@@ -1,12 +1,14 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <fstream>
+#include <animation/springanimation.h>
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
+    w->setBackgroundColor(0xFF223344);
     Drawable*d=nullptr;
     StateListDrawable*sld;
     CompoundButton*chk;
@@ -14,9 +16,10 @@ int main(int argc,const char*argv[]){
     LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
     Button *btn=new Button("Button",120,60);
-    d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
+    //d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
+    d=ctx->getDrawable("cdroid:mipmap/textfield_default_mtrl_alpha");
     sld=dynamic_cast<StateListDrawable*>(d);
-    w->setBackgroundColor(0xFF101112);
+    btn->setBackgroundColor(0xFF332211);
     btn->setOnTouchListener([&argc](View&v,MotionEvent&e){
         const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
         AnimatorSet*aset= new AnimatorSet();
@@ -29,16 +32,26 @@ int main(int argc,const char*argv[]){
         aset->start();
         return false;
     });
-    
-    LOGD("%p statecount=%d",sld,sld->getStateCount());
-    btn->setBackground(d);
+    SpringAnimation spa(btn,(FloatProperty*)&SpringAnimation::SCALE_X,0.2);
+    spa.getSpring()
+        ->setStiffness(20.0f)
+        .setDampingRatio(0.1f);
+    DynamicAnimation::OnAnimationUpdateListener upls([&](DynamicAnimation& animation, float value, float velocity) {
+        printf("[UPDATE] frame value=%.2f  velocity=%.2f\n", value, velocity);
+    }); 
+    DynamicAnimation::OnAnimationEndListener endls([&](DynamicAnimation& animation,bool canceled, float value, float velocity) {
+        printf("[END] frame value=%.2f  velocity=%.2f\n", value, velocity);
+    });
+    spa.addUpdateListener(upls).addEndListener(endls).start();
+
+    LOGD_IF(sld,"%p statecount=%d",sld,sld->getStateCount());
     btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     btn->setOnClickListener([](View&v){LOGD(" Button Clicked ");});
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
     w->addView(btn);
     btn->setId(100);
-    btn->layout(50,60,120,60);
+    btn->layout(10,60,200,60);
 
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));

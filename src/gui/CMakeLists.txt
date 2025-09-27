@@ -12,9 +12,7 @@ file(GLOB_RECURSE SRCS_WIDGETEX RELATIVE "${PROJECT_SOURCE_DIR}" "widgetEx/*")
 if( ENABLE_I18N )
     aux_source_directory(i18n SRCS_I18N)
 endif()
-aux_source_directory(drawables SRCS_DRAWABLES)
 aux_source_directory(cairomm  SRCS_CAIROMM)
-aux_source_directory(animation SRCS_ANIMATION)
 aux_source_directory(private SRCS_PRIVATE)
 aux_source_directory(utils SRCS_UTILS)
 aux_source_directory(navigation SRCS_NAVIGATION)
@@ -65,9 +63,7 @@ set(SOURCES_GUI
     ${SRCS_I18N}
     ${SRCS_CAIROMM}
     ${CDROID_SOURCES}
-    ${SRCS_DRAWABLES}
     ${SRCS_UTILS}
-    ${SRCS_ANIMATION}
 )
 
 add_library(cdroid SHARED ${SOURCES_GUI})

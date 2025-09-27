@@ -32,7 +32,7 @@ private:
     int64_t mMillisInFuture;
     int64_t mStopTimeInFuture;
     /*The interval in millis that the user receives callbacks*/
-    long mCountdownInterval;
+    int64_t mCountdownInterval;
     Handler*mHandler;
     TimerListener mTimerListener;
     bool mCancelled = false;
@@ -44,7 +44,7 @@ public:
      * @param countDownInterval The interval along the way to receive
      *   {@link #onTick(long)} callbacks.
      */
-    CountDownTimer(int64_t millisInFuture, long countDownInterval);
+    CountDownTimer(int64_t millisInFuture, int64_t countDownInterval);
     virtual ~CountDownTimer();
     void setTimerListener(const TimerListener&);
     /**

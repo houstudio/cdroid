@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <drawables/hwvectordrawable.h>
 #include <drawables/hwvectordrawableutils.h>
-#include <drawables/hwpathmeasure.h>
+#include <drawables/pathmeasure.h>
 #include <drawables/hwpathparser.h>
 #include <porting/cdlog.h>
 #include <float.h>

@@ -39,7 +39,7 @@ struct CPoint{
 
 using Point = CPoint<int>;
 using PointF= CPoint<float>;
-
+using PointD= CPoint<double>;
 template<typename T>
 struct CSize{
     T x;

@@ -1,0 +1,30 @@
+SET(ANIMATION_SOURCES
+    animation/alphaanimation.cc
+    animation/animation.cc
+    animation/animationhandler.cc
+    animation/animationset.cc
+    animation/animationutils.cc
+    animation/animator.cc
+    animation/animatorinflater.cc
+    animation/animatorset.cc
+    animation/cliprectanimation.cc
+    animation/dynamicanimation.cc
+    animation/extendanimation.cc
+    animation/flinganimation.cc
+    animation/gridlayoutanimationcontroller.cc
+    animation/interpolators.cc
+    animation/layoutanimationcontroller.cc
+    animation/layouttransition.cc
+    animation/objectanimator.cc
+    animation/properties.cc
+    animation/propertyvaluesholder.cc
+    animation/rotateanimation.cc
+    animation/scaleanimation.cc
+    animation/springanimation.cc
+    animation/springforce.cc
+    animation/statelistanimator.cc
+    animation/timeanimator.cc
+    animation/transformation.cc
+    animation/translateanimation.cc
+    animation/valueanimator.cc
+)

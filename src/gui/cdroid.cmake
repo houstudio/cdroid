@@ -1,59 +1,24 @@
+
+include(core/core.cmake)
+include(view/view.cmake)
+include(animation/animations.cmake)
+include(drawables/drawables.cmake)
+include(widget/widget.cmake)
+include(menu/menu.cmake)
+include(widgetEx/widgetex.cmake)
+include(widgetEx/wear/wear.cmake)
+
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc
+    ${CORE_SOURCES}
+    ${VIEW_SOURCES}
+    ${ANIMATION_SOURCES}
+    ${DRAWABLE_SOURCES}
+    ${WIDGET_SOURCES}
+    ${MENU_SOURCES}
+    ${WIDGETEX_SOURCES}
+    ${WEAR_SOURCES}
 )
-
-list(APPEND CDROID_SOURCES
-    core/app.cc
-    core/assets.cc
-    core/atexit.cc
-    core/attributeset.cc
-    #core/basebundle.cc
-    #core/bundle.cc
-    core/calendar.cc
-    core/canvas.cc
-    core/color.cc
-    core/display.cc
-    core/displaymetrics.cc
-    core/epollwrapper.cc
-    core/graphdevice.cc
-    core/handler.cc
-    core/inputdevice.cc
-    core/inputeventsource.cc
-    core/inputmethod.cc
-    core/inputmethodmanager.cc
-    core/insets.cc
-    core/intent.cc
-    core/uri.cc
-    core/iostreams.cc
-    core/keyboard.cc
-    core/keycharactermap.cc
-    core/keylayoutmap.cc
-    core/layout.cc
-    core/looper.cc
-    core/parcel.cc
-    core/path.cc
-    core/outline.cc
-    core/porterduff.cc
-    core/preferences.cc
-    core/process.cc
-    core/countdowntimer.cc
-    core/scheduler.cc
-    core/systemclock.cc
-    core/textutils.cc
-    core/tokenizer.cc
-    core/xmlpullparser.cc
-    #core/transform.cc
-    core/typedvalue.cc
-    core/typeface.cc
-    core/uieventsource.cc
-    core/windowmanager.cc
-    core/ziparchive.cc
-)
-
-list(APPEND CDROID_SOURCES
-    core/wifimanager.cc
-    core/wifissid.cc
-    )
 
 if(ENABLE_AUDIO)
     list(APPEND CDROID_SOURCES
@@ -62,82 +27,6 @@ if(ENABLE_AUDIO)
         media/audiorecord.cc
         )
 endif()
-
-if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    message("Building on Windows with MSVC compiler")
-    #list(APPEND CDROID_SOURCES core/wepoll.cc)
-endif()
-
-list(APPEND CDROID_SOURCES
-    view/abssavedstate.cc
-    view/choreographer.cc
-    view/configuration.cc
-    view/focusfinder.cc
-    view/gravity.cc
-    view/touchdelegate.cc
-    view/handleractionqueue.cc
-    view/inputevent.cc
-    view/dragevent.cc
-    view/inputeventconsistencyverifier.cc
-    view/keyevent.cc
-    view/layoutinflater.cc
-    view/layoutparams.cc
-    view/motionevent.cc
-    view/viewoutlineprovider.cc
-    view/pointericon.cc
-    view/rendernode.cc
-    view/roundscrollbarrenderer.cc
-    view/soundeffectconstants.cc
-    view/velocitytracker.cc
-    view/view.cc
-    view/viewconfiguration.cc
-    view/viewgroup.cc
-    view/viewoverlay.cc
-    view/viewpropertyanimator.cc
-    view/viewstub.cc
-    view/viewtreeobserver.cc
-    view/gesturedetector.cc
-    view/scalegesturedetector.cc
-    view/windowinsets.cc
-    view/actionprovider.cc
-    #view/diffrentialmotionflingcontroller.cc
-    view/hapticscrollfeedbackprovider.cc
-    view/accessibility/accessibilityevent.cc
-    view/accessibility/accessibilityrecord.cc
-    view/accessibility/accessibilitywindowinfo.cc
-    view/accessibility/accessibilitynodeinfo.cc
-    view/accessibility/accessibilitymanager.cc
-)
-
-if(ENABLE_MENU)
-    list(APPEND CDROID_SOURCES
-        menu/basemenupresenter.cc
-        menu/iconmenuitemview.cc
-        menu/iconmenuview.cc
-        menu/listmenupresenter.cc
-        menu/menudialoghelper.cc
-        menu/menupopuphelper.cc
-        menu/menuitem.cc
-        menu/actionmenuitem.cc
-        menu/expandedmenuview.cc
-        menu/iconmenupresenter.cc
-        menu/listmenuitemview.cc
-        menu/actionmenuview.cc
-        menu/actionmenuitemview.cc
-        menu/actionmenupresenter.cc
-        menu/menubuilder.cc
-        menu/contextmenubuilder.cc
-        menu/menuinflater.cc
-        menu/menuitemimpl.cc
-        menu/menupopup.cc
-        menu/popupmenu.cc
-        menu/actionmenu.cc
-        menu/menuadapter.cc
-        menu/standardmenupopup.cc
-        menu/cascadingmenupopup.cc
-        widget/menupopupwindow.cc
-    )
-endif(ENABLE_MENU)
 
 if(ENABLE_GESTURE)
     list(APPEND CDROID_SOURCES
@@ -154,135 +43,6 @@ if(ENABLE_GESTURE)
     )
 endif(ENABLE_GESTURE)
 
-list(APPEND CDROID_SOURCES
-    widget/edgeeffect.cc
-    widget/scroller.cc
-    widget/fastscroller.cc
-    widget/overscroller.cc
-    widget/rtlspacinghelper.cc
-    widget/viewdraghelper.cc
-    widget/nestedscrollinghelper.cc
-    widget/scrollbardrawable.cc
-    widget/cdwindow.cc
-)
-
-list(APPEND CDROID_SOURCES
-    widget/nestedscrollview.cc
-    widget/scrollview.cc
-    widget/horizontalscrollview.cc
-    widget/progressbar.cc
-    widget/absseekbar.cc
-    widget/seekbar.cc
-    widget/ratingbar.cc
-    widget/space.cc
-    widget/textview.cc
-    widget/edittext.cc
-    #widget/datetimeview.cc
-    widget/checkedtextview.cc
-    widget/imagebutton.cc
-    widget/imageview.cc
-    widget/chronometer.cc
-    widget/button.cc
-    widget/compoundbutton.cc
-    widget/togglebutton.cc
-    widget/radiogroup.cc
-    widget/switch.cc
-    widget/analogclock.cc
-    widget/numberpicker.cc
-    widget/popupwindow.cc
-    widget/candidateview.cc
-    widget/keyboardview.cc
-)
-
-list(APPEND CDROID_SOURCES
-    widget/adapter.cc
-    widget/headerviewlistadapter.cc
-    widget/autoscrollhelper.cc
-    widget/adapterview.cc
-    widget/filterable.cc
-    widget/abslistview.cc
-    widget/recyclebin.cc
-    widget/listview.cc
-    widget/gridview.cc
-)
-if(ENABLE_SPINNER)
-    list(APPEND CDROID_SOURCES
-        widget/absspinner.cc
-        widget/spinner.cc #spinner need AlertDialog
-        widget/forwardinglistener.cc
-        widget/listpopupwindow.cc
-        widget/dropdownlistview.cc
-    )
-endif(ENABLE_SPINNER)
-
-list(APPEND CDROID_SOURCES
-    widget/absolutelayout.cc
-    widget/linearlayout.cc
-    widget/framelayout.cc
-    widget/relativelayout.cc
-    widget/tabwidget.cc
-    widget/gridlayout.cc
-    widget/tablerow.cc
-    widget/tablayout.cc
-    widget/tablelayout.cc
-)
-
-list(APPEND CDROID_SOURCES
-    #widget/activitymanager.cc
-    #widget/backendcairo.cc
-)
-
-list(APPEND CDROID_SOURCES  widget/viewpager.cc)
-
-if(ENABLE_DAYTIME_WIDGETS)
-    list(APPEND CDROID_SOURCES
-        widget/numberictextview.cc
-        widget/yearpickerview.cc
-        widget/datepicker.cc
-        widget/daypickerview.cc
-        widget/daypickerviewpager.cc
-        widget/daypickerpageradapter.cc
-        widget/daypickerspinnerdelegate.cc
-        widget/daypickercalendardelegate.cc
-        widget/radialtimepickerview.cc
-        #widget/textinputtimepickerview.cc
-        widget/timepicker.cc
-        widget/timepickerclockdelegate.cc
-        widget/timepickerspinnerdelegate.cc
-        widget/simplemonthview.cc
-        widget/explorebytouchhelper.cc
-        widget/calendarview.cc
-        widget/calendarviewlegacydelegate.cc
-        widget/calendarviewmaterialdelegate.cc
-    )
-endif(ENABLE_DAYTIME_WIDGETS)
-
-list(APPEND CDROID_SOURCES
-    widget/drawerlayout.cc
-    widget/mediacontroller.cc
-    widget/patternlockview.cc
-
-    widget/plotaxis.cc
-    widget/plotobject.cc
-    widget/plotpoint.cc
-    widget/plotview.cc
-
-    widget/actionbar.cc
-    widget/toolbar.cc
-    widget/toast.cc
-)
-
-list(APPEND CDROID_SOURCES
-    widget/viewanimator.cc
-    widget/viewflipper.cc
-    widget/viewswitcher.cc
-    widget/textswitcher.cc
-    widget/imageswitcher.cc
-    widget/adapterviewanimator.cc
-    widget/adapterviewflipper.cc
-    widget/stackview.cc
-)
-
 if(ENABLE_DIALOGS OR ENABLE_SPINNER)
     list(APPEND CDROID_SOURCES
         app/alertcontroller.cc
@@ -292,8 +52,6 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
     )
 endif(ENABLE_DIALOGS)
 
-include(widgetEx/widgetex.cmake)
-list(APPEND CDROID_SOURCES ${WIDGETEX_SOURCES})
 
 if(ENABLE_TRANSITION)
     list(APPEND CDROID_SOURCES
@@ -318,7 +76,3 @@ if(ENABLE_NAVIGATION)
     )
 endif(ENABLE_NAVIGATION)
 
-if(ENABLE_WEAR OR TRUE)
-    include(widgetEx/wear/wear.cmake)
-    list(APPEND CDROID_SOURCES ${WEAR_SOURCES})
-endif()

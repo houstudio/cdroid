@@ -53,7 +53,7 @@ public:
 protected:
     int mValueType;
     std::string mPropertyName;
-    Property*mProperty;
+    const Property*mProperty;
     OnPropertyChangedListener mOnPropertyChangedListener;
     PropertyGetter mGetter;
     PropertySetter mSetter;
@@ -68,12 +68,12 @@ public:
     PropertyValuesHolder();
     PropertyValuesHolder(const PropertyValuesHolder&);
     virtual ~PropertyValuesHolder();
-    PropertyValuesHolder(Property*prop);
+    PropertyValuesHolder(const Property*prop);
     PropertyValuesHolder(const std::string&name);
     void setPropertyName(const std::string& propertyName);
     const std::string getPropertyName()const;
     void setProperty(Property*p);
-    Property*getProperty()const;
+    const Property*getProperty()const;
     int getValueType()const;
     void setPropertyChangedListener(const OnPropertyChangedListener&);
     
@@ -90,11 +90,11 @@ public:
     void setupSetterAndGetter(void*target);
 
     static PropertyValuesHolder*ofInt(const std::string&name,const std::vector<int>&);
-    static PropertyValuesHolder*ofInt(Property*,const std::vector<int>&);
+    static PropertyValuesHolder*ofInt(const Property*,const std::vector<int>&);
     static PropertyValuesHolder*ofFloat(const std::string&name,const std::vector<float>&);
-    static PropertyValuesHolder*ofFloat(Property*prop,const std::vector<float>&);
+    static PropertyValuesHolder*ofFloat(const Property*prop,const std::vector<float>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
-    static PropertyValuesHolder*ofObject(Property*prop,const std::vector<PathParser::PathData>&);
+    static PropertyValuesHolder*ofObject(const Property*prop,const std::vector<PathParser::PathData>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&);
 };
 

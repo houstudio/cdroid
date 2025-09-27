@@ -284,8 +284,6 @@ private:
     float getHistoricalRawX(size_t pointerIndex, size_t historicalIndex) const;
     float getHistoricalRawY(size_t pointerIndex, size_t historicalIndex) const;
     float getRawAxisValue(int32_t axis, size_t pointerIndex) const;
-    inline float getRawX(size_t pointerIndex) const { return getRawAxisValue(AXIS_X, pointerIndex); }
-    inline float getRawY(size_t pointerIndex) const { return getRawAxisValue(AXIS_Y, pointerIndex); }
 public:
     void setCursorPosition(float x, float y);
     /////////////////////// AXIS Properties has been transformed //////////////////////////////
@@ -306,6 +304,8 @@ public:
     float getX(size_t pointerIndex=0) const { return getAxisValue(AXIS_X,pointerIndex); }
     float getY(size_t pointerIndex=0) const { return getAxisValue(AXIS_Y,pointerIndex); }
 
+    inline float getRawX(size_t pointerIndex=0) const { return getRawAxisValue(AXIS_X, pointerIndex); }
+    inline float getRawY(size_t pointerIndex=0) const { return getRawAxisValue(AXIS_Y, pointerIndex); }
     //////////////////////////////////////////////////////////////////////////////////////////    
     int getPointerProperties(size_t pointerIndex,PointerProperties&pp) const;
     void addSample(nsecs_t eventTime,const PointerCoords*);

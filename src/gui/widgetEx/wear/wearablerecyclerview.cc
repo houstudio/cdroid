@@ -1,9 +1,34 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #include <widgetEx/wear/wearablerecyclerview.h>
 
 namespace cdroid{
+
+DECLARE_WIDGET(WearableRecyclerView);
+
+WearableRecyclerView::WearableRecyclerView(int w,int h)
+    :RecyclerView(w,h){
+    mScrollManager = new ScrollManager();
+}
+
 WearableRecyclerView::WearableRecyclerView(Context* context, const AttributeSet& attrs)
     :RecyclerView(context, attrs){
-
+    mScrollManager = new ScrollManager();
     setHasFixedSize(true);
     // Padding is used to center the top and bottom items in the list, don't clip to padding to
     // allows the items to draw in that space.
@@ -12,6 +37,9 @@ WearableRecyclerView::WearableRecyclerView(Context* context, const AttributeSet&
     setCircularScrollingGestureEnabled(attrs.getBoolean("circularScrollingGestureEnabled",mCircularScrollingEnabled));
     setBezelFraction(attrs.getFloat("bezelWidth",mScrollManager->getBezelWidth()));
     setScrollDegreesPerScreen(attrs.getFloat("scrollDegreesPerScreen",mScrollManager->getScrollDegreesPerScreen()));
+}
+
+WearableRecyclerView::~WearableRecyclerView(){
 }
 
 void WearableRecyclerView::setupCenteredPadding() {

@@ -1,25 +1,23 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+#include <core/mathutils.h>
 #include <widgetEx/wear/scrollmanager.h>
 namespace cdroid{
-/* 
-    private static constexpr int ONE_SEC_IN_MS = 1000;
-    private static constexpr float VELOCITY_MULTIPLIER = 1.5f;
-    private static constexpr float FLING_EDGE_RATIO = 1.5f;
-
-    private float mMinRadiusFraction = 0.0f;
-    private float mMinRadiusFractionSquared = mMinRadiusFraction * mMinRadiusFraction;
-    private float mScrollDegreesPerScreen = 180;
-    private float mScrollRadiansPerScreen = (float) Math.toRadians(mScrollDegreesPerScreen);
-    private float mScreenRadiusPx;
-    private float mScreenRadiusPxSquared;
-    private float mScrollPixelsPerRadian;
-
-    private bool mDown;
-    private bool mScrolling;
-    private float mLastAngleRadians;
-
-    private RecyclerView* mRecyclerView;
-    VelocityTracker* mVelocityTracker;
-*/
 
 ScrollManager::ScrollManager(){
     mMinRadiusFraction = 0.0f;
@@ -45,7 +43,7 @@ void ScrollManager::setRecyclerView(RecyclerView* recyclerView, int width, int h
     mScreenRadiusPx = std::max(width, height) / 2.f;
     mScreenRadiusPxSquared = mScreenRadiusPx * mScreenRadiusPx;
     mScrollPixelsPerRadian = height / mScrollRadiansPerScreen;
-    mScrollRadiansPerScreen = (float) std::toRadians(mScrollDegreesPerScreen)
+    mScrollRadiansPerScreen = (float) MathUtils::toRadians(mScrollDegreesPerScreen);
     mVelocityTracker = VelocityTracker::obtain();
 }
 
@@ -58,8 +56,9 @@ bool ScrollManager::onTouchEvent(MotionEvent& event) {
     float deltaX = event.getRawX() - mScreenRadiusPx;
     float deltaY = event.getRawY() - mScreenRadiusPx;
     float radiusSquared = deltaX * deltaX + deltaY * deltaY;
+    int velocityY =0;
     MotionEvent* vtev = MotionEvent::obtain(event);
-    mVelocityTracker->addMovement(vtev);
+    mVelocityTracker->addMovement(*vtev);
     vtev->recycle();
 
     switch (event.getActionMasked()) {
@@ -77,7 +76,7 @@ bool ScrollManager::onTouchEvent(MotionEvent& event) {
             deltaRadians = normalizeAngleRadians(deltaRadians);
             int scrollPixels = std::round(deltaRadians * mScrollPixelsPerRadian);
             if (scrollPixels != 0) {
-                mRecyclerView.scrollBy(0 /* x */, scrollPixels /* y */);
+                mRecyclerView->scrollBy(0 /* x */, scrollPixels /* y */);
                 // Recompute deltaRadians in terms of rounded scrollPixels.
                 deltaRadians = scrollPixels / mScrollPixelsPerRadian;
                 mLastAngleRadians += deltaRadians;
@@ -97,7 +96,7 @@ bool ScrollManager::onTouchEvent(MotionEvent& event) {
                 deltaYFromCenter /= distFromCenter;
 
                 mScrolling = true;
-                mRecyclerView.invalidate();
+                mRecyclerView->invalidate();
                 mLastAngleRadians = (float) std::atan2(deltaYFromCenter, deltaXFromCenter);
                 return true; // Consume the event.
             }
@@ -115,7 +114,7 @@ bool ScrollManager::onTouchEvent(MotionEvent& event) {
         mScrolling = false;
         mVelocityTracker->computeCurrentVelocity(ONE_SEC_IN_MS,
                 mRecyclerView->getMaxFlingVelocity());
-        int velocityY = (int) mVelocityTracker->getYVelocity();
+        velocityY = (int) mVelocityTracker->getYVelocity();
         if (event.getX() < FLING_EDGE_RATIO * mScreenRadiusPx) {
             velocityY = -velocityY;
         }
@@ -129,7 +128,7 @@ bool ScrollManager::onTouchEvent(MotionEvent& event) {
         if (mDown) {
             mDown = false;
             mScrolling = false;
-            mRecyclerView.invalidate();
+            mRecyclerView->invalidate();
             return true; // Consume the event.
         }
         break;
@@ -148,7 +147,7 @@ float ScrollManager::normalizeAngleRadians(float angleRadians) {
     return angleRadians;
 }
 
-void ScrollManager::setScrollDegreesPerScreen(float degreesPerScreen) {
+void ScrollManager::setScrollDegreesPerScreen(float degreesPerScreen){
     mScrollDegreesPerScreen = degreesPerScreen;
     mScrollRadiansPerScreen = (float) MathUtils::toRadians(mScrollDegreesPerScreen);
 }
@@ -162,7 +161,7 @@ float ScrollManager::getScrollDegreesPerScreen() const{
     return mScrollDegreesPerScreen;
 }
 
-float ScrollManager::getBezelWidth() {
-    return 1 - mMinRadiusFraction;
+float ScrollManager::getBezelWidth() const{
+    return 1.0f - mMinRadiusFraction;
 }
 }/*endof namespace*/

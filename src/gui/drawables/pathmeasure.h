@@ -22,22 +22,22 @@
 #include <cairomm/context.h>
 #include <drawables/hwvectordrawable.h>
 namespace cdroid {
-namespace hwui{
 class PathMeasure{
 private:
-    using Point =CPoint<double>;
     double mTotalLength;
     Cairo::RefPtr<cdroid::Path>mPath;
-    double distance(const Point&p1,const Point&p2);
-    double curveLength(const Point& p0, const Point& p1, const Point& p2, const Point& p3);
-    Point interpolate(const Point& p1, const Point& p2, double t);
-    Point interpolateCurve(const Point& p0, const Point& p1, const Point& p2, const Point& p3, double t);
+    double distance(const PointD&p1,const PointD&p2);
+    double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3);
+    PointD interpolate(const PointD& p1, const PointD& p2, double t);
+    PointD interpolateCurve(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t);
     double calculateTotalLength();
 public:
+    PathMeasure();
     PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool);
+    void setPath(Cairo::RefPtr<cdroid::Path>inPath);
     double getLength();
     bool getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo);
+    bool getPosTan(double distance,PointD* pos,PointD* tangent) ;
 };
-}
 }
 #endif

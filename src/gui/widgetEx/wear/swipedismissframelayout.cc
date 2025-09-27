@@ -1,97 +1,88 @@
-#include <widgetEx/wear/dismissableframelayout.h>
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
+#include <widgetEx/wear/swipedismissframelayout.h>
 namespace cdroid{
-public class SwipeDismissFrameLayout:public DismissibleFrameLayout {
 
-    public static constexpr float DEFAULT_DISMISS_DRAG_WIDTH_RATIO = 0.33f;
+DECLARE_WIDGET(SwipeDismissFrameLayout);
 
+SwipeDismissFrameLayout::SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs)
+    :DismissibleFrameLayout(context, attrs){
+}
 
-    public class Callback {
+void SwipeDismissFrameLayout::addCallback(const SwipeDismissFrameLayout::Callback& callback) {
+    /*if (callback == null) {
+        throw new NullPointerException("addCallback called with null callback");
+    }*/
+    mCallbacksCompat.push_back(callback);
+}
 
-        public void onSwipeStarted(SwipeDismissFrameLayout& layout);
-
-        public void onSwipeCanceled(SwipeDismissFrameLayout& layout);
-
-        public void onDismissed(SwipeDismissFrameLayout& layout);
-    };
-
-    std::vector<Callback> mCallbacksCompat;
-
-    public SwipeDismissFrameLayout(Context* context) {
-        this(context, null, 0);
+void SwipeDismissFrameLayout::removeCallback(const SwipeDismissFrameLayout::Callback& callback) {
+    /*if (callback == null) {
+        throw new NullPointerException("removeCallback called with null callback");
     }
-
-    public SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs) {
-        this(context, attrs, 0);
+    if (!mCallbacksCompat.remove(callback)) {
+        throw new IllegalStateException("removeCallback called with nonexistent callback");
+    }*/
+    auto it =std::find(mCallbacksCompat.begin(),mCallbacksCompat.end(),callback);
+    if(it!=mCallbacksCompat.end()){
+        mCallbacksCompat.erase(it);
     }
+}
 
-    public SwipeDismissFrameLayout(Context context, AttributeSet attrs, int defStyle) {
-        this(context, attrs, defStyle, 0);
+void SwipeDismissFrameLayout::setSwipeable(bool swipeable) {
+    DismissibleFrameLayout::setSwipeDismissible(swipeable);
+}
+
+bool SwipeDismissFrameLayout::isSwipeable() const{
+    return DismissibleFrameLayout::isDismissableBySwipe();
+}
+
+void SwipeDismissFrameLayout::setDismissMinDragWidthRatio(float ratio) {
+    if (isSwipeable()) {
+        getSwipeDismissController()->setDismissMinDragWidthRatio(ratio);
     }
+}
 
-    public SwipeDismissFrameLayout(Context* context,const AttributeSet& attrs, int defStyle,
-            int defStyleRes) {
-        super(context, attrs, defStyle, defStyleRes);
+float SwipeDismissFrameLayout::getDismissMinDragWidthRatio() const{
+    if (isSwipeable()) {
+        return getSwipeDismissController()->getDismissMinDragWidthRatio();
     }
+    return DEFAULT_DISMISS_DRAG_WIDTH_RATIO;
+}
 
-    public void addCallback(Callback callback) {
-        if (callback == null) {
-            throw new NullPointerException("addCallback called with null callback");
-        }
-
-        mCallbacksCompat.add(callback);
+void SwipeDismissFrameLayout::performDismissFinishedCallbacks() {
+    DismissibleFrameLayout::performDismissFinishedCallbacks();
+    for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
+        mCallbacksCompat.at(i).onDismissed(*this);
     }
+}
 
-    public void removeCallback(Callback callback) {
-        if (callback == null) {
-            throw new NullPointerException("removeCallback called with null callback");
-        }
-        if (!mCallbacksCompat.remove(callback)) {
-            throw new IllegalStateException("removeCallback called with nonexistent callback");
-        }
+void SwipeDismissFrameLayout::performDismissStartedCallbacks() {
+    DismissibleFrameLayout::performDismissStartedCallbacks();
+    for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
+        mCallbacksCompat.at(i).onSwipeStarted(*this);
     }
+}
 
-    public void setSwipeable(bool swipeable) {
-        super.setSwipeDismissible(swipeable);
+void SwipeDismissFrameLayout::performDismissCanceledCallbacks() {
+    DismissibleFrameLayout::performDismissCanceledCallbacks();
+    for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
+        mCallbacksCompat.at(i).onSwipeCanceled(*this);
     }
-
-    public bool isSwipeable() {
-        return super.isDismissableBySwipe();
-    }
-
-    public void setDismissMinDragWidthRatio(float ratio) {
-        if (isSwipeable()) {
-            getSwipeDismissController().setDismissMinDragWidthRatio(ratio);
-        }
-    }
-
-    public float getDismissMinDragWidthRatio() {
-        if (isSwipeable()) {
-            return getSwipeDismissController().getDismissMinDragWidthRatio();
-        }
-        return DEFAULT_DISMISS_DRAG_WIDTH_RATIO;
-    }
-
-    @Override
-    protected void performDismissFinishedCallbacks() {
-        super.performDismissFinishedCallbacks();
-        for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
-            mCallbacksCompat.at(i).onDismissed(this);
-        }
-    }
-
-    @Override
-    protected void performDismissStartedCallbacks() {
-        super.performDismissStartedCallbacks();
-        for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
-            mCallbacksCompat.at(i).onSwipeStarted(this);
-        }
-    }
-
-    @Override
-    protected void performDismissCanceledCallbacks() {
-        super.performDismissCanceledCallbacks();
-        for (int i = mCallbacksCompat.size() - 1; i >= 0; i--) {
-            mCallbacksCompat.at(i).onSwipeCanceled(this);
-        }
-    }
+}
 }

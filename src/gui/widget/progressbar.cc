@@ -330,18 +330,19 @@ Drawable* ProgressBar::tileifyIndeterminate(Drawable* drawable){
     return drawable;
 }
 
-class VISUAL_PROGRESS:public Property{
+class VISUAL_PROGRESS:public FloatProperty{
 public:
-    VISUAL_PROGRESS():Property("visual_progress"){}
-    void set(void*object,const AnimateValue&value)override {
+    VISUAL_PROGRESS():FloatProperty("visual_progress"){}
+    void set(void*object,const AnimateValue&value)const override {
         float fv = GET_VARIANT(value,float);
         ((ProgressBar*)object)->setVisualProgress(R::id::progress, fv);
         ((ProgressBar*)object)->mVisualProgress = fv;
     }
-    AnimateValue get(void*object) override{
+    AnimateValue get(void*object)const override{
         return ((ProgressBar*)object)->mVisualProgress;
     }
 };
+static class VISUAL_PROGRESS VISUAL_PROGRESS;
 
 void ProgressBar::initProgressBar(){
     mMin = 0;
@@ -372,9 +373,9 @@ void ProgressBar::initProgressBar(){
     mAggregatedIsVisible = false;
     mShouldStartAnimationDrawable = false;
     mRefreshIsPosted = false;
-    if(Property::fromName("ProgressBar.visual_progress")==nullptr){
-        Property::reigsterProperty("ProgressBar.visual_progress",new VISUAL_PROGRESS());
-    }
+    /*if(Property::fromName("ProgressBar.visual_progress")==nullptr){
+        Property::reigsterProperty("ProgressBar.visual_progress",&VISUAL_PROGRESS);
+    }*/
 }
 
 void ProgressBar::setMin(int value){
@@ -498,7 +499,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     LOGV_IF(isPrimary,"setProgress %d->%d animate=%d",id,progress,animate);
     if (isPrimary && animate) {
         Animator::AnimatorListener animListener;
-        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,"visual_progress",{scale});
+        ObjectAnimator* animator = ObjectAnimator::ofFloat(this,&VISUAL_PROGRESS/*"visual_progress"*/,{scale});
         animator->setAutoCancel(true);
         animator->setDuration(PROGRESS_ANIM_DURATION);
         animator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());

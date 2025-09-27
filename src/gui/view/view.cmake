@@ -1,0 +1,41 @@
+SET(VIEW_SOURCES
+    view/abssavedstate.cc
+    view/choreographer.cc
+    view/configuration.cc
+    view/focusfinder.cc
+    view/gravity.cc
+    view/touchdelegate.cc
+    view/handleractionqueue.cc
+    view/inputevent.cc
+    view/dragevent.cc
+    view/inputeventconsistencyverifier.cc
+    view/keyevent.cc
+    view/layoutinflater.cc
+    view/layoutparams.cc
+    view/motionevent.cc
+    view/viewoutlineprovider.cc
+    view/pointericon.cc
+    view/rendernode.cc
+    view/roundscrollbarrenderer.cc
+    view/soundeffectconstants.cc
+    view/velocitytracker.cc
+    view/view.cc
+    view/viewconfiguration.cc
+    view/viewgroup.cc
+    view/viewoverlay.cc
+    view/viewpropertyanimator.cc
+    view/viewstub.cc
+    view/viewtreeobserver.cc
+    view/gesturedetector.cc
+    view/scalegesturedetector.cc
+    view/windowinsets.cc
+    view/actionprovider.cc
+    #view/diffrentialmotionflingcontroller.cc
+    view/hapticscrollfeedbackprovider.cc
+    view/accessibility/accessibilityevent.cc
+    view/accessibility/accessibilityrecord.cc
+    view/accessibility/accessibilitywindowinfo.cc
+    view/accessibility/accessibilitynodeinfo.cc
+    view/accessibility/accessibilitymanager.cc
+)
+

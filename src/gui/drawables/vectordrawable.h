@@ -130,7 +130,7 @@ public:
         virtual bool onStateChange(const std::vector<int>& state)=0;
         virtual bool isStateful()const=0;
         virtual bool hasFocusStateSpecified()const=0;
-        virtual Property* getProperty(const std::string& propertyName)=0;
+        virtual const Property* getProperty(const std::string& propertyName)=0;
     };
 };
 
@@ -168,14 +168,14 @@ protected:
     int mLastSWCachePixelCount = 0;
     int mLastHWCachePixelCount = 0;
 
-    static const std::shared_ptr<Property> ALPHA;
+    static const FloatProperty& ALPHA;
     // This tracks the total native allocation for all the nodes.
 private:
     void createNativeTree(VGroup* rootGroup);
     void createNativeTreeFromCopy(const VectorDrawableState* copy, VGroup* rootGroup);
     void applyDensityScaling(int sourceDensity, int targetDensity);
 protected:
-    Property* getProperty(const std::string& propertyName);
+    const Property* getProperty(const std::string& propertyName);
 public:
     // If copy is not null, deep copy the given VectorDrawableState. Otherwise, create a
     // native vector drawable tree with an empty root group.
@@ -214,7 +214,7 @@ private:
     static std::unordered_map<std::string, int> sPropertyIndexMap;
     static int getPropertyIndex(const std::string& propertyName);
 
-    static const std::unordered_map<std::string,const std::shared_ptr<Property>> sPropertyMap;
+    static const std::unordered_map<std::string,const Property*> sPropertyMap;
     // Temp array to store transform values obtained from native.
     //float mTransform[8];
     /////////////////////////////////////////////////////
@@ -235,11 +235,19 @@ private:
     friend VectorDrawable;
     friend VectorDrawableState;
     friend AnimatedVectorDrawable;
+
+    static const FloatProperty& TRANSLATE_X;
+    static const FloatProperty& TRANSLATE_Y;
+    static const FloatProperty& SCALE_X;
+    static const FloatProperty& SCALE_Y;
+    static const FloatProperty& PIVOT_X;
+    static const FloatProperty& PIVOT_Y;
+    static const FloatProperty& ROTATION;
 public:
     VGroup();
     ~VGroup();
     VGroup(const VGroup* copy,std::unordered_map<std::string, void*>& targetsMap);
-    Property* getProperty(const std::string& propertyName)override;
+    const Property* getProperty(const std::string& propertyName)override;
 
     std::string getGroupName()const;
 
@@ -282,12 +290,12 @@ protected:
     PathParser::PathData* mPathData = nullptr;
     std::string mPathName;
     int mChangingConfigurations;
-    static const std::shared_ptr<Property> PATH_DATA;
+    static const Property& PATH_DATA;
 public:
     VPath();
     VPath(const VPath* copy);
     ~VPath()override;
-    Property* getProperty(const std::string& propertyName)override;
+    const Property* getProperty(const std::string& propertyName)override;
     std::string getPathName()const;
     /* Setters and Getters, used by animator from AnimatedVectorDrawable. */
     PathParser::PathData* getPathData();
@@ -336,7 +344,7 @@ private:
 
     // Property map for animatable attributes.
     static std::unordered_map<std::string, int> sPropertyIndexMap;
-    static const std::unordered_map<std::string, const std::shared_ptr<Property>> sPropertyMap;
+    static const std::unordered_map<std::string, const Property*> sPropertyMap;
 
     // Temp array to store property data obtained from native getter.
     uint8_t* mPropertyData;
@@ -347,6 +355,14 @@ private:
     ComplexColor* mStrokeColors = nullptr;
     ComplexColor* mFillColors = nullptr;
     hwui::FullPath* mNativePtr;
+    static const FloatProperty& STROKE_WIDTH;
+    static const Property& STROKE_COLOR;
+    static const FloatProperty& STROKE_ALPHA;
+    static const Property& FILL_COLOR;
+    static const FloatProperty& FILL_ALPHA;
+    static const FloatProperty& TRIM_PATH_START;
+    static const FloatProperty& TRIM_PATH_END;
+    static const FloatProperty& TRIM_PATH_OFFSET;
 private:
     void updateStateFromTypedArray(const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);
@@ -355,7 +371,7 @@ public:
     VFullPath();
     VFullPath(const VFullPath* copy);
     ~VFullPath()override;
-    Property* getProperty(const std::string& propertyName)override;
+    const Property* getProperty(const std::string& propertyName)override;
     int getPropertyIndex(const std::string& propertyName);
     bool onStateChange(const std::vector<int>& stateSet) override;
     bool isStateful() const override;

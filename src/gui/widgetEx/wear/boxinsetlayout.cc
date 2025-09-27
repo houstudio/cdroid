@@ -1,5 +1,24 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #include <widgetEx/wear/boxinsetlayout.h>
 namespace cdroid{
+
+DECLARE_WIDGET(BoxInsetLayout);
 
 BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet& attrs)
     :ViewGroup(context, attrs){
@@ -32,7 +51,7 @@ BoxInsetLayout::LayoutParams* BoxInsetLayout::generateLayoutParams(const Attribu
 void BoxInsetLayout::onAttachedToWindow() {
     ViewGroup::onAttachedToWindow();
     mIsRound = true;//getResources().getConfiguration().isScreenRound();
-    WindowInsets insets = getRootWindowInsets();
+    WindowInsets insets({});// = getRootWindowInsets();
     mInsets.set(insets.getSystemWindowInsetLeft(), insets.getSystemWindowInsetTop(),
             insets.getSystemWindowInsetRight(), insets.getSystemWindowInsetBottom());
 }
@@ -226,15 +245,15 @@ void BoxInsetLayout::measureChild(int widthMeasureSpec, int heightMeasureSpec, i
 
     const int maxAllowedWidth = getMeasuredWidth() - totalWidthMargin;
     const int maxAllowedHeight = getMeasuredHeight() - totalHeightMargin;
-    if (child->getMeasuredWidth() > maxAllowedWidth
-            || child->getMeasuredHeight() > maxAllowedHeight) {
+    if ((child->getMeasuredWidth() > maxAllowedWidth)
+            || (child->getMeasuredHeight() > maxAllowedHeight)) {
         child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
     }
 }
 
 int BoxInsetLayout::calculateChildLeftMargin(const LayoutParams* lp, int horizontalGravity, int desiredMinInset) const{
     if (mIsRound && ((lp->boxedEdges & LayoutParams::BOX_LEFT) != 0)) {
-        if (lp->width == LayoutParams::MATCH_PARENT || horizontalGravity == Gravity::LEFT) {
+        if ((lp->width == LayoutParams::MATCH_PARENT) || (horizontalGravity == Gravity::LEFT)) {
             return lp->leftMargin + desiredMinInset;
         }
     }
@@ -284,11 +303,11 @@ BoxInsetLayout::LayoutParams::LayoutParams(Context* context, const AttributeSet&
         boxedEdgesResourceKey = R.styleable.BoxInsetLayout_Layout_boxedEdges;
     }*/
     boxedEdges = attrs.getInt("boxedEdges",std::unordered_map<std::string,int>{
-            {"none",BOX_NONE},
-            {"left",BOX_LEFT},
-            {"top",BOX_TOP},
-            {"right",BOX_RIGHT},
-            {"bottom",BOX_BOTTOM}
+            {"none", (int)BOX_NONE},
+            {"left", (int)BOX_LEFT},
+            {"top" , (int)BOX_TOP},
+            {"right", (int)BOX_RIGHT},
+            {"bottom",(int)BOX_BOTTOM}
             }, BOX_NONE);
 }
 

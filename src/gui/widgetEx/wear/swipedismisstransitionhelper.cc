@@ -1,13 +1,30 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+*/
 #include <widgetEx/wear/swipedismisstransitionhelper.h>
 
 namespace cdroid{
 
 SwipeDismissTransitionHelper::SwipeDismissTransitionHelper(Context* context,DismissibleFrameLayout* layout) {
     mLayout = layout;
-    mIsScreenRound = layout.getResources().getConfiguration().isScreenRound();
-    mScreenWidth = Resources.getSystem().getDisplayMetrics().widthPixels;
+    mIsScreenRound = true;//layout.getResources().getConfiguration().isScreenRound();
+    mScreenWidth = context->getDisplayMetrics().widthPixels;
     mScrimBackground = generateScrimBackgroundDrawable(mScreenWidth,
-            Resources.getSystem().getDisplayMetrics().heightPixels);
+            context->getDisplayMetrics().heightPixels);
 }
 
 void SwipeDismissTransitionHelper::clipOutline(View* view, bool useRoundShape) {
@@ -19,31 +36,31 @@ void SwipeDismissTransitionHelper::clipOutline(View* view, bool useRoundShape) {
         }
         outline.setAlpha(0);
     });
-    view.setClipToOutline(true);
+    view->setClipToOutline(true);
 }
 
 
-static float lerp(float min, float max, float value) {
-    return min + (max - min) * value;
+static float lerp(float minV, float maxV, float value) {
+    return minV + (maxV - minV) * value;
 }
 
-static float clamp(float min, float max, float value) {
-    return max(min, min(max, value));
+static float clamp(float minV, float maxV, float value) {
+    return std::max(minV, std::min(maxV, value));
 }
 
-static float lerpInv(float min, float max, float value) {
-    return min != max ? ((value - min) / (max - min)) : 0.0f;
+static float lerpInv(float minV, float maxV, float value) {
+    return minV != maxV ? ((value - minV) / (maxV - minV)) : 0.0f;
 }
 
 ColorFilter* SwipeDismissTransitionHelper::createDimmingColorFilter(float level) {
     level = clamp(0, 1, level);
     int alpha = (int) (0xFF * level);
-    int color = Color.argb(alpha, 0, 0, 0);
-    ColorFilter colorFilter = mDimmingColorFilterCache.get(alpha);
-    if (colorFilter != null) {
+    int color = Color::toArgb(0 , 0, 0, (uint8_t)alpha);
+    ColorFilter* colorFilter = mDimmingColorFilterCache.get(alpha);
+    if (colorFilter != nullptr) {
         return colorFilter;
     }
-    colorFilter = new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_ATOP);
+    colorFilter = new PorterDuffColorFilter(color, PorterDuff::Mode::SRC_ATOP);
     mDimmingColorFilterCache.put(alpha, colorFilter);
     return colorFilter;
 }
@@ -51,20 +68,20 @@ ColorFilter* SwipeDismissTransitionHelper::createDimmingColorFilter(float level)
 SpringAnimation* SwipeDismissTransitionHelper::createSpringAnimation(float startValue, float finalValue, float startVelocity,
         const DynamicAnimation::OnAnimationUpdateListener& onUpdateListener,
         const DynamicAnimation::OnAnimationEndListener& onEndListener) {
-    SpringAnimation animation = new SpringAnimation(new FloatValueHolder());
-    animation.setStartValue(startValue);
-    animation.setMinimumVisibleChange(SPRING_MIN_VISIBLE_CHANGE);
-    SpringForce spring = new SpringForce();
-    spring.setFinalPosition(finalValue);
-    spring.setDampingRatio(SPRING_DAMPING_RATIO);
-    spring.setStiffness(SPRING_STIFFNESS);
-    animation.setMinValue(0.0f);
-    animation.setMaxValue(mScreenWidth);
-    animation.setStartVelocity(startVelocity);
-    animation.setSpring(spring);
-    animation.addUpdateListener(onUpdateListener);
-    animation.addEndListener(onEndListener);
-    animation.start();
+    SpringAnimation* animation = new SpringAnimation(new FloatValueHolder());
+    animation->setStartValue(startValue);
+    animation->setMinimumVisibleChange(SPRING_MIN_VISIBLE_CHANGE);
+    SpringForce* spring = new SpringForce();
+    spring->setFinalPosition(finalValue);
+    spring->setDampingRatio(SPRING_DAMPING_RATIO);
+    spring->setStiffness(SPRING_STIFFNESS);
+    animation->setMinValue(0.0f);
+    animation->setMaxValue(mScreenWidth);
+    animation->setStartVelocity(startVelocity);
+    animation->setSpring(spring);
+    animation->addUpdateListener(onUpdateListener);
+    animation->addEndListener(onEndListener);
+    animation->start();
     return animation;
 }
 
@@ -73,17 +90,17 @@ void SwipeDismissTransitionHelper::onSwipeProgressChanged(float deltaX, MotionEv
         initializeTransition();
     }
 
-    mVelocityTracker.addMovement(ev);
-    mOriginalViewWidth = mLayout.getWidth();
+    mVelocityTracker->addMovement(ev);
+    mOriginalViewWidth = mLayout->getWidth();
     // For swiping, mProgress is directly manipulated
     // mProgress = 0 (no swipe) - 0.5 (swiped to mid screen) - 1 (swipe to right of screen)
     mProgress = deltaX / mOriginalViewWidth;
     // Solve for other variables
     // Scale = lerp 100% -> 70% when swiping from left edge to right edge
-    mScale = lerp(SCALE_MAX, SCALE_MIN, mProgress);
+    mScale = lerp((float)SCALE_MAX, (float)SCALE_MIN, mProgress);
     // Translation: make sure the right edge of mOriginalView touches right edge of screen
     mTranslationX = std::max(0.0f, 1.0f - mScale) * mLayout->getWidth() / 2.0f;
-    mDimming = std::min(DIM_FOREGROUND_MIN, mProgress / DIM_FOREGROUND_PROGRESS_FACTOR);
+    mDimming = std::min((float)DIM_FOREGROUND_MIN, mProgress / DIM_FOREGROUND_PROGRESS_FACTOR);
 
     updateView();
 }
@@ -94,35 +111,35 @@ void SwipeDismissTransitionHelper::onDismissalRecoveryAnimationProgressChanged(f
 
     mScale = 1 - mTranslationX * 2 / mOriginalViewWidth;
     // Clamp mScale so that we can solve for mProgress
-    mScale = std::max(SCALE_MIN, Math.min(mScale, SCALE_MAX));
-    float nextProgress = lerpInv(SCALE_MAX, SCALE_MIN, mScale);
+    mScale = std::max((float)SCALE_MIN, std::min(mScale, (float)SCALE_MAX));
+    float nextProgress = lerpInv((float)SCALE_MAX, (float)SCALE_MIN, mScale);
     if (nextProgress > mProgress) {
         mProgress = nextProgress;
     }
-    mDimming = std::min(DIM_FOREGROUND_MIN, mProgress / DIM_FOREGROUND_PROGRESS_FACTOR);
+    mDimming = std::min((float)DIM_FOREGROUND_MIN, mProgress / DIM_FOREGROUND_PROGRESS_FACTOR);
     updateView();
 }
 
 void SwipeDismissTransitionHelper::updateView() {
-    mLayout.setScaleX(mScale);
-    mLayout.setScaleY(mScale);
-    mLayout.setTranslationX(mTranslationX);
+    mLayout->setScaleX(mScale);
+    mLayout->setScaleY(mScale);
+    mLayout->setTranslationX(mTranslationX);
     updateDim();
     updateScrim();
 }
 
 void SwipeDismissTransitionHelper::updateDim() {
-    mCompositingPaint.setColorFilter(createDimmingColorFilter(mDimming));
-    mLayout.setLayerPaint(mCompositingPaint);
+    //mCompositingPaint->setColorFilter(createDimmingColorFilter(mDimming));
+    //mLayout->setLayerPaint(mCompositingPaint);
 }
 
 void SwipeDismissTransitionHelper::updateScrim() {
     float alpha = SCRIM_BACKGROUND_MAX * (1.0f - mProgress);
     // Scaling alpha between 0 to 255, as Drawable.setAlpha expects it in range [0,255].
-    mScrimBackground.setAlpha((int) (alpha * 255));
+    mScrimBackground->setAlpha((int) (alpha * 255));
 }
 
-private void SwipeDismissTransitionHelper::initializeTransition() {
+void SwipeDismissTransitionHelper::initializeTransition() {
     mStarted = true;
     ViewGroup* originalParentView = getOriginalParentView();
 
@@ -135,17 +152,16 @@ private void SwipeDismissTransitionHelper::initializeTransition() {
     }
 
     // Adding scrim over parent background if it exists.
-    Drawable parentBackgroundLayers;
+    Drawable* parentBackgroundLayers;
     if (mPrevParentBackground != nullptr) {
-        parentBackgroundLayers = new LayerDrawable(new Drawable[]{mPrevParentBackground,
-                mScrimBackground});
+        parentBackgroundLayers = new LayerDrawable({mPrevParentBackground,mScrimBackground});
     } else {
         parentBackgroundLayers = mScrimBackground;
     }
-    originalParentView.setBackground(parentBackgroundLayers);
+    originalParentView->setBackground(parentBackgroundLayers);
 
-    mCompositingPaint.setColorFilter(null);
-    mLayout.setLayerType(View.LAYER_TYPE_HARDWARE, mCompositingPaint);
+    //mCompositingPaint->setColorFilter(nullptr);
+    mLayout->setLayerType(View::LAYER_TYPE_HARDWARE);//, mCompositingPaint);
     clipOutline(mLayout, mIsScreenRound);
 }
 
@@ -156,54 +172,58 @@ void SwipeDismissTransitionHelper::resetTranslationAndAlpha() {
     mProgress = 0;
     mScale = 1;
     // resetting layout params
-    mLayout.setTranslationX(0);
-    mLayout.setScaleX(1);
-    mLayout.setScaleY(1);
-    mLayout.setAlpha(1);
-    mScrimBackground.setAlpha(0);
+    mLayout->setTranslationX(0);
+    mLayout->setScaleX(1);
+    mLayout->setScaleY(1);
+    mLayout->setAlpha(1);
+    mScrimBackground->setAlpha(0);
 
-    mCompositingPaint.setColorFilter(null);
-    mLayout.setLayerType(View.LAYER_TYPE_NONE, null);
-    mLayout.setClipToOutline(false);
+    //mCompositingPaint->setColorFilter(nullptr);
+    mLayout->setLayerType(View::LAYER_TYPE_NONE);//, nullptr);
+    mLayout->setClipToOutline(false);
 
     // Restoring previous background
-    ViewGroup originalParentView = getOriginalParentView();
-    if (originalParentView != null) {
-        originalParentView.setBackground(mPrevParentBackground);
+    ViewGroup* originalParentView = getOriginalParentView();
+    if (originalParentView != nullptr) {
+        originalParentView->setBackground(mPrevParentBackground);
     }
-    mPrevParentBackground = null;
+    mPrevParentBackground = nullptr;
 }
 
 Drawable* SwipeDismissTransitionHelper::generateScrimBackgroundDrawable(int width, int height) {
-    ShapeDrawable* shape = new ShapeDrawable(new RectShape());
+    ShapeDrawable* shape = new ShapeDrawable();
+    shape->setShape(new RectShape());
     shape->setBounds(0, 0, width, height);
     //shape.getPaint().setColor(Color.BLACK);
     return shape;
 }
 
 bool SwipeDismissTransitionHelper::isAnimating() const{
-    return (mDismissalSpring != nullptr && mDismissalSpring.isRunning()) || (
-            mRecoverySpring != nullptr && mRecoverySpring.isRunning());
+    return (mDismissalSpring != nullptr && mDismissalSpring->isRunning()) || (
+            mRecoverySpring != nullptr && mRecoverySpring->isRunning());
 }
 
 void SwipeDismissTransitionHelper::animateRecovery(const DismissController::OnDismissListener& dismissListener) {
     mVelocityTracker->computeCurrentVelocity(VELOCITY_UNIT);
-    mRecoverySpring = createSpringAnimation(mTranslationX, 0, mVelocityTracker.getXVelocity(),
-            (animation, value, velocity) -> {
-                float distanceRemaining = Math.max(0, (value - 0));
+    const DynamicAnimation::OnAnimationUpdateListener update([this](DynamicAnimation&animation, float value, float velocity){
+                float distanceRemaining = std::max(0.f, (value - 0.f));
                 if (distanceRemaining <= SPRING_ANIMATION_PROGRESS_FINISH_THRESHOLD_PX
-                        && mRecoverySpring != null) {
+                        && mRecoverySpring != nullptr) {
                     // Skip last 2% of animation.
-                    mRecoverySpring.skipToEnd();
+                    mRecoverySpring->skipToEnd();
                 }
                 onDismissalRecoveryAnimationProgressChanged(value);
-            }, (animation, canceled, value, velocity) -> {
-
+    
+            });
+    const DynamicAnimation::OnAnimationEndListener endls(
+            [this,&dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
                 resetTranslationAndAlpha();
-                if (dismissListener != null) {
+                if (dismissListener.onDismissCanceled != nullptr) {
                     dismissListener.onDismissCanceled();
                 }
             });
+    mRecoverySpring = createSpringAnimation(mTranslationX, 0, 
+            mVelocityTracker->getXVelocity(),update,endls);
 }
 
 void SwipeDismissTransitionHelper::animateDismissal(const DismissController::OnDismissListener& dismissListener) {
@@ -212,30 +232,31 @@ void SwipeDismissTransitionHelper::animateDismissal(const DismissController::OnD
     }
     mVelocityTracker->computeCurrentVelocity(VELOCITY_UNIT);
     // Dismissal has started
-    if (dismissListener != null) {
+    if (dismissListener.onDismissStarted != nullptr) {
         dismissListener.onDismissStarted();
     }
-
-    mDismissalSpring = createSpringAnimation(mTranslationX, mScreenWidth,
-            mVelocityTracker.getXVelocity(), (animation, value, velocity) -> {
-                float distanceRemaining = Math.max(0, (mScreenWidth - value));
+    const DynamicAnimation::OnAnimationUpdateListener update([this](DynamicAnimation&animation,float value,float velocity){
+                float distanceRemaining = std::max(0.f, float(mScreenWidth - value));
                 if (distanceRemaining <= SPRING_ANIMATION_PROGRESS_FINISH_THRESHOLD_PX
-                        && mDismissalSpring != null) {
+                        && mDismissalSpring != nullptr) {
                     // Skip last 2% of animation.
-                    mDismissalSpring.skipToEnd();
+                    mDismissalSpring->skipToEnd();
                 }
                 onDismissalRecoveryAnimationProgressChanged(value);
-            }, (animation, canceled, value, velocity) -> {
+            });
+    const DynamicAnimation::OnAnimationEndListener endls(
+            [this,&dismissListener](DynamicAnimation&animation,bool canceled,float value,float velocity){
                 resetTranslationAndAlpha();
-                if (dismissListener != null) {
+                if (dismissListener.onDismissed != nullptr) {
                     dismissListener.onDismissed();
                 }
             });
+    mDismissalSpring = createSpringAnimation(mTranslationX, mScreenWidth, mVelocityTracker->getXVelocity(), update, endls);
 }
 
 ViewGroup* SwipeDismissTransitionHelper::getOriginalParentView() {
-    if (mLayout->getParent() instanceof ViewGroup) {
-        return (ViewGroup) mLayout->getParent();
+    if (dynamic_cast<ViewGroup*>(mLayout->getParent())){// instanceof ViewGroup) {
+        return (ViewGroup*) mLayout->getParent();
     }
     return nullptr;
 }

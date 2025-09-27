@@ -60,7 +60,7 @@ public:
     }
 };
 
-CountDownTimer::CountDownTimer(int64_t millisInFuture, long countDownInterval) {
+CountDownTimer::CountDownTimer(int64_t millisInFuture, int64_t countDownInterval) {
     mMillisInFuture = millisInFuture;
     mCountdownInterval = countDownInterval;
     mHandler = new TimerHandler(this);

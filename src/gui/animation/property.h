@@ -42,13 +42,27 @@ protected:
 public:
     Property(const std::string&name);
     Property(const std::string&name,int type);
-    virtual AnimateValue get(void* t);
-    virtual void set(void* object,const AnimateValue& value);
+    virtual AnimateValue get(void* t)const;
+    virtual void set(void* object,const AnimateValue& value)const;
     const std::string getName()const;
     int getType()const;
     static Property*fromName(const std::string&propertyName);
     static Property*fromName(const std::string&className,const std::string&propertyName);
     static bool reigsterProperty(const std::string&name,Property*prop);
+};
+
+class FloatProperty:public Property{
+public:
+    FloatProperty(const std::string& name):Property(name,FLOAT_TYPE){
+    }
+
+    virtual void setValue(void* object, float value)const{
+        set(object,value);
+    }
+
+    float getValue(void*object)const{
+        return GET_VARIANT(get(object),float);
+    };
 };
 
 }/*endof namespace*/
