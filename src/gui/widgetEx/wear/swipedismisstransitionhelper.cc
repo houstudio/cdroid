@@ -21,6 +21,7 @@ namespace cdroid{
 
 SwipeDismissTransitionHelper::SwipeDismissTransitionHelper(Context* context,DismissibleFrameLayout* layout) {
     mLayout = layout;
+    mVelocityTracker = nullptr;
     mIsScreenRound = true;//layout.getResources().getConfiguration().isScreenRound();
     mScreenWidth = context->getDisplayMetrics().widthPixels;
     mScrimBackground = generateScrimBackgroundDrawable(mScreenWidth,
@@ -206,7 +207,7 @@ bool SwipeDismissTransitionHelper::isAnimating() const{
 void SwipeDismissTransitionHelper::animateRecovery(const DismissController::OnDismissListener& dismissListener) {
     mVelocityTracker->computeCurrentVelocity(VELOCITY_UNIT);
     const DynamicAnimation::OnAnimationUpdateListener update([this](DynamicAnimation&animation, float value, float velocity){
-                float distanceRemaining = std::max(0.f, (value - 0.f));
+                const float distanceRemaining = std::max(0.f, (value - 0.f));
                 if (distanceRemaining <= SPRING_ANIMATION_PROGRESS_FINISH_THRESHOLD_PX
                         && mRecoverySpring != nullptr) {
                     // Skip last 2% of animation.
@@ -236,7 +237,7 @@ void SwipeDismissTransitionHelper::animateDismissal(const DismissController::OnD
         dismissListener.onDismissStarted();
     }
     const DynamicAnimation::OnAnimationUpdateListener update([this](DynamicAnimation&animation,float value,float velocity){
-                float distanceRemaining = std::max(0.f, float(mScreenWidth - value));
+                const float distanceRemaining = std::max(0.f, float(mScreenWidth - value));
                 if (distanceRemaining <= SPRING_ANIMATION_PROGRESS_FINISH_THRESHOLD_PX
                         && mDismissalSpring != nullptr) {
                     // Skip last 2% of animation.

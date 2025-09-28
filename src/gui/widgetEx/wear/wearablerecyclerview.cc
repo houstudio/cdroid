@@ -62,7 +62,7 @@ void WearableRecyclerView::setupCenteredPadding() {
 
         // The focused child should be in the center, so force a scroll to it.
         View* focusedChild = getFocusedChild();
-        int focusedPosition = (focusedChild != nullptr) ? getLayoutManager()->getPosition(
+        const int focusedPosition = (focusedChild != nullptr) ? getLayoutManager()->getPosition(
                         focusedChild) : 0;
         getLayoutManager()->scrollToPosition(focusedPosition);
     }
@@ -141,4 +141,4 @@ void WearableRecyclerView::setEdgeItemsCenteringEnabled(bool isEnabled) {
 bool WearableRecyclerView::isEdgeItemsCenteringEnabled() const{
     return mEdgeItemsCenteringEnabled;
 }
-};
+}/*endof namespace*/

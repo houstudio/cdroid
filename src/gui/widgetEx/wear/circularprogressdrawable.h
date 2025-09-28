@@ -86,12 +86,28 @@ public:
 
     float getArrowScale() const;
     void setArrowScale(float scale);
-
+    /**
+     * Returns the start trim for the progress spinner arc
+     *
+     * @return start trim from [0..1]
+     */
     float getStartTrim() const;
     float getEndTrim() const;
-
+    /**
+     * Sets the start and end trim for the progress spinner arc. 0 corresponds to the geometric
+     * angle of 0 degrees (3 o'clock on a watch) and it increases clockwise, coming to a full circle
+     * at 1.
+     *
+     * @param start starting position of the arc from [0..1]
+     * @param end ending position of the arc from [0..1]
+     */
     void setStartEndTrim(float start, float end);
 
+    /**
+     * Sets the amount of rotation to apply to the progress spinner.
+     *
+     * @param rotation rotation from [0..1]
+     */
     float getProgressRotation() const;
     void setProgressRotation(float rotation);
 

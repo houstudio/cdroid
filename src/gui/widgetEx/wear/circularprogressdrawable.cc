@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <core/color.h>
+#include <core/mathutils.h>
 #include <animation/valueanimator.h>
 #include <widgetEx/wear/circularprogressdrawable.h>
 
@@ -23,6 +24,7 @@ namespace cdroid{
 CircularProgressDrawable::CircularProgressDrawable(Context* context) {
     //mResources = Preconditions.checkNotNull(context).getResources();
     mContext = context;
+    mRotation =0;
     mRing = new Ring();
     mRing->setColors({(int)Color::BLACK});
 
@@ -32,6 +34,7 @@ CircularProgressDrawable::CircularProgressDrawable(Context* context) {
 
 CircularProgressDrawable::~CircularProgressDrawable(){
     delete mRing;
+    delete mAnimator;
 }
 
 void CircularProgressDrawable::setSizeParameters(float centerRadius, float strokeWidth, float arrowWidth,
@@ -344,10 +347,13 @@ CircularProgressDrawable::Ring::Ring() {
     mStartTrim = 0.f;
     mEndTrim = 0.f;
     mRotation = 0.f;
-    mStrokeWidth = 0.5f;
+    mStrokeWidth = 5.f;
     mArrowScale =1;
     mAlpha = 0xFF;
-
+    mArrowWidth =0;
+    mArrowHeight=0;
+    mRingCap=static_cast<int>(Cairo::Context::LineCap::SQUARE);
+    mRingCenterRadius =0.f;
     /*mPaint.setStrokeCap(Paint.Cap.SQUARE);
     mPaint.setAntiAlias(true);
     mPaint.setStyle(Style.STROKE);
@@ -390,25 +396,32 @@ void CircularProgressDrawable::Ring::draw(Canvas& c,const Rect& bounds) {
     }
     arcBounds.set(bounds.centerX() - arcRadius,
             bounds.centerY() - arcRadius,
-            bounds.centerX() + arcRadius,
-            bounds.centerY() + arcRadius);
+            arcRadius + arcRadius,
+            arcRadius + arcRadius);
 
     const float startAngle = (mStartTrim + mRotation) * 360.f;
     const float endAngle = (mEndTrim + mRotation) * 360.f;
     float sweepAngle = endAngle - startAngle;
 
     //mPaint.setColor(mCurrentColor);mPaint.setAlpha(mAlpha);
-    c.set_color(mCurrentColor);
+    c.set_color(mCircleColor);
 
     // Draw the background first
-    float inset = mStrokeWidth / 2.0f; // Calculate inset to draw inside the arc
+    const float inset = mStrokeWidth / 2.0f; // Calculate inset to draw inside the arc
     arcBounds.inset(inset, inset); // Apply inset
     //c.drawCircle(arcBounds.centerX(), arcBounds.centerY(), arcBounds.width / 2.0f,mCirclePaint);
     c.arc(arcBounds.centerX(), arcBounds.centerY(),arcBounds.width / 2.0f,0,M_PI*2.0);
+    c.fill();
     arcBounds.inset(-inset, -inset); // Revert the inset
 
     //c.drawArc(arcBounds, startAngle, sweepAngle, false, mPaint);
-    c.arc(arcBounds.centerX(),arcBounds.centerY(),arcBounds.width,startAngle,endAngle);
+    c.set_color(mCurrentColor);
+    c.set_line_width(mStrokeWidth);
+    c.set_antialias(Cairo::ANTIALIAS_GRAY);
+    c.set_line_cap(static_cast<Cairo::Context::LineCap>(mRingCap));
+    c.arc(arcBounds.centerX(),arcBounds.centerY(),arcBounds.width/2,
+            MathUtils::toRadians(startAngle),MathUtils::toRadians(endAngle));
+    c.stroke();
     drawTriangle(c, startAngle, sweepAngle, arcBounds);
 }
 

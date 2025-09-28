@@ -34,7 +34,7 @@ protected:
     void onBoundsChange(const Rect& bounds)override;
 public:
     RoundedDrawable();
-
+    ~RoundedDrawable()override;
     void inflate(XmlPullParser& parser,const AttributeSet& attrs)override;
 
     void setDrawable(Drawable* drawable);

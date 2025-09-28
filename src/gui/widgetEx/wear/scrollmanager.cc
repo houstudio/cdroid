@@ -27,7 +27,7 @@ ScrollManager::ScrollManager(){
     mScrollRadiansPerScreen = MathUtils::toRadians(mScrollDegreesPerScreen);
  
     mDown = false;
-    mScrolling =false;
+    mScrolling = false;
     mRecyclerView = nullptr;
     mVelocityTracker = nullptr;
 }

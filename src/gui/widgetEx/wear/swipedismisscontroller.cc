@@ -26,8 +26,7 @@ SwipeDismissController::SwipeDismissController(Context* context, DismissibleFram
     ViewConfiguration& vc = ViewConfiguration::get(context);
     mSlop = vc.getScaledTouchSlop();
     mMinFlingVelocity = vc.getScaledMinimumFlingVelocity();
-    mGestureThresholdPx =
-            context->getDisplayMetrics().widthPixels * EDGE_SWIPE_THRESHOLD;
+    mGestureThresholdPx = context->getDisplayMetrics().widthPixels * EDGE_SWIPE_THRESHOLD;
 
     mSwipeDismissTransitionHelper = new SwipeDismissTransitionHelper(context, layout);
 }
@@ -164,10 +163,10 @@ bool SwipeDismissController::onTouchEvent(MotionEvent& ev) {
         break;
     case MotionEvent::ACTION_MOVE:
         mSwipeDismissTransitionHelper->getVelocityTracker()->addMovement(ev);
-        mLastX = ev.getX();//RawX(0);
+        mLastX = ev.getRawX();
         updateSwiping(ev);
         if (mSwiping) {
-            mSwipeDismissTransitionHelper->onSwipeProgressChanged(ev.getX()/*RawX(0)*/ - mDownX, ev);
+            mSwipeDismissTransitionHelper->onSwipeProgressChanged(ev.getRawX() - mDownX, ev);
             break;
         }
     }
@@ -202,7 +201,7 @@ void SwipeDismissController::updateSwiping(MotionEvent& ev) {
 }
 
 void SwipeDismissController::updateDismiss(MotionEvent& ev) {
-    float deltaX = ev.getX()/*RawX(0)*/ - mDownX;
+    float deltaX = ev.getRawX(0) - mDownX;
     // Don't add the motion event as an UP event would clear the velocity tracker
     VelocityTracker* velocityTracker = mSwipeDismissTransitionHelper->getVelocityTracker();
     velocityTracker->computeCurrentVelocity(VELOCITY_UNIT);
@@ -216,7 +215,7 @@ void SwipeDismissController::updateDismiss(MotionEvent& ev) {
 
     if (!mDismissed) {
         if ((deltaX > (mLayout->getWidth() * mDismissMinDragWidthRatio)
-                && ev.getX()/*RawX(0)*/ >= mLastX)
+                && ev.getRawX(0) >= mLastX)
                 || (xVelocity >= mMinFlingVelocity
                 && xVelocity > std::abs(yVelocity)))  {
             mDismissed = true;

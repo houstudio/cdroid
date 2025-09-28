@@ -29,6 +29,7 @@ BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet& attrs)
     if (mInsets == null) {
         mInsets = new Rect();
     }*/
+    mForegroundPadding.setEmpty();
     mScreenHeight= context->getDisplayMetrics().heightPixels;
     mScreenWidth = context->getDisplayMetrics().widthPixels;
 }
@@ -36,9 +37,7 @@ BoxInsetLayout::BoxInsetLayout(Context* context,const AttributeSet& attrs)
 void BoxInsetLayout::setForeground(Drawable* drawable) {
     ViewGroup::setForeground(drawable);
     mForegroundDrawable = drawable;
-    /*if (mForegroundPadding == nullptr) {
-        mForegroundPadding = new Rect();
-    }*/
+
     if (mForegroundDrawable != nullptr) {
         drawable->getPadding(mForegroundPadding);
     }
