@@ -76,11 +76,11 @@ Drawable* AnimationDrawable::getFrame(int index)const{
     return mAnimationState->getChild(index);
 }
 
-int AnimationDrawable::getDuration(int i)const{
+int64_t AnimationDrawable::getDuration(int i)const{
     return mAnimationState->mDurations[i];
 }
 
-long AnimationDrawable::getTotalDuration()const{
+int64_t AnimationDrawable::getTotalDuration()const{
     return mAnimationState->getTotalDuration();
 }
 
@@ -217,8 +217,8 @@ void AnimationDrawable::AnimationState::addFrame(Drawable*dr,int dur){
     mDurations[pos] = dur;
 }
 
-long AnimationDrawable::AnimationState::getTotalDuration()const{
-    int total = 0;
+int64_t AnimationDrawable::AnimationState::getTotalDuration()const{
+    int64_t total = 0;
     for (int dur : mDurations) {
         total += dur;
     }

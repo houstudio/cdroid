@@ -274,7 +274,7 @@ void AnimatedImageDrawable::stop(){
     }
 }
 
-void AnimatedImageDrawable::registerAnimationCallback(Animatable2::AnimationCallback callback){
+void AnimatedImageDrawable::registerAnimationCallback(const Animatable2::AnimationCallback& callback){
     mAnimationCallbacks.push_back(callback);
 }
 
@@ -282,7 +282,7 @@ static bool operator==(const Animatable2::AnimationCallback&a,const Animatable2:
     return (a.onAnimationStart==b.onAnimationStart) && (a.onAnimationEnd==b.onAnimationEnd);
 }
 
-bool AnimatedImageDrawable::unregisterAnimationCallback(Animatable2::AnimationCallback callback){
+bool AnimatedImageDrawable::unregisterAnimationCallback(const Animatable2::AnimationCallback& callback){
     auto it = std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
     const bool rc = (it!=mAnimationCallbacks.end());
     if(rc)

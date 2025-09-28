@@ -62,7 +62,7 @@ const std::string PropertyValuesHolder::getPropertyName()const{
     return mPropertyName;
 }
 
-void PropertyValuesHolder::setProperty(Property*p){
+void PropertyValuesHolder::setProperty(const Property*p){
     mProperty = p;
     mValueType= p?p->getType():Property::UNDEFINED;
 }

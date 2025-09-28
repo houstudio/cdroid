@@ -106,7 +106,7 @@ bool RippleForeground::hasFinishedExit()const{
     return mHasFinishedExit;
 }
 
-long RippleForeground::computeFadeOutDelay() {
+int64_t RippleForeground::computeFadeOutDelay() const{
     const int64_t timeSinceEnter = AnimationUtils::currentAnimationTimeMillis() - mEnterStartedAtMillis;
     if (timeSinceEnter > 0 && timeSinceEnter < OPACITY_HOLD_DURATION) {
         return OPACITY_HOLD_DURATION - timeSinceEnter;
@@ -118,6 +118,46 @@ float RippleForeground::getOpacity()const{
     return mOpacity;
 }
 
+class RippleForeground::CTWEEN_RADIUS:public FloatProperty{
+public:
+    CTWEEN_RADIUS():FloatProperty("tweenRadius"){};
+    void set(void* object, const AnimateValue& value)const {
+        ((RippleForeground*)object)->mTweenRadius = GET_VARIANT(value,float);
+        ((RippleForeground*)object)->onAnimationPropertyChanged();
+    }
+    AnimateValue get(void* object)const {
+        return ((RippleForeground*)object)->mTweenRadius;
+    }
+};
+const RippleForeground::CTWEEN_RADIUS RippleForeground::TWEEN_RADIUS;
+
+class RippleForeground::CTWEEN_ORIGIN:public FloatProperty{
+public:
+    CTWEEN_ORIGIN():FloatProperty("tweenOrigin"){}
+    void set(void* object, const AnimateValue& value)const{
+        ((RippleForeground*)object)->mTweenX = GET_VARIANT(value,float);
+        ((RippleForeground*)object)->mTweenY = GET_VARIANT(value,float);
+        ((RippleForeground*)object)->onAnimationPropertyChanged();
+    }
+    AnimateValue get(void*object)const{
+        return ((RippleForeground*)object)->mTweenX;
+    }
+};
+const RippleForeground::CTWEEN_ORIGIN RippleForeground::TWEEN_ORIGIN;
+
+class RippleForeground::COPACITY:public FloatProperty{
+public:
+    COPACITY():FloatProperty("opacity") {}
+    void set(void*object, const AnimateValue& value)const {
+        ((RippleForeground*)object)->mOpacity = GET_VARIANT(value,float);
+        ((RippleForeground*)object)->onAnimationPropertyChanged();
+    }
+    AnimateValue get(void* object)const {
+        return ((RippleForeground*)object)->mOpacity;
+    }
+};
+const RippleForeground::COPACITY RippleForeground::OPACITY;
+
 void RippleForeground::startSoftwareEnter() {
     for (auto anim:mRunningSwAnimators) {
         anim->cancel();
@@ -125,7 +165,7 @@ void RippleForeground::startSoftwareEnter() {
         delete anim;
     }
     mRunningSwAnimators.clear();
-    ValueAnimator* tweenRadius = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_RADIUS, 1);
+    ValueAnimator* tweenRadius = ObjectAnimator::ofFloat(this, &TWEEN_RADIUS, {1});
     tweenRadius->setDuration(RIPPLE_ENTER_DURATION);
     tweenRadius->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());//DECELERATE_INTERPOLATOR);
     tweenRadius->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
@@ -135,7 +175,7 @@ void RippleForeground::startSoftwareEnter() {
     tweenRadius->start();
     mRunningSwAnimators.push_back(tweenRadius);
 
-    ValueAnimator* tweenOrigin = ValueAnimator::ofFloat({.0f,1.f});//this, TWEEN_ORIGIN, 1);
+    ValueAnimator* tweenOrigin = ObjectAnimator::ofFloat(this, &TWEEN_ORIGIN, {1});
     tweenOrigin->setDuration(RIPPLE_ORIGIN_DURATION);
     tweenOrigin->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());//DECELERATE_INTERPOLATOR);
     tweenOrigin->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
@@ -145,7 +185,7 @@ void RippleForeground::startSoftwareEnter() {
     tweenOrigin->start();
     mRunningSwAnimators.push_back(tweenOrigin);
 	
-    ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});//this, OPACITY, 1);
+    ValueAnimator* opacity = ObjectAnimator::ofFloat(this, &OPACITY, {1});
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(LinearInterpolator::gLinearInterpolator.get());//LINEAR_INTERPOLATOR);
     opacity->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
@@ -158,7 +198,7 @@ void RippleForeground::startSoftwareEnter() {
 }
 
 void RippleForeground::startSoftwareExit() {
-    ValueAnimator* opacity = ValueAnimator::ofFloat({.0f,1.f});
+    ValueAnimator* opacity = ObjectAnimator::ofFloat(this,&OPACITY,{1.f});
     opacity->setDuration(OPACITY_EXIT_DURATION);
     opacity->setInterpolator(LinearInterpolator::gLinearInterpolator.get());//LINEAR_INTERPOLATOR);
     opacity->addListener(mAnimationListener);

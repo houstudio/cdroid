@@ -52,8 +52,8 @@ public:
         CallbackBase<void,Drawable&> onAnimationStart;
         CallbackBase<void,Drawable&> onAnimationEnd;
     };
-    virtual void registerAnimationCallback(AnimationCallback callback)=0;
-    virtual bool unregisterAnimationCallback(AnimationCallback callback)=0;
+    virtual void registerAnimationCallback(const AnimationCallback& callback)=0;
+    virtual bool unregisterAnimationCallback(const AnimationCallback& callback)=0;
 };
 
 enum PixelFormat{

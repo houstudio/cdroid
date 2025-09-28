@@ -45,7 +45,7 @@ void TimeAnimator::setCurrentPlayTime(int64_t playTime){
     animateBasedOnTime(currentTime);
 }
 
-void TimeAnimator::setTimeListener(const TimeAnimator::TimeListener listener){
+void TimeAnimator::setTimeListener(const TimeAnimator::TimeListener& listener){
     mListener = listener;
 }
 

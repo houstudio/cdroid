@@ -31,17 +31,19 @@ PropertyValuesAnimatorSet::PropertyValuesAnimatorSet()/* : BaseRenderNodeAnimato
 
 void PropertyValuesAnimatorSet::setInterpolator(Interpolator* interpolator){
 }
+
 void PropertyValuesAnimatorSet::setStartValue(float value){
 }
-void PropertyValuesAnimatorSet::setDuration(long duration){
+
+void PropertyValuesAnimatorSet::setDuration(int64_t duration){
    mDuration =duration;
 }
-void PropertyValuesAnimatorSet::setStartDelay(long startDelay){
+void PropertyValuesAnimatorSet::setStartDelay(int64_t startDelay){
    mStartDelay = startDelay;
 }
 
 void PropertyValuesAnimatorSet::addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,
-        TimeInterpolator* interpolator, long startDelay, long duration, int repeatCount,int repeatMode) {
+        TimeInterpolator* interpolator, int64_t startDelay, int64_t duration, int repeatCount,int repeatMode) {
     PropertyAnimator* animator = new PropertyAnimator(
             propertyValuesHolder, interpolator, startDelay, duration, repeatCount, repeatMode);
     mAnimators.emplace_back(animator);
@@ -135,7 +137,7 @@ void PropertyValuesAnimatorSet::init() {
 }*/
 
 PropertyAnimator::PropertyAnimator(PropertyValuesHolder* holder, TimeInterpolator* interpolator,
-                    long startDelay, long duration, int repeatCount,int repeatMode)
+                    int64_t startDelay, int64_t duration, int repeatCount,int repeatMode)
         : mPropertyValuesHolder(holder)
         , mInterpolator(interpolator)
         , mStartDelay(startDelay)
@@ -155,7 +157,7 @@ void PropertyAnimator::setCurrentPlayTime(int64_t playTime) {
     }
 
     float currentIterationFraction;
-    long iteration;
+    int64_t iteration;
     if (playTime >= mTotalDuration) {
         // Reached the end of the animation.
         iteration = mRepeatCount;
@@ -169,7 +171,7 @@ void PropertyAnimator::setCurrentPlayTime(int64_t playTime) {
     setFraction(currentIterationFraction, iteration);
 }
 
-void PropertyAnimator::setFraction(float fraction, long iteration) {
+void PropertyAnimator::setFraction(float fraction, int64_t iteration) {
     double totalFraction = fraction + iteration;
     // This makes sure we only set the fraction = repeatCount + 1 once. It is needed because there
     // might be another animator modifying the same property after this animator finishes, we need
