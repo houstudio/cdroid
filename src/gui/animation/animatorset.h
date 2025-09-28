@@ -114,7 +114,7 @@ public:
     bool isStarted()override;
     int64_t getStartDelay()override;
     void setStartDelay(int64_t startDelay)override;
-    int64_t getDuration()override;
+    int64_t getDuration()const override;
     Animator& setDuration(int64_t)override;
     void setupStartValues()override;
     void setupEndValues()override;

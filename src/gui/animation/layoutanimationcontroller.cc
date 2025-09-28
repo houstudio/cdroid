@@ -111,7 +111,7 @@ void LayoutAnimationController::start(){
 }
 
 Animation* LayoutAnimationController::getAnimationForView(View* view){
-    long delay = getDelayForView(view) + mAnimation->getStartOffset();
+    const int64_t delay = getDelayForView(view) + mAnimation->getStartOffset();
     mMaxDelay = std::max(mMaxDelay, delay);
 
     Animation* animation = mAnimation->clone();
@@ -124,15 +124,15 @@ bool LayoutAnimationController::isDone()const{
                 mAnimation->getStartTime() + mMaxDelay + mDuration;
 }
 
-long LayoutAnimationController::getDelayForView(View* view){
+int64_t LayoutAnimationController::getDelayForView(View* view){
     ViewGroup::LayoutParams* lp = view->getLayoutParams();
     AnimationParameters* params = lp->layoutAnimationParameters;
 
     if (params == nullptr) return 0;
 
-    float delay = mDelay * (float)mAnimation->getDuration();
-    long viewDelay = (long) (getTransformedIndex(params) * delay);
-    float totalDelay = delay * params->count;
+    const float delay = mDelay * (float)mAnimation->getDuration();
+    const int64_t viewDelay= getTransformedIndex(params) * delay;
+    const float totalDelay = delay * params->count;
 
     if (mInterpolator == nullptr) {
         mInterpolator = new LinearInterpolator();
@@ -141,7 +141,7 @@ long LayoutAnimationController::getDelayForView(View* view){
     float normalizedDelay = viewDelay / totalDelay;
     normalizedDelay = mInterpolator->getInterpolation(normalizedDelay);
     LOGV("%p:%d totalDelay=%.2f %d/%d mDelay=%.2f dur=%d",view,view->getId(),totalDelay,params->index,params->count,mDelay,mAnimation->getDuration());
-    return (long) (normalizedDelay * totalDelay);
+    return normalizedDelay * totalDelay;
 }
 
 int LayoutAnimationController::getTransformedIndex(const AnimationParameters* params){

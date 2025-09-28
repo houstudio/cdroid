@@ -50,8 +50,8 @@ private:
     int64_t mLastFrameTime = -1;
     int64_t mFirstFrameTime= -1;
 
-    long mDuration = 300;
-    long mStartDelay = 0;
+    int64_t mDuration = 300;
+    int64_t mStartDelay = 0;
     int mRepeatCount = 0;
     int mRepeatMode = RESTART;
     TimeInterpolator* mInterpolator = nullptr;
@@ -78,7 +78,7 @@ private:
     void endAnimation();
     void addOneShotCommitCallback();
     void removeAnimationCallback();
-    void addAnimationCallback(long delay);
+    void addAnimationCallback(int64_t delay);
 protected:
     virtual void animateValue(float fraction);
     void startWithoutPulsing(bool inReverse)override;
@@ -107,15 +107,15 @@ public:
     PropertyValuesHolder*getValues(int idx);
     PropertyValuesHolder*getValues(const std::string&propname);
     virtual void initAnimation();
-    ValueAnimator& setDuration(long duration)override;
-    long getDuration()override;
-    long getTotalDuration()override;
+    ValueAnimator& setDuration(int64_t duration)override;
+    int64_t getDuration()const override;
+    int64_t getTotalDuration()override;
     void overrideDurationScale(float durationScale);
     void setCurrentFraction(float fraction);
     virtual void setCurrentPlayTime(int64_t playTime);
     int64_t getCurrentPlayTime();
-    long getStartDelay()override;
-    void setStartDelay(long startDelay)override;
+    int64_t getStartDelay()override;
+    void setStartDelay(int64_t startDelay)override;
     static long getFrameDelay();
     static void setFrameDelay(long frameDelay);
     AnimateValue getAnimatedValue();

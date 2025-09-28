@@ -41,7 +41,7 @@ public:
     ~ObjectAnimator()override;
     void setTarget(void*target)override;
     void*getTarget();
-    ObjectAnimator&setDuration(long dur)override;
+    ObjectAnimator&setDuration(int64_t dur)override;
 
     void setupStartValues()override;
     void setupEndValues()override;

@@ -220,7 +220,7 @@ int64_t ValueAnimator::getScaledDuration() const{
     return int64_t(mDuration * resolveDurationScale());
 }
 
-ValueAnimator& ValueAnimator::setDuration(long duration){
+ValueAnimator& ValueAnimator::setDuration(int64_t duration){
     if (duration < 0) {
         throw std::logic_error("Animators cannot have negative duration");
     }
@@ -228,11 +228,11 @@ ValueAnimator& ValueAnimator::setDuration(long duration){
     return *this;
 }
 
-long ValueAnimator::getDuration(){
+int64_t ValueAnimator::getDuration()const{
     return mDuration;
 }
 
-long ValueAnimator::getTotalDuration(){
+int64_t ValueAnimator::getTotalDuration(){
     if (mRepeatCount == INFINITE) {
         return DURATION_INFINITE;
     } else {
@@ -313,7 +313,7 @@ int64_t ValueAnimator::getCurrentPlayTime() {
         return 0;
     }
     if (mSeekFraction >= 0) {
-        return (long) (mDuration * mSeekFraction);
+        return mDuration * mSeekFraction;
     }
     float durationScale = resolveDurationScale();
     if (durationScale == 0.f) {
@@ -322,11 +322,11 @@ int64_t ValueAnimator::getCurrentPlayTime() {
     return ((SystemClock::uptimeMillis() - mStartTime) / durationScale);
 }
 
-long ValueAnimator::getStartDelay() {
+int64_t ValueAnimator::getStartDelay() {
     return mStartDelay;
 }
 
-void ValueAnimator::setStartDelay(long startDelay){
+void ValueAnimator::setStartDelay(int64_t startDelay){
     LOGW_IF(startDelay<0,"Start delay should always be non-negative");
     mStartDelay = startDelay>0?startDelay:0;
 }
@@ -531,7 +531,7 @@ bool ValueAnimator::isStarted() {
 void ValueAnimator::reverse() {
     if (isPulsingInternal()) {
         const int64_t currentTime = SystemClock::uptimeMillis();
-        const int64_t currentPlayTime = static_cast<long>(currentTime - mStartTime);
+        const int64_t currentPlayTime = currentTime - mStartTime;
         const int64_t timeLeft = getScaledDuration() - currentPlayTime;
         mStartTime = currentTime - timeLeft;
         mStartTimeCommitted = true; // do not allow start time to be compensated for jank

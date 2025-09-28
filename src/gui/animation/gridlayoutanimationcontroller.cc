@@ -85,7 +85,7 @@ bool GridLayoutAnimationController::willOverlap(){
     return mColumnDelay < 1.0f || mRowDelay < 1.0f;
 }
 
-long GridLayoutAnimationController::getDelayForView(View* view){
+int64_t GridLayoutAnimationController::getDelayForView(View* view){
     ViewGroup::LayoutParams* lp = view->getLayoutParams();
     AnimationParameters* params = (AnimationParameters*) lp->layoutAnimationParameters;
 
@@ -98,12 +98,12 @@ long GridLayoutAnimationController::getDelayForView(View* view){
     const int rowsCount = params->rowsCount;
     const int columnsCount = params->columnsCount;
 
-    const long duration = mAnimation->getDuration();
+    const int64_t duration = mAnimation->getDuration();
     const float columnDelay = mColumnDelay * duration;
     const float rowDelay = mRowDelay * duration;
 
     float totalDelay;
-    long viewDelay;
+    int64_t viewDelay;
 
     if (mInterpolator == nullptr) {
         mInterpolator = new LinearInterpolator();
@@ -111,16 +111,16 @@ long GridLayoutAnimationController::getDelayForView(View* view){
 
     switch (mDirectionPriority) {
     case PRIORITY_COLUMN:
-        viewDelay = (long) (row * rowDelay + column * rowsCount * rowDelay);
+        viewDelay = (int64_t) (row * rowDelay + column * rowsCount * rowDelay);
         totalDelay = rowsCount * rowDelay + columnsCount * rowsCount * rowDelay;
         break;
     case PRIORITY_ROW:
-        viewDelay = (long) (column * columnDelay + row * columnsCount * columnDelay);
+        viewDelay = (int64_t) (column * columnDelay + row * columnsCount * columnDelay);
         totalDelay = columnsCount * columnDelay + rowsCount * columnsCount * columnDelay;
         break;
     case PRIORITY_NONE:
     default:
-        viewDelay = (long) (column * columnDelay + row * rowDelay);
+        viewDelay = (int64_t) (column * columnDelay + row * rowDelay);
         totalDelay = columnsCount * columnDelay + rowsCount * rowDelay;
         break;
     }
@@ -128,7 +128,7 @@ long GridLayoutAnimationController::getDelayForView(View* view){
     float normalizedDelay = viewDelay / totalDelay;
     normalizedDelay = mInterpolator->getInterpolation(normalizedDelay);
 
-    return (long) (normalizedDelay * totalDelay);
+    return normalizedDelay * totalDelay;
 }
 
 int GridLayoutAnimationController::getTransformedColumnIndex(const AnimationParameters* params){

@@ -54,7 +54,7 @@ void ObjectAnimator::initAnimation(){
     }
 }
 
-ObjectAnimator&ObjectAnimator::setDuration(long duration){
+ObjectAnimator&ObjectAnimator::setDuration(int64_t duration){
     ValueAnimator::setDuration(duration);
     return *this;
 }

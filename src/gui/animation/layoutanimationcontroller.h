@@ -38,13 +38,13 @@ public:
 private:
     float mDelay;
     int mOrder;
-    long mDuration;
-    long mMaxDelay; 
+    int64_t mDuration;
+    int64_t mMaxDelay; 
 protected:
     Animation* mAnimation;
     Interpolator* mInterpolator;
 
-    virtual long getDelayForView(View* view);
+    virtual int64_t getDelayForView(View* view);
     int getTransformedIndex(const AnimationParameters* params);
 public:
     LayoutAnimationController(Context* context, const AttributeSet& attrs);

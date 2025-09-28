@@ -330,7 +330,7 @@ void AnimatorSet::setStartDelay(int64_t startDelay) {
     }
 }
 
-int64_t AnimatorSet::getDuration(){
+int64_t AnimatorSet::getDuration()const{
     return mDuration;
 }
 

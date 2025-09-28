@@ -107,7 +107,7 @@ void AnimationSet::setRepeatMode(int repeatMode){
     Animation::setRepeatMode(repeatMode);
 }
 
-void AnimationSet::setStartOffset(long startOffset){
+void AnimationSet::setStartOffset(int64_t startOffset){
     mFlags |= PROPERTY_START_OFFSET_MASK;
     Animation::setStartOffset(startOffset);
 }
@@ -125,7 +125,7 @@ bool AnimationSet::hasAlpha(){
     return mHasAlpha;
 }
 
-void AnimationSet::setDuration(long durationMillis){
+void AnimationSet::setDuration(int64_t durationMillis){
     mFlags |= PROPERTY_DURATION_MASK;
     Animation::setDuration(durationMillis);
     mLastEnd = mStartOffset + mDuration;
@@ -175,7 +175,7 @@ int64_t AnimationSet::getStartTime()const{
     return startTime;
 }
 
-void AnimationSet::restrictDuration(long durationMillis){
+void AnimationSet::restrictDuration(int64_t durationMillis){
     Animation::restrictDuration(durationMillis);
 
     for (Animation*a:mAnimations) {
@@ -183,8 +183,8 @@ void AnimationSet::restrictDuration(long durationMillis){
     }
 }
 
-long AnimationSet::getDuration()const{
-     long duration = 0;
+int64_t AnimationSet::getDuration()const{
+     int64_t duration = 0;
      if ((mFlags & PROPERTY_DURATION_MASK) == PROPERTY_DURATION_MASK) {
          duration = mDuration;
      } else {
@@ -194,11 +194,11 @@ long AnimationSet::getDuration()const{
      return duration;
 }
 
-long AnimationSet::computeDurationHint(){
-    long duration = 0;
+int64_t AnimationSet::computeDurationHint(){
+    int64_t duration = 0;
     int count = (int)mAnimations.size();
     for (int i = count - 1; i >= 0; --i) {
-        long d = mAnimations[i]->computeDurationHint();
+        int64_t d = mAnimations[i]->computeDurationHint();
         if (d > duration) duration = d;
     }
     return duration;
@@ -287,15 +287,15 @@ void AnimationSet::initialize(int width, int height, int parentWidth, int parent
     std::vector<Animation*>& children = mAnimations;
     const int count = children.size();
 
-    const long duration = mDuration;
+    const int64_t duration = mDuration;
     const bool fillAfter = mFillAfter;
     const bool fillBefore = mFillBefore;
     const int repeatMode = mRepeatMode;
     Interpolator* interpolator = mInterpolator;
-    const long startOffset = mStartOffset;
+    const int64_t startOffset = mStartOffset;
 
 
-    std::vector<long>&storedOffsets = mStoredOffsets;
+    std::vector<int64_t>&storedOffsets = mStoredOffsets;
     if (startOffsetSet) {
         if (/*storedOffsets == null ||*/ storedOffsets.size() != count) {
             mStoredOffsets.resize(count);
@@ -316,7 +316,7 @@ void AnimationSet::initialize(int width, int height, int parentWidth, int parent
         if (shareInterpolator) a->setInterpolator(interpolator);
  
         if (startOffsetSet) {
-            long offset = a->getStartOffset();
+            int64_t offset = a->getStartOffset();
             a->setStartOffset(offset + startOffset);
             storedOffsets[i] = offset;
         }
