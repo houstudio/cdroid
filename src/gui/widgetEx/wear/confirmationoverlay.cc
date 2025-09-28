@@ -74,7 +74,6 @@ void ConfirmationOverlay::animateAndHideAfterDelay() {
         animatable->start();
         LOGD("animatable=%p",animatable);
     }
-    LOGD("postDelayed mHideRunnable after %d mOverlayDrawable=%p",mDurationMillis,mOverlayDrawable);
     mMainThreadHandler->postDelayed(mHideRunnable, mDurationMillis);
 }
 

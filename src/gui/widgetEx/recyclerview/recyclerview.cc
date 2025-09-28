@@ -1923,7 +1923,7 @@ void RecyclerView::onAttachedToWindow() {
                     refreshRate = displayRefreshRate;
                 }
             }*/
-            mGapWorker->mFrameIntervalNs = (long) (1000000000 / refreshRate);
+            mGapWorker->mFrameIntervalNs = (1000000000 / refreshRate);
             GapWorker::sGapWorker = mGapWorker;//.set(mGapWorker);
         }
         mGapWorker->add(this);
