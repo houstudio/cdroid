@@ -30,7 +30,7 @@ constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts)
-  :ViewGroup(ctx,atts){
+  :FrameLayout(ctx,atts){
     initWindow();
     Point pt;
     WindowManager::getInstance().getDefaultDisplay().getSize(pt);
@@ -40,7 +40,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : ViewGroup(width,height),window_type(type){
+  : FrameLayout(width,height),window_type(type){
     initWindow();
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
@@ -102,22 +102,6 @@ Window::~Window(){
 
 void Window::playSoundImpl(int effectId){
     LOGD("%d",effectId);
-}
-
-ViewGroup::LayoutParams* Window::generateDefaultLayoutParams()const{
-    return new MarginLayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
-}
-
-bool Window::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
-    return dynamic_cast<const MarginLayoutParams*>(p);
-}
-
-ViewGroup::LayoutParams* Window::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
-    return new MarginLayoutParams(*lp);
-}
-
-ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)const{
-    return new MarginLayoutParams(getContext(),atts);
 }
 
 View* Window::getCommonPredecessor(View* first, View* second){
