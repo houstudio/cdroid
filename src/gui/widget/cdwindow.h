@@ -2,7 +2,6 @@
 #define __CDROID_WINDOW_H__
 #include <cdtypes.h>
 #include <widget/framelayout.h>
-#include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/uieventsource.h>
 

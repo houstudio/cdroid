@@ -388,7 +388,7 @@ void Window::draw(){
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
 
     mAttachInfo->mTreeObserver->dispatchOnPreDraw();
-    ViewGroup::draw(*canvas);
+    FrameLayout::draw(*canvas);
     drawAccessibilityFocusedDrawableIfNeeded(*canvas);
     mAttachInfo->mTreeObserver->dispatchOnDraw();
 
@@ -409,7 +409,7 @@ void Window::setPos(int x,int y){
     const bool changed =(x!=mLeft)||(mTop!=y);
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
-        ViewGroup::layout(x,y,getWidth(),getHeight());
+        FrameLayout::layout(x,y,getWidth(),getHeight());
         mAttachInfo->mWindowLeft= x;
         mAttachInfo->mWindowTop = y;
     }
@@ -435,7 +435,7 @@ void Window::onVisibilityChanged(View& changedView,int visibility){
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
-    ViewGroup::invalidateChildInParent(location,dirty);
+    FrameLayout::invalidateChildInParent(location,dirty);
     invalidate(dirty);
     return nullptr;
 }
@@ -592,7 +592,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     if(!handled){
         switch(action){
         case KeyEvent::ACTION_UP  :
-        case KeyEvent::ACTION_DOWN: handled = ViewGroup::dispatchKeyEvent(event); break;
+        case KeyEvent::ACTION_DOWN: handled = FrameLayout::dispatchKeyEvent(event); break;
         default:break;
         }
     }
@@ -655,7 +655,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     default:
         //return performFocusNavigation(evt);
         LOGV("recv %d %s",keyCode,evt.getLabel());
-        return ViewGroup::onKeyDown(keyCode,evt);
+        return FrameLayout::onKeyDown(keyCode,evt);
     } 
     return false;
 }
@@ -706,7 +706,7 @@ void Window::close(){
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
-    return ViewGroup::dispatchTouchEvent(event);
+    return FrameLayout::dispatchTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){
