@@ -120,7 +120,7 @@ public:
      * Adds the overlay as a content view to the {@code activity}, removing it when complete. While
      * it is shown, all touches will be intercepted to prevent accidental taps on obscured views.
      */
-    //void showOn(Activity* activity);
+    void showOn(Window* activity);
 
     /**
      * Starts a fadeout animation and removes the view once finished. This is invoked by {@link

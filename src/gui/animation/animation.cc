@@ -153,18 +153,18 @@ void Animation::setInterpolator(Interpolator* i) {
     mInterpolator = i;
 }
 
-void Animation::setStartOffset(long startOffset) {
+void Animation::setStartOffset(int64_t startOffset) {
     mStartOffset = startOffset;
 }
 
-void Animation::setDuration(long durationMillis) {
+void Animation::setDuration(int64_t durationMillis) {
     if (durationMillis < 0) {
         throw std::runtime_error("Animation duration cannot be negative");
     }
     mDuration = durationMillis;
 }
 
-void Animation::restrictDuration(long durationMillis) {
+void Animation::restrictDuration(int64_t durationMillis) {
     // If we start after the duration, then we just won't run.
     if (mStartOffset > durationMillis) {
         mStartOffset = durationMillis;
@@ -173,7 +173,7 @@ void Animation::restrictDuration(long durationMillis) {
         return;
     }
 
-    long dur = mDuration + mStartOffset;
+    int64_t dur = mDuration + mStartOffset;
     if (dur > durationMillis) {
         mDuration = durationMillis-mStartOffset;
         dur = durationMillis;
@@ -197,8 +197,8 @@ void Animation::restrictDuration(long durationMillis) {
 }
 
 void Animation::scaleCurrentDuration(float scale) {
-    mDuration = (long) (mDuration * scale);
-    mStartOffset = (long) (mStartOffset * scale);
+    mDuration = int64_t(mDuration * scale);
+    mStartOffset = int64_t(mStartOffset * scale);
 }
 
 void Animation::setStartTime(int64_t startTimeMillis) {
@@ -270,11 +270,12 @@ Interpolator* Animation::getInterpolator() {
 int64_t Animation::getStartTime()const{
     return mStartTime;
 }
-long Animation::getDuration() const{
+
+int64_t Animation::getDuration() const{
     return mDuration;
 }
 
-long Animation::getStartOffset() const{
+int64_t Animation::getStartOffset() const{
     return mStartOffset;
 }
 
@@ -333,15 +334,15 @@ void Animation::ensureInterpolator() {
     }
 }
 
-long Animation::computeDurationHint() {
+int64_t Animation::computeDurationHint() {
     return (getStartOffset() + getDuration()) * (getRepeatCount() + 1);
 }
 
 bool Animation::getTransformation(int64_t currentTime, Transformation& outTransformation) {
     if (mStartTime == -1) mStartTime = currentTime;
 
-    long startOffset = getStartOffset();
-    long duration = mDuration;
+    int64_t startOffset = getStartOffset();
+    int64_t duration = mDuration;
     float normalizedTime;
     if (duration != 0) {
         normalizedTime = ((float)(currentTime-(mStartTime+startOffset))) /(float) duration;
@@ -350,7 +351,7 @@ bool Animation::getTransformation(int64_t currentTime, Transformation& outTransf
         normalizedTime = currentTime < mStartTime ? 0.0f : 1.0f;
     }
 
-    bool expired = normalizedTime >= 1.0f || isCanceled();
+    const bool expired = normalizedTime >= 1.0f || isCanceled();
     mMore = !expired;
 
     if (!mFillEnabled) normalizedTime = std::max(std::min(normalizedTime, 1.0f), 0.0f);
@@ -365,7 +366,7 @@ bool Animation::getTransformation(int64_t currentTime, Transformation& outTransf
 
         if (mCycleFlip) normalizedTime = 1.0f - normalizedTime;
 
-        float interpolatedTime = mInterpolator->getInterpolation(normalizedTime);
+        const float interpolatedTime = mInterpolator->getInterpolation(normalizedTime);
         applyTransformation(interpolatedTime, outTransformation);
     }
     if (expired) {

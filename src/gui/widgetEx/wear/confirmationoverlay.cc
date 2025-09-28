@@ -1,6 +1,7 @@
 #include <widget/R.h>
 #include <widget/textview.h>
 #include <widget/imageview.h>
+#include <widget/cdwindow.h>
 #include <widgetEx/wear/confirmationoverlay.h>
 namespace cdroid{
 
@@ -20,6 +21,7 @@ ConfirmationOverlay::ConfirmationOverlay(const std::string &message)
 }
 
 ConfirmationOverlay::~ConfirmationOverlay(){
+    delete mOverlayView;
     delete mMainThreadHandler;
 }
 
@@ -54,30 +56,38 @@ void ConfirmationOverlay::showAbove(View* view) {
     animateAndHideAfterDelay();
 }
 
-/*void ConfirmationOverlay::showOn(Activity* activity) {
+void ConfirmationOverlay::showOn(Window* activity) {
     if (mIsShowing) {
         return;
     }
     mIsShowing = true;
 
-    updateOverlayView(activity);
-    activity.getWindow().addContentView(mOverlayView, mOverlayView.getLayoutParams());
+    updateOverlayView(activity->getContext());
+    //activity.getWindow().addContentView(mOverlayView, mOverlayView->getLayoutParams());
+    activity->addView(mOverlayView,mOverlayView->getLayoutParams());
     animateAndHideAfterDelay();
-}*/
+}
 
 void ConfirmationOverlay::animateAndHideAfterDelay() {
     if (dynamic_cast<Animatable*>(mOverlayDrawable)) {
         Animatable* animatable = (Animatable*) mOverlayDrawable;
         animatable->start();
+        LOGD("animatable=%p",animatable);
     }
+    LOGD("postDelayed mHideRunnable after %d mOverlayDrawable=%p",mDurationMillis,mOverlayDrawable);
     mMainThreadHandler->postDelayed(mHideRunnable, mDurationMillis);
 }
 
+/**
+ * Starts a fadeout animation and removes the view once finished. This is invoked by {@link
+ * #mHideRunnable} after {@link #mDurationMillis} milliseconds.
+ */
 void ConfirmationOverlay::hide() {
     Animation* fadeOut = AnimationUtils::loadAnimation(mOverlayView->getContext(), "cdroid:anim/fade_out");
     Animation::AnimationListener al;
+    mOverlayView->clearAnimation();
     al.onAnimationStart=[this](Animation& animation){
-        mOverlayView->clearAnimation();
+        //mOverlayView->clearAnimation();/*this line maybe google's bug*/
     };
     al.onAnimationEnd = [this](Animation& animation){
         ((ViewGroup*) mOverlayView->getParent())->removeView(mOverlayView);
@@ -85,7 +95,6 @@ void ConfirmationOverlay::hide() {
         if (mListener != nullptr) {
             mListener/*.onAnimationFinished*/();
         }
-
     };
     fadeOut->setAnimationListener(al);
     mOverlayView->startAnimation(fadeOut);
@@ -110,8 +119,8 @@ void ConfirmationOverlay::updateMessageView(Context* context, View* overlayView)
 
     if (!mMessage.empty()) {
         const int screenWidthPx = context->getDisplayMetrics().widthPixels;// ResourcesUtil.getScreenWidthPx(context);
-        int topMarginPx = 0;//ResourcesUtil.getFractionOfScreenPx(context, screenWidthPx, R.fraction.confirmation_overlay_margin_above_text);
-        int sideMarginPx= 0;//ResourcesUtil.getFractionOfScreenPx(context, screenWidthPx, R.fraction.confirmation_overlay_margin_side);
+        const int topMarginPx = 0;//ResourcesUtil.getFractionOfScreenPx(context, screenWidthPx, R.fraction.confirmation_overlay_margin_above_text);
+        const int sideMarginPx= 0;//ResourcesUtil.getFractionOfScreenPx(context, screenWidthPx, R.fraction.confirmation_overlay_margin_side);
 
         MarginLayoutParams* layoutParams = (MarginLayoutParams*) messageView->getLayoutParams();
         layoutParams->topMargin = topMarginPx;

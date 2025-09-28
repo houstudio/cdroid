@@ -47,10 +47,10 @@ public:
     void removeViewInLayout(View* view) override;
     void removeViews(int start, int count) override;
     void removeViewsInLayout(int start, int count) override;
-    View* getCurrentView();
-    Animation* getInAnimation();
+    View* getCurrentView()const;
+    Animation* getInAnimation()const;
     void setInAnimation(Animation* inAnimation);
-    Animation* getOutAnimation();
+    Animation* getOutAnimation()const;
     void setOutAnimation(Animation* outAnimation);
     bool getAnimateFirstView()const;
     void setAnimateFirstView(bool animate);

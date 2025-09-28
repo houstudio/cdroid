@@ -66,8 +66,8 @@ protected:
     bool mFillAfter = false;
     bool mFillEnabled = false;
     int64_t mStartTime = -1;
-    long mStartOffset;
-    long mDuration;
+    int64_t mStartOffset;
+    int64_t mDuration;
     int mRepeatCount = 0;
     int mRepeated = 0;
     int mRepeatMode = RESTART;
@@ -104,9 +104,9 @@ public:
     //void setListenerHandler(Handler handler);
     virtual void setInterpolator(Context* context,const std::string& resID) ;
     virtual void setInterpolator(Interpolator* i);
-    virtual void setStartOffset(long startOffset) ;
-    virtual void setDuration(long durationMillis);
-    virtual void restrictDuration(long durationMillis);
+    virtual void setStartOffset(int64_t startOffset) ;
+    virtual void setDuration(int64_t durationMillis);
+    virtual void restrictDuration(int64_t durationMillis);
     virtual void scaleCurrentDuration(float scale);
     virtual void setStartTime(int64_t startTimeMillis);
     virtual void start();
@@ -124,8 +124,8 @@ public:
     void setShowWallpaper(bool showWallpaper);
     Interpolator* getInterpolator();
     virtual int64_t getStartTime()const;
-    virtual long getDuration()const;
-    long getStartOffset()const;
+    virtual int64_t getDuration()const;
+    int64_t getStartOffset()const;
     int getRepeatMode()const;
     int getRepeatCount()const;
     bool getFillBefore()const;
@@ -137,7 +137,7 @@ public:
     virtual bool willChangeBounds()const;
     virtual int getExtensionEdges()const;
     void setAnimationListener(const AnimationListener& listener);
-    virtual long computeDurationHint();
+    virtual int64_t computeDurationHint();
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation);
     virtual bool getTransformation(int64_t currentTime, Transformation& outTransformation, float scale);
     bool hasStarted()const;

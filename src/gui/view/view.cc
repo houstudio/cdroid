@@ -482,7 +482,7 @@ View::~View(){
     delete mBackgroundTint;
     delete mLayoutParams;
     delete mRoundScrollbarRenderer;
-    delete mCurrentAnimation;
+    //delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mStateListAnimator;
     delete mOverlay;
@@ -1125,14 +1125,14 @@ void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
     }
-    delete mCurrentAnimation;
+    //delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
-    delete mCurrentAnimation;
+    //delete mCurrentAnimation;
     mCurrentAnimation = animation;
     if (animation) {
         // If the screen is off assume the animation start time is now instead of

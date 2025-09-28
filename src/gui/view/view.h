@@ -959,10 +959,12 @@ public:
     void setMinimumHeight(int minHeight);
     int getMinimumWidth();
     void setMinimumWidth(int minWidth);
+
     Animation* getAnimation()const;
+    /*th animation is owned by caller*/
+    void setAnimation(Animation* animation);
     void startAnimation(Animation* animation);
     void clearAnimation();
-    void setAnimation(Animation* animation);
 
     void applyDrawableToTransparentRegion(Drawable* dr,const Cairo::RefPtr<Cairo::Region>& region);
     virtual bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>& region);
