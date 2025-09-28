@@ -60,7 +60,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
         }
         if( mNextFrame == mAnimatedImageState->mFrameCount - 1){
             mRepeated ++;
-            mStarting = (mRepeated < mRepeatCount)||(mRepeatCount < 0);
+            //mStarting = (mRepeated < mRepeatCount)||(mRepeatCount < 0);
         }
         mCurrentFrame = (mNextFrame - 1) % mAnimatedImageState->mFrameCount;
         mFrameScheduled = false;
@@ -193,6 +193,10 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     // will manage the animation
     LOGV("%p draw Frame %d/%d started=%d repeat=%d/%d nextDelay=%d",this,mCurrentFrame,
           mAnimatedImageState->mFrameCount,mStarting,mRepeated,mRepeatCount,mFrameDelay);
+    if(mStarting && (mCurrentFrame == mAnimatedImageState->mFrameCount-1)){
+        mStarting = (mRepeated < mRepeatCount)||(mRepeatCount<0);
+        postOnAnimationEnd();
+    }
     if( mStarting && ( (mRepeated < mRepeatCount) || (mRepeatCount < 0))){
         if (mFrameDelay > 0) {
             if(!mFrameScheduled){
@@ -201,10 +205,10 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
                 mFrameScheduled = true;
             }
         }
-        if ( mCurrentFrame == mAnimatedImageState->mFrameCount - 1){// == FINISHED) {
-            // This means the animation was drawn in software mode and ended.
-            postOnAnimationEnd();
-        }
+        //if ( mCurrentFrame == mAnimatedImageState->mFrameCount - 1){// == FINISHED) {
+        //    // This means the animation was drawn in software mode and ended.
+        //    postOnAnimationEnd();
+        //}
     }
     void *handler = canvas.getHandler();
     if( (mImageHandler == nullptr) || (handler == nullptr) ){
