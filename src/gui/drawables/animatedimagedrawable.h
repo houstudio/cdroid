@@ -88,8 +88,8 @@ public:
     void stop()override;
     void restart(int fromFrame=0);
     AnimatedImageDrawable*mutate()override;
-    void registerAnimationCallback(Animatable2::AnimationCallback callback)override;
-    bool unregisterAnimationCallback(Animatable2::AnimationCallback callback)override;
+    void registerAnimationCallback(const Animatable2::AnimationCallback& callback)override;
+    bool unregisterAnimationCallback(const Animatable2::AnimationCallback& callback)override;
     void clearAnimationCallbacks();
     void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };

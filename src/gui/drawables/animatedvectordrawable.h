@@ -192,7 +192,7 @@ private:
     // If the duration of an animation is more than 300 frames, we cap the sample size to 300.
     static constexpr int MAX_SAMPLE_POINTS = 300;
     Animator::AnimatorListener mListener;
-    std::vector<long> mStartDelays;
+    std::vector<int64_t> mStartDelays;
     PropertyValuesHolder::PropertyValues mTmpValues;// =  new PropertyValuesHolder.PropertyValues();
     hwui::PropertyValuesAnimatorSet* mSetPtr = nullptr;
     bool mContainsSequentialAnimators = false;
@@ -207,19 +207,19 @@ private:
     std::vector<int> mPendingAnimationActions;
     AnimatedVectorDrawable* mDrawable;
 private:
-    void parseAnimatorSet(AnimatorSet* set, long startTime);
-    void createRTAnimator(ObjectAnimator* animator, long startTime);
-    void createRTAnimatorForGroup(const std::vector<PropertyValuesHolder*>&values,ObjectAnimator* animator, VectorDrawable::VGroup* target,long startTime);
-    void createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,long startTime);
+    void parseAnimatorSet(AnimatorSet* set, int64_t startTime);
+    void createRTAnimator(ObjectAnimator* animator, int64_t startTime);
+    void createRTAnimatorForGroup(const std::vector<PropertyValuesHolder*>&values,ObjectAnimator* animator, VectorDrawable::VGroup* target,int64_t startTime);
+    void createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,int64_t startTime);
 
-    void createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, long startTime);
+    void createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, int64_t startTime);
 
-    void createRTAnimatorForRootGroup(const std::vector<PropertyValuesHolder*>& values,ObjectAnimator* animator, VectorDrawable::VectorDrawableState* target,long startTime);
-    static int getFrameCount(long duration);
+    void createRTAnimatorForRootGroup(const std::vector<PropertyValuesHolder*>& values,ObjectAnimator* animator, VectorDrawable::VectorDrawableState* target,int64_t startTime);
+    static int getFrameCount(int64_t duration);
 
-    static std::vector<float> createFloatDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
-    static std::vector<int> createIntDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration);
-    void createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator);
+    static std::vector<float> createFloatDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, int64_t duration);
+    static std::vector<int> createIntDataPoints(PropertyValuesHolder::PropertyValues::DataSource dataSource, int64_t duration);
+    void createNativeChildAnimator(PropertyValuesHolder* holder, int64_t extraDelay,ObjectAnimator* animator);
     
     void handlePendingAction(int pendingAnimationAction);
     bool useLastSeenTarget();

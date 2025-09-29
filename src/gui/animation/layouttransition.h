@@ -117,7 +117,7 @@ public :
 private:
     bool hasListeners()const;
     void runChangeTransition(ViewGroup* parent, View* newView, int changeReason);
-    void setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child);
+    void setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,int64_t duration, View* child);
     void runAppearingTransition(ViewGroup* parent,View* child);
     void runDisappearingTransition(ViewGroup* parent,View* child);
     void addChild(ViewGroup* parent, View* child, bool changesLayout);
@@ -125,16 +125,16 @@ private:
 public:
     LayoutTransition();
     ~LayoutTransition();
-    void setDuration(long duration);
-    void setDuration(int transitionType, long duration);
-    long getDuration(int transitionType);
+    void setDuration(int64_t duration);
+    void setDuration(int transitionType, int64_t duration);
+    int64_t getDuration(int transitionType)const;
     void enableTransitionType(int transitionType);
     void disableTransitionType(int transitionType);
     bool isTransitionTypeEnabled(int transitionType)const;
-    void setStartDelay(int transitionType, long delay);
-    long getStartDelay(int transitionType)const;
-    void setStagger(int transitionType, long duration);
-    long getStagger(int transitionType)const;
+    void setStartDelay(int transitionType, int64_t delay);
+    int64_t getStartDelay(int transitionType)const;
+    void setStagger(int transitionType, int64_t duration);
+    int64_t getStagger(int transitionType)const;
     void setAnimateParentHierarchy(bool animateParentHierarchy);
 
     void setInterpolator(int transitionType, TimeInterpolator* interpolator);

@@ -373,9 +373,6 @@ void ProgressBar::initProgressBar(){
     mAggregatedIsVisible = false;
     mShouldStartAnimationDrawable = false;
     mRefreshIsPosted = false;
-    /*if(Property::fromName("ProgressBar.visual_progress")==nullptr){
-        Property::reigsterProperty("ProgressBar.visual_progress",&VISUAL_PROGRESS);
-    }*/
 }
 
 void ProgressBar::setMin(int value){

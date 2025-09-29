@@ -64,7 +64,7 @@ private:
     int getTransformedColumnIndex(const AnimationParameters* params);
     int getTransformedRowIndex(const AnimationParameters* params);
 protected:
-    long getDelayForView(View* view)override;
+    int64_t getDelayForView(View* view)override;
 public:
     GridLayoutAnimationController(Context* context,const AttributeSet& attrs);
     GridLayoutAnimationController(Animation* animation);

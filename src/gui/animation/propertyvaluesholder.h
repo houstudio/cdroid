@@ -72,7 +72,7 @@ public:
     PropertyValuesHolder(const std::string&name);
     void setPropertyName(const std::string& propertyName);
     const std::string getPropertyName()const;
-    void setProperty(Property*p);
+    void setProperty(const Property*p);
     const Property*getProperty()const;
     int getValueType()const;
     void setPropertyChangedListener(const OnPropertyChangedListener&);

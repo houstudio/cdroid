@@ -26,20 +26,20 @@ class Tree;
 using  VectorDrawableRoot= Tree;
 class PropertyAnimator {
 public:
-    PropertyAnimator(PropertyValuesHolder* holder, TimeInterpolator* interpolator, long startDelay,
-                     long duration, int repeatCount, int repeatMode);
+    PropertyAnimator(PropertyValuesHolder* holder, TimeInterpolator* interpolator, int64_t startDelay,
+                     int64_t duration, int repeatCount, int repeatMode);
     void setCurrentPlayTime(int64_t playTime);
-    long getTotalDuration() { return mTotalDuration; }
+    int64_t getTotalDuration() { return mTotalDuration; }
     // fraction range: [0, 1], iteration range [0, repeatCount]
-    void setFraction(float fraction, long iteration);
+    void setFraction(float fraction, int64_t iteration);
 
 private:
     std::unique_ptr<PropertyValuesHolder> mPropertyValuesHolder;
     std::unique_ptr<TimeInterpolator> mInterpolator;
-    long mStartDelay;
-    long mDuration;
+    int64_t mStartDelay;
+    int64_t mDuration;
     uint32_t mRepeatCount;
-    long mTotalDuration;
+    int64_t mTotalDuration;
     int mRepeatMode;
     double mLatestFraction = 0;
 };
@@ -58,8 +58,8 @@ public:
 
 private:
     int64_t mStartTime;
-    long mDuration;
-    long mStartDelay;
+    int64_t mDuration;
+    int64_t mStartDelay;
 
     float mLastFraction = 0.0f;
     bool mInitialized = false;
@@ -76,15 +76,15 @@ public:
     PropertyValuesAnimatorSet();
     void setInterpolator(Interpolator* interpolator);
     void setStartValue(float value);
-    void setDuration(long duration);
-    void setStartDelay(long startDelay);
+    void setDuration(int64_t duration);
+    void setStartDelay(int64_t startDelay);
     //void start(const Animator::AnimationListener& listener);
     //void reverse(const Animator::AnimationListener& listener);
     virtual void reset();// override;
     virtual void end();// override;
 
     void addPropertyAnimator(PropertyValuesHolder* propertyValuesHolder,TimeInterpolator* interpolators,
-            long startDelays, long durations,int repeatCount, int repeatMode);
+            int64_t startDelays, int64_t durations,int repeatCount, int repeatMode);
     //virtual uint32_t dirtyMask();
     bool isInfinite() { return mIsInfinite; }
     void setVectorDrawable(VectorDrawableRoot* vd) { mVectorDrawable = vd; }

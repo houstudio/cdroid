@@ -27,7 +27,7 @@ private:
     void* mTarget;
     std::string mTargetClass;
     std::string mPropertyName;
-    Property* mProperty;
+    const Property* mProperty;
     bool mAutoCancel;
 private:
     bool hasSameTargetAndProperties(const Animator*anim);
@@ -41,14 +41,14 @@ public:
     ~ObjectAnimator()override;
     void setTarget(void*target)override;
     void*getTarget();
-    ObjectAnimator&setDuration(long dur)override;
+    ObjectAnimator&setDuration(int64_t dur)override;
 
     void setupStartValues()override;
     void setupEndValues()override;
     void animateValue(float fraction)override;
 
     void setPropertyName(const std::string&propertyName);
-    void setProperty(Property* property);
+    void setProperty(const Property* property);
     const std::string getPropertyName()const;
     void setIntValues(const std::vector<int>&)override;
     void setFloatValues(const std::vector<float>&values)override;
@@ -61,8 +61,8 @@ public:
     static ObjectAnimator* ofFloat(void* target,const std::string& propertyName,const std::vector<float>&);
     static ObjectAnimator* ofPropertyValuesHolder(void*target,const std::vector< PropertyValuesHolder*>&values);
 
-    static ObjectAnimator* ofInt(void*target,Property*prop,const std::vector<int>&);
-    static ObjectAnimator* ofFloat(void*target,Property*prop,const std::vector<float>&);
+    static ObjectAnimator* ofInt(void*target,const Property*prop,const std::vector<int>&);
+    static ObjectAnimator* ofFloat(void*target,const Property*prop,const std::vector<float>&);
     std::string toString()const override;
 };
 

@@ -221,7 +221,7 @@ void AnimatorSet::forceToEnd() {
     if (mReversing) {
         handleAnimationEvents(mLastEventId, 0, getTotalDuration());
     } else {
-        long zeroScalePlayTime = getTotalDuration();
+        int64_t zeroScalePlayTime = getTotalDuration();
         if (zeroScalePlayTime == DURATION_INFINITE) {
             // Use a large number for the play time.
             zeroScalePlayTime = INT_MAX;//Integer.MAX_VALUE;
@@ -296,17 +296,17 @@ bool AnimatorSet::isStarted() {
     return mStarted;
 }
 
-long AnimatorSet::getStartDelay() {
+int64_t AnimatorSet::getStartDelay() {
     return mStartDelay;
 }
 
-void AnimatorSet::setStartDelay(long startDelay) {
+void AnimatorSet::setStartDelay(int64_t startDelay) {
     // Clamp start delay to non-negative range.
     if (startDelay < 0) {
         LOGW("Start delay should always be non-negative");
         startDelay = 0;
     }
-    long delta = startDelay - mStartDelay;
+    int64_t delta = startDelay - mStartDelay;
     if (delta == 0) {
         return;
     }
@@ -330,11 +330,11 @@ void AnimatorSet::setStartDelay(long startDelay) {
     }
 }
 
-long AnimatorSet::getDuration(){
+int64_t AnimatorSet::getDuration()const{
     return mDuration;
 }
 
-Animator& AnimatorSet::setDuration(long duration) {
+Animator& AnimatorSet::setDuration(int64_t duration) {
     if (duration < 0) {
         std::logic_error("duration must be a value of zero or greater");
     }
@@ -907,7 +907,7 @@ void AnimatorSet::removeAnimationCallback() {
     AnimationHandler::getInstance().removeCallback(this);
 }
 
-void AnimatorSet::addAnimationCallback(long delay) {
+void AnimatorSet::addAnimationCallback(int64_t delay) {
     if (!mSelfPulse) {
         return;
     }
@@ -1189,7 +1189,7 @@ bool AnimatorSet::shouldPlayTogether() {
     return mRootNode->mChildNodes.empty() || (mRootNode->mChildNodes.size() == mNodes.size() - 1);
 }
 
-long AnimatorSet::getTotalDuration() {
+int64_t AnimatorSet::getTotalDuration() {
     updateAnimatorsDuration();
     createDependencyGraph();
     return mTotalDuration;
@@ -1351,7 +1351,7 @@ AnimatorSet::Builder& AnimatorSet::Builder::after(Animator* anim) {
     return *this;
 }
 
-AnimatorSet::Builder& AnimatorSet::Builder::after(long delay) {
+AnimatorSet::Builder& AnimatorSet::Builder::after(int64_t delay) {
     // setup dummy ValueAnimator just to run the clock
     ValueAnimator* anim = ValueAnimator::ofFloat({0.f, 1.f});
     anim->setDuration(delay);

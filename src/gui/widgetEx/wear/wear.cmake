@@ -17,5 +17,6 @@ SET(WEAR_SOURCES
     widgetEx/wear/swipedismissframelayout.cc
     widgetEx/wear/swipedismisstransitionhelper.cc
     widgetEx/wear/wearablelinearlayoutmanager.cc
+    widgetEx/wear/confirmationoverlay.cc
 )
 endif(ENABLE_WEAR_WIDGETS)

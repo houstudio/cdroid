@@ -82,7 +82,7 @@ LayoutTransition::~LayoutTransition(){
     if(mDisappearingAnim!=defaultFadeOut)delete mDisappearingAnim;
 }
 
-void LayoutTransition::setDuration(long duration) {
+void LayoutTransition::setDuration(int64_t duration) {
     mChangingAppearingDuration = duration;
     mChangingDisappearingDuration = duration;
     mChangingDuration = duration;
@@ -90,7 +90,7 @@ void LayoutTransition::setDuration(long duration) {
     mDisappearingDuration = duration;
 }
 
-void LayoutTransition::setDuration(int transitionType, long duration) {
+void LayoutTransition::setDuration(int transitionType, int64_t duration) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingDuration = duration;
@@ -110,7 +110,7 @@ void LayoutTransition::setDuration(int transitionType, long duration) {
     }
 }
 
-long LayoutTransition::getDuration(int transitionType) {
+int64_t LayoutTransition::getDuration(int transitionType) const{
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingDuration;
@@ -183,7 +183,7 @@ bool LayoutTransition::isTransitionTypeEnabled(int transitionType)const{
     return false;
 }
 
-void LayoutTransition::setStartDelay(int transitionType, long delay){
+void LayoutTransition::setStartDelay(int transitionType, int64_t delay){
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingDelay = delay;
@@ -203,7 +203,7 @@ void LayoutTransition::setStartDelay(int transitionType, long delay){
     }
 }
 
-long LayoutTransition::getStartDelay(int transitionType)const{
+int64_t LayoutTransition::getStartDelay(int transitionType)const{
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingDelay;
@@ -220,7 +220,7 @@ long LayoutTransition::getStartDelay(int transitionType)const{
     return 0;
 }
 
-void LayoutTransition::setStagger(int transitionType, long duration) {
+void LayoutTransition::setStagger(int transitionType, int64_t duration) {
     switch (transitionType) {
     case CHANGE_APPEARING:
         mChangingAppearingStagger = duration;
@@ -235,7 +235,7 @@ void LayoutTransition::setStagger(int transitionType, long duration) {
     }
 }
 
-long LayoutTransition::getStagger(int transitionType)const{
+int64_t LayoutTransition::getStagger(int transitionType)const{
     switch (transitionType) {
     case CHANGE_APPEARING:
         return mChangingAppearingStagger;
@@ -329,7 +329,7 @@ bool LayoutTransition::hasListeners()const{
 void LayoutTransition::runChangeTransition(ViewGroup* parent, View* newView, int changeReason){
     Animator* baseAnimator  = nullptr;
     Animator* parentAnimator= nullptr;
-    long duration;
+    int64_t duration;
     switch (changeReason) {
     case APPEARING:
         baseAnimator = mChangingAppearingAnim;
@@ -413,7 +413,7 @@ void LayoutTransition::setAnimateParentHierarchy(bool animateParentHierarchy) {
     mAnimateParentHierarchy = animateParentHierarchy;
 }
 
-void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,long duration, View* child){
+void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason, Animator* baseAnimator,int64_t duration, View* child){
     if(layoutChangeListenerMap.find(child) !=layoutChangeListenerMap.end()){
         return;
     }
@@ -479,7 +479,7 @@ void LayoutTransition::setupChangeAnimation(ViewGroup* parent, int changeReason,
             }
         }
 
-        long startDelay = 0;
+        int64_t startDelay = 0;
         switch (changeReason) {
         case APPEARING:
             startDelay = mChangingAppearingDelay + staggerDelay;

@@ -32,6 +32,9 @@ private:
     static constexpr int OPACITY_HOLD_DURATION = OPACITY_ENTER_DURATION + 150;
 
 private:
+    class CTWEEN_RADIUS;
+    class CTWEEN_ORIGIN;
+    class COPACITY;
     float mStartingX;
     float mStartingY;
     float mClampedStartingX;
@@ -58,6 +61,9 @@ private:
     float mStartRadius = 0;
     std::vector<Animator*> mRunningSwAnimators;
     Animator::AnimatorListener mAnimationListener;
+    static const CTWEEN_RADIUS TWEEN_RADIUS;
+    static const CTWEEN_ORIGIN TWEEN_ORIGIN;
+    static const COPACITY OPACITY;
 private:
     float getCurrentX();
     float getCurrentY();
@@ -76,7 +82,7 @@ public:
     void getBounds(Rect& bounds);
     void move(float x, float y);
     bool hasFinishedExit()const;
-    long computeFadeOutDelay();
+    int64_t computeFadeOutDelay()const;
     float getOpacity()const;
     void enter();
     void exit();

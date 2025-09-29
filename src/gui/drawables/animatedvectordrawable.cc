@@ -820,7 +820,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::init(AnimatorSet* set) {
     }
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(AnimatorSet* set, long startTime) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(AnimatorSet* set, int64_t startTime) {
     auto animators = set->getChildAnimations();
 
     const bool playTogether = set->shouldPlayTogether();
@@ -845,7 +845,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::parseAnimatorSet(Animator
 
 // TODO: This method reads animation data from already parsed Animators. We need to move
 // this step further up the chain in the parser to avoid the detour.
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAnimator* animator, long startTime) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAnimator* animator, int64_t startTime) {
     std::vector<PropertyValuesHolder*> values = animator->getValues();
     void* target = animator->getTarget();
     VectorDrawable::VObject*targetObj=(VectorDrawable::VObject*)target;
@@ -868,7 +868,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimator(ObjectAn
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(const std::vector<PropertyValuesHolder*>& values,
-        ObjectAnimator* animator, VectorDrawable::VGroup* target,long startTime) {
+        ObjectAnimator* animator, VectorDrawable::VGroup* target,int64_t startTime) {
 
     hwui::Group* nativePtr = (hwui::Group*)target->getNativePtr();//hwui::Group
     int propertyId;
@@ -896,7 +896,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForGroup(
     }
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,long startTime) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( ObjectAnimator* animator, VectorDrawable::VPath* target,int64_t startTime) {
 
     hwui::Path* nativePtr = (hwui::Path*)target->getNativePtr();//hwui::Path
     std::shared_ptr<PathParser::PathData>startPathData = GET_VARIANT(mTmpValues.startValue,std::shared_ptr<PathParser::PathData>);
@@ -908,7 +908,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForPath( 
     createNativeChildAnimator(propertyPtr, startTime, animator);
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, long startTime) {
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPath(ObjectAnimator* animator,VectorDrawable::VFullPath* target, int64_t startTime) {
 
     int propertyId = target->getPropertyIndex(mTmpValues.propertyName);
     Property*prop = target->getProperty(mTmpValues.propertyName);
@@ -951,7 +951,7 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForFullPa
 }
 
 void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForRootGroup(const std::vector<PropertyValuesHolder*>& values,
-        ObjectAnimator* animator, VectorDrawable::VectorDrawableState* target,long startTime) {
+        ObjectAnimator* animator, VectorDrawable::VectorDrawableState* target,int64_t startTime) {
     long nativePtr = target->getNativeRenderer();
     if (!animator->getPropertyName().compare("alpha")==0) {
         if (mDrawable->mAnimatedVectorState->mShouldIgnoreInvalidAnim) {
@@ -990,8 +990,8 @@ void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createRTAnimatorForRootGr
 /**
  * Calculate the amount of frames an animation will run based on duration.
  */
-int AnimatedVectorDrawable::VectorDrawableAnimatorRT::getFrameCount(long duration) {
-    long frameIntervalNanos = Choreographer::getInstance().getFrameIntervalNanos();
+int AnimatedVectorDrawable::VectorDrawableAnimatorRT::getFrameCount(int64_t duration) {
+    int64_t frameIntervalNanos = Choreographer::getInstance().getFrameIntervalNanos();
     int animIntervalMs = (int) (frameIntervalNanos / SystemClock::NANOS_PER_MS);
     int numAnimFrames = (int) std::ceil(((double) duration) / animIntervalMs);
     // We need 2 frames of data minimum.
@@ -1010,7 +1010,7 @@ int AnimatedVectorDrawable::VectorDrawableAnimatorRT::getFrameCount(long duratio
 // TODO: (Optimization) We should pass the path down in native and chop it into segments
 // in native.
 std::vector<float> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createFloatDataPoints(
-        PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration) {
+        PropertyValuesHolder::PropertyValues::DataSource dataSource, int64_t duration) {
     int numAnimFrames = getFrameCount(duration);
     std::vector<float> values(numAnimFrames);
     float lastFrame = numAnimFrames - 1;
@@ -1022,7 +1022,7 @@ std::vector<float> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createFloat
 }
 
 std::vector<int> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createIntDataPoints(
-        PropertyValuesHolder::PropertyValues::DataSource dataSource, long duration) {
+        PropertyValuesHolder::PropertyValues::DataSource dataSource, int64_t duration) {
     int numAnimFrames = getFrameCount(duration);
     std::vector<int>values(numAnimFrames);
     float lastFrame = numAnimFrames - 1;
@@ -1033,10 +1033,10 @@ std::vector<int> AnimatedVectorDrawable::VectorDrawableAnimatorRT::createIntData
     return values;
 }
 
-void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(PropertyValuesHolder* holder, long extraDelay,ObjectAnimator* animator) {
-    long duration = animator->getDuration();
+void AnimatedVectorDrawable::VectorDrawableAnimatorRT::createNativeChildAnimator(PropertyValuesHolder* holder, int64_t extraDelay,ObjectAnimator* animator) {
+    int64_t duration = animator->getDuration();
     const int repeatCount = animator->getRepeatCount();
-    long startDelay = extraDelay + animator->getStartDelay();
+    int64_t startDelay = extraDelay + animator->getStartDelay();
     auto interpolator = animator->getInterpolator();
 
     startDelay *= ValueAnimator::getDurationScale();

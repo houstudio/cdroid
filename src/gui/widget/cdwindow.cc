@@ -30,7 +30,7 @@ constexpr int FINISH_HANDLED = 1;
 constexpr int FINISH_NOT_HANDLED = 2;
 
 Window::Window(Context*ctx,const AttributeSet&atts)
-  :ViewGroup(ctx,atts){
+  :FrameLayout(ctx,atts){
     initWindow();
     Point pt;
     WindowManager::getInstance().getDefaultDisplay().getSize(pt);
@@ -40,7 +40,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 }
 
 Window::Window(int x,int y,int width,int height,int type)
-  : ViewGroup(width,height),window_type(type){
+  : FrameLayout(width,height),window_type(type){
     initWindow();
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
@@ -102,22 +102,6 @@ Window::~Window(){
 
 void Window::playSoundImpl(int effectId){
     LOGD("%d",effectId);
-}
-
-ViewGroup::LayoutParams* Window::generateDefaultLayoutParams()const{
-    return new MarginLayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
-}
-
-bool Window::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
-    return dynamic_cast<const MarginLayoutParams*>(p);
-}
-
-ViewGroup::LayoutParams* Window::generateLayoutParams(const ViewGroup::LayoutParams* lp)const{
-    return new MarginLayoutParams(*lp);
-}
-
-ViewGroup::LayoutParams* Window::generateLayoutParams(const AttributeSet&atts)const{
-    return new MarginLayoutParams(getContext(),atts);
 }
 
 View* Window::getCommonPredecessor(View* first, View* second){
@@ -404,7 +388,7 @@ void Window::draw(){
     mAttachInfo->mDrawingTime = SystemClock::uptimeMillis();
 
     mAttachInfo->mTreeObserver->dispatchOnPreDraw();
-    ViewGroup::draw(*canvas);
+    FrameLayout::draw(*canvas);
     drawAccessibilityFocusedDrawableIfNeeded(*canvas);
     mAttachInfo->mTreeObserver->dispatchOnDraw();
 
@@ -425,7 +409,7 @@ void Window::setPos(int x,int y){
     const bool changed =(x!=mLeft)||(mTop!=y);
     if( changed && isAttachedToWindow()){
         WindowManager::getInstance().moveWindow(this,x,y);
-        ViewGroup::layout(x,y,getWidth(),getHeight());
+        FrameLayout::layout(x,y,getWidth(),getHeight());
         mAttachInfo->mWindowLeft= x;
         mAttachInfo->mWindowTop = y;
     }
@@ -451,7 +435,7 @@ void Window::onVisibilityChanged(View& changedView,int visibility){
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
-    ViewGroup::invalidateChildInParent(location,dirty);
+    FrameLayout::invalidateChildInParent(location,dirty);
     invalidate(dirty);
     return nullptr;
 }
@@ -608,7 +592,7 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
     if(!handled){
         switch(action){
         case KeyEvent::ACTION_UP  :
-        case KeyEvent::ACTION_DOWN: handled = ViewGroup::dispatchKeyEvent(event); break;
+        case KeyEvent::ACTION_DOWN: handled = FrameLayout::dispatchKeyEvent(event); break;
         default:break;
         }
     }
@@ -671,7 +655,7 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     default:
         //return performFocusNavigation(evt);
         LOGV("recv %d %s",keyCode,evt.getLabel());
-        return ViewGroup::onKeyDown(keyCode,evt);
+        return FrameLayout::onKeyDown(keyCode,evt);
     } 
     return false;
 }
@@ -722,7 +706,7 @@ void Window::close(){
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
-    return ViewGroup::dispatchTouchEvent(event);
+    return FrameLayout::dispatchTouchEvent(event);
 }
 
 void Window::dispatchInvalidateOnAnimation(View*view){

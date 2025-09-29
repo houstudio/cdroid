@@ -31,8 +31,8 @@ void TimeAnimator::start(){
 
 bool TimeAnimator::animateBasedOnTime(int64_t currentTime){
     if(mListener != nullptr){
-        long totalTime = currentTime - mStartTime;
-        long detaTime  = (mPreviousTime<0)?0:(currentTime -mPreviousTime);
+        const int64_t totalTime = currentTime - mStartTime;
+        const int64_t detaTime  = (mPreviousTime<0)?0:(currentTime -mPreviousTime);
         mPreviousTime  = currentTime;
         mListener(*this,totalTime,detaTime);
     }
@@ -45,7 +45,7 @@ void TimeAnimator::setCurrentPlayTime(int64_t playTime){
     animateBasedOnTime(currentTime);
 }
 
-void TimeAnimator::setTimeListener(const TimeAnimator::TimeListener listener){
+void TimeAnimator::setTimeListener(const TimeAnimator::TimeListener& listener){
     mListener = listener;
 }
 

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/framelayout.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 
@@ -156,7 +156,7 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         int childWidthMeasureSpec;
         if (lp->width == LayoutParams::MATCH_PARENT) {
-            int width = std::max(0, getMeasuredWidth()
+            const int width = std::max(0, getMeasuredWidth()
                         - getPaddingLeftWithForeground() - getPaddingRightWithForeground()
                         - lp->leftMargin - lp->rightMargin);
             childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY);
@@ -168,7 +168,7 @@ void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         int childHeightMeasureSpec;
         if (lp->height == LayoutParams::MATCH_PARENT) {
-            int height = std::max(0, getMeasuredHeight()
+            const int height = std::max(0, getMeasuredHeight()
                         - getPaddingTopWithForeground() - getPaddingBottomWithForeground()
                         - lp->topMargin - lp->bottomMargin);
             childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY);

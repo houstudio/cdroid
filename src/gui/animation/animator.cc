@@ -57,8 +57,8 @@ bool Animator::isPaused() {
    return mPaused;
 }
 
-long Animator::getTotalDuration() {
-    const long duration = getDuration();
+int64_t Animator::getTotalDuration() {
+    const int64_t duration = getDuration();
     if (duration == DURATION_INFINITE) {
         return DURATION_INFINITE;
     } else {

@@ -159,11 +159,11 @@ void ViewAnimator::removeViewsInLayout(int start, int count) {
     removeViews(start, count);
 }
 
-View* ViewAnimator::getCurrentView() {
+View* ViewAnimator::getCurrentView() const{
     return getChildAt(mWhichChild);
 }
 
-Animation* ViewAnimator::getInAnimation(){
+Animation* ViewAnimator::getInAnimation()const{
     return mInAnimation;
 }
 
@@ -171,7 +171,7 @@ void ViewAnimator::setInAnimation(Animation* inAnimation){
     mInAnimation=inAnimation;
 }
 
-Animation* ViewAnimator::getOutAnimation(){
+Animation* ViewAnimator::getOutAnimation()const{
     return mOutAnimation;
 }
 

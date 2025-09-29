@@ -73,11 +73,11 @@ public:
     virtual void resume();
     bool isPaused();
     virtual Animator*clone()const;
-    virtual long getStartDelay()=0;
-    virtual void setStartDelay(long startDelay)=0;
-    virtual Animator& setDuration(long duration)=0;
-    virtual long getDuration()=0;
-    virtual long getTotalDuration();
+    virtual int64_t getStartDelay()=0;
+    virtual void setStartDelay(int64_t startDelay)=0;
+    virtual Animator& setDuration(int64_t duration)=0;
+    virtual int64_t getDuration()const=0;
+    virtual int64_t getTotalDuration();
     virtual void setInterpolator(TimeInterpolator* value)=0;
     virtual TimeInterpolator* getInterpolator();
     virtual bool isRunning()=0;

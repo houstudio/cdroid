@@ -46,7 +46,7 @@ private:
     bool mChildrenInitialized = false;
 
     // The amount of time in ms to delay starting the animation after start() is called
-    long mStartDelay = 0;
+    int64_t mStartDelay = 0;
 
     // Animator used for a nonzero startDelay
     class ValueAnimator* mDelayAnim;// = ValueAnimator.ofFloat(0f, 1f).setDuration(0);
@@ -56,8 +56,8 @@ private:
     TimeInterpolator* mInterpolator = nullptr;
 
     // The total duration of finishing all the Animators in the set.
-    long mTotalDuration = 0;
-    long mDuration = -1;
+    int64_t mTotalDuration = 0;
+    int64_t mDuration = -1;
 
     int mLastEventId = -1;
     int64_t mLastFrameTime = -1;
@@ -85,7 +85,7 @@ private:
      int findLatestEventIdForTime(int64_t currentPlayTime);
     void endAnimation();
     void removeAnimationCallback();
-    void addAnimationCallback(long delay);
+    void addAnimationCallback(int64_t delay);
     void createDependencyGraph();
     void sortAnimationEvents();
     void updatePlayTime(Node* parent,std::vector<Node*>& visited);
@@ -112,10 +112,10 @@ public:
     void end()override;
     bool isRunning()override;
     bool isStarted()override;
-    long getStartDelay()override;
-    void setStartDelay(long startDelay)override;
-    long getDuration()override;
-    Animator& setDuration(long)override;
+    int64_t getStartDelay()override;
+    void setStartDelay(int64_t startDelay)override;
+    int64_t getDuration()const override;
+    Animator& setDuration(int64_t)override;
     void setupStartValues()override;
     void setupEndValues()override;
     void pause()override;
@@ -130,7 +130,7 @@ public:
     bool canReverse()override;
     void reverse()override;
     bool shouldPlayTogether();
-    long getTotalDuration()override;
+    int64_t getTotalDuration()override;
     std::string toString()const override;
 };
 
@@ -143,7 +143,7 @@ public:
     Builder& with(Animator* anim);
     Builder& before(Animator* anim);
     Builder& after(Animator* anim);
-    Builder& after(long delay);
+    Builder& after(int64_t delay);
 };
 
 class AnimatorSet::Node{
@@ -166,7 +166,7 @@ public:
 
     int64_t mStartTime = 0;
     int64_t mEndTime = 0;
-    long mTotalDuration = 0;
+    int64_t mTotalDuration = 0;
 public:
     Node(Animator* animation);
     Node* clone();

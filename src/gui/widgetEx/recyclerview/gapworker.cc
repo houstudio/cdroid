@@ -230,7 +230,8 @@ bool GapWorker::isPrefetchPositionAttached(RecyclerView* view, int position) {
     return false;
 }
 
-/*RecyclerView::ViewHolder*/void* GapWorker::prefetchPositionWithDeadline(RecyclerView* view,int position, int64_t deadlineNs) {
+/*RecyclerView::ViewHolder*/
+void* GapWorker::prefetchPositionWithDeadline(RecyclerView* view,int position, int64_t deadlineNs) {
     if (isPrefetchPositionAttached(view, position)) {
         // don't attempt to prefetch attached views
         return nullptr;

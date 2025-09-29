@@ -26,9 +26,9 @@ private:
     int mFlags = 0;
     bool mDirty;
     bool mHasAlpha;
-    std::vector<Animation*> mAnimations ;
-    long mLastEnd;
-    std::vector<long>mStoredOffsets;
+    std::vector<Animation*> mAnimations;
+    int64_t mLastEnd;
+    std::vector<int64_t>mStoredOffsets;
  
     void setFlag(int mask, bool value);
     void init();
@@ -42,15 +42,15 @@ public:
     void setFillAfter(bool fillAfter)override;
     void setFillBefore(bool fillBefore)override;
     void setRepeatMode(int repeatMode)override;
-    void setStartOffset(long startOffset)override;
+    void setStartOffset(int64_t startOffset)override;
     bool hasAlpha() override;
-    void setDuration(long durationMillis)override;
+    void setDuration(int64_t durationMillis)override;
     void addAnimation(Animation* a);
     void setStartTime(int64_t startTimeMillis)override;
     int64_t getStartTime()const override;
-    void restrictDuration(long durationMillis)override;
-    long getDuration()const override;
-    long computeDurationHint()override;
+    void restrictDuration(int64_t durationMillis)override;
+    int64_t getDuration()const override;
+    int64_t computeDurationHint()override;
     void initializeInvalidateRegion(int left, int top, int right, int bottom);
     bool getTransformation(int64_t currentTime, Transformation& t)override;
     void scaleCurrentDuration(float scale)override;

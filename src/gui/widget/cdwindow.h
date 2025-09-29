@@ -1,7 +1,6 @@
 #ifndef __CDROID_WINDOW_H__
 #define __CDROID_WINDOW_H__
 #include <cdtypes.h>
-#include <view/viewgroup.h>
 #include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/uieventsource.h>
@@ -9,7 +8,7 @@
 #define USE_UIEVENTHANDLER 0
 
 namespace cdroid {
-class Window : public ViewGroup {
+class Window : public FrameLayout {
 protected:
     friend class WindowManager;
     friend class GraphDevice;
@@ -81,9 +80,6 @@ protected:
     int processPointerEvent(MotionEvent&event);
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
-    ViewGroup::LayoutParams* generateDefaultLayoutParams()const override;
-    bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
-    ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     typedef enum{
         TYPE_WALLPAPER    = 1,
@@ -123,7 +119,6 @@ public:
     void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delayMilliseconds)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
     void cancelInvalidate(View* view)override;
-    ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void requestTransitionStart(LayoutTransition* transition)override;
     void close();
 };

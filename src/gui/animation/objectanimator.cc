@@ -54,7 +54,7 @@ void ObjectAnimator::initAnimation(){
     }
 }
 
-ObjectAnimator&ObjectAnimator::setDuration(long duration){
+ObjectAnimator&ObjectAnimator::setDuration(int64_t duration){
     ValueAnimator::setDuration(duration);
     return *this;
 }
@@ -92,7 +92,7 @@ void ObjectAnimator::setPropertyName(const std::string& propertyName){
     mInitialized = false;
 }
 
-void ObjectAnimator::setProperty(Property* property){
+void ObjectAnimator::setProperty(const Property* property){
     if (!mValues.empty()) {
         PropertyValuesHolder* valuesHolder = mValues[0];
         const std::string oldName = valuesHolder->getPropertyName();
@@ -259,7 +259,7 @@ ObjectAnimator* ObjectAnimator::ofPropertyValuesHolder(void*target,const std::ve
     return anim;
 }
 
-ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vector<int>&values){
+ObjectAnimator* ObjectAnimator::ofInt(void*target,const Property*prop,const std::vector<int>&values){
     ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
     anim->setProperty(prop);
@@ -267,7 +267,7 @@ ObjectAnimator* ObjectAnimator::ofInt(void*target,Property*prop,const std::vecto
     return anim;
 }
 
-ObjectAnimator* ObjectAnimator::ofFloat(void*target,Property*prop,const std::vector<float>&values){
+ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*prop,const std::vector<float>&values){
     ObjectAnimator*anim = new ObjectAnimator();
     anim->setTarget(target);
     anim->setProperty(prop);
