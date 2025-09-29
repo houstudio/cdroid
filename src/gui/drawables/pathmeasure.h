@@ -23,6 +23,12 @@
 #include <drawables/hwvectordrawable.h>
 namespace cdroid {
 class PathMeasure{
+public:
+    struct Segment {
+        enum Type { Line, Cubic } type;
+        PointD p0, p1, p2, p3;   // Cubic 时全部有效；Line 时仅 p0/p1 有效
+        double  len;               // 该段长度（预先算好）
+    };
 private:
     double mTotalLength;
     Cairo::RefPtr<cdroid::Path>mPath;
@@ -30,7 +36,13 @@ private:
     double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3);
     PointD interpolate(const PointD& p1, const PointD& p2, double t);
     PointD interpolateCurve(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t);
+    void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t0, double t1,
+                PointD& q0, PointD& q1, PointD& q2, PointD& q3);
+    void bezierSplitSingle(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t,
+        PointD& left0, PointD& left1, PointD& left2, PointD& left3,
+        PointD& right0, PointD& right1, PointD& right2, PointD& right3);
     double calculateTotalLength();
+    int buildSegments(std::vector<Segment>&segs,std::vector<double>& accumulatedLen);
 public:
     PathMeasure();
     PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool);
