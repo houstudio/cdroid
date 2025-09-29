@@ -85,7 +85,7 @@ void RadioGroup::setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChange
     mOnHierarchyChangeListener = listener;
 }
 
-void RadioGroup::setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener){
+void RadioGroup::setOnCheckedChangeListener(const CompoundButton::OnCheckedChangeListener& listener){
     mOnCheckedChangeListener = listener;
 }
 

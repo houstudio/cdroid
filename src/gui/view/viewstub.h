@@ -22,7 +22,7 @@ public:
     void draw(Canvas&)override;
     void setVisibility(int visibility)override;
     View*inflate();
-    void setOnInflateListener(OnInflateListener inflateListener);
+    void setOnInflateListener(const OnInflateListener& inflateListener);
 };
 
 }

@@ -91,17 +91,17 @@ public:
 
     std::vector<AccessibilityServiceInfo> getEnabledAccessibilityServiceList( int feedbackTypeFlags);
 #endif
-    void addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
+    void addAccessibilityStateChangeListener(const AccessibilityStateChangeListener& listener);
 
-    void removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener);
+    void removeAccessibilityStateChangeListener(const AccessibilityStateChangeListener& listener);
 
-    void addTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
+    void addTouchExplorationStateChangeListener(const TouchExplorationStateChangeListener& listener);
 
-    void removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener);
+    void removeTouchExplorationStateChangeListener(const TouchExplorationStateChangeListener& listener);
 #if 0
-    void addAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener);//,handler);
+    void addAccessibilityServicesStateChangeListener(const AccessibilityServicesStateChangeListener& listener);//,handler);
 
-    void removeAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener);
+    void removeAccessibilityServicesStateChangeListener(const AccessibilityServicesStateChangeListener& listener);
 
     void addAccessibilityRequestPreparer(AccessibilityRequestPreparer preparer);
 
@@ -109,9 +109,9 @@ public:
 
     std::vector<AccessibilityRequestPreparer> getRequestPreparersForAccessibilityId(int id);
 
-    void addHighTextContrastStateChangeListener(HighTextContrastChangeListener listener, Handler handler);
+    void addHighTextContrastStateChangeListener(const HighTextContrastChangeListener& listener, Handler handler);
 
-    void removeHighTextContrastStateChangeListener(HighTextContrastChangeListener listener);
+    void removeHighTextContrastStateChangeListener(const HighTextContrastChangeListener& listener);
 
     void setAccessibilityPolicy(AccessibilityPolicy policy);
 

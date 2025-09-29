@@ -560,7 +560,7 @@ bool AdapterView::performItemClick(View& view, int position, long id){
 }
 
 
-void AdapterView::setOnItemClickListener(OnItemClickListener listener) {
+void AdapterView::setOnItemClickListener(const OnItemClickListener& listener) {
     mOnItemClickListener = listener;
 }
 

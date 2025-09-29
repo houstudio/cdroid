@@ -655,7 +655,7 @@ void TabLayout::ensureScrollAnimator(){
     }
 }
 
-void TabLayout::setScrollAnimatorListener(Animator::AnimatorListener listener){
+void TabLayout::setScrollAnimatorListener(const Animator::AnimatorListener& listener){
     ensureScrollAnimator();
     mScrollAnimator->addListener(listener);
 }

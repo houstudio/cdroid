@@ -229,7 +229,7 @@ public:
     void addOnPageChangeListener(const OnPageChangeListener& listener);
     void removeOnPageChangeListener(const OnPageChangeListener& listener);
     void clearOnPageChangeListeners();
-    OnPageChangeListener setInternalPageChangeListener(OnPageChangeListener listener);
+    OnPageChangeListener setInternalPageChangeListener(const OnPageChangeListener& listener);
     int getCurrentItem()const;
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);

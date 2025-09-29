@@ -195,7 +195,7 @@ private:
     void removeTabViewAt(int position);
     void animateToTab(int newPosition);
     void ensureScrollAnimator();
-    void setScrollAnimatorListener(Animator::AnimatorListener listener);
+    void setScrollAnimatorListener(const Animator::AnimatorListener& listener);
     void setSelectedTabView(int position);
     void dispatchTabSelected(Tab* tab);
     void dispatchTabUnselected(Tab* tab);

@@ -99,7 +99,7 @@ public:
      *
      * @param postLayoutListener listener for item layout changes. Can be null.
      */
-    void setPostLayoutListener(PostLayoutListener postLayoutListener);
+    void setPostLayoutListener(const PostLayoutListener& postLayoutListener);
 
     /**
      * Setup maximum visible (layout) items on each side of the center item.

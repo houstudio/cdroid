@@ -141,7 +141,7 @@ public:
     virtual void setSelection(int position)=0;
     virtual bool performItemClick(View& view, int position, long id);
     
-    void setOnItemClickListener(OnItemClickListener listener);
+    void setOnItemClickListener(const OnItemClickListener& listener);
     OnItemClickListener getOnItemClickListener() const;
     void setOnItemSelectedListener(const OnItemSelectedListener& listener);
     OnItemSelectedListener getOnItemSelectedListener()const;

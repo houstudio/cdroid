@@ -104,9 +104,9 @@ public:
     long getStartDelay()const;
     ViewPropertyAnimator& setInterpolator(TimeInterpolator* interpolator);
     TimeInterpolator*getInterpolator();
-    ViewPropertyAnimator& setListener(Animator::AnimatorListener listener);
+    ViewPropertyAnimator& setListener(const Animator::AnimatorListener& listener);
     Animator::AnimatorListener getListener()const;
-    ViewPropertyAnimator& setUpdateListener(ValueAnimator::AnimatorUpdateListener listener);
+    ViewPropertyAnimator& setUpdateListener(const ValueAnimator::AnimatorUpdateListener& listener);
     ValueAnimator::AnimatorUpdateListener getUpdateListener()const;
     void start();
     void cancel();

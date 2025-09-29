@@ -117,7 +117,7 @@ public:
         long mMoveDuration = 250;
         long mChangeDuration = 250;
     protected:
-        void setListener(ItemAnimatorListener listener);
+        void setListener(const ItemAnimatorListener& listener);
         static int buildAdapterChangeFlagsForAnimations(ViewHolder* viewHolder);
     public:
         static constexpr int FLAG_CHANGED = 1<<1;//ViewHolder::FLAG_UPDATE;
@@ -446,12 +446,12 @@ public:
     void removeRecyclerListener(const RecyclerListener& listener);
 
     int getBaseline()override;
-    void addOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener);
-    void removeOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener);
+    void addOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
+    void removeOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
     void clearOnChildAttachStateChangeListeners();
     void setLayoutManager(LayoutManager* layout);
     LayoutManager* getLayoutManager();
-    void setOnFlingListener(OnFlingListener onFlingListener);
+    void setOnFlingListener(const OnFlingListener& onFlingListener);
     OnFlingListener getOnFlingListener();
     RecycledViewPool& getRecycledViewPool();
     void setRecycledViewPool(RecycledViewPool* pool);

@@ -206,11 +206,11 @@ List<AccessibilityServiceInfo> AccessibilityManager::getEnabledAccessibilityServ
 }
 #endif
 
-void AccessibilityManager::addAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
+void AccessibilityManager::addAccessibilityStateChangeListener(const AccessibilityStateChangeListener& listener) {
     mAccessibilityStateChangeListeners.push_back(listener);
 }
 
-void AccessibilityManager::removeAccessibilityStateChangeListener(AccessibilityStateChangeListener listener) {
+void AccessibilityManager::removeAccessibilityStateChangeListener(const AccessibilityStateChangeListener& listener) {
     auto it = std::find(mAccessibilityStateChangeListeners.begin(),
             mAccessibilityStateChangeListeners.end(),listener);
     if(it!=mAccessibilityStateChangeListeners.end()){
@@ -218,11 +218,11 @@ void AccessibilityManager::removeAccessibilityStateChangeListener(AccessibilityS
     }
 }
 
-void AccessibilityManager::addTouchExplorationStateChangeListener( TouchExplorationStateChangeListener listener) {
+void AccessibilityManager::addTouchExplorationStateChangeListener(const TouchExplorationStateChangeListener& listener) {
     mTouchExplorationStateChangeListeners.push_back(listener);
 }
 
-void AccessibilityManager::removeTouchExplorationStateChangeListener(TouchExplorationStateChangeListener listener) {
+void AccessibilityManager::removeTouchExplorationStateChangeListener(const TouchExplorationStateChangeListener& listener) {
     auto it = std::find(mTouchExplorationStateChangeListeners.begin(),
             mTouchExplorationStateChangeListeners.end(),listener);
     if(it!=mTouchExplorationStateChangeListeners.end()){
@@ -230,11 +230,11 @@ void AccessibilityManager::removeTouchExplorationStateChangeListener(TouchExplor
     }
 }
 #if 0
-void AccessibilityManager::addAccessibilityServicesStateChangeListener( AccessibilityServicesStateChangeListener listener) {
+void AccessibilityManager::addAccessibilityServicesStateChangeListener(const AccessibilityServicesStateChangeListener& listener) {
     mServicesStateChangeListeners.put_back(listener);
 }
 
-void AccessibilityManager::removeAccessibilityServicesStateChangeListener(AccessibilityServicesStateChangeListener listener) {
+void AccessibilityManager::removeAccessibilityServicesStateChangeListener(const AccessibilityServicesStateChangeListener& listener) {
     auto it = std::find(mServicesStateChangeListeners.begin(),
             mServicesStateChangeListeners.end(),listener);
     if(it!=mServicesStateChangeListeners.end()){
@@ -276,12 +276,12 @@ List<AccessibilityRequestPreparer> AccessibilityManager::getRequestPreparersForA
     return mRequestPreparerLists.get(id);
 }
 
-void AccessibilityManager::addHighTextContrastStateChangeListener(HighTextContrastChangeListener listener, Handler handler) {
+void AccessibilityManager::addHighTextContrastStateChangeListener(const HighTextContrastChangeListener& listener, Handler handler) {
     mHighTextContrastStateChangeListeners
             .put(listener, (handler == null) ? mHandler : handler);
 }
 
-void AccessibilityManager::removeHighTextContrastStateChangeListener(HighTextContrastChangeListener listener) {
+void AccessibilityManager::removeHighTextContrastStateChangeListener(const HighTextContrastChangeListener& listener) {
     mHighTextContrastStateChangeListeners.remove(listener);
 }
 
