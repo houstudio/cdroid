@@ -53,7 +53,7 @@ public:
     int getCheckedRadioButtonId()const;
     std::string getAccessibilityClassName()const override;
     void setOnHierarchyChangeListener(const ViewGroup::OnHierarchyChangeListener& listener)override;
-    void setOnCheckedChangeListener(CompoundButton::OnCheckedChangeListener listener);
+    void setOnCheckedChangeListener(const CompoundButton::OnCheckedChangeListener& listener);
     void check(int id);
     void clearCheck();
     void onInitializeAccessibilityNodeInfo(AccessibilityNodeInfo& info)override;

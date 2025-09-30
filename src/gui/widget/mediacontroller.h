@@ -87,7 +87,7 @@ public:
     bool onTrackballEvent(MotionEvent& ev)override;
     bool dispatchKeyEvent(KeyEvent& event)override;
     void setEnabled(bool enabled)override;
-    void setPrevNextListeners(OnClickListener next,OnClickListener prev);
+    void setPrevNextListeners(const OnClickListener& next,const OnClickListener& prev);
 };
 }/*endof namespace*/
 #endif//__MEDIA_CONTROLLER_H__

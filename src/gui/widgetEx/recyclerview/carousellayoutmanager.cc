@@ -50,7 +50,7 @@ void CarouselLayoutManager::setCircleLayout(bool circleLayout) {
  *
  * @param postLayoutListener listener for item layout changes. Can be null.
  */
-void CarouselLayoutManager::setPostLayoutListener(PostLayoutListener postLayoutListener) {
+void CarouselLayoutManager::setPostLayoutListener(const PostLayoutListener& postLayoutListener) {
     mViewPostLayout = postLayoutListener;
     requestLayout();
 }

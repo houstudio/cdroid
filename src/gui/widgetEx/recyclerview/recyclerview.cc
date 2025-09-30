@@ -596,11 +596,11 @@ int RecyclerView::getBaseline() {
     }
 }
 
-void RecyclerView::addOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener) {
+void RecyclerView::addOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener) {
     mOnChildAttachStateListeners.push_back(listener);
 }
 
-void RecyclerView::removeOnChildAttachStateChangeListener(OnChildAttachStateChangeListener listener) {
+void RecyclerView::removeOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener) {
     if (mOnChildAttachStateListeners.size() == 0) {
         return;
     }
@@ -655,7 +655,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
     requestLayout();
 }
 
-void RecyclerView::setOnFlingListener(OnFlingListener onFlingListener) {
+void RecyclerView::setOnFlingListener(const OnFlingListener& onFlingListener) {
     mOnFlingListener = onFlingListener;
 }
 
@@ -7694,7 +7694,7 @@ void RecyclerView::ItemAnimator::setChangeDuration(long changeDuration) {
     mChangeDuration = changeDuration;
 }
 
-void RecyclerView::ItemAnimator::setListener(RecyclerView::ItemAnimator::ItemAnimatorListener listener) {
+void RecyclerView::ItemAnimator::setListener(const ItemAnimator::ItemAnimatorListener& listener) {
     mListener = listener;
 }
 

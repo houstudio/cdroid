@@ -227,7 +227,7 @@ TimeInterpolator* ViewPropertyAnimator::getInterpolator() {
     }
 }
 
-ViewPropertyAnimator& ViewPropertyAnimator::setListener(Animator::AnimatorListener listener) {
+ViewPropertyAnimator& ViewPropertyAnimator::setListener(const Animator::AnimatorListener& listener) {
     mListener = listener;
     return *this;
 }
@@ -236,7 +236,7 @@ Animator::AnimatorListener ViewPropertyAnimator::getListener()const{
     return mListener;
 }
 
-ViewPropertyAnimator& ViewPropertyAnimator::setUpdateListener(ValueAnimator::AnimatorUpdateListener listener) {
+ViewPropertyAnimator& ViewPropertyAnimator::setUpdateListener(const ValueAnimator::AnimatorUpdateListener& listener) {
     mUpdateListener = listener;
     return *this;
 }

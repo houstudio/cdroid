@@ -93,7 +93,7 @@ View* ViewStub::inflate() {
     }
 }
 
-void ViewStub::setOnInflateListener(OnInflateListener inflateListener){
+void ViewStub::setOnInflateListener(const OnInflateListener& inflateListener){
     mInflateListener = inflateListener;
 }
 }//endof namespace

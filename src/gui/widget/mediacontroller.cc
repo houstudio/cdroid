@@ -382,7 +382,7 @@ void MediaController::installPrevNextListeners() {
     }
 }
 
-void MediaController::setPrevNextListeners(View::OnClickListener next, View::OnClickListener prev) {
+void MediaController::setPrevNextListeners(const View::OnClickListener& next,const View::OnClickListener& prev) {
     mNextListener = next;
     mPrevListener = prev;
     mListenersSet = true;

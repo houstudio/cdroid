@@ -362,7 +362,7 @@ int ViewPager::getChildDrawingOrder(int childCount, int i){
     return result;
 }
 
-ViewPager::OnPageChangeListener ViewPager::setInternalPageChangeListener(OnPageChangeListener listener) {
+ViewPager::OnPageChangeListener ViewPager::setInternalPageChangeListener(const OnPageChangeListener& listener) {
     OnPageChangeListener oldListener = mInternalPageChangeListener;
     mInternalPageChangeListener = listener;
     return oldListener;
