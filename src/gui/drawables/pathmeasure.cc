@@ -93,8 +93,7 @@ void PathMeasure::bezierSplitSingle(const PointD& p0, const PointD& p1, const Po
     right3 = p3;
 }
 void PathMeasure::bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3,
-                 double t0, double t1,
-                 PointD& q0, PointD& q1, PointD& q2, PointD& q3)
+                 double t0, double t1, PointD& q0, PointD& q1, PointD& q2, PointD& q3)
 {
     // 先分割到 t1，得到 [0, t1] 的控制点
     PointD l0, l1, l2, l3, r0, r1, r2, r3;
@@ -234,16 +233,10 @@ bool PathMeasure::getSegment(double startD, double stopD,Cairo::RefPtr<cdroid::P
     bool needsMove = startWithMoveTo;
     for (int i = 0; i < segs.size(); ++i) {
         const Segment& s = segs[i];
-        double segStart = accLen[i];
-        double segEnd   = (i+1<accLen.size())?accLen[i+1]:accLen.back();
-        double t0 = (startD >segStart) ? (startD - segStart) / s.len : 0.0;
-        double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.len : 1.0;
-        if (t1 > 1.0) t1 = 1.0;
-        if (t0 < 0.0) t0 = 0.0;
-        if (t1 <= t0) { 
-            LOGV("SKIP SEG[%d] t0=%f t1=%f type=%d",i,t0,t1,s.type);
-            continue;
-        }
+        const double segStart = (i==0)?0:accLen[i-1];
+        const double segEnd   = accLen[i];
+        const double t0 = (startD >segStart) ? (startD - segStart) / s.len : 0.0;
+        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.len : 1.0;
         if (s.type == Segment::Line) {
             PointD p0 =interpolate(s.p0, s.p1, t0);
             PointD p1 = interpolate(s.p0, s.p1, t1);
@@ -267,7 +260,7 @@ bool PathMeasure::getSegment(double startD, double stopD,Cairo::RefPtr<cdroid::P
             }
             //dst->move_to(q0.x, q0.y);
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
-            LOGV("[%d]CUBIC(%.2f,%.2f, %.2f,%.2f, %.2f,%.2f, %.2f,%.2f, seg %.2f,%.2f,%.2f)",i,q0.x,q0.y,q1.x, q1.y, q2.x, q2.y, q3.x, q3.y,segStart,segEnd,s.len);
+            LOGV("[%d]CUBIC(%.2f,%.2f, %.2f,%.2f, %.2f,%.2f, %.2f,%.2f), seg( %.2f,%.2f)",i,q0.x,q0.y,q1.x, q1.y, q2.x, q2.y, q3.x, q3.y,segStart,segEnd);
         }
     }
     return true;
