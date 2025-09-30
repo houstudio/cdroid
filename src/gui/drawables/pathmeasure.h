@@ -26,26 +26,18 @@ class PathMeasure{
 public:
     struct Segment {
         enum Type { Line, Cubic } type;
-        PointD p0, p1, p2, p3;   // Cubic 时全部有效；Line 时仅 p0/p1 有效
-        double len;               // 该段长度（预先算好）
+        PointD p0, p1, p2, p3;
+        double len;
     };
 private:
-    double mTotalLength;
     std::vector<Segment>mSegments;
-    std::vector<double>mLengths;
     Cairo::RefPtr<cdroid::Path>mPath;
-    double distance(const PointD&p1,const PointD&p2);
-    double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3);
-    PointD interpolate(const PointD& p1, const PointD& p2, double t);
-    PointD interpolateCurve(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t);
-    void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t0, double t1,
-                PointD& q0, PointD& q1, PointD& q2, PointD& q3);
     int buildSegments();
 public:
     PathMeasure();
     PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool);
     void setPath(Cairo::RefPtr<cdroid::Path>inPath);
-    double getLength();
+    double getLength()const;
     bool getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo);
     bool getPosTan(double distance,PointD* pos,PointD* tangent) ;
 };
