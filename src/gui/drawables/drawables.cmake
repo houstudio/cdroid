@@ -19,7 +19,6 @@ SET(DRAWABLE_SOURCES
     drawables/drawablewrapper.cc
     drawables/gaussianblur.cc
     drawables/gradientdrawable.cc
-    drawables/pathmeasure.cc
     drawables/hwpathparser.cc
     drawables/hwvectordrawable.cc
     drawables/hwvectordrawableutils.cc

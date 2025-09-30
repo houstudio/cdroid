@@ -30,13 +30,15 @@ public:
         double len;
     };
 private:
+    bool mForceClosed;
     std::vector<Segment>mSegments;
     Cairo::RefPtr<cdroid::Path>mPath;
     int buildSegments();
 public:
     PathMeasure();
-    PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool);
+    PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed);
     void setPath(Cairo::RefPtr<cdroid::Path>inPath);
+    void setPath(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed);
     double getLength()const;
     bool getSegment(double startD, double stopD, Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo);
     bool getPosTan(double distance,PointD* pos,PointD* tangent) ;

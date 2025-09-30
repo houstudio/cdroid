@@ -16,20 +16,30 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <numeric>
+#include <cfloat>
 #include <porting/cdlog.h>
-#include <drawables/pathmeasure.h>
+#include <core/pathmeasure.h>
 namespace cdroid {
 
 PathMeasure::PathMeasure(){
+    mForceClosed = false;
 }
 
-PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){
+PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
     mPath = inPath;
+    mForceClosed = forceClosed;
     buildSegments();
 }
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath){
     mPath = inPath;
+    mSegments.clear();
+    buildSegments();
+}
+
+void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
+    mPath = inPath;
+    mForceClosed = forceClosed;
     mSegments.clear();
     buildSegments();
 }
@@ -116,6 +126,7 @@ int PathMeasure::buildSegments(){
 
     const auto m_path = mPath->copy_path();
     int i = 0;
+    bool hasMove = false;
 
     while (i < m_path->num_data) {
         const cairo_path_data_t* data = &m_path->data[i];
@@ -125,6 +136,7 @@ int PathMeasure::buildSegments(){
         if (type == CAIRO_PATH_MOVE_TO) {
             startX = x0 = data[1].point.x;
             startY = y0 = data[1].point.y;
+            hasMove = true;
         } else if (type == CAIRO_PATH_LINE_TO) {
             const double x1 = data[1].point.x;
             const double y1 = data[1].point.y;
@@ -156,6 +168,10 @@ int PathMeasure::buildSegments(){
             }
             x0 = startX; y0 = startY;
         }
+    }
+    if (mForceClosed && hasMove && (std::hypot(x0 - startX, y0 - startY) > FLT_EPSILON)) {
+        const double len = std::hypot(startX - x0, startY - y0);
+        mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
     }
     return mSegments.size();
 }
@@ -195,7 +211,7 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             PointD q0, q1, q2, q3;
             if ((t0 == 0.0) && (t1 == 1.0)) {
                 q0 = s.p0; q1 = s.p1; q2 = s.p2; q3 = s.p3;
-            } else if(t1>t0+1e-6){
+            } else if(t1>t0+FLT_EPSILON){
                 bezierSplit(s.p0, s.p1, s.p2, s.p3, t0, t1, q0, q1, q2, q3);
             }
             if (needsMove) { 

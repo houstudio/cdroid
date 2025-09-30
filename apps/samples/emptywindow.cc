@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <cdlog.h>
-#include <drawables/pathmeasure.h>
+#include <core/pathmeasure.h>
 #include <view/gesturedetector.h>
 #include <view/scalegesturedetector.h>
 class MyWindow:public Window{
@@ -36,6 +36,9 @@ public:
         mDetector->setOnDoubleTapListener(dl);
 
         mPath->arc(400,200,100,0,M_PI*2.0);
+        //mPath->line_to(0,0);  mPath->line_to(200,300);
+        mPath->curve_to(234,47,789,121,200,600);
+        mPath->close_path();
     }
     void onDraw(Canvas&canvas)override{
         LOGD("%p onDraw",this);
@@ -56,7 +59,7 @@ public:
             canvas.stroke();
             rc.inflate(-10,-10);
         }
-        canvas.translate(200,0);
+        canvas.translate(400,0);
         canvas.set_source_rgba(0,1,0,0.5);
         canvas.move_to(510.00,200.00);
         mPath->append_to_context(&canvas);

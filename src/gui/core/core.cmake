@@ -28,6 +28,7 @@ SET(CORE_SOURCES
     core/looper.cc
     core/parcel.cc
     core/path.cc
+    core/pathmeasure.cc
     core/outline.cc
     core/porterduff.cc
     core/preferences.cc
