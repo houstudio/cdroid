@@ -43,17 +43,16 @@ namespace{
     }
 
     PointD interpolateCurve(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double t){
-        double u = 1.0 - t;
-        double tt = t * t;
-        double uu = u * u;
-        double uuu = uu * u;
-        double ttt = tt * t;
+        const double u = 1.0 - t;
+        const double tt = t * t;
+        const double uu = u * u;
+        const double uuu = uu * u;
+        const double ttt = tt * t;
 
-        PointD p = {
+        return{
             uuu * p0.x + 3.0 * uu * t * p1.x + 3.0 * u * tt * p2.x + ttt * p3.x,
             uuu * p0.y + 3.0 * uu * t * p1.y + 3.0 * u * tt * p2.y + ttt * p3.y
         };
-        return p;
     }
 
 #define CURVE_STEPS 36
@@ -109,10 +108,10 @@ double PathMeasure::getLength() const{
 }
 
 int PathMeasure::buildSegments(){
-    double x0 = 0, y0 = 0;          // 当前点
-    double startX = 0, startY = 0; // 最近 moveTo 点
+    double x0 = 0, y0 = 0;
+    double startX = 0, startY = 0;
 
-    auto m_path = mPath->copy_path();
+    const auto m_path = mPath->copy_path();
     int i = 0;
 
     while (i < m_path->num_data) {
@@ -124,9 +123,9 @@ int PathMeasure::buildSegments(){
             startX = x0 = data[1].point.x;
             startY = y0 = data[1].point.y;
         } else if (type == CAIRO_PATH_LINE_TO) {
-            double x1 = data[1].point.x;
-            double y1 = data[1].point.y;
-            double len = std::hypot(x1 - x0, y1 - y0);
+            const double x1 = data[1].point.x;
+            const double y1 = data[1].point.y;
+            const double len = std::hypot(x1 - x0, y1 - y0);
             mSegments.push_back({Segment::Line, {x0, y0}, {x1, y1}, {}, {}, len});
             x0 = x1; y0 = y1;
         } else if (type == CAIRO_PATH_CURVE_TO) {
@@ -137,19 +136,18 @@ int PathMeasure::buildSegments(){
             double len = 0;
             PointD prev = {x0, y0};
             for (int k = 1; k <= CURVE_STEPS; ++k) {
-                double t = k / double(CURVE_STEPS);
-                double mt = 1.0-t;
-                double x = mt*mt*mt*x0 + 3*mt*mt*t*x1 + 3*mt*t*t*x2 + t*t*t*x3;
-                double y = mt*mt*mt*y0 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y3;
+                const double t = k / double(CURVE_STEPS);
+                const double mt = 1.0-t;
+                double ptx = mt*mt*mt*x0 + 3*mt*mt*t*x1 + 3*mt*t*t*x2 + t*t*t*x3;
+                double pty = mt*mt*mt*y0 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y3;
 
-                PointD pt = {x,y};
-                len += std::hypot(pt.x - prev.x, pt.y - prev.y);
-                prev = pt;
+                len += std::hypot(ptx - prev.x, pty - prev.y);
+                prev = {ptx,pty};
             }
             mSegments.push_back({Segment::Cubic, {x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, len});
             x0 = x3; y0 = y3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
-            double len = std::hypot(startX - x0, startY - y0);
+            const double len = std::hypot(startX - x0, startY - y0);
             if (len > 0) {
                 mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
             }
@@ -178,8 +176,7 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
 
     bool needsMove = startWithMoveTo;
     double segStart = 0.0,segEnd = 0.0;
-    for (int i = 0; i < mSegments.size(); ++i) {
-        const Segment& s = mSegments[i];
+    for (auto& s:mSegments) {
         segEnd += s.len;
         const double t0 = (startD >segStart) ? (startD - segStart) / s.len : 0.0;
         const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.len : 1.0;
@@ -204,8 +201,8 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             }
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
         }
-        segStart+=s.len;
-        if(segEnd>=stopD)break;
+        segStart += s.len;
+        if(segEnd >= stopD)break;
     }
     return true;
 }
