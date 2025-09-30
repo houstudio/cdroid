@@ -24,11 +24,14 @@ PathMeasure::PathMeasure(){
 }
 
 PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool){
-    mPath=inPath;
+    mPath = inPath;
+    buildSegments();
 }
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath){
-    mPath=inPath;
+    mPath = inPath;
+    mSegments.clear();
+    buildSegments();
 }
 
 namespace{
