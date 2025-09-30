@@ -45,7 +45,7 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
  */
 void PathParser::createPathFromPathData(std::shared_ptr<cdroid::Path>& outPath,const PathParser::PathData& data) {
     //nCreatePathFromPathData(outPath.mNativePath, data.mNativePathData);
-    hwui::VectorDrawableUtils::verbsToPath(outPath, *data.mNativePathData);
+    hwui::VectorDrawableUtils::verbsToPath(outPath, *(hwui::PathData*)data.mNativePathData);
 }
 
 /**
@@ -88,7 +88,7 @@ PathParser::PathData::PathData() {
 }
 
 PathParser::PathData::PathData(const PathParser::PathData& data) {
-    mNativePathData = new hwui::PathData(*data.mNativePathData);
+    mNativePathData = new hwui::PathData(*(hwui::PathData*)data.mNativePathData);
 }
 
 PathParser::PathData::PathData(const std::string& pathString) {
@@ -97,7 +97,7 @@ PathParser::PathData::PathData(const std::string& pathString) {
     }
     mNativePathData = new hwui::PathData();
     hwui::PathParser::ParseResult result;
-    hwui::PathParser::getPathDataFromAsciiString(mNativePathData, &result, pathString.c_str(), pathString.length());
+    hwui::PathParser::getPathDataFromAsciiString((hwui::PathData*)mNativePathData, &result, pathString.c_str(), pathString.length());
 }
 
 long PathParser::PathData::getNativePtr() {
@@ -118,7 +118,7 @@ void PathParser::PathData::setPathData(const PathParser::PathData& source) {
 
 PathParser::PathData&PathParser::PathData::operator=(const PathParser::PathData&other){
     if(&other!=this){
-        *mNativePathData=*other.mNativePathData;
+        *(hwui::PathData*)mNativePathData=*(hwui::PathData*)other.mNativePathData;
     }
     return *this;
 }

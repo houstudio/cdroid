@@ -19,12 +19,35 @@
 #define __PARTH_PARSER_H__
 #include <core/path.h>
 namespace cdroid{
-namespace hwui{
-    struct PathData;
-}
 class PathParser {
 public:
-    class PathData;
+    /**
+     * PathData class is a wrapper around the native PathData object, which contains
+     * the result of parsing a path string. Specifically, there are verbs and points
+     * associated with each verb stored in PathData. This data can then be used to
+     * generate commands to manipulate a Path.
+     */
+    class PathData {
+    private:
+        friend PathParser;
+        void* mNativePathData;
+    public:
+        PathData();
+        PathData(const PathData& data);
+        PathData(const std::string& pathString);
+        long getNativePtr();
+
+        /**
+         * Update the path data to match the source.
+         * Before calling this, make sure canMorph(target, source) is true.
+         *
+         * @param source The source path represented in PathData
+         */
+        void setPathData(const PathData& source);
+        PathData&operator=(const PathData&other);
+        ~PathData();
+    };
+
     /**
      * @param pathString The string representing a path, the same as "d" string in svg file.
      * @return the generated Path object.
@@ -57,32 +80,6 @@ public:
      * @param fraction The fraction to interpolate.
      */
     static bool interpolatePathData(PathData& outData,const PathData& fromData,const PathData& toData, float fraction);
-};
-/**
- * PathData class is a wrapper around the native PathData object, which contains
- * the result of parsing a path string. Specifically, there are verbs and points
- * associated with each verb stored in PathData. This data can then be used to
- * generate commands to manipulate a Path.
- */
-class PathParser::PathData {
-private:
-    friend PathParser;
-    hwui::PathData* mNativePathData;
-public:
-    PathData();
-    PathData(const PathData& data);
-    PathData(const std::string& pathString);
-    long getNativePtr();
-
-    /**
-     * Update the path data to match the source.
-     * Before calling this, make sure canMorph(target, source) is true.
-     *
-     * @param source The source path represented in PathData
-     */
-    void setPathData(const PathData& source);
-    PathData&operator=(const PathData&other);
-    ~PathData();
 };
 }/*endof namespace*/
 #endif/*__PARTH_PARSER_H__*/
