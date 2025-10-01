@@ -480,8 +480,97 @@ void AnimatorInflater::parseAnimatorFromTypeArray(ValueAnimator* anim,const Attr
     }
 }
 
+TypeEvaluator AnimatorInflater::setupAnimatorForPath(ValueAnimator* anim,const AttributeSet&arrayAnimator){
+    TypeEvaluator evaluator = nullptr;
+    const std::string fromString = arrayAnimator.getString("valueFrom");
+    const std::string toString = arrayAnimator.getString("valueTo");
+
+    if (!fromString.empty()) {//pathDataFrom != null) {
+        PathParser::PathData pathDataFrom (fromString);
+        if (!toString.empty()) {//pathDataTo != null) {
+            PathParser::PathData pathDataTo(toString);
+            //anim->setObjectValues(pathDataFrom, pathDataTo);
+            if (!PathParser::canMorph(pathDataFrom, pathDataTo)) {
+                throw std::runtime_error(//arrayAnimator.getPositionDescription()
+                        " Can't morph from " + fromString + " to " + toString);
+            }
+        } else {
+            //anim->setObjectValues((Object)pathDataFrom);
+        }
+        //evaluator = new PathDataEvaluator();
+    } else if (!toString.empty()){//pathDataTo != null) {
+        PathParser::PathData pathDataTo(toString);
+        //anim->setObjectValues((Object)pathDataTo);
+        //evaluator = new PathDataEvaluator();
+    }
+
+    LOGV_IF(evaluator!=nullptr,"create a new PathDataEvaluator here");
+
+    return evaluator;
+}
+
+void AnimatorInflater::setupObjectAnimator(ValueAnimator* anim, const AttributeSet&arrayObjectAnimator,int valueType, float pixelSize){
+    ObjectAnimator* oa = (ObjectAnimator*) anim;
+    std::string pathData = arrayObjectAnimator.getString("pathData");
+    // Path can be involved in an ObjectAnimator in the following 3 ways:
+    // 1) Path morphing: the property to be animated is pathData, and valueFrom and valueTo
+    //    are both of pathType. valueType = pathType needs to be explicitly defined.
+    // 2) A property in X or Y dimension can be animated along a path: the property needs to be
+    //    defined in propertyXName or propertyYName attribute, the path will be defined in the
+    //    pathData attribute. valueFrom and valueTo will not be necessary for this animation.
+    // 3) PathInterpolator can also define a path (in pathData) for its interpolation curve.
+    // Here we are dealing with case 2:
+    if (!pathData.empty()) {
+        std::string propertyXName = arrayObjectAnimator.getString("propertyXName");
+        std::string propertyYName = arrayObjectAnimator.getString("propertyYName");
+
+        if (valueType == VALUE_TYPE_PATH || valueType == VALUE_TYPE_UNDEFINED) {
+            // When pathData is defined, we are in case #2 mentioned above. ValueType can only
+            // be float type, or int type. Otherwise we fallback to default type.
+            valueType = VALUE_TYPE_FLOAT;
+        }
+#if 0
+        if (propertyXName.empty() && propertyYName.empty()) {
+            throw std::runtime_error(//arrayObjectAnimator.getPositionDescription()
+                    " propertyXName or propertyYName is needed for PathData");
+        } else {
+            auto path = PathParser::createPathFromPathData(pathData);
+            float error = 0.5f * pixelSize; // max half a pixel error
+            PathKeyframes keyframeSet = KeyframeSet.ofPath(path, error);
+            Keyframes xKeyframes;
+            Keyframes yKeyframes;
+            if (valueType == VALUE_TYPE_FLOAT) {
+                xKeyframes = keyframeSet.createXFloatKeyframes();
+                yKeyframes = keyframeSet.createYFloatKeyframes();
+            } else {
+                xKeyframes = keyframeSet.createXIntKeyframes();
+                yKeyframes = keyframeSet.createYIntKeyframes();
+            }
+            PropertyValuesHolder* x = nullptr;
+            PropertyValuesHolder* y = nullptr;
+            if (!propertyXName.empty()) {
+                x = PropertyValuesHolder::ofKeyframes(propertyXName, xKeyframes);
+            }
+            if (!propertyYName.empty()) {
+                y = PropertyValuesHolder::ofKeyframes(propertyYName, yKeyframes);
+            }
+            if (x == nullptr) {
+                oa->setValues({y});
+            } else if (y == nullptr) {
+                oa->setValues({x});
+            } else {
+                oa->setValues({x, y});
+            }
+        }
+#endif
+    } else {
+        std::string propertyName = arrayObjectAnimator.getString("propertyName");
+        oa->setPropertyName(propertyName);
+    }
+}
+
 ObjectAnimator* AnimatorInflater::loadObjectAnimator(Context*ctx,const AttributeSet& atts,float){
-    ObjectAnimator*anim = new ObjectAnimator();//propertyName);
+    ObjectAnimator*anim = new ObjectAnimator();
     loadAnimator(ctx,atts,anim,1.f);
     return anim;
 }
@@ -512,11 +601,6 @@ ValueAnimator* AnimatorInflater::loadAnimator(Context*context,const AttributeSet
         }*/
         anim->setInterpolator(interpolator);
     }
-
-    /*arrayAnimator.recycle();
-    if (arrayObjectAnimator != null) {
-        arrayObjectAnimator.recycle();
-    }*/
     return anim;
 }
 

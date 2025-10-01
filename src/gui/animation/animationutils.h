@@ -28,7 +28,7 @@ private:
     static std::unordered_map<std::string,std::shared_ptr<Interpolator>>mInterpolators;
     static Animation* createAnimationFromXml(Context* c, XmlPullParser& parser,AnimationSet* parent,const AttributeSet& attrs);
     static LayoutAnimationController* createLayoutAnimationFromXml(Context* c,XmlPullParser& parser,const AttributeSet& attrs);
-    static Interpolator* createInterpolatorFromXml(Context* context,XmlPullParser&);
+    static Interpolator* createInterpolatorFromXml(Context* context,XmlPullParser&,const std::string&resid);
 public:
     static int64_t currentAnimationTimeMillis();
     static Animation* loadAnimation(Context* context,const std::string&id);
