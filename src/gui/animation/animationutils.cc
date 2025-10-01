@@ -129,14 +129,18 @@ Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
 
 Interpolator* AnimationUtils::loadInterpolator(Context*context,const std::string& id){
     XmlPullParser parser(context,id);
-    return createInterpolatorFromXml(context, parser);
+    return createInterpolatorFromXml(context, parser,id);
 }
 
-Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser){
+static std::unordered_map<std::string,std::shared_ptr<Interpolator>>mInterpolators;
+Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPullParser&parser,const std::string&resid){
     int type;
     const int depth = parser.getDepth();
-    BaseInterpolator*interpolator = nullptr;
+    std::shared_ptr<BaseInterpolator>interpolator;
     const AttributeSet& attrs = parser;
+    auto it = mInterpolators.find(resid);
+    if(it!=mInterpolators.end())
+        return it->second.get();
     while(((type = parser.next()) != XmlPullParser::END_TAG || parser.getDepth() > depth)
                 && type != XmlPullParser::END_DOCUMENT){
         if (type != XmlPullParser::START_TAG) {
@@ -145,30 +149,31 @@ Interpolator* AnimationUtils::createInterpolatorFromXml(Context* context,XmlPull
 
         const std::string name = parser.getName();
         if (0==name.compare("linearInterpolator")) {
-            interpolator = new LinearInterpolator();
+            interpolator = std::make_shared<LinearInterpolator>();
         } else if (0==name.compare("accelerateInterpolator")) {
-            interpolator = new AccelerateInterpolator(context, attrs);
+            interpolator = std::make_shared<AccelerateInterpolator>(context, attrs);
         } else if (0==name.compare("decelerateInterpolator")) {
-            interpolator = new DecelerateInterpolator(context, attrs);
+            interpolator = std::make_shared<DecelerateInterpolator>(context, attrs);
         } else if (0==name.compare("accelerateDecelerateInterpolator")) {
-            interpolator = new AccelerateDecelerateInterpolator();
+            interpolator = std::make_shared<AccelerateDecelerateInterpolator>();
         } else if (0==name.compare("cycleInterpolator")) {
-            interpolator = new CycleInterpolator(context, attrs);
+            interpolator = std::make_shared<CycleInterpolator>(context, attrs);
         } else if (0==name.compare("anticipateInterpolator")) {
-            interpolator = new AnticipateInterpolator(context,attrs);
+            interpolator = std::make_shared<AnticipateInterpolator>(context,attrs);
         } else if (0==name.compare("overshootInterpolator")) {
-            interpolator = new OvershootInterpolator(context, attrs);
+            interpolator = std::make_shared<OvershootInterpolator>(context, attrs);
         } else if (0==name.compare("anticipateOvershootInterpolator")) {
-            interpolator = new AnticipateOvershootInterpolator(context,attrs);
+            interpolator = std::make_shared<AnticipateOvershootInterpolator>(context,attrs);
         } else if (0==name.compare("bounceInterpolator")) {
-            interpolator = new BounceInterpolator();
+            interpolator = std::make_shared<BounceInterpolator>();
         } else if (0==name.compare("pathInterpolator")) {
-            interpolator = new PathInterpolator(context,attrs);
+            interpolator = std::make_shared<PathInterpolator>(context,attrs);
         } else {
             LOGE("Unknown interpolator name: %s",name.c_str());
         }
     }
-    return interpolator;
+    mInterpolators.insert({resid,interpolator});
+    return interpolator.get();
 }
 
 }

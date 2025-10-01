@@ -18,6 +18,8 @@
 #include <animation/interpolators.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
+#include <core/pathmeasure.h>
+#include <drawables/pathparser.h>
 
 namespace cdroid{
 
@@ -159,6 +161,12 @@ PathInterpolator::PathInterpolator(float controlX1, float controlY1, float contr
 
 PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
     if(a.hasAttribute("pathData")){
+        std::string pathData = a.getString("pathData");
+        auto path = PathParser::createPathFromPathData(pathData);
+        if (path == nullptr) {
+            throw std::runtime_error("The path is null, which is created from " + pathData);
+        }
+        initPath(*path);
     }else{
         if (!a.hasAttribute("controlX1")) {
             throw "pathInterpolator requires the controlX1 attribute";
@@ -199,10 +207,7 @@ void PathInterpolator::initQuad(float controlX, float controlY) {
 void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
     Path path;
     path.move_to(0, 0);
-    double x = 0,y = 0;
-    //path.cubicTo(x1, y1, x2, y2, 1f, 1f);
-    path.curve_to(x  + 2.0/3.0 * (x1 - x),  y  + 2.0/3.0 * (y1 - y),
-            x2 + 2.0/3.0 * (x1 - x2), y2 + 2.0/3.0 * (y1 - y2),x2,y2);
+    path.curve_to(x1, y1, x2, y2, 1.f, 1.f);
     initPath(path);
 }
 
