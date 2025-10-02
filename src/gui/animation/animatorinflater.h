@@ -37,6 +37,8 @@ private:
     static int inferValueTypeFromPropertyName(const AttributeSet&atts, const std::string& propertyName);
     static PropertyValuesHolder* getPVH(const AttributeSet&atts, int valueType,const std::string& propertyName);
     static void parseAnimatorFromTypeArray(ValueAnimator* anim,const AttributeSet&atts, float pixelSize);
+    static TypeEvaluator setupAnimatorForPath(ValueAnimator* anim,const AttributeSet&arrayAnimator);
+    static void setupObjectAnimator(ValueAnimator* anim,const AttributeSet&arrayObjectAnimator,int valueType,float pixelSize);
     static ObjectAnimator* loadObjectAnimator(Context*ctx,const AttributeSet& attrs,float );
     static ValueAnimator* loadValueAnimator(Context*context,const AttributeSet& attrs, ValueAnimator*anim,float);
     static ValueAnimator* loadAnimator(Context*ctx,const AttributeSet& attrs, ValueAnimator* anim, float pathErrorScale);
