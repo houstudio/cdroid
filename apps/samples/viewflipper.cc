@@ -1,5 +1,5 @@
 #include<cdroid.h>
-#include<animations.h>
+#include<animation/animations.h>
 #include<cdlog.h>
 
 int main(int argc,const char*argv[]){

@@ -1,6 +1,6 @@
 #include <cdroid.h>
 #include <cdlog.h>
-#include <animations.h>
+#include <animation/animations.h>
 class MyAdapter:public ArrayAdapter<std::string>{
 private:
     int itemType;

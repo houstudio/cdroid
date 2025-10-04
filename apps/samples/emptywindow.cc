@@ -38,7 +38,6 @@ public:
         mPath->arc(400,200,100,0,M_PI*2.0);
         //mPath->line_to(0,0);  mPath->line_to(200,300);
         mPath->curve_to(234,47,789,121,200,600);
-        mPath->close_path();
     }
     void onDraw(Canvas&canvas)override{
         LOGD("%p onDraw",this);

@@ -33,7 +33,7 @@
 | NumberPicker  |     ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
 | ViewAnimator  |AdapterViewAnimator|    Calendarview    |SimpleMonthView| Chronometer   |
 |  ScrollView   | NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |                   |                    |               |               |
+|YearPickerView |                   |WearableRecyclerView|               |               |
 
 # **Supported Layouts:**
 | FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |
