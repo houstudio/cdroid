@@ -219,11 +219,11 @@ void ActionMenuPresenter::runItemAnimations() {
             PropertyValuesHolder* pvhX = nullptr;
             PropertyValuesHolder* pvhY = nullptr;
             if (menuItemLayoutInfoPre->left != menuItemLayoutInfoPost->left) {
-                pvhX = PropertyValuesHolder::ofFloat("translationX",//View::TRANSLATION_X,
+                pvhX = PropertyValuesHolder::ofFloat(View::TRANSLATION_X,
                         {float(menuItemLayoutInfoPre->left - menuItemLayoutInfoPost->left), 0.f});
             }
             if (menuItemLayoutInfoPre->top != menuItemLayoutInfoPost->top) {
-                pvhY = PropertyValuesHolder::ofFloat("translationY",//"View::TRANSLATION_Y,
+                pvhY = PropertyValuesHolder::ofFloat(View::TRANSLATION_Y,
                         {float(menuItemLayoutInfoPre->top - menuItemLayoutInfoPost->top), 0.f});
             }
             if (pvhX != nullptr || pvhY != nullptr) {
@@ -269,7 +269,7 @@ void ActionMenuPresenter::runItemAnimations() {
                     oldInfo->animator->cancel();
                 }
             }
-            ObjectAnimator* anim = ObjectAnimator::ofFloat((void*)menuItemLayoutInfoPre->view, "alpha"/*View::ALPHA*/, {oldAlpha, 0.f});
+            ObjectAnimator* anim = ObjectAnimator::ofFloat((void*)menuItemLayoutInfoPre->view,View::ALPHA, {oldAlpha, 0.f});
             // Re-using the view from pre-layout assumes no view recycling
             /*(mMenuView)*/mContainer->getOverlay()->add(menuItemLayoutInfoPre->view);
             anim->setDuration(ITEM_ANIMATION_DURATION);
@@ -303,7 +303,7 @@ void ActionMenuPresenter::runItemAnimations() {
                     oldInfo->animator->cancel();
                 }
             }
-            ObjectAnimator* anim = ObjectAnimator::ofFloat(menuItemLayoutInfo->view, "alpha"/*View::ALPHA*/,{oldAlpha, 1.f});
+            ObjectAnimator* anim = ObjectAnimator::ofFloat(menuItemLayoutInfo->view,View::ALPHA,{oldAlpha, 1.f});
             anim->start();
             anim->setDuration(ITEM_ANIMATION_DURATION);
             ItemAnimationInfo* info = new ItemAnimationInfo(id, menuItemLayoutInfo, anim, ItemAnimationInfo::FADE_IN);

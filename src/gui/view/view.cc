@@ -10001,7 +10001,7 @@ public:                                                     \
 };                                                          \
 static  prop_##PROJ INST_##PROJ;        \
 }                                       \
-const FloatProperty& View::PROJ =INST_##PROJ;
+const FloatProperty*const View::PROJ =&INST_##PROJ;
 
 VIEW_PROPERTY("translationX",TranslationX, TRANSLATION_X);
 VIEW_PROPERTY("translationY",TranslationY, TRANSLATION_Y);

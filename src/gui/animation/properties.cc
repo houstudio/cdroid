@@ -107,7 +107,7 @@ static const __BACKGROUND_COLOR BACKGROUND_COLOR;
 
 }
 static std::unordered_map<std::string,const Property*>props={
-    {"alpha",&View::ALPHA},
+    {"alpha",View::ALPHA},
     {"bottom",&BOTTOM},
     {"backgroundColor",&BACKGROUND_COLOR},
     {"elevation",&ELEVATION},
@@ -115,20 +115,20 @@ static std::unordered_map<std::string,const Property*>props={
     {"pivotX",&PIVOT_X},
     {"pivotY",&PIVOT_Y},
     {"right" ,&RIGHT},
-    {"rotation" ,&View::ROTATION},
-    {"rotationX",&View::ROTATION_X},
-    {"rotationY",&View::ROTATION_Y},
-    {"scaleX" ,&View::SCALE_X},
-    {"scaleY" ,&View::SCALE_Y},
+    {"rotation" ,View::ROTATION},
+    {"rotationX",View::ROTATION_X},
+    {"rotationY",View::ROTATION_Y},
+    {"scaleX" ,View::SCALE_X},
+    {"scaleY" ,View::SCALE_Y},
     {"scrollX",&SCROLL_X},
     {"scrollY",&SCROLL_Y},
     {"top",&TOP},
-    {"translationX",&View::TRANSLATION_X},
-    {"translationY",&View::TRANSLATION_Y},
-    {"translationZ",&View::TRANSLATION_Z},
-    {"x",&View::X},
-    {"y",&View::Y},
-    {"z",&View::Z}
+    {"translationX",View::TRANSLATION_X},
+    {"translationY",View::TRANSLATION_Y},
+    {"translationZ",View::TRANSLATION_Z},
+    {"x",View::X},
+    {"y",View::Y},
+    {"z",View::Z}
 };
 
 Property*Property::fromName(const std::string&propertyName){
