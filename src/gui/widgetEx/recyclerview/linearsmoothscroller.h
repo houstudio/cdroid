@@ -31,8 +31,8 @@ public:
     static constexpr int SNAP_TO_END = 1;
     static constexpr int SNAP_TO_ANY = 0;
 protected:
-    LinearInterpolator* mLinearInterpolator;
-    DecelerateInterpolator* mDecelerateInterpolator;
+    const LinearInterpolator* mLinearInterpolator;
+    const DecelerateInterpolator* mDecelerateInterpolator;
     PointF mTargetVector;
     int mInterimTargetDx = 0;
     int mInterimTargetDy = 0;

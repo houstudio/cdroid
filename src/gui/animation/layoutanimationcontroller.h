@@ -42,7 +42,7 @@ private:
     int64_t mMaxDelay; 
 protected:
     Animation* mAnimation;
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
 
     virtual int64_t getDelayForView(View* view);
     int getTransformedIndex(const AnimationParameters* params);
@@ -57,8 +57,8 @@ public:
     void setAnimation(Animation* animation);
     Animation* getAnimation();
     void setInterpolator(Context* context,const std::string&resourceID);
-    void setInterpolator(Interpolator* interpolator);
-    Interpolator* getInterpolator();
+    void setInterpolator(const Interpolator* interpolator);
+    const Interpolator* getInterpolator()const;
     float getDelay()const;
     void setDelay(float);
     virtual bool willOverlap();

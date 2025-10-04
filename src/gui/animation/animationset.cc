@@ -219,7 +219,7 @@ void AnimationSet::initializeInvalidateRegion(int left, int top, int right, int 
             Animation* a = mAnimations.at(i);
             if (!a->isFillEnabled() || a->getFillBefore() || (a->getStartOffset() == 0)) {
                 temp.clear();
-                Interpolator* interpolator = a->mInterpolator;
+                const Interpolator* interpolator = a->mInterpolator;
                 a->applyTransformation(interpolator ? interpolator->getInterpolation(0.0f) : 0.0f, temp);
                 previousTransformation.compose(temp);
             }
@@ -291,7 +291,7 @@ void AnimationSet::initialize(int width, int height, int parentWidth, int parent
     const bool fillAfter = mFillAfter;
     const bool fillBefore = mFillBefore;
     const int repeatMode = mRepeatMode;
-    Interpolator* interpolator = mInterpolator;
+    const Interpolator* interpolator = mInterpolator;
     const int64_t startOffset = mStartOffset;
 
 

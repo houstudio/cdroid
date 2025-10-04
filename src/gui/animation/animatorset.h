@@ -53,7 +53,7 @@ private:
 
     Node* mRootNode;// = new Node(mDelayAnim);
 
-    TimeInterpolator* mInterpolator = nullptr;
+    const TimeInterpolator* mInterpolator = nullptr;
 
     // The total duration of finishing all the Animators in the set.
     int64_t mTotalDuration = 0;
@@ -105,8 +105,8 @@ public:
     std::vector<Animator*> getChildAnimations()const;
     void setTarget(void* target)override;
     int getChangingConfigurations()override;
-    void setInterpolator(TimeInterpolator*)override;
-    TimeInterpolator*getInterpolator()override;
+    void setInterpolator(const TimeInterpolator*)override;
+    const TimeInterpolator*getInterpolator()const override;
     Builder* play(Animator* anim);
     void cancel()override;
     void end()override;

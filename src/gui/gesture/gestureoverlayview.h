@@ -104,7 +104,7 @@ private:
     // fading out effect
     bool mIsFadingOut = false;
     float mFadingAlpha = 1.0f;
-    AccelerateDecelerateInterpolator*mInterpolator;// =new AccelerateDecelerateInterpolator();
+    const AccelerateDecelerateInterpolator*mInterpolator;// =new AccelerateDecelerateInterpolator();
 
     Runnable mFadingOut;// = new FadeOutRunnable();
 private:

@@ -42,7 +42,7 @@ GestureOverlayView::GestureOverlayView(Context* context,const AttributeSet& attr
 void GestureOverlayView::init() {
     setWillNotDraw(false);
     mFadingOut = std::bind(&GestureOverlayView::FadeOutProc,this);
-    mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+    mInterpolator = AccelerateDecelerateInterpolator::Instance;
     mCurrentColor = mCertainGestureColor;
     mFadeDuration = 150;
     mFadeOffset  = 420;

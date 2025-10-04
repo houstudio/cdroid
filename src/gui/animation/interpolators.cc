@@ -22,6 +22,9 @@
 #include <drawables/pathparser.h>
 
 namespace cdroid{
+BaseInterpolator::BaseInterpolator(){
+    mChangingConfiguration =0;
+}
 
 void BaseInterpolator::setChangingConfiguration(int changingConfiguration){
     mChangingConfiguration = changingConfiguration;
@@ -37,15 +40,15 @@ AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&at
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
-    mFactor=float(f);
-    mDoubleFactor=float(f*2);
+    mFactor = float(f);
+    mDoubleFactor = float(f*2.0);
 }
 
 float AccelerateInterpolator::getInterpolation(float input)const{
     if (mFactor == 1.0f) {
         return input * input;
     } else {
-        return (float)pow(input, mDoubleFactor);
+        return (float)std::pow(input, mDoubleFactor);
     }
 }
 
@@ -62,7 +65,7 @@ float DecelerateInterpolator::getInterpolation(float input)const{
     if (mFactor == 1.0f) {
         result = (float)(1.0f - (1.0f - input) * (1.0f - input));
     } else {
-        result = (float)(1.0f - pow((1.0f - input), 2 * mFactor));
+        result = (float)(1.0f - std::pow((1.0f - input), 2 * mFactor));
     }
     return result;
 }
@@ -463,27 +466,25 @@ float BezierSCurveInterpolator::getInterpolation(float input)const{
     return BEZIERSCURVE_VALUES[position] + weight * (BEZIERSCURVE_VALUES[position + 1] - BEZIERSCURVE_VALUES[position]);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const NeverDestroyed<LinearInterpolator>LinearInterpolator::gLinearInterpolator;
-const NeverDestroyed<DecelerateInterpolator>DecelerateInterpolator::gDecelerateInterpolator(1.f);
-const NeverDestroyed<FastOutSlowInInterpolator>FastOutSlowInInterpolator::gFastOutSlowInInterpolator;
-const NeverDestroyed<LinearOutSlowInInterpolator>LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator;
-const NeverDestroyed<FastOutLinearInInterpolator>FastOutLinearInInterpolator::gFastOutLinearInInterpolator;
-const NeverDestroyed<AccelerateInterpolator>AccelerateInterpolator::gAccelerateInterpolator(1.f);
-const NeverDestroyed<AccelerateDecelerateInterpolator>AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator;
-const NeverDestroyed<BezierSCurveInterpolator>BezierSCurveInterpolator::gBezierSCurveInterpolator;
-
-bool Interpolator::isSystemGlobalInterpolator(TimeInterpolator*i){
-    if( (i!=nullptr)
-            ||(i==LinearInterpolator::gLinearInterpolator.get())
-            ||(i==DecelerateInterpolator::gDecelerateInterpolator.get())
-            ||(i==FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get())
-            ||(i==LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator.get())
-            ||(i==FastOutLinearInInterpolator::gFastOutLinearInInterpolator.get())
-            ||(i==AccelerateInterpolator::gAccelerateInterpolator.get())
-            ||(i==AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get())
-      ){
-        return true;
-    }
-    return false;
+namespace{
+    LinearInterpolator mLinearInterpolator;
+    BounceInterpolator mBounceInterpolator;
+    DecelerateInterpolator mDecelerateInterpolator;
+    FastOutSlowInInterpolator mFastOutSlowInInterpolator;
+    LinearOutSlowInInterpolator mLinearOutSlowInInterpolator;
+    FastOutLinearInInterpolator mFastOutLinearInInterpolator;
+    AccelerateInterpolator mAccelerateInterpolator(1.f);
+    AccelerateDecelerateInterpolator mAccelerateDecelerateInterpolator;
+    BezierSCurveInterpolator mBezierSCurveInterpolator;
 }
+const LinearInterpolator*const LinearInterpolator::Instance=&mLinearInterpolator;
+const BounceInterpolator*const BounceInterpolator::Instance=&mBounceInterpolator;
+const DecelerateInterpolator*const DecelerateInterpolator::Instance=&mDecelerateInterpolator;
+const FastOutSlowInInterpolator*const FastOutSlowInInterpolator::Instance=&mFastOutSlowInInterpolator;
+const LinearOutSlowInInterpolator*const LinearOutSlowInInterpolator::Instance=&mLinearOutSlowInInterpolator;
+const FastOutLinearInInterpolator*const FastOutLinearInInterpolator::Instance=&mFastOutLinearInInterpolator;
+const AccelerateInterpolator*const AccelerateInterpolator::Instance=&mAccelerateInterpolator;
+const AccelerateDecelerateInterpolator*const AccelerateDecelerateInterpolator::Instance=&mAccelerateDecelerateInterpolator;
+const BezierSCurveInterpolator*const BezierSCurveInterpolator::Instance=&mBezierSCurveInterpolator;
+
 }//endof namespace

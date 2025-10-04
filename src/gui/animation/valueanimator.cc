@@ -25,7 +25,7 @@
 namespace cdroid{
 
 float ValueAnimator::sDurationScale = 1.f;
-TimeInterpolator*ValueAnimator::sDefaultInterpolator=AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+const TimeInterpolator*ValueAnimator::sDefaultInterpolator=AccelerateDecelerateInterpolator::Instance;
 
 ValueAnimator::ValueAnimator()
   :Animator(){
@@ -96,9 +96,6 @@ ValueAnimator::~ValueAnimator(){
         delete v;
     mValues.clear();
     removeAnimationCallback();
-    if(!Interpolator::isSystemGlobalInterpolator(mInterpolator)){
-        //delete mInterpolator;
-    }
 }
 
 void ValueAnimator::setDurationScale(float durationScale) {
@@ -384,16 +381,14 @@ void ValueAnimator::removeAllUpdateListeners(){
     mUpdateListeners.clear();
 }
 
-void ValueAnimator::setInterpolator(TimeInterpolator* value){
-    if(!Interpolator::isSystemGlobalInterpolator(mInterpolator))//(mInterpolator != sDefaultInterpolator)&&(mInterpolator!=LinearInterpolator::gLinearInterpolator.get()))
-        delete mInterpolator;
+void ValueAnimator::setInterpolator(const TimeInterpolator* value){
     if(value)
         mInterpolator = value;
     else
-        mInterpolator = LinearInterpolator::gLinearInterpolator.get();//new LinearInterpolator();
+        mInterpolator = LinearInterpolator::Instance;//new LinearInterpolator();
 }
 
-TimeInterpolator* ValueAnimator::getInterpolator(){
+const TimeInterpolator* ValueAnimator::getInterpolator()const{
     return mInterpolator;
 }
 

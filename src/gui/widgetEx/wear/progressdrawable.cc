@@ -41,7 +41,7 @@ ProgressDrawable::ProgressDrawable() {
     mAnimator->setRepeatCount(ValueAnimator::INFINITE);
     mAnimator->setRepeatMode(ValueAnimator::RESTART);
     mAnimator->setDuration(ANIMATION_DURATION);
-    mAnimator->setInterpolator(LinearInterpolator::gLinearInterpolator.get());
+    mAnimator->setInterpolator(LinearInterpolator::Instance);
 }
 
 ProgressDrawable::~ProgressDrawable(){
@@ -87,7 +87,7 @@ void ProgressDrawable::draw(Canvas& canvas) {
     const float correctionAngle = CORRECTION_ANGLE * progress;
 
     float sweepAngle;
-    auto sInterpolator = BezierSCurveInterpolator::gBezierSCurveInterpolator.get();
+    auto sInterpolator = BezierSCurveInterpolator::Instance;
     if (growing) {
         sweepAngle = MAX_SWEEP
                 * sInterpolator->getInterpolation(lerpInv(0.0f, GROW_SHRINK_RATIO, progress));

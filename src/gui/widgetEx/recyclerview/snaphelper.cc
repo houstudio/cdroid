@@ -68,8 +68,7 @@ void SnapHelper::attachToRecyclerView(RecyclerView* recyclerView){
     mRecyclerView = recyclerView;
     if (mRecyclerView != nullptr) {
         setupCallbacks();
-        mGravityScroller = new Scroller(mRecyclerView->getContext(),
-                DecelerateInterpolator::gDecelerateInterpolator.get());
+        mGravityScroller = new Scroller(mRecyclerView->getContext(), DecelerateInterpolator::Instance);
         snapToTargetExistingView();
     }
 }

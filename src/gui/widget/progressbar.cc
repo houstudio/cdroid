@@ -499,7 +499,7 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
         ObjectAnimator* animator = ObjectAnimator::ofFloat(this,&VISUAL_PROGRESS/*"visual_progress"*/,{scale});
         animator->setAutoCancel(true);
         animator->setDuration(PROGRESS_ANIM_DURATION);
-        animator->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
+        animator->setInterpolator(DecelerateInterpolator::Instance);
         AnimatorListenerAdapter animtorListener;
         animtorListener.onAnimationEnd=[this](Animator&anim,bool){
             delete mLastProgressAnimator;
@@ -783,7 +783,7 @@ void ProgressBar::startAnimation() {
     }else{
         mHasAnimation = true;
         if (mInterpolator == nullptr) {
-            mInterpolator = LinearInterpolator::gLinearInterpolator.get();
+            mInterpolator = LinearInterpolator::Instance;
         }
 
         if (mTransformation == nullptr) {

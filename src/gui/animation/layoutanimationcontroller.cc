@@ -83,12 +83,11 @@ void LayoutAnimationController::setInterpolator(Context* context,const std::stri
     setInterpolator(AnimationUtils::loadInterpolator(context,resourceID));
 }
 
-void LayoutAnimationController::setInterpolator(Interpolator* interpolator){
-    if(mInterpolator)delete mInterpolator;
+void LayoutAnimationController::setInterpolator(const Interpolator* interpolator){
     mInterpolator = interpolator;
 }
 
-Interpolator* LayoutAnimationController::getInterpolator(){
+const Interpolator* LayoutAnimationController::getInterpolator()const{
     return mInterpolator;
 }
 

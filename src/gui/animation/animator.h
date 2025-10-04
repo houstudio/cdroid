@@ -78,8 +78,8 @@ public:
     virtual Animator& setDuration(int64_t duration)=0;
     virtual int64_t getDuration()const=0;
     virtual int64_t getTotalDuration();
-    virtual void setInterpolator(TimeInterpolator* value)=0;
-    virtual TimeInterpolator* getInterpolator();
+    virtual void setInterpolator(const TimeInterpolator* value)=0;
+    virtual const TimeInterpolator* getInterpolator()const;
     virtual bool isRunning()=0;
     virtual bool isStarted();
     void addListener(const AnimatorListener& listener);

@@ -208,13 +208,13 @@ long ViewPropertyAnimator::getStartDelay()const{
     }
 }
 
-ViewPropertyAnimator& ViewPropertyAnimator::setInterpolator(TimeInterpolator* interpolator){
+ViewPropertyAnimator& ViewPropertyAnimator::setInterpolator(const TimeInterpolator* interpolator){
     mInterpolatorSet = true;
     mInterpolator = interpolator;
     return *this;
 }
 
-TimeInterpolator* ViewPropertyAnimator::getInterpolator() {
+const TimeInterpolator* ViewPropertyAnimator::getInterpolator() {
     if (mInterpolatorSet) {
         return mInterpolator;
     } else {

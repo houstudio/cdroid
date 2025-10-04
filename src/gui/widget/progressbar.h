@@ -48,7 +48,7 @@ private:
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mLastProgressAnimator;
     bool mNoInvalidate;
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
 
     void initProgressBar();
     void swapCurrentDrawable(Drawable*d);

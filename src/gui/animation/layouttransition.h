@@ -57,19 +57,19 @@ private:
     bool mAnimateParentHierarchy      = true;
     std::vector<TransitionListener>mListeners;
 
-    static TimeInterpolator* ACCEL_DECEL_INTERPOLATOR;
-    static TimeInterpolator* DECEL_INTERPOLATOR      ;
-    static TimeInterpolator* sAppearingInterpolator  ;
-    static TimeInterpolator* sDisappearingInterpolator;
-    static TimeInterpolator* sChangingAppearingInterpolator;
-    static TimeInterpolator* sChangingDisappearingInterpolator;
-    static TimeInterpolator* sChangingInterpolator;
+    static const TimeInterpolator* ACCEL_DECEL_INTERPOLATOR;
+    static const TimeInterpolator* DECEL_INTERPOLATOR      ;
+    static const TimeInterpolator* sAppearingInterpolator  ;
+    static const TimeInterpolator* sDisappearingInterpolator;
+    static const TimeInterpolator* sChangingAppearingInterpolator;
+    static const TimeInterpolator* sChangingDisappearingInterpolator;
+    static const TimeInterpolator* sChangingInterpolator;
 
-    TimeInterpolator* mAppearingInterpolator            = sAppearingInterpolator;
-    TimeInterpolator* mDisappearingInterpolator         = sDisappearingInterpolator;
-    TimeInterpolator* mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
-    TimeInterpolator* mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
-    TimeInterpolator* mChangingInterpolator             = sChangingInterpolator;
+    const TimeInterpolator* mAppearingInterpolator            = sAppearingInterpolator;
+    const TimeInterpolator* mDisappearingInterpolator         = sDisappearingInterpolator;
+    const TimeInterpolator* mChangingAppearingInterpolator    = sChangingAppearingInterpolator;
+    const TimeInterpolator* mChangingDisappearingInterpolator = sChangingDisappearingInterpolator;
+    const TimeInterpolator* mChangingInterpolator             = sChangingInterpolator;
 
     static Animator* defaultChange;
     static Animator* defaultChangeIn;
@@ -137,8 +137,8 @@ public:
     int64_t getStagger(int transitionType)const;
     void setAnimateParentHierarchy(bool animateParentHierarchy);
 
-    void setInterpolator(int transitionType, TimeInterpolator* interpolator);
-    TimeInterpolator* getInterpolator(int transitionType);
+    void setInterpolator(int transitionType,const TimeInterpolator* interpolator);
+    const TimeInterpolator* getInterpolator(int transitionType)const;
 
     void setAnimator(int transitionType, Animator* anim);
     Animator* getAnimator(int transitionType);

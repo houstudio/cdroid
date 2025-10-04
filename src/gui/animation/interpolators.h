@@ -32,21 +32,21 @@ public:
 };
 
 class Interpolator:public TimeInterpolator{
-public:
-    static bool isSystemGlobalInterpolator(TimeInterpolator*i);
 };
 
 class BaseInterpolator:public Interpolator{
 private:
     int mChangingConfiguration;
 public:
+    BaseInterpolator();
     int getChangingConfiguration();
     void setChangingConfiguration(int changingConfiguration);
 };
 
 class LinearInterpolator:public BaseInterpolator{
 public:
-    static const NeverDestroyed<LinearInterpolator>gLinearInterpolator;
+    static const LinearInterpolator*const Instance;
+    LinearInterpolator():BaseInterpolator(){}
     float getInterpolation(float input)const{return input;}
 };
 
@@ -55,7 +55,7 @@ private:
     float mFactor;
     double mDoubleFactor;
 public:
-    static const NeverDestroyed<AccelerateInterpolator>gAccelerateInterpolator;
+    static const AccelerateInterpolator*const Instance;
     AccelerateInterpolator(Context*ctx,const AttributeSet&);
     AccelerateInterpolator(double f=1.);
     float getInterpolation(float input)const override;
@@ -65,7 +65,7 @@ class DecelerateInterpolator:public BaseInterpolator{
 private:
     float mFactor;
 public:
-    static const NeverDestroyed<DecelerateInterpolator>gDecelerateInterpolator;
+    static const DecelerateInterpolator*const Instance;
     DecelerateInterpolator(Context*ctx,const AttributeSet&);
     DecelerateInterpolator(float factor=1.0);
     float getInterpolation(float input)const override;
@@ -118,12 +118,13 @@ class BounceInterpolator:public BaseInterpolator{
 private:
     static float bounce(float t);
 public:
+    static const BounceInterpolator*const Instance;
     float getInterpolation(float t)const override;
 };
 
 class AccelerateDecelerateInterpolator:public BaseInterpolator{
 public:
-    static const NeverDestroyed<AccelerateDecelerateInterpolator>gAccelerateDecelerateInterpolator;
+    static const AccelerateDecelerateInterpolator*const Instance;
     float getInterpolation(float input)const override;
 };
 
@@ -166,25 +167,25 @@ public:
 
 class FastOutSlowInInterpolator :public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<FastOutSlowInInterpolator>gFastOutSlowInInterpolator;
+    static const FastOutSlowInInterpolator*const Instance;
     FastOutSlowInInterpolator();
 };
 
 class LinearOutSlowInInterpolator:public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<LinearOutSlowInInterpolator>gLinearOutSlowInInterpolator;
+    static const LinearOutSlowInInterpolator*const Instance;
     LinearOutSlowInInterpolator();
 };
 
 class FastOutLinearInInterpolator:public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<FastOutLinearInInterpolator>gFastOutLinearInInterpolator;
+    static const FastOutLinearInInterpolator*const Instance;
     FastOutLinearInInterpolator();
 };
 
 class BezierSCurveInterpolator:public TimeInterpolator {
 public:
-    static const NeverDestroyed<BezierSCurveInterpolator>gBezierSCurveInterpolator;
+    static const BezierSCurveInterpolator*const Instance;
 public:
     BezierSCurveInterpolator();
     float getInterpolation(float input)const override;
