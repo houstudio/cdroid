@@ -18,7 +18,7 @@
 #include <view/motionevent.h>
 #include <private/inputeventlabels.h>
 #include <core/inputdevice.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

@@ -18,7 +18,7 @@
 #include <widget/listview.h>
 #include <widget/checkable.h>
 #include <view/focusfinder.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <widget/R.h>
 #include <porting/cdlog.h>
 

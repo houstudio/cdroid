@@ -1,6 +1,6 @@
 #include <widget/autoscrollhelper.h>
 #include <widget/abslistview.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 namespace cdroid{
 
 AutoScrollHelper::AutoScrollHelper(View* target) {

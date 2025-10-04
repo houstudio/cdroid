@@ -28,7 +28,6 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::
 }
 
 PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::string& defStyleAttr, const std::string& defStyleRes){
-    LOGD("create PopupWindow %p",this);
     init();
     mContext = context;
     AttributeSet attpop= context->obtainStyledAttributes(defStyleAttr);
@@ -65,6 +64,7 @@ PopupWindow::PopupWindow(Context* context,const AttributeSet& attrs, const std::
     setExitTransition(exitTransition);
 #endif
     setBackgroundDrawable(bg);
+    LOGD("create PopupWindow %p background=%p",this,mBackground);
 }
 
 PopupWindow::PopupWindow(View* contentView, int width, int height, bool focusable) {
@@ -85,7 +85,7 @@ PopupWindow::PopupWindow(int width, int height):PopupWindow(nullptr,width,height
 }
 
 PopupWindow::~PopupWindow(){
-    LOGD("destroy PopupWindow %p",this);
+    LOGD("destroy PopupWindow %p mBackground=%p",this,mBackground);
     delete mBackground;
     delete mAboveAnchorBackgroundDrawable;
     delete mBelowAnchorBackgroundDrawable;
@@ -449,7 +449,7 @@ void PopupWindow::preparePopup(WindowManager::LayoutParams*p){
     }
 
     mDecorView = createDecorView(mBackgroundView);
-    LOGD("createDecorView %p",mDecorView);
+    LOGD("%p createDecorView %p background=%p/%p",this,mDecorView,mBackground,mBackgroundView->getBackground());
     mDecorView->setIsRootNamespace(true);
 
     // The background owner should be elevated so that it casts a shadow.
@@ -501,7 +501,7 @@ void PopupWindow::updateAboveAnchor(bool aboveAnchor){
         return ;
     mAboveAnchor = aboveAnchor;
 
-    if (mBackground  && mBackgroundView ) {
+    if (mBackground && mBackgroundView ) {
         // If the background drawable provided was a StateListDrawable
         // with above-anchor and below-anchor states, use those.
         // Otherwise, rely on refreshDrawableState to do the job.
@@ -901,7 +901,7 @@ void PopupWindow::dismiss(){
 }
 
 Rect PopupWindow::getTransitionEpicenter(){
-    if (mAnchor == nullptr || mDecorView == nullptr) {
+    if ((mAnchor == nullptr) || (mDecorView == nullptr)) {
         return Rect::MakeWH(0,0);
     }
 
@@ -915,9 +915,9 @@ Rect PopupWindow::getTransitionEpicenter(){
 
     // Use anchor-relative epicenter, if specified.
     if (!mEpicenterBounds.empty()){// != null) {
-        int offsetX = bounds.left;
-        int offsetY = bounds.top;
-        bounds=mEpicenterBounds;//set(mEpicenterBounds);
+        const int offsetX = bounds.left;
+        const int offsetY = bounds.top;
+        bounds = mEpicenterBounds;
         bounds.offset(offsetX, offsetY);
     }
     return bounds;
@@ -936,7 +936,7 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
     // This needs to stay until after all transitions have ended since we
     // need the reference to cancel transitions in preparePopup().
     ((Window*)(mDecorView))->close();
-    LOGD("close mDecorView %p which its contentView=%p",mDecorView,contentView);
+    LOGD("%p close mDecorView %p which its contentView=%p",this,mDecorView,contentView);
     mDecorView = nullptr;
     mBackgroundView = nullptr;
     mIsTransitioningToDismiss = false;

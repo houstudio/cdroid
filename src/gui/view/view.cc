@@ -33,8 +33,8 @@
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
+#include <utils/textutils.h>
 #include <core/systemclock.h>
-#include <core/textutils.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>

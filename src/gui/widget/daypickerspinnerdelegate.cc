@@ -17,7 +17,7 @@
  *********************************************************************************/
 #if 0
 #include <widget/R.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <widget/calendarview.h>
 #include <widget/daypickerspinnerdelegate.h>
 namespace cdroid{

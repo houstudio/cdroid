@@ -24,7 +24,7 @@
 #include <fribidi.h>
 #endif
 #include <cdlog.h>
-#include <textutils.h>
+#include <utils/textutils.h>
 using namespace Cairo;
 
 namespace cdroid{

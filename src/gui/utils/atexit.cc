@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <porting/cdlog.h>
-#include <core/atexit.h>
+#include <utils/atexit.h>
 namespace cdroid {
 
 static std::vector<std::function<void()>> *mCallbacks = nullptr;

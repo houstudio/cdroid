@@ -21,7 +21,7 @@
 #include <chrono>
 #include <fstream>
 #include <keycharactermap.h>
-#include <textutils.h>
+#include <utils/textutils.h>
 #include <widget/candidateview.h> 
 #include <widget/R.h>
 #include <core/app.h>

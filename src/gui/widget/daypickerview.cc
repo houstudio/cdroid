@@ -19,7 +19,7 @@
 #include <widget/simplemonthview.h>
 #include <widget/calendarview.h>
 #include <widget/R.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 
 namespace cdroid{
 

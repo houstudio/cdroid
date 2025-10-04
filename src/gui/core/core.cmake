@@ -1,7 +1,6 @@
 SET(CORE_SOURCES
     core/app.cc
     core/assets.cc
-    core/atexit.cc
     core/attributeset.cc
     #core/basebundle.cc
     #core/bundle.cc
@@ -36,7 +35,6 @@ SET(CORE_SOURCES
     core/countdowntimer.cc
     core/scheduler.cc
     core/systemclock.cc
-    core/textutils.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
     #core/transform.cc

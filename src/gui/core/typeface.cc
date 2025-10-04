@@ -20,10 +20,10 @@
 #include <dirent.h>
 #include <cdlog.h>
 #include <core/typeface.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
-#include <core/atexit.h>
+#include <utils/atexit.h>
 #include <fontconfig/fcfreetype.h>
 
 namespace cdroid {

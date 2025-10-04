@@ -1,6 +1,6 @@
 #include <widget/switch.h>
-#include <core/mathutils.h>
-#include <core/textutils.h>
+#include <utils/mathutils.h>
+#include <utils/textutils.h>
 #include <view/viewgroup.h>
 
 namespace cdroid{

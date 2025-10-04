@@ -27,8 +27,7 @@
 #include <widgetEx/recyclerview/recyclerviewaccessibilitydelegate.h>
 #include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
-#include <core/neverdestroyed.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <core/build.h>
 #include <cassert>
 
@@ -37,7 +36,7 @@ namespace cdroid{
 //public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
 class QuinticInterpolator:public Interpolator{
 public:
-    float getInterpolation(float t)override{
+    float getInterpolation(float t)const override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
@@ -45,7 +44,7 @@ public:
 
 bool RecyclerView::sDebugAssertionsEnabled= false;
 bool RecyclerView::sVerboseLoggingEnabled = false;
-static NeverDestroyed<QuinticInterpolator> sQuinticInterpolator;
+static QuinticInterpolator sQuinticInterpolator;
 
 DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
 
@@ -3715,7 +3714,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mRV = rv;
     mInterpolator = nullptr;
     mRunnable = std::bind(&ViewFlinger::run,this);
-    mOverScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
+    mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
 }
 
 RecyclerView::ViewFlinger::~ViewFlinger(){
@@ -3906,9 +3905,9 @@ void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     // Because you can't define a custom interpolator for flinging, we should make sure we
     // reset ourselves back to the teh default interpolator in case a different call
     // changed our interpolator.
-    if (mInterpolator != sQuinticInterpolator.get()) {
-        mInterpolator = sQuinticInterpolator.get();
-        mOverScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
+    if (mInterpolator != &sQuinticInterpolator) {
+        mInterpolator = &sQuinticInterpolator;
+        mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
     }
     mOverScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     postOnAnimation();

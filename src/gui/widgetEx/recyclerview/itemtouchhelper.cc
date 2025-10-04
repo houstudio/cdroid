@@ -17,30 +17,29 @@
  *********************************************************************************/
 #include <view/gesturedetector.h>
 #include <widgetEx/recyclerview/itemtouchhelper.h>
-#include <core/neverdestroyed.h>
 #include <core/build.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 
 namespace cdroid{
 
-class DragScrollInterpolator:public Interpolator{//sDragScrollInterpolator = new Interpolator() {
+class DragScrollInterpolator:public Interpolator{
 public:
     DragScrollInterpolator(){}
-    float getInterpolation(float t){
+    float getInterpolation(float t)const override{
         return t * t * t * t * t;
     }
 };
 
-class DragViewScrollInterpolator:public Interpolator{// sDragViewScrollCapInterpolator = new Interpolator() {
+class DragViewScrollInterpolator:public Interpolator{
 public:
     DragViewScrollInterpolator(){}
-    float getInterpolation(float t) {
+    float getInterpolation(float t)const override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
 };
-static NeverDestroyed<DragScrollInterpolator> sDragScrollInterpolator;
-static NeverDestroyed<DragViewScrollInterpolator> sDragViewScrollCapInterpolator;
+static DragScrollInterpolator sDragScrollInterpolator;
+static DragViewScrollInterpolator sDragViewScrollCapInterpolator;
 
 ItemTouchHelper::ItemTouchHelper(Callback* callback) {
     mCallback = callback;
@@ -1227,14 +1226,14 @@ int ItemTouchHelper::Callback::interpolateOutOfBoundsScroll(RecyclerView& recycl
     // might be negative if other direction
     float outOfBoundsRatio = std::min(1.f, 1.f * absOutOfBounds / viewSize);
     outOfBoundsRatio -=1.f;
-    const int cappedScroll = (int) (direction * maxScroll* sDragViewScrollCapInterpolator->getInterpolation(outOfBoundsRatio));
+    const int cappedScroll = (int) (direction * maxScroll* sDragViewScrollCapInterpolator.getInterpolation(outOfBoundsRatio));
     float timeRatio;
     if (msSinceStartScroll > DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS) {
         timeRatio = 1.f;
     } else {
         timeRatio = (float) msSinceStartScroll / DRAG_SCROLL_ACCELERATION_LIMIT_TIME_MS;
     }
-    const int value = (int) (cappedScroll * timeRatio*sDragScrollInterpolator->getInterpolation(timeRatio));
+    const int value = (int) (cappedScroll * timeRatio*sDragScrollInterpolator.getInterpolation(timeRatio));
     if (value == 0) {
         return viewSizeOutOfBounds > 0 ? 1 : -1;
     }

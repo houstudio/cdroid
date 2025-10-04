@@ -1,6 +1,5 @@
-#if 10
 #include <core/build.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <view/configuration.h>
 #include <view/view.h>
 namespace cdroid{
@@ -1769,4 +1768,3 @@ void Configuration::writeXmlAttrs(XmlSerializer xml, Configuration config){
 }
 #endif
 }/*endof namespace*/
-#endif

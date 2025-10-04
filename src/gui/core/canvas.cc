@@ -22,7 +22,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <textutils.h>
+#include <utils/textutils.h>
 #include <view/gravity.h>
 #include <windowmanager.h>
 #include <cdgraph.h>

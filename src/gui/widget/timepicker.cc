@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/timepickerspinnerdelegate.h>

@@ -18,7 +18,7 @@
 #include <view/roundscrollbarrenderer.h>
 #include <core/color.h>
 #include <porting/cdlog.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 namespace cdroid{
 
 RoundScrollbarRenderer::RoundScrollbarRenderer(View*parent) {

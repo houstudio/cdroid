@@ -18,7 +18,7 @@
 #include <widget/progressbar.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/objectanimator.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <widget/R.h>
 #include <porting/cdlog.h>
 

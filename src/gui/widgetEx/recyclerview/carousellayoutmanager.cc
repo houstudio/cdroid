@@ -1,6 +1,6 @@
 #include <widgetEx/recyclerview/carousellayoutmanager.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 /*REF:
 *https://gitee.com/Cserfox/Awesome-RecyclerView-LayoutManager
 *https://github.com/Azoft/CarouselLayoutManager

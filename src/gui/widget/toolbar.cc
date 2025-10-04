@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <widget/toolbar.h>
 #include <menu/actionmenupresenter.h>
 #include <gui_features.h>

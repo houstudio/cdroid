@@ -23,11 +23,11 @@
 #include <iostreams.h>
 #include <iostream>
 #include <fstream>
-#include <drawables.h>
-#include <textutils.h>
+#include <utils/textutils.h>
 #include <limits.h>
 #include <unistd.h>
 #include <core/systemclock.h>
+#include <drawables/drawables.h>
 #include <drawables/drawableinflater.h>
 #include <image-decoders/imagedecoder.h>
 

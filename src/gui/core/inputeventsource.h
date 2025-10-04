@@ -23,7 +23,6 @@
 #include <fstream>
 #include <core/looper.h>
 #include <core/inputdevice.h>
-#include <core/neverdestroyed.h>
 #include <unordered_map>
 #include <mutex>
 

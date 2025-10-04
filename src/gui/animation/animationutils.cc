@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/animationutils.h>
-#include <animations.h>
+#include <animation/animations.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 

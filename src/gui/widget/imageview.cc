@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/imageview.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <porting/cdlog.h>
 using namespace Cairo;
 namespace cdroid{

@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <widget/edgeeffect.h>
 #include <core/systemclock.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <animation/valueanimator.h>

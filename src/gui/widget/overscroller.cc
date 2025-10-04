@@ -19,7 +19,7 @@
 #include <view/viewconfiguration.h>
 #include <core/systemclock.h>
 #include <widget/scroller.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <cdlog.h>
 #include <cstdlib>
 
@@ -377,9 +377,9 @@ bool OverScroller::SplineOverScroller::update(){
 OverScroller::OverScroller(Context* context):OverScroller(context,nullptr,true){
 }
 
-OverScroller::OverScroller(Context* context, Interpolator* interpolator, bool flywheel) {
+OverScroller::OverScroller(Context* context,const Interpolator* interpolator, bool flywheel) {
     if (interpolator == nullptr) {
-        mInterpolator = Scroller::gViscousFluidInterpolator.get();
+        mInterpolator = &Scroller::gViscousFluidInterpolator;
     } else {
         mInterpolator = interpolator;
     }
@@ -393,9 +393,9 @@ OverScroller::~OverScroller(){
     delete mScrollerY;
 }
 
-void OverScroller::setInterpolator(Interpolator* interpolator) {
+void OverScroller::setInterpolator(const Interpolator* interpolator) {
     if (interpolator == nullptr) {
-        mInterpolator = Scroller::gViscousFluidInterpolator.get();
+        mInterpolator = &Scroller::gViscousFluidInterpolator;
     } else {
         mInterpolator = interpolator;
     }

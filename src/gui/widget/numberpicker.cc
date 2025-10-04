@@ -19,10 +19,9 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
 #include <core/color.h>
-#include <core/textutils.h>
-#include <core/mathutils.h>
+#include <utils/textutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
-#include <core/neverdestroyed.h>
 
 //https://gitee.com/awang/WheelView/blob/master/src/com/wangjie/wheelview/WheelView.java
 
@@ -261,7 +260,7 @@ void NumberPicker::setWheelItemCount(int count) {
     mSelectorIndices.resize(mWheelItemCount);
 }
 
-const NeverDestroyed<DecelerateInterpolator>gDecelerateInterpolator(2.5);
+const DecelerateInterpolator sDecelerateInterpolator(2.5);
 
 void NumberPicker::initView(){
     ViewConfiguration&config= ViewConfiguration::get(mContext);
@@ -319,7 +318,7 @@ void NumberPicker::initView(){
     mMinimumFlingVelocity = config.getScaledMinimumFlingVelocity();
     mMaximumFlingVelocity = config.getScaledMaximumFlingVelocity()/ SELECTOR_MAX_FLING_VELOCITY_ADJUSTMENT;
     mFlingScroller  = new Scroller(getContext(), nullptr, true);
-    mAdjustScroller = new Scroller(getContext(), gDecelerateInterpolator.get());
+    mAdjustScroller = new Scroller(getContext(), &sDecelerateInterpolator);
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mHideWheelUntilFocused = false;
     mWheelItemCount = DEFAULT_WHEEL_ITEM_COUNT;

@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <drawables/rippleforeground.h>
 #include <core/systemclock.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

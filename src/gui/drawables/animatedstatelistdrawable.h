@@ -100,7 +100,7 @@ public:
     FrameInterpolator(AnimationDrawable* d, bool reversed);
     int updateFrames(AnimationDrawable* d, bool reversed);
     int getTotalDuration();
-    float getInterpolation(float input)override;
+    float getInterpolation(float input)const override;
 };
 
 class AnimatedStateListDrawable::Transition {

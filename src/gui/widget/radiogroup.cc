@@ -1,7 +1,7 @@
 #include <widget/radiogroup.h>
 #include <widget/radiobutton.h>
 #include <porting/cdlog.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 
 namespace cdroid{
 

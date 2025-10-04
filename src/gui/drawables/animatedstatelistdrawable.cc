@@ -382,7 +382,7 @@ int  AnimatedStateListDrawable::FrameInterpolator::getTotalDuration(){
     return mTotalDuration;
 }
 
-float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input){
+float AnimatedStateListDrawable::FrameInterpolator::getInterpolation(float input)const{
     const int elapsed = (int) (input * mTotalDuration + 0.5f);
     const int N = mFrames;
     const std::vector<int>& frameTimes = mFrameTimes;

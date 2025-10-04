@@ -22,7 +22,6 @@
 #include <core/looper.h>
 #include <core/systemclock.h>
 #include <core/epollwrapper.h>
-#include <core/neverdestroyed.h>
 #if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
   #include <io.h>
   #define close  _close

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/velocitytracker.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <math.h>
 #include <string.h>
 #include <cdtypes.h>

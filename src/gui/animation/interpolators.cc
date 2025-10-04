@@ -41,7 +41,7 @@ AccelerateInterpolator::AccelerateInterpolator(double f){
     mDoubleFactor=float(f*2);
 }
 
-float AccelerateInterpolator::getInterpolation(float input){
+float AccelerateInterpolator::getInterpolation(float input)const{
     if (mFactor == 1.0f) {
         return input * input;
     } else {
@@ -57,7 +57,7 @@ DecelerateInterpolator::DecelerateInterpolator(float factor) {
     mFactor = factor;
 }
 
-float DecelerateInterpolator::getInterpolation(float input){
+float DecelerateInterpolator::getInterpolation(float input)const{
     float result;
     if (mFactor == 1.0f) {
         result = (float)(1.0f - (1.0f - input) * (1.0f - input));
@@ -75,7 +75,7 @@ AnticipateInterpolator::AnticipateInterpolator(float tension){
     mTension = tension;
 }
 
-float AnticipateInterpolator::getInterpolation(float t){
+float AnticipateInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t - mTension);
 }
 
@@ -87,7 +87,7 @@ CycleInterpolator::CycleInterpolator(float cycles) {
     mCycles = cycles;
 }
 
-float CycleInterpolator::getInterpolation(float input){
+float CycleInterpolator::getInterpolation(float input)const{
     return (float)(sin(2 * mCycles * M_PI * input));
 }
 
@@ -99,7 +99,7 @@ OvershootInterpolator::OvershootInterpolator(float tension) {
     mTension = tension;
 }
 
-float OvershootInterpolator::getInterpolation(float t){
+float OvershootInterpolator::getInterpolation(float t)const{
     t -= 1.0f;
     return t * t * ((mTension + 1) * t + mTension) + 1.0f;
 }
@@ -120,7 +120,7 @@ float AnticipateOvershootInterpolator::o(float t, float s) {
     return t * t * ((s + 1) * t + s);
 }
 
-float AnticipateOvershootInterpolator::getInterpolation(float t){
+float AnticipateOvershootInterpolator::getInterpolation(float t)const{
     if (t < 0.5f) return 0.5f * a(t * 2.0f, mTension);
     else return 0.5f * (o(t * 2.0f - 2.0f, mTension) + 2.0f);
 }
@@ -130,7 +130,7 @@ float BounceInterpolator::bounce(float t) {
     return t * t * 8.0f;
 }
 
-float BounceInterpolator::getInterpolation(float t){
+float BounceInterpolator::getInterpolation(float t)const{
     // _b(t) = t * t * 8
     // bs(t) = _b(t) for t < 0.3535
     // bs(t) = _b(t - 0.54719) + 0.7 for t < 0.7408
@@ -144,7 +144,7 @@ float BounceInterpolator::getInterpolation(float t){
     else return bounce(t - 1.0435f) + 0.95f;
 }
 
-float AccelerateDecelerateInterpolator::getInterpolation(float input) {
+float AccelerateDecelerateInterpolator::getInterpolation(float input)const{
     return (float)(cos((input + 1) * M_PI) / 2.0f) + 0.5f;
 }
 
@@ -244,7 +244,7 @@ void PathInterpolator::initPath(cdroid::Path&path){
     }
 }
 
-float PathInterpolator::getInterpolation(float t) {
+float PathInterpolator::getInterpolation(float t)const {
     if (t <= 0) {
         return 0;
     } else if (t >= 1) {
@@ -294,7 +294,7 @@ LookupTableInterpolator::~LookupTableInterpolator(){
     mValues.clear();
 }
 
-float LookupTableInterpolator::getInterpolation(float input){
+float LookupTableInterpolator::getInterpolation(float input)const{
     if (input >= 1.0f) {
         return 1.0f;
     }
@@ -445,7 +445,7 @@ static const float BEZIERSCURVE_VALUES[] ={
 BezierSCurveInterpolator::BezierSCurveInterpolator() {
 }
 
-float BezierSCurveInterpolator::getInterpolation(float input) {
+float BezierSCurveInterpolator::getInterpolation(float input)const{
     if (input >= 1.0f) {
         return 1.0f;
     }

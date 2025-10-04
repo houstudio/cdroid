@@ -19,8 +19,8 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
-#include <core/atexit.h>
-#include <core/neverdestroyed.h>
+#include <utils/atexit.h>
+#include <utils/neverdestroyed.h>
 #include <porting/cdlog.h>
 // --- InputEvent ---
 namespace cdroid{

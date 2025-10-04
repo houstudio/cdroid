@@ -7,7 +7,6 @@
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
-#include <core/neverdestroyed.h>
 //#include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 

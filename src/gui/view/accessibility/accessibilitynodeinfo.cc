@@ -2,7 +2,7 @@
 #include <view/accessibility/accessibilitywindowinfo.h>
 #include <view/view.h>
 #include <core/bitset.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <widget/R.h>
 
 namespace cdroid{

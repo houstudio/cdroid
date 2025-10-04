@@ -62,8 +62,8 @@
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <animation/animatorinflater.h>
+#include <drawables/drawables.h>
 #include <core/rect.h>
-#include <drawables.h>
 #include <cdlog.h>
 
 #define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>

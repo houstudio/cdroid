@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <core/color.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <animation/valueanimator.h>
 #include <widgetEx/wear/circularprogressdrawable.h>
 

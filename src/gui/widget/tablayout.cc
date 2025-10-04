@@ -18,7 +18,7 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
 #include <core/build.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
