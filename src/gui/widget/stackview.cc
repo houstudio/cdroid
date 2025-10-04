@@ -39,6 +39,7 @@ void StackView::initStackView() {
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
     mActivePointerId = INVALID_POINTER;
 
+    mVelocityTracker = nullptr;
     mHighlight = new ImageView(1,1);
     mHighlight->setLayoutParams(new LayoutParams(mHighlight));
     addViewInLayout(mHighlight, -1, new LayoutParams(mHighlight));
