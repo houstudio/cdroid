@@ -179,8 +179,8 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
         const float x1 = a.getFloat("controlX1", 0);
         const float y1 = a.getFloat("controlY1", 0);
 
-        bool hasX2 = a.hasAttribute("controlX2");
-        bool hasY2 = a.hasAttribute("controlY2");
+        const bool hasX2 = a.hasAttribute("controlX2");
+        const bool hasY2 = a.hasAttribute("controlY2");
 
         if (hasX2 != hasY2) {
             throw "pathInterpolator requires both controlX2 and controlY2 for cubic Beziers.";
@@ -194,10 +194,6 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
             initCubic(x1, y1, x2, y2);
         }
     }
-}
-
-PathInterpolator::~PathInterpolator(){
-
 }
 
 void PathInterpolator::initQuad(float controlX, float controlY) {
@@ -291,10 +287,6 @@ LookupTableInterpolator::LookupTableInterpolator(const std::vector<float>& value
 LookupTableInterpolator::LookupTableInterpolator(const float*values,int count){
     mValues.assign(values,values+count);
     mStepSize = 1.f / (count - 1);
-}
-
-LookupTableInterpolator::~LookupTableInterpolator(){
-    mValues.clear();
 }
 
 float LookupTableInterpolator::getInterpolation(float input)const{
@@ -466,25 +458,31 @@ float BezierSCurveInterpolator::getInterpolation(float input)const{
     return BEZIERSCURVE_VALUES[position] + weight * (BEZIERSCURVE_VALUES[position + 1] - BEZIERSCURVE_VALUES[position]);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 namespace{
-    LinearInterpolator mLinearInterpolator;
-    BounceInterpolator mBounceInterpolator;
-    DecelerateInterpolator mDecelerateInterpolator;
-    FastOutSlowInInterpolator mFastOutSlowInInterpolator;
-    LinearOutSlowInInterpolator mLinearOutSlowInInterpolator;
-    FastOutLinearInInterpolator mFastOutLinearInInterpolator;
     AccelerateInterpolator mAccelerateInterpolator(1.f);
     AccelerateDecelerateInterpolator mAccelerateDecelerateInterpolator;
     BezierSCurveInterpolator mBezierSCurveInterpolator;
+    BounceInterpolator mBounceInterpolator;
+    AnticipateInterpolator mAnticipateInterpolator;
+    DecelerateInterpolator mDecelerateInterpolator;
+    FastOutSlowInInterpolator mFastOutSlowInInterpolator;
+    FastOutLinearInInterpolator mFastOutLinearInInterpolator;
+    LinearInterpolator mLinearInterpolator;
+    LinearOutSlowInInterpolator mLinearOutSlowInInterpolator;
+    OvershootInterpolator mOvershootInterpolator;
 }
-const LinearInterpolator*const LinearInterpolator::Instance=&mLinearInterpolator;
-const BounceInterpolator*const BounceInterpolator::Instance=&mBounceInterpolator;
-const DecelerateInterpolator*const DecelerateInterpolator::Instance=&mDecelerateInterpolator;
-const FastOutSlowInInterpolator*const FastOutSlowInInterpolator::Instance=&mFastOutSlowInInterpolator;
-const LinearOutSlowInInterpolator*const LinearOutSlowInInterpolator::Instance=&mLinearOutSlowInInterpolator;
-const FastOutLinearInInterpolator*const FastOutLinearInInterpolator::Instance=&mFastOutLinearInInterpolator;
-const AccelerateInterpolator*const AccelerateInterpolator::Instance=&mAccelerateInterpolator;
-const AccelerateDecelerateInterpolator*const AccelerateDecelerateInterpolator::Instance=&mAccelerateDecelerateInterpolator;
-const BezierSCurveInterpolator*const BezierSCurveInterpolator::Instance=&mBezierSCurveInterpolator;
+
+const AnticipateInterpolator*const AnticipateInterpolator::Instance= &mAnticipateInterpolator;
+const AccelerateInterpolator*const AccelerateInterpolator::Instance = &mAccelerateInterpolator;
+const AccelerateDecelerateInterpolator*const AccelerateDecelerateInterpolator::Instance = &mAccelerateDecelerateInterpolator;
+const BounceInterpolator*const BounceInterpolator::Instance = &mBounceInterpolator;
+const BezierSCurveInterpolator*const BezierSCurveInterpolator::Instance = &mBezierSCurveInterpolator;
+const DecelerateInterpolator*const DecelerateInterpolator::Instance= &mDecelerateInterpolator;
+const FastOutSlowInInterpolator*const FastOutSlowInInterpolator::Instance = &mFastOutSlowInInterpolator;
+const FastOutLinearInInterpolator*const FastOutLinearInInterpolator::Instance = &mFastOutLinearInInterpolator;
+const LinearInterpolator*const LinearInterpolator::Instance = &mLinearInterpolator;
+const LinearOutSlowInInterpolator*const LinearOutSlowInInterpolator::Instance = &mLinearOutSlowInInterpolator;
+const OvershootInterpolator*const OvershootInterpolator::Instance = &mOvershootInterpolator;
 
 }//endof namespace
