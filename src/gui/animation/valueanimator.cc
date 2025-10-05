@@ -747,7 +747,7 @@ void ValueAnimator::removeAnimationCallback() {
     getAnimationHandler().removeCallback(this);
 }
 
-void ValueAnimator::addAnimationCallback(long delay) {
+void ValueAnimator::addAnimationCallback(int64_t delay) {
     if (!mSelfPulse) {
         return;
     }
