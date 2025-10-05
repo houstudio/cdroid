@@ -18,8 +18,7 @@
 #include <widget/viewpager.h>
 #include <focusfinder.h>
 #include <porting/cdtypes.h>
-#include <core/neverdestroyed.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
 #include <cfloat>
 #include <limits>
@@ -28,13 +27,13 @@
 namespace cdroid{
 class VPInterpolator:public Interpolator{
 public:
-    float getInterpolation(float t) {
+    float getInterpolation(float t)const override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
 };
 
-static NeverDestroyed<VPInterpolator>sVPInterpolator;
+static VPInterpolator sVPInterpolator;
 
 DECLARE_WIDGET(ViewPager);
 
@@ -67,7 +66,7 @@ void ViewPager::initViewPager(){
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
     Context* context = getContext();
-    mInterpolator=sVPInterpolator.get();
+    mInterpolator = &sVPInterpolator;
     mVelocityTracker = nullptr;
     mScroller = new Scroller(context, mInterpolator);
     mFakeDragging = false;

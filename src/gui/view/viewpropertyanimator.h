@@ -66,7 +66,7 @@ private:
     bool mInterpolatorSet;
     long mDuration;
     long mStartDelay;
-    TimeInterpolator* mInterpolator;
+    const TimeInterpolator* mInterpolator;
     Animator::AnimatorListener mListener;
     ValueAnimator::AnimatorUpdateListener mUpdateListener;
     ValueAnimator* mTempValueAnimator;
@@ -102,8 +102,8 @@ public:
     long getDuration();
     ViewPropertyAnimator& setStartDelay(long startDelay);
     long getStartDelay()const;
-    ViewPropertyAnimator& setInterpolator(TimeInterpolator* interpolator);
-    TimeInterpolator*getInterpolator();
+    ViewPropertyAnimator& setInterpolator(const TimeInterpolator* interpolator);
+    const TimeInterpolator*getInterpolator();
     ViewPropertyAnimator& setListener(const Animator::AnimatorListener& listener);
     Animator::AnimatorListener getListener()const;
     ViewPropertyAnimator& setUpdateListener(const ValueAnimator::AnimatorUpdateListener& listener);

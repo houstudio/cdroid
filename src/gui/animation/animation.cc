@@ -149,7 +149,7 @@ void Animation::setInterpolator(Context* context,const std::string&resID) {
     setInterpolator(AnimationUtils::loadInterpolator(context, resID));
 }
 
-void Animation::setInterpolator(Interpolator* i) {
+void Animation::setInterpolator(const Interpolator* i) {
     mInterpolator = i;
 }
 
@@ -263,7 +263,7 @@ void Animation::setShowWallpaper(bool showWallpaper) {
     mShowWallpaper = showWallpaper;
 }
 
-Interpolator* Animation::getInterpolator() {
+const Interpolator* Animation::getInterpolator()const{
     return mInterpolator;
 }
 
@@ -330,7 +330,7 @@ void Animation::setAnimationListener(const AnimationListener& listener) {
 
 void Animation::ensureInterpolator() {
     if (mInterpolator == nullptr) {
-        mInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+        mInterpolator = AccelerateDecelerateInterpolator::Instance;
     }
 }
 

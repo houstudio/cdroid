@@ -1,7 +1,7 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <fstream>
-
+#include <widgetEx/wear/circularprogresslayout.h>
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
@@ -11,6 +11,14 @@ int main(int argc,const char*argv[]){
 ///////////////////////////////////////////////////////////
     ProgressBar*pb = new ProgressBar(600,40);
     ProgressBar*pb2= new ProgressBar(600,40);
+    CircularProgressLayout*cpl=new CircularProgressLayout(256,256);
+    w->addView(cpl);
+    cpl->layout(50,360,256,256);
+    cpl->getProgressDrawable()->setBackgroundColor(0xFF112233);
+    cpl->getProgressDrawable()->setColorSchemeColors({0x7FFF0000,0x7F00FF00});
+    cpl->getProgressDrawable()->setStartEndTrim(0,0.38f);
+    cpl->getProgressDrawable()->start();
+
     d=ctx->getDrawable("cdroid:drawable/progress_horizontal.xml");
     LOGI("progress_horizontal drawable=%p",d);
     pb->setProgressDrawable(d);
@@ -96,13 +104,13 @@ int main(int argc,const char*argv[]){
     sb2->layout(10,234,800,50);
     sb2->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
 
-    ShapeDrawable* shapeDrawable = new ShapeDrawable();
+    /*ShapeDrawable* shapeDrawable = new ShapeDrawable();
     shapeDrawable->setShape(new OvalShape());
     shapeDrawable->getShape()->setSolidColor(0xFF4488aa);
     pb5 =new ProgressBar(200,200);
     w->addView(pb5);
     pb5->layout(50,300,200,200);
     pb5->setProgressDrawable(shapeDrawable);
-    pb5->setProgress(35);
+    pb5->setProgress(35);*/
     return app.exec();
 }

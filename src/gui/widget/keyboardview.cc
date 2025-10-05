@@ -1,5 +1,5 @@
 #include <widget/keyboardview.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <cdlog.h>
 #include <fstream>
 #include <string.h>

@@ -18,7 +18,7 @@
 #include <widgetEx/recyclerview/defaultitemanimator.h>
 namespace cdroid{
 
-TimeInterpolator* DefaultItemAnimator::sDefaultInterpolator = nullptr;
+const TimeInterpolator* DefaultItemAnimator::sDefaultInterpolator = nullptr;
 
 DefaultItemAnimator::MoveInfo::MoveInfo(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY) {
     this->holder = &holder;
@@ -506,7 +506,7 @@ void DefaultItemAnimator::endAnimation(RecyclerView::ViewHolder& item) {
 
 void DefaultItemAnimator::resetAnimation(RecyclerView::ViewHolder& holder) {
     if (sDefaultInterpolator == nullptr) {
-        sDefaultInterpolator = AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get();
+        sDefaultInterpolator = AccelerateDecelerateInterpolator::Instance;
     }
     holder.itemView->animate().setInterpolator(sDefaultInterpolator);
     endAnimation(holder);

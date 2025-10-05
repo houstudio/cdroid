@@ -33,8 +33,8 @@
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
 #include <animation/animationutils.h>
+#include <utils/textutils.h>
 #include <core/systemclock.h>
-#include <core/textutils.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
@@ -10001,7 +10001,7 @@ public:                                                     \
 };                                                          \
 static  prop_##PROJ INST_##PROJ;        \
 }                                       \
-const FloatProperty& View::PROJ =INST_##PROJ;
+const FloatProperty*const View::PROJ =&INST_##PROJ;
 
 VIEW_PROPERTY("translationX",TranslationX, TRANSLATION_X);
 VIEW_PROPERTY("translationY",TranslationY, TRANSLATION_Y);

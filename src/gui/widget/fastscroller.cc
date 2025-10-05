@@ -18,8 +18,8 @@
 #include <widget/fastscroller.h>
 #include <widget/listview.h>
 #include <widget/headerviewlistadapter.h>
-#include <core/mathutils.h>
-#include <core/textutils.h>
+#include <utils/mathutils.h>
+#include <utils/textutils.h>
 #include <float.h>
 #include <cdlog.h>
 

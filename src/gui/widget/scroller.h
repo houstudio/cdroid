@@ -19,14 +19,13 @@
 #define __SCROLLER_H__
 #include <animation/interpolators.h>
 #include <core/context.h>
-#include <core/neverdestroyed.h>
 #include <math.h>
 
 namespace cdroid{
 
 class Scroller  {
 private:
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
     int mMode;
     int mStartX;
     int mStartY;
@@ -80,7 +79,7 @@ private:
     double getSplineFlingDistance(float velocity);
 public:
     Scroller(Context* context);
-    Scroller(Context* context, Interpolator* interpolator,bool flywheel=true);
+    Scroller(Context* context,const Interpolator* interpolator,bool flywheel=true);
     ~Scroller();
     void setFriction(float friction);
     float computeDeceleration(float friction);
@@ -113,9 +112,9 @@ public:
         static float VISCOUS_FLUID_OFFSET;
         static float viscousFluid(float x);
     public:
-        float getInterpolation(float input)override;
+        float getInterpolation(float input)const override;
     };
-    static const NeverDestroyed<ViscousFluidInterpolator>gViscousFluidInterpolator;
+    static const ViscousFluidInterpolator gViscousFluidInterpolator;
 };//Scroller
 }//end namespace
 #endif

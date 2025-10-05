@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <core/color.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <animation/valueanimator.h>
 #include <widgetEx/wear/circularprogressdrawable.h>
 
@@ -279,7 +279,7 @@ void CircularProgressDrawable::applyTransformation(float interpolatedTime, Ring*
     } else if (interpolatedTime != 1.0f || lastFrame) {
         const float startingRotation = ring->getStartingRotation();
         float startTrim, endTrim;
-        auto MATERIAL_INTERPOLATOR = FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get();
+        auto MATERIAL_INTERPOLATOR = FastOutSlowInInterpolator::Instance;
 
         if (interpolatedTime < SHRINK_OFFSET) { // Expansion occurs on first half of animation
             const float scaledTime = interpolatedTime / SHRINK_OFFSET;
@@ -317,7 +317,7 @@ void CircularProgressDrawable::setupAnimators() {
     animator->addUpdateListener(aul);
     animator->setRepeatCount(ValueAnimator::INFINITE);
     animator->setRepeatMode(ValueAnimator::RESTART);
-    animator->setInterpolator(LinearInterpolator::gLinearInterpolator.get());//LINEAR_INTERPOLATOR);
+    animator->setInterpolator(LinearInterpolator::Instance);//LINEAR_INTERPOLATOR);
     Animator::AnimatorListener al;
     al.onAnimationStart = [this](Animator& animator, bool/*isReverse*/){
         mRotationCount = 0;

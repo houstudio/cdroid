@@ -20,8 +20,8 @@
 
 #include <view/view.h>
 #include <view/viewgroupoverlay.h>
+#include <animation/animations.h>
 #include <widget/scroller.h>
-#include <animations.h>
 
 namespace cdroid {
 

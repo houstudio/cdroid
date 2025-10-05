@@ -32,13 +32,13 @@ private:
     SplineOverScroller * mScrollerX;
     SplineOverScroller * mScrollerY;
 
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
     bool mFlywheel;
 public:
     OverScroller(Context* context);
-    OverScroller(Context* context, Interpolator* interpolator, bool flywheel=true);
+    OverScroller(Context* context,const Interpolator* interpolator, bool flywheel=true);
     ~OverScroller();
-    void setInterpolator(Interpolator* interpolator);
+    void setInterpolator(const Interpolator* interpolator);
     void setFriction(float friction);
     bool isFinished()const;
     void forceFinished(bool finished);

@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/systemclock.h>
-#include <core/atexit.h>
+#include <utils/atexit.h>
 #include <cdlog.h>
 #include <functional>
 #include <thread>

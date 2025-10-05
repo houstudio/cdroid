@@ -7,7 +7,6 @@
 #include <view/hapticscrollfeedbackprovider.h>
 #include <view/accessibility/accessibilitynodeinfo.h>
 #include <view/accessibility/accessibilitymanager.h>
-#include <core/neverdestroyed.h>
 //#include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 
@@ -4437,7 +4436,7 @@ void AbsListView::FlingRunnable::edgeReached(int delta) {
 void AbsListView::FlingRunnable::startScroll(int distance, int duration, bool linear, bool suppressEndFlingStateChangeCall) {
     const int initialY = distance < 0 ? INT_MAX : 0;
     mLastFlingY = initialY;
-    mScroller->setInterpolator(linear ? LinearInterpolator::gLinearInterpolator.get() : nullptr);
+    mScroller->setInterpolator(linear ? LinearInterpolator::Instance : nullptr);
     mScroller->startScroll(0, initialY, 0, distance, duration);
     mLV->mTouchMode = TOUCH_MODE_FLING;
     mSuppressIdleStateChangeCall = suppressEndFlingStateChangeCall;

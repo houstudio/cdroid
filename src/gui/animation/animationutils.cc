@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/animationutils.h>
-#include <animations.h>
+#include <animation/animations.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 
@@ -108,21 +108,21 @@ LayoutAnimationController* AnimationUtils::createLayoutAnimationFromXml(Context*
 
 Animation* AnimationUtils::makeInAnimation(Context* c, bool fromLeft){
     Animation*a = loadAnimation(c,fromLeft?"cdroid:anim/slide_in_left.xml":"cdroid:anim/slide_in_right.xml");
-    a->setInterpolator(DecelerateInterpolator::gDecelerateInterpolator.get());
+    a->setInterpolator(DecelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeOutAnimation(Context* c, bool toRight){
     Animation*a = loadAnimation(c,toRight?"cdroid:anim/slide_out_right.xml":"cdroid:anim/slide_out_left.xml");
-    a->setInterpolator(AccelerateInterpolator::gAccelerateInterpolator.get());
+    a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }
 
 Animation* AnimationUtils::makeInChildBottomAnimation(Context* c){
     Animation*a = loadAnimation(c,"cdroid:anim/slide_in_child_bottom.xml");
-    a->setInterpolator(AccelerateInterpolator::gAccelerateInterpolator.get());
+    a->setInterpolator(AccelerateInterpolator::Instance);
     a->setStartTime(currentAnimationTimeMillis());
     return a;
 }

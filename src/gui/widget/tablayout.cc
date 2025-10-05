@@ -18,7 +18,7 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
 #include <core/build.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -646,7 +646,7 @@ void TabLayout::animateToTab(int newPosition){
 void TabLayout::ensureScrollAnimator(){
      if (mScrollAnimator == nullptr) {
         mScrollAnimator = new ValueAnimator();
-        mScrollAnimator->setInterpolator(FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get());
+        mScrollAnimator->setInterpolator(FastOutSlowInInterpolator::Instance);
         mScrollAnimator->setDuration(ANIMATION_DURATION);
         mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
            PropertyValuesHolder*ip=anim.getValues()[0]; 
@@ -1445,7 +1445,7 @@ void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int du
 
         if( mIndicatorAnimator==nullptr){ 
             mIndicatorAnimator = new ValueAnimator();
-            mIndicatorAnimator->setInterpolator(FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get());
+            mIndicatorAnimator->setInterpolator(FastOutSlowInInterpolator::Instance);
             mIndicatorAnimator->setFloatValues({.0f,1.f});
         }
         if (startLeft != targetLeft || startRight != targetRight) {

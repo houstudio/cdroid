@@ -60,9 +60,11 @@ ListPopupWindow::ListPopupWindow(Context* context,const AttributeSet& atts, cons
             show();
         }
     };
+    LOGD("%p mPopup=%p",this,mPopup);
 }
 
 ListPopupWindow::~ListPopupWindow(){
+    LOGD("%p mPopup=%p",this,mPopup);
     delete mHandler;
     delete mPopup;
     delete mObserver;

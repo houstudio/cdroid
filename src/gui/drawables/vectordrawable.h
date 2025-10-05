@@ -236,13 +236,13 @@ private:
     friend VectorDrawableState;
     friend AnimatedVectorDrawable;
 
-    static const FloatProperty& TRANSLATE_X;
-    static const FloatProperty& TRANSLATE_Y;
-    static const FloatProperty& SCALE_X;
-    static const FloatProperty& SCALE_Y;
-    static const FloatProperty& PIVOT_X;
-    static const FloatProperty& PIVOT_Y;
-    static const FloatProperty& ROTATION;
+    static const FloatProperty*const TRANSLATE_X;
+    static const FloatProperty*const TRANSLATE_Y;
+    static const FloatProperty*const SCALE_X;
+    static const FloatProperty*const SCALE_Y;
+    static const FloatProperty*const PIVOT_X;
+    static const FloatProperty*const PIVOT_Y;
+    static const FloatProperty*const ROTATION;
 public:
     VGroup();
     ~VGroup();
@@ -290,7 +290,7 @@ protected:
     PathParser::PathData* mPathData = nullptr;
     std::string mPathName;
     int mChangingConfigurations;
-    static const Property& PATH_DATA;
+    static const Property*const PATH_DATA;
 public:
     VPath();
     VPath(const VPath* copy);
@@ -355,14 +355,14 @@ private:
     ComplexColor* mStrokeColors = nullptr;
     ComplexColor* mFillColors = nullptr;
     hwui::FullPath* mNativePtr;
-    static const FloatProperty& STROKE_WIDTH;
-    static const Property& STROKE_COLOR;
-    static const FloatProperty& STROKE_ALPHA;
-    static const Property& FILL_COLOR;
-    static const FloatProperty& FILL_ALPHA;
-    static const FloatProperty& TRIM_PATH_START;
-    static const FloatProperty& TRIM_PATH_END;
-    static const FloatProperty& TRIM_PATH_OFFSET;
+    static const FloatProperty*const STROKE_WIDTH;
+    static const Property*const STROKE_COLOR;
+    static const FloatProperty*const STROKE_ALPHA;
+    static const Property*const FILL_COLOR;
+    static const FloatProperty*const FILL_ALPHA;
+    static const FloatProperty*const TRIM_PATH_START;
+    static const FloatProperty*const TRIM_PATH_END;
+    static const FloatProperty*const TRIM_PATH_OFFSET;
 private:
     void updateStateFromTypedArray(const AttributeSet&atts);
     bool canComplexColorApplyTheme(ComplexColor* complexColor);

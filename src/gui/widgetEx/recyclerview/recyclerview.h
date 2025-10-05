@@ -486,9 +486,9 @@ public:
     void suppressLayout(bool suppress);
     bool isLayoutSuppressed()const;
     void smoothScrollBy(int dx,int dy);
-    void smoothScrollBy(int dx,int dy,Interpolator* interpolator);
-    void smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration);
-    void smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration,bool withtNestedScrolling);
+    void smoothScrollBy(int dx,int dy,const Interpolator* interpolator);
+    void smoothScrollBy(int dx,int dy,const Interpolator* interpolator,int duration);
+    void smoothScrollBy(int dx,int dy,const Interpolator* interpolator,int duration,bool withtNestedScrolling);
     bool fling(int velocityX, int velocityY);
     void stopScroll();
     int getMinFlingVelocity()const;
@@ -571,7 +571,7 @@ private:
     bool mEatRunOnAnimationRequest=false;
     bool mReSchedulePostAnimationCallback = false;
     OverScroller* mOverScroller;
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
     RecyclerView* mRV;
     Runnable mRunnable;
     int computeScrollDuration(int dx, int dy);
@@ -584,7 +584,7 @@ public:
     //void enableRunOnAnimationRequests();
     void postOnAnimation();
     void fling(int velocityX, int velocityY);
-    void smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator);
+    void smoothScrollBy(int dx, int dy, int duration,const Interpolator* interpolator);
     void stop();
 };
 class RecyclerView::AdapterDataObserver{
@@ -1163,7 +1163,7 @@ private:
     int mDy;
     int mDuration;
     int mJumpToPosition = NO_POSITION;//RecyclerView::NO_POSITION;
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
     bool mChanged = false;
     int mConsecutiveUpdates = 0;
     void validate();
@@ -1181,9 +1181,9 @@ public:
     void setDy(int dy);
     int getDuration();
     void setDuration(int duration);
-    Interpolator* getInterpolator();
-    void setInterpolator(Interpolator* interpolator);
-    void update(int dx,int dy,int duration,Interpolator* interpolator);
+    const Interpolator* getInterpolator()const;
+    void setInterpolator(const Interpolator* interpolator);
+    void update(int dx,int dy,int duration,const Interpolator* interpolator);
 };
 
 class RecyclerView::AdapterDataObservable:public Observable<AdapterDataObserver> {

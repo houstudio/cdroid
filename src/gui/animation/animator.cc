@@ -66,7 +66,7 @@ int64_t Animator::getTotalDuration() {
     }
 }
 
-TimeInterpolator* Animator::getInterpolator() {
+const TimeInterpolator* Animator::getInterpolator()const{
     return nullptr;
 }
 

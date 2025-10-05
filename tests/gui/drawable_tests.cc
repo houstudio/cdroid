@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <drawables.h>
+#include <drawables/drawables.h>
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>

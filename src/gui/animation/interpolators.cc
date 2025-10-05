@@ -22,6 +22,9 @@
 #include <drawables/pathparser.h>
 
 namespace cdroid{
+BaseInterpolator::BaseInterpolator(){
+    mChangingConfiguration =0;
+}
 
 void BaseInterpolator::setChangingConfiguration(int changingConfiguration){
     mChangingConfiguration = changingConfiguration;
@@ -37,15 +40,15 @@ AccelerateInterpolator::AccelerateInterpolator(Context*ctx,const AttributeSet&at
 }
 
 AccelerateInterpolator::AccelerateInterpolator(double f){
-    mFactor=float(f);
-    mDoubleFactor=float(f*2);
+    mFactor = float(f);
+    mDoubleFactor = float(f*2.0);
 }
 
-float AccelerateInterpolator::getInterpolation(float input){
+float AccelerateInterpolator::getInterpolation(float input)const{
     if (mFactor == 1.0f) {
         return input * input;
     } else {
-        return (float)pow(input, mDoubleFactor);
+        return (float)std::pow(input, mDoubleFactor);
     }
 }
 
@@ -57,12 +60,12 @@ DecelerateInterpolator::DecelerateInterpolator(float factor) {
     mFactor = factor;
 }
 
-float DecelerateInterpolator::getInterpolation(float input){
+float DecelerateInterpolator::getInterpolation(float input)const{
     float result;
     if (mFactor == 1.0f) {
         result = (float)(1.0f - (1.0f - input) * (1.0f - input));
     } else {
-        result = (float)(1.0f - pow((1.0f - input), 2 * mFactor));
+        result = (float)(1.0f - std::pow((1.0f - input), 2 * mFactor));
     }
     return result;
 }
@@ -75,7 +78,7 @@ AnticipateInterpolator::AnticipateInterpolator(float tension){
     mTension = tension;
 }
 
-float AnticipateInterpolator::getInterpolation(float t){
+float AnticipateInterpolator::getInterpolation(float t)const{
     return t * t * ((mTension + 1) * t - mTension);
 }
 
@@ -87,7 +90,7 @@ CycleInterpolator::CycleInterpolator(float cycles) {
     mCycles = cycles;
 }
 
-float CycleInterpolator::getInterpolation(float input){
+float CycleInterpolator::getInterpolation(float input)const{
     return (float)(sin(2 * mCycles * M_PI * input));
 }
 
@@ -99,7 +102,7 @@ OvershootInterpolator::OvershootInterpolator(float tension) {
     mTension = tension;
 }
 
-float OvershootInterpolator::getInterpolation(float t){
+float OvershootInterpolator::getInterpolation(float t)const{
     t -= 1.0f;
     return t * t * ((mTension + 1) * t + mTension) + 1.0f;
 }
@@ -120,7 +123,7 @@ float AnticipateOvershootInterpolator::o(float t, float s) {
     return t * t * ((s + 1) * t + s);
 }
 
-float AnticipateOvershootInterpolator::getInterpolation(float t){
+float AnticipateOvershootInterpolator::getInterpolation(float t)const{
     if (t < 0.5f) return 0.5f * a(t * 2.0f, mTension);
     else return 0.5f * (o(t * 2.0f - 2.0f, mTension) + 2.0f);
 }
@@ -130,7 +133,7 @@ float BounceInterpolator::bounce(float t) {
     return t * t * 8.0f;
 }
 
-float BounceInterpolator::getInterpolation(float t){
+float BounceInterpolator::getInterpolation(float t)const{
     // _b(t) = t * t * 8
     // bs(t) = _b(t) for t < 0.3535
     // bs(t) = _b(t - 0.54719) + 0.7 for t < 0.7408
@@ -144,7 +147,7 @@ float BounceInterpolator::getInterpolation(float t){
     else return bounce(t - 1.0435f) + 0.95f;
 }
 
-float AccelerateDecelerateInterpolator::getInterpolation(float input) {
+float AccelerateDecelerateInterpolator::getInterpolation(float input)const{
     return (float)(cos((input + 1) * M_PI) / 2.0f) + 0.5f;
 }
 
@@ -176,8 +179,8 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
         const float x1 = a.getFloat("controlX1", 0);
         const float y1 = a.getFloat("controlY1", 0);
 
-        bool hasX2 = a.hasAttribute("controlX2");
-        bool hasY2 = a.hasAttribute("controlY2");
+        const bool hasX2 = a.hasAttribute("controlX2");
+        const bool hasY2 = a.hasAttribute("controlY2");
 
         if (hasX2 != hasY2) {
             throw "pathInterpolator requires both controlX2 and controlY2 for cubic Beziers.";
@@ -191,10 +194,6 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
             initCubic(x1, y1, x2, y2);
         }
     }
-}
-
-PathInterpolator::~PathInterpolator(){
-
 }
 
 void PathInterpolator::initQuad(float controlX, float controlY) {
@@ -244,7 +243,7 @@ void PathInterpolator::initPath(cdroid::Path&path){
     }
 }
 
-float PathInterpolator::getInterpolation(float t) {
+float PathInterpolator::getInterpolation(float t)const {
     if (t <= 0) {
         return 0;
     } else if (t >= 1) {
@@ -290,11 +289,7 @@ LookupTableInterpolator::LookupTableInterpolator(const float*values,int count){
     mStepSize = 1.f / (count - 1);
 }
 
-LookupTableInterpolator::~LookupTableInterpolator(){
-    mValues.clear();
-}
-
-float LookupTableInterpolator::getInterpolation(float input){
+float LookupTableInterpolator::getInterpolation(float input)const{
     if (input >= 1.0f) {
         return 1.0f;
     }
@@ -445,7 +440,7 @@ static const float BEZIERSCURVE_VALUES[] ={
 BezierSCurveInterpolator::BezierSCurveInterpolator() {
 }
 
-float BezierSCurveInterpolator::getInterpolation(float input) {
+float BezierSCurveInterpolator::getInterpolation(float input)const{
     if (input >= 1.0f) {
         return 1.0f;
     }
@@ -463,27 +458,31 @@ float BezierSCurveInterpolator::getInterpolation(float input) {
     return BEZIERSCURVE_VALUES[position] + weight * (BEZIERSCURVE_VALUES[position + 1] - BEZIERSCURVE_VALUES[position]);
 }
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const NeverDestroyed<LinearInterpolator>LinearInterpolator::gLinearInterpolator;
-const NeverDestroyed<DecelerateInterpolator>DecelerateInterpolator::gDecelerateInterpolator(1.f);
-const NeverDestroyed<FastOutSlowInInterpolator>FastOutSlowInInterpolator::gFastOutSlowInInterpolator;
-const NeverDestroyed<LinearOutSlowInInterpolator>LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator;
-const NeverDestroyed<FastOutLinearInInterpolator>FastOutLinearInInterpolator::gFastOutLinearInInterpolator;
-const NeverDestroyed<AccelerateInterpolator>AccelerateInterpolator::gAccelerateInterpolator(1.f);
-const NeverDestroyed<AccelerateDecelerateInterpolator>AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator;
-const NeverDestroyed<BezierSCurveInterpolator>BezierSCurveInterpolator::gBezierSCurveInterpolator;
 
-bool Interpolator::isSystemGlobalInterpolator(TimeInterpolator*i){
-    if( (i!=nullptr)
-            ||(i==LinearInterpolator::gLinearInterpolator.get())
-            ||(i==DecelerateInterpolator::gDecelerateInterpolator.get())
-            ||(i==FastOutSlowInInterpolator::gFastOutSlowInInterpolator.get())
-            ||(i==LinearOutSlowInInterpolator::gLinearOutSlowInInterpolator.get())
-            ||(i==FastOutLinearInInterpolator::gFastOutLinearInInterpolator.get())
-            ||(i==AccelerateInterpolator::gAccelerateInterpolator.get())
-            ||(i==AccelerateDecelerateInterpolator::gAccelerateDecelerateInterpolator.get())
-      ){
-        return true;
-    }
-    return false;
+namespace{
+    AccelerateInterpolator mAccelerateInterpolator(1.f);
+    AccelerateDecelerateInterpolator mAccelerateDecelerateInterpolator;
+    BezierSCurveInterpolator mBezierSCurveInterpolator;
+    BounceInterpolator mBounceInterpolator;
+    AnticipateInterpolator mAnticipateInterpolator;
+    DecelerateInterpolator mDecelerateInterpolator;
+    FastOutSlowInInterpolator mFastOutSlowInInterpolator;
+    FastOutLinearInInterpolator mFastOutLinearInInterpolator;
+    LinearInterpolator mLinearInterpolator;
+    LinearOutSlowInInterpolator mLinearOutSlowInInterpolator;
+    OvershootInterpolator mOvershootInterpolator;
 }
+
+const AnticipateInterpolator*const AnticipateInterpolator::Instance= &mAnticipateInterpolator;
+const AccelerateInterpolator*const AccelerateInterpolator::Instance = &mAccelerateInterpolator;
+const AccelerateDecelerateInterpolator*const AccelerateDecelerateInterpolator::Instance = &mAccelerateDecelerateInterpolator;
+const BounceInterpolator*const BounceInterpolator::Instance = &mBounceInterpolator;
+const BezierSCurveInterpolator*const BezierSCurveInterpolator::Instance = &mBezierSCurveInterpolator;
+const DecelerateInterpolator*const DecelerateInterpolator::Instance= &mDecelerateInterpolator;
+const FastOutSlowInInterpolator*const FastOutSlowInInterpolator::Instance = &mFastOutSlowInInterpolator;
+const FastOutLinearInInterpolator*const FastOutLinearInInterpolator::Instance = &mFastOutLinearInInterpolator;
+const LinearInterpolator*const LinearInterpolator::Instance = &mLinearInterpolator;
+const LinearOutSlowInInterpolator*const LinearOutSlowInInterpolator::Instance = &mLinearOutSlowInInterpolator;
+const OvershootInterpolator*const OvershootInterpolator::Instance = &mOvershootInterpolator;
+
 }//endof namespace

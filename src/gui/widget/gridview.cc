@@ -1,7 +1,7 @@
 #include <widget/gridview.h>
 #include <widget/checkable.h>
 #include <widget/R.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <cdlog.h>
 
 namespace cdroid {

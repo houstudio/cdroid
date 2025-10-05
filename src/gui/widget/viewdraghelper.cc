@@ -16,18 +16,17 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/viewdraghelper.h>
-#include <core/neverdestroyed.h>
 namespace cdroid{
 
 class VDInterpolator:public Interpolator {
 public:
-    float getInterpolation(float t)override{
+    float getInterpolation(float t)const override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
 };
 
-static NeverDestroyed<VDInterpolator> sInterpolator;
+static VDInterpolator sInterpolator;
 
 ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* cb){
     LOGE_IF(forParent == nullptr||cb==nullptr,"Parent view & Callback view may not be null");
@@ -45,7 +44,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mTouchSlop = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();
     mMinVelocity = vc.getScaledMinimumFlingVelocity();
-    mScroller = new OverScroller(context,sInterpolator.get(),true);
+    mScroller = new OverScroller(context,&sInterpolator,true);
     mSetIdleRunnable = [this](){
         setDragState(STATE_IDLE);
     };

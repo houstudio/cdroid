@@ -62,8 +62,8 @@
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <animation/animatorinflater.h>
+#include <drawables/drawables.h>
 #include <core/rect.h>
-#include <drawables.h>
 #include <cdlog.h>
 
 #define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
@@ -1517,18 +1517,18 @@ public:
     virtual void resolveLayoutParams();
     void layout(int l, int t, int r, int b);
 public:
-    static const FloatProperty& ALPHA;
-    static const FloatProperty& TRANSLATION_X;
-    static const FloatProperty& TRANSLATION_Y;
-    static const FloatProperty& TRANSLATION_Z;
-    static const FloatProperty& X;
-    static const FloatProperty& Y;
-    static const FloatProperty& Z;
-    static const FloatProperty& ROTATION;
-    static const FloatProperty& ROTATION_X;
-    static const FloatProperty& ROTATION_Y;
-    static const FloatProperty& SCALE_X;
-    static const FloatProperty& SCALE_Y;
+    static const FloatProperty*const ALPHA;
+    static const FloatProperty*const TRANSLATION_X;
+    static const FloatProperty*const TRANSLATION_Y;
+    static const FloatProperty*const TRANSLATION_Z;
+    static const FloatProperty*const X;
+    static const FloatProperty*const Y;
+    static const FloatProperty*const Z;
+    static const FloatProperty*const ROTATION;
+    static const FloatProperty*const ROTATION_X;
+    static const FloatProperty*const ROTATION_Y;
+    static const FloatProperty*const SCALE_X;
+    static const FloatProperty*const SCALE_Y;
 };
 
 class View::AttachInfo{

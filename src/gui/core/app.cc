@@ -27,10 +27,10 @@
 
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
+#include <utils/atexit.h>
 #include <core/app.h>
 #include <core/cxxopts.h>
 #include <core/build.h>
-#include <core/atexit.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
 #include <core/inputmethodmanager.h>

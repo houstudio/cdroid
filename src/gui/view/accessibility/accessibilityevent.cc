@@ -1,5 +1,5 @@
 #include <view/accessibility/accessibilityevent.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <functional>
 #include <sstream>
 

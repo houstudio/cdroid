@@ -6,8 +6,8 @@
 #include<widget/horizontalscrollview.h>
 #include<widget/simplemonthview.h>
 #include<widget/viewpager.h>
-#include<animations.h>
-#include<drawables.h>
+#include<animation/animations.h>
+#include<drawables/drawables.h>
 #include<cdlog.h>
 using namespace Cairo;
 class MyAdapter:public ArrayAdapter<std::string>{

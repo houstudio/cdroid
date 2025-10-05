@@ -27,8 +27,7 @@
 #include <widgetEx/recyclerview/recyclerviewaccessibilitydelegate.h>
 #include <widgetEx/recyclerview/fastscroller.h>
 #include <view/focusfinder.h>
-#include <core/neverdestroyed.h>
-#include <core/mathutils.h>
+#include <utils/mathutils.h>
 #include <core/build.h>
 #include <cassert>
 
@@ -37,7 +36,7 @@ namespace cdroid{
 //public class RecyclerView extends ViewGroup implements ScrollingView, NestedScrollingChild2 {
 class QuinticInterpolator:public Interpolator{
 public:
-    float getInterpolation(float t)override{
+    float getInterpolation(float t)const override{
         t -= 1.0f;
         return t * t * t * t * t + 1.0f;
     }
@@ -45,7 +44,7 @@ public:
 
 bool RecyclerView::sDebugAssertionsEnabled= false;
 bool RecyclerView::sVerboseLoggingEnabled = false;
-static NeverDestroyed<QuinticInterpolator> sQuinticInterpolator;
+static QuinticInterpolator sQuinticInterpolator;
 
 DECLARE_WIDGET2(RecyclerView,"cdroid:attr/recyclerviewStyle")
 
@@ -1317,15 +1316,15 @@ void RecyclerView::smoothScrollBy(int dx,int dy) {
     smoothScrollBy(dx, dy, nullptr);
 }
 
-void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator) {
+void RecyclerView::smoothScrollBy(int dx,int dy,const Interpolator* interpolator) {
     smoothScrollBy(dx,dy,interpolator,UNDEFINED_DURATION);
 }
 
-void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration){
+void RecyclerView::smoothScrollBy(int dx,int dy,const Interpolator* interpolator,int duration){
     smoothScrollBy(dx,dy,interpolator,duration,false);
 }
 
-void RecyclerView::smoothScrollBy(int dx,int dy,Interpolator* interpolator,int duration,bool withNestedScrolling){
+void RecyclerView::smoothScrollBy(int dx,int dy,const Interpolator* interpolator,int duration,bool withNestedScrolling){
     if (mLayout == nullptr) {
         LOGE("Cannot smooth scroll without a LayoutManager set. "
                "Call setLayoutManager with a non-null argument.");
@@ -3715,7 +3714,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mRV = rv;
     mInterpolator = nullptr;
     mRunnable = std::bind(&ViewFlinger::run,this);
-    mOverScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
+    mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
 }
 
 RecyclerView::ViewFlinger::~ViewFlinger(){
@@ -3906,15 +3905,15 @@ void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     // Because you can't define a custom interpolator for flinging, we should make sure we
     // reset ourselves back to the teh default interpolator in case a different call
     // changed our interpolator.
-    if (mInterpolator != sQuinticInterpolator.get()) {
-        mInterpolator = sQuinticInterpolator.get();
-        mOverScroller = new OverScroller(mRV->getContext(), sQuinticInterpolator.get());
+    if (mInterpolator != &sQuinticInterpolator) {
+        mInterpolator = &sQuinticInterpolator;
+        mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
     }
     mOverScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
     postOnAnimation();
 }
 
-void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration, Interpolator* interpolator) {
+void RecyclerView::ViewFlinger::smoothScrollBy(int dx, int dy, int duration,const Interpolator* interpolator) {
     if(duration ==UNDEFINED_DURATION){
         duration = computeScrollDuration(dx,dy);
     }
@@ -7483,16 +7482,16 @@ void RecyclerView::SmoothScroller::Action::setDuration(int duration) {
     mDuration = duration;
 }
 
-Interpolator* RecyclerView::SmoothScroller::Action::getInterpolator() {
+const Interpolator* RecyclerView::SmoothScroller::Action::getInterpolator() const{
     return mInterpolator;
 }
 
-void RecyclerView::SmoothScroller::Action::setInterpolator(Interpolator* interpolator) {
+void RecyclerView::SmoothScroller::Action::setInterpolator(const Interpolator* interpolator) {
     mChanged = true;
     mInterpolator = interpolator;
 }
 
-void RecyclerView::SmoothScroller::Action::update(int dx,int dy,int duration,Interpolator* interpolator) {
+void RecyclerView::SmoothScroller::Action::update(int dx,int dy,int duration,const Interpolator* interpolator) {
     mDx = dx;
     mDy = dy;
     mDuration = duration;

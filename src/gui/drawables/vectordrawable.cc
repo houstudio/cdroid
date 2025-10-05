@@ -704,7 +704,7 @@ public:                                                     \
             { return ((CLASS*)obj)->get##METHOD(); }        \
 };                                                          \
 static const prop_##PROJ INST_##PROJ;                       \
-}const FloatProperty& CLASS::PROJ =INST_##PROJ;
+}const FloatProperty*const CLASS::PROJ = &INST_##PROJ;
 
 #define DEFINE_INTPROPERTY(CLASS,PROPNAME, METHOD, PROJ)    \
 namespace {                                                 \
@@ -718,7 +718,7 @@ public:                                                     \
             { return ((CLASS*)obj)->get##METHOD(); }        \
 };                                                          \
 static const prop_##PROJ INTPROP_##PROJ;                    \
-}const Property& CLASS::PROJ =INTPROP_##PROJ;
+}const Property*const CLASS::PROJ = &INTPROP_##PROJ;
 
 DEFINE_FLOATPROPERTY(VectorDrawable::VGroup,"translateX",TranslateX,TRANSLATE_X);
 DEFINE_FLOATPROPERTY(VectorDrawable::VGroup,"translateY",TranslateY,TRANSLATE_Y);
@@ -751,13 +751,13 @@ int VectorDrawable::VGroup::getPropertyIndex(const std::string& propertyName) {
 
 // Below are the Properties that wrap the setters to avoid reflection overhead in animations
 const std::unordered_map<std::string, const Property*> VectorDrawable::VGroup::sPropertyMap ={
-    {"translateX", &TRANSLATE_X},
-    {"translateY", &TRANSLATE_Y},
-    {"scaleX", &SCALE_X},
-    {"scaleY", &SCALE_Y},
-    {"pivotX", &PIVOT_X},
-    {"pivotY", &PIVOT_Y},
-    {"rotation", &ROTATION}
+    {"translateX", TRANSLATE_X},
+    {"translateY", TRANSLATE_Y},
+    {"scaleX", SCALE_X},
+    {"scaleY", SCALE_Y},
+    {"pivotX", PIVOT_X},
+    {"pivotY", PIVOT_Y},
+    {"rotation", ROTATION}
 };
 
 VectorDrawable::VGroup::VGroup() {
@@ -1027,13 +1027,13 @@ public:
         return *((VectorDrawable::VPath*)object)->getPathData();
     }
 };
-class PROP_PATH_DATA VPATH_PATH_DATA;
+static class PROP_PATH_DATA VPATH_PATH_DATA;
 }
-const Property& VectorDrawable::VPath::PATH_DATA= VPATH_PATH_DATA;
+const Property*const VectorDrawable::VPath::PATH_DATA= &VPATH_PATH_DATA;
 
 const Property* VectorDrawable::VPath::getProperty(const std::string& propertyName) {
-    if (PATH_DATA.getName().compare(propertyName)==0) {
-        return &PATH_DATA;
+    if (PATH_DATA->getName().compare(propertyName)==0) {
+        return PATH_DATA;
     }
     // property not found
     return nullptr;
@@ -1177,14 +1177,14 @@ std::unordered_map<std::string, int> VectorDrawable::VFullPath::sPropertyIndexMa
 // Below are the Properties that wrap the setters to avoid reflection overhead in animations
 
 const std::unordered_map<std::string, const Property*> VectorDrawable::VFullPath::sPropertyMap={
-    {"strokeWidth", &STROKE_WIDTH},
-    {"strokeColor", &STROKE_COLOR},
-    {"strokeAlpha", &STROKE_ALPHA},
-    {"fillColor", &FILL_COLOR},
-    {"fillAlpha", &FILL_ALPHA},
-    {"trimPathStart", &TRIM_PATH_START},
-    {"trimPathEnd", &TRIM_PATH_END},
-    {"trimPathOffset", &TRIM_PATH_OFFSET}
+    {"strokeWidth", STROKE_WIDTH},
+    {"strokeColor", STROKE_COLOR},
+    {"strokeAlpha", STROKE_ALPHA},
+    {"fillColor", FILL_COLOR},
+    {"fillAlpha", FILL_ALPHA},
+    {"trimPathStart", TRIM_PATH_START},
+    {"trimPathEnd", TRIM_PATH_END},
+    {"trimPathOffset", TRIM_PATH_OFFSET}
 };
 
 VectorDrawable::VFullPath::VFullPath() {

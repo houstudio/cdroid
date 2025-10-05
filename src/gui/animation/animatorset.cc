@@ -181,11 +181,11 @@ int AnimatorSet::getChangingConfigurations() {
     return conf;
 }
 
-void AnimatorSet::setInterpolator(TimeInterpolator* interpolator) {
+void AnimatorSet::setInterpolator(const TimeInterpolator* interpolator) {
     mInterpolator = interpolator;
 }
 
-TimeInterpolator* AnimatorSet::getInterpolator() {
+const TimeInterpolator* AnimatorSet::getInterpolator() const{
     return mInterpolator;
 }
 

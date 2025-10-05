@@ -71,7 +71,7 @@ protected:
     int mRepeatCount = 0;
     int mRepeated = 0;
     int mRepeatMode = RESTART;
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
     AnimationListener mListener;
     Rect mPreviousRegion ;
     Rect mRegion;
@@ -103,7 +103,7 @@ public:
     virtual Animation* clone()const;
     //void setListenerHandler(Handler handler);
     virtual void setInterpolator(Context* context,const std::string& resID) ;
-    virtual void setInterpolator(Interpolator* i);
+    virtual void setInterpolator(const Interpolator* i);
     virtual void setStartOffset(int64_t startOffset) ;
     virtual void setDuration(int64_t durationMillis);
     virtual void restrictDuration(int64_t durationMillis);
@@ -122,7 +122,7 @@ public:
     bool getDetachWallpaper()const;
     void setDetachWallpaper(bool detachWallpaper);
     void setShowWallpaper(bool showWallpaper);
-    Interpolator* getInterpolator();
+    const Interpolator* getInterpolator()const;
     virtual int64_t getStartTime()const;
     virtual int64_t getDuration()const;
     int64_t getStartOffset()const;

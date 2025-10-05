@@ -1,10 +1,10 @@
 #include <widget/edittext.h>
-#include <inputmethodmanager.h>
+#include <core/inputmethodmanager.h>
 #include <cdlog.h>
 #include <regex>
 #include <math.h>
-#include <textutils.h>
-#include <layout.h>
+#include <utils/textutils.h>
+#include <core/layout.h>
 
 namespace cdroid{
 

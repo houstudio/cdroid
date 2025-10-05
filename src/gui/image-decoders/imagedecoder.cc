@@ -24,9 +24,9 @@
 #include <drawables/ninepatchdrawable.h>
 #include <drawables/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <core/context.h>
-#include <core/atexit.h>
+#include <utils/atexit.h>
 #include <png.h>
 #include <porting/cdlog.h>
 #if ENABLE(LCMS)

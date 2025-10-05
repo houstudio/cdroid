@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <utf16char.h>
 #include <core/inputmethod.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
 #include <gui_features.h>

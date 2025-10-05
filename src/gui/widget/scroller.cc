@@ -17,8 +17,8 @@
  *********************************************************************************/
 #include <widget/scroller.h>
 #include <core/systemclock.h>
-#include <core/mathutils.h>
-#include <viewconfiguration.h>
+#include <utils/mathutils.h>
+#include <view/viewconfiguration.h>
 #include <animation/animationutils.h>
 #include <cdlog.h>
 
@@ -27,12 +27,12 @@ namespace cdroid{
 float Scroller::SPLINE_POSITION [NB_SAMPLES + 1];
 float Scroller::SPLINE_TIME [NB_SAMPLES + 1];
 
-const NeverDestroyed<Scroller::ViscousFluidInterpolator>Scroller::gViscousFluidInterpolator;
+const Scroller::ViscousFluidInterpolator Scroller::gViscousFluidInterpolator;
 
 Scroller::Scroller(Context* context):Scroller(context,nullptr,true){
 }
 
-Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) {
+Scroller::Scroller(Context* context,const Interpolator* interpolator, bool flywheel) {
     if( (SPLINE_POSITION[NB_SAMPLES]!=1.f) || (SPLINE_TIME[NB_SAMPLES]!=1.f) )
         sInit();
     mStartX= mStartY =0;
@@ -47,7 +47,7 @@ Scroller::Scroller(Context* context, Interpolator* interpolator, bool flywheel) 
     mFinished = true;
     mDurationReciprocal=1.f;
     if (interpolator == nullptr) {
-        mInterpolator = gViscousFluidInterpolator.get();//new ViscousFluidInterpolator();
+        mInterpolator = &gViscousFluidInterpolator;
     } else {
         mInterpolator = interpolator;
     }
@@ -372,7 +372,7 @@ float Scroller::ViscousFluidInterpolator::viscousFluid(float x){
     return x;    
 }
 
-float Scroller::ViscousFluidInterpolator::getInterpolation(float input) {
+float Scroller::ViscousFluidInterpolator::getInterpolation(float input)const{
     float interpolated = VISCOUS_FLUID_NORMALIZE * viscousFluid(input);
     if (interpolated > 0) {
         return interpolated + VISCOUS_FLUID_OFFSET;

@@ -17,8 +17,8 @@
  *********************************************************************************/
 #include <iomanip>
 #include <widget/R.h>
-#include <core/textutils.h>
-#include <core/mathutils.h>
+#include <utils/textutils.h>
+#include <utils/mathutils.h>
 #include <widget/timepicker.h>
 #include <widget/timepickerclockdelegate.h>
 #include <widget/textinputtimepickerview.h>

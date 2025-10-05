@@ -20,8 +20,8 @@ namespace cdroid{
 
 LinearSmoothScroller::LinearSmoothScroller(Context* context) {
     mDisplayMetrics = context->getDisplayMetrics();
-    mLinearInterpolator = LinearInterpolator::gLinearInterpolator.get();
-    mDecelerateInterpolator = DecelerateInterpolator::gDecelerateInterpolator.get();
+    mLinearInterpolator = LinearInterpolator::Instance;
+    mDecelerateInterpolator = DecelerateInterpolator::Instance;
     mTargetVectorUsable = false;
     mHasCalculatedMillisPerPixel = false;
 }

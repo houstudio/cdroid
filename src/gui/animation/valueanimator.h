@@ -54,8 +54,8 @@ private:
     int64_t mStartDelay = 0;
     int mRepeatCount = 0;
     int mRepeatMode = RESTART;
-    TimeInterpolator* mInterpolator = nullptr;
-    static TimeInterpolator* sDefaultInterpolator;
+    const TimeInterpolator* mInterpolator = nullptr;
+    static const TimeInterpolator* sDefaultInterpolator;
     std::vector<AnimatorUpdateListener> mUpdateListeners;
 protected:
     bool mStartTimeCommitted;
@@ -127,8 +127,8 @@ public:
     void addUpdateListener(const AnimatorUpdateListener& listener);
     void removeUpdateListener(const AnimatorUpdateListener& listener);
     void removeAllUpdateListeners();
-    void setInterpolator(TimeInterpolator* value)override;
-    TimeInterpolator* getInterpolator()override;
+    void setInterpolator(const TimeInterpolator* value)override;
+    const TimeInterpolator* getInterpolator()const override;
     void setEvaluator(TypeEvaluator value);
     void start()override;
     void cancel()override;

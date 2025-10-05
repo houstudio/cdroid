@@ -5,7 +5,7 @@
 #include <framesequence.h>
 #include <gui/cdroid.h>
 #include <core/app.h>
-#include <core/textutils.h>
+#include <utils/textutils.h>
 #include <image-decoders/framesequence.h>
 #include <dirent.h>
 #include <sys/stat.h>

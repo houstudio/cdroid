@@ -90,7 +90,7 @@ class MyProperty: public Property{
 public:
    MyProperty(const std::string&name):Property(name){
    }
-   void set(void* object,const AnimateValue& value)override{
+   void set(void* object,const AnimateValue& value)const override{
        LOGD("value=%f",GET_VARIANT(value,float));
    }
 };

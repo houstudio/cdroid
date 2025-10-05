@@ -21,33 +21,33 @@
 #include <vector>
 #include <core/path.h>
 #include <core/attributeset.h>
-#include <core/neverdestroyed.h>
 namespace cdroid{
 class Context;
-
+/* Interploater is owned by caller.
+ * All cdroid's internal interpolators is goblal pointer which is  not freeable
+ * */
 class TimeInterpolator{
 public:
-    virtual float getInterpolation(float input)=0;
+    virtual float getInterpolation(float input)const=0;
     virtual ~TimeInterpolator()=default;
 };
 
-class Interpolator:public TimeInterpolator{
-public:
-    static bool isSystemGlobalInterpolator(TimeInterpolator*i);
-};
+using Interpolator=TimeInterpolator;
 
 class BaseInterpolator:public Interpolator{
 private:
     int mChangingConfiguration;
 public:
+    BaseInterpolator();
     int getChangingConfiguration();
     void setChangingConfiguration(int changingConfiguration);
 };
 
 class LinearInterpolator:public BaseInterpolator{
 public:
-    static const NeverDestroyed<LinearInterpolator>gLinearInterpolator;
-    float getInterpolation(float input){return input;}
+    static const LinearInterpolator*const Instance;
+    LinearInterpolator():BaseInterpolator(){}
+    float getInterpolation(float input)const{return input;}
 };
 
 class AccelerateInterpolator:public BaseInterpolator{
@@ -55,29 +55,30 @@ private:
     float mFactor;
     double mDoubleFactor;
 public:
-    static const NeverDestroyed<AccelerateInterpolator>gAccelerateInterpolator;
+    static const AccelerateInterpolator*const Instance;
     AccelerateInterpolator(Context*ctx,const AttributeSet&);
-    AccelerateInterpolator(double f=1.);
-    float getInterpolation(float input)override;
+    AccelerateInterpolator(double f=1.0);
+    float getInterpolation(float input)const override;
 };
 
 class DecelerateInterpolator:public BaseInterpolator{
 private:
     float mFactor;
 public:
-    static const NeverDestroyed<DecelerateInterpolator>gDecelerateInterpolator;
+    static const DecelerateInterpolator*const Instance;
     DecelerateInterpolator(Context*ctx,const AttributeSet&);
-    DecelerateInterpolator(float factor=1.0);
-    float getInterpolation(float input)override;
+    DecelerateInterpolator(float factor=1.0f);
+    float getInterpolation(float input)const override;
 };
 
 class AnticipateInterpolator:public BaseInterpolator{
 private:
     float mTension;
 public:
+    static const AnticipateInterpolator*const Instance;
     AnticipateInterpolator(Context*ctx,const AttributeSet&);
-    AnticipateInterpolator(float tension=2.0);
-    float getInterpolation(float t)override;
+    AnticipateInterpolator(float tension=2.0f);
+    float getInterpolation(float t)const override;
 };
 
 class CycleInterpolator:public BaseInterpolator{
@@ -86,16 +87,17 @@ private:
 public:
     CycleInterpolator(Context*ctx,const AttributeSet&);
     CycleInterpolator(float cycles);
-    float getInterpolation(float input)override;
+    float getInterpolation(float input)const override;
 };
 
 class OvershootInterpolator:public BaseInterpolator{
 private:
     float mTension;
 public:
+    static const OvershootInterpolator*const Instance;
     OvershootInterpolator(Context*ctx,const AttributeSet&);
     OvershootInterpolator(float tension=2.0f);
-    float getInterpolation(float t)override;
+    float getInterpolation(float t)const override;
 };
 
 /**
@@ -109,22 +111,23 @@ private:
     static float o(float t, float s);
 public:
     AnticipateOvershootInterpolator(Context*ctx,const AttributeSet&);
-    AnticipateOvershootInterpolator(float tension=2.5, float extraTension=1.5);
+    AnticipateOvershootInterpolator(float tension=2.5f, float extraTension=1.5f);
 
-    float getInterpolation(float t)override;
+    float getInterpolation(float t)const override;
 };
 
 class BounceInterpolator:public BaseInterpolator{
 private:
     static float bounce(float t);
 public:
-    float getInterpolation(float t)override;
+    static const BounceInterpolator*const Instance;
+    float getInterpolation(float t)const override;
 };
 
 class AccelerateDecelerateInterpolator:public BaseInterpolator{
 public:
-    static const NeverDestroyed<AccelerateDecelerateInterpolator>gAccelerateDecelerateInterpolator;
-    float getInterpolation(float input)override;
+    static const AccelerateDecelerateInterpolator*const Instance;
+    float getInterpolation(float input)const override;
 };
 
 
@@ -143,8 +146,7 @@ public:
     PathInterpolator(float controlX1, float controlY1, float controlX2, float controlY2);
     PathInterpolator(cdroid::Path&path);
     PathInterpolator(Context*,const AttributeSet&);
-    ~PathInterpolator()override;
-    float getInterpolation(float t)override;
+    float getInterpolation(float t)const override;
 };
 
 class BackGestureInterpolator:public PathInterpolator{
@@ -160,34 +162,33 @@ protected:
     LookupTableInterpolator(const std::vector<float>&values);
     LookupTableInterpolator(const float*values,int count);
 public:
-    float getInterpolation(float input)override;
-    ~LookupTableInterpolator()override;
+    float getInterpolation(float input)const override;
 };
 
 class FastOutSlowInInterpolator :public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<FastOutSlowInInterpolator>gFastOutSlowInInterpolator;
+    static const FastOutSlowInInterpolator*const Instance;
     FastOutSlowInInterpolator();
 };
 
 class LinearOutSlowInInterpolator:public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<LinearOutSlowInInterpolator>gLinearOutSlowInInterpolator;
+    static const LinearOutSlowInInterpolator*const Instance;
     LinearOutSlowInInterpolator();
 };
 
 class FastOutLinearInInterpolator:public LookupTableInterpolator{
 public:
-    static const NeverDestroyed<FastOutLinearInInterpolator>gFastOutLinearInInterpolator;
+    static const FastOutLinearInInterpolator*const Instance;
     FastOutLinearInInterpolator();
 };
 
 class BezierSCurveInterpolator:public TimeInterpolator {
 public:
-    static const NeverDestroyed<BezierSCurveInterpolator>gBezierSCurveInterpolator;
+    static const BezierSCurveInterpolator*const Instance;
 public:
     BezierSCurveInterpolator();
-    float getInterpolation(float input)override;
+    float getInterpolation(float input)const override;
 };
 }//namespace 
 
