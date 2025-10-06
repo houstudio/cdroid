@@ -51,8 +51,8 @@ public:
     void setIndeterminate(bool indeterminate);
     bool isIndeterminate() const;
 
-    void setTotalTime(long totalTime);
-    long getTotalTime() const;
+    void setTotalTime(int64_t totalTime);
+    int64_t getTotalTime() const;
 
     void startTimer();
     void stopTimer();

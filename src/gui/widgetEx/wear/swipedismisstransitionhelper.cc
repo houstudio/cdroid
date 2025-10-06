@@ -155,7 +155,8 @@ void SwipeDismissTransitionHelper::initializeTransition() {
     // Adding scrim over parent background if it exists.
     Drawable* parentBackgroundLayers;
     if (mPrevParentBackground != nullptr) {
-        parentBackgroundLayers = new LayerDrawable({mPrevParentBackground,mScrimBackground});
+        std::vector<Drawable*> drawables = {mPrevParentBackground,mScrimBackground};
+        parentBackgroundLayers = new LayerDrawable(drawables);
     } else {
         parentBackgroundLayers = mScrimBackground;
     }

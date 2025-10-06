@@ -124,6 +124,7 @@ private:
     void onTouchEvent(RecyclerView& recyclerView,MotionEvent& event);
     void onRequestDisallowInterceptTouchEvent(bool disallowIntercept);
 public:
+    /*callback is owned by caller*/
     ItemTouchHelper(Callback* callback);
     ~ItemTouchHelper()override;
     void attachToRecyclerView(RecyclerView* recyclerView);
