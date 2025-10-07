@@ -49,7 +49,10 @@ TEST_F(CALLBACK,eq){
    CallbackBase<void>c0([](){});
    CallbackBase<void>c1(c0);
    CallbackBase<void>c2([](){});
+   Runnable r1=[](){};
+   Runnable r2=r1;
    ASSERT_TRUE(c0==c1);
+   ASSERT_TRUE(r1==r2);
 
    ASSERT_FALSE(c0==c2);
    ASSERT_FALSE(c1==c2);
