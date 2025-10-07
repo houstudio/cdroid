@@ -37,47 +37,6 @@ public :
 };
 Looper*LOOPER::mLooper=nullptr;
 
-class MyRunner{
-public:
-   int key;
-   std::function<void()>run;
-   MyRunner(){}
-   MyRunner(const std::function<void()>a){}
-   void operator=(const std::function<void()>&a){
-       run=a;
-   }
-   void test(int i){
-       LOGD("i=%d",i);
-   }
-   virtual void post(Runnable&){
-      LOGD("post(Runnable&)");
-   }
-   void post(const Runnable&a){
-      LOGD("post(const Runnable&)");
-      Runnable aa=a;
-      post(aa);   
-   }
-   void post(const std::function<void()>&a){
-      LOGD("post(const const std::function<void()>&)");
-      Runnable aaa;
-      aaa=a;
-      post(aaa);
-   }
-};
-class YouRunner:public MyRunner{
-public:
-   YouRunner():MyRunner(){}
-   YouRunner(const std::function<void()>a):MyRunner(a){};
-};
-TEST_F(LOOPER,function){
-   YouRunner r(std::bind(&LOOPER::SetUp,this));
-   Runnable rrr;
-   r.post(Runnable([](){}));
-   r.post(Runnable([](){}));
-   r.post(std::bind(&LOOPER::SetUp,this));
-   typedef std::function<void()>aaaa;
-}
-
 class TestHandler:public MessageHandler{
    int count;
 public:

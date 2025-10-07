@@ -25,6 +25,25 @@ TEST_F(CALLBACK,loop){
    cbr2=[](int a,int b){return a*b;};
    printf("cbr2=%d\r\n",cbr2(234,345));
 }
+TEST_F(CALLBACK,NUL){
+    CallbackBase<void>n1(nullptr);
+    CallbackBase<void>n2=nullptr;
+    CallbackBase<int,int>n11(nullptr);
+    CallbackBase<int,int>n22(nullptr);
+    ASSERT_TRUE(n1==nullptr);
+    ASSERT_TRUE(n2==nullptr);
+    ASSERT_FALSE(n1!=nullptr);
+    ASSERT_FALSE(n2!=nullptr);
+    ASSERT_TRUE(n11==nullptr);
+    ASSERT_TRUE(n22==nullptr);
+    ASSERT_FALSE(n11!=nullptr);
+    ASSERT_FALSE(n22!=nullptr);
+
+    n1=n2;
+    ASSERT_TRUE(n1==n2);
+    n11=n22;
+    ASSERT_TRUE(n11==n22);
+}
 
 TEST_F(CALLBACK,eq){
    CallbackBase<void>c0([](){});
