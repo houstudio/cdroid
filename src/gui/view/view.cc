@@ -8503,17 +8503,6 @@ bool View::postDelayed(const Runnable& what,long delay){
     getRunQueue()->postDelayed(what,delay);
     return true;
 }
-#ifndef NEW_CALLBACKBASE
-bool View::post(const std::function<void()>&what){
-    Runnable r = what;
-    return post(r);
-}
-
-bool View::postDelayed(const std::function<void()>&what,long delay){
-    Runnable r = what;
-    return postDelayed(r,delay);    
-}
-#endif
 
 bool View::removeCallbacks(const Runnable& what){
     if(what!=nullptr){
