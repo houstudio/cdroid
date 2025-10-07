@@ -22,7 +22,7 @@
 #include <atomic>
 #include <memory>
 #include <core/object.h>
-
+#define NEW_CALLBACKBASE 1
 namespace cdroid{
 
 template<typename R,typename... Args>
@@ -37,7 +37,9 @@ public:
     }
     CallbackBase(const CallbackBase&b):mFunctor(b.mFunctor){
     }
+    CallbackBase(CallbackBase&& b):mFunctor(std::move(b.mFunctor)) {}
     virtual ~CallbackBase(){}
+#ifndef NEW_CALLBACKBASE
     CallbackBase&operator=(const Functor&a){
         mFunctor = std::make_shared<Functor>(a);
         return *this;
@@ -50,6 +52,33 @@ public:
         mFunctor= nullptr;
         return *this;
     }
+#else
+    CallbackBase&operator=(const CallbackBase&b){
+        if(this!=&b){
+            mFunctor = b.mFunctor;
+        }
+        return *this;
+    }
+
+    CallbackBase& operator=(CallbackBase&& b) {
+        if(this != &b) {
+            mFunctor = std::move(b.mFunctor);
+        }
+        return *this;
+    }
+
+    template<typename F>
+    CallbackBase(F&& f, typename std::enable_if<
+        !std::is_same<typename std::decay<F>::type, CallbackBase>::value,void >::type* = nullptr)
+       : mFunctor(std::make_shared<Functor>(std::forward<F>(f))) {}
+
+    template<typename F>
+    typename std::enable_if<!std::is_same<typename std::decay<F>::type, CallbackBase>::value, CallbackBase&>::type
+    operator=(F&& f){
+        mFunctor = std::make_shared<Functor>(std::forward<F>(f));
+        return *this;
+    }
+#endif
     bool operator == (const CallbackBase&b)const{
         return mFunctor.get() == b.mFunctor.get();
     }
