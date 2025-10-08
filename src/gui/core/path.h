@@ -29,6 +29,7 @@ private:
 public:
     typedef cairo_path_t cobject;
     Path();
+    Path(Cairo::Context*);
     Path(const Path&);
     void append_to_context(Cairo::Context*)const;
     void append_to_context(const Cairo::RefPtr<Cairo::Context>&to)const;
