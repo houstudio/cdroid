@@ -8492,26 +8492,16 @@ HandlerActionQueue* View::getRunQueue() {
     return mRunQueue;
 }
 
-bool View::post(Runnable& what){
+bool View::post(const Runnable& what){
     return postDelayed(what,0);
 }
 
-bool View::postDelayed(Runnable& what,long delay){
+bool View::postDelayed(const Runnable& what,long delay){
     if(mAttachInfo){
         return mAttachInfo->mEventSource->postDelayed(what,delay);
     }
     getRunQueue()->postDelayed(what,delay);
     return true;
-}
-
-bool View::post(const std::function<void()>&what){
-    Runnable r = what;
-    return post(r);
-}
-
-bool View::postDelayed(const std::function<void()>&what,long delay){
-    Runnable r = what;
-    return postDelayed(r,delay);    
 }
 
 bool View::removeCallbacks(const Runnable& what){

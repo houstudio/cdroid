@@ -1422,10 +1422,8 @@ public:
 	
     void postOnAnimation(Runnable& action);
     void postOnAnimationDelayed(Runnable& action, long delayMillis);
-    bool post(Runnable& what);
-    bool post(const std::function<void()>&what);
-    bool postDelayed(const std::function<void()>&what,long delay=0);
-    virtual bool postDelayed(Runnable& what,long delay=0);
+    bool post(const Runnable& what);
+    virtual bool postDelayed(const Runnable& what,long delay=0);
     virtual bool removeCallbacks(const Runnable& what);
 
     virtual int getBaseline();

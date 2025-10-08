@@ -37,33 +37,52 @@ public:
     }
     CallbackBase(const CallbackBase&b):mFunctor(b.mFunctor){
     }
+    CallbackBase(CallbackBase&& b):mFunctor(std::move(b.mFunctor)) {}
+
+    template<typename F>
+    CallbackBase(F&& f, typename std::enable_if<
+        !std::is_same<typename std::decay<F>::type, CallbackBase>::value,void >::type* = nullptr)
+       : mFunctor(std::make_shared<Functor>(std::forward<F>(f))) {}
+
     virtual ~CallbackBase(){}
-    CallbackBase&operator=(const Functor&a){
-        mFunctor = std::make_shared<Functor>(a);
-        return *this;
-    }
+
     CallbackBase&operator=(const CallbackBase&b){
-        mFunctor = b.mFunctor;
+        if(this!=&b){
+            mFunctor = b.mFunctor;
+        }
         return *this;
     }
-    CallbackBase&operator=(std::nullptr_t){
-        mFunctor= nullptr;
+
+    CallbackBase& operator=(CallbackBase&& b) {
+        if(this != &b) {
+            mFunctor = std::move(b.mFunctor);
+        }
         return *this;
     }
+
+    template<typename F>
+    typename std::enable_if<!std::is_same<typename std::decay<F>::type, CallbackBase>::value, CallbackBase&>::type
+    operator=(F&& f){
+        mFunctor = std::make_shared<Functor>(std::forward<F>(f));
+        return *this;
+    }
+
     bool operator == (const CallbackBase&b)const{
         return mFunctor.get() == b.mFunctor.get();
     }
     operator bool()const{ 
-        return (mFunctor!=nullptr)&&(*mFunctor!=nullptr);
+        return mFunctor&&(*mFunctor!=nullptr);
     }
     bool operator==(std::nullptr_t)const{
         return (mFunctor==nullptr)||(*mFunctor == nullptr);
     }
     bool operator!=(std::nullptr_t)const{
-        return (mFunctor!=nullptr)&&(*mFunctor != nullptr);
+        return mFunctor&&(*mFunctor != nullptr);
     }
     virtual R operator()(Args...args){
-        if(*this)return (*mFunctor)(std::forward<Args>(args)...);
+        if(*this){
+            return (*mFunctor)(std::forward<Args>(args)...);
+        }
         return R();
     }
 };
@@ -91,7 +110,7 @@ public:
     }
 };
 
-using Runnable=CallbackBase<void>;
+using Runnable = CallbackBase<void>;
 
 }//endof namespace
 #endif/*__CALLBACK_BASE_H__*/
