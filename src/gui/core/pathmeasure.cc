@@ -33,14 +33,12 @@ PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath){
     mPath = inPath;
-    mSegments.clear();
     buildSegments();
 }
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
-    mSegments.clear();
     buildSegments();
 }
 
@@ -125,7 +123,8 @@ int PathMeasure::buildSegments(){
     PointD ptStart = {0,0};
 
     const auto m_path = mPath->copy_path();
-
+    mPoints.clear();
+    mSegments.clear();
     while (i < m_path->num_data) {
         const cairo_path_data_t* data = &m_path->data[i];
         const int type = data->header.type;
