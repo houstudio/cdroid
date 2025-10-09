@@ -28,6 +28,11 @@ Path::Path(){
     mCTX = Cairo::Context::create(mPathSurface);
 }
 
+Path::Path(Cairo::Context*context):Path(){
+    const Cairo::RefPtr<Cairo::Path>copyPath = Cairo::make_refptr_for_instance<Cairo::Path>(context->copy_path());
+    mCTX->append_path(*copyPath);
+}
+
 Path::Path(const Path&o):Path(){
     o.append_to_context(mCTX);
 }
