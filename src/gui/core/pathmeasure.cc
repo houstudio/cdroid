@@ -203,8 +203,8 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             PointD p0 = interpolate(s.p0, s.p1, t0);
             PointD p1 = interpolate(s.p0, s.p1, t1);
             if (needsMove) { 
-                dst->move_to(p0.x, p0.y); 
-                needsMove = false; 
+                dst->move_to(p0.x, p0.y);
+                //needsMove = false;
             }
             dst->line_to(p1.x, p1.y);
         } else { // Cubic
@@ -216,7 +216,7 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             }
             if (needsMove) { 
                 dst->move_to(q0.x, q0.y); 
-                needsMove = false;
+                //needsMove = false;
             }
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
         }
