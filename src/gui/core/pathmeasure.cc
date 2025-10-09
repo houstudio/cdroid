@@ -117,16 +117,16 @@ namespace{
 
 double PathMeasure::getLength() const{
     return std::accumulate(mSegments.begin(),mSegments.end(),0,
-        [](double sum,const Segment&s){ return sum + s.len;});
+        [](double sum,const Segment&s){ return sum + s.distance;});
 }
 
 int PathMeasure::buildSegments(){
-    double x0 = 0, y0 = 0;
-    double startX = 0, startY = 0;
+    bool hasMove = false;
+    int i = 0,ptIndex=-1;
+    PointD pt0 = {0,0};
+    PointD ptStart={0,0};
 
     const auto m_path = mPath->copy_path();
-    int i = 0;
-    bool hasMove = false;
 
     while (i < m_path->num_data) {
         const cairo_path_data_t* data = &m_path->data[i];
@@ -134,44 +134,54 @@ int PathMeasure::buildSegments(){
         i += data->header.length;
 
         if (type == CAIRO_PATH_MOVE_TO) {
-            startX = x0 = data[1].point.x;
-            startY = y0 = data[1].point.y;
+            ptStart = pt0 = {data[1].point.x,data[1].point.y};
+            ptIndex+=1;
+            mPoints.push_back(pt0);
             hasMove = true;
         } else if (type == CAIRO_PATH_LINE_TO) {
-            const double x1 = data[1].point.x;
+            const PointD pt1 = {data[1].point.x,data[1].point.y};
             const double y1 = data[1].point.y;
-            const double len = std::hypot(x1 - x0, y1 - y0);
-            mSegments.push_back({Segment::Line, {x0, y0}, {x1, y1}, {}, {}, len});
-            x0 = x1; y0 = y1;
+            const double len = std::hypot(pt1.x - pt0.x, pt1.y - pt0.y);
+            mPoints.push_back(pt1);
+            mSegments.push_back({Segment::Line,ptIndex, len});
+            ptIndex += 1;
+            pt0 = pt1;
         } else if (type == CAIRO_PATH_CURVE_TO) {
-            double x1 = data[1].point.x, y1 = data[1].point.y;
-            double x2 = data[2].point.x, y2 = data[2].point.y;
-            double x3 = data[3].point.x, y3 = data[3].point.y;
+            const PointD pt1 = {data[1].point.x,data[1].point.y};
+            const PointD pt2 = {data[2].point.x,data[2].point.y};
+            const PointD pt3 = {data[3].point.x,data[3].point.y};
             /* 用任意快速弧长估算，这里直接采样 16 段 */
             double len = 0;
-            PointD prev = {x0, y0};
+            PointD prev = pt0;
             for (int k = 1; k <= CURVE_STEPS; ++k) {
                 const double t = k / double(CURVE_STEPS);
                 const double mt = 1.0-t;
-                double ptx = mt*mt*mt*x0 + 3*mt*mt*t*x1 + 3*mt*t*t*x2 + t*t*t*x3;
-                double pty = mt*mt*mt*y0 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y3;
+                double ptx = mt*mt*mt*pt0.x + 3*mt*mt*t*pt1.x + 3*mt*t*t*pt2.x + t*t*t*pt3.x;
+                double pty = mt*mt*mt*pt0.y + 3*mt*mt*t*pt1.y + 3*mt*t*t*pt2.y + t*t*t*pt3.y;
 
                 len += std::hypot(ptx - prev.x, pty - prev.y);
                 prev = {ptx,pty};
             }
-            mSegments.push_back({Segment::Cubic, {x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, len});
-            x0 = x3; y0 = y3;
+            mPoints.push_back(pt1);
+            mPoints.push_back(pt2);
+            mPoints.push_back(pt3);
+            mSegments.push_back({Segment::Cubic,ptIndex, len});
+            ptIndex += 3;
+            pt0 = pt3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
-            const double len = std::hypot(startX - x0, startY - y0);
+            const double len = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
             if (len > 0) {
-                mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
+                mSegments.push_back({Segment::Line,ptIndex, len});
+                ptIndex += 1;
+                mPoints.push_back(ptStart);
             }
-            x0 = startX; y0 = startY;
+            pt0 = ptStart;
         }
     }
-    if (mForceClosed && hasMove && (std::hypot(x0 - startX, y0 - startY) > FLT_EPSILON)) {
-        const double len = std::hypot(startX - x0, startY - y0);
-        mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
+    if (mForceClosed && hasMove && (std::hypot(pt0.x - ptStart.x, pt0.y - ptStart.y) > FLT_EPSILON)) {
+        const double len = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
+        mSegments.push_back({Segment::Line,ptIndex, len});
+        mPoints.push_back(ptStart);
     }
     return mSegments.size();
 }
@@ -196,12 +206,13 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
     bool needsMove = startWithMoveTo;
     double segStart = 0.0,segEnd = 0.0;
     for (auto& s:mSegments) {
-        segEnd += s.len;
-        const double t0 = (startD >segStart) ? (startD - segStart) / s.len : 0.0;
-        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.len : 1.0;
+        const PointD*pts = mPoints.data()+s.ptIndex;
+        segEnd += s.distance;
+        const double t0 = (startD >segStart) ? (startD - segStart) / s.distance : 0.0;
+        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.distance : 1.0;
         if (s.type == Segment::Line) {
-            PointD p0 = interpolate(s.p0, s.p1, t0);
-            PointD p1 = interpolate(s.p0, s.p1, t1);
+            PointD p0 = interpolate(pts[0],pts[1],t0);
+            PointD p1 = interpolate(pts[0],pts[1],t1);
             if (needsMove) { 
                 dst->move_to(p0.x, p0.y);
                 //needsMove = false;
@@ -210,9 +221,9 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
         } else { // Cubic
             PointD q0, q1, q2, q3;
             if ((t0 == 0.0) && (t1 == 1.0)) {
-                q0 = s.p0; q1 = s.p1; q2 = s.p2; q3 = s.p3;
+                q0 = pts[0]; q1 = pts[1]; q2 = pts[1]; q3 = pts[3];
             } else if(t1>t0+FLT_EPSILON){
-                bezierSplit(s.p0, s.p1, s.p2, s.p3, t0, t1, q0, q1, q2, q3);
+                bezierSplit(pts[0],pts[1],pts[2],pts[3],t0,t1, q0, q1, q2, q3);
             }
             if (needsMove) { 
                 dst->move_to(q0.x, q0.y); 
@@ -220,7 +231,7 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             }
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
         }
-        segStart += s.len;
+        segStart += s.distance;
         if(segEnd >= stopD)break;
     }
     return true;

@@ -26,11 +26,12 @@ class PathMeasure{
 public:
     struct Segment {
         enum Type { Line, Cubic } type;
-        PointD p0, p1, p2, p3;
-        double len;
+        int ptIndex;
+        double distance;
     };
 private:
     bool mForceClosed;
+    std::vector<PointD>mPoints;
     std::vector<Segment>mSegments;
     Cairo::RefPtr<cdroid::Path>mPath;
     int buildSegments();
