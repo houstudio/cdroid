@@ -36,7 +36,7 @@ public:
     void start()override;
     void stop()override;
     bool isRunning()override;
-    void unscheduleSelf(Runnable& what)override;
+    void unscheduleSelf(const Runnable& what)override;
     int getNumberOfFrames()const;
     Drawable*getFrame(int index)const;
     int64_t getDuration(int)const;

@@ -908,8 +908,8 @@ public:
     void setLayerType(int);
     int  getDrawingCacheBackgroundColor()const;
     void setDrawingCacheBackgroundColor(int);
-    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)override;
-    void unscheduleDrawable(Drawable& who,Runnable& what)override;
+    void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override;
+    void unscheduleDrawable(Drawable& who,const Runnable& what)override;
     virtual void unscheduleDrawable(Drawable& who);
 
     const Rect getBound()const;

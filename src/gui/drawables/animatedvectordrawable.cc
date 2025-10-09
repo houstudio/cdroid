@@ -36,10 +36,10 @@ public:
     void invalidateDrawable(Drawable& who)override{
         avd->invalidateSelf();
     }
-    void scheduleDrawable(Drawable& who, Runnable& what, int64_t when)override{
+    void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override{
         avd->scheduleSelf(what, when);
     }
-    void unscheduleDrawable(Drawable& who, Runnable& what)override{
+    void unscheduleDrawable(Drawable& who,const Runnable& what)override{
         avd->unscheduleSelf(what);
     }
 };

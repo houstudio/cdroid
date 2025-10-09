@@ -75,7 +75,7 @@ namespace{
         PointD prev = p0;
         const int steps = CURVE_STEPS;
         for (int i = 1; i <= steps; ++i) {
-            double t = static_cast<double>(i) / steps;
+            const double t = static_cast<double>(i) / steps;
             PointD point = interpolateCurve(p0, p1, p2, p3, t);
             length += distancePoint(prev, point);
             prev = point;
@@ -85,7 +85,7 @@ namespace{
 
     void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3,
            double t0, double t1, PointD& result0, PointD& result1, PointD& result2, PointD& result3){
-        // 第一次 De Casteljau 分割
+        // 1st De Casteljau
         PointD p01 = interpolate(p0, p1, t0);
         PointD p12 = interpolate(p1, p2, t0);
         PointD p23 = interpolate(p2, p3, t0);
@@ -93,7 +93,7 @@ namespace{
         PointD p123 = interpolate(p12, p23, t0);
         PointD p0123 = interpolate(p012, p123, t0);
         
-        // 第二次 De Casteljau 分割
+        // 2nd De Casteljau
         PointD q01 = interpolate(p0, p1, t1);
         PointD q12 = interpolate(p1, p2, t1);
         PointD q23 = interpolate(p2, p3, t1);
@@ -101,13 +101,11 @@ namespace{
         PointD q123 = interpolate(q12, q23, t1);
         PointD q0123 = interpolate(q012, q123, t1);
         
-        // 重新参数化
-        double t = (t1 - t0) / (1.0 - t0);
+        const double t = (t1 - t0) / (1.0 - t0);
         PointD r01 = interpolate(p01, p12, t);
         PointD r12 = interpolate(p12, p23, t);
         PointD r012 = interpolate(r01, r12, t);
         
-        // 结果
         result0 = p0123;
         result1 = r01;
         result2 = r012;
@@ -122,9 +120,9 @@ double PathMeasure::getLength() const{
 
 int PathMeasure::buildSegments(){
     bool hasMove = false;
-    int i = 0,ptIndex=-1;
+    int i = 0 ,ptIndex = -1;
     PointD pt0 = {0,0};
-    PointD ptStart={0,0};
+    PointD ptStart = {0,0};
 
     const auto m_path = mPath->copy_path();
 
@@ -135,15 +133,14 @@ int PathMeasure::buildSegments(){
 
         if (type == CAIRO_PATH_MOVE_TO) {
             ptStart = pt0 = {data[1].point.x,data[1].point.y};
-            ptIndex+=1;
+            ptIndex += 1;
             mPoints.push_back(pt0);
             hasMove = true;
         } else if (type == CAIRO_PATH_LINE_TO) {
             const PointD pt1 = {data[1].point.x,data[1].point.y};
-            const double y1 = data[1].point.y;
-            const double len = std::hypot(pt1.x - pt0.x, pt1.y - pt0.y);
+            const double distance = std::hypot(pt1.x - pt0.x, pt1.y - pt0.y);
             mPoints.push_back(pt1);
-            mSegments.push_back({Segment::Line,ptIndex, len});
+            mSegments.push_back({Segment::Line,ptIndex, distance});
             ptIndex += 1;
             pt0 = pt1;
         } else if (type == CAIRO_PATH_CURVE_TO) {
@@ -151,7 +148,7 @@ int PathMeasure::buildSegments(){
             const PointD pt2 = {data[2].point.x,data[2].point.y};
             const PointD pt3 = {data[3].point.x,data[3].point.y};
             /* 用任意快速弧长估算，这里直接采样 16 段 */
-            double len = 0;
+            double distance = 0;
             PointD prev = pt0;
             for (int k = 1; k <= CURVE_STEPS; ++k) {
                 const double t = k / double(CURVE_STEPS);
@@ -159,19 +156,19 @@ int PathMeasure::buildSegments(){
                 double ptx = mt*mt*mt*pt0.x + 3*mt*mt*t*pt1.x + 3*mt*t*t*pt2.x + t*t*t*pt3.x;
                 double pty = mt*mt*mt*pt0.y + 3*mt*mt*t*pt1.y + 3*mt*t*t*pt2.y + t*t*t*pt3.y;
 
-                len += std::hypot(ptx - prev.x, pty - prev.y);
+                distance += std::hypot(ptx - prev.x, pty - prev.y);
                 prev = {ptx,pty};
             }
             mPoints.push_back(pt1);
             mPoints.push_back(pt2);
             mPoints.push_back(pt3);
-            mSegments.push_back({Segment::Cubic,ptIndex, len});
+            mSegments.push_back({Segment::Cubic,ptIndex, distance});
             ptIndex += 3;
             pt0 = pt3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
-            const double len = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
-            if (len > 0) {
-                mSegments.push_back({Segment::Line,ptIndex, len});
+            const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
+            if (distance > 0) {
+                mSegments.push_back({Segment::Line,ptIndex, distance});
                 ptIndex += 1;
                 mPoints.push_back(ptStart);
             }
@@ -179,8 +176,8 @@ int PathMeasure::buildSegments(){
         }
     }
     if (mForceClosed && hasMove && (std::hypot(pt0.x - ptStart.x, pt0.y - ptStart.y) > FLT_EPSILON)) {
-        const double len = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
-        mSegments.push_back({Segment::Line,ptIndex, len});
+        const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
+        mSegments.push_back({Segment::Line,ptIndex, distance});
         mPoints.push_back(ptStart);
     }
     return mSegments.size();
@@ -238,63 +235,53 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
 }
 
 bool PathMeasure::getPosTan(double distance,PointD* pos,PointD* tangent){
-    double length = 0.0;
-    PointD prev, curr, next;
-    auto m_path = mPath->copy_path();
+    PointD prev, curr;
     bool found = false;
+    double length = 0.0 , segLength = 0.0;
+    const auto m_path = mPath->copy_path();
 
     for (int i = 0; i < m_path->num_data && !found; ) {
         cairo_path_data_t* data = &m_path->data[i];
         i+= data->header.length;
         switch (data->header.type) {
         case CAIRO_PATH_MOVE_TO:
-            prev = { data[1].point.x, data[1].point.y };
+            prev = {data[1].point.x, data[1].point.y};
             break;
-        case CAIRO_PATH_LINE_TO: {
-            curr = { data[1].point.x, data[1].point.y };
-            double segLen = distancePoint(prev, curr);
-            if (length + segLen >= distance) {
-                double t = (distance - length) / segLen;
-                pos->x = prev.x + t * (curr.x - prev.x);
-                pos->y = prev.y + t * (curr.y - prev.y);
-                tangent->x = curr.x - prev.x;
-                tangent->y = curr.y - prev.y;
+        case CAIRO_PATH_LINE_TO:
+            curr = {data[1].point.x, data[1].point.y};
+            segLength = distancePoint(prev, curr);
+            if (length + segLength >= distance) {
+                const double t = (distance - length) / segLength;
+                if(pos)*pos = interpolate(prev,curr,t);
+                if(tangent)*tangent = {curr.x - prev.x,curr.y - prev.y};
                 found = true;
             }
-            length += segLen;
+            length += segLength;
             prev = curr;
             break;
-        }
         case CAIRO_PATH_CURVE_TO: {
             PointD p1 = { data[1].point.x, data[1].point.y };
             PointD p2 = { data[2].point.x, data[2].point.y };
             PointD p3 = { data[3].point.x, data[3].point.y };
-            double segLen = curveLength(prev, p1, p2, p3);
-            if (length + segLen >= distance) {
-                double t = (distance - length) / segLen;
-                PointD pt = interpolateCurve(prev, p1, p2, p3, t);
-                pos->x = pt.x;
-                pos->y = pt.y;
-                // 切线为贝塞尔一阶导数
-                double u = 1.0 - t;
-                tangent->x =
-                    3 * u * u * (p1.x - prev.x) +
-                    6 * u * t * (p2.x - p1.x) +
-                    3 * t * t * (p3.x - p2.x);
-                tangent->y =
-                    3 * u * u * (p1.y - prev.y) +
-                    6 * u * t * (p2.y - p1.y) +
-                    3 * t * t * (p3.y - p2.y);
+            segLength = curveLength(prev, p1, p2, p3);
+            if (length + segLength >= distance) {
+                const double t = (distance - length) / segLength;
+                const double u = 1.0 - t;
+                if(pos)*pos = interpolateCurve(prev, p1, p2, p3, t);
+                if(tangent){/*Tangent is the first derivative of Bézier curve*/
+                    tangent->x =  3 * u * u * (p1.x - prev.x) +
+                        6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
+                    tangent->y =  3 * u * u * (p1.y - prev.y) +
+                        6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
+                }
                 found = true;
             }
-            length += segLen;
+            length += segLength;
             prev = p3;
             break;
         }
         case CAIRO_PATH_CLOSE_PATH:
-            // 可选：处理闭合段
-        default:
-            break;
+        default:    break;
         }
     }
     cairo_path_destroy(m_path);

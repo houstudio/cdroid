@@ -63,7 +63,7 @@ void AnimationDrawable::run(){
     nextFrame(false);
 }
 
-void AnimationDrawable::unscheduleSelf(Runnable&what){
+void AnimationDrawable::unscheduleSelf(const Runnable&what){
     mRunning = false;
     DrawableContainer::unscheduleSelf(what);
 }
