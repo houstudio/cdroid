@@ -81,6 +81,103 @@ namespace{
         return length;
     }
 
+    double pointToLineDistance(const PointD& point, const PointD& lineStart, const PointD& lineEnd) {
+        const double dx = lineEnd.x - lineStart.x;
+        const double dy = lineEnd.y - lineStart.y;
+        const double lineLengthSq = dx * dx + dy * dy;
+
+        if (lineLengthSq == 0) {
+            return distancePoint(point, lineStart);
+        }
+
+        double t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lineLengthSq;
+        t = std::max(0.0, std::min(1.0, t));
+
+        PointD projection={ lineStart.x + t * dx, lineStart.y + t * dy };
+
+        return distancePoint(point, projection);
+    }
+
+    //Is Curve Flat Enough
+    bool isFlatEnough(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance) {
+        const double dist1 = pointToLineDistance(p1, p0, p3);
+        const double dist2 = pointToLineDistance(p2, p0, p3);
+        return std::max(dist1, dist2) <= tolerance;
+    }
+
+    // 二分法分割三次贝塞尔曲线
+    void chopCubicAt(const PointD src[4], PointD dst[7], double t) {
+        double ab_x = src[0].x + (src[1].x - src[0].x) * t;
+        double ab_y = src[0].y + (src[1].y - src[0].y) * t;
+
+        double bc_x = src[1].x + (src[2].x - src[1].x) * t;
+        double bc_y = src[1].y + (src[2].y - src[1].y) * t;
+
+        double cd_x = src[2].x + (src[3].x - src[2].x) * t;
+        double cd_y = src[2].y + (src[3].y - src[2].y) * t;
+
+        double abc_x = ab_x + (bc_x - ab_x) * t;
+        double abc_y = ab_y + (bc_y - ab_y) * t;
+
+        double bcd_x = bc_x + (cd_x - bc_x) * t;
+        double bcd_y = bc_y + (cd_y - bc_y) * t;
+
+        dst[0] = src[0];
+        dst[1] = {ab_x, ab_y};
+        dst[2] = {abc_x, abc_y};
+        dst[3] = {abc_x + (bcd_x - abc_x) * t, abc_y + (bcd_y - abc_y) * t};
+        dst[4] = {bcd_x, bcd_y};
+        dst[5] = {cd_x, cd_y};
+        dst[6] = src[3];
+    }
+
+    // 二分法分割三次贝塞尔曲线（中点）
+    void chopCubicAtHalf(const PointD src[4], PointD dst[7]) {
+        double x12 = (src[0].x + src[1].x) * 0.5;
+        double y12 = (src[0].y + src[1].y) * 0.5;
+        double x23 = (src[1].x + src[2].x) * 0.5;
+        double y23 = (src[1].y + src[2].y) * 0.5;
+        double x34 = (src[2].x + src[3].x) * 0.5;
+        double y34 = (src[2].y + src[3].y) * 0.5;
+
+        double x123 = (x12 + x23) * 0.5;
+        double y123 = (y12 + y23) * 0.5;
+        double x234 = (x23 + x34) * 0.5;
+        double y234 = (y23 + y34) * 0.5;
+
+        double x1234 = (x123 + x234) * 0.5;
+        double y1234 = (y123 + y234) * 0.5;
+
+        dst[0] = src[0];
+        dst[1] = {x12, y12};
+        dst[2] = {x123, y123};
+        dst[3] = {x1234, y1234};
+        dst[4] = {x234, y234};
+        dst[5] = {x34, y34};
+        dst[6] = src[3];
+    }
+
+    // 递归计算三次贝塞尔曲线长度
+    double computeCubicLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance) {
+        if (isFlatEnough(p0, p1, p2, p3, tolerance)) {
+            return distancePoint(p0, p3);
+        } else {
+            PointD pts[4] = {p0, p1, p2, p3};
+            PointD pieces[7];
+            chopCubicAtHalf(pts, pieces);
+
+            return computeCubicLength(pieces[0], pieces[1], pieces[2], pieces[3], tolerance) +
+                   computeCubicLength(pieces[3], pieces[4], pieces[5], pieces[6], tolerance);
+        }
+    }
+
+    double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance = 1e-3) {
+        if ((p0.x == p1.x) && (p0.y == p1.y) && (p2.x == p3.x) && (p2.y == p3.y)) {
+            return distancePoint(p0, p3);
+        }
+        return computeCubicLength(p0, p1, p2, p3, tolerance);
+    }
+
     void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3,
            double t0, double t1, PointD& result0, PointD& result1, PointD& result2, PointD& result3){
         // 1st De Casteljau
@@ -90,7 +187,7 @@ namespace{
         PointD p012 = interpolate(p01, p12, t0);
         PointD p123 = interpolate(p12, p23, t0);
         PointD p0123 = interpolate(p012, p123, t0);
-        
+
         // 2nd De Casteljau
         PointD q01 = interpolate(p0, p1, t1);
         PointD q12 = interpolate(p1, p2, t1);
@@ -98,12 +195,12 @@ namespace{
         PointD q012 = interpolate(q01, q12, t1);
         PointD q123 = interpolate(q12, q23, t1);
         PointD q0123 = interpolate(q012, q123, t1);
-        
+
         const double t = (t1 - t0) / (1.0 - t0);
         PointD r01 = interpolate(p01, p12, t);
         PointD r12 = interpolate(p12, p23, t);
         PointD r012 = interpolate(r01, r12, t);
-        
+
         result0 = p0123;
         result1 = r01;
         result2 = r012;
@@ -147,8 +244,8 @@ int PathMeasure::buildSegments(){
             const PointD pt2 = {data[2].point.x,data[2].point.y};
             const PointD pt3 = {data[3].point.x,data[3].point.y};
             /* 用任意快速弧长估算，这里直接采样 16 段 */
-            double distance = 0;
-            PointD prev = pt0;
+            const double distance = curveLength(pt0,pt1,pt2,pt3,0.1);
+            /*PointD prev = pt0;
             for (int k = 1; k <= CURVE_STEPS; ++k) {
                 const double t = k / double(CURVE_STEPS);
                 const double mt = 1.0-t;
@@ -157,7 +254,7 @@ int PathMeasure::buildSegments(){
 
                 distance += std::hypot(ptx - prev.x, pty - prev.y);
                 prev = {ptx,pty};
-            }
+            }*/
             mPoints.push_back(pt1);
             mPoints.push_back(pt2);
             mPoints.push_back(pt3);
@@ -262,7 +359,7 @@ bool PathMeasure::getPosTan(double distance,PointD* pos,PointD* tangent){
             PointD p1 = { data[1].point.x, data[1].point.y };
             PointD p2 = { data[2].point.x, data[2].point.y };
             PointD p3 = { data[3].point.x, data[3].point.y };
-            segLength = curveLength(prev, p1, p2, p3);
+            segLength = curveLength(prev, p1, p2, p3,0.1);
             if (length + segLength >= distance) {
                 const double t = (distance - length) / segLength;
                 const double u = 1.0 - t;
