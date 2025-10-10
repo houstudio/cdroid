@@ -66,21 +66,6 @@ namespace{
         };
     }
 
-#define CURVE_STEPS 36
-    double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3){
-        // Approximate the length of a cubic Bezier curve using a simple method
-        double length = 0.0;
-        PointD prev = p0;
-        const int steps = CURVE_STEPS;
-        for (int i = 1; i <= steps; ++i) {
-            const double t = static_cast<double>(i) / steps;
-            PointD point = interpolateCurve(p0, p1, p2, p3, t);
-            length += distancePoint(prev, point);
-            prev = point;
-        }
-        return length;
-    }
-
     double pointToLineDistance(const PointD& point, const PointD& lineStart, const PointD& lineEnd) {
         const double dx = lineEnd.x - lineStart.x;
         const double dy = lineEnd.y - lineStart.y;
@@ -243,18 +228,8 @@ int PathMeasure::buildSegments(){
             const PointD pt1 = {data[1].point.x,data[1].point.y};
             const PointD pt2 = {data[2].point.x,data[2].point.y};
             const PointD pt3 = {data[3].point.x,data[3].point.y};
-            /* 用任意快速弧长估算，这里直接采样 16 段 */
             const double distance = curveLength(pt0,pt1,pt2,pt3,0.1);
-            /*PointD prev = pt0;
-            for (int k = 1; k <= CURVE_STEPS; ++k) {
-                const double t = k / double(CURVE_STEPS);
-                const double mt = 1.0-t;
-                double ptx = mt*mt*mt*pt0.x + 3*mt*mt*t*pt1.x + 3*mt*t*t*pt2.x + t*t*t*pt3.x;
-                double pty = mt*mt*mt*pt0.y + 3*mt*mt*t*pt1.y + 3*mt*t*t*pt2.y + t*t*t*pt3.y;
 
-                distance += std::hypot(ptx - prev.x, pty - prev.y);
-                prev = {ptx,pty};
-            }*/
             mPoints.push_back(pt1);
             mPoints.push_back(pt2);
             mPoints.push_back(pt3);
