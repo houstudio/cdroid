@@ -985,11 +985,11 @@ void LayerDrawable::invalidateDrawable(Drawable& who){
         invalidateSelf();
     }
 }
-void LayerDrawable::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
+void LayerDrawable::scheduleDrawable(Drawable& who,const Runnable& what, int64_t when){
     scheduleSelf(what, when);
 }
 
-void LayerDrawable::unscheduleDrawable(Drawable& who,Runnable& what){
+void LayerDrawable::unscheduleDrawable(Drawable& who,const Runnable& what){
     unscheduleSelf(what);
 }
 

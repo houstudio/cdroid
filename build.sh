@@ -7,8 +7,20 @@ eval set -- "${ARGS}"
 TOPDIR=$(dirname "$(readlink -f "$0")")
 declare -A TOOLCHAINS #key/value dict ,key is platform,value is toolchain,key must be uppercase
 
-VCPKGROOT=/opt/vcpkg
-#VCPKGROOT=${HOME}/vcpkg
+if [ -n "$VCPKG_ROOT" ]; then
+    VCPKGROOT="$VCPKG_ROOT"
+elif [ -n "$VCPKGROOT" ]; then
+    VCPKGROOT="$VCPKGROOT"
+elif [ -d "$HOME/vcpkg" ]; then
+    VCPKGROOT="$HOME/vcpkg"
+elif [ -d "/opt/vcpkg" ]; then
+    VCPKGROOT=/opt/vcpkg
+fi
+
+if [ ! -f "$VCPKGROOT/vcpkg" ] && [ ! -f "$VCPKGROOT/vcpkg.exe" ] && [ ! -f "$VCPKGROOT/vcpkg.bat" ]; then
+    echo "vcpkg not found"
+    exit 1
+fi
 
 TOOLCHAINS["SIGMA"]=${VCPKGROOT}/scripts/toolchains/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=${VCPKGROOT}/scripts/toolchains/ali3528-mtitoolchain.cmake

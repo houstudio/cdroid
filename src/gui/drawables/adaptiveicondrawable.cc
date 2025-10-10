@@ -388,11 +388,11 @@ void AdaptiveIconDrawable::invalidateDrawable(Drawable& who) {
     }
 }
 
-void AdaptiveIconDrawable::scheduleDrawable(Drawable& who, Runnable& what, int64_t when){
+void AdaptiveIconDrawable::scheduleDrawable(Drawable& who,const Runnable& what, int64_t when){
     scheduleSelf(what, when);
 }
 
-void AdaptiveIconDrawable::unscheduleDrawable(Drawable& who, Runnable& what) {
+void AdaptiveIconDrawable::unscheduleDrawable(Drawable& who,const Runnable& what) {
     unscheduleSelf(what);
 }
 

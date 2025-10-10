@@ -201,14 +201,14 @@ void DrawableWrapper::invalidateDrawable(Drawable& who){
     }
 }
 
-void DrawableWrapper::scheduleDrawable(Drawable&who,Runnable& what, int64_t when){
+void DrawableWrapper::scheduleDrawable(Drawable&who,const Runnable& what, int64_t when){
     Drawable::Callback* callback = getCallback();
     if (callback != nullptr) {
         callback->scheduleDrawable(*this, what, when);
     }
 }
 
-void DrawableWrapper::unscheduleDrawable(Drawable& who,Runnable& what){
+void DrawableWrapper::unscheduleDrawable(Drawable& who,const Runnable& what){
     Drawable::Callback* callback = getCallback();
     if (callback != nullptr) {
         callback->unscheduleDrawable(*this, what);

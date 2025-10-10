@@ -1056,8 +1056,8 @@ void View::applyDrawableToTransparentRegion(Drawable* dr, const Cairo::RefPtr<Ca
     Rect db = dr->getBounds();
     if (r && mAttachInfo) {
         int location[2];
-        const int w = getWidth();//getRight()-getLeft();
-        const int h = getHeight();//getBottom()-getTop();
+        const int w = getWidth();
+        const int h = getHeight();
         if (db.left > 0) r->do_union({0, 0, db.left, h});
 
         if (db.right() < w) r->do_union({db.right(), 0, w-db.right(), h});
@@ -1154,8 +1154,7 @@ bool View::getDefaultFocusHighlightEnabled()const{
 }
 
 bool View::isDefaultFocusHighlightNeeded(const Drawable* background,const Drawable* foreground)const{
-    const bool lackFocusState = 
-	    ((background == nullptr) || (false==background->isStateful())|| !background->hasFocusStateSpecified())
+    const bool lackFocusState = ((background == nullptr) || (false==background->isStateful())|| !background->hasFocusStateSpecified())
             && ((foreground == nullptr) || (false==foreground->isStateful()) || (false==foreground->hasFocusStateSpecified()));
     return !isInTouchMode() && getDefaultFocusHighlightEnabled() 
 	           && lackFocusState && isAttachedToWindow();// && sUseDefaultFocusHighlight;
@@ -2072,7 +2071,7 @@ View::ScrollabilityCache*View::getScrollCache(){
 }
 
 int View::getScrollBarSize()const{
-    return mScrollCache == nullptr ? ViewConfiguration::get(mContext).getScaledScrollBarSize() :
+    return (mScrollCache == nullptr) ? ViewConfiguration::get(mContext).getScaledScrollBarSize() :
                 mScrollCache->scrollBarSize;
 }
 
@@ -2120,7 +2119,7 @@ void View::setScrollBarDefaultDelayBeforeFade(int scrollBarDefaultDelayBeforeFad
 }
 
 int View::getScrollBarFadeDuration()const{
-    return mScrollCache == nullptr ? ViewConfiguration::getScrollBarFadeDuration() :
+    return (mScrollCache == nullptr) ? ViewConfiguration::getScrollBarFadeDuration() :
             mScrollCache->scrollBarFadeDuration;
 }
 
@@ -4154,8 +4153,8 @@ int View::getHeight()const{
 }
 
 bool View::getGlobalVisibleRect(Rect& r, Point* globalOffset) {
-    int width = mRight - mLeft;
-    int height = mBottom - mTop;
+    const int width = mRight - mLeft;
+    const int height = mBottom - mTop;
     if (width > 0 && height > 0) {
         r.set(0, 0, width, height);
         if (globalOffset) {
@@ -4447,13 +4446,13 @@ bool View::setFrame(int left,int top,int width,int height){
         changed = true;
 
         // Remember our drawn bit
-        int drawn = mPrivateFlags & PFLAG_DRAWN;
+        const int drawn = mPrivateFlags & PFLAG_DRAWN;
 
-        int oldWidth  = mRight-mLeft;
-        int oldHeight = mBottom-mTop;
-        int newWidth  = width;
-        int newHeight = height;
-        bool sizeChanged = (newWidth != oldWidth) || (newHeight != oldHeight);
+        const int oldWidth  = mRight-mLeft;
+        const int oldHeight = mBottom-mTop;
+        const int newWidth  = width;
+        const int newHeight = height;
+        const bool sizeChanged = (newWidth != oldWidth) || (newHeight != oldHeight);
 
         // Invalidate our old position
         invalidate(sizeChanged);
@@ -4530,7 +4529,7 @@ void View::resolveDrawables(){
          return;
     }
 
-    int layoutDirection = isLayoutDirectionResolved() ?
+    const int layoutDirection = isLayoutDirectionResolved() ?
             getLayoutDirection() : getRawLayoutDirection();
 
     if (mBackground)  mBackground->setLayoutDirection(layoutDirection);
@@ -5011,13 +5010,13 @@ void View::setForegroundTintBlendMode(int blendMode) {
 }
 
 const ColorStateList* View::getForegroundTintList(){
-    return mForegroundInfo != nullptr && mForegroundInfo->mTintInfo != nullptr
+    return (mForegroundInfo != nullptr) && (mForegroundInfo->mTintInfo != nullptr)
                 ? mForegroundInfo->mTintInfo->mTintList : nullptr;
 }
 
 void View::applyForegroundTint() {
-    if (mForegroundInfo != nullptr && mForegroundInfo->mDrawable != nullptr
-            && mForegroundInfo->mTintInfo != nullptr) {
+    if ((mForegroundInfo != nullptr) && (mForegroundInfo->mDrawable != nullptr)
+            && (mForegroundInfo->mTintInfo != nullptr)) {
         TintInfo* tintInfo = mForegroundInfo->mTintInfo;
         if (tintInfo->mHasTintList || tintInfo->mHasTintMode) {
             mForegroundInfo->mDrawable = mForegroundInfo->mDrawable->mutate();
@@ -5065,7 +5064,7 @@ void View::setDefaultFocusHighlight(Drawable* highlight){
         if (isAttachedToWindow()) highlight->setVisible(isShown(), false);
         // Set callback last, since the view may still be initializing.
         highlight->setCallback(this);
-    } else if ((mViewFlags & WILL_NOT_DRAW) != 0 && mBackground == nullptr
+    } else if ((mViewFlags & WILL_NOT_DRAW) != 0 && (mBackground == nullptr)
             && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
         mPrivateFlags |= PFLAG_SKIP_DRAW;
     }
@@ -5073,7 +5072,7 @@ void View::setDefaultFocusHighlight(Drawable* highlight){
 }
 
 bool View::hasSize()const {
-    return mRight-mLeft>0 && mBottom-mTop>0;
+    return (mRight - mLeft > 0) && (mBottom - mTop > 0);
 }
 
 bool View::canTakeFocus()const{
@@ -5086,19 +5085,19 @@ bool View::canTakeFocus()const{
 void View::setFlags(int flags,int mask) {
     const bool accessibilityEnabled = AccessibilityManager::getInstance(mContext).isEnabled();
     const bool oldIncludeForAccessibility = accessibilityEnabled && includeForAccessibility();
-    int old = mViewFlags;
+    const int old = mViewFlags;
     mViewFlags = (mViewFlags & ~mask) | (flags & mask);
     int changed = mViewFlags ^ old;
     if(changed==0)return;
 
-    int privateFlags = mPrivateFlags;
+    const int privateFlags = mPrivateFlags;
     bool shouldNotifyFocusableAvailable = false;
 
     // If focusable is auto, update the FOCUSABLE bit.
     int focusableChangedByAuto = 0;
     if ((mViewFlags & FOCUSABLE_AUTO) && (changed & (FOCUSABLE_MASK | CLICKABLE))) {
         // Heuristic only takes into account whether view is clickable.
-        int newFocus=(mViewFlags & CLICKABLE)?FOCUSABLE:NOT_FOCUSABLE;
+        const int newFocus=(mViewFlags & CLICKABLE)?FOCUSABLE:NOT_FOCUSABLE;
         mViewFlags = (mViewFlags & ~FOCUSABLE) | newFocus;
         focusableChangedByAuto = (old & FOCUSABLE) ^ (newFocus & FOCUSABLE);
         changed = (changed & ~FOCUSABLE) | focusableChangedByAuto;
@@ -6241,22 +6240,33 @@ void View::invalidateDrawable(Drawable& drawable){
     }
 }
 
-void View::scheduleDrawable(Drawable& who,Runnable& what, int64_t when){
-    const int64_t delay = when - SystemClock::uptimeMillis();
-    Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
-           Choreographer::subtractFrameDelay(delay));
-    //postDelayed(what,delay);
+void View::scheduleDrawable(Drawable& who,const Runnable& what, int64_t when){
+    if(verifyDrawable(&who)&&(what!=nullptr)){
+        const int64_t delay = when - SystemClock::uptimeMillis();
+        if(mAttachInfo!=nullptr){
+            Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION, what,&who,
+            Choreographer::subtractFrameDelay(delay));
+        }else{
+            // Postpone the runnable until we know
+            // on which thread it needs to run.
+            getRunQueue()->postDelayed(what,delay);
+        }
+    }
 }
 
-void View::unscheduleDrawable(Drawable& who,Runnable& what){
+void View::unscheduleDrawable(Drawable& who,const Runnable& what){
     if(verifyDrawable(&who)&&(what!=nullptr)){
-        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,&who); 
-        //removeCallbacks(what);
+        if(mAttachInfo!=nullptr){
+           Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what,&who); 
+        }
+        getRunQueue()->removeCallbacks(what);
     }
 }
 
 void View::unscheduleDrawable(Drawable& who){
-    Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,&who);
+    if(mAttachInfo!=nullptr){
+        Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,&who);
+    }
 }
 
 ViewGroup*View::getParent()const{
@@ -9495,6 +9505,7 @@ void View::rebuildOutline() {
         //mRenderNode.setOutline(outline);
     }
 }
+
 LayoutParams*View::getLayoutParams()const {
     return mLayoutParams;
 }
@@ -9545,8 +9556,8 @@ void View::measure(int widthMeasureSpec, int heightMeasureSpec){
     bool optical = isLayoutModeOptical(this);
     if (optical != isLayoutModeOptical(mParent)) {
         Insets insets = getOpticalInsets();
-        int oWidth  = insets.left + insets.right;
-        int oHeight = insets.top  + insets.bottom;
+        const int oWidth  = insets.left + insets.right;
+        const int oHeight = insets.top  + insets.bottom;
         widthMeasureSpec  = MeasureSpec::adjust(widthMeasureSpec,  optical ? -oWidth  : oWidth);
         heightMeasureSpec = MeasureSpec::adjust(heightMeasureSpec, optical ? -oHeight : oHeight);
     }
@@ -9854,10 +9865,10 @@ int View::MeasureSpec::adjust(int measureSpec, int delta) {
 }
 
 const std::string View::MeasureSpec::toString(int measureSpec) {
-    int mode = getMode(measureSpec);
-    int size = getSize(measureSpec);
+    const int mode = getMode(measureSpec);
+    const int size = getSize(measureSpec);
 
-        std::ostringstream sb;
+    std::ostringstream sb;
     if (mode == UNSPECIFIED)  sb<<"UNSPECIFIED ";
     else if (mode == EXACTLY) sb<<"EXACTLY ";
     else if (mode == AT_MOST) sb<<"AT_MOST ";

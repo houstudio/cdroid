@@ -69,8 +69,8 @@ public:
     public:
         virtual ~Callback()=default;
         virtual void invalidateDrawable(Drawable& who)=0;
-        virtual void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)=0;
-        virtual void unscheduleDrawable(Drawable& who,Runnable& what)=0;
+        virtual void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)=0;
+        virtual void unscheduleDrawable(Drawable& who,const Runnable& what)=0;
     };
     class ConstantState{
     public:
@@ -166,8 +166,8 @@ public:
     Callback* getCallback()const;
     virtual Cairo::RefPtr<Cairo::Region>getTransparentRegion();
 
-    void scheduleSelf(Runnable& what, int64_t when);
-    virtual void unscheduleSelf(Runnable& what);
+    void scheduleSelf(const Runnable& what, int64_t when);
+    virtual void unscheduleSelf(const Runnable& what);
     virtual void invalidateSelf();
 
     virtual void draw(Canvas&ctx)=0;

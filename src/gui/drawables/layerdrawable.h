@@ -181,8 +181,8 @@ public:
     bool onLayoutDirectionChanged(int layoutDirection)override;
     std::shared_ptr<ConstantState>getConstantState()override;
     void invalidateDrawable(Drawable& who)override;
-    void scheduleDrawable(Drawable& who,Runnable& what, int64_t when)override;
-    void unscheduleDrawable(Drawable& who,Runnable& what)override;
+    void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override;
+    void unscheduleDrawable(Drawable& who,const Runnable& what)override;
     void draw(Canvas&canvas)override;
     void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };

@@ -33,14 +33,12 @@ PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath){
     mPath = inPath;
-    mSegments.clear();
     buildSegments();
 }
 
 void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
-    mSegments.clear();
     buildSegments();
 }
 
@@ -75,7 +73,7 @@ namespace{
         PointD prev = p0;
         const int steps = CURVE_STEPS;
         for (int i = 1; i <= steps; ++i) {
-            double t = static_cast<double>(i) / steps;
+            const double t = static_cast<double>(i) / steps;
             PointD point = interpolateCurve(p0, p1, p2, p3, t);
             length += distancePoint(prev, point);
             prev = point;
@@ -83,31 +81,126 @@ namespace{
         return length;
     }
 
+    double pointToLineDistance(const PointD& point, const PointD& lineStart, const PointD& lineEnd) {
+        const double dx = lineEnd.x - lineStart.x;
+        const double dy = lineEnd.y - lineStart.y;
+        const double lineLengthSq = dx * dx + dy * dy;
+
+        if (lineLengthSq == 0) {
+            return distancePoint(point, lineStart);
+        }
+
+        double t = ((point.x - lineStart.x) * dx + (point.y - lineStart.y) * dy) / lineLengthSq;
+        t = std::max(0.0, std::min(1.0, t));
+
+        PointD projection={ lineStart.x + t * dx, lineStart.y + t * dy };
+
+        return distancePoint(point, projection);
+    }
+
+    //Is Curve Flat Enough
+    bool isFlatEnough(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance) {
+        const double dist1 = pointToLineDistance(p1, p0, p3);
+        const double dist2 = pointToLineDistance(p2, p0, p3);
+        return std::max(dist1, dist2) <= tolerance;
+    }
+
+    // 二分法分割三次贝塞尔曲线
+    void chopCubicAt(const PointD src[4], PointD dst[7], double t) {
+        double ab_x = src[0].x + (src[1].x - src[0].x) * t;
+        double ab_y = src[0].y + (src[1].y - src[0].y) * t;
+
+        double bc_x = src[1].x + (src[2].x - src[1].x) * t;
+        double bc_y = src[1].y + (src[2].y - src[1].y) * t;
+
+        double cd_x = src[2].x + (src[3].x - src[2].x) * t;
+        double cd_y = src[2].y + (src[3].y - src[2].y) * t;
+
+        double abc_x = ab_x + (bc_x - ab_x) * t;
+        double abc_y = ab_y + (bc_y - ab_y) * t;
+
+        double bcd_x = bc_x + (cd_x - bc_x) * t;
+        double bcd_y = bc_y + (cd_y - bc_y) * t;
+
+        dst[0] = src[0];
+        dst[1] = {ab_x, ab_y};
+        dst[2] = {abc_x, abc_y};
+        dst[3] = {abc_x + (bcd_x - abc_x) * t, abc_y + (bcd_y - abc_y) * t};
+        dst[4] = {bcd_x, bcd_y};
+        dst[5] = {cd_x, cd_y};
+        dst[6] = src[3];
+    }
+
+    // 二分法分割三次贝塞尔曲线（中点）
+    void chopCubicAtHalf(const PointD src[4], PointD dst[7]) {
+        double x12 = (src[0].x + src[1].x) * 0.5;
+        double y12 = (src[0].y + src[1].y) * 0.5;
+        double x23 = (src[1].x + src[2].x) * 0.5;
+        double y23 = (src[1].y + src[2].y) * 0.5;
+        double x34 = (src[2].x + src[3].x) * 0.5;
+        double y34 = (src[2].y + src[3].y) * 0.5;
+
+        double x123 = (x12 + x23) * 0.5;
+        double y123 = (y12 + y23) * 0.5;
+        double x234 = (x23 + x34) * 0.5;
+        double y234 = (y23 + y34) * 0.5;
+
+        double x1234 = (x123 + x234) * 0.5;
+        double y1234 = (y123 + y234) * 0.5;
+
+        dst[0] = src[0];
+        dst[1] = {x12, y12};
+        dst[2] = {x123, y123};
+        dst[3] = {x1234, y1234};
+        dst[4] = {x234, y234};
+        dst[5] = {x34, y34};
+        dst[6] = src[3];
+    }
+
+    // 递归计算三次贝塞尔曲线长度
+    double computeCubicLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance) {
+        if (isFlatEnough(p0, p1, p2, p3, tolerance)) {
+            return distancePoint(p0, p3);
+        } else {
+            PointD pts[4] = {p0, p1, p2, p3};
+            PointD pieces[7];
+            chopCubicAtHalf(pts, pieces);
+
+            return computeCubicLength(pieces[0], pieces[1], pieces[2], pieces[3], tolerance) +
+                   computeCubicLength(pieces[3], pieces[4], pieces[5], pieces[6], tolerance);
+        }
+    }
+
+    double curveLength(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3, double tolerance = 1e-3) {
+        if ((p0.x == p1.x) && (p0.y == p1.y) && (p2.x == p3.x) && (p2.y == p3.y)) {
+            return distancePoint(p0, p3);
+        }
+        return computeCubicLength(p0, p1, p2, p3, tolerance);
+    }
+
     void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3,
            double t0, double t1, PointD& result0, PointD& result1, PointD& result2, PointD& result3){
-        // 第一次 De Casteljau 分割
+        // 1st De Casteljau
         PointD p01 = interpolate(p0, p1, t0);
         PointD p12 = interpolate(p1, p2, t0);
         PointD p23 = interpolate(p2, p3, t0);
         PointD p012 = interpolate(p01, p12, t0);
         PointD p123 = interpolate(p12, p23, t0);
         PointD p0123 = interpolate(p012, p123, t0);
-        
-        // 第二次 De Casteljau 分割
+
+        // 2nd De Casteljau
         PointD q01 = interpolate(p0, p1, t1);
         PointD q12 = interpolate(p1, p2, t1);
         PointD q23 = interpolate(p2, p3, t1);
         PointD q012 = interpolate(q01, q12, t1);
         PointD q123 = interpolate(q12, q23, t1);
         PointD q0123 = interpolate(q012, q123, t1);
-        
-        // 重新参数化
-        double t = (t1 - t0) / (1.0 - t0);
+
+        const double t = (t1 - t0) / (1.0 - t0);
         PointD r01 = interpolate(p01, p12, t);
         PointD r12 = interpolate(p12, p23, t);
         PointD r012 = interpolate(r01, r12, t);
-        
-        // 结果
+
         result0 = p0123;
         result1 = r01;
         result2 = r012;
@@ -117,61 +210,71 @@ namespace{
 
 double PathMeasure::getLength() const{
     return std::accumulate(mSegments.begin(),mSegments.end(),0,
-        [](double sum,const Segment&s){ return sum + s.len;});
+        [](double sum,const Segment&s){ return sum + s.distance;});
 }
 
 int PathMeasure::buildSegments(){
-    double x0 = 0, y0 = 0;
-    double startX = 0, startY = 0;
+    bool hasMove = false;
+    int i = 0 ,ptIndex = -1;
+    PointD pt0 = {0,0};
+    PointD ptStart = {0,0};
 
     const auto m_path = mPath->copy_path();
-    int i = 0;
-    bool hasMove = false;
-
+    mPoints.clear();
+    mSegments.clear();
     while (i < m_path->num_data) {
         const cairo_path_data_t* data = &m_path->data[i];
         const int type = data->header.type;
         i += data->header.length;
 
         if (type == CAIRO_PATH_MOVE_TO) {
-            startX = x0 = data[1].point.x;
-            startY = y0 = data[1].point.y;
+            ptStart = pt0 = {data[1].point.x,data[1].point.y};
+            ptIndex += 1;
+            mPoints.push_back(pt0);
             hasMove = true;
         } else if (type == CAIRO_PATH_LINE_TO) {
-            const double x1 = data[1].point.x;
-            const double y1 = data[1].point.y;
-            const double len = std::hypot(x1 - x0, y1 - y0);
-            mSegments.push_back({Segment::Line, {x0, y0}, {x1, y1}, {}, {}, len});
-            x0 = x1; y0 = y1;
+            const PointD pt1 = {data[1].point.x,data[1].point.y};
+            const double distance = std::hypot(pt1.x - pt0.x, pt1.y - pt0.y);
+            mPoints.push_back(pt1);
+            mSegments.push_back({Segment::Line,ptIndex, distance});
+            ptIndex += 1;
+            pt0 = pt1;
         } else if (type == CAIRO_PATH_CURVE_TO) {
-            double x1 = data[1].point.x, y1 = data[1].point.y;
-            double x2 = data[2].point.x, y2 = data[2].point.y;
-            double x3 = data[3].point.x, y3 = data[3].point.y;
+            const PointD pt1 = {data[1].point.x,data[1].point.y};
+            const PointD pt2 = {data[2].point.x,data[2].point.y};
+            const PointD pt3 = {data[3].point.x,data[3].point.y};
             /* 用任意快速弧长估算，这里直接采样 16 段 */
-            double len = 0;
-            PointD prev = {x0, y0};
+            const double distance = curveLength(pt0,pt1,pt2,pt3,0.1);
+            /*PointD prev = pt0;
             for (int k = 1; k <= CURVE_STEPS; ++k) {
                 const double t = k / double(CURVE_STEPS);
                 const double mt = 1.0-t;
-                double ptx = mt*mt*mt*x0 + 3*mt*mt*t*x1 + 3*mt*t*t*x2 + t*t*t*x3;
-                double pty = mt*mt*mt*y0 + 3*mt*mt*t*y1 + 3*mt*t*t*y2 + t*t*t*y3;
+                double ptx = mt*mt*mt*pt0.x + 3*mt*mt*t*pt1.x + 3*mt*t*t*pt2.x + t*t*t*pt3.x;
+                double pty = mt*mt*mt*pt0.y + 3*mt*mt*t*pt1.y + 3*mt*t*t*pt2.y + t*t*t*pt3.y;
 
-                len += std::hypot(ptx - prev.x, pty - prev.y);
+                distance += std::hypot(ptx - prev.x, pty - prev.y);
                 prev = {ptx,pty};
-            }
-            mSegments.push_back({Segment::Cubic, {x0, y0}, {x1, y1}, {x2, y2}, {x3, y3}, len});
-            x0 = x3; y0 = y3;
+            }*/
+            mPoints.push_back(pt1);
+            mPoints.push_back(pt2);
+            mPoints.push_back(pt3);
+            mSegments.push_back({Segment::Cubic,ptIndex, distance});
+            ptIndex += 3;
+            pt0 = pt3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
-            const double len = std::hypot(startX - x0, startY - y0);
-            if (len > 0) {
-                mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
+            const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
+            if (distance > 0) {
+                mSegments.push_back({Segment::Line,ptIndex, distance});
+                ptIndex += 1;
+                mPoints.push_back(ptStart);
             }
-            x0 = startX; y0 = startY;
+            pt0 = ptStart;
         }
     }
-    if (mForceClosed && hasMove && (std::hypot(x0 - startX, y0 - startY) > FLT_EPSILON)) {
-        const double len = std::hypot(startX - x0, startY - y0);
-        mSegments.push_back({Segment::Line, {x0, y0}, {startX, startY}, {}, {}, len});
+    if (mForceClosed && hasMove && (std::hypot(pt0.x - ptStart.x, pt0.y - ptStart.y) > FLT_EPSILON)) {
+        const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
+        mSegments.push_back({Segment::Line,ptIndex, distance});
+        mPoints.push_back(ptStart);
     }
     return mSegments.size();
 }
@@ -196,94 +299,85 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
     bool needsMove = startWithMoveTo;
     double segStart = 0.0,segEnd = 0.0;
     for (auto& s:mSegments) {
-        segEnd += s.len;
-        const double t0 = (startD >segStart) ? (startD - segStart) / s.len : 0.0;
-        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.len : 1.0;
+        const PointD*pts = mPoints.data()+s.ptIndex;
+        segEnd += s.distance;
+        const double t0 = (startD >segStart) ? (startD - segStart) / s.distance : 0.0;
+        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.distance : 1.0;
         if (s.type == Segment::Line) {
-            PointD p0 = interpolate(s.p0, s.p1, t0);
-            PointD p1 = interpolate(s.p0, s.p1, t1);
+            PointD p0 = interpolate(pts[0],pts[1],t0);
+            PointD p1 = interpolate(pts[0],pts[1],t1);
             if (needsMove) { 
-                dst->move_to(p0.x, p0.y); 
-                needsMove = false; 
+                dst->move_to(p0.x, p0.y);
+                //needsMove = false;
             }
             dst->line_to(p1.x, p1.y);
         } else { // Cubic
             PointD q0, q1, q2, q3;
             if ((t0 == 0.0) && (t1 == 1.0)) {
-                q0 = s.p0; q1 = s.p1; q2 = s.p2; q3 = s.p3;
+                q0 = pts[0]; q1 = pts[1]; q2 = pts[1]; q3 = pts[3];
             } else if(t1>t0+FLT_EPSILON){
-                bezierSplit(s.p0, s.p1, s.p2, s.p3, t0, t1, q0, q1, q2, q3);
+                bezierSplit(pts[0],pts[1],pts[2],pts[3],t0,t1, q0, q1, q2, q3);
             }
             if (needsMove) { 
                 dst->move_to(q0.x, q0.y); 
-                needsMove = false;
+                //needsMove = false;
             }
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
         }
-        segStart += s.len;
+        segStart += s.distance;
         if(segEnd >= stopD)break;
     }
     return true;
 }
 
 bool PathMeasure::getPosTan(double distance,PointD* pos,PointD* tangent){
-    double length = 0.0;
-    PointD prev, curr, next;
-    auto m_path = mPath->copy_path();
+    PointD prev, curr;
     bool found = false;
+    double length = 0.0 , segLength = 0.0;
+    const auto m_path = mPath->copy_path();
 
     for (int i = 0; i < m_path->num_data && !found; ) {
         cairo_path_data_t* data = &m_path->data[i];
         i+= data->header.length;
         switch (data->header.type) {
         case CAIRO_PATH_MOVE_TO:
-            prev = { data[1].point.x, data[1].point.y };
+            prev = {data[1].point.x, data[1].point.y};
             break;
-        case CAIRO_PATH_LINE_TO: {
-            curr = { data[1].point.x, data[1].point.y };
-            double segLen = distancePoint(prev, curr);
-            if (length + segLen >= distance) {
-                double t = (distance - length) / segLen;
-                pos->x = prev.x + t * (curr.x - prev.x);
-                pos->y = prev.y + t * (curr.y - prev.y);
-                tangent->x = curr.x - prev.x;
-                tangent->y = curr.y - prev.y;
+        case CAIRO_PATH_LINE_TO:
+            curr = {data[1].point.x, data[1].point.y};
+            segLength = distancePoint(prev, curr);
+            if (length + segLength >= distance) {
+                const double t = (distance - length) / segLength;
+                if(pos)*pos = interpolate(prev,curr,t);
+                if(tangent)*tangent = {curr.x - prev.x,curr.y - prev.y};
                 found = true;
             }
-            length += segLen;
+            length += segLength;
             prev = curr;
             break;
-        }
         case CAIRO_PATH_CURVE_TO: {
             PointD p1 = { data[1].point.x, data[1].point.y };
             PointD p2 = { data[2].point.x, data[2].point.y };
             PointD p3 = { data[3].point.x, data[3].point.y };
-            double segLen = curveLength(prev, p1, p2, p3);
-            if (length + segLen >= distance) {
-                double t = (distance - length) / segLen;
-                PointD pt = interpolateCurve(prev, p1, p2, p3, t);
-                pos->x = pt.x;
-                pos->y = pt.y;
-                // 切线为贝塞尔一阶导数
-                double u = 1.0 - t;
-                tangent->x =
-                    3 * u * u * (p1.x - prev.x) +
-                    6 * u * t * (p2.x - p1.x) +
-                    3 * t * t * (p3.x - p2.x);
-                tangent->y =
-                    3 * u * u * (p1.y - prev.y) +
-                    6 * u * t * (p2.y - p1.y) +
-                    3 * t * t * (p3.y - p2.y);
+            segLength = curveLength(prev, p1, p2, p3,0.1);
+            if (length + segLength >= distance) {
+                const double t = (distance - length) / segLength;
+                const double u = 1.0 - t;
+                if(pos)*pos = interpolateCurve(prev, p1, p2, p3, t);
+                if(tangent){/*Tangent is the first derivative of Bézier curve*/
+                    tangent->x =  3 * u * u * (p1.x - prev.x) +
+                        6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
+                    tangent->y =  3 * u * u * (p1.y - prev.y) +
+                        6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
+                }
                 found = true;
             }
-            length += segLen;
+            length += segLength;
             prev = p3;
             break;
         }
         case CAIRO_PATH_CLOSE_PATH:
-            // 可选：处理闭合段
-        default:
-            break;
+        default:    break;
         }
     }
     cairo_path_destroy(m_path);

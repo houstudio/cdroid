@@ -267,11 +267,11 @@ void ScrollBarDrawable::invalidateDrawable(Drawable& who) {
     invalidateSelf();
 }
 
-void ScrollBarDrawable::scheduleDrawable(Drawable& who, Runnable& what, int64_t when) {
+void ScrollBarDrawable::scheduleDrawable(Drawable& who,const Runnable& what, int64_t when) {
     scheduleSelf(what, when);
 }
 
-void ScrollBarDrawable::unscheduleDrawable(Drawable& who,Runnable& what) {
+void ScrollBarDrawable::unscheduleDrawable(Drawable& who,const Runnable& what) {
     unscheduleSelf(what);
 }
 
