@@ -83,10 +83,10 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/progress_horizontal");
     sb->setProgressDrawable(d);
     sb2->setProgressDrawable(d->getConstantState()->newDrawable());
-    sb2->setOnSeekBarChangeListener((const SeekBar::OnSeekBarChangeListener){
-            .onProgressChanged=[](SeekBar&sb,int,bool)->void{return;},
-            .onStartTrackingTouch=[](SeekBar&sb)->void{},
-            .onStopTrackingTouch=[](SeekBar&)->void{}
+    sb2->setOnSeekBarChangeListener({
+            .onProgressChanged=[](SeekBar&sb,int progress,bool)->void{LOGD("progress=%d",progress);},
+            .onStartTrackingTouch=[](SeekBar&sb){LOGD("onStartTrackingTouch");},
+            .onStopTrackingTouch=[](SeekBar&sb){LOGD("onStopTrackingTouch");}
         });
 
     d=ctx->getDrawable("cdroid:drawable/seek_thumb.xml");
