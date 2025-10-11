@@ -26,6 +26,8 @@
 
 namespace cdroid {
 
+class CompletionInfo;
+
 class TextView : public View{
 private:
     static constexpr int DEFAULT_TYPEFACE = -1;
@@ -343,6 +345,7 @@ public:
     void removeTextChangedListener(const TextWatcher& watcher);
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent& event)override;
+    virtual void onCommitCompletion(CompletionInfo* completion);
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;

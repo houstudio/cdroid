@@ -1375,6 +1375,20 @@ void TextView::onVisibilityChanged(View& changedView, int visibility) {
     }
 }
 
+/**
+ * Called by the framework in response to a text completion from
+ * the current input method, provided by it calling
+ * {@link InputConnection#commitCompletion
+ * InputConnection.commitCompletion()}.  The default implementation does
+ * nothing; text views that are supporting auto-completion should override
+ * this to do their desired behavior.
+ *
+ * @param text The auto complete text the user has selected.
+ */
+void TextView::onCommitCompletion(CompletionInfo* completion){
+    // intentionally empty
+}
+
 void TextView::setSelected(bool selected){
     const bool wasSelected = isSelected();
 
