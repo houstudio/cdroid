@@ -1315,6 +1315,25 @@ void ScrollView::onLayout(bool changed, int l, int t, int w, int h){
     scrollTo(mScrollX, mScrollY);
 }
 
+void ScrollView::onSizeChanged(int w, int h, int oldw, int oldh) {
+    FrameLayout::onSizeChanged(w, h, oldw, oldh);
+
+    View* currentFocused = findFocus();
+    if (nullptr == currentFocused || this == currentFocused)
+        return;
+
+    // If the currently-focused view was visible on the screen when the
+    // screen was at the old height, then scroll the screen to make that
+    // view visible with the new screen height.
+    if (isWithinDeltaOfScreen(currentFocused, 0, oldh)) {
+        Rect mTempRect;
+        currentFocused->getDrawingRect(mTempRect);
+        offsetDescendantRectToMyCoords(currentFocused, mTempRect);
+        int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+        doScrollY(scrollDelta);
+    }
+}
+
 bool ScrollView::isViewDescendantOf(View* child, View* parent){
     if (child == parent) {
         return true;

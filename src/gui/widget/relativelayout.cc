@@ -63,6 +63,10 @@ bool RelativeLayout::shouldDelayChildPressedState(){
     return false;
 }
 
+void RelativeLayout::setIgnoreGravity(int viewId){
+    mIgnoreGravity = viewId;
+}
+
 int RelativeLayout::getIgnoreGravity()const{
     return mIgnoreGravity;
 }

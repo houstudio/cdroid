@@ -167,6 +167,7 @@ public:
     RelativeLayout(Context* context,const AttributeSet& attrs);
     ~RelativeLayout()override;
     bool shouldDelayChildPressedState()override;
+    void setIgnoreGravity(int viewId);
     int getIgnoreGravity()const;
     int getGravity()const;
     void setGravity(int);
