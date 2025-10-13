@@ -10,7 +10,7 @@
 
 namespace cdroid{
 class ListPopupWindow;
-class AbsListView:public AdapterView,Filter::FilterListener{
+class AbsListView:public AdapterView{//,Filter::FilterListener{
 private:
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
     static constexpr int OVERSCROLL_LIMIT_DIVISOR = 3;
@@ -400,7 +400,7 @@ public:
     const std::string getTextFilter()const;
     void beforeTextChanged(const std::string& s, int start, int count, int after);//override textwatcher
     void onTextChanged(const std::string& s, int start, int before, int count);//override textwatcher
-    void onFilterComplete(int count)override;
+    virtual void onFilterComplete(int count);
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;
     void dispatchDrawableHotspotChanged(float x, float y)override;

@@ -34,7 +34,7 @@ void RenderNode::getMatrix(Matrix&outMatrix)const{
     const float px = (mPivotX==FLT_MIN)?(mRight - mLeft)/2:mPivotX;
     const float py = (mPivotY==FLT_MIN)?(mBottom- mTop)/2:mPivotY;
     outMatrix = identity_matrix();
-#if 1
+
     outMatrix.translate(px,py);
     outMatrix.scale(mScaleX,mScaleY);
     outMatrix.rotate(mRotation*M_PI/180.f);
@@ -42,19 +42,6 @@ void RenderNode::getMatrix(Matrix&outMatrix)const{
     Matrix rt = identity_matrix();
     rt.translate(mTranslationX,mTranslationY);
     outMatrix.multiply(outMatrix,rt);
-#else
-    auto sdot=[](float a,float b,float c,float d)->float{
-       return a * b + c * d;
-    };
-    outMatrix.translate(mTranslationX,mTranslationY);
-    outMatrix.scale(mScaleX,mScaleY);
-
-    const float radians = mRotation*M_PI/180.f;
-    const float fsin = sin(radians);
-    const float fcos = cos(radians);
-    Matrix rt(fcos,-fsin, fsin,fcos, sdot(-fsin,px,1.f-fcos,py),sdot(fsin,px,1.f-fcos,py));
-    outMatrix.multiply(outMatrix,rt);
-#endif
 }
 
 void RenderNode::getInverseMatrix(Matrix&outMatrix)const{

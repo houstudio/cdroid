@@ -23,10 +23,7 @@ namespace cdroid{
 
 class Filter{
 public:
-    class FilterListener{
-    public:
-        virtual void onFilterComplete(int count)=0;
-    };
+    using FilterListener = std::function<void(int)>;//void onFilterComplete(int count)=0;
 protected:
     class FilterResults{
     public:
@@ -39,7 +36,7 @@ protected:
 public:
     Filter();
     void filter(const std::string& constraint);
-    void filter(const std::string& constraint, FilterListener* listener);
+    void filter(const std::string& constraint,const FilterListener& listener);
 };
 
 class Filterable {

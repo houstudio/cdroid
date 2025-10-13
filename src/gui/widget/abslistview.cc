@@ -1015,7 +1015,7 @@ void AbsListView::onTextChanged(const std::string& s, int start, int before, int
             Filter* f = ((Filterable*)mAdapter)->getFilter();
             // Filter should not be null when we reach this part
             if (f != nullptr) {
-                f->filter(s, this);
+                f->filter(s, [this](int count){onFilterComplete(count);});
             } else {
                 FATAL("You cannot call onTextChanged with a non filterable adapter");
             }
