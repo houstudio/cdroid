@@ -54,7 +54,7 @@ bool AudioRecord::start() {
     try {
 #if RTAUDIO_VERSION_MAJOR>5
         RtAudio::StreamParameters parameters;
-        RtAudioErrorType err = mRtAudio.openStream(&parameters, nullptr, fmt, mSampleRate, &mBufferFrames, &AudioRecord::rtAudioCallback,this);
+        RtAudioErrorType err = mRtAudio.openStream(nullptr,&parameters, fmt, mSampleRate, &mBufferFrames, &AudioRecord::rtAudioCallback,this);
 #else
         mRtAudio.openStream(
             nullptr, // output

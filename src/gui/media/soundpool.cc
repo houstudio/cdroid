@@ -245,7 +245,7 @@ int SoundPool::play(int soundId,float leftVolume, float rightVolume,int priority
         channel->channels = parameters.nChannels;
         channel->deviceId = deviceId;
 #if RTAUDIO_VERSION_MAJOR>5
-        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, RTAUDIO_SINT16, sound->sampleRate, &bufferFrames, &audioCallback, channel.get());
+        RtAudioErrorType rtError=audio->openStream(&parameters, nullptr, sound->format, sound->sampleRate, &bufferFrames, &audioCallback, channel.get());
         LOGD("%s openStream=%d bufferFrames=%d outputChanels=%d inputChannels=%d",dinfo.name.c_str(),rtError,bufferFrames,dinfo.outputChannels,dinfo.inputChannels);
 #else
         audio->openStream(&parameters, nullptr,sound->format, sound->sampleRate, &bufferFrames, &audioCallback, channel.get(),nullptr/*StreamOptions*/,
