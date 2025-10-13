@@ -17,7 +17,8 @@
  *********************************************************************************/
 #include <drawables/animatedrotatedrawable.h>
 #include <drawables/bitmapdrawable.h>
-#include <systemclock.h>
+#include <core/systemclock.h>
+#include <utils/mathutils.h>
 #include <cdlog.h>
 #include <fstream>
 
@@ -175,10 +176,6 @@ void AnimatedRotateDrawable::updateLocalState(){
     }
 }
 
-static inline float sdot(float a,float b,float c,float d){
-    return a * b + c * d;
-}
-
 void AnimatedRotateDrawable::draw(Canvas& canvas) {
     Drawable* drawable = getDrawable();
     const Rect bounds = drawable->getBounds();
@@ -189,11 +186,20 @@ void AnimatedRotateDrawable::draw(Canvas& canvas) {
     const float py = bounds.top  + (mState->mPivotYRel ? (h * mState->mPivotY) : mState->mPivotY);
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mCurrentDegrees);
-
+#if 0
+    auto sdot = [](float a,float b,float c,float d){
+        return a * b + c * d;
+    };
     const float radians =M_PI*mCurrentDegrees/180.f;
     const float fsin = sin(radians);
     const float fcos = cos(radians);
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
+#else
+    Matrix mtx=identity_matrix();
+    mtx.translate(px,py);
+    mtx.rotate(MathUtils::toRadians(mCurrentDegrees));
+    mtx.translate(-px,-py);
+#endif
     if(drawable){
         canvas.save();
         canvas.transform(mtx);

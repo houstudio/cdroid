@@ -136,10 +136,6 @@ std::shared_ptr<Drawable::ConstantState>RotateDrawable::getConstantState(){
     return mState;
 }
 
-static inline float sdot(float a,float b,float c,float d){
-    return a * b + c * d;
-}
-
 void RotateDrawable::draw(Canvas& canvas) {
     Drawable*d = getDrawable();
     const Rect bounds = getBounds();
@@ -147,12 +143,20 @@ void RotateDrawable::draw(Canvas& canvas) {
     const float py = bounds.top  + (mState->mPivotYRel ? (bounds.height * mState->mPivotY) : mState->mPivotY);
     LOGV("%p bounds(%d,%d %d,%d) pivot=%f,%f pxy=%f,%f degrees=%f",this,bounds.left,bounds.top,bounds.width,bounds.height,
          mState->mPivotX, mState->mPivotY,px,py,mState->mCurrentDegrees);
-
+#if 0
+    auto sdot = [](float a,float b,float c,float d){
+        return a * b + c * d;
+    };
     const float radians = M_PI*mState->mCurrentDegrees/180.f;
     const float fsin = sin(radians);
     const float fcos = cos(radians);
     Matrix mtx(fcos,fsin, -fsin,fcos, sdot(fsin,py,1-fcos,px), sdot(-fsin,px,1-fcos,py));
-
+#else
+    Matrix mtx=identity_matrix();
+    mtx.translate(px,py);
+    mtx.rotate(MathUtils::toRadians(mState->mCurrentDegrees));
+    mtx.translate(-px,-py);
+#endif
     if(d){
         canvas.save();
         canvas.transform(mtx);
