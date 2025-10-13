@@ -1,19 +1,17 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef __CAIROMM_PATTERN_H
@@ -87,7 +85,12 @@ public:
        * The pattern is a radial gradient.
        */
       RADIAL = CAIRO_PATTERN_TYPE_RADIAL,
-      MESH   = CAIRO_PATTERN_TYPE_MESH /*added by zhhou*/
+
+      /**
+       * The pattern is a mesh gradient.
+       * @newin{1,20}
+       */
+      MESH = CAIRO_PATTERN_TYPE_MESH
   };
 
   /**
@@ -337,6 +340,7 @@ public:
        */
       GAUSSIAN = CAIRO_FILTER_GAUSSIAN
   };
+
   /** Create a C++ wrapper for the C instance. This C++ instance should then be given to a RefPtr.
    * @param cobject The C instance.
    * @param has_reference Whether we already have a reference. Otherwise, the constructor will take an extra reference.
@@ -559,39 +563,6 @@ public:
   static RefPtr<RadialGradient> create(double cx0, double cy0, double radius0, double cx1, double cy1, double radius1);
 };
 
-////////////////////////////////////////////////////////added by zhhou////////////////////////////////////////////////
-
-class CAIROMM_API MeshPattern:public Pattern{
-protected:
-   MeshPattern();
-public:
-   explicit MeshPattern(cairo_pattern_t* cobject, bool has_reference = false);
-   void begin_patch();
-   void end_patch();
-   void line_to(double x,double y);
-   void move_to(double x,double y);
-   void curve_to(double,double,double,double,double,double);
-   void set_control_point(uint32_t point_num,double x,double y);
-   void set_corner_color_rgb(uint32_t corner_num,double red,double green,double blue);
-   void set_corner_color_rgba(uint32_t corner_num,double red,double green,double blue,double alpha);
-   int get_patch_count()const;
-   int get_corner_color_rgba(uint32_t patch_num,uint32_t corner_num,double& red,double& green,double& blue,double&alpha);
-   int get_control_point(uint32_t patch_num,uint32_t corner_num,double&x,double&y);
-   static RefPtr<MeshPattern>create();
-};
-
-class CAIROMM_API SweepGradient : public MeshPattern{
-private:
-   double m_cx;
-   double m_cy;
-   double m_radius;
-protected:
-   SweepGradient(double,double,double,double angleRadius,const std::vector<ColorStop>&);
-public:
-   explicit SweepGradient(cairo_pattern_t* cobject, bool has_reference = false);
-   void add_sector(double x,double y,double r,double angleRadius,const ColorStop& from,const ColorStop&to); 
-   static RefPtr<SweepGradient> create(double cx,double cy,double r,double angleRadius,const std::vector<ColorStop>&stopColors);
-};
 } // namespace Cairo
 
 #endif //__CAIROMM_PATTERN_H

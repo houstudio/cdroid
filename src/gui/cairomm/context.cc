@@ -1,19 +1,17 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 /* M_PI is defined in math.h in the case of Microsoft Visual C++ */
@@ -21,15 +19,29 @@
 #include <cairommconfig.h>
 #include <cairomm/context.h>
 #include <cairomm/context_private.h>
+#include <cairomm/mesh_pattern.h>
 #include <cairomm/private.h>
 #include <cairomm/surface.h>
 #include <cairomm/script_surface.h>
 #include <cairomm/scaledfont.h>
+#include <cairomm/xcb_surface.h>
 
 /* Solaris et. al. need math.h for M_PI too */
 #include <cmath>
 
 using namespace Cairo::Private;
+
+namespace
+{
+Cairo::RefPtr<Cairo::Path> get_path_wrapper(cairo_path_t* cpath)
+{
+  auto cpp_path = Cairo::make_refptr_for_instance<Cairo::Path>(new Cairo::Path(cpath, true /* take ownership */));
+  // If an exception is thrown, cpp_path's destructor will call ~Path(),
+  // which will destroy cpath.
+  Cairo::check_object_status_and_throw_exception(*cpp_path);
+  return cpp_path;
+}
+} // anonymous namespace
 
 namespace Cairo
 {
@@ -613,6 +625,9 @@ static RefPtr<Pattern> get_pattern_wrapper (cairo_pattern_t* pattern)
     case CAIRO_PATTERN_TYPE_RADIAL:
       return make_refptr_for_instance<RadialGradient>(new RadialGradient(pattern, false /* does not have reference */));
       break;
+    case CAIRO_PATTERN_TYPE_MESH:
+      return make_refptr_for_instance<MeshPattern>(new MeshPattern(pattern, false /* does not have reference */));
+      break;
     default:
       return make_refptr_for_instance<Pattern>(new Pattern(pattern, false /* does not have reference */));
   }
@@ -784,11 +799,16 @@ RefPtr<Surface> get_surface_wrapper (cairo_surface_t* surface)
       return make_refptr_for_instance<SvgSurface>(new SvgSurface(surface, false /* does not have reference */));
       break;
 #endif
+#if CAIRO_HAS_XCB_SURFACE
+    case CAIRO_SURFACE_TYPE_XCB:
+      return make_refptr_for_instance<XcbSurface>(new XcbSurface(surface, false /* does not have reference */));
+      break;
+#endif
+
     // the following surfaces are not directly supported in cairomm yet
     case CAIRO_SURFACE_TYPE_DIRECTFB:
     case CAIRO_SURFACE_TYPE_OS2:
     case CAIRO_SURFACE_TYPE_BEOS:
-    case CAIRO_SURFACE_TYPE_XCB:
     default:
       return make_refptr_for_instance<Surface>(new Surface(surface, false /* does not have reference */));
   }
@@ -808,11 +828,18 @@ RefPtr<const Surface> Context::get_target() const
   return get_surface_wrapper(surface);
 }
 
+#ifndef CAIROMM_DISABLE_DEPRECATED
 Path* Context::copy_path() const
 {
   auto cresult = cairo_copy_path(const_cast<cobject*>(cobj()));
   check_object_status_and_throw_exception(*this);
   return new Path(cresult, true /* take ownership */); //The caller must delete it.
+}
+#endif //CAIROMM_DISABLE_DEPRECATED
+
+RefPtr<Path> Context::copy_path2() const
+{
+  return get_path_wrapper(cairo_copy_path(const_cast<cobject*>(cobj())));
 }
 
 void Context::get_path_extents(double& x1, double& y1, double& x2, double& y2) const
@@ -821,12 +848,18 @@ void Context::get_path_extents(double& x1, double& y1, double& x2, double& y2) c
   check_object_status_and_throw_exception(*this);
 }
 
-
+#ifndef CAIROMM_DISABLE_DEPRECATED
 Path* Context::copy_path_flat() const
 {
   auto cresult = cairo_copy_path_flat(const_cast<cobject*>(cobj()));
   check_object_status_and_throw_exception(*this);
   return new Path(cresult, true /* take ownership */); //The caller must delete it.
+}
+#endif //CAIROMM_DISABLE_DEPRECATED
+
+RefPtr<Path> Context::copy_path_flat2() const
+{
+  return get_path_wrapper(cairo_copy_path_flat(const_cast<cobject*>(cobj())));
 }
 
 void Context::append_path(const Path& path)

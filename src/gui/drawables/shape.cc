@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawables/shape.h>
+#include <cairomm/mesh_pattern.h>
 #include <color.h>
 #include <cdlog.h>
 using namespace Cairo;

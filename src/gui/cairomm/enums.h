@@ -1,19 +1,17 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef __CAIROMM_ENUMS_H
@@ -193,8 +191,16 @@ typedef enum
 #ifdef CAIRO_HAS_FT_FONT
 enum FtSynthesize {
 
-    /// Embolden the glyphs (redraw with a pixel offset)
+#ifndef CAIROMM_DISABLE_DEPRECATED
+    /** Embolden the glyphs (redraw with a pixel offset).
+     * @deprecated 1.20: Use FT_SYNTHESIZE_BOLD instead.
+     */
     FT_SYNTHESIZE_BOLT = CAIRO_FT_SYNTHESIZE_BOLD,
+#endif
+    /** Embolden the glyphs (redraw with a pixel offset).
+     * @newin{1,20}
+     */
+    FT_SYNTHESIZE_BOLD = CAIRO_FT_SYNTHESIZE_BOLD,
 
     /// Slant the glyph outline by 12 degrees to the right.
     FT_SYNTHESIZE_OBLIQUE = CAIRO_FT_SYNTHESIZE_OBLIQUE
@@ -213,5 +219,3 @@ inline FtSynthesize operator&(FtSynthesize a, FtSynthesize b)
 } // namespace Cairo
 
 #endif //__CAIROMM_ENUMS_H
-
-// vim: ts=2 sw=2 et

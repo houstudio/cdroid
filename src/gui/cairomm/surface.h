@@ -1,19 +1,17 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef __CAIROMM_SURFACE_H
@@ -61,6 +59,8 @@
 
 namespace Cairo
 {
+class CAIROMM_API ImageSurface;
+class CAIROMM_API MappedImageSurface;
 
 /** A cairo surface represents an image, either as the destination of a drawing
  * operation or as source when drawing onto another surface. There are
@@ -193,13 +193,13 @@ public:
       RECORDING = CAIRO_SURFACE_TYPE_RECORDING,
 
       /**
-       * The surface is a OpenVg surface
+       * The surface is a OpenVG surface
        * @since 1.10
        */
       VG = CAIRO_SURFACE_TYPE_VG,
 
       /**
-       * The surface is of type OpenGl
+       * The surface is of type OpenGL
        * @since 1.10
        */
       GL = CAIRO_SURFACE_TYPE_GL,
@@ -236,9 +236,9 @@ public:
       SUBSURFACE = CAIRO_SURFACE_TYPE_SUBSURFACE
   };
 
+  //TODO: Add new formats (at least 3) when we can add API. See cairo/src/cairo.h.
   /**
-   * Format is used to identify the memory format of
-   * image data.
+   * %Cairo::Surface::Format is used to identify the memory format of image data.
    *
    * New entries may be added in future versions.
    **/
@@ -248,7 +248,7 @@ public:
        * Each pixel is a 32-bit quantity, with alpha in the upper 8 bits, then
        * red, then green, then blue. The 32-bit quantities are stored
        * native-endian. Pre-multiplied alpha is used. (That is, 50% transparent
-       * red is 0x80800000,
+       * red is 0x80800000, not 0x80ff0000.)
        */
       ARGB32 = CAIRO_FORMAT_ARGB32,
 
@@ -264,20 +264,21 @@ public:
       A8 = CAIRO_FORMAT_A8,
 
       /**
-       * Each pikel is a 1-bit quentity holding an alpha value. Pixels are packed
+       * Each pixel is a 1-bit quentity holding an alpha value. Pixels are packed
        * together into 32-bit quantities. The ordering of the bits matches the
-       * endianess of the platform. On a big-endian machine, the first pixel is in
+       * endianness of the platform. On a big-endian machine, the first pixel is in
        * the uppermost bit, on a little endian machine the first pixel is in the
        * least-significant bit.
        */
       A1 = CAIRO_FORMAT_A1,
 
       /**
-       * Each fixel is a 16-bit quantity with red in the upper 5 bits, then green
+       * Each pixel is a 16-bit quantity with red in the upper 5 bits, then green
        * in the middle 6 bits, and blue in the lower 5 bits
        */
       RGB16_565 = CAIRO_FORMAT_RGB16_565
   };
+
   /** For example:
    * <code>
    * ErrorStatus my_write_func(unsigned char* data, unsigned int length);
@@ -587,6 +588,67 @@ public:
 
 #endif // CAIRO_HAS_PNG_FUNCTIONS
 
+  /** Create a new image surface that is as compatible as possible for uploading
+   * to and the use in conjunction with an existing surface.
+   * However, this surface can still be used like any normal image surface.
+   * Unlike Surface::create(const RefPtr<Surface> other, Content content,
+   * int width, int height) the new image surface won't inherit the device scale
+   * from this surface..
+   *
+   * Initially the surface contents are all 0 (transparent if contents have
+   * transparency, black otherwise.)
+   *
+   * Use Surface::create(const RefPtr<Surface> other, Content content,
+   * int width, int height) if you don't need an image surface.
+   *
+   * @param format The format for the new surface.
+   * @param width Width of the new surface (in pixels).
+   * @param height Height of the new surface (in pixels).
+   *
+   * @throws std::bad_alloc, Cairo::logic_error, std::ios_base::failure
+   * @newin{1,20}
+   */
+  RefPtr<ImageSurface> create_similar_image(Format format, int width, int height);
+
+  /** Checks whether @a mime_type is supported by the surface.
+   *
+   * @param mime_type The mime type.
+   *
+   * @newin{1,20}
+   */
+  bool supports_mime_type(const std::string& mime_type);
+
+  /** Returns an image surface that is the most efficient mechanism for
+   * modifying the backing store of the target surface.
+   *
+   * @note The use of the original surface as a target or source whilst it is
+   * mapped is undefined. The result of mapping the surface multiple times is
+   * undefined. Changing the device transform of the image surface or
+   * of this surface before the image surface is deleted results in
+   * undefined behavior.
+   *
+   * @param extents Limit the extraction to a rectangular region.
+   *
+   * @throws std::bad_alloc, Cairo::logic_error, std::ios_base::failure
+   * @newin{1,20}
+   */
+  RefPtr<MappedImageSurface> map_to_image(const RectangleInt& extents);
+
+  /** Returns an image surface that is the most efficient mechanism for
+   * modifying the backing store of the target surface.
+   * The region retrieved is the whole surface.
+   *
+   * @note The use of the original surface as a target or source whilst it is
+   * mapped is undefined. The result of mapping the surface multiple times is
+   * undefined. Changing the device transform of the image surface or
+   * of this surface before the image surface is deleted results in
+   * undefined behavior.
+   *
+   * @throws std::bad_alloc, Cairo::logic_error, std::ios_base::failure
+   * @newin{1,20}
+   */
+  RefPtr<MappedImageSurface> map_to_image();
+
   /** This function returns the device for a surface
    * @return The device for this surface, or an empty RefPtr if the surface has
    * no associated device */
@@ -650,7 +712,8 @@ protected:
   /** The underlying C cairo surface type that is wrapped by this Surface
    */
   cobject* m_cobject;
-};
+
+}; // end class Surface
 
 /** @example image-surface.cc
  * An example of using Cairo::ImageSurface class to render to PNG
@@ -817,6 +880,46 @@ public:
 
 #endif // CAIRO_HAS_PNG_FUNCTIONS
 
+}; // end class ImageSurface
+
+/** @example mapped-surface.cc
+ * An example of using Cairo::MappedImageSurface class to render to PDF
+ */
+
+/** Image surface which is mapped to a target surface.
+ *
+ * @see Surface::map_to_image()
+ * @newin{1,20}
+ */
+class CAIROMM_API MappedImageSurface : public ImageSurface
+{
+public:
+  /** Create a C++ wrapper for the C instance. This C++ instance should then be
+   * given to a RefPtr.
+   *
+   * @param cobject The C instance.
+   * @param ctarget The surface that has been mapped to this image surface.
+   * @param has_reference Whether we already have a reference. Otherwise, the
+   * constructor will take an extra reference.
+   *
+   * @newin{1,20}
+   */
+  MappedImageSurface(cairo_surface_t* cobject, cairo_surface_t* ctarget,
+    bool has_reference = false);
+
+  /** Destructor.
+   *
+   * Unmaps this image surface from the target surface that created it.
+   * The contents of the image will be uploaded to the target surface.
+   *
+   * @newin{1,20}
+   */
+  ~MappedImageSurface() override;
+
+protected:
+  /** The C cairo surface which has been mapped to this image surface.
+   */
+  cobject* m_ctarget;
 };
 
 
@@ -1273,10 +1376,10 @@ public:
  * should use this Surface type.
  *
  * @note For this Surface to be available, cairo must have been compiled with
- * Glitz support
+ * Glitz support.
  *
- * @warning This is an experimental surface.  It is not yet marked as a fully
- * supported surface by the cairo library
+ * @warning This was an experimental surface. Glitz support has been removed
+ * from cairo 1.18.
  */
 class CAIROMM_API GlitzSurface : public Surface
 {

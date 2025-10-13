@@ -1,19 +1,17 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #ifndef __CAIROMM_CONTEXT_H
@@ -59,7 +57,7 @@ public:
    * Operator is used to set the compositing operator for all cairo
    * drawing operations.
    *
-   * The default operator is Cairo::Operator::OVER.
+   * The default operator is Cairo::Context::Operator::OVER.
    *
    * The operators marked as @a unbounded modify their destination even outside
    * of the mask layer (that is, their effect is not bound by the mask layer).
@@ -72,7 +70,7 @@ public:
    * mathematical definitions, see
    * <a href="http://cairographics.org/operators/">this</a>
    *
-   **/
+   */
   enum class Operator
   {
       /**
@@ -155,10 +153,10 @@ public:
    * tangent to the path. (Note that filling is not actually implemented in this
    * way. This is just a description of the rule that is applied.)
    *
-   * The default fill rule is Cairo::FillRule::WINDING.
+   * The default fill rule is Cairo::Context::FillRule::WINDING.
    *
    * New entries may be added in future versions.
-   **/
+   */
   enum class FillRule
   {
       /**
@@ -181,8 +179,8 @@ public:
   /**
    * Specifies how to render the endpoints of the path when stroking.
    *
-   * The default line cap style is Cairo::LineCap::BUTT.
-   **/
+   * The default line cap style is Cairo::Context::LineCap::BUTT.
+   */
   enum class LineCap
   {
       /**
@@ -204,7 +202,7 @@ public:
   /**
    * Specifies how to render the junction of two lines when stroking.
    *
-   * The default line join style is Cairo::LineJoin::MITER.
+   * The default line join style is Cairo::Context::LineJoin::MITER.
    */
   enum class LineJoin
   {
@@ -411,7 +409,7 @@ public:
    * examined by stroke(), stroke_extents(), and stroke_to_path(), but does not
    * have any effect during path construction.
    * 
-   * The default line cap style is Cairo::LineCap::BUTT.
+   * The default line cap style is Cairo::Context::LineCap::BUTT.
    *
    * @param line_cap	a line cap style, as a LineCap
    */
@@ -424,7 +422,7 @@ public:
    * examined by stroke(), stroke_extents(), and stroke_to_path(), but does not
    * have any effect during path construction.
    *
-   * The default line join style is Cairo::LineJoin::MITER.
+   * The default line join style is Cairo::Context::LineJoin::MITER.
    *
    * @param line_join	a line joint style, as a LineJoin
    */
@@ -443,8 +441,8 @@ public:
    *
    * Each "on" segment will have caps applied as if the segment were a separate
    * sub-path. In particular, it is valid to use an "on" length of 0.0 with
-   * Cairo::LineCap::ROUND or Cairo::LineCap::SQUARE in order to distributed
-   * dots or squares along a path.
+   * Cairo::Context::LineCap::ROUND or Cairo::Context::LineCap::SQUARE in order to
+   * distribute dots or squares along a path.
    *
    * Note: The length values are in user-space units as evaluated at the time
    * of stroking. This is not necessarily the same as the user space at the
@@ -471,7 +469,7 @@ public:
   /**
    * Sets the current miter limit within the cairo context.
    *
-   * If the current line join style is set to Cairo::LineJoin::MITER (see
+   * If the current line join style is set to Cairo::Context::LineJoin::MITER (see
    * set_line_join()), the miter limit is used to determine whether the lines
    * should be joined with a bevel instead of a miter. Cairo divides the length
    * of the miter by the line width. If the result is greater than the miter
@@ -490,7 +488,7 @@ public:
    * 1/sin(angle/2)
    *
    * @param limit miter limit to set
-   **/
+   */
   void set_miter_limit(double limit);
 
   /** Modifies the current transformation matrix (CTM) by translating the
@@ -856,19 +854,19 @@ public:
    * situations:
    *
    * 1. Zero-length "on" segments set in set_dash(). If the cap style is
-   * Cairo::LineCap::ROUND or Cairo::LineCap::SQUARE then these segments will
+   * Cairo::Context::LineCap::ROUND or Cairo::Context::LineCap::SQUARE then these segments will
    * be drawn as circular dots or squares respectively. In the case of
-   * Cairo::LineCap::SQUARE, the orientation of the squares is determined by
+   * Cairo::Context::LineCap::SQUARE, the orientation of the squares is determined by
    * the direction of the underlying path.
    *
    * 2. A sub-path created by move_to() followed by either a close_path() or
    * one or more calls to line_to() to the same coordinate as the move_to(). If
-   * the cap style is Cairo::LineCap::ROUND then these sub-paths will be drawn
-   * as circular dots. Note that in the case of Cairo::LineCap::SQUARE a
+   * the cap style is Cairo::Context::LineCap::ROUND then these sub-paths will be drawn
+   * as circular dots. Note that in the case of Cairo::Context::LineCap::SQUARE a
    * degenerate sub-path will not be drawn at all, (since the correct
    * orientation is indeterminate).
    *
-   * In no case will a cap style of Cairo::LineCap::BUTT cause anything to be
+   * In no case will a cap style of Cairo::Context::LineCap::BUTT cause anything to be
    * drawn in the case of either degenerate segments or sub-paths.
    */
   void stroke();
@@ -1088,7 +1086,7 @@ public:
    * @param y2 bottom of the resulting extents
    *
    * @since 1.4
-   **/
+   */
   void get_clip_extents(double& x1, double& y1, double& x2, double& y2) const;
 
   /**
@@ -1149,8 +1147,7 @@ public:
    * @param family a font family name, encoded in UTF-8
    * @param slant the slant for the font
    * @param weight the weight for the font
-   *
-   **/
+   */
   void select_font_face(const std::string& family, ToyFontFace::Slant slant, ToyFontFace::Weight weight);
 
   /**
@@ -1223,7 +1220,7 @@ public:
   /** Gets the current scaled font.
    *
    * @since 1.8
-   **/
+   */
   RefPtr<ScaledFont> get_scaled_font();
 
   /**
@@ -1259,7 +1256,7 @@ public:
    *
    * @param glyphs vector of glyphs to show
    * @param num_glyphs number of glyphs to show
-   **/
+   */
   void show_glyphs(const std::vector<Glyph>& glyphs);
 
   /**
@@ -1288,14 +1285,14 @@ public:
    * @param cluster_flags: cluster mapping flags
    *
    * @since 1.8
-   **/
+   */
   void show_text_glyphs(const std::string& utf8,
                         const std::vector<Glyph>& glyphs,
                         const std::vector<TextCluster>& clusters,
                         TextClusterFlags cluster_flags);
   /// @{
   /** Gets the current font face
-   **/
+   */
   RefPtr<FontFace> get_font_face();
   RefPtr<const FontFace> get_font_face() const;
   /// @}
@@ -1471,7 +1468,7 @@ public:
    * @param offset return value for the current dash offset.
    *
    * @since 1.4
-   **/
+   */
   void get_dash(std::vector<double>& dashes, double& offset) const;
 
 
@@ -1496,7 +1493,7 @@ public:
   RefPtr<const Surface> get_target() const;
   /// @}
 
-  //TODO: Copy or reference-count a Path somethow instead of asking the caller to delete it?
+#ifndef CAIROMM_DISABLE_DEPRECATED
   /** Creates a copy of the current path and returns it to the user.
    *
    * @todo See cairo_path_data_t for hints on how to iterate over the returned
@@ -1504,8 +1501,18 @@ public:
    *
    * @note The caller owns the Path object returned from this function.  The
    * Path object must be freed when you are finished with it.
+   *
+   * @deprecated 1.20: Use copy_path2() instead.
    */
   Path* copy_path() const;
+#endif //CAIROMM_DISABLE_DEPRECATED
+
+  /** Creates a copy of the current path and returns it to the user.
+   *
+   * @throws std::bad_alloc, Cairo::logic_error, std::ios_base::failure
+   * @newin{1,20}
+   */
+  RefPtr<Path> copy_path2() const;
 
   /**
    * Computes a bounding box in user-space coordinates covering the points on
@@ -1518,9 +1525,9 @@ public:
    * operations.
    *
    * The result of path_extents() is defined as equivalent to the limit of
-   * stroke_extents() with LineCap::ROUND as the line width approaches 0.0, (but
-   * never reaching the empty-rectangle returned by stroke_extents() for a line
-   * width of 0.0).
+   * stroke_extents() with Cairo::Context::LineCap::ROUND as the line width
+   * approaches 0.0, (but never reaching the empty-rectangle returned by
+   * stroke_extents() for a line width of 0.0).
    *
    * Specifically, this means that zero-area sub-paths such as
    * move_to();line_to() segments, (even degenerate cases where the coordinates
@@ -1537,6 +1544,7 @@ public:
    */
   void get_path_extents(double& x1, double& y1, double& x2, double& y2) const;
 
+#ifndef CAIROMM_DISABLE_DEPRECATED
   /** Gets a flattened copy of the current path and returns it to the user
    *
    * @todo See cairo_path_data_t for hints on how to iterate over the returned
@@ -1550,14 +1558,30 @@ public:
    *
    * @note The caller owns the Path object returned from this function.  The
    * Path object must be freed when you are finished with it.
+   *
+   * @deprecated 1.20: Use copy_path_flat2() instead.
    */
   Path* copy_path_flat() const;
+#endif //CAIROMM_DISABLE_DEPRECATED
+
+  /** Gets a flattened copy of the current path and returns it to the user.
+   *
+   * This function is like copy_path2() except that any curves in the path will
+   * be approximated with piecewise-linear approximations, (accurate to within
+   * the current tolerance value). That is, the result is guaranteed to not have
+   * any elements of type Path::ElementType::CURVE_TO which will instead be
+   * replaced by a series of Path::ElementType::LINE_TO elements.
+   *
+   * @throws std::bad_alloc, Cairo::logic_error, std::ios_base::failure
+   * @newin{1,20}
+   */
+  RefPtr<Path> copy_path_flat2() const;
 
   /** Append the path onto the current path. The path may be either the return
    * value from one of copy_path() or copy_path_flat() or it may be constructed
    * manually.
    *
-   * @param path	path to be appended
+   * @param path Path to be appended
    */
   void append_path(const Path& path);
 
@@ -1632,7 +1656,7 @@ public:
    * operations performed to the group.
    *
    * @since 1.2
-   **/
+   */
   RefPtr<Pattern> pop_group();
 
   /**
@@ -1655,7 +1679,7 @@ public:
    * not be visible outside the group.
    *
    * @since 1.2
-   **/
+   */
   void pop_group_to_source();
 
   /**
@@ -1669,7 +1693,7 @@ public:
    * @exception
    *
    * @since 1.2
-   **/
+   */
   RefPtr<Surface> get_group_target();
 
   /** Same as the non-const version but returns a reference to a const Surface

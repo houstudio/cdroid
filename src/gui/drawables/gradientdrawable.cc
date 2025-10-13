@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <drawables/gradientdrawable.h>
 #include <image-decoders/imagedecoder.h>
+#include <cairomm/mesh_pattern.h>
 #include <cfloat>
 #include <color.h>
 #include <cdlog.h>
