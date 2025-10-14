@@ -88,6 +88,7 @@ protected:
     int computeVerticalScrollOffset()override;
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
+    void initDifferentialFlingHelperIfNotExists();
     void initHapticScrollFeedbackProviderIfNotExists();
     void recycleVelocityTracker();
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;

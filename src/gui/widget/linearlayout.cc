@@ -468,6 +468,10 @@ bool LinearLayout::allViewsAreGoneAfter(int childIndex) {
 }
 
 bool LinearLayout::hasDividerBeforeChildAt(int childIndex){
+    if (mShowDividers == SHOW_DIVIDER_NONE) {
+        // Short-circuit to save iteration over child views.
+        return false;
+    }
     if (childIndex == getVirtualChildCount()) {
         // Check whether the end divider should draw.
         return (mShowDividers & SHOW_DIVIDER_END) != 0;
@@ -734,7 +738,7 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
 
     if (useLargestChild && (widthMode == MeasureSpec::AT_MOST || widthMode == MeasureSpec::UNSPECIFIED)) {
         mTotalLength = 0;
-
+        nonSkippedChildCount = 0;
         for (int i = 0; i < count; ++i) {
             View* child = getVirtualChildAt(i);
             if (child == nullptr) {
@@ -747,6 +751,10 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 continue;
             }
 
+            nonSkippedChildCount++;
+            if (hasDividerBeforeChildAt(i)) {
+                mTotalLength += mDividerWidth;
+            }
             LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
             if (isExactly) {
                 mTotalLength += largestChildWidth + lp->leftMargin + lp->rightMargin +
@@ -756,6 +764,10 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
                 mTotalLength = std::max(totalLength, totalLength + largestChildWidth +
                         lp->leftMargin + lp->rightMargin + getNextLocationOffset(child));
             }
+
+        }
+        if (nonSkippedChildCount > 0 && hasDividerBeforeChildAt(count)) {
+            mTotalLength += mDividerWidth;
         }
     }
 
@@ -784,11 +796,17 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
         maxHeight = -1;
 
         mTotalLength = 0;
+        nonSkippedChildCount = 0;
 
         for (int i = 0; i < count; ++i) {
             View* child = getVirtualChildAt(i);
             if ((child == nullptr) || (child->getVisibility() == View::GONE)) {
                 continue;
+            }
+
+            nonSkippedChildCount++;
+            if (hasDividerBeforeChildAt(i)) {
+                mTotalLength += mDividerWidth;
             }
 
             LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
@@ -858,6 +876,9 @@ void LinearLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec
             }
         }
 
+        if (nonSkippedChildCount > 0 && hasDividerBeforeChildAt(count)) {
+            mTotalLength += mDividerWidth;
+        }
         // Add in our padding
         mTotalLength += mPaddingLeft + mPaddingRight;
         // TODO: Should we update widthSize with the new total length?

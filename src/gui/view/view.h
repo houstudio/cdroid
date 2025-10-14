@@ -1191,7 +1191,7 @@ public:
     const std::string&getHint()const;
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
-    void setStateDescription(const std::string& stateDescription);
+    virtual void setStateDescription(const std::string& stateDescription);
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;

@@ -76,6 +76,22 @@ CompoundButton::~CompoundButton(){
     //delete mButtonTintList;tintlist cant be deleted
 }
 
+void CompoundButton::setStateDescription(const std::string&stateDescription) {
+    mCustomStateDescription = stateDescription;
+    if (stateDescription.empty()) {
+        setDefaultStateDescription();
+    } else {
+        View::setStateDescription(stateDescription);
+    }
+}
+
+/** @hide **/
+void CompoundButton::setDefaultStateDescription() {
+    if (mCustomStateDescription.empty()) {
+        View::setStateDescription(getButtonStateDescription());
+    }
+}
+
 std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
     std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {

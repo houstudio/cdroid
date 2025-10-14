@@ -65,6 +65,8 @@ private:
     void applyProgressBackgroundTint();
     void applySecondaryProgressTint();
     void scheduleAccessibilityEventSender();
+    float getPercent(int progress)const;
+    std::string formatStateDescription(int progress)const;
 protected:
     static constexpr int HORIZONTAL= 0;
     static constexpr int VERTICAL  = 1;
@@ -158,7 +160,7 @@ public:
     Drawable* getTintTarget(int layerId, bool shouldFallback);
     void setProgressDrawableTiled(Drawable* d);
     void drawableHotspotChanged(float x, float y)override;
-
+    void setStateDescription(const std::string& stateDescription)override;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;

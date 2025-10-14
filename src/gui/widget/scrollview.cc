@@ -289,6 +289,14 @@ void ScrollView::initVelocityTrackerIfNotExists() {
     }
 }
 
+void ScrollView::initDifferentialFlingHelperIfNotExists() {
+    /*if (mDifferentialMotionFlingHelper == nullptr) {
+        mDifferentialMotionFlingHelper =
+                new DifferentialMotionFlingHelper(
+                        mContext, new DifferentialFlingTarget());
+    }*/
+}
+
 void ScrollView::initHapticScrollFeedbackProviderIfNotExists() {
     if (mHapticScrollFeedbackProvider == nullptr) {
         mHapticScrollFeedbackProvider = new HapticScrollFeedbackProvider(this);
@@ -670,7 +678,7 @@ bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
                     initHapticScrollFeedbackProviderIfNotExists();
                     mHapticScrollFeedbackProvider->onScrollProgress(
                         event.getDeviceId(), event.getSource(), axis, delta);
-                    //initDifferentialFlingHelperIfNotExists();
+                    initDifferentialFlingHelperIfNotExists();
                     //mDifferentialMotionFlingHelper->onMotionEvent(event, axis);
                 }
                 return true;

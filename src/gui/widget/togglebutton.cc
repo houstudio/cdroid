@@ -99,5 +99,12 @@ std::string ToggleButton::getAccessibilityName()const{
     return "ToggleButton";
 }
 
+std::string ToggleButton::getButtonStateDescription() {
+    if (isChecked()) {
+        return mTextOn.empty() ? mContext->getString("cdroid:string/capital_on") : mTextOn;
+    } else {
+        return mTextOff.empty() ? mContext->getString("cdroid:string/capital_off") : mTextOff;
+    }
+}
 }
 

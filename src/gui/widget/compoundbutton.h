@@ -30,6 +30,7 @@ private:
     int  mButtonTintMode;
     Drawable* mButtonDrawable;
     const ColorStateList*mButtonTintList;
+    std::string mCustomStateDescription;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
     void initCompoundButton();
@@ -42,6 +43,7 @@ protected:
     void onDetachedFromWindow()override;
     void onDraw(Canvas&canvas)override;
     virtual void doSetChecked(bool);
+    void setDefaultStateDescription();
 public:
     CompoundButton(const std::string&txt,int width,int height);
     CompoundButton(Context*ctx,const AttributeSet&attrs);
@@ -66,6 +68,8 @@ public:
     bool isChecked()const override;
     void toggle()override;
 #endif
+    void setStateDescription(const std::string&stateDescription)override;
+    virtual std::string getButtonStateDescription();
     void setOnCheckedChangeListener(const OnCheckedChangeListener& listener);
     /*OnCheckedChangeWidgetListener internal use(for radiogroup...)*/
     void setOnCheckedChangeWidgetListener(const OnCheckedChangeListener& listener);

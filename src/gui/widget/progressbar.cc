@@ -521,8 +521,46 @@ void ProgressBar::doRefreshProgress(int id, int progress, bool fromUser,bool cal
     }
 }
 
+float ProgressBar::getPercent(int progress) const{
+    const float maxProgress = getMax();
+    const float minProgress = getMin();
+    const float currentProgress = progress;
+    const float diffProgress = maxProgress - minProgress;
+    if (diffProgress <= 0.0f) {
+        return 0.0f;
+    }
+    const float percent = (currentProgress - minProgress) / diffProgress;
+    return std::max(0.0f, std::min(1.0f, percent));
+}
+
+std::string ProgressBar::formatStateDescription(int progress) const{
+    // Cache the locale-appropriate NumberFormat.  Configuration locale is guaranteed
+    // non-null, so the first time this is called we will always get the appropriate
+    // NumberFormat, then never regenerate it unless the locale changes on the fly.
+    /*final Locale curLocale = mContext.getResources().getConfiguration().getLocales().get(0);
+    if (!curLocale.equals(mCachedLocale)) {
+        mCachedLocale = curLocale;
+        mPercentFormat = NumberFormat.getPercentInstance(curLocale);
+    }
+    return mPercentFormat.format(getPercent(progress));*/
+    return "";
+}
+
+void ProgressBar::setStateDescription(const std::string& stateDescription) {
+    // Assume the previous custom state description is different from default state description.
+    // Otherwise when the argument is null to restore the default state description, we will
+    // send out a state description changed event even though the state description presented to
+    // the user doesn't change. Since mStateDescription in View is private, we can't prevent
+    // this event from sending out.
+    View::setStateDescription(stateDescription);
+}
+
 void ProgressBar::onProgressRefresh(float scale, bool fromUser, int progress) {
-    if (AccessibilityManager::getInstance(mContext).isEnabled()) {
+    if (AccessibilityManager::getInstance(mContext).isEnabled() && !isIndeterminate()) {
+        AccessibilityEvent* event = AccessibilityEvent::obtain();
+        event->setEventType(AccessibilityEvent::TYPE_WINDOW_CONTENT_CHANGED);
+        //event->setContentChangeTypes(AccessibilityEvent::CONTENT_CHANGE_TYPE_STATE_DESCRIPTION);
+        //sendAccessibilityEventUnchecked(event);
         scheduleAccessibilityEventSender();
     }
 }

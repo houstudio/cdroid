@@ -40,6 +40,7 @@ public:
     float getDisabledAlpha() const;
     void setBackground(Drawable* d)override;
     std::string getAccessibilityName()const;
+    std::string getButtonStateDescription()override;
 };
 }
 #endif
