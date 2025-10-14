@@ -18,6 +18,7 @@
 #include <widgetEx/qrcodeview.h>
 #if ENABLE(QRCODE)
 #include <widgetEx/qrcodegen.h>
+#include <float.h>
 #include <cdlog.h>
 
 //REF:https://github.com/zint/zint-gpl-only/blob/master/backend_qt4/qzint.h/cpp
@@ -225,6 +226,10 @@ bool QRCodeView::onTouchEvent(MotionEvent&evt){
 void  QRCodeView::onDraw(Canvas&canvas){
     View::onDraw(canvas);
 
+    if(mZoom<=FLT_EPSILON){
+        LOGW("mZoom=%f",mZoom);
+        return;
+    }
     canvas.save();
 
     canvas.translate(getPaddingLeft(), getPaddingTop());

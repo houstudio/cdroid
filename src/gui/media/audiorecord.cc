@@ -52,6 +52,10 @@ bool AudioRecord::start() {
     RtAudioFormat fmt = (mAudioFormat == PCM_16BIT) ? RTAUDIO_SINT16 : RTAUDIO_SINT8;
 
     try {
+#if RTAUDIO_VERSION_MAJOR>5
+        RtAudio::StreamParameters parameters;
+        RtAudioErrorType err = mRtAudio.openStream(nullptr,&parameters, fmt, mSampleRate, &mBufferFrames, &AudioRecord::rtAudioCallback,this);
+#else
         mRtAudio.openStream(
             nullptr, // output
             &mInputParams,
@@ -61,8 +65,7 @@ bool AudioRecord::start() {
             &AudioRecord::rtAudioCallback,
             this
         );
-//#if RTAUDIO_VERSION_MAJOR>5
-        RtAudioErrorType err=mRtAudio.startStream();
+#endif
         mIsRecording = true;
     } catch (...) {
         mIsRecording = false;

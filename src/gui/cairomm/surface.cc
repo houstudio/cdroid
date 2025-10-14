@@ -1,23 +1,23 @@
 /* Copyright (C) 2005 The cairomm Development Team
  *
  * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Library General Public
+ * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
+ * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Library General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
 #include <cairomm/surface.h>
 #include <cairomm/script.h>
+#include <cairomm/xcb_device.h>
+#include <cairomm/xlib_device.h>
 #include <cairomm/private.h>
 
 namespace Cairo
@@ -281,6 +281,16 @@ RefPtr<Device> Surface::get_device()
       return make_refptr_for_instance<Script>(new Script(d, true /* has reference */));
       break;
 #endif
+#if CAIRO_HAS_XCB_SURFACE
+    case CAIRO_SURFACE_TYPE_XCB:
+      return make_refptr_for_instance<XcbDevice>(new XcbDevice(d, true /* has reference */));
+      break;
+#endif
+#if CAIRO_HAS_XLIB_SURFACE
+  case CAIRO_SURFACE_TYPE_XLIB:
+      return make_refptr_for_instance<XlibDevice>(new XlibDevice(d, true /* has reference */));
+      break;
+#endif
     default:
       return make_refptr_for_instance<Device>(new Device(d, true /* has reference */));
   }
@@ -310,6 +320,40 @@ RefPtr<Surface> Surface::create(const RefPtr<Surface>& target, double x, double 
   return make_refptr_for_instance<Surface>(new Surface(cobject, true /* has reference */));
 }
 
+RefPtr<ImageSurface> Surface::create_similar_image(Format format, int width, int height)
+{
+  cairo_surface_t* csurf =
+    cairo_surface_create_similar_image(m_cobject, static_cast<cairo_format_t>(format),
+                                       width, height);
+  auto cpp_surf = make_refptr_for_instance<ImageSurface>(new ImageSurface(csurf, true /* has reference */));
+  // If an exception is thrown, cpp_surf's destructor will call ~ImageSurface(),
+  // which will destroy csurf.
+  check_object_status_and_throw_exception(*cpp_surf);
+  return cpp_surf;
+}
+
+bool Surface::supports_mime_type(const std::string& mime_type)
+{
+  return cairo_surface_supports_mime_type(m_cobject, mime_type.c_str());
+}
+
+RefPtr<MappedImageSurface> Surface::map_to_image(const RectangleInt& extents)
+{
+  cairo_surface_t* csurf = cairo_surface_map_to_image(m_cobject, &extents);
+  auto cpp_surf = make_refptr_for_instance<MappedImageSurface>(
+    new MappedImageSurface(csurf, m_cobject, true /* has reference */));
+  check_object_status_and_throw_exception(*cpp_surf);
+  return cpp_surf;
+}
+
+RefPtr<MappedImageSurface> Surface::map_to_image()
+{
+  cairo_surface_t* csurf = cairo_surface_map_to_image(m_cobject, nullptr);
+  auto cpp_surf = make_refptr_for_instance<MappedImageSurface>(
+    new MappedImageSurface(csurf, m_cobject, true /* has reference */));
+  check_object_status_and_throw_exception(*cpp_surf);
+  return cpp_surf;
+}
 
 ImageSurface::ImageSurface(cairo_surface_t* cobject, bool has_reference)
 : Surface(cobject, has_reference)
@@ -396,6 +440,21 @@ int ImageSurface::format_stride_for_width (Format format, int width)
   return cairo_format_stride_for_width(static_cast<cairo_format_t>(format), width);
 }
 
+MappedImageSurface::MappedImageSurface(cairo_surface_t* cobject,
+  cairo_surface_t* ctarget, bool has_reference)
+: ImageSurface(cobject, has_reference), m_ctarget(ctarget)
+{
+  // m_ctarget shall exist as least as long as this MappedImageSurface exists.
+  cairo_surface_reference(m_ctarget);
+}
+
+MappedImageSurface::~MappedImageSurface()
+{
+  cairo_surface_unmap_image(m_ctarget, m_cobject);
+  // ~Surface shall not destroy m_cobject. cairo_surface_unmap_image() did that.
+  m_cobject = nullptr;
+  cairo_surface_destroy(m_ctarget); // unreference
+}
 
 RecordingSurface::RecordingSurface(cairo_surface_t* cobject, bool has_reference)
 : Surface(cobject, has_reference)

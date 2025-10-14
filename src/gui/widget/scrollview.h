@@ -83,6 +83,7 @@ protected:
     int getBottomEdgeEffectColor()const;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onOverScrolled(int scrollX, int scrollY, bool clampedX, bool clampedY)override;
+    void onSizeChanged(int w, int h, int oldw, int oldh)override;
     int computeVerticalScrollRange()override;
     int computeVerticalScrollOffset()override;
     void initOrResetVelocityTracker();
