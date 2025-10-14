@@ -27,8 +27,8 @@
 #include <limits.h>
 #include <unistd.h>
 #include <core/systemclock.h>
-#include <drawables/drawables.h>
-#include <drawables/drawableinflater.h>
+#include <drawable/drawables.h>
+#include <drawable/drawableinflater.h>
 #include <image-decoders/imagedecoder.h>
 
 using namespace Cairo;

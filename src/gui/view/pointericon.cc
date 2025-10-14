@@ -1,6 +1,6 @@
 #include <view/pointericon.h>
 #include <porting/cdlog.h>
-#include <drawables/animationdrawable.h>
+#include <drawable/animationdrawable.h>
 #include <core/xmlpullparser.h>
 #include <stdexcept>
 

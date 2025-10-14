@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/scrollbardrawable.h>
-#include <drawables/colordrawable.h>
+#include <drawable/colordrawable.h>
 #include <viewconfiguration.h>
 
 namespace cdroid{

@@ -19,7 +19,7 @@
 #include <animation/animatorinflater.h>
 #include <animation/animationutils.h>
 #include <core/typedvalue.h>
-#include <drawables/pathparser.h>
+#include <drawable/pathparser.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{

@@ -21,7 +21,7 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 
 namespace cdroid{
 

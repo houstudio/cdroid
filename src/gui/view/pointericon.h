@@ -3,7 +3,7 @@
 #include <cairomm/surface.h>
 #include <core/context.h>
 #include <core/sparsearray.h>
-#include <drawables/bitmapdrawable.h>
+#include <drawable/bitmapdrawable.h>
 
 namespace cdroid {
 using Bitmap = Cairo::RefPtr<Cairo::ImageSurface>;

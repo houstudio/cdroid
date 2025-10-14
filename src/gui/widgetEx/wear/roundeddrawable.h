@@ -17,7 +17,7 @@
 */
 #ifndef __ROUNDED_DRAWABLE_H__
 #define __ROUNDED_DRAWABLE_H__
-#include <drawables/drawablewrapper.h>
+#include <drawable/drawablewrapper.h>
 namespace cdroid{
 class RoundedDrawable:public Drawable {
 private:

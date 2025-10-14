@@ -19,7 +19,7 @@
 #define __ANIMATION_PROPERTY_H__
 #include <string>
 #include <core/variant.h>
-#include <drawables/pathparser.h>
+#include <drawable/pathparser.h>
 namespace cdroid{
 typedef nonstd::variant<int,float,PathParser::PathData>AnimateValue;
 

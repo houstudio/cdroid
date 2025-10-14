@@ -2,9 +2,10 @@
 include(core/core.cmake)
 include(view/view.cmake)
 include(animation/animations.cmake)
-include(drawables/drawables.cmake)
+include(drawable/drawables.cmake)
 include(widget/widget.cmake)
 include(menu/menu.cmake)
+#include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
 include(widgetEx/wear/wear.cmake)
 
@@ -16,6 +17,7 @@ list(APPEND CDROID_SOURCES
     ${DRAWABLE_SOURCES}
     ${WIDGET_SOURCES}
     ${MENU_SOURCES}
+    #${FRAGMENT_SOURCES}
     ${WIDGETEX_SOURCES}
     ${WEAR_SOURCES}
 )

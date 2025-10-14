@@ -27,7 +27,7 @@
 #include <core/variant.h>
 #include <unordered_map>
 #include <animation/property.h>
-#include <drawables/pathparser.h>
+#include <drawable/pathparser.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
 namespace cdroid{

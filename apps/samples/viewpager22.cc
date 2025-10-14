@@ -7,7 +7,6 @@
 #include<widget/simplemonthview.h>
 #include<widgetEx/viewpager2.h>
 #include<animation/animations.h>
-#include<drawables/drawables.h>
 #include<cdlog.h>
 
 class MyPagerAdapter:public RecyclerView::Adapter,RecyclerView::AdapterDataObserver{

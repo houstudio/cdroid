@@ -62,7 +62,7 @@
 #include <animation/animation.h>
 #include <animation/statelistanimator.h>
 #include <animation/animatorinflater.h>
-#include <drawables/drawables.h>
+#include <drawable/drawables.h>
 #include <core/rect.h>
 #include <cdlog.h>
 

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include <widgetEx/wear/roundeddrawable.h>
-#include <drawables/gradientdrawable.h>
+#include <drawable/gradientdrawable.h>
 namespace cdroid{
 
 RoundedDrawable::RoundedDrawable() {
