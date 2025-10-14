@@ -32,7 +32,7 @@ std::shared_ptr<cdroid::Path> PathParser::createPathFromPathData(const std::stri
     //Path path = new Path();
     //nParseStringForPath(path.mNativePath, pathString, pathString.length());
     hwui::PathParser::ParseResult result;
-    Cairo::RefPtr<cdroid::Path> path;
+    Cairo::RefPtr<cdroid::Path> path =std::make_shared<cdroid::Path>();
     hwui::PathParser::parseAsciiStringForPath(path, &result, pathString.c_str(), pathString.length());
     return path;
 }

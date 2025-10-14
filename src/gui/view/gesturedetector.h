@@ -141,9 +141,10 @@ private:
     int mTouchSlopSquare;
     int mDoubleTapTouchSlopSquare;
     int mDoubleTapSlopSquare;
-    float mAmbiguousGestureMultiplier;
+    int mVelocityTrackerStrategy;
     int mMinimumFlingVelocity;
     int mMaximumFlingVelocity;
+    float mAmbiguousGestureMultiplier;
     class GestureHandler;
     static constexpr int LONGPRESS_TIMEOUT = ViewConfiguration::getLongPressTimeout();
     static constexpr int TAP_TIMEOUT = ViewConfiguration::getTapTimeout();
@@ -169,18 +170,18 @@ private:
     // Whether a classification has been recorded by statsd for the current event stream. Reset on
     // ACTION_DOWN.
     bool mHasRecordedClassification;
+    bool mIsDoubleTapping;
+    bool mIsLongpressEnabled;
     MotionEvent* mCurrentDownEvent;
     MotionEvent* mCurrentMotionEvent;
     MotionEvent* mPreviousUpEvent;
 
-    bool mIsDoubleTapping;
 
     float mLastFocusX;
     float mLastFocusY;
     float mDownFocusX;
     float mDownFocusY;
 
-    bool mIsLongpressEnabled;
     VelocityTracker*mVelocityTracker;
     InputEventConsistencyVerifier* mInputEventConsistencyVerifier =nullptr;
 private:
@@ -193,6 +194,7 @@ private:
 public:
     GestureDetector(Context* context,const OnGestureListener& listener);
     GestureDetector(Context* context,const OnGestureListener& listener,Handler*);
+    GestureDetector(Context* context,const OnGestureListener& listener, Handler* handler,int velocityTrackerStrategy);
     virtual ~GestureDetector();
     void setOnDoubleTapListener(const OnDoubleTapListener& onDoubleTapListener);
     void setContextClickListener(const OnContextClickListener& onContextClickListener);

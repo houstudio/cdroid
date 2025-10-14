@@ -347,18 +347,18 @@ void EdgeEffect::updateSpring() {
     double cosCoeff = mDistance * mHeight;
     double sinCoeff = (1 / mDampedFreq) * (DAMPING_RATIO * NATURAL_FREQUENCY
             * mDistance * mHeight + mVelocity);
-    double distance = pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
-            * (cosCoeff * cos(mDampedFreq * deltaT)
-            + sinCoeff * sin(mDampedFreq * deltaT));
+    double distance = std::pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
+            * (cosCoeff * std::cos(mDampedFreq * deltaT)
+            + sinCoeff * std::sin(mDampedFreq * deltaT));
     double velocity = distance * (-NATURAL_FREQUENCY) * DAMPING_RATIO
-            + pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
-            * (-mDampedFreq * cosCoeff * sin(mDampedFreq * deltaT)
-                + mDampedFreq * sinCoeff * cos(mDampedFreq * deltaT));
+            + std::pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
+            * (-mDampedFreq * cosCoeff * std::sin(mDampedFreq * deltaT)
+                + mDampedFreq * sinCoeff * std::cos(mDampedFreq * deltaT));
     mDistance = (float) distance / mHeight;
     mVelocity = (float) velocity;
     if (mDistance > 1.f) {
         mDistance = 1.f;
-        mVelocity = .0f;
+        mVelocity = 0.0f;
     }
     if (isAtEquilibrium()) {
         mDistance = 0;
@@ -392,10 +392,10 @@ bool EdgeEffect::isAtEquilibrium()const{
 
 float EdgeEffect::dampStretchVector(float normalizedVec)const{
     float sign = normalizedVec > .0f ? 1.f : -1.f;
-    float overscroll = abs(normalizedVec);
+    float overscroll = std::abs(normalizedVec);
     float linearIntensity = LINEAR_STRETCH_INTENSITY * overscroll;
     double scalar = M_E / SCROLL_DIST_AFFECTED_BY_EXP_STRETCH;
-    double expIntensity = EXP_STRETCH_INTENSITY * (1.f - exp(-overscroll * scalar));
+    double expIntensity = EXP_STRETCH_INTENSITY * (1.f - std::exp(-overscroll * scalar));
     return sign * (float) (linearIntensity + expIntensity);
 }
 
