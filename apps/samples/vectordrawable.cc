@@ -1,5 +1,5 @@
-#include <drawables/vectordrawable.h>
-#include <drawables/drawableinflater.h>
+#include <drawable/vectordrawable.h>
+#include <drawable/drawableinflater.h>
 #include <core/path.h>
 #include <cdroid.h>
 

@@ -5,7 +5,7 @@
 #include <widget/absolutelayout.h>
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
-#include <drawables/drawableinflater.h>
+#include <drawable/drawableinflater.h>
 #include <guienvironment.h>
 class LAYOUT:public testing::Test{
 public:
