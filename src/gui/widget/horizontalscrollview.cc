@@ -940,18 +940,18 @@ void HorizontalScrollView::computeScroll(){
             postInvalidateOnAnimation();
         }
         // For variable refresh rate project to track the current velocity of this View
-        /*if (viewVelocityApi()) {
-            setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
-        }*/
+        if (true/*viewVelocityApi()*/) {
+            setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+        }
     }
 }
 
 /**
-     * Used by consumeFlingInHorizontalStretch() and consumeFlinInVerticalStretch() for
-     * consuming deltas from EdgeEffects
-     * @param unconsumed The unconsumed delta that the EdgeEffets may consume
-     * @return The unconsumed delta after the EdgeEffects have had an opportunity to consume.
-     */
+ * Used by consumeFlingInHorizontalStretch() and consumeFlinInVerticalStretch() for
+ * consuming deltas from EdgeEffects
+ * @param unconsumed The unconsumed delta that the EdgeEffets may consume
+ * @return The unconsumed delta after the EdgeEffects have had an opportunity to consume.
+ */
 int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
     if (unconsumed > 0 && mEdgeGlowLeft && mEdgeGlowLeft->getDistance() != 0.f) {
         const int size = getWidth();
@@ -1206,9 +1206,9 @@ void HorizontalScrollView::fling(int velocityX){
             mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);
 
             // For variable refresh rate project to track the current velocity of this View
-            /*if (viewVelocityApi()) {
-                setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
-            }*/
+            if (true/*viewVelocityApi()*/) {
+                setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+            }
             const bool movingRight = velocityX > 0;
 
             View* currentFocused = findFocus();
@@ -1227,10 +1227,10 @@ bool HorizontalScrollView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
     if (velocity > 0) {
         return true;
     }
-    float distance = edgeEffect->getDistance() * getWidth();
+    const float distance = edgeEffect->getDistance() * getWidth();
 
     // This is flinging without the spring, so let's see if it will fling past the overscroll
-    float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
+    const float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
 
     return flingDistance < distance;
 }

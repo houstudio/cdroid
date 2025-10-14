@@ -4472,9 +4472,9 @@ void AbsListView::FlingRunnable::run() {
         const int y = mScroller->getCurrY();
 
         // For variable refresh rate project to track the current velocity of this View
-        /*if (viewVelocityApi()) {
-            setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
-        }*/
+        if (true/*viewVelocityApi()*/) {
+            mLV->setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+        }
         // Flip sign to convert finger direction to list items direction
         // (e.g. finger moving down means list is moving towards the top)
         int delta = mLV->consumeFlingInStretch(mLastFlingY - y);
@@ -4557,9 +4557,9 @@ void AbsListView::FlingRunnable::run() {
                 postOnAnimation();
             }
             // For variable refresh rate project to track the current velocity of this View
-            /*if (viewVelocityApi()) {
-                setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
-            }*/
+            if (true/*viewVelocityApi()*/) {
+                mLV->setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+            }
         } else {
             endFling();
         }

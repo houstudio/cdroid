@@ -515,6 +515,7 @@ private:
     int mOldHeightMeasureSpec;
     int mVerticalScrollbarPosition;
     float mLongClickX ,mLongClickY;
+    float mFrameContentVelocity;
     int mNextFocusLeftId;
     int mNextFocusRightId;
     int mNextFocusUpId;
@@ -1406,6 +1407,8 @@ public:
     virtual bool hasUnhandledKeyListener()const;
     void addOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener);
     void removeOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& listener);
+    void setFrameContentVelocity(float pixelsPerSecond);
+    float getFrameContentVelocity()const;
 
     virtual void createContextMenu(ContextMenu& menu);
     virtual int  commitText(const std::wstring&);
@@ -1544,8 +1547,6 @@ public:
     };
     Display*mDisplay;
     ViewGroup*mRootView;
-    bool mHardwareAccelerated;
-    bool mOverscanRequested;
     float mApplicationScale;
     int mWindowLeft;
     int mWindowTop;
@@ -1555,6 +1556,8 @@ public:
     int mDisabledSystemUiVisibility;
     int mGlobalSystemUiVisibility;
     int mDisplayState;
+    int mWindowVisibility;
+    int64_t mDrawingTime;
     Drawable*mAccessibilityFocusDrawable;
     Rect mOverscanInsets;
     Rect mContentInsets;
@@ -1562,6 +1565,8 @@ public:
     Rect mStableInsets;
     Rect mOutsets;
     KeyEvent::DispatcherState mKeyDispatchState;
+    bool mHardwareAccelerated;
+    bool mOverscanRequested;
     bool mAlwaysConsumeNavBar;
     bool mAlwaysConsumeSystemBars;
     bool mHasWindowFocus;
@@ -1571,8 +1576,6 @@ public:
     bool mViewScrollChanged;
     bool mHandlingPointerEvent;
     bool mIgnoreDirtyState;
-    int mWindowVisibility;
-    int64_t mDrawingTime;
     bool mInTouchMode;
     bool mUnbufferedDispatchRequested;
     bool mRecomputeGlobalAttributes;
@@ -1580,6 +1583,7 @@ public:
     bool mHasSystemUiListeners;
     bool mDebugLayout;
     bool mNextFocusLooped;
+    bool mViewVelocityApi;
     UIEventSource*mEventSource;
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;

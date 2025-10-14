@@ -399,6 +399,7 @@ void View::initView(){
     mLayerType= LAYER_TYPE_NONE;
     mTransientStateCount = 0;
     mWindowAttachCount = 0;
+    mFrameContentVelocity = -1;
     mClipBounds.setEmpty();
 
     mLeftPaddingDefined = mRightPaddingDefined =false;
@@ -7677,6 +7678,39 @@ void View::removeOnUnhandledKeyEventListener(const OnUnhandledKeyEventListener& 
     }
 }
 
+/**
+ * Set the current velocity of the View, we only track positive value.
+ * We will use the velocity information to adjust the frame rate when applicable.
+ * For example, we could potentially lower the frame rate when
+ * the velocity of a fling gesture becomes slower.
+ * Note that this is only valid till the next drawn frame.
+ *
+ * @param pixelsPerSecond how many pixels move per second.
+ */
+void View::setFrameContentVelocity(float pixelsPerSecond) {
+    if (mAttachInfo != nullptr && mAttachInfo->mViewVelocityApi) {
+        mFrameContentVelocity = std::abs(pixelsPerSecond);
+
+        /*if (sToolkitMetricsForFrameRateDecisionFlagValue) {
+            Trace.setCounter("Set frame velocity", (long) mFrameContentVelocity);
+        }*/
+    }
+}
+
+/**
+ * Get the current velocity of the View.
+ * The value should always be greater than or equal to 0.
+ * Note that this is only valid till the next drawn frame.
+ *
+ * @return 0 by default, or value passed to {@link #setFrameContentVelocity(float)}.
+ */
+float View::getFrameContentVelocity() const{
+    if (mAttachInfo != nullptr && mAttachInfo->mViewVelocityApi) {
+        return std::max(mFrameContentVelocity, 0.f);
+    }
+    return 0;
+}
+
 /** This method is the last chance for the focused view and its ancestors to
   * respond to an arrow key. This is called when the focused view did not
   * consume the key internally, nor could the view system find a new view in
@@ -9647,6 +9681,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mAlwaysConsumeSystemBars= false;
     mRecomputeGlobalAttributes=false;
     mDebugLayout  = false;
+    mViewVelocityApi=true;
     mDrawingTime  = 0;
     mInTouchMode  = true;
     mKeepScreenOn = true;
