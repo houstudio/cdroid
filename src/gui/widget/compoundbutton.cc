@@ -76,6 +76,14 @@ CompoundButton::~CompoundButton(){
     //delete mButtonTintList;tintlist cant be deleted
 }
 
+std::string CompoundButton::getButtonStateDescription() {
+    if (isChecked()) {
+        return mContext->getString("cdroid:string/checked");
+    } else {
+        return mContext->getString("cdroid:string/not_checked");
+    }
+}
+
 void CompoundButton::setStateDescription(const std::string&stateDescription) {
     mCustomStateDescription = stateDescription;
     if (stateDescription.empty()) {
