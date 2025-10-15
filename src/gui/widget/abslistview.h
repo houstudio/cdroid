@@ -142,6 +142,10 @@ private:
     bool mFiltered;
     bool mIsChildViewEnabled;
     bool mForceTranscriptScroll;
+    bool mHasPerformedLongPress;
+    bool mScrollProfilingStarted = false;
+    bool mFlingProfilingStarted =false;
+    bool mReportChildrenToContentCaptureOnNextUpdate = true;
     int mScrollOffset[2] ;
     int mScrollConsumed[2];
     ContextMenuInfo* mContextMenuInfo;
@@ -161,9 +165,6 @@ private:
     Runnable mTouchModeReset;
     Runnable mClearScrollingCache;
     Runnable mPostScrollRunner;
-    bool mHasPerformedLongPress;
-    bool mScrollProfilingStarted = false;
-    bool mFlingProfilingStarted =false;
     PopupWindow*mPopup;
     class EditText* mTextFilter;
     OnScrollListener mOnScrollListener;
@@ -363,10 +364,8 @@ public:
     void setScrollingCacheEnabled(bool enabled);
 
     std::string getAccessibilityClassName()const override;
-    void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
-    View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
     virtual void onInitializeAccessibilityNodeInfoForItem(View* view, int position, AccessibilityNodeInfo& info);
 
     void reportScrollStateChange(int newState);

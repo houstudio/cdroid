@@ -20,7 +20,7 @@
 #define __PATH_MEASURE_H__
 #include <core/path.h>
 #include <cairomm/context.h>
-#include <drawables/hwvectordrawable.h>
+#include <drawable/hwvectordrawable.h>
 namespace cdroid {
 class PathMeasure{
 public:

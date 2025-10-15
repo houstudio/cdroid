@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/assets.h>
-#include <drawables/drawables.h>
+#include <drawable/drawables.h>
+#include <drawable/drawableinflater.h>
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
-#include <drawables/drawableinflater.h>
 using namespace Cairo;
 class MUTATE:public testing::Test{
 public:

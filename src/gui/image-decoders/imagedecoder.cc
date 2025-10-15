@@ -19,10 +19,10 @@
 #include <cstring>
 #include <fstream>
 #include <gui_features.h>
-#include <drawables/drawable.h>
-#include <drawables/bitmapdrawable.h>
-#include <drawables/ninepatchdrawable.h>
-#include <drawables/animatedimagedrawable.h>
+#include <drawable/drawable.h>
+#include <drawable/bitmapdrawable.h>
+#include <drawable/ninepatchdrawable.h>
+#include <drawable/animatedimagedrawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <utils/textutils.h>
 #include <core/context.h>

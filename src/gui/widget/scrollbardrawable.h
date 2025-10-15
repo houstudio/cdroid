@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __SCROLLBAR_DRAWABLE_H__
 #define __SCROLLBAR_DRAWABLE_H__
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 namespace cdroid{
 
 class ScrollBarDrawable:public Drawable,Drawable::Callback{

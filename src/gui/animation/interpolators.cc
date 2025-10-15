@@ -19,7 +19,7 @@
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
 #include <core/pathmeasure.h>
-#include <drawables/pathparser.h>
+#include <drawable/pathparser.h>
 
 namespace cdroid{
 BaseInterpolator::BaseInterpolator(){

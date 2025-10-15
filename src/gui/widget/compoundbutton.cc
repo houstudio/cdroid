@@ -76,6 +76,30 @@ CompoundButton::~CompoundButton(){
     //delete mButtonTintList;tintlist cant be deleted
 }
 
+std::string CompoundButton::getButtonStateDescription() {
+    if (isChecked()) {
+        return mContext->getString("cdroid:string/checked");
+    } else {
+        return mContext->getString("cdroid:string/not_checked");
+    }
+}
+
+void CompoundButton::setStateDescription(const std::string&stateDescription) {
+    mCustomStateDescription = stateDescription;
+    if (stateDescription.empty()) {
+        setDefaultStateDescription();
+    } else {
+        View::setStateDescription(stateDescription);
+    }
+}
+
+/** @hide **/
+void CompoundButton::setDefaultStateDescription() {
+    if (mCustomStateDescription.empty()) {
+        View::setStateDescription(getButtonStateDescription());
+    }
+}
+
 std::vector<int>CompoundButton::onCreateDrawableState(int extraSpace){
     std::vector<int>drawableState = Button::onCreateDrawableState(extraSpace);
     if (isChecked()) {

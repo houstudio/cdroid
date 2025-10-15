@@ -20,7 +20,7 @@
 #include <vector>
 #include <istream>
 #include <core/context.h>
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 #include <core/xmlpullparser.h>
 namespace cdroid{
 

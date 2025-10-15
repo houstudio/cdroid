@@ -18,7 +18,7 @@
 #include <core/context.h>
 #include <cairomm/context.h>
 #include <cairomm/surface.h>
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 #include <image-decoders/imagedecoder.h>
 #include <core/systemclock.h>
 #include <cdlog.h>

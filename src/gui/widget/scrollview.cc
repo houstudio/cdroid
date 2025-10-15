@@ -289,6 +289,14 @@ void ScrollView::initVelocityTrackerIfNotExists() {
     }
 }
 
+void ScrollView::initDifferentialFlingHelperIfNotExists() {
+    /*if (mDifferentialMotionFlingHelper == nullptr) {
+        mDifferentialMotionFlingHelper =
+                new DifferentialMotionFlingHelper(
+                        mContext, new DifferentialFlingTarget());
+    }*/
+}
+
 void ScrollView::initHapticScrollFeedbackProviderIfNotExists() {
     if (mHapticScrollFeedbackProvider == nullptr) {
         mHapticScrollFeedbackProvider = new HapticScrollFeedbackProvider(this);
@@ -670,7 +678,7 @@ bool ScrollView::onGenericMotionEvent(MotionEvent& event) {
                     initHapticScrollFeedbackProviderIfNotExists();
                     mHapticScrollFeedbackProvider->onScrollProgress(
                         event.getDeviceId(), event.getSource(), axis, delta);
-                    //initDifferentialFlingHelperIfNotExists();
+                    initDifferentialFlingHelperIfNotExists();
                     //mDifferentialMotionFlingHelper->onMotionEvent(event, axis);
                 }
                 return true;
@@ -1074,9 +1082,9 @@ void ScrollView::computeScroll() {
             postInvalidateOnAnimation();
         }
         // For variable refresh rate project to track the current velocity of this View
-        /*if (viewVelocityApi()) {
-            setFrameContentVelocity(Math.abs(mScroller.getCurrVelocity()));
-        }*/
+        if (true/*viewVelocityApi()*/) {
+            setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
+        }
     }/* else {
         if (mFlingStrictSpan != nullptr) {
             mFlingStrictSpan->finish();
@@ -1352,9 +1360,9 @@ void ScrollView::fling(int velocityY) {
                          std::max(0, bottom - height), 0, height/2);
 
         // For variable refresh rate project to track the current velocity of this View
-        /*if (viewVelocityApi()) {
+        if (true/*viewVelocityApi()*/) {
             setFrameContentVelocity(std::abs(mScroller->getCurrVelocity()));
-        }*/
+        }
         /*if (mFlingStrictSpan == null) {
             mFlingStrictSpan = StrictMode.enterCriticalSpan("ScrollView-fling");
         }*/

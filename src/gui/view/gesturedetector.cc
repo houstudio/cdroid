@@ -68,13 +68,18 @@ GestureDetector::GestureDetector(Context* context,const OnGestureListener& liste
     :GestureDetector(context,listener,nullptr){
 }
 
-GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener,Handler*handler) {
+GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener,Handler*handler)
+    :GestureDetector(context,listener,handler,VelocityTracker::VELOCITY_TRACKER_STRATEGY_DEFAULT){
+}
+
+GestureDetector::GestureDetector(Context* context,const OnGestureListener& listener, Handler* handler,int velocityTrackerStrategy){
     if (handler != nullptr) {
         mHandler = new GestureHandler(this,handler);
     } else {
         mHandler = new GestureHandler(this);
     }
     mListener = listener;
+    mVelocityTrackerStrategy = velocityTrackerStrategy;
     init(context);
 }
 
@@ -412,8 +417,10 @@ void GestureDetector::cancel() {
     mHandler->removeMessages(SHOW_PRESS);
     mHandler->removeMessages(LONG_PRESS);
     mHandler->removeMessages(TAP);
-    mVelocityTracker->recycle();
-    mVelocityTracker = nullptr;
+    if(mVelocityTracker!=nullptr){
+        mVelocityTracker->recycle();
+        mVelocityTracker = nullptr;
+    }
     mIsDoubleTapping = false;
     mStillDown = false;
     mAlwaysInTapRegion = false;

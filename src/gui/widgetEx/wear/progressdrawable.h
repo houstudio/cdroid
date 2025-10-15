@@ -17,7 +17,7 @@
 */
 #ifndef __PROGRESS_DRAWABLE_H__
 #define __PROGRESS_DRAWABLE_H__
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 namespace cdroid{
 class ObjectAnimator;
 class ProgressDrawable:public Drawable {

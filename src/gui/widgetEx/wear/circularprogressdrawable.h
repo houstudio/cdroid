@@ -17,7 +17,7 @@
 */
 #ifndef __CIRCULAR_PROGRESS_DRAWABLE_H__
 #define __CIRCULAR_PROGRESS_DRAWABLE_H__
-#include <drawables/drawable.h>
+#include <drawable/drawable.h>
 #include <animation/animator.h>
 namespace cdroid{
 class CircularProgressDrawable:public Drawable ,public Animatable {

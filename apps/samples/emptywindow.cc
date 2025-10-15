@@ -9,10 +9,10 @@ private:
     ScaleGestureDetector*mScaler;
     std::shared_ptr<cdroid::Path>mPath;
     double mPathStart=0.0;
-    double mPathStop=1.0;
+    double mPathStop=0.0;
+    Runnable mRunnable;
 public:
     MyWindow(int x,int y,int w,int h):Window(x,y,w,h){
-        mPath =std::make_shared<cdroid::Path>();
         GestureDetector::OnGestureListener gl;
         gl.onDown=std::bind(&MyWindow::onDown,this,std::placeholders::_1);
         gl.onSingleTapUp=std::bind(&MyWindow::onSingleTapUp,this,std::placeholders::_1);
@@ -35,12 +35,18 @@ public:
         });
         mDetector->setOnDoubleTapListener(dl);
 
-        mPath->arc(400,200,100,0,M_PI*2.0);
-        //mPath->line_to(0,0);  mPath->line_to(200,300);
-        mPath->curve_to(234,47,789,121,200,600);
     }
     void onDraw(Canvas&canvas)override{
-        LOGD("%p onDraw",this);
+        if(mPath==nullptr){
+            canvas.set_font_size(128);
+            canvas.set_source_rgb(1,0,0);
+            canvas.move_to(80,100);
+            canvas.text_path("@#$CDROID您好!");
+            canvas.fill_preserve();
+            LOGD("textpath");
+            mPath =std::make_shared<cdroid::Path>(&canvas);
+            return;
+        }
         Rect rc={0,0,getWidth(),getHeight()};
         canvas.set_source_rgb(1,0,0);
 
@@ -69,7 +75,15 @@ public:
        LOGD("onLongPress");
     } 
 	bool onDown(MotionEvent& e) {
-        mPathStop-=0.10;
+        if(mRunnable==nullptr){
+           mRunnable =[this](){
+                mPathStop+=0.005;
+                invalidate();
+                postDelayed(mRunnable,20);
+           };
+           postDelayed(mRunnable,100);
+        }
+
 		LOGD("onDown %f",mPathStop);
         invalidate();
 		return false;

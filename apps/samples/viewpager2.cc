@@ -7,7 +7,6 @@
 #include<widget/simplemonthview.h>
 #include<widget/viewpager.h>
 #include<animation/animations.h>
-#include<drawables/drawables.h>
 #include<cdlog.h>
 class MyAdapter:public ArrayAdapter<std::string>{
 public:

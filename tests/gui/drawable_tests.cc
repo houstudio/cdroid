@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
-#include <drawables/drawables.h>
+#include <drawable/drawables.h>
 #include <fstream>
 #include <sstream>
 #include <core/systemclock.h>
 #include <core/xmlpullparser.h>
-#include <drawables/drawableinflater.h>
+#include <drawable/drawableinflater.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
 #if defined(_WIN32)||defined(_WIN64)
