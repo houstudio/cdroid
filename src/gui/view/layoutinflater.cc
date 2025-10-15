@@ -25,12 +25,21 @@
 
 namespace cdroid {
 
+static constexpr const char* TAG_MERGE = "merge";
+static constexpr const char* TAG_INCLUDE = "include";
+static constexpr const char* TAG_1995 = "blink";
+static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
+static constexpr const char* TAG_TAG = "tag";
+static constexpr const char* ATTR_LAYOUT = "layout";
+
+static std::unordered_map<std::string,std::string> mDefaultStyle;
+static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
+static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>> mInflaters;
+
 LayoutInflater::LayoutInflater(Context*context) {
     mContext = context;
     mFactorySet = false;
 }
-
-static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>>mInflaters;
 
 LayoutInflater*LayoutInflater::from(Context*context) {
     auto it = mInflaters.find(context);
@@ -42,33 +51,23 @@ LayoutInflater*LayoutInflater::from(Context*context) {
     return it->second.get();
 }
 
-LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap() {
-    static LayoutInflater::INFLATERMAPPER mFlateMapper;
-    return mFlateMapper;
-}
-
-LayoutInflater::STYLEMAPPER& LayoutInflater::getStyleMap() {
-    static LayoutInflater::STYLEMAPPER mDefaultStyle;
-    return mDefaultStyle;
-}
-
 const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
-    LayoutInflater::STYLEMAPPER& maps = getStyleMap();
+    auto& maps = mDefaultStyle;
     auto it = maps.find(name);
     return it==maps.end()?std::string():it->second;
 }
 
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
     const size_t  pt = name.rfind('.');
-    LayoutInflater::INFLATERMAPPER &maps =getInflaterMap();
+    auto &maps = mFlateMapper;
     const std::string sname = (pt!=std::string::npos)?name.substr(pt+1):name;
     auto it = maps.find(sname);
     return (it!=maps.end())?it->second:nullptr;
 }
 
 bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
-    LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
-    LayoutInflater::STYLEMAPPER& smap = getStyleMap();
+    auto& maps = mFlateMapper;
+    auto& smap = mDefaultStyle;
     auto flaterIter = maps.find(name);
     auto styleIter = smap.find(name);
 
@@ -77,7 +76,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
         LOGW("%s is registed to %p",name.c_str(),static_cast<void*>(&flaterIter->second));
         return false;
     }
-    maps.insert(INFLATERMAPPER::value_type(name,inflater));
+    maps.insert({name,inflater});
     smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
     return true;
 }

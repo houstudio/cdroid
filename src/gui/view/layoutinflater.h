@@ -32,12 +32,6 @@ public:
     typedef std::function<View*(const std::string&,Context*,const AttributeSet&)>Factory;
     typedef std::function<View*(View*,const std::string&,Context*,const AttributeSet&)>Factory2;
 private:
-    static constexpr const char* TAG_MERGE = "merge";
-    static constexpr const char* TAG_INCLUDE = "include";
-    static constexpr const char* TAG_1995 = "blink";
-    static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
-    static constexpr const char* TAG_TAG = "tag";
-    static constexpr const char* ATTR_LAYOUT = "layout";
 
     class FactoryMerger {
     private:
@@ -56,12 +50,7 @@ private:
     std::shared_ptr<FactoryMerger> mFactoryMerger;
     bool mFactorySet;
     LayoutInflater(Context*ctx);
-    typedef std::unordered_map<std::string,ViewInflater>INFLATERMAPPER;
-    typedef std::unordered_map<std::string,std::string>STYLEMAPPER;
 private:
-    static INFLATERMAPPER& getInflaterMap();
-    static STYLEMAPPER& getStyleMap();
-
     static void consumeChildElements(XmlPullParser& parser);
     void advanceToRootNode(XmlPullParser&);
     void failNotAllowed(const std::string& name, const std::string& prefix, Context* context,const AttributeSet& attrs);

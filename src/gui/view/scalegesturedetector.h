@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __SCALE_GESTURE_DETECTOR_H__
 #define __SCALE_GESTURE_DETECTOR_H__
 #include <view/gesturedetector.h>
@@ -43,6 +60,7 @@ private:
 
     bool mQuickScaleEnabled;
     bool mStylusScaleEnabled;
+    bool mInProgress;
 
     float mCurrSpan;
     float mPrevSpan;
@@ -53,7 +71,6 @@ private:
     float mPrevSpanY;
     int64_t mCurrTime;
     int64_t mPrevTime;
-    bool mInProgress;
     int mSpanSlop;
     int mMinSpan;
 
@@ -66,7 +83,6 @@ private:
     static constexpr int ANCHORED_SCALE_MODE_NONE = 0;
     static constexpr int ANCHORED_SCALE_MODE_DOUBLE_TAP = 1;
     static constexpr int ANCHORED_SCALE_MODE_STYLUS = 2;
-
 
     /**
      * Consistency verifier for debugging purposes.
