@@ -29,35 +29,35 @@ class LayoutInflater{
 public:
     typedef std::function<View*(Context*ctx, const AttributeSet&attrs)>ViewInflater;
     typedef std::function<bool(const std::string&)>Filter;
-    typedef std::function<View*(const std::string&,Context*,AttributeSet&)>Factory;
-    typedef std::function<View*(View*,const std::string&,Context*,AttributeSet&)>Factory2;
+    typedef std::function<View*(const std::string&,Context*,const AttributeSet&)>Factory;
+    typedef std::function<View*(View*,const std::string&,Context*,const AttributeSet&)>Factory2;
 private:
-    static constexpr const char* TAG_MERGE = "merge";
-    static constexpr const char* TAG_INCLUDE = "include";
-    static constexpr const char* TAG_1995 = "blink";
-    static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
-    static constexpr const char* TAG_TAG = "tag";
-    static constexpr const char* ATTR_LAYOUT = "layout";
 
+    class FactoryMerger {
+    private:
+        Factory mF1, mF2;
+        Factory2 mF12,mF22;
+    public:
+        FactoryMerger(const Factory& f1, const Factory2& f12, const Factory& f2,const Factory2& f22);
+        View* onCreateView(View* parent, const std::string& name, Context* context, const AttributeSet& attrs);
+    };
     Context*mContext;
     Factory mFactory;
     Factory2 mFactory2;
     Factory2 mPrivateFactory;
     Filter mFilter;
+    std::unordered_map<std::string,bool>mFilterMap;
+    std::shared_ptr<FactoryMerger> mFactoryMerger;
+    bool mFactorySet;
     LayoutInflater(Context*ctx);
-    static LayoutInflater*mInst;
-    typedef std::unordered_map<std::string,ViewInflater>INFLATERMAPPER;
-    typedef std::unordered_map<std::string,std::string>STYLEMAPPER;
 private:
-    static INFLATERMAPPER& getInflaterMap();
-    static STYLEMAPPER& getStyleMap();
-
     static void consumeChildElements(XmlPullParser& parser);
+    void advanceToRootNode(XmlPullParser&);
+    void failNotAllowed(const std::string& name, const std::string& prefix, Context* context,const AttributeSet& attrs);
     void parseViewTag(XmlPullParser&parser, View*parent,const AttributeSet& attrs);
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
 protected:
     friend MenuInflater;
-    View* createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs);
     View* createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr);
     void rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate);
     void rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate);
@@ -69,11 +69,12 @@ public:
     Context*getContext()const;
     Factory getFactory()const;
     Factory2 getFactory2()const;
-    void setFactory(Factory factory);
-    void setFactory2(Factory2 factory);
-    void setPrivateFactory(Factory2 factory);
+    void setFactory(const Factory& factory);
+    void setFactory2(const Factory2& factory);
+    void setPrivateFactory(const Factory2& factory);
     Filter getFilter()const;
-    void setFilter(Filter f);
+    void setFilter(const Filter& f);
+
     [[deprecated("This function is deprecated")]]
     View* inflate(const std::string&package,std::istream&stream,ViewGroup*root,bool attachToRoot,AttributeSet*);
     View* inflate(XmlPullParser& parser,ViewGroup* root);
@@ -97,6 +98,13 @@ public:
     View* inflate(XmlPullParser& parser,ViewGroup* root, bool attachToRoot);
     View* inflate(const std::string&resource,ViewGroup* root);
     View* inflate(const std::string&resource,ViewGroup* root, bool attachToRoot);
+
+    View* createView(const std::string& name, const std::string& prefix,AttributeSet& attrs);
+    View* createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs);
+    View* tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attr);
+    View* onCreateView(const std::string& name,AttributeSet& attrs);
+    View* onCreateView(View* parent, const std::string& name,AttributeSet& attrs);
+    View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
 };
 
 template<typename T>

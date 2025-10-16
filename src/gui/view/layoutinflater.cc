@@ -25,49 +25,49 @@
 
 namespace cdroid {
 
+static constexpr const char* TAG_MERGE = "merge";
+static constexpr const char* TAG_INCLUDE = "include";
+static constexpr const char* TAG_1995 = "blink";
+static constexpr const char* TAG_REQUEST_FOCUS = "requestFocus";
+static constexpr const char* TAG_TAG = "tag";
+static constexpr const char* ATTR_LAYOUT = "layout";
+
+static std::unordered_map<std::string,std::string> mDefaultStyle;
+static std::unordered_map<std::string,LayoutInflater::ViewInflater> mFlateMapper;
+static std::unordered_map<Context*,std::shared_ptr<LayoutInflater>> mInflaters;
+
 LayoutInflater::LayoutInflater(Context*context) {
     mContext = context;
+    mFactorySet = false;
 }
 
-LayoutInflater*LayoutInflater::mInst = nullptr;
 LayoutInflater*LayoutInflater::from(Context*context) {
-    if(mInst==nullptr){
-        mInst = new LayoutInflater(context);
-        AtExit::registerCallback([](){
-            LOGD("delete LayoutInflater %p",mInst);
-            delete mInst;
-        });
+    auto it = mInflaters.find(context);
+    if(it==nullptr){
+        LayoutInflater*layoutInfater = new LayoutInflater(context);
+        mInflaters.insert({context,std::shared_ptr<LayoutInflater>(layoutInfater)});
+        return layoutInfater;
     }
-    return mInst;
-}
-
-LayoutInflater::INFLATERMAPPER& LayoutInflater::getInflaterMap() {
-    static LayoutInflater::INFLATERMAPPER mFlateMapper;
-    return mFlateMapper;
-}
-
-LayoutInflater::STYLEMAPPER& LayoutInflater::getStyleMap() {
-    static LayoutInflater::STYLEMAPPER mDefaultStyle;
-    return mDefaultStyle;
+    return it->second.get();
 }
 
 const std::string LayoutInflater::getDefaultStyle(const std::string&name)const {
-    LayoutInflater::STYLEMAPPER& maps = getStyleMap();
+    auto& maps = mDefaultStyle;
     auto it = maps.find(name);
     return it==maps.end()?std::string():it->second;
 }
 
 LayoutInflater::ViewInflater LayoutInflater::getInflater(const std::string&name) {
     const size_t  pt = name.rfind('.');
-    LayoutInflater::INFLATERMAPPER &maps =getInflaterMap();
+    auto &maps = mFlateMapper;
     const std::string sname = (pt!=std::string::npos)?name.substr(pt+1):name;
     auto it = maps.find(sname);
     return (it!=maps.end())?it->second:nullptr;
 }
 
 bool LayoutInflater::registerInflater(const std::string&name,const std::string&defstyle,LayoutInflater::ViewInflater inflater) {
-    LayoutInflater::INFLATERMAPPER& maps = getInflaterMap();
-    LayoutInflater::STYLEMAPPER& smap = getStyleMap();
+    auto& maps = mFlateMapper;
+    auto& smap = mDefaultStyle;
     auto flaterIter = maps.find(name);
     auto styleIter = smap.find(name);
 
@@ -76,7 +76,7 @@ bool LayoutInflater::registerInflater(const std::string&name,const std::string&d
         LOGW("%s is registed to %p",name.c_str(),static_cast<void*>(&flaterIter->second));
         return false;
     }
-    maps.insert(INFLATERMAPPER::value_type(name,inflater));
+    maps.insert({name,inflater});
     smap.insert(std::pair<const std::string,const std::string>(name,defstyle));
     return true;
 }
@@ -93,18 +93,53 @@ LayoutInflater::Factory LayoutInflater::getFactory()const{
 LayoutInflater::Factory2 LayoutInflater::getFactory2()const{
     return mFactory2;
 }
-void LayoutInflater::setFactory(Factory factory){
-    mFactory = factory;
+
+void LayoutInflater::setFactory(const Factory& factory){
+    if(mFactorySet){
+        throw std::runtime_error("A factory has already been set on this LayoutInflater");
+    }
+    if(factory==nullptr){
+        throw std::invalid_argument("Given factory can not be null");
+    }
+    mFactorySet = true;
+    if(mFactory2==nullptr){
+        mFactory = factory;
+    }else{
+        mFactoryMerger = std::make_shared<FactoryMerger>(factory, nullptr, nullptr, mFactory2);
+        mFactory = nullptr;  // reset factory
+        mFactory2 = [this](View* parent, const std::string& name, Context* context, const AttributeSet& attrs) -> View* {
+            return mFactoryMerger->onCreateView(parent, name, context, attrs);
+        };
+    }
 }
 
-void LayoutInflater::setFactory2(Factory2 factory){
-    mFactory2 = factory;
+void LayoutInflater::setFactory2(const Factory2& factory){
+    if(mFactorySet){
+        throw std::runtime_error("A factory has already been set on this LayoutInflater");
+    }
+    if(factory==nullptr){
+        throw std::invalid_argument("Given factory can not be null");
+    }
+    mFactorySet = true;
+    if(mFactory==nullptr){
+        mFactory2 = factory;
+    }else{
+        mFactoryMerger = std::make_shared<FactoryMerger>(nullptr, factory, mFactory, nullptr);
+        mFactory = nullptr;
+        mFactory2 = [this](View* parent, const std::string& name, Context* context, const AttributeSet& attrs) -> View* {
+            return mFactoryMerger->onCreateView(parent, name, context, attrs);
+        };
+    }
 }
 
-void LayoutInflater::setPrivateFactory(Factory2 factory){
+void LayoutInflater::setPrivateFactory(const Factory2& factory){
     if(mFactory==nullptr){
         mPrivateFactory = factory;
     }else{
+        auto merger = std::make_shared<FactoryMerger>(nullptr, factory, nullptr, mPrivateFactory);
+        mPrivateFactory = [merger](View* parent, const std::string& name, Context* context, const AttributeSet& attrs) -> View* {
+            return merger->onCreateView(parent, name, context, attrs);
+        };
     }
 }
 
@@ -112,7 +147,7 @@ LayoutInflater::Filter LayoutInflater::getFilter()const{
     return mFilter;
 }
 
-void LayoutInflater::setFilter(Filter f){
+void LayoutInflater::setFilter(const Filter& f){
     mFilter = f;
 }
 
@@ -120,6 +155,19 @@ View* LayoutInflater::inflate(const std::string&package,std::istream&stream,View
     auto strm = std::make_unique<std::istream>(stream.rdbuf());
     XmlPullParser parser(mContext,std::move(strm));
     return inflate(parser,root,attachToRoot);
+}
+
+void LayoutInflater::advanceToRootNode(XmlPullParser& parser){
+    // Look for the root node.
+    int type;
+    while ((type = parser.next()) != XmlPullParser::START_TAG &&
+        type != XmlPullParser::END_DOCUMENT) {
+        // Empty
+    }
+
+    if (type != XmlPullParser::START_TAG) {
+        throw std::runtime_error(parser.getPositionDescription() + ": No start tag found!");
+    }
 }
 
 View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root){
@@ -130,17 +178,14 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
     int type;
     View*result = root;
     AttributeSet& attrs = parser;
-    while(((type=parser.next())!=XmlPullParser::START_TAG)
-            &&(type!=XmlPullParser::END_DOCUMENT)){
-        //Empty
-    }
+    advanceToRootNode(parser);
 
-    if(type!=XmlPullParser::START_TAG){
-        LOGE("No start tag found");
-        return nullptr;
-    }
     const std::string name = parser.getName();
     if(name.compare(TAG_MERGE)==0){
+        if(root==nullptr||!attachToRoot){
+             throw std::runtime_error("<merge /> can be used only with a valid "
+                            "ViewGroup root and attachToRoot=true");
+        }
         rInflate(parser,root,mContext,attrs,false);
     }else{
         View*temp = createViewFromTag(root,name,mContext,attrs,false);
@@ -174,47 +219,99 @@ View* LayoutInflater::inflate(const std::string&resource,ViewGroup* root, bool a
     return inflate(parser,root,attachToRoot);
 }
 
-View* LayoutInflater::createView(const std::string& name, const std::string& prefix,const AttributeSet& attrs){
-    return nullptr;
+View* LayoutInflater::createView(const std::string& name, const std::string& prefix,AttributeSet& attrs){
+    return createView(mContext,name,prefix,attrs);
+}
+
+View* LayoutInflater::createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs){
+    LayoutInflater::ViewInflater inflater;
+
+    if(name.compare("view")==0){
+        const std::string clsName =  attrs.getString("class");
+        inflater = LayoutInflater::getInflater(clsName);
+    }else{
+        inflater = LayoutInflater::getInflater(name);
+    }
+    std::string clazz;
+    if(inflater==nullptr){
+        clazz = !prefix.empty()?(prefix+name):name;
+        if(mFilter!=nullptr){
+            const bool allowed = mFilter(clazz);
+            if(!allowed){
+                failNotAllowed(name,prefix,viewContext,attrs);
+            }
+        }
+    }else{
+        if(mFilter!=nullptr){
+            auto it = mFilterMap.find(name);
+            if(it==mFilterMap.end()){
+                clazz = !prefix.empty()?(prefix+name):name;
+                const bool allowed = !clazz.empty()&&mFilter(clazz);
+                mFilterMap.insert({name,allowed});
+                if(!allowed){
+                    failNotAllowed(name,prefix,viewContext,attrs);
+                }
+            }else{
+                failNotAllowed(name,prefix,viewContext,attrs);
+            }
+        }
+    }
+    std::string styleName = attrs.getString("style");
+    if(!styleName.empty()) {
+        AttributeSet style = viewContext->obtainStyledAttributes(styleName);
+        attrs.inherit(style);
+    }
+    styleName = LayoutInflater::from(viewContext)->getDefaultStyle(name);
+    if(!styleName.empty()) {
+        AttributeSet defstyle = viewContext->obtainStyledAttributes(styleName);
+        attrs.inherit(defstyle);
+    }
+    View*view = inflater(viewContext,attrs);
+    return view;
+}
+
+
+void LayoutInflater::failNotAllowed(const std::string& name, const std::string& prefix, Context* context,const AttributeSet& attrs) {
+    throw std::runtime_error(//getParserStateDescription(context, attrs) +
+            ": Class not allowed to be inflated "+ (!prefix.empty() ? (prefix + name) : name));
+}
+
+View* LayoutInflater::onCreateView(const std::string& name,AttributeSet& attrs){
+    return createView(name, "android.view.", attrs);
+}
+
+View* LayoutInflater::onCreateView(View* parent, const std::string& name,AttributeSet& attrs){
+    return onCreateView(name,attrs);
+}
+
+View* LayoutInflater::onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs){
+    return onCreateView(parent,name,attrs);
 }
 
 View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr) {
-#if 0
-    if (name.compare("view")==0) {
-        //name = attrs.getAttributeValue(nullptr, "class");
-    }
+#if 10
+    try{
+        View* view = tryCreateView(parent, name, context, attrs);
 
-    // Apply a theme wrapper, if allowed and one is specified.
-
-    View* view;
-    if (mFactory2 != null) {
-        view = mFactory2.onCreateView(parent, name, context, attrs);
-    } else if (mFactory != null) {
-        view = mFactory.onCreateView(name, context, attrs);
-    } else {
-        view = null;
-    }
-
-    if (view == null && mPrivateFactory != null) {
-        view = mPrivateFactory.onCreateView(parent, name, context, attrs);
-    }
-
-    if (view == null) {
-        final Object lastContext = mConstructorArgs[0];
-        mConstructorArgs[0] = context;
-        try {
-            if (-1 == name.indexOf('.')) {
-                view = onCreateView(parent, name, attrs);
-            } else {
-                view = createView(name, null, attrs);
-            }
-        } finally {
-            mConstructorArgs[0] = lastContext;
+        if (view == nullptr) {
+            //lastContext = mConstructorArgs[0];
+            //mConstructorArgs[0] = context;
+            //try {
+                if (std::string::npos == name.find('.')) {
+                    view = onCreateView(context,parent, name, attrs);
+                } else {
+                    view = createView(context,name,"", attrs);
+                }
+            /*} finally {
+                mConstructorArgs[0] = lastContext;
+            }*/
         }
+        return view;
+    }catch(std::exception&e){
+        throw e;
     }
-    return view;
 #else
-    LayoutInflater::ViewInflater inflater = nullptr;
+    LayoutInflater::ViewInflater inflater;
     if(name.compare("view")==0){
         const std::string clsName =  attrs.getString("class");
         inflater = LayoutInflater::getInflater(clsName);
@@ -234,6 +331,28 @@ View* LayoutInflater::createViewFromTag(View* parent,const std::string& name, Co
     View*view = inflater(context,attrs);
     return view;
 #endif
+}
+
+View* LayoutInflater::tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attrs) {
+    if (name.compare(TAG_1995)==0) {
+        // Let's party like it's 1995!
+        return nullptr;//new BlinkLayout(context, attrs);
+    }
+
+    View* view;
+    if (mFactory2 != nullptr) {
+        view = mFactory2/*.onCreateView*/(parent, name, context, attrs);
+    } else if (mFactory != nullptr) {
+        view = mFactory/*.onCreateView*/(name, context, attrs);
+    } else {
+        view = nullptr;
+    }
+
+    if ((view == nullptr) && (mPrivateFactory != nullptr)) {
+        view = mPrivateFactory/*onCreateView*/(parent, name, context, attrs);
+    }
+
+    return view;
 }
 
 void LayoutInflater::rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate){
@@ -357,4 +476,29 @@ void LayoutInflater::consumeChildElements(XmlPullParser& parser){
     }
 }
 
+LayoutInflater::FactoryMerger::FactoryMerger(const Factory& f1,const Factory2& f12,const Factory& f2,const Factory2& f22)
+   :mF1(f1), mF12(f12), mF2(f2), mF22(f22) {
+}
+ 
+View* LayoutInflater::FactoryMerger::onCreateView(View* parent, const std::string& name, Context* context, const AttributeSet& attrs) {
+    View* view = nullptr;
+    
+    if (mF12 && (view = mF12(parent, name, context, attrs))) {
+        return view;
+    }
+    
+    if (mF1 && (view = mF1(name, context, attrs))) {
+        return view;
+    }
+    
+    if (mF22 && (view = mF22(parent, name, context, attrs))) {
+        return view;
+    }
+    
+    if (mF2 && (view = mF2(name, context, attrs))) {
+        return view;
+    }
+    
+    return nullptr;
+}
 }//endof namespace
