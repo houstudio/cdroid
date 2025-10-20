@@ -827,39 +827,39 @@ float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t hi
 }
 
 float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_X, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_Y, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalPressure(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_PRESSURE, pointerIndex, historicalIndex);     
+    return getHistoricalAxisValue(AXIS_PRESSURE, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalSize(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_SIZE, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_SIZE, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalTouchMajor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOUCH_MAJOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOUCH_MAJOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalTouchMinor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOUCH_MINOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOUCH_MINOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalToolMajor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOOL_MAJOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOOL_MAJOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalToolMinor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOOL_MINOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOOL_MINOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalOrientation(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
 }
 
 void MotionEvent::cancel(){
