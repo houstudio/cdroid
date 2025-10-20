@@ -292,8 +292,8 @@ void MotionEvent::initialize(
     mClassification=classification;
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
-    mRawCursorXPosition = rawXCursorPosition;
-    mRawCursorYPosition = rawYCursorPosition;
+    mRawXCursorPosition = rawXCursorPosition;
+    mRawYCursorPosition = rawYCursorPosition;
     mDownTime = downTime;
     mEventTime= eventTime;
     mDisplayId = displayId;
@@ -450,7 +450,7 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
             mAction,mActionButton,mFlags,
             mEdgeFlags,mMetaState,
             mButtonState,mClassification,
-            mRawCursorXPosition,mRawCursorYPosition,
+            mRawXCursorPosition,mRawYCursorPosition,
             mXPrecision,mYPrecision,
             mDownTime,getEventTime(),
             pointerCount,pp,pc);*/
@@ -679,37 +679,58 @@ void MotionEvent::applyTransform(const std::array<float,9>&matrix){
         calculateTransformedCoordsInPlace(c, mSource, mFlags, transform);
     });
 
-    if (mRawCursorXPosition != INVALID_CURSOR_POSITION &&
-        mRawCursorYPosition != INVALID_CURSOR_POSITION) {
-        const vec2 cursor = transform.transform(mRawCursorXPosition, mRawCursorYPosition);
-        mRawCursorXPosition = cursor[0];
-        mRawCursorYPosition = cursor[1];
+    if (mRawXCursorPosition != INVALID_CURSOR_POSITION &&
+        mRawYCursorPosition != INVALID_CURSOR_POSITION) {
+        const vec2 cursor = transform.transform(mRawXCursorPosition, mRawYCursorPosition);
+        mRawXCursorPosition = cursor[0];
+        mRawYCursorPosition = cursor[1];
     }
-}
-
-static void Matrix2Float9(const Cairo::Matrix& m,std::array<float,9>&f9){
-    /*Matrix{
-      double xx; double yx;
-      double xy; double yy;
-      double x0; double y0;}*/
-    //x_new = xx * x + xy * y + x0;
-    //y_new = yx * x + yy * y + y0;
-    f9[0] = m.xx ; //scaleX
-    f9[1] = m.xy ; //skewX
-    f9[2] = m.x0 ; //skewY
-
-    f9[3] = m.yx ;
-    f9[4] = m.yy ;
-    f9[5] = m.y0 ;
-
-    f9[6] = f9[7] =0.0f;
-    f9[8] = 1.f;
 }
 
 void MotionEvent::transform(const Cairo::Matrix& matrix){
     std::array<float,9> f9;
-    Matrix2Float9(matrix,f9);
+    /*Matrix{   double xx; double yx;  double xy; double yy;  double x0; double y0;}*/
+    //x_new = xx * x + xy * y + x0; //y_new = yx * x + yy * y + y0;
+    f9[0] = matrix.xx ; //scaleX
+    f9[1] = matrix.xy ; //skewX
+    f9[2] = matrix.x0 ; //skewY
+
+    f9[3] = matrix.yx ;
+    f9[4] = matrix.yy ;
+    f9[5] = matrix.y0 ;
+
+    f9[6] = f9[7] =0.0f;
+    f9[8] = 1.f;
     transform(f9);
+}
+
+Cairo::Matrix MotionEvent::createRotateMatrix(/*@Surface.Rotation*/ int rotation, int rotatedFrameWidth, int rotatedFrameHeight) {
+    if (rotation == 0/*Surface.ROTATION_0*/) {
+        return Cairo::identity_matrix();//Matrix.IDENTITY_MATRIX);
+    }
+    // values is row-major
+    std::array<float,9> values;
+    if (rotation == 1/*Surface.ROTATION_90*/) {
+        values = {0, 1, 0,
+                -1, 0, (float)rotatedFrameHeight,
+                0, 0, 1};
+    } else if (rotation == 2/*Surface.ROTATION_180*/) {
+        values = {-1, 0, (float)rotatedFrameWidth,
+                0, -1, (float)rotatedFrameHeight,
+                0, 0, 1};
+    } else if (rotation == 3/*Surface.ROTATION_270*/) {
+        values = {0, -1, (float)rotatedFrameWidth,
+                1, 0, 0,
+                0, 0, 1};
+    }
+    Cairo::Matrix toOrient;
+    toOrient.xx = values[0];
+    toOrient.xy = values[1];
+    toOrient.x0 = values[2];
+    toOrient.yx = values[3];
+    toOrient.yy = values[4];
+    toOrient.y0 = values[5];
+    return toOrient;
 }
 
 int MotionEvent::getHistoricalRawPointerCoords( size_t pointerIndex, size_t historicalIndex,PointerCoords&pc) const {
@@ -864,6 +885,16 @@ float MotionEvent::getHistoricalOrientation(size_t pointerIndex, size_t historic
 
 void MotionEvent::cancel(){
     setAction(ACTION_CANCEL);
+}
+
+int MotionEvent::getSurfaceRotation() const{
+    switch (mTransform.getOrientation()) {
+        case ui::Transform::ROT_0:  return 0;//ui::ROTATION_0;
+        case ui::Transform::ROT_90: return 3;//ui::ROTATION_270;
+        case ui::Transform::ROT_180:return 2;//ui::ROTATION_180;
+        case ui::Transform::ROT_270:return 1;//ui::ROTATION_90;
+        default:  return -1;//std::nullopt;
+    }
 }
 
 float MotionEvent::getXCursorPosition()const{
@@ -1024,8 +1055,8 @@ vec2 MotionEvent::calculateTransformedXY(uint32_t source,
 float transformAngle(const ui::Transform& transform, float angleRadians, bool isDirectional) {
     // Construct and transform a vector oriented at the specified clockwise angle from vertical.
     // Coordinate system: down is increasing Y, right is increasing X.
-    float x = sinf(angleRadians);
-    float y = -cosf(angleRadians);
+    const float x = sinf(angleRadians);
+    const float y = -cosf(angleRadians);
     vec2 transformedPoint = transform.transform(x, y);
 
     // Determine how the origin is transformed by the matrix so that we

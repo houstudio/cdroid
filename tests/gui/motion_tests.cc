@@ -85,6 +85,52 @@ TEST_F(MOTIONEVENT,offset){
     ASSERT_EQ(e->getY(),200);
 }
 
+TEST_F(MOTIONEVENT,Rotation) {
+    // The un-rotated frame size.
+    constexpr int width = 600;
+    constexpr int height = 1000;
+    MotionEvent* event = MotionEvent::obtain(0 /* downTime */, 0 /* eventTime */,
+            MotionEvent::ACTION_DOWN, 30 /* x */, 50 /* y */, 0 /* metaState */);
+    event->setSource(InputDevice::SOURCE_TOUCHSCREEN);
+    ASSERT_EQ(0/*Surface.ROTATION_0*/, event->getSurfaceRotation());
+
+    MotionEvent* rot90 = MotionEvent::obtain(*event);
+    rot90->transform(MotionEvent::createRotateMatrix(1/*Surface::ROTATION_90*/, height, width));
+    ASSERT_EQ(50, (int) rot90->getX());
+    ASSERT_EQ(570, (int) rot90->getY());
+    ASSERT_EQ(1/*Surface::ROTATION_90*/, rot90->getSurfaceRotation());
+    rot90->recycle();
+
+    MotionEvent* rot180 = MotionEvent::obtain(*event);
+    rot180->transform(MotionEvent::createRotateMatrix(2/*Surface::ROTATION_180*/, width, height));
+    ASSERT_EQ(570, (int) rot180->getX());
+    ASSERT_EQ(950, (int) rot180->getY());
+    ASSERT_EQ(2/*Surface::ROTATION_180*/, rot180->getSurfaceRotation());
+    rot180->recycle();
+
+    MotionEvent* rot270 = MotionEvent::obtain(*event);
+    rot270->transform(MotionEvent::createRotateMatrix(3/*Surface::ROTATION_270*/, height, width));
+    ASSERT_EQ(950, (int) rot270->getX());
+    ASSERT_EQ(30, (int) rot270->getY());
+    ASSERT_EQ(3/*Surface.ROTATION_270*/, rot270->getSurfaceRotation());
+    rot270->recycle();
+
+    MotionEvent* compoundRot = MotionEvent::obtain(*event);
+    compoundRot->transform(MotionEvent::createRotateMatrix(1/*Surface::ROTATION_90*/, height, width));
+    compoundRot->transform(MotionEvent::createRotateMatrix(2/*Surface::ROTATION_180*/, height, width));
+    ASSERT_EQ(950, (int) compoundRot->getX());
+    ASSERT_EQ(30, (int) compoundRot->getY());
+    ASSERT_EQ(3/*Surface::ROTATION_270*/, compoundRot->getSurfaceRotation());
+    compoundRot->recycle();
+
+    MotionEvent* rotInvalid = MotionEvent::obtain(*event);
+    //mat.setValues(new float[]{1, 2, 3, -4, -5, -6, 0, 0, 1});
+    rotInvalid->transform({1, 2, 3, -4, -5, -6, 0, 0, 1});
+    ASSERT_EQ(-1, rotInvalid->getSurfaceRotation());
+    rotInvalid->recycle();
+    event->recycle();
+}
+
 TEST_F(MOTIONEVENT,EventPool){
     PooledInputEventFactory pool(32);
     PointerCoords coords[128];

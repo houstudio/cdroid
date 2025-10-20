@@ -1560,6 +1560,10 @@ void ViewGroup::addView(View* child, int index,LayoutParams* params){
 }
 
 void ViewGroup::addInArray(View* child, int index){
+    if (mChildren.size() == mChildren.capacity()) {
+        //reserve more memory for opitimize
+        mChildren.reserve(mChildren.size() * 2 + 4);
+    }
     if(index>=mChildren.size())
         mChildren.push_back(child);
     else

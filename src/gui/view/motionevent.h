@@ -206,8 +206,8 @@ protected:
     float mYPrecision;
     float mCursorXPosition;
     float mCursorYPosition;
-    float mRawCursorXPosition;
-    float mRawCursorYPosition;
+    float mRawXCursorPosition;
+    float mRawYCursorPosition;
     ui::Transform mRawTransform;
     nsecs_t mDownTime;
     std::vector<PointerProperties> mPointerProperties;
@@ -237,6 +237,7 @@ public:
     static MotionEvent* obtain(const MotionEvent& other);
     static MotionEvent* obtainNoHistory(const MotionEvent& other);
     static bool isTouchEvent(uint32_t source, int32_t action);
+    static Cairo::Matrix createRotateMatrix(int rotation, int rotatedFrameWidth, int rotatedFrameHeight);
 
     // MotionEvent will transform various axes in different ways, based on the source. For
     // example, the x and y axes will not have any offsets/translations applied if it comes from a
@@ -282,6 +283,7 @@ public:
     int32_t getClassification()const{return mClassification;}
     inline int32_t getActionButton() const { return mActionButton; }
     inline void setActionButton(int32_t button) { mActionButton = button; }
+    int getSurfaceRotation() const;
     inline float getRawXOffset() const;
     inline float getRawYOffset() const;
     inline float getXPrecision() const { return mXPrecision; }
@@ -295,8 +297,8 @@ public:
     float getYDispatchLocation(int pointerIndex);
     float getXCursorPosition()const;
     float getYCursorPosition()const;
-    float getRawXCursorPosition() const { return mRawCursorXPosition;}
-    float getRawYCursorPosition() const { return mRawCursorYPosition;}
+    float getRawXCursorPosition() const { return mRawXCursorPosition;}
+    float getRawYCursorPosition() const { return mRawYCursorPosition;}
 private:
     void updateCursorPosition();
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
