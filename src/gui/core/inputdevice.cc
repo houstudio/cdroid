@@ -422,8 +422,8 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mEvent = nullptr;
     mActionButton = 0;
     mButtonState  = 0;
-    mPointerCoords.resize(16);
-    mPointerProps.resize(16);
+    mPointerCoords.reserve(16);
+    mPointerProps.reserve(16);
     mCoord.clear();
     mProp.clear();
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
