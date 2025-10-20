@@ -4,6 +4,7 @@ SET(CORE_SOURCES
     core/attributeset.cc
     #core/basebundle.cc
     #core/bundle.cc
+    core/transform.cc
     core/calendar.cc
     core/canvas.cc
     core/color.cc
@@ -37,7 +38,6 @@ SET(CORE_SOURCES
     core/systemclock.cc
     core/tokenizer.cc
     core/xmlpullparser.cc
-    #core/transform.cc
     core/typedvalue.cc
     core/typeface.cc
     core/uieventsource.cc
@@ -52,6 +52,6 @@ list(APPEND CORE_SOURCES
 
 if(WIN32 AND CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     message("Building on Windows with MSVC compiler")
-    #list(APPEND CDROID_SOURCES core/wepoll.cc)
+    list(APPEND CDROID_SOURCES core/wepoll.cc)
 endif()
 
