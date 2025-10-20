@@ -48,16 +48,16 @@ void InputEvent::setDisplayId(int id){
     mDisplayId = id;
 }
 
-void InputEvent::initialize(int32_t deviceId, int32_t source) {
+void InputEvent::initialize(int32_t deviceId, uint32_t source) {
     mDeviceId = deviceId;
     mSource = source;
 }
 
-void InputEvent::setSource(int source){
+void InputEvent::setSource(uint32_t source){
     mSource = source;
 }
 
-bool InputEvent::isFromSource(int source)const{
+bool InputEvent::isFromSource(uint32_t source)const{
     return (getSource() & source) == source;
 }
 

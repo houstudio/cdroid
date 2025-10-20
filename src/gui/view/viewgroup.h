@@ -132,7 +132,7 @@ private:
 
     int getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder);
     static View*getAndVerifyPreorderedView(const std::vector<View*>&,const std::vector<View*>&, int childIndex);
-    TouchTarget* getTouchTarget(View* child);
+    TouchTarget* getTouchTarget(View* child)const;
     TouchTarget* addTouchTarget(View* child, int pointerIdBits);
     View*findChildWithAccessibilityFocus();
     void resetTouchState();

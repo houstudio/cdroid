@@ -311,8 +311,8 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     if (child == nullptr) {
         handled = View::dispatchTouchEvent(*transformedEvent);
     } else {
-        float offsetX = mScrollX - child->mLeft;
-        float offsetY = mScrollY - child->mTop;
+        const float offsetX = mScrollX - child->mLeft;
+        const float offsetY = mScrollY - child->mTop;
         transformedEvent->offsetLocation(offsetX, offsetY);
         if (! child->hasIdentityMatrix()) {
             LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
@@ -328,7 +328,7 @@ DONE:
     return handled;
 }
 
-TouchTarget* ViewGroup::getTouchTarget(View* child) {
+TouchTarget* ViewGroup::getTouchTarget(View* child) const{
     for (TouchTarget* target = mFirstTouchTarget; target ; target = target->next) {
         if (target->child == child) {
             return target;
