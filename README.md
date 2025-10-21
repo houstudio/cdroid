@@ -64,9 +64,9 @@
 * cd vcpkg
 * ./bootstrap-vcpkg.sh
 ### 3. install cdroid supported toolchain's patch
-* cp cdroid/script/vcpkgpatch4cdroid.patch vcpkg/
+* cp cdroid/script/vcpkgpatch4cdroid.tar.gz vcpkg/
 * cd vcpkg
-* patch -p1< vcpkgpatch4cdroid.patch
+* tar -zxvf vcpkgpatch4cdroid.tar.gz 
 ### 4.install cdroid deplibs:
 * ./cdroid_install_libs.sh --triplet=x64-linux-dynamic<br>
 ### 5.download cdroid source code:

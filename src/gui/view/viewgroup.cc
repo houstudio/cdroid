@@ -473,7 +473,7 @@ bool ViewGroup::dispatchTooltipHoverEvent(MotionEvent& event) {
             if (mTooltipHoveredSelf) {
                 mTooltipHoveredSelf = false;
                 event.setAction(MotionEvent::ACTION_HOVER_EXIT);
-		View::dispatchTooltipHoverEvent(event);
+                View::dispatchTooltipHoverEvent(event);
                 event.setAction(action);
              }
              return true;

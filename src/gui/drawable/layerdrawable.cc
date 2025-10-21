@@ -124,6 +124,7 @@ LayerDrawable::LayerState::LayerState(const LayerState*orig,LayerDrawable*owner)
 
     mChangingConfigurations = orig->mChangingConfigurations;
     mChildrenChangingConfigurations = orig->mChildrenChangingConfigurations;
+    mChildren.reserve(orig->mChildren.size());
     for (auto child:orig->mChildren){
         mChildren.push_back(new ChildDrawable(child, owner));
     }
@@ -262,6 +263,7 @@ LayerDrawable::LayerDrawable():LayerDrawable(std::make_shared<LayerState>()){
 LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
         :LayerDrawable(){
     mHotspotBounds.set(0,0,0,0);
+    mLayerState->mChildren.reserve(drawables.size());
     for(auto d:drawables){
         ChildDrawable*child=new ChildDrawable(0);
         child->mDrawable=d;
