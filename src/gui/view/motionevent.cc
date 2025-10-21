@@ -73,6 +73,10 @@ float PointerCoords::getY()const{
     return getAxisValue(MotionEvent::AXIS_Y);
 }
 
+std::array<float,2> PointerCoords::getXYValue()const{
+    return{getX(),getY()};
+}
+
 static inline void scaleAxisValue(PointerCoords& c, int axis, float scaleFactor) {
     const float value = c.getAxisValue(axis);
     if (value != 0) {
@@ -80,15 +84,29 @@ static inline void scaleAxisValue(PointerCoords& c, int axis, float scaleFactor)
     }
 }
 
-void PointerCoords::scale(float scaleFactor) {
+float MotionEvent::getRawXOffset() const {
+    // This is equivalent to the x-coordinate of the point that the origin of the raw coordinate
+    // space maps to.
+    return (mTransform * mRawTransform.inverse()).tx();
+}
+
+float MotionEvent::getRawYOffset() const {
+    // This is equivalent to the y-coordinate of the point that the origin of the raw coordinate
+    // space maps to.
+    return (mTransform * mRawTransform.inverse()).ty();
+}
+
+void PointerCoords::scale(float globalScaleFactor,float windowXScale,float windowYScale) {
     // No need to scale pressure or size since they are normalized.
     // No need to scale orientation since it is meaningless to do so.
-    scaleAxisValue(*this, MotionEvent::AXIS_X, scaleFactor);
-    scaleAxisValue(*this, MotionEvent::AXIS_Y, scaleFactor);
-    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MAJOR, scaleFactor);
-    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MINOR, scaleFactor);
-    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MAJOR, scaleFactor);
-    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MINOR, scaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_X, windowXScale);
+    scaleAxisValue(*this, MotionEvent::AXIS_Y, windowYScale);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MAJOR, globalScaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOUCH_MINOR, globalScaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MAJOR, globalScaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_TOOL_MINOR, globalScaleFactor);
+    scaleAxisValue(*this, MotionEvent::AXIS_RELATIVE_X, windowXScale);
+    scaleAxisValue(*this, MotionEvent::AXIS_RELATIVE_Y, windowYScale);
 }
 
 void PointerCoords::applyOffset(float xOffset, float yOffset) {
@@ -167,12 +185,14 @@ void MotionEvent::ensureSharedTempPointerCapacity(size_t desiredCapacity){
 }
 
 MotionEvent::MotionEvent(){
+    mXPrecision =1;
+    mYPrecision =1;
     mPointerProperties.clear();
     mSamplePointerCoords.clear();
     mSampleEventTimes.clear();
 }
 
-void MotionEvent::setSource(int source){
+void MotionEvent::setSource(uint32_t source){
     if(source==mSource)return;
     InputEvent::setSource(source);
     updateCursorPosition();
@@ -180,19 +200,23 @@ void MotionEvent::setSource(int source){
 
 MotionEvent*MotionEvent::obtain(){
     MotionEvent*ev = PooledInputEventFactory::getInstance().createMotionEvent();
+    ev->mTransform.reset();
     ev->mPointerProperties.clear();
     ev->mSamplePointerCoords.clear();
     ev->mSampleEventTimes.clear();
     return ev;
 }
 
-MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action, int pointerCount,
-        const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,int metaState,
-        int buttonState,float xPrecision,float yPrecision,int deviceId,int edgeFlags,int source,int flags){
+MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action,
+        int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
+        int metaState, int buttonState,float xPrecision,float yPrecision,int deviceId,
+        int edgeFlags,uint32_t source,int flags,int classification){
     MotionEvent* ev = obtain();
-    ev->initialize(deviceId, source,0, action,0/*actionbutton*/, flags, edgeFlags,
-         metaState, buttonState, 0, 0, xPrecision, yPrecision, downTime, eventTime,
-         pointerCount, pointerProperties, pointerCoords);
+    ev->initialize(deviceId, source,0/*displayId*/, action,0/*actionbutton*/,
+        flags, edgeFlags, metaState, buttonState, classification,
+        0/*xoffset*/,0/*yoffset*/,xPrecision, yPrecision,
+        0/*rawXCursorPosition*/,0/*rawYCursorPosition*/,
+        downTime, eventTime,pointerCount, pointerProperties, pointerCoords);
     return ev;
 }
 
@@ -211,13 +235,17 @@ MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,
     pc.setAxisValue(AXIS_Y,y);
     pc.setAxisValue(AXIS_PRESSURE,pressure);
     pc.setAxisValue(AXIS_SIZE,size);
-    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN,0, action, 0/*actionButton*/,0/*flags*/,
-        edgeFlags, metaState, 0, 0, 0, xPrecision, yPrecision, downTime , eventTime, 1, &pp,&pc);
+    ev->initialize(deviceId, InputDevice::SOURCE_UNKNOWN,0, action, 0/*actionButton*/,
+        0/*flags*/, edgeFlags, metaState,0/*buttonState*/,CLASSIFICATION_NONE,
+        0/*xoffset*/,0/*yoffset*/,xPrecision, yPrecision,
+        0/*rawXCursorPosition*/,0/*rawYCursorPosition*/,
+        downTime , eventTime, 1, &pp,&pc);
     return ev;
 }
 
 MotionEvent* MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState){
-    return obtain(downTime, eventTime, action, x, y, 1.f, 1.f,metaState, 1.f, 1.f, 0, 0);
+    return obtain(downTime, eventTime, action, x, y, 1.f/*pressue*/, 1.f/*size*/,metaState,
+            1.f/*xPrecision*/, 1.f/*yPrecision*/, 0/*deviceId*/, 0/*edgeFlags*/);
 }
 
 MotionEvent* MotionEvent::obtain(const MotionEvent& other) {
@@ -234,7 +262,7 @@ MotionEvent* MotionEvent::obtainNoHistory(const MotionEvent& other){
 
 void MotionEvent::initialize(
         int deviceId,
-        int source,
+        uint32_t source,
         int displayId,
         int action,
         int actionButton,
@@ -242,10 +270,13 @@ void MotionEvent::initialize(
         int edgeFlags,
         int metaState,
         int buttonState,
+        int classification,
         float xOffset,
         float yOffset,
         float xPrecision,
         float yPrecision,
+        float rawXCursorPosition,
+        float rawYCursorPosition,
         nsecs_t downTime,
         nsecs_t eventTime,
         size_t pointerCount,
@@ -258,14 +289,18 @@ void MotionEvent::initialize(
     mEdgeFlags = edgeFlags;
     mMetaState = metaState;
     mButtonState = buttonState;
-    mClassification=0;
-    mXOffset = xOffset;
-    mYOffset = yOffset;
+    mClassification=classification;
     mXPrecision = xPrecision;
     mYPrecision = yPrecision;
+    mRawXCursorPosition = rawXCursorPosition;
+    mRawYCursorPosition = rawYCursorPosition;
     mDownTime = downTime;
     mEventTime= eventTime;
     mDisplayId = displayId;
+    ui::Transform transform;
+    transform.set(xOffset, yOffset);
+    mTransform = transform;
+    //mRawTransform=rawTransform;
     mPointerProperties.clear();
 
     mSampleEventTimes.clear();
@@ -290,12 +325,11 @@ void MotionEvent::copyFrom(const MotionEvent& other, bool keepHistory) {
     mMetaState = other.mMetaState;
     mButtonState = other.mButtonState;
     mClassification=other.mClassification;
-    mXOffset = other.mXOffset;
-    mYOffset = other.mYOffset;
     mXPrecision = other.mXPrecision;
     mYPrecision = other.mYPrecision;
     mDownTime = other.mDownTime;
     mEventTime= other.mEventTime;
+    mTransform= other.mTransform;
     mSource = other.mSource;
     mDisplayId = other.mDisplayId;
     mPointerProperties = other.mPointerProperties;
@@ -367,9 +401,11 @@ MotionEvent*MotionEvent::split(int idBits){
         }
         const auto eventTimeNanos = getHistoricalEventTime(historyPos);
         if (h == 0) {
-            ev->initialize( getDeviceId(),getSource(),getDisplayId(), newAction, 0, getFlags(),
-                getEdgeFlags(), getMetaState() , getButtonState(), getXOffset(), getYOffset(),
-                getXPrecision(), getYPrecision(),mDownTime, eventTimeNanos,  newPointerCount, pp, pc);
+            ev->initialize( getDeviceId(),getSource(),getDisplayId(), newAction, 0,
+                getFlags(), getEdgeFlags(), getMetaState() , getButtonState(), getClassification(),
+                getRawXOffset(), getRawYOffset(),getXPrecision(), getYPrecision(),
+                0/*rawXCursorPosition*/,0/*rawXCursorPosition*/,
+                mDownTime, eventTimeNanos,  newPointerCount, pp, pc);
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
             ev->addSample(eventTimeNanos,pc);
@@ -402,7 +438,7 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
     const size_t pointerCount = getPointerCount();
     ensureSharedTempPointerCapacity(pointerCount);
 
-    PointerProperties*pp = gSharedTempPointerProperties.data();
+    PointerProperties* pp = gSharedTempPointerProperties.data();
     PointerCoords* pc = gSharedTempPointerCoords.data();
     for (size_t i = 0; i < pointerCount; i++) {
         pp[i] = mPointerProperties[i];//nativeGetPointerProperties(mNativePtr,i,pp[i]);
@@ -410,6 +446,14 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
         pc[i].setAxisValue(AXIS_X,MathUtils::clamp(pc[i].getX(), left, right));
         pc[i].setAxisValue(AXIS_Y,MathUtils::clamp(pc[i].getY(), top, bottom));
     }
+    /*ev->initialize(mDeviceId,mSource,mDisplayId,
+            mAction,mActionButton,mFlags,
+            mEdgeFlags,mMetaState,
+            mButtonState,mClassification,
+            mRawXCursorPosition,mRawYCursorPosition,
+            mXPrecision,mYPrecision,
+            mDownTime,getEventTime(),
+            pointerCount,pp,pc);*/
     return ev;
 }
 
@@ -431,14 +475,7 @@ float MotionEvent::getAxisValue(int axis)const {
 }
 
 float MotionEvent::getAxisValue(int32_t axis, size_t pointerIndex) const {
-    const float value = getHistoricalAxisValue(axis,pointerIndex,getHistorySize());
-    switch (axis) {
-    case AXIS_X://AMOTION_EVENT_AXIS_X:
-        return value + mXOffset;
-    case AXIS_Y://AMOTION_EVENT_AXIS_Y:
-        return value + mYOffset;
-    }
-    return value;
+    return getHistoricalAxisValue(axis,pointerIndex,getHistorySize());
 }
 
 nsecs_t MotionEvent::getHistoricalEventTime(size_t historyPos) const{
@@ -467,7 +504,7 @@ int32_t MotionEvent::findPointerIndex(int32_t pointerId) const {
     return -1;
 }
 
-bool  MotionEvent::isTouchEvent(int32_t source, int32_t action){
+bool  MotionEvent::isTouchEvent(uint32_t source, int32_t action){
     if (source & InputDevice::SOURCE_CLASS_POINTER) {
         // Specifically excludes HOVER_MOVE and SCROLL.
         switch (action & ACTION_MASK) {
@@ -495,23 +532,26 @@ bool MotionEvent::isTouchEvent()const{
 }
 
 void MotionEvent::offsetLocation(float xOffset, float yOffset) {
-    mXOffset += xOffset;
-    mYOffset += yOffset;
+    const float currXOffset = mTransform.tx();
+    const float currYOffset = mTransform.ty();
+    mTransform.set(currXOffset + xOffset, currYOffset + yOffset);
 }
 
 void MotionEvent::setLocation(float x, float y){
-    offsetLocation(x-getX(),y-getY());
+    const float oldX = getX();
+    const float oldY = getY();
+    offsetLocation(x - oldX,y -oldY);
 }
 
-void MotionEvent::scale(float scaleFactor) {
-    mXOffset *= scaleFactor;
-    mYOffset *= scaleFactor;
-    mXPrecision *= scaleFactor;
-    mYPrecision *= scaleFactor;
+void MotionEvent::scale(float globalScaleFactor) {
+    mTransform.set(mTransform.tx() * globalScaleFactor, mTransform.ty() * globalScaleFactor);
+    mRawTransform.set(mRawTransform.tx() * globalScaleFactor,mRawTransform.ty() * globalScaleFactor);
+    mXPrecision *= globalScaleFactor;
+    mYPrecision *= globalScaleFactor;
 
     const size_t numSamples = mSamplePointerCoords.size();
     for (size_t i = 0; i < numSamples; i++) {
-        mSamplePointerCoords[i].scale(scaleFactor);//editableitemat(i)
+        mSamplePointerCoords[i].scale(globalScaleFactor, globalScaleFactor, globalScaleFactor);
     }
 }
 
@@ -584,7 +624,7 @@ std::string MotionEvent::buttonStateToString(int buttonState){
     std::ostringstream result;
     int i = 0,bitsSet=0;
     while (buttonState != 0) {
-        bool isSet = (buttonState & 1) != 0;
+        const bool isSet = (buttonState & 1) != 0;
         buttonState >>= 1; // unsigned shift!
         if (isSet) {
             const char* name = BUTTON_SYMBOLIC_NAMES[i];
@@ -622,94 +662,78 @@ int MotionEvent::axisFromString(const std::string&symbolicName){
     return -1;
 }
 
-static void transformPoint(const float matrix[9], float x, float y, float *outX, float *outY) {
-    // Apply perspective transform like Skia.
-    float newX = matrix[0] * x + matrix[1] * y + matrix[2];
-    float newY = matrix[3] * x + matrix[4] * y + matrix[5];
-    float newZ = matrix[6] * x + matrix[7] * y + matrix[8];
-    if (newZ)
-        newZ = 1.0f / newZ;
-    *outX = newX * newZ;
-    *outY = newY * newZ;
+void MotionEvent::transform(const std::array<float,9>& matrix){
+    // We want to preserve the raw axes values stored in the PointerCoords, so we just update the
+    // transform using the values passed in.
+    ui::Transform newTransform;
+    newTransform.set(matrix);
+    mTransform = newTransform * mTransform;
 }
 
-static float transformAngle(const float matrix[9], float angleRadians,float originX, float originY) {
-    // Construct and transform a vector oriented at the specified clockwise angle from vertical.
-    // Coordinate system: down is increasing Y, right is increasing X.
-    float x = sinf(angleRadians);
-    float y = -cosf(angleRadians);
-    transformPoint(matrix, x, y, &x, &y);
-    x -= originX;
-    y -= originY;
-
-    // Derive the transformed vector's clockwise angle from vertical.
-    float result = atan2f(x, -y);
-    if (result < - M_PI_2) {
-        result += M_PI;
-    } else if (result > M_PI_2) {
-        result -= M_PI;
-    }
-    return result;
-}
-
-void MotionEvent::transform(const float matrix[9]){
-    float oldXOffset = mXOffset;
-    float oldYOffset = mYOffset;
-    float newX, newY;
-    float rawX = getRawX(0);
-    float rawY = getRawY(0);
-    transformPoint(matrix, rawX + oldXOffset, rawY + oldYOffset, &newX, &newY);
-    mXOffset = newX - rawX;
-    mYOffset = newY - rawY;
-
-    // Determine how the origin is transformed by the matrix so that we
-    // can transform orientation vectors.
-    float originX, originY;
-    transformPoint(matrix, 0, 0, &originX, &originY);
+void MotionEvent::applyTransform(const std::array<float,9>&matrix){
+    ui::Transform transform;
+    transform.set(matrix);
 
     // Apply the transformation to all samples.
-    size_t numSamples = mSamplePointerCoords.size();
-    for (size_t i = 0; i < numSamples; i++) {
-        PointerCoords& c = mSamplePointerCoords[i];
-        float x = c.getAxisValue(AXIS_X) + oldXOffset;
-        float y = c.getAxisValue(AXIS_Y) + oldYOffset;
-        transformPoint(matrix, x, y, &x, &y);
-        c.setAxisValue(AXIS_X, x - mXOffset);
-        c.setAxisValue(AXIS_Y, y - mYOffset);
+    std::for_each(mSamplePointerCoords.begin(), mSamplePointerCoords.end(), [&](PointerCoords& c) {
+        calculateTransformedCoordsInPlace(c, mSource, mFlags, transform);
+    });
 
-        float orientation = c.getAxisValue(AXIS_ORIENTATION);
-        c.setAxisValue(AXIS_ORIENTATION,transformAngle(matrix, orientation, originX, originY));
+    if (mRawXCursorPosition != INVALID_CURSOR_POSITION &&
+        mRawYCursorPosition != INVALID_CURSOR_POSITION) {
+        const vec2 cursor = transform.transform(mRawXCursorPosition, mRawYCursorPosition);
+        mRawXCursorPosition = cursor[0];
+        mRawYCursorPosition = cursor[1];
     }
-
-}
-
-static void Matrix2Float9(const Cairo::Matrix& m,float *f9){
-    /*Matrix{
-      double xx; double yx;
-      double xy; double yy;
-      double x0; double y0;}*/
-    //x_new = xx * x + xy * y + x0;
-    //y_new = yx * x + yy * y + y0;
-    f9[0] = m.xx ; //scaleX
-    f9[1] = m.xy ;  //skewX
-    f9[2] = m.x0 ; //skewY
-
-    f9[3] = m.yx ;
-    f9[4] = m.yy ;
-    f9[5] = m.y0 ;
-
-    f9[6] = f9[7] =.0f;
-    f9[8] = 1.f;
 }
 
 void MotionEvent::transform(const Cairo::Matrix& matrix){
-    float f9[9];
-    Matrix2Float9(matrix,f9);
+    std::array<float,9> f9;
+    /*Matrix{   double xx; double yx;  double xy; double yy;  double x0; double y0;}*/
+    //x_new = xx * x + xy * y + x0; //y_new = yx * x + yy * y + y0;
+    f9[0] = matrix.xx ; //scaleX
+    f9[1] = matrix.xy ; //skewX
+    f9[2] = matrix.x0 ; //skewY
+
+    f9[3] = matrix.yx ;
+    f9[4] = matrix.yy ;
+    f9[5] = matrix.y0 ;
+
+    f9[6] = f9[7] =0.0f;
+    f9[8] = 1.f;
     transform(f9);
 }
 
-int MotionEvent::getHistoricalRawPointerCoords(
-        size_t pointerIndex, size_t historicalIndex,PointerCoords&pc) const {
+Cairo::Matrix MotionEvent::createRotateMatrix(/*@Surface.Rotation*/ int rotation, int rotatedFrameWidth, int rotatedFrameHeight) {
+    if (rotation == 0/*Surface.ROTATION_0*/) {
+        return Cairo::identity_matrix();//Matrix.IDENTITY_MATRIX);
+    }
+    // values is row-major
+    std::array<float,9> values;
+    if (rotation == 1/*Surface.ROTATION_90*/) {
+        values = {0, 1, 0,
+                -1, 0, (float)rotatedFrameHeight,
+                0, 0, 1};
+    } else if (rotation == 2/*Surface.ROTATION_180*/) {
+        values = {-1, 0, (float)rotatedFrameWidth,
+                0, -1, (float)rotatedFrameHeight,
+                0, 0, 1};
+    } else if (rotation == 3/*Surface.ROTATION_270*/) {
+        values = {0, -1, (float)rotatedFrameWidth,
+                1, 0, 0,
+                0, 0, 1};
+    }
+    Cairo::Matrix toOrient;
+    toOrient.xx = values[0];
+    toOrient.xy = values[1];
+    toOrient.x0 = values[2];
+    toOrient.yx = values[3];
+    toOrient.yy = values[4];
+    toOrient.y0 = values[5];
+    return toOrient;
+}
+
+int MotionEvent::getHistoricalRawPointerCoords( size_t pointerIndex, size_t historicalIndex,PointerCoords&pc) const {
     const size_t pointerCount = getPointerCount();
     if((pointerIndex<0)||(pointerIndex>=pointerCount)){
         LOGE("outof Range pointerIndex=%d/%d action=%d",pointerIndex,pointerCount,mAction);
@@ -819,60 +843,77 @@ int MotionEvent::getHistoricalPointerCoords(size_t pointerIndex, size_t historic
 float MotionEvent::getHistoricalAxisValue(int axis,size_t pointerIndex,size_t historicalIndex)const{
     PointerCoords pc;
     getHistoricalRawPointerCoords(pointerIndex,historicalIndex,pc);
-    return pc.getAxisValue(axis);
+    return calculateTransformedAxisValue(axis, mSource, mFlags, mTransform, pc);
+    //return pc.getAxisValue(axis);
 }
 
 float MotionEvent::getHistoricalX(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_X, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_X, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalY(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_Y, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_Y, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalPressure(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_PRESSURE, pointerIndex, historicalIndex);     
+    return getHistoricalAxisValue(AXIS_PRESSURE, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalSize(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_SIZE, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_SIZE, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalTouchMajor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOUCH_MAJOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOUCH_MAJOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalTouchMinor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOUCH_MINOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOUCH_MINOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalToolMajor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOOL_MAJOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOOL_MAJOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalToolMinor(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_TOOL_MINOR, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_TOOL_MINOR, pointerIndex, historicalIndex);
 }
 
 float MotionEvent::getHistoricalOrientation(size_t pointerIndex, size_t historicalIndex) const{
-    return getHistoricalRawAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
+    return getHistoricalAxisValue(AXIS_ORIENTATION, pointerIndex, historicalIndex);
 }
 
 void MotionEvent::cancel(){
     setAction(ACTION_CANCEL);
 }
 
+int MotionEvent::getSurfaceRotation() const{
+    switch (mTransform.getOrientation()) {
+        case ui::Transform::ROT_0:  return 0;//ui::ROTATION_0;
+        case ui::Transform::ROT_90: return 3;//ui::ROTATION_270;
+        case ui::Transform::ROT_180:return 2;//ui::ROTATION_180;
+        case ui::Transform::ROT_270:return 1;//ui::ROTATION_90;
+        default:  return -1;//std::nullopt;
+    }
+}
+
 float MotionEvent::getXCursorPosition()const{
-    return mCursorXPosition;
+    vec2 vals = mTransform.transform(getRawXCursorPosition(), getRawYCursorPosition());
+    //roundTransformedCoords(vals[0]);
+    return vals[0];
 }
 
 float MotionEvent::getYCursorPosition()const{
-    return mCursorYPosition;
+    vec2 vals = mTransform.transform(getRawXCursorPosition(), getRawYCursorPosition());
+    //roundTransformedCoords(vals[1]);
+    return vals[1];
 }
 
 void MotionEvent::setCursorPosition(float x, float y){
-    mCursorXPosition = x;
-    mCursorYPosition = y;
+    ui::Transform inverse = mTransform.inverse();
+    vec2 vals = inverse.transform(x,y);
+    mCursorXPosition = vals[0];
+    mCursorYPosition = vals[1];
 }
 
 float MotionEvent::getXDispatchLocation(int pointerIndex){
@@ -959,4 +1000,148 @@ void MotionEvent::toStream(std::ostream& os)const{
     os<<" }";
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+bool isFromSource(uint32_t source, uint32_t test) {
+    return (source & test) == test;
+}
+
+bool shouldDisregardTransformation(uint32_t source) {
+    // Do not apply any transformations to axes from joysticks, touchpads, or relative mice.
+    return isFromSource(source, InputDevice::SOURCE_CLASS_JOYSTICK) ||
+            isFromSource(source, InputDevice::SOURCE_CLASS_POSITION) ||
+            isFromSource(source, InputDevice::SOURCE_MOUSE_RELATIVE);
+}
+
+bool shouldDisregardOffset(uint32_t source) {
+    // Pointer events are the only type of events that refer to absolute coordinates on the display,
+    // so we should apply the entire window transform. For other types of events, we should make
+    // sure to not apply the window translation/offset.
+    return !isFromSource(source, InputDevice::SOURCE_CLASS_POINTER);
+}
+
+float roundTransformedCoords(float val) {
+    // Use a power to two to approximate three decimal places to potentially reduce some cycles.
+    // This should be at least as precise as MotionEvent::ROUNDING_PRECISION.
+    return std::round(val * 1024.f) / 1024.f;
+}
+
+vec2 roundTransformedCoords(vec2 p) {
+    return {roundTransformedCoords(p[0]), roundTransformedCoords(p[1])};
+}
+
+vec2 transformWithoutTranslation(const ui::Transform& transform, const vec2& xy) {
+    const vec2 transformedXy = transform.transform(xy);
+    const vec2 transformedOrigin = transform.transform(0, 0);
+    vec2  v2 = {transformedXy[0]-transformedOrigin[0],transformedXy[1]-transformedOrigin[1]};
+    return roundTransformedCoords(v2);//transformedXy - transformedOrigin);
+}
+
+// Apply the given transformation to the point without checking whether the entire transform
+// should be disregarded altogether for the provided source.
+static inline vec2 calculateTransformedXYUnchecked(uint32_t source,
+        const ui::Transform& transform , const vec2& xy) {
+    return shouldDisregardOffset(source) ? transformWithoutTranslation(transform, xy)
+                                   : roundTransformedCoords(transform.transform(xy));
+}
+
+vec2 MotionEvent::calculateTransformedXY(uint32_t source,
+        const ui::Transform& transform , const vec2& xy) {
+    if (shouldDisregardTransformation(source)) {
+        return xy;
+    }
+    return calculateTransformedXYUnchecked(source, transform, xy);
+}
+
+float transformAngle(const ui::Transform& transform, float angleRadians, bool isDirectional) {
+    // Construct and transform a vector oriented at the specified clockwise angle from vertical.
+    // Coordinate system: down is increasing Y, right is increasing X.
+    const float x = sinf(angleRadians);
+    const float y = -cosf(angleRadians);
+    vec2 transformedPoint = transform.transform(x, y);
+
+    // Determine how the origin is transformed by the matrix so that we
+    // can transform orientation vectors.
+    const vec2 origin = transform.transform(0, 0);
+
+    transformedPoint[0] -= origin[0];//transformedPoint.x -= origin.x;
+    transformedPoint[1] -= origin[1];//transformedPoint.y -= origin.y;
+
+    if (!isDirectional && transformedPoint[1] > 0) {
+        // Limit the range of atan2f to [-pi/2, pi/2] by reversing the direction of the vector.
+        transformedPoint[0]=-transformedPoint[0];
+        transformedPoint[1]=-transformedPoint[1];//transformedPoint *= -1;
+    }
+
+    // Derive the transformed vector's clockwise angle from vertical.
+    // The return value of atan2f is in range [-pi, pi] which conforms to the orientation API.
+    return atan2f(transformedPoint[0], -transformedPoint[1]);
+}
+
+float transformOrientation(const ui::Transform& transform,
+        const PointerCoords& coords,int32_t motionEventFlags) {
+    if ((motionEventFlags & MotionEvent::PRIVATE_FLAG_SUPPORTS_ORIENTATION) == 0) {
+        return 0;
+    }
+
+    const bool isDirectionalAngle =
+            (motionEventFlags & MotionEvent::PRIVATE_FLAG_SUPPORTS_DIRECTIONAL_ORIENTATION) != 0;
+
+    return transformAngle(transform, coords.getAxisValue(MotionEvent::AXIS_ORIENTATION),
+                          isDirectionalAngle);
+}
+// Keep in sync with calculateTransformedCoords.
+float MotionEvent::calculateTransformedAxisValue(int32_t axis, uint32_t source,
+        int32_t flags , const ui::Transform& transform, const PointerCoords& coords) {
+    if (shouldDisregardTransformation(source)) {
+        return coords.getAxisValue(axis);
+    }
+
+    if (axis == MotionEvent::AXIS_X || axis == MotionEvent::AXIS_Y) {
+        const vec2 xy = calculateTransformedXYUnchecked(source, transform, coords.getXYValue());
+        static_assert(MotionEvent::AXIS_X == 0 && MotionEvent::AXIS_Y == 1);
+        return xy[axis];
+    }
+
+    if (axis == MotionEvent::AXIS_RELATIVE_X || axis == MotionEvent::AXIS_RELATIVE_Y) {
+        const vec2 relativeXy = transformWithoutTranslation(transform,
+                                    {coords.getAxisValue(MotionEvent::AXIS_RELATIVE_X),
+                                    coords.getAxisValue(MotionEvent::AXIS_RELATIVE_Y)});
+        return axis == MotionEvent::AXIS_RELATIVE_X ? relativeXy[0] : relativeXy[1];
+    }
+
+    if (axis == MotionEvent::AXIS_ORIENTATION) {
+        return transformOrientation(transform, coords, flags);
+    }
+
+    return coords.getAxisValue(axis);
+}
+
+// Keep in sync with calculateTransformedAxisValue. This is an optimization of
+// calculateTransformedAxisValue for all PointerCoords axes.
+void MotionEvent::calculateTransformedCoordsInPlace(PointerCoords& coords,
+        uint32_t source, int32_t flags, const ui::Transform& transform) {
+    if (shouldDisregardTransformation(source)) {
+        return;
+    }
+
+    const vec2 xy = calculateTransformedXYUnchecked(source, transform, coords.getXYValue());
+    coords.setAxisValue(MotionEvent::AXIS_X, xy[0]);
+    coords.setAxisValue(MotionEvent::AXIS_Y, xy[1]);
+
+    const vec2 relativeXy = transformWithoutTranslation(transform,
+                                {coords.getAxisValue(MotionEvent::AXIS_RELATIVE_X),
+                                 coords.getAxisValue(MotionEvent::AXIS_RELATIVE_Y)});
+    coords.setAxisValue(MotionEvent::AXIS_RELATIVE_X, relativeXy[0]);
+    coords.setAxisValue(MotionEvent::AXIS_RELATIVE_Y, relativeXy[1]);
+
+    coords.setAxisValue(MotionEvent::AXIS_ORIENTATION,
+                        transformOrientation(transform, coords, flags));
+}
+
+PointerCoords MotionEvent::calculateTransformedCoords(uint32_t source, int32_t flags,
+        const ui::Transform& transform, const PointerCoords& coords) {
+    PointerCoords out = coords;
+    calculateTransformedCoordsInPlace(out, source, flags, transform);
+    return out;
+}
 }

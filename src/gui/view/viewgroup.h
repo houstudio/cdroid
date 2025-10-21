@@ -60,6 +60,8 @@ private:
     static constexpr int FLAG_SHOW_CONTEXT_MENU_WITH_COORDS = 0x20000000;
 
     static constexpr int LAYOUT_MODE_UNDEFINED   = -1;
+    static constexpr int ARRAY_INITIAL_CAPACITY = 12;
+    static constexpr int ARRAY_CAPACITY_INCREMENT = 12;
 protected:
     static constexpr int CLIP_TO_PADDING_MASK = FLAG_CLIP_TO_PADDING | FLAG_PADDING_NOT_NULL;
     static constexpr int FLAG_DISALLOW_INTERCEPT = 0x80000;
@@ -132,7 +134,7 @@ private:
 
     int getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder);
     static View*getAndVerifyPreorderedView(const std::vector<View*>&,const std::vector<View*>&, int childIndex);
-    TouchTarget* getTouchTarget(View* child);
+    TouchTarget* getTouchTarget(View* child)const;
     TouchTarget* addTouchTarget(View* child, int pointerIdBits);
     View*findChildWithAccessibilityFocus();
     void resetTouchState();

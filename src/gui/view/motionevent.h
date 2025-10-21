@@ -20,6 +20,7 @@
 #include <view/inputevent.h>
 #include <cairomm/matrix.h>
 #include <core/bitset.h>
+#include <core/transform.h>
 #include <limits>
 #include <cmath>
 
@@ -49,12 +50,12 @@ struct PointerCoords {
     float getAxisValue(int32_t axis) const;
     int setAxisValue(int32_t axis, float value);
 
-    void scale(float scale);
+    void scale(float globalScale,float windowXScale,float windowYScale);
     void applyOffset(float xOffset, float yOffset);
 
     float getX() const;
     float getY() const;
-
+    std::array<float,2> getXYValue()const;
     bool operator==(const PointerCoords& other) const;
     bool operator!=(const PointerCoords& other) const;
     void copyFrom(const PointerCoords& other);
@@ -162,13 +163,18 @@ public:
         BUTTON_STYLUS_PRIMARY = 1 << 5,
         BUTTON_STYLUS_SECONDARY = 1 << 6
     };
-    enum{
-        FLAG_WINDOW_IS_OBSCURED =0x01,
-        FLAG_WINDOW_IS_PARTIALLY_OBSCURED = 0x2,
-        FLAG_HOVER_EXIT_PENDING = 0x4,
-        FLAG_IS_GENERATED_GESTURE = 0x8,
-        FLAG_TAINTED = 0x80000000,
-        FLAG_TARGET_ACCESSIBILITY_FOCUS = 0x40000000,
+    enum MotionEventFlag{
+        FLAG_WINDOW_IS_OBSCURED = 0x01,
+        FLAG_WINDOW_IS_PARTIALLY_OBSCURED = 0x2,//static_cast<int32_t>(android::os::MotionEventFlag::WINDOW_IS_PARTIALLY_OBSCURED),
+        FLAG_HOVER_EXIT_PENDING = 0x4,//static_cast<int32_t>(android::os::MotionEventFlag::HOVER_EXIT_PENDING),
+        FLAG_IS_GENERATED_GESTURE = 0x8,//static_cast<int32_t>(android::os::MotionEventFlag::IS_GENERATED_GESTURE),
+        FLAG_TAINTED = 0x80000000,//(0x80000000)static_cast<int32_t>(android::os::MotionEventFlag::TAINTED),
+        FLAG_TARGET_ACCESSIBILITY_FOCUS = 0x40000000,//(0x4000000)static_cast<int32_t>(android::os::MotionEventFlag::TARGET_ACCESSIBILITY_FOCUS),
+        PRIVATE_FLAG_SUPPORTS_ORIENTATION = 128,//static_cast<int32_t>(android::os::MotionEventFlag::PRIVATE_FLAG_SUPPORTS_ORIENTATION),
+        PRIVATE_FLAG_SUPPORTS_DIRECTIONAL_ORIENTATION = 256,//static_cast<int32_t>(android::os::MotionEventFlag::PRIVATE_FLAG_SUPPORTS_DIRECTIONAL_ORIENTATION),
+        PRIVATE_FLAG_MASK = PRIVATE_FLAG_SUPPORTS_ORIENTATION |PRIVATE_FLAG_SUPPORTS_DIRECTIONAL_ORIENTATION,
+    };
+    enum MotionClassification{
         CLASSIFICATION_NONE = 0,
         CLASSIFICATION_AMBIGUOUS_GESTURE = 1,
         CLASSIFICATION_DEEP_PRESS = 2,
@@ -176,7 +182,7 @@ public:
         CLASSIFICATION_MULTI_FINGER_SWIPE = 4,
         CLASSIFICATION_PINCH = 5,
     };
-    enum{
+    enum ToolType{
         TOOL_TYPE_UNKNOWN = 0,
         TOOL_TYPE_FINGER = 1,
         TOOL_TYPE_STYLUS = 2,
@@ -195,12 +201,14 @@ protected:
     int32_t mMetaState;
     int32_t mButtonState;
     int32_t mClassification;
-    float mXOffset;
-    float mYOffset;
+    ui::Transform mTransform;
     float mXPrecision;
     float mYPrecision;
     float mCursorXPosition;
     float mCursorYPosition;
+    float mRawXCursorPosition;
+    float mRawYCursorPosition;
+    ui::Transform mRawTransform;
     nsecs_t mDownTime;
     std::vector<PointerProperties> mPointerProperties;
     std::vector< nsecs_t > mSampleEventTimes;
@@ -209,15 +217,17 @@ public:
     MotionEvent();
     MotionEvent(const MotionEvent&m);
     MotionEvent*copy()const override{return obtain(*this);}
-    void initialize(int deviceId,int source,int displayId,int action,int actionButton,
-        int flags, int edgeFlags,int metaState, int buttonState, float xOffset, float yOffset,
-	    float xPrecision, float yPrecision,nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
+    void initialize(int deviceId,uint32_t source,int displayId,int action,int actionButton,
+        int flags, int edgeFlags,int metaState, int buttonState, int classification,
+        float xoffset,float yoffset,float xPrecision, float yPrecision,
+        float rawXCursorPosition,float rawYCursorPosition,
+        nsecs_t downTime, nsecs_t eventTime, size_t pointerCount,
         const PointerProperties* pointerProperties,const PointerCoords* pointerCoords);
 
     static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
         int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
         int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
-        int edgeFlags, int source, int flags);
+        int edgeFlags, uint32_t source, int flags,int classification);
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
         float x, float y, float pressure, float size, int metaState,
@@ -226,10 +236,21 @@ public:
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState);
     static MotionEvent* obtain(const MotionEvent& other);
     static MotionEvent* obtainNoHistory(const MotionEvent& other);
-    static bool isTouchEvent(int32_t source, int32_t action);
+    static bool isTouchEvent(uint32_t source, int32_t action);
+    static Cairo::Matrix createRotateMatrix(int rotation, int rotatedFrameWidth, int rotatedFrameHeight);
+
+    // MotionEvent will transform various axes in different ways, based on the source. For
+    // example, the x and y axes will not have any offsets/translations applied if it comes from a
+    // relative mouse device (since SOURCE_RELATIVE_MOUSE is a non-pointer source). These methods
+    // are used to apply these transformations for different axes.
+    static vec2 calculateTransformedXY(uint32_t source, const ui::Transform&, const vec2& xy);
+    static float calculateTransformedAxisValue(int32_t axis, uint32_t source, int32_t flags,const ui::Transform&, const PointerCoords&);
+    static void calculateTransformedCoordsInPlace(PointerCoords& coords, uint32_t source,int32_t flags, const ui::Transform&);
+    static PointerCoords calculateTransformedCoords(uint32_t source, int32_t flags,const ui::Transform&, const PointerCoords&);
+
     void copyFrom(const MotionEvent& other, bool keepHistory);
     MotionEvent*split(int idBits);
-    void setSource(int)override;
+    void setSource(uint32_t)override;
     int getType()const override{return INPUT_EVENT_TYPE_MOTION;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }
@@ -259,11 +280,12 @@ public:
     inline int32_t getButtonState() const { return mButtonState; }
     inline void setButtonState(int32_t buttonState) { mButtonState = buttonState; }
     bool isButtonPressed(int button)const;
-    int32_t  getClassification()const{return mClassification;}
+    int32_t getClassification()const{return mClassification;}
     inline int32_t getActionButton() const { return mActionButton; }
     inline void setActionButton(int32_t button) { mActionButton = button; }
-    inline float getXOffset() const { return mXOffset; }
-    inline float getYOffset() const { return mYOffset; }
+    int getSurfaceRotation() const;
+    inline float getRawXOffset() const;
+    inline float getRawYOffset() const;
     inline float getXPrecision() const { return mXPrecision; }
     inline float getYPrecision() const { return mYPrecision; }
     inline size_t getHistorySize() const { return mSampleEventTimes.size() - 1; }
@@ -275,6 +297,8 @@ public:
     float getYDispatchLocation(int pointerIndex);
     float getXCursorPosition()const;
     float getYCursorPosition()const;
+    float getRawXCursorPosition() const { return mRawXCursorPosition;}
+    float getRawYCursorPosition() const { return mRawYCursorPosition;}
 private:
     void updateCursorPosition();
     ////////////////////////////////// Raw AXIS Properties ///////////////////////////////////
@@ -315,7 +339,8 @@ public:
 
     // Apply 3x3 perspective matrix transformation.
     // Matrix is in row-major form and compatible with SkMatrix.
-    void transform(const float matrix[9]);
+    void transform(const std::array<float,9>& matrix);
+    void applyTransform(const std::array<float,9>&matrix);
     void transform(const Cairo::Matrix & matrix);
     void addBatch(nsecs_t eventTime, float x, float y, float pressure, float size, int metaState);
     void addBatch(nsecs_t eventTime,const std::vector<PointerCoords>& pointerCoords, int metaState);

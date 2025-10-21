@@ -3571,7 +3571,7 @@ void AbsListView::onNestedScroll(View* target, int dxConsumed, int dyConsumed,in
     const View* motionView = getChildAt(motionIndex);
     int oldStart = 0;
     if(motionView) oldStart = motionView->getTop();
-    if (motionView == nullptr || trackMotionScroll(-dyUnconsumed, -dyUnconsumed)) {
+    if ((motionView == nullptr) || trackMotionScroll(-dyUnconsumed, -dyUnconsumed)) {
         int myUnconsumed = dyUnconsumed;
         int myConsumed = 0;
         if (motionView) {
@@ -3586,8 +3586,8 @@ void AbsListView::onNestedScroll(View* target, int dxConsumed, int dyConsumed,in
 
 bool AbsListView::onNestedFling(View* target, float velocityX, float velocityY, bool consumed) {
     const int childCount = getChildCount();
-    if (!consumed && childCount > 0 && canScrollList((int) velocityY) &&
-            std::abs(velocityY) > mMinimumVelocity) {
+    if (!consumed && (childCount > 0) && canScrollList((int) velocityY) &&
+            (std::abs(velocityY) > mMinimumVelocity)) {
         reportScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
         if(mFlingRunnable == nullptr){
             mFlingRunnable = new FlingRunnable(this);

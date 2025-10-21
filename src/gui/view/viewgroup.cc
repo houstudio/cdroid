@@ -177,6 +177,7 @@ void ViewGroup::initGroup(){
     mAccessibilityFocusedVirtualView = nullptr;
     mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
+    mChildren.reserve((int)ARRAY_INITIAL_CAPACITY);
     mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
          // We only care about disappearing items, since we need special logic to keep
          // those items visible after they've been 'removed'
@@ -311,8 +312,8 @@ bool ViewGroup::dispatchTransformedTouchEvent(MotionEvent& event, bool cancel,
     if (child == nullptr) {
         handled = View::dispatchTouchEvent(*transformedEvent);
     } else {
-        float offsetX = mScrollX - child->mLeft;
-        float offsetY = mScrollY - child->mTop;
+        const float offsetX = mScrollX - child->mLeft;
+        const float offsetY = mScrollY - child->mTop;
         transformedEvent->offsetLocation(offsetX, offsetY);
         if (! child->hasIdentityMatrix()) {
             LOGV_IF(event.getAction()==MotionEvent::ACTION_DOWN,"xy=(%f,%f) , (%f,%f)",event.getX(),event.getY(),transformedEvent->getX(),transformedEvent->getY());
@@ -328,7 +329,7 @@ DONE:
     return handled;
 }
 
-TouchTarget* ViewGroup::getTouchTarget(View* child) {
+TouchTarget* ViewGroup::getTouchTarget(View* child) const{
     for (TouchTarget* target = mFirstTouchTarget; target ; target = target->next) {
         if (target->child == child) {
             return target;
@@ -1560,6 +1561,10 @@ void ViewGroup::addView(View* child, int index,LayoutParams* params){
 }
 
 void ViewGroup::addInArray(View* child, int index){
+    if (mChildren.size() == mChildren.capacity()) {
+        //reserve more memory for opitimize
+        mChildren.reserve(mChildren.size() + (int)ARRAY_CAPACITY_INCREMENT);
+    }
     if(index>=mChildren.size())
         mChildren.push_back(child);
     else

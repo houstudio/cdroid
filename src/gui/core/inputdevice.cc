@@ -422,8 +422,8 @@ TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mEvent = nullptr;
     mActionButton = 0;
     mButtonState  = 0;
-    mPointerCoords.resize(16);
-    mPointerProps.resize(16);
+    mPointerCoords.reserve(16);
+    mPointerProps.reserve(16);
     mCoord.clear();
     mProp.clear();
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
@@ -649,7 +649,8 @@ int TouchDevice::getActionByBits(int& pointerIndex){
 
 static std::string printEvent(MotionEvent*e){
     std::ostringstream oss;
-    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()<<" eventTime:"<<e->getDownTime()<<"/"<<e->getEventTime();
+    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()
+        <<" source="<<e->getSource()<<" eventTime:"<<e->getDownTime()<<"/"<<e->getEventTime();
     oss<<" ("<<int(e->getX())<<","<<int(e->getY())<<"}"<<" historySize="<<e->getHistorySize();
     for(int i=0;i<e->getPointerCount();i++){
        oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
@@ -748,7 +749,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
-                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/);
+                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/,0/*classification*/);
             LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                  mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);

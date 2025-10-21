@@ -27,7 +27,7 @@ KeyEvent* KeyEvent::obtain(){
 }
 
 KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
-          int deviceId, int scancode, int flags, int source,int displayId/*, std::string characters*/){
+          int deviceId, int scancode, int flags, uint32_t source,int displayId/*, std::string characters*/){
     KeyEvent* ev = obtain();
     ev->mDownTime = downTime;
     ev->mEventTime = eventTime;
@@ -143,9 +143,8 @@ bool KeyEvent::isConfirmKey(int keyCode){
     }
 }
 
-void KeyEvent::initialize(int32_t deviceId,   int32_t source,
-        int32_t action,  int32_t flags,  int32_t keyCode, int32_t scanCode,
-        int32_t metaState, int32_t repeatCount, nsecs_t downTime, nsecs_t eventTime) {
+void KeyEvent::initialize(int32_t deviceId, uint32_t source,int32_t action, int32_t flags, int32_t keyCode,
+        int32_t scanCode, int32_t metaState, int32_t repeatCount, nsecs_t downTime, nsecs_t eventTime) {
     InputEvent::initialize(deviceId, source);
     mAction = action;
     mFlags = flags;

@@ -108,12 +108,12 @@ public:
     void setDisplayId(int);
     virtual int getType()const=0;
     virtual InputEvent*copy()const=0;
-    void initialize(int32_t deviceId, int32_t source);
+    void initialize(int32_t deviceId, uint32_t source);
     void initialize(const InputEvent& from);
-    int getSource()const{return mSource;}
-    bool isFromSource(int s)const;
+    uint32_t getSource()const{return mSource;}
+    bool isFromSource(uint32_t s)const;
     long getSequenceNumber()const{return mSeq;}
-    virtual void setSource(int source);
+    virtual void setSource(uint32_t source);
     virtual bool isTainted()const=0;
     virtual void setTainted(bool)=0;
     virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
