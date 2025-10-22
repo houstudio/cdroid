@@ -187,7 +187,8 @@ public:
         TOOL_TYPE_FINGER = 1,
         TOOL_TYPE_STYLUS = 2,
         TOOL_TYPE_MOUSE = 3,
-        TOOL_TYPE_ERASER = 4
+        TOOL_TYPE_ERASER = 4,
+        TOOL_TYPE_PALM = 5
     };
 private:
     static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
