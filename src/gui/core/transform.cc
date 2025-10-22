@@ -226,8 +226,7 @@ vec3 Transform::transform(const vec3& v) const {
 }
 
 vec2 Transform::transform(float x, float y) const {
-    vec2 v2={x,y};
-    return transform(v2);//vec2(x, y));
+    return transform(vec2{x,y});
 }
 
 #if 0
