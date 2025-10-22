@@ -15,10 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#ifndef __INPUT_EVENT_LABE_H__
-#define __INPUT_EVENT_LABE_H__
-#include <view/keyevent.h>
-#include <view/motionevent.h>
+#ifndef __INPUT_EVENT_LABEL_H__
+#define __INPUT_EVENT_LABEL_H__
 #include <string.h>
 #include <stdint.h>
 
@@ -54,4 +52,4 @@ const char* getAxisLabel(int32_t axisId);
 int32_t getLedByLabel(const char* label);
 
 }/*endof namespace*/
-#endif
+#endif/*__INPUT_EVENT_LABEL_H__*/

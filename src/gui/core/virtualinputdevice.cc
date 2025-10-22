@@ -1,4 +1,5 @@
 #include <view/keycodes.h>
+#include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <fcntl.h>
 #include <unistd.h>

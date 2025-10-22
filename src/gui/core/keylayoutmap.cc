@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <stdlib.h>
 #include <private/inputeventlabels.h>
+#include <view/keyevent.h>
 #include <tokenizer.h>
 #include <keylayoutmap.h>
 #include <cdtypes.h>

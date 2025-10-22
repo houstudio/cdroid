@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <private/inputeventlabels.h>
+#include <view/keyevent.h>
+#include <view/motionevent.h>
 
 #define DEFINE_KEY(key)   { #key, KeyEvent::KEYCODE_##key }
 #define DEFINE_AXIS(axis) { #axis, MotionEvent::AXIS_##axis }
