@@ -19,6 +19,7 @@
 #define __TEXT_UTILS_H__
 #include <string>
 #include <vector>
+#include <stdio.h>
 namespace cdroid{
 
 class TextUtils{
@@ -40,6 +41,10 @@ public:
     static std::vector<std::string> split(const std::string& s,int delim);
     static int UCS2UTF(wchar_t wc,char*oututf,int outlen);
     static int UTF2UCS(const char*utf,wchar_t*unicode);
+
+    static void stringAppendV(std::string& dst, const char* format, va_list ap);
+    static std::string stringPrintf(const char* fmt, ...);
+    static void stringAppendF(std::string& dst, const char* format, ...);
 };
 }
 #endif
