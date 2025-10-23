@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <private/inputeventlabels.h>
+#include <view/keyevent.h>
+#include <view/motionevent.h>
 
 #define DEFINE_KEY(key)   { #key, KeyEvent::KEYCODE_##key }
 #define DEFINE_AXIS(axis) { #axis, MotionEvent::AXIS_##axis }
@@ -98,8 +100,8 @@ const InputEventLabel KEYCODES[] = {
     DEFINE_KEY(GRAVE),
     DEFINE_KEY(MINUS),
     DEFINE_KEY(EQUALS),
-    DEFINE_KEY(LEFTBRACE),
-    DEFINE_KEY(RIGHTBRACE),
+    DEFINE_KEY(LEFT_BRACKET),
+    DEFINE_KEY(RIGHT_BRACKET),
     DEFINE_KEY(BACKSLASH),
     DEFINE_KEY(SEMICOLON),
     DEFINE_KEY(APOSTROPHE),

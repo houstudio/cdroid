@@ -77,7 +77,7 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 Preferences InputDevice::mPrefs;
 
 InputDevice::InputDevice(int fdev){
-    INPUTDEVICEINFO devInfos;
+    INPUTDEVICEINFO devInfos={};
     InputDeviceIdentifier di;
     Point displaySize;
     std::ostringstream oss;
@@ -767,8 +767,10 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
             if( pointerIndex < mTrack2Slot.size() )
                 mTrack2Slot.removeAt(pointerIndex);
-            mPointerProps.erase (mPointerProps.begin() + pointerIndex);
-            mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
+            if(pointerIndex<mPointerProps.size()){
+                mPointerProps.erase (mPointerProps.begin() + pointerIndex);
+                mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
+            }
             mPointerProps.resize(mPointerProps.size()+1);
             mPointerCoords.resize(mPointerCoords.size()+1);
         }else {

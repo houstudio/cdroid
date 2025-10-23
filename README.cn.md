@@ -65,17 +65,21 @@ sudo apt install autoconf libtool build-essential cmake gdb pkg-config zip gette
 * git clone https://gitee.com/houstudio/vcpkg.git
 * cd vcpkg
 * ./bootstrap-vcpkg.sh
-### 3.install cdroid deplibs:
+### 3. install cdroid supported toolchain's patch
+* cp cdroid/script/vcpkgpatch4cdroid.tar.gz vcpkg/
+* cd vcpkg
+* tar -zxvf vcpkgpatch4cdroid.tar.gz
+### 4.install cdroid deplibs:
 * ./cdroid_install_libs.sh --triplet=x64-linux-dynamic<br>
-### 4.download cdroid source code:
+### 5.download cdroid source code:
 * cd ~
 * git clone http://www.gitee.com/houstudio/cdroid.git<br>
-### 5.build cdroid:
+### 6.build cdroid:
 * cd cdroid
 * ./build.sh --build=debug
 * cd outX64-Debug
 * make -j
-### 6.prepare system and app resource
+### 7.prepare system and app resource
 *The cdroid.pak and yourapp's pak must be in your working directory*
 * cp src/gui/cdroid.pak ./
 * cp apps/appname/appname.pak ./

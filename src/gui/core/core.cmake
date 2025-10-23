@@ -14,6 +14,7 @@ SET(CORE_SOURCES
     core/graphdevice.cc
     core/handler.cc
     core/inputdevice.cc
+    core/virtualinputdevice.cc
     core/inputeventsource.cc
     core/inputmethod.cc
     core/inputmethodmanager.cc

@@ -152,7 +152,13 @@ public:
         AXIS_GENERIC_13 = 44,
         AXIS_GENERIC_14 = 45,
         AXIS_GENERIC_15 = 46,
-        AXIS_GENERIC_16 = 47
+        AXIS_GENERIC_16 = 47,
+        AXIS_GESTURE_X_OFFSET = 48,
+        AXIS_GESTURE_Y_OFFSET = 49,
+        AXIS_GESTURE_SCROLL_X_DISTANCE = 50,
+        AXIS_GESTURE_SCROLL_Y_DISTANCE = 51,
+        AXIS_GESTURE_PINCH_SCALE_FACTOR = 52,
+        AXIS_GESTURE_SWIPE_FINGER_COUNT = 53
     };
     enum{
         BUTTON_PRIMARY = 1 << 0,
@@ -187,7 +193,8 @@ public:
         TOOL_TYPE_FINGER = 1,
         TOOL_TYPE_STYLUS = 2,
         TOOL_TYPE_MOUSE = 3,
-        TOOL_TYPE_ERASER = 4
+        TOOL_TYPE_ERASER = 4,
+        TOOL_TYPE_PALM = 5
     };
 private:
     static constexpr float INVALID_CURSOR_POSITION = NAN;//std::numeric_limits<float>::quiet_NaN();
