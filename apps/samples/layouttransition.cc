@@ -4,10 +4,6 @@
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    printf("bool.size=%d long.size=%d float.size=%d double.size=%d ponter.size=%d string.size=%d View.size=%d function.size=%d Runnable.size=%d Insets.size=%d"
-         " shared_ptr.size=%d vector.size=%d map.size=%d\n",  sizeof(bool),sizeof(long),sizeof(float),sizeof(double),sizeof(void*),sizeof(std::string),
-         sizeof(View),sizeof(std::function<void()>),sizeof(Runnable),sizeof(Insets),
-         sizeof(std::shared_ptr<int>),sizeof(std::vector<int>),sizeof(std::map<int,int>));
     Window*w=new Window(0,0,-1,-1);
     w->setId(10000);
     w->setBackgroundColor(0xFF111111);

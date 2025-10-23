@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __KEY_EVENT_H__
 #define __KEY_EVENT_H__
+#include <view/keycodes.h>
 #include <view/inputevent.h>
 #include <core/sparsearray.h>
 namespace cdroid{
@@ -544,5 +545,4 @@ enum{
 
 };/*endof class KeyEvent*/
 }/*endof namespace*/
-#include <view/keycodes.h>
 #endif/*__KEY_EVENT_H__*/
