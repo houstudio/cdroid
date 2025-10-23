@@ -165,6 +165,7 @@ namespace{
 
     void bezierSplit(const PointD& p0, const PointD& p1, const PointD& p2, const PointD& p3,
            double t0, double t1, PointD& result0, PointD& result1, PointD& result2, PointD& result3){
+    #if 0
         // 1st De Casteljau
         PointD p01 = interpolate(p0, p1, t0);
         PointD p12 = interpolate(p1, p2, t0);
@@ -190,6 +191,34 @@ namespace{
         result1 = r01;
         result2 = r012;
         result3 = q0123;
+    #else
+        PointD tmp0, tmp1, tmp2, tmp3;
+        {
+            double s = t1;
+            PointD a = interpolate(p0, p1, s);
+            PointD b = interpolate(p1, p2, s);
+            PointD c = interpolate(p2, p3, s);
+            PointD d = interpolate(a, b, s);
+            PointD e = interpolate(b, c, s);
+            PointD f = interpolate(d, e, s);
+            tmp0 = p0;
+            tmp1 = a;
+            tmp2 = d;
+            tmp3 = f;
+        }
+        // 再在 [0, t1] 上分割到 t0/t1，得到 [t0, t1] 的贝塞尔段
+        double s = (t0) / (t1);
+        PointD a = interpolate(tmp0, tmp1, s);
+        PointD b = interpolate(tmp1, tmp2, s);
+        PointD c = interpolate(tmp2, tmp3, s);
+        PointD d = interpolate(a, b, s);
+        PointD e = interpolate(b, c, s);
+        PointD f = interpolate(d, e, s);
+        result0 = f;
+        result1 = e;
+        result2 = c;
+        result3 = tmp3;
+    #endif
     }
 }
 
