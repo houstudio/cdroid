@@ -45,6 +45,7 @@ public:
     void rel_curve_to(double x1, double y1, double x2, double y2, double x3, double y3);;
     void rel_quad_to(double dx1, double dy1, double dx2, double dy2);
     void arc(double xc, double yc, double radius, double angle1, double angle2);
+    void arc_negative(double xc, double yc, double radius, double angle1, double angle2);
     void arc_to(double x1, double y1, double x2, double y2, double radius);
     void arc_to(const RectF&, double startAngle, double sweepAngle, bool forceMoveTo);
     void arc_to(double left, double top, double width, double height, double startAngle, double sweepAngle, bool forceMoveTo);
