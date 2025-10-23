@@ -95,10 +95,13 @@ protected:
 protected:
     void prepareForReuse();
 public:
-    enum{
+    enum InputEventType{
         INPUT_EVENT_TYPE_KEY = 1,
         INPUT_EVENT_TYPE_MOTION = 2,
-        INPUT_EVENT_TYPE_FOCUS = 3
+        INPUT_EVENT_TYPE_FOCUS = 3,
+        INPUT_EVENT_TYPE_CAPTURE =4,
+        INPUT_EVENT_TYPE_DRAG=5,
+        INPUT_EVENT_TYPE_TOUCH_MODE=6
     };
     InputEvent();
     virtual ~InputEvent();

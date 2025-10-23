@@ -121,34 +121,26 @@ void InputEvent::recycle(){
 }
 
 std::ostream& operator<<(std::ostream& out, const InputEvent& event) {
-    /*switch (event.getType()) {
-    case InputEventType::KEY: {
-        const KeyEvent& keyEvent = static_cast<const KeyEvent&>(event);
-        out << keyEvent;
-        return out;
-    }
-    case InputEventType::MOTION: {
-        const MotionEvent& motionEvent = static_cast<const MotionEvent&>(event);
-        out << motionEvent;
-        return out;
-    }
-    case InputEventType::FOCUS: {
+    switch (event.getType()) {
+    case InputEvent::INPUT_EVENT_TYPE_KEY:
+        out << static_cast<const KeyEvent&>(event);
+        break;
+    case InputEvent::INPUT_EVENT_TYPE_MOTION:
+        out << static_cast<const MotionEvent&>(event);
+        break;
+    case InputEvent::INPUT_EVENT_TYPE_FOCUS:
         out << "FocusEvent";
-        return out;
-    }
-    case InputEventType::CAPTURE: {
+        break;
+    case InputEvent::INPUT_EVENT_TYPE_CAPTURE:
         out << "CaptureEvent";
-        return out;
-    }
-    case InputEventType::DRAG: {
+        break;
+    case InputEvent::INPUT_EVENT_TYPE_DRAG:
         out << "DragEvent";
-        return out;
-    }
-    case InputEventType::TOUCH_MODE: {
+        break;
+    case InputEvent::INPUT_EVENT_TYPE_TOUCH_MODE:
         out << "TouchModeEvent";
-        return out;
+        break;
     }
-    }*/
     return out;
 }
 
