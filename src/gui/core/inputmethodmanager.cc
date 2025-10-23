@@ -113,7 +113,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_MODE_CHANGE:break;
         case Keyboard::KEYCODE_BACKSPACE:
         case Keyboard::KEYCODE_DELETE:
-             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
+             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_UP/*action*/,0,
              KeyEvent::KEYCODE_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              /*sendKeyEvent(keyEvent);*/break;
         case -101:break;
@@ -146,8 +146,8 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_DONE     :  break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
-             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,KeyEvent::KEYCODE_BACK,
-		   0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_UP/*action*/,0,KeyEvent::KEYCODE_BACK,
+		        0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              imm.sendKeyEvent(keyEvent);break;
 	}
     };

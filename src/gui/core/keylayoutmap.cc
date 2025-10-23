@@ -241,7 +241,7 @@ int KeyLayoutMap::Parser::parseKey() {
 
     mTokenizer->skipDelimiters(WHITESPACE);
     std::string keyCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.c_str());
+    int32_t keyCode = InputEventLookup::getKeyCodeByLabel(keyCodeToken.c_str());
     if (!keyCode) {
         LOGE("%s: Expected key code label, got '%s'. keycode=%d", mTokenizer->getLocation().c_str(),
                 keyCodeToken.c_str(),keyCode);
@@ -254,7 +254,7 @@ int KeyLayoutMap::Parser::parseKey() {
         if (mTokenizer->isEol() || mTokenizer->peekChar() == '#') break;
 
         std::string flagToken = mTokenizer->nextToken(WHITESPACE);
-        uint32_t flag = getKeyFlagByLabel(flagToken.c_str());
+        uint32_t flag = InputEventLookup::getKeyFlagByLabel(flagToken.c_str());
         if (!flag) {
             LOGE("%s: Expected key flag label, got '%s'.", mTokenizer->getLocation().c_str(),
                     flagToken.c_str());
@@ -303,7 +303,7 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string axisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = getAxisByLabel(axisToken.c_str());
+        axisInfo.axis = InputEventLookup::getAxisByLabel(axisToken.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected inverted axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), axisToken.c_str());
@@ -323,7 +323,7 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string lowAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.axis = getAxisByLabel(lowAxisToken.c_str());
+        axisInfo.axis = InputEventLookup::getAxisByLabel(lowAxisToken.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected low axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), lowAxisToken.c_str());
@@ -332,14 +332,14 @@ int KeyLayoutMap::Parser::parseAxis() {
 
         mTokenizer->skipDelimiters(WHITESPACE);
         std::string highAxisToken = mTokenizer->nextToken(WHITESPACE);
-        axisInfo.highAxis = getAxisByLabel(highAxisToken.c_str());
+        axisInfo.highAxis = InputEventLookup::getAxisByLabel(highAxisToken.c_str());
         if (axisInfo.highAxis < 0) {
             LOGE("%s: Expected high axis label, got '%s'.",
                     mTokenizer->getLocation().c_str(), highAxisToken.c_str());
             return -1;//BAD_VALUE;
         }
     } else {
-        axisInfo.axis = getAxisByLabel(token.c_str());
+        axisInfo.axis = InputEventLookup::getAxisByLabel(token.c_str());
         if (axisInfo.axis < 0) {
             LOGE("%s: Expected axis label, 'split' or 'invert', got '%s'.",
                     mTokenizer->getLocation().c_str(), token.c_str());
@@ -405,7 +405,7 @@ int KeyLayoutMap::Parser::parseLed() {
 
     mTokenizer->skipDelimiters(WHITESPACE);
     std::string ledCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t ledCode = getLedByLabel(ledCodeToken.c_str());
+    int32_t ledCode = InputEventLookup::getLedByLabel(ledCodeToken.c_str());
     if (ledCode < 0) {
         LOGE("%s: Expected LED code label, got '%s'.", mTokenizer->getLocation().c_str(),
                 ledCodeToken.c_str());

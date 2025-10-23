@@ -357,7 +357,7 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
             break;
         }
 
-        mEvent.initialize(getId(),getSources(),(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
+        mEvent.initialize(getId(),getSources(),0/*displayId*/,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));

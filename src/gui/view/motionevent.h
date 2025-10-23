@@ -79,8 +79,11 @@ struct PointerProperties {
     void copyFrom(const PointerProperties& other);
 };
 
+std::ostream& operator<<(std::ostream& out, const PointerProperties& properties);
+
 class MotionEvent:public InputEvent{
 public:
+    static constexpr size_t MAX_POINTERS = 16;
     enum{
         ACTION_MASK = 0xff,
         ACTION_POINTER_INDEX_MASK = 0xff00,
@@ -398,7 +401,10 @@ public:
     static int axisFromString(const std::string&symbolicName);
     static std::string buttonStateToString(int buttonState);
     static std::string toolTypeToString(int toolType);
-    void toStream(std::ostream& os)const override;
+    static std::string classificationToString(int);
 };
+
+std::ostream& operator<<(std::ostream& out, const MotionEvent& event);
+
 }/*endof namespace*/
 #endif/*__MOTION_EVENT_H__*/
