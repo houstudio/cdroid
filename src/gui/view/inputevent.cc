@@ -20,6 +20,7 @@
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
 #include <utils/atexit.h>
+#include <utils/textutils.h>
 #include <utils/neverdestroyed.h>
 #include <porting/cdlog.h>
 #include <fcntl.h>
@@ -104,7 +105,7 @@ std::string InputEvent::sourceToString(uint32_t source) {
         }
     }
     if (result.empty()) {
-        //result = StringPrintf("0x%08x", source);
+        result = TextUtils::stringPrintf("0x%08x", source);
     }
     return result;
 }

@@ -237,7 +237,13 @@ public:
     static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
         int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
         int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
-        int edgeFlags, uint32_t source, int flags,int classification);
+        int edgeFlags, uint32_t source,int displayid, int flags,int classification);
+
+    static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime,
+            int action, int pointerCount,const PointerProperties* pointerProperties,
+            const PointerCoords* pointerCoords, int metaState, int buttonState,
+            float xPrecision, float yPrecision, int deviceId,
+            int edgeFlags, int source, int displayId, int flags);
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
         float x, float y, float pressure, float size, int metaState,

@@ -211,14 +211,24 @@ MotionEvent*MotionEvent::obtain(){
 MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action,
         int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
         int metaState, int buttonState,float xPrecision,float yPrecision,int deviceId,
-        int edgeFlags,uint32_t source,int flags,int classification){
+        int edgeFlags,uint32_t source,int displayId,int flags,int classification){
     MotionEvent* ev = obtain();
-    ev->initialize(deviceId, source,0/*displayId*/, action,0/*actionbutton*/,
+    ev->initialize(deviceId, source,displayId, action,0/*actionbutton*/,
         flags, edgeFlags, metaState, buttonState, classification,
         0/*xoffset*/,0/*yoffset*/,xPrecision, yPrecision,
         0/*rawXCursorPosition*/,0/*rawYCursorPosition*/,
         downTime, eventTime,pointerCount, pointerProperties, pointerCoords);
     return ev;
+}
+
+MotionEvent* MotionEvent::obtain(nsecs_t downTime, nsecs_t eventTime,
+           int action, int pointerCount,const PointerProperties* pointerProperties,
+           const PointerCoords* pointerCoords, int metaState, int buttonState,
+           float xPrecision, float yPrecision, int deviceId,
+           int edgeFlags, int source, int displayId, int flags){
+     return obtain(downTime, eventTime, action, pointerCount, pointerProperties, pointerCoords,
+                metaState, buttonState, xPrecision, yPrecision, deviceId, edgeFlags, source,
+                displayId, flags, CLASSIFICATION_NONE);
 }
 
 MotionEvent* MotionEvent::obtain(nsecs_t downTime,nsecs_t eventTime, int action,

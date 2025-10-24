@@ -83,6 +83,7 @@ InputDevice::InputDevice(int fdev){
     std::ostringstream oss;
 
     mSeqID = 0;
+    mDisplayId = 0;
     mDeviceClasses= 0;
     //mAxisFlags =0;
     mScreenRotation =0;
@@ -104,6 +105,10 @@ InputDevice::InputDevice(int fdev){
     mScreenHeight = displaySize.y;//ScreenSize is screen size in no roration
     if(mPrefs.getSectionCount()==0){
         mPrefs.load(App::getInstance().getDataPath() + std::string("input-devices.xml"));
+        const std::string section = getName();
+        if(mPrefs.hasSection(section)){
+            mDisplayId = mPrefs.getInt(section,"displayId",0);
+        }
     }
     LOGI("screenSize(%dx%d) rotation=%d",displaySize.x,displaySize.y,display.getRotation());
 
@@ -357,7 +362,7 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
             break;
         }
 
-        mEvent.initialize(getId(),getSources(),0/*displayId*/,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
+        mEvent.initialize(getId(),getSources(),mDisplayId,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));
@@ -649,17 +654,7 @@ int TouchDevice::getActionByBits(int& pointerIndex){
 
 static std::string printEvent(MotionEvent*e){
     std::ostringstream oss;
-    oss<<"MotionEvent::Acion="<<e->getActionMasked()<<" Index="<<e->getActionIndex()
-        <<" source="<<e->getSource()<<" eventTime:"<<e->getDownTime()<<"/"<<e->getEventTime();
-    oss<<" ("<<int(e->getX())<<","<<int(e->getY())<<"}"<<" historySize="<<e->getHistorySize();
-    for(int i=0;i<e->getPointerCount();i++){
-       oss<<std::endl<<"   Pointer["<<i<<"].id="<<e->getPointerId(i)<<" ";
-       oss<<"("<<int(e->getX(i))<<","<<int(e->getY(i))<<") {";
-       for(int j=0;j<e->getHistorySize();j++){
-          oss<<"("<<e->getHistoricalEventTime(j)<<":"<<int(e->getHistoricalX(i,j))<<","<<int(e->getHistoricalY(i,j))<<")";
-       }
-       oss<<"}";
-    }
+    oss<<*e;
     return oss.str(); 
 }
 
@@ -749,7 +744,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
             mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
-                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(), 0/*flags*/,0/*classification*/);
+                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
             LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                  mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
             mEvent->setActionButton(mActionButton);
