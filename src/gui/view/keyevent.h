@@ -126,7 +126,7 @@ public:
 public:
     void initialize(
             int32_t deviceId,
-            uint32_t source,
+            int32_t source,
             int32_t displayId,
             int32_t action,
             int32_t flags,
@@ -138,7 +138,7 @@ public:
             nsecs_t eventTime);
     void initialize(const KeyEvent& from);
     static KeyEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
-               int deviceId, int scancode, int flags, uint32_t source,int displayId=0/*,std::string characters*/);
+               int deviceId, int scancode, int flags, int32_t source,int displayId=0/*,std::string characters*/);
     static KeyEvent* obtain(const KeyEvent& other);
     virtual int getType()const override{return INPUT_EVENT_TYPE_KEY;}
     KeyEvent*copy()const override{return obtain(*this);}

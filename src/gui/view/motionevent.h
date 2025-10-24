@@ -227,7 +227,7 @@ public:
     MotionEvent();
     MotionEvent(const MotionEvent&m);
     MotionEvent*copy()const override{return obtain(*this);}
-    void initialize(int deviceId,uint32_t source,int displayId,int action,int actionButton,
+    void initialize(int deviceId,int source,int displayId,int action,int actionButton,
         int flags, int edgeFlags,int metaState, int buttonState, int classification,
         float xoffset,float yoffset,float xPrecision, float yPrecision,
         float rawXCursorPosition,float rawYCursorPosition,
@@ -237,12 +237,11 @@ public:
     static MotionEvent*obtain(nsecs_t downTime, nsecs_t eventTime, int action,
             int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
             int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
-            int edgeFlags, uint32_t source,int displayid, int flags,int classification);
+            int edgeFlags, int source,int displayid, int flags,int classification);
 
-    static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime,
-            int action, int pointerCount,const PointerProperties* pointerProperties,
-            const PointerCoords* pointerCoords, int metaState, int buttonState,
-            float xPrecision, float yPrecision, int deviceId,
+    static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
+            int pointerCount,const PointerProperties* pointerProperties, const PointerCoords* pointerCoords,
+            int metaState, int buttonState, float xPrecision, float yPrecision, int deviceId,
             int edgeFlags, int source, int displayId, int flags);
 
     static MotionEvent* obtain(nsecs_t downTime, nsecs_t eventTime, int action,
@@ -272,7 +271,7 @@ public:
 
     void copyFrom(const MotionEvent& other, bool keepHistory);
     MotionEvent*split(int idBits);
-    void setSource(uint32_t)override;
+    void setSource(int32_t)override;
     int getType()const override{return INPUT_EVENT_TYPE_MOTION;}
     inline void setAction(int32_t action) { mAction = action; }
     inline int32_t getActionMasked() const { return mAction &ACTION_MASK; }

@@ -193,7 +193,7 @@ MotionEvent::MotionEvent(){
     mSampleEventTimes.clear();
 }
 
-void MotionEvent::setSource(uint32_t source){
+void MotionEvent::setSource(int32_t source){
     if(source==mSource)return;
     InputEvent::setSource(source);
     updateCursorPosition();
@@ -211,7 +211,7 @@ MotionEvent*MotionEvent::obtain(){
 MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action,
         int pointerCount, const PointerProperties* pointerProperties,const PointerCoords* pointerCoords,
         int metaState, int buttonState,float xPrecision,float yPrecision,int deviceId,
-        int edgeFlags,uint32_t source,int displayId,int flags,int classification){
+        int edgeFlags,int source,int displayId,int flags,int classification){
     MotionEvent* ev = obtain();
     ev->initialize(deviceId, source,displayId, action,0/*actionbutton*/,
         flags, edgeFlags, metaState, buttonState, classification,
@@ -282,7 +282,7 @@ MotionEvent* MotionEvent::obtainNoHistory(const MotionEvent& other){
 
 void MotionEvent::initialize(
         int deviceId,
-        uint32_t source,
+        int source,
         int displayId,
         int action,
         int actionButton,
