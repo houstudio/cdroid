@@ -91,24 +91,28 @@ protected:
     int32_t mAction;
     long mSeq;
     static int mNextSeq;
-    nsecs_t mEventTime;//SystemClock#uptimeMillis
+    nsecs_t mEventTime;
 protected:
     void prepareForReuse();
 public:
-    enum{
+    enum InputEventType{
         INPUT_EVENT_TYPE_KEY = 1,
         INPUT_EVENT_TYPE_MOTION = 2,
-        INPUT_EVENT_TYPE_FOCUS = 3
+        INPUT_EVENT_TYPE_FOCUS = 3,
+        INPUT_EVENT_TYPE_CAPTURE =4,
+        INPUT_EVENT_TYPE_DRAG=5,
+        INPUT_EVENT_TYPE_TOUCH_MODE=6
     };
     InputEvent();
     virtual ~InputEvent();
     int getAction()const{return mAction;}
     int getDeviceId()const{return mDeviceId;}
+    int getId()const{return mId;}
     int getDisplayId()const;
     void setDisplayId(int);
     virtual int getType()const=0;
     virtual InputEvent*copy()const=0;
-    void initialize(int32_t deviceId, uint32_t source);
+    void initialize(int32_t id,int32_t deviceId, uint32_t source,int32_t displayId);
     void initialize(const InputEvent& from);
     uint32_t getSource()const{return mSource;}
     bool isFromSource(uint32_t s)const;
@@ -119,9 +123,11 @@ public:
     virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
     virtual nsecs_t getEventTime()const{ return mEventTime;}
     virtual void recycle();/*only obtained event can call recycle*/
-    virtual void toStream(std::ostream& os)const=0;
-    friend std::ostream& operator<<( std::ostream&,const InputEvent&);
+    static int32_t nextId();
+    static std::string sourceToString(uint32_t source);
 };
+
+std::ostream& operator<<(std::ostream& out, const InputEvent& event);
 
 class KeyEvent;
 class MotionEvent;
@@ -156,6 +162,30 @@ private:
     const size_t mMaxPoolSize;
     std::queue<KeyEvent*> mKeyEventPool;
     std::queue<MotionEvent*> mMotionEventPool;
+};
+
+class IdGenerator {
+private:
+    static constexpr uint32_t SOURCE_SHIFT = 30;
+
+public:
+    // Used to divide integer space to ensure no conflict among these sources./
+    enum class Source : int32_t {
+        INPUT_READER = static_cast<int32_t>(0x0u << SOURCE_SHIFT),
+        INPUT_DISPATCHER = static_cast<int32_t>(0x1u << SOURCE_SHIFT),
+        OTHER = static_cast<int32_t>(0x3u << SOURCE_SHIFT), // E.g. app injected events
+    };
+    IdGenerator(Source source);
+
+    int32_t nextId() const;
+
+    // Extract source from given id.
+    static inline Source getSource(int32_t id) { return static_cast<Source>(SOURCE_MASK & id); }
+
+private:
+    const Source mSource;
+
+    static constexpr int32_t SOURCE_MASK = static_cast<int32_t>(0x3u << SOURCE_SHIFT);
 };
 
 }/*endof namespace*/

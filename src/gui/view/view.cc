@@ -8138,18 +8138,15 @@ void View::setHovered(bool hovered) {
 }
 
 bool View::performClick(){
-    bool result = false;
     //notifyAutofillManagerOnClick();
+    sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
+    notifyEnterOrExitForAutoFillIfNeeded(true);
     if(mListenerInfo && mListenerInfo->mOnClickListener){
          playSoundEffect(SoundEffectConstants::CLICK);
          mListenerInfo->mOnClickListener(*this);
-         result = true;
+         return true;
     }
-    if(mAttachInfo){//isAttachedToWindow())
-        sendAccessibilityEvent(AccessibilityEvent::TYPE_VIEW_CLICKED);
-        notifyEnterOrExitForAutoFillIfNeeded(true);
-    }
-    return result;
+    return false;
 }
 
 bool View::callOnClick() {

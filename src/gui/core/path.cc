@@ -195,6 +195,10 @@ void Path::arc(double xc, double yc, double radius, double angle1, double angle2
     mCTX->arc(xc,yc,radius,angle1,angle2);
 }
 
+void Path::arc_negative(double xc, double yc, double radius, double angle1, double angle2){
+    mCTX->arc_negative(xc,yc,radius,angle1,angle2);
+}
+
 void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
     // Current point
     double x0=0, y0=0;

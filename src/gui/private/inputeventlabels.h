@@ -19,6 +19,9 @@
 #define __INPUT_EVENT_LABEL_H__
 #include <string.h>
 #include <stdint.h>
+#include <string>
+#include <vector>
+#include <unordered_map>
 
 namespace cdroid{
 
@@ -27,29 +30,70 @@ struct InputEventLabel {
     int value;
 };
 
-extern const InputEventLabel KEYCODES[];
+struct EvdevEventLabel {
+    std::string type;
+    std::string code;
+    std::string value;
+};
 
-extern const InputEventLabel AXES[];
+//   NOTE: If you want a new key code, axis code, led code or flag code in keylayout file,
+//   then you must add it to InputEventLabels.cpp.
 
-extern const InputEventLabel LEDS[];
+class InputEventLookup {
+    /**
+     * This class is not purely static, but uses a singleton pattern in order to delay the
+     * initialization of the maps that it contains. If it were purely static, the maps could be
+     * created early, and would cause sanitizers to report memory leaks.
+     */
+public:
+    InputEventLookup(InputEventLookup& other) = delete;
 
-extern const InputEventLabel FLAGS[];
+    void operator=(const InputEventLookup&) = delete;
 
-int lookupValueByLabel(const char* literal, const InputEventLabel *list);
+    static int lookupValueByLabel(const std::unordered_map<std::string, int>& map,
+                                                 const char* literal);
 
-const char* lookupLabelByValue(int value, const InputEventLabel* list);
+    static const char* lookupLabelByValue(const std::vector<InputEventLabel>& vec, int value);
 
-int32_t getKeyCodeByLabel(const char* label);
+    static int getKeyCodeByLabel(const char* label);
 
-const char* getLabelByKeyCode(int32_t keyCode);
+    static const char* getLabelByKeyCode(int32_t keyCode);
 
-uint32_t getKeyFlagByLabel(const char* label);
+    static int getKeyFlagByLabel(const char* label);
 
-int32_t getAxisByLabel(const char* label);
+    static int getAxisByLabel(const char* label);
 
-const char* getAxisLabel(int32_t axisId);
+    static const char* getAxisLabel(int32_t axisId);
 
-int32_t getLedByLabel(const char* label);
+    static int getLedByLabel(const char* label);
 
+    static EvdevEventLabel getLinuxEvdevLabel(int32_t type, int32_t code, int32_t value);
+
+    static int getLinuxEvdevEventTypeByLabel(const char* label);
+
+    static int getLinuxEvdevEventCodeByLabel(int32_t type, const char* label);
+
+    static int getLinuxEvdevInputPropByLabel(const char* label);
+
+private:
+    InputEventLookup();
+
+    static const InputEventLookup& get() {
+        static InputEventLookup sLookup;
+        return sLookup;
+    }
+
+    const std::unordered_map<std::string, int> KEYCODES;
+
+    const std::vector<InputEventLabel> KEY_NAMES;
+
+    const std::unordered_map<std::string, int> AXES;
+
+    const std::vector<InputEventLabel> AXES_NAMES;
+
+    const std::unordered_map<std::string, int> LEDS;
+
+    const std::unordered_map<std::string, int> FLAGS;
+};
 }/*endof namespace*/
 #endif/*__INPUT_EVENT_LABEL_H__*/

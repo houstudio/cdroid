@@ -25,7 +25,6 @@
 #if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
   #include <io.h>
   #define close  _close
-  #define open   _open
   #define read  _read
   #define write  _write
   static const char* strerror_r(int errnum, char* buf, size_t buflen) {

@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __KEY_EVENT_H__
 #define __KEY_EVENT_H__
+#include <view/keycodes.h>
 #include <view/inputevent.h>
 #include <core/sparsearray.h>
 namespace cdroid{
@@ -126,6 +127,7 @@ public:
     void initialize(
             int32_t deviceId,
             uint32_t source,
+            int32_t displayId,
             int32_t action,
             int32_t flags,
             int32_t keyCode,
@@ -181,7 +183,6 @@ public:
     static bool metaStateHasModifiers(int metaState, int modifiers);
     static const std::string metaStateToString(int metaState);
     static const std::string actionToString(int action);
-    void toStream(std::ostream& os)const override;
 enum{
     KEYCODE_UNKNOWN         = 0,
     KEYCODE_SOFT_LEFT       = 1,
@@ -541,8 +542,9 @@ enum{
     LED_CONTROLLER_3 = 0x12,
     LED_CONTROLLER_4 = 0x13
 };
-
 };/*endof class KeyEvent*/
+
+std::ostream& operator<<(std::ostream& out, const KeyEvent& event);
+
 }/*endof namespace*/
-#include <view/keycodes.h>
 #endif/*__KEY_EVENT_H__*/

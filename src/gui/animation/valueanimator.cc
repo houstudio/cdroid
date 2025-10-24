@@ -574,14 +574,15 @@ void ValueAnimator::endAnimation(){
     mLastFrameTime = -1;
     mFirstFrameTime = -1;
     mStartTime = -1;
+    // mReversing needs to be reset *after* notifying the listeners for the end callbacks.
+    const bool lastReversing = mReversing;
+    mReversing = false;/*onAnimationEnd maybe destroied this animator*/
     if (notify && mListeners.size()) {
         std::vector<AnimatorListener>tmpListeners = mListeners;
         for (AnimatorListener l:tmpListeners) {
-            if(l.onAnimationEnd)l.onAnimationEnd(*this, mReversing);
+            if(l.onAnimationEnd)l.onAnimationEnd(*this, lastReversing);
         }
     }
-    // mReversing needs to be reset *after* notifying the listeners for the end callbacks.
-    mReversing = false;
 }
 
 void ValueAnimator::commitAnimationFrame(int64_t frameTime){

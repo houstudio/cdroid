@@ -19,6 +19,7 @@
 #include <private/inputeventlabels.h>
 #include <core/inputdevice.h>
 #include <utils/mathutils.h>
+#include <utils/textutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -282,7 +283,7 @@ void MotionEvent::initialize(
         size_t pointerCount,
         const PointerProperties* pointerProperties,
         const PointerCoords* pointerCoords) {
-    InputEvent::initialize(deviceId, source);
+    InputEvent::initialize(0,deviceId, source,displayId);
     mAction = action;
     mActionButton = actionButton;
     mFlags = flags;
@@ -317,7 +318,7 @@ MotionEvent::MotionEvent(const MotionEvent&other){
 }
 
 void MotionEvent::copyFrom(const MotionEvent& other, bool keepHistory) {
-    InputEvent::initialize(other.mDeviceId, other.mSource);
+    InputEvent::initialize(nextId(),other.mDeviceId, other.mSource,other.mDisplayId);
     mAction = other.mAction;
     mActionButton = other.mActionButton;
     mFlags = other.mFlags;
@@ -330,8 +331,6 @@ void MotionEvent::copyFrom(const MotionEvent& other, bool keepHistory) {
     mDownTime = other.mDownTime;
     mEventTime= other.mEventTime;
     mTransform= other.mTransform;
-    mSource = other.mSource;
-    mDisplayId = other.mDisplayId;
     mPointerProperties = other.mPointerProperties;
 
     if (keepHistory) {
@@ -406,6 +405,7 @@ MotionEvent*MotionEvent::split(int idBits){
                 getRawXOffset(), getRawYOffset(),getXPrecision(), getYPrecision(),
                 0/*rawXCursorPosition*/,0/*rawXCursorPosition*/,
                 mDownTime, eventTimeNanos,  newPointerCount, pp, pc);
+            ev->mId=InputEvent::nextId();
         } else {
             //nativeAddBatch(ev.mNativePtr, eventTimeNanos, pc, 0);
             ev->addSample(eventTimeNanos,pc);
@@ -531,6 +531,19 @@ bool MotionEvent::isTouchEvent()const{
     return isTouchEvent(mSource, mAction);
 }
 
+bool MotionEvent::isStylusPointer()const{
+    const int actionIndex = getActionIndex();
+    return isFromSource(InputDevice::SOURCE_STYLUS)
+            && (getToolType(actionIndex) == TOOL_TYPE_STYLUS
+            || getToolType(actionIndex) == TOOL_TYPE_ERASER);
+}
+
+bool MotionEvent::isHoverEvent()const{
+    return getActionMasked() == ACTION_HOVER_ENTER
+            || getActionMasked() == ACTION_HOVER_EXIT
+            || getActionMasked() == ACTION_HOVER_MOVE;
+}
+
 void MotionEvent::offsetLocation(float xOffset, float yOffset) {
     const float currXOffset = mTransform.tx();
     const float currYOffset = mTransform.ty();
@@ -569,17 +582,16 @@ std::string MotionEvent::actionToString(int action){
     case ACTION_BUTTON_PRESS  :return "ACTION_BUTTON_PRESS";
     case ACTION_BUTTON_RELEASE:return "ACTION_BUTTON_RELEASE";
     }
-    int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;
-    std::ostringstream oss;
+    const int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;
     switch (action & ACTION_MASK) {
-    case ACTION_POINTER_DOWN: oss<<"ACTION_POINTER_DOWN("<<index<<")";return oss.str();
-    case ACTION_POINTER_UP  : oss<<"ACTION_POINTER_UP(" <<index<<")"; return oss.str();
+    case ACTION_POINTER_DOWN: return TextUtils::stringPrintf("ACTION_POINTER_DOWN(%d)",index);
+    case ACTION_POINTER_UP  : return TextUtils::stringPrintf("ACTION_POINTER_UP(%d)",index);
     default: return std::to_string(action);
     }
 }
 
 std::string MotionEvent::axisToString(int axis){
-    return lookupLabelByValue(axis,AXES);
+    return InputEventLookup::getAxisLabel(axis);
 }
 
 static const char*BUTTON_SYMBOLIC_NAMES[]{
@@ -656,10 +668,28 @@ std::string MotionEvent::toolTypeToString(int toolType){
 
 int MotionEvent::axisFromString(const std::string&symbolicName){
     if(symbolicName.compare(0,5,"AXIS_")==0){
-        const int axis = lookupValueByLabel(symbolicName.c_str()+5,AXES);
+        const int axis = InputEventLookup::getAxisByLabel(symbolicName.c_str()+5);
         if(axis>=0)return axis;
     }
     return -1;
+}
+
+std::string MotionEvent::classificationToString(int classification) {
+    switch (classification) {
+    default:
+    case CLASSIFICATION_NONE:
+        return "NONE";
+    case CLASSIFICATION_AMBIGUOUS_GESTURE:
+        return "AMBIGUOUS_GESTURE";
+    case CLASSIFICATION_DEEP_PRESS:
+        return "DEEP_PRESS";
+    case CLASSIFICATION_TWO_FINGER_SWIPE:
+        return "TWO_FINGER_SWIPE";
+    case CLASSIFICATION_MULTI_FINGER_SWIPE:
+        return "MULTI_FINGER_SWIPE";
+    case CLASSIFICATION_PINCH:
+        return "PINCH";
+    }
 }
 
 void MotionEvent::transform(const std::array<float,9>& matrix){
@@ -958,46 +988,56 @@ void MotionEvent::updateCursorPosition() {
     setCursorPosition(x, y);
 }
 
-template <typename T>
-static void appendUnless(T defValue, std::ostringstream& os,const std::string& key, T value) {
-    if (/*DEBUG_CONCISE_TOSTRING &&*/ defValue==value) return;
-    os<<key<<value;
-}
-
-void MotionEvent::toStream(std::ostream& os)const{
-    os<<(const char*)"MotionEvent { action="<<actionToString(getAction());
-    //appendUnless("0", msg, ", actionButton=", buttonStateToString(getActionButton()));
-
-    const size_t pointerCount = getPointerCount();
-    for (int i = 0; i < pointerCount; i++) {
-        //appendUnless(i, os, ", id[" + i + "]=", getPointerId(i));
-        float x = getX(i);
-        float y = getY(i);
-        if (/*!DEBUG_CONCISE_TOSTRING ||*/ x != 0.f || y != 0.f) {
-            os<<", x["<<i<<"]="<<x;
-            os<<", y["<<i<<"]="<<y;
+std::ostream& operator<<(std::ostream& out, const MotionEvent& event) {
+    out << "MotionEvent { action=" << MotionEvent::actionToString(event.getAction());
+    if (event.getActionButton() != 0) {
+        out << ", actionButton=" << std::to_string(event.getActionButton());
+    }
+    const size_t pointerCount = event.getPointerCount();
+    FATAL_IF(pointerCount > MotionEvent::MAX_POINTERS, "Too many pointers : pointerCount = %zu",
+                        pointerCount);
+    for (size_t i = 0; i < pointerCount; i++) {
+        out << ", id[" << i << "]=" << event.getPointerId(i);
+        float x = event.getX(i);
+        float y = event.getY(i);
+        if (x != 0 || y != 0) {
+            out << ", x[" << i << "]=" << x;
+            out << ", y[" << i << "]=" << y;
         }
-        //appendUnless(TOOL_TYPE_SYMBOLIC_NAMES.get(TOOL_TYPE_FINGER),
-        //    os, ", toolType[" + i + "]=", toolTypeToString(getToolType(i)));
+        const int toolType = event.getToolType(i);
+        if (toolType != MotionEvent::TOOL_TYPE_FINGER) {
+            out << ", toolType[" << i << "]=" << MotionEvent::toolTypeToString(toolType);
+        }
     }
-
-    //appendUnless("0", os, ", buttonState=", buttonStateToString(getButtonState()));
-    //appendUnless(classificationToString(CLASSIFICATION_NONE), os, ", classification=",classificationToString(getClassification()));
-    os<< (const char*)", metaState="<<KeyEvent::metaStateToString(getMetaState());
-    //appendUnless("0", os, ", metaState=", KeyEvent::metaStateToString(getMetaState()));
-    os<< (const char*)", flags=0x"<<std::hex<<getFlags();//appendUnless("0", os, ", flags=0x", Integer.toHexString(getFlags()));
-    os<< (const char*)", edgeFlags=0x"<<std::hex<<getEdgeFlags()<<std::dec;//appendUnless("0", os, ", edgeFlags=0x", Integer.toHexString(getEdgeFlags()));
-    os<< (const char*)", pointerCount="<<pointerCount;//appendUnless(1, os, ", pointerCount=", pointerCount);
-    os<< (const char*)", historySize="<<getHistorySize();//appendUnless(0, os, ", historySize=", getHistorySize());
-    os<< (const char*)", eventTime="<<getEventTime();
-    if (true){//!DEBUG_CONCISE_TOSTRING) {
-        os<< (const char*)", downTime="<<getDownTime();
-        os<< (const char*)", deviceId="<<getDeviceId();
-        os<< (const char*)", source=0x"<<std::hex<<getSource()<<std::dec;
-        os<< (const char*)", displayId="<<getDisplayId();
-        //os<<", eventId="<<getId();
+    if (event.getButtonState() != 0) {
+        out << ", buttonState=" << event.getButtonState();
     }
-    os<<" }";
+    if (event.getClassification() != MotionEvent::CLASSIFICATION_NONE) {
+        out << ", classification=" << MotionEvent::classificationToString(event.getClassification());
+    }
+    if (event.getMetaState() != 0) {
+        out << ", metaState=" << event.getMetaState();
+    }
+    if (event.getFlags() != 0) {
+        out << ", flags=0x" << std::hex << event.getFlags() << std::dec;
+    }
+    if (event.getEdgeFlags() != 0) {
+        out << ", edgeFlags=" << event.getEdgeFlags();
+    }
+    if (pointerCount != 1) {
+        out << ", pointerCount=" << pointerCount;
+    }
+    if (event.getHistorySize() != 0) {
+        out << ", historySize=" << event.getHistorySize();
+    }
+    out << ", eventTime=" << event.getEventTime();
+    out << ", downTime=" << event.getDownTime();
+    out << ", deviceId=" << event.getDeviceId();
+    out << ", source=" << InputEvent::sourceToString(event.getSource());
+    out << ", displayId=" << event.getDisplayId();
+    out << ", eventId=0x" << std::hex << event.getId() << std::dec;
+    out << "}";
+    return out;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////

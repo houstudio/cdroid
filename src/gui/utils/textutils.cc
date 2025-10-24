@@ -19,7 +19,7 @@
 #include <string.h>
 #include <cdtypes.h>
 #include <cdlog.h>
-
+#include <memory>
 #ifdef USE_ICONV
 #include <iconv.h>
 #endif
@@ -64,50 +64,48 @@ const char*TextUtils::UCS16(){
 }
 
 const std::string TextUtils::utf16_utf8(const unsigned short*utf16,int len){
-    char*out=new char[len*4];
+    std::unique_ptr<char[]>out(new char[len*4]);
     #ifdef USE_ICONV
     int rc = convert(UCS16(),"UTF-8",(const char*)utf16,len*2,out,len*4);
     LOGD_IF(rc==-1,"convert error");
     #else
-    char*pout = out;
+    char*pout = out.get();
     for(int i=0;i<len;i++){
         int n=UCS2UTF(utf16[i],pout,4);
         pout+=n;
     }
     *pout = 0;
     #endif
-    std::string u8s=out;
-    delete[] out;
+    std::string u8s(out.get());
     return u8s; 
 }
 
 const std::wstring TextUtils::utf8tounicode(const std::string&utf8){
     size_t u8len = utf8.size() + 8;
-    wchar_t *out = new wchar_t[u8len];
+    std::unique_ptr<wchar_t[]> out(new wchar_t[u8len]);
     #ifdef USE_ICONV
     int rc = convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
     LOGD_IF(rc==-1,"convert error");
     #else
-    wchar_t*pout = out;
+    wchar_t*pout = out.get();
     for(int i=0;i< utf8.length() ;){
         int n=UTF2UCS((utf8.c_str()+i),pout++);
         i+=n;
     }
-    *pout = 0;
+    *pout = L'\0';
     #endif
-    std::wstring u32s(out,wcslen(out));
-    delete[] out;
+    std::wstring u32s(out.get());
     return u32s;
 }
 
 const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
     size_t u8len = utf8.size()+8;
-    char16_t *out= new char16_t[u8len];
+    std::unique_ptr<char16_t[]> out(new char16_t[u8len]);
     #ifdef USE_ICONV
     int rc = convert("UTF-8",UCSWCHAR(),utf8.c_str(),utf8.size(),(char*)out,sizeof(wchar_t)*u8len);
     LOGD_IF(rc==-1,"convert error");
     #else
-    char16_t*pout = out;
+    char16_t*pout = out.get();
     for(int i = 0;i < utf8.length() ;){
 	wchar_t oc;
         int n=UTF2UCS((utf8.c_str()+i),&oc);
@@ -116,28 +114,26 @@ const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
     }
     *pout = 0;
     #endif
-    std::u16string u16s(out);//,wcslen(out));
-    delete[] out;
+    std::u16string u16s(out.get());//,wcslen(out));
     return u16s;
 }
 
 const std::string TextUtils::unicode2utf8(const std::wstring&u32s){
-    int u8len = u32s.length()*4+8;
-    char*out  = new char[u8len];
+    const int u8len = u32s.length()*4+8;
+    std::unique_ptr<char[]>out(new char[u8len]);
     #ifdef USE_ICONV
     int rc = convert(UCSWCHAR(),"UTF-8",(char*)u32s.c_str(),u32s.length()*sizeof(wchar_t),out,u8len);
     LOGD_IF(rc==-1,"convert error");
     #else
     //static int ucs4ToUtf8 (unsigned char *s, wchar_t uc, int n)
-    char*pout = out;
+    char*pout = out.get();
     for(int i = 0 ;i < u32s.length() ;i++){
         int n = UCS2UTF(u32s[i],pout,4);
         pout+=n;
     }
     *pout=0;
     #endif
-    std::string u8s = out;
-    delete[] out;
+    std::string u8s(out.get());
     return u8s;
 }
 
@@ -286,6 +282,65 @@ int TextUtils::UCS2UTF(wchar_t wc,char*oututf,int outlen){
     case 1: s[0] = wc;
     }
     return count;
+}
+
+void TextUtils::stringAppendV(std::string& dst, const char* format, va_list ap) {
+    // First try with a small fixed size buffer
+    char space[1024];// __attribute__((__uninitialized__));
+
+    // It's possible for methods that use a va_list to invalidate
+    // the data in it upon use.  The fix is to make a copy
+    // of the structure before using it and use that copy instead.
+    va_list backup_ap;
+    va_copy(backup_ap, ap);
+    int result = vsnprintf(space, sizeof(space), format, backup_ap);
+    va_end(backup_ap);
+
+    if (result < static_cast<int>(sizeof(space))) {
+        if (result >= 0) {
+            // Normal case -- everything fit.
+            dst.append(space, result);
+            return;
+        }
+
+        if (result < 0) {
+            // Just an error.
+            return;
+        }
+    }
+
+    // Increase the buffer size to the size requested by vsnprintf,
+    // plus one for the closing \0.
+    int length = result + 1;
+    char* buf = new char[length];
+
+    // Restore the va_list before we use it again
+    va_copy(backup_ap, ap);
+    result = vsnprintf(buf, length, format, backup_ap);
+    va_end(backup_ap);
+
+    if (result >= 0 && result < length) {
+        // It fit
+        dst.append(buf, result);
+    }
+    delete[] buf;
+}
+
+
+std::string TextUtils::stringPrintf(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    std::string result;
+    stringAppendV(result, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+void TextUtils::stringAppendF(std::string& dst, const char* format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    stringAppendV(dst, format, ap);
+    va_end(ap);
 }
 
 }//namespace

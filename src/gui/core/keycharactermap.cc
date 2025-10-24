@@ -1,8 +1,9 @@
 #include <stdlib.h>
 #include <string.h>
+#include <core/inputdevice.h>
 #include <private/inputeventlabels.h>
-#include <keycharactermap.h>
-#include <tokenizer.h>
+#include <private/keycharactermap.h>
+#include <core/tokenizer.h>
 #include <cdtypes.h>
 #include <cdlog.h>
 #include <fstream>
@@ -471,7 +472,7 @@ bool KeyCharacterMap::findKey(char16_t ch, int32_t* outKeyCode, int32_t* outMeta
 void KeyCharacterMap::addKey(std::vector<KeyEvent>& outEvents,
         int32_t deviceId, int32_t keyCode, int32_t metaState, bool down, nsecs_t time) {
     KeyEvent event;
-    event.initialize(deviceId, 0/*AINPUT_SOURCE_KEYBOARD*/,
+    event.initialize(deviceId,InputDevice::SOURCE_KEYBOARD,0,
             down ? KeyEvent::ACTION_DOWN : KeyEvent::ACTION_UP,
             0, keyCode, 0, metaState, 0, time, time);
     outEvents.push_back(event);
@@ -788,7 +789,7 @@ int KeyCharacterMap::Parser::parseMapKey() {
 
     mTokenizer->skipDelimiters(WHITESPACE);
     std::string keyCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.c_str());
+    int32_t keyCode = InputEventLookup::getKeyCodeByLabel(keyCodeToken.c_str());
     if (!keyCode) {
         LOGE("%s: Expected key code label, got '%s'.", mTokenizer->getLocation().c_str(),
                 keyCodeToken.c_str());
@@ -805,7 +806,7 @@ int KeyCharacterMap::Parser::parseMapKey() {
 
 int KeyCharacterMap::Parser::parseKey() {
     std::string keyCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t keyCode = getKeyCodeByLabel(keyCodeToken.c_str());
+    int32_t keyCode = InputEventLookup::getKeyCodeByLabel(keyCodeToken.c_str());
     if (!keyCode) {
         LOGE("%s: Expected key code label, got '%s'.", mTokenizer->getLocation().c_str(),
                 keyCodeToken.c_str());
@@ -925,11 +926,10 @@ int KeyCharacterMap::Parser::parseKeyProperty() {
             } else if (token == "fallback") {
                 mTokenizer->skipDelimiters(WHITESPACE);
                 token = mTokenizer->nextToken(WHITESPACE);
-                int32_t keyCode = getKeyCodeByLabel(token.c_str());
+                int32_t keyCode = InputEventLookup::getKeyCodeByLabel(token.c_str());
                 if (!keyCode) {
                     LOGE("%s: Invalid key code label for fallback behavior, got '%s'.",
-                            mTokenizer->getLocation().c_str(),
-                            token.c_str());
+                            mTokenizer->getLocation().c_str(), token.c_str());
                     return 0;//BAD_VALUE;
                 }
                 if (haveFallback || haveReplacement) {
@@ -942,11 +942,10 @@ int KeyCharacterMap::Parser::parseKeyProperty() {
             } else if (token == "replace") {
                 mTokenizer->skipDelimiters(WHITESPACE);
                 token = mTokenizer->nextToken(WHITESPACE);
-                int32_t keyCode = getKeyCodeByLabel(token.c_str());
+                int32_t keyCode = InputEventLookup::getKeyCodeByLabel(token.c_str());
                 if (!keyCode) {
                     LOGE("%s: Invalid key code label for replace, got '%s'.",
-                            mTokenizer->getLocation().c_str(),
-                            token.c_str());
+                            mTokenizer->getLocation().c_str(), token.c_str());
                     return BAD_VALUE;
                 }
                 if (haveCharacter) {

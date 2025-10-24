@@ -29,6 +29,7 @@ KeyEvent* KeyEvent::obtain(){
 KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int code, int repeat, int metaState,
           int deviceId, int scancode, int flags, uint32_t source,int displayId/*, std::string characters*/){
     KeyEvent* ev = obtain();
+    ev->mId = InputEvent::nextId();
     ev->mDownTime = downTime;
     ev->mEventTime = eventTime;
     ev->mAction = action;
@@ -46,6 +47,7 @@ KeyEvent* KeyEvent::obtain(nsecs_t downTime, nsecs_t eventTime, int action,int c
 
 KeyEvent* KeyEvent::obtain(const KeyEvent& other){
     KeyEvent* ev = obtain();
+    ev->mId = other.mId;
     ev->mDownTime = other.mDownTime;
     ev->mEventTime = other.mEventTime;
     ev->mAction = other.mAction;
@@ -109,11 +111,11 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
 }
 
 const char* KeyEvent::getLabel(int keyCode) {
-    return getLabelByKeyCode(keyCode);
+    return  InputEventLookup::getLabelByKeyCode(keyCode);//getLabelByKeyCode(keyCode);
 }
 
 int32_t KeyEvent::getKeyCodeFromLabel(const char* label) {
-    return getKeyCodeByLabel(label);
+    return  InputEventLookup::getKeyCodeByLabel(label);//getKeyCodeByLabel(label);
 }
 
 bool KeyEvent::isModifierKey(int keyCode){
@@ -143,9 +145,9 @@ bool KeyEvent::isConfirmKey(int keyCode){
     }
 }
 
-void KeyEvent::initialize(int32_t deviceId, uint32_t source,int32_t action, int32_t flags, int32_t keyCode,
+void KeyEvent::initialize(int32_t deviceId, uint32_t source,int32_t displayId,int32_t action, int32_t flags, int32_t keyCode,
         int32_t scanCode, int32_t metaState, int32_t repeatCount, nsecs_t downTime, nsecs_t eventTime) {
-    InputEvent::initialize(deviceId, source);
+    InputEvent::initialize(nextId(),deviceId, source,displayId);
     mAction = action;
     mFlags = flags;
     mKeyCode = keyCode;
@@ -367,25 +369,26 @@ void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
 
 }
 
-std::ostream& operator<<(std::ostream& os,const InputEvent&e){
-    e.toStream(os);
-    return os;
-}
+std::ostream& operator<<(std::ostream& out, const KeyEvent& event) {
+    out << "KeyEvent { action=" << KeyEvent::actionToString(event.getAction());
 
-void KeyEvent::toStream(std::ostream& os)const{
-    os<<"KeyEvent { action="<<actionToString(mAction);
-    os<<", keyCode="<<mKeyCode;//keyCodeToString(mKeyCode);
-    os<<", scanCode="<<mScanCode;
-    //if (mCharacters != null) os<<", characters=\""<<mCharacters<<"\"";
-    os<<", metaState="<<metaStateToString(mMetaState);
-    os<<", flags=0x"<<std::hex<<mFlags<<std::dec;
-    os<<", repeatCount="<<mRepeatCount;
-    os<<", eventTime="<<mEventTime;
-    os<<", downTime="<<mDownTime;
-    os<<", deviceId="<<mDeviceId;
-    os<<", source=0x"<<std::hex<<mSource<<std::dec;
-    os<<", displayId="<<mDisplayId;
-    os<<" }";
+    out << ", keycode=" << event.getKeyCode() << "(" << KeyEvent::getLabel(event.getKeyCode())
+        << ")";
+
+    if (event.getMetaState() != 0) {
+        out << ", metaState=" << event.getMetaState();
+    }
+
+    out << ", eventTime=" << event.getEventTime();
+    out << ", downTime=" << event.getDownTime();
+    out << ", flags=" << std::hex << event.getFlags() << std::dec;
+    out << ", repeatCount=" << event.getRepeatCount();
+    out << ", deviceId=" << event.getDeviceId();
+    out << ", source=" << InputEvent::sourceToString(event.getSource());
+    out << ", displayId=" << event.getDisplayId();
+    out << ", eventId=0x" << std::hex << event.getId() << std::dec;
+    out << "}";
+    return out;
 }
 
 }

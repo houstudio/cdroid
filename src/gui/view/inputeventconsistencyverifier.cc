@@ -601,7 +601,7 @@ void InputEventConsistencyVerifier::appendEvent(std::ostringstream& message, int
     if (unhandled) {
         message<<"(unhandled) ";
     }
-    event.toStream(message);
+    message<<event;
 }
 
 void InputEventConsistencyVerifier::problem(const std::string message,...) {

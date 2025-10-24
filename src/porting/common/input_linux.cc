@@ -98,7 +98,7 @@ int32_t InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-    int rc1,rc2,rcc,version=-1;
+    int rc1,rc2,rcc=0,version=-1;
     int clock = CLOCK_MONOTONIC;/*CLOCK_REALTIME=0,CLOCK_MONOTONIC=1 time.h*/
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
     struct input_id id={0,0};
