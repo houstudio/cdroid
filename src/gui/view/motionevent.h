@@ -268,6 +268,8 @@ public:
         return (mAction & ACTION_POINTER_INDEX_MASK) >>  ACTION_POINTER_INDEX_SHIFT;
     }
     bool isTouchEvent()const;
+    bool isStylusPointer()const;
+    bool isHoverEvent()const;
     inline nsecs_t getDownTime()const{return mDownTime;}
     inline void setDownTime(nsecs_t downTime){mDownTime = downTime;}
     inline size_t getPointerCount() const { return mPointerProperties.size(); }

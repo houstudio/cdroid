@@ -91,7 +91,7 @@ protected:
     int32_t mAction;
     long mSeq;
     static int mNextSeq;
-    nsecs_t mEventTime;//SystemClock#uptimeMillis
+    nsecs_t mEventTime;
 protected:
     void prepareForReuse();
 public:

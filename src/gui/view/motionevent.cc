@@ -19,6 +19,7 @@
 #include <private/inputeventlabels.h>
 #include <core/inputdevice.h>
 #include <utils/mathutils.h>
+#include <utils/textutils.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -530,6 +531,19 @@ bool MotionEvent::isTouchEvent()const{
     return isTouchEvent(mSource, mAction);
 }
 
+bool MotionEvent::isStylusPointer()const{
+    const int actionIndex = getActionIndex();
+    return isFromSource(InputDevice::SOURCE_STYLUS)
+            && (getToolType(actionIndex) == TOOL_TYPE_STYLUS
+            || getToolType(actionIndex) == TOOL_TYPE_ERASER);
+}
+
+bool MotionEvent::isHoverEvent()const{
+    return getActionMasked() == ACTION_HOVER_ENTER
+            || getActionMasked() == ACTION_HOVER_EXIT
+            || getActionMasked() == ACTION_HOVER_MOVE;
+}
+
 void MotionEvent::offsetLocation(float xOffset, float yOffset) {
     const float currXOffset = mTransform.tx();
     const float currYOffset = mTransform.ty();
@@ -568,11 +582,10 @@ std::string MotionEvent::actionToString(int action){
     case ACTION_BUTTON_PRESS  :return "ACTION_BUTTON_PRESS";
     case ACTION_BUTTON_RELEASE:return "ACTION_BUTTON_RELEASE";
     }
-    int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;
-    std::ostringstream oss;
+    const int index = (action & ACTION_POINTER_INDEX_MASK) >> ACTION_POINTER_INDEX_SHIFT;
     switch (action & ACTION_MASK) {
-    case ACTION_POINTER_DOWN: oss<<"ACTION_POINTER_DOWN("<<index<<")";return oss.str();
-    case ACTION_POINTER_UP  : oss<<"ACTION_POINTER_UP(" <<index<<")"; return oss.str();
+    case ACTION_POINTER_DOWN: return TextUtils::stringPrintf("ACTION_POINTER_DOWN(%d)",index);
+    case ACTION_POINTER_UP  : return TextUtils::stringPrintf("ACTION_POINTER_UP(%d)",index);
     default: return std::to_string(action);
     }
 }
