@@ -112,19 +112,19 @@ public:
     void setDisplayId(int);
     virtual int getType()const=0;
     virtual InputEvent*copy()const=0;
-    void initialize(int32_t id,int32_t deviceId, uint32_t source,int32_t displayId);
+    void initialize(int32_t id,int32_t deviceId, int32_t source,int32_t displayId);
     void initialize(const InputEvent& from);
-    uint32_t getSource()const{return mSource;}
-    bool isFromSource(uint32_t s)const;
+    int32_t getSource()const{return mSource;}
+    bool isFromSource(int32_t s)const;
     long getSequenceNumber()const{return mSeq;}
-    virtual void setSource(uint32_t source);
+    virtual void setSource(int32_t source);
     virtual bool isTainted()const=0;
     virtual void setTainted(bool)=0;
     virtual nsecs_t getEventTimeNanos() const { return mEventTime*NS_PER_MS; }
     virtual nsecs_t getEventTime()const{ return mEventTime;}
     virtual void recycle();/*only obtained event can call recycle*/
     static int32_t nextId();
-    static std::string sourceToString(uint32_t source);
+    static std::string sourceToString(int32_t source);
 };
 
 std::ostream& operator<<(std::ostream& out, const InputEvent& event);

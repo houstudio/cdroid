@@ -20,6 +20,7 @@
 #include <view/motionevent.h>
 #include <core/inputdevice.h>
 #include <utils/atexit.h>
+#include <utils/textutils.h>
 #include <utils/neverdestroyed.h>
 #include <porting/cdlog.h>
 #include <fcntl.h>
@@ -55,22 +56,22 @@ int32_t InputEvent::nextId(){
     return idGen.nextId();
 }
 
-void InputEvent::initialize(int32_t id,int32_t deviceId, uint32_t source,int32_t displayId) {
+void InputEvent::initialize(int32_t id,int32_t deviceId, int32_t source,int32_t displayId) {
     mId = id;
     mDeviceId = deviceId;
     mSource = source;
     mDisplayId = displayId;
 }
 
-void InputEvent::setSource(uint32_t source){
+void InputEvent::setSource(int32_t source){
     mSource = source;
 }
 
-bool InputEvent::isFromSource(uint32_t source)const{
+bool InputEvent::isFromSource(int32_t source)const{
     return (getSource() & source) == source;
 }
 
-std::string InputEvent::sourceToString(uint32_t source) {
+std::string InputEvent::sourceToString(int32_t source) {
     if (source == InputDevice::SOURCE_UNKNOWN) {
         return "UNKNOWN";
     }
@@ -104,7 +105,7 @@ std::string InputEvent::sourceToString(uint32_t source) {
         }
     }
     if (result.empty()) {
-        //result = StringPrintf("0x%08x", source);
+        result = TextUtils::stringPrintf("0x%08x", source);
     }
     return result;
 }

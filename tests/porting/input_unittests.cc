@@ -11,7 +11,7 @@ class INPUT:public testing::Test{
    public :
    virtual void SetUp(){
        InputInit();
-       printf("inputevent.size=%d\r\n",sizeof(INPUTEVENT));
+       printf("inputevent.size=%ld\r\n",sizeof(INPUTEVENT));
    }
    virtual void TearDown(){}
 };

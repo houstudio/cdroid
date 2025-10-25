@@ -1,15 +1,16 @@
 <sections>
-  <section name="devicename">
-    <item name="minX" desc="ABS_X.min value">0</item>
-    <item name="maxX" desc="ABS_X.max value">1280</item>
-    <item name="minY" desc="ABS_Y.min value">0</item>
-    <item name="maxY" desc="ABS_Y.max value">720</item>
-    <item name="invertX" desc="invert direction of ABS_X">false</item>
-    <item name="invertY" desc="invert direction of ABS_Y">false</item>
-    <item name="switchXY" desc="switch ABS_X/ABS_Y">false</item>
-    <item name="virtualKeys" desc="map some area to KEY">
-        0,0,100,40,KEYCODE_ENTER;
-        0,0,100,40,KEYCODE_ESCAPE
-    </item>
-  </section>
+    <section name="devicename">
+        <item name="displayId">0</item>
+        <item name="minX" desc="ABS_X.min value">0</item>
+        <item name="maxX" desc="ABS_X.max value">1280</item>
+        <item name="minY" desc="ABS_Y.min value">0</item>
+        <item name="maxY" desc="ABS_Y.max value">720</item>
+        <item name="invertX" desc="invert direction of ABS_X">false</item>
+        <item name="invertY" desc="invert direction of ABS_Y">false</item>
+        <item name="switchXY" desc="switch ABS_X/ABS_Y">false</item>
+        <item name="virtualKeys" desc="map some area to KEY">
+            0,0,100,40,KEYCODE_ENTER;
+            0,0,100,40,KEYCODE_ESCAPE
+        </item>
+    </section>
 </sections>

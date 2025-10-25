@@ -253,7 +253,7 @@ InputEvent*InputEventSource::parseEvent(const char*line){
         MotionEvent*m = MotionEvent::obtain(etime,etime,
             action|(pointer<<MotionEvent::ACTION_POINTER_INDEX_SHIFT),
             float(x),float(y), 0/*pressure*/, 0/*size*/, 0/*metaState*/,
-            0,0/*x/yPrecision*/,0/*deviceId*/,0/*edgeFlags*/);
+            0,0/*x/yPrecision*/,0/*deviceId*/,0/*edgeFlags*/,InputDevice::SOURCE_TOUCHSCREEN,0/*displayId*/);
         return m;
     }
     return nullptr;

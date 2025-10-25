@@ -353,6 +353,7 @@ protected:
     int32_t mLastAction;
     int32_t mScreenRotation;
     int32_t mSeqID;
+    int32_t mDisplayId;
     nsecs_t mLastEventTime;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
