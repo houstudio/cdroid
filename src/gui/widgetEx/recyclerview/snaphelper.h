@@ -37,7 +37,7 @@ private:
     void destroyCallbacks();
     bool snapFromFling(RecyclerView::LayoutManager& layoutManager, int velocityX,int velocityY);
 protected:
-    void snapToTargetExistingView();
+    virtual void snapToTargetExistingView();
     RecyclerView::SmoothScroller* createScroller(RecyclerView::LayoutManager& layoutManager);
     LinearSmoothScroller* createSnapScroller(RecyclerView::LayoutManager& layoutManager);
 public:
