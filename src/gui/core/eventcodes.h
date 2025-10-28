@@ -771,6 +771,10 @@
 #define LED_MISC 0x08
 #define LED_MAIL 0x09
 #define LED_CHARGING 0x0a
+#define LED_CONTROLLER_1 0x0b
+#define LED_CONTROLLER_2 0x0c
+#define LED_CONTROLLER_3 0x0d
+#define LED_CONTROLLER_4 0x0e
 #define LED_MAX 0x0f
 #define LED_CNT (LED_MAX + 1)
 #define REP_DELAY 0x00

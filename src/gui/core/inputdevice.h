@@ -339,6 +339,7 @@ public:
     static constexpr int SOURCE_ROTARY_ENCODER = 0x00400000 | SOURCE_CLASS_NONE;
     static constexpr int SOURCE_JOYSTICK = 0x01000000 | SOURCE_CLASS_JOYSTICK;
     static constexpr int SOURCE_HDMI = 0x02000000 | SOURCE_CLASS_BUTTON;
+    static constexpr int SOURCE_SENSOR=0x04000000 | SOURCE_CLASS_NONE;
     static constexpr int SOURCE_ANY = 0xffffff00;
 
     static constexpr int KEYBOARD_TYPE_NONE = 0;
