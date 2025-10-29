@@ -21,7 +21,8 @@
 #include <view/motionevent.h>
 #include <core/eventcodes.h>
 //#include <linux/input.h>
-#define DEFINE_KEYCODE(key)   { #key, KeyEvent::KEYCODE_##key }
+
+#define DEFINE_KEYCODE(key) { #key, KeyEvent::KEYCODE_##key }
 #define DEFINE_AXIS(axis) { #axis, MotionEvent::AXIS_##axis }
 #define DEFINE_LED(led)   { #led, LED_##led }
 #define DEFINE_FLAG(flag) { #flag, POLICY_FLAG_##flag }
@@ -553,30 +554,19 @@ int getValue(const label* labels, const char* searchLabel) {
 
 const label* getCodeLabelsForType(int32_t type) {
     switch (type) {
-        case EV_SYN:
-            return syn_labels;
-        case EV_KEY:
-            return key_labels;
-        case EV_REL:
-            return rel_labels;
-        case EV_ABS:
-            return abs_labels;
-        case EV_SW:
-            return sw_labels;
-        case EV_MSC:
-            return msc_labels;
-        case EV_LED:
-            return led_labels;
-        case EV_REP:
-            return rep_labels;
-        case EV_SND:
-            return snd_labels;
-        case EV_FF:
-            return ff_labels;
+        case EV_SYN:  return syn_labels;
+        case EV_KEY:  return key_labels;
+        case EV_REL:  return rel_labels;
+        case EV_ABS:  return abs_labels;
+        case EV_SW:   return sw_labels;
+        case EV_MSC:  return msc_labels;
+        case EV_LED:  return led_labels;
+        case EV_REP:  return rep_labels;
+        case EV_SND:  return snd_labels;
+        case EV_FF:   return ff_labels;
         case EV_FF_STATUS:
             return ff_status_labels;
-        default:
-            return nullptr;
+        default:      return nullptr;
     }
 }
 
@@ -604,8 +594,7 @@ int InputEventLookup::getLinuxEvdevEventTypeByLabel(const char* label) {
     return getValue(ev_labels, label);
 }
 
-int InputEventLookup::getLinuxEvdevEventCodeByLabel(int32_t type,
-                                                                   const char* label) {
+int InputEventLookup::getLinuxEvdevEventCodeByLabel(int32_t type, const char* label) {
     return getValue(getCodeLabelsForType(type), label);
 }
 

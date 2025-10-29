@@ -241,6 +241,11 @@ int PathMeasure::buildSegments(){
         const int type = data->header.type;
         i += data->header.length;
 
+        if(mPoints.size()>=mPoints.capacity())
+            mPoints.reserve(mPoints.capacity()*2+4);
+        if(mSegments.size()>=mSegments.capacity())
+            mSegments.reserve(mSegments.capacity()*2+4);
+
         if (type == CAIRO_PATH_MOVE_TO) {
             ptStart = pt0 = {data[1].point.x,data[1].point.y};
             ptIndex += 1;

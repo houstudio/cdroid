@@ -92,7 +92,7 @@ std::string InputEvent::sourceToString(int32_t source) {
             {InputDevice::SOURCE_TOUCH_NAVIGATION, "TOUCH_NAVIGATION"},
             {InputDevice::SOURCE_JOYSTICK, "JOYSTICK"},
             {InputDevice::SOURCE_HDMI, "HDMI"},
-            //{InputDevice::SOURCE_SENSOR, "SENSOR"},
+            {InputDevice::SOURCE_SENSOR, "SENSOR"},
             {InputDevice::SOURCE_ROTARY_ENCODER, "ROTARY_ENCODER"},
     };
     std::string result;
