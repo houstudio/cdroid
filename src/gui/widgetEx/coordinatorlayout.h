@@ -73,7 +73,7 @@ public:
         View* findAnchorView(CoordinatorLayout& parent, View* forChild);
     public: 
         LayoutParams(int width, int height);
-        ~LayoutParams();
+        ~LayoutParams()override;
         LayoutParams(Context* context, const AttributeSet& attrs);
         LayoutParams(const LayoutParams& p);
         LayoutParams(const MarginLayoutParams& p);
