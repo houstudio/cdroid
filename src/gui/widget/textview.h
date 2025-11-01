@@ -216,7 +216,7 @@ public:
     TextView(Context*ctx,const AttributeSet&attrs);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
-    virtual ~TextView();
+    ~TextView()override;
     void setTypeface(Typeface* tf);
     void setTypeface(Typeface* tf,int style);
     Typeface* getTypeface()const;

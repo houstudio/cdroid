@@ -28,7 +28,6 @@ protected:
 public:
     NumericTextView(Context* context,const AttributeSet& attrs);
 
-
     /**
      * Sets the currently displayed value.
      * <p>

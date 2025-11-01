@@ -51,6 +51,7 @@ protected:
 public:
     TabWidget(int w,int h);
     TabWidget(Context*ctx,const AttributeSet&atts);
+    ~TabWidget()override;
     View*getChildTabViewAt(int index);
     int getTabCount()const;
     void setDividerDrawable(Drawable* drawable);

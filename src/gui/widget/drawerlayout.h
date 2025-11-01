@@ -207,10 +207,10 @@ protected:
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
-    ~DrawerLayout()override;
 public:
     DrawerLayout(int w,int h);
     DrawerLayout(Context*ctx,const AttributeSet&atts); 
+    ~DrawerLayout()override;
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);

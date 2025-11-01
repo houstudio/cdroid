@@ -205,7 +205,7 @@ protected:
 public:
     NumberPicker(int w,int h);
     NumberPicker(Context* context,const AttributeSet& attrs);
-    ~NumberPicker();
+    ~NumberPicker()override;
     void setOrientation(int orientation)override;
     void setWheelItemCount(int count);
     void setSelector(int count){setWheelItemCount(count);}

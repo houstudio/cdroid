@@ -82,7 +82,7 @@ protected:
 public:
     explicit ImageView(int w, int h);
     ImageView(Context*ctx,const AttributeSet&attrs);
-    virtual ~ImageView();
+    ~ImageView()override;
     bool verifyDrawable(Drawable* dr)const override;
     void jumpDrawablesToCurrentState()override;
     void invalidateDrawable(Drawable& dr)override;

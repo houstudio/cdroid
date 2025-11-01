@@ -43,7 +43,7 @@ protected:
 public:
     SnapHelper();
     virtual ~SnapHelper();
-    bool onFling(int velocityX, int velocityY);
+    virtual bool onFling(int velocityX, int velocityY);
     void attachToRecyclerView(RecyclerView* recyclerView);
 
     void calculateScrollDistance(int velocityX, int velocityY,int snapDistance[2]);
