@@ -50,7 +50,7 @@ protected:
     bool onStateChange(const std::vector<int>&state)override;
 public:
     ScrollBarDrawable();
-    virtual ~ScrollBarDrawable();
+    ~ScrollBarDrawable()override;
     void setAlwaysDrawHorizontalTrack(bool alwaysDrawTrack);
     void setAlwaysDrawVerticalTrack(bool alwaysDrawTrack);
     bool getAlwaysDrawVerticalTrack()const;

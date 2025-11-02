@@ -3,6 +3,7 @@
 * 运行环境：32M以上内存的嵌入式系统。
 * 主仓库: [https://gitee.com/houstudio/cdroid](https://gitee.com/houstudio/cdroid)
 * 镜像仓库: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
+* 技术支持：QQ:1225012331 微信:calfhou
 # **Features:**
 * Multi Layer/Multi Window 
 * 集成40+ 安卓兼容的UI组件和20+ Drawables

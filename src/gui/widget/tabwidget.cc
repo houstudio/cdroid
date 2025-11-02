@@ -43,12 +43,17 @@ TabWidget::TabWidget(Context*ctx,const AttributeSet&atts)
     setChildrenDrawingOrderEnabled(true);
 }
 
+TabWidget::~TabWidget(){
+    delete mLeftStrip;
+    delete mRightStrip;
+}
+
 void TabWidget::initTab(){
-    mSelectedTab=-1;
-    mDrawBottomStrips=true;
-    mImposedTabsHeight=-1;
-    mLeftStrip=nullptr;
-    mRightStrip=nullptr;
+    mSelectedTab = -1;
+    mDrawBottomStrips = true;
+    mImposedTabsHeight= -1;
+    mLeftStrip = nullptr;
+    mRightStrip= nullptr;
     mSelectionChangedListener=nullptr;
 }
 

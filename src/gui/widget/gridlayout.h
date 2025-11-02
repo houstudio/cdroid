@@ -331,10 +331,10 @@ protected:
 
     void onMeasure(int widthSpec, int heightSpec)override;
     void onLayout(bool changed, int left, int top, int w, int h)override;
-    ~GridLayout()override;
 public:
     GridLayout(int w,int h);
     GridLayout(Context*ctx,const AttributeSet&attrs);
+    ~GridLayout()override;
     int getOrientation()const;
     void setOrientation(int);
     int getRowCount()const;

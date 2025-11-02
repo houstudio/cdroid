@@ -23,7 +23,7 @@
 
 namespace cdroid{
 
-class Scroller  {
+class Scroller {
 private:
     const Interpolator* mInterpolator;
     int mMode;

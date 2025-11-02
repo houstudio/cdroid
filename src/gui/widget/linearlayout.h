@@ -106,6 +106,7 @@ public:
     LinearLayout(int w,int h);
     LinearLayout(int x,int y,int w,int h);
     LinearLayout(Context* context,const AttributeSet& attrs);
+    ~LinearLayout()override;
     LayoutParams* generateLayoutParams(const AttributeSet&)const override;
     void setShowDividers(int showDividers);
     int getShowDividers()const;
@@ -132,7 +133,6 @@ public:
     std::string getAccessibilityClassName()const override;
     void onRtlPropertiesChanged(int layoutDirection) override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    virtual ~LinearLayout();
 };
 
 }/*namespace cdroid*/

@@ -112,7 +112,7 @@ protected:
 public:
     AdapterView(int w,int h);
     AdapterView(Context*ctx,const AttributeSet&atts);
-    virtual ~AdapterView();
+    ~AdapterView()override;
     virtual Adapter*getAdapter();
     virtual void setAdapter(Adapter*)=0;
     int getFirstVisiblePosition()const;

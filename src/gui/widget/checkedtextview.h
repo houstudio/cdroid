@@ -27,7 +27,6 @@ private:
     void setBasePadding(bool checkmarkAtStart);
     bool isCheckMarkAtStart();
 protected:
-    ~CheckedTextView();
     void doSetChecked(bool checked);
     bool verifyDrawable(Drawable* who)const override;
     void internalSetPadding(int left, int top, int right, int bottom)override;
@@ -38,6 +37,7 @@ protected:
     void drawableHotspotChanged(float x, float y)override;
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
+    ~CheckedTextView()override;
 #ifndef FUNCTION_AS_CHECKABLE
     void toggle();
     bool isChecked()const;

@@ -179,7 +179,7 @@ protected:
 public:
     KeyboardView(int w,int h);
     KeyboardView(Context*context,const AttributeSet&atts);
-    ~KeyboardView();
+    ~KeyboardView()override;
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();
     void setKeyboard(Keyboard*k);
