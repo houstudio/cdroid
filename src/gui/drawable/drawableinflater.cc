@@ -94,8 +94,8 @@ static const std::unordered_map<std::string,std::function<Drawable*()>>drawableP
 Drawable* DrawableInflater::inflateFromTag(const std::string& name) {
     auto it = drawableParsers.find(name);
     if(it!=drawableParsers.end()){
-        auto func = it->second;
-        return func();
+        Drawable*d = it->second();
+        return d;
     }
     return nullptr;
 }
