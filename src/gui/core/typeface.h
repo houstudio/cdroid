@@ -58,17 +58,19 @@ private:
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
     static Typeface* sDefaults[4];
-    static std::unordered_map<std::string,Typeface*>*sSystemFontMap;
+    static std::unordered_map<std::string,std::shared_ptr<Typeface>> sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
 private:
+    struct Deleter;
     static void setDefault(Typeface* t);
     static Typeface* getDefault();
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
-    Typeface(FcPattern&);
+    Typeface(const FcPattern&);
+    ~Typeface()=default;
     static int parseStyle(const std::string&style,std::string&normalizedName);
     void fetchProps(FT_Face);
 public:
@@ -86,6 +88,7 @@ public:
            std::unordered_map<std::string, Typeface*>& fontMap, 
 	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);
+    static std::shared_ptr<Typeface> make(const FcPattern& pat);
     static Typeface* create(const std::string& familyName,int style);
     static Typeface* create(Typeface* family,int style);
     static Typeface* create(Typeface* family,int weight, bool italic);
