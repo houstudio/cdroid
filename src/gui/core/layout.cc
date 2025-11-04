@@ -111,7 +111,10 @@ void Layout::setTypeface(Typeface*tf){
 }
 
 void Layout::setFakeTextSkew(float skew){
-    mFakeTextSkew = skew;
+    if(mFakeTextSkew!=skew){
+        mFakeTextSkew= skew;
+        resetScaledFont();
+    }
 }
 
 void Layout::resetScaledFont(){
