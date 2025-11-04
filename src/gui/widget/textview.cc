@@ -1999,10 +1999,6 @@ void TextView::resetResolvedDrawables(){
 
 void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
        int typefaceIndex,int style,int weight){
-    if(style&Typeface::ITALIC){
-        mLayout->setFakeTextSkew(-0.25);
-        mHintLayout->setFakeTextSkew(-0.25);
-    }
     if ((typeface == nullptr) && (familyName.empty()==false)) {
          // Lookup normal Typeface from system font map.
          Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
@@ -2042,9 +2038,11 @@ void TextView::setTypeface(Typeface* tf,int style){
         const int typefaceStyle = tf ? tf->getStyle() : 0;
         const int need = style & ~typefaceStyle;
         mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
         //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
     } else {
         mLayout->setFakeTextSkew(0.0);
+        mHintLayout->setFakeTextSkew(0.0);
         //mTextPaint.setFakeBoldText(false);
         setTypeface(tf);
     }
