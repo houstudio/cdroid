@@ -508,7 +508,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
         pshCancel();
         mVelocityTracker->computeCurrentVelocity(1000, mMaximumFlingVelocity);
         if(isHorizontalMode()){
-            int initialVelocity = (int) mVelocityTracker->getXVelocity();
+            const int initialVelocity = (int) mVelocityTracker->getXVelocity();
             if (std::abs(initialVelocity) > mMinimumFlingVelocity) {
                 fling(initialVelocity);
                 onScrollStateChange(OnScrollListener::SCROLL_STATE_FLING);
@@ -581,7 +581,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
 }
 
 bool NumberPicker::dispatchTouchEvent(MotionEvent& event){
-    int action = event.getActionMasked();
+    const int action = event.getActionMasked();
     switch (action) {
     case MotionEvent::ACTION_CANCEL:
     case MotionEvent::ACTION_UP:
@@ -592,7 +592,7 @@ bool NumberPicker::dispatchTouchEvent(MotionEvent& event){
 }
 
 bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
-    int keyCode = event.getKeyCode();
+    const int keyCode = event.getKeyCode();
     switch (keyCode) {
     case KeyEvent::KEYCODE_DPAD_CENTER:
     case KeyEvent::KEYCODE_ENTER:
@@ -672,14 +672,14 @@ void NumberPicker::computeScroll() {
     }
     scroller->computeScrollOffset();
     if(isHorizontalMode()){
-        int currentScrollerX = scroller->getCurrX();
+        const int currentScrollerX = scroller->getCurrX();
         if (mPreviousScrollerX == 0) {
             mPreviousScrollerX = scroller->getStartX();
         }
         scrollBy(currentScrollerX - mPreviousScrollerX, 0);
         mPreviousScrollerX = currentScrollerX;
     }else{
-        int currentScrollerY = scroller->getCurrY();
+        const int currentScrollerY = scroller->getCurrY();
         if (mPreviousScrollerY == 0) {
             mPreviousScrollerY = scroller->getStartY();
         }
