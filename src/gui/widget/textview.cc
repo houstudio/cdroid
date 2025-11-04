@@ -2001,6 +2001,7 @@ void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& family
        int typefaceIndex,int style,int weight){
     if(style&Typeface::ITALIC){
         mLayout->setFakeTextSkew(-0.25);
+        mHintLayout->setFakeTextSkew(-0.25);
     }
     if ((typeface == nullptr) && (familyName.empty()==false)) {
          // Lookup normal Typeface from system font map.
