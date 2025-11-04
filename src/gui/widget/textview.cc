@@ -322,7 +322,6 @@ public:
     Typeface* mFontTypeface;
     int mTypefaceIndex = -1;
     int mTextStyle=0;
-    int mStyleIndex = -1;
     int mFontWeight = -1;
     int mShadowColor = 0;
     float mLetterSpacing = 0;
@@ -344,6 +343,7 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextColors    = nullptr;
     mTextColorHints= nullptr;
     mTextColorLinks= nullptr;
+    mTextStyle = Typeface::NORMAL;
 }
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
@@ -516,8 +516,8 @@ void TextView::initView(){
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
     mShadowRadius = .0;
-    mShadowDx = .0;
-    mShadowDy = .0;
+    mShadowDx = 0.0f;
+    mShadowDy = 0.0f;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
     mEditMode   = READONLY;
@@ -641,7 +641,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
         attr->mFontFamily.clear();
     }
     setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
-            attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
+            attr->mTypefaceIndex, attr->mTextStyle, attr->mFontWeight);
 
     if (attr->mShadowColor != 0) {
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
@@ -1999,6 +1999,9 @@ void TextView::resetResolvedDrawables(){
 
 void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
        int typefaceIndex,int style,int weight){
+    if(style&Typeface::ITALIC){
+        mLayout->setFakeTextSkew(-0.25);
+    }
     if ((typeface == nullptr) && (familyName.empty()==false)) {
          // Lookup normal Typeface from system font map.
          Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
