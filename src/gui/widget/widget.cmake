@@ -12,6 +12,7 @@ list(APPEND WIDGET_SOURCES
 )
 
 list(APPEND WIDGET_SOURCES
+    #widget/autocompletetextview.cc
     widget/nestedscrollview.cc
     widget/scrollview.cc
     widget/horizontalscrollview.cc
@@ -22,6 +23,7 @@ list(APPEND WIDGET_SOURCES
     widget/space.cc
     widget/textview.cc
     widget/edittext.cc
+    widget/textclock.cc
     #widget/datetimeview.cc
     widget/checkedtextview.cc
     widget/imagebutton.cc
