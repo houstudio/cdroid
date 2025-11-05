@@ -359,7 +359,7 @@ protected:
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
-    std::deque<InputEvent*>mEvents;
+    std::vector<InputEvent*>mEvents;
     virtual int isValidEvent(int type,int code,int value);
 public:
     InputDevice(int fdev);
@@ -374,7 +374,7 @@ public:
     int getClasses()const;
     int getEventCount()const;
     void pushEvent(InputEvent*);
-    InputEvent*popEvent();
+    int drainEvents(std::vector<InputEvent*>&out);
     const std::string&getName()const;
     const InputDeviceIdentifier&getIdentifier()const;
     void getLastEvent(int&action,nsecs_t&etime)const;

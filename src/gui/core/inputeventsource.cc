@@ -198,20 +198,16 @@ int InputEventSource::handleEvents(){
     {
         std::lock_guard<std::recursive_mutex> lock(mtxEvents);
         for(auto it:mDevices){
-            auto dev = it.second;
-            if(dev->getEventCount()==0)continue;
             Pending p;
+            auto dev = it.second;
+            if(0==dev->drainEvents(p.events))continue;
             p.dev = dev;
-            while(dev->getEventCount()){
-                InputEvent*e = dev->popEvent();
-                p.events.push_back(e);
-            }
             pending.push_back(p);
         }
     }
     for (auto &p : pending) {
-        for (auto *e : p.events) {
-            ++ret;
+        ret+=p.events.size();
+        for(auto e:p.events) {
             WindowManager::getInstance().processEvent(*e);
             e->recycle();
         }
@@ -222,23 +218,23 @@ int InputEventSource::handleEvents(){
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
         auto dev = it.second;
+        std::vector<InputEvent*>events;
         if(dev->getEventCount()==0)continue;
-        ret += dev->getEventCount();
+        ret += dev->drainEvents(events);
         if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
-            while(dev->getEventCount()){
-               MotionEvent*e = (MotionEvent*)dev->popEvent();
-               WindowManager::getInstance().processEvent(*e);
-               e->recycle();
+            for(auto e:events){
+               MotionEvent*me = (MotionEvent*)e;
+               WindowManager::getInstance().processEvent(*me);
+               me->recycle();
             }
         }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
-            while(dev->getEventCount()){
-                KeyEvent*e = (KeyEvent*)dev->popEvent();
-                WindowManager::getInstance().processEvent(*e);
-                e->recycle();
+            for(auto e:events){
+                KeyEvent*ke = (KeyEvent*)e;
+                WindowManager::getInstance().processEvent(*ke);
+                ke->recycle();
             }
         }else{
-            while(dev->getEventCount()){
-                InputEvent*e=dev->popEvent();
+            for(auto e:events){
                 e->recycle();
             }
         }
