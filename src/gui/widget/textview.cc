@@ -2019,7 +2019,7 @@ void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& family
 void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
     if (weight >= 0) {
         weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
-        bool italic = (style & Typeface::ITALIC) != 0;
+        const bool italic = (style & Typeface::ITALIC) != 0;
         setTypeface(Typeface::create(typeface, weight, italic));
     } else {
         setTypeface(typeface, style);

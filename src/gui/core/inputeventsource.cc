@@ -42,21 +42,33 @@ void InputEventSource::doEventsConsume(){
     INPUTEVENT es[128];
     while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
-        std::lock_guard<std::mutex> lock(mtxEvents);
+        if(count==0)continue;
         if(count)mLastInputEventTime = SystemClock::uptimeMillis();
         LOGV_IF(count,"rcv %d rawEvents",count);
         for(int i = 0 ; i < count ; i ++){
             const INPUTEVENT*e = es+i;
+            std::shared_ptr<InputDevice> devicePtr;
             auto it = mDevices.find(e->device);
-            if(es[i].type >= EV_ADD){
-                onDeviceChanged(es+i);
+            bool isDeviceChange = false;
+            {
+                std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+                if(es[i].type >= EV_ADD){
+                    onDeviceChanged(es+i);
+                    isDeviceChange = true;
+                }else{
+                    if(it==mDevices.end()){
+                        devicePtr = getDevice(es->device);
+                    }else{
+                        devicePtr = it->second;
+                    }
+                }
+            }
+            if(isDeviceChange)continue;
+            if(devicePtr){
+                devicePtr->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
                 continue;
             }
-            if(it==mDevices.end()){
-                getDevice(es->device)->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
-                continue;
-            }
-            it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
+            //putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
         }
     }
 }
@@ -138,7 +150,7 @@ bool InputEventSource::needCancel(InputDevice*dev){
 }
 
 int InputEventSource::checkEvents(){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     const nsecs_t now = SystemClock::uptimeMillis();
     int count = 0;
     for(auto dev:mDevices){
@@ -179,8 +191,35 @@ bool InputEventSource::isScreenSaverActived()const{
 }
 
 int InputEventSource::handleEvents(){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+#if 1
     int ret = 0;
+    struct Pending { std::shared_ptr<InputDevice> dev; std::vector<InputEvent*> events; };
+    std::vector<Pending> pending;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+        for(auto it:mDevices){
+            auto dev = it.second;
+            if(dev->getEventCount()==0)continue;
+            Pending p;
+            p.dev = dev;
+            while(dev->getEventCount()){
+                InputEvent*e = dev->popEvent();
+                p.events.push_back(e);
+            }
+            pending.push_back(p);
+        }
+    }
+    for (auto &p : pending) {
+        for (auto *e : p.events) {
+            ++ret;
+            WindowManager::getInstance().processEvent(*e);
+            e->recycle();
+        }
+    }
+    return ret;
+#else
+    int ret;
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
         auto dev = it.second;
         if(dev->getEventCount()==0)continue;
@@ -205,6 +244,7 @@ int InputEventSource::handleEvents(){
         }
     }
     return ret;
+#endif
 }
 
 void InputEventSource::sendEvent(InputEvent&event){
