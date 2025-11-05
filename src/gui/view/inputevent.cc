@@ -21,7 +21,6 @@
 #include <core/inputdevice.h>
 #include <utils/atexit.h>
 #include <utils/textutils.h>
-#include <utils/neverdestroyed.h>
 #include <porting/cdlog.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -148,7 +147,8 @@ std::ostream& operator<<(std::ostream& out, const InputEvent& event) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // --- PooledInputEventFactory ---
-static NeverDestroyed<PooledInputEventFactory>mInst(20);
+static std::shared_ptr<PooledInputEventFactory>mInst = std::make_shared<PooledInputEventFactory>(20);
+
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
     return *mInst.get();
 }
