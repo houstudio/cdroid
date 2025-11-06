@@ -345,8 +345,8 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
         const int dividerDistence = 2*mDividerThickness + mDividerDistance;
         if(isHorizontalMode()){
             const int w = std::max(inptTxtMsrdWdth,mSelectorElementSize);
-            mLeftDividerLeft = (getWidth()-w)/2;//(getWidth()-mDividerDistance)/2 - mDividerThickness;
-            mRightDividerRight= mLeftDividerLeft + w;//dividerDistence;
+            mLeftDividerLeft = (getWidth()-w - mDividerDistance)/2 - mDividerThickness;
+            mRightDividerRight= mLeftDividerLeft + w + dividerDistence;
             mBottomDividerBottom = getHeight();
             mInputText->layout((msrdWdth - w) /2, inptTxtTop,w, inptTxtMsrdHght);
         }else{

@@ -45,6 +45,7 @@ public:
     static void stringAppendV(std::string& dst, const char* format, va_list ap);
     static std::string stringPrintf(const char* fmt, ...);
     static void stringAppendF(std::string& dst, const char* format, ...);
+    static std::string formatTime(const std::string& fmt, int64_t seconds);
 };
 }
 #endif
