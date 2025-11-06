@@ -454,15 +454,11 @@ public:
     void reclaimViews(std::vector<View*>& views);
 };
 
-class AbsListView::AbsRunnable{
+class AbsListView::AbsRunnable:public View::ViewRunnable{
 protected:
     AbsListView*mLV;
-    Runnable mRunnable;
 public:
     AbsRunnable(AbsListView*);
-    virtual void run()=0;
-    void postDelayed(long);
-    void removeCallbacks();
 };
 
 class AbsListView::CheckForTap:public AbsRunnable{

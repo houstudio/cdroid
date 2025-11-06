@@ -4187,18 +4187,10 @@ AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):Vie
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
-AbsListView::AbsRunnable::AbsRunnable(AbsListView*lv){
+AbsListView::AbsRunnable::AbsRunnable(AbsListView*lv)
+    :View::ViewRunnable(lv){
     //(*mFunctor)=std::bind(&AbsRunnable::run,this);
     mLV = lv;
-    mRunnable = std::bind(&AbsRunnable::run,this);
-}
-
-void AbsListView::AbsRunnable::postDelayed(long ms) {
-    mLV->postDelayed(mRunnable,ms);
-}
-
-void AbsListView::AbsRunnable::removeCallbacks(){
-    mLV->removeCallbacks(mRunnable);
 }
 
 AbsListView::WindowRunnable::WindowRunnable(AbsListView*lv):AbsRunnable(lv) {

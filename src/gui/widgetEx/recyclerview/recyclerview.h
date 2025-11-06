@@ -587,6 +587,7 @@ public:
     void smoothScrollBy(int dx, int dy, int duration,const Interpolator* interpolator);
     void stop();
 };
+
 class RecyclerView::AdapterDataObserver{
 public:
     virtual void onChanged();
