@@ -42,7 +42,7 @@ void InputEventSource::doEventsConsume(){
     INPUTEVENT es[128];
     while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
-        std::lock_guard<std::mutex> lock(mtxEvents);
+        std::lock_guard<std::recursive_mutex> lock(mtxEvents);
         if(count)mLastInputEventTime = SystemClock::uptimeMillis();
         LOGV_IF(count,"rcv %d rawEvents",count);
         for(int i = 0 ; i < count ; i ++){
@@ -138,7 +138,7 @@ bool InputEventSource::needCancel(InputDevice*dev){
 }
 
 int InputEventSource::checkEvents(){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     const nsecs_t now = SystemClock::uptimeMillis();
     int count = 0;
     for(auto dev:mDevices){
@@ -179,32 +179,56 @@ bool InputEventSource::isScreenSaverActived()const{
 }
 
 int InputEventSource::handleEvents(){
-    std::lock_guard<std::mutex> lock(mtxEvents);
+#if 0
     int ret = 0;
+    struct Pending { std::shared_ptr<InputDevice> dev; std::vector<InputEvent*> events; };
+    std::vector<Pending> pendings;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+        for(auto it:mDevices){
+            Pending p;
+            auto dev = it.second;
+            if(0==dev->drainEvents(p.events))continue;
+            p.dev = dev;
+            pendings.push_back(p);
+        }
+    }
+    for (auto &p : pendings) {
+        ret+=p.events.size();
+        for(auto e:p.events) {
+            WindowManager::getInstance().processEvent(*e);
+            e->recycle();
+        }
+    }
+    return ret;
+#else
+    int ret;
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
         auto dev = it.second;
+        std::vector<InputEvent*>events;
         if(dev->getEventCount()==0)continue;
-        ret += dev->getEventCount();
+        ret += dev->drainEvents(events);
         if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
-            while(dev->getEventCount()){
-               MotionEvent*e = (MotionEvent*)dev->popEvent();
-               WindowManager::getInstance().processEvent(*e);
-               e->recycle();
+            for(auto e:events){
+               MotionEvent*me = (MotionEvent*)e;
+               WindowManager::getInstance().processEvent(*me);
+               me->recycle();
             }
         }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
-            while(dev->getEventCount()){
-                KeyEvent*e = (KeyEvent*)dev->popEvent();
-                WindowManager::getInstance().processEvent(*e);
-                e->recycle();
+            for(auto e:events){
+                KeyEvent*ke = (KeyEvent*)e;
+                WindowManager::getInstance().processEvent(*ke);
+                ke->recycle();
             }
         }else{
-            while(dev->getEventCount()){
-                InputEvent*e=dev->popEvent();
+            for(auto e:events){
                 e->recycle();
             }
         }
     }
     return ret;
+#endif
 }
 
 void InputEventSource::sendEvent(InputEvent&event){

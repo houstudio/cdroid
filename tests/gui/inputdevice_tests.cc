@@ -31,8 +31,10 @@ public:
       }
       eventCount = d.getEventCount();
       LOGI("%d Events",eventCount);
+      std::vector<InputEvent*>events;
+      d.drainEvents(events);
       for(int i=0;d.getEventCount();i++){
-          MotionEvent*e=(MotionEvent*)d.popEvent();
+          MotionEvent*e=(MotionEvent*)events.at(i);
           const int pointerCount=e->getPointerCount();
           const int hisCount = e->getHistorySize();
           if(eventOut)eventOut[i] = e;

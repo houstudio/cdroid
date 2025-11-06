@@ -32,7 +32,7 @@ class InputEventSource:public EventHandler{
 public:	
     typedef std::function<void(bool)>ScreenSaver;
 private:
-    std::mutex mtxEvents;
+    std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
     bool mRunning;

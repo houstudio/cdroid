@@ -55,6 +55,7 @@ Layout::Layout(int fontSize,int width)
     mMultiline= false;
     mBreakStrategy = BREAK_STRATEGY_SIMPLE ;
     mEditable = false;
+    mFakeTextSkew = 0.f;
     mSelectionStart =-1;
     mSelectionEnd = -1;
     mTextDirection= 0;
@@ -80,6 +81,7 @@ Layout::Layout(const Layout&l):Layout(l.mFontSize,l.mWidth){
     mEditable = l.mEditable;
     mText = l.mText;
     mLines= l.mLines;
+    mFakeTextSkew = l.mFakeTextSkew;
     mTextDirection = l.mTextDirection;
     mSelectionStart = l.mSelectionStart;
     mSelectionEnd = l.mSelectionEnd;
@@ -108,9 +110,16 @@ void Layout::setTypeface(Typeface*tf){
     }
 }
 
+void Layout::setFakeTextSkew(float skew){
+    if(mFakeTextSkew!=skew){
+        mFakeTextSkew= skew;
+        resetScaledFont();
+    }
+}
+
 void Layout::resetScaledFont(){
-    Cairo::Matrix font_mtx = Cairo::identity_matrix();
-    font_mtx.scale(mFontSize, mFontSize);
+    const double skewX= mFakeTextSkew;
+    Cairo::Matrix font_mtx(mFontSize, 0.0, mFontSize * skewX, mFontSize, 0.0, 0.0);
 
     Cairo::FontOptions options;
     Cairo::Matrix ctm = Cairo::identity_matrix();
@@ -118,6 +127,7 @@ void Layout::resetScaledFont(){
     mTypeface->getFontFace()->get_font_options(options);
     options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
     options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
+
     mScaledFont = Cairo::ScaledFont::create(face, font_mtx, ctm, options);
 }
 
@@ -715,8 +725,9 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
 
 void  Layout::draw(Canvas&canvas){
     relayout();
-    canvas.set_font_size(mFontSize);
-    canvas.set_font_face(mTypeface->getFontFace()->get_font_face());
+    //canvas.set_font_size(mFontSize);
+    //canvas.set_font_face(mTypeface->getFontFace()->get_font_face());
+    canvas.set_scaled_font(mScaledFont);
     drawText(canvas,0,mLineCount);
 }
 

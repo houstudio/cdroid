@@ -43,6 +43,7 @@ private:
     bool mEditable;
     bool mMultiline;
     int mBreakStrategy;
+    float mFakeTextSkew;
     float mSpacingMult; //spacingMult line spacing multiplier
     int mSpacingAdd;   //spacingAdd line spacing add
     int mLayout;        //mLayout>0 need relayout
@@ -91,6 +92,7 @@ public:
     bool isEditable()const;
     int getEllipsis()const;
     void setEllipsis(int);
+    void setFakeTextSkew(float);
     const std::string getString()const;
     std::wstring & getText(); //for edit 
     void setMultiline(bool enabe);

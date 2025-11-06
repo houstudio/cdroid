@@ -21,7 +21,6 @@
 #include <core/inputdevice.h>
 #include <utils/atexit.h>
 #include <utils/textutils.h>
-#include <utils/neverdestroyed.h>
 #include <porting/cdlog.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -148,7 +147,8 @@ std::ostream& operator<<(std::ostream& out, const InputEvent& event) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // --- PooledInputEventFactory ---
-static NeverDestroyed<PooledInputEventFactory>mInst(20);
+static std::shared_ptr<PooledInputEventFactory>mInst = std::make_shared<PooledInputEventFactory>(20);
+
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
     return *mInst.get();
 }
@@ -227,15 +227,17 @@ static bool ReadFully(int fd, void* data, size_t byte_count) {
 [[maybe_unused]]
 #endif
 static int getRandomBytes(uint8_t* data, size_t size) {
+    int result =0;
     int fd = TEMP_FAILURE_RETRY(open("/dev/urandom", O_RDONLY | O_CLOEXEC | O_NOFOLLOW));
     if (fd == -1) {
-        return -errno;
+        result= -errno;
+    }else{
+        if (!ReadFully(fd, data, size)) {
+            result = -errno;
+        }
     }
-
-    if (!ReadFully(fd, data, size)) {
-        return -errno;
-    }
-    return 0;
+    close(fd);
+    return result;
 }
 
 IdGenerator::IdGenerator(Source source) : mSource(source) {}

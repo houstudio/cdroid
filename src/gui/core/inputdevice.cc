@@ -312,10 +312,10 @@ void InputDevice::pushEvent(InputEvent*e){
     mLastEventTime=e->getEventTime();
 }
 
-InputEvent*InputDevice::popEvent(){
-    InputEvent*event = mEvents.front();
-    mEvents.pop_front();
-    return event;
+int InputDevice::drainEvents(std::vector<InputEvent*>&out){
+    out.clear();
+    out.swap(mEvents);
+    return out.size();
 }
 
 void InputDevice::getLastEvent(int&action,nsecs_t&etime)const{

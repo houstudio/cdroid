@@ -322,7 +322,6 @@ public:
     Typeface* mFontTypeface;
     int mTypefaceIndex = -1;
     int mTextStyle=0;
-    int mStyleIndex = -1;
     int mFontWeight = -1;
     int mShadowColor = 0;
     float mLetterSpacing = 0;
@@ -344,6 +343,7 @@ TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextColors    = nullptr;
     mTextColorHints= nullptr;
     mTextColorLinks= nullptr;
+    mTextStyle = Typeface::NORMAL;
 }
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
@@ -516,8 +516,8 @@ void TextView::initView(){
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
     mShadowRadius = .0;
-    mShadowDx = .0;
-    mShadowDy = .0;
+    mShadowDx = 0.0f;
+    mShadowDy = 0.0f;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
     mEditMode   = READONLY;
@@ -641,7 +641,7 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
         attr->mFontFamily.clear();
     }
     setTypefaceFromAttrs(attr->mFontTypeface, attr->mFontFamily,
-            attr->mTypefaceIndex, attr->mStyleIndex, attr->mFontWeight);
+            attr->mTypefaceIndex, attr->mTextStyle, attr->mFontWeight);
 
     if (attr->mShadowColor != 0) {
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
@@ -2019,7 +2019,7 @@ void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& family
 void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
     if (weight >= 0) {
         weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
-        bool italic = (style & Typeface::ITALIC) != 0;
+        const bool italic = (style & Typeface::ITALIC) != 0;
         setTypeface(Typeface::create(typeface, weight, italic));
     } else {
         setTypeface(typeface, style);
@@ -2035,13 +2035,15 @@ void TextView::setTypeface(Typeface* tf,int style){
         }
         setTypeface(tf);
         // now compute what (if any) algorithmic styling is needed
-        int typefaceStyle = tf ? tf->getStyle() : 0;
-        int need = style & ~typefaceStyle;
+        const int typefaceStyle = tf ? tf->getStyle() : 0;
+        const int need = style & ~typefaceStyle;
+        mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
         //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
-        //mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25f : 0);
     } else {
+        mLayout->setFakeTextSkew(0.0);
+        mHintLayout->setFakeTextSkew(0.0);
         //mTextPaint.setFakeBoldText(false);
-        //mTextPaint.setTextSkewX(0);
         setTypeface(tf);
     }
 }
