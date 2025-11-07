@@ -58,13 +58,14 @@ private:
     static constexpr int DEFAULT_MIN_WIDTH = 64;
     static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
     class AccessibilityNodeProviderImpl;
+    class PressedStateHelper;
+    class ChangeCurrentByOneFromLongPressCommand;
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
     Runnable mChangeCurrentByOneFromLongPressCommand;
     Runnable mBeginSoftInputOnLongPressCommand;
     float mInputTextCenter;
-    int mSelectionDividersDistance;
     int mMinHeight;
     int mMaxHeight;
     int mMinWidth;
@@ -117,6 +118,7 @@ private:
     bool mWrapSelectorWheelPreferred;
     bool mUpdateInputTextInFling;
     bool mPerformClickOnTap;
+    bool mHasSelectorWheel;
     int mWheelItemCount;
     int mRealWheelItemCount;
     int mWheelMiddleItemIndex;
@@ -127,29 +129,16 @@ private:
     int mDividerColor;
     int mDividerType;
     int mDividerDistance;
-    int mDividerLength;
     int mDividerThickness;
-    int mTopDividerTop;
-    int mBottomDividerBottom;
-    int mLeftDividerLeft;
-    int mRightDividerRight;
+    int mStartDividerStart;
+    int mEndDividerEnd;
     int mOrder;
     int mItemSpacing;
-    int mSelectionDividerHeight;
     int mScrollState=OnScrollListener::SCROLL_STATE_IDLE;
-    int mTopSelectionDividerTop;
-    int mBottomSelectionDividerBottom;
     int mLastHoveredChildVirtualViewId;
     int mLastHandledDownDpadKeyCode;
     Cairo::RefPtr<Cairo::LinearGradient>mPat;
-    //PressedStateHelper's members
-    Runnable mPressedStateHelpers;
-    int mPSHManagedButton;
-    int mPSHMode;
-    void pshCancel();
-    void pshButtonPressDelayed(int);
-    void pshButtonTapped(int);
-    void pshRun();
+    PressedStateHelper* mPressedStateHelper;
 private:
     void initView();
     float getMaxTextSize()const;
@@ -282,6 +271,33 @@ public:
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
     AccessibilityNodeProvider* getAccessibilityNodeProvider()override;
 
+};
+
+class NumberPicker::PressedStateHelper:public ViewRunnable{
+public:
+    static constexpr int BUTTON_INCREMENT = 1;
+    static constexpr int BUTTON_DECREMENT = 2;
+private:
+    static constexpr int MODE_PRESS = 1;
+    static constexpr int MODE_TAPPED = 2;
+    int mManagedButton;
+    int mMode;
+    NumberPicker*mNP;
+public:
+    PressedStateHelper(NumberPicker*np);
+    void cancel();
+    void buttonPressDelayed(int button);
+    void buttonTapped(int button);
+    void run()override;
+};
+
+class NumberPicker::ChangeCurrentByOneFromLongPressCommand:public ViewRunnable{
+private:
+    bool mIncrement;
+    void setStep(bool increment) {
+        mIncrement = increment;
+    }
+    void run()override;
 };
 
 class NumberPicker::AccessibilityNodeProviderImpl:public AccessibilityNodeProvider {

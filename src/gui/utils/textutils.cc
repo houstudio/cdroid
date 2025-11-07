@@ -343,4 +343,68 @@ void TextUtils::stringAppendF(std::string& dst, const char* format, ...) {
     va_end(ap);
 }
 
+std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
+    bool has_ss = false;
+    int32_t h24 = seconds / 3600;
+    int32_t m   = (seconds % 3600) / 60;
+    int32_t s = seconds % 60;
+    for (const char* p = fmt.c_str(); *p; ++p)
+        if (*p == 's' && *(p+1) == 's') { has_ss = true; break; }
+
+    const bool blink_colon = !has_ss && ((s & 1) == 0);
+
+    std::string out;
+    out.reserve(fmt.length() + 32);
+
+    for (const char* p = fmt.c_str(); *p; ++p) {
+        char c = *p;
+
+        if (c == ':' && !has_ss) {
+            out += (blink_colon ? ':' : ' ');
+            continue;
+        }
+
+        /* 24h*/
+        if (c == 'H' && *(p+1) != 'H') {
+            char b[3]; std::snprintf(b, 3, "%u", h24 % 24); out += b; continue;
+        }
+        if (c == 'H' && *(p+1) == 'H') {
+            char b[3]; std::snprintf(b, 3, "%02u", h24 % 24); out += b; ++p; continue;
+        }
+
+        /* 12h*/
+        if (c == 'h' && *(p+1) != 'h') {
+            unsigned h12 = h24 % 12; if (h12 == 0) h12 = 12;
+            char b[3]; std::snprintf(b, 3, "%u", h12); out += b; continue;
+        }
+        if (c == 'h' && *(p+1) == 'h') {
+            unsigned h12 = h24%12; if (h12 == 0) h12 = 12;
+            char b[3]; std::snprintf(b, 3, "%02u", h12); out += b; ++p; continue;
+        }
+
+        /* minute */
+        if (c == 'm' && *(p+1) != 'm') {
+            char b[3]; std::snprintf(b, 3, "%u", m % 60); out += b; continue;
+        }
+        if (c == 'm' && *(p+1) == 'm') {
+            char b[3]; std::snprintf(b, 3, "%02u", m % 60); out += b; ++p; continue;
+        }
+
+        /* second */
+        if (c == 's' && *(p+1) != 's') {
+            char b[3]; std::snprintf(b, 3, "%u", s % 60); out += b; continue;
+        }
+        if (c == 's' && *(p+1) == 's') {
+            char b[3]; std::snprintf(b, 3, "%02u", s % 60); out += b; ++p; continue;
+        }
+
+        /* AM/PM */
+        if (c == 'A') { out += (h24 < 12 ? "AM" : "PM"); continue; }
+        if (c == 'a') { out += (h24 < 12 ? "am" : "pm"); continue; }
+
+        out += c;
+    }
+    return out;
+}
+
 }//namespace

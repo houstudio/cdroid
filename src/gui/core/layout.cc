@@ -725,8 +725,6 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
 
 void  Layout::draw(Canvas&canvas){
     relayout();
-    //canvas.set_font_size(mFontSize);
-    //canvas.set_font_face(mTypeface->getFontFace()->get_font_face());
     canvas.set_scaled_font(mScaledFont);
     drawText(canvas,0,mLineCount);
 }

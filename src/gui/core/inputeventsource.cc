@@ -179,37 +179,18 @@ bool InputEventSource::isScreenSaverActived()const{
 }
 
 int InputEventSource::handleEvents(){
-#if 0
     int ret = 0;
-    struct Pending { std::shared_ptr<InputDevice> dev; std::vector<InputEvent*> events; };
-    std::vector<Pending> pendings;
-    {
-        std::lock_guard<std::recursive_mutex> lock(mtxEvents);
-        for(auto it:mDevices){
-            Pending p;
-            auto dev = it.second;
-            if(0==dev->drainEvents(p.events))continue;
-            p.dev = dev;
-            pendings.push_back(p);
-        }
-    }
-    for (auto &p : pendings) {
-        ret+=p.events.size();
-        for(auto e:p.events) {
-            WindowManager::getInstance().processEvent(*e);
-            e->recycle();
-        }
-    }
-    return ret;
-#else
-    int ret;
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
         auto dev = it.second;
         std::vector<InputEvent*>events;
         if(dev->getEventCount()==0)continue;
         ret += dev->drainEvents(events);
-        if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
+		for(auto e:events) {
+            WindowManager::getInstance().processEvent(*e);
+            e->recycle();
+        }
+        /*if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
             for(auto e:events){
                MotionEvent*me = (MotionEvent*)e;
                WindowManager::getInstance().processEvent(*me);
@@ -225,10 +206,9 @@ int InputEventSource::handleEvents(){
             for(auto e:events){
                 e->recycle();
             }
-        }
+        }*/
     }
     return ret;
-#endif
 }
 
 void InputEventSource::sendEvent(InputEvent&event){

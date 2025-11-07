@@ -40,7 +40,7 @@ Scroller::Scroller(Context* context,const Interpolator* interpolator, bool flywh
     mMinX  = mMinY = 0;
     mMaxX  = mMaxY = 0;
     mCurrX = mCurrY = 0;
-    mDeltaX= mDeltaY=.0f;
+    mDeltaX= mDeltaY=0.0f;
     mStartTime= 0;
     mDuration = 1;
     mDistance = 0;

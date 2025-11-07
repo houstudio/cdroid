@@ -108,8 +108,8 @@ ViewPropertyAnimator::ViewPropertyAnimator(View* view){
         if (!hardwareAccelerated) {
             mView->invalidateParentCaches();
         }
-        float fraction = animation.getAnimatedFraction();
-        int propertyMask = propertyBundle.mPropertyMask;
+        const float fraction = animation.getAnimatedFraction();
+        const int propertyMask = propertyBundle.mPropertyMask;
         if ((propertyMask & TRANSFORM_MASK) != 0) {
             mView->invalidateViewProperty(hardwareAccelerated, false);
         }

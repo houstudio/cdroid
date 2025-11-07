@@ -1146,6 +1146,7 @@ void View::setAnimation(Animation* animation) {
         animation->reset();
     }
 }
+
 void View::setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled){
     mDefaultFocusHighlightEnabled = defaultFocusHighlightEnabled;
 }
@@ -1503,7 +1504,7 @@ bool View::isNestedScrollingEnabled()const{
                 PFLAG3_NESTED_SCROLLING_ENABLED;
 }
 
-void View::postUpdate(Runnable r) {
+void View::postUpdate(const Runnable& r) {
     // Potentially racey from a background thread. It's ok if it's not perfect.
     /*final Handler h = getHandler();
     if (h != null) {
@@ -1530,8 +1531,7 @@ std::vector<Rect> View::getSystemGestureExclusionRects(){
 void View::setPreferKeepClear(bool preferKeepClear){
     getListenerInfo()->mPreferKeepClear = preferKeepClear;
     updatePositionUpdateListener();
-    Runnable run([this](){updateKeepClearRects();});
-    postUpdate(run);
+    postUpdate([this](){updateKeepClearRects();});
 }
 
 bool View::isPreferKeepClear()const{
@@ -1542,8 +1542,7 @@ void View::setPreferKeepClearRects(const std::vector<Rect>& rects){
     ListenerInfo* info = getListenerInfo();
     info->mKeepClearRects= rects;
     updatePositionUpdateListener();
-    Runnable run([this](){updateKeepClearRects();});
-    postUpdate(run);
+    postUpdate([this](){updateKeepClearRects();});
 }
 
 std::vector<Rect> View::getPreferKeepClearRects()const{
@@ -1555,8 +1554,7 @@ void View::setUnrestrictedPreferKeepClearRects(const std::vector<Rect>& rects){
     ListenerInfo* info = getListenerInfo();
     info->mUnrestrictedKeepClearRects = rects;
     updatePositionUpdateListener();
-    Runnable run([this](){updateKeepClearRects();});
-    postUpdate(run);
+    postUpdate([this](){updateKeepClearRects();});
 }
 
 std::vector<Rect>View::getUnrestrictedPreferKeepClearRects()const{
@@ -8510,7 +8508,7 @@ bool View::onTouchEvent(MotionEvent& event){
     return true;
 }
 
-void View::postOnAnimation(Runnable& action){
+void View::postOnAnimation(const Runnable& action){
     if(mAttachInfo){
         Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,action,nullptr);
     }else{
@@ -8518,7 +8516,7 @@ void View::postOnAnimation(Runnable& action){
     }
 }
 
-void View::postOnAnimationDelayed(Runnable& action, long delayMillis){
+void View::postOnAnimationDelayed(const Runnable& action, long delayMillis){
     if(mAttachInfo){
         Choreographer::getInstance().postCallbackDelayed(Choreographer::CALLBACK_ANIMATION,action,nullptr,delayMillis);
     }else{
@@ -9703,9 +9701,31 @@ View::AttachInfo::~AttachInfo(){
     delete mAccessibilityFocusDrawable;
 }
 
+///////////////////////////////////////////////////////////////////////////////////
+View::ViewRunnable::ViewRunnable(View*v):mView(v){
+    mRunnable =[this](){
+        run();
+    };
+}
+
+void View::ViewRunnable::run(){
+}
+
+void View::ViewRunnable::post(){
+    mView->post(mRunnable);
+}
+
+void View::ViewRunnable::postDelayed(long ms){
+    mView->postDelayed(mRunnable,ms);
+}
+
+void View::ViewRunnable::removeCallbacks(){
+    mView->removeCallbacks(mRunnable);
+}
+
+
 View::CheckForTap::CheckForTap(View*v)
-    :mView(v){
-    mRunnable = std::bind(&CheckForTap::run,this);
+    :View::ViewRunnable(v){
 }
 void View::CheckForTap::setAnchor(float x,float y){
     mX = x;

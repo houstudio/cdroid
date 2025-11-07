@@ -1,5 +1,23 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widget/textclock.h>
 #include <core/systemclock.h>
+#include <utils/textutils.h>
 
 namespace cdroid{
 #if 0
@@ -85,8 +103,12 @@ void TextClock::doTick() {
         // This should never happen, but if it does, then tick again in a second.
         millisUntilNextTick = 1000;
     }
-
     postDelayed(mTicker, millisUntilNextTick);
+#else
+    const int64_t now =mTime.getTimeInMillis();
+    const int64_t nextSecondMillis = (now / 1000 + 1) * 1000;
+    const long millisUntilNextTick = long(nextSecondMillis-now);
+    postDelayed(mTicker,millisUntilNextTick);
 #endif
 }
 
@@ -202,9 +224,7 @@ void TextClock::chooseFormat() {
     }
 
     const bool hadSeconds = mHasSeconds;
-    auto pos = mFormat.find_last_of(":")!=std::string::npos;
-    mHasSeconds =(pos!=std::string::npos)&&((mFormat[pos+1]=='s')||(mFormat[pos+1]=='S'));
-    //mHasSeconds=DateFormat.hasSeconds(mFormat);
+    mHasSeconds = mFormat.find_last_of("sS")!=std::string::npos;
 
     if (mShouldRunTicker && (hadSeconds != mHasSeconds)) {
         mTicker();
@@ -270,34 +290,8 @@ void TextClock::unregisterObserver() {
 
 void TextClock::onTimeChanged() {
     mTime.setTimeInMillis(SystemClock::currentTimeMillis());
-    //setText(DateFormat.format(mFormat, mTime));
-    //setContentDescription(DateFormat.format(mDescFormat, mTime));
-    std::string text = mFormat;
-    char stm[64];
-    int64_t seconds=SystemClock::currentTimeMillis()/1000;
-    auto pos = text.find("SS");
-    const bool mColonBlinking=true;
-    sprintf(stm,"%02d%c%02d",int(seconds/60),((((seconds%60)%2==0)||mColonBlinking==false)?':':' '),int(seconds%60));
-    if(pos!=std::string::npos){
-        sprintf(stm,"%02d",int(seconds%60));
-        text.replace(pos,2,stm);
-        if(mColonBlinking&&(seconds%2==0)){
-            text.replace(pos-1,1," ");
-        }
-        pos=text.find("MM");
-        if(pos!=std::string::npos){
-            sprintf(stm,"%02d",int((seconds%3600)/60));
-            text.replace(pos,2,stm);
-        }
-        pos=text.find("H");
-        if(pos!=std::string::npos){
-            sprintf(stm,"%d",int(seconds/3600));
-            text.replace(pos,1+(text[pos+1]=='H'),stm);
-        }
-    }else{
-        text = stm;
-    }
-    setText(text);
+    setText(TextUtils::formatTime(mFormat, mTime.getTimeInMillis()/1000));
+    setContentDescription(TextUtils::formatTime(mDescFormat, mTime.getTimeInMillis()/1000));
 }
 
 /*void TextClock::encodeProperties(ViewHierarchyEncoder stream) {
@@ -310,9 +304,9 @@ void TextClock::onTimeChanged() {
     stream.addProperty("format24Hour", s == null ? null : s.toString());
     stream.addProperty("format", mFormat == null ? null : mFormat.toString());
     stream.addProperty("hasSeconds", mHasSeconds);
-}*/
+}
 
-/*public static class ClockEventDelegate {
+public static class ClockEventDelegate {
     private final Context mContext;
     public ClockEventDelegate(Context context) {
         mContext = context;

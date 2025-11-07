@@ -475,6 +475,7 @@ public:
     class TintInfo;
     class ForegroundInfo;
     class ListenerInfo;
+    class ViewRunnable;
 public:
     DECLARE_UIEVENT(bool,OnKeyListener,View& v, int keyCode, KeyEvent&);
     DECLARE_UIEVENT(bool,OnTouchListener,View&v, MotionEvent&);
@@ -765,7 +766,7 @@ protected:
     virtual bool hasFlag(int flag) const;
     bool fitSystemWindows(Rect& insets);
     void applyInsets(const Rect& insets);
-    void postUpdate(Runnable r);
+    void postUpdate(const Runnable& r);
     virtual void dispatchSetSelected(bool selected);
     virtual void dispatchSetPressed(bool pressed);
     virtual void dispatchVisibilityChanged(View& changedView,int visiblity);
@@ -1423,8 +1424,8 @@ public:
     virtual bool onGenericMotionEvent(MotionEvent& event);
     virtual void onHoverChanged(bool hovered);
 	
-    void postOnAnimation(Runnable& action);
-    void postOnAnimationDelayed(Runnable& action, long delayMillis);
+    void postOnAnimation(const Runnable& action);
+    void postOnAnimationDelayed(const Runnable& action, long delayMillis);
     bool post(const Runnable& what);
     virtual bool postDelayed(const Runnable& what,long delay=0);
     virtual bool removeCallbacks(const Runnable& what);
@@ -1657,15 +1658,26 @@ public:
     OnApplyWindowInsetsListener mOnApplyWindowInsetsListener;
 };
 
-class View::CheckForTap{
+class View::ViewRunnable{
 protected:
     View*mView;
-    float mX,mY;
     Runnable mRunnable;
+public:
+    ViewRunnable(View*v);
+    virtual ~ViewRunnable()=default;
+    virtual void run();
+    void postDelayed(long);
+    void post();
+    void removeCallbacks();
+};
+
+class View::CheckForTap:public View::ViewRunnable{
+protected:
+    float mX,mY;
 public:
     CheckForTap(View*v);
     void setAnchor(float,float);
-    virtual void run();
+    void run()override;
     void postDelayed(long);
     void removeCallbacks();
 };
