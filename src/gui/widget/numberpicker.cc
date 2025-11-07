@@ -123,8 +123,9 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     if ((mMinWidth != SIZE_UNSPECIFIED) && (mMaxWidth != SIZE_UNSPECIFIED) && (mMinWidth > mMaxWidth) ){
         LOGE("minWidth(%d)  > maxWidth(%d)",mMinWidth,mMaxWidth);
     }
-
-    const std::string layoutres = atts.getString("internalLayout",(getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ));
+    const std::string defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
+    const std::string layoutres = atts.getString("internalLayout",defaultLayoutRes);
+    mHasSelectorWheel = (defaultLayoutRes!=layoutres);
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
@@ -662,7 +663,7 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
 }
 
 bool NumberPicker::dispatchHoverEvent(MotionEvent& event) {
-    if (0){//!mHasSelectorWheel) {
+    if (!mHasSelectorWheel) {
         return LinearLayout::dispatchHoverEvent(event);
     }
 
@@ -849,7 +850,7 @@ float NumberPicker::getMaxTextSize()const {
 }
 
 bool NumberPicker::performClick() {
-    if (true/*!mHasSelectorWheel*/) {
+    if (!mHasSelectorWheel) {
         return ViewGroup::performClick();
     } else if (!ViewGroup::performClick()) {
         showSoftInput();
@@ -858,7 +859,7 @@ bool NumberPicker::performClick() {
 }
 
 bool NumberPicker::performLongClick() {
-    if (true/*!mHasSelectorWheel*/) {
+    if (!mHasSelectorWheel) {
         return ViewGroup::performLongClick();
     } else if (!ViewGroup::performLongClick()) {
         showSoftInput();
@@ -867,8 +868,9 @@ bool NumberPicker::performLongClick() {
 }
 
 void NumberPicker::showSoftInput(){
-    //if(mHasSelectorWheel)
-	mInputText->setVisibility(View::VISIBLE);
+    if(mHasSelectorWheel){
+	   mInputText->setVisibility(View::VISIBLE);
+    }
 }
 
 void NumberPicker::hideSoftInput(){
@@ -1893,7 +1895,7 @@ void NumberPicker::onInitializeAccessibilityEventInternal(AccessibilityEvent& ev
 }
 
 AccessibilityNodeProvider* NumberPicker::getAccessibilityNodeProvider(){
-    if (false){//!mHasSelectorWheel) {
+    if (!mHasSelectorWheel) {
         return LinearLayout::getAccessibilityNodeProvider();
     }
     if (mAccessibilityNodeProvider == nullptr) {
