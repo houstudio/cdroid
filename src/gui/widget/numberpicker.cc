@@ -1252,17 +1252,17 @@ void NumberPicker::onDraw(Canvas&canvas){
         if (mDecrementVirtualButtonPressed) {
             mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
             if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, 0, mRight, mStartDividerStart);
+                mVirtualButtonPressedDrawable->setBounds(0, 0, getWidth() , mStartDividerStart);
             else
-                mVirtualButtonPressedDrawable->setBounds(0, 0,mStartDividerStart,mBottom);
+                mVirtualButtonPressedDrawable->setBounds(0, 0, mStartDividerStart , getHeight());
             mVirtualButtonPressedDrawable->draw(canvas);
         }
         if (mIncrementVirtualButtonPressed) {
             mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
             if(!isHorizontalMode())
-                mVirtualButtonPressedDrawable->setBounds(0, mEndDividerEnd, mRight, mBottom-mEndDividerEnd);
+                mVirtualButtonPressedDrawable->setBounds(0, mEndDividerEnd, getWidth(), getHeight() - mEndDividerEnd);
             else
-                mVirtualButtonPressedDrawable->setBounds(mEndDividerEnd, 0,mRight-mEndDividerEnd,mBottom);
+                mVirtualButtonPressedDrawable->setBounds(mEndDividerEnd, 0, getWidth() - mEndDividerEnd, getHeight());
             mVirtualButtonPressedDrawable->draw(canvas);
         }
     }
