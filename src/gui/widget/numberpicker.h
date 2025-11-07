@@ -60,11 +60,12 @@ private:
     class AccessibilityNodeProviderImpl;
     class PressedStateHelper;
     class ChangeCurrentByOneFromLongPressCommand;
+    class BeginSoftInputOnLongPressCommand;
     ImageButton* mIncrementButton;
     ImageButton* mDecrementButton;
     EditText* mInputText;
-    Runnable mChangeCurrentByOneFromLongPressCommand;
-    Runnable mBeginSoftInputOnLongPressCommand;
+    ChangeCurrentByOneFromLongPressCommand* mChangeCurrentByOneFromLongPressCommand;
+    BeginSoftInputOnLongPressCommand* mBeginSoftInputOnLongPressCommand;
     float mInputTextCenter;
     int mMinHeight;
     int mMaxHeight;
@@ -117,6 +118,7 @@ private:
     bool mHideWheelUntilFocused; 
     bool mWrapSelectorWheelPreferred;
     bool mUpdateInputTextInFling;
+    bool mIgnoreMoveEvents;
     bool mPerformClickOnTap;
     bool mHasSelectorWheel;
     int mWheelItemCount;
@@ -166,7 +168,6 @@ private:
     void validateInputTextView(View* v);
     bool updateInputTextView();
     void notifyChange(int previous, int current);
-    void postChangeCurrentByOneFromLongPress(bool increment);
     void postChangeCurrentByOneFromLongPress(bool increment, long delayMillis);
     void removeChangeCurrentByOneFromLongPress();
     void removeBeginSoftInputCommand();
@@ -294,10 +295,20 @@ public:
 class NumberPicker::ChangeCurrentByOneFromLongPressCommand:public ViewRunnable{
 private:
     bool mIncrement;
+public:
     void setStep(bool increment) {
         mIncrement = increment;
     }
+    ChangeCurrentByOneFromLongPressCommand(View*v):ViewRunnable(v){}
     void run()override;
+};
+
+class NumberPicker::BeginSoftInputOnLongPressCommand:public ViewRunnable {
+public:
+    BeginSoftInputOnLongPressCommand(View*v):ViewRunnable(v){}
+    void run() override{
+        ((NumberPicker*)mView)->performLongClick();
+    }
 };
 
 class NumberPicker::AccessibilityNodeProviderImpl:public AccessibilityNodeProvider {

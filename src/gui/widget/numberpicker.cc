@@ -128,7 +128,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mVirtualButtonPressedDrawable = new ColorDrawable(0x80FF0000);//atts.getDrawable("virtualButtonPressedDrawable");
+    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
     setWillNotDraw(false);
 
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
@@ -220,6 +220,8 @@ NumberPicker::~NumberPicker(){
     delete mDividerDrawable;
     delete mItemBackground;
     delete mVirtualButtonPressedDrawable;
+    delete mBeginSoftInputOnLongPressCommand;
+    delete mChangeCurrentByOneFromLongPressCommand;
     delete mFlingScroller;
     delete mAdjustScroller;
     delete mAccessibilityNodeProvider;
@@ -291,7 +293,9 @@ void NumberPicker::initView(){
     mTypeface = nullptr;
     mItemBackground = nullptr;
     mVirtualButtonPressedDrawable = nullptr;
-    mDividerColor =DEFAULT_DIVIDER_COLOR;
+    mBeginSoftInputOnLongPressCommand = nullptr;
+    mChangeCurrentByOneFromLongPressCommand = nullptr;
+    mDividerColor = DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
     mDividerThickness =2;
@@ -300,12 +304,13 @@ void NumberPicker::initView(){
     mWrapSelectorWheel= false;
     mWrapSelectorWheelPreferred = true;
     mUpdateInputTextInFling = false;
+    mIgnoreMoveEvents  = false;
     mPerformClickOnTap = false;
     mIncrementVirtualButtonPressed = false;
     mDecrementVirtualButtonPressed = false;
     mPreviousScrollerY   = 0;
     mCurrentScrollOffset = 0;
-    mInitialScrollOffset = 0;
+    mInitialScrollOffset = INT_MIN;
     mLongPressUpdateInterval = DEFAULT_LONG_PRESS_UPDATE_INTERVAL;
     mMinHeight = SIZE_UNSPECIFIED;
     mMaxHeight = SIZE_UNSPECIFIED;
@@ -350,11 +355,13 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
         initializeFadingEdges();
         if(isHorizontalMode()){
             const int w = std::max(inptTxtMsrdWdth,mSelectorElementSize);
-            if(w>mDividerDistance)mDividerDistance=w;
+            if(w > mDividerDistance) mDividerDistance = w;
             mStartDividerStart = (getWidth() - mDividerDistance)/2 - mDividerThickness;
             mEndDividerEnd= mStartDividerStart + mDividerDistance + 2*mDividerThickness;
             mInputText->layout((msrdWdth - w) /2, inptTxtTop,w, inptTxtMsrdHght);
         }else{
+            const int h = std::max(inptTxtMsrdHght,mSelectorElementSize);
+            if(h > mDividerDistance) mDividerDistance = h;
             mStartDividerStart = (getHeight() - mDividerDistance)/2 - mDividerThickness;
             mEndDividerEnd = mStartDividerStart + mDividerDistance+2*mDividerThickness;
         }
@@ -381,6 +388,9 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
         int amountToScroll = scroller->getFinalX() - scroller->getCurrX();
         int futureScrollOffset = (mCurrentScrollOffset + amountToScroll) % mSelectorElementSize;
         int overshootAdjustment = mInitialScrollOffset - futureScrollOffset;
+
+        int reduced = amountToScroll%mSelectorElementSize;
+        if(reduced < 0) reduced += mSelectorElementSize;
         if (overshootAdjustment != 0) {
             if (std::abs(overshootAdjustment) > mSelectorElementSize / 2) {
                 if (overshootAdjustment > 0) {
@@ -390,13 +400,16 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
                 }
             }
             amountToScroll += overshootAdjustment;
-            scrollBy(amountToScroll, 0);
+            scrollBy(reduced + overshootAdjustment/*amountToScroll*/, 0);
             return true;
         }
     }else{
         int amountToScroll = scroller->getFinalY() - scroller->getCurrY();
         int futureScrollOffset = (mCurrentScrollOffset + amountToScroll) % mSelectorElementSize;
         int overshootAdjustment = mInitialScrollOffset - futureScrollOffset;
+
+        int reduced = amountToScroll%mSelectorElementSize;
+        if(reduced < 0) reduced += mSelectorElementSize;
         if (overshootAdjustment != 0) {
             if (std::abs(overshootAdjustment) > mSelectorElementSize / 2) {
                 if (overshootAdjustment > 0) {
@@ -406,20 +419,37 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
                 }
             }
             amountToScroll += overshootAdjustment;
-            scrollBy(0, amountToScroll);
+            scrollBy(0, reduced + overshootAdjustment/*amountToScroll*/);
             return true;
         }
     }
     return false;
 }
+
 bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     if (!isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
+    mIgnoreMoveEvents = false;
     mPerformClickOnTap = false;
+    removeAllCallbacks();
     if(isHorizontalMode()){
         mLastDownOrMoveEventX = mLastDownEventX = event.getX();
+        mLastDownEventTime = event.getEventTime();
+
+        // Handle pressed state before any state change.
+        if (mLastDownEventX < mStartDividerStart) {
+            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
+                mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+            }
+        } else if (mLastDownEventX > mEndDividerEnd) {
+            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
+                mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
+            }
+        }
+        // Make sure we support flinging inside scrollables.
+        getParent()->requestDisallowInterceptTouchEvent(true);
         if (!mFlingScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
@@ -429,18 +459,28 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
             onScrollerFinished(mAdjustScroller);
-        } else if (mLastDownEventX >= mStartDividerStart
-                && mLastDownEventX <= mEndDividerEnd) {
-            mPerformClickOnTap = true;
-        } else if (mLastDownEventX < mStartDividerStart) {
-            postChangeCurrentByOneFromLongPress(false);
-            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+        } else if (mLastDownEventX< mStartDividerStart) {
+            postChangeCurrentByOneFromLongPress(false, ViewConfiguration::getLongPressTimeout());
         } else if (mLastDownEventX > mEndDividerEnd) {
-            postChangeCurrentByOneFromLongPress(true);
-            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
+            postChangeCurrentByOneFromLongPress(true, ViewConfiguration::getLongPressTimeout());
+        } else{
+            mPerformClickOnTap = true;
+            postBeginSoftInputOnLongPressCommand();
         }
     }else{
         mLastDownOrMoveEventY = mLastDownEventY = event.getY();
+        // Handle pressed state before any state change.
+        if (mLastDownEventY < mStartDividerStart) {
+            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
+                mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+            }
+        } else if (mLastDownEventY > mEndDividerEnd) {
+            if (mScrollState == OnScrollListener::SCROLL_STATE_IDLE) {
+                mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
+            }
+        }
+        // Make sure we support flinging inside scrollables.
+        getParent()->requestDisallowInterceptTouchEvent(true);
         if (!mFlingScroller->isFinished()) {
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
@@ -450,15 +490,13 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
             onScrollerFinished(mAdjustScroller);
-        } else if (mLastDownEventY >= mStartDividerStart
-                && mLastDownEventY <= mEndDividerEnd) {
-            mPerformClickOnTap = true;
-            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
         } else if (mLastDownEventY < mStartDividerStart) {
-            postChangeCurrentByOneFromLongPress(false);
-            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+            postChangeCurrentByOneFromLongPress(false, ViewConfiguration::getLongPressTimeout());
         } else if (mLastDownEventY > mEndDividerEnd) {
-            postChangeCurrentByOneFromLongPress(true);
+            postChangeCurrentByOneFromLongPress(true, ViewConfiguration::getLongPressTimeout());
+        } else{
+            mPerformClickOnTap = true;
+            postBeginSoftInputOnLongPressCommand();
         }        
     }//endif isHorizontalMode
     return true;
@@ -730,15 +768,16 @@ void NumberPicker::scrollBy(int x, int y){
         }
     }
     mCurrentScrollOffset += xy;
-
+    int loop1=0,loop2=0;
+    int oldCurrentScrollOffset= mCurrentScrollOffset;
     while (mCurrentScrollOffset - mInitialScrollOffset >  gap) {
         mCurrentScrollOffset -= mSelectorElementSize;
         if(isAscendingOrder())
             decrementSelectorIndices(selectorIndices);
         else
-            incrementSelectorIndices(selectorIndices);
+            incrementSelectorIndices(selectorIndices);loop1++;
         setValueInternal(selectorIndices[mWheelMiddleItemIndex], true);
-        if (!mWrapSelectorWheel && selectorIndices[mWheelMiddleItemIndex] <= mMinValue) {
+        if (!mWrapSelectorWheel && (selectorIndices[mWheelMiddleItemIndex] <= mMinValue)) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
@@ -748,9 +787,9 @@ void NumberPicker::scrollBy(int x, int y){
         if(isAscendingOrder())
             incrementSelectorIndices(selectorIndices);
         else
-            decrementSelectorIndices(selectorIndices);
+            decrementSelectorIndices(selectorIndices);loop2++;
         setValueInternal(selectorIndices[mWheelMiddleItemIndex], true);
-        if (!mWrapSelectorWheel && selectorIndices[mWheelMiddleItemIndex] >= mMaxValue) {
+        if (!mWrapSelectorWheel && (selectorIndices[mWheelMiddleItemIndex] >= mMaxValue)) {
             mCurrentScrollOffset = mInitialScrollOffset;
         }
     }
@@ -1336,9 +1375,6 @@ void NumberPicker::onDraw(Canvas&canvas){
 
 void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
     int top,bottom,left,right;
-    int leftOfLeftDivider/*,rightOfLeftDivider*/;
-    int /*bottomOfUnderlineDivider,*/topOfUnderlineDivider;
-    int rightOfRightDivider,leftOfRightDivider;
 
     switch (mDividerType) {
     case SIDE_LINES:
@@ -1350,14 +1386,10 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
             bottom = getBottom();
         }
         // draw the left divider
-        leftOfLeftDivider = mStartDividerStart;
-        //rightOfLeftDivider = leftOfLeftDivider + mDividerThickness;
-        mDividerDrawable->setBounds(leftOfLeftDivider, top, mDividerThickness, bottom-top);
+        mDividerDrawable->setBounds(mStartDividerStart, top, mDividerThickness, bottom-top);
         mDividerDrawable->draw(canvas);
         // draw the right divider
-        rightOfRightDivider = mEndDividerEnd;
-        leftOfRightDivider = rightOfRightDivider - mDividerThickness;
-        mDividerDrawable->setBounds(leftOfRightDivider, top, mDividerThickness, bottom-top);
+        mDividerDrawable->setBounds(mEndDividerEnd - mDividerThickness, top, mDividerThickness, bottom-top);
         mDividerDrawable->draw(canvas);
         break;
     case UNDERLINE:
@@ -1368,36 +1400,26 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
             left = mStartDividerStart;
             right = mEndDividerEnd;
         }
-        //bottomOfUnderlineDivider = mEndDividerEnd;
-        mDividerDrawable->setBounds(left,topOfUnderlineDivider,right - left,mDividerThickness);
+        mDividerDrawable->setBounds(left,0,mDividerThickness,mBottom);
         mDividerDrawable->draw(canvas);
         break;
    }
 }
 
 void NumberPicker::drawVerticalDividers(Canvas& canvas) {
-    int topOfTopDivider/*,bottomOfTopDivider*/;
-    int bottomOfUnderlineDivider,topOfUnderlineDivider;
-    int topOfBottomDivider,bottomOfBottomDivider;
     const int left = getPaddingLeft();
     const int right= getWidth()-getPaddingRight();
     switch (mDividerType) {
     case SIDE_LINES:
         // draw the top divider
-        topOfTopDivider = mStartDividerStart;
-        //bottomOfTopDivider = topOfTopDivider + mDividerThickness;
-        mDividerDrawable->setBounds(0, topOfTopDivider, right-left, mDividerThickness);
+        mDividerDrawable->setBounds(0, mStartDividerStart, right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         // draw the bottom divider
-        bottomOfBottomDivider = mEndDividerEnd;
-        topOfBottomDivider = bottomOfBottomDivider - mDividerThickness;
-        mDividerDrawable->setBounds(left,topOfBottomDivider,right-left, mDividerThickness);
+        mDividerDrawable->setBounds(left,mEndDividerEnd - mDividerThickness,right - left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         break;
     case UNDERLINE:
-        bottomOfUnderlineDivider = mEndDividerEnd;
-        topOfUnderlineDivider = bottomOfUnderlineDivider - mDividerThickness;
-        mDividerDrawable->setBounds(left,topOfUnderlineDivider,right-left, mDividerThickness);
+        mDividerDrawable->setBounds(left,mEndDividerEnd - mDividerThickness,right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         break;
     }
@@ -1687,49 +1709,47 @@ void NumberPicker::notifyChange(int previous, int current){
 }
 
 void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment, long delayMillis){
-    if(mChangeCurrentByOneFromLongPressCommand!=nullptr)
-        removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
-
-        mChangeCurrentByOneFromLongPressCommand=[this,increment](){
-        changeValueByOne(increment);
-        postDelayed(mChangeCurrentByOneFromLongPressCommand, mLongPressUpdateInterval);
-    };
-    postDelayed(mChangeCurrentByOneFromLongPressCommand, delayMillis);
+    if(mChangeCurrentByOneFromLongPressCommand==nullptr)
+        mChangeCurrentByOneFromLongPressCommand = new ChangeCurrentByOneFromLongPressCommand(this);
+    else
+        mChangeCurrentByOneFromLongPressCommand->removeCallbacks();
+    mChangeCurrentByOneFromLongPressCommand->setStep(increment);
+    mChangeCurrentByOneFromLongPressCommand->postDelayed(delayMillis);
 }
 
-void NumberPicker::postChangeCurrentByOneFromLongPress(bool increment){
-    postChangeCurrentByOneFromLongPress(increment, ViewConfiguration::getLongPressTimeout());
-}
 void NumberPicker::removeChangeCurrentByOneFromLongPress(){
     if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
-        removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
-        mChangeCurrentByOneFromLongPressCommand =nullptr;
+        mChangeCurrentByOneFromLongPressCommand->removeCallbacks();
     }
 }
 
 void NumberPicker::removeBeginSoftInputCommand(){
     if(mBeginSoftInputOnLongPressCommand!=nullptr){
-        removeCallbacks(mBeginSoftInputOnLongPressCommand);
-        mBeginSoftInputOnLongPressCommand=nullptr;
+        mBeginSoftInputOnLongPressCommand->removeCallbacks();
     }
 }
 
 void NumberPicker::postBeginSoftInputOnLongPressCommand(){
-    if(mBeginSoftInputOnLongPressCommand!=nullptr)
-        removeCallbacks(mBeginSoftInputOnLongPressCommand);
-    mBeginSoftInputOnLongPressCommand=[this](){
-        performLongClick();
-    };
-    postDelayed(mBeginSoftInputOnLongPressCommand,ViewConfiguration::getLongPressTimeout());
+    if(mBeginSoftInputOnLongPressCommand==nullptr){
+        mBeginSoftInputOnLongPressCommand = new BeginSoftInputOnLongPressCommand(this);
+    }else{
+        mBeginSoftInputOnLongPressCommand->removeCallbacks();
+    }
+    mBeginSoftInputOnLongPressCommand->postDelayed(ViewConfiguration::getLongPressTimeout());
 }
 
 
 void NumberPicker::removeAllCallbacks(){
     if (mChangeCurrentByOneFromLongPressCommand != nullptr) {
-        removeCallbacks(mChangeCurrentByOneFromLongPressCommand);
-        mChangeCurrentByOneFromLongPressCommand =nullptr;
+        mChangeCurrentByOneFromLongPressCommand->removeCallbacks();
     }
+    /*if (mSetSelectionCommand != nullptr) {
+        mSetSelectionCommand->cancel();
+    }*/
     removeBeginSoftInputCommand();
+    if (mBeginSoftInputOnLongPressCommand != nullptr) {
+        mBeginSoftInputOnLongPressCommand->removeCallbacks();
+    }
     mPressedStateHelper->cancel();
 }
 
@@ -1852,6 +1872,11 @@ void NumberPicker::PressedStateHelper::run(){
         }//endof switch (mManagedButton)
         break;/*endof case MODE_TAPPED*/
     }
+}
+
+void NumberPicker::ChangeCurrentByOneFromLongPressCommand::run(){
+    ((NumberPicker*)mView)->changeValueByOne(mIncrement);
+    postDelayed(((NumberPicker*)mView)->mLongPressUpdateInterval);
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////

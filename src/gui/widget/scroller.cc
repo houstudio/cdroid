@@ -35,22 +35,21 @@ Scroller::Scroller(Context* context):Scroller(context,nullptr,true){
 Scroller::Scroller(Context* context,const Interpolator* interpolator, bool flywheel) {
     if( (SPLINE_POSITION[NB_SAMPLES]!=1.f) || (SPLINE_TIME[NB_SAMPLES]!=1.f) )
         sInit();
+    mMode  = FLING_MODE/*0*/;
     mStartX= mStartY =0;
     mFinalX= mFinalY =0;
     mMinX  = mMinY = 0;
     mMaxX  = mMaxY = 0;
-    mCurrX = mCurrY = 0;
-    mDeltaX= mDeltaY=0.0f;
+    mCurrX = mCurrY= 0;
     mStartTime= 0;
     mDuration = 1;
     mDistance = 0;
     mFinished = true;
-    mDurationReciprocal=1.f;
-    if (interpolator == nullptr) {
-        mInterpolator = &gViscousFluidInterpolator;
-    } else {
-        mInterpolator = interpolator;
-    }
+    mCurrVelocity =0.0f;
+    mDeltaX= mDeltaY= 0.0f;
+    mDurationReciprocal = 1.0f;
+
+    mInterpolator = (interpolator == nullptr) ? &gViscousFluidInterpolator : interpolator;
     mPpi = context->getDisplayMetrics().density * 160.0f;
     mDeceleration = computeDeceleration(ViewConfiguration::getScrollFriction());
     mFlywheel = flywheel;
