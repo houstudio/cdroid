@@ -128,7 +128,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     LayoutInflater::from(mContext)->inflate(layoutres,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
-    mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
+    mVirtualButtonPressedDrawable = new ColorDrawable(0x80FF0000);//atts.getDrawable("virtualButtonPressedDrawable");
     setWillNotDraw(false);
 
     mInputText =(EditText*)findViewById(cdroid::R::id::numberpicker_input);
@@ -282,11 +282,9 @@ void NumberPicker::initView(){
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
     mItemSpacing= 0;
-    mTopDividerTop=0;
-    mBottomDividerBottom = 0;
-    mLeftDividerLeft = 0;
-    mRightDividerRight=0;
     mInputTextSize = 24;
+    mEndDividerEnd = 0;
+    mStartDividerStart= 0;
     mInputTextColor = 0xFFFFFFFF;
     mSelectedTypeface = nullptr;
     mHasSelectorWheel = false;
@@ -353,17 +351,15 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
         if(isHorizontalMode()){
             const int w = std::max(inptTxtMsrdWdth,mSelectorElementSize);
             if(w>mDividerDistance)mDividerDistance=w;
-            mLeftDividerLeft = (getWidth() - mDividerDistance)/2 - mDividerThickness;
-            mRightDividerRight= mLeftDividerLeft + mDividerDistance + 2*mDividerThickness;
-            mBottomDividerBottom = getHeight();
+            mStartDividerStart = (getWidth() - mDividerDistance)/2 - mDividerThickness;
+            mEndDividerEnd= mStartDividerStart + mDividerDistance + 2*mDividerThickness;
             mInputText->layout((msrdWdth - w) /2, inptTxtTop,w, inptTxtMsrdHght);
         }else{
-            mTopDividerTop = (getHeight() - mDividerDistance)/2 - mDividerThickness;
-            mBottomDividerBottom = mTopDividerTop + mDividerDistance+2*mDividerThickness;
+            mStartDividerStart = (getHeight() - mDividerDistance)/2 - mDividerThickness;
+            mEndDividerEnd = mStartDividerStart + mDividerDistance+2*mDividerThickness;
         }
     }
 }
-
 
 void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     // Try greedily to fit the max width and height.
@@ -433,13 +429,15 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
             onScrollerFinished(mAdjustScroller);
-        } else if (mLastDownEventX >= mLeftDividerLeft
-                && mLastDownEventX <= mRightDividerRight) {
+        } else if (mLastDownEventX >= mStartDividerStart
+                && mLastDownEventX <= mEndDividerEnd) {
             mPerformClickOnTap = true;
-        } else if (mLastDownEventX < mLeftDividerLeft) {
+        } else if (mLastDownEventX < mStartDividerStart) {
             postChangeCurrentByOneFromLongPress(false);
-        } else if (mLastDownEventX > mRightDividerRight) {
+            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+        } else if (mLastDownEventX > mEndDividerEnd) {
             postChangeCurrentByOneFromLongPress(true);
+            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
         }
     }else{
         mLastDownOrMoveEventY = mLastDownEventY = event.getY();
@@ -452,12 +450,14 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
             mFlingScroller->forceFinished(true);
             mAdjustScroller->forceFinished(true);
             onScrollerFinished(mAdjustScroller);
-        } else if (mLastDownEventY >= mTopDividerTop
-                && mLastDownEventY <= mBottomDividerBottom) {
+        } else if (mLastDownEventY >= mStartDividerStart
+                && mLastDownEventY <= mEndDividerEnd) {
             mPerformClickOnTap = true;
-        } else if (mLastDownEventY < mTopDividerTop) {
+            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_INCREMENT);
+        } else if (mLastDownEventY < mStartDividerStart) {
             postChangeCurrentByOneFromLongPress(false);
-        } else if (mLastDownEventY > mBottomDividerBottom) {
+            mPressedStateHelper->buttonPressDelayed(PressedStateHelper::BUTTON_DECREMENT);
+        } else if (mLastDownEventY > mEndDividerEnd) {
             postChangeCurrentByOneFromLongPress(true);
         }        
     }//endif isHorizontalMode
@@ -523,7 +523,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         mPerformClickOnTap = false;
                         performClick();
                         if ( (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) && mOnClickListener &&
-                             (mLastDownEventX >= mLeftDividerLeft && mLastDownEventX <= mRightDividerRight)) {
+                             (mLastDownEventX >= mStartDividerStart && mLastDownEventX <= mEndDividerEnd)) {
                             mOnClickListener(*this);
                         }
                     }else{
@@ -555,7 +555,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
                         mPerformClickOnTap = false;
                         performClick();
                         if ( (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) && mOnClickListener &&
-                             (mLastDownEventY >= mTopDividerTop && mLastDownEventY <= mBottomDividerBottom)) {
+                             (mLastDownEventY >= mStartDividerStart && mLastDownEventY <= mEndDividerEnd)) {
                             mOnClickListener(*this);
                         }
                     }else{
@@ -631,9 +631,9 @@ bool NumberPicker::dispatchHoverEvent(MotionEvent& event) {
     if (AccessibilityManager::getInstance(mContext).isEnabled()) {
         const int eventY = (int) event.getY();
         int hoveredVirtualViewId;
-        if (eventY < mTopDividerTop) {
+        if (eventY < mStartDividerStart) {
             hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_DECREMENT;
-        } else if (eventY > mBottomDividerBottom) {
+        } else if (eventY > mEndDividerEnd) {
             hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INCREMENT;
         } else {
             hoveredVirtualViewId = AccessibilityNodeProviderImpl::VIRTUAL_VIEW_ID_INPUT;
@@ -1198,27 +1198,33 @@ void NumberPicker::onDraw(Canvas&canvas){
         x = mCurrentScrollOffset - mSelectorElementSize/2;
         recText = Rect::Make(x,y,mSelectorElementSize,getHeight());
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
-            canvas.rectangle(mLeftDividerLeft, 0, mRightDividerRight-mLeftDividerLeft, getHeight());
+            canvas.rectangle(mStartDividerStart, 0, mEndDividerEnd - mStartDividerStart + mDividerThickness, getHeight());
             canvas.clip();
         }
     } else {
         y = mCurrentScrollOffset - mSelectorElementSize/2;
         recText = Rect::Make(0,y,getWidth(),mSelectorElementSize);
         if (mRealWheelItemCount < DEFAULT_WHEEL_ITEM_COUNT) {
-            canvas.rectangle(0, mTopDividerTop, getWidth(), mBottomDividerBottom-mTopDividerTop);
+            canvas.rectangle(0, mStartDividerStart, getWidth(), mEndDividerEnd - mStartDividerStart + mDividerThickness);
             canvas.clip();
         }
-        if (showSelectorWheel && mVirtualButtonPressedDrawable && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)){
-            if (mDecrementVirtualButtonPressed) {
-                mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-                mVirtualButtonPressedDrawable->setBounds(0, 0, mRight, mTopDividerTop);
-                mVirtualButtonPressedDrawable->draw(canvas);
-            }
-            if (mIncrementVirtualButtonPressed) {
-                mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
-                mVirtualButtonPressedDrawable->setBounds(0, mBottomDividerBottom, mRight, mBottom);
-                mVirtualButtonPressedDrawable->draw(canvas);
-            }
+    }
+    if (showSelectorWheel && mVirtualButtonPressedDrawable && (mScrollState == OnScrollListener::SCROLL_STATE_IDLE)){
+        if (mDecrementVirtualButtonPressed) {
+            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
+            if(!isHorizontalMode())
+                mVirtualButtonPressedDrawable->setBounds(0, 0, mRight, mStartDividerStart);
+            else
+                mVirtualButtonPressedDrawable->setBounds(0, 0,mStartDividerStart,mBottom);
+            mVirtualButtonPressedDrawable->draw(canvas);
+        }
+        if (mIncrementVirtualButtonPressed) {
+            mVirtualButtonPressedDrawable->setState(StateSet::PRESSED_STATE_SET);
+            if(!isHorizontalMode())
+                mVirtualButtonPressedDrawable->setBounds(0, mEndDividerEnd, mRight, mBottom-mEndDividerEnd);
+            else
+                mVirtualButtonPressedDrawable->setBounds(mEndDividerEnd, 0,mRight-mEndDividerEnd,mBottom);
+            mVirtualButtonPressedDrawable->draw(canvas);
         }
     }
     if( mTextColor != mTextColor2 ){
@@ -1344,12 +1350,12 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
             bottom = getBottom();
         }
         // draw the left divider
-        leftOfLeftDivider = mLeftDividerLeft;
+        leftOfLeftDivider = mStartDividerStart;
         //rightOfLeftDivider = leftOfLeftDivider + mDividerThickness;
         mDividerDrawable->setBounds(leftOfLeftDivider, top, mDividerThickness, bottom-top);
         mDividerDrawable->draw(canvas);
         // draw the right divider
-        rightOfRightDivider = mRightDividerRight;
+        rightOfRightDivider = mEndDividerEnd;
         leftOfRightDivider = rightOfRightDivider - mDividerThickness;
         mDividerDrawable->setBounds(leftOfRightDivider, top, mDividerThickness, bottom-top);
         mDividerDrawable->draw(canvas);
@@ -1359,10 +1365,10 @@ void NumberPicker::drawHorizontalDividers(Canvas& canvas) {
             left = (mMaxWidth - mDividerDistance) / 2;
             right = left + mDividerDistance;
         } else {
-            left = mLeftDividerLeft;
-            right = mRightDividerRight;
+            left = mStartDividerStart;
+            right = mEndDividerEnd;
         }
-        //bottomOfUnderlineDivider = mBottomDividerBottom;
+        //bottomOfUnderlineDivider = mEndDividerEnd;
         mDividerDrawable->setBounds(left,topOfUnderlineDivider,right - left,mDividerThickness);
         mDividerDrawable->draw(canvas);
         break;
@@ -1378,18 +1384,18 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     switch (mDividerType) {
     case SIDE_LINES:
         // draw the top divider
-        topOfTopDivider = mTopDividerTop;
+        topOfTopDivider = mStartDividerStart;
         //bottomOfTopDivider = topOfTopDivider + mDividerThickness;
         mDividerDrawable->setBounds(0, topOfTopDivider, right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         // draw the bottom divider
-        bottomOfBottomDivider = mBottomDividerBottom;
+        bottomOfBottomDivider = mEndDividerEnd;
         topOfBottomDivider = bottomOfBottomDivider - mDividerThickness;
         mDividerDrawable->setBounds(left,topOfBottomDivider,right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
         break;
     case UNDERLINE:
-        bottomOfUnderlineDivider = mBottomDividerBottom;
+        bottomOfUnderlineDivider = mEndDividerEnd;
         topOfUnderlineDivider = bottomOfUnderlineDivider - mDividerThickness;
         mDividerDrawable->setBounds(left,topOfUnderlineDivider,right-left, mDividerThickness);
         mDividerDrawable->draw(canvas);
@@ -1773,11 +1779,18 @@ void NumberPicker::PressedStateHelper::cancel(){
     removeCallbacks();
     if(mNP->mIncrementVirtualButtonPressed){
         mNP->mIncrementVirtualButtonPressed = false;
-        mNP->invalidate(0, mNP->mBottomDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomDividerBottom);
+        if(!mNP->isHorizontalMode())
+            mNP->invalidate(0, mNP->mEndDividerEnd, mNP->mRight, mNP->mBottom-mNP->mEndDividerEnd);
+        else
+            mNP->invalidate(mNP->mEndDividerEnd,0,mNP->mRight-mNP->mEndDividerEnd,mNP->mBottom);
     }
-    mNP->mDecrementVirtualButtonPressed = false;
-    if(mNP->mDecrementVirtualButtonPressed)
-        mNP->invalidate(0,0,mNP->mRight,mNP->mTopDividerTop);
+    if(mNP->mDecrementVirtualButtonPressed){
+        mNP->mDecrementVirtualButtonPressed = false;
+        if(!mNP->isHorizontalMode())
+            mNP->invalidate(0,0,mNP->mRight,mNP->mStartDividerStart);
+        else
+            mNP->invalidate(0,0,mNP->mStartDividerStart,mNP->mBottom);
+    }
 }
 
 void NumberPicker::PressedStateHelper::buttonPressDelayed(int button){
@@ -1801,11 +1814,17 @@ void NumberPicker::PressedStateHelper::run(){
         switch (mManagedButton) {
         case BUTTON_INCREMENT:
              mNP->mIncrementVirtualButtonPressed = true;
-             mNP->invalidate(0, mNP->mBottomDividerBottom, mNP->mRight, mNP->mBottom);
+             if(!mNP->isHorizontalMode())
+                 mNP->invalidate(0, mNP->mEndDividerEnd, mNP->mRight, mNP->mBottom-mNP->mEndDividerEnd);
+             else
+                 mNP->invalidate(mNP->mEndDividerEnd,0,mNP->mRight-mNP->mEndDividerEnd,mNP->mBottom);
              break;
         case BUTTON_DECREMENT:
              mNP->mDecrementVirtualButtonPressed = true;
-             mNP->invalidate(0, 0, mNP->mRight, mNP->mTopDividerTop);
+             if(!mNP->isHorizontalMode())
+                 mNP->invalidate(0,0, mNP->mRight, mNP->mStartDividerStart);
+             else
+                 mNP->invalidate(0,0,mNP->mStartDividerStart,mNP->mBottom);
              break;
         }
         break;
@@ -1816,14 +1835,20 @@ void NumberPicker::PressedStateHelper::run(){
                 postDelayed(ViewConfiguration::getPressedStateDuration());
             }
             mNP->mIncrementVirtualButtonPressed ^= true;
-            mNP->invalidate(0, mNP->mBottomDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomDividerBottom);
+            if(!mNP->isHorizontalMode())
+                mNP->invalidate(0, mNP->mEndDividerEnd, mNP->mRight, mNP->mBottom-mNP->mEndDividerEnd);
+            else
+                mNP->invalidate(mNP->mEndDividerEnd,0,mNP->mRight-mNP->mEndDividerEnd,mNP->mBottom);
             break;
         case BUTTON_DECREMENT:
             if (!mNP->mDecrementVirtualButtonPressed) {
                 postDelayed(ViewConfiguration::getPressedStateDuration());
             }
             mNP->mDecrementVirtualButtonPressed ^= true;
-            mNP->invalidate(0, 0, mNP->mRight, mNP->mTopDividerTop);
+            if(!mNP->isHorizontalMode())
+                mNP->invalidate(0, 0, mNP->mRight, mNP->mStartDividerStart);
+            else
+                mNP->invalidate(0,0,mNP->mStartDividerStart,mNP->mBottom);
         }//endof switch (mManagedButton)
         break;/*endof case MODE_TAPPED*/
     }
@@ -1864,14 +1889,14 @@ AccessibilityNodeInfo* NumberPicker::AccessibilityNodeProviderImpl::createAccess
         case VIRTUAL_VIEW_ID_DECREMENT:
             return createAccessibilityNodeInfoForVirtualButton(VIRTUAL_VIEW_ID_DECREMENT,
                     getVirtualDecrementButtonText(), mNP->mScrollX, mNP->mScrollY, mNP->mScrollX + mNP->getWidth(),
-                    mNP->mTopDividerTop + mNP->mDividerThickness);
+                    mNP->mStartDividerStart + mNP->mDividerThickness);
         case VIRTUAL_VIEW_ID_INPUT:
             return createAccessibiltyNodeInfoForInputText(mNP->mScrollX,
-                    mNP->mTopDividerTop + mNP->mDividerThickness, mNP->mScrollX + mNP->getWidth(),
-                    mNP->mBottomDividerBottom - mNP->mDividerThickness);
+                    mNP->mStartDividerStart + mNP->mDividerThickness, mNP->mScrollX + mNP->getWidth(),
+                    mNP->mEndDividerEnd - mNP->mDividerThickness);
         case VIRTUAL_VIEW_ID_INCREMENT:
             return createAccessibilityNodeInfoForVirtualButton(VIRTUAL_VIEW_ID_INCREMENT,
-                    getVirtualIncrementButtonText(), mNP->mScrollX, mNP->mBottomDividerBottom - mNP->mDividerThickness,
+                    getVirtualIncrementButtonText(), mNP->mScrollX, mNP->mEndDividerEnd - mNP->mDividerThickness,
                     mNP->mScrollX + mNP->getWidth(), mNP->mScrollY + mNP->getHeight());
     }
     return AccessibilityNodeProvider::createAccessibilityNodeInfo(virtualViewId);
@@ -1995,7 +2020,7 @@ bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewI
                 if (mAccessibilityFocusedView != virtualViewId) {
                     mAccessibilityFocusedView = virtualViewId;
                     sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
-                    mNP->invalidate(0, mNP->mBottomDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomDividerBottom);
+                    mNP->invalidate(0, mNP->mEndDividerEnd, mNP->mRight, mNP->mBottom-mNP->mEndDividerEnd);
                     return true;
                 }
             } return false;
@@ -2003,7 +2028,7 @@ bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewI
                 if (mAccessibilityFocusedView == virtualViewId) {
                     mAccessibilityFocusedView = UNDEFINED;
                     sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
-                    mNP->invalidate(0, mNP->mBottomDividerBottom, mNP->mRight, mNP->mBottom-mNP->mBottomDividerBottom);
+                    mNP->invalidate(0, mNP->mEndDividerEnd, mNP->mRight, mNP->mBottom-mNP->mEndDividerEnd);
                     return true;
                 }
             } return false;
@@ -2023,7 +2048,7 @@ bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewI
                 if (mAccessibilityFocusedView != virtualViewId) {
                     mAccessibilityFocusedView = virtualViewId;
                     sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUSED);
-                    mNP->invalidate(0, 0, mNP->mRight, mNP->mTopDividerTop);
+                    mNP->invalidate(0, 0, mNP->mRight, mNP->mStartDividerStart);
                     return true;
                 }
             } return false;
@@ -2031,7 +2056,7 @@ bool NumberPicker::AccessibilityNodeProviderImpl::performAction(int virtualViewI
                 if (mAccessibilityFocusedView == virtualViewId) {
                     mAccessibilityFocusedView = UNDEFINED;
                     sendAccessibilityEventForVirtualView(virtualViewId, AccessibilityEvent::TYPE_VIEW_ACCESSIBILITY_FOCUS_CLEARED);
-                    mNP->invalidate(0, 0, mNP->mRight, mNP->mTopDividerTop);
+                    mNP->invalidate(0, 0, mNP->mRight, mNP->mStartDividerStart);
                     return true;
                 }
             } return false;

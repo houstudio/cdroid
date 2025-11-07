@@ -1,3 +1,6 @@
+  - TextView's fontstyle add Italic support
+  - Fix NumberPicker's divider position in horizontal mode
+  - Remove InputDevice::popEvent,Add InputDevice::drainEvents
 # **V4.3.3
   - Toolbar
   - GestureOverlayView OK.

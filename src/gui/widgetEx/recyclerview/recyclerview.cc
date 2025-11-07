@@ -157,9 +157,10 @@ void RecyclerView::initRecyclerView(){
     mClipToPadding = true;
     mIgnoreMotionEventTillDown = false;
     mPostedAnimatorRunner = false;
-    mDataSetHasChangedAfterLayout = false;
     mAdapterUpdateDuringMeasure = false;
     mLowResRotaryEncoderFeature = false;
+    mDataSetHasChangedAfterLayout = false;
+    mLastAutoMeasureSkippedDueToExact = false;
     mEatenAccessibilityChangeFlags =0;
     mInterceptRequestLayoutDepth = 0;
     mState = new State();
@@ -184,6 +185,8 @@ void RecyclerView::initRecyclerView(){
     mScrollOffset[0] = mScrollOffset[1] = 0;
     mScrollConsumed[0] = mScrollConsumed[1] = 0;
     mNestedOffsets[0] = mNestedOffsets[1] = 0;
+    mLastAutoMeasureNonExactMeasuredWidth = 0;
+    mLastAutoMeasureNonExactMeasuredHeight= 0;
     mScrollStepConsumed[0] = mScrollStepConsumed[1] = 0;
     mScrollingChildHelper = nullptr;
     mScrollFeedbackProvider= nullptr;

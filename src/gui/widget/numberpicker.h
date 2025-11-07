@@ -130,10 +130,8 @@ private:
     int mDividerType;
     int mDividerDistance;
     int mDividerThickness;
-    int mTopDividerTop;
-    int mBottomDividerBottom;
-    int mLeftDividerLeft;
-    int mRightDividerRight;
+    int mStartDividerStart;
+    int mEndDividerEnd;
     int mOrder;
     int mItemSpacing;
     int mScrollState=OnScrollListener::SCROLL_STATE_IDLE;

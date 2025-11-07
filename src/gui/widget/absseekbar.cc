@@ -68,6 +68,8 @@ void AbsSeekBar::initSeekBar(){
     mDisabledAlpha = 1.f;
     mTouchProgressOffset =0.f;
     mTouchThumbOffset = 0.f;
+    mThumbExclusionMaxSize = 0;
+    mThumbRect.setEmpty();
     mScaledTouchSlop  = ViewConfiguration::get(mContext).getScaledTouchSlop();
     setFocusable(true);
 }

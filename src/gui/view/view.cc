@@ -1146,6 +1146,7 @@ void View::setAnimation(Animation* animation) {
         animation->reset();
     }
 }
+
 void View::setDefaultFocusHighlightEnabled(bool defaultFocusHighlightEnabled){
     mDefaultFocusHighlightEnabled = defaultFocusHighlightEnabled;
 }
