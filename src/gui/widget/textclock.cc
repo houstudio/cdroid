@@ -55,12 +55,10 @@ DECLARE_WIDGET(TextClock)
 
 TextClock::TextClock(Context* context,const AttributeSet& attrs)
     :TextView(context, attrs){
-
+    init();
     mFormat12 = attrs.getString("format12Hour");
     mFormat24 = attrs.getString("format24Hour");
     mTimeZone = attrs.getString("timeZone");
-
-    init();
 }
 
 void TextClock::init() {
@@ -105,9 +103,17 @@ void TextClock::doTick() {
     }
     postDelayed(mTicker, millisUntilNextTick);
 #else
-    const int64_t now =mTime.getTimeInMillis();
-    const int64_t nextSecondMillis = (now / 1000 + 1) * 1000;
-    const long millisUntilNextTick = long(nextSecondMillis-now);
+    const int64_t now = mTime.getTimeInMillis();
+    int64_t nextSecondMillis;
+    if(mHasSeconds){
+        nextSecondMillis = (now / 1000 + 1) * 1000;
+    }else{
+        nextSecondMillis = (now / 60000 +1) * 60000;
+    }
+    long millisUntilNextTick = long(nextSecondMillis - now);
+    if(millisUntilNextTick <= 0){
+        millisUntilNextTick = 1000;
+    }
     postDelayed(mTicker,millisUntilNextTick);
 #endif
 }
@@ -234,7 +240,8 @@ void TextClock::chooseFormat() {
 const std::string TextClock::getBestDateTimePattern(const std::string& skeleton) {
     /*DateTimePatternGenerator dtpg = DateTimePatternGenerator.getInstance(
             getContext().getResources().getConfiguration().locale);
-    return dtpg.getBestPattern(skeleton);*/return "";
+    return dtpg.getBestPattern(skeleton);*/
+    return DEFAULT_FORMAT_24_HOUR;
 }
 
 void TextClock::onAttachedToWindow() {
