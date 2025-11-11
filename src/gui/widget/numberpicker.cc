@@ -445,7 +445,7 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
 
 bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
-    if (!isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
+    if (!mHasSelectorWheel || !isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
     mIgnoreMoveEvents = false;
@@ -520,7 +520,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
 }
 
 bool NumberPicker::onTouchEvent(MotionEvent& event){
-    if (!isEnabled()) {
+    if (!isEnabled() || !mHasSelectorWheel) {
         return false;
     }
     if (mVelocityTracker == nullptr) mVelocityTracker = VelocityTracker::obtain();
@@ -658,6 +658,9 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
         break;
     case KeyEvent::KEYCODE_DPAD_DOWN:
     case KeyEvent::KEYCODE_DPAD_UP:
+        if(!mHasSelectorWheel){
+            break;
+        }
         switch (event.getAction()) {
         case KeyEvent::ACTION_DOWN:
             if (mWrapSelectorWheel || ((keyCode == KeyEvent::KEYCODE_DPAD_DOWN)
@@ -753,6 +756,10 @@ void NumberPicker::computeScroll() {
 
 void NumberPicker::setEnabled(bool enabled) {
     ViewGroup::setEnabled(enabled);
+    if(!mHasSelectorWheel){
+        if(mIncrementButton)mIncrementButton->setEnabled(enabled);
+        if(mDecrementButton)mDecrementButton->setEnabled(enabled);
+    }
     mInputText->setEnabled(enabled);
 }
 
@@ -891,7 +898,9 @@ void NumberPicker::showSoftInput(){
 
 void NumberPicker::hideSoftInput(){
     if (mInputText->getInputType() != EditText::TYPE_NONE) {
-        mInputText->setVisibility(View::INVISIBLE);
+        if(mHasSelectorWheel){
+            mInputText->setVisibility(View::INVISIBLE);
+        }
     }
 }
 
