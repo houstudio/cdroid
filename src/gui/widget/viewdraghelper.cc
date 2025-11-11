@@ -34,13 +34,14 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mParentView = forParent;
     mCallback = cb;
     ViewConfiguration vc = ViewConfiguration::get(context);
-    const float density =context->getDisplayMetrics().density;
+    const float density = context->getDisplayMetrics().density;
     mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;
 
     mDragState = STATE_IDLE;
     mVelocityTracker = nullptr;
+    mInterpolator = nullptr;
     mTouchSlop = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();
     mMinVelocity = vc.getScaledMinimumFlingVelocity();
@@ -48,6 +49,10 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mSetIdleRunnable = [this](){
         setDragState(STATE_IDLE);
     };
+}
+
+ViewDragHelper::~ViewDragHelper(){
+    delete mScroller;
 }
 
 ViewDragHelper *ViewDragHelper::create(ViewGroup* forParent,Callback* cb) {
@@ -141,6 +146,20 @@ bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop)
     return continueSliding;
 }
 
+bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop, int duration, Interpolator* interpolator) {
+    mCapturedView = child;
+    mActivePointerId = INVALID_POINTER;
+
+    bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, duration, interpolator);
+    if (!continueSliding && mDragState == STATE_IDLE && mCapturedView != nullptr) {
+        // If we're in an IDLE state to begin with and aren't moving anywhere, we
+        // end up having a non-null capturedView with an IDLE dragState
+        mCapturedView = nullptr;
+    }
+
+    return continueSliding;
+}
+
 bool ViewDragHelper::settleCapturedViewAt(int finalLeft, int finalTop) {
     LOGE_IF(!mReleaseInProgress,"Cannot settleCapturedViewAt outside of a call to Callback#onViewReleased");
 
@@ -163,6 +182,31 @@ bool ViewDragHelper::forceSettleCapturedViewAt(int finalLeft, int finalTop, int 
     }
 
     const int duration = computeSettleDuration(mCapturedView, dx, dy, xvel, yvel);
+    mScroller->startScroll(startLeft, startTop, dx, dy, duration);
+
+    setDragState(STATE_SETTLING);
+    return true;
+}
+
+bool ViewDragHelper::forceSettleCapturedViewAt(int finalLeft, int finalTop, int duration, Interpolator* interpolator) {
+    const int startLeft = mCapturedView->getLeft();
+    const int startTop = mCapturedView->getTop();
+    const int dx = finalLeft - startLeft;
+    const int dy = finalTop - startTop;
+
+    if (dx == 0 && dy == 0) {
+        // Nothing to do. Send callbacks, be done.
+        mScroller->abortAnimation();
+        setDragState(STATE_IDLE);
+        return false;
+    }
+
+    // mScroller's interpolator delegates to mInterpolator, update it before start animation.
+    if (interpolator != nullptr) {
+        mInterpolator = interpolator;
+    } else {
+        mInterpolator = &sInterpolator;
+    }
     mScroller->startScroll(startLeft, startTop, dx, dy, duration);
 
     setDragState(STATE_SETTLING);

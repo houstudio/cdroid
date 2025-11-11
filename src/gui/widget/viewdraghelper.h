@@ -114,10 +114,12 @@ private:
     bool mReleaseInProgress;
 
     ViewGroup* mParentView;
+    Interpolator*mInterpolator;
     Runnable mSetIdleRunnable;
 private:
     ViewDragHelper(Context* context,ViewGroup* forParent,Callback* cb);
     bool forceSettleCapturedViewAt(int finalLeft, int finalTop, int xvel, int yvel);
+    bool forceSettleCapturedViewAt(int finalLeft, int finalTop, int duration, Interpolator* interpolator);
     int computeSettleDuration(View* child, int dx, int dy, int xvel, int yvel);
     int computeAxisDuration(int delta, int velocity, int motionRange);
     int clampMag(int value, int absMin, int absMax);
@@ -141,6 +143,7 @@ protected:
 public:
     static ViewDragHelper* create(ViewGroup*,Callback* cb);
     static ViewDragHelper* create(ViewGroup* forParent, float sensitivity,Callback* cb);
+    virtual ~ViewDragHelper();
     void setMinVelocity(float minVel);
     float getMinVelocity()const;
     int getViewDragState()const;
@@ -153,6 +156,7 @@ public:
     void cancel();
     void abort();
     bool smoothSlideViewTo(View* child, int finalLeft, int finalTop);
+    bool smoothSlideViewTo(View* child, int finalLeft, int finalTop, int duration, Interpolator* interpolator);
     bool settleCapturedViewAt(int finalLeft, int finalTop);
     void flingCapturedView(int minLeft, int minTop, int maxLeft, int maxTop);
     bool continueSettling(bool deferCallbacks);
