@@ -124,9 +124,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         LOGE("minWidth(%d)  > maxWidth(%d)",mMinWidth,mMaxWidth);
     }
     const std::string defaultLayoutRes = (getOrientation()==LinearLayout::VERTICAL?DEFAULT_LAYOUT_VERT:DEFAULT_LAYOUT_HORZ);
-    const std::string layoutres = atts.getString("internalLayout",defaultLayoutRes);
-    mHasSelectorWheel = (defaultLayoutRes!=layoutres);
-    LayoutInflater::from(mContext)->inflate(layoutres,this);
+    const std::string layoutRes = atts.getString("internalLayout",defaultLayoutRes);
+    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
+    mHasSelectorWheel = (defaultLayoutRes!=layoutRes)||(mWheelItemCount!=DEFAULT_WHEEL_ITEM_COUNT);
+    LayoutInflater::from(mContext)->inflate(layoutRes,this);
     setWidthAndHeight();
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     mVirtualButtonPressedDrawable = atts.getDrawable("virtualButtonPressedDrawable");
@@ -194,7 +195,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         setSelectedTextColor(mInputText->getCurrentTextColor());
     updateInputTextView();
 
-    setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
+    //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
     setValue(atts.getInt("value",0));
     setMinValue(atts.getInt("min",0));
     setMaxValue(atts.getInt("max",0));
@@ -290,6 +291,7 @@ void NumberPicker::initView(){
     mStartDividerStart= 0;
     mInputTextColor = 0xFFFFFFFF;
     mSelectedTypeface = nullptr;
+    mComputeMaxWidth  = false;
     mHasSelectorWheel = false;
     mTypeface = nullptr;
     mItemBackground = nullptr;
@@ -340,6 +342,17 @@ void NumberPicker::initView(){
 }
 
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
+    if (!mHasSelectorWheel&&mIncrementButton&&mIncrementButton) {
+        const int btnw = mIncrementButton->getMeasuredWidth();
+        const int btnh = mIncrementButton->getMeasuredHeight();
+        if(!isHorizontalMode()){
+            mIncrementButton->layout( 0, 0, width, btnh);
+            mDecrementButton->layout( 0, height - btnh, width, btnh);
+        }else{
+            mIncrementButton->layout( 0, 0, btnw, height);
+            mDecrementButton->layout( width - btnw, 0, btnw, height);
+        }
+    }
     const int msrdWdth = getMeasuredWidth();
     const int msrdHght = getMeasuredHeight();
 
@@ -370,6 +383,9 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
 }
 
 void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
+    if (!mHasSelectorWheel) {
+        LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
+    }
     // Try greedily to fit the max width and height.
     const int newWidthMeasureSpec = makeMeasureSpec(widthMeasureSpec, mMaxWidth);
     const int newHeightMeasureSpec = makeMeasureSpec(heightMeasureSpec, mMaxHeight);
@@ -429,7 +445,7 @@ bool NumberPicker::moveToFinalScrollerPosition(Scroller* scroller) {
 
 bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
-    if (!isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
+    if (!mHasSelectorWheel || !isEnabled() ||(action!=MotionEvent::ACTION_DOWN)) {
         return false;
     }
     mIgnoreMoveEvents = false;
@@ -504,7 +520,7 @@ bool NumberPicker::onInterceptTouchEvent(MotionEvent& event){
 }
 
 bool NumberPicker::onTouchEvent(MotionEvent& event){
-    if (!isEnabled()) {
+    if (!isEnabled() || !mHasSelectorWheel) {
         return false;
     }
     if (mVelocityTracker == nullptr) mVelocityTracker = VelocityTracker::obtain();
@@ -642,6 +658,9 @@ bool NumberPicker::dispatchKeyEvent(KeyEvent& event){
         break;
     case KeyEvent::KEYCODE_DPAD_DOWN:
     case KeyEvent::KEYCODE_DPAD_UP:
+        if(!mHasSelectorWheel){
+            break;
+        }
         switch (event.getAction()) {
         case KeyEvent::ACTION_DOWN:
             if (mWrapSelectorWheel || ((keyCode == KeyEvent::KEYCODE_DPAD_DOWN)
@@ -737,6 +756,10 @@ void NumberPicker::computeScroll() {
 
 void NumberPicker::setEnabled(bool enabled) {
     ViewGroup::setEnabled(enabled);
+    if(!mHasSelectorWheel){
+        if(mIncrementButton)mIncrementButton->setEnabled(enabled);
+        if(mDecrementButton)mDecrementButton->setEnabled(enabled);
+    }
     mInputText->setEnabled(enabled);
 }
 
@@ -875,7 +898,9 @@ void NumberPicker::showSoftInput(){
 
 void NumberPicker::hideSoftInput(){
     if (mInputText->getInputType() != EditText::TYPE_NONE) {
-        mInputText->setVisibility(View::INVISIBLE);
+        if(mHasSelectorWheel){
+            mInputText->setVisibility(View::INVISIBLE);
+        }
     }
 }
 
