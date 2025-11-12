@@ -236,7 +236,7 @@ public:
         bool orderPreserved = DEFAULT_ORDER_PRESERVED;
         bool locationsValid = false;
         Axis(GridLayout*g,bool horizontal);
-        int calculateMaxIndex();
+        int calculateMaxIndex()const;
         int getMaxIndex();
         int getCount();
         void setCount(int);
@@ -293,9 +293,7 @@ private:
     void initGridLayout();
     void invalidateStructure();
     void invalidateValues();
-    int getDefaultMargin(View* c, bool horizontal, bool leading)const;
-    int getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const;
-    int getDefaultMargin(View* c, const LayoutParams* p, bool horizontal, bool leading);
+    int getDefaultMargin(View* c)const;
     int getMargin1(View* view, bool horizontal, bool leading);
     int getMargin(View* view, bool horizontal, bool leading);
     int getTotalMargin(View* child, bool horizontal);

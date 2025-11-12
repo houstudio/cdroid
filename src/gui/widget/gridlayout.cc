@@ -236,27 +236,14 @@ const GridLayout::Alignment* GridLayout::getAlignment(int gravity, bool horizont
     }
 }
 
-int GridLayout::getDefaultMargin(View* c, bool horizontal, bool leading)const{
+int GridLayout::getDefaultMargin(View* c)const{
+    if(!mUseDefaultMargins){
+        return 0;
+    }
     if (dynamic_cast<Space*>(c)) {
         return 0;
     }
     return mDefaultGap / 2;
-}
-
-int GridLayout::getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const{
-    return /*isAtEdge ? DEFAULT_CONTAINER_MARGIN :*/ getDefaultMargin(c, horizontal, leading);
-}
-
-int GridLayout::getDefaultMargin(View* c,const LayoutParams* p, bool horizontal, bool leading){
-    if (!mUseDefaultMargins) {
-       return 0;
-    }
-    const Spec& spec = horizontal ? p->columnSpec : p->rowSpec;
-    Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-    Interval span = spec.span;
-    const bool leading1 = (horizontal && isLayoutRtl()) ? !leading : leading;
-    const bool isAtEdge = leading1 ? (span.min == 0) : (span.max == axis->getCount());
-    return getDefaultMargin(c, isAtEdge, horizontal, leading);
 }
 
 int GridLayout::getMargin1(View* view, bool horizontal, bool leading){
@@ -264,7 +251,7 @@ int GridLayout::getMargin1(View* view, bool horizontal, bool leading){
     const int margin = horizontal ?
           (leading ? lp->leftMargin : lp->rightMargin) :
           (leading ? lp->topMargin : lp->bottomMargin);
-    return margin == UNDEFINED ? getDefaultMargin(view, lp, horizontal, leading) : margin;
+    return margin == UNDEFINED ? getDefaultMargin(view) : margin;
 }
 
 int GridLayout::getMargin(View* view, bool horizontal, bool leading){
@@ -298,9 +285,9 @@ bool GridLayout::fits(std::vector<int>&a, int value, int start, int end){
 }
 
 void GridLayout::procrusteanFill(std::vector<int>& a, int start, int end, int value){
-    const int ms=std::min((size_t)start,a.size());
-    const int me=std::min((size_t)end,a.size());
-    for(int i=ms;i<me;i++)a[i]=value;
+    const int ms = std::min((size_t)start,a.size());
+    const int me = std::min((size_t)end,a.size());
+    for(int i = ms;i < me;i++)a[i]=value;
 }
 
 void GridLayout::setCellGroup(LayoutParams* lp, int row, int rowSpan, int col, int colSpan){
@@ -318,7 +305,7 @@ int GridLayout::clip(Interval minorRange, bool minorWasDefined, int count){
 }
 
 void GridLayout::validateLayoutParams() {
-    bool horizontal = (mOrientation == HORIZONTAL);
+    const bool horizontal = (mOrientation == HORIZONTAL);
     Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
     const int count = (axis->definedCount != UNDEFINED) ? axis->definedCount : 0;
 
@@ -376,14 +363,18 @@ void GridLayout::validateLayoutParams() {
 
 void GridLayout::invalidateStructure(){
     mLastLayoutParamsHashCode = UNINITIALIZED_HASH;
-    mHorizontalAxis->invalidateStructure();
-    mVerticalAxis->invalidateStructure();
+    if(mHorizontalAxis!=nullptr) mHorizontalAxis->invalidateStructure();
+    if(mVerticalAxis != nullptr) mVerticalAxis->invalidateStructure();
     invalidateValues();
 }
 
 void GridLayout::invalidateValues(){
-    mHorizontalAxis->invalidateValues();
-    mVerticalAxis->invalidateValues();
+    // Need null check because requestLayout() is called in View's initializer,
+    // before we are set up.
+    if (mHorizontalAxis != nullptr && mVerticalAxis != nullptr) {
+        mHorizontalAxis->invalidateValues();
+        mVerticalAxis->invalidateValues();
+    }
 }
 
 void GridLayout::onSetLayoutParams(View* child,const ViewGroup::LayoutParams* layoutParams){
@@ -636,7 +627,7 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
     consistencyCheck();
 
     int targetWidth = w;//right - left;
-    int targetHeight = h;//bottom - top;
+    int targetHeight= h;//bottom - top;
 
     int paddingLeft = getPaddingLeft();
     int paddingTop = getPaddingTop();
@@ -1036,13 +1027,13 @@ GridLayout::Axis::Axis(GridLayout*g,bool horizontal){
     orderPreserved = DEFAULT_ORDER_PRESERVED;
 }
 
-int GridLayout::Axis::calculateMaxIndex(){
+int GridLayout::Axis::calculateMaxIndex()const{
     int result = -1;
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         LayoutParams* params = grd->getLayoutParams(c);
         Spec& spec = horizontal ? params->columnSpec : params->rowSpec;
-        Interval span = spec.span;
+        Interval& span = spec.span;
         result = std::max(result, span.min);
         result = std::max(result, span.max);
         result = std::max(result, span.size());
@@ -1050,13 +1041,13 @@ int GridLayout::Axis::calculateMaxIndex(){
     return result == -1 ? UNDEFINED : result;
 }
 
-int GridLayout::Axis::getMaxIndex(){
+int GridLayout::Axis::getMaxIndex() {
     if(maxIndex==UNDEFINED)
        maxIndex =std::max(0,calculateMaxIndex());
     return maxIndex;
 }
 
-int GridLayout::Axis::getCount(){
+int GridLayout::Axis::getCount() {
     return std::max(definedCount,getMaxIndex());
 }
 
@@ -1074,7 +1065,7 @@ bool GridLayout::Axis::isOrderPreserved()const{
 }
 
 void GridLayout::Axis::setOrderPreserved(bool orderPreserved){
-    this->orderPreserved=orderPreserved;
+    this->orderPreserved = orderPreserved;
     invalidateStructure();
 }
 
