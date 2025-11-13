@@ -9719,6 +9719,14 @@ void View::ViewRunnable::postDelayed(long ms){
     mView->postDelayed(mRunnable,ms);
 }
 
+void View::ViewRunnable::postOnAnimation(){
+    mView->postOnAnimation(mRunnable);
+}
+
+void View::ViewRunnable::postOnAnimationDelayed(long delayedMillis){
+    mView->postOnAnimationDelayed(mRunnable,delayedMillis);
+}
+
 void View::ViewRunnable::removeCallbacks(){
     mView->removeCallbacks(mRunnable);
 }

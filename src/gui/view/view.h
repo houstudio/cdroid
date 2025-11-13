@@ -1666,9 +1666,11 @@ public:
     ViewRunnable(View*v);
     virtual ~ViewRunnable()=default;
     virtual void run();
-    void postDelayed(long);
     void post();
+    void postDelayed(long);
     void removeCallbacks();
+    void postOnAnimation();
+    void postOnAnimationDelayed(long);
 };
 
 class View::CheckForTap:public View::ViewRunnable{
