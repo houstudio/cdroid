@@ -36,8 +36,6 @@ void SlidingPaneLayout::initView(){
     mShadowDrawableLeft = nullptr;
     mShadowDrawableRight= nullptr;
     mLockMode = LOCK_MODE_UNLOCKED;
-    mIsUnableToDrag = false;
-    mPreservedOpenState = false;
     mParallaxOffset = 0;
     mSlideRange = 0;
     mSlideOffset= 0;
@@ -46,6 +44,9 @@ void SlidingPaneLayout::initView(){
     mInitialMotionY = 0;
     mSlideableView = nullptr;
     mCanSlide = true;
+    mFirstLayout = true;
+    mIsUnableToDrag = false;
+    mPreservedOpenState = false;
     //setWillNotDraw(false);
     //setAccessibilityDelegate(new AccessibilityDelegate());
     setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -498,7 +499,7 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
             xStart += pos + lpMargin;
             mSlideOffset = (float) pos / mSlideRange;
         } else if (mCanSlide && mParallaxBy != 0) {
-            offset = (int) ((1 - mSlideOffset) * mParallaxBy);
+            offset = (int) ((1.f - mSlideOffset) * mParallaxBy);
             xStart = nextXStart;
         } else {
             xStart = nextXStart;
