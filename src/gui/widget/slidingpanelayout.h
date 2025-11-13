@@ -171,7 +171,9 @@ public:
 };/*endof SlidingPaneLayout*/
 
 class SlidingPaneLayout::DragHelperCallback:public ViewDragHelper::Callback {
+private:
     SlidingPaneLayout*mSPL;
+    bool isDraggable()const;
 public:
     DragHelperCallback(SlidingPaneLayout*spl);
     bool tryCaptureView(View& child, int pointerId)override;
@@ -185,6 +187,7 @@ public:
     int clampViewPositionHorizontal(View& child, int left, int dx)override;
 
     int clampViewPositionVertical(View& child, int top, int dy) override;
+    void onEdgeTouched(int edgeFlags, int pointerId)override;
     void onEdgeDragStarted(int edgeFlags, int pointerId) override;
 };
 

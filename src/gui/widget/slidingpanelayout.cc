@@ -1034,7 +1034,7 @@ SlidingPaneLayout::DragHelperCallback::DragHelperCallback(SlidingPaneLayout*spl)
 }
 
 bool SlidingPaneLayout::DragHelperCallback::tryCaptureView(View& child, int pointerId) {
-    if (mSPL->mIsUnableToDrag) {
+    if (isDraggable()) {
         return false;
     }
 
@@ -1111,8 +1111,32 @@ int SlidingPaneLayout::DragHelperCallback::clampViewPositionVertical(View& child
     return child.getTop();
 }
 
-void SlidingPaneLayout::DragHelperCallback::onEdgeDragStarted(int edgeFlags, int pointerId) {
+void SlidingPaneLayout::DragHelperCallback::onEdgeTouched(int edgeFlags, int pointerId) {
+    if (!isDraggable()) {
+        return;
+    }
     mSPL->mDragHelper->captureChildView(mSPL->mSlideableView, pointerId);
+}
+
+void SlidingPaneLayout::DragHelperCallback::onEdgeDragStarted(int edgeFlags, int pointerId) {
+    if(!isDraggable()) return;
+    mSPL->mDragHelper->captureChildView(mSPL->mSlideableView, pointerId);
+}
+
+bool SlidingPaneLayout::DragHelperCallback::isDraggable() const{
+    if (mSPL->mIsUnableToDrag) {
+        return false;
+    }
+    if (mSPL->getLockMode() == LOCK_MODE_LOCKED) {
+        return false;
+    }
+    if (mSPL->isOpen() && mSPL->getLockMode() == LOCK_MODE_LOCKED_OPEN) {
+        return false;
+    }
+    if (!mSPL->isOpen() && mSPL->getLockMode() == LOCK_MODE_LOCKED_CLOSED) {
+        return false;
+    }
+    return true;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
