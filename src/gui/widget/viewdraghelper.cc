@@ -36,6 +36,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     ViewConfiguration vc = ViewConfiguration::get(context);
     const float density = context->getDisplayMetrics().density;
     mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
+    mDefaultEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;
 
@@ -83,6 +84,14 @@ void ViewDragHelper::setEdgeTrackingEnabled(int edgeFlags){
 
 int ViewDragHelper::getEdgeSize()const{
     return mEdgeSize;
+}
+
+void ViewDragHelper::setEdgeSize(int size){
+    mEdgeSize = size;
+}
+
+int ViewDragHelper::getDefaultEdgeSize()const{
+    return mDefaultEdgeSize;
 }
 
 void ViewDragHelper::captureChildView(View* childView, int activePointerId) {
@@ -369,7 +378,7 @@ void ViewDragHelper::saveInitialMotion(float x, float y, int pointerId) {
     mInitialMotionX[pointerId] = mLastMotionX[pointerId] = x;
     mInitialMotionY[pointerId] = mLastMotionY[pointerId] = y;
     mInitialEdgesTouched[pointerId] = getEdgesTouched((int) x, (int) y);
-    mPointersDown |= 1 << pointerId;
+    mPointersDown |= (1 << pointerId);
 } 
 
 void ViewDragHelper::saveLastMotion(MotionEvent& ev) {
@@ -388,7 +397,7 @@ void ViewDragHelper::saveLastMotion(MotionEvent& ev) {
 }
 
 bool ViewDragHelper::isPointerDown(int pointerId)const{
-    return (mPointersDown & 1 << pointerId) != 0;
+    return (mPointersDown & (1 << pointerId)) != 0;
 }
 
 
@@ -878,7 +887,13 @@ int ViewDragHelper::getEdgesTouched(int x, int y)const{
 }
 
 bool ViewDragHelper::isValidPointerForActionMove(int pointerId)const{
-    return !isPointerDown(pointerId);
+    if(!isPointerDown(pointerId)){
+        LOGE("Ignoring pointerId= %d because ACTION_DOWN was not received "
+                    "for this pointer before ACTION_MOVE. It likely happened because "
+                    " ViewDragHelper did not receive all the events in the event stream.",pointerId);
+        return false;
+    }
+    return true;
 }
 
 void ViewDragHelper::Callback::onViewDragStateChanged(int state){

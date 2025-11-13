@@ -104,6 +104,7 @@ private:
     float mMinVelocity;
 
     int mEdgeSize;
+    int mDefaultEdgeSize;
     int mTrackingEdges;
 
     OverScroller* mScroller;
@@ -149,6 +150,8 @@ public:
     int getViewDragState()const;
     void setEdgeTrackingEnabled(int edgeFlags);
     int getEdgeSize()const;
+    void setEdgeSize(int);
+    int getDefaultEdgeSize()const;
     void captureChildView(View* childView, int activePointerId);
     View* getCapturedView()const;
     int getActivePointerId()const;
