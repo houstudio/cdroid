@@ -177,23 +177,23 @@ private:
     Drawable* resolveRightShadow();
     bool mirror(Drawable* drawable, int layoutDirection);
     static bool hasOpaqueBackground(View* v);
-    bool hasPeekingDrawer();
-    bool hasVisibleDrawer();
+    bool hasPeekingDrawer()const;
+    bool hasVisibleDrawer()const;
 protected:
     void updateDrawerState(int forGravity,int activeState, View* activeDrawer);
     void dispatchOnDrawerClosed(View* drawerView);
     void dispatchOnDrawerOpened(View* drawerView);
     void dispatchOnDrawerSlide(View* drawerView, float slideOffset);
     void setDrawerViewOffset(View* drawerView, float slideOffset);
-    float getDrawerViewOffset(View* drawerView);
-    int getDrawerViewAbsoluteGravity(View* drawerView);
-    bool checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor);
-    View* findOpenDrawer();
+    float getDrawerViewOffset(View* drawerView)const;
+    int getDrawerViewAbsoluteGravity(View* drawerView)const;
+    bool checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor)const;
+    View* findOpenDrawer()const;
     void moveDrawerToOffset(View* drawerView, float slideOffset);
-    View* findDrawerWithGravity(int gravity);
+    View* findDrawerWithGravity(int gravity)const;
     bool isContentView(View* child)const;
     bool isDrawerView (View* child)const;
-    View* findVisibleDrawer();
+    View* findVisibleDrawer()const;
     void cancelChildViewTouch();
 
     void onDetachedFromWindow()override;
@@ -245,10 +245,10 @@ public:
     void closeDrawer(View* drawerView, bool animate);
     void closeDrawer(int gravity);
     void closeDrawer(int gravity, bool animate);
-    bool isDrawerOpen(View* drawer);
-    bool isDrawerOpen(int drawerGravity);
-    bool isDrawerVisible(View* drawer);
-    bool isDrawerVisible(int drawerGravity);
+    bool isDrawerOpen(View* drawer)const;
+    bool isDrawerOpen(int drawerGravity)const;
+    bool isDrawerVisible(View* drawer)const;
+    bool isDrawerVisible(int drawerGravity)const;
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;

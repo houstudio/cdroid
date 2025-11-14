@@ -402,23 +402,23 @@ void DrawerLayout::setDrawerViewOffset(View* drawerView, float slideOffset) {
     dispatchOnDrawerSlide(drawerView, slideOffset);
 }
 
-float DrawerLayout::getDrawerViewOffset(View* drawerView) {
+float DrawerLayout::getDrawerViewOffset(View* drawerView) const{
     return ((LayoutParams*) drawerView->getLayoutParams())->onScreen;
 }
 
 /* @return the absolute gravity of the child drawerView, resolved according
  * to the current layout direction */
-int DrawerLayout::getDrawerViewAbsoluteGravity(View* drawerView) {
+int DrawerLayout::getDrawerViewAbsoluteGravity(View* drawerView) const{
     const int gravity = ((LayoutParams*) drawerView->getLayoutParams())->gravity;
     return Gravity::getAbsoluteGravity(gravity, getLayoutDirection());
 }
 
-bool DrawerLayout::checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor) {
+bool DrawerLayout::checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor) const{
     int absGravity = getDrawerViewAbsoluteGravity(drawerView);
     return (absGravity & checkFor) == checkFor;
 }
 
-View* DrawerLayout::findOpenDrawer() {
+View* DrawerLayout::findOpenDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
@@ -448,7 +448,7 @@ void DrawerLayout::moveDrawerToOffset(View* drawerView, float slideOffset) {
  *            layout direction.
  * @return the drawer with the specified gravity
  */
-View* DrawerLayout::findDrawerWithGravity(int gravity) {
+View* DrawerLayout::findDrawerWithGravity(int gravity) const{
     const int absHorizGravity = Gravity::getAbsoluteGravity(
             gravity, getLayoutDirection()) & Gravity::HORIZONTAL_GRAVITY_MASK;
     const int childCount = getChildCount();
@@ -1135,13 +1135,13 @@ void DrawerLayout::closeDrawer(int gravity, bool animate) {
     closeDrawer(drawerView, animate);
 }
      
-bool DrawerLayout::isDrawerOpen(View* drawer) {
+bool DrawerLayout::isDrawerOpen(View* drawer) const{
     LOGE_IF(!isDrawerView(drawer),"View %p:%d is not a drawer",drawer,drawer->getId());
     LayoutParams* drawerLp = (LayoutParams*) drawer->getLayoutParams();
     return (drawerLp->openState & LayoutParams::FLAG_IS_OPENED) == 1;
 }
 
-bool DrawerLayout::isDrawerOpen(int drawerGravity) {
+bool DrawerLayout::isDrawerOpen(int drawerGravity) const{
     View* drawerView = findDrawerWithGravity(drawerGravity);
     if (drawerView != nullptr) {
         return isDrawerOpen(drawerView);
@@ -1149,13 +1149,13 @@ bool DrawerLayout::isDrawerOpen(int drawerGravity) {
     return false;
 }
      
-bool DrawerLayout::isDrawerVisible(View* drawer) {
+bool DrawerLayout::isDrawerVisible(View* drawer) const{
     LOGE_IF(!isDrawerView(drawer),"View %p:%d is not a drawer",drawer,drawer->getId());
     return ((LayoutParams*) drawer->getLayoutParams())->onScreen > 0;
 }
 
 
-bool DrawerLayout::isDrawerVisible(int drawerGravity) {
+bool DrawerLayout::isDrawerVisible(int drawerGravity) const{
     View* drawerView = findDrawerWithGravity(drawerGravity);
     if (drawerView != nullptr) {
         return isDrawerVisible(drawerView);
@@ -1163,7 +1163,7 @@ bool DrawerLayout::isDrawerVisible(int drawerGravity) {
     return false;
 }
     
-bool DrawerLayout::hasPeekingDrawer() {
+bool DrawerLayout::hasPeekingDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
@@ -1228,11 +1228,11 @@ void DrawerLayout::addFocusables(std::vector<View*>& views, int direction, int f
     mNonDrawerViews.clear();
 }
 
-bool DrawerLayout::hasVisibleDrawer() {
+bool DrawerLayout::hasVisibleDrawer() const{
     return findVisibleDrawer() != nullptr;
 }
 
-View* DrawerLayout::findVisibleDrawer() {
+View* DrawerLayout::findVisibleDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
