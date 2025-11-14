@@ -1328,7 +1328,9 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
             }
             if (mIsBeingDragged) {
                 // Scroll to follow the motion event
-                if (performDrag(x)) postInvalidateOnAnimation();
+                if (performDrag(x,y)){
+                    postInvalidateOnAnimation();
+                }
             }
             break;
         }
@@ -1442,9 +1444,9 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
          // Not else! Note that mIsBeingDragged can be set above.
          if (mIsBeingDragged) {
              // Scroll to follow the motion event
-             int activePointerIndex = ev.findPointerIndex(mActivePointerId);
-             float x = ev.getX(activePointerIndex);
-             needsInvalidate |= performDrag(x);
+             const int activePointerIndex = ev.findPointerIndex(mActivePointerId);
+             const float x = ev.getX(activePointerIndex);
+             needsInvalidate |= performDrag(x,ev.getY(activePointerIndex));
          }
          break;
     case MotionEvent::ACTION_UP:
@@ -1516,7 +1518,7 @@ void ViewPager::requestParentDisallowInterceptTouchEvent(bool disallowIntercept)
      }
 }
 
-bool ViewPager::performDrag(float x){
+bool ViewPager::performDrag(float x,float y){
     bool needsInvalidate = false;
 
     float deltaX = mLastMotionX - x;
@@ -1545,14 +1547,14 @@ bool ViewPager::performDrag(float x){
     if (scrollX < leftBound) {
         if (leftAbsolute) {
             const float over = leftBound - scrollX;
-            mLeftEdge->onPull(std::abs(over) / width);
+            mLeftEdge->onPull(over / width,1.f - y/getHeight());
             needsInvalidate = true;
         }
         scrollX = leftBound;
     } else if (scrollX > rightBound) {
         if (rightAbsolute) {
             const float over = scrollX - rightBound;
-            mRightEdge->onPull(std::abs(over) / width);
+            mRightEdge->onPull(over / width,y /getHeight());
             needsInvalidate = true;
         }
         scrollX = rightBound;
@@ -1639,7 +1641,7 @@ void ViewPager::draw(Canvas& canvas){
             int width = getWidth();
 
             canvas.save();
-            canvas.rotate_degrees(270);
+            canvas.rotate_degrees(-90);
             canvas.translate(-height + getPaddingTop(), mFirstOffset * width);
             mLeftEdge->setSize(height, width);
             needsInvalidate |= mLeftEdge->draw(canvas);
