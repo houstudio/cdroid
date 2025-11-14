@@ -16,13 +16,13 @@ int main(int argc,const char*argv[]){
     lr->setId(200);
     ll->setOrientation(LinearLayout::VERTICAL);
     lr->setOrientation(LinearLayout::VERTICAL);
-    spl->setParallaxDistance(120);
+    //spl->setParallaxDistance(120);
 
-    SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(200/*LayoutParams::WRAP_CONTENT*/,LayoutParams::MATCH_PARENT);
+    SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::MATCH_PARENT);
     TextView*tv=new TextView(" Left Panel ",200,-1);
     Button*btn=new Button("Open/Close",200,-1);
-    ll->addView(tv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
-    ll->addView(btn,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+    ll->addView(tv,new LinearLayout::LayoutParams(200/*LayoutParams::MATCH_PARENT*/,LayoutParams::WRAP_CONTENT));
+    ll->addView(btn,new LinearLayout::LayoutParams(200/*LayoutParams::MATCH_PARENT*/,LayoutParams::WRAP_CONTENT));
     spl->addView(ll,-1,lp);
     
     lp=new SlidingPaneLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
@@ -41,5 +41,16 @@ int main(int argc,const char*argv[]){
     spl->setBackgroundColor(0xFF222222);
     ll->setBackgroundColor(0xFFFF0000);
     lr->setBackgroundColor(0xFF00FF00);
+    SlidingPaneLayout::PanelSlideListener lst;
+    lst.onPanelSlide=[](View&panel,float slidOffset){
+        LOGD("panel %p:%d offset=%f",&panel,panel.getId(),slidOffset);
+    };
+    lst.onPanelOpened=[](View&panel){
+        LOGD("panel %p:%d opened",&panel,panel.getId());
+    };
+    lst.onPanelClosed=[](View&panel){
+        LOGD("panel %p:%d closed",&panel,panel.getId());
+    };
+    spl->setPanelSlideListener(lst);
     return app.exec();
 }

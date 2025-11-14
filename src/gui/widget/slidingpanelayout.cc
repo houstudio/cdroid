@@ -474,7 +474,7 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
     int nextXStart = xStart;
 
     if (mFirstLayout) {
-        mSlideOffset = mSlideable && mPreservedOpenState ? 1.f : 0.f;
+        mSlideOffset = mSlideable && mPreservedOpenState ? 0.f : 1.f;
     }
 
     for (int i = 0; i < childCount; i++) {
@@ -497,7 +497,7 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
             lp->dimWhenOffset = xStart + lpMargin + range + childWidth / 2 > width - paddingEnd;
             const int pos = (int) (range * mSlideOffset);
             xStart += pos + lpMargin;
-            mSlideOffset = (float) pos / mSlideRange;
+            mSlideOffset = float(pos) / mSlideRange;
         } else if (mSlideable && mParallaxBy != 0) {
             offset = (int) ((1.f - mSlideOffset) * mParallaxBy);
             xStart = nextXStart;
@@ -701,7 +701,7 @@ void SlidingPaneLayout::onPanelDragged(int newLeft) {
     const int lpMargin = isLayoutRtl ? lp->rightMargin : lp->leftMargin;
     const int startBound = paddingStart + lpMargin;
 
-    mSlideOffset = (float) (newStart - startBound) / mSlideRange;
+    mSlideOffset = float(newStart - startBound) / mSlideRange;
 
     if (mParallaxBy != 0) {
         parallaxOtherViews(mSlideOffset);
@@ -1062,7 +1062,7 @@ bool SlidingPaneLayout::DragHelperCallback::tryCaptureView(View& child, int poin
 
 void SlidingPaneLayout::DragHelperCallback::onViewDragStateChanged(int state) {
     if (mSPL->mDragHelper->getViewDragState() == ViewDragHelper::STATE_IDLE) {
-        if (mSPL->mSlideOffset == 0) {
+        if (mSPL->mSlideOffset == 1.f) {
             mSPL->updateObscuredViewsVisibility(mSPL->mSlideableView);
             mSPL->dispatchOnPanelClosed(mSPL->mSlideableView);
             mSPL->mPreservedOpenState = false;
