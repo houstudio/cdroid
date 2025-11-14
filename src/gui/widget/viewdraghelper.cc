@@ -54,6 +54,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
 
 ViewDragHelper::~ViewDragHelper(){
     delete mScroller;
+    delete mCallback;
     if( mVelocityTracker){
         mVelocityTracker->recycle();
     }

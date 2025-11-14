@@ -64,9 +64,6 @@ DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
 }
 
 DrawerLayout::~DrawerLayout(){
-    delete mLeftCallback;
-    delete mRightCallback;
-
     delete mLeftDragger;
     delete mRightDragger;
 }

@@ -11,12 +11,14 @@ int main(int argc,const char*argv[]){
     w->addView(spl);
     LinearLayout*ll=new LinearLayout(-1,-1);
     LinearLayout*lr=new LinearLayout(-1,-1);
+    ll->setId(100);
+    lr->setId(200);
     ll->setOrientation(LinearLayout::VERTICAL);
     lr->setOrientation(LinearLayout::VERTICAL);
     spl->setParallaxDistance(120);
-    spl->addView(ll,-1,new SlidingPaneLayout::LayoutParams(300,LayoutParams::MATCH_PARENT));
-    SlidingPaneLayout::LayoutParams*lp=new SlidingPaneLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
-    lp->slideable = true;
+    SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(300,LayoutParams::MATCH_PARENT);
+    spl->addView(ll,-1,lp);
+    lp=new SlidingPaneLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     spl->addView(lr,-1,lp);
     auto click=[spl](View& v) {
         LOGD("isopened=%d",spl->isOpen());
@@ -26,7 +28,8 @@ int main(int argc,const char*argv[]){
     };
     ll->setOnClickListener(click);
     lr->setOnClickListener(click);
-    ll->setBackgroundColor(0xFF112233);
-    lr->setBackgroundColor(0xFF111111);
+    spl->setBackgroundColor(0xFF222222);
+    ll->setBackgroundColor(0xFFFF0000);
+    lr->setBackgroundColor(0xFF00FF00);
     return app.exec();
 }

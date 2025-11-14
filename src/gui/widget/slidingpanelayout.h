@@ -72,7 +72,7 @@ private:
     int mParallaxBy;
     Drawable* mShadowDrawableLeft;
     Drawable* mShadowDrawableRight;
-    bool mCanSlide;
+    bool mSlideable;
     bool mFirstLayout = true;
     int mLockMode;
     float mParallaxOffset;
@@ -97,6 +97,7 @@ private:
     bool openPane(int initialVelocity);
     Insets getSystemGestureInsets();
     void parallaxOtherViews(float slideOffset);
+    int computeScrollOffset(View*slideableView,float slideOffset);
     static int getMinimumWidth(View* child);
     static int measureChildHeight(View* child,int spec, int padding);
 protected:
@@ -115,8 +116,8 @@ protected:
     void onPanelDragged(int newLeft);
     bool drawChild(Canvas& canvas, View* child,int64_t drawingTime)override;
     void invalidateChildRegion(View* v);
-    bool smoothSlideTo(float slideOffset, int velocity);
-    
+    bool smoothSlideTo(float slideOffset,int velocity);
+    bool smoothSlideTo(float slideOffset,int duration,Interpolator*interpolater);
     bool canScroll(View* v, bool checkV, int dx, int x, int y);
     bool isDimmed(View* child)const;
 

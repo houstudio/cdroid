@@ -62,6 +62,7 @@ public:
 
     class Callback{
     public:
+        virtual ~Callback()=default;
         virtual void onViewDragStateChanged(int state);
         virtual void onViewPositionChanged(View& changedView, int left, int top,int dx,int dy);
         virtual void onViewCaptured(View& capturedChild, int activePointerId);
