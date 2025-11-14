@@ -1306,6 +1306,11 @@ void View::setOverScrollMode(int overScrollMode){
     mOverScrollMode = overScrollMode;
 }
 
+View* View::inflate(Context*context,const std::string& resource, ViewGroup* root){
+    LayoutInflater* factory = LayoutInflater::from(context);
+    return factory->inflate(resource, root);
+}
+
 bool View::overScrollBy(int deltaX, int deltaY, int scrollX, int scrollY, int scrollRangeX,
            int scrollRangeY, int maxOverScrollX, int maxOverScrollY, bool isTouchEvent){
     const int overScrollMode = mOverScrollMode;
