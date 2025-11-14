@@ -174,7 +174,7 @@ private:
     void onSecondaryPointerUp(MotionEvent& ev);
     bool canScroll();
     bool canScroll(View* v, bool checkV, int dx, int x, int y);
-    bool performDrag(float x);
+    bool performDrag(float x,float y);
     ItemInfo* infoForCurrentScrollPosition();
     void endDrag();
     bool resetTouch();
