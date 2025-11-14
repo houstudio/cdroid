@@ -135,7 +135,6 @@ private:
 
     bool mInLayout;
     bool mFirstLayout = true;
-    bool mDisallowInterceptRequested;
     bool mChildrenCanceledTouch;
 
 
@@ -164,12 +163,11 @@ private:
     Drawable* mShadowRight = nullptr;
 
     std::vector<View*> mNonDrawerViews;
-    Rect mChildHitRect;
     Matrix mChildInvertedMatrix;
 private:
     void initView();
     static const std::string gravityToString(int gravity);
-    bool isInBoundsOfChild(float x, float y, View* child);
+    bool isInBoundsOfChild(float x, float y, View* child)const;
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
@@ -221,10 +219,10 @@ public:
     void setDrawerLockMode(int lockMode);
     void setDrawerLockMode(int lockMode,int edgeGravity);
     void setDrawerLockMode(int lockMode,View* drawerView);
-    int getDrawerLockMode(int edgeGravity);
-    int getDrawerLockMode(View* drawerView);
+    int getDrawerLockMode(int edgeGravity)const;
+    int getDrawerLockMode(View* drawerView)const;
     void setDrawerTitle(int edgeGravity,const std::string&title);
-    const std::string getDrawerTitle(int edgeGravity);
+    const std::string getDrawerTitle(int edgeGravity)const;
     void requestLayout()override;
     void computeScroll()override;
     void setStatusBarBackground(Drawable* bg);

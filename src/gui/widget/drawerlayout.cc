@@ -168,7 +168,7 @@ void DrawerLayout::setDrawerLockMode(int lockMode,View* drawerView) {
 }
 
 
-int DrawerLayout::getDrawerLockMode(int edgeGravity) {
+int DrawerLayout::getDrawerLockMode(int edgeGravity) const{
     const int layoutDirection = getLayoutDirection();
     int lockMode;
     switch (edgeGravity) {
@@ -212,7 +212,7 @@ int DrawerLayout::getDrawerLockMode(int edgeGravity) {
    return LOCK_MODE_UNLOCKED;
 }
 
-int DrawerLayout::getDrawerLockMode(View* drawerView) {
+int DrawerLayout::getDrawerLockMode(View* drawerView) const{
     LOGE_IF(!isDrawerView(drawerView),"View %p:%d is not a drawer",drawerView,drawerView->getId());
     const int drawerGravity = ((LayoutParams*) drawerView->getLayoutParams())->gravity;
     return getDrawerLockMode(drawerGravity);
@@ -227,7 +227,7 @@ void DrawerLayout::setDrawerTitle(int edgeGravity,const std::string& title) {
     }
 }
 
-const std::string DrawerLayout::getDrawerTitle(int edgeGravity) {
+const std::string DrawerLayout::getDrawerTitle(int edgeGravity) const{
     int absGravity = Gravity::getAbsoluteGravity(edgeGravity, getLayoutDirection());
     if (absGravity == Gravity::LEFT) {
         return mTitleLeft;
@@ -237,9 +237,10 @@ const std::string DrawerLayout::getDrawerTitle(int edgeGravity) {
     return std::string();
 }
 
-bool DrawerLayout::isInBoundsOfChild(float x, float y, View* child) {
-    child->getHitRect(mChildHitRect);
-    return mChildHitRect.contains((int) x, (int) y);
+bool DrawerLayout::isInBoundsOfChild(float x, float y, View* child) const{
+    Rect tempRect;
+    child->getHitRect(tempRect);
+    return tempRect.contains((int) x, (int) y);
 }
 
 bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child){
@@ -278,8 +279,8 @@ MotionEvent* DrawerLayout::getTransformedMotionEvent(MotionEvent& event, View* c
 }
 
 void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activeDrawer) {
-    int leftState = mLeftDragger->getViewDragState();
-    int rightState = mRightDragger->getViewDragState();
+    const int leftState = mLeftDragger->getViewDragState();
+    const int rightState = mRightDragger->getViewDragState();
 
     int state;
     if (leftState == STATE_DRAGGING || rightState == STATE_DRAGGING) {
@@ -895,7 +896,6 @@ bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
                 interceptForTap = true;
             }
         }
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
    
@@ -909,7 +909,6 @@ bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
     case MotionEvent::ACTION_CANCEL:
     case MotionEvent::ACTION_UP:
         closeDrawers(true);
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
     }  
     return interceptForDrag || interceptForTap || hasPeekingDrawer() || mChildrenCanceledTouch;
@@ -961,7 +960,6 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
     case MotionEvent::ACTION_DOWN:
         mInitialMotionX = ev.getX();
         mInitialMotionY = ev.getY();
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
    
@@ -983,13 +981,11 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
             }
         }
         closeDrawers(peekingOnly);
-        mDisallowInterceptRequested = false;
         break;
         }
    
     case MotionEvent::ACTION_CANCEL:
         closeDrawers(true);
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
     }
@@ -1005,7 +1001,6 @@ void DrawerLayout::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
         // If we have an edge touch we want to skip this and track it for later instead.
         ViewGroup::requestDisallowInterceptTouchEvent(disallowIntercept);
     }
-    mDisallowInterceptRequested = disallowIntercept;
     if (disallowIntercept) {
         closeDrawers(true);
     }
