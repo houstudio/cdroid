@@ -90,13 +90,13 @@ private:
 
     // Last known position/pointer tracking
     int mActivePointerId = INVALID_POINTER;
-    std::unordered_map<int,float> mInitialMotionX;
-    std::unordered_map<int,float> mInitialMotionY;
-    std::unordered_map<int,float> mLastMotionX;
-    std::unordered_map<int,float> mLastMotionY;
-    std::unordered_map<int,int> mInitialEdgesTouched;
-    std::unordered_map<int,int> mEdgeDragsInProgress;
-    std::unordered_map<int,int> mEdgeDragsLocked;
+    std::vector<float> mInitialMotionX;
+    std::vector<float> mInitialMotionY;
+    std::vector<float> mLastMotionX;
+    std::vector<float> mLastMotionY;
+    std::vector<int> mInitialEdgesTouched;
+    std::vector<int> mEdgeDragsInProgress;
+    std::vector<int> mEdgeDragsLocked;
     int mPointersDown;
 
     VelocityTracker* mVelocityTracker;
@@ -104,6 +104,7 @@ private:
     float mMinVelocity;
 
     int mEdgeSize;
+    int mDefaultEdgeSize;
     int mTrackingEdges;
 
     OverScroller* mScroller;
@@ -149,6 +150,8 @@ public:
     int getViewDragState()const;
     void setEdgeTrackingEnabled(int edgeFlags);
     int getEdgeSize()const;
+    void setEdgeSize(int);
+    int getDefaultEdgeSize()const;
     void captureChildView(View* childView, int activePointerId);
     View* getCapturedView()const;
     int getActivePointerId()const;

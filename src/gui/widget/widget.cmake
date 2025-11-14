@@ -105,6 +105,7 @@ endif(ENABLE_DAYTIME_WIDGETS)
 
 list(APPEND WIDGET_SOURCES
     widget/drawerlayout.cc
+    widget/slidingpanelayout.cc
     widget/mediacontroller.cc
     widget/patternlockview.cc
 
