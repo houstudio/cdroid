@@ -1,4 +1,5 @@
 #include <core/app.h>
+#include <widget/button.h>
 #include <widget/cdwindow.h>
 #include <widget/linearlayout.h>
 #include <widget/slidingpanelayout.h>
@@ -16,16 +17,25 @@ int main(int argc,const char*argv[]){
     ll->setOrientation(LinearLayout::VERTICAL);
     lr->setOrientation(LinearLayout::VERTICAL);
     spl->setParallaxDistance(120);
-    SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(300,LayoutParams::MATCH_PARENT);
+
+    SlidingPaneLayout::LayoutParams*lp =new SlidingPaneLayout::LayoutParams(200/*LayoutParams::WRAP_CONTENT*/,LayoutParams::MATCH_PARENT);
+    TextView*tv=new TextView(" Left Panel ",200,-1);
+    Button*btn=new Button("Open/Close",200,-1);
+    ll->addView(tv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+    ll->addView(btn,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
     spl->addView(ll,-1,lp);
+    
     lp=new SlidingPaneLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     spl->addView(lr,-1,lp);
     auto click=[spl](View& v) {
         LOGD("isopened=%d",spl->isOpen());
         if (spl->isOpen()) {
             spl->closePane();
+        }else{
+            spl->openPane();
         }
     };
+    btn->setOnClickListener(click);
     ll->setOnClickListener(click);
     lr->setOnClickListener(click);
     spl->setBackgroundColor(0xFF222222);
