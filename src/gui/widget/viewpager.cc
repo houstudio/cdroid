@@ -204,11 +204,18 @@ PagerAdapter* ViewPager::getAdapter() {
     return mAdapter;
 }
 
-void ViewPager::addOnAdapterChangeListener(const OnAdapterChangeListener& listener){
-    mAdapterChangeListeners.push_back(listener);
+void ViewPager::addOnAdapterChangeListener(const ViewPager::OnAdapterChangeListener& listener){
+    auto it = std::find(mAdapterChangeListeners.begin(),mAdapterChangeListeners.end(),listener);
+    if(it==mAdapterChangeListeners.end()){
+        mAdapterChangeListeners.push_back(listener);
+    }
 }
 
-void ViewPager::removeOnAdapterChangeListener(const OnAdapterChangeListener& listener){
+void ViewPager::removeOnAdapterChangeListener(const ViewPager::OnAdapterChangeListener& listener){
+    auto it = std::find(mAdapterChangeListeners.begin(),mAdapterChangeListeners.end(),listener);
+    if(it!=mAdapterChangeListeners.end()){
+        mAdapterChangeListeners.erase(it);
+    }
 }
 
 int ViewPager::getClientWidth() {
@@ -277,9 +284,10 @@ void ViewPager::setCurrentItemInternal(int item, bool smoothScroll, bool always,
 void ViewPager::scrollToItem(int item, bool smoothScroll, int velocity, bool dispatchSelected){
     int destX=0;
     const ItemInfo* curInfo = infoForPosition(item);
-    if(curInfo)
+    if(curInfo){
         destX= (int) (getClientWidth() * std::max(mFirstOffset,
                     std::min(curInfo->offset, mLastOffset)));
+    }
     if (smoothScroll) {
         smoothScrollTo(destX, 0, velocity);
         if(dispatchSelected)dispatchOnPageSelected(item);
@@ -495,6 +503,7 @@ ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
 }
 
 void ViewPager::dataSetChanged(){
+    // This method only gets called if our observer is attached, so mAdapter is non-null.
     const int adapterCount = mAdapter->getCount();
     mExpectedAdapterCount = adapterCount;
     bool needPopulate = mItems.size() < mOffscreenPageLimit * 2 + 1
@@ -722,7 +731,7 @@ void ViewPager::sortChildDrawingOrder(){
             LayoutParams* llp = (LayoutParams*) lhs->getLayoutParams();
             LayoutParams* rlp = (LayoutParams*) rhs->getLayoutParams();
             if (llp->isDecor != rlp->isDecor) {
-                return !llp->isDecor ;//? 1 : -1;
+                return !llp->isDecor;
             }
             return (llp->position < rlp->position);
         });
@@ -814,7 +823,6 @@ void ViewPager::calculatePageOffsets(ItemInfo* curItem, int curIndex, ItemInfo* 
          ii->offset = offset;
          offset += ii->widthFactor + marginOffset;
     }
-    mNeedCalculatePageOffsets = false;
 }
 
 void ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params){
@@ -1455,11 +1463,18 @@ bool ViewPager::onTouchEvent(MotionEvent& ev){
                             / (ii->widthFactor + marginOffset);
 
              const int activePointerIndex = ev.findPointerIndex(mActivePointerId);
-             float x = ev.getX(activePointerIndex);
-             int totalDelta = (int) (x - mInitialMotionX);
-             int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
+             const float x = ev.getX(activePointerIndex);
+             const int totalDelta = (int) (x - mInitialMotionX);
+             const int nextPage = determineTargetPage(currentPage, pageOffset, initialVelocity, totalDelta);
              setCurrentItemInternal(nextPage, true, true, initialVelocity);
              needsInvalidate = resetTouch();
+             if (nextPage == currentPage && needsInvalidate) {
+                 if (mRightEdge->getDistance() != 0) {
+                     mRightEdge->onAbsorb(-initialVelocity);
+                 } else if (mLeftEdge->getDistance() != 0) {
+                     mLeftEdge->onAbsorb(initialVelocity);
+                 }
+             }
          }
          break;
     case MotionEvent::ACTION_CANCEL:
@@ -1490,7 +1505,7 @@ bool ViewPager::resetTouch() {
     endDrag();
     mLeftEdge->onRelease();
     mRightEdge->onRelease();
-    needsInvalidate = mLeftEdge->isFinished() || mRightEdge->isFinished();
+    needsInvalidate = !mLeftEdge->isFinished() || !mRightEdge->isFinished();
     return needsInvalidate;
 }
 
