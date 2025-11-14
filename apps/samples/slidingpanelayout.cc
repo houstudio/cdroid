@@ -18,7 +18,14 @@ int main(int argc,const char*argv[]){
     SlidingPaneLayout::LayoutParams*lp=new SlidingPaneLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     lp->slideable = true;
     spl->addView(lr,-1,lp);
-
+    auto click=[spl](View& v) {
+        LOGD("isopened=%d",spl->isOpen());
+        if (spl->isOpen()) {
+            spl->closePane();
+        }
+    };
+    ll->setOnClickListener(click);
+    lr->setOnClickListener(click);
     ll->setBackgroundColor(0xFF112233);
     lr->setBackgroundColor(0xFF111111);
     return app.exec();

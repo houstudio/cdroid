@@ -43,7 +43,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mDragState = STATE_IDLE;
     mVelocityTracker = nullptr;
     mInterpolator = nullptr;
-    mTouchSlop = vc.getScaledTouchSlop();
+    mTouchSlop   = vc.getScaledTouchSlop();
     mMaxVelocity = vc.getScaledMaximumFlingVelocity();
     mMinVelocity = vc.getScaledMinimumFlingVelocity();
     mScroller = new OverScroller(context,&sInterpolator,true);
@@ -54,6 +54,9 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
 
 ViewDragHelper::~ViewDragHelper(){
     delete mScroller;
+    if( mVelocityTracker){
+        mVelocityTracker->recycle();
+    }
 }
 
 ViewDragHelper *ViewDragHelper::create(ViewGroup* forParent,Callback* cb) {
@@ -146,7 +149,7 @@ bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop)
     mActivePointerId = INVALID_POINTER;
 
     bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, 0, 0);
-    if (!continueSliding && mDragState == STATE_IDLE && mCapturedView ) {
+    if (!continueSliding && (mDragState == STATE_IDLE) && mCapturedView ) {
         // If we're in an IDLE state to begin with and aren't moving anywhere, we
         // end up having a non-null capturedView with an IDLE dragState
         mCapturedView = nullptr;
@@ -160,7 +163,7 @@ bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop,
     mActivePointerId = INVALID_POINTER;
 
     bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, duration, interpolator);
-    if (!continueSliding && mDragState == STATE_IDLE && mCapturedView != nullptr) {
+    if (!continueSliding && (mDragState == STATE_IDLE) && (mCapturedView != nullptr)) {
         // If we're in an IDLE state to begin with and aren't moving anywhere, we
         // end up having a non-null capturedView with an IDLE dragState
         mCapturedView = nullptr;
@@ -343,8 +346,13 @@ void ViewDragHelper::dispatchViewReleased(float xvel, float yvel) {
 }
 
 void ViewDragHelper::clearMotionHistory() {
-    for(int i=0;i<mInitialMotionX.size();i++)
-       clearMotionHistory(i);
+    std::fill(mInitialMotionX.begin(),mInitialMotionX.end(),0);
+    std::fill(mInitialMotionY.begin(),mInitialMotionY.end(),0);
+    std::fill(mLastMotionX.begin(),mLastMotionX.end(),0);
+    std::fill(mLastMotionY.begin(),mLastMotionY.end(),0);
+    std::fill(mInitialEdgesTouched.begin(),mInitialEdgesTouched.end(),0);
+    std::fill(mEdgeDragsInProgress.begin(),mEdgeDragsInProgress.end(),0);
+    std::fill(mEdgeDragsLocked.begin(),mEdgeDragsLocked.end(),0);
 }
 
 void ViewDragHelper::clearMotionHistory(int pointerId) {
@@ -363,13 +371,13 @@ void ViewDragHelper::clearMotionHistory(int pointerId) {
 
 void ViewDragHelper::ensureMotionHistorySizeForId(int pointerId) {
     if (mInitialMotionX.size() <= pointerId) {
-        //mInitialMotionX.resize(pointerId + 1);// = imx;
-        //mInitialMotionY.resize(pointerId + 1);// = imy;
-        //mLastMotionX.resize(pointerId + 1);// = lmx;
-        //mLastMotionY.resize(pointerId + 1);// = lmy;
-        //mInitialEdgesTouched.resize(pointerId + 1);// = iit;
-        //mEdgeDragsInProgress.resize(pointerId + 1);// = edip;
-        //mEdgeDragsLocked.resize(pointerId + 1);// = edl;
+        mInitialMotionX.resize(pointerId + 1);
+        mInitialMotionY.resize(pointerId + 1);
+        mLastMotionX.resize(pointerId + 1);
+        mLastMotionY.resize(pointerId + 1);
+        mInitialEdgesTouched.resize(pointerId + 1);
+        mEdgeDragsInProgress.resize(pointerId + 1);
+        mEdgeDragsLocked.resize(pointerId + 1);
     }
 }
 
@@ -436,8 +444,8 @@ bool ViewDragHelper::canScroll(View* v, bool checkV, int dx, int dy, int x, int 
             // TODO: Add versioned support here for transformed views.
             // This will not work for transformed views in Honeycomb+
             View* child = group->getChildAt(i);
-            if (x + scrollX >= child->getLeft() && x + scrollX < child->getRight()
-                    && y + scrollY >= child->getTop() && y + scrollY < child->getBottom()
+            if ((x + scrollX >= child->getLeft()) && (x + scrollX < child->getRight())
+                    && (y + scrollY >= child->getTop()) && (y + scrollY < child->getBottom())
                     && canScroll(child, true, dx, dy, x + scrollX - child->getLeft(),
                         y + scrollY - child->getTop())) {
                 return true;
@@ -817,8 +825,7 @@ bool ViewDragHelper::isEdgeTouched(int edges)const{
 }
 
 bool ViewDragHelper::isEdgeTouched(int edges, int pointerId)const{
-    auto it = mInitialEdgesTouched.find(pointerId);
-    return isPointerDown(pointerId) && (it->second & edges) != 0;
+    return isPointerDown(pointerId) && (mInitialEdgesTouched[pointerId] & edges) != 0;
 }
 
 void ViewDragHelper::releaseViewForPointerUp() {
