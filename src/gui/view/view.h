@@ -1519,7 +1519,7 @@ public:
     virtual void requestLayout();
     void forceLayout();
     virtual void resolveLayoutParams();
-    void layout(int l, int t, int r, int b);
+    virtual void layout(int l, int t, int w, int h);
 public:
     static const FloatProperty*const ALPHA;
     static const FloatProperty*const TRANSLATION_X;

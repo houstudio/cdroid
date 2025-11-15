@@ -107,6 +107,7 @@ private:
     std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
     int mChildUnhandledKeyListeners;
+    bool mSuppressLayout;
     bool mLayoutCalledWhileSuppressed;
     bool mIsInterestedInDrag;
     bool mHoveredSelf;
@@ -122,8 +123,6 @@ private:
     class TouchTarget* mFirstTouchTarget;
     class HoverTarget* mFirstHoverTarget;
     View* mTooltipHoverTarget;
-    Point animateTo;//save window boundray  while animating
-    Point animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
     void initGroup();
     void initFromAttributes(Context*,const AttributeSet&);
@@ -345,6 +344,8 @@ public:
     void offsetRectBetweenParentAndChild(const View* descendant, Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);
+    void suppressLayout(bool suppress);
+    bool isLayoutSuppressed()const;
     bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region)override;
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
@@ -379,6 +380,7 @@ public:
 
     PointerIcon* onResolvePointerIcon(MotionEvent&, int)override;
 
+    void layout(int l, int t, int w, int h)override final;
     void startLayoutAnimation(); 
     void scheduleLayoutAnimation();
     void setLayoutAnimation(LayoutAnimationController*);

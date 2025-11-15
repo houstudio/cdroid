@@ -166,6 +166,7 @@ void ViewGroup::initGroup(){
     mAccessibilityFocusedHost  = nullptr;
     mLayoutAnimationController = nullptr;
     mHoveredSelf = false;
+    mSuppressLayout  = false;
     mPointerCapture  = false;
     mIsInterestedInDrag = false;
     mTooltipHoveredSelf = false;
@@ -179,13 +180,16 @@ void ViewGroup::initGroup(){
     mPersistentDrawingCache = PERSISTENT_SCROLLING_CACHE;
     setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
     mChildren.reserve((int)ARRAY_INITIAL_CAPACITY);
-    mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
+
+    mLayoutTransitionListener.startTransition=[this](LayoutTransition&transition,
+            ViewGroup*container,View*view,int transitionType){
          // We only care about disappearing items, since we need special logic to keep
          // those items visible after they've been 'removed'
          if(transitionType==LayoutTransition::DISAPPEARING)
              startViewTransition(view);
     };
-    mLayoutTransitionListener.endTransition=[this](LayoutTransition&transition,ViewGroup*container,View*view,int transitionType){
+    mLayoutTransitionListener.endTransition=[this](LayoutTransition&transition,
+            ViewGroup*container,View*view,int transitionType){
          if(mLayoutCalledWhileSuppressed && !transition.isChangingLayout()){
               requestLayout();
               mLayoutCalledWhileSuppressed=false;
@@ -3036,6 +3040,20 @@ bool ViewGroup::getChildVisibleRect(View*child,Rect&r,Point*offset,bool forcePar
     return rectIsVisible;
 }
 
+void ViewGroup::suppressLayout(bool suppress) {
+    mSuppressLayout = suppress;
+    if (!suppress) {
+        if (mLayoutCalledWhileSuppressed) {
+            requestLayout();
+            mLayoutCalledWhileSuppressed = false;
+        }
+    }
+}
+
+bool ViewGroup::isLayoutSuppressed() const{
+    return mSuppressLayout;
+}
+
 bool ViewGroup::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region){
      // If no transparent regions requested, we are always opaque.
      const bool meOpaque = (mPrivateFlags & View::PFLAG_REQUEST_TRANSPARENT_REGIONS) == 0;
@@ -3066,6 +3084,18 @@ bool ViewGroup::gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&regio
          preorderedList.clear();
      }
      return meOpaque || noneOfTheChildrenAreTransparent;
+}
+
+void ViewGroup::layout(int l, int t, int w, int h) {
+    if (!mSuppressLayout && (mTransition == nullptr || !mTransition->isChangingLayout())) {
+        if (mTransition != nullptr) {
+            mTransition->layoutChange(this);
+        }
+        View::layout(l, t, w, h);
+    } else {
+        // record the fact that we noop'd it; request layout when transition finishes
+        mLayoutCalledWhileSuppressed = true;
+    }
 }
 
 bool ViewGroup::canAnimate()const{
