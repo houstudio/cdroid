@@ -50,7 +50,7 @@ cmake_dependent_option(ENABLE_MATHGL "Enable MathGL" OFF "MATHGL_FOUND" OFF)
 cmake_dependent_option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON "RTAUDIO_FOUND" OFF)
 cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" OFF "zint_FOUND" OFF)
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)
-cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" ON "LCMS2_FOUND" OFF)
+cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF "LCMS2_FOUND" OFF)
 cmake_dependent_option(ENABLE_FRIBIDI "Enable BiDi layout" ON "FRIBIDI_FOUND" OFF)
 cmake_dependent_option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON "HARFBUZZ_FOUND" OFF)
 

@@ -928,8 +928,9 @@ void ViewGroup::clearDisappearingChildren() {
 }
 
 void ViewGroup::startViewTransition(View* view){
-    if (view->mParent == this)
+    if (view->mParent == this){
         mTransitioningViews.push_back(view);
+    }
 }
 
 void ViewGroup::endViewTransition(View* view){
@@ -997,7 +998,7 @@ void ViewGroup::dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,
 void ViewGroup::cancelInvalidate(View* view){
 }
 
-bool ViewGroup::isViewTransitioning(View* view){
+bool ViewGroup::isViewTransitioning(View* view)const{
     return  std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view)!= mTransitioningViews.end();
 }
 

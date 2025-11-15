@@ -292,7 +292,7 @@ protected:
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
-    bool isViewTransitioning(View* view);
+    bool isViewTransitioning(View* view)const;
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
     void dispatchVisibilityChanged(View& changedView, int visibility)override;
