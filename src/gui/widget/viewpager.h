@@ -66,7 +66,7 @@ public:
     static constexpr int SCROLL_STATE_DRAGGING = 1;
     /** Indicates that the pager is in the process of settling to a final position.*/
     static constexpr int SCROLL_STATE_SETTLING = 2;
-    DECLARE_UIEVENT(void,OnAdapterChangeListener,ViewPager&,PagerAdapter*oldAdapter,PagerAdapter*newAdapter);
+    using OnAdapterChangeListener = CallbackBase<void,ViewPager&,PagerAdapter* /*oldAdapter*/,PagerAdapter* /*newAdapter*/>;
     class LayoutParams :public ViewGroup::LayoutParams{
     public:
         /* true if this view is a decoration on the pager itself and not
@@ -94,16 +94,15 @@ protected:
 private:
     Interpolator* mInterpolator;
     Runnable mEndScrollRunnable;
-    int mExpectedAdapterCount;
     std::vector<ItemInfo*>mItems ;
     ItemInfo mTempItem;
-    int mRestoredCurItem = -1;
     Scroller* mScroller;
-    bool mIsScrollStarted;
-    int mScrollState;
     PagerObserver * mObserver;
-    int mPageMargin;
     Drawable* mMarginDrawable;
+    int mExpectedAdapterCount;
+    int mRestoredCurItem = -1;
+    int mPageMargin;
+    int mScrollState;
     int mTopPageBounds;
     int mBottomPageBounds;
 
@@ -113,24 +112,27 @@ private:
     // or end of the pager data set during touch scrolling.
     float mFirstOffset;//Float.MAX_VALUE;
     float mLastOffset ;//Float.MAX_VALUE;
-    int mChildWidthMeasureSpec;
-    int mChildHeightMeasureSpec;
-    int mPageTransformerLayerType;
-    bool mInLayout;
     std::vector<OnPageChangeListener> mOnPageChangeListeners;
     OnPageChangeListener mInternalPageChangeListener;
     PageTransformer* mPageTransformer;
 
+    bool mIsScrollStarted;
+    bool mInLayout;
     bool mScrollingCacheEnabled;
-
     bool mPopulatePending;
-    int mOffscreenPageLimit = DEFAULT_OFFSCREEN_PAGES;
-
     bool mIsBeingDragged;
     bool mIsUnableToDrag;
+    bool mFakeDragging;
+    bool mFirstLayout = true;
+    bool mCalledSuper;
+
+    int mOffscreenPageLimit = DEFAULT_OFFSCREEN_PAGES;
     int mDefaultGutterSize;
     int mGutterSize;
     int mTouchSlop;
+    int mChildWidthMeasureSpec;
+    int mChildHeightMeasureSpec;
+    int mPageTransformerLayerType;
 
     /**Position of the last motion event.*/
     float mLastMotionX;
@@ -147,16 +149,11 @@ private:
     int mMaximumVelocity;
     int mFlingDistance;
     int mCloseEnough;
-    bool mFakeDragging;
     int64_t mFakeDragBeginTime;
-
 
     EdgeEffect* mLeftEdge;
     EdgeEffect* mRightEdge;
 
-    bool mFirstLayout = true;
-    bool mNeedCalculatePageOffsets =false;
-    bool mCalledSuper;
     int mDecorChildCount;
     int mDrawingOrder;
     std::vector<View*>mDrawingOrderedChildren;
@@ -177,7 +174,7 @@ private:
     void onSecondaryPointerUp(MotionEvent& ev);
     bool canScroll();
     bool canScroll(View* v, bool checkV, int dx, int x, int y);
-    bool performDrag(float x);
+    bool performDrag(float x,float y);
     ItemInfo* infoForCurrentScrollPosition();
     void endDrag();
     bool resetTouch();

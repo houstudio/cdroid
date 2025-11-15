@@ -135,7 +135,6 @@ private:
 
     bool mInLayout;
     bool mFirstLayout = true;
-    bool mDisallowInterceptRequested;
     bool mChildrenCanceledTouch;
 
 
@@ -164,12 +163,11 @@ private:
     Drawable* mShadowRight = nullptr;
 
     std::vector<View*> mNonDrawerViews;
-    Rect mChildHitRect;
     Matrix mChildInvertedMatrix;
 private:
     void initView();
     static const std::string gravityToString(int gravity);
-    bool isInBoundsOfChild(float x, float y, View* child);
+    bool isInBoundsOfChild(float x, float y, View* child)const;
     bool dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child);
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child);
     void updateChildrenImportantForAccessibility(View* drawerView, bool isDrawerOpen);
@@ -179,23 +177,23 @@ private:
     Drawable* resolveRightShadow();
     bool mirror(Drawable* drawable, int layoutDirection);
     static bool hasOpaqueBackground(View* v);
-    bool hasPeekingDrawer();
-    bool hasVisibleDrawer();
+    bool hasPeekingDrawer()const;
+    bool hasVisibleDrawer()const;
 protected:
     void updateDrawerState(int forGravity,int activeState, View* activeDrawer);
     void dispatchOnDrawerClosed(View* drawerView);
     void dispatchOnDrawerOpened(View* drawerView);
     void dispatchOnDrawerSlide(View* drawerView, float slideOffset);
     void setDrawerViewOffset(View* drawerView, float slideOffset);
-    float getDrawerViewOffset(View* drawerView);
-    int getDrawerViewAbsoluteGravity(View* drawerView);
-    bool checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor);
-    View* findOpenDrawer();
+    float getDrawerViewOffset(View* drawerView)const;
+    int getDrawerViewAbsoluteGravity(View* drawerView)const;
+    bool checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor)const;
+    View* findOpenDrawer()const;
     void moveDrawerToOffset(View* drawerView, float slideOffset);
-    View* findDrawerWithGravity(int gravity);
+    View* findDrawerWithGravity(int gravity)const;
     bool isContentView(View* child)const;
     bool isDrawerView (View* child)const;
-    View* findVisibleDrawer();
+    View* findVisibleDrawer()const;
     void cancelChildViewTouch();
 
     void onDetachedFromWindow()override;
@@ -221,10 +219,10 @@ public:
     void setDrawerLockMode(int lockMode);
     void setDrawerLockMode(int lockMode,int edgeGravity);
     void setDrawerLockMode(int lockMode,View* drawerView);
-    int getDrawerLockMode(int edgeGravity);
-    int getDrawerLockMode(View* drawerView);
+    int getDrawerLockMode(int edgeGravity)const;
+    int getDrawerLockMode(View* drawerView)const;
     void setDrawerTitle(int edgeGravity,const std::string&title);
-    const std::string getDrawerTitle(int edgeGravity);
+    const std::string getDrawerTitle(int edgeGravity)const;
     void requestLayout()override;
     void computeScroll()override;
     void setStatusBarBackground(Drawable* bg);
@@ -247,10 +245,10 @@ public:
     void closeDrawer(View* drawerView, bool animate);
     void closeDrawer(int gravity);
     void closeDrawer(int gravity, bool animate);
-    bool isDrawerOpen(View* drawer);
-    bool isDrawerOpen(int drawerGravity);
-    bool isDrawerVisible(View* drawer);
-    bool isDrawerVisible(int drawerGravity);
+    bool isDrawerOpen(View* drawer)const;
+    bool isDrawerOpen(int drawerGravity)const;
+    bool isDrawerVisible(View* drawer)const;
+    bool isDrawerVisible(int drawerGravity)const;
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;

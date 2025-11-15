@@ -64,9 +64,6 @@ DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
 }
 
 DrawerLayout::~DrawerLayout(){
-    delete mLeftCallback;
-    delete mRightCallback;
-
     delete mLeftDragger;
     delete mRightDragger;
 }
@@ -171,7 +168,7 @@ void DrawerLayout::setDrawerLockMode(int lockMode,View* drawerView) {
 }
 
 
-int DrawerLayout::getDrawerLockMode(int edgeGravity) {
+int DrawerLayout::getDrawerLockMode(int edgeGravity) const{
     const int layoutDirection = getLayoutDirection();
     int lockMode;
     switch (edgeGravity) {
@@ -215,7 +212,7 @@ int DrawerLayout::getDrawerLockMode(int edgeGravity) {
    return LOCK_MODE_UNLOCKED;
 }
 
-int DrawerLayout::getDrawerLockMode(View* drawerView) {
+int DrawerLayout::getDrawerLockMode(View* drawerView) const{
     LOGE_IF(!isDrawerView(drawerView),"View %p:%d is not a drawer",drawerView,drawerView->getId());
     const int drawerGravity = ((LayoutParams*) drawerView->getLayoutParams())->gravity;
     return getDrawerLockMode(drawerGravity);
@@ -230,7 +227,7 @@ void DrawerLayout::setDrawerTitle(int edgeGravity,const std::string& title) {
     }
 }
 
-const std::string DrawerLayout::getDrawerTitle(int edgeGravity) {
+const std::string DrawerLayout::getDrawerTitle(int edgeGravity) const{
     int absGravity = Gravity::getAbsoluteGravity(edgeGravity, getLayoutDirection());
     if (absGravity == Gravity::LEFT) {
         return mTitleLeft;
@@ -240,9 +237,10 @@ const std::string DrawerLayout::getDrawerTitle(int edgeGravity) {
     return std::string();
 }
 
-bool DrawerLayout::isInBoundsOfChild(float x, float y, View* child) {
-    child->getHitRect(mChildHitRect);
-    return mChildHitRect.contains((int) x, (int) y);
+bool DrawerLayout::isInBoundsOfChild(float x, float y, View* child) const{
+    Rect tempRect;
+    child->getHitRect(tempRect);
+    return tempRect.contains((int) x, (int) y);
 }
 
 bool DrawerLayout::dispatchTransformedGenericPointerEvent(MotionEvent& event, View* child){
@@ -281,8 +279,8 @@ MotionEvent* DrawerLayout::getTransformedMotionEvent(MotionEvent& event, View* c
 }
 
 void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activeDrawer) {
-    int leftState = mLeftDragger->getViewDragState();
-    int rightState = mRightDragger->getViewDragState();
+    const int leftState = mLeftDragger->getViewDragState();
+    const int rightState = mRightDragger->getViewDragState();
 
     int state;
     if (leftState == STATE_DRAGGING || rightState == STATE_DRAGGING) {
@@ -404,23 +402,23 @@ void DrawerLayout::setDrawerViewOffset(View* drawerView, float slideOffset) {
     dispatchOnDrawerSlide(drawerView, slideOffset);
 }
 
-float DrawerLayout::getDrawerViewOffset(View* drawerView) {
+float DrawerLayout::getDrawerViewOffset(View* drawerView) const{
     return ((LayoutParams*) drawerView->getLayoutParams())->onScreen;
 }
 
 /* @return the absolute gravity of the child drawerView, resolved according
  * to the current layout direction */
-int DrawerLayout::getDrawerViewAbsoluteGravity(View* drawerView) {
+int DrawerLayout::getDrawerViewAbsoluteGravity(View* drawerView) const{
     const int gravity = ((LayoutParams*) drawerView->getLayoutParams())->gravity;
     return Gravity::getAbsoluteGravity(gravity, getLayoutDirection());
 }
 
-bool DrawerLayout::checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor) {
+bool DrawerLayout::checkDrawerViewAbsoluteGravity(View* drawerView, int checkFor) const{
     int absGravity = getDrawerViewAbsoluteGravity(drawerView);
     return (absGravity & checkFor) == checkFor;
 }
 
-View* DrawerLayout::findOpenDrawer() {
+View* DrawerLayout::findOpenDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
@@ -450,7 +448,7 @@ void DrawerLayout::moveDrawerToOffset(View* drawerView, float slideOffset) {
  *            layout direction.
  * @return the drawer with the specified gravity
  */
-View* DrawerLayout::findDrawerWithGravity(int gravity) {
+View* DrawerLayout::findDrawerWithGravity(int gravity) const{
     const int absHorizGravity = Gravity::getAbsoluteGravity(
             gravity, getLayoutDirection()) & Gravity::HORIZONTAL_GRAVITY_MASK;
     const int childCount = getChildCount();
@@ -898,7 +896,6 @@ bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
                 interceptForTap = true;
             }
         }
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
    
@@ -912,7 +909,6 @@ bool DrawerLayout::onInterceptTouchEvent(MotionEvent& ev) {
     case MotionEvent::ACTION_CANCEL:
     case MotionEvent::ACTION_UP:
         closeDrawers(true);
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
     }  
     return interceptForDrag || interceptForTap || hasPeekingDrawer() || mChildrenCanceledTouch;
@@ -964,7 +960,6 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
     case MotionEvent::ACTION_DOWN:
         mInitialMotionX = ev.getX();
         mInitialMotionY = ev.getY();
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
    
@@ -986,13 +981,11 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
             }
         }
         closeDrawers(peekingOnly);
-        mDisallowInterceptRequested = false;
         break;
         }
    
     case MotionEvent::ACTION_CANCEL:
         closeDrawers(true);
-        mDisallowInterceptRequested = false;
         mChildrenCanceledTouch = false;
         break;
     }
@@ -1008,7 +1001,6 @@ void DrawerLayout::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
         // If we have an edge touch we want to skip this and track it for later instead.
         ViewGroup::requestDisallowInterceptTouchEvent(disallowIntercept);
     }
-    mDisallowInterceptRequested = disallowIntercept;
     if (disallowIntercept) {
         closeDrawers(true);
     }
@@ -1143,13 +1135,13 @@ void DrawerLayout::closeDrawer(int gravity, bool animate) {
     closeDrawer(drawerView, animate);
 }
      
-bool DrawerLayout::isDrawerOpen(View* drawer) {
+bool DrawerLayout::isDrawerOpen(View* drawer) const{
     LOGE_IF(!isDrawerView(drawer),"View %p:%d is not a drawer",drawer,drawer->getId());
     LayoutParams* drawerLp = (LayoutParams*) drawer->getLayoutParams();
     return (drawerLp->openState & LayoutParams::FLAG_IS_OPENED) == 1;
 }
 
-bool DrawerLayout::isDrawerOpen(int drawerGravity) {
+bool DrawerLayout::isDrawerOpen(int drawerGravity) const{
     View* drawerView = findDrawerWithGravity(drawerGravity);
     if (drawerView != nullptr) {
         return isDrawerOpen(drawerView);
@@ -1157,13 +1149,13 @@ bool DrawerLayout::isDrawerOpen(int drawerGravity) {
     return false;
 }
      
-bool DrawerLayout::isDrawerVisible(View* drawer) {
+bool DrawerLayout::isDrawerVisible(View* drawer) const{
     LOGE_IF(!isDrawerView(drawer),"View %p:%d is not a drawer",drawer,drawer->getId());
     return ((LayoutParams*) drawer->getLayoutParams())->onScreen > 0;
 }
 
 
-bool DrawerLayout::isDrawerVisible(int drawerGravity) {
+bool DrawerLayout::isDrawerVisible(int drawerGravity) const{
     View* drawerView = findDrawerWithGravity(drawerGravity);
     if (drawerView != nullptr) {
         return isDrawerVisible(drawerView);
@@ -1171,7 +1163,7 @@ bool DrawerLayout::isDrawerVisible(int drawerGravity) {
     return false;
 }
     
-bool DrawerLayout::hasPeekingDrawer() {
+bool DrawerLayout::hasPeekingDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
@@ -1236,11 +1228,11 @@ void DrawerLayout::addFocusables(std::vector<View*>& views, int direction, int f
     mNonDrawerViews.clear();
 }
 
-bool DrawerLayout::hasVisibleDrawer() {
+bool DrawerLayout::hasVisibleDrawer() const{
     return findVisibleDrawer() != nullptr;
 }
 
-View* DrawerLayout::findVisibleDrawer() {
+View* DrawerLayout::findVisibleDrawer() const{
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);

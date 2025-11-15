@@ -38,12 +38,12 @@ void SlidingPaneLayout::initView(){
     mLockMode = LOCK_MODE_UNLOCKED;
     mParallaxOffset = 0;
     mSlideRange = 0;
-    mSlideOffset= 0;
+    mSlideOffset= 1.f;
     mParallaxBy = 0;
     mInitialMotionX = 0;
     mInitialMotionY = 0;
     mSlideableView = nullptr;
-    mCanSlide = true;
+    mSlideable = false;
     mFirstLayout = true;
     mIsUnableToDrag = false;
     mPreservedOpenState = false;
@@ -166,10 +166,10 @@ void SlidingPaneLayout::updateObscuredViewsVisibility(View* panel) {
             continue;
         }
 
-        int clampedChildLeft = std::max((isLayoutRtl ? endBound : startBound), child->getLeft());
-        int clampedChildTop = std::max(topBound, child->getTop());
-        int clampedChildRight = std::min((isLayoutRtl ? startBound : endBound), child->getRight());
-        int clampedChildBottom = std::min(bottomBound, child->getBottom());
+        const int clampedChildLeft = std::max((isLayoutRtl ? endBound : startBound), child->getLeft());
+        const int clampedChildTop = std::max(topBound, child->getTop());
+        const int clampedChildRight = std::min((isLayoutRtl ? startBound : endBound), child->getRight());
+        const int clampedChildBottom = std::min(bottomBound, child->getBottom());
         int vis;
         if (clampedChildLeft >= left && clampedChildTop >= top
                 && clampedChildRight <= right && clampedChildBottom <= bottom) {
@@ -315,7 +315,7 @@ void SlidingPaneLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             childWidthSpec = MeasureSpec::makeMeasureSpec(lp->width, MeasureSpec::EXACTLY);
         }
 
-        int childHeightSpec = getChildMeasureSpec(heightMeasureSpec,
+        const int childHeightSpec = getChildMeasureSpec(heightMeasureSpec,
                 getPaddingTop() + getPaddingBottom(), lp->height);
         child->measure(childWidthSpec, childHeightSpec);
         const int childWidth = child->getMeasuredWidth();
@@ -433,7 +433,7 @@ void SlidingPaneLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     const int measuredHeight = layoutHeight + getPaddingTop() + getPaddingBottom();
 
     setMeasuredDimension(measuredWidth, measuredHeight);
-    mCanSlide = canSlide;
+    mSlideable = canSlide;
 
     if (mDragHelper->getViewDragState() != ViewDragHelper::STATE_IDLE && !canSlide) {
         // Cancel scrolling in progress, it's no longer relevant.
@@ -449,7 +449,7 @@ int SlidingPaneLayout::getMinimumWidth(View* child) {
 }
 
 int SlidingPaneLayout::measureChildHeight(View* child,int spec, int padding) {
-    LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+    const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     int childHeightSpec;
     const bool skippedFirstPass = lp->width == 0 && lp->weight > 0;
     if (skippedFirstPass) {
@@ -474,7 +474,7 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
     int nextXStart = xStart;
 
     if (mFirstLayout) {
-        mSlideOffset = mCanSlide && mPreservedOpenState ? 1.f : 0.f;
+        mSlideOffset = mSlideable && mPreservedOpenState ? 0.f : 1.f;
     }
 
     for (int i = 0; i < childCount; i++) {
@@ -497,8 +497,8 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
             lp->dimWhenOffset = xStart + lpMargin + range + childWidth / 2 > width - paddingEnd;
             const int pos = (int) (range * mSlideOffset);
             xStart += pos + lpMargin;
-            mSlideOffset = (float) pos / mSlideRange;
-        } else if (mCanSlide && mParallaxBy != 0) {
+            mSlideOffset = float(pos) / mSlideRange;
+        } else if (mSlideable && mParallaxBy != 0) {
             offset = (int) ((1.f - mSlideOffset) * mParallaxBy);
             xStart = nextXStart;
         } else {
@@ -518,7 +518,6 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
         const int childTop = paddingTop;
         const int childHeight =child->getMeasuredHeight();
         child->layout(childLeft, paddingTop, childWidth, childHeight);
-
         // If a folding feature separates the content, we use its width as the extra
         // offset for the next child, in order to avoid rendering the content under it.
         /*if (mFoldingFeature != nullptr
@@ -530,7 +529,7 @@ void SlidingPaneLayout::onLayout(bool changed, int l, int t, int width, int heig
     }
 
     if (mFirstLayout) {
-        if (mCanSlide) {
+        if (mSlideable) {
             if (mParallaxBy != 0) {
                 parallaxOtherViews(mSlideOffset);
             }
@@ -551,7 +550,7 @@ void SlidingPaneLayout::onSizeChanged(int w, int h, int oldw, int oldh) {
 
 void SlidingPaneLayout::requestChildFocus(View* child, View* focused) {
     ViewGroup::requestChildFocus(child, focused);
-    if (!isInTouchMode() && !mCanSlide) {
+    if (!isInTouchMode() && !mSlideable) {
         mPreservedOpenState = child == mSlideableView;
     }
 }
@@ -560,7 +559,7 @@ bool SlidingPaneLayout::onInterceptTouchEvent(MotionEvent& ev) {
     const int action = ev.getActionMasked();
 
     // Preserve the open state based on the last view that was touched.
-    if (!mCanSlide && action == MotionEvent::ACTION_DOWN && getChildCount() > 1) {
+    if (!mSlideable && action == MotionEvent::ACTION_DOWN && getChildCount() > 1) {
         // After the first things will be slideable.
         View* secondChild = getChildAt(1);
         if (secondChild != nullptr) {
@@ -569,7 +568,7 @@ bool SlidingPaneLayout::onInterceptTouchEvent(MotionEvent& ev) {
         }
     }
 
-    if (!mCanSlide || (mIsUnableToDrag && action != MotionEvent::ACTION_DOWN)) {
+    if (!mSlideable || (mIsUnableToDrag && action != MotionEvent::ACTION_DOWN)) {
         mDragHelper->cancel();
         return ViewGroup::onInterceptTouchEvent(ev);
     }
@@ -588,7 +587,6 @@ bool SlidingPaneLayout::onInterceptTouchEvent(MotionEvent& ev) {
             const float y = ev.getY();
             mInitialMotionX = x;
             mInitialMotionY = y;
-
             if (mDragHelper->isViewUnder(mSlideableView, (int) x, (int) y)
                     && isDimmed(mSlideableView)) {
                 interceptTap = true;
@@ -616,7 +614,7 @@ bool SlidingPaneLayout::onInterceptTouchEvent(MotionEvent& ev) {
 }
 
 bool SlidingPaneLayout::onTouchEvent(MotionEvent& ev) {
-    if (!mCanSlide) {
+    if (!mSlideable) {
         return ViewGroup::onTouchEvent(ev);
     }
 
@@ -650,7 +648,7 @@ bool SlidingPaneLayout::onTouchEvent(MotionEvent& ev) {
 }
 
 bool SlidingPaneLayout::closePane(int initialVelocity) {
-    if(!mCanSlide){
+    if(!mSlideable){
         mPreservedOpenState = false;
     }
     if (mFirstLayout || smoothSlideTo(1.f, initialVelocity)) {
@@ -661,7 +659,7 @@ bool SlidingPaneLayout::closePane(int initialVelocity) {
 }
 
 bool SlidingPaneLayout::openPane(int initialVelocity) {
-    if(!mCanSlide){
+    if(!mSlideable){
         mPreservedOpenState = true;
     }
     if (mFirstLayout || smoothSlideTo(0.f, initialVelocity)) {
@@ -680,11 +678,11 @@ bool SlidingPaneLayout::closePane() {
 }
 
 bool SlidingPaneLayout::isOpen() const{
-    return !mCanSlide || (mSlideOffset == 1.f);
+    return !mSlideable || (mSlideOffset == 0.f);
 }
 
 bool SlidingPaneLayout::isSlideable() const{
-    return mCanSlide;
+    return mSlideable;
 }
 
 void SlidingPaneLayout::onPanelDragged(int newLeft) {
@@ -703,7 +701,7 @@ void SlidingPaneLayout::onPanelDragged(int newLeft) {
     const int lpMargin = isLayoutRtl ? lp->rightMargin : lp->leftMargin;
     const int startBound = paddingStart + lpMargin;
 
-    mSlideOffset = (float) (newStart - startBound) / mSlideRange;
+    mSlideOffset = float(newStart - startBound) / mSlideRange;
 
     if (mParallaxBy != 0) {
         parallaxOtherViews(mSlideOffset);
@@ -736,7 +734,7 @@ bool SlidingPaneLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTi
     bool result;
     canvas.save();
 
-    if (mCanSlide && !lp->slideable && mSlideableView != nullptr) {
+    if (mSlideable && !lp->slideable && mSlideableView != nullptr) {
         // Clip against the slider; no sense drawing what will immediately be covered.
         Rect rect;
         double x1, y1, x2, y2;
@@ -818,23 +816,12 @@ void SlidingPaneLayout::invalidateChildRegion(View* v) {
 }
 
 bool SlidingPaneLayout::smoothSlideTo(float slideOffset, int velocity) {
-    if (!mCanSlide) {
+    if (!mSlideable||(mSlideableView==nullptr)) {
         // Nothing to do.
         return false;
     }
 
-    const bool isLayoutRtl = isLayoutRtlSupport();
-    const LayoutParams* lp = (LayoutParams*) mSlideableView->getLayoutParams();
-
-    int x;
-    if (isLayoutRtl) {
-        const int startBound = getPaddingRight() + lp->rightMargin;
-        const int childWidth = mSlideableView->getWidth();
-        x = (int) (getWidth() - (startBound + slideOffset * mSlideRange + childWidth));
-    } else {
-        const int startBound = getPaddingLeft() + lp->leftMargin;
-        x = (int) (startBound + slideOffset * mSlideRange);
-    }
+    const int x = computeScrollOffset(mSlideableView,slideOffset);
 
     if (mDragHelper->smoothSlideViewTo(mSlideableView, x, mSlideableView->getTop())) {
         setAllChildrenVisible();
@@ -844,9 +831,42 @@ bool SlidingPaneLayout::smoothSlideTo(float slideOffset, int velocity) {
     return false;
 }
 
+bool SlidingPaneLayout::smoothSlideTo(float slideOffset,int duration,Interpolator*interpolater) {
+    if (!mSlideable||(mSlideableView==nullptr)) {
+        // Nothing to do.
+        return false;
+    }
+
+    const int x = computeScrollOffset(mSlideableView,slideOffset);
+
+    if (mDragHelper->smoothSlideViewTo(mSlideableView, x, 
+                mSlideableView->getTop(),duration,interpolater)) {
+        setAllChildrenVisible();
+        postInvalidateOnAnimation();
+        return true;
+    }
+    return false;
+}
+
+int SlidingPaneLayout::computeScrollOffset(View*slideableView,float slideOffset){
+    const bool isLayoutRtl = isLayoutRtlSupport();
+    const LayoutParams* lp = (LayoutParams*) slideableView->getLayoutParams();
+
+    int x;
+    if (isLayoutRtl) {
+        const int startBound = getPaddingRight() + lp->rightMargin;
+        const int childWidth = slideableView->getWidth();
+        x = (int) (getWidth() - (startBound + slideOffset * mSlideRange + childWidth));
+    } else {
+        const int startBound = getPaddingLeft() + lp->leftMargin;
+        x = (int) (startBound + slideOffset * mSlideRange);
+    }
+    return x;
+}
+
 void SlidingPaneLayout::computeScroll() {
     if (mDragHelper->continueSettling(true)) {
-        if (!mCanSlide) {
+        if (!mSlideable) {
             mDragHelper->abort();
             return;
         }
@@ -900,7 +920,7 @@ void SlidingPaneLayout::draw(Canvas& c) {
         left = right - shadowWidth;
     }
 
-    shadowDrawable->setBounds(left, top, right, bottom);
+    shadowDrawable->setBounds(left, top, shadowWidth,bottom-top);
     shadowDrawable->draw(c);
 }
 
@@ -917,7 +937,6 @@ void SlidingPaneLayout::parallaxOtherViews(float slideOffset) {
         const int dx = oldOffset - newOffset;
 
         v->offsetLeftAndRight(isLayoutRtl ? -dx : dx);
-
     }
 }
 
@@ -932,8 +951,8 @@ bool SlidingPaneLayout::canScroll(View* v, bool checkV, int dx, int x, int y) {
             // TODO: Add versioned support here for transformed views.
             // This will not work for transformed views in Honeycomb+
             View* child = group->getChildAt(i);
-            if (x + scrollX >= child->getLeft() && x + scrollX < child->getRight()
-                    && y + scrollY >= child->getTop() && y + scrollY < child->getBottom()
+            if ((x + scrollX >= child->getLeft()) && (x + scrollX < child->getRight())
+                    && (y + scrollY >= child->getTop()) && (y + scrollY < child->getBottom())
                     && canScroll(child, true, dx, x + scrollX - child->getLeft(),
                             y + scrollY - child->getTop())) {
                 return true;
@@ -949,7 +968,7 @@ bool SlidingPaneLayout::isDimmed(View* child) const{
         return false;
     }
     const LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-    return mCanSlide && lp->dimWhenOffset && mSlideOffset > 0;
+    return mSlideable && lp->dimWhenOffset && (mSlideOffset > 0.f);
 }
 
 ViewGroup::LayoutParams* SlidingPaneLayout::generateDefaultLayoutParams() const{
@@ -1043,7 +1062,7 @@ bool SlidingPaneLayout::DragHelperCallback::tryCaptureView(View& child, int poin
 
 void SlidingPaneLayout::DragHelperCallback::onViewDragStateChanged(int state) {
     if (mSPL->mDragHelper->getViewDragState() == ViewDragHelper::STATE_IDLE) {
-        if (mSPL->mSlideOffset == 0) {
+        if (mSPL->mSlideOffset == 1.f) {
             mSPL->updateObscuredViewsVisibility(mSPL->mSlideableView);
             mSPL->dispatchOnPanelClosed(mSPL->mSlideableView);
             mSPL->mPreservedOpenState = false;
