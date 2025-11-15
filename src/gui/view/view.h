@@ -1831,11 +1831,12 @@ class View::DragShadowBuilder {
 private:
     View* mView;
 public:
-    DragShadowBuilder(View* view);
     DragShadowBuilder();
-    View* getView();
-    void onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint);
-    void onDrawShadow(Canvas& canvas);
+    DragShadowBuilder(View* view);
+    virtual ~DragShadowBuilder()=default;
+    View* getView()const;
+    virtual void onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint);
+    virtual void onDrawShadow(Canvas& canvas);
 };
 }//endof namespace cdroid
 

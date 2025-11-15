@@ -328,6 +328,7 @@ public:
     View*getFocusedChild();
     bool hasFocus()const override;
     View*findFocus()override;
+    void setDragFocus(View*newDragTarget, DragEvent& event);
     bool restoreDefaultFocus()override;
     virtual void requestChildFocus(View*child,View*focused);
     void unFocus(View* focused)override;

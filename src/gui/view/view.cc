@@ -9091,7 +9091,7 @@ bool View::dispatchDragEvent(DragEvent&event){
         (event.mAction == DragEvent::ACTION_DROP) ) {
         // About to deliver an event with coordinates to this view. Notify that now this view
         // has drag focus. This will send exit/enter events as needed.
-        //getViewRootImpl().setDragFocus(this, event);
+        getRootView()->setDragFocus(this, event);
     }
     return callDragEventHandler(event);
 }
@@ -10040,15 +10040,15 @@ void View::cancel(SendViewScrolledAccessibilityEvent* callback){
      callback->reset();
 }
 
-View::DragShadowBuilder::DragShadowBuilder(View* view) {
-    mView = view;
-}
-
 View::DragShadowBuilder::DragShadowBuilder() {
     mView = nullptr;
 }
 
-View* View::DragShadowBuilder::getView() {
+View::DragShadowBuilder::DragShadowBuilder(View* view) {
+    mView = view;
+}
+
+View* View::DragShadowBuilder::getView() const{
     return mView;
 }
 

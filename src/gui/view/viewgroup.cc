@@ -2605,6 +2605,40 @@ bool ViewGroup::restoreDefaultFocus(){
     return View::restoreDefaultFocus();
 }
 
+void ViewGroup::setDragFocus(View* newDragTarget, DragEvent& event){
+    View*mCurrentDragView = mCurrentDragChild;
+    if (mCurrentDragView != newDragTarget /*&& !View.sCascadedDragDrop*/) {
+        // Send EXITED and ENTERED notifications to the old and new drag focus views.
+
+        const float tx = event.mX;
+        const float ty = event.mY;
+        const int action = event.mAction;
+        ClipData* td = event.mClipData;
+        // Position should not be available for ACTION_DRAG_ENTERED and ACTION_DRAG_EXITED.
+        event.mX = 0;
+        event.mY = 0;
+        event.mClipData = nullptr;
+
+        if (mCurrentDragView != nullptr) {
+            event.mAction = DragEvent::ACTION_DRAG_EXITED;
+            mCurrentDragView->callDragEventHandler(event);
+        }
+
+        if (newDragTarget != nullptr) {
+            event.mAction = DragEvent::ACTION_DRAG_ENTERED;
+            newDragTarget->callDragEventHandler(event);
+        }
+
+        event.mAction = action;
+        event.mX = tx;
+        event.mY = ty;
+        event.mClipData = td;
+    }
+
+    mCurrentDragView = newDragTarget;
+    mCurrentDragChild= newDragTarget;
+}
+
 bool ViewGroup::hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const{
     if ((mViewFlags & VISIBILITY_MASK) != VISIBLE) {
         return false;
