@@ -915,14 +915,15 @@ void ViewGroup::addDisappearingView(View* v) {
 }
 
 void ViewGroup::clearDisappearingChildren() {
-    std::vector<View*> disappearingChildren = mDisappearingChildren;
-    int count = disappearingChildren.size();
+    const int count = mDisappearingChildren.size();
     for (int i = 0; i < count; i++) {
-        View* view = disappearingChildren.at(i);
-        if (view->mAttachInfo)view->dispatchDetachedFromWindow();
+        View* view = mDisappearingChildren.at(i);
+        if (view->mAttachInfo!=nullptr){
+            view->dispatchDetachedFromWindow();
+        }
         view->clearAnimation();
     }
-    disappearingChildren.clear();
+    mDisappearingChildren.clear();
     invalidate();
 }
 
@@ -933,28 +934,36 @@ void ViewGroup::startViewTransition(View* view){
 
 void ViewGroup::endViewTransition(View* view){
     auto it = std::find(mTransitioningViews.begin(),mTransitioningViews.end(),view);
-    if(it!=mTransitioningViews.end())mTransitioningViews.erase(it);
+    if(it != mTransitioningViews.end()){
+        mTransitioningViews.erase(it);
+    }
 
-    it= std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
-    if (it!=mDisappearingChildren.end()) {
+    it = std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
+    if (it != mDisappearingChildren.end()) {
         mDisappearingChildren.erase(it);
 
-        it=std::find(mVisibilityChangingChildren.begin(),mVisibilityChangingChildren.end(),view);
-        if (it!=mVisibilityChangingChildren.end()) {
+        it = std::find(mVisibilityChangingChildren.begin(),mVisibilityChangingChildren.end(),view);
+        if (it != mVisibilityChangingChildren.end()) {
             mVisibilityChangingChildren.erase(it);
         } else {
-            if (view->mAttachInfo) view->dispatchDetachedFromWindow();
-            if (view->mParent) view->mParent = nullptr;
+            if (view->mAttachInfo!=nullptr){
+                view->dispatchDetachedFromWindow();
+            }
+            if (view->mParent){
+                view->mParent = nullptr;
+            }
         }
-       invalidate();
-   }
+        invalidate();
+    }
 }
 
 void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
     auto it = std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
-    if (it!=mDisappearingChildren.end()) {
+    if (it != mDisappearingChildren.end()) {
         mDisappearingChildren.erase(it);
-        if (view->mAttachInfo) view->dispatchDetachedFromWindow();
+        if (view->mAttachInfo!=nullptr){
+            view->dispatchDetachedFromWindow();
+        }
         view->clearAnimation();
         mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
     }
@@ -1738,7 +1747,7 @@ void ViewGroup::addView(View* child, int width, int height){
     return addView(child, -1, params);
 }
 
-void ViewGroup::addView(View* child, LayoutParams* params){
+void ViewGroup::addView(View* child, ViewGroup::LayoutParams* params){
     return addView(child, -1, params);
 }
 
@@ -1749,7 +1758,7 @@ void ViewGroup::removeView(View* view){
     }
 }
 
-void ViewGroup::addView(View* child, int index,LayoutParams* params){
+void ViewGroup::addView(View* child, int index,ViewGroup::LayoutParams* params){
     if(child==nullptr)
          throw std::runtime_error("Cannot add a null child view to a ViewGroup");
     requestLayout();
@@ -1772,7 +1781,7 @@ void ViewGroup::cleanupLayoutState(View* child)const{
     child->mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
 }
 
-void ViewGroup::addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout){
+void ViewGroup::addViewInner(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout){
     if(mTransition){
         mTransition->cancel(LayoutTransition::DISAPPEARING);
     }

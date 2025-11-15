@@ -82,8 +82,8 @@ public:
     static constexpr int LAYOUT_MODE_OPTICAL_BOUNDS = 1;
     static constexpr int LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS;
 public:
-    typedef cdroid::LayoutParams LayoutParams;
-    typedef cdroid::MarginLayoutParams MarginLayoutParams;
+    using LayoutParams =cdroid::LayoutParams;
+    using MarginLayoutParams=cdroid::MarginLayoutParams;
     typedef struct{
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewAdded;
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewRemoved;
@@ -169,7 +169,7 @@ private:
 
     void bindLayoutAnimation(View* child);
     void notifyAnimationListener();
-    void addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    void addViewInner(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
     PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
@@ -370,11 +370,11 @@ public:
 
     virtual void addView(View* view);
     virtual void addView(View* child, int index);
-    virtual void addView(View* child, LayoutParams* params);
-    virtual void addView(View* child, int index, LayoutParams* params);
+    virtual void addView(View* child, ViewGroup::LayoutParams* params);
+    virtual void addView(View* child, int index, ViewGroup::LayoutParams* params);
     void addView(View* child, int width, int height);
-    bool addViewInLayout(View* child, int index,LayoutParams* params);
-    bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params);
+    bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
     int getTransientViewCount() const;
