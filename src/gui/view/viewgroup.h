@@ -142,6 +142,7 @@ private:
     void resetTouchState();
     static bool resetCancelNextUpFlag(View* view);
     void clearTouchTargets();
+    void clearCachedLayoutMode();
 
     static bool canViewReceivePointerEvents(View& child);
     static MotionEvent* obtainMotionEventNoHistoryOrSelf(MotionEvent* event);
@@ -269,6 +270,8 @@ protected:
 
     virtual void onDebugDrawMargins(Canvas& canvas);
     virtual void onDebugDraw(Canvas& canvas);
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
     void drawInvalidateRegion(Canvas&canvas);
     void dispatchDraw(Canvas&)override;
 
@@ -336,7 +339,7 @@ public:
     bool isShowingContextMenuWithCoords()const;
     virtual bool showContextMenuForChild(View* originalView);
     virtual bool showContextMenuForChild(View* originalView, float x, float y);
-    bool hasTransientState()override;
+    bool hasTransientState()const override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
 
     void offsetDescendantRectToMyCoords(const View* descendant, Rect& rect)const;

@@ -4110,7 +4110,7 @@ void View::onStartTemporaryDetach() {
     mPrivateFlags |= PFLAG_CANCEL_NEXT_UP_EVENT;
 }
 
-bool View::hasTransientState(){
+bool View::hasTransientState()const{
     return (mPrivateFlags2 & PFLAG2_HAS_TRANSIENT_STATE) == PFLAG2_HAS_TRANSIENT_STATE;
 }
 

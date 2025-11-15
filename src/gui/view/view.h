@@ -1168,7 +1168,7 @@ public:
     virtual void dispatchFinishTemporaryDetach();
     virtual void onFinishTemporaryDetach();
     virtual void onStartTemporaryDetach();
-    virtual bool hasTransientState();
+    virtual bool hasTransientState()const;
     void setHasTransientState(bool hasTransientState);
 
     static int generateViewId();

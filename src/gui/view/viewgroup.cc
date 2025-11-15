@@ -598,7 +598,23 @@ void ViewGroup::onViewAdded(View*v){
 void ViewGroup::onViewRemoved(View*v){
 }
 
-bool ViewGroup::hasTransientState(){
+void ViewGroup::clearCachedLayoutMode() {
+    if (!hasBooleanFlag(FLAG_LAYOUT_MODE_WAS_EXPLICITLY_SET)) {
+       mLayoutMode = LAYOUT_MODE_UNDEFINED;
+    }
+}
+
+void ViewGroup::onAttachedToWindow() {
+    View::onAttachedToWindow();
+    clearCachedLayoutMode();
+}
+
+void ViewGroup::onDetachedFromWindow() {
+    View::onDetachedFromWindow();
+    clearCachedLayoutMode();
+}
+
+bool ViewGroup::hasTransientState()const{
     return (mChildCountWithTransientState > 0) || View::hasTransientState();
 }
 
@@ -728,14 +744,16 @@ void ViewGroup::childHasTransientStateChanged(View* child, bool childHasTransien
 
 void ViewGroup::dispatchViewAdded(View*v){
     onViewAdded(v);
-    if(mOnHierarchyChangeListener.onChildViewAdded)
+    if(mOnHierarchyChangeListener.onChildViewAdded){
         mOnHierarchyChangeListener.onChildViewAdded(*this,v);
+    }
 }
 
 void ViewGroup::dispatchViewRemoved(View*v){
     onViewRemoved(v);
-    if(mOnHierarchyChangeListener.onChildViewRemoved)
+    if(mOnHierarchyChangeListener.onChildViewRemoved){
         mOnHierarchyChangeListener.onChildViewRemoved(*this,v);
+    }
 }
 
 void ViewGroup::removeDetachedView(View* child, bool animate){
