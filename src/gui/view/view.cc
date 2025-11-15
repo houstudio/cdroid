@@ -8977,7 +8977,70 @@ void View::setDisabledSystemUiVisibility(int flags){
     }
 }
 
-bool View::startDragAndDrop(ClipData*,DragShadowBuilder*,void*myLocalState,int flags){
+bool View::startDragAndDrop(ClipData*,DragShadowBuilder*shadowBuilder,void*myLocalState,int flags){
+    if(mAttachInfo==nullptr){
+        return false;
+    }
+    Point shadowSize;
+    Point shadowTouchPoint;
+    shadowBuilder->onProvideShadowMetrics(shadowSize, shadowTouchPoint);
+    if ((shadowSize.x < 0) || (shadowSize.y < 0) || (shadowTouchPoint.x < 0) || (shadowTouchPoint.y < 0)) {
+        throw std::invalid_argument("Drag shadow dimensions must not be negative");
+    }
+
+    // Create 1x1 surface when zero surface size is specified because SurfaceControl.Builder
+    // does not accept zero size surface.
+    if ((shadowSize.x == 0)  || (shadowSize.y == 0) ) {
+        if (true/*!sAcceptZeroSizeDragShadow*/) {
+            throw std::invalid_argument("Drag shadow dimensions must be positive");
+        }
+        shadowSize.x = 1;
+        shadowSize.y = 1;
+    }
+#if 0
+    if (mAttachInfo->mDragSurface != nullptr) {
+        mAttachInfo->mDragSurface->release();
+    }
+    mAttachInfo->mDragSurface = new Surface();
+    mAttachInfo->mDragToken = nullptr;
+
+    ViewRootImpl root = mAttachInfo->mRootView;//mViewRootImpl;
+    SurfaceSession session = new SurfaceSession(root.mSurface);
+    SurfaceControl surface = new SurfaceControl.Builder(session)
+            .setName("drag surface")
+            .setSize(shadowSize.x, shadowSize.y)
+            .setFormat(PixelFormat.TRANSLUCENT)
+            .build();
+    try {
+        mAttachInfo->mDragSurface->copyFrom(surface);
+        Canvas canvas(mAttachInfo->mDragSurface);
+        canvas.set_operator(Canvas::Operator::CLEAR);//canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        canvas.paint();
+        shadowBuilder->onDrawShadow(canvas);
+
+        // Cache the local state object for delivery with DragEvents
+        root.setLocalDragState(myLocalState);
+
+        // repurpose 'shadowSize' for the last touch point
+        root.getLastTouchPoint(shadowSize);
+
+        mAttachInfo->mDragToken = mAttachInfo.mSession.performDrag(
+                mAttachInfo.mWindow, flags, surface, root.getLastTouchSource(),
+                shadowSize.x, shadowSize.y, shadowTouchPoint.x, shadowTouchPoint.y, data);
+
+        return mAttachInfo->mDragToken != null;
+    } catch (Exception e) {
+        Log.e(VIEW_LOG_TAG, "Unable to initiate drag", e);
+        return false;
+    } finally {
+        if (mAttachInfo.mDragToken == nullptr) {
+            mAttachInfo->mDragSurface.destroy();
+            mAttachInfo->mDragSurface = null;
+            root->setLocalDragState(nullptr);
+        }
+        session.kill();
+    }
+#endif
     return false;
 }
 
@@ -8988,7 +9051,7 @@ void View::cancelDragDrop(){
     }
     if (mAttachInfo->mDragToken != nullptr) {
         /*try {
-            mAttachInfo.mSession.cancelDragAndDrop(mAttachInfo.mDragToken);
+            mAttachInfo->mSession->cancelDragAndDrop(mAttachInfo->mDragToken);
         } catch (Exception e) {
             LOGE("Unable to cancel drag", e);
         }*/
@@ -9004,17 +9067,11 @@ void View::updateDragShadow(DragShadowBuilder*shadowBuilder){
         return;
     }
     if (mAttachInfo->mDragToken != nullptr) {
-        /*try {
-            Canvas canvas = mAttachInfo->mDragSurface.lockCanvas(null);
-            try {
-                canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-                shadowBuilder->onDrawShadow(canvas);
-            } finally {
-                mAttachInfo.mDragSurface.unlockCanvasAndPost(canvas);
-            }
-        } catch (Exception e) {
-            LOGE("Unable to update drag shadow", e);
-        }*/
+        Canvas canvas(mAttachInfo->mDragSurface);
+        canvas.set_operator(Canvas::Operator::CLEAR);
+        canvas.paint();
+        //canvas.drawColor(0, PorterDuff.Mode.CLEAR);
+        shadowBuilder->onDrawShadow(canvas);
     } else {
         LOGE("No active drag");
     }
@@ -9022,6 +9079,10 @@ void View::updateDragShadow(DragShadowBuilder*shadowBuilder){
 
 bool View::onDragEvent(DragEvent&){
     return false;
+}
+
+bool View::dispatchDragEnterExitInPreN(DragEvent& event) {
+    return callDragEventHandler(event);
 }
 
 bool View::dispatchDragEvent(DragEvent&event){
@@ -9032,7 +9093,7 @@ bool View::dispatchDragEvent(DragEvent&event){
         // has drag focus. This will send exit/enter events as needed.
         //getViewRootImpl().setDragFocus(this, event);
     }
-    return false;//callDragEventHandler(event);
+    return callDragEventHandler(event);
 }
 
 bool View::callDragEventHandler(DragEvent& event){

@@ -993,6 +993,7 @@ public:
     virtual bool onDragEvent(DragEvent&);
     virtual bool dispatchDragEvent(DragEvent&);
     virtual bool canAcceptDrag();
+    virtual bool dispatchDragEnterExitInPreN(DragEvent& event);
     bool callDragEventHandler(DragEvent& event);
 
     void setDrawingCacheEnabled(bool);

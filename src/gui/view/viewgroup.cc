@@ -160,6 +160,7 @@ void ViewGroup::initGroup(){
     mFocusedInCluster = nullptr;
     mFirstTouchTarget = nullptr;
     mFirstHoverTarget = nullptr;
+    mCurrentDragChild = nullptr;
     mTooltipHoverTarget = nullptr;
     mCurrentDragStartEvent = nullptr;
     mAccessibilityFocusedHost  = nullptr;
@@ -986,8 +987,7 @@ void ViewGroup::onChildVisibilityChanged(View* child, int oldVisibility, int new
     }
     // in all cases, for drags
     if ((newVisibility == VISIBLE) && (mCurrentDragStartEvent!=nullptr)) {
-        auto it = std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),child);
-        if (it==mChildrenInterestedInDrag.end()){//!mChildrenInterestedInDrag.contains(child)) {
+        if (!mChildrenInterestedInDrag.count(child)) {
             notifyChildOfDragStart(child);
         }
     }
@@ -1013,6 +1013,181 @@ void ViewGroup::attachViewToParent(View* child, int index, LayoutParams* params)
     notifySubtreeAccessibilityStateChangedIfNeeded();
 }
 
+bool ViewGroup::dispatchDragEnterExitInPreN(DragEvent& event) {
+    if (event.mAction == DragEvent::ACTION_DRAG_EXITED && mCurrentDragChild != nullptr) {
+        // The drag exited a sub-tree of views; notify of the exit all descendants that are in
+        // entered state.
+        // We don't need this recursive delivery for ENTERED events because they get generated
+        // from the recursive delivery of LOCATION/DROP events, and hence, don't need their own
+        // recursion.
+        mCurrentDragChild->dispatchDragEnterExitInPreN(event);
+        mCurrentDragChild = nullptr;
+    }
+    return mIsInterestedInDrag && View::dispatchDragEnterExitInPreN(event);
+}
+
+bool ViewGroup::dispatchDragEvent(DragEvent& event) {
+    bool retval = false;
+    const float tx = event.mX;
+    const float ty = event.mY;
+#if 1
+    ClipData* td = event.mClipData;
+    // Dispatch down the view hierarchy
+    Point localPoint;// = getLocalPoint();
+
+    switch (event.mAction) {
+    case DragEvent::ACTION_DRAG_STARTED: {
+        // Clear the state to recalculate which views we drag over.
+        mCurrentDragChild = nullptr;
+
+        // Set up our tracking of drag-started notifications
+        mCurrentDragStartEvent = DragEvent::obtain(event);
+        /*if (mChildrenInterestedInDrag == nullptr) {
+            mChildrenInterestedInDrag = new HashSet<View>();
+        } else */{
+            mChildrenInterestedInDrag.clear();
+        }
+
+        // Now dispatch down to our children, caching the responses
+        const int count = mChildren.size();
+        for (int i = 0; i < count; i++) {
+            View* child = mChildren[i];
+            child->mPrivateFlags2 &= ~View::DRAG_MASK;
+            if (child->getVisibility() == VISIBLE) {
+                if (notifyChildOfDragStart(mChildren[i])) {
+                    retval = true;
+                }
+            }
+        }
+
+        // Notify itself of the drag start.
+        mIsInterestedInDrag = View::dispatchDragEvent(event);
+        if (mIsInterestedInDrag) {
+            retval = true;
+        }
+
+        if (!retval) {
+            // Neither us nor any of our children are interested in this drag, so stop tracking
+            // the current drag event.
+            mCurrentDragStartEvent->recycle();
+            mCurrentDragStartEvent = nullptr;
+        }
+    } break;
+
+    case DragEvent::ACTION_DRAG_ENDED: {
+        // Release the bookkeeping now that the drag lifecycle has ended
+        if (mChildrenInterestedInDrag.size()) {
+            for (View* child : mChildrenInterestedInDrag) {
+                // If a child was interested in the ongoing drag, it's told that it's over
+                if (child->dispatchDragEvent(event)) {
+                    retval = true;
+                }
+            }
+            mChildrenInterestedInDrag.clear();
+        }
+        if (mCurrentDragStartEvent != nullptr) {
+            mCurrentDragStartEvent->recycle();
+            mCurrentDragStartEvent = nullptr;
+        }
+
+        if (mIsInterestedInDrag) {
+            if (View::dispatchDragEvent(event)) {
+                retval = true;
+            }
+            mIsInterestedInDrag = false;
+        }
+    } break;
+
+    case DragEvent::ACTION_DRAG_LOCATION:
+    case DragEvent::ACTION_DROP: {
+        // Find the [possibly new] drag target
+        View* target = findFrontmostDroppableChildAt(event.mX, event.mY, &localPoint);
+
+        if (target != mCurrentDragChild) {
+            if (false/*sCascadedDragDrop*/) {/*targetSdkVersion < Build.VERSION_CODES.N;*/
+                // For pre-Nougat apps, make sure that the whole hierarchy of views that contain
+                // the drag location is kept in the state between ENTERED and EXITED events.
+                // (Starting with N, only the innermost view will be in that state).
+
+                const int action = event.mAction;
+                // Position should not be available for ACTION_DRAG_ENTERED and
+                // ACTION_DRAG_EXITED.
+                event.mX = 0;
+                event.mY = 0;
+                event.mClipData = nullptr;
+
+                if (mCurrentDragChild != nullptr) {
+                    event.mAction = DragEvent::ACTION_DRAG_EXITED;
+                    mCurrentDragChild->dispatchDragEnterExitInPreN(event);
+                }
+
+                if (target != nullptr) {
+                    event.mAction = DragEvent::ACTION_DRAG_ENTERED;
+                    target->dispatchDragEnterExitInPreN(event);
+                }
+
+                event.mAction = action;
+                event.mX = tx;
+                event.mY = ty;
+                event.mClipData = td;
+            }
+            mCurrentDragChild = target;
+        }
+
+        if (target == nullptr && mIsInterestedInDrag) {
+            target = this;
+        }
+
+        // Dispatch the actual drag notice, localized into the target coordinates.
+        if (target != nullptr) {
+            if (target != this) {
+                event.mX = localPoint.x;
+                event.mY = localPoint.y;
+
+                retval = target->dispatchDragEvent(event);
+
+                event.mX = tx;
+                event.mY = ty;
+
+                if (mIsInterestedInDrag) {
+                    bool eventWasConsumed;
+                    if (false/*sCascadedDragDrop*/) {
+                        eventWasConsumed = retval;
+                    } else {
+                        eventWasConsumed = event.mEventHandlerWasCalled;
+                    }
+
+                    if (!eventWasConsumed) {
+                        retval = View::dispatchDragEvent(event);
+                    }
+                }
+            } else {
+                retval = View::dispatchDragEvent(event);
+            }
+        }
+    } break;
+    }
+#endif
+    return retval;
+}
+
+// Find the frontmost child view that lies under the given point, and calculate
+// the position within its own local coordinate system.
+View* ViewGroup::findFrontmostDroppableChildAt(float x, float y, Point* outLocalPoint) {
+    const int count = mChildren.size();
+    for (int i = count - 1; i >= 0; i--) {
+        View* child = mChildren[i];
+        if (!child->canAcceptDrag()) {
+            continue;
+        }
+
+        if (isTransformedTouchPointInView(x, y, *child, outLocalPoint)) {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
 bool ViewGroup::notifyChildOfDragStart(View* child) {
     // The caller guarantees that the child is not in mChildrenInterestedInDrag yet.
 
@@ -1033,7 +1208,7 @@ bool ViewGroup::notifyChildOfDragStart(View* child) {
     mCurrentDragStartEvent->mY = ty;
     mCurrentDragStartEvent->mEventHandlerWasCalled = false;
     if (canAccept) {
-        mChildrenInterestedInDrag.push_back(child);
+        mChildrenInterestedInDrag.insert(child);
         if (!child->canAcceptDrag()) {
             child->mPrivateFlags2 |= View::PFLAG2_DRAG_CAN_ACCEPT;
             child->refreshDrawableState();
@@ -1901,8 +2076,10 @@ void ViewGroup::removeViewInternal(int index, View* view){
         }
     }
     if (mCurrentDragStartEvent != nullptr){
-        auto it =std::find(mChildrenInterestedInDrag.begin(),mChildrenInterestedInDrag.end(),view);
-        if(it!=mChildrenInterestedInDrag.end())mChildrenInterestedInDrag.erase(it);
+        auto it = mChildrenInterestedInDrag.find(view);
+        if(it!=mChildrenInterestedInDrag.end()){
+            mChildrenInterestedInDrag.erase(it);
+        }
     }
 }
 

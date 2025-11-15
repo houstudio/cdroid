@@ -112,6 +112,9 @@ private:
     bool mHoveredSelf;
     bool mTooltipHoveredSelf;
     bool mPointerCapture;
+    // Current frontmost child that can accept drag and lies under the drag location.
+    // Used only to generate ENTER/EXIT events for pre-Nougat aps.
+    View* mCurrentDragChild;
     DragEvent*mCurrentDragStartEvent;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
@@ -176,7 +179,7 @@ protected:
     int mPersistentDrawingCache;
     std::vector<View*> mChildren;
     std::vector<View*> mDisappearingChildren;
-    std::vector<View*> mChildrenInterestedInDrag;
+    std::set<View*> mChildrenInterestedInDrag;
     View* mAccessibilityFocusedHost;
     AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     Cairo::RefPtr<Cairo::Region>mInvalidRgn;
@@ -192,7 +195,9 @@ protected:
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
+    View*findFrontmostDroppableChildAt(float x, float y, Point* outLocalPoint);
     bool notifyChildOfDragStart(View* child);
+    bool dispatchDragEnterExitInPreN(DragEvent& event)override;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchScreenStateChanged(int screenState)override;
     void dispatchMovedToDisplay(Display& display, Configuration& config)override;
@@ -440,6 +445,7 @@ public:
     bool isMotionEventSplittingEnabled()const; 
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchKeyShortcutEvent(KeyEvent&)override;
+    bool dispatchDragEvent(DragEvent& event)override;
     bool dispatchTrackballEvent(MotionEvent& event)override;
     bool dispatchCapturedPointerEvent(MotionEvent& event)override;
     void dispatchPointerCaptureChanged(bool hasCapture)override;
