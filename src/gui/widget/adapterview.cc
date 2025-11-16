@@ -82,7 +82,7 @@ Adapter*AdapterView::getAdapter(){
     return mAdapter;
 }
 
-void AdapterView::addView(View* child, int index, LayoutParams* params){
+void AdapterView::addView(View* child, int index, ViewGroup::LayoutParams* params){
     LOGI("addView(View*,...)is not supported in AdapterView");
 }
 

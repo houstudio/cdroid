@@ -82,8 +82,8 @@ public:
     static constexpr int LAYOUT_MODE_OPTICAL_BOUNDS = 1;
     static constexpr int LAYOUT_MODE_DEFAULT = LAYOUT_MODE_CLIP_BOUNDS;
 public:
-    typedef cdroid::LayoutParams LayoutParams;
-    typedef cdroid::MarginLayoutParams MarginLayoutParams;
+    using LayoutParams =cdroid::LayoutParams;
+    using MarginLayoutParams=cdroid::MarginLayoutParams;
     typedef struct{
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewAdded;
         std::function<void(View&/*parent*/,View* /*child*/)>onChildViewRemoved;
@@ -107,11 +107,15 @@ private:
     std::vector<int>mTransientIndices;
     int mChildCountWithTransientState;
     int mChildUnhandledKeyListeners;
+    bool mSuppressLayout;
     bool mLayoutCalledWhileSuppressed;
     bool mIsInterestedInDrag;
     bool mHoveredSelf;
     bool mTooltipHoveredSelf;
     bool mPointerCapture;
+    // Current frontmost child that can accept drag and lies under the drag location.
+    // Used only to generate ENTER/EXIT events for pre-Nougat aps.
+    View* mCurrentDragChild;
     DragEvent*mCurrentDragStartEvent;
     Animation::AnimationListener mAnimationListener;
     LayoutTransition::TransitionListener mLayoutTransitionListener;
@@ -119,8 +123,6 @@ private:
     class TouchTarget* mFirstTouchTarget;
     class HoverTarget* mFirstHoverTarget;
     View* mTooltipHoverTarget;
-    Point animateTo;//save window boundray  while animating
-    Point animateFrom;//window animate from boundary
     Transformation* mChildTransformation;
     void initGroup();
     void initFromAttributes(Context*,const AttributeSet&);
@@ -140,6 +142,7 @@ private:
     void resetTouchState();
     static bool resetCancelNextUpFlag(View* view);
     void clearTouchTargets();
+    void clearCachedLayoutMode();
 
     static bool canViewReceivePointerEvents(View& child);
     static MotionEvent* obtainMotionEventNoHistoryOrSelf(MotionEvent* event);
@@ -166,7 +169,7 @@ private:
 
     void bindLayoutAnimation(View* child);
     void notifyAnimationListener();
-    void addViewInner(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    void addViewInner(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout);
     void addDisappearingView(View* v);
     bool updateLocalSystemUiVisibility(int localValue, int localChanges)override;
     PointerIcon* dispatchResolvePointerIcon(MotionEvent& event, int pointerIndex,View* child);
@@ -176,7 +179,7 @@ protected:
     int mPersistentDrawingCache;
     std::vector<View*> mChildren;
     std::vector<View*> mDisappearingChildren;
-    std::vector<View*> mChildrenInterestedInDrag;
+    std::set<View*> mChildrenInterestedInDrag;
     View* mAccessibilityFocusedHost;
     AccessibilityNodeInfo* mAccessibilityFocusedVirtualView;
     Cairo::RefPtr<Cairo::Region>mInvalidRgn;
@@ -192,7 +195,9 @@ protected:
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
+    View*findFrontmostDroppableChildAt(float x, float y, Point* outLocalPoint);
     bool notifyChildOfDragStart(View* child);
+    bool dispatchDragEnterExitInPreN(DragEvent& event)override;
     void dispatchAttachedToWindow(AttachInfo* info, int visibility)override;
     void dispatchScreenStateChanged(int screenState)override;
     void dispatchMovedToDisplay(Display& display, Configuration& config)override;
@@ -265,6 +270,8 @@ protected:
 
     virtual void onDebugDrawMargins(Canvas& canvas);
     virtual void onDebugDraw(Canvas& canvas);
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
     void drawInvalidateRegion(Canvas&canvas);
     void dispatchDraw(Canvas&)override;
 
@@ -285,7 +292,7 @@ protected:
     virtual bool getChildStaticTransformation(View* child, Transformation* t);
     Transformation* getChildTransformation();
     void finishAnimatingView(View* view, Animation* animation);
-    bool isViewTransitioning(View* view);
+    bool isViewTransitioning(View* view)const;
     void attachLayoutAnimationParameters(View* child,LayoutParams* params, int index, int count);
     virtual void onChildVisibilityChanged(View* child, int oldVisibility, int newVisibility);
     void dispatchVisibilityChanged(View& changedView, int visibility)override;
@@ -323,6 +330,7 @@ public:
     View*getFocusedChild();
     bool hasFocus()const override;
     View*findFocus()override;
+    void setDragFocus(View*newDragTarget, DragEvent& event);
     bool restoreDefaultFocus()override;
     virtual void requestChildFocus(View*child,View*focused);
     void unFocus(View* focused)override;
@@ -331,7 +339,7 @@ public:
     bool isShowingContextMenuWithCoords()const;
     virtual bool showContextMenuForChild(View* originalView);
     virtual bool showContextMenuForChild(View* originalView, float x, float y);
-    bool hasTransientState()override;
+    bool hasTransientState()const override;
     void childHasTransientStateChanged(View* child, bool childHasTransientState);
 
     void offsetDescendantRectToMyCoords(const View* descendant, Rect& rect)const;
@@ -339,6 +347,8 @@ public:
     void offsetRectBetweenParentAndChild(const View* descendant, Rect& rect,bool offsetFromChildToParent, bool clipToBounds)const;
     void offsetChildrenTopAndBottom(int offset);
     virtual bool getChildVisibleRect(View*child,Rect&r,Point*offset);
+    void suppressLayout(bool suppress);
+    bool isLayoutSuppressed()const;
     bool gatherTransparentRegion(const Cairo::RefPtr<Cairo::Region>&region)override;
 
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
@@ -360,11 +370,11 @@ public:
 
     virtual void addView(View* view);
     virtual void addView(View* child, int index);
-    virtual void addView(View* child, LayoutParams* params);
-    virtual void addView(View* child, int index, LayoutParams* params);
+    virtual void addView(View* child, ViewGroup::LayoutParams* params);
+    virtual void addView(View* child, int index, ViewGroup::LayoutParams* params);
     void addView(View* child, int width, int height);
-    bool addViewInLayout(View* child, int index,LayoutParams* params);
-    bool addViewInLayout(View* child, int index,LayoutParams* params,bool preventRequestLayout);
+    bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params);
+    bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
     int getTransientViewCount() const;
@@ -373,6 +383,7 @@ public:
 
     PointerIcon* onResolvePointerIcon(MotionEvent&, int)override;
 
+    void layout(int l, int t, int w, int h)override final;
     void startLayoutAnimation(); 
     void scheduleLayoutAnimation();
     void setLayoutAnimation(LayoutAnimationController*);
@@ -440,6 +451,7 @@ public:
     bool isMotionEventSplittingEnabled()const; 
     bool dispatchKeyEvent(KeyEvent&)override;
     bool dispatchKeyShortcutEvent(KeyEvent&)override;
+    bool dispatchDragEvent(DragEvent& event)override;
     bool dispatchTrackballEvent(MotionEvent& event)override;
     bool dispatchCapturedPointerEvent(MotionEvent& event)override;
     void dispatchPointerCaptureChanged(bool hasCapture)override;

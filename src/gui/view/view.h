@@ -993,6 +993,7 @@ public:
     virtual bool onDragEvent(DragEvent&);
     virtual bool dispatchDragEvent(DragEvent&);
     virtual bool canAcceptDrag();
+    virtual bool dispatchDragEnterExitInPreN(DragEvent& event);
     bool callDragEventHandler(DragEvent& event);
 
     void setDrawingCacheEnabled(bool);
@@ -1167,7 +1168,7 @@ public:
     virtual void dispatchFinishTemporaryDetach();
     virtual void onFinishTemporaryDetach();
     virtual void onStartTemporaryDetach();
-    virtual bool hasTransientState();
+    virtual bool hasTransientState()const;
     void setHasTransientState(bool hasTransientState);
 
     static int generateViewId();
@@ -1518,7 +1519,7 @@ public:
     virtual void requestLayout();
     void forceLayout();
     virtual void resolveLayoutParams();
-    void layout(int l, int t, int r, int b);
+    virtual void layout(int l, int t, int w, int h);
 public:
     static const FloatProperty*const ALPHA;
     static const FloatProperty*const TRANSLATION_X;
@@ -1830,11 +1831,12 @@ class View::DragShadowBuilder {
 private:
     View* mView;
 public:
-    DragShadowBuilder(View* view);
     DragShadowBuilder();
-    View* getView();
-    void onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint);
-    void onDrawShadow(Canvas& canvas);
+    DragShadowBuilder(View* view);
+    virtual ~DragShadowBuilder()=default;
+    View* getView()const;
+    virtual void onProvideShadowMetrics(Point& outShadowSize, Point& outShadowTouchPoint);
+    virtual void onDrawShadow(Canvas& canvas);
 };
 }//endof namespace cdroid
 
