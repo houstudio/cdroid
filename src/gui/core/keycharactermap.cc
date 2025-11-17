@@ -890,7 +890,7 @@ int KeyCharacterMap::Parser::parseKeyProperty() {
     do {
         char ch = mTokenizer->peekChar();
         if (ch == '\'') {
-            char16_t character;
+            char16_t character=0;
             int status = parseCharacterLiteral(&character);
             if (status || !character) {
                 LOGE("%s: Invalid character literal for key.",
