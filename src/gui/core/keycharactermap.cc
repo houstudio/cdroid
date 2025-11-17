@@ -1144,6 +1144,9 @@ int KeyCharacterMap::Parser::parseCharacterLiteral(char16_t* outCharacter) {
     }
 
 Error:
+    if(outCharacter){
+        *outCharacter = 0;
+    }
     LOGE("%s: Malformed character literal.", mTokenizer->getLocation().c_str());
     return BAD_VALUE;
 }
