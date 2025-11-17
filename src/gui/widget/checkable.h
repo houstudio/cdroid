@@ -19,7 +19,7 @@
 #define __CHECKABLE_H__
 #include <core/callbackbase.h>
 namespace cdroid{
-#define FUNCTION_AS_CHECKABLE 0
+#define FUNCTION_AS_CHECKABLE 1
 //we cant use virtual class as Checkeable,
 //it will cause listview's setItemCheck crashed in  ListView::setupChild
 class Checkable{
