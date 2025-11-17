@@ -46,7 +46,7 @@ void CompoundButton::initCompoundButton(){
     mOnCheckedChangeWidgetListener = nullptr;
     mButtonTintMode = PorterDuff::Mode::NOOP;
     mButtonTintList = nullptr;
-#if FUNCTION_AS_CHECKABLE
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
     isChecked = [this]()->bool{
         return mChecked;
     };
@@ -57,7 +57,7 @@ void CompoundButton::initCompoundButton(){
 #endif
 }
 
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
 void CompoundButton::setChecked(bool checked){
     doSetChecked(checked);
 }
@@ -173,8 +173,9 @@ void CompoundButton::onDetachedFromWindow(){
 
 void CompoundButton::jumpDrawablesToCurrentState(){
     Button::jumpDrawablesToCurrentState();
-    if (mButtonDrawable )
+    if (mButtonDrawable!=nullptr){
         mButtonDrawable->jumpToCurrentState();
+    }
 }
 
 void CompoundButton::setButtonTintList(const ColorStateList* tint) {
@@ -252,7 +253,8 @@ void CompoundButton::doSetChecked(bool checked){
         //final AutofillManager afm = mContext.getSystemService(AutofillManager.class);
         //if (afm != null)  afm.notifyValueChanged(this);
         mBroadcasting = false;
-    }    
+    }
+    setDefaultStateDescription();
 }
 
 void CompoundButton::setOnCheckedChangeListener(const OnCheckedChangeListener& listener) {
@@ -336,7 +338,7 @@ std::string CheckBox::getAccessibilityClassName()const{
 DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
 RadioButton::RadioButton(const std::string&txt,int w,int h)
   :CompoundButton(txt,w,h){
-#if FUNCTION_AS_CHECKABLE
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
     toggle = [this](){
         if(!isChecked())doSetChecked(true);
     };
@@ -345,14 +347,14 @@ RadioButton::RadioButton(const std::string&txt,int w,int h)
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
    :CompoundButton(ctx,attrs){
-#if FUNCTION_AS_CHECKABLE
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
     toggle = [this](){
         if(!isChecked())doSetChecked(true);
     };
 #endif
 }
 
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
 void RadioButton::toggle(){
     if(!isChecked())CompoundButton::toggle();
 }

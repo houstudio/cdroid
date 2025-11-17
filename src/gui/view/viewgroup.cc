@@ -1062,7 +1062,6 @@ bool ViewGroup::dispatchDragEvent(DragEvent& event) {
     bool retval = false;
     const float tx = event.mX;
     const float ty = event.mY;
-#if 1
     ClipData* td = event.mClipData;
     // Dispatch down the view hierarchy
     Point localPoint;// = getLocalPoint();
@@ -1199,7 +1198,6 @@ bool ViewGroup::dispatchDragEvent(DragEvent& event) {
         }
     } break;
     }
-#endif
     return retval;
 }
 
