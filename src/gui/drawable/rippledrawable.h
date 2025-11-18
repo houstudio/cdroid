@@ -93,8 +93,6 @@ private:
     void exitPatternedAnimation();
     void enterPatternedBackgroundAnimation(bool focused, bool hovered);
     void startBackgroundAnimation();
-    void drawPatterned(Canvas& canvas);
-    void drawPatternedBackground(Canvas& c, float cx, float cy);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
