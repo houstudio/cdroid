@@ -17,9 +17,9 @@
  *********************************************************************************/
 #include <widget/listview.h>
 #include <widget/checkable.h>
+#include <widget/R.h>
 #include <view/focusfinder.h>
 #include <utils/mathutils.h>
-#include <widget/R.h>
 #include <porting/cdlog.h>
 
 namespace cdroid {

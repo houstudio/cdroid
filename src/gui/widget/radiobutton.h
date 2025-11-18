@@ -23,7 +23,7 @@ class RadioButton:public CompoundButton{
 public:
     RadioButton(const std::string&,int w,int h);
     RadioButton(Context*ctx,const AttributeSet& attrs);
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void toggle()override;
 #endif
     std::string getAccessibilityClassName()const override;

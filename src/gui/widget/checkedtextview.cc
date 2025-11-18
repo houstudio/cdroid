@@ -27,7 +27,7 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     const bool checked = a.getBoolean("checked", false);
     setChecked(checked);
     applyCheckMarkTint();
-#ifdef FUNCTION_AS_CHECKABLE
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
     isChecked = [this]()->bool{
         return mChecked;
     };
@@ -43,7 +43,7 @@ CheckedTextView::~CheckedTextView(){
     delete mCheckMarkTintList;
 }
 
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void CheckedTextView::toggle() {
     setChecked(!mChecked);
 }

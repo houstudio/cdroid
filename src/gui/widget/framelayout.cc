@@ -41,7 +41,7 @@ void FrameLayout::setForegroundGravity(int foregroundGravity){
         ViewGroup::setForegroundGravity(foregroundGravity);
         // calling get* again here because the set above may apply default constraints
         Drawable* foreground = getForeground();
-        if (getForegroundGravity() == Gravity::FILL && foreground ) {
+        if ((getForegroundGravity() == Gravity::FILL) && (foreground!=nullptr) ) {
             Rect padding;
             if (foreground->getPadding(padding)) {
                 mForegroundPaddingLeft = padding.left;
@@ -82,22 +82,22 @@ FrameLayout::LayoutParams* FrameLayout::generateLayoutParams(const ViewGroup::La
     return new FrameLayout::LayoutParams(*lp);
 }
 
-int FrameLayout::getPaddingLeftWithForeground() {
+int FrameLayout::getPaddingLeftWithForeground() const{
     return isForegroundInsidePadding() ? std::max(mPaddingLeft, mForegroundPaddingLeft) :
         mPaddingLeft + mForegroundPaddingLeft;
 }
 
-int FrameLayout::getPaddingRightWithForeground() {
+int FrameLayout::getPaddingRightWithForeground() const{
     return isForegroundInsidePadding() ? std::max(mPaddingRight, mForegroundPaddingRight) :
         mPaddingRight + mForegroundPaddingRight;
 }
 
-int FrameLayout::getPaddingTopWithForeground() {
+int FrameLayout::getPaddingTopWithForeground() const{
     return isForegroundInsidePadding() ? std::max(mPaddingTop, mForegroundPaddingTop) :
             mPaddingTop + mForegroundPaddingTop;
 }
 
-int FrameLayout::getPaddingBottomWithForeground() {
+int FrameLayout::getPaddingBottomWithForeground() const{
     return isForegroundInsidePadding() ? std::max(mPaddingBottom, mForegroundPaddingBottom) :
         mPaddingBottom + mForegroundPaddingBottom;
 }
@@ -267,7 +267,7 @@ std::string FrameLayout::getAccessibilityClassName()const{
 
 FrameLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
     :MarginLayoutParams(c,attrs){
-    gravity=attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
+    gravity = attrs.getGravity("layout_gravity",UNSPECIFIED_GRAVITY);
 }
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height)
@@ -276,17 +276,17 @@ FrameLayout::LayoutParams::LayoutParams(int width, int height)
 
 FrameLayout::LayoutParams::LayoutParams(int width, int height, int gravity)
     :MarginLayoutParams(width,height){
-    this->gravity=gravity;
+    this->gravity = gravity;
 }
 
 FrameLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams&source)
    :MarginLayoutParams(source){
-    gravity= UNSPECIFIED_GRAVITY;
+    gravity = UNSPECIFIED_GRAVITY;
 }
 
 FrameLayout::LayoutParams::LayoutParams(const MarginLayoutParams& source)
     :MarginLayoutParams(source){
-    gravity= UNSPECIFIED_GRAVITY;
+    gravity = UNSPECIFIED_GRAVITY;
 }
 
 FrameLayout::LayoutParams::LayoutParams(const FrameLayout::LayoutParams& source)

@@ -57,7 +57,7 @@ void CompoundButton::initCompoundButton(){
 #endif
 }
 
-#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void CompoundButton::setChecked(bool checked){
     doSetChecked(checked);
 }
@@ -239,6 +239,7 @@ void CompoundButton::onInitializeAccessibilityNodeInfoInternal(AccessibilityNode
 }
 
 void CompoundButton::doSetChecked(bool checked){
+    LOGD("%p checked=%d->%d",this,mChecked,checked);
     if (mChecked != checked) {
         mCheckedFromResource = false;
         mChecked = checked;
@@ -354,7 +355,7 @@ RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
 #endif
 }
 
-#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void RadioButton::toggle(){
     if(!isChecked())CompoundButton::toggle();
 }
