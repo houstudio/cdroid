@@ -36,6 +36,7 @@ protected:
     virtual void onTargetRadiusChanged(float targetRadius);
 public:
     RippleComponent(RippleDrawable* owner,const Rect& bounds);
+    virtual ~RippleComponent()=default;
     virtual void onHotspotBoundsChanged();
     virtual void onBoundsChange();
     void setup(float maxRadius, int densityDpi);

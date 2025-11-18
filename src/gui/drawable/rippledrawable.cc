@@ -66,6 +66,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     mDensity = Drawable::resolveDensity(mState->mDensity);
     mRipple  = nullptr;
     mBackground = nullptr;
+    mHasPending = false;
     mRippleActive   = false;
     mOverrideBounds = false;
     if (mState->mChildren.size()) {
@@ -86,6 +87,10 @@ RippleDrawable::RippleDrawable(const ColorStateList* color,Drawable* content,Dra
     ensurePadding();
     refreshPadding();
     updateLocalState();
+}
+
+RippleDrawable::~RippleDrawable(){
+    pruneRipples();
 }
 
 void RippleDrawable::jumpToCurrentState(){

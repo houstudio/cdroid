@@ -100,6 +100,7 @@ protected:
 public:
     RippleDrawable();
     RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask);
+    ~RippleDrawable()override;
     void jumpToCurrentState()override;
     int  getOpacity()override;
     bool setVisible(bool visible, bool restart)override;

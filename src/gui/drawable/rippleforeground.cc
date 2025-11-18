@@ -30,12 +30,12 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     mStartingY = startingY;
     mUsingProperties = false;
     mHasFinishedExit = false;
-    mStartRadius  = .0f;
-    mTargetRadius = .0f;
-    mOpacity = .0f;
-    mTweenRadius = .0f;
-    mClampedStartingX = .0f;
-    mClampedStartingY = .0f;
+    mStartRadius  = 0.0f;
+    mTargetRadius = 0.0f;
+    mOpacity = 0.0f;
+    mTweenRadius = 0.0f;
+    mClampedStartingX = 0.0f;
+    mClampedStartingY = 0.0f;
     // Take 60% of the maximum of the width and height, then divided half to get the radius.
     mStartRadius = std::max(bounds.width, bounds.height) * 0.3f;
     clampStartingPosition();
@@ -44,7 +44,7 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
         auto it = std::find(mRunningSwAnimators.begin(),mRunningSwAnimators.end(),&anim);
         if(it != mRunningSwAnimators.end()){
             mRunningSwAnimators.erase(it);
-            LOGV("Animator %p ended",&anim);
+            LOGD("Animator %p ended",&anim);
             delete &anim;
         }
         //pruneSwFinished();
@@ -161,7 +161,7 @@ const RippleForeground::COPACITY RippleForeground::OPACITY;
 void RippleForeground::startSoftwareEnter() {
     for (auto anim:mRunningSwAnimators) {
         anim->cancel();
-        LOGV("delete anim %p of %d",anim,mRunningSwAnimators.size());
+        LOGD("delete anim %p of %d",anim,mRunningSwAnimators.size());
         delete anim;
     }
     mRunningSwAnimators.clear();
@@ -193,7 +193,7 @@ void RippleForeground::startSoftwareEnter() {
         onAnimationPropertyChanged();
     }));
     opacity->start();
-    LOGV("add anims %p %p %p",tweenRadius,tweenOrigin,opacity);
+    LOGD("add anims %p %p %p",tweenRadius,tweenOrigin,opacity);
     mRunningSwAnimators.push_back(opacity);
 }
 
@@ -236,7 +236,7 @@ float RippleForeground::getCurrentRadius() {
 void RippleForeground::end(){
     for (auto anim:mRunningSwAnimators) {
         anim->end();
-        LOGV("delete %d anim %p",mRunningSwAnimators.size(),anim);
+        LOGD("delete %d anim %p",mRunningSwAnimators.size(),anim);
         delete anim;
     }
     mRunningSwAnimators.clear();
