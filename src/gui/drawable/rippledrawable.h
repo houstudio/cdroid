@@ -23,7 +23,8 @@
 namespace cdroid{
 
 class RippleDrawable:public LayerDrawable{
-public:
+private:
+    static constexpr int BACKGROUND_OPACITY_DURATION= 80;
     static constexpr int RADIUS_AUTO = -1;
     static constexpr int MASK_UNKNOWN = -1;
     static constexpr int MASK_NONE = 0;

@@ -494,17 +494,17 @@ void RippleDrawable::enterPatternedBackgroundAnimation(bool focused, bool hovere
 
 void RippleDrawable::startBackgroundAnimation() {
     mRunBackgroundAnimation = false;
-    /*if (Looper.myLooper() == null) {
-        Log.w(TAG, "Thread doesn't have a looper. Skipping animation.");
+    /*if (Looper::myLooper() == nullptr) {
+        LOGW("Thread doesn't have a looper. Skipping animation.");
         return;
     }*/
     mBackgroundAnimation = ValueAnimator::ofFloat({mBackgroundOpacity, mTargetBackgroundOpacity});
-    /*mBackgroundAnimation->setInterpolator(LINEAR_INTERPOLATOR);
+    mBackgroundAnimation->setInterpolator(LinearInterpolator::Instance);
     mBackgroundAnimation->setDuration(BACKGROUND_OPACITY_DURATION);
-    mBackgroundAnimation.addUpdateListener(update -> {
-        mBackgroundOpacity = (float) update.getAnimatedValue();
+    mBackgroundAnimation->addUpdateListener([this](ValueAnimator&anim){
+        mBackgroundOpacity = GET_VARIANT(anim.getAnimatedValue(),float);
         invalidateSelf(false);
-    });*/
+    });
     mBackgroundAnimation->start();
 }
 
@@ -560,7 +560,7 @@ void RippleDrawable::drawPatterned(Canvas& canvas) {
     for (int i = 0; i < mRunningAnimations.size(); i++) {
         RippleAnimationSession s = mRunningAnimations.get(i);
         if (!canvas.isHardwareAccelerated()) {
-            Log.e(TAG, "The RippleDrawable.STYLE_PATTERNED animation is not supported for a "
+            LOGE("The RippleDrawable.STYLE_PATTERNED animation is not supported for a "
                     + "non-hardware accelerated Canvas. Skipping animation.");
             break;
         } else if (useCanvasProps) {
@@ -573,7 +573,7 @@ void RippleDrawable::drawPatterned(Canvas& canvas) {
         } else {
             RippleAnimationSession.AnimationProperties<Float, Paint> p =
                     s.getProperties();
-            float radius = p.getMaxRadius();
+            const float radius = p.getMaxRadius();
             canvas.drawCircle(p.getX(), p.getY(), radius, p.getPaint());
         }
     }
@@ -588,8 +588,8 @@ Rect RippleDrawable::getDirtyBounds() const{
         dirtyBounds = drawingBounds;
         drawingBounds.set(0,0,0,0);
 
-        int cX = (int) mHotspotBounds.centerX();
-        int cY = (int) mHotspotBounds.centerY();
+        const int cX = (int) mHotspotBounds.centerX();
+        const int cY = (int) mHotspotBounds.centerY();
         Rect rippleBounds;
 
         const std::vector<RippleForeground*>& activeRipples = mExitingRipples;
