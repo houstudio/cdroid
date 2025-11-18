@@ -87,6 +87,9 @@ DynamicAnimation::DynamicAnimation(void* object,const FloatProperty* property) {
     }
 }
 
+DynamicAnimation::~DynamicAnimation(){
+}
+
 DynamicAnimation& DynamicAnimation::setStartValue(float startValue) {
     mValue = startValue;
     mStartValueIsSet = true;

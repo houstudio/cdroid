@@ -64,7 +64,7 @@ public:
      * @param <K> the class on which the Property is declared
      */
     SpringAnimation(void* object,const FloatProperty*property,float finalPosition);
-
+    ~SpringAnimation()override;
     SpringForce* getSpring() const;
     SpringAnimation& setSpring(SpringForce* force);
 

@@ -20,15 +20,21 @@ namespace cdroid{
 
 SpringAnimation::SpringAnimation(FloatValueHolder* floatValueHolder)
     :DynamicAnimation(floatValueHolder){
+    mSpring = nullptr;
 }
 
 SpringAnimation::SpringAnimation(void*object,const FloatProperty* property)
     :DynamicAnimation(object, property){
+    mSpring = nullptr;
 }
 
 SpringAnimation::SpringAnimation(void* object,const FloatProperty*property,float finalPosition)
     :DynamicAnimation(object, property){
     mSpring = new SpringForce(finalPosition);
+}
+
+SpringAnimation::~SpringAnimation(){
+    delete mSpring;
 }
 
 SpringForce* SpringAnimation::getSpring() const{
