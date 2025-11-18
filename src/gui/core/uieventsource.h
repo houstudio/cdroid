@@ -30,13 +30,13 @@ private:
         Runnable run;
     }RUNNER;
     std::list<RUNNER>mRunnables;
-    std::function<void()> mLayoutRunner;
+    Runnable mLayoutRunner;
     ViewGroup*mAttachedView;
     bool hasDelayedRunners()const;
     void handleCompose();
     int handleRunnables();
 public:
-    UIEventSource(View*,std::function<void()>run);
+    UIEventSource(View*,const Runnable& run);
     ~UIEventSource()override;
     bool processEvents();
     int checkEvents()override;

@@ -9041,7 +9041,7 @@ bool View::startDragAndDrop(ClipData*,DragShadowBuilder*shadowBuilder,void*myLoc
         session.kill();
     }
 #endif
-    return false;
+    return true;
 }
 
 void View::cancelDragDrop(){

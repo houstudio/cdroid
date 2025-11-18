@@ -138,7 +138,8 @@ App::App(int argc,const char*argv[]){
 
 App::~App(){
     WindowManager::getInstance().shutDown();
-    InputMethodManager::getInstance().shutDown();
+    auto inst = InputMethodManager::peekInstance();
+    if(inst)inst->shutDown();
     delete Looper::getMainLooper();
     delete &GraphDevice::getInstance();
 }
@@ -157,7 +158,7 @@ const std::string App::getDataPath()const{
 }
 
 App& App::getInstance(){
-    if(mInst==nullptr)
+    if(mInst == nullptr)
         mInst = new App;
     return *mInst;
 }

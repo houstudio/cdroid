@@ -21,18 +21,18 @@ public:
         chk=new CheckBox("",0,0);
         lp= new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,1);
         addView(chk,lp);
-#ifdef FUNCTION_AS_CHECKABLE 
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
         setChecked=[this](bool checked){ chk->setChecked(checked); };
         isChecked=[this]()->bool{ return chk->isChecked(); };
         toggle = [this](){ chk->toggle(); };
 #endif
     }
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
     void setChecked(bool checked)override{
 	chk->setChecked(checked);
 	LOGD_IF(checked,"setChecked(%d)",checked);
     }
-    bool isChecked()const{
+    bool isChecked()const override{
 	return chk->isChecked();
     }
     void toggle()override{
@@ -70,6 +70,7 @@ public:
         dv->setId(position);
         dv->startMarqueeIfNeed(position==10);
         dv->setName(dt.name);
+        dv->setChecked(position%3==0);
         return dv;
     }
 };
@@ -95,7 +96,7 @@ int main(int argc,const char*argv[]){
     lv->setAdapter(adapter);
     adapter->notifyDataSetChanged();
     lv->setSelector(new ColorDrawable(0x8800FF00));
-    lv->setChoiceMode(ListView::CHOICE_MODE_SINGLE);
+    lv->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE);//SINGLE);
     lv->setSelection(2);
     lv->setOnItemClickListener([](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);

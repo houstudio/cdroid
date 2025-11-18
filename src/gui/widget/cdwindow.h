@@ -31,6 +31,7 @@ protected:
     };
 private:
     class UIEventHandler;
+    friend UIEventSource;
     class SendWindowContentChangedAccessibilityEvent;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
