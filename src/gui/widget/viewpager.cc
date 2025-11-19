@@ -38,7 +38,7 @@ static VPInterpolator sVPInterpolator;
 DECLARE_WIDGET(ViewPager);
 
 ViewPager::ViewPager(int w,int h):ViewGroup(w,h){
-    initViewPager();    
+    initViewPager(nullptr); 
 }
 
 ViewPager::~ViewPager(){
@@ -58,10 +58,10 @@ ViewPager::~ViewPager(){
 
 ViewPager::ViewPager(Context* context,const AttributeSet& attrs)
   :ViewGroup(context,attrs){
-    initViewPager();
+    initViewPager(&attrs);
 }
 
-void ViewPager::initViewPager(){
+void ViewPager::initViewPager(const AttributeSet*atts){
     setWillNotDraw(false);
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setFocusable(true);
@@ -95,8 +95,13 @@ void ViewPager::initViewPager(){
     mTouchSlop = configuration.getScaledPagingTouchSlop();
     mMinimumVelocity = (int) (MIN_FLING_VELOCITY * density);
     mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-    mLeftEdge  = new EdgeEffect(context);
-    mRightEdge = new EdgeEffect(context);
+    if(atts==nullptr){
+        mLeftEdge  = new EdgeEffect(context);
+        mRightEdge = new EdgeEffect(context);
+    }else{
+        mLeftEdge  = new EdgeEffect(context,*atts);
+        mRightEdge = new EdgeEffect(context,*atts);
+    }
     mMarginDrawable =nullptr;
 
     mCurItem = 0;

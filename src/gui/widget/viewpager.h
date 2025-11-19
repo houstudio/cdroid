@@ -189,7 +189,7 @@ protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
     ItemInfo* infoForPosition(int position)const;
-    void initViewPager();
+    void initViewPager(const AttributeSet*);
     int getChildDrawingOrder(int childCount, int i)override;
     void onDetachedFromWindow()override;
     void setScrollState(int newState);
