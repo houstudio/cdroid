@@ -260,13 +260,8 @@ void NestedScrollView::initScrollView(const AttributeSet*atts) {
 
     mParentHelper= new NestedScrollingParentHelper(this);
     mChildHelper = new NestedScrollingChildHelper(this);
-    if(atts==nullptr){
-        mEdgeGlowTop = new EdgeEffect(mContext);
-        mEdgeGlowBottom = new EdgeEffect(mContext);
-    }else{
-        mEdgeGlowTop = new EdgeEffect(mContext,*atts);
-        mEdgeGlowBottom = new EdgeEffect(mContext,*atts);
-    }
+    mEdgeGlowTop = new EdgeEffect(mContext,atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext,atts);
     setNestedScrollingEnabled(true); 
 }
 

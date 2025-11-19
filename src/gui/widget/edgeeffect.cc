@@ -31,8 +31,11 @@ constexpr float EdgeEffect::PULL_GLOW_BEGIN;
 constexpr int EdgeEffect::MIN_VELOCITY;
 constexpr int EdgeEffect::MAX_VELOCITY;
 
-EdgeEffect::EdgeEffect(Context* context){
-    mInterpolator = new DecelerateInterpolator();
+EdgeEffect::EdgeEffect(Context* context):EdgeEffect(context,nullptr){
+}
+
+EdgeEffect::EdgeEffect(Context* context,const AttributeSet* attrs){
+    mInterpolator = DecelerateInterpolator::Instance;
     mDisplacement = 0.5f;
     mBounds.set(0,0,0,0);
     mPullDistance = 0;
@@ -48,15 +51,12 @@ EdgeEffect::EdgeEffect(Context* context){
     mDuration = PULL_DECAY_TIME;
     mDistance = 0;
     mVelocity = 0.f;
-}
-
-EdgeEffect::EdgeEffect(Context* context,const AttributeSet& attrs)
-    :EdgeEffect(context){
-    mColor = attrs.getColor("colorEdgeEffect", 0xff666666);
+    if(attrs != nullptr){
+        mColor = attrs->getColor("colorEdgeEffect", 0xff666666);
+    }
 }
 
 EdgeEffect::~EdgeEffect(){
-    delete mInterpolator;
 }
 
 void EdgeEffect::setSize(int width, int height){

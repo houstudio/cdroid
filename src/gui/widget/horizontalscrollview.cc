@@ -106,13 +106,8 @@ void HorizontalScrollView::initScrollView(const AttributeSet*atts) {
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mLastScroll = 0;
-    if(atts==nullptr){
-        mEdgeGlowLeft = new EdgeEffect(mContext);
-        mEdgeGlowRight= new EdgeEffect(mContext);
-    }else{
-        mEdgeGlowLeft = new EdgeEffect(mContext,*atts);
-        mEdgeGlowRight= new EdgeEffect(mContext,*atts);
-    }
+    mEdgeGlowLeft = new EdgeEffect(mContext,atts);
+    mEdgeGlowRight= new EdgeEffect(mContext,atts);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();
