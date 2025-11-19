@@ -67,7 +67,7 @@ private:
     int mResOutColor;
     int mClickColor;
 
-    static HolographicHelper* sHolographicHelper;
+    static std::shared_ptr<HolographicHelper> sHolographicHelper;
     ImageView* mHighlight;
     ImageView* mClickFeedback;
     bool mClickFeedbackIsValid = false;

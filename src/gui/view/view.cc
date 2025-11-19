@@ -4515,7 +4515,7 @@ void View::getHitRect(Rect& outRect){
     }
 }
 
-bool View::pointInView(int localX,int localY, int slop) {
+bool View::pointInView(int localX,int localY, int slop) const{
     return localX >= -slop && localY >= -slop && localX < (mRight-mLeft + slop) &&
             localY < (mBottom-mTop + slop);
 }

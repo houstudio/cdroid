@@ -162,8 +162,8 @@ int AdapterViewAnimator::modulo(int pos, int size) {
 View* AdapterViewAnimator::getViewAtRelativeIndex(int relativeIndex){
     if ((relativeIndex >= 0) && (relativeIndex <= getNumActiveViews() - 1) && (mAdapter != nullptr)) {
         int i = modulo(mCurrentWindowStartUnbounded + relativeIndex, getWindowSize());
-        auto it=mViewsMap.find(i);
-        if (it!=mViewsMap.end()) {
+        auto it = mViewsMap.find(i);
+        if (it != mViewsMap.end()) {
             return it->second->view;
         }
     }
@@ -281,7 +281,7 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
     // at the extremities of the list, eg. where newWindowStartUnbounded < 0 or
     // newWindowEndUnbounded > adapterCount - 1
     for (auto vm : mViewsMap) {
-        int index=vm.first;
+        const int index = vm.first;
         bool remove = false;
         if (!wrap && (index < rangeStart || index > rangeEnd)) {
             remove = true;
@@ -304,15 +304,15 @@ void AdapterViewAnimator::showOnly(int childIndex, bool animate) {
         // Run through the indices in the new range
         for (int i = newWindowStart; i <= newWindowEnd; i++) {
 
-            int index = modulo(i, getWindowSize());
+            const int index = modulo(i, getWindowSize());
             int oldRelativeIndex;
-            auto it=mViewsMap.find(index);
-            if (it!=mViewsMap.end()) {
+            auto it = mViewsMap.find(index);
+            if (it != mViewsMap.end()) {
                 oldRelativeIndex = it->second->relativeIndex;
             } else {
                 oldRelativeIndex = -1;
             }
-            int newRelativeIndex = i - newWindowStartUnbounded;
+            const int newRelativeIndex = i - newWindowStartUnbounded;
 
             // If this item is in the current window, great, we just need to apply
             // the transform for it's new relative position in the window, and animate
@@ -398,7 +398,7 @@ bool AdapterViewAnimator::onTouchEvent(MotionEvent& ev){
     View* v = nullptr;
     switch (action) {
     case MotionEvent::ACTION_DOWN:
-        if ((v=getCurrentView())!=nullptr) {
+        if ((v = getCurrentView())!=nullptr) {
             if (isTransformedTouchPointInView(ev.getX(), ev.getY(), *v, nullptr)) {
                 mTouchMode = TOUCH_MODE_DOWN_IN_CURRENT_VIEW;
                 postDelayed(mPendingCheckForTap, ViewConfiguration::getTapTimeout());

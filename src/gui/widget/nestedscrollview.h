@@ -65,7 +65,7 @@ private:
 private:
     void initScrollView();
     bool canScroll();
-    bool inChild(int x, int y);
+    bool inChild(int x, int y)const;
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
@@ -107,15 +107,15 @@ public:
     ~NestedScrollView()override;
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll(int type);
-    bool hasNestedScrollingParent(int type);
+    bool hasNestedScrollingParent(int type)const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[], int type);
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[],int type);
     void setNestedScrollingEnabled(bool enabled);
-    bool isNestedScrollingEnabled();
+    bool isNestedScrollingEnabled()const;
     bool startNestedScroll(int axes);
     void stopNestedScroll();
-    bool hasNestedScrollingParent();
+    bool hasNestedScrollingParent()const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[])override;
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[])override;

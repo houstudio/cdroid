@@ -42,7 +42,7 @@ private :
    bool mIsNestedScrollingEnabled;
    int  mTempNestedScrollConsumed[2];
 private:
-    ViewGroup* getNestedScrollingParentForType(int type);
+    ViewGroup* getNestedScrollingParentForType(int type)const;
     void setNestedScrollingParentForType(int type, ViewGroup* p);
     bool dispatchNestedScrollInternal(int dxConsumed, int dyConsumed,int dxUnconsumed,
             int dyUnconsumed,int* offsetInWindow,int type, int*consumed);
@@ -50,9 +50,9 @@ public:
     NestedScrollingChildHelper(View* view);
     void setNestedScrollingEnabled(bool enabled);
 
-    bool isNestedScrollingEnabled();
-    bool hasNestedScrollingParent();
-    bool hasNestedScrollingParent(int type);
+    bool isNestedScrollingEnabled()const;
+    bool hasNestedScrollingParent()const;
+    bool hasNestedScrollingParent(int type)const;
     bool startNestedScroll( int axes);
     bool startNestedScroll( int axes, int type);
     void stopNestedScroll();
