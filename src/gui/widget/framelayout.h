@@ -45,10 +45,10 @@ private:
     int mForegroundPaddingBottom;
     std::vector<View*>mMatchParentChildren;
 protected:
-    int getPaddingLeftWithForeground();
-    int getPaddingRightWithForeground();
-    int getPaddingTopWithForeground();
-    int getPaddingBottomWithForeground();
+    int getPaddingLeftWithForeground()const;
+    int getPaddingRightWithForeground()const;
+    int getPaddingTopWithForeground()const;
+    int getPaddingBottomWithForeground()const;
 
     LayoutParams* generateDefaultLayoutParams()const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;

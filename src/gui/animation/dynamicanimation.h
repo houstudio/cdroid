@@ -95,7 +95,7 @@ public:
     DynamicAnimation(FloatValueHolder* floatValueHolder);
 
     DynamicAnimation(void* object,const FloatProperty* property);
-
+    virtual ~DynamicAnimation();
     DynamicAnimation& setStartValue(float startValue);
     virtual DynamicAnimation& setStartVelocity(float startVelocity);
 

@@ -66,6 +66,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
     mDensity = Drawable::resolveDensity(mState->mDensity);
     mRipple  = nullptr;
     mBackground = nullptr;
+    mHasPending = false;
     mRippleActive   = false;
     mOverrideBounds = false;
     if (mState->mChildren.size()) {
@@ -86,6 +87,10 @@ RippleDrawable::RippleDrawable(const ColorStateList* color,Drawable* content,Dra
     ensurePadding();
     refreshPadding();
     updateLocalState();
+}
+
+RippleDrawable::~RippleDrawable(){
+    pruneRipples();
 }
 
 void RippleDrawable::jumpToCurrentState(){
@@ -489,91 +494,18 @@ void RippleDrawable::enterPatternedBackgroundAnimation(bool focused, bool hovere
 
 void RippleDrawable::startBackgroundAnimation() {
     mRunBackgroundAnimation = false;
-    /*if (Looper.myLooper() == null) {
-        Log.w(TAG, "Thread doesn't have a looper. Skipping animation.");
+    /*if (Looper::myLooper() == nullptr) {
+        LOGW("Thread doesn't have a looper. Skipping animation.");
         return;
     }*/
     mBackgroundAnimation = ValueAnimator::ofFloat({mBackgroundOpacity, mTargetBackgroundOpacity});
-    /*mBackgroundAnimation->setInterpolator(LINEAR_INTERPOLATOR);
+    mBackgroundAnimation->setInterpolator(LinearInterpolator::Instance);
     mBackgroundAnimation->setDuration(BACKGROUND_OPACITY_DURATION);
-    mBackgroundAnimation.addUpdateListener(update -> {
-        mBackgroundOpacity = (float) update.getAnimatedValue();
+    mBackgroundAnimation->addUpdateListener([this](ValueAnimator&anim){
+        mBackgroundOpacity = GET_VARIANT(anim.getAnimatedValue(),float);
         invalidateSelf(false);
-    });*/
+    });
     mBackgroundAnimation->start();
-}
-
-void RippleDrawable::drawPatterned(Canvas& canvas) {
-#if 0
-    Rect bounds = mHotspotBounds;
-    canvas.save();//Canvas.CLIP_SAVE_FLAG);
-    bool useCanvasProps = !mForceSoftware;
-    if (isBounded()) {
-	canvas.rectangle(getDirtyBounds());
-        canvas.clip();
-    }
-    float x, y, cx, cy, w, h;
-    bool addRipple = mAddRipple;
-    cx = bounds.centerX();
-    cy = bounds.centerY();
-    bool shouldExit = mExitingAnimation;
-    mExitingAnimation = false;
-    mAddRipple = false;
-    if (mRunningAnimations.size() > 0 && !addRipple) {
-        // update paint when view is invalidated
-        updateRipplePaint();
-    }
-    drawContent(canvas);
-    drawPatternedBackground(canvas, cx, cy);
-    if (addRipple && mRunningAnimations.size() <= MAX_RIPPLES) {
-        if (mHasPending) {
-            x = mPendingX;
-            y = mPendingY;
-            mHasPending = false;
-        } else {
-            x = bounds.exactCenterX();
-            y = bounds.exactCenterY();
-        }
-        h = bounds.height();
-        w = bounds.width();
-        RippleAnimationSession.AnimationProperties<Float, Paint> properties =
-                createAnimationProperties(x, y, cx, cy, w, h);
-        mRunningAnimations.add(new RippleAnimationSession(properties, !useCanvasProps)
-                .setOnAnimationUpdated(() -> invalidateSelf(false))
-                .setOnSessionEnd(session -> {
-                    mRunningAnimations.remove(session);
-                })
-                .setForceSoftwareAnimation(!useCanvasProps)
-                .enter(canvas));
-    }
-    if (shouldExit) {
-        for (int i = 0; i < mRunningAnimations.size(); i++) {
-            RippleAnimationSession s = mRunningAnimations.get(i);
-            s.exit(canvas);
-        }
-    }
-    for (int i = 0; i < mRunningAnimations.size(); i++) {
-        RippleAnimationSession s = mRunningAnimations.get(i);
-        if (!canvas.isHardwareAccelerated()) {
-            Log.e(TAG, "The RippleDrawable.STYLE_PATTERNED animation is not supported for a "
-                    + "non-hardware accelerated Canvas. Skipping animation.");
-            break;
-        } else if (useCanvasProps) {
-            RippleAnimationSession.AnimationProperties<CanvasProperty<Float>,
-                    CanvasProperty<Paint>>
-                    p = s.getCanvasProperties();
-            RecordingCanvas can = (RecordingCanvas) canvas;
-            can.drawRipple(p.getX(), p.getY(), p.getMaxRadius(), p.getPaint(),
-                    p.getProgress(), p.getNoisePhase(), p.getColor(), p.getShader());
-        } else {
-            RippleAnimationSession.AnimationProperties<Float, Paint> p =
-                    s.getProperties();
-            float radius = p.getMaxRadius();
-            canvas.drawCircle(p.getX(), p.getY(), radius, p.getPaint());
-        }
-    }
-    canvas.restoreToCount(saveCount);
-#endif
 }
 
 Rect RippleDrawable::getDirtyBounds() const{
@@ -583,8 +515,8 @@ Rect RippleDrawable::getDirtyBounds() const{
         dirtyBounds = drawingBounds;
         drawingBounds.set(0,0,0,0);
 
-        int cX = (int) mHotspotBounds.centerX();
-        int cY = (int) mHotspotBounds.centerY();
+        const int cX = (int) mHotspotBounds.centerX();
+        const int cY = (int) mHotspotBounds.centerY();
         Rect rippleBounds;
 
         const std::vector<RippleForeground*>& activeRipples = mExitingRipples;

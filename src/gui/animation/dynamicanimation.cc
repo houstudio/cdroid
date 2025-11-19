@@ -64,10 +64,11 @@ public:
         return ((FloatValueHolder*)obj)->getValue();
     }
 };
+
 static  FloatValueHolderProperty FLOATVALUEHOLDER;
 
 DynamicAnimation::DynamicAnimation(FloatValueHolder* floatValueHolder) {
-    mTarget = nullptr;
+    mTarget = floatValueHolder;
     mProperty = &FLOATVALUEHOLDER;
     mMinVisibleChange = MIN_VISIBLE_CHANGE_PIXELS;
 }
@@ -84,6 +85,9 @@ DynamicAnimation::DynamicAnimation(void* object,const FloatProperty* property) {
     } else {
         mMinVisibleChange = MIN_VISIBLE_CHANGE_PIXELS;
     }
+}
+
+DynamicAnimation::~DynamicAnimation(){
 }
 
 DynamicAnimation& DynamicAnimation::setStartValue(float startValue) {

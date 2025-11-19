@@ -38,7 +38,7 @@ protected:
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
     ~CheckedTextView()override;
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void toggle();
     bool isChecked()const;
     void setChecked(bool checked);

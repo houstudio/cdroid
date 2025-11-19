@@ -25,7 +25,7 @@ namespace cdroid{
 class Checkable{
 public:
     virtual ~Checkable()=default;
-#ifdef FUNCTION_AS_CHECKABLE
+#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
     CallbackBase <void,bool> setChecked;
     CallbackBase <bool> isChecked;
     CallbackBase <void> toggle;

@@ -63,7 +63,7 @@ public:
     int getCompoundPaddingLeft()const override;
     int getCompoundPaddingRight()const override;
     //inerited from Checkable
-#ifndef FUNCTION_AS_CHECKABLE
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void setChecked(bool checked)override;
     bool isChecked()const override;
     void toggle()override;

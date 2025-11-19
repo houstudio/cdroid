@@ -23,7 +23,8 @@
 namespace cdroid{
 
 class RippleDrawable:public LayerDrawable{
-public:
+private:
+    static constexpr int BACKGROUND_OPACITY_DURATION= 80;
     static constexpr int RADIUS_AUTO = -1;
     static constexpr int MASK_UNKNOWN = -1;
     static constexpr int MASK_NONE = 0;
@@ -92,14 +93,13 @@ private:
     void exitPatternedAnimation();
     void enterPatternedBackgroundAnimation(bool focused, bool hovered);
     void startBackgroundAnimation();
-    void drawPatterned(Canvas& canvas);
-    void drawPatternedBackground(Canvas& c, float cx, float cy);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
 public:
     RippleDrawable();
     RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask);
+    ~RippleDrawable()override;
     void jumpToCurrentState()override;
     int  getOpacity()override;
     bool setVisible(bool visible, bool restart)override;
