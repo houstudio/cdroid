@@ -239,7 +239,6 @@ void CompoundButton::onInitializeAccessibilityNodeInfoInternal(AccessibilityNode
 }
 
 void CompoundButton::doSetChecked(bool checked){
-    LOGD("%p checked=%d->%d",this,mChecked,checked);
     if (mChecked != checked) {
         mCheckedFromResource = false;
         mChecked = checked;

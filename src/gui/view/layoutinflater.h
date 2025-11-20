@@ -49,7 +49,6 @@ private:
     std::unordered_map<std::string,bool>mFilterMap;
     std::shared_ptr<FactoryMerger> mFactoryMerger;
     bool mFactorySet;
-    LayoutInflater(Context*ctx);
 private:
     static void consumeChildElements(XmlPullParser& parser);
     void advanceToRootNode(XmlPullParser&);
@@ -58,6 +57,7 @@ private:
     void parseInclude(XmlPullParser&parser, Context*,View*prent,const AttributeSet& attrs);
 protected:
     friend MenuInflater;
+    LayoutInflater(Context*ctx);
     View* createViewFromTag(View* parent,const std::string& name, Context* context,AttributeSet& attrs,bool ignoreThemeAttr);
     void rInflateChildren(XmlPullParser& parser, View* parent,AttributeSet& attrs,bool finishInflate);
     void rInflate(XmlPullParser& parser, View* parent, Context* context,AttributeSet& attrs, bool finishInflate);
@@ -102,9 +102,9 @@ public:
     View* createView(const std::string& name, const std::string& prefix,AttributeSet& attrs);
     View* createView(Context* viewContext, const std::string& name, const std::string& prefix,AttributeSet& attrs);
     View* tryCreateView(View* parent,const std::string& name, Context* context,AttributeSet& attr);
-    View* onCreateView(const std::string& name,AttributeSet& attrs);
-    View* onCreateView(View* parent, const std::string& name,AttributeSet& attrs);
-    View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
+    virtual View* onCreateView(const std::string& name,AttributeSet& attrs);
+    virtual View* onCreateView(View* parent, const std::string& name,AttributeSet& attrs);
+    virtual View* onCreateView(Context* viewContext, View* parent, const std::string& name,AttributeSet& attrs);
 };
 
 template<typename T>

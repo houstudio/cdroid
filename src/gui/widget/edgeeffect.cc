@@ -60,12 +60,12 @@ EdgeEffect::~EdgeEffect(){
 }
 
 void EdgeEffect::setSize(int width, int height){
-    float r = width * RADIUS_FACTOR / SIN;
-    float y = COS * r;
-    float h = r - y;
-    float oR = height * RADIUS_FACTOR / SIN;
-    float oy = COS * oR;
-    float oh = oR - oy;
+    const float r = width * RADIUS_FACTOR / SIN;
+    const float y = COS * r;
+    const float h = r - y;
+    const float oR = height * RADIUS_FACTOR / SIN;
+    const float oy = COS * oR;
+    const float oh = oR - oy;
     mWidth  = width;
     mHeight = height;
     mRadius = r;
