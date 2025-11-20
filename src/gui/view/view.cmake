@@ -11,6 +11,7 @@ SET(VIEW_SOURCES
     view/inputeventconsistencyverifier.cc
     view/keyevent.cc
     view/layoutinflater.cc
+    view/asyncinflater.cc
     view/layoutparams.cc
     view/motionevent.cc
     view/viewoutlineprovider.cc

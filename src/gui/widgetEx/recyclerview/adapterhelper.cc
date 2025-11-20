@@ -23,7 +23,8 @@ AdapterHelper::AdapterHelper(Callback callback)
    :AdapterHelper(callback, false){
 }
 
-AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler) {
+AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler)
+    :mUpdateOpPool(UpdateOp::POOL_SIZE){
     mCallback = callback;
     mDisableRecycler = disableRecycler;
     OpReorderer::Callback cbk;
@@ -31,12 +32,10 @@ AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler) {
 	std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
     cbk.recycleUpdateOp= std::bind(&AdapterHelper::recycleUpdateOp,this,std::placeholders::_1);
     mOpReorderer = new OpReorderer(cbk);
-    mUpdateOpPool = new Pools::SimplePool<UpdateOp>(UpdateOp::POOL_SIZE);
 }
 
 AdapterHelper::~AdapterHelper(){
     delete mOpReorderer;
-    delete mUpdateOpPool;
 }
 
 AdapterHelper& AdapterHelper::addUpdateOp(const std::vector<UpdateOp*>&ops) {
@@ -547,7 +546,7 @@ bool AdapterHelper::hasUpdates() {
 }
 
 AdapterHelper::UpdateOp* AdapterHelper::obtainUpdateOp(int cmd, int positionStart, int itemCount, Object* payload) {
-    UpdateOp* op = mUpdateOpPool->acquire();
+    UpdateOp* op = mUpdateOpPool.acquire();
     if (op == nullptr) {
         op = new UpdateOp(cmd, positionStart, itemCount, payload);
     } else {
@@ -562,7 +561,7 @@ AdapterHelper::UpdateOp* AdapterHelper::obtainUpdateOp(int cmd, int positionStar
 void AdapterHelper::recycleUpdateOp(UpdateOp* op) {
     if (!mDisableRecycler) {
         op->payload = nullptr;
-        mUpdateOpPool->release(op);
+        mUpdateOpPool.release(op);
     }
 }
 

@@ -52,7 +52,7 @@ public:
 	    std::function<void(RecyclerView::ViewHolder*)>unused;//(RecyclerView::ViewHolder* holder);
     };
 private:
-    Pools::SimplePool<InfoRecord>* mPool;
+    Pools::SimplePool<InfoRecord> mPool;
 protected:
     std::unordered_map<RecyclerView::ViewHolder*, InfoRecord*> mLayoutHolderMap;
     LongSparseArray<RecyclerView::ViewHolder*> mOldChangedHolders;
@@ -81,7 +81,7 @@ protected:
     void onDetach();
 public:
     ViewInfoStore();
-    ~ViewInfoStore();
+    virtual ~ViewInfoStore();
     void onViewDetached(RecyclerView::ViewHolder* viewHolder);
 };
 }/*endof namespace*/

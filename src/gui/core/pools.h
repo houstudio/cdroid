@@ -11,9 +11,9 @@ public:
     template<typename T>
     class Pool {
     public:
-        virtual ~Pool()=default;
-        virtual T* acquire()=0;
-        virtual bool release(T* instance)=0;
+        virtual ~Pool() = default;
+        virtual T* acquire() = 0;
+        virtual bool release(T* instance) = 0;
     };
 public:
     template<typename T>
@@ -22,11 +22,10 @@ public:
         int mPoolSize;
         std::vector<T*> mPool;
     public:
-        SimplePool(int maxPoolSize) {
-            mPool.resize(maxPoolSize);
-            mPoolSize = 0;
+        SimplePool(int maxPoolSize):mPoolSize(0){
+            mPool.resize(maxPoolSize,nullptr);
         }
-        ~SimplePool()override{
+        ~SimplePool() override{
             for(auto elem:mPool)
                 delete elem;
             mPool.clear();
