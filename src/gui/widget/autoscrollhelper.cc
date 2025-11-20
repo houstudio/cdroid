@@ -23,12 +23,12 @@ AutoScrollHelper::AutoScrollHelper(View* target) {
     setRampDownDuration(DEFAULT_RAMP_DOWN_DURATION);
 
     mScroller =new ClampedScroller();
-    mEdgeInterpolator = new AccelerateInterpolator();
+    mEdgeInterpolator = AccelerateInterpolator::Instance;
 }
 
 AutoScrollHelper::~AutoScrollHelper(){
     delete mScroller;
-    delete mEdgeInterpolator;
+    //delete mEdgeInterpolator;
 }
 
 AutoScrollHelper& AutoScrollHelper::setEnabled(bool enabled) {

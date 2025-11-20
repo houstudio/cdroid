@@ -19,15 +19,26 @@
 #define __FILTERABLE_H__
 #include <functional>
 #include <string>
+#include <core/handler.h>
 namespace cdroid{
 
 class Filter{
 public:
     using FilterListener = std::function<void(int)>;//void onFilterComplete(int count)=0;
+    using Delayer = std::function<int(const std::string)>;
+private:
+    static constexpr int FILTER_TOKEN = 0xD0D0F00D;
+    static constexpr int FINISH_TOKEN = 0xDEADBEEF;
+    class RequestHandler;
+    class ResultsHandler;
+    class RequestArguments;
+    Handler* mThreadHandler;
+    Handler* mResultHandler;
+    Delayer mDelayer;
 protected:
     class FilterResults{
     public:
-        void*values;
+        std::vector<void*>values;
         int count;
     }; 
 protected:
@@ -35,8 +46,32 @@ protected:
     virtual void publishResults(const std::string& constraint, FilterResults results) = 0;
 public:
     Filter();
+    virtual ~Filter();
+    void setDelayer(const Delayer& delayer);
     void filter(const std::string& constraint);
     void filter(const std::string& constraint,const FilterListener& listener);
+};
+
+class Filter::RequestHandler:public Handler{
+public:
+    Filter*mFilter;
+public:
+    RequestHandler(Looper*looper);
+    void handleMessage(Message&msg)override;
+};
+
+class Filter::ResultsHandler:public Handler{
+public:
+    Filter*mFilter;
+public:
+    void handleMessage(Message&msg)override;
+};
+
+class Filter::RequestArguments{
+public:
+    std::string constraint;
+    FilterListener listener;
+    FilterResults results;
 };
 
 class Filterable {

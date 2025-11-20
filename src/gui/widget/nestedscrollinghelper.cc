@@ -62,15 +62,15 @@ void NestedScrollingChildHelper::setNestedScrollingEnabled(bool enabled) {
     mIsNestedScrollingEnabled = enabled;
 }
 
-bool NestedScrollingChildHelper::isNestedScrollingEnabled() {
+bool NestedScrollingChildHelper::isNestedScrollingEnabled() const{
     return mIsNestedScrollingEnabled;
 }
 
-bool NestedScrollingChildHelper::hasNestedScrollingParent() {
+bool NestedScrollingChildHelper::hasNestedScrollingParent() const{
     return hasNestedScrollingParent(View::TYPE_TOUCH);
 }
 
-bool NestedScrollingChildHelper::hasNestedScrollingParent( int type) {
+bool NestedScrollingChildHelper::hasNestedScrollingParent( int type) const{
     return getNestedScrollingParentForType(type) != nullptr;
 }
 
@@ -238,7 +238,7 @@ void NestedScrollingChildHelper::onStopNestedScroll( View* child) {
     mView->stopNestedScroll();
 }
 
-ViewGroup* NestedScrollingChildHelper::getNestedScrollingParentForType(int type) {
+ViewGroup* NestedScrollingChildHelper::getNestedScrollingParentForType(int type) const{
     switch (type) {
     case View::TYPE_TOUCH:    return mNestedScrollingParentTouch;
     case View::TYPE_NON_TOUCH:return mNestedScrollingParentNonTouch;

@@ -4515,7 +4515,7 @@ void View::getHitRect(Rect& outRect){
     }
 }
 
-bool View::pointInView(int localX,int localY, int slop) {
+bool View::pointInView(int localX,int localY, int slop) const{
     return localX >= -slop && localY >= -slop && localX < (mRight-mLeft + slop) &&
             localY < (mBottom-mTop + slop);
 }
@@ -9192,8 +9192,8 @@ int View::resolveSize(int size, int measureSpec){
 }
 
 int View::resolveSizeAndState(int size, int measureSpec, int childMeasuredState){
-    int specMode = MeasureSpec::getMode(measureSpec);
-    int specSize = MeasureSpec::getSize(measureSpec);
+    const int specMode = MeasureSpec::getMode(measureSpec);
+    const int specSize = MeasureSpec::getSize(measureSpec);
     int result;
     switch (specMode) {
     case MeasureSpec::AT_MOST:

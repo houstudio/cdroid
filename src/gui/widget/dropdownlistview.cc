@@ -59,7 +59,7 @@ bool DropDownListView::onHoverEvent(MotionEvent& ev){
     }
 
     // Allow the super class to handle hover state management first.
-    bool handled = ListView::onHoverEvent(ev);
+    const bool handled = ListView::onHoverEvent(ev);
 
     if ((action == MotionEvent::ACTION_HOVER_ENTER) || (action == MotionEvent::ACTION_HOVER_MOVE)) {
         const int position = pointToPosition((int) ev.getX(), (int) ev.getY());

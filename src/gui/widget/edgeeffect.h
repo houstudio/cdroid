@@ -119,7 +119,7 @@ private:
     int64_t mStartTime;
     float mDuration;
 
-    Interpolator* mInterpolator;
+    const Interpolator* mInterpolator;
 
     static constexpr int STATE_IDLE = 0;
     static constexpr int STATE_PULL = 1;
@@ -152,7 +152,7 @@ private:
     float dampStretchVector(float normalizedVec)const;
 public:
     EdgeEffect(Context* context);
-    EdgeEffect(Context* context,const AttributeSet& attrs);
+    EdgeEffect(Context* context,const AttributeSet* attrs);
     virtual ~EdgeEffect();
     void setSize(int width, int height);
     bool isFinished()const;

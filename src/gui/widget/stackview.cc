@@ -21,7 +21,8 @@ namespace cdroid{
 
 DECLARE_WIDGET(StackView);
 
-StackView::HolographicHelper* StackView::sHolographicHelper;
+std::shared_ptr<StackView::HolographicHelper> StackView::sHolographicHelper;
+
 StackView::StackView(Context* context,const  AttributeSet& attrs)
     :AdapterViewAnimator(context, attrs){
 
@@ -52,7 +53,7 @@ void StackView::initStackView() {
     mStackSlider = new StackSlider(this);
 
     if (sHolographicHelper == nullptr) {
-        sHolographicHelper = new HolographicHelper(mContext);
+        sHolographicHelper = std::make_shared<HolographicHelper>(mContext);
     }
     setClipChildren(false);
     setClipToPadding(false);

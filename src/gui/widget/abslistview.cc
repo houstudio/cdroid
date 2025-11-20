@@ -54,8 +54,8 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     mOnScrollListener.onScroll = nullptr;
     mOnScrollListener.onScrollStateChanged = nullptr;
 
-    mEdgeGlowBottom = new EdgeEffect(mContext,atts);
-    mEdgeGlowTop = new EdgeEffect(mContext,atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext,&atts);
+    mEdgeGlowTop = new EdgeEffect(mContext,&atts);
 
     mPendingCheckForLongPress = new CheckForLongPress(this);
     mPendingCheckForTap = new CheckForTap(this);;

@@ -32,6 +32,10 @@ private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float MAX_SCROLL_FACTOR = 0.5f;
     static constexpr int INVALID_POINTER = -1;
+    static constexpr float SCROLL_FRICTION = 0.015f;
+    static constexpr float INFLEXION = 0.35f;
+    static constexpr float DECELERATION_RATE = 2.3582018154259448f;//(float) (Math.log(0.78) / Math.log(0.9));
+    static constexpr float FLING_DESTRENTCH_FACTOR = 4.f;
 private:
     int64_t mLastScroll;
  
@@ -41,7 +45,7 @@ private:
     EdgeEffect* mEdgeGlowBottom;
 	
     int mLastMotionY;
-	
+    float mPhysicalCoeff;
     bool mIsLayoutDirty;
     bool mIsLaidOut;
     View* mChildToScrollTo;
@@ -63,12 +67,14 @@ private:
     float mVerticalScrollFactor;
     OnScrollChangeListener mOnScrollChangeListener;
 private:
-    void initScrollView();
+    void initScrollView(const AttributeSet*attrs);
     bool canScroll();
-    bool inChild(int x, int y);
+    bool inChild(int x, int y)const;
     void initOrResetVelocityTracker();
     void initVelocityTrackerIfNotExists();
     void recycleVelocityTracker();
+    bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity) const;
+    float getSplineFlingDistance(int velocity) const;
     bool edgeEffectFling(int velocityY);
     bool stopGlowAnimations(MotionEvent& e);
     void onSecondaryPointerUp(MotionEvent& ev);
@@ -107,15 +113,15 @@ public:
     ~NestedScrollView()override;
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll(int type);
-    bool hasNestedScrollingParent(int type);
+    bool hasNestedScrollingParent(int type)const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[], int type);
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[],int type);
     void setNestedScrollingEnabled(bool enabled);
-    bool isNestedScrollingEnabled();
+    bool isNestedScrollingEnabled()const;
     bool startNestedScroll(int axes);
     void stopNestedScroll();
-    bool hasNestedScrollingParent();
+    bool hasNestedScrollingParent()const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[])override;
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[])override;

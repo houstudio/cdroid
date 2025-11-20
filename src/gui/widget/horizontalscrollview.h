@@ -55,7 +55,7 @@ private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float MAX_SCROLL_FACTOR =0.5f;
     static constexpr float FLING_DESTRETCH_FACTOR = 4.f;
-    void initScrollView();
+    void initScrollView(const AttributeSet*);
     bool canScroll();
     bool inChild(int x, int y);
     void initOrResetVelocityTracker();

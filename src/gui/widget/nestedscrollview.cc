@@ -25,11 +25,12 @@ namespace cdroid{
 DECLARE_WIDGET2(NestedScrollView,"cdroid:attr/scrollViewStyle")
 
 NestedScrollView::NestedScrollView(int w,int h):FrameLayout(w,h){
-    initScrollView();
+    initScrollView(nullptr);
 }
 
 NestedScrollView::NestedScrollView(Context* context,const AttributeSet&attrs):FrameLayout(context,attrs){
-    initScrollView();
+    initScrollView(&attrs);
+    setFillViewport(attrs.getBoolean("fillViewport",false));
 }
 
 NestedScrollView::~NestedScrollView(){
@@ -38,6 +39,7 @@ NestedScrollView::~NestedScrollView(){
     delete mChildHelper;
     delete mEdgeGlowTop;
     delete mEdgeGlowBottom;
+    recycleVelocityTracker();
 }
 
 bool NestedScrollView::startNestedScroll(int axes, int type){
@@ -48,7 +50,7 @@ void NestedScrollView::stopNestedScroll(int type){
     mChildHelper->stopNestedScroll(type);
 }
 
-bool NestedScrollView::hasNestedScrollingParent(int type) {
+bool NestedScrollView::hasNestedScrollingParent(int type) const{
     return mChildHelper->hasNestedScrollingParent(type);
 }
 
@@ -66,7 +68,7 @@ void NestedScrollView::setNestedScrollingEnabled(bool enabled) {
     mChildHelper->setNestedScrollingEnabled(enabled);
 }
 
-bool NestedScrollView::isNestedScrollingEnabled() {
+bool NestedScrollView::isNestedScrollingEnabled() const{
     return mChildHelper->isNestedScrollingEnabled();
 }
 
@@ -78,7 +80,7 @@ void NestedScrollView::stopNestedScroll() {
     stopNestedScroll(View::TYPE_TOUCH);
 }
 
-bool NestedScrollView::hasNestedScrollingParent() {
+bool NestedScrollView::hasNestedScrollingParent() const{
     return hasNestedScrollingParent(View::TYPE_TOUCH);
 }
 
@@ -226,7 +228,7 @@ int NestedScrollView::getMaxScrollAmount() {
     return (int) (MAX_SCROLL_FACTOR * getHeight());
 }
 
-void NestedScrollView::initScrollView() {
+void NestedScrollView::initScrollView(const AttributeSet*atts) {
     mScroller = new OverScroller(mContext);
     setFocusable(true);
     mFillViewport  = true;
@@ -242,6 +244,11 @@ void NestedScrollView::initScrollView() {
     mScrollOffset[1] = 0;
     mScrollConsumed[0] = 0;
     mScrollConsumed[1] = 0;
+    const float ppi = mContext->getDisplayMetrics().density * 160.0f;
+    mPhysicalCoeff = 9.80665f//SensorManager::GRAVITY_EARTH // g (m/s^2)
+            * 39.37f // inch/meter
+            * ppi
+            * 0.84f; // look and feel tuning
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     ViewConfiguration& configuration = ViewConfiguration::get(getContext());
@@ -253,8 +260,8 @@ void NestedScrollView::initScrollView() {
 
     mParentHelper= new NestedScrollingParentHelper(this);
     mChildHelper = new NestedScrollingChildHelper(this);
-    mEdgeGlowTop = new EdgeEffect(mContext);
-    mEdgeGlowBottom = new EdgeEffect(mContext);
+    mEdgeGlowTop = new EdgeEffect(mContext,atts);
+    mEdgeGlowBottom = new EdgeEffect(mContext,atts);
     setNestedScrollingEnabled(true); 
 }
 
@@ -374,7 +381,7 @@ void NestedScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         return;
     }
 
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
     if (heightMode == MeasureSpec::UNSPECIFIED) {
         return;
     }
@@ -383,15 +390,15 @@ void NestedScrollView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         View* child = getChildAt(0);
 	NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
 
-        int childSize = child->getMeasuredHeight();
-        int parentSpace = getMeasuredHeight() - getPaddingTop()
+        const int childSize = child->getMeasuredHeight();
+        const int parentSpace = getMeasuredHeight() - getPaddingTop()
                 - getPaddingBottom() - lp->topMargin  - lp->bottomMargin;
 
         if (childSize < parentSpace) {
-            int childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
+            const int childWidthMeasureSpec = getChildMeasureSpec(widthMeasureSpec,
                     getPaddingLeft() + getPaddingRight() + lp->leftMargin + lp->rightMargin,
                     lp->width);
-            int childHeightMeasureSpec =
+            const int childHeightMeasureSpec =
                     MeasureSpec::makeMeasureSpec(parentSpace, MeasureSpec::EXACTLY);
             child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
@@ -453,9 +460,9 @@ bool NestedScrollView::executeKeyEvent(KeyEvent& event) {
     return handled;
 }
 
-bool NestedScrollView::inChild(int x, int y) {
+bool NestedScrollView::inChild(int x, int y) const{
     if (getChildCount() > 0) {
-        int scrollY = getScrollY();
+        const int scrollY = getScrollY();
         View* child = getChildAt(0);
         return !(y < child->getTop() - scrollY
                 || y >= child->getBottom() - scrollY
@@ -505,7 +512,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
     * state and he is moving his finger.  We want to intercept this
     * motion.
     */
-    int action = ev.getAction();
+    const int action = ev.getAction();
     if ((action == MotionEvent::ACTION_MOVE) && (mIsBeingDragged)) {
         return true;
     }
@@ -521,7 +528,7 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
             * Locally do absolute value. mLastMotionY is set to the y value
             * of the down event.
             */
-            int activePointerId = mActivePointerId;
+            const int activePointerId = mActivePointerId;
             if (activePointerId == INVALID_POINTER) {
                 // If we don't have a valid id, the touch down wasn't on content.
                 break;
@@ -533,8 +540,8 @@ bool NestedScrollView::onInterceptTouchEvent(MotionEvent& ev) {
                 break;
             }
 
-            int y = (int) ev.getY(pointerIndex);
-            int yDiff = std::abs(y - mLastMotionY);
+            const int y = (int) ev.getY(pointerIndex);
+            const int yDiff = std::abs(y - mLastMotionY);
             if (yDiff > mTouchSlop
                     && (getNestedScrollAxes() & View::SCROLL_AXIS_VERTICAL) == 0) {
                 mIsBeingDragged = true;
@@ -757,12 +764,39 @@ bool NestedScrollView::onTouchEvent(MotionEvent& ev) {
     return true;
 }
 
+bool NestedScrollView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) const{
+    if (velocity > 0) {
+        return true;
+    }
+    const float distance = edgeEffect->getDistance() * getHeight();
+
+    // This is flinging without the spring, so let's see if it will fling past the overscroll
+    const float flingDistance = getSplineFlingDistance(-velocity);
+
+    return flingDistance < distance;
+}
+
+float NestedScrollView::getSplineFlingDistance(int velocity) const{
+    const double l = std::log(INFLEXION * std::abs(velocity) / (SCROLL_FRICTION * mPhysicalCoeff));
+    const double decelMinusOne = DECELERATION_RATE - 1.0;
+    return (float) (SCROLL_FRICTION * mPhysicalCoeff
+            * std::exp(DECELERATION_RATE / decelMinusOne * l));
+}
+
 bool NestedScrollView::edgeEffectFling(int velocityY) {
     bool consumed = true;
     if (mEdgeGlowTop->getDistance() != 0) {
-        mEdgeGlowTop->onAbsorb(velocityY);
+        if(shouldAbsorb(mEdgeGlowTop,velocityY)){
+            mEdgeGlowTop->onAbsorb(velocityY);
+        }else{
+            fling(-velocityY);
+        }
     } else if (mEdgeGlowBottom->getDistance() != 0) {
-        mEdgeGlowBottom->onAbsorb(-velocityY);
+        if(shouldAbsorb(mEdgeGlowBottom,-velocityY)){
+            mEdgeGlowBottom->onAbsorb(-velocityY);
+        }else{
+            fling(-velocityY);
+        }
     } else {
         consumed = false;
     }
@@ -833,7 +867,7 @@ float NestedScrollView::getVerticalScrollFactorCompat() {
             throw std::runtime_error("Expected theme to define listPreferredItemHeight.");
         }
         mVerticalScrollFactor = outValue.getDimension(context->getResources().getDisplayMetrics());*/
-	mVerticalScrollFactor=1.f;
+        mVerticalScrollFactor=1.f;
     }
     return mVerticalScrollFactor;
 }
@@ -844,14 +878,14 @@ void NestedScrollView::onOverScrolled(int scrollX, int scrollY, bool clampedX, b
 
 bool NestedScrollView::overScrollBy(int deltaX, int deltaY,int scrollX, int scrollY,
         int scrollRangeX, int scrollRangeY, int maxOverScrollX, int maxOverScrollY,  bool isTouchEvent) {
-    int overScrollMode = getOverScrollMode();
-    bool canScrollHorizontal =
+    const int overScrollMode = getOverScrollMode();
+    const bool canScrollHorizontal =
             computeHorizontalScrollRange() > computeHorizontalScrollExtent();
-    bool canScrollVertical =
+    const bool canScrollVertical =
             computeVerticalScrollRange() > computeVerticalScrollExtent();
-    bool overScrollHorizontal = overScrollMode == View::OVER_SCROLL_ALWAYS
+    const bool overScrollHorizontal = overScrollMode == View::OVER_SCROLL_ALWAYS
             || (overScrollMode == View::OVER_SCROLL_IF_CONTENT_SCROLLS && canScrollHorizontal);
-    bool overScrollVertical = overScrollMode == View::OVER_SCROLL_ALWAYS
+    const bool overScrollVertical = overScrollMode == View::OVER_SCROLL_ALWAYS
             || (overScrollMode == View::OVER_SCROLL_IF_CONTENT_SCROLLS && canScrollVertical);
 
     int newScrollX = scrollX + deltaX;
@@ -865,10 +899,10 @@ bool NestedScrollView::overScrollBy(int deltaX, int deltaY,int scrollX, int scro
     }
 
     // Clamp values if at the limits and record
-    int left = -maxOverScrollX;
-    int right = maxOverScrollX + scrollRangeX;
-    int top = -maxOverScrollY;
-    int bottom = maxOverScrollY + scrollRangeY;
+    const int left = -maxOverScrollX;
+    const int right = maxOverScrollX + scrollRangeX;
+    const int top = -maxOverScrollY;
+    const int bottom = maxOverScrollY + scrollRangeY;
 
     bool clampedX = false;
     if (newScrollX > right) {
@@ -902,8 +936,8 @@ int NestedScrollView::getScrollRange() {
     if (getChildCount() > 0) {
         View* child = getChildAt(0);
         NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-        int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
-        int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
+        const int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
+        const int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
         scrollRange = std::max(0, childSize - parentSpace);
     }
     return scrollRange;
@@ -926,8 +960,8 @@ View* NestedScrollView::findFocusableViewInBounds(bool topFocus, int top, int bo
     int count = focusables.size();
     for (int i = 0; i < count; i++) {
         View* view = focusables.at(i);
-        int viewTop = view->getTop();
-        int viewBottom = view->getBottom();
+        const int viewTop = view->getTop();
+        const int viewBottom = view->getBottom();
 
         if (top < viewBottom && viewTop < bottom) {
             /*
@@ -975,12 +1009,12 @@ View* NestedScrollView::findFocusableViewInBounds(bool topFocus, int top, int bo
 }
 
 bool NestedScrollView::pageScroll(int direction) {
-    bool down = direction == View::FOCUS_DOWN;
-    int height = getHeight();
+    const bool down = direction == View::FOCUS_DOWN;
+    const int height = getHeight();
 
     if (down) {
         mTempRect.top = getScrollY() + height;
-        int count = getChildCount();
+        const int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
             NestedScrollView::LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
@@ -1001,20 +1035,18 @@ bool NestedScrollView::pageScroll(int direction) {
 }
 
 bool NestedScrollView::fullScroll(int direction) {
-    bool down = direction == View::FOCUS_DOWN;
-    int height = getHeight();
+    const bool down = direction == View::FOCUS_DOWN;
+    const int height = getHeight();
 
     mTempRect.top = 0;
     mTempRect.height = height;
 
     if (down) {
-        int count = getChildCount();
+        const int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
             NestedScrollView::LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
-            //mTempRect.bottom = view->getBottom() + lp->bottomMargin + getPaddingBottom();
-            //mTempRect.top = mTempRect.bottom - height;
-	    mTempRect.top= view->getBottom() + lp->bottomMargin + getPaddingBottom() -height;
+	        mTempRect.top = view->getBottom() + lp->bottomMargin + getPaddingBottom() -height;
         }
     }
 
@@ -1024,10 +1056,10 @@ bool NestedScrollView::fullScroll(int direction) {
 bool NestedScrollView::scrollAndFocus(int direction, int top, int bottom) {
     bool handled = true;
 
-    int height = getHeight();
-    int containerTop = getScrollY();
-    int containerBottom = containerTop + height;
-    bool up = direction == View::FOCUS_UP;
+    const int height = getHeight();
+    const int containerTop = getScrollY();
+    const int containerBottom = containerTop + height;
+    const bool up = direction == View::FOCUS_UP;
 
     View* newFocused = findFocusableViewInBounds(up, top, bottom);
     if (newFocused == nullptr) {
@@ -1052,7 +1084,7 @@ bool NestedScrollView::arrowScroll(int direction) {
 
     View* nextFocused = FocusFinder::getInstance().findNextFocus(this, currentFocused, direction);
 
-    int maxJump = getMaxScrollAmount();
+    const int maxJump = getMaxScrollAmount();
 
     if (nextFocused != nullptr && isWithinDeltaOfScreen(nextFocused, maxJump, getHeight())) {
         nextFocused->getDrawingRect(mTempRect);
@@ -1070,8 +1102,8 @@ bool NestedScrollView::arrowScroll(int direction) {
             if (getChildCount() > 0) {
                 View* child = getChildAt(0);
                 NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-                int daBottom = child->getBottom() + lp->bottomMargin;
-                int screenBottom = getScrollY() + getHeight() - getPaddingBottom();
+                const int daBottom = child->getBottom() + lp->bottomMargin;
+                const int screenBottom = getScrollY() + getHeight() - getPaddingBottom();
                 scrollDelta = std::min(daBottom - screenBottom, maxJump);
             }
         }
@@ -1088,7 +1120,7 @@ bool NestedScrollView::arrowScroll(int direction) {
         // (also, need to temporarily force FOCUS_BEFORE_DESCENDANTS so we are
         // sure to
         // get it)
-        int descendantFocusability = getDescendantFocusability();  // save
+        const int descendantFocusability = getDescendantFocusability();  // save
         setDescendantFocusability(ViewGroup::FOCUS_BEFORE_DESCENDANTS);
         requestFocus();
         setDescendantFocusability(descendantFocusability);  // restore
@@ -1123,14 +1155,14 @@ void NestedScrollView::smoothScrollBy(int dx, int dy) {
         // Nothing to do.
         return;
     }
-    int64_t duration = AnimationUtils::currentAnimationTimeMillis() - mLastScroll;
+    const int64_t duration = AnimationUtils::currentAnimationTimeMillis() - mLastScroll;
     if (duration > ANIMATED_SCROLL_GAP) {
         View* child = getChildAt(0);
-        NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-        int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
-        int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
-        int scrollY = getScrollY();
-        int maxY = std::max(0, childSize - parentSpace);
+        const NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+        const int childSize = child->getHeight() + lp->topMargin + lp->bottomMargin;
+        const int parentSpace = getHeight() - getPaddingTop() - getPaddingBottom();
+        const int scrollY = getScrollY();
+        const int maxY = std::max(0, childSize - parentSpace);
         dy = std::max(0, std::min(scrollY + dy, maxY)) - scrollY;
         mLastScrollerY = getScrollY();
         mScroller->startScroll(getScrollX(), scrollY, 0, dy);
@@ -1149,17 +1181,16 @@ void NestedScrollView::smoothScrollTo(int x, int y) {
 }
 
 int NestedScrollView::computeVerticalScrollRange() {
-    int count = getChildCount();
-    int parentSpace = getHeight() - getPaddingBottom() - getPaddingTop();
-    if (count == 0) {
+    const int parentSpace = getHeight() - getPaddingBottom() - getPaddingTop();
+    if (getChildCount() == 0) {
         return parentSpace;
     }
 
     View* child = getChildAt(0);
-    NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+    const NestedScrollView::LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
     int scrollRange = child->getBottom() + lp->bottomMargin;
-    int scrollY = getScrollY();
-    int overscrollBottom = std::max(0, scrollRange - parentSpace);
+    const int scrollY = getScrollY();
+    const int overscrollBottom = std::max(0, scrollRange - parentSpace);
     if (scrollY < 0) {
         scrollRange -= scrollY;
     } else if (scrollY > overscrollBottom) {
@@ -1190,15 +1221,12 @@ int NestedScrollView::computeHorizontalScrollExtent() {
 }
 
 void NestedScrollView::measureChild(View* child, int parentWidthMeasureSpec,  int parentHeightMeasureSpec) {
-    ViewGroup::LayoutParams* lp = child->getLayoutParams();
+    const ViewGroup::LayoutParams* lp = child->getLayoutParams();
 
-    int childWidthMeasureSpec;
-    int childHeightMeasureSpec;
-
-    childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec, getPaddingLeft()
+    const int childWidthMeasureSpec = getChildMeasureSpec(parentWidthMeasureSpec, getPaddingLeft()
             + getPaddingRight(), lp->width);
 
-    childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
+    const int childHeightMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
 
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }
@@ -1231,17 +1259,17 @@ void NestedScrollView::computeScroll() {
         }
 
         if (dy != 0) {
-            int range = getScrollRange();
-            int oldScrollY = getScrollY();
+            const int range = getScrollRange();
+            const int oldScrollY = getScrollY();
 
             overScrollBy(0, dy, getScrollX(), oldScrollY, 0, range, 0, 0, false);
 
-            int scrolledDeltaY = getScrollY() - oldScrollY;
-            int unconsumedY = dy - scrolledDeltaY;
+            const int scrolledDeltaY = getScrollY() - oldScrollY;
+            const int unconsumedY = dy - scrolledDeltaY;
 
             if (!dispatchNestedScroll(0, scrolledDeltaY, 0, unconsumedY, nullptr,View::TYPE_NON_TOUCH)) {
-                int mode = getOverScrollMode();
-                bool canOverscroll = mode == OVER_SCROLL_ALWAYS
+                const int mode = getOverScrollMode();
+                const bool canOverscroll = mode == OVER_SCROLL_ALWAYS
                         || (mode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
                 if (canOverscroll) {
                     ensureGlows();
@@ -1273,7 +1301,7 @@ void NestedScrollView::scrollToChild(View* child) {
     /* Offset from child's local coordinates to ScrollView coordinates */
     offsetDescendantRectToMyCoords(child, mTempRect);
 
-    int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+    const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
 
     if (scrollDelta != 0) {
         scrollBy(0, scrollDelta);
@@ -1281,8 +1309,8 @@ void NestedScrollView::scrollToChild(View* child) {
 }
 
 bool NestedScrollView::scrollToChildRect(const Rect& rect, bool immediate) {
-    int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
-    bool scroll = delta != 0;
+    const int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
+    const bool scroll = delta != 0;
     if (scroll) {
         if (immediate) {
             scrollBy(0, delta);

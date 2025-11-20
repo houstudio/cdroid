@@ -916,7 +916,7 @@ public:
 
     const Rect getBound()const;
     void getHitRect(Rect&);
-    bool pointInView(int localX,int localY,int slop);
+    bool pointInView(int localX,int localY,int slop)const;
     const Rect getDrawingRect()const;
     int64_t getDrawingTime()const;
     virtual void getFocusedRect(Rect&r);

@@ -25,12 +25,12 @@ namespace cdroid{
 DECLARE_WIDGET2(HorizontalScrollView,"cdroid:attr/horizontalScrollViewStyle")
  
 HorizontalScrollView::HorizontalScrollView(int w,int h):FrameLayout(w,h){
-    initScrollView();
+    initScrollView(nullptr);
 }
 
 HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
   :FrameLayout(ctx,atts){
-    initScrollView();
+    initScrollView(&atts);
     setFillViewport(atts.getBoolean("fillViewport", false));
     mScrollDuration=atts.getInt("scrollDuration",300);
 }
@@ -93,7 +93,7 @@ int HorizontalScrollView::getMaxScrollAmount() {
     return (int) (MAX_SCROLL_FACTOR * (mRight-mLeft));
 }
 
-void HorizontalScrollView::initScrollView() {
+void HorizontalScrollView::initScrollView(const AttributeSet*atts) {
     mScroller = new OverScroller(getContext());
     mVelocityTracker = nullptr;
     mChildToScrollTo = nullptr;
@@ -106,8 +106,8 @@ void HorizontalScrollView::initScrollView() {
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mLastScroll = 0;
-    mEdgeGlowLeft = new EdgeEffect(mContext);
-    mEdgeGlowRight= new EdgeEffect(mContext);
+    mEdgeGlowLeft = new EdgeEffect(mContext,atts);
+    mEdgeGlowRight= new EdgeEffect(mContext,atts);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);
     mTouchSlop = configuration.getScaledTouchSlop();
     mMinimumVelocity = configuration.getScaledMinimumFlingVelocity();

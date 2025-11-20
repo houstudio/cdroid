@@ -74,8 +74,9 @@ private:
         int getDeltaY()const;
     };
     ClampedScroller* mScroller;
-    Interpolator* mEdgeInterpolator;
-    protected: View* mTarget;
+    const Interpolator* mEdgeInterpolator;
+protected:
+    View* mTarget;
     Runnable mRunnable;
     float mRelativeEdges[2];
     float mMaximumEdges[2];
