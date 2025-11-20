@@ -19,6 +19,7 @@
 #define __ASYNC_INFLATER_H__
 #include <core/pools.h>
 #include <core/handler.h>
+#include <utils/arrayblockingqueue.h>
 #include <view/layoutinflater.h>
 
 namespace cdroid{
@@ -31,7 +32,7 @@ private:
     class InflateThread;
     LayoutInflater* mInflater;
     Handler* mHandler;
-    //InflateThread mInflateThread;
+    InflateThread* mInflateThread;
 private:
     bool handleMessage(Message& msg);
 public:
@@ -66,18 +67,11 @@ protected:
 
 class AsyncLayoutInflater::InflateThread{
 private:
-    //static InflateThread sInstance;
-    //ArrayBlockingQueue<InflateRequest> mQueue = new ArrayBlockingQueue<>(10);
+    static std::unique_ptr<InflateThread> sInstance;
+    ArrayBlockingQueue<InflateRequest*> mQueue;
     Pools::SynchronizedPool<InflateRequest> mRequestPool;
-
-    /*static {
-        sInstance = new InflateThread();
-        sInstance.start();
-    }*/
 public:
-    /*static InflateThread getInstance() {
-        return sInstance;
-    }*/
+    static InflateThread* getInstance();
     InflateThread();
     // Extracted to its own method to ensure locals have a constrained liveness
     // scope by the GC. This is needed to avoid keeping previous request references

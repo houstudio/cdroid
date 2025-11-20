@@ -1,3 +1,6 @@
+  - Add AsyncInflater
+  - Add SlidingPaneLayout
+  - Fix ViewDragHelper's memleak
   - TextView's fontstyle add Italic support
   - Fix NumberPicker's divider position in horizontal mode
   - Remove InputDevice::popEvent,Add InputDevice::drainEvents
