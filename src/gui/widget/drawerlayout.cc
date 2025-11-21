@@ -36,7 +36,7 @@ void DrawerLayout::initView(){
     setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     const float density = mContext->getDisplayMetrics().density;
     mMinDrawerMargin = (int) (MIN_DRAWER_MARGIN * density + 0.5f);
-    float minVel = MIN_FLING_VELOCITY * density;
+    const float minVel = MIN_FLING_VELOCITY * density;
 
     mLeftCallback  = new ViewDragCallback(this,Gravity::LEFT);
     mRightCallback = new ViewDragCallback(this,Gravity::RIGHT);
@@ -122,7 +122,7 @@ void DrawerLayout::addDrawerListener(const DrawerListener& listener) {
 
 void DrawerLayout::removeDrawerListener(const DrawerListener& listener){
     auto it = std::find(mListeners.begin(),mListeners.end(),listener);
-    if(it!=mListeners.end()){
+    if(it != mListeners.end()){
         mListeners.erase(it);
     }
 }
@@ -133,7 +133,7 @@ void DrawerLayout::setDrawerLockMode(int lockMode) {
 }
 
 void DrawerLayout::setDrawerLockMode(int lockMode,int edgeGravity) {
-    int absGravity = Gravity::getAbsoluteGravity(edgeGravity,getLayoutDirection());
+    const int absGravity = Gravity::getAbsoluteGravity(edgeGravity,getLayoutDirection());
 
     switch (edgeGravity) {
     case Gravity::LEFT:  mLockModeLeft = lockMode;   break;
@@ -219,7 +219,7 @@ int DrawerLayout::getDrawerLockMode(View* drawerView) const{
 }
 
 void DrawerLayout::setDrawerTitle(int edgeGravity,const std::string& title) {
-    int absGravity = Gravity::getAbsoluteGravity(edgeGravity,getLayoutDirection());
+    const int absGravity = Gravity::getAbsoluteGravity(edgeGravity,getLayoutDirection());
     if (absGravity == Gravity::LEFT) {
         mTitleLeft = title;
     } else if (absGravity == Gravity::RIGHT) {
@@ -228,7 +228,7 @@ void DrawerLayout::setDrawerTitle(int edgeGravity,const std::string& title) {
 }
 
 const std::string DrawerLayout::getDrawerTitle(int edgeGravity) const{
-    int absGravity = Gravity::getAbsoluteGravity(edgeGravity, getLayoutDirection());
+    const int absGravity = Gravity::getAbsoluteGravity(edgeGravity, getLayoutDirection());
     if (absGravity == Gravity::LEFT) {
         return mTitleLeft;
     } else if (absGravity == Gravity::RIGHT) {
@@ -511,13 +511,13 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(widthSize, heightSize);
 
     bool applyInsets = false;//mLastInsets != null && getFitsSystemWindows();
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
 
     // Only one drawer is permitted along each vertical edge (left / right). These two booleans
     // are tracking the presence of the edge drawers.
     bool hasDrawerOnLeftEdge = false;
     bool hasDrawerOnRightEdge = false;
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
 
@@ -605,7 +605,7 @@ void DrawerLayout::resolveShadowDrawables() {
 }
 
 Drawable* DrawerLayout::resolveLeftShadow() {
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     // Prefer shadows defined with start/end gravity over left and right.
     if (layoutDirection == View::LAYOUT_DIRECTION_LTR) {
         if (mShadowStart) {
@@ -624,7 +624,7 @@ Drawable* DrawerLayout::resolveLeftShadow() {
 }
 
 Drawable* DrawerLayout::resolveRightShadow() {
-    int layoutDirection = getLayoutDirection();
+    const int layoutDirection = getLayoutDirection();
     if (layoutDirection == View::LAYOUT_DIRECTION_LTR) {
         if (mShadowEnd != nullptr) {
             // Correct drawable layout direction, if needed.
@@ -679,9 +679,9 @@ void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
                 newOffset = (float) (width - childLeft) / childWidth;
             }
 
-            bool changeOffset = newOffset != lp->onScreen;
+            const bool changeOffset = newOffset != lp->onScreen;
 
-            int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
+            const int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
 
             LOGD("child %p:%d size=%d,%d left=%d",child,child->getId(),childWidth,childHeight,childLeft);
             switch (vgrav) {
@@ -709,9 +709,11 @@ void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
                 }
             }
 
-            if (changeOffset) setDrawerViewOffset(child, newOffset);
+            if (changeOffset){
+                setDrawerViewOffset(child, newOffset);
+            }
 
-            int newVisibility = lp->onScreen > 0 ? VISIBLE : INVISIBLE;
+            const int newVisibility = lp->onScreen > 0 ? VISIBLE : INVISIBLE;
             if (child->getVisibility() != newVisibility) {
                 child->setVisibility(newVisibility);
             }
@@ -800,8 +802,8 @@ void DrawerLayout::onDraw(Canvas& c) {
 }
 
 bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
-    int height = getHeight();
-    bool drawingContent = isContentView(child);
+    const int height = getHeight();
+    const bool drawingContent = isContentView(child);
     int clipLeft = 0, clipRight = getWidth();
 
     canvas.save();
@@ -816,17 +818,17 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
             }
 
             if (checkDrawerViewAbsoluteGravity(v, Gravity::LEFT)) {
-                int vright = v->getRight();
+                const int vright = v->getRight();
                 if (vright > clipLeft) clipLeft = vright;
             } else {
-                int vleft = v->getLeft();
+                const int vleft = v->getLeft();
                 if (vleft < clipRight) clipRight = vleft;
             }
         }
         canvas.rectangle(clipLeft, 0, clipRight-clipLeft, getHeight());
         canvas.clip();
     }
-    bool result = ViewGroup::drawChild(canvas, child, drawingTime);
+    const bool result = ViewGroup::drawChild(canvas, child, drawingTime);
     canvas.restore();
 
     if ((mScrimOpacity > 0) && drawingContent) {
@@ -1328,7 +1330,7 @@ void DrawerLayout::ViewDragCallback::onViewDragStateChanged(int state){
 
 void DrawerLayout::ViewDragCallback::onViewPositionChanged(View& changedView, int left, int top, int dx, int dy){
     float offset;
-    int childWidth = changedView.getWidth();
+    const int childWidth = changedView.getWidth();
 
     // This reverses the positioning shown in onLayout.
     if (mDL->checkDrawerViewAbsoluteGravity(&changedView, Gravity::LEFT)) {
@@ -1453,8 +1455,8 @@ int DrawerLayout::ViewDragCallback::clampViewPositionVertical(View& child, int t
 
 DrawerLayout::LayoutParams::LayoutParams(Context* c,const AttributeSet& attrs)
   :ViewGroup::MarginLayoutParams(c, attrs){
-    gravity = attrs.getInt(0, Gravity::NO_GRAVITY);
-    onScreen =.0f;
+    gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
+    onScreen =0.0f;
 }
 
 DrawerLayout::LayoutParams::LayoutParams(int width, int height)
