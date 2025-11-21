@@ -27,7 +27,7 @@
 namespace cdroid{
 typedef int64_t nsecs_t;
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
-
+class Handler;
 struct Message{
     int what;
     int arg1;
@@ -35,7 +35,7 @@ struct Message{
     int flags;
     void*obj;
     Runnable callback;
-    class Handler*target;
+    Handler*target;
 public:
     Message(int what=0);
 };
@@ -53,8 +53,8 @@ private:
     friend class Looper;
 protected:
     MessageHandler();
-    void setOwned(bool looper);
     virtual ~MessageHandler();
+    void setOwned(bool looper);
 public:
     virtual void dispatchMessage(Message&);
     virtual void handleMessage(Message& message)=0;

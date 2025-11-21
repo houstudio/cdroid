@@ -2,18 +2,18 @@
 #define __POOLS_H__
 #include <vector>
 #include <mutex>
+#include <exception>
 namespace cdroid{
 class Pools final{
 private:
-    Pools() {
-        /* do nothing - hiding constructor */
-    }
+    Pools() =default;
 public:
     template<typename T>
     class Pool {
     public:
-        T acquire();
-        bool release(T instance);
+        virtual ~Pool() = default;
+        virtual T* acquire() = 0;
+        virtual bool release(T* instance) = 0;
     };
 public:
     template<typename T>
@@ -22,26 +22,25 @@ public:
         int mPoolSize;
         std::vector<T*> mPool;
     public:
-        SimplePool(int maxPoolSize) {
-            mPool.resize(maxPoolSize);
-            mPoolSize = 0;
+        SimplePool(int maxPoolSize):mPoolSize(0){
+            mPool.resize(maxPoolSize,nullptr);
         }
-        ~SimplePool(){
+        ~SimplePool() override{
             for(auto elem:mPool)
                 delete elem;
             mPool.clear();
         }
-        T* acquire() {
+        T* acquire() override{
             if (mPoolSize>0) {
-                T* instance = (T*) mPool[mPoolSize-1];
+                T* instance = mPool[mPoolSize-1];
                 mPool[--mPoolSize] = nullptr;
                 return instance;
             }
             return nullptr;
         }
-        bool release(T* instance) {
+        bool release(T* instance) override{
             if (isInPool(instance)) {
-                throw "Already in the pool!";
+                throw std::runtime_error("Already in the pool!");
             }
             if (mPoolSize < mPool.size()) {
                 mPool[mPoolSize++] = instance;
@@ -68,12 +67,12 @@ public:
         SynchronizedPool(int maxPoolSize):SimplePool<T>(maxPoolSize){
         }
 
-        T* acquire() {
+        T* acquire() override{
             std::lock_guard<std::mutex> lock(mutex);
             return SimplePool<T>::acquire();
         }
 
-        bool release(T* element) {
+        bool release(T* element) override{
             std::lock_guard<std::mutex> lock(mutex);
             return SimplePool<T>::release(element);
         }

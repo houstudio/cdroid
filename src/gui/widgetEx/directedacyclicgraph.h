@@ -12,7 +12,7 @@ class DirectedAcyclicGraph{
 private:
     std::vector<T*> mSortResult;
     std::set<T*> mSortTmpMarked;
-    Pools::SimplePool<std::vector<T*>> *mListPool;// (10);
+    Pools::SimplePool<std::vector<T*>> mListPool;
     std::unordered_map<T*, std::vector<T*>*> mGraph;
 private:
     void dfs(T* node, std::vector<T*>&result, std::set<T*>& tmpMarked) {
@@ -40,7 +40,7 @@ private:
     }
 
     std::vector<T*>* getEmptyList() {
-        std::vector<T*>* list = mListPool->acquire();
+        std::vector<T*>* list = mListPool.acquire();
         if (list == nullptr) {
             list = new std::vector<T*>;
         }
@@ -49,15 +49,13 @@ private:
 
     void poolList(std::vector<T*>* list) {
         list->clear();
-        mListPool->release(list);
+        mListPool.release(list);
     }
 public:
-    DirectedAcyclicGraph() {
-        mListPool = new Pools::SimplePool<std::vector<T*>>(10);
+    DirectedAcyclicGraph():mListPool(10){
     }
 
     ~DirectedAcyclicGraph() {
-        delete mListPool;
         for (auto g : mGraph)delete g.second;
     }
 

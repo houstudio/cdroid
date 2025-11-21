@@ -21,12 +21,10 @@
 namespace cdroid{
 static constexpr int _Debug=1;
 
-ViewInfoStore::ViewInfoStore(){
-   mPool=new Pools::SimplePool<ViewInfoStore::InfoRecord>(20);
+ViewInfoStore::ViewInfoStore():mPool(20){
 }
 
 ViewInfoStore::~ViewInfoStore(){
-   delete mPool;
 }
 
 void ViewInfoStore::clear() {
@@ -218,7 +216,7 @@ ViewInfoStore::InfoRecord::InfoRecord() {
 }
 
 ViewInfoStore::InfoRecord* ViewInfoStore::obtainInfoRecord() {
-    InfoRecord* record = mPool->acquire();
+    InfoRecord* record = mPool.acquire();
     if(record==nullptr)record = new InfoRecord();
     record->preInfo = nullptr;
     record->postInfo = nullptr;
@@ -230,13 +228,13 @@ void ViewInfoStore::recycleInfoRecord(InfoRecord* record) {
     record->flags = 0;
     record->preInfo = nullptr;
     record->postInfo= nullptr;
-    mPool->release(record);
+    mPool.release(record);
 }
 
 void ViewInfoStore::drainInfoRecordCache() {
     //noinspection StatementWithEmptyBody
     InfoRecord*info = nullptr;
-    while ((info=mPool->acquire())!=nullptr) { 
+    while ((info=mPool.acquire())!=nullptr) { 
         delete info;
     }
 }

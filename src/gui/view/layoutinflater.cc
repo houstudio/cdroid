@@ -178,6 +178,9 @@ View* LayoutInflater::inflate(XmlPullParser& parser,ViewGroup* root, bool attach
     int type;
     View*result = root;
     AttributeSet& attrs = parser;
+    if(!parser){
+        return nullptr;
+    }
     advanceToRootNode(parser);
 
     const std::string name = parser.getName();
