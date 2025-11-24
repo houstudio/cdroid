@@ -151,7 +151,7 @@ bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop)
     mCapturedView = child;
     mActivePointerId = INVALID_POINTER;
 
-    bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, 0, 0);
+    const bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, 0, 0);
     if (!continueSliding && (mDragState == STATE_IDLE) && mCapturedView ) {
         // If we're in an IDLE state to begin with and aren't moving anywhere, we
         // end up having a non-null capturedView with an IDLE dragState
@@ -165,7 +165,7 @@ bool ViewDragHelper::smoothSlideViewTo(View* child, int finalLeft, int finalTop,
     mCapturedView = child;
     mActivePointerId = INVALID_POINTER;
 
-    bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, duration, interpolator);
+    const bool continueSliding = forceSettleCapturedViewAt(finalLeft, finalTop, duration, interpolator);
     if (!continueSliding && (mDragState == STATE_IDLE) && (mCapturedView != nullptr)) {
         // If we're in an IDLE state to begin with and aren't moving anywhere, we
         // end up having a non-null capturedView with an IDLE dragState
@@ -243,8 +243,8 @@ int ViewDragHelper::computeSettleDuration(View* child, int dx, int dy, int xvel,
     const float yweight = yvel != 0 ? (float) absYVel / addedVel :
                 (float) absDy / addedDistance;
 
-    int xduration = computeAxisDuration(dx, xvel, mCallback->getViewHorizontalDragRange(*child));
-    int yduration = computeAxisDuration(dy, yvel, mCallback->getViewVerticalDragRange(*child));
+    const int xduration = computeAxisDuration(dx, xvel, mCallback->getViewHorizontalDragRange(*child));
+    const int yduration = computeAxisDuration(dy, yvel, mCallback->getViewVerticalDragRange(*child));
 
     return (int) (xduration * xweight + yduration * yweight);
 }

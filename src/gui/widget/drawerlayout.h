@@ -41,7 +41,7 @@ public:
 
     class DrawerListener:public EventSet{
     public:
-        std::function<void(View&, float)>onDrawerSlide;
+        std::function<void(View&/*drawerView*/, float/*offset(0.0f->1.0f*/)>onDrawerSlide;
 
         /* Called when a drawer has settled in a completely open state.
          * The drawer is interactive at this point.
@@ -50,12 +50,12 @@ public:
 
         /* Called when a drawer has settled in a completely closed state.
          * @param drawerView Drawer view that is now closed */
-        std::function<void(View&)> onDrawerClosed;
+        std::function<void(View&/*drawerView*/)> onDrawerClosed;
 
         /* Called when the drawer motion state changes. The new state will
          * be one of {@link #STATE_IDLE}, {@link #STATE_DRAGGING} or {@link #STATE_SETTLING}.
          * @param newState The new drawer motion state */
-        std::function<void(int)> onDrawerStateChanged; 
+        std::function<void(int/*state*/)> onDrawerStateChanged;
     };
     class LayoutParams:public ViewGroup::MarginLayoutParams{
     public:
