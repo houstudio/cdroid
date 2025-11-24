@@ -114,6 +114,7 @@ private:
         bool onEdgeLock(int edgeFlags)override;
         void onEdgeDragStarted(int edgeFlags, int pointerId)override;
         int getViewHorizontalDragRange(View& child)override;
+        int getViewVerticalDragRange(View& child)override;
         int clampViewPositionHorizontal(View& child, int left, int dx)override;
         int clampViewPositionVertical(View& child, int top, int dy)override;
     };
@@ -130,9 +131,12 @@ private:
 
     ViewDragHelper*   mLeftDragger;
     ViewDragHelper*   mRightDragger;
+    ViewDragHelper*   mTopDragger;
+    ViewDragHelper*   mBottomDragger;
     ViewDragCallback* mLeftCallback;
     ViewDragCallback* mRightCallback;
-
+    ViewDragCallback* mTopCallback;
+    ViewDragCallback* mBottomCallback;
     bool mInLayout;
     bool mFirstLayout = true;
     bool mChildrenCanceledTouch;
@@ -142,6 +146,8 @@ private:
     int mLockModeRight = LOCK_MODE_UNDEFINED;
     int mLockModeStart = LOCK_MODE_UNDEFINED;
     int mLockModeEnd   = LOCK_MODE_UNDEFINED;
+    int mLockModeTop   = LOCK_MODE_UNDEFINED;
+    int mLockModeBottom= LOCK_MODE_UNDEFINED;
 
     //DrawerListener mListener;
     std::vector<DrawerListener> mListeners;
@@ -152,6 +158,8 @@ private:
 
     std::string mTitleLeft;
     std::string mTitleRight;
+    std::string mTitleTop;
+    std::string mTitleBottom;
 
     //Object mLastInsets;
     bool mDrawStatusBarBackground;
@@ -161,6 +169,8 @@ private:
     Drawable* mShadowEnd = nullptr;
     Drawable* mShadowLeft = nullptr;
     Drawable* mShadowRight = nullptr;
+    Drawable* mShadowTop = nullptr;
+    Drawable* mShadowBottom= nullptr;
 
     std::vector<View*> mNonDrawerViews;
     Matrix mChildInvertedMatrix;

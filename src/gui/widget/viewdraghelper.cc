@@ -37,6 +37,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     const float density = context->getDisplayMetrics().density;
     mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mDefaultEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
+    mTrackingEdges= 0;
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;
 
@@ -142,6 +143,7 @@ void ViewDragHelper::abort() {
         const int newY = mScroller->getCurrY();
         mCallback->onViewPositionChanged(*mCapturedView, newX, newY, newX - oldX, newY - oldY);
     }
+    mInterpolator = &sInterpolator;
     setDragState(STATE_IDLE);
 }
 
