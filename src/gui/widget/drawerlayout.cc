@@ -33,6 +33,7 @@ void DrawerLayout::initView(){
     mShadowRightResolved = nullptr;
     mShadowStart= mShadowEnd  = nullptr;
     mShadowLeft = mShadowRight= nullptr;
+    mShadowTop = mShadowBottom= nullptr;
     setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     const float density = mContext->getDisplayMetrics().density;
     mMinDrawerMargin = (int) (MIN_DRAWER_MARGIN * density + 0.5f);
@@ -76,6 +77,10 @@ DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
 }
 
 DrawerLayout::~DrawerLayout(){
+    delete mShadowLeftResolved;
+    delete mShadowRightResolved;
+    delete mShadowTop;
+    delete mShadowBottom;
     delete mLeftDragger;
     delete mRightDragger;
     delete mTopDragger;
@@ -107,16 +112,22 @@ void DrawerLayout::setDrawerShadow(Drawable* shadowDrawable,int gravity){
         return;
     }
     if ((gravity & Gravity::START) == Gravity::START) {
+        delete mShadowStart;
         mShadowStart = shadowDrawable;
     } else if ((gravity & Gravity::END) == Gravity::END) {
+        delete mShadowEnd;
         mShadowEnd = shadowDrawable;
     } else if ((gravity & Gravity::LEFT) == Gravity::LEFT) {
+        delete mShadowLeft;
         mShadowLeft = shadowDrawable;
     } else if ((gravity & Gravity::RIGHT) == Gravity::RIGHT) {
+        delete mShadowRight;
         mShadowRight = shadowDrawable;
-    } else if((gravity &Gravity::TOP)==Gravity::TOP){
+    } else if((gravity & Gravity::TOP) == Gravity::TOP){
+        delete mShadowTop;
         mShadowTop = shadowDrawable;
-    } else if((gravity &Gravity::BOTTOM)==Gravity::BOTTOM){
+    } else if((gravity & Gravity::BOTTOM) == Gravity::BOTTOM){
+        delete mShadowBottom;
         mShadowBottom = shadowDrawable;
     }
     resolveShadowDrawables();
@@ -961,7 +972,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
         const int shadowWidth = mShadowLeftResolved->getIntrinsicWidth();
         const int childRight  = child->getRight();
         const int drawerPeekDistance = mLeftDragger->getEdgeSize();
-        const float alpha = std::max(.0f, std::min((float) childRight / drawerPeekDistance, 1.f));
+        const float alpha = std::max(0.0f, std::min((float) childRight / drawerPeekDistance, 1.0f));
         mShadowLeftResolved->setBounds(childRight, child->getTop(),shadowWidth, child->getHeight());
         mShadowLeftResolved->setAlpha((int) (0xff * alpha));
         mShadowLeftResolved->draw(canvas);
@@ -970,7 +981,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
         const int childLeft = child->getLeft();
         const int showing   = getWidth() - childLeft;
         const int drawerPeekDistance = mRightDragger->getEdgeSize();
-        const float alpha =  std::max(.0f, std::min((float) showing / drawerPeekDistance, 1.f));
+        const float alpha =  std::max(0.0f, std::min((float) showing / drawerPeekDistance, 1.0f));
         mShadowRightResolved->setBounds(childLeft - shadowWidth, child->getTop(),
                 shadowWidth, child->getWidth());
         mShadowRightResolved->setAlpha((int) (0xff * alpha));
@@ -979,7 +990,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 		const int shadowHeight = mShadowTop->getIntrinsicHeight();
 		const int childBottom = child->getBottom();
 		const int drawerPeekDistance = mTopDragger->getEdgeSize();
-		const float alpha = std::max(0.f, std::min((float) childBottom / drawerPeekDistance, 1.f));
+		const float alpha = std::max(0.0f, std::min((float) childBottom / drawerPeekDistance, 1.0f));
 		mShadowTop->setBounds(child->getLeft(), childBottom, child->getWidth(), shadowHeight);
 		mShadowTop->setAlpha((int) (0xff * alpha));
 		mShadowTop->draw(canvas);
@@ -988,7 +999,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 		const int childTop = child->getTop();
 		const int showing = getHeight() - childTop;
 		const int drawerPeekDistance = mBottomDragger->getEdgeSize();
-		const float alpha = std::max(0.f, std::min((float) showing / drawerPeekDistance, 1.f));
+		const float alpha = std::max(0.0f, std::min((float) showing / drawerPeekDistance, 1.0f));
 		mShadowBottom->setBounds(child->getLeft(), childTop - shadowHeight, child->getWidth(), shadowHeight);
 		mShadowBottom->setAlpha((int) (0xff * alpha));
 		mShadowBottom->draw(canvas);
