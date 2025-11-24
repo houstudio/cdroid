@@ -202,7 +202,6 @@ void DrawerLayout::setDrawerLockMode(int lockMode,View* drawerView) {
     setDrawerLockMode(lockMode, gravity);
 }
 
-
 int DrawerLayout::getDrawerLockMode(int edgeGravity) const{
     const int layoutDirection = getLayoutDirection();
     int lockMode;
@@ -806,7 +805,6 @@ void DrawerLayout::requestLayout() {
     }
 }
 
-
 void DrawerLayout::computeScroll() {
     const int childCount = getChildCount();
     float scrimOpacity = 0;
@@ -815,7 +813,6 @@ void DrawerLayout::computeScroll() {
         scrimOpacity = std::max(scrimOpacity, onscreen);
     }
     mScrimOpacity = scrimOpacity;
-
     const bool leftDraggerSettling = mLeftDragger->continueSettling(true);
     const bool rightDraggerSettling= mRightDragger->continueSettling(true);
     const bool topDraggerSettling  = mTopDragger->continueSettling(true);
@@ -834,13 +831,10 @@ bool DrawerLayout::hasOpaqueBackground(View* v) {
     return false;
 }
 
-
 void DrawerLayout::setStatusBarBackground(Drawable* bg) {
     mStatusBarBackground = bg;
     invalidate();
 }
-
-
 
 Drawable* DrawerLayout::getStatusBarBackgroundDrawable() {
     return mStatusBarBackground;
@@ -885,7 +879,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
     const int height = getHeight();
     const bool drawingContent = isContentView(child);
     int clipLeft = 0, clipRight = getWidth();
-    int clipTop = 0,clipBottom =getHeight();
+    int clipTop = 0,clipBottom = getHeight();
     canvas.save();
     if (drawingContent) {
         const int childCount = getChildCount();
@@ -917,10 +911,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 					const int vtop = v->getTop();
 					if (vtop < clipBottom) clipBottom = vtop;
 				}break;
-            default:
-                if(v->getTop()<clipBottom){
-                    clipBottom = v->getTop();
-                }break;
+            default:break;
             }
         }
         canvas.rectangle(clipLeft,clipTop, clipRight-clipLeft, clipBottom-clipTop);
@@ -935,7 +926,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
         const int color = imag << 24 | (mScrimColor & 0xffffff);
         canvas.set_color(color);
 
-        canvas.rectangle(clipLeft, 0, clipRight, getHeight());
+        canvas.rectangle(clipLeft, clipTop, clipRight-clipLeft, clipBottom-clipTop);
         canvas.fill();
     } else if (mShadowLeftResolved && checkDrawerViewAbsoluteGravity(child, Gravity::LEFT)) {
         const int shadowWidth = mShadowLeftResolved->getIntrinsicWidth();
@@ -969,9 +960,9 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 		const int showing = getHeight() - childTop;
 		const int drawerPeekDistance = mBottomDragger->getEdgeSize();
 		const float alpha = std::max(0.f, std::min((float) showing / drawerPeekDistance, 1.f));
-		mShadowRight->setBounds(child->getLeft(), childTop - shadowHeight, child->getWidth(), shadowHeight);
-		mShadowRight->setAlpha((int) (0xff * alpha));
-		mShadowRight->draw(canvas);
+		mShadowBottom->setBounds(child->getLeft(), childTop - shadowHeight, child->getWidth(), shadowHeight);
+		mShadowBottom->setAlpha((int) (0xff * alpha));
+		mShadowBottom->draw(canvas);
 	}
     return result;
 }
@@ -1058,8 +1049,7 @@ bool DrawerLayout::dispatchGenericMotionEvent(MotionEvent& event) {
     }   
     return false;
 }
-    
-    
+
 bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
     const int action = ev.getAction();
     bool wantTouchEvents = true;
@@ -1105,8 +1095,7 @@ bool DrawerLayout::onTouchEvent(MotionEvent& ev) {
    
     return wantTouchEvents;
 }
-    
-    
+
 void DrawerLayout::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
     if (CHILDREN_DISALLOW_INTERCEPT
             || (!mLeftDragger->isEdgeTouched(ViewDragHelper::EDGE_LEFT)
@@ -1505,14 +1494,13 @@ void DrawerLayout::ViewDragCallback::onViewPositionChanged(View& changedView, in
         break;
     case Gravity::TOP:
         if (mDL->checkDrawerViewAbsoluteGravity(&changedView, Gravity::TOP))
-			offset = (float) (childHeight - top) / childHeight;
+			offset = 1.f-float(-top) / childHeight;
 		break;
     case Gravity::BOTTOM:
         if (mDL->checkDrawerViewAbsoluteGravity(&changedView, Gravity::BOTTOM))
 			offset = (float) (height - top) / childHeight;
 		break;
-    default:
-        //offset = (float) (height - top) / childHeight;
+    default: //offset = (float) (height - top) / childHeight;
         break;
     }
     LOGV("%p changedView %p:%d offset=%.2f leftop=%d,%d",this,&changedView,changedView.getId(),offset,left,top);
