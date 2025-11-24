@@ -579,8 +579,10 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     // Only one drawer is permitted along each vertical edge (left / right). These two booleans
     // are tracking the presence of the edge drawers.
-    bool hasDrawerOnLeftEdge = false;
+    bool hasDrawerOnLeftEdge  = false;
     bool hasDrawerOnRightEdge = false;
+    bool hasDrawerOnTopEdge   = false;
+    bool hasDrawerOnBottomEdge= false;
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
@@ -636,26 +638,41 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                     child->setElevation(mDrawerElevation);
                 }
             }
-            const int childGravity = getDrawerViewAbsoluteGravity(child) & Gravity::HORIZONTAL_GRAVITY_MASK;
+            const int childGravity = getDrawerViewAbsoluteGravity(child);// & Gravity::HORIZONTAL_GRAVITY_MASK;
             // Note that the isDrawerView check guarantees that childGravity here is either LEFT or RIGHT
             const bool isLeftEdgeDrawer = (childGravity == Gravity::LEFT);
-            if ((isLeftEdgeDrawer && hasDrawerOnLeftEdge)
-                    || (!isLeftEdgeDrawer && hasDrawerOnRightEdge)) {
-                LOGE("Child drawer has absolute gravity %d but this already has a drawer view along that edge",childGravity);
+            const bool isTopEdgeDrawer = (childGravity == Gravity::TOP);
+            switch(childGravity){
+            case Gravity::LEFT:
+                hasDrawerOnLeftEdge = true; break;
+            case Gravity::RIGHT:
+                hasDrawerOnRightEdge= true; break;
+            case Gravity::TOP:
+                hasDrawerOnTopEdge = true; break;
+            case Gravity::BOTTOM:
+                hasDrawerOnBottomEdge = true;break;
             }
-            if (isLeftEdgeDrawer) {
-                hasDrawerOnLeftEdge = true;
-            } else {
-                hasDrawerOnRightEdge = true;
-            }
-            const int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
-                    (childGravity?mMinDrawerMargin:0) + lp->leftMargin + lp->rightMargin, lp->width);
-            const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
+            if(childGravity&Gravity::HORIZONTAL_GRAVITY_MASK){
+                const int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
+                    mMinDrawerMargin + lp->leftMargin + lp->rightMargin, lp->width);
+                const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
                     lp->topMargin + lp->bottomMargin, lp->height);
-            child->measure(drawerWidthSpec, drawerHeightSpec);
-            LOGD("child %p:%d size=%d,%d/%d,%d/%d,%d margin=%d,%d,%d,%d",child,child->getId(),lp->width,lp->height,
-                    drawerWidthSpec&0xFFFFFF,drawerHeightSpec&0xFFFFFF,widthMeasureSpec&0xFFFFFF,heightMeasureSpec&0xFFFFFF,
-                    lp->leftMargin,lp->rightMargin,lp->topMargin, lp->bottomMargin);
+                child->measure(drawerWidthSpec, drawerHeightSpec);
+                if ((isLeftEdgeDrawer && hasDrawerOnLeftEdge)
+                    || (!isLeftEdgeDrawer && hasDrawerOnRightEdge)) {
+                    LOGE("Child drawer has absolute gravity %d but this already has a drawer view along that edge",childGravity);
+                }
+            }else{
+                const int drawerWidthSpec = getChildMeasureSpec(widthMeasureSpec,
+                    lp->leftMargin + lp->rightMargin, lp->width);
+                const int drawerHeightSpec = getChildMeasureSpec(heightMeasureSpec,
+                    mMinDrawerMargin + lp->topMargin + lp->bottomMargin, lp->height);
+                child->measure(drawerWidthSpec, drawerHeightSpec);
+                if ((isTopEdgeDrawer && hasDrawerOnTopEdge)
+                    || (!isTopEdgeDrawer && hasDrawerOnBottomEdge)) {
+                    LOGE("Child drawer has absolute gravity %d but this already has a drawer view along that edge",childGravity);
+                }
+            }
         }else{
             LOGE("Child %p at index %f does not have a valid layout_gravity - must be Gravity.LEFT, "
                    "Gravity.RIGHT or Gravity.NO_GRAVITY",child,i);
@@ -766,32 +783,7 @@ void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
             }
 
             const bool changeOffset = (newOffset != lp->onScreen);
-            const int vgrav = lp->gravity & Gravity::VERTICAL_GRAVITY_MASK;
-
-            switch (vgrav) {
-            default:
-            case Gravity::TOP:
-                child->layout(childLeft, lp->topMargin, childWidth,childHeight);
-                break;
-
-            case Gravity::BOTTOM:
-                child->layout(childLeft,
-                        height - lp->bottomMargin - child->getMeasuredHeight(),childWidth,height);
-                break;
-
-            case Gravity::CENTER_VERTICAL: {
-                int childTopCV = (height - childHeight) / 2;
-                // Offset for margins. If things don't fit right because of
-                // bad measurement before, oh well.
-                if (childTopCV < lp->topMargin) {
-                    childTopCV = lp->topMargin;
-                } else if (childTopCV + childHeight > height - lp->bottomMargin) {
-                    childTopCV = height - lp->bottomMargin - childHeight;
-                }
-                child->layout(childLeft, childTopCV, childWidth,childHeight);
-                break;
-                }
-            }
+            child->layout(childLeft, childTop, childWidth,childHeight);
 
             if (changeOffset){
                 setDrawerViewOffset(child, newOffset);
@@ -802,7 +794,7 @@ void DrawerLayout::onLayout(bool changed, int l, int t, int width, int height) {
                 child->setVisibility(newVisibility);
             }
         }
-        LOGD("child[%d] %p:%d pos(%d,%d-%d,%d)",i,child,child->getId(),child->getLeft(),child->getTop(),child->getWidth(),child->getHeight());
+        LOGD("child[%d] %p:%d offset=%.2f pos(%d,%d,%d,%d)",i,child,child->getId(),lp->onScreen,child->getLeft(),child->getTop(),child->getWidth(),child->getHeight());
     }
     mInLayout = false;
     mFirstLayout = false;
