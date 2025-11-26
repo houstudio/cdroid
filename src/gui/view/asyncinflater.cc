@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <thread>
 #include <view/asyncinflater.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 AsyncLayoutInflater::AsyncLayoutInflater(Context* context) {

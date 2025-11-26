@@ -1,7 +1,8 @@
 #include <core/transform.h>
 #include <porting/cdlog.h>
 #include <iomanip>
-namespace cdroid::ui {
+namespace cdroid{
+namespace ui {
 
 Transform::Transform() {
     reset();
@@ -36,11 +37,11 @@ bool Transform::operator==(const Transform& other) const {
 }
 
 Transform Transform::operator*(const Transform& rhs) const {
-    if (/*CC_LIKELY*/(mType == IDENTITY))
+    if (/*CC_LIKELY*/(static_cast<type_mask>(mType) == IDENTITY))
         return rhs;
 
     Transform r(*this);
-    if (rhs.mType == IDENTITY)
+    if (rhs.mType == (uint32_t)IDENTITY)
         return r;
 
     // TODO: we could use mType to optimize the matrix multiply
@@ -511,5 +512,5 @@ void Transform::dump(const char* name, const char* prefix) const {
     dump(out, name, prefix);
     LOG(DEBUG)<< out.str();
 }
-
-} /*namespace cdroid::ui*/
+}/*endof ui*/
+} /*namespace cdroid*/

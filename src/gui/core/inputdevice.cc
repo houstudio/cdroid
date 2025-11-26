@@ -614,7 +614,7 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
             if( mTypeB==false ) mSlotID = index;
             slot = index;
             LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
-        }else if( (value==-1) /*&& mTypeB*/){//for TypeB
+        }else if( value==-1 /*&& mTypeB*/){//for TypeB
             const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
             LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
             mCurrBits.clearBit(pointerIndex);

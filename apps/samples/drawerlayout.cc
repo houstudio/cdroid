@@ -25,7 +25,7 @@ public:
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,-1,-1);
+    Window*w = new Window(0,0,-1,-1);
 
     DrawerLayout*dl = new DrawerLayout(100,100);
 
@@ -48,7 +48,7 @@ int main(int argc,const char*argv[]){
     content->addView(btn);
     btn->setOnClickListener([dl](View&){
         LOGD("openDrawer");
-        //dl->openDrawer(Gravity::START);
+        dl->openDrawer(Gravity::START);
     });
 
     btn=new Button("Close",100,64);
@@ -130,5 +130,10 @@ int main(int argc,const char*argv[]){
 
     w->addView(dl);
     dl->requestLayout();
+    DrawerLayout::DrawerListener dls;
+    dls.onDrawerSlide=[](View&view,float offset){
+        view.setAlpha(offset);
+    };
+    dl->addDrawerListener(dls);
     app.exec();
 }

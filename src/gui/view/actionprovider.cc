@@ -1,4 +1,5 @@
 #include <view/actionprovider.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 ActionProvider::ActionProvider(Context* context) {

@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <core/handler.h>
 #include <core/systemclock.h>
-
+#include <porting/cdlog.h>
 namespace cdroid{
 
 Handler::Handler():Handler(nullptr){
