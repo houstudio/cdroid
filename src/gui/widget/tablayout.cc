@@ -87,6 +87,9 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 }
 
 TabLayout::~TabLayout(){
+    for(Tab*tab:mTabs){
+        delete tab;
+    }
     if(mOwnedTabTextColors){
         delete mTabTextColors;/*ColorStateList is global holded by keymap ,cant destroied*/
     }
