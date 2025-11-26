@@ -1,5 +1,10 @@
-#include <cdroid.h>
-#include <cdlog.h>
+#include <widget/linearlayout.h>
+#include <widget/checkable.h>
+#include <widget/textview.h>
+#include <widget/checkbox.h>
+#include <widget/listview.h>
+#include <core/app.h>
+#include <porting/cdlog.h>
 
 class DataView:public LinearLayout,public Checkable{
 private:
@@ -19,6 +24,7 @@ public:
         addView(name,lp);
 
         chk=new CheckBox("",0,0);
+        chk->setClickable(true);
         lp= new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT,1);
         addView(chk,lp);
 #if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
@@ -27,7 +33,7 @@ public:
         toggle = [this](){ chk->toggle(); };
 #endif
     }
-#if !(defined(FUNCTION_AS_CHECKABLE)||FUNCTION_AS_CHECKABLE)
+#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void setChecked(bool checked)override{
 	chk->setChecked(checked);
 	LOGD_IF(checked,"setChecked(%d)",checked);

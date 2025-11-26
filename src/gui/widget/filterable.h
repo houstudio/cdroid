@@ -43,7 +43,7 @@ protected:
     }; 
 protected:
     virtual FilterResults performFiltering(const std::string& constraint) = 0;
-    virtual void publishResults(const std::string& constraint, FilterResults results) = 0;
+    virtual void publishResults(const std::string& constraint, FilterResults& results) = 0;
 public:
     Filter();
     virtual ~Filter();

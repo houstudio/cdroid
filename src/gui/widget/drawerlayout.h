@@ -124,7 +124,6 @@ private:
     float mInitialMotionX;
     float mInitialMotionY;
 
-
     int mDrawerState;
     int mMinDrawerMargin;
     int mScrimColor = DEFAULT_SCRIM_COLOR;
@@ -140,7 +139,6 @@ private:
     bool mInLayout;
     bool mFirstLayout = true;
     bool mChildrenCanceledTouch;
-
 
     int mLockModeLeft  = LOCK_MODE_UNDEFINED;
     int mLockModeRight = LOCK_MODE_UNDEFINED;

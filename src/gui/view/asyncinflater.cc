@@ -111,7 +111,7 @@ void AsyncLayoutInflater::InflateThread::runInner() {
         LOGW("%s",ex.what());
         return;
     }
-LOGD("request=%p resid=%s",request,request->resid.c_str());
+
     try {
         request->view = request->inflater->mInflater->inflate(
                 request->resid, request->parent, false);
