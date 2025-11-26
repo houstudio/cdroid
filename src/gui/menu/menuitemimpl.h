@@ -94,7 +94,7 @@ public:
     int getOrdering()const;
 
     Intent* getIntent()override;
-    MenuItem& setIntent(Intent* intent);
+    MenuItem& setIntent(Intent* intent)override;
 
     Runnable getCallback();
     MenuItem& setCallback(Runnable callback);
@@ -102,8 +102,8 @@ public:
     int getAlphabeticShortcut()const override;
     int getAlphabeticModifiers()const override;
 
-    MenuItem& setAlphabeticShortcut(int alphaChar);
-    MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers);
+    MenuItem& setAlphabeticShortcut(int alphaChar)override;
+    MenuItem& setAlphabeticShortcut(int alphaChar, int alphaModifiers)override;
 
     int getNumericShortcut()const override;
     int getNumericModifiers()const override;
@@ -121,22 +121,22 @@ public:
     bool hasSubMenu()const override;
     void setSubMenu(SubMenuBuilder* subMenu);
 
-    std::string getTitle();
+    std::string getTitle()override;
     std::string getTitleForItemView(MenuView::ItemView* itemView);
-    MenuItem& setTitle(const std::string& title);
+    MenuItem& setTitle(const std::string& title)override;
 
-    std::string getTitleCondensed();
-    MenuItem& setTitleCondensed(const std::string& title);
+    std::string getTitleCondensed()override;
+    MenuItem& setTitleCondensed(const std::string& title)override;
 
-    Drawable* getIcon();
+    Drawable* getIcon()override;
     MenuItem& setIcon(Drawable* icon)override;
     MenuItem& setIcon(const std::string& iconResId)override;
 
-    MenuItem& setIconTintList(const ColorStateList* iconTintList);
-    const ColorStateList* getIconTintList();
+    MenuItem& setIconTintList(const ColorStateList* iconTintList)override;
+    const ColorStateList* getIconTintList()override;
 
-    MenuItem& setIconTintMode(int iconTintMode);
-    int getIconTintMode()const;
+    MenuItem& setIconTintMode(int iconTintMode)override;
+    int getIconTintMode()const override;
 
     bool isCheckable() const override;
     MenuItem& setCheckable(bool checkable)override;
@@ -152,10 +152,10 @@ public:
     bool setVisibleInt(bool shown);
     MenuItem& setVisible(bool shown)override;
 
-    MenuItem& setOnMenuItemClickListener(const MenuItem::OnMenuItemClickListener& clickListener);
+    MenuItem& setOnMenuItemClickListener(const MenuItem::OnMenuItemClickListener& clickListener)override;
 
     void setMenuInfo(ContextMenuInfo* menuInfo);
-    ContextMenuInfo* getMenuInfo();
+    ContextMenuInfo* getMenuInfo()override;
 
     void actionFormatChanged();
 
@@ -164,41 +164,41 @@ public:
     bool isActionButton()const;
 
     bool requestsActionButton();
-    bool requiresActionButton();
+    bool requiresActionButton()override;
 
-    bool requiresOverflow();
+    bool requiresOverflow()override;
 
     void setIsActionButton(bool isActionButton);
 
     bool showsTextAsAction()const;
 
-    void setShowAsAction(int actionEnum);
+    void setShowAsAction(int actionEnum) override;
 
-    MenuItem& setActionView(View* view);
-    MenuItem& setActionView(const std::string& resId);
+    MenuItem& setActionView(View* view)override;
+    MenuItem& setActionView(const std::string& resId)override;
 
     View* getActionView()override;
 
     ActionProvider* getActionProvider()override;
-    MenuItem& setActionProvider(ActionProvider* actionProvider);
+    MenuItem& setActionProvider(ActionProvider* actionProvider)override;
 
-    MenuItem& setShowAsActionFlags(int actionEnum);
+    MenuItem& setShowAsActionFlags(int actionEnum)override;
 
-    bool expandActionView();
-    bool collapseActionView();
+    bool expandActionView()override;
+    bool collapseActionView()override;
 
     MenuItem& setOnActionExpandListener(const OnActionExpandListener& listener)override;
 
     bool hasCollapsibleActionView();
     void setActionViewExpanded(bool isExpanded);
 
-    bool isActionViewExpanded()const;
+    bool isActionViewExpanded()const override;
     
-    MenuItem& setContentDescription(const std::string&contentDescription);
-    std::string getContentDescription();
+    MenuItem& setContentDescription(const std::string&contentDescription)override;
+    std::string getContentDescription()override;
 
-    MenuItem& setTooltipText(const std::string& tooltipText);
-    std::string getTooltipText();
+    MenuItem& setTooltipText(const std::string& tooltipText)override;
+    std::string getTooltipText()override;
 };
 }/*endof namespace*/
 #endif/*__MENUITEM_IMPL_H__*/

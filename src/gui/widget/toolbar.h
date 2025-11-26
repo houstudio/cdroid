@@ -156,7 +156,7 @@ public:
     void setTitleMarginEnd(int margin);
     int getTitleMarginBottom()const;
     void setTitleMarginBottom(int margin);
-    void onRtlPropertiesChanged(int layoutDirection);
+    void onRtlPropertiesChanged(int layoutDirection)override;
     bool canShowOverflowMenu()const;
     bool isOverflowMenuShowing()const;
     bool isOverflowMenuShowPending()const;

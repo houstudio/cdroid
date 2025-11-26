@@ -13,7 +13,7 @@
 #include <linux/input.h>
 #include <time.h>
 #include <pixman.h>
-
+static pthread_t xThreadId;
 static Display*x11Display=NULL;
 static Window x11Window=0;
 static Visual *x11Visual=NULL;
@@ -86,6 +86,7 @@ static void onExit() {
         XCloseDisplay(x11Display);
         x11Display=NULL;
     }
+    pthread_destroy(xThreadId);
 }
 
 int32_t GFXInit() {
@@ -93,7 +94,6 @@ int32_t GFXInit() {
     XInitThreads();
     x11Display=XOpenDisplay(NULL);
     if(x11Display) {
-        pthread_t tid;
         XSetWindowAttributes winattrs;
         XGCValues values;
         XSizeHints sizehints;
@@ -141,7 +141,7 @@ int32_t GFXInit() {
         XSelectInput(x11Display, x11Window, ExposureMask | KeyPressMask|KeyReleaseMask |ResizeRedirectMask|
                      ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask );
         XMapWindow(x11Display,x11Window);
-        pthread_create(&tid,NULL,X11EventProc,NULL);
+        pthread_create(&xThreadId,NULL,X11EventProc,NULL);
     }
     atexit(onExit);
     return E_OK;

@@ -136,9 +136,9 @@ public:
     /**
      * Dismisses the popup, if showing.
      */
-    void dismiss();
+    void dismiss()override;
     bool isShowing();
-    void setPresenterCallback(const MenuPresenter::Callback& cb);
+    void setPresenterCallback(const MenuPresenter::Callback& cb)override;
 };
 }/*endof namespace*/
 #endif/*__MENU_POPUP_HELPER_H__*/
