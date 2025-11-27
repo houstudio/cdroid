@@ -39,15 +39,6 @@ GetGitVersion(CDROID)
 message("VERSION=${CDROID_VERSION} ${CDROID_VERSION_MAJOR}.${CDROID_VERSION_MINOR}.${CDROID_VERSION_PATCH}
 CDROID_BUILD_NUMBER=${CDROID_BUILD_NUMBER} COMMIT_ID=${CDROID_COMMITID}")
 
-include(CheckIncludeFile)
-include(CheckFunctionExists)
-check_function_exists(mallinfo2 HAVE_MALLINFO2)
-check_function_exists(mallinfo HAVE_MALLINFO)
-check_function_exists(epoll_wait HAVE_EPOLL)
-check_function_exists(poll HAVE_POLL)
-check_function_exists(eventfd HAVE_EVENTFD)
-check_include_file("rtaudio/RtAudio.h" HAVE_RTAUDIO_H)
-
 configure_file(core/build.h.cmake ${PROJECT_SOURCE_DIR}/core/build.h)
 configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
 

@@ -6,6 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 include(cmake/depchecks.cmake)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
+include(cmake/check_cdroiddeps.cmake)
 
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)

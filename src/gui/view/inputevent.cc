@@ -22,9 +22,16 @@
 #include <utils/atexit.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
+#include <linux/random.h>
+#include <gui_features.h>
+
+#if HAVE_SYSRANDOM_H
+#include <sys/random.h>
+#endif
+
 #include <fcntl.h>
 #include <unistd.h>
-// --- InputEvent ---
+
 namespace cdroid{
 
 int InputEvent::mNextSeq=0;
@@ -242,11 +249,19 @@ static int getRandomBytes(uint8_t* data, size_t size) {
 
 IdGenerator::IdGenerator(Source source) : mSource(source) {}
 
+#if (__GNUC__ >= 3) //|| __glibc_has_builtin (__builtin_expect)
+# define CC_UNLIKELY(cond) __builtin_expect ((cond), 0)
+# define CC_LIKELY(cond)   __builtin_expect ((cond), 1)
+#else
+# define CC_UNLIKELY(cond) (cond)
+# define CC_LIKELY(cond)   (cond)
+#endif
+
 int32_t IdGenerator::nextId() const {
     constexpr uint32_t SEQUENCE_NUMBER_MASK = ~SOURCE_MASK;
     int32_t id = 0;
 
-#if defined(__ANDROID__)
+#if defined(__ANDROID__)&&HAVE_GETRANDOM
     // On device, prefer 'getrandom' to '/dev/urandom' because it's faster.
     constexpr size_t BUF_LEN = sizeof(id);
     size_t totalBytes = 0;
