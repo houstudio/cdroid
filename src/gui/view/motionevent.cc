@@ -1157,7 +1157,7 @@ float MotionEvent::calculateTransformedAxisValue(int32_t axis, uint32_t source,
 
     if (axis == MotionEvent::AXIS_X || axis == MotionEvent::AXIS_Y) {
         const vec2 xy = calculateTransformedXYUnchecked(source, transform, coords.getXYValue());
-        static_assert(MotionEvent::AXIS_X == 0 && MotionEvent::AXIS_Y == 1);
+        static_assert(MotionEvent::AXIS_X == 0 && MotionEvent::AXIS_Y == 1,"please check your AXIS_XXX definntions");
         return xy[axis];
     }
 

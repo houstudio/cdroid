@@ -59,7 +59,7 @@ public:
 
     int getOpacity()override;
 
-    void setAlpha(int alpha);
+    void setAlpha(int alpha)override;
     int getAlpha()const override;
 
     void setColorFilter(ColorFilter* cf)override;

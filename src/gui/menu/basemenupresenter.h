@@ -42,7 +42,7 @@ public:
 
     void initForMenu(Context* context, MenuBuilder* menu)override;
     ViewGroup* getMenuView(ViewGroup* root)override;
-    void updateMenuView(bool cleared);
+    void updateMenuView(bool cleared)override;
     void setCallback(const Callback& cb)override;
     Callback getCallback();
 
@@ -55,10 +55,10 @@ public:
 
     void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
     bool onSubMenuSelected(SubMenuBuilder* menu)override;
-    bool flagActionItems();
+    bool flagActionItems()override;
 
-    bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item);
-    bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item);
+    bool expandItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
+    bool collapseItemActionView(MenuBuilder& menu, MenuItemImpl& item)override;
 
     int getId() const override;
     void setId(int id);

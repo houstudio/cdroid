@@ -19,6 +19,15 @@
 #include <core/uieventsource.h>
 namespace cdroid{
 
+HandlerActionQueue::HandlerActionQueue(){
+}
+
+HandlerActionQueue::~HandlerActionQueue(){
+    for(auto action:mActions){
+        delete action;
+    }
+}
+
 void HandlerActionQueue::post(const Runnable& action) {
     postDelayed(action, 0);
 }

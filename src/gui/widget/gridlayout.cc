@@ -965,7 +965,7 @@ public:
         const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
-    GridLayout::Bounds*getBounds()const{
+    GridLayout::Bounds*getBounds()const override{
         return new BaseBounds();
     }
 };

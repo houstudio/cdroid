@@ -164,7 +164,7 @@ public:
     void removeOnGesturingListener(const OnGesturingListener& listener);
     void removeAllOnGesturingListeners();
     bool isGesturing()const;
-    void draw(Canvas& canvas);
+    void draw(Canvas& canvas)override;
     void clear(bool animated);
     void cancelClearAnimation();
     void cancelGesture();

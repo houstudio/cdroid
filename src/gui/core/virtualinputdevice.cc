@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <core/virtualinputdevice.h>
 #include <linux/uinput.h>
+#include <porting/cdlog.h>
 #include <cstring>
 #include <string>
 namespace {

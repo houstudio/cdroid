@@ -182,7 +182,7 @@ public:
     void clear()override;
 
     void setGroupCheckable(int group, bool checkable, bool exclusive)override;
-    void setGroupVisible(int group, bool visible);
+    void setGroupVisible(int group, bool visible)override;
     void setGroupEnabled(int group, bool enabled)override;
 
     bool hasVisibleItems()const override;

@@ -33,6 +33,8 @@ private:
 private:
     std::vector<HandlerAction*> mActions;
 public:
+    HandlerActionQueue();
+    virtual ~HandlerActionQueue();
     void post(const Runnable& action);
     void postDelayed(const Runnable& action, long delayMillis);
     void removeCallbacks(const Runnable& action);

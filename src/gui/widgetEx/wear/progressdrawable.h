@@ -56,7 +56,7 @@ public:
 
     void draw(Canvas& canvas) override;
 
-    void setAlpha(int i);
+    void setAlpha(int alpha)override;
 
     void setColorFilter(ColorFilter* colorFilter)override;
 

@@ -60,7 +60,7 @@ public:
     ~ActionMenuItemView()override;
     //void onConfigurationChanged(Configuration newConfig) override;
 
-    std::string getAccessibilityClassName() const;
+    std::string getAccessibilityClassName() const override;
 
     void setPadding(int l, int t, int r, int b) override;
 
@@ -77,24 +77,24 @@ public:
 
     bool prefersCondensedTitle()const override;
 
-    void setCheckable(bool checkable);
+    void setCheckable(bool checkable)override;
 
-    void setChecked(bool checked);
+    void setChecked(bool checked)override;
     void setEnabled(bool)override;
     void setExpandedFormat(bool expandedFormat);
 
     void setIcon(Drawable* icon)override;
     bool hasText()const;
 
-    void setShortcut(bool showShortcut, int shortcutKey);
+    void setShortcut(bool showShortcut, int shortcutKey)override;
 
-    void setTitle(const std::string& title);
+    void setTitle(const std::string& title)override;
 
     bool dispatchPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     void onPopulateAccessibilityEventInternal(AccessibilityEvent& event)override;
     bool dispatchHoverEvent(MotionEvent& event)override;
 
-    bool showsIcon();
+    bool showsIcon()override;
 
     bool needsDividerBefore()override;
     bool needsDividerAfter()override;

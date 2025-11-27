@@ -12,8 +12,6 @@ int main(int argc,const char*argv[]){
     Drawable*d=nullptr;
     StateListDrawable*sld;
     CompoundButton*chk;
-    LOGD("test LOGF %d",__LINE__);
-    LOG(DEBUG)<<"Test Stream(DEBUG)";
 #if 10
     Button *btn=new Button("Button",120,60);
     //d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
@@ -25,23 +23,21 @@ int main(int argc,const char*argv[]){
         AnimatorSet*aset= new AnimatorSet();
         Animator* alpha = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
         Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.5f});
-        alpha->setDuration(2000);
-        scale->setDuration(2000);
+        alpha->setDuration(200);
+        scale->setDuration(200);
         if(argc%2)aset->playTogether({alpha,scale});
         else aset->playSequentially({scale,alpha});
         aset->start();
         return false;
     });
     SpringAnimation spa(btn,(FloatProperty*)&SpringAnimation::SCALE_X,0.2);
-    spa.getSpring()
-        ->setStiffness(20.0f)
-        .setDampingRatio(0.1f);
-    DynamicAnimation::OnAnimationUpdateListener upls([&](DynamicAnimation& animation, float value, float velocity) {
+    spa.getSpring()/*->setStiffness(2.0f)*/->setDampingRatio(0.1f);
+    DynamicAnimation::OnAnimationUpdateListener upls=[&](DynamicAnimation& animation, float value, float velocity) {
         printf("[UPDATE] frame value=%.2f  velocity=%.2f\n", value, velocity);
-    }); 
-    DynamicAnimation::OnAnimationEndListener endls([&](DynamicAnimation& animation,bool canceled, float value, float velocity) {
+    };
+    DynamicAnimation::OnAnimationEndListener endls=[&](DynamicAnimation& animation,bool canceled, float value, float velocity) {
         printf("[END] frame value=%.2f  velocity=%.2f\n", value, velocity);
-    });
+    };
     spa.addUpdateListener(upls).addEndListener(endls).start();
 
     LOGD_IF(sld,"%p statecount=%d",sld,sld->getStateCount());
@@ -77,11 +73,16 @@ int main(int argc,const char*argv[]){
     btn->setClickable(true);
 
     chk=new CheckBox("CheckME",200,60);
+    chk->setId(1000);
+    chk->setChecked(true);
     d = ctx->getDrawable("cdroid:drawable/btn_check.xml");
     chk->setButtonDrawable(d);
-    chk->setChecked(true);
+    chk->setClickable(true);
     w->addView(chk);
-    chk->layout(350,150,200,60);
+    chk->setOnCheckedChangeListener([](CompoundButton&btn,bool checked){
+            LOGD("btn %p checked=%d",&btn,checked);
+            });
+    chk->layout(450,360,200,60);
 	
     /*AnalogClock*clk=new AnalogClock(300,300);
     d=ctx->getDrawable("cdroid:drawable/analog.xml");
@@ -94,9 +95,10 @@ int main(int argc,const char*argv[]){
     chk=new RadioButton("Radio",120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
+    chk->setId(1001);
     chk->setChecked(true);
     w->addView(chk);
-    chk->layout(600,150,120,60);
+    chk->layout(700,360,120,60);
 	
     EditText*edt=new EditText("Edit Me!",200,60);
     d=ctx->getDrawable("cdroid:drawable/edit_text.xml");//editbox_background.xml");
@@ -147,7 +149,6 @@ int main(int argc,const char*argv[]){
     sb->layout(150,250,800,30);
     w->addView(sb2);
     sb2->layout(150,300,800,30);
-
 #endif
     return app.exec();
 }

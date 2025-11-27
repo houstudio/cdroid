@@ -1,3 +1,4 @@
+  - DrawerLayout add Top/Bottom slider support
   - Add AsyncInflater
   - Add SlidingPaneLayout
   - Fix ViewDragHelper's memleak

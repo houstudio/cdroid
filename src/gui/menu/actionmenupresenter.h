@@ -125,7 +125,7 @@ public:
 
     bool isOverflowReserved() const;
 
-    bool flagActionItems();
+    bool flagActionItems()override;
 
     void onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)override;
 
@@ -168,7 +168,7 @@ public:
     bool performClick() override;
     bool needsDividerBefore() override;
     bool needsDividerAfter() override;
-    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info);
+    void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };
 
 class ActionMenuPresenter::OverflowPopup:public MenuPopupHelper {

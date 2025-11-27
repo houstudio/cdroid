@@ -43,7 +43,7 @@ LayoutInflater::LayoutInflater(Context*context) {
 
 LayoutInflater*LayoutInflater::from(Context*context) {
     auto it = mInflaters.find(context);
-    if(it==nullptr){
+    if(it== mInflaters.end()){
         LayoutInflater*layoutInfater = new LayoutInflater(context);
         mInflaters.insert({context,std::shared_ptr<LayoutInflater>(layoutInfater)});
         return layoutInfater;

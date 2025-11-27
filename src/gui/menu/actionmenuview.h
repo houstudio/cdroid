@@ -54,7 +54,7 @@ private:
     void onMeasureExactFormat(int widthMeasureSpec, int heightMeasureSpec);
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void onLayout(bool changed, int left, int top, int right, int bottom);
+    void onLayout(bool changed, int left, int top, int width, int height)override;
     LayoutParams* generateDefaultLayoutParams()const override;
     LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* p)const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p)const override;
@@ -86,9 +86,9 @@ public:
 
     virtual bool invokeItem(MenuItemImpl& item);
 
-    int getWindowAnimations();
+    int getWindowAnimations()override;
 
-    void initialize(MenuBuilder* menu);
+    void initialize(MenuBuilder* menu)override;
     Menu* getMenu();
 
     void setMenuCallbacks(const MenuPresenter::Callback& pcb, const MenuBuilder::Callback& mcb);
