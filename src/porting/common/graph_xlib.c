@@ -407,5 +407,6 @@ static void* X11EventProc(void*p) {
         };
         if(x11Display==0)break;
     }
+    pthread_exit(NULL);
 }
 
