@@ -1,0 +1,18 @@
+include(CheckIncludeFile)
+include(CheckFunctionExists)
+
+check_include_file(rtaudio/RtAudio.h HAVE_RTAUDIO_H)
+check_include_file(sys/random.h HAVE_SYSRANDOM_H)
+check_include_file(execinfo.h HAVE_EXECINFO_H)
+check_include_file(drm.h HAVE_DRM_H)
+check_include_file(poll.h HAVE_POLL_H)
+check_include_file(sys/epoll.h  HAVE_EPOLL_H)
+check_include_file(linux/input.h HAVE_INPUT_H)
+check_include_file(iconv.h HAVE_ICONV_H)
+
+check_function_exists(mallinfo2 HAVE_MALLINFO2)
+check_function_exists(mallinfo HAVE_MALLINFO)
+check_function_exists(epoll_wait HAVE_EPOLL)
+check_function_exists(poll HAVE_POLL)
+check_function_exists(eventfd HAVE_EVENTFD)
+check_function_exists(getrandom HAVE_GETRANDOM)
