@@ -11,7 +11,6 @@
 #include <string.h>
 #include <linux/input.h>
 #include <time.h>
-#include <xcbwin.h>
 static xcb_connection_t *xcbConnection = NULL;
 static xcb_window_t xcbWindow;
 static xcb_gcontext_t xcbGC;
