@@ -5,11 +5,14 @@
 #include <stdlib.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
+#include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/keysymdef.h>
 #include <pthread.h>
 #include <string.h>
 #include <linux/input.h>
 #include <time.h>
+static Display *xcbDisplay;
 static xcb_connection_t *xcbConnection = NULL;
 static const xcb_setup_t *xcbSetup=NULL;
 static xcb_window_t xcbWindow;
@@ -17,7 +20,6 @@ static xcb_gcontext_t xcbGC;
 static xcb_pixmap_t xcbPixmap;
 static xcb_image_t*mainSurface=NULL;
 static void* XCBEventProc(void*p);
-const char *xcb_error_to_string(int error_code);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #if 1
@@ -81,6 +83,7 @@ static void onExit() {
 int32_t GFXInit() {
     if(xcbConnection)return E_OK;
     //xcw.Open(800,600);
+    xcbDisplay = XOpenDisplay(NULL);
     xcbConnection = xcb_connect(NULL, NULL);
     if (xcb_connection_has_error(xcbConnection)) {
         LOGE("Cannot open display %p",xcbConnection);
@@ -122,7 +125,7 @@ int32_t GFXInit() {
     xcbWindow = xcb_generate_id(xcbConnection);
     uint32_t value_mask = XCB_CW_BACK_PIXMAP |XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
     uint32_t value_list[4] = { xcbPixmap, screen->white_pixel,
-        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS
+        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS | XCB_EVENT_MASK_KEY_RELEASE
         |XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION};
 
     xcb_create_window(xcbConnection, XCB_COPY_FROM_PARENT,
@@ -292,7 +295,6 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         xcb_image_put(xcbConnection,xcbPixmap,xcbGC,subimage,dx,dy,0);
         xcb_image_destroy(subimage);
         XCBExpose(dx,dy,rs.w,rs.h);
-        xcb_flush(xcbConnection);
     }
     return 0;
 }
@@ -314,9 +316,9 @@ static struct{int xkey;int key;}X11KEY2CD[]={
 
 static void* XCBEventProc(void*p) {
     xcb_generic_event_t *event;
-    LOGD("XCBEventProc");
     while ((event = xcb_wait_for_event(xcbConnection))) {
-        switch (event->response_type & ~0x80) {
+        const int eventType =event->response_type & ~0x80;
+        switch (eventType) {
         case XCB_EXPOSE: {
             xcb_expose_event_t *expose = (xcb_expose_event_t *) event;
             if(mainSurface){
@@ -326,23 +328,24 @@ static void* XCBEventProc(void*p) {
             }
             break;
         }
-        case XCB_KEY_PRESS: {
+        case XCB_KEY_PRESS:
+        case XCB_KEY_RELEASE:{
             xcb_key_press_event_t *key_press = (xcb_key_press_event_t *) event;
-            LOGD("Key press event: key %d, state 0x%08x", key_press->detail, key_press->state);
+            KeySym keysym = XkbKeycodeToKeysym(xcbDisplay, key_press->detail, 0, 0);
+            for(int i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
+                if(keysym==X11KEY2CD[i].xkey){
+                    SENDKEY(X11KEY2CD[i].key,eventType==XCB_KEY_PRESS);
+                    break;
+                }
+            }
+            LOGD("Key press event: key %d, state keyname=%s", key_press->detail, key_press->state,XKeysymToString(keysym));
             break;
         }
-        case XCB_BUTTON_PRESS: {
-            xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
-            InjectABS(bp->time,EV_KEY,BTN_TOUCH,1);
-            SENDMOUSE(bp->time,bp->event_x - screenMargin.x, bp->event_y - screenMargin.y);
-            LOGD("Button press event: button %d, state 0x%08x", bp->detail, bp->state);
-            break;
-        }
+        case XCB_BUTTON_PRESS:
         case XCB_BUTTON_RELEASE:{
-            xcb_button_release_event_t *br = (xcb_button_release_event_t *)event;
-            InjectABS(br->time,EV_KEY,BTN_TOUCH,0);
-            SENDMOUSE(br->time,br->event_x - screenMargin.x, br->event_y - screenMargin.y);
-            LOGD("Button Release: button=%d, x=%d, y=%d", br->detail, br->event_x, br->event_y);
+            xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
+            InjectABS(bp->time,EV_KEY,BTN_TOUCH,eventType==XCB_BUTTON_PRESS?1:0);
+            SENDMOUSE(bp->time,bp->event_x - screenMargin.x, bp->event_y - screenMargin.y);
             break;
         }
         case XCB_MOTION_NOTIFY:{
@@ -351,7 +354,7 @@ static void* XCBEventProc(void*p) {
             LOGV("Motion Notify: x=%d, y=%d", mv->event_x, mv->event_y);
         }
         default:
-            LOGV("Unknown event type: %d", event->response_type & ~0x80);
+            LOGV("Unknown event type: %d", eventType);
             break;
         }
         free(event);
@@ -362,25 +365,3 @@ static void* XCBEventProc(void*p) {
     return NULL;
 }
 
-const char *xcb_error_to_string(int error_code) {
-    switch (error_code) {
-        case XCB_REQUEST: return "XCB_REQUEST";
-        case XCB_VALUE: return "XCB_VALUE";
-        case XCB_WINDOW: return "XCB_WINDOW";
-        case XCB_PIXMAP: return "XCB_PIXMAP";
-        case XCB_ATOM: return "XCB_ATOM";
-        case XCB_CURSOR: return "XCB_CURSOR";
-        case XCB_FONT: return "XCB_FONT";
-        case XCB_MATCH: return "XCB_MATCH";
-        case XCB_DRAWABLE: return "XCB_DRAWABLE";
-        case XCB_ACCESS: return "XCB_ACCESS";
-        case XCB_ALLOC: return "XCB_ALLOC";
-        case XCB_COLORMAP: return "XCB_COLORMAP";
-        case XCB_G_CONTEXT: return "XCB_G_CONTEXT";
-        case XCB_ID_CHOICE: return "XCB_ID_CHOICE";
-        case XCB_NAME: return "XCB_NAME";
-        case XCB_LENGTH: return "XCB_LENGTH";
-        case XCB_IMPLEMENTATION: return "XCB_IMPLEMENTATION";
-        default: return "Unknown XCB error";
-    }
-}
