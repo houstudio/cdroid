@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <xcb/xcb.h>
 #include <xcb/xcb_image.h>
-#include <xcb/xcb_keysyms.h>
 #include <X11/keysym.h>
 #include <pthread.h>
 #include <string.h>
 #include <linux/input.h>
 #include <time.h>
 static xcb_connection_t *xcbConnection = NULL;
+static const xcb_setup_t *xcbSetup=NULL;
 static xcb_window_t xcbWindow;
 static xcb_gcontext_t xcbGC;
 static xcb_pixmap_t xcbPixmap;
@@ -19,7 +19,6 @@ static xcb_image_t*mainSurface=NULL;
 static void* XCBEventProc(void*p);
 const char *xcb_error_to_string(int error_code);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
-//#define USE_PIXMAN 1
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #if 1
    #define SENDMOUSE(time,x,y)  {\
@@ -29,10 +28,10 @@ static GFXRect screenMargin= {0}; //{60,0,60,0};
       InjectABS(time,EV_ABS,SYN_MT_REPORT,0);\
       InjectABS(time,EV_SYN,SYN_REPORT,0);}
 
-/*   #define SENDMOUSE(time,x,y)  {\
+   #define SENDMOUSE(time,x,y)  {\
       InjectABS(time,EV_ABS,ABS_X,x);\
       InjectABS(time,EV_ABS,ABS_Y,y);\
-      InjectABS(time,EV_SYN,SYN_REPORT,0);}*/
+      InjectABS(time,EV_SYN,SYN_REPORT,0);}
 #else
    #define SENDMOUSE(time,x,y)  {\
       InjectREL(time,EV_REL,REL_X,x);\
@@ -87,11 +86,17 @@ int32_t GFXInit() {
         LOGE("Cannot open display %p",xcbConnection);
         return E_ERROR;
     }
-    const xcb_setup_t *setup = xcb_get_setup(xcbConnection);
-    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(setup);
+    xcbSetup = xcb_get_setup(xcbConnection);
+    xcb_screen_iterator_t iter = xcb_setup_roots_iterator(xcbSetup);
     xcb_screen_t *screen = iter.data;
+    
+    xcb_format_iterator_t iterator = xcb_setup_pixmap_formats_iterator(xcbSetup);
 
-    pthread_t xThreadId;
+    while (iterator.rem) {
+        xcb_format_t *format = iterator.data;
+        LOGD("depth=%d bits_per_pixel=%d scanline_pad=%d",format->depth,format->bits_per_pixel,format->scanline_pad);
+        xcb_format_next(&iterator);
+    } 
     uint32_t width,height;
     const char*strMargin=getenv("SCREEN_MARGINS");
     const char* DELIM=",;";
@@ -116,10 +121,9 @@ int32_t GFXInit() {
 
     xcbWindow = xcb_generate_id(xcbConnection);
     uint32_t value_mask = XCB_CW_BACK_PIXMAP |XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK;
-    uint32_t value_list[4] = {
-        xcbPixmap,
-        screen->white_pixel,
-        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS};
+    uint32_t value_list[4] = { xcbPixmap, screen->white_pixel,
+        XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_KEY_PRESS
+        |XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE | XCB_EVENT_MASK_POINTER_MOTION};
 
     xcb_create_window(xcbConnection, XCB_COPY_FROM_PARENT,
         xcbWindow, screen->root, 0, 0, width, height, 4,
@@ -138,6 +142,7 @@ int32_t GFXInit() {
     xcb_flush(xcbConnection);
 
     LOGD("xcbConnection=%p xcbWindow=%p(%dx%dx%d) maxlen=%d",xcbConnection,xcbWindow,width,height,screen->root_depth,xcb_get_maximum_request_length(xcbConnection));
+    pthread_t xThreadId;
     pthread_create(&xThreadId,NULL,XCBEventProc,NULL);
     pthread_detach(xThreadId);
     atexit(onExit);
@@ -218,6 +223,7 @@ static void XCBExpose(int x,int y,int width,int height){
     ev.count=0;
     xcb_send_event(xcbConnection, 0, xcbWindow, XCB_EVENT_MASK_EXPOSURE, (char *)&ev);
 }
+
 int32_t GFXFlip(GFXHANDLE surface) {
     xcb_image_t *img=(xcb_image_t*)surface;
     if(mainSurface==surface) {
@@ -233,11 +239,9 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         width += screenMargin.x + screenMargin.w;
         height+= screenMargin.y + screenMargin.h;
     }
-    void*base =malloc(width*height*4);
-    img=xcb_image_create(width,height,XCB_IMAGE_FORMAT_Z_PIXMAP,0/*xpad*/,32,32,0,
-                XCB_IMAGE_ORDER_LSB_FIRST, XCB_IMAGE_ORDER_LSB_FIRST,base, width*height*4, (uint8_t*)base);
+    img = xcb_image_create(width,height,XCB_IMAGE_FORMAT_Z_PIXMAP,32/*xpad*/,24,32,0,
+                XCB_IMAGE_ORDER_LSB_FIRST, XCB_IMAGE_ORDER_LSB_FIRST,NULL, width*height*4, NULL);
     *surface=img;
-    img->stride=width*4;
     LOGD("%p:%p  size=%dx%dx%d %d hwsurface=%d",img,img->data,width,height,img->stride,img->bpp,hwsurface);
     if(hwsurface) {
         mainSurface=img;
@@ -272,7 +276,6 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     if(dx + rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
     if(dy + rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
 
-    //LOGV_IF(ndst==mainSurface,"Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     pbs += rs.y*nsrc->stride+rs.x*4;
     pbd += dy*ndst->stride+dx*4;
     if(ndst==mainSurface) {
@@ -284,9 +287,10 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         pbd+=ndst->stride;
     }
     if((ndst==mainSurface)&&xcbConnection) {
-    LOGD("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
-        for(int x=100;x<200;x++)for(int y=100;y<200;y++)xcb_image_put_pixel(mainSurface,x,y,0xFFFF0000|x<<12|y);
-        xcb_image_put(xcbConnection,xcbPixmap,xcbGC,mainSurface,dx,dy,0);
+        LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
+        xcb_image_t*subimage=xcb_image_subimage(mainSurface,rs.x,rs.y,rs.w,rs.h,NULL,mainSurface->size,NULL);
+        xcb_image_put(xcbConnection,xcbPixmap,xcbGC,subimage,dx,dy,0);
+        xcb_image_destroy(subimage);
         XCBExpose(dx,dy,rs.w,rs.h);
         xcb_flush(xcbConnection);
     }
@@ -318,7 +322,7 @@ static void* XCBEventProc(void*p) {
             if(mainSurface){
                 xcb_copy_area(xcbConnection, xcbPixmap, xcbWindow,xcbGC,expose->x,expose->y,expose->x,expose->y, expose->width,expose->height);
                 xcb_flush(xcbConnection);
-                LOGD("Expose event on window 0x%08x (%d,%d,%d,%d)mainSurface=%p", expose->window,expose->x,expose->y,expose->width,expose->height,mainSurface);
+                LOGV("Expose event on window 0x%08x (%d,%d,%d,%d)mainSurface=%p", expose->window,expose->x,expose->y,expose->width,expose->height,mainSurface);
             }
             break;
         }
@@ -328,12 +332,26 @@ static void* XCBEventProc(void*p) {
             break;
         }
         case XCB_BUTTON_PRESS: {
-            xcb_button_press_event_t *button_press = (xcb_button_press_event_t *) event;
-            LOGD("Button press event: button %d, state 0x%08x", button_press->detail, button_press->state);
+            xcb_button_press_event_t *bp = (xcb_button_press_event_t *) event;
+            InjectABS(bp->time,EV_KEY,BTN_TOUCH,1);
+            SENDMOUSE(bp->time,bp->event_x - screenMargin.x, bp->event_y - screenMargin.y);
+            LOGD("Button press event: button %d, state 0x%08x", bp->detail, bp->state);
             break;
         }
+        case XCB_BUTTON_RELEASE:{
+            xcb_button_release_event_t *br = (xcb_button_release_event_t *)event;
+            InjectABS(br->time,EV_KEY,BTN_TOUCH,0);
+            SENDMOUSE(br->time,br->event_x - screenMargin.x, br->event_y - screenMargin.y);
+            LOGD("Button Release: button=%d, x=%d, y=%d", br->detail, br->event_x, br->event_y);
+            break;
+        }
+        case XCB_MOTION_NOTIFY:{
+            xcb_motion_notify_event_t *mv = (xcb_motion_notify_event_t *)event;
+            SENDMOUSE(mv->time,mv->event_x - screenMargin.x, mv->event_y - screenMargin.y);
+            LOGV("Motion Notify: x=%d, y=%d", mv->event_x, mv->event_y);
+        }
         default:
-            LOGD("Unknown event type: %d", event->response_type & ~0x80);
+            LOGV("Unknown event type: %d", event->response_type & ~0x80);
             break;
         }
         free(event);
