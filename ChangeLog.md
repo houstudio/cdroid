@@ -1,4 +1,5 @@
   - DrawerLayout add Top/Bottom slider support
+  - Add XCB Graph support,faster than XLIB and no tearing
   - Add AsyncInflater
   - Add SlidingPaneLayout
   - Fix ViewDragHelper's memleak

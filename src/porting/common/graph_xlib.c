@@ -19,6 +19,7 @@ static Visual *x11Visual=NULL;
 static Atom WM_DELETE_WINDOW;
 static GC mainGC=0;
 static XImage*mainSurface=NULL;
+static Pixmap x11Pixmap;
 static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
 #define USE_PIXMAN 1
@@ -80,6 +81,7 @@ static void InjectREL(unsigned long time,int type,int axis,int value) {
 static void onExit() {
     LOGD("X11 Graph shutdown!");
     if(x11Display) {
+        XFreePixmap(x11Display,x11Pixmap);
         XSelectInput(x11Display,x11Window,0);
         XDestroyWindow(x11Display,x11Window);
         XCloseDisplay(x11Display);
@@ -119,21 +121,7 @@ int32_t GFXInit() {
         x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
                     1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
         LOGI("screenMargin=(%d,%d,%d,%d)[%s]",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin);
-#if 0
-        sizehints.flags = PMinSize | PMaxSize;
-        sizehints.min_width = width;
-        sizehints.max_width = width;
-        sizehints.min_height = height;
-        sizehints.max_height = height;
-        XSetWMNormalHints(x11Display,x11Window,&sizehints);
-
-        XRenderPictFormat* pictFormat = XRenderFindVisualFormat(x11Display, x11Visual);
-        Picture picture = XRenderCreatePicture(x11Display, x11Window, pictFormat, 0, NULL);
-        shminfo.shmid = shmget(IPC_PRIVATE, width*height*4, IPC_CREAT | 0666);
-        shminfo.shmaddr = shmat(shminfo.shmid, 0, 0);
-        shminfo.readOnly = False;
-        XShmAttach(x11Display, &shminfo);
-#endif
+        x11Pixmap = XCreatePixmap(x11Display, x11Window, width, height,DefaultDepth(x11Display, screen));
         WM_DELETE_WINDOW = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
         XSetWMProtocols(x11Display,x11Window, &WM_DELETE_WINDOW, 1);
         mainGC = XCreateGC(x11Display,x11Window,0, &values);
@@ -329,6 +317,7 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 #endif
     LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
     if((ndst==mainSurface)&&x11Display) {
+        XPutImage(x11Display,x11Pixmap,mainGC,ndst,rs.x,rs.y,dx,dy,rs.w,rs.h);
         X11Expose(dx+screenMargin.x,dy+screenMargin.h,rs.w,rs.h);
     }
     return 0;
@@ -357,8 +346,8 @@ static void* X11EventProc(void*p) {
         switch(event.type) {
         case Expose:
             if(mainSurface) {
-                XExposeEvent e=event.xexpose;
-                XPutImage(x11Display,x11Window,mainGC,mainSurface,e.x,e.y,e.x,e.y,e.width,e.height);
+                XExposeEvent e = event.xexpose;
+                XCopyArea(x11Display, x11Pixmap, x11Window, mainGC,e.x,e.y,e.width,e.height,e.x,e.y);
             }
             break;
         case ConfigureNotify:
