@@ -338,7 +338,7 @@ static void* XCBEventProc(void*p) {
                     break;
                 }
             }
-            LOGD("Key press event: key %d, state keyname=%s", key_press->detail, key_press->state,XKeysymToString(keysym));
+            LOGD("Key press event: key %d, state %d keyname=%s", key_press->detail, key_press->state,XKeysymToString(keysym));
             break;
         }
         case XCB_BUTTON_PRESS:
