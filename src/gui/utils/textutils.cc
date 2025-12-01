@@ -374,28 +374,28 @@ std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
 
         /* 12h*/
         if (c == 'h' && *(p+1) != 'h') {
-            unsigned h12 = h24 % 12; if (h12 == 0) h12 = 12;
-            char b[3]; std::snprintf(b, 3, "%u", h12); out += b; continue;
+            uint32_t h12 = h24 % 12; if (h12 == 0) h12 = 12;
+            char b[16]; std::snprintf(b, 3, "%d", h12); out += b; continue;
         }
         if (c == 'h' && *(p+1) == 'h') {
-            unsigned h12 = h24%12; if (h12 == 0) h12 = 12;
-            char b[3]; std::snprintf(b, 3, "%02u", h12); out += b; ++p; continue;
+            uint32_t h12 = h24%12; if (h12 == 0) h12 = 12;
+            char b[16]; std::snprintf(b, 3, "%02d", h12); out += b; ++p; continue;
         }
 
         /* minute */
         if (c == 'm' && *(p+1) != 'm') {
-            char b[3]; std::snprintf(b, 3, "%u", m % 60); out += b; continue;
+            char b[8]; std::snprintf(b, 3, "%u", m % 60); out += b; continue;
         }
         if (c == 'm' && *(p+1) == 'm') {
-            char b[3]; std::snprintf(b, 3, "%02u", m % 60); out += b; ++p; continue;
+            char b[8]; std::snprintf(b, 3, "%02u", m % 60); out += b; ++p; continue;
         }
 
         /* second */
         if (c == 's' && *(p+1) != 's') {
-            char b[3]; std::snprintf(b, 3, "%u", s % 60); out += b; continue;
+            char b[8]; std::snprintf(b, 3, "%u", s % 60); out += b; continue;
         }
         if (c == 's' && *(p+1) == 's') {
-            char b[3]; std::snprintf(b, 3, "%02u", s % 60); out += b; ++p; continue;
+            char b[8]; std::snprintf(b, 3, "%02u", s % 60); out += b; ++p; continue;
         }
 
         /* AM/PM */
