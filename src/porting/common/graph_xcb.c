@@ -136,10 +136,10 @@ int32_t GFXInit() {
     xcb_change_property(xcbConnection, XCB_PROP_MODE_REPLACE, xcbWindow,
             XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 8, 6,"CDROID"); 
 
-    
-    const uint32_t gc_values[] = {0};
+    const uint32_t gc_mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
+    const uint32_t gc_values[] = {screen->black_pixel, 0};
     xcbGC = xcb_generate_id(xcbConnection);
-    xcb_create_gc(xcbConnection, xcbGC, xcbPixmap, 0, gc_values);
+    xcb_create_gc(xcbConnection, xcbGC, xcbPixmap, gc_mask, gc_values);
     
     xcb_map_window(xcbConnection, xcbWindow);
     xcb_flush(xcbConnection);
@@ -194,6 +194,18 @@ int32_t GFXSurfaceSetOpacity(GFXHANDLE surface,uint8_t alpha) {
     return 0;//dispLayer->SetOpacity(dispLayer,alpha);
 }
 
+static void XCBExpose(int x,int y,int width,int height){
+    xcb_expose_event_t ev;
+    ev.response_type = XCB_EXPOSE;
+    ev.window = xcbWindow;
+    ev.x=x;  ev.y=y;
+    ev.width = width;
+    ev.height= height;
+    ev.count=0;
+    xcb_send_event(xcbConnection, 0, xcbWindow, XCB_EVENT_MASK_EXPOSURE, (char *)&ev);
+    //xcb_clear_area(xcbConnection,0,xcbWindow,x,y,width,height);
+}
+
 int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     xcb_image_t*img=(xcb_image_t*)surface;
     uint32_t x,y;
@@ -210,28 +222,16 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
         memcpy(fb,fbtop,rec.w*4);
     }
     if(surface==mainSurface) {
-        xcb_clear_area(xcbConnection, 0, xcbWindow, 0,0,img->width,img->height);
+        XCBExpose(rec.x,rec.y,rec.w,rec.h);
     }
     return E_OK;
-}
-
-static void XCBExpose(int x,int y,int width,int height){
-    xcb_expose_event_t ev;
-    ev.response_type = XCB_EXPOSE;
-    ev.window = xcbWindow;
-    ev.x=x;
-    ev.y=y;
-    ev.width=width;
-    ev.height=height;
-    ev.count=0;
-    xcb_send_event(xcbConnection, 0, xcbWindow, XCB_EVENT_MASK_EXPOSURE, (char *)&ev);
 }
 
 int32_t GFXFlip(GFXHANDLE surface) {
     xcb_image_t *img=(xcb_image_t*)surface;
     if(mainSurface==surface) {
         GFXRect rect= {0,0,img->width,img->height};
-        //XCBExpose(0,0,img->width,img->height);//very slowly
+        xcb_flush(xcbConnection);
     }
     return 0;
 }
@@ -256,11 +256,11 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     xcb_image_t *ndst=(xcb_image_t*)dstsurface;
     xcb_image_t *nsrc=(xcb_image_t*)srcsurface;
     GFXRect rs= {0,0};
-    uint8_t*pbs=(uint8_t*)nsrc->data;
-    uint8_t*pbd=(uint8_t*)ndst->data;
-    rs.w=nsrc->width;
-    rs.h=nsrc->height;
-    if(srcrect)rs=*srcrect;
+    uint8_t*pbs = (uint8_t*)nsrc->data;
+    uint8_t*pbd = (uint8_t*)ndst->data;
+    rs.w = nsrc->width;
+    rs.h = nsrc->height;
+    if(srcrect)rs = *srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)) {
         LOGD("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
         return E_INVALID_PARA;
@@ -324,7 +324,7 @@ static void* XCBEventProc(void*p) {
             if(mainSurface){
                 xcb_copy_area(xcbConnection, xcbPixmap, xcbWindow,xcbGC,expose->x,expose->y,expose->x,expose->y, expose->width,expose->height);
                 xcb_flush(xcbConnection);
-                LOGV("Expose event on window 0x%08x (%d,%d,%d,%d)mainSurface=%p", expose->window,expose->x,expose->y,expose->width,expose->height,mainSurface);
+                LOGV("Expose event on window 0x%08x (%d,%d,%d,%d)count=%d", expose->window,expose->x,expose->y,expose->width,expose->height,expose->count);
             }
             break;
         }
@@ -338,7 +338,7 @@ static void* XCBEventProc(void*p) {
                     break;
                 }
             }
-            LOGD("Key press event: key %d, state keyname=%s", key_press->detail, key_press->state,XKeysymToString(keysym));
+            LOGD("Key press event: key %d, state %d keyname=%s", key_press->detail, key_press->state,XKeysymToString(keysym));
             break;
         }
         case XCB_BUTTON_PRESS:
