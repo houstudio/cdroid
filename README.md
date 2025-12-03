@@ -4,7 +4,7 @@
 * Mirrored repository: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
 # **Features:**
 * Multi Layer/Multi Window 
-* Integrated with 40+ UI Components and 20+ Drawables(compatible with android)
+* Integrated with 50+ UI Components and 20+ Drawables(compatible with android)
 * All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
 * Vector Graph supported via **Cairo**
 # **Quick Start**
@@ -25,20 +25,20 @@
 ![输入图片说明](https://foruda.gitee.com/images/1696897716776731960/47e420c7_8310459.png "asd4.png")
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 
-|  View         |     TextView      |  Button            |  ImageView    |  ImageButton  |
-|---------------|-------------------|--------------------|---------------|---------------|
-|CompoundButton |    ToggleButton   |     CheckBox       | RadioButton   |  ProgressBar  |
-|   SeekBar     |   Chronometer     |    AnalogClock     |   ViewGroup   |  RadioGroup   |
-|  ScrollView   |    ViewPager      |  SimpleMonthView   |    Switch     |   RatingBar   |
-| NumberPicker  |     ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
-| ViewAnimator  |AdapterViewAnimator|    Calendarview    |SimpleMonthView| Chronometer   |
-|  ScrollView   | NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |                   |WearableRecyclerView|               |               |
+|  View         |      TextView      |  Button            |  ImageView    |  ImageButton  |
+|---------------|--------------------|--------------------|---------------|---------------|
+|CompoundButton |    ToggleButton    |     CheckBox       | RadioButton   |  ProgressBar  |
+|   SeekBar     |   Chronometer      |    AnalogClock     |   ViewGroup   |  RadioGroup   |
+|  ScrollView   |    ViewPager       |  SimpleMonthView   |    Switch     |   RatingBar   |
+| NumberPicker  |     ListView       |     GridView       | RecyclerView  |  ViewFlipper  |
+| ViewAnimator  |AdapterViewAnimator |    Calendarview    |SimpleMonthView| Chronometer   |
+|  ScrollView   | NestedScrollView   |HorizontalScrollView| DateTimeView  |   ViewPager2  |
+|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |               |
 
 # **Supported Layouts:**
-| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |
-|-------------|----------------|----------------|------------------|
-| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView|
+| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
+|-------------|----------------|----------------|------------------|-------------------|
+| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
 
 # **Supported Drawables:**
 |   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable    |  InsetDrawable  |

@@ -6,7 +6,7 @@
 * 技术支持：QQ:1225012331 微信:calfhou
 # **Features:**
 * Multi Layer/Multi Window 
-* 集成40+ 安卓兼容的UI组件和20+ Drawables
+* 集成50+ 安卓兼容的UI组件和20+ Drawables
 * 所有UI组件(Layouts,Drawables...)可以在安卓兼容的开发环境(**AndroidStudio or Eclipse**)中进行设计 
 * 基于 **Cairo**的矢量图形引擎
 # **Quick Start**
@@ -28,20 +28,20 @@
 ![Pott](https://gitee.com/houstudio/cdroid/raw/master/docs/images/screenshots/plot.png)
 
 # **UI Components:**
-|  View         |     TextView      |  Button            |  ImageView    |  ImageButton  |
-|---------------|-------------------|--------------------|---------------|---------------|
-|CompoundButton |    ToggleButton   |     CheckBox       |  RadioButton  |  ProgressBar  |
-|   SeekBar     |   Chronometer     |    AnalogClock     |   ViewGroup   |  RadioGroup   |
-|  ScrollView   |    ViewPager      |  SimpleMonthView   |    Switch     |   RatingBar   |
-| NumberPicker  |     ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
-| ViewAnimator  |AdapterViewAnimator|    Calendarview    |SimpleMonthView|  Chronometer  |
-|  ScrollView   | NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |                   |                    |               |               |
+|  View         |     TextView       |  Button            |  ImageView    |  ImageButton  |
+|---------------|--------------------|--------------------|---------------|---------------|
+|CompoundButton |    ToggleButton    |     CheckBox       |  RadioButton  |  ProgressBar  |
+|   SeekBar     |    Chronometer     |    AnalogClock     |   ViewGroup   |  RadioGroup   |
+|  ScrollView   |     ViewPager      |  SimpleMonthView   |    Switch     |   RatingBar   |
+| NumberPicker  |      ListView      |     GridView       | RecyclerView  |  ViewFlipper  |
+| ViewAnimator  | AdapterViewAnimator|    Calendarview    |SimpleMonthView|  Chronometer  |
+|  ScrollView   |  NestedScrollView  |HorizontalScrollView| DateTimeView  |   ViewPager2  |
+|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |               |
 
 # **Supported Layouts:**
-| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |
-|-------------|----------------|----------------|------------------|
-| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView|
+| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
+|-------------|----------------|----------------|------------------|-------------------|
+| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
 
 # **Supported Drawables:**
 |   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
