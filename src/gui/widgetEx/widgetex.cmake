@@ -25,8 +25,11 @@ SET(WIDGETEX_SOURCES
     #widgetEx/recyclerview/carousellayoutmanager.cc
     widgetEx/recyclerview/adapterhelper.cc
     widgetEx/viewgrouputils.cc
-    widgetEx/coordinatorlayout.cc
 )
+endif()
+
+if(ENABLE_COORDINATORLAYOUT)
+    list(APPEND WIDGETEX_SOURCES widgetEx/coordinatorlayout.cc)
 endif()
 
 if(ENABLE_FLEXBOXLAYOUT)

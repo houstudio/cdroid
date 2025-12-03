@@ -362,6 +362,7 @@ static void* XCBEventProc(void*p) {
     xcb_destroy_window(xcbConnection, xcbWindow);
     xcb_disconnect(xcbConnection);
     LOGD("XCBEventProc End.");
+    exit(0);
     return NULL;
 }
 

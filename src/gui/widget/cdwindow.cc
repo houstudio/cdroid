@@ -533,7 +533,8 @@ int Window::processKeyEvent(KeyEvent&event){
     int handled = FINISH_NOT_HANDLED;
     int groupNavigationDirection = 0;
     const int action = event.getAction();
-    LOGV_IF(action==KeyEvent::ACTION_DOWN,"key:0x%x %s %x",event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KeyEvent::KEYCODE_DPAD_DOWN);
+    LOGV_IF(action==KeyEvent::ACTION_DOWN|1,"%s:0x%x %s %x",event.actionToString(action).c_str(),
+            event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
     if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
