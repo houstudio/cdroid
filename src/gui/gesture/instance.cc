@@ -67,7 +67,7 @@ std::vector<float> Instance::spatialSampler(const Gesture& gesture) {
     return GestureUtils::spatialSampling(gesture, PATCH_SAMPLE_SIZE, false);
 }
 
-static float ORIENTATIONS[] = {
+static constexpr float ORIENTATIONS[] = {
      0, (float) (M_PI / 4), (float) (M_PI / 2),
      (float) (M_PI * 3 / 4),(float) M_PI, -0,
      (float) (-M_PI / 4), (float) (-M_PI / 2),
