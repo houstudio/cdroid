@@ -11,6 +11,6 @@ int SYSSuspend(){
 }
 
 int SYSGetSerialNo(char*sn,int max_size){
-    sprintf(sn,"%llx",0x12345678);
+    sprintf(sn,"%ux",0x12345678);
     return 0;
 }
