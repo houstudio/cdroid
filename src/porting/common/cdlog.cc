@@ -6,6 +6,11 @@
 #include <map>
 #include <shared_queue.h>
 #include <iomanip>
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#elif HAVE_LINUX_PRCTL_H
+#include <linux/prctl.h>
+#endif
 #if defined(__Linux__)||defined(__unix__)
 #include <unistd.h>
 #include <cxxabi.h>
@@ -56,6 +61,11 @@ static void LogInit() {
     static std::once_flag sInit;
     std::call_once(sInit,[&]() {
         std::thread th([]() {
+#if HAVE_PRCTL
+            prctl(PR_SET_NAME,"LogThread",0,0,0);
+#elif HAVE_PTHREAD_SETNAME_NP
+            pthread_setname_np(pthread_self(), "LogThread");
+#endif
             while(1) {
                 std::string msg;
                 if(dbgMessages.size()==0)dbgMessages.wait_and_pop(msg,INT_MAX);

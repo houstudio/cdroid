@@ -1,10 +1,30 @@
 cmake_minimum_required (VERSION 3.8)
 project(tvhal C CXX)
 
+include(CheckIncludeFile)
+include(CheckFunctionExists)
+
+check_include_file(sys/prctl.h HAVE_SYS_PRCTL_H)
+check_include_file(linux/prctl.h HAVE_LINUX_PRCTL_H)
+
+check_function_exists(prctl HAVE_PRCTL)
+check_function_exists(pthread_setname_np HAVE_PTHREAD_SETNAME_NP)
+
 if( CMAKE_SYSTEM_NAME MATCHES "Linux" )
     add_definitions(-DLINUX=1)
 endif()
-
+if(HAVE_SYS_PRCTL_H)
+    add_definitions(-DHAVE_SYS_PRCTL_H=1)
+endif()
+if(HAVE_LINUX_PRCTL_H)
+    add_definitions(-DHAVE_LINUX_PRCTL_H=1)
+endif()
+if(HAVE_PRCTL)
+    add_definitions(-DHAVE_PRCTL=1)
+endif()
+if(HAVE_PTHREAD_SETNAME_NP)
+    add_definitions(-DHAVE_PTHREAD_SETNAME_NP=1)
+endif()
 message("CDROID_CHIPSET=${CDROID_CHIPSET}")
 
 add_subdirectory(${CDROID_CHIPSET})

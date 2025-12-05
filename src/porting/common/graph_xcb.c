@@ -4,6 +4,7 @@
 #include <cdlog.h>
 #include <stdlib.h>
 #include <xcb/xcb.h>
+#include <xcb/shm.h>
 #include <xcb/xcb_image.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -11,6 +12,11 @@
 #include <pthread.h>
 #include <string.h>
 #include <linux/input.h>
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#elif HAVE_LINUX_PRCTL_H
+#include <linux/prctl.h>
+#endif
 #include <time.h>
 static Display *xcbDisplay;
 static xcb_connection_t *xcbConnection = NULL;
@@ -138,13 +144,14 @@ int32_t GFXInit() {
 
     const uint32_t gc_mask = XCB_GC_FOREGROUND | XCB_GC_GRAPHICS_EXPOSURES;
     const uint32_t gc_values[] = {screen->black_pixel, 0};
+    const xcb_query_extension_reply_t *ext =xcb_get_extension_data(xcbConnection,&xcb_shm_id);
     xcbGC = xcb_generate_id(xcbConnection);
     xcb_create_gc(xcbConnection, xcbGC, xcbPixmap, gc_mask, gc_values);
     
     xcb_map_window(xcbConnection, xcbWindow);
     xcb_flush(xcbConnection);
 
-    LOGD("xcbConnection=%p xcbWindow=%p(%dx%dx%d) maxlen=%d",xcbConnection,xcbWindow,width,height,screen->root_depth,xcb_get_maximum_request_length(xcbConnection));
+    LOGD("xcbConnection=%p xcbWindow=%p(%dx%dx%d) maxlen=%d shm=%d",xcbConnection,xcbWindow,width,height,screen->root_depth,xcb_get_maximum_request_length(xcbConnection),ext->present);
     pthread_t xThreadId;
     pthread_create(&xThreadId,NULL,XCBEventProc,NULL);
     pthread_detach(xThreadId);
@@ -316,6 +323,11 @@ static struct{int xkey;int key;}X11KEY2CD[]={
 
 static void* XCBEventProc(void*p) {
     xcb_generic_event_t *event;
+#if HAVE_PRCTL
+    prctl(PR_SET_NAME,"XCBThread",0,0,0);
+#elif HAVE_PTHREAD_SETNAME_NP
+    pthread_setname_np(pthread_self(), "XCBThread");
+#endif
     while ((event = xcb_wait_for_event(xcbConnection))) {
         const int eventType =event->response_type & ~0x80;
         switch (eventType) {
