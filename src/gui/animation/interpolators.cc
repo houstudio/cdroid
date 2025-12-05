@@ -310,7 +310,7 @@ float LookupTableInterpolator::getInterpolation(float input)const{
     return mValues[position] + weight * (mValues[position + 1] - mValues[position]);
 }
 
-static float VALUES1[] ={
+static const float VALUES1[] ={
     0.0000f, 0.0001f, 0.0002f, 0.0005f, 0.0009f, 0.0014f, 0.0020f,
     0.0027f, 0.0036f, 0.0046f, 0.0058f, 0.0071f, 0.0085f, 0.0101f,
     0.0118f, 0.0137f, 0.0158f, 0.0180f, 0.0205f, 0.0231f, 0.0259f,
@@ -342,7 +342,7 @@ static float VALUES1[] ={
     0.9998f, 0.9999f, 0.9999f, 1.0000f, 1.0000f
 };
 
-static float VALUES2[] ={
+static const float VALUES2[] ={
     0.0000f, 0.0222f, 0.0424f, 0.0613f, 0.0793f, 0.0966f, 0.1132f,
     0.1293f, 0.1449f, 0.1600f, 0.1747f, 0.1890f, 0.2029f, 0.2165f,
     0.2298f, 0.2428f, 0.2555f, 0.2680f, 0.2802f, 0.2921f, 0.3038f,
@@ -374,7 +374,7 @@ static float VALUES2[] ={
     0.9998f, 0.9999f, 0.9999f, 1.0000f, 1.0000f
 };
 
-static float VALUES3[] ={
+static const float VALUES3[] ={
     0.0000f, 0.0001f, 0.0002f, 0.0005f, 0.0008f, 0.0013f, 0.0018f,
     0.0024f, 0.0032f, 0.0040f, 0.0049f, 0.0059f, 0.0069f, 0.0081f,
     0.0093f, 0.0106f, 0.0120f, 0.0135f, 0.0151f, 0.0167f, 0.0184f,
