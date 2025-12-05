@@ -47,15 +47,21 @@
 #cmakedefine ENABLE_LCMS   1
 #cmakedefine ENABLE_MENU   1
 
+#cmakedefine HAVE_RTAUDIO_H 1
+#cmakedefine HAVE_SYSRANDOM_H 1
+#cmakedefine HAVE_ICONV_H 1
+#cmakedefine HAVE_SYS_PRCTL_H 1
+#cmakedefine HAVE_LINUX_PRCTL_H 1
+#cmakedefine HAVE_GETRANDOM 1
+#cmakedefine HAVE_PTHREAD_SETNAME_NP 1
+
 #cmakedefine HAVE_EPOLL 1
 #cmakedefine HAVE_POLL  1
 #cmakedefine HAVE_EVENTFD 1
 #cmakedefine HAVE_MALLINFO 1
 #cmakedefine HAVE_MALLINFO2 1
-#cmakedefine HAVE_RTAUDIO_H 1
-#cmakedefine HAVE_SYSRANDOM_H 1
-#cmakedefine HAVE_GETRANDOM 1
-#cmakedefine HAVE_ICONV_H 1
+#cmakedefine HAVE_PRCTL 1
+
 
 #define CDROID_VERSION "@CDROID_VERSION@"
 #define CDROID_VERSION_MAJOR @CDROID_VERSION_MAJOR@
