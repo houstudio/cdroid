@@ -123,7 +123,7 @@ public:
 
 class AnimatedStateListDrawable::AnimationDrawableTransition:public Transition {
 private:
-    Property*mProperty;
+    const Property*mProperty;
     ObjectAnimator* mAnim;
     FrameInterpolator*mFrameInterpolator;
     // Even AnimationDrawable is always reversible technically, but

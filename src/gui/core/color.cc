@@ -23,7 +23,7 @@
 #include <exception>
 
 namespace cdroid{
-static std::map<const std::string ,unsigned int>sColorNameMap={
+static const std::map<const std::string ,unsigned int>sColorNameMap={
     {"aquamarine",0xFF7FFFD4},    {"beige" , 0xFFF5F5DC},       {"black"    , 0xFF000000},     {"blue"      , 0xFF0000FF},
     {"blueviolet",0xFF8A2BE2},    {"brown" , 0xFFA52A2A},       {"cadetblue", 0xFF5F9EA0},     {"chartreuse", 0xFF7FFF00},
     {"chocolate" ,0xFFD2691E},    {"coral" , 0xFFFF7F50},       {"cornflowerblue",0xFF6495ED}, {"cyan"      , 0xFF00FFFF},
@@ -91,14 +91,7 @@ unsigned int Color::parseColor(const std::string& colorString){
 }
 
 unsigned int Color::getHtmlColor(const std::string&colorname){
-     auto it=sColorNameMap.find(colorname);
-     static std::once_flag sInit;
-     std::call_once(sInit,[&](){
-         atexit([](){
-             sColorNameMap.clear();
-             std::cout<<"sColorNameMap.cleared"<<std::endl;
-         });
-     });
+     auto it = sColorNameMap.find(colorname);
      if(it== sColorNameMap.end())/*return -1;*/
          throw std::invalid_argument("invalid color");
      return it->second;

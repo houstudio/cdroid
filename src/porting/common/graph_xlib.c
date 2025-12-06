@@ -11,6 +11,11 @@
 #include <pthread.h>
 #include <string.h>
 #include <linux/input.h>
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#elif HAVE_LINUX_PRCTL_H
+#include <linux/prctl.h>
+#endif
 #include <time.h>
 #include <pixman.h>
 static Display*x11Display=NULL;
@@ -341,6 +346,11 @@ static struct{int xkey;int key;}X11KEY2CD[]={
 static void* X11EventProc(void*p) {
     XEvent event;
     int i,keysym,key=0,down;
+#if HAVE_PRCTL
+    prctl(PR_SET_NAME,"X11Thread",0,0,0);
+#elif HAVE_PTHREAD_SETNAME_NP
+    pthread_setname_np(pthread_self(), "X11Thread");
+#endif
     while(x11Display) {
         int rc=XNextEvent(x11Display, &event);
         switch(event.type) {

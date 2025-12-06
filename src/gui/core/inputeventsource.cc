@@ -20,8 +20,15 @@
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
 #include <unordered_map>
+#include <gui_features.h>
 #include <thread>
 #include <chrono>
+#include <pthread.h>
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#elif HAVE_LINUX_PRCTL_H
+#include <linux/prctl.h>
+#endif
 
 namespace cdroid{
 InputEventSource::InputEventSource(){
@@ -40,6 +47,11 @@ InputEventSource::InputEventSource(){
 
 void InputEventSource::doEventsConsume(){
     INPUTEVENT es[128];
+#if HAVE_PRCTL
+    prctl(PR_SET_NAME,"InputThread",0,0,0);
+#elif HAVE_PTHREAD_SETNAME_NP
+    pthread_setname_np(pthread_self(), "InputThread");
+#endif
     while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
         std::lock_guard<std::recursive_mutex> lock(mtxEvents);

@@ -16,6 +16,12 @@ constexpr bool isDebug() {
 namespace vd_flags{
     constexpr bool high_resolution_scroll(){return false;}
 }
+#ifndef REL_WHEEL_HI_RES
+#define REL_WHEEL_HI_RES 0x0b
+#endif
+#ifndef REL_HWHEEL_HI_RES
+#define REL_HWHEEL_HI_RES 0x0c
+#endif
 namespace cdroid {
 
 /** Creates a new uinput device and assigns a file descriptor. */
@@ -258,8 +264,8 @@ bool VirtualInputDevice::writeInputEvent(uint16_t type, uint16_t code, int32_t v
     std::chrono::microseconds microseconds =
             std::chrono::duration_cast<std::chrono::microseconds>(eventTime - seconds);
     struct input_event ev = {.type = type, .code = code, .value = value};
-    ev.input_event_sec = static_cast<decltype(ev.input_event_sec)>(seconds.count());
-    ev.input_event_usec = static_cast<decltype(ev.input_event_usec)>(microseconds.count());
+    ev.time.tv_sec = static_cast<decltype(ev.time.tv_sec)>(seconds.count());
+    ev.time.tv_usec = static_cast<decltype(ev.time.tv_usec)>(microseconds.count());
 
     return TEMP_FAILURE_RETRY(::write(mFd, &ev, sizeof(struct input_event))) == sizeof(ev);
 }

@@ -450,13 +450,13 @@ namespace{
     };
 }
 
-static const std::shared_ptr<Property>CURRENT_INDEX=std::make_shared<PROP_CURRENT_INDEX>();
+static const class PROP_CURRENT_INDEX CURRENT_INDEX;;
 AnimatedStateListDrawable::AnimationDrawableTransition::AnimationDrawableTransition(AnimationDrawable* ad, bool reversed, bool hasReversibleFlag){
     const int frameCount = ad->getNumberOfFrames();
     const int fromFrame = reversed ? frameCount - 1 : 0;
     const int toFrame = reversed ? 0 : frameCount - 1;
     mFrameInterpolator = new FrameInterpolator(ad, reversed);
-    mProperty = CURRENT_INDEX.get();
+    mProperty = &CURRENT_INDEX;
     ObjectAnimator* anim = ObjectAnimator::ofInt(ad, mProperty,{fromFrame, toFrame});
     anim->setAutoCancel(true);
     anim->setDuration(mFrameInterpolator->getTotalDuration());

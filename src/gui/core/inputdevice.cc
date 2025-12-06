@@ -123,8 +123,10 @@ InputDevice::InputDevice(int fdev){
         oss<<"Keyboard";
     }
 
-    if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask))
+    if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask)){
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
+        oss<<"Cursoe";
+    }
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
         oss<<"Proximity";//Proximity sensor
     }
