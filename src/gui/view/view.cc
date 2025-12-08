@@ -8286,6 +8286,16 @@ void View::removeLongPressCallback() {
     }
 }
 
+bool View::hasPendingLongPressCallback() const{
+    if (mPendingCheckForLongPress == nullptr) {
+        return false;
+    }
+    if (mAttachInfo == nullptr) {
+        return false;
+    }
+    return mAttachInfo->mEventSource->hasCallbacks(mPendingCheckForLongPress->mRunnable);
+}
+
 void View::removePerformClickCallback(){
     if(mPerformClick!=nullptr){
         removeCallbacks(mPerformClick);
@@ -8300,8 +8310,9 @@ void View::removeUnsetPressCallback() {
 }
 
 void View::setTouchDelegate(TouchDelegate*delegate){
-    if(mTouchDelegate)
+    if(mTouchDelegate){
         delete mTouchDelegate;
+    }
     mTouchDelegate = delegate;
 }
 
@@ -8405,6 +8416,7 @@ bool View::onTouchEvent(MotionEvent& event){
     const int y = event.getY();
     const int action = event.getAction();
     const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE));
+    int touchSlop =0;
     bool prepressed;
 
     if ((mViewFlags & ENABLED_MASK) == DISABLED) {
@@ -8487,10 +8499,27 @@ bool View::onTouchEvent(MotionEvent& event){
         }
         break;
     case MotionEvent::ACTION_MOVE:
-        if (clickable)drawableHotspotChanged(x, y);
+        if (clickable){
+            drawableHotspotChanged(x, y);
+        }
+        touchSlop = mTouchSlop;
+        if((event.getClassification()==MotionEvent::CLASSIFICATION_AMBIGUOUS_GESTURE)&&hasPendingLongPressCallback()){
+            if (!pointInView(x, y, touchSlop)) {
+                // The default action here is to cancel long press. But instead, we
+                // just extend the timeout here, in case the classification
+                // stays ambiguous.
+                removeLongPressCallback();
+                long delay = (long) (ViewConfiguration::getLongPressTimeout()
+                        * 1.5f/*mAmbiguousGestureMultiplier*/);
+                // Subtract the time already spent
+                delay -= event.getEventTime() - event.getDownTime();
+                checkForLongClick(delay, x, y);//TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS);
+            }
+            touchSlop *= 1.5f/*mAmbiguousGestureMultiplier*/;
+        }
 
         // Be lenient about moving outside of buttons
-        if (!pointInView(x, y,mTouchSlop)) {
+        if (!pointInView(x, y,touchSlop)) {
             // Outside button Remove any future long press/tap checks
             removeTapCallback();
             removeLongPressCallback();
@@ -8499,9 +8528,15 @@ bool View::onTouchEvent(MotionEvent& event){
             }
             mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
         }
+        if((event.getClassification()==MotionEvent::CLASSIFICATION_DEEP_PRESS)&&hasPendingLongPressCallback()){
+             removeLongPressCallback();
+             checkForLongClick( 0 /* send immediately */,x,y);//TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__DEEP_PRESS);
+        }
         break;
     case MotionEvent::ACTION_CANCEL:
-        if (clickable) setPressed(false);
+        if (clickable){
+            setPressed(false);
+        }
         removeTapCallback();
         removeLongPressCallback();
         mInContextButtonPress = false;

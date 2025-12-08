@@ -43,6 +43,7 @@ public:
     int handleEvents()override;
     bool postDelayed(const Runnable& run,long delay=0);
     int removeCallbacks(const Runnable& what);
+    bool hasCallbacks(const Runnable& what)const;
 };
 
 }//end namespace
