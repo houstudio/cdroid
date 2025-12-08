@@ -802,8 +802,8 @@ int TouchDevice::checkPointEdges(Point&pt)const{
     int edges=0;
     if(pt.x < EDGESIZE) edges|=1;
     if(pt.y < EDGESIZE) edges|=2;
-    if(pt.x > mTPWidth - EDGESIZE) edges|=4;
-    if(pt.y > mTPHeight - EDGESIZE) edges|=8;
+    if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
+    if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
     return edges;
 }
 
