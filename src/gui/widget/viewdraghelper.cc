@@ -35,8 +35,7 @@ ViewDragHelper::ViewDragHelper(Context* context,ViewGroup* forParent,Callback* c
     mCallback = cb;
     ViewConfiguration vc = ViewConfiguration::get(context);
     const float density = context->getDisplayMetrics().density;
-    mEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
-    mDefaultEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
+    mEdgeSize = mDefaultEdgeSize = (int) (EDGE_SIZE * density + 0.5f);
     mTrackingEdges= 0;
     mCapturedView = nullptr;
     mPointersDown = INVALID_POINTER;
@@ -67,7 +66,7 @@ ViewDragHelper *ViewDragHelper::create(ViewGroup* forParent,Callback* cb) {
 
 ViewDragHelper* ViewDragHelper::create(ViewGroup* forParent, float sensitivity,Callback* cb) {
     ViewDragHelper* helper = create(forParent, cb);
-    helper->mTouchSlop = (int) (helper->mTouchSlop * (1 / sensitivity));
+    helper->mTouchSlop = (int) (helper->mTouchSlop * (1.f / sensitivity));
     return helper;
 }
 

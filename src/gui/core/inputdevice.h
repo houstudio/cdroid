@@ -351,11 +351,12 @@ protected:
     int32_t mScreenWidth;
     int32_t mScreenHeight;
     uint32_t mCorrectedDeviceClasses;
-    int32_t mLastAction;
     int32_t mScreenRotation;
     int32_t mSeqID;
     int32_t mDisplayId;
+    int32_t mLastAction;
     nsecs_t mLastEventTime;
+    Point mLastEventPos;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
@@ -377,7 +378,7 @@ public:
     int drainEvents(std::vector<InputEvent*>&out);
     const std::string&getName()const;
     const InputDeviceIdentifier&getIdentifier()const;
-    void getLastEvent(int&action,nsecs_t&etime)const;
+    void getLastEvent(int&action,nsecs_t&etime,Point*pos)const;
     void bindDisplay(int);
 };
 
@@ -432,6 +433,7 @@ protected:
 public:
     TouchDevice(int fd);
     int putEvent(long sec,long usec,int type,int code,int value)override;
+    int checkPointEdges(Point&pt)const;
 };
 
 class MouseDevice:public TouchDevice{
