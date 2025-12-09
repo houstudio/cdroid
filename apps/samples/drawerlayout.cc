@@ -57,6 +57,8 @@ int main(int argc,const char*argv[]){
         LOGD("closeDrawer");
         dl->closeDrawer(Gravity::START);
     });
+    SeekBar*pb=new SeekBar(-1,32);
+    content->addView(pb);
    
     dl->setBackgroundColor(0xFF778899);
     DrawerLayout::LayoutParams*lp = new  DrawerLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);

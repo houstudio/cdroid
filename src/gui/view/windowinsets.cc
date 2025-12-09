@@ -277,4 +277,30 @@ bool WindowInsets::isSystemWindowInsetsConsumed() const{
     return mSystemWindowInsetsConsumed;
 }
 
+int WindowInsets::Type::indexOf(int type){
+    switch (type) {
+    case STATUS_BARS:
+        return 0;
+    case NAVIGATION_BARS:
+        return 1;
+    case CAPTION_BAR:
+        return 2;
+    case IME:
+        return 3;
+    case SYSTEM_GESTURES:
+        return 4;
+    case MANDATORY_SYSTEM_GESTURES:
+        return 5;
+    case TAPPABLE_ELEMENT:
+        return 6;
+    case DISPLAY_CUTOUT:
+        return 7;
+    case WINDOW_DECOR:
+        return 8;
+    case SYSTEM_OVERLAYS:
+        return 9;
+    default:
+        throw std::invalid_argument("type needs to be >= FIRST and <= LAST");
+    }
+}
 }/*endof namespace*/

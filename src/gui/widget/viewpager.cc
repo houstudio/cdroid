@@ -1636,10 +1636,9 @@ void ViewPager::draw(Canvas& canvas){
      if (overScrollMode == View::OVER_SCROLL_ALWAYS
            || (overScrollMode == View::OVER_SCROLL_IF_CONTENT_SCROLLS
                     && mAdapter != nullptr && mAdapter->getCount() > 1)) {
+        const int width = getWidth();
+        const int height= getHeight() - getPaddingTop() - getPaddingBottom();
         if (!mLeftEdge->isFinished()) {
-            int height = getHeight() - getPaddingTop() - getPaddingBottom();
-            int width = getWidth();
-
             canvas.save();
             canvas.rotate_degrees(-90);
             canvas.translate(-height + getPaddingTop(), mFirstOffset * width);
@@ -1648,9 +1647,6 @@ void ViewPager::draw(Canvas& canvas){
             canvas.restore();
         }
         if (!mRightEdge->isFinished()) {
-            int width = getWidth();
-            int height = getHeight() - getPaddingTop() - getPaddingBottom();
-
             canvas.save();
             canvas.rotate_degrees(90);
             canvas.translate(-getPaddingTop(), -(mLastOffset + 1) * width);

@@ -119,4 +119,13 @@ int UIEventSource::removeCallbacks(const Runnable& what){
     return count;
 }
 
+bool UIEventSource::hasCallbacks(const Runnable& what)const{
+    for(auto it = mRunnables.begin();it != mRunnables.end();){
+        if(it->run == what){
+            return true;
+        }
+    }
+    return false;
+}
+
 }//end namespace

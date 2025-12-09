@@ -567,6 +567,7 @@ private:
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
     void setKeyedTag(int key,void* tag);
+    bool hasPendingLongPressCallback()const;
     void removeTapCallback();
     void removeLongPressCallback();
     void removePerformClickCallback();
@@ -1662,6 +1663,7 @@ public:
 
 class View::ViewRunnable{
 protected:
+    friend View;
     View*mView;
     Runnable mRunnable;
 public:

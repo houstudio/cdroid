@@ -89,6 +89,7 @@ InputDevice::InputDevice(int fdev){
     mScreenRotation =0;
     mLastAction=-1;
     mLastEventTime = 0;
+    mLastEventPos={-1,-1};
 
     mKeyboardType = KEYBOARD_TYPE_NONE;
     InputGetDeviceInfo(fdev,&devInfos);
@@ -320,9 +321,10 @@ int InputDevice::drainEvents(std::vector<InputEvent*>&out){
     return out.size();
 }
 
-void InputDevice::getLastEvent(int&action,nsecs_t&etime)const{
+void InputDevice::getLastEvent(int&action,nsecs_t&etime,Point*pos)const{
     action = mLastAction;
     etime = mLastEventTime;
+    *pos = mLastEventPos;
 }
 
 KeyDevice::KeyDevice(int fd)
@@ -758,6 +760,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         }
         mLastAction = action;
         mLastEventTime = SystemClock::uptimeMillis();
+        mLastEventPos.set(mCoord.getX(),mCoord.getY());
         if( mLastBits.count() > mCurrBits.count() ){
             const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
             LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
@@ -792,6 +795,16 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         break;/*caseof EV_SYN*/
     }
     return 0;
+}
+
+int TouchDevice::checkPointEdges(Point&pt)const{
+#define EDGESIZE 16
+    int edges=0;
+    if(pt.x < EDGESIZE) edges|=1;
+    if(pt.y < EDGESIZE) edges|=2;
+    if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
+    if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
+    return edges;
 }
 
 MouseDevice::MouseDevice(int fd):TouchDevice(fd){
