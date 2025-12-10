@@ -249,6 +249,7 @@ void TabLayout::removeTabAt(int position){
     Tab* removedTab =(*itr); 
     if (removedTab) {
         removedTab->reset();
+        delete removedTab;
     }
 
     int newTabCount = mTabs.size();
@@ -948,7 +949,7 @@ TabLayout::TabView::TabView(Context* context,const AttributeSet&atts,TabLayout*p
 }
 
 TabLayout::TabView::~TabView(){
-    delete mTab;
+    //delete mTab;cant destroied here ,it is owned by TabLayout::mTabs
 }
 
 void TabLayout::TabView::updateBackgroundDrawable(Context* context) {

@@ -49,9 +49,11 @@ public:
     }
     void remove(int idx){
         items.erase(items.begin()+idx);
+        notifyItemRemoved(idx);
     }
     void add(const std::string&str){
         items.push_back(str);
+        notifyItemInserted(items.size()-1);
     }
     int getItemCount()override {
         return items.size();

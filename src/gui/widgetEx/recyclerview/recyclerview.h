@@ -660,6 +660,7 @@ public:
     StateRestorationPolicy getStateRestorationPolicy()const;
     bool canRestoreState();
 };
+
 class RecyclerView::ItemDecoration{
 public:
     virtual ~ItemDecoration()=default;
@@ -667,6 +668,7 @@ public:
     virtual void onDrawOver(Canvas& c,RecyclerView& parent,State& state);
     virtual void getItemOffsets(Rect& outRect, View& view,RecyclerView& parent, State& state);
 };
+
 class RecyclerView::OnItemTouchListener:public EventSet{
 public:
     CallbackBase<bool,RecyclerView&,MotionEvent&>onInterceptTouchEvent;//(RecyclerView& rv,MotionEvent& e);
