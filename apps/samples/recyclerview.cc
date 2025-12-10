@@ -58,6 +58,10 @@ public:
     int getItemCount()override {
         return items.size();
     }
+    void setData(const std::vector<std::string>&itms){
+        items =itms;
+        notifyDataSetChanged();
+    }
     long getItemId(int position)override {return position;}
     void onItemRangeChanged(int positionStart, int itemCount, Object* payload)override{
         LOGV("positionStart=%d itemCount=%d",positionStart,itemCount);
