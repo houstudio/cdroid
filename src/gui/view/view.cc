@@ -3708,15 +3708,6 @@ void View::setKeyedTag(int key,void* tag){
     mKeyedTags->put(key,tag);
 }
 
-void View::setHint(const std::string&hint){
-    mHint = hint;
-    invalidate(true);
-}
-
-const std::string&View::getHint()const{
-    return mHint;
-}
-
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{
     return mAccessibilityDelegate;
 }

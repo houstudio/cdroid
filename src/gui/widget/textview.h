@@ -176,6 +176,7 @@ protected:
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
+    std::string mHint;
     std::wstring& getEditable();
     void setEditable(bool b);
     int getFontSize()const;
@@ -225,7 +226,8 @@ public:
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
     void  setTextAppearance(Context*,const std::string&);
-    void setHint(const std::string&txt)override;
+    virtual void setHint(const std::string&txt);
+    std::string getHint()const;
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();
     void computeScroll()override;

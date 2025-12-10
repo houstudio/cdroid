@@ -702,7 +702,6 @@ protected:
     bool mSendingHoverAccessibilityEvents;
     AccessibilityDelegate* mAccessibilityDelegate;
     Rect mClipBounds;
-    std::string mHint;
     std::string mContentDescription;
     std::string mStateDescription;
     std::string mAccessibilityPaneTitle;
@@ -1191,8 +1190,6 @@ public:
     void setTag(int key,void*tag);
     void*getTag(int key)const;
     void setTagInternal(int key, void* tag);
-    virtual void setHint(const std::string&hint);
-    const std::string&getHint()const;
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
     virtual void setStateDescription(const std::string& stateDescription);
