@@ -26,6 +26,7 @@
 #include <sstream>
 #include <core/app.h>
 #include <core/tokenizer.h>
+#include <core/transform.h>
 #include <core/inputdevice.h>
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
@@ -586,7 +587,19 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     default:
         mCoord.setAxisValue(axis,value);break;
     }/*endof switch(axis)*/
-
+#if 0
+    ui::Transform t;
+    uint32_t flags =0;
+    if (mInvertX) flags |= ui::Transform::FLIP_H;  // 水平翻转
+    if (mInvertY) flags |= ui::Transform::FLIP_V;  // 垂直翻转
+    t.set(flags, float(mScreenWidth) / mTPWidth,float(mScreenHeight) / mTPHeight);
+    switch (rotation) {
+    case Display::ROTATION_0:   break;
+    case Display::ROTATION_90:  t = t * ui::Transform::ROT_90;  break;
+    case Display::ROTATION_180: t = t * ui::Transform::ROT_180; break;
+    case Display::ROTATION_270: t = t * ui::Transform::ROT_270; break;
+    }
+#endif
     //if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
     //    mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
@@ -670,8 +683,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     switch(type){
     case EV_KEY:
         switch(code){
-        case BTN_TOUCH :
-        case BTN_STYLUS:
+        case BTN_TOUCH ://case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
                 mCurrBits.markBit(0);
@@ -683,13 +695,46 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
             break;
-        case BTN_0:
-        case BTN_STYLUS2:
+        case BTN_LEFT:/*MouseLeft*/
+            mActionButton = MotionEvent::BUTTON_PRIMARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_PRIMARY;
+            else mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
+            break;
+        case BTN_RIGHT://Mouse Right*/
             mActionButton = MotionEvent::BUTTON_SECONDARY;
-            if(value)
-                mButtonState = MotionEvent::BUTTON_SECONDARY;
-            else
-                mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_SECONDARY;
+            else mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+            break;
+        case BTN_MIDDLE:/*Mouse Middle*/
+            mActionButton = MotionEvent::BUTTON_TERTIARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_TERTIARY;
+            else mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
+            break;
+        case BTN_SIDE:
+        case BTN_BACK:
+            mActionButton = MotionEvent::BUTTON_BACK;
+            if(value) mButtonState|=MotionEvent::BUTTON_BACK;
+            else mButtonState &= ~MotionEvent::BUTTON_BACK;
+            break;
+        case BTN_EXTRA:
+        case BTN_FORWARD:
+            mActionButton = MotionEvent::BUTTON_FORWARD;
+            if(value) mButtonState|=MotionEvent::BUTTON_FORWARD;
+            else mButtonState &= ~MotionEvent::BUTTON_FORWARD;
+            break;
+        case BTN_STYLUS:
+            mActionButton = MotionEvent::BUTTON_SECONDARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_SECONDARY;
+            else mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+        case BTN_STYLUS2:
+            mActionButton = MotionEvent::BUTTON_TERTIARY;
+            if(value) mButtonState = MotionEvent::BUTTON_TERTIARY;
+            else mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
+            break;
+        case BTN_STYLUS3:
+            mActionButton = MotionEvent::BUTTON_STYLUS_PRIMARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_STYLUS_PRIMARY;
+            else mButtonState &= ~MotionEvent::BUTTON_STYLUS_PRIMARY;
             break;
         case BTN_TOOL_FINGER:break;
         case BTN_TOOL_PEN:break;
