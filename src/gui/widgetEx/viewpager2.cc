@@ -71,6 +71,7 @@ ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
 }
 
 ViewPager2::~ViewPager2(){
+    delete mScrollEventAdapter;
     delete mFakeDragger;
     delete mPagerSnapHelper;
     //delete mPageChangeEventDispatcher;
