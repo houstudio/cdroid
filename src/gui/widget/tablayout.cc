@@ -245,11 +245,11 @@ void TabLayout::removeTabAt(int position){
     int selectedTabPosition = mSelectedTab ? mSelectedTab->getPosition() : 0;
     removeTabViewAt(position);
 
-    auto itr=mTabs.erase(mTabs.begin()+position);
-    Tab* removedTab =(*itr); 
+    Tab* removedTab =mTabs.at(position); 
     if (removedTab) {
         removedTab->reset();
         delete removedTab;
+        auto itr=mTabs.erase(mTabs.begin()+position);
     }
 
     int newTabCount = mTabs.size();
@@ -923,8 +923,8 @@ void TabLayout::Tab::reset() {
     mView   = nullptr;
     mTag    = nullptr;
     mIcon   = nullptr;
-    mText   = nullptr;
-    mContentDesc = nullptr;
+    mText.clear();
+    mContentDesc.clear();
     mPosition = INVALID_POSITION;
     mCustomView = nullptr;
 }
