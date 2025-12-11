@@ -386,7 +386,7 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
 TouchDevice::TouchDevice(int fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
-    mProp.id =0;
+    mProp.id = 0;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
@@ -592,13 +592,20 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     uint32_t flags =0;
     if (mInvertX) flags |= ui::Transform::FLIP_H;  // 水平翻转
     if (mInvertY) flags |= ui::Transform::FLIP_V;  // 垂直翻转
-    t.set(flags, float(mScreenWidth) / mTPWidth,float(mScreenHeight) / mTPHeight);
     switch (rotation) {
     case Display::ROTATION_0:   break;
-    case Display::ROTATION_90:  t = t * ui::Transform::ROT_90;  break;
-    case Display::ROTATION_180: t = t * ui::Transform::ROT_180; break;
-    case Display::ROTATION_270: t = t * ui::Transform::ROT_270; break;
+    case Display::ROTATION_90:  flags|= ui::Transform::ROT_90;  break;
+    case Display::ROTATION_180: flags|= ui::Transform::ROT_180; break;
+    case Display::ROTATION_270: flags|= ui::Transform::ROT_270; break;
     }
+    t.set(flags, float(mScreenWidth) / mTPWidth,float(mScreenHeight) / mTPHeight);
+    const std::array<float, 9> rowMajor{t[0][0], t[1][0], t[2][0],
+                                  t[0][1], t[1][1], t[2][1],
+                                  t[0][2], t[1][2], t[2][2]};
+    MotionEvent*mv=MotionEvent::obtain(0,0,0,800,480,0,0,0,0,0,0,0,0,0);
+    LOGD("xy=%.f,%.f",mv->getX(),mv->getY());
+    mv->applyTransform(rowMajor);
+    LOGD("xy=%.f,%.f",mv->getX(),mv->getY());
 #endif
     //if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
     //    mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
@@ -736,9 +743,13 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             if(value) mButtonState|=MotionEvent::BUTTON_STYLUS_PRIMARY;
             else mButtonState &= ~MotionEvent::BUTTON_STYLUS_PRIMARY;
             break;
-        case BTN_TOOL_FINGER:break;
-        case BTN_TOOL_PEN:break;
-        case BTN_TOOL_RUBBER:break;
+        case BTN_TOOL_FINGER:
+        case BTN_TOOL_PEN:
+        case BTN_TOOL_RUBBER:
+        case BTN_TOOL_BRUSH:
+        case BTN_TOOL_PENCIL:
+            mProp.toolType = toMotionToolType(code);
+            break;
         default:
             if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
                 KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),

@@ -258,7 +258,7 @@ int ViewConfiguration::getHapticScrollFeedbackTickInterval(int inputDeviceId, in
     return NO_HAPTIC_SCROLL_TICK_INTERVAL;
 }
 
-bool ViewConfiguration::isViewBasedRotaryEncoderHapticScrollFeedbackEnabled() {
+bool ViewConfiguration::isViewBasedRotaryEncoderHapticScrollFeedbackEnabled() const{
     return mViewBasedRotaryEncoderScrollHapticsEnabledConfig;//&& Flags.useViewBasedRotaryEncoderScrollHaptics();
 }
 
@@ -276,7 +276,7 @@ bool ViewConfiguration::isInputDeviceInfoValid(int id, int axis, int source) {
  *
  * @removed
  */
-int ViewConfiguration::getScaledScrollFactor() {
+int ViewConfiguration::getScaledScrollFactor() const{
     return (int) mVerticalScrollFactor;
 }
 
@@ -284,7 +284,7 @@ int ViewConfiguration::getScaledScrollFactor() {
  * @return Amount to scroll in response to a horizontal {@link MotionEvent#ACTION_SCROLL} event.
  * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
  */
-float ViewConfiguration::getScaledHorizontalScrollFactor() {
+float ViewConfiguration::getScaledHorizontalScrollFactor() const{
     return mHorizontalScrollFactor;
 }
 
@@ -292,7 +292,7 @@ float ViewConfiguration::getScaledHorizontalScrollFactor() {
  * @return Amount to scroll in response to a vertical {@link MotionEvent#ACTION_SCROLL} event.
  * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
  */
-float ViewConfiguration::getScaledVerticalScrollFactor() {
+float ViewConfiguration::getScaledVerticalScrollFactor() const{
     return mVerticalScrollFactor;
 }
 
@@ -302,7 +302,7 @@ float ViewConfiguration::getScaledVerticalScrollFactor() {
  *
  * @return the maximum size of View's drawing cache expressed in bytes
  */
-int ViewConfiguration::getScaledMaximumDrawingCacheSize() {
+int ViewConfiguration::getScaledMaximumDrawingCacheSize() const{
     return mMaximumDrawingCacheSize;
 }
 
@@ -310,7 +310,7 @@ int ViewConfiguration::getScaledMaximumDrawingCacheSize() {
  * @return The maximum distance a View should overscroll by when showing edge effects (in
  * pixels).
  */
-int ViewConfiguration::getScaledOverscrollDistance() {
+int ViewConfiguration::getScaledOverscrollDistance() const{
     return mOverscrollDistance;
 }
 
@@ -318,7 +318,7 @@ int ViewConfiguration::getScaledOverscrollDistance() {
  * @return The maximum distance a View should overfling by when showing edge effects (in
  * pixels).
  */
-int ViewConfiguration::getScaledOverflingDistance() {
+int ViewConfiguration::getScaledOverflingDistance() const{
     return mOverflingDistance;
 }
 
@@ -329,7 +329,7 @@ int ViewConfiguration::getScaledOverflingDistance() {
  * @return the time the zoom controls should be visible expressed
  * in milliseconds.
  */
-long ViewConfiguration::getZoomControlsTimeout() {
+long ViewConfiguration::getZoomControlsTimeout(){
     return ZOOM_CONTROLS_TIMEOUT;
 }
 
@@ -342,7 +342,7 @@ long ViewConfiguration::getZoomControlsTimeout() {
  *   the global actions dialog.
  * @hide
  */
-long ViewConfiguration::getDeviceGlobalActionKeyTimeout() {
+long ViewConfiguration::getDeviceGlobalActionKeyTimeout() const{
     return mGlobalActionsKeyTimeout;
 }
 
@@ -354,7 +354,7 @@ long ViewConfiguration::getDeviceGlobalActionKeyTimeout() {
  *   shortcut.
  * @hide
  */
-long ViewConfiguration::getAccessibilityShortcutKeyTimeout() {
+long ViewConfiguration::getAccessibilityShortcutKeyTimeout() const{
     return A11Y_SHORTCUT_KEY_TIMEOUT;
 }
 
@@ -363,7 +363,7 @@ long ViewConfiguration::getAccessibilityShortcutKeyTimeout() {
  *   accessibility shortcut after it's confirmed that accessibility shortcut is used.
  * @hide
  */
-long ViewConfiguration::getAccessibilityShortcutKeyTimeoutAfterConfirmation() {
+long ViewConfiguration::getAccessibilityShortcutKeyTimeoutAfterConfirmation() const{
     return A11Y_SHORTCUT_KEY_TIMEOUT_AFTER_CONFIRMATION;
 }
 
@@ -382,7 +382,7 @@ float ViewConfiguration::getScaledAmbiguousGestureMultiplier() const{
  *
  * @return true if a permanent menu key is present, false otherwise.
  */
-bool ViewConfiguration::hasPermanentMenuKey() {
+bool ViewConfiguration::hasPermanentMenuKey() const{
     return sHasPermanentMenuKey;
 }
 
@@ -391,7 +391,7 @@ bool ViewConfiguration::hasPermanentMenuKey() {
  *
  * @return {@code True} if shortcuts should be displayed in menus.
  */
-bool ViewConfiguration::shouldShowMenuShortcutsWhenKeyboardPresent() {
+bool ViewConfiguration::shouldShowMenuShortcutsWhenKeyboardPresent() const{
     return mShowMenuShortcutsWhenKeyboardPresent;
 }
 

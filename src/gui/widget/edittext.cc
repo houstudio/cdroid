@@ -10,10 +10,14 @@ namespace cdroid{
 
 DECLARE_WIDGET2(EditText,"cdroid:attr/editTextStyle")
 
+EditText::EditText(int w,int h):EditText(std::string(),w,h){
+}
+
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     initEditText();
     mHint = ctx->getString(attrs.getString("hint"));
+    mHintLayout->setText(mHint);
     mInputType = attrs.getInt("inputType",std::unordered_map<std::string,int>{
 		    {"none",TYPE_NONE}    , {"any", TYPE_ANY},
 		    {"number",TYPE_NUMBER}, {"text",TYPE_TEXT},
@@ -21,9 +25,6 @@ EditText::EditText(Context*ctx,const AttributeSet& attrs)
 		    {"textVisiblePassword",TYPE_PASSWORD}
 	  },TYPE_NONE);
     setEditable(true);
-}
-
-EditText::EditText(int w,int h):EditText(std::string(),w,h){
 }
 
 EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
@@ -34,14 +35,14 @@ EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
 }
 
 void EditText::initEditText(){
-    mPasswordChar='*';
-    mBlinkOn=true;
-    mEditMode=INSERT;
-    mInputType=TYPE_NONE;
-    afterChanged=nullptr;
+    mPasswordChar = '*';
+    mBlinkOn = true;
+    mEditMode= INSERT;
+    mInputType = TYPE_NONE;
+    afterChanged = nullptr;
     mCaretRect.set(0,0,1,1);
-    mBlinkOn=false;
-    mRBLink=std::bind(&EditText::blinkCaret,this);
+    mBlinkOn = false;
+    mRBLink = std::bind(&EditText::blinkCaret,this);
 }
 
 void EditText::onDetachedFromWindow(){
@@ -140,7 +141,7 @@ void EditText::setEditMode(EDITMODE mode){
 }
 
 void EditText::setHint(const std::string&txt){
-    View::setHint(txt);
+    TextView::setHint(txt);
     if(getText().empty())invalidate(true);
 }
 

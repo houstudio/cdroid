@@ -298,9 +298,10 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     }
     if((ndst==mainSurface)&&xcbConnection) {
         LOGV("src (%d,%d,%d,%d) dst (%d,%d,%d,%d)",rs.x,rs.y,rs.w,rs.h,dx,dy,rs.w,rs.h);
-        xcb_image_t*subimage=xcb_image_subimage(mainSurface,rs.x,rs.y,rs.w,rs.h,NULL,mainSurface->size,NULL);
+        xcb_image_t*subimage=xcb_image_subimage(mainSurface,rs.x,rs.y,rs.w,rs.h,NULL,0/*bytes*/,NULL);
         xcb_image_put(xcbConnection,xcbPixmap,xcbGC,subimage,dx,dy,0);
         xcb_image_destroy(subimage);
+        subimage = NULL;
         XCBExpose(dx,dy,rs.w,rs.h);
     }
     return 0;

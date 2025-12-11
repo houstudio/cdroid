@@ -854,9 +854,13 @@ const std::string TextView::getText()const{
 }
 
 void TextView::setHint(const std::string& hint){
-    View::setHint(hint);
+    mHint = hint;
     mHintLayout->setText(hint);
     checkForRelayout();
+}
+
+std::string TextView::getHint()const{
+    return mHint;
 }
 
 std::wstring& TextView::getEditable(){

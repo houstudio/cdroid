@@ -134,10 +134,10 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
     setForegroundTintList(attrs.getColorStateList("foregroundTint"));
 
-    setClickable( attrs.getBoolean("clickable",false) );
-    setLongClickable( attrs.getBoolean("longclickable",false) );
-    setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
-    setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
+    //setClickable( attrs.getBoolean("clickable",false) );
+    //setLongClickable( attrs.getBoolean("longclickable",false) );
+    //setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
+    //setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
   
     mNextFocusLeftId = attrs.getResourceId("nextFocusLeft",View::NO_ID);
     mNextFocusRightId= attrs.getResourceId("nextFocusRight",View::NO_ID);
@@ -168,6 +168,13 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues &= ~FOCUSABLE_AUTO;
         viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
+    }
+    const int focusable = attrs.getInt("focusable",{
+            {"true",FOCUSABLE},{"false",NOT_FOCUSABLE},
+            {"auto",FOCUSABLE_AUTO}},0);
+    viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK)|focusable;
+    if((viewFlagValues & FOCUSABLE_AUTO) == 0){
+        viewFlagMasks |= FOCUSABLE_MASK;
     }
     if( attrs.hasAttribute("focusable") ){
         viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
@@ -3706,15 +3713,6 @@ void View::setKeyedTag(int key,void* tag){
     if(mKeyedTags ==nullptr)
         mKeyedTags = new SparseArray<void*>();
     mKeyedTags->put(key,tag);
-}
-
-void View::setHint(const std::string&hint){
-    mHint = hint;
-    invalidate(true);
-}
-
-const std::string&View::getHint()const{
-    return mHint;
 }
 
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{

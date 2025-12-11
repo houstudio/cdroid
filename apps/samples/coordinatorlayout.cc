@@ -2,6 +2,7 @@
 #include<cdlog.h>
 #include <widgetEx/coordinatorlayout.h>
 #include <core/classloader.h>
+#include <gui_features.h>
 using namespace cdroid;
 
 class YourCustomBehavior:public cdroid::CoordinatorLayout::Behavior{
@@ -37,6 +38,7 @@ public:
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
+#if ENABLE_COORDINATORLAYOUT
     CoordinatorLayout*cl=new CoordinatorLayout(-1,-1);
     NestedScrollView*scroller=new NestedScrollView(-1,-1);
     scroller->setSmoothScrollingEnabled(true);
@@ -72,6 +74,7 @@ int main(int argc,const char*argv[]){
     tlp->gravity = Gravity::BOTTOM|Gravity::END;
     cl->addView(tv,tlp);
     w->addView(cl);
+#endif
     w->requestLayout();
     return app.exec();
 }

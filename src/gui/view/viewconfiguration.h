@@ -440,43 +440,43 @@ public:
     *
     * @hide
     */
-    bool isViewBasedRotaryEncoderHapticScrollFeedbackEnabled();
+    bool isViewBasedRotaryEncoderHapticScrollFeedbackEnabled()const;
     /**
      * @return Amount to scroll in response to a {@link MotionEvent#ACTION_SCROLL} event. Multiply
      * this by the event's axis value to obtain the number of pixels to be scrolled.
      *
      * @removed
      */
-    int getScaledScrollFactor();
+    int getScaledScrollFactor()const;
     /**
      * @return Amount to scroll in response to a horizontal {@link MotionEvent#ACTION_SCROLL} event.
      * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
      */
-    float getScaledHorizontalScrollFactor();
+    float getScaledHorizontalScrollFactor()const;
 
     /**
      * @return Amount to scroll in response to a vertical {@link MotionEvent#ACTION_SCROLL} event.
      * Multiply this by the event's axis value to obtain the number of pixels to be scrolled.
      */
-    float getScaledVerticalScrollFactor();
+    float getScaledVerticalScrollFactor()const;
 
     /**
      * The maximum drawing cache size expressed in bytes.
      *
      * @return the maximum size of View's drawing cache expressed in bytes
      */
-    int getScaledMaximumDrawingCacheSize();
+    int getScaledMaximumDrawingCacheSize()const;
 
     /**
      * @return The maximum distance a View should overscroll by when showing edge effects (in
      * pixels).
      */
-    int getScaledOverscrollDistance();
+    int getScaledOverscrollDistance()const;
     /**
      * @return The maximum distance a View should overfling by when showing edge effects (in
      * pixels).
      */
-    int getScaledOverflingDistance();
+    int getScaledOverflingDistance()const;
     /**
      * The amount of time that the zoom controls should be
      * displayed on the screen expressed in milliseconds.
@@ -494,7 +494,7 @@ public:
      *   the global actions dialog.
      * @hide
      */
-    long getDeviceGlobalActionKeyTimeout();
+    long getDeviceGlobalActionKeyTimeout()const;
     /**
      * The amount of time a user needs to press the relevant keys to activate the accessibility
      * shortcut.
@@ -503,13 +503,13 @@ public:
      *   shortcut.
      * @hide
      */
-    long getAccessibilityShortcutKeyTimeout();
+    long getAccessibilityShortcutKeyTimeout()const;
     /**
      * @return The amount of time a user needs to press the relevant keys to activate the
      *   accessibility shortcut after it's confirmed that accessibility shortcut is used.
      * @hide
      */
-    long getAccessibilityShortcutKeyTimeoutAfterConfirmation();
+    long getAccessibilityShortcutKeyTimeoutAfterConfirmation()const;
 
     /**
      * The amount of friction applied to scrolls and flings.
@@ -546,13 +546,13 @@ public:
      *
      * @return true if a permanent menu key is present, false otherwise.
      */
-    bool hasPermanentMenuKey();
+    bool hasPermanentMenuKey()const;
     /**
      * Check if shortcuts should be displayed in menus.
      *
      * @return {@code True} if shortcuts should be displayed in menus.
      */
-    bool shouldShowMenuShortcutsWhenKeyboardPresent();
+    bool shouldShowMenuShortcutsWhenKeyboardPresent()const;
     int getScaledMinimumScalingSpan()const;
     /**
      * @hide

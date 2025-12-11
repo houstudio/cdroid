@@ -17,7 +17,7 @@ public:
 #endif
         {
             View*sm=new View(100,100);
-            sm->setBackground(new ColorDrawable(0xFF000000|(0xFF<<((position%3)*8))));
+            sm->setBackground(new ColorDrawable(0xFF000000|(0xFF<<((position%3)*4))));
             container->addView(sm);
             return sm;
         }
