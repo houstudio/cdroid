@@ -788,7 +788,7 @@ ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedCo
     return new ColorStateList(states, colors);
 }
 
-int TabLayout::getDefaultHeight() {
+int TabLayout::getDefaultHeight() const{
     bool hasIconAndText = false;
     for (int i = 0, count = mTabs.size(); i < count; i++) {
         Tab* tab = mTabs.at(i);
@@ -800,7 +800,7 @@ int TabLayout::getDefaultHeight() {
     return hasIconAndText&&!isInlineLabel() ? DEFAULT_HEIGHT_WITH_TEXT_ICON : DEFAULT_HEIGHT;
 }
 
-int TabLayout::getTabMinWidth() {
+int TabLayout::getTabMinWidth() const{
     if (mRequestedTabMinWidth != INVALID_WIDTH) {
         // If we have been given a min width, use it
         return mRequestedTabMinWidth;
@@ -813,7 +813,7 @@ FrameLayout::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& a
     return generateDefaultLayoutParams();
 }
 
-int TabLayout::getTabMaxWidth() {
+int TabLayout::getTabMaxWidth() const{
     return mTabMaxWidth;
 }
 

@@ -1,7 +1,9 @@
-  - DrawerLayout add Top/Bottom slider support
-  - Add XCB Graph support,faster than XLIB and no tearing
+# **V4.4.8
+  - DrawerLayout add Top/Bottom slider,friendly for landscape and portrait
+  - Add XCB Graph support,faster than XLIB and less tearing
   - Add AsyncInflater
   - Add SlidingPaneLayout
+  - Fix TabLayout's double free & memleak issues
   - Fix ViewDragHelper's memleak
   - TextView's fontstyle add Italic support
   - Fix NumberPicker's divider position in horizontal mode

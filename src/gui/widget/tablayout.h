@@ -204,8 +204,8 @@ private:
     void applyModeAndGravity();
 
     static ColorStateList* createColorStateList(int defaultColor, int selectedColor);
-    int getDefaultHeight();
-    int getTabMinWidth();
+    int getDefaultHeight()const;
+    int getTabMinWidth()const;
 protected:
     static constexpr int FIXED_WRAP_GUTTER_MIN = 16; //dps
     static constexpr int MOTION_NON_ADJACENT_OFFSET = 24;
@@ -252,7 +252,7 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void selectTab(Tab* tab,bool updateIndicator);
     void updateTabViews(bool requestLayout);
-    int  getTabMaxWidth();
+    int  getTabMaxWidth()const;
 public:
     TabLayout(int w,int h);
     TabLayout(Context*context,const AttributeSet&atts);
