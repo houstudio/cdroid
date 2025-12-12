@@ -484,15 +484,15 @@ void AdapterHelper::consumeUpdatesInOnePass() {
             mCallback.onDispatchSecondPass(op);
             mCallback.offsetPositionsForAdd(op->positionStart, op->itemCount);
             break;
-	case UpdateOp::REMOVE:
+        case UpdateOp::REMOVE:
             mCallback.onDispatchSecondPass(op);
             mCallback.offsetPositionsForRemovingInvisible(op->positionStart, op->itemCount);
             break;
-	case UpdateOp::UPDATE:
+        case UpdateOp::UPDATE:
             mCallback.onDispatchSecondPass(op);
             mCallback.markViewHoldersUpdated(op->positionStart, op->itemCount, op->payload);
             break;
-	case UpdateOp::MOVE:
+        case UpdateOp::MOVE:
             mCallback.onDispatchSecondPass(op);
             mCallback.offsetPositionsForMove(op->positionStart, op->itemCount);
             break;
@@ -561,7 +561,10 @@ AdapterHelper::UpdateOp* AdapterHelper::obtainUpdateOp(int cmd, int positionStar
 void AdapterHelper::recycleUpdateOp(UpdateOp* op) {
     if (!mDisableRecycler) {
         op->payload = nullptr;
-        mUpdateOpPool.release(op);
+        if(!mUpdateOpPool.release(op)){
+            /*out of pool*/
+            delete op;
+        }
     }
 }
 
