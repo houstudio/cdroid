@@ -22,14 +22,6 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-static constexpr int DEFAULT_HEIGHT_WITH_TEXT_ICON = 72;
-static constexpr int DEFAULT_GAP_TEXT_ICON = 8;
-static constexpr int DEFAULT_HEIGHT = 48;
-static constexpr int TAB_MIN_WIDTH_MARGIN = 56;
-static constexpr int MIN_INDICATOR_WIDTH  = 24;
-//   static final int FIXED_WRAP_GUTTER_MIN = 16;
-static constexpr int INVALID_WIDTH = -1;
-static constexpr int ANIMATION_DURATION = 300;
 
 DECLARE_WIDGET(TabLayout)
 
@@ -42,14 +34,22 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
   :HorizontalScrollView(context,atts){
     initTabLayout();
 
-    mTabStrip->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
-    mTabStrip->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0));
+    mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
+    mSlidingTabIndicator->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0));
+
+    const int animationMode = atts.getInt("tabIndicatorAnimationMode",std::unordered_map<std::string,int>{
+            {"linear",(int)INDICATOR_ANIMATION_MODE_LINEAR},
+            {"elastic",(int)INDICATOR_ANIMATION_MODE_ELASTIC},
+            {"fade",(int)INDICATOR_ANIMATION_MODE_FADE},
+            },INDICATOR_ANIMATION_MODE_ELASTIC);
+    setTabIndicatorAnimationMode(animationMode);
 
     setSelectedTabIndicator(context->getDrawable(atts.getString("tabIndicator"))); 
-    setTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
+    setSelectedTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
 
-    mTabPaddingStart = mTabPaddingTop=mTabPaddingEnd=mPaddingBottom=atts.getDimensionPixelSize("tabPadding",0);
+    mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
+        mPaddingBottom = atts.getDimensionPixelSize("tabPadding",0);
     mTabPaddingStart = atts.getDimensionPixelSize("tabPaddingStart",mTabPaddingStart);
     mTabPaddingEnd   = atts.getDimensionPixelSize("tabPaddingEnd",mTabPaddingEnd);
     mTabPaddingTop   = atts.getDimensionPixelSize("tabPaddingTop",mTabPaddingTop);
@@ -73,16 +73,18 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
         mOwnedTabTextColors =true;
     }
 
-    mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration", 300);
+    mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration",ANIMATION_DURATION);
     mRequestedTabMinWidth = atts.getDimensionPixelSize("tabMinWidth", -1);
     mRequestedTabMaxWidth = atts.getDimensionPixelSize("tabMaxWidth", -1);
 
     mTabBackgroundResId= atts.getString("tabBackground");
     mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
-    mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{{"scrollable",0},{"fixed",1}},mMode);
+    mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{
+            {"scrollable",(int)MODE_SCROLLABLE},
+            {"fixed",(int)MODE_FIXED}},mMode);
     mSmoothScroll = atts.getBoolean("smoothScroll",true);
-    mTabGravity =atts.getGravity("tabGravity",0);
-    mInlineLabel=atts.getBoolean("tabInlineLabel",false);
+    mTabGravity = atts.getGravity("tabGravity",0);
+    mInlineLabel= atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
 }
 
@@ -96,6 +98,7 @@ TabLayout::~TabLayout(){
     delete mScrollAnimator;
     delete mAdapterChangeListener;
     delete mPagerAdapterObserver;
+    delete mTabIndicatorInterpolator;
 }
 
 void TabLayout::initTabLayout(){
@@ -106,12 +109,15 @@ void TabLayout::initTabLayout(){
     mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
     mContentInsetStart = 0;
+    mTabIndicatorHeight =-1;
     mOwnedTabTextColors= false;
     mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
     mViewPager    = nullptr;
     mPagerAdapter = nullptr;
+    mTabIndicatorTimeInterpolator = nullptr;
+    mTabIndicatorInterpolator = nullptr;
     mTabIndicatorGravity  = Gravity::BOTTOM;
     mPagerAdapterObserver = nullptr;
     mAdapterChangeListener= nullptr;
@@ -120,36 +126,60 @@ void TabLayout::initTabLayout(){
     mRequestedTabMaxWidth = INVALID_WIDTH;
     mTabTextMultiLineSize = 2;
     mScrollableTabMinWidth= 100;
-    tabIndicatorFullWidth = true;
-    mTabStrip = new SlidingTabStrip(getContext(),atts,this);
-    HorizontalScrollView::addView(mTabStrip, 0, new HorizontalScrollView::LayoutParams(
+    mTabIndicatorFullWidth = true;
+    mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
+    mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
+    HorizontalScrollView::addView(mSlidingTabIndicator, 0, new HorizontalScrollView::LayoutParams(
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
 }
 
 void TabLayout::setSelectedTabIndicatorColor( int color){
-    mTabStrip->setSelectedIndicatorColor(color);
+    mTabSelectedIndicatorColor = color;//TODO mTabSelectedIndicatorColor
+    mSlidingTabIndicator->setSelectedIndicatorColor(color);
+    updateTabViews(false);
 }
 
 void TabLayout::setSelectedTabIndicatorHeight(int height) {
-    mTabStrip->setSelectedIndicatorHeight(height);
+    mTabIndicatorHeight = height;
+    mSlidingTabIndicator->setSelectedIndicatorHeight(height);
 }
 
-void TabLayout::setScrollPosition(int position, float positionOffset, bool updateSelectedText, bool updateIndicatorPosition){
-    int roundedPosition = std::round(position + positionOffset);
-    if (roundedPosition < 0 || roundedPosition >= mTabStrip->getChildCount()) {
+void TabLayout::setScrollPosition(int position, float positionOffset, bool updateSelectedText){
+    setScrollPosition(position, positionOffset, updateSelectedText, true);
+}
+
+void TabLayout::setScrollPosition(int position, float positionOffset, bool updateSelectedTabView, bool updateIndicatorPosition) {
+    setScrollPosition(position, positionOffset, updateSelectedTabView, updateIndicatorPosition, true);
+}
+
+void TabLayout::setScrollPosition(int position, float positionOffset, bool updateSelectedText, bool updateIndicatorPosition,bool alwaysScroll){
+    const int roundedPosition = std::round(position + positionOffset);
+    if (roundedPosition < 0 || roundedPosition >= mSlidingTabIndicator->getChildCount()) {
         return;
     }
 
     // Set the indicator position, if enabled
     if (updateIndicatorPosition) {
-        mTabStrip->setIndicatorPositionFromTabPosition(position, positionOffset);
+        mSlidingTabIndicator->setIndicatorPositionFromTabPosition(position, positionOffset);
     }
 
     // Now update the scroll position, canceling any running animation
     if (mScrollAnimator && mScrollAnimator->isRunning()) {
         mScrollAnimator->cancel();
     }
-    scrollTo(calculateScrollXForTab(position, positionOffset), 0);
+
+    const int scrollXForPosition = calculateScrollXForTab(position, positionOffset);
+    const int scrollX = getScrollX();
+    bool toMove = ((position < getSelectedTabPosition()) && (scrollXForPosition >= scrollX))
+        || ((position > getSelectedTabPosition()) && (scrollXForPosition <= scrollX)) || (position == getSelectedTabPosition());
+    if(getLayoutDirection()==View::LAYOUT_DIRECTION_RTL){
+        toMove = ((position < getSelectedTabPosition()) && (scrollXForPosition <= scrollX))
+            || ((position > getSelectedTabPosition()) && (scrollXForPosition >= scrollX))
+            || (position == getSelectedTabPosition());
+    }
+    if(toMove||(mViewPagerScrollState==ViewPager::SCROLL_STATE_DRAGGING)||alwaysScroll){
+        scrollTo(calculateScrollXForTab(position, positionOffset), 0);
+    }
 
     // Update the 'selected state' view as we scroll, if enabled
     if (updateSelectedText) {
@@ -157,12 +187,8 @@ void TabLayout::setScrollPosition(int position, float positionOffset, bool updat
     }
 }
 
-void TabLayout::setScrollPosition(int position, float positionOffset, bool updateSelectedText){
-    setScrollPosition(position, positionOffset, updateSelectedText, true);
-}
-
 float TabLayout::getScrollPosition()const{
-    return mTabStrip->getIndicatorPosition();
+    return mSlidingTabIndicator->getIndicatorPosition();
 }
 
 void TabLayout::addTab(Tab* tab) {
@@ -200,6 +226,18 @@ void TabLayout::addTabFromItemView(TabItem* item){
     tab->setContentDescription(item->getContentDescription());//getContentDescription inherited from View.
     addTab(tab);
     delete item;//added by zhhou
+}
+
+bool TabLayout::isScrollingEnabled() const{
+    return getTabMode() == MODE_SCROLLABLE || getTabMode() == MODE_AUTO;
+}
+
+bool TabLayout::onInterceptTouchEvent(MotionEvent& event) {
+    return isScrollingEnabled() && HorizontalScrollView::onInterceptTouchEvent(event);
+}
+
+bool TabLayout::onTouchEvent(MotionEvent& event) {
+    return event.getActionMasked() == MotionEvent::ACTION_SCROLL && !isScrollingEnabled() ? false : HorizontalScrollView::onTouchEvent(event);
 }
 
 void TabLayout::addOnTabSelectedListener(const OnTabSelectedListener& listener){
@@ -242,17 +280,17 @@ void TabLayout::removeTab(Tab* tab) {
 }
 
 void TabLayout::removeTabAt(int position){
-    int selectedTabPosition = mSelectedTab ? mSelectedTab->getPosition() : 0;
+    const int selectedTabPosition = mSelectedTab ? mSelectedTab->getPosition() : 0;
     removeTabViewAt(position);
 
-    auto itr=mTabs.erase(mTabs.begin()+position);
-    Tab* removedTab =(*itr); 
+    Tab* removedTab =(position<mTabs.size()&&position>=0)?mTabs.at(position):nullptr;
     if (removedTab) {
         removedTab->reset();
         delete removedTab;
+        mTabs.erase(mTabs.begin()+position);
     }
 
-    int newTabCount = mTabs.size();
+    const int newTabCount = mTabs.size();
     for (int i = position; i < newTabCount; i++) {
         mTabs.at(i)->setPosition(i);
     }
@@ -263,7 +301,7 @@ void TabLayout::removeTabAt(int position){
 }
 
 void TabLayout::removeAllTabs(){
-    for (int i = mTabStrip->getChildCount() - 1; i >= 0; i--) {
+    for (int i = mSlidingTabIndicator->getChildCount() - 1; i >= 0; i--) {
         removeTabViewAt(i);
     }
 
@@ -298,15 +336,20 @@ int TabLayout::getTabGravity()const{
     return mTabGravity;
 }
 
-Drawable*TabLayout::getSelectedTabIndicator()const{
+Drawable*TabLayout::getTabSelectedIndicator()const{
     return mTabSelectedIndicator;
 }
 
-void TabLayout::setSelectedTabIndicator(Drawable*d){
-    if(mTabSelectedIndicator!=d){
+void TabLayout::setSelectedTabIndicator(Drawable*tabSelectedIndicator){
+    if(tabSelectedIndicator==nullptr){
+        tabSelectedIndicator = new GradientDrawable();
+    }
+    if(mTabSelectedIndicator!=tabSelectedIndicator){
         delete mTabSelectedIndicator;
-        mTabSelectedIndicator=d;
-        mTabStrip->postInvalidateOnAnimation();
+        mTabSelectedIndicator = tabSelectedIndicator;
+        const int indicatorHeight = mTabIndicatorHeight == -1 ? mTabSelectedIndicator->getIntrinsicHeight() : mTabIndicatorHeight;
+        mSlidingTabIndicator->setSelectedIndicatorHeight(indicatorHeight);
+        //mSlidingTabIndicator->postInvalidateOnAnimation();
     }
 }
 
@@ -318,20 +361,42 @@ int TabLayout::getTabIndicatorGravity()const{
     return mTabIndicatorGravity;
 }
 
-void TabLayout::setTabIndicatorGravity(int gravity){
+void TabLayout::setSelectedTabIndicatorGravity(int gravity){
     if(mTabIndicatorGravity!=gravity){
          mTabIndicatorGravity =gravity;
-         mTabStrip->postInvalidateOnAnimation();
+         mSlidingTabIndicator->postInvalidateOnAnimation();
     }
 }
 
+void TabLayout::setTabIndicatorAnimationMode(int tabIndicatorAnimationMode) {
+    mTabIndicatorAnimationMode = tabIndicatorAnimationMode;
+    switch (tabIndicatorAnimationMode) {
+    case INDICATOR_ANIMATION_MODE_LINEAR:
+        mTabIndicatorInterpolator = new TabIndicatorInterpolator();
+        break;
+    case INDICATOR_ANIMATION_MODE_ELASTIC:
+        mTabIndicatorInterpolator = new ElasticTabIndicatorInterpolator();
+        break;
+    case INDICATOR_ANIMATION_MODE_FADE:
+        mTabIndicatorInterpolator = new FadeTabIndicatorInterpolator();
+        break;
+    default:
+        throw std::invalid_argument(tabIndicatorAnimationMode + " is not a valid TabIndicatorAnimationMode");
+    }
+}
+
+int TabLayout::getTabIndicatorAnimationMode() const{
+    return mTabIndicatorAnimationMode;
+}
+
 bool TabLayout::isTabIndicatorFullWidth()const{
-    return tabIndicatorFullWidth;
+    return mTabIndicatorFullWidth;
 }
 
 void TabLayout::setTabIndicatorFullWidth(bool tabIndicatorFullWidth) {
-    this->tabIndicatorFullWidth = tabIndicatorFullWidth;
-    mTabStrip->postInvalidateOnAnimation();//slidingTabIndicator);
+    mTabIndicatorFullWidth = tabIndicatorFullWidth;
+    mSlidingTabIndicator->jumpIndicatorToSelectedPosition();
+    mSlidingTabIndicator->postInvalidateOnAnimation();
 }
 
 bool TabLayout::isInlineLabel()const{
@@ -341,13 +406,14 @@ bool TabLayout::isInlineLabel()const{
 void TabLayout::setInlineLabel(bool v){
     if(mInlineLabel==v)return;
     mInlineLabel=v;
-    for(int i=0;i<mTabStrip->getChildCount();i++){
-        View*child=mTabStrip->getChildAt(i);
+    for(int i=0;i<mSlidingTabIndicator->getChildCount();i++){
+        View*child=mSlidingTabIndicator->getChildAt(i);
         if(dynamic_cast<TabLayout::TabView*>(child)){
             TabLayout::TabView*tv=(TabLayout::TabView*)child;
-            //tv->updateBackgroundDrawable(getContext());
+            //tv->updateOrientation();
         }  
     }
+    applyModeAndGravity();
 }
 
 void TabLayout::setTabTextColors(const ColorStateList* textColor) {
@@ -433,12 +499,36 @@ void TabLayout::setupWithViewPager(ViewPager* viewPager){
     setupWithViewPager(viewPager, true);
 }
 
+void TabLayout::updateViewPagerScrollState(int scrollState) {
+    mViewPagerScrollState = scrollState;
+}
+
 bool TabLayout::shouldDelayChildPressedState(){
      return getTabScrollRange() > 0;
 }
 
-int TabLayout::getTabScrollRange(){
-    return std::max(0, mTabStrip->getWidth() - getWidth() - getPaddingLeft()
+void TabLayout::onAttachedToWindow() {
+    HorizontalScrollView::onAttachedToWindow();
+    //MaterialShapeUtils.setParentAbsoluteElevation(this);
+    if (mViewPager == nullptr) {
+        ViewGroup* vp = getParent();
+        if (dynamic_cast<ViewPager*>(vp)) {
+            setupWithViewPager((ViewPager*)vp, true, true);
+        }
+    }
+
+}
+
+void TabLayout::onDetachedFromWindow() {
+    HorizontalScrollView::onDetachedFromWindow();
+    if (mSetupViewPagerImplicitly) {
+        setupWithViewPager(nullptr);
+        mSetupViewPagerImplicitly = false;
+    }
+}
+
+int TabLayout::getTabScrollRange() {
+    return std::max(0, mSlidingTabIndicator->getWidth() - getWidth() - getPaddingLeft()
             - getPaddingRight());
 }
 
@@ -503,7 +593,7 @@ TabLayout::TabView*TabLayout::createTabView(TabLayout::Tab* tab){
 void TabLayout::configureTab(TabLayout::Tab* tab, int position){
     tab->setPosition(position);
     mTabs.insert(mTabs.begin()+position, tab);
-    int count = mTabs.size();
+    const int count = mTabs.size();
     for (int i = position + 1; i < count; i++) {
         mTabs[i]->setPosition(i);
     }
@@ -511,7 +601,7 @@ void TabLayout::configureTab(TabLayout::Tab* tab, int position){
 
 void TabLayout::addTabView(TabLayout::Tab* tab){
     TabView* tabView = (TabView*)tab->mView;
-    mTabStrip->addView(tabView, tab->getPosition(), createLayoutParamsForTabs());
+    mSlidingTabIndicator->addView(tabView, tab->getPosition(), createLayoutParamsForTabs());
 }
 
 void TabLayout::addView(View* child){
@@ -548,10 +638,10 @@ LinearLayout::LayoutParams* TabLayout::createLayoutParamsForTabs(){
 void TabLayout::updateTabViewLayoutParams(LinearLayout::LayoutParams* lp){
     if (mMode == MODE_FIXED && mTabGravity == GRAVITY_FILL) {
        lp->width = 0;
-       lp->weight = 1;
+       lp->weight = 1.0f;
     } else {
        lp->width = LinearLayout::LayoutParams::WRAP_CONTENT;
-       lp->weight = 0;
+       lp->weight = 0.0f;
     }
 }
 
@@ -560,7 +650,7 @@ static int dpToPx(int dps) {
 }
 
 void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    int idealHeight = dpToPx(getDefaultHeight()) + getPaddingTop() + getPaddingBottom();
+    const int idealHeight = dpToPx(getDefaultHeight()) + getPaddingTop() + getPaddingBottom();
     switch (MeasureSpec::getMode(heightMeasureSpec)) {
     case MeasureSpec::AT_MOST:
         heightMeasureSpec = MeasureSpec::makeMeasureSpec(
@@ -603,9 +693,9 @@ void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         if (remeasure) {
             // Re-measure the child with a widthSpec set to be exactly our measure width
-            int childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec, getPaddingTop()
+            const int childHeightMeasureSpec = getChildMeasureSpec(heightMeasureSpec, getPaddingTop()
                     + getPaddingBottom(), child->getLayoutParams()->height);
-            int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
+            const int childWidthMeasureSpec = MeasureSpec::makeMeasureSpec(
                     getMeasuredWidth(), MeasureSpec::EXACTLY);
             child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
         }
@@ -613,10 +703,11 @@ void TabLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 void TabLayout::removeTabViewAt(int position){
-    TabView* view = (TabView*) mTabStrip->getChildAt(position);
-    mTabStrip->removeViewAt(position);
+    TabView* view = (TabView*) mSlidingTabIndicator->getChildAt(position);
+    mSlidingTabIndicator->removeViewAt(position);
     if (view) {
         view->reset();
+        delete view;
         //mTabViewPool.release(view);
     }
     requestLayout();
@@ -627,15 +718,15 @@ void TabLayout::animateToTab(int newPosition){
         return;
     }
 
-    if ( false==isLaidOut()  || mTabStrip->childrenNeedLayout()) {
+    if ( false==isLaidOut()  || mSlidingTabIndicator->childrenNeedLayout()) {
         // If we don't have a window token, or we haven't been laid out yet just draw the new
         // position now
-        setScrollPosition(newPosition, .0f, true);
+        setScrollPosition(newPosition, 0.0f, true);
         return;
     }
 
-    int startScrollX = getScrollX();
-    int targetScrollX= calculateScrollXForTab(newPosition, 0);
+    const int startScrollX = getScrollX();
+    const int targetScrollX= calculateScrollXForTab(newPosition, 0);
 
     if (startScrollX != targetScrollX) {
         ensureScrollAnimator();
@@ -644,14 +735,14 @@ void TabLayout::animateToTab(int newPosition){
     }
 
     // Now animate the indicator
-    mTabStrip->animateIndicatorToPosition(newPosition, ANIMATION_DURATION);
+    mSlidingTabIndicator->animateIndicatorToPosition(newPosition,mTabIndicatorAnimationDuration);//ANIMATION_DURATION);
 }
 
 void TabLayout::ensureScrollAnimator(){
      if (mScrollAnimator == nullptr) {
         mScrollAnimator = new ValueAnimator();
         mScrollAnimator->setInterpolator(FastOutSlowInInterpolator::Instance);
-        mScrollAnimator->setDuration(ANIMATION_DURATION);
+        mScrollAnimator->setDuration(mTabIndicatorAnimationDuration);//ANIMATION_DURATION);
         mScrollAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim) {
            PropertyValuesHolder*ip=anim.getValues()[0]; 
            scrollTo(GET_VARIANT(ip->getAnimatedValue(),float),0);
@@ -665,11 +756,15 @@ void TabLayout::setScrollAnimatorListener(const Animator::AnimatorListener& list
 }
 
 void TabLayout::setSelectedTabView(int position){
-    int tabCount = mTabStrip->getChildCount();
+    const int tabCount = mSlidingTabIndicator->getChildCount();
     if (position < tabCount) {
         for (int i = 0; i < tabCount; i++) {
-            View* child = mTabStrip->getChildAt(i);
+            View* child = mSlidingTabIndicator->getChildAt(i);
             child->setSelected(i == position);
+            child->setActivated(i == position);
+            if(dynamic_cast<TabView*>(child)){
+                ((TabView*)child)->updateTab();
+            }
         }
     }
 }
@@ -677,12 +772,12 @@ void TabLayout::setSelectedTabView(int position){
 void TabLayout::selectTab(TabLayout::Tab* tab,bool updateIndicator){
     Tab* currentTab = mSelectedTab;
     if (currentTab == tab) {
-        if (currentTab) {
+        if (currentTab!=nullptr) {
             dispatchTabReselected(tab);
             animateToTab(tab->getPosition());
         }
     } else {
-        int newPosition = tab ? tab->getPosition() : Tab::INVALID_POSITION;
+        const int newPosition = tab ? tab->getPosition() : Tab::INVALID_POSITION;
         if (updateIndicator) {
             if ((currentTab == nullptr || currentTab->getPosition() == Tab::INVALID_POSITION)
                     && newPosition != Tab::INVALID_POSITION) {
@@ -695,50 +790,60 @@ void TabLayout::selectTab(TabLayout::Tab* tab,bool updateIndicator){
                 setSelectedTabView(newPosition);
             }
         }
-        if (currentTab) dispatchTabUnselected(currentTab);
 
         mSelectedTab = tab;
-        if (tab) dispatchTabSelected(tab);
+        if ((currentTab!=nullptr)&&(currentTab->mParent!=nullptr)){
+            dispatchTabUnselected(currentTab);
+        }
+        if (tab){
+            dispatchTabSelected(tab);
+        }
     }    
 }
 
 void TabLayout::dispatchTabSelected(Tab* tab) {
     for (auto ls:mSelectedListeners) {
-        if(ls.onTabSelected)
+        if(ls.onTabSelected){
             ls.onTabSelected(*tab);
+        }
     }
 }
 
 void TabLayout::dispatchTabUnselected(Tab* tab) {
     for (auto ls:mSelectedListeners) {
-        if(ls.onTabUnselected)
+        if(ls.onTabUnselected){
             ls.onTabUnselected(*tab);
+        }
     }
 }
 
 void TabLayout::dispatchTabReselected(Tab* tab) {
     for (auto ls:mSelectedListeners) {
-        if(ls.onTabReselected)
+        if(ls.onTabReselected){
             ls.onTabReselected(*tab);
+        }
     }
 }
 
 int TabLayout::calculateScrollXForTab(int position, float positionOffset){
     if (mMode == MODE_SCROLLABLE) {
-        View* selectedChild = mTabStrip->getChildAt(position);
-        View* nextChild = position + 1 < mTabStrip->getChildCount()
-             ? mTabStrip->getChildAt(position + 1): nullptr;
-        int selectedWidth = selectedChild ? selectedChild->getWidth() : 0;
-        int nextWidth = nextChild  ? nextChild->getWidth() : 0;
+        View* selectedChild = mSlidingTabIndicator->getChildAt(position);
+        if(selectedChild==nullptr){
+            return 0;
+        } else {
+            View* nextChild = position + 1 < mSlidingTabIndicator->getChildCount()
+                 ? mSlidingTabIndicator->getChildAt(position + 1): nullptr;
+            const int selectedWidth = selectedChild ? selectedChild->getWidth() : 0;
+            const int nextWidth = nextChild  ? nextChild->getWidth() : 0;
 
-        // base scroll amount: places center of tab in center of parent
-        int scrollBase = selectedChild->getLeft() + (selectedWidth / 2) - (getWidth() / 2);
-        // offset amount: fraction of the distance between centers of tabs
-        int scrollOffset = (int) ((selectedWidth + nextWidth) * 0.5f * positionOffset);
+            // base scroll amount: places center of tab in center of parent
+            const int scrollBase = selectedChild->getLeft() + (selectedWidth / 2) - (getWidth() / 2);
+            // offset amount: fraction of the distance between centers of tabs
+            const int scrollOffset = (int) ((selectedWidth + nextWidth) * 0.5f * positionOffset);
 
-        return (getLayoutDirection() == LAYOUT_DIRECTION_LTR)
-                ? scrollBase + scrollOffset
-                    : scrollBase - scrollOffset;
+            return (getLayoutDirection() == LAYOUT_DIRECTION_LTR)
+                    ? scrollBase + scrollOffset : scrollBase - scrollOffset;
+        }
     }
     return 0;
 }
@@ -749,23 +854,38 @@ void TabLayout::applyModeAndGravity(){
         // If we're scrollable, or fixed at start, inset using padding
         paddingStart = std::max(0, mContentInsetStart - mTabPaddingStart);
     }
-    mTabStrip->setPaddingRelative(paddingStart, 0, 0, 0);
+    mSlidingTabIndicator->setPaddingRelative(paddingStart, 0, 0, 0);
 
     switch (mMode) {
-    case MODE_FIXED:
-        mTabStrip->setGravity(Gravity::CENTER_HORIZONTAL);
-        break;
     case MODE_SCROLLABLE:
-        mTabStrip->setGravity(Gravity::START);
+        applyGravityForModeScrollable(mTabGravity);
+        //mSlidingTabIndicator->setGravity(Gravity::START);
+        break;
+    case MODE_FIXED:
+    case MODE_AUTO:
+        mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL);
         break;
     }
     updateTabViews(true);
 }
 
+void TabLayout::applyGravityForModeScrollable(int tabGravity) {
+    switch (tabGravity) {
+    case 0:
+        LOGW("MODE_SCROLLABLE + GRAVITY_FILL is not supported, GRAVITY_START will be used instead");
+    case 2:
+        mSlidingTabIndicator->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);//0x800003
+        break;
+    case 1:
+        mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL | Gravity::TOP);//1);
+    }
+
+}
+
 void TabLayout::updateTabViews(bool requestLayout){
-    LOGD("requestLayout=%d mintabwidth=%d %d children",requestLayout,getTabMinWidth(),mTabStrip->getChildCount());
-    for (int i = 0; i < mTabStrip->getChildCount(); i++) {
-        View* child = mTabStrip->getChildAt(i);
+    LOGD("requestLayout=%d mintabwidth=%d %d children",requestLayout,getTabMinWidth(),mSlidingTabIndicator->getChildCount());
+    for (int i = 0; i < mSlidingTabIndicator->getChildCount(); i++) {
+        View* child = mSlidingTabIndicator->getChildAt(i);
         child->setMinimumWidth(getTabMinWidth());
         updateTabViewLayoutParams((LinearLayout::LayoutParams*) child->getLayoutParams());
         if (requestLayout) {
@@ -788,7 +908,7 @@ ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedCo
     return new ColorStateList(states, colors);
 }
 
-int TabLayout::getDefaultHeight() {
+int TabLayout::getDefaultHeight() const{
     bool hasIconAndText = false;
     for (int i = 0, count = mTabs.size(); i < count; i++) {
         Tab* tab = mTabs.at(i);
@@ -800,7 +920,7 @@ int TabLayout::getDefaultHeight() {
     return hasIconAndText&&!isInlineLabel() ? DEFAULT_HEIGHT_WITH_TEXT_ICON : DEFAULT_HEIGHT;
 }
 
-int TabLayout::getTabMinWidth() {
+int TabLayout::getTabMinWidth() const{
     if (mRequestedTabMinWidth != INVALID_WIDTH) {
         // If we have been given a min width, use it
         return mRequestedTabMinWidth;
@@ -813,11 +933,9 @@ FrameLayout::LayoutParams* TabLayout::generateLayoutParams(const AttributeSet& a
     return generateDefaultLayoutParams();
 }
 
-int TabLayout::getTabMaxWidth() {
+int TabLayout::getTabMaxWidth() const{
     return mTabMaxWidth;
 }
-
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////
 DECLARE_WIDGET3(TabLayout::TabItem,TabItem,"")
@@ -844,7 +962,7 @@ TabLayout::Tab::~Tab(){
 }
 
 void TabLayout::Tab::setTag(void*tag){
-    mTag=tag;
+    mTag = tag;
 }
 
 void*TabLayout::Tab::getTag()const{
@@ -856,13 +974,13 @@ View*TabLayout::Tab::getCustomView()const{
 }
 
 TabLayout::Tab& TabLayout::Tab::setCustomView(View*v){
-    mCustomView=v;
+    mCustomView = v;
     updateView();
     return *this;
 }
 
 TabLayout::Tab& TabLayout::Tab::setCustomView(const std::string&resid){
-    View*v=LayoutInflater::from(mParent->getContext())->inflate(resid,nullptr,false);
+    View*v = LayoutInflater::from(mParent->getContext())->inflate(resid,nullptr,false);
     return setCustomView(v);
 }
 
@@ -871,7 +989,7 @@ Drawable* TabLayout::Tab::getIcon()const{
 }
 
 TabLayout::Tab& TabLayout::Tab::setIcon(Drawable* icon){
-    mIcon=icon;
+    mIcon = icon;
     updateView();
     return *this;
 }
@@ -881,7 +999,7 @@ int TabLayout::Tab::getPosition()const{
 }
 
 void TabLayout::Tab::setPosition(int position){
-    mPosition=position;
+    mPosition = position;
 }
 
 std::string TabLayout::Tab::getText()const{
@@ -923,8 +1041,8 @@ void TabLayout::Tab::reset() {
     mView   = nullptr;
     mTag    = nullptr;
     mIcon   = nullptr;
-    mText   = nullptr;
-    mContentDesc = nullptr;
+    mText.clear();
+    mContentDesc.clear();
     mPosition = INVALID_POSITION;
     mCustomView = nullptr;
 }
@@ -996,7 +1114,7 @@ void TabLayout::TabView::updateBackgroundDrawable(Context* context) {
 }
 
 bool TabLayout::TabView::performClick(){
-    bool handled = LinearLayout::performClick();
+    const bool handled = LinearLayout::performClick();
 
     if (mTab) {
         if (!handled)playSoundEffect(SoundEffectConstants::CLICK);
@@ -1103,6 +1221,88 @@ void TabLayout::TabView::reset() {
     setSelected(false);
 }
 
+void TabLayout::TabView::updateTab() {
+#if 0
+    Tab* tab = mTab;
+    View* custom = tab != nullptr ? tab->getCustomView() : nullptr;
+    if (custom != nullptr) {
+        ViewGroup* customParent = custom->getParent();
+        if (customParent != this) {
+            if (customParent != nullptr) {
+                ((ViewGroup*)customParent)->removeView(custom);
+            }
+
+            if (mCustomView != nullptr) {
+                ViewGroup* customViewParent = mCustomView->getParent();
+                if (customViewParent != nullptr) {
+                    ((ViewGroup*)customViewParent)->removeView(mCustomView);
+                }
+            }
+
+            addView(custom);
+        }
+
+        mCustomView = custom;
+        if (mTextView != nullptr) {
+            mTextView->setVisibility(View::GONE);
+        }
+
+        if (mIconView != nullptr) {
+            mIconView->setVisibility(View::GONE);
+            mIconView->setImageDrawable(nullptr);
+        }
+
+        mCustomTextView = (TextView*)custom->findViewById(16908308);
+        if (mCustomTextView != nullptr) {
+            mDefaultMaxLines = mCustomTextView->getMaxLines();
+        }
+
+        mCustomIconView = (ImageView*)custom->findViewById(16908294);
+    } else {
+        if (mCustomView != nullptr) {
+            removeView(mCustomView);
+            mCustomView = nullptr;
+        }
+
+        mCustomTextView = nullptr;
+        mCustomIconView = nullptr;
+    }
+
+    if (mCustomView == nullptr) {
+        if (mIconView == nullptr) {
+            inflateAndAddDefaultIconView();
+        }
+
+        if (mTextView == nullptr) {
+            inflateAndAddDefaultTextView();
+            mDefaultMaxLines = mTextView->getMaxLines();
+        }
+
+        mTextView->setTextAppearance(mParent->defaultTabTextAppearance);
+        if (isSelected() && mParent->selectedTabTextAppearance != -1) {
+            mTextView->setTextAppearance(mParent->selectedTabTextAppearance);
+        } else {
+            mTextView->setTextAppearance(mParent->mTabTextAppearance);
+        }
+
+        if (mParent->mTabTextColors != nullptr) {
+            mTextView->setTextColor(mParent->mTabTextColors);
+        }
+
+        updateTextAndIcon(mTextView, mIconView/*, true*/);
+        tryUpdateBadgeAnchor();
+        //addOnLayoutChangeListener(this->mIconView);
+        //addOnLayoutChangeListener(this->mTextView);
+    } else if (mCustomTextView != nullptr || mCustomIconView != nullptr) {
+        updateTextAndIcon(mCustomTextView, mCustomIconView/*, false*/);
+    }
+
+    /*if (tab != nullptr && !TextUtils::isEmpty(tab->mContentDesc)) {
+        setContentDescription(tab->mContentDesc);
+    }*/
+#endif
+}
+
 void TabLayout::TabView::update() {
     Tab* tab = mTab;
     View* custom = tab ? tab->getCustomView() : nullptr;
@@ -1166,22 +1366,35 @@ void TabLayout::TabView::update() {
     setSelected(tab && tab->isSelected());
 }
 
-int TabLayout::TabView::getContentWidth(){
+int TabLayout::TabView::getContentWidth()const{
     bool initialized = false;
     int left = 0;
     int right = 0;
-    View*var4[] = {mTextView, mIconView, mCustomView};
-    int var5 = sizeof(var4)/sizeof(View*);
-
-    for(int var6 = 0; var6 < var5; ++var6) {
-        View* view = var4[var6];
-        if (view && view->getVisibility() == View::INVISIBLE) {
+    View*views[] = {mTextView, mIconView, mCustomView};
+    for(View*view:views) {
+        if (view && view->getVisibility() == View::VISIBLE) {
             left = initialized ? std::min(left, view->getLeft()) : view->getLeft();
             right = initialized ? std::max(right, view->getRight()) : view->getRight();
             initialized = true;
         }
     }
     return right - left;
+}
+
+int TabLayout::TabView::getContentHeight() const{
+    bool initialized = false;
+    int top = 0;
+    int bottom = 0;
+    View*views[] = {mTextView, mIconView, mCustomView};
+    for(View* view : views) {
+        if (view != nullptr && view->getVisibility() == View::VISIBLE) {
+            top = initialized ? std::min(top, view->getTop()) : view->getTop();
+            bottom = initialized ? std::max(bottom, view->getBottom()) : view->getBottom();
+            initialized = true;
+        }
+    }
+
+    return bottom - top;
 }
 
 void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconView) {
@@ -1241,7 +1454,7 @@ float TabLayout::TabView::approximateLineWidth(Layout* layout, int line, float t
 }
 
 /*-------------------------------------------------------------------------------------------------------*/
-TabLayout::SlidingTabStrip::SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent)
+TabLayout::SlidingTabIndicator::SlidingTabIndicator(Context* context,const AttributeSet&atts,TabLayout*parent)
  :LinearLayout(context,atts){
     mParent = parent;
     mIndicatorLeft  = -1;
@@ -1252,25 +1465,25 @@ TabLayout::SlidingTabStrip::SlidingTabStrip(Context* context,const AttributeSet&
     setWillNotDraw(false);
 }
 
-TabLayout::SlidingTabStrip::~SlidingTabStrip(){
+TabLayout::SlidingTabIndicator::~SlidingTabIndicator(){
     delete mIndicatorAnimator;
 }
 
-void TabLayout::SlidingTabStrip::setSelectedIndicatorColor(int color) {
+void TabLayout::SlidingTabIndicator::setSelectedIndicatorColor(int color) {
     if (mSelectedIndicatorColor != color) {
         mSelectedIndicatorColor=color;
         postInvalidateOnAnimation();
     }
 }
 
-void TabLayout::SlidingTabStrip::setSelectedIndicatorHeight(int height) {
+void TabLayout::SlidingTabIndicator::setSelectedIndicatorHeight(int height) {
     if (mSelectedIndicatorHeight != height) {
         mSelectedIndicatorHeight = height;
         postInvalidateOnAnimation();
     }
 }
 
-bool TabLayout::SlidingTabStrip::childrenNeedLayout() {
+bool TabLayout::SlidingTabIndicator::childrenNeedLayout() {
     for (int i = 0, z = getChildCount(); i < z; i++) {
         View* child = getChildAt(i);
         if (child->getWidth() <= 0) {
@@ -1280,7 +1493,7 @@ bool TabLayout::SlidingTabStrip::childrenNeedLayout() {
     return false;
 }
 
-void TabLayout::SlidingTabStrip::setIndicatorPositionFromTabPosition(int position, float positionOffset) {
+void TabLayout::SlidingTabIndicator::setIndicatorPositionFromTabPosition(int position, float positionOffset) {
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
         mIndicatorAnimator->cancel();
     }
@@ -1290,11 +1503,11 @@ void TabLayout::SlidingTabStrip::setIndicatorPositionFromTabPosition(int positio
     updateIndicatorPosition();
 }
 
-float TabLayout::SlidingTabStrip::getIndicatorPosition() {
+float TabLayout::SlidingTabIndicator::getIndicatorPosition() {
     return mSelectedPosition + mSelectionOffset;
 }
 
-void TabLayout::SlidingTabStrip::onRtlPropertiesChanged(int layoutDirection) {
+void TabLayout::SlidingTabIndicator::onRtlPropertiesChanged(int layoutDirection) {
     LinearLayout::onRtlPropertiesChanged(layoutDirection);
 
     // Workaround for a bug before Android M where LinearLayout did not relayout itself when
@@ -1308,7 +1521,7 @@ void TabLayout::SlidingTabStrip::onRtlPropertiesChanged(int layoutDirection) {
     }
 }
 
-void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+void TabLayout::SlidingTabIndicator::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
 
     if (MeasureSpec::getMode(widthMeasureSpec) != MeasureSpec::EXACTLY) {
@@ -1334,7 +1547,7 @@ void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasu
             return;
         }
 
-        int gutter = dpToPx(TabLayout::FIXED_WRAP_GUTTER_MIN);
+        const int gutter = dpToPx(TabLayout::FIXED_WRAP_GUTTER_MIN);
         bool remeasure = false;
 
         if (largestTabWidth * count <= getMeasuredWidth() - gutter * 2) {
@@ -1363,30 +1576,57 @@ void TabLayout::SlidingTabStrip::onMeasure(int widthMeasureSpec, int heightMeasu
     }
 }
 
-void TabLayout::SlidingTabStrip::onLayout(bool changed, int l, int t, int w, int h) {
+void TabLayout::SlidingTabIndicator::onLayout(bool changed, int l, int t, int w, int h) {
     LinearLayout::onLayout(changed, l, t, w, h);
 
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
-        // If we're currently running an animation, lets cancel it and start a
-        // new animation with the remaining duration
-        mIndicatorAnimator->cancel();
-        long duration = mIndicatorAnimator->getDuration();
-        animateIndicatorToPosition(mSelectedPosition,
-                std::round((1.f - mIndicatorAnimator->getAnimatedFraction()) * duration));
+        updateOrRecreateIndicatorAnimation(false,mParent->getSelectedTabPosition(),-1);
     } else {
-        // If we've been layed out, update the indicator position
-        updateIndicatorPosition();
+        jumpIndicatorToIndicatorPosition();
     }
 }
 
-void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
+void TabLayout::SlidingTabIndicator::jumpIndicatorToPosition(int position) {
+    if (mParent->mViewPagerScrollState == 0 || mParent->getTabSelectedIndicator()->getBounds().left == -1
+            && mParent->getTabSelectedIndicator()->getBounds().width == 0) {
+        View* currentView = this->getChildAt(position);
+        mParent->mTabIndicatorInterpolator->setIndicatorBoundsForTab(mParent, currentView, mParent->mTabSelectedIndicator);
+        mParent->mIndicatorPosition = position;
+    }
+}
+
+void TabLayout::SlidingTabIndicator::jumpIndicatorToSelectedPosition() {
+    jumpIndicatorToPosition(mParent->getSelectedTabPosition());
+}
+
+void TabLayout::SlidingTabIndicator::jumpIndicatorToIndicatorPosition() {
+    if (mParent->mIndicatorPosition == -1) {
+        mParent->mIndicatorPosition = mParent->getSelectedTabPosition();
+    }
+
+    jumpIndicatorToPosition(mParent->mIndicatorPosition);
+}
+
+void TabLayout::SlidingTabIndicator::tweenIndicatorPosition(View* startTitle, View* endTitle, float fraction) {
+    bool hasVisibleTitle = startTitle != nullptr && startTitle->getWidth() > 0;
+    if (hasVisibleTitle) {
+        mParent->mTabIndicatorInterpolator->updateIndicatorForOffset(mParent, startTitle, endTitle, fraction, mParent->mTabSelectedIndicator);
+    } else {
+        mParent->mTabSelectedIndicator->setBounds(-1, mParent->mTabSelectedIndicator->getBounds().top,
+                0, mParent->mTabSelectedIndicator->getBounds().height);
+    }
+
+    postInvalidateOnAnimation();
+}
+
+void TabLayout::SlidingTabIndicator::updateIndicatorPosition() {
     View* selectedTitle = getChildAt(mSelectedPosition);
     int left, right;
 
     if (selectedTitle && selectedTitle->getWidth() > 0) {
         left = selectedTitle->getLeft();
         right= selectedTitle->getRight();
-        if(!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(selectedTitle)){
+        if(!mParent->mTabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(selectedTitle)){
             calculateTabViewContentBounds((TabLayout::TabView*)selectedTitle,mParent->tabViewContentBounds);
             left = mParent->tabViewContentBounds.left;
             right= mParent->tabViewContentBounds.right();
@@ -1396,7 +1636,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
             View* nextTitle = getChildAt(mSelectedPosition + 1);
             int nextTitleLeft = nextTitle->getLeft();
             int nextTitleRight= nextTitle->getRight(); 
-            if(!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(nextTitle)){
+            if(!mParent->mTabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(nextTitle)){
                 calculateTabViewContentBounds((TabLayout::TabView*)selectedTitle,mParent->tabViewContentBounds);
                 nextTitleLeft = mParent->tabViewContentBounds.left;
                 nextTitleRight= mParent->tabViewContentBounds.right();
@@ -1413,7 +1653,7 @@ void TabLayout::SlidingTabStrip::updateIndicatorPosition() {
     setIndicatorPosition(left, right);
 }
 
-void TabLayout::SlidingTabStrip::setIndicatorPosition(int left, int right) {
+void TabLayout::SlidingTabIndicator::setIndicatorPosition(int left, int right) {
     if (left != mIndicatorLeft || right != mIndicatorRight) {
         // If the indicator's left/right has changed, invalidate
         mIndicatorLeft = left;
@@ -1422,70 +1662,54 @@ void TabLayout::SlidingTabStrip::setIndicatorPosition(int left, int right) {
     }
 }
 
-void TabLayout::SlidingTabStrip::animateIndicatorToPosition(int position, int duration) {
+void TabLayout::SlidingTabIndicator::animateIndicatorToPosition(int position, int duration) {
     if (mIndicatorAnimator && mIndicatorAnimator->isRunning()) {
         mIndicatorAnimator->cancel();
     }
 
-    const bool isRtl = getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
-
-    View* targetView = getChildAt(position);
-    if (targetView == nullptr) {
-        // If we don't have a view, just update the position now and return
-        updateIndicatorPosition();
-    }else{
-
-        int targetLeft = targetView->getLeft();
-        int targetRight= targetView->getRight();
-
-        if (!mParent->tabIndicatorFullWidth && dynamic_cast<TabLayout::TabView*>(targetView)){
-            // If the views are adjacent, we'll animate from edge-to-edge
-            calculateTabViewContentBounds((TabLayout::TabView*)targetView,mParent->tabViewContentBounds);
-            targetLeft = mParent->tabViewContentBounds.left;
-            targetRight= mParent->tabViewContentBounds.right();
-        } 
-        int startLeft = mIndicatorLeft;
-        int startRight= mIndicatorRight;
-
-        if( mIndicatorAnimator==nullptr){ 
-            mIndicatorAnimator = new ValueAnimator();
-            mIndicatorAnimator->setInterpolator(FastOutSlowInInterpolator::Instance);
-            mIndicatorAnimator->setFloatValues({.0f,1.f});
-        }
-        if (startLeft != targetLeft || startRight != targetRight) {
-            ValueAnimator* animator = mIndicatorAnimator;
-            animator->setDuration(duration);
-            animator->removeAllListeners();
-            animator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this,startLeft,targetLeft,startRight,targetRight](ValueAnimator&anim) {
-                const float fraction = anim.getAnimatedFraction();
-                setIndicatorPosition((int)MathUtils::lerp(float(startLeft), float(targetLeft), fraction),
-                                     (int)MathUtils::lerp(float(startRight), float(targetRight), fraction));
-            }));
-            Animator::AnimatorListener al;
-            al.onAnimationEnd=[this,position](Animator&anim,bool reverse){
-                mSelectedPosition = position;
-                mSelectionOffset = .0f;
-            };
-
-            animator->addListener(al);
-            animator->start();
-        }
-    }
-
+    updateOrRecreateIndicatorAnimation(true,position,duration);
 }
 
-void TabLayout::SlidingTabStrip::calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds){
+void TabLayout::SlidingTabIndicator::updateOrRecreateIndicatorAnimation(bool recreateAnimation, int position, int duration) {
+    if (mParent->mIndicatorPosition != position) {
+        View* currentView = getChildAt(mParent->getSelectedTabPosition());
+        View* targetView = getChildAt(position);
+        if (targetView == nullptr) {
+            jumpIndicatorToSelectedPosition();
+        } else {
+            mParent->mIndicatorPosition = position;
+            ValueAnimator::AnimatorUpdateListener updateListener
+                =[this,currentView,targetView](ValueAnimator& valueAnimator) {
+                 tweenIndicatorPosition(currentView, targetView, valueAnimator.getAnimatedFraction());
+            };
+            if (recreateAnimation) {
+                ValueAnimator* animator = mIndicatorAnimator = new ValueAnimator();
+                animator->setInterpolator(mParent->mTabIndicatorTimeInterpolator);
+                animator->setDuration((long)duration);
+                animator->setFloatValues({0.0F, 1.0F});
+                animator->addUpdateListener(updateListener);
+                animator->start();
+            } else {
+                mIndicatorAnimator->removeAllUpdateListeners();
+                mIndicatorAnimator->addUpdateListener(updateListener);
+            }
+
+        }
+    }
+}
+
+void TabLayout::SlidingTabIndicator::calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds){
     int tabViewContentWidth = tabView->getContentWidth();
     if (tabViewContentWidth <  dpToPx(24)) {
          tabViewContentWidth = dpToPx(24);
     }
-    int tabViewCenter = (tabView->getLeft() + tabView->getRight()) / 2;
-    int contentLeftBounds = tabViewCenter - tabViewContentWidth / 2;
-    int contentRightBounds = tabViewCenter + tabViewContentWidth / 2;
+    const int tabViewCenter = (tabView->getLeft() + tabView->getRight()) / 2;
+    const int contentLeftBounds = tabViewCenter - tabViewContentWidth / 2;
+    const int contentRightBounds = tabViewCenter + tabViewContentWidth / 2;
     contentBounds.set((float)contentLeftBounds, 0.0F, tabViewContentWidth, 0.0F);
 }
 
-void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
+void TabLayout::SlidingTabIndicator::draw(Canvas& canvas) {
     LinearLayout::draw(canvas);
     // Thick colored underline below the current selection
     int indicatorHeight= mSelectedIndicatorHeight;
@@ -1527,10 +1751,10 @@ void TabLayout::SlidingTabStrip::draw(Canvas& canvas) {
 
 TabLayout::TabLayoutOnPageChangeListener::TabLayoutOnPageChangeListener(){
     mTabLayout = nullptr;
-    onPageSelected=std::bind(&TabLayoutOnPageChangeListener::doPageSelected,this,std::placeholders::_1);
-    onPageScrolled=std::bind(&TabLayoutOnPageChangeListener::doPageScrolled,this,std::placeholders::_1,
+    onPageSelected = std::bind(&TabLayoutOnPageChangeListener::doPageSelected,this,std::placeholders::_1);
+    onPageScrolled = std::bind(&TabLayoutOnPageChangeListener::doPageScrolled,this,std::placeholders::_1,
                             std::placeholders::_2,std::placeholders::_3);
-    onPageScrollStateChanged=std::bind(&TabLayoutOnPageChangeListener::doPageScrollStateChanged,
+    onPageScrollStateChanged = std::bind(&TabLayoutOnPageChangeListener::doPageScrollStateChanged,
           this,std::placeholders::_1);
 }
 
@@ -1542,18 +1766,21 @@ void TabLayout::TabLayoutOnPageChangeListener::reset(){
 void TabLayout::TabLayoutOnPageChangeListener::doPageScrollStateChanged(int state){
     mPreviousScrollState = mScrollState;
     mScrollState = state;
+    if(mTabLayout!=nullptr){
+        mTabLayout->updateViewPagerScrollState(mScrollState);
+    }
 }
 
 void TabLayout::TabLayoutOnPageChangeListener::doPageScrolled(int position,float positionOffset,int positionOffsetPixels){
     if (mTabLayout) {
         // Only update the text selection if we're not settling, or we are settling after
         // being dragged
-        bool updateText = mScrollState != ViewPager::SCROLL_STATE_SETTLING ||
+        const bool updateText = mScrollState != ViewPager::SCROLL_STATE_SETTLING ||
                mPreviousScrollState == ViewPager::SCROLL_STATE_DRAGGING;
         // Update the indicator if we're not settling after being idle. This is caused
         // from a setCurrentItem() call and will be handled by an animation from
         // onPageSelected() instead.
-        bool updateIndicator = !(mScrollState == ViewPager::SCROLL_STATE_SETTLING
+        const bool updateIndicator = !(mScrollState == ViewPager::SCROLL_STATE_SETTLING
                 && mPreviousScrollState == ViewPager::SCROLL_STATE_IDLE);
         mTabLayout->setScrollPosition(position, positionOffset, updateText, updateIndicator);
     }
@@ -1588,4 +1815,76 @@ void TabLayout::PagerAdapterObserver::clearSavedState(){
 }
 
 /*------------------------------------------------------------------------------*/
+//class TabLayout::TabIndicatorInterpolator{
+RectF TabLayout::TabIndicatorInterpolator::calculateTabViewContentBounds(TabLayout::TabView* tabView,int minWidth) {
+    int tabViewContentWidth = tabView->getContentWidth();
+    int tabViewContentHeight = tabView->getContentHeight();
+    const int minWidthPx = minWidth;//(int)ViewUtils.dpToPx(tabView->getContext(), minWidth);
+    if (tabViewContentWidth < minWidthPx) {
+        tabViewContentWidth = minWidthPx;
+    }
+
+    const int tabViewCenterX = (tabView->getLeft() + tabView->getRight()) / 2;
+    const int tabViewCenterY = (tabView->getTop() + tabView->getBottom()) / 2;
+    const int contentLeftBounds = tabViewCenterX - tabViewContentWidth / 2;
+    const int contentTopBounds = tabViewCenterY - tabViewContentHeight / 2;
+    const int contentRightBounds = tabViewCenterX + tabViewContentWidth / 2;
+    const int contentBottomBounds = tabViewCenterY + tabViewCenterX / 2;
+    return {(float)contentLeftBounds, (float)contentTopBounds, 
+        (float)contentRightBounds-contentLeftBounds, (float)(contentBottomBounds-contentTopBounds)};
+}
+
+RectF TabLayout::TabIndicatorInterpolator::calculateIndicatorWidthForTab(TabLayout* tabLayout, View* tab) {
+    if (tab == nullptr) {
+        return RectF();
+    } else {
+        return !tabLayout->isTabIndicatorFullWidth() && dynamic_cast<TabLayout::TabView*>(tab) ?
+            calculateTabViewContentBounds((TabLayout::TabView*)tab, 24)
+            :RectF::MakeLTRB((float)tab->getLeft(), (float)tab->getTop(), (float)tab->getRight(), (float)tab->getBottom());
+    }
+}
+
+void TabLayout::TabIndicatorInterpolator::setIndicatorBoundsForTab(TabLayout* tabLayout, View* tab,Drawable* indicator){
+    RectF startIndicator = calculateIndicatorWidthForTab(tabLayout, tab);
+    indicator->setBounds((int)startIndicator.left, indicator->getBounds().top, (int)startIndicator.width, indicator->getBounds().height);
+}
+
+void TabLayout::TabIndicatorInterpolator::updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle,float offset, Drawable* indicator){
+    RectF startIndicator = calculateIndicatorWidthForTab(tabLayout, startTitle);
+    RectF endIndicator = calculateIndicatorWidthForTab(tabLayout, endTitle);
+    const int left = AnimationUtils::lerp((int)startIndicator.left, (int)endIndicator.left, offset);
+    const int right= AnimationUtils::lerp((int)startIndicator.right(), (int)endIndicator.right(), offset);
+    indicator->setBounds(left, indicator->getBounds().top,right - left, indicator->getBounds().height);
+}
+
+//class TabLayout::FadeTabIndicatorInterpolator
+void TabLayout::FadeTabIndicatorInterpolator::updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle, float offset,Drawable* indicator){
+    View* tab = offset < 0.5F ? startTitle : endTitle;
+    RectF bounds = calculateIndicatorWidthForTab(tabLayout, tab);
+    const float alpha = offset < 0.5F ? AnimationUtils::lerp(1.0F, 0.0F, 0.0F, 0.5F, offset) : AnimationUtils::lerp(0.0F, 1.0F, 0.5F, 1.0F, offset);
+    indicator->setBounds((int)bounds.left, indicator->getBounds().top, (int)bounds.width, indicator->getBounds().height);
+    indicator->setAlpha((int)(alpha * 255.0F));
+}
+
+//class TabLayout::ElasticTabIndicatorInterpolator
+void TabLayout::ElasticTabIndicatorInterpolator::updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle, float offset,Drawable* indicator) {
+    RectF startIndicator = calculateIndicatorWidthForTab(tabLayout, startTitle);
+    RectF endIndicator = calculateIndicatorWidthForTab(tabLayout, endTitle);
+    const bool isMovingRight = startIndicator.left < endIndicator.left;
+    float leftFraction;
+    float rightFraction;
+    if (isMovingRight) {
+        leftFraction = accInterp(offset);
+        rightFraction = decInterp(offset);
+    } else {
+        leftFraction = decInterp(offset);
+        rightFraction = accInterp(offset);
+    }
+    const int left =AnimationUtils::lerp((int)startIndicator.left, (int)endIndicator.left, leftFraction);
+    const int right=AnimationUtils::lerp((int)startIndicator.right(), (int)endIndicator.right(), rightFraction);
+    indicator->setBounds(left, indicator->getBounds().top, right-left, indicator->getBounds().height);
+    Rect rc = indicator->getBounds();
+    LOGD("indicator.bounds=(%d,%d,%d,%d)",rc.left,rc.top,rc.width,rc.height);
+}
+
 }//endof namespace

@@ -170,8 +170,8 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
     }
     const int focusable = attrs.getInt("focusable",{
-            {"true",FOCUSABLE},{"false",NOT_FOCUSABLE},
-            {"auto",FOCUSABLE_AUTO}},0);
+            {"true",(int)FOCUSABLE},{"false",(int)NOT_FOCUSABLE},
+            {"auto",(int)FOCUSABLE_AUTO}},0);
     viewFlagValues = (viewFlagValues & ~FOCUSABLE_MASK)|focusable;
     if((viewFlagValues & FOCUSABLE_AUTO) == 0){
         viewFlagMasks |= FOCUSABLE_MASK;

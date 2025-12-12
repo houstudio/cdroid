@@ -37,6 +37,22 @@ public:
     static Animation* makeOutAnimation(Context* c, bool toRight);
     static Animation* makeInChildBottomAnimation(Context* c);
     static Interpolator* loadInterpolator(Context*,const std::string& id);
+
+    static float lerp(float startValue, float endValue, float fraction) {
+        return startValue + fraction * (endValue - startValue);
+    }
+
+    static int lerp(int startValue, int endValue, float fraction) {
+        return startValue + std::round(fraction * (float)(endValue - startValue));
+    }
+
+    static float lerp(float outputMin, float outputMax, float inputMin, float inputMax, float value) {
+        if (value <= inputMin) {
+            return outputMin;
+        } else {
+            return value >= inputMax ? outputMax : lerp(outputMin, outputMax, (value - inputMin) / (inputMax - inputMin));
+        }
+    }
 };
 
 }//endof namespace

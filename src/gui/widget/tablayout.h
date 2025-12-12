@@ -26,15 +26,26 @@
 namespace cdroid{
 
 class TabLayout:public HorizontalScrollView{
+private:
+    static constexpr int DEFAULT_HEIGHT_WITH_TEXT_ICON = 72;
+    static constexpr int DEFAULT_GAP_TEXT_ICON = 8;
+    static constexpr int DEFAULT_HEIGHT = 48;
+    static constexpr int TAB_MIN_WIDTH_MARGIN = 56;
+    static constexpr int INVALID_WIDTH = -1;
+    static constexpr int ANIMATION_DURATION = 300;
 public:
     static constexpr int MODE_SCROLLABLE = 0;
     static constexpr int MODE_FIXED = 1;
+    static constexpr int MODE_AUTO  = 2;
     static constexpr int GRAVITY_FILL = 0;
     static constexpr int GRAVITY_CENTER = 1;
     static constexpr int INDICATOR_GRAVITY_BOTTOM = 0;
     static constexpr int INDICATOR_GRAVITY_CENTER = 1;
     static constexpr int INDICATOR_GRAVITY_TOP = 2;
     static constexpr int INDICATOR_GRAVITY_STRETCH = 3;
+    static constexpr int INDICATOR_ANIMATION_MODE_LINEAR = 0;
+    static constexpr int INDICATOR_ANIMATION_MODE_ELASTIC = 1;
+    static constexpr int INDICATOR_ANIMATION_MODE_FADE = 2;
     class Tab{
     private:
         void* mTag;
@@ -84,7 +95,8 @@ public:
         ImageView* mCustomIconView;
         Drawable* mBaseBackgroundDrawable;
         int mDefaultMaxLines = 2;
-        int getContentWidth(); 
+        int getContentWidth()const;
+        int getContentHeight()const;
         void updateTextAndIcon(TextView* textView,ImageView* iconView);
         float approximateLineWidth(Layout* layout, int line, float textSize);
         void updateBackgroundDrawable(Context* context);
@@ -96,11 +108,12 @@ public:
         void onMeasure(int origWidthMeasureSpec,int origHeightMeasureSpec)override;
         void setTab(Tab* tab);
         void reset();
+        void updateTab();
         void update();
         Tab* getTab();
     };
 
-    class  OnTabSelectedListener:public EventSet{
+    class OnTabSelectedListener:public EventSet{
     public:
         std::function<void(Tab&)>onTabSelected;
         std::function<void(Tab&)>onTabUnselected;
@@ -130,6 +143,9 @@ public:
         void reset();
     };
 private:
+    class TabIndicatorInterpolator;
+    class FadeTabIndicatorInterpolator;
+    class ElasticTabIndicatorInterpolator;
     class AdapterChangeListener:public ViewPager::OnAdapterChangeListener{
 
     };
@@ -142,8 +158,9 @@ private:
         void onInvalidated()override;
         void clearSavedState()override;
     };
-    class SlidingTabStrip:public LinearLayout{
+    class SlidingTabIndicator:public LinearLayout{
     private:
+        friend TabLayout;
         int  mSelectedIndicatorHeight;
         int  mSelectedIndicatorColor;
 
@@ -157,13 +174,18 @@ private:
         TabLayout*mParent;
         ValueAnimator* mIndicatorAnimator;
         void updateIndicatorPosition();
+        void jumpIndicatorToPosition(int position);
+        void jumpIndicatorToSelectedPosition();
+        void jumpIndicatorToIndicatorPosition();
+        void tweenIndicatorPosition(View* startTitle, View* endTitle, float fraction);
+        void updateOrRecreateIndicatorAnimation(bool recreateAnimation, int position, int duration);
     protected:
         void calculateTabViewContentBounds(TabLayout::TabView* tabView, Rect& contentBounds);
         void onMeasure(int widthMeasureSpec,int heightMeasureSpec)override;
-        void onLayout(bool changed, int l, int t, int r, int b)override;
+        void onLayout(bool changed, int l, int t, int w, int h)override;
     public:
-        SlidingTabStrip(Context* context,const AttributeSet&atts,TabLayout*parent);
-        ~SlidingTabStrip()override;
+        SlidingTabIndicator(Context* context,const AttributeSet&atts,TabLayout*parent);
+        ~SlidingTabIndicator()override;
         void setSelectedIndicatorColor(int color);
         void setSelectedIndicatorHeight(int height);
         bool childrenNeedLayout();
@@ -178,14 +200,19 @@ private:
     int  mRequestedTabMaxWidth;
     int  mScrollableTabMinWidth;
     int  mContentInsetStart;
+    int  mIndicatorPosition;
     Rect tabViewContentBounds;
     ValueAnimator* mScrollAnimator;
     Tab* mSelectedTab;
-    SlidingTabStrip* mTabStrip;
+    SlidingTabIndicator* mSlidingTabIndicator;
+    TabIndicatorInterpolator* mTabIndicatorInterpolator;
+    TimeInterpolator* mTabIndicatorTimeInterpolator;
     bool mSetupViewPagerImplicitly;
+    int mViewPagerScrollState;
 
     void initTabLayout();
     void addTabFromItemView(TabItem* item);
+    bool isScrollingEnabled()const;
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh, bool implicitSetup);
     int getTabScrollRange();
     void updateAllTabs();
@@ -202,10 +229,10 @@ private:
     void dispatchTabReselected(Tab* tab);
     int  calculateScrollXForTab(int position, float positionOffset);
     void applyModeAndGravity();
-
+    void applyGravityForModeScrollable(int tabGravity);
     static ColorStateList* createColorStateList(int defaultColor, int selectedColor);
-    int getDefaultHeight();
-    int getTabMinWidth();
+    int getDefaultHeight()const;
+    int getTabMinWidth()const;
 protected:
     static constexpr int FIXED_WRAP_GUTTER_MIN = 16; //dps
     static constexpr int MOTION_NON_ADJACENT_OFFSET = 24;
@@ -214,6 +241,7 @@ protected:
     int  mTabPaddingEnd;
     int  mTabPaddingBottom;
     int  mTabTextAppearance;
+    int mTabSelectedIndicatorColor;
     bool mOwnedTabTextColors;
     const ColorStateList* mTabTextColors;
     const ColorStateList* mTabIconTint;
@@ -227,13 +255,15 @@ protected:
     int  mTabGravity;
     int  mTabIndicatorAnimationDuration;
     int  mTabIndicatorGravity;
+    int  mTabIndicatorAnimationMode;
     int  mMode;
+    int  mTabIndicatorHeight;
     bool mSmoothScroll;/*used for viewpage item switch*/
     bool mInlineLabel;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;
     bool inlineLabel;
-    bool tabIndicatorFullWidth;
+    bool mTabIndicatorFullWidth;
     bool unboundedRipple;
     ViewPager* mViewPager;
     std::vector<Tab*>mTabs;
@@ -242,7 +272,7 @@ protected:
     AdapterChangeListener* mAdapterChangeListener;
     TabLayoutOnPageChangeListener mPageChangeListener;
 
-    void setScrollPosition(int position, float positionOffset, bool updateSelectedText, bool updateIndicatorPosition);
+    void setScrollPosition(int position, float positionOffset, bool updateSelectedText, bool updateIndicatorPosition,bool alwaysScroll);
 
     void setPagerAdapter(PagerAdapter* adapter,bool addObserver);
     void populateFromPagerAdapter();
@@ -252,7 +282,10 @@ protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void selectTab(Tab* tab,bool updateIndicator);
     void updateTabViews(bool requestLayout);
-    int  getTabMaxWidth();
+    int  getTabMaxWidth()const;
+    void updateViewPagerScrollState(int scrollState);
+    void onAttachedToWindow()override;
+    void onDetachedFromWindow()override;
 public:
     TabLayout(int w,int h);
     TabLayout(Context*context,const AttributeSet&atts);
@@ -260,12 +293,15 @@ public:
     void setSelectedTabIndicatorColor( int color);
     void setSelectedTabIndicatorHeight(int height);
     void setScrollPosition(int position, float positionOffset, bool updateSelectedText);
+    void setScrollPosition(int position, float positionOffset, bool updateSelectedTabView, bool updateIndicatorPosition);
     float getScrollPosition()const;
     void addTab(Tab* tab);
     void addTab(Tab* tab, int position);
     void addTab(Tab* tab, bool setSelected);
     void addTab(Tab* tab, int position, bool setSelected);
 
+    bool onInterceptTouchEvent(MotionEvent& event)override;
+    bool onTouchEvent(MotionEvent& event)override;
     void addOnTabSelectedListener(const OnTabSelectedListener& listener);
     void removeOnTabSelectedListener(const OnTabSelectedListener& listener);
     void clearOnTabSelectedListeners();
@@ -281,8 +317,10 @@ public:
     void setTabGravity(int gravity);
     int  getTabGravity()const;
     int  getTabIndicatorGravity()const;
-    void setTabIndicatorGravity(int);
-    Drawable* getSelectedTabIndicator()const;
+    void setSelectedTabIndicatorGravity(int);
+    void setTabIndicatorAnimationMode(int tabIndicatorAnimationMode);
+    int getTabIndicatorAnimationMode()const;
+    Drawable* getTabSelectedIndicator()const;
     void setSelectedTabIndicator(Drawable*d);
     void setSelectedTabIndicator(const std::string&res);
     bool isTabIndicatorFullWidth()const;
@@ -304,5 +342,35 @@ public:
     FrameLayout::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
+class TabLayout::TabIndicatorInterpolator{
+private:
+    static constexpr int MIN_INDICATOR_WIDTH = 24;
+public:
+    static RectF calculateTabViewContentBounds(TabLayout::TabView* tabView,int minWidth);
+
+    static RectF calculateIndicatorWidthForTab(TabLayout* tabLayout, View* tab);
+    virtual void setIndicatorBoundsForTab(TabLayout* tabLayout, View* tab,Drawable* indicator);
+    virtual void updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle,float offset, Drawable* indicator);
+};
+
+class TabLayout::FadeTabIndicatorInterpolator:public TabIndicatorInterpolator {
+private:
+    static constexpr float FADE_THRESHOLD = 0.5F;
+public:
+    void updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle, float offset,Drawable* indicator) override;
+};
+
+class TabLayout::ElasticTabIndicatorInterpolator:public TabIndicatorInterpolator {
+private:
+    static float decInterp(float fraction/*0.0->1.0*/) {
+        return (float)std::sin((double)fraction * M_PI / (double)2.0F);
+    }
+
+    static float accInterp(float fraction/*0.0->1.0*/) {
+        return (float)((double)1.0F - std::cos((double)fraction * M_PI / (double)2.0F));
+    }
+public:
+    void updateIndicatorForOffset(TabLayout* tabLayout, View* startTitle, View* endTitle, float offset,Drawable* indicator);
+};
 }/*endof namespace*/
 #endif/*__TABLAYOUT_H__*/
