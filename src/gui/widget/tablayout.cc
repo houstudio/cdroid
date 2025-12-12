@@ -81,9 +81,13 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
     mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{
             {"scrollable",(int)MODE_SCROLLABLE},
-            {"fixed",(int)MODE_FIXED}},mMode);
+            {"fixed",(int)MODE_FIXED},
+            {"auto",(int)MODE_AUTO}},mMode);
     mSmoothScroll = atts.getBoolean("smoothScroll",true);
-    mTabGravity = atts.getGravity("tabGravity",0);
+    mTabGravity = atts.getInt("tabGravity",std::unordered_map<std::string,int>{
+            {"fill",(int)GRAVITY_FILL},
+            {"center",(int)GRAVITY_CENTER},
+            {"start",(int)GRAVITY_START}},GRAVITY_FILL);
     mInlineLabel= atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
 }
@@ -887,12 +891,12 @@ void TabLayout::applyModeAndGravity(){
 
 void TabLayout::applyGravityForModeScrollable(int tabGravity) {
     switch (tabGravity) {
-    case 0:
+    case GRAVITY_FILL:
         LOGW("MODE_SCROLLABLE + GRAVITY_FILL is not supported, GRAVITY_START will be used instead");
-    case 2:
+    case GRAVITY_START:
         mSlidingTabIndicator->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);//0x800003
         break;
-    case 1:
+    case GRAVITY_CENTER:
         mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL | Gravity::TOP);//1);
     }
 

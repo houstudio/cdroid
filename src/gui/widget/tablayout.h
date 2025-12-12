@@ -39,6 +39,7 @@ public:
     static constexpr int MODE_AUTO  = 2;
     static constexpr int GRAVITY_FILL = 0;
     static constexpr int GRAVITY_CENTER = 1;
+    static constexpr int GRAVITY_START = 2;
     static constexpr int INDICATOR_GRAVITY_BOTTOM = 0;
     static constexpr int INDICATOR_GRAVITY_CENTER = 1;
     static constexpr int INDICATOR_GRAVITY_TOP = 2;
