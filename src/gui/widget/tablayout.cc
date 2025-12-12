@@ -1477,10 +1477,10 @@ void TabLayout::SlidingTabIndicator::setSelectedIndicatorColor(int color) {
 }
 
 void TabLayout::SlidingTabIndicator::setSelectedIndicatorHeight(int height) {
-    if (mSelectedIndicatorHeight != height) {
-        mSelectedIndicatorHeight = height;
-        postInvalidateOnAnimation();
-    }
+    Rect bounds = mParent->mTabSelectedIndicator->getBounds();
+    bounds.height = height;
+    mParent->mTabSelectedIndicator->setBounds(bounds.left,0,bounds.width,height);
+    requestLayout();
 }
 
 bool TabLayout::SlidingTabIndicator::childrenNeedLayout() {
