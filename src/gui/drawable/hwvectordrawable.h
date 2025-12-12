@@ -524,7 +524,7 @@ public:
         struct NonAnimatableProperties {
             float viewportWidth = 0;
             float viewportHeight = 0;
-            Rect bounds;
+            Rect bounds{};
             int scaledWidth = 0;
             int scaledHeight = 0;
             ColorFilter* colorFilter=nullptr;

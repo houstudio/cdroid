@@ -158,7 +158,7 @@ protected:
     // Fields for cache
     int mCachedThemeAttrs[2];
     ColorStateList* mCachedTint;
-    PorterDuff::Mode mCachedTintMode;
+    int  mCachedTintMode;
     bool mAutoMirrored;
     bool mCachedAutoMirrored;
     bool mCacheDirty;

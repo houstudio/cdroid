@@ -116,6 +116,7 @@ void TabLayout::initTabLayout(){
     mScrollAnimator = nullptr;
     mViewPager    = nullptr;
     mPagerAdapter = nullptr;
+    mTabSelectedIndicatorColor =0;
     mTabIndicatorTimeInterpolator = nullptr;
     mTabIndicatorInterpolator = nullptr;
     mTabIndicatorGravity  = Gravity::BOTTOM;
@@ -127,6 +128,7 @@ void TabLayout::initTabLayout(){
     mTabTextMultiLineSize = 2;
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
+    mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
     HorizontalScrollView::addView(mSlidingTabIndicator, 0, new HorizontalScrollView::LayoutParams(
@@ -382,6 +384,8 @@ void TabLayout::setSelectedTabIndicatorGravity(int gravity){
 
 void TabLayout::setTabIndicatorAnimationMode(int tabIndicatorAnimationMode) {
     mTabIndicatorAnimationMode = tabIndicatorAnimationMode;
+    delete mTabIndicatorInterpolator;
+    mTabIndicatorInterpolator = nullptr;
     switch (tabIndicatorAnimationMode) {
     case INDICATOR_ANIMATION_MODE_LINEAR:
         mTabIndicatorInterpolator = new TabIndicatorInterpolator();

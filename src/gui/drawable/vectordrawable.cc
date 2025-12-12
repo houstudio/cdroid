@@ -537,7 +537,10 @@ VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableSta
     mCachedTint = nullptr;
     mCacheDirty = false;
     mRootGroup = nullptr;
+    mAutoMirrored = false;
     mCachedAutoMirrored = false;
+    memset(mThemeAttrs,0,sizeof(mThemeAttrs));
+    memset(mCachedThemeAttrs,0,sizeof(mCachedThemeAttrs));
     if (copy != nullptr) {
         //mThemeAttrs = copy->mThemeAttrs;
         mChangingConfigurations = copy->mChangingConfigurations;
@@ -604,7 +607,7 @@ void VectorDrawable::VectorDrawableState::updateCacheStates() {
     // likely hit cache miss more, but practically not much difference.
     //mCachedThemeAttrs = mThemeAttrs;
     mCachedTint = mTint;
-    //mCachedTintMode = mTintMode;
+    mCachedTintMode = mTintMode;
     mCachedAutoMirrored = mAutoMirrored;
     mCacheDirty = false;
 }
