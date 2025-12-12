@@ -43,10 +43,9 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
 
     setSelectedTabIndicator(atts.getDrawable("tabIndicator"));
     setSelectedTabIndicatorColor(atts.getColor("tabIndicatorColor",0));
+    mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",2));
     setSelectedTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
-    mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",-1));
-    mSlidingTabIndicator->setSelectedIndicatorColor(atts.getColor("tabIndicatorColor",0));
 
 
     mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
@@ -134,9 +133,19 @@ void TabLayout::initTabLayout(){
           LayoutParams::WRAP_CONTENT, LayoutParams::MATCH_PARENT));
 }
 
+static void setTint(Drawable* drawable,int color) {
+    const bool hasTint = color != 0;
+    if (hasTint) {
+        drawable->setTint( color);
+    } else {
+        drawable->setTintList((ColorStateList*)nullptr);
+    }
+
+}
+
 void TabLayout::setSelectedTabIndicatorColor( int color){
     mTabSelectedIndicatorColor = color;//TODO mTabSelectedIndicatorColor
-    mSlidingTabIndicator->setSelectedIndicatorColor(color);
+    setTint(mTabSelectedIndicator,mTabSelectedIndicatorColor);
     updateTabViews(false);
 }
 
@@ -343,15 +352,13 @@ Drawable*TabLayout::getTabSelectedIndicator()const{
 
 void TabLayout::setSelectedTabIndicator(Drawable*tabSelectedIndicator){
     if(tabSelectedIndicator==nullptr){
-        tabSelectedIndicator = new ColorDrawable(0xFFFF0000);//GradientDrawable();
-        //((GradientDrawable*)tabSelectedIndicator)->setStroke(2,mTabSelectedIndicatorColor);
-        //((GradientDrawable*)tabSelectedIndicator)->setShape(GradientDrawable::RECTANGLE);
+        tabSelectedIndicator = new GradientDrawable();
+        ((GradientDrawable*)tabSelectedIndicator)->setColor(0xFFFFFFFF);
     }
-    //if(mTabSelectedIndicator!=tabSelectedIndicator)
-    {
+    if(mTabSelectedIndicator!=tabSelectedIndicator){
         delete mTabSelectedIndicator;
         mTabSelectedIndicator = tabSelectedIndicator->mutate();
-        mTabSelectedIndicator->setColorFilter(mTabSelectedIndicatorColor,PorterDuff::Mode::SRC_IN);
+        setTint(mTabSelectedIndicator,mTabSelectedIndicatorColor);
         const int indicatorHeight = mTabIndicatorHeight == -1 ? mTabSelectedIndicator->getIntrinsicHeight() : mTabIndicatorHeight;
         mSlidingTabIndicator->setSelectedIndicatorHeight(indicatorHeight);
         mSlidingTabIndicator->postInvalidateOnAnimation();
@@ -864,10 +871,10 @@ void TabLayout::applyModeAndGravity(){
     switch (mMode) {
     case MODE_SCROLLABLE:
         applyGravityForModeScrollable(mTabGravity);
-        //mSlidingTabIndicator->setGravity(Gravity::START);
         break;
     case MODE_FIXED:
     case MODE_AUTO:
+        LOGW_IF(mTabGravity==2,"GRAVITY_START is not supported with the current tab mode, GRAVITY_CENTER will be used instead");
         mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL);
         break;
     }
@@ -995,6 +1002,9 @@ Drawable* TabLayout::Tab::getIcon()const{
 
 TabLayout::Tab& TabLayout::Tab::setIcon(Drawable* icon){
     mIcon = icon;
+    if((mParent->mTabGravity==1)||(mParent->mMode==MODE_AUTO)){
+        mParent->updateTabViews(true);
+    }
     updateView();
     return *this;
 }
@@ -1615,7 +1625,7 @@ void TabLayout::SlidingTabIndicator::jumpIndicatorToIndicatorPosition() {
 }
 
 void TabLayout::SlidingTabIndicator::tweenIndicatorPosition(View* startTitle, View* endTitle, float fraction) {
-    bool hasVisibleTitle = startTitle != nullptr && startTitle->getWidth() > 0;
+    const bool hasVisibleTitle = (startTitle != nullptr) && (startTitle->getWidth() > 0);
     if (hasVisibleTitle) {
         mParent->mTabIndicatorInterpolator->updateIndicatorForOffset(mParent, startTitle, endTitle, fraction, mParent->mTabSelectedIndicator);
     } else {
