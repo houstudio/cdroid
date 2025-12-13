@@ -129,7 +129,7 @@ RecyclerView::~RecyclerView(){
         mVelocityTracker->recycle();
     delete mChildHelper;
     delete mState;
-    delete mLayout;
+    //delete mLayout;
     delete mAdapterHelper;
     delete mViewInfoStore;
     delete mViewFlinger;
@@ -178,6 +178,13 @@ void RecyclerView::initRecyclerView(){
     mVelocityTracker = nullptr;
     mLayout = nullptr;
     mAdapter= nullptr;
+
+    const float ppi = mContext->getDisplayMetrics().density * 160.0f;
+    mPhysicalCoef = 9.80665f//SensorManager.GRAVITY_EARTH
+        *39.37f//inch/meter
+        *ppi
+        *0.84f;// look and feel tuning
+
     mAccessibilityDelegate = nullptr;
     mInterceptingOnItemTouchListener = nullptr;
     mInterceptingOnItemTouchListener = nullptr;
@@ -637,7 +644,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
             mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
-        delete mLayout;
+        //delete mLayout;
     } else {
         mRecycler->clear();
     }

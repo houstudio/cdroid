@@ -105,7 +105,9 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
             FATAL("Pages must fill the whole ViewPager2 (use match_parent)");
         }
     };
-    ls.onChildViewDetachedFromWindow = [](View& view){LOGD("onChildViewDetachedFromWindow");};
+    ls.onChildViewDetachedFromWindow = [](View& view){
+        LOGV("onChildViewDetachedFromWindow %p:%d",&view,view.getId());
+    };
     mRecyclerView->addOnChildAttachStateChangeListener(ls);//enforceChildFillListener();
 
     // Create ScrollEventAdapter before attaching PagerSnapHelper to RecyclerView, because the

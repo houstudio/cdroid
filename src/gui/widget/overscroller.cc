@@ -69,6 +69,7 @@ OverScroller::SplineOverScroller::SplineOverScroller(Context* context) {
             * 39.37f // inch/meter
             * ppi
             * 0.84f; // look and feel tuning
+    mCurrVelocity = 0.f;
     mFlingFriction = ViewConfiguration::getScrollFriction();
 }
 

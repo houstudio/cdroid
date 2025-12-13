@@ -15,6 +15,7 @@ InputEventConsistencyVerifier::InputEventConsistencyVerifier(Object* caller, int
     mMostRecentEventIndex = 0;
     mCurrentEvent = nullptr;
     mKeyStateList = nullptr;
+    reset();
 }
 
 InputEventConsistencyVerifier::~InputEventConsistencyVerifier(){

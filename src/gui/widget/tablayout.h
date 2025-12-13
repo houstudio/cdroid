@@ -39,6 +39,7 @@ public:
     static constexpr int MODE_AUTO  = 2;
     static constexpr int GRAVITY_FILL = 0;
     static constexpr int GRAVITY_CENTER = 1;
+    static constexpr int GRAVITY_START = 2;
     static constexpr int INDICATOR_GRAVITY_BOTTOM = 0;
     static constexpr int INDICATOR_GRAVITY_CENTER = 1;
     static constexpr int INDICATOR_GRAVITY_TOP = 2;
@@ -163,17 +164,14 @@ private:
         friend TabLayout;
         int  mSelectedIndicatorHeight;
         int  mSelectedIndicatorColor;
-
         int  mSelectedPosition= -1;
         float mSelectionOffset;
 
         int  mLayoutDirection = -1;
-
         int  mIndicatorLeft  = -1;
         int  mIndicatorRight = -1;
         TabLayout*mParent;
         ValueAnimator* mIndicatorAnimator;
-        void updateIndicatorPosition();
         void jumpIndicatorToPosition(int position);
         void jumpIndicatorToSelectedPosition();
         void jumpIndicatorToIndicatorPosition();
@@ -188,7 +186,7 @@ private:
         ~SlidingTabIndicator()override;
         void setSelectedIndicatorColor(int color);
         void setSelectedIndicatorHeight(int height);
-        bool childrenNeedLayout();
+        bool childrenNeedLayout()const;
         void setIndicatorPositionFromTabPosition(int position, float positionOffset);
         float getIndicatorPosition();
         void onRtlPropertiesChanged(int layoutDirection)override;

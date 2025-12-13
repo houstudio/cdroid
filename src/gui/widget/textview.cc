@@ -412,6 +412,9 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setRelativeDrawablesIfNeeded(start, end);
 
     setCompoundDrawablePadding(attrs.getDimensionPixelSize("drawablePadding",0));
+    setMaxLines(attrs.getInt("maxLines",-1));
+    setMinLines(attrs.getInt("minLines",-1));
+    setLines(attrs.getInt("lines",-1));
     setHeight(attrs.getDimensionPixelSize("height",-1));
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));

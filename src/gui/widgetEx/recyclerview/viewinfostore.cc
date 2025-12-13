@@ -228,7 +228,9 @@ void ViewInfoStore::recycleInfoRecord(InfoRecord* record) {
     record->flags = 0;
     record->preInfo = nullptr;
     record->postInfo= nullptr;
-    mPool.release(record);
+    if(!mPool.release(record)){
+        delete record;/*outof pool*/
+    }
 }
 
 void ViewInfoStore::drainInfoRecordCache() {
