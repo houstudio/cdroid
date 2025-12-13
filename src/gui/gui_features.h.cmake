@@ -29,7 +29,7 @@
 #cmakedefine ENABLE_BARCODE 1
 #cmakedefine ENABLE_QRCODE 1
 #cmakedefine ENABLE_COORDINATORLAYOUT 1
-#cmakedefine ENABLE_WEAR_WIDGETS 1
+#cmakedefine ENABLE_WEARABLE_WIDGETS 1
 
 #cmakedefine ENABLE_I18N   1
 #cmakedefine ENABLE_GIF   1     

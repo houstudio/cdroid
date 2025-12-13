@@ -976,8 +976,9 @@ TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(con
 }
 
 TabLayout::TabItem::~TabItem(){
-    delete mIcon;
+    //delete mIcon;/*cant destroy mIcon duetoTabLayout::addTabFromItemView*/
 }
+
 /*-------------------------------------------------------------------------------------------*/
 TabLayout::Tab::Tab(){
     mTag   = nullptr;
