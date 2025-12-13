@@ -401,7 +401,7 @@ void TabLayout::setTabIndicatorAnimationMode(int tabIndicatorAnimationMode) {
         mTabIndicatorInterpolator = new FadeTabIndicatorInterpolator();
         break;
     default:
-        throw std::invalid_argument(tabIndicatorAnimationMode + " is not a valid TabIndicatorAnimationMode");
+        throw std::invalid_argument(std::string("invalid TabIndicatorAnimationMode:")+std::to_string(tabIndicatorAnimationMode));
     }
 }
 
