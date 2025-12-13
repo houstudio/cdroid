@@ -128,6 +128,7 @@ public:
        std::string mCustomLayout;
        TabItem();
        TabItem(Context* context,const AttributeSet& attrs);
+       virtual ~TabItem();
     };
 
     class TabLayoutOnPageChangeListener:public ViewPager::OnPageChangeListener{

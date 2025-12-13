@@ -901,7 +901,8 @@ void TabLayout::applyGravityForModeScrollable(int tabGravity) {
         mSlidingTabIndicator->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);//0x800003
         break;
     case GRAVITY_CENTER:
-        mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL | Gravity::TOP);//1);
+        mSlidingTabIndicator->setGravity(Gravity::CENTER_HORIZONTAL);
+        break;
     }
 
 }
@@ -965,14 +966,18 @@ int TabLayout::getTabMaxWidth() const{
 DECLARE_WIDGET3(TabLayout::TabItem,TabItem,"")
 
 TabLayout::TabItem::TabItem():View(0,0){
-    mIcon=nullptr;
+    mIcon = nullptr;
 }
+
 TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(context,attrs){
-    mText=attrs.getString("text");
-    mIcon=context->getDrawable(attrs.getString("icon"));
+    mText = attrs.getString("text");
+    mIcon = attrs.getDrawable("icon");
     LOGV("%s,%p",mText.c_str(),mIcon);
 }
 
+TabLayout::TabItem::~TabItem{
+    delete mIcon;
+}
 /*-------------------------------------------------------------------------------------------*/
 TabLayout::Tab::Tab(){
     mTag   = nullptr;
@@ -1014,7 +1019,7 @@ Drawable* TabLayout::Tab::getIcon()const{
 
 TabLayout::Tab& TabLayout::Tab::setIcon(Drawable* icon){
     mIcon = icon;
-    if((mParent->mTabGravity==1)||(mParent->mMode==MODE_AUTO)){
+    if((mParent->mTabGravity==INDICATOR_GRAVITY_CENTER)||(mParent->mMode==MODE_AUTO)){
         mParent->updateTabViews(true);
     }
     updateView();
@@ -1034,7 +1039,7 @@ std::string TabLayout::Tab::getText()const{
 }
 
 TabLayout::Tab& TabLayout::Tab::setText(const std::string&text){
-    mText=text;
+    mText = text;
     updateView();
     return *this;
 }
