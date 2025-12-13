@@ -975,7 +975,7 @@ TabLayout::TabItem::TabItem(Context* context,const AttributeSet& attrs):View(con
     LOGV("%s,%p",mText.c_str(),mIcon);
 }
 
-TabLayout::TabItem::~TabItem{
+TabLayout::TabItem::~TabItem(){
     delete mIcon;
 }
 /*-------------------------------------------------------------------------------------------*/
