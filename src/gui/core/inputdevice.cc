@@ -37,6 +37,10 @@
   #include <core/eventcodes.h>   
 #endif
 
+#ifndef BTN_STYLUS3
+  #define BTN_STYLUS3 0x149
+#endif
+
 using namespace std;
 namespace cdroid{
 
