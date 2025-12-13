@@ -789,6 +789,10 @@ void TabLayout::setSelectedTabView(int position){
     }
 }
 
+void TabLayout::selectTab(TabLayout::Tab*tab){
+    selectTab(tab,true);
+}
+
 void TabLayout::selectTab(TabLayout::Tab* tab,bool updateIndicator){
     Tab* currentTab = mSelectedTab;
     if (currentTab == tab) {

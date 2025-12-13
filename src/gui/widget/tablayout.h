@@ -144,6 +144,7 @@ public:
         void reset();
     };
 private:
+    friend class TabLayoutMediator;
     class TabIndicatorInterpolator;
     class FadeTabIndicatorInterpolator;
     class ElasticTabIndicatorInterpolator;
@@ -278,7 +279,6 @@ protected:
     LinearLayout::LayoutParams* createLayoutParamsForTabs();
     void updateTabViewLayoutParams(LinearLayout::LayoutParams* lp);
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
-    void selectTab(Tab* tab,bool updateIndicator);
     void updateTabViews(bool requestLayout);
     int  getTabMaxWidth()const;
     void updateViewPagerScrollState(int scrollState);
@@ -337,6 +337,8 @@ public:
     void addView(View* child, ViewGroup::LayoutParams* params)override;
     void addView(View* child, int index, ViewGroup::LayoutParams* params)override;
 
+    void selectTab(Tab* tab,bool updateIndicator);
+    void selectTab(Tab* tab);
     FrameLayout::LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
 };
 
