@@ -7,7 +7,6 @@ int main(int argc,const char*argv[]){
     TabLayout* tab=new TabLayout(1280,40);
     tab->setSelectedTabIndicatorColor(0xFF00FF00);
     tab->setSelectedTabIndicatorHeight(4);
-    tab->setTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     for(int i=0;i<6;i++){
         TabLayout::Tab*t=tab->newTab();
         t->setText("Tab"+std::to_string(i));
