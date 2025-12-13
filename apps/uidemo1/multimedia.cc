@@ -152,6 +152,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mTabLayout->setSelectedTabIndicatorColor(0x8000FF00);
     mTabLayout->setSelectedTabIndicatorHeight(5);
     mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
+    mTabLayout->setTabIndicatorAnimationMode(TabLayout::INDICATOR_ANIMATION_MODE_ELASTIC);
     mTabLayout->setSelectedTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
     //LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);

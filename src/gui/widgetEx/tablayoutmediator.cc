@@ -84,20 +84,18 @@ void TabLayoutMediator::detach() {
     delete mOnPageChangeCallback;
     mOnPageChangeCallback = nullptr;
     mAdapter = nullptr;
-    mAttached = false;
+    mAttached= false;
 }
 
 void TabLayoutMediator::populateTabsFromPagerAdapter() {
     mTabLayout->removeAllTabs();
     if (mAdapter != nullptr) {
         const int adapterCount = mAdapter->getItemCount();
-
         for(int i = 0; i < adapterCount; ++i) {
             TabLayout::Tab* tab = mTabLayout->newTab();
             mTabConfigurationStrategy/*.onConfigureTab*/(*tab, i);
             mTabLayout->addTab(tab, false);
         }
-
         if (adapterCount > 0) {
             const int lastItem = mTabLayout->getTabCount() - 1;
             const int currItem = std::min(mViewPager->getCurrentItem(), lastItem);
@@ -106,7 +104,6 @@ void TabLayoutMediator::populateTabsFromPagerAdapter() {
             }
         }
     }
-
 }
 
 //class TabLayoutOnPageChangeCallback extends ViewPager2.OnPageChangeCallback {
@@ -130,21 +127,21 @@ void TabLayoutMediator::TabLayoutOnPageChangeCallback::doPageScrollStateChanged(
     if (mTabLayout != nullptr) {
         mTabLayout->updateViewPagerScrollState(mScrollState);
     }
-
 }
 
 void TabLayoutMediator::TabLayoutOnPageChangeCallback::doPageScrolled(int position, float positionOffset, int positionOffsetPixels) {
     if (mTabLayout != nullptr) {
-        const bool updateSelectedTabView = mScrollState != ViewPager2::SCROLL_STATE_SETTLING || mPreviousScrollState == ViewPager2::SCROLL_STATE_DRAGGING;
-        const bool updateIndicator = mScrollState != ViewPager2::SCROLL_STATE_SETTLING || mPreviousScrollState != ViewPager2::SCROLL_STATE_IDLE;
+        const bool updateSelectedTabView = (mScrollState != ViewPager2::SCROLL_STATE_SETTLING)
+            || (mPreviousScrollState == ViewPager2::SCROLL_STATE_DRAGGING);
+        const bool updateIndicator = (mScrollState != ViewPager2::SCROLL_STATE_SETTLING)
+            || (mPreviousScrollState != ViewPager2::SCROLL_STATE_IDLE);
         mTabLayout->setScrollPosition(position, positionOffset, updateSelectedTabView, updateIndicator, false);
     }
 }
 
 void TabLayoutMediator::TabLayoutOnPageChangeCallback::doPageSelected(int position) {
     if (mTabLayout != nullptr && mTabLayout->getSelectedTabPosition() != position && position < mTabLayout->getTabCount()) {
-        const bool updateIndicator =
-            ((mScrollState == ViewPager2::SCROLL_STATE_IDLE)
+        const bool updateIndicator = ((mScrollState == ViewPager2::SCROLL_STATE_IDLE)
                 || (mScrollState == ViewPager2::SCROLL_STATE_SETTLING))
             && (mPreviousScrollState == ViewPager2::SCROLL_STATE_IDLE);
         mTabLayout->selectTab(mTabLayout->getTabAt(position), updateIndicator);
