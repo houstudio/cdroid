@@ -232,6 +232,7 @@ class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
 public:
     Behavior() {}
     Behavior(Context* context, const AttributeSet& attrs) {}
+    ~Behavior()=default;
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
     virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {
