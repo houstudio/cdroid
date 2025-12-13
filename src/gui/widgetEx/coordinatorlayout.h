@@ -242,9 +242,9 @@ public:
         return false;
     }
     virtual int getScrimColor(CoordinatorLayout& parent, View& child) { return 0xFF000000; }
-    virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return .0f; }
+    virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return 0.0f; }
     virtual bool blocksInteractionBelow(CoordinatorLayout& parent, View& child) {
-        return getScrimOpacity(parent, child) > .0f;
+        return getScrimOpacity(parent, child) > 0.0f;
     }
     virtual bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency) {
         return false;

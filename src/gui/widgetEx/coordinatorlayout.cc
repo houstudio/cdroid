@@ -138,12 +138,11 @@ Drawable* CoordinatorLayout::getStatusBarBackground()const {
 void CoordinatorLayout::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    std::vector<int> state = getDrawableState();
     bool changed = false;
+    std::vector<int> state = getDrawableState();
 
-    Drawable* d = mStatusBarBackground;
-    if (d != nullptr && d->isStateful()) {
-        changed |= d->setState(state);
+    if (mStatusBarBackground != nullptr && mStatusBarBackground->isStateful()) {
+        changed |= mStatusBarBackground->setState(state);
     }
 
     if (changed) {
@@ -158,7 +157,7 @@ void CoordinatorLayout::drawableStateChanged() {
 void CoordinatorLayout::setVisibility(int visibility) {
     ViewGroup::setVisibility(visibility);
 
-    const bool visible = visibility == VISIBLE;
+    const bool visible = (visibility == View::VISIBLE);
     if (mStatusBarBackground && mStatusBarBackground->isVisible() != visible) {
         mStatusBarBackground->setVisible(visible, false);
     }
