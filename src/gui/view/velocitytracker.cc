@@ -414,8 +414,9 @@ std::unordered_map<std::string,int>VelocityTracker::STRATEGIES = {
 
 int VelocityTracker::toStrategyId(const char*strStrategy){
     auto it = STRATEGIES.find(strStrategy);
-    if(it!=STRATEGIES.end())
-	return it->second;
+    if(it!=STRATEGIES.end()){
+        return it->second;
+    }
     return VELOCITY_TRACKER_STRATEGY_DEFAULT;
 }
 

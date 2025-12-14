@@ -10,13 +10,14 @@ public:
     YourCustomBehavior():Behavior(){
     }
     bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency)override {
-	LOGD("");
+        LOGD("dependency %p:%d child=%p:%d",&dependency,dependency.getId(),&child,child.getId());
         return dynamic_cast<NestedScrollView*>(&dependency);
     }
     bool onDependentViewChanged(CoordinatorLayout& parent,View& child, View& dependency) override{
         // Update your child view based on changes in the dependent view
         float translationY = std::min(0.f, dependency.getTranslationY());
         child.setTranslationY(translationY);
+        LOGD("dependency %p:%d child=%p:%d",&dependency,dependency.getId(),&child,child.getId());
         return true;
     }
 
@@ -29,8 +30,9 @@ public:
 
     void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,View& child,View& target,
                               int dx, int dy,int* consumed,int type) {
-        float translationY = std::max(0, std::min(child.getHeight(), int(child.getTranslationY() - dy)));
+        const float translationY = std::max(0, std::min(child.getHeight(), int(child.getTranslationY() - dy)));
         child.setTranslationY(translationY);
+        LOGV("dx=%d,dy=%d type=%d",dx,dy,type);
     }
 };
 

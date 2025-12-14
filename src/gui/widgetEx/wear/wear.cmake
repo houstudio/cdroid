@@ -1,4 +1,4 @@
-if (ENABLE_WEAR_WIDGETS)
+if (ENABLE_WEARABLE_WIDGETS)
 SET(WEAR_SOURCES
     widgetEx/wear/arclayout.cc
     widgetEx/wear/boxinsetlayout.cc
@@ -19,4 +19,4 @@ SET(WEAR_SOURCES
     widgetEx/wear/wearablelinearlayoutmanager.cc
     widgetEx/wear/confirmationoverlay.cc
 )
-endif(ENABLE_WEAR_WIDGETS)
+endif(ENABLE_WEARABLE_WIDGETS)

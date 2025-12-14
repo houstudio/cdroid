@@ -70,7 +70,7 @@ void CoordinatorLayout::initView() {
     ViewGroup::setOnHierarchyChangeListener(hcl);
 }
 
-CoordinatorLayout::~CoordinatorLayout(){
+CoordinatorLayout::~CoordinatorLayout() {
     delete mStatusBarBackground;
     delete mNestedScrollingParentHelper;
 }
@@ -138,12 +138,11 @@ Drawable* CoordinatorLayout::getStatusBarBackground()const {
 void CoordinatorLayout::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    std::vector<int> state = getDrawableState();
     bool changed = false;
+    std::vector<int> state = getDrawableState();
 
-    Drawable* d = mStatusBarBackground;
-    if (d != nullptr && d->isStateful()) {
-        changed |= d->setState(state);
+    if (mStatusBarBackground != nullptr && mStatusBarBackground->isStateful()) {
+        changed |= mStatusBarBackground->setState(state);
     }
 
     if (changed) {
@@ -158,7 +157,7 @@ void CoordinatorLayout::drawableStateChanged() {
 void CoordinatorLayout::setVisibility(int visibility) {
     ViewGroup::setVisibility(visibility);
 
-    const bool visible = visibility == VISIBLE;
+    const bool visible = (visibility == View::VISIBLE);
     if (mStatusBarBackground && mStatusBarBackground->isVisible() != visible) {
         mStatusBarBackground->setVisible(visible, false);
     }
@@ -374,7 +373,7 @@ void CoordinatorLayout::requestDisallowInterceptTouchEvent(bool disallowIntercep
     }
 }
 
-int CoordinatorLayout::getKeyline(int index) {
+int CoordinatorLayout::getKeyline(int index) const{
     if (mKeylines.empty()){//} == nullptr) {
         LOGE("No keylines defined for %p attempted index lookup %d" ,this,index);
         return 0;
@@ -1429,7 +1428,7 @@ void CoordinatorLayout::onNestedPreScroll(View* target, int dx, int dy, int* con
 
         Behavior* viewBehavior = lp->getBehavior();
         if (viewBehavior != nullptr) {
-            mTempIntPair[0] = mTempIntPair[1] = 0;
+            int mTempIntPair[2] = {0,0};
             viewBehavior->onNestedPreScroll(*this, *view, *target, dx, dy, mTempIntPair, type);
 
             xConsumed = dx > 0 ? std::max(xConsumed, mTempIntPair[0]) : std::min(xConsumed, mTempIntPair[0]);

@@ -94,20 +94,19 @@ private:
     std::vector<View*> mDependencySortedChildren;
     DirectedAcyclicGraph<View> mChildDag;
 
-    std::vector<View*> mTempDependenciesList;
-    int mTempIntPair[2];
     bool mDisallowInterceptReset;
     bool mIsAttachedToWindow;
+    bool mDrawStatusBarBackground;
+    bool mNeedsPreDrawListener;
     std::vector<int> mKeylines;
+    std::vector<View*> mTempDependenciesList;
 
     View* mBehaviorTouchView;
     View* mNestedScrollingTarget;
 
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
-    bool mNeedsPreDrawListener;
 
     WindowInsets* mLastInsets;
-    bool mDrawStatusBarBackground;
     Drawable* mStatusBarBackground;
 
     ViewGroup::OnHierarchyChangeListener mOnHierarchyChangeListener;
@@ -118,7 +117,7 @@ private:
     void resetTouchBehaviors(bool notifyOnInterceptTouchEvent);
     void getTopSortedChildren(std::vector<View*>& out);
     bool performIntercept(MotionEvent& ev,int type);
-    int getKeyline(int index);
+    int getKeyline(int index)const;
     void prepareChildren();
     WindowInsets dispatchApplyWindowInsetsToBehaviors(WindowInsets insets);
     void getDesiredAnchoredChildRectWithoutConstraints(View* child, int layoutDirection,
@@ -163,7 +162,7 @@ protected:
 public:
     CoordinatorLayout(int w, int h);
     CoordinatorLayout(Context* context,const AttributeSet& attrs);
-    ~CoordinatorLayout();
+    ~CoordinatorLayout()override;
     void setOnHierarchyChangeListener(const OnHierarchyChangeListener& onHierarchyChangeListener)override;
     void onAttachedToWindow()override;
     void onDetachedFromWindow()override;
@@ -215,7 +214,7 @@ public:
     bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate)override;
 
     struct AttachedBehavior {
-	std::function<Behavior*()> getBehavior;
+        std::function<Behavior*()> getBehavior;
     };
 };
 
@@ -233,6 +232,7 @@ class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
 public:
     Behavior() {}
     Behavior(Context* context, const AttributeSet& attrs) {}
+    ~Behavior()=default;
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
     virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {
@@ -242,9 +242,9 @@ public:
         return false;
     }
     virtual int getScrimColor(CoordinatorLayout& parent, View& child) { return 0xFF000000; }
-    virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return .0f; }
+    virtual float getScrimOpacity(CoordinatorLayout& parent, View& child) { return 0.0f; }
     virtual bool blocksInteractionBelow(CoordinatorLayout& parent, View& child) {
-        return getScrimOpacity(parent, child) > .0f;
+        return getScrimOpacity(parent, child) > 0.0f;
     }
     virtual bool layoutDependsOn(CoordinatorLayout& parent, View& child, View& dependency) {
         return false;

@@ -37,7 +37,6 @@
   #include <core/eventcodes.h>   
 #endif
 
-using namespace std;
 namespace cdroid{
 
 InputDeviceSensorInfo::InputDeviceSensorInfo(const std::string& name,const std::string& vendor, int32_t version,
@@ -738,11 +737,13 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
             if(value) mButtonState = MotionEvent::BUTTON_TERTIARY;
             else mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
             break;
+#ifdef BTN_STYLUS3
         case BTN_STYLUS3:
             mActionButton = MotionEvent::BUTTON_STYLUS_PRIMARY;
             if(value) mButtonState|=MotionEvent::BUTTON_STYLUS_PRIMARY;
             else mButtonState &= ~MotionEvent::BUTTON_STYLUS_PRIMARY;
             break;
+#endif
         case BTN_TOOL_FINGER:
         case BTN_TOOL_PEN:
         case BTN_TOOL_RUBBER:
@@ -1094,7 +1095,7 @@ std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
     if (deviceIdentifier.vendor !=0 && deviceIdentifier.product != 0) {
         if (deviceIdentifier.version != 0) {// Try vendor product version.
             std::ostringstream name;
-            name<<"Vendor_"<<hex<<setfill('0')<<setw(4)<<deviceIdentifier.vendor
+            name <<"Vendor_"<<std::hex<<std::setfill('0')<<std::setw(4)<<deviceIdentifier.vendor
                  <<"_Product_"<<deviceIdentifier.product<<"_Version_"<<deviceIdentifier.version;
             std::string versionPath(getInputDeviceConfigurationFilePathByName(name.str(),type));
             if (!versionPath.empty()) {
@@ -1103,7 +1104,8 @@ std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
         }
         // Try vendor product.
         std::ostringstream name;
-        name<<"Vendor_"<<std::ios::hex<<setfill('0')<<setw(4)<<deviceIdentifier.vendor<<"_Product_"<<deviceIdentifier.product;
+        name<<"Vendor_"<<std::ios::hex<<std::setfill('0')<<std::setw(4)
+            <<deviceIdentifier.vendor<<"_Product_"<<deviceIdentifier.product;
         std::string productPath(getInputDeviceConfigurationFilePathByName(name.str(),type));
         if (!productPath.empty()) {
             return productPath;
