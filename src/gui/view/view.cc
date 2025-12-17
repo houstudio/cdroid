@@ -1607,7 +1607,7 @@ std::vector<Rect>View::collectPreferKeepClearRects(){
         list.insert(list.end(),info->mKeepClearRects.begin(),info->mKeepClearRects.end());
     }
 
-    return list;
+    return std::move(list);
 }
 
 int View::combineVisibility(int vis1, int vis2) {
@@ -7234,7 +7234,7 @@ void View::addKeyboardNavigationClusters(std::vector<View*>&views,int drection){
 std::vector<View*>View::getFocusables(int direction){
     std::vector<View*> result;
     addFocusables(result, direction);
-    return result;
+    return std::move(result);
 }
 
 int View::getFocusable()const{

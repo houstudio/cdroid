@@ -2136,7 +2136,7 @@ void TextView::drawableStateChanged(){
         updateTextColors();
     }
     if (mDrawables) {
-        const std::vector<int>& state = getDrawableState();
+        const std::vector<int> state = getDrawableState();
         for (int i=0;i<4;i++){
             Drawable* dr = mDrawables->mShowing[i];
             if ((dr != nullptr) && dr->isStateful() && dr->setState(state)) {

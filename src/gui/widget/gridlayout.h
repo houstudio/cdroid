@@ -245,10 +245,10 @@ public:
         void setOrderPreserved(bool);
         void invalidateStructure();
         void invalidateValues();
-        std::vector<int>getLocations();
-        std::vector<int>& getLeadingMargins();
-        std::vector<int>& getTrailingMargins();
-        std::vector<int>& getDeltas();
+        const std::vector<int>& getLocations();
+        const std::vector<int>& getLeadingMargins();
+        const std::vector<int>& getTrailingMargins();
+        const std::vector<int>& getDeltas();
         int getMeasure(int measureSpec);
         PackedMap<Spec,Bounds>&getGroupBounds();
         void layout(int);

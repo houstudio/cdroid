@@ -259,10 +259,10 @@ int GridLayout::getMargin(View* view, bool horizontal, bool leading){
         return getMargin1(view, horizontal, leading);
     } else {
         Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-        std::vector<int>& margins=leading?axis->getLeadingMargins()
+        const std::vector<int>& margins=leading?axis->getLeadingMargins()
             :axis->getTrailingMargins();
-        LayoutParams* lp = getLayoutParams(view);
-        Spec spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const LayoutParams* lp = getLayoutParams(view);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         int index = leading ? spec.span.min : spec.span.max;
         return margins[index];
    }
@@ -549,7 +549,7 @@ void GridLayout::measureChildrenWithMargins(int widthSpec, int heightSpec, bool 
             if (spec.getAbsoluteAlignment(horizontal) == FILL) {
                 Interval& span = spec.span;
                 Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-                std::vector<int> locations = axis->getLocations();
+                const std::vector<int>& locations = axis->getLocations();
                 int cellSize = locations[span.max] - locations[span.min];
                 int viewSize = cellSize - getTotalMargin(c, horizontal);
                 if (horizontal) {
@@ -637,8 +637,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
     mHorizontalAxis->layout(targetWidth - paddingLeft - paddingRight);
     mVerticalAxis->layout(targetHeight - paddingTop - paddingBottom);
 
-    std::vector<int> hLocations = mHorizontalAxis->getLocations();
-    std::vector<int> vLocations = mVerticalAxis->getLocations();
+    const std::vector<int>& hLocations = mHorizontalAxis->getLocations();
+    const std::vector<int>& vLocations = mVerticalAxis->getLocations();
 
     for (int i = 0, N = getChildCount(); i < N; i++) {
         View* c = getChildAt(i);
@@ -1111,7 +1111,7 @@ void GridLayout::Axis::setParentConstraints(int min, int max) {
 int GridLayout::Axis::getMeasure(int min,int max){
     setParentConstraints(min,max);
     parentMax = max;
-    std::vector<int> ls=getLocations();
+    const std::vector<int>& ls=getLocations();
     return size(ls);
 }
 
@@ -1184,7 +1184,7 @@ void GridLayout::Axis::computeMargins(bool leading){
     }
 }
 
-std::vector<int>& GridLayout::Axis::getLeadingMargins() {
+const std::vector<int>& GridLayout::Axis::getLeadingMargins() {
     if (leadingMargins.size()==0) {
         leadingMargins.resize(getCount() + 1);
     }
@@ -1195,7 +1195,7 @@ std::vector<int>& GridLayout::Axis::getLeadingMargins() {
     return leadingMargins;
 }
 
-std::vector<int>& GridLayout::Axis::getTrailingMargins() {
+const std::vector<int>& GridLayout::Axis::getTrailingMargins() {
     if (trailingMargins.size()==0) {
         trailingMargins.resize(getCount() + 1);
     }
@@ -1454,7 +1454,7 @@ bool GridLayout::Axis::hasWeights(){
     return mHasWeights;
 }
 
-std::vector<int>& GridLayout::Axis::getDeltas(){
+const std::vector<int>& GridLayout::Axis::getDeltas(){
     deltas.resize(grd->getChildCount());
     return deltas;
 }
@@ -1615,7 +1615,7 @@ void GridLayout::Axis::computeLocations(std::vector<int>&a){
     }
 }
 
-std::vector<int>GridLayout::Axis::getLocations(){
+const std::vector<int>& GridLayout::Axis::getLocations(){
     if(locations.size()==0){
         locations.resize(getCount()+1);
         for(int i=0;i<locations.size();i++)locations[i]=0;
