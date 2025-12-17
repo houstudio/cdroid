@@ -4660,8 +4660,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
     }
 
     if (holder.isTmpDetached()) {
-        LOGE("Tmp detached view should be removed from RecyclerView "
-	   "before it can be recycled: %p",&holder);
+        LOGE("Tmp detached view should be removed from RecyclerView before it can be recycled: %p",&holder);
     }
 
     if (holder.shouldIgnore()) {
