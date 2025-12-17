@@ -232,7 +232,7 @@ class CoordinatorLayout::Behavior{//; :public View {//<V extends View> {
 public:
     Behavior() {}
     Behavior(Context* context, const AttributeSet& attrs) {}
-    ~Behavior()=default;
+    virtual ~Behavior()=default;
     virtual void onAttachedToLayoutParams(CoordinatorLayout::LayoutParams& params) {}
     virtual void onDetachedFromLayoutParams() {}
     virtual bool onInterceptTouchEvent(CoordinatorLayout& parent, View& child, MotionEvent& ev) {
@@ -300,6 +300,12 @@ public:
         if (type == View::TYPE_TOUCH) {
             onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
         }
+    }
+    virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type,int*consumed){
+        consumed[0] += dxUnconsumed;
+        consumed[1] += dyUnconsumed;
+        onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type);
     }
     virtual void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,
         View& child, View& target, int dx, int dy, int* consumed) {

@@ -29,7 +29,9 @@ SET(WIDGETEX_SOURCES
 endif()
 
 if(ENABLE_COORDINATORLAYOUT)
-    list(APPEND WIDGETEX_SOURCES widgetEx/coordinatorlayout.cc)
+    list(APPEND WIDGETEX_SOURCES
+        widgetEx/coordinatorlayout.cc
+        widgetEx/hidebottomviewonscrollbehavior.cc)
 endif()
 
 if(ENABLE_FLEXBOXLAYOUT)
