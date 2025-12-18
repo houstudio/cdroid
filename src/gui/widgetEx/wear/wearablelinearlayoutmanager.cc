@@ -30,8 +30,9 @@ WearableLinearLayoutManager::WearableLinearLayoutManager(Context* context,const 
 WearableLinearLayoutManager::WearableLinearLayoutManager(Context* context)
     :WearableLinearLayoutManager(context, nullptr){
     mCurvingLayoutCallback =new CurvingLayoutCallback(context); 
-    mLayoutCallback = std::bind(&CurvingLayoutCallback::onLayoutFinished,mCurvingLayoutCallback,
-            std::placeholders::_1,std::placeholders::_2);
+    mLayoutCallback = [this](View&view,RecyclerView&rv){
+        mCurvingLayoutCallback->onLayoutFinished(view,rv);
+    };
 }
 
 WearableLinearLayoutManager::~WearableLinearLayoutManager(){

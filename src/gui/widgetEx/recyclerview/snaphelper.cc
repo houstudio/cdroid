@@ -78,8 +78,10 @@ void SnapHelper::setupCallbacks(){
         FATAL("An instance of OnFlingListener already set.");
     }
     mRecyclerView->addOnScrollListener(mScrollListener);
-    auto fun = std::bind(&SnapHelper::onFling,this,std::placeholders::_1,std::placeholders::_2);
-    mRecyclerView->setOnFlingListener(fun);
+    RecyclerView::OnFlingListener ls = [this](int velocityX,int velocityY){
+        return onFling(velocityX,velocityY);
+    };
+    mRecyclerView->setOnFlingListener(ls);
 }
 
 void SnapHelper::destroyCallbacks() {

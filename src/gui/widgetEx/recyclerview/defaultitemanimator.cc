@@ -170,8 +170,12 @@ void DefaultItemAnimator::animateRemoveImpl(RecyclerView::ViewHolder& holder) {
     mRemoveAnimations.push_back(&holder);//add(holder);
     //AnimatorListenerAdapter
     Animator::AnimatorListener al;
-    al.onAnimationStart=std::bind(&DefaultItemAnimator::onRemoveAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onRemoveAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationStart=[this,&holder](Animator&animator,bool isReverse){
+        onRemoveAnimationStart(&holder,animator,isReverse);
+    };
+    al.onAnimationEnd = [this,&holder](Animator&animator,bool isReverse){
+        onRemoveAnimationEnd(&holder,animator,isReverse);
+    };
     animation.setDuration(getRemoveDuration()).alpha(0).setListener(al).start();
 }
 
@@ -205,8 +209,12 @@ void DefaultItemAnimator::animateAddImpl(RecyclerView::ViewHolder& holder) {
     ViewPropertyAnimator& animation = view->animate();
     mAddAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
-    al.onAnimationStart = std::bind(&DefaultItemAnimator::onAddAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onAddAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationStart = [this,&holder](Animator&animator,bool isReverse){
+        onAddAnimationStart(&holder,animator,isReverse);
+    };
+    al.onAnimationEnd = [this,&holder](Animator&animator,bool isReverse){
+        onAddAnimationEnd(&holder,animator,isReverse);
+    };
     animation.alpha(1).setDuration(getAddDuration()).setListener(al).start();
 }
 
@@ -270,9 +278,15 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
     mMoveAnimations.push_back(&holder);//add(holder);
     Animator::AnimatorListener al;
 
-    al.onAnimationStart = std::bind(&DefaultItemAnimator::onMoveAnimationStart,this,&holder,std::placeholders::_1,std::placeholders::_2);
-    al.onAnimationCancel = std::bind(&DefaultItemAnimator::onMoveAnimationCancel,this,deltaX,deltaY,&holder,std::placeholders::_1);
-    al.onAnimationEnd = std::bind(&DefaultItemAnimator::onMoveAnimationEnd,this,&holder,std::placeholders::_1,std::placeholders::_2);
+    al.onAnimationStart = [this,&holder](Animator&animator,bool isReverse){
+        onMoveAnimationStart(&holder,animator,isReverse);
+    };
+    al.onAnimationCancel = [this,&holder,deltaX,deltaY](Animator&animator){
+        onMoveAnimationCancel(deltaX,deltaY,&holder,animator);
+    };
+    al.onAnimationEnd = [this,&holder](Animator&animator,bool isReverse){
+        onMoveAnimationEnd(&holder,animator,isReverse);
+    };
     animation.setDuration(getMoveDuration()).setListener(al).start();
 }
 
@@ -348,8 +362,12 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
  
         Animator::AnimatorListener al;
         changeInfo.useCount++;
-        al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
-        al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationEnd,this,true,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+        al.onAnimationStart = [this,&changeInfo](Animator& animator,bool isReverse){
+            onChangeAnimationStart(true,&changeInfo,animator,isReverse);
+        };
+        al.onAnimationEnd =  [this,&changeInfo](Animator& animator,bool isReverse){
+            onChangeAnimationEnd(true,&changeInfo,animator,isReverse);
+        };
         oldViewAnim.alpha(0).setListener(al).start();
     }
     if (newView != nullptr) {
@@ -357,8 +375,12 @@ void DefaultItemAnimator::animateChangeImpl(ChangeInfo& changeInfo) {
         mChangeAnimations.push_back(changeInfo.newHolder);
         Animator::AnimatorListener al;
         changeInfo.useCount++;
-        al.onAnimationStart = std::bind(&DefaultItemAnimator::onChangeAnimationStart,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
-        al.onAnimationEnd = std::bind(&DefaultItemAnimator::onChangeAnimationEnd,this,false,&changeInfo,std::placeholders::_1,std::placeholders::_2);
+        al.onAnimationStart = [this,&changeInfo](Animator& animator,bool isReverse){
+            onChangeAnimationStart(false,&changeInfo,animator,isReverse);
+        };
+        al.onAnimationEnd = [this,&changeInfo](Animator& animator,bool isReverse){
+            onChangeAnimationEnd(false,&changeInfo,animator,isReverse);
+        };
         newViewAnimation.translationX(0).translationY(0).setDuration(getChangeDuration())
                 .alpha(1).setListener(al).start();
     }

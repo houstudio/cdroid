@@ -94,7 +94,7 @@ AsyncLayoutInflater::InflateThread::InflateThread():mRequestPool(10),mQueue(10){
 AsyncLayoutInflater::InflateThread*AsyncLayoutInflater::InflateThread::getInstance(){
     if(sInstance == nullptr){
         sInstance = std::make_unique<AsyncLayoutInflater::InflateThread>();
-        std::thread inflaterThread(std::bind(&AsyncLayoutInflater::InflateThread::run,sInstance.get()));
+        std::thread inflaterThread([](){sInstance->run();});
         inflaterThread.detach();
     }
     return sInstance.get();

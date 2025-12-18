@@ -200,7 +200,7 @@ void RecyclerView::initRecyclerView(){
     mFirstLayoutComplete = false;
     mEdgeEffectFactory = new EdgeEffectFactory();
     mAccessibilityManager = &AccessibilityManager::getInstance(getContext());
-    mItemAnimatorListener = std::bind(&RecyclerView::doAnimatorFinished,this,std::placeholders::_1);
+    mItemAnimatorListener = [this](ViewHolder&holder){doAnimatorFinished(holder);};
     setItemAnimator(new DefaultItemAnimator());
 
     setScrollContainer(true);
@@ -239,8 +239,8 @@ void RecyclerView::initRecyclerView(){
         mLayout->removeAndRecycleView(viewHolder->itemView, *mRecycler);
     };
     mViewInfoProcessCallback = visCBK;
-    mUpdateChildViewsRunnable = std::bind(&RecyclerView::doUpdateChildViews,this);
-    mItemAnimatorRunner = std::bind(&RecyclerView::doItemAnimator,this);
+    mUpdateChildViewsRunnable = [this](){ doUpdateChildViews();};
+    mItemAnimatorRunner = [this](){doItemAnimator();};
 }
 
 void RecyclerView::initAutofill() {
@@ -3723,7 +3723,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
     mInterpolator = nullptr;
-    mRunnable = std::bind(&ViewFlinger::run,this);
+    mRunnable = [this](){run();};
     mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
 }
 

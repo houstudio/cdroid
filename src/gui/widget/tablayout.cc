@@ -1750,11 +1750,15 @@ void TabLayout::SlidingTabIndicator::draw(Canvas& canvas) {
 
 TabLayout::TabLayoutOnPageChangeListener::TabLayoutOnPageChangeListener(){
     mTabLayout = nullptr;
-    onPageSelected = std::bind(&TabLayoutOnPageChangeListener::doPageSelected,this,std::placeholders::_1);
-    onPageScrolled = std::bind(&TabLayoutOnPageChangeListener::doPageScrolled,this,std::placeholders::_1,
-                            std::placeholders::_2,std::placeholders::_3);
-    onPageScrollStateChanged = std::bind(&TabLayoutOnPageChangeListener::doPageScrollStateChanged,
-          this,std::placeholders::_1);
+    onPageSelected = [this](int position){
+        doPageSelected(position);
+    };
+    onPageScrolled = [this](int position,float positionOffset,int positionOffsetPixels){
+        doPageScrolled(position,positionOffset,positionOffsetPixels);
+    };
+    onPageScrollStateChanged = [this](int state){
+        doPageScrollStateChanged(state);
+    };
 }
 
 

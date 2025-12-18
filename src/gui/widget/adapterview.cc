@@ -432,7 +432,7 @@ void AdapterView::doSectionNotify(){
     ViewGroup*root=getRootView();
     if(mDataChanged && root && root->isLayoutRequested()){
         if(getAdapter())
-            mPendingSelectionNotifier = std::bind(&AdapterView::doSectionNotify,this);
+            mPendingSelectionNotifier = [this](){doSectionNotify();};
     }else{
         dispatchOnItemSelected();
     }
@@ -448,7 +448,7 @@ void AdapterView::selectionChanged(){
             // in a consistent state and is able to accommodate
             // new layout or invalidate requests.
             if (mSelectionNotifier==nullptr) {
-                mSelectionNotifier = std::bind(&AdapterView::doSectionNotify,this);
+                mSelectionNotifier = [this](){doSectionNotify();};
             } else {
                 removeCallbacks(mSelectionNotifier);
             }

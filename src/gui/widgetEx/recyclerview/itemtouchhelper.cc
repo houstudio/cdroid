@@ -62,12 +62,16 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
             mRecyclerView->postOnAnimation(mScrollRunnable);
         }
     };
-    mOnChildAttachStateChangeListener.onChildViewAttachedToWindow = std::bind(&ItemTouchHelper::onChildViewAttachedToWindow,this,std::placeholders::_1);
-    mOnChildAttachStateChangeListener.onChildViewDetachedFromWindow = std::bind(&ItemTouchHelper::onChildViewDetachedFromWindow,this,std::placeholders::_1);
+    mOnChildAttachStateChangeListener.onChildViewAttachedToWindow = [this](View&view){onChildViewAttachedToWindow(view);};
+    mOnChildAttachStateChangeListener.onChildViewDetachedFromWindow =[this](View&view){onChildViewDetachedFromWindow(view);};
 
-    mOnItemTouchListener.onInterceptTouchEvent = std::bind(&ItemTouchHelper::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onTouchEvent = std::bind(&ItemTouchHelper::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent = std::bind(&ItemTouchHelper::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
+    mOnItemTouchListener.onInterceptTouchEvent = [this](RecyclerView&rv,MotionEvent&e){
+        return onInterceptTouchEvent(rv,e);
+    };
+    mOnItemTouchListener.onTouchEvent = [this](RecyclerView&rv,MotionEvent&e){onTouchEvent(rv,e);};
+    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent =[this](bool disallowIntercept){
+        onRequestDisallowInterceptTouchEvent(disallowIntercept);
+    };
 }
 
 ItemTouchHelper::~ItemTouchHelper(){
@@ -236,8 +240,8 @@ void ItemTouchHelper::destroyCallbacks() {
 
 void ItemTouchHelper::startGestureDetection() {
 #if ENABLE(GESTURE)
-    mItemTouchHelperGestureListener.onDown = std::bind(&ItemTouchHelper::onGestureDown,this,std::placeholders::_1);
-    mItemTouchHelperGestureListener.onLongPress = std::bind(&ItemTouchHelper::onGestureLongPress,this,std::placeholders::_1);
+    mItemTouchHelperGestureListener.onDown = [this](MotionEvent&e){return onGestureDown(e);};
+    mItemTouchHelperGestureListener.onLongPress = [this](MotionEvent&e){onGestureLongPress(e);};
     mGestureDetector = new GestureDetector(mRecyclerView->getContext(),mItemTouchHelperGestureListener);
 #endif
 }
@@ -1329,10 +1333,18 @@ ItemTouchHelper::RecoverAnimation::RecoverAnimation(RecyclerView::ViewHolder* vi
     };
     mValueAnimator->addUpdateListener(ls);
     mValueAnimator->setTarget(viewHolder->itemView);
-    mAnimatorListener.onAnimationStart = std::bind(&RecoverAnimation::onAnimationStart,this,std::placeholders::_1,std::placeholders::_2);
-    mAnimatorListener.onAnimationEnd   = std::bind(&RecoverAnimation::onAnimationEnd,this,std::placeholders::_1,std::placeholders::_2);
-    mAnimatorListener.onAnimationCancel= std::bind(&RecoverAnimation::onAnimationCancel,this,std::placeholders::_1);
-    mAnimatorListener.onAnimationRepeat= std::bind(&RecoverAnimation::onAnimationRepeat,this,std::placeholders::_1);
+    mAnimatorListener.onAnimationStart = [this](Animator&animator,bool isReverse){
+        onAnimationStart(animator,isReverse);
+    };
+    mAnimatorListener.onAnimationEnd = [this](Animator&animator,bool isReverse){
+        onAnimationEnd(animator,isReverse);
+    };
+    mAnimatorListener.onAnimationCancel= [this](Animator&animator){
+        onAnimationCancel(animator);
+    };
+    mAnimatorListener.onAnimationRepeat= [this](Animator&animator){
+        onAnimationRepeat(animator);
+    };
     mValueAnimator->addListener(mAnimatorListener);
     setFraction(0.f);
 }

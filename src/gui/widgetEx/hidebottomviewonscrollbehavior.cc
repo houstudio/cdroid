@@ -130,12 +130,8 @@ void HideBottomViewOnScrollBehavior::animateChildTo(View& child, int targetY, lo
         mCurrentAnimator = nullptr;
     };
     mCurrentAnimator = &child.animate().translationY((float)targetY);
-    mCurrentAnimator->setInterpolator(interpolator).setDuration(duration).setListener(al);
-    /*new AnimatorListenerAdapter() {
-        public void onAnimationEnd(Animator& animation) {
-            HideBottomViewOnScrollBehavior.this.mCurrentAnimator = null;
-        }
-    });*/
+    mCurrentAnimator->setInterpolator(interpolator)
+        .setDuration(duration).setListener(al);
 }
 
 void HideBottomViewOnScrollBehavior::addOnScrollStateChangedListener(const HideBottomViewOnScrollBehavior::OnScrollStateChangedListener& listener) {

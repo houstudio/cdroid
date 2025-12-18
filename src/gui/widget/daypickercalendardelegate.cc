@@ -98,7 +98,9 @@ DatePickerCalendarDelegate::DatePickerCalendarDelegate(DatePickeri* delegator, C
     mYearPickerView = mAnimator->findViewById(R.id.date_picker_year_picker);
     mYearPickerView->setRange(mMinDate, mMaxDate);
     mYearPickerView->setYear(mCurrentDate.get(Calendar.YEAR));
-    OnYearSelectedListener ysl = std::bind(&DatePickerCalendarDelegate::onYearChanged,this,std::spaceholders::_1,std::spaceholders::_2);
+    OnYearSelectedListener ysl = [this](YearPickerView& view, int year){
+        onYearChanged(view,year);
+    };
     mYearPickerView->setOnYearSelectedListener(ysl);
 
     // Initialize for current locale. This also initializes the date, so no

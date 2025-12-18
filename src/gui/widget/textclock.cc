@@ -74,7 +74,7 @@ void TextClock::init() {
         mFormat24 = getBestDateTimePattern("Hm");
     }
     mClockEventDelegate = nullptr;//new ClockEventDelegate(getContext());
-    mTicker = std::bind(&TextClock::doTick,this);
+    mTicker = [this](){doTick();};
     createTime(mTimeZone);
     chooseFormat();
 }

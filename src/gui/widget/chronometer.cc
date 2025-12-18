@@ -40,7 +40,7 @@ void Chronometer::init(){
     mColonBlinking = false;
     mFormat = "MM:SS";
     updateText(mBase);
-    mTickRunnable = std::bind(&Chronometer::tickRunner,this);
+    mTickRunnable = [this](){tickRunner();};
 }
 
 void Chronometer::setCountDown(bool countDown) {

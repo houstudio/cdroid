@@ -126,8 +126,12 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
     setFastScrollEnabled(atts.getBoolean("fastScrollEnabled",false));
     setFastScrollStyle(atts.getString("fastScrollStyle"));
     setFastScrollAlwaysVisible(atts.getBoolean("fastScrollAlwaysVisible",false));
-    mGlobalLayoutListener = std::bind(&AbsListView::onGlobalLayout,this);
-    mTouchModeChangeListener = std::bind(&AbsListView::onTouchModeChanged,this,std::placeholders::_1);
+    mGlobalLayoutListener = [this](){
+        onGlobalLayout();
+    };
+    mTouchModeChangeListener = [this](bool isInTouchMode){
+        onTouchModeChanged(isInTouchMode);
+    };
 }
 
 AbsListView::~AbsListView() {
@@ -4189,7 +4193,6 @@ AbsListView::LayoutParams::LayoutParams(Context*ctx,const AttributeSet&atts):Vie
 ////////////////////////////////////////////////////////////////////////////////////////////////////////
 AbsListView::AbsRunnable::AbsRunnable(AbsListView*lv)
     :View::ViewRunnable(lv){
-    //(*mFunctor)=std::bind(&AbsRunnable::run,this);
     mLV = lv;
 }
 
@@ -4339,7 +4342,7 @@ AbsListView::FlingRunnable::FlingRunnable(AbsListView*lv):AbsRunnable(lv){
     mScroller = nullptr;
     mSuppressIdleStateChangeCall = false;
     mScroller = new OverScroller(mLV->getContext());
-    mCheckFlywheel = std::bind(&FlingRunnable::checkFlyWheel,this);
+    mCheckFlywheel = [this](){checkFlyWheel();};
 }
 
 AbsListView::FlingRunnable::~FlingRunnable() {
