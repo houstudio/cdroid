@@ -697,7 +697,7 @@ View* CalendarViewLegacyDelegate::WeeksAdapter::getView(int position, View* conv
                         FrameLayout::LayoutParams::WRAP_CONTENT);
         weekView->setLayoutParams(params);
         weekView->setClickable(true);
-        weekView->setOnTouchListener([this](View&v,MotionEvent&e){onTouch(v,e);});
+        weekView->setOnTouchListener([this](View&v,MotionEvent&e){return onTouch(v,e);});
     }
 
     int selectedWeekDay = (mSelectedWeek == position) ? mSelectedDate.get(
