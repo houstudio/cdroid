@@ -57,6 +57,7 @@ private:
     void onStateChanged();
 public:
     RippleBackground(RippleDrawable* owner,const Rect& bounds, bool isBounded);
+    ~RippleBackground()override;
     bool isVisible()const;
     void draw(Canvas& c,float alpha);
     void setState(bool focused, bool hovered, bool pressed);

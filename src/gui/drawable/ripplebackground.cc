@@ -71,6 +71,11 @@ void RippleComponent::onTargetRadiusChanged(float targetRadius){
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 RippleBackground::RippleBackground(RippleDrawable* owner,const Rect& bounds, bool isBounded):RippleComponent(owner,bounds){
     mIsBounded = isBounded;
+    mAnimator = nullptr;
+}
+
+RippleBackground::~RippleBackground(){
+    delete mAnimator;
 }
 
 bool RippleBackground::isVisible()const{
@@ -114,6 +119,7 @@ void RippleBackground::onStateChanged(){
     float newOpacity = mFocused ? .6f : mHovered ? .2f : .0f;
     if (mAnimator != nullptr) {
         mAnimator->cancel();
+        delete mAnimator;
         mAnimator = nullptr;
     }
     mAnimator = ObjectAnimator::ofFloat(this, &OPACITY, {newOpacity});
@@ -131,6 +137,7 @@ void RippleBackground::onStateChanged(){
 void RippleBackground::jumpToFinal(){
     if (mAnimator) {
         mAnimator->end();
+        delete mAnimator;
         mAnimator = nullptr;
     }
 }
