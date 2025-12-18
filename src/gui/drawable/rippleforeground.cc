@@ -41,13 +41,7 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     clampStartingPosition();
     mAnimationListener.onAnimationEnd=[this](Animator&anim,bool isReverse){
         mHasFinishedExit = true;
-        auto it = std::find(mRunningSwAnimators.begin(),mRunningSwAnimators.end(),&anim);
-        if(it != mRunningSwAnimators.end()){
-            mRunningSwAnimators.erase(it);
-            LOGD("Animator %p ended",&anim);
-            delete &anim;
-        }
-        //pruneSwFinished();
+        pruneSwFinished();
     };
 }
 
@@ -82,11 +76,14 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
 
 void RippleForeground::pruneSwFinished() {
     if( mRunningSwAnimators.size()==0)return;
-    for (int i = mRunningSwAnimators.size() - 1;i>=0;i--){
-        Animator*anim=mRunningSwAnimators[i];
+    for (auto it =mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
+        Animator*anim = *it;
         if (!anim->isRunning()) {
-            mRunningSwAnimators.erase(mRunningSwAnimators.begin()+i);
-            LOGD("erase %p",anim);
+            it = mRunningSwAnimators.erase(it);
+            anim->end();
+            delete anim;
+        }else{
+            it++;
         }
     }
 }
