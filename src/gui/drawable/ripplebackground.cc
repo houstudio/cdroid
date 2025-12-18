@@ -97,13 +97,26 @@ void RippleBackground::setState(bool focused, bool hovered, bool pressed){
     }
 }
 
+class RippleBackground::COPACITY:public FloatProperty{
+public:
+    COPACITY():FloatProperty("opacity") {}
+    void set(void*object, const AnimateValue& value)const {
+        ((RippleBackground*)object)->mOpacity = GET_VARIANT(value,float);
+        ((RippleBackground*)object)->invalidateSelf();;
+    }
+    AnimateValue get(void* object)const {
+        return ((RippleBackground*)object)->mOpacity;
+    }
+};
+const RippleBackground::COPACITY RippleBackground::OPACITY;
+
 void RippleBackground::onStateChanged(){
     float newOpacity = mFocused ? .6f : mHovered ? .2f : .0f;
     if (mAnimator != nullptr) {
         mAnimator->cancel();
         mAnimator = nullptr;
     }
-    mAnimator = ValueAnimator::ofFloat({mOpacity,newOpacity});//this, OPACITY, newOpacity);
+    mAnimator = ObjectAnimator::ofFloat(this, &OPACITY, {newOpacity});
     mAnimator->setDuration(OPACITY_DURATION);
     mAnimator->setInterpolator(LinearInterpolator::Instance);
     mAnimator->addUpdateListener(ValueAnimator::AnimatorUpdateListener([this](ValueAnimator&anim){
@@ -121,6 +134,5 @@ void RippleBackground::jumpToFinal(){
         mAnimator = nullptr;
     }
 }
-
 
 }

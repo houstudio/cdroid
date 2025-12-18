@@ -45,6 +45,8 @@ public:
 
 class RippleBackground:public RippleComponent{
 private:
+    class COPACITY;
+    static const COPACITY OPACITY;
     static constexpr  int OPACITY_DURATION = 80;
     ValueAnimator* mAnimator;
     float mOpacity = 0;
