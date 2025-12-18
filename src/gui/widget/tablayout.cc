@@ -1646,7 +1646,7 @@ void TabLayout::SlidingTabIndicator::tweenIndicatorPosition(View* startTitle, Vi
     const bool hasVisibleTitle = (startTitle != nullptr) && (startTitle->getWidth() > 0);
     if (hasVisibleTitle) {
         mParent->mTabIndicatorInterpolator->updateIndicatorForOffset(mParent, startTitle, endTitle, fraction, mParent->mTabSelectedIndicator);
-    } else {
+    } else if(mParent->mTabSelectedIndicator!=nullptr){
         mParent->mTabSelectedIndicator->setBounds(-1, mParent->mTabSelectedIndicator->getBounds().top,
                 0, mParent->mTabSelectedIndicator->getBounds().height);
     }
