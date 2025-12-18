@@ -53,7 +53,9 @@ void CompoundButton::initCompoundButton(){
     toggle = [this](){
         doSetChecked(!mChecked);
     };
-    setChecked = std::bind(&CompoundButton::doSetChecked,this,std::placeholders::_1);
+    setChecked = [this](bool checked){
+        doSetChecked(checked);
+    };
 #endif
 }
 

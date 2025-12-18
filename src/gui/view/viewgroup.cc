@@ -1481,11 +1481,11 @@ std::vector<View*> ViewGroup::buildOrderedChildList() {
         }
         preSortedChildren.insert(preSortedChildren.begin()+insertIndex, nextChild);
     }
-    return preSortedChildren;
+    return std::move(preSortedChildren);
 }
 
 std::vector<View*> ViewGroup::buildTouchDispatchChildList(){
-    return buildOrderedChildList();
+    return std::move(buildOrderedChildList());
 }
 
 View* ViewGroup::getAccessibilityFocusedHost()const{

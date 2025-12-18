@@ -1289,6 +1289,10 @@ void SlidingPaneLayout::DisableLayerRunnable::run() {
         spl->invalidateChildRegion(mChildView);
     }
     //spl->mPostedRunnables.remove(this);
+    /*auto it = std::find(spl->mPostedRunnables.begin(),spl->mPostedRunnables.end(),mRunnable);
+    if(it != spl->mPostedRunnables.end()){
+        spl->mPostedRunnables.erase(it);
+    }*/
 }
 
 }/*endof namespace*/

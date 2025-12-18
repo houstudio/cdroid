@@ -129,7 +129,7 @@ RecyclerView::~RecyclerView(){
         mVelocityTracker->recycle();
     delete mChildHelper;
     delete mState;
-    //delete mLayout;
+    delete mLayout;
     delete mAdapterHelper;
     delete mViewInfoStore;
     delete mViewFlinger;
@@ -644,7 +644,7 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
             mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
-        //delete mLayout;
+        delete mLayout;
     } else {
         mRecycler->clear();
     }
@@ -4660,8 +4660,7 @@ void RecyclerView::Recycler::recycleViewHolderInternal(ViewHolder& holder) {
     }
 
     if (holder.isTmpDetached()) {
-        LOGE("Tmp detached view should be removed from RecyclerView "
-	   "before it can be recycled: %p",&holder);
+        LOGE("Tmp detached view should be removed from RecyclerView before it can be recycled: %p",&holder);
     }
 
     if (holder.shouldIgnore()) {

@@ -1144,7 +1144,7 @@ std::vector<int>AbsListView::getDrawableStateForSelector() {
         //        state.length - enabledPos - 1);
     }
 
-    return state;
+    return std::move(state);
 }
 
 void AbsListView::updateSelectorState() {

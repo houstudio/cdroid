@@ -71,6 +71,9 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
 }
 
 ItemTouchHelper::~ItemTouchHelper(){
+    if(mRecyclerView!=nullptr){
+        destroyCallbacks();
+    }
 #if ENABLE(GESTURE)
     delete mGestureDetector;
 #endif
