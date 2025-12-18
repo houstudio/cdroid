@@ -32,6 +32,9 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,
     mExitAnimInterpolator = nullptr;
 }
 
+HideBottomViewOnScrollBehavior::~HideBottomViewOnScrollBehavior(){
+}
+
 bool HideBottomViewOnScrollBehavior::onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) {
     ViewGroup::MarginLayoutParams* paramsCompat = (ViewGroup::MarginLayoutParams*)child.getLayoutParams();
     mHeight = child.getMeasuredHeight() + paramsCompat->bottomMargin;
