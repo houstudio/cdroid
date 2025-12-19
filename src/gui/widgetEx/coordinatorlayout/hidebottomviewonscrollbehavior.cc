@@ -54,7 +54,7 @@ void HideBottomViewOnScrollBehavior::setAdditionalHiddenOffsetY(View& child, int
 }
 
 bool HideBottomViewOnScrollBehavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild, View& target, int nestedScrollAxes, int type) {
-    return nestedScrollAxes == 2;
+    return nestedScrollAxes == View::TYPE_TOUCH/*2*/;
 }
 
 void HideBottomViewOnScrollBehavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed) {

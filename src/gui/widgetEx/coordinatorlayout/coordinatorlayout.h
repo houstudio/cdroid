@@ -20,7 +20,7 @@
 #include <view/viewgroup.h>
 #include <view/windowinsets.h>
 #include <widget/nestedscrollinghelper.h>
-#include <widgetEx/directedacyclicgraph.h>
+#include <widgetEx/coordinatorlayout/directedacyclicgraph.h>
 
 namespace cdroid{
 class CoordinatorLayout:public ViewGroup{// implements NestedScrollingParent2 {
@@ -114,7 +114,8 @@ private:
     NestedScrollingParentHelper* mNestedScrollingParentHelper;
 private:
     void initView();
-    void resetTouchBehaviors(bool notifyOnInterceptTouchEvent);
+    void cancelInterceptBehaviors();
+    void resetTouchBehaviors();
     void getTopSortedChildren(std::vector<View*>& out);
     bool performIntercept(MotionEvent& ev,int type);
     bool performEvent(Behavior* behavior,View& child,MotionEvent& ev,int type);
