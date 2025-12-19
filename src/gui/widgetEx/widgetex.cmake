@@ -30,8 +30,10 @@ endif()
 
 if(ENABLE_COORDINATORLAYOUT)
     list(APPEND WIDGETEX_SOURCES
-        widgetEx/coordinatorlayout.cc
-        widgetEx/hidebottomviewonscrollbehavior.cc)
+        widgetEx/coordinatorlayout/coordinatorlayout.cc
+        widgetEx/coordinatorlayout/hideviewonscrollbehavior.cc
+        widgetEx/coordinatorlayout/hidebottomviewonscrollbehavior.cc
+    )
 endif()
 
 if(ENABLE_FLEXBOXLAYOUT)

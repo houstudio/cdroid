@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __HIDE_BOTTOMVIEW_ONSCROLL_BEHAVIOR_H__
 #define __HIDE_BOTTOMVIEW_ONSCROLL_BEHAVIOR_H__
-#include <widgetEx/coordinatorlayout.h>
+#include <widgetEx/coordinatorlayout/coordinatorlayout.h>
 namespace cdroid{
 class HideBottomViewOnScrollBehavior:public CoordinatorLayout::Behavior{
 public:
@@ -37,8 +37,8 @@ private:
     int mAdditionalHiddenOffsetY = 0;
     ViewPropertyAnimator* mCurrentAnimator;
 private:
-    void updateCurrentState(View& child, int state);
-    void animateChildTo(View& child, int targetY, long duration, TimeInterpolator* interpolator);
+    void updateCurrentState(View* child, int state);
+    void animateChildTo(View* child, int targetY, long duration, TimeInterpolator* interpolator);
 public:
     HideBottomViewOnScrollBehavior();
     HideBottomViewOnScrollBehavior(Context* context,const AttributeSet& attrs);
@@ -48,24 +48,18 @@ public:
     void setAdditionalHiddenOffsetY(View& child, int offset);
 
     bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild, View& target, int nestedScrollAxes, int type)override;
-
     void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed)override;
 
     bool isScrolledUp() const;
-
-    void slideUp(View& child);
-
-    void slideUp(View& child, bool animate);
+    void slideUp(View* child);
+    void slideUp(View* child, bool animate);
 
     bool isScrolledDown() const;
-
-    void slideDown(View& child);
-
-    void slideDown(View& child, bool animate);
+    void slideDown(View* child);
+    void slideDown(View* child, bool animate);
 
     void addOnScrollStateChangedListener(const OnScrollStateChangedListener& listener);
     void removeOnScrollStateChangedListener(const OnScrollStateChangedListener& listener);
-
     void clearOnScrollStateChangedListeners();
 };
 }/*endof namespace*/

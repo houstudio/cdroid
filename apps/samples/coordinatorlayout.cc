@@ -1,6 +1,6 @@
 #include<cdroid.h>
 #include<cdlog.h>
-#include <widgetEx/coordinatorlayout.h>
+#include <widgetEx/coordinatorlayout/coordinatorlayout.h>
 #include <core/classloader.h>
 #include <gui_features.h>
 using namespace cdroid;
