@@ -45,7 +45,6 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
         }
     }
     mStatusBarBackground = attrs.getDrawable("statusBarBackground");
-
 }
 
 void CoordinatorLayout::initView() {
@@ -372,7 +371,7 @@ bool CoordinatorLayout::onTouchEvent(MotionEvent& ev) {
         handled = performIntercept(ev, TYPE_ON_TOUCH);
         cancelSuper = (action != MotionEvent::ACTION_DOWN) && handled;
     }
-LOGD("handled=%d",handled);
+
     // Keep the super implementation correct
     if ((mBehaviorTouchView == nullptr)||(action==MotionEvent::ACTION_CANCEL)) {
         handled |= ViewGroup::onTouchEvent(ev);
@@ -393,6 +392,8 @@ LOGD("handled=%d",handled);
 void CoordinatorLayout::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
     ViewGroup::requestDisallowInterceptTouchEvent(disallowIntercept);
     if (disallowIntercept && !mDisallowInterceptReset) {
+        // If there is no behavior currently handling touches then send a cancel event to all
+        // behavior's intercept methods.
         if(mBehaviorTouchView==nullptr){
             cancelInterceptBehaviors();
         }

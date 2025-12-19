@@ -1,6 +1,7 @@
 #include<cdroid.h>
 #include<cdlog.h>
 #include <widgetEx/coordinatorlayout/coordinatorlayout.h>
+#include <widgetEx/coordinatorlayout/hidebottomviewonscrollbehavior.h>
 #include <core/classloader.h>
 #include <gui_features.h>
 using namespace cdroid;
@@ -39,7 +40,7 @@ public:
 //REGISTER_CLASS(YourCustomBehavior,cdroid::CoordinatorLayout::Behavior);
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(0,0,-1,-1);
+    Window*w = new Window(0,0,-1,-1);
 #if ENABLE_COORDINATORLAYOUT
     CoordinatorLayout*cl=new CoordinatorLayout(-1,-1);
     NestedScrollView*scroller=new NestedScrollView(-1,-1);
@@ -67,15 +68,16 @@ int main(int argc,const char*argv[]){
         edit->setFocusable(i==0);
         layout->addView(edit,lp);
     }
-    cl->addView(scroller,new CoordinatorLayout::LayoutParams(
-			    LayoutParams::MATCH_PARENT,
-			    LayoutParams::WRAP_CONTENT));
-    TextView*tv=new TextView("Hello world",100,32);
-    tlp=new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
+    cl->addView(scroller,new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT));
+    TextView*tv=new TextView("Hello world",100,64);
+    tv->setTextSize(48);
+    tlp=new CoordinatorLayout::LayoutParams(LayoutParams::MATCH_PARENT,64);
     tlp->setBehavior(new YourCustomBehavior());
-    tlp->gravity = Gravity::BOTTOM|Gravity::END;
+    tlp->gravity = Gravity::BOTTOM;
     cl->addView(tv,tlp);
     w->addView(cl);
+#else
+    w->addView(new TextView("CoordinatorLayout not enabled in your cdroid.",-1,-1));
 #endif
     w->requestLayout();
     return app.exec();
