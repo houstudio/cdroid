@@ -23,7 +23,7 @@ class HideBottomViewOnScrollBehavior:public CoordinatorLayout::Behavior{
 public:
     static constexpr int STATE_SCROLLED_DOWN = 1;
     static constexpr int STATE_SCROLLED_UP = 2;
-    typedef CallbackBase<void,View&,int> OnScrollStateChangedListener;//onStateChanged(View& var1, int var2);
+    typedef CallbackBase<void,View&,int> OnScrollStateChangedListener;//onStateChanged(View& bottomView, int newState);
 private:
     std::vector<OnScrollStateChangedListener> mOnScrollStateChangedListeners;
     static constexpr int DEFAULT_ENTER_ANIMATION_DURATION_MS = 225;

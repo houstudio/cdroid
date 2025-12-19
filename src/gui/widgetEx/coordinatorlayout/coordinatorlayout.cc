@@ -1433,6 +1433,49 @@ void CoordinatorLayout::onNestedScroll(View* target, int dxConsumed, int dyConsu
     }
 }
 
+void CoordinatorLayout::onNestedScroll(View* target, int dxConsumed, int dyConsumed,
+        int dxUnconsumed, int dyUnconsumed, int type, int *consumed) {
+    const int childCount = getChildCount();
+    bool accepted = false;
+    int xConsumed = 0;
+    int yConsumed = 0;
+
+    for (int i = 0; i < childCount; i++) {
+        View* view = getChildAt(i);
+        if (view->getVisibility() == GONE) {
+            // If the child is GONE, skip...
+            continue;
+        }
+
+        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+        if (!lp->isNestedScrollAccepted(type)) {
+            continue;
+        }
+
+        Behavior* viewBehavior = lp->getBehavior();
+        if (viewBehavior != nullptr) {
+            int mBehaviorConsumed[] ={0,0};
+
+            viewBehavior->onNestedScroll(*this, *view, *target, dxConsumed, dyConsumed,
+                    dxUnconsumed, dyUnconsumed, type, mBehaviorConsumed);
+
+            xConsumed = dxUnconsumed > 0 ? std::max(xConsumed, mBehaviorConsumed[0])
+                    : std::min(xConsumed, mBehaviorConsumed[0]);
+            yConsumed = dyUnconsumed > 0 ? std::max(yConsumed, mBehaviorConsumed[1])
+                    : std::min(yConsumed, mBehaviorConsumed[1]);
+
+            accepted = true;
+        }
+    }
+
+    consumed[0] += xConsumed;
+    consumed[1] += yConsumed;
+
+    if (accepted) {
+        onChildViewsChanged(EVENT_NESTED_SCROLL);
+    }
+}
+
 void CoordinatorLayout::onNestedPreScroll(View* target, int dx, int dy, int* consumed) {
     onNestedPreScroll(target, dx, dy, consumed, View::TYPE_TOUCH);
 }
@@ -1541,6 +1584,75 @@ void* CoordinatorLayout::Behavior::getTag(View& child) {
     LayoutParams* lp = (LayoutParams*)child.getLayoutParams();
     return lp->mBehaviorTag;
 }
+
+bool CoordinatorLayout::Behavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout,
+    View& child, View& directTargetChild, View& target, int axes) {
+    return false;
+}
+
+bool CoordinatorLayout::Behavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,
+      View& directTargetChild, View& target, int axes, int type) {
+    if (type == View::TYPE_TOUCH) {
+        return onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes);
+    }
+    return false;
+}
+
+void CoordinatorLayout::Behavior::onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout,
+    View& child, View& directTargetChild, View& target, int axes) {
+    /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild,
+    View& target, int axes, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onNestedScrollAccepted(coordinatorLayout, child, directTargetChild, target, axes);
+    }
+}
+
+void CoordinatorLayout::Behavior::onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target) {
+    /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onStopNestedScroll(coordinatorLayout, child, target);
+    }
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+     /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
+    }
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type,int*consumed){
+    // In the case that this nested scrolling v3 version is not implemented, we call the v2
+    // version in case the v2 version is. We Also consume all of the unconsumed scroll
+    // distances.
+    consumed[0] += dxUnconsumed;
+    consumed[1] += dyUnconsumed;
+    onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed,
+            dxUnconsumed, dyUnconsumed, type);
+}
+
+void CoordinatorLayout::Behavior::onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dx, int dy, int* consumed){
+    /*Do Nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dx, int dy, int* consumed, int type){
+    if(type==View::TYPE_TOUCH){
+        onNestedPreScroll(coordinatorLayout,child,target,dx,dy,consumed,type);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 CoordinatorLayout::LayoutParams::LayoutParams(int width, int height)
     :MarginLayoutParams(width,height) {

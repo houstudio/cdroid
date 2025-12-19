@@ -207,6 +207,7 @@ public:
     void onStopNestedScroll(View* target, int type)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type)override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int type,int*consumed)override;
     void onNestedPreScroll(View* target, int dx, int dy, int consumed[]) override;
 
     void onNestedPreScroll(View* target, int dx, int dy, int* consumed, int  type)override;
@@ -268,70 +269,32 @@ public:
     static void setTag(View& child, void* tag);
     static void* getTag(View& child);
 
-    virtual bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout,
-        View& child, View& directTargetChild, View& target, int axes) {
+    virtual bool onStartNestedScroll(CoordinatorLayout&, View& child, View& directTargetChild, View& target, int axes);
+    virtual bool onStartNestedScroll(CoordinatorLayout&, View& child, View& directTargetChild, View& target, int axes, int type);
+
+    virtual void onNestedScrollAccepted(CoordinatorLayout&, View& child, View& directTargetChild, View& target, int axes);
+    virtual void onNestedScrollAccepted(CoordinatorLayout&, View& child, View& directTargetChild, View& target, int axes, int type);
+
+    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target);
+    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int type);
+
+    virtual void onNestedScroll(CoordinatorLayout&, View& child,View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed);
+    virtual void onNestedScroll(CoordinatorLayout&, View& child,View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type);
+    virtual void onNestedScroll(CoordinatorLayout&, View& child,View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type,int*consumed);
+    
+    virtual void onNestedPreScroll(CoordinatorLayout&, View& child, View& target, int dx, int dy, int* consumed);
+    virtual void onNestedPreScroll(CoordinatorLayout&, View& child, View& target, int dx, int dy, int* consumed, int type);
+
+    virtual bool onNestedFling(CoordinatorLayout&, View& child, View& target,float velocityX, float velocityY, bool consumed) {
         return false;
     }
-    virtual bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,
-          View& directTargetChild, View& target, int axes, int type) {
-        if (type == View::TYPE_TOUCH) {
-            return onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes);
-        }
-        return false;
-    }
-    virtual void onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout,
-        View& child, View& directTargetChild, View& target, int axes) {
-    }
-    virtual void onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild,
-        View& target, int axes, int type) {
-        if (type == View::TYPE_TOUCH) {
-            onNestedScrollAccepted(coordinatorLayout, child, directTargetChild, target, axes);
-        }
-    }
-    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target) {
-    }
-    virtual void onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int type) {
-        if (type == View::TYPE_TOUCH) {
-            onStopNestedScroll(coordinatorLayout, child, target);
-        }
-    }
-    virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
-        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
-    }
-    virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
-        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
-        if (type == View::TYPE_TOUCH) {
-            onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
-        }
-    }
-    virtual void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
-        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type,int*consumed){
-        consumed[0] += dxUnconsumed;
-        consumed[1] += dyUnconsumed;
-        onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed, type);
-    }
-    virtual void onNestedPreScroll(CoordinatorLayout& coordinatorLayout,
-        View& child, View& target, int dx, int dy, int* consumed) {
-    }
-    virtual void onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target,
-        int dx, int dy, int* consumed, int type) {
-        if (type == View::TYPE_TOUCH) {
-            onNestedPreScroll(coordinatorLayout, child, target, dx, dy, consumed);
-        }
-    }
-    virtual bool onNestedFling(CoordinatorLayout& coordinatorLayout, View& child, View& target,
-        float velocityX, float velocityY, bool consumed) {
-        return false;
-    }
-    virtual bool onNestedPreFling(CoordinatorLayout& coordinatorLayout,
-        View& child, View& target, float velocityX, float velocityY) {
+    virtual bool onNestedPreFling(CoordinatorLayout&,View& child, View& target, float velocityX, float velocityY) {
         return false;
     }
     WindowInsets onApplyWindowInsets(CoordinatorLayout& coordinatorLayout, View& child, WindowInsets& insets) {
         return insets;
     }
-    virtual bool onRequestChildRectangleOnScreen(CoordinatorLayout& coordinatorLayout,
-        View& child, const Rect& rectangle, bool immediate) {
+    virtual bool onRequestChildRectangleOnScreen(CoordinatorLayout&,View& child, const Rect& rectangle, bool immediate) {
         return false;
     }
     virtual void onRestoreInstanceState(CoordinatorLayout& parent, View& child, Parcelable& state) {
