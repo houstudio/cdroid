@@ -26,9 +26,9 @@ namespace cdroid{
 class ViewGroup;
 class LayoutTransition{
 public:
-    struct TransitionListener{
-       CallbackBase<void,LayoutTransition&, ViewGroup*/*container*/,View* /*view*/, int/*transitionType*/> startTransition;
-       CallbackBase<void,LayoutTransition&, ViewGroup*/*container*/,View* /*view*/, int/*transitionType*/> endTransition;
+    struct TransitionListener:public EventSet{
+        std::function<void(LayoutTransition&, ViewGroup* /*container*/,View* /*view*/, int/*transitionType*/)> startTransition;
+        std::function<void(LayoutTransition&, ViewGroup* /*container*/,View* /*view*/, int/*transitionType*/)> endTransition;
     };
 private:
     static constexpr int FLAG_APPEARING             = 0x01;

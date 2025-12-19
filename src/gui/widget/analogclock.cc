@@ -63,7 +63,7 @@ void AnalogClock::initAnalog(){
     mHourHandTintInfo = new TintInfo;
     mMinuteHandTintInfo = new TintInfo;
     mSecondHandTintInfo = new TintInfo;
-    mTick = std::bind(&AnalogClock::onTickProc,this);
+    mTick = [this](){onTickProc();};
 }
 
 Drawable* AnalogClock::apply(TintInfo*ti,Drawable*drawable){

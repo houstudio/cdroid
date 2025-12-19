@@ -7374,8 +7374,8 @@ void View::setTooltipText(const std::string& tooltipText) {
         setFlags(TOOLTIP, TOOLTIP);
         if (mTooltipInfo == nullptr) {
             mTooltipInfo = new TooltipInfo();
-            mTooltipInfo->mShowTooltipRunnable = std::bind(&View::showHoverTooltip,this);
-            mTooltipInfo->mHideTooltipRunnable = std::bind(&View::hideTooltip,this);
+            mTooltipInfo->mShowTooltipRunnable = [this](){showHoverTooltip();};
+            mTooltipInfo->mHideTooltipRunnable = [this](){hideTooltip();};
             mTooltipInfo->mHoverSlop = ViewConfiguration::get(mContext).getScaledHoverSlop();
             mTooltipInfo->clearAnchorPos();
         }
@@ -9855,7 +9855,7 @@ void View::CheckForTap::removeCallbacks(){
 
 View::CheckForLongPress::CheckForLongPress(View*v)
    :CheckForTap(v){
-    mRunnable = std::bind(&CheckForLongPress::run,this);
+    mRunnable = [this]{run();};
 }
 
 void View::CheckForLongPress::rememberWindowAttachCount(){
@@ -9878,7 +9878,7 @@ void View::CheckForLongPress::run(){
 View::SendViewScrolledAccessibilityEvent::SendViewScrolledAccessibilityEvent(View*v):mView(v){
     mIsPending = false;
     mDeltaX = mDeltaY =0;
-    mRunnable = std::bind(&SendViewScrolledAccessibilityEvent::run,this);
+    mRunnable = [this](){run();};
 }
 
 void View::SendViewScrolledAccessibilityEvent::post(int dx, int dy) {

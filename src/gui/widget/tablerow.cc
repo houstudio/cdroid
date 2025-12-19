@@ -58,8 +58,12 @@ TableRow::TableRow(Context* context,const AttributeSet& attrs)
 
 void TableRow::initTableRow() {
     OnHierarchyChangeListener oldListener = mOnHierarchyChangeListener;
-    mChildrenTracker.onChildViewAdded  = std::bind(&TableRow::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
-    mChildrenTracker.onChildViewRemoved= std::bind(&TableRow::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
+    mChildrenTracker.onChildViewAdded  = [this](View& parent, View* child){
+        onChildViewAdded(parent,child);
+    };
+    mChildrenTracker.onChildViewRemoved= [this](View& parent, View* child){
+        onChildViewRemoved(parent,child);
+    };
     if (oldListener.onChildViewAdded||oldListener.onChildViewRemoved) {
         mExtHCL = oldListener;
     }

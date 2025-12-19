@@ -41,13 +41,7 @@ RippleForeground::RippleForeground(RippleDrawable* owner,const Rect& bounds, flo
     clampStartingPosition();
     mAnimationListener.onAnimationEnd=[this](Animator&anim,bool isReverse){
         mHasFinishedExit = true;
-        auto it = std::find(mRunningSwAnimators.begin(),mRunningSwAnimators.end(),&anim);
-        if(it != mRunningSwAnimators.end()){
-            mRunningSwAnimators.erase(it);
-            LOGD("Animator %p ended",&anim);
-            delete &anim;
-        }
-        //pruneSwFinished();
+        pruneSwFinished();
     };
 }
 
@@ -58,14 +52,10 @@ RippleForeground::~RippleForeground(){
 
 void RippleForeground::onTargetRadiusChanged(float targetRadius){
     clampStartingPosition();
-    std::ostringstream oss;
     for (auto animator:mRunningSwAnimators) {
         animator->removeListener(mAnimationListener);
         animator->end();
-        oss<<animator<<" ";
     }
-    LOGD("radius=%.2f anims=%d{%s}",targetRadius,mRunningSwAnimators.size(),oss.str().c_str());
-    //mRunningSwAnimators.clear();
     invalidateSelf();//switchToUiThreadAnimation();
 }
 
@@ -82,11 +72,14 @@ void RippleForeground::drawSoftware(Canvas& c,float origAlpha) {
 
 void RippleForeground::pruneSwFinished() {
     if( mRunningSwAnimators.size()==0)return;
-    for (int i = mRunningSwAnimators.size() - 1;i>=0;i--){
-        Animator*anim=mRunningSwAnimators[i];
+    for (auto it =mRunningSwAnimators.begin();it!=mRunningSwAnimators.end();){
+        Animator*anim = *it;
         if (!anim->isRunning()) {
-            mRunningSwAnimators.erase(mRunningSwAnimators.begin()+i);
-            LOGD("erase %p",anim);
+            it = mRunningSwAnimators.erase(it);
+            anim->end();
+            delete anim;
+        }else{
+            it++;
         }
     }
 }
@@ -95,7 +88,7 @@ void RippleForeground::getBounds(Rect& bounds) {
     const int outerX = (int) mTargetX;
     const int outerY = (int) mTargetY;
     const int r = (int) mTargetRadius + 1;
-    bounds.set(outerX - r, outerY - r, r+r,r + r);
+    bounds.set(outerX - r, outerY - r, r + r,r + r);
 }
 
 void RippleForeground::move(float x, float y) {
@@ -241,11 +234,11 @@ void RippleForeground::draw(Canvas&canvas,float alpha){
 }
 
 void RippleForeground::clampStartingPosition(){
-    float cX = (float)mBounds.centerX();
-    float cY = (float)mBounds.centerY();
-    float dX = mStartingX - cX;
-    float dY = mStartingY - cY;
-    float r = mTargetRadius - mStartRadius;
+    const float cX = (float)mBounds.centerX();
+    const float cY = (float)mBounds.centerY();
+    const float dX = mStartingX - cX;
+    const float dY = mStartingY - cY;
+    const float r = mTargetRadius - mStartRadius;
     if (dX * dX + dY * dY > r * r) {
         // Point is outside the circle, clamp to the perimeter.
         double angle = std::atan2(dY, dX);

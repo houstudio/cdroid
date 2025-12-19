@@ -34,8 +34,9 @@ public:
     PageTransformerAdapter(LinearLayoutManager* layoutManager) {
         mLayoutManager = layoutManager;
         mPageTransformer= nullptr;
-	    onPageScrolled = std::bind(&PageTransformerAdapter::doPageScrolled,this,
-            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+	    onPageScrolled = [this](int position, float positionOffset, int positionOffsetPixels){
+            doPageScrolled(position,positionOffset,positionOffsetPixels);
+        };
     }
     ViewPager2::PageTransformer* getPageTransformer() {
         return mPageTransformer;
@@ -120,8 +121,12 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     // Add mScrollEventAdapter after attaching mPagerSnapHelper to mRecyclerView, because we
     // don't want to respond on the events sent out during the attach process
     RecyclerView::OnScrollListener scrollCBK;
-    scrollCBK.onScrolled = std::bind(&ScrollEventAdapter::onScrolled,mScrollEventAdapter,std::placeholders::_1,std::placeholders::_2,std::placeholders::_3);
-    scrollCBK.onScrollStateChanged = std::bind(&ScrollEventAdapter::onScrollStateChanged,mScrollEventAdapter,std::placeholders::_1,std::placeholders::_2);
+    scrollCBK.onScrolled = [this](RecyclerView& rv, int dx, int dy){
+        mScrollEventAdapter->onScrolled(rv,dx,dy);
+    };
+    scrollCBK.onScrollStateChanged = [this](RecyclerView& rv, int newState){
+        mScrollEventAdapter->onScrollStateChanged(rv,newState);
+    };
     mRecyclerView->addOnScrollListener(scrollCBK);
 
     //mPageChangeEventDispatcher.addOnPageChangeCallback=[](){};

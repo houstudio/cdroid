@@ -42,7 +42,7 @@ void EditText::initEditText(){
     afterChanged = nullptr;
     mCaretRect.set(0,0,1,1);
     mBlinkOn = false;
-    mRBLink = std::bind(&EditText::blinkCaret,this);
+    mRBLink = [this](){blinkCaret();};
 }
 
 void EditText::onDetachedFromWindow(){

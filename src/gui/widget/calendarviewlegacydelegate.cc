@@ -605,7 +605,7 @@ int CalendarViewLegacyDelegate::getWeeksSinceMinDate(Calendar& date) {
 
 CalendarViewLegacyDelegate::ScrollStateRunnable::ScrollStateRunnable(CalendarViewLegacyDelegate*delegator){
     mDelegate = delegator;
-    mRunnable  = std::bind(&ScrollStateRunnable::run,this);
+    mRunnable  = [this](){run();};
 }
 
 void CalendarViewLegacyDelegate::ScrollStateRunnable::doScrollStateChange(AbsListView* view, int scrollState) {
@@ -697,7 +697,7 @@ View* CalendarViewLegacyDelegate::WeeksAdapter::getView(int position, View* conv
                         FrameLayout::LayoutParams::WRAP_CONTENT);
         weekView->setLayoutParams(params);
         weekView->setClickable(true);
-        weekView->setOnTouchListener(std::bind(&WeeksAdapter::onTouch,this,std::placeholders::_1,std::placeholders::_2));
+        weekView->setOnTouchListener([this](View&v,MotionEvent&e){return onTouch(v,e);});
     }
 
     int selectedWeekDay = (mSelectedWeek == position) ? mSelectedDate.get(

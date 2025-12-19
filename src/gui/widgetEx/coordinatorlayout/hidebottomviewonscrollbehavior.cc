@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widgetEx/hidebottomviewonscrollbehavior.h>
+#include <widgetEx/coordinatorlayout/hidebottomviewonscrollbehavior.h>
 namespace cdroid{
 HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior() {
     mEnterAnimDuration = DEFAULT_ENTER_ANIMATION_DURATION_MS;
@@ -30,6 +30,9 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,
     mExitAnimDuration = attrs.getInt("exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
     mEnterAnimInterpolator = nullptr;
     mExitAnimInterpolator = nullptr;
+}
+
+HideBottomViewOnScrollBehavior::~HideBottomViewOnScrollBehavior(){
 }
 
 bool HideBottomViewOnScrollBehavior::onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection) {
@@ -56,9 +59,9 @@ bool HideBottomViewOnScrollBehavior::onStartNestedScroll(CoordinatorLayout& coor
 
 void HideBottomViewOnScrollBehavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed) {
     if (dyConsumed > 0) {
-        slideDown(child);
+        slideDown(&child);
     } else if (dyConsumed < 0) {
-        slideUp(child);
+        slideUp(&child);
     }
 
 }
@@ -67,15 +70,15 @@ bool HideBottomViewOnScrollBehavior::isScrolledUp() const{
     return mCurrentState == STATE_SCROLLED_UP;
 }
 
-void HideBottomViewOnScrollBehavior::slideUp(View& child) {
+void HideBottomViewOnScrollBehavior::slideUp(View* child) {
     slideUp(child, true);
 }
 
-void HideBottomViewOnScrollBehavior::slideUp(View& child, bool animate) {
+void HideBottomViewOnScrollBehavior::slideUp(View* child, bool animate) {
     if (!isScrolledUp()) {
         if (mCurrentAnimator != nullptr) {
             mCurrentAnimator->cancel();
-            child.clearAnimation();
+            child->clearAnimation();
         }
 
         updateCurrentState(child, STATE_SCROLLED_UP);
@@ -83,7 +86,7 @@ void HideBottomViewOnScrollBehavior::slideUp(View& child, bool animate) {
         if (animate) {
             animateChildTo(child, targetTranslationY, (long)mEnterAnimDuration, mEnterAnimInterpolator);
         } else {
-            child.setTranslationY((float)targetTranslationY);
+            child->setTranslationY((float)targetTranslationY);
         }
 
     }
@@ -93,15 +96,15 @@ bool HideBottomViewOnScrollBehavior::isScrolledDown() const{
     return mCurrentState == STATE_SCROLLED_DOWN;
 }
 
-void HideBottomViewOnScrollBehavior::slideDown(View& child) {
+void HideBottomViewOnScrollBehavior::slideDown(View* child) {
     slideDown(child, true);
 }
 
-void HideBottomViewOnScrollBehavior::slideDown(View& child, bool animate) {
+void HideBottomViewOnScrollBehavior::slideDown(View* child, bool animate) {
     if (!isScrolledDown()) {
         if (mCurrentAnimator != nullptr) {
             mCurrentAnimator->cancel();
-            child.clearAnimation();
+            child->clearAnimation();
         }
 
         updateCurrentState(child, STATE_SCROLLED_DOWN);
@@ -109,33 +112,29 @@ void HideBottomViewOnScrollBehavior::slideDown(View& child, bool animate) {
         if (animate) {
             animateChildTo(child, targetTranslationY, (long)mExitAnimDuration, mExitAnimInterpolator);
         } else {
-            child.setTranslationY((float)targetTranslationY);
+            child->setTranslationY((float)targetTranslationY);
         }
 
     }
 }
 
-void HideBottomViewOnScrollBehavior::updateCurrentState(View& child, int state) {
+void HideBottomViewOnScrollBehavior::updateCurrentState(View* child, int state) {
     mCurrentState = state;
 
     for(OnScrollStateChangedListener& listener : mOnScrollStateChangedListeners) {
-        listener/*.onStateChanged*/(child, mCurrentState);
+        listener/*.onStateChanged*/(*child, mCurrentState);
     }
 
 }
 
-void HideBottomViewOnScrollBehavior::animateChildTo(View& child, int targetY, long duration, TimeInterpolator* interpolator) {
+void HideBottomViewOnScrollBehavior::animateChildTo(View* child, int targetY, long duration, TimeInterpolator* interpolator) {
     Animator::AnimatorListener al;
     al.onAnimationEnd=[this](Animator& animation,bool){
         mCurrentAnimator = nullptr;
     };
-    mCurrentAnimator = &child.animate().translationY((float)targetY);
-    mCurrentAnimator->setInterpolator(interpolator).setDuration(duration).setListener(al);
-    /*new AnimatorListenerAdapter() {
-        public void onAnimationEnd(Animator& animation) {
-            HideBottomViewOnScrollBehavior.this.mCurrentAnimator = null;
-        }
-    });*/
+    mCurrentAnimator = &child->animate().translationY((float)targetY);
+    mCurrentAnimator->setInterpolator(interpolator)
+        .setDuration(duration).setListener(al);
 }
 
 void HideBottomViewOnScrollBehavior::addOnScrollStateChangedListener(const HideBottomViewOnScrollBehavior::OnScrollStateChangedListener& listener) {

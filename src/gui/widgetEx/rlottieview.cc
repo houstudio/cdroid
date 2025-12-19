@@ -32,7 +32,7 @@ void RLottieView::initViewData() {
     mRunning    = false;
     mAutoStart  = false;
     mOneShot    = false;
-    mNextFrame  = std::bind(&RLottieView::nextFrame, this);
+    mNextFrame  = [this](){nextFrame();};
 }
 
 void RLottieView::loadFromFile(const std::string &path) {

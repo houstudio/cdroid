@@ -40,7 +40,7 @@ ToastWindow::ToastWindow(Toast*toast,int x,int y,int w,int h):Window(x,y,w,h){
     mDuration = INT_MAX;
     mTimeElapsed = 100;
     mToast = toast;
-    mTimer = std::bind(&ToastWindow::timeElapsed,this);
+    mTimer = [this](){timeElapsed();};
     postDelayed(mTimer,100);
 }
 

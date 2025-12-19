@@ -28,9 +28,10 @@ AdapterHelper::AdapterHelper(Callback callback, bool disableRecycler)
     mCallback = callback;
     mDisableRecycler = disableRecycler;
     OpReorderer::Callback cbk;
-    cbk.obtainUpdateOp = std::bind(&AdapterHelper::obtainUpdateOp,this,std::placeholders::_1,
-	std::placeholders::_2,std::placeholders::_3,std::placeholders::_4);
-    cbk.recycleUpdateOp= std::bind(&AdapterHelper::recycleUpdateOp,this,std::placeholders::_1);
+    cbk.obtainUpdateOp = [this](int cmd, int positionStart, int itemCount, Object* payload){
+        return obtainUpdateOp(cmd,positionStart,itemCount,payload);
+    };
+    cbk.recycleUpdateOp= [this](UpdateOp* op){recycleUpdateOp(op);};
     mOpReorderer = new OpReorderer(cbk);
 }
 

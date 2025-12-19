@@ -74,9 +74,15 @@ void RadioGroup::init(){
     ViewGroup::OnHierarchyChangeListener lhs;
     mCheckedId = View::NO_ID;
     mInitialCheckedId = false;
-    mChildOnCheckedChangeListener=std::bind(&RadioGroup::onRadioChecked,this,std::placeholders::_1,std::placeholders::_2);
-    lhs.onChildViewAdded  = std::bind(&RadioGroup::onChildViewAdded,this,std::placeholders::_1,std::placeholders::_2);
-    lhs.onChildViewRemoved= std::bind(&RadioGroup::onChildViewRemoved,this,std::placeholders::_1,std::placeholders::_2);
+    mChildOnCheckedChangeListener=[this](CompoundButton&view,bool checked){
+        onRadioChecked(view,checked);
+    };
+    lhs.onChildViewAdded  = [this](View&parent,View*child){
+        onChildViewAdded(parent,child);
+    };
+    lhs.onChildViewRemoved= [this](View&parent,View*child){
+        onChildViewRemoved(parent,child);
+    };
     LinearLayout::setOnHierarchyChangeListener(lhs);
 }
 

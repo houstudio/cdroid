@@ -145,7 +145,7 @@ bool AutoScrollHelper::shouldAnimate() {
 
 void AutoScrollHelper::startAnimating() {
     if (mRunnable == nullptr) {
-        mRunnable = std::bind(&AutoScrollHelper::animationRun,this);
+        mRunnable = [this](){animationRun();};
     }
 
     mAnimating = true;

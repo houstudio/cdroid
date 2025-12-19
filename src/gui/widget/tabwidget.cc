@@ -288,7 +288,7 @@ void TabWidget::addView(View* child) {
 
     // TODO: detect this via geometry with a tabwidget listener rather
     // than potentially interfere with the view's listener
-    child->setOnClickListener(std::bind(&TabWidget::onClickChild,this,std::placeholders::_1,getTabCount() - 1));
+    child->setOnClickListener([this](View&v){onClickChild(v,getTabCount()-1);});
 }
 
 void TabWidget::removeAllViews() {

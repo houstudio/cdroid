@@ -66,13 +66,19 @@ RecyclerView::FastScroller::FastScroller(RecyclerView*recyclerView, StateListDra
     });
     mShowHideAnimator->addUpdateListener(aul);
 
-    mOnScrollListener.onScrolled=[this](RecyclerView& recyclerView, int dx, int dy){
+    mOnScrollListener.onScrolled = [this](RecyclerView& recyclerView, int dx, int dy){
          updateScrollPosition(recyclerView.computeHorizontalScrollOffset(),
                     recyclerView.computeVerticalScrollOffset());
     };
-    mOnItemTouchListener.onInterceptTouchEvent=std::bind(&FastScroller::onInterceptTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onTouchEvent=std::bind(&RecyclerView::FastScroller::onTouchEvent,this,std::placeholders::_1,std::placeholders::_2);
-    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent=std::bind(&FastScroller::onRequestDisallowInterceptTouchEvent,this,std::placeholders::_1);
+    mOnItemTouchListener.onInterceptTouchEvent = [this](RecyclerView&rv,MotionEvent&e){
+        return onInterceptTouchEvent(rv,e);
+    };
+    mOnItemTouchListener.onTouchEvent=[this](RecyclerView&rv,MotionEvent&e){
+        onTouchEvent(rv,e);
+    };
+    mOnItemTouchListener.onRequestDisallowInterceptTouchEvent=[this](bool disallowIntercept){
+        onRequestDisallowInterceptTouchEvent(disallowIntercept);
+    };
     attachToRecyclerView(recyclerView);
 }
 

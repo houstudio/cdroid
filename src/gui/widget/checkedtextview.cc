@@ -34,7 +34,9 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     toggle = [this](){
         doSetChecked(!mChecked);
     };
-    setChecked = std::bind(&CheckedTextView::doSetChecked,this,std::placeholders::_1);
+    setChecked = [this](bool checked){
+        doSetChecked(checked);
+   };
 #endif
 }
 

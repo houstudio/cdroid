@@ -58,7 +58,7 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     }
 
     mPrevButton = (ImageButton*)findViewById(R::id::prev);
-    auto clickListener =std::bind(&DayPickerView::onButtonClick,this,std::placeholders::_1);
+    auto clickListener =[this](View&view){onButtonClick(view);};
     mPrevButton->setOnClickListener(clickListener);
 
     mNextButton = (ImageButton*)findViewById(R::id::next);

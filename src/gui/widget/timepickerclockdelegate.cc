@@ -27,8 +27,12 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
 
     // Set up hour/minute labels.
     mHourView = (NumericTextView*) mainView->findViewById(R::id::hours);
-    mClickListener = std::bind(&TimePickerClockDelegate::onViewClick,this,std::placeholders::_1);
-    mFocusListener =  std::bind(&TimePickerClockDelegate::onViewFocusChange,this,std::placeholders::_1,std::placeholders::_2);
+    mClickListener = [this](View&view){
+        onViewClick(view);
+    }
+    mFocusListener = [this](View&view,bool focused){
+        onViewFocusChange(view,focused);
+    };
     mHourView->setOnClickListener(mClickListener);
     mHourView->setOnFocusChangeListener(mFocusListener);
     mHourView->setOnDigitEnteredListener(mDigitEnteredListener);

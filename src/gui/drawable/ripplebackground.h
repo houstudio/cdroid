@@ -45,6 +45,8 @@ public:
 
 class RippleBackground:public RippleComponent{
 private:
+    class COPACITY;
+    static const COPACITY OPACITY;
     static constexpr  int OPACITY_DURATION = 80;
     ValueAnimator* mAnimator;
     float mOpacity = 0;
@@ -55,6 +57,7 @@ private:
     void onStateChanged();
 public:
     RippleBackground(RippleDrawable* owner,const Rect& bounds, bool isBounded);
+    ~RippleBackground()override;
     bool isVisible()const;
     void draw(Canvas& c,float alpha);
     void setState(bool focused, bool hovered, bool pressed);

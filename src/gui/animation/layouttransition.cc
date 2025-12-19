@@ -803,15 +803,16 @@ void LayoutTransition::showChild(ViewGroup* parent, View* child, int oldVisibili
 }
 
 void LayoutTransition::addTransitionListener(const TransitionListener& listener){
-    mListeners.push_back(listener);
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it==mListeners.end()){
+        mListeners.push_back(listener);
+    }
 }
 
 void LayoutTransition::removeTransitionListener(const TransitionListener& listener){
-    for(auto it = mListeners.begin();it!=mListeners.end();it++){
-        if((it->startTransition==listener.startTransition) && (it->endTransition==listener.endTransition)){
-            mListeners.erase(it);
-            break;
-        }
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it!=mListeners.end()){
+        mListeners.erase(it);
     }
 }
 
