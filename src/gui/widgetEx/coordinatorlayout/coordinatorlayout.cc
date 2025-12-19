@@ -261,31 +261,30 @@ bool CoordinatorLayout::performIntercept(MotionEvent& ev,int type) {
             if (b != nullptr) {
                 if (cancelEvent == nullptr) {
                     const auto now = SystemClock::uptimeMillis();
-                    cancelEvent = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-                }
-                switch (type) {
-                case TYPE_ON_INTERCEPT:
-                    b->onInterceptTouchEvent(*this, *child, *cancelEvent);
-                    break;
-                case TYPE_ON_TOUCH:
-                    b->onTouchEvent(*this, *child, *cancelEvent);
-                    break;
+                    cancelEvent = obtainCancelEvent(ev);
+                    performEvent(b,*child,*cancelEvent,type);
                 }
             }
             continue;
         }
 
-        if (!intercepted && (b != nullptr)) {
-            switch (type) {
-            case TYPE_ON_INTERCEPT:
-                intercepted = b->onInterceptTouchEvent(*this, *child, ev);
-                break;
-            case TYPE_ON_TOUCH:
-                intercepted = b->onTouchEvent(*this, *child, ev);
-                break;
-            }
-            if (intercepted) {
+        if (!newBlock && intercepted && (b != nullptr)) {
+            intercepted = performEvent(b,*child,ev,type);
+            if(intercepted){
                 mBehaviorTouchView = child;
+                // If a behavior intercepted an event then send cancel events to all the prior
+                // behaviors.
+                if (action != MotionEvent::ACTION_CANCEL && action != MotionEvent::ACTION_UP) {
+                    for (int j = 0; j < i; j++) {
+                        View* priorChild = topmostChildList.at(j);
+                        Behavior* priorBehavior =
+                                ((LayoutParams*) priorChild->getLayoutParams())->getBehavior();
+                        if (priorBehavior != nullptr) {
+                            if (cancelEvent == nullptr) cancelEvent = obtainCancelEvent(ev);
+                            performEvent(priorBehavior, *priorChild, *cancelEvent, type);
+                        }
+                    }
+                }
             }
         }
 
@@ -302,8 +301,26 @@ bool CoordinatorLayout::performIntercept(MotionEvent& ev,int type) {
     }
 
     topmostChildList.clear();
-
+    if(cancelEvent){
+        cancelEvent->recycle();
+    }
     return intercepted;
+}
+
+bool CoordinatorLayout::performEvent(Behavior* behavior, View& child, MotionEvent& ev, int type) {
+    switch (type) {
+    case TYPE_ON_INTERCEPT:
+        return behavior->onInterceptTouchEvent(*this, child, ev);
+    case TYPE_ON_TOUCH:
+        return behavior->onTouchEvent(*this, child, ev);
+    }
+    return false;
+}
+
+MotionEvent* CoordinatorLayout::obtainCancelEvent(MotionEvent& other) {
+    MotionEvent* event = MotionEvent::obtain(other);
+    event->setAction(MotionEvent::ACTION_CANCEL);
+    return event;
 }
 
 bool CoordinatorLayout::onInterceptTouchEvent(MotionEvent& ev) {

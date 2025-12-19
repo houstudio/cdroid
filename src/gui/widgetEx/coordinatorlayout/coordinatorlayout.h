@@ -117,6 +117,8 @@ private:
     void resetTouchBehaviors(bool notifyOnInterceptTouchEvent);
     void getTopSortedChildren(std::vector<View*>& out);
     bool performIntercept(MotionEvent& ev,int type);
+    bool performEvent(Behavior* behavior,View& child,MotionEvent& ev,int type);
+    MotionEvent* obtainCancelEvent(MotionEvent& other);
     int getKeyline(int index)const;
     void prepareChildren();
     WindowInsets dispatchApplyWindowInsetsToBehaviors(WindowInsets insets);

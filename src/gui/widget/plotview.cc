@@ -761,6 +761,7 @@ void PlotView::onDraw(cdroid::Canvas&p){
 
     //p.fillRect(rect(), backgroundColor());
     p.translate(getPaddingLeft(), getPaddingTop());
+    drawAxes(p);
 
     setPixRect();
     r= d->pixRect;
@@ -775,8 +776,6 @@ void PlotView::onDraw(cdroid::Canvas&p){
         po->draw(p, this);
     }
     p.restore();//This save/restore used to reset clip area
-
-    drawAxes(p);
 }
 
 void PlotView::drawAxes(cdroid::Canvas&p){

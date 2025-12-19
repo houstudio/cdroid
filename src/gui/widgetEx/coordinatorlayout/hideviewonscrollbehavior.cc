@@ -3,7 +3,9 @@
 #include <widgetEx/coordinatorlayout/hiderightviewonscrolldelegate.h>
 #include <widgetEx/coordinatorlayout/hidebottomviewonscrolldelegate.h>
 namespace cdroid{
-HideViewOnScrollBehavior::HideViewOnScrollBehavior() {}
+HideViewOnScrollBehavior::HideViewOnScrollBehavior() {
+    mHideOnScrollViewDelegate = nullptr;
+}
 
 HideViewOnScrollBehavior::HideViewOnScrollBehavior(int viewEdge):HideViewOnScrollBehavior(){
     setViewEdge(viewEdge);
@@ -14,6 +16,7 @@ HideViewOnScrollBehavior::HideViewOnScrollBehavior(Context* context, const Attri
 }
 
 HideViewOnScrollBehavior::~HideViewOnScrollBehavior(){
+    delete mHideOnScrollViewDelegate;
 }
 
 void HideViewOnScrollBehavior::setViewEdge(View* view, int layoutDirection) {
@@ -41,6 +44,7 @@ void HideViewOnScrollBehavior::setViewEdgeInternal(int viewEdge) {
     if((mHideOnScrollViewDelegate!=nullptr)&&(mHideOnScrollViewDelegate->getViewEdge() == viewEdge)){
         return;
     }
+    delete mHideOnScrollViewDelegate;
     switch (viewEdge) {
     case EDGE_RIGHT:
         mHideOnScrollViewDelegate = new HideRightViewOnScrollDelegate();

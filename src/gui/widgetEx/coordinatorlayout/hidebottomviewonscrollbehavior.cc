@@ -63,7 +63,6 @@ void HideBottomViewOnScrollBehavior::onNestedScroll(CoordinatorLayout& coordinat
     } else if (dyConsumed < 0) {
         slideUp(&child);
     }
-
 }
 
 bool HideBottomViewOnScrollBehavior::isScrolledUp() const{
