@@ -30,11 +30,13 @@ private:
     static constexpr int DEFAULT_EXIT_ANIMATION_DURATION_MS = 175;
     int mEnterAnimDuration;
     int mExitAnimDuration;
-    TimeInterpolator* mEnterAnimInterpolator;
-    TimeInterpolator* mExitAnimInterpolator;
     int mHeight = 0;
     int mCurrentState = 2;
     int mAdditionalHiddenOffsetY = 0;
+    bool mDisableOnTouchExploration;
+    TimeInterpolator* mEnterAnimInterpolator;
+    TimeInterpolator* mExitAnimInterpolator;
+    AccessibilityManager*mAccessibilityManager;
     ViewPropertyAnimator* mCurrentAnimator;
 private:
     void updateCurrentState(View* child, int state);
@@ -45,7 +47,7 @@ public:
     ~HideBottomViewOnScrollBehavior()override;
     bool onLayoutChild(CoordinatorLayout& parent, View& child, int layoutDirection)override;
 
-    void setAdditionalHiddenOffsetY(View& child, int offset);
+    void setAdditionalHiddenOffsetY(View* child, int offset);
 
     bool onStartNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild, View& target, int nestedScrollAxes, int type)override;
     void onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed)override;
@@ -61,6 +63,9 @@ public:
     void addOnScrollStateChangedListener(const OnScrollStateChangedListener& listener);
     void removeOnScrollStateChangedListener(const OnScrollStateChangedListener& listener);
     void clearOnScrollStateChangedListeners();
+
+    void disableOnTouchExploration(bool disableOnTouchExploration);
+    bool isDisabledOnTouchExploration()const;
 };
 }/*endof namespace*/
 #endif/*__HIDE_BOTTOMVIEW_ONSCROLL_BEHAVIOR_H__*/
