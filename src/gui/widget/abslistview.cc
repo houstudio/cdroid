@@ -4199,6 +4199,7 @@ AbsListView::AbsRunnable::AbsRunnable(AbsListView*lv)
 AbsListView::WindowRunnable::WindowRunnable(AbsListView*lv):AbsRunnable(lv) {
     mOriginalAttachCount=0;
 }
+
 void AbsListView::WindowRunnable::rememberWindowAttachCount() {
     mOriginalAttachCount = mLV->getWindowAttachCount();
 }

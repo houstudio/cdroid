@@ -22,6 +22,7 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior() {
     mExitAnimDuration = DEFAULT_EXIT_ANIMATION_DURATION_MS;
     mEnterAnimInterpolator = nullptr;
     mExitAnimInterpolator = nullptr;
+    mDisableOnTouchExploration = true;
 }
 
 HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,const AttributeSet& attrs)
@@ -30,6 +31,7 @@ HideBottomViewOnScrollBehavior::HideBottomViewOnScrollBehavior(Context* context,
     mExitAnimDuration = attrs.getInt("exitAnimDuration",DEFAULT_EXIT_ANIMATION_DURATION_MS);
     mEnterAnimInterpolator = nullptr;
     mExitAnimInterpolator = nullptr;
+    mDisableOnTouchExploration = true;
 }
 
 HideBottomViewOnScrollBehavior::~HideBottomViewOnScrollBehavior(){
@@ -45,16 +47,16 @@ bool HideBottomViewOnScrollBehavior::onLayoutChild(CoordinatorLayout& parent, Vi
     return CoordinatorLayout::Behavior::onLayoutChild(parent, child, layoutDirection);
 }
 
-void HideBottomViewOnScrollBehavior::setAdditionalHiddenOffsetY(View& child, int offset) {
+void HideBottomViewOnScrollBehavior::setAdditionalHiddenOffsetY(View* child, int offset) {
     mAdditionalHiddenOffsetY = offset;
-    if (mCurrentState == STATE_SCROLLED_DOWN) {
-        child.setTranslationY((float)(mHeight + mAdditionalHiddenOffsetY));
+    if ((child!=nullptr)&&mCurrentState == STATE_SCROLLED_DOWN) {
+        child->setTranslationY((float)(mHeight + mAdditionalHiddenOffsetY));
     }
 
 }
 
 bool HideBottomViewOnScrollBehavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild, View& target, int nestedScrollAxes, int type) {
-    return nestedScrollAxes == 2;
+    return nestedScrollAxes == View::TYPE_TOUCH/*2*/;
 }
 
 void HideBottomViewOnScrollBehavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed) {
@@ -63,7 +65,6 @@ void HideBottomViewOnScrollBehavior::onNestedScroll(CoordinatorLayout& coordinat
     } else if (dyConsumed < 0) {
         slideUp(&child);
     }
-
 }
 
 bool HideBottomViewOnScrollBehavior::isScrolledUp() const{
@@ -101,21 +102,28 @@ void HideBottomViewOnScrollBehavior::slideDown(View* child) {
 }
 
 void HideBottomViewOnScrollBehavior::slideDown(View* child, bool animate) {
-    if (!isScrolledDown()) {
-        if (mCurrentAnimator != nullptr) {
-            mCurrentAnimator->cancel();
-            child->clearAnimation();
-        }
-
-        updateCurrentState(child, STATE_SCROLLED_DOWN);
-        int targetTranslationY = mHeight + mAdditionalHiddenOffsetY;
-        if (animate) {
-            animateChildTo(child, targetTranslationY, (long)mExitAnimDuration, mExitAnimInterpolator);
-        } else {
-            child->setTranslationY((float)targetTranslationY);
-        }
-
+    if (isScrolledDown()){
+        return;
     }
+     // If Touch Exploration is on, we should disable sliding down due to a11y issues.
+    if (mDisableOnTouchExploration
+        && mAccessibilityManager != nullptr
+        && mAccessibilityManager->isTouchExplorationEnabled()) {
+         return;
+    }
+    if (mCurrentAnimator != nullptr) {
+        mCurrentAnimator->cancel();
+        child->clearAnimation();
+    }
+
+    updateCurrentState(child, STATE_SCROLLED_DOWN);
+    int targetTranslationY = mHeight + mAdditionalHiddenOffsetY;
+    if (animate) {
+        animateChildTo(child, targetTranslationY, (long)mExitAnimDuration, mExitAnimInterpolator);
+    } else {
+        child->setTranslationY((float)targetTranslationY);
+    }
+
 }
 
 void HideBottomViewOnScrollBehavior::updateCurrentState(View* child, int state) {
@@ -155,4 +163,13 @@ void HideBottomViewOnScrollBehavior::clearOnScrollStateChangedListeners() {
     mOnScrollStateChangedListeners.clear();
 }
 
+/** Sets whether or not to disable this behavior if touch exploration is enabled. */
+void HideBottomViewOnScrollBehavior::disableOnTouchExploration(bool disableOnTouchExploration) {
+    mDisableOnTouchExploration = disableOnTouchExploration;
+}
+
+/** Returns whether or not this behavior is disabled if touch exploration is enabled. */
+bool HideBottomViewOnScrollBehavior::isDisabledOnTouchExploration() const{
+    return mDisableOnTouchExploration;
+}
 }

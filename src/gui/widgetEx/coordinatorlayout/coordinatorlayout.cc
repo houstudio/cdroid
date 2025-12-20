@@ -45,7 +45,6 @@ CoordinatorLayout::CoordinatorLayout(Context* context,const AttributeSet& attrs)
         }
     }
     mStatusBarBackground = attrs.getDrawable("statusBarBackground");
-
 }
 
 void CoordinatorLayout::initView() {
@@ -53,6 +52,9 @@ void CoordinatorLayout::initView() {
     mBehaviorTouchView = nullptr;
     mNestedScrollingTarget = nullptr;
     mStatusBarBackground = nullptr;
+    mDisallowInterceptReset = false;
+    mIsAttachedToWindow = false;
+    mNeedsPreDrawListener= false;
     mNestedScrollingParentHelper = new NestedScrollingParentHelper(this);
     setupForInsets();
     OnHierarchyChangeListener hcl;
@@ -81,7 +83,7 @@ void CoordinatorLayout::setOnHierarchyChangeListener(const OnHierarchyChangeList
 
 void CoordinatorLayout::onAttachedToWindow() {
     ViewGroup::onAttachedToWindow();
-    resetTouchBehaviors(false);
+    resetTouchBehaviors();
     if (mNeedsPreDrawListener) {
         if (mOnPreDrawListener == nullptr) {
             mOnPreDrawListener = [this]() {
@@ -102,7 +104,7 @@ void CoordinatorLayout::onAttachedToWindow() {
 
 void CoordinatorLayout::onDetachedFromWindow() {
     ViewGroup::onDetachedFromWindow();
-    resetTouchBehaviors(false);
+    resetTouchBehaviors();
     if (mNeedsPreDrawListener && mOnPreDrawListener != nullptr) {
         ViewTreeObserver* vto = getViewTreeObserver();
         vto->removeOnPreDrawListener(mOnPreDrawListener);
@@ -188,30 +190,45 @@ WindowInsets CoordinatorLayout::getLastWindowInsets() {
     return *mLastInsets;
 } 
 
-void CoordinatorLayout::resetTouchBehaviors(bool notifyOnInterceptTouchEvent) {
+void CoordinatorLayout::cancelInterceptBehaviors() {
+    MotionEvent* cancelEvent = nullptr;
     const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
         Behavior* b = lp->getBehavior();
         if (b != nullptr) {
-            auto now = SystemClock::uptimeMillis();
-            MotionEvent* cancelEvent = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-            if (notifyOnInterceptTouchEvent) {
-                b->onInterceptTouchEvent(*this, *child, *cancelEvent);
-            } else {
-                b->onTouchEvent(*this, *child, *cancelEvent);
+            if (cancelEvent == nullptr) {
+                auto now = SystemClock::uptimeMillis();
+                cancelEvent = MotionEvent::obtain(now, now,
+                        MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
             }
-            cancelEvent->recycle();
+            b->onInterceptTouchEvent(*this, *child, *cancelEvent);
         }
     }
+    if (cancelEvent != nullptr) {
+        cancelEvent->recycle();
+    }
+}
 
+void CoordinatorLayout::resetTouchBehaviors() {
+    if(mBehaviorTouchView!=nullptr){
+        LayoutParams* lp = (LayoutParams*) mBehaviorTouchView->getLayoutParams();
+        Behavior* b = lp->getBehavior();
+        if (b != nullptr) {
+            auto now = SystemClock::uptimeMillis();
+            MotionEvent* cancelEvent = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
+            b->onTouchEvent(*this, *mBehaviorTouchView, *cancelEvent);
+            cancelEvent->recycle();
+        }
+        mBehaviorTouchView = nullptr;
+    }
+    const int childCount = getChildCount();
     for (int i = 0; i < childCount; i++) {
         View* child = getChildAt(i);
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
         lp->resetTouchBehaviorTracking();
     }
-    mBehaviorTouchView = nullptr;
     mDisallowInterceptReset = false;
 }
 
@@ -259,33 +276,29 @@ bool CoordinatorLayout::performIntercept(MotionEvent& ev,int type) {
             // Cancel all behaviors beneath the one that intercepted.
             // If the event is "down" then we don't have anything to cancel yet.
             if (b != nullptr) {
-                if (cancelEvent == nullptr) {
-                    const auto now = SystemClock::uptimeMillis();
-                    cancelEvent = MotionEvent::obtain(now, now,MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-                }
-                switch (type) {
-                case TYPE_ON_INTERCEPT:
-                    b->onInterceptTouchEvent(*this, *child, *cancelEvent);
-                    break;
-                case TYPE_ON_TOUCH:
-                    b->onTouchEvent(*this, *child, *cancelEvent);
-                    break;
-                }
+                if (cancelEvent == nullptr) cancelEvent = obtainCancelEvent(ev);
+                performEvent(b,*child,*cancelEvent,type);
             }
             continue;
         }
 
-        if (!intercepted && (b != nullptr)) {
-            switch (type) {
-            case TYPE_ON_INTERCEPT:
-                intercepted = b->onInterceptTouchEvent(*this, *child, ev);
-                break;
-            case TYPE_ON_TOUCH:
-                intercepted = b->onTouchEvent(*this, *child, ev);
-                break;
-            }
-            if (intercepted) {
+        if (!newBlock && !intercepted && (b != nullptr)) {
+            intercepted = performEvent(b,*child,ev,type);
+            if(intercepted){
                 mBehaviorTouchView = child;
+                // If a behavior intercepted an event then send cancel events to all the prior
+                // behaviors.
+                if (action != MotionEvent::ACTION_CANCEL && action != MotionEvent::ACTION_UP) {
+                    for (int j = 0; j < i; j++) {
+                        View* priorChild = topmostChildList.at(j);
+                        Behavior* priorBehavior =
+                                ((LayoutParams*) priorChild->getLayoutParams())->getBehavior();
+                        if (priorBehavior != nullptr) {
+                            if (cancelEvent == nullptr) cancelEvent = obtainCancelEvent(ev);
+                            performEvent(priorBehavior, *priorChild, *cancelEvent, type);
+                        }
+                    }
+                }
             }
         }
 
@@ -302,8 +315,26 @@ bool CoordinatorLayout::performIntercept(MotionEvent& ev,int type) {
     }
 
     topmostChildList.clear();
-
+    if(cancelEvent!=nullptr){
+        cancelEvent->recycle();
+    }
     return intercepted;
+}
+
+bool CoordinatorLayout::performEvent(Behavior* behavior, View& child, MotionEvent& ev, int type) {
+    switch (type) {
+    case TYPE_ON_INTERCEPT:
+        return behavior->onInterceptTouchEvent(*this, child, ev);
+    case TYPE_ON_TOUCH:
+        return behavior->onTouchEvent(*this, child, ev);
+    }
+    return false;
+}
+
+MotionEvent* CoordinatorLayout::obtainCancelEvent(MotionEvent& other) {
+    MotionEvent* event = MotionEvent::obtain(other);
+    event->setAction(MotionEvent::ACTION_CANCEL);
+    return event;
 }
 
 bool CoordinatorLayout::onInterceptTouchEvent(MotionEvent& ev) {
@@ -311,25 +342,24 @@ bool CoordinatorLayout::onInterceptTouchEvent(MotionEvent& ev) {
 
     // Make sure we reset in case we had missed a previous important event.
     if (action == MotionEvent::ACTION_DOWN) {
-        resetTouchBehaviors(true);
+        resetTouchBehaviors();
     }
 
     const bool intercepted = performIntercept(ev, TYPE_ON_INTERCEPT);
 
-    if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
-        resetTouchBehaviors(true);
+    if ((action == MotionEvent::ACTION_UP) || (action == MotionEvent::ACTION_CANCEL)) {
+        mBehaviorTouchView = nullptr;
+        resetTouchBehaviors();
     }
-
     return intercepted;
 }
 
 bool CoordinatorLayout::onTouchEvent(MotionEvent& ev) {
     bool handled = false;
     bool cancelSuper = false;
-    MotionEvent* cancelEvent = nullptr;
     const int action = ev.getActionMasked();
 
-    if (mBehaviorTouchView || (cancelSuper = performIntercept(ev, TYPE_ON_TOUCH))) {
+    if (mBehaviorTouchView!=nullptr) {
         // Safe since performIntercept guarantees that
         // mBehaviorTouchView != null if it returns true
         LayoutParams* lp = (LayoutParams*) mBehaviorTouchView->getLayoutParams();
@@ -337,29 +367,23 @@ bool CoordinatorLayout::onTouchEvent(MotionEvent& ev) {
         if (b != nullptr) {
             handled = b->onTouchEvent(*this, *mBehaviorTouchView, ev);
         }
+    }else{
+        handled = performIntercept(ev, TYPE_ON_TOUCH);
+        cancelSuper = (action != MotionEvent::ACTION_DOWN) && handled;
     }
 
     // Keep the super implementation correct
-    if (mBehaviorTouchView == nullptr) {
+    if ((mBehaviorTouchView == nullptr)||(action==MotionEvent::ACTION_CANCEL)) {
         handled |= ViewGroup::onTouchEvent(ev);
     } else if (cancelSuper) {
-        if (cancelEvent == nullptr) {
-            const auto now = SystemClock::uptimeMillis();
-            cancelEvent = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0.0f, 0.0f, 0);
-        }
+        MotionEvent*cancelEvent = obtainCancelEvent(ev);
         ViewGroup::onTouchEvent(*cancelEvent);
-    }
-
-    if (!handled && action == MotionEvent::ACTION_DOWN) {
-
-    }
-
-    if (cancelEvent != nullptr) {
         cancelEvent->recycle();
     }
 
     if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
-        resetTouchBehaviors(false);
+        mBehaviorTouchView = nullptr;
+        resetTouchBehaviors();
     }
 
     return handled;
@@ -368,7 +392,12 @@ bool CoordinatorLayout::onTouchEvent(MotionEvent& ev) {
 void CoordinatorLayout::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
     ViewGroup::requestDisallowInterceptTouchEvent(disallowIntercept);
     if (disallowIntercept && !mDisallowInterceptReset) {
-        resetTouchBehaviors(false);
+        // If there is no behavior currently handling touches then send a cancel event to all
+        // behavior's intercept methods.
+        if(mBehaviorTouchView==nullptr){
+            cancelInterceptBehaviors();
+        }
+        resetTouchBehaviors();
         mDisallowInterceptReset = true;
     }
 }
@@ -497,6 +526,7 @@ void CoordinatorLayout::prepareChildren() {
     // We also need to reverse the result since we want the start of the list to contain
     // Views which have no dependencies, then dependent views after that
     //Collections.reverse(mDependencySortedChildren);
+    std::reverse(mDependencySortedChildren.begin(),mDependencySortedChildren.end());
 }
 
 void CoordinatorLayout::getDescendantRect(View* descendant, Rect& out) {
@@ -1404,6 +1434,49 @@ void CoordinatorLayout::onNestedScroll(View* target, int dxConsumed, int dyConsu
     }
 }
 
+void CoordinatorLayout::onNestedScroll(View* target, int dxConsumed, int dyConsumed,
+        int dxUnconsumed, int dyUnconsumed, int type, int *consumed) {
+    const int childCount = getChildCount();
+    bool accepted = false;
+    int xConsumed = 0;
+    int yConsumed = 0;
+
+    for (int i = 0; i < childCount; i++) {
+        View* view = getChildAt(i);
+        if (view->getVisibility() == GONE) {
+            // If the child is GONE, skip...
+            continue;
+        }
+
+        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+        if (!lp->isNestedScrollAccepted(type)) {
+            continue;
+        }
+
+        Behavior* viewBehavior = lp->getBehavior();
+        if (viewBehavior != nullptr) {
+            int mBehaviorConsumed[] ={0,0};
+
+            viewBehavior->onNestedScroll(*this, *view, *target, dxConsumed, dyConsumed,
+                    dxUnconsumed, dyUnconsumed, type, mBehaviorConsumed);
+
+            xConsumed = dxUnconsumed > 0 ? std::max(xConsumed, mBehaviorConsumed[0])
+                    : std::min(xConsumed, mBehaviorConsumed[0]);
+            yConsumed = dyUnconsumed > 0 ? std::max(yConsumed, mBehaviorConsumed[1])
+                    : std::min(yConsumed, mBehaviorConsumed[1]);
+
+            accepted = true;
+        }
+    }
+
+    consumed[0] += xConsumed;
+    consumed[1] += yConsumed;
+
+    if (accepted) {
+        onChildViewsChanged(EVENT_NESTED_SCROLL);
+    }
+}
+
 void CoordinatorLayout::onNestedPreScroll(View* target, int dx, int dy, int* consumed) {
     onNestedPreScroll(target, dx, dy, consumed, View::TYPE_TOUCH);
 }
@@ -1512,6 +1585,75 @@ void* CoordinatorLayout::Behavior::getTag(View& child) {
     LayoutParams* lp = (LayoutParams*)child.getLayoutParams();
     return lp->mBehaviorTag;
 }
+
+bool CoordinatorLayout::Behavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout,
+    View& child, View& directTargetChild, View& target, int axes) {
+    return false;
+}
+
+bool CoordinatorLayout::Behavior::onStartNestedScroll(CoordinatorLayout& coordinatorLayout,View& child,
+      View& directTargetChild, View& target, int axes, int type) {
+    if (type == View::TYPE_TOUCH) {
+        return onStartNestedScroll(coordinatorLayout, child, directTargetChild, target, axes);
+    }
+    return false;
+}
+
+void CoordinatorLayout::Behavior::onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout,
+    View& child, View& directTargetChild, View& target, int axes) {
+    /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedScrollAccepted(CoordinatorLayout& coordinatorLayout, View& child, View& directTargetChild,
+    View& target, int axes, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onNestedScrollAccepted(coordinatorLayout, child, directTargetChild, target, axes);
+    }
+}
+
+void CoordinatorLayout::Behavior::onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target) {
+    /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onStopNestedScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onStopNestedScroll(coordinatorLayout, child, target);
+    }
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed) {
+     /*Do nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type) {
+    if (type == View::TYPE_TOUCH) {
+        onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed, dxUnconsumed, dyUnconsumed);
+    }
+}
+
+void CoordinatorLayout::Behavior::onNestedScroll(CoordinatorLayout& coordinatorLayout, View& child,
+        View& target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type,int*consumed){
+    // In the case that this nested scrolling v3 version is not implemented, we call the v2
+    // version in case the v2 version is. We Also consume all of the unconsumed scroll
+    // distances.
+    consumed[0] += dxUnconsumed;
+    consumed[1] += dyUnconsumed;
+    onNestedScroll(coordinatorLayout, child, target, dxConsumed, dyConsumed,
+            dxUnconsumed, dyUnconsumed, type);
+}
+
+void CoordinatorLayout::Behavior::onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dx, int dy, int* consumed){
+    /*Do Nothing*/
+}
+
+void CoordinatorLayout::Behavior::onNestedPreScroll(CoordinatorLayout& coordinatorLayout, View& child, View& target, int dx, int dy, int* consumed, int type){
+    if(type==View::TYPE_TOUCH){
+        onNestedPreScroll(coordinatorLayout,child,target,dx,dy,consumed,type);
+    }
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 CoordinatorLayout::LayoutParams::LayoutParams(int width, int height)
     :MarginLayoutParams(width,height) {
@@ -1529,6 +1671,10 @@ void CoordinatorLayout::LayoutParams::init() {
     mAnchorView = nullptr;
     mAnchorDirectChild = nullptr;
     mBehaviorTag = nullptr;
+    mDidBlockInteraction = false;
+    mDidChangeAfterNestedScroll = false;
+    mDidAcceptNestedScrollTouch = false;
+    mDidAcceptNestedScrollNonTouch=false;
 }
 
 CoordinatorLayout::LayoutParams::~LayoutParams() {
