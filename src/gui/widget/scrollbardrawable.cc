@@ -78,11 +78,11 @@ void ScrollBarDrawable::setParameters(int range, int offset, int extent, bool ve
 }
 
 void ScrollBarDrawable::draw(Canvas&canvas) {
-    bool bdrawTrack = true;
-    bool bdrawThumb = true;
+    bool bDrawTrack = true;
+    bool bDrawThumb = true;
     if (mExtent <= 0 || mRange <= mExtent) {
-        bdrawTrack = mVertical ? mAlwaysDrawVerticalTrack : mAlwaysDrawHorizontalTrack;
-        bdrawThumb = false;
+        bDrawTrack = mVertical ? mAlwaysDrawVerticalTrack : mAlwaysDrawHorizontalTrack;
+        bDrawThumb = false;
     }
 
     Rect r = getBounds();
@@ -93,9 +93,9 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     rcClip.set(int(x1),int(y1),int(std::abs(x2-x1)),int(std::abs(y2-y1)));
     if(!rcClip.intersect(r))return;
 
-    if (bdrawTrack)drawTrack(canvas, r, mVertical);
+    if (bDrawTrack)drawTrack(canvas, r, mVertical);
 
-    if (bdrawThumb) {
+    if (bDrawThumb) {
         const int scrollBarLength = mVertical ? r.height : r.width;
         const int thickness   = mVertical ? r.width : r.height;
         const int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
@@ -136,7 +136,7 @@ void ScrollBarDrawable::drawTrack(Canvas&canvas,const Rect& bounds, bool vertica
 }
 
 void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset, int length, bool vertical) {
-    bool changed = mRangeChanged || mBoundsChanged;
+    const bool changed = mRangeChanged || mBoundsChanged;
     if (vertical) {
         if (mVerticalThumb != nullptr) {
             if (changed)
@@ -195,7 +195,7 @@ Drawable*ScrollBarDrawable::getVerticalThumbDrawable()const{
 }
 
 Drawable*ScrollBarDrawable::getVerticalTrackDrawable()const{
-    return mHorizontalThumb;
+    return mVerticalTrack;
 }
 
 Drawable*ScrollBarDrawable::getHorizontalThumbDrawable()const{

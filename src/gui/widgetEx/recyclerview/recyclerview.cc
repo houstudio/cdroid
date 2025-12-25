@@ -6680,14 +6680,12 @@ bool RecyclerView::LayoutManager::performAccessibilityActionForItem(Recycler& re
 
 RecyclerView::LayoutManager::Properties RecyclerView::LayoutManager::getProperties(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes) {
     Properties properties;
-    //TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.RecyclerView, defStyleAttr, defStyleRes);
     properties.orientation = attrs.getInt("orientation",std::unordered_map<std::string,int>{
             {"horizontal",LinearLayout::HORIZONTAL},
             {"vertical",LinearLayout::VERTICAL}}, DEFAULT_ORIENTATION);//a.getInt(R.styleable.RecyclerView_android_orientation, DEFAULT_ORIENTATION);
     properties.spanCount = attrs.getInt("spanCount",1);//a.getInt(R.styleable.RecyclerView_spanCount, 1);
     properties.reverseLayout = attrs.getBoolean("reverseLayout",false);//a.getBoolean(R.styleable.RecyclerView_reverseLayout, false);
     properties.stackFromEnd = attrs.getBoolean("stackFromEnd",false);//a.getBoolean(R.styleable.RecyclerView_stackFromEnd, false);
-    //a.recycle();
     return properties;
 }
 

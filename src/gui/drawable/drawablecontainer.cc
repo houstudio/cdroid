@@ -366,6 +366,7 @@ void DrawableContainer::DrawableContainerState::computeConstantSize() {
         if (s > mConstantMinimumHeight) mConstantMinimumHeight = s;
     }
 }
+
 bool DrawableContainer::DrawableContainerState::isStateful(){
     if (mCheckedStateful)
         return mStateful;
@@ -401,6 +402,7 @@ int DrawableContainer::DrawableContainerState::getOpacity(){
     mCheckedOpacity = true;
     return op;
 }
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 DrawableContainer::DrawableContainer(){
     mDrawableContainerState= std::make_shared<DrawableContainerState>(nullptr,this);

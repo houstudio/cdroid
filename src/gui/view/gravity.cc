@@ -110,7 +110,7 @@ void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, in
 }
 
 void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, int yAdj, Rect& outRect, int layoutDirection){
-    int absGravity = getAbsoluteGravity(gravity, layoutDirection);
+    const int absGravity = getAbsoluteGravity(gravity, layoutDirection);
     apply(absGravity, w, h, container, xAdj, yAdj, outRect);
 }
 
