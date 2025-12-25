@@ -32,6 +32,7 @@
 #include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
+#include <widget/scrollbarutils.h>
 #include <animation/animationutils.h>
 #include <utils/textutils.h>
 #include <core/systemclock.h>
@@ -2492,8 +2493,8 @@ bool View::isOnVerticalScrollbarThumb(int x,int y){
         const int range = computeVerticalScrollRange();
         const int offset = computeVerticalScrollOffset();
         const int extent = computeVerticalScrollExtent();
-        const int thumbLength = ViewConfiguration::getThumbLength(bounds.height, bounds.width,extent, range);
-        const int thumbOffset = ViewConfiguration::getThumbOffset(bounds.height, thumbLength, extent, range, offset);
+        const int thumbLength = ScrollBarUtils::getThumbLength(bounds.height, bounds.width,extent, range);
+        const int thumbOffset = ScrollBarUtils::getThumbOffset(bounds.height, thumbLength, extent, range, offset);
         const int thumbTop = bounds.top + thumbOffset;
         const int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
         if (x >= touchBounds.left && x <= touchBounds.right()
@@ -2516,8 +2517,8 @@ bool View::isOnHorizontalScrollbarThumb(int x,int y){
         const int range = computeHorizontalScrollRange();
         const int offset = computeHorizontalScrollOffset();
         const int extent = computeHorizontalScrollExtent();
-        const int thumbLength = ViewConfiguration::getThumbLength(bounds.width, bounds.height,extent, range);
-        const int thumbOffset = ViewConfiguration::getThumbOffset(bounds.width, thumbLength,extent, range, offset);
+        const int thumbLength = ScrollBarUtils::getThumbLength(bounds.width, bounds.height,extent, range);
+        const int thumbOffset = ScrollBarUtils::getThumbOffset(bounds.width, thumbLength,extent, range, offset);
         const int thumbLeft = bounds.left + thumbOffset;
         const int adjust = std::max(mScrollCache->scrollBarMinTouchTarget - thumbLength, 0) / 2;
         if (x >= thumbLeft - adjust && x <= thumbLeft + thumbLength + adjust
@@ -8341,9 +8342,9 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
             const int offset = computeVerticalScrollOffset();
             const int extent = computeVerticalScrollExtent();
 
-            const int thumbLength = ViewConfiguration::getThumbLength(
+            const int thumbLength = ScrollBarUtils::getThumbLength(
                     bounds.height, bounds.width, extent, range);
-            const int thumbOffset = ViewConfiguration::getThumbOffset(
+            const int thumbOffset = ScrollBarUtils::getThumbOffset(
                             bounds.height, thumbLength, extent, range, offset);
 
             const float diff = y - mScrollCache->mScrollBarDraggingPos;
@@ -8368,9 +8369,9 @@ bool View::handleScrollBarDragging(MotionEvent& event) {
             const int offset = computeHorizontalScrollOffset();
             const int extent = computeHorizontalScrollExtent();
 
-            const int thumbLength = ViewConfiguration::getThumbLength(
+            const int thumbLength = ScrollBarUtils::getThumbLength(
                     bounds.width, bounds.height, extent, range);
-            const int thumbOffset = ViewConfiguration::getThumbOffset(
+            const int thumbOffset = ScrollBarUtils::getThumbOffset(
                             bounds.width, thumbLength, extent, range, offset);
 
             const float diff = x - mScrollCache->mScrollBarDraggingPos;

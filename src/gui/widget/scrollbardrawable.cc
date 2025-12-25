@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/scrollbardrawable.h>
+#include <widget/scrollbarutils.h>
 #include <drawable/colordrawable.h>
-#include <viewconfiguration.h>
+#include <view/viewconfiguration.h>
 
 namespace cdroid{
 
@@ -98,8 +99,8 @@ void ScrollBarDrawable::draw(Canvas&canvas) {
     if (bDrawThumb) {
         const int scrollBarLength = mVertical ? r.height : r.width;
         const int thickness   = mVertical ? r.width : r.height;
-        const int thumbLength = ViewConfiguration::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
-        const int thumbOffset = ViewConfiguration::getThumbOffset(scrollBarLength, thumbLength, mExtent, mRange,mOffset);
+        const int thumbLength = ScrollBarUtils::getThumbLength(scrollBarLength, thickness, mExtent, mRange);
+        const int thumbOffset = ScrollBarUtils::getThumbOffset(scrollBarLength, thumbLength, mExtent, mRange,mOffset);
         drawThumb(canvas, r, thumbOffset, thumbLength, mVertical);
     }
 }

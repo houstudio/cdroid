@@ -210,8 +210,6 @@ public:
     ViewConfiguration();
     static ViewConfiguration&get(Context*context);
     static bool isScreenRound();
-    static int getThumbLength(int size, int thickness, int extent, int range);
-    static int getThumbOffset(int size, int thumbLength, int extent, int range, int offset);
 
     int getScaledScrollBarSize()const;
     /**

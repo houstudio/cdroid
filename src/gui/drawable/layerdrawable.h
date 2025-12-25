@@ -60,7 +60,7 @@ protected:
         std::vector< ChildDrawable*>mChildren;
         LayerState();
         LayerState(const LayerState*state,LayerDrawable*owner);
-        ~LayerState();
+        ~LayerState()override;
         LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
         int getOpacity();
