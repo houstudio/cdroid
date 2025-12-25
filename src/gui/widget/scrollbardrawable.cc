@@ -111,25 +111,25 @@ void ScrollBarDrawable::onBoundsChange(const Rect& bounds) {
 }
 
 bool ScrollBarDrawable::isStateful()const {
-    return (mVerticalTrack  && mVerticalTrack->isStateful())
-            || (mVerticalThumb  && mVerticalThumb->isStateful())
-            || (mHorizontalTrack && mHorizontalTrack->isStateful())
-            || (mHorizontalThumb && mHorizontalThumb->isStateful())
+    return ((mVerticalTrack!=nullptr)  && mVerticalTrack->isStateful())
+            || ((mVerticalThumb!=nullptr)  && mVerticalThumb->isStateful())
+            || ((mHorizontalTrack!=nullptr) && mHorizontalTrack->isStateful())
+            || ((mHorizontalThumb!=nullptr) && mHorizontalThumb->isStateful())
             || Drawable::isStateful();
 }
 
 bool ScrollBarDrawable::onStateChange(const std::vector<int>&state) {
     bool changed = Drawable::onStateChange(state);
-    if (mVerticalTrack )  changed |= mVerticalTrack->setState(state);
-    if (mVerticalThumb )  changed |= mVerticalThumb->setState(state);
-    if (mHorizontalTrack) changed |= mHorizontalTrack->setState(state);
-    if (mHorizontalThumb) changed |= mHorizontalThumb->setState(state);
+    if (mVerticalTrack!=nullptr) changed |= mVerticalTrack->setState(state);
+    if (mVerticalThumb!=nullptr) changed |= mVerticalThumb->setState(state);
+    if (mHorizontalTrack!=nullptr) changed |= mHorizontalTrack->setState(state);
+    if (mHorizontalThumb!=nullptr) changed |= mHorizontalThumb->setState(state);
     return changed;
 }
 
 void ScrollBarDrawable::drawTrack(Canvas&canvas,const Rect& bounds, bool vertical) {
-    Drawable* track=vertical?mVerticalTrack:mHorizontalTrack;
-    if ( track ) {
+    Drawable* track = vertical ? mVerticalTrack:mHorizontalTrack;
+    if ( track!=nullptr) {
         if (mBoundsChanged)
             track->setBounds(bounds);
         track->draw(canvas);
@@ -144,7 +144,7 @@ void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset,
                 mVerticalThumb->setBounds(bounds.left, bounds.top + offset,bounds.width, length);
             mVerticalThumb->draw(canvas);
         }
-    } else if ( mHorizontalThumb ) {
+    } else if ( mHorizontalThumb!=nullptr) {
         if (changed)
             mHorizontalThumb->setBounds(bounds.left+ offset, bounds.top,length, bounds.height);
         mHorizontalThumb->draw(canvas);
@@ -152,7 +152,7 @@ void ScrollBarDrawable::drawThumb(Canvas& canvas,const Rect& bounds, int offset,
 }
 
 void ScrollBarDrawable::setVerticalThumbDrawable(Drawable* thumb) {
-    if (mVerticalThumb){
+    if (mVerticalThumb!=nullptr){
         mVerticalThumb->setCallback(nullptr);
         delete mVerticalThumb;
     }
@@ -162,7 +162,7 @@ void ScrollBarDrawable::setVerticalThumbDrawable(Drawable* thumb) {
 }
 
 void ScrollBarDrawable::setVerticalTrackDrawable(Drawable* track) {
-    if (mVerticalTrack){
+    if (mVerticalTrack!=nullptr){
         mVerticalTrack->setCallback(nullptr);
         delete mVerticalTrack;
     }
@@ -172,7 +172,7 @@ void ScrollBarDrawable::setVerticalTrackDrawable(Drawable* track) {
 }
 
 void ScrollBarDrawable::setHorizontalThumbDrawable(Drawable* thumb) {
-    if (mHorizontalThumb){
+    if (mHorizontalThumb!=nullptr){
         mHorizontalThumb->setCallback(nullptr);
         delete mHorizontalThumb;
     }
@@ -182,7 +182,7 @@ void ScrollBarDrawable::setHorizontalThumbDrawable(Drawable* thumb) {
 }
 
 void ScrollBarDrawable::setHorizontalTrackDrawable(Drawable* track) {
-    if (mHorizontalTrack ){
+    if (mHorizontalTrack!=nullptr){
         mHorizontalTrack->setCallback(nullptr);
         delete mHorizontalTrack;
     }
@@ -226,21 +226,21 @@ void ScrollBarDrawable::propagateCurrentState(Drawable* d) {
 
 int ScrollBarDrawable::getSize(bool vertical) {
     if (vertical) {
-        return mVerticalTrack  ? mVerticalTrack->getIntrinsicWidth() :
-                mVerticalThumb ? mVerticalThumb->getIntrinsicWidth() : 0;
+        return mVerticalTrack!=nullptr ? mVerticalTrack->getIntrinsicWidth() :
+                mVerticalThumb!=nullptr ? mVerticalThumb->getIntrinsicWidth() : 0;
     } else {
-        return mHorizontalTrack ? mHorizontalTrack->getIntrinsicHeight() :
-                mHorizontalThumb? mHorizontalThumb->getIntrinsicHeight() : 0;
+        return mHorizontalTrack!=nullptr ? mHorizontalTrack->getIntrinsicHeight() :
+                mHorizontalThumb!=nullptr ? mHorizontalThumb->getIntrinsicHeight() : 0;
     }
 }
 
 ScrollBarDrawable* ScrollBarDrawable::mutate() {
     if (!mMutated && Drawable::mutate() == this) {
-        if (mVerticalTrack )    mVerticalTrack->mutate();
-        if (mVerticalThumb )    mVerticalThumb->mutate();
+        if (mVerticalTrack!=nullptr) mVerticalTrack->mutate();
+        if (mVerticalThumb!=nullptr) mVerticalThumb->mutate();
 
-        if (mHorizontalTrack)   mHorizontalTrack->mutate();
-        if (mHorizontalThumb)   mHorizontalThumb->mutate();
+        if (mHorizontalTrack!=nullptr) mHorizontalTrack->mutate();
+        if (mHorizontalThumb!=nullptr) mHorizontalThumb->mutate();
         mMutated = true;
     }
     return this;
@@ -250,10 +250,10 @@ void ScrollBarDrawable::setAlpha(int alpha) {
     mAlpha = alpha;
     mHasSetAlpha = true;
 
-    if (mVerticalTrack)   mVerticalTrack->setAlpha(alpha);
-    if (mVerticalThumb)   mVerticalThumb->setAlpha(alpha);
-    if (mHorizontalTrack) mHorizontalTrack->setAlpha(alpha);
-    if (mHorizontalThumb) mHorizontalThumb->setAlpha(alpha);
+    if (mVerticalTrack!=nullptr) mVerticalTrack->setAlpha(alpha);
+    if (mVerticalThumb!=nullptr) mVerticalThumb->setAlpha(alpha);
+    if (mHorizontalTrack!=nullptr) mHorizontalTrack->setAlpha(alpha);
+    if (mHorizontalThumb!=nullptr) mHorizontalThumb->setAlpha(alpha);
 }
 
 int ScrollBarDrawable::getAlpha()const{

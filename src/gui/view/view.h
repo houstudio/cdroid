@@ -616,7 +616,6 @@ private:
     bool isHoverable()const;
     bool hasSize()const;
     bool canTakeFocus()const;
-    void getRoundVerticalScrollBarBounds(Rect* bounds);
     void getStraightVerticalScrollBarBounds(Rect*drawBounds, Rect*touchBounds=nullptr);
     void getVerticalScrollBarBounds(Rect*bounds, Rect*touchBounds=nullptr);
     void getHorizontalScrollBarBounds(Rect*drawBounds, Rect*touchBounds);

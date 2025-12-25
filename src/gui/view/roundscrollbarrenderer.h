@@ -47,11 +47,10 @@ private:
     void setThumbColor(int thumbColor);
     void setTrackColor(int trackColor);
     float dpToPx(float dp);
-protected:
-    void getRoundVerticalScrollBarBounds(Rect& bounds);
 public:
     RoundScrollbarRenderer(View* parent);
     void drawRoundScrollbars(Canvas& canvas, float alpha,const Rect& bounds,bool drawToLeft);
+    void getRoundVerticalScrollBarBounds(Rect& bounds);
 };
 }//namespace
 #define __ROUND_SCROLLBAR_RENDERER__
