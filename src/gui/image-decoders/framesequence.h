@@ -52,7 +52,7 @@ public:
      * Type determined by header information in the stream
      */
     FrameSequence(std::istream&);
-    virtual ~FrameSequence() {}
+    virtual ~FrameSequence()=default;
     virtual int getWidth() const = 0;
     virtual int getHeight() const = 0;
     virtual bool isOpaque() const = 0;
@@ -73,7 +73,7 @@ public:
     * Returns frame's delay time in milliseconds.
     */
     virtual long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr) = 0;
-    virtual ~FrameSequenceState() {}
+    virtual ~FrameSequenceState() =default;
 };
 
 }/*endof namespace*/

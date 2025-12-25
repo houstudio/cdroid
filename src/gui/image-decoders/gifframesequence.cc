@@ -25,7 +25,7 @@
 
 namespace cdroid{
 
-#define ARGB_TO_COLOR8888(a, r, g, b) ((a) << 24 | (r) << 16 | (g) << 8 | (b))
+#define ARGB_TO_COLOR8888(a, r, g, b) (uint32_t(a) << 24 | uint32_t(r) << 16 | uint32_t(g) << 8 | (b))
 
 static int streamReader(GifFileType* fileType, GifByteType* out, int size) {
     std::istream* stream = (std::istream*) fileType->UserData;

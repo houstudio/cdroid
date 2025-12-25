@@ -1307,7 +1307,7 @@ int View::getOverScrollMode()const{
 }
 
 void View::setOverScrollMode(int overScrollMode){
-    bool rc=overScrollMode != OVER_SCROLL_ALWAYS &&
+    const bool rc = overScrollMode != OVER_SCROLL_ALWAYS &&
             overScrollMode != OVER_SCROLL_IF_CONTENT_SCROLLS &&
             overScrollMode != OVER_SCROLL_NEVER;
     LOGE_IF(rc,"Invalid overscroll mode %d" ,overScrollMode);

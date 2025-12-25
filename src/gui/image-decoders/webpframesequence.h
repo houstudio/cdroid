@@ -41,7 +41,7 @@ public:
     static constexpr uint32_t RIFF_HEADER_SIZE = 12;/*Size of the RIFF header ("RIFFnnnnWEBP")*/
 public:
     WebPFrameSequence(std::istream&);
-    virtual ~WebPFrameSequence();
+    ~WebPFrameSequence()override;
 
     int getWidth() const override;
     int getHeight() const override;
@@ -69,10 +69,10 @@ private:
             const WebPIterator& prevIter, const uint32_t* prevBuffer, int prevStride);
 public:
     WebPFrameSequenceState(const WebPFrameSequence& frameSequence);
-    virtual ~WebPFrameSequenceState();
+    ~WebPFrameSequenceState()override;
 
     // Returns frame's delay time in milliseconds.
-    virtual long drawFrame(int frameNr,uint32_t* outputPtr, int outputPixelStride, int previousFrameNr);
+    long drawFrame(int frameNr,uint32_t* outputPtr, int outputPixelStride, int previousFrameNr)override;
 
 };
 }/*endof namespace*/

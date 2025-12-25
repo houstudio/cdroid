@@ -34,7 +34,7 @@ public:
     static constexpr uint32_t GIF_HEADER_SIZE = 6;/*GIF87a or GIF89a*/
 public:
     GifFrameSequence(std::istream&);
-    virtual ~GifFrameSequence();
+    ~GifFrameSequence()override;
 
     int getWidth() const override;
     int getHeight() const override;
@@ -62,9 +62,9 @@ private:
     void restorePreserveBuffer(uint32_t* outputPtr, int outputPixelStride);
 public:
     GifFrameSequenceState(const GifFrameSequence& frameSequence);
-    virtual ~GifFrameSequenceState();
+    ~GifFrameSequenceState()override;
     // returns frame's delay time in ms
-    virtual long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr);
+    long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr)override;
 
 };
 }/*endof namespace*/
