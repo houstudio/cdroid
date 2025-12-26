@@ -42,7 +42,6 @@ InputEventSource::InputEventSource(){
     auto func = std::bind(&InputEventSource::doEventsConsume,this);
     std::thread th(func);
     th.detach();
-    LOGD("%p",this);
 }
 
 void InputEventSource::doEventsConsume(){

@@ -40,7 +40,7 @@ GIFDecoder::~GIFDecoder(){
     delete mPrivate;
 }
 
-#define  ARGB(a, r, g, b) ( ((a) & 0xff) << 24 ) | ( ((r) & 0xff) << 16 ) | ( ((g) & 0xff) << 8 ) | ((b) & 0xff)
+#define  ARGB(a, r, g, b) ( uint32_t((a) & 0xff) << 24 ) | ( uint32_t((r) & 0xff) << 16 ) | ( uint32_t((g) & 0xff) << 8 ) | ((b) & 0xff)
 #define  DISPOSE(ext) (((ext)->Bytes[0] & 0x1c) >> 2)
 #define  TRANS_INDEX(ext) ((ext)->Bytes[3])
 #define  TRANSPARENCY(ext) ((ext)->Bytes[0] & 1)

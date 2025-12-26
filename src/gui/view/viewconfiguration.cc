@@ -88,25 +88,6 @@ bool ViewConfiguration::isScreenRound(){
     return mInst && mInst->mIsScreenRound;
 }
 
-int ViewConfiguration::getThumbLength(int size, int thickness, int extent, int range) {
-    // Avoid the tiny thumb.
-    int minLength = thickness * 2;
-    int length = round((float) size * extent / range);
-    if (length < minLength) {
-        length = minLength;
-    }
-    return length;
-}
-
-int ViewConfiguration::getThumbOffset(int size, int thumbLength, int extent, int range, int offset) {
-    // Avoid the too-big thumb.
-    int thumbOffset = round((float) (size - thumbLength) * offset / (range - extent));
-    if (thumbOffset > size - thumbLength) {
-        thumbOffset = size - thumbLength;
-    }
-    return thumbOffset;
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 int ViewConfiguration::getScaledScrollBarSize() const{

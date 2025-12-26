@@ -49,9 +49,9 @@ public:
     void onTargetFound(View* targetView, RecyclerView::State& state, Action& action)override;
     void onSeekTargetStep(int dx, int dy, RecyclerView::State& state, Action& action)override;
     void onStop()override;
-    float calculateSpeedPerPixel(DisplayMetrics& displayMetrics);
+    virtual float calculateSpeedPerPixel(DisplayMetrics& displayMetrics);
     int calculateTimeForDeceleration(int dx);
-    int calculateTimeForScrolling(int dx);
+    virtual int calculateTimeForScrolling(int dx);
     int getHorizontalSnapPreference();
     int getVerticalSnapPreference();
     void updateActionForInterimTarget(Action& action);

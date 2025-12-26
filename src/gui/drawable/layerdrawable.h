@@ -60,7 +60,7 @@ protected:
         std::vector< ChildDrawable*>mChildren;
         LayerState();
         LayerState(const LayerState*state,LayerDrawable*owner);
-        ~LayerState();
+        ~LayerState()override;
         LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
         int getOpacity();
@@ -120,7 +120,6 @@ public:
     void setLayerHeight(int idx,int h);
     int getLayerGravity(int index)const;
     void setLayerGravity(int index, int gravity);
-    void setLayerAttributes(int idx,const AttributeSet&);
     void setLayerInset(int index, int l, int t, int r, int b);
     void setLayerInsetRelative(int index, int s, int t, int e, int b);
     int getLayerInsetLeft(int index)const;

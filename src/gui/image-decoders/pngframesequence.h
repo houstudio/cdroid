@@ -40,7 +40,7 @@ public:
     static constexpr int PNG_HEADER_SIZE = 8;
 public:
     PngFrameSequence(std::istream&);
-    virtual ~PngFrameSequence();
+    ~PngFrameSequence()override;
 
     int getWidth() const override;
     int getHeight() const override;
@@ -68,9 +68,9 @@ private:
     void resetPngIO();
 public:
     PngFrameSequenceState(const PngFrameSequence& frameSequence);
-    virtual ~PngFrameSequenceState();
+    ~PngFrameSequenceState()override;
     // returns frame's delay time in ms
-    virtual long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr);
+    long drawFrame(int frameNr, uint32_t* outputPtr, int outputPixelStride, int previousFrameNr)override;
 };
 
 }/*endof namespace*/

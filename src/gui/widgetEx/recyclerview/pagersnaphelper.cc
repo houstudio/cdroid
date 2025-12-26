@@ -137,27 +137,27 @@ private:
 public:
     MyPageSmoothScroller(SnapHelper* snap,RecyclerView* rv)
 	    :LinearSmoothScroller(rv->getContext()){
-	mSnapHelper = snap;
-	mRecyclerView = rv;
+        mSnapHelper = snap;
+        mRecyclerView = rv;
     }
 protected:
-    void onTargetFound(View* targetView, RecyclerView::State& state, Action& action) {
+    void onTargetFound(View* targetView, RecyclerView::State& state, Action& action) override{
         int snapDistances[2];
-	RecyclerView::LayoutManager*layoutManger = mRecyclerView->getLayoutManager();
-	mSnapHelper->calculateDistanceToFinalSnap(*layoutManger,*targetView,snapDistances);
-        int dx = snapDistances[0];
-        int dy = snapDistances[1];
+        RecyclerView::LayoutManager*layoutManger = mRecyclerView->getLayoutManager();
+        mSnapHelper->calculateDistanceToFinalSnap(*layoutManger,*targetView,snapDistances);
+        const int dx = snapDistances[0];
+        const int dy = snapDistances[1];
         int time = calculateTimeForDeceleration(std::max(std::abs(dx), std::abs(dy)));
         if (time > 0) {
             action.update(dx, dy, time, mDecelerateInterpolator);
         }
     }
 
-    float calculateSpeedPerPixel(DisplayMetrics& displayMetrics) {
+    float calculateSpeedPerPixel(DisplayMetrics& displayMetrics) override{
         return SnapHelper::MILLISECONDS_PER_INCH / displayMetrics.densityDpi;
     }
 
-    int calculateTimeForScrolling(int dx) {
+    int calculateTimeForScrolling(int dx) override{
         return std::min((int)PagerSnapHelper::MAX_SCROLL_ON_FLING_DURATION,
 		   LinearSmoothScroller::calculateTimeForScrolling(dx));
     }
