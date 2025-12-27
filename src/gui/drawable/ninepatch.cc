@@ -662,17 +662,6 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
     #error "Unknown endian"
 #endif
 
-static const bool kDebugStringPoolNoisy = false;
-static const bool kDebugXMLNoisy = false;
-static const bool kDebugTableNoisy = false;
-static const bool kDebugTableGetEntry = false;
-static const bool kDebugTableSuperNoisy = false;
-static const bool kDebugLoadTableNoisy = false;
-static const bool kDebugLoadTableSuperNoisy = false;
-static const bool kDebugTableTheme = false;
-static const bool kDebugResXMLTree = false;
-static const bool kDebugLibNoisy = false;
-
 static void fill9patchOffsets(Res_png_9patch* patch) {
     patch->xDivsOffset = sizeof(Res_png_9patch);
     patch->yDivsOffset = patch->xDivsOffset + (patch->numXDivs * sizeof(int32_t));
