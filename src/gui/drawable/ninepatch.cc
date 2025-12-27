@@ -624,6 +624,22 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
 #undef htonl
 #undef ntohs
 #undef htons
+
+#ifndef __BYTE_ORDER__
+  /* 常见顺序宏（如果系统未提供） */
+  #ifndef __ORDER_LITTLE_ENDIAN__
+    #define __ORDER_LITTLE_ENDIAN__ 1234
+  #endif
+  #ifndef __ORDER_BIG_ENDIAN__
+    #define __ORDER_BIG_ENDIAN__ 4321
+  #endif
+
+  /* Windows / MSVC 下默认小端 */
+  #if defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER)
+    #define __BYTE_ORDER__ __ORDER_LITTLE_ENDIAN__
+  #endif
+#endif
+
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
     #define ntohl(x) ( (uint32_t)( \
         ( ((uint32_t)(x) << 24) & 0xFF000000u) | \
