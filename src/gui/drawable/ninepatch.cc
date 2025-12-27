@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <sstream>
 #include <drawable/ninepatch.h>
 namespace cdroid {
 
@@ -249,16 +250,16 @@ static uint32_t GetRegionColor(uint8_t** rows, const Bounds& region) {
                 // The color is transparent.
                 // If the expectedColor is not transparent, NO_COLOR.
                 if (get_alpha(expected_color) != 0) {
-                    return cdroid::Res_png_9patch::NO_COLOR;
+                    return Res_png_9patch::NO_COLOR;
                 }
             } else if (color != expected_color) {
-                return cdroid::Res_png_9patch::NO_COLOR;
+                return Res_png_9patch::NO_COLOR;
             }
         }
     }
 
     if (get_alpha(expected_color) == 0) {
-        return cdroid::Res_png_9patch::TRANSPARENT_COLOR;
+        return Res_png_9patch::TRANSPARENT_COLOR;
     }
     return expected_color;
 }
@@ -524,7 +525,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
 }
 
 std::unique_ptr<uint8_t[]> NinePatch::SerializeBase(size_t* outLen) const {
-    cdroid::Res_png_9patch data;
+    Res_png_9patch data;
     data.numXDivs = static_cast<uint8_t>(horizontal_stretch_regions.size()) * 2;
     data.numYDivs = static_cast<uint8_t>(vertical_stretch_regions.size()) * 2;
     data.numColors = static_cast<uint8_t>(region_colors.size());
@@ -534,11 +535,11 @@ std::unique_ptr<uint8_t[]> NinePatch::SerializeBase(size_t* outLen) const {
     data.paddingBottom = padding.bottom;
 
     auto buffer = std::unique_ptr<uint8_t[]>(new uint8_t[data.serializedSize()]);
-    cdroid::Res_png_9patch::serialize(data, (const int32_t*)horizontal_stretch_regions.data(),
+    Res_png_9patch::serialize(data, (const int32_t*)horizontal_stretch_regions.data(),
                                        (const int32_t*)vertical_stretch_regions.data(),
                                        region_colors.data(), buffer.get());
     // Convert to file endianness.
-    reinterpret_cast<cdroid::Res_png_9patch*>(buffer.get())->deviceToFile();
+    reinterpret_cast<Res_png_9patch*>(buffer.get())->deviceToFile();
 
     *outLen = data.serializedSize();
     return buffer;
