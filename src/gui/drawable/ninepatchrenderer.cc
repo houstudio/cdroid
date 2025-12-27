@@ -20,10 +20,218 @@
 #include <core/context.h>
 #include <image-decoders/imagedecoder.h>
 #include <porting/cdlog.h>
-
+/*
+ * REFS:
+ * frameworks/base/libs/hwui/jni/NinePatchPeeker.cpp
+ * frameworks/base/libs/androidfw/Png.cpp
+ */
 using namespace Cairo;
 
 namespace cdroid{
+constexpr uint32_t kColorWhite = 0xffffffffu;
+constexpr uint32_t kColorTick = 0xff000000u;
+constexpr uint32_t kColorLayoutBoundsTick = 0xff0000ffu;
+enum class TickType { kNone, kTick, kLayoutBounds, kBoth };
+
+static TickType tickType(uint8_t* p, bool transparent, const char** outError) {
+    uint32_t color = p[0] | (p[1] << 8) | (p[2] << 16) | (p[3] << 24);
+
+    if (transparent) {
+        if (p[3] == 0) {
+            return TickType::kNone;
+        }
+        if (color == kColorLayoutBoundsTick) {
+            return TickType::kLayoutBounds;
+        }
+        if (color == kColorTick) {
+            return TickType::kTick;
+        }
+
+        // Error cases
+        if (p[3] != 0xff) {
+            *outError ="Frame pixels must be either solid or transparent (not intermediate alphas)";
+            return TickType::kNone;
+        }
+
+        if (p[0] != 0 || p[1] != 0 || p[2] != 0) {
+            *outError = "Ticks in transparent frame must be black or red";
+        }
+        return TickType::kTick;
+    }
+
+    if (p[3] != 0xFF) {
+        *outError = "White frame must be a solid color (no alpha)";
+    }
+    if (color == kColorWhite) {
+        return TickType::kNone;
+    }
+    if (color == kColorTick) {
+        return TickType::kTick;
+    }
+    if (color == kColorLayoutBoundsTick) {
+        return TickType::kLayoutBounds;
+    }
+
+    if (p[0] != 0 || p[1] != 0 || p[2] != 0) {
+        *outError = "Ticks in white frame must be black or red";
+        return TickType::kNone;
+    }
+    return TickType::kTick;
+}
+
+enum class TickState { kStart, kInside1, kOutside1 };
+
+static bool getHorizontalTicks(uint8_t* row, int width, bool transparent, bool required,
+                               int32_t* outLeft, int32_t* outRight, const char** outError,
+                               uint8_t* outDivs, bool multipleAllowed) {
+    *outLeft = *outRight = -1;
+    TickState state = TickState::kStart;
+    bool found = false;
+
+    for (int i = 1; i < width - 1; i++) {
+        if (tickType(row + i * 4, transparent, outError) == TickType::kTick) {
+            if (state == TickState::kStart || (state == TickState::kOutside1 && multipleAllowed)) {
+                *outLeft = i - 1;
+                *outRight = width - 2;
+                found = true;
+                if (outDivs != NULL) {
+                    *outDivs += 2;
+                }
+                state = TickState::kInside1;
+            } else if (state == TickState::kOutside1) {
+                *outError = "Can't have more than one marked region along edge";
+                *outLeft = i;
+                return false;
+            }
+        } else if (!*outError) {
+            if (state == TickState::kInside1) {
+                // We're done with this div.  Move on to the next.
+                *outRight = i - 1;
+                outRight += 2;
+                outLeft += 2;
+                state = TickState::kOutside1;
+            }
+        } else {
+            *outLeft = i;
+            return false;
+        }
+    }
+
+    if (required && !found) {
+        *outError = "No marked region found along edge";
+        *outLeft = -1;
+        return false;
+    }
+    return true;
+}
+
+static bool getVerticalTicks(uint8_t** rows, int offset, int height, bool transparent, bool required,
+        int32_t* outTop, int32_t* outBottom, const char** outError, uint8_t* outDivs, bool multipleAllowed) {
+    *outTop = *outBottom = -1;
+    TickState state = TickState::kStart;
+    bool found = false;
+
+    for (int i = 1; i < height - 1; i++) {
+        if (tickType(rows[i] + offset, transparent, outError) == TickType::kTick) {
+            if (state == TickState::kStart || (state == TickState::kOutside1 && multipleAllowed)) {
+                *outTop = i - 1;
+                *outBottom = height - 2;
+                found = true;
+                if (outDivs != NULL) {
+                    *outDivs += 2;
+                }
+                state = TickState::kInside1;
+            } else if (state == TickState::kOutside1) {
+                *outError = "Can't have more than one marked region along edge";
+                *outTop = i;
+                return false;
+            }
+        } else if (!*outError) {
+            if (state == TickState::kInside1) {
+                // We're done with this div.  Move on to the next.
+                *outBottom = i - 1;
+                outTop += 2;
+                outBottom += 2;
+                state = TickState::kOutside1;
+            }
+        } else {
+            *outTop = i;
+            return false;
+        }
+    }
+
+    if (required && !found) {
+        *outError = "No marked region found along edge";
+        *outTop = -1;
+        return false;
+    }
+    return true;
+}
+
+static bool getHorizontalLayoutBoundsTicks(uint8_t* row, int width, bool transparent,
+                bool /* required */, int32_t* outLeft, int32_t* outRight,const char** outError) {
+    *outLeft = *outRight = 0;
+
+    // Look for left tick
+    if (tickType(row + 4, transparent, outError) == TickType::kLayoutBounds) {
+        // Starting with a layout padding tick
+        int i = 1;
+        while (i < width - 1) {
+            (*outLeft)++;
+            i++;
+            if (tickType(row + i * 4, transparent, outError) != TickType::kLayoutBounds) {
+                break;
+            }
+        }
+    }
+
+    // Look for right tick
+    if (tickType(row + (width - 2) * 4, transparent, outError) == TickType::kLayoutBounds) {
+        // Ending with a layout padding tick
+        int i = width - 2;
+        while (i > 1) {
+            (*outRight)++;
+            i--;
+            if (tickType(row + i * 4, transparent, outError) != TickType::kLayoutBounds) {
+                break;
+            }
+        }
+    }
+    return true;
+}
+
+static bool getVerticalLayoutBoundsTicks(uint8_t** rows, int offset, int height, bool transparent,
+                                         bool /* required */, int32_t* outTop, int32_t* outBottom,
+                                         const char** outError) {
+    *outTop = *outBottom = 0;
+
+    // Look for top tick
+    if (tickType(rows[1] + offset, transparent, outError) == TickType::kLayoutBounds) {
+        // Starting with a layout padding tick
+        int i = 1;
+        while (i < height - 1) {
+            (*outTop)++;
+            i++;
+            if (tickType(rows[i] + offset, transparent, outError) != TickType::kLayoutBounds) {
+                break;
+            }
+        }
+    }
+
+    // Look for bottom tick
+    if (tickType(rows[height - 2] + offset, transparent, outError) == TickType::kLayoutBounds) {
+        // Ending with a layout padding tick
+        int i = height - 2;
+        while (i > 1) {
+            (*outBottom)++;
+            i--;
+            if (tickType(rows[i] + offset, transparent, outError) != TickType::kLayoutBounds) {
+                break;
+            }
+        }
+    }
+    return true;
+}
 
 static void findMaxOpacity(uint8_t** rows, int startX, int startY, int endX, int endY, int dX,
         int dY, int* outInset) {
@@ -99,7 +307,20 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         mOutlineInsets.top = 0;
         mOutlineInsets.bottom = 0;
     }
- 
+
+    
+    // Find left and right of layout padding...(maybe its is android's OpticalInsets)
+    const bool transparent = rows[0][3]==0;
+    const char* errorMsg=nullptr;
+    getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
+                                   &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
+  
+    getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
+                                 &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
+  
+    const bool haveLayoutBounds = (mOpticalInsets.left != 0) || (mOpticalInsets.right != 0)
+        ||(mOpticalInsets.top != 0) || (mOpticalInsets.bottom != 0);
+
     const int innerStartX = 1 + mOutlineInsets.left;
     const int innerStartY = 1 + mOutlineInsets.top;
     const int innerEndX = endX - mOutlineInsets.right;
@@ -137,6 +358,10 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
+    LOGD_IF(haveLayoutBounds||1,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
+            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
+            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
+            mPadding.left,mPadding.top,mPadding.width,mPadding.height);
 }
 
 NinePatchRenderer::NinePatchRenderer(Context*ctx,const std::string&resid)
