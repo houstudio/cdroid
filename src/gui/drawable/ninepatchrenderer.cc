@@ -25,6 +25,22 @@ using namespace Cairo;
 
 namespace cdroid{
 
+static void findMaxOpacity(uint8_t** rows, int startX, int startY, int endX, int endY, int dX,
+        int dY, int* outInset) {
+    uint8_t maxOpacity = 0;
+    int inset = 0;
+    *outInset = 0;
+    for (int x = startX, y = startY; x != endX && y != endY; x += dX, y += dY, inset++) {
+        uint8_t* color = rows[y] + x * 4;
+        uint8_t opacity = color[3];
+        if (opacity > maxOpacity) {
+            maxOpacity = opacity;
+            *outInset = inset;
+        }
+        if (opacity == 0xff) return;
+    }
+}
+
 NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     const uint32_t numRows = image->get_height();
@@ -41,6 +57,30 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     for(auto&r:anp->vertical_stretch_regions){
         mResizeDistancesY.push_back({r.start,r.end-r.start});
     }
+
+    const int midX = image->get_width() / 2;
+    const int midY = image->get_height() / 2;
+    const int endX = image->get_width() - 2;
+    const int endY = image->get_height() - 2;
+
+   // find left and right extent of nine patch content on center row
+    if (image->get_width() > 4) {
+        findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOpticalInsets.left);
+        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOpticalInsets.bottom);
+    } else {
+        mOpticalInsets.left = 0;
+        mOpticalInsets.right = 0;
+    }
+ 
+    // find top and bottom extent of nine patch content on center column
+    if (image->get_height() > 4) {
+        findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOpticalInsets.top);
+        findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOpticalInsets.bottom);
+    } else {
+        mOpticalInsets.top = 0;
+        mOpticalInsets.bottom = 0;
+    }
+
     mPadding.left = anp->padding.left;
     mPadding.top  = anp->padding.top;
     mPadding.width = anp->padding.right;

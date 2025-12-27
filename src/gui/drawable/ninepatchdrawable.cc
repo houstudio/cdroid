@@ -369,10 +369,13 @@ void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,con
     if(bitmap){
         mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap));
         mPadding = mNinePatch->getPadding();
+        mOpticalInsets=mNinePatch->getOpticalInsets();
     }
     if(padding)mPadding=*padding;
-    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
-        mPadding.left,mPadding.top,mPadding.width,mPadding.height);
+    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) opticalInsets=(%d,%d,%d,%d)",
+            this,bitmap->get_width(),bitmap->get_height(),
+            mPadding.left,mPadding.top,mPadding.width,mPadding.height,
+            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom);
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
