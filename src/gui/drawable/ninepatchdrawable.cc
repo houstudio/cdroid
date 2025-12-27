@@ -83,7 +83,7 @@ void NinePatchDrawable::computeBitmapSize(){
     mBitmapHeight= Drawable::scaleFromDensity( ninePatch->get_height(), sourceDensity, targetDensity, true);
     mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width() , sourceDensity, targetDensity, true);
 
-    mOutlineRadius = mNinePatchState->getRadius();
+    mOutlineRadius = mNinePatchState->mNinePatch->getRadius();
     /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
     if (insets != null) {
         Rect outlineRect = insets.outlineRect;
