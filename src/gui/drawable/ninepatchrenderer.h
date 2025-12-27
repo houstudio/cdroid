@@ -29,6 +29,7 @@ private:
     int mRadius;
     Rect mContentArea;
     Rect mPadding;
+    Insets mOutlineInsets;
     Insets mOpticalInsets;
     float mAlpha;
     std::vector<std::pair< int, int >>mResizeDistancesY;

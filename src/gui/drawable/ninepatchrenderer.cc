@@ -84,26 +84,26 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
 
    // find left and right extent of nine patch content on center row
     if (image->get_width() > 4) {
-        findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOpticalInsets.left);
-        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOpticalInsets.bottom);
+        findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
+        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.bottom);
     } else {
-        mOpticalInsets.left = 0;
-        mOpticalInsets.right = 0;
+        mOutlineInsets.left = 0;
+        mOutlineInsets.right = 0;
     }
  
     // find top and bottom extent of nine patch content on center column
     if (image->get_height() > 4) {
-        findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOpticalInsets.top);
-        findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOpticalInsets.bottom);
+        findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOutlineInsets.top);
+        findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
     } else {
-        mOpticalInsets.top = 0;
-        mOpticalInsets.bottom = 0;
+        mOutlineInsets.top = 0;
+        mOutlineInsets.bottom = 0;
     }
  
-    const int innerStartX = 1 + mOpticalInsets.left;
-    const int innerStartY = 1 + mOpticalInsets.top;
-    const int innerEndX = endX - mOpticalInsets.right;
-    const int innerEndY = endY - mOpticalInsets.bottom;
+    const int innerStartX = 1 + mOutlineInsets.left;
+    const int innerStartY = 1 + mOutlineInsets.top;
+    const int innerEndX = endX - mOutlineInsets.right;
+    const int innerEndY = endY - mOutlineInsets.bottom;
     const int innerMidX = (innerEndX + innerStartX) / 2;
     const int innerMidY = (innerEndY + innerStartY) / 2;
   

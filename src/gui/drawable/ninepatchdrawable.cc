@@ -373,7 +373,7 @@ void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,con
         mOpticalInsets = mNinePatch->getOpticalInsets();
     }
     if(padding)mPadding=*padding;
-    LOGD("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) radius=%d opticalInsets=(%d,%d,%d,%d)",
+    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) radius=%d opticalInsets=(%d,%d,%d,%d)",
             this,bitmap->get_width(),bitmap->get_height(),
             mPadding.left,mPadding.top,mPadding.width,mPadding.height,mNinePatch->getRadius(),
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom);
