@@ -17,7 +17,7 @@
  *********************************************************************************/
 #include <drawable/ninepatchdrawable.h>
 #include <image-decoders/imagedecoder.h>
-#include <drawable/ninepatch.h>
+#include <drawable/ninepatchrenderer.h>
 #include <fstream>
 #include <cdlog.h>
 using namespace Cairo;
@@ -322,7 +322,7 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
             throw std::logic_error(//a.getPositionDescription() +
                     ": <nine-patch> requires a valid src attribute");
         } else {//if (bitmap.getNinePatchChunk() == null) {
-            state->mNinePatch = std::make_shared<NinePatch>(bitmap);
+            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
             state->mPadding = state->mNinePatch->getPadding();
             mOutlineRadius = state->mNinePatch->getRadius();
             const Rect& r=state->mPadding;
@@ -367,7 +367,7 @@ void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&
 
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding){
     if(bitmap){
-        mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
+        mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap));
         mPadding = mNinePatch->getPadding();
     }
     if(padding)mPadding=*padding;
