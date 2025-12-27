@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/ninepatchdrawable.h>
-#include <image-decoders/imagedecoder.h>
 #include <drawable/ninepatchrenderer.h>
+#include <image-decoders/imagedecoder.h>
+#include <porting/cdlog.h>
 #include <fstream>
-#include <cdlog.h>
 using namespace Cairo;
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp

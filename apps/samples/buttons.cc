@@ -10,35 +10,13 @@ int main(int argc,const char*argv[]){
     w->setId(1);
     w->setBackgroundColor(0xFF223344);
     Drawable*d=nullptr;
-    StateListDrawable*sld;
+    StateListDrawable*sld=nullptr;
     CompoundButton*chk;
 #if 10
-    Button *btn=new Button("Button",120,60);
-    //d=ctx->getDrawable("cdroid:drawable/btn_default.xml");
-    d=ctx->getDrawable("cdroid:mipmap/textfield_default_mtrl_alpha");
-    sld=dynamic_cast<StateListDrawable*>(d);
-    btn->setBackgroundColor(0xFF332211);
-    btn->setOnTouchListener([&argc](View&v,MotionEvent&e){
-        const bool down=e.getAction()==MotionEvent::ACTION_DOWN;
-        AnimatorSet*aset= new AnimatorSet();
-        Animator* alpha = ObjectAnimator::ofFloat(&v, "alpha", {0.f});
-        Animator* scale = ObjectAnimator::ofFloat(&v, "scaleX", {1.5f});
-        alpha->setDuration(200);
-        scale->setDuration(200);
-        if(argc%2)aset->playTogether({alpha,scale});
-        else aset->playSequentially({scale,alpha});
-        aset->start();
-        return false;
-    });
-    SpringAnimation spa(btn,(FloatProperty*)&SpringAnimation::SCALE_X,0.2);
-    spa.getSpring()/*->setStiffness(2.0f)*/->setDampingRatio(0.1f);
-    DynamicAnimation::OnAnimationUpdateListener upls=[&](DynamicAnimation& animation, float value, float velocity) {
-        printf("[UPDATE] frame value=%.2f  velocity=%.2f\n", value, velocity);
-    };
-    DynamicAnimation::OnAnimationEndListener endls=[&](DynamicAnimation& animation,bool canceled, float value, float velocity) {
-        printf("[END] frame value=%.2f  velocity=%.2f\n", value, velocity);
-    };
-    spa.addUpdateListener(upls).addEndListener(endls).start();
+    Button *btn=new Button("Hello World!",350,200);
+    d = ctx->getDrawable("cdroid:drawable/btn_default");
+    LOGD("d=%p",d);
+    btn->setBackground(d);
 
     LOGD_IF(sld,"%p statecount=%d",sld,sld->getStateCount());
     btn->setBackgroundTintList(ctx->getColorStateList("cdroid:color/textview"));
@@ -47,7 +25,8 @@ int main(int argc,const char*argv[]){
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
     w->addView(btn);
     btn->setId(100);
-    btn->layout(10,60,200,60);
+    btn->setTextSize(50);
+    btn->layout(10,40,350,200);
 
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));
@@ -59,7 +38,7 @@ int main(int argc,const char*argv[]){
     btn->setClickable(true);
     w->addView(btn);
     btn->setId(101);
-    btn->layout(200,60,300,64);
+    btn->layout(400,60,300,64);
 
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
@@ -69,7 +48,7 @@ int main(int argc,const char*argv[]){
     ((ToggleButton*)btn)->setTextOff("Off");
     w->addView(btn);
     btn->setId(101);
-    btn->layout(200,150,120,40);
+    btn->layout(400,150,120,40);
     btn->setClickable(true);
 
     chk=new CheckBox("CheckME",200,60);
@@ -84,19 +63,13 @@ int main(int argc,const char*argv[]){
             });
     chk->layout(450,360,200,60);
 	
-    /*AnalogClock*clk=new AnalogClock(300,300);
-    d=ctx->getDrawable("cdroid:drawable/analog.xml");
-    clk->setClockDrawable(d,AnalogClock::DIAL);
-    d=ctx->getDrawable("cdroid:drawable/analog_second.xml");
-    clk->setClockDrawable(d,AnalogClock::SECOND);
-    w->addView(clk).layout(600,300,300,300);*/
-
 #if 1 
     chk=new RadioButton("Radio",120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
     chk->setId(1001);
-    chk->setChecked(true);
+    dynamic_cast<Checkable*>(chk)->setChecked(true);
+    //chk->setChecked(true);
     w->addView(chk);
     chk->layout(700,360,120,60);
 	
@@ -117,7 +90,7 @@ int main(int argc,const char*argv[]){
     pb->setProgress(34);
     pb->setSecondaryProgress(15);
     w->addView(pb);
-    pb->layout(50,150,500,40);
+    pb->layout(400,150,500,40);
 #endif
 #if 1
     //////////////////////////////////////////////////////////    

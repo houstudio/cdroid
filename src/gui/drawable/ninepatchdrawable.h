@@ -18,10 +18,9 @@
 #ifndef __NINEPATCH_DRAWABLE_H__
 #define __NINEPATCH_DRAWABLE_H__
 #include <drawable/drawable.h>
-#include <drawable/ninepatchrenderer.h>
 
 namespace cdroid{
-class NinePatch;
+class NinePatchRenderer;
 class NinePatchDrawable:public Drawable{
 private:
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{

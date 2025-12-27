@@ -28,14 +28,13 @@ namespace cdroid{
 NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     const uint32_t numRows = image->get_height();
-    uint8_t** rows = new uint8_t*[numRows];
+    auto rows = std::unique_ptr<uint8_t*[]>(new uint8_t*[numRows]);
     uint8_t*pd = image->get_data();
     for(int i = 0;i < numRows; i++){
         rows[i] = pd;
         pd += image->get_stride();
     }
-    auto anp = NinePatch::Create(rows,image->get_width(),numRows,nullptr);
-    delete []rows;
+    auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,nullptr);
     for(auto&r:anp->horizontal_stretch_regions){
         mResizeDistancesX.push_back({r.start,r.end-r.start});
     }
@@ -46,7 +45,7 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     mPadding.top  = anp->padding.top;
     mPadding.width = anp->padding.right;
     mPadding.height= anp->padding.bottom;
-    mRadius = anp->outline_radius;
+    mRadius = static_cast<int>(anp->outline_radius);
     mOpacity = ImageDecoder::getTransparency(mImage);
     mContentArea.set(mPadding.left,mPadding.top,
         image->get_width()-mPadding.left-2,
