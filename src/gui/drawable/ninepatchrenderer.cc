@@ -358,7 +358,7 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
-    LOGD_IF(haveLayoutBounds||1,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
+    LOGD_IF(haveLayoutBounds,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
             mPadding.left,mPadding.top,mPadding.width,mPadding.height);
