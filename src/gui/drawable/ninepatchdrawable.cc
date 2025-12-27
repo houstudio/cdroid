@@ -83,6 +83,7 @@ void NinePatchDrawable::computeBitmapSize(){
     mBitmapHeight= Drawable::scaleFromDensity( ninePatch->get_height(), sourceDensity, targetDensity, true);
     mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width() , sourceDensity, targetDensity, true);
 
+    mOutlineRadius = mNinePatchState->getRadius();
     /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
     if (insets != null) {
         Rect outlineRect = insets.outlineRect;
@@ -368,13 +369,13 @@ void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding){
     if(bitmap){
         mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap));
-        mPadding = mNinePatch->getPadding();
-        mOpticalInsets=mNinePatch->getOpticalInsets();
+        mPadding   = mNinePatch->getPadding();
+        mOpticalInsets = mNinePatch->getOpticalInsets();
     }
     if(padding)mPadding=*padding;
-    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) opticalInsets=(%d,%d,%d,%d)",
+    LOGD("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) radius=%d opticalInsets=(%d,%d,%d,%d)",
             this,bitmap->get_width(),bitmap->get_height(),
-            mPadding.left,mPadding.top,mPadding.width,mPadding.height,
+            mPadding.left,mPadding.top,mPadding.width,mPadding.height,mNinePatch->getRadius(),
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom);
 }
 

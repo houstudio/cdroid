@@ -41,6 +41,25 @@ static void findMaxOpacity(uint8_t** rows, int startX, int startY, int endX, int
     }
 }
 
+
+static uint8_t maxAlphaOverRow(uint8_t* row, int startX, int endX) {
+    uint8_t maxAlpha = 0;
+    for (int x = startX; x < endX; x++) {
+        uint8_t alpha = (row + x * 4)[3];
+        if (alpha > maxAlpha) maxAlpha = alpha;
+    }
+    return maxAlpha;
+}
+
+static uint8_t maxAlphaOverCol(uint8_t** rows, int offsetX, int startY, int endY) {
+    uint8_t maxAlpha = 0;
+    for (int y = startY; y < endY; y++) {
+        uint8_t alpha = (rows[y] + offsetX * 4)[3];
+        if (alpha > maxAlpha) maxAlpha = alpha;
+    }
+    return maxAlpha;
+}
+
 NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     : mImage(image){
     const uint32_t numRows = image->get_height();
@@ -80,6 +99,29 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         mOpticalInsets.top = 0;
         mOpticalInsets.bottom = 0;
     }
+ 
+    const int innerStartX = 1 + mOpticalInsets.left;
+    const int innerStartY = 1 + mOpticalInsets.top;
+    const int innerEndX = endX - mOpticalInsets.right;
+    const int innerEndY = endY - mOpticalInsets.bottom;
+    const int innerMidX = (innerEndX + innerStartX) / 2;
+    const int innerMidY = (innerEndY + innerStartY) / 2;
+  
+    // assuming the image is a round rect, compute the radius by marching
+    // diagonally from the top left corner towards the center
+    mAlpha = std::max(maxAlphaOverRow(rows[innerMidY], innerStartX, innerEndX),
+                 maxAlphaOverCol(rows.get(), innerMidX, innerStartY, innerStartY));
+  
+    int diagonalInset = 0;
+    findMaxOpacity(rows.get(), innerStartX, innerStartY, innerMidX, innerMidY, 1, 1, &diagonalInset);
+  
+    /* Determine source radius based upon inset:
+     *     sqrt(r^2 + r^2) = sqrt(i^2 + i^2) + r
+     *     sqrt(2) * r = sqrt(2) * i + r
+     *     (sqrt(2) - 1) * r = sqrt(2) * i
+     *     r = sqrt(2) / (sqrt(2) - 1) * i
+     */
+    mRadius = int32_t(3.4142f * diagonalInset);
 
     mPadding.left = anp->padding.left;
     mPadding.top  = anp->padding.top;

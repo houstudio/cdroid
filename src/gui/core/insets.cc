@@ -72,7 +72,7 @@ bool Insets::operator==(const Insets&o)const{
 }
  
 bool Insets::operator!=(const Insets&o)const{
-    return (left!=o.left)&&(top!=o.top)&&(right!=o.right)&&(bottom!=o.bottom);
+    return (left!=o.left)||(top!=o.top)||(right!=o.right)||(bottom!=o.bottom);
 }
 
 }
