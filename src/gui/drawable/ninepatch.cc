@@ -620,13 +620,30 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T>& v) {
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-#if defined(_WIN32)||1
-#undef  nhtol
-#undef  htonl
-#define ntohl(x)    ( ((x) << 24) | (((x) >> 24) & 255) | (((x) << 8) & 0xff0000) | (((x) >> 8) & 0xff00) )
-#define htonl(x)    ntohl(x)
-#define ntohs(x)    ( (((x) << 8) & 0xff00) | (((x) >> 8) & 255) )
-#define htons(x)    ntohs(x)
+#undef ntohl
+#undef htonl
+#undef ntohs
+#undef htons
+#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
+    #define ntohl(x) ( (uint32_t)( \
+        ( ((uint32_t)(x) << 24) & 0xFF000000u) | \
+        ( ((uint32_t)(x) <<  8) & 0x00FF0000u) | \
+        ( ((uint32_t)(x) >>  8) & 0x0000FF00u) | \
+        ( ((uint32_t)(x) >> 24) & 0x000000FFu) ) )
+
+    #define htonl(x) ntohl(x)
+    #define ntohs(x) ( (uint16_t)( \
+        ( ((uint16_t)(x) << 8) & 0xFF00u) | \
+        ( ((uint16_t)(x) >> 8) & 0x00FFu) ) )
+
+    #define htons(x) ntohs(x)
+#elif __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+    #define ntohl(x) ( (uint32_t)(x) )
+    #define htonl(x) ntohl(x)
+    #define ntohs(x) ( (uint16_t)(x) )
+    #define htons(x) ntohs(x)
+#else
+    #error "Unknown endian"
 #endif
 
 static const bool kDebugStringPoolNoisy = false;
