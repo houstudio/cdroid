@@ -18,10 +18,9 @@
 #ifndef __NINEPATCH_DRAWABLE_H__
 #define __NINEPATCH_DRAWABLE_H__
 #include <drawable/drawable.h>
-#include <drawable/ninepatch.h>
 
 namespace cdroid{
-class NinePatch;
+class NinePatchRenderer;
 class NinePatchDrawable:public Drawable{
 private:
     class NinePatchState:public std::enable_shared_from_this<NinePatchState>,public ConstantState{
@@ -34,7 +33,7 @@ private:
         int mTintMode;
         int mChangingConfigurations;
         const ColorStateList*mTint;
-        Cairo::RefPtr<NinePatch>mNinePatch;
+        Cairo::RefPtr<NinePatchRenderer>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
         void setBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap,const Rect*padding=nullptr);

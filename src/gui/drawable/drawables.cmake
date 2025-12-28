@@ -26,6 +26,7 @@ SET(DRAWABLE_SOURCES
     drawable/layerdrawable.cc
     drawable/levellistdrawable.cc
     drawable/ninepatch.cc
+    drawable/ninepatchrenderer.cc
     drawable/ninepatchdrawable.cc
     drawable/paintdrawable.cc
     drawable/pathparser.cc

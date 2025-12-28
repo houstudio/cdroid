@@ -16,10 +16,10 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/ninepatchdrawable.h>
+#include <drawable/ninepatchrenderer.h>
 #include <image-decoders/imagedecoder.h>
-#include <drawable/ninepatch.h>
+#include <porting/cdlog.h>
 #include <fstream>
-#include <cdlog.h>
 using namespace Cairo;
 namespace cdroid{
 //https://github.com/soramimi/QtNinePatch/blob/master/NinePatch.cpp
@@ -83,6 +83,7 @@ void NinePatchDrawable::computeBitmapSize(){
     mBitmapHeight= Drawable::scaleFromDensity( ninePatch->get_height(), sourceDensity, targetDensity, true);
     mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width() , sourceDensity, targetDensity, true);
 
+    mOutlineRadius = mNinePatchState->mNinePatch->getRadius();
     /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
     if (insets != null) {
         Rect outlineRect = insets.outlineRect;
@@ -322,7 +323,7 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
             throw std::logic_error(//a.getPositionDescription() +
                     ": <nine-patch> requires a valid src attribute");
         } else {//if (bitmap.getNinePatchChunk() == null) {
-            state->mNinePatch = std::make_shared<NinePatch>(bitmap);
+            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
             state->mPadding = state->mNinePatch->getPadding();
             mOutlineRadius = state->mNinePatch->getRadius();
             const Rect& r=state->mPadding;
@@ -367,12 +368,15 @@ void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&
 
 void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding){
     if(bitmap){
-        mNinePatch = RefPtr<NinePatch>(new NinePatch(bitmap));
-        mPadding = mNinePatch->getPadding();
+        mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap));
+        mPadding   = mNinePatch->getPadding();
+        mOpticalInsets = mNinePatch->getOpticalInsets();
     }
     if(padding)mPadding=*padding;
-    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d)",this,bitmap->get_width(),bitmap->get_height(),
-        mPadding.left,mPadding.top,mPadding.width,mPadding.height);
+    LOGV("ninpatch %p size=%dx%d padding=(%d,%d,%d,%d) radius=%d opticalInsets=(%d,%d,%d,%d)",
+            this,bitmap->get_width(),bitmap->get_height(),
+            mPadding.left,mPadding.top,mPadding.width,mPadding.height,mNinePatch->getRadius(),
+            mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom);
 }
 
 NinePatchDrawable::NinePatchState::NinePatchState(const NinePatchState&orig){
