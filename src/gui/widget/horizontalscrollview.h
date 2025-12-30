@@ -31,15 +31,13 @@ private:
     VelocityTracker* mVelocityTracker;
     EdgeEffect* mEdgeGlowLeft;
     EdgeEffect* mEdgeGlowRight;
-    int mLastMotionX;
-    bool mIsLayoutDirty = true;
     View* mChildToScrollTo = nullptr;
     bool mIsBeingDragged = false;
-
+    bool mIsLayoutDirty = true;
     bool mFillViewport;
-
     bool mSmoothScrollingEnabled = true;
 
+    int mLastMotionX;
     int mScrollDuration;
     int mTouchSlop;
     int mMinimumVelocity;
@@ -47,10 +45,9 @@ private:
 
     int mOverscrollDistance;
     int mOverflingDistance;
+    int mActivePointerId;
 
     float mHorizontalScrollFactor;
-    int mActivePointerId;
-    Rect mTempRect;
 private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float MAX_SCROLL_FACTOR =0.5f;

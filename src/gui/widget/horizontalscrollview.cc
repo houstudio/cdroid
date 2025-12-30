@@ -201,7 +201,6 @@ bool HorizontalScrollView::dispatchKeyEvent(KeyEvent& event) {
 }
 
 bool HorizontalScrollView::executeKeyEvent(KeyEvent& event) {
-    mTempRect.setEmpty();
 
     LOGV("%s.%s",event.getLabel(),KeyEvent::actionToString(event.getAction()).c_str());
     if (!canScroll()) {
@@ -693,8 +692,9 @@ View* HorizontalScrollView::findFocusableViewInBounds(bool leftFocus, int left, 
 }
 
 bool HorizontalScrollView::pageScroll(int direction) {
-    bool right = direction == View::FOCUS_RIGHT;
-    int width = getWidth();
+    const bool right = direction == View::FOCUS_RIGHT;
+    const int width = getWidth();
+    Rect mTempRect{};
 
     if (right) {
         mTempRect.left = getScrollX() + width;
@@ -717,8 +717,9 @@ bool HorizontalScrollView::pageScroll(int direction) {
 }
 
 bool HorizontalScrollView::fullScroll(int direction) {
-    bool right = direction == View::FOCUS_RIGHT;
-    int width = getWidth();
+    const bool right = direction == View::FOCUS_RIGHT;
+    const int width = getWidth();
+    Rect mTempRect{};
 
     mTempRect.left = 0;
     mTempRect.width = width;
@@ -728,7 +729,7 @@ bool HorizontalScrollView::fullScroll(int direction) {
         if (count > 0) {
             View* view = getChildAt(0);
             mTempRect.width = width;//view->getRight();
-            mTempRect.left = view->getRight() - width;//mTempRect.right - width;
+            mTempRect.left = view->getRight() - width;
         }
     }
 
@@ -766,12 +767,13 @@ bool HorizontalScrollView::arrowScroll(int direction){
 
     View* nextFocused = FocusFinder::getInstance().findNextFocus(this, currentFocused, direction);
 
-    int maxJump = getMaxScrollAmount();
+    const int maxJump = getMaxScrollAmount();
 
     if (nextFocused != nullptr && isWithinDeltaOfScreen(nextFocused, maxJump)) {
+        Rect mTempRect;
         nextFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(nextFocused, mTempRect);
-        int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+        const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
         doScrollX(scrollDelta);
         nextFocused->requestFocus(direction);
     } else {
@@ -782,9 +784,9 @@ bool HorizontalScrollView::arrowScroll(int direction){
             scrollDelta = getScrollX();
         } else if (direction == View::FOCUS_RIGHT && getChildCount() > 0) {
 
-            int daRight = getChildAt(0)->getRight();
+            const int daRight = getChildAt(0)->getRight();
 
-            int screenRight = getScrollX() + getWidth();
+            const int screenRight = getScrollX() + getWidth();
 
             if (daRight - screenRight < maxJump) {
                 scrollDelta = daRight - screenRight;
@@ -802,7 +804,7 @@ bool HorizontalScrollView::arrowScroll(int direction){
         // it up (take it back to ourselves)
         // (also, need to temporarily force FOCUS_BEFORE_DESCENDANTS so we are
         // sure to get it)
-        int descendantFocusability = getDescendantFocusability();  // save
+        const int descendantFocusability = getDescendantFocusability();  // save
         setDescendantFocusability(ViewGroup::FOCUS_BEFORE_DESCENDANTS);
         requestFocus();
         setDescendantFocusability(descendantFocusability);  // restore
@@ -815,7 +817,8 @@ bool HorizontalScrollView::isOffScreen(View* descendant){
 }
 
 bool HorizontalScrollView::isWithinDeltaOfScreen(View* descendant, int delta){
-     descendant->getDrawingRect(mTempRect);
+    Rect mTempRect;
+    descendant->getDrawingRect(mTempRect);
     offsetDescendantRectToMyCoords(descendant, mTempRect);
 
     return (mTempRect.right() + delta) >= getScrollX()
@@ -839,10 +842,10 @@ void HorizontalScrollView::smoothScrollBy(int dx, int dy) {
     }
     const auto duration = SystemClock::uptimeMillis() - mLastScroll;
     if (duration > ANIMATED_SCROLL_GAP) {
-        int width = getWidth() - mPaddingRight - mPaddingLeft;
-        int right = getChildAt(0)->getWidth();
-        int maxX = std::max(0, right - width);
-        int scrollX = mScrollX;
+        const int width = getWidth() - mPaddingRight - mPaddingLeft;
+        const int right = getChildAt(0)->getWidth();
+        const int maxX = std::max(0, right - width);
+        const int scrollX = mScrollX;
         dx = std::max(0, std::min(scrollX + dx, maxX)) - scrollX;
 
         mScroller->startScroll(scrollX, mScrollY, dx, 0,mScrollDuration);
@@ -859,15 +862,15 @@ void HorizontalScrollView::smoothScrollTo(int x, int y){
 }
 
 int HorizontalScrollView::computeHorizontalScrollRange() {
-    int count = getChildCount();
-    int contentWidth = getWidth() - mPaddingLeft - mPaddingRight;
+    const int count = getChildCount();
+    const int contentWidth = getWidth() - mPaddingLeft - mPaddingRight;
     if (count == 0) {
         return contentWidth;
     }
 
     int scrollRange = getChildAt(0)->getRight();
-    int scrollX = mScrollX;
-    int overscrollRight = std::max(0, scrollRange - contentWidth);
+    const int scrollX = mScrollX;
+    const int overscrollRight = std::max(0, scrollRange - contentWidth);
     if (scrollX < 0) {
         scrollRange -= scrollX;
     } else if (scrollX > overscrollRight) {
@@ -885,12 +888,12 @@ void HorizontalScrollView::measureChild(View* child, int parentWidthMeasureSpec,
         int parentHeightMeasureSpec) {
     LayoutParams* lp = (LayoutParams*)child->getLayoutParams();
 
-    int horizontalPadding = mPaddingLeft + mPaddingRight;
-    int childWidthMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
+    const int horizontalPadding = mPaddingLeft + mPaddingRight;
+    const int childWidthMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
         std::max(0, MeasureSpec::getSize(parentWidthMeasureSpec) - horizontalPadding),
         MeasureSpec::UNSPECIFIED);
 
-    int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
+    const int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
                 mPaddingTop + mPaddingBottom, lp->height);
     child->measure(childWidthMeasureSpec, childHeightMeasureSpec);
 }
@@ -899,11 +902,11 @@ void HorizontalScrollView::measureChildWithMargins(View* child, int parentWidthM
             int parentHeightMeasureSpec, int heightUsed) {
     MarginLayoutParams* lp = (MarginLayoutParams*) child->getLayoutParams();
 
-    int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
+    const int childHeightMeasureSpec = getChildMeasureSpec(parentHeightMeasureSpec,
             mPaddingTop + mPaddingBottom + lp->topMargin + lp->bottomMargin+ heightUsed, lp->height);
 
-    int usedTotal = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin + widthUsed;
-    int childWidthMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
+    const int usedTotal = mPaddingLeft + mPaddingRight + lp->leftMargin + lp->rightMargin + widthUsed;
+    const int childWidthMeasureSpec = MeasureSpec::makeSafeMeasureSpec(
                     std::max(0, MeasureSpec::getSize(parentWidthMeasureSpec) - usedTotal),
                     MeasureSpec::UNSPECIFIED);
 
@@ -952,6 +955,10 @@ void HorizontalScrollView::computeScroll(){
  * @return The unconsumed delta after the EdgeEffects have had an opportunity to consume.
  */
 int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
+    const int scrollX = getScrollX();
+    if((scrollX < 0)||(scrollX>getScrollRange())){
+        return unconsumed;
+    }
     if (unconsumed > 0 && mEdgeGlowLeft && mEdgeGlowLeft->getDistance() != 0.f) {
         const int size = getWidth();
         const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
@@ -976,21 +983,22 @@ int HorizontalScrollView::consumeFlingInStretch(int unconsumed) {
 }
 
 void HorizontalScrollView::scrollToChild(View* child) {
-        child->getDrawingRect(mTempRect);
+    Rect mTempRect;
+    child->getDrawingRect(mTempRect);
 
-        /* Offset from child's local coordinates to ScrollView coordinates */
-        offsetDescendantRectToMyCoords(child, mTempRect);
+    /* Offset from child's local coordinates to ScrollView coordinates */
+    offsetDescendantRectToMyCoords(child, mTempRect);
 
-        int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+    const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
 
-        if (scrollDelta != 0) {
-            scrollBy(scrollDelta, 0);
-        }
+    if (scrollDelta != 0) {
+        scrollBy(scrollDelta, 0);
+    }
 }
 
 bool HorizontalScrollView::scrollToChildRect(Rect rect, bool immediate){
-    int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
-    bool scroll = delta != 0;
+    const int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
+    const bool scroll = delta != 0;
     if (scroll) {
         if (immediate) {
             scrollBy(delta, 0);
@@ -1004,11 +1012,11 @@ bool HorizontalScrollView::scrollToChildRect(Rect rect, bool immediate){
 int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
     if (getChildCount() == 0) return 0;
 
-    int width = getWidth();
+    const int width = getWidth();
     int screenLeft = getScrollX();
     int screenRight = screenLeft + width;
 
-    int fadingEdge = getHorizontalFadingEdgeLength();
+    const int fadingEdge = getHorizontalFadingEdgeLength();
 
     // leave room for left fading edge as long as rect isn't at very left
     if (rect.left > 0) {
@@ -1036,8 +1044,8 @@ int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
         }
 
         // make sure we aren't scrolling beyond the end of our content
-        int right = getChildAt(0)->getRight();
-        int distanceToRight = right - screenRight;
+        const int right = getChildAt(0)->getRight();
+        const int distanceToRight = right - screenRight;
         scrollXDelta = std::min(scrollXDelta, distanceToRight);
 
     } else if (rect.left < screenLeft && rect.right() < screenRight) {
@@ -1159,9 +1167,10 @@ void HorizontalScrollView::onSizeChanged(int w, int h, int oldw, int oldh) {
     if (nullptr == currentFocused || this == currentFocused)
         return;
 
-    int maxJump = mRight - mLeft;
+    const int maxJump = mRight - mLeft;
 
     if (isWithinDeltaOfScreen(currentFocused, maxJump)) {
+        Rect mTempRect;
         currentFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(currentFocused, mTempRect);
         int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);

@@ -318,7 +318,7 @@ void ScrollView::requestDisallowInterceptTouchEvent(bool disallowIntercept) {
 }
 
 bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
-    int action = ev.getAction();
+    const int action = ev.getAction();
     if ((action == MotionEvent::ACTION_MOVE) && (mIsBeingDragged)) {
         return true;
     }
@@ -345,7 +345,7 @@ bool ScrollView::onInterceptTouchEvent(MotionEvent& ev) {
         }
 
         const int pointerIndex = ev.findPointerIndex(activePointerId);
-        if (pointerIndex == -1) {
+        if (pointerIndex == INVALID_POINTER) {
             LOGE("Invalid pointerId=%d  in onInterceptTouchEvent",activePointerId);
             break;
         }
@@ -443,7 +443,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
     vtev->offsetLocation(0, mNestedYOffset);
 
     switch (actionMasked) {
-    case MotionEvent::ACTION_DOWN: {
+    case MotionEvent::ACTION_DOWN:
         if (getChildCount() == 0) {
             return false;
         }
@@ -468,7 +468,6 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
         LOGV("ACTION_DOWN mActivePointerId=%d",mActivePointerId);
         startNestedScroll(SCROLL_AXIS_VERTICAL);
         break;
-    }
     case MotionEvent::ACTION_MOVE: {
         const int activePointerIndex = ev.findPointerIndex(mActivePointerId);
         if (activePointerIndex == -1) {
@@ -866,11 +865,10 @@ bool ScrollView::fullScroll(int direction) {
     mTempRect.height = height;
 
     if (down) {
-        int count = getChildCount();
+        const int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(count - 1);
-            mTempRect.top = mTempRect.bottom() - height;
-            mTempRect.height = view->getBottom() + mPaddingBottom-mTempRect.top;
+            mTempRect.top = view->getBottom() + mPaddingBottom - height;
         }
     }
     return scrollAndFocus(direction, mTempRect.top, mTempRect.bottom());
@@ -1138,6 +1136,10 @@ bool ScrollView::onNestedFling(View* target, float velocityX, float velocityY, b
 }
 
 int ScrollView::consumeFlingInStretch(int unconsumed) {
+    const int scrollY = getScrollY();
+    if((scrollY < 0)||(scrollY > getScrollRange())){
+        return unconsumed;
+    }
     if (unconsumed > 0 && mEdgeGlowTop && mEdgeGlowTop->getDistance() != 0.f) {
          const int size = getHeight();
          const float deltaDistance = -unconsumed * FLING_DESTRETCH_FACTOR / size;
@@ -1400,9 +1402,9 @@ bool ScrollView::shouldAbsorb(EdgeEffect* edgeEffect, int velocity) {
     if (velocity > 0) {
         return true;
     }
-    float distance = edgeEffect->getDistance() * getHeight();
+    const float distance = edgeEffect->getDistance() * getHeight();
     // This is flinging without the spring, so let's see if it will fling past the overscroll
-    float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
+    const float flingDistance = (float) mScroller->getSplineFlingDistance(-velocity);
 
     return flingDistance < distance;
 }
