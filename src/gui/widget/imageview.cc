@@ -101,8 +101,8 @@ void ImageView::resolveUri(){
     if (!mResource.empty()) {
         if(strpbrk(mResource.c_str(),"@:")==nullptr){
             RefPtr<Cairo::ImageSurface>bitmap = getContext()->loadImage(mResource);
-            setImageBitmap(bitmap);
             LOGW_IF(bitmap==nullptr,"Unable to find resource: %s",mResource.c_str());
+            setImageBitmap(bitmap);
         }else if(mResource.compare("@null")){
             Drawable* d = getContext()->getDrawable(mResource);
             LOGW_IF(d==nullptr,"Unable to find resource: %s",mResource.c_str());
