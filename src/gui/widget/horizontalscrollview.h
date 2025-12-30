@@ -68,7 +68,7 @@ private:
     void doScrollX(int delta);
     int  consumeFlingInStretch(int unconsumed);
     void scrollToChild(View* child);
-    bool scrollToChildRect(Rect rect, bool immediate);
+    bool scrollToChildRect(const Rect& rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
     bool shouldDisplayEdgeEffects()const;
     bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
@@ -82,7 +82,7 @@ protected:
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed)override;
-    int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
+    int computeScrollDeltaToGetChildRectOnScreen(const Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;

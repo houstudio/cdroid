@@ -1182,7 +1182,7 @@ void ScrollView::scrollToDescendant(View* child) {
     }
 }
 
-bool ScrollView::scrollToChildRect(Rect& rect, bool immediate){
+bool ScrollView::scrollToChildRect(const Rect& rect, bool immediate){
     int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
      bool scroll = delta != 0;
     if (scroll) {
@@ -1195,7 +1195,7 @@ bool ScrollView::scrollToChildRect(Rect& rect, bool immediate){
     return scroll;
 }
 
-int ScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
+int ScrollView::computeScrollDeltaToGetChildRectOnScreen(const Rect& rect){
      if (getChildCount() == 0) return 0;
 
         int height = getHeight();

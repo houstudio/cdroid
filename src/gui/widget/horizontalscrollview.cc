@@ -739,10 +739,10 @@ bool HorizontalScrollView::fullScroll(int direction) {
 bool HorizontalScrollView::scrollAndFocus(int direction, int left, int right){
     bool handled = true;
 
-    int width = getWidth();
-    int containerLeft = getScrollX();
-    int containerRight = containerLeft + width;
-    bool goLeft = direction == View::FOCUS_LEFT;
+    const int width = getWidth();
+    int const containerLeft = getScrollX();
+    const int containerRight = containerLeft + width;
+    const bool goLeft = direction == View::FOCUS_LEFT;
 
     View* newFocused = findFocusableViewInBounds(goLeft, left, right);
     if (newFocused == nullptr) {
@@ -996,7 +996,7 @@ void HorizontalScrollView::scrollToChild(View* child) {
     }
 }
 
-bool HorizontalScrollView::scrollToChildRect(Rect rect, bool immediate){
+bool HorizontalScrollView::scrollToChildRect(const Rect& rect, bool immediate){
     const int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
     const bool scroll = delta != 0;
     if (scroll) {
@@ -1009,7 +1009,7 @@ bool HorizontalScrollView::scrollToChildRect(Rect rect, bool immediate){
     return scroll;
 }
 
-int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(Rect& rect){
+int HorizontalScrollView::computeScrollDeltaToGetChildRectOnScreen(const Rect& rect){
     if (getChildCount() == 0) return 0;
 
     const int width = getWidth();
