@@ -194,7 +194,7 @@ View* FocusFinder::findNextFocus(ViewGroup* root, View* focused,Rect* focusedRec
 }
 
 View* FocusFinder::findNextKeyboardNavigationCluster(View* root,View* currentCluster,
-        std::vector<View*> clusters,int direction) {
+        std::vector<View*>& clusters,int direction) {
         // Note: This sort is stable.
     /*mUserSpecifiedClusterComparator.setFocusables(clusters, root);
     Collections.sort(clusters, mUserSpecifiedClusterComparator);

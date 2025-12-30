@@ -27,7 +27,7 @@ private:
     View* findNextUserSpecifiedKeyboardNavigationCluster(View*root, View*currentCluster,int direction);
     View* findNextUserSpecifiedFocus(ViewGroup* root, View* focused, int direction);
     View* findNextFocus(ViewGroup* root, View* focused,Rect* focusedRect,int direction, std::vector<View*>& focusables);
-    View* findNextKeyboardNavigationCluster(View* root,View* currentCluster,std::vector<View*> clusters,int direction);
+    View* findNextKeyboardNavigationCluster(View* root,View* currentCluster,std::vector<View*>& clusters,int direction);
     void setFocusBottomRight(ViewGroup* root,Rect& focusedRect)const;
     void setFocusTopLeft(ViewGroup* root, Rect& focusedRect)const;
     bool isTouchCandidate(int x, int y,const Rect& destRect, int direction)const;
