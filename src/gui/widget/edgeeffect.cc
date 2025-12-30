@@ -73,7 +73,7 @@ void EdgeEffect::setSize(int width, int height){
     mBounds.set(mBounds.left, mBounds.top, width, (int) std::min((float)height, h));
 }
 
-int EdgeEffect::getCurrentEdgeEffectBehavior() {
+int EdgeEffect::getCurrentEdgeEffectBehavior() const{
     if (!ValueAnimator::areAnimatorsEnabled()) {
         return TYPE_NONE;
     } else {

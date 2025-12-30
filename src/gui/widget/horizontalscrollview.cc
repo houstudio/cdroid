@@ -727,10 +727,9 @@ bool HorizontalScrollView::fullScroll(int direction) {
     mTempRect.width = width;
 
     if (right) {
-        int count = getChildCount();
+        const int count = getChildCount();
         if (count > 0) {
             View* view = getChildAt(0);
-            mTempRect.width = width;//view->getRight();
             mTempRect.left = view->getRight() - width;
         }
     }
@@ -742,7 +741,7 @@ bool HorizontalScrollView::scrollAndFocus(int direction, int left, int right){
     bool handled = true;
 
     const int width = getWidth();
-    int const containerLeft = getScrollX();
+    const int containerLeft = getScrollX();
     const int containerRight = containerLeft + width;
     const bool goLeft = direction == View::FOCUS_LEFT;
 
@@ -771,7 +770,7 @@ bool HorizontalScrollView::arrowScroll(int direction){
 
     const int maxJump = getMaxScrollAmount();
 
-    if (nextFocused != nullptr && isWithinDeltaOfScreen(nextFocused, maxJump)) {
+    if ((nextFocused != nullptr) && isWithinDeltaOfScreen(nextFocused, maxJump)) {
         Rect mTempRect;
         nextFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(nextFocused, mTempRect);
@@ -782,12 +781,11 @@ bool HorizontalScrollView::arrowScroll(int direction){
         // no new focus
         int scrollDelta = maxJump;
 
-        if (direction == View::FOCUS_LEFT && getScrollX() < scrollDelta) {
+        if ((direction == View::FOCUS_LEFT) && (getScrollX() < scrollDelta)) {
             scrollDelta = getScrollX();
-        } else if (direction == View::FOCUS_RIGHT && getChildCount() > 0) {
+        } else if ((direction == View::FOCUS_RIGHT) && (getChildCount() > 0)) {
 
             const int daRight = getChildAt(0)->getRight();
-
             const int screenRight = getScrollX() + getWidth();
 
             if (daRight - screenRight < maxJump) {
@@ -800,7 +798,7 @@ bool HorizontalScrollView::arrowScroll(int direction){
         doScrollX(direction == View::FOCUS_RIGHT ? scrollDelta : -scrollDelta);
     }
 
-    if (currentFocused != nullptr && currentFocused->isFocused()
+    if ((currentFocused != nullptr) && currentFocused->isFocused()
             && isOffScreen(currentFocused)) {
         // previously focused item still has focus and is off screen, give
         // it up (take it back to ourselves)

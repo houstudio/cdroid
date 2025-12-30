@@ -879,10 +879,10 @@ bool ScrollView::fullScroll(int direction) {
 bool ScrollView::scrollAndFocus(int direction, int top, int bottom) {
     bool handled = true;
 
-    int height = getHeight();
-    int containerTop = getScrollY();
-    int containerBottom = containerTop + height;
-    bool up = direction == View::FOCUS_UP;
+    const int height = getHeight();
+    const int containerTop = getScrollY();
+    const int containerBottom = containerTop + height;
+    const bool up = (direction == View::FOCUS_UP);
 
     View* newFocused = findFocusableViewInBounds(up, top, bottom);
     if (newFocused == nullptr) {
@@ -892,7 +892,7 @@ bool ScrollView::scrollAndFocus(int direction, int top, int bottom) {
     if (top >= containerTop && bottom <= containerBottom) {
         handled = false;
     } else {
-        int delta = up ? (top - containerTop) : (bottom - containerBottom);
+        const int delta = up ? (top - containerTop) : (bottom - containerBottom);
         doScrollY(delta);
     }
     if (newFocused != findFocus()) newFocused->requestFocus(direction);
@@ -907,23 +907,23 @@ bool ScrollView::arrowScroll(int direction) {
 
     const int maxJump = getMaxScrollAmount();
 
-    if (nextFocused != nullptr && isWithinDeltaOfScreen(nextFocused, maxJump, getHeight())) {
+    if ((nextFocused != nullptr) && isWithinDeltaOfScreen(nextFocused, maxJump, getHeight())) {
         Rect mTempRect;
         nextFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(nextFocused, mTempRect);
-        int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+        const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
         doScrollY(scrollDelta);
         nextFocused->requestFocus(direction);
     } else {
         // no new focus
         int scrollDelta = maxJump;
 
-        if (direction == View::FOCUS_UP && getScrollY() < scrollDelta) {
+        if ((direction == View::FOCUS_UP) && (getScrollY() < scrollDelta)) {
             scrollDelta = getScrollY();
         } else if (direction == View::FOCUS_DOWN) {
             if (getChildCount() > 0) {
-                int daBottom = getChildAt(0)->getBottom();
-                int screenBottom = getScrollY() + getHeight() - mPaddingBottom;
+                const int daBottom = getChildAt(0)->getBottom();
+                const int screenBottom = getScrollY() + getHeight() - mPaddingBottom;
                 if (daBottom - screenBottom < maxJump) {
                     scrollDelta = daBottom - screenBottom;
                 }
@@ -935,7 +935,7 @@ bool ScrollView::arrowScroll(int direction) {
         doScrollY(direction == View::FOCUS_DOWN ? scrollDelta : -scrollDelta);
     }
 
-    if (currentFocused != nullptr && currentFocused->isFocused()
+    if ((currentFocused != nullptr) && currentFocused->isFocused()
             && isOffScreen(currentFocused)) {
         // previously focused item still has focus and is off screen, give
         // it up (take it back to ourselves)
@@ -1122,10 +1122,10 @@ void ScrollView::onStopNestedScroll(View* target) {
 
 void ScrollView::onNestedScroll(View* target, int dxConsumed, int dyConsumed,
             int dxUnconsumed, int dyUnconsumed){
-    int oldScrollY = mScrollY;
+    const int oldScrollY = mScrollY;
     scrollBy(0, dyUnconsumed);
-    int myConsumed = mScrollY - oldScrollY;
-    int myUnconsumed = dyUnconsumed - myConsumed;
+    const int myConsumed = mScrollY - oldScrollY;
+    const int myUnconsumed = dyUnconsumed - myConsumed;
     dispatchNestedScroll(0, myConsumed, 0, myUnconsumed, nullptr);
 }
 
@@ -1185,8 +1185,8 @@ void ScrollView::scrollToDescendant(View* child) {
 }
 
 bool ScrollView::scrollToChildRect(const Rect& rect, bool immediate){
-    int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
-     bool scroll = delta != 0;
+    const int delta = computeScrollDeltaToGetChildRectOnScreen(rect);
+    const bool scroll = delta != 0;
     if (scroll) {
         if (immediate) {
             scrollBy(0, delta);
@@ -1200,11 +1200,11 @@ bool ScrollView::scrollToChildRect(const Rect& rect, bool immediate){
 int ScrollView::computeScrollDeltaToGetChildRectOnScreen(const Rect& rect){
      if (getChildCount() == 0) return 0;
 
-        int height = getHeight();
+        const int height = getHeight();
         int screenTop = getScrollY();
         int screenBottom = screenTop + height;
 
-        int fadingEdge = getVerticalFadingEdgeLength();
+        const int fadingEdge = getVerticalFadingEdgeLength();
 
         // leave room for top fading edge as long as rect isn't at very top
         if (rect.top > 0) {
@@ -1441,10 +1441,10 @@ void ScrollView::scrollTo(int x, int y){
 void ScrollView::draw(Canvas& canvas){
     FrameLayout::draw(canvas);
     if (shouldDisplayEdgeEffects()) {
-        int scrollY = mScrollY;
+        const int scrollY = mScrollY;
         int width,height;
         float translateX,translateY;
-        bool clipToPadding = getClipToPadding();
+        const bool clipToPadding = getClipToPadding();
         if (!mEdgeGlowTop->isFinished()) {
             canvas.save();
             if (clipToPadding) {
