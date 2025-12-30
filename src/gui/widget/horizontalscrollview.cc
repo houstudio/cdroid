@@ -1191,7 +1191,7 @@ void HorizontalScrollView::fling(int velocityX){
             } else {
                 shouldFling = true;
             }
-        }else if(mScrollX==maxScroll && mEdgeGlowRight->isFinished()){
+        }else if((mScrollX==maxScroll) && !mEdgeGlowRight->isFinished()){
             if (shouldAbsorb(mEdgeGlowRight, velocityX)) {
                 mEdgeGlowRight->onAbsorb(velocityX);
             } else {
