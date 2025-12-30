@@ -1208,7 +1208,7 @@ void HorizontalScrollView::fling(int velocityX){
             if(shouldDisplayEdgeEffects())
             mEdgeGlowRight->onAbsorb(velocityX);
         }else{
-            shouldFling = false;
+            shouldFling = true;
         }
         if(shouldFling){
             mScroller->fling(mScrollX, mScrollY, velocityX, 0, 0,std::max(0, right - width), 0, 0, width/2, 0);

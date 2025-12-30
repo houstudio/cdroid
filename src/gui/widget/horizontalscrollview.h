@@ -26,7 +26,6 @@ namespace cdroid{
 class HorizontalScrollView:public FrameLayout{
 private:
     static constexpr int INVALID_POINTER = -1;
-    int64_t mLastScroll;
     OverScroller* mScroller;
     VelocityTracker* mVelocityTracker;
     EdgeEffect* mEdgeGlowLeft;
@@ -37,6 +36,7 @@ private:
     bool mFillViewport;
     bool mSmoothScrollingEnabled = true;
 
+    int64_t mLastScroll;
     int mLastMotionX;
     int mScrollDuration;
     int mTouchSlop;

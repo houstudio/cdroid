@@ -25,13 +25,14 @@ class HapticScrollFeedbackProvider;
 class ScrollView:public FrameLayout{
 private:
     static constexpr int INVALID_POINTER=-1;
-    int64_t mLastScroll;
-    int mLastMotionY;
-    bool mIsLayoutDirty=true;
     View* mChildToScrollTo = nullptr;
+    bool mIsLayoutDirty=true;
     bool mIsBeingDragged = false;
     bool mFillViewport;
     bool mSmoothScrollingEnabled = true;
+
+    int64_t mLastScroll;
+    int mLastMotionY;
     int mTouchSlop;
     int mScrollDuration;
     int mMinimumVelocity;
