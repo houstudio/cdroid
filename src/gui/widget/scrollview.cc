@@ -41,6 +41,7 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
 
 ScrollView::~ScrollView(){
     recycleVelocityTracker();
+    delete mSavedState;
     delete mHapticScrollFeedbackProvider;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -113,6 +114,7 @@ void ScrollView::initScrollView() {
     mSmoothScrollingEnabled = true;
     mVelocityTracker = nullptr;
     mLastScroll = 0;
+    mSavedState = nullptr;
     mEdgeGlowTop = new EdgeEffect(mContext);
     mEdgeGlowBottom = new EdgeEffect(mContext);
     ViewConfiguration& configuration = ViewConfiguration::get(mContext);
@@ -1307,10 +1309,10 @@ void ScrollView::onLayout(bool changed, int l, int t, int w, int h){
     mChildToScrollTo = nullptr;
 
     if (!isLaidOut()) {
-        /*if (mSavedState != nullptr) {
-            mScrollY = mSavedState.scrollPosition;
+        if (mSavedState != nullptr) {
+            mScrollY = mSavedState->scrollPosition;
             mSavedState = nullptr;
-        } */// mScrollY default value is "0"
+        }// mScrollY default value is "0"
         const int childHeight = (getChildCount() > 0) ? getChildAt(0)->getMeasuredHeight() : 0;
         const int scrollRange = std::max(0, childHeight - (h - mPaddingBottom - mPaddingTop));
 
@@ -1329,7 +1331,7 @@ void ScrollView::onSizeChanged(int w, int h, int oldw, int oldh) {
     FrameLayout::onSizeChanged(w, h, oldw, oldh);
 
     View* currentFocused = findFocus();
-    if (nullptr == currentFocused || this == currentFocused)
+    if ((nullptr == currentFocused) || (this == currentFocused))
         return;
 
     // If the currently-focused view was visible on the screen when the
@@ -1339,7 +1341,7 @@ void ScrollView::onSizeChanged(int w, int h, int oldw, int oldh) {
         Rect mTempRect;
         currentFocused->getDrawingRect(mTempRect);
         offsetDescendantRectToMyCoords(currentFocused, mTempRect);
-        int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
+        const int scrollDelta = computeScrollDeltaToGetChildRectOnScreen(mTempRect);
         doScrollY(scrollDelta);
     }
 }
@@ -1355,8 +1357,8 @@ bool ScrollView::isViewDescendantOf(View* child, View* parent){
 
 void ScrollView::fling(int velocityY) {
     if (getChildCount() > 0) {
-        int height = getHeight() - mPaddingBottom - mPaddingTop;
-        int bottom = getChildAt(0)->getHeight();
+        const int height = getHeight() - mPaddingBottom - mPaddingTop;
+        const int bottom = getChildAt(0)->getHeight();
 
         mScroller->fling(mScrollX, mScrollY, 0, velocityY, 0, 0, 0,
                          std::max(0, bottom - height), 0, height/2);
@@ -1498,4 +1500,28 @@ int ScrollView::clamp(int n, int my, int child){
    return n;
 }
 
+void ScrollView::onRestoreInstanceState(Parcelable& state) {
+    /*if (mContext.getApplicationInfo().targetSdkVersion <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        // Some old apps reused IDs in ways they shouldn't have.
+        // Don't break them, but they don't get scroll state restoration.
+        FrameLayout::onRestoreInstanceState(state);
+        return;
+    }*/
+    SavedState* ss = (SavedState*)&state;
+    FrameLayout::onRestoreInstanceState(*ss->getSuperState());
+    mSavedState = ss;
+    requestLayout();
+}
+
+Parcelable* ScrollView::onSaveInstanceState() {
+    /*if (mContext.getApplicationInfo().targetSdkVersion <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        // Some old apps reused IDs in ways they shouldn't have.
+        // Don't break them, but they don't get scroll state restoration.
+        return FrameLayout::onSaveInstanceState();
+    }*/
+    Parcelable* superState = FrameLayout::onSaveInstanceState();
+    SavedState* ss = new SavedState(superState);
+    ss->scrollPosition = mScrollY;
+    return ss;
+}
 }

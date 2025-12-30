@@ -25,6 +25,7 @@ namespace cdroid{
 
 class HorizontalScrollView:public FrameLayout{
 private:
+    class SavedState;
     static constexpr int INVALID_POINTER = -1;
     OverScroller* mScroller;
     VelocityTracker* mVelocityTracker;
@@ -46,8 +47,8 @@ private:
     int mOverscrollDistance;
     int mOverflingDistance;
     int mActivePointerId;
-
     float mHorizontalScrollFactor;
+    SavedState*mSavedState;
 private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float MAX_SCROLL_FACTOR =0.5f;
@@ -87,6 +88,8 @@ protected:
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void draw(Canvas& canvas)override;
+    void onRestoreInstanceState(Parcelable& state)override;
+    Parcelable*onSaveInstanceState()override;
 public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
@@ -125,5 +128,19 @@ public:
     void scrollTo(int x, int y)override;
 };
 
+class HorizontalScrollView::SavedState:public BaseSavedState{
+public:
+    int scrollOffsetFromStart;
+public:
+    SavedState(Parcelable*superState):BaseSavedState(superState),scrollOffsetFromStart(0){
+    }
+    SavedState(Parcel&source):BaseSavedState(source){
+        scrollOffsetFromStart = source.readInt();
+    }
+    void writeToParcel(Parcel&dest,int flags){
+        BaseSavedState::writeToParcel(dest,flags);
+        dest.writeInt(scrollOffsetFromStart);
+    }
+};
 }
 #endif

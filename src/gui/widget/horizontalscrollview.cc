@@ -37,6 +37,7 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
 
 HorizontalScrollView::~HorizontalScrollView(){
     recycleVelocityTracker();
+    delete mSavedState;
     delete mScroller;
     delete mEdgeGlowLeft;
     delete mEdgeGlowRight;
@@ -106,6 +107,7 @@ void HorizontalScrollView::initScrollView(const AttributeSet*atts) {
     setDescendantFocusability(FOCUS_AFTER_DESCENDANTS);
     setWillNotDraw(false);
     mLastScroll = 0;
+    mSavedState = nullptr;
     mEdgeGlowLeft = new EdgeEffect(mContext,atts);
     mEdgeGlowRight= new EdgeEffect(mContext,atts);
     ViewConfiguration&configuration=ViewConfiguration::get(mContext);
@@ -1123,9 +1125,9 @@ void HorizontalScrollView::onLayout(bool changed, int l, int t, int w, int h){
         childMargins = childParams->leftMargin + childParams->rightMargin;
     }
 
-    int available = w-getPaddingLeftWithForeground()-getPaddingRightWithForeground() - childMargins;
+    const int available = w-getPaddingLeftWithForeground() - getPaddingRightWithForeground() - childMargins;
 
-    bool forceLeftGravity = (childWidth > available);
+    const bool forceLeftGravity = (childWidth > available);
 
     layoutChildren(l, t, w, h, forceLeftGravity);
 
@@ -1137,13 +1139,13 @@ void HorizontalScrollView::onLayout(bool changed, int l, int t, int w, int h){
     mChildToScrollTo = nullptr;
 
     if (!isLaidOut()) {
-        int scrollRange = std::max(0, childWidth - (w - mPaddingLeft - mPaddingRight));
-        /*if (mSavedState != nullptr) {
+        const int scrollRange = std::max(0, childWidth - (w - mPaddingLeft - mPaddingRight));
+        if (mSavedState != nullptr) {
             mScrollX = isLayoutRtl()
-                    ? scrollRange - mSavedState.scrollOffsetFromStart
-                    : mSavedState.scrollOffsetFromStart;
+                    ? scrollRange - mSavedState->scrollOffsetFromStart
+                    : mSavedState->scrollOffsetFromStart;
             mSavedState = nullptr;
-        } else*/ {
+        } else {
             if (isLayoutRtl()) {
                 mScrollX = scrollRange - mScrollX;
             } // mScrollX default value is "0" for LTR
@@ -1300,4 +1302,28 @@ void HorizontalScrollView::draw(Canvas& canvas){
     }
 }
 
+void HorizontalScrollView::onRestoreInstanceState(Parcelable& state) {
+    /*if (mContext.getApplicationInfo().targetSdkVersion <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        // Some old apps reused IDs in ways they shouldn't have.
+        // Don't break them, but they don't get scroll state restoration.
+        FrameLayout::onRestoreInstanceState(state);
+        return;
+    }*/
+    SavedState* ss = (SavedState*) &state;
+    FrameLayout::onRestoreInstanceState(*ss->getSuperState());
+    mSavedState = ss;
+    requestLayout();
+}
+
+Parcelable* HorizontalScrollView::onSaveInstanceState() {
+    /*if (mContext.getApplicationInfo().targetSdkVersion <= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        // Some old apps reused IDs in ways they shouldn't have.
+        // Don't break them, but they don't get scroll state restoration.
+        return FrameLayout::onSaveInstanceState();
+    }*/
+    Parcelable* superState = FrameLayout::onSaveInstanceState();
+    SavedState* ss = new SavedState(superState);
+    ss->scrollOffsetFromStart = isLayoutRtl() ? -mScrollX : mScrollX;
+    return ss;
+}
 }//namespace 
