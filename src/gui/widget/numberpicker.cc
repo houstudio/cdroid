@@ -343,14 +343,19 @@ void NumberPicker::initView(){
 
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
     if (!mHasSelectorWheel&&mIncrementButton&&mIncrementButton) {
-        const int btnw = mIncrementButton->getMeasuredWidth();
-        const int btnh = mIncrementButton->getMeasuredHeight();
         if(!isHorizontalMode()){
+            const int btnh = mIncrementButton->getMeasuredHeight();
             mIncrementButton->layout( 0, 0, width, btnh);
             mDecrementButton->layout( 0, height - btnh, width, btnh);
         }else{
-            mIncrementButton->layout( 0, 0, btnw, height);
-            mDecrementButton->layout( width - btnw, 0, btnw, height);
+            const int btnw = mIncrementButton->getMeasuredWidth();
+            if(!isLayoutRtl()){
+                mIncrementButton->layout( 0, 0, btnw, height);
+                mDecrementButton->layout( width - btnw, 0, btnw, height);
+            }else{
+                mDecrementButton->layout( 0, 0, btnw, height);
+                mIncrementButton->layout( width - btnw, 0, btnw, height);
+            }
         }
     }
     const int msrdWdth = getMeasuredWidth();

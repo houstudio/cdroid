@@ -113,7 +113,7 @@ public:
 XmlPullParser::XmlPullParser(){
     mData = new Private;
     mData->depth = 0;
-    mData->parser = XML_ParserCreateNS(NULL,' ');
+    mData->parser = XML_ParserCreateNS(nullptr,' ');
     XML_SetUserData(mData->parser, this);
     XML_SetElementHandler(mData->parser, AttrParser::startElementHandler, AttrParser::endElementHandler);
     XML_SetCharacterDataHandler(mData->parser, AttrParser::characterDataHandler);

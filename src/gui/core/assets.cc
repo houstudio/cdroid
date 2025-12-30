@@ -226,7 +226,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 std::string key  = attrs.getString("name");
                 std::string value= getTrimedValue(parser);
                 value = AttributeSet::normalize(package,value);
-                size_t pos =key.find(':');
+                const size_t pos =key.find(':');
                 if(pos!=std::string::npos)key=key.substr(pos+1);
                 its->second.add(key,value);
             }
