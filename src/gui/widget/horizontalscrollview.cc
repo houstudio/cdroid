@@ -384,7 +384,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
     const int action = ev.getAction();
 
     switch (action & MotionEvent::ACTION_MASK) {
-    case MotionEvent::ACTION_DOWN: {
+    case MotionEvent::ACTION_DOWN:
         if (getChildCount() == 0) {
             return false;
         }
@@ -405,7 +405,6 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
         mLastMotionX = (int) ev.getX();
         mActivePointerId = ev.getPointerId(0);
         break;
-    }
     case MotionEvent::ACTION_MOVE:{
         const int activePointerIndex = ev.findPointerIndex(mActivePointerId);
         if (activePointerIndex == -1) {
@@ -464,7 +463,7 @@ bool HorizontalScrollView::onTouchEvent(MotionEvent& ev) {
                         mEdgeGlowRight->onRelease();
                     }
                 } else if (pulledToX > range) {
-                    mEdgeGlowRight->onPull((float) deltaX / getWidth(),displacement);
+                    mEdgeGlowRight->onPullDistance((float) deltaX / getWidth(),displacement);
                     if (!mEdgeGlowLeft->isFinished()) {
                         mEdgeGlowLeft->onRelease();
                     }
