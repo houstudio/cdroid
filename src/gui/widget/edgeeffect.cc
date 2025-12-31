@@ -73,7 +73,7 @@ void EdgeEffect::setSize(int width, int height){
     mBounds.set(mBounds.left, mBounds.top, width, (int) std::min((float)height, h));
 }
 
-int EdgeEffect::getCurrentEdgeEffectBehavior() {
+int EdgeEffect::getCurrentEdgeEffectBehavior() const{
     if (!ValueAnimator::areAnimatorsEnabled()) {
         return TYPE_NONE;
     } else {
@@ -96,7 +96,7 @@ void EdgeEffect::onPull(float deltaDistance){
 }
 
 void EdgeEffect::onPull(float deltaDistance, float displacement){
-    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    const int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
     if (edgeEffectBehavior == TYPE_NONE) {
         finish();
         return;
@@ -130,10 +130,10 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
         mGlowAlpha = mGlowAlphaStart = 0;
     } else {
 
-        float absdd = std::abs(deltaDistance);
+        const float absdd = std::abs(deltaDistance);
         mGlowAlpha = mGlowAlphaStart = std::min(MAX_ALPHA,
                 mGlowAlpha + (absdd * PULL_DISTANCE_ALPHA_GLOW_FACTOR));
-        float scale = (float) (std::max(0.f, 1.f - 1.f /
+        const float scale = (float) (std::max(0.f, 1.f - 1.f /
                (float)std::sqrt(std::abs(mPullDistance) * mBounds.height) - 0.3f) / 0.7f);
 
         mGlowScaleY = mGlowScaleYStart = scale;
@@ -147,13 +147,13 @@ void EdgeEffect::onPull(float deltaDistance, float displacement){
 }
 
 float EdgeEffect::onPullDistance(float deltaDistance, float displacement) {
-    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    const int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
     if (edgeEffectBehavior == TYPE_NONE) {
         return 0.f;
     }
-    float finalDistance = std::max(.0f, deltaDistance + mDistance);
-    float delta = finalDistance - mDistance;
-    if (delta == 0.f && mDistance == 0.f) {
+    const float finalDistance = std::max(.0f, deltaDistance + mDistance);
+    const float delta = finalDistance - mDistance;
+    if ((delta == 0.f) && (mDistance == 0.f)) {
         return 0.f; // No pull, don't do anything.
     }
 
@@ -190,7 +190,7 @@ void EdgeEffect::onRelease(){
 }
 
 void EdgeEffect::onAbsorb(int velocity){
-    int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
+    const int edgeEffectBehavior = getCurrentEdgeEffectBehavior();
     if (edgeEffectBehavior == TYPE_STRETCH) {
         mState = STATE_RECEDE;
         mVelocity = velocity * ON_ABSORB_VELOCITY_ADJUSTMENT;
@@ -268,9 +268,9 @@ int EdgeEffect::getMaxHeight()const{
 
 void EdgeEffect::update() {
     const auto time = SystemClock::uptimeMillis();
-    float t = std::min((time - mStartTime) / mDuration, 1.f);
+    const float t = std::min((time - mStartTime) / mDuration, 1.f);
 
-    float interp = mInterpolator->getInterpolation(t);
+    const float interp = mInterpolator->getInterpolation(t);
 
     mGlowAlpha = mGlowAlphaStart + (mGlowAlphaFinish - mGlowAlphaStart) * interp;
     mGlowScaleY = mGlowScaleYStart + (mGlowScaleYFinish - mGlowScaleYStart) * interp;
@@ -316,8 +316,8 @@ void EdgeEffect::update() {
 }
 
 void EdgeEffect::updateSpring() {
-    int64_t time = AnimationUtils::currentAnimationTimeMillis();
-    float deltaT = (time - mStartTime) / 1000.f; // Convert from millis to seconds
+    const int64_t time = AnimationUtils::currentAnimationTimeMillis();
+    const float deltaT = (time - mStartTime) / 1000.f; // Convert from millis to seconds
     if (deltaT < 0.001f) {
         return; // Must have at least 1 ms difference
     }
@@ -341,16 +341,16 @@ void EdgeEffect::updateSpring() {
         }
         return;
     }
-    double mDampedFreq = NATURAL_FREQUENCY * sqrt(1 - DAMPING_RATIO * DAMPING_RATIO);
+    const double mDampedFreq = NATURAL_FREQUENCY * sqrt(1 - DAMPING_RATIO * DAMPING_RATIO);
 
     // We're always underdamped, so we can use only those equations:
-    double cosCoeff = mDistance * mHeight;
-    double sinCoeff = (1 / mDampedFreq) * (DAMPING_RATIO * NATURAL_FREQUENCY
+    const double cosCoeff = mDistance * mHeight;
+    const double sinCoeff = (1 / mDampedFreq) * (DAMPING_RATIO * NATURAL_FREQUENCY
             * mDistance * mHeight + mVelocity);
-    double distance = std::pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
+    const double distance = std::pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
             * (cosCoeff * std::cos(mDampedFreq * deltaT)
             + sinCoeff * std::sin(mDampedFreq * deltaT));
-    double velocity = distance * (-NATURAL_FREQUENCY) * DAMPING_RATIO
+    const double velocity = distance * (-NATURAL_FREQUENCY) * DAMPING_RATIO
             + std::pow(M_E, -DAMPING_RATIO * NATURAL_FREQUENCY * deltaT)
             * (-mDampedFreq * cosCoeff * std::sin(mDampedFreq * deltaT)
                 + mDampedFreq * sinCoeff * std::cos(mDampedFreq * deltaT));
@@ -380,22 +380,22 @@ float EdgeEffect::calculateDistanceFromGlowValues(float scale, float alpha) {
 }
 
 bool EdgeEffect::isAtEquilibrium()const{
-    double displacement = mDistance * mHeight; // in pixels
-    double velocity = mVelocity;
+    const double displacement = mDistance * mHeight; // in pixels
+    const double velocity = mVelocity;
 
     // Don't allow displacement to drop below 0. We don't want it stretching the opposite
     // direction if it is flung that way. We also want to stop the animation as soon as
     // it gets very close to its destination.
-    return displacement < 0 || (abs(velocity) < VELOCITY_THRESHOLD
-            && displacement < VALUE_THRESHOLD);
+    return (displacement < 0) || ((std::abs(velocity) < VELOCITY_THRESHOLD)
+            && (displacement < VALUE_THRESHOLD));
 }
 
 float EdgeEffect::dampStretchVector(float normalizedVec)const{
-    float sign = normalizedVec > .0f ? 1.f : -1.f;
-    float overscroll = std::abs(normalizedVec);
-    float linearIntensity = LINEAR_STRETCH_INTENSITY * overscroll;
-    double scalar = M_E / SCROLL_DIST_AFFECTED_BY_EXP_STRETCH;
-    double expIntensity = EXP_STRETCH_INTENSITY * (1.f - std::exp(-overscroll * scalar));
+    const float sign = normalizedVec > 0.f ? 1.f : -1.f;
+    const float overscroll = std::abs(normalizedVec);
+    const float linearIntensity = LINEAR_STRETCH_INTENSITY * overscroll;
+    const double scalar = M_E / SCROLL_DIST_AFFECTED_BY_EXP_STRETCH;
+    const double expIntensity = EXP_STRETCH_INTENSITY * (1.f - std::exp(-overscroll * scalar));
     return sign * (float) (linearIntensity + expIntensity);
 }
 

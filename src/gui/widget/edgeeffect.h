@@ -146,7 +146,7 @@ private:
 private:
     void update();
     void updateSpring();
-    int  getCurrentEdgeEffectBehavior();
+    int  getCurrentEdgeEffectBehavior()const;
     float calculateDistanceFromGlowValues(float scale, float alpha);
     bool isAtEquilibrium()const;
     float dampStretchVector(float normalizedVec)const;

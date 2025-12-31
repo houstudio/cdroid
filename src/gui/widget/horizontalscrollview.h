@@ -25,21 +25,20 @@ namespace cdroid{
 
 class HorizontalScrollView:public FrameLayout{
 private:
+    class SavedState;
     static constexpr int INVALID_POINTER = -1;
-    int64_t mLastScroll;
     OverScroller* mScroller;
     VelocityTracker* mVelocityTracker;
     EdgeEffect* mEdgeGlowLeft;
     EdgeEffect* mEdgeGlowRight;
-    int mLastMotionX;
-    bool mIsLayoutDirty = true;
     View* mChildToScrollTo = nullptr;
     bool mIsBeingDragged = false;
-
+    bool mIsLayoutDirty = true;
     bool mFillViewport;
-
     bool mSmoothScrollingEnabled = true;
 
+    int64_t mLastScroll;
+    int mLastMotionX;
     int mScrollDuration;
     int mTouchSlop;
     int mMinimumVelocity;
@@ -47,10 +46,9 @@ private:
 
     int mOverscrollDistance;
     int mOverflingDistance;
-
-    float mHorizontalScrollFactor;
     int mActivePointerId;
-    Rect mTempRect;
+    float mHorizontalScrollFactor;
+    SavedState*mSavedState;
 private:
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr float MAX_SCROLL_FACTOR =0.5f;
@@ -71,7 +69,7 @@ private:
     void doScrollX(int delta);
     int  consumeFlingInStretch(int unconsumed);
     void scrollToChild(View* child);
-    bool scrollToChildRect(Rect rect, bool immediate);
+    bool scrollToChildRect(const Rect& rect, bool immediate);
     bool isViewDescendantOf(View* child, View* parent);
     bool shouldDisplayEdgeEffects()const;
     bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity);
@@ -85,11 +83,13 @@ protected:
     void measureChild(View* child, int parentWidthMeasureSpec,int parentHeightMeasureSpec)override;
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed)override;
-    int computeScrollDeltaToGetChildRectOnScreen(Rect& rect);
+    int computeScrollDeltaToGetChildRectOnScreen(const Rect& rect);
     bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect)override;
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
     void draw(Canvas& canvas)override;
+    void onRestoreInstanceState(Parcelable& state)override;
+    Parcelable*onSaveInstanceState()override;
 public:
     HorizontalScrollView(int w,int h);
     HorizontalScrollView(Context*ctx,const AttributeSet&atts);
@@ -128,5 +128,19 @@ public:
     void scrollTo(int x, int y)override;
 };
 
+class HorizontalScrollView::SavedState:public BaseSavedState{
+public:
+    int scrollOffsetFromStart;
+public:
+    SavedState(Parcelable*superState):BaseSavedState(superState),scrollOffsetFromStart(0){
+    }
+    SavedState(Parcel&source):BaseSavedState(source){
+        scrollOffsetFromStart = source.readInt();
+    }
+    void writeToParcel(Parcel&dest,int flags){
+        BaseSavedState::writeToParcel(dest,flags);
+        dest.writeInt(scrollOffsetFromStart);
+    }
+};
 }
 #endif
