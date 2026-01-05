@@ -174,7 +174,7 @@ StateListAnimator* AnimatorInflater::createStateListAnimatorFromXml(Context*cont
 std::vector<PropertyValuesHolder*> AnimatorInflater::loadValues(XmlPullParser& parser,const  AttributeSet& attrs){
     std::vector<PropertyValuesHolder*> values;
     int type = XmlPullParser::START_TAG;
-    while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT) && (type != XmlPullParser::END_DOCUMENT)) {
+    while ((type != XmlPullParser::END_TAG) && (type != XmlPullParser::END_DOCUMENT)) {
         if (type != XmlPullParser::START_TAG) {
             type = parser.next();
             continue;
