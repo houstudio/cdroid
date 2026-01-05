@@ -861,10 +861,10 @@ int TouchDevice::checkPointEdges(Point&pt)const{
     if((pt.x < 0)&&(pt.y < 0))return 0;
     if(pt.x < EDGESIZE) edges|=1;
     if(pt.y < EDGESIZE) edges|=2;
-    if(rotation==0||rotation==2){
+    if(rotation==Display::ROTATION_0||rotation==Display::ROTATION_180){
         if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
         if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
-    }else{
+    }else{/*Display::ROTATION_90 Display::ROTATION_270*/
         if(pt.x > mScreenHeight - EDGESIZE) edges|=4;
         if(pt.y > mScreenWidth - EDGESIZE) edges|=8;
     }
