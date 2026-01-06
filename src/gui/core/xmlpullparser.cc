@@ -34,9 +34,12 @@ struct XmlEvent {
     std::string text;
     std::shared_ptr<std::unordered_map<std::string,std::string>>atts;
     XmlEvent(){
+        depth = -1;
+        lineNumber = -1;
+        columnNumber = -1;
         atts = std::make_shared<std::unordered_map<std::string,std::string>>();
     }
-    XmlEvent(XmlPullParser::EventType tp):XmlEvent(){type =tp;depth=-1;}
+    XmlEvent(XmlPullParser::EventType tp):XmlEvent(){type =tp;}
     XmlEvent(XmlPullParser::EventType tp,const std::string&name_):XmlEvent(tp){
        name= name_;
     }

@@ -342,7 +342,7 @@ void NumberPicker::initView(){
 }
 
 void NumberPicker::onLayout(bool changed, int left, int top, int width, int height){
-    if (!mHasSelectorWheel&&mIncrementButton&&mIncrementButton) {
+    if (!mHasSelectorWheel&&mIncrementButton&&mDecrementButton) {
         if(!isHorizontalMode()){
             const int btnh = mIncrementButton->getMeasuredHeight();
             mIncrementButton->layout( 0, 0, width, btnh);

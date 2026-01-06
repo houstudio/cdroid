@@ -91,7 +91,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
         if(hasColon==false) {
             if( isRes && hasSlash ){
                 value = std::string(pkg+":"+value);
-            }else if(hasAsk && (hasColon==false) && (property.size()>1) ) {
+            }else if(hasAsk && (property.size()>1) ) {
                 value = std::string(pkg + ":attr/" + value);
             }
         }
