@@ -345,9 +345,9 @@ void TextUtils::stringAppendF(std::string& dst, const char* format, ...) {
 
 std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
     bool has_ss = false;
-    int32_t h24 = seconds / 3600;
-    int32_t m   = (seconds % 3600) / 60;
-    int32_t s = seconds % 60;
+    uint32_t h24 = seconds / 3600;
+    uint32_t m   = (seconds % 3600) / 60;
+    uint32_t s = seconds % 60;
     for (const char* p = fmt.c_str(); *p; ++p)
         if (*p == 's' && *(p+1) == 's') { has_ss = true; break; }
 
@@ -366,36 +366,36 @@ std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
 
         /* 24h*/
         if (c == 'H' && *(p+1) != 'H') {
-            char b[3]; std::snprintf(b, 3, "%d", h24 % 24); out += b; continue;
+            char b[3]; std::snprintf(b, 3, "%u", h24 % 24); out += b; continue;
         }
         if (c == 'H' && *(p+1) == 'H') {
-            char b[3]; std::snprintf(b, 3, "%02d", h24 % 24); out += b; ++p; continue;
+            char b[3]; std::snprintf(b, 3, "%02u", h24 % 24); out += b; ++p; continue;
         }
 
         /* 12h*/
         if (c == 'h' && *(p+1) != 'h') {
             uint32_t h12 = h24 % 12; if (h12 == 0) h12 = 12;
-            char b[16]; std::snprintf(b, 3, "%d", h12); out += b; continue;
+            char b[16]; std::snprintf(b, 3, "%u", h12); out += b; continue;
         }
         if (c == 'h' && *(p+1) == 'h') {
             uint32_t h12 = h24%12; if (h12 == 0) h12 = 12;
-            char b[16]; std::snprintf(b, 3, "%02d", h12); out += b; ++p; continue;
+            char b[16]; std::snprintf(b, 3, "%02u", h12); out += b; ++p; continue;
         }
 
         /* minute */
         if (c == 'm' && *(p+1) != 'm') {
-            char b[8]; std::snprintf(b, 3, "%d", m % 60); out += b; continue;
+            char b[8]; std::snprintf(b, 3, "%u", m % 60); out += b; continue;
         }
         if (c == 'm' && *(p+1) == 'm') {
-            char b[8]; std::snprintf(b, 3, "%02d", m % 60); out += b; ++p; continue;
+            char b[8]; std::snprintf(b, 3, "%02u", m % 60); out += b; ++p; continue;
         }
 
         /* second */
         if (c == 's' && *(p+1) != 's') {
-            char b[8]; std::snprintf(b, 3, "%d", s % 60); out += b; continue;
+            char b[8]; std::snprintf(b, 3, "%u", s % 60); out += b; continue;
         }
         if (c == 's' && *(p+1) == 's') {
-            char b[8]; std::snprintf(b, 3, "%02d", s % 60); out += b; ++p; continue;
+            char b[8]; std::snprintf(b, 3, "%02u", s % 60); out += b; ++p; continue;
         }
 
         /* AM/PM */
