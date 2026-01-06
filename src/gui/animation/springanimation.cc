@@ -110,7 +110,6 @@ bool SpringAnimation::updateValueAndVelocity(long deltaT) {
     }
 
     if (mPendingPosition != UNSET) {
-        double lastPosition = mSpring->getFinalPosition();
         // Approximate by considering half of the time spring position stayed at the old
         // position, half of the time it's at the new position.
         DynamicAnimation::MassState* massState = mSpring->updateValues(mValue, mVelocity, deltaT / 2);

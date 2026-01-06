@@ -30,7 +30,6 @@ int64_t AnimationUtils::currentAnimationTimeMillis(){
 
 Animation* AnimationUtils::loadAnimation(Context* context,const std::string&resid){
     Animation*anim = nullptr;
-    int type,depth;
     XmlPullParser parser(context,resid);
     const AttributeSet& attrs = parser;
     return createAnimationFromXml(context,parser,nullptr,attrs);

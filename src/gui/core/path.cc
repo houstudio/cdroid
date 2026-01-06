@@ -529,7 +529,7 @@ static void addBezier(const PointF* points,BezierCalculation bezierFunction, std
             }
         } while (needsSubdivision);
         iter = next;
-        next++;
+        ++next;
     }
 
     // Now that each division can use linear interpolation with less than the allowed error

@@ -180,7 +180,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         postOnAnimationStart();
     }
     canvas.save();
-    auto frmSequence = mAnimatedImageState->mFrameSequence;
+    //auto frmSequence = mAnimatedImageState->mFrameSequence;
     if( (mCurrentFrame != mNextFrame) && mAnimatedImageState->mFrameCount){
         const int64_t startTime  = SystemClock::uptimeMillis();
         mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
