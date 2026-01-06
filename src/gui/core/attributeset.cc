@@ -281,8 +281,10 @@ float AttributeSet::getFloat(const std::string&key,float def)const{
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
         try{
-            int32_t iv = mContext->getDimension(v);
-            return *(float*)&iv;
+            const int32_t iv = mContext->getDimension(v);
+            float fv;
+            std::memcpy(&fv,&iv,sizeof(fv));
+            return fv;
         }catch(std::exception&e){
             return def;
         }
