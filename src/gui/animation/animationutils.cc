@@ -75,7 +75,6 @@ Animation* AnimationUtils::createAnimationFromXml(Context* c, XmlPullParser& par
 }
 
 LayoutAnimationController* AnimationUtils::loadLayoutAnimation(Context* context,const std::string&resid){
-    int type,depth;
     XmlPullParser parser(context,resid);
     const AttributeSet& attrs = parser;
     return createLayoutAnimationFromXml(context,parser,attrs);

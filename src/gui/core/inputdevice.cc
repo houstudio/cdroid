@@ -857,10 +857,17 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
 int TouchDevice::checkPointEdges(Point&pt)const{
 #define EDGESIZE 16
     int edges=0;
+    const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
+    if((pt.x < 0)&&(pt.y < 0))return 0;
     if(pt.x < EDGESIZE) edges|=1;
     if(pt.y < EDGESIZE) edges|=2;
-    if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
-    if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
+    if(rotation==Display::ROTATION_0||rotation==Display::ROTATION_180){
+        if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
+        if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
+    }else{/*Display::ROTATION_90 Display::ROTATION_270*/
+        if(pt.x > mScreenHeight - EDGESIZE) edges|=4;
+        if(pt.y > mScreenWidth - EDGESIZE) edges|=8;
+    }
     return edges;
 }
 

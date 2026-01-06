@@ -379,14 +379,14 @@ int Typeface::loadFromFontConfig() {
     std::string lang = "en_US.UTF-8";
     if(langenv)lang = langenv;
     size_t pos = lang.find('.');
-    const int loadedFont = fs->nfont;
+    const int loadedFont = fs?fs->nfont:0;
     if(pos != std::string::npos)
         lang = lang.substr(0,pos);
     pos = lang.find('_');
     if(pos != std::string::npos)
         lang = lang.substr(0,pos);
     mSystemLang = lang;
-    for (int i=0; fs && i < fs->nfont; i++) {
+    for (int i=0; i < loadedFont; i++) {
         FcPattern *pat = fs->fonts[i];//FcPatternDuplicate(fs->fonts[i]);
         auto tf = Typeface::make(*pat);
         const std::string family = tf->getFamily();
