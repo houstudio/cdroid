@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <string.h>
-#include "cdtypes.h"
-#include "cdlog.h"
+#include <cstring>
+#include <porting/cdlog.h>
 #include <gui_features.h>
 #if ENABLE(WEBP)
 #include <core/context.h>
@@ -105,7 +104,7 @@ WebPFrameSequence::WebPFrameSequence(std::istream&stream)
         return;
     }
     mDataBytes = new uint8_t[mDataSize];
-    memcpy((void*)mDataBytes, riff_header, RIFF_HEADER_SIZE);
+    std::memcpy((void*)mDataBytes, riff_header, RIFF_HEADER_SIZE);
 
     // Read rest of the bytes.
     void* remaining_bytes = (void*)(mDataBytes + RIFF_HEADER_SIZE);
@@ -186,14 +185,14 @@ static bool checkIfCover(const WebPIterator& target, const WebPIterator& covered
 
 // Clear all pixels in a line to transparent.
 static void clearLine(uint32_t* dst, int width) {
-    memset(dst, 0, width * sizeof(*dst));  // Note: Assumes TRANSPARENT == 0x0.
+    std::memset(dst, 0, width * sizeof(*dst));  // Note: Assumes TRANSPARENT == 0x0.
 }
 
 // Copy all pixels from 'src' to 'dst'.
 static void copyFrame(const uint32_t* src, int srcStride, uint32_t* dst, int dstStride,
         int width, int height) {
     for (int y = 0; y < height; y++) {
-        memcpy(dst, src, width * sizeof(*dst));
+        std::memcpy(dst, src, width * sizeof(*dst));
         src += srcStride;
         dst += dstStride;
     }
@@ -391,8 +390,8 @@ long WebPFrameSequence::WebPFrameSequenceState::drawFrame(int frameNr,
 bool WebPFrameSequence::isWEBP(const uint8_t* header,uint32_t header_size) {
     const uint8_t* const header_str = (const uint8_t*)header;
     return (header_size >= RIFF_HEADER_SIZE) &&
-            !memcmp("RIFF", header_str, 4) &&
-            !memcmp("WEBP", header_str + 8, 4);
+            !std::memcmp("RIFF", header_str, 4) &&
+            !std::memcmp("WEBP", header_str + 8, 4);
 }
 
 }/*endof namespace*/

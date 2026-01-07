@@ -1,9 +1,9 @@
 #include <widget/keyboardview.h>
 #include <utils/textutils.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 #include <fstream>
-#include <string.h>
-#include <limits.h>
+#include <cstring>
+#include <climits>
 #include <float.h>
 #if (__cplusplus >= 201703L)&&__has_include(<execution>)
 #include <execution>
@@ -53,7 +53,7 @@ void KeyboardView::init(){
     mMiniKeyboardOnScreen = false;
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
-    memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
+    std::memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
 }
 
 KeyboardView::~KeyboardView(){

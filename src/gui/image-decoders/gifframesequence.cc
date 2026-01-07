@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <string.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <cstring>
+#include <porting/cdlog.h>
 #include <gui/gui_features.h>
 #if ENABLE(GIF)
 #include <gif_lib.h>
@@ -208,7 +207,7 @@ void GifFrameSequence::GifFrameSequenceState::savePreserveBuffer(uint32_t* outpu
         mPreserveBuffer = new uint32_t[width * height];
     }
     for (int y = 0; y < height; y++) {
-        memcpy(mPreserveBuffer + width * y,
+        std::memcpy(mPreserveBuffer + width * y,
                 outputPtr + outputPixelStride * y,
                 width * 4);
     }
@@ -222,7 +221,7 @@ void GifFrameSequence::GifFrameSequenceState::restorePreserveBuffer(uint32_t* ou
         return;
     }
     for (int y = 0; y < height; y++) {
-        memcpy(outputPtr + outputPixelStride * y,
+        std::memcpy(outputPtr + outputPixelStride * y,
                 mPreserveBuffer + width * y,
                 width * 4);
     }
@@ -342,9 +341,9 @@ long GifFrameSequence::GifFrameSequenceState::drawFrame(int frameNr,
 ////////////////////////////////////////////////////////////////////////////////
 
 bool GifFrameSequence::isGIF(const uint8_t* header,uint32_t header_size) {
-    return !memcmp(GIF_STAMP, header, GIF_STAMP_LEN)
-            || !memcmp(GIF87_STAMP, header, GIF_STAMP_LEN)
-            || !memcmp(GIF89_STAMP, header, GIF_STAMP_LEN);
+    return !std::memcmp(GIF_STAMP, header, GIF_STAMP_LEN)
+            || !std::memcmp(GIF87_STAMP, header, GIF_STAMP_LEN)
+            || !std::memcmp(GIF89_STAMP, header, GIF_STAMP_LEN);
 }
 
 }/*endof namespace*/

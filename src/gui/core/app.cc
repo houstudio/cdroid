@@ -21,7 +21,6 @@
 #include <assets.h>
 #include <getopt.h>
 #include <fcntl.h>
-#include <string.h>
 #include <thread>
 #include <mutex>
 

@@ -20,7 +20,6 @@
 #include <core/windowmanager.h>
 #include <core/xmlpullparser.h>
 #include <core/color.h>
-#include <string.h>
 #include <vector>
 #include <cstring>
 #include <porting/cdlog.h>

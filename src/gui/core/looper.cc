@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #define _CRT_SECURE_NO_WARNINGS
-#include <string.h>
+#include <cstring>
 #include <fcntl.h>
 #include <pthread.h>
 #include <core/looper.h>

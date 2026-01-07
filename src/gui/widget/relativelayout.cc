@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/relativelayout.h>
-#include <string.h>
-#include <cdlog.h>
+#include <cstring>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 static constexpr int RULES_VERTICAL[] = {
@@ -838,8 +838,8 @@ RelativeLayout::LayoutParams::LayoutParams(int w, int h)
     alignWithParent= false;
     mRulesChanged  = false;
     mIsRtlCompatibilityMode= false;
-    memset(mRules,0,sizeof(mRules));
-    memset(mInitialRules,0,sizeof(mInitialRules));
+    std::memset(mRules,0,sizeof(mRules));
+    std::memset(mInitialRules,0,sizeof(mInitialRules));
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     mNeedsLayoutResolution = false;
 }
@@ -848,8 +848,8 @@ RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source
   :MarginLayoutParams(source){
     mRulesChanged  = false;
     alignWithParent= false;
-    memset(mRules,0,sizeof(mRules));
-    memset(mInitialRules,0,sizeof(mInitialRules));
+    std::memset(mRules,0,sizeof(mRules));
+    std::memset(mInitialRules,0,sizeof(mInitialRules));
     mLeft = mTop = mRight = mBottom = 0;//VALUE_NOT_SET;
     mIsRtlCompatibilityMode= false;
     mNeedsLayoutResolution = false;
@@ -860,8 +860,8 @@ RelativeLayout::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& 
     mRulesChanged  = false;
     alignWithParent= false;
     mIsRtlCompatibilityMode=false;
-    memset(mRules,0,sizeof(mRules));
-    memset(mInitialRules,0,sizeof(mInitialRules));
+    std::memset(mRules,0,sizeof(mRules));
+    std::memset(mInitialRules,0,sizeof(mInitialRules));
     mLeft = mTop = mRight = mBottom = VALUE_NOT_SET;
     mNeedsLayoutResolution = false;
 }
@@ -871,8 +871,8 @@ RelativeLayout::LayoutParams::LayoutParams(const RelativeLayout::LayoutParams& s
     mIsRtlCompatibilityMode = source.mIsRtlCompatibilityMode;
     mRulesChanged = source.mRulesChanged;
     alignWithParent= source.alignWithParent;
-    memcpy(mRules,source.mRules,sizeof(mRules));
-    memcpy(mInitialRules,source.mInitialRules,sizeof(mInitialRules)); 
+    std::memcpy(mRules,source.mRules,sizeof(mRules));
+    std::memcpy(mInitialRules,source.mInitialRules,sizeof(mInitialRules)); 
     mLeft = source.mLeft;
     mTop  = source.mTop;
     mRight  = source.mRight;

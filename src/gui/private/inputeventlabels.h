@@ -17,7 +17,6 @@
  *********************************************************************************/
 #ifndef __INPUT_EVENT_LABEL_H__
 #define __INPUT_EVENT_LABEL_H__
-#include <string.h>
 #include <stdint.h>
 #include <string>
 #include <vector>

@@ -15,9 +15,8 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <string.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <cstring>
+#include <porting/cdlog.h>
 #include <core/color.h>
 #include <png.h>
 #include <fstream>
@@ -33,7 +32,7 @@ namespace cdroid {
 ////////////////////////////////////////////////////////////////////////////////
 static void pngmem_reader(png_structp png_ptr, png_bytep png_data, png_size_t data_size) {
     char** ppd = (char**)(png_get_io_ptr(png_ptr));
-    memcpy(png_data,*ppd, data_size);
+    std::memcpy(png_data,*ppd, data_size);
     *ppd += data_size;
 }
 
@@ -176,10 +175,13 @@ static void composeFrame(uint8_t*dst,uint8_t*src,uint32_t stride, unsigned char 
         uint8_t * sp = src+j*stride;//rows_src[j];
         uint8_t * dp = dst+(j+y)*stride+x*4;//rows_dst[j+y] + x*4;
 
-        if (bop == 0){memcpy(dp, sp, w*4);continue;}
+        if (bop == 0){
+            std::memcpy(dp, sp, w*4);
+            continue;
+        }
         for (i=0; i<w; i++, sp+=4, dp+=4) {
             if (sp[3] == 255)
-                memcpy(dp, sp, 4);
+                std::memcpy(dp, sp, 4);
             else if (sp[3] != 0) {
                 if (dp[3] != 0) {
                     u = sp[3]*255;
@@ -189,8 +191,9 @@ static void composeFrame(uint8_t*dst,uint8_t*src,uint32_t stride, unsigned char 
                     dp[1] = (sp[1]*u + dp[1]*v)/al;
                     dp[2] = (sp[2]*u + dp[2]*v)/al;
                     dp[3] = al/255;
-                } else
-                    memcpy(dp, sp, 4);
+                } else{
+                    std::memcpy(dp, sp, 4);
+                }
             }
         }
     }
@@ -241,17 +244,17 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
 
     png_read_image(png_ptr, rows.data());
     if(frmDop==PNG_DISPOSE_OP_PREVIOUS)
-        memcpy(mPrevFrame,mFrame,width*height*4);
+        std::memcpy(mPrevFrame,mFrame,width*height*4);
 
     composeFrame(mFrame,mBuffer,width*4,frmBop,frmX,frmY,frmWidth,frmHeight);
-    memcpy(outputPtr,mFrame,width*height*4);
+    std::memcpy(outputPtr,mFrame,width*height*4);
     switch(frmDop){
     case PNG_DISPOSE_OP_NONE:/*Nothing* TODO*/ break;
     case PNG_DISPOSE_OP_BACKGROUND:
         fillFrame(mFrame,width*4,frmX,frmY,frmWidth,frmHeight,mFrameSequence.mBgColor);
         break;
     case PNG_DISPOSE_OP_PREVIOUS:
-        memcpy(mFrame,mPrevFrame,width*height*4);
+        std::memcpy(mFrame,mPrevFrame,width*height*4);
         break;
     }
     mFrameIndex++;
@@ -264,7 +267,7 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
 
 bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
     static constexpr const char*PNG_STAMP="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
-    return !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
+    return !std::memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
 }
 
 }/*endof namespace*/

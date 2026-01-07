@@ -16,9 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <utils/textutils.h>
-#include <string.h>
-#include <cdtypes.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
+#include <cstring>
 #include <memory>
 #ifdef USE_ICONV
 #include <iconv.h>
@@ -33,7 +32,7 @@ static int convert(const char*from_charset,const char*to_charset,const char*inbu
     size_t outlen0=outlen;
     iconv_t cd = iconv_open(to_charset,from_charset);
     if (cd==0) return -1;
-    memset(outbuf,0,outlen);
+    std::memset(outbuf,0,outlen);
     iconv(cd, pin, &inlen,pout, &outlen);
     iconv_close(cd);
     return outlen0-outlen;
