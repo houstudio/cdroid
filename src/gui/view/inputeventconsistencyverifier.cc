@@ -605,7 +605,7 @@ void InputEventConsistencyVerifier::appendEvent(std::ostringstream& message, int
     message<<event;
 }
 
-void InputEventConsistencyVerifier::problem(const std::string message,...) {
+void InputEventConsistencyVerifier::problem(const std::string& message,...) {
     va_list args;
     char buffer [512];
     va_start(args, message);
