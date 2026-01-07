@@ -33,7 +33,7 @@ static LogLevel sLogLevel=LOG_DEBUG;
     long tv_nsec;
 };*/
 #define CLOCK_MONOTONIC 0
-void clock_gettime(int, struct timespec* ts){
+static void clock_gettime(int, struct timespec* ts){
     ULONGLONG tickCount = GetTickCount64();
     ts->tv_sec = static_cast<time_t>(tickCount / 1000);
     ts->tv_nsec = static_cast<long>((tickCount % 1000) * 1000000);
