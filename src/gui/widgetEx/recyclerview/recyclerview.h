@@ -1022,7 +1022,7 @@ private:
     void createPayloadsIfNeeded();
     void onEnteredHiddenState(RecyclerView& parent);
     void onLeftHiddenState(RecyclerView& parent);
-    bool shouldBeKeptAsChild();
+    bool shouldBeKeptAsChild()const;
     bool doesTransientStatePreventRecycling();
 protected:
     static constexpr int FLAG_BOUND = 1 << 0;
@@ -1110,7 +1110,7 @@ public:
     int getOldPosition()const;
     long getItemId()const;
     int getItemViewType()const;
-    std::string toString();
+    std::string toString()const;
     void setIsRecyclable(bool recyclable);
     bool shouldIgnore()const;
     bool isInvalid()const;

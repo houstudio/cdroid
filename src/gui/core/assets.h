@@ -52,7 +52,7 @@ protected:
 public:
     Assets();
     Assets(const std::string&path);
-    ~Assets();
+    ~Assets()override;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;
