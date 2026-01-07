@@ -3777,7 +3777,7 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
 
                 removePointersFromTouchTargets(idBitsToAssign);
                 const int childrenCount = mChildren.size();
-                if ((newTouchTarget == nullptr) && childrenCount){
+                if (/*(newTouchTarget == nullptr) &&*/ childrenCount){
                     const int x = ev.getXDispatchLocation(actionIndex);
                     const int y = ev.getYDispatchLocation(actionIndex);
 

@@ -48,7 +48,7 @@ void Path::reset(){
 
 bool Path::is_convex()const{
     cairo_path_t *path = cairo_copy_path(mCTX->cobj());
-    int i, j, k;
+    int i , j;
     int num_points = 0;
     double *points = NULL;
     int sign = 0;
@@ -84,7 +84,7 @@ bool Path::is_convex()const{
     // 检查多边形的凹凸性
     for (i = 0; i < num_points; i++) {
         j = (i + 1) % num_points;
-        k = (i + 2) % num_points;
+        int k = (i + 2) % num_points;
 
         double dx1 = points[2 * j] - points[2 * i];
         double dy1 = points[2 * j + 1] - points[2 * i + 1];
@@ -529,7 +529,7 @@ static void addBezier(const PointF* points,BezierCalculation bezierFunction, std
             }
         } while (needsSubdivision);
         iter = next;
-        next++;
+        ++next;
     }
 
     // Now that each division can use linear interpolation with less than the allowed error

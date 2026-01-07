@@ -34,9 +34,12 @@ struct XmlEvent {
     std::string text;
     std::shared_ptr<std::unordered_map<std::string,std::string>>atts;
     XmlEvent(){
+        depth = -1;
+        lineNumber = -1;
+        columnNumber = -1;
         atts = std::make_shared<std::unordered_map<std::string,std::string>>();
     }
-    XmlEvent(XmlPullParser::EventType tp):XmlEvent(){type =tp;depth=-1;}
+    XmlEvent(XmlPullParser::EventType tp):XmlEvent(){type =tp;}
     XmlEvent(XmlPullParser::EventType tp,const std::string&name_):XmlEvent(tp){
        name= name_;
     }
@@ -81,7 +84,7 @@ struct Private{
 class XmlPullParser::AttrParser{
 public:
     static void startElementHandler(void* userData, const XML_Char* name, const XML_Char** attrs){
-        XmlPullParser*parser = (XmlPullParser*)userData;
+        XmlPullParser*parser = static_cast<XmlPullParser*>(userData);
         Private*data = parser->mData;
         auto event = data->acquire(START_TAG,name);
         data->mText.clear();
@@ -95,14 +98,14 @@ public:
         data->eventQueue.push(event);
     }
     static void endElementHandler(void* userData, const XML_Char* name){
-        Private*data =((XmlPullParser*)userData)->mData;
+        Private*data = static_cast<XmlPullParser*>(userData)->mData;
         auto event = data->acquire(END_TAG,name);
         const int depth = --data->depth;
         event->depth= depth;
         data->eventQueue.push(event);
     }
     static void characterDataHandler(void* userData, const XML_Char* s, int len){
-        Private*data = ((XmlPullParser*)userData)->mData;
+        Private*data = static_cast<XmlPullParser*>(userData)->mData;
         auto event = data->acquire(TEXT,"");
         event->text.append(s,len);
         event->depth = data->depth;

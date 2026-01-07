@@ -345,9 +345,9 @@ void TextUtils::stringAppendF(std::string& dst, const char* format, ...) {
 
 std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
     bool has_ss = false;
-    int32_t h24 = seconds / 3600;
-    int32_t m   = (seconds % 3600) / 60;
-    int32_t s = seconds % 60;
+    uint32_t h24 = seconds / 3600;
+    uint32_t m   = (seconds % 3600) / 60;
+    uint32_t s = seconds % 60;
     for (const char* p = fmt.c_str(); *p; ++p)
         if (*p == 's' && *(p+1) == 's') { has_ss = true; break; }
 
@@ -375,11 +375,11 @@ std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
         /* 12h*/
         if (c == 'h' && *(p+1) != 'h') {
             uint32_t h12 = h24 % 12; if (h12 == 0) h12 = 12;
-            char b[16]; std::snprintf(b, 3, "%d", h12); out += b; continue;
+            char b[16]; std::snprintf(b, 3, "%u", h12); out += b; continue;
         }
         if (c == 'h' && *(p+1) == 'h') {
             uint32_t h12 = h24%12; if (h12 == 0) h12 = 12;
-            char b[16]; std::snprintf(b, 3, "%02d", h12); out += b; ++p; continue;
+            char b[16]; std::snprintf(b, 3, "%02u", h12); out += b; ++p; continue;
         }
 
         /* minute */

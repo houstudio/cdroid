@@ -217,8 +217,8 @@ void PathParser::getPathDataFromAsciiString(PathData* data, ParseResult* result,
 
     size_t start = 0;
     // Skip leading spaces.
-    while (isspace(pathStr[start]) && start < strLen) {
-        start++;
+    while ((start < strLen) && isspace(pathStr[start])) {
+        ++ start;
     }
     if (start == strLen) {
         result->failureOccurred = true;

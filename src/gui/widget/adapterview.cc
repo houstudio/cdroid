@@ -29,6 +29,7 @@ AdapterView::AdapterView(int w,int h):ViewGroup(w,h){
 void AdapterView::initAdapterView(){
     mFirstPosition=0;
     mIsVertical = true;
+    mSyncPosition= 0;
     mOldItemCount= mItemCount =0;
     mSelectedPosition = INVALID_POSITION;
     mNextSelectedPosition = INVALID_POSITION;

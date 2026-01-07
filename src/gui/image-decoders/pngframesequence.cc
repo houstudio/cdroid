@@ -264,9 +264,7 @@ long PngFrameSequence::PngFrameSequenceState::drawFrame(int frameNr,
 
 bool PngFrameSequence::isPNG(const uint8_t* header,uint32_t head_size) {
     static constexpr const char*PNG_STAMP="\x89\x50\x4E\x47\x0D\x0A\x1A\x0A";
-    return !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE)
-           || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE)
-           || !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
+    return !memcmp(PNG_STAMP, header, PNG_HEADER_SIZE);
 }
 
 }/*endof namespace*/

@@ -188,8 +188,10 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 std::string value = getTrimedValue(parser);
                 if((format.compare("float")==0)||(type[0]=='f')){
                     float fv =std::strtof(value.c_str(),nullptr);
+                    int32_t i32v;
+                    std::memcpy(&i32v,&fv,sizeof(i32v));
                     if(type[0]=='f') fv/=100.f;
-                    mDimensions.insert({resUri,*(int32_t*)&fv});
+                    mDimensions.insert({resUri,i32v});
                 }else{
                     const int32_t v = std::stol(value);
                     mDimensions.insert({resUri,v});
@@ -555,7 +557,9 @@ bool Assets::getBoolean(const std::string&refid)const{
 
 float Assets::getFloat(const std::string&refid)const{
     const int32_t iv=getDimension(refid);
-    return *((float*)&iv);
+    float fv;
+    std::memcpy(&fv,&iv,sizeof(fv));
+    return fv;
 }
 
 #pragma GCC push_options

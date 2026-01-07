@@ -91,7 +91,7 @@ std::string AttributeSet::normalize(const std::string&pkg,const std::string&prop
         if(hasColon==false) {
             if( isRes && hasSlash ){
                 value = std::string(pkg+":"+value);
-            }else if(hasAsk && (hasColon==false) && (property.size()>1) ) {
+            }else if(hasAsk && (property.size()>1) ) {
                 value = std::string(pkg + ":attr/" + value);
             }
         }
@@ -281,8 +281,10 @@ float AttributeSet::getFloat(const std::string&key,float def)const{
     const std::string v = getAttributeValue(key);
     if(v.find_first_of("@:/")!=std::string::npos){
         try{
-            int32_t iv = mContext->getDimension(v);
-            return *(float*)&iv;
+            const int32_t iv = mContext->getDimension(v);
+            float fv;
+            std::memcpy(&fv,&iv,sizeof(fv));
+            return fv;
         }catch(std::exception&e){
             return def;
         }

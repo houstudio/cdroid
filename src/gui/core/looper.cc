@@ -627,7 +627,7 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
         std::lock_guard<std::recursive_mutex> _l(mLock);
 
         std::list<MessageEnvelope>::const_iterator it;
-        for(it=mMessageEnvelopes.begin();it!=mMessageEnvelopes.end();it++){
+        for(it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();++it){
             if(it->uptime>=uptime)break;
             i+=1;
         }
