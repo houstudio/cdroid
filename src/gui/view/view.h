@@ -503,6 +503,7 @@ private:
     friend Window;
     friend FocusFinder;
     friend LayoutInflater;
+    friend TouchDelegate;
     friend ViewPropertyAnimator;
     class TooltipInfo;
     class CheckForTap;
@@ -529,7 +530,8 @@ private:
     bool mInContextButtonPress;
     bool mHasPerformedLongPress;
     bool mIgnoreNextUpEvent;
-	
+    bool mHoveringTouchDelegate;
+
     bool mBackgroundSizeChanged;
     bool mDefaultFocusHighlightSizeChanged;
     bool mDefaultFocusHighlightEnabled;
@@ -613,6 +615,7 @@ private:
     void drawAutofilledHighlight(Canvas& canvas);
     bool isOnVerticalScrollbarThumb(int x,int y);
     bool isOnHorizontalScrollbarThumb(int x,int y);
+    bool dispatchTouchExplorationHoverEvent(MotionEvent& event);
     bool isHoverable()const;
     bool hasSize()const;
     bool canTakeFocus()const;
