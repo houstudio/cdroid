@@ -419,6 +419,7 @@ void View::initView(){
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
+    mHoveringTouchDelegate = false;
     mDefaultFocusHighlightEnabled = false;
     mDefaultFocusHighlightSizeChanged = false;
     mBoundsChangedmDefaultFocusHighlightSizeChanged = false;
