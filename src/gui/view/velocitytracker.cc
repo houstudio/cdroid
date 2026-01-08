@@ -17,11 +17,9 @@
  *********************************************************************************/
 #include <view/velocitytracker.h>
 #include <utils/mathutils.h>
-#include <math.h>
-#include <string.h>
-#include <cdtypes.h>
-#include <cdlog.h>
-#include <limits.h>
+#include <porting/cdlog.h>
+#include <cmath>
+#include <climits>
 #include <cfloat>
 #include <set>
 #include <chrono>
@@ -68,7 +66,7 @@ static float vectorNorm(const float* a, uint32_t m) {
         float t = *(a++);
         r += t * t;
     }
-    return sqrtf(r);
+    return std::sqrt(r);
 }
 
 static std::string vectorToString(const float* a, uint32_t m) {

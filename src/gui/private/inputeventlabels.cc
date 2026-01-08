@@ -20,6 +20,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/eventcodes.h>
+#include <string.h>
 //#include <linux/input.h>
 
 #define DEFINE_KEYCODE(key) { #key, KeyEvent::KEYCODE_##key }

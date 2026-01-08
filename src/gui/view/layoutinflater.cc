@@ -19,7 +19,6 @@
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
 #include <porting/cdlog.h>
-#include <string.h>
 #include <fstream>
 #include <iomanip>
 

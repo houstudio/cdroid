@@ -25,7 +25,7 @@ namespace cdroid{
 class Filter{
 public:
     using FilterListener = std::function<void(int)>;//void onFilterComplete(int count)=0;
-    using Delayer = std::function<int(const std::string)>;
+    using Delayer = std::function<int(const std::string&)>;
 private:
     static constexpr int FILTER_TOKEN = 0xD0D0F00D;
     static constexpr int FINISH_TOKEN = 0xDEADBEEF;

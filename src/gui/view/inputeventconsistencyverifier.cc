@@ -169,7 +169,7 @@ void InputEventConsistencyVerifier::onTrackballEvent(MotionEvent& event, int nes
             ensureHistorySizeIsZeroForThisAction(event);
             ensurePointerCountIsOneForThisAction(event);
             break;
-	case MotionEvent::ACTION_UP:
+        case MotionEvent::ACTION_UP:
             if (!mTrackballDown) {
                 problem("ACTION_UP but trackball is not down.");
             } else {
@@ -179,12 +179,11 @@ void InputEventConsistencyVerifier::onTrackballEvent(MotionEvent& event, int nes
             ensureHistorySizeIsZeroForThisAction(event);
             ensurePointerCountIsOneForThisAction(event);
             break;
-	case MotionEvent::ACTION_MOVE:
+        case MotionEvent::ACTION_MOVE:
             ensurePointerCountIsOneForThisAction(event);
             break;
         default:
-            problem("Invalid action " + MotionEvent::actionToString(action)
-                    + " for trackball event.");
+            problem("Invalid action %s for trackball event.",MotionEvent::actionToString(action).c_str());
             break;
         }
 
@@ -605,11 +604,11 @@ void InputEventConsistencyVerifier::appendEvent(std::ostringstream& message, int
     message<<event;
 }
 
-void InputEventConsistencyVerifier::problem(const std::string message,...) {
+void InputEventConsistencyVerifier::problem(const char* message,...) {
     va_list args;
     char buffer [512];
     va_start(args, message);
-    vsnprintf(buffer,sizeof(buffer),message.c_str(),args);
+    vsnprintf(buffer,sizeof(buffer),message,args);
     va_end(args);
     if (mViolationMessage.str().length() == 0) {
         mViolationMessage<<mCurrentEventType<<": ";

@@ -35,34 +35,35 @@ class Drawable;
 class ColorStateList;
 class Context{
 public:
-    virtual const std::string getPackageName()const=0;
-    virtual const std::string getTheme()const=0;
-    virtual void setTheme(const std::string&theme)=0;
-    virtual const DisplayMetrics&getDisplayMetrics()const=0;
-    virtual int getId(const std::string&)const=0;
-    virtual int getNextAutofillId()=0;
-    virtual const std::string getString(const std::string&id,const std::string&lan="")=0;
-    virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr)=0;
+    virtual ~Context() = default;
+    virtual const std::string getPackageName() const = 0;
+    virtual const std::string getTheme() const = 0;
+    virtual void setTheme(const std::string&theme) = 0;
+    virtual const DisplayMetrics&getDisplayMetrics() const = 0;
+    virtual int getId(const std::string&) const = 0;
+    virtual int getNextAutofillId() = 0;
+    virtual const std::string getString(const std::string&id,const std::string&lan="") = 0;
+    virtual std::unique_ptr<std::istream>getInputStream(const std::string&,std::string*outpkg=nullptr) = 0;
 
-    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height)=0;
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname){
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname,int width,int height) = 0;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(const std::string&resname) {
         return loadImage(resname,-1,-1);
     }
-    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height)=0;
-    Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&stream){
+    virtual Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&,int width,int height) = 0;
+    Cairo::RefPtr<Cairo::ImageSurface> loadImage(std::istream&stream) {
         return loadImage(stream,-1,-1);
     }
 
-    virtual Drawable* getDrawable(const std::string&resid)=0;
-    virtual int getColor(const std::string&resid)=0;
-    virtual bool getBoolean(const std::string&resid)const=0;
-    virtual int getDimension(const std::string&resid)const=0;
-    virtual int getDimensionPixelSize(const std::string&key,int def=0)const=0;
-    virtual float getFloat(const std::string&resid)const=0;
-    virtual size_t getArray(const std::string&resname,std::vector<std::string>&)=0;
-    virtual size_t getArray(const std::string&resname,std::vector<int>&)=0;
-    virtual ColorStateList* getColorStateList(const std::string&resid)=0;
-    virtual AttributeSet obtainStyledAttributes(const std::string&resid)=0;
+    virtual Drawable* getDrawable(const std::string&resid) = 0;
+    virtual int getColor(const std::string&resid) = 0;
+    virtual bool getBoolean(const std::string&resid) const = 0;
+    virtual int getDimension(const std::string&resid) const = 0;
+    virtual int getDimensionPixelSize(const std::string&key,int def=0) const = 0;
+    virtual float getFloat(const std::string&resid) const = 0;
+    virtual size_t getArray(const std::string&resname,std::vector<std::string>&) = 0;
+    virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
+    virtual ColorStateList* getColorStateList(const std::string&resid) = 0;
+    virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
 };
 
 }

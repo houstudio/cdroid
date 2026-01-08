@@ -21,7 +21,6 @@
 #include <assets.h>
 #include <getopt.h>
 #include <fcntl.h>
-#include <string.h>
 #include <thread>
 #include <mutex>
 
@@ -46,9 +45,9 @@ namespace cdroid{
 App*App::mInst = nullptr;
 
 App::App(int argc,const char*argv[]){
-    int alpha=255,rotation=0,density=0,frameDelay=0;
-    bool debug=false,showFPS=false,help=false;
-    std::string logo,monkey,record,datapath;
+    int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
+    bool debug= false,showFPS = false, help = false;
+    std::string logo, monkey, record, datapath;
     LogParseModules(argc,argv);
     mQuitFlag = false;
     mExitCode = 0;
@@ -69,7 +68,6 @@ App::App(int argc,const char*argv[]){
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
-    cxxopts::ParseResult result;
     std::string name;
 #if defined(__linux__)||defined(__unix__)
     name= std::string(argc?argv[0]:__progname);
@@ -79,13 +77,12 @@ App::App(int argc,const char*argv[]){
     name = progName;
 #endif
     try{
-        if(argv==nullptr){
-            const char*dummy[]={name.c_str(),nullptr};
-            result = options.parse(1,dummy);
+        if((argc == 0) || (argv == nullptr)){
+            const char*dummy[] = {name.c_str(), nullptr};
+            mArgsResult = std::make_unique<cxxopts::ParseResult>(std::move(options.parse(1,dummy)));
         }else{
-            result = options.parse(argc,argv);
+            mArgsResult = std::make_unique<cxxopts::ParseResult>(std::move(options.parse(argc,argv)));
         }
-        mArgsResult = std::make_unique<cxxopts::ParseResult>(result);
     }catch(std::exception&e){
         LOGE("%s",e.what());
     }
@@ -116,7 +113,7 @@ App::App(int argc,const char*argv[]){
     }
     if(!logo.empty()) graph.setLogo(logo);
     graph.showFPS(showFPS).init();
-    View::VIEW_DEBUG = result.count("debug");
+    View::VIEW_DEBUG = debug;
     DisplayMetrics::DENSITY_DEVICE = DisplayMetrics::getDeviceDensity();
     if(alpha!=255) setOpacity(alpha);
     if(density) DisplayMetrics::DENSITY_DEVICE = density;

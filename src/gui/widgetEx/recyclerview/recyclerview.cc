@@ -6994,7 +6994,7 @@ void RecyclerView::ViewHolder::onLeftHiddenState(RecyclerView& parent) {
 }
 
 
-std::string RecyclerView::ViewHolder::toString() {
+std::string RecyclerView::ViewHolder::toString() const{
     std::ostringstream oss;
     oss<<"ViewHolder{ hashCode() position="<<mPosition;
     oss<<" id=" <<mItemId<<", oldPos=" <<mOldPosition <<", pLpos:" << mPreLayoutPosition;
@@ -7035,7 +7035,7 @@ bool RecyclerView::ViewHolder::isRecyclable() const{
             && !itemView->hasTransientState();
 }
 
-bool RecyclerView::ViewHolder::shouldBeKeptAsChild() {
+bool RecyclerView::ViewHolder::shouldBeKeptAsChild() const{
     return (mFlags & FLAG_NOT_RECYCLABLE) != 0;
 }
 

@@ -23,6 +23,7 @@
 #include <iostreams.h>
 #include <iostream>
 #include <fstream>
+#include <cstring>
 #include <utils/textutils.h>
 #include <limits.h>
 #include <unistd.h>

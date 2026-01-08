@@ -83,7 +83,7 @@ private:
     bool startEvent(InputEvent& event, int nestingLevel, const std::string& eventType);
     void finishEvent();
     static void appendEvent(std::ostringstream& message, int index,const InputEvent& event, bool unhandled);
-    void problem(const std::string message,...);
+    void problem(const char* message,...);
     KeyState* findKeyState(int deviceId, int source, int keyCode, bool remove);
     void addKeyState(int deviceId, int source, int keyCode);
 public:

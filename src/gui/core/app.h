@@ -40,7 +40,7 @@ protected:
     void onInit();
 public:
      App(int argc=0,const char*argv[]=NULL);
-     ~App();
+     ~App()override;
      static App&getInstance();
      const std::string getDataPath()const;
      virtual void setOpacity(unsigned char alpha);

@@ -19,7 +19,7 @@
 #include <porting/cdlog.h>
 #include <chrono>
 #include <sys/stat.h>
-#include <string.h>
+#include <cstring>
 #include <fstream>
 #include <iostream>
 #include <iomanip>
