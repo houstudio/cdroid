@@ -55,7 +55,6 @@ void InputEventSource::doEventsConsume(){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
         std::lock_guard<std::recursive_mutex> lock(mtxEvents);
         if(count)mLastInputEventTime = SystemClock::uptimeMillis();
-        LOGV_IF(count,"rcv %d rawEvents",count);
         for(int i = 0 ; i < count ; i ++){
             const INPUTEVENT*e = es+i;
             auto it = mDevices.find(e->device);
@@ -200,7 +199,7 @@ int InputEventSource::handleEvents(){
         std::vector<InputEvent*>events;
         if(dev->getEventCount()==0)continue;
         ret += dev->drainEvents(events);
-		for(auto e:events) {
+        for(auto e:events) {
             WindowManager::getInstance().processEvent(*e);
             e->recycle();
         }

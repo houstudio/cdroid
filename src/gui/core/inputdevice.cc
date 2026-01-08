@@ -884,7 +884,7 @@ MouseDevice::MouseDevice(int fd):TouchDevice(fd){
 }
 
 int MouseDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_REL)||(type==EV_SYN)||(type==EV_KEY);
+    return (type==EV_REL)||(type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY);
 }
 
 int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
@@ -915,6 +915,10 @@ int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
         }break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){
+            setAxisValue(code,value,true);
+        }break;
+    case EV_ABS:
+        if( (code >= ABS_X) && (code <= ABS_Z) ){
             setAxisValue(code,value,true);
         }break;
     case EV_SYN:
