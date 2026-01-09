@@ -4,6 +4,7 @@
 #include <signal.h>
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+#include <libdrm/drm_fourcc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <fcntl.h>
@@ -28,6 +29,7 @@ typedef struct buffer_object {
     uint32_t fb_id;
 }SURFACE;
 static SURFACE*primary;
+
 static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     struct drm_mode_create_dumb create = {};
     struct drm_mode_map_dumb map = {};
@@ -41,12 +43,16 @@ static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     bo->pitch = create.pitch;
     bo->size = create.size;
     bo->handle = create.handle;
-    drmModeAddFB(fd, bo->width, bo->height, 24, 32, bo->pitch, bo->handle, &bo->fb_id);
+    uint32_t handlers[4]={create.handle};
+    uint32_t strides[4] ={bo->pitch};
+    uint32_t offsets[4] ={0};
+    drmModeAddFB2(fd, bo->width, bo->height, DRM_FORMAT_XRGB8888, handlers, strides, offsets, &bo->fb_id,0);
     map.handle = create.handle;
     drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
     bo->vaddr = (uint32_t*)mmap(0, create.size, PROT_READ | PROT_WRITE,MAP_SHARED, fd, map.offset);
     return 0;
 }
+
 static void modeset_destroy_fb(int fd, struct buffer_object *bo){
     struct drm_mode_destroy_dumb destroy = {};
     drmModeRmFB(fd, bo->fb_id);
@@ -63,6 +69,10 @@ int32_t GFXInit() {
     if(drmFD>0)return 0;
     drmModePlaneResPtr plane_resources = nullptr;
     drmFD = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
+    if(drmFD < 0){
+        FATAL("drm open failed! ");
+        exit(0);
+    }
     drmModeres = drmModeGetResources(drmFD);
     crtc_id = drmModeres->crtcs[0];
     conn_id = drmModeres->connectors[0];
