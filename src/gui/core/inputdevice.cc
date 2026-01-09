@@ -121,38 +121,45 @@ InputDevice::InputDevice(int fdev){
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
-        oss<<"Keyboard";
+        oss << "Keyboard";
     }
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask)){
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
-        oss<<"Cursoe";
+        oss << "Cursor";
     }
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
-        oss<<"Proximity";//Proximity sensor
+        oss << "Proximity";//Proximity sensor
     }
     if(TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) && TEST_BIT(ABS_Z, devInfos.absBitMask)){
-        oss<<"Accelerometer";//Accelerometer sensor
+        oss << "Accelerometer";//Accelerometer sensor
     }
     if(TEST_BIT(ABS_RX, devInfos.absBitMask) && TEST_BIT(ABS_RY, devInfos.absBitMask) && TEST_BIT(ABS_RZ, devInfos.absBitMask)){
-        oss<<"Gyroscope";//Gyroscope sensor
+        oss << "Gyroscope";//Gyroscope sensor
     }
     if(TEST_BIT(ABS_HAT0X, devInfos.absBitMask) && TEST_BIT(ABS_HAT0Y, devInfos.absBitMask) 
              && TEST_BIT(ABS_HAT1X, devInfos.absBitMask) && TEST_BIT(ABS_HAT1Y, devInfos.absBitMask)){
-        oss<<"Magnetometer";//Magnetometer sensor
+        oss << "Magnetometer";//Magnetometer sensor
     }
     if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
         if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask) || !haveGamepadButtons) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
-            oss<<"MTouch";
+            oss << "MTouch";
         }
         // Is this an old style single-touch driver?
     } else if ( TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) ) {
-        if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)) mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
-        else mDeviceClasses |= INPUT_DEVICE_CLASS_ROTARY_ENCODER;
-        oss<<(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)?"STouch":"Rotaty Encoder");
+        if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)){
+            mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+            oss << "STouch";
+        }if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask)){
+            mDeviceClasses |= INPUT_DEVICE_CLASS_CURSOR;
+            oss << "Cursor(ABS)";
+        } else{
+            mDeviceClasses |=INPUT_DEVICE_CLASS_ROTARY_ENCODER;
+            oss << "Rotaty Encoder";
+        }
         // Is this a BT stylus?
     } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
             && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {
@@ -877,7 +884,7 @@ MouseDevice::MouseDevice(int fd):TouchDevice(fd){
 }
 
 int MouseDevice::isValidEvent(int type,int code,int value){
-    return (type==EV_REL)||(type==EV_SYN)||(type==EV_KEY);
+    return (type==EV_REL)||(type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY);
 }
 
 int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
@@ -908,6 +915,10 @@ int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
         }break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){
+            setAxisValue(code,value,true);
+        }break;
+    case EV_ABS:
+        if( (code >= ABS_X) && (code <= ABS_Z) ){
             setAxisValue(code,value,true);
         }break;
     case EV_SYN:

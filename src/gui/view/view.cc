@@ -419,6 +419,7 @@ void View::initView(){
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
+    mHoveringTouchDelegate = false;
     mDefaultFocusHighlightEnabled = false;
     mDefaultFocusHighlightSizeChanged = false;
     mBoundsChangedmDefaultFocusHighlightSizeChanged = false;
@@ -8042,10 +8043,86 @@ bool View::onGenericMotionEvent(MotionEvent& event){
     return false;
 }
 
-bool View::onHoverEvent(MotionEvent& event){
-    /*if (mTouchDelegate != nullptr && dispatchTouchExplorationHoverEvent(event)) {
-         return true;
+bool View::dispatchTouchExplorationHoverEvent(MotionEvent& event) {
+    /*const AccessibilityManager manager = AccessibilityManager.getInstance(mContext);
+    if (!manager.isEnabled() || !manager.isTouchExplorationEnabled()) {
+        return false;
     }*/
+
+    const bool oldHoveringTouchDelegate = mHoveringTouchDelegate;
+    const int action = event.getActionMasked();
+    bool pointInDelegateRegion = false;
+    bool handled = false;
+
+    /*AccessibilityNodeInfo::TouchDelegateInfo info = mTouchDelegate->getTouchDelegateInfo();
+    for (int i = 0; i < info.getRegionCount(); i++) {
+        Region r = info.getRegionAt(i);
+        if (r.contains((int) event.getX(), (int) event.getY())) {
+            pointInDelegateRegion = true;
+        }
+    }*/
+
+    // Explore by touch should dispatch events to children under the pointer first if any
+    // before dispatching to TouchDelegate. For non-hoverable views that do not consume
+    // hover events but receive accessibility focus, it should also not delegate to these
+    // views when hovered.
+    if (!oldHoveringTouchDelegate) {
+        if (((action == MotionEvent::ACTION_HOVER_ENTER) || (action == MotionEvent::ACTION_HOVER_MOVE))
+                && !pointInHoveredChild(event) && pointInDelegateRegion) {
+            mHoveringTouchDelegate = true;
+        }
+    } else {
+        if ((action == MotionEvent::ACTION_HOVER_EXIT) ||
+                ((action == MotionEvent::ACTION_HOVER_MOVE)
+                    && (pointInHoveredChild(event) || !pointInDelegateRegion))) {
+            mHoveringTouchDelegate = false;
+        }
+    }
+    switch (action) {
+    case MotionEvent::ACTION_HOVER_MOVE:
+        if (oldHoveringTouchDelegate && mHoveringTouchDelegate) {
+            // Inside bounds, dispatch as is.
+            handled = mTouchDelegate->onTouchExplorationHoverEvent(event);
+        } else if (!oldHoveringTouchDelegate && mHoveringTouchDelegate) {
+            // Moving inbound, synthesize hover enter.
+            MotionEvent* eventNoHistory = (event.getHistorySize() == 0)
+                    ? &event : MotionEvent::obtainNoHistory(event);
+            eventNoHistory->setAction(MotionEvent::ACTION_HOVER_ENTER);
+            handled = mTouchDelegate->onTouchExplorationHoverEvent(*eventNoHistory);
+            eventNoHistory->setAction(action);
+            handled |= mTouchDelegate->onTouchExplorationHoverEvent(*eventNoHistory);
+            if(&event!=eventNoHistory) eventNoHistory->recycle();
+        } else if (oldHoveringTouchDelegate && !mHoveringTouchDelegate) {
+            // Moving outbound, synthesize hover exit.
+            const bool hoverExitPending = event.isHoverExitPending();
+            event.setHoverExitPending(true);
+            mTouchDelegate->onTouchExplorationHoverEvent(event);
+            MotionEvent* eventNoHistory = (event.getHistorySize() == 0)
+                    ? &event : MotionEvent::obtainNoHistory(event);
+            eventNoHistory->setHoverExitPending(hoverExitPending);
+            eventNoHistory->setAction(MotionEvent::ACTION_HOVER_EXIT);
+            mTouchDelegate->onTouchExplorationHoverEvent(*eventNoHistory);
+            if(&event!=eventNoHistory) eventNoHistory->recycle();
+        }  // else: outside bounds, do nothing.
+        break;
+    case MotionEvent::ACTION_HOVER_ENTER:
+        if (!oldHoveringTouchDelegate && mHoveringTouchDelegate) {
+            handled = mTouchDelegate->onTouchExplorationHoverEvent(event);
+        }
+        break;
+    case MotionEvent::ACTION_HOVER_EXIT:
+        if (oldHoveringTouchDelegate) {
+            mTouchDelegate->onTouchExplorationHoverEvent(event);
+        }
+        break;
+    }
+    return handled;
+}
+
+bool View::onHoverEvent(MotionEvent& event){
+    if ((mTouchDelegate != nullptr) && dispatchTouchExplorationHoverEvent(event)) {
+         return true;
+    }
 
     // The root view may receive hover (or touch) events that are outside the bounds of
     // the window.  This code ensures that we only send accessibility events for
@@ -8060,8 +8137,8 @@ bool View::onHoverEvent(MotionEvent& event){
             mSendingHoverAccessibilityEvents = true;
         }
     } else {
-        if (action == MotionEvent::ACTION_HOVER_EXIT
-                || (action == MotionEvent::ACTION_HOVER_MOVE
+        if ((action == MotionEvent::ACTION_HOVER_EXIT)
+                || ((action == MotionEvent::ACTION_HOVER_MOVE)
                         && !pointInView(event.getX(), event.getY(),0))) {
             mSendingHoverAccessibilityEvents = false;
             sendAccessibilityHoverEvent(AccessibilityEvent::TYPE_VIEW_HOVER_EXIT);
