@@ -30,7 +30,7 @@ typedef struct buffer_object {
 }SURFACE;
 static SURFACE*primary;
 
-static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
+static int modeset_create_fb(int fd, SURFACE *bo, uint32_t color){
     struct drm_mode_create_dumb create = {};
     struct drm_mode_map_dumb map = {};
     uint32_t i;
@@ -46,7 +46,8 @@ static int modeset_create_fb(int fd, struct buffer_object *bo, uint32_t color){
     uint32_t handlers[4]={create.handle};
     uint32_t strides[4] ={bo->pitch};
     uint32_t offsets[4] ={0};
-    drmModeAddFB2(fd, bo->width, bo->height, DRM_FORMAT_XRGB8888, handlers, strides, offsets, &bo->fb_id,0);
+    int32_t added = drmModeAddFB2(fd, bo->width, bo->height, DRM_FORMAT_XRGB8888, handlers, strides, offsets, &bo->fb_id,0);
+    LOGD("drmModeAddFB2=%d fbid=%d",added,bo->fb_id);
     map.handle = create.handle;
     drmIoctl(fd, DRM_IOCTL_MODE_MAP_DUMB, &map);
     bo->vaddr = (uint32_t*)mmap(0, create.size, PROT_READ | PROT_WRITE,MAP_SHARED, fd, map.offset);
