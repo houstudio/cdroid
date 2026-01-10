@@ -42,7 +42,6 @@ else()
        NAMES cairo.h
        HINTS ${PC_CAIRO_INCLUDEDIR}
           ${PC_CAIRO_INCLUDE_DIRS}
-       NO_DEFAULT_PATH
        PATH_SUFFIXES cairo)
 endif()
 
