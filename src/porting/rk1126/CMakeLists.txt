@@ -25,7 +25,7 @@ endif()
 list(APPEND RK1126_INCLUDE_DIRS ../common)
 list(APPEND RK1126_INCLUDE_DIRS ../include)
 
-list(APPEND SIGMA_LIBS pthread dl)
+list(APPEND RK1126_LIBS pthread dl)
 list(APPEND RKTARGET tvhal)
 find_package(DRM REQUIRED)
 
@@ -45,7 +45,7 @@ add_library(tvhal SHARED ${RK1126_SRCS} ../common/graph_fb.c)
 target_link_libraries(tvhal ${RK1126_LIBS})
 
 add_library(tvhal-drm SHARED ${RK1126_SRCS} ../common/graph_drm.cc)
-target_link_libraries(tvhal-drm ${RK1126_LIBS})
+target_link_libraries(tvhal-drm ${RK1126_LIBS} ${DRM_LIBRARIES})
 add_dependencies(tvhal tvhal-drm)
 
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)

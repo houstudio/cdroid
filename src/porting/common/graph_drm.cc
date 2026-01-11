@@ -69,6 +69,7 @@ static void sigint_handler(int arg){
 int32_t GFXInit() {
     if(drmFD>0)return 0;
     drmModePlaneResPtr plane_resources = nullptr;
+    drmModePlaneResPtr plane_cursor = nullptr;
     drmFD = open("/dev/dri/card0", O_RDWR | O_CLOEXEC);
     if(drmFD < 0){
         FATAL("drm open failed! ");
@@ -91,7 +92,17 @@ int32_t GFXInit() {
                 // ... 在这里可以查询 plane_info->possible_crtcs, plane_info->formats 等 ...
                 LOGI("  - Possible CRTCs mask: 0x%x", plane_info->possible_crtcs);
                 LOGI("  - Number of formats: %u", plane_info->count_formats);
-                // 注意：plane_info->formats 是一个指向格式数组的指针，可能需要进一步查询
+                drmModeObjectProperties *props = drmModeObjectGetProperties(drmFD, plane_id, DRM_MODE_OBJECT_PLANE);
+                for (uint32_t j = 0; j < props->count_props; j++) {
+                    drmModePropertyRes *prop = drmModeGetProperty(drmFD, props->props[j]);
+                    if (prop && prop->name && strcmp(prop->name, "type") == 0){
+                        uint64_t type_value = props->prop_values[j];
+                        LOGD_IF(type_value == DRM_PLANE_TYPE_CURSOR,"cursor plane id=%d",plane_id);
+                        LOGD_IF(type_value != DRM_PLANE_TYPE_CURSOR,"plane type=%d id=%d",type_value,plane_id);
+                    }
+                    drmModeFreeProperty(prop);
+                }
+                drmModeFreeObjectProperties(props);
                 drmModeFreePlane(plane_info); // 释放 plane_info
             } else {
                 LOGE("  - drmModeGetPlane failed for this ID");
