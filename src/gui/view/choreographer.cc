@@ -255,8 +255,8 @@ void Choreographer::doCallbacks(int callbackType, long frameTimeNanos){
         }
     }
     for (CallbackRecord* c = callbacks; c != nullptr; c = c->next) {
-        LOGV("RunCallback: type=%d, acction=%p token=%p , latencyMillis=%lld %lld",callbackType,
-            c->action , c->token, (SystemClock::uptimeMillis() - c->dueTime),c->dueTime);
+        LOGV("RunCallback: type=%d, action=%p token=%p , latencyMillis=%lld %lld",callbackType,
+            &c->action , c->token, (SystemClock::uptimeMillis() - c->dueTime),c->dueTime);
         c->run(frameTimeNanos);
     }
     /*synchronized (mLock)*/
