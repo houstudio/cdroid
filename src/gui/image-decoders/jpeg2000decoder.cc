@@ -18,7 +18,7 @@
 /*********************************************************************************
  * JPEG2000 decoder using OpenJPEG (optional, guarded by USE(OPENJPEG))
  *********************************************************************************/
-
+#include <gui_features.h>
 #include <core/context.h>
 #include <cairomm/surface.h>
 #include <image-decoders/imagedecoder.h>
@@ -26,17 +26,14 @@
 #include <vector>
 #include <cstring>
 #include <memory>
+#if ENABLE(OPENJPEG)
+#include <openjpeg.h>
 #if ENABLE(LCMS)
 #include <lcms2.h>
 #endif
 
-#if USE(OPENJPEG)
-#include <openjpeg.h>
-#endif
-
 namespace cdroid {
 
-#if USE(OPENJPEG)
 struct JPEG2000Decoder::PRIVATE {
     std::vector<uint8_t> data;
 };
@@ -239,6 +236,6 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEG2000Decoder::decode(float scale, void* ta
     ImageDecoder::setTransparency(surf, transparency);
     return surf;
 }
-#endif // USE(OPENJPEG)
 
 } // namespace cdroid
+#endif // USE(OPENJPEG)
