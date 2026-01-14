@@ -404,7 +404,7 @@ int Typeface::loadFromFontConfig() {
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)
             sSystemFontMap.insert({fm,tf});
-        LOGV("font %s %p",family.c_str(),tf);
+        LOGV("font %s %p",family.c_str(),tf.get());
         if(std::regex_search(family,patSans)) {
             std::string ms = std::regex_search(family,patMono)?"mono":"serif";
             ms = "sans-"+ms;

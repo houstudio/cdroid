@@ -44,9 +44,9 @@ public:
         !std::is_same<typename std::decay<F>::type, CallbackBase>::value,void >::type* = nullptr)
        : mFunctor(std::make_shared<Functor>(std::forward<F>(f))) {}
 
-    virtual ~CallbackBase(){}
+    virtual ~CallbackBase() = default;
 
-    CallbackBase&operator=(const CallbackBase&b){
+    CallbackBase& operator=(const CallbackBase&b){
         if(this!=&b){
             mFunctor = b.mFunctor;
         }
@@ -67,19 +67,23 @@ public:
         return *this;
     }
 
-    bool operator == (const CallbackBase&b)const{
+    bool operator == (const CallbackBase&b) const {
         return mFunctor.get() == b.mFunctor.get();
     }
-    operator bool()const{ 
-        return mFunctor&&(*mFunctor!=nullptr);
+
+    operator bool() const {
+        return mFunctor && static_cast<bool>(*mFunctor);
     }
-    bool operator==(std::nullptr_t)const{
-        return (mFunctor==nullptr)||(*mFunctor == nullptr);
+
+    bool operator==(std::nullptr_t) const {
+        return !mFunctor || !static_cast<bool>(*mFunctor);
     }
-    bool operator!=(std::nullptr_t)const{
-        return mFunctor&&(*mFunctor != nullptr);
+
+    bool operator!=(std::nullptr_t) const {
+        return mFunctor && static_cast<bool>(*mFunctor);
     }
-    virtual R operator()(Args...args){
+
+    virtual R operator()(Args...args) {
         if(*this){
             return (*mFunctor)(std::forward<Args>(args)...);
         }

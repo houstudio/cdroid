@@ -72,7 +72,7 @@ int32_t InputInit() {
     dev.maxfd = dev.pipe[0];
     int rc = fcntl(dev.pipe[0],F_SETFL,O_NONBLOCK);
     struct dirent **namelist=nullptr;
-    LOGD("cplusplus=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,rc,dev.fds[0],sizeof(struct input_event),sizeof(struct timeval));
+    LOGD("cplusplus=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,rc,dev.fds[0].fd,sizeof(struct input_event),sizeof(struct timeval));
     int nf=scandir(WATCHED_PATH,&namelist,[](const struct dirent * ent)->int{
         char fname[256];
         int fd = -1;

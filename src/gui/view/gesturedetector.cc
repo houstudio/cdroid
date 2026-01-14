@@ -59,7 +59,7 @@ public:
             }
             break;
         default:
-            LOGD("Unknown message %d" ,msg); //never
+            LOGD("Unknown message %d" ,msg.what); //never
         }
     }
 };
