@@ -174,11 +174,10 @@ static int registerBuildinCodesc(){
 #endif
 
 #if USE(OPENJPEG)
-    if (matchesJP2Signature(contents))
-        return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::JP2, alphaOption, gammaAndColorProfileOption);
-
-    if (matchesJ2KSignature(contents))
-        return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::J2K, alphaOption, gammaAndColorProfileOption);
+    ImageDecoder::registerFactory("mime/jp2",12,JPEG2000Decoder::isJP2,
+            [](std::istream&stream){return std::make_unique<JPEG2000Decoder>(stream);});
+    ImageDecoder::registerFactory("mime/j2k",4,JPEG2000Decoder::isJ2K,
+            [](std::istream&stream){return std::make_unique<JPEG2000Decoder>(stream);});
 #endif
 
 #if USE(ICO)
