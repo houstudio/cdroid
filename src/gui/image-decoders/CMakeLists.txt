@@ -7,6 +7,7 @@ set(DECODER_SRCS
     gifdecoder.cc
     pngdecoder.cc
     jpegdecoder.cc
+    webpdecoder.cc
     framesequence.cc
     gifframesequence.cc
     pngframesequence.cc

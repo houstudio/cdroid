@@ -101,5 +101,16 @@ public:
     static bool isPNG(const uint8_t*,uint32_t);
 };
 
+class WEBPDecoder:public ImageDecoder{
+private:
+    void*getColorProfile(PRIVATE*,uint8_t colorType);
+public:
+    WEBPDecoder(std::istream&);
+    ~WEBPDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    static bool isWEBP(const uint8_t*,uint32_t);
+};
+
 }/*endof namespace*/
 #endif

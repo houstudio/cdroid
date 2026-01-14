@@ -207,6 +207,11 @@ static int registerBuildinCodesc(){
             [](std::istream&stream){return std::make_unique<JPEGDecoder>(stream);});
 #endif
 
+#if ENABLE(WEBP)
+    ImageDecoder::registerFactory("mime/webp",14,WEBPDecoder::isWEBP,
+            [](std::istream&stream){return std::make_unique<WEBPDecoder>(stream);});
+#endif
+
 #if USE(OPENJPEG)
     if (matchesJP2Signature(contents))
         return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::JP2, alphaOption, gammaAndColorProfileOption);
