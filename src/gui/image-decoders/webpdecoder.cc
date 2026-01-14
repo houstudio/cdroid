@@ -24,7 +24,11 @@
 #include <webp/demux.h>
 #include <fstream>
 #include <cstring>
+#include <vector>
 #include <porting/cdlog.h>
+#if ENABLE(LCMS)
+#include <lcms2.h>
+#endif
 
 namespace cdroid {
 
@@ -38,6 +42,26 @@ struct PRIVATE {
 static inline int multiply_alpha (int alpha, int color) {
     int temp = (alpha * color) + 0x80;
     return ((temp + (temp >> 8)) >> 8);
+}
+
+// Scan RIFF WebP chunks to extract an embedded ICC profile (ICCP chunk) if any.
+static std::vector<uint8_t> extractICCP(const uint8_t* data, size_t size) {
+    std::vector<uint8_t> empty;
+    if (!data || size < 12) return empty;
+    size_t pos = 12; // skip RIFF header (12 bytes)
+    while (pos + 8 <= size) {
+        const uint8_t* tagPtr = data + pos;
+        uint32_t chunkSize = (uint32_t)tagPtr[4] | ((uint32_t)tagPtr[5] << 8) | ((uint32_t)tagPtr[6] << 16) | ((uint32_t)tagPtr[7] << 24);
+        size_t dataStart = pos + 8;
+        if (dataStart + chunkSize > size) break;
+        if (!std::memcmp(tagPtr, "ICCP", 4) || !std::memcmp(tagPtr, "iccp", 4)) {
+            return std::vector<uint8_t>(data + dataStart, data + dataStart + chunkSize);
+        }
+        size_t advance = 8 + chunkSize;
+        if (chunkSize & 1) advance++;
+        pos += advance;
+    }
+    return empty;
 }
 
 WEBPDecoder::WEBPDecoder(std::istream& stream): ImageDecoder(stream) {
@@ -87,7 +111,7 @@ bool WEBPDecoder::decodeSize() {
     return true;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* /*targetProfile*/) {
+Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* targetProfile) {
     if ((mImageWidth == -1) || (mImageHeight == -1)) {
         if (!decodeSize()) return nullptr;
     }
@@ -99,18 +123,88 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* /*targ
     uint8_t* pixels = image->get_data();
     const int stride = image->get_stride();
 
-    // Decode into temporary buffer in BGRA order (byte order: B,G,R,A)
-    // Use WebPDecodeBGRAInto which writes un-premultiplied BGRA bytes
     const size_t out_size = static_cast<size_t>(stride) * height;
-    if (WebPDecodeBGRAInto(mPrivate->data, mPrivate->size, pixels, out_size, stride) == 0) {
+
+#if ENABLE(LCMS)
+    cmsHTRANSFORM transform = nullptr;
+    if (targetProfile != nullptr) {
+        std::vector<uint8_t> icc = extractICCP(mPrivate->data, mPrivate->size);
+        cmsHPROFILE src_profile = nullptr;
+        if (!icc.empty()) {
+            src_profile = cmsOpenProfileFromMem(icc.data(), icc.size());
+        } else {
+            src_profile = cmsCreate_sRGBProfile();
+        }
+        if (src_profile) {
+            transform = cmsCreateTransform(src_profile, TYPE_RGBA_8,
+                                           (cmsHPROFILE)targetProfile, TYPE_RGBA_8,
+                                           cmsGetHeaderRenderingIntent(src_profile), 0);
+            cmsCloseProfile(src_profile);
+            if (transform) {
+                // store transform in base class for cleanup
+                mTransform = transform;
+            }
+        }
+    }
+#endif
+
+    // Decode into temporary buffer in BGRA order (byte order: B,G,R,A)
+    uint8_t* decoded = new uint8_t[out_size];
+    if (WebPDecodeBGRAInto(mPrivate->data, mPrivate->size, decoded, out_size, stride) == 0) {
         LOGE("WebP decode failed");
+        delete[] decoded;
         return nullptr;
     }
 
-    // Premultiply and convert BGRA bytes to native ARGB32 (0xAARRGGBB)
+#if ENABLE(LCMS)
+    if (mTransform) {
+        // We have an LCMS transform: use it to convert rows from RGBA -> RGBA color space
+        uint8_t* srcRow = new uint8_t[width * 4];
+        uint8_t* dstRow = new uint8_t[width * 4];
+        for (int y = 0; y < height; y++) {
+            uint8_t* srcDecodedRow = decoded + y * stride;
+            uint32_t* dst32 = reinterpret_cast<uint32_t*>(pixels + y * stride);
+            // build src RGBA row from decoded BGRA
+            for (int x = 0; x < width; x++) {
+                srcRow[4 * x + 0] = srcDecodedRow[4 * x + 2]; // R
+                srcRow[4 * x + 1] = srcDecodedRow[4 * x + 1]; // G
+                srcRow[4 * x + 2] = srcDecodedRow[4 * x + 0]; // B
+                srcRow[4 * x + 3] = srcDecodedRow[4 * x + 3]; // A
+            }
+            // color transform
+            cmsDoTransform((cmsHTRANSFORM)mTransform, srcRow, dstRow, width);
+            for (int x = 0; x < width; x++) {
+                uint8_t a = srcRow[4 * x + 3];
+                uint8_t r = dstRow[4 * x + 0];
+                uint8_t g = dstRow[4 * x + 1];
+                uint8_t b = dstRow[4 * x + 2];
+                uint32_t p;
+                if (a == 0) {
+                    p = 0;
+                } else {
+                    if (a != 255) {
+                        r = (uint8_t)multiply_alpha(a, r);
+                        g = (uint8_t)multiply_alpha(a, g);
+                        b = (uint8_t)multiply_alpha(a, b);
+                    }
+                    p = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
+                }
+                dst32[x] = p;
+            }
+        }
+        delete[] srcRow;
+        delete[] dstRow;
+        delete[] decoded;
+        const int transparency = ImageDecoder::computeTransparency(image);
+        ImageDecoder::setTransparency(image, transparency);
+        return image;
+    }
+#endif
+
+    // No color transform: premultiply and convert BGRA bytes to native ARGB32 (0xAARRGGBB)
     for (int y = 0; y < height; y++) {
-        uint8_t* row = pixels + y * stride;
-        uint32_t* dst = reinterpret_cast<uint32_t*>(row);
+        uint8_t* row = decoded + y * stride;
+        uint32_t* dst = reinterpret_cast<uint32_t*>(pixels + y * stride);
         for (int x = 0; x < width; x++) {
             uint8_t b = row[x * 4 + 0];
             uint8_t g = row[x * 4 + 1];
@@ -131,6 +225,7 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* /*targ
         }
     }
 
+    delete[] decoded;
     const int transparency = ImageDecoder::computeTransparency(image);
     ImageDecoder::setTransparency(image, transparency);
     return image;
