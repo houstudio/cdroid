@@ -101,6 +101,20 @@ public:
     static bool isPNG(const uint8_t*,uint32_t);
 };
 
+// BMP decoder supporting classic and VxD headers, paletted & truecolor, RLE4/RLE8, BITFIELDS, and
+// BI_JPEG/BI_PNG embedded-compressed bitmaps (delegates to JPEG/PNG decoders when present).
+class BMPDecoder:public ImageDecoder{
+private:
+    struct PRIVATE;
+    PRIVATE* mPrivate;
+public:
+    BMPDecoder(std::istream&);
+    ~BMPDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    static bool isBMP(const uint8_t*,uint32_t);
+};
+
 class WEBPDecoder:public ImageDecoder{
 private:
     void*getColorProfile(PRIVATE*,uint8_t colorType);

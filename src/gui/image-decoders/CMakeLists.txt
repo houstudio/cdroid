@@ -4,6 +4,7 @@ find_package(LCMS2)
 find_package(Fontconfig)
 set(DECODER_SRCS
     imagedecoder.cc
+    bmpdecoder.cc
     gifdecoder.cc
     pngdecoder.cc
     jpegdecoder.cc

@@ -155,45 +155,6 @@ void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int tra
         bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
 }
 
-#if USE(OPENJPEG)
-static bool matchesJP2Signature(char* contents){
-    return !memcmp(contents, "\x00\x00\x00\x0C\x6A\x50\x20\x20\x0D\x0A\x87\x0A", 12)
-        || !memcmp(contents, "\x0D\x0A\x87\x0A", 4);
-}
-
-static bool matchesJ2KSignature(char* contents){
-    return !memcmp(contents, "\xFF\x4F\xFF\x51", 4);
-}
-#endif
-
-#if ENABLE(WEBP)
-static bool matchesWebPSignature(char* contents){
-    return !memcmp(contents, "RIFF", 4) && !memcmp(contents + 8, "WEBPVP", 6);
-}
-#endif
-
-static bool matchesBMPSignature(char* contents){
-    return !memcmp(contents, "BM", 2);
-}
-
-static bool matchesICOSignature(char* contents){
-    return !memcmp(contents, "\x00\x00\x01\x00", 4);
-}
-
-static bool matchesCURSignature(char* contents){
-    return !memcmp(contents, "\x00\x00\x02\x00", 4);
-}
-
-static bool isApng(std::istream*istm){
-    char buf[64];
-    //Chuk IHDR is the pngs's 1st Chunk
-    //Chunk acTL is the 1st Chunk after IHDR
-    istm->read(buf,48);
-    const uint32_t frames = png_get_uint_32(buf+41);
-    LOGV("chunk:%c%c%c%c isapng=%d frames:%d",buf[37],buf[38],buf[39],buf[40],!memcmp(buf+37,"acTL",4),frames);
-    return (memcmp(buf+37,"acTL",4)==0) && (frames>1);
-}
-
 static int registerBuildinCodesc(){
     ImageDecoder::registerFactory(std::string("mime/png"),8,PNGDecoder::isPNG,
             [](std::istream&stream){return std::make_unique<PNGDecoder>(stream);});
@@ -225,10 +186,9 @@ static int registerBuildinCodesc(){
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 
-#if USE(BITMAP)
-    if (matchesBMPSignature(contents))
-        return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
-#endif
+    /* register BMP decoder */
+    ImageDecoder::registerFactory("mime/bmp",2,BMPDecoder::isBMP,
+            [](std::istream&stream){return std::make_unique<BMPDecoder>(stream);});
     return 0;
 }
 
