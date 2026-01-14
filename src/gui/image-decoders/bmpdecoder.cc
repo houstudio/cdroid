@@ -11,6 +11,7 @@
 #include <drawable/drawable.h>
 #include <porting/cdlog.h>
 #include <cstring>
+#include <cstdint>
 #include <vector>
 #include <memory>
 #include <sstream>
@@ -174,6 +175,30 @@ static bool decodeRLE8(const uint8_t* src, size_t srcSize, int width, int height
     return true;
 }
 
+// Helpers for mask decoding
+static inline int trailingZeros(uint32_t mask) {
+#if defined(__GNUG__)
+    return mask ? __builtin_ctz(mask) : 0;
+#else
+    int s = 0; while (mask && !(mask & 1u)) { mask >>= 1; s++; } return s;
+#endif
+}
+static inline int popCount(uint32_t mask) {
+#if defined(__GNUG__)
+    return __builtin_popcount(mask);
+#else
+    int c = 0; while (mask) { c += (mask & 1u); mask >>= 1; } return c;
+#endif
+}
+
+static inline uint8_t expandTo8(uint32_t value, int bits) {
+    if (bits <= 0) return 0;
+    if (bits >= 8) return static_cast<uint8_t>(value >> (bits - 8));
+    // scale value to 0..255: (value * 255 + half) / max
+    uint32_t maxv = (1u << bits) - 1u;
+    return static_cast<uint8_t>((value * 255u + (maxv / 2u)) / maxv);
+}
+
 // RLE4 decode: similar but nibbles
 static bool decodeRLE4(const uint8_t* src, size_t srcSize, int width, int height, std::vector<uint8_t>& outIndices) {
     outIndices.assign(width * height, 0);
@@ -334,6 +359,49 @@ Cairo::RefPtr<Cairo::ImageSurface> BMPDecoder::decode(float scale, void* targetP
                 uint8_t g = srcRow[x*3 + 1];
                 uint8_t r = srcRow[x*3 + 2];
                 dstRow[x] = (uint32_t(255) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
+            }
+        }
+        ImageDecoder::setTransparency(image, ImageDecoder::computeTransparency(image));
+        return image;
+    }
+
+    if (mPrivate->bitsPerPixel == 16) {
+        // 16bpp: support BITFIELDS (masks) or fall back to common 5-6-5 layout
+        const uint8_t* src = mPrivate->pixelData.data();
+        size_t srcRowBytes = ((width * 2 + 3) / 4) * 4; // rows aligned to 4 bytes
+        uint32_t rmask = mPrivate->redMask;
+        uint32_t gmask = mPrivate->greenMask;
+        uint32_t bmask = mPrivate->blueMask;
+        uint32_t amask = mPrivate->alphaMask;
+        if (rmask == 0 && gmask == 0 && bmask == 0) {
+            // Default to RGB565 (common), if you need RGB555 set masks explicitly via BITFIELDS
+            rmask = 0xF800u; gmask = 0x07E0u; bmask = 0x001Fu; amask = 0;
+        }
+        const int rshift = trailingZeros(rmask);
+        const int gshift = trailingZeros(gmask);
+        const int bshift = trailingZeros(bmask);
+        const int rbits = popCount(rmask >> rshift);
+        const int gbits = popCount(gmask >> gshift);
+        const int bbits = popCount(bmask >> bshift);
+
+        for (int y = 0; y < height; ++y) {
+            const uint8_t* srcRow = src + (height - 1 - y) * srcRowBytes;
+            uint32_t* dstRow = reinterpret_cast<uint32_t*>(dstPixelsBase + y * dstStride);
+            for (int x = 0; x < width; ++x) {
+                uint16_t pix = (uint16_t)srcRow[x*2] | ((uint16_t)srcRow[x*2 + 1] << 8);
+                uint32_t rv = (rmask ? ((pix & rmask) >> rshift) : 0);
+                uint32_t gv = (gmask ? ((pix & gmask) >> gshift) : 0);
+                uint32_t bv = (bmask ? ((pix & bmask) >> bshift) : 0);
+                uint8_t r = expandTo8(rv, rbits);
+                uint8_t g = expandTo8(gv, gbits);
+                uint8_t b = expandTo8(bv, bbits);
+                uint8_t a = 255;
+                if (amask) {
+                    int ashift = trailingZeros(amask);
+                    int abits = popCount(amask >> ashift);
+                    a = expandTo8((pix & amask) >> ashift, abits);
+                }
+                dstRow[x] = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
             }
         }
         ImageDecoder::setTransparency(image, ImageDecoder::computeTransparency(image));
