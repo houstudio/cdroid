@@ -149,20 +149,19 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
 #endif
 
     // Decode into temporary buffer in BGRA order (byte order: B,G,R,A)
-    uint8_t* decoded = new uint8_t[out_size];
-    if (WebPDecodeBGRAInto(mPrivate->data, mPrivate->size, decoded, out_size, stride) == 0) {
+    std::vector<uint8_t> decoded(out_size);
+    if (WebPDecodeBGRAInto(mPrivate->data, mPrivate->size, decoded.data(), out_size, stride) == 0) {
         LOGE("WebP decode failed");
-        delete[] decoded;
         return nullptr;
     }
 
 #if ENABLE(LCMS)
     if (mTransform) {
         // We have an LCMS transform: use it to convert rows from RGBA -> RGBA color space
-        uint8_t* srcRow = new uint8_t[width * 4];
-        uint8_t* dstRow = new uint8_t[width * 4];
+        std::vector<uint8_t> srcRow(width * 4);
+        std::vector<uint8_t> dstRow(width * 4);
         for (int y = 0; y < height; y++) {
-            uint8_t* srcDecodedRow = decoded + y * stride;
+            uint8_t* srcDecodedRow = decoded.data() + y * stride;
             uint32_t* dst32 = reinterpret_cast<uint32_t*>(pixels + y * stride);
             // build src RGBA row from decoded BGRA
             for (int x = 0; x < width; x++) {
@@ -172,7 +171,7 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
                 srcRow[4 * x + 3] = srcDecodedRow[4 * x + 3]; // A
             }
             // color transform
-            cmsDoTransform((cmsHTRANSFORM)mTransform, srcRow, dstRow, width);
+            cmsDoTransform((cmsHTRANSFORM)mTransform, srcRow.data(), dstRow.data(), width);
             for (int x = 0; x < width; x++) {
                 uint8_t a = srcRow[4 * x + 3];
                 uint8_t r = dstRow[4 * x + 0];
@@ -192,9 +191,6 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
                 dst32[x] = p;
             }
         }
-        delete[] srcRow;
-        delete[] dstRow;
-        delete[] decoded;
         const int transparency = ImageDecoder::computeTransparency(image);
         ImageDecoder::setTransparency(image, transparency);
         return image;
@@ -203,7 +199,7 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
 
     // No color transform: premultiply and convert BGRA bytes to native ARGB32 (0xAARRGGBB)
     for (int y = 0; y < height; y++) {
-        uint8_t* row = decoded + y * stride;
+        uint8_t* row = decoded.data() + y * stride;
         uint32_t* dst = reinterpret_cast<uint32_t*>(pixels + y * stride);
         for (int x = 0; x < width; x++) {
             uint8_t b = row[x * 4 + 0];
@@ -225,7 +221,6 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
         }
     }
 
-    delete[] decoded;
     const int transparency = ImageDecoder::computeTransparency(image);
     ImageDecoder::setTransparency(image, transparency);
     return image;

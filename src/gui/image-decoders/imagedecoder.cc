@@ -45,7 +45,7 @@ ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mTransform= nullptr;
 #if ENABLE(LCMS)
     if(mCMSProfile==nullptr){
-        mCMSProfile=cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
+        mCMSProfile = cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
         if(mCMSProfile){
             AtExit::registerCallback([](){
                 cmsCloseProfile(mCMSProfile);
@@ -71,7 +71,7 @@ ImageDecoder::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
 
 int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Verifier v,Factory factory){
     auto it = mFactories.find(mime);
-    if(it==mFactories.end()){
+    if(it == mFactories.end()){
         mFactories.insert({mime,Registry(magicSize,factory,v)});
         mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
         LOGD("Register FrameSequence factory[%d] %s", mFactories.size()-1,mime.c_str());
@@ -95,7 +95,7 @@ int ImageDecoder::getFrameCount()const{
 }
 
 int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
-    if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
+    if( (bmp == nullptr) || (bmp->get_width() == 0 )|| (bmp->get_height() == 0) )
         return PixelFormat::TRANSPARENT;
     if((bmp->get_content()&&(Cairo::Content::CONTENT_ALPHA)==0))
         return PixelFormat::OPAQUE;
@@ -105,9 +105,9 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
         case Surface::Format::A1:
             return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
         case Surface::Format::A8:
-            for(int y=0;y<bmp->get_height();y++){
-                uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
-                for(int x=0;x<bmp->get_width();x++,alpha++)
+            for(int y = 0;y < bmp->get_height(); ++y){
+                uint8_t*alpha = bmp->get_data() + bmp->get_stride()*y;
+                for(int x = 0;x < bmp->get_width(); ++x, ++alpha)
                     if(*alpha > 0 && *alpha < 255)
                         return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
             }
@@ -126,7 +126,7 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     int transparentCount = 0, opaqueCount = 0;
     for(int y = 0;y < bmp->get_height() ;y++){
         uint8_t*pixels = (bmp->get_data() + bmp->get_stride()*y);
-        for (int x = 0; x < bmp->get_width(); x++, pixels+=4){
+        for (int x = 0; x < bmp->get_width(); ++x, pixels+=4){
             const uint8_t a = pixels[3];
             if(a==0) transparentCount++;
             else if(a!=255) return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
@@ -291,10 +291,12 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
             //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
         }
+#ifdef DEBUG
         if(d != nullptr) {
             d->getConstantState()->mResource=resourceId;
             return d;
         }
+#endif
     }
 
     if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
