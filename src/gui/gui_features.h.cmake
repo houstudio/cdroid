@@ -35,6 +35,7 @@
 #cmakedefine ENABLE_GIF   1     
 #cmakedefine ENABLE_JPEG  1
 #cmakedefine ENABLE_WEBP  1
+#cmakedefine ENABLE_OPENJPEG 1
 #cmakedefine ENABLE_LOTTIE 1
 #cmakedefine ENABLE_TURBOJPEG 1
 #cmakedefine ENABLE_FRIBIDI  1

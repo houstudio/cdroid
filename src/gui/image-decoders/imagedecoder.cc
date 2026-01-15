@@ -45,7 +45,7 @@ ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mTransform= nullptr;
 #if ENABLE(LCMS)
     if(mCMSProfile==nullptr){
-        mCMSProfile=cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
+        mCMSProfile = cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
         if(mCMSProfile){
             AtExit::registerCallback([](){
                 cmsCloseProfile(mCMSProfile);
@@ -71,7 +71,7 @@ ImageDecoder::Registry::Registry(uint32_t msize,Factory& fun,Verifier& v)
 
 int ImageDecoder::registerFactory(const std::string&mime,uint32_t magicSize,Verifier v,Factory factory){
     auto it = mFactories.find(mime);
-    if(it==mFactories.end()){
+    if(it == mFactories.end()){
         mFactories.insert({mime,Registry(magicSize,factory,v)});
         mHeaderBytesRequired = std::max(magicSize,mHeaderBytesRequired);
         LOGD("Register FrameSequence factory[%d] %s", mFactories.size()-1,mime.c_str());
@@ -95,7 +95,7 @@ int ImageDecoder::getFrameCount()const{
 }
 
 int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
-    if((bmp==nullptr)||(bmp->get_width()==0)||(bmp->get_height()==0))
+    if( (bmp == nullptr) || (bmp->get_width() == 0 )|| (bmp->get_height() == 0) )
         return PixelFormat::TRANSPARENT;
     if((bmp->get_content()&&(Cairo::Content::CONTENT_ALPHA)==0))
         return PixelFormat::OPAQUE;
@@ -105,9 +105,9 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
         case Surface::Format::A1:
             return PixelFormat::TRANSPARENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA;
         case Surface::Format::A8:
-            for(int y=0;y<bmp->get_height();y++){
-                uint8_t*alpha=bmp->get_data()+bmp->get_stride()*y;
-                for(int x=0;x<bmp->get_width();x++,alpha++)
+            for(int y = 0;y < bmp->get_height(); ++y){
+                uint8_t*alpha = bmp->get_data() + bmp->get_stride()*y;
+                for(int x = 0;x < bmp->get_width(); ++x, ++alpha)
                     if(*alpha > 0 && *alpha < 255)
                         return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_ALPHA;
             }
@@ -126,7 +126,7 @@ int ImageDecoder::computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp){
     int transparentCount = 0, opaqueCount = 0;
     for(int y = 0;y < bmp->get_height() ;y++){
         uint8_t*pixels = (bmp->get_data() + bmp->get_stride()*y);
-        for (int x = 0; x < bmp->get_width(); x++, pixels+=4){
+        for (int x = 0; x < bmp->get_width(); ++x, pixels+=4){
             const uint8_t a = pixels[3];
             if(a==0) transparentCount++;
             else if(a!=255) return PixelFormat::TRANSLUCENT;//CAIRO_IMAGE_HAS_BILEVEL_ALPHA
@@ -155,45 +155,6 @@ void ImageDecoder::setTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp,int tra
         bmp->set_mime_data((const char*)TRANSPARENCY,(unsigned char*)(long(transparency)),0,nullptr);
 }
 
-#if USE(OPENJPEG)
-static bool matchesJP2Signature(char* contents){
-    return !memcmp(contents, "\x00\x00\x00\x0C\x6A\x50\x20\x20\x0D\x0A\x87\x0A", 12)
-        || !memcmp(contents, "\x0D\x0A\x87\x0A", 4);
-}
-
-static bool matchesJ2KSignature(char* contents){
-    return !memcmp(contents, "\xFF\x4F\xFF\x51", 4);
-}
-#endif
-
-#if ENABLE(WEBP)
-static bool matchesWebPSignature(char* contents){
-    return !memcmp(contents, "RIFF", 4) && !memcmp(contents + 8, "WEBPVP", 6);
-}
-#endif
-
-static bool matchesBMPSignature(char* contents){
-    return !memcmp(contents, "BM", 2);
-}
-
-static bool matchesICOSignature(char* contents){
-    return !memcmp(contents, "\x00\x00\x01\x00", 4);
-}
-
-static bool matchesCURSignature(char* contents){
-    return !memcmp(contents, "\x00\x00\x02\x00", 4);
-}
-
-static bool isApng(std::istream*istm){
-    char buf[64];
-    //Chuk IHDR is the pngs's 1st Chunk
-    //Chunk acTL is the 1st Chunk after IHDR
-    istm->read(buf,48);
-    const uint32_t frames = png_get_uint_32(buf+41);
-    LOGV("chunk:%c%c%c%c isapng=%d frames:%d",buf[37],buf[38],buf[39],buf[40],!memcmp(buf+37,"acTL",4),frames);
-    return (memcmp(buf+37,"acTL",4)==0) && (frames>1);
-}
-
 static int registerBuildinCodesc(){
     ImageDecoder::registerFactory(std::string("mime/png"),8,PNGDecoder::isPNG,
             [](std::istream&stream){return std::make_unique<PNGDecoder>(stream);});
@@ -207,12 +168,16 @@ static int registerBuildinCodesc(){
             [](std::istream&stream){return std::make_unique<JPEGDecoder>(stream);});
 #endif
 
-#if USE(OPENJPEG)
-    if (matchesJP2Signature(contents))
-        return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::JP2, alphaOption, gammaAndColorProfileOption);
+#if ENABLE(WEBP)
+    ImageDecoder::registerFactory("mime/webp",14,WEBPDecoder::isWEBP,
+            [](std::istream&stream){return std::make_unique<WEBPDecoder>(stream);});
+#endif
 
-    if (matchesJ2KSignature(contents))
-        return JPEG2000ImageDecoder::create(JPEG2000ImageDecoder::Format::J2K, alphaOption, gammaAndColorProfileOption);
+#if ENABLE(OPENJPEG)
+    ImageDecoder::registerFactory("mime/jp2",12,JPEG2000Decoder::isJP2,
+            [](std::istream&stream){return std::make_unique<JPEG2000Decoder>(stream);});
+    ImageDecoder::registerFactory("mime/j2k",4,JPEG2000Decoder::isJ2K,
+            [](std::istream&stream){return std::make_unique<JPEG2000Decoder>(stream);});
 #endif
 
 #if USE(ICO)
@@ -220,10 +185,9 @@ static int registerBuildinCodesc(){
         return ICOImageDecoder::create(alphaOption, gammaAndColorProfileOption);
 #endif
 
-#if USE(BITMAP)
-    if (matchesBMPSignature(contents))
-        return BMPImageDecoder::create(alphaOption, gammaAndColorProfileOption);
-#endif
+    /* register BMP decoder */
+    ImageDecoder::registerFactory("mime/bmp",2,BMPDecoder::isBMP,
+            [](std::istream&stream){return std::make_unique<BMPDecoder>(stream);});
     return 0;
 }
 
@@ -282,12 +246,16 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
         Drawable*d = nullptr;
         if(TextUtils::endWith(resourceId,".9.png"))
             d = new NinePatchDrawable(image);
-        else if(TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg"))
+        else if( (image->get_width() >0) && (image->get_height() > 0) ){
+            //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
+        }
+#ifdef DEBUG
         if(d != nullptr) {
             d->getConstantState()->mResource=resourceId;
             return d;
         }
+#endif
     }
 
     if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")

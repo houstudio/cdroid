@@ -101,5 +101,45 @@ public:
     static bool isPNG(const uint8_t*,uint32_t);
 };
 
+// BMP decoder supporting classic and VxD headers, paletted & truecolor, RLE4/RLE8, BITFIELDS, and
+// BI_JPEG/BI_PNG embedded-compressed bitmaps (delegates to JPEG/PNG decoders when present).
+class BMPDecoder:public ImageDecoder{
+private:
+    struct PRIVATE;
+    PRIVATE* mPrivate;
+public:
+    BMPDecoder(std::istream&);
+    ~BMPDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    static bool isBMP(const uint8_t*,uint32_t);
+};
+
+// JPEG2000 decoder wrapper around OpenJPEG
+class JPEG2000Decoder: public ImageDecoder {
+private:
+    struct PRIVATE;
+    PRIVATE* mPrivate;
+public:
+    enum class Format { JP2, J2K };
+    JPEG2000Decoder(std::istream&);
+    ~JPEG2000Decoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    static bool isJP2(const uint8_t*, uint32_t);
+    static bool isJ2K(const uint8_t*, uint32_t);
+};
+
+class WEBPDecoder:public ImageDecoder{
+private:
+    void*getColorProfile(PRIVATE*,uint8_t colorType);
+public:
+    WEBPDecoder(std::istream&);
+    ~WEBPDecoder()override;
+    bool decodeSize()override;
+    Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    static bool isWEBP(const uint8_t*,uint32_t);
+};
+
 }/*endof namespace*/
 #endif
