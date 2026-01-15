@@ -69,18 +69,6 @@ WEBPDecoder::WEBPDecoder(std::istream& stream): ImageDecoder(stream) {
     mPrivate->data = nullptr;
     mPrivate->size = 0;
     mPrivate->demux = nullptr;
-
-    // Read entire stream into memory
-    std::vector<char> buf((std::istreambuf_iterator<char>(mStream)), std::istreambuf_iterator<char>());
-    mPrivate->size = buf.size();
-    if (mPrivate->size > 0) {
-        mPrivate->data = new uint8_t[mPrivate->size];
-        std::memcpy(mPrivate->data, buf.data(), mPrivate->size);
-        mPrivate->webp_data.bytes = mPrivate->data;
-        mPrivate->webp_data.size = mPrivate->size;
-    } else {
-        mPrivate->data = nullptr;
-    }
 }
 
 WEBPDecoder::~WEBPDecoder() {
@@ -92,23 +80,60 @@ WEBPDecoder::~WEBPDecoder() {
 }
 
 bool WEBPDecoder::decodeSize() {
-    if (!mPrivate || !mPrivate->data || mPrivate->size == 0) return false;
+    if (!mPrivate) return false;
 
-    if (!WebPGetInfo(mPrivate->data, mPrivate->size, (int*)&mImageWidth, (int*)&mImageHeight)) {
-        LOGE("WebP get info failed");
-        return false;
+    // Incrementally read small chunks and call WebPGetFeatures until we can
+    // determine width/height. For seekable streams we restore position; for
+    // non-seekable streams we keep the prefetched bytes in mPrivate for later use.
+    constexpr size_t kChunk = 8 * 1024;
+    constexpr size_t kMaxProbe = 256 * 1024; // limit probing to avoid long reads
+    std::vector<uint8_t> probe;
+    probe.reserve(kChunk);
+
+    std::streampos origPos = mStream.tellg();
+    bool seekable = (origPos != std::streampos(-1));
+    mStream.clear();
+    if (seekable) mStream.seekg(0, std::ios::beg);
+
+    while (probe.size() < kMaxProbe && mStream) {
+        size_t before = probe.size();
+        probe.resize(before + kChunk);
+        mStream.read(reinterpret_cast<char*>(probe.data() + before), (std::streamsize)kChunk);
+        std::streamsize got = mStream.gcount();
+        if (got <= 0) {
+            probe.resize(before);
+            break;
+        }
+        probe.resize(before + (size_t)got);
+
+        WebPBitstreamFeatures features;
+        VP8StatusCode st = WebPGetFeatures(probe.data(), probe.size(), &features);
+        if (st == VP8_STATUS_OK) {
+            mImageWidth = features.width;
+            mImageHeight = features.height;
+            mFrameCount = (features.has_animation ? 1 : 1); // accurate frame count requires full demux; keep 1
+            // If stream is not seekable, stash the probe for later decode
+            if (!seekable) {
+                mPrivate->size = probe.size();
+                mPrivate->data = new uint8_t[mPrivate->size];
+                std::memcpy(mPrivate->data, probe.data(), mPrivate->size);
+                mPrivate->webp_data.bytes = mPrivate->data;
+                mPrivate->webp_data.size = mPrivate->size;
+            }
+            if (seekable && origPos != std::streampos(-1)) mStream.seekg(origPos);
+            return true;
+        } else if (st == VP8_STATUS_NOT_ENOUGH_DATA) {
+            continue; // read more
+        } else {
+            LOGE("WebPGetFeatures failed: %d", st);
+            if (seekable && origPos != std::streampos(-1)) mStream.seekg(origPos);
+            return false;
+        }
     }
 
-    // Try to determine frame count for animated WebP.
-    mPrivate->demux = WebPDemux(&mPrivate->webp_data);
-    if (mPrivate->demux) {
-        mFrameCount = WebPDemuxGetI(mPrivate->demux, WEBP_FF_FRAME_COUNT);
-        WebPDemuxDelete(mPrivate->demux);
-        mPrivate->demux = nullptr;
-    } else {
-        mFrameCount = 1;
-    }
-    return true;
+    // If we exit loop without success, restore position (if possible) and fail.
+    if (seekable && origPos != std::streampos(-1)) mStream.seekg(origPos);
+    return false;
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* targetProfile) {
@@ -148,81 +173,242 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
     }
 #endif
 
-    // Decode into temporary buffer in BGRA order (byte order: B,G,R,A)
-    std::vector<uint8_t> decoded(out_size);
-    if (WebPDecodeBGRAInto(mPrivate->data, mPrivate->size, decoded.data(), out_size, stride) == 0) {
-        LOGE("WebP decode failed");
-        return nullptr;
-    }
+    // Prefer incremental decode: feed input stream to a WebPIDecoder and decode
+    // directly into the Cairo surface to avoid allocating the whole image.
+    if (targetProfile == nullptr) {
+        WebPDecBuffer outBuf;
+        if (!WebPInitDecBuffer(&outBuf)) {
+            LOGE("WebPInitDecBuffer failed");
+            return nullptr;
+        }
+        outBuf.colorspace = MODE_bgrA; // bytes order B,G,R,A which maps to native ARGB32 on little-endian
+        outBuf.width = width;
+        outBuf.height = height;
+        outBuf.is_external_memory = 1;
+        outBuf.u.RGBA.rgba = pixels;
+        outBuf.u.RGBA.stride = stride;
+        outBuf.u.RGBA.size = out_size;
 
-#if ENABLE(LCMS)
-    if (mTransform) {
-        // We have an LCMS transform: use it to convert rows from RGBA -> RGBA color space
-        std::vector<uint8_t> srcRow(width * 4);
-        std::vector<uint8_t> dstRow(width * 4);
-        for (int y = 0; y < height; y++) {
-            uint8_t* srcDecodedRow = decoded.data() + y * stride;
-            uint32_t* dst32 = reinterpret_cast<uint32_t*>(pixels + y * stride);
-            // build src RGBA row from decoded BGRA
-            for (int x = 0; x < width; x++) {
-                srcRow[4 * x + 0] = srcDecodedRow[4 * x + 2]; // R
-                srcRow[4 * x + 1] = srcDecodedRow[4 * x + 1]; // G
-                srcRow[4 * x + 2] = srcDecodedRow[4 * x + 0]; // B
-                srcRow[4 * x + 3] = srcDecodedRow[4 * x + 3]; // A
-            }
-            // color transform
-            cmsDoTransform((cmsHTRANSFORM)mTransform, srcRow.data(), dstRow.data(), width);
-            for (int x = 0; x < width; x++) {
-                uint8_t a = srcRow[4 * x + 3];
-                uint8_t r = dstRow[4 * x + 0];
-                uint8_t g = dstRow[4 * x + 1];
-                uint8_t b = dstRow[4 * x + 2];
-                uint32_t p;
-                if (a == 0) {
-                    p = 0;
-                } else {
-                    if (a != 255) {
-                        r = (uint8_t)multiply_alpha(a, r);
-                        g = (uint8_t)multiply_alpha(a, g);
-                        b = (uint8_t)multiply_alpha(a, b);
-                    }
-                    p = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
-                }
-                dst32[x] = p;
+        WebPIDecoder* idec = WebPINewDecoder(&outBuf);
+        if (!idec) {
+            LOGE("WebPINewDecoder failed");
+            WebPFreeDecBuffer(&outBuf);
+            return nullptr;
+        }
+
+        const size_t kChunk = 16 * 1024;
+        std::vector<char> buf(kChunk);
+        VP8StatusCode status = VP8_STATUS_SUSPENDED;
+
+        // If decodeSize prefetched bytes into mPrivate for non-seekable streams,
+        // submit them first to the incremental decoder.
+        if (mPrivate->data && mPrivate->size > 0) {
+            status = WebPIAppend(idec, mPrivate->data, mPrivate->size);
+            if (status != VP8_STATUS_OK && status != VP8_STATUS_SUSPENDED) {
+                LOGE("WebPIAppend(prefetch) failed: %d", status);
+                WebPIDelete(idec);
+                WebPFreeDecBuffer(&outBuf);
+                return nullptr;
             }
         }
+
+        while (mStream && status != VP8_STATUS_OK) {
+            mStream.read(buf.data(), (std::streamsize)buf.size());
+            std::streamsize r = mStream.gcount();
+            if (r <= 0) break;
+            status = WebPIAppend(idec, reinterpret_cast<const uint8_t*>(buf.data()), (size_t)r);
+            if (status != VP8_STATUS_OK && status != VP8_STATUS_SUSPENDED) {
+                LOGE("WebPIAppend failed: %d", status);
+                WebPIDelete(idec);
+                WebPFreeDecBuffer(&outBuf);
+                return nullptr;
+            }
+            // partial rows are already written into `pixels` by the decoder
+        }
+
+        if (status != VP8_STATUS_OK) {
+            LOGE("WebP incremental decode incomplete: %d", status);
+            WebPIDelete(idec);
+            WebPFreeDecBuffer(&outBuf);
+            return nullptr;
+        }
+
+        WebPIDelete(idec);
+        WebPFreeDecBuffer(&outBuf);
+
+        const int transparency = ImageDecoder::computeTransparency(image);
+        ImageDecoder::setTransparency(image, transparency);
+        return image;
+    }
+
+    // If a targetProfile is requested (color management), perform incremental decode
+    // and apply LCMS transform per-row as decoded, avoiding full-file buffering.
+#if ENABLE(LCMS)
+    if (targetProfile != nullptr) {
+        // We'll accumulate a small prefix to search for ICCP chunk.
+        std::vector<uint8_t> prefetched;
+        if (mPrivate->data && mPrivate->size > 0) {
+            prefetched.insert(prefetched.end(), mPrivate->data, mPrivate->data + mPrivate->size);
+        } else {
+            // If stream is seekable, rewind to start and read small prefix for ICCP
+            std::streampos orig = mStream.tellg();
+            if (orig != std::streampos(-1)) {
+                mStream.clear();
+                mStream.seekg(0, std::ios::beg);
+                const size_t preSize = 64 * 1024;
+                prefetched.resize(preSize);
+                mStream.read(reinterpret_cast<char*>(prefetched.data()), (std::streamsize)preSize);
+                std::streamsize got = mStream.gcount();
+                prefetched.resize((size_t)got);
+                mStream.clear();
+                mStream.seekg(orig);
+            }
+        }
+
+        cmsHTRANSFORM transform = nullptr;
+        cmsHPROFILE src_profile = nullptr;
+
+        WebPIDecoder* idec = WebPINewRGB(MODE_BGRA, nullptr, 0, 0);
+        if (!idec) {
+            LOGE("WebPINewRGB failed");
+            return nullptr;
+        }
+
+        const size_t kChunk2 = 16 * 1024;
+        std::vector<char> buf(kChunk2);
+        int processed_last_y = 0;
+        VP8StatusCode status = VP8_STATUS_SUSPENDED;
+
+        auto tryCreateTransform = [&]() {
+            if (transform) return;
+            std::vector<uint8_t> icc = extractICCP(prefetched.data(), prefetched.size());
+            if (icc.empty()) return;
+            src_profile = cmsOpenProfileFromMem(icc.data(), icc.size());
+            if (!src_profile) return;
+            cmsHTRANSFORM t = cmsCreateTransform(src_profile, TYPE_RGBA_8,
+                                                 (cmsHPROFILE)targetProfile, TYPE_RGBA_8,
+                                                 cmsGetHeaderRenderingIntent(src_profile), 0);
+            cmsCloseProfile(src_profile);
+            if (t) transform = t;
+        };
+
+        // If we prefetched some bytes, submit them first
+        if (!prefetched.empty()) {
+            status = WebPIAppend(idec, prefetched.data(), prefetched.size());
+            tryCreateTransform();
+            if (status != VP8_STATUS_OK && status != VP8_STATUS_SUSPENDED) {
+                LOGE("WebPIAppend(prefetch) failed: %d", status);
+                WebPIDelete(idec);
+                if (transform) cmsDeleteTransform(transform);
+                return nullptr;
+            }
+            // process any available rows
+            int last_y = -1, w = 0, h = 0, decStride = 0;
+            uint8_t* internal = WebPIDecGetRGB(idec, &last_y, &w, &h, &decStride);
+            if (internal && last_y >= 0) {
+                for (int y = processed_last_y; y <= last_y; y++) {
+                    uint8_t* srcDecodedRow = internal + y * decStride;
+                    // build src RGBA row
+                    std::vector<uint8_t> srcRow(width * 4);
+                    std::vector<uint8_t> dstRow(width * 4);
+                    for (int x = 0; x < width; x++) {
+                        srcRow[4 * x + 0] = srcDecodedRow[4 * x + 2]; // R
+                        srcRow[4 * x + 1] = srcDecodedRow[4 * x + 1]; // G
+                        srcRow[4 * x + 2] = srcDecodedRow[4 * x + 0]; // B
+                        srcRow[4 * x + 3] = srcDecodedRow[4 * x + 3]; // A
+                    }
+                    if (transform) cmsDoTransform(transform, srcRow.data(), dstRow.data(), width);
+                    uint32_t* dst32 = reinterpret_cast<uint32_t*>(pixels + y * stride);
+                    for (int x = 0; x < width; x++) {
+                        uint8_t a = srcRow[4 * x + 3];
+                        uint8_t r = transform ? dstRow[4 * x + 0] : srcRow[4 * x + 0];
+                        uint8_t g = transform ? dstRow[4 * x + 1] : srcRow[4 * x + 1];
+                        uint8_t b = transform ? dstRow[4 * x + 2] : srcRow[4 * x + 2];
+                        uint32_t p;
+                        if (a == 0) p = 0;
+                        else {
+                            if (a != 255) {
+                                r = (uint8_t)multiply_alpha(a, r);
+                                g = (uint8_t)multiply_alpha(a, g);
+                                b = (uint8_t)multiply_alpha(a, b);
+                            }
+                            p = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
+                        }
+                        dst32[x] = p;
+                    }
+                }
+                processed_last_y = last_y + 1;
+            }
+        }
+
+        // Continue reading and appending
+        while (mStream && status != VP8_STATUS_OK) {
+            mStream.read(buf.data(), (std::streamsize)buf.size());
+            std::streamsize r = mStream.gcount();
+            if (r <= 0) break;
+            // keep small prefix for ICC search
+            if (prefetched.size() < 128 * 1024) prefetched.insert(prefetched.end(), buf.data(), buf.data() + r);
+            status = WebPIAppend(idec, reinterpret_cast<const uint8_t*>(buf.data()), (size_t)r);
+            tryCreateTransform();
+            if (status != VP8_STATUS_OK && status != VP8_STATUS_SUSPENDED) {
+                LOGE("WebPIAppend failed: %d", status);
+                WebPIDelete(idec);
+                if (transform) cmsDeleteTransform(transform);
+                return nullptr;
+            }
+
+            int last_y = -1, w = 0, h = 0, decStride = 0;
+            uint8_t* internal = WebPIDecGetRGB(idec, &last_y, &w, &h, &decStride);
+            if (internal && last_y >= processed_last_y) {
+                for (int y = processed_last_y; y <= last_y; y++) {
+                    uint8_t* srcDecodedRow = internal + y * decStride;
+                    std::vector<uint8_t> srcRow(width * 4);
+                    std::vector<uint8_t> dstRow(width * 4);
+                    for (int x = 0; x < width; x++) {
+                        srcRow[4 * x + 0] = srcDecodedRow[4 * x + 2];
+                        srcRow[4 * x + 1] = srcDecodedRow[4 * x + 1];
+                        srcRow[4 * x + 2] = srcDecodedRow[4 * x + 0];
+                        srcRow[4 * x + 3] = srcDecodedRow[4 * x + 3];
+                    }
+                    if (transform) cmsDoTransform(transform, srcRow.data(), dstRow.data(), width);
+                    uint32_t* dst32 = reinterpret_cast<uint32_t*>(pixels + y * stride);
+                    for (int x = 0; x < width; x++) {
+                        uint8_t a = srcRow[4 * x + 3];
+                        uint8_t r = transform ? dstRow[4 * x + 0] : srcRow[4 * x + 0];
+                        uint8_t g = transform ? dstRow[4 * x + 1] : srcRow[4 * x + 1];
+                        uint8_t b = transform ? dstRow[4 * x + 2] : srcRow[4 * x + 2];
+                        uint32_t p;
+                        if (a == 0) p = 0;
+                        else {
+                            if (a != 255) {
+                                r = (uint8_t)multiply_alpha(a, r);
+                                g = (uint8_t)multiply_alpha(a, g);
+                                b = (uint8_t)multiply_alpha(a, b);
+                            }
+                            p = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
+                        }
+                        dst32[x] = p;
+                    }
+                }
+                processed_last_y = last_y + 1;
+            }
+        }
+
+        if (status != VP8_STATUS_OK) {
+            LOGE("WebP incremental decode incomplete: %d", status);
+            WebPIDelete(idec);
+            if (transform) cmsDeleteTransform(transform);
+            return nullptr;
+        }
+
+        WebPIDelete(idec);
+        if (transform) cmsDeleteTransform(transform);
+
         const int transparency = ImageDecoder::computeTransparency(image);
         ImageDecoder::setTransparency(image, transparency);
         return image;
     }
 #endif
-
-    // No color transform: premultiply and convert BGRA bytes to native ARGB32 (0xAARRGGBB)
-    for (int y = 0; y < height; y++) {
-        uint8_t* row = decoded.data() + y * stride;
-        uint32_t* dst = reinterpret_cast<uint32_t*>(pixels + y * stride);
-        for (int x = 0; x < width; x++) {
-            uint8_t b = row[x * 4 + 0];
-            uint8_t g = row[x * 4 + 1];
-            uint8_t r = row[x * 4 + 2];
-            uint8_t a = row[x * 4 + 3];
-            uint32_t p;
-            if (a == 0) {
-                p = 0;
-            } else {
-                if (a != 255) {
-                    r = (uint8_t)multiply_alpha(a, r);
-                    g = (uint8_t)multiply_alpha(a, g);
-                    b = (uint8_t)multiply_alpha(a, b);
-                }
-                p = (uint32_t(a) << 24) | (uint32_t(r) << 16) | (uint32_t(g) << 8) | uint32_t(b);
-            }
-            dst[x] = p;
-        }
-    }
-
-    const int transparency = ImageDecoder::computeTransparency(image);
-    ImageDecoder::setTransparency(image, transparency);
     return image;
 }
 

@@ -173,7 +173,7 @@ static int registerBuildinCodesc(){
             [](std::istream&stream){return std::make_unique<WEBPDecoder>(stream);});
 #endif
 
-#if USE(OPENJPEG)
+#if ENABLE(OPENJPEG)
     ImageDecoder::registerFactory("mime/jp2",12,JPEG2000Decoder::isJP2,
             [](std::istream&stream){return std::make_unique<JPEG2000Decoder>(stream);});
     ImageDecoder::registerFactory("mime/j2k",4,JPEG2000Decoder::isJ2K,

@@ -115,7 +115,6 @@ public:
     static bool isBMP(const uint8_t*,uint32_t);
 };
 
-#if USE(OPENJPEG)
 // JPEG2000 decoder wrapper around OpenJPEG
 class JPEG2000Decoder: public ImageDecoder {
 private:
@@ -130,7 +129,6 @@ public:
     static bool isJP2(const uint8_t*, uint32_t);
     static bool isJ2K(const uint8_t*, uint32_t);
 };
-#endif
 
 class WEBPDecoder:public ImageDecoder{
 private:

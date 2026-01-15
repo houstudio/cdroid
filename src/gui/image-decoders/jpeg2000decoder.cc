@@ -35,16 +35,69 @@
 namespace cdroid {
 
 struct JPEG2000Decoder::PRIVATE {
-    std::vector<uint8_t> data;
+    // no persistent copy; we rely on mStream from ImageDecoder
 };
 
 JPEG2000Decoder::JPEG2000Decoder(std::istream& stream): ImageDecoder(stream) {
     mPrivate = new PRIVATE();
-    mStream.seekg(0, std::ios::end);
-    size_t sz = static_cast<size_t>(mStream.tellg());
-    mStream.seekg(0, std::ios::beg);
-    mPrivate->data.resize(sz);
-    mStream.read(reinterpret_cast<char*>(mPrivate->data.data()), sz);
+}
+
+// Helper: create an OpenJPEG memory stream backed by a std::istream (no full-file buffering)
+static opj_stream_t* create_opj_memory_stream(std::istream& stream) {
+    opj_stream_t* opjstream = opj_stream_create(64 * 1024, OPJ_TRUE);
+    if (!opjstream) return nullptr;
+
+    // Determine stream length (if possible) while preserving position
+    std::istream::pos_type orig = stream.tellg();
+    std::streamoff length = -1;
+    if (orig != (std::istream::pos_type)-1) {
+        stream.seekg(0, std::ios::end);
+        std::istream::pos_type endpos = stream.tellg();
+        if (endpos != (std::istream::pos_type)-1) length = static_cast<std::streamoff>(endpos);
+        stream.seekg(orig);
+    }
+
+    // read callback
+    auto read_fn = [](void* p_buffer, OPJ_SIZE_T p_nb_bytes, void* p_user_data) -> OPJ_SIZE_T {
+        std::istream* is = static_cast<std::istream*>(p_user_data);
+        if (!is || !is->good()) return (OPJ_SIZE_T)-1;
+        is->read(reinterpret_cast<char*>(p_buffer), (std::streamsize)p_nb_bytes);
+        std::streamsize got = is->gcount();
+        if (got <= 0) return (OPJ_SIZE_T)-1;
+        return (OPJ_SIZE_T)got;
+    };
+
+    // skip callback: use seek relative
+    auto skip_fn = [](OPJ_OFF_T p_nb_bytes, void* p_user_data) -> OPJ_OFF_T {
+        std::istream* is = static_cast<std::istream*>(p_user_data);
+        if (!is) return (OPJ_OFF_T)-1;
+        std::istream::pos_type cur = is->tellg();
+        if (cur == (std::istream::pos_type)-1) return (OPJ_OFF_T)-1;
+        is->seekg((std::streamoff)p_nb_bytes, std::ios::cur);
+        if (!is->good()) { is->clear(); is->seekg(cur); return (OPJ_OFF_T)-1; }
+        std::istream::pos_type npos = is->tellg();
+        if (npos == (std::istream::pos_type)-1) return (OPJ_OFF_T)-1;
+        return static_cast<OPJ_OFF_T>(npos - cur);
+    };
+
+    // seek callback: absolute
+    auto seek_fn = [](OPJ_OFF_T p_nb_bytes, void* p_user_data) -> OPJ_BOOL {
+        std::istream* is = static_cast<std::istream*>(p_user_data);
+        if (!is) return OPJ_FALSE;
+        is->clear();
+        is->seekg((std::streamoff)p_nb_bytes, std::ios::beg);
+        return is->good() ? OPJ_TRUE : OPJ_FALSE;
+    };
+
+    // free user data: do nothing (caller manages stream lifetime)
+    auto free_ud = [](void* /*p_user_data*/) {};
+
+    opj_stream_set_user_data(opjstream, &stream, (opj_stream_free_user_data_fn)free_ud);
+    if (length >= 0) opj_stream_set_user_data_length(opjstream, (OPJ_UINT64)length);
+    opj_stream_set_read_function(opjstream, (opj_stream_read_fn)read_fn);
+    opj_stream_set_skip_function(opjstream, (opj_stream_skip_fn)skip_fn);
+    opj_stream_set_seek_function(opjstream, (opj_stream_seek_fn)seek_fn);
+    return opjstream;
 }
 
 JPEG2000Decoder::~JPEG2000Decoder() {
@@ -63,19 +116,28 @@ bool JPEG2000Decoder::isJ2K(const uint8_t* contents, uint32_t header_size) {
 }
 
 bool JPEG2000Decoder::decodeSize() {
-    if (!mPrivate || mPrivate->data.empty()) return false;
-    const uint8_t* buf = mPrivate->data.data();
-    size_t bufSize = mPrivate->data.size();
+    // Read header bytes from stream to detect format
+    uint8_t header[12] = {0};
+    std::istream::pos_type origPos = mStream.tellg();
+    mStream.clear();
+    mStream.seekg(0, std::ios::beg);
+    mStream.read(reinterpret_cast<char*>(header), sizeof(header));
+    std::streamsize headerGot = mStream.gcount();
+    if (origPos != (std::istream::pos_type)-1) mStream.seekg(origPos);
 
     opj_dparameters_t parameters;
     opj_set_default_decoder_parameters(&parameters);
 
     opj_codec_t* codec = nullptr;
-    if (JPEG2000Decoder::isJP2(buf, bufSize)) codec = opj_create_decompress(OPJ_CODEC_JP2);
-    else if (JPEG2000Decoder::isJ2K(buf, bufSize)) codec = opj_create_decompress(OPJ_CODEC_J2K);
+    if (JPEG2000Decoder::isJP2(header, (uint32_t)headerGot)) codec = opj_create_decompress(OPJ_CODEC_JP2);
+    else if (JPEG2000Decoder::isJ2K(header, (uint32_t)headerGot)) codec = opj_create_decompress(OPJ_CODEC_J2K);
     else return false;
 
-    opj_stream_t* stream = opj_stream_create_default_memory_stream(const_cast<uint8_t*>(buf), bufSize, 1);
+    // Ensure stream is at beginning for OpenJPEG callbacks
+    mStream.clear();
+    mStream.seekg(0, std::ios::beg);
+
+    opj_stream_t* stream = create_opj_memory_stream(mStream);
     if (!stream) { opj_destroy_codec(codec); return false; }
 
     if (!opj_setup_decoder(codec, &parameters)) { opj_stream_destroy(stream); opj_destroy_codec(codec); return false; }
@@ -97,19 +159,28 @@ bool JPEG2000Decoder::decodeSize() {
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> JPEG2000Decoder::decode(float scale, void* targetProfile) {
-    if (!mPrivate || mPrivate->data.empty()) return nullptr;
-    const uint8_t* buf = mPrivate->data.data();
-    size_t bufSize = mPrivate->data.size();
+    // Read header bytes to detect format
+    uint8_t header[12] = {0};
+    std::istream::pos_type origPos = mStream.tellg();
+    mStream.clear();
+    mStream.seekg(0, std::ios::beg);
+    mStream.read(reinterpret_cast<char*>(header), sizeof(header));
+    std::streamsize headerGot = mStream.gcount();
+    if (origPos != (std::istream::pos_type)-1) mStream.seekg(origPos);
 
     opj_dparameters_t parameters;
     opj_set_default_decoder_parameters(&parameters);
 
     opj_codec_t* codec = nullptr;
-    if (JPEG2000Decoder::isJP2(buf, bufSize)) codec = opj_create_decompress(OPJ_CODEC_JP2);
-    else if (JPEG2000Decoder::isJ2K(buf, bufSize)) codec = opj_create_decompress(OPJ_CODEC_J2K);
+    if (JPEG2000Decoder::isJP2(header, (uint32_t)headerGot)) codec = opj_create_decompress(OPJ_CODEC_JP2);
+    else if (JPEG2000Decoder::isJ2K(header, (uint32_t)headerGot)) codec = opj_create_decompress(OPJ_CODEC_J2K);
     else return nullptr;
 
-    opj_stream_t* stream = opj_stream_create_default_memory_stream(const_cast<uint8_t*>(buf), bufSize, 1);
+    // Ensure stream at start for OpenJPEG
+    mStream.clear();
+    mStream.seekg(0, std::ios::beg);
+
+    opj_stream_t* stream = create_opj_memory_stream(mStream);
     if (!stream) { opj_destroy_codec(codec); return nullptr; }
 
     if (!opj_setup_decoder(codec, &parameters)) { opj_stream_destroy(stream); opj_destroy_codec(codec); return nullptr; }
