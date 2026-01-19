@@ -909,7 +909,7 @@ int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
             }else{
-                 mCurrBits.clearBit(0);
+                mCurrBits.clear();
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
