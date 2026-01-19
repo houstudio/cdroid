@@ -699,6 +699,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOUCH ://case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
+                LOGW_IF(mCurrBits.count(),"Wrong BTN_TOUCH STATE %X should be 0 (Fingers was already TOUCHED DOWN)",mCurrBits.value);
                 mCurrBits.markBit(0);
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
