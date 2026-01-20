@@ -84,6 +84,7 @@ protected:
     void dispatchFinishedWhenDone();
     void cancelAll(std::vector<RecyclerView::ViewHolder*>& viewHolders);
 public:
+    ~DefaultItemAnimator()override;
     void runPendingAnimations()override;
     bool animateRemove(RecyclerView::ViewHolder& holder)override;
     bool animateAdd(RecyclerView::ViewHolder& holder)override;

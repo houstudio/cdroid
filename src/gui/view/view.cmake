@@ -1,7 +1,7 @@
 SET(VIEW_SOURCES
     view/abssavedstate.cc
     view/choreographer.cc
-    view/configuration.cc
+    #view/configuration.cc
     view/focusfinder.cc
     view/gravity.cc
     view/touchdelegate.cc

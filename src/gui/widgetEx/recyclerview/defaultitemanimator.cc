@@ -43,6 +43,11 @@ DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder,
     this->useCount = 0;
 }
 
+DefaultItemAnimator::~DefaultItemAnimator(){
+    /*TODO*/
+    LOGD("MAYBE must do somethings");
+}
+
 void DefaultItemAnimator::runPendingAnimations() {
     const bool removalsPending = !mPendingRemovals.empty();
     const bool movesPending = !mPendingMoves.empty();
@@ -223,8 +228,8 @@ bool DefaultItemAnimator::animateMove(RecyclerView::ViewHolder& holder, int from
     fromX += (int) holder.itemView->getTranslationX();
     fromY += (int) holder.itemView->getTranslationY();
     resetAnimation(holder);
-    int deltaX = toX - fromX;
-    int deltaY = toY - fromY;
+    const int deltaX = toX - fromX;
+    const int deltaY = toY - fromY;
     if (deltaX == 0 && deltaY == 0) {
         dispatchMoveFinished(holder);
         return false;
@@ -297,12 +302,12 @@ bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, Rec
         // run a move animation to handle position changes.
         return animateMove(oldHolder, fromLeft, fromTop, toLeft, toTop);
     }
-    float prevTranslationX = oldHolder.itemView->getTranslationX();
-    float prevTranslationY = oldHolder.itemView->getTranslationY();
-    float prevAlpha = oldHolder.itemView->getAlpha();
+    const float prevTranslationX = oldHolder.itemView->getTranslationX();
+    const float prevTranslationY = oldHolder.itemView->getTranslationY();
+    const float prevAlpha = oldHolder.itemView->getAlpha();
     resetAnimation(oldHolder);
-    int deltaX = (int) (toLeft - fromLeft - prevTranslationX);
-    int deltaY = (int) (toTop - fromTop - prevTranslationY);
+    const int deltaX = (int) (toLeft - fromLeft - prevTranslationX);
+    const int deltaY = (int) (toTop - fromTop - prevTranslationY);
     // recover prev translation state after ending animation
     oldHolder.itemView->setTranslationX(prevTranslationX);
     oldHolder.itemView->setTranslationY(prevTranslationY);
