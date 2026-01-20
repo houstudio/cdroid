@@ -699,6 +699,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOUCH ://case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
             if(value){
+                LOGW_IF(mCurrBits.count(),"Wrong BTN_TOUCH STATE %X should be 0 (Fingers was already TOUCHED DOWN)",mCurrBits.value);
                 mCurrBits.markBit(0);
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
@@ -826,18 +827,27 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
         mLastEventTime = SystemClock::uptimeMillis();
         mLastEventPos.set(mCoord.getX(),mCoord.getY());
         if( mLastBits.count() > mCurrBits.count() ){
-            const uint32_t pointerIndex = BitSet32::firstMarkedBit(mLastBits.value^mCurrBits.value);
-            LOGV("clearbits %d %08x,%08x trackslot.size = %d",pointerIndex,mLastBits.value,mCurrBits.value, mTrack2Slot.size());
-            if(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(pointerIndex);
-            if( pointerIndex < mTrack2Slot.size() )
-                mTrack2Slot.removeAt(pointerIndex);
-            if(pointerIndex<mPointerProps.size()){
-                mPointerProps.erase (mPointerProps.begin() + pointerIndex);
-                mPointerCoords.erase(mPointerCoords.begin()+ pointerIndex);
+            // Find bits that were present in last but are gone in current
+            uint32_t disappeared = mLastBits.value & (~mCurrBits.value);
+            if (disappeared) {
+                const int removedCount = BitSet32::count(disappeared);
+                for (;disappeared;) {
+                    const int idx = BitSet32::clearLastMarkedBit(disappeared);
+                    LOGV("clearbits %d %08x,%08x trackslot.size = %d", idx, mLastBits.value, mCurrBits.value, mTrack2Slot.size());
+                    if (mDeviceClasses & INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(idx);
+                    if (idx < mTrack2Slot.size()) mTrack2Slot.removeAt(idx);
+                    if (idx < (int)mPointerProps.size()) {
+                        mPointerProps.erase(mPointerProps.begin() + idx);
+                        mPointerCoords.erase(mPointerCoords.begin() + idx);
+                    }
+                }
+                // Maintain previous container sizes by appending empty slots equal to removed count
+                if(removedCount){
+                    mPointerProps.resize(mPointerProps.size() + removedCount);
+                    mPointerCoords.resize(mPointerCoords.size() + removedCount);
+                }
             }
-            mPointerProps.resize(mPointerProps.size()+1);
-            mPointerCoords.resize(mPointerCoords.size()+1);
-        }else {
+        } else {
             mPointerCoordsBak.clear();
             mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
             mPointerPropsBak.clear();
@@ -895,11 +905,12 @@ int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
         case BTN_TOUCH :
         case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
-            if(value)mCurrBits.markBit(0);else mCurrBits.clearBit(0);
             if(value){
+                mCurrBits.markBit(0);
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
             }else{
+                mCurrBits.clear();
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
             }
