@@ -487,7 +487,7 @@ void ViewPropertyAnimator::animatePropertyBy(int constantName, float startValue,
     }
 
     NameValuesHolder nameValuePair = NameValuesHolder(constantName, startValue, byValue);
-    mPendingAnimations.push_back(nameValuePair);
+    mPendingAnimations.push_back(std::move(nameValuePair));
     mView->removeCallbacks(mAnimationStarter);
     mView->postOnAnimation(mAnimationStarter);
 }
