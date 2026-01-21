@@ -450,6 +450,7 @@ protected:
     int32_t mMinY,mMaxY;
     int32_t mActionButton;
     int32_t mButtonState;
+    int32_t mPendingAction;
     PointerCoords mPointerCoord;
     PointerProperties mPointerProp;
     int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;

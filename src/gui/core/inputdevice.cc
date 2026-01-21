@@ -902,7 +902,8 @@ MouseDevice::MouseDevice(int32_t fd):InputDevice(fd){
     mX = mY = mZ = 0;
     mDX= mDY= mDZ= 0;
     memset(mButtonStates,0,sizeof(mButtonStates));
- #define ISRANGEVALID(range) (range&&(range->max-range->min))
+#define ISRANGEVALID(range) (range&&(range->max-range->min))
+    mPendingAction = -1;
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
     for(int i=0;i<axesRange.size();i++){
         InputDeviceInfo::MotionRange&range=axesRange.at(i);
@@ -1010,38 +1011,52 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             if(value){
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
             }else{
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
+                mPendingAction = MotionEvent::ACTION_UP;
             }
             break;
         case BTN_0:
         case BTN_STYLUS2:
             mActionButton = MotionEvent::BUTTON_SECONDARY;
-            if(value)
+            if(value) {
                 mButtonState = MotionEvent::BUTTON_SECONDARY;
-            else
+                mPendingAction = MotionEvent::ACTION_DOWN;
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+            } else {
                 mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+                mPendingAction = MotionEvent::ACTION_UP;
+                mMoveTime = sec * 1000 + usec/1000;
+            }
             break;
         }break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){
             setAxisValue(code,value,true);
+            mMoveTime = sec * 1000 + usec/1000;
         }break;
     case EV_ABS:
         if( (code >= ABS_X) && (code <= ABS_Z) ){
-            setAxisValue(code,value,true);
+            setAxisValue(code,value,false);
+            mMoveTime = sec * 1000 + usec/1000;
         }break;
     case EV_SYN:
-	if(code == SYN_REPORT) {
+        if(code == SYN_REPORT) {
             MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
-	    int action= 0;
-	    if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
+        	int action = MotionEvent::ACTION_MOVE;
+		    if(mPendingAction != -1){
+                action = mPendingAction;
+			    if(action == MotionEvent::ACTION_DOWN) mDownTime = mMoveTime;
+			    mPendingAction = -1;
+		    }
+            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
                 LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
             }else {
-		mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
                 LOGV_IF(action != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);
@@ -1050,10 +1065,10 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
                 mEvent->recycle();
+	        }
+	        //LOGD("mX=%d,mY=%d",mX,mY);
 	    }
-	    //LOGD("mX=%d,mY=%d",mX,mY);
-	}
-	break;
+	    break;
     default:break;
     }
     return 0;
