@@ -127,7 +127,7 @@ InputDevice::InputDevice(int32_t fdev){
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask)){
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
-	mDeviceInfo.addSource(SOURCE_MOUSE_RELATIVE);
+        mDeviceInfo.addSource(SOURCE_MOUSE_RELATIVE);
         oss << "Cursor";
     }
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
@@ -160,11 +160,11 @@ InputDevice::InputDevice(int32_t fdev){
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
             oss << "SingleTouch";
         }if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask)){
-	    mDeviceInfo.addSource(SOURCE_MOUSE);
+            mDeviceInfo.addSource(SOURCE_MOUSE);
             mDeviceClasses |= INPUT_DEVICE_CLASS_CURSOR;
             oss << "Cursor(ABS)";
         } else{
-	    mDeviceInfo.addSource(SOURCE_ROTARY_ENCODER);
+            mDeviceInfo.addSource(SOURCE_ROTARY_ENCODER);
             mDeviceClasses |=INPUT_DEVICE_CLASS_ROTARY_ENCODER;
             oss << "Rotaty Encoder";
         }
@@ -172,7 +172,7 @@ InputDevice::InputDevice(int32_t fdev){
     } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
             && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_EXTERNAL_STYLUS;
-	mDeviceInfo.addSource(SOURCE_STYLUS);
+        mDeviceInfo.addSource(SOURCE_STYLUS);
         // Keyboard will try to claim some of the buttons but we really want to reserve those so we
         // can fuse it with the touch screen data, so just take them back. Note this means an
         // external stylus cannot also be a keyboard device.
@@ -184,7 +184,7 @@ InputDevice::InputDevice(int32_t fdev){
     // from other devices such as accelerometers that also have absolute axes.
     if (haveGamepadButtons) {
         const uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
-	mDeviceInfo.addSource(SOURCE_GAMEPAD);
+        mDeviceInfo.addSource(SOURCE_GAMEPAD);
         for (int i = 0; i <= ABS_MAX; i++) {
             if (TEST_BIT(i, devInfos.absBitMask)
                     && (getAbsAxisUsage(i, assumedClasses) & INPUT_DEVICE_CLASS_JOYSTICK)) {
@@ -1108,7 +1108,7 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 mEvents.push_back(e);
                 mEvent->recycle();
             }
-	        LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
+            //LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
         }
 	    break;
     default:break;
