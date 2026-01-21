@@ -900,6 +900,7 @@ int32_t TouchDevice::checkPointEdges(Point&pt)const{
 
 MouseDevice::MouseDevice(int32_t fd):InputDevice(fd){
     mX = mY = mZ = 0;
+    mDX= mDY= mDZ= 0;
     memset(mButtonStates,0,sizeof(mButtonStates));
  #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
@@ -957,11 +958,9 @@ int32_t MouseDevice::ABS2AXIS(int32_t absaxis){
 
 void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
-    int slot, axis = ABS2AXIS(raw_axis);
+    int axis = ABS2AXIS(raw_axis);
     const bool isABS= mDeviceInfo.getMotionRanges().size()>=2;
-#if 10
-    switch(axis){
-    case MotionEvent::AXIS_X:
+    if(axis== MotionEvent::AXIS_X){
         switch(rotation){
         case Display::ROTATION_0  : value -= mMinX ; break;
         case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break;
@@ -976,11 +975,10 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }else if(mScreenWidth != mTPWidth){
             value = (value * mScreenWidth)/mTPWidth;
         }
-	mX += (value - mDX);
-	mDX = value;
-	mPointerCoord.setAxisValue(axis,mDX);
-        break;
-    case MotionEvent::AXIS_Y:
+	    mX += (value - mDX);
+	    mDX = value;
+	    mPointerCoord.setAxisValue(axis,mDX);
+    }else if(axis == MotionEvent::AXIS_Y){
         switch(rotation){
         case Display::ROTATION_0  : value -= mMinY; break;
         case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
@@ -995,13 +993,10 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }else{
             value = (value * mScreenHeight)/mTPHeight;
         }
-	mY += (value - mDY);
-	mDY= value;
-	mPointerCoord.setAxisValue(axis,mDY);
-        break;
-    default: break;
-    }/*endof switch(axis)*/
-#endif
+	    mY += (value - mDY);
+	    mDY= value;
+	    mPointerCoord.setAxisValue(axis,mDY);
+    }
 }
 
 int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){
