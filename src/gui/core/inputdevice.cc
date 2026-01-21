@@ -1110,7 +1110,7 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             }
             //LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
         }
-	    break;
+        break;
     default:break;
     }
     return 0;
