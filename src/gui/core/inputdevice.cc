@@ -1004,34 +1004,76 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
     if(!isValidEvent(type,code,value))return -1;
     switch(type){
     case EV_KEY:
-        switch(code){
-        case BTN_TOUCH :
-        case BTN_STYLUS:
+        switch (code) {
+        case BTN_LEFT:
+        case BTN_TOUCH: /* touchpads may present as BTN_TOUCH */
             mActionButton = MotionEvent::BUTTON_PRIMARY;
-            if(value){
+            if (value) {
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
-                mButtonState = MotionEvent::BUTTON_PRIMARY;
+                mButtonState |= MotionEvent::BUTTON_PRIMARY;
                 mPendingAction = MotionEvent::ACTION_DOWN;
-            }else{
+            } else {
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
                 mPendingAction = MotionEvent::ACTION_UP;
             }
             break;
-        case BTN_0:
+        case BTN_RIGHT:
+        case BTN_0: /* legacy */
         case BTN_STYLUS2:
             mActionButton = MotionEvent::BUTTON_SECONDARY;
-            if(value) {
-                mButtonState = MotionEvent::BUTTON_SECONDARY;
-                mPendingAction = MotionEvent::ACTION_DOWN;
+            if (value) {
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_SECONDARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
             } else {
+                mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
                 mPendingAction = MotionEvent::ACTION_UP;
-                mMoveTime = sec * 1000 + usec/1000;
             }
             break;
-        }break;
+        case BTN_MIDDLE:
+            mActionButton = MotionEvent::BUTTON_TERTIARY;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_TERTIARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        case BTN_SIDE:
+        case BTN_BACK:
+            mActionButton = MotionEvent::BUTTON_BACK;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_BACK;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_BACK;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        case BTN_EXTRA:
+        case BTN_FORWARD:
+            mActionButton = MotionEvent::BUTTON_FORWARD;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_FORWARD;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_FORWARD;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){
             setAxisValue(code,value,true);
@@ -1045,12 +1087,12 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
     case EV_SYN:
         if(code == SYN_REPORT) {
             MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
-        	int action = MotionEvent::ACTION_MOVE;
-		    if(mPendingAction != -1){
+            int action = MotionEvent::ACTION_MOVE;
+            if(mPendingAction != -1){
                 action = mPendingAction;
-			    if(action == MotionEvent::ACTION_DOWN) mDownTime = mMoveTime;
-			    mPendingAction = -1;
-		    }
+                if(action == MotionEvent::ACTION_DOWN) mDownTime = mMoveTime;
+                mPendingAction = -1;
+            }
             if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
@@ -1065,9 +1107,9 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
                 mEvent->recycle();
-	        }
-	        //LOGD("mX=%d,mY=%d",mX,mY);
-	    }
+            }
+	        LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
+        }
 	    break;
     default:break;
     }
