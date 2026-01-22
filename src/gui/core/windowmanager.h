@@ -32,6 +32,7 @@ private:
     int mDisplayRotation;
     Window*mActiveWindow;/*activeWindow*/
     std::vector< Window* > mWindows;
+    Window* mHoveredWindow;
     std::vector< Display > mDisplays;
     static WindowManager* mInst;
 private:
