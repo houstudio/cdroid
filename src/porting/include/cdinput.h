@@ -39,13 +39,13 @@ typedef struct{
     uint16_t product;
     uint16_t version;
     uint8_t uniqueId[64];
-    uint8_t keyBitMask[128];
-    uint8_t absBitMask[8];
-    uint8_t relBitMask[4];
-    uint8_t swBitMask [4];
-    uint8_t ledBitMask[4];
-    uint8_t propBitMask[4];
-    uint8_t ffBitMask [16];
+    uint8_t keyBitMask[0x60];/*(KEY_CNT(0x300)+7)/8*/
+    uint8_t absBitMask[8];   /*(ABS_CNT(0x40)+7)/8*/
+    uint8_t relBitMask[4];   /*(REL_CNT(0x10)+7)/8*/
+    uint8_t ledBitMask[4];   /*(LED_CNT(0x10)+7)/8*/
+    uint8_t swBitMask [4];   /*(SW_CNT(0x11)+7)/8*/
+    uint8_t propBitMask[4];  /*(INPUT_PROP_CNT(0x20)+7)/8*/
+    uint8_t ffBitMask [16];  /*(FF_CNT(0x80)+7)/8*/
     INPUTAXISINFO axis[64/*ABS_CNT*/];
     char name[MAX_DEVICE_NAME];
 }INPUTDEVICEINFO;

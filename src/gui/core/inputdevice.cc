@@ -73,6 +73,9 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 
 #define TEST_BIT(bit, array) ((array)[(bit)/8] & (1<<((bit)%8)))
 #define SIZEOF_BITS(bits) (((bits) + 7) / 8)
+#ifndef KEY_CNT
+   #define KEY_CNT (KEY_MAX+1)
+#endif
 
 Preferences InputDevice::mPrefs;
 
@@ -116,7 +119,7 @@ InputDevice::InputDevice(int32_t fdev){
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
     const bool haveKeyboardKeys = containsNonZeroByte(devInfos.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
-            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_MAX + 1));
+            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_CNT));
     const bool haveGamepadButtons = containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
