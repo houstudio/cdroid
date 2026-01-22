@@ -317,9 +317,7 @@ void WindowManager::onMotion(MotionEvent&event) {
    const int y = event.getY();
    const int action = event.getActionMasked();
    // If this is a touchscreen/stylus/touchpad event, keep existing behavior.
-   if (event.isFromSource(InputDevice::SOURCE_TOUCHSCREEN)
-       || event.isFromSource(InputDevice::SOURCE_STYLUS)
-       || event.isFromSource(InputDevice::SOURCE_TOUCHPAD)) {
+   if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)){
        for (auto itr = mWindows.rbegin(); itr != mWindows.rend(); itr++) {
            auto w = (*itr);
            ViewTreeObserver*obv = w->getViewTreeObserver();
@@ -333,7 +331,7 @@ void WindowManager::onMotion(MotionEvent&event) {
            LOGV_IF(action != MotionEvent::ACTION_MOVE, "%s at(%d,%d)", MotionEvent::actionToString(action).c_str(), x, y);
            if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
                event.offsetLocation(-w->getLeft(), -w->getTop());
-               w->dispatchTouchEvent(event);
+               w->dispatchPointerEvent(event);
                event.offsetLocation(w->getLeft(), w->getTop());
                break;
            }
