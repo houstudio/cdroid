@@ -346,11 +346,11 @@ public:
     static constexpr int KEYBOARD_TYPE_NON_ALPHABETIC = 1;
     static constexpr int KEYBOARD_TYPE_ALPHABETIC = 2;
 protected:
-    int mDeviceClasses;
-    int mKeyboardType;
+    int32_t mDeviceClasses;
+    int32_t mKeyboardType;
     int32_t mScreenWidth;
     int32_t mScreenHeight;
-    uint32_t mCorrectedDeviceClasses;
+    int32_t mCorrectedDeviceClasses;
     int32_t mScreenRotation;
     int32_t mSeqID;
     int32_t mDisplayId;
@@ -361,44 +361,44 @@ protected:
     class KeyLayoutMap*kmap;
     static Preferences mPrefs;
     std::vector<InputEvent*>mEvents;
-    virtual int isValidEvent(int type,int code,int value);
+    virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
 public:
-    InputDevice(int fdev);
-    virtual int putEvent(long sec,long usec,int type,int code,int value){return 0;}//PENDING need more rawevent OK,wecan getevent now
-    int getId()const;
-    int getProductId()const;
-    int getVendorId()const;
+    InputDevice(int32_t fdev);
+    virtual int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){return 0;}//PENDING need more rawevent OK,wecan getevent now
+    int32_t getId()const;
+    int32_t getProductId()const;
+    int32_t getVendorId()const;
     bool isVirtual()const;
     bool isFullKeyboard()const;
-    bool supportsSource(int source)const;
-    int getSources()const;
-    int getClasses()const;
-    int getEventCount()const;
+    bool supportsSource(int32_t source)const;
+    int32_t getSources()const;
+    int32_t getClasses()const;
+    int32_t getEventCount()const;
     void pushEvent(InputEvent*);
-    int drainEvents(std::vector<InputEvent*>&out);
+    int32_t drainEvents(std::vector<InputEvent*>&out);
     const std::string&getName()const;
     const InputDeviceIdentifier&getIdentifier()const;
-    void getLastEvent(int&action,nsecs_t&etime,Point*pos)const;
-    void bindDisplay(int);
+    void getLastEvent(int32_t &action,nsecs_t&etime,Point*pos)const;
+    void bindDisplay(int32_t);
 };
 
 class KeyDevice:public InputDevice{
 private:
-    int mLastDownKey;
-    int mRepeatCount;
+    int32_t mLastDownKey;
+    int32_t mRepeatCount;
 protected:
-    int msckey;
+    int32_t msckey;
     KeyEvent mEvent;
     nsecs_t mDownTime;
-    int isValidEvent(int type,int code,int value)override;
+    int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;
 public:
-    KeyDevice(int fd);
-    int putEvent(long sec,long usec,int type,int code,int value)override;
+    KeyDevice(int32_t fd);
+    int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
 };
 
 class TouchDevice:public InputDevice{
 private:
-    int parseVirtualKeys(const std::string&);
+    int32_t parseVirtualKeys(const std::string&);
 protected:
     MotionEvent* mEvent;
     nsecs_t mDownTime;
@@ -418,32 +418,47 @@ protected:
     bool mInvertY;
     bool mTypeB;
     BitSet32 mLastBits,mCurrBits;
-    SparseArray<int>mTrack2Slot;
+    SparseArray<int32_t>mTrack2Slot;
     PointerCoords mCoord;
     PointerProperties mProp;
     std::vector<PointerCoords>mPointerCoords;
     std::vector<PointerCoords>mPointerCoordsBak;
     std::vector<PointerProperties>mPointerProps;
     std::vector<PointerProperties>mPointerPropsBak;
-    std::vector<std::pair<Rect,int>>mVirtualKeyMap;
-    int getActionByBits(int&pointIndex);
-    void setAxisValue(int axis,int value,bool isRelative);
-    int isValidEvent(int type,int code,int value)override;
-    int ABS2AXIS(int absaxis);
+    std::vector<std::pair<Rect,int32_t>>mVirtualKeyMap;
+    int32_t getActionByBits(int32_t &pointIndex);
+    void setAxisValue(int32_t axis,int32_t value,bool isRelative);
+    int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;
+    int32_t ABS2AXIS(int32_t absaxis);
 public:
-    TouchDevice(int fd);
-    int putEvent(long sec,long usec,int type,int code,int value)override;
-    int checkPointEdges(Point&pt)const;
+    TouchDevice(int32_t fd);
+    int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
+    int32_t checkPointEdges(Point&pt)const;
 };
 
-class MouseDevice:public TouchDevice{
+class MouseDevice:public InputDevice{
 protected:
+    MotionEvent* mEvent;
+    nsecs_t mDownTime;
+    nsecs_t mMoveTime;
     uint8_t mButtonStates[16];
     int32_t mX,mY,mZ;
-    int isValidEvent(int type,int code,int value)override;
+    int32_t mDX,mDY,mDZ;
+    int32_t mTPWidth;
+    int32_t mTPHeight;
+    int32_t mMinX,mMaxX;
+    int32_t mMinY,mMaxY;
+    int32_t mActionButton;
+    int32_t mButtonState;
+    int32_t mPendingAction;
+    PointerCoords mPointerCoord;
+    PointerProperties mPointerProp;
+    int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;
+    void setAxisValue(int32_t axis,int32_t value,bool isRelative);
+    int32_t ABS2AXIS(int32_t absaxis);
 public:
-    MouseDevice(int fd);
-    int putEvent(long sec,long usec,int type,int code,int value)override;
+    MouseDevice(int32_t fd);
+    int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
 };
 }//namespace
 #endif 

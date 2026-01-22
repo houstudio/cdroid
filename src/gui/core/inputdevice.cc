@@ -76,7 +76,7 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 
 Preferences InputDevice::mPrefs;
 
-InputDevice::InputDevice(int fdev){
+InputDevice::InputDevice(int32_t fdev){
     INPUTDEVICEINFO devInfos={};
     InputDeviceIdentifier di;
     Point displaySize;
@@ -121,42 +121,50 @@ InputDevice::InputDevice(int fdev){
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
+        mDeviceInfo.addSource(SOURCE_KEYBOARD);
         oss << "Keyboard";
     }
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask)){
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
+        mDeviceInfo.addSource(SOURCE_MOUSE_RELATIVE);
         oss << "Cursor";
     }
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
         oss << "Proximity";//Proximity sensor
+       mDeviceInfo.addSource(SOURCE_SENSOR);
     }
     if(TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) && TEST_BIT(ABS_Z, devInfos.absBitMask)){
         oss << "Accelerometer";//Accelerometer sensor
+        mDeviceInfo.addSource(SOURCE_SENSOR);
     }
     if(TEST_BIT(ABS_RX, devInfos.absBitMask) && TEST_BIT(ABS_RY, devInfos.absBitMask) && TEST_BIT(ABS_RZ, devInfos.absBitMask)){
         oss << "Gyroscope";//Gyroscope sensor
+        mDeviceInfo.addSource(SOURCE_SENSOR);
     }
     if(TEST_BIT(ABS_HAT0X, devInfos.absBitMask) && TEST_BIT(ABS_HAT0Y, devInfos.absBitMask) 
              && TEST_BIT(ABS_HAT1X, devInfos.absBitMask) && TEST_BIT(ABS_HAT1Y, devInfos.absBitMask)){
         oss << "Magnetometer";//Magnetometer sensor
+        mDeviceInfo.addSource(SOURCE_SENSOR);
     }
     if(TEST_BIT(ABS_MT_POSITION_X, devInfos.absBitMask) && TEST_BIT(ABS_MT_POSITION_Y, devInfos.absBitMask)) {
         // Some joysticks such as the PS3 controller report axes that conflict
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
         if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask) || !haveGamepadButtons) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
-            oss << "MTouch";
+            oss << "MultiTouch";
         }
         // Is this an old style single-touch driver?
     } else if ( TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) ) {
         if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)){
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
-            oss << "STouch";
+            oss << "SingleTouch";
         }if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask)){
+            mDeviceInfo.addSource(SOURCE_MOUSE);
             mDeviceClasses |= INPUT_DEVICE_CLASS_CURSOR;
             oss << "Cursor(ABS)";
         } else{
+            mDeviceInfo.addSource(SOURCE_ROTARY_ENCODER);
             mDeviceClasses |=INPUT_DEVICE_CLASS_ROTARY_ENCODER;
             oss << "Rotaty Encoder";
         }
@@ -164,6 +172,7 @@ InputDevice::InputDevice(int fdev){
     } else if ((TEST_BIT(ABS_PRESSURE, devInfos.absBitMask) || TEST_BIT(BTN_TOUCH, devInfos.keyBitMask))
             && !TEST_BIT(ABS_X, devInfos.absBitMask) && !TEST_BIT(ABS_Y, devInfos.absBitMask)) {
         mDeviceClasses |= INPUT_DEVICE_CLASS_EXTERNAL_STYLUS;
+        mDeviceInfo.addSource(SOURCE_STYLUS);
         // Keyboard will try to claim some of the buttons but we really want to reserve those so we
         // can fuse it with the touch screen data, so just take them back. Note this means an
         // external stylus cannot also be a keyboard device.
@@ -175,6 +184,7 @@ InputDevice::InputDevice(int fdev){
     // from other devices such as accelerometers that also have absolute axes.
     if (haveGamepadButtons) {
         const uint32_t assumedClasses = mDeviceClasses | INPUT_DEVICE_CLASS_JOYSTICK;
+        mDeviceInfo.addSource(SOURCE_GAMEPAD);
         for (int i = 0; i <= ABS_MAX; i++) {
             if (TEST_BIT(i, devInfos.absBitMask)
                     && (getAbsAxisUsage(i, assumedClasses) & INPUT_DEVICE_CLASS_JOYSTICK)) {
@@ -220,7 +230,7 @@ InputDevice::InputDevice(int fdev){
     }
 }
 
-void InputDevice::bindDisplay(int id){
+void InputDevice::bindDisplay(int32_t id){
     Point displaySize;
     Display display =  WindowManager::getInstance().getDefaultDisplay();
     display.getRealSize(displaySize);
@@ -267,23 +277,23 @@ uint32_t getAbsAxisUsage(int32_t axis, uint32_t mDeviceClasses) {
     return mDeviceClasses & INPUT_DEVICE_CLASS_JOYSTICK;
 }
 
-int InputDevice::isValidEvent(int type,int code,int value){
+int32_t InputDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
     return true;
 }
 
-int InputDevice::getId()const{
+int32_t InputDevice::getId()const{
     return mDeviceInfo.getId();
 }
 
-int InputDevice::getSources()const{
+int32_t InputDevice::getSources()const{
     return mDeviceInfo.getSources();
 }
 
-int InputDevice::getVendorId()const{
+int32_t InputDevice::getVendorId()const{
     return mDeviceInfo.getIdentifier().vendor;
 }
 
-int InputDevice::getProductId()const{
+int32_t InputDevice::getProductId()const{
     return mDeviceInfo.getIdentifier().product;
 }
 
@@ -296,11 +306,11 @@ bool InputDevice::isFullKeyboard()const{
 	    && (mKeyboardType == KEYBOARD_TYPE_ALPHABETIC);
 }
 
-bool InputDevice::supportsSource(int source)const{
+bool InputDevice::supportsSource(int32_t source)const{
     return (getSources() & source) == source;
 }
 
-int InputDevice::getClasses()const{
+int32_t InputDevice::getClasses()const{
     return mDeviceClasses;
 }
 
@@ -312,7 +322,7 @@ const InputDeviceIdentifier&InputDevice::getIdentifier()const{
     return mDeviceInfo.getIdentifier();
 }
 
-int InputDevice::getEventCount()const{
+int32_t InputDevice::getEventCount()const{
     return mEvents.size();
 }
 
@@ -322,7 +332,7 @@ void InputDevice::pushEvent(InputEvent*e){
     mLastEventTime=e->getEventTime();
 }
 
-int InputDevice::drainEvents(std::vector<InputEvent*>&out){
+int32_t InputDevice::drainEvents(std::vector<InputEvent*>&out){
     out.clear();
     out.swap(mEvents);
     return out.size();
@@ -334,7 +344,7 @@ void InputDevice::getLastEvent(int&action,nsecs_t&etime,Point*pos)const{
     *pos = mLastEventPos;
 }
 
-KeyDevice::KeyDevice(int fd)
+KeyDevice::KeyDevice(int32_t fd)
    :InputDevice(fd){
    msckey = 0;
    mLastDownKey = -1;
@@ -344,12 +354,12 @@ KeyDevice::KeyDevice(int fd)
    KeyLayoutMap::load(fname,kmap);
 }
 
-int KeyDevice::isValidEvent(int type,int code,int value){
+int32_t KeyDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
     return (type==EV_KEY)||(type==EV_MSC)||(type==EV_LED)||
         (type==EV_REP)||(type==EV_SYN);
 }
 
-int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
+int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t value){
     int flags  = 0;
     int keycode= code;
     if(!isValidEvent(type,code,value)){
@@ -389,7 +399,7 @@ int KeyDevice::putEvent(long sec,long nsec,int type,int code,int value){
     return 0;
 }
 
-TouchDevice::TouchDevice(int fd):InputDevice(fd){
+TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     mProp.id = 0;
@@ -453,7 +463,7 @@ static bool isAllDigits(const std::string& str) {
     }) == str.end();
 }
 
-int TouchDevice::parseVirtualKeys(const std::string&content){
+int32_t TouchDevice::parseVirtualKeys(const std::string&content){
     Tokenizer*tokenizer = nullptr;
     constexpr const char*delimiters=" ,;\r\n";
 
@@ -497,7 +507,7 @@ Error:
     return (int)mVirtualKeyMap.size();
 }
 
-int TouchDevice::ABS2AXIS(int absaxis){
+int32_t TouchDevice::ABS2AXIS(int32_t absaxis){
     switch(absaxis){
     case ABS_MT_POSITION_X:
     case ABS_X:/*REL_X*/ return MotionEvent::AXIS_X;
@@ -548,7 +558,7 @@ static int toMotionToolType(int value){
 /*Android use 0->PointerCount as PointerID
  *other PointerID will caused many crashes */
 
-void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
+void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
     int slot, axis = ABS2AXIS(raw_axis);
     int tmp;
@@ -657,11 +667,11 @@ void TouchDevice::setAxisValue(int raw_axis,int value,bool isRelative){
     }
 }
 
-int TouchDevice::isValidEvent(int type,int code,int value){
+int32_t TouchDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
     return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY)||(type==EV_MSC);
 }
 
-int TouchDevice::getActionByBits(int& pointerIndex){
+int32_t TouchDevice::getActionByBits(int& pointerIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
     pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
     if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
@@ -688,7 +698,7 @@ static std::string printEvent(MotionEvent*e){
     return oss.str(); 
 }
 
-int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
+int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){
     int slot,pointerCount,pointerIndex,action;
     MotionEvent*lastEvent;
     if(!isValidEvent(type,code,value))return -1;
@@ -871,7 +881,7 @@ int TouchDevice::putEvent(long sec,long usec,int type,int code,int value){
     return 0;
 }
 
-int TouchDevice::checkPointEdges(Point&pt)const{
+int32_t TouchDevice::checkPointEdges(Point&pt)const{
 #define EDGESIZE 16
     int edges=0;
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
@@ -888,52 +898,219 @@ int TouchDevice::checkPointEdges(Point&pt)const{
     return edges;
 }
 
-MouseDevice::MouseDevice(int fd):TouchDevice(fd){
+MouseDevice::MouseDevice(int32_t fd):InputDevice(fd){
     mX = mY = mZ = 0;
+    mDX= mDY= mDZ= 0;
     memset(mButtonStates,0,sizeof(mButtonStates));
+#define ISRANGEVALID(range) (range&&(range->max-range->min))
+    mPendingAction = -1;
+    std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
+    for(int i=0;i<axesRange.size();i++){
+        InputDeviceInfo::MotionRange&range=axesRange.at(i);
+        const int axis = ABS2AXIS(range.axis);
+        if(axis>=0)range.axis = axis;
+        range = axesRange.at(i);
+    }
+    InputDeviceInfo::MotionRange*rangeX = mDeviceInfo.getMotionRange(MotionEvent::AXIS_X,0);
+    Display display =  WindowManager::getInstance().getDefaultDisplay();
+    mTPWidth  = ISRANGEVALID(rangeX) ? (rangeX->max-rangeX->min) : mScreenWidth;
+    mMinX = ISRANGEVALID(rangeX) ? rangeX->min : 0;
+    mMaxX = ISRANGEVALID(rangeX) ? rangeX->max : mScreenWidth;
+
+    InputDeviceInfo::MotionRange*rangeY = mDeviceInfo.getMotionRange(MotionEvent::AXIS_Y,0);
+    mTPHeight = ISRANGEVALID(rangeY) ? (rangeY->max-rangeY->min) : mScreenHeight;
+    mMinY = ISRANGEVALID(rangeY) ? rangeY->min : 0;
+    mMaxY = ISRANGEVALID(rangeY) ? rangeY->max : mScreenHeight;
 }
 
-int MouseDevice::isValidEvent(int type,int code,int value){
+int32_t MouseDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
     return (type==EV_REL)||(type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY);
 }
 
-int MouseDevice::putEvent(long sec,long usec,int type,int code,int value){
+int32_t MouseDevice::ABS2AXIS(int32_t absaxis){
+    switch(absaxis){
+    case ABS_X:/*REL_X*/ return MotionEvent::AXIS_X;
+
+    case ABS_Y:/*REL_Y*/ return MotionEvent::AXIS_Y;
+
+    case ABS_Z:/*REL_Z*/ return MotionEvent::AXIS_Z;
+
+    case ABS_RX:/*REL_RX*/return MotionEvent::AXIS_RX;
+    case ABS_RY:/*REL_RY*/return MotionEvent::AXIS_RY;
+    case ABS_RZ:/*REL_RZ*/return MotionEvent::AXIS_RZ;
+
+    case ABS_TOOL_WIDTH:/*AXIS_TOUCH_MAJOR*/
+    case ABS_MT_WIDTH_MAJOR:/*AXIS_TOUCH_MAJOR*/
+    case ABS_MT_TOUCH_MAJOR:return MotionEvent::AXIS_TOUCH_MAJOR;
+    case ABS_MT_WIDTH_MINOR:/*AXIS_TOUCH_MINOR*/
+    case ABS_MT_TOUCH_MINOR:return MotionEvent::AXIS_TOUCH_MINOR;
+    case ABS_MT_TOOL_X:return MotionEvent::AXIS_TOOL_MAJOR;
+    case ABS_MT_TOOL_Y:return MotionEvent::AXIS_TOOL_MINOR;
+    case ABS_MT_ORIENTATION:return MotionEvent::AXIS_ORIENTATION;
+    //case ABS_TILT_X: return MotionEvent::AXIS_TILT_X;
+    //case ABS_TILT_Y: return MotionEvent::AXIS_TILT_Y;
+    case ABS_VOLUME: return MotionEvent::AXIS_VSCROLL;
+    case ABS_HAT0X : return MotionEvent::AXIS_HSCROLL;
+    case ABS_HAT0Y : return MotionEvent::AXIS_VSCROLL;
+    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_WHEEL;
+    default:return  -1;
+    }
+}
+
+void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
+    const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
+    int axis = ABS2AXIS(raw_axis);
+    const bool isABS= mDeviceInfo.getMotionRanges().size()>=2;
+    if(axis== MotionEvent::AXIS_X){
+        switch(rotation){
+        case Display::ROTATION_0  : value -= mMinX ; break;
+        case Display::ROTATION_90 : axis = MotionEvent::AXIS_Y; value -= mMinX; break;
+        case Display::ROTATION_180: value= mMaxX - value; break;
+        case Display::ROTATION_270: axis = MotionEvent::AXIS_Y; value = mMaxX - value; break;//tested
+        }
+
+        //if(mInvertX)value = mMaxX - mMinX - value;
+        if(0/*mSwitchXY*/){
+            value = (value * mScreenWidth)/mTPHeight;
+            axis= (rotation==Display::ROTATION_90 ||rotation==Display::ROTATION_270)?MotionEvent::AXIS_X:MotionEvent::AXIS_Y;
+        }else if(mScreenWidth != mTPWidth){
+            value = (value * mScreenWidth)/mTPWidth;
+        }
+	    mX += (value - mDX);
+	    mDX = value;
+	    mPointerCoord.setAxisValue(axis,mDX);
+    }else if(axis == MotionEvent::AXIS_Y){
+        switch(rotation){
+        case Display::ROTATION_0  : value -= mMinY; break;
+        case Display::ROTATION_90 : axis = MotionEvent::AXIS_X; value = mMaxY - value; break;
+        case Display::ROTATION_180: value= mMaxY - value; break;
+        case Display::ROTATION_270: axis = MotionEvent::AXIS_X; value -= mMinY ; break;
+        }
+
+        //if(mInvertY)value = mMaxY - mMinY - value;
+        if(0/*mSwitchXY*/){
+            value = (value * mScreenHeight)/mTPWidth;
+            axis= (rotation==Display::ROTATION_90 ||rotation==Display::ROTATION_270)?MotionEvent::AXIS_Y:MotionEvent::AXIS_X;
+        }else{
+            value = (value * mScreenHeight)/mTPHeight;
+        }
+	    mY += (value - mDY);
+	    mDY= value;
+	    mPointerCoord.setAxisValue(axis,mDY);
+    }
+}
+
+int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){
     if(!isValidEvent(type,code,value))return -1;
     switch(type){
     case EV_KEY:
-        switch(code){
-        case BTN_TOUCH :
-        case BTN_STYLUS:
+        switch (code) {
+        case BTN_LEFT:
+        case BTN_TOUCH: /* touchpads may present as BTN_TOUCH */
             mActionButton = MotionEvent::BUTTON_PRIMARY;
-            if(value){
-                mCurrBits.markBit(0);
+            if (value) {
                 mMoveTime = mDownTime = sec * 1000 + usec/1000;
-                mButtonState = MotionEvent::BUTTON_PRIMARY;
-            }else{
-                mCurrBits.clear();
+                mButtonState |= MotionEvent::BUTTON_PRIMARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
                 mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
+                mPendingAction = MotionEvent::ACTION_UP;
             }
             break;
-        case BTN_0:
+        case BTN_RIGHT:
+        case BTN_0: /* legacy */
         case BTN_STYLUS2:
             mActionButton = MotionEvent::BUTTON_SECONDARY;
-            if(value)
-                mButtonState = MotionEvent::BUTTON_SECONDARY;
-            else
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_SECONDARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
             break;
-        }break;
+        case BTN_MIDDLE:
+            mActionButton = MotionEvent::BUTTON_TERTIARY;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_TERTIARY;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        case BTN_SIDE:
+        case BTN_BACK:
+            mActionButton = MotionEvent::BUTTON_BACK;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_BACK;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_BACK;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        case BTN_EXTRA:
+        case BTN_FORWARD:
+            mActionButton = MotionEvent::BUTTON_FORWARD;
+            if (value) {
+                mMoveTime = mDownTime = sec * 1000 + usec/1000;
+                mButtonState |= MotionEvent::BUTTON_FORWARD;
+                mPendingAction = MotionEvent::ACTION_DOWN;
+            } else {
+                mMoveTime = sec * 1000 + usec/1000;
+                mButtonState &= ~MotionEvent::BUTTON_FORWARD;
+                mPendingAction = MotionEvent::ACTION_UP;
+            }
+            break;
+        default:
+            break;
+        }
+        break;
     case EV_REL:
         if( (code >= REL_X) && (code <= REL_Z) ){
             setAxisValue(code,value,true);
+            mMoveTime = sec * 1000 + usec/1000;
         }break;
     case EV_ABS:
         if( (code >= ABS_X) && (code <= ABS_Z) ){
-            setAxisValue(code,value,true);
+            setAxisValue(code,value,false);
+            mMoveTime = sec * 1000 + usec/1000;
         }break;
     case EV_SYN:
+        if(code == SYN_REPORT) {
+            MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
+            int action = MotionEvent::ACTION_MOVE;
+            if(mPendingAction != -1){
+                action = mPendingAction;
+                if(action == MotionEvent::ACTION_DOWN) mDownTime = mMoveTime;
+                mPendingAction = -1;
+            }
+            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
+                auto lastTime = lastEvent->getDownTime();
+                lastEvent->addSample(mMoveTime,&mPointerCoord);
+                LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+            }else {
+                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
+                    0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
+                LOGV_IF(action != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
+                mEvent->setActionButton(mActionButton);
+                mEvent->setAction(action);
 
+                MotionEvent*e = MotionEvent::obtain(*mEvent);
+                mEvents.push_back(e);
+                mEvent->recycle();
+            }
+            //LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
+        }
+        break;
     default:break;
     }
     return 0;

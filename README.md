@@ -58,7 +58,7 @@
 
 # **Building CDROID:**
 ### 1.install dependencs:
- sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip gettext libx11-dev libxcb1-dev libxcb-image0-dev bison python>=3.7 pip3-python python3-lxml meson
+ sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip gettext libx11-dev libxcb1-dev libxcb-image0-dev libxcb-cursor-dev bison python>=3.7 pip3-python python3-lxml meson
 ### 2.install vcpkg:
 * git clone https://www.github.com/microsoft/vcpkg.git
 * cd vcpkg
