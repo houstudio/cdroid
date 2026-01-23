@@ -1083,15 +1083,10 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         }
         break;
     case EV_REL:
-        if( (code >= REL_X) && (code <= REL_Z) ){
-            setAxisValue(code,value,true);
-            mMoveTime = sec * 1000 + usec/1000;
-        }break;
     case EV_ABS:
-        if( (code >= ABS_X) && (code <= ABS_Z) ){
-            setAxisValue(code,value,false);
-            mMoveTime = sec * 1000 + usec/1000;
-        }break;
+        setAxisValue(code,value,type==EV_ABS);
+        mMoveTime = sec * 1000 + usec/1000;
+        break;
     case EV_SYN:
         if(code == SYN_REPORT) {
             MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
