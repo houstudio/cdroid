@@ -1004,7 +1004,7 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     }else if( axis == MotionEvent::AXIS_WHEEL || axis == MotionEvent::AXIS_VSCROLL ){
         mZ += (value - mDZ);
         mDZ= value;
-        mPointerCoord.setAxisValue(axis,mDZ);
+        mPointerCoord.setAxisValue(axis,mZ);
     }
 }
 
