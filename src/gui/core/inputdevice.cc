@@ -1108,7 +1108,7 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 mEvents.push_back(e);
                 mEvent->recycle();
             }
-            LOGD_IF(mPendingAction!=MotionEvent::ACTION_MOVE,"mX=%d,mY=%d Action=%d",mX,mY,mPendingAction);
+            //LOGD_IF(mPendingAction!=MotionEvent::ACTION_MOVE,"mX=%d,mY=%d Action=%d",mX,mY,mPendingAction);
             mPendingAction = MotionEvent::ACTION_MOVE;
         }
         break;
