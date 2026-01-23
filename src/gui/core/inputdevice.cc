@@ -1093,6 +1093,9 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             if(mPendingAction==MotionEvent::ACTION_DOWN){
                 mDownTime = mMoveTime;
             }
+            if(mPointerCoord.getAxisValue(MotionEvent::AXIS_VSCROLL)!=0||mPointerCoord.getAxisValue(MotionEvent::AXIS_HSCROLL)!=0){
+                mPendingAction = MotionEvent::ACTION_SCROLL;
+            }
             if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (mPendingAction == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
