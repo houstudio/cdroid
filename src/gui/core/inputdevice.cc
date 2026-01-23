@@ -73,6 +73,9 @@ static bool containsNonZeroByte(const uint8_t* array, uint32_t startIndex, uint3
 
 #define TEST_BIT(bit, array) ((array)[(bit)/8] & (1<<((bit)%8)))
 #define SIZEOF_BITS(bits) (((bits) + 7) / 8)
+#ifndef KEY_CNT
+   #define KEY_CNT (KEY_MAX+1)
+#endif
 
 Preferences InputDevice::mPrefs;
 
@@ -116,7 +119,7 @@ InputDevice::InputDevice(int32_t fdev){
     // See if this is a keyboard.  Ignore everything in the button range except for
     // joystick and gamepad buttons which are handled like keyboards for the most part.
     const bool haveKeyboardKeys = containsNonZeroByte(devInfos.keyBitMask, 0, SIZEOF_BITS(BTN_MISC))
-            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_MAX + 1));
+            || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(KEY_OK), SIZEOF_BITS(KEY_CNT));
     const bool haveGamepadButtons = containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_MISC), SIZEOF_BITS(BTN_MOUSE))
             || containsNonZeroByte(devInfos.keyBitMask, SIZEOF_BITS(BTN_JOYSTICK), SIZEOF_BITS(BTN_DIGI));
     if (haveKeyboardKeys || haveGamepadButtons) {
@@ -903,7 +906,7 @@ MouseDevice::MouseDevice(int32_t fd):InputDevice(fd){
     mDX= mDY= mDZ= 0;
     memset(mButtonStates,0,sizeof(mButtonStates));
 #define ISRANGEVALID(range) (range&&(range->max-range->min))
-    mPendingAction = -1;
+    mPendingAction = MotionEvent::ACTION_MOVE;
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
     for(int i=0;i<axesRange.size();i++){
         InputDeviceInfo::MotionRange&range=axesRange.at(i);
@@ -976,9 +979,9 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }else if(mScreenWidth != mTPWidth){
             value = (value * mScreenWidth)/mTPWidth;
         }
-	    mX += (value - mDX);
-	    mDX = value;
-	    mPointerCoord.setAxisValue(axis,mDX);
+        mX += (value - mDX);
+        mDX = value;
+        mPointerCoord.setAxisValue(axis,mDX);
     }else if(axis == MotionEvent::AXIS_Y){
         switch(rotation){
         case Display::ROTATION_0  : value -= mMinY; break;
@@ -994,9 +997,9 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }else{
             value = (value * mScreenHeight)/mTPHeight;
         }
-	    mY += (value - mDY);
-	    mDY= value;
-	    mPointerCoord.setAxisValue(axis,mDY);
+        mY += (value - mDY);
+        mDY= value;
+        mPointerCoord.setAxisValue(axis,mDY);
     }
 }
 
@@ -1087,28 +1090,26 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
     case EV_SYN:
         if(code == SYN_REPORT) {
             MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
-            int action = MotionEvent::ACTION_MOVE;
-            if(mPendingAction != -1){
-                action = mPendingAction;
-                if(action == MotionEvent::ACTION_DOWN) mDownTime = mMoveTime;
-                mPendingAction = -1;
+            if(mPendingAction==MotionEvent::ACTION_DOWN){
+                mDownTime = mMoveTime;
             }
-            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
+            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (mPendingAction == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
                 LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
             }else {
-                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , mPendingAction , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
-                LOGV_IF(action != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
+                LOGV_IF(mPendingAction != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);
-                mEvent->setAction(action);
+                mEvent->setAction(mPendingAction);
 
                 MotionEvent*e = MotionEvent::obtain(*mEvent);
                 mEvents.push_back(e);
                 mEvent->recycle();
             }
-            //LOGD("mX=%d,mY=%d Action=%d",mX,mY,action);
+            //LOGD_IF(mPendingAction!=MotionEvent::ACTION_MOVE,"mX=%d,mY=%d Action=%d",mX,mY,mPendingAction);
+            mPendingAction = MotionEvent::ACTION_MOVE;
         }
         break;
     default:break;

@@ -156,7 +156,7 @@ const RippleForeground::COPACITY RippleForeground::OPACITY;
 void RippleForeground::startSoftwareEnter() {
     for (auto anim:mRunningSwAnimators) {
         anim->cancel();
-        LOGD("delete anim %p of %d",anim,mRunningSwAnimators.size());
+        //LOGD("delete anim %p of %d",anim,mRunningSwAnimators.size());
         delete anim;
     }
     mRunningSwAnimators.clear();
@@ -176,7 +176,7 @@ void RippleForeground::startSoftwareEnter() {
     opacity->setDuration(OPACITY_ENTER_DURATION);
     opacity->setInterpolator(LinearInterpolator::Instance);
     opacity->start();
-    LOGD("add anims %p %p %p",tweenRadius,tweenOrigin,opacity);
+    //LOGD("add anims %p %p %p",tweenRadius,tweenOrigin,opacity);
     mRunningSwAnimators.push_back(opacity);
 }
 
@@ -188,7 +188,7 @@ void RippleForeground::startSoftwareExit() {
     opacity->setStartDelay(computeFadeOutDelay());
 
     opacity->start();
-    LOGD("add anim %p",opacity);
+    //LOGD("add anim %p",opacity);
     mRunningSwAnimators.push_back(opacity);
 }
 
@@ -216,7 +216,7 @@ float RippleForeground::getCurrentRadius() {
 void RippleForeground::end(){
     for (auto anim:mRunningSwAnimators) {
         anim->end();
-        LOGD("delete %d anim %p",mRunningSwAnimators.size(),anim);
+        //LOGD("delete %d anim %p",mRunningSwAnimators.size(),anim);
         delete anim;
     }
     mRunningSwAnimators.clear();

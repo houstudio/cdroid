@@ -216,7 +216,8 @@ MotionEvent*MotionEvent::obtain(nsecs_t downTime , nsecs_t eventTime, int action
     ev->initialize(deviceId, source,displayId, action,0/*actionbutton*/,
         flags, edgeFlags, metaState, buttonState, classification,
         0/*xoffset*/,0/*yoffset*/,xPrecision, yPrecision,
-        0/*rawXCursorPosition*/,0/*rawYCursorPosition*/,
+        INVALID_CURSOR_POSITION/*rawXCursorPosition*/,
+        INVALID_CURSOR_POSITION/*rawYCursorPosition*/,
         downTime, eventTime,pointerCount, pointerProperties, pointerCoords);
     return ev;
 }
@@ -961,8 +962,9 @@ float MotionEvent::getYCursorPosition()const{
 void MotionEvent::setCursorPosition(float x, float y){
     ui::Transform inverse = mTransform.inverse();
     vec2 vals = inverse.transform(x,y);
-    mCursorXPosition = vals[0];
-    mCursorYPosition = vals[1];
+    //mCursorXPosition = vals[0];  mCursorYPosition = vals[1];
+    mRawXCursorPosition = vals[0];
+    mRawYCursorPosition = vals[1];
 }
 
 float MotionEvent::getXDispatchLocation(int pointerIndex){

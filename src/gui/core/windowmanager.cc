@@ -29,6 +29,7 @@ WindowManager* WindowManager::mInst = nullptr;
 WindowManager::WindowManager(){
     mActiveWindow = nullptr;
     mDisplayRotation =0;
+    mHoveredWindow = nullptr;
 }
 
 WindowManager&WindowManager::getInstance(){
@@ -315,24 +316,82 @@ void WindowManager::onMotion(MotionEvent&event) {
    const int x = event.getX();
    const int y = event.getY();
    const int action = event.getActionMasked();
-   for (auto itr = mWindows.rbegin();itr != mWindows.rend();itr++) {
-       auto w = (*itr);
-       ViewTreeObserver*obv = w->getViewTreeObserver();
-       if(action == MotionEvent::ACTION_DOWN){
-           w->mAttachInfo->mInTouchMode=true;
-           obv->dispatchOnTouchModeChanged(true);
-       }else if(action == MotionEvent::ACTION_UP){
-           w->mAttachInfo->mInTouchMode=false;
-           obv->dispatchOnTouchModeChanged(false);
+   // If this is a touchscreen/stylus/touchpad event, keep existing behavior.
+   if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)){
+       for (auto itr = mWindows.rbegin(); itr != mWindows.rend(); itr++) {
+           auto w = (*itr);
+           ViewTreeObserver*obv = w->getViewTreeObserver();
+           if (action == MotionEvent::ACTION_DOWN) {
+               w->mAttachInfo->mInTouchMode = true;
+               obv->dispatchOnTouchModeChanged(true);
+           } else if (action == MotionEvent::ACTION_UP) {
+               w->mAttachInfo->mInTouchMode = false;
+               obv->dispatchOnTouchModeChanged(false);
+           }
+           LOGV_IF(action != MotionEvent::ACTION_MOVE, "%s at(%d,%d)", MotionEvent::actionToString(action).c_str(), x, y);
+           if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
+               event.offsetLocation(-w->getLeft(), -w->getTop());
+               w->dispatchPointerEvent(event);
+               event.offsetLocation(w->getLeft(), w->getTop());
+               break;
+           }
        }
-       LOGV_IF(action!=MotionEvent::ACTION_MOVE,"%s at(%d,%d)",MotionEvent::actionToString(action).c_str(),x,y);
-       if ((w->getVisibility()==View::VISIBLE) && w->getBound().contains(x,y)) {
-           event.offsetLocation(-w->getLeft(),-w->getTop());
-           w->dispatchTouchEvent(event);
-           event.offsetLocation(w->getLeft(),w->getTop());
+       return;
+   }
+
+   // Pointer (mouse) handling: support hover enter/exit/move, button press/release, scroll.
+   Window* target = nullptr;
+   for (auto itr = mWindows.rbegin(); itr != mWindows.rend(); itr++) {
+       auto w = (*itr);
+       if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
+           target = w;
            break;
        }
    }
+
+   // Hover exit for previously hovered window when pointer moved out
+   if (mHoveredWindow && mHoveredWindow != target) {
+       MotionEvent* exitEvent = MotionEvent::obtain(event);
+       exitEvent->setAction(MotionEvent::ACTION_HOVER_EXIT);
+       exitEvent->offsetLocation(-mHoveredWindow->getLeft(), -mHoveredWindow->getTop());
+       mHoveredWindow->dispatchPointerEvent(*exitEvent);
+       exitEvent->recycle();
+       mHoveredWindow = nullptr;
+   }
+
+   if (target) {
+       // If entering a new window, send hover enter
+       if (mHoveredWindow != target) {
+           MotionEvent* enterEvent = MotionEvent::obtain(event);
+           enterEvent->setAction(MotionEvent::ACTION_HOVER_ENTER);
+           enterEvent->offsetLocation(-target->getLeft(), -target->getTop());
+           target->dispatchPointerEvent(*enterEvent);
+           enterEvent->recycle();
+           mHoveredWindow = target;
+       }
+
+       // Dispatch the original event to target window (offset to its coords)
+       event.offsetLocation(-target->getLeft(), -target->getTop());
+
+       // If this is a button press, bring window to front / activate it
+       if ((action == MotionEvent::ACTION_DOWN) || (action == MotionEvent::ACTION_BUTTON_PRESS)) {
+           if (mActiveWindow != target) {
+               bringToFront(target);
+               if (target->hasFlag(View::FOCUSABLE)) {
+                   target->dispatchWindowFocusChanged(true);
+                   target->onActive();
+               }
+               mActiveWindow = target;
+           }
+       }
+
+       target->dispatchPointerEvent(event);
+       event.offsetLocation(target->getLeft(), target->getTop());
+       return;
+   }
+
+   // If no target and we had a hovered window already, clear it (hover exit already sent above).
+   return;
 }
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
