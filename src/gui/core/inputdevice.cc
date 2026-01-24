@@ -130,7 +130,7 @@ InputDevice::InputDevice(int32_t fdev){
 
     if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask) &&TEST_BIT(REL_X,devInfos.relBitMask) &&TEST_BIT(REL_Y,devInfos.relBitMask)){
         mDeviceClasses = INPUT_DEVICE_CLASS_CURSOR;
-        mDeviceInfo.addSource(SOURCE_MOUSE_RELATIVE);
+        mDeviceInfo.addSource(SOURCE_MOUSE);
         oss << "Cursor";
     }
     if(TEST_BIT(ABS_DISTANCE, devInfos.absBitMask)){
@@ -155,20 +155,22 @@ InputDevice::InputDevice(int32_t fdev){
         // with the ABS_MT range.  Try to confirm that the device really is a touch screen.
         if (TEST_BIT(BTN_TOUCH, devInfos.keyBitMask) || !haveGamepadButtons) {
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH | INPUT_DEVICE_CLASS_TOUCH_MT;
+            mDeviceInfo.addSource(SOURCE_TOUCHSCREEN);
             oss << "MultiTouch";
         }
         // Is this an old style single-touch driver?
     } else if ( TEST_BIT(ABS_X, devInfos.absBitMask) && TEST_BIT(ABS_Y, devInfos.absBitMask) ) {
         if(TEST_BIT(BTN_TOUCH, devInfos.keyBitMask)){
             mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH;
+            mDeviceInfo.addSource(SOURCE_TOUCHSCREEN);
             oss << "SingleTouch";
         }if(TEST_BIT(BTN_MOUSE,devInfos.keyBitMask)){
-            mDeviceInfo.addSource(SOURCE_MOUSE);
             mDeviceClasses |= INPUT_DEVICE_CLASS_CURSOR;
+            mDeviceInfo.addSource(SOURCE_MOUSE);
             oss << "Cursor(ABS)";
         } else{
-            mDeviceInfo.addSource(SOURCE_ROTARY_ENCODER);
             mDeviceClasses |=INPUT_DEVICE_CLASS_ROTARY_ENCODER;
+            mDeviceInfo.addSource(SOURCE_ROTARY_ENCODER);
             oss << "Rotaty Encoder";
         }
         // Is this a BT stylus?
@@ -933,9 +935,7 @@ int32_t MouseDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
 int32_t MouseDevice::ABS2AXIS(int32_t absaxis){
     switch(absaxis){
     case ABS_X:/*REL_X*/ return MotionEvent::AXIS_X;
-
     case ABS_Y:/*REL_Y*/ return MotionEvent::AXIS_Y;
-
     case ABS_Z:/*REL_Z*/ return MotionEvent::AXIS_Z;
 
     case ABS_RX:/*REL_RX*/return MotionEvent::AXIS_RX;
@@ -955,7 +955,8 @@ int32_t MouseDevice::ABS2AXIS(int32_t absaxis){
     case ABS_VOLUME: return MotionEvent::AXIS_VSCROLL;
     case ABS_HAT0X : return MotionEvent::AXIS_HSCROLL;
     case ABS_HAT0Y : return MotionEvent::AXIS_VSCROLL;
-    case ABS_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_WHEEL;
+    case REL_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_VSCROLL;
+    case REL_HWHEEL:return MotionEvent::AXIS_HSCROLL;
     default:return  -1;
     }
 }
@@ -981,7 +982,7 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }
         mX += (value - mDX);
         mDX = value;
-        mPointerCoord.setAxisValue(axis,mDX);
+        mPointerCoord.setAxisValue(axis,mX);
     }else if(axis == MotionEvent::AXIS_Y){
         switch(rotation){
         case Display::ROTATION_0  : value -= mMinY; break;
@@ -1000,6 +1001,10 @@ void MouseDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         mY += (value - mDY);
         mDY= value;
         mPointerCoord.setAxisValue(axis,mDY);
+    }else if( axis == MotionEvent::AXIS_WHEEL || axis == MotionEvent::AXIS_VSCROLL ){
+        mZ += (value - mDZ);
+        mDZ= value;
+        mPointerCoord.setAxisValue(axis,mZ);
     }
 }
 
@@ -1078,20 +1083,18 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         }
         break;
     case EV_REL:
-        if( (code >= REL_X) && (code <= REL_Z) ){
-            setAxisValue(code,value,true);
-            mMoveTime = sec * 1000 + usec/1000;
-        }break;
     case EV_ABS:
-        if( (code >= ABS_X) && (code <= ABS_Z) ){
-            setAxisValue(code,value,false);
-            mMoveTime = sec * 1000 + usec/1000;
-        }break;
+        setAxisValue(code,value,type==EV_ABS);
+        mMoveTime = sec * 1000 + usec/1000;
+        break;
     case EV_SYN:
         if(code == SYN_REPORT) {
             MotionEvent*lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
             if(mPendingAction==MotionEvent::ACTION_DOWN){
                 mDownTime = mMoveTime;
+            }
+            if(mPointerCoord.getAxisValue(MotionEvent::AXIS_VSCROLL)!=0||mPointerCoord.getAxisValue(MotionEvent::AXIS_HSCROLL)!=0){
+                mPendingAction = MotionEvent::ACTION_SCROLL;
             }
             if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (mPendingAction == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
