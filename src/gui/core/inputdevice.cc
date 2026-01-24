@@ -528,6 +528,7 @@ int32_t TouchDevice::ABS2AXIS(int32_t absaxis){
 
     case ABS_MT_PRESSURE:
     case ABS_PRESSURE: return MotionEvent::AXIS_PRESSURE;
+    case ABS_DISTANCE: return MotionEvent::AXIS_DISTANCE;
     case ABS_TOOL_WIDTH:/*AXIS_TOUCH_MAJOR*/
     case ABS_MT_WIDTH_MAJOR:/*AXIS_TOUCH_MAJOR*/
     case ABS_MT_TOUCH_MAJOR:return MotionEvent::AXIS_TOUCH_MAJOR;
@@ -955,7 +956,9 @@ int32_t MouseDevice::ABS2AXIS(int32_t absaxis){
     case ABS_VOLUME: return MotionEvent::AXIS_VSCROLL;
     case ABS_HAT0X : return MotionEvent::AXIS_HSCROLL;
     case ABS_HAT0Y : return MotionEvent::AXIS_VSCROLL;
+    case REL_WHEEL_HI_RES:
     case REL_WHEEL:/*REL_WHEEL*/ return MotionEvent::AXIS_VSCROLL;
+    case REL_HWHEEL_HI_RES:
     case REL_HWHEEL:return MotionEvent::AXIS_HSCROLL;
     default:return  -1;
     }

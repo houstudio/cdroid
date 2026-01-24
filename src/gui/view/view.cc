@@ -7899,8 +7899,8 @@ bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
     switch (event.getActionMasked()) {
     case MotionEvent::ACTION_BUTTON_PRESS:
         if (isContextClickable() && !mInContextButtonPress && !mHasPerformedLongPress
-                && (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY
-                || actionButton == MotionEvent::BUTTON_SECONDARY)) {
+                && ((actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY)
+                || (actionButton == MotionEvent::BUTTON_SECONDARY))) {
             if (performContextClick(event.getX(), event.getY())) {
                 mInContextButtonPress = true;
                 setPressed(true, event.getX(), event.getY());
@@ -7912,8 +7912,8 @@ bool View::dispatchGenericMotionEventInternal(MotionEvent& event){
         break;
 
     case MotionEvent::ACTION_BUTTON_RELEASE:
-        if (mInContextButtonPress && (actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY
-                || actionButton == MotionEvent::BUTTON_SECONDARY)) {
+        if (mInContextButtonPress && ((actionButton == MotionEvent::BUTTON_STYLUS_PRIMARY)
+                || (actionButton == MotionEvent::BUTTON_SECONDARY))) {
             mInContextButtonPress = false;
             mIgnoreNextUpEvent = true;
         }
@@ -7942,7 +7942,7 @@ bool View::dispatchPointerEvent(MotionEvent& event){
 
 bool View::dispatchHoverEvent(MotionEvent& event){
     if (mListenerInfo && mListenerInfo->mOnHoverListener
-                && (mViewFlags & ENABLED_MASK) == ENABLED
+                && ((mViewFlags & ENABLED_MASK) == ENABLED)
                 && mListenerInfo->mOnHoverListener(*this, event)) {
             return true;
     }
@@ -8001,7 +8001,7 @@ bool View::dispatchTouchEvent(MotionEvent&event){
 
     if ( (actionMasked == MotionEvent::ACTION_UP) ||
          (actionMasked == MotionEvent::ACTION_CANCEL) ||
-         (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
+         ((actionMasked == MotionEvent::ACTION_DOWN) && !result)) {
         stopNestedScroll();
     }
 
@@ -8024,7 +8024,7 @@ bool View::dispatchTouchEvent(MotionEvent&event){
         mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     if ( (actionMasked == MotionEvent::ACTION_UP) ||
          (actionMasked == MotionEvent::ACTION_CANCEL) ||
-         (actionMasked == MotionEvent::ACTION_DOWN && !result)) {
+         ((actionMasked == MotionEvent::ACTION_DOWN) && !result)) {
         stopNestedScroll();
     }
 
