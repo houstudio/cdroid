@@ -100,6 +100,7 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
 }
 
 std::unique_ptr<InputEventSource>InputEventSource::mInst;
+
 InputEventSource& InputEventSource::getInstance(){
     if(mInst==nullptr)
         mInst = std::unique_ptr<InputEventSource>(new InputEventSource());
@@ -193,33 +194,16 @@ bool InputEventSource::isScreenSaverActived()const{
 
 int InputEventSource::handleEvents(){
     int ret = 0;
+    std::vector<InputEvent*>events;
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
-        auto dev = it.second;
-        std::vector<InputEvent*>events;
-        if(dev->getEventCount()==0)continue;
-        ret += dev->drainEvents(events);
-        for(auto e:events) {
+        const auto eventCount = it.second->drainEvents(events);
+        if(eventCount==0) continue;
+        ret += eventCount;
+        std::for_each(events.begin(),events.end(),[](InputEvent*e){
             WindowManager::getInstance().processEvent(*e);
             e->recycle();
-        }
-        /*if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
-            for(auto e:events){
-               MotionEvent*me = (MotionEvent*)e;
-               WindowManager::getInstance().processEvent(*me);
-               me->recycle();
-            }
-        }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
-            for(auto e:events){
-                KeyEvent*ke = (KeyEvent*)e;
-                WindowManager::getInstance().processEvent(*ke);
-                ke->recycle();
-            }
-        }else{
-            for(auto e:events){
-                e->recycle();
-            }
-        }*/
+        });
     }
     return ret;
 }
