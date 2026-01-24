@@ -195,13 +195,14 @@ bool InputEventSource::isScreenSaverActived()const{
 int InputEventSource::handleEvents(){
     int ret = 0;
     std::vector<InputEvent*>events;
+    WindowManager& wm = WindowManager::getInstance();
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
         const auto eventCount = it.second->drainEvents(events);
         if(eventCount==0) continue;
         ret += eventCount;
-        std::for_each(events.begin(),events.end(),[](InputEvent*e){
-            WindowManager::getInstance().processEvent(*e);
+        std::for_each(events.begin(),events.end(),[&wm](InputEvent*e){
+            wm.processEvent(*e);
             e->recycle();
         });
     }

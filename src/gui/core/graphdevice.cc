@@ -282,30 +282,34 @@ void GraphDevice::computeVisibleRegion(std::vector<Window*>&windows,std::vector<
 }
 
 void GraphDevice::rotateRectInWindow(const Rect&rcw,const Rect&rs,Rect&rd,int&dx,int&dy,int rotation){
-    const int ox =dx;
-    const int oy= dy;
+    const int ox = dx;
+    const int oy = dy;
+    // Initialize rd from source rect to ensure fields are defined.
+    rd = rs;
     switch(rotation){
-    case Display::ROTATION_0 : rd = rs;break;
+    case Display::ROTATION_0 :
+        // No change
+        break;
     case Display::ROTATION_90:
         dx = oy;
-        dy = mScreenHeight -ox - rs.width;
+        dy = mScreenHeight - ox - rs.width;
         rd.width  = rs.height;
         rd.height = rs.width;
         rd.left = rs.top;
-        rd.top = rcw.width -rs.left -rs.width;
+        rd.top = rcw.width - rs.left - rs.width;
         break;
     case Display::ROTATION_180:
         dx = mScreenWidth - ox - rs.width;
-        dy = mScreenHeight- oy - rs.height;
-        rd.left = rcw.width  - rd.left - rs.width;
-        rd.top = rcw.height - rd.top - rs.height;
+        dy = mScreenHeight - oy - rs.height;
+        rd.left = rcw.width - rs.left - rs.width;
+        rd.top = rcw.height - rs.top - rs.height;
         break;
     case Display::ROTATION_270:
         dy = ox;
-        dx = mScreenWidth - oy - rs.height;	
+        dx = mScreenWidth - oy - rs.height;
         rd.width = rs.height;
         rd.height= rs.width;
-        rd.left = rcw.height- rs.top -rs.height;
+        rd.left = rcw.height - rs.top - rs.height;
         rd.top = rs.left;
         break;
     }
