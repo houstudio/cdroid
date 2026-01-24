@@ -125,9 +125,9 @@ std::shared_ptr<InputDevice>InputEventSource::getDevice(int fd){
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_JOYSTICK|INPUT_DEVICE_CLASS_GAMEPAD)){
-            LOGI("%s IS NOT SUPPORTED",tmpdev.getName().c_str());
+            LOGI("[%d]%s IS NOT SUPPORTED",fd,tmpdev.getName().c_str());
         }else {
-            LOGI("%s IS NOT SUPPORTED",tmpdev.getName().c_str());
+            LOGI("[%d]%s IS NOT SUPPORTED",fd,tmpdev.getName().c_str());
             dev.reset(new InputDevice(fd));
         }
         mDevices.emplace(fd,dev);
