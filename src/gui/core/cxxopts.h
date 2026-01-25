@@ -1299,8 +1299,6 @@ template <>
 class standard_value<bool> : public abstract_value<bool>
 {
   public:
-  ~standard_value() override = default;
-
   standard_value()
   {
     set_default_and_implicit();
@@ -2341,7 +2339,7 @@ OptionAdder::operator()
     // (length-1) and longer names
   std::string short_name {""};
   auto first_short_name_iter =
-    std::partition(option_names.begin(), option_names.end(),
+    std::stable_partition(option_names.begin(), option_names.end(),
       [&](const std::string& name) { return name.length() > 1; }
     );
   auto num_length_1_names = (option_names.end() - first_short_name_iter);
@@ -2773,17 +2771,17 @@ Options::help_one_group(const std::string& g) const
 {
   using OptionHelp = std::vector<std::pair<String, String>>;
 
+  String result;
+
   auto group = m_help.find(g);
   if (group == m_help.end())
   {
-    return "";
+    return result;
   }
 
   OptionHelp format;
 
   std::size_t longest = 0;
-
-  String result;
 
   if (!g.empty())
   {

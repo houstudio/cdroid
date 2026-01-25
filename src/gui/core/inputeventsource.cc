@@ -100,6 +100,7 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
 }
 
 std::unique_ptr<InputEventSource>InputEventSource::mInst;
+
 InputEventSource& InputEventSource::getInstance(){
     if(mInst==nullptr)
         mInst = std::unique_ptr<InputEventSource>(new InputEventSource());
@@ -124,9 +125,9 @@ std::shared_ptr<InputDevice>InputEventSource::getDevice(int fd){
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_KEYBOARD)){
             dev.reset(new KeyDevice(fd));
         }else if(tmpdev.getClasses()&(INPUT_DEVICE_CLASS_JOYSTICK|INPUT_DEVICE_CLASS_GAMEPAD)){
-            LOGI("%s IS NOT SUPPORTED",tmpdev.getName().c_str());
+            LOGI("[%d]%s IS NOT SUPPORTED",fd,tmpdev.getName().c_str());
         }else {
-            LOGI("%s IS NOT SUPPORTED",tmpdev.getName().c_str());
+            LOGI("[%d]%s IS NOT SUPPORTED",fd,tmpdev.getName().c_str());
             dev.reset(new InputDevice(fd));
         }
         mDevices.emplace(fd,dev);
@@ -193,33 +194,17 @@ bool InputEventSource::isScreenSaverActived()const{
 
 int InputEventSource::handleEvents(){
     int ret = 0;
+    std::vector<InputEvent*>events;
+    WindowManager& wm = WindowManager::getInstance();
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     for(auto it:mDevices){
-        auto dev = it.second;
-        std::vector<InputEvent*>events;
-        if(dev->getEventCount()==0)continue;
-        ret += dev->drainEvents(events);
-        for(auto e:events) {
-            WindowManager::getInstance().processEvent(*e);
+        const auto eventCount = it.second->drainEvents(events);
+        if(eventCount==0) continue;
+        ret += eventCount;
+        std::for_each(events.begin(),events.end(),[&wm](InputEvent*e){
+            wm.processEvent(*e);
             e->recycle();
-        }
-        /*if(dev->getClasses()&(INPUT_DEVICE_CLASS_TOUCH|INPUT_DEVICE_CLASS_TOUCH_MT)){
-            for(auto e:events){
-               MotionEvent*me = (MotionEvent*)e;
-               WindowManager::getInstance().processEvent(*me);
-               me->recycle();
-            }
-        }else if(dev->getClasses()&INPUT_DEVICE_CLASS_KEYBOARD){
-            for(auto e:events){
-                KeyEvent*ke = (KeyEvent*)e;
-                WindowManager::getInstance().processEvent(*ke);
-                ke->recycle();
-            }
-        }else{
-            for(auto e:events){
-                e->recycle();
-            }
-        }*/
+        });
     }
     return ret;
 }

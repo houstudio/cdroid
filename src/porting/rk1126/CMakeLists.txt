@@ -29,6 +29,21 @@ list(APPEND RK1126_LIBS pthread dl)
 list(APPEND RKTARGET tvhal)
 find_package(DRM REQUIRED)
 
+find_package(PkgConfig)
+pkg_check_modules(PC_RGA librga)
+find_path(RGA_INCLUDE_DIRS
+    NAMES rga/RgaApi.h
+    HINTS ${PC_RGA_INCLUDEDIR}
+    ${PC_RGA_INCLUDE_DIRS}
+    #PATH_SUFFIXES rga
+)
+
+find_library(RGA_LIBRARIES
+    NAMES rga
+    HINTS ${PC_RGA_LIBDIR}
+    ${PC_RGA_LIBRARY_DIRS}
+)
+
 include_directories(./
     ../common ../include
     ${PIXMAN_INCLUDE_DIR}
