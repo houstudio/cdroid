@@ -588,11 +588,9 @@ Runnable ImageView::setImageURIAsync(const std::string&uri){
 }
 
 void ImageView::setImageTintList(const ColorStateList*tint){
-    if(mDrawableTintList!=tint){
-        mDrawableTintList = tint;
-        mHasDrawableTint = (tint!=nullptr);
-        applyImageTint();
-    }
+    mDrawableTintList = tint;
+    mHasDrawableTint = true;
+    applyImageTint();
 }
 
 const ColorStateList* ImageView::getImageTintList(){
@@ -714,7 +712,7 @@ void ImageView::onDetachedFromWindow() {
 }
 
 void ImageView::applyImageTint() {
-    if (mDrawable != nullptr && (mHasDrawableTint || mHasDrawableTintMode)) {
+    if ((mDrawable != nullptr) && (mHasDrawableTint || mHasDrawableTintMode)) {
         mDrawable = mDrawable->mutate();
 
         if (mHasDrawableTint) {
