@@ -187,7 +187,7 @@ public:
         void computeMargins(bool leading);
         bool solve(std::vector<int>&a);
         bool solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError=true);
-        bool computeHasWeights();
+        bool computeHasWeights()const;
         std::vector<std::vector<Arc>> groupArcsByFirstVertex(std::vector<Arc>& arcs);
         std::vector<Arc> topologicalSort(std::vector<Arc>& arcs);
         void addComponentSizes(std::vector<Arc>& result, PackedMap<Interval,MutableInt*>& links);
@@ -201,7 +201,7 @@ public:
         void computeLinks(PackedMap<Interval,MutableInt*>&links,bool min);
         PackedMap<Interval,MutableInt*>& getForwardLinks();
         PackedMap<Interval,MutableInt*>& getBackwardLinks();
-        void include(std::vector<Arc>& arcs, Interval key,const MutableInt& size,bool ignoreIfAlreadyPresent);
+        void include(std::vector<Arc>& arcs,const Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent);
         float calculateTotalWeight();
         void shareOutDelta(int totalDelta, float totalWeight);
         void solveAndDistributeSpace(std::vector<int>&a);
@@ -222,7 +222,6 @@ public:
         bool backwardLinksValid= false;
         bool leadingMarginsValid = false;
         bool trailingMarginsValid= false;
-
     public:
         int definedCount;
         std::vector<int>leadingMargins;

@@ -1247,7 +1247,7 @@ bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry)
     if (!entry.valid) {
         return false;
     }
-    Interval& span = entry.span;
+    const Interval& span = entry.span;
     const int u = span.min;
     const int v = span.max;
     const int candidate = locations[u] + entry.value.value;
@@ -1268,7 +1268,7 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
     std::string axisName = horizontal ? "horizontal" : "vertical";
-    int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
+    const int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
     std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
 
     for (int p = 0; p < arcs.size(); p++) {
@@ -1341,7 +1341,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     // reuse the sizes array to hold the current last elements as we insert each arc
     for(int i=0;i<sizes.size();i++)sizes[i]=0;//Arrays.fill(sizes, 0);
     for (Arc arc : arcs) {
-        int i = arc.span.min;
+        const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
     }
     return result;
@@ -1432,14 +1432,14 @@ std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
     return arcs;
 }
 
-bool GridLayout::Axis::computeHasWeights(){
+bool GridLayout::Axis::computeHasWeights()const{
    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
        View* child = grd->getChildAt(i);
        if (child->getVisibility() == View::GONE) {
            continue;
        }
-       LayoutParams* lp = grd->getLayoutParams(child);
-       Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+       const LayoutParams* lp = grd->getLayoutParams(child);
+       const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
        if (spec.weight != 0.f) {
            return true;
        }
@@ -1463,7 +1463,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>GridLayout::A
     Assoc<Interval, MutableInt*> result;
     std::vector<Spec>&keys = getGroupBounds().keys;
     for (int i = 0, N = keys.size(); i < N; i++) {
-        Interval span = min ? keys[i].span : keys[i].span.inverse();
+        const Interval& span = min ? keys[i].span : keys[i].span.inverse();
         result.put(span, new MutableInt());
     }
     return result.pack();
@@ -1507,7 +1507,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout:
 }
 
 void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs, 
-        GridLayout::Interval key,const MutableInt& size,bool ignoreIfAlreadyPresent){
+        const GridLayout::Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent){
     /*Remove self referential links.
       These appear:
         . as parental constraints when GridLayout has no children
@@ -1516,8 +1516,8 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
     // this bit below should really be computed outside here -
     // its just to stop default (row/col > 0) constraints obliterating valid entries
     if (ignoreIfAlreadyPresent) {
-        for (Arc arc : arcs) {
-            Interval& span = arc.span;
+        for (Arc& arc : arcs) {
+            const Interval& span = arc.span;
             if (span.min==key.min&&span.max==key.max){//span.equals(key)) {
                 return;
             }
@@ -1582,8 +1582,8 @@ void GridLayout::Axis::shareOutDelta(int totalDelta, float totalWeight){
         if (c->getVisibility() == View::GONE) {
             continue;
         }
-        LayoutParams* lp = grd->getLayoutParams(c);
-        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const LayoutParams* lp = grd->getLayoutParams(c);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         const float weight = spec.weight;
         if (weight != 0.f) {
             const int delta = std::round((weight * totalDelta / totalWeight));
@@ -1608,7 +1608,7 @@ void GridLayout::Axis::computeLocations(std::vector<int>&a){
         // order is not preserved this may not be the first vertex. For consistency,
         // translate all the values so that they measure the distance from a[0]; the
         // leading edge of the parent. After this transformation some values may be negative.
-        int a0 = a[0];
+        const int a0 = a[0];
         for (int i = 0, N = a.size(); i < N; i++) {
             a[i] = a[i] - a0;
         }
