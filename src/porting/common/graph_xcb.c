@@ -7,6 +7,7 @@
 #include <xcb/shm.h>
 #include <xcb/xcb_image.h>
 #include <xcb/xcb_cursor.h>
+#include <X11/cursorfont.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/keysymdef.h>
@@ -156,7 +157,7 @@ int32_t GFXInit() {
     xcbGC = xcb_generate_id(xcbConnection);
     xcb_create_gc(xcbConnection, xcbGC, xcbPixmap, gc_mask, gc_values);
     if(xcb_cursor_context_new(xcbConnection, screen, &xcbCursorCTX)>0){
-        xcbCursor = xcb_cursor_load_cursor(xcbCursorCTX, "arrow");
+        xcbCursor = xcb_cursor_load_cursor(xcbCursorCTX, XC_arrow);
         // Change the window's cursor attribute
         uint32_t cursor_mask = XCB_CW_CURSOR;
         uint32_t cursor_value[] = { xcbCursor };
