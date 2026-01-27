@@ -1705,7 +1705,7 @@ void View::dispatchDetachedFromWindow(){
     }
 
     if(mListenerInfo){
-        for(auto l:mListenerInfo->mOnAttachStateChangeListeners){
+        for(auto& l:mListenerInfo->mOnAttachStateChangeListeners){
             if(l.onViewDetachedFromWindow)l.onViewDetachedFromWindow(*this);
         }
     }
@@ -7479,7 +7479,7 @@ void View::layout(int l, int t, int w, int h){
             mRoundScrollbarRenderer = nullptr;
         }
         if(mListenerInfo){
-            for(auto ls:mListenerInfo->mOnLayoutChangeListeners){
+            for(auto& ls:mListenerInfo->mOnLayoutChangeListeners){
                 ls(*this,l, t, w, h,oldL,oldT,oldW,oldH);
             }
         }

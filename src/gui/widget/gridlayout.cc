@@ -402,7 +402,7 @@ void GridLayout::checkLayoutParams(const LayoutParams* lp, bool horizontal)const
         handleInvalidParams(groupName + " indices must be positive");
     }
     const Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-    const  int count = axis->definedCount;
+    const int count = axis->definedCount;
     if (count != UNDEFINED) {
         if (span.max > count) {
             handleInvalidParams(groupName +
@@ -1333,7 +1333,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     std::vector<int>sizes;
 	result.resize(N);
 	sizes.resize(N);
-    for (Arc arc : arcs) {
+    for (Arc& arc : arcs) {
         sizes[arc.span.min]++;
     }
     for (int i = 0; i < sizes.size(); i++) {

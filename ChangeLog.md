@@ -1,5 +1,6 @@
-# **V4.5.x
-  - add Tablayout::setTabIndicatorAnimationMode
+# **V4.6.x
+  - add MotionEvent for MouseDevice support.
+  - add Tablayout::setTabIndicatorAnimationMode(tabIndicatorAnimationMode:linear,elastic,fade)
   - add TabLayoutMediator(make TabLayout working friendly with ViewPager2)
   - add single Frame's Webp to Bitmapdrawable supported"
   - fix HorizontalScrollView's fling.
