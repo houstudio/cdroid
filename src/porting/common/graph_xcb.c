@@ -6,6 +6,8 @@
 #include <xcb/xcb.h>
 #include <xcb/shm.h>
 #include <xcb/xcb_image.h>
+#include <xcb/xcb_cursor.h>
+#include <X11/cursorfont.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/keysymdef.h>
@@ -23,10 +25,13 @@ static xcb_connection_t *xcbConnection = NULL;
 static const xcb_setup_t *xcbSetup=NULL;
 static xcb_window_t xcbWindow;
 static xcb_gcontext_t xcbGC;
+static xcb_cursor_t xcbCursor;
+static xcb_cursor_context_t *xcbCursorCTX = NULL;
 static xcb_pixmap_t xcbPixmap;
 static xcb_image_t*mainSurface=NULL;
 static void* XCBEventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
+
 #define SENDKEY(k,down) {InjectKey(EV_KEY,k,down);}
 #if 1
    #define SENDMOUSE(time,x,y)  {\
@@ -46,6 +51,7 @@ static GFXRect screenMargin= {0}; //{60,0,60,0};
       InjectREL(time,EV_REL,REL_Y,y);\
       InjectREL(time,EV_SYN,SYN_REPORT,0);}
 #endif
+
 static void InjectKey(int type,int code,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
@@ -58,6 +64,7 @@ static void InjectKey(int type,int code,int value) {
     i.device=INJECTDEV_KEY;
     InputInjectEvents(&i,1,1);
 }
+
 static void InjectABS(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
@@ -70,6 +77,7 @@ static void InjectABS(unsigned long time,int type,int axis,int value) {
     i.device=INJECTDEV_TOUCH;
     InputInjectEvents(&i,1,1);
 }
+
 static void InjectREL(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
@@ -82,6 +90,7 @@ static void InjectREL(unsigned long time,int type,int axis,int value) {
     i.device=INJECTDEV_MOUSE;
     InputInjectEvents(&i,1,1);
 }
+
 static void onExit() {
     LOGD("X11 Graph shutdown!");
 }
@@ -147,11 +156,27 @@ int32_t GFXInit() {
     const xcb_query_extension_reply_t *ext =xcb_get_extension_data(xcbConnection,&xcb_shm_id);
     xcbGC = xcb_generate_id(xcbConnection);
     xcb_create_gc(xcbConnection, xcbGC, xcbPixmap, gc_mask, gc_values);
-    
+    if(xcb_cursor_context_new(xcbConnection, screen, &xcbCursorCTX)>0){
+        xcbCursor = xcb_cursor_load_cursor(xcbCursorCTX, XC_arrow);
+        // Change the window's cursor attribute
+        uint32_t cursor_mask = XCB_CW_CURSOR;
+        uint32_t cursor_value[] = { xcbCursor };
+        xcb_change_window_attributes(xcbConnection, xcbWindow, cursor_mask, cursor_value);
+        // --- 7. Warp Pointer to a new position (relative to root window) ---
+        // Move cursor to screen coordinates (200, 150)
+        xcb_warp_pointer(xcbConnection,
+                     XCB_NONE, // src_window: No source restriction
+                     XCB_NONE, // dst_window: Relative to root window (screen)
+                     0, 0,     // src_x, src_y: Ignored due to XCB_NONE src_window
+                     0, 0,     // src_width, src_height: Ignored due to XCB_NONE src_window
+                     200, 150); // dst_x, dst_y: New screen coordinates
+    }
     xcb_map_window(xcbConnection, xcbWindow);
     xcb_flush(xcbConnection);
 
-    LOGD("xcbConnection=%p xcbWindow=%p(%dx%dx%d) maxlen=%d shm=%d",xcbConnection,xcbWindow,width,height,screen->root_depth,xcb_get_maximum_request_length(xcbConnection),ext->present);
+    LOGD("xcbConnection=%p xcbWindow=%p(%dx%dx%d) maxlen=%d shm=%d xcbCursorCTX=%p xcbCursor=%p",xcbConnection,
+            xcbWindow,width,height,screen->root_depth,xcb_get_maximum_request_length(xcbConnection),
+            ext->present,xcbCursorCTX,xcbCursor);
     pthread_t xThreadId;
     pthread_create(&xThreadId,NULL,XCBEventProc,NULL);
     pthread_detach(xThreadId);

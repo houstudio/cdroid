@@ -87,7 +87,7 @@ public:
         virtual void include(int before,int after);
         virtual int size(bool min);
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal);
-        void include(GridLayout* gl,View* c,Spec* spec,Axis* axis, int size);
+        void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
     class Spec{
     public:
@@ -102,10 +102,10 @@ public:
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
         bool operator<(const Spec &l1) const;
-        const Alignment* getAbsoluteAlignment(bool);
-        Spec copyWriteSpan(Interval span);
+        const Alignment* getAbsoluteAlignment(bool)const;
+        Spec copyWriteSpan(const Interval& span);
         Spec copyWriteAlignment(const Alignment* alignment);
-        int getFlexibility();
+        int getFlexibility()const;
         int hashCode()const;
     };
     static Spec spec(int start, int size,const Alignment* alignment, float weight);
@@ -180,6 +180,10 @@ public:
     }; 
     class Axis{
     private:
+        static constexpr int NEW = 0;
+        static constexpr int PENDING = 1;
+        static constexpr int COMPLETE = 2;
+    private:
         GridLayout*grd;
         int maxIndex;
         MutableInt parentMin;
@@ -187,21 +191,21 @@ public:
         void computeMargins(bool leading);
         bool solve(std::vector<int>&a);
         bool solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError=true);
-        bool computeHasWeights();
+        bool computeHasWeights()const;
         std::vector<std::vector<Arc>> groupArcsByFirstVertex(std::vector<Arc>& arcs);
         std::vector<Arc> topologicalSort(std::vector<Arc>& arcs);
         void addComponentSizes(std::vector<Arc>& result, PackedMap<Interval,MutableInt*>& links);
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
-        void logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0);
-        bool relax(std::vector<int>&locations, Arc& entry);
+        void logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
+        bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);
         PackedMap<Interval,MutableInt*>createLinks(bool min);
         void computeLinks(PackedMap<Interval,MutableInt*>&links,bool min);
         PackedMap<Interval,MutableInt*>& getForwardLinks();
         PackedMap<Interval,MutableInt*>& getBackwardLinks();
-        void include(std::vector<Arc>& arcs, Interval key,const MutableInt& size,bool ignoreIfAlreadyPresent);
+        void include(std::vector<Arc>& arcs,const Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent);
         float calculateTotalWeight();
         void shareOutDelta(int totalDelta, float totalWeight);
         void solveAndDistributeSpace(std::vector<int>&a);
@@ -222,7 +226,6 @@ public:
         bool backwardLinksValid= false;
         bool leadingMarginsValid = false;
         bool trailingMarginsValid= false;
-
     public:
         int definedCount;
         std::vector<int>leadingMargins;

@@ -17,8 +17,9 @@
  *********************************************************************************/
 #include <widget/gridlayout.h>
 #include <widget/space.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 #include <sstream>
+#include <algorithm>
 
 namespace cdroid{
 
@@ -39,8 +40,8 @@ GridLayout::LayoutParams::LayoutParams(const Spec& rowSpec,const Spec& columnSpe
 
 GridLayout::LayoutParams::LayoutParams()
     :MarginLayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT){
-    rowSpec=GridLayout::spec(GridLayout::UNDEFINED);
-    columnSpec=GridLayout::spec(GridLayout::UNDEFINED);
+    rowSpec = GridLayout::spec(GridLayout::UNDEFINED);
+    columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
 }
 
 GridLayout::LayoutParams::LayoutParams(const LayoutParams& source)
@@ -51,14 +52,14 @@ GridLayout::LayoutParams::LayoutParams(const LayoutParams& source)
 
 GridLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& params)
     :MarginLayoutParams(params){
-    rowSpec=GridLayout::spec(GridLayout::UNDEFINED);
-    columnSpec=GridLayout::spec(GridLayout::UNDEFINED);
+    rowSpec = GridLayout::spec(GridLayout::UNDEFINED);
+    columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
 }
 
 GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
     :MarginLayoutParams(params){
-    rowSpec=GridLayout::spec(GridLayout::UNDEFINED);
-    columnSpec=GridLayout::spec(GridLayout::UNDEFINED);
+    rowSpec = GridLayout::spec(GridLayout::UNDEFINED);
+    columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
 }
 
 GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
@@ -263,7 +264,7 @@ int GridLayout::getMargin(View* view, bool horizontal, bool leading){
             :axis->getTrailingMargins();
         const LayoutParams* lp = getLayoutParams(view);
         const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        int index = leading ? spec.span.min : spec.span.max;
+        const int index = leading ? spec.span.min : spec.span.max;
         return margins[index];
    }
 }
@@ -287,7 +288,7 @@ bool GridLayout::fits(std::vector<int>&a, int value, int start, int end){
 void GridLayout::procrusteanFill(std::vector<int>& a, int start, int end, int value){
     const int ms = std::min((size_t)start,a.size());
     const int me = std::min((size_t)end,a.size());
-    for(int i = ms;i < me;i++)a[i]=value;
+    for(int i = ms;i < me;i++)a[i] = value;
 }
 
 void GridLayout::setCellGroup(LayoutParams* lp, int row, int rowSpan, int col, int colSpan){
@@ -300,7 +301,7 @@ int GridLayout::clip(Interval minorRange, bool minorWasDefined, int count){
     if (count == 0) {
         return size;
     }
-    int min = minorWasDefined ? std::min(minorRange.min, count) : 0;
+    const int min = minorWasDefined ? std::min(minorRange.min, count) : 0;
     return std::min(size, count - min);
 }
 
@@ -319,8 +320,8 @@ void GridLayout::validateLayoutParams() {
 
         Spec& majorSpec = horizontal ? lp->rowSpec : lp->columnSpec;
         Interval& majorRange = majorSpec.span;
-        bool majorWasDefined = majorSpec.startDefined;
-        int majorSpan = majorRange.size();
+        const bool majorWasDefined = majorSpec.startDefined;
+        const int majorSpan = majorRange.size();
         if (majorWasDefined) {
             major = majorRange.min;
         }
@@ -395,13 +396,13 @@ void GridLayout::handleInvalidParams(const std::string& msg){
 
 void GridLayout::checkLayoutParams(const LayoutParams* lp, bool horizontal)const{
     std::string groupName = horizontal ? "column" : "row";
-    Spec spec = horizontal ? lp->columnSpec : lp->rowSpec;
-    Interval span = spec.span;
+    const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+    const Interval& span = spec.span;
     if (span.min != UNDEFINED && span.min < 0) {
         handleInvalidParams(groupName + " indices must be positive");
     }
-    Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-    int count = axis->definedCount;
+    const Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
+    const  int count = axis->definedCount;
     if (count != UNDEFINED) {
         if (span.max > count) {
             handleInvalidParams(groupName +
@@ -474,13 +475,13 @@ void GridLayout::onDebugDraw(Canvas& canvas){
 
     std::vector<int>& xs = mHorizontalAxis->locations;
     for (int i = 0, length = xs.size(); i < length; i++) {
-        int x = left + xs[i];
+        const int x = left + xs[i];
         drawLine(canvas, x, top, x, bottom);
     }
 
     std::vector<int>& ys = mVerticalAxis->locations;
     for (int i = 0, length = ys.size(); i < length; i++) {
-        int y = top + ys[i];
+        const int y = top + ys[i];
         drawLine(canvas, left, y, right, y);
     }
 
@@ -509,7 +510,7 @@ int GridLayout::computeLayoutParamsHashCode() {
     for (int i = 0, N = getChildCount(); i < N; i++) {
         View* c = getChildAt(i);
         if (c->getVisibility() == View::GONE) continue;
-        LayoutParams* lp = (LayoutParams*) c->getLayoutParams();
+        const LayoutParams* lp = (LayoutParams*) c->getLayoutParams();
         result = 31 * result + lp->hashCode();
     }
     return result;
@@ -544,14 +545,14 @@ void GridLayout::measureChildrenWithMargins(int widthSpec, int heightSpec, bool 
         if (firstPass) {
             measureChildWithMargins2(c, widthSpec, heightSpec, lp->width, lp->height);
         } else {
-            bool horizontal = (mOrientation == HORIZONTAL);
-            Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+            const bool horizontal = (mOrientation == HORIZONTAL);
+            const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
             if (spec.getAbsoluteAlignment(horizontal) == FILL) {
-                Interval& span = spec.span;
+                const Interval& span = spec.span;
                 Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
                 const std::vector<int>& locations = axis->getLocations();
-                int cellSize = locations[span.max] - locations[span.min];
-                int viewSize = cellSize - getTotalMargin(c, horizontal);
+                const int cellSize = locations[span.max] - locations[span.min];
+                const int viewSize = cellSize - getTotalMargin(c, horizontal);
                 if (horizontal) {
                     measureChildWithMargins2(c, widthSpec, heightSpec, viewSize, lp->height);
                 } else {
@@ -643,12 +644,12 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
     for (int i = 0, N = getChildCount(); i < N; i++) {
         View* c = getChildAt(i);
         if (c->getVisibility() == View::GONE) continue;
-        LayoutParams* lp = getLayoutParams(c);
-        Spec& columnSpec = lp->columnSpec;
-        Spec& rowSpec = lp->rowSpec;
+        const LayoutParams* lp = getLayoutParams(c);
+        const Spec& columnSpec = lp->columnSpec;
+        const Spec& rowSpec = lp->rowSpec;
 
-        Interval& colSpan = columnSpec.span;
-        Interval& rowSpan = rowSpec.span;
+        const Interval& colSpan = columnSpec.span;
+        const Interval& rowSpan = rowSpec.span;
 
         const int x1 = hLocations[colSpan.min];
         const int y1 = vLocations[rowSpan.min];
@@ -726,13 +727,13 @@ int GridLayout::Interval::hashCode()const{
 }
 
 bool GridLayout::Interval::operator<(const Interval &other) const{
-    const int h1=hashCode();
-    const int h2=other.hashCode();
-    return h1<h2;
+    const int h1 = hashCode();
+    const int h2 = other.hashCode();
+    return h1 < h2;
 }
 //--------------------------------------------------------------------------
 GridLayout::Arc::Arc(){
-    valid =true;
+    valid = true;
 }
 GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableInt& value):Arc(){
     this->span = span;
@@ -778,12 +779,12 @@ int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignme
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
-void GridLayout::Bounds::include(GridLayout* gl, View* c,Spec* spec, Axis* axis, int size) {
+void GridLayout::Bounds::include(GridLayout* gl, View* c,const Spec* spec, Axis* axis, int size) {
     this->flexibility &= spec->getFlexibility();
-    bool horizontal = axis->horizontal;
+    const bool horizontal = axis->horizontal;
     const Alignment* alignment = spec->getAbsoluteAlignment(axis->horizontal);
     // todo test this works correctly when the returned value is UNDEFINED
-    int before = alignment->getAlignmentValue(c, size, gl->getLayoutMode());
+    const int before = alignment->getAlignmentValue(c, size, gl->getLayoutMode());
     include(before, size - before);
 }
 
@@ -818,7 +819,7 @@ bool GridLayout::Spec::operator<(const Spec &l1) const{
     return hashCode()<l1.hashCode();
 }
 
-const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizontal){
+const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizontal)const{
     if (alignment != GridLayout::UNDEFINED_ALIGNMENT) {
         return alignment;
     }
@@ -828,7 +829,7 @@ const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizon
     return GridLayout::FILL;
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteSpan(Interval span){
+GridLayout::Spec GridLayout::Spec::copyWriteSpan(const Interval& span){
     return Spec(startDefined, span, alignment, weight);
 }
 
@@ -836,7 +837,7 @@ GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment
     return Spec(startDefined, span, alignment, weight);
 }
 
-int GridLayout::Spec::getFlexibility() {
+int GridLayout::Spec::getFlexibility() const{
     return (alignment == GridLayout::UNDEFINED_ALIGNMENT && weight == 0) ? GridLayout::INFLEXIBLE : GridLayout::CAN_STRETCH;
 }
 
@@ -1075,7 +1076,7 @@ GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds>GridLayout::Axis::crea
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
         LayoutParams* lp = grd->getLayoutParams(c);
-        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         Bounds bounds =*(Bounds*)spec.getAbsoluteAlignment(horizontal)->getBounds();
         assoc.put(spec, bounds);
     }
@@ -1090,10 +1091,10 @@ void GridLayout::Axis::computeGroupBounds(){
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
-        LayoutParams* lp = grd->getLayoutParams(c);
-        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const LayoutParams* lp = grd->getLayoutParams(c);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         const int size = grd->getMeasurementIncludingMargin(c, horizontal) +
-                ((spec.weight == 0) ? 0 : getDeltas()[i]);
+                ((spec.weight == 0.f) ? 0 : getDeltas()[i]);
         groupBounds.getValue(i).include(grd, c, &spec, this, size);
     }
 }
@@ -1111,7 +1112,7 @@ void GridLayout::Axis::setParentConstraints(int min, int max) {
 int GridLayout::Axis::getMeasure(int min,int max){
     setParentConstraints(min,max);
     parentMax = max;
-    const std::vector<int>& ls=getLocations();
+    const std::vector<int>& ls = getLocations();
     return size(ls);
 }
 
@@ -1176,10 +1177,10 @@ void GridLayout::Axis::computeMargins(bool leading){
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         if (c->getVisibility() == View::GONE) continue;
-        LayoutParams* lp = grd->getLayoutParams(c);
-        Spec spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Interval span = spec.span;
-        int index = leading ? span.min : span.max;
+        const LayoutParams* lp = grd->getLayoutParams(c);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const Interval& span = spec.span;
+        const int index = leading ? span.min : span.max;
         margins[index] = std::max(margins[index], grd->getMargin1(c, horizontal, leading));
     }
 }
@@ -1216,10 +1217,10 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
         } else {
             result <<",";//= result.append(", ");
         }
-        int src = arc.span.min;
-        int dst = arc.span.max;
-        int value =arc.value.value;
-        if(src<dst)
+        const int src = arc.span.min;
+        const int dst = arc.span.max;
+        const int value =arc.value.value;
+        if(src < dst)
             result<<var<<dst<<"-"<<var<<src<<">="<<value;
         else
             result<<var<<src<<"-"<<var<<dst<<"<="<<-value;
@@ -1227,7 +1228,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     return result.str();
 }
 
-void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0){
+void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0){
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
@@ -1243,11 +1244,11 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
              " are inconsistent; permanently removing: " << arcsToString(horizontal,removed);
 }
 
-bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry){
+bool GridLayout::Axis::relax(std::vector<int>&locations,const GridLayout::Arc& entry){
     if (!entry.valid) {
         return false;
     }
-    Interval& span = entry.span;
+    const Interval& span = entry.span;
     const int u = span.min;
     const int v = span.max;
     const int candidate = locations[u] + entry.value.value;
@@ -1268,7 +1269,7 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
     std::string axisName = horizontal ? "horizontal" : "vertical";
-    int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
+    const int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
     std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
 
     for (int p = 0; p < arcs.size(); p++) {
@@ -1339,35 +1340,12 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
         result[i].resize(sizes[i]);// = new Arc[sizes[i]];
     }
     // reuse the sizes array to hold the current last elements as we insert each arc
-    for(int i=0;i<sizes.size();i++)sizes[i]=0;//Arrays.fill(sizes, 0);
+    std::fill(sizes.begin(),sizes.end(), 0);
     for (Arc arc : arcs) {
-        int i = arc.span.min;
+        const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
     }
     return result;
-}
-
-#define NEW      0
-#define PENDING  1
-#define COMPLETE 2
-static void walk(std::vector<int>&visited,std::vector<std::vector<GridLayout::Arc>>&arcsByVertex,
-    std::vector<GridLayout::Arc>&result,int&cursor,int loc){
-    switch (visited[loc]) {
-    case NEW:
-         visited[loc] = PENDING;
-        for (GridLayout::Arc arc : arcsByVertex[loc]) {
-             walk(visited,arcsByVertex,result,cursor,arc.span.max);
-             result[cursor--] = arc;
-         }
-         visited[loc] = COMPLETE;
-         break;
-    case PENDING:
-         // le singe est dans l'arbre
-         //assert(false);
-         break;
-    case COMPLETE:
-         break;
-    }
 }
 
 std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridLayout::Arc>& arcs){
@@ -1376,15 +1354,37 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
     result.resize(arcs.size());
     std::vector<std::vector<Arc>>arcsByVertex = groupArcsByFirstVertex(arcs);
     std::vector<int> visited;
-    visited.resize(getCount()+1);
+    visited.resize(getCount()+1,(int)NEW);
+    std::function<void(std::vector<int>&, std::vector<std::vector<GridLayout::Arc>>&, std::vector<GridLayout::Arc>&, int&, int)> walk;
+    walk = [&walk](std::vector<int>&visited,std::vector<std::vector<GridLayout::Arc>>&arcsByVertex,
+          std::vector<GridLayout::Arc>&result,int&cursor,int loc){
+        switch (visited[loc]) {
+        case NEW:
+            visited[loc] = PENDING;
+            for (GridLayout::Arc& arc : arcsByVertex[loc]) {
+                walk(visited,arcsByVertex,result,cursor,arc.span.max);
+                result[cursor--] = arc;
+            }
+            visited[loc] = (int)COMPLETE;
+            break;
+        case PENDING:
+            // le singe est dans l'arbre
+            //assert(false);
+            break;
+        case COMPLETE:
+            break;
+        }
+    };
     for (int loc = 0, N = arcsByVertex.size(); loc < N; loc++) {
-        walk(visited,arcsByVertex,result,cursor,loc);
+        if(visited[loc] == NEW){
+            walk(visited,arcsByVertex,result,cursor,loc);
+        }
     }
-    return result;//topologicalSort(arcs.toArray(new Arc[arcs.size()]));
+    return result;
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
-  GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
+    GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
     for (int i = 0; i < links.keys.size(); i++) {
         Interval& key = links.keys[i];
         include(result, key, *links.values[i], false);
@@ -1432,15 +1432,15 @@ std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
     return arcs;
 }
 
-bool GridLayout::Axis::computeHasWeights(){
+bool GridLayout::Axis::computeHasWeights()const{
    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
        View* child = grd->getChildAt(i);
        if (child->getVisibility() == View::GONE) {
            continue;
        }
-       LayoutParams* lp = grd->getLayoutParams(child);
-       Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-       if (spec.weight != 0) {
+       const LayoutParams* lp = grd->getLayoutParams(child);
+       const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+       if (spec.weight != 0.f) {
            return true;
        }
    }
@@ -1463,7 +1463,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>GridLayout::A
     Assoc<Interval, MutableInt*> result;
     std::vector<Spec>&keys = getGroupBounds().keys;
     for (int i = 0, N = keys.size(); i < N; i++) {
-        Interval span = min ? keys[i].span : keys[i].span.inverse();
+        const Interval& span = min ? keys[i].span : keys[i].span.inverse();
         result.put(span, new MutableInt());
     }
     return result.pack();
@@ -1477,7 +1477,7 @@ void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,G
     // Use getter to trigger a re-evaluation
     std::vector<Bounds>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
-        int size = bounds[i].size(min);
+        const int size = bounds[i].size(min);
         MutableInt* valueHolder = links.getValue(i);
         // this effectively takes the max() of the minima and the min() of the maxima
         valueHolder->value = std::max(valueHolder->value, min ? size : -size);
@@ -1507,7 +1507,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout:
 }
 
 void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs, 
-        GridLayout::Interval key,const MutableInt& size,bool ignoreIfAlreadyPresent){
+        const GridLayout::Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent){
     /*Remove self referential links.
       These appear:
         . as parental constraints when GridLayout has no children
@@ -1516,8 +1516,8 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
     // this bit below should really be computed outside here -
     // its just to stop default (row/col > 0) constraints obliterating valid entries
     if (ignoreIfAlreadyPresent) {
-        for (Arc arc : arcs) {
-            Interval& span = arc.span;
+        for (Arc& arc : arcs) {
+            const Interval& span = arc.span;
             if (span.min==key.min&&span.max==key.max){//span.equals(key)) {
                 return;
             }
@@ -1527,7 +1527,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
 }
 
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
-    for (int i=0;i<deltas.size();i++)deltas[i]=0;
+    std::fill(deltas.begin(),deltas.end(),0);
     solve(a);
     int deltaMax = parentMin.value * grd->getChildCount() + 1; //exclusive
     if (deltaMax < 2) {
@@ -1542,7 +1542,7 @@ void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
     // do a binary search to find the max delta that won't conflict with constraints
     while(deltaMin < deltaMax) {
         // cast to long to prevent overflow.
-        int delta = (int) (((long) deltaMin + deltaMax) / 2);
+        const int delta = (int) (((long) deltaMin + deltaMax) / 2);
         invalidateValues();
         shareOutDelta(delta, totalWeight);
         validSolution = solve(getArcs(), a, false);
@@ -1562,7 +1562,7 @@ void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
 }
 
 float GridLayout::Axis::calculateTotalWeight() {
-    float totalWeight = .0f;
+    float totalWeight = 0.f;
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         if (c->getVisibility() == View::GONE) {
@@ -1576,17 +1576,17 @@ float GridLayout::Axis::calculateTotalWeight() {
 }
 
 void GridLayout::Axis::shareOutDelta(int totalDelta, float totalWeight){
-    for (int i=0;i<deltas.size();i++)deltas[i]=0;
+    std::fill(deltas.begin(),deltas.end(),0);
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         if (c->getVisibility() == View::GONE) {
             continue;
         }
-        LayoutParams* lp = grd->getLayoutParams(c);
-        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        float weight = spec.weight;
-        if (weight != 0) {
-            int delta = std::round((weight * totalDelta / totalWeight));
+        const LayoutParams* lp = grd->getLayoutParams(c);
+        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const float weight = spec.weight;
+        if (weight != 0.f) {
+            const int delta = std::round((weight * totalDelta / totalWeight));
             deltas[i] = delta;
             // the two adjustments below are to counter the above rounding and avoid
             // off-by-ones at the end
@@ -1608,7 +1608,7 @@ void GridLayout::Axis::computeLocations(std::vector<int>&a){
         // order is not preserved this may not be the first vertex. For consistency,
         // translate all the values so that they measure the distance from a[0]; the
         // leading edge of the parent. After this transformation some values may be negative.
-        int a0 = a[0];
+        const int a0 = a[0];
         for (int i = 0, N = a.size(); i < N; i++) {
             a[i] = a[i] - a0;
         }

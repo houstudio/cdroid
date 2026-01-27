@@ -7,6 +7,7 @@
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
+#include <X11/cursorfont.h>
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
@@ -123,9 +124,9 @@ int32_t GFXInit() {
         GFXGetDisplaySize(0,&width,&height);
         width += screenMargin.x + screenMargin.w;
         height+= screenMargin.y + screenMargin.h;
-        x11Window=XCreateSimpleWindow(x11Display, RootWindow(x11Display, screen), 0, 0,width,height,
+        Window rootWindow = RootWindow(x11Display, screen);
+        x11Window=XCreateSimpleWindow(x11Display, rootWindow, 0, 0,width,height,
                     1, BlackPixel(x11Display, screen), WhitePixel(x11Display, screen));
-        LOGI("screenMargin=(%d,%d,%d,%d)[%s]",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin);
         x11Pixmap = XCreatePixmap(x11Display, x11Window, width, height,DefaultDepth(x11Display, screen));
         WM_DELETE_WINDOW = XInternAtom(x11Display, "WM_DELETE_WINDOW", False);
         XSetWMProtocols(x11Display,x11Window, &WM_DELETE_WINDOW, 1);
@@ -133,6 +134,11 @@ int32_t GFXInit() {
         XSelectInput(x11Display, x11Window, ExposureMask | KeyPressMask|KeyReleaseMask |ResizeRedirectMask|
                      ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask );
         XMapWindow(x11Display,x11Window);
+        Cursor cursor = XCreateFontCursor(x11Display, XC_pencil);//XC_arrow);
+        XDefineCursor(x11Display, x11Window, cursor);
+        XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, 100, 100);
+        XFlush(x11Display);
+        LOGI("screenMargin=(%d,%d,%d,%d)[%s] cursor=%p",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin,cursor);
         pthread_create(&xThreadId,NULL,X11EventProc,NULL);
         pthread_detach(xThreadId);
     }
@@ -385,6 +391,7 @@ static void* X11EventProc(void*p) {
         case MotionNotify:
             if(event.xmotion.state&Button1MotionMask) {
                 SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x, event.xmotion.y - screenMargin.y);
+                XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, event.xmotion.x,event.xmotion.y);
             }
             break;
         case DestroyNotify:
