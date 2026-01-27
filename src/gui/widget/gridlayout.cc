@@ -1268,9 +1268,9 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 }
 
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
-    std::string axisName = horizontal ? "horizontal" : "vertical";
+    const std::string axisName = horizontal ? "horizontal" : "vertical";
     const int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
-    std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
+    std::vector<bool> originalCulprits;
 
     for (int p = 0; p < arcs.size(); p++) {
         init(locations);
@@ -1282,8 +1282,8 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 changed |= relax(locations, arcs[j]);
             }
             if (!changed) {
-                if (originalCulprits != nullptr) {
-                    logError(axisName, arcs, *originalCulprits);
+                if (!originalCulprits.empty()) {
+                    logError(axisName, arcs, originalCulprits);
                 }
                 return true;
             }
@@ -1293,10 +1293,10 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
             return false; 
         }// cannot solve with these constraints
 
-        std::shared_ptr<std::vector<bool>> culprits = std::make_shared<std::vector<bool>>(arcs.size(),false);
+        std::vector<bool> culprits(arcs.size(),false);
         for (int i = 0; i < N; i++) {
             for (int j = 0, length = arcs.size(); j < length; j++) {
-                culprits->at(j) =culprits->at(j)| relax(locations, arcs[j]);
+                culprits[j] = culprits[j] | relax(locations, arcs[j]);
             }
         }
 
@@ -1305,7 +1305,7 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
         }
 
         for (int i = 0; i < arcs.size(); i++) {
-            if (culprits->at(i)) {
+            if (culprits[i]) {
                 Arc& arc = arcs[i];
                 // Only remove max values, min values alone cannot be inconsistent
                 if (arc.span.min < arc.span.max) {
