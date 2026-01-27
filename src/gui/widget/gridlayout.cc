@@ -1384,10 +1384,10 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
-    GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
+        GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& links) {
     for (int i = 0; i < links.keys.size(); i++) {
         Interval& key = links.keys[i];
-        include(result, key, *links.values[i], false);
+        include(result, key, links.values[i], false);
     }
 }
 
@@ -1459,32 +1459,32 @@ const std::vector<int>& GridLayout::Axis::getDeltas(){
     return deltas;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>GridLayout::Axis::createLinks(bool min){
-    Assoc<Interval, MutableInt*> result;
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>GridLayout::Axis::createLinks(bool min){
+    Assoc<Interval, MutableInt> result;
     std::vector<Spec>&keys = getGroupBounds().keys;
     for (int i = 0, N = keys.size(); i < N; i++) {
         const Interval& span = min ? keys[i].span : keys[i].span.inverse();
-        result.put(span, new MutableInt());
+        result.put(span,MutableInt());
     }
     return result.pack();
 }
 
-void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>&links,bool min){
-    std::vector<MutableInt*>&spans = links.values;
+void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>&links,bool min){
+    std::vector<MutableInt>&spans = links.values;
     for (int i = 0; i < spans.size(); i++) {
-        spans[i]->reset();//INT_MIN;//spans[i].reset();
+        spans[i].reset();//INT_MIN;//spans[i].reset();
     }
     // Use getter to trigger a re-evaluation
     std::vector<Bounds>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
         const int size = bounds[i].size(min);
-        MutableInt* valueHolder = links.getValue(i);
+        MutableInt& valueHolder = links.getValue(i);
         // this effectively takes the max() of the minima and the min() of the maxima
-        valueHolder->value = std::max(valueHolder->value, min ? size : -size);
+        valueHolder.value = std::max(valueHolder.value, min ? size : -size);
     }
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout::Axis::getForwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getForwardLinks(){
     if (forwardLinks.size()==0) {
        forwardLinks = createLinks(true);
     }
@@ -1495,7 +1495,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout:
     return forwardLinks;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout::Axis::getBackwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getBackwardLinks(){
     if (backwardLinks.size()==0) {
         backwardLinks = createLinks(false);
     }
