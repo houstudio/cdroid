@@ -1211,7 +1211,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     std::string var = horizontal ? "x" : "y";
     std::ostringstream result;
     bool first = true;
-    for (GridLayout::Arc arc : arcs) {
+    for (GridLayout::Arc& arc : arcs) {
         if (first) {
             first = false;
         } else {
@@ -1341,11 +1341,11 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     }
     // reuse the sizes array to hold the current last elements as we insert each arc
     std::fill(sizes.begin(),sizes.end(), 0);
-    for (Arc arc : arcs) {
+    for (Arc& arc : arcs) {
         const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
     }
-    return result;
+    return std::move(result);
 }
 
 std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridLayout::Arc>& arcs){
@@ -1380,7 +1380,7 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
             walk(visited,arcsByVertex,result,cursor,loc);
         }
     }
-    return result;
+    return std::move(result);
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
@@ -1418,7 +1418,7 @@ std::vector<GridLayout::Arc>GridLayout::Axis::createArcs(){
     std::vector<Arc> sMins = topologicalSort(mins);
     std::vector<Arc> sMaxs = topologicalSort(maxs);
     sMins.insert(sMins.end(),sMaxs.begin(),sMaxs.end());
-    return sMins;//append(sMins, sMaxs);
+    return std::move(sMins);
 }
 
 std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
