@@ -180,6 +180,10 @@ public:
     }; 
     class Axis{
     private:
+        static constexpr int NEW = 0;
+        static constexpr int PENDING = 1;
+        static constexpr int COMPLETE = 2;
+    private:
         GridLayout*grd;
         int maxIndex;
         MutableInt parentMin;
