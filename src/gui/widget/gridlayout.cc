@@ -1227,7 +1227,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     return result.str();
 }
 
-void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0){
+void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0){
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
@@ -1243,7 +1243,7 @@ void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&ar
              " are inconsistent; permanently removing: " << arcsToString(horizontal,removed);
 }
 
-bool GridLayout::Axis::relax(std::vector<int>&locations, GridLayout::Arc& entry){
+bool GridLayout::Axis::relax(std::vector<int>&locations,const GridLayout::Arc& entry){
     if (!entry.valid) {
         return false;
     }
@@ -1339,7 +1339,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
         result[i].resize(sizes[i]);// = new Arc[sizes[i]];
     }
     // reuse the sizes array to hold the current last elements as we insert each arc
-    for(int i=0;i<sizes.size();i++)sizes[i]=0;//Arrays.fill(sizes, 0);
+    std::fill(sizes.begin(),sizes.end(), 0);
     for (Arc arc : arcs) {
         const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
@@ -1384,7 +1384,7 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
-  GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
+    GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
     for (int i = 0; i < links.keys.size(); i++) {
         Interval& key = links.keys[i];
         include(result, key, *links.values[i], false);
@@ -1527,7 +1527,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
 }
 
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
-    for (int i=0;i<deltas.size();i++)deltas[i]=0;
+    std::fill(deltas.begin(),deltas.end(),0);
     solve(a);
     int deltaMax = parentMin.value * grd->getChildCount() + 1; //exclusive
     if (deltaMax < 2) {
@@ -1576,7 +1576,7 @@ float GridLayout::Axis::calculateTotalWeight() {
 }
 
 void GridLayout::Axis::shareOutDelta(int totalDelta, float totalWeight){
-    for (int i=0;i<deltas.size();i++)deltas[i]=0;
+    std::fill(deltas.begin(),deltas.end(),0);
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         if (c->getVisibility() == View::GONE) {

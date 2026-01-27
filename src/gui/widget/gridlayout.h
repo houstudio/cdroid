@@ -194,8 +194,8 @@ public:
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
-        void logError(const std::string& axisName, std::vector<Arc>&arcs, std::vector<bool>& culprits0);
-        bool relax(std::vector<int>&locations, Arc& entry);
+        void logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
+        bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);
         PackedMap<Interval,MutableInt*>createLinks(bool min);
         void computeLinks(PackedMap<Interval,MutableInt*>&links,bool min);
