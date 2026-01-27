@@ -85,8 +85,8 @@ public:
         Bounds();
         virtual void reset();
         virtual void include(int before,int after);
-        virtual int size(bool min);
-        virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal);
+        virtual int size(bool min)const;
+        virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
     class Spec{
@@ -101,10 +101,10 @@ public:
         Spec();
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
-        bool operator<(const Spec &l1) const;
+        bool operator<(const Spec &l1)const;
         const Alignment* getAbsoluteAlignment(bool)const;
-        Spec copyWriteSpan(const Interval& span);
-        Spec copyWriteAlignment(const Alignment* alignment);
+        Spec copyWriteSpan(const Interval& span)const;
+        Spec copyWriteAlignment(const Alignment* alignment)const;
         int getFlexibility()const;
         int hashCode()const;
     };

@@ -318,16 +318,16 @@ void GridLayout::validateLayoutParams() {
     for (int i = 0, N = getChildCount(); i < N; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
 
-        Spec& majorSpec = horizontal ? lp->rowSpec : lp->columnSpec;
-        Interval& majorRange = majorSpec.span;
+        const Spec& majorSpec = horizontal ? lp->rowSpec : lp->columnSpec;
+        const Interval& majorRange = majorSpec.span;
         const bool majorWasDefined = majorSpec.startDefined;
         const int majorSpan = majorRange.size();
         if (majorWasDefined) {
             major = majorRange.min;
         }
 
-        Spec& minorSpec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Interval& minorRange = minorSpec.span;
+        const Spec& minorSpec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const Interval& minorRange = minorSpec.span;
         const bool minorWasDefined = minorSpec.startDefined;
         const int minorSpan = clip(minorRange, minorWasDefined, count);
         if (minorWasDefined) {
@@ -666,8 +666,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
         const Alignment* hAlign = columnSpec.getAbsoluteAlignment(true);
         const Alignment* vAlign = rowSpec.getAbsoluteAlignment(false);
 
-        Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
-        Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
+        const Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
+        const Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
 
         // Gravity offsets: the location of the alignment group relative to its cell group.
         const int gravityOffsetX = hAlign->getGravityOffset(c, cellWidth - boundsX.size(true));
@@ -766,7 +766,7 @@ void GridLayout::Bounds::include(int before,int after){
     this->after = std::max(this->after, after);
 }
 
-int GridLayout::Bounds::size(bool min){
+int GridLayout::Bounds::size(bool min)const{
     if (!min) {
         if (canStretch(flexibility)) {
             return MAX_SIZE;
@@ -775,7 +775,7 @@ int GridLayout::Bounds::size(bool min){
     return before + after;
 }
 
-int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignment*a,int size,bool horizontal){
+int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignment*a,int size,bool horizontal)const{
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
@@ -829,11 +829,11 @@ const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizon
     return GridLayout::FILL;
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteSpan(const Interval& span){
+GridLayout::Spec GridLayout::Spec::copyWriteSpan(const Interval& span)const{
     return Spec(startDefined, span, alignment, weight);
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment){
+GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment)const{
     return Spec(startDefined, span, alignment, weight);
 }
 
@@ -947,11 +947,11 @@ protected:
             mSize = std::max(mSize, before + after);
         }
 
-        int size(bool min)override{
+        int size(bool min)const override{
             return std::max(Bounds::size(min), mSize);
         }
 
-        int getOffset(GridLayout* gl, View* c,const Alignment* a, int size, bool hrz)override{
+        int getOffset(GridLayout* gl, View* c,const Alignment* a, int size, bool hrz)const override{
             return std::max(0, Bounds::getOffset(gl, c, a, size, hrz));
         }
     };
@@ -1345,7 +1345,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
         const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
     }
-    return std::move(result);
+    return result;
 }
 
 std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridLayout::Arc>& arcs){
@@ -1380,7 +1380,7 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
             walk(visited,arcsByVertex,result,cursor,loc);
         }
     }
-    return std::move(result);
+    return result;
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
@@ -1418,7 +1418,7 @@ std::vector<GridLayout::Arc>GridLayout::Axis::createArcs(){
     std::vector<Arc> sMins = topologicalSort(mins);
     std::vector<Arc> sMaxs = topologicalSort(maxs);
     sMins.insert(sMins.end(),sMaxs.begin(),sMaxs.end());
-    return std::move(sMins);
+    return sMins;
 }
 
 std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
