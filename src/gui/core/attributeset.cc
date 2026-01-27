@@ -46,15 +46,15 @@ AttributeSet::AttributeSet(Context*ctx,const std::string&package)
 }
 
 AttributeSet::AttributeSet(const AttributeSet&other):AttributeSet(other.mContext,other.mPackage){
-    for(auto a:*other.mAttrs){
+    for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
 }
 
 AttributeSet& AttributeSet::operator =(const AttributeSet&other){
-    mContext=other.mContext;
-    mPackage=other.mPackage;
-    for(auto a:*other.mAttrs){
+    mContext = other.mContext;
+    mPackage = other.mPackage;
+    for(auto& a:*other.mAttrs){
         mAttrs->insert({a.first,a.second});
     }
     return *this;
@@ -212,7 +212,7 @@ int AttributeSet::getInt(const std::string&key,const std::unordered_map<std::str
         std::vector<std::string> gs = split(vstr);
         int result= 0;
         int count = 0;
-        for(std::string s:gs){
+        for(const std::string& s:gs){
             auto it = kvs.find(s);
             if(it != kvs.end()){
                 result |= it->second;
@@ -229,7 +229,7 @@ int AttributeSet::getInt(const std::string&key,const std::unordered_map<std::str
 int AttributeSet::getResourceId(const std::string&key,int def)const{
     const std::string str = getString(key);
     if(!str.empty()){
-        int value = mContext->getId(str);
+        const int value = mContext->getId(str);
         return value == -1 ? def : value;
     }
     return def;
@@ -238,7 +238,7 @@ int AttributeSet::getResourceId(const std::string&key,int def)const{
 int AttributeSet::getArray(const std::string&key,std::vector<std::string>&array)const{
     const std::string str = getString(key);
     if(!str.empty()){
-        int value = mContext->getArray(str,array);
+        const int value = mContext->getArray(str,array);
         return value;
     }
     return 0;
@@ -334,7 +334,7 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
     int gravity = 0;
     const std::string prop = getString(key);
     std::vector<std::string>gs = split(prop);
-    for(auto s:gs){
+    for(auto& s:gs){
         auto it = gravitykvs.find(s);
         if(it!=gravitykvs.end()){
             gravity|=it->second;
