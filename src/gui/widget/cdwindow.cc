@@ -56,11 +56,6 @@ Window::Window(int x,int y,int width,int height,int type)
 }
 
 void Window::initWindow(){
-#if USE_UIEVENTHANDLER
-    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
-#else
-    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
-#endif
     mInLayout= false;
     mAccessibilityManager =&AccessibilityManager::getInstance(mContext);
     mSendWindowContentChangedAccessibilityEvent = nullptr;
@@ -93,6 +88,11 @@ void Window::initWindow(){
         }
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(acsl);
+#if USE_UIEVENTHANDLER
+    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
+#else
+    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
+#endif
 }
 
 Window::~Window(){
@@ -533,7 +533,7 @@ int Window::processKeyEvent(KeyEvent&event){
     int handled = FINISH_NOT_HANDLED;
     int groupNavigationDirection = 0;
     const int action = event.getAction();
-    LOGV_IF(action==KeyEvent::ACTION_DOWN|1,"%s:0x%x %s %x",event.actionToString(action).c_str(),
+    LOGV_IF(action==KeyEvent::ACTION_DOWN,"%s:0x%x %s %x",event.actionToString(action).c_str(),
             event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
@@ -692,8 +692,8 @@ void Window::doLayout(){
         const int vertMargin = lp->topMargin+lp->bottomMargin;
         const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth() - horzMargin,MeasureSpec::EXACTLY);
         const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()- vertMargin,MeasureSpec::EXACTLY);
-        view->measure(widthSpec, heightSpec);
-        view->layout (lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
+        FrameLayout::measure(widthSpec,heightSpec);
+        FrameLayout::layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
     }
     getViewTreeObserver()->dispatchOnGlobalLayout();
     mAttachInfo->mTreeObserver->dispatchOnGlobalLayout();

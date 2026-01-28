@@ -250,12 +250,12 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
             //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
         }
-#ifdef DEBUG
         if(d != nullptr) {
+#ifdef DEBUG
             d->getConstantState()->mResource=resourceId;
+#endif
             return d;
         }
-#endif
     }
 
     if( ((istm!=nullptr)&&(*istm)) && (TextUtils::endWith(resourceId,".gif")||TextUtils::endWith(resourceId,".webp")
