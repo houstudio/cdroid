@@ -2,7 +2,8 @@
   - add MotionEvent for MouseDevice support.
   - add Tablayout::setTabIndicatorAnimationMode(tabIndicatorAnimationMode:linear,elastic,fade)
   - add TabLayoutMediator(make TabLayout working friendly with ViewPager2)
-  - add single Frame's Webp to Bitmapdrawable supported"
+  - add single Frame's Webp to Bitmapdrawable supported
+  - add Bitmap,Jpeg2000 support
   - fix HorizontalScrollView's fling.
   - fix RippleDrawable's memleak
 # **V4.4.8
