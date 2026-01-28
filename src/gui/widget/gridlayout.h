@@ -85,8 +85,8 @@ public:
         Bounds();
         virtual void reset();
         virtual void include(int before,int after);
-        virtual int size(bool min);
-        virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal);
+        virtual int size(bool min)const;
+        virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
     class Spec{
@@ -101,10 +101,10 @@ public:
         Spec();
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
-        bool operator<(const Spec &l1) const;
+        bool operator<(const Spec &l1)const;
         const Alignment* getAbsoluteAlignment(bool)const;
-        Spec copyWriteSpan(const Interval& span);
-        Spec copyWriteAlignment(const Alignment* alignment);
+        Spec copyWriteSpan(const Interval& span)const;
+        Spec copyWriteAlignment(const Alignment* alignment)const;
         int getFlexibility()const;
         int hashCode()const;
     };
@@ -194,17 +194,17 @@ public:
         bool computeHasWeights()const;
         std::vector<std::vector<Arc>> groupArcsByFirstVertex(std::vector<Arc>& arcs);
         std::vector<Arc> topologicalSort(std::vector<Arc>& arcs);
-        void addComponentSizes(std::vector<Arc>& result, PackedMap<Interval,MutableInt*>& links);
+        void addComponentSizes(std::vector<Arc>& result, PackedMap<Interval,MutableInt>& links);
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
         void logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
         bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);
-        PackedMap<Interval,MutableInt*>createLinks(bool min);
-        void computeLinks(PackedMap<Interval,MutableInt*>&links,bool min);
-        PackedMap<Interval,MutableInt*>& getForwardLinks();
-        PackedMap<Interval,MutableInt*>& getBackwardLinks();
+        PackedMap<Interval,MutableInt>createLinks(bool min);
+        void computeLinks(PackedMap<Interval,MutableInt>&links,bool min);
+        PackedMap<Interval,MutableInt>& getForwardLinks();
+        PackedMap<Interval,MutableInt>& getBackwardLinks();
         void include(std::vector<Arc>& arcs,const Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent);
         float calculateTotalWeight();
         void shareOutDelta(int totalDelta, float totalWeight);
@@ -217,8 +217,8 @@ public:
         void computeGroupBounds();
     protected:
         PackedMap<Spec, Bounds> groupBounds;
-        PackedMap<Interval,MutableInt*> forwardLinks;
-        PackedMap<Interval,MutableInt*> backwardLinks;
+        PackedMap<Interval,MutableInt> forwardLinks;
+        PackedMap<Interval,MutableInt> backwardLinks;
     public:
         bool horizontal;
         bool groupBoundsValid  = false;

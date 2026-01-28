@@ -18,12 +18,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <signal.h>
-#include <assets.h>
-#include <getopt.h>
 #include <fcntl.h>
 #include <thread>
 #include <mutex>
-
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
 #include <utils/atexit.h>
@@ -42,15 +39,11 @@ extern "C" unsigned long  GetModuleFileNameA(void* hModule, char* lpFilename, un
 
 namespace cdroid{
 
-App*App::mInst = nullptr;
-
-App::App(int argc,const char*argv[]){
+App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
     std::string logo, monkey, record, datapath;
     LogParseModules(argc,argv);
-    mQuitFlag = false;
-    mExitCode = 0;
     mInst = this;
     cxxopts::Options options("cdroid","cdroid application");
     options.add_options()
@@ -68,13 +61,12 @@ App::App(int argc,const char*argv[]){
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
-    std::string name;
 #if defined(__linux__)||defined(__unix__)
-    name= std::string(argc?argv[0]:__progname);
+    std::string name= std::string(argc?argv[0]:__progname);
 #elif (defined(_WIN32)||defined(_WIN64))
     char progName[260];
     GetModuleFileNameA(nullptr,progName,sizeof(progName));
-    name = progName;
+    std::string name = progName;
 #endif
     try{
         if((argc == 0) || (argv == nullptr)){
@@ -132,6 +124,8 @@ App::App(int argc,const char*argv[]){
         inputsource->playback(monkey);
     }
 }
+
+App*App::mInst = nullptr;
 
 App::~App(){
     WindowManager::getInstance().shutDown();

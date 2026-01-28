@@ -1609,7 +1609,7 @@ std::vector<Rect>View::collectPreferKeepClearRects(){
         list.insert(list.end(),info->mKeepClearRects.begin(),info->mKeepClearRects.end());
     }
 
-    return std::move(list);
+    return list;
 }
 
 int View::combineVisibility(int vis1, int vis2) {
@@ -1705,7 +1705,7 @@ void View::dispatchDetachedFromWindow(){
     }
 
     if(mListenerInfo){
-        for(auto l:mListenerInfo->mOnAttachStateChangeListeners){
+        for(auto& l:mListenerInfo->mOnAttachStateChangeListeners){
             if(l.onViewDetachedFromWindow)l.onViewDetachedFromWindow(*this);
         }
     }
@@ -7232,7 +7232,7 @@ void View::addKeyboardNavigationClusters(std::vector<View*>&views,int drection){
 std::vector<View*>View::getFocusables(int direction){
     std::vector<View*> result;
     addFocusables(result, direction);
-    return std::move(result);
+    return result;
 }
 
 int View::getFocusable()const{
@@ -7479,7 +7479,7 @@ void View::layout(int l, int t, int w, int h){
             mRoundScrollbarRenderer = nullptr;
         }
         if(mListenerInfo){
-            for(auto ls:mListenerInfo->mOnLayoutChangeListeners){
+            for(auto& ls:mListenerInfo->mOnLayoutChangeListeners){
                 ls(*this,l, t, w, h,oldL,oldT,oldW,oldH);
             }
         }

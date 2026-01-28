@@ -44,7 +44,7 @@ Assets::Assets(const std::string&path):Assets() {
 }
 
 Assets::~Assets() {
-    for(auto cls:mStateColors){
+    for(auto& cls:mStateColors){
         delete cls.second;
     }
     mStateColors.clear();
@@ -52,7 +52,7 @@ Assets::~Assets() {
     for(auto it=mResources.begin(); it!=mResources.end(); it++) {
         delete it->second;
     }
-    for(auto d:mDrawables) {
+    for(auto& d:mDrawables) {
         LOGD_IF(d.second.use_count(),"%s reference=%d",d.first.c_str(),d.second.use_count());
     }
     mDrawables.clear();
@@ -160,11 +160,11 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(tag.compare("bool")==0){
                     v = value[0]=='t'?true:false;
                 }
-                mDimensions.insert({resUri,v});
+                mDimensions.insert({std::move(resUri),v});
             }else if(itc!=mDimensions.end()){
-                mDimensions.insert({resUri,itc->second});
+                mDimensions.insert({std::move(resUri),itc->second});
             }else{
-                pending->dimens.insert({resUri,dimenRes});
+                pending->dimens.insert({std::move(resUri),std::move(dimenRes)});
             }
         }else if(tag.compare("color")==0){
             std::string colorUri = package+":color/"+attrs.getString("name");
@@ -175,7 +175,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
                 mColors.insert({colorUri,color});
             }else if (itc==mColors.end()){
-                pending->colors.insert({colorUri,colorRef});
+                pending->colors.insert({std::move(colorUri),colorRef});
             }
         }else if(tag.compare("string")==0){
             std::string key = package+":string/"+attrs.getString("name");
@@ -192,10 +192,10 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     int32_t i32v;
                     std::memcpy(&i32v,&fv,sizeof(i32v));
                     if(type[0]=='f') fv/=100.f;
-                    mDimensions.insert({resUri,i32v});
+                    mDimensions.insert({std::move(resUri),i32v});
                 }else{
                     const int32_t v = std::stol(value);
-                    mDimensions.insert({resUri,v});
+                    mDimensions.insert({std::move(resUri),v});
                 }
             }else if(type.compare("id")){
                 LOGD("CANT REACHED---------%s depth=%d %s",type.c_str(),parser.getDepth(),attrs.getString("name").c_str());
@@ -211,9 +211,9 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 AttributeSet itemAtts(attrs);
                 //itemAtts = attrs;
                 if(it==pending->colorStateList.end()){
-                    it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
+                    it = pending->colorStateList.insert({std::move(resUri),{itemAtts}}).first;
                 }else
-                    it->second.push_back(itemAtts);
+                    it->second.push_back(std::move(itemAtts));
             }
         }else if(tag.compare("style")==0){
             const std::string styleName = package+":style/"+attrs.getString("name");
@@ -231,7 +231,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 value = AttributeSet::normalize(package,value);
                 const size_t pos =key.find(':');
                 if(pos!=std::string::npos)key=key.substr(pos+1);
-                its->second.add(key,value);
+                its->second.add(std::move(key),std::move(value));
             }
         }else if(tag.find("array")!=std::string::npos){
             const std::string key = package+":array/"+attrs.getString("name");
@@ -240,9 +240,9 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
                 std::string value= getTrimedValue(parser);
-                array.push_back(value);
+                array.push_back(std::move(value));
             }
-            mArraies.emplace(key,array);
+            mArraies.emplace(std::move(key),std::move(array));
         }
     }
     return 0;
@@ -276,22 +276,26 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     });
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme.Material");
-    for(auto c:pending.colors){
+    for(auto& c:pending.colors){
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());
-        if( it != mColors.end() ) mColors.insert({c.first,it->second});
+        if( it != mColors.end() ){
+            mColors.insert({std::move(c.first),it->second});
+        }
     }
-    for(auto d:pending.dimens){
+    for(auto& d:pending.dimens){
         auto it = mDimensions.find(d.second);
         LOGD_IF(it==mDimensions.end(),"dimen %s losting refto %s",d.first.c_str(),d.second.c_str());
-        if(it != mDimensions.end()) mDimensions.insert({d.first,it->second});
+        if(it != mDimensions.end()){
+            mDimensions.insert({std::move(d.first),it->second});
+        }
     }
-    for(auto cs:pending.colorStateList){
+    for(auto& cs:pending.colorStateList){
         ColorStateList*cls = new ColorStateList();
-        for(auto attr:cs.second){
+        for(auto& attr:cs.second){
             cls->addStateColor(this,attr);
         }
-        mStateColors.insert({cs.first,cls});
+        mStateColors.insert({std::move(cs.first),cls});
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
     LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
@@ -369,10 +373,10 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
 
 void Assets::loadStrings(const std::string&lan) {
     const std::string suffix = "/strings-"+lan+".xml";
-    for(auto a:mResources) {
+    for(auto& a:mResources) {
         std::vector<std::string>files;
         a.second->getEntries(files);
-        for(auto fileName:files){
+        for(auto& fileName:files){
             if( (TextUtils::endWith(fileName,".xml") && TextUtils::endWith(fileName,suffix) )==false)continue;
             loadKeyValues(a.first,fileName,nullptr);
             LOGD("load %s for '%s'",fileName.c_str(),lan.c_str());

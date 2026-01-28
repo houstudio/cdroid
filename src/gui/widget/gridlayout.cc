@@ -318,16 +318,16 @@ void GridLayout::validateLayoutParams() {
     for (int i = 0, N = getChildCount(); i < N; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
 
-        Spec& majorSpec = horizontal ? lp->rowSpec : lp->columnSpec;
-        Interval& majorRange = majorSpec.span;
+        const Spec& majorSpec = horizontal ? lp->rowSpec : lp->columnSpec;
+        const Interval& majorRange = majorSpec.span;
         const bool majorWasDefined = majorSpec.startDefined;
         const int majorSpan = majorRange.size();
         if (majorWasDefined) {
             major = majorRange.min;
         }
 
-        Spec& minorSpec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Interval& minorRange = minorSpec.span;
+        const Spec& minorSpec = horizontal ? lp->columnSpec : lp->rowSpec;
+        const Interval& minorRange = minorSpec.span;
         const bool minorWasDefined = minorSpec.startDefined;
         const int minorSpan = clip(minorRange, minorWasDefined, count);
         if (minorWasDefined) {
@@ -402,7 +402,7 @@ void GridLayout::checkLayoutParams(const LayoutParams* lp, bool horizontal)const
         handleInvalidParams(groupName + " indices must be positive");
     }
     const Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
-    const  int count = axis->definedCount;
+    const int count = axis->definedCount;
     if (count != UNDEFINED) {
         if (span.max > count) {
             handleInvalidParams(groupName +
@@ -666,8 +666,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
         const Alignment* hAlign = columnSpec.getAbsoluteAlignment(true);
         const Alignment* vAlign = rowSpec.getAbsoluteAlignment(false);
 
-        Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
-        Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
+        const Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
+        const Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
 
         // Gravity offsets: the location of the alignment group relative to its cell group.
         const int gravityOffsetX = hAlign->getGravityOffset(c, cellWidth - boundsX.size(true));
@@ -766,7 +766,7 @@ void GridLayout::Bounds::include(int before,int after){
     this->after = std::max(this->after, after);
 }
 
-int GridLayout::Bounds::size(bool min){
+int GridLayout::Bounds::size(bool min)const{
     if (!min) {
         if (canStretch(flexibility)) {
             return MAX_SIZE;
@@ -775,7 +775,7 @@ int GridLayout::Bounds::size(bool min){
     return before + after;
 }
 
-int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignment*a,int size,bool horizontal){
+int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignment*a,int size,bool horizontal)const{
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
@@ -829,11 +829,11 @@ const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizon
     return GridLayout::FILL;
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteSpan(const Interval& span){
+GridLayout::Spec GridLayout::Spec::copyWriteSpan(const Interval& span)const{
     return Spec(startDefined, span, alignment, weight);
 }
 
-GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment){
+GridLayout::Spec GridLayout::Spec::copyWriteAlignment(const Alignment* alignment)const{
     return Spec(startDefined, span, alignment, weight);
 }
 
@@ -947,11 +947,11 @@ protected:
             mSize = std::max(mSize, before + after);
         }
 
-        int size(bool min)override{
+        int size(bool min)const override{
             return std::max(Bounds::size(min), mSize);
         }
 
-        int getOffset(GridLayout* gl, View* c,const Alignment* a, int size, bool hrz)override{
+        int getOffset(GridLayout* gl, View* c,const Alignment* a, int size, bool hrz)const override{
             return std::max(0, Bounds::getOffset(gl, c, a, size, hrz));
         }
     };
@@ -1211,7 +1211,7 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     std::string var = horizontal ? "x" : "y";
     std::ostringstream result;
     bool first = true;
-    for (GridLayout::Arc arc : arcs) {
+    for (GridLayout::Arc& arc : arcs) {
         if (first) {
             first = false;
         } else {
@@ -1268,9 +1268,9 @@ bool GridLayout::Axis::solve(std::vector<int>&a){
 }
 
 bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,bool modifyOnError){
-    std::string axisName = horizontal ? "horizontal" : "vertical";
+    const std::string axisName = horizontal ? "horizontal" : "vertical";
     const int N = getCount() + 1; // The number of vertices is the number of columns/rows + 1.
-    std::shared_ptr<std::vector<bool>> originalCulprits = nullptr;
+    std::vector<bool> originalCulprits;
 
     for (int p = 0; p < arcs.size(); p++) {
         init(locations);
@@ -1282,8 +1282,8 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
                 changed |= relax(locations, arcs[j]);
             }
             if (!changed) {
-                if (originalCulprits != nullptr) {
-                    logError(axisName, arcs, *originalCulprits);
+                if (!originalCulprits.empty()) {
+                    logError(axisName, arcs, originalCulprits);
                 }
                 return true;
             }
@@ -1293,10 +1293,10 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
             return false; 
         }// cannot solve with these constraints
 
-        std::shared_ptr<std::vector<bool>> culprits = std::make_shared<std::vector<bool>>(arcs.size(),false);
+        std::vector<bool> culprits(arcs.size(),false);
         for (int i = 0; i < N; i++) {
             for (int j = 0, length = arcs.size(); j < length; j++) {
-                culprits->at(j) =culprits->at(j)| relax(locations, arcs[j]);
+                culprits[j] = culprits[j] | relax(locations, arcs[j]);
             }
         }
 
@@ -1305,7 +1305,7 @@ bool GridLayout::Axis::solve(std::vector<Arc>&arcs,std::vector<int>& locations,b
         }
 
         for (int i = 0; i < arcs.size(); i++) {
-            if (culprits->at(i)) {
+            if (culprits[i]) {
                 Arc& arc = arcs[i];
                 // Only remove max values, min values alone cannot be inconsistent
                 if (arc.span.min < arc.span.max) {
@@ -1333,7 +1333,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     std::vector<int>sizes;
 	result.resize(N);
 	sizes.resize(N);
-    for (Arc arc : arcs) {
+    for (Arc& arc : arcs) {
         sizes[arc.span.min]++;
     }
     for (int i = 0; i < sizes.size(); i++) {
@@ -1341,7 +1341,7 @@ std::vector<std::vector<GridLayout::Arc>> GridLayout::Axis::groupArcsByFirstVert
     }
     // reuse the sizes array to hold the current last elements as we insert each arc
     std::fill(sizes.begin(),sizes.end(), 0);
-    for (Arc arc : arcs) {
+    for (Arc& arc : arcs) {
         const int i = arc.span.min;
         result[i][sizes[i]++] = arc;
     }
@@ -1384,10 +1384,10 @@ std::vector<GridLayout::Arc> GridLayout::Axis::topologicalSort(std::vector<GridL
 }
 
 void GridLayout::Axis::addComponentSizes(std::vector<GridLayout::Arc>& result, 
-    GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& links) {
+        GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& links) {
     for (int i = 0; i < links.keys.size(); i++) {
         Interval& key = links.keys[i];
-        include(result, key, *links.values[i], false);
+        include(result, key, links.values[i], false);
     }
 }
 
@@ -1418,7 +1418,7 @@ std::vector<GridLayout::Arc>GridLayout::Axis::createArcs(){
     std::vector<Arc> sMins = topologicalSort(mins);
     std::vector<Arc> sMaxs = topologicalSort(maxs);
     sMins.insert(sMins.end(),sMaxs.begin(),sMaxs.end());
-    return sMins;//append(sMins, sMaxs);
+    return sMins;
 }
 
 std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
@@ -1459,32 +1459,32 @@ const std::vector<int>& GridLayout::Axis::getDeltas(){
     return deltas;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>GridLayout::Axis::createLinks(bool min){
-    Assoc<Interval, MutableInt*> result;
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>GridLayout::Axis::createLinks(bool min){
+    Assoc<Interval, MutableInt> result;
     std::vector<Spec>&keys = getGroupBounds().keys;
     for (int i = 0, N = keys.size(); i < N; i++) {
         const Interval& span = min ? keys[i].span : keys[i].span.inverse();
-        result.put(span, new MutableInt());
+        result.put(span,MutableInt());
     }
     return result.pack();
 }
 
-void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>&links,bool min){
-    std::vector<MutableInt*>&spans = links.values;
+void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>&links,bool min){
+    std::vector<MutableInt>&spans = links.values;
     for (int i = 0; i < spans.size(); i++) {
-        spans[i]->reset();//INT_MIN;//spans[i].reset();
+        spans[i].reset();//INT_MIN;//spans[i].reset();
     }
     // Use getter to trigger a re-evaluation
     std::vector<Bounds>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
         const int size = bounds[i].size(min);
-        MutableInt* valueHolder = links.getValue(i);
+        MutableInt& valueHolder = links.getValue(i);
         // this effectively takes the max() of the minima and the min() of the maxima
-        valueHolder->value = std::max(valueHolder->value, min ? size : -size);
+        valueHolder.value = std::max(valueHolder.value, min ? size : -size);
     }
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout::Axis::getForwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getForwardLinks(){
     if (forwardLinks.size()==0) {
        forwardLinks = createLinks(true);
     }
@@ -1495,7 +1495,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout:
     return forwardLinks;
 }
 
-GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt*>& GridLayout::Axis::getBackwardLinks(){
+GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>& GridLayout::Axis::getBackwardLinks(){
     if (backwardLinks.size()==0) {
         backwardLinks = createLinks(false);
     }
