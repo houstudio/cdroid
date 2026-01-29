@@ -51,10 +51,10 @@ protected:
 public:
     IconMenuItemView(Context* context,const AttributeSet& attrs);
     void initialize(const std::string& title, Drawable* icon);
-    void initialize(MenuItemImpl* itemData, int menuType);
+    void initialize(MenuItemImpl* itemData, int menuType)override;
     void setItemData(MenuItemImpl* data);
     bool performClick()override;
-    void setTitle(const std::string& title);
+    void setTitle(const std::string& title)override;
     void setIcon(Drawable* icon)override;
     void setItemInvoker(const MenuBuilder::ItemInvoker& itemInvoker);
 
@@ -63,11 +63,11 @@ public:
     void setVisibility(int v)override;
     void setIconMenuView(IconMenuView* iconMenuView);
     IconMenuView::LayoutParams* getTextAppropriateLayoutParams();
-    void setCheckable(bool checkable);
-    void setChecked(bool checked);
+    void setCheckable(bool checkable)override;
+    void setChecked(bool checked)override;
     void setShortcut(bool showShortcut, int shortcutKey)override;
     bool prefersCondensedTitle()const override;
-    bool showsIcon();
+    bool showsIcon()override;
 };
 }/*endof namespace*/
 #endif/*__ICON_MENUITEM_VIEW_H__*/

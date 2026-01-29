@@ -59,25 +59,25 @@ protected:
 public:
     ListMenuItemView(Context* context,const AttributeSet& attrs);
 
-    void initialize(MenuItemImpl* itemData, int menuType);
+    void initialize(MenuItemImpl* itemData, int menuType)override;
 
     void setForceShowIcon(bool forceShow);
 
-    void setTitle(const std::string& title);
+    void setTitle(const std::string& title)override;
 
-    MenuItemImpl* getItemData();
+    MenuItemImpl* getItemData()override;
     void setEnabled(bool)override;
-    void setCheckable(bool checkable);
+    void setCheckable(bool checkable)override;
 
-    void setChecked(bool checked);
+    void setChecked(bool checked)override;
 
     void setShortcut(bool showShortcut, int shortcutKey)override;
 
-    void setIcon(Drawable* icon);
+    void setIcon(Drawable* icon)override;
 
     bool prefersCondensedTitle()const override;
 
-    bool showsIcon();
+    bool showsIcon()override;
 
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     /**

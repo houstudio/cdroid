@@ -32,7 +32,7 @@ public:
     bool invokeItem(MenuItemImpl* item);
 
     void onItemClick(AdapterView& parent, View& v, int position, long id);
-    int getWindowAnimations();
+    int getWindowAnimations()override;
 };
 }/*endof namespace*/
 #endif/*__EXPANDED_MENU_VIEW_H__*/

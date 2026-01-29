@@ -92,7 +92,7 @@ public:
     MenuItem& setAlphabeticShortcut(int alphachar, int alphaModifiers) override;
     MenuItem& setCheckable(bool checkable) override;
     ActionMenuItem& setExclusiveCheckable(bool exclusive);
-    MenuItem& setChecked(bool checked);
+    MenuItem& setChecked(bool checked)override;
 
     MenuItem& setEnabled(bool enabled) override;
 

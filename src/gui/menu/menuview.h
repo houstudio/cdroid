@@ -17,6 +17,8 @@
  *********************************************************************************/
 #ifndef __MENU_VIEW_H__
 #define __MENU_VIEW_H__
+#include <string>
+
 namespace cdroid{
 class Drawable;
 class MenuBuilder;
