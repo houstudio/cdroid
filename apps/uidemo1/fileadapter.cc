@@ -11,11 +11,6 @@ void realpath(const char* path, char* real) {
 }
 #endif
 namespace cdroid{
-std::string SimplifyPath(const std::string & path) {
-    char rpath[1024];
-    realpath(path.c_str(),rpath);
-    return std::string(rpath);
-}
 
 static int file_filter(const struct dirent*ent){
     return (ent->d_type==DT_REG)||(ent->d_type==DT_DIR);
@@ -69,9 +64,10 @@ int FileAdapter::loadFiles(const std::string&filepath){
 }
 
 std::string FileAdapter::SimplifyPath(const std::string & path) {
-    char rpath[1024];
-    realpath(path.c_str(),rpath);
-    return std::string(rpath);
+     char* rpath= realpath(path.c_str(),nullptr);
+    std::string rs(rpath);
+    free(rpath);
+    return rs;
 }
 
 FileItem::FileItem(){

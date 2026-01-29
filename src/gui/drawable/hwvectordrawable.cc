@@ -231,7 +231,7 @@ void FullPath::FullPathProperties::setPropertyValue(int propertyId, float value)
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 void ClipPath::draw(Canvas& outCanvas, bool useStagingData) {
-    Cairo::RefPtr<cdroid::Path> tempStagingPath;
+    Cairo::RefPtr<cdroid::Path> tempStagingPath=std::make_shared<cdroid::Path>();
     getUpdatedPath(useStagingData, tempStagingPath);
     tempStagingPath->append_to_context(&outCanvas);
     outCanvas.clip();

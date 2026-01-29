@@ -154,12 +154,11 @@ App& App::getInstance(){
     return *mInst;
 }
 
-const std::string App::getArg(const std::string&key,const std::string&def)const{
-    std::string value = def;
-    if(mArgsResult->count(key)){
-        value = (*mArgsResult)[key].as<std::string>();
+const std::string App::getArg(const std::string&key,const std::string&fallback)const{
+    if(mArgsResult && mArgsResult->count(key)) {
+        return (*mArgsResult)[key].as<std::string>();
     }
-    return value;
+    return fallback;
 }
 
 bool App::hasArg(const std::string&key)const{
@@ -167,50 +166,41 @@ bool App::hasArg(const std::string&key)const{
 }
 
 bool App::hasSwitch(const std::string&key)const{
-    return mArgsResult->count(key)!=0;
+    return mArgsResult && mArgsResult->count(key)!=0;
 }
 
-void App::setArg(const std::string&key,const std::string&value){
-    //mArgsResult.setArgument(key,value);
-}
-
-int App::getArgAsInt(const std::string&key,int def)const{
-    int value = def;
-    if(mArgsResult->count(key)){
-        value = (*mArgsResult)[key].as<int>();
+int App::getArgAsInt(const std::string&key,int fallback)const{
+    if(mArgsResult&&mArgsResult->count(key)){
+        return (*mArgsResult)[key].as<int>();
     }
-    return value;
+    return fallback;
 }
 
-float App::getArgAsFloat(const std::string&key,float def)const{
-    float value = def;
-    if(mArgsResult->count(key)){
-        value = (*mArgsResult)[key].as<float>();
+float App::getArgAsFloat(const std::string&key,float fallback)const{
+    if(mArgsResult && mArgsResult->count(key)){
+        return (*mArgsResult)[key].as<float>();
     }
-    return value;
+    return fallback;
 }
 
-double App::getArgAsDouble(const std::string&key,double def)const{
-    double value = def;
+double App::getArgAsDouble(const std::string&key,double fallback)const{
     if(mArgsResult->count(key)){
-        value = (*mArgsResult)[key].as<double>();
+        return (*mArgsResult)[key].as<double>();
     }
-    return value;
+    return fallback;
 }
 
 size_t App::getParamCount()const{
-    return mArgsResult->arguments().size();//getParamCount();
+    return mArgsResult?mArgsResult->arguments().size():0;
 }
 
 std::string App::getParam(int idx,const std::string&def)const{
-    std::string value = def;
-    //mArgsResult.getParam(idx,value);
     const auto& args = mArgsResult->arguments();
-    if((idx<args.size())&&(idx>=0)){
+    if((idx < args.size()) && (idx >= 0)){
         const std::string  key = args[idx].key();
-        value = (*mArgsResult)[key].as<std::string>();
+        return (*mArgsResult)[key].as<std::string>();
     }
-    return value;
+    return def;
 }
 
 void App::setOpacity(unsigned char alpha){
@@ -248,7 +238,7 @@ void App::setName(const std::string&appname){
     addResource(getDataPath()+mName+std::string(".pak"));
 }
 
-const std::string& App::getName(){
+const std::string& App::getName()const{
     return mName;
 }
 

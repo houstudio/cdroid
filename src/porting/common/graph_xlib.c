@@ -234,7 +234,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
 #else
     pixman_color_t pmcolor=argb32_to_pixman_color(color);
     pixman_rectangle16_t rec16={rec.x,rec.y,rec.w,rec.h};
-    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, img->width, img->height, img->data, img->bytes_per_line);
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, img->width, img->height, (uint32_t*)img->data, img->bytes_per_line);
     pixman_image_fill_rectangles(PIXMAN_OP_SRC, src_image, &pmcolor, 1, &rec16);
     pixman_image_unref(src_image);
 #endif
@@ -319,8 +319,8 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         pbd+=ndst->bytes_per_line;
     }
 #else
-    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, nsrc->data, nsrc->bytes_per_line);
-    pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, ndst->data, ndst->bytes_per_line);
+    pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, (uint32_t*)nsrc->data, nsrc->bytes_per_line);
+    pixman_image_t *dst_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, ndst->width, ndst->height, (uint32_t*)ndst->data, ndst->bytes_per_line);
     pixman_image_composite(PIXMAN_OP_SRC, src_image,NULL/*mask*/, dst_image,
                        rs.x, rs.y, 0, 0, dx, dy, rs.w, rs.h);
     pixman_image_unref(src_image);
@@ -391,7 +391,7 @@ static void* X11EventProc(void*p) {
         case MotionNotify:
             if(event.xmotion.state&Button1MotionMask) {
                 SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x, event.xmotion.y - screenMargin.y);
-                XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, event.xmotion.x,event.xmotion.y);
+                //XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, event.xmotion.x,event.xmotion.y);
             }
             break;
         case DestroyNotify:

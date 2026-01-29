@@ -33,8 +33,6 @@ if(HAVE_EXECINFO_H)
 endif()
 
 find_package(PkgConfig)
-find_package(SDL2)
-find_package(DirectFB)
 find_package(X11)
 find_package(XCB REQUIRED)
 find_package(XCB_IMAGE)
@@ -46,7 +44,18 @@ find_package(OpenGL)
 find_package(PkgConfig REQUIRED)
 find_path(XCB_IMAGE_INCLUDE_DIR NAMES xcb/xcb_image.h)
 find_library(XCB_IMAGE_LIBRARY NAMES xcb-image)
-pkg_check_modules(XCB_CURSOR REQUIRED xcb-cursor)
+
+pkg_check_modules(PC_XCB_CURSOR xcb-cursor)
+find_path(XCB_CURSOR_INCLUDE_DIRS
+    NAMES xcb/xcb_cursor.h
+    HINTS ${PC_XCB_CURSOR_INCLUDEDIR}
+    ${PC_XCB_CURSOR_INCLUDE_DIRS}
+)
+find_library(XCB_CURSOR_LIBRARIES
+    NAMES xcb_cursor
+    HINTS ${PC_XCB_CURSOR_LIBDIR}
+    ${PC_XCB_CURSOR_LIBRARY_DIRS}
+)
 include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
 
 add_library(tvhal-fb SHARED ${X64_SRCS} ../common/graph_fb.c)
@@ -59,21 +68,22 @@ if(OPENGL_FOUND AND X11_FOUND)
     target_link_libraries(tvhal-xgl PRIVATE ${X11_LIBRARIES} ${PIXMAN_LIBRARIES} ${OPENGL_LIBRARIES})
     list(APPEND X64PORTS tvhal-xgl)
 endif()
-if(XCB_FOUND AND XCB_IMAGE_LIBRARY)
-    include_directories(${XCB_INCLUDE_DIR})
-    add_library(tvhal-xcb SHARED ${X64_SRCS} ../common/graph_xcb.c)
-    target_link_libraries(tvhal-xcb ${X11_LIBRARIES} ${PIXMAN_LIBRARIES} ${XCB_CURSOR_LIBRARIES} ${X11_LIBRARIES})
-    add_library(tvhal SHARED ${X64_SRCS} ../common/graph_xcb.c)
-    target_link_libraries(tvhal PRIVATE ${XCB_LIBRARIES} ${XCB_IMAGE_LIBRARY} ${XCB_CURSOR_LIBRARIES} ${X11_LIBRARIES})
-    list(APPEND X64PORTS tvhal-xcb tvhal)
-elseif(X11_FOUND)
-    include_directories(${X11_INCLUDE_DIR}) 
+
+if(X11_FOUND)
+    include_directories(${X11_INCLUDE_DIR})
     add_library(tvhal-x11 SHARED ${X64_SRCS} ../common/graph_xlib.c)
     target_link_libraries(tvhal-x11 ${X11_LIBRARIES} ${PIXMAN_LIBRARIES})
     list(APPEND X64PORTS tvhal-x11)
     add_library(tvhal SHARED ${X64_SRCS} ../common/graph_xlib.c)
     target_link_libraries(tvhal PRIVATE ${X11_LIBRARIES} ${PIXMAN_LIBRARIES})
     list(APPEND X64PORTS tvhal)
+elseif(XCB_FOUND AND XCB_IMAGE_LIBRARY AND XCB_CURSOR_LIBRARIES)
+    include_directories(${XCB_INCLUDE_DIR})
+    add_library(tvhal-xcb SHARED ${X64_SRCS} ../common/graph_xcb.c)
+    target_link_libraries(tvhal-xcb ${X11_LIBRARIES} ${PIXMAN_LIBRARIES} ${XCB_CURSOR_LIBRARIES} ${X11_LIBRARIES})
+    add_library(tvhal SHARED ${X64_SRCS} ../common/graph_xcb.c)
+    target_link_libraries(tvhal PRIVATE ${XCB_LIBRARIES} ${XCB_IMAGE_LIBRARY} ${XCB_CURSOR_LIBRARIES} ${X11_LIBRARIES})
+    list(APPEND X64PORTS tvhal-xcb tvhal)
 endif(X11_FOUND)
 
 if(DRM_FOUND)
