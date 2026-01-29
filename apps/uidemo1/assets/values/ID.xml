@@ -24,6 +24,5 @@
   <id name="exitbutton">0x00002725</id>
   <id name="tablayout">0x00002726</id>
   <id name="viewpager">0x00002727</id>
-  <id name="recyclerview">0x00002728</id>
 </resources>
 
