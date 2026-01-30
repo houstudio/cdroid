@@ -29,6 +29,7 @@ DECLARE_WIDGET(QRCodeView)
 
 QRCodeView::QRCodeView(int w,int h):View(w,h){
     initView();
+    encode();
 };
 
 QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
@@ -51,6 +52,7 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     mDotColor  = attrs.getColor("dotColor",mDotColor);
     mBarBgColor= attrs.getColor("barBgColor",mBarBgColor);
     mLogoDrawable = attrs.getDrawable("logo");
+    encode();
 }
 
 QRCodeView::~QRCodeView(){
@@ -167,8 +169,10 @@ float  QRCodeView::getZoom()const{
 
 void QRCodeView::onSizeChanged(int w,int h,int ow,int oh){
     View::onSizeChanged(w,h,ow,oh);
-    if(mQRImage)
-        mZoom = float(std::min(w,h))/float(mQRImage->get_width());
+    if(mQRImage&&mQrCodeWidth>0){
+        mZoom = float(std::min(w-getPaddingLeft()- getPaddingRight(),
+                    h-getPaddingTop() - getPaddingBottom()))/mQrCodeWidth;
+    }
 }
 
 void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -176,7 +180,7 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
     const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
     const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
-    int width = widthSize,height=heightSize;
+    int width = widthSize,height = heightSize;
     switch(widthMode){
     case MeasureSpec::EXACTLY:
         height= width; break;
@@ -189,9 +193,11 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     case MeasureSpec::UNSPECIFIED:
         break;
     }
-    mZoom = std::min(width,height);
-    mZoom /= mQrCodeWidth;
-    LOGV("setMeasuredDimension(%d,%d)  %dx%d mZoom=%f",width,height,widthSize,heightSize,mZoom);
+    if(mQrCodeWidth>0){
+        mZoom = float(std::min(width-getPaddingLeft()- getPaddingRight(),
+            height-getPaddingTop() - getPaddingBottom()))/mQrCodeWidth;
+    }
+    LOGV("setMeasuredDimension(%d,%d)  %dx%d mQrCodeWidth=%d mZoom=%f",width,height,widthSize,heightSize,mQrCodeWidth,mZoom);
     setMeasuredDimension(width, height);
 }
 
