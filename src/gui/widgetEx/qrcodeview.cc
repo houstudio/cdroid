@@ -50,7 +50,7 @@ QRCodeView::QRCodeView(Context*ctx,const AttributeSet&attrs):View(ctx,attrs){
     },mEncodeMode);
 
     mDotColor  = attrs.getColor("dotColor",mDotColor);
-    mBarBgColor= attrs.getColor("barBgColor",mBarBgColor);
+    mBarBgColor= attrs.getColor("barBgColor", (~mDotColor)|0xFF000000);
     mLogoDrawable = attrs.getDrawable("logo");
     encode();
 }
