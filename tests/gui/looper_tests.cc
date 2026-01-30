@@ -215,7 +215,7 @@ static int fdcallback(int fd, int events, void* data){
        uint64_t count=0;
        if(::read(fd, &count, sizeof(uint64_t))>0){
           (*loops)+=count;
-          LOGD("loops +%d = %d",count,*loops,rc);
+          LOGD("loops +%d = %d",count,*loops);
        }
    }
    if(*loops>=20){

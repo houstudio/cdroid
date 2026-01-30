@@ -94,10 +94,10 @@ protected:
     Callback*mCallback;
     std::vector<int>mStateSet;
     PorterDuffColorFilter *updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode);
-    virtual bool onStateChange(const std::vector<int>&) { return false;}
-    virtual bool onLevelChange(int level) { return false; }
-    virtual bool onLayoutDirectionChanged(int layoutDirection){return false;}
-    virtual void onBoundsChange(const Rect& bounds){}
+    virtual bool onStateChange(const std::vector<int>&/*state*/) { return false; }
+    virtual bool onLevelChange(int /*level*/) { return false; }
+    virtual bool onLayoutDirectionChanged(int /*layoutDirection*/){return false; }
+    virtual void onBoundsChange(const Rect& /*bounds*/){}
 public:
     Drawable();
     virtual ~Drawable();
@@ -139,7 +139,7 @@ public:
     virtual bool isStateful()const;
     virtual bool hasFocusStateSpecified()const;
     virtual Drawable*getCurrent();
-    virtual void setAlpha(int alpha){};
+    virtual void setAlpha(int /*alpha*/){};
     virtual int getAlpha()const{return 0xFF;}
     virtual std::shared_ptr<ConstantState>getConstantState();
     virtual void setAutoMirrored(bool mirrored);
