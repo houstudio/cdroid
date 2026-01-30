@@ -212,10 +212,11 @@ static int fdcallback(int fd, int events, void* data){
    int *loops=(int*)data;
    clock_gettime(CLOCK_MONOTONIC,&cur);
    if(events&Looper::EVENT_INPUT){
-       uint64_t count;
-       ::read(fd, &count, sizeof(uint64_t));
-       (*loops)+=count;
-       LOGD("loops +%d = %d",count,*loops);
+       uint64_t count=0;
+       if(::read(fd, &count, sizeof(uint64_t))>0){
+          (*loops)+=count;
+          LOGD("loops +%d = %d",count,*loops);
+       }
    }
    if(*loops>=20){
        struct itimerspec new_value={{0,0},{0,0}};

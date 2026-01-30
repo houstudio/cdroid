@@ -87,7 +87,7 @@ public:
 
     IconMenuItemView* createMoreItemView();
 
-    void initialize(MenuBuilder* menu);
+    void initialize(MenuBuilder* menu)override;
 
     bool invokeItem(MenuItemImpl& item);
 
@@ -99,7 +99,7 @@ public:
 
     void setNumActualItemsShown(int count);
 
-    int getWindowAnimations();
+    int getWindowAnimations()override;
   
     std::vector<int> getLayout();
 

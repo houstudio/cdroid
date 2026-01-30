@@ -30,7 +30,6 @@ namespace R{
          static constexpr int exitbutton              = 0x00002725 ;/*10021*/
          static constexpr int tablayout               = 0x00002726 ;/*10022*/
          static constexpr int viewpager               = 0x00002727 ;/*10023*/
-         static constexpr int recyclerview            = 0x00002728 ;/*10024*/
     };/*namespace id*/
 
     namespace strings{

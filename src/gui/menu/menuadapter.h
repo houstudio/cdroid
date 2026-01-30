@@ -35,13 +35,13 @@ public:
     MenuAdapter(MenuBuilder* menu, LayoutInflater* inflater, bool overflowOnly,const std::string& itemLayoutRes);
     bool getForceShowIcon()const;
     void setForceShowIcon(bool forceShow);
-    int getCount()const;
+    int getCount()const override;
 
     MenuBuilder* getAdapterMenu()const;
-    void* getItem(int position)const;
+    void* getItem(int position)const override;
 
     long getItemId(int position);
-    View* getView(int position, View* convertView, ViewGroup* parent);
+    View* getView(int position, View* convertView, ViewGroup* parent)override;
     void findExpandedIndex();
     void notifyDataSetChanged() override;
 };

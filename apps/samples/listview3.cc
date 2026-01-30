@@ -35,15 +35,15 @@ public:
     }
 #if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void setChecked(bool checked)override{
-	chk->setChecked(checked);
-	LOGD_IF(checked,"setChecked(%d)",checked);
+        chk->setChecked(checked);
+        LOGD_IF(checked,"setChecked(%d)",checked);
     }
     bool isChecked()const override{
-	return chk->isChecked();
+        return chk->isChecked();
     }
     void toggle()override{
-	chk->toggle();
-	LOGD("toggle");
+        chk->toggle();
+        LOGD("toggle");
     }
 #endif
     void setName(const std::string&txt){

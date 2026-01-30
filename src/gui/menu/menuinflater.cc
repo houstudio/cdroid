@@ -24,6 +24,7 @@
 #include <menu/menuitemimpl.h>
 #include <view/actionprovider.h>
 #include <view/layoutinflater.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{ 
 MenuInflater::MenuInflater(Context* context) {

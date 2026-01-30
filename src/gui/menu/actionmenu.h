@@ -43,34 +43,34 @@ public:
     /*int addIntentOptions(int groupId, int itemId, int order,ComponentName caller,
      * Intent[] specifics, Intent intent, int flags, MenuItem[] outSpecificItems);*/
 
-    SubMenu* addSubMenu(const std::string& title);
+    SubMenu* addSubMenu(const std::string& title)override;
     //SubMenu* addSubMenu(int titleRes)
-    SubMenu* addSubMenu(int groupId, int itemId, int order,const std::string& title);
+    SubMenu* addSubMenu(int groupId, int itemId, int order,const std::string& title)override;
     //SubMenu* addSubMenu(int groupId, int itemId, int order, int titleRes);
 
-    void clear();
-    void close();
+    void clear()override;
+    void close()override;
 
     MenuItem* findItem(int id);
-    MenuItem* getItem(int index);
+    MenuItem* getItem(int index)override;
 
     bool hasVisibleItems();
 
     bool isShortcutKey(int keyCode, KeyEvent& event);
 
-    bool performIdentifierAction(int id, int flags);
-    bool performShortcut(int keyCode, KeyEvent& event, int flags);
+    bool performIdentifierAction(int id, int flags)override;
+    bool performShortcut(int keyCode, KeyEvent& event, int flags)override;
 
-    void removeGroup(int groupId);
-    void removeItem(int id);
+    void removeGroup(int groupId)override;
+    void removeItem(int id)override;
 
-    void setGroupCheckable(int group, bool checkable,bool exclusive);
-    void setGroupEnabled(int group, bool enabled);
-    void setGroupVisible(int group, bool visible);
+    void setGroupCheckable(int group, bool checkable,bool exclusive)override;
+    void setGroupEnabled(int group, bool enabled)override;
+    void setGroupVisible(int group, bool visible)override;
 
-    void setQwertyMode(bool isQwerty);
+    void setQwertyMode(bool isQwerty)override;
 
-    int size() const;
+    int size() const override;
 };
 }/*endof namespace*/
 #endif/*__ACTION_MENU_H__*/
