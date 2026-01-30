@@ -175,29 +175,68 @@ void QRCodeView::onSizeChanged(int w,int h,int ow,int oh){
 }
 
 void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
+    const int widthMode = MeasureSpec::getMode(widthMeasureSpec);
     const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
-    const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
+    const int widthSize = MeasureSpec::getSize(widthMeasureSpec);
     const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
-    int width = widthSize,height = heightSize;
-    switch(widthMode){
+
+    int desiredWidth = mQrCodeWidth;
+    int desiredHeight = mQrCodeWidth;
+
+    int measuredWidth = 0;
+    int measuredHeight = 0;
+
+    switch (widthMode) {
     case MeasureSpec::EXACTLY:
-        height= width; break;
+        measuredWidth = widthSize;
+        break;
     case MeasureSpec::AT_MOST:
-        if(heightMode==MeasureSpec::EXACTLY){
-            height= heightSize;
-        }else
-            width = mQrCodeWidth*mZoom;
+        measuredWidth = std::min(desiredWidth, widthSize);
         break;
     case MeasureSpec::UNSPECIFIED:
+        measuredWidth = desiredWidth;
         break;
     }
-    if(mQrCodeWidth>0){
-        mZoom = float(std::min(width-getPaddingLeft()- getPaddingRight(),
-            height-getPaddingTop() - getPaddingBottom()))/mQrCodeWidth;
+
+    switch (heightMode) {
+    case MeasureSpec::EXACTLY:
+        measuredHeight = heightSize;
+        break;
+    case MeasureSpec::AT_MOST:
+        measuredHeight = std::min(desiredHeight, heightSize);
+        break;
+    case MeasureSpec::UNSPECIFIED:
+        measuredHeight = desiredHeight;
+        break;
     }
-    LOGV("setMeasuredDimension(%d,%d)  %dx%d mQrCodeWidth=%d mZoom=%f",width,height,widthSize,heightSize,mQrCodeWidth,mZoom);
-    setMeasuredDimension(width, height);
+
+    const int availableWidth = measuredWidth - getPaddingLeft() - getPaddingRight();
+    const int availableHeight = measuredHeight - getPaddingTop() - getPaddingBottom();
+
+    if (mQrCodeWidth > 0 && availableWidth > 0 && availableHeight > 0) {
+        const float scaleToFitWidth = static_cast<float>(availableWidth) / mQrCodeWidth;
+        const float scaleToFitHeight = static_cast<float>(availableHeight) / mQrCodeWidth;
+
+        mZoom = std::min(scaleToFitWidth, scaleToFitHeight);
+
+        const int actualContentWidth = static_cast<int>(mQrCodeWidth * mZoom);
+        const int actualContentHeight = static_cast<int>(mQrCodeWidth * mZoom); // 正方形
+
+        measuredWidth = actualContentWidth + getPaddingLeft() + getPaddingRight();
+        measuredHeight = actualContentHeight + getPaddingTop() + getPaddingBottom();
+    } else if (mQrCodeWidth <= 0) {
+        // 如果 mQrCodeWidth 无效，可能需要设置一个最小默认值或返回
+        // 或者，如果允许 UNSPECIFIED 情况，可以保持 desiredWidth/desiredHeight
+        // 这里暂时不做特殊处理，使用前面根据 mode 计算出的值
+    }
+
+    if (widthMode == MeasureSpec::AT_MOST) {
+        measuredWidth = std::min(measuredWidth, widthSize);
+    }
+    if (heightMode == MeasureSpec::AT_MOST) {
+        measuredHeight = std::min(measuredHeight, heightSize);
+    }
+    setMeasuredDimension(measuredWidth, measuredHeight);
 }
 
 void QRCodeView::encode(){
@@ -231,7 +270,7 @@ bool QRCodeView::onTouchEvent(MotionEvent&evt){
 void  QRCodeView::onDraw(Canvas&canvas){
     View::onDraw(canvas);
 
-    if(mZoom<=FLT_EPSILON){
+    if((mZoom<=FLT_EPSILON)||std::isfinite(mZoom)){
         LOGW("mZoom=%f",mZoom);
         return;
     }
