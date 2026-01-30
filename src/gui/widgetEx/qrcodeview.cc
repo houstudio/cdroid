@@ -68,7 +68,6 @@ void QRCodeView::initView(){
     mBarBgColor= (~mDotColor)|0xFF000000;
     mShowLogo = true;
     mLogoDrawable = nullptr;
-    setBackgroundColor(0xFF000000);
 }
 
 void QRCodeView::setEccLevel(int level){
