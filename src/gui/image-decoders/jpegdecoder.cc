@@ -220,10 +220,14 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
     uint8_t*srcLine = new uint8_t[image->get_stride()];
     while (cinfo->output_scanline < cinfo->output_height) {
         unsigned char *row_address = image->get_data() +cinfo->output_scanline * image->get_stride();
+#if ENABLE(LCMS)
         if(transform==nullptr)
             row_pointer[0] = row_address;
         else
             row_pointer[0] = srcLine;
+#else
+        row_pointer[0] = row_address;
+#endif
         if(jpeg_read_scanlines(cinfo, row_pointer, 1)!=1){
             LOGW("jpeg data corrupt at scanline=%d/%d",cinfo->output_scanline,cinfo->output_height);
             break;
