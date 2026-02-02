@@ -35,28 +35,23 @@
 namespace cdroid{
 using namespace Cairo;
 
-void*ImageDecoder::mCMSProfile = nullptr;
-static std::unique_ptr<void,std::function<void(void*p)>>mLCMSProfile;
+static std::unique_ptr<void,std::function<void(void*)>>mLCMSProfile;
 
 ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mImageWidth = -1;
     mImageHeight= -1;
     mFrameCount = 1;
     mPrivate = nullptr;
-    mTransform= nullptr;
 #if ENABLE(LCMS)
     if(mLCMSProfile == nullptr){
-        mLCMSProfile = std::make_unique<void>(
-            cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r"),
+        auto cmsprofile = cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
+        mLCMSProfile = std::unique_ptr<void,std::function<void(void*p)>>(cmsprofile,
             [](void* lcms){ if(lcms)cmsCloseProfile(lcms); });
     }
 #endif
 }
 
 ImageDecoder::~ImageDecoder(){
-#if ENABLE(LCMS)
-    if(mTransform)cmsDeleteTransform(mTransform);
-#endif
 }
 
 uint32_t ImageDecoder::mHeaderBytesRequired = 0;

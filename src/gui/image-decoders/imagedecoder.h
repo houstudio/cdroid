@@ -46,8 +46,6 @@ protected:
     int mImageWidth;
     int mImageHeight;
     int mFrameCount;
-    void*mTransform;
-    static void*mCMSProfile;
     std::istream&mStream;
     static std::unique_ptr<ImageDecoder>getDecoder(std::istream&);
 public:

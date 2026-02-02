@@ -120,35 +120,39 @@ Cairo::RefPtr<Cairo::ImageSurface> PNGDecoder::decode(float scale,void*targetPro
         decodeSize();
     std::vector<png_bytep> row_pointers(mImageHeight);
     Cairo::RefPtr<Cairo::ImageSurface> image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mImageWidth,mImageHeight);
-    uint8_t*frame_pixels=image->get_data();
+    uint8_t*frame_pixels = image->get_data();
 
     for (png_uint_32 y = 0; y < mImageHeight; ++y) {
         row_pointers[y] = (frame_pixels + y* mImageWidth * 4);
         memset(row_pointers[y],0,mImageWidth * 4);
     }
 #if ENABLE(LCMS)
+    cmsHTRANSFORM transform = nullptr;
     if(targetProfile) {
-        const uint32_t inType=TYPE_RGBA_8;
+        const uint32_t inType = TYPE_RGBA_8;
         const uint8_t colorType = png_get_color_type(png_ptr,info_ptr);
         cmsHPROFILE src_profile = getColorProfile(mPrivate, colorType);
         const uint32_t profileSpace = cmsGetColorSpace(src_profile);
-        mTransform = cmsCreateTransform(src_profile, inType, targetProfile, inType,
+        transform = cmsCreateTransform(src_profile, inType, targetProfile, inType,
                                         cmsGetHeaderRenderingIntent(src_profile), 0);
         cmsCloseProfile(src_profile);
     }
+#else
+    png_read_image(png_ptr, row_pointers.data());
 #endif
-    if(mTransform==nullptr)
-        png_read_image(png_ptr, row_pointers.data());
 #if ENABLE(LCMS)
-    else{
-        uint8_t *srcLine=new uint8_t[mImageWidth*4];
+    if(transform==nullptr){
+        png_read_image(png_ptr, row_pointers.data());
+    }else{
+        uint8_t *srcLine = new uint8_t[mImageWidth*4];
         for(uint32_t i = 0;i < mImageHeight;i++){
             png_read_row(png_ptr,srcLine,nullptr);
-            cmsDoTransform(mTransform,srcLine,row_pointers[i],mImageWidth);
+            cmsDoTransform(transform,srcLine,row_pointers[i],mImageWidth);
             uint8_t *pd = row_pointers[i] , *ps = srcLine;
-            for(int j=0;j<mImageWidth;j++,ps+=4,pd+=4)pd[3]=ps[3];
+            for(int j = 0;j < mImageWidth;j++,ps+=4,pd+=4)pd[3]=ps[3];
         }
         delete []srcLine;
+        cmsDeleteTransform(transform);
     }
 #endif
     png_read_end (png_ptr, info_ptr);
