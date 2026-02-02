@@ -26,7 +26,6 @@
 #include <image-decoders/imagedecoder.h>
 #include <utils/textutils.h>
 #include <core/context.h>
-#include <utils/atexit.h>
 #include <png.h>
 #include <porting/cdlog.h>
 #if ENABLE(LCMS)
@@ -35,7 +34,9 @@
 
 namespace cdroid{
 using namespace Cairo;
+
 void*ImageDecoder::mCMSProfile = nullptr;
+static std::unique_ptr<void,std::function<void(void*p)>>mLCMSProfile;
 
 ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mImageWidth = -1;
@@ -44,13 +45,10 @@ ImageDecoder::ImageDecoder(std::istream&stream):mStream(stream){
     mPrivate = nullptr;
     mTransform= nullptr;
 #if ENABLE(LCMS)
-    if(mCMSProfile==nullptr){
-        mCMSProfile = cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r");
-        if(mCMSProfile){
-            AtExit::registerCallback([](){
-                cmsCloseProfile(mCMSProfile);
-            });
-        }
+    if(mLCMSProfile == nullptr){
+        mLCMSProfile = std::make_unique<void>(
+            cmsOpenProfileFromFile("/home/houzh/sRGB Color Space Profile.icm","r"),
+            [](void* lcms){ if(lcms)cmsCloseProfile(lcms); });
     }
 #endif
 }
@@ -226,7 +224,7 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
         scale = std::min(scale,float(width)/decoder->getWidth());
     else if(height > 0)
         scale = std::max(scale,float(height)/decoder->getHeight());
-    return decoder->decode(scale);
+    return decoder->decode(scale,mLCMSProfile.get());
 }
 
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){
