@@ -204,7 +204,7 @@ bool HorizontalScrollView::dispatchKeyEvent(KeyEvent& event) {
 
 bool HorizontalScrollView::executeKeyEvent(KeyEvent& event) {
 
-    LOGV("%s.%s",event.getLabel(),KeyEvent::actionToString(event.getAction()).c_str());
+    LOGV("%s.%s",KeyEvent::keyCodeToString(event.getKeyCode()).c_str(),KeyEvent::actionToString(event.getAction()).c_str());
     if (!canScroll()) {
         if (isFocused()) {
             View* currentFocused = findFocus();

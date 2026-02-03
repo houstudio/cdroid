@@ -1628,7 +1628,7 @@ bool ListView::commonKey(int keyCode, int count, KeyEvent& event) {
         }
     }
 
-    LOGV("%s action=%d handled=%d",KeyEvent::getLabel(keyCode),action,handled);
+    LOGV("%s action=%d handled=%d",KeyEvent::keyCodeToString(keyCode).c_str(),action,handled);
     if (!handled && action != KeyEvent::ACTION_UP) {
         switch (keyCode) {
         case KeyEvent::KEYCODE_DPAD_UP:

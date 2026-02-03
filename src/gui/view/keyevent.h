@@ -32,6 +32,9 @@ private:
     nsecs_t mDownTime;//SystemClock#uptimeMillis
     static int metaStateFilterDirectionalModifiers(int metaState,int modifiers, int basic, int left, int right);
     static KeyEvent*obtain();
+    const char*getLabel(){return getLabel(mKeyCode);}
+    static const char*getLabel(int key);
+    static int getKeyCodeFromLabel(const char*label);
 public:
     enum{
         ACTION_DOWN = 0,
@@ -173,9 +176,6 @@ public:
     void startTracking() { mFlags |= FLAG_START_TRACKING; }
     bool isTracking()const{ return (mFlags&FLAG_TRACKING) != 0;}
     bool isLongPress()const{ return (mFlags&FLAG_LONG_PRESS) != 0; }
-    const char*getLabel(){return getLabel(mKeyCode);}
-    static const char*getLabel(int key);
-    static int getKeyCodeFromLabel(const char*label);
     static bool isModifierKey(int keyCode);
     static bool isConfirmKey(int keyCode);
     static int normalizeMetaState(int metaState);

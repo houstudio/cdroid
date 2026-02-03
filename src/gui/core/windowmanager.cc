@@ -404,7 +404,7 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
         Window*win = (*itr);
         if ( win->hasFlag(View::FOCUSABLE) && (win->getVisibility()==View::VISIBLE) ) {
             const int keyCode = event.getKeyCode();
-            LOGV("Window:%p Key:%s[%x] action=%d",win,event.getLabel(),keyCode,event.getAction());
+            LOGV("Window:%p Key:%s[%x] action=%d",win,KeyEvent::keyCodeToString(keyCode).c_str(),keyCode,event.getAction());
             win->processKeyEvent(event);
             //dispatchKeyEvent(event);
             return;

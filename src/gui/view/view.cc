@@ -7588,7 +7588,7 @@ bool View::dispatchKeyEvent(KeyEvent&event){
         return true;
     }
     const bool result = event.dispatch(this,( mAttachInfo ? &mAttachInfo->mKeyDispatchState : nullptr),this);
-    LOGV("%s.%s=%d",event.getLabel(event.getKeyCode()),KeyEvent::actionToString(event.getAction()).c_str(),result);
+    LOGV("%s.%s=%d",KeyEvent::keyCodeToString(event.getKeyCode()).c_str(),KeyEvent::actionToString(event.getAction()).c_str(),result);
     if(mInputEventConsistencyVerifier && (result == false))
         mInputEventConsistencyVerifier->onUnhandledEvent(event, 0);
     return result;

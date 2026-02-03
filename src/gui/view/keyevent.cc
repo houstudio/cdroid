@@ -399,7 +399,7 @@ void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
 std::ostream& operator<<(std::ostream& out, const KeyEvent& event) {
     out << "KeyEvent { action=" << KeyEvent::actionToString(event.getAction());
 
-    out << ", keycode=" << event.getKeyCode() << "(" << KeyEvent::getLabel(event.getKeyCode())
+    out << ", keycode=" << event.getKeyCode() << "(" << KeyEvent::keyCodeToString(event.getKeyCode())
         << ")";
 
     if (event.getMetaState() != 0) {

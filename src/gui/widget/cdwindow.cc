@@ -534,7 +534,7 @@ int Window::processKeyEvent(KeyEvent&event){
     int groupNavigationDirection = 0;
     const int action = event.getAction();
     LOGV_IF(action==KeyEvent::ACTION_DOWN,"%s:0x%x %s %x",event.actionToString(action).c_str(),
-            event.getKeyCode(),KeyEvent::getLabel(event.getKeyCode()),KeyEvent::KEYCODE_DPAD_DOWN);
+            event.getKeyCode(),KeyEvent::keyCodeToString(event.getKeyCode()).c_str(),KeyEvent::KEYCODE_DPAD_DOWN);
     if(dispatchKeyEvent(event))
         return FINISH_HANDLED;
     if (action == KeyEvent::ACTION_DOWN  && event.getKeyCode() == KeyEvent::KEYCODE_TAB) {
@@ -651,18 +651,19 @@ bool Window::onKeyDown(int keyCode,KeyEvent& evt){
     switch(keyCode){
     case KeyEvent::KEYCODE_ESCAPE:
         evt.startTracking();
-        LOGD("recv %d %s flags=%x",keyCode,evt.getLabel(),evt.getFlags());
+        LOGD("recv %d %s flags=%x",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),evt.getFlags());
         return true;
     default:
         //return performFocusNavigation(evt);
-        LOGV("recv %d %s",keyCode,evt.getLabel());
+        LOGV("recv %d %s",keyCode,KeyEvent::keyCodeToString(keyCode).c_str());
         return FrameLayout::onKeyDown(keyCode,evt);
     } 
     return false;
 }
 
 bool Window::onKeyUp(int keyCode,KeyEvent& evt){
-    LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,evt.getLabel(),evt.getFlags(),evt.isTracking(),evt.isCanceled());
+    LOGV("recv %d %s flags=%x track=%d cance=%d",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),
+            evt.getFlags(),evt.isTracking(),evt.isCanceled());
     switch(keyCode){
     case KeyEvent::KEYCODE_ESCAPE:
         if(evt.isTracking()&&!evt.isCanceled()){

@@ -390,7 +390,7 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
 
         mEvent.initialize(getId(),getSources(),mDisplayId,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
               keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
-        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, mEvent.getLabel(),value,flags);
+        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, KeyEvent::keyCodeToString(keycode).c_str(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
     case EV_SYN:
@@ -501,7 +501,7 @@ int32_t TouchDevice::parseVirtualKeys(const std::string&content){
         tokenizer->skipDelimiters(delimiters);
 
         token= tokenizer->nextToken(delimiters);
-        key = KeyEvent::getKeyCodeFromLabel(token.c_str());
+        key = KeyEvent::keyCodeFromString(token);
         tokenizer->skipDelimiters(delimiters);
         if(key==0)goto Error;
         LOGD("area(%d,%d,%d,%d)key %d",rect.left,rect.top,rect.width,rect.height,key);

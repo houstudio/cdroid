@@ -323,7 +323,7 @@ void InputMethodManager::showIme(){
 
 void InputMethodManager::sendKeyEvent(KeyEvent&k){
     if(imeWindow&&imeWindow->mBuddy)imeWindow->mBuddy->onKeyDown(k.getKeyCode(),k);
-    LOGD("%s",k.getLabel());
+    LOGD("%s",KeyEvent::keyCodeToString(k.getKeyCode()).c_str());
 }
 
 void InputMethodManager::setInputType(int inputType){
