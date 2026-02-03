@@ -93,10 +93,10 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
             return true;
         }
         if (mKeyCode != KEYCODE_UNKNOWN) {
-            int count=mRepeatCount;
+            const int count = mRepeatCount;
             mAction = ACTION_DOWN;
             mRepeatCount = 0;
-            bool handled = receiver->onKeyDown(mKeyCode, *this);
+            const bool handled = receiver->onKeyDown(mKeyCode, *this);
             if (handled) {
                 mAction = ACTION_UP;
                 receiver->onKeyUp(mKeyCode, *this);
@@ -113,7 +113,7 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
 
 const std::string KeyEvent::keyCodeToString(int keyCode){
     std::string symbolicName = getLabel(keyCode);
-    if(symbolicName.empty())
+    if(!symbolicName.empty())
         return std::string("KEYCODE_")+symbolicName;
     return std::to_string(keyCode);
 }
@@ -121,11 +121,15 @@ const std::string KeyEvent::keyCodeToString(int keyCode){
 int KeyEvent::keyCodeFromString(const std::string& symbolicName){
     const int base =( ((symbolicName.length()>2) &&
                 (symbolicName[1]=='x'||symbolicName[1]=='X')) ||(symbolicName[0]=='#'))?16:10;
-    int keyCode = std::strtol(symbolicName.c_str(),nullptr,base);
-    if(keyCodeIsValid(keyCode)){
+    char* end=nullptr;
+    int keyCode = std::strtol(symbolicName.c_str(),&end,base);
+    if((end!=symbolicName.c_str())&&keyCodeIsValid(keyCode)){
         return keyCode;
     }
-    keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.c_str());
+    if(symbolicName.compare(0,8,"KEYCODE_")==0)
+        keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.substr(8).c_str());
+    else
+        keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.c_str());
     if(keyCodeIsValid(keyCode)) return keyCode;
     return KEYCODE_UNKNOWN;
 }
@@ -278,9 +282,9 @@ bool KeyEvent::hasModifiers(int modifiers)const{
 
 int KeyEvent::metaStateFilterDirectionalModifiers(int metaState,
         int modifiers, int basic, int left, int right) {
-    bool wantBasic = (modifiers & basic) != 0;
-    int directional = left | right;
-    bool wantLeftOrRight = (modifiers & directional) != 0;
+    const bool wantBasic = (modifiers & basic) != 0;
+    const int directional = left | right;
+    const bool wantLeftOrRight = (modifiers & directional) != 0;
 
     if (wantBasic) {
         if (wantLeftOrRight) {
@@ -375,9 +379,9 @@ void KeyEvent::DispatcherState::performedLongPress(KeyEvent& event){
 }
 
 void KeyEvent::DispatcherState::handleUpEvent(KeyEvent& event){
-    int keyCode = event.getKeyCode();
+    const int keyCode = event.getKeyCode();
     //LOGV("Handle key up %s:%p",event,this);
-    int index = mActiveLongPresses.indexOfKey(keyCode);
+    const int index = mActiveLongPresses.indexOfKey(keyCode);
     if (index >= 0) {
         LOGV("  Index: %d",index);
         event.mFlags |= FLAG_CANCELED | FLAG_CANCELED_LONG_PRESS;
