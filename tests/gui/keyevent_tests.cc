@@ -1,5 +1,7 @@
 #include <gtest/gtest.h>
 #include <view/keyevent.h>
+#include <view/motionevent.h>
+
 using namespace cdroid;
 class KEYEVENT:public testing::Test{
 
@@ -26,3 +28,17 @@ TEST_F(KEYEVENT,metaStateToString){
     EXPECT_STREQ(KeyEvent::metaStateToString(KeyEvent::META_ALT_LEFT_ON|KeyEvent::META_CTRL_RIGHT_ON).c_str(),
             "META_ALT_LEFT_ON|META_CTRL_RIGHT_ON");
 }
+
+TEST_F(KEYEVENT,axisToString){
+    EXPECT_STREQ(MotionEvent::axisToString(MotionEvent::AXIS_X).c_str(),"AXIS_X");
+    EXPECT_STREQ(MotionEvent::axisToString(MotionEvent::AXIS_Y).c_str(),"AXIS_Y");
+    EXPECT_STREQ(MotionEvent::axisToString(MotionEvent::AXIS_PRESSURE).c_str(),"AXIS_PRESSURE");
+}
+
+TEST_F(KEYEVENT,axisFromString){
+    EXPECT_EQ(MotionEvent::axisFromString("AXIS_X"),MotionEvent::AXIS_X);
+    EXPECT_EQ(MotionEvent::axisFromString("AXIS_Y"),MotionEvent::AXIS_Y);
+    EXPECT_EQ(MotionEvent::axisFromString("AXIS_PRESSURE"),MotionEvent::AXIS_PRESSURE);
+}
+
+
