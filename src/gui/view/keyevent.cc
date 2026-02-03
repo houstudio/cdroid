@@ -107,12 +107,11 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
         }
         return false;
     }
-    LOGV("%p %s.%s res=%d",receiver,getLabel(mKeyCode),actionToString(mAction).c_str(),res);
     return res;
 }
 
 const std::string KeyEvent::keyCodeToString(int keyCode){
-    std::string symbolicName = getLabel(keyCode);
+    std::string symbolicName = InputEventLookup::getLabelByKeyCode(keyCode);
     if(!symbolicName.empty())
         return std::string("KEYCODE_")+symbolicName;
     return std::to_string(keyCode);
@@ -127,19 +126,11 @@ int KeyEvent::keyCodeFromString(const std::string& symbolicName){
         return keyCode;
     }
     if(symbolicName.compare(0,8,"KEYCODE_")==0)
-        keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.substr(8).c_str());
+        keyCode = InputEventLookup::getKeyCodeByLabel(symbolicName.c_str()+8);
     else
-        keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.c_str());
+        keyCode = InputEventLookup::getKeyCodeByLabel(symbolicName.c_str());
     if(keyCodeIsValid(keyCode)) return keyCode;
     return KEYCODE_UNKNOWN;
-}
-
-const char* KeyEvent::getLabel(int keyCode) {
-    return  InputEventLookup::getLabelByKeyCode(keyCode);//getLabelByKeyCode(keyCode);
-}
-
-int32_t KeyEvent::getKeyCodeFromLabel(const char* label) {
-    return  InputEventLookup::getKeyCodeByLabel(label);//getKeyCodeByLabel(label);
 }
 
 bool KeyEvent::isModifierKey(int keyCode){
