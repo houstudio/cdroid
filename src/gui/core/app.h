@@ -24,7 +24,6 @@
 #include <core/looper.h>
 #include <core/context.h>
 #include <core/assets.h>
-#include <core/cxxopts.h>
 
 namespace cxxopts{
     class ParseResult;

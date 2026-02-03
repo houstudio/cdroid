@@ -181,7 +181,10 @@ public:
     static int normalizeMetaState(int metaState);
     static bool metaStateHasNoModifiers(int metaState);
     static bool metaStateHasModifiers(int metaState, int modifiers);
+    static bool keyCodeIsValid(int keyCode);
     static const std::string metaStateToString(int metaState);
+    static const std::string keyCodeToString(int keyCode);
+    static int keyCodeFromString(const std::string& symbolicName);
     static const std::string actionToString(int action);
 enum{
     KEYCODE_UNKNOWN         = 0,
@@ -522,7 +525,8 @@ enum{
     KEYCODE_F21 = 334,
     KEYCODE_F22 = 335,
     KEYCODE_F23 = 336,
-    KEYCODE_F24 = 337
+    KEYCODE_F24 = 337,
+    LAST_KEYCODE= KEYCODE_F24
 };/*endof KEYCODES*/
 
 enum{
