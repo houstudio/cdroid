@@ -134,6 +134,7 @@ void TabLayout::initTabLayout(){
     mTabTextMultiLineSize = 2;
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
+    mSetupViewPagerImplicitly = false;
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
