@@ -947,7 +947,7 @@ bool GradientDrawable::ensureValidRect() {
                     // let's have a very, very small radius.
                     radius = 0.001f;
                 }
-                RefPtr<Cairo::RadialGradient>pat = RadialGradient::create( x0, y0, radius,x0,y0,0);
+                RefPtr<Cairo::RadialGradient>pat = RadialGradient::create( x0, y0, 0,x0,y0,radius);
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c((uint32_t)gradientColors[i]);
                     pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
