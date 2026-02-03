@@ -84,7 +84,7 @@ sudo apt install autoconf libtool build-essential aapt cmake gdb pkg-config zip 
 *The cdroid.pak and yourapp's pak must be in your working directory*
 * cp src/gui/cdroid.pak ./
 * cp apps/appname/appname.pak ./
-### 7.run samples(in directory outX64-Debug
+### 7.run samples(in directory outX64-Debug)
 * apps/samples/helloworld
 * apps/uidemo1/uidemo1
 

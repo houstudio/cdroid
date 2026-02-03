@@ -15,9 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include<view/keyevent.h>
+#include <view/keyevent.h>
 #include <private/inputeventlabels.h>
 #include <porting/cdlog.h>
+#include <sstream>
 namespace cdroid{
 
 KeyEvent* KeyEvent::obtain(){
@@ -108,6 +109,25 @@ bool KeyEvent::dispatch(KeyEvent::Callback* receiver,KeyEvent::DispatcherState*s
     }
     LOGV("%p %s.%s res=%d",receiver,getLabel(mKeyCode),actionToString(mAction).c_str(),res);
     return res;
+}
+
+const std::string KeyEvent::keyCodeToString(int keyCode){
+    std::string symbolicName = getLabel(keyCode);
+    if(symbolicName.empty())
+        return std::string("KEYCODE_")+symbolicName;
+    return std::to_string(keyCode);
+}
+
+int KeyEvent::keyCodeFromString(const std::string& symbolicName){
+    const int base =( ((symbolicName.length()>2) &&
+                (symbolicName[1]=='x'||symbolicName[1]=='X')) ||(symbolicName[0]=='#'))?16:10;
+    int keyCode = std::strtol(symbolicName.c_str(),nullptr,base);
+    if(keyCodeIsValid(keyCode)){
+        return keyCode;
+    }
+    keyCode = KeyEvent::getKeyCodeFromLabel(symbolicName.c_str());
+    if(keyCodeIsValid(keyCode)) return keyCode;
+    return KEYCODE_UNKNOWN;
 }
 
 const char* KeyEvent::getLabel(int keyCode) {
@@ -205,28 +225,31 @@ static const char*META_SYMBOLIC_NAMES[]={
     "0x80000000",
 };
 
+bool KeyEvent::keyCodeIsValid(int keyCode){
+    return (keyCode >= KEYCODE_UNKNOWN) && (keyCode <= LAST_KEYCODE);
+}
+
 const std::string KeyEvent::metaStateToString(int metaState){
-    std::string result;
-    int i=0;
-    if(metaState==0) result = "0";
+    std::ostringstream result;
+    int i = 0;
+    if(metaState==0) return "0";
     while (metaState != 0) {
-        bool isSet = (metaState & 1) != 0;
+        const bool isSet = (metaState & 1) != 0;
         metaState >>= 1; // unsigned shift!
         if (isSet) {
             std::string name = META_SYMBOLIC_NAMES[i];
-            if (result.empty()) {
+            if (result.str().empty()) {
                 if (metaState == 0) {
                     return name;
                 }
-                result = name;
+                result << name;
             } else {
-                result+="!";
-                result+=name;
+                result << "|"<< name;
             }
         }
         i += 1;
     }
-    return result;
+    return result.str();
 }
 
 const std::string KeyEvent::actionToString(int action){

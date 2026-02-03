@@ -184,13 +184,14 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
         cinfo->scale_denom= scale_denom;
     }
 #if ENABLE(LCMS)
+    cmsHTRANSFORM transform = nullptr;
     if(targetProfile){
         cmsHPROFILE src_profile = getColorProfile(mPrivate);
         if (src_profile) {
             cmsUInt32Number inType=TYPE_RGBA_8;
             cmsColorSpaceSignature profileSpace = cmsGetColorSpace(src_profile);
 
-            mTransform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
+            transform = cmsCreateTransform(src_profile, inType, targetProfile, TYPE_RGBA_8,
                              cmsGetHeaderRenderingIntent(src_profile), 0);
 
             cmsCloseProfile(src_profile);
@@ -219,10 +220,14 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
     uint8_t*srcLine = new uint8_t[image->get_stride()];
     while (cinfo->output_scanline < cinfo->output_height) {
         unsigned char *row_address = image->get_data() +cinfo->output_scanline * image->get_stride();
-        if(mTransform==nullptr)
+#if ENABLE(LCMS)
+        if(transform==nullptr)
             row_pointer[0] = row_address;
         else
             row_pointer[0] = srcLine;
+#else
+        row_pointer[0] = row_address;
+#endif
         if(jpeg_read_scanlines(cinfo, row_pointer, 1)!=1){
             LOGW("jpeg data corrupt at scanline=%d/%d",cinfo->output_scanline,cinfo->output_height);
             break;
@@ -231,11 +236,15 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEGDecoder::decode(float scale,void*targetPr
         pix_conv(row_address, 4, row_address, 3, cinfo->output_width);
 #endif
 #if ENABLE(LCMS)
-        if(mTransform)cmsDoTransform(mTransform, srcLine, row_address, mImageWidth);
+        if(transform)cmsDoTransform(transform, srcLine, row_address, mImageWidth);
 #endif
     }
     delete []srcLine;
-
+#if ENABLE(LCMS)
+    if(transform){
+        cmsDeleteTransform(transform);
+    }
+#endif
     // finish and close everything
     (void) jpeg_finish_decompress(cinfo);
     jpeg_destroy_decompress(cinfo);

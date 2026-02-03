@@ -161,10 +161,10 @@ bool Looper::getAllowNonCallbacks() const {
 
 void Looper::rebuildEpollLocked() {
     // Close old epoll instance if we have one.
-    if (mEpoll!=nullptr) {
+    if (mEpoll != nullptr) {
         LOGV("%p ~ rebuildEpollLocked - rebuilding epoll set", this);
         delete mEpoll;
-	mEpoll = nullptr;
+        mEpoll = nullptr;
     }
 
     // Allocate the new epoll instance and register the wake pipe.
@@ -179,7 +179,7 @@ void Looper::rebuildEpollLocked() {
     for (auto it=mRequests.begin();it!=mRequests.end(); it++) {
         const SequenceNumber& seq = it->first;
         const Request& request = it->second;
-        epoll_event eventItem =createEpollEvent(request.events,seq);
+        epoll_event eventItem = createEpollEvent(request.events,seq);
         const int epollResult = mEpoll->addFd(request.fd,eventItem);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, request.fd, & eventItem);
         LOGE_IF(epollResult<0,"Error adding epoll events for fd %d while rebuilding epoll set: %s",request.fd, strerror(errno));
     }
@@ -557,7 +557,7 @@ int Looper::addFd(int fd, int ident, int events,const LooperCallback* callback1,
 int Looper::removeFd(int fd) {
     std::lock_guard<std::recursive_mutex> _l(mLock);
     const auto it = mSequenceNumberByFd.find(fd);
-    if(it == mSequenceNumberByFd.end() ) return 0;
+    if( it == mSequenceNumberByFd.end() ) return 0;
     return removeSequenceNumberLocked(it->second);
 }
 
@@ -628,8 +628,8 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
 
         std::list<MessageEnvelope>::const_iterator it;
         for(it = mMessageEnvelopes.begin();it != mMessageEnvelopes.end();++it){
-            if(it->uptime>=uptime)break;
-            i+=1;
+            if(it->uptime >= uptime)break;
+            i += 1;
         }
 
         MessageEnvelope messageEnvelope(uptime,const_cast<MessageHandler*>(handler), message);

@@ -165,10 +165,6 @@ Cairo::RefPtr<Cairo::ImageSurface> WEBPDecoder::decode(float scale, void* target
                                            (cmsHPROFILE)targetProfile, TYPE_RGBA_8,
                                            cmsGetHeaderRenderingIntent(src_profile), 0);
             cmsCloseProfile(src_profile);
-            if (transform) {
-                // store transform in base class for cleanup
-                mTransform = transform;
-            }
         }
     }
 #endif

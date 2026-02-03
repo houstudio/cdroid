@@ -223,7 +223,6 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEG2000Decoder::decode(float scale, void* ta
             transform = cmsCreateTransform(src_profile, TYPE_RGBA_8, (cmsHPROFILE)targetProfile, TYPE_RGBA_8,
                                            cmsGetHeaderRenderingIntent(src_profile), 0);
             cmsCloseProfile(src_profile);
-            if (transform) mTransform = transform;
         }
     }
 #endif
@@ -302,7 +301,11 @@ Cairo::RefPtr<Cairo::ImageSurface> JPEG2000Decoder::decode(float scale, void* ta
     opj_image_destroy(image);
     opj_stream_destroy(stream);
     opj_destroy_codec(codec);
-
+#if ENABLE(LCMS)
+    if(transform){
+        cmsDeleteTransform(transform);
+    }
+#endif
     const int transparency = ImageDecoder::computeTransparency(surf);
     ImageDecoder::setTransparency(surf, transparency);
     return surf;
