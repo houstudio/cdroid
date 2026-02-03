@@ -21,6 +21,7 @@
 #include <utils/mathutils.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
+#include <sstream>
 
 namespace cdroid{
 
