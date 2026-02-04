@@ -96,14 +96,14 @@ void TabWidget::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec) {
     }
 
     // First, measure with no constraint
-    int width = MeasureSpec::getSize(widthMeasureSpec);
-    int unspecifiedWidth = MeasureSpec::makeSafeMeasureSpec(width,MeasureSpec::UNSPECIFIED);
+    const int width = MeasureSpec::getSize(widthMeasureSpec);
+    const int unspecifiedWidth = MeasureSpec::makeSafeMeasureSpec(width,MeasureSpec::UNSPECIFIED);
     mImposedTabsHeight = -1;
     LinearLayout::measureHorizontal(unspecifiedWidth, heightMeasureSpec);
 
     int extraWidth = getMeasuredWidth() - width;
     if (extraWidth > 0) {
-        int count = getChildCount();
+        const int count = getChildCount();
 
         int childCount = 0;
         for (int i = 0; i < count; i++) {
@@ -119,9 +119,9 @@ void TabWidget::measureHorizontal(int widthMeasureSpec, int heightMeasureSpec) {
             for (int i = 0; i < count; i++) {
                 View* child = getChildAt(i);
                 if (child->getVisibility() == GONE) continue;
-                int childWidth = child->getMeasuredWidth();
-                int delta = extraWidth / childCount;
-                int newWidth = std::max(0, childWidth - delta);
+                const int childWidth = child->getMeasuredWidth();
+                const int delta = extraWidth / childCount;
+                const int newWidth = std::max(0, childWidth - delta);
                 mImposedTabWidths[i] = newWidth;
                 // Make sure the extra width is evenly distributed, no int division remainder
                 extraWidth -= childWidth - newWidth; // delta may have been clamped
@@ -243,7 +243,7 @@ void TabWidget::setCurrentTab(int index) {
     mStripMoved = true;
 }
 void TabWidget::focusCurrentTab(int index) {
-    int oldTab = mSelectedTab;
+    const int oldTab = mSelectedTab;
 
     // set the tab
     setCurrentTab(index);
@@ -257,7 +257,7 @@ void TabWidget::focusCurrentTab(int index) {
 void TabWidget::setEnabled(bool enabled){
     LinearLayout::setEnabled(enabled);
 
-    int count = getTabCount();
+    const int count = getTabCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildTabViewAt(i);
         child->setEnabled(enabled);
