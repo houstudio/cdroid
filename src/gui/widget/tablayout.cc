@@ -27,6 +27,8 @@ DECLARE_WIDGET(TabLayout)
 
 TabLayout::TabLayout(int w,int h):HorizontalScrollView(w,h){
     initTabLayout();
+    setSelectedTabIndicator(nullptr);
+    setTabIndicatorAnimationMode(INDICATOR_ANIMATION_MODE_LINEAR);
     applyModeAndGravity();
 }
 
@@ -132,6 +134,7 @@ void TabLayout::initTabLayout(){
     mTabTextMultiLineSize = 2;
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
+    mSetupViewPagerImplicitly = false;
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
@@ -140,13 +143,13 @@ void TabLayout::initTabLayout(){
 }
 
 static void setTint(Drawable* drawable,int color) {
-    const bool hasTint = color != 0;
-    if (hasTint) {
-        drawable->setTint( color);
-    } else {
-        drawable->setTintList((ColorStateList*)nullptr);
+    if(drawable){
+        if (color!=0) {
+            drawable->setTint( color);
+        } else {
+            drawable->setTintList((ColorStateList*)nullptr);
+        }
     }
-
 }
 
 void TabLayout::setSelectedTabIndicatorColor( int color){

@@ -21,6 +21,7 @@
 #include <utils/mathutils.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
+#include <sstream>
 
 namespace cdroid{
 
@@ -611,7 +612,9 @@ std::string MotionEvent::actionToString(int action){
 }
 
 std::string MotionEvent::axisToString(int axis){
-    return InputEventLookup::getAxisLabel(axis);
+    const char*symbolicName = InputEventLookup::getAxisLabel(axis);
+    if(symbolicName!=nullptr)return std::string("AXIS_")+symbolicName;
+    return std::to_string(axis);
 }
 
 static const char*BUTTON_SYMBOLIC_NAMES[]{
@@ -691,7 +694,11 @@ int MotionEvent::axisFromString(const std::string&symbolicName){
         const int axis = InputEventLookup::getAxisByLabel(symbolicName.c_str()+5);
         if(axis>=0)return axis;
     }
-    return -1;
+    const int base =( ((symbolicName.length()>2) &&
+                (symbolicName[1]=='x'||symbolicName[1]=='X')) ||(symbolicName[0]=='#'))?16:10;
+    char* end=nullptr;
+    const int axis = std::strtol(symbolicName.c_str(),&end,base);
+    return (end!=symbolicName.c_str())?axis:-1;
 }
 
 std::string MotionEvent::classificationToString(int classification) {

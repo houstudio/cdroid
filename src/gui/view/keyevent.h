@@ -143,8 +143,8 @@ public:
     virtual int getType()const override{return INPUT_EVENT_TYPE_KEY;}
     KeyEvent*copy()const override{return obtain(*this);}
     int getKeyCode()const {return mKeyCode;}
-    void setKeyCode(int k){mKeyCode=k;}
-    int getFlags()const{return mFlags;}
+    void setKeyCode(int k){ mKeyCode = k; }
+    int getFlags()const {return mFlags;}
     inline bool isTainted()const override{return (mFlags&FLAG_TAINTED)!=0;}
     inline void setTainted(bool tainted)override{
         if(tainted)mFlags|=FLAG_TAINTED;
@@ -168,14 +168,11 @@ public:
     bool isCapsLockOn() const{  return (mMetaState & META_CAPS_LOCK_ON) != 0;  }
     bool isNumLockOn() const{   return (mMetaState & META_NUM_LOCK_ON) != 0;   }
     bool isScrollLockOn() const{return (mMetaState & META_SCROLL_LOCK_ON) != 0;}
-    bool isCanceled()const { return (mFlags&FLAG_CANCELED) != 0; }
+    bool isCanceled()const{ return (mFlags&FLAG_CANCELED) != 0; }
     void cancel() { mFlags |= FLAG_CANCELED;}
     void startTracking() { mFlags |= FLAG_START_TRACKING; }
     bool isTracking()const{ return (mFlags&FLAG_TRACKING) != 0;}
-    bool isLongPress() { return (mFlags&FLAG_LONG_PRESS) != 0; }
-    const char*getLabel(){return getLabel(mKeyCode);}
-    static const char*getLabel(int key);
-    static int getKeyCodeFromLabel(const char*label);
+    bool isLongPress()const{ return (mFlags&FLAG_LONG_PRESS) != 0; }
     static bool isModifierKey(int keyCode);
     static bool isConfirmKey(int keyCode);
     static int normalizeMetaState(int metaState);

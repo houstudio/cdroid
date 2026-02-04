@@ -490,7 +490,7 @@ int InputEventLookup::getKeyCodeByLabel(const char* label) {
 const char* InputEventLookup::getLabelByKeyCode(int32_t keyCode) {
     const auto& self = get();
     if (keyCode >= 0 && static_cast<size_t>(keyCode) < self.KEYCODES.size()) {
-        return get().lookupLabelByValue(self.KEY_NAMES, keyCode);
+        return self.lookupLabelByValue(self.KEY_NAMES, keyCode);
     }
     return nullptr;
 }

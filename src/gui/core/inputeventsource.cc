@@ -225,7 +225,7 @@ void InputEventSource::recordEvent(InputEvent&inputEvent){
         oss<<(4 + m.getAction())<<","<<m.getX(0)<<","<<m.getY()<<","<<m.getEventTime()<<std::endl;
     }else if(type==InputEvent::INPUT_EVENT_TYPE_KEY){
         KeyEvent& k = (KeyEvent&)inputEvent;
-        oss<<k.getAction()<<","<<k.getLabel()<<","<<k.getEventTime()<<std::endl;
+        oss<<k.getAction()<<","<<KeyEvent::keyCodeToString(k.getKeyCode())<<","<<k.getEventTime()<<std::endl;
     }
 }
 
