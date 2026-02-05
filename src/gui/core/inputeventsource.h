@@ -35,6 +35,7 @@ private:
     std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
+    int mCursorDevices;
     bool mRunning;
     bool mIsPlayback;
     bool mIsScreenSaveActived;
