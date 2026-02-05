@@ -125,6 +125,16 @@ int32_t GFXGetDisplayCount(){
     return 1;
 }
 
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+    return (GFXHANDLE)0;
+}
+
+void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
+}
+
+void GFXDestroyCursor(GFXHANDLE cursorHandle){
+}
+
 int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
     SURFACE*gfx = (SURFACE*)surface;
     *buffer = gfx->vaddr;

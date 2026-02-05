@@ -38,12 +38,22 @@ typedef struct _GFXPoint {
     int32_t x;
     int32_t y;
 }GFXPoint;
+
 typedef struct _GFXRect {
     int32_t x;
     int32_t y;
     uint32_t w;
     uint32_t h;
 }GFXRect;
+
+typedef struct _GFXCursorImage{
+    uint32_t width;
+    uint32_t height;
+    uint32_t hotX;
+    uint32_t hotY;
+    uint32_t delay;
+    uint32_t*pixels;
+}GFXCursorImage;
 /**}*/
 
 /**
@@ -131,6 +141,10 @@ int32_t GFXFlip(GFXHANDLE dstsurface);
     For more information refer to @ref nglCreateSurface
 */
 int32_t GFXDestroySurface(GFXHANDLE surface);
+
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*);
+void GFXMoveCursor(GFXHANDLE,int32_t xPos,int32_t yPos);
+void GFXDestroyCursor(GFXHANDLE);
 
 /**}*///raphfunctions
 

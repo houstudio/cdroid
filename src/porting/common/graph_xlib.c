@@ -147,6 +147,33 @@ int32_t GFXInit() {
     return E_OK;
 }
 
+#ifndef MAX
+#define MAX(x,y) ((x)>(y)?(x):(y))
+#endif
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+    XcursorImage ximg;
+    ximg.version = XCURSOR_IMAGE_VERSION;
+    ximg.size = MAX(cursorImage->width,cursorImage->height);
+    ximg.width= cursorImage->width;
+    ximg.height= cursorImage->height;
+    ximg.xhot = cursorImage->hotX;
+    ximg.yhot = cursorImage->hotY;
+    ximg.delay= cursorImage->delay;
+    ximg.pixels=cursorImage->pixels;
+    Cursor cursor = XcursorImageLoadCursor(x11Display,&ximg);
+    XDefineCursor(x11Display, x11Window, cursor);
+    return (GFXHANDLE)cursor;
+}
+
+void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
+    XWarpPointer(x11Display,None,None,0,0,1,1,xPos,yPos);
+}
+
+void GFXDestroyCursor(GFXHANDLE cursorHandle){
+    XUndefineCursor(x11Display, x11Window); 
+    XFreeCursor(x11Display,(Cursor)cursorHandle);
+}
+
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     const char*env = getenv("SCREEN_SIZE");
     if(env==NULL) {
