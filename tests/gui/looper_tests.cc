@@ -147,9 +147,11 @@ TEST_F(LOOPER,removeHandler){
         mLooper->pollOnce(100);
     }
     mLooper->removeHandler(sd);
+    EXPECT_EQ(SelfDestroyHandler::Count,1);
     mLooper->removeHandler(sd2);
     delete sd2;
     mLooper->removeEventHandler(se);
+    EXPECT_EQ(SelfDestroyEventHandler::Count,1);
     mLooper->removeEventHandler(se2);
     delete se2;
     EXPECT_EQ(SelfDestroyHandler::Count,0);
