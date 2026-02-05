@@ -665,8 +665,7 @@ void Looper::removeHandler(MessageHandler*handler){
         if( (*it) == handler){
             if((*it)->mFlags&FLAG_OWNED)
                 handler->mFlags |= FLAG_REMOVED;//set Erase Flags.removed in doEventHandlers
-            else
-                mHandlers.erase(it);
+            //else mHandlers.erase(it);
             break;
         }
     }
@@ -679,10 +678,9 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
-            if((*it)->mFlags&&FLAG_OWNED)
+            if((*it)->mFlags&FLAG_OWNED)
                 (*it)->mFlags |=FLAG_REMOVED;//set removed flags,removed in doEventHandlers
-            else
-                mEventHandlers.erase(it);
+            //else  mEventHandlers.erase(it);
             break;
         }
     }
