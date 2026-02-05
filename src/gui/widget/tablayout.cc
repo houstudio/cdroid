@@ -21,6 +21,10 @@
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
+/* CODE AND Resource Referenced:
+ * https://github.com/material-components/material-components-android/blob/master/lib/java/com/google/android/material/tabs
+ * */
+
 namespace cdroid{
 
 DECLARE_WIDGET(TabLayout)

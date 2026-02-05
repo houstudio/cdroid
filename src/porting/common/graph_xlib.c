@@ -8,6 +8,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+#include <X11/Xcursor/Xcursor.h>
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
@@ -19,12 +20,12 @@
 #endif
 #include <time.h>
 #include <pixman.h>
-static Display*x11Display=NULL;
-static Window x11Window=0;
-static Visual *x11Visual=NULL;
+static Display*x11Display= NULL;
+static Window x11Window = 0;
+static Visual *x11Visual = NULL;
 static Atom WM_DELETE_WINDOW;
-static GC mainGC=0;
-static XImage*mainSurface=NULL;
+static GC mainGC = 0;
+static XImage*mainSurface = NULL;
 static Pixmap x11Pixmap;
 static void* X11EventProc(void*p);
 static GFXRect screenMargin= {0}; //{60,0,60,0};
@@ -49,39 +50,39 @@ static GFXRect screenMargin= {0}; //{60,0,60,0};
       InjectREL(time,EV_SYN,SYN_REPORT,0);}
 #endif
 static void InjectKey(int type,int code,int value) {
-    INPUTEVENT i= {0};
+    INPUTEVENT i = {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
-    i.tv_sec=ts.tv_sec;
-    i.tv_usec=ts.tv_nsec/1000;
-    i.type=type;
-    i.code=code;
-    i.value=value;
-    i.device=INJECTDEV_KEY;
+    i.tv_sec = ts.tv_sec;
+    i.tv_usec= ts.tv_nsec/1000;
+    i.type = type;
+    i.code = code;
+    i.value= value;
+    i.device = INJECTDEV_KEY;
     InputInjectEvents(&i,1,1);
 }
 static void InjectABS(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
-    i.tv_sec=ts.tv_sec;
-    i.tv_usec=ts.tv_nsec/1000;
-    i.type=type;
-    i.code=axis;
-    i.value=value;
-    i.device=INJECTDEV_TOUCH;
+    i.tv_sec = ts.tv_sec;
+    i.tv_usec= ts.tv_nsec/1000;
+    i.type = type;
+    i.code = axis;
+    i.value= value;
+    i.device = INJECTDEV_TOUCH;
     InputInjectEvents(&i,1,1);
 }
 static void InjectREL(unsigned long time,int type,int axis,int value) {
     INPUTEVENT i= {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC,&ts);
-    i.tv_sec=ts.tv_sec;
-    i.tv_usec=ts.tv_nsec/1000;
-    i.type=type;
-    i.code=axis;
-    i.value=value;
-    i.device=INJECTDEV_MOUSE;
+    i.tv_sec = ts.tv_sec;
+    i.tv_usec= ts.tv_nsec/1000;
+    i.type = type;
+    i.code = axis;
+    i.value= value;
+    i.device = INJECTDEV_MOUSE;
     InputInjectEvents(&i,1,1);
 }
 static void onExit() {
@@ -91,33 +92,33 @@ static void onExit() {
         XSelectInput(x11Display,x11Window,0);
         XDestroyWindow(x11Display,x11Window);
         XCloseDisplay(x11Display);
-        x11Display=NULL;
+        x11Display = NULL;
     }
 }
 
 int32_t GFXInit() {
     if(x11Display)return E_OK;
     XInitThreads();
-    x11Display=XOpenDisplay(NULL);
+    x11Display = XOpenDisplay(NULL);
     if(x11Display) {
         pthread_t xThreadId;
         XSetWindowAttributes winattrs;
         XGCValues values;
         XSizeHints sizehints;
         int width,height;
-        int screen=DefaultScreen(x11Display);
-        const char*strMargin=getenv("SCREEN_MARGINS");
-        const char* DELIM=",;";
+        int screen = DefaultScreen(x11Display);
+        const char*strMargin = getenv("SCREEN_MARGINS");
+        const char* DELIM = ",;";
         if(strMargin){
-            char *sm=strdup(strMargin);
-            char*token=strtok(sm,DELIM);
-            screenMargin.x=atoi(token);
-            token=strtok(NULL,DELIM);
-            screenMargin.y=atoi(token);
-            token=strtok(NULL,DELIM);
-            screenMargin.w=atoi(token);
-            token=strtok(NULL,DELIM);
-            screenMargin.h=atoi(token);
+            char *sm = strdup(strMargin);
+            char*token = strtok(sm,DELIM);
+            screenMargin.x = atoi(token);
+            token = strtok(NULL,DELIM);
+            screenMargin.y = atoi(token);
+            token = strtok(NULL,DELIM);
+            screenMargin.w = atoi(token);
+            token = strtok(NULL,DELIM);
+            screenMargin.h = atoi(token);
             free(sm);
         }
         x11Visual = DefaultVisual(x11Display, screen);
@@ -147,16 +148,16 @@ int32_t GFXInit() {
 }
 
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
-    const char*env= getenv("SCREEN_SIZE");
+    const char*env = getenv("SCREEN_SIZE");
     if(env==NULL) {
-        *width=1280;//dispCfg.width;
-        *height=720;//dispCfg.height;
+        *width = 1280;//dispCfg.width;
+        *height= 720;//dispCfg.height;
     } else {
-        *width=atoi(env)- screenMargin.x - screenMargin.w;
-        env=strpbrk(env,"x*,");
-        if((*width<=0)||(env==NULL))exit(-1);
-        *height=atoi(env+1)- screenMargin.y - screenMargin.h;
-        if(*height<=0)exit(-1);
+        *width =atoi(env)- screenMargin.x - screenMargin.w;
+        env = strpbrk(env,"x*,");
+        if((*width <= 0)||(env == NULL))exit(-1);
+        *height = atoi(env+1)- screenMargin.y - screenMargin.h;
+        if(*height <= 0)exit(-1);
     }
     return E_OK;
 }
@@ -166,17 +167,17 @@ int32_t GFXGetDisplayCount() {
 }
 
 int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
-    XImage*img=(XImage*)surface;
-    *buffer=img->data;
-    *pitch=img->bytes_per_line;
+    XImage*img = (XImage*)surface;
+    *buffer = img->data;
+    *pitch  = img->bytes_per_line;
     return 0;
 }
 
 int32_t GFXGetSurfaceInfo(GFXHANDLE surface,uint32_t*width,uint32_t*height,int32_t *format) {
-    XImage*img=(XImage*)surface;
-    *width=img->width;
-    *height=img->height;
-    if(format)*format=GPF_ARGB;
+    XImage*img = (XImage*)surface;
+    *width = img->width;
+    *height= img->height;
+    if(format)*format = GPF_ARGB;
     return E_OK;
 }
 
@@ -192,14 +193,14 @@ static void  X11Expose(int x,int y,int w,int h) {
     XExposeEvent e;
     memset(&e,0,sizeof(e));
     e.type = Expose;
-    e.send_event=True;
+    e.send_event = True;
     e.display= x11Display;
     e.window = x11Window;
     e.x = x ;
     e.y = y ;
     e.width = w;
-    e.height=h;
-    e.count=1;
+    e.height= h;
+    e.count = 1;
     if(x11Display&&mainSurface) {
         XPutImage(x11Display,x11Window,mainGC,mainSurface,x,y,x,y,w,h);
         //XSendEvent(x11Display,x11Window,False,0,(XEvent*)&e);
@@ -215,20 +216,21 @@ static pixman_color_t argb32_to_pixman_color(uint32_t argb) {
     color.blue  = (argb >> 0)  & 0xFF * 0xFFFF / 0xFF; // Blue: 0-255 -> 0-65535
     return color;
 }
+
 int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
-    XImage*img=(XImage*)surface;
+    XImage*img = (XImage*)surface;
     uint32_t x,y;
     GFXRect rec= {0,0,0,0};
-    rec.w=img->width;
-    rec.h=img->height;
-    if(rect)rec=*rect;
+    rec.w = img->width;
+    rec.h = img->height;
+    if(rect)rec = *rect;
     LOGV("FillRect %p %d,%d-%d,%d color=0x%x pitch=%d",img,rec.x,rec.y,rec.w,rec.h,color,img->bytes_per_line);
 #ifndef USE_PIXMAN
-    uint32_t*fb=(uint32_t*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
-    uint32_t*fbtop=fb;
+    uint32_t*fb = (uint32_t*)(img->data+img->bytes_per_line*rec.y+rec.x*4);
+    uint32_t*fbtop = fb;
     for(x=0; x<rec.w; x++)fb[x]=color;
     for(y=1; y<rec.h; y++) {
-        fb+=(img->bytes_per_line>>2);
+        fb += (img->bytes_per_line>>2);
         memcpy(fb,fbtop,rec.w*4);
     }
 #else
@@ -254,23 +256,23 @@ int32_t GFXFlip(GFXHANDLE surface) {
 }
 
 int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
-    XImage*img=NULL;
+    XImage*img = NULL;
     if(x11Display) {
         int imagedepth = DefaultDepth(x11Display,DefaultScreen(x11Display));
         if(hwsurface) {
             width += screenMargin.x + screenMargin.w;
             height+= screenMargin.y + screenMargin.h;
         }
-        img=XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,width*4);
+        img = XCreateImage(x11Display,x11Visual, imagedepth,ZPixmap,0,NULL,width,height,32,width*4);
     } else {
-        img=(XImage*)malloc(sizeof(XImage));
-        img->width=width;
-        img->height=height;
-        img->bits_per_pixel=32;
-        img->bytes_per_line=width*4;
+        img = (XImage*)malloc(sizeof(XImage));
+        img->width = width;
+        img->height= height;
+        img->bits_per_pixel = 32;
+        img->bytes_per_line = width*4;
     }
-    img->data=(char*)malloc(height*img->bytes_per_line);
-    *surface=img;
+    img->data= (char*)malloc(height*img->bytes_per_line);
+    *surface = img;
     LOGD("%p  size=%dx%dx%d %db",img,width,height,img->bytes_per_line,img->bits_per_pixel);
     if(hwsurface) {
         mainSurface=img;
@@ -278,16 +280,15 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
     return E_OK;
 }
 
-
 int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GFXRect* srcrect) {
     XImage *ndst=(XImage*)dstsurface;
     XImage *nsrc=(XImage*)srcsurface;
-    GFXRect rs= {0,0};
-    uint8_t*pbs=(uint8_t*)nsrc->data;
-    uint8_t*pbd=(uint8_t*)ndst->data;
-    rs.w=nsrc->width;
-    rs.h=nsrc->height;
-    if(srcrect)rs=*srcrect;
+    GFXRect rs = {0,0};
+    uint8_t*pbs= (uint8_t*)nsrc->data;
+    uint8_t*pbd= (uint8_t*)ndst->data;
+    rs.w = nsrc->width;
+    rs.h = nsrc->height;
+    if(srcrect)rs = *srcrect;
     if(((int)rs.w+dx<=0)||((int)rs.h+dy<=0)||(dx>=(int)ndst->width)||(dy>=(int)ndst->height)||(rs.x<0)||(rs.y<0)) {
         LOGD("dx=%d,dy=%d rs=(%d,%d-%d,%d)",dx,dy,rs.x,rs.y,rs.w,rs.h);
         return E_INVALID_PARA;
@@ -296,12 +297,12 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     if(dx<0) {
         rs.x -= dx;
         rs.w = (int)rs.w+dx;
-        dx=0;
+        dx = 0;
     }
     if(dy<0) {
         rs.y -= dy;
         rs.h = (int)rs.h+dy;
-        dy=0;
+        dy = 0;
     }
     if(dx + rs.w > ndst->width -screenMargin.x - screenMargin.w) rs.w = ndst->width -screenMargin.x - screenMargin.w -dx;
     if(dy + rs.h > ndst->height-screenMargin.y - screenMargin.h) rs.h = ndst->height-screenMargin.y - screenMargin.h -dy;
@@ -315,8 +316,8 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     }
     for(unsigned int y=0; y<rs.h; y++) {
         memcpy(pbd,pbs,rs.w*4);
-        pbs+=nsrc->bytes_per_line;
-        pbd+=ndst->bytes_per_line;
+        pbs += nsrc->bytes_per_line;
+        pbd += ndst->bytes_per_line;
     }
 #else
     pixman_image_t *src_image = pixman_image_create_bits(PIXMAN_a8r8g8b8, nsrc->width, nsrc->height, (uint32_t*)nsrc->data, nsrc->bytes_per_line);
@@ -358,7 +359,7 @@ static void* X11EventProc(void*p) {
     pthread_setname_np(pthread_self(), "X11Thread");
 #endif
     while(x11Display) {
-        int rc=XNextEvent(x11Display, &event);
+        const int rc = XNextEvent(x11Display, &event);
         switch(event.type) {
         case Expose:
             if(mainSurface) {
@@ -371,7 +372,7 @@ static void* X11EventProc(void*p) {
             break;
         case KeyPress:/* 当检测到键盘按键,退出消息循环 */
         case KeyRelease:
-            down=event.type==KeyPress;
+            down =(event.type==KeyPress);
             keysym=XLookupKeysym((XKeyEvent*)&event,0);
             for(i=0;i<sizeof(X11KEY2CD)/sizeof(X11KEY2CD[0]);i++){
                 if(keysym==X11KEY2CD[i].xkey){

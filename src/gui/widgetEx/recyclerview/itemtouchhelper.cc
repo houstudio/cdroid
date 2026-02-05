@@ -75,12 +75,18 @@ ItemTouchHelper::ItemTouchHelper(Callback* callback) {
 }
 
 ItemTouchHelper::~ItemTouchHelper(){
-    if(mRecyclerView!=nullptr){
-        destroyCallbacks();
+    const int recoverAnimSize = (int)mRecoverAnimations.size();
+    for (int i = recoverAnimSize - 1; i >= 0; i--) {
+        RecoverAnimation* recoverAnimation = mRecoverAnimations.at(0);
+        recoverAnimation->cancel();
+        mCallback->clearView(*mRecyclerView, *recoverAnimation->mViewHolder);
+        delete recoverAnimation;
     }
-#if ENABLE(GESTURE)
-    delete mGestureDetector;
-#endif
+    mRecoverAnimations.clear();
+    mOverdrawChild = nullptr;
+    mOverdrawChildPosition = -1;
+    releaseVelocityTracker();
+    stopGestureDetection();
 }
 
 bool ItemTouchHelper::onInterceptTouchEvent(RecyclerView& recyclerView,MotionEvent& event) {
