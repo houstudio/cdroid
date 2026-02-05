@@ -60,7 +60,9 @@ GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
     return (GFXHANDLE)0;
 }
 
-void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
+void GFXAttachCursor(GFXHANDLE cursorHandle){
+}
+void GFXMoveCursor(int32_t xPos,int32_t yPos){
 }
 
 void GFXDestroyCursor(GFXHANDLE cursorHandle){

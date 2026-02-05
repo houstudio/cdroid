@@ -166,6 +166,18 @@ int32_t GFXGetDisplayCount() {
     return 1;
 }
 
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+    return (GFXHANDLE)0;
+}
+
+void GFXAttachCursor(GFXHANDLE cursorHandle){
+}
+void GFXMoveCursor(int32_t xPos,int32_t yPos){
+}
+
+void GFXDestroyCursor(GFXHANDLE cursorHandle){
+}
+
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     FBDEVICE*dev=devs+dispid;

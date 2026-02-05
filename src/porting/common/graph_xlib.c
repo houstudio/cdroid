@@ -172,8 +172,14 @@ GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
     return (GFXHANDLE)0;
 #endif
 }
+void GFXAttachCursor(GFXHANDLE cursorHandle){
+    if(cursorHandle!=NULL)
+        XDefineCursor(x11Display, x11Window, (Cursor)(cursorHandle));
+    else
+        XUndefineCursor(x11Display, x11Window);
+}
 
-void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
+void GFXMoveCursor(int32_t xPos,int32_t yPos){
 #ifdef HAVE_XCURCOR_H
     XWarpPointer(x11Display,None,None,0,0,1,1,xPos,yPos);
 #endif
@@ -181,7 +187,6 @@ void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
 
 void GFXDestroyCursor(GFXHANDLE cursorHandle){
 #ifdef HAVE_XCURCOR_H
-    XUndefineCursor(x11Display, x11Window); 
     XFreeCursor(x11Display,(Cursor)cursorHandle);
 #endif
 }

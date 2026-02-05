@@ -143,7 +143,13 @@ int32_t GFXFlip(GFXHANDLE dstsurface);
 int32_t GFXDestroySurface(GFXHANDLE surface);
 
 GFXHANDLE GFXCreateCursor(const GFXCursorImage*);
-void GFXMoveCursor(GFXHANDLE,int32_t xPos,int32_t yPos);
+/*
+ * cursorHandle Cursor to attached to Display
+ * cursorHandle =NULL(0) for Cursor dettach
+ * NULL cursorHandle also used for hide cursor
+ * */
+void GFXAttachCursor(GFXHANDLE cursorHandle);
+void GFXMoveCursor(int32_t xPos,int32_t yPos);
 void GFXDestroyCursor(GFXHANDLE);
 
 /**}*///raphfunctions
