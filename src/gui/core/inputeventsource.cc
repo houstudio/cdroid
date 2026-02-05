@@ -34,7 +34,6 @@ namespace cdroid{
 InputEventSource::InputEventSource(){
     InputInit();
     mScreenSaveTimeOut = -1;
-    mCursorDevices = 0;
     mRunning = true;
     mIsPlayback = false;
     mIsScreenSaveActived = false;
@@ -86,16 +85,10 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     switch(es->type){
     case EV_ADD:/*noting todo*/
         dev = getDevice(es->device);
-        if(dev->getClasses()&INPUT_DEVICE_CLASS_CURSOR){
-            mCursorDevices++;
-        }
         LOGI("device %s %d is added",(dev?dev->getName().c_str():""),es->device);
         break;
     case EV_REMOVE:
         if(itr!=mDevices.end())dev = itr->second;
-        if(dev&&(dev->getClasses()&INPUT_DEVICE_CLASS_CURSOR)){
-            mCursorDevices--;
-        }
         LOGI_IF(dev,"device %s:%d/%d is removed", dev->getName().c_str(), es->device,dev->getId());
         LOGI_IF(dev==nullptr,"remove unknwon dev %d",es->device);
         if(itr!=mDevices.end())mDevices.erase(itr);
@@ -212,11 +205,6 @@ int InputEventSource::handleEvents(){
             wm.processEvent(*e);
             e->recycle();
         });
-        if( (eventCount > 0) && (mCursorDevices > 0) && (it.second->getClasses()&INPUT_DEVICE_CLASS_CURSOR)){
-            MotionEvent*e=(MotionEvent*)events.back();
-            //wm.moveCursor(e->getX(),e->getY());
-            LOGW("TODO:show cursor")
-        }
     }
     return ret;
 }
