@@ -8,7 +8,9 @@
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/cursorfont.h>
+#ifdef HAVE_XCURCOR_H
 #include <X11/Xcursor/Xcursor.h>
+#endif
 #include <sys/ipc.h>
 #include <pthread.h>
 #include <string.h>
@@ -135,9 +137,11 @@ int32_t GFXInit() {
         XSelectInput(x11Display, x11Window, ExposureMask | KeyPressMask|KeyReleaseMask |ResizeRedirectMask|
                      ButtonPressMask | ButtonReleaseMask | PointerMotionMask | Button1MotionMask | Button2MotionMask );
         XMapWindow(x11Display,x11Window);
+#ifdef HAVE_XCURCOR_H
         Cursor cursor = XCreateFontCursor(x11Display, XC_pencil);//XC_arrow);
         XDefineCursor(x11Display, x11Window, cursor);
         XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, 100, 100);
+#endif
         XFlush(x11Display);
         LOGI("screenMargin=(%d,%d,%d,%d)[%s] cursor=%p",screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h,strMargin,cursor);
         pthread_create(&xThreadId,NULL,X11EventProc,NULL);
@@ -151,6 +155,7 @@ int32_t GFXInit() {
 #define MAX(x,y) ((x)>(y)?(x):(y))
 #endif
 GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+#ifdef HAVE_XCURCOR_H
     XcursorImage ximg;
     ximg.version = XCURSOR_IMAGE_VERSION;
     ximg.size = MAX(cursorImage->width,cursorImage->height);
@@ -163,15 +168,22 @@ GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
     Cursor cursor = XcursorImageLoadCursor(x11Display,&ximg);
     XDefineCursor(x11Display, x11Window, cursor);
     return (GFXHANDLE)cursor;
+#else
+    return (GFXHANDLE)0;
+#endif
 }
 
 void GFXMoveCursor(GFXHANDLE cursorHandle,int32_t xPos,int32_t yPos){
+#ifdef HAVE_XCURCOR_H
     XWarpPointer(x11Display,None,None,0,0,1,1,xPos,yPos);
+#endif
 }
 
 void GFXDestroyCursor(GFXHANDLE cursorHandle){
+#ifdef HAVE_XCURCOR_H
     XUndefineCursor(x11Display, x11Window); 
     XFreeCursor(x11Display,(Cursor)cursorHandle);
+#endif
 }
 
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
@@ -419,7 +431,6 @@ static void* X11EventProc(void*p) {
         case MotionNotify:
             if(event.xmotion.state&Button1MotionMask) {
                 SENDMOUSE(event.xmotion.time,event.xmotion.x - screenMargin.x, event.xmotion.y - screenMargin.y);
-                //XWarpPointer(x11Display, None, x11Window, 0, 0, 0, 0, event.xmotion.x,event.xmotion.y);
             }
             break;
         case DestroyNotify:
