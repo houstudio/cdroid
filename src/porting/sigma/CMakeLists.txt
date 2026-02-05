@@ -3,7 +3,6 @@ project (sigma C CXX)
 set(SIGMA_SRCS ../common/cdlog.cc
         ../common/input_linux.cc
 	mediaplayer.c misc.c disp.c)
-find_package(DirectFB)
 include(CheckIncludeFile)
 
 check_include_file(poll.h HAVE_POLL_H)
@@ -57,14 +56,6 @@ target_link_libraries(tvhal ${SIGMA_LIBS})
 add_library(tvhal-fb SHARED ${SIGMA_SRCS} ../common/graph_fb.c)
 target_link_libraries(tvhal-fb ${SIGMA_LIBS})
 add_dependencies(tvhal tvhal-fb)
-
-if(DIRECTFB_FOUND)
-    add_library(tvhal-dfb SHARED ${SIGMA_SRCS} ../common/graph_dfb.c)
-    include_directories(${DIRECTFB_INCLUDE_DIRS})
-    target_link_libraries(tvhal-dfb ${DIRECTFB_LIBRARIES} ${SIGMA_LIBS})
-    list(APPEND SIGMATARGET tvhal-dfb)
-    add_dependencies(tvhal tvhal-dfb)
-endif(DIRECTFB_FOUND)
 
 file(GLOB MILIBS ${PROJECT_SOURCE_DIR}/libs/*.so)
 install (TARGETS ${SIGMATARGET}  DESTINATION lib)
