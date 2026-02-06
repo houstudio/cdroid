@@ -60,7 +60,6 @@ int Tokenizer::fromStream(const std::string&name,std::istream&is, Tokenizer** ou
         //result = -errno;
         LOGE("Error reading stream:%s!",name.c_str());
         delete[] buffer;
-        buffer = NULL;
         return -1;
     }
     *outTokenizer = new Tokenizer(name, buffer,true, length);
@@ -74,8 +73,8 @@ int Tokenizer::fromContents(const std::string&name,const char* contents, Tokeniz
 
 std::string Tokenizer::getLocation() const {
     std::string result=mName;
-    result+=":";
-    result+=std::to_string(mLineNumber);
+    result +=":";
+    result += std::to_string(mLineNumber);
     return result;
 }
 
