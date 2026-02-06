@@ -223,7 +223,7 @@ namespace{
 }
 
 double PathMeasure::getLength() const{
-    return std::accumulate(mSegments.begin(),mSegments.end(),0,
+    return std::accumulate(mSegments.begin(),mSegments.end(),0.0,
         [](double sum,const Segment&s){ return sum + s.distance;});
 }
 
@@ -272,7 +272,7 @@ int PathMeasure::buildSegments(){
             pt0 = pt3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
             const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
-            if (distance > 0) {
+            if (distance > 0.f) {
                 mSegments.push_back({Segment::Line,ptIndex, distance});
                 ptIndex += 1;
                 mPoints.push_back(ptStart);
