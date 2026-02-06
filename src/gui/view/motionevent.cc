@@ -182,7 +182,7 @@ void MotionEvent::ensureSharedTempPointerCapacity(size_t desiredCapacity){
         }
         gSharedTempPointerCoords.resize(capacity);
         gSharedTempPointerProperties.resize(capacity);
-        gSharedTempPointerIndexMap .resize(capacity);
+        gSharedTempPointerIndexMap.resize(capacity);
     }
 }
 
