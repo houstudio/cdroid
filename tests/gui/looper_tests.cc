@@ -91,31 +91,72 @@ class SelfDestroyHandler:public MessageHandler{
 private:
     Looper*mLooper;
 public:
-   SelfDestroyHandler(Looper*lp){mLooper=lp;}
+   static int Count;
+   SelfDestroyHandler(Looper*lp,bool ownedByLooper=false){
+       mLooper=lp;
+       setOwned(ownedByLooper);
+       Count++;
+   }
+   ~SelfDestroyHandler()override{
+       Count--;
+       std::cout<<"destroy SelfDestroyHandler:"<<this<<std::endl;
+   }
    void handleMessage(Message&msg)override{
-       mLooper->removeMessages(this);
+       mLooper->removeHandler(this);
+       printf("removeHandler %p\r\n",this);
    }
 };
+int SelfDestroyHandler::Count=0;
 class SelfDestroyEventHandler:public EventHandler{
 private:
     Looper*mLooper;
 public:
-    SelfDestroyEventHandler(Looper*lp){mLooper=lp;}
+    static int Count;
+    SelfDestroyEventHandler(Looper*lp,bool ownedByLooper=false){
+        mLooper=lp;
+        Count++;
+        setOwned(ownedByLooper);
+    }
+    ~SelfDestroyEventHandler()override{
+        Count--;
+        std::cout<<"destroy SelfDestroyEventHandler:"<<this<<std::endl;
+    }
     int checkEvents()override{return 1;};
     int handleEvents()override{
         mLooper->removeEventHandler(this);
         return 1;
     }
 };
+int SelfDestroyEventHandler::Count=0;
 TEST_F(LOOPER,removeHandler){
-    SelfDestroyHandler*sd=new SelfDestroyHandler(mLooper);
-    SelfDestroyEventHandler*se=new SelfDestroyEventHandler(mLooper);
     Message msg(100);
+    SelfDestroyHandler*sd = new SelfDestroyHandler(mLooper,true);
+    SelfDestroyHandler*sd2= new SelfDestroyHandler(mLooper,false);
+    SelfDestroyEventHandler*se= new SelfDestroyEventHandler(mLooper,true);
+    SelfDestroyEventHandler*se2=new SelfDestroyEventHandler(mLooper,false);
+    mLooper->addHandler(sd);
+    mLooper->addHandler(sd2);
     mLooper->addEventHandler(se);
+    mLooper->addEventHandler(se2);
     mLooper->sendMessageDelayed(10,sd,msg);
-
-    mLooper->pollOnce(100);
-    LOGD("===");
+    mLooper->sendMessageDelayed(10,sd2,msg);
+    printf("HANDLE:%p ,%p  EventHandler:%p ,%p\r\n",sd,sd2,se,se2);
+    EXPECT_EQ(SelfDestroyHandler::Count,2);
+    EXPECT_EQ(SelfDestroyEventHandler::Count,2);
+    for(int i=0;i<2;i++){
+        mLooper->pollOnce(100);
+    }
+    mLooper->removeHandler(sd);
+    EXPECT_EQ(SelfDestroyHandler::Count,1);
+    mLooper->removeHandler(sd2);
+    delete sd2;
+    mLooper->removeEventHandler(se);
+    EXPECT_EQ(SelfDestroyEventHandler::Count,1);
+    mLooper->removeEventHandler(se2);
+    delete se2;
+    EXPECT_EQ(SelfDestroyHandler::Count,0);
+    EXPECT_EQ(SelfDestroyEventHandler::Count,0);
+    printf("#### END ####\r\n\r\n");
 }
 
 class TestRunner:public Runnable{

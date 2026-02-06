@@ -17,6 +17,7 @@
  *********************************************************************************/
 #define _CRT_SECURE_NO_WARNINGS
 #include <cstring>
+#include <algorithm>
 #include <fcntl.h>
 #include <pthread.h>
 #include <core/looper.h>
@@ -89,12 +90,14 @@ Looper::Looper(bool allowNonCallbacks) :
     rebuildEpollLocked();
 }
 
+#define FLAG_OWNED 2
+#define FLAG_REMOVED 1
 Looper::~Looper() {
     close(mWakeEventFd);
     mWakeEventFd = -1;
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
-        if((hdl->mFlags&2)==2)delete hdl;
+        if((hdl->mFlags&FLAG_OWNED)==FLAG_OWNED)delete hdl;
     }
     mEventHandlers.clear();
 }
@@ -233,12 +236,14 @@ int Looper::doEventHandlers(){
         for(auto it = mHandlers.begin();it != mHandlers.end();){
             MessageHandler*hdl = (*it);
             uint32_t eFlags = (*it)->mFlags;
-            if((eFlags&1)==0){
+            if((eFlags&FLAG_REMOVED)==0){
                 hdl->handleIdle(); count++;
                 eFlags = hdl->mFlags;
             }
-            if(eFlags&2) delete hdl;
-            if(eFlags&1){
+            if(eFlags&FLAG_REMOVED){
+                if(eFlags&FLAG_OWNED){
+                    delete hdl;
+                }
                 it = mHandlers.erase(it);
                 continue;
             }
@@ -248,14 +253,16 @@ int Looper::doEventHandlers(){
     for(auto it=mEventHandlers.begin();it!=mEventHandlers.end();){
         EventHandler*es=(*it);
         uint32_t eFlags = es->mFlags;
-        if(es&&((eFlags&1)==0)){
+        if(es&&((eFlags&FLAG_REMOVED)==0)){
             if(es->checkEvents()>0){
                 es->handleEvents();  count++;
             }
             eFlags = es->mFlags;//Maybe EventHandler::handleEvents will remove itself,so we recheck the flags
         }
-        if((eFlags&3)==3) delete es;//EventHandler owned by looper must be freed here
-        if((eFlags&1)==1){
+        if(eFlags&FLAG_REMOVED){
+            if(eFlags&FLAG_OWNED){
+                delete es;//EventHandler owned by looper must be freed here
+            }
             it = mEventHandlers.erase(it);
             continue;
         }
@@ -647,14 +654,18 @@ void Looper::sendMessageAtTime(nsecs_t uptime, const MessageHandler* handler,
 }
 
 void Looper::addHandler(MessageHandler*handler){
-    mHandlers.insert(mHandlers.begin(),handler);
+    auto it = std::find(mHandlers.begin(),mHandlers.end(),handler);
+    if(it==mHandlers.end()){
+        mHandlers.insert(mHandlers.begin(),handler);
+    }
 }
 
 void Looper::removeHandler(MessageHandler*handler){
     for(auto it = mHandlers.begin();it != mHandlers.end();it++){
         if( (*it) == handler){
-            mHandlers.erase(it);
-            handler->mFlags |= 1;//set Erase Flags.removed in doEventHandlers
+            if((*it)->mFlags&FLAG_OWNED)
+                handler->mFlags |= FLAG_REMOVED;//set Erase Flags.removed in doEventHandlers
+            //else mHandlers.erase(it);
             break;
         }
     }
@@ -667,8 +678,9 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
-            (*it)->mFlags |=1;//set removed flags,removed in doEventHandlers
-            //mEventHandlers.erase(it);
+            if((*it)->mFlags&FLAG_OWNED)
+                (*it)->mFlags |=FLAG_REMOVED;//set removed flags,removed in doEventHandlers
+            //else  mEventHandlers.erase(it);
             break;
         }
     }
@@ -749,8 +761,8 @@ MessageHandler::~MessageHandler(){
 }
 
 void MessageHandler::setOwned(bool looper){
-    if(looper)mFlags|=2;
-    else mFlags&=~2;
+    if(looper)mFlags|=FLAG_OWNED;
+    else mFlags&=~FLAG_OWNED;
 }
 
 void MessageHandler::dispatchMessage(Message&message){
@@ -771,8 +783,8 @@ EventHandler::~EventHandler(){
 }
 
 void EventHandler::setOwned(bool looper){
-    if(looper)mFlags|=2;
-    else mFlags&=~2;
+    if(looper)mFlags|=FLAG_OWNED;
+    else mFlags&=~FLAG_OWNED;
 }
 
 }

@@ -127,6 +127,18 @@ int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     return E_OK;
 }
 
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+    return (GFXHANDLE)0;
+}
+
+void GFXAttachCursor(GFXHANDLE cursorHandle){
+}
+
+void GFXMoveCursor(int32_t xPos,int32_t yPos){
+}
+
+void GFXDestroyCursor(GFXHANDLE cursorHandle){
+}
 
 int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
     FBSURFACE*ngs=(FBSURFACE*)surface;

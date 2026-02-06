@@ -679,14 +679,16 @@ std::string MotionEvent::buttonStateToString(int buttonState){
 }
 
 std::string MotionEvent::toolTypeToString(int toolType){
-    switch(toolType){
-    case TOOL_TYPE_UNKNOWN: return "TOOL_TYPE_UNKNOWN";
-    case TOOL_TYPE_FINGER : return "TOOL_TYPE_FINGER";
-    case TOOL_TYPE_STYLUS : return "TOOL_TYPE_STYLUS";
-    case TOOL_TYPE_MOUSE  : return "TOOL_TYPE_MOUSE";
-    case TOOL_TYPE_ERASER : return "TOOL_TYPE_ERASER";
-    default: return std::to_string(toolType);
+    static const char*toolTypeNames[]={
+        "TOOL_TYPE_UNKNOWN",  "TOOL_TYPE_FINGER",
+        "TOOL_TYPE_STYLUS",   "TOOL_TYPE_MOUSE",
+        "TOOL_TYPE_ERASER",   "TOOL_TYPE_PALM"
+    };
+
+    if( (toolType >= TOOL_TYPE_UNKNOWN) && (toolType <= TOOL_TYPE_PALM) ){
+        return toolTypeNames[toolType];
     }
+    return std::to_string(toolType);
 }
 
 int MotionEvent::axisFromString(const std::string&symbolicName){

@@ -18,7 +18,7 @@ check_include_file(poll.h HAVE_POLL_H)
 check_include_file(sys/epoll.h  HAVE_EPOLL_H)
 check_include_file(linux/input.h HAVE_INPUT_H)
 check_include_file(execinfo.h HAVE_EXECINFO_H)
-
+check_include_file(X11/Xcursor/Xcursor.h HAVE_XCURCOR_H)
 if(HAVE_POLL_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_POLL_H)
 endif()
@@ -44,7 +44,9 @@ find_package(OpenGL)
 find_package(PkgConfig REQUIRED)
 find_path(XCB_IMAGE_INCLUDE_DIR NAMES xcb/xcb_image.h)
 find_library(XCB_IMAGE_LIBRARY NAMES xcb-image)
-
+if(HAVE_XCURCOR_H)
+    add_definitions(-D HAVE_XCURCOR_H=1)
+endif()
 pkg_check_modules(PC_XCB_CURSOR xcb-cursor)
 find_path(XCB_CURSOR_INCLUDE_DIRS
     NAMES xcb/xcb_cursor.h

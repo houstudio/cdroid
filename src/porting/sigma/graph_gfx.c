@@ -83,6 +83,7 @@ static void* loadLogo(const char*fileName){
 static void showLogo(FBSURFACE*dst,void*buffer){
     memcpy(dst->buffer,buffer,dst->height*dst->pitch);
 }
+
 int GFXInit() {
     int ret;
     char*logoBuffer,*strMargin;
@@ -199,6 +200,19 @@ int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     *width =dev->var.xres - screenMargin.x - screenMargin.w;
     *height=dev->var.yres - screenMargin.y - screenMargin.h;
     return E_OK;
+}
+
+GFXHANDLE GFXCreateCursor(const GFXCursorImage*cursorImage){
+    return (GFXHANDLE)0;
+}
+
+void GFXAttachCursor(GFXHANDLE cursorHandle){
+}
+
+void GFXMoveCursor(int32_t xPos,int32_t yPos){
+}
+
+void GFXDestroyCursor(GFXHANDLE cursorHandle){
 }
 
 int32_t GFXLockSurface(GFXHANDLE surface,void**buffer,uint32_t*pitch) {
