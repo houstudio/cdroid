@@ -706,7 +706,7 @@ static std::string printEvent(MotionEvent*e){
 
 int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){
     int slot,pointerCount,pointerIndex,action;
-    MotionEvent*lastEvent;
+    MotionEvent*lastEvent = nullptr;
     if(!isValidEvent(type,code,value))return -1;
     //LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
     switch(type){
