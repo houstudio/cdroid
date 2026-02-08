@@ -23,10 +23,11 @@
 #include <drawable/hwvectordrawable.h>
 namespace cdroid {
 class PathMeasure{
-public:
+private:
     struct Segment {
-        enum Type { Line, Cubic } type;
-        int ptIndex;
+        enum Type { Line, Cubic };
+        int32_t ptIndex:30;
+        int32_t type:2;
         double distance;
     };
 private:
