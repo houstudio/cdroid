@@ -919,6 +919,7 @@ public:
      * {@hide}
      */
     static Configuration generateDelta(const Configuration& base,const Configuration& change);
+    static void readXmlAttrs(XmlPullParser& parser, Configuration& configOut);
 };
 }/*endof namespace*/
 #endif/*__CONFIGURTATION_H__*/
