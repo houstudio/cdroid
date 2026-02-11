@@ -795,7 +795,7 @@ void ViewGroup::removeFromArray(int index){
     if (!isViewTransitioning(mChildren[index])){
         mChildren[index]->mParent = nullptr;
     }
-    if ((index>=0)&&(index<mChildren.size())) {
+    if ( (index >= 0) && (index < mChildren.size()) ) {
         /*auto it=*/mChildren.erase(mChildren.begin()+index);
         //delete *it;cant delete here 
     } else {
@@ -1428,13 +1428,13 @@ int ViewGroup::getChildCount()const{
 }
 
 View*ViewGroup::getChildAt(int idx)const{
-    if(idx<0||idx>=mChildren.size())return nullptr;
+    if( (idx < 0) || (idx >= mChildren.size()) )return nullptr;
     return mChildren.at(idx);
 }
 
 int ViewGroup::indexOfChild(View* child)const{
-    int count=mChildren.size();
-    for(int i=0;i<count;i++)
+    const int count = mChildren.size();
+    for(int i = 0;i < count;i++)
         if(mChildren[i]==child)return i;
     return -1;
 }
@@ -1615,7 +1615,7 @@ PointerIcon* ViewGroup::dispatchResolvePointerIcon(MotionEvent& event, int point
 int ViewGroup::getAndVerifyPreorderedIndex(int childrenCount, int i, bool customOrder){
     int childIndex;
     if (customOrder) {
-        int childIndex1 = getChildDrawingOrder(childrenCount, i);
+        const int childIndex1 = getChildDrawingOrder(childrenCount, i);
         LOGE_IF(childIndex1 >= childrenCount,"getChildDrawingOrder() returned invalid index %d (child count is %d)",childIndex1,childrenCount);
         childIndex = childIndex1;
     } else {
@@ -1653,7 +1653,7 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
     const int specMode = MeasureSpec::getMode(spec);
     const int specSize = MeasureSpec::getSize(spec);
 
-    int size = std::max(0, specSize - padding);
+    const int size = std::max(0, specSize - padding);
 
     int resultSize = 0;
     int resultMode = 0;
@@ -1704,12 +1704,12 @@ int ViewGroup::getChildMeasureSpec(int spec, int padding, int childDimension){
         } else if (childDimension == LayoutParams::MATCH_PARENT) {
             // Child wants to be our size... find out how big it should
             // be
-            resultSize = size;// View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
+            resultSize = size;// View::sUseZeroUnspecifiedMeasureSpec ? 0 : size;
             resultMode = MeasureSpec::UNSPECIFIED;
         } else if (childDimension == LayoutParams::WRAP_CONTENT) {
             // Child wants to determine its own size.... find out how
             // big it should be
-            resultSize = size;//View.sUseZeroUnspecifiedMeasureSpec ? 0 : size;
+            resultSize = size;//View::sUseZeroUnspecifiedMeasureSpec ? 0 : size;
             resultMode = MeasureSpec::UNSPECIFIED;
         }
         break;
@@ -1844,7 +1844,7 @@ void ViewGroup::addViewInner(View* child, int index,ViewGroup::LayoutParams* par
 
     if (child->getVisibility() !=GONE) notifySubtreeAccessibilityStateChangedIfNeeded();
 
-    int transientCount = mTransientIndices.size();
+    const int transientCount = mTransientIndices.size();
     for (int i = 0; i < transientCount; ++i) {
         int oldIndex = mTransientIndices.at(i);
         if (index <= oldIndex) {
@@ -1995,7 +1995,7 @@ void ViewGroup::removeAllViews(){
 }
 
 void ViewGroup::removeAllViewsInLayout() {
-    int count = mChildren.size();
+    const int count = mChildren.size();
     if (count <= 0) {
         return;
     }
@@ -2100,28 +2100,28 @@ void ViewGroup::removeViewInternal(int index, View* view){
 
     const int transientCount =  mTransientIndices.size();
     for (int i = 0; i < transientCount; ++i) {
-        int oldIndex = mTransientIndices.at(i);
+        const int oldIndex = mTransientIndices.at(i);
         if (index < oldIndex) {
             mTransientIndices[i]=oldIndex-1;//mTransientIndices.set(i, oldIndex - 1);
         }
     }
     if (mCurrentDragStartEvent != nullptr){
         auto it = mChildrenInterestedInDrag.find(view);
-        if(it!=mChildrenInterestedInDrag.end()){
+        if(it != mChildrenInterestedInDrag.end()){
             mChildrenInterestedInDrag.erase(it);
         }
     }
 }
 
 void ViewGroup::removeViewsInternal(int start, int count){
-    int end = start + count;
+    const int end = start + count;
 
     if ((start < 0) || (count < 0) || (end > mChildren.size())) {
         throw std::runtime_error("IndexOutOfBoundsException");
     }
 
     View* focused = mFocused;
-    bool detach = mAttachInfo != nullptr;
+    const bool detach = mAttachInfo != nullptr;
     bool _clearChildFocus = false;
     View* _clearDefaultFocus = nullptr;
 
@@ -2326,8 +2326,8 @@ void ViewGroup::onDebugDraw(Canvas& canvas){
 
     // Draw clip bounds
     canvas.set_color(DEBUG_CORNERS_COLOR); 
-    int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
-    int lineWidth  = dipsToPixels(1);
+    const int lineLength = dipsToPixels(DEBUG_CORNERS_SIZE_DIP);
+    const int lineWidth  = dipsToPixels(1);
     for (View* c:mChildren){
         if (c->getVisibility() != View::GONE) {
             drawRectCorners(canvas, c->getLeft(), c->getTop(), c->getRight(), c->getBottom(),lineLength, lineWidth);
@@ -3160,7 +3160,7 @@ void ViewGroup::requestTransitionStart(LayoutTransition* transition){
 }
 
 bool ViewGroup::resolveRtlPropertiesIfNeeded(){
-    bool result = View::resolveRtlPropertiesIfNeeded();
+    const bool result = View::resolveRtlPropertiesIfNeeded();
     // We dont need to resolve the children RTL properties if nothing has changed for the parent
     if (result) {
         for (View*child:mChildren) {
@@ -3211,7 +3211,7 @@ bool ViewGroup::resolveTextAlignment() {
 
 void ViewGroup::resolvePadding() {
     View::resolvePadding();
-    int count = getChildCount();
+    const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->isLayoutDirectionInherited() && !child->isPaddingResolved()) {
@@ -3321,7 +3321,7 @@ void ViewGroup::notifyAnimationListener(){
 }
 
 void ViewGroup::addFocusables(std::vector<View*>& views, int direction, int focusableMode){
-    int focusableCount = views.size();
+    const int focusableCount = views.size();
 
     const int descendantFocusability = getDescendantFocusability();
     const bool blockFocusForTouchscreen = shouldBlockFocusForTouchscreen();
@@ -3380,7 +3380,7 @@ void ViewGroup::clearFocusedInCluster(View* child) {
 }
 
 void ViewGroup::addKeyboardNavigationClusters(std::vector<View*>&views,int direction){
-    int focusableCount = views.size();
+    const int focusableCount = views.size();
 
     if (isKeyboardNavigationCluster()) {
         // Cluster-navigation can enter a touchscreenBlocksFocus cluster, so temporarily
@@ -3907,15 +3907,15 @@ bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
     HoverTarget* firstOldHoverTarget = mFirstHoverTarget;
     mFirstHoverTarget = nullptr;
     if (!interceptHover && action != MotionEvent::ACTION_HOVER_EXIT) {
-        float x = event.getXDispatchLocation(0);
-        float y = event.getYDispatchLocation(0);
-        int childrenCount = mChildren.size();
+        const float x = event.getXDispatchLocation(0);
+        const float y = event.getYDispatchLocation(0);
+        const int childrenCount = mChildren.size();
         if (childrenCount != 0) {
             std::vector<View*> preorderedList = buildOrderedChildList();
-            bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
+            const bool customOrder = preorderedList.empty() && isChildrenDrawingOrderEnabled();
             HoverTarget* lastHoverTarget = nullptr;
             for (int i = childrenCount - 1; i >= 0; i--) {
-                int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
+                const int childIndex = getAndVerifyPreorderedIndex(childrenCount, i, customOrder);
                 View* child = getAndVerifyPreorderedView(preorderedList, mChildren, childIndex);
                 if (!child->canReceivePointerEvents() || !isTransformedTouchPointInView(x, y, *child, nullptr)) {
                     continue;
@@ -3991,7 +3991,7 @@ bool ViewGroup::dispatchHoverEvent(MotionEvent&event){
             // Synthesize an exit from a move or enter.
             // Ignore the result because hover focus has moved to a different view.
             if (action == MotionEvent::ACTION_HOVER_MOVE) {
-                bool hoverExitPending = event.isHoverExitPending();
+                const bool hoverExitPending = event.isHoverExitPending();
                 event.setHoverExitPending(true);
                 dispatchTransformedGenericPointerEvent(event, child); // move
                 event.setHoverExitPending(hoverExitPending);
@@ -4257,7 +4257,7 @@ bool ViewGroup::restoreFocusNotInCluster(){
     if (isKeyboardNavigationCluster() || ((mViewFlags & VISIBILITY_MASK) != VISIBLE)) {
         return false;
     }
-    int descendentFocusability = getDescendantFocusability();
+    const int descendentFocusability = getDescendantFocusability();
     if (descendentFocusability == FOCUS_BLOCK_DESCENDANTS) {
         return View::requestFocus(FOCUS_DOWN, nullptr);
     }
@@ -4404,7 +4404,7 @@ int  ViewGroup::ViewLocationHolder::compareTo(ViewLocationHolder* another) {
         return 1;
     }
 
-    int boundsResult = compareBoundsOfTree(this, another);
+    const int boundsResult = compareBoundsOfTree(this, another);
     if (boundsResult != 0) {
         return boundsResult;
     }

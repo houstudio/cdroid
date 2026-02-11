@@ -1620,28 +1620,26 @@ Configuration Configuration::generateDelta(const Configuration& base,const Confi
 	return delta;
 }
 
-#if 0
-    private static final String XML_ATTR_FONT_SCALE = "fs";
-    private static final String XML_ATTR_MCC = "mcc";
-    private static final String XML_ATTR_MNC = "mnc";
-    private static final String XML_ATTR_LOCALES = "locales";
-    private static final String XML_ATTR_TOUCHSCREEN = "touch";
-    private static final String XML_ATTR_KEYBOARD = "key";
-    private static final String XML_ATTR_KEYBOARD_HIDDEN = "keyHid";
-    private static final String XML_ATTR_HARD_KEYBOARD_HIDDEN = "hardKeyHid";
-    private static final String XML_ATTR_NAVIGATION = "nav";
-    private static final String XML_ATTR_NAVIGATION_HIDDEN = "navHid";
-    private static final String XML_ATTR_ORIENTATION = "ori";
-    private static final String XML_ATTR_ROTATION = "rot";
-    private static final String XML_ATTR_SCREEN_LAYOUT = "scrLay";
-    private static final String XML_ATTR_COLOR_MODE = "clrMod";
-    private static final String XML_ATTR_UI_MODE = "ui";
-    private static final String XML_ATTR_SCREEN_WIDTH = "width";
-    private static final String XML_ATTR_SCREEN_HEIGHT = "height";
-    private static final String XML_ATTR_SMALLEST_WIDTH = "sw";
-    private static final String XML_ATTR_DENSITY = "density";
-    private static final String XML_ATTR_APP_BOUNDS = "app_bounds";
-#endif
+    static const char* XML_ATTR_FONT_SCALE = "fs";
+    static const char* XML_ATTR_MCC = "mcc";
+    static const char* XML_ATTR_MNC = "mnc";
+    static const char* XML_ATTR_LOCALES = "locales";
+    static const char* XML_ATTR_TOUCHSCREEN = "touch";
+    static const char* XML_ATTR_KEYBOARD = "key";
+    static const char* XML_ATTR_KEYBOARD_HIDDEN = "keyHid";
+    static const char* XML_ATTR_HARD_KEYBOARD_HIDDEN = "hardKeyHid";
+    static const char* XML_ATTR_NAVIGATION = "nav";
+    static const char* XML_ATTR_NAVIGATION_HIDDEN = "navHid";
+    static const char* XML_ATTR_ORIENTATION = "ori";
+    static const char* XML_ATTR_ROTATION = "rot";
+    static const char* XML_ATTR_SCREEN_LAYOUT = "scrLay";
+    static const char* XML_ATTR_COLOR_MODE = "clrMod";
+    static const char* XML_ATTR_UI_MODE = "ui";
+    static const char* XML_ATTR_SCREEN_WIDTH = "width";
+    static const char* XML_ATTR_SCREEN_HEIGHT = "height";
+    static const char* XML_ATTR_SMALLEST_WIDTH = "sw";
+    static const char* XML_ATTR_DENSITY = "density";
+    static const char* XML_ATTR_APP_BOUNDS = "app_bounds";
 /**
  * Reads the attributes corresponding to Configuration member fields from the Xml parser.
  * The parser is expected to be on a tag which has Configuration attributes.
@@ -1651,7 +1649,7 @@ Configuration Configuration::generateDelta(const Configuration& base,const Confi
  * {@hide}
  */
 #if 0
-void Configuration::readXmlAttrs(XmlPullParser parser, Configuration configOut)
+void Configuration::readXmlAttrs(XmlPullParser& parser, Configuration& configOut)
 		throws XmlPullParserException, IOException {
 	configOut.fontScale = Float.intBitsToFloat(
 			XmlUtils.readIntAttribute(parser, XML_ATTR_FONT_SCALE, 0));

@@ -14,7 +14,7 @@ SET(CORE_SOURCES
     core/graphdevice.cc
     core/handler.cc
     core/inputdevice.cc
-    core/virtualinputdevice.cc
+    #core/virtualinputdevice.cc
     core/inputeventsource.cc
     core/inputmethod.cc
     core/inputmethodmanager.cc
@@ -42,6 +42,7 @@ SET(CORE_SOURCES
     core/typedvalue.cc
     core/typeface.cc
     core/uieventsource.cc
+    #core/virtualkeymap.cc
     core/windowmanager.cc
     core/ziparchive.cc
 )
