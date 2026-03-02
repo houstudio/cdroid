@@ -33,6 +33,7 @@ int main(int argc,const char*argv[]){
     ScrollView*scroller=new ScrollView(-1,-1);
     scroller->setSmoothScrollingEnabled(true);
     scroller->setVerticalScrollBarEnabled(true);
+    scroller->setVerticalScrollbarThumbDrawable(new ColorDrawable(0xFF334455));
     scroller->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     w->addView(scroller);
     scroller->setId(100);
