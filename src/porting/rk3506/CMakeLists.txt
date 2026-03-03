@@ -40,7 +40,9 @@ include_directories(./
 set(PREFIX ${CMAKE_INSTALL_PREFIX})
 
 add_library(tvhal-fb SHARED ${RK3506_SRCS} ../common/graph_fb.c)
-add_library(tvhal-drm SHARED ${RK3506_SRCS} ../common/graph_drm.cc)
+if(HAVE_DRM_H AND DRM_FOUND)
+   add_library(tvhal-drm SHARED ${RK3506_SRCS} ../common/graph_drm.cc)
+endif()
 add_library(tvhal SHARED ${RK3506_SRCS} ../common/graph_fb.c)
 target_link_libraries(tvhal ${RK3506_LIBS} dl)
 install (TARGETS tvhal DESTINATION lib)

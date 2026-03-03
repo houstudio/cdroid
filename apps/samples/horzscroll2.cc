@@ -12,6 +12,7 @@ int main(int argc,const char*argv[]){
     hs->setHorizontalFadingEdgeEnabled(true);
     hs->setFadingEdgeLength(200);
     hs->setHorizontalScrollBarEnabled(true);
+    hs->setHorizontalScrollbarThumbDrawable(new ColorDrawable(0xFF334455));
     LinearLayout*layout=new LinearLayout(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT);
     layout->setOrientation(LinearLayout::HORIZONTAL);
 

@@ -7,7 +7,6 @@ include(widget/widget.cmake)
 include(menu/menu.cmake)
 #include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
-include(widgetEx/wear/wear.cmake)
 
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc

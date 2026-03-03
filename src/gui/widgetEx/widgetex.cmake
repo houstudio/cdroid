@@ -66,3 +66,4 @@ if(ENABLE_BARCODE)
     list(APPEND WIDGETEX_SOURCES widgetEx/barcodeview.cc)
 endif(ENABLE_BARCODE)
 
+include(widgetEx/wear/wear.cmake)

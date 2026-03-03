@@ -67,7 +67,7 @@
 * cd ~
 * git clone http://www.gitee.com/houstudio/cdroid.git<br>
 ### 4. install cdroid supported toolchain's patch
-* cp cdroid/script/vcpkgpatch4cdroid.tar.gz vcpkg/
+* cp cdroid/scripts/vcpkgpatch4cdroid.tar.gz vcpkg/
 * cd vcpkg
 * tar -zxvf vcpkgpatch4cdroid.tar.gz 
 ### 5.install cdroid deplibs:
