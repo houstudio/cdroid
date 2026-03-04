@@ -255,7 +255,7 @@ bool GestureDetector::onTouchEvent(MotionEvent& ev) {
         if (mIsLongpressEnabled) {
             mHandler->removeMessages(LONG_PRESS);
             mHandler->sendMessageAtTime(mHandler->obtainMessage(LONG_PRESS, TOUCH_GESTURE_CLASSIFIED__CLASSIFICATION__LONG_PRESS, 0 /* arg2 */),
-                    SystemCLock::uptimeMillis() + ViewConfiguration::getLongPressTimeout());
+                    mCurrentDownEvent->getDownTime() + ViewConfiguration::getLongPressTimeout());
         }
         mHandler->sendEmptyMessageAtTime(SHOW_PRESS, mCurrentDownEvent->getDownTime() + TAP_TIMEOUT);
         handled |= (mListener.onDown?mListener.onDown(ev):false);
