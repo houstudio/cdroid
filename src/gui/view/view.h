@@ -700,6 +700,7 @@ protected:
     bool mLeftPaddingDefined;
     bool mRightPaddingDefined;
     bool mCachingFailed;
+    bool mLastIsOpaque;
     bool mSendingHoverAccessibilityEvents;
     AccessibilityDelegate* mAccessibilityDelegate;
     Rect mClipBounds;
