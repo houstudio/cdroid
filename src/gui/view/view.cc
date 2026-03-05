@@ -415,7 +415,6 @@ void View::initView(){
     mUserPaddingStart = mUserPaddingEnd = UNDEFINED_PADDING;
     mUserPaddingRight = mUserPaddingLeft= UNDEFINED_PADDING;
 
-    mLastIsOpaque = false;
     mHasPerformedLongPress = false;
     mInContextButtonPress  = false;
     mIgnoreNextUpEvent     = false;
@@ -4675,7 +4674,7 @@ void View::setBackground(Drawable*background){
     bool bRequestLayout = false;
     if(mBackground!=nullptr){
         if(isAttachedToWindow()) mBackground->setVisible(false,false);
-        mBackground->setCallback(this);
+        mBackground->setCallback(nullptr);
         unscheduleDrawable(*mBackground);
         delete mBackground;
         mBackground = nullptr;
@@ -6125,9 +6124,8 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate && (isOpaque() != mLastIsOpaque))) {
+              || fullInvalidate) {
         if (fullInvalidate) {
-            mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;
         }
 
