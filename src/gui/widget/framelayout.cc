@@ -105,7 +105,7 @@ int FrameLayout::getPaddingBottomWithForeground() const{
 void FrameLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int count = getChildCount();
 
-    bool measureMatchParentChildren =MeasureSpec::getMode(widthMeasureSpec) != MeasureSpec::EXACTLY ||
+    const bool measureMatchParentChildren =MeasureSpec::getMode(widthMeasureSpec) != MeasureSpec::EXACTLY ||
         MeasureSpec::getMode(heightMeasureSpec) != MeasureSpec::EXACTLY;
     mMatchParentChildren.clear();
 

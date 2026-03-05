@@ -1721,10 +1721,10 @@ int TextView::desired(Layout*layout){
 }
 
 void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
-    int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode = MeasureSpec::getMode(heightMeasureSpec);
-    int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
-    int heightSize = MeasureSpec::getSize(heightMeasureSpec);
+    const int widthMode  = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightMode = MeasureSpec::getMode(heightMeasureSpec);
+    const int widthSize  = MeasureSpec::getSize(widthMeasureSpec);
+    const int heightSize = MeasureSpec::getSize(heightMeasureSpec);
 
     int width;
     int height;
@@ -1753,10 +1753,10 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         width += getCompoundPaddingLeft() + getCompoundPaddingRight();
 
         if (mMaxWidthMode == EMS)width = std::min(width, mMaxWidth * getLineHeight());
-        else   width = std::min(width, mMaxWidth);
+        else width = std::min(width, mMaxWidth);
 
         if (mMinWidthMode == EMS) width = std::max(width, mMinWidth * getLineHeight());
-        else  width = std::max(width, mMinWidth);
+        else width = std::max(width, mMinWidth);
 
         // Check against our minimum width
         width = std::max(width, getSuggestedMinimumWidth());
@@ -1778,7 +1778,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         height = heightSize;
         mDesiredHeightAtMeasure = -1;
     } else {
-        int desired = getDesiredHeight();
+        const int desired = getDesiredHeight();
         height = desired;
         mDesiredHeightAtMeasure = desired;
 
