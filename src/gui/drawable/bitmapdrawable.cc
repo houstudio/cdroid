@@ -486,8 +486,10 @@ void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     auto bmp = ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
     mBitmapState->mBitmap = bmp;
     static std::unordered_map<std::string,int>kvs={
-          {"disabled",TileMode::DISABLED}, {"clamp",TileMode::CLAMP},
-          {"repeat",TileMode::REPEAT},  {"mirror",TileMode::MIRROR}};
+          {"disabled",TileMode::DISABLED},
+          {"clamp",TileMode::CLAMP},
+          {"repeat",TileMode::REPEAT},
+          {"mirror",TileMode::MIRROR}};
     const int tileMode=atts.getInt("tileMode",kvs,-1);
     mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
     mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);

@@ -65,7 +65,7 @@ typedef struct {
 static INPUTDEVICE dev= {0,0};
 #define WATCHED_PATH "/dev/input"
 int32_t InputInit() {
-    if(dev.pipe[0]>0)
+    if(dev.pipe[0] > 0)
         return 0;
     pipe(dev.pipe);
     dev.fds.push_back({dev.pipe[0],"pipe"});
@@ -74,13 +74,15 @@ int32_t InputInit() {
     struct dirent **namelist=nullptr;
     LOGD("cplusplus=%d fcntl=%d fd[0]=%d input_event.size=%d %d",__cplusplus,rc,dev.fds[0].fd,sizeof(struct input_event),sizeof(struct timeval));
     int nf=scandir(WATCHED_PATH,&namelist,[](const struct dirent * ent)->int{
-        char fname[256];
+        char fname[PATH_MAX];
         int fd = -1;
         snprintf(fname,sizeof(fname),WATCHED_PATH"/%s",ent->d_name);
-        if(ent->d_type!=DT_DIR) {
+        if(ent->d_type != DT_DIR) {
+            const int clock = CLOCK_MONOTONIC;
+            /*if your kernel's CONFIG_INPUT_PROC_CLOCK is realtime and no RTC,the clock must be setted as CLOCK_MONOTONIC*/
             fd = open(fname,O_RDWR);
-            LOGI("%s fd=%d",fname,fd);
-            if(fd>0) {
+            ioctl(fd,EVIOCSCLOCKID,&clock);
+            if(fd > 0) {
                 dev.maxfd=std::max(dev.maxfd,fd);
                 dev.fds.push_back({fd,fname});
             }
@@ -98,16 +100,13 @@ int32_t InputInit() {
 #define SET_BIT(array,bit)    ((array)[(bit)/8] |= (1<<((bit)%8)))
 
 int32_t InputGetDeviceInfo(int device,INPUTDEVICEINFO*devinfo) {
-    int rc1,rc2,rcc=0,version=-1;
-    int clock = CLOCK_MONOTONIC;/*CLOCK_REALTIME=0,CLOCK_MONOTONIC=1 time.h*/
+    int rc1,rc2,rcc = 0,version = -1;
     memset(devinfo,0,sizeof(INPUTDEVICEINFO));
-    struct input_id id={0,0};
-    rc1=ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
-    rc2=ioctl(device, EVIOCGID, &id);
-    rc2=ioctl(device,EVIOCGVERSION,&version);
-    /*if your kernel's CONFIG_INPUT_PROC_CLOCK is realtime and no RTC,the clock must be setted as CLOCK_MONOTONIC*/
-    /*rcc=ioctl(device,EVIOCSCLOCKID,&clock);*/
-    rc2=ioctl(device,EVIOCGUNIQ(sizeof(devinfo->uniqueId)),devinfo->uniqueId);
+    struct input_id id = {0,0};
+    rc1 = ioctl(device, EVIOCGNAME(sizeof(devinfo->name) - 1),devinfo->name);
+    rc2 = ioctl(device, EVIOCGID, &id);
+    rc2 = ioctl(device, EVIOCGVERSION,&version);
+    rc2 = ioctl(device, EVIOCGUNIQ(sizeof(devinfo->uniqueId)),devinfo->uniqueId);
     LOGD("device[%s]%d  vid:%d pid:%d ver:%d id:%s clockset=%d",devinfo->name,device,id.vendor,id.product,version,devinfo->uniqueId,rcc);
 
     for(int i=0,j=0; i<ABS_CNT; i++) {
