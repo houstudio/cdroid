@@ -1,5 +1,5 @@
-project (ingenic C CXX)
-#for inegnic X2600
+project (ad102 C CXX)
+
 set(INGENIC_SRCS
 	../common/cdlog.cc
 	../common/input_linux.cc
