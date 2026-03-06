@@ -483,8 +483,8 @@ void ImageView::configureBounds(){
             mDrawMatrix.scale(scale, scale);
         } else {
             // Generate the required transform.
-            Rect src = {0, 0, dwidth, dheight};
-            Rect dst = {0, 0, vwidth, vheight};
+            const Rect src = {0, 0, dwidth, dheight};
+            const Rect dst = {0, 0, vwidth, vheight};
             mDrawMatrix = mMatrix;
             setRect2Rect(mDrawMatrix,src,dst,mScaleType);
         }
@@ -870,11 +870,10 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 void ImageView::onDraw(Canvas& canvas) {
     if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
  
-    const double degrees = M_PI / 180.f;
-
     const int width = getWidth();
     const int height= getHeight();
     if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
+        const double degrees = M_PI / 180.f;
         canvas.begin_new_sub_path();
         canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
         canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
