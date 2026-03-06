@@ -42,4 +42,4 @@ include_directories(
 set(INGENIC_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/include/lib2d PARENT_SCOPE)
 add_library(ingenic2d STATIC ${G2DSRCS})
 link_directories(./)
-#target_link_libraries(ingenic2d hardware2 m)
+target_link_libraries(ingenic2d hardware2 m)
