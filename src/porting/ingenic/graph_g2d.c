@@ -211,7 +211,6 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         surf->pitch=dev->fix.line_length;
         surf->frame=ingenic_2d_alloc_frame_by_user(g2d,width,height,INGENIC_2D_ARGB8888,surf->kbuffer,surf->buffer,buffer_size);
     } else {
-        surf->buffer=(char*)malloc(buffer_size);
         surf->frame = ingenic_2d_alloc_frame(g2d,width,height,INGENIC_2D_ARGB8888);
         surf->buffer= surf->frame->addr[0];
         surf->kbuffer=surf->frame->phyaddr[0];
@@ -255,14 +254,6 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
-    /*pbs+=rs.y*nsrc->pitch+rs.x*4;
-    pbd+=dy*ndst->pitch+dx*4;
-    const int cpw=rs.w*4;
-    for(y=0; y<rs.h; y++) {
-        memcpy(pbd,pbs,cpw);
-        pbs+=nsrc->pitch;
-        pbd+=ndst->pitch;
-    }*/
     ingenic_src.x=rs.x;
     ingenic_src.y=rs.y;
     ingenic_src.w=rs.w;
@@ -283,7 +274,6 @@ int32_t GFXDestroySurface(GFXHANDLE surface) {
     if(surf->ishw)
         munmap(surf->buffer,surf->pitch*surf->height);
     else {
-        if(surf->buffer)free(surf->buffer);
         if(surf->frame)ingenic_2d_free_frame(g2d,surf->frame);
     }
     free(surf);
