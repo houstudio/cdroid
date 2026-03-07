@@ -85,7 +85,8 @@ int32_t GFXInit() {
     LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
     g2d = ingenic_2d_open();
     LOGI("FBIOPUT_VSCREENINFO=%d g2d=%p",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),g2d);
-    LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
+    LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags,
+            screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
     atexit(OnExit);
     return E_OK;
 }
@@ -214,14 +215,18 @@ static int setfbinfo(FBSURFACE*surf) {
 
 int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
+    FBDEVICE*dev=devs+dispid;
     surf->dispid=dispid;
+    if(hwsurface){
+        width = dev->var.xres;
+        height= dev->var.yres;
+    }
     surf->width=width;
     surf->height=height;
     surf->format=format;
     surf->ishw=hwsurface;
     surf->pitch=width*4;
     size_t buffer_size=surf->height*surf->pitch;
-    FBDEVICE*dev=devs+dispid;
     if(hwsurface && devs[dispid].fix.smem_len) {
         size_t mem_len=((dev->fix.smem_start) -((dev->fix.smem_start) & ~(getpagesize() - 1)));
         buffer_size=surf->height*dev->fix.line_length;
@@ -231,13 +236,11 @@ int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t he
         surf->pitch=dev->fix.line_length;
         surf->frame=ingenic_2d_alloc_frame_by_user(g2d,width,height,INGENIC_2D_ARGB8888,surf->kbuffer,surf->buffer,buffer_size);
     } else {
-        //surf->buffer=(char*)malloc(buffer_size);
         surf->frame = ingenic_2d_alloc_frame(g2d,width,height,INGENIC_2D_ARGB8888);
         surf->buffer= surf->frame->addr[0];
         surf->kbuffer=surf->frame->phyaddr[0];
     }
-    surf->ishw=hwsurface;
-    LOGV("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
+    LOGI("surface=%x buf=%p/%p size=%dx%d hw=%d",surf,surf->kbuffer,surf->buffer,width,height,hwsurface);
     *surface=surf;
     return E_OK;
 }
