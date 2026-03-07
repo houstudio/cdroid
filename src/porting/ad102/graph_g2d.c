@@ -17,6 +17,7 @@ typedef struct {
     int fb;
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
+    struct fb_device_info fb_info;
 } FBDEVICE;
 
 typedef struct {
@@ -33,6 +34,13 @@ typedef struct {
 
 static FBDEVICE devs[2]= {-1};
 static struct ingenic_2d *g2d;
+
+static void OnExit(){
+    FBDEVICE*dev=&devs[0];
+    fb_close(dev->fb,&dev->fb_info);
+    ingenic_2d_close(g2d);
+    LOGI("Graph Exit");
+}
 
 int32_t GFXInit() {
     if(devs[0].fb>=0)return E_OK;
@@ -54,15 +62,16 @@ int32_t GFXInit() {
     }
 #else
     struct fb_device_info fb_info;
-    dev->fb=fb_open("/dev/fb0",&fb_info);
-    dev->fix=fb_info.fix;
-    dev->var=fb_info.var;
+    dev->fb=fb_open("/dev/fb0",&dev->fb_info);
+    dev->fix=dev->fb_info.fix;
+    dev->var=dev->fb_info.var;
 #endif
     dev->var.yoffset=0;//set first screen memory for display
     LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
     g2d = ingenic_2d_open();
     LOGI("FBIOPUT_VSCREENINFO=%d g2d=%p",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),g2d);
     LOGI("fb solution=%dx%d accel_flags=0x%x\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags);
+    atexit(OnExit);
     return E_OK;
 }
 

@@ -1,5 +1,5 @@
-project (ingenic C CXX)
-#for inegnic X2600
+project (ad102 C CXX)
+
 set(INGENIC_SRCS
 	../common/cdlog.cc
 	../common/input_linux.cc
@@ -27,9 +27,9 @@ endif()
 list(APPEND INGENIC_INCLUDE_DIRS ../common)
 list(APPEND INGENIC_INCLUDE_DIRS ../include)
 
+link_directories(${PROJECT_SOURCE_DIR} ./lib2d ./)
 include_directories(./
     ./ ../common ../include
-    ./include/lib2d ./include/
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${INGENIC_INCLUDE_DIRS}
@@ -39,6 +39,6 @@ set(PREFIX ${CMAKE_INSTALL_PREFIX})
 add_library(tvhal SHARED ${INGENIC_SRCS} ../common/graph_fb.c)
 add_library(tvhal-g2d SHARED ${INGENIC_SRCS} ./graph_g2d.c)
 target_link_libraries(tvhal ${INGENIC_LIBS} dl)
-target_link_libraries(tvhal-g2d ${INGENIC_LIBS} 2d)
+target_link_libraries(tvhal-g2d ${INGENIC_LIBS} 2d hardware2)
 add_dependencies(tvhal tvhal-g2d)
 install (TARGETS tvhal tvhal-g2d  DESTINATION lib)
