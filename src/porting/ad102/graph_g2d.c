@@ -34,7 +34,7 @@ typedef struct {
 
 static FBDEVICE devs[2]= {-1};
 static struct ingenic_2d *g2d;
-
+static GFXRect screenMargin= {0};
 static void OnExit(){
     FBDEVICE*dev=&devs[0];
     fb_close(dev->fb,&dev->fb_info);
@@ -66,6 +66,21 @@ int32_t GFXInit() {
     dev->fix=dev->fb_info.fix;
     dev->var=dev->fb_info.var;
 #endif
+    const char*strMargin=getenv("SCREEN_MARGINS");
+    const char* DELIM=",;";
+    if(strMargin){
+        char *sm=strdup(strMargin);
+        char*token=strtok(sm,DELIM);
+        screenMargin.x=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.y=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.w=atoi(token);
+        token=strtok(NULL,DELIM);
+        screenMargin.h=atoi(token);
+        free(sm);
+    }
+
     dev->var.yoffset=0;//set first screen memory for display
     LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
     g2d = ingenic_2d_open();
@@ -82,12 +97,8 @@ int32_t GFXGetDisplayCount() {
 int32_t GFXGetDisplaySize(int dispid,uint32_t*width,uint32_t*height) {
     if(dispid<0||dispid>=GFXGetDisplayCount())return E_ERROR;
     FBDEVICE*dev=devs+dispid;
-    *width=dev->var.xres;
-    *height=dev->var.yres;
-    if( (dev->var.xres==0) || (dev->var.yres==0)) {
-        *width=800;
-        *height=640;
-    }
+    *width =dev->var.xres-(screenMargin.x + screenMargin.w);
+    *height=dev->var.yres-(screenMargin.y + screenMargin.h);
     LOGD("screensize=%dx%d",*width,*height);
     return E_OK;
 }
@@ -260,8 +271,10 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
         rs.h=(int)rs.h+dy;
         dy=0;
     }
-    if(dx+rs.w>ndst->width)rs.w=ndst->width-dx;
-    if(dy+rs.h>ndst->height)rs.h=ndst->height-dy;
+    if(dx+rs.w>ndst->width - screenMargin.x - screenMargin.w)
+        rs.w = ndst->width - screenMargin.x - screenMargin.w-dx;
+    if(dy+rs.h>ndst->height- screenMargin.y- screenMargin.h)
+        rs.h = ndst->height- screenMargin.y- screenMargin.h -dy;
 
     LOGV("Blit %p %d,%d-%d,%d -> %p %d,%d buffer=%p->%p",nsrc,rs.x,rs.y,rs.w,rs.h,ndst,dx,dy,pbs,pbd);
     ingenic_src.x=rs.x;
@@ -273,6 +286,10 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
     ingenic_dst.y=dy;
     ingenic_dst.w=rs.w;
     ingenic_dst.h=rs.h;
+    if(ndst->ishw){
+        ingenic_dst.x+=screenMargin.x;
+        ingenic_dst.y+=screenMargin.y;
+    }
     ingenic_dst.frame=ndst->frame;
     ingenic_2d_blend(g2d,&ingenic_src,&ingenic_dst,255);
     return 0;
