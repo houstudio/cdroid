@@ -38,6 +38,7 @@ static struct ingenic_2d *g2d;
 static void OnExit(){
     FBDEVICE*dev=&devs[0];
     fb_close(dev->fb,&dev->fb_info);
+    ingenic_2d_close(g2d);
     LOGI("Graph Exit");
 }
 
