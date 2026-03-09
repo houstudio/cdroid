@@ -1,6 +1,6 @@
 project (ad102 C CXX)
 
-set(INGENIC_SRCS
+set(AD102_SRCS
 	../common/cdlog.cc
 	../common/input_linux.cc
     ./cdplayer.c
@@ -25,13 +25,11 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-list(APPEND INGENIC_INCLUDE_DIRS ../common)
-list(APPEND INGENIC_INCLUDE_DIRS ../include)
+list(APPEND AD102_INCLUDE_DIRS ../common)
+list(APPEND AD102_INCLUDE_DIRS ../include)
 
-#find_package(FFMPEG REQUIRED)
-#link_directories(${PROJECT_SOURCE_DIR} ./lib2d ./)# ${FFMPEG_LIBRARY_DIRS})
 include_directories(./
-    ${INGENIC_INCLUDE_DIRS}
+    ${AD102_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
     ${FFMPEG_INCLUDE_DIRS}
@@ -43,8 +41,8 @@ set(AD102_LIBS
     asound utils2
     media media_ffmpeg
     hardware2 2d)
-add_library(tvhal SHARED ${INGENIC_SRCS} ../common/graph_fb.c)
-add_library(tvhal-g2d SHARED ${INGENIC_SRCS} ./graph_g2d.c)
+add_library(tvhal SHARED ${AD102_SRCS} ../common/graph_fb.c)
+add_library(tvhal-g2d SHARED ${AD102_SRCS} ./graph_g2d.c)
 target_link_libraries(tvhal ${AD102_LIBS} )
 target_link_libraries(tvhal-g2d ${AD102_LIBS})
 
