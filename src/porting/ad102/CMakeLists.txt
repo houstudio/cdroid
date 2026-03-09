@@ -37,7 +37,12 @@ include_directories(./
     ${FFMPEG_INCLUDE_DIRS}
 )
 
-set(AD102_LIBS asound utils2 media hardware2 2d)
+set(AD102_LIBS
+    z ssl crypto
+    avcodec avutil avfilter swresample swscale avformat
+    asound utils2
+    media media_ffmpeg
+    hardware2 2d)
 add_library(tvhal SHARED ${INGENIC_SRCS} ../common/graph_fb.c)
 add_library(tvhal-g2d SHARED ${INGENIC_SRCS} ./graph_g2d.c)
 target_link_libraries(tvhal ${AD102_LIBS} )
