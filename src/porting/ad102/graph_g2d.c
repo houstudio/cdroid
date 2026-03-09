@@ -8,11 +8,12 @@
 #include <sys/mman.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <core/eventcodes.h>
 #include <cdinput.h>
 #include <ingenic2d.h>
 #include <libhardware2/fb.h>
-
+#include <signal.h>
 typedef struct {
     int fb;
     struct fb_fix_screeninfo fix;
@@ -35,11 +36,27 @@ typedef struct {
 static FBDEVICE devs[2]= {-1};
 static struct ingenic_2d *g2d;
 static GFXRect screenMargin= {0};
+
 static void OnExit(){
     FBDEVICE*dev=&devs[0];
+    printf("%s Graph Exit g2d=%p\r\n",__FUNCTION__,g2d);
     fb_close(dev->fb,&dev->fb_info);
-    ingenic_2d_close(g2d);
-    LOGI("Graph Exit");
+    if(g2d){
+        ingenic_2d_close(g2d);
+        g2d=NULL;
+    }
+}
+
+static void signal_handler(int sig) {
+    // 如果在这里调用 _exit(0)，atexit 不会被调用
+    FBDEVICE*dev=&devs[0];
+    printf("%s Graph Exit g2d=%p\r\n",__FUNCTION__,g2d);
+    fb_close(dev->fb,&dev->fb_info);
+    if(g2d){
+        ingenic_2d_close(g2d);
+        g2d=NULL;
+    }
+    _exit(0);
 }
 
 int32_t GFXInit() {
@@ -88,7 +105,15 @@ int32_t GFXInit() {
     LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags,
             screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);
     atexit(OnExit);
+    signal(SIGINT, signal_handler);
     return E_OK;
+}
+
+int32_t GFXTerm(){
+    FBDEVICE*dev=&devs[0];
+    fb_close(dev->fb,&dev->fb_info);
+    ingenic_2d_close(g2d);
+    LOGI("Graph Term");
 }
 
 int32_t GFXGetDisplayCount() {
@@ -301,9 +326,9 @@ int32_t GFXBlit(GFXHANDLE dstsurface,int dx,int dy,GFXHANDLE srcsurface,const GF
 int32_t GFXDestroySurface(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     FBDEVICE*dev=devs+surf->dispid;
-    if(surf->ishw)
+    if(surf->ishw){
         munmap(surf->buffer,surf->pitch*surf->height);
-    else {
+    }else {
         if(surf->frame)ingenic_2d_free_frame(g2d,surf->frame);
     }
     free(surf);
