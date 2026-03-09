@@ -43,15 +43,15 @@ HANDLE MPOpen(const char*fname) {
     if (!access("/dev/snd/pcmC1D0p", F_OK))
         audio_device = "/dev/snd/pcmC1D0p";
 
-    ffmpeg_demuxing_init_param(&mp->demuxing_param);
-    ffmpeg_video_decoder_init_param(&mp->video_decoder_param);
+    //ffmpeg_demuxing_init_param(&mp->demuxing_param);
+    //ffmpeg_video_decoder_init_param(&mp->video_decoder_param);
     fb_video_player_init_default_param(&mp->fb_param);
     async_video_player_init_param(&mp->async_video_param, mp->fb_param.fb_device, &mp->fb_param.param);
 
-    ffmpeg_audio_decoder_init_param(&mp->audio_decoder_param);
+    //ffmpeg_audio_decoder_init_param(&mp->audio_decoder_param);
     alsa_audio_player_init_default_param(&mp->alsa_player_param, 2, 48000);
     async_audio_player_init_param(&mp->async_audio_param, audio_device, &mp->alsa_player_param.param);
-    ffmpeg_audio_resample_init_default_param(&mp->resampler_param, 2, 48000, AUDIO_fltp, AUDIO_s16le);
+    //ffmpeg_audio_resample_init_default_param(&mp->resampler_param, 2, 48000, AUDIO_fltp, AUDIO_s16le);
 
     mp->m_p_param.demuxing_param = &mp->demuxing_param;
     mp->m_p_param.video_player_param = &mp->async_video_param.param;
