@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <core/eventcodes.h>
 #include <cdinput.h>
-#include <ingenic2d.h>
+#include <lib2d/ingenic2d.h>
 #include <libhardware2/fb.h>
 #include <signal.h>
 typedef struct {
