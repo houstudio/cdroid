@@ -1,8 +1,9 @@
 project (ad102 C CXX)
 
-set(INGENIC_SRCS
+set(AD102_SRCS
 	../common/cdlog.cc
 	../common/input_linux.cc
+    ./cdplayer.c
 	)
 include(CheckIncludeFile)
 
@@ -24,21 +25,28 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
-list(APPEND INGENIC_INCLUDE_DIRS ../common)
-list(APPEND INGENIC_INCLUDE_DIRS ../include)
+list(APPEND AD102_INCLUDE_DIRS ../common)
+list(APPEND AD102_INCLUDE_DIRS ../include)
 
-link_directories(${PROJECT_SOURCE_DIR} ./lib2d ./)
 include_directories(./
-    ./ ../common ../include
+    ${AD102_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
     ${CMAKE_SOURCE_DIR}/src/gui/core
-    ${INGENIC_INCLUDE_DIRS}
+    ${FFMPEG_INCLUDE_DIRS}
 )
-set(PREFIX ${CMAKE_INSTALL_PREFIX})
 
-add_library(tvhal SHARED ${INGENIC_SRCS} ../common/graph_fb.c)
-add_library(tvhal-g2d SHARED ${INGENIC_SRCS} ./graph_g2d.c)
-target_link_libraries(tvhal ${INGENIC_LIBS} dl)
-target_link_libraries(tvhal-g2d ${INGENIC_LIBS} 2d hardware2)
+set(AD102_LIBS
+    z ssl crypto
+    avcodec avutil avfilter swresample swscale avformat
+    asound utils2
+    media media_ffmpeg
+    hardware2 2d)
+add_library(tvhal SHARED ${AD102_SRCS} ../common/graph_fb.c)
+add_library(tvhal-g2d SHARED ${AD102_SRCS} ./graph_g2d.c)
+target_link_libraries(tvhal ${AD102_LIBS} )
+target_link_libraries(tvhal-g2d ${AD102_LIBS})
+
+set_target_properties(tvhal tvhal-g2d PROPERTIES LINK_INTERFACE_MULTIPLICITY 3)
+
 add_dependencies(tvhal tvhal-g2d)
 install (TARGETS tvhal tvhal-g2d  DESTINATION lib)

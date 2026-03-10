@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <core/eventcodes.h>
 #include <cdinput.h>
-#include <ingenic2d.h>
+#include <lib2d/ingenic2d.h>
 #include <libhardware2/fb.h>
 #include <signal.h>
 typedef struct {
@@ -236,7 +236,6 @@ static int setfbinfo(FBSURFACE*surf) {
     LOGD("FBIOPUT_VSCREENINFO=%d",rc);
     return rc;
 }
-
 
 int32_t GFXCreateSurface(int dispid,GFXHANDLE*surface,uint32_t width,uint32_t height,int32_t format,bool hwsurface) {
     FBSURFACE*surf=(FBSURFACE*)malloc(sizeof(FBSURFACE));
