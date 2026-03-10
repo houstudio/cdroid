@@ -80,7 +80,6 @@ static void* PlayProc(void*p){
 int MPPlay(HANDLE handle) {
     INGENIC_PLAYER*mp=(INGENIC_PLAYER*)handle;
     pthread_create(&mp->threadId,NULL,PlayProc,mp);
-    pthread_detach(mp->threadId);
     return E_OK;
 }
 
