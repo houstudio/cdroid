@@ -73,7 +73,8 @@ static void* PlayProc(void*p){
     INGENIC_PLAYER*mp=(INGENIC_PLAYER*)p;
     mp->running=true;
     while(mp&&mp->running){
-        media_player_play_one_frame(mp->player);
+        const int ret =media_player_play_one_frame(mp->player);
+        if((ret < 0)||media_player_is_end(mp->player))break;
     }
 }
 
