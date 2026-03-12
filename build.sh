@@ -25,7 +25,7 @@ fi
 TOOLCHAINS["SIGMA"]=${VCPKGROOT}/scripts/toolchains/ssd202-mtitoolchain.cmake
 TOOLCHAINS["ALI3528"]=${VCPKGROOT}/scripts/toolchains/ali3528-mtitoolchain.cmake
 TOOLCHAINS["R818"]=${VCPKGROOT}/scripts/toolchains/r818-toolchain.cmake
-TOOLCHAINS["D211"]=${VCPKGROOT}/scripts/toolchains/riscv64-d211-toolchain.cmake
+TOOLCHAINS["D211"]=${VCPKGROOT}/scripts/toolchains/artinchip-d211-toolchain.cmake
 TOOLCHAINS["HI3536"]=${VCPKGROOT}/scripts/toolchains/hisi3536-toolchain.cmake
 TOOLCHAINS["INGENIC"]=${VCPKGROOT}/scripts/toolchains/ingenic-x2600-toolchain.cmake
 TOOLCHAINS["AD102"]=${VCPKGROOT}/scripts/toolchains/ingenic-ad102-toolchain.cmake
@@ -39,7 +39,7 @@ declare -A DEPLIBS #key/value dict,key is platform,value is deplibs dir in vcpkg
 DEPLIBS["X64"]=${VCPKGROOT}/installed/x64-linux-dynamic
 DEPLIBS["SIGMA"]=${VCPKGROOT}/installed/sigma-linux-dynamic
 DEPLIBS["R818"]=${VCPKGROOT}/installed/r818-linux
-DEPLIBS["D211"]=${VCPKGROOT}/installed/riscv64-d211-linux
+DEPLIBS["D211"]=${VCPKGROOT}/installed/artinchip-d211-linux-dynamic
 DEPLIBS["HI3536"]=${VCPKGROOT}/installed/hisi3536-linux
 DEPLIBS["INGENIC"]=${VCPKGROOT}/installed/ingenic-linux
 DEPLIBS["AD102"]=${VCPKGROOT}/installed/ingenic-ad102-linux
