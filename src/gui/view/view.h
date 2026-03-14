@@ -564,7 +564,9 @@ private:
     class TintInfo* mBackgroundTint;
     class ForegroundInfo* mForegroundInfo;
 private:	
+    View(View &&) =delete;
     View(const View&) = delete;
+    View&operator=(View&) = delete;
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version

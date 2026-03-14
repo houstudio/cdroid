@@ -296,7 +296,7 @@ void GridLayout::setCellGroup(LayoutParams* lp, int row, int rowSpan, int col, i
     lp->setColumnSpecSpan(Interval(col,col+colSpan));
 }
 
-int GridLayout::clip(Interval minorRange, bool minorWasDefined, int count){
+int GridLayout::clip(const Interval& minorRange, bool minorWasDefined, int count){
     const int size = minorRange.size();
     if (count == 0) {
         return size;
@@ -694,11 +694,12 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
                 targetWidth - width - paddingRight - rightMargin - dx;
         const int cy = paddingTop + y1 + gravityOffsetY + alignmentOffsetY + topMargin;
 
-        if (width != c->getMeasuredWidth() || height != c->getMeasuredHeight()) {
+        if ( (width != c->getMeasuredWidth()) || (height != c->getMeasuredHeight()) ) {
             c->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY), 
                        MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY));
         }
-        LOGV("child %p:%d pos=%d,%d",c,c->getId(),x1,y1);
+        LOGV("child %p:%d pos=%d,%d,%d,%d col:%d,%d row:%d,%d",c,c->getId(),x1,y1,width,height,
+                columnSpec.span.min,columnSpec.span.max,rowSpec.span.min,rowSpec.span.max);
         c->layout(cx, cy, width, height);
     }
 }

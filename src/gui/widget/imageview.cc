@@ -510,7 +510,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
         // update cached drawable dimensions if they've changed
         const int w = dr.getIntrinsicWidth();
         const int h = dr.getIntrinsicHeight();
-        LOGV("wh=%d,%d ->%d,%d",w,h,mDrawableWidth,mDrawableHeight);
+        LOGV("%p:%d wh=%d,%d ->%d,%d",this,mID,w,h,mDrawableWidth,mDrawableHeight);
         if (w != mDrawableWidth || h != mDrawableHeight) {
             mDrawableWidth = w;
             mDrawableHeight = h;
@@ -868,12 +868,14 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 }
 
 void ImageView::onDraw(Canvas& canvas) {
-    if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
  
     const int width = getWidth();
     const int height= getHeight();
-    if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
+    bool needSaveRestore = mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3];
+    if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
+    if(needSaveRestore){
         const double degrees = M_PI / 180.f;
+        canvas.save();
         canvas.begin_new_sub_path();
         canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
         canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
@@ -887,21 +889,22 @@ void ImageView::onDraw(Canvas& canvas) {
         mDrawable->setAlpha(getAlpha()*255);
         mDrawable->draw(canvas);
     } else {
-        canvas.save();
+        if(!needSaveRestore){
+            canvas.save();
+            needSaveRestore=true;
+        }
         if (mCropToPadding) {
             canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
-                    mScrollX + getWidth() - mPaddingRight,
-                    mScrollY  + getHeight()- mPaddingBottom);
+                    mScrollX + getWidth() - mPaddingRight,mScrollY  + getHeight()- mPaddingBottom);
             canvas.clip();
         }
         LOGV("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
             mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
         canvas.transform(mDrawMatrix);
-
         mDrawable->draw(canvas);
-        canvas.restore();
     }
+    if(needSaveRestore)canvas.restore();
 }
 
 }
