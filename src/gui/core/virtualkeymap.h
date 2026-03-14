@@ -33,7 +33,6 @@ struct VirtualKeyDefinition {
     int32_t height;
 };
 
-
 /**
  * Describes a collection of virtual keys on a touch screen in terms of
  * virtual scan codes and hit rectangles.
@@ -43,30 +42,25 @@ struct VirtualKeyDefinition {
 class VirtualKeyMap {
 public:
     ~VirtualKeyMap();
-
     static std::unique_ptr<VirtualKeyMap> fromStream(std::istream& filename);
 
     inline const std::vector<VirtualKeyDefinition>& getVirtualKeys() const {
         return mVirtualKeys;
     }
-
 private:
     class Parser {
         VirtualKeyMap* mMap;
         Tokenizer* mTokenizer;
-
     public:
         Parser(VirtualKeyMap* map, Tokenizer* tokenizer);
         ~Parser();
         int32_t parse();
-
     private:
         bool consumeFieldDelimiterAndSkipWhitespace();
         bool parseNextIntField(int32_t* outValue);
     };
 
     std::vector<VirtualKeyDefinition> mVirtualKeys;
-
     VirtualKeyMap();
 };
 

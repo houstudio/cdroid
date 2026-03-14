@@ -16,7 +16,7 @@
 #else
   #include <core/eventcodes.h>
 #endif
-
+#include <linux/uinput.h>
 #include <porting/cdlog.h>
 #include <cstring>
 #include <string>
