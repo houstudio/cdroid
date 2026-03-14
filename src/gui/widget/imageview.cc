@@ -868,19 +868,18 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 }
 
 void ImageView::onDraw(Canvas& canvas) {
- 
-    const int width = getWidth();
-    const int height= getHeight();
     bool needSaveRestore = mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3];
     if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
     if(needSaveRestore){
         const double degrees = M_PI / 180.f;
+        const int width = getWidth();
+        const int height= getHeight();
         canvas.save();
         canvas.begin_new_sub_path();
-        canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
-        canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
-        canvas.arc( mRadii[3], height - mRadii[3], mRadii[3], 90 * degrees, 180 * degrees);
-        canvas.arc( mRadii[0], mRadii[0], mRadii[0], 180 * degrees, 270 * degrees);
+        canvas.arc( mScrollX + width - mRadii[1] - mPaddingRight, mScrollY + mRadii[1 + mPaddingTop], mRadii[1], -90 * degrees, 0 * degrees);
+        canvas.arc( mScrollX + width - mRadii[2] - mPaddingRight, mScrollY + height - mRadii[2]-mPaddingBottom, mRadii[2], 0 * degrees, 90 * degrees);
+        canvas.arc( mScrollX + mRadii[3] + mPaddingLeft, mScrollY + height - mRadii[3] - mPaddingBottom, mRadii[3], 90 * degrees, 180 * degrees);
+        canvas.arc( mScrollX + mRadii[0] + mPaddingLeft, mScrollY + mRadii[0] + mPaddingTop, mRadii[0], 180 * degrees, 270 * degrees);
         canvas.close_path();
         canvas.clip();
     }
@@ -895,7 +894,8 @@ void ImageView::onDraw(Canvas& canvas) {
         }
         if (mCropToPadding) {
             canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
-                    mScrollX + getWidth() - mPaddingRight,mScrollY  + getHeight()- mPaddingBottom);
+                    mScrollX + getWidth() - mPaddingRight - mPaddingLeft,
+                    mScrollY + getHeight()- mPaddingBottom- mPaddingTop);
             canvas.clip();
         }
         LOGV("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
