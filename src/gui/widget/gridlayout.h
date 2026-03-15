@@ -92,7 +92,7 @@ public:
     class Spec{
     public:
         static const Spec UNDEFINED;
-        static constexpr float DEFAULT_WEIGHT =.0f;
+        static constexpr float DEFAULT_WEIGHT =0.0f;
     public:
         bool startDefined;
         Interval span;
@@ -303,7 +303,7 @@ private:
     static bool fits(std::vector<int>&a, int value, int start, int end);
     static void procrusteanFill(std::vector<int>& a, int start, int end, int value);
     static void setCellGroup(LayoutParams* lp, int row, int rowSpan, int col, int colSpan);
-    static int clip(Interval minorRange, bool minorWasDefined, int count);
+    static int clip(const Interval& minorRange, bool minorWasDefined, int count);
     void validateLayoutParams();
     static void handleInvalidParams(const std::string& msg);
     void checkLayoutParams(const LayoutParams* lp, bool horizontal)const;

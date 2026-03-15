@@ -510,7 +510,7 @@ void ImageView::invalidateDrawable(Drawable& dr){
         // update cached drawable dimensions if they've changed
         const int w = dr.getIntrinsicWidth();
         const int h = dr.getIntrinsicHeight();
-        LOGV("wh=%d,%d ->%d,%d",w,h,mDrawableWidth,mDrawableHeight);
+        LOGV("%p:%d wh=%d,%d ->%d,%d",this,mID,w,h,mDrawableWidth,mDrawableHeight);
         if (w != mDrawableWidth || h != mDrawableHeight) {
             mDrawableWidth = w;
             mDrawableHeight = h;
@@ -868,17 +868,18 @@ void ImageView::animateTransform(const Cairo::Matrix* matrix) {
 }
 
 void ImageView::onDraw(Canvas& canvas) {
+    bool needSaveRestore = mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3];
     if ((mDrawable == nullptr)||(mDrawableWidth == 0) || (mDrawableHeight == 0)) return;
- 
-    const int width = getWidth();
-    const int height= getHeight();
-    if(mRadii[0]||mRadii[1]||mRadii[2]||mRadii[3]){
+    if(needSaveRestore){
         const double degrees = M_PI / 180.f;
+        const int width = getWidth();
+        const int height= getHeight();
+        canvas.save();
         canvas.begin_new_sub_path();
-        canvas.arc( width - mRadii[1], mRadii[1], mRadii[1], -90 * degrees, 0 * degrees);
-        canvas.arc( width - mRadii[2], height - mRadii[2], mRadii[2], 0 * degrees, 90 * degrees);
-        canvas.arc( mRadii[3], height - mRadii[3], mRadii[3], 90 * degrees, 180 * degrees);
-        canvas.arc( mRadii[0], mRadii[0], mRadii[0], 180 * degrees, 270 * degrees);
+        canvas.arc( mScrollX + width - mRadii[1] - mPaddingRight, mScrollY + mRadii[1 + mPaddingTop], mRadii[1], -90 * degrees, 0 * degrees);
+        canvas.arc( mScrollX + width - mRadii[2] - mPaddingRight, mScrollY + height - mRadii[2]-mPaddingBottom, mRadii[2], 0 * degrees, 90 * degrees);
+        canvas.arc( mScrollX + mRadii[3] + mPaddingLeft, mScrollY + height - mRadii[3] - mPaddingBottom, mRadii[3], 90 * degrees, 180 * degrees);
+        canvas.arc( mScrollX + mRadii[0] + mPaddingLeft, mScrollY + mRadii[0] + mPaddingTop, mRadii[0], 180 * degrees, 270 * degrees);
         canvas.close_path();
         canvas.clip();
     }
@@ -887,21 +888,23 @@ void ImageView::onDraw(Canvas& canvas) {
         mDrawable->setAlpha(getAlpha()*255);
         mDrawable->draw(canvas);
     } else {
-        canvas.save();
+        if(!needSaveRestore){
+            canvas.save();
+            needSaveRestore=true;
+        }
         if (mCropToPadding) {
             canvas.rectangle(mScrollX + mPaddingLeft, mScrollY + mPaddingTop,
-                    mScrollX + getWidth() - mPaddingRight,
-                    mScrollY  + getHeight()- mPaddingBottom);
+                    mScrollX + getWidth() - mPaddingRight - mPaddingLeft,
+                    mScrollY + getHeight()- mPaddingBottom- mPaddingTop);
             canvas.clip();
         }
         LOGV("%p:%d DrawMatrix=%.2f,%.2f, %.2f,%.2f, %.2f,%.2f",this,mID,mDrawMatrix.xx,mDrawMatrix.yx,
             mDrawMatrix.xy,mDrawMatrix.yy,mDrawMatrix.x0,mDrawMatrix.y0);
         canvas.translate(mPaddingLeft, mPaddingTop);
         canvas.transform(mDrawMatrix);
-
         mDrawable->draw(canvas);
-        canvas.restore();
     }
+    if(needSaveRestore)canvas.restore();
 }
 
 }

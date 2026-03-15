@@ -20,12 +20,6 @@
 #include <utils/errors.h>
 namespace cdroid {
 
-static const char* WHITESPACE = " \t\r";
-static const char* WHITESPACE_OR_FIELD_DELIMITER = " \t\r:";
-
-
-// --- VirtualKeyMap ---
-
 VirtualKeyMap::VirtualKeyMap() {
 }
 
@@ -52,7 +46,6 @@ std::unique_ptr<VirtualKeyMap> VirtualKeyMap::fromStream(std::istream& istream) 
     if (status != OK) {
         return nullptr;
     }
-
     return map;
 }
 
@@ -66,31 +59,29 @@ VirtualKeyMap::Parser::Parser(VirtualKeyMap* map, Tokenizer* tokenizer) :
 VirtualKeyMap::Parser::~Parser() {
 }
 
+static const char* WHITESPACE = " \t\r";
+static const char* WHITESPACE_OR_FIELD_DELIMITER = " \t\r:";
+
 int32_t VirtualKeyMap::Parser::parse() {
     while (!mTokenizer->isEof()) {
 #if DEBUG_PARSER
         LOGD("Parsing %s: '%s'.", mTokenizer->getLocation().c_str(),
               mTokenizer->peekRemainderOfLine().c_str());
 #endif
-
         mTokenizer->skipDelimiters(WHITESPACE);
-
         if (!mTokenizer->isEol() && mTokenizer->peekChar() != '#') {
             // Multiple keys can appear on one line or they can be broken up across multiple lines.
             do {
                 std::string token = mTokenizer->nextToken(WHITESPACE_OR_FIELD_DELIMITER);
                 if (token != "0x01") {
-                    LOGE("%s: Unknown virtual key type, expected 0x01.",
-                          mTokenizer->getLocation().c_str());
+                    LOGE("%s: Unknown virtual key type, expected 0x01.",mTokenizer->getLocation().c_str());
                     return BAD_VALUE;
                 }
 
                 VirtualKeyDefinition defn;
-                bool success = parseNextIntField(&defn.scanCode)
-                        && parseNextIntField(&defn.centerX)
-                        && parseNextIntField(&defn.centerY)
-                        && parseNextIntField(&defn.width)
-                        && parseNextIntField(&defn.height);
+                const bool success = parseNextIntField(&defn.scanCode)
+                        && parseNextIntField(&defn.centerX) && parseNextIntField(&defn.centerY)
+                        && parseNextIntField(&defn.width) && parseNextIntField(&defn.height);
                 if (!success) {
                     LOGE("%s: Expected 5 colon-delimited integers in virtual key definition.",
                           mTokenizer->getLocation().c_str());
@@ -98,8 +89,7 @@ int32_t VirtualKeyMap::Parser::parse() {
                 }
 
 #if DEBUG_PARSER
-                LOGD("Parsed virtual key: scanCode=%d, centerX=%d, centerY=%d, "
-                        "width=%d, height=%d",
+                LOGD("Parsed virtual key: scanCode=%d, centerX=%d, centerY=%d, width=%d, height=%d",
                         defn.scanCode, defn.centerX, defn.centerY, defn.width, defn.height);
 #endif
                 mMap->mVirtualKeys.push_back(defn);
@@ -111,10 +101,8 @@ int32_t VirtualKeyMap::Parser::parse() {
                 return BAD_VALUE;
             }
         }
-
         mTokenizer->nextLine();
     }
-
     return NO_ERROR;
 }
 
