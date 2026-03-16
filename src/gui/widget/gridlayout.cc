@@ -934,9 +934,9 @@ public:
 
 class SwitchAlignment:public GridLayout::Alignment{
 private:
-    GridLayout::Alignment*ltr,*rtl;
+    const GridLayout::Alignment*ltr,*rtl;
 public:
-    SwitchAlignment(GridLayout::Alignment*l2r,GridLayout::Alignment*r2l){
+    SwitchAlignment(const GridLayout::Alignment*l2r,const GridLayout::Alignment*r2l){
         ltr = l2r;
         rtl = r2l;
     }
@@ -1002,14 +1002,14 @@ public:
 };
 
 namespace {
-    BaselineAlignment __BASELINE__;
-    LeadingAlignment __LEADING__;
-    TrailingAlignment __TRAILING__;
-    SwitchAlignment __LEFT__(&__LEADING__,&__TRAILING__);//GridLayout::START,GridLayout::END);
-    SwitchAlignment __RIGHT__(&__TRAILING__,&__LEADING__);//GridLayout::END,GridLayout::START);
-    CenterAlignment __CENTER__;
-    FillAlignment __FILL__;
-    UndefinedAlignment __UNDEFINED_ALIGNMENT__;
+    const BaselineAlignment __BASELINE__;
+    const LeadingAlignment __LEADING__;
+    const TrailingAlignment __TRAILING__;
+    const SwitchAlignment __LEFT__(&__LEADING__,&__TRAILING__);//GridLayout::START,GridLayout::END);
+    const SwitchAlignment __RIGHT__(&__TRAILING__,&__LEADING__);//GridLayout::END,GridLayout::START);
+    const CenterAlignment __CENTER__;
+    const FillAlignment __FILL__;
+    const UndefinedAlignment __UNDEFINED_ALIGNMENT__;
 }
 
 const GridLayout::Alignment*GridLayout::BASELINE = &__BASELINE__;//new BaselineAlignment();
