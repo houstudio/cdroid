@@ -237,7 +237,7 @@ const GridLayout::Alignment* GridLayout::getAlignment(int gravity, bool horizont
     }
 }
 
-int GridLayout::getDefaultMargin(View* c)const{
+int GridLayout::getDefaultMargin(View* c, bool horizontal, bool leading)const{
     if(!mUseDefaultMargins){
         return 0;
     }
@@ -247,12 +247,28 @@ int GridLayout::getDefaultMargin(View* c)const{
     return mDefaultGap / 2;
 }
 
+int GridLayout::getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const{
+    return /*isAtEdge ? DEFAULT_CONTAINER_MARGIN :*/ getDefaultMargin(c, horizontal, leading);
+}
+
+int GridLayout::getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool leading){
+    if (!mUseDefaultMargins) {
+        return 0;
+    }
+    Spec& spec = horizontal ? p->columnSpec : p->rowSpec;
+    Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
+    const Interval& span = spec.span;
+    bool leading1 = (horizontal && isLayoutRtl()) ? !leading : leading;
+    bool isAtEdge = leading1 ? (span.min == 0) : (span.max == axis->getCount());
+    return getDefaultMargin(c, isAtEdge, horizontal, leading);
+}
+
 int GridLayout::getMargin1(View* view, bool horizontal, bool leading){
-    LayoutParams* lp = getLayoutParams(view);
+    const LayoutParams* lp = getLayoutParams(view);
     const int margin = horizontal ?
           (leading ? lp->leftMargin : lp->rightMargin) :
           (leading ? lp->topMargin : lp->bottomMargin);
-    return margin == UNDEFINED ? getDefaultMargin(view) : margin;
+    return margin == UNDEFINED ? getDefaultMargin(view,lp,horizontal,leading) : margin;
 }
 
 int GridLayout::getMargin(View* view, bool horizontal, bool leading){
@@ -468,10 +484,10 @@ void GridLayout::onDebugDrawMargins(Canvas& canvas){
 void GridLayout::onDebugDraw(Canvas& canvas){
     Insets insets = getOpticalInsets();
 
-    int top    = getPaddingTop()    + insets.top;
-    int left   = getPaddingLeft()   + insets.left;
-    int right  = getWidth()  - getPaddingRight()  - insets.right;
-    int bottom = getHeight() - getPaddingBottom() - insets.bottom;
+    const int top    = getPaddingTop()    + insets.top;
+    const int left   = getPaddingLeft()   + insets.left;
+    const int right  = getWidth()  - getPaddingRight()  - insets.right;
+    const int bottom = getHeight() - getPaddingBottom() - insets.bottom;
 
     std::vector<int>& xs = mHorizontalAxis->locations;
     for (int i = 0, length = xs.size(); i < length; i++) {
@@ -608,11 +624,11 @@ void GridLayout::onMeasure(int widthSpec, int heightSpec){
             resolveSizeAndState(measuredHeight, heightSpec, 0));
 }
 
-int GridLayout::getMeasurement(View* c, bool horizontal) {
+int GridLayout::getMeasurement(View* c, bool horizontal) const{
     return horizontal ? c->getMeasuredWidth() : c->getMeasuredHeight();
 }
 
-int GridLayout::getMeasurementIncludingMargin(View* c, bool horizontal){
+int GridLayout::getMeasurementIncludingMargin(View* c, bool horizontal) {
     if (c->getVisibility() == View::GONE) {
         return 0;
     }

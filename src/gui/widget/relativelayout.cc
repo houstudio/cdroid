@@ -142,10 +142,10 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width = 0;
     int height = 0;
 
-    int widthMode = MeasureSpec::getMode(widthMeasureSpec);
-    int heightMode= MeasureSpec::getMode(heightMeasureSpec);
-    int widthSize = MeasureSpec::getSize(widthMeasureSpec);
-    int heightSize= MeasureSpec::getSize(heightMeasureSpec);
+    const int widthMode = MeasureSpec::getMode(widthMeasureSpec);
+    const int heightMode= MeasureSpec::getMode(heightMeasureSpec);
+    const int widthSize = MeasureSpec::getSize(widthMeasureSpec);
+    const int heightSize= MeasureSpec::getSize(heightMeasureSpec);
 
     // Record our dimensions if they are known;
     if (widthMode != MeasureSpec::UNSPECIFIED)  myWidth = widthSize;
@@ -174,8 +174,8 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         ignore = findViewById(mIgnoreGravity);
     }
 
-    bool isWrapContentWidth = widthMode != MeasureSpec::EXACTLY;
-    bool isWrapContentHeight = heightMode != MeasureSpec::EXACTLY;
+    const bool isWrapContentWidth = widthMode != MeasureSpec::EXACTLY;
+    const bool isWrapContentHeight = heightMode != MeasureSpec::EXACTLY;
     // We need to know our size for doing the correct computation of children positioning in RTL
     // mode but there is no practical way to get it instead of running the code below.
     // So, instead of running the code twice, we just set the width to a "default display width"

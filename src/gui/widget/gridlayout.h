@@ -18,13 +18,14 @@
 #ifndef __GRID_LAYOUT_H__
 #define __GRID_LAYOUT_H__
 #include <view/viewgroup.h>
+#include <widget/linearlayout.h>
 #include <map>
 namespace cdroid{
 
 class GridLayout:public ViewGroup{
 public:
-    static constexpr int HORIZONTAL = 0;
-    static constexpr int VERTICAL   = 1;
+    static constexpr int HORIZONTAL = LinearLayout::HORIZONTAL;
+    static constexpr int VERTICAL   = LinearLayout::VERTICAL;
     static constexpr int UNDEFINED  = INT_MIN;
     static constexpr int ALIGN_BOUNDS = 0;
     static constexpr int ALIGN_MARGINS= 1;
@@ -296,7 +297,9 @@ private:
     void initGridLayout();
     void invalidateStructure();
     void invalidateValues();
-    int getDefaultMargin(View* c)const;
+    int getDefaultMargin(View* c,bool horizontal, bool leading)const;
+    int getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const;
+    int getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool leading);
     int getMargin1(View* view, bool horizontal, bool leading);
     int getMargin(View* view, bool horizontal, bool leading);
     int getTotalMargin(View* child, bool horizontal);
@@ -313,7 +316,7 @@ private:
     void measureChildWithMargins2(View* child, int parentWidthSpec, int parentHeightSpec,
            int childWidth, int childHeight);
     void measureChildrenWithMargins(int widthSpec, int heightSpec, bool firstPass);
-    int getMeasurement(View* c, bool horizontal);
+    int getMeasurement(View* c, bool horizontal)const;
 protected:
     static int max2(const std::vector<int>& a, int valueIfEmpty);
     static const Alignment* getAlignment(int gravity, bool horizontal);
