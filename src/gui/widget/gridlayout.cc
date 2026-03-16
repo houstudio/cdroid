@@ -759,8 +759,8 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 
 //--------------------------------------------------------------------------
 
-GridLayout::Bounds *GridLayout::Alignment::getBounds()const{
-    return new Bounds();
+GridLayout::Bounds GridLayout::Alignment::getBounds()const{
+    return Bounds();
 }
 
 int GridLayout::Alignment::hashCode()const{
@@ -983,8 +983,8 @@ public:
         const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
-    GridLayout::Bounds*getBounds()const override{
-        return new BaseBounds();
+    GridLayout::Bounds getBounds()const override{
+        return BaseBounds();
     }
 };
 
@@ -1094,7 +1094,7 @@ GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds>GridLayout::Axis::crea
         // we must include views that are GONE here, see introductory javadoc
         LayoutParams* lp = grd->getLayoutParams(c);
         const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Bounds bounds =*(Bounds*)spec.getAbsoluteAlignment(horizontal)->getBounds();
+        Bounds bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
         assoc.put(spec, bounds);
     }
     return assoc.pack();

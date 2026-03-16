@@ -41,6 +41,7 @@ public:
     class Bounds;
     class Spec;
     class Axis;
+    class Alignment;
     class MutableInt{
     public:
         int value;
@@ -67,17 +68,6 @@ public:
         Arc();
         Arc(const Interval& span,const MutableInt& value);
     };
-    class Alignment{
-    public:
-        virtual int getGravityOffset(View*view,int dellDelta)const=0;
-        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
-        int getSizeInCell(View*v,int viewSize,int cellSize)const{
-            return viewSize;
-        }
-        virtual Bounds* getBounds()const;
-        int hashCode()const;
-    };
-    static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Bounds{
     public:
         int before;
@@ -90,6 +80,17 @@ public:
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
+    class Alignment{
+    public:
+        virtual int getGravityOffset(View*view,int dellDelta)const=0;
+        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
+        int getSizeInCell(View*v,int viewSize,int cellSize)const{
+            return viewSize;
+        }
+        virtual Bounds getBounds()const;
+        int hashCode()const;
+    };
+    static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Spec{
     public:
         static const Spec UNDEFINED;
