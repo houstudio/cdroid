@@ -1224,15 +1224,15 @@ const std::vector<int>& GridLayout::Axis::getTrailingMargins() {
     return trailingMargins;
 }
 
-static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& arcs) {
-    std::string var = horizontal ? "x" : "y";
+static std::string arcsToString(bool horizontal,const std::vector<GridLayout::Arc>& arcs) {
+    const std::string var = horizontal ? "x" : "y";
     std::ostringstream result;
     bool first = true;
-    for (GridLayout::Arc& arc : arcs) {
+    for (const GridLayout::Arc& arc : arcs) {
         if (first) {
             first = false;
         } else {
-            result <<",";//= result.append(", ");
+            result <<",";
         }
         const int src = arc.span.min;
         const int dst = arc.span.max;
@@ -1245,11 +1245,11 @@ static std::string arcsToString(bool horizontal,std::vector<GridLayout::Arc>& ar
     return result.str();
 }
 
-void GridLayout::Axis::logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0){
+void GridLayout::Axis::logError(const std::string& axisName,const std::vector<Arc>&arcs,const std::vector<bool>& culprits0){
     std::vector<Arc> culprits; 
     std::vector<Arc> removed;
     for (int c = 0; c < arcs.size(); c++) {
-        Arc& arc = arcs[c];
+        const Arc& arc = arcs[c];
         if (culprits0[c]) {
             culprits.push_back(arc);
         }
@@ -1578,7 +1578,7 @@ void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
     }
 }
 
-float GridLayout::Axis::calculateTotalWeight() {
+float GridLayout::Axis::calculateTotalWeight() const{
     float totalWeight = 0.f;
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
