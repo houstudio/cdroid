@@ -84,9 +84,9 @@ public:
     class Alignment{
     protected:
         Bounds*mBounds;
+        Alignment(Bounds*);
     public:
         Alignment();
-        Alignment(Bounds*);
         virtual ~Alignment();
         virtual int getGravityOffset(View*view,int dellDelta)const=0;
         virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;

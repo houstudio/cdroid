@@ -763,7 +763,7 @@ GridLayout::Alignment::Alignment(){
     mBounds= new Bounds();
 }
 GridLayout::Alignment::Alignment(GridLayout::Bounds*b){
-    mBounds=b;
+    mBounds = b;
 }
 GridLayout::Alignment::~Alignment(){
     delete mBounds;
@@ -779,7 +779,6 @@ int GridLayout::Alignment::hashCode()const{
 //--------------------------------------------------------------------------
 
 GridLayout::Bounds::Bounds(){
-    LOGD("Bounds %p",this);
     reset();
 }
 void GridLayout::Bounds::reset(){
