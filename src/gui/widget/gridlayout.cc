@@ -255,7 +255,7 @@ int GridLayout::getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool
     if (!mUseDefaultMargins) {
         return 0;
     }
-    Spec& spec = horizontal ? p->columnSpec : p->rowSpec;
+    const Spec& spec = horizontal ? p->columnSpec : p->rowSpec;
     Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
     const Interval& span = spec.span;
     bool leading1 = (horizontal && isLayoutRtl()) ? !leading : leading;
@@ -472,12 +472,12 @@ void GridLayout::drawLine(Canvas& canvas, int x1, int y1, int x2, int y2){
 }
 
 void GridLayout::onDebugDrawMargins(Canvas& canvas){
-    LayoutParams* lp = new LayoutParams();
+    LayoutParams lp;
     for (int i = 0; i < getChildCount(); i++) {
         View* c = getChildAt(i);
-        lp->setMargins(getMargin1(c, true, true),getMargin1(c, false, true),
+        lp.setMargins(getMargin1(c, true, true),getMargin1(c, false, true),
              getMargin1(c, true, false),  getMargin1(c, false, false));
-        lp->onDebugDraw(*c, canvas);
+        lp.onDebugDraw(*c, canvas);
     }
 }
 
@@ -759,8 +759,7 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 }
 
 //--------------------------------------------------------------------------
-GridLayout::Alignment::Alignment(){
-    mBounds= new Bounds();
+GridLayout::Alignment::Alignment():Alignment(new Bounds()){
 }
 GridLayout::Alignment::Alignment(GridLayout::Bounds*b){
     mBounds = b;
@@ -1124,7 +1123,7 @@ public:
 }
 
 GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>GridLayout::Axis::createGroupBounds(){
-    Assoc<Spec, Bounds*> assoc;// = Assoc.of(Spec.class, Bounds.class);
+    Assoc<Spec, Bounds*> assoc;
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
@@ -1199,17 +1198,17 @@ void GridLayout::Axis::layout(int size){
 void GridLayout::Axis::invalidateStructure(){
     maxIndex = UNDEFINED;
 
-    groupBounds.clear();// = nullptr;
-    forwardLinks.clear();// = nullptr;
-    backwardLinks.clear();// = nullptr;
+    groupBounds.clear();
+    forwardLinks.clear();
+    backwardLinks.clear();
 
-    leadingMargins.clear();// = nullptr;
-    trailingMargins.clear();// = nullptr;
-    arcs.clear();// = nullptr;
+    leadingMargins.clear();
+    trailingMargins.clear();
+    arcs.clear();
 
-    locations.clear();// = nullptr;
+    locations.clear();
 
-    deltas.clear();// = nullptr;
+    deltas.clear();
     hasWeightsValid = false;
 
     invalidateValues();
@@ -1525,7 +1524,7 @@ GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>GridLayout::Ax
 void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,GridLayout::MutableInt>&links,bool min){
     std::vector<MutableInt>&spans = links.values;
     for (int i = 0; i < spans.size(); i++) {
-        spans[i].reset();//INT_MIN;//spans[i].reset();
+        spans[i].reset();
     }
     // Use getter to trigger a re-evaluation
     std::vector<Bounds*>&bounds = getGroupBounds().values;
