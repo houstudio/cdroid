@@ -682,12 +682,12 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
         const Alignment* hAlign = columnSpec.getAbsoluteAlignment(true);
         const Alignment* vAlign = rowSpec.getAbsoluteAlignment(false);
 
-        const Bounds& boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
-        const Bounds& boundsY = mVerticalAxis->getGroupBounds().getValue(i);
+        const auto boundsX = mHorizontalAxis->getGroupBounds().getValue(i);
+        const auto boundsY = mVerticalAxis->getGroupBounds().getValue(i);
 
         // Gravity offsets: the location of the alignment group relative to its cell group.
-        const int gravityOffsetX = hAlign->getGravityOffset(c, cellWidth - boundsX.size(true));
-        const int gravityOffsetY = vAlign->getGravityOffset(c, cellHeight - boundsY.size(true));
+        const int gravityOffsetX = hAlign->getGravityOffset(c, cellWidth - boundsX->size(true));
+        const int gravityOffsetY = vAlign->getGravityOffset(c, cellHeight - boundsY->size(true));
 
         const int leftMargin = getMargin(c, true, true);
         const int topMargin = getMargin(c, false, true);
@@ -698,8 +698,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
         const int sumMarginsY = topMargin + bottomMargin;
 
         // Alignment offsets: the location of the view relative to its alignment group.
-        const int alignmentOffsetX = boundsX.getOffset(this, c, hAlign, pWidth + sumMarginsX, true);
-        const int alignmentOffsetY = boundsY.getOffset(this, c, vAlign, pHeight + sumMarginsY, false);
+        const int alignmentOffsetX = boundsX->getOffset(this, c, hAlign, pWidth + sumMarginsX, true);
+        const int alignmentOffsetY = boundsY->getOffset(this, c, vAlign, pHeight + sumMarginsY, false);
 
         const int width = hAlign->getSizeInCell(c, pWidth, cellWidth - sumMarginsX);
         const int height = vAlign->getSizeInCell(c, pHeight, cellHeight - sumMarginsY);
@@ -740,13 +740,14 @@ GridLayout::Interval GridLayout::Interval::inverse(){
 }
 
 int GridLayout::Interval::hashCode()const{
-    return 31*min +max;
+    return min*31+max;
 }
 
 bool GridLayout::Interval::operator<(const Interval &other) const{
-    const int h1 = hashCode();
-    const int h2 = other.hashCode();
-    return h1 < h2;
+    if (this->min != other.min) {
+        return this->min < other.min;
+    }
+    return this->max < other.max;
 }
 //--------------------------------------------------------------------------
 GridLayout::Arc::Arc(){
@@ -759,8 +760,8 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 
 //--------------------------------------------------------------------------
 
-GridLayout::Bounds GridLayout::Alignment::getBounds()const{
-    return Bounds();
+GridLayout::Bounds* GridLayout::Alignment::getBounds()const{
+    return new Bounds();
 }
 
 int GridLayout::Alignment::hashCode()const{
@@ -832,8 +833,10 @@ int GridLayout::Spec::hashCode()const{
     return result;
 }
 
-bool GridLayout::Spec::operator<(const Spec &l1) const{
-    return hashCode()<l1.hashCode();
+bool GridLayout::Spec::operator<(const Spec &other) const{
+    if(this->alignment != other.alignment)
+        return this->alignment < other.alignment;
+    return this->span < other.span;
 }
 
 const GridLayout::Alignment* GridLayout::Spec::getAbsoluteAlignment(bool horizontal)const{
@@ -983,8 +986,8 @@ public:
         const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
     }
-    GridLayout::Bounds getBounds()const override{
-        return BaseBounds();
+    GridLayout::Bounds* getBounds()const override{
+        return new BaseBounds();
     }
 };
 
@@ -1028,7 +1031,7 @@ const GridLayout::Alignment*GridLayout::UNDEFINED_ALIGNMENT=&__UNDEFINED_ALIGNME
 //--------------------------------------------------------------------------
 
 GridLayout::Axis::Axis(GridLayout*g,bool horizontal){
-    grd=g;
+    grd = g;
     maxIndex  = UNDEFINED;
     this->horizontal = horizontal;
     parentMin = 0;
@@ -1043,6 +1046,10 @@ GridLayout::Axis::Axis(GridLayout*g,bool horizontal){
     leadingMarginsValid = false;
     trailingMarginsValid= false;
     orderPreserved = DEFAULT_ORDER_PRESERVED;
+}
+
+GridLayout::Axis::~Axis(){
+    invalidateStructure();
 }
 
 int GridLayout::Axis::calculateMaxIndex()const{
@@ -1087,23 +1094,46 @@ void GridLayout::Axis::setOrderPreserved(bool orderPreserved){
     invalidateStructure();
 }
 
-GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds>GridLayout::Axis::createGroupBounds(){
-    Assoc<Spec, Bounds> assoc;// = Assoc.of(Spec.class, Bounds.class);
+namespace{
+template<class K,class V>
+class Assoc{
+private:
+    std::vector<std::pair<K,V>>mData;
+public:
+   void put(K key, V value) {
+       mData.push_back(std::pair<K,V>(key, value));
+   }
+
+   GridLayout::PackedMap<K, V> pack() {
+       const int N = mData.size();
+       std::vector<K>keys;
+       std::vector<V>values;
+       for (int i = 0; i < N; i++) {
+           keys.push_back(mData.at(i).first);
+           values.push_back(mData.at(i).second);
+       }
+       return GridLayout::PackedMap<K, V>(keys, values);
+   }
+};
+}
+
+GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>GridLayout::Axis::createGroupBounds(){
+    Assoc<Spec, Bounds*> assoc;// = Assoc.of(Spec.class, Bounds.class);
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
         LayoutParams* lp = grd->getLayoutParams(c);
         const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Bounds bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
+        Bounds* bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
         assoc.put(spec, bounds);
     }
     return assoc.pack();
 }
 
 void GridLayout::Axis::computeGroupBounds(){
-    std::vector<Bounds>& values = groupBounds.values;
+    std::vector<Bounds*>& values = groupBounds.values;
     for (int i = 0; i < values.size(); i++) {
-        values[i].reset();
+        values[i]->reset();
     }
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
@@ -1112,7 +1142,7 @@ void GridLayout::Axis::computeGroupBounds(){
         const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         const int size = grd->getMeasurementIncludingMargin(c, horizontal) +
                 ((spec.weight == 0.f) ? 0 : getDeltas()[i]);
-        groupBounds.getValue(i).include(grd, c, &spec, this, size);
+        groupBounds.getValue(i)->include(grd, c, &spec, this, size);
     }
 }
 
@@ -1144,7 +1174,7 @@ int GridLayout::Axis::getMeasure(int measureSpec){
     }
 }
 
-GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds>&GridLayout::Axis::getGroupBounds(){
+GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>&GridLayout::Axis::getGroupBounds(){
     if (groupBounds.size()==0) {
         groupBounds = createGroupBounds();
     }
@@ -1492,9 +1522,9 @@ void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,G
         spans[i].reset();//INT_MIN;//spans[i].reset();
     }
     // Use getter to trigger a re-evaluation
-    std::vector<Bounds>&bounds = getGroupBounds().values;
+    std::vector<Bounds*>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
-        const int size = bounds[i].size(min);
+        const int size = bounds[i]->size(min);
         MutableInt& valueHolder = links.getValue(i);
         // this effectively takes the max() of the minima and the min() of the maxima
         valueHolder.value = std::max(valueHolder.value, min ? size : -size);

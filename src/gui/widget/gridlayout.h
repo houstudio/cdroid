@@ -87,7 +87,7 @@ public:
         int getSizeInCell(View*v,int viewSize,int cellSize)const{
             return viewSize;
         }
-        virtual Bounds getBounds()const;
+        virtual Bounds* getBounds()const;
         int hashCode()const;
     };
     static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
@@ -103,11 +103,11 @@ public:
         Spec();
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
-        bool operator<(const Spec &l1)const;
         const Alignment* getAbsoluteAlignment(bool)const;
         Spec copyWriteSpan(const Interval& span)const;
         Spec copyWriteAlignment(const Alignment* alignment)const;
         int getFlexibility()const;
+        bool operator<(const Spec &l1)const;
         int hashCode()const;
     };
     static Spec spec(int start, int size,const Alignment* alignment, float weight);
@@ -120,6 +120,20 @@ public:
     static Spec spec(int start);
     template<class K,class V>
     class PackedMap{
+    private:
+        template<typename T>
+        struct ClearHelper {
+            static void clear(std::vector<T>& vec) {
+                //NOTHING
+            }
+        };
+
+        template<typename T>
+        struct ClearHelper<T*> {
+            static void clear(std::vector<T*>& vec) {
+                for (auto& ptr : vec) delete ptr;
+            }
+        };
     public:
         std::vector<int>index;
         std::vector<K>keys;
@@ -132,6 +146,7 @@ public:
         }
         void clear(){
             index.clear();
+            ClearHelper<V>::clear(values);
             keys.clear();
             values.clear();
         }
@@ -146,7 +161,7 @@ public:
                     index=keyToIndex.size();
                     keyToIndex.insert(std::pair<K,int>(k,index));
                 }else index=kitr->second;
-                result.push_back(index);//[i++]=index;
+                result.push_back(index);
             }
             return result;
         }
@@ -160,26 +175,6 @@ public:
         V& getValue(int i){return values[index[i]];}
         void setValue(int i,V v){values[index[i]]=v;}
     };
-    template<class K,class V>
-	class Assoc{
-    private:
-        std::vector<std::pair<K,V>>mData;
-    public:
-       void put(K key, V value) {
-           mData.push_back(std::pair<K,V>(key, value));
-       }
-
-       PackedMap<K, V> pack() {
-           const int N = mData.size();
-           std::vector<K>keys;
-           std::vector<V>values;
-           for (int i = 0; i < N; i++) {
-               keys.push_back(mData.at(i).first);
-               values.push_back(mData.at(i).second);
-           }
-           return PackedMap<K, V>(keys, values);
-       }
-    }; 
     class Axis{
     private:
         static constexpr int NEW = 0;
@@ -215,10 +210,10 @@ public:
         int  size(const std::vector<int>&);
         void setParentConstraints(int min,int max);
         int  getMeasure(int min, int max);
-        PackedMap<Spec,Bounds>createGroupBounds();
+        PackedMap<Spec,Bounds*>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<Spec, Bounds> groupBounds;
+        PackedMap<Spec, Bounds*> groupBounds;
         PackedMap<Interval,MutableInt> forwardLinks;
         PackedMap<Interval,MutableInt> backwardLinks;
     public:
@@ -241,6 +236,7 @@ public:
         bool orderPreserved = DEFAULT_ORDER_PRESERVED;
         bool locationsValid = false;
         Axis(GridLayout*g,bool horizontal);
+        ~Axis();
         int calculateMaxIndex()const;
         int getMaxIndex();
         int getCount();
@@ -255,7 +251,7 @@ public:
         const std::vector<int>& getTrailingMargins();
         const std::vector<int>& getDeltas();
         int getMeasure(int measureSpec);
-        PackedMap<Spec,Bounds>&getGroupBounds();
+        PackedMap<Spec,Bounds*>&getGroupBounds();
         void layout(int);
     };
 
