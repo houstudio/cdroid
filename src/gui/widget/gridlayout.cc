@@ -251,11 +251,11 @@ int GridLayout::getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool l
     return /*isAtEdge ? DEFAULT_CONTAINER_MARGIN :*/ getDefaultMargin(c, horizontal, leading);
 }
 
-int GridLayout::getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool leading){
+int GridLayout::getDefaultMargin(View* c,const LayoutParams* lp, bool horizontal, bool leading){
     if (!mUseDefaultMargins) {
         return 0;
     }
-    const Spec& spec = horizontal ? p->columnSpec : p->rowSpec;
+    const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
     Axis* axis = horizontal ? mHorizontalAxis : mVerticalAxis;
     const Interval& span = spec.span;
     bool leading1 = (horizontal && isLayoutRtl()) ? !leading : leading;
@@ -328,8 +328,7 @@ void GridLayout::validateLayoutParams() {
 
     int major = 0;
     int minor = 0;
-    std::vector<int>maxSizes;
-    maxSizes.resize(count);
+    std::vector<int>maxSizes(count,0);
 
     for (int i = 0, N = getChildCount(); i < N; i++) {
         LayoutParams* lp = (LayoutParams*) getChildAt(i)->getLayoutParams();
@@ -714,8 +713,8 @@ void GridLayout::onLayout(bool changed, int left, int top, int w, int h){
             c->measure(MeasureSpec::makeMeasureSpec(width, MeasureSpec::EXACTLY), 
                        MeasureSpec::makeMeasureSpec(height, MeasureSpec::EXACTLY));
         }
-        LOGV("child %p:%d pos=%d,%d,%d,%d col:%d,%d row:%d,%d",c,c->getId(),cx,cy,width,height,
-                columnSpec.span.min,columnSpec.span.max,rowSpec.span.min,rowSpec.span.max);
+        LOGV("[%p] child %p:%d pos=%d,%d,%d,%d cell(%d,%d) offset=%d/%d topMargin=%d/%d",this,c,c->getId(),cx,cy,width,height,
+                columnSpec.span.min,rowSpec.span.min,gravityOffsetY,alignmentOffsetY,topMargin,bottomMargin);
         c->layout(cx, cy, width, height);
     }
 }
@@ -759,16 +758,8 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 }
 
 //--------------------------------------------------------------------------
-GridLayout::Alignment::Alignment():Alignment(new Bounds()){
-}
-GridLayout::Alignment::Alignment(GridLayout::Bounds*b){
-    mBounds = b;
-}
-GridLayout::Alignment::~Alignment(){
-    delete mBounds;
-}
-GridLayout::Bounds* GridLayout::Alignment::getBounds()const{
-    return mBounds;
+std::shared_ptr<GridLayout::Bounds> GridLayout::Alignment::getBounds()const{
+    return std::make_shared<Bounds>();
 }
 
 int GridLayout::Alignment::hashCode()const{
@@ -982,8 +973,6 @@ protected:
         }
     };
 public:
-    BaselineAlignment():Alignment(new BaseBounds()){
-    }
     int getGravityOffset(View* view, int cellDelta)const override{ 
         return 0; // baseline gravity is top
     }
@@ -993,6 +982,9 @@ public:
         }
         const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
+    }
+    std::shared_ptr<GridLayout::Bounds> getBounds()const override{
+        return std::make_shared<BaseBounds>();
     }
 };
 
@@ -1122,21 +1114,21 @@ public:
 };
 }
 
-GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>GridLayout::Axis::createGroupBounds(){
-    Assoc<Spec, Bounds*> assoc;
+GridLayout::PackedMap<GridLayout::Spec,std::shared_ptr<GridLayout::Bounds>>GridLayout::Axis::createGroupBounds(){
+    Assoc<Spec, std::shared_ptr<Bounds>> assoc;
     for (int i = 0, N = grd->getChildCount(); i < N; i++) {
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
         LayoutParams* lp = grd->getLayoutParams(c);
         Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
-        Bounds* bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
+        auto bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
         assoc.put(spec, bounds);
     }
     return assoc.pack();
 }
 
 void GridLayout::Axis::computeGroupBounds(){
-    std::vector<Bounds*>& values = groupBounds.values;
+    std::vector<std::shared_ptr<Bounds>>& values = groupBounds.values;
     for (int i = 0; i < values.size(); i++) {
         values[i]->reset();
     }
@@ -1179,7 +1171,7 @@ int GridLayout::Axis::getMeasure(int measureSpec){
     }
 }
 
-GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>&GridLayout::Axis::getGroupBounds(){
+GridLayout::PackedMap<GridLayout::Spec,std::shared_ptr<GridLayout::Bounds>>&GridLayout::Axis::getGroupBounds(){
     if (groupBounds.size()==0) {
         groupBounds = createGroupBounds();
     }
@@ -1527,7 +1519,7 @@ void GridLayout::Axis::computeLinks(GridLayout::PackedMap<GridLayout::Interval,G
         spans[i].reset();
     }
     // Use getter to trigger a re-evaluation
-    std::vector<Bounds*>&bounds = getGroupBounds().values;
+    std::vector<std::shared_ptr<Bounds>>&bounds = getGroupBounds().values;
     for (int i = 0; i < bounds.size(); i++) {
         const int size = bounds[i]->size(min);
         MutableInt& valueHolder = links.getValue(i);

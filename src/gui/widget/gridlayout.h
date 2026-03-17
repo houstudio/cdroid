@@ -82,18 +82,14 @@ public:
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
     class Alignment{
-    protected:
-        Bounds*mBounds;
-        Alignment(Bounds*);
     public:
-        Alignment();
-        virtual ~Alignment();
+        virtual ~Alignment()=default;
         virtual int getGravityOffset(View*view,int dellDelta)const=0;
         virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
         int getSizeInCell(View*v,int viewSize,int cellSize)const{
             return viewSize;
         }
-        virtual Bounds* getBounds()const;
+        virtual std::shared_ptr<Bounds> getBounds()const;
         int hashCode()const;
     };
     static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
@@ -131,10 +127,10 @@ public:
         std::vector<K>keys;
         std::vector<V>values;
         PackedMap(){}
-        PackedMap(const std::vector<K>&keys,const std::vector<V>&values){
-            this->index = createIndex(keys);
-            this->keys  = compact(keys, index);
-            this->values= compact(values, index);
+        PackedMap(const std::vector<K>&Keys,const std::vector<V>&Values){
+            this->index = createIndex(Keys);
+            this->keys  = compact(Keys, index);
+            this->values= compact(Values, index);
         }
         void clear(){
             index.clear();
@@ -201,10 +197,10 @@ public:
         int  size(const std::vector<int>&);
         void setParentConstraints(int min,int max);
         int  getMeasure(int min, int max);
-        PackedMap<Spec,Bounds*>createGroupBounds();
+        PackedMap<Spec,std::shared_ptr<Bounds>>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<Spec, Bounds*> groupBounds;
+        PackedMap<Spec, std::shared_ptr<Bounds>> groupBounds;
         PackedMap<Interval,MutableInt> forwardLinks;
         PackedMap<Interval,MutableInt> backwardLinks;
     public:
@@ -242,7 +238,7 @@ public:
         const std::vector<int>& getTrailingMargins();
         const std::vector<int>& getDeltas();
         int getMeasure(int measureSpec);
-        PackedMap<Spec,Bounds*>&getGroupBounds();
+        PackedMap<Spec,std::shared_ptr<Bounds>>&getGroupBounds();
         void layout(int);
     };
 
@@ -286,8 +282,8 @@ private:
     void invalidateStructure();
     void invalidateValues();
     int getDefaultMargin(View* c,bool horizontal, bool leading)const;
-    int getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const;
-    int getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool leading);
+    int getDefaultMargin(View* c,bool isAtEdge, bool horizontal, bool leading)const;
+    int getDefaultMargin(View* c,const LayoutParams* p, bool horizontal, bool leading);
     int getMargin1(View* view, bool horizontal, bool leading);
     int getMargin(View* view, bool horizontal, bool leading);
     int getTotalMargin(View* child, bool horizontal);
