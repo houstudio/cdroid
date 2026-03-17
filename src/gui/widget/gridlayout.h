@@ -74,6 +74,7 @@ public:
         int after;
         int flexibility;
         Bounds();
+        virtual ~Bounds()=default;
         virtual void reset();
         virtual void include(int before,int after);
         virtual int size(bool min)const;
@@ -81,7 +82,12 @@ public:
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
     class Alignment{
+    protected:
+        Bounds*mBounds;
     public:
+        Alignment();
+        Alignment(Bounds*);
+        virtual ~Alignment();
         virtual int getGravityOffset(View*view,int dellDelta)const=0;
         virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
         int getSizeInCell(View*v,int viewSize,int cellSize)const{
@@ -120,20 +126,6 @@ public:
     static Spec spec(int start);
     template<class K,class V>
     class PackedMap{
-    private:
-        template<typename T>
-        struct ClearHelper {
-            static void clear(std::vector<T>& vec) {
-                //NOTHING
-            }
-        };
-
-        template<typename T>
-        struct ClearHelper<T*> {
-            static void clear(std::vector<T*>& vec) {
-                for (auto& ptr : vec) delete ptr;
-            }
-        };
     public:
         std::vector<int>index;
         std::vector<K>keys;
@@ -146,7 +138,6 @@ public:
         }
         void clear(){
             index.clear();
-            ClearHelper<V>::clear(values);
             keys.clear();
             values.clear();
         }

@@ -759,9 +759,17 @@ GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableI
 }
 
 //--------------------------------------------------------------------------
-
+GridLayout::Alignment::Alignment(){
+    mBounds= new Bounds();
+}
+GridLayout::Alignment::Alignment(GridLayout::Bounds*b){
+    mBounds=b;
+}
+GridLayout::Alignment::~Alignment(){
+    delete mBounds;
+}
 GridLayout::Bounds* GridLayout::Alignment::getBounds()const{
-    return new Bounds();
+    return mBounds;
 }
 
 int GridLayout::Alignment::hashCode()const{
@@ -771,9 +779,9 @@ int GridLayout::Alignment::hashCode()const{
 //--------------------------------------------------------------------------
 
 GridLayout::Bounds::Bounds(){
-   reset();
+    LOGD("Bounds %p",this);
+    reset();
 }
-
 void GridLayout::Bounds::reset(){
     before = after = INT_MIN;
     flexibility= CAN_STRETCH;
@@ -976,6 +984,8 @@ protected:
         }
     };
 public:
+    BaselineAlignment():Alignment(new BaseBounds()){
+    }
     int getGravityOffset(View* view, int cellDelta)const override{ 
         return 0; // baseline gravity is top
     }
@@ -985,9 +995,6 @@ public:
         }
         const int baseline = view->getBaseline();
         return baseline == -1 ? GridLayout::UNDEFINED : baseline;
-    }
-    GridLayout::Bounds* getBounds()const override{
-        return new BaseBounds();
     }
 };
 
@@ -1123,7 +1130,7 @@ GridLayout::PackedMap<GridLayout::Spec,GridLayout::Bounds*>GridLayout::Axis::cre
         View* c = grd->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
         LayoutParams* lp = grd->getLayoutParams(c);
-        const Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
+        Spec& spec = horizontal ? lp->columnSpec : lp->rowSpec;
         Bounds* bounds =spec.getAbsoluteAlignment(horizontal)->getBounds();
         assoc.put(spec, bounds);
     }
