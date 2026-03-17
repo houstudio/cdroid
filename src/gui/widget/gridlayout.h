@@ -18,13 +18,14 @@
 #ifndef __GRID_LAYOUT_H__
 #define __GRID_LAYOUT_H__
 #include <view/viewgroup.h>
+#include <widget/linearlayout.h>
 #include <map>
 namespace cdroid{
 
 class GridLayout:public ViewGroup{
 public:
-    static constexpr int HORIZONTAL = 0;
-    static constexpr int VERTICAL   = 1;
+    static constexpr int HORIZONTAL = LinearLayout::HORIZONTAL;
+    static constexpr int VERTICAL   = LinearLayout::VERTICAL;
     static constexpr int UNDEFINED  = INT_MIN;
     static constexpr int ALIGN_BOUNDS = 0;
     static constexpr int ALIGN_MARGINS= 1;
@@ -40,6 +41,7 @@ public:
     class Bounds;
     class Spec;
     class Axis;
+    class Alignment;
     class MutableInt{
     public:
         int value;
@@ -66,17 +68,6 @@ public:
         Arc();
         Arc(const Interval& span,const MutableInt& value);
     };
-    class Alignment{
-    public:
-        virtual int getGravityOffset(View*view,int dellDelta)const=0;
-        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
-        int getSizeInCell(View*v,int viewSize,int cellSize)const{
-            return viewSize;
-        }
-        virtual Bounds* getBounds()const;
-        int hashCode()const;
-    };
-    static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Bounds{
     public:
         int before;
@@ -89,6 +80,17 @@ public:
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
     };
+    class Alignment{
+    public:
+        virtual int getGravityOffset(View*view,int dellDelta)const=0;
+        virtual int getAlignmentValue(View*v,int viewSize,int mOrientationde)const=0;
+        int getSizeInCell(View*v,int viewSize,int cellSize)const{
+            return viewSize;
+        }
+        virtual Bounds* getBounds()const;
+        int hashCode()const;
+    };
+    static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Spec{
     public:
         static const Spec UNDEFINED;
@@ -101,11 +103,11 @@ public:
         Spec();
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
-        bool operator<(const Spec &l1)const;
         const Alignment* getAbsoluteAlignment(bool)const;
         Spec copyWriteSpan(const Interval& span)const;
         Spec copyWriteAlignment(const Alignment* alignment)const;
         int getFlexibility()const;
+        bool operator<(const Spec &l1)const;
         int hashCode()const;
     };
     static Spec spec(int start, int size,const Alignment* alignment, float weight);
@@ -118,6 +120,20 @@ public:
     static Spec spec(int start);
     template<class K,class V>
     class PackedMap{
+    private:
+        template<typename T>
+        struct ClearHelper {
+            static void clear(std::vector<T>& vec) {
+                //NOTHING
+            }
+        };
+
+        template<typename T>
+        struct ClearHelper<T*> {
+            static void clear(std::vector<T*>& vec) {
+                for (auto& ptr : vec) delete ptr;
+            }
+        };
     public:
         std::vector<int>index;
         std::vector<K>keys;
@@ -130,6 +146,7 @@ public:
         }
         void clear(){
             index.clear();
+            ClearHelper<V>::clear(values);
             keys.clear();
             values.clear();
         }
@@ -144,7 +161,7 @@ public:
                     index=keyToIndex.size();
                     keyToIndex.insert(std::pair<K,int>(k,index));
                 }else index=kitr->second;
-                result.push_back(index);//[i++]=index;
+                result.push_back(index);
             }
             return result;
         }
@@ -158,26 +175,6 @@ public:
         V& getValue(int i){return values[index[i]];}
         void setValue(int i,V v){values[index[i]]=v;}
     };
-    template<class K,class V>
-	class Assoc{
-    private:
-        std::vector<std::pair<K,V>>mData;
-    public:
-       void put(K key, V value) {
-           mData.push_back(std::pair<K,V>(key, value));
-       }
-
-       PackedMap<K, V> pack() {
-           const int N = mData.size();
-           std::vector<K>keys;
-           std::vector<V>values;
-           for (int i = 0; i < N; i++) {
-               keys.push_back(mData.at(i).first);
-               values.push_back(mData.at(i).second);
-           }
-           return PackedMap<K, V>(keys, values);
-       }
-    }; 
     class Axis{
     private:
         static constexpr int NEW = 0;
@@ -198,7 +195,7 @@ public:
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
-        void logError(const std::string& axisName, std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
+        void logError(const std::string& axisName,const std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
         bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);
         PackedMap<Interval,MutableInt>createLinks(bool min);
@@ -206,17 +203,17 @@ public:
         PackedMap<Interval,MutableInt>& getForwardLinks();
         PackedMap<Interval,MutableInt>& getBackwardLinks();
         void include(std::vector<Arc>& arcs,const Interval& key,const MutableInt& size,bool ignoreIfAlreadyPresent);
-        float calculateTotalWeight();
+        float calculateTotalWeight()const;
         void shareOutDelta(int totalDelta, float totalWeight);
         void solveAndDistributeSpace(std::vector<int>&a);
         void computeLocations(std::vector<int>&a);
         int  size(const std::vector<int>&);
         void setParentConstraints(int min,int max);
         int  getMeasure(int min, int max);
-        PackedMap<Spec,Bounds>createGroupBounds();
+        PackedMap<Spec,Bounds*>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<Spec, Bounds> groupBounds;
+        PackedMap<Spec, Bounds*> groupBounds;
         PackedMap<Interval,MutableInt> forwardLinks;
         PackedMap<Interval,MutableInt> backwardLinks;
     public:
@@ -239,6 +236,7 @@ public:
         bool orderPreserved = DEFAULT_ORDER_PRESERVED;
         bool locationsValid = false;
         Axis(GridLayout*g,bool horizontal);
+        ~Axis();
         int calculateMaxIndex()const;
         int getMaxIndex();
         int getCount();
@@ -253,7 +251,7 @@ public:
         const std::vector<int>& getTrailingMargins();
         const std::vector<int>& getDeltas();
         int getMeasure(int measureSpec);
-        PackedMap<Spec,Bounds>&getGroupBounds();
+        PackedMap<Spec,Bounds*>&getGroupBounds();
         void layout(int);
     };
 
@@ -296,7 +294,9 @@ private:
     void initGridLayout();
     void invalidateStructure();
     void invalidateValues();
-    int getDefaultMargin(View* c)const;
+    int getDefaultMargin(View* c,bool horizontal, bool leading)const;
+    int getDefaultMargin(View* c, bool isAtEdge, bool horizontal, bool leading)const;
+    int getDefaultMargin(View* c, LayoutParams* p, bool horizontal, bool leading);
     int getMargin1(View* view, bool horizontal, bool leading);
     int getMargin(View* view, bool horizontal, bool leading);
     int getTotalMargin(View* child, bool horizontal);
@@ -313,7 +313,7 @@ private:
     void measureChildWithMargins2(View* child, int parentWidthSpec, int parentHeightSpec,
            int childWidth, int childHeight);
     void measureChildrenWithMargins(int widthSpec, int heightSpec, bool firstPass);
-    int getMeasurement(View* c, bool horizontal);
+    int getMeasurement(View* c, bool horizontal)const;
 protected:
     static int max2(const std::vector<int>& a, int valueIfEmpty);
     static const Alignment* getAlignment(int gravity, bool horizontal);
