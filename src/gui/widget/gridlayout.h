@@ -34,9 +34,9 @@ public:
     static constexpr int UNINITIALIZED_HASH = 0;
     static constexpr int DEFAULT_ORIENTATION =HORIZONTAL;
     static constexpr int DEFAULT_COUNT = UNDEFINED;
+    static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
     static constexpr bool DEFAULT_USE_DEFAULT_MARGINS =false;
     static constexpr bool DEFAULT_ORDER_PRESERVED = true;
-    static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
 public:
     class Bounds;
     class Spec;
@@ -79,7 +79,7 @@ public:
         virtual void include(int before,int after);
         virtual int size(bool min)const;
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
-        void include(GridLayout* gl,View* c,const Spec* spec,Axis* axis, int size);
+        void include(GridLayout* gl,View* c,const Spec* spec,const Axis* axis, int size);
     };
     class Alignment{
     public:
@@ -219,9 +219,9 @@ public:
         bool mHasWeights;
         bool arcsValid = false;
         bool hasWeightsValid = false;
-        std::vector<int>deltas;
         bool orderPreserved = DEFAULT_ORDER_PRESERVED;
         bool locationsValid = false;
+        std::vector<int>deltas;
         Axis(GridLayout*g,bool horizontal);
         ~Axis();
         int calculateMaxIndex()const;

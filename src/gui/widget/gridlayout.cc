@@ -794,7 +794,7 @@ int GridLayout::Bounds::getOffset(GridLayout*gl,View*c,const GridLayout::Alignme
     return before - a->getAlignmentValue(c, size, gl->getLayoutMode());
 }
 
-void GridLayout::Bounds::include(GridLayout* gl, View* c,const Spec* spec, Axis* axis, int size) {
+void GridLayout::Bounds::include(GridLayout* gl, View* c,const Spec* spec,const Axis* axis, int size) {
     this->flexibility &= spec->getFlexibility();
     const bool horizontal = axis->horizontal;
     const Alignment* alignment = spec->getAbsoluteAlignment(axis->horizontal);
@@ -804,10 +804,10 @@ void GridLayout::Bounds::include(GridLayout* gl, View* c,const Spec* spec, Axis*
 }
 
 //--------------------------------------------------------------------------
-const GridLayout::Spec  GridLayout::Spec::UNDEFINED=GridLayout::spec(GridLayout::UNDEFINED);
+const GridLayout::Spec GridLayout::Spec::UNDEFINED=GridLayout::spec(GridLayout::UNDEFINED);
 
 GridLayout::Spec::Spec(){
-    alignment =GridLayout::UNDEFINED_ALIGNMENT;
+    alignment = GridLayout::UNDEFINED_ALIGNMENT;
 }
 
 GridLayout::Spec::Spec(bool startDefined,const Interval& span,const Alignment* alignment, float weight){
