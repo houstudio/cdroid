@@ -79,7 +79,7 @@ public:
         virtual void include(int before,int after);
         virtual int size(bool min)const;
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
-        void include(GridLayout* gl,View* c,const Spec* spec,const Axis* axis, int size);
+        void include(GridLayout* gl,View* c,std::shared_ptr<Spec> spec,const Axis* axis, int size);
     };
     class Alignment{
     public:
@@ -95,7 +95,7 @@ public:
     static const Alignment*UNDEFINED_ALIGNMENT,*LEADING,*TRAILING,*TOP,*BOTTOM,*START,*END,*BASELINE,*LEFT,*RIGHT,*CENTER,*FILL;
     class Spec{
     public:
-        static const Spec UNDEFINED;
+        static const std::shared_ptr<Spec> UNDEFINED;
         static constexpr float DEFAULT_WEIGHT =0.0f;
     public:
         bool startDefined;
@@ -106,20 +106,20 @@ public:
         Spec(bool startDefined, const Interval& span,const Alignment* alignment, float weight);
         Spec(bool startDefined, int start, int size,const Alignment* alignment, float weight);
         const Alignment* getAbsoluteAlignment(bool)const;
-        Spec copyWriteSpan(const Interval& span)const;
-        Spec copyWriteAlignment(const Alignment* alignment)const;
+        std::shared_ptr<Spec> copyWriteSpan(const Interval& span)const;
+        std::shared_ptr<Spec> copyWriteAlignment(const Alignment* alignment)const;
         int getFlexibility()const;
         bool operator<(const Spec &l1)const;
         int hashCode()const;
     };
-    static Spec spec(int start, int size,const Alignment* alignment, float weight);
-    static Spec spec(int start,const Alignment* alignment, float weight);
-    static Spec spec(int start, int size,float weight);
-    static Spec spec(int start, float weight);
-    static Spec spec(int start, int size,const Alignment* alignment);
-    static Spec spec(int start,const Alignment* alignment);
-    static Spec spec(int start, int size);
-    static Spec spec(int start);
+    static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment, float weight);
+    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment, float weight);
+    static std::shared_ptr<Spec> spec(int start, int size,float weight);
+    static std::shared_ptr<Spec> spec(int start, float weight);
+    static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment);
+    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment);
+    static std::shared_ptr<Spec> spec(int start, int size);
+    static std::shared_ptr<Spec> spec(int start);
     template<class K,class V>
     class PackedMap{
     public:
@@ -197,10 +197,10 @@ public:
         int  size(const std::vector<int>&);
         void setParentConstraints(int min,int max);
         int  getMeasure(int min, int max);
-        PackedMap<Spec,std::shared_ptr<Bounds>>createGroupBounds();
+        PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<Spec, std::shared_ptr<Bounds>> groupBounds;
+        PackedMap<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> groupBounds;
         PackedMap<Interval,MutableInt> forwardLinks;
         PackedMap<Interval,MutableInt> backwardLinks;
     public:
@@ -238,7 +238,7 @@ public:
         const std::vector<int>& getTrailingMargins();
         const std::vector<int>& getDeltas();
         int getMeasure(int measureSpec);
-        PackedMap<Spec,std::shared_ptr<Bounds>>&getGroupBounds();
+        PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>&getGroupBounds();
         void layout(int);
     };
 
@@ -252,12 +252,12 @@ public:
         //static constexpr Interval DEFAULT_SPAN=Interval(0,1);//INT_MIN,INT_MIN+1);
         static constexpr int DEFAULT_SPAN_SIZE = 1;//DEFAULT_SPAN.size()
         LayoutParams(int width, int height,int left, int top, int right, int bottom,
-           const Spec& rowSpec, const Spec& columnSpec);
+           std::shared_ptr<Spec> rowSpec, std::shared_ptr<Spec> columnSpec);
     public:
-        Spec rowSpec;
-        Spec columnSpec;
+        std::shared_ptr<Spec> rowSpec;
+        std::shared_ptr<Spec> columnSpec;
         LayoutParams();
-        LayoutParams(const Spec& rowSpec,const Spec& columnSpec);
+        LayoutParams(std::shared_ptr<Spec> rowSpec,std::shared_ptr<Spec> columnSpec);
         LayoutParams(const ViewGroup::LayoutParams& params);
         LayoutParams(const MarginLayoutParams& params);
         LayoutParams(const LayoutParams& params);
