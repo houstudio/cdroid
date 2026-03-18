@@ -57,6 +57,15 @@ GridLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& params)
     columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
 }
 
+// Reinitialise the margins using a different default policy than MarginLayoutParams.
+// Here we use the value UNDEFINED (as distinct from zero) to represent the undefined state
+// so that a layout manager default can be accessed post set up. We need this as, at the
+// point of installation, we do not know how many rows/cols there are and therefore
+// which elements are positioned next to the container's trailing edges. We need to
+// know this as margins around the container's boundary should have different
+// defaults to those between peers.
+
+// This method could be parametrized and moved into MarginLayout.
 void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet& attrs){
     const int margin = attrs.getDimensionPixelSize("layout_margin", DEFAULT_MARGIN);
     leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", margin);
@@ -391,8 +400,8 @@ void GridLayout::validateLayoutParams() {
 
 void GridLayout::invalidateStructure(){
     mLastLayoutParamsHashCode = UNINITIALIZED_HASH;
-    if(mHorizontalAxis!=nullptr) mHorizontalAxis->invalidateStructure();
-    if(mVerticalAxis != nullptr) mVerticalAxis->invalidateStructure();
+    mHorizontalAxis->invalidateStructure();
+    mVerticalAxis->invalidateStructure();
     invalidateValues();
 }
 
@@ -445,7 +454,7 @@ bool GridLayout::checkLayoutParams(const ViewGroup::LayoutParams* p)const{
     if (dynamic_cast<const LayoutParams*>(p)==nullptr){
         return false;
     }
-    LayoutParams* lp = (LayoutParams*) p;
+    const LayoutParams* lp = (const LayoutParams*) p;
     checkLayoutParams(lp, true);
     checkLayoutParams(lp, false);
     return true;
@@ -1040,8 +1049,8 @@ const GridLayout::Alignment*GridLayout::UNDEFINED_ALIGNMENT=&__UNDEFINED_ALIGNME
 //--------------------------------------------------------------------------
 
 GridLayout::Axis::Axis(GridLayout*g,bool horizontal){
-    grd = g;
-    maxIndex  = UNDEFINED;
+    mGrid = g;
+    mMaxIndex  = UNDEFINED;
     mHorizontal = horizontal;
     parentMin = 0;
     parentMax =-MAX_SIZE;
@@ -1063,9 +1072,9 @@ GridLayout::Axis::~Axis(){
 
 int GridLayout::Axis::calculateMaxIndex()const{
     int result = -1;
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
-        const LayoutParams* params = grd->getLayoutParams(c);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
+        const LayoutParams* params = mGrid->getLayoutParams(c);
         auto spec = mHorizontal ? params->columnSpec : params->rowSpec;
         Interval& span = spec->span;
         result = std::max(result, span.min);
@@ -1076,9 +1085,9 @@ int GridLayout::Axis::calculateMaxIndex()const{
 }
 
 int GridLayout::Axis::getMaxIndex() {
-    if(maxIndex==UNDEFINED)
-       maxIndex =std::max(0,calculateMaxIndex());
-    return maxIndex;
+    if(mMaxIndex==UNDEFINED)
+       mMaxIndex =std::max(0,calculateMaxIndex());
+    return mMaxIndex;
 }
 
 int GridLayout::Axis::getCount() {
@@ -1105,10 +1114,10 @@ void GridLayout::Axis::setOrderPreserved(bool orderPreserved){
 
 GridLayout::PackedMap<std::shared_ptr<GridLayout::Spec>,std::shared_ptr<GridLayout::Bounds>>GridLayout::Axis::createGroupBounds(){
     Assoc<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> assoc;
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
-        const LayoutParams* lp = grd->getLayoutParams(c);
+        const LayoutParams* lp = mGrid->getLayoutParams(c);
         auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
         auto bounds =spec->getAbsoluteAlignment(mHorizontal)->getBounds();
         assoc.put(spec, bounds);
@@ -1121,14 +1130,14 @@ void GridLayout::Axis::computeGroupBounds(){
     for (int i = 0; i < values.size(); i++) {
         values[i]->reset();
     }
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
         // we must include views that are GONE here, see introductory javadoc
-        const LayoutParams* lp = grd->getLayoutParams(c);
+        const LayoutParams* lp = mGrid->getLayoutParams(c);
         const auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
-        const int size = grd->getMeasurementIncludingMargin(c, mHorizontal) +
+        const int size = mGrid->getMeasurementIncludingMargin(c, mHorizontal) +
                 ((spec->weight == 0.f) ? 0 : getDeltas()[i]);
-        mGroupBounds.getValue(i)->include(grd, c, spec, this, size);
+        mGroupBounds.getValue(i)->include(mGrid, c, spec, this, size);
     }
 }
 
@@ -1177,7 +1186,7 @@ void GridLayout::Axis::layout(int size){
 }
 
 void GridLayout::Axis::invalidateStructure(){
-    maxIndex = UNDEFINED;
+    mMaxIndex = UNDEFINED;
 
     mGroupBounds.clear();
     mForwardLinks.clear();
@@ -1207,14 +1216,14 @@ void GridLayout::Axis::invalidateValues(){
 
 void GridLayout::Axis::computeMargins(bool leading){
     std::vector<int>& margins = leading ? mLeadingMargins : mTrailingMargins;
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
         if (c->getVisibility() == View::GONE) continue;
-        const LayoutParams* lp = grd->getLayoutParams(c);
+        const LayoutParams* lp = mGrid->getLayoutParams(c);
         const auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
         const Interval& span = spec->span;
         const int index = leading ? span.min : span.max;
-        margins[index] = std::max(margins[index], grd->getMargin1(c, mHorizontal, leading));
+        margins[index] = std::max(margins[index], mGrid->getMargin1(c, mHorizontal, leading));
     }
 }
 
@@ -1466,12 +1475,12 @@ std::vector<GridLayout::Arc>& GridLayout::Axis::getArcs() {
 }
 
 bool GridLayout::Axis::computeHasWeights()const{
-   for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-       View* child = grd->getChildAt(i);
+   for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+       View* child = mGrid->getChildAt(i);
        if (child->getVisibility() == View::GONE) {
            continue;
        }
-       const LayoutParams* lp = grd->getLayoutParams(child);
+       const LayoutParams* lp = mGrid->getLayoutParams(child);
        const auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
        if (spec->weight != 0.f) {
            return true;
@@ -1488,7 +1497,7 @@ bool GridLayout::Axis::hasWeights(){
 }
 
 const std::vector<int>& GridLayout::Axis::getDeltas(){
-    mDeltas.resize(grd->getChildCount());
+    mDeltas.resize(mGrid->getChildCount());
     return mDeltas;
 }
 
@@ -1562,7 +1571,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
     std::fill(mDeltas.begin(),mDeltas.end(),0);
     solve(a);
-    int deltaMax = parentMin.value * grd->getChildCount() + 1; //exclusive
+    int deltaMax = parentMin.value * mGrid->getChildCount() + 1; //exclusive
     if (deltaMax < 2) {
         return; //don't have any delta to distribute
     }
@@ -1596,12 +1605,12 @@ void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
 
 float GridLayout::Axis::calculateTotalWeight() const{
     float totalWeight = 0.f;
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
         if (c->getVisibility() == View::GONE) {
             continue;
         }
-        const LayoutParams* lp = grd->getLayoutParams(c);
+        const LayoutParams* lp = mGrid->getLayoutParams(c);
         const auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
         totalWeight += spec->weight;
     }
@@ -1610,12 +1619,12 @@ float GridLayout::Axis::calculateTotalWeight() const{
 
 void GridLayout::Axis::shareOutDelta(int totalDelta, float totalWeight){
     std::fill(mDeltas.begin(),mDeltas.end(),0);
-    for (int i = 0, N = grd->getChildCount(); i < N; i++) {
-        View* c = grd->getChildAt(i);
+    for (int i = 0, N = mGrid->getChildCount(); i < N; i++) {
+        View* c = mGrid->getChildAt(i);
         if (c->getVisibility() == View::GONE) {
             continue;
         }
-        const LayoutParams* lp = grd->getLayoutParams(c);
+        const LayoutParams* lp = mGrid->getLayoutParams(c);
         const auto spec = mHorizontal ? lp->columnSpec : lp->rowSpec;
         const float weight = spec->weight;
         if (weight != 0.f) {

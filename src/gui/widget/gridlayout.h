@@ -120,16 +120,16 @@ public:
         int hashCode()const;
     };
     static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment, float weight);
-    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment, float weight);
+    static std::shared_ptr<Spec> spec(int start, const Alignment* alignment, float weight);
     static std::shared_ptr<Spec> spec(int start, int size,float weight);
     static std::shared_ptr<Spec> spec(int start, float weight);
     static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment);
-    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment);
+    static std::shared_ptr<Spec> spec(int start, const Alignment* alignment);
     static std::shared_ptr<Spec> spec(int start, int size);
     static std::shared_ptr<Spec> spec(int start);
 protected:
     template<class K,class V>
-    class PackedMap{//package
+    class PackedMap{
     public:
         std::vector<int>index;
         std::vector<K>keys;
@@ -198,8 +198,8 @@ protected:
         static constexpr int PENDING = 1;
         static constexpr int COMPLETE = 2;
     private:
-        GridLayout*grd;
-        int maxIndex;
+        GridLayout*mGrid;
+        int mMaxIndex;
         MutableInt parentMin;
         MutableInt parentMax;
         void computeMargins(bool leading);
