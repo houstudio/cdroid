@@ -37,10 +37,11 @@ public:
     static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
     static constexpr bool DEFAULT_USE_DEFAULT_MARGINS =false;
     static constexpr bool DEFAULT_ORDER_PRESERVED = true;
+private:
+    class Axis;
 public:
     class Bounds;
     class Spec;
-    class Axis;
     class Alignment;
     class MutableInt{
     public:
@@ -56,7 +57,7 @@ public:
         Interval();
         Interval(int min,int max);
         int size()const;
-        Interval inverse();
+        Interval inverse()const;
         int hashCode()const;
         bool operator<(const Interval &l1) const;
     };
@@ -162,6 +163,7 @@ public:
         V& getValue(int i){return values[index[i]];}
         void setValue(int i,V v){values[index[i]]=v;}
     };
+private:
     class Axis{
     private:
         static constexpr int NEW = 0;
@@ -200,28 +202,28 @@ public:
         PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> groupBounds;
-        PackedMap<Interval,MutableInt> forwardLinks;
-        PackedMap<Interval,MutableInt> backwardLinks;
+        PackedMap<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> mGroupBounds;
+        PackedMap<Interval,MutableInt> mForwardLinks;
+        PackedMap<Interval,MutableInt> mBackwardLinks;
     public:
-        bool horizontal;
-        bool groupBoundsValid  = false;
-        bool forwardLinksValid = false;
-        bool backwardLinksValid= false;
-        bool leadingMarginsValid = false;
-        bool trailingMarginsValid= false;
-    public:
-        int definedCount;
-        std::vector<int>leadingMargins;
-        std::vector<int>trailingMargins;
-        std::vector<int>locations;
-        std::vector<Arc>arcs;
+        bool mHorizontal;
+        bool mGroupBoundsValid  = false;
+        bool mForwardLinksValid = false;
+        bool mBackwardLinksValid= false;
+        bool mLeadingMarginsValid = false;
+        bool mTrailingMarginsValid= false;
         bool mHasWeights;
-        bool arcsValid = false;
-        bool hasWeightsValid = false;
-        bool orderPreserved = DEFAULT_ORDER_PRESERVED;
-        bool locationsValid = false;
-        std::vector<int>deltas;
+        bool mArcsValid = false;
+        bool mHasWeightsValid = false;
+        bool mOrderPreserved = DEFAULT_ORDER_PRESERVED;
+        bool mLocationsValid = false;
+        int mDefinedCount;
+        std::vector<int>mLeadingMargins;
+        std::vector<int>mTrailingMargins;
+        std::vector<int>mLocations;
+        std::vector<Arc>mArcs;
+        std::vector<int>mDeltas;
+    public:
         Axis(GridLayout*g,bool horizontal);
         ~Axis();
         int calculateMaxIndex()const;
@@ -241,7 +243,7 @@ public:
         PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>&getGroupBounds();
         void layout(int);
     };
-
+public:
     class LayoutParams:public MarginLayoutParams{
     private:
         static constexpr int DEFAULT_WIDTH = WRAP_CONTENT;
