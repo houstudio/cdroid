@@ -37,12 +37,16 @@ public:
     static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
     static constexpr bool DEFAULT_USE_DEFAULT_MARGINS =false;
     static constexpr bool DEFAULT_ORDER_PRESERVED = true;
-private:
+protected:
     class Axis;
-public:
     class Bounds;
+    class Interval;
+    class MutableInt;
+public:
     class Spec;
     class Alignment;
+    class BaselineAlignment;
+protected:
     class MutableInt{
     public:
         int value;
@@ -71,6 +75,7 @@ public:
     };
     class Bounds{
     public:
+        friend class BaselineAlignment;
         int before;
         int after;
         int flexibility;
@@ -82,6 +87,7 @@ public:
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,std::shared_ptr<Spec> spec,const Axis* axis, int size);
     };
+public:
     class Alignment{
     public:
         virtual ~Alignment()=default;
@@ -121,8 +127,9 @@ public:
     static std::shared_ptr<Spec> spec(int start,const Alignment* alignment);
     static std::shared_ptr<Spec> spec(int start, int size);
     static std::shared_ptr<Spec> spec(int start);
+protected:
     template<class K,class V>
-    class PackedMap{
+    class PackedMap{//package
     public:
         std::vector<int>index;
         std::vector<K>keys;
@@ -163,7 +170,28 @@ public:
         V& getValue(int i){return values[index[i]];}
         void setValue(int i,V v){values[index[i]]=v;}
     };
-private:
+    template<class K,class V>
+    class Assoc{
+    private:
+        std::vector<std::pair<K,V>>mData;
+    public:
+       void put(K key, V value) {
+           mData.push_back(std::pair<K,V>(key, value));
+       }
+
+       GridLayout::PackedMap<K, V> pack() {
+           const int N = mData.size();
+           std::vector<K>keys;
+           std::vector<V>values;
+           for (int i = 0; i < N; i++) {
+               keys.push_back(mData.at(i).first);
+               values.push_back(mData.at(i).second);
+           }
+           return GridLayout::PackedMap<K, V>(keys, values);
+       }
+    };
+
+protected:
     class Axis{
     private:
         static constexpr int NEW = 0;
@@ -184,6 +212,7 @@ private:
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
+        std::string arcsToString(bool horizontal,const std::vector<GridLayout::Arc>& arcs);
         void logError(const std::string& axisName,const std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
         bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);

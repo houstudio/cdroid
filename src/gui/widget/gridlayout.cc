@@ -961,8 +961,8 @@ public:
     }
 };
 
-class BaselineAlignment:public GridLayout::Alignment{
-protected:
+class GridLayout::BaselineAlignment:public GridLayout::Alignment{
+private:
     class BaseBounds:public GridLayout::Bounds{
     private:
         int mSize;
@@ -1014,7 +1014,7 @@ public:
 };
 
 namespace {
-    const BaselineAlignment __BASELINE__;
+    const GridLayout::BaselineAlignment __BASELINE__;
     const LeadingAlignment __LEADING__;
     const TrailingAlignment __TRAILING__;
     const SwitchAlignment __LEFT__(&__LEADING__,&__TRAILING__);//GridLayout::START,GridLayout::END);
@@ -1101,29 +1101,6 @@ bool GridLayout::Axis::isOrderPreserved()const{
 void GridLayout::Axis::setOrderPreserved(bool orderPreserved){
     mOrderPreserved = orderPreserved;
     invalidateStructure();
-}
-
-namespace{
-template<class K,class V>
-class Assoc{
-private:
-    std::vector<std::pair<K,V>>mData;
-public:
-   void put(K key, V value) {
-       mData.push_back(std::pair<K,V>(key, value));
-   }
-
-   GridLayout::PackedMap<K, V> pack() {
-       const int N = mData.size();
-       std::vector<K>keys;
-       std::vector<V>values;
-       for (int i = 0; i < N; i++) {
-           keys.push_back(mData.at(i).first);
-           values.push_back(mData.at(i).second);
-       }
-       return GridLayout::PackedMap<K, V>(keys, values);
-   }
-};
 }
 
 GridLayout::PackedMap<std::shared_ptr<GridLayout::Spec>,std::shared_ptr<GridLayout::Bounds>>GridLayout::Axis::createGroupBounds(){
@@ -1263,7 +1240,7 @@ const std::vector<int>& GridLayout::Axis::getTrailingMargins() {
     return mTrailingMargins;
 }
 
-static std::string arcsToString(bool horizontal,const std::vector<GridLayout::Arc>& arcs) {
+std::string GridLayout::Axis::arcsToString(bool horizontal,const std::vector<GridLayout::Arc>& arcs) {
     const std::string var = horizontal ? "x" : "y";
     std::ostringstream result;
     bool first = true;
