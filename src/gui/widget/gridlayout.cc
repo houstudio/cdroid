@@ -57,15 +57,14 @@ GridLayout::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& params)
     columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
 }
 
-GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
-    :MarginLayoutParams(params){
-    rowSpec = GridLayout::spec(GridLayout::UNDEFINED);
-    columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
+void GridLayout::LayoutParams::reInitSuper(Context* context, const AttributeSet& attrs){
+    const int margin = attrs.getDimensionPixelSize("layout_margin", DEFAULT_MARGIN);
+    leftMargin = attrs.getDimensionPixelSize("layout_marginLeft", margin);
+    topMargin = attrs.getDimensionPixelSize("layout_marginTop", margin);
+    rightMargin = attrs.getDimensionPixelSize("layout_marginRight", margin);
+    bottomMargin = attrs.getDimensionPixelSize("layout_marginBottom", margin);
 }
-
-GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
-    :MarginLayoutParams(context,attrs){
-
+void GridLayout::LayoutParams::init(Context* context,const AttributeSet& attrs){
     const int gravity = attrs.getGravity("layout_gravity", Gravity::NO_GRAVITY);
  
     const int column = attrs.getInt("layout_column", DEFAULT_COLUMN);
@@ -77,6 +76,18 @@ GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attr
     const int rowSpan = attrs.getInt("layout_rowSpan", DEFAULT_SPAN_SIZE);
     const float rowWeight = attrs.getFloat("layout_rowWeight", Spec::DEFAULT_WEIGHT);
     this->rowSpec = spec(row, rowSpan, getAlignment(gravity, false), rowWeight);
+}
+
+GridLayout::LayoutParams::LayoutParams(const MarginLayoutParams& params)
+    :MarginLayoutParams(params){
+    rowSpec = GridLayout::spec(GridLayout::UNDEFINED);
+    columnSpec = GridLayout::spec(GridLayout::UNDEFINED);
+}
+
+GridLayout::LayoutParams::LayoutParams(Context* context,const AttributeSet& attrs)
+    :MarginLayoutParams(context,attrs){
+    reInitSuper(context,attrs);
+    init(context,attrs);
 }
 
 void GridLayout::LayoutParams::setGravity(int gravity){

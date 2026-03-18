@@ -255,6 +255,8 @@ public:
         static constexpr int DEFAULT_SPAN_SIZE = 1;//DEFAULT_SPAN.size()
         LayoutParams(int width, int height,int left, int top, int right, int bottom,
            std::shared_ptr<Spec> rowSpec, std::shared_ptr<Spec> columnSpec);
+        void reInitSuper(Context* context,const AttributeSet& attrs);
+        void init(Context* context,const AttributeSet& attrs);
     public:
         std::shared_ptr<Spec> rowSpec;
         std::shared_ptr<Spec> columnSpec;
