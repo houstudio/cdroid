@@ -69,7 +69,6 @@ ShapeDrawable::ShapeDrawable(){
 }
 
 ShapeDrawable::~ShapeDrawable(){
-    delete mTintFilter;
 }
 
 void ShapeDrawable::getOutline(Outline& outline) {
@@ -157,7 +156,7 @@ int ShapeDrawable::getOpacity(){
     }
 }
 
-void ShapeDrawable::setTintList(const RefPtr<ColorStateList>&tint){
+void ShapeDrawable::setTintList(const cdroid::RefPtr<ColorStateList>&tint){
     if( mShapeState->mTint!=tint ){
         mShapeState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
@@ -171,7 +170,7 @@ void ShapeDrawable::setTintMode(int tintMode){
     invalidateSelf();
 }
 
-void ShapeDrawable::setColorFilter(ColorFilter*colorFilter){
+void ShapeDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
     invalidateSelf();
 }
 

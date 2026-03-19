@@ -58,7 +58,7 @@ public:
 
     void setAlpha(int alpha)override;
 
-    void setColorFilter(ColorFilter* colorFilter)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
 
     int getOpacity() override;
 };

@@ -54,7 +54,7 @@ private:
     // actual value set by developer
     float mRawShadowSize;
 
-    RefPtr<ColorStateList> mBackground;
+    cdroid::RefPtr<ColorStateList> mBackground;
 
     bool mDirty = true;
     bool mAddPaddingForCorners = true;
@@ -65,7 +65,7 @@ private:
     int mStateColor;
     int mAlpha;
 private:
-    void setBackground(const RefPtr<ColorStateList>& color);
+    void setBackground(const cdroid::RefPtr<ColorStateList>& color);
     void setShadowSize(float shadowSize, float maxShadowSize);
     void drawShadow(Canvas& canvas);
     void buildShadowCorners();
@@ -74,7 +74,7 @@ protected:
     void onBoundsChange(const Rect& bounds) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
 public:
-    RoundRectDrawableWithShadow(Context*,const RefPtr<ColorStateList>& backgroundColor, float radius,
+    RoundRectDrawableWithShadow(Context*,const cdroid::RefPtr<ColorStateList>& backgroundColor, float radius,
             float shadowSize, float maxShadowSize);
 
     void setAddPaddingForCorners(bool addPaddingForCorners);
@@ -87,7 +87,7 @@ public:
     static float calculateHorizontalPadding(float maxShadowSize, float cornerRadius, bool addPaddingForCorners);
 
     bool isStateful() const override;
-    void setColorFilter(ColorFilter* cf) override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) override;
     int getOpacity() override;
 
     float getCornerRadius() const;
@@ -106,9 +106,9 @@ public:
     float getMinWidth() const;
     float getMinHeight() const;
 
-    void setColor(const RefPtr<ColorStateList>& color);
+    void setColor(const cdroid::RefPtr<ColorStateList>& color);
 
-    const RefPtr<ColorStateList> getColor() const;
+    const cdroid::RefPtr<ColorStateList> getColor() const;
 };
 }/*endof namespace*/
 #endif/*__ROUNDRECT_DRAWABLE_WIDTH_SHADOW_H__*/

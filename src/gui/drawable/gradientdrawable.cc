@@ -294,7 +294,6 @@ GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int
 }
 
 GradientDrawable::~GradientDrawable(){
-    delete mTintFilter;
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
@@ -806,14 +805,14 @@ int GradientDrawable::getOpacity()const {
            OPAQUE : TRANSLUCENT;
 }
 
-void GradientDrawable::setColorFilter(ColorFilter*colorFilter){
+void GradientDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
     if(colorFilter !=mColorFilter){
         mColorFilter = colorFilter;
-	invalidateSelf();
+        invalidateSelf();
     }
 }
 
-ColorFilter*GradientDrawable::getColorFilter(){
+const cdroid::RefPtr<ColorFilter>GradientDrawable::getColorFilter()const{
     return mColorFilter;
 }
 
@@ -1070,7 +1069,7 @@ void GradientDrawable::prepareStrokeProps(Canvas&canvas) {
 void GradientDrawable::draw(Canvas&canvas) {
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
-    const ColorFilter* colorFilter = mColorFilter;// ? mColorFilter : mTintFilter;
+    const auto colorFilter = mColorFilter;// ? mColorFilter : mTintFilter;
     int preStrokeAlpha,preFillAlpha;
     getPatternAlpha(preStrokeAlpha,preFillAlpha);
     const int currStrokeAlpha = modulateAlpha(preStrokeAlpha);

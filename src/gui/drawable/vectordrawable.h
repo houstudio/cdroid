@@ -47,8 +47,8 @@ private:
     static constexpr const char*const SHAPE_VECTOR = "vector";
 
     std::shared_ptr<VectorDrawableState> mVectorState;
-    PorterDuffColorFilter* mTintFilter;
-    ColorFilter* mColorFilter;
+    cdroid::RefPtr<PorterDuffColorFilter> mTintFilter;
+    cdroid::RefPtr<ColorFilter> mColorFilter;
     bool mMutated;
     /** Whether DPI-scaled width, height, and insets need to be updated. */
     bool mDpiScaledDirty = true;
@@ -78,9 +78,9 @@ public:
     void draw(Canvas& canvas) override;
     int getAlpha()const override;
     void setAlpha(int alpha)override;
-    void setColorFilter(ColorFilter* colorFilter)override;
-    ColorFilter* getColorFilter()override;
-    void setTintList(const RefPtr<ColorStateList>& tint)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
+    const cdroid::RefPtr<ColorFilter> getColorFilter()const override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>& tint)override;
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
@@ -141,7 +141,7 @@ protected:
     // Variables below need to be copied (deep copy if applicable) for mutation.
     int mThemeAttrs[2];
     int mChangingConfigurations;
-    RefPtr<ColorStateList> mTint;
+    cdroid::RefPtr<ColorStateList> mTint;
     int mTintMode = DEFAULT_TINT_MODE;
     int mBaseWidth = 0;
     int mBaseHeight = 0;
@@ -157,7 +157,7 @@ protected:
 
     // Fields for cache
     int mCachedThemeAttrs[2];
-    RefPtr<ColorStateList> mCachedTint;
+    cdroid::RefPtr<ColorStateList> mCachedTint;
     int  mCachedTintMode;
     bool mAutoMirrored;
     bool mCachedAutoMirrored;

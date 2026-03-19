@@ -34,7 +34,7 @@ public:
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     int getOpacity()override;
-    void setColorFilter(ColorFilter* colorFilter)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
     void setAlpha(int alpha)override;
 };
 

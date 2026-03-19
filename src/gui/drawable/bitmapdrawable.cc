@@ -134,7 +134,6 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
 
 BitmapDrawable::~BitmapDrawable(){
     LOGV("%p:%p use_count=%d %s",this,mBitmapState->mBitmap.get(),mBitmapState.use_count(),mBitmapState->mResource.c_str());
-    delete mTintFilter;
 }
 
 RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{

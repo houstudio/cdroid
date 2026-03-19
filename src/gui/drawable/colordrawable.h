@@ -36,7 +36,7 @@ private:
 private:
     bool mMutated;
     std::shared_ptr<ColorState>mColorState;
-    PorterDuffColorFilter* mTintFilter;
+    cdroid::RefPtr<PorterDuffColorFilter> mTintFilter;
     ColorDrawable(std::shared_ptr<ColorState> state);
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;

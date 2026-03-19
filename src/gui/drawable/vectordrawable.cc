@@ -32,16 +32,12 @@ VectorDrawable::VectorDrawable()
 
 VectorDrawable::VectorDrawable(std::shared_ptr<VectorDrawableState> state) {
     mMutated = false;
-    mColorFilter= nullptr;
-    mTintFilter = nullptr;
     mTargetDensity=0;
     mVectorState = state;
     updateLocalState();
 }
 
 VectorDrawable::~VectorDrawable(){
-    delete mTintFilter;
-    delete mColorFilter;
 }
 
 void VectorDrawable::updateLocalState() {
@@ -90,7 +86,7 @@ void VectorDrawable::draw(Canvas& canvas) {
     }
 
     // Color filters always override tint filters.
-    ColorFilter* colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
+    auto colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
     //long colorFilterNativeInstance = colorFilter == nullptr ? 0 :colorFilter.getNativeInstance();
     const bool canReuseCache = mVectorState->canReuseCache();
     /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
@@ -135,16 +131,16 @@ void VectorDrawable::setAlpha(int alpha) {
     }
 }
 
-void VectorDrawable::setColorFilter(ColorFilter* colorFilter) {
+void VectorDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     mColorFilter = colorFilter;
     invalidateSelf();
 }
 
-ColorFilter* VectorDrawable::getColorFilter() {
+const cdroid::RefPtr<ColorFilter> VectorDrawable::getColorFilter() const{
     return mColorFilter;
 }
 
-void VectorDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
+void VectorDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tint) {
     auto state = mVectorState;
     if (state->mTint != tint) {
         state->mTint =tint;

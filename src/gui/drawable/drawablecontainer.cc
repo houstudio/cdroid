@@ -141,7 +141,6 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
 DrawableContainer::DrawableContainerState::~DrawableContainerState(){
     for_each( mDrawables.begin(), mDrawables.end(),[](Drawable*d){delete d;});
     mDrawables.clear();
-    delete mColorFilter;
 }
 
 int DrawableContainer::DrawableContainerState::getChangingConfigurations()const{
@@ -502,7 +501,7 @@ void DrawableContainer::setDither(bool dither) {
     }
 }
 
-void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
+void DrawableContainer::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
 
     if (mDrawableContainerState->mColorFilter != colorFilter) {
         mDrawableContainerState->mColorFilter = colorFilter;
@@ -513,7 +512,7 @@ void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
     }
 }
 
-void DrawableContainer::setTintList(const RefPtr<ColorStateList>&tint){
+void DrawableContainer::setTintList(const cdroid::RefPtr<ColorStateList>&tint){
     if( mDrawableContainerState->mTintList!=tint ){
         mDrawableContainerState->mTintList = tint;
         if(mCurrDrawable)

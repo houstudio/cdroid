@@ -58,7 +58,6 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
 }
 
 ColorDrawable::~ColorDrawable(){
-    delete mTintFilter;
 }
 
 void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){

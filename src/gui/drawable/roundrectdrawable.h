@@ -29,16 +29,16 @@ private:
     bool mInsetForPadding = false;
     bool mInsetForRadius = true;
 
-    RefPtr<ColorStateList> mBackground;
-    PorterDuffColorFilter* mTintFilter;
-    RefPtr<ColorStateList> mTint;
+    cdroid::RefPtr<ColorStateList> mBackground;
+    cdroid::RefPtr<PorterDuffColorFilter> mTintFilter;
+    cdroid::RefPtr<ColorStateList> mTint;
     int mAlpha;
     int mStateColor;
     int mTintMode;// = PorterDuff.Mode.SRC_IN;
 private:
     void setBackground(const RefPtr<ColorStateList>& color);
     void updateBounds(const Rect& bounds);
-    PorterDuffColorFilter* createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode);
+    cdroid::RefPtr<PorterDuffColorFilter> createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode);
 protected:
     void onBoundsChange(const Rect& bounds) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
@@ -57,17 +57,17 @@ public:
 
     void setAlpha(int alpha) override;
     int getAlpha()const override;
-    void setColorFilter(ColorFilter* cf) override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) override;
 
     int getOpacity() override;
 
     float getRadius()const;
 
-    void setColor(const RefPtr<ColorStateList>& color);
+    void setColor(const cdroid::RefPtr<ColorStateList>& color);
 
-    const RefPtr<ColorStateList> getColor() const;
+    const cdroid::RefPtr<ColorStateList> getColor() const;
 
-    void setTintList(const RefPtr<ColorStateList>& tint) override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>& tint) override;
     void setTintMode(int tintMode) override;
 
     bool isStateful() const override;

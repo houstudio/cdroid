@@ -108,7 +108,7 @@ void ProgressDrawable::setAlpha(int i) {
     // Not supported.
 }
 
-void ProgressDrawable::setColorFilter(ColorFilter* colorFilter) {
+void ProgressDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     // Not supported.
 }
 

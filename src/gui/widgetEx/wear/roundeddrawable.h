@@ -62,7 +62,7 @@ public:
     void setAlpha(int alpha)override;
     int getAlpha()const override;
 
-    void setColorFilter(ColorFilter* cf)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& cf)override;
 
     /**
      * Sets the border radius to be applied when rendering the drawable in pixels.

@@ -132,7 +132,7 @@ bool RoundRectDrawableWithShadow::isStateful() const{
     return (mBackground != nullptr && mBackground->isStateful()) || Drawable::isStateful();
 }
 
-void RoundRectDrawableWithShadow::setColorFilter(ColorFilter* cf) {
+void RoundRectDrawableWithShadow::setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) {
     //mPaint.setColorFilter(cf);
 }
 
@@ -314,12 +314,12 @@ float RoundRectDrawableWithShadow::getMinHeight() const{
     return content + (mRawMaxShadowSize * SHADOW_MULTIPLIER + mInsetShadow) * 2;
 }
 
-void RoundRectDrawableWithShadow::setColor(const RefPtr<ColorStateList>& color) {
+void RoundRectDrawableWithShadow::setColor(const cdroid::RefPtr<ColorStateList>& color) {
     setBackground(color);
     invalidateSelf();
 }
 
-const RefPtr<ColorStateList> RoundRectDrawableWithShadow::getColor() const{
+const cdroid::RefPtr<ColorStateList> RoundRectDrawableWithShadow::getColor() const{
     return mBackground;
 }
 }

@@ -123,7 +123,7 @@ public:
     void setAlpha(int alpha) override;
     int getAlpha() const override;
 
-    void setColorFilter(ColorFilter* colorFilter) override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) override;
 
     int getOpacity() override;
 
@@ -195,7 +195,7 @@ public:
 
     void goToNextColor();
 
-    void setColorFilter(ColorFilter* filter);
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& filter);
 
     void setAlpha(int alpha);
     int getAlpha() const;

@@ -96,7 +96,7 @@ int RoundRectDrawable::getAlpha()const{
     return mAlpha;
 }
 
-void RoundRectDrawable::setColorFilter(ColorFilter* cf) {
+void RoundRectDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) {
     //mPaint.setColorFilter(cf);
 }
 
@@ -108,7 +108,7 @@ float RoundRectDrawable::getRadius() const{
     return mRadius;
 }
 
-void RoundRectDrawable::setColor(const RefPtr<ColorStateList>& color) {
+void RoundRectDrawable::setColor(const cdroid::RefPtr<ColorStateList>& color) {
     setBackground(color);
     invalidateSelf();
 }
@@ -117,7 +117,7 @@ const RefPtr<ColorStateList> RoundRectDrawable::getColor() const{
     return mBackground;
 }
 
-void RoundRectDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
+void RoundRectDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tint) {
     mTint = tint;
     mTintFilter = createTintFilter(mTint, mTintMode);
     invalidateSelf();
@@ -147,11 +147,11 @@ bool RoundRectDrawable::isStateful() const {
             || (mBackground != nullptr && mBackground->isStateful()) || Drawable::isStateful();
 }
 
-PorterDuffColorFilter* RoundRectDrawable::createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode) {
+cdroid::RefPtr<PorterDuffColorFilter> RoundRectDrawable::createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode) {
     if (tint == nullptr || tintMode <0) {
         return nullptr;
     }
     const int color = tint->getColorForState(getState(), Color::TRANSPARENT);
-    return new PorterDuffColorFilter(color, tintMode);
+    return std::make_shared<PorterDuffColorFilter>(color, tintMode);
 }
 }

@@ -50,7 +50,6 @@ NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp):NinePatchDrawable(
 }
 
 NinePatchDrawable::~NinePatchDrawable(){
-    delete mTintFilter;
 }
 
 void NinePatchDrawable::computeBitmapSize(){

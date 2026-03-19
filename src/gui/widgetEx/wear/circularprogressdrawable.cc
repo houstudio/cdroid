@@ -180,7 +180,7 @@ int CircularProgressDrawable::getAlpha() const{
     return mRing->getAlpha();
 }
 
-void CircularProgressDrawable::setColorFilter(ColorFilter* colorFilter) {
+void CircularProgressDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     mRing->setColorFilter(colorFilter);
     invalidateSelf();
 }
@@ -499,7 +499,7 @@ void CircularProgressDrawable::Ring::goToNextColor() {
     setColorIndex(getNextColorIndex());
 }
 
-void CircularProgressDrawable::Ring::setColorFilter(ColorFilter* filter) {
+void CircularProgressDrawable::Ring::setColorFilter(const cdroid::RefPtr<ColorFilter>& filter) {
     //mPaint.setColorFilter(filter);
 }
 
