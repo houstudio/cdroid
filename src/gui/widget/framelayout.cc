@@ -199,10 +199,10 @@ void FrameLayout::layoutChildren(int left, int top, int width, int height, bool 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         if (child->getVisibility() != GONE) {
-            LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
+            const LayoutParams* lp = (const LayoutParams*) child->getLayoutParams();
 
-            int childWidth = child->getMeasuredWidth();
-            int childHeight = child->getMeasuredHeight();
+            const int childWidth = child->getMeasuredWidth();
+            const int childHeight = child->getMeasuredHeight();
 
             int childLeft=0;
             int childTop =0;
@@ -212,9 +212,9 @@ void FrameLayout::layoutChildren(int left, int top, int width, int height, bool 
                 gravity = DEFAULT_CHILD_GRAVITY;
             }
 
-            int layoutDirection = getLayoutDirection();
-            int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
-            int verticalGravity = gravity & Gravity::VERTICAL_GRAVITY_MASK;
+            const int layoutDirection = getLayoutDirection();
+            const int absoluteGravity = Gravity::getAbsoluteGravity(gravity, layoutDirection);
+            const int verticalGravity = gravity & Gravity::VERTICAL_GRAVITY_MASK;
 
             switch (absoluteGravity & Gravity::HORIZONTAL_GRAVITY_MASK) {
             case Gravity::CENTER_HORIZONTAL:

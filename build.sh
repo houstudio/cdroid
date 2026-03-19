@@ -20,6 +20,16 @@ fi
 if [ ! -f "$VCPKGROOT/vcpkg" ] && [ ! -f "$VCPKGROOT/vcpkg.exe" ] && [ ! -f "$VCPKGROOT/vcpkg.bat" ]; then
     echo "vcpkg not found"
     exit 1
+elif [ ! -f "$VCPKGROOT/cdroid_install_libs.sh" ]; then
+    tar -zxvf scripts/vcpkgpatch4cdroid.tar.gz -C "$VCPKGROOT"
+    echo "VCPKG has patched cdroid"
+    echo "cheking x64 triplet deps libraries"
+    if [ ! -d "$VCPKGROOT/installed/x64-linux-dynamic/lib" ];then
+       echo "now we need to install cdroid deps for x64 triplet,pls wait some minutes... "
+       pushd "$VCPKGROOT"
+       ./cdroid_install_libs.sh --triplet=x64-linux-dynamic
+       popd
+    fi
 fi
 
 TOOLCHAINS["SIGMA"]=${VCPKGROOT}/scripts/toolchains/ssd202-mtitoolchain.cmake
