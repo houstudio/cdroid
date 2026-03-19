@@ -1466,8 +1466,8 @@ public:
     float getX()const;//x pos to screen
     float getY()const;//y pos to screen
     float getZ()const;
-    float getElevation()const;
-    void setElevation(float elevation);
+    virtual float getElevation()const;
+    virtual void setElevation(float elevation);
     float getTranslationX()const;
     float getTranslationY()const;
     float getTranslationZ()const;

@@ -21,6 +21,7 @@
 namespace cdroid{
 RoundRectDrawable::RoundRectDrawable(const ColorStateList* backgroundColor, float radius) {
     mRadius = radius;
+    mTint = nullptr;
     //mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
     setBackground(backgroundColor);
 }
