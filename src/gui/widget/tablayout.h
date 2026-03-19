@@ -230,7 +230,7 @@ private:
     int  calculateScrollXForTab(int position, float positionOffset);
     void applyModeAndGravity();
     void applyGravityForModeScrollable(int tabGravity);
-    static ColorStateList* createColorStateList(int defaultColor, int selectedColor);
+    static RefPtr<ColorStateList> createColorStateList(int defaultColor, int selectedColor);
     int getDefaultHeight()const;
     int getTabMinWidth()const;
 protected:
@@ -242,10 +242,9 @@ protected:
     int  mTabPaddingBottom;
     int  mTabTextAppearance;
     int mTabSelectedIndicatorColor;
-    bool mOwnedTabTextColors;
-    const ColorStateList* mTabTextColors;
-    const ColorStateList* mTabIconTint;
-    const ColorStateList* mTabRippleColorStateList;
+    RefPtr<ColorStateList> mTabTextColors;
+    RefPtr<ColorStateList> mTabIconTint;
+    RefPtr<ColorStateList> mTabRippleColorStateList;
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
     float mTabTextMultiLineSize;
@@ -326,8 +325,8 @@ public:
     void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;
     void setInlineLabel(bool);
-    void setTabTextColors(const ColorStateList* textColor);
-    const ColorStateList* getTabTextColors()const;
+    void setTabTextColors(const RefPtr<ColorStateList>& textColor);
+    const RefPtr<ColorStateList> getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
     void setupWithViewPager(ViewPager* viewPager);
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh);

@@ -19,6 +19,7 @@
 #define __MENU_ITEM_H__
 #include <string>
 #include <functional>
+#include <core/context.h>
 namespace cdroid{
 class Drawable;
 class View;
@@ -63,9 +64,9 @@ public:
 
     virtual Drawable* getIcon()=0;
 
-    virtual MenuItem& setIconTintList(const ColorStateList* tint);
+    virtual MenuItem& setIconTintList(const RefPtr<ColorStateList>& tint);
 
-    virtual const ColorStateList* getIconTintList();
+    virtual const RefPtr<ColorStateList> getIconTintList();
 
     virtual MenuItem& setIconTintMode(int tintMode);
 

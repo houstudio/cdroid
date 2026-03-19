@@ -54,7 +54,7 @@ protected:
         int mEnterFadeDuration,mExitFadeDuration;
         int mTintMode;
         ColorFilter*mColorFilter;
-        const ColorStateList*mTintList;
+        RefPtr<ColorStateList>mTintList;
         std::vector<Drawable*>mDrawables;
         SparseArray<std::shared_ptr<ConstantState>>mDrawableFutures;
     public:
@@ -138,7 +138,7 @@ public:
     void getHotspotBounds(Rect& outRect)const override;
     void setHotspotBounds(int left, int top, int width, int height)override;
     void setColorFilter(ColorFilter*colorFilter)override;
-    void setTintList(const ColorStateList*tint)override;
+    void setTintList(const RefPtr<ColorStateList>&tint)override;
     void setTintMode(int)override;
     void setEnterFadeDuration(int ms);
     void setExitFadeDuration(int ms);

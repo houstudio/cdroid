@@ -53,8 +53,8 @@ public:
     void setMinimumHeight(int minHeight) override;
 
     void setCardBackgroundColor(int color);
-    void setCardBackgroundColor(const ColorStateList* color);
-    const ColorStateList* getCardBackgroundColor() const;
+    void setCardBackgroundColor(const RefPtr<ColorStateList>& color);
+    const RefPtr<ColorStateList> getCardBackgroundColor() const;
 
     int getContentPaddingLeft() const;
     int getContentPaddingRight() const;

@@ -144,10 +144,10 @@ ColorFilter* VectorDrawable::getColorFilter() {
     return mColorFilter;
 }
 
-void VectorDrawable::setTintList(const ColorStateList* tint) {
+void VectorDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
     auto state = mVectorState;
     if (state->mTint != tint) {
-        state->mTint =(ColorStateList*)tint;
+        state->mTint =tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, state->mTintMode);
         invalidateSelf();
     }
@@ -364,7 +364,7 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
         //state->mTintMode = Drawable::parseTintMode(tintMode, Mode::SRC_IN);
     }
 
-    ColorStateList* tint = atts.getColorStateList("tint");
+    auto tint = atts.getColorStateList("tint");
     if (tint != nullptr) {
         state->mTint = tint;
     }
@@ -1230,9 +1230,9 @@ int VectorDrawable::VFullPath::getPropertyIndex(const std::string& propertyName)
 bool VectorDrawable::VFullPath::onStateChange(const std::vector<int>&stateSet) {
     bool changed = false;
 
-    if (mStrokeColors != nullptr && dynamic_cast<ColorStateList*>(mStrokeColors)) {
+    if (mStrokeColors != nullptr && std::dynamic_pointer_cast<ColorStateList>(mStrokeColors)) {
         const int oldStrokeColor = getStrokeColor();
-        const int newStrokeColor =((ColorStateList*) mStrokeColors)->getColorForState(stateSet, oldStrokeColor);
+        const int newStrokeColor = std::dynamic_pointer_cast<ColorStateList>( mStrokeColors)->getColorForState(stateSet, oldStrokeColor);
         changed |= oldStrokeColor != newStrokeColor;
         if (oldStrokeColor != newStrokeColor) {
             //nSetStrokeColor(mNativePtr, newStrokeColor);
@@ -1240,9 +1240,9 @@ bool VectorDrawable::VFullPath::onStateChange(const std::vector<int>&stateSet) {
         }
     }
 
-    if (mFillColors != nullptr && dynamic_cast<ColorStateList*>(mFillColors)) {
+    if (mFillColors != nullptr && std::dynamic_pointer_cast<ColorStateList>(mFillColors)) {
         const int oldFillColor = getFillColor();
-        const int newFillColor = ((ColorStateList*) mFillColors)->getColorForState(stateSet, oldFillColor);
+        const int newFillColor = std::dynamic_pointer_cast<ColorStateList>(mFillColors)->getColorForState(stateSet, oldFillColor);
         changed |= oldFillColor != newFillColor;
         if (oldFillColor != newFillColor) {
             //nSetFillColor(mNativePtr, newFillColor);
@@ -1258,10 +1258,10 @@ bool VectorDrawable::VFullPath::isStateful() const{
 }
 
 bool VectorDrawable::VFullPath::hasFocusStateSpecified() const{
-    return (mStrokeColors != nullptr && dynamic_cast<ColorStateList*>(mStrokeColors) &&
-            ((ColorStateList*) mStrokeColors)->hasFocusStateSpecified()) &&
-            (mFillColors != nullptr && dynamic_cast<ColorStateList*>(mFillColors) &&
-            ((ColorStateList*) mFillColors)->hasFocusStateSpecified());
+    return (mStrokeColors != nullptr && std::dynamic_pointer_cast<ColorStateList>(mStrokeColors) &&
+            std::dynamic_pointer_cast<ColorStateList>(mStrokeColors)->hasFocusStateSpecified()) &&
+            (mFillColors != nullptr && std::dynamic_pointer_cast<ColorStateList>(mFillColors) &&
+            std::dynamic_pointer_cast<ColorStateList>(mFillColors)->hasFocusStateSpecified());
 }
 
 long VectorDrawable::VFullPath::getNativePtr() {
@@ -1315,7 +1315,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
         ((hwui::Path*)mNativePtr)->mutateStagingProperties()->setData(data);
     }
 #if 10
-    ComplexColor* fillColors = atts.getColorStateList("fillColor");
+    auto fillColors = atts.getColorStateList("fillColor");
     if (fillColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1330,7 +1330,7 @@ void VectorDrawable::VFullPath::updateStateFromTypedArray(const AttributeSet& at
         fillColor = fillColors->getDefaultColor();
     }
 
-    ComplexColor* strokeColors = atts.getColorStateList("strokeColor");
+    auto strokeColors = atts.getColorStateList("strokeColor");
     if (strokeColors != nullptr) {
         // If the colors is a gradient color, or the color state list is stateful, keep the
         // colors information. Otherwise, discard the colors and keep the default color.
@@ -1481,7 +1481,7 @@ void VectorDrawable::VFullPath::applyTheme(Theme t) {
 #endif
 }
 
-bool VectorDrawable::VFullPath::canComplexColorApplyTheme(ComplexColor* complexColor) {
+bool VectorDrawable::VFullPath::canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor) {
     return complexColor != nullptr ;//&& complexColor->canApplyTheme();
 }
 

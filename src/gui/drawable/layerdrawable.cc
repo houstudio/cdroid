@@ -652,7 +652,7 @@ void LayerDrawable::getHotspotBounds(Rect& outRect)const{
     }
 }
 
-void LayerDrawable::setTintList(const ColorStateList* tint){
+void LayerDrawable::setTintList(const RefPtr<ColorStateList>& tint){
     for (ChildDrawable*child:mLayerState->mChildren) {
         Drawable* dr = child->mDrawable;
         if (dr != nullptr) {

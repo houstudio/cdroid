@@ -43,7 +43,7 @@ private:
         bool mMipMap;
         int mChangingConfigurations;
         std::vector<int>mThemeAttrs;
-        const ColorStateList* mTint;
+        RefPtr<ColorStateList> mTint;
         int mTintMode;
         int mTileModeX;
         int mTileModeY;
@@ -100,7 +100,7 @@ public:
     void setTileModeXY(int,int);
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()const override;
-    void setTintList(const ColorStateList*lst)override;
+    void setTintList(const RefPtr<ColorStateList>&lst)override;
     void setTintMode(int mode)override;
     int getTintMode()const;
     BitmapDrawable*mutate()override;

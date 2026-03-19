@@ -39,7 +39,7 @@ private:
     std::unordered_map<std::string,AttributeSet>mStyles;
     std::unordered_map<std::string,uint32_t>mColors;
     std::unordered_map<std::string,int>mDimensions;
-    std::unordered_map<std::string,ColorStateList*>mStateColors;
+    std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
@@ -74,7 +74,7 @@ public:
     float getFloat(const std::string&resid)const override;
     size_t getArray(const std::string&resid,std::vector<int>&)override;
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
-    ColorStateList* getColorStateList(const std::string&resid)override;
+    RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
     AttributeSet obtainStyledAttributes(const std::string&)override;
 };
 

@@ -65,7 +65,7 @@ protected:
     std::vector<int>mState;
     Drawable*mDrawable;
     ColorFilter*mColorFilter;
-    const ColorStateList*mDrawableTintList;
+    RefPtr<ColorStateList>mDrawableTintList;
     int mDrawableTintMode;
     BitmapDrawable*mRecycleableBitmapDrawable;
     Matrix mMatrix;
@@ -115,8 +115,8 @@ public:
     Runnable setImageURIAsync(const std::string&uri);
     void setImageDrawable(Drawable* drawable);
     void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
-    void setImageTintList(const ColorStateList*tint);
-    const ColorStateList* getImageTintList();
+    void setImageTintList(const RefPtr<ColorStateList>&tint);
+    const RefPtr<ColorStateList> getImageTintList()const;
     void setImageTintMode(int mode);
     int getImageTintMode()const;
     void setColorFilter(int color,int mode);

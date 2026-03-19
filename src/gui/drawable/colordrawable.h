@@ -26,7 +26,7 @@ private:
     public:
         uint32_t mBaseColor;// base color, independent of setAlpha()
         uint32_t mUseColor; // basecolor modulated by setAlpha()
-        const ColorStateList*mTint;
+        RefPtr<ColorStateList>mTint;
         int mTintMode;
         ColorState();
         ColorState(const ColorState& state);
@@ -49,7 +49,7 @@ public:
     void setAlpha(int a)override;
     int getOpacity()override;
     void getOutline(Outline&)override;
-    void setTintList(const ColorStateList* tint)override;
+    void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     int getChangingConfigurations()const override;

@@ -142,7 +142,7 @@ ColorFilter* AnimatedVectorDrawable::getColorFilter() {
     return mAnimatedVectorState->mVectorDrawable->getColorFilter();
 }
 
-void AnimatedVectorDrawable::setTintList(const ColorStateList* tint) {
+void AnimatedVectorDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
     mAnimatedVectorState->mVectorDrawable->setTintList(tint);
 }
 

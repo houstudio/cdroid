@@ -1134,10 +1134,10 @@ public:
     bool isForegroundInsidePadding()const;
     int getForegroundGravity()const;
     void setForegroundGravity(int gravity);
-    void setForegroundTintList(const ColorStateList* tint);
+    void setForegroundTintList(const RefPtr<ColorStateList>& tint);
     void setForegroundTintMode(int tintMode);
     void setForegroundTintBlendMode(int blendMode);
-    const ColorStateList* getForegroundTintList();
+    const RefPtr<ColorStateList> getForegroundTintList();
     virtual void onResolveDrawables(int layoutDirection);
 
     virtual void jumpDrawablesToCurrentState();
@@ -1145,10 +1145,10 @@ public:
     virtual void setBackground(Drawable*background);
     virtual void setBackgroundColor(int color);
     void setBackgroundResource(const std::string&resid);
-    void setBackgroundTintList(const ColorStateList* tint);
+    void setBackgroundTintList(const RefPtr<ColorStateList>& tint);
     void setBackgroundTintMode(int tintMode);
     int getBackgroundTintMode() const;
-    const ColorStateList* getBackgroundTintList()const;
+    const RefPtr<ColorStateList> getBackgroundTintList()const;
     virtual int getSolidColor()const;
 
     AccessibilityDelegate* getAccessibilityDelegate()const;
@@ -1615,7 +1615,7 @@ public:
 
 class View::TintInfo{
 public:
-    const ColorStateList*mTintList;
+    RefPtr<ColorStateList>mTintList;
     int mBlendMode;
     int mTintMode;
     bool mHasTintMode;

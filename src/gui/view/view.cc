@@ -257,7 +257,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         setFlags(viewFlagValues, viewFlagMasks);
     }
 
-    ColorStateList*csl = attrs.getColorStateList("backgroundTint");
+    auto csl = attrs.getColorStateList("backgroundTint");
     if( (mBackgroundTint == nullptr) && csl){
         mBackgroundTint = new TintInfo;
         mBackgroundTint->mTintList = csl;
@@ -4766,7 +4766,7 @@ void View::setBackgroundColor(int color){
         setBackground(new ColorDrawable(color));
 }
 
-void View::setBackgroundTintList(const ColorStateList* tint){
+void View::setBackgroundTintList(const RefPtr<ColorStateList>& tint){
     if (mBackgroundTint == nullptr) {
         mBackgroundTint = new TintInfo();
     }
@@ -4777,7 +4777,7 @@ void View::setBackgroundTintList(const ColorStateList* tint){
     }
 }
 
-const ColorStateList* View::getBackgroundTintList()const{
+const RefPtr<ColorStateList> View::getBackgroundTintList()const{
     return mBackgroundTint != nullptr ? mBackgroundTint->mTintList : nullptr;
 }
 
@@ -4969,7 +4969,7 @@ void View::setForegroundGravity(int gravity){
     }
 }
 
-void View::setForegroundTintList(const ColorStateList* tint){
+void View::setForegroundTintList(const RefPtr<ColorStateList>& tint){
     if (mForegroundInfo == nullptr) {
         mForegroundInfo = new ForegroundInfo();
     }
@@ -5009,7 +5009,7 @@ void View::setForegroundTintBlendMode(int blendMode) {
     applyForegroundTint();
 }
 
-const ColorStateList* View::getForegroundTintList(){
+const RefPtr<ColorStateList> View::getForegroundTintList(){
     return (mForegroundInfo != nullptr) && (mForegroundInfo->mTintInfo != nullptr)
                 ? mForegroundInfo->mTintInfo->mTintList : nullptr;
 }

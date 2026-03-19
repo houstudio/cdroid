@@ -27,7 +27,7 @@ private:
     class ShapeState:public std::enable_shared_from_this<ShapeState>,public ConstantState{
     public:
         Shape*mShape;
-        const ColorStateList* mTint;
+        RefPtr<ColorStateList> mTint;
         int mTintMode;
         Rect mPadding;
         int mChangingConfigurations;
@@ -63,7 +63,7 @@ public:
     void setAlpha(int alpha)override;
     int getAlpha()const override;
     int getOpacity()override;
-    void setTintList(const ColorStateList*)override;
+    void setTintList(const RefPtr<ColorStateList>&)override;
     void setTintMode(int tintMode)override;
     void setColorFilter(ColorFilter*colorFilter)override;
     int getIntrinsicWidth()const;

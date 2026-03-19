@@ -173,7 +173,7 @@ void Drawable::setTint(int color) {
     setTintList(ColorStateList::valueOf(color));
 }
 
-PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode) {
+PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,const RefPtr<ColorStateList>& tint,int tintMode) {
     if ( (tint == nullptr) || (tintMode == PorterDuff::Mode::NOOP) ) {
         return nullptr;
     }
@@ -188,7 +188,7 @@ PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFil
     return tintFilter;
 }
 
-void Drawable::setTintList(const ColorStateList* tint) {
+void Drawable::setTintList(const RefPtr<ColorStateList>& tint) {
 }
 
 void Drawable::setTintMode(int mode) {

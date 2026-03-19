@@ -54,7 +54,6 @@ TextView::Drawables::~Drawables(){
     for(int i=0;i<4;i++){
         delete mShowing[i];
     }
-    //delete mTintList;//tintlist cant destroied!
 }
 
 bool TextView::Drawables::hasMetadata()const{
@@ -314,9 +313,9 @@ public:
     int mTextColor;
     int mTextColorHint;
     int mTextColorLink;
-    ColorStateList* mTextColors = nullptr;
-    ColorStateList* mTextColorHints = nullptr;
-    ColorStateList* mTextColorLinks = nullptr;
+    RefPtr<ColorStateList> mTextColors;
+    RefPtr<ColorStateList> mTextColorHints;
+    RefPtr<ColorStateList> mTextColorLinks;
     int mTextSize = 0;
     std::string mFontFamily;
     Typeface* mFontTypeface;
@@ -2338,19 +2337,19 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
 }
 
 void TextView::setTextColor(int color){
-    mCurTextColor = color;
-    invalidate();
-    //setTextColor(ColorStateList::valueOf(color));
+    mTextColor = ColorStateList::valueOf(color);
+    updateTextColors();
 }
 
-void TextView::setTextColor(const ColorStateList* colors){
-    if(mTextColor!=colors){
-        mTextColor = colors;
-        updateTextColors();
+void TextView::setTextColor(const RefPtr<ColorStateList>& colors){
+    if(colors==nullptr){
+        FATAL("NullPointerException");
     }
+    mTextColor = colors;
+    updateTextColors();
 }
 
-const ColorStateList* TextView::getTextColors()const{
+const RefPtr<ColorStateList> TextView::getTextColors()const{
     return mTextColor;
 }
 
@@ -2382,14 +2381,14 @@ void TextView::setHintTextColor(int color){
     //setHintTextColor(ColorStateList::valueOf(color));
 }
 
-void TextView::setHintTextColor(const ColorStateList* colors){
+void TextView::setHintTextColor(const RefPtr<ColorStateList>& colors){
     if(mHintTextColor!=colors){
         mHintTextColor = colors;
         updateTextColors();
     }
 }
 
-const ColorStateList* TextView::getHintTextColors()const{
+const RefPtr<ColorStateList> TextView::getHintTextColors()const{
     return mHintTextColor;
 }
 
@@ -2399,17 +2398,17 @@ int TextView::getCurrentHintTextColor()const{
 
 
 void TextView::setLinkTextColor(int color){
-    //setLinkTextColor(ColorStateList::valueOf(color));
+    setLinkTextColor(ColorStateList::valueOf(color));
 }
 
-void TextView::setLinkTextColor(const ColorStateList* colors){
+void TextView::setLinkTextColor(const RefPtr<ColorStateList>& colors){
     if(mLinkTextColor!=colors){
         mLinkTextColor = colors;
         updateTextColors();
     }
 }
 
-const ColorStateList* TextView::getLinkTextColors()const{
+const RefPtr<ColorStateList> TextView::getLinkTextColors()const{
     return mLinkTextColor;
 }
 
@@ -2417,7 +2416,7 @@ void TextView::applyCompoundDrawableTint(){
     if (mDrawables == nullptr) return;
     if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mHasTintMode==false) )return ;
 
-    const ColorStateList* tintList = mDrawables->mTintList;
+    const RefPtr<ColorStateList> tintList = mDrawables->mTintList;
     const int tintMode = mDrawables->mTintMode;
     const bool hasTint = (mDrawables->mTintList!=nullptr);
     const bool hasTintMode = mDrawables->mHasTintMode;
@@ -2573,7 +2572,7 @@ int TextView::getExtendedPaddingBottom()const{
     }
 }
 
-void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
+void TextView::setCompoundDrawableTintList(const RefPtr<ColorStateList>& tint){
     if (mDrawables == nullptr) {
         mDrawables = new Drawables(getContext());
     }
@@ -2583,7 +2582,7 @@ void TextView::setCompoundDrawableTintList(const ColorStateList* tint){
     }
 }
 
-const ColorStateList* TextView::getCompoundDrawableTintList()const{
+const RefPtr<ColorStateList> TextView::getCompoundDrawableTintList()const{
     return mDrawables ? mDrawables->mTintList : nullptr;
 }
 

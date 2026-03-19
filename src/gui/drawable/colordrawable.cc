@@ -121,7 +121,7 @@ int ColorDrawable::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations() | mColorState->getChangingConfigurations();
 }
 
-void ColorDrawable::setTintList(const ColorStateList* tint){
+void ColorDrawable::setTintList(const RefPtr<ColorStateList>& tint){
     if( mColorState->mTint!=tint ){
         mColorState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);

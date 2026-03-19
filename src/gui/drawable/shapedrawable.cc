@@ -48,7 +48,6 @@ ShapeDrawable* ShapeDrawable::ShapeState::newDrawable(){
 
 ShapeDrawable::ShapeState::~ShapeState(){
     delete mShape;
-    //delete mTint;mTint cant be destroied
 }
 
 int ShapeDrawable::ShapeState::getChangingConfigurations()const{
@@ -158,7 +157,7 @@ int ShapeDrawable::getOpacity(){
     }
 }
 
-void ShapeDrawable::setTintList(const ColorStateList*tint){
+void ShapeDrawable::setTintList(const RefPtr<ColorStateList>&tint){
     if( mShapeState->mTint!=tint ){
         mShapeState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter,tint,mShapeState->mTintMode); 
@@ -290,7 +289,7 @@ void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
         //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
     }
 
-    ColorStateList* tint = a.getColorStateList("tint");
+    auto tint = a.getColorStateList("tint");
     if (tint != nullptr) {
         state->mTint = tint;
     }

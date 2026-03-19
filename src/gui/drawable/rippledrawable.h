@@ -40,7 +40,7 @@ private:
         std::vector<int>mTouchThemeAttrs;
         int mMaxRadius;
         int mRippleStyle=FORCE_PATTERNED_STYLE?STYLE_PATTERNED:STYLE_SOLID;
-        const ColorStateList*mColor;
+        RefPtr<ColorStateList>mColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
         ~RippleState();
         void onDensityChanged(int sourceDensity, int targetDensity)override;
@@ -98,7 +98,7 @@ protected:
     void onBoundsChange(const Rect& bounds)override;
 public:
     RippleDrawable();
-    RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask);
+    RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask);
     ~RippleDrawable()override;
     void jumpToCurrentState()override;
     int  getOpacity()override;
@@ -106,7 +106,7 @@ public:
     bool isProjected();
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    void setColor(const ColorStateList* color);
+    void setColor(const RefPtr<ColorStateList>& color);
     void setRadius(int radius);
     int  getRadius()const;
     bool setDrawableByLayerId(int id, Drawable* drawable)override;

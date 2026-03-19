@@ -45,7 +45,7 @@ private:
     int mFlags = ENABLED;
     int mIconTintMode;
     Drawable* mIconDrawable;
-    const ColorStateList* mIconTintList = nullptr;
+    RefPtr<ColorStateList> mIconTintList;
     bool mHasIconTint = false;
     bool mHasIconTintMode = false;
 
@@ -100,8 +100,8 @@ public:
 
     MenuItem& setIcon(const std::string& iconRes) override;
 
-    MenuItem& setIconTintList(const ColorStateList* iconTintList) override;
-    const ColorStateList* getIconTintList() override;
+    MenuItem& setIconTintList(const RefPtr<ColorStateList>& iconTintList) override;
+    const RefPtr<ColorStateList> getIconTintList() override;
     MenuItem& setIconTintMode(int iconTintMode) override;
     int getIconTintMode()const override;
 

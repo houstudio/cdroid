@@ -65,18 +65,13 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     if(atts.hasAttribute("tabTextColor"))
         mTabTextColors = context->getColorStateList(atts.getString("tabTextColor"));
     else{ 
-        mTabTextColors = new ColorStateList(0xFFFFFFFF);
-        mOwnedTabTextColors = true;
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
     }
 
     if(atts.hasAttribute("tabSelectedTextColor")){
         const int selected = atts.getColor("tabSelectedTextColor",0);
         const int defColor = mTabTextColors->getDefaultColor();
-        if(mOwnedTabTextColors){
-            delete mTabTextColors;
-        }
         mTabTextColors = createColorStateList(defColor, selected);
-        mOwnedTabTextColors =true;
     }
 
     mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration",ANIMATION_DURATION);
@@ -102,9 +97,6 @@ TabLayout::~TabLayout(){
     for(Tab*tab:mTabs){
         delete tab;
     }
-    if(mOwnedTabTextColors){
-        delete mTabTextColors;/*ColorStateList is global holded by keymap ,cant destroied*/
-    }
     delete mScrollAnimator;
     delete mAdapterChangeListener;
     delete mPagerAdapterObserver;
@@ -120,7 +112,6 @@ void TabLayout::initTabLayout(){
     mTabTextSize = 20;
     mContentInsetStart = 0;
     mTabIndicatorHeight =-1;
-    mOwnedTabTextColors= false;
     mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
@@ -151,7 +142,7 @@ static void setTint(Drawable* drawable,int color) {
         if (color!=0) {
             drawable->setTint( color);
         } else {
-            drawable->setTintList((ColorStateList*)nullptr);
+            drawable->setTintList(RefPtr<ColorStateList>(nullptr));
         }
     }
 }
@@ -443,20 +434,19 @@ void TabLayout::setInlineLabel(bool v){
     applyModeAndGravity();
 }
 
-void TabLayout::setTabTextColors(const ColorStateList* textColor) {
+void TabLayout::setTabTextColors(const RefPtr<ColorStateList>& textColor) {
     if (mTabTextColors!=textColor){
         mTabTextColors = textColor;
         updateAllTabs();
     }
 }
 
-const ColorStateList* TabLayout::getTabTextColors()const{
+const RefPtr<ColorStateList> TabLayout::getTabTextColors()const{
     return mTabTextColors;
 }
 
 void TabLayout::setTabTextColors(int normalColor, int selectedColor){
-    ColorStateList *cls = createColorStateList(normalColor, selectedColor);
-    mOwnedTabTextColors =true;
+    auto cls = createColorStateList(normalColor, selectedColor);
     setTabTextColors(cls);
 }
 
@@ -926,7 +916,7 @@ void TabLayout::updateTabViews(bool requestLayout){
     }
 }
 
-ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedColor){
+RefPtr<ColorStateList> TabLayout::createColorStateList(int defaultColor, int selectedColor){
     std::vector<std::vector<int>>states;
     std::vector<int>colors;
 
@@ -937,7 +927,7 @@ ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedCo
     states.push_back(StateSet::NOTHING);
     colors.push_back(defaultColor);
     LOGD("createColorStateList %x,%x",defaultColor,selectedColor);
-    return new ColorStateList(states, colors);
+    return std::make_shared<ColorStateList>(states, colors);
 }
 
 int TabLayout::getDefaultHeight() const{

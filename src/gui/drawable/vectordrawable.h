@@ -80,7 +80,7 @@ public:
     void setAlpha(int alpha)override;
     void setColorFilter(ColorFilter* colorFilter)override;
     ColorFilter* getColorFilter()override;
-    void setTintList(const ColorStateList* tint)override;
+    void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
@@ -141,7 +141,7 @@ protected:
     // Variables below need to be copied (deep copy if applicable) for mutation.
     int mThemeAttrs[2];
     int mChangingConfigurations;
-    ColorStateList* mTint = nullptr;
+    RefPtr<ColorStateList> mTint;
     int mTintMode = DEFAULT_TINT_MODE;
     int mBaseWidth = 0;
     int mBaseHeight = 0;
@@ -157,7 +157,7 @@ protected:
 
     // Fields for cache
     int mCachedThemeAttrs[2];
-    ColorStateList* mCachedTint;
+    RefPtr<ColorStateList> mCachedTint;
     int  mCachedTintMode;
     bool mAutoMirrored;
     bool mCachedAutoMirrored;
@@ -352,8 +352,8 @@ private:
     // Variables below need to be copied (deep copy if applicable) for mutation.
     int mThemeAttrs[2];
 
-    ComplexColor* mStrokeColors = nullptr;
-    ComplexColor* mFillColors = nullptr;
+    RefPtr<ComplexColor> mStrokeColors;
+    RefPtr<ComplexColor> mFillColors;
     hwui::FullPath* mNativePtr;
     static const FloatProperty*const STROKE_WIDTH;
     static const Property*const STROKE_COLOR;
@@ -365,7 +365,7 @@ private:
     static const FloatProperty*const TRIM_PATH_OFFSET;
 private:
     void updateStateFromTypedArray(const AttributeSet&atts);
-    bool canComplexColorApplyTheme(ComplexColor* complexColor);
+    bool canComplexColorApplyTheme(const RefPtr<ComplexColor>& complexColor);
     void inflateGradients(XmlPullParser&,const AttributeSet&atts);
 public:
     VFullPath();

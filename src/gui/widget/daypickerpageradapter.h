@@ -47,9 +47,9 @@ private:
     std::string mDayOfWeekTextAppearance;
     std::string mDayTextAppearance;
 
-    const ColorStateList* mCalendarTextColor;
-    const ColorStateList* mDaySelectorColor;
-    const ColorStateList* mDayHighlightColor;
+    const RefPtr<ColorStateList> mCalendarTextColor;
+    const RefPtr<ColorStateList> mDaySelectorColor;
+    const RefPtr<ColorStateList> mDayHighlightColor;
 
     SimpleMonthView::OnDayClickListener mOnDayClickListener;
     OnDaySelectedListener mOnDaySelectedListener;
@@ -69,8 +69,8 @@ public:
     bool getBoundsForDate(Calendar& day, Rect& outBounds);
     void setSelectedDay(Calendar* day);
     void setOnDaySelectedListener(const OnDaySelectedListener& listener);
-    void setCalendarTextColor(const ColorStateList* calendarTextColor);
-    void setDaySelectorColor(const ColorStateList* selectorColor);
+    void setCalendarTextColor(const RefPtr<ColorStateList>& calendarTextColor);
+    void setDaySelectorColor(const RefPtr<ColorStateList>& selectorColor);
 
     void setMonthTextAppearance(const std::string& resId);
     void setDayOfWeekTextAppearance(const std::string& resId);

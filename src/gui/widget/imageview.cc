@@ -90,7 +90,6 @@ ImageView::~ImageView() {
     if(mDrawable!=mRecycleableBitmapDrawable)
         delete mRecycleableBitmapDrawable;
     delete mDrawable;
-    //delete mDrawableTintList;//cant be destroied.
     delete mColorFilter;
 }
 
@@ -587,13 +586,13 @@ Runnable ImageView::setImageURIAsync(const std::string&uri){
     return r;
 }
 
-void ImageView::setImageTintList(const ColorStateList*tint){
+void ImageView::setImageTintList(const RefPtr<ColorStateList>&tint){
     mDrawableTintList = tint;
     mHasDrawableTint = true;
     applyImageTint();
 }
 
-const ColorStateList* ImageView::getImageTintList(){
+const RefPtr<ColorStateList> ImageView::getImageTintList()const{
     return mDrawableTintList;
 }
 

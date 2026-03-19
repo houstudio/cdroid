@@ -70,8 +70,8 @@ private:
        int mSolidColor;
        int mStrokeColor;
        Orientation mOrientation;
-       const ColorStateList* mSolidColors;
-       const ColorStateList* mStrokeColors;
+       RefPtr<ColorStateList> mSolidColors;
+       RefPtr<ColorStateList> mStrokeColors;
        std::vector<int>mGradientColors;
        std::vector<float>mPositions;
        Cairo::RefPtr<Cairo::ImageSurface>mImagePattern;
@@ -97,7 +97,7 @@ private:
        bool mUseLevelForShape;
        bool mOpaqueOverBounds;
        bool mOpaqueOverShape;
-       const ColorStateList*mTint;
+       RefPtr<ColorStateList>mTint;
        int mTintMode;
        int mDensity;
        std::vector<int>mAttrSize;
@@ -120,9 +120,9 @@ private:
        void setGradientType(int gradient);
        void setGradientCenter(float x, float y);
        void setGradientColors(const std::vector<int>&colors);
-       void setSolidColors(const ColorStateList* colors);
+       void setSolidColors(const RefPtr<ColorStateList>& colors);
        void setStroke(int width,int color,float dashWidth,float dashGap);
-       void setStroke(int width,const ColorStateList* colors,float dashWidth,float dashGap);
+       void setStroke(int width,const RefPtr<ColorStateList>& colors,float dashWidth,float dashGap);
        void setCornerRadius(float radius);
        void setCornerRadii(const std::vector<float>& radii);
        void setSize(int width, int height);
@@ -181,9 +181,9 @@ public:
     void setCornerRadius(float radius);
     float getCornerRadius()const;
     void setStroke(int width,int color);
-    void setStroke(int width, const ColorStateList* colorStateList);
+    void setStroke(int width, const RefPtr<ColorStateList>& colorStateList);
     void setStroke(int width,int color, float dashWidth, float dashGap);
-    void setStroke(int width, const ColorStateList* colorStateList, float dashWidth, float dashGap);
+    void setStroke(int width, const RefPtr<ColorStateList>& colorStateList, float dashWidth, float dashGap);
     void setInnerRadiusRatio(float innerRadiusRatio);
     float getInnerRadiusRatio()const;
     void setInnerRadius(int innerRadius);
@@ -214,8 +214,8 @@ public:
     void setColors(const std::vector<int>&colors,const std::vector<float>&offsets);
     const std::vector<int>&getColors()const;
     void setColor(int argb);
-    void setColor(const ColorStateList* colorStateList);
-    const ColorStateList* getColor();
+    void setColor(const RefPtr<ColorStateList>& colorStateList);
+    const RefPtr<ColorStateList> getColor()const;
     void setImagePattern(Cairo::RefPtr<Cairo::ImageSurface>);
     void setImagePattern(Context*ctx,const std::string&);
     bool isStateful()const override;
@@ -226,7 +226,7 @@ public:
     void setDither(bool dither)override;
     void setColorFilter(ColorFilter*)override;
     ColorFilter*getColorFilter()override;
-    void setTintList(const ColorStateList*tint)override;
+    void setTintList(const RefPtr<ColorStateList>&tint)override;
     void setTintMode(int tintMode)override;
     int getOpacity()const;
     void getGradientCenter(float&x,float&y)const;

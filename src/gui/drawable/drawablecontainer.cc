@@ -141,7 +141,6 @@ DrawableContainer::DrawableContainerState::DrawableContainerState(const Drawable
 DrawableContainer::DrawableContainerState::~DrawableContainerState(){
     for_each( mDrawables.begin(), mDrawables.end(),[](Drawable*d){delete d;});
     mDrawables.clear();
-    //delete mTintList;//tintlist cant be destroied
     delete mColorFilter;
 }
 
@@ -514,7 +513,7 @@ void DrawableContainer::setColorFilter(ColorFilter*colorFilter){
     }
 }
 
-void DrawableContainer::setTintList(const ColorStateList*tint){
+void DrawableContainer::setTintList(const RefPtr<ColorStateList>&tint){
     if( mDrawableContainerState->mTintList!=tint ){
         mDrawableContainerState->mTintList = tint;
         if(mCurrDrawable)

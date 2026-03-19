@@ -16,13 +16,13 @@ private:
     static constexpr int SERIF = 2;
     static constexpr int MONOSPACE = 3;
     Drawable* mThumbDrawable;
-    const ColorStateList* mThumbTintList;
+    RefPtr<ColorStateList> mThumbTintList;
     //BlendMode mThumbBlendMode = null;
     bool mHasThumbTint = false;
     bool mHasThumbTintMode = false;
 
     Drawable* mTrackDrawable;
-    const ColorStateList* mTrackTintList;
+    RefPtr<ColorStateList> mTrackTintList;
     //BlendMode* mTrackBlendMode = null;
     bool mHasTrackTint = false;
     bool mHasTrackTintMode = false;
@@ -75,7 +75,7 @@ private:
     /** Bottom bound for drawing the switch track and thumb. */
     int mSwitchBottom;
 
-    const ColorStateList* mTextColors;
+    RefPtr<ColorStateList> mTextColors;
     Layout* mOnLayout;
     Layout* mOffLayout;
     //TransformationMethod2 mSwitchTransformationMethod;
@@ -120,15 +120,15 @@ public:
     void setTrackDrawable(Drawable* track);
     void setTrackResource(const std::string& resId);
     Drawable* getTrackDrawable();
-    void setTrackTintList(const ColorStateList* tint);
-    const ColorStateList* getTrackTintList();
+    void setTrackTintList(const RefPtr<ColorStateList>& tint);
+    const RefPtr<ColorStateList> getTrackTintList();
     void setTrackTintMode(PorterDuffMode tintMode);
     PorterDuffMode getTrackTintMode()const;
     void setThumbDrawable(Drawable* thumb);
     void setThumbResource(const std::string& resId);
     Drawable* getThumbDrawable();
-    void setThumbTintList(const ColorStateList* tint);
-    const ColorStateList* getThumbTintList()const;
+    void setThumbTintList(const RefPtr<ColorStateList> tint);
+    const RefPtr<ColorStateList> getThumbTintList()const;
     void setThumbTintMode(PorterDuffMode tintMode);
     PorterDuffMode getThumbTintMode()const;
     void setSplitTrack(bool splitTrack);

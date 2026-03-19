@@ -29,21 +29,21 @@ private:
     bool mInsetForPadding = false;
     bool mInsetForRadius = true;
 
-    const ColorStateList* mBackground;
+    RefPtr<ColorStateList> mBackground;
     PorterDuffColorFilter* mTintFilter;
-    const ColorStateList* mTint;
+    RefPtr<ColorStateList> mTint;
     int mAlpha;
     int mStateColor;
     int mTintMode;// = PorterDuff.Mode.SRC_IN;
 private:
-    void setBackground(const ColorStateList* color);
+    void setBackground(const RefPtr<ColorStateList>& color);
     void updateBounds(const Rect& bounds);
-    PorterDuffColorFilter* createTintFilter(const ColorStateList* tint, int tintMode);
+    PorterDuffColorFilter* createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode);
 protected:
     void onBoundsChange(const Rect& bounds) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
 public:
-    RoundRectDrawable(const ColorStateList* backgroundColor, float radius);
+    RoundRectDrawable(const RefPtr<ColorStateList>& backgroundColor, float radius);
 
     void setPadding(float padding, bool insetForPadding, bool insetForRadius);
 
@@ -63,11 +63,11 @@ public:
 
     float getRadius()const;
 
-    void setColor(const ColorStateList* color);
+    void setColor(const RefPtr<ColorStateList>& color);
 
-    const ColorStateList* getColor() const;
+    const RefPtr<ColorStateList> getColor() const;
 
-    void setTintList(const ColorStateList* tint) override;
+    void setTintList(const RefPtr<ColorStateList>& tint) override;
     void setTintMode(int tintMode) override;
 
     bool isStateful() const override;

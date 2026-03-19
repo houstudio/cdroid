@@ -115,7 +115,7 @@ public:
 
     void setColorFilter(ColorFilter* colorFilter) override;
 
-    void setTintList(const ColorStateList* tint) override;
+    void setTintList(const RefPtr<ColorStateList>& tint) override;
 
     //void setTintBlendMode(BlendMode blendMode)override;
 

@@ -32,7 +32,7 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
         int mChangingConfigurations;
-        const ColorStateList*mTint;
+        RefPtr<ColorStateList>mTint;
         Cairo::RefPtr<NinePatchRenderer>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
@@ -70,7 +70,7 @@ public:
     bool getPadding(Rect& padding) override;
     void getOutline(Outline&)override;
     int getAlpha()const override;
-    void setTintList(const ColorStateList* tint)override;
+    void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setTintMode(int mode)override;
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()const override;

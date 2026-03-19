@@ -45,7 +45,7 @@ Assets::Assets(const std::string&path):Assets() {
 
 Assets::~Assets() {
     for(auto& cls:mStateColors){
-        delete cls.second;
+        //delete cls.second;
     }
     mStateColors.clear();
 
@@ -291,7 +291,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         }
     }
     for(auto& cs:pending.colorStateList){
-        ColorStateList*cls = new ColorStateList();
+        auto cls = std::make_shared<ColorStateList>();
         for(auto& attr:cs.second){
             cls->addStateColor(this,attr);
         }
@@ -600,7 +600,7 @@ int Assets::getColor(const std::string&refid) {
     throw std::runtime_error("Resource not found:" + refid);
 }
 
-ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
+RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     std::string pkg,name = fullresid,relname;
     parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
@@ -609,14 +609,14 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
     if( its != mStateColors.end())
         return its->second;
     else if(itc != mColors.end()){
-        ColorStateList* cls = new ColorStateList(itc->second);
-        mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
+        auto cls = ColorStateList::valueOf(itc->second);
+        mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
         return cls;
     }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
-            ColorStateList* cls=ColorStateList::inflate(this,fullresid);
-            mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
+            auto cls=ColorStateList::inflate(this,fullresid);
+            mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){
             std::string realName;
@@ -625,8 +625,8 @@ ColorStateList* Assets::getColorStateList(const std::string&fullresid) {
             realName = mTheme.getString(realName);
             itc = mColors.find(realName);
             if(itc != mColors.end()){
-                ColorStateList* cls = new ColorStateList(itc->second);
-                mStateColors.insert(std::pair<const std::string,ColorStateList*>(name,cls));
+                auto cls = ColorStateList::valueOf(itc->second);
+                mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
                 return cls;
             }
         }

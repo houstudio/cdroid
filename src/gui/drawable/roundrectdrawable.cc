@@ -19,14 +19,14 @@
 #include <drawable/gradientdrawable.h>
 #include <drawable/roundrectdrawablewithshadow.h>
 namespace cdroid{
-RoundRectDrawable::RoundRectDrawable(const ColorStateList* backgroundColor, float radius) {
+RoundRectDrawable::RoundRectDrawable(const RefPtr<ColorStateList>& backgroundColor, float radius) {
     mRadius = radius;
     mTint = nullptr;
     //mPaint = new Paint(Paint.ANTI_ALIAS_FLAG | Paint.DITHER_FLAG);
     setBackground(backgroundColor);
 }
 
-void RoundRectDrawable::setBackground(const ColorStateList* color) {
+void RoundRectDrawable::setBackground(const RefPtr<ColorStateList>& color) {
     mBackground = (color == nullptr) ?  ColorStateList::valueOf(Color::TRANSPARENT) : color;
     mStateColor = mBackground->getColorForState(getState(), mBackground->getDefaultColor());
 }
@@ -108,16 +108,16 @@ float RoundRectDrawable::getRadius() const{
     return mRadius;
 }
 
-void RoundRectDrawable::setColor(const ColorStateList* color) {
+void RoundRectDrawable::setColor(const RefPtr<ColorStateList>& color) {
     setBackground(color);
     invalidateSelf();
 }
 
-const ColorStateList* RoundRectDrawable::getColor() const{
+const RefPtr<ColorStateList> RoundRectDrawable::getColor() const{
     return mBackground;
 }
 
-void RoundRectDrawable::setTintList(const ColorStateList* tint) {
+void RoundRectDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
     mTint = tint;
     mTintFilter = createTintFilter(mTint, mTintMode);
     invalidateSelf();
@@ -147,7 +147,7 @@ bool RoundRectDrawable::isStateful() const {
             || (mBackground != nullptr && mBackground->isStateful()) || Drawable::isStateful();
 }
 
-PorterDuffColorFilter* RoundRectDrawable::createTintFilter(const ColorStateList* tint, int tintMode) {
+PorterDuffColorFilter* RoundRectDrawable::createTintFilter(const RefPtr<ColorStateList>& tint, int tintMode) {
     if (tint == nullptr || tintMode <0) {
         return nullptr;
     }

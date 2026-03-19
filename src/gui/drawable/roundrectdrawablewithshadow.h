@@ -54,7 +54,7 @@ private:
     // actual value set by developer
     float mRawShadowSize;
 
-    const ColorStateList* mBackground;
+    RefPtr<ColorStateList> mBackground;
 
     bool mDirty = true;
     bool mAddPaddingForCorners = true;
@@ -65,7 +65,7 @@ private:
     int mStateColor;
     int mAlpha;
 private:
-    void setBackground(const ColorStateList* color);
+    void setBackground(const RefPtr<ColorStateList>& color);
     void setShadowSize(float shadowSize, float maxShadowSize);
     void drawShadow(Canvas& canvas);
     void buildShadowCorners();
@@ -74,7 +74,7 @@ protected:
     void onBoundsChange(const Rect& bounds) override;
     bool onStateChange(const std::vector<int>& stateSet) override;
 public:
-    RoundRectDrawableWithShadow(Context*,const ColorStateList* backgroundColor, float radius,
+    RoundRectDrawableWithShadow(Context*,const RefPtr<ColorStateList>& backgroundColor, float radius,
             float shadowSize, float maxShadowSize);
 
     void setAddPaddingForCorners(bool addPaddingForCorners);
@@ -106,9 +106,9 @@ public:
     float getMinWidth() const;
     float getMinHeight() const;
 
-    void setColor(const ColorStateList* color);
+    void setColor(const RefPtr<ColorStateList>& color);
 
-    const ColorStateList* getColor() const;
+    const RefPtr<ColorStateList> getColor() const;
 };
 }/*endof namespace*/
 #endif/*__ROUNDRECT_DRAWABLE_WIDTH_SHADOW_H__*/

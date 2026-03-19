@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __CARDVIEW_IMPL_H__
 #define __CARDVIEW_IMPL_H__
+#include <core/context.h>
 #include <drawable/roundrectdrawable.h>
 #include <drawable/roundrectdrawablewithshadow.h>
 namespace cdroid{
@@ -35,7 +36,7 @@ public:
 class CardViewImpl {
 public:
     virtual ~CardViewImpl()=default;
-    virtual void initialize(CardViewDelegate* cardView, Context* context, ColorStateList* backgroundColor,
+    virtual void initialize(CardViewDelegate* cardView, Context* context, const RefPtr<ColorStateList>& backgroundColor,
             float radius, float elevation, float maxElevation)=0;
 
     virtual void setRadius(CardViewDelegate* cardView, float radius)=0;
@@ -58,8 +59,8 @@ public:
 
     virtual void onPreventCornerOverlapChanged(CardViewDelegate* cardView)=0;
 
-    virtual void setBackgroundColor(CardViewDelegate* cardView,const ColorStateList* color)=0;
-    virtual const ColorStateList* getBackgroundColor(CardViewDelegate* cardView)=0;
+    virtual void setBackgroundColor(CardViewDelegate* cardView,const RefPtr<ColorStateList>& color)=0;
+    virtual const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView)=0;
 };
 
 class CardViewApi21Impl:public CardViewImpl {
@@ -68,8 +69,8 @@ private:
         return ((RoundRectDrawable*) cardView->getCardBackground());
     }
 public:
-    void initialize(CardViewDelegate* cardView, Context* context,
-                ColorStateList* backgroundColor, float radius, float elevation, float maxElevation) override{
+    void initialize(CardViewDelegate* cardView, Context* context, const RefPtr<ColorStateList>& backgroundColor,
+            float radius, float elevation, float maxElevation) override{
         RoundRectDrawable* background = new RoundRectDrawable(backgroundColor, radius);
         cardView->setCardBackground(background);
 
@@ -138,11 +139,11 @@ public:
         setMaxElevation(cardView, getMaxElevation(cardView));
     }
 
-    void setBackgroundColor(CardViewDelegate* cardView,const ColorStateList* color) override{
+    void setBackgroundColor(CardViewDelegate* cardView,const RefPtr<ColorStateList>& color) override{
         getCardBackground(cardView)->setColor(color);
     }
 
-    const ColorStateList* getBackgroundColor(CardViewDelegate* cardView) override{
+    const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
         return getCardBackground(cardView)->getColor();
     }
 };
@@ -150,7 +151,7 @@ public:
 class CardViewBaseImpl:public CardViewImpl {
 private:
     RoundRectDrawableWithShadow* createBackground(Context* context,
-                    ColorStateList* backgroundColor, float radius, float elevation,
+                    const RefPtr<ColorStateList>& backgroundColor, float radius, float elevation,
                     float maxElevation) {
         return new RoundRectDrawableWithShadow(context, backgroundColor, radius, elevation, maxElevation);
     }
@@ -165,7 +166,7 @@ public:
     }
 
     void initialize(CardViewDelegate* cardView, Context* context,
-            ColorStateList* backgroundColor, float radius, float elevation, float maxElevation) override{
+            const RefPtr<ColorStateList>& backgroundColor, float radius, float elevation, float maxElevation) override{
         RoundRectDrawableWithShadow* background = createBackground(context, backgroundColor, radius,
                 elevation, maxElevation);
         background->setAddPaddingForCorners(cardView->getPreventCornerOverlap());
@@ -192,11 +193,11 @@ public:
         updatePadding(cardView);
     }
 
-    void setBackgroundColor(CardViewDelegate* cardView, const ColorStateList* color) override{
+    void setBackgroundColor(CardViewDelegate* cardView, const RefPtr<ColorStateList>& color) override{
         getShadowBackground(cardView)->setColor(color);
     }
 
-    const ColorStateList* getBackgroundColor(CardViewDelegate* cardView) override{
+    const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
         return getShadowBackground(cardView)->getColor();
     }
 

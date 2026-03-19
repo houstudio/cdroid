@@ -30,7 +30,6 @@
 #define ENABLE(FEATURE) (defined(ENABLE_##FEATURE) && ENABLE_##FEATURE)
 
 namespace cdroid{
-
 class Drawable;
 class ColorStateList;
 class Context{
@@ -62,7 +61,7 @@ public:
     virtual float getFloat(const std::string&resid) const = 0;
     virtual size_t getArray(const std::string&resname,std::vector<std::string>&) = 0;
     virtual size_t getArray(const std::string&resname,std::vector<int>&) = 0;
-    virtual ColorStateList* getColorStateList(const std::string&resid) = 0;
+    virtual RefPtr<ColorStateList> getColorStateList(const std::string&resid) = 0;
     virtual AttributeSet obtainStyledAttributes(const std::string&resid) = 0;
 };
 

@@ -383,7 +383,7 @@ int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     }
 }
 
-ColorStateList*AttributeSet::getColorStateList(const std::string&key)const{
+RefPtr<ColorStateList>AttributeSet::getColorStateList(const std::string&key)const{
     const std::string resid = getString(key);
     return mContext->getColorStateList(resid);
 }

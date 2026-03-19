@@ -19,7 +19,7 @@
 #include <drawable/roundrectdrawablewithshadow.h>
 namespace cdroid{
 
-RoundRectDrawableWithShadow::RoundRectDrawableWithShadow(Context*context,const ColorStateList* backgroundColor, float radius,
+RoundRectDrawableWithShadow::RoundRectDrawableWithShadow(Context*context,const RefPtr<ColorStateList>& backgroundColor, float radius,
         float shadowSize, float maxShadowSize) {
     mShadowStartColor = 0x37000000;//resources.getColor(R.color.cardview_shadow_start_color);
     mShadowEndColor   = 0x03000000;//resources.getColor(R.color.cardview_shadow_end_color);
@@ -31,7 +31,7 @@ RoundRectDrawableWithShadow::RoundRectDrawableWithShadow(Context*context,const C
     mCornerShadowPath = nullptr;
 }
 
-void RoundRectDrawableWithShadow::setBackground(const ColorStateList* color) {
+void RoundRectDrawableWithShadow::setBackground(const RefPtr<ColorStateList>& color) {
     mBackground = (color == nullptr) ?  ColorStateList::valueOf(Color::TRANSPARENT) : color;
     mStateColor = mBackground->getColorForState(getState(), mBackground->getDefaultColor());
 }
@@ -314,12 +314,12 @@ float RoundRectDrawableWithShadow::getMinHeight() const{
     return content + (mRawMaxShadowSize * SHADOW_MULTIPLIER + mInsetShadow) * 2;
 }
 
-void RoundRectDrawableWithShadow::setColor(const ColorStateList* color) {
+void RoundRectDrawableWithShadow::setColor(const RefPtr<ColorStateList>& color) {
     setBackground(color);
     invalidateSelf();
 }
 
-const ColorStateList* RoundRectDrawableWithShadow::getColor() const{
+const RefPtr<ColorStateList> RoundRectDrawableWithShadow::getColor() const{
     return mBackground;
 }
 }
