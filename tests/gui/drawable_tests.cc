@@ -19,7 +19,7 @@ public:
     static Canvas*ctx;
     static Assets*rm;
     static int mScreenWidth,mScreenHeight;
-    static RefPtr<ImageSurface>sImage;
+    static cdroid::RefPtr<ImageSurface>sImage;
     static GFXHANDLE mPrimarySurface,mDrawSurface;
 public:
     static void SetUpTestCase(){
@@ -36,8 +36,8 @@ public:
         rm=new Assets("cdroid.pak");
         ctx=new Canvas(surface);//GraphDevice::getInstance().createContext(800,600);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
-        RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
-        RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
+        cdroid::RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
+        cdroid::RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
         pat->add_color_stop_rgba(0,1,0,0,0);
         pat->add_color_stop_rgba(.25,0,1,0,.5);
         pat->add_color_stop_rgba(.5,1,0,1,1.);
@@ -45,7 +45,7 @@ public:
         pat->add_color_stop_rgba(1.,1,1,1,0);
         rd->add_color_stop_rgba(0,.2,.2,.2,.1);
         rd->add_color_stop_rgba(1,1.,.2,.5,.5);
-        RefPtr<Cairo::Context>cr=Cairo::Context::create(sImage);
+        cdroid::RefPtr<Cairo::Context>cr=Cairo::Context::create(sImage);
         cr->set_source(pat);
         cr->rectangle(0,0,400,400);
         cr->fill();
@@ -95,7 +95,7 @@ int DRAWABLE::mScreenWidth=0;
 int DRAWABLE::mScreenHeight=0;
 GFXHANDLE DRAWABLE::mPrimarySurface=nullptr;
 GFXHANDLE DRAWABLE::mDrawSurface=nullptr;
-RefPtr<ImageSurface>DRAWABLE::sImage;
+cdroid::RefPtr<ImageSurface>DRAWABLE::sImage;
 
 TEST_F(DRAWABLE,parsexml){
     std::ifstream fs("styles.xml");
@@ -147,8 +147,8 @@ TEST_F(DRAWABLE,ninepatch2){
 }
 
 TEST_F(DRAWABLE,picture){
-    RefPtr<RecordingSurface>picture= RecordingSurface::create();
-    RefPtr<Cairo::Context>ctxpic=Cairo::Context::create(picture);
+    cdroid::RefPtr<RecordingSurface>picture= RecordingSurface::create();
+    cdroid::RefPtr<Cairo::Context>ctxpic=Cairo::Context::create(picture);
     ctxpic->set_source_rgba(1,1,1,1);
     ctxpic->rectangle(0,0,400,50);
     ctxpic->fill();

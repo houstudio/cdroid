@@ -139,7 +139,7 @@ TEST_F(CDCONTEXT,Translate){
 }
 
 TEST_F(CDCONTEXT,Clip){
-    RefPtr<ImageSurface>img=ImageSurface::create_from_png("light.png");
+    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("light.png");
     cdroid::Rect rect={0,0,800,600};
     ctx->set_color(0xFFFFFFFF);
     ctx->rectangle(0,0,800,600);ctx->fill();
@@ -196,9 +196,9 @@ TEST_F(CDCONTEXT,Clip3){
 }
 
 TEST_F(CDCONTEXT,Mask){
-    RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
-    RefPtr<Pattern>pat1=SurfacePattern::create(img);
-    RefPtr<Pattern>pat2=SolidPattern::create_rgba(0,1.0,0,.5);
+    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
+    cdroid::RefPtr<Pattern>pat1=SurfacePattern::create(img);
+    cdroid::RefPtr<Pattern>pat2=SolidPattern::create_rgba(0,1.0,0,.5);
     cdroid::Rect rect={0,0,800,600};
     ctx->set_source(pat1);
     ctx->rectangle(0,0,800,600);
@@ -207,10 +207,10 @@ TEST_F(CDCONTEXT,Mask){
 }
 
 TEST_F(CDCONTEXT,ImageSurface){
-    RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
-    RefPtr<Cairo::Context>ictx=Cairo::Context::create(img);
-    RefPtr<Gradient>pat=LinearGradient::create(0,0,400,0);
-    RefPtr<Pattern>pat1=SolidPattern::create_rgba(1,0,0,.51);
+    cdroid::RefPtr<ImageSurface>img=ImageSurface::create_from_png("im_game.png");
+    cdroid::RefPtr<Cairo::Context>ictx=Cairo::Context::create(img);
+    cdroid::RefPtr<Gradient>pat=LinearGradient::create(0,0,400,0);
+    cdroid::RefPtr<Pattern>pat1=SolidPattern::create_rgba(1,0,0,.51);
     pat->add_color_stop_rgba ( .0, 1, 1, 1, 0);
     pat->add_color_stop_rgba ( .2, 0, 1, 0, 0.5);
     pat->add_color_stop_rgba ( .4, 1, 1, 1, 0);
@@ -225,8 +225,8 @@ TEST_F(CDCONTEXT,ImageSurface){
 }
 TEST_F(CDCONTEXT,Pattern_Line){
    int i, j; 
-   RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 80, 400, 300, 400));
-   RefPtr<LinearGradient>linpat(LinearGradient::create(200, 210, 600, 390));
+   cdroid::RefPtr<RadialGradient>radpat(RadialGradient::create(200, 150, 80, 400, 300, 400));
+   cdroid::RefPtr<LinearGradient>linpat(LinearGradient::create(200, 210, 600, 390));
    cdroid::Rect rect={0,0,800,600};
    radpat->add_color_stop_rgb ( 0, 1.0, 0.8, 0.8); 
    radpat->add_color_stop_rgb ( 1, 0.9, 0.0, 0.0); 
@@ -246,7 +246,7 @@ TEST_F(CDCONTEXT,Pattern_Line){
    ctx->dump2png("pat-line.png");
 }
 TEST_F(CDCONTEXT,Pattern_Radio){
-   RefPtr<RadialGradient>radpat(RadialGradient::create(200, 200, 10, 200, 200, 150));
+    cdroid::RefPtr<RadialGradient>radpat(RadialGradient::create(200, 200, 10, 200, 200, 150));
    cdroid::Rect rect={0,0,1200,600};
    radpat->add_color_stop_rgb ( .0, 1., 1., 1.);
    radpat->add_color_stop_rgb ( 1., 1., .0,.0);
@@ -302,36 +302,36 @@ TEST_F(CDCONTEXT,Font){
     SLEEP(1000);
 }
 TEST_F(CDCONTEXT,ALPHA){
-     ctx->set_color(0xFFFFFFFF);
-     ctx->rectangle(0,0,1280,720);ctx->fill();
-     ctx->set_color(0x80FF0000);
-     ctx->rectangle(200,200,480,320);ctx->fill();
-     ctx->dump2png("alpha.png");
+    ctx->set_color(0xFFFFFFFF);
+    ctx->rectangle(0,0,1280,720);ctx->fill();
+    ctx->set_color(0x80FF0000);
+    ctx->rectangle(200,200,480,320);ctx->fill();
+    ctx->dump2png("alpha.png");
 }
 TEST_F(CDCONTEXT,HOLE){
-     ctx->set_color(0xFFFFFFFF);
-     ctx->rectangle(0,0,1280,720);ctx->fill();
-     ctx->set_color(0);
-     ctx->rectangle(200,200,480,320);ctx->fill();
-     ctx->dump2png("hole.png");
+    ctx->set_color(0xFFFFFFFF);
+    ctx->rectangle(0,0,1280,720);ctx->fill();
+    ctx->set_color(0);
+    ctx->rectangle(200,200,480,320);ctx->fill();
+    ctx->dump2png("hole.png");
 }
 TEST_F(CDCONTEXT,HOLE2){
-     ctx->set_color(0xFFFFFFFF);
-     ctx->rectangle(0,0,1280,720);ctx->fill();
-     ctx->set_source_rgba(0,0,0,0);
-     ctx->rectangle(200,200,480,320);ctx->fill();
-     ctx->dump2png("hole2.png");
+    ctx->set_color(0xFFFFFFFF);
+    ctx->rectangle(0,0,1280,720);ctx->fill();
+    ctx->set_source_rgba(0,0,0,0);
+    ctx->rectangle(200,200,480,320);ctx->fill();
+    ctx->dump2png("hole2.png");
 }
 TEST_F(CDCONTEXT,HOLE3){
-     RefPtr<ImageSurface>img=ImageSurface::create(Surface::Format::ARGB32,1280,720);
-     RefPtr<Cairo::Context>ctx1=Cairo::Context::create(img);
-     ctx1->set_source_rgb(1,0.5,1);
-     ctx1->rectangle(0,0,1280,720);
-     ctx1->fill();
-     ctx1->set_source_rgba(0,1,0,0.1);
-     ctx1->rectangle(200,200,480,320);
-     ctx1->fill();
-     img->write_to_png("hole3.png");
+    cdroid::RefPtr<ImageSurface>img=ImageSurface::create(Surface::Format::ARGB32,1280,720);
+    cdroid::RefPtr<Cairo::Context>ctx1=Cairo::Context::create(img);
+    ctx1->set_source_rgb(1,0.5,1);
+    ctx1->rectangle(0,0,1280,720);
+    ctx1->fill();
+    ctx1->set_source_rgba(0,1,0,0.1);
+    ctx1->rectangle(200,200,480,320);
+    ctx1->fill();
+    img->write_to_png("hole3.png");
 }
 TEST_F(CDCONTEXT,layout){
     Layout layout(30,200);
@@ -388,8 +388,8 @@ TEST_F(CDCONTEXT,hebrew){
              0x0020,0x05d0,0x05b6,0x0020,0xfb30,0x0020,0x05d0,0x0592,0x0020,0x05dc,
              0x05ad,0x0020,0x05dc,0x059d,0x0020,0x05dc,0x0599,0x0020,0x05dc,0x05b6,
              0x0020,0xfb3c,0x0020,0x05dc,0x0592,0x00};
-    RefPtr<ImageSurface>imgsurface=ImageSurface::create(Surface::Format::ARGB32,800,600);
-    RefPtr<Cairo::Context>ctx=Cairo::Context::create(imgsurface);
+    cdoird::RefPtr<ImageSurface>imgsurface=ImageSurface::create(Surface::Format::ARGB32,800,600);
+    cdroid::RefPtr<Cairo::Context>ctx=Cairo::Context::create(imgsurface);
     std::string u8text=TextUtils::unicode2utf8(text);
     TextExtents extents;
     const wchar_t *p=text;
