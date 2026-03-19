@@ -1083,7 +1083,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     const float sweep = st->mUseLevelForShape ? (360.f*getLevel()/10000.f) : 360.f;
     const Pattern::Dither ditherMode = mGradientState->mDither
                ? Pattern::Dither::GOOD : Pattern::Dither::DEFAULT;
-    float rad = .0f;
+    float rad = 0.0f;
 
     std::vector<float>radii;
     if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;

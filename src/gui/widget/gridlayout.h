@@ -37,11 +37,16 @@ public:
     static constexpr int DEFAULT_ALIGNMENT_MODE = ALIGN_MARGINS;
     static constexpr bool DEFAULT_USE_DEFAULT_MARGINS =false;
     static constexpr bool DEFAULT_ORDER_PRESERVED = true;
-public:
-    class Bounds;
-    class Spec;
+protected:
     class Axis;
+    class Bounds;
+    class Interval;
+    class MutableInt;
+public:
+    class Spec;
     class Alignment;
+    class BaselineAlignment;
+protected:
     class MutableInt{
     public:
         int value;
@@ -56,7 +61,7 @@ public:
         Interval();
         Interval(int min,int max);
         int size()const;
-        Interval inverse();
+        Interval inverse()const;
         int hashCode()const;
         bool operator<(const Interval &l1) const;
     };
@@ -70,6 +75,7 @@ public:
     };
     class Bounds{
     public:
+        friend class BaselineAlignment;
         int before;
         int after;
         int flexibility;
@@ -81,6 +87,7 @@ public:
         virtual int getOffset(GridLayout*gl,View*v,const Alignment*,int size,bool horizontal)const;
         void include(GridLayout* gl,View* c,std::shared_ptr<Spec> spec,const Axis* axis, int size);
     };
+public:
     class Alignment{
     public:
         virtual ~Alignment()=default;
@@ -113,13 +120,14 @@ public:
         int hashCode()const;
     };
     static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment, float weight);
-    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment, float weight);
+    static std::shared_ptr<Spec> spec(int start, const Alignment* alignment, float weight);
     static std::shared_ptr<Spec> spec(int start, int size,float weight);
     static std::shared_ptr<Spec> spec(int start, float weight);
     static std::shared_ptr<Spec> spec(int start, int size,const Alignment* alignment);
-    static std::shared_ptr<Spec> spec(int start,const Alignment* alignment);
+    static std::shared_ptr<Spec> spec(int start, const Alignment* alignment);
     static std::shared_ptr<Spec> spec(int start, int size);
     static std::shared_ptr<Spec> spec(int start);
+protected:
     template<class K,class V>
     class PackedMap{
     public:
@@ -162,14 +170,36 @@ public:
         V& getValue(int i){return values[index[i]];}
         void setValue(int i,V v){values[index[i]]=v;}
     };
+    template<class K,class V>
+    class Assoc{
+    private:
+        std::vector<std::pair<K,V>>mData;
+    public:
+       void put(K key, V value) {
+           mData.push_back(std::pair<K,V>(key, value));
+       }
+
+       GridLayout::PackedMap<K, V> pack() {
+           const int N = mData.size();
+           std::vector<K>keys;
+           std::vector<V>values;
+           for (int i = 0; i < N; i++) {
+               keys.push_back(mData.at(i).first);
+               values.push_back(mData.at(i).second);
+           }
+           return GridLayout::PackedMap<K, V>(keys, values);
+       }
+    };
+
+protected:
     class Axis{
     private:
         static constexpr int NEW = 0;
         static constexpr int PENDING = 1;
         static constexpr int COMPLETE = 2;
     private:
-        GridLayout*grd;
-        int maxIndex;
+        GridLayout*mGrid;
+        int mMaxIndex;
         MutableInt parentMin;
         MutableInt parentMax;
         void computeMargins(bool leading);
@@ -182,6 +212,7 @@ public:
         std::vector<Arc>createArcs();
         void computeArcs();
         bool hasWeights();
+        std::string arcsToString(bool horizontal,const std::vector<GridLayout::Arc>& arcs);
         void logError(const std::string& axisName,const std::vector<Arc>&arcs,const std::vector<bool>& culprits0);
         bool relax(std::vector<int>&locations,const Arc& entry);
         void init(std::vector<int>& locations);
@@ -200,28 +231,28 @@ public:
         PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>createGroupBounds();
         void computeGroupBounds();
     protected:
-        PackedMap<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> groupBounds;
-        PackedMap<Interval,MutableInt> forwardLinks;
-        PackedMap<Interval,MutableInt> backwardLinks;
+        PackedMap<std::shared_ptr<Spec>, std::shared_ptr<Bounds>> mGroupBounds;
+        PackedMap<Interval,MutableInt> mForwardLinks;
+        PackedMap<Interval,MutableInt> mBackwardLinks;
     public:
-        bool horizontal;
-        bool groupBoundsValid  = false;
-        bool forwardLinksValid = false;
-        bool backwardLinksValid= false;
-        bool leadingMarginsValid = false;
-        bool trailingMarginsValid= false;
-    public:
-        int definedCount;
-        std::vector<int>leadingMargins;
-        std::vector<int>trailingMargins;
-        std::vector<int>locations;
-        std::vector<Arc>arcs;
+        bool mHorizontal;
+        bool mGroupBoundsValid  = false;
+        bool mForwardLinksValid = false;
+        bool mBackwardLinksValid= false;
+        bool mLeadingMarginsValid = false;
+        bool mTrailingMarginsValid= false;
         bool mHasWeights;
-        bool arcsValid = false;
-        bool hasWeightsValid = false;
-        bool orderPreserved = DEFAULT_ORDER_PRESERVED;
-        bool locationsValid = false;
-        std::vector<int>deltas;
+        bool mArcsValid = false;
+        bool mHasWeightsValid = false;
+        bool mOrderPreserved = DEFAULT_ORDER_PRESERVED;
+        bool mLocationsValid = false;
+        int mDefinedCount;
+        std::vector<int>mLeadingMargins;
+        std::vector<int>mTrailingMargins;
+        std::vector<int>mLocations;
+        std::vector<Arc>mArcs;
+        std::vector<int>mDeltas;
+    public:
         Axis(GridLayout*g,bool horizontal);
         ~Axis();
         int calculateMaxIndex()const;
@@ -241,7 +272,7 @@ public:
         PackedMap<std::shared_ptr<Spec>,std::shared_ptr<Bounds>>&getGroupBounds();
         void layout(int);
     };
-
+public:
     class LayoutParams:public MarginLayoutParams{
     private:
         static constexpr int DEFAULT_WIDTH = WRAP_CONTENT;
@@ -253,6 +284,8 @@ public:
         static constexpr int DEFAULT_SPAN_SIZE = 1;//DEFAULT_SPAN.size()
         LayoutParams(int width, int height,int left, int top, int right, int bottom,
            std::shared_ptr<Spec> rowSpec, std::shared_ptr<Spec> columnSpec);
+        void reInitSuper(Context* context,const AttributeSet& attrs);
+        void init(Context* context,const AttributeSet& attrs);
     public:
         std::shared_ptr<Spec> rowSpec;
         std::shared_ptr<Spec> columnSpec;

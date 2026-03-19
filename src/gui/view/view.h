@@ -962,9 +962,9 @@ public:
     bool canResolveTextDirection()const;
     bool canResolveLayoutDirection()const;
     int getMinimumHeight();
-    void setMinimumHeight(int minHeight);
+    virtual void setMinimumHeight(int minHeight);
     int getMinimumWidth();
-    void setMinimumWidth(int minWidth);
+    virtual void setMinimumWidth(int minWidth);
 
     Animation* getAnimation()const;
     /*th animation is owned by caller*/
