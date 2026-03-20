@@ -314,9 +314,7 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
 }
 
 bool BitmapDrawable::onStateChange(const std::vector<int>&stateSet){
-        LOGD("%p tintfilter= %p tint=%p",this,mTintFilter.get(),mBitmapState->mTint.get());
     if (mBitmapState->mTint && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
-        LOGD("%p tintfilter= %p tint=%p",this,mTintFilter.get(),mBitmapState->mTint.get());
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
