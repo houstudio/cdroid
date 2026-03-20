@@ -314,7 +314,9 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
 }
 
 bool BitmapDrawable::onStateChange(const std::vector<int>&stateSet){
+        LOGD("%p tintfilter= %p tint=%p",this,mTintFilter.get(),mBitmapState->mTint.get());
     if (mBitmapState->mTint && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
+        LOGD("%p tintfilter= %p tint=%p",this,mTintFilter.get(),mBitmapState->mTint.get());
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
@@ -478,6 +480,9 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
+void BitmapDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+}
+
 void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
     auto bmp = ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
@@ -488,10 +493,11 @@ void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
           {"repeat",TileMode::REPEAT},
           {"mirror",TileMode::MIRROR}};
     const int tileMode=atts.getInt("tileMode",kvs,-1);
+    mBitmapState->mDither =atts.getBoolean("dither",true);
+    mBitmapState->mTint = atts.getColorStateList("tint");
     mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
     mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
     mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
-    mBitmapState->mDither = atts.getBoolean("antialias",true);
     mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
     mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
     setBitmap(bmp);//computeBitmapSize();
