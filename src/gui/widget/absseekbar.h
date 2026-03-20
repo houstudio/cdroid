@@ -29,8 +29,8 @@ private:
     bool mIsDragging;
     bool mHasTickMarkTint = false;
     bool mHasTickMarkTintMode = false;
-    ColorStateList*mThumbTintList;
-    ColorStateList*mTickMarkTintList;
+    RefPtr<ColorStateList>mThumbTintList;
+    RefPtr<ColorStateList>mTickMarkTintList;
 
     float mDisabledAlpha;
     float mTouchDownX;

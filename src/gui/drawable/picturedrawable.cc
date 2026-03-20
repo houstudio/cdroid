@@ -56,7 +56,7 @@ int PictureDrawable::getOpacity(){
     return TRANSLUCENT;
 }
 
-void PictureDrawable::setColorFilter(ColorFilter* colorFilter) {
+void PictureDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
 }
 
 void PictureDrawable::setAlpha(int alpha){

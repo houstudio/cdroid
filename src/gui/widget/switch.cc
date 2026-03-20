@@ -108,9 +108,6 @@ void Switch::init(){
 }
 
 Switch::~Switch(){
-    //delete mTextColors;
-    //delete mTrackTintList;
-    //delete mThumbTintList;
     delete mThumbDrawable;
     delete mTrackDrawable;
     delete mPositionAnimator;
@@ -122,7 +119,7 @@ Switch::~Switch(){
 void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
     AttributeSet atts = context->obtainStyledAttributes(resid);//com.android.internal.R.styleable.TextAppearance);
 
-    ColorStateList* colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
+    auto colors = atts.getColorStateList("textColor");//com.android.internal.R.styleable.TextAppearance_textColor);
     if (colors) {
         mTextColors = colors;
     } else {
@@ -252,7 +249,7 @@ Drawable* Switch::getTrackDrawable() {
     return mTrackDrawable;
 }
 
-void Switch::setTrackTintList(const ColorStateList* tint){
+void Switch::setTrackTintList(const RefPtr<ColorStateList>& tint){
     if(mTrackTintList!=tint){
         mTrackTintList = tint;
         mHasTrackTint = (tint!=nullptr);
@@ -260,7 +257,7 @@ void Switch::setTrackTintList(const ColorStateList* tint){
     }
 }
 
-const ColorStateList* Switch::getTrackTintList() {
+const RefPtr<ColorStateList> Switch::getTrackTintList() {
     return mTrackTintList;
 }
 
@@ -311,7 +308,7 @@ Drawable* Switch::getThumbDrawable(){
     return mThumbDrawable;
 }
 
-void Switch::setThumbTintList(const ColorStateList* tint){
+void Switch::setThumbTintList(const RefPtr<ColorStateList> tint){
     if(mThumbTintList!=tint){
         mThumbTintList = tint;
         mHasThumbTint = (tint!=nullptr);
@@ -319,7 +316,7 @@ void Switch::setThumbTintList(const ColorStateList* tint){
     }
 }
 
-const ColorStateList* Switch::getThumbTintList()const{
+const RefPtr<ColorStateList> Switch::getThumbTintList()const{
     return mThumbTintList;
 }
 

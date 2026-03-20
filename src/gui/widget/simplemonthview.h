@@ -44,10 +44,10 @@ private:
     int mMonthTextSize;
     int mDayOfWeekTextSize;
 
-    const ColorStateList* mDayTextColor;
-    const ColorStateList* mMonthTextColor;
-    const ColorStateList* mDayOfWeekTextColor;
-    const ColorStateList* mDaySelectorColor;
+    const RefPtr<ColorStateList> mDayTextColor;
+    const RefPtr<ColorStateList> mMonthTextColor;
+    const RefPtr<ColorStateList> mDayOfWeekTextColor;
+    const RefPtr<ColorStateList> mDaySelectorColor;
     int mDesiredMonthHeight;
     int mDesiredDayOfWeekHeight;
     int mDesiredDayHeight;
@@ -96,7 +96,7 @@ private:
     void initMonthView();
     void updateMonthYearLabel();
     void updateDayOfWeekLabels();
-    ColorStateList*applyTextAppearance(Typeface*&face,int& txtSize,const std::string& resId);
+    const RefPtr<ColorStateList>applyTextAppearance(Typeface*&face,int& txtSize,const std::string& resId);
     bool moveOneDay(bool positive);
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);
@@ -135,11 +135,11 @@ public:
     void setDayOfWeekTextAppearance(const std::string& resId);
     void setDayTextAppearance(const std::string& resId);
 
-    void setMonthTextColor(const ColorStateList* monthTextColor);
-    void setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor);
-    void setDayTextColor(const ColorStateList* dayTextColor);
-    void setDaySelectorColor(const ColorStateList* dayBackgroundColor);
-    void setDayHighlightColor(const ColorStateList* dayHighlightColor);
+    void setMonthTextColor(const RefPtr<ColorStateList>& monthTextColor);
+    void setDayOfWeekTextColor(const RefPtr<ColorStateList>& dayOfWeekTextColor);
+    void setDayTextColor(const RefPtr<ColorStateList>& dayTextColor);
+    void setDaySelectorColor(const RefPtr<ColorStateList>& dayBackgroundColor);
+    void setDayHighlightColor(const RefPtr<ColorStateList>& dayHighlightColor);
     void setOnDayClickListener(const OnDayClickListener& listener);
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;

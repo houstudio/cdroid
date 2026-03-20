@@ -113,9 +113,9 @@ public:
 
     int getAlpha() const override;
 
-    void setColorFilter(ColorFilter* colorFilter) override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) override;
 
-    void setTintList(const ColorStateList* tint) override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>& tint) override;
 
     //void setTintBlendMode(BlendMode blendMode)override;
 

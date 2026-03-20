@@ -42,7 +42,6 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
 
 CheckedTextView::~CheckedTextView(){
     delete mCheckMarkDrawable;
-    delete mCheckMarkTintList;
 }
 
 #if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
@@ -111,7 +110,7 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
     resolvePadding();
 }
 
-void CheckedTextView::setCheckMarkTintList(const ColorStateList*tint){
+void CheckedTextView::setCheckMarkTintList(const RefPtr<ColorStateList>&tint){
     if(mCheckMarkTintList!=tint){
         mCheckMarkTintList = tint;
         mHasCheckMarkTint = (tint!=nullptr);
@@ -119,7 +118,7 @@ void CheckedTextView::setCheckMarkTintList(const ColorStateList*tint){
     }
 }
 
-const ColorStateList* CheckedTextView::getCheckMarkTintList()const{
+const RefPtr<ColorStateList> CheckedTextView::getCheckMarkTintList()const{
     return mCheckMarkTintList;
 }
 

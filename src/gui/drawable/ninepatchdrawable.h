@@ -32,7 +32,7 @@ private:
         Insets mOpticalInsets;
         int mTintMode;
         int mChangingConfigurations;
-        const ColorStateList*mTint;
+        cdroid::RefPtr<ColorStateList>mTint;
         Cairo::RefPtr<NinePatchRenderer>mNinePatch;
         NinePatchState();
         NinePatchState(const NinePatchState&state);
@@ -54,7 +54,7 @@ private:
     bool needsMirroring();
     void computeBitmapSize();
     std::shared_ptr<NinePatchState>mNinePatchState;
-    PorterDuffColorFilter*mTintFilter;
+    cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
     NinePatchDrawable(std::shared_ptr<NinePatchState>state);
     void updateStateFromTypedArray(const AttributeSet&a);
 protected:
@@ -70,7 +70,7 @@ public:
     bool getPadding(Rect& padding) override;
     void getOutline(Outline&)override;
     int getAlpha()const override;
-    void setTintList(const ColorStateList* tint)override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>& tint)override;
     void setTintMode(int mode)override;
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()const override;

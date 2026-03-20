@@ -112,14 +112,14 @@ void DayPickerPagerAdapter::setOnDaySelectedListener(const OnDaySelectedListener
     mOnDaySelectedListener = listener;
 }
 
-void DayPickerPagerAdapter::setCalendarTextColor(const ColorStateList* calendarTextColor) {
+void DayPickerPagerAdapter::setCalendarTextColor(const RefPtr<ColorStateList>& calendarTextColor) {
     if(mCalendarTextColor!=calendarTextColor){
         mCalendarTextColor = calendarTextColor;
         notifyDataSetChanged();
     }
 }
 
-void DayPickerPagerAdapter::setDaySelectorColor(const ColorStateList* selectorColor) {
+void DayPickerPagerAdapter::setDaySelectorColor(const RefPtr<ColorStateList>& selectorColor) {
     if(mDaySelectorColor!=selectorColor){
         mDaySelectorColor = selectorColor;
         notifyDataSetChanged();

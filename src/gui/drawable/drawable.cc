@@ -33,11 +33,9 @@ Drawable::Drawable() {
     mLayoutDirection = LayoutDirection::LTR;
     mCallback = nullptr;
     mBounds.set(0,0,0,0);
-    mColorFilter = nullptr;
 }
 
 Drawable::~Drawable() {
-    delete mColorFilter;
 }
 
 void Drawable::setBounds(const Rect&r) {
@@ -150,14 +148,13 @@ void Drawable::setFilterBitmap(bool filter){
 bool Drawable::isFilterBitmap()const{
     return false;
 }
-void Drawable::setColorFilter(ColorFilter*cf) {
-    delete mColorFilter;
+void Drawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&cf) {
     mColorFilter = cf;
     invalidateSelf();
     LOGV("setColorFilter %p:%p",this,cf);
 }
 
-ColorFilter*Drawable::getColorFilter(){
+const cdroid::RefPtr<ColorFilter>Drawable::getColorFilter()const{
     return nullptr;
 }
 
@@ -166,21 +163,21 @@ void Drawable::clearColorFilter(){
 }
 
 void Drawable::setColorFilter(int color,PorterDuffMode mode) {
-    setColorFilter(new PorterDuffColorFilter(color,mode));
+    setColorFilter(std::make_shared<PorterDuffColorFilter>(color,mode));
 }
 
 void Drawable::setTint(int color) {
     setTintList(ColorStateList::valueOf(color));
 }
 
-PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode) {
+cdroid::RefPtr<PorterDuffColorFilter>Drawable::updateTintFilter(const cdroid::RefPtr<PorterDuffColorFilter>& tintFilter,const RefPtr<ColorStateList>& tint,int tintMode) {
     if ( (tint == nullptr) || (tintMode == PorterDuff::Mode::NOOP) ) {
         return nullptr;
     }
 
     const int color = tint->getColorForState(getState(), Color::TRANSPARENT);
     if (tintFilter == nullptr) {
-        return new PorterDuffColorFilter(color, tintMode);
+        return std::make_shared<PorterDuffColorFilter>(color, tintMode);
     }
 
     tintFilter->setColor(color);
@@ -188,7 +185,7 @@ PorterDuffColorFilter *Drawable::updateTintFilter(PorterDuffColorFilter* tintFil
     return tintFilter;
 }
 
-void Drawable::setTintList(const ColorStateList* tint) {
+void Drawable::setTintList(const RefPtr<ColorStateList>& tint) {
 }
 
 void Drawable::setTintMode(int mode) {

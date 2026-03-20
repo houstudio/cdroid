@@ -123,7 +123,7 @@ int RoundedDrawable::getAlpha() const{
     return mAlpha;//mPaint.getAlpha();
 }
 
-void RoundedDrawable::setColorFilter(ColorFilter* cf) {
+void RoundedDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) {
     //mPaint.setColorFilter(cf);
 }
 

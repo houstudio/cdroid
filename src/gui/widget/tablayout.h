@@ -47,8 +47,10 @@ public:
     static constexpr int INDICATOR_ANIMATION_MODE_LINEAR = 0;
     static constexpr int INDICATOR_ANIMATION_MODE_ELASTIC = 1;
     static constexpr int INDICATOR_ANIMATION_MODE_FADE = 2;
+    class TabView;
     class Tab{
     private:
+        friend class TabView;
         void* mTag;
         Drawable* mIcon;
         std::string mText;
@@ -58,7 +60,7 @@ public:
     public:
         static constexpr int INVALID_POSITION = -1;
         TabLayout* mParent;
-        View* mView;/*TabView*/
+        TabView* mView;
 
         Tab();
         ~Tab(); 
@@ -101,6 +103,9 @@ public:
         void updateTextAndIcon(TextView* textView,ImageView* iconView);
         float approximateLineWidth(Layout* layout, int line, float textSize);
         void updateBackgroundDrawable(Context* context);
+        void inflateAndAddDefaultIconView();
+        void inflateAndAddDefaultTextView();
+        void addOnLayoutChangeListener(View* view);
     public:
         TabView(Context* context,const AttributeSet&atts,TabLayout*parent);
         ~TabView()override;
@@ -230,7 +235,7 @@ private:
     int  calculateScrollXForTab(int position, float positionOffset);
     void applyModeAndGravity();
     void applyGravityForModeScrollable(int tabGravity);
-    static ColorStateList* createColorStateList(int defaultColor, int selectedColor);
+    static cdroid::RefPtr<ColorStateList> createColorStateList(int defaultColor, int selectedColor);
     int getDefaultHeight()const;
     int getTabMinWidth()const;
 protected:
@@ -240,16 +245,18 @@ protected:
     int  mTabPaddingTop;
     int  mTabPaddingEnd;
     int  mTabPaddingBottom;
-    int  mTabTextAppearance;
     int mTabSelectedIndicatorColor;
-    bool mOwnedTabTextColors;
-    const ColorStateList* mTabTextColors;
-    const ColorStateList* mTabIconTint;
-    const ColorStateList* mTabRippleColorStateList;
+    cdroid::RefPtr<ColorStateList> mTabTextColors;
+    cdroid::RefPtr<ColorStateList> mTabIconTint;
+    cdroid::RefPtr<ColorStateList> mTabRippleColorStateList;
     Drawable* mTabSelectedIndicator;
     float mTabTextSize;
+    float mSelectedTabTextSize;
     float mTabTextMultiLineSize;
     std::string mTabBackgroundResId;
+    std::string mTabTextAppearance;
+    std::string mSelectedTabTextAppearance;
+    std::string mDefaultTabTextAppearance;
     int  mTabMaxWidth;
 
     int  mTabGravity;
@@ -326,8 +333,8 @@ public:
     void setTabIndicatorFullWidth(bool tabIndicatorFullWidth);
     bool isInlineLabel()const;
     void setInlineLabel(bool);
-    void setTabTextColors(const ColorStateList* textColor);
-    const ColorStateList* getTabTextColors()const;
+    void setTabTextColors(const cdroid::RefPtr<ColorStateList>& textColor);
+    const cdroid::RefPtr<ColorStateList> getTabTextColors()const;
     void setTabTextColors(int normalColor, int selectedColor);
     void setupWithViewPager(ViewPager* viewPager);
     void setupWithViewPager(ViewPager* viewPager, bool autoRefresh);

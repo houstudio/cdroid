@@ -27,7 +27,7 @@ private:
     class ShapeState:public std::enable_shared_from_this<ShapeState>,public ConstantState{
     public:
         Shape*mShape;
-        const ColorStateList* mTint;
+        cdroid::RefPtr<ColorStateList> mTint;
         int mTintMode;
         Rect mPadding;
         int mChangingConfigurations;
@@ -42,7 +42,7 @@ private:
         int getChangingConfigurations()const override;
     };
     bool mMutated;
-    PorterDuffColorFilter*mTintFilter;
+    cdroid::RefPtr<PorterDuffColorFilter>mTintFilter;
     std::shared_ptr<ShapeState>mShapeState;
     void updateShape();
     ShapeDrawable(std::shared_ptr<ShapeState>state);
@@ -63,9 +63,9 @@ public:
     void setAlpha(int alpha)override;
     int getAlpha()const override;
     int getOpacity()override;
-    void setTintList(const ColorStateList*)override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>&)override;
     void setTintMode(int tintMode)override;
-    void setColorFilter(ColorFilter*colorFilter)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter)override;
     int getIntrinsicWidth()const;
     int getIntrinsicHeight()const;
     void setIntrinsicWidth(int width);

@@ -134,15 +134,15 @@ void AnimatedVectorDrawable::setAlpha(int alpha) {
     mAnimatedVectorState->mVectorDrawable->setAlpha(alpha);
 }
 
-void AnimatedVectorDrawable::setColorFilter(ColorFilter* colorFilter) {
+void AnimatedVectorDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     mAnimatedVectorState->mVectorDrawable->setColorFilter(colorFilter);
 }
 
-ColorFilter* AnimatedVectorDrawable::getColorFilter() {
+const cdroid::RefPtr<ColorFilter> AnimatedVectorDrawable::getColorFilter() const{
     return mAnimatedVectorState->mVectorDrawable->getColorFilter();
 }
 
-void AnimatedVectorDrawable::setTintList(const ColorStateList* tint) {
+void AnimatedVectorDrawable::setTintList(const RefPtr<ColorStateList>& tint) {
     mAnimatedVectorState->mVectorDrawable->setTintList(tint);
 }
 

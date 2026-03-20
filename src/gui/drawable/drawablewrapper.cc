@@ -244,17 +244,17 @@ int DrawableWrapper::getAlpha()const{
     return mDrawable ? mDrawable->getAlpha() : 255;
 }
 
-void DrawableWrapper::setColorFilter(ColorFilter*colorFilter){
+void DrawableWrapper::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
     if(mDrawable)mDrawable->setColorFilter(colorFilter);
 }
 
-ColorFilter*DrawableWrapper::getColorFilter(){
+const cdroid::RefPtr<ColorFilter>DrawableWrapper::getColorFilter()const{
     Drawable*dr = getDrawable();
     if(dr)return dr->getColorFilter();
     return Drawable::getColorFilter();
 }
 
-void DrawableWrapper::setTintList(const ColorStateList*tint){
+void DrawableWrapper::setTintList(const RefPtr<ColorStateList>&tint){
     if(mDrawable)mDrawable->setTintList(tint);
 }
 

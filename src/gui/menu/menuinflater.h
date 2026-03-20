@@ -18,6 +18,7 @@
 #ifndef __MENU_INFLATER_H__
 #define __MENU_INFLATER_H__
 #include <menu/menu.h>
+#include <core/context.h>
 namespace cdroid{ 
 class Context;
 class XmlPullParser;
@@ -100,7 +101,7 @@ private:
     std::string itemTitle;
     std::string itemTitleCondensed;
     std::string itemIconResId;
-    ColorStateList* itemIconTintList;
+    RefPtr<ColorStateList> itemIconTintList;
     int mItemIconBlendMode;
     int itemAlphabeticModifiers;
     int itemAlphabeticShortcut;

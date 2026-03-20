@@ -18,6 +18,7 @@
 #include <widget/tablayout.h>
 #include <widget/R.h>
 #include <core/build.h>
+#include <utils/textutils.h>
 #include <utils/mathutils.h>
 #include <porting/cdlog.h>
 
@@ -53,7 +54,6 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     setSelectedTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
 
-
     mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
         mPaddingBottom = atts.getDimensionPixelSize("tabPadding",0);
     mTabPaddingStart = atts.getDimensionPixelSize("tabPaddingStart",mTabPaddingStart);
@@ -62,21 +62,34 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabPaddingBottom= atts.getDimensionPixelSize("tabPaddingBottom",mTabPaddingBottom); 
     mTabTextSize  = atts.getDimensionPixelSize("tabTextSize",mTabTextSize);
 
+    mTabTextAppearance = atts.getString("tabTextAppearance");
+    const AttributeSet ta = context->obtainStyledAttributes(mTabTextAppearance);
+    mTabTextSize  = ta.getDimensionPixelSize("textSize",0);
+    mTabTextColors= ta.getColorStateList("textColor");
+    
+    if(atts.hasAttribute("tabSelectedTextAppearance")){
+        mSelectedTabTextAppearance = atts.getString("tabSelectedTextAppearance",mTabTextAppearance);
+    }
+    if(!mSelectedTabTextAppearance.empty()){
+        const AttributeSet sa=context->obtainStyledAttributes(mSelectedTabTextAppearance);
+        mSelectedTabTextSize =sa.getDimensionPixelSize("textSize");
+        auto selectedTabTextColor =sa.getColorStateList("textColor");
+        if(selectedTabTextColor!=nullptr){
+            mTabTextColors = createColorStateList(mTabTextColors->getDefaultColor(),
+                    selectedTabTextColor->getColorForState({StateSet::VIEW_STATE_SELECTED}, selectedTabTextColor->getDefaultColor()));
+        }
+    }
+
     if(atts.hasAttribute("tabTextColor"))
         mTabTextColors = context->getColorStateList(atts.getString("tabTextColor"));
     else{ 
-        mTabTextColors = new ColorStateList(0xFFFFFFFF);
-        mOwnedTabTextColors = true;
+        mTabTextColors = ColorStateList::valueOf(0xFFFFFFFF);
     }
 
     if(atts.hasAttribute("tabSelectedTextColor")){
         const int selected = atts.getColor("tabSelectedTextColor",0);
         const int defColor = mTabTextColors->getDefaultColor();
-        if(mOwnedTabTextColors){
-            delete mTabTextColors;
-        }
         mTabTextColors = createColorStateList(defColor, selected);
-        mOwnedTabTextColors =true;
     }
 
     mTabIndicatorAnimationDuration = atts.getInt("tabIndicatorAnimationDuration",ANIMATION_DURATION);
@@ -102,9 +115,6 @@ TabLayout::~TabLayout(){
     for(Tab*tab:mTabs){
         delete tab;
     }
-    if(mOwnedTabTextColors){
-        delete mTabTextColors;/*ColorStateList is global holded by keymap ,cant destroied*/
-    }
     delete mScrollAnimator;
     delete mAdapterChangeListener;
     delete mPagerAdapterObserver;
@@ -120,8 +130,6 @@ void TabLayout::initTabLayout(){
     mTabTextSize = 20;
     mContentInsetStart = 0;
     mTabIndicatorHeight =-1;
-    mOwnedTabTextColors= false;
-    mTabTextColors  = nullptr;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
     mViewPager    = nullptr;
@@ -139,6 +147,7 @@ void TabLayout::initTabLayout(){
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
     mSetupViewPagerImplicitly = false;
+    mDefaultTabTextAppearance ="cdroid:attr/textAppearanceTitleSmall";
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
     mSlidingTabIndicator = new SlidingTabIndicator(getContext(),atts,this);
@@ -151,7 +160,7 @@ static void setTint(Drawable* drawable,int color) {
         if (color!=0) {
             drawable->setTint( color);
         } else {
-            drawable->setTintList((ColorStateList*)nullptr);
+            drawable->setTintList(RefPtr<ColorStateList>(nullptr));
         }
     }
 }
@@ -443,20 +452,19 @@ void TabLayout::setInlineLabel(bool v){
     applyModeAndGravity();
 }
 
-void TabLayout::setTabTextColors(const ColorStateList* textColor) {
+void TabLayout::setTabTextColors(const RefPtr<ColorStateList>& textColor) {
     if (mTabTextColors!=textColor){
         mTabTextColors = textColor;
         updateAllTabs();
     }
 }
 
-const ColorStateList* TabLayout::getTabTextColors()const{
+const RefPtr<ColorStateList> TabLayout::getTabTextColors()const{
     return mTabTextColors;
 }
 
 void TabLayout::setTabTextColors(int normalColor, int selectedColor){
-    ColorStateList *cls = createColorStateList(normalColor, selectedColor);
-    mOwnedTabTextColors =true;
+    auto cls = createColorStateList(normalColor, selectedColor);
     setTabTextColors(cls);
 }
 
@@ -627,7 +635,7 @@ void TabLayout::configureTab(TabLayout::Tab* tab, int position){
 }
 
 void TabLayout::addTabView(TabLayout::Tab* tab){
-    TabView* tabView = (TabView*)tab->mView;
+    TabView* tabView = tab->mView;
     mSlidingTabIndicator->addView(tabView, tab->getPosition(), createLayoutParamsForTabs());
 }
 
@@ -926,7 +934,7 @@ void TabLayout::updateTabViews(bool requestLayout){
     }
 }
 
-ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedColor){
+RefPtr<ColorStateList> TabLayout::createColorStateList(int defaultColor, int selectedColor){
     std::vector<std::vector<int>>states;
     std::vector<int>colors;
 
@@ -937,7 +945,7 @@ ColorStateList* TabLayout::createColorStateList(int defaultColor, int selectedCo
     states.push_back(StateSet::NOTHING);
     colors.push_back(defaultColor);
     LOGD("createColorStateList %x,%x",defaultColor,selectedColor);
-    return new ColorStateList(states, colors);
+    return std::make_shared<ColorStateList>(states, colors);
 }
 
 int TabLayout::getDefaultHeight() const{
@@ -1073,7 +1081,7 @@ std::string TabLayout::Tab::getContentDescription()const{
 }
 
 void TabLayout::Tab::updateView() {
-    if (mView) ((TabView*)mView)->update();
+    if (mView) mView->update();
 }
 
 void TabLayout::Tab::reset() {
@@ -1262,7 +1270,6 @@ void TabLayout::TabView::reset() {
 }
 
 void TabLayout::TabView::updateTab() {
-#if 0
     Tab* tab = mTab;
     View* custom = tab != nullptr ? tab->getCustomView() : nullptr;
     if (custom != nullptr) {
@@ -1278,7 +1285,6 @@ void TabLayout::TabView::updateTab() {
                     ((ViewGroup*)customViewParent)->removeView(mCustomView);
                 }
             }
-
             addView(custom);
         }
 
@@ -1296,78 +1302,7 @@ void TabLayout::TabView::updateTab() {
         if (mCustomTextView != nullptr) {
             mDefaultMaxLines = mCustomTextView->getMaxLines();
         }
-
         mCustomIconView = (ImageView*)custom->findViewById(16908294);
-    } else {
-        if (mCustomView != nullptr) {
-            removeView(mCustomView);
-            mCustomView = nullptr;
-        }
-
-        mCustomTextView = nullptr;
-        mCustomIconView = nullptr;
-    }
-
-    if (mCustomView == nullptr) {
-        if (mIconView == nullptr) {
-            inflateAndAddDefaultIconView();
-        }
-
-        if (mTextView == nullptr) {
-            inflateAndAddDefaultTextView();
-            mDefaultMaxLines = mTextView->getMaxLines();
-        }
-
-        mTextView->setTextAppearance(mParent->defaultTabTextAppearance);
-        if (isSelected() && mParent->selectedTabTextAppearance != -1) {
-            mTextView->setTextAppearance(mParent->selectedTabTextAppearance);
-        } else {
-            mTextView->setTextAppearance(mParent->mTabTextAppearance);
-        }
-
-        if (mParent->mTabTextColors != nullptr) {
-            mTextView->setTextColor(mParent->mTabTextColors);
-        }
-
-        updateTextAndIcon(mTextView, mIconView/*, true*/);
-        tryUpdateBadgeAnchor();
-        //addOnLayoutChangeListener(this->mIconView);
-        //addOnLayoutChangeListener(this->mTextView);
-    } else if (mCustomTextView != nullptr || mCustomIconView != nullptr) {
-        updateTextAndIcon(mCustomTextView, mCustomIconView/*, false*/);
-    }
-
-    /*if (tab != nullptr && !TextUtils::isEmpty(tab->mContentDesc)) {
-        setContentDescription(tab->mContentDesc);
-    }*/
-#endif
-}
-
-void TabLayout::TabView::update() {
-    Tab* tab = mTab;
-    View* custom = tab ? tab->getCustomView() : nullptr;
-    if (custom != nullptr) {
-        ViewGroup* customParent = custom->getParent();
-        if (customParent != this) {
-            if (customParent != nullptr) {
-                ((ViewGroup*) customParent)->removeView(custom);
-            }
-            addView(custom);
-        }
-        mCustomView = custom;
-        if (mTextView != nullptr) {
-            mTextView->setVisibility(GONE);
-        }
-        if (mIconView != nullptr) {
-            mIconView->setVisibility(GONE);
-            mIconView->setImageDrawable(nullptr);
-        }
-
-        mCustomTextView = (TextView*) custom->findViewById(cdroid::R::id::text1);
-        if (mCustomTextView != nullptr) {
-            mDefaultMaxLines = mCustomTextView->getMaxLines();
-        }
-        mCustomIconView = (ImageView*) custom->findViewById(cdroid::R::id::icon);
     } else {
         // We do not have a custom view. Remove one if it already exists
         if (mCustomView != nullptr) {
@@ -1379,31 +1314,67 @@ void TabLayout::TabView::update() {
     }
 
     if (mCustomView == nullptr) {
-        // If there isn't a custom view, we'll us our own in-built layouts
-        LayoutInflater* inflater =LayoutInflater::from(getContext());
         if (mIconView == nullptr) {
-            ImageView* iconView = (ImageView*)inflater->inflate("cdroid:layout/design_layout_tab_icon.xml", this, true);
-            mIconView = iconView;
+            inflateAndAddDefaultIconView();
         }
         if (mTextView == nullptr) {
-            TextView* textView = (TextView*)inflater->inflate("cdroid:layout/design_layout_tab_text.xml", this, true);
-            mTextView = textView;
+            inflateAndAddDefaultTextView();
             mDefaultMaxLines = mTextView->getMaxLines();
         }
-        //mTextView->setTextAppearance(mTabTextAppearance);
-        if (mParent->mTabTextColors) {
+
+        mTextView->setTextAppearance(mParent->mDefaultTabTextAppearance);
+        if (isSelected() && mParent->mSelectedTabTextAppearance.empty()==false) {
+            mTextView->setTextAppearance(mParent->mSelectedTabTextAppearance);
+        } else {
+            mTextView->setTextAppearance(mParent->mTabTextAppearance);
+        }
+
+        if (mParent->mTabTextColors != nullptr) {
             mTextView->setTextColor(mParent->mTabTextColors);
         }
-        updateTextAndIcon(mTextView, mIconView);
-    } else {
-        // Else, we'll see if there is a TextView or ImageView present and update them
-        if (mCustomTextView || mCustomIconView ) {
-            updateTextAndIcon(mCustomTextView, mCustomIconView);
-        }
-    }
 
-    // Finally update our selected state
-    setSelected(tab && tab->isSelected());
+        updateTextAndIcon(mTextView, mIconView/*, true*/);
+        //tryUpdateBadgeAnchor();
+        addOnLayoutChangeListener(this->mIconView);
+        addOnLayoutChangeListener(this->mTextView);
+    } else if (mCustomTextView != nullptr || mCustomIconView != nullptr) {
+        updateTextAndIcon(mCustomTextView, mCustomIconView/*, false*/);
+    }
+    if (tab != nullptr && !TextUtils::isEmpty(tab->mContentDesc)) {
+        setContentDescription(tab->mContentDesc);
+    }
+}
+
+void TabLayout::TabView::update() {
+    updateTab();
+    setSelected(mTab&&mTab->isSelected());
+}
+
+void TabLayout::TabView::inflateAndAddDefaultIconView() {
+    ViewGroup* iconViewParent = this;
+
+    mIconView = (ImageView*)LayoutInflater::from(getContext())->inflate("cdroid:layout/design_layout_tab_icon", iconViewParent, false);
+    iconViewParent->addView(this->mIconView, 0);
+}
+
+void TabLayout::TabView::inflateAndAddDefaultTextView() {
+    ViewGroup* textViewParent = this;
+
+    this->mTextView = (TextView*)LayoutInflater::from(getContext())->inflate("cdroid:layout/design_layout_tab_text", textViewParent, false);
+    textViewParent->addView(this->mTextView);
+}
+
+void TabLayout::TabView::addOnLayoutChangeListener(View* view) {
+    if (view != nullptr) {
+        /*view->addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                if (view.getVisibility() == 0) {
+                    TabView.this.tryUpdateBadgeDrawableBounds(view);
+                }
+
+            }
+        });*/
+    }
 }
 
 int TabLayout::TabView::getContentWidth()const{

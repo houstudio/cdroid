@@ -66,9 +66,9 @@ public:
     bool onLayoutDirectionChanged(int layoutDirection)override;
     int getAlpha() const override;
     void setAlpha(int alpha)override;
-    void setColorFilter(ColorFilter* colorFilter)override;
-    ColorFilter* getColorFilter()override;
-    void setTintList(const ColorStateList* tint)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
+    const cdroid::RefPtr<ColorFilter> getColorFilter()const override;
+    void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setHotspot(float x, float y)override;
     void setHotspotBounds(int left, int top, int right, int bottom)override;
     void setTintMode(int tintMode)override;

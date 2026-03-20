@@ -28,6 +28,8 @@ class Drawable;
 class ColorStateList;
 class Context;
 class XmlPullParser;
+template <typename T>
+using RefPtr = std::shared_ptr<T>;
 class AttributeSet{
 protected:
     std::string mPackage;
@@ -64,7 +66,7 @@ public:
     int getLayoutDimension(const std::string&key,int def)const;
     float getFraction(const std::string&key,int base,int pbase,float def=.0)const;
 
-    ColorStateList*getColorStateList(const std::string&key)const;
+    RefPtr<ColorStateList>getColorStateList(const std::string&key)const;
     Drawable*getDrawable(const std::string&key)const;
     int getArray(const std::string&key,std::vector<std::string>&array)const;
     int getArray(const std::string&key,std::vector<int>&array)const;

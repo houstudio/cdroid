@@ -26,30 +26,27 @@ namespace cdroid{
 
 class ProgressTintInfo{
 public:
-    ColorStateList* mIndeterminateTintList;
+    RefPtr<ColorStateList> mIndeterminateTintList;
     PorterDuffMode mIndeterminateTintMode;
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
-    const ColorStateList* mProgressTintList;
+    RefPtr<ColorStateList> mProgressTintList;
     PorterDuffMode mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
-    const ColorStateList* mProgressBackgroundTintList;
+    RefPtr<ColorStateList> mProgressBackgroundTintList;
     PorterDuffMode mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
-    const ColorStateList* mSecondaryProgressTintList;
+    RefPtr<ColorStateList> mSecondaryProgressTintList;
     PorterDuffMode mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
 public:
     ProgressTintInfo(){
-        mProgressTintList = nullptr;
-        mProgressBackgroundTintList = nullptr;
-        mSecondaryProgressTintList = nullptr;
     }
 };
 
@@ -1074,7 +1071,7 @@ void ProgressBar::applySecondaryProgressTint(){
         }
 }
 
-void ProgressBar::setProgressTintList(const ColorStateList*tint){
+void ProgressBar::setProgressTintList(const RefPtr<ColorStateList>&tint){
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
@@ -1088,7 +1085,7 @@ void ProgressBar::setProgressTintList(const ColorStateList*tint){
     }
 }
 
-const ColorStateList* ProgressBar::getProgressTintList()const{
+const RefPtr<ColorStateList> ProgressBar::getProgressTintList()const{
     return mProgressTintInfo  ? mProgressTintInfo->mProgressTintList : nullptr;
 }
 
@@ -1108,7 +1105,7 @@ int ProgressBar::getProgressTintMode()const{
     return mProgressTintInfo ? mProgressTintInfo->mProgressTintMode : 0;
 }
 
-void ProgressBar::setProgressBackgroundTintList(const ColorStateList* tint) {
+void ProgressBar::setProgressBackgroundTintList(const RefPtr<ColorStateList>& tint) {
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
@@ -1122,7 +1119,7 @@ void ProgressBar::setProgressBackgroundTintList(const ColorStateList* tint) {
     }
 }
 
-const ColorStateList*ProgressBar::getProgressBackgroundTintList()const{
+const RefPtr<ColorStateList> ProgressBar::getProgressBackgroundTintList()const{
     return mProgressTintInfo ? mProgressTintInfo->mProgressBackgroundTintList : nullptr;
 }
 
@@ -1142,7 +1139,7 @@ int ProgressBar::getProgressBackgroundTintMode()const{
     return mProgressTintInfo  ? mProgressTintInfo->mProgressBackgroundTintMode :0;
 }
 
-void ProgressBar::setSecondaryProgressTintList(const ColorStateList* tint) {
+void ProgressBar::setSecondaryProgressTintList(const RefPtr<ColorStateList>& tint) {
     if (mProgressTintInfo == nullptr) {
         mProgressTintInfo = new ProgressTintInfo();
     }
@@ -1156,7 +1153,7 @@ void ProgressBar::setSecondaryProgressTintList(const ColorStateList* tint) {
     }
 }
 
-const ColorStateList* ProgressBar::getSecondaryProgressTintList()const{
+const RefPtr<ColorStateList>ProgressBar::getSecondaryProgressTintList()const{
     return mProgressTintInfo ? mProgressTintInfo->mSecondaryProgressTintList : nullptr;
 }
 

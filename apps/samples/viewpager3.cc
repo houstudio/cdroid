@@ -5,7 +5,7 @@
 using namespace Cairo;
 class MyPageAdapter:public PagerAdapter{
     std::vector<std::string>urls;
-    std::map< int,RefPtr<Cairo::ImageSurface> >imgs;
+    std::map< int,cdroid::RefPtr<Cairo::ImageSurface> >imgs;
 public:
     MyPageAdapter(const std::string&path){
         DIR*dir=opendir(path.c_str());
@@ -26,7 +26,7 @@ public:
         container->addView(iv);
         iv->setId(position);
         //iv->setScaleType(FIT_XY);
-        RefPtr<Cairo::ImageSurface>img;
+        cdroid::RefPtr<Cairo::ImageSurface>img;
         if(imgs.find(position)==imgs.end()){
             img=container->getContext()->loadImage(urls[position]);
             imgs[position]=img;

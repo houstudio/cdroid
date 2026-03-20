@@ -17,11 +17,11 @@ public:
 
        ImageView*tv=(ImageView*)convertView;
        Picture picture=nullptr;
-       RefPtr<Cairo::Context>ctx=nullptr;
+       cdroid::RefPtr<Cairo::Context>ctx=nullptr;
        PictureDrawable*pd=nullptr;
        if(convertView==nullptr){
            tv=new ImageView(600,20);
-	   tv->setPadding(20,0,0,0);
+           tv->setPadding(20,0,0,0);
            picture=Cairo::RecordingSurface::create();
            ctx=Cairo::Context::create(picture);
            PictureDrawable*pd=new PictureDrawable(picture);

@@ -98,11 +98,11 @@ int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod)const{
     return (baseColor & 0xFFFFFF) | ((unsigned int)alpha << 24);    
 }
 
-ColorStateList*ColorStateList::withAlpha(int alpha)const{
+RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
     std::vector<int>colors = mColors;
     for(int i = 0 ; i < colors.size();i++)
         colors[i] = (colors[i] & 0x00FFFFFF) | ( alpha & 0xFF000000 );
-    return new ColorStateList(mStateSpecs,colors);
+    return std::make_shared<ColorStateList>(mStateSpecs,colors);
 }
 
 void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
@@ -110,7 +110,7 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
     int depth, type;
 
     int changingConfigurations = 0;
-    int defaultColor = DEFAULT_COLOR;
+    int defaultColor = (int)DEFAULT_COLOR;
 
     bool hasUnresolvedAttrs = false;
 
@@ -144,18 +144,18 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
     onColorsChanged();
 }
 
-ColorStateList* ColorStateList::createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs){
+RefPtr<ColorStateList> ColorStateList::createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs){
     const std::string name = parser.getName();
     if (name.compare("selector")) {
         LOGE("invalid color state list tag %s" ,name.c_str());
     }
 
-    ColorStateList* colorStateList = new ColorStateList(DEFAULT_COLOR);
+    auto colorStateList = ColorStateList::valueOf((int)DEFAULT_COLOR);
     colorStateList->inflate(parser, attrs);
     return colorStateList;
 }
 
-ColorStateList* ColorStateList::createFromXml(XmlPullParser& parser) {
+RefPtr<ColorStateList> ColorStateList::createFromXml(XmlPullParser& parser) {
     int type;
     const AttributeSet& attrs = parser;
     while ((type = parser.next()) != XmlPullParser::START_TAG
@@ -207,7 +207,7 @@ const std::vector<std::vector<int>>& ColorStateList::getStates()const{
 }
 
 void ColorStateList::onColorsChanged(){
-    int defaultColor = DEFAULT_COLOR;
+    int defaultColor = (int)DEFAULT_COLOR;
     bool isOpaque = true;
     const int N=(int)mStateSpecs.size();
     if ( N> 0) {
@@ -243,10 +243,8 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
     return defaultColor;
 }
 
-ColorStateList*ColorStateList::valueOf(int color){
-    char buf[32];
-    sprintf(buf,"#%06x",color);
-    return App::getInstance().getColorStateList(buf); 
+RefPtr<ColorStateList> ColorStateList::valueOf(int color){
+    return std::make_shared<ColorStateList>(color); 
 }
 
 const std::vector<int>& ColorStateList::getColors()const{
@@ -262,15 +260,15 @@ bool ColorStateList::hasState(int state)const{
     return false;
 }
 
-ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
+RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::string&resname){
     XmlPullParser parser(ctx,resname);
     int type;
-    ColorStateList *colorStateList = nullptr;
+    RefPtr<ColorStateList> colorStateList = nullptr;
     const int depth = parser.getDepth();
     const AttributeSet& atts = parser;
     if(resname.size()&&(resname[0]=='#'||(resname.find("/")!=std::string::npos))){
         const int color = Color::parseColor(resname);
-        return new ColorStateList(color);
+        return ColorStateList::valueOf(color);
     }
 
     while((type=parser.next())!=XmlPullParser::END_DOCUMENT){
@@ -282,7 +280,7 @@ ColorStateList*ColorStateList::inflate(Context*ctx,const std::string&resname){
         const int color = atts.getColor("color");
         StateSet::parseState(states,atts);
         if(colorStateList==nullptr)
-            colorStateList = new ColorStateList();
+            colorStateList = std::make_shared<ColorStateList>();
         colorStateList->addStateColor(states,color);
     }
     return colorStateList;

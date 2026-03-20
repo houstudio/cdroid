@@ -58,7 +58,6 @@ ColorDrawable::ColorDrawable(std::shared_ptr<ColorState> state){
 }
 
 ColorDrawable::~ColorDrawable(){
-    delete mTintFilter;
 }
 
 void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
@@ -121,7 +120,7 @@ int ColorDrawable::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations() | mColorState->getChangingConfigurations();
 }
 
-void ColorDrawable::setTintList(const ColorStateList* tint){
+void ColorDrawable::setTintList(const RefPtr<ColorStateList>& tint){
     if( mColorState->mTint!=tint ){
         mColorState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, mColorState->mTintMode);

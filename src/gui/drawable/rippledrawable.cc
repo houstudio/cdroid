@@ -79,7 +79,7 @@ RippleDrawable::RippleDrawable(std::shared_ptr<RippleState> state) {
 RippleDrawable::RippleDrawable():RippleDrawable(std::make_shared<RippleState>(nullptr,this)){
 }
 
-RippleDrawable::RippleDrawable(const ColorStateList* color,Drawable* content,Drawable* mask)
+RippleDrawable::RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask)
   :RippleDrawable(std::make_shared<RippleState>(nullptr,nullptr)){
     if(content)addLayer(content,{0},-1,0,0,0,0);
     if(mask)addLayer(mask,{0},cdroid::R::id::mask,0,0,0,0);
@@ -234,7 +234,7 @@ bool RippleDrawable::hasFocusStateSpecified()const{
     return true;
 }
 
-void RippleDrawable::setColor(const ColorStateList* color){
+void RippleDrawable::setColor(const RefPtr<ColorStateList>& color){
     if(mState->mColor!=color){
         mState->mColor = color;
         invalidateSelf(false);

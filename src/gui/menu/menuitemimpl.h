@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __MENUITEM_IMPL_H__
 #define __MENUITEM_IMPL_H__
+#include <core/context.h>
 #include <menu/menuitem.h>
 #include <menu/menuview.h>
 #include <menu/menubuilder.h>
@@ -49,7 +50,7 @@ private:
     Drawable* mIconDrawable;
     std::string mIconResId;
 
-    const ColorStateList* mIconTintList;
+    RefPtr<ColorStateList> mIconTintList;
     int mIconTintMode;
     bool mHasIconTint = false;
     bool mHasIconTintMode = false;
@@ -132,8 +133,8 @@ public:
     MenuItem& setIcon(Drawable* icon)override;
     MenuItem& setIcon(const std::string& iconResId)override;
 
-    MenuItem& setIconTintList(const ColorStateList* iconTintList)override;
-    const ColorStateList* getIconTintList()override;
+    MenuItem& setIconTintList(const RefPtr<ColorStateList>& iconTintList)override;
+    const RefPtr<ColorStateList> getIconTintList()override;
 
     MenuItem& setIconTintMode(int iconTintMode)override;
     int getIconTintMode()const override;

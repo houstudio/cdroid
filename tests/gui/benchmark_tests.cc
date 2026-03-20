@@ -2,9 +2,8 @@
 #include <cdroid.h>
 #include <core/systemclock.h>
 #include <image-decoders/imagedecoder.h>
-
-using namespace cdroid;
 using namespace Cairo;
+using namespace cdroid;
 class BENCHMARK:public testing::Test{
 
    public :
@@ -19,10 +18,10 @@ class BENCHMARK:public testing::Test{
 };
 
 TEST_F(BENCHMARK,FillBlit){
-    RefPtr<ImageSurface>dstsuf=ImageSurface::create(Surface::Format::ARGB32,1280,720);
-    RefPtr<ImageSurface>srcsuf=ImageSurface::create(Surface::Format::ARGB32,1280,720);
-    RefPtr<Cairo::Context>dst=Cairo::Context::create(dstsuf);
-    RefPtr<Cairo::Context>src=Cairo::Context::create(srcsuf);
+    cdroid::RefPtr<ImageSurface>dstsuf=ImageSurface::create(Surface::Format::ARGB32,1280,720);
+    cdroid::RefPtr<ImageSurface>srcsuf=ImageSurface::create(Surface::Format::ARGB32,1280,720);
+    cdroid::RefPtr<Cairo::Context>dst=Cairo::Context::create(dstsuf);
+    cdroid::RefPtr<Cairo::Context>src=Cairo::Context::create(srcsuf);
     src->set_source_rgb(1,0.5,1);
     src->rectangle(0,0,1280,720);
     src->fill();

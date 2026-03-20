@@ -38,7 +38,7 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     std::string dayOfWeekTextAppearanceResId = attrs.getString("weekDayTextAppearance");//R.style.TextAppearance_Material_Widget_Calendar_DayOfWeek);
     std::string dayTextAppearanceResId = attrs.getString("dateTextAppearance");//,R.style.TextAppearance_Material_Widget_Calendar_Day);
 
-    const ColorStateList* daySelectorColor = attrs.getColorStateList("daySelectorColor");
+    auto daySelectorColor = attrs.getColorStateList("daySelectorColor");
 
     // Set up adapter.
     mAdapter = new DayPickerPagerAdapter(context,"cdroid:layout/date_picker_month_item_material", R::id::month_view);
@@ -81,7 +81,7 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
     // Proxy the month text color into the previous and next buttons.
     if (!monthTextAppearanceResId.empty()) {
         auto ta = mContext->obtainStyledAttributes("cdroid:attr/textColor");
-        const ColorStateList* monthColor = ta.getColorStateList(0);
+        auto monthColor = ta.getColorStateList(0);
         if (monthColor != nullptr) {
             mPrevButton->setImageTintList(monthColor);
             mNextButton->setImageTintList(monthColor);

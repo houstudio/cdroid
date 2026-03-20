@@ -40,20 +40,20 @@ private:
     void onColorsChanged();
     int modulateColorAlpha(int baseColor, float alphaMod)const;
 protected:
-    static ColorStateList* createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs);
+    static RefPtr<ColorStateList> createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs);
 public:
     ColorStateList();
     ColorStateList(int color);
     ColorStateList(const ColorStateList&other);
     ColorStateList(const std::vector<std::vector<int>>&states,const std::vector<int>&colors);
-    ~ColorStateList();
+    ~ColorStateList()override;
     int addStateColor(const std::vector<int>&stateSet,int color);
     int addStateColor(cdroid::Context*,const AttributeSet&);
     int getDefaultColor()const override;
     bool isOpaque()const;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const;
-    ColorStateList*withAlpha(int alpha)const;
+    RefPtr<ColorStateList>withAlpha(int alpha)const;
     ColorStateList&operator=(const ColorStateList&other);
     bool operator!=(const ColorStateList&other)const;
     bool operator==(const ColorStateList&other)const;
@@ -63,9 +63,9 @@ public:
     const std::vector<int>& getColors()const;
     bool hasState(int state)const ;
     void dump()const;
-    static ColorStateList* valueOf(int color);
-    static ColorStateList* createFromXml(XmlPullParser& parser);
-    static ColorStateList* inflate(Context*ctx,const std::string&resname);
+    static RefPtr<ColorStateList> valueOf(int color);
+    static RefPtr<ColorStateList> createFromXml(XmlPullParser& parser);
+    static RefPtr<ColorStateList> inflate(Context*ctx,const std::string&resname);
 };
 
 }

@@ -90,10 +90,10 @@ protected:
     int mChangingConfigurations;
     int mSrcDensityOverride;
     Rect mBounds;
-    ColorFilter*mColorFilter;
+    cdroid::RefPtr<ColorFilter>mColorFilter;
     Callback*mCallback;
     std::vector<int>mStateSet;
-    PorterDuffColorFilter *updateTintFilter(PorterDuffColorFilter* tintFilter,const ColorStateList* tint,int tintMode);
+    cdroid::RefPtr<PorterDuffColorFilter> updateTintFilter(const cdroid::RefPtr<PorterDuffColorFilter>& tintFilter,const cdroid::RefPtr<ColorStateList>& tint,int tintMode);
     virtual bool onStateChange(const std::vector<int>&/*state*/) { return false; }
     virtual bool onLevelChange(int /*level*/) { return false; }
     virtual bool onLayoutDirectionChanged(int /*layoutDirection*/){return false; }
@@ -112,8 +112,8 @@ public:
     void inflateWithAttributes(XmlPullParser&parser,const AttributeSet&);
     static Drawable*createFromXmlInner(XmlPullParser&parser,const AttributeSet&);
     static Drawable*createFromXmlInnerForDensity(XmlPullParser&parser,const AttributeSet&,int);
-    virtual void setColorFilter(ColorFilter*);
-    virtual ColorFilter*getColorFilter();
+    virtual void setColorFilter(const cdroid::RefPtr<ColorFilter>&);
+    virtual const cdroid::RefPtr<ColorFilter>getColorFilter()const;
     void setColorFilter(int color,PorterDuff::Mode mode);
     void clearColorFilter();
     void setTint(int color);
@@ -122,7 +122,7 @@ public:
      * To make memory manager simple,
      * The Drawable must deep copy from the tint,and own the new instance 
      * */
-    virtual void setTintList(const ColorStateList* tint);
+    virtual void setTintList(const cdroid::RefPtr<ColorStateList>& tint);
     virtual void setTintMode(int);
     bool setState(const std::vector<int>&state);
     const std::vector<int>& getState()const;

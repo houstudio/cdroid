@@ -167,7 +167,7 @@ public:
     void setHotspot(float x,float y)override;
     void setHotspotBounds(int left,int top,int width,int height)override;
     void getHotspotBounds(Rect& outRect)const override;
-    void setTintList(const ColorStateList* tint)override;
+    void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setTintMode(int tintMode)override;
     bool setVisible(bool visible,bool restart)override;
     void setDither(bool dither)override;

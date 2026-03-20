@@ -39,7 +39,7 @@ TEST_F(ASSETS,array2){
 }
 TEST_F(ASSETS,color){
     App app(0,NULL);
-    ColorStateList* cl = app.getColorStateList("cdroid:attr/editTextColor");
+    auto cl = app.getColorStateList("cdroid:attr/editTextColor");
     ASSERT_TRUE(cl!=NULL);
     cl=app.getColorStateList("cdroid:color/textview");
     ASSERT_TRUE(cl!=NULL);

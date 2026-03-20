@@ -346,7 +346,7 @@ MenuItem& MenuItemImpl::setIcon(const std::string& iconResId) {
     return *this;
 }
 
-MenuItem& MenuItemImpl::setIconTintList(const ColorStateList* iconTintList) {
+MenuItem& MenuItemImpl::setIconTintList(const RefPtr<ColorStateList>& iconTintList) {
     mIconTintList = iconTintList;
     mHasIconTint = true;
     mNeedToApplyIconTint = true;
@@ -354,7 +354,7 @@ MenuItem& MenuItemImpl::setIconTintList(const ColorStateList* iconTintList) {
     return *this;
 }
 
-const ColorStateList* MenuItemImpl::getIconTintList() {
+const RefPtr<ColorStateList> MenuItemImpl::getIconTintList() {
     return mIconTintList;
 }
 

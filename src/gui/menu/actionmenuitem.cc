@@ -159,14 +159,14 @@ MenuItem& ActionMenuItem::setIcon(const std::string& iconRes){
     return *this;
 }
 
-MenuItem& ActionMenuItem::setIconTintList(const ColorStateList* iconTintList){
+MenuItem& ActionMenuItem::setIconTintList(const RefPtr<ColorStateList>& iconTintList){
     mIconTintList = iconTintList;
     mHasIconTint = true;
     applyIconTint();
     return *this;
 }
 
-const ColorStateList* ActionMenuItem::getIconTintList(){
+const RefPtr<ColorStateList> ActionMenuItem::getIconTintList(){
     return mIconTintList;
 }
 

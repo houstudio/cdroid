@@ -53,8 +53,8 @@ protected:
         int mLayoutDirection;
         int mEnterFadeDuration,mExitFadeDuration;
         int mTintMode;
-        ColorFilter*mColorFilter;
-        const ColorStateList*mTintList;
+        cdroid::RefPtr<ColorFilter>mColorFilter;
+        cdroid::RefPtr<ColorStateList>mTintList;
         std::vector<Drawable*>mDrawables;
         SparseArray<std::shared_ptr<ConstantState>>mDrawableFutures;
     public:
@@ -137,8 +137,8 @@ public:
     int getMinimumHeight() override;
     void getHotspotBounds(Rect& outRect)const override;
     void setHotspotBounds(int left, int top, int width, int height)override;
-    void setColorFilter(ColorFilter*colorFilter)override;
-    void setTintList(const ColorStateList*tint)override;
+    void setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter)override;
+    void setTintList(const cdroid::RefPtr<ColorStateList>&tint)override;
     void setTintMode(int)override;
     void setEnterFadeDuration(int ms);
     void setExitFadeDuration(int ms);

@@ -459,7 +459,7 @@ int AdaptiveIconDrawable::getAlpha()const {
     return mAlpha;
 }
 
-void AdaptiveIconDrawable::setColorFilter(ColorFilter* colorFilter) {
+void AdaptiveIconDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
         Drawable* dr = mLayerState->mChildren[i]->mDrawable;
         if (dr != nullptr) {
@@ -468,7 +468,7 @@ void AdaptiveIconDrawable::setColorFilter(ColorFilter* colorFilter) {
     }
 }
 
-void AdaptiveIconDrawable::setTintList(const ColorStateList* tint) {
+void AdaptiveIconDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tint) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
         Drawable* dr = mLayerState->mChildren[i]->mDrawable;
         if (dr != nullptr) {

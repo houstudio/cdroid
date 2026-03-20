@@ -90,8 +90,6 @@ ImageView::~ImageView() {
     if(mDrawable!=mRecycleableBitmapDrawable)
         delete mRecycleableBitmapDrawable;
     delete mDrawable;
-    //delete mDrawableTintList;//cant be destroied.
-    delete mColorFilter;
 }
 
 void ImageView::resolveUri(){
@@ -587,13 +585,13 @@ Runnable ImageView::setImageURIAsync(const std::string&uri){
     return r;
 }
 
-void ImageView::setImageTintList(const ColorStateList*tint){
+void ImageView::setImageTintList(const RefPtr<ColorStateList>&tint){
     mDrawableTintList = tint;
     mHasDrawableTint = true;
     applyImageTint();
 }
 
-const ColorStateList* ImageView::getImageTintList(){
+const RefPtr<ColorStateList> ImageView::getImageTintList()const{
     return mDrawableTintList;
 }
 
@@ -609,14 +607,14 @@ int ImageView::getImageTintMode()const{
 }
 
 void ImageView::setColorFilter(int color,int mode){
-    setColorFilter(new PorterDuffColorFilter(color, mode));
+    setColorFilter(std::make_shared<PorterDuffColorFilter>(color, mode));
 }
 
 void ImageView::setColorFilter(int color){
     setColorFilter(color, PorterDuff::Mode::SRC_ATOP);
 }
 
-void ImageView::setColorFilter(ColorFilter* cf){
+void ImageView::setColorFilter(const cdroid::RefPtr<ColorFilter>& cf){
     if (mColorFilter != cf) {
         mColorFilter = cf;
         mHasColorFilter = true;
@@ -630,7 +628,7 @@ void ImageView::clearColorFilter(){
     setColorFilter(nullptr);
 }
 
-ColorFilter* ImageView::getColorFilter(){
+const cdroid::RefPtr<ColorFilter> ImageView::getColorFilter() const{
     return mColorFilter;
 }
 

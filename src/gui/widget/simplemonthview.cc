@@ -103,11 +103,11 @@ void SimpleMonthView::updateDayOfWeekLabels(){
     }
 }
 
-ColorStateList* SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
+RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
     std::string fontFamily = attrs.getString("fontFamily");
     textSize = attrs.getDimensionPixelSize("textSize",textSize);
-    ColorStateList* textColor = attrs.getColorStateList("textColor");
+    auto textColor = attrs.getColorStateList("textColor");
     if(!fontFamily.empty()) face = Typeface::create(fontFamily,0);
     return textColor;
 }
@@ -124,7 +124,7 @@ void SimpleMonthView::setDayOfWeekTextAppearance(const std::string& resId) {
 }
 
 void SimpleMonthView::setDayTextAppearance(const std::string& resId) {
-    ColorStateList* textColor = applyTextAppearance(mDayTypeface,mDayTextSize,resId);
+    auto textColor = applyTextAppearance(mDayTypeface,mDayTextSize,resId);
     if (textColor != nullptr) {
         mDayTextColor = textColor;
     }
@@ -140,28 +140,28 @@ int SimpleMonthView::getCellWidth()const{
     return mCellWidth;
 }
 
-void SimpleMonthView::setMonthTextColor(const ColorStateList* monthTextColor){
+void SimpleMonthView::setMonthTextColor(const RefPtr<ColorStateList>& monthTextColor){
     mMonthTextColor = monthTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayOfWeekTextColor(const ColorStateList* dayOfWeekTextColor){
+void SimpleMonthView::setDayOfWeekTextColor(const RefPtr<ColorStateList> dayOfWeekTextColor){
     //const int enabledColor = dayOfWeekTextColor->getColorForState(ENABLED_STATE_SET, 0);
     mDayOfWeekTextColor = dayOfWeekTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayTextColor(const ColorStateList* dayTextColor){
+void SimpleMonthView::setDayTextColor(const RefPtr<ColorStateList>& dayTextColor){
     mDayTextColor = dayTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDaySelectorColor(const ColorStateList* dayBackgroundColor){
+void SimpleMonthView::setDaySelectorColor(const RefPtr<ColorStateList>& dayBackgroundColor){
     mDaySelectorColor = dayBackgroundColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayHighlightColor(const ColorStateList* dayHighlightColor){
+void SimpleMonthView::setDayHighlightColor(const RefPtr<ColorStateList>& dayHighlightColor){
 
 }
 

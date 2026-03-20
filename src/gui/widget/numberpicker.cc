@@ -188,7 +188,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
-    const ColorStateList*colors = mInputText->getTextColors();
+    auto colors = mInputText->getTextColors();
     if(colors&&colors->isStateful())
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
     else
@@ -1362,7 +1362,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             Drawable*dr = nullptr;
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
-                const ColorStateList*cl = getForegroundTintList();
+                const RefPtr<ColorStateList>cl = getForegroundTintList();
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
                 if(cl){

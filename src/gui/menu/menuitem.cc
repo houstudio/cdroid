@@ -19,11 +19,11 @@
 #include <menu/menuitem.h>
 namespace cdroid{
 
-MenuItem& MenuItem::setIconTintList(const ColorStateList* tint){
+MenuItem& MenuItem::setIconTintList(const RefPtr<ColorStateList>& tint){
     return *this;
 }
 
-const ColorStateList* MenuItem::getIconTintList() {
+const RefPtr<ColorStateList> MenuItem::getIconTintList() {
     return nullptr;
 }
 

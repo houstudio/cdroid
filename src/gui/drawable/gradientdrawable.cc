@@ -179,7 +179,7 @@ void GradientDrawable::GradientState::setShape( int shape) {
     computeOpacity();
 }
 
-void GradientDrawable::GradientState::setSolidColors(const ColorStateList*colors) {
+void GradientDrawable::GradientState::setSolidColors(const RefPtr<ColorStateList>&colors) {
     mGradientColors.clear();
     if(mSolidColors!=colors){
         mSolidColors = colors;
@@ -239,7 +239,7 @@ void GradientDrawable::GradientState::setStroke(int width,int color,float dashWi
     computeOpacity();
 }
 
-void GradientDrawable::GradientState::setStroke(int width,const ColorStateList*colors, float dashWidth,float dashGap) {
+void GradientDrawable::GradientState::setStroke(int width,const RefPtr<ColorStateList>&colors, float dashWidth,float dashGap) {
     mStrokeWidth = width;
     if(mStrokeColors!=colors){
         mStrokeColors = colors;
@@ -294,7 +294,6 @@ GradientDrawable::GradientDrawable(Orientation orientation,const std::vector<int
 }
 
 GradientDrawable::~GradientDrawable(){
-    delete mTintFilter;
 }
 
 std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
@@ -416,7 +415,7 @@ void GradientDrawable::setStroke(int width,int color) {
     setStroke(width, color, 0, 0);
 }
 
-void GradientDrawable::setStroke(int width, const ColorStateList*colorStateList) {
+void GradientDrawable::setStroke(int width, const RefPtr<ColorStateList>&colorStateList) {
     setStroke(width, colorStateList, 0, 0);
 }
 
@@ -425,7 +424,7 @@ void GradientDrawable::setStroke(int width,int color, float dashWidth, float das
     setStrokeInternal(width, color, dashWidth, dashGap);
 }
 
-void GradientDrawable::setStroke(int width,const ColorStateList* colorStateList, float dashWidth, float dashGap) {
+void GradientDrawable::setStroke(int width,const RefPtr<ColorStateList>& colorStateList, float dashWidth, float dashGap) {
     mGradientState->setStroke(width, colorStateList, dashWidth, dashGap);
     int color;
     if (colorStateList == nullptr) {
@@ -694,7 +693,7 @@ void GradientDrawable::setColor(int argb) {
     }
 }
 
-void GradientDrawable::setColor(const ColorStateList* colorStateList) {
+void GradientDrawable::setColor(const RefPtr<ColorStateList>& colorStateList) {
     mGradientState->setSolidColors(colorStateList);
     int color = Color::TRANSPARENT;
     if (colorStateList) {
@@ -706,7 +705,7 @@ void GradientDrawable::setColor(const ColorStateList* colorStateList) {
     }
 }
 
-const ColorStateList* GradientDrawable::getColor() {
+const RefPtr<ColorStateList> GradientDrawable::getColor() const{
     return mGradientState->mSolidColors;
 }
 
@@ -806,18 +805,18 @@ int GradientDrawable::getOpacity()const {
            OPAQUE : TRANSLUCENT;
 }
 
-void GradientDrawable::setColorFilter(ColorFilter*colorFilter){
+void GradientDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
     if(colorFilter !=mColorFilter){
         mColorFilter = colorFilter;
-	invalidateSelf();
+        invalidateSelf();
     }
 }
 
-ColorFilter*GradientDrawable::getColorFilter(){
+const cdroid::RefPtr<ColorFilter>GradientDrawable::getColorFilter()const{
     return mColorFilter;
 }
 
-void GradientDrawable::setTintList(const ColorStateList*tint){
+void GradientDrawable::setTintList(const RefPtr<ColorStateList>&tint){
     mGradientState->mTint = tint;
     mTintFilter= updateTintFilter(mTintFilter,tint,mGradientState->mTintMode);
     invalidateSelf();
@@ -1070,7 +1069,7 @@ void GradientDrawable::prepareStrokeProps(Canvas&canvas) {
 void GradientDrawable::draw(Canvas&canvas) {
     if (!ensureValidRect())return; // nothing to draw
     auto st = mGradientState;
-    const ColorFilter* colorFilter = mColorFilter;// ? mColorFilter : mTintFilter;
+    const auto colorFilter = mColorFilter;// ? mColorFilter : mTintFilter;
     int preStrokeAlpha,preFillAlpha;
     getPatternAlpha(preStrokeAlpha,preFillAlpha);
     const int currStrokeAlpha = modulateAlpha(preStrokeAlpha);
@@ -1217,7 +1216,7 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
         //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
     }
 
-    ColorStateList* tint = atts.getColorStateList("tint");
+    auto tint = atts.getColorStateList("tint");
     if (tint != nullptr) {
         state->mTint = tint;
     }
@@ -1359,7 +1358,7 @@ void GradientDrawable::updateGradientDrawableSolid(const AttributeSet&atts){
         const int color = atts.getColorWithException("color");
         setColor(color);
     }catch(std::exception&e){
-        ColorStateList*colorStateList = atts.getColorStateList("color");
+        auto colorStateList = atts.getColorStateList("color");
         if(colorStateList) setColor(colorStateList);
     }
 }
@@ -1374,7 +1373,7 @@ void GradientDrawable::updateGradientDrawableStroke(const AttributeSet&atts){
         const int color = atts.getColorWithException("color");
         setStroke(width,(int)color,dashWidth,dashGap);
     }catch(std::exception&e){
-        const ColorStateList*colorStateList = atts.getColorStateList("color");
+        auto colorStateList = atts.getColorStateList("color");
         if(dashWidth!=0.0f){
             setStroke(width,colorStateList,dashWidth,dashGap);
         }else{

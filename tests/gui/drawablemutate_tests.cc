@@ -34,14 +34,14 @@ TEST_F(MUTATE,color){
 }
 
 TEST_F(MUTATE,bitmap){
-    RefPtr<ImageSurface>img=ImageSurface::create(Cairo::Surface::Format::ARGB32,100,100);
+    cdroid::RefPtr<ImageSurface>img=ImageSurface::create(Cairo::Surface::Format::ARGB32,100,100);
     BitmapDrawable*d1=new BitmapDrawable(img);
     BitmapDrawable*d2=(BitmapDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_EQ(d1->getBitmap().get(),d2->getBitmap().get());
 }
 
 TEST_F(MUTATE,bitmap2){
-    RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/seek_thumb_selected.png");
+    cdroid::RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/seek_thumb_selected.png");
     BitmapDrawable*d1=new BitmapDrawable(img);
     BitmapDrawable*d2=(BitmapDrawable*)d1->getConstantState()->newDrawable();
     ASSERT_NE(dynamic_cast<BitmapDrawable*>(d2),(void*)nullptr);
@@ -54,7 +54,7 @@ TEST_F(MUTATE,bitmap2){
 }
 
 TEST_F(MUTATE,ninepatch){
-    RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/btn_default_pressed.9.png");
+    cdroid::RefPtr<ImageSurface>img;//=cdroid::Context::loadImage("/home/houzh/Miniwin/src/gui/res/mipmap/btn_default_pressed.9.png");
     NinePatchDrawable*d1=new NinePatchDrawable(img);
     NinePatchDrawable*d2=(NinePatchDrawable*)d1->getConstantState()->newDrawable();
     printf("intrinsicsize d1=%dx%d d2=%dx%d\r\n",d1->getIntrinsicWidth(),d1->getIntrinsicHeight(),

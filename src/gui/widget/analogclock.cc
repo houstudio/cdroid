@@ -100,7 +100,7 @@ void AnalogClock::setDial(Icon icon) {
     requestLayout();
 }
 
-void AnalogClock::setDialTintList(const ColorStateList* tint) {
+void AnalogClock::setDialTintList(const RefPtr<ColorStateList>& tint) {
     if(mDialTintInfo->mTintList!=tint){
         mDialTintInfo->mTintList = tint;
         mDialTintInfo->mHasTintList = (tint!=nullptr);
@@ -108,7 +108,7 @@ void AnalogClock::setDialTintList(const ColorStateList* tint) {
     }
 }
 
-const ColorStateList* AnalogClock::getDialTintList()const {
+const RefPtr<ColorStateList> AnalogClock::getDialTintList()const {
     return mDialTintInfo->mTintList;
 }
 
@@ -133,7 +133,7 @@ void AnalogClock::setHourHand(Icon icon) {
     requestLayout();
 }
 
-void AnalogClock::setHourHandTintList(const ColorStateList* tint) {
+void AnalogClock::setHourHandTintList(const RefPtr<ColorStateList>& tint) {
     if(mHourHandTintInfo->mTintList!=tint){
         mHourHandTintInfo->mTintList = tint;
         mHourHandTintInfo->mHasTintList = (tint!=nullptr);
@@ -141,7 +141,7 @@ void AnalogClock::setHourHandTintList(const ColorStateList* tint) {
     }
 }
 
-const ColorStateList* AnalogClock::getHourHandTintList()const{
+const RefPtr<ColorStateList> AnalogClock::getHourHandTintList()const{
     return mHourHandTintInfo->mTintList;
 }
 
@@ -189,7 +189,7 @@ void AnalogClock::setSecondHand(Icon icon) {
     invalidate();
 }
 
-void AnalogClock::setMinuteHandTintList(const ColorStateList* tint) {
+void AnalogClock::setMinuteHandTintList(const RefPtr<ColorStateList>& tint) {
     if(mMinuteHandTintInfo->mTintList!=tint){
         mMinuteHandTintInfo->mTintList = tint;
         mMinuteHandTintInfo->mHasTintList = (tint!=nullptr);
@@ -197,7 +197,7 @@ void AnalogClock::setMinuteHandTintList(const ColorStateList* tint) {
     }
 }
 
-const ColorStateList* AnalogClock::getMinuteHandTintList()const{
+const RefPtr<ColorStateList> AnalogClock::getMinuteHandTintList()const{
     return mMinuteHandTintInfo->mTintList;
 }
 

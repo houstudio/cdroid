@@ -9,6 +9,7 @@ list(APPEND WIDGET_SOURCES
     widget/nestedscrollinghelper.cc
     widget/scrollbardrawable.cc
     widget/cdwindow.cc
+    widget/cardview.cc
 )
 
 list(APPEND WIDGET_SOURCES

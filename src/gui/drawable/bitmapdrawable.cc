@@ -75,7 +75,6 @@ BitmapDrawable::BitmapState::BitmapState(const BitmapState&bitmapState){
 BitmapDrawable::BitmapState::~BitmapState(){
     mBitmap = nullptr;
     LOGV("%p %s",this,mResource.c_str());
-    //delete mTint;//tint cant be destroied
 }
 
 BitmapDrawable* BitmapDrawable::BitmapState::newDrawable(){
@@ -135,7 +134,6 @@ BitmapDrawable::BitmapDrawable(Context*ctx,const std::string&resname)
 
 BitmapDrawable::~BitmapDrawable(){
     LOGV("%p:%p use_count=%d %s",this,mBitmapState->mBitmap.get(),mBitmapState.use_count(),mBitmapState->mResource.c_str());
-    delete mTintFilter;
 }
 
 RefPtr<ImageSurface> BitmapDrawable::getBitmap()const{
@@ -220,7 +218,7 @@ int BitmapDrawable::getOpacity(){
     return mBitmapState->mTransparency;
 }
 
-void BitmapDrawable::setTintList(const ColorStateList*tint){
+void BitmapDrawable::setTintList(const RefPtr<ColorStateList>&tint){
     if( mBitmapState->mTint!=tint ){
         mBitmapState->mTint = tint;
         mTintFilter = updateTintFilter(mTintFilter, tint, mBitmapState->mTintMode);

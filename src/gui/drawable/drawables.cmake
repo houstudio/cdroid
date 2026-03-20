@@ -43,4 +43,6 @@ SET(DRAWABLE_SOURCES
     drawable/stateset.cc
     drawable/transitiondrawable.cc
     drawable/vectordrawable.cc
+    drawable/roundrectdrawable.cc
+    drawable/roundrectdrawablewithshadow.cc
 )
