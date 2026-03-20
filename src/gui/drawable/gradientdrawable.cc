@@ -284,7 +284,6 @@ GradientDrawable::GradientDrawable(std::shared_ptr<GradientState>state) {
     mGradientRadius = 0.5f;
     mStrokeWidth =-1;
     mAlpha = 255;
-    mTintFilter = nullptr;
     mPath = std::make_shared<cdroid::Path>();
     updateLocalState();
 }
@@ -1168,7 +1167,8 @@ void GradientDrawable::draw(Canvas&canvas) {
         }
     }
     if(mTintFilter){
-        canvas.set_source(canvas.pop_group());
+        //canvas.set_source(canvas.pop_group());
+        canvas.pop_group_to_source();
         mTintFilter->apply(canvas,mBounds);
     }
     canvas.restore();

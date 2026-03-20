@@ -98,7 +98,8 @@ void VectorDrawable::draw(Canvas& canvas) {
     }
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
     if(colorFilter){
-        canvas.set_source(canvas.pop_group());
+        //canvas.set_source(canvas.pop_group());
+        canvas.pop_group_to_source();
         mTintFilter->apply(canvas,mBounds);
     }
     if (pixelCount == 0) {

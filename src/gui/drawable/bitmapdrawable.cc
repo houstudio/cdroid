@@ -93,7 +93,6 @@ BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
     mBitmapState = std::make_shared<BitmapState>(img);
     mDstRectAndInsetsDirty = true;
     mMutated = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -101,7 +100,6 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
     mBitmapState = state;
     mDstRectAndInsetsDirty = true;
     mMutated = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -315,8 +313,8 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
     mDstRectAndInsetsDirty = true;
 }
 
-bool BitmapDrawable::onStateChange(const std::vector<int>&){
-    if (mBitmapState->mTint  && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
+bool BitmapDrawable::onStateChange(const std::vector<int>&stateSet){
+    if (mBitmapState->mTint && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
@@ -458,7 +456,8 @@ void BitmapDrawable::draw(Canvas&canvas){
     }
 
     if(mTintFilter){
-        canvas.set_source(canvas.pop_group());
+        //canvas.set_source(canvas.pop_group());
+        canvas.pop_group_to_source();
         mTintFilter->apply(canvas,mBounds);
     }
     canvas.restore();

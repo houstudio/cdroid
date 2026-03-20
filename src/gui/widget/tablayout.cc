@@ -149,6 +149,7 @@ void TabLayout::initTabLayout(){
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
     mSetupViewPagerImplicitly = false;
+    mTabIndicatorAnimationDuration = ANIMATION_DURATION;
     mDefaultTabTextAppearance ="cdroid:attr/textAppearanceTitleSmall";
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
