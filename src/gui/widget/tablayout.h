@@ -34,12 +34,18 @@ private:
     static constexpr int INVALID_WIDTH = -1;
     static constexpr int ANIMATION_DURATION = 300;
 public:
+    /*@see setTabMode(int) getTabMode*/
     static constexpr int MODE_SCROLLABLE = 0;
     static constexpr int MODE_FIXED = 1;
     static constexpr int MODE_AUTO  = 2;
+    /*@see Tab#setTabLabelVisibility(int) getTabLabelVisibility*/
+    static constexpr int TAB_LABEL_VISIBILITY_UNLABELED =0;
+    static constexpr int TAB_LABEL_VISIBILITY_LABELED = 1;
+    /* @see #setTabGravity(int) getTabGravity*/
     static constexpr int GRAVITY_FILL = 0;
     static constexpr int GRAVITY_CENTER = 1;
     static constexpr int GRAVITY_START = 2;
+    /*#setSelectedTabIndicatorGravity(int) getTabIndicatorGravity*/
     static constexpr int INDICATOR_GRAVITY_BOTTOM = 0;
     static constexpr int INDICATOR_GRAVITY_CENTER = 1;
     static constexpr int INDICATOR_GRAVITY_TOP = 2;
@@ -56,6 +62,7 @@ public:
         std::string mText;
         std::string mContentDesc;
         int  mPosition = INVALID_POSITION;
+        int mLabelVisibilityMode =1;
         View* mCustomView;
     public:
         static constexpr int INVALID_POSITION = -1;
@@ -76,6 +83,8 @@ public:
         std::string getText()const;
         Tab& setText(const std::string&text);
         void select();
+        Tab& setTabLabelVisibility(int mode);
+        int getTabLabelVisibility()const;
         bool isSelected()const;
         std::string getContentDescription()const;
         Tab& setContentDescription(const std::string&contentDesc);
@@ -100,7 +109,8 @@ public:
         int mDefaultMaxLines = 2;
         int getContentWidth()const;
         int getContentHeight()const;
-        void updateTextAndIcon(TextView* textView,ImageView* iconView);
+        void updateOrientation();
+        void updateTextAndIcon(TextView* textView,ImageView* iconView,bool);
         float approximateLineWidth(Layout* layout, int line, float textSize);
         void updateBackgroundDrawable(Context* context);
         void inflateAndAddDefaultIconView();
