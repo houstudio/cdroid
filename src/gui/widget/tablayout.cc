@@ -128,7 +128,9 @@ void TabLayout::initTabLayout(){
     mTabPaddingStart= mTabPaddingTop   = 0;
     mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
+    mTabGravity = GRAVITY_FILL;
     mContentInsetStart = 0;
+    mIndicatorPosition = -1;
     mTabIndicatorHeight =-1;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
@@ -1695,6 +1697,7 @@ void TabLayout::SlidingTabIndicator::updateOrRecreateIndicatorAnimation(bool rec
                  tweenIndicatorPosition(currentView, targetView, valueAnimator.getAnimatedFraction());
             };
             if (recreateAnimation) {
+                delete mIndicatorAnimator;
                 ValueAnimator* animator = mIndicatorAnimator = new ValueAnimator();
                 animator->setInterpolator(mParent->mTabIndicatorTimeInterpolator);
                 animator->setDuration((long)duration);
