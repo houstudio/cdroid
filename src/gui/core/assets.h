@@ -43,6 +43,7 @@ private:
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
+    std::string resolveAttrValue(const std::string&name)const;
 protected:
     std::string mName;
     DisplayMetrics mDisplayMetrics;

@@ -537,7 +537,8 @@ Drawable* Assets::getDrawable(const std::string&resid) {
 int Assets::getDimension(const std::string&refid)const{
     std::string pkg,name = refid;
     parseResource(name,nullptr,&pkg);
-    name = AttributeSet::normalize(pkg,name);
+    name = resolveAttrValue(refid);
+    //name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()) 
         return it->second;
@@ -644,6 +645,30 @@ RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
 
 void Assets::clearStyles() {
     mStyles.clear();
+}
+
+std::string Assets::resolveAttrValue(const std::string&attrResId)const{
+    std::string name=attrResId;
+    AttributeSet atts;
+    size_t pos = name.find("attr/");
+    if(pos!=std::string::npos){
+        do {
+            std::string key;
+            if((pos=name.find('?'))!=std::string::npos)
+                name.erase(pos,1);
+            if((pos =name.find('/'))!=std::string::npos)
+                name=name.substr(pos+1);
+            key = name;
+            name= mTheme.getString(key);
+            atts.add(key,name);
+            if((pos=name.find('@'))!=std::string::npos)
+                name.erase(pos,1);
+            pos = name.find("attr");
+        }while(pos!=std::string::npos);
+        name = parseResource(name,nullptr,nullptr);
+        return name;
+    }
+    return name;
 }
 
 AttributeSet Assets::obtainStyledAttributes(const std::string&resname) {
