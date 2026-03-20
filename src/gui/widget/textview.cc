@@ -313,9 +313,9 @@ public:
     int mTextColor;
     int mTextColorHint;
     int mTextColorLink;
-    RefPtr<ColorStateList> mTextColors;
-    RefPtr<ColorStateList> mTextColorHints;
-    RefPtr<ColorStateList> mTextColorLinks;
+    cdroid::RefPtr<ColorStateList> mTextColors;
+    cdroid::RefPtr<ColorStateList> mTextColorHints;
+    cdroid::RefPtr<ColorStateList> mTextColorLinks;
     int mTextSize = 0;
     std::string mFontFamily;
     Typeface* mFontTypeface;
@@ -339,9 +339,6 @@ public:
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
     mTextColor = 0xFF000000;
-    mTextColors    = nullptr;
-    mTextColorHints= nullptr;
-    mTextColorLinks= nullptr;
     mTextStyle = Typeface::NORMAL;
 }
 
