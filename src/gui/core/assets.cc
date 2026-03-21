@@ -160,11 +160,11 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(tag.compare("bool")==0){
                     v = value[0]=='t'?true:false;
                 }
-                mDimensions.insert({std::move(resUri),v});
+                mDimensions.insert({resUri,v});
             }else if(itc!=mDimensions.end()){
-                mDimensions.insert({std::move(resUri),itc->second});
+                mDimensions.insert({resUri,itc->second});
             }else{
-                pending->dimens.insert({std::move(resUri),std::move(dimenRes)});
+                pending->dimens.insert({resUri,dimenRes});
             }
         }else if(tag.compare("color")==0){
             std::string colorUri = package+":color/"+attrs.getString("name");
@@ -175,7 +175,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 const uint32_t color = (value[0]=='#')?Color::parseColor(value):itc->second;
                 mColors.insert({colorUri,color});
             }else if (itc==mColors.end()){
-                pending->colors.insert({std::move(colorUri),colorRef});
+                pending->colors.insert({colorUri,colorRef});
             }
         }else if(tag.compare("string")==0){
             std::string key = package+":string/"+attrs.getString("name");
@@ -192,10 +192,10 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                     int32_t i32v;
                     std::memcpy(&i32v,&fv,sizeof(i32v));
                     if(type[0]=='f') fv/=100.f;
-                    mDimensions.insert({std::move(resUri),i32v});
+                    mDimensions.insert({resUri,i32v});
                 }else{
                     const int32_t v = std::stol(value);
-                    mDimensions.insert({std::move(resUri),v});
+                    mDimensions.insert({resUri,v});
                 }
             }else if(type.compare("id")){
                 LOGD("CANT REACHED---------%s depth=%d %s",type.c_str(),parser.getDepth(),attrs.getString("name").c_str());
@@ -213,7 +213,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 if(it==pending->colorStateList.end()){
                     it = pending->colorStateList.insert({std::move(resUri),{itemAtts}}).first;
                 }else
-                    it->second.push_back(std::move(itemAtts));
+                    it->second.emplace_back(itemAtts);
             }
         }else if(tag.compare("style")==0){
             const std::string styleName = package+":style/"+attrs.getString("name");
@@ -231,7 +231,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 value = AttributeSet::normalize(package,value);
                 const size_t pos =key.find(':');
                 if(pos!=std::string::npos)key=key.substr(pos+1);
-                its->second.add(std::move(key),std::move(value));
+                its->second.add(key,value);
             }
         }else if(tag.find("array")!=std::string::npos){
             const std::string key = package+":array/"+attrs.getString("name");
@@ -240,7 +240,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
             while(((type=parser.next())!=XmlPullParser::END_DOCUMENT) && (parser.getDepth()>=depth) ){
                 if(type!=XmlPullParser::START_TAG)continue;
                 std::string value= getTrimedValue(parser);
-                array.push_back(std::move(value));
+                array.emplace_back(value);
             }
             mArraies.emplace(std::move(key),std::move(array));
         }
@@ -435,7 +435,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<int>&out) {
     auto it = mArraies.find(fullname);
     if(it != mArraies.end()) {
         for(auto itm:it->second)
-           out.push_back(std::stoi(itm));
+           out.emplace_back(std::stoi(itm));
         return it->second.size();
     }
     return  0;
@@ -448,7 +448,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     if(it != mArraies.end()) {
         for(auto itm:it->second){
             itm = AttributeSet::normalize(pkg,itm);
-            out.push_back(itm);
+            out.emplace_back(itm);
         }
         return it->second.size();
     }
@@ -456,7 +456,7 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
     if(pak)pak->forEachEntry([&out,pkg](const std::string&res){
         if(TextUtils::startWith(res,"font")){
             std::string fullres = AttributeSet::normalize(pkg,res);
-            out.push_back(fullres);
+            out.emplace_back(fullres);
         }
         return out.size();
     });
