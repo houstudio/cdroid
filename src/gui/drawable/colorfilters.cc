@@ -27,11 +27,6 @@ ColorMatrixColorFilter::ColorMatrixColorFilter(const float(&v)[20]){
 void ColorMatrixColorFilter::apply(Canvas&canvas,const Rect&rect){
     Cairo::ImageSurface*img=dynamic_cast<Cairo::ImageSurface*>(canvas.get_target().get());
     uint8_t *data=img->get_data();
-    /*RGB��Alpha����ֵ���㷽�����£�
-    Redͨ����ֵ= a[0] * srcR + a[1] * srcG + a[2] * srcB + a[3] * srcA + a[4]
-    Greenͨ����ֵ= a[5] * srcR + a[6] * srcG + a[7] * srcB + a[8] * srcA + a[9]
-    Blueͨ����ֵ= a[10] * srcR + a[11] * srcG + a[12] * srcB + a[13] * srcA + a[14]
-    Alphaͨ����ֵ= a[15]*srcR+a[16]*srcG + a[17] * srcB + a[18] * srcA + a[19]*/
 }
 
 PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
@@ -48,7 +43,7 @@ void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
 }
 
 void PorterDuffColorFilter::setColor(int c){
-    mColor=c;
+    mColor = c;
 }
 
 int PorterDuffColorFilter::getColor()const{
@@ -81,7 +76,7 @@ int LightingColorFilter::getColorAdd()const{
 }
 
 void LightingColorFilter::setColorAdd(int add){
-    mAdd =add;
+    mAdd = add;
 }
 
 void LightingColorFilter::apply(Canvas&canvas,const Rect&rect){
