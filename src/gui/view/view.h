@@ -1540,8 +1540,6 @@ public:
 class View::AttachInfo{
 public:
     class InvalidateInfo{
-    private:
-        static std::vector<InvalidateInfo*>sPool;
     public:
         View* target;
         nsecs_t time;

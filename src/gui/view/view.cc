@@ -9816,22 +9816,42 @@ View::AttachInfo::InvalidateInfo::InvalidateInfo(){
     time = 0;
     rect.set(0,0,0,0);
 }
-std::vector<View::AttachInfo::InvalidateInfo*>View::AttachInfo::InvalidateInfo::sPool;
+
+namespace {
+    class InvalidateInfoPoolManager final{
+    private:
+        std::vector<View::AttachInfo::InvalidateInfo*> sPool;
+    public:
+        View::AttachInfo::InvalidateInfo*obtain(){
+            View::AttachInfo::InvalidateInfo*ret = nullptr;
+            if(sPool.empty()){
+                ret = new View::AttachInfo::InvalidateInfo();
+            }else{
+                ret = sPool.back();
+                sPool.pop_back();
+            }
+            ret->rect.set(0,0,0,0);
+            return ret;
+        }
+        void recycle(View::AttachInfo::InvalidateInfo*obj){
+            sPool.push_back(obj);
+        }
+        ~InvalidateInfoPoolManager() {
+            for (auto* item : sPool) {
+                delete item;
+            }
+            sPool.clear();
+        }
+    };
+    InvalidateInfoPoolManager mInvalidateInfoPool;
+}
 
 View::AttachInfo::InvalidateInfo*View::AttachInfo::InvalidateInfo::obtain(){
-    AttachInfo::InvalidateInfo*ret = nullptr;
-    if(sPool.empty()){
-        ret = new AttachInfo::InvalidateInfo();
-    }else{
-        ret = sPool.back();
-        sPool.pop_back();
-    }
-    ret->rect.set(0,0,0,0);
-    return ret;
+    return mInvalidateInfoPool.obtain();
 }
 
 void View::AttachInfo::InvalidateInfo::recycle(){
-    sPool.push_back(this);
+    mInvalidateInfoPool.recycle(this);
 }
 
 View::AttachInfo::AttachInfo(Context*ctx){
