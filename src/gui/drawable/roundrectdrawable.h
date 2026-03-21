@@ -44,7 +44,7 @@ protected:
     bool onStateChange(const std::vector<int>& stateSet) override;
 public:
     RoundRectDrawable(const RefPtr<ColorStateList>& backgroundColor, float radius);
-
+    ~RoundRectDrawable()override;
     void setPadding(float padding, bool insetForPadding, bool insetForRadius);
 
     float getPadding() const;

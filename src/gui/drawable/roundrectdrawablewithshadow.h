@@ -76,7 +76,7 @@ protected:
 public:
     RoundRectDrawableWithShadow(Context*,const cdroid::RefPtr<ColorStateList>& backgroundColor, float radius,
             float shadowSize, float maxShadowSize);
-
+    ~RoundRectDrawableWithShadow()override;
     void setAddPaddingForCorners(bool addPaddingForCorners);
     void setAlpha(int alpha) override;
     int getAlpha()const override;

@@ -115,6 +115,7 @@ TabLayout::~TabLayout(){
     for(Tab*tab:mTabs){
         delete tab;
     }
+    delete mTabSelectedIndicator;
     delete mScrollAnimator;
     delete mAdapterChangeListener;
     delete mPagerAdapterObserver;
@@ -380,14 +381,13 @@ void TabLayout::setSelectedTabIndicator(Drawable*tabSelectedIndicator){
         tabSelectedIndicator = new GradientDrawable();
         ((GradientDrawable*)tabSelectedIndicator)->setColor(0xFFFFFFFF);
     }
-    if(mTabSelectedIndicator!=tabSelectedIndicator){
-        delete mTabSelectedIndicator;
-        mTabSelectedIndicator = tabSelectedIndicator->mutate();
-        setTint(mTabSelectedIndicator,mTabSelectedIndicatorColor);
-        const int indicatorHeight = mTabIndicatorHeight == -1 ? mTabSelectedIndicator->getIntrinsicHeight() : mTabIndicatorHeight;
-        mSlidingTabIndicator->setSelectedIndicatorHeight(indicatorHeight);
-        mSlidingTabIndicator->postInvalidateOnAnimation();
-    }
+    //if(mTabSelectedIndicator!=tabSelectedIndicator){
+    delete mTabSelectedIndicator;
+    mTabSelectedIndicator = tabSelectedIndicator;//->mutate();
+    setTint(mTabSelectedIndicator,mTabSelectedIndicatorColor);
+    const int indicatorHeight = mTabIndicatorHeight == -1 ? mTabSelectedIndicator->getIntrinsicHeight() : mTabIndicatorHeight;
+    mSlidingTabIndicator->setSelectedIndicatorHeight(indicatorHeight);
+    mSlidingTabIndicator->postInvalidateOnAnimation();
 }
 
 void TabLayout::setSelectedTabIndicator(const std::string&res){
