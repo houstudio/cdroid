@@ -1354,12 +1354,9 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
 }
 
 void GradientDrawable::updateGradientDrawableSolid(const AttributeSet&atts){
-    try{
-        const int color = atts.getColorWithException("color");
-        setColor(color);
-    }catch(std::exception&e){
-        auto colorStateList = atts.getColorStateList("color");
-        if(colorStateList) setColor(colorStateList);
+    auto colorStateList = atts.getColorStateList("color");
+    if(colorStateList) {
+        setColor(colorStateList);
     }
 }
 
@@ -1369,16 +1366,15 @@ void GradientDrawable::updateGradientDrawableStroke(const AttributeSet&atts){
     const int width = atts.getDimensionPixelSize("width",defaultStrokeWidth);
     const float dashWidth = atts.getDimension("dashWidth",st->mStrokeDashWidth);
     const float dashGap = atts.getDimension("dashGap",st->mStrokeDashGap);
-    try{
-        const int color = atts.getColorWithException("color");
-        setStroke(width,(int)color,dashWidth,dashGap);
-    }catch(std::exception&e){
-        auto colorStateList = atts.getColorStateList("color");
-        if(dashWidth!=0.0f){
-            setStroke(width,colorStateList,dashWidth,dashGap);
-        }else{
-            setStroke(width,colorStateList);
-        }
+
+    auto colorStateList = atts.getColorStateList("color");
+    if(colorStateList==nullptr){
+        colorStateList = st->mStrokeColors;
+    }
+    if(dashWidth!=0.0f){
+        setStroke(width,colorStateList,dashWidth,dashGap);
+    }else{
+        setStroke(width,colorStateList);
     }
 }
 
