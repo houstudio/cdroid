@@ -5,7 +5,7 @@
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(100,100,320,320);
+    Window*w=new Window(0,0,-1,-1);
     AnalogClock*clk=new AnalogClock(320,320);
     clk->setDial(app.getDrawable("cdroid:mipmap/clock_dial"));
     clk->setHourHand(app.getDrawable("cdroid:mipmap/clock_hand_hour"));

@@ -8,7 +8,6 @@
 #include<widget/viewpager.h>
 #include<animation/animations.h>
 #include<cdlog.h>
-using namespace Cairo;
 class MyAdapter:public ArrayAdapter<std::string>{
 public:
    MyAdapter():ArrayAdapter(){
