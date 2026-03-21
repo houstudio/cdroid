@@ -30,24 +30,24 @@ PorterDuff::Mode PorterDuff::intToMode(int val) {
 int PorterDuff::toOperator(int tintMode){
     switch(tintMode){
     case PorterDuff::NOOP    :/*=-1*/ return CAIRO_OPERATOR_CLEAR;
-    case PorterDuff::CLEAR   :/*= 0*/ return CAIRO_OPERATOR_CLEAR;
-    case PorterDuff::SRC     :/*= 1*/ return CAIRO_OPERATOR_SOURCE;
-    case PorterDuff::DST     :/*= 2*/ return CAIRO_OPERATOR_DEST;
-    case PorterDuff::SRC_OVER:/*= 3*/ return CAIRO_OPERATOR_OVER;
-    case PorterDuff::DST_OVER:/*= 4*/ return CAIRO_OPERATOR_DEST_OVER;
-    case PorterDuff::SRC_IN  :/*= 5*/ return CAIRO_OPERATOR_IN;
-    case PorterDuff::DST_IN  :/*= 6*/ return CAIRO_OPERATOR_DEST_IN;
-    case PorterDuff::SRC_OUT :/*= 7*/ return CAIRO_OPERATOR_OUT;
-    case PorterDuff::DST_OUT :/*= 8*/ return CAIRO_OPERATOR_DEST_OUT;
-    case PorterDuff::SRC_ATOP:/*= 9*/ return CAIRO_OPERATOR_ATOP;
-    case PorterDuff::DST_ATOP:/*=10*/ return CAIRO_OPERATOR_DEST_ATOP;
-    case PorterDuff::XOR     :/*=11*/ return CAIRO_OPERATOR_XOR;
-    case PorterDuff::ADD     :/*=12*/ return CAIRO_OPERATOR_ADD;
-    case PorterDuff::MULTIPLY:/*=13*/ return CAIRO_OPERATOR_MULTIPLY;
-    case PorterDuff::SCREEN  :/*=14*/ return CAIRO_OPERATOR_SCREEN;
-    case PorterDuff::OVERLAY :/*=15*/ return CAIRO_OPERATOR_OVERLAY;
-    case PorterDuff::DARKEN  :/*=16*/ return CAIRO_OPERATOR_DARKEN;
-    case PorterDuff::LIGHTEN :/*=17*/ return CAIRO_OPERATOR_LIGHTEN;
+    case PorterDuff::CLEAR   :/*= 0*/ return CAIRO_OPERATOR_CLEAR;    /*0*/
+    case PorterDuff::SRC     :/*= 1*/ return CAIRO_OPERATOR_SOURCE;   /*1*/
+    case PorterDuff::DST     :/*= 2*/ return CAIRO_OPERATOR_DEST;     /*6*/
+    case PorterDuff::SRC_OVER:/*= 3*/ return CAIRO_OPERATOR_OVER;     /*2*/
+    case PorterDuff::DST_OVER:/*= 4*/ return CAIRO_OPERATOR_DEST_OVER;/*7*/
+    case PorterDuff::SRC_IN  :/*= 5*/ return CAIRO_OPERATOR_IN;       /*3*/
+    case PorterDuff::DST_IN  :/*= 6*/ return CAIRO_OPERATOR_DEST_IN;  /*8*/
+    case PorterDuff::SRC_OUT :/*= 7*/ return CAIRO_OPERATOR_OUT;      /*4*/
+    case PorterDuff::DST_OUT :/*= 8*/ return CAIRO_OPERATOR_DEST_OUT; /*9*/
+    case PorterDuff::SRC_ATOP:/*= 9*/ return CAIRO_OPERATOR_ATOP;     /*5*/
+    case PorterDuff::DST_ATOP:/*=10*/ return CAIRO_OPERATOR_DEST_ATOP;/*10*/
+    case PorterDuff::XOR     :/*=11*/ return CAIRO_OPERATOR_XOR;      /*11*/
+    case PorterDuff::ADD     :/*=12*/ return CAIRO_OPERATOR_ADD;      /*12*/
+    case PorterDuff::MULTIPLY:/*=13*/ return CAIRO_OPERATOR_MULTIPLY; /*14*/
+    case PorterDuff::SCREEN  :/*=14*/ return CAIRO_OPERATOR_SCREEN;   /*15*/
+    case PorterDuff::OVERLAY :/*=15*/ return CAIRO_OPERATOR_OVERLAY;  /*16*/
+    case PorterDuff::DARKEN  :/*=16*/ return CAIRO_OPERATOR_DARKEN;   /*17*/
+    case PorterDuff::LIGHTEN :/*=17*/ return CAIRO_OPERATOR_LIGHTEN;  /*18*/
     }
     LOGD("TintMode %d is not support",tintMode);
     return CAIRO_OPERATOR_SOURCE;

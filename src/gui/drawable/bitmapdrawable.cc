@@ -28,7 +28,6 @@ BitmapDrawable::BitmapState::BitmapState(){
     mGravity  = Gravity::FILL;
     mBaseAlpha= 1.0f;
     mAlpha = 255;
-    mTint  = nullptr;
     mTransparency = -1;
     mTintMode     = DEFAULT_TINT_MODE;
     mTileModeX = mTileModeY = -1;

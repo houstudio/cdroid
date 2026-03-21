@@ -59,7 +59,7 @@ public:
         bool mIsRtlCompatibilityMode;
         bool mOverride;
         bool mHasTint, mHasTintMode;
-        RefPtr<ColorStateList> mTintList;
+        cdroid::RefPtr<ColorStateList> mTintList;
         int mTintMode;
         int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
         int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
@@ -113,9 +113,9 @@ private:
     int mFontWeightAdjustment;
     Typeface* mOriginalTypeface;
 
-    RefPtr<ColorStateList> mTextColor;
-    RefPtr<ColorStateList> mHintTextColor;
-    RefPtr<ColorStateList> mLinkTextColor;
+    cdroid::RefPtr<ColorStateList> mTextColor;
+    cdroid::RefPtr<ColorStateList> mHintTextColor;
+    cdroid::RefPtr<ColorStateList> mLinkTextColor;
     int mCurTextColor;
     int mCurHintTextColor;
     int mHighlightColor;
@@ -249,7 +249,7 @@ public:
     float getTextScaleX()const;
     void setTextScaleX(float);
     void setTextColor(int color);
-    void setTextColor(const RefPtr<ColorStateList>& colors);
+    void setTextColor(const cdroid::RefPtr<ColorStateList>& colors);
     Layout* getLayout()const;
     Layout* getHintLayout()const;
     void setShadowLayer(float radius, float dx, float dy, int color);
@@ -275,17 +275,17 @@ public:
     int  getEllipsize() const;
     void setEllipsize(int ellipsize);
 
-    const RefPtr<ColorStateList> getTextColors()const;
+    const cdroid::RefPtr<ColorStateList> getTextColors()const;
     int getCurrentTextColor()const;
     void setHighlightColor(int color);
     int getHighlightColor()const;
     void setHintTextColor(int color);
-    void setHintTextColor(const RefPtr<ColorStateList>& colors);
-    const RefPtr<ColorStateList> getHintTextColors()const;
+    void setHintTextColor(const cdroid::RefPtr<ColorStateList>& colors);
+    const cdroid::RefPtr<ColorStateList> getHintTextColors()const;
     int getCurrentHintTextColor()const;
     void setLinkTextColor(int color);
-    void setLinkTextColor(const RefPtr<ColorStateList>& colors);
-    const RefPtr<ColorStateList> getLinkTextColors()const;
+    void setLinkTextColor(const cdroid::RefPtr<ColorStateList>& colors);
+    const cdroid::RefPtr<ColorStateList> getLinkTextColors()const;
     void setMinWidth(int minPixels);
     int getMinWidth()const;
     void setMaxWidth(int maxPixels);
@@ -329,8 +329,8 @@ public:
     int getCompoundDrawablePadding()const;
     std::vector<Drawable*>getCompoundDrawables()const;
     std::vector<Drawable*> getCompoundDrawablesRelative() const;
-    void setCompoundDrawableTintList(const RefPtr<ColorStateList>& tint);
-    const RefPtr<ColorStateList> getCompoundDrawableTintList()const;
+    void setCompoundDrawableTintList(const cdroid::RefPtr<ColorStateList>& tint);
+    const cdroid::RefPtr<ColorStateList> getCompoundDrawableTintList()const;
     void drawableHotspotChanged(float x,float y)override;
     void setCompoundDrawableTintMode(int tintMode);
     int getCompoundDrawableTintMode()const;

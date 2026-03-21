@@ -87,7 +87,7 @@ CardView::CardView(Context* context, const AttributeSet& attrs)
     :FrameLayout(context, attrs){
     mCardViewDelegate = new CardViewDelegateInternal(this);
     //TypedArray a = context.obtainStyledAttributes(attrs, R.styleable.CardView, defStyleAttr,R.style.CardView);
-    RefPtr<ColorStateList> backgroundColor=nullptr;
+    cdroid::RefPtr<ColorStateList> backgroundColor;
     if (attrs.hasAttribute("cardBackgroundColor")) {
         backgroundColor = attrs.getColorStateList("cardBackgroundColor");
     } /*else {
@@ -198,11 +198,11 @@ void CardView::setCardBackgroundColor(int color) {
     IMPL->setBackgroundColor(mCardViewDelegate, ColorStateList::valueOf(color));
 }
 
-void CardView::setCardBackgroundColor(const RefPtr<ColorStateList>& color) {
+void CardView::setCardBackgroundColor(const cdroid::RefPtr<ColorStateList>& color) {
     IMPL->setBackgroundColor(mCardViewDelegate, color);
 }
 
-const RefPtr<ColorStateList> CardView::getCardBackgroundColor() const{
+const cdroid::RefPtr<ColorStateList> CardView::getCardBackgroundColor() const{
     return IMPL->getBackgroundColor(mCardViewDelegate);
 }
 

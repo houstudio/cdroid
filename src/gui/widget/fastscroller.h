@@ -105,7 +105,7 @@ private:
     float mTextSize;
 
     /** Theme-specified text color. Used only if text appearance is not set. */
-    RefPtr<ColorStateList> mTextColor;
+    cdroid::RefPtr<ColorStateList> mTextColor;
 
     Drawable* mThumbDrawable;
     Drawable* mTrackDrawable;

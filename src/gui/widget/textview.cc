@@ -2314,7 +2314,7 @@ void TextView::setTextColor(int color){
     updateTextColors();
 }
 
-void TextView::setTextColor(const RefPtr<ColorStateList>& colors){
+void TextView::setTextColor(const cdroid::RefPtr<ColorStateList>& colors){
     if(colors==nullptr){
         FATAL("NullPointerException");
     }
@@ -2322,7 +2322,7 @@ void TextView::setTextColor(const RefPtr<ColorStateList>& colors){
     updateTextColors();
 }
 
-const RefPtr<ColorStateList> TextView::getTextColors()const{
+const cdroid::RefPtr<ColorStateList> TextView::getTextColors()const{
     return mTextColor;
 }
 
@@ -2354,14 +2354,14 @@ void TextView::setHintTextColor(int color){
     //setHintTextColor(ColorStateList::valueOf(color));
 }
 
-void TextView::setHintTextColor(const RefPtr<ColorStateList>& colors){
+void TextView::setHintTextColor(const cdroid::RefPtr<ColorStateList>& colors){
     if(mHintTextColor!=colors){
         mHintTextColor = colors;
         updateTextColors();
     }
 }
 
-const RefPtr<ColorStateList> TextView::getHintTextColors()const{
+const cdroid::RefPtr<ColorStateList> TextView::getHintTextColors()const{
     return mHintTextColor;
 }
 
@@ -2374,14 +2374,14 @@ void TextView::setLinkTextColor(int color){
     setLinkTextColor(ColorStateList::valueOf(color));
 }
 
-void TextView::setLinkTextColor(const RefPtr<ColorStateList>& colors){
+void TextView::setLinkTextColor(const cdroid::RefPtr<ColorStateList>& colors){
     if(mLinkTextColor!=colors){
         mLinkTextColor = colors;
         updateTextColors();
     }
 }
 
-const RefPtr<ColorStateList> TextView::getLinkTextColors()const{
+const cdroid::RefPtr<ColorStateList> TextView::getLinkTextColors()const{
     return mLinkTextColor;
 }
 
@@ -2389,7 +2389,7 @@ void TextView::applyCompoundDrawableTint(){
     if (mDrawables == nullptr) return;
     if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mHasTintMode==false) )return ;
 
-    const RefPtr<ColorStateList> tintList = mDrawables->mTintList;
+    const auto tintList = mDrawables->mTintList;
     const int tintMode = mDrawables->mTintMode;
     const bool hasTint = (mDrawables->mTintList!=nullptr);
     const bool hasTintMode = mDrawables->mHasTintMode;

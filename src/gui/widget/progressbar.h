@@ -145,16 +145,16 @@ public:
     void setIndeterminateDrawableTiled(Drawable* d);
     Drawable*getIndeterminateDrawable()const;
 
-    void setProgressTintList(const RefPtr<ColorStateList>&tint);
-    const RefPtr<ColorStateList>getProgressTintList()const;
+    void setProgressTintList(const cdroid::RefPtr<ColorStateList>&tint);
+    const cdroid::RefPtr<ColorStateList>getProgressTintList()const;
     void setProgressTintMode(int);
     int getProgressTintMode()const;
-    void setProgressBackgroundTintList(const RefPtr<ColorStateList>&tint);
-    const RefPtr<ColorStateList>getProgressBackgroundTintList()const;
+    void setProgressBackgroundTintList(const cdroid::RefPtr<ColorStateList>&tint);
+    const cdroid::RefPtr<ColorStateList>getProgressBackgroundTintList()const;
     void setProgressBackgroundTintMode(int);
     int getProgressBackgroundTintMode()const;
-    void setSecondaryProgressTintList(const RefPtr<ColorStateList>&tintt);
-    const RefPtr<ColorStateList>getSecondaryProgressTintList()const;
+    void setSecondaryProgressTintList(const cdroid::RefPtr<ColorStateList>&tintt);
+    const cdroid::RefPtr<ColorStateList>getSecondaryProgressTintList()const;
     void setSecondaryProgressTintMode(int tintMode);
     int getSecondaryProgressTintMode()const;
     Drawable* getTintTarget(int layerId, bool shouldFallback);

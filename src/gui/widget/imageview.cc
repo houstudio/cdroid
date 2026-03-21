@@ -40,6 +40,9 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     Drawable*d = attrs.getDrawable("src");
     if(d)setImageDrawable(d);
     mDrawableTintList = attrs.getColorStateList("tint");
+    if(mDrawableTintList){
+        mDrawableBlendMode =attrs.getTintMode("tintMode",PorterDuff::SRC_ATOP);
+    }
     mHasDrawableTint = mDrawableTintList!=nullptr;
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
@@ -82,6 +85,7 @@ void ImageView::initImageView(){
     mDrawableTintList = nullptr;
     mColorFilter = nullptr;
     mDrawableTintMode = -1;
+    mDrawableBlendMode= -1;
     mRadii[0] = mRadii[1] = 0;
     mRadii[2] = mRadii[3] = 0;
 }
@@ -585,13 +589,13 @@ Runnable ImageView::setImageURIAsync(const std::string&uri){
     return r;
 }
 
-void ImageView::setImageTintList(const RefPtr<ColorStateList>&tint){
+void ImageView::setImageTintList(const cdroid::RefPtr<ColorStateList>&tint){
     mDrawableTintList = tint;
     mHasDrawableTint = true;
     applyImageTint();
 }
 
-const RefPtr<ColorStateList> ImageView::getImageTintList()const{
+const cdroid::RefPtr<ColorStateList> ImageView::getImageTintList()const{
     return mDrawableTintList;
 }
 
@@ -804,7 +808,7 @@ void ImageView::updateDrawable(Drawable*d){
     }
 }
 
-void ImageView::setImageBitmap(RefPtr<ImageSurface>bitmap){
+void ImageView::setImageBitmap(const RefPtr<ImageSurface>&bitmap){
     if(mDrawable!=mRecycleableBitmapDrawable)
         delete mDrawable;
     mDrawable = nullptr;

@@ -455,14 +455,14 @@ void TabLayout::setInlineLabel(bool v){
     applyModeAndGravity();
 }
 
-void TabLayout::setTabTextColors(const RefPtr<ColorStateList>& textColor) {
+void TabLayout::setTabTextColors(const cdroid::RefPtr<ColorStateList>& textColor) {
     if (mTabTextColors!=textColor){
         mTabTextColors = textColor;
         updateAllTabs();
     }
 }
 
-const RefPtr<ColorStateList> TabLayout::getTabTextColors()const{
+const cdroid::RefPtr<ColorStateList> TabLayout::getTabTextColors()const{
     return mTabTextColors;
 }
 

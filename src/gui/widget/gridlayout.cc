@@ -1276,10 +1276,10 @@ void GridLayout::Axis::logError(const std::string& axisName,const std::vector<Ar
     for (int c = 0; c < arcs.size(); c++) {
         const Arc& arc = arcs[c];
         if (culprits0[c]) {
-            culprits.push_back(arc);
+            culprits.emplace_back(arc);
         }
         if (!arc.valid) {
-            removed.push_back(arc);
+            removed.emplace_back(arc);
         }
     }
     LOG(DEBUG)<<axisName + " constraints: "<<arcsToString(mHorizontal,culprits)<<
@@ -1565,7 +1565,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
             }
         }
     }
-    arcs.push_back(Arc(key, size));
+    arcs.emplace_back(Arc(key, size));
 }
 
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
