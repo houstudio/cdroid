@@ -343,6 +343,14 @@ int AttributeSet::getGravity(const std::string&key,int defvalue)const{
     return gs.size()?gravity:defvalue;
 }
 
+static std::unordered_map<std::string,int> tintModes={
+    {"src",PorterDuff::Mode::SRC},
+};
+
+int AttributeSet::getTintMode(const std::string&key,int def)const{
+    return def;
+}
+
 int AttributeSet::getDimension(const std::string&key,int def)const{
     char*p;
     const std::string v = getString(key);

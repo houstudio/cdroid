@@ -59,6 +59,7 @@ public:
     float getFloat(const std::string&key,float def=.0)const;
     const std::string getString(const std::string&key,const std::string&def=std::string())const;
     int getGravity(const std::string&key,int defvalue=0)const;
+    int getTintMode(const std::string&key,int def)const;
 
     int getDimension(const std::string&key,int def=0)const;
     int getDimensionPixelSize(const std::string&key,int def=0)const;
