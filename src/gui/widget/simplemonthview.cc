@@ -103,7 +103,7 @@ void SimpleMonthView::updateDayOfWeekLabels(){
     }
 }
 
-cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
+const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
     std::string fontFamily = attrs.getString("fontFamily");
     textSize = attrs.getDimensionPixelSize("textSize",textSize);
