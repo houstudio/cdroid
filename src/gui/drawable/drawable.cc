@@ -174,14 +174,11 @@ cdroid::RefPtr<PorterDuffColorFilter>Drawable::updateTintFilter(const cdroid::Re
     if ( (tint == nullptr) || (tintMode == PorterDuff::Mode::NOOP) ) {
         return nullptr;
     }
-
     const int color = tint->getColorForState(getState(), Color::TRANSPARENT);
-    if (tintFilter == nullptr) {
+    if ((tintFilter == nullptr)||(tintFilter->getColor() != color)
+            ||(tintFilter->getMode() != tintMode)) {
         return std::make_shared<PorterDuffColorFilter>(color, tintMode);
     }
-
-    tintFilter->setColor(color);
-    tintFilter->setMode(tintMode);
     return tintFilter;
 }
 

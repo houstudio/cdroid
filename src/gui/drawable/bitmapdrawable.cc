@@ -93,7 +93,6 @@ BitmapDrawable::BitmapDrawable(RefPtr<ImageSurface>img){
     mBitmapState = std::make_shared<BitmapState>(img);
     mDstRectAndInsetsDirty = true;
     mMutated = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -101,7 +100,6 @@ BitmapDrawable::BitmapDrawable(std::shared_ptr<BitmapState>state){
     mBitmapState = state;
     mDstRectAndInsetsDirty = true;
     mMutated = false;
-    mTintFilter = nullptr;
     computeBitmapSize();
 }
 
@@ -315,8 +313,8 @@ void BitmapDrawable::onBoundsChange(const Rect&r){
     mDstRectAndInsetsDirty = true;
 }
 
-bool BitmapDrawable::onStateChange(const std::vector<int>&){
-    if (mBitmapState->mTint  && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
+bool BitmapDrawable::onStateChange(const std::vector<int>&stateSet){
+    if (mBitmapState->mTint && (mBitmapState->mTintMode != PorterDuff::NOOP)) {
         mTintFilter = updateTintFilter(mTintFilter, mBitmapState->mTint, mBitmapState->mTintMode);
         return true;
     }
@@ -458,7 +456,8 @@ void BitmapDrawable::draw(Canvas&canvas){
     }
 
     if(mTintFilter){
-        canvas.set_source(canvas.pop_group());
+        //canvas.set_source(canvas.pop_group());
+        canvas.pop_group_to_source();
         mTintFilter->apply(canvas,mBounds);
     }
     canvas.restore();
@@ -479,6 +478,9 @@ void BitmapDrawable::getOutline(Outline& outline) {
     outline.setAlpha(opaqueOverShape ? getAlpha() / 255.0f : 0.0f);
 }
 
+void BitmapDrawable::updateStateFromTypedArray(const AttributeSet&atts){
+}
+
 void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     Drawable::inflate(parser,atts);
     auto bmp = ImageDecoder::loadImage(atts.getContext(),atts.getString("src"));
@@ -489,10 +491,11 @@ void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
           {"repeat",TileMode::REPEAT},
           {"mirror",TileMode::MIRROR}};
     const int tileMode=atts.getInt("tileMode",kvs,-1);
+    mBitmapState->mDither =atts.getBoolean("dither",true);
+    mBitmapState->mTint = atts.getColorStateList("tint");
     mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
     mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
     mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
-    mBitmapState->mDither = atts.getBoolean("antialias",true);
     mBitmapState->mFilterBitmap=atts.getBoolean("filter",false);
     mBitmapState->mAntiAlias=atts.getBoolean("antialias",true);
     setBitmap(bmp);//computeBitmapSize();

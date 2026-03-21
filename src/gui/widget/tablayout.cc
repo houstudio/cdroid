@@ -128,7 +128,9 @@ void TabLayout::initTabLayout(){
     mTabPaddingStart= mTabPaddingTop   = 0;
     mTabPaddingEnd  = mTabPaddingBottom= 0;
     mTabTextSize = 20;
+    mTabGravity = GRAVITY_FILL;
     mContentInsetStart = 0;
+    mIndicatorPosition = -1;
     mTabIndicatorHeight =-1;
     mSelectedTab    = nullptr;
     mScrollAnimator = nullptr;
@@ -147,6 +149,7 @@ void TabLayout::initTabLayout(){
     mScrollableTabMinWidth= 100;
     mTabIndicatorFullWidth = true;
     mSetupViewPagerImplicitly = false;
+    mTabIndicatorAnimationDuration = ANIMATION_DURATION;
     mDefaultTabTextAppearance ="cdroid:attr/textAppearanceTitleSmall";
     mViewPagerScrollState = ViewPager::SCROLL_STATE_IDLE;
     mTabIndicatorAnimationMode = INDICATOR_ANIMATION_MODE_LINEAR;
@@ -417,7 +420,7 @@ void TabLayout::setTabIndicatorAnimationMode(int tabIndicatorAnimationMode) {
         mTabIndicatorInterpolator = new FadeTabIndicatorInterpolator();
         break;
     default:
-        throw std::invalid_argument(std::string("invalid TabIndicatorAnimationMode:")+std::to_string(tabIndicatorAnimationMode));
+        FATAL("invalid TabIndicatorAnimationMode:%s",tabIndicatorAnimationMode);
     }
 }
 
@@ -446,7 +449,7 @@ void TabLayout::setInlineLabel(bool v){
         View*child=mSlidingTabIndicator->getChildAt(i);
         if(dynamic_cast<TabLayout::TabView*>(child)){
             TabLayout::TabView*tv=(TabLayout::TabView*)child;
-            //tv->updateOrientation();
+            tv->updateOrientation();
         }  
     }
     applyModeAndGravity();
@@ -1065,6 +1068,19 @@ void TabLayout::Tab::select() {
     mParent->selectTab((TabLayout::Tab*)this,true);
 }
 
+TabLayout::Tab& TabLayout::Tab::setTabLabelVisibility(int mode){
+    mLabelVisibilityMode = mode;
+    if(mParent->mTabGravity==GRAVITY_CENTER||mParent->mMode==MODE_AUTO){
+        mParent->updateTabViews(true);
+    }
+    updateView();
+    return *this;
+}
+
+int TabLayout::Tab::getTabLabelVisibility()const{
+    return mLabelVisibilityMode;
+}
+
 bool TabLayout::Tab::isSelected()const{
     LOGE_IF(mParent==nullptr,"Tab not attached to a TabLayout");
     return mParent->getSelectedTabPosition() == mPosition;
@@ -1333,12 +1349,12 @@ void TabLayout::TabView::updateTab() {
             mTextView->setTextColor(mParent->mTabTextColors);
         }
 
-        updateTextAndIcon(mTextView, mIconView/*, true*/);
+        updateTextAndIcon(mTextView, mIconView, true);
         //tryUpdateBadgeAnchor();
         addOnLayoutChangeListener(this->mIconView);
         addOnLayoutChangeListener(this->mTextView);
     } else if (mCustomTextView != nullptr || mCustomIconView != nullptr) {
-        updateTextAndIcon(mCustomTextView, mCustomIconView/*, false*/);
+        updateTextAndIcon(mCustomTextView, mCustomIconView, false);
     }
     if (tab != nullptr && !TextUtils::isEmpty(tab->mContentDesc)) {
         setContentDescription(tab->mContentDesc);
@@ -1408,7 +1424,17 @@ int TabLayout::TabView::getContentHeight() const{
     return bottom - top;
 }
 
-void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconView) {
+void TabLayout::TabView::updateOrientation() {
+    this->setOrientation(mParent->inlineLabel ? 0 : 1);
+    if (mCustomTextView == nullptr && mCustomIconView == nullptr) {
+        updateTextAndIcon(mTextView, mIconView, true);
+    } else {
+        updateTextAndIcon(mCustomTextView, mCustomIconView, false);
+    }
+
+}
+
+void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconView,bool addDefaultMargins) {
     Drawable* icon = mTab ? mTab->getIcon() : nullptr;
     std::string text = mTab ? mTab->getText() : "";
     std::string contentDesc = mTab ? mTab->getContentDescription() : "";
@@ -1426,7 +1452,9 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
     }
 
     bool hasText = !text.empty();//!TextUtils.isEmpty(text);
+    bool showingText =false;
     if (textView != nullptr) {
+        showingText = hasText && (mTab->mLabelVisibilityMode==TAB_LABEL_VISIBILITY_LABELED);
         if (hasText) {
             textView->setText(text);
             textView->setVisibility(VISIBLE);
@@ -1438,15 +1466,23 @@ void TabLayout::TabView::updateTextAndIcon(TextView* textView,ImageView* iconVie
         textView->setContentDescription(contentDesc);
     }
 
-    if (iconView != nullptr) {
+    if (addDefaultMargins && iconView != nullptr) {
         MarginLayoutParams* lp = ((MarginLayoutParams*) iconView->getLayoutParams());
-        int bottomMargin = 0;
-        if (hasText && iconView->getVisibility() == VISIBLE) {
-            // If we're showing both text and icon, add some margin bottom to the icon
-            bottomMargin = dpToPx(DEFAULT_GAP_TEXT_ICON);
+        int iconMargin = 0;
+        if(showingText && mIconView->getVisibility()==VISIBLE){
+            iconMargin = dpToPx(DEFAULT_GAP_TEXT_ICON);
         }
-        if (bottomMargin != lp->bottomMargin) {
-            lp->bottomMargin = bottomMargin;
+        if(mParent->mInlineLabel){
+            if(iconMargin != lp->getMarginEnd()){
+                lp->setMarginEnd(iconMargin);
+                lp->bottomMargin = 0;
+                iconView->setLayoutParams(lp);
+                iconView->requestLayout();
+            }
+        }else if(iconMargin!=lp->bottomMargin){
+            lp->bottomMargin = iconMargin;
+            lp->setMarginEnd(0);
+            iconView->setLayoutParams(lp);
             iconView->requestLayout();
         }
     }
@@ -1662,6 +1698,7 @@ void TabLayout::SlidingTabIndicator::updateOrRecreateIndicatorAnimation(bool rec
                  tweenIndicatorPosition(currentView, targetView, valueAnimator.getAnimatedFraction());
             };
             if (recreateAnimation) {
+                delete mIndicatorAnimator;
                 ValueAnimator* animator = mIndicatorAnimator = new ValueAnimator();
                 animator->setInterpolator(mParent->mTabIndicatorTimeInterpolator);
                 animator->setDuration((long)duration);

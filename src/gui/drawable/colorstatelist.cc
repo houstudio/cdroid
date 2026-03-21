@@ -39,14 +39,11 @@ ColorStateList::ColorStateList(int color)
 
 int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
     std::vector<int>states;
-    int color = atts.getColor("color",0);
-    int alpha = 0;
-    if(atts.hasAttribute("alpha")){
-        alpha = atts.getInt("alpha",255);
-        color&=0xFFFFFF;
-    }
+    int baseColor = atts.getColor("color",0);
+    float alpha = atts.getFloat("alpha",1.f);
     StateSet::parseState(states,atts);
-    return addStateColor(states,color|(alpha<<24));
+    baseColor = modulateColorAlpha(baseColor,alpha);
+    return addStateColor(states,baseColor);
 }
 
 ColorStateList::ColorStateList(const ColorStateList&other)
@@ -67,6 +64,7 @@ ColorStateList::~ColorStateList(){
 
 void ColorStateList::dump()const{
     std::ostringstream oss;
+    oss <<"CLS:"<<std::hex <<this<<std::endl;
     for(int i=0;i<mColors.size();i++){
 	const std::vector<int>&state=mStateSpecs[i];
         oss<<"[";

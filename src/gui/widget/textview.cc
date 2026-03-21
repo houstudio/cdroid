@@ -310,12 +310,9 @@ public:
 class TextAppearanceAttributes{
 public:
     int mTextColorHighlight = 0;
-    int mTextColor;
-    int mTextColorHint;
-    int mTextColorLink;
-    RefPtr<ColorStateList> mTextColors;
-    RefPtr<ColorStateList> mTextColorHints;
-    RefPtr<ColorStateList> mTextColorLinks;
+    cdroid::RefPtr<ColorStateList> mTextColor;
+    cdroid::RefPtr<ColorStateList> mTextColorHint;
+    cdroid::RefPtr<ColorStateList> mTextColorLink;
     int mTextSize = 0;
     std::string mFontFamily;
     Typeface* mFontTypeface;
@@ -338,37 +335,16 @@ public:
 };
 
 TextAppearanceAttributes::TextAppearanceAttributes(){
-    mTextColor = 0xFF000000;
-    mTextColors    = nullptr;
-    mTextColorHints= nullptr;
-    mTextColorLinks= nullptr;
     mTextStyle = Typeface::NORMAL;
 }
 
 void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet&atts){
     if(atts.hasAttribute("textColorHighlight"))
         mTextColorHighlight = atts.getColor("textColorHighlight",mTextColorHighlight);
-    if(atts.hasAttribute("textColor")){
-        try{
-            mTextColor = atts.getColorWithException("textColor");
-        }catch(std::exception&e){
-            mTextColors= atts.getColorStateList("textColor");
-        }
-    }
-    if(atts.hasAttribute("textColorHint")){
-        try{
-            mTextColorHint = atts.getColorWithException("textColorHint");
-        }catch(std::exception&e){
-            mTextColorHints= atts.getColorStateList("textColorHint");
-        }
-    }
-    if(atts.hasAttribute("textColorLink")){
-        try{
-            mTextColorLink = atts.getColorWithException("textColorLink");
-        }catch(std::exception&e){
-            mTextColorLinks= atts.getColorStateList("textColorLink");
-        }
-    }
+
+    mTextColor = atts.getColorStateList("textColor");
+    mTextColorHint = atts.getColorStateList("textColorHint");
+    mTextColorLink = atts.getColorStateList("textColorLink");
     mTextSize = atts.getDimensionPixelSize("textSize",mTextSize);
     mTextStyle= atts.getInt("textStyle",std::unordered_map<std::string,int>{
 	   {"normal",(int)Typeface::NORMAL},
@@ -626,14 +602,11 @@ int TextView::getLayoutAlignment()const{
 }
 
 void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
-    if (attr->mTextColors)setTextColor(attr->mTextColors);
-    else setTextColor(attr->mTextColor);
+    if (attr->mTextColor)setTextColor(attr->mTextColor);
 
-    if (attr->mTextColorHints)setHintTextColor(attr->mTextColorHints);
-    else setHintTextColor(attr->mTextColorHint);
+    if (attr->mTextColorHint)setHintTextColor(attr->mTextColorHint);
 
-    if (attr->mTextColorLinks)setLinkTextColor(attr->mTextColorLinks);
-    else setLinkTextColor(attr->mTextColorLink);
+    if (attr->mTextColorLink)setLinkTextColor(attr->mTextColorLink);
 
     if (attr->mTextColorHighlight) setHighlightColor(attr->mTextColorHighlight);
 
