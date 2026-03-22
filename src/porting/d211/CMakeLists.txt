@@ -3,6 +3,7 @@ project (d211 C CXX)
 set(D211_SRCS ../common/cdlog.cc
         ../common/input_linux.cc
 	mediaplayer.c
+    graph_gfx.c
 	)
 find_package(DirectFB)
 include(CheckIncludeFile)
@@ -27,13 +28,6 @@ endif()
 list(APPEND D211_INCLUDE_DIRS ../common)
 list(APPEND D211_INCLUDE_DIRS ../include ./include ./ge ./ge/include )
 
-if(DIRECTFB_FOUND)
-    list(APPEND D211_SRCS ../common/graph_dfb.c)
-    list(APPEND D211_INCLUDE_DIRS ${DIRECTFB_INCLUDE_DIRS})
-    list(APPEND D211_LIBS ${DIRECTFB_LIBRARIES})
-else()    
-    list(APPEND D211_SRCS graph_gfx.c)
-endif()
 list(APPEND D211_INCLUDE_DIRS ./inc)
 list(APPEND D211_LIBS pthread dl)
 

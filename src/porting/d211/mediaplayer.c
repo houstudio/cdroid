@@ -21,32 +21,32 @@ HANDLE MPOpen(const char*fname){
     return mp;
 }
 
-DWORD MPPlay(HANDLE handle){
+int32_t MPPlay(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     GFXRect r = mp->viewPort;
 //    mm_player_open(mp->mediaURL,r.x,r.y,r.w,r.h);// uint16_t x, uint16_t y, uint16_t width, uint16_t height)
     return E_OK;
 }
 
-DWORD MPStop(HANDLE handle){
+int32_t MPStop(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     //mm_player_stop();no stop api
     return E_OK;
 }
 
-DWORD MPResume(HANDLE handle){
+int32_t MPResume(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     //mm_player_resume();
     return E_OK;
 }
 
-DWORD MPPause(HANDLE handle){
+int32_t MPPause(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     //mm_player_pause();
     return E_OK;
 }
 
-DWORD MPClose(HANDLE handle){
+int32_t MPClose(HANDLE handle){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     free(mp->mediaURL);
     free(mp);
@@ -54,28 +54,28 @@ DWORD MPClose(HANDLE handle){
     return E_OK;
 }
 
-DWORD MPGetPosition(HANDLE handle,double*pos){
+int32_t MPGetPosition(HANDLE handle,double*pos){
     //mm_player_getposition(pos);
     return E_OK;
 }
 
-DWORD MPGetDuration(HANDLE handle,double*dur){
+int32_t MPGetDuration(HANDLE handle,double*dur){
     //mm_player_getduration(dur);
 }
 
-DWORD MPSeek(HANDLE handle,double pos){
+int32_t MPSeek(HANDLE handle,double pos){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     //mpg_cmd_set_speed
     //mm_player_seek2time(pos);
 }
 
-DWORD MPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
+int32_t MPSetCallback(HANDLE handle,MP_CALLBACK cbk,void*userdata){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     mp->cbk=cbk;
     mp->userdata=userdata;
 }
 
-DWORD MPSetWindow(HANDLE handle,int x,int y,int width,int height){
+int32_t MPSetWindow(HANDLE handle,int x,int y,int width,int height){
     MP_PLAYER*mp=(MP_PLAYER*)handle;
     GFXRect *r=&mp->viewPort;
     r->x = x;
@@ -85,7 +85,7 @@ DWORD MPSetWindow(HANDLE handle,int x,int y,int width,int height){
     return 0;
 }
 
-DWORD MPRotate(HANDLE handle, int type) {
+int32_t MPRotate(HANDLE handle, int type) {
     MP_PLAYER *mp =(MP_PLAYER*)handle;
     GFXRect   *r  = &mp->viewPort;
 

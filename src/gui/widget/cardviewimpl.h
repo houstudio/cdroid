@@ -36,7 +36,7 @@ public:
 class CardViewImpl {
 public:
     virtual ~CardViewImpl()=default;
-    virtual void initialize(CardViewDelegate* cardView, Context* context, const RefPtr<ColorStateList>& backgroundColor,
+    virtual void initialize(CardViewDelegate* cardView, Context* context, const cdroid::RefPtr<ColorStateList>& backgroundColor,
             float radius, float elevation, float maxElevation)=0;
 
     virtual void setRadius(CardViewDelegate* cardView, float radius)=0;
@@ -59,8 +59,8 @@ public:
 
     virtual void onPreventCornerOverlapChanged(CardViewDelegate* cardView)=0;
 
-    virtual void setBackgroundColor(CardViewDelegate* cardView,const RefPtr<ColorStateList>& color)=0;
-    virtual const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView)=0;
+    virtual void setBackgroundColor(CardViewDelegate* cardView,const cdroid::RefPtr<ColorStateList>& color)=0;
+    virtual const cdroid::RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView)=0;
 };
 
 class CardViewApi21Impl:public CardViewImpl {
@@ -69,7 +69,7 @@ private:
         return ((RoundRectDrawable*) cardView->getCardBackground());
     }
 public:
-    void initialize(CardViewDelegate* cardView, Context* context, const RefPtr<ColorStateList>& backgroundColor,
+    void initialize(CardViewDelegate* cardView, Context* context, const cdroid::RefPtr<ColorStateList>& backgroundColor,
             float radius, float elevation, float maxElevation) override{
         RoundRectDrawable* background = new RoundRectDrawable(backgroundColor, radius);
         cardView->setCardBackground(background);
@@ -139,20 +139,19 @@ public:
         setMaxElevation(cardView, getMaxElevation(cardView));
     }
 
-    void setBackgroundColor(CardViewDelegate* cardView,const RefPtr<ColorStateList>& color) override{
+    void setBackgroundColor(CardViewDelegate* cardView,const cdroid::RefPtr<ColorStateList>& color) override{
         getCardBackground(cardView)->setColor(color);
     }
 
-    const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
+    const cdroid::RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
         return getCardBackground(cardView)->getColor();
     }
 };
 
 class CardViewBaseImpl:public CardViewImpl {
 private:
-    RoundRectDrawableWithShadow* createBackground(Context* context,
-                    const RefPtr<ColorStateList>& backgroundColor, float radius, float elevation,
-                    float maxElevation) {
+    RoundRectDrawableWithShadow* createBackground(Context* context, const cdroid::RefPtr<ColorStateList>& backgroundColor,
+            float radius, float elevation, float maxElevation) {
         return new RoundRectDrawableWithShadow(context, backgroundColor, radius, elevation, maxElevation);
     }
     RoundRectDrawableWithShadow* getShadowBackground(CardViewDelegate* cardView) {
@@ -165,8 +164,8 @@ public:
                         canvas.drawRoundRect(bounds, cornerRadius, cornerRadius, paint);*/
     }
 
-    void initialize(CardViewDelegate* cardView, Context* context,
-            const RefPtr<ColorStateList>& backgroundColor, float radius, float elevation, float maxElevation) override{
+    void initialize(CardViewDelegate* cardView, Context* context, const cdroid::RefPtr<ColorStateList>& backgroundColor,
+            float radius, float elevation, float maxElevation) override{
         RoundRectDrawableWithShadow* background = createBackground(context, backgroundColor, radius,
                 elevation, maxElevation);
         background->setAddPaddingForCorners(cardView->getPreventCornerOverlap());
@@ -193,11 +192,11 @@ public:
         updatePadding(cardView);
     }
 
-    void setBackgroundColor(CardViewDelegate* cardView, const RefPtr<ColorStateList>& color) override{
+    void setBackgroundColor(CardViewDelegate* cardView, const cdroid::RefPtr<ColorStateList>& color) override{
         getShadowBackground(cardView)->setColor(color);
     }
 
-    const RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
+    const cdroid::RefPtr<ColorStateList> getBackgroundColor(CardViewDelegate* cardView) override{
         return getShadowBackground(cardView)->getColor();
     }
 

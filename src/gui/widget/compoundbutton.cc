@@ -179,7 +179,7 @@ void CompoundButton::jumpDrawablesToCurrentState(){
     }
 }
 
-void CompoundButton::setButtonTintList(const RefPtr<ColorStateList>& tint) {
+void CompoundButton::setButtonTintList(const cdroid::RefPtr<ColorStateList>& tint) {
     if(mButtonTintList!=tint){
         mButtonTintList = tint;
         applyButtonTint();
@@ -189,9 +189,9 @@ void CompoundButton::setButtonTintList(const RefPtr<ColorStateList>& tint) {
 /**
  * @return the tint applied to the button drawable
  * @attr ref android.R.styleable#CompoundButton_buttonTint
- * @see #setButtonTintList(const RefPtr<ColorStateList>)
+ * @see #setButtonTintList(const cdroid::RefPtr<ColorStateList>)
  */
-const RefPtr<ColorStateList> CompoundButton::getButtonTintList() const{
+const cdroid::RefPtr<ColorStateList> CompoundButton::getButtonTintList() const{
     return mButtonTintList;
 }
 

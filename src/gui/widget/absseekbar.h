@@ -29,8 +29,8 @@ private:
     bool mIsDragging;
     bool mHasTickMarkTint = false;
     bool mHasTickMarkTintMode = false;
-    RefPtr<ColorStateList>mThumbTintList;
-    RefPtr<ColorStateList>mTickMarkTintList;
+    cdroid::RefPtr<ColorStateList>mThumbTintList;
+    cdroid::RefPtr<ColorStateList>mTickMarkTintList;
 
     float mDisabledAlpha;
     float mTouchDownX;

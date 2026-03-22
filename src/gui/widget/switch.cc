@@ -249,7 +249,7 @@ Drawable* Switch::getTrackDrawable() {
     return mTrackDrawable;
 }
 
-void Switch::setTrackTintList(const RefPtr<ColorStateList>& tint){
+void Switch::setTrackTintList(const cdroid::RefPtr<ColorStateList>& tint){
     if(mTrackTintList!=tint){
         mTrackTintList = tint;
         mHasTrackTint = (tint!=nullptr);
@@ -257,7 +257,7 @@ void Switch::setTrackTintList(const RefPtr<ColorStateList>& tint){
     }
 }
 
-const RefPtr<ColorStateList> Switch::getTrackTintList() {
+const cdroid::RefPtr<ColorStateList> Switch::getTrackTintList() {
     return mTrackTintList;
 }
 
@@ -308,7 +308,7 @@ Drawable* Switch::getThumbDrawable(){
     return mThumbDrawable;
 }
 
-void Switch::setThumbTintList(const RefPtr<ColorStateList> tint){
+void Switch::setThumbTintList(const cdroid::RefPtr<ColorStateList> tint){
     if(mThumbTintList!=tint){
         mThumbTintList = tint;
         mHasThumbTint = (tint!=nullptr);
@@ -316,7 +316,7 @@ void Switch::setThumbTintList(const RefPtr<ColorStateList> tint){
     }
 }
 
-const RefPtr<ColorStateList> Switch::getThumbTintList()const{
+const cdroid::RefPtr<ColorStateList> Switch::getThumbTintList()const{
     return mThumbTintList;
 }
 

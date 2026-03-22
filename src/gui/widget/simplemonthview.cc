@@ -103,7 +103,7 @@ void SimpleMonthView::updateDayOfWeekLabels(){
     }
 }
 
-RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
+const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
     std::string fontFamily = attrs.getString("fontFamily");
     textSize = attrs.getDimensionPixelSize("textSize",textSize);
@@ -140,28 +140,28 @@ int SimpleMonthView::getCellWidth()const{
     return mCellWidth;
 }
 
-void SimpleMonthView::setMonthTextColor(const RefPtr<ColorStateList>& monthTextColor){
+void SimpleMonthView::setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor){
     mMonthTextColor = monthTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayOfWeekTextColor(const RefPtr<ColorStateList> dayOfWeekTextColor){
+void SimpleMonthView::setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor){
     //const int enabledColor = dayOfWeekTextColor->getColorForState(ENABLED_STATE_SET, 0);
     mDayOfWeekTextColor = dayOfWeekTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayTextColor(const RefPtr<ColorStateList>& dayTextColor){
+void SimpleMonthView::setDayTextColor(const cdroid::RefPtr<ColorStateList>& dayTextColor){
     mDayTextColor = dayTextColor;
     invalidate();
 }
 
-void SimpleMonthView::setDaySelectorColor(const RefPtr<ColorStateList>& dayBackgroundColor){
+void SimpleMonthView::setDaySelectorColor(const cdroid::RefPtr<ColorStateList>& dayBackgroundColor){
     mDaySelectorColor = dayBackgroundColor;
     invalidate();
 }
 
-void SimpleMonthView::setDayHighlightColor(const RefPtr<ColorStateList>& dayHighlightColor){
+void SimpleMonthView::setDayHighlightColor(const cdroid::RefPtr<ColorStateList>& dayHighlightColor){
 
 }
 

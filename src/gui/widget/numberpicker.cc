@@ -1362,7 +1362,7 @@ void NumberPicker::onDraw(Canvas&canvas){
             Drawable*dr = nullptr;
             if(selectorIndex<mDisplayedDrawables.size() && (dr = mDisplayedDrawables.at(selectorIndex))){
                 Rect outRect;
-                const RefPtr<ColorStateList>cl = getForegroundTintList();
+                auto cl = getForegroundTintList();
                 Gravity::apply(textGravity,dr->getIntrinsicWidth(),dr->getIntrinsicHeight(),recText,outRect,getLayoutDirection());
                 dr->setBounds(outRect);
                 if(cl){

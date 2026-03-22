@@ -13,9 +13,11 @@
 #include <cdinput.h>
 #include <lib2d/ingenic2d.h>
 #include <libhardware2/fb.h>
+#include <libhardware2/fb_layer_mixer.h>
 #include <signal.h>
 typedef struct {
     int fb;
+    int fb_mixer;
     struct fb_fix_screeninfo fix;
     struct fb_var_screeninfo var;
     struct fb_device_info fb_info;
@@ -101,6 +103,7 @@ int32_t GFXInit() {
     dev->var.yoffset=0;//set first screen memory for display
     LOGI("fb_open fd =%d fb_enabled=%d",dev->fb,fb_enable(dev->fb));
     g2d = ingenic_2d_open();
+    LOGI("fbmem.addr=%x fbmem.size=%d pitch=%d",dev->fix.smem_start,dev->fix.smem_len,dev->fix.line_length);
     LOGI("FBIOPUT_VSCREENINFO=%d g2d=%p",ioctl(dev->fb,FBIOPUT_VSCREENINFO,&dev->var),g2d);
     LOGI("fb solution=%dx%d accel_flags=0x%x ScreenMargin=(%d,%d,%d,%d)\r\n",dev->var.xres,dev->var.yres,dev->var.accel_flags,
             screenMargin.x,screenMargin.y,screenMargin.w,screenMargin.h);

@@ -29,7 +29,7 @@ private:
     bool mCheckedFromResource;
     int  mButtonTintMode;
     Drawable* mButtonDrawable;
-    RefPtr<ColorStateList>mButtonTintList;
+    cdroid::RefPtr<ColorStateList>mButtonTintList;
     std::string mCustomStateDescription;
     OnCheckedChangeListener mOnCheckedChangeListener;
     OnCheckedChangeListener mOnCheckedChangeWidgetListener;
@@ -53,8 +53,8 @@ public:
     bool performClick()override;
     Drawable* getButtonDrawable()const;
     void jumpDrawablesToCurrentState()override;
-    void setButtonTintList(const RefPtr<ColorStateList>& tint);
-    const RefPtr<ColorStateList> getButtonTintList()const;
+    void setButtonTintList(const cdroid::RefPtr<ColorStateList>& tint);
+    const cdroid::RefPtr<ColorStateList> getButtonTintList()const;
     void setButtonTintMode(PorterDuffMode tintMode);
     PorterDuffMode getButtonTintMode()const;
     std::string getAccessibilityClassName()const override;

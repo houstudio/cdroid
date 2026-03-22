@@ -39,6 +39,7 @@ private:
     bool mHasDrawableTint;
     bool mHasDrawableTintMode;
     bool mBaselineAlignBottom;
+    int mDrawableBlendMode;
     int mBaseline;
     int mAlpha;
     int mViewAlphaScale;
@@ -114,7 +115,7 @@ public:
     void setImageURI(const std::string&uri);
     Runnable setImageURIAsync(const std::string&uri);
     void setImageDrawable(Drawable* drawable);
-    void setImageBitmap(Cairo::RefPtr<Cairo::ImageSurface>bitmap);
+    void setImageBitmap(const Cairo::RefPtr<Cairo::ImageSurface>&bitmap);
     void setImageTintList(const cdroid::RefPtr<ColorStateList>&tint);
     const cdroid::RefPtr<ColorStateList> getImageTintList()const;
     void setImageTintMode(int mode);

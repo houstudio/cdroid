@@ -10,7 +10,7 @@ private:
 
     std::string mCheckMarkResource;
     Drawable* mCheckMarkDrawable;
-    RefPtr<ColorStateList> mCheckMarkTintList;
+    cdroid::RefPtr<ColorStateList> mCheckMarkTintList;
     //BlendMode mCheckMarkBlendMode = null;
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
@@ -46,8 +46,8 @@ public:
     Drawable* getCheckMarkDrawable()const;
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);
-    void setCheckMarkTintList(const RefPtr<ColorStateList>&tint);
-    const RefPtr<ColorStateList> getCheckMarkTintList()const;
+    void setCheckMarkTintList(const cdroid::RefPtr<ColorStateList>&tint);
+    const cdroid::RefPtr<ColorStateList> getCheckMarkTintList()const;
     void setVisibility(int visibility)override;
     void jumpDrawablesToCurrentState()override;
     void onRtlPropertiesChanged(int layoutDirection)override;

@@ -110,7 +110,7 @@ void CheckedTextView::setCheckMarkDrawableInternal(Drawable* d,const std::string
     resolvePadding();
 }
 
-void CheckedTextView::setCheckMarkTintList(const RefPtr<ColorStateList>&tint){
+void CheckedTextView::setCheckMarkTintList(const cdroid::RefPtr<ColorStateList>&tint){
     if(mCheckMarkTintList!=tint){
         mCheckMarkTintList = tint;
         mHasCheckMarkTint = (tint!=nullptr);
@@ -118,7 +118,7 @@ void CheckedTextView::setCheckMarkTintList(const RefPtr<ColorStateList>&tint){
     }
 }
 
-const RefPtr<ColorStateList> CheckedTextView::getCheckMarkTintList()const{
+const cdroid::RefPtr<ColorStateList> CheckedTextView::getCheckMarkTintList()const{
     return mCheckMarkTintList;
 }
 

@@ -31,6 +31,9 @@ RoundRectDrawableWithShadow::RoundRectDrawableWithShadow(Context*context,const R
     mCornerShadowPath = nullptr;
 }
 
+RoundRectDrawableWithShadow::~RoundRectDrawableWithShadow(){
+    delete mCornerShadowPath;
+}
 void RoundRectDrawableWithShadow::setBackground(const RefPtr<ColorStateList>& color) {
     mBackground = (color == nullptr) ?  ColorStateList::valueOf(Color::TRANSPARENT) : color;
     mStateColor = mBackground->getColorForState(getState(), mBackground->getDefaultColor());

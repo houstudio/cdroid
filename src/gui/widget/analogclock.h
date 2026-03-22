@@ -61,20 +61,20 @@ public:
     AnalogClock(Context*ctx,const AttributeSet& attrs);
     ~AnalogClock();
     void setDial(Icon icon);
-    void setDialTintList(const RefPtr<ColorStateList>&);
-    const RefPtr<ColorStateList>getDialTintList()const;
+    void setDialTintList(const cdroid::RefPtr<ColorStateList>&);
+    const cdroid::RefPtr<ColorStateList>getDialTintList()const;
 
     void setHourHand(Icon icon);
-    void setHourHandTintList(const RefPtr<ColorStateList>&);
-    const RefPtr<ColorStateList> getHourHandTintList()const;
+    void setHourHandTintList(const cdroid::RefPtr<ColorStateList>&);
+    const cdroid::RefPtr<ColorStateList> getHourHandTintList()const;
 
     void setMinuteHand(Icon icon);
-    void setMinuteHandTintList(const RefPtr<ColorStateList>&);
-    const RefPtr<ColorStateList> getMinuteHandTintList()const;
+    void setMinuteHandTintList(const cdroid::RefPtr<ColorStateList>&);
+    const cdroid::RefPtr<ColorStateList> getMinuteHandTintList()const;
 
     void setSecondHand(Icon icon);
-    void setSecondHandTintList(const RefPtr<ColorStateList>&);
-    const RefPtr<ColorStateList> getSecondHandTintList()const;
+    void setSecondHandTintList(const cdroid::RefPtr<ColorStateList>&);
+    const cdroid::RefPtr<ColorStateList> getSecondHandTintList()const;
 
     void onVisibilityAggregated(bool isVisible)override;
 }; 
