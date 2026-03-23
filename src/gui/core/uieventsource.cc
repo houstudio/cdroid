@@ -39,15 +39,14 @@ int UIEventSource::checkEvents(){
 }
 
 void UIEventSource::handleCompose(){
-    GraphDevice::getInstance().lock();
 #if COMPOSE_ASYNC
+    GraphDevice::getInstance().lock();
     if(GraphDevice::getInstance().needCompose())
         GraphDevice::getInstance().requestCompose();
+    GraphDevice::getInstance().unlock();
 #else
     GraphDevice::getInstance().composeSurfaces();
 #endif
-
-    GraphDevice::getInstance().unlock();
 }
 
 int UIEventSource::handleRunnables(){

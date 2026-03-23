@@ -132,7 +132,6 @@ App::~App(){
     auto inst = InputMethodManager::peekInstance();
     if(inst)inst->shutDown();
     delete Looper::getMainLooper();
-    delete &GraphDevice::getInstance();
 }
 
 void App::onInit(){
