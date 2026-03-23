@@ -35,13 +35,11 @@ InputEventSource::InputEventSource(){
     InputInit();
     mScreenSaveTimeOut = -1;
     mRunning = true;
+    mInited = false;
     mIsPlayback = false;
     mIsScreenSaveActived = false;
     mLastPlaybackEventTime = SystemClock::uptimeMillis();
     mLastInputEventTime = mLastPlaybackEventTime;
-    auto func = std::bind(&InputEventSource::doEventsConsume,this);
-    std::thread th(func);
-    th.detach();
 }
 
 void InputEventSource::doEventsConsume(){
@@ -100,12 +98,10 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     }
 }
 
-std::unique_ptr<InputEventSource>InputEventSource::mInst;
+InputEventSource InputEventSource::mInst;
 
 InputEventSource& InputEventSource::getInstance(){
-    if(mInst==nullptr)
-        mInst = std::unique_ptr<InputEventSource>(new InputEventSource());
-    return *mInst;
+    return mInst;
 }
 
 void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){
@@ -153,6 +149,12 @@ bool InputEventSource::needCancel(InputDevice*dev){
 }
 
 int InputEventSource::checkEvents(){
+    if(!mInited){
+        auto func = std::bind(&InputEventSource::doEventsConsume,this);
+        std::thread th(func);
+        th.detach();
+        mInited = true;
+    }
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     const nsecs_t now = SystemClock::uptimeMillis();
     int count = 0;
