@@ -91,6 +91,7 @@ static void onExit() {
     LOGD("X11 Graph shutdown!");
     if(x11Display) {
         XFreePixmap(x11Display,x11Pixmap);
+        XFreeGC(x11Display,mainGC);
         XSelectInput(x11Display,x11Window,0);
         XDestroyWindow(x11Display,x11Window);
         XCloseDisplay(x11Display);
@@ -483,8 +484,7 @@ static void* X11EventProc(void*p) {
             return 0;
         case ClientMessage:
             if ( (Atom) event.xclient.data.l[0] == WM_DELETE_WINDOW) {
-                LOGD("====ClientMessage WM_DELETE_WINDOW");
-                LOGD("GraphX11.Terminated");
+                LOGD("GraphX11.Terminated(WM_DELETE_WINDOW)");
                 exit(0);
             }
             break;
@@ -495,8 +495,6 @@ static void* X11EventProc(void*p) {
             LOGD("event.type=%d",event.type);
             break;
         };
-        if(x11Display==0)break;
     }
-    pthread_exit(NULL);
 }
 

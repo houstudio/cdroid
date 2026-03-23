@@ -39,6 +39,7 @@ Choreographer::Choreographer(){
 }
 
 Choreographer::~Choreographer(){
+    LOGD("~Choreographer %p",this);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
         mCallbackQueues[i]=nullptr;
@@ -51,7 +52,6 @@ Choreographer::~Choreographer(){
         next=nn;
         count++;
     }
-    mLooper->removeEventHandler(this);
 }
 
 float Choreographer::getRefreshRate() {
