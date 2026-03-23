@@ -32,9 +32,8 @@
 
 namespace cdroid{
 InputEventSource::InputEventSource(){
-    InputInit();
     mScreenSaveTimeOut = -1;
-    mRunning = true;
+    mRunning = false;
     mInited = false;
     mIsPlayback = false;
     mIsScreenSaveActived = false;
@@ -49,6 +48,8 @@ void InputEventSource::doEventsConsume(){
 #elif HAVE_PTHREAD_SETNAME_NP
     pthread_setname_np(pthread_self(), "InputThread");
 #endif
+    mRunning = true;
+    InputInit();
     while(mRunning){
         const int count = InputGetEvents(es,sizeof(es)/sizeof(INPUTEVENT),20);
         std::lock_guard<std::recursive_mutex> lock(mtxEvents);
