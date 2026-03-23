@@ -681,8 +681,8 @@ void LayoutTransition::runAppearingTransition(ViewGroup* parent,View* child){
     lis.onAnimationEnd = [this,parent,child](Animator& anim,bool reverse){
         auto it = currentAppearingAnimations.find(child);
         if(it!=currentAppearingAnimations.end()){
-            currentAppearingAnimations.erase(it);
             delete it->second;
+            currentAppearingAnimations.erase(it);
         }
         std::vector<TransitionListener>listeners = mListeners;
         for (auto& l: listeners)
@@ -717,8 +717,8 @@ void LayoutTransition::runDisappearingTransition(ViewGroup* parent,View* child){
     lis.onAnimationEnd = [this,parent,child,preAnimAlpha](Animator& anim,bool reverse){
         auto it = currentDisappearingAnimations.find(child);
         if(it!=currentDisappearingAnimations.end()){
-            currentDisappearingAnimations.erase(it);
             delete it->second;
+            currentDisappearingAnimations.erase(it);
         }
         child->setAlpha(preAnimAlpha);
         std::vector<TransitionListener>listeners = mListeners;
