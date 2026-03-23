@@ -41,6 +41,7 @@ Choreographer::Choreographer(){
 Choreographer::~Choreographer(){
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
+        mCallbackQueues[i]=nullptr;
     }
     int count=0;
     CallbackRecord*next=mCallbackPool;
@@ -51,22 +52,22 @@ Choreographer::~Choreographer(){
         count++;
     }
     mLooper->removeEventHandler(this);
-    LOGD("%p released %d CallbackRecords",this,count);
 }
 
 float Choreographer::getRefreshRate() {
     return 1000.f/sFrameDelay;
 }
 
-static NeverDestroyed<Choreographer>mInst;
+Choreographer Choreographer::mInst;
 
 Choreographer& Choreographer::getInstance(){
-    if(mInst->mLooper==nullptr){
-        mInst->mLooper = Looper::getMainLooper();
-        mInst->mLooper->addEventHandler(mInst.get());
-        mInst->mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
+    if(mInst.mLooper==nullptr){
+        mInst.mLooper = Looper::getMainLooper();
+        mInst.mLooper->addEventHandler(&mInst);
+        mInst.setOwned(false);
+        mInst.mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     }
-    return *mInst;
+    return mInst;
 }   
 
 long Choreographer::getFrameDelay(){
