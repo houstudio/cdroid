@@ -38,6 +38,7 @@ private:
 public:
     UIEventSource(View*,const Runnable& run);
     ~UIEventSource()override;
+    void cleanUp();
     bool processEvents();
     int checkEvents()override;
     int handleEvents()override;

@@ -31,6 +31,10 @@ UIEventSource::UIEventSource(View*v,const Runnable&r):mLayoutRunner(r){
 UIEventSource::~UIEventSource(){
 }
 
+void UIEventSource::cleanUp(){
+    mRunnables.clear();
+}
+
 int UIEventSource::checkEvents(){
     return hasDelayedRunners()||(mAttachedView&&mAttachedView->isDirty())
            ||mAttachedView->isLayoutRequested()

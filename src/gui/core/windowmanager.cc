@@ -43,6 +43,7 @@ WindowManager::~WindowManager() {
     for(Window*w:mWindows){
         View::AttachInfo*info = w->mAttachInfo;
         Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
+        w->mUIEventHandler->cleanUp();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;

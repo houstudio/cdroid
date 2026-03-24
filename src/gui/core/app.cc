@@ -123,6 +123,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(!monkey.empty()){
         inputsource->playback(monkey);
     }
+    AnimationHandler::getInstance();
 }
 
 App*App::mInst = nullptr;

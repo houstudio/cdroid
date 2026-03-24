@@ -52,6 +52,8 @@ AnimationHandler::AnimationHandler(){
 }
 
 AnimationHandler::~AnimationHandler(){
+    cleanUpList();
+    LOGD("~AnimationHandler %p",this);
     delete mProvider;
 }
 
