@@ -65,7 +65,7 @@ public:
     #define LOG_PRINTF(level,...) LogPrintf(level,__FILE__,__FUNCTION__,__LINE__,__VA_ARGS__)
 #endif
 
-#ifndef DEBUG
+#if defined(NDEBUG)
     #define LOGV(...)
     #define LOGV_IF(x,...)
     #define LOGD(...)
