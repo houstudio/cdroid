@@ -32,6 +32,7 @@
 
 namespace cdroid{
 InputEventSource::InputEventSource(){
+    LOGD("InputEventSource %p",this);
     mScreenSaveTimeOut = -1;
     mRunning = false;
     mInited = false;
@@ -99,9 +100,8 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     }
 }
 
-InputEventSource InputEventSource::mInst;
-
 InputEventSource& InputEventSource::getInstance(){
+    static InputEventSource mInst;
     return mInst;
 }
 

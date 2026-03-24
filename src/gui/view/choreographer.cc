@@ -58,9 +58,8 @@ float Choreographer::getRefreshRate() {
     return 1000.f/sFrameDelay;
 }
 
-Choreographer Choreographer::mInst;
-
 Choreographer& Choreographer::getInstance(){
+    static Choreographer mInst;
     if(mInst.mLooper==nullptr){
         mInst.mLooper = Looper::getMainLooper();
         mInst.mLooper->addEventHandler(&mInst);
