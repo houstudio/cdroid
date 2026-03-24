@@ -39,6 +39,7 @@ Choreographer::Choreographer(){
 }
 
 Choreographer::~Choreographer(){
+    mLooper->removeEventHandler(this);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
         mCallbackQueues[i]=nullptr;

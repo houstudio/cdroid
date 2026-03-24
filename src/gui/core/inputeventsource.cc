@@ -73,8 +73,7 @@ void InputEventSource::doEventsConsume(){
 
 InputEventSource::~InputEventSource(){
     mRunning = false;
-    //InputEventSource::mInst is static&global,do not remove.
-    //Looper::getMainLooper()->removeEventHandler(this);
+    Looper::getMainLooper()->removeEventHandler(this);
     if(frecord.is_open())
        frecord.close();
     LOGD("%p Destroied",this);

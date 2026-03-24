@@ -16,10 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <windowmanager.h>
-#include <cdlog.h>
-#include <graphdevice.h>
-#include <uieventsource.h>
+#include <porting/cdlog.h>
+#include <core/app.h>
+#include <core/graphdevice.h>
+#include <core/windowmanager.h>
+#include <core/uieventsource.h>
 
 using namespace Cairo;
 namespace cdroid {
@@ -38,8 +39,10 @@ WindowManager&WindowManager::getInstance(){
 };
 
 WindowManager::~WindowManager() {
+    App::getInstance().exit(0);
     for(Window*w:mWindows){
         View::AttachInfo*info = w->mAttachInfo;
+        Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
