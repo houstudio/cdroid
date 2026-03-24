@@ -120,11 +120,11 @@ public:
         void setListener(const ItemAnimatorListener& listener);
         static int buildAdapterChangeFlagsForAnimations(ViewHolder* viewHolder);
     public:
-        static constexpr int FLAG_CHANGED = 1<<1;//ViewHolder::FLAG_UPDATE;
-        static constexpr int FLAG_REMOVED = 1<<3;//ViewHolder::FLAG_REMOVED;
-        static constexpr int FLAG_INVALIDATED = 1<<2;//ViewHolder::FLAG_INVALID;
-        static constexpr int FLAG_MOVED = 1<<11;//ViewHolder::FLAG_MOVED;
-        static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = 1<<12;//ViewHolder::FLAG_APPEARED_IN_PRE_LAYOUT;
+        static constexpr int FLAG_CHANGED = 1<<1;
+        static constexpr int FLAG_REMOVED = 1<<3;
+        static constexpr int FLAG_INVALIDATED = 1<<2;
+        static constexpr int FLAG_MOVED = 1<<11;
+        static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = 1<<12;
     public:
         virtual ~ItemAnimator()=default;
         long getMoveDuration();
@@ -1026,17 +1026,17 @@ private:
     bool doesTransientStatePreventRecycling();
 protected:
     static constexpr int FLAG_BOUND = 1 << 0;
-    static constexpr int FLAG_UPDATE = 1 << 1;
-    static constexpr int FLAG_INVALID = 1 << 2;
-    static constexpr int FLAG_REMOVED = 1 << 3;
+    static constexpr int FLAG_UPDATE = ItemAnimator::FLAG_CHANGED;/*1 << 1*/;
+    static constexpr int FLAG_INVALID = ItemAnimator::FLAG_INVALIDATED;/*1 << 2;*/
+    static constexpr int FLAG_REMOVED = ItemAnimator::FLAG_REMOVED;/*1 << 3;*/
     static constexpr int FLAG_NOT_RECYCLABLE = 1 << 4;
     static constexpr int FLAG_RETURNED_FROM_SCRAP = 1 << 5;
     static constexpr int FLAG_IGNORE = 1 << 7;
     static constexpr int FLAG_TMP_DETACHED = 1 << 8;
     static constexpr int FLAG_ADAPTER_POSITION_UNKNOWN = 1 << 9;
     static constexpr int FLAG_ADAPTER_FULLUPDATE = 1 << 10;
-    static constexpr int FLAG_MOVED = 1 << 11;
-    static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = 1 << 12;
+    static constexpr int FLAG_MOVED = ItemAnimator::FLAG_MOVED;/*1 << 11*/
+    static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = ItemAnimator::FLAG_APPEARED_IN_PRE_LAYOUT;/*1 << 12;*/
     static constexpr int PENDING_ACCESSIBILITY_STATE_NOT_SET = -1;
     static constexpr int FLAG_BOUNCED_FROM_HIDDEN_LIST = 1 << 13;
     static constexpr int FLAG_SET_A11Y_ITEM_DELEGATE = 1 << 14;
