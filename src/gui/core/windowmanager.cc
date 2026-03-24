@@ -24,7 +24,7 @@
 using namespace Cairo;
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
-WindowManager* WindowManager::mInst = nullptr;
+WindowManager WindowManager::mInst;
 
 WindowManager::WindowManager(){
     mActiveWindow = nullptr;
@@ -33,10 +33,7 @@ WindowManager::WindowManager(){
 }
 
 WindowManager&WindowManager::getInstance(){
-    if(nullptr==mInst){
-        mInst = new WindowManager();
-    }
-    return *mInst;
+    return mInst;
 };
 
 WindowManager::~WindowManager() {

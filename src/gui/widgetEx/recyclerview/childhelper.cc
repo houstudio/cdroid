@@ -25,7 +25,11 @@ ChildHelper::ChildHelper(ChildHelper::Callback& callback){
 }
 
 ChildHelper::~ChildHelper(){
-    delete mBucket;
+    Bucket*tmp =mBucket;
+    while(tmp){
+        tmp= mBucket->mNext;
+        delete mBucket;
+    }
 }
 
 void ChildHelper::hideViewInternal(View* child){

@@ -24,7 +24,11 @@
 #ifdef HAVE_EXECINFO_H
 #include <execinfo.h>
 #endif
-#define ASYNC_LOG 1 
+#if !defined(NDEBUG)
+#define ASYNC_LOG 0
+#else
+#define ASYNC_LOG 1
+#endif
 static LogLevel sLogLevel=LOG_DEBUG;
 #if defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER)
 #include <Windows.h>

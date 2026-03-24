@@ -49,7 +49,7 @@ InputEventConsistencyVerifier::~InputEventConsistencyVerifier(){
  * @return True if it should be enabled.
  */
 bool InputEventConsistencyVerifier::isInstrumentationEnabled() {
-#ifndef _DEBUG
+#if !defined(NDEBUG)
     return true;//IS_ENG_BUILD;
 #else
     return false;

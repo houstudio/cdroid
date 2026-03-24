@@ -35,6 +35,7 @@ private:
     std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
+    bool mInited;
     bool mRunning;
     bool mIsPlayback;
     bool mIsScreenSaveActived;
@@ -42,7 +43,7 @@ private:
     nsecs_t mLastInputEventTime;/*for screensaver*/
     std::ofstream frecord;
     std::unordered_map<int,std::shared_ptr<InputDevice>>mDevices;
-    static std::unique_ptr<InputEventSource>mInst;
+    static InputEventSource mInst;
 private:
     std::shared_ptr<InputDevice>getDevice(int fd);
     void doEventsConsume();
@@ -54,7 +55,7 @@ protected:
     void onDeviceChanged(const INPUTEVENT*es);
 public:
     static InputEventSource& getInstance();
-    ~InputEventSource();
+    ~InputEventSource()override;
     void openScreenSaver();
     void setScreenSaver(ScreenSaver func,int timeout);
     void closeScreenSaver();

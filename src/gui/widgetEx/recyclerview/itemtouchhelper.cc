@@ -15,10 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <view/gesturedetector.h>
-#include <widgetEx/recyclerview/itemtouchhelper.h>
 #include <core/build.h>
 #include <utils/mathutils.h>
+#include <view/gesturedetector.h>
+#include <widgetEx/recyclerview/itemtouchhelper.h>
 
 namespace cdroid{
 
@@ -957,9 +957,9 @@ void ItemTouchHelper::removeChildDrawingOrderCallbackIfNecessary(View* view) {
 /*************************************************************************************************/
 //public abstract static class ItemTouchHelper::Callback {
 
-static NeverDestroyed<ItemTouchUIUtilImpl>INSTANCE;
+static ItemTouchUIUtilImpl INSTANCE;
 ItemTouchUIUtil& ItemTouchHelper::Callback::getDefaultUIUtil() {
-    return *INSTANCE;
+    return INSTANCE;
 }
 
 int ItemTouchHelper::Callback::convertToRelativeDirection(int flags, int layoutDirection) {

@@ -1,17 +1,25 @@
 project(CDROID C CXX)
 cmake_minimum_required (VERSION 3.22)
+
+set(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
+if(COMMAND cmake_policy)
+   cmake_policy(SET CMP0003 NEW)
+   cmake_policy(SET CMP0012 NEW)
+   #make vcpkg happy:)
+endif(COMMAND cmake_policy)
+
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
+
+#LeakSanitizer does not work under ptrace (strace, gdb ,valgrind,...)
+#set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -g")
+#set(CMAKE_LINKER_FLAGS_DEBUG "${CMAKE_LINKER_FLAGS_DEBUG} -fsanitize=address")
+
 include(cmake/depchecks.cmake)
 include(cmake/common_functions.cmake)
 include(cmake/options.cmake)
 include(cmake/check_cdroiddeps.cmake)
-
-if(COMMAND cmake_policy)
-   cmake_policy(SET CMP0003 NEW)
-   #make vcpkg happy:)
-endif(COMMAND cmake_policy)
 
 add_compile_options(-Wno-deprecated-declarations)
 

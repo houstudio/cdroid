@@ -90,8 +90,7 @@ public:
      * @see #createAccessibilityNodeInfo(int)
      * @see AccessibilityNodeInfo
      */
-    std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string text,
-            int virtualViewId) {
+    std::vector<AccessibilityNodeInfo*> findAccessibilityNodeInfosByText(const std::string& text, int virtualViewId) {
         return std::vector<AccessibilityNodeInfo*>();
     }
 

@@ -34,7 +34,7 @@ private:
     std::vector< Window* > mWindows;
     Window* mHoveredWindow;
     std::vector< Display > mDisplays;
-    static WindowManager* mInst;
+    static WindowManager mInst;
 private:
     friend class GraphDevice;
     WindowManager();
@@ -69,7 +69,6 @@ public:
     int getWindows(std::vector<Window*>&);
     int getVisibleWindows(std::vector<Window*>&);
     Window*getActiveWindow()const;
-    void shutDown(){delete mInst;}
 protected:
     virtual void onKeyEvent(KeyEvent&key);
     virtual void onMotion(MotionEvent&event);

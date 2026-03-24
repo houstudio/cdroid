@@ -128,11 +128,9 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
 App*App::mInst = nullptr;
 
 App::~App(){
-    WindowManager::getInstance().shutDown();
     auto inst = InputMethodManager::peekInstance();
     if(inst)inst->shutDown();
     delete Looper::getMainLooper();
-    delete &GraphDevice::getInstance();
 }
 
 void App::onInit(){

@@ -77,7 +77,7 @@ public:
     bool removeViewIfHidden(View* view);
 };
 
-class ChildHelper::Bucket{
+class ChildHelper::Bucket final{
 public:
     static constexpr int BITS_PER_WORD = sizeof(long)*8;
     static constexpr long LAST_BIT= 1L<<(BITS_PER_WORD-1);

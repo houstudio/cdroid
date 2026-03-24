@@ -328,7 +328,7 @@ void MotionEvent::initialize(
     mSampleEventTimes.clear();
     mSamplePointerCoords.clear();
     for(int i=0;i<pointerCount;i++){
-        mPointerProperties.push_back(pointerProperties[i]);
+        mPointerProperties.emplace_back(pointerProperties[i]);
     }
     addSample(eventTime,pointerCoords);
     updateCursorPosition();
@@ -359,14 +359,14 @@ void MotionEvent::copyFrom(const MotionEvent& other, bool keepHistory) {
         mSamplePointerCoords = other.mSamplePointerCoords;
     } else {
         mSampleEventTimes.clear();
-        mSampleEventTimes.push_back(other.getEventTime());
+        mSampleEventTimes.emplace_back(other.getEventTime());
         mSamplePointerCoords.clear();
         const size_t pointerCount = other.getPointerCount();
         const size_t historySize = other.getHistorySize();
 
         mSamplePointerCoords.resize(pointerCount);
         for(int i=0;i<pointerCount;i++)
-            mSamplePointerCoords.push_back(other.mSamplePointerCoords.at(historySize*pointerCount+i));
+            mSamplePointerCoords.emplace_back(other.mSamplePointerCoords.at(historySize*pointerCount+i));
     }
 }
 
@@ -445,7 +445,7 @@ int MotionEvent::getPointerProperties(size_t pointerIndex,PointerProperties&pp) 
 }
 
 void MotionEvent::addSample(nsecs_t eventTime, const PointerCoords*coords) {
-    mSampleEventTimes.push_back(eventTime);
+    mSampleEventTimes.emplace_back(eventTime);
     mSamplePointerCoords.insert(mSamplePointerCoords.end(),
         &coords[0],&coords[getPointerCount()]);
 }
@@ -467,14 +467,15 @@ MotionEvent* MotionEvent::clampNoHistory(float left, float top, float right, flo
         pc[i].setAxisValue(AXIS_X,MathUtils::clamp(pc[i].getX(), left, right));
         pc[i].setAxisValue(AXIS_Y,MathUtils::clamp(pc[i].getY(), top, bottom));
     }
-    /*ev->initialize(mDeviceId,mSource,mDisplayId,
+    ev->initialize(getDeviceId(),getSource(),getDisplayId(),
             mAction,mActionButton,mFlags,
             mEdgeFlags,mMetaState,
             mButtonState,mClassification,
-            mRawXCursorPosition,mRawYCursorPosition,
+            getRawXOffset(),getRawYOffset(),
+            mXPrecision,mYPrecision,
             mXPrecision,mYPrecision,
             mDownTime,getEventTime(),
-            pointerCount,pp,pc);*/
+            pointerCount,pp,pc);
     return ev;
 }
 

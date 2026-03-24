@@ -18,7 +18,6 @@
 #ifndef __CHOREO_GRAPHER_H__
 #define __CHOREO_GRAPHER_H__
 #include <core/looper.h>
-#include <utils/neverdestroyed.h>
 #include <drawable/drawable.h>
 namespace cdroid{
 class Choreographer:protected EventHandler{
@@ -58,6 +57,7 @@ private:
         int hasCallbacksLocked(void* action, void* token)const;
     };
 private:
+    static Choreographer mInst;
     Looper *mLooper;
     bool mFrameScheduled;
     bool mCallbacksRunning;
@@ -66,7 +66,6 @@ private:
     CallbackRecord* mCallbackPool;
     CallbackQueue* mCallbackQueues[CALLBACK_LAST+1];
     static long sFrameDelay;
-    friend NeverDestroyed<Choreographer>;
     Choreographer();
     ~Choreographer();
     static float getRefreshRate();

@@ -113,9 +113,9 @@ void AnimationHandler::cleanUpList(){
     }
 }
 
-static NeverDestroyed<AnimationHandler>mInst;
+AnimationHandler AnimationHandler::mInst;
 AnimationHandler&AnimationHandler::getInstance(){
-    return *mInst;
+    return mInst;
 }
 
 AnimationHandler::AnimationFrameCallbackProvider*AnimationHandler::getProvider(){
@@ -171,7 +171,7 @@ int AnimationHandler::getCallbackSize()const{
 }
 
 int AnimationHandler::getAnimationCount(){
-    return mInst->getCallbackSize();
+    return mInst.getCallbackSize();
 }    
 
 void AnimationHandler::setFrameDelay(long delay){
