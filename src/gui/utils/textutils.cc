@@ -106,9 +106,9 @@ const std::u16string TextUtils::utf8_utf16(const std::string&utf8){
     #else
     char16_t*pout = out.get();
     for(int i = 0;i < utf8.length() ;){
-	wchar_t oc;
+        wchar_t oc;
         int n=UTF2UCS((utf8.c_str()+i),&oc);
-	*pout++= oc;
+        *pout++= oc;
         i += n;
     }
     *pout = 0;
