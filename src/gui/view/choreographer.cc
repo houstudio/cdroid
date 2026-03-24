@@ -39,7 +39,6 @@ Choreographer::Choreographer(){
 }
 
 Choreographer::~Choreographer(){
-    LOGD("~Choreographer %p",this);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
         mCallbackQueues[i]=nullptr;
@@ -52,6 +51,7 @@ Choreographer::~Choreographer(){
         next=nn;
         count++;
     }
+    LOGD("~Choreographer %p",this);
 }
 
 float Choreographer::getRefreshRate() {
@@ -137,8 +137,9 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
 
     const auto now = SystemClock::uptimeMillis();
     const auto dueTime = now + delayMillis;
-    mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
-    
+    if(mCallbackQueues[callbackType]){
+        mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
+    }
     /*if (dueTime <= now) {
         scheduleFrameLocked(now);
     } else {
@@ -154,11 +155,17 @@ int Choreographer::removeCallbacks(int callbackType,const Runnable* action, void
 }
 
 int Choreographer::removeCallbacksInternal(int callbackType,void* action, void* token){
-    return mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
+    if(mCallbackQueues[callbackType]){
+        return mCallbackQueues[callbackType]->removeCallbacksLocked(action,token);
+    }
+    return 0;
 }
 
 int Choreographer::hasCallbacks(int callbackType, const Runnable* action,void*token)const{
-    return mCallbackQueues[callbackType]->hasCallbacksLocked((void*)action,token);
+    if(mCallbackQueues[callbackType]){
+        return mCallbackQueues[callbackType]->hasCallbacksLocked((void*)action,token);
+    }
+    return 0;
 }
 
 void Choreographer::postCallback(int callbackType,const Runnable& action, void* token){
