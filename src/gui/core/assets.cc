@@ -53,7 +53,7 @@ Assets::~Assets() {
         delete it->second;
     }
     for(auto& d:mDrawables) {
-        LOGD_IF(d.second.use_count(),"%s reference=%d",d.first.c_str(),d.second.use_count());
+        LOGV_IF(d.second.use_count(),"%s reference=%d",d.first.c_str(),d.second.use_count());
     }
     mDrawables.clear();
     mIDS.clear();

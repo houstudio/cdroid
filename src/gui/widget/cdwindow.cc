@@ -827,6 +827,9 @@ void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
 
 void Window::drawAccessibilityFocusedDrawableIfNeeded(Canvas& canvas){
     Rect bounds;
+    if(!isAttachedToWindow()){
+        return;
+    }
     if (getAccessibilityFocusedRect(bounds)) {
         Drawable* drawable = getAccessibilityFocusedDrawable();
         if (drawable != nullptr) {
