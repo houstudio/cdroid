@@ -244,7 +244,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
             d = new BitmapDrawable(image);
         }
         if(d != nullptr) {
-#ifdef DEBUG
+#if !defined(NDEBUG)
             d->getConstantState()->mResource=resourceId;
 #endif
             return d;
