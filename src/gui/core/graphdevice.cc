@@ -111,8 +111,10 @@ int GraphDevice::init(){
 
 GraphDevice::~GraphDevice(){
     mQuitFlag = true;
+#if COMPOSE_ASYNC
     mCV.notify_all();
     std::this_thread::sleep_for(std::chrono::milliseconds(10));
+#endif
     delete mPrimaryContext;
     GFXDestroySurface(mPrimarySurface);
     LOGD("%p Destroied",this);

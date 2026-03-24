@@ -88,7 +88,7 @@ static void InjectREL(unsigned long time,int type,int axis,int value) {
     InputInjectEvents(&i,1,1);
 }
 static void onExit() {
-    LOGD("X11 Graph shutdown!");
+    LOGD("X11 Graph shutdown(x11Display=%p)!",x11Display);
     if(x11Display) {
         XFreePixmap(x11Display,x11Pixmap);
         XFreeGC(x11Display,mainGC);
@@ -438,12 +438,13 @@ static struct{int xkey;int key;}X11KEY2CD[]={
 static void* X11EventProc(void*p) {
     XEvent event;
     int i,keysym,key=0,down;
+    bool mRunning = true;
 #if HAVE_PRCTL
     prctl(PR_SET_NAME,"X11Thread",0,0,0);
 #elif HAVE_PTHREAD_SETNAME_NP
     pthread_setname_np(pthread_self(), "X11Thread");
 #endif
-    while(x11Display) {
+    while(mRunning) {
         const int rc = XNextEvent(x11Display, &event);
         switch(event.type) {
         case Expose:
@@ -485,7 +486,7 @@ static void* X11EventProc(void*p) {
         case ClientMessage:
             if ( (Atom) event.xclient.data.l[0] == WM_DELETE_WINDOW) {
                 LOGD("GraphX11.Terminated(WM_DELETE_WINDOW)");
-                exit(0);
+                mRunning = false;
             }
             break;
         case UnmapNotify:
@@ -496,5 +497,7 @@ static void* X11EventProc(void*p) {
             break;
         };
     }
+    LOGD("X11EventProc exit");
+    exit(0);
 }
 
