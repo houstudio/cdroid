@@ -54,7 +54,6 @@ private:
     std::list<AnimationFrameCallback*> mAnimationCallbacks;
     std::list<AnimationFrameCallback*> mCommitCallbacks;
     std::unordered_map<AnimationFrameCallback* ,long>mDelayedCallbackStartTime;
-    static AnimationHandler mInst;
     AnimationHandler();
 private:
     AnimationFrameCallbackProvider* getProvider();

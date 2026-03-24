@@ -154,14 +154,14 @@ std::ostream& operator<<(std::ostream& out, const InputEvent& event) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // --- PooledInputEventFactory ---
-static std::shared_ptr<PooledInputEventFactory>mInst = std::make_shared<PooledInputEventFactory>(20);
-
 PooledInputEventFactory& PooledInputEventFactory::getInstance(){
-    return *mInst.get();
+    static PooledInputEventFactory mInst;
+    return mInst;
 }
 
 PooledInputEventFactory::PooledInputEventFactory(size_t maxPoolSize)
     :mMaxPoolSize(maxPoolSize) {
+    LOGD("PooledInputEventFactory:%p(%d)",this,maxPoolSize);
 }
 
 PooledInputEventFactory::~PooledInputEventFactory() {

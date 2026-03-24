@@ -20,12 +20,9 @@
 
 namespace cdroid {
 
-FocusFinder*FocusFinder::mInst=nullptr;
-
 FocusFinder&FocusFinder::getInstance(){
-    if(mInst==nullptr)
-       mInst=new FocusFinder();
-    return *mInst;
+    static FocusFinder mInst;
+    return mInst;
 }
 
 FocusFinder::FocusFinder(){

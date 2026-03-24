@@ -48,6 +48,7 @@ AnimationHandler::AnimationHandler(){
     mProvider  = nullptr;
     mListDirty = false;
     mFrameCallback = std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
+    LOGD("AnimationHandler %p",this);
 }
 
 AnimationHandler::~AnimationHandler(){
@@ -113,8 +114,8 @@ void AnimationHandler::cleanUpList(){
     }
 }
 
-AnimationHandler AnimationHandler::mInst;
 AnimationHandler&AnimationHandler::getInstance(){
+    static AnimationHandler mInst;
     return mInst;
 }
 
@@ -171,7 +172,7 @@ int AnimationHandler::getCallbackSize()const{
 }
 
 int AnimationHandler::getAnimationCount(){
-    return mInst.getCallbackSize();
+    return AnimationHandler::getInstance().getCallbackSize();
 }    
 
 void AnimationHandler::setFrameDelay(long delay){

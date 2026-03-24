@@ -24,15 +24,16 @@
 using namespace Cairo;
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
-WindowManager WindowManager::mInst;
 
 WindowManager::WindowManager(){
     mActiveWindow = nullptr;
     mDisplayRotation =0;
     mHoveredWindow = nullptr;
+    LOGD("WindowManager %p",this);
 }
 
 WindowManager&WindowManager::getInstance(){
+    static WindowManager mInst;
     return mInst;
 };
 

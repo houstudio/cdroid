@@ -4,12 +4,9 @@
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/accessibility/accessibilityevent.h>
 namespace cdroid{
-AccessibilityManager*AccessibilityManager::sInstance=nullptr;
 AccessibilityManager& AccessibilityManager::getInstance(Context* context) {
-    if (sInstance == nullptr) {
-        sInstance = new AccessibilityManager(context,0/*userId*/);
-    }
-    return *sInstance;
+    static AccessibilityManager mInstance(context,0);
+    return mInstance;
 }
 
 AccessibilityManager::AccessibilityManager(Context* context/*, IAccessibilityManager service*/, int userId) {
@@ -22,6 +19,7 @@ AccessibilityManager::AccessibilityManager(Context* context/*, IAccessibilityMan
     mIsTouchExplorationEnabled = false;
     mIsHighTextContrastEnabled = false;
     mRelevantEventTypes = AccessibilityEvent::TYPES_ALL_MASK;
+    LOGD("AccessibilityManager %p",this);
     //tryConnectToServiceLocked(service);
 }
 #if 0

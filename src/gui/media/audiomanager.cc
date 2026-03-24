@@ -28,12 +28,9 @@
 
 namespace cdroid{
 
-static std::unique_ptr<AudioManager>mInst;
 AudioManager&AudioManager::getInstance(){
-    if(mInst==nullptr){
-        mInst = std::unique_ptr<AudioManager>(new AudioManager(&App::getInstance()));
-    }
-    return *mInst;
+    static AudioManager mInst(&App::getInstance());
+    return mInst;
 }
 
 AudioManager::AudioManager(Context*ctx):mContext(ctx){
