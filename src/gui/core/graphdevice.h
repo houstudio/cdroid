@@ -49,7 +49,6 @@ private:
     std::string mLogo;
     GFXHANDLE mPrimarySurface;
     class Canvas*mPrimaryContext;
-    static GraphDevice mInst;
     GraphDevice();
     void trackFPS(Canvas&);
     void doCompose();
