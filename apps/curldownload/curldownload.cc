@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <curldownload.h>
 #include <curl/curl.h>
 #include <core/looper.h>
@@ -17,14 +34,13 @@ static void ms2timespec(int ms, struct timespec *ts){
     ts->tv_nsec = (ms % 1000) * 1000000;
 }
 
-
 CurlDownloader::CurlDownloader(Looper*looper):mLooper(looper){
     curl_global_init(CURL_GLOBAL_ALL);
     mMulti = curl_multi_init();
     mActiveHandles = 0;
     curl_multi_setopt(mMulti, CURLMOPT_SOCKETFUNCTION,SocketCallback);
     curl_multi_setopt(mMulti, CURLMOPT_SOCKETDATA, this);
-    //when curl_multi_add_handle is called to add a handle,StartTimeoutCallback will be called
+    //when curl_multi_add_handle is called to add a handle,MultiTimeoutCallback will be called
     curl_multi_setopt(mMulti, CURLMOPT_TIMERFUNCTION,MultiTimeCallback);
     curl_multi_setopt(mMulti, CURLMOPT_TIMERDATA, this);
 
