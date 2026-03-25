@@ -43,9 +43,6 @@ private:
     static int EventHandler(int fd, int events, void *data);
     static size_t WriteHandler(void *ptr, size_t size, size_t nmemb, void *userdata);
     static int ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
-    void setSock(SockInfo*f, int socket, void*e, int act);
-    void addSock(int socket, void *easy, int action);
-    void removeSock(SockInfo *fdp);
     void checkTimeout();
     void cleanUp(int still_running);
     void cleanUpConnection(ConnectionData* priv,void*easy,
