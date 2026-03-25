@@ -38,6 +38,7 @@ private:
     static int SocketCallback(void *easy,int socket, int action, void *userp, void *socketp);
     static int TimerCallback(int fd, int events, void* data);
     static int MultiTimeCallback(void*multi, long timeout_ms, void * data);
+    static int DebugCallback(void *handle, int type, char *data, size_t size, void *userp);
     static int EventHandler(int fd, int events, void *data);
     static size_t WriteHandler(char *ptr, size_t size, size_t nmemb, void *userdata);
     static int ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);

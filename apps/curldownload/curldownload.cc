@@ -62,7 +62,10 @@ CURL * CurlDownloader::createConnection(ConnectionData* connection) {
         err = curl_easy_setopt(curl, CURLOPT_WRITEDATA, curl);
         err = curl_easy_setopt(curl, CURLOPT_MAX_RECV_SPEED_LARGE,10240*1024);
         err = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
-        err = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000L);
+        err = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 10000L);
+        err = curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);  // 启用详细日志
+        err = curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, DebugCallback);  // 设置调试回调
+        err = curl_easy_setopt(curl, CURLOPT_DEBUGDATA, curl);
         err = curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION,ProgressCallback);
         err = curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,curl);
 
@@ -113,26 +116,33 @@ void CurlDownloader::cleanUpConnection(ConnectionData* priv, CURL *easy,
 
     curl_easy_cleanup(easy);
     mActiveHandles--;
-	LOGV("mEasys.size=%d/%d priv=%p",mEasys.size(),mActiveHandles,priv);
+	LOGV("mEasys.size=%d/%d priv=%p recv %d bytes",mEasys.size(),mActiveHandles,priv,priv->getNbBytes());
     delete priv;
 }
 
 void CurlDownloader::cleanUp(int still_running) {
     int msgs_in_queue , httpStatus;
-    struct CURLMsg * curlm_msg;
-    CURL *easy;
-    CURLcode res;
+    struct CURLMsg * curlMsg;
     double total_time;
 
-    while ((curlm_msg = curl_multi_info_read(mMulti, &msgs_in_queue)) != NULL)  {
-        ConnectionData* priv;
-        easy = curlm_msg->easy_handle;
-        res = curlm_msg->data.result;
-        curl_easy_getinfo(easy, CURLINFO_PRIVATE, &priv);
-        curl_easy_getinfo(easy, CURLINFO_TOTAL_TIME, &total_time);
-        curl_easy_getinfo(easy, CURLINFO_RESPONSE_CODE, &httpStatus);
-        if (curlm_msg->msg == CURLMSG_DONE) {
-            cleanUpConnection(priv, easy, total_time, res, httpStatus, 0);
+    while ((curlMsg = curl_multi_info_read(mMulti, &msgs_in_queue)) != NULL)  {
+        if (curlMsg->msg == CURLMSG_DONE) {
+            ConnectionData* priv;
+            CURL* curl = curlMsg->easy_handle;
+            CURLcode result = curlMsg->data.result;
+            curl_easy_getinfo(curl, CURLINFO_PRIVATE, &priv);
+            curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &total_time);
+            curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &httpStatus);
+            if(result == CURLE_OPERATION_TIMEDOUT){
+                LOGD("%p [%s] timeout",priv,priv->getUrl().c_str());
+                cleanUpConnection(priv, curl, total_time, result, httpStatus, 1);
+            }else if(result != CURLE_OK){
+                LOGD("%p [%s] error:%s",priv,priv->getUrl().c_str(),curl_easy_strerror(result));
+                cleanUpConnection(priv, curl, total_time, result, httpStatus, 0);
+            }else{
+                LOGD("%p [%s] completed successfully[%d，%d]",priv,priv->getUrl().c_str(),result,httpStatus);
+                cleanUpConnection(priv, curl, total_time, result, httpStatus, 0);
+            }
         }
     }
 
@@ -189,6 +199,40 @@ size_t CurlDownloader::WriteHandler(char *ptr, size_t size, size_t nmemb, void *
 
 int CurlDownloader::ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow){
     LOGV("clientp=%p download=%.f/%.f",clientp,dlnow,dltotal,ulnow,ultotal);
+    return 0;
+}
+
+int CurlDownloader::DebugCallback(void *handle, int type, char *data, size_t size, void *userp) {
+    const char *text;
+    (void)handle; /* prevent compiler warning */
+    (void)userp;
+#if !defined(NDEBUG)
+    switch (type) {
+    case CURLINFO_TEXT:
+        LOGV("CURL: %.*s", (int)size, data);
+        break;
+    case CURLINFO_HEADER_OUT:
+        LOGV("CURL > %.*s", (int)size, data);
+        break;
+    case CURLINFO_DATA_OUT:
+        LOGD("CURL > %d bytes data", (int)size);
+        break;
+    case CURLINFO_SSL_DATA_OUT:
+        LOGD("CURL > %d bytes SSL data", (int)size);
+        break;
+    case CURLINFO_HEADER_IN:
+        LOGV("CURL < %.*s", (int)size, data);
+        break;
+    case CURLINFO_DATA_IN:
+        LOGV("CURL < %d bytes data", (int)size);
+        break;
+    case CURLINFO_SSL_DATA_IN:
+        LOGD("CURL < %d bytes SSL data", (int)size);
+        break;
+    default: /* in case a new one is introduced to shock us */
+        return 0;
+    }
+#endif
     return 0;
 }
 
