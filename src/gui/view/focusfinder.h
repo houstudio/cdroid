@@ -41,7 +41,6 @@ protected:
     Rect mOtherRect;
     Rect mBestCandidateRect;
     std::vector<View*>mTempList;
-    static FocusFinder*mInst;
 protected: 
     bool isBetterCandidate(int direction,const Rect& source,const Rect& rect1,const Rect& rect2);
     bool beamBeats(int direction,const Rect& source,const Rect&rect1,const Rect& rect2);

@@ -38,9 +38,8 @@ using namespace Cairo;
 
 namespace cdroid{
 
-GraphDevice GraphDevice::mInst;
-
-GraphDevice&GraphDevice::GraphDevice::getInstance(){
+GraphDevice&GraphDevice::getInstance(){
+    static GraphDevice mInst;
     return mInst;
 }
 
@@ -48,6 +47,7 @@ GraphDevice::GraphDevice(){
     mFormat  = GPF_ARGB;
     mRotation= 0;
     mShowFPS = false;
+    LOGD("GraphDevice %p",this);
 }
 
 GraphDevice& GraphDevice::setFormat(int format){

@@ -16,29 +16,34 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <windowmanager.h>
-#include <cdlog.h>
-#include <graphdevice.h>
-#include <uieventsource.h>
+#include <porting/cdlog.h>
+#include <core/app.h>
+#include <core/graphdevice.h>
+#include <core/windowmanager.h>
+#include <core/uieventsource.h>
 
 using namespace Cairo;
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
-WindowManager WindowManager::mInst;
 
 WindowManager::WindowManager(){
     mActiveWindow = nullptr;
     mDisplayRotation =0;
     mHoveredWindow = nullptr;
+    LOGD("WindowManager %p",this);
 }
 
 WindowManager&WindowManager::getInstance(){
+    static WindowManager mInst;
     return mInst;
 };
 
 WindowManager::~WindowManager() {
+    App::getInstance().exit(0);
     for(Window*w:mWindows){
         View::AttachInfo*info = w->mAttachInfo;
+        Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
+        w->mUIEventHandler->cleanUp();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;

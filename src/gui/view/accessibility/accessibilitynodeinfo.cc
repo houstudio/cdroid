@@ -1650,7 +1650,7 @@ const AccessibilityNodeInfo::AccessibilityAction  AccessibilityNodeInfo::Accessi
 AccessibilityNodeInfo::AccessibilityAction::AccessibilityAction(int actionId, const std::string& label) {
     if ((actionId & ACTION_TYPE_MASK) == 0 && BitSet32::count(actionId) != 1) {
         //throw std::runtime_error("Invalid standard action id");
-        LOGD("Invalid standard action id:%d",actionId);
+        LOGV("Invalid standard action id:%d",actionId);
     }
 
     mActionId = actionId;

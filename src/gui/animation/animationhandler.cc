@@ -43,15 +43,24 @@ void AnimationHandler::MyFrameCallbackProvider::setFrameDelay(long delay) {
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+static bool mAnimationHandlerTerminated=false;
 AnimationHandler::AnimationHandler(){
     mProvider  = nullptr;
     mListDirty = false;
-    mFrameCallback = std::bind(&AnimationHandler::doFrame,this,std::placeholders::_1);
+    mFrameCallback = [this](int64_t frameTimeNanos){
+        doFrame(frameTimeNanos);
+    };
+    LOGD("AnimationHandler %p",this);
 }
 
 AnimationHandler::~AnimationHandler(){
+    cleanUpList();
+    mCommitCallbacks.clear();
     delete mProvider;
+    mAnimationHandlerTerminated=true;
+    mProvider = nullptr;
+    mFrameCallback = nullptr;
+    LOGD("~AnimationHandler %p",this);
 }
 
 
@@ -113,8 +122,8 @@ void AnimationHandler::cleanUpList(){
     }
 }
 
-AnimationHandler AnimationHandler::mInst;
 AnimationHandler&AnimationHandler::getInstance(){
+    static AnimationHandler mInst;
     return mInst;
 }
 
@@ -151,15 +160,17 @@ void AnimationHandler::addOneShotCommitCallback(AnimationFrameCallback* callback
 }
 
 void AnimationHandler::removeCallback(AnimationFrameCallback* callback){
-    auto it1 = std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
-    auto it2 = mDelayedCallbackStartTime.find((AnimationFrameCallback*)callback);
-    if(it1 != mCommitCallbacks.end())mCommitCallbacks.erase(it1);
-    if(it2 != mDelayedCallbackStartTime.end())mDelayedCallbackStartTime.erase(it2);
-    
-    auto it3 = std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
-    if (it3 != mAnimationCallbacks.end()) {
-        (*it3) = nullptr;
-        mListDirty = true;
+    if(!mAnimationHandlerTerminated){
+        auto it1 = std::find(mCommitCallbacks.begin(),mCommitCallbacks.end(),callback);
+        auto it2 = mDelayedCallbackStartTime.find((AnimationFrameCallback*)callback);
+        if(it1 != mCommitCallbacks.end())mCommitCallbacks.erase(it1);
+        if(it2 != mDelayedCallbackStartTime.end())mDelayedCallbackStartTime.erase(it2);
+
+        auto it3 = std::find(mAnimationCallbacks.begin(),mAnimationCallbacks.end(),callback);
+        if (it3 != mAnimationCallbacks.end()) {
+            (*it3) = nullptr;
+            mListDirty = true;
+        }
     }
 }
 
@@ -171,7 +182,7 @@ int AnimationHandler::getCallbackSize()const{
 }
 
 int AnimationHandler::getAnimationCount(){
-    return mInst.getCallbackSize();
+    return AnimationHandler::getInstance().getCallbackSize();
 }    
 
 void AnimationHandler::setFrameDelay(long delay){

@@ -34,7 +34,6 @@ private:
     std::vector< Window* > mWindows;
     Window* mHoveredWindow;
     std::vector< Display > mDisplays;
-    static WindowManager mInst;
 private:
     friend class GraphDevice;
     WindowManager();

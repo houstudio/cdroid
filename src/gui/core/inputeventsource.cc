@@ -32,6 +32,7 @@
 
 namespace cdroid{
 InputEventSource::InputEventSource(){
+    LOGD("InputEventSource %p",this);
     mScreenSaveTimeOut = -1;
     mRunning = false;
     mInited = false;
@@ -72,8 +73,7 @@ void InputEventSource::doEventsConsume(){
 
 InputEventSource::~InputEventSource(){
     mRunning = false;
-    //InputEventSource::mInst is static&global,do not remove.
-    //Looper::getMainLooper()->removeEventHandler(this);
+    Looper::getMainLooper()->removeEventHandler(this);
     if(frecord.is_open())
        frecord.close();
     LOGD("%p Destroied",this);
@@ -99,9 +99,8 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
     }
 }
 
-InputEventSource InputEventSource::mInst;
-
 InputEventSource& InputEventSource::getInstance(){
+    static InputEventSource mInst;
     return mInst;
 }
 

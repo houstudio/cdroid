@@ -57,7 +57,6 @@ private:
         int hasCallbacksLocked(void* action, void* token)const;
     };
 private:
-    static Choreographer mInst;
     Looper *mLooper;
     bool mFrameScheduled;
     bool mCallbacksRunning;

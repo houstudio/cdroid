@@ -129,7 +129,7 @@ RecyclerView::~RecyclerView(){
         mVelocityTracker->recycle();
     delete mChildHelper;
     delete mState;
-    delete mLayout;
+    //delete mLayout;
     delete mAdapterHelper;
     delete mViewInfoStore;
     delete mViewFlinger;

@@ -957,8 +957,8 @@ void ItemTouchHelper::removeChildDrawingOrderCallbackIfNecessary(View* view) {
 /*************************************************************************************************/
 //public abstract static class ItemTouchHelper::Callback {
 
-static ItemTouchUIUtilImpl INSTANCE;
 ItemTouchUIUtil& ItemTouchHelper::Callback::getDefaultUIUtil() {
+    static ItemTouchUIUtilImpl INSTANCE;
     return INSTANCE;
 }
 

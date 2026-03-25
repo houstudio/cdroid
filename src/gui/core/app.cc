@@ -123,6 +123,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(!monkey.empty()){
         inputsource->playback(monkey);
     }
+    AnimationHandler::getInstance();
 }
 
 App*App::mInst = nullptr;
@@ -131,6 +132,7 @@ App::~App(){
     auto inst = InputMethodManager::peekInstance();
     if(inst)inst->shutDown();
     delete Looper::getMainLooper();
+    LOGD("~App %p",this);
 }
 
 void App::onInit(){

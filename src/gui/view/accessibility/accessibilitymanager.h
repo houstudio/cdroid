@@ -37,8 +37,6 @@ public:
 private:
     static constexpr bool Debug = false;
 private:
-    static AccessibilityManager* sInstance;
-
     //private IAccessibilityManager mService;
     int mUserId;
     //Handler mHandler;

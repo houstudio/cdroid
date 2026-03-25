@@ -39,6 +39,7 @@ Choreographer::Choreographer(){
 }
 
 Choreographer::~Choreographer(){
+    mLooper->removeEventHandler(this);
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
         mCallbackQueues[i]=nullptr;
@@ -58,9 +59,8 @@ float Choreographer::getRefreshRate() {
     return 1000.f/sFrameDelay;
 }
 
-Choreographer Choreographer::mInst;
-
 Choreographer& Choreographer::getInstance(){
+    static Choreographer mInst;
     if(mInst.mLooper==nullptr){
         mInst.mLooper = Looper::getMainLooper();
         mInst.mLooper->addEventHandler(&mInst);
