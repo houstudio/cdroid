@@ -36,7 +36,7 @@ int main(int argc,const char*argv[]){
     cxxopts::Options options("main","application");
     options.add_options()
         ("u,url","url to download",cxxopts::value<std::string>(url))
-        ("loop","download test loops",cxxopts::value<int>()) ;
+        ("loop","download test loops",cxxopts::value<int>()->default_value("1")) ;
     auto result = options.parse(argc,argv);
     Window*w = new Window(0,0,-1,-1);
     MyAdapter*adapter=new MyAdapter();
@@ -46,12 +46,13 @@ int main(int argc,const char*argv[]){
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
     for(int i=0;i<56;i++) adapter->add("");
+
     CurlDownloader dld(Looper::getForThread());
     if(!url.empty()){
         LOGI_IF(!url.empty(),"downloading %s...",url.c_str());
         if(!url.empty()){
-           CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(url);
-           dld.addConnection(cnn);
+            CurlDownloader::ConnectionData* cnn=new CurlDownloader::ConnectionData(url);
+            dld.addConnection(cnn);
         }
     }
     const int loops = result["loop"].as<int>();
@@ -61,6 +62,7 @@ int main(int argc,const char*argv[]){
           dld.addConnection(cnn);
        }
     }
+    dld.cleanConnections();
     return app.exec();
 }
 
