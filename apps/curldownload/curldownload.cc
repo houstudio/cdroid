@@ -62,6 +62,7 @@ CURL * CurlDownloader::createConnection(ConnectionData* connection) {
         err = curl_easy_setopt(curl, CURLOPT_WRITEDATA, curl);
         err = curl_easy_setopt(curl, CURLOPT_MAX_RECV_SPEED_LARGE,10240*1024);
         err = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0);
+        err = curl_easy_setopt(curl, CURLOPT_TIMEOUT_MS, 1000L);
         err = curl_easy_setopt(curl, CURLOPT_PROGRESSFUNCTION,ProgressCallback);
         err = curl_easy_setopt(curl, CURLOPT_PROGRESSDATA,curl);
 
@@ -86,35 +87,37 @@ int CurlDownloader::TimerCallback(int fd, int events, void* data){
     CurlDownloader*thiz =(CurlDownloader*)data;
     CURLMcode errm = curl_multi_socket_action(thiz->mMulti,CURL_SOCKET_TIMEOUT,0,&running);
     LOGV("errm=%d runnings=%d",errm,running);
-    thiz->cleanup(running);
+    thiz->cleanUp(running);
     return running;
 }
 
-void CurlDownloader::check_for_timeout() {
+void CurlDownloader::checkTimeout() {
     for(int i= mEasys.size()-1 ; i >= 0; i --){
         ConnectionData* priv;
         CURL*easy = mEasys[i];
         curl_easy_getinfo(easy, CURLINFO_PRIVATE, &priv);
         if (priv->hasElapsed(5000) && ! priv->isStoppedByTimeout()) {
-           cleanup_one_connection(priv, easy, 0.0, CURLE_OK, 0, 1);
+           cleanUpConnection(priv, easy, 0.0, CURLE_OK, 0, 1);
         }
     }
-    cleanup(-1);
+    cleanUp(-1);
 }
 
-void CurlDownloader::cleanup_one_connection(ConnectionData* priv, CURL *easy,
+void CurlDownloader::cleanUpConnection(ConnectionData* priv, CURL *easy,
         double total_time,int res, int httpStatus, int stoppedByTimeout) {
     priv->onConnectionComplete(total_time, res, httpStatus, stoppedByTimeout);
 
     auto it = std::find(mEasys.begin(),mEasys.end(),easy);
     if(it!=mEasys.end())mEasys.erase(it);
     curl_multi_remove_handle(mMulti, easy);
+
     curl_easy_cleanup(easy);
     mActiveHandles--;
-	LOGV("mEasys.size=%d/%d",mEasys.size(),mActiveHandles);
+	LOGV("mEasys.size=%d/%d priv=%p",mEasys.size(),mActiveHandles,priv);
+    delete priv;
 }
 
-void CurlDownloader::cleanup(int still_running) {
+void CurlDownloader::cleanUp(int still_running) {
     int msgs_in_queue , httpStatus;
     struct CURLMsg * curlm_msg;
     CURL *easy;
@@ -129,7 +132,7 @@ void CurlDownloader::cleanup(int still_running) {
         curl_easy_getinfo(easy, CURLINFO_TOTAL_TIME, &total_time);
         curl_easy_getinfo(easy, CURLINFO_RESPONSE_CODE, &httpStatus);
         if (curlm_msg->msg == CURLMSG_DONE) {
-            cleanup_one_connection(priv, easy, total_time, res, httpStatus, 0);
+            cleanUpConnection(priv, easy, total_time, res, httpStatus, 0);
         }
     }
 
@@ -137,7 +140,7 @@ void CurlDownloader::cleanup(int still_running) {
 
     if (mActiveHandles== 0) {
         LOGD("Nothing is left, done!");
-	Looper::getDefault()->removeFd(mTimerFD);
+        Looper::getDefault()->removeFd(mTimerFD);
     }
 }
 
@@ -159,11 +162,11 @@ int CurlDownloader::SocketCallback(CURL *easy, int socket, int action, void *use
     SockInfo *fdp = (SockInfo *) socketp;
     LOGV("socket_callback_from_curl %d action = %s",socket, whatstr[action]);
     if (action == CURL_POLL_REMOVE) {
-        thiz->remove_sock(fdp);
+        thiz->removeSock(fdp);
     } else if (!fdp) {
-        thiz->addsock(socket, easy, action);
+        thiz->addSock(socket, easy, action);
     } else {
-        thiz->setsock(fdp, socket, easy, action);
+        thiz->setSock(fdp, socket, easy, action);
     }
     return 0;
 }
@@ -198,11 +201,11 @@ int CurlDownloader::EventHandler(int fd, int events, void *arg){
         LOGE_IF(errm,"curl_multi_socket_action", errm);
         LOGV("calling curl_multi_socket_action for fd %d events=%d runnings=%d errm=%d", fd,events,running_handles,errm);
     } while (errm == CURLM_CALL_MULTI_PERFORM && max_retry-- > 0);
-    thiz->cleanup(running_handles);
+    thiz->cleanUp(running_handles);
     return errm==CURLM_OK;//return 0 will caused fd removed by Looper
 }
 
-void CurlDownloader::setsock(SockInfo*f,int socket, CURL*e, int act){
+void CurlDownloader::setSock(SockInfo*f,int socket, CURL*e, int act){
     int kind =(act & CURL_POLL_IN)?Looper::EVENT_INPUT:0;
     kind |= (act & CURL_POLL_OUT)?Looper::EVENT_OUTPUT:0;// | EV_PERSIST;
     LOGV("setsock s = %d act = %d", socket, act);
@@ -216,14 +219,14 @@ void CurlDownloader::setsock(SockInfo*f,int socket, CURL*e, int act){
     f->evset = 1;
 }
 
-void CurlDownloader::addsock(int socket, CURL *easy, int action) {
+void CurlDownloader::addSock(int socket, CURL *easy, int action) {
     SockInfo *fdp = (SockInfo *) calloc(1, sizeof(SockInfo));
     LOGE_IF(fdp==nullptr,"calloc (SockInfo)", fdp);
-    setsock(fdp, socket, easy, action);
+    setSock(fdp, socket, easy, action);
     curl_multi_assign(mMulti, socket, fdp);
 }
 
-void CurlDownloader::remove_sock(SockInfo *fdp) {
+void CurlDownloader::removeSock(SockInfo *fdp) {
     if (fdp->evset) {
         //event_del(&fdp->ev);
         mLooper->removeFd(fdp->sockfd);
@@ -243,10 +246,12 @@ CurlDownloader::ConnectionData::ConnectionData(const std::string&input) {
     data = nullptr;
     stopppedByTimeout = 0;
     startTime = SystemClock::uptimeMillis();
+    LOGD("%p [%s]",this,url.c_str());
 }
 
 CurlDownloader::ConnectionData::~ConnectionData() {
     if(data)free(data);
+    LOGD("%p [%s]",this,url.c_str());
 }
 
 const std::string CurlDownloader::ConnectionData::getUrl()const{

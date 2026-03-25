@@ -41,12 +41,12 @@ private:
     static int EventHandler(int fd, int events, void *data);
     static size_t WriteHandler(char *ptr, size_t size, size_t nmemb, void *userdata);
     static int ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
-    void setsock(SockInfo*f, int socket, void*e, int act);
-    void addsock(int socket, void *easy, int action);
-    void remove_sock(SockInfo *fdp);
-    void check_for_timeout();
-    void cleanup(int still_running);
-    void cleanup_one_connection(ConnectionData* priv,void*easy,
+    void setSock(SockInfo*f, int socket, void*e, int act);
+    void addSock(int socket, void *easy, int action);
+    void removeSock(SockInfo *fdp);
+    void checkTimeout();
+    void cleanUp(int still_running);
+    void cleanUpConnection(ConnectionData* priv,void*easy,
         double total_time,int res, int httpStatus, int stoppedByTimeout);
     void*createConnection(ConnectionData* connection);
 public:

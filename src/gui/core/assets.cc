@@ -60,7 +60,7 @@ Assets::~Assets() {
     mResources.clear();
     mStrings.clear();
     mStyles.clear();
-    std::cout<<" Assets destroied!"<<std::endl;
+    LOGD("~Assets %p!",this);
 }
 
 const DisplayMetrics& Assets::getDisplayMetrics()const{
