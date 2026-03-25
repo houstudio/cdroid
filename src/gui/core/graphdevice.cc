@@ -34,13 +34,18 @@
 #endif
 #include <malloc.h>
 #include <fstream>
+#include <mutex>
 using namespace Cairo;
 
 namespace cdroid{
 
 GraphDevice&GraphDevice::getInstance(){
-    static GraphDevice mInst;
-    return mInst;
+    static GraphDevice* mInstance = nullptr;
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        mInstance = new GraphDevice();
+    });
+    return *mInstance;
 }
 
 GraphDevice::GraphDevice(){

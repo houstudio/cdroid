@@ -19,6 +19,7 @@
 #define __APPLICATION_H__
 #include <string>
 #include <map>
+#include <atomic>
 #include <istream>
 #include <cairomm/surface.h>
 #include <core/looper.h>
@@ -36,7 +37,7 @@ private:
     int mExitCode;
 protected:
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
-    static App*mInst;
+    static std::atomic<App*>mInst;
     void onInit();
 public:
      App(int argc=0,const char*argv[]=NULL);

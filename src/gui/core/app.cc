@@ -126,12 +126,16 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     AnimationHandler::getInstance();
 }
 
-App*App::mInst = nullptr;
+std::atomic<App*>App::mInst;
 
 App::~App(){
+    LOGD("~App %p",this);
     auto inst = InputMethodManager::peekInstance();
     if(inst)inst->shutDown();
+    delete &WindowManager::getInstance();
     delete Looper::getMainLooper();
+    delete &GraphDevice::getInstance();
+    delete &InputEventSource::getInstance();
     LOGD("~App %p",this);
 }
 
