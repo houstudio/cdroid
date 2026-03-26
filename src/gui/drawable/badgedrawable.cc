@@ -532,13 +532,14 @@ void BadgeDrawable::calculateCenterAndBounds(Context* context,const Rect& anchor
 
 void BadgeDrawable::drawText(Canvas& canvas) {
     Rect textBounds;
-    std::string badgeText = getBadgeText();
-    //textDrawableHelper.getTextPaint().getTextBounds(badgeText, 0, badgeText.length(), textBounds);
-    //canvas.drawText( badgeText, mBadgeCenterX, mBadgeCenterY + textBounds.height / 2, textDrawableHelper.getTextPaint());
-    const int textBoundHeight =mTextLayout->getHeight()/2;
-    canvas.move_to(mBadgeCenterX,mBadgeCenterY + textBoundHeight);
+    const std::string badgeText = getBadgeText();
+    const int textBoundHeight= mTextLayout->getHeight()/2;
+    const int textBoundWidth = mTextLayout->getLineWidth(0);
+    canvas.move_to(mBadgeCenterX-textBoundWidth/2,/*mBadgeCenterY + textBoundHeight+*/mTextLayout->getLineBaseline(0));
     canvas.set_color(mSavedState->mBadgeTextColor);
-    canvas.show_text(badgeText);
+    canvas.set_font_size(mTextLayout->getFontSize());
+    //canvas.show_text(badgeText);
+    canvas.draw_text(mBadgeBounds,badgeText,Gravity::CENTER);
 }
 
 std::string BadgeDrawable::getBadgeText() {
