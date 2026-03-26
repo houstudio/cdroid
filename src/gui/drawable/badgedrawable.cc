@@ -10,7 +10,7 @@ BadgeDrawable::SavedState::SavedState(Context* context) {
     // If the badge text color attribute was not explicitly set, use the text color specified in
     // the TextAppearance.
     //TextAppearance textAppearance = new TextAppearance(context, R.style.TextAppearance_MaterialComponents_Badge);
-    mBadgeTextColor = 0xFFFFFFFF;//textAppearance.textColor.getDefaultColor();
+    mBadgeTextColor = ~0;//textAppearance.textColor.getDefaultColor();
     mBackgroundColor= 0xFFFF0000;
     //contentDescriptionNumberless =context->getString(R.string.mtrl_badge_numberless_content_description);
     //contentDescriptionQuantityStrings = R.plurals.mtrl_badge_content_description;
@@ -183,7 +183,7 @@ BadgeDrawable::BadgeDrawable(Context* context) {
     //textDrawableHelper = new TextDrawableHelper(/* delegate= */ this);
     //textDrawableHelper.getTextPaint().setTextAlign(Paint.Align.CENTER);
     mSavedState = new SavedState(context);
-    mShapeDrawable->setColor(0xFFFF0000);
+    setBackgroundColor(mSavedState->mBackgroundColor);
     setTextAppearanceResource("@cdroid:style/TextAppearance.MaterialComponents.Badge");
 }
 

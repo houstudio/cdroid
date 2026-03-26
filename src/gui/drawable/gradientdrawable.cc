@@ -289,7 +289,6 @@ std::shared_ptr<Drawable::ConstantState>GradientDrawable::getConstantState() {
 
 void GradientDrawable::updateLocalState() {
     mPathIsDirty = true;
-    mGradientIsDirty = true;
     auto state = mGradientState;
     if(state->mSolidColors) {
         const std::vector<int> currentState = getState();
@@ -312,6 +311,7 @@ void GradientDrawable::updateLocalState() {
             //setStroke(state->mStrokeWidth,state->mStrokeColor,state->mStrokeDashWidth,state->mStrokeDashGap);
         }
     }
+    mGradientIsDirty = true;
     state->computeOpacity();
     mTintFilter = updateTintFilter(mTintFilter, state->mTint, state->mTintMode);
 }
