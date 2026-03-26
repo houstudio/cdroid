@@ -138,8 +138,6 @@ private:
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
     int  addFd(int fd, int ident, int events,const LooperCallback* callback1,Looper_callbackFunc callback2, void* data);
-    static void initTLSKey();
-    static void threadDestructor(void*);
 protected:
 public:
     enum {

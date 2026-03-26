@@ -37,7 +37,6 @@ private:
 private:
     friend class GraphDevice;
     WindowManager();
-    virtual ~WindowManager();
 public:
     DECLARE_UIEVENT(bool,WNDENUMPROC,Window*);
     class LayoutParams:public ViewGroup::LayoutParams{
@@ -51,6 +50,7 @@ public:
         int privateFlags;
     };
 public:
+    virtual ~WindowManager();
     static WindowManager& getInstance();
     void setDisplayRotation(int display,int rotation);
     int  getDisplayRotation(int display=0)const;

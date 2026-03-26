@@ -16,13 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <porting/cdlog.h>
 #include <core/app.h>
+#include <porting/cdlog.h>
 #include <core/graphdevice.h>
 #include <core/windowmanager.h>
 #include <core/uieventsource.h>
+#include <mutex>
 
-using namespace Cairo;
 namespace cdroid {
 // Initialize the instance of the singleton to nullptr
 
@@ -34,8 +34,12 @@ WindowManager::WindowManager(){
 }
 
 WindowManager&WindowManager::getInstance(){
-    static WindowManager mInst;
-    return mInst;
+    static WindowManager* mInstance = nullptr;
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        mInstance = new WindowManager();
+    });
+    return *mInstance;
 };
 
 WindowManager::~WindowManager() {
@@ -225,14 +229,14 @@ void WindowManager::moveWindow(Window*w,int x,int y){
         //GraphDevice::getInstance().invalidate(rcw2);
         for(auto it = mWindows.begin();it<itw;it++){
            Rect rc = w->getBound();
-           RefPtr<Cairo::Region>newrgn = Cairo::Region::create((RectangleInt&)rc);
+           Cairo::RefPtr<Cairo::Region>newrgn = Cairo::Region::create((Cairo::RectangleInt&)rc);
            for( auto it2 = it+1 ; it2 < itw ; it2++){
                Rect r = (*it)->getBound();
-               newrgn->subtract((const RectangleInt&)r);
+               newrgn->subtract((const Cairo::RectangleInt&)r);
            }
            newrgn->translate(-rcw.left,-rcw.top);
-           (*it)->mPendingRgn->do_union((RectangleInt&)rcw);
-           (*it)->mPendingRgn->subtract((RectangleInt&)rcw2);
+           (*it)->mPendingRgn->do_union((Cairo::RectangleInt&)rcw);
+           (*it)->mPendingRgn->subtract((Cairo::RectangleInt&)rcw2);
         }
         GraphDevice::getInstance().flip();
     }
@@ -423,7 +427,7 @@ void WindowManager::clip(Window*win){
         rc.intersect((*wind)->getBound());
         if(rc.empty())continue;
         rc.offset(-win->getX(),-win->getY());
-        win->mInvalidRgn->subtract((const RectangleInt&)rc); 
+        win->mInvalidRgn->subtract((const Cairo::RectangleInt&)rc); 
     }
 }
 

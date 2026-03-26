@@ -23,6 +23,7 @@
 #include <gui_features.h>
 #include <thread>
 #include <chrono>
+#include <mutex>
 #include <pthread.h>
 #if HAVE_SYS_PRCTL_H
 #include <sys/prctl.h>
@@ -100,8 +101,12 @@ void InputEventSource::onDeviceChanged(const INPUTEVENT*es){
 }
 
 InputEventSource& InputEventSource::getInstance(){
-    static InputEventSource mInst;
-    return mInst;
+    static InputEventSource* mInstance = nullptr;
+    static std::once_flag flag;
+    std::call_once(flag, []() {
+        mInstance = new InputEventSource();
+    });
+    return *mInstance;
 }
 
 void InputEventSource::setScreenSaver(ScreenSaver func,int timeout){

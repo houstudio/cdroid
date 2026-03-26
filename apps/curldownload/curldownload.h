@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __CURL_DOWNLOADER_H__
 #define __CURL_DOWNLOADER_H__
 #include <string>
@@ -9,25 +26,26 @@ class Looper;
 class CurlDownloader{
 public:
     class ConnectionData {
-    private:
+    protected:
+        friend CurlDownloader;
 	    std::string url;
-	    char* data;
 	    double totalTime;
-	    int nbBytes;
-	    int res;
+	    int curlResult;
 	    int httpStatus;
 	    time_t startTime;
+        size_t mReceivedBytes;
 	    int stopppedByTimeout;
     public:
 	    ConnectionData(const std::string&url);
 	    virtual ~ConnectionData();
 	    const std::string getUrl()const;
 	    int getHttpStatus() const;
-	    int getNbBytes()const;
+	    int getRecvBytes()const;
 	    int hasElapsed(long timeout);
 	    int isStoppedByTimeout() const;
-	    void onDataRead(char* input, size_t size);
-	    void onConnectionComplete(double time,int r, int status, int stoppedByTimeout);
+	    virtual void onDataReady(void* input, size_t size);
+        virtual void onDownloadProgress(double done,double total);
+	    virtual void onConnectionComplete(double time,int r, int status, int stoppedByTimeout);
     };
 private:
     int mTimerFD;
@@ -38,21 +56,20 @@ private:
     static int SocketCallback(void *easy,int socket, int action, void *userp, void *socketp);
     static int TimerCallback(int fd, int events, void* data);
     static int MultiTimeCallback(void*multi, long timeout_ms, void * data);
+    static int DebugCallback(void *handle, int type, char *data, size_t size, void *userp);
     static int EventHandler(int fd, int events, void *data);
-    static size_t WriteHandler(char *ptr, size_t size, size_t nmemb, void *userdata);
+    static size_t WriteHandler(void *ptr, size_t size, size_t nmemb, void *userdata);
     static int ProgressCallback(void* clientp, double dltotal, double dlnow, double ultotal, double ulnow);
-    void setsock(SockInfo*f, int socket, void*e, int act);
-    void addsock(int socket, void *easy, int action);
-    void remove_sock(SockInfo *fdp);
-    void check_for_timeout();
-    void cleanup(int still_running);
-    void cleanup_one_connection(ConnectionData* priv,void*easy,
+    void checkTimeout();
+    void cleanUp(int still_running);
+    void cleanUpConnection(ConnectionData* priv,void*easy,
         double total_time,int res, int httpStatus, int stoppedByTimeout);
     void*createConnection(ConnectionData* connection);
 public:
     CurlDownloader(cdroid::Looper*looper=nullptr);
     ~CurlDownloader();
     int addConnection(ConnectionData* connections); 
+    void cleanConnections();
 };
 }/*endof namespace*/
 #endif //__CURL_DOWNLOADER_H__

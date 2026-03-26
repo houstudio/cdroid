@@ -41,8 +41,9 @@
 
 #define DEBUG_POLL_AND_WAKE 0
 #define DEBUG_CALLBACKS 0
-
+#define USE_THREADLOCAL 1
 /*REF:http://androidxref.com/9.0.0_r3/xref/system/core/libutils/Looper.cpp*/
+
 namespace cdroid{
 
 // Maximum number of file descriptors for which to retrieve poll events each iteration.
@@ -93,8 +94,10 @@ Looper::Looper(bool allowNonCallbacks) :
 #define FLAG_OWNED 2
 #define FLAG_REMOVED 1
 Looper::~Looper() {
+    LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
     close(mWakeEventFd);
     mWakeEventFd = -1;
+    mHandlers.clear();
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
         if((hdl->mFlags&FLAG_OWNED)==FLAG_OWNED)delete hdl;
@@ -102,32 +105,31 @@ Looper::~Looper() {
     mEventHandlers.clear();
 }
 
-void Looper::initTLSKey() {
-    const int error = pthread_key_create(&gTLSKey, threadDestructor);
+static void initTLSKey() {
+#ifndef USE_THREADLOCAL
+    const int error = pthread_key_create(&gTLSKey,[](void*st){
+        Looper* const self = static_cast<Looper*>(st);
+        if(self !=nullptr){
+            delete self;
+        }
+    });
     LOGE_IF(error != 0, "Could not allocate TLS key: %s", strerror(error));
+#endif
 }
 
-void Looper::threadDestructor(void *st) {
-    Looper* const self = static_cast<Looper*>(st);
-    if (self != nullptr) {
-        //self->decStrong((void*)threadDestructor);
-	    delete self;
-    }
-}
-
-Looper*Looper::getDefault(){
+Looper* Looper::getDefault(){
     return getMainLooper();
 }
 
-Looper*Looper::getMainLooper(){
+Looper* Looper::getMainLooper(){
     return sMainLooper;
 }
 
-Looper*Looper::myLooper(){
+Looper* Looper::myLooper(){
     return getForThread();
 }
 
-Looper*Looper::prepare(int opts){
+Looper* Looper::prepare(int opts){
     Looper* looper = getForThread();
     const bool allowNonCallbacks = opts & PREPARE_ALLOW_NON_CALLBACKS;
     if(looper==nullptr){
@@ -145,17 +147,26 @@ void Looper::prepareMainLooper(){
     sMainLooper = myLooper();
 }
 
+static thread_local Looper*gThreadLocalLooper=nullptr;
 void Looper::setForThread(Looper* looper){
     Looper*old = getForThread();
     delete old;
+#ifdef USE_THREADLOCAL
+    gThreadLocalLooper = looper;
+#else
     pthread_setspecific(gTLSKey,looper);
+#endif
 }
 
-Looper*Looper::getForThread(){
-   const int result = pthread_once(&gTLSOnce,initTLSKey);
-   LOGW_IF(result != 0,"pthread_once failed");
-   Looper*looper = static_cast<Looper*>(pthread_getspecific(gTLSKey));
-   return looper;
+Looper* Looper::getForThread(){
+#ifdef USE_THREADLOCAL
+    return gThreadLocalLooper;
+#else
+    const int result = pthread_once(&gTLSOnce,initTLSKey);
+    LOGW_IF(result != 0,"pthread_once failed");
+    Looper*looper = static_cast<Looper*>(pthread_getspecific(gTLSKey));
+    return looper;
+#endif
 }
 
 bool Looper::getAllowNonCallbacks() const {
