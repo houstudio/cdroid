@@ -14,7 +14,7 @@ namespace cdroid{
    */
 void BadgeUtils::updateBadgeBounds(Rect& rect, float centerX, float centerY, float halfWidth, float halfHeight) {
     rect.set( int(centerX - halfWidth), int(centerY - halfHeight),
-        int(centerX + halfWidth*2.f), int(centerY + halfHeight*2.f));
+        int(halfWidth*2.f), int(halfHeight*2.f));
 }
 
 void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable, View* anchor) {

@@ -1,4 +1,5 @@
 #include <drawable/badgedrawable.h>
+#include <drawable/badgeutils.h>
 #include <widget/framelayout.h>
 #include <core/xmlpullparser.h>
 #include <core/layout.h>
@@ -9,8 +10,9 @@ namespace cdroid{
 BadgeDrawable::SavedState::SavedState(Context* context) {
     // If the badge text color attribute was not explicitly set, use the text color specified in
     // the TextAppearance.
+    const AttributeSet atts= context->obtainStyledAttributes("cdroid:style/TextAppearance.MaterialComponents.Badge");
     //TextAppearance textAppearance = new TextAppearance(context, R.style.TextAppearance_MaterialComponents_Badge);
-    mBadgeTextColor = ~0;//textAppearance.textColor.getDefaultColor();
+    mBadgeTextColor = ~0;//atts.getColorStateList("textColor");//textAppearance.textColor.getDefaultColor();
     mBackgroundColor= 0xFFFF0000;
     //contentDescriptionNumberless =context->getString(R.string.mtrl_badge_numberless_content_description);
     //contentDescriptionQuantityStrings = R.plurals.mtrl_badge_content_description;
@@ -101,9 +103,9 @@ void BadgeDrawable::setVisible(bool visible) {
     mSavedState->mIsVisible = visible;
     // When hiding a badge in pre-API 18, invalidate the custom parent in order to trigger a draw
     // pass to remove this badge from its foreground.
-    /*if (BadgeUtils.USE_COMPAT_PARENT && getCustomBadgeParent() != nullptr && !visible) {
-        ((ViewGroup) getCustomBadgeParent().getParent()).invalidate();
-    }*/
+    if (BadgeUtils::USE_COMPAT_PARENT && getCustomBadgeParent() != nullptr && !visible) {
+        ((ViewGroup*) getCustomBadgeParent()->getParent())->invalidate();
+    }
 }
 
 void BadgeDrawable::restoreFromSavedState(SavedState& savedState) {
@@ -167,7 +169,6 @@ BadgeDrawable::BadgeDrawable(Context* context) {
     mAnchorView = nullptr;
     mCustomBadgeParent = nullptr;
     mBadgeRadius = 6;
-    mBadgeWidePadding =0;
     mBadgeCenterX = 0;
     mBadgeCenterY = 0;
     mCornerRadius = 6;
@@ -177,22 +178,13 @@ BadgeDrawable::BadgeDrawable(Context* context) {
     mShapeDrawable = new GradientDrawable();
   
     mBadgeRadius = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_radius",mBadgeRadius);
-    mBadgeWidePadding = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding");
+    mBadgeWidePadding = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding",4);
     mBadgeWithTextRadius = context->getDimensionPixelSize("cdroid::dimen/mtrl_badge_with_text_radius",mBadgeWithTextRadius);
   
-    //textDrawableHelper = new TextDrawableHelper(/* delegate= */ this);
-    //textDrawableHelper.getTextPaint().setTextAlign(Paint.Align.CENTER);
     mSavedState = new SavedState(context);
     setBackgroundColor(mSavedState->mBackgroundColor);
     setTextAppearanceResource("@cdroid:style/TextAppearance.MaterialComponents.Badge");
 }
-
-/*void BadgeDrawable::updateBadgeCoordinates(View* anchorView, ViewGroup* customBadgeParent) {
-    if (dynamic_cast<FrameLayout*>(customBadgeParent)==nullptr) {
-        FATAL("customBadgeParent must be a FrameLayout");
-    }
-    updateBadgeCoordinates(anchorView, (FrameLayout*) customBadgeParent);
-}*/
 
 void BadgeDrawable::updateBadgeCoordinates(View* anchorView) {
     updateBadgeCoordinates(anchorView, nullptr);
@@ -201,12 +193,12 @@ void BadgeDrawable::updateBadgeCoordinates(View* anchorView) {
 void BadgeDrawable::updateBadgeCoordinates(View* anchorView, FrameLayout* customBadgeParent) {
     mAnchorView = anchorView;
   
-    /*if (BadgeUtils.USE_COMPAT_PARENT && customBadgeParent == nullptr) {
+    if (BadgeUtils::USE_COMPAT_PARENT && (customBadgeParent == nullptr)) {
         tryWrapAnchorInCompatParent(anchorView);
-    } else*/ {
+    } else {
         mCustomBadgeParent = customBadgeParent;
     }
-    if (1/*!BadgeUtils.USE_COMPAT_PARENT*/) {
+    if (!BadgeUtils::USE_COMPAT_PARENT) {
         updateAnchorParentToNotClip(anchorView);
     }
     updateCenterAndBounds();
@@ -236,7 +228,7 @@ void BadgeDrawable::tryWrapAnchorInCompatParent(View* anchorView) {
     frameLayout->setMinimumWidth(anchorView->getWidth());
     frameLayout->setMinimumHeight(anchorView->getHeight());
   
-    int anchorIndex = anchorViewParent->indexOfChild(anchorView);
+    const int anchorIndex = anchorViewParent->indexOfChild(anchorView);
     anchorViewParent->removeViewAt(anchorIndex);
     anchorView->setLayoutParams(new LayoutParams(ViewGroup::LayoutParams::MATCH_PARENT, ViewGroup::LayoutParams::MATCH_PARENT));
   
@@ -348,7 +340,6 @@ int BadgeDrawable::getAlpha()const {
 
 void BadgeDrawable::setAlpha(int alpha) {
     mSavedState->mAlpha = alpha;
-    //textDrawableHelper.getTextPaint().setAlpha(alpha);
     invalidateSelf();
 }
 
@@ -456,15 +447,14 @@ void BadgeDrawable::updateCenterAndBounds() {
     if (mContext == nullptr || anchorView == nullptr) {
         return;
     }
-    Rect tmpRect;
-    tmpRect=mBadgeBounds;
-  
+
     Rect anchorRect;
+    Rect tmpRect = mBadgeBounds;
     // Retrieves the visible bounds of the anchor view.
     anchorView->getDrawingRect(anchorRect);
   
     ViewGroup* customBadgeParent = mCustomBadgeParent != nullptr ? mCustomBadgeParent : nullptr;
-    if (customBadgeParent != nullptr/* || BadgeUtils.USE_COMPAT_PARENT*/) {
+    if ((customBadgeParent != nullptr) || BadgeUtils::USE_COMPAT_PARENT) {
       // Calculates coordinates relative to the parent.
         ViewGroup* viewGroup = customBadgeParent == nullptr ? (ViewGroup*) anchorView->getParent() : customBadgeParent;
         viewGroup->offsetDescendantRectToMyCoords(anchorView, anchorRect);
@@ -472,11 +462,8 @@ void BadgeDrawable::updateCenterAndBounds() {
   
     calculateCenterAndBounds(mContext, anchorRect, anchorView);
   
-    //updateBadgeBounds(mBadgeBounds, mBadgeCenterX, mBadgeCenterY, mHalfBadgeWidth, mHalfBadgeHeight);
-    mBadgeBounds.set(int(mBadgeCenterX-mHalfBadgeWidth), int(mBadgeCenterY-mHalfBadgeHeight),
-            int(mHalfBadgeWidth*2.f), int(mHalfBadgeHeight*2.f));
+    BadgeUtils::updateBadgeBounds(mBadgeBounds, mBadgeCenterX, mBadgeCenterY, mHalfBadgeWidth, mHalfBadgeHeight);
   
-    //mShapeDrawable->setCornerSize(mCornerRadius);
     mShapeDrawable->setCornerRadius(mCornerRadius);
     if (tmpRect!=mBadgeBounds) {
         mShapeDrawable->setBounds(mBadgeBounds);
@@ -505,8 +492,7 @@ void BadgeDrawable::calculateCenterAndBounds(Context* context,const Rect& anchor
         std::string badgeText = getBadgeText();
         mTextLayout->setText(badgeText);
         mTextLayout->relayout(1);
-        mHalfBadgeWidth = //textDrawableHelper.getTextWidth(badgeText) / 2.f + mBadgeWidePadding;
-            mTextLayout->getMaxLineWidth()/2.f + mBadgeWidePadding;
+        mHalfBadgeWidth = mTextLayout->getMaxLineWidth()/2.f + mBadgeWidePadding;
     }
   
     const int inset = context->getDimensionPixelSize(hasNumber()
