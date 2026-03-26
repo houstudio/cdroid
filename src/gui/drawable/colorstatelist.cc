@@ -19,6 +19,7 @@
 #include <drawable/stateset.h>
 #include <core/color.h>
 #include <core/app.h>
+#include <core/sparsearray.h>
 #include <core/xmlpullparser.h>
 #include <attributeset.h>
 #include <exception>
@@ -242,7 +243,15 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 RefPtr<ColorStateList> ColorStateList::valueOf(int color){
-    return std::make_shared<ColorStateList>(color); 
+    static SparseArray<std::shared_ptr<ColorStateList>>sCache;
+    const int index = sCache.indexOfKey(color);
+    if(index>=0){
+        auto cached = sCache.valueAt(index);
+        return cached;
+    }
+    auto cls =std::make_shared<ColorStateList>(color);
+    sCache.put(color,cls);
+    return cls;
 }
 
 const std::vector<int>& ColorStateList::getColors()const{
