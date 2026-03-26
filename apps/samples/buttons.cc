@@ -2,7 +2,7 @@
 #include <cdlog.h>
 #include <fstream>
 #include <animation/springanimation.h>
-
+#include <drawable/badgeutils.h>
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     cdroid::Context*ctx=&app;
@@ -13,6 +13,10 @@ int main(int argc,const char*argv[]){
     StateListDrawable*sld=nullptr;
     CompoundButton*chk;
 #if 10
+    BadgeDrawable*bd = BadgeDrawable::create(&app);
+    bd->setNumber(96);
+    w->setId(10000);
+
     Button *btn=new Button("Hello World!",350,200);
     d = ctx->getDrawable("cdroid:drawable/btn_default");
     LOGD("d=%p",d);
@@ -27,6 +31,8 @@ int main(int argc,const char*argv[]){
     btn->setId(100);
     btn->setTextSize(50);
     btn->layout(10,40,350,200);
+    bd->setBounds(0,0,350,200);
+    BadgeUtils::attachBadgeDrawable(bd,btn);
 
     ShapeDrawable*sd=new ShapeDrawable();
     sd->setShape(new ArcShape(0,360));
