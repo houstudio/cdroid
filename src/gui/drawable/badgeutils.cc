@@ -77,31 +77,21 @@ void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable, Toolbar* tool
  */
 void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable,
         Toolbar* toolbar,int menuItemId,FrameLayout* customBadgeParent) {
-#if 0
-    toolbar->post(
-      new Runnable() {
-        @Override
-        public void run() {
-          ActionMenuItemView menuItemView =
-              ToolbarUtils.getActionMenuItemView(toolbar, menuItemId);
-          if (menuItemView != null) {
-            badgeDrawable.setHorizontalOffset(
-                badgeDrawable.getHorizontalOffset()
-                    + toolbar
-                        .getResources()
-                        .getDimensionPixelOffset(
-                            R.dimen.mtrl_badge_toolbar_action_menu_item_horizontal_offset));
-            badgeDrawable.setVerticalOffset(
-                badgeDrawable.getVerticalOffset()
-                    + toolbar
-                        .getResources()
-                        .getDimensionPixelOffset(
-                            R.dimen.mtrl_badge_toolbar_action_menu_item_vertical_offset));
-
-            BadgeUtils.attachBadgeDrawable(badgeDrawable, menuItemView, customBadgeParent);
-          }
-        }
-      });
+#if ENABLE(MENU)
+    toolbar->post([badgeDrawable,toolbar,menuItemId,customBadgeParent](){
+            ActionMenuItemView* menuItemView =ToolbarUtils::getActionMenuItemView(toolbar, menuItemId);
+            if (menuItemView != nullptr) {
+                badgeDrawable->setHorizontalOffset(
+                    badgeDrawable->getHorizontalOffset()
+                       + toolbar->getContext()
+                       ->getDimensionPixelSize("cdroid:dimen/mtrl_badge_toolbar_action_menu_item_horizontal_offset"));
+                badgeDrawable->setVerticalOffset(
+                    badgeDrawable->getVerticalOffset()
+                       + toolbar->getContext()
+                       ->getDimensionPixelSize("cdroid:dimen/mtrl_badge_toolbar_action_menu_item_vertical_offset"));
+                BadgeUtils::attachBadgeDrawable(badgeDrawable, menuItemView, customBadgeParent);
+            }
+        });
 #endif
 }
 
