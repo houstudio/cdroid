@@ -16,7 +16,7 @@ BadgeDrawable::SavedState::SavedState(Context* context) {
     //contentDescriptionQuantityStrings = R.plurals.mtrl_badge_content_description;
     //contentDescriptionExceedsMaxBadgeNumberRes = R.string.mtrl_exceed_max_badge_number_content_description;
     mIsVisible = true;
-    mBadgeGravity = TOP_END;
+    mBadgeGravity = Gravity::NO_GRAVITY;
     mVerticalOffset  = 0;
     mHorizontalOffset= 0;
 }
@@ -162,7 +162,7 @@ void BadgeDrawable::loadDefaultStateFromAttributes( Context* context,const Attri
 
 BadgeDrawable::BadgeDrawable(Context* context) {
     mContext = context;
-    mTextLayout = new Layout(14,-1);
+    mTextLayout = new Layout(14,INT_MAX);
     mTextLayout->setMultiline(false);
     mAnchorView = nullptr;
     mCustomBadgeParent = nullptr;
@@ -444,7 +444,7 @@ int BadgeDrawable::getVerticalOffset() const{
 
 void BadgeDrawable::setTextAppearanceResource(const std::string& id) {
     const AttributeSet atts = mContext->obtainStyledAttributes(id);
-    const int textSize = atts.getInt("textSize");
+    const int textSize = atts.getInt("textSize",12);
     Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);
     mTextLayout->setFontSize(textSize);
     mTextLayout->setTypeface(tf);
@@ -504,6 +504,7 @@ void BadgeDrawable::calculateCenterAndBounds(Context* context,const Rect& anchor
         mHalfBadgeHeight = mCornerRadius;
         std::string badgeText = getBadgeText();
         mTextLayout->setText(badgeText);
+        mTextLayout->relayout(1);
         mHalfBadgeWidth = //textDrawableHelper.getTextWidth(badgeText) / 2.f + mBadgeWidePadding;
             mTextLayout->getMaxLineWidth()/2.f + mBadgeWidePadding;
     }
