@@ -1,6 +1,24 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <drawable/badgeutils.h>
 #include <widget/framelayout.h>
 #include <widget/toolbar.h>
+#include <gui_features.h>
 namespace cdroid{
 
   /**
@@ -112,8 +130,8 @@ void BadgeUtils::detachBadgeDrawable(BadgeDrawable* badgeDrawable, Toolbar* tool
     if (badgeDrawable == nullptr) {
         return;
     }
-#if 0
-    ActionMenuItemView* menuItemView = ToolbarUtils.getActionMenuItemView(toolbar, menuItemId);
+#if ENABLE(MENU)
+    ActionMenuItemView* menuItemView = ToolbarUtils::getActionMenuItemView(toolbar, menuItemId);
     if (menuItemView != nullptr) {
         detachBadgeDrawable(badgeDrawable, menuItemView);
     } else {
@@ -132,4 +150,5 @@ void BadgeUtils::setBadgeDrawableBounds(BadgeDrawable* badgeDrawable, View* anch
     badgeDrawable->setBounds(badgeBounds);
     badgeDrawable->updateBadgeCoordinates(anchor, compatBadgeParent);
 }
+
 }
