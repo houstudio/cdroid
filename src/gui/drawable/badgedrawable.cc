@@ -138,7 +138,9 @@ void BadgeDrawable::loadDefaultStateFromAttributes( Context* context,const Attri
     if (attrs.hasAttribute("number")) {
         setNumber(attrs.getInt("number", 0));
     }
-    setBackgroundColor(attrs.getColor("backgroundColor",0xFFFF0000));
+    if(attrs.hasAttribute("backgroundColor")){
+        setBackgroundColor(attrs.getColor("backgroundColor"));
+    }
   
     // Only set the badge text color if this attribute has explicitly been set, otherwise use the
     // text color specified in the TextAppearance.
@@ -260,11 +262,10 @@ int BadgeDrawable::getBackgroundColor() const{
 }
 
 void BadgeDrawable::setBackgroundColor(int backgroundColor) {
-    auto cls = mShapeDrawable->getColor();
-    if ((mSavedState->mBackgroundColor != backgroundColor)
-            ||(cls==nullptr)||(cls->getDefaultColor()!=backgroundColor)) {
-        mSavedState->mBackgroundColor = backgroundColor;
-        mShapeDrawable->setColor(backgroundColor);
+    mSavedState->mBackgroundColor = backgroundColor;
+    auto  backgroundColorStateList = ColorStateList::valueOf(backgroundColor);
+    if (mShapeDrawable->getColor()!=backgroundColorStateList){
+        mShapeDrawable->setColor(backgroundColorStateList);
         invalidateSelf();
     }
 }
