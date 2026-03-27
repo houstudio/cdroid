@@ -649,7 +649,7 @@ void Assets::clearStyles() {
 }
 
 std::string Assets::resolveAttrValue(const std::string&attrResId)const{
-    std::string name=attrResId;
+    std::string name = attrResId;
     AttributeSet atts;
     size_t pos = name.find("attr/");
     if(pos!=std::string::npos){
@@ -667,8 +667,9 @@ std::string Assets::resolveAttrValue(const std::string&attrResId)const{
             pos = name.find("attr");
         }while(pos!=std::string::npos);
         name = parseResource(name,nullptr,nullptr);
-        return name;
     }
+    if((pos=name.find("@"))!=std::string::npos)
+        name.erase(pos,1);
     return name;
 }
 
