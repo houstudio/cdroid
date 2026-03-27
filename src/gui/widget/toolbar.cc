@@ -1487,6 +1487,7 @@ void Toolbar::ExpandedActionViewMenuPresenter::onRestoreInstanceState(Parcelable
 #endif/*ENABLE(MENU)*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
+#if ENABLE(MENU)
 View* ToolbarUtils::getSecondaryActionMenuItemView(Toolbar* toolbar) {
     ActionMenuView* actionMenuView = getActionMenuView(toolbar);
     if (actionMenuView != nullptr) {
@@ -1507,7 +1508,7 @@ ActionMenuView* ToolbarUtils::getActionMenuView(Toolbar* toolbar) {
     }
     return nullptr;
 }
-
+#endif
 ImageButton* ToolbarUtils::getNavigationIconButton(Toolbar* toolbar) {
     if (toolbar->getChildCount() > 0) {
         View* child = toolbar->getChildAt(0);
@@ -1517,7 +1518,7 @@ ImageButton* ToolbarUtils::getNavigationIconButton(Toolbar* toolbar) {
     }
     return nullptr;
 }
-
+#if ENABLE(MENU)
 ActionMenuItemView* ToolbarUtils::getActionMenuItemView(Toolbar* toolbar, int menuItemId) {
     ActionMenuView* actionMenuView = getActionMenuView(toolbar);
     if (actionMenuView != nullptr) {
@@ -1533,5 +1534,5 @@ ActionMenuItemView* ToolbarUtils::getActionMenuItemView(Toolbar* toolbar, int me
     }
     return nullptr;
 }
-
+#endif
 }//namespace

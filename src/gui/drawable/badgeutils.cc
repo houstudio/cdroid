@@ -19,6 +19,7 @@
 #include <widget/framelayout.h>
 #include <widget/toolbar.h>
 #include <gui_features.h>
+#include <menu/actionmenupresenter.h>
 namespace cdroid{
 
   /**
@@ -92,6 +93,8 @@ void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable,
                 BadgeUtils::attachBadgeDrawable(badgeDrawable, menuItemView, customBadgeParent);
             }
         });
+#else
+    LOGW("Menu is Disabled");
 #endif
 }
 
@@ -117,16 +120,18 @@ void BadgeUtils::detachBadgeDrawable(BadgeDrawable* badgeDrawable, View* anchor)
  * will be removed from the foreground of a FrameLayout that is an ancestor of the anchor.
  */
 void BadgeUtils::detachBadgeDrawable(BadgeDrawable* badgeDrawable, Toolbar* toolbar, int menuItemId) {
+#if ENABLE(MENU)
     if (badgeDrawable == nullptr) {
         return;
     }
-#if ENABLE(MENU)
     ActionMenuItemView* menuItemView = ToolbarUtils::getActionMenuItemView(toolbar, menuItemId);
     if (menuItemView != nullptr) {
         detachBadgeDrawable(badgeDrawable, menuItemView);
     } else {
         LOGW("Trying to remove badge from a null menuItemView: %d" ,menuItemId);
     }
+#else
+    LOGW("Menu is Disabled");
 #endif
 }
 
