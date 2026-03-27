@@ -256,6 +256,13 @@ std::string BadgeDrawable::getText()const{
     return mState->getText();
 }
 
+void BadgeDrawable::setText(const std::string& text) {
+    if (mState->getText()!= text) {
+        mState->setText(text);
+        onTextUpdated();
+    }
+}
+
 void BadgeDrawable::clearText(){
     if(mState->hasText()){
         mState->clearText();
@@ -789,15 +796,20 @@ std::string BadgeDrawable::getBadgeContent() const{
 }
 
 std::string BadgeDrawable::getTextBadgeText() const{
-  // If number exceeds max count, show badgeMaxCount+ instead of the number.
-  if (getNumber() <= mMaxBadgeNumber) {
-      //return NumberFormat.getInstance().format(getNumber());
-      return std::to_string(getNumber());
-  } else {
-      //return context->getString(R.string.mtrl_exceed_max_badge_number_suffix,
-      //    mMaxBadgeNumber, DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX);
-      return "";
-  }
+    std::string text = getText();
+    const int maxCharacterCount = getMaxCharacterCount();
+    if (maxCharacterCount == BADGE_CONTENT_NOT_TRUNCATED) {
+        return text;
+    }
+    if(text.length()>maxCharacterCount){
+        if(mContext==nullptr){
+            return "";
+        }
+        text = text.substr(0,maxCharacterCount-1);
+        return text+"+";
+    } else {
+        return text;
+    }
 }
 
 std::string BadgeDrawable::getNumberBadgeText() const{
@@ -805,13 +817,11 @@ std::string BadgeDrawable::getNumberBadgeText() const{
     if (mMaxBadgeNumber == BADGE_CONTENT_NOT_TRUNCATED || getNumber() <= mMaxBadgeNumber) {
         return std::to_string(getNumber());//NumberFormat.getInstance(state.getNumberLocale()).format(getNumber());
     } else {
-        return"";
-        /* Context context = contextRef.get();
-        if (context == null) {
-           return "";
+        if(mContext==nullptr){
+            return "";
         }
-  
-        return String.format(
+        return std::to_string(mMaxBadgeNumber)+"+";
+        /*return String.format(
             state.getNumberLocale(),
             context.getString(R.string.mtrl_exceed_max_badge_number_suffix),
             maxBadgeNumber,DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX);
