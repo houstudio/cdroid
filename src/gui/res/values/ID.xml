@@ -240,5 +240,6 @@
   <id name="accessibilityActionShowTextSuggestions">0x000004d5</id>
   <id name="accessibilityActionScrollInDirection">0x000004d6</id>
   <id name="nav_controller_view_tag">0x000004d7</id>
+  <id name="mtrl_anchor_parent">0x000004d8</id>
 </resources>
 

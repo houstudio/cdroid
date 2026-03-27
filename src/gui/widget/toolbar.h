@@ -212,6 +212,7 @@ public:
     void setCollapsible(bool);
     void setMenuCallbacks(const MenuPresenter::Callback& pcb,const MenuBuilder::Callback& mcb);
 };
+
 class Toolbar::ExpandedActionViewMenuPresenter:public MenuPresenter {
 private:
     friend Toolbar;
@@ -239,5 +240,16 @@ public:
     Parcelable* onSaveInstanceState()override;
     void onRestoreInstanceState(Parcelable& state)override;
 };
+
+class ToolbarUtils{
+private:
+    ToolbarUtils()=default;
+public:
+    static View*getSecondaryActionMenuItemView(Toolbar* toolbar);
+    static ActionMenuView*getActionMenuView(Toolbar* toolbar);
+    static ImageButton*getNavigationIconButton(Toolbar* toolbar);
+    static ActionMenuItemView*getActionMenuItemView(Toolbar* toolbar, int menuItemId);
+};
+
 }/*endof namespace*/
 #endif

@@ -67,8 +67,6 @@ private:
        int mShape;
        int mGradient;// = LINEAR_GRADIENT
        int mAngle;
-       int mSolidColor;
-       int mStrokeColor;
        Orientation mOrientation;
        cdroid::RefPtr<ColorStateList> mSolidColors;
        cdroid::RefPtr<ColorStateList> mStrokeColors;
@@ -121,7 +119,6 @@ private:
        void setGradientCenter(float x, float y);
        void setGradientColors(const std::vector<int>&colors);
        void setSolidColors(const cdroid::RefPtr<ColorStateList>& colors);
-       void setStroke(int width,int color,float dashWidth,float dashGap);
        void setStroke(int width,const cdroid::RefPtr<ColorStateList>& colors,float dashWidth,float dashGap);
        void setCornerRadius(float radius);
        void setCornerRadii(const std::vector<float>& radii);
