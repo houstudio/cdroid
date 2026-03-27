@@ -542,7 +542,8 @@ int Assets::getDimension(const std::string&refid)const{
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()) 
         return it->second;
-    throw std::runtime_error("Resource not found:" + refid);
+    LOGW("Resource not found:%s",refid.c_str());
+    return 0;
 }
 
 int Assets::getDimensionPixelSize(const std::string&refid,int def)const{

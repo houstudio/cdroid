@@ -68,13 +68,10 @@ private:
     void onBadgeTextAppearanceUpdated();
     void onBadgeShapeAppearanceUpdated();
     void onBadgeContentUpdated();
-    static BadgeDrawable* createFromAttributes(Context* context,const AttributeSet& attrs,int defStyleAttr, int defStyleRes);
     //static int readColorFromAttributes(Context* context, TypedArray a, int index);
     BadgeDrawable(Context* context,const std::string&badgeResId, const std::string&defStyleAttr,
             const std::string&defStyleRes, BadgeState::State*state);
     void tryWrapAnchorInCompatParent(View* anchorView);
-    void setTextAppearanceResource(const std::string& id);
-    //void setTextAppearance(TextAppearance& textAppearance);
     void updateCenterAndBounds();
     int getTotalVerticalOffsetForState() const;
     int getTotalHorizontalOffsetForState() const;
@@ -202,7 +199,8 @@ public:
     void setLargeFontVerticalOffsetAdjustment(int px);
     int getLargeFontVerticalOffsetAdjustment() const;
     void setAdditionalVerticalOffset(int px);//
-    int getAdditionalVerticalOffset() const;//
+    int getAdditionalVerticalOffset() const;
+    void setTextAppearance(const std::string& id);
     void setBadgeWithTextShapeAppearance(const std::string& id);
     void setBadgeWithTextShapeAppearanceOverlay(const std::string& id);
     void setBadgeWithoutTextShapeAppearance(const std::string& id);

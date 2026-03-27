@@ -41,8 +41,7 @@ BadgeDrawable::~BadgeDrawable(){
 }
 
 BadgeDrawable* BadgeDrawable::create(Context* context) {
-    const AttributeSet attrs = context->obtainStyledAttributes("cdroid:attr/badgeStyle");
-    return createFromAttributes(context, attrs, 0/*DEFAULT_THEME_ATTR*/,0/*DEFAULT_STYLE*/);
+    return new BadgeDrawable(context,"","","", nullptr);
 }
 
 BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::string& id) {
@@ -53,15 +52,9 @@ BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::st
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    //AttributeSet attrs = DrawableUtils::parseDrawableXml(context, id, "badge");
-    const int style = 0;//attrs.getStyleAttribute();
-    //if (style == 0) { style = DEFAULT_STYLE; }
-    return createFromAttributes(context, attrs, 0/*DEFAULT_THEME_ATTR*/, style);
-}
-
-/** Returns a {@code BadgeDrawable} from the given attributes. */
-BadgeDrawable* BadgeDrawable::createFromAttributes(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes) {
-    return new BadgeDrawable(context,"","","",nullptr);
+    const std::string tag=parser.getName();
+    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),id.c_str());
+    return new BadgeDrawable(context, id, "","", 0/*style*/);
 }
 
 void BadgeDrawable::setVisible(bool visible) {
@@ -121,7 +114,7 @@ BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
   
     mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     //setBackgroundColor(mState->mBackgroundColor);
-    setTextAppearanceResource("@cdroid:style/TextAppearance.MaterialComponents.Badge");
+    setTextAppearance("@cdroid:style/TextAppearance.MaterialComponents.Badge");
     restoreState();
 }
 
@@ -483,7 +476,7 @@ int BadgeDrawable::getAdditionalVerticalOffset() const{
     return mState->getAdditionalVerticalOffset();
 }
 
-void BadgeDrawable::setTextAppearanceResource(const std::string& id) {
+void BadgeDrawable::setTextAppearance(const std::string& id) {
     const AttributeSet atts = mContext->obtainStyledAttributes(id);
     const int textSize = atts.getInt("textSize",12);
     Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);

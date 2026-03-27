@@ -25,7 +25,16 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
     }
     storedState->badgeResId = badgeResId;
 
-    AttributeSet a = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
+    //AttributeSet a = generateTypedArray(context, storedState->badgeResId, defStyleAttr, defStyleRes);
+
+    int type;
+    XmlPullParser parser(context,badgeResId);
+    const AttributeSet& a = parser;
+    while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
+        //NOTHING
+    }
+    const std::string tag=parser.getName();
+    LOGD_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),badgeResId.c_str());
 
     mBadgeRadius = a.getDimensionPixelSize("badgeRadius", (int)BadgeDrawable::BADGE_RADIUS_NOT_SPECIFIED);
 
