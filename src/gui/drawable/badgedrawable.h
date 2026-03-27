@@ -35,7 +35,8 @@ private:
 
     //static constexpr int DEFAULT_STYLE = R.style.Widget_MaterialComponents_Badge;
     //static constexpr int DEFAULT_THEME_ATTR = R.attr.badgeStyle;
-    //static final String DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX = "+";
+    static constexpr const char* const DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX = "+";
+    static constexpr const char* const DEFAULT_EXCEED_MAX_BADGE_TEXT_SUFFIX = "\u2026";/*...*/
     Context* mContext;
     GradientDrawable* mShapeDrawable;
     //TextDrawableHelper textDrawableHelper;

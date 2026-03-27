@@ -799,7 +799,7 @@ std::string BadgeDrawable::getTextBadgeText() const{
             return "";
         }
         text = text.substr(0,maxCharacterCount-1);
-        return text+"+";
+        return text + DEFAULT_EXCEED_MAX_BADGE_TEXT_SUFFIX;
     } else {
         return text;
     }
@@ -813,7 +813,7 @@ std::string BadgeDrawable::getNumberBadgeText() const{
         if(mContext==nullptr){
             return "";
         }
-        return std::to_string(mMaxBadgeNumber)+"+";
+        return std::to_string(mMaxBadgeNumber) + DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX;
         /*return String.format(
             state.getNumberLocale(),
             context.getString(R.string.mtrl_exceed_max_badge_number_suffix),
