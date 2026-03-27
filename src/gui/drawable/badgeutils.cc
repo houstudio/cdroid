@@ -52,11 +52,7 @@ void BadgeUtils::attachBadgeDrawable(BadgeDrawable* badgeDrawable,View* anchor,F
     if (badgeDrawable->getCustomBadgeParent() != nullptr) {
         badgeDrawable->getCustomBadgeParent()->setForeground(badgeDrawable);
     } else {
-        if (USE_COMPAT_PARENT) {
-            FATAL("Trying to reference null customBadgeParent");
-        } else {
-            anchor->getOverlay()->add(badgeDrawable);
-        }
+        anchor->getOverlay()->add(badgeDrawable);
     }
 }
 
@@ -107,7 +103,7 @@ void BadgeUtils::detachBadgeDrawable(BadgeDrawable* badgeDrawable, View* anchor)
     if (badgeDrawable == nullptr) {
         return;
     }
-    if (USE_COMPAT_PARENT || badgeDrawable->getCustomBadgeParent() != nullptr) {
+    if (badgeDrawable->getCustomBadgeParent() != nullptr) {
         badgeDrawable->getCustomBadgeParent()->setForeground(nullptr);
     } else {
         anchor->getOverlay()->remove(badgeDrawable);

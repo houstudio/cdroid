@@ -24,9 +24,8 @@ class BadgeUtils {
 private:
     BadgeUtils()=default;
 public:
-    static constexpr bool USE_COMPAT_PARENT = false;
-    static void attachBadgeDrawable(BadgeDrawable* badgeDrawable, View* anchor);
     static void updateBadgeBounds(Rect& rect, float centerX, float centerY, float halfWidth, float halfHeight);
+    static void attachBadgeDrawable(BadgeDrawable* badgeDrawable, View* anchor);
     /**
      * Attaches a BadgeDrawable to its associated anchor and update the BadgeDrawable's coordinates
      * based on the anchor. For API 18+, the BadgeDrawable will be added as a view overlay. For

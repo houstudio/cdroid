@@ -1487,8 +1487,8 @@ void Toolbar::ExpandedActionViewMenuPresenter::onRestoreInstanceState(Parcelable
 #endif/*ENABLE(MENU)*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-#if ENABLE(MENU)
 View* ToolbarUtils::getSecondaryActionMenuItemView(Toolbar* toolbar) {
+#if ENABLE(MENU)
     ActionMenuView* actionMenuView = getActionMenuView(toolbar);
     if (actionMenuView != nullptr) {
         // Only return the first child of the ActionMenuView if there is more than one child
@@ -1496,19 +1496,22 @@ View* ToolbarUtils::getSecondaryActionMenuItemView(Toolbar* toolbar) {
             return actionMenuView->getChildAt(0);
         }
     }
+#endif
     return nullptr;
 }
 
 ActionMenuView* ToolbarUtils::getActionMenuView(Toolbar* toolbar) {
+#if ENABLE(MENU)
     for (int i = 0; i < toolbar->getChildCount(); i++) {
         View* child = toolbar->getChildAt(i);
         if (dynamic_cast<ActionMenuView*>(child)) {
             return (ActionMenuView*) child;
         }
     }
+#endif
     return nullptr;
 }
-#endif
+
 ImageButton* ToolbarUtils::getNavigationIconButton(Toolbar* toolbar) {
     if (toolbar->getChildCount() > 0) {
         View* child = toolbar->getChildAt(0);
@@ -1518,8 +1521,9 @@ ImageButton* ToolbarUtils::getNavigationIconButton(Toolbar* toolbar) {
     }
     return nullptr;
 }
-#if ENABLE(MENU)
+
 ActionMenuItemView* ToolbarUtils::getActionMenuItemView(Toolbar* toolbar, int menuItemId) {
+#if ENABLE(MENU)
     ActionMenuView* actionMenuView = getActionMenuView(toolbar);
     if (actionMenuView != nullptr) {
         for (int i = 0; i < actionMenuView->getChildCount(); i++) {
@@ -1532,7 +1536,7 @@ ActionMenuItemView* ToolbarUtils::getActionMenuItemView(Toolbar* toolbar, int me
             }
         }
     }
+#endif
     return nullptr;
 }
-#endif
 }//namespace
