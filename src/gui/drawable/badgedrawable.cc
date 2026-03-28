@@ -17,81 +17,31 @@
  *********************************************************************************/
 #include <drawable/badgedrawable.h>
 #include <drawable/badgeutils.h>
+#include <drawable/badgestate.h>
+#include <animation/animationutils.h>
 #include <widget/framelayout.h>
 #include <core/xmlpullparser.h>
 #include <core/layout.h>
 #include <widget/R.h>
-#if 10
 namespace cdroid{
 
-BadgeDrawable::SavedState::SavedState(Context* context) {
-    // If the badge text color attribute was not explicitly set, use the text color specified in
-    // the TextAppearance.
-    const AttributeSet atts= context->obtainStyledAttributes("cdroid:style/TextAppearance.MaterialComponents.Badge");
-    //TextAppearance textAppearance = new TextAppearance(context, R.style.TextAppearance_MaterialComponents_Badge);
-    mBadgeTextColor = ~0;//atts.getColorStateList("textColor");//textAppearance.textColor.getDefaultColor();
-    mBackgroundColor= 0xFFFF0000;
-    //contentDescriptionNumberless =context->getString(R.string.mtrl_badge_numberless_content_description);
-    //contentDescriptionQuantityStrings = R.plurals.mtrl_badge_content_description;
-    //contentDescriptionExceedsMaxBadgeNumberRes = R.string.mtrl_exceed_max_badge_number_content_description;
-    mIsVisible = true;
-    mBadgeGravity = Gravity::NO_GRAVITY;
-    mVerticalOffset  = 0;
-    mHorizontalOffset= 0;
+BadgeState::State*BadgeDrawable::getSavedState()const{
+    return mState->getOverridingState();
 }
 
-BadgeDrawable::SavedState::SavedState(Parcel& in) {
-    mBackgroundColor = in.readInt();
-    mBadgeTextColor = in.readInt();
-    mAlpha = in.readInt();
-    mNumber = in.readInt();
-    mMaxCharacterCount = in.readInt();
-    contentDescriptionNumberless = in.readString();
-    contentDescriptionQuantityStrings = in.readInt();
-    mBadgeGravity = in.readInt();
-    mHorizontalOffset = in.readInt();
-    mVerticalOffset = in.readInt();
-    mIsVisible = in.readInt() != 0;
-}
-
-int BadgeDrawable::SavedState::describeContents() {
-    return 0;
-}
-
-void BadgeDrawable::SavedState::writeToParcel(Parcel& dest, int flags) {
-    dest.writeInt(mBackgroundColor);
-    dest.writeInt(mBadgeTextColor);
-    dest.writeInt(mAlpha);
-    dest.writeInt(mNumber);
-    dest.writeInt(mMaxCharacterCount);
-    dest.writeString(contentDescriptionNumberless);
-    dest.writeInt(contentDescriptionQuantityStrings);
-    dest.writeInt(mBadgeGravity);
-    dest.writeInt(mHorizontalOffset);
-    dest.writeInt(mVerticalOffset);
-    dest.writeInt(mIsVisible ? 1 : 0);
-}
-
-
-BadgeDrawable::SavedState* BadgeDrawable::getSavedState() const{
-    return mSavedState;
-}
-
-BadgeDrawable* BadgeDrawable::createFromSavedState(Context* context, SavedState* savedState) {
-    BadgeDrawable* badge = new BadgeDrawable(context);
-    badge->restoreFromSavedState(*savedState);
+BadgeDrawable* BadgeDrawable::createFromState(Context* context, BadgeState::State* savedState) {
+    BadgeDrawable* badge = new BadgeDrawable(context,"","","",savedState);
     return badge;
 }
 
 BadgeDrawable::~BadgeDrawable(){
     delete mShapeDrawable;
-    delete mSavedState;
+    delete mState;
     delete mTextLayout;
 }
 
 BadgeDrawable* BadgeDrawable::create(Context* context) {
-    const AttributeSet attrs = context->obtainStyledAttributes("cdroid:attr/badgeStyle");
-    return createFromAttributes(context, attrs, 0/*DEFAULT_THEME_ATTR*/,0/*DEFAULT_STYLE*/);
+    return new BadgeDrawable(context,"","","", nullptr);
 }
 
 BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::string& id) {
@@ -102,84 +52,46 @@ BadgeDrawable* BadgeDrawable::createFromResource(Context* context, const std::st
     while( ((type=parser.next())!=XmlPullParser::START_TAG) && (type!=XmlPullParser::END_DOCUMENT)){
         //NOTHING
     }
-    //AttributeSet attrs = DrawableUtils::parseDrawableXml(context, id, "badge");
-    const int style = 0;//attrs.getStyleAttribute();
-    //if (style == 0) { style = DEFAULT_STYLE; }
-    return createFromAttributes(context, attrs, 0/*DEFAULT_THEME_ATTR*/, style);
-}
-
-/** Returns a {@code BadgeDrawable} from the given attributes. */
-BadgeDrawable* BadgeDrawable::createFromAttributes(Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes) {
-    BadgeDrawable* badge = new BadgeDrawable(context);
-    badge->loadDefaultStateFromAttributes(context, attrs, defStyleAttr, defStyleRes);
-    return badge;
+    const std::string tag=parser.getName();
+    LOGE_IF(tag.compare("badge"),"invalid resource tag:%s[%s] ",tag.c_str(),id.c_str());
+    return new BadgeDrawable(context, id, "","", 0/*style*/);
 }
 
 void BadgeDrawable::setVisible(bool visible) {
-    Drawable::setVisible(visible, /* restart= */ false);
-    mSavedState->mIsVisible = visible;
-    // When hiding a badge in pre-API 18, invalidate the custom parent in order to trigger a draw
-    // pass to remove this badge from its foreground.
-    if (BadgeUtils::USE_COMPAT_PARENT && getCustomBadgeParent() != nullptr && !visible) {
-        ((ViewGroup*) getCustomBadgeParent()->getParent())->invalidate();
+    mState->setVisible(visible);
+    onVisibilityUpdated();
+}
+
+void BadgeDrawable::onVisibilityUpdated(){
+    bool visible = mState->isVisible();
+    Drawable::setVisible(visible,/*restart*/false);
+}
+
+void BadgeDrawable::setBadgeFixedEdge(int fixedEdge) {
+    if (mState->mBadgeFixedEdge != fixedEdge) {
+        mState->mBadgeFixedEdge = fixedEdge;
+        updateCenterAndBounds();
     }
 }
 
-void BadgeDrawable::restoreFromSavedState(SavedState& savedState) {
-    setMaxCharacterCount(savedState.mMaxCharacterCount);
-  
-    // Only set the badge number if it exists in the style.
-    // Defaulting it to 0 means the badge will incorrectly show text when the user may want a
-    // numberless badge.
-    if (savedState.mNumber != BADGE_NUMBER_NONE) {
-        setNumber(savedState.mNumber);
-    }
-  
-    setBackgroundColor(savedState.mBackgroundColor);
-  
-    // Only set the badge text color if this attribute has explicitly been set, otherwise use the
-    // text color specified in the TextAppearance.
-    setBadgeTextColor(savedState.mBadgeTextColor);
-  
-    setBadgeGravity(savedState.mBadgeGravity);
-  
-    setHorizontalOffset(savedState.mHorizontalOffset);
-    setVerticalOffset(savedState.mVerticalOffset);
-    setVisible(savedState.mIsVisible);
+void BadgeDrawable::restoreState() {
+    onBadgeShapeAppearanceUpdated();
+    onBadgeTextAppearanceUpdated();
+
+    onMaxBadgeLengthUpdated();
+
+    onBadgeContentUpdated();
+    //onAlphaUpdated();
+    onBackgroundColorUpdated();
+    onBadgeTextColorUpdated();
+    onBadgeGravityUpdated();
+
+    updateCenterAndBounds();
+    onVisibilityUpdated();
 }
 
-void BadgeDrawable::loadDefaultStateFromAttributes( Context* context,const AttributeSet& attrs, int defStyleAttr, int defStyleRes) {
-    setMaxCharacterCount( attrs.getInt("maxCharacterCount", DEFAULT_MAX_BADGE_CHARACTER_COUNT));
-  
-    // Only set the badge number if it exists in the style.
-    // Defaulting it to 0 means the badge will incorrectly show text when the user may want a
-    // numberless badge.
-    if (attrs.hasAttribute("number")) {
-        setNumber(attrs.getInt("number", 0));
-    }
-    if(attrs.hasAttribute("backgroundColor")){
-        setBackgroundColor(attrs.getColor("backgroundColor"));
-    }
-  
-    // Only set the badge text color if this attribute has explicitly been set, otherwise use the
-    // text color specified in the TextAppearance.
-    if (attrs.hasAttribute("badgeTextColor")) {
-        setBadgeTextColor(attrs.getColor("badgeTextColor"));
-    }
-  
-    setBadgeGravity(attrs.getInt("badgeGravity",std::unordered_map<std::string,int>{
-                {"TOP_END"     , (int)TOP_END},
-                {"TOP_START"   , (int)TOP_START},
-                {"BOTTOM_END"  , (int)BOTTOM_END},
-                {"BOTTOM_START", (int)BOTTOM_START},
-            },TOP_END));
-  
-    setHorizontalOffset(attrs.getDimensionPixelOffset("horizontalOffset", 0));
-    setVerticalOffset(attrs.getDimensionPixelOffset("verticalOffset", 0));
-    LOGD("mBackgroundColor=%x mBadgeTextColor=%x",mSavedState->mBackgroundColor,mSavedState->mBadgeTextColor);
-}
-
-BadgeDrawable::BadgeDrawable(Context* context) {
+BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
+            const std::string&defStyleAttr,const std::string&defStyleRes,BadgeState::State*savedState) {
     mContext = context;
     mTextLayout = new Layout(14,INT_MAX);
     mTextLayout->setMultiline(false);
@@ -188,19 +100,22 @@ BadgeDrawable::BadgeDrawable(Context* context) {
     mBadgeRadius = 6;
     mBadgeCenterX = 0;
     mBadgeCenterY = 0;
-    mCornerRadius = 6;
+    mCornerRadius = BADGE_RADIUS_NOT_SPECIFIED;
     mBadgeWithTextRadius =6;
+    mMaxBadgeNumber =BADGE_CONTENT_NOT_TRUNCATED;
     //ThemeEnforcement.checkMaterialTheme(context);
     //Resources res = context.getResources();
     mShapeDrawable = new GradientDrawable();
-  
+
+    mState =new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     mBadgeRadius = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_radius",mBadgeRadius);
     mBadgeWidePadding = context->getDimensionPixelSize("cdroid:dimen/mtrl_badge_long_text_horizontal_padding",0);
     mBadgeWithTextRadius = context->getDimensionPixelSize("cdroid::dimen/mtrl_badge_with_text_radius",mBadgeWithTextRadius);
   
-    mSavedState = new SavedState(context);
-    setBackgroundColor(mSavedState->mBackgroundColor);
-    setTextAppearanceResource("@cdroid:style/TextAppearance.MaterialComponents.Badge");
+    mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
+    //setBackgroundColor(mState->mBackgroundColor);
+    setTextAppearance("@cdroid:style/TextAppearance.MaterialComponents.Badge");
+    restoreState();
 }
 
 void BadgeDrawable::updateBadgeCoordinates(View* anchorView) {
@@ -209,15 +124,9 @@ void BadgeDrawable::updateBadgeCoordinates(View* anchorView) {
 
 void BadgeDrawable::updateBadgeCoordinates(View* anchorView, FrameLayout* customBadgeParent) {
     mAnchorView = anchorView;
-  
-    if (BadgeUtils::USE_COMPAT_PARENT && (customBadgeParent == nullptr)) {
-        tryWrapAnchorInCompatParent(anchorView);
-    } else {
-        mCustomBadgeParent = customBadgeParent;
-    }
-    if (!BadgeUtils::USE_COMPAT_PARENT) {
-        updateAnchorParentToNotClip(anchorView);
-    }
+    mCustomBadgeParent = customBadgeParent;
+
+    updateAnchorParentToNotClip(anchorView);
     updateCenterAndBounds();
     invalidateSelf();
 }
@@ -267,12 +176,16 @@ void BadgeDrawable::updateAnchorParentToNotClip(View* anchorView) {
 }
 
 int BadgeDrawable::getBackgroundColor() const{
-    return mSavedState->mBackgroundColor;
+    return mShapeDrawable->getColor()->getDefaultColor();
 }
 
 void BadgeDrawable::setBackgroundColor(int backgroundColor) {
-    mSavedState->mBackgroundColor = backgroundColor;
-    auto  backgroundColorStateList = ColorStateList::valueOf(backgroundColor);
+    mState->setBackgroundColor(backgroundColor);
+    onBackgroundColorUpdated();
+}
+
+void BadgeDrawable::onBackgroundColorUpdated(){
+    auto  backgroundColorStateList = ColorStateList::valueOf(mState->getBackgroundColor());
     if (mShapeDrawable->getColor()!=backgroundColorStateList){
         mShapeDrawable->setColor(backgroundColorStateList);
         invalidateSelf();
@@ -280,66 +193,124 @@ void BadgeDrawable::setBackgroundColor(int backgroundColor) {
 }
 
 int BadgeDrawable::getBadgeTextColor() const{
-    return mSavedState->mBackgroundColor;
+    return mState->getBadgeTextColor();
 }
 
 void BadgeDrawable::setBadgeTextColor(int badgeTextColor) {
-    if (mSavedState->mBadgeTextColor != badgeTextColor){
-        mSavedState->mBadgeTextColor = badgeTextColor;
-        invalidateSelf();
+    if (mState->getBadgeTextColor() != badgeTextColor){
+        mState->setBadgeTextColor (badgeTextColor);
+        onBadgeTextColorUpdated();
     }
+}
+
+void BadgeDrawable::onBadgeTextColorUpdated() {
+    //textDrawableHelper.getTextPaint().setColor(state.getBadgeTextColor());
+    invalidateSelf();
 }
 
 bool BadgeDrawable::hasNumber() const{
-    return mSavedState->mNumber != BADGE_NUMBER_NONE;
+    return !mState->hasText()&&mState->hasNumber();
 }
 
 int BadgeDrawable::getNumber() const{
-    if (!hasNumber()) {
-        return 0;
-    }
-    return mSavedState->mNumber;
+    return mState->hasNumber()?mState->getNumber():0;
 }
 
 void BadgeDrawable::setNumber(int number) {
     number = std::max(0, number);
-    if (mSavedState->mNumber != number) {
-        mSavedState->mNumber = number;
+    if (mState->getNumber() != number) {
+        mState->setNumber(number);
         updateCenterAndBounds();
-        invalidateSelf();
+        onNumberUpdated();
     }
 }
 
 /** Resets any badge number so that a numberless badge will be displayed. */
 void BadgeDrawable::clearNumber() {
-    mSavedState->mNumber = BADGE_NUMBER_NONE;
-    invalidateSelf();
-}
-
-int BadgeDrawable::getMaxCharacterCount() const{
-     return mSavedState->mMaxCharacterCount;
-}
-
-void BadgeDrawable::setMaxCharacterCount(int maxCharacterCount) {
-    if (mSavedState->mMaxCharacterCount != maxCharacterCount) {
-       mSavedState->mMaxCharacterCount = maxCharacterCount;
-       updateMaxBadgeNumber();
-       updateCenterAndBounds();
-       invalidateSelf();
+    if(mState->hasNumber()){
+        mState->clearNumber();
+        onNumberUpdated();
     }
 }
 
+void BadgeDrawable::onNumberUpdated() {
+    // The text has priority over the number so when the number changes, the badge is updated
+    // only if there is no text.
+    if (!hasText()) {
+        onBadgeContentUpdated();
+    }
+}
+
+bool BadgeDrawable::hasText()const{
+    return mState->hasText();
+}
+
+std::string BadgeDrawable::getText()const{
+    return mState->getText();
+}
+
+void BadgeDrawable::setText(const std::string& text) {
+    if (mState->getText()!= text) {
+        mState->setText(text);
+        onTextUpdated();
+    }
+}
+
+void BadgeDrawable::clearText(){
+    if(mState->hasText()){
+        mState->clearText();
+        onTextUpdated();
+    }
+}
+
+void BadgeDrawable::onTextUpdated() {
+    // The text has priority over the number so any text change updates the badge content.
+    onBadgeContentUpdated();
+}
+
+int BadgeDrawable::getMaxCharacterCount() const{
+     return mState->getMaxCharacterCount();
+}
+
+void BadgeDrawable::setMaxCharacterCount(int maxCharacterCount) {
+    if (mState->getMaxCharacterCount() != maxCharacterCount) {
+       mState->setMaxCharacterCount(maxCharacterCount);
+       onMaxBadgeLengthUpdated();
+    }
+}
+
+int BadgeDrawable::getMaxNumber() const{
+    return mState->getMaxNumber();
+}
+
+void BadgeDrawable::setMaxNumber(int maxNumber) {
+    if (mState->getMaxNumber() != maxNumber) {
+        mState->setMaxNumber(maxNumber);
+        onMaxBadgeLengthUpdated();
+    }
+}
+
+void BadgeDrawable::onMaxBadgeLengthUpdated() {
+    updateMaxBadgeNumber();
+    //textDrawableHelper.setTextSizeDirty(true);
+    updateCenterAndBounds();
+    invalidateSelf();
+}
+
 int BadgeDrawable::getBadgeGravity() const{
-    return mSavedState->mBadgeGravity;
+    return mState->getBadgeGravity();
 }
 
 void BadgeDrawable::setBadgeGravity(int gravity) {
-    if (mSavedState->mBadgeGravity != gravity) {
-        mSavedState->mBadgeGravity = gravity;
-        if (mAnchorView != nullptr && mAnchorView != nullptr) {
-            updateBadgeCoordinates(
-                mAnchorView, mCustomBadgeParent != nullptr ? mCustomBadgeParent : nullptr);
-        }
+    if (mState->getBadgeGravity() != gravity) {
+        mState->setBadgeGravity(gravity);
+         onBadgeGravityUpdated();
+    }
+}
+void BadgeDrawable::onBadgeGravityUpdated(){
+    if (mAnchorView != nullptr && mAnchorView != nullptr) {
+        updateBadgeCoordinates(
+            mAnchorView, mCustomBadgeParent != nullptr ? mCustomBadgeParent : nullptr);
     }
 }
 
@@ -352,11 +323,11 @@ void BadgeDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilte
 }
 
 int BadgeDrawable::getAlpha()const {
-    return mSavedState->mAlpha;
+    return mState->getAlpha();
 }
 
 void BadgeDrawable::setAlpha(int alpha) {
-    mSavedState->mAlpha = alpha;
+    mState->setAlpha(alpha);
     invalidateSelf();
 }
 
@@ -380,8 +351,8 @@ void BadgeDrawable::draw(Canvas& canvas) {
         return;
     }
     mShapeDrawable->draw(canvas);
-    if (hasNumber()) {
-        drawText(canvas);
+    if (hasBadgeContent()) {
+        drawBadgeContent(canvas);
     }
 }
 
@@ -394,15 +365,15 @@ bool BadgeDrawable::onStateChange(const std::vector<int>& state) {
 }
 
 void BadgeDrawable::setContentDescriptionNumberless(const std::string& charSequence) {
-    mSavedState->contentDescriptionNumberless = charSequence;
+    mState->setContentDescriptionNumberless(charSequence);
 }
 
 /*void BadgeDrawable::setContentDescriptionQuantityStringsResource(int stringsResource) {
-    mSavedState->contentDescriptionQuantityStrings = stringsResource;
+    mState->contentDescriptionQuantityStrings = stringsResource;
 }*/
 
 void BadgeDrawable::setContentDescriptionExceedsMaxBadgeNumberStringResource(int stringsResource) {
-    mSavedState->contentDescriptionExceedsMaxBadgeNumberRes = stringsResource;
+    //mState->setContentDescriptionExceedsMaxBadgeNumberRes(stringsResource);
 }
 
 std::string BadgeDrawable::getContentDescription() const{
@@ -410,7 +381,7 @@ std::string BadgeDrawable::getContentDescription() const{
         return null;
     }
     if (hasNumber()) {
-        if (mSavedState.contentDescriptionQuantityStrings > 0) {
+        if (mState.contentDescriptionQuantityStrings > 0) {
           Context context = mContext.get();
           if (context == null) {
               return null;
@@ -419,44 +390,150 @@ std::string BadgeDrawable::getContentDescription() const{
               return context
                   .getResources()
                   .getQuantityString(
-                      mSavedState.contentDescriptionQuantityStrings, getNumber(), getNumber());
+                      mState.contentDescriptionQuantityStrings, getNumber(), getNumber());
           } else {
               return context.getString(
-                  mSavedState.contentDescriptionExceedsMaxBadgeNumberRes, mMaxBadgeNumber);
+                  mState.contentDescriptionExceedsMaxBadgeNumberRes, mMaxBadgeNumber);
           }
         } else {
             return null;
         }
-    } else */{
-        return mSavedState->contentDescriptionNumberless;
-    }
+    } else {
+        return mState->contentDescriptionNumberless;
+    }*/
+    return"";
 }
 
 void BadgeDrawable::setHorizontalOffset(int px) {
-    mSavedState->mHorizontalOffset = px;
-    updateCenterAndBounds();
+    setHorizontalOffsetWithoutText(px);
+    setHorizontalOffsetWithText(px);
 }
 
 int BadgeDrawable::getHorizontalOffset() const{
-    return mSavedState->mHorizontalOffset;
+    return mState->getHorizontalOffsetWithoutText();
 }
 
-void BadgeDrawable::setVerticalOffset(int px) {
-    mSavedState->mVerticalOffset = px;
+void BadgeDrawable::setHorizontalOffsetWithoutText(int px) {
+    mState->setHorizontalOffsetWithoutText(px);
     updateCenterAndBounds();
 }
 
-int BadgeDrawable::getVerticalOffset() const{
-    return mSavedState->mVerticalOffset;
+int BadgeDrawable::getHorizontalOffsetWithoutText() const{
+    return mState->getHorizontalOffsetWithoutText();
 }
 
-void BadgeDrawable::setTextAppearanceResource(const std::string& id) {
+void BadgeDrawable::setHorizontalOffsetWithText(int px) {
+    mState->setHorizontalOffsetWithText(px);
+    updateCenterAndBounds();
+}
+
+int BadgeDrawable::getHorizontalOffsetWithText() const{
+    return mState->getHorizontalOffsetWithText();
+}
+
+void BadgeDrawable::setVerticalOffset(int px) {
+    setVerticalOffsetWithoutText(px);
+    setVerticalOffsetWithText(px);
+}
+
+int BadgeDrawable::getVerticalOffset() const{
+    return mState->getVerticalOffsetWithoutText();
+}
+
+void BadgeDrawable::setVerticalOffsetWithoutText(int px) {
+    mState->setVerticalOffsetWithoutText(px);
+    updateCenterAndBounds();
+}
+
+int BadgeDrawable::getVerticalOffsetWithoutText()const{
+    return mState->getVerticalOffsetWithoutText();
+}
+
+void BadgeDrawable::setVerticalOffsetWithText(int px) {
+    mState->setVerticalOffsetWithText(px);
+    updateCenterAndBounds();
+}
+
+int BadgeDrawable::getVerticalOffsetWithText() const{
+    return mState->getVerticalOffsetWithText();
+}
+
+void BadgeDrawable::setLargeFontVerticalOffsetAdjustment(int px) {
+    mState->setLargeFontVerticalOffsetAdjustment(px);
+    updateCenterAndBounds();
+}
+
+int BadgeDrawable::getLargeFontVerticalOffsetAdjustment() const{
+    return mState->getLargeFontVerticalOffsetAdjustment();
+}
+
+void BadgeDrawable::setAdditionalVerticalOffset(int px) {
+    mState->setAdditionalVerticalOffset(px);
+    updateCenterAndBounds();
+}
+
+int BadgeDrawable::getAdditionalVerticalOffset() const{
+    return mState->getAdditionalVerticalOffset();
+}
+
+void BadgeDrawable::setTextAppearance(const std::string& id) {
     const AttributeSet atts = mContext->obtainStyledAttributes(id);
     const int textSize = atts.getInt("textSize",12);
     Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);
     mTextLayout->setFontSize(textSize);
     mTextLayout->setTypeface(tf);
     atts.getColor("textColor");
+}
+
+void BadgeDrawable::onBadgeTextAppearanceUpdated() {
+    if (mContext == nullptr) {
+        return;
+    }
+    /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
+    if (textDrawableHelper.getTextAppearance() == textAppearance) {
+        return;
+    }
+    //textDrawableHelper.setTextAppearance(textAppearance, context);
+    */
+    onBadgeTextColorUpdated();
+    updateCenterAndBounds();
+    invalidateSelf();
+}
+
+void BadgeDrawable::setBadgeWithoutTextShapeAppearance(const std::string& id) {
+    mState->setBadgeShapeAppearanceResId(id);
+    onBadgeShapeAppearanceUpdated();
+}
+
+void BadgeDrawable::setBadgeWithoutTextShapeAppearanceOverlay(const std::string& id) {
+    mState->setBadgeShapeAppearanceOverlayResId(id);
+    onBadgeShapeAppearanceUpdated();
+}
+
+void BadgeDrawable::setBadgeWithTextShapeAppearance(const std::string& id) {
+    mState->setBadgeWithTextShapeAppearanceResId(id);
+    onBadgeShapeAppearanceUpdated();
+}
+
+void BadgeDrawable::setBadgeWithTextShapeAppearanceOverlay(const std::string& id) {
+    mState->setBadgeWithTextShapeAppearanceOverlayResId(id);
+    onBadgeShapeAppearanceUpdated();
+}
+void BadgeDrawable::onBadgeShapeAppearanceUpdated() {
+    if (mContext == nullptr) {
+        return;
+    }
+    /*shapeDrawable.setShapeAppearanceModel(
+      ShapeAppearanceModel.builder(
+              context,
+              hasBadgeContent()
+                  ? state.getBadgeWithTextShapeAppearanceResId()
+                  : state.getBadgeShapeAppearanceResId(),
+              hasBadgeContent()
+                  ? state.getBadgeWithTextShapeAppearanceOverlayResId()
+                  : state.getBadgeShapeAppearanceOverlayResId())
+          .build());*/
+    invalidateSelf();
 }
 
 void BadgeDrawable::updateCenterAndBounds() {
@@ -471,94 +548,291 @@ void BadgeDrawable::updateCenterAndBounds() {
     anchorView->getDrawingRect(anchorRect);
   
     ViewGroup* customBadgeParent = mCustomBadgeParent != nullptr ? mCustomBadgeParent : nullptr;
-    if ((customBadgeParent != nullptr) || BadgeUtils::USE_COMPAT_PARENT) {
-      // Calculates coordinates relative to the parent.
-        ViewGroup* viewGroup = customBadgeParent == nullptr ? (ViewGroup*) anchorView->getParent() : customBadgeParent;
-        viewGroup->offsetDescendantRectToMyCoords(anchorView, anchorRect);
+    if (customBadgeParent != nullptr) {
+        // Calculates coordinates relative to the parent.
+        customBadgeParent->offsetDescendantRectToMyCoords(anchorView, anchorRect);
     }
   
-    calculateCenterAndBounds(mContext, anchorRect, anchorView);
+    calculateCenterAndBounds(anchorRect, anchorView);
   
     BadgeUtils::updateBadgeBounds(mBadgeBounds, mBadgeCenterX, mBadgeCenterY, mHalfBadgeWidth, mHalfBadgeHeight);
-  
-    mShapeDrawable->setCornerRadius(mCornerRadius);
+ 
+    if(mCornerRadius!=BADGE_RADIUS_NOT_SPECIFIED){
+        mShapeDrawable->setCornerRadius(mCornerRadius);
+    }
     if (tmpRect!=mBadgeBounds) {
         mShapeDrawable->setBounds(mBadgeBounds);
     }
 }
 
-void BadgeDrawable::calculateCenterAndBounds(Context* context,const Rect& anchorRect, View* anchorView) {
-    switch (mSavedState->mBadgeGravity) {
+int BadgeDrawable::getTotalVerticalOffsetForState() const{
+    int vOffset = mState->getVerticalOffsetWithoutText();
+    if (hasBadgeContent()) {
+        vOffset = mState->getVerticalOffsetWithText();
+        if (mContext != nullptr) {
+             float progress =
+              AnimationUtils::lerp(0.f, 1.f,FONT_SCALE_THRESHOLD, 1.f, 1.f/*MaterialResources.getFontScale(mContext)*/ - 1.f);
+              vOffset = AnimationUtils::lerp(vOffset, vOffset - mState->getLargeFontVerticalOffsetAdjustment(), progress);
+        }
+    }
+
+    // If the offset alignment mode is at the edge of the anchor, we want to move the badge
+    // so that its origin is at the edge.
+    if (mState->mOffsetAlignmentMode == OFFSET_ALIGNMENT_MODE_EDGE) {
+        vOffset -= std::round(mHalfBadgeHeight);
+    }
+    return vOffset + mState->getAdditionalVerticalOffset();
+}
+
+int BadgeDrawable::getTotalHorizontalOffsetForState() const{
+    int hOffset = hasBadgeContent()
+          ? mState->getHorizontalOffsetWithText()
+          : mState->getHorizontalOffsetWithoutText();
+    // If the offset alignment mode is legacy, then we want to add the legacy inset to the offset.
+    if (mState->mOffsetAlignmentMode == OFFSET_ALIGNMENT_MODE_LEGACY) {
+        hOffset += hasBadgeContent() ? mState->mHorizontalInsetWithText : mState->mHorizontalInset;
+    }
+    return hOffset + mState->getAdditionalHorizontalOffset();
+}
+
+void BadgeDrawable::calculateCenterAndBounds(const Rect& anchorRect, View* anchorView) {
+    mCornerRadius = hasBadgeContent()?mState->mBadgeWithTextRadius:mState->mBadgeRadius;
+    if (mCornerRadius != BADGE_RADIUS_NOT_SPECIFIED) {
+        mHalfBadgeWidth = mCornerRadius;
+        mHalfBadgeHeight = mCornerRadius;
+    } else {
+        mHalfBadgeWidth =
+          std::round(hasBadgeContent() ? mState->mBadgeWithTextWidth / 2 : mState->mBadgeWidth / 2);
+        mHalfBadgeHeight =
+          std::round(hasBadgeContent() ? mState->mBadgeWithTextHeight / 2 : mState->mBadgeHeight / 2);
+    }
+
+    // If the badge has a number, we want to make sure that the badge is at least tall/wide
+    // enough to encompass the text with padding.
+    if(hasBadgeContent()){
+        std::string badgeContent=getBadgeContent();
+        mTextLayout->setText(badgeContent);
+        mTextLayout->relayout(1);
+        mHalfBadgeWidth = std::max(mHalfBadgeWidth,
+              mTextLayout->getMaxLineWidth() / 2.f
+                  + mState->getBadgeHorizontalPadding());
+
+        mHalfBadgeHeight =std::max(mHalfBadgeHeight,
+              mTextLayout->getLineHeight(0)/ 2.f
+                  + mState->getBadgeVerticalPadding());
+
+        // If the badge has text, it should at least have the same width as it does height
+        mHalfBadgeWidth = std::max(mHalfBadgeWidth, mHalfBadgeHeight);
+    }
+
+    const int totalVerticalOffset = getTotalVerticalOffsetForState();
+    switch (mState->getBadgeGravity()) {
     case BOTTOM_END:
     case BOTTOM_START:
-        mBadgeCenterY = anchorRect.bottom() - mSavedState->mVerticalOffset;
+        mBadgeCenterY = anchorRect.bottom() - totalVerticalOffset;
         break;
     case TOP_END:
     case TOP_START:
     default:
-        mBadgeCenterY = anchorRect.top + mSavedState->mVerticalOffset;
+        mBadgeCenterY = anchorRect.top + totalVerticalOffset;
         break;
     }
-    if (getNumber() <= MAX_CIRCULAR_BADGE_NUMBER_COUNT) {
-        mCornerRadius = !hasNumber() ? mBadgeRadius : mBadgeWithTextRadius;
-        mHalfBadgeHeight = mCornerRadius;
-        mHalfBadgeWidth = mCornerRadius;
-    } else {
-        mCornerRadius = mBadgeWithTextRadius;
-        mHalfBadgeHeight = mCornerRadius;
-        std::string badgeText = getBadgeText();
-        mTextLayout->setText(badgeText);
-        mTextLayout->relayout(1);
-        mHalfBadgeWidth = mTextLayout->getMaxLineWidth()/2.f + mBadgeWidePadding;
-    }
   
-    const int inset = context->getDimensionPixelSize(hasNumber()
-                    ? "@cdroid:dimen/mtrl_badge_text_horizontal_edge_offset"
-                    : "@cdroid:dimen/mtrl_badge_horizontal_edge_offset");
+    const int totalHorizontalOffset = getTotalHorizontalOffsetForState();
     // Update the centerX based on the badge width and 'inset' from start or end boundary of anchor.
-    switch (mSavedState->mBadgeGravity) {
+    switch (mState->getBadgeGravity()) {
     case BOTTOM_START:
     case TOP_START:
-        mBadgeCenterX = anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_LTR
-              ? anchorRect.left - mHalfBadgeWidth + inset + mSavedState->mHorizontalOffset
-              : anchorRect.right() + mHalfBadgeWidth - inset - mSavedState->mHorizontalOffset;
+        mBadgeCenterX = mState->mBadgeFixedEdge == BADGE_FIXED_EDGE_START
+            ? (anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_LTR
+              ? anchorRect.left + mHalfBadgeWidth -(mHalfBadgeHeight*2 -totalHorizontalOffset)
+              : anchorRect.right() - mHalfBadgeWidth +(mHalfBadgeHeight*2 - totalHorizontalOffset))
+            : (anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_LTR
+                ? anchorRect.left - mHalfBadgeWidth + totalHorizontalOffset
+                : anchorRect.right() + mHalfBadgeWidth - totalHorizontalOffset);
       break;
     case BOTTOM_END:
     case TOP_END:
     default:
-        mBadgeCenterX =anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_LTR
-              ? anchorRect.right() + mHalfBadgeWidth - inset - mSavedState->mHorizontalOffset
-              : anchorRect.left - mHalfBadgeWidth + inset + mSavedState->mHorizontalOffset;
+        mBadgeCenterX = mState->mBadgeFixedEdge ==BADGE_FIXED_EDGE_START
+            ? (anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_LTR
+              ? anchorRect.right() + mHalfBadgeWidth - totalHorizontalOffset
+              : anchorRect.left - mHalfBadgeWidth + totalHorizontalOffset)
+            : (anchorView->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL
+              ? anchorRect.right() - mHalfBadgeWidth + (mHalfBadgeHeight * 2 - totalHorizontalOffset)
+              : anchorRect.left + mHalfBadgeWidth - (mHalfBadgeHeight * 2 - totalHorizontalOffset)); 
+
         break;
+    }
+    if (mState->isAutoAdjustedToGrandparentBounds()) {
+        autoAdjustWithinGrandparentBounds(anchorView);
+    } else {
+        autoAdjustWithinViewBounds(anchorView, nullptr);
     }
 }
 
-void BadgeDrawable::drawText(Canvas& canvas) {
+void BadgeDrawable::autoAdjustWithinViewBounds(View* anchorView, View* ancestorView) {
+    // The top of the badge may be cut off by the anchor view's ancestor view if clipChildren is
+    // false (eg. in the case of the bottom navigation bar). If that is the case, we should adjust
+    // the position of the badge.
+  
+    float totalAnchorYOffset;
+    float totalAnchorXOffset;
+    ViewGroup* anchorParent;
+    // If there is a custom badge parent, we should use its coordinates instead of the anchor
+    // view's parent.
+    ViewGroup* customAnchorParent = getCustomBadgeParent();
+    if (customAnchorParent == nullptr) {
+        totalAnchorYOffset = anchorView->getY();
+        totalAnchorXOffset = anchorView->getX();
+        anchorParent = anchorView->getParent();
+    } else {
+        totalAnchorYOffset = 0;
+        totalAnchorXOffset = 0;
+        anchorParent = customAnchorParent;
+    }
+  
+    ViewGroup* currentViewParent = anchorParent;
+    while (/*currentViewParent instanceof View &&*/currentViewParent&& currentViewParent != ancestorView) {
+        ViewGroup* viewGrandparent = currentViewParent->getParent();
+        if (viewGrandparent==nullptr|| viewGrandparent->getClipChildren()) {
+            break;
+        }
+        View* currentViewGroup = currentViewParent;
+        totalAnchorYOffset += currentViewGroup->getY();
+        totalAnchorXOffset += currentViewGroup->getX();
+        currentViewParent = currentViewParent->getParent();
+    }
+  
+    // If currentViewParent is not a View, all ancestor Views did not clip their children
+    /*if (!(currentViewParent instanceof View)) {
+        return;
+    }*/
+  
+    float topCutOff = getTopCutOff(totalAnchorYOffset);
+    float leftCutOff = getLeftCutOff(totalAnchorXOffset);
+    float bottomCutOff = getBottomCutOff(currentViewParent->getHeight(), totalAnchorYOffset);
+    float rightCutOff = getRightCutoff(currentViewParent->getWidth(), totalAnchorXOffset);
+  
+    // If there's any part of the badge that is cut off, we move the badge accordingly.
+    if (topCutOff < 0) {
+        mBadgeCenterY += std::abs(topCutOff);
+    }
+    if (leftCutOff < 0) {
+        mBadgeCenterX += std::abs(leftCutOff);
+    }
+    if (bottomCutOff > 0) {
+        mBadgeCenterY -= std::abs(bottomCutOff);
+    }
+    if (rightCutOff > 0) {
+        mBadgeCenterX -= std::abs(rightCutOff);
+    }
+}
+
+/** Adjust the badge placement so it is within its anchor's grandparent view. */
+void BadgeDrawable::autoAdjustWithinGrandparentBounds(View* anchorView) {
+    // If there is a custom badge parent, we should use its coordinates instead of the anchor
+    // view's parent.
+    ViewGroup* customAnchor = getCustomBadgeParent();
+    ViewGroup* anchorParent = nullptr;
+    if (customAnchor == nullptr) {
+        anchorParent = anchorView->getParent();
+    } else {
+        anchorParent = customAnchor;
+    }
+    if (1/*anchorParent instanceof View && anchorParent.getParent() instanceof View*/) {
+        autoAdjustWithinViewBounds(anchorView, anchorParent->getParent());
+    }
+}
+
+float BadgeDrawable::getTopCutOff(float totalAnchorYOffset) const{
+    return mBadgeCenterY - mHalfBadgeHeight + totalAnchorYOffset;
+}
+
+float BadgeDrawable::getLeftCutOff(float totalAnchorXOffset) const{
+    return mBadgeCenterX - mHalfBadgeWidth + totalAnchorXOffset;
+}
+
+float BadgeDrawable::getBottomCutOff(float ancestorHeight, float totalAnchorYOffset) const{
+    return mBadgeCenterY + mHalfBadgeHeight - ancestorHeight + totalAnchorYOffset;
+}
+
+float BadgeDrawable::getRightCutoff(float ancestorWidth, float totalAnchorXOffset) const{
+    return mBadgeCenterX + mHalfBadgeWidth - ancestorWidth + totalAnchorXOffset;
+}
+
+void BadgeDrawable::drawBadgeContent(Canvas& canvas) {
     Rect textBounds;
-    const std::string badgeText = getBadgeText();
+    const std::string badgeContent = getBadgeContent();
     const int textBoundHeight= mTextLayout->getHeight()/2;
     const int textBoundWidth = mTextLayout->getLineWidth(0);
     canvas.move_to(mBadgeCenterX-textBoundWidth/2,/*mBadgeCenterY + textBoundHeight+*/mTextLayout->getLineBaseline(0));
-    canvas.set_color(mSavedState->mBadgeTextColor);
+    canvas.set_color(mState->getBadgeTextColor());
     canvas.set_font_size(mTextLayout->getFontSize());
     //canvas.show_text(badgeText);
-    canvas.draw_text(mBadgeBounds,badgeText,Gravity::CENTER);
+    canvas.draw_text(mBadgeBounds,badgeContent,Gravity::CENTER);
 }
 
-std::string BadgeDrawable::getBadgeText() {
-  // If number exceeds max count, show badgeMaxCount+ instead of the number.
-  if (getNumber() <= mMaxBadgeNumber) {
-      //return NumberFormat.getInstance().format(getNumber());
-      return std::to_string(getNumber());
-  } else {
-      //return context->getString(R.string.mtrl_exceed_max_badge_number_suffix,
-      //    mMaxBadgeNumber, DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX);
-      return "";
-  }
+bool BadgeDrawable::hasBadgeContent() const{
+    return hasText() || hasNumber();
+}
+
+std::string BadgeDrawable::getBadgeContent() const{
+    if (hasText()) {
+        return getTextBadgeText();
+    } else if (hasNumber()) {
+        return getNumberBadgeText();
+    } else {
+        return "";
+    }
+}
+
+std::string BadgeDrawable::getTextBadgeText() const{
+    std::string text = getText();
+    const int maxCharacterCount = getMaxCharacterCount();
+    if (maxCharacterCount == BADGE_CONTENT_NOT_TRUNCATED) {
+        return text;
+    }
+    if(text.length()>maxCharacterCount){
+        if(mContext==nullptr){
+            return "";
+        }
+        text = text.substr(0,maxCharacterCount-1);
+        return text + DEFAULT_EXCEED_MAX_BADGE_TEXT_SUFFIX;
+    } else {
+        return text;
+    }
+}
+
+std::string BadgeDrawable::getNumberBadgeText() const{
+    // If number exceeds max count, show badgeMaxCount+ instead of the number.
+    if (mMaxBadgeNumber == BADGE_CONTENT_NOT_TRUNCATED || getNumber() <= mMaxBadgeNumber) {
+        return std::to_string(getNumber());//NumberFormat.getInstance(state.getNumberLocale()).format(getNumber());
+    } else {
+        if(mContext==nullptr){
+            return "";
+        }
+        return std::to_string(mMaxBadgeNumber) + DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX;
+        /*return String.format(
+            state.getNumberLocale(),
+            context.getString(R.string.mtrl_exceed_max_badge_number_suffix),
+            maxBadgeNumber,DEFAULT_EXCEED_MAX_BADGE_NUMBER_SUFFIX);
+        */
+    }
+}
+
+void BadgeDrawable::onBadgeContentUpdated() {
+    //textDrawableHelper.setTextSizeDirty(true);
+    onBadgeShapeAppearanceUpdated();
+    updateCenterAndBounds();
+    invalidateSelf();
 }
 
 void BadgeDrawable::updateMaxBadgeNumber() {
-    mMaxBadgeNumber = (int) std::pow(10.0d, (double) getMaxCharacterCount() - 1) - 1;
+    if(getMaxCharacterCount() != BADGE_CONTENT_NOT_TRUNCATED){
+        mMaxBadgeNumber = (int) std::pow(10.0d, (double) getMaxCharacterCount() - 1) - 1;
+    }else{
+        mMaxBadgeNumber = getMaxNumber();
+    }
 }
 }/*endof namespace*/
-#endif

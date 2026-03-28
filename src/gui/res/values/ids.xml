@@ -283,4 +283,5 @@
   <item type="id" name="nav_controller_view_tag" />
   <!-- BadageDrawable -->
   <item type="id" name="mtrl_anchor_parent"/>
+  <item type="id" name="mtrl_internal_children_alpha_tag"/>
 </resources>

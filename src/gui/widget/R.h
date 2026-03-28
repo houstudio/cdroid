@@ -247,6 +247,7 @@ namespace R{
          static constexpr int accessibilityActionScrollInDirection= 0x000004D6 ;/*1238*/
          static constexpr int nav_controller_view_tag = 0x000004D7 ;/*1239*/
          static constexpr int mtrl_anchor_parent      = 0x000004D8 ;/*1240*/
+         static constexpr int mtrl_internal_children_alpha_tag= 0x000004D9 ;/*1241*/
     };/*namespace id*/
 
     namespace strings{

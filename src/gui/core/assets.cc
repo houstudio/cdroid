@@ -365,9 +365,11 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         std::istream*stream = pak->getInputStream(resname);
         if(stream)return std::unique_ptr<std::istream>(stream);
     }
-    if(fullresid.empty()||resname.empty())return nullptr;
     struct stat fs;
-    if(stat(fullresid.c_str(),&fs)<0)return nullptr;
+    if( fullresid.empty() || resname.empty() || (stat(fullresid.c_str(),&fs)<0)){
+        LOGE("resoure:\"%s\" not found",fullresid.c_str());
+        return nullptr;
+    }
     return std::make_unique<std::ifstream>(fullresid);
 }
 
@@ -542,7 +544,8 @@ int Assets::getDimension(const std::string&refid)const{
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()) 
         return it->second;
-    throw std::runtime_error("Resource not found:" + refid);
+    LOGW("Resource not found:%s",refid.c_str());
+    return 0;
 }
 
 int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
@@ -616,7 +619,9 @@ RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
-            auto cls=ColorStateList::inflate(this,fullresid);
+            auto cls = (fullresid.size()&&(fullresid[0]=='#'))
+                ?ColorStateList::valueOf(std::strtol(fullresid.c_str()+1,nullptr,16))
+                :ColorStateList::inflate(this,fullresid);
             mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){
@@ -648,7 +653,7 @@ void Assets::clearStyles() {
 }
 
 std::string Assets::resolveAttrValue(const std::string&attrResId)const{
-    std::string name=attrResId;
+    std::string name = attrResId;
     AttributeSet atts;
     size_t pos = name.find("attr/");
     if(pos!=std::string::npos){
@@ -666,8 +671,9 @@ std::string Assets::resolveAttrValue(const std::string&attrResId)const{
             pos = name.find("attr");
         }while(pos!=std::string::npos);
         name = parseResource(name,nullptr,nullptr);
-        return name;
     }
+    if((pos=name.find("@"))!=std::string::npos)
+        name.erase(pos,1);
     return name;
 }
 

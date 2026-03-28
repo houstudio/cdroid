@@ -16,8 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <animation/property.h>
-#include <view/view.h>
-
+#include <view/viewgroup.h>
+#include <widget/R.h>
 namespace cdroid{
 
 Property::Property(const std::string&name){
@@ -46,6 +46,46 @@ const std::string Property::getName()const{
     return mName;
 }
 
+class DrawableAlphaProperty:public Property{
+public:
+    static DrawableAlphaProperty DRAWABLE_ALPHA;// = DrawableAlphaProperty();
+
+    DrawableAlphaProperty() :Property("drawableAlpha",INT_TYPE){}
+
+    AnimateValue get(void* object) const override{
+        return ((Drawable*)object)->getAlpha();
+    }
+    void set(void*object, const AnimateValue&v) const override{
+        ((Drawable*)object)->setAlpha(GET_VARIANT(v,int));
+    }
+};
+DrawableAlphaProperty DrawableAlphaProperty::DRAWABLE_ALPHA;
+
+class ChildrenAlphaProperty :public Property{
+
+public:
+    static ChildrenAlphaProperty CHILDREN_ALPHA;
+
+    ChildrenAlphaProperty():Property("childrenAlpha",FLOAT_TYPE){}
+    AnimateValue get(void*object) const override{
+        float* alpha = (float*) ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
+        if (alpha != nullptr) {
+            return *alpha;
+        } else {
+            return 1.f;
+        }
+    }
+
+    void set(void*object, const AnimateValue& value)const override {
+        float alpha = GET_VARIANT(value,float);
+        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, &alpha);
+        for (int i = 0, count = ((ViewGroup*)object)->getChildCount(); i < count; i++) {
+            View* child = ((ViewGroup*)object)->getChildAt(i);
+            child->setAlpha(alpha);
+        }
+    }
+};
+ChildrenAlphaProperty ChildrenAlphaProperty::CHILDREN_ALPHA;
 ////////////////////////////////////////////////////////////////////////////
 
 #define DEFINE_FLOATPROPERTY(PROPNAME, METHOD, PROJ)        \
@@ -128,7 +168,9 @@ static std::unordered_map<std::string,const Property*>props={
     {"translationZ",View::TRANSLATION_Z},
     {"x",View::X},
     {"y",View::Y},
-    {"z",View::Z}
+    {"z",View::Z},
+    {"drawableAlpha",&DrawableAlphaProperty::DRAWABLE_ALPHA},
+    {"childrenAlpha",&ChildrenAlphaProperty::CHILDREN_ALPHA}
 };
 
 Property*Property::fromName(const std::string&propertyName){
@@ -155,6 +197,7 @@ bool Property::reigsterProperty(const std::string&propertyName,Property*prop){
     }
     return false;
 }
+
 
 }/*endof namespace*/
 
