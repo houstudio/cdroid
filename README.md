@@ -33,7 +33,7 @@
 | NumberPicker  |     ListView       |     GridView       | RecyclerView  |  ViewFlipper  |
 | ViewAnimator  |AdapterViewAnimator |    Calendarview    |SimpleMonthView| Chronometer   |
 |  ScrollView   | NestedScrollView   |HorizontalScrollView| DateTimeView  |   ViewPager2  |
-|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |               |
+|YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |   CardView    |
 
 # **Supported Layouts:**
 | FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
@@ -41,13 +41,13 @@
 | TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
 
 # **Supported Drawables:**
-|   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable    |  InsetDrawable  |
-|-------------------|------------------|-------------------------|-----------------|
-|ShapeDrawable      |TransitionDrawable|  AnimatedVectorDrawable |StateListDrawable|
-| LevelListDrawable |   ClipDrawable   |  AnimatedRotateDrawable | RotateDrawable  |
-|GradientDrawable   |  ScaleDrawable   |  AnimatedImageDrawable  | VectorDrawable  |
-|  RippleDrawable   |AnimationDrawable |AnimatedStateListDrawable|  LayerDrawable  |
-
+|   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
+|-------------------|------------------|--------------------------|-----------------|
+|ShapeDrawable      |TransitionDrawable|  AnimatedVectorDrawable  |StateListDrawable|
+| LevelListDrawable |   ClipDrawable   |  AnimatedRotateDrawable  | RotateDrawable  |
+|GradientDrawable   |  ScaleDrawable   |  AnimatedImageDrawable   | VectorDrawable  |
+|  RippleDrawable   |AnimationDrawable |AnimatedStateListDrawable |  LayerDrawable  |
+|   BadgeDrawable   | PictureDrawable  |AnimationScaleListDrawable| RippleDrawable  |
 # **Porting guide:**
 
 * 1 A new product porting should be placed to src/porting/xxx(where xxx is you chipset name)

@@ -211,7 +211,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 AttributeSet itemAtts(attrs);
                 //itemAtts = attrs;
                 if(it==pending->colorStateList.end()){
-                    it = pending->colorStateList.insert({std::move(resUri),{itemAtts}}).first;
+                    it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
                 }else
                     it->second.emplace_back(itemAtts);
             }
@@ -242,7 +242,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 std::string value= getTrimedValue(parser);
                 array.emplace_back(value);
             }
-            mArraies.emplace(std::move(key),std::move(array));
+            mArraies.emplace(key,std::move(array));
         }
     }
     return 0;
@@ -280,14 +280,14 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());
         if( it != mColors.end() ){
-            mColors.insert({std::move(c.first),it->second});
+            mColors.insert({c.first,it->second});
         }
     }
     for(auto& d:pending.dimens){
         auto it = mDimensions.find(d.second);
         LOGD_IF(it==mDimensions.end(),"dimen %s losting refto %s",d.first.c_str(),d.second.c_str());
         if(it != mDimensions.end()){
-            mDimensions.insert({std::move(d.first),it->second});
+            mDimensions.insert({d.first,it->second});
         }
     }
     for(auto& cs:pending.colorStateList){
@@ -295,7 +295,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         for(auto& attr:cs.second){
             cls->addStateColor(this,attr);
         }
-        mStateColors.insert({std::move(cs.first),cls});
+        mStateColors.insert({cs.first,cls});
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
     LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
