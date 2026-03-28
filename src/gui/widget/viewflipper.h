@@ -26,7 +26,6 @@ private:
     static constexpr int DEFAULT_INTERVAL = 3000;
     int mFlipInterval = DEFAULT_INTERVAL;
     bool mAutoStart = false;
-
     bool mRunning = false;
     bool mStarted = false;
     bool mVisible = false;

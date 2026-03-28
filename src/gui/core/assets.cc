@@ -605,7 +605,7 @@ int Assets::getColor(const std::string&refid) {
     throw std::runtime_error("Resource not found:" + refid);
 }
 
-RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
+cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     std::string pkg,name = fullresid,relname;
     parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
@@ -620,9 +620,14 @@ RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
-            auto cls = (fullresid.size()&&(fullresid[0]=='#'))
-                ?ColorStateList::valueOf(std::strtol(fullresid.c_str()+1,nullptr,16))
-                :ColorStateList::inflate(this,fullresid);
+            cdroid::RefPtr<ColorStateList>cls;
+            if(fullresid.size()&&(fullresid[0]=='#')){
+                int argb = std::strtol(fullresid.c_str()+1,nullptr,16);
+                if( fullresid.size() < 8 ) argb |= 0xFF000000;
+                cls = ColorStateList::valueOf(argb);
+            }else{
+                cls = ColorStateList::inflate(this,fullresid);
+            }
             mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){

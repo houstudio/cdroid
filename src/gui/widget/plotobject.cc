@@ -271,7 +271,7 @@ void PlotObject::draw(cdroid::Canvas&painter,PlotView*pw){
     }
     // Draw lines:
     if (d->type & Lines) {
-	bool bPrevious = false;
+        bool bPrevious = false;
         painter.set_source(linePen());
         PointF Previous; // Initialize to null
         for (const PlotPoint *pp : d->pList) {
