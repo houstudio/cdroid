@@ -90,10 +90,10 @@ public:
         data->mText.clear();
         event->depth = data->depth++;
         for(int i = 0;attrs[i];i+=2){
-            const char* key = strrchr(attrs[i],' ');
-            if(key) key++;
-            else key = attrs[i];
-            event->atts->insert({std::string(key),AttributeSet::normalize(parser->mPackage,std::string(attrs[i+1]))});
+            const char* nmsp= strrchr(attrs[i],' ');
+            const char* attr= attrs[i+1];
+            const char* key = nmsp?(nmsp+1):attrs[i];
+            event->atts->insert({std::string(key),AttributeSet::normalize(parser->mPackage,std::string(attr))});
         }
         data->eventQueue.push(event);
     }

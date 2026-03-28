@@ -365,9 +365,11 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         std::istream*stream = pak->getInputStream(resname);
         if(stream)return std::unique_ptr<std::istream>(stream);
     }
-    if(fullresid.empty()||resname.empty())return nullptr;
     struct stat fs;
-    if(stat(fullresid.c_str(),&fs)<0)return nullptr;
+    if( fullresid.empty() || resname.empty() || (stat(fullresid.c_str(),&fs)<0)){
+        LOGE("resoure:\"%s\" not found",fullresid.c_str());
+        return nullptr;
+    }
     return std::make_unique<std::ifstream>(fullresid);
 }
 
@@ -617,7 +619,9 @@ RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
-            auto cls=ColorStateList::inflate(this,fullresid);
+            auto cls = (fullresid.size()&&(fullresid[0]=='#'))
+                ?ColorStateList::valueOf(std::strtol(fullresid.c_str()+1,nullptr,16))
+                :ColorStateList::inflate(this,fullresid);
             mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){

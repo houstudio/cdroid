@@ -669,7 +669,6 @@ void BadgeDrawable::calculateCenterAndBounds(const Rect& anchorRect, View* ancho
     } else {
         autoAdjustWithinViewBounds(anchorView, nullptr);
     }
-    LOGD("Center=%.f,%.f harf=%.f,%.f",mBadgeCenterX,mBadgeCenterY,mHalfBadgeWidth,mHalfBadgeHeight);
 }
 
 void BadgeDrawable::autoAdjustWithinViewBounds(View* anchorView, View* ancestorView) {
