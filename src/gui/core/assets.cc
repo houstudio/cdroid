@@ -391,8 +391,10 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(std::istream&stream,int wid
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
-    std::unique_ptr<std::istream> stm = getInputStream(resname);
-    if(stm)return loadImage(*stm,width,height);
+    if(!resname.empty()&&resname.compare("null")){
+        std::unique_ptr<std::istream> stm = getInputStream(resname);
+        if(stm) return loadImage(*stm,width,height);
+    }
     return nullptr;
 }
 
