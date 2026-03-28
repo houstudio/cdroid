@@ -365,9 +365,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         std::istream*stream = pak->getInputStream(resname);
         if(stream)return std::unique_ptr<std::istream>(stream);
     }
-    struct stat fs;
-    if( fullresid.empty() || resname.empty() || (stat(fullresid.c_str(),&fs)<0)){
-        LOGE("resoure:\"%s\" not found",fullresid.c_str());
+    if( fullresid.empty() || resname.empty() || (access(fullresid.c_str(),F_OK)<0)){
+        LOGD("resoure:\"%s\" not found",fullresid.c_str());
         return nullptr;
     }
     return std::make_unique<std::ifstream>(fullresid);
