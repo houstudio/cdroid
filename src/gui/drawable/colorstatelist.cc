@@ -243,12 +243,12 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
-#if 0
+#if 1
     static SparseArray<std::weak_ptr<ColorStateList>>sCache;
     const int index = sCache.indexOfKey(color);
     if(index >= 0){
-        auto cached = sCache.valueAt(index).lock();
-        if(cached) return cached;
+        auto cls = sCache.valueAt(index).lock();
+        if(cls) return cls;
         sCache.removeAt(index);
     }
     auto cls =std::make_shared<ColorStateList>(color);

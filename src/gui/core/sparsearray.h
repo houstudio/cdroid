@@ -58,11 +58,11 @@ public:
     }
     int indexOfKey(int key)const{
         auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
-        return itr!=mKeys.end()?int(itr-mKeys.begin()):-1;
+        return (itr!=mKeys.end())&&(*itr == key)?int(itr-mKeys.begin()):-1;
     }
     int indexOfValue(T value)const{
-        auto itr = std::lower_bound(mValues.begin(), mValues.end(), value);
-        return itr!=mValues.end()?int(itr-mValues.begin()):-1;
+        auto itr = std::find(mValues.begin(), mValues.end(), value);
+        return (itr!=mValues.end())?int(itr-mValues.begin()):-1;
     }
     int keyAt(size_t index)const{
         return mKeys[index];
