@@ -81,8 +81,18 @@ Color* Color::valueOf(float r,float g,float b,float a){
 
 unsigned int Color::parseColor(const std::string& colorString){
     if(colorString[0]=='#'){
+        const size_t csLEN = colorString.length();
         unsigned int cc=strtoul(colorString.c_str()+1,nullptr,16);
-        if(colorString.length()<=7)
+        if( csLEN ==4 ){
+            uint32_t r = (cc>>8)&0xF;
+            uint32_t g = (cc>>4)&0xF;
+            uint32_t b = cc & 0xF;
+            r = (r<<4)|r;
+            g = (g<<4)|g;
+            b = (b<<4)|b;
+            cc= (r<<16) | (g<<8) | b;
+        }
+        if( (csLEN==4) || (csLEN==7) )
             cc|=0xFF000000;
         return cc;
     }else{
