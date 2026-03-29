@@ -68,9 +68,9 @@ public:
 
     ChildrenAlphaProperty():Property("childrenAlpha",FLOAT_TYPE){}
     AnimateValue get(void*object) const override{
-        float* alpha = (float*) ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
-        if (alpha != nullptr) {
-            return *alpha;
+        Any alpha =  ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
+        if (alpha.type()==typeid(float)) {
+            return alpha;
         } else {
             return 1.f;
         }
@@ -78,7 +78,7 @@ public:
 
     void set(void*object, const AnimateValue& value)const override {
         float alpha = GET_VARIANT(value,float);
-        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, &alpha);
+        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, value);
         for (int i = 0, count = ((ViewGroup*)object)->getChildCount(); i < count; i++) {
             View* child = ((ViewGroup*)object)->getChildAt(i);
             child->setAlpha(alpha);

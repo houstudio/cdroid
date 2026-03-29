@@ -32,6 +32,7 @@
 #include <core/parcel.h>
 #include <core/parcelable.h>
 #include <core/predicate.h>
+#include <core/any.h>
 #include <cairomm/pattern.h>
 #include <view/dragevent.h>
 #include <view/keyevent.h>
@@ -69,6 +70,7 @@
 #define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
 
 namespace cdroid{
+using Any=nonstd::any;
 class DragEvent;
 class ViewGroup;
 class ViewOverlay;
@@ -570,7 +572,7 @@ private:
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-    void setKeyedTag(int key,void* tag);
+    void setKeyedTag(int key,const Any& tag);
     bool hasPendingLongPressCallback()const;
     void removeTapCallback();
     void removeLongPressCallback();
@@ -711,11 +713,11 @@ protected:
     std::string mAccessibilityPaneTitle;
     Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
     Cairo::RefPtr<Cairo::ImageSurface> mUnscaledDrawingCache;
-    void * mTag;
+    Any mTag;
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    SparseArray<void*>* mKeyedTags;
+    SparseArray<Any>* mKeyedTags;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
     ViewOutlineProvider mOutlineProvider;
@@ -1189,11 +1191,11 @@ public:
     void setAccessibilityTraversalAfter(int afterId);
     int getAccessibilityTraversalAfter()const;
     int  getAutoFillViewId();
-    void setTag(void*);
-    void*getTag()const;
-    void setTag(int key,void*tag);
-    void*getTag(int key)const;
-    void setTagInternal(int key, void* tag);
+    void setTag(const Any&);
+    const Any getTag()const;
+    void setTag(int key,const Any&tag);
+    const Any getTag(int key)const;
+    void setTagInternal(int key,const Any& tag);
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
     virtual void setStateDescription(const std::string& stateDescription);
