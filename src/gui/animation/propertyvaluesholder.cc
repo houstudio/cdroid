@@ -137,9 +137,9 @@ AnimateValue& PropertyValuesHolder::ArgbEvaluator(float fraction,AnimateValue& o
 
 AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to){
 #if VARIANT_AS_ANIMATEDVAUE
-    const PathParser::PathData& fromPathData= GET_VARIANT(from,const PathParser::PathData&);
-    const PathParser::PathData& toPathData  = GET_VARIANT(to,const PathParser::PathData&);
-    auto& outPathData = GET_VARIANT(out,PathParser::PathData&);
+    auto& fromPathData= GET_VARIANT(from,PathParser::PathData);
+    auto& toPathData  = GET_VARIANT(to,PathParser::PathData);
+    auto& outPathData = GET_VARIANT(out,PathParser::PathData);
     if (!PathParser::interpolatePathData(outPathData, fromPathData, toPathData, fraction)) {
         throw std::runtime_error("Can't interpolate between two incompatible pathData");
     }
