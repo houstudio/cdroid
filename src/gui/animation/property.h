@@ -19,10 +19,11 @@
 #define __ANIMATION_PROPERTY_H__
 #include <string>
 #include <core/any.h>
-//#include <core/variant.h>
+#include <core/variant.h>
 #include <drawable/pathparser.h>
+#define VARIANT_AS_ANIMATEDVAUE 1
 namespace cdroid{
-#if 0
+#if VARIANT_AS_ANIMATEDVAUE
   typedef nonstd::variant<int,float,PathParser::PathData>AnimateValue;
   #if variant_CPP17_OR_GREATER
      #define GET_VARIANT(vt,type) std::get<type>(vt)

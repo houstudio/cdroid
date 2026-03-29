@@ -3683,33 +3683,33 @@ int View::getAutoFillViewId(){
     return mAutofillViewId;
 }
 
-void View::setTag(const Any&tag){
+void View::setTag(void*tag){
     mTag = tag;
 }
 
-const Any View::getTag()const{
+void* View::getTag()const{
     return mTag;
 }
 
-void View::setTag(int key,const Any&tag){
+void View::setTag(int key,void*tag){
     //FATAL_IF((key>>24)<2,"The key must be an application-specific resource id.";
     setKeyedTag(key,tag);
 }
 
-const Any View::getTag(int key)const{
+void* View::getTag(int key)const{
     if (mKeyedTags != nullptr)
         return mKeyedTags->get(key);
-    return Any();
+    return nullptr;
 }
 
-void View::setTagInternal(int key, const Any& tag) {
+void View::setTagInternal(int key, void* tag) {
     //FATAL_IF(((key >> 24) != 0x1,"The key must be a framework-specific resource id.";
     setKeyedTag(key, tag);
 }
 
-void View::setKeyedTag(int key,const Any& tag){
+void View::setKeyedTag(int key,void* tag){
     if(mKeyedTags ==nullptr)
-        mKeyedTags = new SparseArray<Any>();
+        mKeyedTags = new SparseArray<void*>();
     mKeyedTags->put(key,tag);
 }
 

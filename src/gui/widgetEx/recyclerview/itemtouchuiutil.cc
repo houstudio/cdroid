@@ -21,12 +21,12 @@ namespace cdroid{
 void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& view, float dX, float dY,
         int actionState, bool isCurrentlyActive){
     if (isCurrentlyActive) {
-        Any tag = view.getTag(R::id::item_touch_helper_previous_elevation);
-        if (tag.type() != typeid(float)) {
-            float originalElevation = (view.getElevation());
+        void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
+        if (tag == nullptr) {
+            long originalElevation = long(view.getElevation());
             int newElevation = 1.f + findMaxElevation(recyclerView, view);
             view.setElevation(newElevation);
-            view.setTag(R::id::item_touch_helper_previous_elevation, originalElevation);
+            view.setTag(R::id::item_touch_helper_previous_elevation, (void*)originalElevation);
         }
     }
     view.setTranslationX(dX);
@@ -54,9 +54,9 @@ void ItemTouchUIUtilImpl::onDrawOver(Canvas& c, RecyclerView& recyclerView, View
 }
 
 void ItemTouchUIUtilImpl::clearView(View& view){
-    Any tag = view.getTag(R::id::item_touch_helper_previous_elevation);
-    if (tag.type() == typeid(float)) {
-        view.setElevation(nonstd::any_cast<float>(tag));
+    long* tag = (long*)view.getTag(R::id::item_touch_helper_previous_elevation);
+    if (tag!=nullptr) {
+        view.setElevation(float((long)tag));
     }
     view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
 

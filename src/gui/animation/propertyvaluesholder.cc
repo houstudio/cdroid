@@ -92,7 +92,7 @@ static int lerp(int startValue, int endValue, float fraction) {
 }
 
 AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, const AnimateValue& from, const AnimateValue& to){
-#if 0
+#if VARIANT_AS_ANIMATEDVAUE
     switch(from.index()){
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
@@ -136,7 +136,7 @@ AnimateValue& PropertyValuesHolder::ArgbEvaluator(float fraction,AnimateValue& o
 }
 
 AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to){
-#if 0
+#if VARIANT_AS_ANIMATEDVAUE
     const PathParser::PathData& fromPathData= GET_VARIANT(from,const PathParser::PathData&);
     const PathParser::PathData& toPathData  = GET_VARIANT(to,const PathParser::PathData&);
     auto& outPathData = GET_VARIANT(out,PathParser::PathData&);
@@ -144,7 +144,6 @@ AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValu
         throw std::runtime_error("Can't interpolate between two incompatible pathData");
     }
 #else
-    //const PathParser::PathData* fromPathData =nonstd::any_cast<PathParser::PathData>(&from);
     const auto fromPathData = GET_VARIANT(&from,const PathParser::PathData);
     const auto toPathData = GET_VARIANT(&to,const PathParser::PathData);
     auto outPathData = GET_VARIANT(&out,PathParser::PathData);
