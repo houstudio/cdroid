@@ -7,7 +7,6 @@ if(COMMAND cmake_policy)
    cmake_policy(SET CMP0012 NEW)
    #make vcpkg happy:)
 endif(COMMAND cmake_policy)
-
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)

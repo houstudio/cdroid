@@ -17,8 +17,8 @@
  *********************************************************************************/
 #ifndef __SPARSE_ARRAY_H__
 #define __SPARSE_ARRAY_H__
-#include <algorithm>
 #include <vector>
+#include <algorithm>
 
 namespace cdroid{
 
@@ -37,17 +37,19 @@ public:
         mValues.clear();
     }
     void put(int key, T value){
-        auto itr=std::find(mKeys.begin(),mKeys.end(),key);
-        if(itr!=mKeys.end()){
-            mValues[itr-mKeys.begin()]=value;
+        auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
+        if( (itr != mKeys.end()) && (*itr == key) ){
+            mValues[itr - mKeys.begin()] = value;
 	        return;
-	    }
-        mKeys.push_back(key);
-        mValues.push_back(value);	
+	    }else{
+            const size_t pos = itr - mKeys.begin();
+            mKeys.insert(mKeys.begin()+pos,key);
+            mValues.insert(mValues.begin()+pos,value);
+        }
     }
     T get( int key,T def)const{
-        auto itr=std::find(mKeys.begin(),mKeys.end(),key);
-        if(itr!=mKeys.end())
+        auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
+        if( (itr != mKeys.end()) && (*itr == key) )
             return mValues[itr-mKeys.begin()];
         return def;
     }
@@ -55,11 +57,11 @@ public:
         return get(key,static_cast<T>(0));
     }
     int indexOfKey(int key)const{
-        auto itr=std::find(mKeys.begin(),mKeys.end(),key);
+        auto itr = std::lower_bound(mKeys.begin(), mKeys.end(), key);
         return itr!=mKeys.end()?int(itr-mKeys.begin()):-1;
     }
     int indexOfValue(T value)const{
-        auto itr=std::find(mValues.begin(),mValues.end(),value);
+        auto itr = std::lower_bound(mValues.begin(), mValues.end(), value);
         return itr!=mValues.end()?int(itr-mValues.begin()):-1;
     }
     int keyAt(size_t index)const{
@@ -77,16 +79,18 @@ public:
         }	
     }
     void removeAt(size_t idx){
-        mKeys.erase(mKeys.begin()+idx);
-        mValues.erase(mValues.begin()+idx);
+        if(idx<size()){
+            mKeys.erase(mKeys.begin()+idx);
+            mValues.erase(mValues.begin()+idx);
+        }
     }
     void append(int key, T value) {
         if (size() && (key <= mKeys.back())) {
             put(key, value);
             return;
         }
-        mKeys.push_back(key);// = GrowingArrayUtils.append(mKeys, mSize, key);
-        mValues.push_back(value);// = GrowingArrayUtils.append(mValues, mSize, value);
+        mKeys.emplace_back(key);
+        mValues.emplace_back(value);
     }
 };
 template<typename T>

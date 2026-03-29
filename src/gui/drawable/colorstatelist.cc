@@ -97,7 +97,7 @@ int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod)const{
     return (baseColor & 0xFFFFFF) | ((unsigned int)alpha << 24);    
 }
 
-RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
+cdroid::RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
     std::vector<int>colors = mColors;
     for(int i = 0 ; i < colors.size();i++)
         colors[i] = (colors[i] & 0x00FFFFFF) | ( alpha & 0xFF000000 );
@@ -143,7 +143,7 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
     onColorsChanged();
 }
 
-RefPtr<ColorStateList> ColorStateList::createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs){
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs){
     const std::string name = parser.getName();
     if (name.compare("selector")) {
         LOGE("invalid color state list tag %s" ,name.c_str());
@@ -154,7 +154,7 @@ RefPtr<ColorStateList> ColorStateList::createFromXmlInner(XmlPullParser& parser,
     return colorStateList;
 }
 
-RefPtr<ColorStateList> ColorStateList::createFromXml(XmlPullParser& parser) {
+cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(XmlPullParser& parser) {
     int type;
     const AttributeSet& attrs = parser;
     while ((type = parser.next()) != XmlPullParser::START_TAG
@@ -242,12 +242,13 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
     return defaultColor;
 }
 
-RefPtr<ColorStateList> ColorStateList::valueOf(int color){
-    static SparseArray<std::shared_ptr<ColorStateList>>sCache;
+cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
+    static SparseArray<std::weak_ptr<ColorStateList>>sCache;
     const int index = sCache.indexOfKey(color);
-    if(index>=0){
-        auto cached = sCache.valueAt(index);
-        return cached;
+    if(index >= 0){
+        auto cached = sCache.valueAt(index).lock();
+        if(cached) return cached;
+        sCache.removeAt(index);
     }
     auto cls =std::make_shared<ColorStateList>(color);
     sCache.put(color,cls);
@@ -267,10 +268,10 @@ bool ColorStateList::hasState(int state)const{
     return false;
 }
 
-RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::string&resname){
+cdroid::RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::string&resname){
     XmlPullParser parser(ctx,resname);
     int type;
-    RefPtr<ColorStateList> colorStateList = nullptr;
+    cdroid::RefPtr<ColorStateList> colorStateList = nullptr;
     const int depth = parser.getDepth();
     const AttributeSet& atts = parser;
     if(resname.size()&&(resname[0]=='#'||(resname.find("/")!=std::string::npos))){

@@ -211,7 +211,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 AttributeSet itemAtts(attrs);
                 //itemAtts = attrs;
                 if(it==pending->colorStateList.end()){
-                    it = pending->colorStateList.insert({std::move(resUri),{itemAtts}}).first;
+                    it = pending->colorStateList.insert({resUri,{itemAtts}}).first;
                 }else
                     it->second.emplace_back(itemAtts);
             }
@@ -242,7 +242,7 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 std::string value= getTrimedValue(parser);
                 array.emplace_back(value);
             }
-            mArraies.emplace(std::move(key),std::move(array));
+            mArraies.emplace(key,std::move(array));
         }
     }
     return 0;
@@ -280,14 +280,14 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         auto it = mColors.find(c.second);
         LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());
         if( it != mColors.end() ){
-            mColors.insert({std::move(c.first),it->second});
+            mColors.insert({c.first,it->second});
         }
     }
     for(auto& d:pending.dimens){
         auto it = mDimensions.find(d.second);
         LOGD_IF(it==mDimensions.end(),"dimen %s losting refto %s",d.first.c_str(),d.second.c_str());
         if(it != mDimensions.end()){
-            mDimensions.insert({std::move(d.first),it->second});
+            mDimensions.insert({d.first,it->second});
         }
     }
     for(auto& cs:pending.colorStateList){
@@ -295,7 +295,7 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         for(auto& attr:cs.second){
             cls->addStateColor(this,attr);
         }
-        mStateColors.insert({std::move(cs.first),cls});
+        mStateColors.insert({cs.first,cls});
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
     LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
@@ -365,9 +365,8 @@ std::unique_ptr<std::istream> Assets::getInputStream(const std::string&fullresid
         std::istream*stream = pak->getInputStream(resname);
         if(stream)return std::unique_ptr<std::istream>(stream);
     }
-    struct stat fs;
-    if( fullresid.empty() || resname.empty() || (stat(fullresid.c_str(),&fs)<0)){
-        LOGE("resoure:\"%s\" not found",fullresid.c_str());
+    if( fullresid.empty() || resname.empty() || (access(fullresid.c_str(),F_OK)<0)){
+        LOGD("resoure:\"%s\" not found",fullresid.c_str());
         return nullptr;
     }
     return std::make_unique<std::ifstream>(fullresid);
@@ -391,8 +390,10 @@ Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(std::istream&stream,int wid
 }
 
 Cairo::RefPtr<Cairo::ImageSurface> Assets::loadImage(const std::string&resname,int width,int height){
-    std::unique_ptr<std::istream> stm = getInputStream(resname);
-    if(stm)return loadImage(*stm,width,height);
+    if(!resname.empty()&&resname.compare("null")){
+        std::unique_ptr<std::istream> stm = getInputStream(resname);
+        if(stm) return loadImage(*stm,width,height);
+    }
     return nullptr;
 }
 
@@ -604,7 +605,7 @@ int Assets::getColor(const std::string&refid) {
     throw std::runtime_error("Resource not found:" + refid);
 }
 
-RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
+cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     std::string pkg,name = fullresid,relname;
     parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);
@@ -619,9 +620,14 @@ RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullresid) {
     }else if( name.size()&&(fullresid.find("attr")==std::string::npos) ) {
         const size_t slashpos = fullresid.find("/");
         try{
-            auto cls = (fullresid.size()&&(fullresid[0]=='#'))
-                ?ColorStateList::valueOf(std::strtol(fullresid.c_str()+1,nullptr,16))
-                :ColorStateList::inflate(this,fullresid);
+            cdroid::RefPtr<ColorStateList>cls;
+            if(fullresid.size()&&(fullresid[0]=='#')){
+                int argb = std::strtol(fullresid.c_str()+1,nullptr,16);
+                if( fullresid.size() < 8 ) argb |= 0xFF000000;
+                cls = ColorStateList::valueOf(argb);
+            }else{
+                cls = ColorStateList::inflate(this,fullresid);
+            }
             mStateColors.insert(std::pair<const std::string,RefPtr<ColorStateList>>(name,cls));
             return cls;
         }catch(std::invalid_argument&e){
