@@ -243,6 +243,7 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
+#if 0
     static SparseArray<std::weak_ptr<ColorStateList>>sCache;
     const int index = sCache.indexOfKey(color);
     if(index >= 0){
@@ -253,6 +254,18 @@ cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
     auto cls =std::make_shared<ColorStateList>(color);
     sCache.put(color,cls);
     return cls;
+#else
+    static std::unordered_map<int,std::weak_ptr<ColorStateList>>sCache;
+    const auto it = sCache.find(color);
+    if(it != sCache.end()){
+        auto cls = it->second.lock();
+        if( cls ) return cls;
+        sCache.erase(it);
+    }
+    auto cls = std::make_shared<ColorStateList>(color);
+    sCache.insert({color,cls});
+    return cls;
+#endif
 }
 
 const std::vector<int>& ColorStateList::getColors()const{

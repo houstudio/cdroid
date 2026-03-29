@@ -622,9 +622,8 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
         try{
             cdroid::RefPtr<ColorStateList>cls;
             if(fullresid.size()&&(fullresid[0]=='#')){
-                int argb = std::strtol(fullresid.c_str()+1,nullptr,16);
-                if( fullresid.size() < 8 ) argb |= 0xFF000000;
-                cls = ColorStateList::valueOf(argb);
+                const int color = Color::parseColor(fullresid);
+                cls = ColorStateList::valueOf(color);
             }else{
                 cls = ColorStateList::inflate(this,fullresid);
             }
