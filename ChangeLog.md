@@ -1,4 +1,6 @@
-# **V4.8.x
+# **V4.8.2
+  - add BadgeDrawable
+  - Elegant Resource Cleanup and Exit
   - add CardView
   - add RoundRectDrawable,RoundRectDrawableWithShadow
   - Fix GridLayout's layout issues
