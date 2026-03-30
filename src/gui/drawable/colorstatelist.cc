@@ -84,6 +84,9 @@ int ColorStateList::getChangingConfigurations()const{
 
 int ColorStateList::addStateColor(const std::vector<int>&stateSet,int color){
     mStateSpecs.push_back(stateSet);
+    if(mColors.size()==0){
+        mDefaultColor = color;
+    }
     mColors.push_back(color);
     return mColors.size()-1;
 }
