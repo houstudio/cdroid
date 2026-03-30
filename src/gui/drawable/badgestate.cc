@@ -140,15 +140,16 @@ BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std:
 
     // Only set the badge text color if this attribute has explicitly been set, otherwise use the
     // text color specified in the TextAppearance.
-    /*if (storedState->badgeTextColor != null) {
+    if (a.hasAttribute("badgeTextColor")) {
+        currentState->badgeTextColor = a.getColor("badgeTextColor");
+    } else if(!currentState->badgeTextAppearanceResId.empty()){
+        //TextAppearance textAppearance = new TextAppearance(context, currentState->badgeTextAppearanceResId);
+        //currentState->badgeTextColor = textAppearance.getTextColor().getDefaultColor();
+        const AttributeSet attrText = context->obtainStyledAttributes(currentState->badgeTextAppearanceResId);
+        currentState->badgeTextColor= attrText.getColorStateList("textColor")->getDefaultColor();
+    }else{
         currentState->badgeTextColor = storedState->badgeTextColor;
-    } else if (a.hasAttribute("badgeTextColor")) {
-        currentState->badgeTextColor = readColorFromAttributes(context, a, R.styleable.Badge_badgeTextColor);
-    } else {
-        TextAppearance textAppearance =
-            new TextAppearance(context, currentState->badgeTextAppearanceResId);
-        currentState->badgeTextColor = textAppearance.getTextColor().getDefaultColor();
-    }*/
+    }
 
     currentState->badgeGravity = (storedState->badgeGravity == Gravity::NO_GRAVITY)
         ? a.getInt("badgeGravity",std::unordered_map<std::string,int>{
