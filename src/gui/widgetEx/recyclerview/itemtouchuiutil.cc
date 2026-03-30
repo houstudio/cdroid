@@ -25,7 +25,7 @@ void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& vi
         if (tag == nullptr) {
             int intOriginElevation;
             const float originalElevation = view.getElevation();
-            std::memcpy(&intOriginElevation,&originalElevation,sizeof(int));
+            memcpy(&intOriginElevation,&originalElevation,sizeof(int));
             const float newElevation = 1.f + findMaxElevation(recyclerView, view);
             view.setElevation(newElevation);
             view.setTag(R::id::item_touch_helper_previous_elevation, (void*)long(intOriginElevation));
@@ -60,7 +60,7 @@ void ItemTouchUIUtilImpl::clearView(View& view){
     if (tag!=nullptr) {
         float fltElevation;
         const int intElevation = int((long)tag);
-        std::memcpy(&fltElevation,&intElevation,sizeof(int));
+        memcpy(&fltElevation,&intElevation,sizeof(int));
         view.setElevation(fltElevation);
     }
     view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
