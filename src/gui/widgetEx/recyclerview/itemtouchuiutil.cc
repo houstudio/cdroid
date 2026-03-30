@@ -23,10 +23,12 @@ void ItemTouchUIUtilImpl::onDraw(Canvas& c, RecyclerView& recyclerView, View& vi
     if (isCurrentlyActive) {
         void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
         if (tag == nullptr) {
-            long originalElevation = long(view.getElevation());
-            int newElevation = 1.f + findMaxElevation(recyclerView, view);
+            int intOriginElevation;
+            const float originalElevation = view.getElevation();
+            std::memcpy(&intOriginElevation,&originalElevation,sizeof(int));
+            const float newElevation = 1.f + findMaxElevation(recyclerView, view);
             view.setElevation(newElevation);
-            view.setTag(R::id::item_touch_helper_previous_elevation, (void*)originalElevation);
+            view.setTag(R::id::item_touch_helper_previous_elevation, (void*)long(intOriginElevation));
         }
     }
     view.setTranslationX(dX);
@@ -54,9 +56,12 @@ void ItemTouchUIUtilImpl::onDrawOver(Canvas& c, RecyclerView& recyclerView, View
 }
 
 void ItemTouchUIUtilImpl::clearView(View& view){
-    const long* tag = (const long*)view.getTag(R::id::item_touch_helper_previous_elevation);
-    if (tag != nullptr/* && tag instanceof Float*/) {
-        view.setElevation(float((long)tag));
+    void* tag = view.getTag(R::id::item_touch_helper_previous_elevation);
+    if (tag!=nullptr) {
+        float fltElevation;
+        const int intElevation = int((long)tag);
+        std::memcpy(&fltElevation,&intElevation,sizeof(int));
+        view.setElevation(fltElevation);
     }
     view.setTag(R::id::item_touch_helper_previous_elevation, nullptr);
 

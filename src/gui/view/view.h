@@ -32,6 +32,7 @@
 #include <core/parcel.h>
 #include <core/parcelable.h>
 #include <core/predicate.h>
+#include <core/any.h>
 #include <cairomm/pattern.h>
 #include <view/dragevent.h>
 #include <view/keyevent.h>
@@ -711,7 +712,7 @@ protected:
     std::string mAccessibilityPaneTitle;
     Cairo::RefPtr<Cairo::ImageSurface> mDrawingCache;
     Cairo::RefPtr<Cairo::ImageSurface> mUnscaledDrawingCache;
-    void * mTag;
+    void* mTag;
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
@@ -1190,10 +1191,10 @@ public:
     int getAccessibilityTraversalAfter()const;
     int  getAutoFillViewId();
     void setTag(void*);
-    void*getTag()const;
+    void* getTag()const;
     void setTag(int key,void*tag);
-    void*getTag(int key)const;
-    void setTagInternal(int key, void* tag);
+    void* getTag(int key)const;
+    void setTagInternal(int key,void* tag);
     void setContentDescription(const std::string&);
     virtual std::string getContentDescription()const;
     virtual void setStateDescription(const std::string& stateDescription);

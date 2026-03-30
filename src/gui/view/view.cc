@@ -3687,7 +3687,7 @@ void View::setTag(void*tag){
     mTag = tag;
 }
 
-void*View::getTag()const{
+void* View::getTag()const{
     return mTag;
 }
 

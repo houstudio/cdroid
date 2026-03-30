@@ -92,6 +92,7 @@ static int lerp(int startValue, int endValue, float fraction) {
 }
 
 AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, const AnimateValue& from, const AnimateValue& to){
+#if VARIANT_AS_ANIMATEDVAUE
     switch(from.index()){
     case 0:
         out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
@@ -102,6 +103,13 @@ AnimateValue& PropertyValuesHolder::evaluator(float fraction,AnimateValue&out, c
     default:
         LOGE("NOT_REACHED");
     }
+#else
+    if(from.type()==typeid(int)){
+        out = (int)((1.f - fraction)*GET_VARIANT(from,int) +  fraction * GET_VARIANT(to,int));
+    }else if(from.type()==typeid(float)){
+        out = GET_VARIANT(from,float) * (1.f - fraction) + GET_VARIANT(to,float) * fraction;
+    }
+#endif
     return out;
 }
 
@@ -128,12 +136,21 @@ AnimateValue& PropertyValuesHolder::ArgbEvaluator(float fraction,AnimateValue& o
 }
 
 AnimateValue& PropertyValuesHolder::PathDataEvaluator(float fraction,AnimateValue& out,const AnimateValue&from,const AnimateValue&to){
+#if VARIANT_AS_ANIMATEDVAUE
     auto& fromPathData= GET_VARIANT(from,PathParser::PathData);
     auto& toPathData  = GET_VARIANT(to,PathParser::PathData);
     auto& outPathData = GET_VARIANT(out,PathParser::PathData);
     if (!PathParser::interpolatePathData(outPathData, fromPathData, toPathData, fraction)) {
         throw std::runtime_error("Can't interpolate between two incompatible pathData");
     }
+#else
+    const auto fromPathData = GET_VARIANT(&from,const PathParser::PathData);
+    const auto toPathData = GET_VARIANT(&to,const PathParser::PathData);
+    auto outPathData = GET_VARIANT(&out,PathParser::PathData);
+    if (!PathParser::interpolatePathData(*outPathData, *fromPathData, *toPathData, fraction)) {
+        throw std::runtime_error("Can't interpolate between two incompatible pathData");
+    }
+#endif
     return out;
 }
 

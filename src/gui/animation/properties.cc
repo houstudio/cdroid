@@ -68,20 +68,25 @@ public:
 
     ChildrenAlphaProperty():Property("childrenAlpha",FLOAT_TYPE){}
     AnimateValue get(void*object) const override{
-        float* alpha = (float*) ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
-        if (alpha != nullptr) {
-            return *alpha;
+        void* tag = ((ViewGroup*)object)->getTag(R::id::mtrl_internal_children_alpha_tag);
+        if (tag!=0) {
+            float fltAlpha;
+            const int intTag = (int)long(tag);
+            std::memcpy(&fltAlpha,&intTag,sizeof(int));
+            return fltAlpha;
         } else {
             return 1.f;
         }
     }
 
     void set(void*object, const AnimateValue& value)const override {
-        float alpha = GET_VARIANT(value,float);
-        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, &alpha);
+        int intAlpha;
+        const float fltAlpha = GET_VARIANT(value,float);
+        std::memcpy(&intAlpha,&fltAlpha,sizeof(int));
+        ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, (void*)long(intAlpha));
         for (int i = 0, count = ((ViewGroup*)object)->getChildCount(); i < count; i++) {
             View* child = ((ViewGroup*)object)->getChildAt(i);
-            child->setAlpha(alpha);
+            child->setAlpha(fltAlpha);
         }
     }
 };

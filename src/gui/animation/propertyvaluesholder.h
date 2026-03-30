@@ -24,7 +24,6 @@
 #include <cmath>
 #include <iostream>
 #include <core/color.h>
-#include <core/variant.h>
 #include <unordered_map>
 #include <animation/property.h>
 #include <drawable/pathparser.h>

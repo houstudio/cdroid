@@ -84,6 +84,9 @@ int ColorStateList::getChangingConfigurations()const{
 
 int ColorStateList::addStateColor(const std::vector<int>&stateSet,int color){
     mStateSpecs.push_back(stateSet);
+    if(mColors.size()==0){
+        mDefaultColor = color;
+    }
     mColors.push_back(color);
     return mColors.size()-1;
 }
@@ -243,16 +246,29 @@ int ColorStateList::getColorForState(const std::vector<int>&stateSet, int defaul
 }
 
 cdroid::RefPtr<ColorStateList> ColorStateList::valueOf(int color){
+#if 1
     static SparseArray<std::weak_ptr<ColorStateList>>sCache;
     const int index = sCache.indexOfKey(color);
     if(index >= 0){
-        auto cached = sCache.valueAt(index).lock();
-        if(cached) return cached;
+        auto cls = sCache.valueAt(index).lock();
+        if(cls) return cls;
         sCache.removeAt(index);
     }
     auto cls =std::make_shared<ColorStateList>(color);
     sCache.put(color,cls);
     return cls;
+#else
+    static std::unordered_map<int,std::weak_ptr<ColorStateList>>sCache;
+    const auto it = sCache.find(color);
+    if(it != sCache.end()){
+        auto cls = it->second.lock();
+        if( cls ) return cls;
+        sCache.erase(it);
+    }
+    auto cls = std::make_shared<ColorStateList>(color);
+    sCache.insert({color,cls});
+    return cls;
+#endif
 }
 
 const std::vector<int>& ColorStateList::getColors()const{
