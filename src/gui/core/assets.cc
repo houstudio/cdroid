@@ -189,10 +189,8 @@ int Assets::loadKeyValues(const std::string&package,const std::string&resid,void
                 std::string value = getTrimedValue(parser);
                 if((format.compare("float")==0)||(type[0]=='f')){
                     float fv =std::strtof(value.c_str(),nullptr);
-                    int32_t i32v;
-                    std::memcpy(&i32v,&fv,sizeof(i32v));
                     if(type[0]=='f') fv/=100.f;
-                    mDimensions.insert({resUri,i32v});
+                    mDimensions.insert({resUri,fv});
                 }else{
                     const int32_t v = std::stol(value);
                     mDimensions.insert({resUri,v});
@@ -544,7 +542,7 @@ int Assets::getDimension(const std::string&refid)const{
     //name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()) 
-        return it->second;
+        return GET_VARIANT(it->second,int);
     LOGW("Resource not found:%s",refid.c_str());
     return 0;
 }
@@ -555,7 +553,7 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     name = AttributeSet::normalize(pkg,name);
     auto it = mDimensions.find(name);
     if(it != mDimensions.end()){
-        return it->second;
+        return GET_VARIANT(it->second,int);
     }
     return def;
 
@@ -565,11 +563,15 @@ bool Assets::getBoolean(const std::string&refid)const{
     return getDimension(refid);
 }
 
-float Assets::getFloat(const std::string&refid)const{
-    const int32_t iv=getDimension(refid);
-    float fv;
-    std::memcpy(&fv,&iv,sizeof(fv));
-    return fv;
+float Assets::getFloat(const std::string&refid,float def)const{
+    std::string pkg,name = refid;
+    parseResource(name,nullptr,&pkg);
+    name = AttributeSet::normalize(pkg,name);
+    auto it = mDimensions.find(name);
+    if(it != mDimensions.end()){
+        return GET_VARIANT(it->second,float);
+    }
+    return def;
 }
 
 #pragma GCC push_options
