@@ -489,6 +489,10 @@ void BadgeDrawable::onBadgeTextAppearanceUpdated() {
     if (mContext == nullptr) {
         return;
     }
+    const AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
+    const int fontSize = atts.getInt("textSize",mTextLayout->getFontSize());
+    mTextLayout->setFontSize(fontSize);
+    mTextLayout->relayout();
     /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
     if (textDrawableHelper.getTextAppearance() == textAppearance) {
         return;
@@ -762,14 +766,9 @@ float BadgeDrawable::getRightCutoff(float ancestorWidth, float totalAnchorXOffse
 }
 
 void BadgeDrawable::drawBadgeContent(Canvas& canvas) {
-    Rect textBounds;
     const std::string badgeContent = getBadgeContent();
-    const int textBoundHeight= mTextLayout->getHeight()/2;
-    const int textBoundWidth = mTextLayout->getLineWidth(0);
-    canvas.move_to(mBadgeCenterX-textBoundWidth/2,/*mBadgeCenterY + textBoundHeight+*/mTextLayout->getLineBaseline(0));
     canvas.set_color(mState->getBadgeTextColor());
     canvas.set_font_size(mTextLayout->getFontSize());
-    //canvas.show_text(badgeText);
     canvas.draw_text(mBadgeBounds,badgeContent,Gravity::CENTER);
 }
 

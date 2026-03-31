@@ -72,7 +72,7 @@ public:
         if (tag!=0) {
             float fltAlpha;
             const int intTag = (int)long(tag);
-            std::memcpy(&fltAlpha,&intTag,sizeof(int));
+            memcpy(&fltAlpha,&intTag,sizeof(int));
             return fltAlpha;
         } else {
             return 1.f;
@@ -82,7 +82,7 @@ public:
     void set(void*object, const AnimateValue& value)const override {
         int intAlpha;
         const float fltAlpha = GET_VARIANT(value,float);
-        std::memcpy(&intAlpha,&fltAlpha,sizeof(int));
+        memcpy(&intAlpha,&fltAlpha,sizeof(int));
         ((ViewGroup*)object)->setTag(R::id::mtrl_internal_children_alpha_tag, (void*)long(intAlpha));
         for (int i = 0, count = ((ViewGroup*)object)->getChildCount(); i < count; i++) {
             View* child = ((ViewGroup*)object)->getChildAt(i);

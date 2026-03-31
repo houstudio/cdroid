@@ -41,7 +41,7 @@ ColorStateList::ColorStateList(int color)
 int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
     std::vector<int>states;
     int baseColor = atts.getColor("color",0);
-    float alpha = atts.getFloat("alpha",1.f);
+    const float alpha = atts.getFloat("alpha",1.f);
     StateSet::parseState(states,atts);
     baseColor = modulateColorAlpha(baseColor,alpha);
     return addStateColor(states,baseColor);
@@ -84,7 +84,7 @@ int ColorStateList::getChangingConfigurations()const{
 
 int ColorStateList::addStateColor(const std::vector<int>&stateSet,int color){
     mStateSpecs.push_back(stateSet);
-    if(mColors.size()==0){
+    if((mColors.size()==0)||(stateSet.size()==0)){
         mDefaultColor = color;
     }
     mColors.push_back(color);
@@ -144,32 +144,6 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
     mDefaultColor = defaultColor;
 
     onColorsChanged();
-}
-
-cdroid::RefPtr<ColorStateList> ColorStateList::createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs){
-    const std::string name = parser.getName();
-    if (name.compare("selector")) {
-        LOGE("invalid color state list tag %s" ,name.c_str());
-    }
-
-    auto colorStateList = ColorStateList::valueOf((int)DEFAULT_COLOR);
-    colorStateList->inflate(parser, attrs);
-    return colorStateList;
-}
-
-cdroid::RefPtr<ColorStateList> ColorStateList::createFromXml(XmlPullParser& parser) {
-    int type;
-    const AttributeSet& attrs = parser;
-    while ((type = parser.next()) != XmlPullParser::START_TAG
-               && type != XmlPullParser::END_DOCUMENT) {
-        // Seek parser to start tag.
-    }
-
-    if (type != XmlPullParser::START_TAG) {
-        throw std::logic_error("No start tag found");
-    }
-
-    return createFromXmlInner(parser, attrs);
 }
 
 ColorStateList&ColorStateList::operator=(const ColorStateList&other){

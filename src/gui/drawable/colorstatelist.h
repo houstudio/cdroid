@@ -31,16 +31,14 @@ private:
     static constexpr int DEFAULT_COLOR = 0xFFFF0000;
     static std::vector<std::vector<int>>EMPTY;
     int mDefaultColor;
-    bool mIsOpaque;
     int mChangingConfigurations;
+    bool mIsOpaque;
     std::vector<int>mColors;
     std::vector<std::vector<int>>mStateSpecs;
 private:
     void inflate(XmlPullParser& parser,const AttributeSet&atts);
     void onColorsChanged();
     int modulateColorAlpha(int baseColor, float alphaMod)const;
-protected:
-    static cdroid::RefPtr<ColorStateList> createFromXmlInner(XmlPullParser& parser,const AttributeSet& attrs);
 public:
     ColorStateList();
     ColorStateList(int color);
@@ -64,7 +62,6 @@ public:
     bool hasState(int state)const ;
     void dump()const;
     static cdroid::RefPtr<ColorStateList> valueOf(int color);
-    static cdroid::RefPtr<ColorStateList> createFromXml(XmlPullParser& parser);
     static cdroid::RefPtr<ColorStateList> inflate(Context*ctx,const std::string&resname);
 };
 }
