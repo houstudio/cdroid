@@ -5524,7 +5524,7 @@ bool View::computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets) cons
     return innerInsets.isSystemWindowInsetsConsumed();
 }
 
-WindowInsets View::computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets) {
+WindowInsets View::computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets) const{
     if (((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0)|| (mAttachInfo == nullptr)
             || (((mAttachInfo->mSystemUiVisibility & SYSTEM_UI_LAYOUT_FLAGS) == 0)
             && !mAttachInfo->mOverscanRequested)) {

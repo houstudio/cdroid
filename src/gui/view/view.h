@@ -1300,7 +1300,7 @@ public:
     virtual WindowInsets onApplyWindowInsets(const WindowInsets& insets);
     void setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener);
     WindowInsets dispatchApplyWindowInsets(const WindowInsets& insets);
-    WindowInsets computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets);
+    WindowInsets computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets)const;
     void setFitsSystemWindows(bool fitSystemWindows);
     bool getFitsSystemWindows()const;
     bool fitsSystemWindows();
