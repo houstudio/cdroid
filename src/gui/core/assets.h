@@ -21,6 +21,7 @@
 #include <string>
 #include <functional>
 #include <unordered_map>
+#include <core/variant.h>
 #include <drawable/drawable.h>
 
 namespace cdroid{
@@ -38,7 +39,7 @@ private:
     std::unordered_map<std::string,class ZIPArchive*>mResources;
     std::unordered_map<std::string,AttributeSet>mStyles;
     std::unordered_map<std::string,uint32_t>mColors;
-    std::unordered_map<std::string,int>mDimensions;
+    std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions;
     std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
@@ -72,7 +73,7 @@ public:
     int getColor(const std::string&resid)override;
     int getDimension(const std::string&resid)const override;
     int getDimensionPixelSize(const std::string&key,int def=0)const override;
-    float getFloat(const std::string&resid)const override;
+    float getFloat(const std::string&resid,float def=0)const override;
     size_t getArray(const std::string&resid,std::vector<int>&)override;
     size_t getArray(const std::string&resid,std::vector<std::string>&)override;
     RefPtr<ColorStateList> getColorStateList(const std::string&resid)override;
