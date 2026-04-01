@@ -50,6 +50,7 @@ void InputEventSource::doEventsConsume(){
 #elif HAVE_PTHREAD_SETNAME_NP
     pthread_setname_np(pthread_self(), "InputThread");
 #endif
+    LOGI("InputEventSource'thread on %d",sched_getcpu());
     mRunning = true;
     InputInit();
     while(mRunning){
@@ -179,7 +180,7 @@ int InputEventSource::checkEvents(){
             setThreadAffinity(th,coreId-1>=0?coreId-1:coreId+1);
         }
         th.detach();
-        LOGD("mainThread on %d/%d",coreId,numCore);
+        LOGI("MainLoop on %d/%d",coreId,numCore);
         mInited = true;
     }
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);

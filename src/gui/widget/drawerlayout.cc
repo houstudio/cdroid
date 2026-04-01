@@ -35,7 +35,9 @@ void DrawerLayout::initView(){
     mShadowLeft = mShadowRight= nullptr;
     mShadowTop = mShadowBottom= nullptr;
     mDrawerState = 0;
+    mLastInsets = new WindowInsets(WindowInsets::CONSUMED);
     mChildrenCanceledTouch = false;
+    mDrawStatusBarBackground = false;
     setDescendantFocusability(ViewGroup::FOCUS_AFTER_DESCENDANTS);
     const float density = mContext->getDisplayMetrics().density;
     mMinDrawerMargin = (int) (MIN_DRAWER_MARGIN * density + 0.5f);
@@ -87,6 +89,8 @@ DrawerLayout::~DrawerLayout(){
     delete mRightDragger;
     delete mTopDragger;
     delete mBottomDragger;
+    delete mLastInsets;
+    delete mStatusBarBackground;
 }
 
 void DrawerLayout::setDrawerElevation(float elevation) {
@@ -101,6 +105,13 @@ void DrawerLayout::setDrawerElevation(float elevation) {
 
 float DrawerLayout::getDrawerElevation()const{
     return mDrawerElevation;
+}
+
+void DrawerLayout::setChildInsets(const WindowInsets& insets, bool draw) {
+    *mLastInsets = insets;
+    mDrawStatusBarBackground = draw;
+    setWillNotDraw(!draw && getBackground() == nullptr);
+    requestLayout();
 }
 
 void DrawerLayout::setDrawerShadow(Drawable* shadowDrawable,int gravity){
@@ -586,7 +597,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 
     setMeasuredDimension(widthSize, heightSize);
 
-    bool applyInsets = false;//mLastInsets != null && getFitsSystemWindows();
+    const bool applyInsets = mLastInsets->hasInsets() && getFitsSystemWindows();
     const int layoutDirection = getLayoutDirection();
 
     // Only one drawer is permitted along each vertical edge (left / right). These two booleans
@@ -604,12 +615,11 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         }
 
         LayoutParams* lp = (LayoutParams*) child->getLayoutParams();
-#if 0
         if (applyInsets) {
             const int cgrav = Gravity::getAbsoluteGravity(lp->gravity, layoutDirection);
             if (child->getFitsSystemWindows()) {
                 if (Build::VERSION::SDK_INT >= 21) {
-                    WindowInsets wi = (WindowInsets) mLastInsets;
+                    WindowInsets wi(*mLastInsets);
                     if (cgrav == Gravity::LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),
                                 wi.getSystemWindowInsetTop(), 0, wi.getSystemWindowInsetBottom());
@@ -621,7 +631,7 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 }
             } else {
                 if (Build::VERSION::SDK_INT >= 21) {
-                    WindowInsets wi = (WindowInsets) mLastInsets;
+                    WindowInsets wi(*mLastInsets);
                     if (cgrav == Gravity::LEFT) {
                         wi = wi.replaceSystemWindowInsets(wi.getSystemWindowInsetLeft(),
                                 wi.getSystemWindowInsetTop(), 0, wi.getSystemWindowInsetBottom());
@@ -636,7 +646,6 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 }
             }
         }
-#endif
         if (isContentView(child)) {
             // Content views get measured at exactly the layout's size.
             const int contentWidthSpec = MeasureSpec::makeMeasureSpec(
@@ -652,16 +661,6 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             }
             const int childGravity = getDrawerViewAbsoluteGravity(child);// & Gravity::HORIZONTAL_GRAVITY_MASK;
             // Note that the isDrawerView check guarantees that childGravity here is either LEFT or RIGHT
-            /*switch(childGravity){
-            case Gravity::LEFT:
-                hasDrawerOnLeftEdge = true; break;
-            case Gravity::RIGHT:
-                hasDrawerOnRightEdge= true; break;
-            case Gravity::TOP:
-                hasDrawerOnTopEdge = true; break;
-            case Gravity::BOTTOM:
-                hasDrawerOnBottomEdge = true;break;
-            }*/
             if(childGravity&Gravity::HORIZONTAL_GRAVITY_MASK){
                 const bool isLeftEdgeDrawer = (childGravity == Gravity::LEFT);
                 if ((isLeftEdgeDrawer && hasDrawerOnLeftEdge)
@@ -874,6 +873,7 @@ bool DrawerLayout::hasOpaqueBackground(View* v) {
 }
 
 void DrawerLayout::setStatusBarBackground(Drawable* bg) {
+    delete mStatusBarBackground;
     mStatusBarBackground = bg;
     invalidate();
 }
@@ -884,12 +884,14 @@ Drawable* DrawerLayout::getStatusBarBackgroundDrawable() {
 
 
 void DrawerLayout::setStatusBarBackground(const std::string& resId) {
+    delete mStatusBarBackground;
     mStatusBarBackground = getContext()->getDrawable(resId);
     invalidate();
 }
 
 
 void DrawerLayout::setStatusBarBackgroundColor(int color) {
+    delete mStatusBarBackground;
     mStatusBarBackground = new ColorDrawable(color);
     invalidate();
 }
@@ -900,12 +902,11 @@ void DrawerLayout::onRtlPropertiesChanged(int layoutDirection) {
 
 void DrawerLayout::onDraw(Canvas& c) {
     ViewGroup::onDraw(c);
-#if 0
-    if (mDrawStatusBarBackground && mStatusBarBackground != nullptr) {
+    if (mDrawStatusBarBackground && (mStatusBarBackground != nullptr)) {
         int inset = 0;
         if (Build::VERSION::SDK_INT >= 21) {
             inset = mLastInsets != nullptr
-                    ? ((WindowInsets) mLastInsets).getSystemWindowInsetTop() : 0;
+                    ? mLastInsets->getSystemWindowInsetTop() : 0;
         } else {
             inset = 0;
         }
@@ -914,7 +915,6 @@ void DrawerLayout::onDraw(Canvas& c) {
             mStatusBarBackground->draw(c);
         }
     }
-#endif
 }
 
 bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {

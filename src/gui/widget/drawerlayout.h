@@ -139,6 +139,7 @@ private:
     bool mInLayout;
     bool mFirstLayout = true;
     bool mChildrenCanceledTouch;
+    bool mDrawStatusBarBackground;
 
     int mLockModeLeft  = LOCK_MODE_UNDEFINED;
     int mLockModeRight = LOCK_MODE_UNDEFINED;
@@ -159,9 +160,7 @@ private:
     std::string mTitleTop;
     std::string mTitleBottom;
 
-    //Object mLastInsets;
-    bool mDrawStatusBarBackground;
-
+    WindowInsets* mLastInsets;
     /** Shadow drawables for different gravity */
     Drawable* mShadowStart = nullptr;
     Drawable* mShadowEnd = nullptr;
@@ -219,6 +218,7 @@ public:
     ~DrawerLayout()override;
     void setDrawerElevation(float elevation);
     float getDrawerElevation()const;
+    void setChildInsets(const WindowInsets& insets, bool draw);
     void setDrawerShadow(Drawable* shadowDrawable,int gravity);
     void setDrawerShadow(const std::string& resId,int gravity);
     void setScrimColor(int color);
