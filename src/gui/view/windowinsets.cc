@@ -98,8 +98,8 @@ DisplayCutout* WindowInsets::getDisplayCutout()const {
     return mDisplayCutout;
 }
 
-WindowInsets WindowInsets::consumeDisplayCutout() {
-    WindowInsets result(*this);// = new WindowInsets(this);
+WindowInsets WindowInsets::consumeDisplayCutout() const{
+    WindowInsets result(*this);
     result.mDisplayCutout = nullptr;
     result.mDisplayCutoutConsumed = true;
     return result;

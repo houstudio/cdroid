@@ -45,7 +45,7 @@ public:
 
     DisplayCutout* getDisplayCutout()const;
 
-    WindowInsets consumeDisplayCutout();
+    WindowInsets consumeDisplayCutout() const;
 
     bool isConsumed() const;
     bool isRound() const;
