@@ -153,11 +153,33 @@ bool InputEventSource::needCancel(InputDevice*dev){
     return false;
 }
 
+void setThreadAffinity(std::thread& t, int coreId) {
+    if (!t.joinable()) {
+        LOGE("Cannot set affinity: thread is not joinable.");
+    }
+#if __linux__
+    cpu_set_t cpuset;
+    CPU_ZERO(&cpuset);
+    CPU_SET(coreId, &cpuset);
+
+    const int rc = pthread_setaffinity_np(t.native_handle(), sizeof(cpu_set_t), &cpuset);
+    if (rc != 0) {
+        LOGW("Failed to set thread affinity");
+    }
+#endif
+}
+
 int InputEventSource::checkEvents(){
     if(!mInited){
+        const auto numCore = std::thread::hardware_concurrency();
+        auto coreId= sched_getcpu();
         auto func = std::bind(&InputEventSource::doEventsConsume,this);
         std::thread th(func);
+        if(numCore>1){
+            setThreadAffinity(th,coreId-1>=0?coreId-1:coreId+1);
+        }
         th.detach();
+        LOGD("mainThread on %d/%d",coreId,numCore);
         mInited = true;
     }
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
