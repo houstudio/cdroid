@@ -216,8 +216,11 @@ void  QRCodeView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mQrCodeWidth > 0 && availableWidth > 0 && availableHeight > 0) {
         const float scaleToFitWidth = static_cast<float>(availableWidth) / mQrCodeWidth;
         const float scaleToFitHeight = static_cast<float>(availableHeight) / mQrCodeWidth;
-
-        mZoom = std::min(scaleToFitWidth, scaleToFitHeight);
+        if(widthMode==MeasureSpec::EXACTLY)
+            mZoom = scaleToFitWidth;
+        else if(heightMode==MeasureSpec::EXACTLY)
+            mZoom = scaleToFitHeight;
+        else mZoom = std::min(scaleToFitWidth, scaleToFitHeight);
 
         const int actualContentWidth = static_cast<int>(mQrCodeWidth * mZoom);
         const int actualContentHeight = static_cast<int>(mQrCodeWidth * mZoom); // 正方形
@@ -270,12 +273,12 @@ bool QRCodeView::onTouchEvent(MotionEvent&evt){
 void  QRCodeView::onDraw(Canvas&canvas){
     View::onDraw(canvas);
 
-    if((mZoom<=FLT_EPSILON)||std::isfinite(mZoom)){
+    if((mZoom<=FLT_EPSILON)||!std::isfinite(mZoom)){
         LOGW("mZoom=%f",mZoom);
         return;
     }
-    canvas.save();
 
+    canvas.save();
     canvas.translate(getPaddingLeft(), getPaddingTop());
     canvas.scale(mZoom,mZoom);
     canvas.set_source(mQRImage,0,0);
