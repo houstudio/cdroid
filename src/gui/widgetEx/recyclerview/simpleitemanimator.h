@@ -36,7 +36,7 @@ public:
             ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
     bool animatePersistence(RecyclerView::ViewHolder& viewHolder,
             ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
-    bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+    bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder* newHolder,
             ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)override;
     virtual bool animateRemove(RecyclerView::ViewHolder& holder)=0;
 
@@ -45,7 +45,7 @@ public:
     virtual bool animateMove(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY)=0;
 
     virtual bool animateChange(RecyclerView::ViewHolder& oldHolder,
-            RecyclerView::ViewHolder& newHolder, int fromLeft, int fromTop, int toLeft, int toTop)=0;
+            RecyclerView::ViewHolder* newHolder, int fromLeft, int fromTop, int toLeft, int toTop)=0;
 
     void dispatchRemoveFinished(RecyclerView::ViewHolder& item);
     void dispatchMoveFinished(RecyclerView::ViewHolder& item);

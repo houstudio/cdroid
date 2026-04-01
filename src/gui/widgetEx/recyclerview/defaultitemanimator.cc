@@ -20,21 +20,21 @@ namespace cdroid{
 
 const TimeInterpolator* DefaultItemAnimator::sDefaultInterpolator = nullptr;
 
-DefaultItemAnimator::MoveInfo::MoveInfo(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY) {
-    this->holder = &holder;
+DefaultItemAnimator::MoveInfo::MoveInfo(RecyclerView::ViewHolder* holder, int fromX, int fromY, int toX, int toY) {
+    this->holder = holder;
     this->fromX = fromX;
     this->fromY = fromY;
     this->toX = toX;
     this->toY = toY;
 }
 
-DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder) {
-    this->oldHolder = &oldHolder;
-    this->newHolder = &newHolder;
+DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder* oldHolder, RecyclerView::ViewHolder* newHolder) {
+    this->oldHolder = oldHolder;
+    this->newHolder = newHolder;
     this->useCount = 0;
 }
 
-DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+DefaultItemAnimator::ChangeInfo::ChangeInfo(RecyclerView::ViewHolder* oldHolder, RecyclerView::ViewHolder* newHolder,
         int fromX, int fromY, int toX, int toY):ChangeInfo(oldHolder, newHolder){
     this->fromX = fromX;
     this->fromY = fromY;
@@ -240,7 +240,7 @@ bool DefaultItemAnimator::animateMove(RecyclerView::ViewHolder& holder, int from
     if (deltaY != 0) {
         view->setTranslationY(-deltaY);
     }
-    mPendingMoves.push_back(new MoveInfo(holder, fromX, fromY, toX, toY));
+    mPendingMoves.push_back(new MoveInfo(&holder, fromX, fromY, toX, toY));
     return true;
 }
 
@@ -295,9 +295,9 @@ void DefaultItemAnimator::animateMoveImpl(RecyclerView::ViewHolder& holder, int 
     animation.setDuration(getMoveDuration()).setListener(al).start();
 }
 
-bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder* newHolder,
         int fromLeft, int fromTop, int toLeft, int toTop) {
-    if (&oldHolder == &newHolder) {
+    if (&oldHolder == newHolder) {
         // Don't know how to run change animations when the same view holder is re-used.
         // run a move animation to handle position changes.
         return animateMove(oldHolder, fromLeft, fromTop, toLeft, toTop);
@@ -312,17 +312,14 @@ bool DefaultItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, Rec
     oldHolder.itemView->setTranslationX(prevTranslationX);
     oldHolder.itemView->setTranslationY(prevTranslationY);
     oldHolder.itemView->setAlpha(prevAlpha);
-#ifndef __clang__
-    if (&newHolder != nullptr) 
-#endif
-    {
+    if (newHolder != nullptr) {
         // carry over translation values
-        resetAnimation(newHolder);
-        newHolder.itemView->setTranslationX(-deltaX);
-        newHolder.itemView->setTranslationY(-deltaY);
-        newHolder.itemView->setAlpha(0);
+        resetAnimation(*newHolder);
+        newHolder->itemView->setTranslationX(-deltaX);
+        newHolder->itemView->setTranslationY(-deltaY);
+        newHolder->itemView->setAlpha(0);
     }
-    mPendingChanges.push_back(new ChangeInfo(oldHolder, newHolder, fromLeft, fromTop, toLeft, toTop));
+    mPendingChanges.push_back(new ChangeInfo(&oldHolder, newHolder, fromLeft, fromTop, toLeft, toTop));
     return true;
 }
 

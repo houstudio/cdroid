@@ -47,7 +47,7 @@ protected:
         RecyclerView::ViewHolder* holder;
         int fromX, fromY, toX, toY;
     public:
-        MoveInfo(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY);
+        MoveInfo(RecyclerView::ViewHolder* holder, int fromX, int fromY, int toX, int toY);
     };
 
     class ChangeInfo {
@@ -55,9 +55,9 @@ protected:
         RecyclerView::ViewHolder* oldHolder, *newHolder;
         int fromX, fromY, toX, toY ,useCount;
     private:
-       	ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder);
+        ChangeInfo(RecyclerView::ViewHolder* oldHolder, RecyclerView::ViewHolder* newHolder);
     public:
-        ChangeInfo(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+        ChangeInfo(RecyclerView::ViewHolder* oldHolder, RecyclerView::ViewHolder* newHolder,
                 int fromX, int fromY, int toX, int toY);
     };
 protected:
@@ -89,7 +89,7 @@ public:
     bool animateRemove(RecyclerView::ViewHolder& holder)override;
     bool animateAdd(RecyclerView::ViewHolder& holder)override;
     bool animateMove(RecyclerView::ViewHolder& holder, int fromX, int fromY, int toX, int toY)override;
-    bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+    bool animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder* newHolder,
             int fromLeft, int fromTop, int toLeft, int toTop)override;
     void endAnimation(RecyclerView::ViewHolder& item)override;
     bool isRunning()override;
