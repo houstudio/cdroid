@@ -72,13 +72,13 @@ bool SimpleItemAnimator::animatePersistence(RecyclerView::ViewHolder& viewHolder
     return false;
 }
 
-bool SimpleItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder& newHolder,
+bool SimpleItemAnimator::animateChange(RecyclerView::ViewHolder& oldHolder, RecyclerView::ViewHolder* newHolder,
         ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo) {
     LOGD_IF(_Debug,"%p CHANGED: %p with view %p",this,&oldHolder,oldHolder.itemView);
     const int fromLeft = preLayoutInfo.left;
     const int fromTop = preLayoutInfo.top;
     int toLeft, toTop;
-    if (newHolder.shouldIgnore()) {
+    if (newHolder->shouldIgnore()) {
         toLeft = preLayoutInfo.left;
         toTop = preLayoutInfo.top;
     } else {

@@ -65,7 +65,7 @@
 #include <animation/animatorinflater.h>
 #include <drawable/drawables.h>
 #include <core/rect.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 
 #define DECLARE_UIEVENT(type, name, ...) using name = std::function<type(__VA_ARGS__)>
 
@@ -491,7 +491,7 @@ public:
     DECLARE_UIEVENT(void,OnFocusChangeListener,View&,bool);
     DECLARE_UIEVENT(void,OnScrollChangeListener,View& v, int, int, int, int);
     DECLARE_UIEVENT(void,OnSystemUiVisibilityChangeListener,int);
-    DECLARE_UIEVENT(WindowInsets, OnApplyWindowInsetsListener,View&,WindowInsets&);
+    DECLARE_UIEVENT(WindowInsets, OnApplyWindowInsetsListener,View&,const WindowInsets&);
     typedef CallbackBase<void,View&,int,int,int,int,int,int,int,int>OnLayoutChangeListener;
     typedef CallbackBase<bool,View&,KeyEvent&>OnUnhandledKeyEventListener;
     typedef struct{
@@ -792,7 +792,7 @@ protected:
     void updateSystemGestureExclusionRects();
     void updateKeepClearRects();
     std::vector<Rect>collectPreferKeepClearRects();
-    bool computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets);
+    bool computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets)const;
     virtual void clearParentsWantFocus();
     virtual void clearFocusInternal(View* focused, bool propagate, bool refocus);
     virtual void handleFocusGainInternal(int direction,Rect*previouslyFocusedRect);
@@ -1297,10 +1297,10 @@ public:
     void getWindowDisplayFrame(Rect& outRect);
     virtual void dispatchConfigurationChanged(Configuration& newConfig);
     bool isShown()const;
-    virtual WindowInsets onApplyWindowInsets(WindowInsets& insets);
+    virtual WindowInsets onApplyWindowInsets(const WindowInsets& insets);
     void setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& listener);
-    WindowInsets dispatchApplyWindowInsets(WindowInsets& insets);
-    WindowInsets computeSystemWindowInsets(WindowInsets& in, Rect& outLocalInsets);
+    WindowInsets dispatchApplyWindowInsets(const WindowInsets& insets);
+    WindowInsets computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets)const;
     void setFitsSystemWindows(bool fitSystemWindows);
     bool getFitsSystemWindows()const;
     bool fitsSystemWindows();

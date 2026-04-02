@@ -3,7 +3,7 @@
 
 namespace cdroid{
 
-//CONSUMED = new WindowInsets(null, null, null, false, false, null);
+WindowInsets WindowInsets::CONSUMED(nullptr, nullptr, nullptr, false, false, nullptr);
 
 WindowInsets::WindowInsets(const Rect* systemWindowInsets,const Rect* windowDecorInsets,const Rect* stableInsets,
         bool isRound, bool alwaysConsumeNavBar,const DisplayCutout* displayCutout) {
@@ -11,13 +11,13 @@ WindowInsets::WindowInsets(const Rect* systemWindowInsets,const Rect* windowDeco
     mSystemWindowInsets.setEmpty();
     mWindowDecorInsets.setEmpty();
     mStableInsets.setEmpty();
-    if(mSystemWindowInsetsConsumed) mSystemWindowInsets = *systemWindowInsets;
+    if(systemWindowInsets) mSystemWindowInsets = *systemWindowInsets;
 
     mWindowDecorInsetsConsumed = windowDecorInsets == nullptr;
-    if(mWindowDecorInsetsConsumed) mWindowDecorInsets = *windowDecorInsets;
+    if(windowDecorInsets) mWindowDecorInsets = *windowDecorInsets;
 
     mStableInsetsConsumed = stableInsets == nullptr;
-    if(mStableInsetsConsumed) mStableInsets = *stableInsets;
+    if(stableInsets) mStableInsets = *stableInsets;
 
     mIsRound = isRound;
     mAlwaysConsumeNavBar = alwaysConsumeNavBar;
@@ -98,8 +98,8 @@ DisplayCutout* WindowInsets::getDisplayCutout()const {
     return mDisplayCutout;
 }
 
-WindowInsets WindowInsets::consumeDisplayCutout() {
-    WindowInsets result(*this);// = new WindowInsets(this);
+WindowInsets WindowInsets::consumeDisplayCutout() const{
+    WindowInsets result(*this);
     result.mDisplayCutout = nullptr;
     result.mDisplayCutoutConsumed = true;
     return result;
@@ -114,7 +114,7 @@ bool WindowInsets::isRound() const{
     return mIsRound;
 }
 
-WindowInsets WindowInsets::consumeSystemWindowInsets() {
+WindowInsets WindowInsets::consumeSystemWindowInsets() const{
     WindowInsets result(*this);
     result.mSystemWindowInsets.setEmpty();
     result.mSystemWindowInsetsConsumed = true;
@@ -122,7 +122,7 @@ WindowInsets WindowInsets::consumeSystemWindowInsets() {
 }
 
 WindowInsets WindowInsets::consumeSystemWindowInsets(bool left, bool top,
-        bool right, bool bottom) {
+        bool right, bool bottom) const{
     if (left || top || right || bottom) {
         WindowInsets result(*this);// = new WindowInsets(this);
         result.mSystemWindowInsets.set(
@@ -136,28 +136,28 @@ WindowInsets WindowInsets::consumeSystemWindowInsets(bool left, bool top,
 }
 
 WindowInsets WindowInsets::replaceSystemWindowInsets(int left, int top,
-        int right, int bottom) {
-    WindowInsets result(*this);// new WindowInsets(this);
+        int right, int bottom) const{
+    WindowInsets result(*this);
     result.mSystemWindowInsets.set(left, top, right, bottom);
     return result;
 }
 
-WindowInsets WindowInsets::replaceSystemWindowInsets(const Rect& systemWindowInsets) {
-    WindowInsets result(*this);// = new WindowInsets(this);
+WindowInsets WindowInsets::replaceSystemWindowInsets(const Rect& systemWindowInsets) const{
+    WindowInsets result(*this);
     result.mSystemWindowInsets=systemWindowInsets;
     return result;
 }
 
-WindowInsets WindowInsets::consumeWindowDecorInsets() {
+WindowInsets WindowInsets::consumeWindowDecorInsets() const{
     WindowInsets result(*this);
     result.mWindowDecorInsets.set(0, 0, 0, 0);
     result.mWindowDecorInsetsConsumed = true;
     return result;
 }
 
-WindowInsets WindowInsets::consumeWindowDecorInsets(bool left, bool top, bool right, bool bottom) {
+WindowInsets WindowInsets::consumeWindowDecorInsets(bool left, bool top, bool right, bool bottom) const{
     if (left || top || right || bottom) {
-        WindowInsets result(*this);// = new WindowInsets(this);
+        WindowInsets result(*this);
         result.mWindowDecorInsets.set(left ? 0 : mWindowDecorInsets.left,
                 top ? 0 : mWindowDecorInsets.top,
                 right ? 0 : mWindowDecorInsets.width,
@@ -167,7 +167,7 @@ WindowInsets WindowInsets::consumeWindowDecorInsets(bool left, bool top, bool ri
     return *this;
 }
 
-WindowInsets WindowInsets::replaceWindowDecorInsets(int left, int top, int right, int bottom) {
+WindowInsets WindowInsets::replaceWindowDecorInsets(int left, int top, int right, int bottom) const{
     WindowInsets result(*this);
     result.mWindowDecorInsets.set(left, top, right, bottom);
     return result;
@@ -194,8 +194,8 @@ bool WindowInsets::hasStableInsets() const{
             || (mStableInsets.height != 0);
 }
 
-WindowInsets WindowInsets::consumeStableInsets() {
-    WindowInsets result(*this);// = new WindowInsets(this);
+WindowInsets WindowInsets::consumeStableInsets() const{
+    WindowInsets result(*this);
     result.mStableInsets.setEmpty();
     result.mStableInsetsConsumed = true;
     return result;
@@ -205,11 +205,11 @@ bool WindowInsets::shouldAlwaysConsumeNavBar() const{
     return mAlwaysConsumeNavBar;
 }
 
-WindowInsets WindowInsets::inset(const Rect& r) {
+WindowInsets WindowInsets::inset(const Rect& r) const{
     return inset(r.left, r.top, r.width, r.height);
 }
 
-WindowInsets WindowInsets::inset(int left, int top, int right, int bottom) {
+WindowInsets WindowInsets::inset(int left, int top, int right, int bottom) const{
     /*Preconditions.checkArgumentNonnegative(left);
     Preconditions.checkArgumentNonnegative(top);
     Preconditions.checkArgumentNonnegative(right);

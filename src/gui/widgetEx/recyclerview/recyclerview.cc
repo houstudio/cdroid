@@ -227,7 +227,7 @@ void RecyclerView::initRecyclerView(){
     visCBK->processPersistent = [this](ViewHolder* viewHolder,ItemAnimator::ItemHolderInfo* preInfo,ItemAnimator::ItemHolderInfo* postInfo){
         viewHolder->setIsRecyclable(false);
         if (mDataSetHasChangedAfterLayout) {
-            if (mItemAnimator->animateChange(*viewHolder, *viewHolder, *preInfo, *postInfo)) {
+            if (mItemAnimator->animateChange(*viewHolder, viewHolder, *preInfo, *postInfo)) {
                 postAnimationRunner();
             }
         } else if (mItemAnimator->animatePersistence(*viewHolder, *preInfo, *postInfo)) {
@@ -2997,7 +2997,7 @@ void RecyclerView::dispatchLayoutStep3() {
                     if (preInfo == nullptr) {
                         handleMissingPreInfoForChangeError(key, holder, oldChangeViewHolder);
                     } else {
-                        animateChange(*oldChangeViewHolder, *holder, *preInfo, *postInfo,
+                        animateChange(*oldChangeViewHolder, holder, *preInfo, *postInfo,
                                 oldDisappearing, newDisappearing);
                     }
                     delete preInfo;
@@ -3155,23 +3155,23 @@ void RecyclerView::animateDisappearance(ViewHolder& holder, ItemAnimator::ItemHo
     }
 }
 
-void RecyclerView::animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,
+void RecyclerView::animateChange(ViewHolder& oldHolder,ViewHolder* newHolder,
         ItemAnimator::ItemHolderInfo& preInfo,ItemAnimator::ItemHolderInfo& postInfo,
         bool oldHolderDisappearing, bool newHolderDisappearing) {
     oldHolder.setIsRecyclable(false);
     if (oldHolderDisappearing) {
         addAnimatingView(oldHolder);
     }
-    if (&oldHolder != &newHolder) {
+    if (&oldHolder != newHolder) {
         if (newHolderDisappearing) {
-            addAnimatingView(newHolder);
+            addAnimatingView(*newHolder);
         }
-        oldHolder.mShadowedHolder = &newHolder;
+        oldHolder.mShadowedHolder = newHolder;
         // old holder should disappear after animation ends
         addAnimatingView(oldHolder);
         mRecycler->unscrapView(oldHolder);
-        newHolder.setIsRecyclable(false);
-        newHolder.mShadowingHolder = &oldHolder;
+        newHolder->setIsRecyclable(false);
+        newHolder->mShadowingHolder = &oldHolder;
     }
     if (mItemAnimator->animateChange(oldHolder, newHolder, preInfo, postInfo)) {
         postAnimationRunner();

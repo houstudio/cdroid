@@ -141,7 +141,7 @@ public:
         virtual bool animateDisappearance(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo* postLayoutInfo)=0;
         virtual bool animateAppearance(ViewHolder& viewHolder,ItemHolderInfo* preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
         virtual bool animatePersistence(ViewHolder& viewHolder,ItemHolderInfo& preLayoutInfo, ItemHolderInfo& postLayoutInfo)=0;
-        virtual bool animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,ItemHolderInfo& preLayoutInfo,ItemHolderInfo& postLayoutInfo)=0;
+        virtual bool animateChange(ViewHolder& oldHolder,ViewHolder* newHolder,ItemHolderInfo& preLayoutInfo,ItemHolderInfo& postLayoutInfo)=0;
         virtual void runPendingAnimations()=0;
         virtual void endAnimation(ViewHolder& item)=0;
         virtual void endAnimations()=0;
@@ -306,7 +306,7 @@ private:
     bool findInterceptingOnItemTouchListener(MotionEvent& e);
     bool stopGlowAnimations(MotionEvent& e);
     bool didChildRangeChange(int minPositionPreLayout, int maxPositionPreLayout);
-    void animateChange(ViewHolder& oldHolder,ViewHolder& newHolder,ItemAnimator::ItemHolderInfo& preInfo,
+    void animateChange(ViewHolder& oldHolder,ViewHolder* newHolder,ItemAnimator::ItemHolderInfo& preInfo,
 	     ItemAnimator::ItemHolderInfo& postInfo,bool oldHolderDisappearing, bool newHolderDisappearing);
     NestedScrollingChildHelper* getScrollingChildHelper();
     ScrollFeedbackProvider* getScrollFeedbackProvider();

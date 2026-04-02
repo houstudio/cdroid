@@ -45,32 +45,32 @@ public:
 
     DisplayCutout* getDisplayCutout()const;
 
-    WindowInsets consumeDisplayCutout();
+    WindowInsets consumeDisplayCutout() const;
 
     bool isConsumed() const;
     bool isRound() const;
 
-    WindowInsets consumeSystemWindowInsets();
-    WindowInsets consumeSystemWindowInsets(bool left, bool top, bool right, bool bottom);
-    WindowInsets replaceSystemWindowInsets(int left, int top,int right, int bottom);
-    WindowInsets replaceSystemWindowInsets(const Rect& systemWindowInsets);
+    WindowInsets consumeSystemWindowInsets()const;
+    WindowInsets consumeSystemWindowInsets(bool left, bool top, bool right, bool bottom)const;
+    WindowInsets replaceSystemWindowInsets(int left, int top,int right, int bottom)const;
+    WindowInsets replaceSystemWindowInsets(const Rect& systemWindowInsets)const;
 
-    WindowInsets consumeWindowDecorInsets();
-    WindowInsets consumeWindowDecorInsets(bool left, bool top,bool right, bool bottom);
-    WindowInsets replaceWindowDecorInsets(int left, int top, int right, int bottom);
+    WindowInsets consumeWindowDecorInsets()const;
+    WindowInsets consumeWindowDecorInsets(bool left, bool top,bool right, bool bottom)const;
+    WindowInsets replaceWindowDecorInsets(int left, int top, int right, int bottom)const;
 
     int getStableInsetTop() const;
     int getStableInsetLeft() const;
     int getStableInsetRight() const;
     int getStableInsetBottom() const;
     bool hasStableInsets() const;
-    WindowInsets consumeStableInsets();
+    WindowInsets consumeStableInsets()const;
 
     bool shouldAlwaysConsumeNavBar() const;
 
-    WindowInsets inset(const Rect& r);
+    WindowInsets inset(const Rect& r)const;
 
-    WindowInsets inset(int left, int top, int right, int bottom);
+    WindowInsets inset(int left, int top, int right, int bottom)const;
     bool operator==(const WindowInsets& o)const;
     bool operator!=(const WindowInsets& o)const;
     bool isSystemWindowInsetsConsumed() const;

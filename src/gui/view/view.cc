@@ -5478,7 +5478,7 @@ bool View::fitSystemWindowsInt(Rect& insets) {
     return false;
 }
 
-WindowInsets View::onApplyWindowInsets(WindowInsets& insets) {
+WindowInsets View::onApplyWindowInsets(const WindowInsets& insets) {
     Rect rect = insets.getSystemWindowInsets();
     if ((mPrivateFlags3 & PFLAG3_FITTING_SYSTEM_WINDOWS) == 0) {
         // We weren't called from within a direct call to fitSystemWindows,
@@ -5500,7 +5500,7 @@ void View::setOnApplyWindowInsetsListener(const OnApplyWindowInsetsListener& lis
     getListenerInfo()->mOnApplyWindowInsetsListener = listener;
 }
 
-WindowInsets View::dispatchApplyWindowInsets(WindowInsets& insets) {
+WindowInsets View::dispatchApplyWindowInsets(const WindowInsets& insets) {
     mPrivateFlags3 |= PFLAG3_APPLYING_INSETS;
     Finally finally([this]() {mPrivateFlags3 &= ~PFLAG3_APPLYING_INSETS; });
     if (mListenerInfo && mListenerInfo->mOnApplyWindowInsetsListener) {
@@ -5517,14 +5517,14 @@ WindowInsets* View::getRootWindowInsets() {
     return nullptr;
 }
 
-bool View::computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets) {
+bool View::computeFitSystemWindows(Rect& inoutInsets, Rect& outLocalInsets) const{
     WindowInsets wInsets(inoutInsets);
     WindowInsets innerInsets = computeSystemWindowInsets(wInsets,outLocalInsets);
     inoutInsets=innerInsets.getSystemWindowInsets();
     return innerInsets.isSystemWindowInsetsConsumed();
 }
 
-WindowInsets View::computeSystemWindowInsets(WindowInsets& in, Rect& outLocalInsets) {
+WindowInsets View::computeSystemWindowInsets(const WindowInsets& in, Rect& outLocalInsets) const{
     if (((mViewFlags & OPTIONAL_FITS_SYSTEM_WINDOWS) == 0)|| (mAttachInfo == nullptr)
             || (((mAttachInfo->mSystemUiVisibility & SYSTEM_UI_LAYOUT_FLAGS) == 0)
             && !mAttachInfo->mOverscanRequested)) {
