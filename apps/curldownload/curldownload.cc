@@ -164,7 +164,15 @@ void CurlDownloader::cleanUp(int still_running) {
 }
 
 void CurlDownloader::cleanConnections(){
-    cleanUp(-1);
+    for(auto easy:mEasys){
+        ConnectionData* priv;
+        curl_easy_getinfo(easy, CURLINFO_PRIVATE, &priv);
+        curl_multi_remove_handle(mMulti, easy);
+        curl_easy_cleanup(easy);
+        delete priv;
+    }
+    mActiveHandles = 0;
+    mEasys.clear();
 }
 
 int CurlDownloader::MultiTimeCallback(CURLM *multi, long timeout_ms, void * data){
