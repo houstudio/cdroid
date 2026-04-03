@@ -62,7 +62,7 @@ int main(int argc,const char*argv[]){
           dld.addConnection(cnn);
        }
     }
-    dld.cleanConnections();
+    //dld.cleanConnections();
     return app.exec();
 }
 
