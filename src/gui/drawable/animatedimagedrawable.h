@@ -67,6 +67,7 @@ private:
     std::promise<void> mDecodePromise;
     std::shared_ptr<Cairo::ImageSurface> mRenderImage;
     std::shared_ptr<Cairo::ImageSurface> mDecodeImage;
+    std::atomic<bool> mDecodeInProgress;
     std::mutex mFrameSequenceMutex;
     static std::queue<std::pair<AnimatedImageDrawable*, int>> sDecodeQueue;
     static std::thread sDecodeThread;

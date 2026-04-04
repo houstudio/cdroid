@@ -72,6 +72,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
 
     mRenderImage = mImage;
     mDecodeImage = frmSequence ? Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight()) : nullptr;
+    mDecodeInProgress = false;
     mDecodeFuture = std::shared_future<void>();
     if(!sDecodeThread.joinable()) {
         sDecodeThread = std::thread(decodeWorker);
@@ -115,6 +116,7 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
     mRenderImage = mImage;
     mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
+    mDecodeInProgress = false;
     mDecodeFuture = std::shared_future<void>();
     if(!sDecodeThread.joinable()) {
         sDecodeThread = std::thread(decodeWorker);
@@ -128,6 +130,21 @@ AnimatedImageDrawable::~AnimatedImageDrawable(){
     Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
     if(mRunnable) unscheduleSelf(mRunnable);
     mRunnable = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(sDecodeMutex);
+        std::queue<std::pair<AnimatedImageDrawable*, int>> filteredQueue;
+        while(!sDecodeQueue.empty()){
+            auto task = sDecodeQueue.front();
+            sDecodeQueue.pop();
+            if(task.first != this){
+                filteredQueue.push(task);
+            }
+        }
+        std::swap(sDecodeQueue, filteredQueue);
+    }
+    while(mDecodeInProgress){
+        std::this_thread::yield();
+    }
     delete mFrameSequenceState;
     if(mImageHandler){
         GFXDestroySurface(mImageHandler);
@@ -450,14 +467,17 @@ void AnimatedImageDrawable::decodeWorker() {
 #endif
     while(true) {
         std::pair<AnimatedImageDrawable*, int> task;
+        AnimatedImageDrawable* instance = nullptr;
+        int frameIndex = -1;
         {
             std::unique_lock<std::mutex> lock(sDecodeMutex);
             sDecodeCV.wait(lock, []{ return !sDecodeQueue.empty(); });
             task = sDecodeQueue.front();
             sDecodeQueue.pop();
+            instance = task.first;
+            frameIndex = task.second;
+            instance->mDecodeInProgress = true;
         }
-        AnimatedImageDrawable* instance = task.first;
-        const int frameIndex = task.second;
         // decode
         const int prevFrame = (frameIndex - 1 + instance->mAnimatedImageState->mFrameCount) % instance->mAnimatedImageState->mFrameCount;
         {
@@ -467,6 +487,7 @@ void AnimatedImageDrawable::decodeWorker() {
         LOGV("%p decode frame %d completed cpuid=%d",instance,frameIndex,sched_getcpu());
         instance->mDecodeImage->mark_dirty();
         instance->mDecodePromise.set_value();
+        instance->mDecodeInProgress = false;
     }
 }
 
