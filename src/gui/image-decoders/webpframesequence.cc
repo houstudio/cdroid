@@ -216,6 +216,7 @@ WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFram
 
 WebPFrameSequence::WebPFrameSequenceState::~WebPFrameSequenceState() {
     delete[] mPreservedBuffer;
+    WebPFreeDecBuffer(&mDecoderConfig->output);
     delete mDecoderConfig;
 }
 
