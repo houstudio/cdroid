@@ -19,6 +19,12 @@
 #define __ANIMATED_IMAGE_DRAWABLE_H__
 #include <drawable/drawable.h>
 #include <core/handler.h>
+#include <future>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <atomic>
 namespace cdroid{
 class FrameSequence;
 class FrameSequenceState;
@@ -57,9 +63,21 @@ private:
     ColorFilter* mColorFilter;
     std::vector<Animatable2::AnimationCallback> mAnimationCallbacks;
     void* mImageHandler;
+    std::shared_future<void> mDecodeFuture;
+    std::promise<void> mDecodePromise;
+    std::shared_ptr<Cairo::ImageSurface> mRenderImage;
+    std::shared_ptr<Cairo::ImageSurface> mDecodeImage;
+    std::atomic<bool> mDecodeInProgress;
+    std::mutex mFrameSequenceMutex;
+    static std::queue<std::pair<AnimatedImageDrawable*, int>> sDecodeQueue;
+    static std::thread sDecodeThread;
+    static std::mutex sDecodeMutex;
+    static std::condition_variable sDecodeCV;
     void postOnAnimationStart();
     void postOnAnimationEnd();
     void updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride);
+    void submitDecodeTask(int frameIndex);
+    static void decodeWorker();
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 protected:
     void onBoundsChange(const Rect& bounds)override;

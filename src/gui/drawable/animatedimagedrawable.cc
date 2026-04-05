@@ -24,8 +24,25 @@
 #include <image-decoders/imagedecoder.h>
 #include <image-decoders/framesequence.h>
 #include <porting/cdgraph.h>
+#include <future>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
+#include <queue>
+#include <atomic>
+#if HAVE_SYS_PRCTL_H
+#include <sys/prctl.h>
+#elif HAVE_LINUX_PRCTL_H
+#include <linux/prctl.h>
+#endif
+
 namespace cdroid{
 #define ENABLE_DMABLIT 0
+
+std::queue<std::pair<AnimatedImageDrawable*, int>> AnimatedImageDrawable::sDecodeQueue;
+std::thread AnimatedImageDrawable::sDecodeThread;
+std::mutex AnimatedImageDrawable::sDecodeMutex;
+std::condition_variable AnimatedImageDrawable::sDecodeCV;
 
 AnimatedImageDrawable::AnimatedImageDrawable()
   :AnimatedImageDrawable(std::make_shared<AnimatedImageState>()){
@@ -53,10 +70,22 @@ AnimatedImageDrawable::AnimatedImageDrawable(std::shared_ptr<AnimatedImageState>
         mImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,frmSequence->getWidth(),frmSequence->getHeight());
     }
 
+    mRenderImage = mImage;
+    mDecodeImage = frmSequence ? Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight()) : nullptr;
+    mDecodeInProgress = false;
+    mDecodeFuture = std::shared_future<void>();
+    if(!sDecodeThread.joinable()) {
+        sDecodeThread = std::thread(decodeWorker);
+    }
+
     mRunnable = [this](){
         if(mStarting && mAnimatedImageState->mFrameCount){
             invalidateSelf();
             mNextFrame = (mNextFrame + 1)%mAnimatedImageState->mFrameCount;
+            int nextFrameToDecode = (mNextFrame + 1) % mAnimatedImageState->mFrameCount;
+            if(!mDecodeFuture.valid() || mDecodeFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+                submitDecodeTask(nextFrameToDecode);
+            }
         }
         if( mNextFrame == mAnimatedImageState->mFrameCount - 1){
             mRepeated ++;
@@ -85,6 +114,13 @@ AnimatedImageDrawable::AnimatedImageDrawable(cdroid::Context*ctx,const std::stri
 #endif
     LOGD("%p %s %dx%dx%d frmSequence=%p",this,res.c_str(),frmSequence->getWidth(),frmSequence->getHeight(),frmSequence->getFrameCount(),frmSequence);
     mAnimatedImageState->mFrameCount = frmSequence->getFrameCount();
+    mRenderImage = mImage;
+    mDecodeImage = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, frmSequence->getWidth(), frmSequence->getHeight());
+    mDecodeInProgress = false;
+    mDecodeFuture = std::shared_future<void>();
+    if(!sDecodeThread.joinable()) {
+        sDecodeThread = std::thread(decodeWorker);
+    }
 }
 
 AnimatedImageDrawable::~AnimatedImageDrawable(){
@@ -94,6 +130,21 @@ AnimatedImageDrawable::~AnimatedImageDrawable(){
     Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,nullptr,this);
     if(mRunnable) unscheduleSelf(mRunnable);
     mRunnable = nullptr;
+    {
+        std::lock_guard<std::mutex> lock(sDecodeMutex);
+        std::queue<std::pair<AnimatedImageDrawable*, int>> filteredQueue;
+        while(!sDecodeQueue.empty()){
+            auto task = sDecodeQueue.front();
+            sDecodeQueue.pop();
+            if(task.first != this){
+                filteredQueue.push(task);
+            }
+        }
+        std::swap(sDecodeQueue, filteredQueue);
+    }
+    while(mDecodeInProgress){
+        std::this_thread::yield();
+    }
     delete mFrameSequenceState;
     if(mImageHandler){
         GFXDestroySurface(mImageHandler);
@@ -175,19 +226,25 @@ bool AnimatedImageDrawable::onLayoutDirectionChanged(int layoutDirection) {
 }
 
 void AnimatedImageDrawable::draw(Canvas& canvas){
-    if(mImage == nullptr)return;
+    if(mRenderImage == nullptr)return;
     if (mStarting && (mCurrentFrame == 0) ) {
         postOnAnimationStart();
     }
     canvas.save();
+    // check if decode ready
+    if(mDecodeFuture.valid() && mDecodeFuture.wait_for(std::chrono::seconds(0)) == std::future_status::ready) {
+        std::swap(mRenderImage, mDecodeImage);
+        mDecodeFuture = std::shared_future<void>();
+    }
     //auto frmSequence = mAnimatedImageState->mFrameSequence;
     if( (mCurrentFrame != mNextFrame) && mAnimatedImageState->mFrameCount){
+        std::lock_guard<std::mutex> lock(mFrameSequenceMutex);
         const int64_t startTime  = SystemClock::uptimeMillis();
-        mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mImage->get_data(),mImage->get_stride()>>2,mCurrentFrame);
+        mFrameDelay = mFrameSequenceState->drawFrame(mNextFrame,(uint32_t*)mRenderImage->get_data(),mRenderImage->get_stride()>>2,mCurrentFrame);
         const int64_t decodeTime = (SystemClock::uptimeMillis() - startTime);
         mFrameDelay = (decodeTime >= mFrameDelay)?(mFrameDelay/2):(mFrameDelay - decodeTime);
         mCurrentFrame = mNextFrame;
-        mImage->mark_dirty();
+        mRenderImage->mark_dirty();
     }
     // a value <= 0 indicates that the drawable is stopped or that renderThread
     // will manage the animation
@@ -202,6 +259,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
             if(!mFrameScheduled){
                 unscheduleSelf(mRunnable);
                 scheduleSelf(mRunnable, SystemClock::uptimeMillis() + mFrameDelay);
+                LOGV("%p schedule next frame %d in %d ms",this,mNextFrame,mFrameDelay);
                 mFrameScheduled = true;
             }
         }
@@ -213,7 +271,7 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     void *handler = canvas.getHandler();
     if( (mImageHandler == nullptr) || (handler == nullptr) ){
         const bool isOpaque = mAnimatedImageState->mFrameSequence->isOpaque();
-        canvas.set_source(mImage,mBounds.left,mBounds.top);
+        canvas.set_source(mRenderImage,mBounds.left,mBounds.top);
         canvas.set_operator(isOpaque?Cairo::Context::Operator::SOURCE:Cairo::Context::Operator::OVER);
         canvas.translate(mBounds.left,mBounds.top);
         if(mAnimatedImageState->mAutoMirrored && (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL)){
@@ -389,6 +447,48 @@ AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
 
 int AnimatedImageDrawable::AnimatedImageState::getChangingConfigurations()const{
     return 0;
+}
+
+void AnimatedImageDrawable::submitDecodeTask(int frameIndex) {
+    mDecodePromise = std::promise<void>();
+    mDecodeFuture = mDecodePromise.get_future();
+    {
+        std::lock_guard<std::mutex> lock(sDecodeMutex);
+        sDecodeQueue.push({this, frameIndex});
+    }
+    sDecodeCV.notify_one();
+}
+
+void AnimatedImageDrawable::decodeWorker() {
+#if HAVE_PRCTL
+    prctl(PR_SET_NAME,"AniImageDecoder",0,0,0);
+#elif HAVE_PTHREAD_SETNAME_NP
+    pthread_setname_np(pthread_self(), "AniImageDecoder");
+#endif
+    while(true) {
+        std::pair<AnimatedImageDrawable*, int> task;
+        AnimatedImageDrawable* instance = nullptr;
+        int frameIndex = -1;
+        {
+            std::unique_lock<std::mutex> lock(sDecodeMutex);
+            sDecodeCV.wait(lock, []{ return !sDecodeQueue.empty(); });
+            task = sDecodeQueue.front();
+            sDecodeQueue.pop();
+            instance = task.first;
+            frameIndex = task.second;
+            instance->mDecodeInProgress = true;
+        }
+        // decode
+        const int prevFrame = (frameIndex - 1 + instance->mAnimatedImageState->mFrameCount) % instance->mAnimatedImageState->mFrameCount;
+        {
+            std::lock_guard<std::mutex> lock(instance->mFrameSequenceMutex);
+            instance->mFrameSequenceState->drawFrame(frameIndex, (uint32_t*)instance->mDecodeImage->get_data(), instance->mDecodeImage->get_stride()>>2, prevFrame);
+        }
+        LOGV("%p decode frame %d completed cpuid=%d",instance,frameIndex,sched_getcpu());
+        instance->mDecodeImage->mark_dirty();
+        instance->mDecodePromise.set_value();
+        instance->mDecodeInProgress = false;
+    }
 }
 
 }

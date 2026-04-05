@@ -206,7 +206,7 @@ WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFram
         mFrameSequence(frameSequence) {
     mDecoderConfig = new WebPDecoderConfig;
     WebPInitDecoderConfig(mDecoderConfig);
-    mDecoderConfig->options.use_threads = 1;
+    mDecoderConfig->options.use_threads = 0;/*disable threadmode,we use decodeWorker in AnimatedImageDrawable*/
     mDecoderConfig->output.is_external_memory = 1;
     mDecoderConfig->output.colorspace = MODE_bgrA;//Pre-multiplied alpha mode.
     const int canvasWidth = mFrameSequence.getWidth();
@@ -216,6 +216,7 @@ WebPFrameSequence::WebPFrameSequenceState::WebPFrameSequenceState(const WebPFram
 
 WebPFrameSequence::WebPFrameSequenceState::~WebPFrameSequenceState() {
     delete[] mPreservedBuffer;
+    WebPFreeDecBuffer(&mDecoderConfig->output);
     delete mDecoderConfig;
 }
 
