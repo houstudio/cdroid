@@ -107,7 +107,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
 
     LOGI("cdroid %s on %s [%s] Build:%d Commit:%s",Build::VERSION::Release,Build::VERSION::BASE_OS,
             Build::VERSION::CODENAME,Build::VERSION::BuildNumber,Build::VERSION::CommitID);
-    LOGI("https://www.gitee.com/houstudio/cdroid %s|%s|%s",getName().c_str(),mName.c_str(),getDataPath().c_str());
+    LOGI("https://www.gitee.com/houstudio/cdroid");
 
     GraphDevice& graph =GraphDevice::getInstance();
     if(rotation){
