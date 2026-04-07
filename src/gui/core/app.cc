@@ -32,8 +32,11 @@
 #include <core/inputmethodmanager.h>
 
 #if defined(__linux__)||defined(__unix__)
+#include <sys/auxv.h>
 extern "C" char *__progname;
+#define PATH_SEP '/'
 #elif defined(_WIN32)||defined(_WIN64)
+#define PATH_SEP '\\'
 extern "C" unsigned long  GetModuleFileNameA(void* hModule, char* lpFilename, unsigned long nSize);
 #endif
 
@@ -43,6 +46,18 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     int alpha = 255, rotation = 0, density = 0, frameDelay = 0;
     bool debug= false,showFPS = false, help = false;
     std::string logo, monkey, record, datapath;
+#if defined(__linux__)||defined(__unix__)
+    //std::string name = std::string(argc?argv[0]:__progname);
+    std::string name = (const char*)getauxval(AT_EXECFN);
+#elif (defined(_WIN32)||defined(_WIN64))
+    char progName[260];
+    GetModuleFileNameA(nullptr,progName,sizeof(progName));
+    std::string name = progName;
+#endif
+    size_t pos=name.rfind(PATH_SEP);
+    if(pos!=std::string::npos){
+        datapath = name.substr(0,pos);
+    }
     LogParseModules(argc,argv);
     mInst = this;
     cxxopts::Options options("cdroid","cdroid application");
@@ -61,13 +76,6 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
 
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
-#if defined(__linux__)||defined(__unix__)
-    std::string name= std::string(argc?argv[0]:__progname);
-#elif (defined(_WIN32)||defined(_WIN64))
-    char progName[260];
-    GetModuleFileNameA(nullptr,progName,sizeof(progName));
-    std::string name = progName;
-#endif
     try{
         if((argc == 0) || (argv == nullptr)){
             const char*dummy[] = {name.c_str(), nullptr};
@@ -86,6 +94,7 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         return;
     }
     Typeface::setContext(this);
+    mName = name;
     onInit();
     setName(name);
     LOGI("\033[1;35m          ┏━┓┏┓╋╋╋┏┓┏┓");
@@ -147,8 +156,12 @@ void App::onInit(){
 }
 
 const std::string App::getDataPath()const{
-    std::string path=getArg("data","./");
-    if(path.back()!='/')path+='/';
+    const size_t pos =mName.rfind(PATH_SEP);
+    std::string path;
+    if(pos!=std::string::npos)
+        path = getArg("data",mName.substr(0,pos + 1));
+    else
+        path = getArg("data",std::string(".")+PATH_SEP);
     return path;
 }
 
@@ -236,7 +249,7 @@ void App::exit(int code){
 
 void App::setName(const std::string&appname){
     mName = appname;
-    size_t pos = mName.find_last_of("/");
+    size_t pos = mName.rfind(PATH_SEP);
     if(pos!=std::string::npos)
         mName = mName.substr(pos+1);
     addResource(getDataPath()+mName+std::string(".pak"));
