@@ -303,13 +303,13 @@ key EQUALS {
     shift:                              '+'
 }
 
-key LEFTBRACE {
+key LEFT_BRACKET {
     label:                              '['
     base:                               '['
     shift:                              '{'
 }
 
-key RIGHTBRACE {
+key RIGHT_BRACKET {
     label:                              ']'
     base:                               ']'
     shift:                              '}'
