@@ -146,7 +146,7 @@ bool InputEventSource::needCancel(InputDevice*dev){
     const nsecs_t now = SystemClock::uptimeMillis();
     dev->getLastEvent(action,etime,&pos);
     TouchDevice*tdev= dynamic_cast<TouchDevice*>(dev);
-    const int edges = tdev->checkPointEdges(pos);
+    const int edges = tdev?tdev->checkPointEdges(pos):0;
     if( (action == MotionEvent::ACTION_MOVE) && (now - etime>500) && (tdev != nullptr) && edges){
         MotionEvent*e = MotionEvent::obtain(now, now, MotionEvent::ACTION_CANCEL, 0, 0, 0);
         dev->pushEvent(e);
