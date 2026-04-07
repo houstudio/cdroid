@@ -45,8 +45,7 @@ public:
      static App&getInstance();
      const std::string getDataPath()const;
      virtual void setOpacity(unsigned char alpha);
-     virtual void setName(const std::string&appname);
-     virtual const std::string&getName()const;
+     virtual const std::string getName()const;
      bool hasArg(const std::string&key)const;
      bool hasSwitch(const std::string&key)const;
      const std::string getArg(const std::string&key,const std::string&fallback_value)const;
