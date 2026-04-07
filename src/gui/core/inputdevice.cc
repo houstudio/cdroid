@@ -895,18 +895,21 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
 }
 
 int32_t TouchDevice::checkPointEdges(Point&pt)const{
-#define EDGESIZE 16
-    int edges=0;
+#define EDGESIZE 8
+    int edges=0;//1 LEFT,2 TOP,4 RIGHT,8 BOTTOM
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
-    if((pt.x < 0)&&(pt.y < 0))return 0;
-    if(pt.x < EDGESIZE) edges|=1;
-    if(pt.y < EDGESIZE) edges|=2;
     if(rotation==Display::ROTATION_0||rotation==Display::ROTATION_180){
-        if(pt.x > mScreenWidth - EDGESIZE) edges|=4;
-        if(pt.y > mScreenHeight - EDGESIZE) edges|=8;
+        const bool invert =rotation==Display::ROTATION_180;
+        if(pt.x < EDGESIZE) edges|=invert?4:1;
+        if(pt.y < EDGESIZE) edges|=invert?8:2;
+        if(pt.x > mScreenWidth - EDGESIZE) edges|=invert?1:4;
+        if(pt.y > mScreenHeight - EDGESIZE) edges|=invert?2:8;
     }else{/*Display::ROTATION_90 Display::ROTATION_270*/
-        if(pt.x > mScreenHeight - EDGESIZE) edges|=4;
-        if(pt.y > mScreenWidth - EDGESIZE) edges|=8;
+        const bool invert =rotation==Display::ROTATION_90;
+        if(pt.x < EDGESIZE) edges|=invert?1:4;
+        if(pt.y < EDGESIZE) edges|=invert?2:8;
+        if(pt.x > mScreenHeight - EDGESIZE) edges|=invert?4:1;
+        if(pt.y > mScreenWidth - EDGESIZE) edges|=invert?8:2;
     }
     return edges;
 }
