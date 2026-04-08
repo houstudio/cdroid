@@ -806,7 +806,7 @@ int KeyCharacterMap::Parser::parseMapKey() {
 
 int KeyCharacterMap::Parser::parseKey() {
     std::string keyCodeToken = mTokenizer->nextToken(WHITESPACE);
-    int32_t keyCode = InputEventLookup::getKeyCodeByLabel(keyCodeToken.c_str());
+    const int32_t keyCode = InputEventLookup::getKeyCodeByLabel(keyCodeToken.c_str());
     if (!keyCode) {
         LOGE("%s: Expected key code label, got '%s'.", mTokenizer->getLocation().c_str(),
                 keyCodeToken.c_str());

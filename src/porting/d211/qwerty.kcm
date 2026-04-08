@@ -435,7 +435,7 @@ key EQUALS {
     shift+alt:                          '+'
 }
 
-key LEFTBRACE {
+key LEFT_BRACKET {
     label:                              '['
     number:                             '['
     base:                               '['
@@ -444,7 +444,7 @@ key LEFTBRACE {
     shift+alt:                          '{'
 }
 
-key RIGHTBRACE {
+key RIGHT_BRACKET {
     label:                              ']'
     number:                             ']'
     base:                               ']'

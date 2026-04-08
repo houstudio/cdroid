@@ -19,6 +19,7 @@
 #include <porting/cdlog.h>
 #include <chrono>
 #include <sys/stat.h>
+#include <unistd.h>
 #include <cstring>
 #include <fstream>
 #include <iostream>
@@ -30,6 +31,7 @@
 #include <core/inputdevice.h>
 #include <core/systemclock.h>
 #include <core/windowmanager.h>
+#include <utils/textutils.h>
 #include <private/keylayoutmap.h>
 
 #if defined(__linux__)||defined(__unix__)
@@ -362,8 +364,15 @@ KeyDevice::KeyDevice(int32_t fd)
    mLastDownKey = -1;
    mRepeatCount = 0;
    mDeviceInfo.addSource(SOURCE_KEYBOARD);
-   const std::string fname=App::getInstance().getDataPath()+getName()+".kl";
-   KeyLayoutMap::load(fname,kmap);
+   std::string fname=App::getInstance().getDataPath()+getName()+".kl";
+   if(0==access(fname.c_str(),F_OK)){
+       KeyLayoutMap::load(fname,kmap);
+   }else{
+       fname = TextUtils::stringPrintf("%s/Vendor_%04x_Productor_%04x.kl",
+               App::getInstance().getDataPath().c_str(),
+               mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
+        KeyLayoutMap::load(fname,kmap);
+   }
 }
 
 int32_t KeyDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
@@ -453,8 +462,8 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
         parseVirtualKeys(mPrefs.getString(section,"virtualKeys"));
     }
-    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
-    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
+    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX + 1):mScreenWidth;
+    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY + 1):mScreenHeight;
     mLastBits.clear();
     mCurrBits.clear();
     mEvent = nullptr;
