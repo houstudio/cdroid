@@ -705,8 +705,8 @@ protected:
     bool mRequestedSimpleAnimations = false;
     bool mIsAttachedToWindow = false;
     bool mAutoMeasure = false;
-    int mPrefetchMaxCountObserved;
     bool mPrefetchMaxObservedInInitialPrefetch;
+    int mPrefetchMaxCountObserved;
 protected:
     void setRecyclerView(RecyclerView* recyclerView);
     void setMeasureSpecs(int wSpec, int hSpec);
@@ -1128,9 +1128,9 @@ private:
     RecyclerView::LayoutManager* mLayoutManager;
     bool mPendingInitialRun;
     bool mRunning;
+    bool mStarted;
     View* mTargetView;
     Action* mRecyclingAction;
-    bool mStarted;
 private:
     void onAnimation(int dx, int dy);
 protected:

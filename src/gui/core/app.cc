@@ -65,16 +65,16 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     Looper::prepareMainLooper();
     options.allow_unrecognised_options();
 #if defined(__linux__)||defined(__unix__)
-    //std::string name = std::string(argc?argv[0]:__progname);
-    std::string name = (const char*)getauxval(AT_EXECFN);
+    //mName = std::string(argc?argv[0]:__progname);
+    mName = (const char*)getauxval(AT_EXECFN);
 #elif (defined(_WIN32)||defined(_WIN64))
     char progName[260];
     GetModuleFileNameA(nullptr,progName,sizeof(progName));
-    std::string name = progName;
+    mName = progName;
 #endif
     try{
         if((argc == 0) || (argv == nullptr)){
-            const char*dummy[] = {name.c_str(), nullptr};
+            const char*dummy[] = {mName.c_str(), nullptr};
             mArgsResult = std::make_unique<cxxopts::ParseResult>(std::move(options.parse(1,dummy)));
         }else{
             mArgsResult = std::make_unique<cxxopts::ParseResult>(std::move(options.parse(argc,argv)));
@@ -90,11 +90,10 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         return;
     }
     Typeface::setContext(this);
-    mName = name;
     onInit();
-    size_t pos = mName.rfind(PATH_SEP);
+    const size_t pos = mName.rfind(PATH_SEP);
     if(pos!=std::string::npos){
-        name = mName.substr(pos+1);
+        const std::string name = mName.substr(pos+1);
         std::string pakPath =getDataPath()+name+std::string(".pak");
         if(0==access(pakPath.c_str(),F_OK))
             addResource(pakPath,getName());
