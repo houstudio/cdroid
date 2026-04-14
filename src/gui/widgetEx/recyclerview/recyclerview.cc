@@ -4133,32 +4133,32 @@ void RecyclerView::RecycledViewPool::putRecycledView(ViewHolder* scrap) {
     scrapHeap.push_back(scrap);
 }
 
-long RecyclerView::RecycledViewPool::runningAverage(long oldAverage, long newValue) {
+int64_t RecyclerView::RecycledViewPool::runningAverage(int64_t oldAverage, int64_t newValue) {
     if (oldAverage == 0) {
         return newValue;
     }
     return (oldAverage / 4 * 3) + (newValue / 4);
 }
 
-void RecyclerView::RecycledViewPool::factorInCreateTime(int viewType, long createTimeNs) {
+void RecyclerView::RecycledViewPool::factorInCreateTime(int viewType, int64_t createTimeNs) {
     ScrapData* scrapData = getScrapDataForType(viewType);
     scrapData->mCreateRunningAverageNs = runningAverage(
         scrapData->mCreateRunningAverageNs, createTimeNs);
 }
 
-void RecyclerView::RecycledViewPool::factorInBindTime(int viewType, long bindTimeNs) {
+void RecyclerView::RecycledViewPool::factorInBindTime(int viewType, int64_t bindTimeNs) {
     ScrapData* scrapData = getScrapDataForType(viewType);
     scrapData->mBindRunningAverageNs = runningAverage(
         scrapData->mBindRunningAverageNs, bindTimeNs);
 }
 
-bool RecyclerView::RecycledViewPool::willCreateInTime(int viewType, long approxCurrentNs, long deadlineNs) {
-    const long expectedDurationNs = getScrapDataForType(viewType)->mCreateRunningAverageNs;
+bool RecyclerView::RecycledViewPool::willCreateInTime(int viewType, int64_t approxCurrentNs, int64_t deadlineNs) {
+    const int64_t expectedDurationNs = getScrapDataForType(viewType)->mCreateRunningAverageNs;
     return (expectedDurationNs == 0) || (approxCurrentNs + expectedDurationNs < deadlineNs);
 }
 
-bool RecyclerView::RecycledViewPool::willBindInTime(int viewType, long approxCurrentNs, long deadlineNs) {
-    const long expectedDurationNs = getScrapDataForType(viewType)->mBindRunningAverageNs;
+bool RecyclerView::RecycledViewPool::willBindInTime(int viewType, int64_t approxCurrentNs, int64_t deadlineNs) {
+    const int64_t expectedDurationNs = getScrapDataForType(viewType)->mBindRunningAverageNs;
     return (expectedDurationNs == 0) || (approxCurrentNs + expectedDurationNs < deadlineNs);
 }
 
@@ -4323,7 +4323,7 @@ bool RecyclerView::Recycler::validateViewHolderForOffsetPosition(ViewHolder* hol
 }
 
 bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int offsetPosition,
-        int position, long deadlineNs) {
+        int position, int64_t deadlineNs) {
     holder.mBindingAdapter = nullptr;
     holder.mOwnerRecyclerView = mRV;//RecyclerView.this;
     const int viewType = holder.getItemViewType();
@@ -4408,8 +4408,8 @@ View* RecyclerView::Recycler::getViewForPosition(int position, bool dryRun) {
 }
 
 RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByDeadline(int position,
-        bool dryRun, long deadlineNs) {
-    if (position < 0 || position >= mRV->mState->getItemCount()) {
+        bool dryRun, int64_t deadlineNs) {
+    if ((position < 0) || (position >= mRV->mState->getItemCount()) ) {
         LOGE("Invalid item position %d . Item count:%d",position, mRV->mState->getItemCount());
     }
     bool fromScrapOrHiddenOrCache = false;
