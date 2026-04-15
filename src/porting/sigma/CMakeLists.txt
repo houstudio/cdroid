@@ -27,8 +27,6 @@ endif()
 
 list(APPEND SIGMA_INCLUDE_DIRS ../common)
 list(APPEND SIGMA_INCLUDE_DIRS ../include)
-
-
 list(APPEND SIGMA_INCLUDE_DIRS ./inc)
 
 link_directories(${PROJECT_SOURCE_DIR}/libs)
