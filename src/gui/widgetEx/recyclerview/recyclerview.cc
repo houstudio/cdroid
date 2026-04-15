@@ -651,8 +651,8 @@ void RecyclerView::setLayoutManager(std::unique_ptr<LayoutManager> layout) {
     // this is just a defensive measure for faulty item animators.
     mChildHelper->removeAllViewsUnfiltered();
     mLayout = std::move(layout);
-    if (layout != nullptr) {
-        if (layout->mRecyclerView != nullptr) {
+    if (mLayout != nullptr) {
+        if (mLayout->mRecyclerView != nullptr) {
             FATAL("LayoutManager %p is already attached to a RecyclerView:",layout.get());
         }
         mLayout->setRecyclerView(this);
