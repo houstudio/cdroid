@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <signal.h>
 #include <fcntl.h>
+#include <unistd.h>
 #include <thread>
 #include <mutex>
 #include <porting/cdlog.h>

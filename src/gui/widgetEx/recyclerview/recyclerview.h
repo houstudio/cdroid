@@ -907,19 +907,19 @@ protected:
     public:
         std::vector<ViewHolder*> mScrapHeap;
         int mMaxScrap = DEFAULT_MAX_SCRAP;
-        long mCreateRunningAverageNs = 0;
-        long mBindRunningAverageNs = 0;
+        int64_t mCreateRunningAverageNs = 0;
+        int64_t mBindRunningAverageNs = 0;
     };
     SparseArray<ScrapData*> mScrap;
     int mAttachCountForClearing = 0;
     std::set<Adapter*> mAttachedAdaptersForPoolingContainer;
 
     int size();
-    long runningAverage(long oldAverage, long newValue);
-    void factorInCreateTime(int viewType, long createTimeNs);
-    void factorInBindTime(int viewType, long bindTimeNs);
-    bool willCreateInTime(int viewType, long approxCurrentNs, long deadlineNs);
-    bool willBindInTime(int viewType, long approxCurrentNs, long deadlineNs);
+    int64_t runningAverage(int64_t oldAverage, int64_t newValue);
+    void factorInCreateTime(int viewType, int64_t createTimeNs);
+    void factorInBindTime(int viewType, int64_t bindTimeNs);
+    bool willCreateInTime(int viewType, int64_t approxCurrentNs, int64_t deadlineNs);
+    bool willBindInTime(int viewType, int64_t approxCurrentNs, int64_t deadlineNs);
     void attach();
     void detach();
     void onAdapterChanged(Adapter* oldAdapter, Adapter* newAdapter,bool compatibleWithPrevious);
@@ -948,7 +948,7 @@ private:
     RecyclerView::ViewCacheExtension mViewCacheExtension;
 
     bool tryBindViewHolderByDeadline(ViewHolder& holder, int offsetPosition,
-            int position, long deadlineNs);
+            int position, int64_t deadlineNs);
     void attachAccessibilityDelegateOnBind(ViewHolder& holder);
     void invalidateDisplayListInt(ViewHolder& holder);
     void invalidateDisplayListInt(ViewGroup& viewGroup, bool invalidateThis);
@@ -961,7 +961,7 @@ protected:
     void updateViewCacheSize();
     bool validateViewHolderForOffsetPosition(ViewHolder* holder);
     View* getViewForPosition(int position, bool dryRun);
-    ViewHolder* tryGetViewHolderForPositionByDeadline(int position, bool dryRun, long deadlineNs);
+    ViewHolder* tryGetViewHolderForPositionByDeadline(int position, bool dryRun, int64_t deadlineNs);
     void recycleViewInternal(View* view);
     void recycleAndClearCachedViews();
     void recycleCachedViewAt(int cachedViewIndex);
