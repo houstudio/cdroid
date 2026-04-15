@@ -34,7 +34,7 @@ void GapWorker::LayoutPrefetchRegistryImpl::collectPrefetchPositionsFromView(Rec
         std::fill(mPrefetchArray.begin(),mPrefetchArray.end(), -1);
     }
 
-    RecyclerView::LayoutManager* layout = view->mLayout;
+    auto& layout = view->mLayout;
     if ((view->mAdapter != nullptr) && (layout != nullptr) && layout->isItemPrefetchEnabled()) {
         if (nested) {
             // nested prefetch, only if no adapter updates pending. Note: we don't query

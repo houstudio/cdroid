@@ -316,7 +316,7 @@ protected:
     Rect mTempRect2;
     RectF mTempRectF;
     Adapter* mAdapter;
-    LayoutManager* mLayout;
+    std::unique_ptr<LayoutManager> mLayout;
     RecyclerListener mRecyclerListener;
     OnItemTouchListener* mInterceptingOnItemTouchListener;
     std::vector<RecyclerListener>mRecyclerListeners;
@@ -449,7 +449,7 @@ public:
     void addOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
     void removeOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
     void clearOnChildAttachStateChangeListeners();
-    void setLayoutManager(LayoutManager* layout);
+    void setLayoutManager(std::unique_ptr<LayoutManager> layout);
     LayoutManager* getLayoutManager();
     void setOnFlingListener(const OnFlingListener& onFlingListener);
     OnFlingListener getOnFlingListener();

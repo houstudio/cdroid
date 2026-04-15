@@ -90,8 +90,9 @@ void ViewPager2::initialize(Context* context,const AttributeSet& attrs) {
     mRecyclerView->setId(View::generateViewId());
     mRecyclerView->setDescendantFocusability(FOCUS_BEFORE_DESCENDANTS);
 
-    mLayoutManager = new LinearLayoutManagerImpl(context,this);
-    mRecyclerView->setLayoutManager(mLayoutManager);
+    //mLayoutManager = new LinearLayoutManagerImpl(context,this);
+    mRecyclerView->setLayoutManager(std::make_unique<LinearLayoutManagerImpl>(context,this));
+    mLayoutManager = (LinearLayoutManagerImpl*)mRecyclerView->getLayoutManager();
     mRecyclerView->setScrollingTouchSlop(RecyclerView::TOUCH_SLOP_PAGING);
     setOrientation(context, attrs);
 
