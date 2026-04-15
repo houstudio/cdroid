@@ -35,7 +35,7 @@ list(APPEND SIGMA2351_LIBS pthread dl
     -lcus3a -lispalgo -lmi_isp)
 list(APPEND SIGMATARGET tvhal)
 if(EXECINFO_LIBRARY)
-    list(APPEND SIGMA_LIBS ${EXECINFO_LIBRARY})
+    list(APPEND SIGMA2351_LIBS ${EXECINFO_LIBRARY})
 endif()
 include_directories(./
     ../common ../include

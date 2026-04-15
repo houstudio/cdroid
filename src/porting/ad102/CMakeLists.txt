@@ -25,9 +25,12 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
+find_library(EXECINFO_LIBRARY NAMES execinfo)
 list(APPEND AD102_INCLUDE_DIRS ../common)
 list(APPEND AD102_INCLUDE_DIRS ../include)
-
+if(EXECINFO_LIBRARY)
+    list(APPEND AD102_LIBS ${EXECINFO_LIBRARY})
+endif()
 include_directories(./
     ${AD102_INCLUDE_DIRS}
     ${CMAKE_SOURCE_DIR}/src/gui/
