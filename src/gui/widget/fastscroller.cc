@@ -126,7 +126,7 @@ void FastScroller::updateAppearance() {
         mSecondaryText->setTextSize(TypedValue::COMPLEX_UNIT_PX, mTextSize);
     }
 
-    int padding = mPreviewPadding;
+    const int padding = mPreviewPadding;
     mPrimaryText->setIncludeFontPadding(false);
     mPrimaryText->setPadding(padding, padding, padding, padding);
     mSecondaryText->setIncludeFontPadding(false);

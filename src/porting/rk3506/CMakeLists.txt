@@ -24,9 +24,15 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
+find_library(EXECINFO_LIBRARY NAMES execinfo)
 list(APPEND RK3506_INCLUDE_DIRS ../common)
 list(APPEND RK3506_INCLUDE_DIRS ../include)
 find_package(DRM)
+
+if(EXECINFO_LIBRARY)
+    list(APPEND RK3506_LIBS ${EXECINFO_LIBRARY})
+endif()
+
 include_directories(./
     ../common
     ../include

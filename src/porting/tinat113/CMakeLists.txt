@@ -26,7 +26,13 @@ endif()
 
 list(APPEND TINAT113_INCLUDE_DIRS ../common)
 list(APPEND TINAT113_INCLUDE_DIRS ../include)
+find_library(EXECINFO_LIBRARY NAMES execinfo)
 find_package(Pixman)
+
+if(EXECINFO_LIBRARY)
+    list(APPEND TINAT113_LIBS ${EXECINFO_LIBRARY})
+endif()
+
 include_directories(./
     ../common
     ../include
