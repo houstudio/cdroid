@@ -29,14 +29,19 @@ if(HAVE_EXECINFO_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
+find_library(EXECINFO_LIBRARY NAMES execinfo)
 find_package(PkgConfig)
 find_package(Pixman)
 find_package(OpenGL)
 
+set(ANDROID_LIBS log android EGL GLESv2)
+if(EXECINFO_LIBRARY)
+    list(APPEND ANDROID_LIBS ${EXECINFO_LIBRARY})
+endif()
 include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
 
 add_library(tvhal SHARED ${ANDROID_SRCS})
-target_link_libraries(tvhal log android EGL GLESv2)
+target_link_libraries(tvhal ${ANDROID_LIBS})
 
 include_directories(./
     ../common ../include
