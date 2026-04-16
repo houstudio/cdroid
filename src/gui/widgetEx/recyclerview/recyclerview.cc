@@ -733,7 +733,7 @@ bool RecyclerView::removeAnimatingView(View* view) {
     return removed;
 }
 
-RecyclerView::LayoutManager* RecyclerView::getLayoutManager() {
+RecyclerView::LayoutManager* RecyclerView::getLayoutManager() const{
     return mLayout.get();
 }
 
@@ -984,8 +984,7 @@ void RecyclerView::nestedScrollBy(int x, int y) {
     nestedScrollByInternal(x, y, -1, -1, nullptr, TYPE_NON_TOUCH);
 }
 
-void RecyclerView::nestedScrollByInternal(int x,int y,int horizontalAxis,int verticalAxis,
-       MotionEvent* motionEvent,int type) {
+void RecyclerView::nestedScrollByInternal(int x,int y,int horizontalAxis,int verticalAxis, MotionEvent* motionEvent,int type) {
     if (mLayout == nullptr) {
         LOGE("Cannot scroll without a LayoutManager set. Call setLayoutManager with a non-null argument.");
         return;
@@ -2600,7 +2599,7 @@ void RecyclerView::dispatchContentChangedIfNecessary() {
     }
 }
 
-bool RecyclerView::isComputingLayout() {
+bool RecyclerView::isComputingLayout() const{
     return mLayoutOrScrollCounter > 0;
 }
 
@@ -3284,7 +3283,7 @@ RecyclerView::LayoutParams* RecyclerView::generateLayoutParams(const ViewGroup::
     return mLayout->generateLayoutParams(*p);
 }
 
-bool RecyclerView::isAnimating() {
+bool RecyclerView::isAnimating() const{
     return mItemAnimator && mItemAnimator->isRunning();
 }
 
@@ -3474,21 +3473,21 @@ RecyclerView::ViewHolder* RecyclerView::getChildViewHolderInt(View* child) {
     return ((LayoutParams*) child->getLayoutParams())->mViewHolder;
 }
 
-int RecyclerView::getChildPosition(View* child) {
+int RecyclerView::getChildPosition(View* child) const{
     return getChildAdapterPosition(child);
 }
 
-int RecyclerView::getChildAdapterPosition(View* child) {
+int RecyclerView::getChildAdapterPosition(View* child) const{
     ViewHolder* holder = getChildViewHolderInt(child);
     return holder ? holder->getAbsoluteAdapterPosition() : NO_POSITION;
 }
 
-int RecyclerView::getChildLayoutPosition(View* child) {
+int RecyclerView::getChildLayoutPosition(View* child) const{
     ViewHolder* holder = getChildViewHolderInt(child);
     return holder ? holder->getLayoutPosition() : NO_POSITION;
 }
 
-long RecyclerView::getChildItemId(View* child) {
+long RecyclerView::getChildItemId(View* child) const{
     if (mAdapter == nullptr || !mAdapter->hasStableIds()) {
         return NO_ID;
     }
@@ -3496,15 +3495,15 @@ long RecyclerView::getChildItemId(View* child) {
     return holder ? holder->getItemId() : NO_ID;
 }
 
-RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position) {
+RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position) const{
     return findViewHolderForPosition(position, false);
 }
 
-RecyclerView::ViewHolder* RecyclerView::findViewHolderForLayoutPosition(int position) {
+RecyclerView::ViewHolder* RecyclerView::findViewHolderForLayoutPosition(int position) const{
     return findViewHolderForPosition(position, false);
 }
 
-RecyclerView::ViewHolder* RecyclerView::findViewHolderForAdapterPosition(int position) {
+RecyclerView::ViewHolder* RecyclerView::findViewHolderForAdapterPosition(int position) const{
     if (mDataSetHasChangedAfterLayout) {
         return nullptr;
     }
@@ -3525,7 +3524,7 @@ RecyclerView::ViewHolder* RecyclerView::findViewHolderForAdapterPosition(int pos
     return hidden;
 }
 
-RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position, bool checkNewPosition) {
+RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position, bool checkNewPosition) const{
     const int childCount = mChildHelper->getUnfilteredChildCount();
     ViewHolder* hidden = nullptr;
     for (int i = 0; i < childCount; i++) {
@@ -3551,7 +3550,7 @@ RecyclerView::ViewHolder* RecyclerView::findViewHolderForPosition(int position, 
     return hidden;
 }
 
-RecyclerView::ViewHolder* RecyclerView::findViewHolderForItemId(long id) {
+RecyclerView::ViewHolder* RecyclerView::findViewHolderForItemId(long id) const{
     if ( (mAdapter == nullptr) || !mAdapter->hasStableIds()) {
         return nullptr;
     }
@@ -3570,7 +3569,7 @@ RecyclerView::ViewHolder* RecyclerView::findViewHolderForItemId(long id) {
     return hidden;
 }
 
-View* RecyclerView::findChildViewUnder(float x, float y) {
+View* RecyclerView::findChildViewUnder(float x, float y) const{
     const int count = mChildHelper->getChildCount();
     for (int i = count - 1; i >= 0; i--) {
         View* child = mChildHelper->getChildAt(i);
@@ -3711,7 +3710,7 @@ void RecyclerView::dispatchOnScrollStateChanged(int state) {
     }
 }
 
-bool RecyclerView::hasPendingAdapterUpdates() {
+bool RecyclerView::hasPendingAdapterUpdates() const{
     return !mFirstLayoutComplete || mDataSetHasChangedAfterLayout
             || mAdapterHelper->hasPendingUpdates();
 }
@@ -4109,7 +4108,7 @@ RecyclerView::ViewHolder* RecyclerView::RecycledViewPool::getRecycledView(int vi
     return nullptr;
 }
 
-int RecyclerView::RecycledViewPool::size() {
+int RecyclerView::RecycledViewPool::size() const{
     int count = 0;
     for (int i = 0; i < mScrap.size(); i++) {
         std::vector<ViewHolder*>& viewHolders = mScrap.valueAt(i)->mScrapHeap;
@@ -4485,8 +4484,7 @@ RecyclerView::ViewHolder* RecyclerView::Recycler::tryGetViewHolderForPositionByD
         }
         if (holder == nullptr) {
             int64_t start = mRV->getNanoTime();
-            if (deadlineNs != FOREVER_NS
-                    && !mRecyclerPool->willCreateInTime(type, start, deadlineNs)) {
+            if ((deadlineNs != FOREVER_NS) && !mRecyclerPool->willCreateInTime(type, start, deadlineNs)) {
                 // abort - we have a deadline we can't meet
                 return nullptr;
             }
@@ -4791,11 +4789,11 @@ void RecyclerView::Recycler::unscrapView(ViewHolder& holder) {
     holder.clearReturnedFromScrapFlag();
 }
 
-int RecyclerView::Recycler::getScrapCount() {
+int RecyclerView::Recycler::getScrapCount() const{
     return mAttachedScrap.size();
 }
 
-View* RecyclerView::Recycler::getScrapViewAt(int index) {
+View* RecyclerView::Recycler::getScrapViewAt(int index) const{
     return mAttachedScrap.at(index)->itemView;
 }
 
@@ -4806,7 +4804,7 @@ void RecyclerView::Recycler::clearScrap() {
     }
 }
 
-RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition(int position) {
+RecyclerView::ViewHolder* RecyclerView::Recycler::getChangedScrapViewForPosition(int position) const{
     // If pre-layout, check the changed scrap for an exact match.
     size_t changedScrapSize;
     if ((mChangedScrap == nullptr) || ((changedScrapSize = mChangedScrap->size()) == 0) ) {
@@ -5152,7 +5150,7 @@ void RecyclerView::Adapter::onBindViewHolder(ViewHolder& holder, int position,st
     onBindViewHolder(holder, position);
 }
 
-int RecyclerView::Adapter::findRelativeAdapterPositionIn(Adapter&adapter,ViewHolder&,int localPosition){
+int RecyclerView::Adapter::findRelativeAdapterPositionIn(Adapter&adapter,const ViewHolder&,int localPosition)const{
     if(&adapter==this)return localPosition;
     return NO_POSITION;
 }
@@ -5206,7 +5204,7 @@ long RecyclerView::Adapter::getItemId(int position) {
 }
 
 
-bool RecyclerView::Adapter::hasStableIds() {
+bool RecyclerView::Adapter::hasStableIds() const{
     return mHasStableIds;
 }
 
@@ -6817,7 +6815,7 @@ int RecyclerView::ViewHolder::getLayoutPosition()const{
 #endif
 }*/
 
-int RecyclerView::ViewHolder::getBindingAdapterPosition(){
+int RecyclerView::ViewHolder::getBindingAdapterPosition()const{
     if ((mBindingAdapter == nullptr)||(mOwnerRecyclerView == nullptr)) {
         return NO_POSITION;
     }
@@ -6832,7 +6830,7 @@ int RecyclerView::ViewHolder::getBindingAdapterPosition(){
     return rvAdapter->findRelativeAdapterPositionIn(*mBindingAdapter,*this, globalPosition);
 }
 
-int RecyclerView::ViewHolder::getAbsoluteAdapterPosition(){
+int RecyclerView::ViewHolder::getAbsoluteAdapterPosition() const{
     if (mOwnerRecyclerView == nullptr) {
         return NO_POSITION;
     }
@@ -7075,7 +7073,7 @@ void RecyclerView::dispatchPendingImportantForAccessibilityChanges() {
     mPendingAccessibilityImportanceChange.clear();
 }
 
-int RecyclerView::getAdapterPositionInRecyclerView(ViewHolder* viewHolder) const{
+int RecyclerView::getAdapterPositionInRecyclerView(const ViewHolder* viewHolder) const{
     if (viewHolder->hasAnyOfTheFlags(ViewHolder::FLAG_INVALID
             | ViewHolder::FLAG_REMOVED | ViewHolder::FLAG_ADAPTER_POSITION_UNKNOWN)
             || !viewHolder->isBound()) {
@@ -7103,7 +7101,7 @@ void RecyclerView::setNestedScrollingEnabled(bool enabled) {
     getScrollingChildHelper()->setNestedScrollingEnabled(enabled);
 }
 
-bool RecyclerView::isNestedScrollingEnabled() {
+bool RecyclerView::isNestedScrollingEnabled() const{
     return getScrollingChildHelper()->isNestedScrollingEnabled();
 }
 
@@ -7123,11 +7121,11 @@ void RecyclerView::stopNestedScroll(int type) {
     getScrollingChildHelper()->stopNestedScroll(type);
 }
 
-bool RecyclerView::hasNestedScrollingParent() {
+bool RecyclerView::hasNestedScrollingParent() const{
     return getScrollingChildHelper()->hasNestedScrollingParent();
 }
 
-bool RecyclerView::hasNestedScrollingParent(int type) {
+bool RecyclerView::hasNestedScrollingParent(int type) const{
     return getScrollingChildHelper()->hasNestedScrollingParent(type);
 }
 
@@ -7185,19 +7183,19 @@ RecyclerView::LayoutParams::LayoutParams(const LayoutParams& source)
     :ViewGroup::MarginLayoutParams((const ViewGroup::LayoutParams&) source){
 }
 
-bool RecyclerView::LayoutParams::viewNeedsUpdate() {
+bool RecyclerView::LayoutParams::viewNeedsUpdate() const{
     return mViewHolder->needsUpdate();
 }
 
-bool RecyclerView::LayoutParams::isViewInvalid() {
+bool RecyclerView::LayoutParams::isViewInvalid() const{
     return mViewHolder->isInvalid();
 }
 
-bool RecyclerView::LayoutParams::isItemRemoved() {
+bool RecyclerView::LayoutParams::isItemRemoved() const{
     return mViewHolder->isRemoved();
 }
 
-bool RecyclerView::LayoutParams::isItemChanged() {
+bool RecyclerView::LayoutParams::isItemChanged() const{
     return mViewHolder->isUpdated();
 }
 
@@ -7206,7 +7204,7 @@ int RecyclerView::LayoutParams::getViewPosition() {
     return mViewHolder->getPosition();
 }*/
 
-int RecyclerView::LayoutParams::getViewLayoutPosition() {
+int RecyclerView::LayoutParams::getViewLayoutPosition() const{
     return mViewHolder->getLayoutPosition();
 }
 
@@ -7214,11 +7212,11 @@ int RecyclerView::LayoutParams::getViewLayoutPosition() {
     return mViewHolder->getBindingAdapterPosition();
 }*/
 
-int RecyclerView::LayoutParams::getAbsoluteAdapterPosition() {
+int RecyclerView::LayoutParams::getAbsoluteAdapterPosition() const{
     return mViewHolder->getAbsoluteAdapterPosition();
 }
 
-int RecyclerView::LayoutParams::getBindingAdapterPosition() {
+int RecyclerView::LayoutParams::getBindingAdapterPosition() const{
     return mViewHolder->getBindingAdapterPosition();
 }
 //////////////////////////////////RecyclerView::AdapterDataObserver///////////////////////////////
@@ -7375,7 +7373,7 @@ void RecyclerView::SmoothScroller::onAnimation(int dx, int dy) {
     }
  }
 
-int RecyclerView::SmoothScroller::getChildPosition(View* view) {
+int RecyclerView::SmoothScroller::getChildPosition(View* view) const{
     return mRecyclerView->getChildLayoutPosition(view);
 }
 
@@ -7383,7 +7381,7 @@ int RecyclerView::SmoothScroller::getChildCount() const{
     return mRecyclerView->mLayout->getChildCount();
 }
 
-View* RecyclerView::SmoothScroller::findViewByPosition(int position) {
+View* RecyclerView::SmoothScroller::findViewByPosition(int position) const{
     return mRecyclerView->mLayout->findViewByPosition(position);
 }
 
@@ -7428,7 +7426,7 @@ void RecyclerView::SmoothScroller::Action::jumpTo(int targetPosition) {
     mJumpToPosition = targetPosition;
 }
 
-bool RecyclerView::SmoothScroller::Action::hasJumpTarget() {
+bool RecyclerView::SmoothScroller::Action::hasJumpTarget() const{
     return mJumpToPosition >= 0;
 }
 
@@ -7462,7 +7460,7 @@ void RecyclerView::SmoothScroller::Action::validate() {
     }
 }
 
-int RecyclerView::SmoothScroller::Action::getDx() {
+int RecyclerView::SmoothScroller::Action::getDx() const{
     return mDx;
 }
 
@@ -7471,7 +7469,7 @@ void RecyclerView::SmoothScroller::Action::setDx(int dx) {
     mDx = dx;
 }
 
-int RecyclerView::SmoothScroller::Action::getDy() {
+int RecyclerView::SmoothScroller::Action::getDy() const{
     return mDy;
 }
 
@@ -7480,7 +7478,7 @@ void RecyclerView::SmoothScroller::Action::setDy(int dy) {
     mDy = dy;
 }
 
-int RecyclerView::SmoothScroller::Action::getDuration() {
+int RecyclerView::SmoothScroller::Action::getDuration() const{
     return mDuration;
 }
 
@@ -7606,19 +7604,19 @@ void RecyclerView::State::prepareForNestedPrefetch(RecyclerView::Adapter* adapte
     mIsMeasuring = false;
 }
 
-bool RecyclerView::State::isMeasuring() {
+bool RecyclerView::State::isMeasuring() const{
     return mIsMeasuring;
 }
 
-bool RecyclerView::State::isPreLayout() {
+bool RecyclerView::State::isPreLayout() const{
     return mInPreLayout;
 }
 
-bool RecyclerView::State::willRunPredictiveAnimations() {
+bool RecyclerView::State::willRunPredictiveAnimations() const{
     return mRunPredictiveAnimations;
 }
 
-bool RecyclerView::State::willRunSimpleAnimations() {
+bool RecyclerView::State::willRunSimpleAnimations() const{
     return mRunSimpleAnimations;
 }
 
@@ -7629,7 +7627,7 @@ void RecyclerView::State::remove(int resourceId) {
     mData.remove(resourceId);
 }
 
-Object* RecyclerView::State::get(int resourceId) {
+Object* RecyclerView::State::get(int resourceId) const{
     if (0==mData.size()) {
         return nullptr;
     }
@@ -7640,35 +7638,35 @@ void RecyclerView::State::put(int resourceId, Object* data) {
     mData.put(resourceId, data);
 }
 
-int RecyclerView::State::getTargetScrollPosition() {
+int RecyclerView::State::getTargetScrollPosition() const{
     return mTargetPosition;
 }
 
-bool RecyclerView::State::hasTargetScrollPosition() {
+bool RecyclerView::State::hasTargetScrollPosition() const{
     return mTargetPosition != RecyclerView::NO_POSITION;
 }
 
-bool RecyclerView::State::didStructureChange() {
+bool RecyclerView::State::didStructureChange() const{
     return mStructureChanged;
 }
 
-int RecyclerView::State::getItemCount() {
+int RecyclerView::State::getItemCount() const{
     return mInPreLayout
             ? (mPreviousLayoutItemCount - mDeletedInvisibleItemCountSincePreviousLayout)
             : mItemCount;
 }
 
-int RecyclerView::State::getRemainingScrollHorizontal() {
+int RecyclerView::State::getRemainingScrollHorizontal() const{
     return mRemainingScrollHorizontal;
 }
 
-int RecyclerView::State::getRemainingScrollVertical() {
+int RecyclerView::State::getRemainingScrollVertical() const{
     return mRemainingScrollVertical;
 }
 
 ///////////////////////////////////RecyclerView::ItemAnimator///////////////////////////////////
 
-long RecyclerView::ItemAnimator::getMoveDuration() {
+long RecyclerView::ItemAnimator::getMoveDuration() const{
     return mMoveDuration;
 }
 
@@ -7676,7 +7674,7 @@ void RecyclerView::ItemAnimator::setMoveDuration(long moveDuration) {
     mMoveDuration = moveDuration;
 }
 
-long RecyclerView::ItemAnimator::getAddDuration() {
+long RecyclerView::ItemAnimator::getAddDuration() const{
     return mAddDuration;
 }
 
@@ -7684,7 +7682,7 @@ void RecyclerView::ItemAnimator::setAddDuration(long addDuration) {
     mAddDuration = addDuration;
 }
 
-long RecyclerView::ItemAnimator::getRemoveDuration() {
+long RecyclerView::ItemAnimator::getRemoveDuration() const{
     return mRemoveDuration;
 }
 
@@ -7692,7 +7690,7 @@ void RecyclerView::ItemAnimator::setRemoveDuration(long removeDuration) {
     mRemoveDuration = removeDuration;
 }
 
-long RecyclerView::ItemAnimator::getChangeDuration() {
+long RecyclerView::ItemAnimator::getChangeDuration() const{
     return mChangeDuration;
 }
 
@@ -7804,9 +7802,9 @@ int RecyclerView::getChildDrawingOrder(int childCount, int i) {
     return ViewGroup::getChildDrawingOrder(childCount, i);
 }
 
-NestedScrollingChildHelper* RecyclerView::getScrollingChildHelper() {
+NestedScrollingChildHelper* RecyclerView::getScrollingChildHelper() const{
     if (mScrollingChildHelper == nullptr) {
-        mScrollingChildHelper = new NestedScrollingChildHelper(this);
+        mScrollingChildHelper = new NestedScrollingChildHelper((View*)this);
     }
     return mScrollingChildHelper;
 }
