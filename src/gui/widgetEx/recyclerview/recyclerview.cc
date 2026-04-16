@@ -301,11 +301,11 @@ void RecyclerView::setAccessibilityDelegate(RecyclerViewAccessibilityDelegate* a
 void RecyclerView::createLayoutManager(Context* context,const std::string& className,
 	const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/) {
     if(!className.compare("LinearLayoutManager")){
-        setLayoutManager(new LinearLayoutManager(context,attrs));
+        setLayoutManager(std::make_unique<LinearLayoutManager>(context,attrs));
     }else if(!className.compare("GridLayoutManager")){
-        setLayoutManager(new GridLayoutManager(context,attrs));
+        setLayoutManager(std::make_unique<GridLayoutManager>(context,attrs));
     }else if(!className.compare("StaggeredGridLayoutManager")){
-        setLayoutManager(new StaggeredGridLayoutManager(context,attrs));
+        setLayoutManager(std::make_unique<StaggeredGridLayoutManager>(context,attrs));
     }
 }
 
@@ -624,7 +624,7 @@ void RecyclerView::clearOnChildAttachStateChangeListeners() {
     mOnChildAttachStateListeners.clear();
 }
 
-void RecyclerView::setLayoutManager(LayoutManager* layout) {
+void RecyclerView::setLayoutManager(std::unique_ptr<LayoutManager> layout) {
     if (layout == mLayout) {
         return;
     }
@@ -644,16 +644,16 @@ void RecyclerView::setLayoutManager(LayoutManager* layout) {
             mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
-        delete mLayout;
+        //delete mLayout;
     } else {
         mRecycler->clear();
     }
     // this is just a defensive measure for faulty item animators.
     mChildHelper->removeAllViewsUnfiltered();
-    mLayout = layout;
-    if (layout != nullptr) {
-        if (layout->mRecyclerView != nullptr) {
-            FATAL("LayoutManager %p is already attached to a RecyclerView:",layout);
+    mLayout = std::move(layout);
+    if (mLayout != nullptr) {
+        if (mLayout->mRecyclerView != nullptr) {
+            FATAL("LayoutManager %p is already attached to a RecyclerView:",layout.get());
         }
         mLayout->setRecyclerView(this);
         if (mIsAttached) {
@@ -734,7 +734,7 @@ bool RecyclerView::removeAnimatingView(View* view) {
 }
 
 RecyclerView::LayoutManager* RecyclerView::getLayoutManager() {
-    return mLayout;
+    return mLayout.get();
 }
 
 RecyclerView::RecycledViewPool& RecyclerView::getRecycledViewPool() {
@@ -4327,7 +4327,7 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
     holder.mBindingAdapter = nullptr;
     holder.mOwnerRecyclerView = mRV;//RecyclerView.this;
     const int viewType = holder.getItemViewType();
-    int64_t startBindNs = mRV->getNanoTime();
+    const int64_t startBindNs = mRV->getNanoTime();
     if (deadlineNs != FOREVER_NS
             && !mRecyclerPool->willBindInTime(viewType, startBindNs, deadlineNs)) {
         // abort - we have a deadline we can't meet
@@ -4353,7 +4353,7 @@ bool RecyclerView::Recycler::tryBindViewHolderByDeadline(ViewHolder& holder, int
         mRV->detachViewFromParent(holder.itemView);
     }
 
-    int64_t endBindNs = mRV->getNanoTime();
+    const int64_t endBindNs = mRV->getNanoTime();
     mRecyclerPool->factorInBindTime(holder.getItemViewType(), endBindNs - startBindNs);
     attachAccessibilityDelegateOnBind(holder);
     if (mRV->mState->isPreLayout()) {

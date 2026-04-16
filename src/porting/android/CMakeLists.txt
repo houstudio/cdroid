@@ -16,6 +16,8 @@ check_include_file(sys/epoll.h  HAVE_EPOLL_H)
 check_include_file(linux/input.h HAVE_INPUT_H)
 check_include_file(execinfo.h HAVE_EXECINFO_H)
 
+find_library(EXECINFO_LIBRARY NAMES execinfo)
+
 if(HAVE_POLL_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_POLL_H)
 endif()
@@ -25,7 +27,7 @@ endif()
 if(HAVE_INPUT_H)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_INPUT_H)
 endif()
-if(HAVE_EXECINFO_H)
+if(HAVE_EXECINFO_H AND EXECINFO_LIBRARY)
     list(APPEND CMAKE_REQUIRED_DEFINITIONS -DHAVE_EXECINFO_H)
 endif()
 
@@ -33,10 +35,14 @@ find_package(PkgConfig)
 find_package(Pixman)
 find_package(OpenGL)
 
+set(ANDROID_LIBS log android EGL GLESv2)
+if(EXECINFO_LIBRARY)
+    list(APPEND ANDROID_LIBS ${EXECINFO_LIBRARY})
+endif()
 include_directories(../common ../include ${PIXMAN_INCLUDE_DIRS})
 
 add_library(tvhal SHARED ${ANDROID_SRCS})
-target_link_libraries(tvhal log android EGL GLESv2)
+target_link_libraries(tvhal ${ANDROID_LIBS})
 
 include_directories(./
     ../common ../include

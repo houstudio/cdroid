@@ -110,10 +110,10 @@ int MPClose(HANDLE handle) {
     free(mp);
     return E_OK;
 }
-
+static int set_alsa_volume(long playback_vol);
 int MPSetVolume(HANDLE handle,int colume){
     INGENIC_PLAYER*mp=(INGENIC_PLAYER*)handle;
-    LOGD("todo:");
+    set_alsa_volume(colume);
     return E_OK;
 }
 
@@ -168,5 +168,48 @@ int MPGetPosition(HANDLE handle,double*mediatims){
 int MPGetStatus(HANDLE handle){
 }
 int MPRotate(HANDLE handle,int rot) {
+    return 0;
+}
+
+static int set_alsa_volume(long playback_vol) {
+    long min, max;
+    snd_mixer_t *handle;
+    snd_mixer_elem_t *elem;
+    snd_mixer_selem_id_t *sid;
+
+    const char *card = "default"; // 或者具体声卡名，如 "hw:0"
+    const char *selem_name = "Master"; // 或者 "PCM", "Speaker" 等，取决于你的设备
+
+    // 1. 打开混音器设备
+    snd_mixer_open(&handle, 0);
+    snd_mixer_attach(handle, card);
+    snd_mixer_selem_register(handle, NULL, NULL);
+    snd_mixer_load(handle);
+
+    // 2. 查找指定的混音器元素 (e.g., Master)
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0); // 设备索引，通常为 0
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    elem = snd_mixer_find_selem(handle, sid);
+
+    if (!elem) {
+        LOGE("Cannot find simple element '%s'\n", selem_name);
+        snd_mixer_close(handle);
+        return -1;
+    }
+
+    // 3. 获取音量范围
+    snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+
+    // 4. 设置音量 (假设 playback_vol 在 0 到 100 之间)
+    // 将 0-100 映射到 min-max 范围
+    long vol = min + (playback_vol * (max - min)) / 100;
+    if (vol > max) vol = max;
+
+    // 5. 应用到所有播放通道 (Left, Right, etc.)
+    snd_mixer_selem_set_playback_volume_all(elem, vol);
+    LOGI("Set ALSA '%s' volume to %ld (%ld%%)\n", selem_name, vol, playback_vol);
+    // 6. 清理
+    snd_mixer_close(handle);
     return 0;
 }
