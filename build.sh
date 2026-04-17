@@ -175,7 +175,7 @@ if [ -f "$OPTIONS_FILE" ]; then
     echo "$CMAKE_SWITCHES"
 fi
 
-cmake \
+cmake  -G Ninja \
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
     -DCMAKE_INSTALL_PREFIX=./ \
     -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \

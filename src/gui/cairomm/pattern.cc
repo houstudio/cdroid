@@ -94,14 +94,14 @@ Pattern::Extend Pattern::get_extend() const
 }
 
 void Pattern::set_dither(Dither dither){
-#if CAIRO_VERSION_MINOR>=18
+#ifdef HAVE_CAIRO_DITHER_FUNCTIONS
   cairo_pattern_set_dither(m_cobject,(cairo_dither_t)dither);
   check_object_status_and_throw_exception(*this);
 #endif
 }
 
 Pattern::Dither Pattern::get_dither() const{
-#if CAIRO_VERSION_MINOR>=18
+#ifdef HAVE_CAIRO_DITHER_FUNCTIONS
   auto result = static_cast<Dither>(cairo_pattern_get_dither(m_cobject));
   check_object_status_and_throw_exception(*this);
   return result;

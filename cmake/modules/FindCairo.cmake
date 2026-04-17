@@ -49,28 +49,26 @@ find_library(CAIRO_LIBRARIES
     NAMES cairo
     HINTS ${PC_CAIRO_LIBDIR}
           ${PC_CAIRO_LIBRARY_DIRS}
+    NO_DEFAULT_PATH
 )
 
-#message(FATAL_ERROR ">>CAIRO_INCLUDE_DIRS=${CAIRO_INCLUDE_DIRS} CMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}")
 if (CAIRO_INCLUDE_DIRS)
-    if (EXISTS "${CAIRO_INCLUDE_DIRS}/cairo/cairo-version.h")
-        file(READ "${CAIRO_INCLUDE_DIRS}/cairo/cairo-version.h" CAIRO_VERSION_CONTENT)
+    foreach(dir ${CAIRO_INCLUDE_DIRS})
+        if (EXISTS "${dir}/cairo-version.h")
+            file(READ "${dir}/cairo-version.h" CAIRO_VERSION_CONTENT)
 
-        string(REGEX MATCH "#define +CAIRO_VERSION_MAJOR +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
-        set(CAIRO_VERSION_MAJOR "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "#define +CAIRO_VERSION_MAJOR +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
+            set(CAIRO_VERSION_MAJOR "${CMAKE_MATCH_1}")
 
-        string(REGEX MATCH "#define +CAIRO_VERSION_MINOR +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
-        set(CAIRO_VERSION_MINOR "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "#define +CAIRO_VERSION_MINOR +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
+            set(CAIRO_VERSION_MINOR "${CMAKE_MATCH_1}")
 
-        string(REGEX MATCH "#define +CAIRO_VERSION_MICRO +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
-        set(CAIRO_VERSION_MICRO "${CMAKE_MATCH_1}")
+            string(REGEX MATCH "#define +CAIRO_VERSION_MICRO +([0-9]+)" _dummy "${CAIRO_VERSION_CONTENT}")
+            set(CAIRO_VERSION_MICRO "${CMAKE_MATCH_1}")
 
-        set(CAIRO_VERSION "${CAIRO_VERSION_MAJOR}.${CAIRO_VERSION_MINOR}.${CAIRO_VERSION_MICRO}")
-    endif ()
-endif ()
-
-if ("${Cairo_FIND_VERSION}" VERSION_GREATER "${CAIRO_VERSION}")
-    message(FATAL_ERROR "Required version (" ${Cairo_FIND_VERSION} ") is higher than found version (" ${CAIRO_VERSION} ")")
+            set(CAIRO_VERSION "${CAIRO_VERSION_MAJOR}.${CAIRO_VERSION_MINOR}.${CAIRO_VERSION_MICRO}")
+        endif ()
+    endforeach()
 endif ()
 
 if ( CAIRO_INCLUDE_DIRS AND CAIRO_LIBRARIES)
