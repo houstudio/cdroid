@@ -1,6 +1,6 @@
 #!/bin/bash
 #处理参数，规范化参数
-ARGS=`getopt -a -o p:b:h:: --long product:,build::,options::,help:: -- "$@"`
+ARGS=`getopt -a -o p:b:h:: --long product:,build::,options::,help::,ninja -- "$@"`
 #echo $ARGS
 #将规范化后的命令行参数分配至位置参数（$1,$2,...)
 eval set -- "${ARGS}"
@@ -70,6 +70,7 @@ CDROID_VALID_PORTS="${OSNAME}"
 SHOWHELP=0
 PRODUCT="${OSNAME}"
 BUILD_TYPE="Release"
+BUILDWITHNINJA=""
 
 for key in "${!TOOLCHAINS[@]}"
 do
@@ -92,6 +93,11 @@ do
         -h|--help)
                 SHOWHELP=1
                 echo "showhelp"
+                shift
+                ;;
+        --ninja)
+                BUILDWITHNINJA="-G Ninja"
+                echo "build with ninja"
                 shift
                 ;;
         --options)
@@ -175,7 +181,7 @@ if [ -f "$OPTIONS_FILE" ]; then
     echo "$CMAKE_SWITCHES"
 fi
 
-cmake \
+cmake ${BUILDWITHNINJA} \
     -DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE} \
     -DCMAKE_INSTALL_PREFIX=./ \
     -DCMAKE_PREFIX_PATH=${DEPLIBS_DIR} \

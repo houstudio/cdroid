@@ -105,7 +105,7 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setBackgroundColor(0xFF112233);
     RecyclerView*rv=new WearableRecyclerView(800,480);
-    rv->setLayoutManager(new WearableLinearLayoutManager(&app));//new GridLayoutManager(&app,argc));
+    rv->setLayoutManager(std::make_unique<WearableLinearLayoutManager>(&app));//new GridLayoutManager(&app,argc));
     rv->getLayoutManager()->setItemPrefetchEnabled(true);
     auto ps = new LinearSnapHelper();//PagerSnapHelper();
     ps->attachToRecyclerView(rv);

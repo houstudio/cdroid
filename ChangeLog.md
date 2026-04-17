@@ -6,6 +6,7 @@
   - add CardView
   - add RoundRectDrawable,RoundRectDrawableWithShadow
   - Fix GridLayout's layout issues
+  - Change RecyclerView::setLayoutManager(LayoutManager*) to setLayoutManager(std::unique_ptr<LayoutManager>)
 # **V4.6.9
   - add MotionEvent for MouseDevice support.
   - add Tablayout::setTabIndicatorAnimationMode(tabIndicatorAnimationMode:linear,elastic,fade)

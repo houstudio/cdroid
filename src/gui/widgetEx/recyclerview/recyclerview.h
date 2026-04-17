@@ -127,13 +127,13 @@ public:
         static constexpr int FLAG_APPEARED_IN_PRE_LAYOUT = 1<<12;
     public:
         virtual ~ItemAnimator()=default;
-        long getMoveDuration();
+        long getMoveDuration()const;
         void setMoveDuration(long moveDuration);
-        long getAddDuration();
+        long getAddDuration()const;
         void setAddDuration(long addDuration);
-        long getRemoveDuration();
+        long getRemoveDuration()const;
         void setRemoveDuration(long removeDuration);
-        long getChangeDuration();
+        long getChangeDuration()const;
         void setChangeDuration(long changeDuration);
         ItemHolderInfo* recordPreLayoutInformation(State& state,ViewHolder& viewHolder, int changeFlags,std::vector<Object*>& payloads);
         ItemHolderInfo* recordPostLayoutInformation(State& state,ViewHolder& viewHolder);
@@ -169,15 +169,15 @@ public:
         LayoutParams(const ViewGroup::MarginLayoutParams& source);
         LayoutParams(const ViewGroup::LayoutParams& source);
         LayoutParams(const LayoutParams& source);
-        bool viewNeedsUpdate();
-        bool isViewInvalid();
-        bool isItemRemoved();
-        bool isItemChanged();
+        bool viewNeedsUpdate()const;
+        bool isViewInvalid()const;
+        bool isItemRemoved()const;
+        bool isItemChanged()const;
         //[[deprecated("getViewPosition is deprecated use getViewAdapterPosition PLS.")]]
-        int getViewLayoutPosition();
+        int getViewLayoutPosition()const;
         //[[deprecated("getViewAdapterPosition is deprecated use getBindingAdapterPosition PLS.")]]
-        int getAbsoluteAdapterPosition();
-        int getBindingAdapterPosition();
+        int getAbsoluteAdapterPosition()const;
+        int getBindingAdapterPosition()const;
     };
 public:/*public classes*/
     class OnScrollListener:public EventSet{
@@ -230,7 +230,7 @@ private:/*private variables*/
     std::vector<OnScrollListener> mScrollListeners;
     ItemAnimator::ItemAnimatorListener mItemAnimatorListener;
     ChildDrawingOrderCallback mChildDrawingOrderCallback;
-    NestedScrollingChildHelper* mScrollingChildHelper;
+    mutable NestedScrollingChildHelper* mScrollingChildHelper;
     ScrollFeedbackProvider* mScrollFeedbackProvider;
  
     int mMinMaxLayoutPositions[2];
@@ -269,9 +269,7 @@ private:
     bool flingNoThresholdCheck(int velocityX, int velocityY);
     bool fling(int velocityX, int velocityY, int minFlingVelocity, int maxFlingVelocity);
     void startNestedScrollForType(int type);
-    void nestedScrollByInternal(
-            int x,int y,int horizontalAxis,int verticalAxis,
-            MotionEvent* motionEvent,int type);
+    void nestedScrollByInternal(int x,int y,int horizontalAxis,int verticalAxis,MotionEvent* motionEvent,int type);
     bool shouldAbsorb(EdgeEffect* edgeEffect, int velocity, int size);
     int consumeFlingInStretch(int unconsumed, EdgeEffect* startGlow, EdgeEffect* endGlow,int size);
     void stopScrollersInternal();
@@ -308,7 +306,7 @@ private:
     bool didChildRangeChange(int minPositionPreLayout, int maxPositionPreLayout);
     void animateChange(ViewHolder& oldHolder,ViewHolder* newHolder,ItemAnimator::ItemHolderInfo& preInfo,
 	     ItemAnimator::ItemHolderInfo& postInfo,bool oldHolderDisappearing, bool newHolderDisappearing);
-    NestedScrollingChildHelper* getScrollingChildHelper();
+    NestedScrollingChildHelper* getScrollingChildHelper()const;
     ScrollFeedbackProvider* getScrollFeedbackProvider();
 protected:
     static constexpr int MAX_SCROLL_DURATION = 2000;
@@ -408,7 +406,7 @@ protected:
     void processDataSetCompletelyChanged(bool dispatchItemsChanged);
     void markKnownViewsInvalid();
 
-    ViewHolder* findViewHolderForPosition(int position, bool checkNewPosition);
+    ViewHolder* findViewHolderForPosition(int position, bool checkNewPosition)const;
     Rect getItemDecorInsetsForChild(View* child);
     void scrollStep(int dx, int dy,int* consumed);
     void dispatchOnScrolled(int hresult, int vresult);
@@ -422,7 +420,7 @@ protected:
     void dispatchChildAttached(View* child);
     bool setChildImportantForAccessibilityInternal(ViewHolder* viewHolder,int importantForAccessibility);
     void dispatchPendingImportantForAccessibilityChanges();
-    int getAdapterPositionInRecyclerView(ViewHolder* viewHolder)const;
+    int getAdapterPositionInRecyclerView(const ViewHolder* viewHolder)const;
     void initFastScroller(StateListDrawable* verticalThumbDrawable, Drawable* verticalTrackDrawable, 
              StateListDrawable* horizontalThumbDrawable, Drawable* horizontalTrackDrawable,const AttributeSet&);
     int getChildDrawingOrder(int childCount, int i)override;
@@ -450,7 +448,7 @@ public:
     void removeOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
     void clearOnChildAttachStateChangeListeners();
     void setLayoutManager(std::unique_ptr<LayoutManager> layout);
-    LayoutManager* getLayoutManager();
+    LayoutManager* getLayoutManager()const;
     void setOnFlingListener(const OnFlingListener& onFlingListener);
     OnFlingListener getOnFlingListener();
     RecycledViewPool& getRecycledViewPool();
@@ -510,14 +508,14 @@ public:
     bool onGenericMotionEvent(MotionEvent& event)override;
     void setItemAnimator(ItemAnimator* animator);
     ItemAnimator* getItemAnimator();
-    bool isComputingLayout();
+    bool isComputingLayout()const;
     void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
     bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event)override;
     void requestLayout()override;
     void draw(Canvas& c)override;
     void onDraw(Canvas& c)override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs)const override;
-    bool isAnimating();
+    bool isAnimating()const;
     void invalidateItemDecorations();
     bool getPreserveFocusAfterLayout()const;
     void setPreserveFocusAfterLayout(bool preserveFocusAfterLayout);
@@ -525,15 +523,15 @@ public:
     View* findContainingItemView(View* view);
     ViewHolder* findContainingViewHolder(View* view);
     static ViewHolder* getChildViewHolderInt(View* child);
-    int getChildPosition(View* child);
-    int getChildAdapterPosition(View* child);
-    int getChildLayoutPosition(View* child);
-    long getChildItemId(View* child);
-    ViewHolder* findViewHolderForPosition(int position);
-    ViewHolder* findViewHolderForLayoutPosition(int position);
-    ViewHolder* findViewHolderForAdapterPosition(int position);
-    ViewHolder* findViewHolderForItemId(long id);
-    View* findChildViewUnder(float x, float y);
+    int getChildPosition(View* child)const;
+    int getChildAdapterPosition(View* child)const;
+    int getChildLayoutPosition(View* child)const;
+    long getChildItemId(View* child)const;
+    ViewHolder* findViewHolderForPosition(int position)const;
+    ViewHolder* findViewHolderForLayoutPosition(int position)const;
+    ViewHolder* findViewHolderForAdapterPosition(int position)const;
+    ViewHolder* findViewHolderForItemId(long id)const;
+    View* findChildViewUnder(float x, float y)const;
     bool drawChild(Canvas& canvas, View* child, int64_t drawingTime)override;
     void offsetChildrenVertical(int dy);
     void onChildAttachedToWindow(View* child);
@@ -543,17 +541,17 @@ public:
     static void getDecoratedBoundsWithMarginsInt(View* view, Rect& outBounds);
     void onScrolled(int dx,int dy);
     void onScrollStateChanged(int state);
-    bool hasPendingAdapterUpdates();
+    bool hasPendingAdapterUpdates()const;
 
     //override of NestedScrollingChild 
     void setNestedScrollingEnabled(bool enabled);
-    bool isNestedScrollingEnabled();
+    bool isNestedScrollingEnabled()const;
     bool startNestedScroll(int axes);
     bool startNestedScroll(int axes, int type);
     void stopNestedScroll();
     void stopNestedScroll(int type);
-    bool hasNestedScrollingParent();
-    bool hasNestedScrollingParent(int type);
+    bool hasNestedScrollingParent()const;
+    bool hasNestedScrollingParent(int type)const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2])override;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,int dyUnconsumed, int offsetInWindow[2], int type,int consumed[2]);
@@ -629,14 +627,14 @@ public:
     virtual ViewHolder*onCreateViewHolder(ViewGroup* parent, int viewType)=0;
     virtual void onBindViewHolder(ViewHolder& holder, int position)=0;
     void onBindViewHolder(ViewHolder& holder, int position,std::vector<Object*>& payloads);
-    int findRelativeAdapterPositionIn(Adapter&,ViewHolder&,int localPosition);
+    int findRelativeAdapterPositionIn(Adapter&,const ViewHolder&,int localPosition)const;
     ViewHolder*createViewHolder(ViewGroup* parent, int viewType);
     void bindViewHolder(ViewHolder& holder, int position);
     virtual int getItemViewType(int position);
     void setHasStableIds(bool hasStableIds);
     virtual long getItemId(int position);
     virtual int getItemCount()=0;
-    virtual bool hasStableIds();
+    virtual bool hasStableIds()const;
     virtual void onViewRecycled(ViewHolder& holder);
     virtual bool onFailedToRecycleView(ViewHolder& holder);
     virtual void onViewAttachedToWindow(ViewHolder& holder);
@@ -914,7 +912,7 @@ protected:
     int mAttachCountForClearing = 0;
     std::set<Adapter*> mAttachedAdaptersForPoolingContainer;
 
-    int size();
+    int size()const;
     int64_t runningAverage(int64_t oldAverage, int64_t newValue);
     void factorInCreateTime(int viewType, int64_t createTimeNs);
     void factorInBindTime(int viewType, int64_t bindTimeNs);
@@ -970,10 +968,10 @@ protected:
     void quickRecycleScrapView(View* view);
     void scrapView(View* view);
     void unscrapView(ViewHolder& holder);
-    int getScrapCount();
-    View* getScrapViewAt(int index);
+    int getScrapCount()const;
+    View* getScrapViewAt(int index)const;
     void clearScrap();
-    ViewHolder* getChangedScrapViewForPosition(int position);
+    ViewHolder* getChangedScrapViewForPosition(int position)const;
     ViewHolder* getScrapOrHiddenOrCachedHolderForPosition(int position, bool dryRun);
     ViewHolder* getScrapOrCachedViewForId(long id, int type, bool dryRun);
     void dispatchViewRecycled(ViewHolder& holder);
@@ -1104,8 +1102,8 @@ public:
      */
     //[[deprecated("use getBindingAdapterPosition or getAbsoluteAdapterPosition")]]
     //int getAdapterPosition();
-    int getBindingAdapterPosition();
-    int getAbsoluteAdapterPosition();
+    int getBindingAdapterPosition()const;
+    int getAbsoluteAdapterPosition()const;
     RecyclerView::Adapter*getBindingAdapter()const;
     int getOldPosition()const;
     long getItemId()const;
@@ -1151,9 +1149,9 @@ public:
     bool isPendingInitialRun() const;
     bool isRunning() const;
     int getTargetPosition() const;
-    int getChildPosition(View* view);
+    int getChildPosition(View* view)const;
     int getChildCount() const;
-    View* findViewByPosition(int position);
+    View* findViewByPosition(int position)const;
     void instantScrollToPosition(int position);
 };
 
@@ -1171,18 +1169,18 @@ private:
     int mConsecutiveUpdates = 0;
     void validate();
 protected:
-    bool hasJumpTarget();
+    bool hasJumpTarget()const;
     void runIfNecessary(RecyclerView& recyclerView);
 public:
     Action(int dx,int dy);
     Action(int dx, int dy, int duration);
     Action(int dx, int dy, int duration,Interpolator* interpolator);
     void jumpTo(int targetPosition);
-    int getDx();
+    int getDx()const;
     void setDx(int dx);
-    int getDy();
+    int getDy()const;
     void setDy(int dy);
-    int getDuration();
+    int getDuration()const;
     void setDuration(int duration);
     const Interpolator* getInterpolator()const;
     void setInterpolator(const Interpolator* interpolator);
@@ -1257,19 +1255,19 @@ protected:
     //State& reset();
     void prepareForNestedPrefetch(Adapter* adapter);
 public:
-    bool isMeasuring();
-    bool isPreLayout();
-    bool willRunPredictiveAnimations();
-    bool willRunSimpleAnimations();
+    bool isMeasuring()const;
+    bool isPreLayout()const;
+    bool willRunPredictiveAnimations()const;
+    bool willRunSimpleAnimations()const;
     void remove(int resourceId);
-    Object* get(int resourceId);
+    Object* get(int resourceId)const;
     void put(int resourceId, Object* data);
-    int getTargetScrollPosition();
-    bool hasTargetScrollPosition();
-    bool didStructureChange();
-    int getItemCount();
-    int getRemainingScrollHorizontal();
-    int getRemainingScrollVertical();
+    int getTargetScrollPosition()const;
+    bool hasTargetScrollPosition()const;
+    bool didStructureChange()const;
+    int getItemCount()const;
+    int getRemainingScrollHorizontal()const;
+    int getRemainingScrollVertical()const;
 };
 
 }/*endof namespace*/

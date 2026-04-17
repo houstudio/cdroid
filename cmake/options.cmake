@@ -1,4 +1,8 @@
 include(CMakeDependentOption)
+include(CheckIncludeFile)
+include(CheckFunctionExists)
+include(CheckLibraryExists)
+include(CheckSymbolExists)
 
 find_package(ZLIB REQUIRED)
 find_package(ZIP REQUIRED)
@@ -55,10 +59,13 @@ cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code9
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)
 cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF "LCMS2_FOUND" OFF)
 cmake_dependent_option(ENABLE_FRIBIDI "Enable BiDi layout" ON "FRIBIDI_FOUND" OFF)
-cmake_dependent_option(FT_WITH_HARFBUZZ "Improve auto-hinting of OpenType fonts." ON "HARFBUZZ_FOUND" OFF)
 
 set(CMAKE_REQUIRED_INCLUDES "${CMAKE_REQUIRED_INCLUDES} ${RTAUDIO_INCLUDE_DIRS}")
 
+check_library_exists(cairo cairo_pattern_get_dither "" HAVE_CAIRO_DITHER_FUNCTIONS)
+if(HAVE_CAIRO_DITHER_FUNCTIONS)
+    add_definitions(-DHAVE_CAIRO_DITHER_FUNCTIONS)
+endif()
 list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
     ${BZIP2_LIBRARIES}

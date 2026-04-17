@@ -84,11 +84,6 @@ function(GetGitVersion TARGET)
         OUTPUT_VARIABLE LATEST_TAG
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    execute_process(
-        COMMAND git describe --tags --abbrev=0
-        OUTPUT_VARIABLE CDVERSION
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
 
     execute_process(
         COMMAND git rev-parse --short ${LATEST_TAG}
@@ -103,17 +98,17 @@ function(GetGitVersion TARGET)
         OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    if(NOT CDVERSION)
-        set(CHANGELOG_FILE "${CMAKE_SOURCE_DIR}/ChangeLog.md")
-        file(READ "${CHANGELOG_FILE}" CHANGELOG_CONTENT)
-        set(VERSION_REGEX "\\*\\*V([0-9]+)\\.([0-9]+)\\.([0-9]+)")
-        string(REGEX MATCH "${VERSION_REGEX}" FULL_MATCH "${CHANGELOG_CONTENT}")
-        set(CDVERSION "${${FULL_MATCH}}")
-        if(NOT FULL_MATCH)
-            set(CDVERSION "2.0.0")
-            set(COMMIT_COUNT "0")
-            set(LAST_COMMIT_HASH "00000000")
-        endif()
+    set(CHANGELOG_FILE "${CMAKE_SOURCE_DIR}/ChangeLog.md")
+    file(READ "${CHANGELOG_FILE}" CHANGELOG_CONTENT)
+    set(VERSION_REGEX "([0-9]+)\\.([0-9]+)\\.([0-9]+)")
+    string(REGEX MATCH "${VERSION_REGEX}" FULL_MATCH "${CHANGELOG_CONTENT}")
+    if(FULL_MATCH)
+        set(CDVERSION "${FULL_MATCH}")
+    else()
+        execute_process(
+            COMMAND git describe --tags --abbrev=0
+            OUTPUT_VARIABLE CDVERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
     endif()
 
     # Extract MAJOR, MINOR, PATCH from VERSION if MAJOR, MINOR, PATCH are provided
