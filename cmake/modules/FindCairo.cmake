@@ -31,26 +31,24 @@
 find_package(PkgConfig)
 pkg_check_modules(PC_CAIRO cairo)
 
-if(CMAKE_HOST_WIN32)
-   find_path(CAIRO_INCLUDE_DIRS
-       NAMES cairo.h
-       HINTS ${PC_CAIRO_INCLUDEDIR}
-          ${PC_CAIRO_INCLUDE_DIRS}
-       PATH_SUFFIXES cairo)
-else()
-   find_path(CAIRO_INCLUDE_DIRS
-       NAMES cairo.h
-       HINTS ${PC_CAIRO_INCLUDEDIR}
-          ${PC_CAIRO_INCLUDE_DIRS}
-       PATH_SUFFIXES cairo)
-endif()
 
-find_library(CAIRO_LIBRARIES
-    NAMES cairo
-    HINTS ${PC_CAIRO_LIBDIR}
-          ${PC_CAIRO_LIBRARY_DIRS}
-    NO_DEFAULT_PATH
-)
+if(NOT CAIRO_LIBRARIES OR NOT EXISTS "${CAIRO_LIBRARIES}")
+    find_path(CAIRO_INCLUDE_DIRS_TMP
+        NAMES cairo.h
+        HINTS ${PC_CAIRO_INCLUDEDIR}
+           ${PC_CAIRO_INCLUDE_DIRS}
+        PATH_SUFFIXES cairo)
+
+    find_library(CAIRO_LIBRARIES_TMP
+        NAMES cairo
+        HINTS ${PC_CAIRO_LIBDIR}
+              ${PC_CAIRO_LIBRARY_DIRS}
+        NO_DEFAULT_PATH)
+    if(CAIRO_LIBRARIES_TMP)
+        set(CAIRO_INCLUDE_DIRS ${CAIRO_INCLUDE_DIRS_TMP} CACHE PATH "Cairo include path" FORCE)
+        set(CAIRO_LIBRARIES ${CAIRO_LIBRARIES_TMP} CACHE PATH "Cairo library path" FORCE)
+    endif()
+endif()
 
 if (CAIRO_INCLUDE_DIRS)
     foreach(dir ${CAIRO_INCLUDE_DIRS})

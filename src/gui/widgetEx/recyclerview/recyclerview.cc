@@ -624,6 +624,10 @@ void RecyclerView::clearOnChildAttachStateChangeListeners() {
     mOnChildAttachStateListeners.clear();
 }
 
+void RecyclerView::setLayoutManager(LayoutManager* layout){
+    setLayoutManager(std::unique_ptr<LayoutManager>(layout));
+}
+
 void RecyclerView::setLayoutManager(std::unique_ptr<LayoutManager> layout) {
     if (layout == mLayout) {
         return;
