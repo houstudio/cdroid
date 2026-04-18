@@ -404,6 +404,9 @@ public:
     int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
 };
 
+static constexpr int MAX_POINTERS=16;
+static constexpr int MAX_POINTER_ID=31;
+static constexpr int ACTIVE_POINTER_ID=-1;
 class TouchDevice:public InputDevice{
 protected:
     MotionEvent* mEvent;
