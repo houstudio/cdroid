@@ -448,6 +448,8 @@ public:
     void removeOnChildAttachStateChangeListener(const OnChildAttachStateChangeListener& listener);
     void clearOnChildAttachStateChangeListeners();
     void setLayoutManager(std::unique_ptr<LayoutManager> layout);
+    [[deprecated("This function is deprecated,USE std::unique_ptr version.")]]
+     void setLayoutManager(LayoutManager*layout);
     LayoutManager* getLayoutManager()const;
     void setOnFlingListener(const OnFlingListener& onFlingListener);
     OnFlingListener getOnFlingListener();
