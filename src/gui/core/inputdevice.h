@@ -20,7 +20,7 @@
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/bitset.h>
-#include <core/rect.h>
+#include <core/virtualkeymap.h>
 #include <functional>
 #include <memory>
 #include <unordered_map>
@@ -54,6 +54,14 @@ struct InputDeviceIdentifier {
     // is intended to be a minimum way to distinguish from other active devices and may
     // reuse values that are not associated with an input anymore.
     uint16_t nonce;
+    /**
+     * Return InputDeviceIdentifier.name that has been adjusted as follows:
+     *     - all characters besides alphanumerics, dash,
+     *       and underscore have been replaced with underscores.
+     * This helps in situations where a file that matches the device name is needed,
+     * while conforming to the filename limitations.
+     */
+    std::string getCanonicalName() const;
 };
 /* Types of input device sensors. Keep sync with core/java/android/hardware/Sensor.java */
 enum class InputDeviceSensorType : int32_t {
@@ -396,9 +404,10 @@ public:
     int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
 };
 
+static constexpr int MAX_POINTERS=16;
+static constexpr int MAX_POINTER_ID=31;
+static constexpr int ACTIVE_POINTER_ID=-1;
 class TouchDevice:public InputDevice{
-private:
-    int32_t parseVirtualKeys(const std::string&);
 protected:
     MotionEvent* mEvent;
     nsecs_t mDownTime;
@@ -425,7 +434,7 @@ protected:
     std::vector<PointerCoords>mPointerCoordsBak;
     std::vector<PointerProperties>mPointerProps;
     std::vector<PointerProperties>mPointerPropsBak;
-    std::vector<std::pair<Rect,int32_t>>mVirtualKeyMap;
+    std::vector<VirtualKeyDefinition>mVirtualKeyDefs;
     int32_t getActionByBits(int32_t &pointIndex);
     void setAxisValue(int32_t axis,int32_t value,bool isRelative);
     int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;

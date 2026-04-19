@@ -1,0 +1,5 @@
+# format: keyType:<linux_keycode>:<centerX>:<centerY>:<width>:<height>
+# KeyType must be 0x01
+0x01:139:120:1850:180:120
+0x01:172:540:1850:200:120
+0x01:187:960:1850:180:120

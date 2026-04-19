@@ -21,7 +21,7 @@
 #include <vector>
 #include <memory>
 namespace cdroid {
-
+class Tokenizer;
 /* Describes a virtual key. */
 struct VirtualKeyDefinition {
     int32_t scanCode;

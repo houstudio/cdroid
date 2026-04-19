@@ -21,14 +21,12 @@
 #include <array>
 #include <memory>
 #include <core/pools.h>
+#include <core/inputdevice.h>
 #include <view/motionevent.h>
 namespace cdroid{
 typedef int64_t nsecs_t;
 class VelocityTrackerStrategy;
 class VelocityTrackerImpl;
-#define MAX_POINTERS 16
-#define MAX_POINTER_ID 31
-#define ACTIVE_POINTER_ID -1
 
 ////////////VelocityTracker.java///////////////////////////
 //frameworks/base/core/jni/android_view_VelocityTracker.cpp

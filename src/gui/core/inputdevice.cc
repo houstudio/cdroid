@@ -30,6 +30,7 @@
 #include <core/transform.h>
 #include <core/inputdevice.h>
 #include <core/systemclock.h>
+#include <core/virtualkeymap.h>
 #include <core/windowmanager.h>
 #include <utils/textutils.h>
 #include <private/keylayoutmap.h>
@@ -460,7 +461,6 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
         mInvertX = mPrefs.getBool(section,"invertX",false);
         mInvertY = mPrefs.getBool(section,"invertY",false);
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
-        parseVirtualKeys(mPrefs.getString(section,"virtualKeys"));
     }
     mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX + 1):mScreenWidth;
     mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY + 1):mScreenHeight;
@@ -474,58 +474,21 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
     mCoord.clear();
     mProp.clear();
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
-    LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d",mScreenWidth, mScreenHeight,
-        display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY);
+    std::string name = std::string("virtualkeys.")+mDeviceInfo.getIdentifier().getCanonicalName();
+    std::ifstream vkf(name);
+    auto vkm = VirtualKeyMap::fromStream(vkf);
+    LOGD("VirtualKeyMap %s",name.c_str());
+    if(vkm){
+        mVirtualKeyDefs = vkm->getVirtualKeys();
+    }
+    LOGI("screen(%d,%d) rotation=%d [%s] X(%d,%d) Y(%d,%d) invert=%d,%d switchXY=%d virtualKey:%d",mScreenWidth, mScreenHeight,
+        display.getRotation(),section.c_str(),mMinX,mMaxX,mMinY,mMaxY,mInvertX,mInvertY,mSwitchXY,mVirtualKeyDefs.size());
 }
 
 static bool isAllDigits(const std::string& str) {
     return std::find_if(str.begin(), str.end(), [](char ch) {
         return !std::isdigit(ch);
     }) == str.end();
-}
-
-int32_t TouchDevice::parseVirtualKeys(const std::string&content){
-    Tokenizer*tokenizer = nullptr;
-    constexpr const char*delimiters=" ,;\r\n";
-
-    if(content.empty())
-        return 0;
-    LOGD("%s",content.c_str());
-    Tokenizer::fromContents("virtualKeyMap",content.c_str(),&tokenizer);
-    do{
-        Rect rect;
-        int key=0,err=0;
-        std::string token;
-        token = tokenizer->nextToken(delimiters);
-        if(!isAllDigits(token)) goto Error;
-        rect.left = std::stoi(token);
-        tokenizer->skipDelimiters(delimiters);
-
-        token= tokenizer->nextToken(delimiters);
-        if(!isAllDigits(token)) goto Error;
-        rect.top = std::stoi(token);
-        tokenizer->skipDelimiters(delimiters);
-
-        token = tokenizer->nextToken(delimiters);
-        if(!isAllDigits(token)) goto Error;
-        rect.width = std::stoi(token);
-        tokenizer->skipDelimiters(delimiters);
-
-        token= tokenizer->nextToken(delimiters);
-        if(!isAllDigits(token)) goto Error;
-        rect.height= std::stoi(token);
-        tokenizer->skipDelimiters(delimiters);
-
-        token= tokenizer->nextToken(delimiters);
-        key = KeyEvent::keyCodeFromString(token);
-        tokenizer->skipDelimiters(delimiters);
-        if(key==0)goto Error;
-        LOGD("area(%d,%d,%d,%d)key %d",rect.left,rect.top,rect.width,rect.height,key);
-        mVirtualKeyMap.push_back({rect,key});
-    }while(!tokenizer->isEof());
-Error:
-    delete tokenizer;
-    return (int)mVirtualKeyMap.size();
 }
 
 int32_t TouchDevice::ABS2AXIS(int32_t absaxis){
@@ -1346,4 +1309,16 @@ std::string getInputDeviceConfigurationFilePathByDeviceIdentifier(
     // Try device name.
     return getInputDeviceConfigurationFilePathByName(deviceIdentifier.name, type);
 }
+
+
+std::string InputDeviceIdentifier::getCanonicalName() const {
+    std::string replacedName = name;
+    for (char& ch : replacedName) {
+        if (!isValidNameChar(ch)) {
+            ch = '_';
+        }
+    }
+    return replacedName;
+}
+
 }
