@@ -372,6 +372,7 @@ protected:
     virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
 public:
     InputDevice(int32_t fdev);
+    virtual ~InputDevice();
     virtual int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     int32_t getId()const;
     int32_t getProductId()const;

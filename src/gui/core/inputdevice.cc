@@ -254,6 +254,10 @@ InputDevice::InputDevice(int32_t fdev){
     }
 }
 
+InputDevice::~InputDevice(){
+    delete mKeyMap;
+}
+
 void InputDevice::bindDisplay(int32_t id){
     Point displaySize;
     Display display =  WindowManager::getInstance().getDefaultDisplay();
