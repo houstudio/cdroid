@@ -625,6 +625,7 @@ void RecyclerView::clearOnChildAttachStateChangeListeners() {
 }
 
 void RecyclerView::setLayoutManager(LayoutManager* layout){
+    LOGD("This function is deprecated,USE setLayoutManager(std::unique_ptr<LayoutManager>layout>).");
     setLayoutManager(std::unique_ptr<LayoutManager>(layout));
 }
 
@@ -648,7 +649,6 @@ void RecyclerView::setLayoutManager(std::unique_ptr<LayoutManager> layout) {
             mLayout->dispatchDetachedFromWindow(*this, *mRecycler);
         }
         mLayout->setRecyclerView(nullptr);
-        //delete mLayout;
     } else {
         mRecycler->clear();
     }
