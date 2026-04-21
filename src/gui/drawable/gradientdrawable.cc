@@ -710,33 +710,23 @@ bool GradientDrawable::onStateChange(const std::vector<int>& stateSet) {
             mFillPaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
             bInvalidateSelf = true;
         }
-    }/*else if(mFillPaint==nullptr){
-        const Color cc(st->mSolidColor);
-        mFillPaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
-        bInvalidateSelf = true;
-    }*/
-
-    //if (mStrokePaint != nullptr)
-    {
-        if (st->mStrokeColors) {
-            RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
-            pat->get_rgba(r,g,b,a);
-            const int newColor = st->mStrokeColors->getColorForState(stateSet, 0);
-            const int oldColor = Color::toArgb((float)r,(float)g,(float)b,(float)a);
-            if (oldColor != newColor) {
-                const Color cc(newColor);
-                mStrokePaint =SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
-                bInvalidateSelf = true;
-            }
-        }/*else if(st->mStrokeWidth!=0.f){
-            const Color cc(st->mStrokeColor);
-            bInvalidateSelf = true;
-            mStrokePaint = SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
-        }*/
     }
 
-    /*if (s->mTint != nullptr && s.mBlendMode != null) {
-        mBlendModeColorFilter = updateBlendModeFilter(mBlendModeColorFilter, s.mTint, s.mBlendMode);
+    if ((mStrokePaint != nullptr) && st->mStrokeColors){
+        auto strokeColors = st->mStrokeColors;
+        RefPtr<Cairo::SolidPattern>pat = std::dynamic_pointer_cast<Cairo::SolidPattern>(mStrokePaint);
+        pat->get_rgba(r,g,b,a);
+        const int newColor = st->mStrokeColors->getColorForState(stateSet, 0);
+        const int oldColor = Color::toArgb((float)r,(float)g,(float)b,(float)a);
+        if (oldColor != newColor) {
+            const Color cc(newColor);
+            mStrokePaint =SolidPattern::create_rgba((float)cc.red(),(float)cc.green(),(float)cc.blue(),(float)cc.alpha());
+            bInvalidateSelf = true;
+        }
+    }
+
+    /*if (st->mTint != nullptr && st.mBlendMode != null) {
+        mBlendModeColorFilter = updateBlendModeFilter(mBlendModeColorFilter, st.mTint, s.mBlendMode);
         invalidateSelf = true;
     }*/
 
