@@ -234,7 +234,16 @@ InputDevice::InputDevice(int32_t fdev){
         }
     }
     mCorrectedDeviceClasses = mDeviceClasses;
-    kmap = nullptr;
+    mKeyMap = nullptr;
+    std::string fname=App::getInstance().getDataPath()+getName()+".kl";
+    if(0==access(fname.c_str(),F_OK)){
+        KeyLayoutMap::load(fname,mKeyMap);
+    }else{
+        fname = TextUtils::stringPrintf("%s/Vendor_%04x_Productor_%04x.kl",
+                App::getInstance().getDataPath().c_str(),
+                mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
+         KeyLayoutMap::load(fname,mKeyMap);
+    }
     LOGI("%d:[%s] Props=%02x%02x%02x%02x[%s]",fdev,devInfos.name,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3],oss.str().c_str());
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
@@ -243,6 +252,10 @@ InputDevice::InputDevice(int32_t fdev){
             mDeviceInfo.addMotionRange(axis->axis,0/*source*/,axis->minimum,axis->maximum,axis->flat,axis->fuzz,axis->resolution);
         LOGV_IF(axis->maximum!=axis->minimum,"devfd=%d axis[%d] range=%d,%d",fdev,axis->axis,axis->minimum,axis->maximum);
     }
+}
+
+InputDevice::~InputDevice(){
+    delete mKeyMap;
 }
 
 void InputDevice::bindDisplay(int32_t id){
@@ -365,15 +378,6 @@ KeyDevice::KeyDevice(int32_t fd)
    mLastDownKey = -1;
    mRepeatCount = 0;
    mDeviceInfo.addSource(SOURCE_KEYBOARD);
-   std::string fname=App::getInstance().getDataPath()+getName()+".kl";
-   if(0==access(fname.c_str(),F_OK)){
-       KeyLayoutMap::load(fname,kmap);
-   }else{
-       fname = TextUtils::stringPrintf("%s/Vendor_%04x_Productor_%04x.kl",
-               App::getInstance().getDataPath().c_str(),
-               mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
-        KeyLayoutMap::load(fname,kmap);
-   }
 }
 
 int32_t KeyDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
@@ -383,31 +387,33 @@ int32_t KeyDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
 
 int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t value){
     int flags  = 0;
-    int keycode= code;
+    int keyCode= code;
     if(!isValidEvent(type,code,value)){
          LOGD("invalid event type %x source=%x",type,mDeviceInfo.getSources());
          return -1;
     }
     switch(type){
     case EV_KEY://value 0:release,1:down,2:long press/repeat(press and hold).
-        if(kmap)kmap->mapKey(code/*scancode*/,0,&keycode/*keycode*/,(uint32_t*)&flags);
+        if((mKeyMap==nullptr)||mKeyMap->mapKey(code/*scancode*/,0,&keyCode/*keycode*/,(uint32_t*)&flags)){
+            keyCode =code;/*mapKeyfailed or no map specified*/
+        }
         switch(value){
         case 0://key up
             mLastDownKey = -1;
             mRepeatCount = 0;
             break;
         case 1://key down
-            if(mLastDownKey==keycode)
+            if(mLastDownKey==keyCode)
                 mRepeatCount ++;
-            mLastDownKey = keycode;
+            mLastDownKey = keyCode;
             break;
         default://2:key repeat
             break;
         }
 
         mEvent.initialize(getId(),getSources(),mDisplayId,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-              keycode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
-        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keycode, KeyEvent::keyCodeToString(keycode).c_str(),value,flags);
+              keyCode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
+        LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keyCode, KeyEvent::keyCodeToString(keyCode).c_str(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
     case EV_SYN:
@@ -425,6 +431,8 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
     mTypeB = false;
     mTrackID = mSlotID = -1;
     mProp.id = 0;
+    mVirtualKeyCode=0;
+    mVirtualScanCode=0;
     mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
@@ -807,16 +815,47 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
             const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
             const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
-            mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
-                 0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
-            LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
-                 mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
-            mEvent->setActionButton(mActionButton);
-            mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
+            if(action==MotionEvent::ACTION_DOWN){
+                int keyFlags;
+                if(mVirtualScanCode){
+                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+                    mEvents.push_back(k);
+                    k->recycle();
+                    LOGD("mVirtualKey=%d/%d ACTION_UP",mVirtualScanCode,mVirtualKeyCode);
+                }
+                mVirtualScanCode = findVirtualKeyHit(mPointerCoords[0].getX(),mPointerCoords[0].getY());
+                if(mVirtualScanCode){
+                    if((mKeyMap==nullptr)||mKeyMap->mapKey(mVirtualScanCode/*scancode*/,0,&mVirtualKeyCode/*keycode*/,(uint32_t*)&keyFlags)){
+                        mVirtualKeyCode = mVirtualScanCode;/*mapKey failed or no map specified*/
+                    }
+                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+                    mEvents.push_back(k);
+                    k->recycle();
+                    LOGD("mVirtualKey=%d/%d ACTION_DOWN %p",mVirtualScanCode,mVirtualKeyCode,k);
+                }
+            }
+            if(mVirtualScanCode==0){
+                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
+                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
+                LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+                     mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
+                mEvent->setActionButton(mActionButton);
+                mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
 
-            MotionEvent*e = MotionEvent::obtain(*mEvent);
-            mEvents.push_back(e);
-            mEvent->recycle();
+                MotionEvent*e = MotionEvent::obtain(*mEvent);
+                mEvents.push_back(e);
+                mEvent->recycle();
+            }
+            if((action==MotionEvent::ACTION_UP)&&mVirtualScanCode){
+                KeyEvent*k=KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+                mEvents.push_back(k);
+                k->recycle();
+                LOGD("mVirtualKey=%d/%d ACTION_UP %p",mVirtualKeyCode,mVirtualKeyCode,k);
+                mVirtualKeyCode=mVirtualScanCode=0;
+            }
         }
         mLastAction = action;
         mLastEventTime = SystemClock::uptimeMillis();
@@ -885,6 +924,20 @@ int32_t TouchDevice::checkPointEdges(Point&pt)const{
     }
     return edges;
 }
+
+int32_t TouchDevice::findVirtualKeyHit(int32_t x,int32_t y)const{
+    for (const VirtualKeyDefinition& vk:mVirtualKeyDefs) {
+        if ((x >= vk.centerX-vk.width/2)&&(x<vk.centerX+vk.width/2)
+                &&(y>=vk.centerY-vk.height/2)&&(y<vk.centerY+vk.height/2)) {
+             LOGD("VirtualKeys: Hit test (%d, %d): scanCode=%d,center(%d,%d) size(%d,%d)",
+                x, y,vk.scanCode, vk.centerX, vk.centerY, vk.width,vk.height);
+            return vk.scanCode;
+        }
+    }
+    return 0;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 MouseDevice::MouseDevice(int32_t fd):InputDevice(fd){
     mX = mY = mZ = 0;

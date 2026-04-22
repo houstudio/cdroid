@@ -69,10 +69,7 @@ public:
     int findUsageCodeForLed(int32_t ledCode, int32_t* outUsageCode) const;
 
     int mapAxis(int32_t scanCode, AxisInfo* outAxisInfo) const;
-
-protected:
     virtual ~KeyLayoutMap();
-
 private:
     struct Key {
         int32_t keyCode;

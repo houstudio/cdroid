@@ -366,12 +366,13 @@ protected:
     nsecs_t mLastEventTime;
     Point mLastEventPos;
     InputDeviceInfo mDeviceInfo;
-    class KeyLayoutMap*kmap;
+    class KeyLayoutMap*mKeyMap;
     static Preferences mPrefs;
     std::vector<InputEvent*>mEvents;
     virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
 public:
     InputDevice(int32_t fdev);
+    virtual ~InputDevice();
     virtual int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){return 0;}//PENDING need more rawevent OK,wecan getevent now
     int32_t getId()const;
     int32_t getProductId()const;
@@ -422,6 +423,8 @@ protected:
     int32_t mPressureMax;
     int32_t mActionButton;
     int32_t mButtonState;
+    int32_t mVirtualScanCode;
+    int32_t mVirtualKeyCode;
     bool mSwitchXY;
     bool mInvertX;
     bool mInvertY;
@@ -439,6 +442,7 @@ protected:
     void setAxisValue(int32_t axis,int32_t value,bool isRelative);
     int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;
     int32_t ABS2AXIS(int32_t absaxis);
+    int32_t findVirtualKeyHit(int32_t x,int32_t y)const;
 public:
     TouchDevice(int32_t fd);
     int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
