@@ -590,7 +590,7 @@ void Layout::relayout(bool force){
     if(mLineHeight<mFontSize)
         mLineHeight = fontextents.height;
     mLineHeight = mLineHeight*mSpacingMult+mSpacingAdd;
-    for(int i = 0; mMultiline && (i < mText.length());i++){
+    for(int i = 0; mMultiline && (mText.length()>1) && (i < mText.length()-1);i++){
         char breaks[2];
         wchar_t wch[2];
         float line_width=0;
