@@ -531,7 +531,7 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     if (mVelocityTracker == nullptr) mVelocityTracker = VelocityTracker::obtain();
 
     mVelocityTracker->addMovement(event);
-    int action = event.getActionMasked();
+    const int action = event.getActionMasked();
     switch (action) {
     case MotionEvent::ACTION_MOVE:
         if (isHorizontalMode()) {
@@ -564,8 +564,16 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
             mLastDownOrMoveEventY = currentMoveY;
         }
         break;
-    case MotionEvent::ACTION_UP:
     case MotionEvent::ACTION_CANCEL:
+        ensureScrollWheelAdjusted();
+        if (mScrollState != OnScrollListener::SCROLL_STATE_IDLE) {
+            mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
+            if (mOnScrollListener.onScrollStateChange) {
+                mOnScrollListener.onScrollStateChange(*this, mScrollState);
+            }
+        }
+        break;
+    case MotionEvent::ACTION_UP:
         removeBeginSoftInputCommand();
         removeChangeCurrentByOneFromLongPress();
         mPressedStateHelper->cancel();
