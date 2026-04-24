@@ -131,4 +131,15 @@ list(APPEND WIDGET_SOURCES
     widget/stackview.cc
 )
 
+list(APPEND WIDGET_SOURCES
+   widget/plot/barplotbase.cc
+   widget/plot/barplot.cc
+   widget/plot/figure.cc
+   widget/plot/fonts.cc
+   widget/plot/frame.cc
+   widget/plot/histogramplot.cc
+   widget/plot/legend.cc
+   widget/plot/plot2d.cc
+   widget/plot/groupfigure.cc
+)
 

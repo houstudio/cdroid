@@ -531,11 +531,11 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
     if (mVelocityTracker == nullptr) mVelocityTracker = VelocityTracker::obtain();
 
     mVelocityTracker->addMovement(event);
-    int action = event.getActionMasked();
+    const int action = event.getActionMasked();
     switch (action) {
     case MotionEvent::ACTION_MOVE:
         if (isHorizontalMode()) {
-            float currentMoveX = event.getX();
+            const float currentMoveX = event.getX();
             if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
                 int deltaDownX = (int) std::abs(currentMoveX - mLastDownEventX);
                 if (deltaDownX > mTouchSlop) {
@@ -551,21 +551,27 @@ bool NumberPicker::onTouchEvent(MotionEvent& event){
         }else{
             const float currentMoveY = event.getY();
             if (mScrollState != OnScrollListener::SCROLL_STATE_TOUCH_SCROLL) {
-                int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
+                const int deltaDownY = (int) std::abs(currentMoveY - mLastDownEventY);
                 if (deltaDownY > mTouchSlop) {
                     removeAllCallbacks();
                     onScrollStateChange(OnScrollListener::SCROLL_STATE_TOUCH_SCROLL);
                 }
             } else {
-                int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
+                const int deltaMoveY = (int) ((currentMoveY - mLastDownOrMoveEventY));
                 scrollBy(0, deltaMoveY);
                 invalidate();
             }
             mLastDownOrMoveEventY = currentMoveY;
         }
         break;
-    case MotionEvent::ACTION_UP:
     case MotionEvent::ACTION_CANCEL:
+        ensureScrollWheelAdjusted();
+        onScrollStateChange(OnScrollListener::SCROLL_STATE_IDLE);
+        removeBeginSoftInputCommand();
+        removeChangeCurrentByOneFromLongPress();
+        mPressedStateHelper->cancel();
+        break;
+    case MotionEvent::ACTION_UP:
         removeBeginSoftInputCommand();
         removeChangeCurrentByOneFromLongPress();
         mPressedStateHelper->cancel();
@@ -1617,7 +1623,9 @@ void NumberPicker::onScrollerFinished(Scroller* scroller) {
 void NumberPicker::onScrollStateChange(int scrollState) {
     if (mScrollState == scrollState)  return;
     mScrollState = scrollState;
-    if (mOnScrollListener.onScrollStateChange) mOnScrollListener.onScrollStateChange(*this, scrollState);
+    if (mOnScrollListener.onScrollStateChange){
+        mOnScrollListener.onScrollStateChange(*this, scrollState);
+    }
 }
 
 void NumberPicker::fling(int velocity) {
