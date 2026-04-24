@@ -41,7 +41,7 @@ public:
     struct Style {
         DataType type;
         int32_t color;
-        std::string dash_array{""};
+        std::vector<double> dash_array;
     };
 
     Legend() = default;

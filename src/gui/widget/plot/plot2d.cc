@@ -43,7 +43,7 @@ template <typename T> static bool IsInfinity(T x) {
 Plot2D::Plot2D() : Figure(), m_color_selector(color_tables::BRIGHT) {}
 
 void Plot2D::plot(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-        int32_t color, const float stroke_width, const std::string &dash_array) {
+        int32_t color, float stroke_width, const std::vector<double> &dash_array) {
     if (x_data.size() != y_data.size()) {
         return;
     }
@@ -60,12 +60,12 @@ void Plot2D::plot(const std::vector<Real> &x_data, const std::vector<Real> &y_da
 }
 
 void Plot2D::plot(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-        const float stroke_width,const std::string &dash_array) {
+        float stroke_width,const std::vector<double> &dash_array) {
     plot(x_data, y_data, m_color_selector.NextColor(), stroke_width, dash_array);
 }
 
 void Plot2D::plot(const std::vector<Real> &y_data, int32_t color,
-                  const float stroke_width, const std::string &dash_array) {
+                  const float stroke_width, const std::vector<double> &dash_array) {
     if (m_data_type == DataType::NUMERIC) {
         std::vector<Real> x_data;
         x_data.resize(y_data.size());
@@ -82,28 +82,28 @@ void Plot2D::plot(const std::vector<Real> &y_data, int32_t color,
     }
 }
 
-void Plot2D::plot(const std::vector<Real> &y_data, const float stroke_width,
-                  const std::string &dash_array) {
+void Plot2D::plot(const std::vector<Real> &y_data, float stroke_width,
+                  const std::vector<double> &dash_array) {
     plot(y_data, m_color_selector.NextColor(), stroke_width, dash_array);
 }
 
 void Plot2D::plot(const std::vector<Real> &x_data,
                   const std::function<Real(Real)> &function, int32_t color,
-                  const float stroke_width, const std::string &dash_array) {
+                  float stroke_width, const std::vector<double> &dash_array) {
     const auto y_data = ranges::Generate(x_data, function);
     plot(x_data, y_data, color, stroke_width, dash_array);
 }
 
 void Plot2D::plot(const std::vector<Real> &x_data,
                   const std::function<Real(Real)> &function,
-                  const float stroke_width, const std::string &dash_array) {
+                  float stroke_width, const std::vector<double> &dash_array) {
     plot(x_data, function, m_color_selector.NextColor(), stroke_width,
          dash_array);
 }
 
 void Plot2D::plot(const std::vector<std::string> &x_data,
                   const std::vector<Real> &y_data, int32_t color,
-                  const float stroke_width, const std::string &dash_array) {
+                  float stroke_width, const std::vector<double> &dash_array) {
     if (x_data.size() != y_data.size()) {
         return;
     }
@@ -124,14 +124,13 @@ void Plot2D::plot(const std::vector<std::string> &x_data,
     m_data_type = DataType::CATEGORICAL;
 }
 
-void Plot2D::plot(const std::vector<std::string> &x_data,
-                  const std::vector<Real> &y_data, const float stroke_width,
-                  const std::string &dash_array) {
+void Plot2D::plot(const std::vector<std::string> &x_data, const std::vector<Real> &y_data,
+        float stroke_width, const std::vector<double> &dash_array) {
     plot(x_data, y_data, m_color_selector.NextColor(), stroke_width, dash_array);
 }
 
 void Plot2D::scatter(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-        int32_t color, const float radius) {
+        int32_t color, float radius) {
     if (x_data.size() != y_data.size()) {
         return;
     }
@@ -140,7 +139,7 @@ void Plot2D::scatter(const std::vector<Real> &x_data, const std::vector<Real> &y
         m_numeric_data.clear();
     }
 
-    const Style style = {color, radius, "", true};
+    const Style style = {color, radius, {}, true};
     m_numeric_data.emplace_back(DataSeries{x_data, y_data, style});
 
     m_data_type = DataType::NUMERIC;
@@ -152,7 +151,7 @@ void Plot2D::scatter(const std::vector<Real> &x_data, const std::vector<Real> &y
 }
 
 void Plot2D::scatter(const std::vector<std::string> &x_data, const std::vector<Real> &y_data,
-        int32_t color, const float radius) {
+        int32_t color, float radius) {
     if (x_data.size() != y_data.size()) {
         return;
     }
@@ -163,14 +162,14 @@ void Plot2D::scatter(const std::vector<std::string> &x_data, const std::vector<R
         m_categorical_labels = x_data;
     }
 
-    const Style style = {color, radius, "", true};
+    const Style style = {color, radius, {}, true};
     m_categorical_data.emplace_back(CategoricalDataSeries{y_data, style});
     m_numeric_data.clear();
     m_data_type = DataType::CATEGORICAL;
 }
 
 void Plot2D::scatter(const std::vector<std::string> &x_data,
-                     const std::vector<Real> &y_data, const float radius) {
+                     const std::vector<Real> &y_data, float radius) {
     scatter(x_data, y_data, m_color_selector.NextColor(), radius);
 }
 
@@ -374,7 +373,7 @@ void Plot2D::calculateCategoricalFrame() {
 void Plot2D::drawBackground(cairo_t *cr) {
     cairo_rectangle(cr, 0, 0, m_width, m_height);
     cdroid::Color c(BACKGROUND_COLOR);
-    cairo_set_source_rgb(cr,c.red(),c.green(),c.blue());
+    cairo_set_source_rgba(cr,c.red(),c.green(),c.blue(),c.alpha());
     cairo_fill(cr);
 }
 
@@ -460,18 +459,11 @@ void Plot2D::drawNumericPath(const DataSeries &plot, cairo_t *cr) {
 
     cairo_set_line_width(cr, plot.style.stroke);
     cdroid::Color c(plot.style.color);
-    cairo_set_source_rgb(cr,c.red(),c.green(),c.blue());
+    cairo_set_source_rgba(cr,c.red(),c.green(),c.blue(),c.alpha());
 
-    if (!plot.style.dash_array.empty()) {
-        std::vector<double> dashes;
-        std::stringstream ss(plot.style.dash_array);
-        std::string item;
-        while (std::getline(ss, item, ',')) {
-            dashes.push_back(std::stod(item));
-        }
-        if (!dashes.empty()) {
-            cairo_set_dash(cr, dashes.data(), dashes.size(), 0);
-        }
+    const std::vector<double> dashes =plot.style.dash_array;
+    if (!dashes.empty()) {
+        cairo_set_dash(cr, dashes.data(), dashes.size(), 0);
     }
 
     bool first = true;
@@ -504,7 +496,7 @@ void Plot2D::drawNumericScatter(const DataSeries &plot, cairo_t *cr) {
 
     cairo_save(cr);
     cdroid::Color c(plot.style.color);
-    cairo_set_source_rgb(cr,c.red(),c.green(),c.blue());
+    cairo_set_source_rgba(cr,c.red(),c.green(),c.blue(),c.alpha());
 
     for (size_t i = 0; i < size; ++i) {
         if (IsInfinity(data_y[i])) continue;
@@ -538,18 +530,11 @@ void Plot2D::drawCategoricalPath(const CategoricalDataSeries &plot, cairo_t *cr)
     cairo_save(cr);
     cdroid::Color c(plot.style.color);
     cairo_set_line_width(cr, plot.style.stroke);
-    cairo_set_source_rgb(cr,c.red(),c.green(),c.blue());
+    cairo_set_source_rgba(cr,c.red(),c.green(),c.blue(),c.alpha());
 
-    if (!plot.style.dash_array.empty()) {
-        std::vector<double> dashes;
-        std::stringstream ss(plot.style.dash_array);
-        std::string item;
-        while (std::getline(ss, item, ',')) {
-            dashes.push_back(std::stod(item));
-        }
-        if (!dashes.empty()) {
-            cairo_set_dash(cr, dashes.data(), dashes.size(), 0);
-        }
+    const std::vector<double>& dashes=plot.style.dash_array;
+    if (!dashes.empty()) {
+        cairo_set_dash(cr, dashes.data(), dashes.size(), 0);
     }
 
     bool first = true;
@@ -582,7 +567,7 @@ void Plot2D::drawCategoricalScatter(const CategoricalDataSeries &plot, cairo_t *
 
     cairo_save(cr);
     cdroid::Color c(plot.style.color);
-    cairo_set_source_rgb(cr,c.red(),c.green(),c.blue());
+    cairo_set_source_rgba(cr,c.red(),c.green(),c.blue(),c.alpha());
 
     for (size_t i = 0; i < size; ++i) {
         if (IsInfinity(data_y[i])) continue;

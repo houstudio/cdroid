@@ -93,26 +93,15 @@ void Legend::draw(cairo_t*cr, float x, float y, float margin, Alignment alignmen
         const float element_y = y + fonts::EmToPx(FONT_MARGIN_EM + FONT_EM/4.0f +
                                 static_cast<float>(i) * FONT_EM);
 
-        // A. 绘制符号
         float symbol_x = x + fonts::EmToPx(FONT_MARGIN_EM);
         float symbol_size = fonts::EmToPx(SYMBOL_LENTH_EM);
         cdroid::Color cl(label.second.color);
         cairo_set_source_rgb(cr,cl.red(),cl.green(),cl.blue());
         if (label.second.type == DataType::LINE) {
-            // 与stroke-dasharray效果一致
             cairo_set_line_width(cr, 2.0f);
-
-            // 解析dash_array - 假设格式为"dash1,space1,dash2,space2,..."
-            if (!label.second.dash_array.empty()) {
-                std::vector<double> dashes;
-                std::stringstream ss(label.second.dash_array);
-                std::string item;
-                while (std::getline(ss, item, ',')) {
-                    dashes.push_back(std::stod(item));
-                }
-                if (!dashes.empty()) {
-                    cairo_set_dash(cr, dashes.data(), (int)dashes.size(), 0);
-                }
+            const std::vector<double>& dashes =label.second.dash_array;
+            if (!dashes.empty()) {
+                cairo_set_dash(cr, dashes.data(), (int)dashes.size(), 0);
             }
             cairo_move_to(cr, symbol_x, element_y);
             cairo_line_to(cr, symbol_x + symbol_size, element_y);
@@ -125,7 +114,7 @@ void Legend::draw(cairo_t*cr, float x, float y, float margin, Alignment alignmen
             cairo_arc(cr, circle_x, element_y, circle_r, 0, 2*M_PI);
             cairo_fill(cr);
         } else if (label.second.type == DataType::BAR) {
-            float rect_size = fonts::EmToPx(FONT_EM/2.0f); // 与RECT_LENGTH_PX对应
+            float rect_size = fonts::EmToPx(FONT_EM/2.0f);
             float rect_x = symbol_x + symbol_size/2.0f - rect_size/2.0f;
             float rect_y = element_y - rect_size/2.0f;
 
@@ -138,7 +127,7 @@ void Legend::draw(cairo_t*cr, float x, float y, float margin, Alignment alignmen
         }
 
         const float text_x = symbol_x + symbol_size + fonts::EmToPx(SPACING_LENGTH_EM);
-        const float text_y = element_y + fonts::EmToPx(FONT_EM/3.0f); // 垂直居中调整
+        const float text_y = element_y + fonts::EmToPx(FONT_EM/3.0f);
 
         cairo_move_to(cr, text_x, text_y);
         cairo_show_text(cr, label.first.c_str());

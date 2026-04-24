@@ -76,7 +76,7 @@ void PlotFrame::draw(cairo_t*cr, float x, float y) const {
 void PlotFrame::drawFullFrame(cairo_t *cr, float x, float y) const {
     cairo_rectangle(cr, x, y, m_width, m_height);
     cdroid::Color cs(m_frame_color);
-    cairo_set_source_rgb(cr, cs.red(), cs.green(),cs.blue());
+    cairo_set_source_rgba(cr, cs.red(), cs.green(),cs.blue(),cs.alpha());
     cairo_set_line_width(cr, STROKE_WIDTH);
     cairo_stroke(cr);
 }
@@ -86,7 +86,7 @@ void PlotFrame::drawAxesOnly(cairo_t *cr, float x, float y) const {
     cairo_line_to(cr, x, y + m_height);
     cairo_line_to(cr, x + m_width, y + m_height);
     cdroid::Color cs(m_frame_color);
-    cairo_set_source_rgb(cr,cs.red(), cs.green(),cs.blue());
+    cairo_set_source_rgba(cr,cs.red(), cs.green(),cs.blue(),cs.alpha());
     cairo_set_line_width(cr, STROKE_WIDTH);
     cairo_stroke(cr);
 }
@@ -105,7 +105,7 @@ void PlotFrame::drawAxes(cairo_t*cr, float x, float y) const {
         float mark_y = y + marker.first;
         cairo_move_to(cr, x, mark_y);
         cairo_line_to(cr, x - MARKER_LENGTH, mark_y);
-        cairo_set_source_rgb(cr,cs.red(), cs.green(),cs.blue());
+        cairo_set_source_rgba(cr,cs.red(), cs.green(),cs.blue(),cs.alpha());
         cairo_set_line_width(cr, 1.0);
         cairo_stroke(cr);
         // TODO: Draw text
@@ -120,7 +120,7 @@ void PlotFrame::drawAxes(cairo_t*cr, float x, float y) const {
         if (m_grid_enable) {
             cairo_move_to(cr, x, mark_y);
             cairo_line_to(cr, x + m_width, mark_y);
-            cairo_set_source_rgb(cr,cs.red(), cs.green(),cs.blue());
+            cairo_set_source_rgba(cr,cs.red(), cs.green(),cs.blue(),cs.alpha());
             cairo_set_line_width(cr, 0.75);
             double dashes[] = {0.75, 0.75};
             cairo_set_dash(cr, dashes, 2, 0);
@@ -134,7 +134,7 @@ void PlotFrame::drawAxes(cairo_t*cr, float x, float y) const {
 
         cairo_move_to(cr, mark_x, y + m_height);
         cairo_line_to(cr, mark_x, y + m_height + MARKER_LENGTH);
-        cairo_set_source_rgb(cr,cs.red(), cs.green(),cs.blue());
+        cairo_set_source_rgba(cr,cs.red(), cs.green(),cs.blue(),cs.alpha());
         cairo_set_line_width(cr, 1.0);
         cairo_stroke(cr);
 

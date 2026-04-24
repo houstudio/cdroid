@@ -51,8 +51,8 @@ public:
      * units)
      */
     void plot(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-              int32_t color, const float stroke_width = 2,
-              const std::string &dash_array = {});
+              int32_t color, float stroke_width,
+              const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a plot consisting of an x-axis sequence and a y-axis sequence
@@ -65,7 +65,7 @@ public:
      * units)
      */
     void plot(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-              const float stroke_width = 2, const std::string &dash_array = {});
+              float stroke_width, const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a plot consisting of one y-axis sequence of size N. The x-axis
@@ -79,7 +79,7 @@ public:
      * units)
      */
     void plot(const std::vector<Real> &y_data, int32_t color,
-              const float stroke_width = 2, const std::string &dash_array = {});
+              float stroke_width, const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a plot consisting of one y-axis sequence of size N. The x-axis
@@ -91,8 +91,8 @@ public:
      * @param dash_array Dash array (length of draw / no-draw segments in pt
      * units)
      */
-    void plot(const std::vector<Real> &y_data, const float stroke_width = 2,
-              const std::string &dash_array = {});
+    void plot(const std::vector<Real> &y_data, float stroke_width,
+              const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a plot using a vector as x axis values and a lambda function
@@ -107,7 +107,7 @@ public:
      */
     void plot(const std::vector<Real> &x_data,
               const std::function<Real(Real)> &function, int32_t color,
-              const float stroke_width = 2, const std::string &dash_array = {});
+              float stroke_width, const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a plot using a vector as x axis values and a lambda function
@@ -121,7 +121,7 @@ public:
      */
     void plot(const std::vector<Real> &x_data,
               const std::function<Real(Real)> &function,
-              const float stroke_width = 2, const std::string &dash_array = {});
+              float stroke_width, const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a categorical plot with discrete text labels on the x axis and
@@ -136,7 +136,7 @@ public:
      */
     void plot(const std::vector<std::string> &x_data,
               const std::vector<Real> &y_data, int32_t color,
-              const float stroke_width = 2, const std::string &dash_array = {});
+              float stroke_width, const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a categorical plot with discrete text labels on the x axis and
@@ -149,8 +149,8 @@ public:
      * units)
      */
     void plot(const std::vector<std::string> &x_data,
-              const std::vector<Real> &y_data, const float stroke_width = 2,
-              const std::string &dash_array = {});
+              const std::vector<Real> &y_data, float stroke_width = 2,
+              const std::vector<double> &dash_array = {});
 
     /**
      * @brief Add a SCATTER plot consisting of one y-axis sequence of size N. The
@@ -165,7 +165,7 @@ public:
      * units)
      */
     void scatter(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-                 int32_t color, const float radius = 2);
+                 int32_t color, float radius = 2);
 
     /**
      * @brief Add a SCATTER plot consisting of one y-axis sequence of size N. The
@@ -179,7 +179,7 @@ public:
      * units)
      */
     void scatter(const std::vector<Real> &x_data, const std::vector<Real> &y_data,
-                 const float radius = 2);
+                 float radius = 2);
 
     /**
      * @brief Add a categorical SCATTER plot with discrete text labels on the x
@@ -194,7 +194,7 @@ public:
      */
     void scatter(const std::vector<std::string> &x_data,
                  const std::vector<Real> &y_data,
-                 int32_t color = 0xFF000000, const float radius = 2);
+                 int32_t color = 0xFF000000, float radius = 2);
 
     /**
      * @brief Add a categorical SCATTER plot with discrete text labels on the x
@@ -207,7 +207,7 @@ public:
      * units)
      */
     void scatter(const std::vector<std::string> &x_data,
-                 const std::vector<Real> &y_data, const float radius = 2);
+                 const std::vector<Real> &y_data, float radius = 2);
 
     /**
      * @brief Set hold on/off
@@ -300,7 +300,7 @@ protected:
     struct Style {
         int32_t color;
         float stroke;
-        std::string dash_array;
+        std::vector<double> dash_array;
         bool scatter;
     };
 

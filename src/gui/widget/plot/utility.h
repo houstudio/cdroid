@@ -212,35 +212,35 @@ BinarySearchInterval(T value, const std::vector<T> &intervals) {
 
 namespace color_tables {
 
-const std::vector<int32_t> BRIGHT{
-    0x4477AA, 0xEE6677, 0x228833, 0xCCBB44,
-    0x66CCEE, 0xAA3377, 0xBBBBBB};
+const std::vector<uint32_t> BRIGHT{
+    0xFF4477AA, 0xFFEE6677, 0xFF228833, 0xFFCCBB44,
+    0xFF66CCEE, 0xFFAA3377, 0xFFBBBBBB};
 
-const std::vector<int32_t> VIBRANT{
-    0xEE7733, 0x0077BB, 0x33BBEE, 0xEE3377,
-    0xCC3311, 0x009988, 0xBBBBBB};
+const std::vector<uint32_t> VIBRANT{
+    0xFFEE7733, 0xFF0077BB, 0xFF33BBEE, 0xFFEE3377,
+    0xCC3311, 0xFF009988, 0xFFBBBBBB};
 
-const std::vector<int32_t> MUTED{
-    0xCC6677, 0x332288, 0xDDCC77, 0x117733,
-    0x88CCEE, 0x882255, 0x44AA99, 0x999933};
+const std::vector<uint32_t> MUTED{
+    0xFFCC6677, 0xFF332288, 0xFFDDCC77, 0xFF117733,
+    0xFF88CCEE, 0xFF882255, 0xFF44AA99, 0xFF999933};
 
-const std::vector<int32_t> LIGHT{
-    0x77AADD, 0xEE8866, 0xEEDD88,
-    0xFFAABB, 0x99DDFF, 0x44BB99,
-    0xBBCC33, 0xAAAA00, 0xDDDDDD};
+const std::vector<uint32_t> LIGHT{
+    0xFF77AADD, 0xFFEE8866, 0xFFEEDD88,
+    0xFFFFAABB, 0xFF99DDFF, 0xFF44BB99,
+    0xFFBBCC33, 0xFFAAAA00, 0xFFDDDDDD};
 
 } // namespace color_tables
 
 class ColorSelector final {
 public:
-    ColorSelector(const std::vector<int32_t> &table) : m_table(table) {}
-    int32_t NextColor() {
-        int32_t color = m_table[index];
+    ColorSelector(const std::vector<uint32_t> &table) : m_table(table) {}
+    uint32_t NextColor() {
+        uint32_t color = m_table[index];
         index = (index + 1) % m_table.size();
         return color;
     }
 private:
-    const std::vector<int32_t> m_table;
+    const std::vector<uint32_t> m_table;
 
     size_t index = 0;
 };
