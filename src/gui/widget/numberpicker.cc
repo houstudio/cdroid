@@ -31,6 +31,11 @@ DECLARE_WIDGET2(NumberPicker,"cdroid:attr/numberPickerStyle")
 const std::string DEFAULT_LAYOUT_VERT="cdroid:layout/number_picker";
 const std::string DEFAULT_LAYOUT_HORZ="cdroid:layout/number_picker_horz";
 
+namespace {
+    static NumberPicker::Formatter sTwoDigitFormatter=[](int value){
+        return TextUtils::stringPrintf("%02d",value);
+    };
+}
 NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     initView();
     setOrientation(h>w?VERTICAL:HORIZONTAL);
@@ -869,10 +874,14 @@ void NumberPicker::setOnScrollListener(const OnScrollListener& onScrollListener)
     mOnScrollListener = onScrollListener;
 }
 
-void NumberPicker::setFormatter(Formatter formatter){
+void NumberPicker::setFormatter(const Formatter& formatter){
     mFormatter = formatter;
     initializeSelectorWheelIndices();
     updateInputTextView();
+}
+
+NumberPicker::Formatter NumberPicker::getTwoDigitFormatter(){
+    return sTwoDigitFormatter;
 }
 
 void NumberPicker::setValue(int value) {
