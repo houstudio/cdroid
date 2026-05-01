@@ -215,7 +215,8 @@ public:
     void setOnClickListener(const OnClickListener& onClickListener)override;
     void setOnValueChangedListener(const OnValueChangeListener& onValueChangedListener);
     void setOnScrollListener(const OnScrollListener& onScrollListener);
-    void setFormatter(Formatter formatter);
+    void setFormatter(const Formatter& formatter);
+    static Formatter getTwoDigitFormatter();
 
     EditText*getSelectedText()const;
     Drawable* getDivider()const;

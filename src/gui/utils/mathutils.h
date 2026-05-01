@@ -60,11 +60,11 @@ public:
    }
 
    static double toRadians(double degrees) {
-       return degrees * (M_PI / 180.0);
+       return degrees * M_PI / 180.0;
    }
 
    static double toDegrees(double radians) {
-       return radians * (180.0 / M_PI);
+       return radians * 180.0 / M_PI;
    }
 };
 }

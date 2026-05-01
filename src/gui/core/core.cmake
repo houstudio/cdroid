@@ -8,6 +8,7 @@ SET(CORE_SOURCES
     core/calendar.cc
     core/canvas.cc
     core/color.cc
+    core/numberformat.cc
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc
