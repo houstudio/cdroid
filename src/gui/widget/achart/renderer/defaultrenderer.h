@@ -116,6 +116,7 @@ private:
     /** The start angle for circular charts such as pie, doughnut, etc. */
     float mStartAngle = 0;
 public:
+    virtual ~DefaultRenderer()=default;
     /**
      * Returns the chart title.
      *

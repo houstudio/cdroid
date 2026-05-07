@@ -63,8 +63,6 @@ private:
     /** The old y2 coordinate. */
     float mLastY2=-1.f;
     int mLastSeriesSelection=-1;
-    bool mWasPanning;
-    bool mWasZooming;
     /** The zoom buttons rectangle. */
     RectF zoomR;
     /** The pan tool. */
@@ -85,6 +83,7 @@ public:
      * @param chart the chart to be drawn
      */
     TouchHandler(GraphicalView* view, AbstractChart* chart);
+    virtual ~TouchHandler();
     /**
      * Handles the touch event.
      *
@@ -149,6 +148,7 @@ protected:
     void setYRange(double min, double max, int scale);
 public:
     AbstractTool(GraphicalView* graphicalView);
+    virtual ~AbstractTool()=default;
     /**
      * Abstract tool constructor.
      *
@@ -263,11 +263,9 @@ public:
 };
 class TouchHandler::Move :public AbstractTool {
 private:
-    int mDragBuffer;
-
     std::vector<MoveListener> mMoveListeners;
-
     Context* mContext;
+    int mDragBuffer;
     int mOverlaySeriesIndex;
 
     bool mDraggingLeft = false;

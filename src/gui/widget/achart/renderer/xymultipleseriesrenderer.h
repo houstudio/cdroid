@@ -78,7 +78,7 @@ private:
     /** The grid color. */
     int mGridColor = 0x48c8c8c8;//Color.argb(75, 200, 200, 200);
     /** The number of scales. */
-    int scalesCount;
+    int mScalesCount;
     /** The X axis labels alignment. */
     int/*Align*/ xLabelsAlign=1;// = Align.CENTER;
     /** The Y axis labels alignment. */
@@ -113,10 +113,13 @@ public:
     }
 
     XYMultipleSeriesRenderer(int scaleNumber) {
-        scalesCount = scaleNumber;
+        mScalesCount = scaleNumber;
+        mLabelFormat = nullptr;
         initAxesRange(scaleNumber);
     }
-
+    ~XYMultipleSeriesRenderer()override{
+        delete mLabelFormat;
+    }
     void initAxesRange(int scales) {
         mYTitle.resize(scales);// = new String[scales];
         yLabelsAlign.resize(scales);// = new Align[scales];
@@ -1285,7 +1288,7 @@ public:
     }
 
     int getScalesCount() const{
-        return scalesCount;
+        return mScalesCount;
     }
 };
 }/*endof namespace*/
