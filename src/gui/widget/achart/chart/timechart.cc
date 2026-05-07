@@ -13,103 +13,84 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.achartengine.chart;
-
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import org.achartengine.model.XYMultipleSeriesDataset;
-import org.achartengine.model.XYSeries;
-import org.achartengine.renderer.XYMultipleSeriesRenderer;
-
-import android.graphics.Canvas;
-import android.graphics.Paint;
-
+#include <widget/achart/chart/timechart.h>
 namespace cdroid{
 /**
  * The time chart rendering class.
  */
-//public static final String TYPE = "Time";
 
-TimeChart::TimeChart() {
+TimeChart::TimeChart():LineChart(){
+    mStartPoint =0.0/0.0/*NAN*/;
 }
 
-TimeChart::TimeChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset, const std::shared_ptr<XYMultipleSeriesRenderer>& renderer) {
-    super(dataset, renderer);
+TimeChart::TimeChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset, const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)
+:LineChart(dataset, renderer){
+    mStartPoint =0.0/0.0/*NAN*/;
 }
 
 std::string TimeChart::getDateFormat() const{
     return mDateFormat;
 }
 
-void TimeChart::setDateFormat(const std::string& format) {
+void TimeChart::setDateFormat(const std::string& format){
     mDateFormat = format;
 }
 
-void TimeChart::drawXLabels(std::vector<double>& xLabels, std::vector<double>& xTextLabelLocations, Canvas& canvas,
-                           Paint paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX) {
-    int length = xLabels.size();
+void TimeChart::drawXLabels(const std::vector<double>& xLabels, const std::vector<double>& xTextLabelLocations,
+        Canvas& canvas, Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX) {
+    const int length = xLabels.size();
     if (length > 0) {
-        bool showLabels = mRenderer.isShowLabels();
-        bool showGridY = mRenderer.isShowGridY();
-        DateFormat format = getDateFormat(xLabels.get(0), xLabels.get(length - 1));
+        const bool showLabels = mRenderer->isShowLabels();
+        const bool showGridY = mRenderer->isShowGridY();
+        DateFormat format(getDateFormat(xLabels.at(0), xLabels.at(length - 1)));
         for (int i = 0; i < length; i++) {
-            long label = std::round(xLabels.get(i));
+            const int64_t label = std::round(xLabels.at(i));
             float xLabel = (float) (left + xPixelsPerUnit * (label - minX));
             if (showLabels) {
-                paint.setColor(mRenderer.getXLabelsColor());
-                canvas
-                .drawLine(xLabel, bottom, xLabel, bottom + mRenderer.getLabelsTextSize() / 3, paint);
-                drawText(canvas, format.format(new Date(label)), xLabel,
-                         bottom + mRenderer.getLabelsTextSize() * 4 / 3 + mRenderer.getXLabelsPadding(), paint, mRenderer.getXLabelsAngle());
+                canvas.set_color(mRenderer->getXLabelsColor());
+                //canvas.drawLine(xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize() / 3, paint);
+                canvas.move_to(xLabel, bottom);
+                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                canvas.stroke();
+                drawText(canvas, format.format(label), xLabel,
+                         bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding(), paint, mRenderer->getXLabelsAngle());
             }
             if (showGridY) {
-                paint.setColor(mRenderer.getGridColor());
-                canvas.drawLine(xLabel, bottom, xLabel, top, paint);
+                canvas.set_color(mRenderer->getGridColor());
+                //canvas.drawLine(xLabel, bottom, xLabel, top, paint);
+                canvas.move_to(xLabel, bottom);
+                canvas.line_to(xLabel, top);
+                canvas.stroke();
             }
         }
     }
-    drawXTextLabels(xTextLabelLocations, canvas, paint, true, left, top, bottom, xPixelsPerUnit,
-                    minX, maxX);
+    drawXTextLabels(xTextLabelLocations, canvas, paint, true, left, top, bottom, xPixelsPerUnit, minX, maxX);
 }
 
-DateFormat TimeChart::getDateFormat(double start, double end) {
-    if (mDateFormat != null) {
-        SimpleDateFormat format = null;
-        try {
-            format = new SimpleDateFormat(mDateFormat);
-            return format;
-        } catch (Exception e) {
-            // do nothing here
-        }
+std::string TimeChart::getDateFormat(double start, double end) const{
+    if (!mDateFormat.empty()) {
+        return mDateFormat;
     }
-    DateFormat format = SimpleDateFormat.getDateInstance(SimpleDateFormat.MEDIUM);
-    double diff = end - start;
+    std::string format = "HH:mm:ss";
+    const double diff = end - start;
     if (diff > DAY && diff < 5 * DAY) {
-        format = SimpleDateFormat.getDateTimeInstance(SimpleDateFormat.SHORT, SimpleDateFormat.SHORT);
+        format = "yy/MM/dd hh:mm";
     } else if (diff < DAY) {
-        format = SimpleDateFormat.getTimeInstance(SimpleDateFormat.MEDIUM);
+        format = "HH:mm:ss";
     }
     return format;
 }
 
-std::string TimeChart::getChartType() const{
-    return TYPE;
-}
-
-std::vector<double> TimeChart::getXLabels(double min, double max, int count) {
-    final List<Double> result = new ArrayList<Double>();
-    if (!mRenderer.isXRoundedLabels()) {
-        if (mDataset.getSeriesCount() > 0) {
-            XYSeries series = mDataset.getSeriesAt(0);
-            int length = series.getItemCount();
+std::vector<double> TimeChart::getXLabels(double min, double max, int count) const{
+    std::vector<double> result;
+    if (!mRenderer->isXRoundedLabels()) {
+        if (mDataset->getSeriesCount() > 0) {
+            auto series = mDataset->getSeriesAt(0);
+            int length = series->getItemCount();
             int intervalLength = 0;
             int startIndex = -1;
             for (int i = 0; i < length; i++) {
-                double value = series.getX(i);
+                double value = series->getX(i);
                 if (min <= value && value <= max) {
                     intervalLength++;
                     if (startIndex < 0) {
@@ -119,55 +100,202 @@ std::vector<double> TimeChart::getXLabels(double min, double max, int count) {
             }
             if (intervalLength < count) {
                 for (int i = startIndex; i < startIndex + intervalLength; i++) {
-                    result.add(series.getX(i));
+                    result.push_back(series->getX(i));
                 }
             } else {
                 float step = (float) intervalLength / count;
                 int intervalCount = 0;
                 for (int i = 0; i < length && intervalCount < count; i++) {
-                    double value = series.getX(std::round(i * step));
+                    double value = series->getX(std::round(i * step));
                     if (min <= value && value <= max) {
-                        result.add(value);
+                        result.push_back(value);
                         intervalCount++;
                     }
                 }
             }
             return result;
         } else {
-            return super.getXLabels(min, max, count);
+            return LineChart::getXLabels(min, max, count);
         }
     }
-    if (mStartPoint == null) {
-        mStartPoint = min - (min % DAY) + DAY + new Date(std::round(min)).getTimezoneOffset() * 60
-                      * 1000;
+    if (std::isnan(mStartPoint)) {
+        //mStartPoint = min - (min % DAY) + DAY + new Date(std::round(min)).getTimezoneOffset() * 60* 1000;
+        mStartPoint = min - std::fmod(min, static_cast<double>(TimeChart::DAY)) + TimeChart::DAY;
     }
     if (count > 25) {
         count = 25;
     }
 
 
-    final double cycleMath = (max - min) / count;
+    const double cycleMath = (max - min) / count;
     if (cycleMath <= 0) {
         return result;
     }
     double cycle = DAY;
 
     if (cycleMath <= DAY) {
-        while (cycleMath < cycle / 2) {
-            cycle = cycle / 2;
+        while (cycleMath < cycle / 2.0) {
+            cycle = cycle / 2.0;
         }
     } else {
         while (cycleMath > cycle) {
-            cycle = cycle * 2;
+            cycle = cycle * 2.0;
         }
     }
 
     double val = mStartPoint - std::floor((mStartPoint - min) / cycle) * cycle;
     int i = 0;
     while (val < max && i++ <= count) {
-        result.add(val);
+        result.push_back(val);
         val += cycle;
     }
 
     return result;
+}
+
+std::string TimeChart::getChartType() const{
+    return "Time";
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////
+TimeChart::DateFormat::DateFormat(const std::string& fmt_pattern) : mPattern(fmt_pattern) {}
+
+std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
+    std::time_t time_sec = timestamp_ms / 1000;
+    std::tm* timeinfo = std::localtime(&time_sec);
+    std::ostringstream oss;
+    std::string result;
+    size_t pos = 0;
+    
+    while (pos < mPattern.length()) {
+        if (pos + 1 < mPattern.length() && mPattern[pos] == 'y') {
+            int year_digits = 0;
+            size_t year_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'y') {
+                year_digits++;
+                pos++;
+            }
+            if (year_digits == 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%y", timeinfo);
+                result += buf;
+            } else if (year_digits >= 4) {
+                char buf[5];
+                std::strftime(buf, sizeof(buf), "%Y", timeinfo);
+                result += buf;
+            }
+        } else if (pos + 1 < mPattern.length() && mPattern[pos] == 'M') {
+            int month_digits = 0;
+            size_t month_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'M') {
+                month_digits++;
+                pos++;
+            }
+            if (month_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", timeinfo->tm_mon + 1);
+                result += buf;
+            } else if (month_digits == 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%m", timeinfo);
+                result += buf;
+            } else if (month_digits == 3) {
+                char buf[4];
+                std::strftime(buf, sizeof(buf), "%b", timeinfo);
+                result += buf;
+            } else if (month_digits >= 4) {
+                char buf[12];
+                std::strftime(buf, sizeof(buf), "%B", timeinfo);
+                result += buf;
+            }
+        }else if (pos + 1 < mPattern.length() && mPattern[pos] == 'd') {
+            int day_digits = 0;
+            size_t day_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'd') {
+                day_digits++;
+                pos++;
+            }
+            if (day_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", timeinfo->tm_mday);
+                result += buf;
+            } else if (day_digits >= 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%d", timeinfo);
+                result += buf;
+            }
+        } else if (pos + 1 < mPattern.length() && mPattern[pos] == 'H') {
+            int hour_digits = 0;
+            size_t hour_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'H') {
+                hour_digits++;
+                pos++;
+            }
+            if (hour_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", timeinfo->tm_hour);
+                result += buf;
+            } else if (hour_digits >= 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%H", timeinfo);
+                result += buf;
+            }
+        }  else if (pos + 1 < mPattern.length() && mPattern[pos] == 'h') {
+            int hour_digits = 0;
+            size_t hour_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'h') {
+                hour_digits++;
+                pos++;
+            }
+            int hour12 = (timeinfo->tm_hour % 12 == 0) ? 12 : timeinfo->tm_hour % 12;
+            if (hour_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", hour12);
+                result += buf;
+            } else if (hour_digits >= 2) {
+                char buf[3];
+                std::sprintf(buf, "%02d", hour12);
+                result += buf;
+            }
+        } else if (pos + 1 < mPattern.length() && mPattern[pos] == 'm') {
+            int minute_digits = 0;
+            size_t minute_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 'm') {
+                minute_digits++;
+                pos++;
+            }
+            if (minute_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", timeinfo->tm_min);
+                result += buf;
+            } else if (minute_digits >= 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%M", timeinfo);
+                result += buf;
+            }
+        } else if (pos + 1 < mPattern.length() && mPattern[pos] == 's') {
+            int second_digits = 0;
+            size_t second_start = pos;
+            while (pos < mPattern.length() && mPattern[pos] == 's') {
+                second_digits++;
+                pos++;
+            }
+            if (second_digits == 1) {
+                char buf[3];
+                std::sprintf(buf, "%d", timeinfo->tm_sec);
+                result += buf;
+            } else if (second_digits >= 2) {
+                char buf[3];
+                std::strftime(buf, sizeof(buf), "%S", timeinfo);
+                result += buf;
+            }
+        } else {
+            // 非格式字符直接添加
+            result += mPattern[pos];
+            pos++;
+        }
+    }    
+    return result;
+}
+
 }/*endof namespace*/

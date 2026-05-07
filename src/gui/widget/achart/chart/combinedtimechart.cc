@@ -13,38 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.achartengine.chart;
-
-#include<chart/combinedtimechart.h>
+#include<widget/achart/chart/timechart.h>
+#include<widget/achart/chart/combinedtimechart.h>
 
 namespace cdroid{
 
 CombinedTimeChart::CombinedTimeChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
-        const std::shared_ptr<XYMultipleSeriesRenderer>& renderer, const std::vector<std::string>& types) {
-    super(dataset, renderer, types);
+        const std::shared_ptr<XYMultipleSeriesRenderer>& renderer, const std::vector<std::string>& types)
+    :CombinedXYChart(dataset, renderer, types){
 }
 
-void CombinedTimeChart::drawXLabels(std::vector<double>& xLabels, std::vector<double>& xTextLabelLocations, Canvas& canvas,
-                            Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX) {
+void CombinedTimeChart::drawXLabels(const std::vector<double>& xLabels,const std::vector<double>& xTextLabelLocations,
+        Canvas& canvas, Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX) {
     int length = xLabels.size();
     if (length > 0) {
-        bool showLabels = mRenderer.isShowLabels();
-        bool showGridY = mRenderer.isShowGridY();
-        DateFormat format = getDateFormat(xLabels.get(0), xLabels.get(length - 1));
+        const bool showLabels = mRenderer->isShowLabels();
+        const bool showGridY = mRenderer->isShowGridY();
+        TimeChart::DateFormat format(getDateFormat(xLabels.at(0), xLabels.at(length - 1)));
         for (int i = 0; i < length; i++) {
-            long label = std::round(xLabels.get(i));
+            int64_t label = std::round(xLabels.at(i));
             float xLabel = (float) (left + xPixelsPerUnit * (label - minX));
             if (showLabels) {
-                paint.setColor(mRenderer.getXLabelsColor());
-                canvas
-                .drawLine(xLabel, bottom, xLabel, bottom + mRenderer.getLabelsTextSize() / 3, paint);
-                drawText(canvas, format.format(new Date(label)), xLabel,
-                         bottom + mRenderer.getLabelsTextSize() * 4 / 3 + mRenderer.getXLabelsPadding(),
-                         paint, mRenderer.getXLabelsAngle());
+                canvas.set_color(mRenderer->getXLabelsColor());
+                canvas.move_to(xLabel, bottom);
+                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                canvas.stroke();
+                drawText(canvas, format.format(label), xLabel,
+                         bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding(),
+                         paint, mRenderer->getXLabelsAngle());
             }
             if (showGridY) {
-                paint.setColor(mRenderer.getGridColor());
-                canvas.drawLine(xLabel, bottom, xLabel, top, paint);
+                canvas.set_color(mRenderer->getGridColor());
+                canvas.move_to(xLabel, bottom);
+                canvas.line_to(xLabel, top);
             }
         }
     }
@@ -53,15 +54,15 @@ void CombinedTimeChart::drawXLabels(std::vector<double>& xLabels, std::vector<do
 }
 
 std::vector<double> CombinedTimeChart::getXLabels(double min, double max, int count) {
-    final List<Double> result = new ArrayList<Double>();
-    if (!mRenderer.isXRoundedLabels()) {
-        if (mDataset.getSeriesCount() > 0) {
-            XYSeries series = mDataset.getSeriesAt(0);
-            int length = series.getItemCount();
+    std::vector<double> result;
+    if (!mRenderer->isXRoundedLabels()) {
+        if (mDataset->getSeriesCount() > 0) {
+            auto series = mDataset->getSeriesAt(0);
+            int length = series->getItemCount();
             int intervalLength = 0;
             int startIndex = -1;
             for (int i = 0; i < length; i++) {
-                double value = series.getX(i);
+                double value = series->getX(i);
                 if (min <= value && value <= max) {
                     intervalLength++;
                     if (startIndex < 0) {
@@ -71,33 +72,33 @@ std::vector<double> CombinedTimeChart::getXLabels(double min, double max, int co
             }
             if (intervalLength < count) {
                 for (int i = startIndex; i < startIndex + intervalLength; i++) {
-                    result.add(series.getX(i));
+                    result.push_back(series->getX(i));
                 }
             } else {
                 float step = (float) intervalLength / count;
                 int intervalCount = 0;
                 for (int i = 0; i < length && intervalCount < count; i++) {
-                    double value = series.getX(std::round(i * step));
+                    double value = series->getX(std::round(i * step));
                     if (min <= value && value <= max) {
-                        result.add(value);
+                        result.push_back(value);
                         intervalCount++;
                     }
                 }
             }
             return result;
         } else {
-            return super.getXLabels(min, max, count);
+            return CombinedXYChart::getXLabels(min, max, count);
         }
     }
-    if (mStartPoint == null) {
-        mStartPoint = min - (min % DAY) + DAY + new Date(std::round(min)).getTimezoneOffset() * 60
-                      * 1000;
+    if (std::isnan(mStartPoint)) {
+        //mStartPoint = min - (min % DAY) + DAY + new Date(std::round(min)).getTimezoneOffset() * 60* 1000;
+        mStartPoint = min - std::fmod(min, static_cast<double>(CombinedTimeChart::DAY)) + CombinedTimeChart::DAY;
     }
     if (count > 25) {
         count = 25;
     }
 
-    final double cycleMath = (max - min) / count;
+    const double cycleMath = (max - min) / count;
     if (cycleMath <= 0) {
         return result;
     }
@@ -116,20 +117,20 @@ std::vector<double> CombinedTimeChart::getXLabels(double min, double max, int co
     double val = mStartPoint - std::floor((mStartPoint - min) / cycle) * cycle;
     int i = 0;
     while (val < max && i++ <= count) {
-        result.add(val);
+        result.push_back(val);
         val += cycle;
     }
 
     return result;
 }
 
-DateFormat CombinedTimeChart::getDateFormat(double start, double end) {
+std::string CombinedTimeChart::getDateFormat(double start, double end) const{
     double diff = end - start;
 
     if (diff > DAY * 2) {
-        return new SimpleDateFormat("d MMM");
+        return "d MMM";
     } else {
-        return new SimpleDateFormat("d MMM, HH:mm");
+        return "d MMM, HH:mm";
     }
 }
 

@@ -133,6 +133,7 @@ cdroid::GraphicalView* createInteractionChart(cdroid::Context* context) {
 }
 
 cdroid::GraphicalView* createOverviewChart(cdroid::Context* context) {
+#if 0
     auto dataset = std::make_shared<cdroid::XYMultipleSeriesDataset>();
     auto renderer = std::make_shared<cdroid::XYMultipleSeriesRenderer>();
     renderer->setChartTitle("DragControl + TargetRange");
@@ -210,6 +211,9 @@ cdroid::GraphicalView* createOverviewChart(cdroid::Context* context) {
         statusListener.onMoveApplied();
     });*/
     return chartView;
+#else
+    return nullptr;
+#endif
 }
 
 cdroid::GraphicalView* createPieChart(cdroid::Context* context) {
@@ -792,13 +796,13 @@ std::vector<ChartPageSpec> createChartPages(cdroid::Context* context) {
     pages.push_back(createCubicChart(context));
     pages.push_back(createScatterChart(context));
     pages.push_back(createBubbleChart(context));
-    //pages.push_back(createTimeChart(context));
+    pages.push_back(createTimeChart(context));
     pages.push_back(createBarChartPage(context));
     pages.push_back(createRangeBarChartPage(context));
     pages.push_back(createRangeStackedBarChartPage(context));
     pages.push_back(createCombinedXYChartPage(context));
-    //pages.push_back(createCombinedTimeChartPage(context));
-    pages.push_back({"DragControl + TargetRange", createOverviewChart(context), false});
+    pages.push_back(createCombinedTimeChartPage(context));
+    //pages.push_back({"DragControl + TargetRange", createOverviewChart(context), false});
     pages.push_back({"Pie Chart", createPieChart(context), true});
     pages.push_back(createDoughnutChartPage(context));
     pages.push_back(createDialChartPage(context));

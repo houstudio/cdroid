@@ -29,17 +29,17 @@ private:
     /** The date format pattern to be used in formatting the X axis labels. */
     std::string mDateFormat;
     /** The starting point for labels. */
-    double mStartPoint;
+    mutable double mStartPoint;
 private:
-    DateFormat getDateFormat(double start, double end);
+    std::string getDateFormat(double start, double end)const;
 protected:
-    void drawXLabels(const std::vector<double>& xLabels, std::vector<double>& xTextLabelLocations, Canvas& canvas,
+    void drawXLabels(const std::vector<double>& xLabels,const std::vector<double>& xTextLabelLocations, Canvas& canvas,
              Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX) override;
 
-    std::vector<double> getXLabels(double min, double max, int count) override;
+    std::vector<double> getXLabels(double min, double max, int count);
 public:
     CombinedTimeChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
-            const std::shared_ptr<XYMultipleSeriesRenderer>& renderer,const std::vector<std::string>>& types);
+            const std::shared_ptr<XYMultipleSeriesRenderer>& renderer,const std::vector<std::string>& types);
     /**
      * Returns the date format pattern to be used for formatting the X axis
      * labels.
