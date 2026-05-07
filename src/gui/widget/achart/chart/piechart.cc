@@ -1,0 +1,139 @@
+/**
+ * Copyright (C) 2009 - 2012 SC 4ViewSoft SRL
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include <core/rect.h>
+#include<widget/achart/chart/piechart.h>
+
+namespace cdroid{
+
+PieChart::PieChart(const std::shared_ptr<CategorySeries>& dataset,const std::shared_ptr<DefaultRenderer>& renderer)
+    :RoundChart(dataset, renderer){
+    mPieMapper = new PieMapper();
+}
+
+PieChart::~PieChart(){
+    delete mPieMapper;
+}
+
+static void drawArc(Canvas& canvas,double centerX, double centerY, 
+            double radius, double startAngle, double sweepAngle,PieChart::Paint&paint) {
+    
+    double startRad = startAngle * M_PI / 180.0;
+    double endRad = (startAngle + sweepAngle) * M_PI / 180.0;
+    canvas.move_to(centerX, centerY);
+    canvas.arc(centerX, centerY, radius, startRad, endRad);
+    canvas.close_path();
+    if(paint.style==1)//PieChart::Style::FILL)
+    canvas.stroke();
+    else canvas.fill();
+}
+
+void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
+    //paint.setAntiAlias(mRenderer->isAntialiasing());
+    //paint.setStyle(Style.FILL);
+    canvas.set_font_size(mRenderer->getLabelsTextSize());
+    int legendSize = getLegendSize(mRenderer, height / 5, 0);
+    const int left = x;
+    const int top = y;
+    const int right = x + width;
+    const int sLength = mDataset->getItemCount();
+    double total = 0;
+    std::vector<std::string> titles(sLength);
+    for (int i = 0; i < sLength; i++) {
+        total += mDataset->getValue(i);
+        titles[i] = mDataset->getCategory(i);
+    }
+    if (mRenderer->isFitLegend()) {
+        legendSize = drawLegend(canvas, mRenderer, titles, left, right, y,
+                width, height, legendSize, paint, true);
+    }
+    const int bottom = y + height - legendSize;
+    drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
+
+    float currentAngle = mRenderer->getStartAngle();
+    const int mRadius = std::min(std::abs(right - left), std::abs(bottom - top));
+    const int radius = (int) (mRadius * 0.35 * mRenderer->getScale());
+
+    if (mCenterX == NO_VALUE) {
+        mCenterX = (left + right) / 2;
+    }
+    if (mCenterY == NO_VALUE) {
+        mCenterY = (bottom + top) / 2;
+    }
+
+    // Hook in clip detection after center has been calculated
+    mPieMapper->setDimensions(radius, mCenterX, mCenterY);
+    const bool loadPieCfg = !mPieMapper->areAllSegmentPresent(sLength);
+    if (loadPieCfg) {
+        mPieMapper->clearPieSegments();
+    }
+
+    const float shortRadius = radius * 0.9f;
+    const float longRadius = radius * 1.1f;
+    std::vector<RectF> prevLabelsBounds;
+
+    for (int i = 0; i < sLength; i++) {
+        auto seriesRenderer = mRenderer->getSeriesRendererAt(i);
+        if (seriesRenderer->isGradientEnabled()) {
+            Color startColor(seriesRenderer->getGradientStartColor());
+            Color endColor(seriesRenderer->getGradientStopColor());
+            Cairo::RefPtr<Cairo::RadialGradient> grad = Cairo::RadialGradient::create(
+               mCenterX, mCenterY, 0.0, mCenterX, mCenterY, radius );
+            grad->add_color_stop_rgba(0.0, startColor.red(), startColor.green(), 
+                             startColor.blue(), startColor.alpha());
+            grad->add_color_stop_rgba(1.0, endColor.red(), endColor.green(),
+                             endColor.blue(), endColor.alpha());
+            canvas.set_source(grad);
+        } else {
+            canvas.set_color(seriesRenderer->getColor());
+        }
+
+        const float value = (float) mDataset->getValue(i);
+        const float angle = (float) (value / total * 360);
+        if (seriesRenderer->isHighlighted()) {
+            const double rAngle = (90.0 - (currentAngle + angle / 2))*M_PI/180.0;
+            const float translateX = (float) (radius * 0.1 * std::sin(rAngle));
+            const float translateY = (float) (radius * 0.1 * std::cos(rAngle));
+            drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius, currentAngle, angle,paint);
+        } else {
+            drawArc(canvas, mCenterX, mCenterY, radius, currentAngle, angle,paint);
+        }
+        canvas.set_color(seriesRenderer->getColor());
+        drawLabel(canvas, mDataset->getCategory(i), mRenderer, prevLabelsBounds, mCenterX, mCenterY,
+                  shortRadius, longRadius, currentAngle, angle, left, right, mRenderer->getLabelsColor(),
+                  paint, true, false);
+        if (mRenderer->isDisplayValues()) {
+            drawLabel(canvas,
+                getLabel(mRenderer->getSeriesRendererAt(i)->getChartValuesFormat(), mDataset->getValue(i)),
+                mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius / 2, longRadius / 2,
+                currentAngle, angle, left, right, mRenderer->getLabelsColor(), paint, false, true);
+        }
+
+        // Save details for getSeries functionality
+        if (loadPieCfg) {
+            mPieMapper->addPieSegment(i, value, currentAngle, angle);
+        }
+        currentAngle += angle;
+    }
+    prevLabelsBounds.clear();
+    drawLegend(canvas, mRenderer, titles, left, right, y, width, height, legendSize, paint, false);
+    drawTitle(canvas, x, y, width, paint);
+}
+
+SeriesSelection* PieChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
+    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint);
+}
+
+}
