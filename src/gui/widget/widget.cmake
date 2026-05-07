@@ -74,6 +74,7 @@ list(APPEND WIDGET_SOURCES
     widget/tablerow.cc
     widget/tablayout.cc
     widget/tablelayout.cc
+    widget/drawerlayout.cc
 )
 
 list(APPEND CDROID_SOURCES
@@ -105,19 +106,18 @@ if(ENABLE_DAYTIME_WIDGETS)
 endif(ENABLE_DAYTIME_WIDGETS)
 
 list(APPEND WIDGET_SOURCES
-    widget/drawerlayout.cc
     widget/slidingpanelayout.cc
     widget/mediacontroller.cc
     widget/patternlockview.cc
 
-    widget/plotaxis.cc
-    widget/plotobject.cc
-    widget/plotpoint.cc
-    widget/plotview.cc
-
     widget/actionbar.cc
     widget/toolbar.cc
     widget/toast.cc
+
+    #widget/plotaxis.cc
+    #widget/plotobject.cc
+    #widget/plotpoint.cc
+    #widget/plotview.cc
 )
 
 list(APPEND WIDGET_SOURCES
@@ -130,16 +130,40 @@ list(APPEND WIDGET_SOURCES
     widget/adapterviewflipper.cc
     widget/stackview.cc
 )
+if(ENABLE_ACHART)
+    list(APPEND WIDGET_SOURCES
+        widget/achart/model/categoryseries.h
+        widget/achart/model/multiplecategoryseries.h
+        widget/achart/model/rangecategoryseries.h
+        widget/achart/model/seriesselection.h
+        widget/achart/model/timeseries.h
+        widget/achart/model/xymultipleseriesdataset.h
+        widget/achart/model/xyseries.h
+        widget/achart/model/xyvalueseries.h
 
-list(APPEND WIDGET_SOURCES
-   widget/plot/barplotbase.cc
-   widget/plot/barplot.cc
-   widget/plot/figure.cc
-   widget/plot/fonts.cc
-   widget/plot/frame.cc
-   widget/plot/histogramplot.cc
-   widget/plot/legend.cc
-   widget/plot/plot2d.cc
-   widget/plot/groupfigure.cc
-)
+        widget/achart/chart/scatterchart.cc
+        widget/achart/chart/abstractchart.cc
+        widget/achart/chart/xychart.cc
+        widget/achart/chart/combinedxychart.cc
+        widget/achart/chart/linechart.cc
+        widget/achart/chart/cubiclinechart.cc
+        widget/achart/chart/roundchart.cc
+        widget/achart/chart/piechart.cc
+        widget/achart/chart/dialchart.cc
+        widget/achart/chart/barchart.cc
+        widget/achart/chart/rangebarchart.cc
+        widget/achart/chart/bubblechart.cc
+        widget/achart/chart/doughnutchart.cc
+        widget/achart/chart/dragcontrolchart.cc
+        widget/achart/chart/targetrangechart.cc
+        widget/achart/chart/rangestackedbarchart.h
+        widget/achart/graphicalview.cc
+        widget/achart/chartfactory.cc
+        widget/achart/touchhandler.cc
+        widget/achart/tools/abstracttool.cc
+        widget/achart/tools/move.cc
+        widget/achart/tools/pan.cc
+        widget/achart/tools/zoom.cc
+    )
+endif(ENABLE_ACHART)
 

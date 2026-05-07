@@ -207,8 +207,8 @@ std::vector<std::string> TextUtils::split(const std::string& s,int delim){
     size_t pos = 0;
     size_t len = s.length();
     while (pos < len){
-        int find_pos = s.find(delim, pos);
-        if (find_pos < 0){
+        auto find_pos = s.find(delim, pos);
+        if (find_pos != std::string::npos){
             elems.push_back(s.substr(pos, len - pos));
             break;
         }
