@@ -81,7 +81,7 @@ void GraphicalView::checkRange(std::vector<double>& range, int scale) {
 void GraphicalView::zoom(int zoomAxis,float zoomRate,bool zoomIn) {
     if (dynamic_cast<XYChart*>(mChart)) {
         auto renderer = std::dynamic_pointer_cast<XYMultipleSeriesRenderer>(mRenderer);
-        int scales = renderer->getScalesCount();
+        const int scales = renderer->getScalesCount();
         bool limitsReachedX=false,limitsReachedY=false;
         for (int i = 0; i < scales; i++) {
             auto range = getRange(i);
@@ -156,6 +156,8 @@ void GraphicalView::zoom(int zoomAxis,float zoomRate,bool zoomIn) {
             renderer->setScale(renderer->getScale() / zoomRate);
         }
     }
+    invalidate();
+    notifyZoomListeners(ZoomEvent(zoomIn, zoomRate));
 }
  
 double GraphicalView::getAxisRatio(std::vector<double>& range) const {
@@ -238,7 +240,7 @@ void GraphicalView::pan(float oldX, float oldY, float newX, float newY) {
         RoundChart* chart = (RoundChart*) mChart;
         chart->setCenterX(chart->getCenterX() + (int) (newX - oldX));
         chart->setCenterY(chart->getCenterY() + (int) (newY - oldY));
-        //notifyPanListeners();
+        notifyPanListeners();
     }
     return;
 }
@@ -286,12 +288,10 @@ void GraphicalView::setZoomRate(float rate) {
 
 void GraphicalView::zoomIn() {
     zoom(ZOOM_AXIS_XY,mZoomRate,true);
-    invalidate();
 }
 
 void GraphicalView::zoomOut() {
     zoom(ZOOM_AXIS_XY,mZoomRate,false);
-    invalidate();
 }
 
 void GraphicalView::zoomReset() {
@@ -373,6 +373,27 @@ void GraphicalView::removeMoveListener(const MoveListener& listener) {
     //mTouchHandler->removeMoveListener(listener);
 }
 
+void GraphicalView::notifyPanListeners(){
+    for (PanListener& listener : mPanListeners) {
+        listener();//.panApplied();
+    }
+}
+
+void GraphicalView::notifyZoomListeners(const ZoomEvent& e) {
+    for (ZoomListener& listener : mZoomListeners) {
+        listener.zoomApplied(e);
+    }
+}
+
+  /**
+   * Notify the zoom listeners about a zoom reset.
+   */
+void GraphicalView::notifyZoomResetListeners() {
+    for (ZoomListener& listener : mZoomListeners) {
+        listener.zoomReset();
+    }
+}
+
 RectF GraphicalView::getZoomRectangle() const {
     return mZoomR;
 }
@@ -384,8 +405,7 @@ bool GraphicalView::onTouchEvent(MotionEvent& event) {
 
 bool GraphicalView::handleTouch(MotionEvent& event) {
     const int action = event.getActionMasked();
-    LOGD("===render=%p action=%d",mRenderer,action);
-    if (mRenderer != nullptr && action == MotionEvent::ACTION_MOVE) {
+    if ((mRenderer != nullptr) && (action == MotionEvent::ACTION_MOVE)) {
         if (oldX >= 0 || oldY >= 0) {
             const float newX = event.getX(0);
             const float newY = event.getY(0);
@@ -404,12 +424,12 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
                     // horizontal pinch zoom, |deltaY| / |deltaX| is [0 ~ 0.25], 0.25 is
                     // the approximate value of tan(PI / 12)
                     zoomRate = newDeltaX / oldDeltaX;
-                    zoom(ZOOM_AXIS_X,zoomRate,bZoomIn);
+                    zoom(ZOOM_AXIS_X,zoomRate,true);
                 } else if (tan1 >= 3.73 && tan2 >= 3.73) {
                     // pinch zoom vertically, |deltaY| / |deltaX| is [3.73 ~ infinity],
                     // 3.732 is the approximate value of tan(PI / 2 - PI / 12)
                     zoomRate = newDeltaY / oldDeltaY;
-                    zoom(zoomRate, ZOOM_AXIS_Y,bZoomIn);
+                    zoom(zoomRate, ZOOM_AXIS_Y,true);
                 } else {
                     // pinch zoom diagonally
                     if (std::abs(newX - oldX) >= std::abs(newY - oldY)) {
@@ -417,7 +437,7 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
                     } else {
                         zoomRate = newDeltaY / oldDeltaY;
                     }
-                    zoom(ZOOM_AXIS_XY,zoomRate,bZoomIn);
+                    zoom(ZOOM_AXIS_XY,zoomRate,true);
                 }
                 oldX2 = newX2;
                 oldY2 = newY2;
@@ -428,7 +448,7 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
             }
             oldX = newX;
             oldY = newY;
-            invalidate();//graphicalView.repaint();
+            invalidate();
             return true;
         }
     } else if (action == MotionEvent::ACTION_DOWN) {
@@ -436,11 +456,11 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
         oldY = event.getY(0);
         if (mRenderer != nullptr && mRenderer->isZoomEnabled() && mZoomR.contains(oldX, oldY)) {
             if (oldX < mZoomR.left + mZoomR.width / 3) {
-                zoomIn();LOGD("ZOOMIN");
+                zoomIn();
             } else if (oldX < mZoomR.left + mZoomR.width * 2 / 3) {
-                zoomOut();LOGD("ZOOMOUT");
+                zoomOut();
             } else {
-                zoomReset();LOGD("ZOOMRESET");
+                zoomReset();
             }
             return true;
         }

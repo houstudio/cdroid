@@ -61,7 +61,6 @@ private:
     float mZoomRate;
     /** If the graphical view is drawn. */
     bool mDrawn;
-    bool bZoomIn;
     std::vector<PanListener> mPanListeners;
     std::vector<ZoomListener> mZoomListeners;
     static constexpr int ZOOM_AXIS_X=1;
@@ -78,6 +77,9 @@ protected:
     bool handleTouch(MotionEvent& event);
     void zoom(int axis,float zoomrate,bool zoomIn);
     void pan(float oldX, float oldY, float newX, float newY);
+    void notifyPanListeners();
+    void notifyZoomListeners(const ZoomEvent& e);
+    void notifyZoomResetListeners();
 public:
     GraphicalView(Context*,const AttributeSet&);
     ~GraphicalView()override;
