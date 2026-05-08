@@ -88,13 +88,9 @@ GraphicalView* ChartFactory::getBubbleChartView(Context* context,
 GraphicalView* ChartFactory::getTimeChartView(Context* context,
         const std::shared_ptr<XYMultipleSeriesDataset>& dataset, const std::shared_ptr<XYMultipleSeriesRenderer>& renderer, const std::string& format) {
     checkParameters(dataset, renderer);
-#if 0
     TimeChart* chart = new TimeChart(dataset, renderer);
     chart->setDateFormat(format);
     return new GraphicalView(context, chart);
-#else
-    return nullptr;
-#endif
 }
 
 /**
@@ -179,12 +175,8 @@ GraphicalView* ChartFactory::getCombinedTimeChartView(Context* context,
         throw std::invalid_argument("Dataset, renderer and types should be not null and the datasets series count should be equal to the types length");
     }
     checkParameters(dataset, renderer);
-#if 0
     CombinedTimeChart* chart = new CombinedTimeChart(dataset, renderer, types);
     return new GraphicalView(context, chart);
-#else
-    return nullptr;
-#endif
 }
 
 /**

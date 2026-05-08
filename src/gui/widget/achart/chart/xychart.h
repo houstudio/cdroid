@@ -60,7 +60,7 @@ protected:
 
     XYChart();
     virtual void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer);
-    std::vector<double> getXLabels(double min, double max, int count)const;
+    virtual std::vector<double> getXLabels(double min, double max, int count)const;
 
     std::map<int, std::vector<double>> getYLabels(const std::vector<double>& minY, const std::vector<double>& maxY, int maxScaleNumber)const;
     Rect getScreenR()const;
@@ -126,7 +126,7 @@ protected:
      * @param minX the minimum value on the X axis in the chart
      * @param maxX the maximum value on the X axis in the chart
      */
-    void drawXLabels(const std::vector<double>& xLabels,const std::vector<double>& xTextLabelLocations,
+    virtual void drawXLabels(const std::vector<double>& xLabels,const std::vector<double>& xTextLabelLocations,
             Canvas& canvas, Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX);
 
     /**

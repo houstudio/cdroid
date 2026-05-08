@@ -41,6 +41,7 @@ GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
 }
 
 GraphicalView::~GraphicalView(){
+    delete mChart;
     delete mZoomIn;
     delete mZoomOut;
     delete mTouchHandler;

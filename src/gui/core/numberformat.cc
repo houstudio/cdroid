@@ -366,5 +366,6 @@ void DecimalFormat::analyzeSubpattern(const std::string& subpattern, bool isPosi
         fGroupingUsed = hasGrouping;
     }
 }
+
 }
 

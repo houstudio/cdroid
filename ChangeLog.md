@@ -1,6 +1,7 @@
 # **
   - add TouchDevice VirtualKeyMap support
   - fix NumberPicker::onTouchEvent's behavior(ACTION_CANCEL)
+  - add AChartEngine(Kplot is removed)
 # **V4.8.6
   - AnimatedImageDrawable add decodeWorker thread.
   - Fix ColorStateLists's defaultColor

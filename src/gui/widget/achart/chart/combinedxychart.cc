@@ -17,7 +17,7 @@
 #include<widget/achart/chart/targetrangechart.h>
 #include<widget/achart/chart/combinedxychart.h>
 
-//#include<widget/achart/chart/timechart.h>
+#include<widget/achart/chart/timechart.h>
 #include<widget/achart/chart/rangestackedbarchart.h>
 #include<widget/achart/chart/rangebarchart.h>
 #include<widget/achart/chart/barchart.h>
@@ -125,9 +125,9 @@ void CombinedXYChart::configureTargetRangeChart(XYChart* chart, int seriesIndex)
 }
 
 XYChart* CombinedXYChart::getXYChart(const std::string& type) const{
-    /*if (type == "Time") {
+    if (type == "Time") {
         return new TimeChart();
-    }*/
+    }
     if (type == "Line") {
         return new LineChart(mDataset, mRenderer);
     }
@@ -149,12 +149,12 @@ XYChart* CombinedXYChart::getXYChart(const std::string& type) const{
     if (type == "RangeStackedBar") {
         return new RangeStackedBarChart();
     }
-    if (type == "DragControl") {
+    /*if (type == "DragControl") {
         return new DragControlChart(mDataset, mRenderer);
     }
     if (type == TargetRangeChart::TYPE) {
         return new TargetRangeChart();
-    }
+    }*/
     return nullptr;
 }
 

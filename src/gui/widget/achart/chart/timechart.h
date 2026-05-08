@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef __TIME_CHART_H__
-#define __TIME_CHART_H__
+#ifndef __ACHART_TIME_CHART_H__
+#define __ACHART_TIME_CHART_H__
 
 #include <widget/achart/chart/linechart.h>
 
@@ -25,31 +25,30 @@ namespace cdroid{
 class TimeChart :public LineChart {
 public:
     static constexpr long DAY = 24 * 60 * 60 * 1000;
+    class DateFormat {
+    private:
+        std::string mPattern;
+    public:
+        DateFormat(const std::string& fmt_pattern);
+        std::string format(std::int64_t timestamp_ms) const;
+    };
 private:
     /** The date format pattern to be used in formatting the X axis labels. */
     std::string mDateFormat;
     /** The starting point for labels. */
-    double mStartPoint;
+    mutable double mStartPoint;
 
-    DateFormat getDateFormat(double start, double end);
+    std::string getDateFormat(double start, double end)const;
 protected:
-    void drawXLabels(std::vector<double>& xLabels, std::vector<double>& xTextLabelLocations, Canvas& canvas,
-                Paint paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX)override;
-    std::vector<double> getXLabels(double min, double max, int count)override;
+    void drawXLabels(const std::vector<double>& xLabels,const std::vector<double>& xTextLabelLocations, Canvas& canvas,
+                Paint& paint, int left, int top, int bottom, double xPixelsPerUnit, double minX, double maxX)override;
+    std::vector<double> getXLabels(double min, double max, int count)const override;
 public:
     TimeChart();
-
     TimeChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset, const std::shared_ptr<XYMultipleSeriesRenderer>& renderer);
-
-    std::string getDateFormat() const{
-        return mDateFormat;
-    }
-
-    void setDateFormat(const std::string& format) {
-        mDateFormat = format;
-    }
-
+    std::string getDateFormat() const;
+    void setDateFormat(const std::string& format);
     std::string getChartType() const override;
 };
 }/*endof namespace*/
-#endif/*__TIME_CHART_H__*/
+#endif/*__ACHART_TIME_CHART_H__*/

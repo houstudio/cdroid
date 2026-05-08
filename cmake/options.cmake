@@ -53,8 +53,6 @@ cmake_dependent_option(ENABLE_GIF "enable gif encode and decoder" ON "GIF_FOUND"
 cmake_dependent_option(ENABLE_JPEG "enable jpeg decoder" ON "JPEG_FOUND" OFF)
 cmake_dependent_option(ENABLE_WEBP "enable webp decoder" ON "WEBP_FOUND" OFF)
 cmake_dependent_option(ENABLE_OPENJPEG "enable openjpeg(jpeg2000)" ON "OPENJPEG_FOUND" OFF)
-cmake_dependent_option(ENABLE_PLPLOT "Enable PLPLot" ON "PLPLOT_FOUND" OFF)
-cmake_dependent_option(ENABLE_MATHGL "Enable MathGL" OFF "MATHGL_FOUND" OFF)
 cmake_dependent_option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON "RTAUDIO_FOUND" OFF)
 cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" OFF "zint_FOUND" OFF)
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)

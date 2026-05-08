@@ -10,7 +10,9 @@
 #include <widget/achart/chart/dialchart.h>
 #include <widget/achart/chart/doughnutchart.h>
 #include <widget/achart/chart/combinedxychart.h>
+#include <widget/achart/chart/combinedtimechart.h>
 #include <widget/achart/chart/linechart.h>
+#include <widget/achart/chart/timechart.h>
 #include <widget/achart/chart/bubblechart.h>
 #include <widget/achart/chart/scatterchart.h>
 #include <widget/achart/chart/cubiclinechart.h>

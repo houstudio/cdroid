@@ -41,4 +41,4 @@ set(ACHART_SRCS
 
 add_library(achart STATIC ${ACHART_SRCS})
 add_executable(acharttest main.cc)
-target_link_libraries(acharttest cdroid achart)
+target_link_libraries(acharttest cdroid)
