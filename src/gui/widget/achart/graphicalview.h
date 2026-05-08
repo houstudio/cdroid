@@ -54,6 +54,7 @@ protected:
     void checkRange(std::vector<double>& range, int scale);
     double getAxisRatio(std::vector<double>& range) const;
     bool handleTouch(MotionEvent& event);
+    void handleSelection(int,int);
     void zoom(int axis,float zoomrate,bool zoomIn);
     void pan(float oldX, float oldY, float newX, float newY);
     void notifyPanListeners();

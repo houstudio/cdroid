@@ -272,7 +272,6 @@ void GraphicalView::onDraw(Canvas& canvas) {
         mZoomR.set(width - zoomSize * 3, height - zoomSize * 0.775f, zoomSize*3,zoomSize*3);
         canvas.rectangle(mZoomR.left,mZoomR.top,mZoomR.width,mZoomR.height);
         canvas.fill();
-        LOGD("rend zoomR(%.f,%.f,%.f,%.f) %d,%d",mZoomR.left,mZoomR.top,mZoomR.width,mZoomR.height,width,height);
         /*float buttonY = top + height - zoomSize * 0.625f;
         canvas.drawBitmap(zoomInImage, left + width - zoomSize * 2.75f, buttonY, null);
         canvas.drawBitmap(zoomOutImage, left + width - zoomSize * 1.75f, buttonY, null);
@@ -332,6 +331,7 @@ void GraphicalView::zoomReset() {
     } else {
         mRenderer->setScale(mRenderer->getOriginalScale());
     }
+    notifyZoomResetListeners();
     invalidate();
 }
 
@@ -351,7 +351,7 @@ void GraphicalView::removeZoomListener(const ZoomListener& listener) {
 
 void GraphicalView::addPanListener(const PanListener& listener) {
     auto it =std::find(mPanListeners.begin(),mPanListeners.end(),listener);
-    if(it == mPanListeners.end()){
+    if((listener!=nullptr)&&(it == mPanListeners.end())){
         mPanListeners.push_back(listener);
     }
 }
@@ -371,13 +371,17 @@ void GraphicalView::notifyPanListeners(){
 
 void GraphicalView::notifyZoomListeners(float zoomRate,bool zoomIn) {
     for (ZoomListener& listener : mZoomListeners) {
-        listener.zoomApplied(zoomRate,zoomIn);
+        if(listener.zoomApplied){
+            listener.zoomApplied(zoomRate,zoomIn);
+        }
     }
 }
 
 void GraphicalView::notifyZoomResetListeners() {
     for (ZoomListener& listener : mZoomListeners) {
-        listener.zoomReset();
+        if(listener.zoomReset){
+            listener.zoomReset();
+        }
     }
 }
 
@@ -430,8 +434,7 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
                 oldY2 = newY2;
             } else if (mRenderer->isPanEnabled()) {
                 pan(oldX, oldY, newX, newY);
-                oldX2 = 0;LOGD("Pan(%.f,%.f->%.f,%.f)",oldX, oldY, newX, newY);
-                oldY2 = 0;
+                oldX2 = oldY2 = 0;
             }
             oldX = newX;
             oldY = newY;
@@ -452,16 +455,27 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
             return true;
         }
     } else if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_POINTER_UP) {
-        oldX = 0;
-        oldY = 0;
-        oldX2 = 0;
-        oldY2 = 0;
+        const int slop=ViewConfiguration::getTouchSlop();
+        const int tapTime=ViewConfiguration::getTapTimeout();
+        LOGD("duration=%d %d",int(event.getEventTime() - event.getDownTime()),tapTime);
+        if( (event.getEventTime() - event.getDownTime()<=tapTime)
+                && (event.getX(0)-oldX<slop) && (event.getY(0)-oldY<slop)){
+            handleSelection(oldX,oldY);
+        }
+        oldX = oldY = 0;
+        oldX2 = oldY2 =0;
         if (action == MotionEvent::ACTION_POINTER_UP) {
-            oldX = -1;
-            oldY = -1;
+            oldX = oldY = -1;
         }
     }
     return !mRenderer->isClickEnabled();
+}
+
+void GraphicalView::handleSelection(int x,int y){
+    SeriesSelection* selection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)});
+    LOGD_IF(selection,"%d,%d",selection->getSeriesIndex(),selection->getPointIndex());
+    invalidate();
+    delete selection;
 }
 
 Bitmap GraphicalView::toBitmap() {

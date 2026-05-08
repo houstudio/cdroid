@@ -829,7 +829,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                     if((mKeyMap==nullptr)||mKeyMap->mapKey(mVirtualScanCode/*scancode*/,0,&mVirtualKeyCode/*keycode*/,(uint32_t*)&keyFlags)){
                         mVirtualKeyCode = mVirtualScanCode;/*mapKey failed or no map specified*/
                     }
-                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                    KeyEvent*k = KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
                         getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                     mEvents.push_back(k);
                     k->recycle();
@@ -837,7 +837,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 }
             }
             if(mVirtualScanCode==0){
-                mEvent = MotionEvent::obtain(mMoveTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
                 LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                      mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
@@ -849,7 +849,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 mEvent->recycle();
             }
             if((action==MotionEvent::ACTION_UP)&&mVirtualScanCode){
-                KeyEvent*k=KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                KeyEvent*k=KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
                         getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                 mEvents.push_back(k);
                 k->recycle();
