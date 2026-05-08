@@ -46,10 +46,10 @@ void GraphicalView::setYRange(double min, double max, int scale) {
 
 std::vector<double> GraphicalView::getRange(int scale) const {
     auto renderer = std::dynamic_pointer_cast<XYMultipleSeriesRenderer>(mRenderer);
-    double minX = renderer->getXAxisMin(scale);
-    double maxX = renderer->getXAxisMax(scale);
-    double minY = renderer->getYAxisMin(scale);
-    double maxY = renderer->getYAxisMax(scale);
+    const double minX = renderer->getXAxisMin(scale);
+    const double maxX = renderer->getXAxisMax(scale);
+    const double minY = renderer->getYAxisMin(scale);
+    const double maxY = renderer->getYAxisMax(scale);
     return { minX, maxX, minY, maxY };
 }
 
@@ -157,7 +157,7 @@ void GraphicalView::zoom(int zoomAxis,float zoomRate,bool zoomIn) {
         }
     }
     invalidate();
-    notifyZoomListeners(ZoomEvent(zoomIn, zoomRate));
+    notifyZoomListeners(zoomIn, zoomRate);
 }
  
 double GraphicalView::getAxisRatio(std::vector<double>& range) const {
@@ -177,7 +177,7 @@ void GraphicalView::pan(float oldX, float oldY, float newX, float newY) {
         auto renderer = std::dynamic_pointer_cast<XYMultipleSeriesRenderer>(mRenderer);
         const int scales = renderer->getScalesCount();
         std::vector<double> limits = renderer->getPanLimits();
-        const bool limited = /*limits != null &&*/ limits.size() == 4;
+        const bool limited = limits.size() == 4;
         XYChart* chart = (XYChart*) mChart;
         for (int scale = 0; scale < scales; scale++) {
             auto range = getRange(scale);
@@ -251,8 +251,7 @@ SeriesSelection* GraphicalView::getCurrentSeriesAndPoint() const {
 
 std::vector<double> GraphicalView::toRealPoint(int scale) {
     if (dynamic_cast<XYChart*>(mChart)) {
-        XYChart* chart = (XYChart*) mChart;
-        return chart->toRealPoint(oldX, oldY, scale);
+        return ((XYChart*) mChart)->toRealPoint(oldX, oldY, scale);
     }
     return {};
 }
@@ -331,7 +330,6 @@ void GraphicalView::zoomReset() {
             }
         }
     } else {
-        //DefaultRenderer renderer = ((RoundChart*) mChart).getRenderer();
         mRenderer->setScale(mRenderer->getOriginalScale());
     }
     invalidate();
@@ -365,29 +363,18 @@ void GraphicalView::removePanListener(const PanListener& listener) {
     }
 }
 
-void GraphicalView::addMoveListener(const MoveListener& listener) {
-    //mTouchHandler->addMoveListener(listener);
-}
-
-void GraphicalView::removeMoveListener(const MoveListener& listener) {
-    //mTouchHandler->removeMoveListener(listener);
-}
-
 void GraphicalView::notifyPanListeners(){
     for (PanListener& listener : mPanListeners) {
         listener();//.panApplied();
     }
 }
 
-void GraphicalView::notifyZoomListeners(const ZoomEvent& e) {
+void GraphicalView::notifyZoomListeners(float zoomRate,bool zoomIn) {
     for (ZoomListener& listener : mZoomListeners) {
-        listener.zoomApplied(e);
+        listener.zoomApplied(zoomRate,zoomIn);
     }
 }
 
-  /**
-   * Notify the zoom listeners about a zoom reset.
-   */
 void GraphicalView::notifyZoomResetListeners() {
     for (ZoomListener& listener : mZoomListeners) {
         listener.zoomReset();

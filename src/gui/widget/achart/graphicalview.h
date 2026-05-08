@@ -12,33 +12,12 @@ namespace cdroid{
  */
 class GraphicalView :public View {
 public:
-    class ZoomEvent {
-    private:
-        /** A flag to be used to know if this is a zoom in or out. */
-        bool mZoomIn;
-        /** The zoom rate. */
-        float mZoomRate;
-    public:
-        ZoomEvent(bool in, float rate) {
-            mZoomIn = in;
-            mZoomRate = rate;
-        }
-
-        bool isZoomIn() const{
-            return mZoomIn;
-        }
-        float getZoomRate() const{
-            return mZoomRate;
-        }
-    };
     class ZoomListener:public EventSet{
     public:
-        std::function<void(const ZoomEvent&)>zoomApplied;
+        std::function<void(float zoomRate,bool isZoomIm)>zoomApplied;
         std::function<void()> zoomReset;
     };
-    using MoveListener = CallbackBase<void>;/*moveApplied*/
     using PanListener = CallbackBase<void>;/*panApplied*/
-
 private:
   /** The chart to be drawn. */
     AbstractChart* mChart;
@@ -78,7 +57,7 @@ protected:
     void zoom(int axis,float zoomrate,bool zoomIn);
     void pan(float oldX, float oldY, float newX, float newY);
     void notifyPanListeners();
-    void notifyZoomListeners(const ZoomEvent& e);
+    void notifyZoomListeners(float zoomrate,bool isZoomin);
     void notifyZoomResetListeners();
 public:
     GraphicalView(Context*,const AttributeSet&);
@@ -153,19 +132,6 @@ public:
      * @param listener pan listener
      */
     void removePanListener(const PanListener& listener);
-    /**
-     * Adds a new move listener.
-     * 
-     * @param listener move listener
-     */
-    void addMoveListener(const MoveListener& listener);
-  
-    /**
-     * Removes a move listener.
-     * 
-     * @param listener move listener
-     */
-    void removeMoveListener(const MoveListener& listener);
 
     bool onTouchEvent(MotionEvent& event) override;
   
