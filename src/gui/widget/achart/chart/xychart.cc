@@ -206,11 +206,10 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
 
         std::vector<float> points;
         std::vector<double> values;
-        float yAxisValue = std::min((float)bottom, (float) (bottom + yPixelsPerUnit[scale] * minY[scale]));
+        const float yAxisValue = std::min((float)bottom, (float) (bottom + yPixelsPerUnit[scale] * minY[scale]));
         std::vector<ClickableArea>& clickableArea = mClickableAreas[i];
 
-        std::map<double, double> range = series->getRange(minX[scale], maxX[scale],
-                                          seriesRenderer->isDisplayBoundingPoints());
+        auto range = series->getRange(minX[scale], maxX[scale], seriesRenderer->isDisplayBoundingPoints());
         int startIndex = -1;
         clickableArea.clear();
         for (auto&value : range) {
@@ -276,9 +275,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         drawBackground(mRenderer, canvas, x, y, left - x, height - y, paint, true, mRenderer->getMarginsColor());
     }
 
-    bool showTickMarks = mRenderer->isShowTickMarks();
-    bool showCustomTextGridX = mRenderer->isShowCustomTextGridX();
-    bool showCustomTextGridY = mRenderer->isShowCustomTextGridY();
+    const bool showTickMarks = mRenderer->isShowTickMarks();
+    const bool showCustomTextGridX = mRenderer->isShowCustomTextGridX();
+    const bool showCustomTextGridY = mRenderer->isShowCustomTextGridY();
     if (showLabels || showGridX) {
         std::vector<double> xLabels = getValidLabels(getXLabels(minX[0], maxX[0], mRenderer->getXLabels()));
         std::map<int, std::vector<double>> allYLabels = getYLabels(minY, maxY, maxScaleNumber);

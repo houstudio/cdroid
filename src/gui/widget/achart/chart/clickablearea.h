@@ -24,7 +24,6 @@ private:
     double y;
 public:
     ClickableArea()=default;
-    //ClickableArea(ClickableArea&&)=default;
     ClickableArea(const ClickableArea&)=default;
     ClickableArea(const RectF& rect, double x, double y) {
         this->rect = rect;
