@@ -246,7 +246,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         paint.setColor(mRenderer->getLabelsColor());
         if (count > 0) {
             canvas.set_color(mRenderer->getLabelsColor());
-            //paint->setTextSize(mRenderer->getAnnotationsTextSize());
+            //canvas.set_font_size(mRenderer->getAnnotationsTextSize());
             //paint.setTextAlign(mRenderer->getAnnotationsTextAlign());
             Rect bound;
             for (int j = 0; j < count; j++) {
@@ -264,9 +264,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             auto clickableAreasForSubSeries = clickableAreasForPoints(points, values, yAxisValue, i, startIndex);
             clickableArea.insert(clickableArea.end(),clickableAreasForSubSeries.begin(),clickableAreasForSubSeries.end());
         }
-        LOGD("series[%d] %d/%d area",i,clickableArea.size(),range.size());
     }/*endof for*/
-    LOGD("%p(%s) %d areas",this,getChartType().c_str(),mClickableAreas.size());
     // draw stuff over the margins such as data doesn't render on these areas
     drawBackground(mRenderer, canvas, x, bottom, width, height - bottom, paint, true, mRenderer->getMarginsColor());
     drawBackground(mRenderer, canvas, x, y, width, margins[0], paint, true, mRenderer->getMarginsColor());

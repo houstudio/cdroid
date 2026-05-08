@@ -5,26 +5,45 @@
 #include <widget/achart/chart/roundchart.h>
 #include <widget/achart/renderer/defaultrenderer.h>
 #include <widget/achart/model/seriesselection.h>
-#include <widget/achart/touchhandler.h>
+//#include <widget/achart/touchhandler.h>
 namespace cdroid{
 /**
  * The view that encapsulates the graphical chart.
  */
 class GraphicalView :public View {
 public:
-    using MoveListener=TouchHandler::MoveListener;
-    using PanListener =TouchHandler::PanListener;
-    using ZoomListener=TouchHandler::ZoomListener;
-    using ZoomEvent = TouchHandler::ZoomEvent;
+    class ZoomEvent {
+    private:
+        /** A flag to be used to know if this is a zoom in or out. */
+        bool mZoomIn;
+        /** The zoom rate. */
+        float mZoomRate;
+    public:
+        ZoomEvent(bool in, float rate) {
+            mZoomIn = in;
+            mZoomRate = rate;
+        }
+
+        bool isZoomIn() const{
+            return mZoomIn;
+        }
+        float getZoomRate() const{
+            return mZoomRate;
+        }
+    };
+    class ZoomListener:public EventSet{
+    public:
+        std::function<void(const ZoomEvent&)>zoomApplied;
+        std::function<void()> zoomReset;
+    };
+    using MoveListener = CallbackBase<void>;/*moveApplied*/
+    using PanListener = CallbackBase<void>;/*panApplied*/
+
 private:
   /** The chart to be drawn. */
     AbstractChart* mChart;
     /** The chart renderer. */
     std::shared_ptr<DefaultRenderer> mRenderer;
-    /** The view bounds. */
-    Rect mRect;
-    /** The user interface thread handler. */
-    Handler* mHandler;
     /** The zoom buttons rectangle. */
     RectF mZoomR;
     /** The zoom in icon. */
@@ -33,30 +52,32 @@ private:
     Bitmap zoomOutImage;
     /** The fit zoom icon. */
     Bitmap fitZoomImage;
-    /** The zoom area size. */
-    int zoomSize = 50;
     /** The zoom buttons background color. */
     static constexpr int ZOOM_BUTTONS_COLOR = 0xAF969696;
-    /** The zoom in tool. */
-    TouchHandler::Zoom* mZoomIn;
-    /** The zoom out tool. */
-    TouchHandler::Zoom* mZoomOut;
-    /** The fit zoom tool. */
-    TouchHandler::FitZoom* mFitZoom;
-    /** The paint to be used when drawing the chart. */
-    //Paint mPaint = new Paint();
-    /** The touch handler. */
-    TouchHandler* mTouchHandler;
     /** The old x coordinate. */
-    float oldX;
+    float oldX,oldX2;
     /** The old y coordinate. */
-    float oldY;
+    float oldY,oldY2;
+    float mZoomRate;
     /** If the graphical view is drawn. */
     bool mDrawn;
+    bool bZoomIn;
+    std::vector<PanListener> mPanListeners;
+    std::vector<ZoomListener> mZoomListeners;
+    static constexpr int ZOOM_AXIS_X=1;
+    static constexpr int ZOOM_AXIS_Y=2;
+    static constexpr int ZOOM_AXIS_XY=3;
 protected:
-    friend TouchHandler;
     void onDraw(Canvas& canvas) override;
     RectF getZoomRectangle()const;
+    void setXRange(double min, double max, int scale);
+    void setYRange(double min, double max, int scale);
+    std::vector<double>getRange(int scale)const;
+    void checkRange(std::vector<double>& range, int scale);
+    double getAxisRatio(std::vector<double>& range) const;
+    bool handleTouch(MotionEvent& event);
+    void zoom(int axis,float zoomrate,bool zoomIn);
+    void pan(float oldX, float oldY, float newX, float newY);
 public:
     GraphicalView(Context*,const AttributeSet&);
     ~GraphicalView()override;
@@ -145,20 +166,6 @@ public:
     void removeMoveListener(const MoveListener& listener);
 
     bool onTouchEvent(MotionEvent& event) override;
-  
-    /**
-     * Schedule a view content repaint.
-     */
-    void repaint();
-    /**
-     * Schedule a view content repaint, in the specified rectangle area.
-     * 
-     * @param left the left position of the area to be repainted
-     * @param top the top position of the area to be repainted
-     * @param right the right position of the area to be repainted
-     * @param bottom the bottom position of the area to be repainted
-     */
-    void repaint(int left, int top, int right, int bottom);
   
     /**
      * Saves the content of the graphical view to a bitmap.

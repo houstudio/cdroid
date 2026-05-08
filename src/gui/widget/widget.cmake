@@ -161,11 +161,6 @@ if(ENABLE_ACHART)
         widget/achart/chart/rangestackedbarchart.h
         widget/achart/graphicalview.cc
         widget/achart/chartfactory.cc
-        widget/achart/touchhandler.cc
-        widget/achart/tools/abstracttool.cc
-        widget/achart/tools/move.cc
-        widget/achart/tools/pan.cc
-        widget/achart/tools/zoom.cc
     )
 endif(ENABLE_ACHART)
 
