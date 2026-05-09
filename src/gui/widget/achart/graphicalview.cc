@@ -37,7 +37,6 @@ GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
             if (dynamic_cast<DragControlChart*>(charts[i]) != nullptr) {
                 mOverlaySeriesIndex=i;
                 LOGD("mOverlaySeriesIndex=%d",mOverlaySeriesIndex);
-                //mMove = std::make_unique<tools::Move>(mGraphicalView, static_cast<int>(i));
                 break;
             }
         }
@@ -287,10 +286,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     const std::vector<double> limitPoint1 = chart->toScreenPoint({limits[0], 0.0});
     const std::vector<double> limitPoint2 = chart->toScreenPoint({limits[1], 0.0});
     const std::vector<double> realPoint = chart->toRealPoint(newX, 0.0f);
-    if ((oldPoint1.size() < 1) || (oldPoint2.size() < 1)
-            || (limitPoint1.size() < 1) || (limitPoint2.size() < 1) || (realPoint.size() < 1) ) {
-        return false;
-    }
 
     const double oldScreenX1 = oldPoint1[0];
     const double oldScreenX2 = oldPoint2[0];
@@ -335,6 +330,7 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     invalidate();
     series->add(newRealX1, 0.0);
     series->add(newRealX2, 0.0);
+    //LOGD("(%.2f,%.2f)",newRealX1,newRealX2);
     //notifyMoveListeners();
     return true;
 }
