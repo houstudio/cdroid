@@ -17,6 +17,7 @@ public:
         std::function<void(GraphicalView&view,float zoomRate,bool isZoomIm)>onZoom;
         std::function<void(GraphicalView&)> onZoomReset;
         std::function<void(GraphicalView&)> onPanned;
+        std::function<void(GraphicalView&,double oldX1,double oldX2,double newX1,double newX2)> onMoved;
     };
 private:
   /** The chart to be drawn. */

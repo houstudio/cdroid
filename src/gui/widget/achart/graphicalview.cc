@@ -331,7 +331,11 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     series->add(newRealX1, 0.0);
     series->add(newRealX2, 0.0);
     //LOGD("(%.2f,%.2f)",newRealX1,newRealX2);
-    //notifyMoveListeners();
+    for(auto l:mListeners){
+        if(l.onMoved){
+            l.onMoved(*this,oldRealX1,oldRealX2,newRealX1,newRealX2);
+        }
+    }
     return true;
 }
 
