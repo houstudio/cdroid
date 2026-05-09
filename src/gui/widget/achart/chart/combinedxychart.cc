@@ -149,12 +149,12 @@ XYChart* CombinedXYChart::getXYChart(const std::string& type) const{
     if (type == "RangeStackedBar") {
         return new RangeStackedBarChart();
     }
-    /*if (type == "DragControl") {
+    if (type == "DragControl") {
         return new DragControlChart(mDataset, mRenderer);
     }
     if (type == TargetRangeChart::TYPE) {
         return new TargetRangeChart();
-    }*/
+    }
     return nullptr;
 }
 
