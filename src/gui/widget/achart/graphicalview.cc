@@ -172,7 +172,7 @@ void GraphicalView::zoom(int zoomAxis,float zoomRate,bool zoomIn) {
         }
     }
     invalidate();
-    notifyZoomListeners(zoomIn, zoomRate);
+    notifyZoomListeners(zoomRate, zoomIn);
 }
  
 double GraphicalView::getAxisRatio(std::vector<double>& range) const {
@@ -374,6 +374,10 @@ void GraphicalView::setZoomRate(float rate) {
     mZoomRate = rate;
 }
 
+float GraphicalView::getZoomRate()const{
+    return mZoomRate;
+}
+
 void GraphicalView::zoomIn() {
     zoom(ZOOM_AXIS_XY,mZoomRate,true);
 }
@@ -425,52 +429,40 @@ void GraphicalView::zoomReset() {
     invalidate();
 }
 
-void GraphicalView::addZoomListener(const ZoomListener& listener, bool onButtons, bool onPinch) {
-    auto it = std::find(mZoomListeners.begin(),mZoomListeners.end(),listener);
-    if(it == mZoomListeners.end()){
-        mZoomListeners.push_back(listener);
+void GraphicalView::addChartListener(const ChartListener& listener) {
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it == mListeners.end()){
+        mListeners.push_back(listener);
     }
 }
 
-void GraphicalView::removeZoomListener(const ZoomListener& listener) {
-    auto it = std::find(mZoomListeners.begin(),mZoomListeners.end(),listener);
-    if(it != mZoomListeners.end()){
-        mZoomListeners.erase(it);
-    }
-}
-
-void GraphicalView::addPanListener(const PanListener& listener) {
-    auto it =std::find(mPanListeners.begin(),mPanListeners.end(),listener);
-    if((listener!=nullptr)&&(it == mPanListeners.end())){
-        mPanListeners.push_back(listener);
-    }
-}
-
-void GraphicalView::removePanListener(const PanListener& listener) {
-    auto it =std::find(mPanListeners.begin(),mPanListeners.end(),listener);
-    if(it!=mPanListeners.end()){
-        mPanListeners.erase(it);
+void GraphicalView::removeChartListener(const ChartListener& listener) {
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it != mListeners.end()){
+        mListeners.erase(it);
     }
 }
 
 void GraphicalView::notifyPanListeners(){
-    for (PanListener& listener : mPanListeners) {
-        listener();//.panApplied();
+    for (ChartListener& listener : mListeners) {
+        if(listener.onPanned){
+            listener.onPanned(*this);
+        }
     }
 }
 
 void GraphicalView::notifyZoomListeners(float zoomRate,bool zoomIn) {
-    for (ZoomListener& listener : mZoomListeners) {
-        if(listener.zoomApplied){
-            listener.zoomApplied(zoomRate,zoomIn);
+    for (ChartListener& listener : mListeners) {
+        if(listener.onZoom){
+            listener.onZoom(*this,zoomRate,zoomIn);
         }
     }
 }
 
 void GraphicalView::notifyZoomResetListeners() {
-    for (ZoomListener& listener : mZoomListeners) {
-        if(listener.zoomReset){
-            listener.zoomReset();
+    for (ChartListener& listener : mListeners) {
+        if(listener.onZoomReset){
+            listener.onZoomReset(*this);
         }
     }
 }
