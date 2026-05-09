@@ -43,40 +43,40 @@ void DragControlChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float
     if (points.size() < 4) {
         return;
     }
-    const Rect screen = getScreenR();
     float leftHandleX = points.at(0);
     float rightHandleX = points.at(2);
     if (leftHandleX > rightHandleX) {
         std::swap(leftHandleX, rightHandleX);
     }
 
-    const float chartLeft = static_cast<float>(screen.left);
-    const float chartRight = static_cast<float>(screen.right());
-    leftHandleX = std::max(chartLeft, std::min(leftHandleX, chartRight));
-    rightHandleX = std::max(leftHandleX + kMinimumHandleGap, std::min(rightHandleX, chartRight));
-    if (rightHandleX > chartRight) {
-        rightHandleX = chartRight;
-        leftHandleX = std::min(leftHandleX, rightHandleX - kMinimumHandleGap);
-    }
+    //const float chartLeft = static_cast<float>(screen.left);
+    //const float chartRight = static_cast<float>(screen.right());
+    //leftHandleX = std::max(chartLeft, std::min(leftHandleX, chartRight));
+    //rightHandleX = std::max(leftHandleX + kMinimumHandleGap, std::min(rightHandleX, chartRight));
+    //if (rightHandleX > chartRight) {
+    //    rightHandleX = chartRight;
+    //    leftHandleX = std::min(leftHandleX, rightHandleX - kMinimumHandleGap);
+    //}
 
     const float overlayTop = 0.0f;
-    const float overlayBottom = static_cast<float>(std::max(m_height, screen.bottom()));
+    const auto screen = getScreenR();
+    const float overlayBottom = screen.bottom();//static_cast<float>(std::max(m_height, screen.bottom()));
     const float handleTop = static_cast<float>(screen.top);
     const float handleBottom = static_cast<float>(screen.bottom());
     const float handleHalfWidth = std::min(kDefaultHandleHalfWidth,
                                            std::max(4.0f, screen.width / 20.0f));
 
     canvas.set_color(kOverlayColor);
-    if (leftHandleX > 0.0f) {
+   /* if (leftHandleX > 0.0f) {
         canvas.rectangle(0, static_cast<int>(overlayTop), std::round(leftHandleX),
                          std::round(overlayBottom - overlayTop));
         canvas.fill();
     }
-    if (rightHandleX < m_width) {
+    if (rightHandleX < screen.right()){//m_width) {
         canvas.rectangle(std::round(rightHandleX), static_cast<int>(overlayTop),
                          std::round(m_width - rightHandleX), std::round(overlayBottom - overlayTop));
         canvas.fill();
-    }
+    }*/
 
     const auto drawHandle = [&](float centerX) {
         const int left = std::round(centerX - handleHalfWidth);

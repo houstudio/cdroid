@@ -195,8 +195,8 @@ cdroid::GraphicalView* createOverviewChart(cdroid::Context* context) {
     dataset->addSeries(signalSeries);
 
     auto dragSeries = std::make_shared<cdroid::XYSeries>("DragControl");
-    dragSeries->add(2.0, 0.0);
-    dragSeries->add(7.5, 0.0);
+    dragSeries->add(0.0, 0.0);
+    dragSeries->add(8.0, 0.0);
     dataset->addSeries(dragSeries);
 
     auto targetSeries = std::make_shared<cdroid::XYSeries>("TargetRange");

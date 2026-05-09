@@ -60,4 +60,53 @@ void RoundChart::setCenterX(int centerX) {
 void RoundChart::setCenterY(int centerY) {
     mCenterY = centerY;
 }
+
+SeriesSelection* RoundChart:: getSeriesAndPointForScreenCoordinate(const PointF& point)const{
+    SeriesSelection* selection = AbstractChart::getSeriesAndPointForScreenCoordinate(point);
+    if (selection != nullptr) {
+        return selection;
+    }    
+    return getSectorForScreenCoordinate(point);
+}
+
+SeriesSelection* RoundChart::getSectorForScreenCoordinate(const PointF& point) const{
+    if (mDataset == nullptr || mDataset->getItemCount() == 0) {
+        return nullptr;
+    }
+#if 0 
+    double radius = getRadius();
+    // 计算点击点与圆心的距离
+    double distance = std::sqrt(
+        std::pow(point.x - mCenterX, 2) + std::pow(point.y - mCenterY, 2)
+    );
+    
+    // 检查是否在饼图有效半径范围内
+    double outerRadius = getOuterRadius();
+    double innerRadius = getInnerRadius(); // 甜甜圈图的内半径
+    
+    if (distance > outerRadius || distance < innerRadius) {
+        return nullptr; // 点不在扇形区域内
+    }
+    
+    // 计算角度
+    double angle = std::atan2(point.y - mCenterY, point.x - ,mCenterX)*180.0/M_PI;
+    if (angle < 0) angle += 360; // 转换为0-360度范围
+    
+    // 找到对应的扇形
+    const int itemCount = mDataset->getItemCount();
+    double totalValue = calculateTotalValue(mDataset, 0);
+    double currentAngle = mRenderer->getStartAngle(); // 起始角度
+    
+    for (int i = 0; i < itemCount; i++) {
+        double value = mDataset->getValue(0, i);
+        double sectorAngle = (value / totalValue) * 360.0;
+        
+        if (angle >= currentAngle && angle < currentAngle + sectorAngle) {
+            return new SeriesSelection(0, i, value); // seriesIndex=0, pointIndex=i
+        }
+        currentAngle += sectorAngle;
+    }
+#endif
+    return nullptr;
+}
 }/*endof namespace*/

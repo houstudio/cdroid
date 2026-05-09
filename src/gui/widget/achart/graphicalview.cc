@@ -283,7 +283,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     if (limits.size() < 2) {
         return false;
     }
-
     const double oldRealX1 = series->getX(0);
     const double oldRealX2 = series->getX(1);
     const std::vector<double> oldPoint1 = chart->toScreenPoint({oldRealX1, 0.0});
@@ -308,7 +307,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     double newRealX1 = oldRealX1;
     double newRealX2 = oldRealX2;
     const double mDragBuffer = 16.0;
-    LOGD("oldX=%.f oldScreenX=%.f,%.f ",oldX,oldScreenX1,oldScreenX2);
     if ((mDraggingLeft || std::fabs(oldX - oldScreenX1) < mDragBuffer) && !mMoving) {
         mDraggingLeft = true;
         if (newRealX < oldRealX2 - renderer->getZoomInLimitX() && newX >= limitScreenX1) {

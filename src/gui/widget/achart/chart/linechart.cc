@@ -66,7 +66,7 @@ void LineChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
                 referencePoint = yAxisValue;
                 break;
             case XYSeriesRenderer::FillOutsideLine::BELOW:
-                referencePoint = m_height;//canvas.getHeight();
+                referencePoint = (dynamic_cast<Cairo::ImageSurface*>(canvas.get_target().get()))->get_height();//m_height;//canvas.getHeight();
                 break;
             case XYSeriesRenderer::FillOutsideLine::ABOVE:
                 referencePoint = 0;
