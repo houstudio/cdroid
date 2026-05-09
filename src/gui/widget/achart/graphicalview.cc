@@ -1,4 +1,6 @@
 #include <widget/achart/graphicalview.h>
+#include <widget/achart/chart/combinedxychart.h>
+#include <widget/achart/chart/dragcontrolchart.h>
 namespace cdroid {
 DECLARE_WIDGET(GraphicalView)
 GraphicalView::GraphicalView(Context*ctx,const AttributeSet&attr):View(ctx,attr) {
@@ -9,6 +11,8 @@ GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
     mChart = chart;
     mZoomRate = 1.25f;
     setClickable(true);
+    mDraggingLeft=mDraggingRight=false;
+    mMoving = false;
     if (dynamic_cast<XYChart*>(mChart)) {
         mRenderer = ((XYChart*) mChart)->getRenderer();
     } else {
@@ -25,6 +29,18 @@ GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
 
     if (mRenderer->isZoomEnabled() ){//&& mRenderer->isZoomButtonsVisible()|| mRenderer->isExternalZoomEnabled()){
         mZoomRate = mRenderer->getZoomRate();
+    }
+    mOverlaySeriesIndex = -1;
+    if(dynamic_cast<CombinedXYChart*>(mChart)!=nullptr){
+        const std::vector<XYChart*> charts = ((CombinedXYChart*)mChart)->getCharts();
+        for (size_t i = 0; i < charts.size(); ++i) {
+            if (dynamic_cast<DragControlChart*>(charts[i]) != nullptr) {
+                mOverlaySeriesIndex=i;
+                LOGD("mOverlaySeriesIndex=%d",mOverlaySeriesIndex);
+                //mMove = std::make_unique<tools::Move>(mGraphicalView, static_cast<int>(i));
+                break;
+            }
+        }
     }
 }
 
@@ -245,6 +261,86 @@ void GraphicalView::pan(float oldX, float oldY, float newX, float newY) {
     return;
 }
 
+bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
+    auto* chart = dynamic_cast<CombinedXYChart*>(mChart);
+    auto renderer = std::dynamic_pointer_cast<XYMultipleSeriesRenderer>(mRenderer);
+    if ( (renderer == nullptr) || (chart == nullptr) ) {
+        return false;
+    }
+
+    auto dataset = chart->getDataset();
+    if ( (dataset == nullptr) || (mOverlaySeriesIndex < 0)
+            || mOverlaySeriesIndex >= dataset->getSeriesCount()) {
+        return false;
+    }
+
+    auto series = dataset->getSeriesAt(mOverlaySeriesIndex);
+    if ((series == nullptr )|| (series->getItemCount() < 2)) {
+        return false;
+    }
+
+    const std::vector<double> limits = renderer->getPanLimits();
+    if (limits.size() < 2) {
+        return false;
+    }
+
+    const double oldRealX1 = series->getX(0);
+    const double oldRealX2 = series->getX(1);
+    const std::vector<double> oldPoint1 = chart->toScreenPoint({oldRealX1, 0.0});
+    const std::vector<double> oldPoint2 = chart->toScreenPoint({oldRealX2, 0.0});
+    const std::vector<double> limitPoint1 = chart->toScreenPoint({limits[0], 0.0});
+    const std::vector<double> limitPoint2 = chart->toScreenPoint({limits[1], 0.0});
+    const std::vector<double> realPoint = chart->toRealPoint(newX, 0.0f);
+    if (oldPoint1.size() < 1 || oldPoint2.size() < 1
+            || limitPoint1.size() < 1 || limitPoint2.size() < 1 || realPoint.size() < 1) {
+        return false;
+    }
+
+    const double oldScreenX1 = oldPoint1[0];
+    const double oldScreenX2 = oldPoint2[0];
+    const double limitScreenX1 = limitPoint1[0];
+    const double limitScreenX2 = limitPoint2[0];
+    const double realLimitX1 = limits[0];
+    const double realLimitX2 = limits[1];
+    const double realDistance = oldRealX2 - oldRealX1;
+    const double realHalfDistance = realDistance / 2.0;
+    const double newRealX = realPoint[0];
+    double newRealX1 = oldRealX1;
+    double newRealX2 = oldRealX2;
+    const double mDragBuffer = 16.0;
+    LOGD("oldX=%.f oldScreenX=%.f,%.f ",oldX,oldScreenX1,oldScreenX2);
+    if ((mDraggingLeft || std::fabs(oldX - oldScreenX1) < mDragBuffer) && !mMoving) {
+        mDraggingLeft = true;
+        if (newRealX < oldRealX2 - renderer->getZoomInLimitX() && newX >= limitScreenX1) {
+            newRealX1 = newRealX;
+        }
+    } else if ((mDraggingRight || std::fabs(oldX - oldScreenX2) < mDragBuffer) && !mMoving) {
+        mDraggingRight = true;
+        if (newRealX > oldRealX1 + renderer->getZoomInLimitX() && newX <= limitScreenX2) {
+            newRealX2 = newRealX;
+        }
+    } else {
+        mMoving = true;
+        if (newRealX - realHalfDistance > realLimitX1 && newRealX + realHalfDistance < realLimitX2) {
+            newRealX1 = newRealX - realHalfDistance;
+            newRealX2 = newRealX + realHalfDistance;
+        } else if (newRealX - realHalfDistance <= realLimitX1) {
+            newRealX1 = realLimitX1;
+            newRealX2 = newRealX1 + realDistance;
+        } else {
+            newRealX2 = realLimitX2;
+            newRealX1 = newRealX2 - realDistance;
+        }
+    }
+    for (int i = series->getItemCount() - 1; i >= 0; --i) {
+        series->remove(i);
+    }
+    series->add(newRealX1, 0.0);
+    series->add(newRealX2, 0.0);
+    //notifyMoveListeners();
+    return true;
+}
+
 SeriesSelection* GraphicalView::getCurrentSeriesAndPoint() const {
     return mChart->getSeriesAndPointForScreenCoordinate({float(oldX), float(oldY)});
 }
@@ -396,6 +492,9 @@ bool GraphicalView::onTouchEvent(MotionEvent& event) {
 
 bool GraphicalView::handleTouch(MotionEvent& event) {
     const int action = event.getActionMasked();
+    if(mOverlaySeriesIndex>=0){
+        return handleMoveEvent(event);
+    }
     if ((mRenderer != nullptr) && (action == MotionEvent::ACTION_MOVE)) {
         if (oldX >= 0 || oldY >= 0) {
             const float newX = event.getX(0);
@@ -469,6 +568,33 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
         }
     }
     return !mRenderer->isClickEnabled();
+}
+
+bool GraphicalView::handleMoveEvent(MotionEvent& event) {
+    const int action = event.getActionMasked();
+    if (action == MotionEvent::ACTION_MOVE && (oldX >= 0.0f || oldY >= 0.0f)) {
+        const float newX = event.getX(0);
+        const float newY = event.getY(0);
+        if (move(oldX, oldY, newX, newY)) {
+            oldX = newX;
+            oldY = newY;
+            invalidate();
+        }
+    } else if (action == MotionEvent::ACTION_DOWN) {
+        oldX = event.getX(0);
+        oldY = event.getY(0);
+    } else if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_POINTER_UP) {
+        mDraggingLeft = false;
+        mDraggingRight = false;
+        mMoving = false;
+        oldX = 0.0f;
+        oldY = 0.0f;
+        if (action == MotionEvent::ACTION_POINTER_UP) {
+            oldX = -1.0f;
+            oldY = -1.0f;
+        }
+    }
+    return true;
 }
 
 void GraphicalView::handleSelection(int x,int y){

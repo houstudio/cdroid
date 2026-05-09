@@ -38,6 +38,10 @@ private:
     /** The old y coordinate. */
     float oldY,oldY2;
     float mZoomRate;
+    int mOverlaySeriesIndex;
+    bool mDraggingLeft = false;
+    bool mDraggingRight = false;
+    bool mMoving;
     /** If the graphical view is drawn. */
     bool mDrawn;
     std::vector<PanListener> mPanListeners;
@@ -55,8 +59,10 @@ protected:
     double getAxisRatio(std::vector<double>& range) const;
     bool handleTouch(MotionEvent& event);
     void handleSelection(int,int);
+    bool handleMoveEvent(MotionEvent& event);
     void zoom(int axis,float zoomrate,bool zoomIn);
     void pan(float oldX, float oldY, float newX, float newY);
+    bool move(float oldX,float oldY,float newX,float newY);
     void notifyPanListeners();
     void notifyZoomListeners(float zoomrate,bool isZoomin);
     void notifyZoomResetListeners();
