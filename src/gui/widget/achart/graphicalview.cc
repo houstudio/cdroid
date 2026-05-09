@@ -269,8 +269,9 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     }
 
     auto dataset = chart->getDataset();
-    if ( (dataset == nullptr) || (mOverlaySeriesIndex < 0)
-            || mOverlaySeriesIndex >= dataset->getSeriesCount()) {
+    const std::vector<double> limits = renderer->getPanLimits();
+    if ( (dataset == nullptr) || (mOverlaySeriesIndex < 0) || (limits.size() < 2)
+            || (mOverlaySeriesIndex >= dataset->getSeriesCount()) ) {
         return false;
     }
 
@@ -279,10 +280,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
         return false;
     }
 
-    const std::vector<double> limits = renderer->getPanLimits();
-    if (limits.size() < 2) {
-        return false;
-    }
     const double oldRealX1 = series->getX(0);
     const double oldRealX2 = series->getX(1);
     const std::vector<double> oldPoint1 = chart->toScreenPoint({oldRealX1, 0.0});
@@ -290,8 +287,8 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     const std::vector<double> limitPoint1 = chart->toScreenPoint({limits[0], 0.0});
     const std::vector<double> limitPoint2 = chart->toScreenPoint({limits[1], 0.0});
     const std::vector<double> realPoint = chart->toRealPoint(newX, 0.0f);
-    if (oldPoint1.size() < 1 || oldPoint2.size() < 1
-            || limitPoint1.size() < 1 || limitPoint2.size() < 1 || realPoint.size() < 1) {
+    if ((oldPoint1.size() < 1) || (oldPoint2.size() < 1)
+            || (limitPoint1.size() < 1) || (limitPoint2.size() < 1) || (realPoint.size() < 1) ) {
         return false;
     }
 
@@ -317,7 +314,7 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
         if (newRealX > oldRealX1 + renderer->getZoomInLimitX() && newX <= limitScreenX2) {
             newRealX2 = newRealX;
         }
-    } else {
+    } else if(oldX>oldScreenX1&&oldX<oldScreenX2){
         mMoving = true;
         if (newRealX - realHalfDistance > realLimitX1 && newRealX + realHalfDistance < realLimitX2) {
             newRealX1 = newRealX - realHalfDistance;
@@ -329,10 +326,13 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
             newRealX2 = realLimitX2;
             newRealX1 = newRealX2 - realDistance;
         }
+    }else{
+        return false;
     }
     for (int i = series->getItemCount() - 1; i >= 0; --i) {
         series->remove(i);
     }
+    invalidate();
     series->add(newRealX1, 0.0);
     series->add(newRealX2, 0.0);
     //notifyMoveListeners();
@@ -490,8 +490,8 @@ bool GraphicalView::onTouchEvent(MotionEvent& event) {
 
 bool GraphicalView::handleTouch(MotionEvent& event) {
     const int action = event.getActionMasked();
-    if(mOverlaySeriesIndex>=0){
-        return handleMoveEvent(event);
+    if((mOverlaySeriesIndex>=0)&&handleMoveEvent(event)) {
+        return true;
     }
     if ((mRenderer != nullptr) && (action == MotionEvent::ACTION_MOVE)) {
         if (oldX >= 0 || oldY >= 0) {
