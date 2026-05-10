@@ -37,7 +37,6 @@ GraphicalView::GraphicalView(Context* context, AbstractChart* chart)
             if (dynamic_cast<DragControlChart*>(charts[i]) != nullptr) {
                 mOverlaySeriesIndex=i;
                 LOGD("mOverlaySeriesIndex=%d",mOverlaySeriesIndex);
-                //mMove = std::make_unique<tools::Move>(mGraphicalView, static_cast<int>(i));
                 break;
             }
         }
@@ -173,7 +172,7 @@ void GraphicalView::zoom(int zoomAxis,float zoomRate,bool zoomIn) {
         }
     }
     invalidate();
-    notifyZoomListeners(zoomIn, zoomRate);
+    notifyZoomListeners(zoomRate, zoomIn);
 }
  
 double GraphicalView::getAxisRatio(std::vector<double>& range) const {
@@ -269,18 +268,14 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     }
 
     auto dataset = chart->getDataset();
-    if ( (dataset == nullptr) || (mOverlaySeriesIndex < 0)
-            || mOverlaySeriesIndex >= dataset->getSeriesCount()) {
+    const std::vector<double> limits = renderer->getPanLimits();
+    if ( (dataset == nullptr) || (mOverlaySeriesIndex < 0) || (limits.size() < 2)
+            || (mOverlaySeriesIndex >= dataset->getSeriesCount()) ) {
         return false;
     }
 
     auto series = dataset->getSeriesAt(mOverlaySeriesIndex);
     if ((series == nullptr )|| (series->getItemCount() < 2)) {
-        return false;
-    }
-
-    const std::vector<double> limits = renderer->getPanLimits();
-    if (limits.size() < 2) {
         return false;
     }
 
@@ -291,10 +286,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     const std::vector<double> limitPoint1 = chart->toScreenPoint({limits[0], 0.0});
     const std::vector<double> limitPoint2 = chart->toScreenPoint({limits[1], 0.0});
     const std::vector<double> realPoint = chart->toRealPoint(newX, 0.0f);
-    if (oldPoint1.size() < 1 || oldPoint2.size() < 1
-            || limitPoint1.size() < 1 || limitPoint2.size() < 1 || realPoint.size() < 1) {
-        return false;
-    }
 
     const double oldScreenX1 = oldPoint1[0];
     const double oldScreenX2 = oldPoint2[0];
@@ -308,7 +299,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     double newRealX1 = oldRealX1;
     double newRealX2 = oldRealX2;
     const double mDragBuffer = 16.0;
-    LOGD("oldX=%.f oldScreenX=%.f,%.f ",oldX,oldScreenX1,oldScreenX2);
     if ((mDraggingLeft || std::fabs(oldX - oldScreenX1) < mDragBuffer) && !mMoving) {
         mDraggingLeft = true;
         if (newRealX < oldRealX2 - renderer->getZoomInLimitX() && newX >= limitScreenX1) {
@@ -319,7 +309,7 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
         if (newRealX > oldRealX1 + renderer->getZoomInLimitX() && newX <= limitScreenX2) {
             newRealX2 = newRealX;
         }
-    } else {
+    } else if(oldX>oldScreenX1&&oldX<oldScreenX2){
         mMoving = true;
         if (newRealX - realHalfDistance > realLimitX1 && newRealX + realHalfDistance < realLimitX2) {
             newRealX1 = newRealX - realHalfDistance;
@@ -331,13 +321,21 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
             newRealX2 = realLimitX2;
             newRealX1 = newRealX2 - realDistance;
         }
+    }else{
+        return false;
     }
     for (int i = series->getItemCount() - 1; i >= 0; --i) {
         series->remove(i);
     }
+    invalidate();
     series->add(newRealX1, 0.0);
     series->add(newRealX2, 0.0);
-    //notifyMoveListeners();
+    //LOGD("(%.2f,%.2f)",newRealX1,newRealX2);
+    for(auto l:mListeners){
+        if(l.onMoved){
+            l.onMoved(*this,oldRealX1,oldRealX2,newRealX1,newRealX2);
+        }
+    }
     return true;
 }
 
@@ -378,6 +376,10 @@ void GraphicalView::onDraw(Canvas& canvas) {
 
 void GraphicalView::setZoomRate(float rate) {
     mZoomRate = rate;
+}
+
+float GraphicalView::getZoomRate()const{
+    return mZoomRate;
 }
 
 void GraphicalView::zoomIn() {
@@ -431,52 +433,40 @@ void GraphicalView::zoomReset() {
     invalidate();
 }
 
-void GraphicalView::addZoomListener(const ZoomListener& listener, bool onButtons, bool onPinch) {
-    auto it = std::find(mZoomListeners.begin(),mZoomListeners.end(),listener);
-    if(it == mZoomListeners.end()){
-        mZoomListeners.push_back(listener);
+void GraphicalView::addChartListener(const ChartListener& listener) {
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it == mListeners.end()){
+        mListeners.push_back(listener);
     }
 }
 
-void GraphicalView::removeZoomListener(const ZoomListener& listener) {
-    auto it = std::find(mZoomListeners.begin(),mZoomListeners.end(),listener);
-    if(it != mZoomListeners.end()){
-        mZoomListeners.erase(it);
-    }
-}
-
-void GraphicalView::addPanListener(const PanListener& listener) {
-    auto it =std::find(mPanListeners.begin(),mPanListeners.end(),listener);
-    if((listener!=nullptr)&&(it == mPanListeners.end())){
-        mPanListeners.push_back(listener);
-    }
-}
-
-void GraphicalView::removePanListener(const PanListener& listener) {
-    auto it =std::find(mPanListeners.begin(),mPanListeners.end(),listener);
-    if(it!=mPanListeners.end()){
-        mPanListeners.erase(it);
+void GraphicalView::removeChartListener(const ChartListener& listener) {
+    auto it = std::find(mListeners.begin(),mListeners.end(),listener);
+    if(it != mListeners.end()){
+        mListeners.erase(it);
     }
 }
 
 void GraphicalView::notifyPanListeners(){
-    for (PanListener& listener : mPanListeners) {
-        listener();//.panApplied();
+    for (ChartListener& listener : mListeners) {
+        if(listener.onPanned){
+            listener.onPanned(*this);
+        }
     }
 }
 
 void GraphicalView::notifyZoomListeners(float zoomRate,bool zoomIn) {
-    for (ZoomListener& listener : mZoomListeners) {
-        if(listener.zoomApplied){
-            listener.zoomApplied(zoomRate,zoomIn);
+    for (ChartListener& listener : mListeners) {
+        if(listener.onZoom){
+            listener.onZoom(*this,zoomRate,zoomIn);
         }
     }
 }
 
 void GraphicalView::notifyZoomResetListeners() {
-    for (ZoomListener& listener : mZoomListeners) {
-        if(listener.zoomReset){
-            listener.zoomReset();
+    for (ChartListener& listener : mListeners) {
+        if(listener.onZoomReset){
+            listener.onZoomReset(*this);
         }
     }
 }
@@ -492,8 +482,8 @@ bool GraphicalView::onTouchEvent(MotionEvent& event) {
 
 bool GraphicalView::handleTouch(MotionEvent& event) {
     const int action = event.getActionMasked();
-    if(mOverlaySeriesIndex>=0){
-        return handleMoveEvent(event);
+    if((mOverlaySeriesIndex>=0)&&handleMoveEvent(event)) {
+        return true;
     }
     if ((mRenderer != nullptr) && (action == MotionEvent::ACTION_MOVE)) {
         if (oldX >= 0 || oldY >= 0) {

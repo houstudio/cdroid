@@ -20,11 +20,6 @@
 #include <widget/achart/renderer/xymultipleseriesrenderer.h>
 namespace cdroid {
 
-void AbstractChart::setSize(int32_t width,int32_t height){
-    m_width =width;
-    m_height =height;
-}
-
 void AbstractChart::drawBackground(const std::shared_ptr<DefaultRenderer>& renderer, Canvas& canvas, int x, int y, int width,
                                    int height, Paint& paint, bool newColor, int color) {
     if (renderer->isApplyBackgroundColor() || newColor) {
@@ -218,8 +213,9 @@ std::vector<float> AbstractChart::calculateDrawPoints(float p1x, float p1y, floa
 }
 
 void AbstractChart::drawPath(Canvas& canvas,const std::vector<float>& points, Paint& paint, bool circular) {
-    const int height = m_height;//canvas.getHeight();
-    const int width = m_width;//canvas.getWidth();
+    auto image_surface = std::dynamic_pointer_cast<Cairo::ImageSurface>(canvas.get_target());
+    const int height = image_surface->get_height();
+    const int width = image_surface->get_width();
 
     std::vector<float> tempDrawPoints;
     if (points.size() < 4) {

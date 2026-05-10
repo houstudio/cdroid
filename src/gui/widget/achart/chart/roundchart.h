@@ -30,24 +30,25 @@ protected:
     /** A no value constant. */
     static constexpr int NO_VALUE = INT_MAX;
     /** The series dataset. */
-     std::shared_ptr<CategorySeries> mDataset;
+    std::shared_ptr<CategorySeries> mDataset;
     /** The series renderer. */
     std::shared_ptr<DefaultRenderer> mRenderer;
     /** The chart center X axis. */
     int mCenterX = NO_VALUE;
     /** The chart center y axis. */
     int mCenterY = NO_VALUE;
+protected:
+    SeriesSelection* getSectorForScreenCoordinate(const PointF& point)const;
 public:
     RoundChart(const std::shared_ptr<CategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
     void drawTitle(Canvas& canvas, int x, int y, int width,  Paint& paint);
 
     int getLegendShapeWidth(int seriesIndex) const;
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer, float x, float y,int seriesIndex,  Paint& paint)override;
-
+    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const override;
     const std::shared_ptr<DefaultRenderer>& getRenderer() const;
 
     int getCenterX() const;
-
     int getCenterY() const;
 
     void setCenterX(int centerX);

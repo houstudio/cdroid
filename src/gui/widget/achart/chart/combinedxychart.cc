@@ -160,7 +160,6 @@ XYChart* CombinedXYChart::getXYChart(const std::string& type) const{
 
 void CombinedXYChart::syncSubChartState(XYChart* chart, int seriesIndex) const {
     chart->setScreenR(getScreenR());
-    chart->setSize(m_width, m_height);
 
     auto series = mDataset->getSeriesAt(seriesIndex);
     if (series == nullptr) {
@@ -195,7 +194,6 @@ void CombinedXYChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float
         const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
     //mCharts[seriesIndex]->setScreenR(getScreenR());
     //mCharts[seriesIndex]->setCalcRange(getCalcRange(mDataset->getSeriesAt(seriesIndex)->getScaleNumber()), 0);
-    mCharts[seriesIndex]->setSize(m_width, m_height);
     syncSubChartState(mCharts[seriesIndex], seriesIndex);
     mCharts[seriesIndex]->drawSeries(canvas, paint, points, seriesRenderer, yAxisValue, 0,startIndex);
 }

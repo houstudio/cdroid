@@ -39,7 +39,6 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     int right = x + width - margins[3];
     int sLength = mDataset->getSeriesCount();
     std::vector<std::string> titles(sLength);
-    setSize(width,height);
     for (int i = 0; i < sLength; i++) {
         titles[i] = mDataset->getSeriesAt(i)->getTitle();
     }
@@ -50,7 +49,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     /*if (mScreenR == null) {
         mScreenR = new Rect();
     }*/
-    mScreenR.set(left, top, right, bottom);
+    mScreenR.set(left, top, right - left,bottom - top);
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
 
     /*if (paint.getTypeface() == null
@@ -494,7 +493,6 @@ void XYChart::drawPoints(Canvas& canvas, Paint& paint, std::vector<float>& point
     if (isRenderPoints(seriesRenderer)) {
         ScatterChart* pointsChart = getPointsChart();
         if (pointsChart != nullptr) {
-            pointsChart->setSize(m_width,m_height);
             pointsChart->drawSeries(canvas, paint, pointsList, seriesRenderer, yAxisValue, seriesIndex,startIndex);
         }
     }

@@ -34,7 +34,6 @@ void DialChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint
 
     const int sLength = mDataset->getItemCount();
     std::vector<std::string> titles(sLength);
-    setSize(width,height);
     for (int i = 0; i < sLength; i++) {
         titles[i] = mDataset->getCategory(i);
     }

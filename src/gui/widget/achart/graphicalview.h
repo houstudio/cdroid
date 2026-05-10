@@ -12,12 +12,13 @@ namespace cdroid{
  */
 class GraphicalView :public View {
 public:
-    class ZoomListener:public EventSet{
+    class ChartListener:public EventSet{
     public:
-        std::function<void(float zoomRate,bool isZoomIm)>zoomApplied;
-        std::function<void()> zoomReset;
+        std::function<void(GraphicalView&view,float zoomRate,bool isZoomIm)>onZoom;
+        std::function<void(GraphicalView&)> onZoomReset;
+        std::function<void(GraphicalView&)> onPanned;
+        std::function<void(GraphicalView&,double oldX1,double oldX2,double newX1,double newX2)> onMoved;
     };
-    using PanListener = CallbackBase<void>;/*panApplied*/
 private:
   /** The chart to be drawn. */
     AbstractChart* mChart;
@@ -44,13 +45,13 @@ private:
     bool mMoving;
     /** If the graphical view is drawn. */
     bool mDrawn;
-    std::vector<PanListener> mPanListeners;
-    std::vector<ZoomListener> mZoomListeners;
+    std::vector<ChartListener> mListeners;
     static constexpr int ZOOM_AXIS_X=1;
     static constexpr int ZOOM_AXIS_Y=2;
     static constexpr int ZOOM_AXIS_XY=3;
 protected:
     void onDraw(Canvas& canvas) override;
+    bool onTouchEvent(MotionEvent& event) override;
     RectF getZoomRectangle()const;
     void setXRange(double min, double max, int scale);
     void setYRange(double min, double max, int scale);
@@ -99,7 +100,7 @@ public:
      * @param rate the zoom rate
      */
     void setZoomRate(float rate);
-  
+    float getZoomRate()const;  
     /**
      * Do a chart zoom in.
      */
@@ -119,28 +120,13 @@ public:
      * 
      * @param listener zoom listener
      */
-    void addZoomListener(const ZoomListener& listener, bool onButtons, bool onPinch);
+    void addChartListener(const ChartListener& listener);
     /**
      * Removes a zoom listener.
      * 
      * @param listener zoom listener
      */
-    void removeZoomListener(const ZoomListener& listener);
-  
-    /**
-     * Adds a new pan listener.
-     * 
-     * @param listener pan listener
-     */
-    void addPanListener(const PanListener& listener);
-    /**
-     * Removes a pan listener.
-     * 
-     * @param listener pan listener
-     */
-    void removePanListener(const PanListener& listener);
-
-    bool onTouchEvent(MotionEvent& event) override;
+    void removeChartListener(const ChartListener& listener);
   
     /**
      * Saves the content of the graphical view to a bitmap.

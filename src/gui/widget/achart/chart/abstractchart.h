@@ -43,8 +43,6 @@ public:
 protected:
     enum Style{STROKE=1,FILL=2};
     enum Align{LEFT,CENTER,RIGHT};
-    int m_width;
-    int m_height;
 private:
     static std::vector<float> calculateDrawPoints(float p1x, float p1y, float p2x, float p2y,int screenHeight, int screenWidth);
     std::string getFitText(const std::string& text, float width,  Paint& paint)const;
@@ -68,7 +66,6 @@ protected:
             float currentAngle, float angle, int left, int right, int color, Paint& paint, bool line,bool display);
 public:
     virtual ~AbstractChart()=default;
-    void setSize(int32_t width,int32_t height);
     virtual void draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint)=0;
 
     bool isVertical(const std::shared_ptr<DefaultRenderer>& renderer)const;

@@ -31,6 +31,11 @@ DragControlChart::DragControlChart(const std::shared_ptr<XYMultipleSeriesDataset
     :XYChart(dataset, renderer){
 }
 
+static int multiAlpha(int color,float alpha){
+    const int a = ((color&0xFF000000)>>24)*alpha;
+    return (color&0xFFFFFF)|(a<<24);
+}
+
 void DragControlChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float>& points,
         const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
 
@@ -40,58 +45,37 @@ void DragControlChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float
 
     // At least two coordinates are required
     // points comes like this: 0:x1, 1:y1, 2:x2, 3:y2, ... - that's why we check for four items
-    if (points.size() < 4) {
-        return;
+    if (points.size() < 4) { //points.size<4 means rightHandlex> mScreenR.right()
+        //return;
     }
-    const Rect screen = getScreenR();
     float leftHandleX = points.at(0);
-    float rightHandleX = points.at(2);
+    float rightHandleX = points.size()>2?points.at(2):FLT_MAX;
     if (leftHandleX > rightHandleX) {
         std::swap(leftHandleX, rightHandleX);
     }
 
-    const float chartLeft = static_cast<float>(screen.left);
-    const float chartRight = static_cast<float>(screen.right());
-    leftHandleX = std::max(chartLeft, std::min(leftHandleX, chartRight));
-    rightHandleX = std::max(leftHandleX + kMinimumHandleGap, std::min(rightHandleX, chartRight));
-    if (rightHandleX > chartRight) {
-        rightHandleX = chartRight;
-        leftHandleX = std::min(leftHandleX, rightHandleX - kMinimumHandleGap);
+    // Left and right overlay
+    const int handleHalfWidth =8;
+    const Rect screen = getScreenR();
+    paint.setColor(seriesRenderer->getColor());
+    canvas.set_color(multiAlpha(seriesRenderer->getColor(),0.5));
+    canvas.rectangle(0, screen.top, points.at(0),screen.height);
+    if(points.size()>2){
+        canvas.rectangle(points.at(2), screen.top, screen.width,screen.height);
     }
-
-    const float overlayTop = 0.0f;
-    const float overlayBottom = static_cast<float>(std::max(m_height, screen.bottom()));
+    canvas.fill();
+    const float overlayBottom = static_cast<float>(std::max(0, screen.bottom()));
     const float handleTop = static_cast<float>(screen.top);
     const float handleBottom = static_cast<float>(screen.bottom());
-    const float handleHalfWidth = std::min(kDefaultHandleHalfWidth,
-                                           std::max(4.0f, screen.width / 20.0f));
+    Rect rc = {(int)leftHandleX,screen.top,handleHalfWidth*2,screen.height};
 
-    canvas.set_color(kOverlayColor);
-    if (leftHandleX > 0.0f) {
-        canvas.rectangle(0, static_cast<int>(overlayTop), std::round(leftHandleX),
-                         std::round(overlayBottom - overlayTop));
-        canvas.fill();
-    }
-    if (rightHandleX < m_width) {
-        canvas.rectangle(std::round(rightHandleX), static_cast<int>(overlayTop),
-                         std::round(m_width - rightHandleX), std::round(overlayBottom - overlayTop));
-        canvas.fill();
-    }
+    canvas.set_color(seriesRenderer->getColor());
+    const auto drawHandle = [&canvas](const Rect&r) {
+        const float centerX = r.left+r.width/2;
+        const float gripCenterY = r.top+r.height/2;
 
-    const auto drawHandle = [&](float centerX) {
-        const int left = std::round(centerX - handleHalfWidth);
-        const int top = std::round(handleTop);
-        const int width = std::max(1, static_cast<int>(std::round(handleHalfWidth * 2.0f)));
-        const int height = std::max(1, static_cast<int>(std::round(handleBottom - handleTop)));
-        const float gripCenterY = handleTop + (handleBottom - handleTop) / 2.0f;
-
-        canvas.set_color(kHandleFillColor);
-        canvas.rectangle(left, top, width, height);
-        canvas.fill();
-
-        canvas.set_color(kHandleStrokeColor);
-        canvas.rectangle(left, top, width, height);
-        canvas.stroke();
+        canvas.rectangle(r.left,r.top,r.width,r.height);
+        canvas.fill_preserve();
 
         canvas.set_color(kGripColor);
         for (int offset = -1; offset <= 1; ++offset) {
@@ -101,14 +85,16 @@ void DragControlChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float
         }
         canvas.stroke();
     };
-
-    drawHandle(leftHandleX);
-    drawHandle(rightHandleX);
+    drawHandle(rc);
+    if(points.size()>2){
+        rc.left =rightHandleX;
+        canvas.set_color(seriesRenderer->getColor());
+        drawHandle(rc);
+    }
 }
 
 std::vector<ClickableArea> DragControlChart::clickableAreasForPoints(const std::vector<float>& points,
         const std::vector<double>& values, float yAxisValue, int seriesIndex, int startIndex) {
-
     return {};
 }
 
