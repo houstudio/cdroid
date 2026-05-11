@@ -14,6 +14,7 @@ class GraphicalView :public View {
 public:
     class ChartListener:public EventSet{
     public:
+        std::function<void(GraphicalView&,SeriesSelection&selection)>onSelectChanged;
         std::function<void(GraphicalView&view,float zoomRate,bool isZoomIm)>onZoom;
         std::function<void(GraphicalView&)> onZoomReset;
         std::function<void(GraphicalView&)> onPanned;
@@ -45,6 +46,7 @@ private:
     bool mMoving;
     /** If the graphical view is drawn. */
     bool mDrawn;
+    SeriesSelection mSelection;
     std::vector<ChartListener> mListeners;
     static constexpr int ZOOM_AXIS_X=1;
     static constexpr int ZOOM_AXIS_Y=2;

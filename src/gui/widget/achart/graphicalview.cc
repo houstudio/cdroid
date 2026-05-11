@@ -544,8 +544,7 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
         const int tapTime=ViewConfiguration::getTapTimeout();
         LOGD("duration=%d %d",int(event.getEventTime() - event.getDownTime()),tapTime);
         if( (event.getEventTime() - event.getDownTime()<=tapTime)
-                && (event.getX(0)-oldX<slop) && (event.getY(0)-oldY<slop)
-                && mRenderer->isClickEnabled()){
+                || ( (event.getX(0)-oldX<slop) && (event.getY(0)-oldY<slop) ) ){
             handleSelection(oldX,oldY);
         }
         oldX = oldY = 0;
@@ -585,12 +584,21 @@ bool GraphicalView::handleMoveEvent(MotionEvent& event) {
 }
 
 void GraphicalView::handleSelection(int x,int y){
-    SeriesSelection selection;
-    const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},selection);
-    LOGD_IF(hasSelection,"%d,%d",selection.getSeriesIndex(),selection.getPointIndex());
-    if(hasSelection){
-        mChart->setSelection(selection.getSeriesIndex(),selection.getPointIndex());
-        invalidate();
+    if( (mRenderer!=nullptr) && mRenderer->isClickEnabled() ){
+        SeriesSelection selection;
+        const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},selection);
+        LOGD_IF(hasSelection,"%d,%d",selection.getSeriesIndex(),selection.getPointIndex());
+        if( hasSelection && ( (selection.getSeriesIndex()!=mSelection.getPointIndex())
+                    || (selection.getPointIndex()!=mSelection.getPointIndex())) ){
+            mChart->setSelection(selection.getSeriesIndex(),selection.getPointIndex());
+            mSelection = selection;
+            for(auto& l:mListeners){
+                if(l.onSelectChanged){
+                    l.onSelectChanged(*this,mSelection);
+                }
+            }
+            invalidate();
+        }
     }
 }
 

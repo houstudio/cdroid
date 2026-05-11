@@ -55,6 +55,7 @@ void  BarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
     const int seriesNr = mDataset->getSeriesCount();
     const int length = points.size();
     const float halfDiffX = getHalfDiffX(points, length, seriesNr);
+    paint.setColor(seriesRenderer->getColor());
     canvas.set_color(seriesRenderer->getColor());
     paint.setStyle(Style::FILL);
     for (int i = 0; i < length; i += 2) {
@@ -100,10 +101,10 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
         yMax = temp;
     }
     if (renderer->isGradientEnabled()) {
-        float minY = (float) toScreenPoint({ 0, renderer->getGradientStopValue() }, scale)[1];
-        float maxY = (float) toScreenPoint({ 0, renderer->getGradientStartValue() },scale)[1];
-        float gradientMinY = std::max(minY, std::min(yMin, yMax));
-        float gradientMaxY = std::min(maxY, std::max(yMin, yMax));
+        const float minY = (float) toScreenPoint({ 0, renderer->getGradientStopValue() }, scale)[1];
+        const float maxY = (float) toScreenPoint({ 0, renderer->getGradientStartValue() },scale)[1];
+        const float gradientMinY = std::max(minY, std::min(yMin, yMax));
+        const float gradientMaxY = std::min(maxY, std::max(yMin, yMax));
         int gradientMinColor = renderer->getGradientStopColor();
         int gradientMaxColor = renderer->getGradientStartColor();
         int gradientStartColor = gradientMaxColor;
@@ -111,11 +112,9 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
 
         if (yMin < minY) {
             canvas.set_color(gradientMinColor);
-            canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin),
-                            std::round(gradientMinY-yMin));
+            canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin), std::round(gradientMinY-yMin));
         } else {
-            gradientStopColor = getGradientPartialColor(gradientMinColor, gradientMaxColor,
-                                (maxY - gradientMinY) / (maxY - minY));
+            gradientStopColor = getGradientPartialColor(gradientMinColor, gradientMaxColor, (maxY - gradientMinY) / (maxY - minY));
         }
         if (yMax > maxY) {
             canvas.set_color(gradientMaxColor);
@@ -125,8 +124,16 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
             gradientStartColor = getGradientPartialColor(gradientMaxColor, gradientMinColor,
                                  (gradientMaxY - minY) / (maxY - minY));
         }
+        auto pat =Cairo::LinearGradient::create(xMin,gradientMinY,xMax,gradientMaxY);
+        Color c1(gradientStartColor);
+        Color c2(gradientStopColor);
+        pat->add_color_stop_rgba(c1.red(),c1.green(),c1.blue(),c1.alpha(),0);
+        pat->add_color_stop_rgba(c2.red(),c2.green(),c2.blue(),c2.alpha(),1.0);
+        canvas.set_source(pat);
+        canvas.rectangle(xMin,gradientMinY,xMax-xMin,gradientMaxY-gradientMinY);
+        canvas.fill();
         GradientDrawable gradient(GradientDrawable::Orientation::BOTTOM_TOP, {gradientStartColor, gradientStopColor});
-        gradient.setBounds(std::round(xMin), std::round(gradientMinY), std::round(xMax), std::round(gradientMaxY));
+        gradient.setBounds(std::round(xMin), std::round(gradientMinY), std::round(xMax-xMin), std::round(gradientMaxY-gradientMinY));
         gradient.draw(canvas);
     } else {
         if (std::abs(yMin - yMax) < 1) {
@@ -135,7 +142,8 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
             } else {
                 yMax = yMin - 1;
             }
-        }//canvas.set_color(paint.color);
+        }
+        canvas.set_color(paint.color);
         canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin), std::round(yMax-yMin));
         canvas.fill();
     }
