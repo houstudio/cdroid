@@ -47,7 +47,7 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
         paint.setStyle(Style::STROKE);
         canvas.set_line_width(renderer->getPointStrokeWidth());
     }
-    int length = points.size();
+    const int length = points.size();
     switch (renderer->getPointStyle()) {
     case X:
         canvas.set_line_width(renderer->getPointStrokeWidth());

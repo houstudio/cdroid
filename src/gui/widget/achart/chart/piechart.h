@@ -47,7 +47,7 @@ public:
      */
     void draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint)override;
 
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const override;
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&)const override;
 };
 }/*endof namespace*/
 #endif/*__PIE_CHART_H__*/

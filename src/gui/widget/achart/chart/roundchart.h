@@ -45,7 +45,6 @@ public:
 
     int getLegendShapeWidth(int seriesIndex) const;
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer, float x, float y,int seriesIndex,  Paint& paint)override;
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const override;
     const std::shared_ptr<DefaultRenderer>& getRenderer() const;
 
     int getCenterX() const;

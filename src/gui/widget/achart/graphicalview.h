@@ -77,14 +77,7 @@ public:
      * @param chart the chart to be drawn
      */
     GraphicalView(Context* context, AbstractChart* chart);
-  
-    /**
-     * Returns the current series selection object.
-     * 
-     * @return the series selection
-     */
-    SeriesSelection* getCurrentSeriesAndPoint() const;
-  
+   
     /**
      * Transforms the currently selected screen point to a real point.
      * 

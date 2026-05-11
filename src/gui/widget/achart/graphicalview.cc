@@ -339,10 +339,6 @@ bool GraphicalView::move(float oldX, float oldY, float newX, float newY) {
     return true;
 }
 
-SeriesSelection* GraphicalView::getCurrentSeriesAndPoint() const {
-    return mChart->getSeriesAndPointForScreenCoordinate({float(oldX), float(oldY)});
-}
-
 std::vector<double> GraphicalView::toRealPoint(int scale) {
     if (dynamic_cast<XYChart*>(mChart)) {
         return ((XYChart*) mChart)->toRealPoint(oldX, oldY, scale);
@@ -548,7 +544,8 @@ bool GraphicalView::handleTouch(MotionEvent& event) {
         const int tapTime=ViewConfiguration::getTapTimeout();
         LOGD("duration=%d %d",int(event.getEventTime() - event.getDownTime()),tapTime);
         if( (event.getEventTime() - event.getDownTime()<=tapTime)
-                && (event.getX(0)-oldX<slop) && (event.getY(0)-oldY<slop)){
+                && (event.getX(0)-oldX<slop) && (event.getY(0)-oldY<slop)
+                && mRenderer->isClickEnabled()){
             handleSelection(oldX,oldY);
         }
         oldX = oldY = 0;
@@ -588,10 +585,13 @@ bool GraphicalView::handleMoveEvent(MotionEvent& event) {
 }
 
 void GraphicalView::handleSelection(int x,int y){
-    SeriesSelection* selection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)});
-    LOGD_IF(selection,"%d,%d",selection->getSeriesIndex(),selection->getPointIndex());
-    invalidate();
-    delete selection;
+    SeriesSelection selection;
+    const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},selection);
+    LOGD_IF(hasSelection,"%d,%d",selection.getSeriesIndex(),selection.getPointIndex());
+    if(hasSelection){
+        mChart->setSelection(selection.getSeriesIndex(),selection.getPointIndex());
+        invalidate();
+    }
 }
 
 Bitmap GraphicalView::toBitmap() {

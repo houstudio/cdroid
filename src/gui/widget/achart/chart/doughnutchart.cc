@@ -84,7 +84,7 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
     float shortRadius = radius * 0.9f;
     float longRadius = radius * 1.1f;
     std::vector<RectF> prevLabelsBounds;
-    for (int category = 0,dataIndex=0; category < cLength; category++) {
+    for (int category = 0; category < cLength; category++) {
         const int sLength = mDataset->getItemCount(category);
         double total = 0;
         std::vector<std::string> titles(sLength);
@@ -108,7 +108,7 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
                       mCenterY, shortRadius, longRadius, currentAngle, angle, left, right,
                       mRenderer->getLabelsColor(), paint, true, false);
             if (loadPieCfg) {
-               mPieMapper->addPieSegment(dataIndex++, value, currentAngle, angle,innerRadius,radius-innerRadius);
+               mPieMapper->addPieSegment((category<<16)|i, value, currentAngle, angle,innerRadius,radius-innerRadius);
             }
             currentAngle += angle;
         }
@@ -132,8 +132,8 @@ void DoughnutChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simple
     if(paint.style==Style::FILL)canvas.fill();else canvas.stroke();
 }
 
-SeriesSelection* DoughnutChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
-    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint);
+bool DoughnutChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
+    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
 }
 
 }/*endof namespace*/

@@ -111,23 +111,26 @@ public:
      * @param screenPoint - the user tap location
      * @return null if screen point is not in PieChart or its config if it is
      */
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
         if (isOnPieChart(screenPoint)) {
             const double angleFromPieCenter = getAngle(screenPoint);
-            for (const PieSegment& pieSeg : mPieSegmentList) {
-                if (pieSeg.isInSegment(angleFromPieCenter)) {
-                    if(pieSeg.getRadius()==0.f){
-                        return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(), pieSeg.getValue());
+            for (const PieSegment& ps : mPieSegmentList) {
+                if (ps.isInSegment(angleFromPieCenter)) {
+                    if(ps.getRadius()==0.f){
+                        selection = SeriesSelection(0, ps.getDataIndex(), ps.getValue(), ps.getValue());
+                        return true;
                     }else{
                         const double distance =std::sqrt(std::pow(screenPoint.x -mCenterX,2)+std::pow(screenPoint.y-mCenterY,2));
-                        if(distance>pieSeg.getRadius()&&distance<pieSeg.getRadius()+pieSeg.getThicknees()){
-                            return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(), pieSeg.getValue());
+                        if(distance>ps.getRadius()&&distance<ps.getRadius()+ps.getThicknees()){
+                            const int idx= ps.getDataIndex();
+                            selection = SeriesSelection(idx>>16, idx&0xFFFF, ps.getValue(), ps.getValue());
+                            return true;
                         }
                     }
                 }
             }
         }
-        return nullptr;
+        return false;
     }
 };
 }/*endof namespace*/

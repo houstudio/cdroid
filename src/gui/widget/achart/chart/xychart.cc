@@ -17,9 +17,11 @@
 #include <widget/achart/chart/scatterchart.h>
 namespace cdroid{
 
-XYChart::XYChart(){
+XYChart::XYChart():AbstractChart(){
 }
-XYChart::XYChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer) {
+
+XYChart::XYChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)
+    :XYChart(){
     mDataset = dataset;
     mRenderer = renderer;
 }
@@ -46,9 +48,6 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         legendSize = drawLegend(canvas, mRenderer, titles, left, right, y, width, height, legendSize,paint, true);
     }
     int bottom = y + height - margins[2] - legendSize;
-    /*if (mScreenR == null) {
-        mScreenR = new Rect();
-    }*/
     mScreenR.set(left, top, right - left,bottom - top);
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
 
@@ -766,9 +765,9 @@ std::vector<double> XYChart::toScreenPoint(const std::vector<double>& realPoint,
     }
 }
 
-SeriesSelection* XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
+bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
     if (mClickableAreas.empty()||(mRenderer==nullptr)){
-        return nullptr;
+        return false;
     }
     const float selectableBuffer = mRenderer->getSelectableBuffer();
     for (int seriesIndex = mClickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
@@ -787,14 +786,15 @@ SeriesSelection* XYChart::getSeriesAndPointForScreenCoordinate(const PointF& scr
                         rectangle.inflate(selectableBuffer,selectableBuffer);
                     }
                     if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
-                        return new SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                        selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                        return true;
                     }
                 }
                 pointIndex++;
             }
         }
     }
-    return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint);
+    return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection);
 }
 
 bool XYChart::isRenderNullValues() const{

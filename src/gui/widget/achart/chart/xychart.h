@@ -197,7 +197,7 @@ public:
 
     std::vector<double> toRealPoint(float screenX, float screenY, int scale)const;
     std::vector<double> toScreenPoint(const std::vector<double>& realPoint, int scale)const;
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const override;
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&)const override;
 
     /**
      * The graphical representation of a series.

@@ -70,7 +70,7 @@ public:
      */
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer, float x, float y,int seriesIndex,  Paint& paint)override;
 
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const override;
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&) const override;
 };
 }/*endof namespace*/
 #endif/*__DOUGHNUT_CHART_H__*/

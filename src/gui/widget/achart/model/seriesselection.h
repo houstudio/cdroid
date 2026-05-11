@@ -23,6 +23,7 @@ private:
     double mXValue;
     double mValue;
 public:
+    SeriesSelection()=default;
     SeriesSelection(int seriesIndex, int pointIndex, double xValue, double value) {
         mSeriesIndex = seriesIndex;
         mPointIndex = pointIndex;
