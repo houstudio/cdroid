@@ -101,7 +101,7 @@ private:
      */
     bool mXRoundedLabels = true;
     /** The label format. */
-    NumberFormat* mLabelFormat=nullptr;
+    std::string mLabelFormat;
     /** A constant value for the bar chart items width. */
     float mBarWidth = -1;
     /** The zoom in limit permitted in the axis X */
@@ -114,21 +114,17 @@ public:
 
     XYMultipleSeriesRenderer(int scaleNumber) {
         mScalesCount = scaleNumber;
-        mLabelFormat = nullptr;
         initAxesRange(scaleNumber);
     }
-    ~XYMultipleSeriesRenderer()override{
-        delete mLabelFormat;
-    }
     void initAxesRange(int scales) {
-        mYTitle.resize(scales);// = new String[scales];
-        yLabelsAlign.resize(scales);// = new Align[scales];
-        yAxisAlign.resize(scales);//= new Align[scales];
-        mYLabelsColor.resize(scales);// = new int[scales];
-        mMinX.resize(scales);// = new double[scales];
-        mMaxX.resize(scales);// = new double[scales];
-        mMinY.resize(scales);// = new double[scales];
-        mMaxY.resize(scales);// = new double[scales];
+        mYTitle.resize(scales);
+        yLabelsAlign.resize(scales);
+        yAxisAlign.resize(scales);
+        mYLabelsColor.resize(scales);
+        mMinX.resize(scales);
+        mMaxX.resize(scales);
+        mMinY.resize(scales);
+        mMaxY.resize(scales);
         for (int i = 0; i < scales; i++) {
             mYLabelsColor[i] = TEXT_COLOR;
             initAxesRangeForScale(i);
@@ -144,7 +140,7 @@ public:
         initialRange[i]= range;
         mYTitle[i] = "";
         mYTextLabels[i]= std::map<double, std::string>();
-        yLabelsAlign[i] = 0;//Align.CENTER;
+        yLabelsAlign[i] = 2;//Align.CENTER;
         yAxisAlign[i] = 0;//Align.LEFT;
     }
 
@@ -1224,7 +1220,7 @@ public:
      *
      * @return the number format for labels
      */
-    NumberFormat* getLabelFormat() const{
+    std::string getLabelFormat() const{
         return mLabelFormat;
     }
 
@@ -1233,7 +1229,7 @@ public:
      *
      * @param format the number format for labels
      */
-    void setLabelFormat(NumberFormat* format) {
+    void setLabelFormat(const std::string& format) {
         mLabelFormat = format;
     }
 

@@ -52,7 +52,7 @@ private:
     /** If the legend item for this renderer is visible. */
     bool mShowLegendItem = true;
     /** The chart values format. */
-    NumberFormat* mChartValuesFormat=nullptr;
+    std::string mChartValuesFormat;
     /** If this is a highlighted slice (pie chart displays slice as exploded). */
     bool mHighlighted;
     /** If the bounding points to the first and last visible ones should be displayed. */
@@ -321,7 +321,7 @@ public:
      *
      * @return the number format for chart values
      */
-    NumberFormat* getChartValuesFormat() const{
+    std::string getChartValuesFormat() const{
         return mChartValuesFormat;
     }
 
@@ -330,7 +330,7 @@ public:
      *
      * @param format the number format for chart values
      */
-    void setChartValuesFormat(NumberFormat* format) {
+    void setChartValuesFormat(const std::string& format) {
         mChartValuesFormat = format;
     }
 };

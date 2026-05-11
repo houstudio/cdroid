@@ -627,8 +627,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
                     if (axisAlign == Align::LEFT) {
                         //canvas.drawLine(left + getLabelLinePos(axisAlign), yLabel, left, yLabel, paint);
                         if(showTickMarks){
-                            canvas.move_to(left + getLabelLinePos(axisAlign), yLabel);
-                            canvas.line_to(left, yLabel);
+                            drawLine(canvas,left + getLabelLinePos(axisAlign), yLabel,left, yLabel);
                             canvas.stroke();
                         }
                         drawText(canvas, getLabel(mRenderer->getLabelFormat(), label),
@@ -637,8 +636,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
                                  mRenderer->getYLabelsAngle());
                     } else {
                         if(showTickMarks){
-                            canvas.move_to(right, yLabel);
-                            canvas.line_to(right + getLabelLinePos(axisAlign), yLabel);
+                            drawLine(canvas,right, yLabel,right + getLabelLinePos(axisAlign), yLabel);
                             canvas.stroke();
                         }
                         drawText(canvas, getLabel(mRenderer->getLabelFormat(), label),
@@ -651,8 +649,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
                     canvas.set_color(mRenderer->getGridColor());//paint.setColor(mRenderer->getGridColor());
                     //canvas.drawLine(left, yLabel, right, yLabel, paint);
                     if(showTickMarks){
-                        canvas.move_to(left, yLabel);
-                        canvas.line_to(right, yLabel);
+                        drawLine(canvas,left,yLabel,right,yLabel);
                         canvas.stroke();
                     }
                 }
@@ -661,8 +658,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
                     canvas.set_color(mRenderer->getYLabelsColor(i));//paint.setColor(mRenderer->getYLabelsColor(i));
                     //canvas.drawLine(right - getLabelLinePos(axisAlign), yLabel, right, yLabel, paint);
                     if(showTickMarks){
-                        canvas.move_to(right - getLabelLinePos(axisAlign), yLabel);
-                        canvas.line_to(right, yLabel);
+                        drawLine(canvas,right - getLabelLinePos(axisAlign), yLabel,right, yLabel);
                         canvas.stroke();
                     }
                     drawText(canvas, getLabel(mRenderer->getLabelFormat(), label),
@@ -673,8 +669,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
                     canvas.set_color(mRenderer->getGridColor());//paint.setColor(mRenderer->getGridColor());
                     //canvas.drawLine(right, yLabel, left, yLabel, paint);
                     if(showTickMarks){
-                        canvas.move_to(right, yLabel);
-                        canvas.line_to(left, yLabel);
+                        drawLine(canvas,right, yLabel,left, yLabel);
                         canvas.stroke();
                     }
                 }
