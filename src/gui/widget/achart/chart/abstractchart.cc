@@ -137,7 +137,7 @@ std::string AbstractChart::getLabel(const NumberFormat* format, double label) co
     } else if (label == std::round(label)) {
         text = std::to_string((long long)std::round(label));
     } else {
-        text =  std::to_string(label);
+        text =  TextUtils::stringPrintf("%g",label);
     }
     return text;
 }
