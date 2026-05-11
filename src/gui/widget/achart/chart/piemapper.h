@@ -60,8 +60,8 @@ public:
      * @param startAngle
      * @param angle
      */
-    void addPieSegment(int dataIndex, float value, float startAngle, float angle) {
-        mPieSegmentList.push_back(PieSegment(dataIndex, value, startAngle, angle));
+    void addPieSegment(int dataIndex, float value, float startAngle, float angle,float radius=0.f,float thickNees=0.f) {
+        mPieSegmentList.push_back(PieSegment(dataIndex, value, startAngle, angle,radius,thickNees));
     }
 
     /**
@@ -116,8 +116,14 @@ public:
             const double angleFromPieCenter = getAngle(screenPoint);
             for (const PieSegment& pieSeg : mPieSegmentList) {
                 if (pieSeg.isInSegment(angleFromPieCenter)) {
-                    return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(),
-                                               pieSeg.getValue());
+                    if(pieSeg.getRadius()==0.f){
+                        return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(), pieSeg.getValue());
+                    }else{
+                        const double distance =std::sqrt(std::pow(screenPoint.x -mCenterX,2)+std::pow(screenPoint.y-mCenterY,2));
+                        if(distance>pieSeg.getRadius()&&distance<pieSeg.getRadius()+pieSeg.getThicknees()){
+                            return new SeriesSelection(0, pieSeg.getDataIndex(), pieSeg.getValue(), pieSeg.getValue());
+                        }
+                    }
                 }
             }
         }

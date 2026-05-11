@@ -311,15 +311,13 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
                             if (axisAlign == Align::LEFT) {
                                 if(showTickMarks){
-                                    canvas.move_to(left + getLabelLinePos(axisAlign),yLabel);
-                                    canvas.line_to(left, yLabel);
+                                    drawLine(canvas,left + getLabelLinePos(axisAlign),yLabel,left, yLabel);
                                     canvas.stroke();
                                 }
                                 drawText(canvas, label, left, yLabel - 2, paint, mRenderer->getYLabelsAngle());
                             } else {
                                 if(showTickMarks){
-                                    canvas.move_to(right, yLabel);
-                                    canvas.line_to(right + getLabelLinePos(axisAlign), yLabel);
+                                    drawLine(canvas, right, yLabel, right + getLabelLinePos(axisAlign), yLabel);
                                     canvas.stroke();
                                 }
                                 drawText(canvas, label, right, yLabel - 2, paint, mRenderer->getYLabelsAngle());
@@ -327,20 +325,18 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
 
                             if (showCustomTextGridY) {
                                 canvas.set_color(mRenderer->getGridColor());
-                                canvas.move_to(left, yLabel);
-                                canvas.line_to(right, yLabel);
+                                drawLine(canvas,left, yLabel,right, yLabel);
                                 canvas.stroke();
                             }
                         } else {
-                            if(showTickMarks){canvas.move_to(right - getLabelLinePos(axisAlign),yLabel);
-                                canvas.line_to(right, yLabel);
+                            if(showTickMarks){
+                                drawLine(canvas, right - getLabelLinePos(axisAlign),yLabel, right, yLabel);
                                 canvas.stroke();
                             }
                             drawText(canvas, label, right + 10, yLabel - 2, paint, mRenderer->getYLabelsAngle());
                             if (showCustomTextGridY) {
                                 canvas.set_color(mRenderer->getGridColor());
-                                canvas.move_to(right, yLabel);
-                                canvas.line_to(left, yLabel);
+                                drawLine(canvas,right, yLabel,left, yLabel);
                                 canvas.stroke();
                             }
                         }
@@ -389,22 +385,18 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     }
     if (mRenderer->isShowAxes()) {
         canvas.set_color(mRenderer->getAxesColor());
-        canvas.move_to(left, bottom);
-        canvas.line_to(right, bottom);
+        drawLine(canvas,left, bottom,right, bottom);
         bool rightAxis = false;
         for (int i = 0; i < maxScaleNumber && !rightAxis; i++) {
             rightAxis = mRenderer->getYAxisAlign(i) == Align::RIGHT;
         }
         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
-            canvas.move_to(left, top);
-            canvas.line_to(left, bottom);
+            drawLine(canvas,left, top, left, bottom);
             if (rightAxis) {
-                canvas.move_to(right, top);
-                canvas.line_to(right, bottom);
+                drawLine(canvas,right, top, right, bottom);
             }
         } else if (orientation == XYMultipleSeriesRenderer::Orientation::VERTICAL) {
-            canvas.move_to(right, top);
-            canvas.line_to(right, bottom);
+            drawLine(canvas,right, top, right, bottom);
         }
         canvas.stroke();
     }
@@ -585,8 +577,7 @@ void XYChart::drawXLabels(const std::vector<double>& xLabels,const std::vector<d
         if (showXLabels) {
             canvas.set_color(mRenderer->getXLabelsColor());
             if(showTickMarks){
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                drawLine(canvas,xLabel, bottom,xLabel , bottom + mRenderer->getLabelsTextSize() / 3);
                 canvas.stroke();
             }
             drawText(canvas, getLabel(mRenderer->getLabelFormat(), label), xLabel,
@@ -596,8 +587,7 @@ void XYChart::drawXLabels(const std::vector<double>& xLabels,const std::vector<d
         if (showGridY) {
             canvas.set_line_width(mRenderer->getGridLineWidth());
             canvas.set_color(mRenderer->getGridColor());
-            canvas.move_to(xLabel, bottom);
-            canvas.line_to(xLabel, top);
+            drawLine(canvas,xLabel, bottom, xLabel, top);
             canvas.stroke();
         }
     }
@@ -689,16 +679,14 @@ void XYChart::drawXTextLabels(const std::vector<double>& xTextLabelLocations, Ca
                 float xLabel = (float) (left + xPixelsPerUnit * (location - minX));
                 canvas.set_color(mRenderer->getXLabelsColor());
                 if(showTickMarks){
-                    canvas.move_to(xLabel, bottom);
-                    canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                    drawLine(canvas ,xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize()/3);
                     canvas.stroke();
                 }
                 drawText(canvas, mRenderer->getXTextLabel(location), xLabel,
                          bottom + mRenderer->getLabelsTextSize() * 4 / 3, paint, mRenderer->getXLabelsAngle());
                 if (showCustomTextGridX) {
                     canvas.set_color(mRenderer->getGridColor());
-                    canvas.move_to(xLabel, bottom);
-                    canvas.line_to(xLabel, top);
+                    drawLine(canvas, xLabel , bottom, xLabel, top);
                     canvas.stroke();
                 }
             }

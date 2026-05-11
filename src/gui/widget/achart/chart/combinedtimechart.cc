@@ -35,8 +35,7 @@ void CombinedTimeChart::drawXLabels(const std::vector<double>& xLabels,const std
             float xLabel = (float) (left + xPixelsPerUnit * (label - minX));
             if (showLabels) {
                 canvas.set_color(mRenderer->getXLabelsColor());
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                drawLine(canvas,xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize()/3);
                 canvas.stroke();
                 drawText(canvas, format.format(label), xLabel,
                          bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding(),
@@ -44,8 +43,7 @@ void CombinedTimeChart::drawXLabels(const std::vector<double>& xLabels,const std
             }
             if (showGridY) {
                 canvas.set_color(mRenderer->getGridColor());
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, top);
+                drawLine(canvas, xLabel, bottom, xLabel, top);
             }
         }
     }

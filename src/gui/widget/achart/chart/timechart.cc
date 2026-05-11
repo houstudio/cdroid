@@ -49,17 +49,14 @@ void TimeChart::drawXLabels(const std::vector<double>& xLabels, const std::vecto
             if (showLabels) {
                 canvas.set_color(mRenderer->getXLabelsColor());
                 //canvas.drawLine(xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize() / 3, paint);
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                drawLine(canvas, xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
                 canvas.stroke();
                 drawText(canvas, format.format(label), xLabel,
                          bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding(), paint, mRenderer->getXLabelsAngle());
             }
             if (showGridY) {
                 canvas.set_color(mRenderer->getGridColor());
-                //canvas.drawLine(xLabel, bottom, xLabel, top, paint);
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, top);
+                drawLine(canvas,xLabel, bottom,xLabel, top);
                 canvas.stroke();
             }
         }

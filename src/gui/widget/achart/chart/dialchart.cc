@@ -123,8 +123,7 @@ void DialChart::drawTicks(Canvas& canvas, double min, double max, double minAngl
         const int y1 = std::round(centerY + (float) (shortRadius * cosValue));
         const int x2 = std::round(centerX + (float) (longRadius * sinValue));
         const int y2 = std::round(centerY + (float) (longRadius * cosValue));
-        canvas.move_to(x1, y1);
-        canvas.line_to(x2, y2);
+        drawLine(canvas,x1, y1,x2, y2);
         canvas.stroke();
         if (labels) {
             paint.setTextAlign(Align::LEFT);
@@ -161,8 +160,7 @@ void DialChart::drawNeedle(Canvas& canvas, double angle, int centerX, int center
                              };
         const float width = canvas.get_line_width();
         canvas.set_line_width(5);
-        canvas.move_to(centerX, centerY);
-        canvas.line_to(needleCenterX, needleCenterY);
+        drawLine(canvas,centerX, centerY,needleCenterX, needleCenterY);
         canvas.stroke();
         canvas.set_line_width(width);
     } else {

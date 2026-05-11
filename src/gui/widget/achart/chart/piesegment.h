@@ -25,16 +25,20 @@ private:
     float mStartAngle;
     float mEndAngle;
     float mValue;
+    float mRadius;
+    float mThicknees;
     int mDataIndex;
 public:
     PieSegment()=default;
     PieSegment(PieSegment&& other)=default;
     PieSegment(const PieSegment& other) = default;
-    PieSegment(int dataIndex, float value, float startAngle, float angle) {
+    PieSegment(int dataIndex, float value, float startAngle, float angle,float radius=0.f,float thickNees=0.f) {
         mStartAngle = startAngle;
         mEndAngle = angle + startAngle;
         mDataIndex = dataIndex;
         mValue = value;
+        mRadius= radius;
+        mThicknees=thickNees;
     }
 
     bool isInSegment(double angle) const{
@@ -65,6 +69,12 @@ public:
 
     float getValue() const{
         return mValue;
+    }
+    float getRadius()const{
+        return mRadius;
+    }
+    float getThicknees()const{
+        return mThicknees;
     }
 };
 }/*endof namespace*/

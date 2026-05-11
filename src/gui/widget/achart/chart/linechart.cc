@@ -162,8 +162,7 @@ void LineChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeri
     const float lineWidth = ((const XYSeriesRenderer*)renderer.get())->getLineWidth();
     if(lineWidth!=0.f){
         canvas.set_line_width(lineWidth);
-        canvas.move_to(x, y);
-        canvas.line_to(x + SHAPE_WIDTH, y);
+        drawLine(canvas,x, y,x + SHAPE_WIDTH, y);
         canvas.stroke();
     }
     if (isRenderPoints(renderer)) {
