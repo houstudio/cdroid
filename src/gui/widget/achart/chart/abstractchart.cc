@@ -34,6 +34,11 @@ void AbstractChart::drawBackground(const std::shared_ptr<DefaultRenderer>& rende
     }
 }
 
+void AbstractChart::drawLine(Canvas&canvas,float x1,float y1,float x2,float y2)const{
+    canvas.move_to(x1,y1);
+    canvas.line_to(x2,y2);
+}
+
 static std::vector<float>getTextWidths(Canvas& ctx, const std::string& text) {
     std::vector<float> widths;
     for (size_t i = 0; i < text.length(); ++i) {
@@ -130,14 +135,12 @@ bool AbstractChart::isVertical(const std::shared_ptr<DefaultRenderer>& renderer)
            && (derived_renderer->getOrientation() == XYMultipleSeriesRenderer::Orientation::VERTICAL);
 }
 
-std::string AbstractChart::getLabel(const NumberFormat* format, double label) const{
+std::string AbstractChart::getLabel(const std::string& format, double label) const{
     std::string text = "";
-    if (format != nullptr) {
-        text = format->format(label);
-    } else if (label == std::round(label)) {
-        text = std::to_string(std::round(label));
+    if (!format.empty()) {
+        text = TextUtils::stringPrintf(format.c_str(),label);
     } else {
-        text =  std::to_string(label);
+        text =  TextUtils::stringPrintf("%g",label);
     }
     return text;
 }

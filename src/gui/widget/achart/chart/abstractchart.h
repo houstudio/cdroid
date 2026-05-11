@@ -47,6 +47,7 @@ private:
     static std::vector<float> calculateDrawPoints(float p1x, float p1y, float p2x, float p2y,int screenHeight, int screenWidth);
     std::string getFitText(const std::string& text, float width,  Paint& paint)const;
 protected:
+    void drawLine(Canvas&canvas,float x1,float y1,float x2,float y2)const;
     void drawBackground(const std::shared_ptr<DefaultRenderer>& renderer, Canvas& canvas,
             int x, int y, int width,int height, Paint& paint, bool newColor, int color);
     int drawLegend(Canvas& canvas, const std::shared_ptr<DefaultRenderer>& renderer, const std::vector<std::string>& titles,
@@ -55,7 +56,7 @@ protected:
     void drawString(Canvas& canvas,const std::string& text, float x, float y,  Paint& paint);
     bool getExceed(float currentWidth, const std::shared_ptr<DefaultRenderer>& renderer, int right, int width);
 
-    std::string getLabel(const NumberFormat* format, double label)const;
+    std::string getLabel(const std::string& format, double label)const;
 
     virtual void drawPath(Canvas& canvas,const std::vector<float>& points, Paint& paint, bool circular);
 
