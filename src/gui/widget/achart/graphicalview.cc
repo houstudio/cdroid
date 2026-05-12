@@ -587,7 +587,7 @@ void GraphicalView::handleSelection(int x,int y){
     if( (mRenderer!=nullptr) && mRenderer->isClickEnabled() ){
         SeriesSelection sel;
         const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},sel);
-        if( hasSelection && ( (sel.getSeriesIndex()!=mSelection.getPointIndex())
+        if( hasSelection && ( (sel.getSeriesIndex()!=mSelection.getSeriesIndex())
                     || (sel.getPointIndex()!=mSelection.getPointIndex())) ){
             LOGD_IF(hasSelection,"%d,%d",sel.getSeriesIndex(),sel.getPointIndex());
             mChart->setSelection(sel.getSeriesIndex(),sel.getPointIndex());
