@@ -21,9 +21,6 @@
 namespace cdroid{
 namespace {
 static const int kGridLevelCount = 5;
-static const int kTextAlignLeft = 0;
-static const int kTextAlignCenter = 1;
-static const int kTextAlignRight = 2;
 
 static int withAlpha(int color, int alpha) {
     return Color::toArgb(Color::red(color), Color::green(color), Color::blue(color), alpha);
@@ -34,40 +31,6 @@ static PointF makeRadarPoint(int centerX, int centerY, double radius, double ang
     point.x = static_cast<float>(centerX + std::cos(angleRadians) * radius);
     point.y = static_cast<float>(centerY - std::sin(angleRadians) * radius);
     return point;
-}
-
-static void strokePolygon(Canvas& canvas, const std::vector<PointF>& points) {
-    if (points.empty()) {
-        return;
-    }
-    canvas.begin_new_path();
-    canvas.move_to(points.front().x, points.front().y);
-    for (size_t i = 1; i < points.size(); ++i) {
-        canvas.line_to(points[i].x, points[i].y);
-    }
-    canvas.close_path();
-    canvas.stroke();
-}
-
-static void fillPolygon(Canvas& canvas, const std::vector<PointF>& points) {
-    if (points.empty()) {
-        return;
-    }
-    canvas.begin_new_path();
-    canvas.move_to(points.front().x, points.front().y);
-    for (size_t i = 1; i < points.size(); ++i) {
-        canvas.line_to(points[i].x, points[i].y);
-    }
-    canvas.close_path();
-    canvas.fill_preserve();
-    canvas.stroke();
-}
-
-static int resolveTextAlign(float x, int centerX) {
-    if (std::fabs(x - centerX) < 4.0f) {
-        return kTextAlignCenter;
-    }
-    return x < centerX ? kTextAlignRight : kTextAlignLeft;
 }
 }
 
@@ -82,16 +45,16 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
 
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
-    int left = x;
-    int top = y;
-    int right = x + width;
+    const int left = x;
+    const int top = y;
+    const int right = x + width;
     std::vector<std::string> categories= mDataset->getCategories();
     if (mRenderer->isFitLegend()) {
         legendSize = drawLegend(canvas, mRenderer, categories, left, right, y, width, height,
                                 legendSize, paint, true);
     }
 
-    int bottom = y + height - legendSize;
+    const int bottom = y + height - legendSize;
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
 
     const int categoryCount = std::min(mDataset->getCategoriesCount(), mRenderer->getSeriesRendererCount());
@@ -127,23 +90,32 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
     const double startAngle = mRenderer->getStartAngle() * M_PI / 180.0;
     canvas.set_color(withAlpha(mRenderer->getLabelsColor(), 0x55));
     canvas.set_line_width(1.0);
+    paint.setStyle(STROKE);
     for (int level = 1; level <= kGridLevelCount; ++level) {
-        std::vector<PointF> gridPoints;
+        std::vector<float> gridPoints;
         const double ratio = static_cast<double>(level) / kGridLevelCount;
         const double levelRadius = chartRadius * ratio;
         for (int axis = 0; axis < axisCount; ++axis) {
             const double angle = startAngle + M_PI / 2.0 - axis * (2.0 * M_PI / axisCount);
-            gridPoints.push_back(makeRadarPoint(mCenterX, mCenterY, levelRadius, angle));
+            auto pt = makeRadarPoint(mCenterX, mCenterY, levelRadius, angle);
+            gridPoints.push_back(pt.x);
+            gridPoints.push_back(pt.y);
         }
-        strokePolygon(canvas, gridPoints);
+        drawPath(canvas,gridPoints,paint,true);
     }
+
+    auto resolveTextAlign=[](float x, int centerX){
+        if (std::fabs(x - centerX) < 4.0f) {
+            return Align::CENTER;
+        }
+        return x < centerX ? Align::RIGHT : Align::LEFT;
+    };
 
     for (int axis = 0; axis < axisCount; ++axis) {
         const double angle = startAngle + M_PI / 2.0 - axis * (2.0 * M_PI / axisCount);
         const PointF outerPoint = makeRadarPoint(mCenterX, mCenterY, chartRadius, angle);
         canvas.set_color(withAlpha(mRenderer->getLabelsColor(), 0x70));
-        canvas.move_to(mCenterX, mCenterY);
-        canvas.line_to(outerPoint.x, outerPoint.y);
+        drawLine(canvas,mCenterX, mCenterY,outerPoint.x, outerPoint.y);
         canvas.stroke();
 
         const std::string axisLabel = axis < static_cast<int>(axisTitles.size()) ? axisTitles[axis]
@@ -152,27 +124,28 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
         paint.setTextAlign(resolveTextAlign(labelPoint.x, mCenterX));
         drawString(canvas, axisLabel, labelPoint.x, labelPoint.y, paint);
     }
-
+    paint.setStyle(FILL);
     for (int category = 0; category < categoryCount; ++category) {
         const std::vector<double> values = mDataset->getValues(category);
-        std::vector<PointF> polygon;
+        std::vector<float> polygon;
         polygon.reserve(values.size());
         for (size_t axis = 0; axis < values.size(); ++axis) {
             const double angle = startAngle + M_PI / 2.0 - axis * (2.0 * M_PI / axisCount);
             const double normalized = std::max(0.0, values[axis]) / globalMaxValue;
-            polygon.push_back(makeRadarPoint(mCenterX, mCenterY, chartRadius * normalized, angle));
+            const auto pt = makeRadarPoint(mCenterX, mCenterY, chartRadius * normalized, angle);
+            polygon.push_back(pt.x);polygon.push_back(pt.y);
         }
 
         const int color = mRenderer->getSeriesRendererAt(category)->getColor();
         canvas.set_color(withAlpha(color, 0x33));
         canvas.set_line_width(2.0);
-        fillPolygon(canvas, polygon);
+        drawPath(canvas,polygon,paint,true);
 
         canvas.set_color(color);
         canvas.set_line_width(2.0);
-        for (size_t axis = 0; axis < polygon.size(); ++axis) {
+        for (size_t axis = 0; axis < polygon.size(); axis+=2) {
             canvas.begin_new_path();
-            canvas.arc(polygon[axis].x, polygon[axis].y, 3.0, 0.0, 2.0 * M_PI);
+            canvas.arc(polygon[axis], polygon[axis+1], 3.0, 0.0, 2.0 * M_PI);
             canvas.fill();
         }
     }
