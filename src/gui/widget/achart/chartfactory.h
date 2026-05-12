@@ -177,9 +177,6 @@ public:
             const std::shared_ptr<CategorySeries>& dataset,
             const std::shared_ptr<DefaultRenderer>& renderer);
 
-    static GraphicalView* getRadarChartView(Context*context,
-            const std::shared_ptr<MultipleCategorySeries>& dataset,
-            const std::shared_ptr<DefaultRenderer>& renderer);
     /**
      * Creates a dial chart view that can be used to start the graphical view
      * activity.
@@ -211,6 +208,11 @@ public:
     static GraphicalView* getDoughnutChartView(Context* context,
             const std::shared_ptr<MultipleCategorySeries>& dataset,
             const std::shared_ptr<DefaultRenderer>& renderer);
+
+    static GraphicalView* getRadarChartView(Context*context,
+            const std::shared_ptr<MultipleCategorySeries>& dataset,
+            const std::shared_ptr<DefaultRenderer>& renderer);
+
     /**
      * Checks the validity of the dataset and renderer parameters.
      *

@@ -20,7 +20,7 @@
 
 namespace cdroid{
 namespace {
-static const int kGridLevelCount = 5;
+static constexpr int kGridLevelCount = 5;
 
 static int withAlpha(int color, int alpha) {
     return Color::toArgb(Color::red(color), Color::green(color), Color::blue(color), alpha);
@@ -44,14 +44,13 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
     }
 
     canvas.set_font_size(mRenderer->getLabelsTextSize());
-    int legendSize = getLegendSize(mRenderer, height / 5, 0);
+    int legendSize = getLegendSize(mRenderer, height / 8, 0);
     const int left = x;
     const int top = y;
     const int right = x + width;
     std::vector<std::string> categories= mDataset->getCategories();
     if (mRenderer->isFitLegend()) {
-        legendSize = drawLegend(canvas, mRenderer, categories, left, right, y, width, height,
-                                legendSize, paint, true);
+        legendSize = drawLegend(canvas, mRenderer, categories, left, right, y, width, height, legendSize, paint, true);
     }
 
     const int bottom = y + height - legendSize;
@@ -73,7 +72,7 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
     }
 
     const int radiusBase = std::min(std::abs(right - left), std::abs(bottom - top));
-    const double chartRadius = radiusBase * 0.30 * mRenderer->getScale();
+    const double chartRadius = radiusBase * 0.45 * mRenderer->getScale();
     const std::vector<std::string> axisTitles = mDataset->getTitles(0);
 
     double globalMaxValue = 0.0;
@@ -120,7 +119,7 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
 
         const std::string axisLabel = axis < static_cast<int>(axisTitles.size()) ? axisTitles[axis]
                                                                                   : std::to_string(axis + 1);
-        const PointF labelPoint = makeRadarPoint(mCenterX, mCenterY, chartRadius * 1.18, angle);
+        const PointF labelPoint = makeRadarPoint(mCenterX, mCenterY, chartRadius * 1.05, angle);
         paint.setTextAlign(resolveTextAlign(labelPoint.x, mCenterX));
         drawString(canvas, axisLabel, labelPoint.x, labelPoint.y, paint);
     }
@@ -133,7 +132,8 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
             const double angle = startAngle + M_PI / 2.0 - axis * (2.0 * M_PI / axisCount);
             const double normalized = std::max(0.0, values[axis]) / globalMaxValue;
             const auto pt = makeRadarPoint(mCenterX, mCenterY, chartRadius * normalized, angle);
-            polygon.push_back(pt.x);polygon.push_back(pt.y);
+            polygon.push_back(pt.x);
+            polygon.push_back(pt.y);
         }
 
         const int color = mRenderer->getSeriesRendererAt(category)->getColor();
