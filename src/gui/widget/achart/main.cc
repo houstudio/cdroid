@@ -751,6 +751,42 @@ ChartPageSpec createDoughnutChartPage(cdroid::Context* context) {
     return {"Doughnut Chart", chartView, true};
 }
 
+ChartPageSpec createRadarChartPage(cdroid::Context* context) {
+    auto dataset = std::make_shared<cdroid::MultipleCategorySeries>("Radar");
+    dataset->add("Core",
+        {"Quality", "Delivery", "Cost", "Stability", "UX", "Ops"},
+        {8.5, 7.2, 6.4, 8.8, 7.5, 6.9});
+    dataset->add("Target",
+        {"Quality", "Delivery", "Cost", "Stability", "UX", "Ops"},
+        {7.0, 8.1, 7.6, 7.4, 8.0, 7.8});
+    dataset->add("Stretch",
+        {"Quality", "Delivery", "Cost", "Stability", "UX", "Ops"},
+        {9.0, 8.6, 6.8, 9.2, 8.7, 8.1});
+
+    auto renderer = std::make_shared<cdroid::DefaultRenderer>();
+    configureCommonRoundRenderer(*renderer, "Radar Chart", argb(0xFF14213D));
+    renderer->setDisplayValues(false);
+    renderer->setScale(1.0f);
+    renderer->setMargins({24, 24, 24, 24});
+
+    const std::vector<int> colors = {
+        argb(0xFFEF476F),
+        argb(0xFFFFD166),
+        argb(0xFF06D6A0)
+    };
+    for (size_t i = 0; i < colors.size(); ++i) {
+        std::shared_ptr<cdroid::SimpleSeriesRenderer> seriesRenderer =
+            std::make_shared<cdroid::SimpleSeriesRenderer>();
+        seriesRenderer->setColor(colors[i]);
+        seriesRenderer->setShowLegendItem(true);
+        renderer->addSeriesRenderer(seriesRenderer);
+    }
+
+    auto* chartView = cdroid::ChartFactory::getRadarChartView(context, dataset, renderer);
+    //attachPanZoomListeners(*chartView, statusListener);
+    return {"Radar Chart", chartView, true};
+}
+
 ChartPageSpec createDialChartPage(cdroid::Context* context) {
     auto dataset = std::make_shared<cdroid::CategorySeries>("Dial");
     dataset->add("Current", 68.0);
@@ -805,6 +841,7 @@ std::vector<ChartPageSpec> createChartPages(cdroid::Context* context) {
     pages.push_back({"DragControl + TargetRange", createOverviewChart(context), false});
     pages.push_back({"Pie Chart", createPieChart(context), true});
     pages.push_back(createDoughnutChartPage(context));
+    pages.push_back(createRadarChartPage(context));
     pages.push_back(createDialChartPage(context));
     return pages;
 }

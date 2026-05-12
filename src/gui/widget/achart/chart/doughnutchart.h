@@ -24,12 +24,11 @@ namespace cdroid{
  * The doughnut chart rendering class.
  */
 class DoughnutChart :public RoundChart {
-private:
+protected:
     /** The series dataset. */
     std::shared_ptr<MultipleCategorySeries> mDataset;
     /** A step variable to control the size of the legend shape. */
     int mStep;
-    PieMapper*mPieMapper;
 public:
     /**
      * Builds a new doughnut chart instance.
@@ -38,7 +37,6 @@ public:
      * @param renderer the series renderer
      */
     DoughnutChart(const std::shared_ptr<MultipleCategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
-    ~DoughnutChart()override;
     /**
      * The graphical representation of the doughnut chart.
      *

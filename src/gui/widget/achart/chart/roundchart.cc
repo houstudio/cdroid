@@ -19,6 +19,11 @@ RoundChart::RoundChart(const std::shared_ptr<CategorySeries>& dataset, const std
     :AbstractChart(){
     mDataset = dataset;
     mRenderer = renderer;
+    mPieMapper = new PieMapper();
+}
+
+RoundChart::~RoundChart(){
+    delete mPieMapper;
 }
 
 void RoundChart::drawTitle(Canvas& canvas, int x, int y, int width,  Paint& paint) {

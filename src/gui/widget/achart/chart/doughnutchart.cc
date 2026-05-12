@@ -22,11 +22,6 @@ DoughnutChart::DoughnutChart(const std::shared_ptr<MultipleCategorySeries>& data
         const std::shared_ptr<DefaultRenderer>& renderer)
     :RoundChart(nullptr, renderer){
     mDataset = dataset;
-    mPieMapper = new PieMapper();
-}
-
-DoughnutChart::~DoughnutChart(){
-    delete mPieMapper;
 }
 
 static void drawRingSlice(Canvas& canvas, double centerX, double centerY, double outerRadius,
@@ -50,16 +45,15 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
     int right = x + width;
     int ringSegments = 0;
     const int cLength = mDataset->getCategoriesCount();
-    std::vector<std::string> categories(cLength);
+    const std::vector<std::string>& categories = mDataset->getCategories();
     for (int category = 0; category < cLength; category++) {
-        categories[category] = mDataset->getCategory(category);
         ringSegments += mDataset->getItemCount(category);
     }
     if (mRenderer->isFitLegend()) {
         legendSize = drawLegend(canvas, mRenderer, categories, left, right, y, width, height, legendSize, paint, true);
     }
 
-    int bottom = y + height - legendSize;
+    const int bottom = y + height - legendSize;
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
     mStep = SHAPE_WIDTH * 3 / 4;
 

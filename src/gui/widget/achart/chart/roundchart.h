@@ -15,6 +15,7 @@
  */
 #ifndef __ROUND_CHART_H__
 #define __ROUND_CHART_H__
+#include <widget/achart/chart/piemapper.h>
 #include <widget/achart/renderer/defaultrenderer.h>
 #include <widget/achart/renderer/simpleseriesrenderer.h>
 #include <widget/achart/chart/abstractchart.h>
@@ -37,10 +38,12 @@ protected:
     int mCenterX = NO_VALUE;
     /** The chart center y axis. */
     int mCenterY = NO_VALUE;
+    PieMapper*mPieMapper;
 protected:
     SeriesSelection* getSectorForScreenCoordinate(const PointF& point)const;
 public:
     RoundChart(const std::shared_ptr<CategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
+    ~RoundChart()override;
     void drawTitle(Canvas& canvas, int x, int y, int width,  Paint& paint);
 
     int getLegendShapeWidth(int seriesIndex) const;

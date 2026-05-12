@@ -171,9 +171,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         std::vector<double> xLabels = getValidLabels(getXLabels(minX[0], maxX[0], mRenderer->getXLabels()));
         std::map<int, std::vector<double>> allYLabels = getYLabels(minY, maxY, maxScaleNumber);
 
-        int xLabelsLeft = left;
-        bool showXLabels = mRenderer->isShowXLabels();
-        bool showYLabels = mRenderer->isShowYLabels();
+        const int xLabelsLeft = left;
+        const bool showXLabels = mRenderer->isShowXLabels();
+        const bool showYLabels = mRenderer->isShowYLabels();
         // Only draw the grid.
         mRenderer->setShowLabels(false);
         /*if (mGridPaint == null) {
@@ -194,7 +194,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     mClickableAreas.clear();
     for (int i = 0; i < sLength; i++) {
         auto series = mDataset->getSeriesAt(i);
-        int scale = series->getScaleNumber();
+        const int scale = series->getScaleNumber();
         if (series->getItemCount() == 0) {
             continue;
         }
@@ -291,8 +291,8 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         }
         // Draw just the labels and not the grid lines.
         mRenderer->setShowGrid(false);
-        drawXLabels(xLabels, mRenderer->getXTextLabelLocations(), canvas, paint, xLabelsLeft,
-                top, bottom, xPixelsPerUnit[0], minX[0], maxX[0]);
+        drawXLabels(xLabels, mRenderer->getXTextLabelLocations(), canvas, paint,
+                xLabelsLeft, top, bottom, xPixelsPerUnit[0], minX[0], maxX[0]);
         drawYLabels(allYLabels, canvas, paint, maxScaleNumber, left, right, bottom, yPixelsPerUnit, minY);
         mRenderer->setShowGridX(showGridX);
         mRenderer->setShowGridY(showGridY);
@@ -346,7 +346,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
 
         if (showLabels) {
             canvas.set_color(mRenderer->getLabelsColor());
-            float size = mRenderer->getAxisTitleTextSize();
+            const float size = mRenderer->getAxisTitleTextSize();
             canvas.set_font_size(size);
             paint.setTextAlign(Align::CENTER);
             if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {

@@ -585,13 +585,13 @@ bool GraphicalView::handleMoveEvent(MotionEvent& event) {
 
 void GraphicalView::handleSelection(int x,int y){
     if( (mRenderer!=nullptr) && mRenderer->isClickEnabled() ){
-        SeriesSelection selection;
-        const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},selection);
-        LOGD_IF(hasSelection,"%d,%d",selection.getSeriesIndex(),selection.getPointIndex());
-        if( hasSelection && ( (selection.getSeriesIndex()!=mSelection.getPointIndex())
-                    || (selection.getPointIndex()!=mSelection.getPointIndex())) ){
-            mChart->setSelection(selection.getSeriesIndex(),selection.getPointIndex());
-            mSelection = selection;
+        SeriesSelection sel;
+        const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},sel);
+        if( hasSelection && ( (sel.getSeriesIndex()!=mSelection.getPointIndex())
+                    || (sel.getPointIndex()!=mSelection.getPointIndex())) ){
+            LOGD_IF(hasSelection,"%d,%d",sel.getSeriesIndex(),sel.getPointIndex());
+            mChart->setSelection(sel.getSeriesIndex(),sel.getPointIndex());
+            mSelection = sel;
             for(auto& l:mListeners){
                 if(l.onSelectChanged){
                     l.onSelectChanged(*this,mSelection);

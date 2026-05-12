@@ -20,7 +20,6 @@ namespace cdroid{
 
 PieChart::PieChart(const std::shared_ptr<CategorySeries>& dataset,const std::shared_ptr<DefaultRenderer>& renderer)
     :RoundChart(dataset, renderer){
-    mPieMapper = new PieMapper();
     const int sLength = mDataset->getItemCount();
     for(int i=0;i<sLength;i++){
         if(mRenderer->getSeriesRendererAt(i)->isHighlighted()){
@@ -28,10 +27,6 @@ PieChart::PieChart(const std::shared_ptr<CategorySeries>& dataset,const std::sha
             break;
         }
     }
-}
-
-PieChart::~PieChart(){
-    delete mPieMapper;
 }
 
 static void drawArc(Canvas& canvas,double centerX, double centerY, 

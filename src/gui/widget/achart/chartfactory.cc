@@ -219,6 +219,14 @@ GraphicalView* ChartFactory::getDialChartView(Context* context,
     return new GraphicalView(context, chart);
 }
 
+GraphicalView* ChartFactory::getRadarChartView(Context*context,
+       const std::shared_ptr<MultipleCategorySeries>& dataset,
+        const std::shared_ptr<DefaultRenderer>& renderer){
+    checkParameters(dataset, renderer);
+    RadarChart*chart = new RadarChart(dataset, renderer);
+    return new GraphicalView(context,chart);
+}
+
 /**
  * Creates a doughnut chart view that can be used to start the graphical view
  * activity.
