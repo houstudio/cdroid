@@ -155,6 +155,7 @@ if(ENABLE_ACHART)
         widget/achart/chart/rangebarchart.cc
         widget/achart/chart/bubblechart.cc
         widget/achart/chart/doughnutchart.cc
+        widget/achart/chart/radarchart.cc
         widget/achart/chart/timechart.cc
         widget/achart/chart/dragcontrolchart.cc
         widget/achart/chart/targetrangechart.cc

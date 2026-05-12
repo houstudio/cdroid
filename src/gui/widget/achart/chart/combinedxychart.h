@@ -46,7 +46,7 @@ public:
     void drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
             const std::shared_ptr<XYSeriesRenderer>& seriesRenderer,
             float yAxisValue, int seriesIndex, int startIndex)override;
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const override;
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&) const override;
     int getLegendShapeWidth(int seriesIndex) const override;
 
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,

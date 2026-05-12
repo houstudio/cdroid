@@ -16,6 +16,7 @@
 #ifndef __DOUGHNUT_CHART_H__
 #define __DOUGHNUT_CHART_H__
 
+#include <widget/achart/chart/piemapper.h>
 #include <widget/achart/chart/roundchart.h>
 #include <widget/achart/model/multiplecategoryseries.h>
 namespace cdroid{
@@ -23,7 +24,7 @@ namespace cdroid{
  * The doughnut chart rendering class.
  */
 class DoughnutChart :public RoundChart {
-private:
+protected:
     /** The series dataset. */
     std::shared_ptr<MultipleCategorySeries> mDataset;
     /** A step variable to control the size of the legend shape. */
@@ -36,7 +37,6 @@ public:
      * @param renderer the series renderer
      */
     DoughnutChart(const std::shared_ptr<MultipleCategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
-
     /**
      * The graphical representation of the doughnut chart.
      *
@@ -67,6 +67,8 @@ public:
      * @param paint the paint to be used for drawing
      */
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer, float x, float y,int seriesIndex,  Paint& paint)override;
+
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&) const override;
 };
 }/*endof namespace*/
 #endif/*__DOUGHNUT_CHART_H__*/

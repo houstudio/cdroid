@@ -20,11 +20,13 @@ namespace cdroid{
 
 PieChart::PieChart(const std::shared_ptr<CategorySeries>& dataset,const std::shared_ptr<DefaultRenderer>& renderer)
     :RoundChart(dataset, renderer){
-    mPieMapper = new PieMapper();
-}
-
-PieChart::~PieChart(){
-    delete mPieMapper;
+    const int sLength = mDataset->getItemCount();
+    for(int i=0;i<sLength;i++){
+        if(mRenderer->getSeriesRendererAt(i)->isHighlighted()){
+            mDataIndex = i;
+            break;
+        }
+    }
 }
 
 static void drawArc(Canvas& canvas,double centerX, double centerY, 
@@ -102,7 +104,7 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
 
         const float value = (float) mDataset->getValue(i);
         const float angle = (float) (value / total * 360);
-        if (seriesRenderer->isHighlighted()) {
+        if (/*seriesRenderer->isHighlighted()||*/(mDataIndex == i)) {
             const double rAngle = (90.0 - (currentAngle + angle / 2))*M_PI/180.0;
             const float translateX = (float) (radius * 0.1 * std::sin(rAngle));
             const float translateY = (float) (radius * 0.1 * std::cos(rAngle));
@@ -132,8 +134,8 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
     drawTitle(canvas, x, y, width, paint);
 }
 
-SeriesSelection* PieChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
-    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint);
+bool PieChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
+    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
 }
 
 }

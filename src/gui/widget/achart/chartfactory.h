@@ -8,6 +8,7 @@
 #include <widget/achart/chart/rangebarchart.h>
 #include <widget/achart/chart/piechart.h>
 #include <widget/achart/chart/dialchart.h>
+#include <widget/achart/chart/radarchart.h>
 #include <widget/achart/chart/doughnutchart.h>
 #include <widget/achart/chart/combinedxychart.h>
 #include <widget/achart/chart/combinedtimechart.h>
@@ -176,6 +177,9 @@ public:
             const std::shared_ptr<CategorySeries>& dataset,
             const std::shared_ptr<DefaultRenderer>& renderer);
 
+    static GraphicalView* getRadarChartView(Context*context,
+            const std::shared_ptr<MultipleCategorySeries>& dataset,
+            const std::shared_ptr<DefaultRenderer>& renderer);
     /**
      * Creates a dial chart view that can be used to start the graphical view
      * activity.

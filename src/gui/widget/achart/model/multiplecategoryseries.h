@@ -133,6 +133,17 @@ public:
         return mTitles.at(index);
     }
 
+    const std::vector<std::string>& getCategories() const{
+        return mCategories;
+    }
+
+    const std::vector<std::vector<std::string>>& getTitles() const{
+        return mTitles;
+    }
+
+    const std::vector<std::vector<double>>& getValues() const{
+        return mValues;
+    }
     /**
      * Transforms the category series to an XY series.
      *

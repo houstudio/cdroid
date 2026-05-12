@@ -23,9 +23,6 @@ class PieMapper;
  * The pie chart rendering class.
  */
 class PieChart :public RoundChart {
-private:
-    /** Handles returning values when tapping on PieChart. */
-    PieMapper* mPieMapper;
 public:
     /**
      * Builds a new pie chart instance.
@@ -34,7 +31,6 @@ public:
      * @param renderer the series renderer
      */
     PieChart(const std::shared_ptr<CategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
-    ~PieChart()override;
     /**
      * The graphical representation of the pie chart.
      *
@@ -47,7 +43,7 @@ public:
      */
     void draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint)override;
 
-    SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const override;
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&)const override;
 };
 }/*endof namespace*/
 #endif/*__PIE_CHART_H__*/

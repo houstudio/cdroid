@@ -43,6 +43,8 @@ public:
 protected:
     enum Style{STROKE=1,FILL=2};
     enum Align{LEFT,CENTER,RIGHT};
+    int mSeriesIndex;
+    int mDataIndex;
 private:
     static std::vector<float> calculateDrawPoints(float p1x, float p1y, float p2x, float p2y,int screenHeight, int screenWidth);
     std::string getFitText(const std::string& text, float width,  Paint& paint)const;
@@ -66,6 +68,7 @@ protected:
             std::vector<RectF>& prevLabelsBounds, int centerX, int centerY, float shortRadius, float longRadius,
             float currentAngle, float angle, int left, int right, int color, Paint& paint, bool line,bool display);
 public:
+    AbstractChart();
     virtual ~AbstractChart()=default;
     virtual void draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint)=0;
 
@@ -78,7 +81,8 @@ public:
 
     bool isNullValue(double value) const;
 
-    virtual SeriesSelection* getSeriesAndPointForScreenCoordinate(const PointF& screenPoint)const;
+    virtual bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection)const;
+    virtual void setSelection(int seriesIndex,int dataIndex);
 };
 }/*endof namespace*/
 #endif/*__ABSTRACT_CHART_H__*/

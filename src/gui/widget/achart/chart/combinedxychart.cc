@@ -214,10 +214,10 @@ void CombinedXYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas
                                     0, orientation, startIndex);
 }
 
-SeriesSelection* CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const {
-    SeriesSelection* pointSelection = XYChart::getSeriesAndPointForScreenCoordinate(screenPoint);
-    if (pointSelection != nullptr || mRenderer == nullptr || mDataset == nullptr || !mRenderer->isClickEnabled()) {
-        return pointSelection;
+bool CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const {
+    bool hasSelection = XYChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection);
+    if (hasSelection || mRenderer == nullptr || mDataset == nullptr || !mRenderer->isClickEnabled()) {
+        return hasSelection;
     }
 
     for (int seriesIndex = static_cast<int>(mCharts.size()) - 1; seriesIndex >= 0; --seriesIndex) {
@@ -227,19 +227,16 @@ SeriesSelection* CombinedXYChart::getSeriesAndPointForScreenCoordinate(const Poi
         }
 
         syncSubChartState(chart, seriesIndex);
-        SeriesSelection* childSelection = chart->getSeriesAndPointForScreenCoordinate(screenPoint);
-        if (childSelection == nullptr) {
+        const bool seriesSelection = chart->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
+        if (!seriesSelection) {
             continue;
         }
 
-        SeriesSelection* mappedSelection = new SeriesSelection(
-            seriesIndex, childSelection->getPointIndex(),
-            childSelection->getXValue(), childSelection->getValue());
-        delete childSelection;
-        return mappedSelection;
+        selection=SeriesSelection( seriesIndex, selection.getPointIndex(),selection.getXValue(), selection.getValue());
+        return true;
     }
 
-    return nullptr;
+    return false;
 }
 
 int CombinedXYChart::getLegendShapeWidth(int seriesIndex) const{

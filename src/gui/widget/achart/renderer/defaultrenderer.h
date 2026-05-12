@@ -62,7 +62,7 @@ private:
     /** The labels color. */
     int mLabelsColor = TEXT_COLOR;
     /** The labels text size. */
-    float mLabelsTextSize = 10;
+    float mLabelsTextSize = 14;
     /** If the legend is visible. */
     bool mShowLegend = true;
     /** The legend text size. */

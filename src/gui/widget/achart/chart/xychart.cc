@@ -17,9 +17,11 @@
 #include <widget/achart/chart/scatterchart.h>
 namespace cdroid{
 
-XYChart::XYChart(){
+XYChart::XYChart():AbstractChart(){
 }
-XYChart::XYChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer) {
+
+XYChart::XYChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)
+    :XYChart(){
     mDataset = dataset;
     mRenderer = renderer;
 }
@@ -46,9 +48,6 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         legendSize = drawLegend(canvas, mRenderer, titles, left, right, y, width, height, legendSize,paint, true);
     }
     int bottom = y + height - margins[2] - legendSize;
-    /*if (mScreenR == null) {
-        mScreenR = new Rect();
-    }*/
     mScreenR.set(left, top, right - left,bottom - top);
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
 
@@ -172,9 +171,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         std::vector<double> xLabels = getValidLabels(getXLabels(minX[0], maxX[0], mRenderer->getXLabels()));
         std::map<int, std::vector<double>> allYLabels = getYLabels(minY, maxY, maxScaleNumber);
 
-        int xLabelsLeft = left;
-        bool showXLabels = mRenderer->isShowXLabels();
-        bool showYLabels = mRenderer->isShowYLabels();
+        const int xLabelsLeft = left;
+        const bool showXLabels = mRenderer->isShowXLabels();
+        const bool showYLabels = mRenderer->isShowYLabels();
         // Only draw the grid.
         mRenderer->setShowLabels(false);
         /*if (mGridPaint == null) {
@@ -195,7 +194,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     mClickableAreas.clear();
     for (int i = 0; i < sLength; i++) {
         auto series = mDataset->getSeriesAt(i);
-        int scale = series->getScaleNumber();
+        const int scale = series->getScaleNumber();
         if (series->getItemCount() == 0) {
             continue;
         }
@@ -292,8 +291,8 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         }
         // Draw just the labels and not the grid lines.
         mRenderer->setShowGrid(false);
-        drawXLabels(xLabels, mRenderer->getXTextLabelLocations(), canvas, paint, xLabelsLeft,
-                top, bottom, xPixelsPerUnit[0], minX[0], maxX[0]);
+        drawXLabels(xLabels, mRenderer->getXTextLabelLocations(), canvas, paint,
+                xLabelsLeft, top, bottom, xPixelsPerUnit[0], minX[0], maxX[0]);
         drawYLabels(allYLabels, canvas, paint, maxScaleNumber, left, right, bottom, yPixelsPerUnit, minY);
         mRenderer->setShowGridX(showGridX);
         mRenderer->setShowGridY(showGridY);
@@ -311,15 +310,13 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
                             if (axisAlign == Align::LEFT) {
                                 if(showTickMarks){
-                                    canvas.move_to(left + getLabelLinePos(axisAlign),yLabel);
-                                    canvas.line_to(left, yLabel);
+                                    drawLine(canvas,left + getLabelLinePos(axisAlign),yLabel,left, yLabel);
                                     canvas.stroke();
                                 }
                                 drawText(canvas, label, left, yLabel - 2, paint, mRenderer->getYLabelsAngle());
                             } else {
                                 if(showTickMarks){
-                                    canvas.move_to(right, yLabel);
-                                    canvas.line_to(right + getLabelLinePos(axisAlign), yLabel);
+                                    drawLine(canvas, right, yLabel, right + getLabelLinePos(axisAlign), yLabel);
                                     canvas.stroke();
                                 }
                                 drawText(canvas, label, right, yLabel - 2, paint, mRenderer->getYLabelsAngle());
@@ -327,20 +324,18 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
 
                             if (showCustomTextGridY) {
                                 canvas.set_color(mRenderer->getGridColor());
-                                canvas.move_to(left, yLabel);
-                                canvas.line_to(right, yLabel);
+                                drawLine(canvas,left, yLabel,right, yLabel);
                                 canvas.stroke();
                             }
                         } else {
-                            if(showTickMarks){canvas.move_to(right - getLabelLinePos(axisAlign),yLabel);
-                                canvas.line_to(right, yLabel);
+                            if(showTickMarks){
+                                drawLine(canvas, right - getLabelLinePos(axisAlign),yLabel, right, yLabel);
                                 canvas.stroke();
                             }
                             drawText(canvas, label, right + 10, yLabel - 2, paint, mRenderer->getYLabelsAngle());
                             if (showCustomTextGridY) {
                                 canvas.set_color(mRenderer->getGridColor());
-                                canvas.move_to(right, yLabel);
-                                canvas.line_to(left, yLabel);
+                                drawLine(canvas,right, yLabel,left, yLabel);
                                 canvas.stroke();
                             }
                         }
@@ -351,7 +346,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
 
         if (showLabels) {
             canvas.set_color(mRenderer->getLabelsColor());
-            float size = mRenderer->getAxisTitleTextSize();
+            const float size = mRenderer->getAxisTitleTextSize();
             canvas.set_font_size(size);
             paint.setTextAlign(Align::CENTER);
             if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
@@ -389,22 +384,18 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     }
     if (mRenderer->isShowAxes()) {
         canvas.set_color(mRenderer->getAxesColor());
-        canvas.move_to(left, bottom);
-        canvas.line_to(right, bottom);
+        drawLine(canvas,left, bottom,right, bottom);
         bool rightAxis = false;
         for (int i = 0; i < maxScaleNumber && !rightAxis; i++) {
             rightAxis = mRenderer->getYAxisAlign(i) == Align::RIGHT;
         }
         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
-            canvas.move_to(left, top);
-            canvas.line_to(left, bottom);
+            drawLine(canvas,left, top, left, bottom);
             if (rightAxis) {
-                canvas.move_to(right, top);
-                canvas.line_to(right, bottom);
+                drawLine(canvas,right, top, right, bottom);
             }
         } else if (orientation == XYMultipleSeriesRenderer::Orientation::VERTICAL) {
-            canvas.move_to(right, top);
-            canvas.line_to(right, bottom);
+            drawLine(canvas,right, top, right, bottom);
         }
         canvas.stroke();
     }
@@ -585,8 +576,7 @@ void XYChart::drawXLabels(const std::vector<double>& xLabels,const std::vector<d
         if (showXLabels) {
             canvas.set_color(mRenderer->getXLabelsColor());
             if(showTickMarks){
-                canvas.move_to(xLabel, bottom);
-                canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                drawLine(canvas,xLabel, bottom,xLabel , bottom + mRenderer->getLabelsTextSize() / 3);
                 canvas.stroke();
             }
             drawText(canvas, getLabel(mRenderer->getLabelFormat(), label), xLabel,
@@ -596,8 +586,7 @@ void XYChart::drawXLabels(const std::vector<double>& xLabels,const std::vector<d
         if (showGridY) {
             canvas.set_line_width(mRenderer->getGridLineWidth());
             canvas.set_color(mRenderer->getGridColor());
-            canvas.move_to(xLabel, bottom);
-            canvas.line_to(xLabel, top);
+            drawLine(canvas,xLabel, bottom, xLabel, top);
             canvas.stroke();
         }
     }
@@ -689,16 +678,14 @@ void XYChart::drawXTextLabels(const std::vector<double>& xTextLabelLocations, Ca
                 float xLabel = (float) (left + xPixelsPerUnit * (location - minX));
                 canvas.set_color(mRenderer->getXLabelsColor());
                 if(showTickMarks){
-                    canvas.move_to(xLabel, bottom);
-                    canvas.line_to(xLabel, bottom + mRenderer->getLabelsTextSize() / 3);
+                    drawLine(canvas ,xLabel, bottom, xLabel, bottom + mRenderer->getLabelsTextSize()/3);
                     canvas.stroke();
                 }
                 drawText(canvas, mRenderer->getXTextLabel(location), xLabel,
                          bottom + mRenderer->getLabelsTextSize() * 4 / 3, paint, mRenderer->getXLabelsAngle());
                 if (showCustomTextGridX) {
                     canvas.set_color(mRenderer->getGridColor());
-                    canvas.move_to(xLabel, bottom);
-                    canvas.line_to(xLabel, top);
+                    drawLine(canvas, xLabel , bottom, xLabel, top);
                     canvas.stroke();
                 }
             }
@@ -778,9 +765,9 @@ std::vector<double> XYChart::toScreenPoint(const std::vector<double>& realPoint,
     }
 }
 
-SeriesSelection* XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
+bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
     if (mClickableAreas.empty()||(mRenderer==nullptr)){
-        return nullptr;
+        return false;
     }
     const float selectableBuffer = mRenderer->getSelectableBuffer();
     for (int seriesIndex = mClickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
@@ -799,14 +786,15 @@ SeriesSelection* XYChart::getSeriesAndPointForScreenCoordinate(const PointF& scr
                         rectangle.inflate(selectableBuffer,selectableBuffer);
                     }
                     if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
-                        return new SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                        selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                        return true;
                     }
                 }
                 pointIndex++;
             }
         }
     }
-    return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint);
+    return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection);
 }
 
 bool XYChart::isRenderNullValues() const{

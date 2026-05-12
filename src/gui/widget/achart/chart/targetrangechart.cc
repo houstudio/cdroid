@@ -51,8 +51,7 @@ void TargetRangeChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float
         const double originalLineWidth = canvas.get_line_width();
         canvas.set_color(Color::BLACK);
         canvas.set_line_width(2.0);
-        canvas.move_to(screen.left, targetY);
-        canvas.line_to(screen.right(), targetY);
+        drawLine(canvas,screen.left, targetY, screen.right(), targetY);
         canvas.stroke();
         canvas.set_line_width(originalLineWidth);
     }

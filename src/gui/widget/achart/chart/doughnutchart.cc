@@ -24,7 +24,6 @@ DoughnutChart::DoughnutChart(const std::shared_ptr<MultipleCategorySeries>& data
     mDataset = dataset;
 }
 
-
 static void drawRingSlice(Canvas& canvas, double centerX, double centerY, double outerRadius,
         double innerRadius, double startAngleDegrees, double sweepAngleDegrees) {
     const double startRadians = startAngleDegrees * M_PI / 180.0;
@@ -44,16 +43,17 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
     int left = x;
     int top = y;
     int right = x + width;
+    int ringSegments = 0;
     const int cLength = mDataset->getCategoriesCount();
-    std::vector<std::string> categories(cLength);
+    const std::vector<std::string>& categories = mDataset->getCategories();
     for (int category = 0; category < cLength; category++) {
-        categories[category] = mDataset->getCategory(category);
+        ringSegments += mDataset->getItemCount(category);
     }
     if (mRenderer->isFitLegend()) {
         legendSize = drawLegend(canvas, mRenderer, categories, left, right, y, width, height, legendSize, paint, true);
     }
 
-    int bottom = y + height - legendSize;
+    const int bottom = y + height - legendSize;
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
     mStep = SHAPE_WIDTH * 3 / 4;
 
@@ -68,12 +68,18 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
     if (mCenterY == NO_VALUE) {
         mCenterY = (bottom + top) / 2;
     }
-    LOGD("radiusBase=%d cLength=%d ringThickness=%.2f radius=%.2f",radiusBase,cLength,ringThickness,radius);
+
+    mPieMapper->setDimensions(radiusBase, mCenterX, mCenterY);
+    const bool loadPieCfg = !mPieMapper->areAllSegmentPresent(ringSegments);
+    if (loadPieCfg) {
+        mPieMapper->clearPieSegments();
+    }
+
     float shortRadius = radius * 0.9f;
     float longRadius = radius * 1.1f;
     std::vector<RectF> prevLabelsBounds;
     for (int category = 0; category < cLength; category++) {
-        int sLength = mDataset->getItemCount(category);
+        const int sLength = mDataset->getItemCount(category);
         double total = 0;
         std::vector<std::string> titles(sLength);
         for (int i = 0; i < sLength; i++) {
@@ -89,12 +95,15 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
         const double innerRadius = std::max(0.0, radius - ringThickness);
         for (int i = 0; i < sLength; i++) {
             canvas.set_color(mRenderer->getSeriesRendererAt(i)->getColor());
-            float value = (float) mDataset->getValues(category)[i];
-            float angle = (float) (value / total * 360);
+            const float value = (float) mDataset->getValues(category)[i];
+            const float angle = (float) (value / total * 360);
             drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle);
             drawLabel(canvas, mDataset->getTitles(category)[i], mRenderer, prevLabelsBounds, mCenterX,
                       mCenterY, shortRadius, longRadius, currentAngle, angle, left, right,
                       mRenderer->getLabelsColor(), paint, true, false);
+            if (loadPieCfg) {
+               mPieMapper->addPieSegment((category<<16)|i, value, currentAngle, angle,innerRadius,radius-innerRadius);
+            }
             currentAngle += angle;
         }
         radius = std::max(0.0, innerRadius - ringGap);
@@ -116,4 +125,9 @@ void DoughnutChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simple
     canvas.arc(x+SHAPE_WIDTH,y,mStep,0,M_PI*2.0);
     if(paint.style==Style::FILL)canvas.fill();else canvas.stroke();
 }
+
+bool DoughnutChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
+    return mPieMapper->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
+}
+
 }/*endof namespace*/

@@ -20,6 +20,9 @@
 #include <widget/achart/renderer/xymultipleseriesrenderer.h>
 namespace cdroid {
 
+AbstractChart::AbstractChart():mSeriesIndex(-1),mDataIndex(-1){
+}
+
 void AbstractChart::drawBackground(const std::shared_ptr<DefaultRenderer>& renderer, Canvas& canvas, int x, int y, int width,
                                    int height, Paint& paint, bool newColor, int color) {
     if (renderer->isApplyBackgroundColor() || newColor) {
@@ -349,8 +352,12 @@ bool AbstractChart::isNullValue(double value) const{
     return std::isnan(value) || std::isinf(value) || value == MathHelper::NULL_VALUE;
 }
 
-SeriesSelection* AbstractChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint) const{
-    return nullptr;
+bool AbstractChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&) const{
+    return false;
 }
 
+void AbstractChart::setSelection(int seriesIndex,int dataIndex){
+    mSeriesIndex = seriesIndex;
+    mDataIndex = dataIndex;
+}
 }
