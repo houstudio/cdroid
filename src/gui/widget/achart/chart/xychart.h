@@ -41,7 +41,7 @@ private:
     Rect mScreenR;
     /** The calculated range. */
     std::map<int, std::vector<double>> mCalcRange;
-
+protected:
     /**
      * The clickable areas for all points. The array index is the series index,
      * and the RectF list index is the point index in that series.
@@ -240,6 +240,7 @@ public:
      * @return the chart type
      */
     virtual std::string getChartType()const =0;
+    void setSelection(int seriesIndex,int dataIndex)override;
 };
 }/*endof namespace*/
 #endif/*__XY_CHART_H__*/

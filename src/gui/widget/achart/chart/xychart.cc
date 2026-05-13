@@ -790,23 +790,29 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
         int pointIndex = 0;
         auto it = mClickableAreas.find(seriesIndex);
         if (mClickableAreas.end()!=it) {
-            RectF rectangle;
             for (const ClickableArea& area : it->second) {
-                if (1/*area != null*/) {
-                    rectangle = area.getRect();
-                    if(!rectangle.empty()){
-                        rectangle.inflate(selectableBuffer,selectableBuffer);
-                    }
-                    if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
-                        selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
-                        return true;
-                    }
+                RectF rectangle = area.getRect();
+                if(!rectangle.empty()){
+                    rectangle.inflate(selectableBuffer,selectableBuffer);
+                }
+                if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
+                    selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                    return true;
                 }
                 pointIndex++;
             }
         }
     }
     return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection);
+}
+
+void XYChart::setSelection(int seriesIndex,int dataIndex){
+    mDataIndex =dataIndex;
+    if((mDataset!=nullptr)&&(seriesIndex<mDataset->getSeriesCount())){
+        mSeriesIndex = seriesIndex;
+    }else{
+        mSeriesIndex = -1;
+    }
 }
 
 bool XYChart::isRenderNullValues() const{

@@ -200,11 +200,13 @@ void CombinedXYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas
     //mCharts[seriesIndex]->setCalcRange(getCalcRange(mDataset->getSeriesAt(seriesIndex)->getScaleNumber()), 0);
     syncSubChartState(mCharts[seriesIndex], seriesIndex);
     if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setPointSize(seriesRenderer->getPointSize()+2);
         seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
     }
     mCharts[seriesIndex]->drawSeries(series, canvas, paint, pointsList, seriesRenderer, yAxisValue,
                                     0, orientation, startIndex);
     if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setPointSize(seriesRenderer->getPointSize()-2);
         seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()-2);
     }
 }
@@ -249,6 +251,14 @@ std::string CombinedXYChart::getChartType() const{
 
 std::vector<XYChart*> CombinedXYChart::getCharts() const{
     return mCharts;
+}
+
+void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
+    XYChart::setSelection(seriesIndex,pointIndex);
+    for(auto chart:mCharts){
+        chart->setSelection(-1,-1);
+    }
+    mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
 }
 
 }

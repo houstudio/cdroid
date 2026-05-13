@@ -53,6 +53,7 @@ public:
 
     std::string getChartType() const override;
     std::vector<XYChart*> getCharts() const;
+    void setSelection(int,int)override;
 };
 }/*endof namespace*/
 #endif/*__COMBINED_XYCHART_H__*/
