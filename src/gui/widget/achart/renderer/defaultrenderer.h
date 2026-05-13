@@ -104,7 +104,7 @@ private:
     /** A flag for enabling the click on elements. */
     bool mClickEnabled = false;
     /** The selectable radius around a clickable point. */
-    int mSelectableBuffer = 15;
+    int mSelectableBuffer = 4;
     /** If the chart should display the values (available for pie chart). */
     bool mDisplayValues;
 

@@ -52,11 +52,11 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     drawBackground(mRenderer, canvas, x, y, width, height, paint, false, DefaultRenderer::NO_COLOR);
 
     /*if (paint.getTypeface() == null
-            || (mRenderer->getTextTypeface() != null && paint.getTypeface().equals(
+            || (mRenderer->getTextTypeface() != nullptr && paint.getTypeface().equals(
                     mRenderer->getTextTypeface()))
             || !paint.getTypeface().toString().equals(mRenderer->getTextTypefaceName())
             || paint.getTypeface().getStyle() != mRenderer->getTextTypefaceStyle()) {
-        if (mRenderer->getTextTypeface() != null) {
+        if (mRenderer->getTextTypeface() != nullptr) {
             paint.setTypeface(mRenderer->getTextTypeface());
         } else {
             paint.setTypeface(Typeface::create(mRenderer->getTextTypefaceName(),
@@ -80,7 +80,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         transform(canvas, angle, false);
     }
 
-    int maxScaleNumber = -INT_MAX;//Integer.MAX_VALUE;
+    int maxScaleNumber = -INT_MAX;
     for (int i = 0; i < sLength; i++) {
         maxScaleNumber = std::max(maxScaleNumber, mDataset->getSeriesAt(i)->getScaleNumber());
     }
@@ -114,27 +114,27 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
     std::vector<double> yPixelsPerUnit(maxScaleNumber);
     for (int i = 0; i < sLength; i++) {
         auto series = mDataset->getSeriesAt(i);
-        int scale = series->getScaleNumber();
+        const int scale = series->getScaleNumber();
         if (series->getItemCount() == 0) {
             continue;
         }
         if (!isMinXSet[scale]) {
-            double minimumX = series->getMinX();
+            const double minimumX = series->getMinX();
             minX[scale] = std::min(minX[scale], minimumX);
             mCalcRange[scale][0] = minX[scale];
         }
         if (!isMaxXSet[scale]) {
-            double maximumX = series->getMaxX();
+            const double maximumX = series->getMaxX();
             maxX[scale] = std::max(maxX[scale], maximumX);
             mCalcRange[scale][1] = maxX[scale];
         }
         if (!isMinYSet[scale]) {
-            double minimumY = series->getMinY();
+            const double minimumY = series->getMinY();
             minY[scale] = std::min(minY[scale], minimumY);
             mCalcRange[scale][2] = minY[scale];
         }
         if (!isMaxYSet[scale]) {
-            double maximumY = series->getMaxY();
+            const double maximumY = series->getMaxY();
             maxY[scale] = std::max(maxY[scale],maximumY);
             mCalcRange[scale][3] = maxY[scale];
         }
@@ -210,6 +210,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         auto range = series->getRange(minX[scale], maxX[scale], seriesRenderer->isDisplayBoundingPoints());
         int startIndex = -1;
         clickableArea.clear();
+        if(i==mSeriesIndex){
+            seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
+        }
         for (auto&value : range) {
             double xValue = value.first;//getKey();
             double yValue = value.second;//getValue();
@@ -260,6 +263,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             drawSeries(series, canvas, paint, points, seriesRenderer, yAxisValue, i, orientation, startIndex);
             auto clickableAreasForSubSeries = clickableAreasForPoints(points, values, yAxisValue, i, startIndex);
             clickableArea.insert(clickableArea.end(),clickableAreasForSubSeries.begin(),clickableAreasForSubSeries.end());
+        }
+        if(i==mSeriesIndex){
+            seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()-2);
         }
     }/*endof for*/
     // draw stuff over the margins such as data doesn't render on these areas

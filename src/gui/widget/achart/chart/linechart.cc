@@ -21,18 +21,18 @@ namespace cdroid {
 LineChart::LineChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
         const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)
     :XYChart(dataset, renderer){
-    pointsChart = new ScatterChart(dataset, renderer);
+    mPointsChart = new ScatterChart(dataset, renderer);
 }
 
 LineChart::~LineChart(){
-    delete pointsChart;
+    delete mPointsChart;
 }
 
 void LineChart::setDatasetRenderer(
         const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
         const std::shared_ptr<XYMultipleSeriesRenderer>& renderer) {
     XYChart::setDatasetRenderer(dataset, renderer);
-    pointsChart = new ScatterChart(dataset, renderer);
+    mPointsChart = new ScatterChart(dataset, renderer);
 }
 
 void LineChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
@@ -166,7 +166,7 @@ void LineChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeri
         canvas.stroke();
     }
     if (isRenderPoints(renderer)) {
-        pointsChart->drawLegendShape(canvas, renderer, x + 5, y, seriesIndex, paint);
+        mPointsChart->drawLegendShape(canvas, renderer, x + 5, y, seriesIndex, paint);
     }
 }
 
@@ -175,7 +175,7 @@ bool LineChart::isRenderPoints(const std::shared_ptr<SimpleSeriesRenderer>& rend
 }
 
 ScatterChart* LineChart::getPointsChart() const{
-    return pointsChart;
+    return mPointsChart;
 }
 
 std::string LineChart::getChartType() const{

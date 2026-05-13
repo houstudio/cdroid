@@ -26,7 +26,7 @@ private:
     /** The legend shape width. */
     static constexpr int SHAPE_WIDTH = 30;
     /** The scatter chart to be used to draw the data points. */
-    ScatterChart* pointsChart;
+    ScatterChart* mPointsChart;
 protected:
     LineChart()=default;
     void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)override;

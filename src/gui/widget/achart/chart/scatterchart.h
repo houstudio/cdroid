@@ -53,7 +53,6 @@ public:
     int getLegendShapeWidth(int seriesIndex) const override;
     void drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,
             float x, float y,int seriesIndex,  Paint& paint)override;
-
     std::string getChartType() const override;
 };
 }/*endof namespace*/
