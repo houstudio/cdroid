@@ -169,6 +169,19 @@ void LineChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeri
     }
 }
 
+bool LineChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
+    if(XYChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection)){
+        return true;
+    }
+#if 10
+    for (int seriesIndex = mClickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
+        auto it = mClickableAreas.find(seriesIndex);
+        for (const ClickableArea& area : it->second){
+        }
+    }
+#endif
+    return false;
+}
 bool LineChart::isRenderPoints(const std::shared_ptr<SimpleSeriesRenderer>& renderer) const{
     return ((XYSeriesRenderer*) renderer.get())->getPointStyle() != PointStyle::POINT;
 }

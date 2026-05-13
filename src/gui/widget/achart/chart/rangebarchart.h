@@ -23,6 +23,8 @@ namespace cdroid{
  */
 class RangeBarChart :public BarChart {
 protected:
+    std::vector<ClickableArea> clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
+            float yAxisValue, int seriesIndex, int startIndex)override;
     void drawChartValuesText(Canvas& canvas, const std::shared_ptr<XYSeries>& series, const std::shared_ptr<XYSeriesRenderer>& renderer,
              Paint& paint,const std::vector<float>& points, int seriesIndex, int startIndex)override;
     float getCoeficient() const;
