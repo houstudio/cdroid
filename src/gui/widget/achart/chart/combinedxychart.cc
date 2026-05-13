@@ -245,6 +245,16 @@ void CombinedXYChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simp
     mCharts[seriesIndex]->drawLegendShape(canvas, renderer, x, y, 0, paint);
 }
 
+void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
+    XYChart::setSelection(seriesIndex,pointIndex);
+    for(auto chart:mCharts){
+        chart->setSelection(-1,-1);
+    }
+    if( (seriesIndex>0) && (seriesIndex<(int)mCharts.size()) ){
+         mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
+    }
+}
+
 std::string CombinedXYChart::getChartType() const{
     return "Combined";
 }
@@ -253,12 +263,5 @@ std::vector<XYChart*> CombinedXYChart::getCharts() const{
     return mCharts;
 }
 
-void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
-    XYChart::setSelection(seriesIndex,pointIndex);
-    for(auto chart:mCharts){
-        chart->setSelection(-1,-1);
-    }
-    mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
-}
 
 }
