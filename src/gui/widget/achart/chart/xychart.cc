@@ -305,8 +305,8 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         if (showLabels) {//grid horizontal lines
             canvas.set_color(mRenderer->getLabelsColor());
             for (int i = 0; i < maxScaleNumber; i++) {
-                int axisAlign = mRenderer->getYAxisAlign(i);
-                auto yTextLabelLocations = mRenderer->getYTextLabelLocations(i);
+                const int axisAlign = mRenderer->getYAxisAlign(i);
+                const auto yTextLabelLocations = mRenderer->getYTextLabelLocations(i);
                 for (const double location : yTextLabelLocations) {
                     if (minY[i] <= location && location <= maxY[i]) {
                         const float yLabel = (float) (bottom - yPixelsPerUnit[i] * (location - minY[i]));
@@ -360,7 +360,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                     bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding() + size,
                     paint, 0);
                 for (int i = 0; i < maxScaleNumber; i++) {
-                    int axisAlign = mRenderer->getYAxisAlign(i);
+                    const int axisAlign = mRenderer->getYAxisAlign(i);
                     if (axisAlign == Align::LEFT) {
                         drawText(canvas, mRenderer->getYTitle(i), x + size, y + height / 2, paint, -90);
                     } else {
@@ -490,7 +490,13 @@ void XYChart::drawPoints(Canvas& canvas, Paint& paint, std::vector<float>& point
     if (isRenderPoints(seriesRenderer)) {
         ScatterChart* pointsChart = getPointsChart();
         if (pointsChart != nullptr) {
+            if(seriesIndex==mSeriesIndex){
+                seriesRenderer->setPointSize(seriesRenderer->getPointSize()+2);
+            }
             pointsChart->drawSeries(canvas, paint, pointsList, seriesRenderer, yAxisValue, seriesIndex,startIndex);
+            if(seriesIndex==mSeriesIndex){
+                 seriesRenderer->setPointSize(seriesRenderer->getPointSize()-2);
+            }
         }
     }
 }

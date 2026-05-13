@@ -50,8 +50,7 @@ void LineChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
             if (range.empty()) {
                 fillPoints.insert(fillPoints.end(),points.begin(),points.end());
             } else {
-                fillPoints.insert(fillPoints.end(),
-                        points.begin()+range[0]*2,points.begin()+range[1]*2);
+                fillPoints.insert(fillPoints.end(),points.begin()+range[0]*2,points.begin()+range[1]*2);
             }
 
             float referencePoint;
@@ -87,13 +86,13 @@ void LineChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
                 }
 
                 for (int i = 3; i < fillPoints.size(); i += 2) {
-                    float prevValue = fillPoints.at(i - 2);
-                    float value = fillPoints.at(i);
+                    const float prevValue = fillPoints.at(i - 2);
+                    const float value = fillPoints.at(i);
 
                     if (prevValue < referencePoint && value > referencePoint || prevValue > referencePoint
                             && value < referencePoint) {
-                        float prevX = fillPoints.at(i - 3);
-                        float x = fillPoints.at(i - 1);
+                        const float prevX = fillPoints.at(i - 3);
+                        const float x = fillPoints.at(i - 1);
                         boundsPoints.push_back(prevX + (x - prevX) * (referencePoint - prevValue) / (value - prevValue));
                         boundsPoints.push_back(referencePoint);
                         if (((fill.getType() == XYSeriesRenderer::FillOutsideLine::BOUNDS_ABOVE) && (value > referencePoint))

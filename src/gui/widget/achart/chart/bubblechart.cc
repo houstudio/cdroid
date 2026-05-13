@@ -36,7 +36,7 @@ void BubbleChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& p
     const double max = series->getMaxValue();
     const double coef = MAX_BUBBLE_SIZE / max;
     for (int i = 0; i < length; i += 2) {
-        double size = series->getValue(startIndex + i / 2) * coef + MIN_BUBBLE_SIZE;
+        double size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
         drawCircle(canvas, paint, points.at(i), points.at(i + 1), (float) size);
     }
 }
@@ -44,13 +44,13 @@ void BubbleChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& p
 std::vector<ClickableArea> BubbleChart::clickableAreasForPoints(const std::vector<float>& points,
         const std::vector<double>& values, float yAxisValue, int seriesIndex, int startIndex) {
     int length = points.size();
-    auto series = (XYValueSeries*)(mDataset->getSeriesAt(seriesIndex).get());
+    auto series = std::dynamic_pointer_cast<XYValueSeries>(mDataset->getSeriesAt(seriesIndex));
     double max = series->getMaxValue();
     double coef = MAX_BUBBLE_SIZE / max;
     std::vector<ClickableArea> ret(length / 2);
     for (int i = 0; i < length; i += 2) {
-        const float size = series->getValue(startIndex + i / 2) * coef + MIN_BUBBLE_SIZE;
-        ret[i / 2] = ClickableArea({points.at(i) - (float) size, points.at(i + 1) - (float) size,
+        const float size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
+        ret[i/2] = ClickableArea({points.at(i) - (float) size, points.at(i + 1) - (float) size,
                 float(size)*2.f, float(size)*2.f}, values.at(i), values.at(i + 1));
     }
     return ret;
@@ -68,7 +68,6 @@ void BubbleChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSe
 }
 
 void BubbleChart::drawCircle(Canvas& canvas,  Paint& paint, float x, float y, float radius) {
-    //canvas.drawCircle(x, y, radius, paint);
      canvas.arc(x,y,radius,0,M_PI*2.0);
      if(paint.style==Style::FILL)canvas.fill();canvas.stroke();
 }

@@ -47,9 +47,13 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
         canvas.set_line_width(renderer->getPointStrokeWidth());
     }
     const int length = points.size();
+    if(seriesIndex==mSeriesIndex){
+        mSize+=2;
+        renderer->setPointStrokeWidth(renderer->getPointStrokeWidth()+2);
+    }
+    canvas.set_line_width(renderer->getPointStrokeWidth());
     switch (renderer->getPointStyle()) {
     case X:
-        canvas.set_line_width(renderer->getPointStrokeWidth());
         for (int i = 0; i < length; i += 2) {
             drawX(canvas, paint, points.at(i), points.at(i + 1));
         }
@@ -87,12 +91,14 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
         break;
     case PointStyle::POINT:
         for (int i = 0; i < length; i += 2) {
-            LOGD("%.2f,%.2f",points.at(i), points.at(i + 1));
-            //canvas.drawPoint(points.at(i), points.at(i + 1), paint);
             canvas.arc(points.at(i), points.at(i + 1),mSize,0,M_PI*2.0);
             canvas.fill();
         }
         break;
+    }
+    if(seriesIndex==mSeriesIndex){
+        mSize-=2;
+        renderer->setPointStrokeWidth(renderer->getPointStrokeWidth()-2);
     }
     if (renderer->isFillPoints()){
         canvas.fill();
