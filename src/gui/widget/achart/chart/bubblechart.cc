@@ -27,7 +27,7 @@ BubbleChart::BubbleChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset
     :XYChart(dataset, renderer){
 }
 
-void BubbleChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
+void BubbleChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float>& points,
         const std::shared_ptr<XYSeriesRenderer>& renderer, float yAxisValue, int seriesIndex, int startIndex) {
     canvas.set_color(renderer->getColor());
     paint.setStyle(Style::FILL);
@@ -38,15 +38,19 @@ void BubbleChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& p
     for (int i = 0; i < length; i += 2) {
         double size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
         drawCircle(canvas, paint, points.at(i), points.at(i + 1), (float) size);
+        if( (mSeriesIndex==seriesIndex) && (startIndex+i/2==mDataIndex) ){
+            canvas.arc(points.at(i), points.at(i + 1), float(size+3.f),0,M_PI*2.0);
+            canvas.stroke();
+        }
     }
 }
 
 std::vector<ClickableArea> BubbleChart::clickableAreasForPoints(const std::vector<float>& points,
         const std::vector<double>& values, float yAxisValue, int seriesIndex, int startIndex) {
-    int length = points.size();
+    const int length = points.size();
     auto series = std::dynamic_pointer_cast<XYValueSeries>(mDataset->getSeriesAt(seriesIndex));
-    double max = series->getMaxValue();
-    double coef = MAX_BUBBLE_SIZE / max;
+    const double max = series->getMaxValue();
+    const double coef = MAX_BUBBLE_SIZE / max;
     std::vector<ClickableArea> ret(length / 2);
     for (int i = 0; i < length; i += 2) {
         const float size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
