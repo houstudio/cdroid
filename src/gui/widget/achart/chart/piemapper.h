@@ -116,7 +116,7 @@ public:
             const double angleFromPieCenter = getAngle(screenPoint);
             for (const PieSegment& ps : mPieSegmentList) {
                 if (ps.isInSegment(angleFromPieCenter)) {
-                    if(ps.getRadius()==0.f){
+                    if(ps.getRadius()==0.f||ps.getThicknees()==0.f){
                         selection = SeriesSelection(0, ps.getDataIndex(), ps.getValue(), ps.getValue());
                         return true;
                     }else{

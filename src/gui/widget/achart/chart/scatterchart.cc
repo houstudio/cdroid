@@ -18,7 +18,6 @@
 #include <widget/achart/renderer/xyseriesrenderer.h>
 #include <widget/achart/renderer/simpleseriesrenderer.h>
 namespace cdroid{
-//public static final String TYPE = "Scatter";
 
 ScatterChart::ScatterChart() {
 }
@@ -90,7 +89,8 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
         for (int i = 0; i < length; i += 2) {
             LOGD("%.2f,%.2f",points.at(i), points.at(i + 1));
             //canvas.drawPoint(points.at(i), points.at(i + 1), paint);
-            canvas.arc(points.at(i), points.at(i + 1),renderer->getPointStrokeWidth()/2.f,0,M_PI*2.0);
+            canvas.arc(points.at(i), points.at(i + 1),mSize,0,M_PI*2.0);
+            canvas.fill();
         }
         break;
     }
@@ -146,8 +146,7 @@ void ScatterChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleS
         break;
     case PointStyle::POINT:
         //canvas.drawPoint(x + SHAPE_WIDTH, y, paint);
-        canvas.arc(x+SHAPE_WIDTH,y,mSize+10,0,M_PI*2.0);
-        LOGD("%.2f,%.2f",x+SHAPE_WIDTH,y);
+        canvas.arc(x+SHAPE_WIDTH,y,mSize,0,M_PI*2.0);
         break;
     }
     if(paint.style==Style::FILL){

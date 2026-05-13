@@ -357,15 +357,6 @@ void GraphicalView::onDraw(Canvas& canvas) {
     AbstractChart::Paint mPaint;
     mChart->draw(canvas, left,top, width, height, mPaint);
     if (mRenderer != nullptr && mRenderer->isZoomEnabled() /*&& mRenderer->isZoomButtonsVisible()*/) {
-        canvas.set_color(ZOOM_BUTTONS_COLOR);
-        const int zoomSize = std::max(20, std::min(width, height) / 7);
-        mZoomR.set(width - zoomSize * 3, height - zoomSize * 0.775f, zoomSize*3,zoomSize*3);
-        canvas.rectangle(mZoomR.left,mZoomR.top,mZoomR.width,mZoomR.height);
-        canvas.fill();
-        /*float buttonY = top + height - zoomSize * 0.625f;
-        canvas.drawBitmap(zoomInImage, left + width - zoomSize * 2.75f, buttonY, null);
-        canvas.drawBitmap(zoomOutImage, left + width - zoomSize * 1.75f, buttonY, null);
-        canvas.drawBitmap(fitZoomImage, left + width - zoomSize * 0.75f, buttonY, null);*/
     }
     mDrawn = true;
 }
@@ -587,7 +578,7 @@ void GraphicalView::handleSelection(int x,int y){
     if( (mRenderer!=nullptr) && mRenderer->isClickEnabled() ){
         SeriesSelection sel;
         const bool hasSelection = mChart->getSeriesAndPointForScreenCoordinate({float(x),float(y)},sel);
-        if( hasSelection && ( (sel.getSeriesIndex()!=mSelection.getPointIndex())
+        if( hasSelection && ( (sel.getSeriesIndex()!=mSelection.getSeriesIndex())
                     || (sel.getPointIndex()!=mSelection.getPointIndex())) ){
             LOGD_IF(hasSelection,"%d,%d",sel.getSeriesIndex(),sel.getPointIndex());
             mChart->setSelection(sel.getSeriesIndex(),sel.getPointIndex());

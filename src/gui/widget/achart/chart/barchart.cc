@@ -27,12 +27,12 @@ BarChart::BarChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
     mType = type;
 }
 
-std::vector<ClickableArea>  BarChart::clickableAreasForPoints(const std::vector<float>& points,
+std::vector<ClickableArea> BarChart::clickableAreasForPoints(const std::vector<float>& points,
         const std::vector<double>& values,float yAxisValue, int seriesIndex, int startIndex) {
     const int seriesNr = mDataset->getSeriesCount();
     const int length = points.size();
     std::vector<ClickableArea> ret(length / 2);
-    float halfDiffX = getHalfDiffX(points, length, seriesNr);
+    const float halfDiffX = getHalfDiffX(points, length, seriesNr);
     for (int i = 0; i < length; i += 2) {
         const float x = points.at(i);
         const float y = points.at(i + 1);
@@ -150,15 +150,14 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
 }
 
 int  BarChart::getGradientPartialColor(int minColor, int maxColor, float fraction) const{
-    uint8_t alpha = std::round(fraction * Color::alpha(minColor) + (1.f - fraction)
-                           * Color::alpha(maxColor));
+    uint8_t alpha = std::round(fraction * Color::alpha(minColor) + (1.f - fraction) * Color::alpha(maxColor));
     uint8_t r = std::round(fraction * Color::red(minColor) + (1.f - fraction) * Color::red(maxColor));
     uint8_t g = std::round(fraction * Color::green(minColor) + (1.f - fraction) * Color::green(maxColor));
     uint8_t b = std::round(fraction * Color::blue(minColor) + (1.f - fraction) * Color::blue((maxColor)));
     return Color::toArgb( r, g, b,alpha);
 }
 
-void  BarChart::drawChartValuesText(Canvas& canvas,  const std::shared_ptr<XYSeries>& series, 
+void  BarChart::drawChartValuesText(Canvas& canvas, const std::shared_ptr<XYSeries>& series,
         const std::shared_ptr<XYSeriesRenderer>& renderer, Paint& paint,
         const std::vector<float>& points, int seriesIndex, int startIndex) {
     const int seriesNr = mDataset->getSeriesCount();
@@ -195,14 +194,11 @@ void  BarChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeri
 }
 
 float  BarChart::getHalfDiffX(const std::vector<float>& points, int length, int seriesNr) const{
-    float barWidth = mRenderer->getBarWidth();
+    const float barWidth = mRenderer->getBarWidth();
     if (barWidth > 0) {
         return barWidth / 2;
     }
-    int div = length;
-    if (length > 2) {
-        div = length - 2;
-    }
+    const int div = length>2?length-2:length;
     float halfDiffX = (points.at(length - 2) - points.at(0)) / div;
     if (halfDiffX == 0) {
         halfDiffX = 10;
@@ -211,7 +207,7 @@ float  BarChart::getHalfDiffX(const std::vector<float>& points, int length, int 
     if ((mType != Type::STACKED)&&(mType != Type::HEAPED)) {
         halfDiffX /= seriesNr;
     }
-    return (float) (halfDiffX / (getCoeficient() * (1 + mRenderer->getBarSpacing())));
+    return (float) (halfDiffX / (getCoeficient() * (1.f + mRenderer->getBarSpacing())));
 }
 
 float  BarChart::getCoeficient() const{

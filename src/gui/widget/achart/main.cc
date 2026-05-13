@@ -77,7 +77,7 @@ cdroid::GraphicalView* createInteractionChart(cdroid::Context* context) {
     renderer->setShowGrid(true);
     renderer->setShowLegend(true);
     renderer->setClickEnabled(true);
-    renderer->setSelectableBuffer(18);
+    //renderer->setSelectableBuffer(4);
     renderer->setPanEnabled(true, true);
     renderer->setZoomEnabled(true, true);
     renderer->setPanLimits({0.0, 10.0, -1.4, 1.4});
@@ -150,7 +150,7 @@ cdroid::GraphicalView* createOverviewChart(cdroid::Context* context) {
     renderer->setShowGrid(true);
     renderer->setShowLegend(true);
     renderer->setClickEnabled(true);
-    renderer->setSelectableBuffer(18);
+    //renderer->setSelectableBuffer(4);
     renderer->setPanEnabled(false, false);
     renderer->setZoomEnabled(false, false);
     renderer->setXAxisMin(0.0);
@@ -372,7 +372,7 @@ void configureCommonXYRenderer(cdroid::XYMultipleSeriesRenderer& renderer, const
     renderer.setShowGrid(true);
     renderer.setShowLegend(true);
     renderer.setClickEnabled(true);
-    renderer.setSelectableBuffer(18);
+    //renderer.setSelectableBuffer(4);
     renderer.setPanEnabled(true, true);
     renderer.setZoomEnabled(true, true);
     renderer.setZoomRate(1.25f);
@@ -496,16 +496,20 @@ ChartPageSpec createScatterChart(cdroid::Context* context) {
 
     renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFF90E0EF), cdroid::PointStyle::X, false, false, 1.8f));
     renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFAFCC), cdroid::PointStyle::TRIANGLE, true, false, 1.8f));
+    renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFAFCC), cdroid::PointStyle::POINT, true, false, 1.8f));
 
     auto batchA = std::make_shared<cdroid::XYSeries>("Batch A");
     auto batchB = std::make_shared<cdroid::XYSeries>("Batch B");
+    auto batchC = std::make_shared<cdroid::XYSeries>("Batch C");
     for (int i = 0; i < 10; ++i) {
         const double x = 0.8 + i;
         batchA->add(x, 2.2 + std::fmod(i * 2.7, 6.0));
         batchB->add(x + 0.15, 4.0 + std::fmod(i * 1.9, 5.2));
+        batchC->add(x + 0.12, 4.0 + std::fmod(i * 1.9, 4.9));
     }
     dataset->addSeries(batchA);
     dataset->addSeries(batchB);
+    dataset->addSeries(batchC);
 
     auto* chartView = cdroid::ChartFactory::getScatterChartView(context, dataset, renderer);
     attachPanZoomListeners(*chartView);

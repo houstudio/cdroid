@@ -44,7 +44,7 @@ static void drawArc(Canvas& canvas,double centerX, double centerY,
 
 void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
     //paint.setAntiAlias(mRenderer->isAntialiasing());
-    //paint.setStyle(Style.FILL);
+    //paint.setStyle(Style::FILL);
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
     const int left = x;
@@ -52,9 +52,11 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
     const int right = x + width;
     const int sLength = mDataset->getItemCount();
     double total = 0;
+    double maxValue = FLT_MIN;
     std::vector<std::string> titles(sLength);
     for (int i = 0; i < sLength; i++) {
         total += mDataset->getValue(i);
+        maxValue = std::max(maxValue,mDataset->getValue(i));
         titles[i] = mDataset->getCategory(i);
     }
     if (mRenderer->isFitLegend()) {
@@ -92,42 +94,38 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
             Color startColor(seriesRenderer->getGradientStartColor());
             Color endColor(seriesRenderer->getGradientStopColor());
             Cairo::RefPtr<Cairo::RadialGradient> grad = Cairo::RadialGradient::create(
-               mCenterX, mCenterY, 0.0, mCenterX, mCenterY, radius );
-            grad->add_color_stop_rgba(0.0, startColor.red(), startColor.green(), 
-                             startColor.blue(), startColor.alpha());
-            grad->add_color_stop_rgba(1.0, endColor.red(), endColor.green(),
-                             endColor.blue(), endColor.alpha());
+                    mCenterX, mCenterY, 0.0, mCenterX, mCenterY, radius );
+            grad->add_color_stop_rgba(0.0, startColor.red(), startColor.green(), startColor.blue(), startColor.alpha());
+            grad->add_color_stop_rgba(1.0, endColor.red(), endColor.green(), endColor.blue(), endColor.alpha());
             canvas.set_source(grad);
         } else {
             canvas.set_color(seriesRenderer->getColor());
         }
 
         const float value = (float) mDataset->getValue(i);
-        const float angle = (float) (value / total * 360);
-        if (/*seriesRenderer->isHighlighted()||*/(mDataIndex == i)) {
-            const double rAngle = (90.0 - (currentAngle + angle / 2))*M_PI/180.0;
+        const float sweepAngle = (float) (value / total * 360.f);
+        const float radiusScale = 1.f;//std::sqrt(value/maxValue);
+        if (seriesRenderer->isHighlighted()|| (mDataIndex == i)) {
+            const double rAngle = (90.0 - (currentAngle + sweepAngle / 2))*M_PI/180.0;
             const float translateX = (float) (radius * 0.1 * std::sin(rAngle));
             const float translateY = (float) (radius * 0.1 * std::cos(rAngle));
-            drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius, currentAngle, angle,paint);
+            drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,paint);
         } else {
-            drawArc(canvas, mCenterX, mCenterY, radius, currentAngle, angle,paint);
+            drawArc(canvas, mCenterX, mCenterY, radius*radiusScale, currentAngle, sweepAngle,paint);
         }
         canvas.set_color(seriesRenderer->getColor());
-        drawLabel(canvas, mDataset->getCategory(i), mRenderer, prevLabelsBounds, mCenterX, mCenterY,
-                  shortRadius, longRadius, currentAngle, angle, left, right, mRenderer->getLabelsColor(),
-                  paint, true, false);
+        drawLabel(canvas, mDataset->getCategory(i), mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius,
+                longRadius, currentAngle, sweepAngle, left, right, mRenderer->getLabelsColor(), paint, true, false);
         if (mRenderer->isDisplayValues()) {
-            drawLabel(canvas,
-                getLabel(mRenderer->getSeriesRendererAt(i)->getChartValuesFormat(), mDataset->getValue(i)),
-                mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius / 2, longRadius / 2,
-                currentAngle, angle, left, right, mRenderer->getLabelsColor(), paint, false, true);
+            drawLabel(canvas, getLabel(mRenderer->getSeriesRendererAt(i)->getChartValuesFormat(),
+                mDataset->getValue(i)), mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius / 2, longRadius / 2,
+                currentAngle, sweepAngle, left, right, mRenderer->getLabelsColor(), paint, false, true);
         }
 
-        // Save details for getSeries functionality
         if (loadPieCfg) {
-            mPieMapper->addPieSegment(i, value, currentAngle, angle);
+            mPieMapper->addPieSegment(i, value, currentAngle, sweepAngle);
         }
-        currentAngle += angle;
+        currentAngle += sweepAngle;
     }
     prevLabelsBounds.clear();
     drawLegend(canvas, mRenderer, titles, left, right, y, width, height, legendSize, paint, false);

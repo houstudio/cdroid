@@ -33,8 +33,6 @@ private:
     Bitmap zoomOutImage;
     /** The fit zoom icon. */
     Bitmap fitZoomImage;
-    /** The zoom buttons background color. */
-    static constexpr int ZOOM_BUTTONS_COLOR = 0xAF969696;
     /** The old x coordinate. */
     float oldX,oldX2;
     /** The old y coordinate. */
