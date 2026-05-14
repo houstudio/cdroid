@@ -130,7 +130,6 @@ bool CubicLineChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPo
                  const PointF& sp1 = samplePoints[j];
                  const PointF& sp2 = samplePoints[j+1];
                  auto distance = pointToSegmentDistance(screenPoint, sp1, sp2);
-                 LOGD("(%g,%g) (%g,%g) distance=%g",sp1.x,sp1.y,sp2.x,sp2.y,distance);
                  if (distance < selectableBuffer) {
                      selection = SeriesSelection(seriesIndex, -1, sp1.x, sp1.y);
                      return true;
