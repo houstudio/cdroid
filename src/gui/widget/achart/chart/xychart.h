@@ -61,12 +61,10 @@ protected:
     XYChart();
     virtual void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer);
     virtual std::vector<double> getXLabels(double min, double max, int count)const;
-
     std::map<int, std::vector<double>> getYLabels(const std::vector<double>& minY, const std::vector<double>& maxY, int maxScaleNumber)const;
+
     Rect getScreenR()const;
-
     void setScreenR(const Rect& screenR);
-
 
     /**
      * Draws the series.

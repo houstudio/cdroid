@@ -40,11 +40,11 @@ std::vector<ClickableArea> BarChart::clickableAreasForPoints(const std::vector<f
         const float maxY = std::max(y, yAxisValue);
         if (mType == Type::STACKED||mType == Type::HEAPED) {
             ret[i / 2] = ClickableArea({x - halfDiffX, minY, halfDiffX*2.f, maxY-minY},
-                    values.at(i), values.at(i + 1));
+                    values.at(i), values.at(i + 1),startIndex+i/2);
         } else {
             const float startX = x - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
             ret[i / 2] = ClickableArea({startX, minY, 2 * halfDiffX, maxY-minY},
-                    values.at(i), values.at(i + 1));
+                    values.at(i), values.at(i + 1),startIndex+i/2);
         }
     }
     return ret;

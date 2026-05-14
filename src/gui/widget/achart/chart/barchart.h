@@ -24,7 +24,7 @@ namespace cdroid{
 class BarChart :public XYChart {
 public:
     enum Type {
-        DEFAULT, STACKED,HEAPED
+        DEFAULT, STACKED, HEAPED
     };
 private:
     /** The legend shape width. */

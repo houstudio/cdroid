@@ -250,7 +250,7 @@ void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
     for(auto chart:mCharts){
         chart->setSelection(-1,-1);
     }
-    if( (seriesIndex>0) && (seriesIndex<(int)mCharts.size()) ){
+    if( (seriesIndex>=0) && (seriesIndex<(int)mCharts.size()) ){
          mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
     }
 }

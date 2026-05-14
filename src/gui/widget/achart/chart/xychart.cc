@@ -214,9 +214,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
         }
         for (auto&value : range) {
-            double xValue = value.first;//getKey();
-            double yValue = value.second;//getValue();
-            if (startIndex < 0 && (!isNullValue(yValue) || isRenderNullValues())) {
+            const double xValue = value.first;//getKey();
+            const double yValue = value.second;//getValue();
+            if ((startIndex < 0) && (!isNullValue(yValue) || isRenderNullValues())) {
                 startIndex = series->getIndexForKey(xValue);
             }
 
@@ -238,7 +238,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                     values.clear();
                     startIndex = -1;
                 }
-                clickableArea.push_back(ClickableArea({},0,0));//null);
+                clickableArea.push_back(ClickableArea({},0,0,-1));//null);
             }
         }
 
@@ -442,7 +442,7 @@ std::vector<double> XYChart::getValidLabels(const std::vector<double>& labels) c
 }
 
 void XYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas& canvas,  Paint& paint,std::vector<float>& pointsList,
-            const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int orientation,int startIndex) {
+        const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int orientation,int startIndex) {
     BasicStroke* stroke = seriesRenderer->getStroke();
     //Cap cap = paint.getStrokeCap();
     //Join join = paint.getStrokeJoin();
@@ -486,7 +486,7 @@ void XYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas& canvas
 }*/
 
 void XYChart::drawPoints(Canvas& canvas, Paint& paint, std::vector<float>& pointsList,
-            const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
+        const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
     if (isRenderPoints(seriesRenderer)) {
         ScatterChart* pointsChart = getPointsChart();
         if (pointsChart != nullptr) {
@@ -787,7 +787,6 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
         // on top of that.
         // we want to know what the user clicked on, so traverse them in the
         // order they appear on the screen.
-        int pointIndex = 0;
         auto it = mClickableAreas.find(seriesIndex);
         if (mClickableAreas.end()!=it) {
             for (const ClickableArea& area : it->second) {
@@ -796,10 +795,9 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
                     rectangle.inflate(selectableBuffer,selectableBuffer);
                 }
                 if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
-                    selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
+                    selection =SeriesSelection(seriesIndex, area.getPointIndex(), area.getX(), area.getY());
                     return true;
                 }
-                pointIndex++;
             }
         }
     }

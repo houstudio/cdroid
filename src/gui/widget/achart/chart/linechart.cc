@@ -146,8 +146,7 @@ std::vector<ClickableArea> LineChart::clickableAreasForPoints(const std::vector<
     const int selectableBuffer = mRenderer->getSelectableBuffer();
     for (int i = 0; i < length; i += 2) {
         ret[i / 2] = ClickableArea({points.at(i) - selectableBuffer, points.at(i + 1) - selectableBuffer,
-                selectableBuffer*2.f, selectableBuffer*2.f},
-                values.at(i), values.at(i + 1));
+                selectableBuffer*2.f, selectableBuffer*2.f}, values.at(i), values.at(i + 1),startIndex+i/2);
     }
     return ret;
 }

@@ -31,25 +31,36 @@ RangeBarChart::RangeBarChart(const std::shared_ptr<XYMultipleSeriesDataset>& dat
 
 std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
             float yAxisValue, int seriesIndex, int startIndex){
+    //return BarChart::clickableAreasForPoints(points,values,yAxisValue,seriesIndex,startIndex);
+    (void)yAxisValue;
     const int seriesNr = mDataset->getSeriesCount();
     const int length = points.size();
-    std::vector<ClickableArea> ret(length / 4);
+    std::vector<ClickableArea> ret;
+    if (length < 4 || values.size() < 4) {
+        return ret;
+    }
+
     const float halfDiffX = getHalfDiffX(points, length, seriesNr);
-    for (int i = 0; i <= length-4; i += 4) {
-        const float x1 = points.at(i);
-        const float y1 = points.at(i + 1);
-        const float x2 = points.at(i + 2);
-        const float y2 = points.at(i + 3);
-        const float minY = std::min(x1, x2);
-        const float maxY = std::max(y1, y2);
-        if (mType == Type::STACKED||mType == Type::HEAPED) {
-            ret[i / 4] = ClickableArea({x1 - halfDiffX, minY, halfDiffX*2.f, maxY-minY},
-                    values.at(i), values.at(i + 1));
-        } else {
-            const float startX = x1 - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
-            ret[i / 4] = ClickableArea({startX, minY, 2 * halfDiffX, maxY-minY},
-                    values.at(i), values.at(i + 1));
+    int start = 0;
+    if (startIndex > 0) {
+        start = 2;
+    }
+
+    for (int i = start; i + 3 < length && i + 3 < static_cast<int>(values.size()); i += 4) {
+        const float x = points.at(i);
+        const float yMin = points.at(i + 1);
+        const float yMax = points.at(i + 3);
+
+        float left = x - halfDiffX;
+        float right = x + halfDiffX;
+        if (mType == Type::DEFAULT){//STACKED||mType==Type::HEAPED) {
+            const float startX = x - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
+            left = startX;
+            right = startX + 2 * halfDiffX;
         }
+
+        ret.push_back(ClickableArea(RectF::MakeLTRB(left,std::min(yMin, yMax),
+                        right, std::max(yMin, yMax)), values.at(i), values.at(i + 1),startIndex+i/4));
     }
     return ret;
 }

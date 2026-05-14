@@ -55,7 +55,7 @@ std::vector<ClickableArea> BubbleChart::clickableAreasForPoints(const std::vecto
     for (int i = 0; i < length; i += 2) {
         const float size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
         ret[i/2] = ClickableArea({points.at(i) - (float) size, points.at(i + 1) - (float) size,
-                float(size)*2.f, float(size)*2.f}, values.at(i), values.at(i + 1));
+                float(size)*2.f, float(size)*2.f}, values.at(i), values.at(i + 1),startIndex+i/2);
     }
     return ret;
 }
