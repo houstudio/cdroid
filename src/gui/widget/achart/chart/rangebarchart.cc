@@ -31,7 +31,6 @@ RangeBarChart::RangeBarChart(const std::shared_ptr<XYMultipleSeriesDataset>& dat
 
 std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
             float yAxisValue, int seriesIndex, int startIndex){
-    //return BarChart::clickableAreasForPoints(points,values,yAxisValue,seriesIndex,startIndex);
     (void)yAxisValue;
     const int seriesNr = mDataset->getSeriesCount();
     const int length = points.size();
@@ -53,7 +52,7 @@ std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vec
 
         float left = x - halfDiffX;
         float right = x + halfDiffX;
-        if (mType == Type::DEFAULT){//STACKED||mType==Type::HEAPED) {
+        if (mType == Type::DEFAULT){
             const float startX = x - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
             left = startX;
             right = startX + 2 * halfDiffX;
