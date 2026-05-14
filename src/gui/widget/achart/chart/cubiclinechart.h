@@ -33,7 +33,7 @@ public:
     CubicLineChart();
     CubicLineChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
             const std::shared_ptr<XYMultipleSeriesRenderer>& renderer,float smoothness);
-
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint, SeriesSelection& selection) const override;
     std::string getChartType() const;
 };
 }/*endof namespace*/

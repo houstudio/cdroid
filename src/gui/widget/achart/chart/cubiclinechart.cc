@@ -80,6 +80,66 @@ void CubicLineChart::calc(const std::vector<float>& points, PointF& result, int 
     result.y = (p1y + (diffY * multiplier));
 }
 
+bool CubicLineChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint, SeriesSelection& selection) const {
+    if (XYChart::getSeriesAndPointForScreenCoordinate(screenPoint, selection)) {
+        return true;
+    }
+
+    const float selectableBuffer = mRenderer->getSelectableBuffer();
+
+    for (int seriesIndex = mClickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
+        auto it = mClickableAreas.find(seriesIndex);
+        if (it == mClickableAreas.end()) continue;
+
+        auto& areas = it->second;
+        auto series = mDataset->getSeriesAt(seriesIndex);
+        const auto scale = series->getScaleNumber();
+
+        std::vector<PointF> controlPoints; // 获取所有控制点 (P0, C0, C1, P1, P1, C2, C3, P2, ...)
+
+        for(auto& a:areas){
+            const auto v = toScreenPoint({a.getX(),a.getY()},scale);
+            controlPoints.push_back({float(v[0]),float(v[1])});
+        }
+
+        // 遍历每一段贝塞尔曲线 (每4个控制点一组: P_start, C1, C2, P_end)
+        for (size_t bezier_idx = 0; bezier_idx + 3 < controlPoints.size(); bezier_idx += 3) { // 步长为3，因为 P_start -> C1 -> C2 -> P_end
+             // 注意：实际 CubicLineChart 的控制点布局可能不同，比如是 P0, P1, ..., PN 然后内部计算 C0, C1, ...
+             // 下面的伪代码假定是 P, C1, C2, P, C3, C4, P... 的模式
+             const PointF& P0 = controlPoints[bezier_idx];     // 曲线起点
+             const PointF& C1 = controlPoints[bezier_idx + 1]; // 第一个控制手柄
+             const PointF& C2 = controlPoints[bezier_idx + 2]; // 第二个控制手柄
+             const PointF& P1 = controlPoints[bezier_idx + 3]; // 曲线终点
+
+             // --- 采样曲线 ---
+             const int samples = 20;
+             std::vector<PointF> samplePoints;
+             for (int s = 0; s <= samples; ++s) {
+                 const double t = static_cast<double>(s) / samples;
+                 // 立方贝塞尔曲线公式: B(t) = (1-t)^3*P0 + 3*(1-t)^2*t*C1 + 3*(1-t)*t^2*C2 + t^3*P1
+                 const double x = std::pow(1 - t, 3) * P0.x + 3 * std::pow(1 - t, 2) * t * C1.x +
+                            3 * (1 - t) * std::pow(t, 2) * C2.x + std::pow(t, 3) * P1.x;
+
+                 const double y = std::pow(1 - t, 3) * P0.y + 3 * std::pow(1 - t, 2) * t * C1.y +
+                            3 * (1 - t) * std::pow(t, 2) * C2.y + std::pow(t, 3) * P1.y;
+
+                 samplePoints.push_back({float(x), float(y)});
+             }
+
+             for (size_t j = 0; j < samplePoints.size() - 1; ++j) {
+                 const PointF& sp1 = samplePoints[j];
+                 const PointF& sp2 = samplePoints[j+1];
+                 auto distance = pointToSegmentDistance(screenPoint, sp1, sp2);
+                 LOGD("(%g,%g) (%g,%g) distance=%g",sp1.x,sp1.y,sp2.x,sp2.y,distance);
+                 if (distance < selectableBuffer) {
+                     selection = SeriesSelection(seriesIndex, -1, sp1.x, sp1.y);
+                     return true;
+                 }
+             }
+        }
+    }
+    return false;
+}
 std::string CubicLineChart::getChartType() const{
     return "Cubic"/*TYPE*/;
 }

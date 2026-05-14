@@ -32,6 +32,7 @@ protected:
     void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)override;
     std::vector<ClickableArea> clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
             float yAxisValue, int seriesIndex, int startIndex)override;
+    double pointToSegmentDistance(const PointF& p,const PointF& a,const PointF& b)const;
 public:
     LineChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
             const std::shared_ptr<XYMultipleSeriesRenderer>& renderer);
