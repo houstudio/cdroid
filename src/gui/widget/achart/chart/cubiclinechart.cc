@@ -16,7 +16,6 @@
 #include <widget/achart/chart/cubiclinechart.h>
 namespace cdroid{
 /** The chart type. */
-//public static final String TYPE = "Cubic";
 
 CubicLineChart::CubicLineChart() {
     // default is to have first control point at about 33% of the distance,
@@ -33,20 +32,32 @@ CubicLineChart::CubicLineChart(const std::shared_ptr<XYMultipleSeriesDataset>& d
 }
 
 void CubicLineChart::drawPath(Canvas& canvas, const std::vector<float>& points,  Paint& paint, bool circular) {
-    //Path p = new Path();
-    float x = points.at(0);
-    float y = points.at(1);
+#if 0
+    const float x = points.at(0);
+    const float y = points.at(1);
     canvas.begin_new_path();
     canvas.move_to(x, y);
 
     int length = points.size();
     if (circular) {
+        if (length < 8 || (length % 2) != 0) return;
         length -= 4;
+    }else{
+        if (length < 8 || (length % 2) != 0) {
+            if (length == 4) {
+                 canvas.begin_new_path();
+                 canvas.move_to(points[0], points[1]);
+                 canvas.line_to(points[2], points[3]);
+                 canvas.stroke();
+                 return;
+            }
+            return;
+        }
     }
     PointF p1,p2,p3;
-    for (int i = 0; i < length; i += 2) {
-        int nextIndex = i + 2 < length ? i + 2 : i;
-        int nextNextIndex = i + 4 < length ? i + 4 : nextIndex;
+    for (int i = 0; i < length-2; i += 2) {
+        const int nextIndex = i + 2 < length ? i + 2 : i;
+        const int nextNextIndex = i + 4 < length ? i + 4 : nextIndex;
         calc(points, p1, i, nextIndex, mSecondMultiplier);
         p2.x = points.at(nextIndex);
         p2.y = points.at(nextIndex + 1);
@@ -61,11 +72,60 @@ void CubicLineChart::drawPath(Canvas& canvas, const std::vector<float>& points, 
         canvas.line_to(points.at(0), points.at(1));
     }
     canvas.close_path();
+#else
+    if (points.size() < 4) {
+        return;
+    }
+    int length = points.size();
+    if (!circular) {
+        if (length < 8 || (length % 2) != 0) {
+            if (length == 4) {
+                canvas.move_to(points[0], points[1]);
+                canvas.line_to(points[2], points[3]);
+                canvas.stroke();
+                return;
+            }
+            return;
+        }
+        length -=2;
+    } else {
+        if (length < 6 || (length % 2) != 0) {
+             if (length == 4) {
+                 canvas.move_to(points[0], points[1]);
+                 canvas.line_to(points[2], points[3]);
+                 canvas.line_to(points[0], points[1]);
+                 if(paint.style==Style::FILL) canvas.fill(); else canvas.stroke();
+                 return;
+             }
+             return;
+        }
+    }
+
+    canvas.move_to(points[0], points[1]);
+
+    for (int i = 0; i < length - 2; i += 2) {
+        PointF p1, p2, p3;
+        const int nextIndex = i + 2;
+        const int nextNextIndex = (i + 4 < length) ? i + 4 : (circular ? 0 : nextIndex);
+
+        calc(points, p1, i, nextIndex, mSecondMultiplier);
+        p2.x = points[nextIndex];
+        p2.y = points[nextIndex + 1];
+        if (circular && i + 4 >= length) {
+            calc(points, p3, nextIndex, nextNextIndex, mFirstMultiplier);
+        } else {
+            calc(points, p3, nextIndex, nextNextIndex, mFirstMultiplier);
+        }
+        canvas.curve_to(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y);
+    }
+    if (circular) {
+        canvas.line_to(points[0], points[1]);
+    }
+#endif
     if(paint.style==Style::FILL)
         canvas.fill();
     else
         canvas.stroke();
-    //canvas.drawPath(p, paint);
 }
 
 void CubicLineChart::calc(const std::vector<float>& points, PointF& result, int index1, int index2, float multiplier) {
