@@ -22,13 +22,15 @@ private:
     RectF rect;
     double x;
     double y;
+    int pointIndex;
 public:
     ClickableArea()=default;
     ClickableArea(const ClickableArea&)=default;
-    ClickableArea(const RectF& rect, double x, double y) {
+    ClickableArea(const RectF& rect, double x, double y,int index) {
         this->rect = rect;
         this->x = x;
         this->y = y;
+        pointIndex=index;
     }
     RectF getRect() const{
         return rect;
@@ -38,6 +40,9 @@ public:
     }
     double getY() const{
         return y;
+    }
+    int getPointIndex()const{
+        return pointIndex;
     }
 };
 }/*endof namespace*/

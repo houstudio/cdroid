@@ -27,8 +27,6 @@ class SimpleSeriesRenderer{
 private:
     /** The series color. */
     int mColor = Color::BLUE;
-    /** If the values should be displayed above the chart points. */
-    bool mDisplayChartValues=false;
     /** The minimum distance between displaying chart values. */
     int mDisplayChartValuesDistance = 100;
     /** The chart values text size. */
@@ -37,10 +35,6 @@ private:
     int/*Align*/ mChartValuesTextAlign;// = Align.CENTER;
     /** The chart values spacing from the data point. */
     float mChartValuesSpacing = 5.f;
-    /** The stroke style. */
-    BasicStroke* mStroke=nullptr;
-    /** If gradient is enabled. */
-    bool mGradientEnabled = false;
     /** The gradient start value. */
     double mGradientStartValue;
     /** The gradient start color. */
@@ -49,14 +43,20 @@ private:
     double mGradientStopValue;
     /** The gradient stop color. */
     int mGradientStopColor;
+    /** If the values should be displayed above the chart points. */
+    bool mDisplayChartValues=false;
+    /** If gradient is enabled. */
+    bool mGradientEnabled = false;
     /** If the legend item for this renderer is visible. */
     bool mShowLegendItem = true;
-    /** The chart values format. */
-    std::string mChartValuesFormat;
     /** If this is a highlighted slice (pie chart displays slice as exploded). */
     bool mHighlighted;
     /** If the bounding points to the first and last visible ones should be displayed. */
     bool mDisplayBoundingPoints = true;
+    /** The chart values format. */
+    std::string mChartValuesFormat;
+    /** The stroke style. */
+    BasicStroke* mStroke=nullptr;
 public:
     virtual ~SimpleSeriesRenderer()=default;
     /**

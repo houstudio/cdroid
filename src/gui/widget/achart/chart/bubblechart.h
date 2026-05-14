@@ -31,7 +31,7 @@ private:
     /** The maximum bubble size. */
     static constexpr int MAX_BUBBLE_SIZE = 20;
 private:
-    void drawCircle(Canvas& canvas,  Paint& paint, float x, float y, float radius);
+    void drawCircle(Canvas& canvas, Paint& paint, float x, float y, float radius);
 protected:
     BubbleChart()=default;
     std::vector<ClickableArea> clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
@@ -57,7 +57,7 @@ public:
      * @param seriesIndex the index of the series currently being drawn
      * @param startIndex the start index of the rendering points
      */
-    void drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
+    void drawSeries(Canvas& canvas, Paint& paint,std::vector<float>& points,
             const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex)override;
 
     /**

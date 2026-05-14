@@ -214,9 +214,9 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
         }
         for (auto&value : range) {
-            double xValue = value.first;//getKey();
-            double yValue = value.second;//getValue();
-            if (startIndex < 0 && (!isNullValue(yValue) || isRenderNullValues())) {
+            const double xValue = value.first;//getKey();
+            const double yValue = value.second;//getValue();
+            if ((startIndex < 0) && (!isNullValue(yValue) || isRenderNullValues())) {
                 startIndex = series->getIndexForKey(xValue);
             }
 
@@ -238,7 +238,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                     values.clear();
                     startIndex = -1;
                 }
-                clickableArea.push_back(ClickableArea({},0,0));//null);
+                clickableArea.push_back(ClickableArea({},0,0,-1));//null);
             }
         }
 
@@ -305,8 +305,8 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         if (showLabels) {//grid horizontal lines
             canvas.set_color(mRenderer->getLabelsColor());
             for (int i = 0; i < maxScaleNumber; i++) {
-                int axisAlign = mRenderer->getYAxisAlign(i);
-                auto yTextLabelLocations = mRenderer->getYTextLabelLocations(i);
+                const int axisAlign = mRenderer->getYAxisAlign(i);
+                const auto yTextLabelLocations = mRenderer->getYTextLabelLocations(i);
                 for (const double location : yTextLabelLocations) {
                     if (minY[i] <= location && location <= maxY[i]) {
                         const float yLabel = (float) (bottom - yPixelsPerUnit[i] * (location - minY[i]));
@@ -360,7 +360,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                     bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding() + size,
                     paint, 0);
                 for (int i = 0; i < maxScaleNumber; i++) {
-                    int axisAlign = mRenderer->getYAxisAlign(i);
+                    const int axisAlign = mRenderer->getYAxisAlign(i);
                     if (axisAlign == Align::LEFT) {
                         drawText(canvas, mRenderer->getYTitle(i), x + size, y + height / 2, paint, -90);
                     } else {
@@ -442,7 +442,7 @@ std::vector<double> XYChart::getValidLabels(const std::vector<double>& labels) c
 }
 
 void XYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas& canvas,  Paint& paint,std::vector<float>& pointsList,
-            const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int orientation,int startIndex) {
+        const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int orientation,int startIndex) {
     BasicStroke* stroke = seriesRenderer->getStroke();
     //Cap cap = paint.getStrokeCap();
     //Join join = paint.getStrokeJoin();
@@ -486,11 +486,17 @@ void XYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas& canvas
 }*/
 
 void XYChart::drawPoints(Canvas& canvas, Paint& paint, std::vector<float>& pointsList,
-            const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
+        const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
     if (isRenderPoints(seriesRenderer)) {
         ScatterChart* pointsChart = getPointsChart();
         if (pointsChart != nullptr) {
+            if(seriesIndex==mSeriesIndex){
+                seriesRenderer->setPointSize(seriesRenderer->getPointSize()+2);
+            }
             pointsChart->drawSeries(canvas, paint, pointsList, seriesRenderer, yAxisValue, seriesIndex,startIndex);
+            if(seriesIndex==mSeriesIndex){
+                 seriesRenderer->setPointSize(seriesRenderer->getPointSize()-2);
+            }
         }
     }
 }
@@ -781,26 +787,30 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
         // on top of that.
         // we want to know what the user clicked on, so traverse them in the
         // order they appear on the screen.
-        int pointIndex = 0;
         auto it = mClickableAreas.find(seriesIndex);
         if (mClickableAreas.end()!=it) {
-            RectF rectangle;
             for (const ClickableArea& area : it->second) {
-                if (1/*area != null*/) {
-                    rectangle = area.getRect();
-                    if(!rectangle.empty()){
-                        rectangle.inflate(selectableBuffer,selectableBuffer);
-                    }
-                    if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
-                        selection =SeriesSelection(seriesIndex, pointIndex, area.getX(), area.getY());
-                        return true;
-                    }
+                RectF rectangle = area.getRect();
+                if(!rectangle.empty()){
+                    rectangle.inflate(selectableBuffer,selectableBuffer);
                 }
-                pointIndex++;
+                if (!rectangle.empty() && rectangle.contains(screenPoint.x, screenPoint.y)) {
+                    selection =SeriesSelection(seriesIndex, area.getPointIndex(), area.getX(), area.getY());
+                    return true;
+                }
             }
         }
     }
     return AbstractChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection);
+}
+
+void XYChart::setSelection(int seriesIndex,int dataIndex){
+    mDataIndex =dataIndex;
+    if((mDataset!=nullptr)&&(seriesIndex<mDataset->getSeriesCount())){
+        mSeriesIndex = seriesIndex;
+    }else{
+        mSeriesIndex = -1;
+    }
 }
 
 bool XYChart::isRenderNullValues() const{

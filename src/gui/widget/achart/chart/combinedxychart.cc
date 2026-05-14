@@ -28,10 +28,6 @@
 #include<widget/achart/chart/linechart.h>
 namespace cdroid{
 
-//private Class<?>[] xyChartTypes = new Class<?>[] { TimeChart.class, LineChart.class,
-//        CubicLineChart.class, BarChart.class, BubbleChart.class, ScatterChart.class,
-//        RangeBarChart.class, RangeStackedBarChart.class, DragControlChart.class, TargetRangeChart.class
-
 CombinedXYChart::CombinedXYChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
         const std::shared_ptr<XYMultipleSeriesRenderer>& renderer,
         const std::vector<std::string>& types):XYChart(dataset, renderer){
@@ -124,6 +120,9 @@ void CombinedXYChart::configureTargetRangeChart(XYChart* chart, int seriesIndex)
     targetRangeChart->setValues(min, max, target);
 }
 
+//private Class<?>[] xyChartTypes = new Class<?>[] { TimeChart.class, LineChart.class,
+//        CubicLineChart.class, BarChart.class, BubbleChart.class, ScatterChart.class,
+//        RangeBarChart.class, RangeStackedBarChart.class, DragControlChart.class, TargetRangeChart.class
 XYChart* CombinedXYChart::getXYChart(const std::string& type) const{
     if (type == "Time") {
         return new TimeChart();
@@ -174,28 +173,18 @@ void CombinedXYChart::syncSubChartState(XYChart* chart, int seriesIndex) const {
     }
 }
 
-void CombinedXYChart::syncSubChartSelection(XYChart* chart, int seriesIndex) const {
-#if 0
-    const SeriesSelection* selection = getSelection();
-    if (selection == nullptr || selection->getSeriesIndex() != seriesIndex) {
-        chart->setSelection(nullptr);
-        return;
-    }
-
-    chart->setSelection(new SeriesSelection(
-        0,
-        selection->getPointIndex(),
-        selection->getXValue(),
-        selection->getValue()));
-#endif
-}
-
 void CombinedXYChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
         const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
     //mCharts[seriesIndex]->setScreenR(getScreenR());
     //mCharts[seriesIndex]->setCalcRange(getCalcRange(mDataset->getSeriesAt(seriesIndex)->getScaleNumber()), 0);
     syncSubChartState(mCharts[seriesIndex], seriesIndex);
+    if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
+    }
     mCharts[seriesIndex]->drawSeries(canvas, paint, points, seriesRenderer, yAxisValue, 0,startIndex);
+    if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()-2);
+    }
 }
 
 std::vector<ClickableArea> CombinedXYChart::clickableAreasForPoints(const std::vector<float>& points,
@@ -210,8 +199,16 @@ void CombinedXYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas
     //mCharts[seriesIndex]->setSize(m_width, m_height);
     //mCharts[seriesIndex]->setCalcRange(getCalcRange(mDataset->getSeriesAt(seriesIndex)->getScaleNumber()), 0);
     syncSubChartState(mCharts[seriesIndex], seriesIndex);
+    if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setPointSize(seriesRenderer->getPointSize()+2);
+        seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()+2);
+    }
     mCharts[seriesIndex]->drawSeries(series, canvas, paint, pointsList, seriesRenderer, yAxisValue,
                                     0, orientation, startIndex);
+    if(mSeriesIndex==seriesIndex){
+        seriesRenderer->setPointSize(seriesRenderer->getPointSize()-2);
+        seriesRenderer->setLineWidth(seriesRenderer->getLineWidth()-2);
+    }
 }
 
 bool CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const {
@@ -248,6 +245,16 @@ void CombinedXYChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simp
     mCharts[seriesIndex]->drawLegendShape(canvas, renderer, x, y, 0, paint);
 }
 
+void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
+    XYChart::setSelection(seriesIndex,pointIndex);
+    for(auto chart:mCharts){
+        chart->setSelection(-1,-1);
+    }
+    if( (seriesIndex>=0) && (seriesIndex<(int)mCharts.size()) ){
+         mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
+    }
+}
+
 std::string CombinedXYChart::getChartType() const{
     return "Combined";
 }
@@ -255,5 +262,6 @@ std::string CombinedXYChart::getChartType() const{
 std::vector<XYChart*> CombinedXYChart::getCharts() const{
     return mCharts;
 }
+
 
 }

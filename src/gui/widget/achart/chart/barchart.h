@@ -24,7 +24,7 @@ namespace cdroid{
 class BarChart :public XYChart {
 public:
     enum Type {
-        DEFAULT, STACKED,HEAPED
+        DEFAULT, STACKED, HEAPED
     };
 private:
     /** The legend shape width. */
@@ -38,14 +38,14 @@ protected:
 
     BarChart(Type type);
 private:
-    void drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax, int scale,int seriesIndex,  Paint& paint);
+    void drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax, int scale,int seriesIndex,int pointIndex, Paint& paint);
 
     int getGradientPartialColor(int minColor, int maxColor, float fraction)const;
 protected:
     std::vector<ClickableArea> clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
             float yAxisValue, int seriesIndex, int startIndex)override;
 
-    void drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax, float halfDiffX, int seriesNr, int seriesIndex,  Paint& paint);
+    void drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax, float halfDiffX, int seriesNr, int seriesIndex,int pointIndex, Paint& paint);
 
     void drawChartValuesText(Canvas& canvas,  const std::shared_ptr<XYSeries>& series, const std::shared_ptr<XYSeriesRenderer>& renderer,
              Paint& paint,const std::vector<float>& points, int seriesIndex, int startIndex)override;

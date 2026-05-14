@@ -31,7 +31,6 @@ private:
     void configureSubChart(XYChart* chart, int seriesIndex) const;
     void configureTargetRangeChart(XYChart* chart, int seriesIndex) const;
     void syncSubChartState(XYChart* chart, int seriesIndex) const;
-    void syncSubChartSelection(XYChart* chart, int seriesIndex) const;
 protected:
     std::vector<ClickableArea> clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
             float yAxisValue, int seriesIndex, int startIndex)override;
@@ -53,8 +52,8 @@ public:
             float x, float y,int seriesIndex,  Paint& paint)override;
 
     std::string getChartType() const override;
-
-    std::vector<XYChart*> getCharts() const ;
+    std::vector<XYChart*> getCharts() const;
+    void setSelection(int,int)override;
 };
 }/*endof namespace*/
 #endif/*__COMBINED_XYCHART_H__*/

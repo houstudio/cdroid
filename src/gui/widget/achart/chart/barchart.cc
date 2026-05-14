@@ -40,11 +40,11 @@ std::vector<ClickableArea> BarChart::clickableAreasForPoints(const std::vector<f
         const float maxY = std::max(y, yAxisValue);
         if (mType == Type::STACKED||mType == Type::HEAPED) {
             ret[i / 2] = ClickableArea({x - halfDiffX, minY, halfDiffX*2.f, maxY-minY},
-                    values.at(i), values.at(i + 1));
+                    values.at(i), values.at(i + 1),startIndex+i/2);
         } else {
             const float startX = x - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
             ret[i / 2] = ClickableArea({startX, minY, 2 * halfDiffX, maxY-minY},
-                    values.at(i), values.at(i + 1));
+                    values.at(i), values.at(i + 1),startIndex+i/2);
         }
     }
     return ret;
@@ -66,9 +66,9 @@ void  BarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
             const float lastY = mPreviousSeriesPoints.at(i + 1);
             y = y + (lastY - yAxisValue);
             points[i + 1]= y;
-            drawBar(canvas, x, lastY, x, y, halfDiffX, seriesNr, seriesIndex, paint);
+            drawBar(canvas, x, lastY, x, y, halfDiffX, seriesNr, seriesIndex,i/2, paint);
         }else{
-            drawBar(canvas, x, yAxisValue, x, y, halfDiffX, seriesNr, seriesIndex, paint);
+            drawBar(canvas, x, yAxisValue, x, y, halfDiffX, seriesNr, seriesIndex,i/2, paint);
         }
         mPreviousSeriesPoints = points;
     }
@@ -76,18 +76,18 @@ void  BarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
 }
 
 void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax,
-        float halfDiffX, int seriesNr, int seriesIndex,  Paint& paint) {
+        float halfDiffX, int seriesNr, int seriesIndex,int pointIndex, Paint& paint) {
     const int scale = mDataset->getSeriesAt(seriesIndex)->getScaleNumber();
     if (mType == Type::STACKED|| mType == Type::HEAPED) {
-        drawBar(canvas, xMin - halfDiffX, yMax, xMax + halfDiffX, yMin, scale, seriesIndex, paint);
+        drawBar(canvas, xMin - halfDiffX, yMax, xMax + halfDiffX, yMin, scale, seriesIndex, pointIndex, paint);
     } else {
         const float startX = xMin - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
-        drawBar(canvas, startX, yMax, startX + 2 * halfDiffX, yMin, scale, seriesIndex, paint);
+        drawBar(canvas, startX, yMax, startX + 2 * halfDiffX, yMin, scale, seriesIndex, pointIndex, paint);
     }
 }
 
-void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
-        float xMax, float yMax,int scale,int seriesIndex,  Paint& paint) {
+void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin, float xMax, float yMax,
+        int scale,int seriesIndex, int pointIndex, Paint& paint) {
     auto renderer = mRenderer->getSeriesRendererAt(seriesIndex);
     float temp;
     if (xMin > xMax) {
@@ -105,8 +105,8 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
         const float maxY = (float) toScreenPoint({ 0, renderer->getGradientStartValue() },scale)[1];
         const float gradientMinY = std::max(minY, std::min(yMin, yMax));
         const float gradientMaxY = std::min(maxY, std::max(yMin, yMax));
-        int gradientMinColor = renderer->getGradientStopColor();
-        int gradientMaxColor = renderer->getGradientStartColor();
+        const int gradientMinColor = renderer->getGradientStopColor();
+        const int gradientMaxColor = renderer->getGradientStartColor();
         int gradientStartColor = gradientMaxColor;
         int gradientStopColor = gradientMinColor;
 
@@ -146,6 +146,10 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin,
         canvas.set_color(paint.color);
         canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin), std::round(yMax-yMin));
         canvas.fill();
+        if( ((mSeriesIndex<0)||(mSeriesIndex==seriesIndex))&&pointIndex==mDataIndex){
+            canvas.rectangle(std::round(xMin)-2, std::round(yMin)-2, std::round(xMax-xMin)+4, std::round(yMax-yMin)+4);
+            canvas.stroke();
+        }
     }
 }
 

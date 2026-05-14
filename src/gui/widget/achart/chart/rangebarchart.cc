@@ -29,26 +29,61 @@ RangeBarChart::RangeBarChart(const std::shared_ptr<XYMultipleSeriesDataset>& dat
     :BarChart(dataset, renderer, type){
 }
 
+std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
+            float yAxisValue, int seriesIndex, int startIndex){
+    (void)yAxisValue;
+    const int seriesNr = mDataset->getSeriesCount();
+    const int length = points.size();
+    std::vector<ClickableArea> ret;
+    if (length < 4 || values.size() < 4) {
+        return ret;
+    }
+
+    const float halfDiffX = getHalfDiffX(points, length, seriesNr);
+    int start = 0;
+    if (startIndex > 0) {
+        start = 2;
+    }
+
+    for (int i = start; i + 3 < length && i + 3 < static_cast<int>(values.size()); i += 4) {
+        const float x = points.at(i);
+        const float yMin = points.at(i + 1);
+        const float yMax = points.at(i + 3);
+
+        float left = x - halfDiffX;
+        float right = x + halfDiffX;
+        if (mType == Type::DEFAULT){
+            const float startX = x - seriesNr * halfDiffX + seriesIndex * 2 * halfDiffX;
+            left = startX;
+            right = startX + 2 * halfDiffX;
+        }
+
+        ret.push_back(ClickableArea(RectF::MakeLTRB(left,std::min(yMin, yMax),
+                        right, std::max(yMin, yMax)), values.at(i), values.at(i + 1),startIndex+i/4));
+    }
+    return ret;
+}
+
 void RangeBarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& points,
         const std::shared_ptr<XYSeriesRenderer>& seriesRenderer, float yAxisValue, int seriesIndex, int startIndex) {
-    int seriesNr = mDataset->getSeriesCount();
-    int length = points.size();
+    const int seriesNr = mDataset->getSeriesCount();
+    const int length = points.size();
     paint.setColor(seriesRenderer->getColor());
     canvas.set_color(seriesRenderer->getColor());
     paint.setStyle(Style::FILL);
-    float halfDiffX = getHalfDiffX(points, length, seriesNr);
+    const float halfDiffX = getHalfDiffX(points, length, seriesNr);
     int start = 0;
     if (startIndex > 0) {
         start = 2;
     }
     for (int i = start; i < length; i += 4) {
         if (points.size() > i + 3) {
-            float xMin = points.at(i);
-            float yMin = points.at(i + 1);
+            const float xMin = points.at(i);
+            const float yMin = points.at(i + 1);
             // xMin = xMax
-            float xMax = points.at(i + 2);
-            float yMax = points.at(i + 3);
-            drawBar(canvas, xMin, yMin, xMax, yMax, halfDiffX, seriesNr, seriesIndex, paint);
+            const float xMax = points.at(i + 2);
+            const float yMax = points.at(i + 3);
+            drawBar(canvas, xMin, yMin, xMax, yMax, halfDiffX, seriesNr, seriesIndex,i/4, paint);
         }
     }
     paint.setColor(seriesRenderer->getColor());
@@ -57,14 +92,14 @@ void RangeBarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>&
 void RangeBarChart::drawChartValuesText(Canvas& canvas, const std::shared_ptr<XYSeries>& series,
         const std::shared_ptr<XYSeriesRenderer>& renderer, Paint& paint,
         const std::vector<float>& points, int seriesIndex, int startIndex) {
-    int seriesNr = mDataset->getSeriesCount();
-    float halfDiffX = getHalfDiffX(points, points.size(), seriesNr);
+    const int seriesNr = mDataset->getSeriesCount();
+    const float halfDiffX = getHalfDiffX(points, points.size(), seriesNr);
     int start = 0;
     if (startIndex > 0) {
         start = 2;
     }
     for (int i = start; i < points.size(); i += 4) {
-        int index = startIndex + i / 2;
+        const int index = startIndex + i / 2;
         float x = points.at(i);
         if (mType == Type::DEFAULT) {
             x += seriesIndex * 2 * halfDiffX - (seriesNr - 1.5f) * halfDiffX;

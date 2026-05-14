@@ -41,7 +41,7 @@ private:
     Rect mScreenR;
     /** The calculated range. */
     std::map<int, std::vector<double>> mCalcRange;
-
+protected:
     /**
      * The clickable areas for all points. The array index is the series index,
      * and the RectF list index is the point index in that series.
@@ -61,12 +61,10 @@ protected:
     XYChart();
     virtual void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,const std::shared_ptr<XYMultipleSeriesRenderer>& renderer);
     virtual std::vector<double> getXLabels(double min, double max, int count)const;
-
     std::map<int, std::vector<double>> getYLabels(const std::vector<double>& minY, const std::vector<double>& maxY, int maxScaleNumber)const;
+
     Rect getScreenR()const;
-
     void setScreenR(const Rect& screenR);
-
 
     /**
      * Draws the series.
@@ -240,6 +238,7 @@ public:
      * @return the chart type
      */
     virtual std::string getChartType()const =0;
+    void setSelection(int seriesIndex,int dataIndex)override;
 };
 }/*endof namespace*/
 #endif/*__XY_CHART_H__*/

@@ -50,7 +50,7 @@ public:
      * @param renderer the series renderer
      */
     bool isRenderPoints(const std::shared_ptr<SimpleSeriesRenderer>& renderer) const override;
-
+    bool getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const override;
     /**
      * Returns the scatter chart to be used for drawing the data points.
      *
