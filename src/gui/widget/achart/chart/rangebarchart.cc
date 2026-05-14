@@ -38,14 +38,9 @@ std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vec
     if (length < 4 || values.size() < 4) {
         return ret;
     }
-
+    const int offset=startIndex?2:0;
     const float halfDiffX = getHalfDiffX(points, length, seriesNr);
-    int start = 0;
-    if (startIndex > 0) {
-        start = 2;
-    }
-
-    for (int i = start; i + 3 < length && i + 3 < static_cast<int>(values.size()); i += 4) {
+    for (int i = offset; i <= length-4; i += 4) {
         const float x = points.at(i);
         const float yMin = points.at(i + 1);
         const float yMax = points.at(i + 3);
@@ -57,9 +52,8 @@ std::vector<ClickableArea> RangeBarChart::clickableAreasForPoints(const std::vec
             left = startX;
             right = startX + 2 * halfDiffX;
         }
-
-        ret.push_back(ClickableArea(RectF::MakeLTRB(left,std::min(yMin, yMax),
-                        right, std::max(yMin, yMax)), values.at(i), values.at(i + 1),startIndex+i/4));
+        ret.push_back(ClickableArea({left,std::min(yMin, yMax), halfDiffX*2.f, std::max(yMin, yMax)},
+                    values.at(i), values.at(i + 1),startIndex+i/4));
     }
     return ret;
 }
@@ -83,7 +77,7 @@ void RangeBarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>&
             // xMin = xMax
             const float xMax = points.at(i + 2);
             const float yMax = points.at(i + 3);
-            drawBar(canvas, xMin, yMin, xMax, yMax, halfDiffX, seriesNr, seriesIndex,i/4, paint);
+            drawBar(canvas, xMin, yMin, xMax, yMax, halfDiffX, seriesNr, seriesIndex,startIndex+i/4, paint);
         }
     }
     paint.setColor(seriesRenderer->getColor());
@@ -107,15 +101,13 @@ void RangeBarChart::drawChartValuesText(Canvas& canvas, const std::shared_ptr<XY
 
         if (!isNullValue(series->getY(index + 1)) && points.size() > i + 3) {
             // draw the maximum value
-            drawText(canvas, getLabel(renderer->getChartValuesFormat(), series->getY(index + 1)), x,
-                     points.at(i + 3) - renderer->getChartValuesSpacing(), paint, 0);
+            drawText(canvas, getLabel(renderer->getChartValuesFormat(), series->getY(index + 1)),
+                    x, points.at(i + 3) - renderer->getChartValuesSpacing(), paint, 0);
         }
         if (!isNullValue(series->getY(index)) && points.size() > i + 1) {
             // draw the minimum value
-            drawText(canvas,
-                getLabel(renderer->getChartValuesFormat(), series->getY(index)),
-                x,
-                points.at(i + 1) + renderer->getChartValuesTextSize()
+            drawText(canvas, getLabel(renderer->getChartValuesFormat(), series->getY(index)),
+                x, points.at(i + 1) + renderer->getChartValuesTextSize()
                 + renderer->getChartValuesSpacing() - 3, paint, 0);
         }
     }
