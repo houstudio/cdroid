@@ -318,7 +318,6 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
         return false;
     }
     if (!dst) dst = std::make_shared<cdroid::Path>();
-    else dst->reset();
     if (start < 0) start = 0;
     if (stop>total) stop = total;
 
