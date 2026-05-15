@@ -807,11 +807,12 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
 }
 
 void XYChart::setSelection(int seriesIndex,int dataIndex){
-    mDataIndex =dataIndex;
+    AbstractChart::setSelection(seriesIndex,dataIndex);
     if((mDataset!=nullptr)&&(seriesIndex<mDataset->getSeriesCount())){
-        mSeriesIndex = seriesIndex;
-    }else{
-        mSeriesIndex = -1;
+        ScatterChart*scatter = getPointsChart();
+        if(scatter){
+            scatter->setSelection(seriesIndex,dataIndex);
+        }
     }
 }
 

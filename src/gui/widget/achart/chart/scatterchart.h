@@ -32,10 +32,11 @@ private:
     float mSize = SIZE;
 private:
     void drawX(Canvas& canvas, Paint& paint, float x, float y);
+    void drawPoint(Canvas& canvas, Paint& paint, float x, float y);
     void drawCircle(Canvas& canvas, Paint& paint, float x, float y);
-    void drawTriangle(Canvas& canvas, Paint& paint, std::vector<float>& path, float x, float y);
+    void drawTriangle(Canvas& canvas, Paint& paint, float x, float y);
     void drawSquare(Canvas& canvas, Paint& paint, float x, float y);
-    void drawDiamond(Canvas& canvas, Paint& paint, std::vector<float>& path, float x, float y);
+    void drawDiamond(Canvas& canvas, Paint& paint, float x, float y);
 protected:
     void setDatasetRenderer(const std::shared_ptr<XYMultipleSeriesDataset>& dataset,
             const std::shared_ptr<XYMultipleSeriesRenderer>& renderer)override;

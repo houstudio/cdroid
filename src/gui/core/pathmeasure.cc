@@ -23,20 +23,16 @@ namespace cdroid {
 
 PathMeasure::PathMeasure(){
     mForceClosed = false;
+    mContourIndex= 0;
 }
 
-PathMeasure::PathMeasure(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
+PathMeasure::PathMeasure(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
     buildSegments();
 }
 
-void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath){
-    mPath = inPath;
-    buildSegments();
-}
-
-void PathMeasure::setPath(Cairo::RefPtr<cdroid::Path>inPath,bool forceClosed){
+void PathMeasure::setPath(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
     buildSegments();
@@ -229,13 +225,24 @@ double PathMeasure::getLength() const{
 
 int PathMeasure::buildSegments(){
     bool hasMove = false;
+    bool contourOpen = false;
     int i = 0 ,ptIndex = -1;
     PointD pt0 = {0,0};
     PointD ptStart = {0,0};
+    Contour currentContour = {0, 0, 0.0, false};
+    const auto finalizeContour = [this, &currentContour, &contourOpen]() {
+        if (!contourOpen) {
+            return;
+        }
+        currentContour.segmentEnd = mSegments.size();
+        mContours.push_back(currentContour);
+        contourOpen = false;
+    };
 
     const auto m_path = mPath->copy_path();
     mPoints.clear();
     mSegments.clear();
+    mContours.clear();
     while (i < m_path->num_data) {
         const cairo_path_data_t* data = &m_path->data[i];
         const int type = data->header.type;
@@ -247,15 +254,22 @@ int PathMeasure::buildSegments(){
             mSegments.reserve(mSegments.capacity()*2+4);
 
         if (type == CAIRO_PATH_MOVE_TO) {
+            finalizeContour();
             ptStart = pt0 = {data[1].point.x,data[1].point.y};
             ptIndex += 1;
             mPoints.push_back(pt0);
             hasMove = true;
+            contourOpen = true;
+            currentContour.segmentStart = mSegments.size();
+            currentContour.segmentEnd = mSegments.size();
+            currentContour.length = 0.0;
+            currentContour.isClosed = false;
         } else if (type == CAIRO_PATH_LINE_TO) {
             const PointD pt1 = {data[1].point.x,data[1].point.y};
             const double distance = std::hypot(pt1.x - pt0.x, pt1.y - pt0.y);
             mPoints.push_back(pt1);
             mSegments.push_back({Segment::Line,ptIndex, distance});
+            currentContour.length += distance;
             ptIndex += 1;
             pt0 = pt1;
         } else if (type == CAIRO_PATH_CURVE_TO) {
@@ -268,56 +282,60 @@ int PathMeasure::buildSegments(){
             mPoints.push_back(pt2);
             mPoints.push_back(pt3);
             mSegments.push_back({Segment::Cubic,ptIndex, distance});
+            currentContour.length += distance;
             ptIndex += 3;
             pt0 = pt3;
         }  else if (type == CAIRO_PATH_CLOSE_PATH) {
             const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
             if (distance > 0.f) {
                 mSegments.push_back({Segment::Line,ptIndex, distance});
+                currentContour.length += distance;
                 ptIndex += 1;
                 mPoints.push_back(ptStart);
             }
+            currentContour.isClosed = true;
             pt0 = ptStart;
         }
     }
     if (mForceClosed && hasMove && (std::hypot(pt0.x - ptStart.x, pt0.y - ptStart.y) > FLT_EPSILON)) {
         const double distance = std::hypot(ptStart.x - pt0.x, ptStart.y - pt0.y);
         mSegments.push_back({Segment::Line,ptIndex, distance});
+        currentContour.length += distance;
+        currentContour.isClosed = true;
         mPoints.push_back(ptStart);
     }
+    finalizeContour();
     return mSegments.size();
 }
 
 bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo){
-    if (!dst) dst = std::make_shared<cdroid::Path>();
-    else dst->reset();
-
-    if (start < 0) start = 0;
-    if (stop>1.0) stop = 1.0;
-    if (stop  < start) return false;
-
     if(mSegments.empty()){
         buildSegments();
     }
-
     const double total = getLength();
-    const double startD= start*total;
-    const double stopD = stop*total;
-    LOGV("nsegs=%d/%d totallen=%f",mSegments.size(),mSegments.size(),total);
+    if( (mContourIndex>=mContours.size()) || (start>=stop) || (total < DBL_EPSILON) ){
+        return false;
+    }
+    if (!dst) dst = std::make_shared<cdroid::Path>();
+    else dst->reset();
+    if (start < 0) start = 0;
+    if (stop>total) stop = total;
 
     bool needsMove = startWithMoveTo;
     double segStart = 0.0,segEnd = 0.0;
-    for (auto& s:mSegments) {
-        const PointD*pts = mPoints.data()+s.ptIndex;
+    const Contour& contour = mContours[mContourIndex];
+    for (size_t segIndex = contour.segmentStart;segIndex<contour.segmentEnd;++segIndex) {
+        const Segment& s = mSegments[segIndex];
+        const PointD* pts = mPoints.data() + s.ptIndex;
         segEnd += s.distance;
-        const double t0 = (startD >segStart) ? (startD - segStart) / s.distance : 0.0;
-        const double t1 = (stopD < segEnd) ? (stopD  - segStart) / s.distance : 1.0;
+        const double t0 = (start >segStart) ? (start - segStart) / s.distance : 0.0;
+        const double t1 = (stop < segEnd) ? (stop  - segStart) / s.distance : 1.0;
         if (s.type == Segment::Line) {
             PointD p0 = interpolate(pts[0],pts[1],t0);
             PointD p1 = interpolate(pts[0],pts[1],t1);
             if (needsMove) { 
                 dst->move_to(p0.x, p0.y);
-                //needsMove = false;
+                needsMove = false;
             }
             dst->line_to(p1.x, p1.y);
         } else { // Cubic
@@ -329,67 +347,103 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
             }
             if (needsMove) { 
                 dst->move_to(q0.x, q0.y); 
-                //needsMove = false;
+                needsMove = false;
             }
             dst->curve_to(q1.x, q1.y, q2.x, q2.y, q3.x, q3.y);
         }
         segStart += s.distance;
-        if(segEnd >= stopD)break;
+        if(segEnd >= stop)break;
     }
     return true;
 }
 
-bool PathMeasure::getPosTan(double distance,PointD* pos,PointD* tangent){
-    PointD prev, curr;
-    bool found = false;
-    double length = 0.0 , segLength = 0.0;
-    const auto m_path = mPath->copy_path();
-
-    for (int i = 0; i < m_path->num_data && !found; ) {
-        cairo_path_data_t* data = &m_path->data[i];
-        i+= data->header.length;
-        switch (data->header.type) {
-        case CAIRO_PATH_MOVE_TO:
-            prev = {data[1].point.x, data[1].point.y};
-            break;
-        case CAIRO_PATH_LINE_TO:
-            curr = {data[1].point.x, data[1].point.y};
-            segLength = distancePoint(prev, curr);
-            if (length + segLength >= distance) {
-                const double t = (distance - length) / segLength;
-                if(pos)*pos = interpolate(prev,curr,t);
-                if(tangent)*tangent = {curr.x - prev.x,curr.y - prev.y};
-                found = true;
-            }
-            length += segLength;
-            prev = curr;
-            break;
-        case CAIRO_PATH_CURVE_TO: {
-            PointD p1 = { data[1].point.x, data[1].point.y };
-            PointD p2 = { data[2].point.x, data[2].point.y };
-            PointD p3 = { data[3].point.x, data[3].point.y };
-            segLength = curveLength(prev, p1, p2, p3,0.1);
-            if (length + segLength >= distance) {
-                const double t = (distance - length) / segLength;
-                const double u = 1.0 - t;
-                if(pos)*pos = interpolateCurve(prev, p1, p2, p3, t);
-                if(tangent){/*Tangent is the first derivative of Bézier curve*/
-                    tangent->x =  3 * u * u * (p1.x - prev.x) +
-                        6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
-                    tangent->y =  3 * u * u * (p1.y - prev.y) +
-                        6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
-                }
-                found = true;
-            }
-            length += segLength;
-            prev = p3;
-            break;
-        }
-        case CAIRO_PATH_CLOSE_PATH:
-        default:    break;
-        }
+bool PathMeasure::getPosTan(double distance,double* pos,double* tangent){
+    if(mSegments.empty()) {
+        buildSegments();
     }
-    cairo_path_destroy(m_path);
-    return found;
+    if(mContourIndex >= mContours.size()) {
+        return false;
+    }
+    const double totalDistance = getLength();
+    if(distance<0) distance = 0;
+    if(distance>totalDistance) distance = totalDistance;
+
+    double accumulated = 0.0;
+    const Contour& contour = mContours[mContourIndex];
+    for (size_t segIndex=contour.segmentStart;segIndex < contour.segmentEnd; ++segIndex) {
+        const Segment& segment = mSegments[segIndex];
+        const double segLength = segment.distance;
+        const PointD* pts = mPoints.data() + segment.ptIndex;
+        if (accumulated + segLength + DBL_EPSILON < distance) {
+            accumulated += segLength;
+            continue;
+        }
+
+        const double t = segLength > DBL_EPSILON ? (distance - accumulated) / segLength : 0.0;
+        if (segment.type == Segment::Line) {
+            if (pos) {
+                PointD p = interpolate(pts[0], pts[1], t);
+                pos[0] = p.x; pos[1] = p.y;
+            }
+            if (tangent) {
+                tangent[0] = pts[1].x - pts[0].x;
+                tangent[1] = pts[1].y - pts[0].y;
+            }
+            return true;
+        }
+        const PointD& p0 = pts[0];
+        const PointD& p1 = pts[1];
+        const PointD& p2 = pts[2];
+        const PointD& p3 = pts[3];
+        const double u = 1.0 - t;
+        if (pos) {
+            PointD p = interpolateCurve(p0, p1, p2, p3, t);
+            pos[0] = p.x; pos[1] = p.y;
+        }
+        if (tangent) {
+            tangent[0] = 3 * u * u * (p1.x - p0.x)
+                + 6 * u * t * (p2.x - p1.x) + 3 * t * t * (p3.x - p2.x);
+            tangent[1] = 3 * u * u * (p1.y - p0.y)
+                + 6 * u * t * (p2.y - p1.y) + 3 * t * t * (p3.y - p2.y);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool PathMeasure::getMatrix(double distance, Cairo::Matrix& matrix, int flags) {
+    double pos[2];
+    double tan[2];
+
+    if( !getPosTan(distance, pos, tan) ){
+        return false;
+    }
+
+    matrix= Cairo::identity_matrix();
+
+    if (flags & TANGENT_MATRIX_FLAG) {
+        const double angle_radians = std::atan2(tan[1], tan[0]);
+        matrix.rotate(angle_radians);
+    }
+
+    if (flags & POSITION_MATRIX_FLAG) {
+        matrix.translate(pos[0], pos[1]);
+    }
+    return true;
+}
+
+bool PathMeasure::isClosed() const {
+    return mContourIndex < mContours.size() ? mContours[mContourIndex].isClosed : false;
+}
+
+bool PathMeasure::nextContour() {
+    if (mSegments.empty() && mPath) {
+        buildSegments();
+    }
+    if (mContourIndex + 1 >= mContours.size()) {
+        return false;
+    }
+    ++mContourIndex;
+    return true;
 }
 }/*endof namespace*/

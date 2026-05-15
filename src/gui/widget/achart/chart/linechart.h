@@ -58,7 +58,6 @@ public:
      * @return the data points scatter chart
      */
     ScatterChart* getPointsChart() const;
-
     std::string getChartType() const override;
 };
 }/*endof namespace*/

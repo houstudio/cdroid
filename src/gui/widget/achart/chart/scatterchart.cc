@@ -39,66 +39,48 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
     mSize = renderer->getPointSize();
     canvas.save();
     canvas.set_color(renderer->getColor());
-    std::vector<float>pathPTS;
     if(!renderer->isFillPoints()){
         paint.setStyle(Style::FILL);
     }else{
         paint.setStyle(Style::STROKE);
         canvas.set_line_width(renderer->getPointStrokeWidth());
     }
-    const int length = points.size();
     if(seriesIndex==mSeriesIndex){
         mSize+=2;
-        renderer->setPointStrokeWidth(renderer->getPointStrokeWidth()+2);
     }
     canvas.set_line_width(renderer->getPointStrokeWidth());
-    switch (renderer->getPointStyle()) {
-    case X:
-        for (int i = 0; i < length; i += 2) {
-            drawX(canvas, paint, points.at(i), points.at(i + 1));
+    std::function<void(Canvas&,Paint&,float,float)>funcs[8];
+    funcs[X]=[this](Canvas& c, Paint& p, float x, float y) { drawX(c, p, x, y); };
+    funcs[CIRCLE]=[this](Canvas& c, Paint& p, float x, float y) { drawCircle(c, p, x, y); };
+    funcs[CIRCLE_FILLED]=[this](Canvas& c, Paint& p, float x, float y){
+        Paint fill;
+        fill.setColor(Color::WHITE); // TODO
+        fill.setStyle(Style::FILL);
+        drawCircle(c,fill,x,y);
+        drawCircle(c,p,x,y);
+    };
+    funcs[TRIANGLE]=[this](Canvas& c, Paint& p, float x, float y) {drawTriangle(c,p,x,y);};
+    funcs[SQUARE] = [this](Canvas& c, Paint& p, float x, float y) {drawSquare(c,p,x,y);};
+    funcs[DIAMOND]= [this](Canvas& c, Paint& p, float x, float y) {drawDiamond(c,p,x,y);};
+    funcs[POINT]  = [this](Canvas& c, Paint& p, float x, float y) {drawPoint(c,p,x,y);};
+
+    const int length = points.size();
+    const int pointStrokeWidth = renderer->getPointStrokeWidth();
+    auto draw=funcs[renderer->getPointStyle()];
+    for(int i=0;i<length;i+=2){
+        draw(canvas,paint,points.at(i), points.at(i + 1));
+        if( (seriesIndex==mSeriesIndex) && (startIndex+i/2==mDataIndex) ){
+            const int oldStyle=paint.style;
+            mSize+=4;
+            paint.style=STROKE;
+            drawCircle(canvas,paint,points.at(i), points.at(i + 1));
+            paint.style=oldStyle;
+            mSize-=4;
         }
-        break;
-    case PointStyle::CIRCLE:
-        for (int i = 0; i < length; i += 2) {
-            drawCircle(canvas, paint, points.at(i), points.at(i + 1));
-        }
-        break;
-    case PointStyle::CIRCLE_FILLED:
-        for (int i = 0; i < length; i += 2) {
-            Paint fill;
-            fill.setColor(Color::WHITE); // TODO
-            fill.setStyle(Style::FILL);
-            drawCircle(canvas, fill, points.at(i), points.at(i + 1));
-            drawCircle(canvas, paint, points.at(i), points.at(i + 1));
-        }
-        break;
-    case PointStyle::TRIANGLE:
-        pathPTS.resize(6);
-        for (int i = 0; i < length; i += 2) {
-            drawTriangle(canvas, paint, pathPTS, points.at(i), points.at(i + 1));
-        }
-        break;
-    case PointStyle::SQUARE:
-        for (int i = 0; i < length; i += 2) {
-            drawSquare(canvas, paint, points.at(i), points.at(i + 1));
-        }
-        break;
-    case PointStyle::DIAMOND:
-        pathPTS.resize(8);
-        for (int i = 0; i < length; i += 2) {
-            drawDiamond(canvas, paint, pathPTS, points.at(i), points.at(i + 1));
-        }
-        break;
-    case PointStyle::POINT:
-        for (int i = 0; i < length; i += 2) {
-            canvas.arc(points.at(i), points.at(i + 1),mSize,0,M_PI*2.0);
-            canvas.fill();
-        }
-        break;
     }
+
     if(seriesIndex==mSeriesIndex){
         mSize-=2;
-        renderer->setPointStrokeWidth(renderer->getPointStrokeWidth()-2);
     }
     if (renderer->isFillPoints()){
         canvas.fill();
@@ -110,7 +92,7 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
 
 std::vector<ClickableArea> ScatterChart::clickableAreasForPoints(const std::vector<float>& points,const std::vector<double>& values,
         float yAxisValue, int seriesIndex, int startIndex) {
-    int length = points.size();
+    const int length = points.size();
     std::vector<ClickableArea> ret(length / 2);
     for (int i = 0; i < length; i += 2) {
         int selectableBuffer = mRenderer->getSelectableBuffer();
@@ -126,7 +108,6 @@ int ScatterChart::getLegendShapeWidth(int seriesIndex) const{
 
 void ScatterChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,
         float x, float y,int seriesIndex,  Paint& paint) {
-    std::vector<float>pathPTS;
      if (((XYSeriesRenderer*) renderer.get())->isFillPoints()) {
         paint.setStyle(Style::FILL);
     } else {
@@ -140,19 +121,16 @@ void ScatterChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleS
         drawCircle(canvas, paint, x + SHAPE_WIDTH, y);
         break;
     case PointStyle::TRIANGLE:/*bug*/
-        pathPTS.resize(6);
-        drawTriangle(canvas, paint, pathPTS, x + SHAPE_WIDTH, y);
+        drawTriangle(canvas, paint, x + SHAPE_WIDTH, y);
         break;
     case PointStyle::SQUARE:
         drawSquare(canvas, paint, x + SHAPE_WIDTH, y);
         break;
     case PointStyle::DIAMOND:/*bug*/
-        pathPTS.resize(8);
-        drawDiamond(canvas, paint, pathPTS, x + SHAPE_WIDTH, y);
+        drawDiamond(canvas, paint, x + SHAPE_WIDTH, y);
         break;
     case PointStyle::POINT:
-        //canvas.drawPoint(x + SHAPE_WIDTH, y, paint);
-        canvas.arc(x+SHAPE_WIDTH,y,mSize,0,M_PI*2.0);
+        drawPoint(canvas,paint,x + SHAPE_WIDTH, y);
         break;
     }
     if(paint.style==Style::FILL){
@@ -170,13 +148,20 @@ void ScatterChart::drawX(Canvas& canvas,  Paint& paint, float x, float y) {
     canvas.stroke();
 }
 
-void ScatterChart::drawCircle(Canvas& canvas,  Paint& paint, float x, float y) {
+void ScatterChart::drawPoint(Canvas& canvas, Paint& paint, float x, float y){
     canvas.arc(x,y,mSize,0,M_PI*2.0);
-    if(paint.style==Style::FILL)canvas.fill();
+    if(paint.style&FILL)canvas.fill();
     else canvas.stroke();
 }
 
-void ScatterChart::drawTriangle(Canvas& canvas,  Paint& paint, std::vector<float>& path, float x, float y) {
+void ScatterChart::drawCircle(Canvas& canvas,  Paint& paint, float x, float y) {
+    canvas.arc(x,y,mSize,0,M_PI*2.0);
+    if(paint.style&Style::FILL)canvas.fill();
+    else canvas.stroke();
+}
+
+void ScatterChart::drawTriangle(Canvas& canvas,  Paint& paint, float x, float y) {
+    std::vector<float>path(6);
     path[0] = x;/*x,y is center of triangle*/
     path[1] = y - mSize - mSize / 2.0;
     path[2] = x - mSize;
@@ -187,14 +172,14 @@ void ScatterChart::drawTriangle(Canvas& canvas,  Paint& paint, std::vector<float
 }
 
 void ScatterChart::ScatterChart::drawSquare(Canvas& canvas,  Paint& paint, float x, float y) {
-    //canvas.drawRect(x - size, y - size, x + size, y + size, paint);
     canvas.rectangle(x - mSize, y - mSize,mSize*2.0,mSize*2.0);
     if(paint.style==Style::STROKE)
         canvas.stroke();
     else canvas.fill();
 }
 
-void ScatterChart::drawDiamond(Canvas& canvas,  Paint& paint, std::vector<float>& path, float x, float y) {
+void ScatterChart::drawDiamond(Canvas& canvas,  Paint& paint, float x, float y) {
+    std::vector<float>path(8);
     path[0] = x;
     path[1] = y - mSize;
     path[2] = x - mSize;
