@@ -221,8 +221,10 @@ namespace{
 }
 
 double PathMeasure::getLength() const{
-    return std::accumulate(mSegments.begin(),mSegments.end(),0.0,
-        [](double sum,const Segment&s){ return sum + s.distance;});
+    if (mContourIndex >= mContours.size()) {
+        return 0.0;
+    }
+    return mContours[mContourIndex].length;
 }
 
 int PathMeasure::buildSegments(){
@@ -311,9 +313,6 @@ int PathMeasure::buildSegments(){
 }
 
 bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo){
-    if(mSegments.empty()){
-        buildSegments();
-    }
     const double total = getLength();
     if( (mContourIndex>=mContours.size()) || (start>=stop) || (total < DBL_EPSILON) ){
         return false;
@@ -360,9 +359,6 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
 }
 
 bool PathMeasure::getPosTan(double distance,double* pos,double* tangent){
-    if(mSegments.empty()) {
-        buildSegments();
-    }
     if(mContourIndex >= mContours.size()) {
         return false;
     }
@@ -414,8 +410,7 @@ bool PathMeasure::getPosTan(double distance,double* pos,double* tangent){
 }
 
 bool PathMeasure::getMatrix(double distance, Cairo::Matrix& matrix, int flags) {
-    double pos[2];
-    double tan[2];
+    double pos[2], tan[2];
 
     if( !getPosTan(distance, pos, tan) ){
         return false;
