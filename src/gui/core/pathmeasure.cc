@@ -29,11 +29,13 @@ PathMeasure::PathMeasure(){
 PathMeasure::PathMeasure(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
+    mContourIndex= 0;
     buildSegments();
 }
 
 void PathMeasure::setPath(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
+    mContourIndex= 0;
     mForceClosed = forceClosed;
     buildSegments();
 }
