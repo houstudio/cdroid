@@ -225,15 +225,14 @@ bool CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenP
 
         syncSubChartState(chart, seriesIndex);
         const bool seriesSelection = chart->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
-        if (!seriesSelection) {
-            auto ds = chart->getDataset();
-            if(ds){
-                seriesCount += ds->getSeriesCount();
-            }
-            continue;
+        if (seriesSelection) {
+            selection = SeriesSelection(seriesCount + selection.getSeriesIndex() , selection.getPointIndex(),selection.getXValue(), selection.getValue());
+            return true;
         }
-        selection=SeriesSelection(seriesCount + selection.getSeriesIndex() , selection.getPointIndex(),selection.getXValue(), selection.getValue());
-        return true;
+        auto dataset = chart->getDataset();
+        if(dataset){
+            seriesCount += dataset->getSeriesCount();
+        }
     }
 
     return false;
@@ -252,14 +251,15 @@ void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
     XYChart::setSelection(seriesIndex,pointIndex);
     int seriesCount = 0;
     for(auto chart:mCharts){
-        auto ds =  chart->getDataset();
+        auto dataset = chart->getDataset();
         chart->setSelection(-1,-1);
-        if(ds){
-            if(seriesIndex>=seriesCount&&seriesIndex<seriesCount+ds->getSeriesCount()){
+        if(dataset){
+            const int dsCount = dataset->getSeriesCount();
+            if((seriesIndex>=seriesCount)&&(seriesIndex<seriesCount+dsCount)){
                 chart->setSelection(seriesIndex-seriesCount,pointIndex);
                 break;
             }
-            seriesCount += ds->getSeriesCount();
+            seriesCount += dsCount;
         }
     }
 }
@@ -271,6 +271,5 @@ std::string CombinedXYChart::getChartType() const{
 std::vector<XYChart*> CombinedXYChart::getCharts() const{
     return mCharts;
 }
-
 
 }

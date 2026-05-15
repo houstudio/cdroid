@@ -37,7 +37,7 @@ static void drawRingSlice(Canvas& canvas, double centerX, double centerY, double
 
 void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
     //paint.setAntiAlias(mRenderer->isAntialiasing());
-    //paint.setStyle(Style.FILL);
+    paint.setStyle(Style::FILL);
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
     int left = x;

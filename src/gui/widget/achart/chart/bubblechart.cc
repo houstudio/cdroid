@@ -38,7 +38,7 @@ void BubbleChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float>& po
     for (int i = 0; i < length; i += 2) {
         const double size = series->getValue(startIndex + i/2) * coef + MIN_BUBBLE_SIZE;
         drawCircle(canvas, paint, points.at(i), points.at(i + 1), (float) size);
-        if( ((mSeriesIndex<0)||(mSeriesIndex==seriesIndex)) && (startIndex+i/2==mDataIndex) ){
+        if( (mSeriesIndex==seriesIndex) && (startIndex+i/2==mDataIndex) ){
             canvas.arc(points.at(i), points.at(i + 1), float(size+3.f),0,M_PI*2.0);
             canvas.stroke();
         }

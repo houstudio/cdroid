@@ -146,7 +146,7 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin, float xMax, floa
         canvas.set_color(paint.color);
         canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin), std::round(yMax-yMin));
         canvas.fill();
-        if( ((mSeriesIndex<0)||(mSeriesIndex==seriesIndex))&&pointIndex==mDataIndex){
+        if( (mSeriesIndex==seriesIndex) && (pointIndex==mDataIndex) ){
             canvas.rectangle(std::round(xMin)-2, std::round(yMin)-2, std::round(xMax-xMin)+4, std::round(yMax-yMin)+4);
             canvas.stroke();
         }
