@@ -230,7 +230,7 @@ double PathMeasure::getLength() const{
 int PathMeasure::buildSegments(){
     bool hasMove = false;
     bool contourOpen = false;
-    int i = 0 ,ptIndex = -1;
+    int i = 0, ptIndex = -1;
     PointD pt0 = {0,0};
     PointD ptStart = {0,0};
     Contour currentContour = {0, 0, 0.0, false};
@@ -415,13 +415,12 @@ bool PathMeasure::getMatrix(double distance, Cairo::Matrix& matrix, int flags) {
         return false;
     }
 
-    matrix= Cairo::identity_matrix();
+    matrix = Cairo::identity_matrix();
 
     if (flags & TANGENT_MATRIX_FLAG) {
         const double angle_radians = std::atan2(tan[1], tan[0]);
         matrix.rotate(angle_radians);
     }
-
     if (flags & POSITION_MATRIX_FLAG) {
         matrix.translate(pos[0], pos[1]);
     }
@@ -433,9 +432,6 @@ bool PathMeasure::isClosed() const {
 }
 
 bool PathMeasure::nextContour() {
-    if (mSegments.empty() && mPath) {
-        buildSegments();
-    }
     if (mContourIndex + 1 >= mContours.size()) {
         return false;
     }
