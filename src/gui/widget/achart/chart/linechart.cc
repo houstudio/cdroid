@@ -168,19 +168,58 @@ void LineChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeri
     }
 }
 
+double LineChart::pointToSegmentDistance(const PointF& p,const PointF& a,const PointF& b)const {
+    double dx = b.x - a.x;
+    double dy = b.y - a.y;
+    if (dx == 0 && dy == 0) {
+        dx = p.x - a.x;
+        dy = p.y - a.y;
+        return std::sqrt(dx * dx + dy * dy);
+    }
+
+    const double apx = p.x - a.x;
+    const double apy = p.y - a.y;
+    const double t = (apx * dx + apy * dy) / (dx * dx + dy * dy);
+    if (t < 0.0) {
+        dx = p.x - a.x;
+        dy = p.y - a.y;
+    } else if (t > 1.0) {
+        dx = p.x - b.x;
+        dy = p.y - b.y;
+    } else {
+        double nearest_x = a.x + t * dx;
+        double nearest_y = a.y + t * dy;
+        dx = p.x - nearest_x;
+        dy = p.y - nearest_y;
+    }
+    return std::sqrt(dx * dx + dy * dy);
+}
+
 bool LineChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{
     if(XYChart::getSeriesAndPointForScreenCoordinate(screenPoint,selection)){
         return true;
     }
-#if 10
+    const float selectableBuffer = mRenderer->getSelectableBuffer();
     for (int seriesIndex = mClickableAreas.size() - 1; seriesIndex >= 0; seriesIndex--) {
         auto it = mClickableAreas.find(seriesIndex);
-        for (const ClickableArea& area : it->second){
+        auto series = mDataset->getSeriesAt(seriesIndex);
+        const auto scale = series->getScaleNumber();
+        if(it==mClickableAreas.end())continue;
+        const auto& areas = it->second;
+        for (int i=0;i<areas.size()-1;i++){
+            auto pts = toScreenPoint({areas[i].getX(),areas[i].getY(),areas[i+1].getX(),areas[i+1].getY()},scale);
+            const PointF p1={float(pts[0]),float(pts[1])};
+            const PointF p2={float(pts[2]),float(pts[3])};
+            auto distance=pointToSegmentDistance(screenPoint,p1,p2);
+            if(distance<selectableBuffer){
+                selection=SeriesSelection(seriesIndex,-1,p1.x,p1.y);
+                return true;
+            }
         }
     }
-#endif
     return false;
 }
+
 bool LineChart::isRenderPoints(const std::shared_ptr<SimpleSeriesRenderer>& renderer) const{
     return ((XYSeriesRenderer*) renderer.get())->getPointStyle() != PointStyle::POINT;
 }

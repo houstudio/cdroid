@@ -21,7 +21,6 @@
 
 namespace cdroid{
 class ScrollManager {
-    // One second in milliseconds.
 private:
     static constexpr int ONE_SEC_IN_MS = 1000;
     static constexpr float VELOCITY_MULTIPLIER = 1.5f;
@@ -48,7 +47,6 @@ public:
     ScrollManager();
     ~ScrollManager();
     void setRecyclerView(RecyclerView* recyclerView, int width, int height);
-
     void clearRecyclerView();
 
     bool onTouchEvent(MotionEvent& event);

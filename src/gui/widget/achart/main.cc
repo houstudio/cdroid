@@ -640,8 +640,8 @@ ChartPageSpec createRangeStackedBarChartPage(cdroid::Context* context) {
     renderer->setPanLimits({0.0, 5.5, 0.0, 16.0});
     renderer->setZoomLimits({0.0, 5.5, 0.0, 16.0});
 
-    renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFF06D6A0), cdroid::PointStyle::POINT, false, true));
-    renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFB703), cdroid::PointStyle::POINT, false, true));
+    renderer->addSeriesRenderer(createSeriesRenderer(argb(0x8006D6A0), cdroid::PointStyle::POINT, false, true));
+    renderer->addSeriesRenderer(createSeriesRenderer(argb(0x80FFB703), cdroid::PointStyle::POINT, false, true));
 
     auto planned = std::make_shared<cdroid::XYSeries>("Planned");
     auto actual = std::make_shared<cdroid::XYSeries>("Actual");

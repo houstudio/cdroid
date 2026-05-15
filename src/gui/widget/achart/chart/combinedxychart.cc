@@ -216,7 +216,7 @@ bool CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenP
     if (hasSelection || mRenderer == nullptr || mDataset == nullptr || !mRenderer->isClickEnabled()) {
         return hasSelection;
     }
-
+    int seriesCount =0;
     for (int seriesIndex = static_cast<int>(mCharts.size()) - 1; seriesIndex >= 0; --seriesIndex) {
         XYChart* chart = mCharts[seriesIndex];
         if (chart == nullptr) {
@@ -226,10 +226,13 @@ bool CombinedXYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenP
         syncSubChartState(chart, seriesIndex);
         const bool seriesSelection = chart->getSeriesAndPointForScreenCoordinate(screenPoint,selection);
         if (!seriesSelection) {
+            auto ds = chart->getDataset();
+            if(ds){
+                seriesCount += ds->getSeriesCount();
+            }
             continue;
         }
-
-        selection=SeriesSelection( seriesIndex, selection.getPointIndex(),selection.getXValue(), selection.getValue());
+        selection=SeriesSelection(seriesCount + selection.getSeriesIndex() , selection.getPointIndex(),selection.getXValue(), selection.getValue());
         return true;
     }
 
@@ -247,11 +250,17 @@ void CombinedXYChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simp
 
 void CombinedXYChart::setSelection(int seriesIndex,int pointIndex){
     XYChart::setSelection(seriesIndex,pointIndex);
+    int seriesCount = 0;
     for(auto chart:mCharts){
+        auto ds =  chart->getDataset();
         chart->setSelection(-1,-1);
-    }
-    if( (seriesIndex>=0) && (seriesIndex<(int)mCharts.size()) ){
-         mCharts[seriesIndex]->setSelection(seriesIndex,pointIndex);
+        if(ds){
+            if(seriesIndex>=seriesCount&&seriesIndex<seriesCount+ds->getSeriesCount()){
+                chart->setSelection(seriesIndex-seriesCount,pointIndex);
+                break;
+            }
+            seriesCount += ds->getSeriesCount();
+        }
     }
 }
 

@@ -768,10 +768,12 @@ std::vector<double> XYChart::toScreenPoint(const std::vector<double>& realPoint,
         realMaxY = calcRange[3];
     }
     if (!mScreenR.empty()) {
-        return {
-                   (realPoint[0] - realMinX) * mScreenR.width / (realMaxX - realMinX) + mScreenR.left,
-                   (realMaxY - realPoint[1]) * mScreenR.height / (realMaxY - realMinY) + mScreenR.top
-               };
+        std::vector<double> ret(realPoint.size());
+        for(int i=0;i<realPoint.size();i+=2){
+            ret[i]  =(realPoint[i] - realMinX) * mScreenR.width / (realMaxX - realMinX) + mScreenR.left;
+            ret[i+1]=(realMaxY - realPoint[i+1]) * mScreenR.height / (realMaxY - realMinY) + mScreenR.top;
+        }
+        return ret;
     } else {
         return realPoint;
     }
@@ -805,11 +807,12 @@ bool XYChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,Ser
 }
 
 void XYChart::setSelection(int seriesIndex,int dataIndex){
-    mDataIndex =dataIndex;
+    AbstractChart::setSelection(seriesIndex,dataIndex);
     if((mDataset!=nullptr)&&(seriesIndex<mDataset->getSeriesCount())){
-        mSeriesIndex = seriesIndex;
-    }else{
-        mSeriesIndex = -1;
+        ScatterChart*scatter = getPointsChart();
+        if(scatter){
+            scatter->setSelection(seriesIndex,dataIndex);
+        }
     }
 }
 

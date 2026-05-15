@@ -20,13 +20,16 @@ namespace cdroid{
 class ClickableArea {
 private:
     RectF rect;
-    double x;
-    double y;
+    float x;
+    float y;
     int pointIndex;
 public:
-    ClickableArea()=default;
+    ClickableArea(){
+        pointIndex=-1;
+        rect={0,0,0,0};
+    }
     ClickableArea(const ClickableArea&)=default;
-    ClickableArea(const RectF& rect, double x, double y,int index) {
+    ClickableArea(const RectF& rect, float x, float y,int index) {
         this->rect = rect;
         this->x = x;
         this->y = y;
@@ -35,10 +38,10 @@ public:
     RectF getRect() const{
         return rect;
     }
-    double getX() const{
+    float getX() const{
         return x;
     }
-    double getY() const{
+    float getY() const{
         return y;
     }
     int getPointIndex()const{

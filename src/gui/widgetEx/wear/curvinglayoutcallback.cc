@@ -50,7 +50,7 @@ void CurvingLayoutCallback::onLayoutFinished(View& child, RecyclerView& parent) 
         const float verticalAnchor = (float) child.getTop() + mAnchorOffsetXY[1];
         const float mYScrollProgress = (verticalAnchor + std::abs(minCenter)) / range;
 
-        mPathMeasure->getPosTan(mYScrollProgress * mPathLength, (PointD*)mPathPoints, (PointD*)mPathTangent);
+        mPathMeasure->getPosTan(mYScrollProgress * mPathLength, mPathPoints, mPathTangent);
 
         const bool topClusterRisk = (std::abs(mPathPoints[1] - mCurveBottom) < EPSILON)
                         && (minCenter < mPathPoints[1]);
@@ -114,7 +114,7 @@ void CurvingLayoutCallback::maybeSetUpCircularInitialLayout(int width, int heigh
             0.22f * width, 0.83f * height,
             0.34f * width, 0.925f * height);
         mCurvePath->line_to(width / 2, mCurveTop);
-        mPathMeasure->setPath(mCurvePath);//, false);
+        mPathMeasure->setPath(mCurvePath, false);
         mPathLength = mPathMeasure->getLength();
     }
 }
