@@ -29,11 +29,13 @@ PathMeasure::PathMeasure(){
 PathMeasure::PathMeasure(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
     mForceClosed = forceClosed;
+    mContourIndex= 0;
     buildSegments();
 }
 
 void PathMeasure::setPath(const Cairo::RefPtr<cdroid::Path>& inPath,bool forceClosed){
     mPath = inPath;
+    mContourIndex= 0;
     mForceClosed = forceClosed;
     buildSegments();
 }
@@ -219,14 +221,16 @@ namespace{
 }
 
 double PathMeasure::getLength() const{
-    return std::accumulate(mSegments.begin(),mSegments.end(),0.0,
-        [](double sum,const Segment&s){ return sum + s.distance;});
+    if (mContourIndex >= mContours.size()) {
+        return 0.0;
+    }
+    return mContours[mContourIndex].length;
 }
 
 int PathMeasure::buildSegments(){
     bool hasMove = false;
     bool contourOpen = false;
-    int i = 0 ,ptIndex = -1;
+    int i = 0, ptIndex = -1;
     PointD pt0 = {0,0};
     PointD ptStart = {0,0};
     Contour currentContour = {0, 0, 0.0, false};
@@ -309,15 +313,11 @@ int PathMeasure::buildSegments(){
 }
 
 bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Path>& dst, bool startWithMoveTo){
-    if(mSegments.empty()){
-        buildSegments();
-    }
     const double total = getLength();
     if( (mContourIndex>=mContours.size()) || (start>=stop) || (total < DBL_EPSILON) ){
         return false;
     }
     if (!dst) dst = std::make_shared<cdroid::Path>();
-    else dst->reset();
     if (start < 0) start = 0;
     if (stop>total) stop = total;
 
@@ -358,9 +358,6 @@ bool PathMeasure::getSegment(double start, double stop,Cairo::RefPtr<cdroid::Pat
 }
 
 bool PathMeasure::getPosTan(double distance,double* pos,double* tangent){
-    if(mSegments.empty()) {
-        buildSegments();
-    }
     if(mContourIndex >= mContours.size()) {
         return false;
     }
@@ -412,20 +409,18 @@ bool PathMeasure::getPosTan(double distance,double* pos,double* tangent){
 }
 
 bool PathMeasure::getMatrix(double distance, Cairo::Matrix& matrix, int flags) {
-    double pos[2];
-    double tan[2];
+    double pos[2], tan[2];
 
     if( !getPosTan(distance, pos, tan) ){
         return false;
     }
 
-    matrix= Cairo::identity_matrix();
+    matrix = Cairo::identity_matrix();
 
     if (flags & TANGENT_MATRIX_FLAG) {
         const double angle_radians = std::atan2(tan[1], tan[0]);
         matrix.rotate(angle_radians);
     }
-
     if (flags & POSITION_MATRIX_FLAG) {
         matrix.translate(pos[0], pos[1]);
     }
@@ -437,9 +432,6 @@ bool PathMeasure::isClosed() const {
 }
 
 bool PathMeasure::nextContour() {
-    if (mSegments.empty() && mPath) {
-        buildSegments();
-    }
     if (mContourIndex + 1 >= mContours.size()) {
         return false;
     }
