@@ -29,6 +29,10 @@ protected:
     std::shared_ptr<MultipleCategorySeries> mDataset;
     /** A step variable to control the size of the legend shape. */
     int mStep;
+    int getSeriesSelectionColor(int series)const override;
+private:
+    void drawRingSlice(Canvas& canvas, double cx, double cy, double outerRadius,
+            double innerRadius, double startAngleDegrees, double sweepAngleDegrees,int style); 
 public:
     /**
      * Builds a new doughnut chart instance.

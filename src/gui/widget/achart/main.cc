@@ -496,7 +496,7 @@ ChartPageSpec createScatterChart(cdroid::Context* context) {
 
     renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFF90E0EF), cdroid::PointStyle::X, false, false, 1.8f));
     renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFAFCC), cdroid::PointStyle::TRIANGLE, true, false, 1.8f));
-    renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFAFCC), cdroid::PointStyle::POINT, true, false, 1.8f));
+    renderer->addSeriesRenderer(createSeriesRenderer(argb(0xFFFFAFCC), cdroid::PointStyle::DIAMOND, true, false, 1.8f));
 
     auto batchA = std::make_shared<cdroid::XYSeries>("Batch A");
     auto batchB = std::make_shared<cdroid::XYSeries>("Batch B");

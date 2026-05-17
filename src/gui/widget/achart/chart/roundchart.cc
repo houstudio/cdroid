@@ -26,6 +26,12 @@ RoundChart::~RoundChart(){
     delete mPieMapper;
 }
 
+int RoundChart::getSeriesSelectionColor(int seriesIndex)const{
+    const int size = mDataset->getItemCount();
+    auto seriesRenderer = mRenderer->getSeriesRendererAt((seriesIndex + 1)%size);
+    return seriesRenderer->getColor();
+}
+
 void RoundChart::drawTitle(Canvas& canvas, int x, int y, int width,  Paint& paint) {
     if (mRenderer->isShowLabels()) {
         canvas.set_color(mRenderer->getLabelsColor());

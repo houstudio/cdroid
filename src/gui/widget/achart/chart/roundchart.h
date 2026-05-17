@@ -40,6 +40,7 @@ protected:
     int mCenterY = NO_VALUE;
     PieMapper*mPieMapper;
 protected:
+    virtual int getSeriesSelectionColor(int series)const;
     SeriesSelection* getSectorForScreenCoordinate(const PointF& point)const;
 public:
     RoundChart(const std::shared_ptr<CategorySeries>& dataset, const std::shared_ptr<DefaultRenderer>& renderer);
