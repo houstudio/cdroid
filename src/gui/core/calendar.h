@@ -194,7 +194,7 @@ public:
     Calendar& setWeekDate(int weekYear, int weekOfYear, int dayOfWeek);
     Calendar& setLenient(bool lenient);
     Calendar& setWeekDefinition(int firstDayOfWeek, int minimalDaysInFirstWeek);
-    Calendar& setInstant(long instant);
+    Calendar& setInstant(int64_t instant);
     int getFirstDayOfWeek();
     void setFirstDayOfWeek(int);
     int getMinimalDaysInFirstWeek() const;

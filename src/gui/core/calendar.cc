@@ -885,8 +885,8 @@ bool Calendar::isValidWeekParameter(int value){
     return value > 0 && value <= 7;
 }
 
-Calendar& Calendar::setInstant(long instant){
-    setTime(static_cast<int64_t>(instant));
+Calendar& Calendar::setInstant(int64_t instant){
+    setTime(instant);
     return *this;
 }
 
