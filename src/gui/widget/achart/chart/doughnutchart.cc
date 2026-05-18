@@ -107,7 +107,9 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
             drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,FILL);
             if( (mSeriesIndex==category) && (mDataIndex==i) ) {
                 canvas.set_color(getSeriesSelectionColor(i));
+                canvas.set_line_width(mRenderer->getGridLineWidth()+1);
                 drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,STROKE);
+                canvas.set_line_width(mRenderer->getGridLineWidth()-1);
             }
             drawLabel(canvas, mDataset->getTitles(category)[i], mRenderer, prevLabelsBounds, mCenterX,
                       mCenterY, shortRadius, longRadius, currentAngle, angle, left, right,
