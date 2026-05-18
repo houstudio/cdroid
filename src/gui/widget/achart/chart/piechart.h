@@ -23,6 +23,9 @@ class PieMapper;
  * The pie chart rendering class.
  */
 class PieChart :public RoundChart {
+private:
+    void drawArc(Canvas& canvas,double centerX, double centerY,
+            double radius, double startAngle, double sweepAngle,int paintStyle);
 public:
     /**
      * Builds a new pie chart instance.

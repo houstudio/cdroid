@@ -29,17 +29,15 @@ PieChart::PieChart(const std::shared_ptr<CategorySeries>& dataset,const std::sha
     }
 }
 
-static void drawArc(Canvas& canvas,double centerX, double centerY, 
-            double radius, double startAngle, double sweepAngle,PieChart::Paint&paint) {
-    
+void PieChart::drawArc(Canvas& canvas,double centerX, double centerY, double radius,
+        double startAngle, double sweepAngle,int paintStyle) {
     double startRad = startAngle * M_PI / 180.0;
     double endRad = (startAngle + sweepAngle) * M_PI / 180.0;
     canvas.move_to(centerX, centerY);
     canvas.arc(centerX, centerY, radius, startRad, endRad);
     canvas.close_path();
-    if(paint.style==1)//PieChart::Style::FILL)
-    canvas.stroke();
-    else canvas.fill();
+    if(paintStyle&Style::FILL)canvas.fill();
+    else canvas.stroke();
 }
 
 void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
@@ -50,11 +48,11 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
     const int left = x;
     const int top = y;
     const int right = x + width;
-    const int sLength = mDataset->getItemCount();
+    const int categoryCount = mDataset->getItemCount();
     double total = 0;
     double maxValue = FLT_MIN;
-    std::vector<std::string> titles(sLength);
-    for (int i = 0; i < sLength; i++) {
+    std::vector<std::string> titles(categoryCount);
+    for (int i = 0; i < categoryCount; i++) {
         total += mDataset->getValue(i);
         maxValue = std::max(maxValue,mDataset->getValue(i));
         titles[i] = mDataset->getCategory(i);
@@ -79,7 +77,7 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
 
     // Hook in clip detection after center has been calculated
     mPieMapper->setDimensions(radius, mCenterX, mCenterY);
-    const bool loadPieCfg = !mPieMapper->areAllSegmentPresent(sLength);
+    const bool loadPieCfg = !mPieMapper->areAllSegmentPresent(categoryCount);
     if (loadPieCfg) {
         mPieMapper->clearPieSegments();
     }
@@ -88,7 +86,7 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
     const float longRadius = radius * 1.1f;
     std::vector<RectF> prevLabelsBounds;
 
-    for (int i = 0; i < sLength; i++) {
+    for (int i = 0; i < categoryCount; i++) {
         auto seriesRenderer = mRenderer->getSeriesRendererAt(i);
         if (seriesRenderer->isGradientEnabled()) {
             Color startColor(seriesRenderer->getGradientStartColor());
@@ -105,13 +103,16 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
         const float value = (float) mDataset->getValue(i);
         const float sweepAngle = (float) (value / total * 360.f);
         const float radiusScale = 1.f;//std::sqrt(value/maxValue);
-        if (seriesRenderer->isHighlighted()|| (mDataIndex == i)) {
+        float translateX = 0,translateY=0;
+        if (seriesRenderer->isHighlighted()) {
             const double rAngle = (90.0 - (currentAngle + sweepAngle / 2))*M_PI/180.0;
-            const float translateX = (float) (radius * 0.1 * std::sin(rAngle));
-            const float translateY = (float) (radius * 0.1 * std::cos(rAngle));
-            drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,paint);
-        } else {
-            drawArc(canvas, mCenterX, mCenterY, radius*radiusScale, currentAngle, sweepAngle,paint);
+            translateX = (float) (radius * 0.1 * std::sin(rAngle));
+            translateY = (float) (radius * 0.1 * std::cos(rAngle));
+        }
+        drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,Style::FILL);
+        if(mDataIndex==i){
+            canvas.set_color(getSeriesSelectionColor(i));
+            drawArc(canvas, mCenterX+translateX,  mCenterY+translateY, (radius + 4)*radiusScale, currentAngle, sweepAngle,Style::STROKE);
         }
         canvas.set_color(seriesRenderer->getColor());
         drawLabel(canvas, mDataset->getCategory(i), mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius,

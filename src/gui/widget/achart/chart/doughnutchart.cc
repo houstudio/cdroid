@@ -24,15 +24,22 @@ DoughnutChart::DoughnutChart(const std::shared_ptr<MultipleCategorySeries>& data
     mDataset = dataset;
 }
 
-static void drawRingSlice(Canvas& canvas, double centerX, double centerY, double outerRadius,
-        double innerRadius, double startAngleDegrees, double sweepAngleDegrees) {
+int DoughnutChart::getSeriesSelectionColor(int seriesIndex)const{
+    const int size = mDataset->getCategoriesCount();
+    auto seriesRenderer = mRenderer->getSeriesRendererAt((seriesIndex + 1)%size);
+    return seriesRenderer->getColor();
+}
+
+void DoughnutChart::drawRingSlice(Canvas& canvas, double centerX, double centerY, double outerRadius,
+        double innerRadius, double startAngleDegrees, double sweepAngleDegrees,int style) {
     const double startRadians = startAngleDegrees * M_PI / 180.0;
     const double endRadians = (startAngleDegrees + sweepAngleDegrees) * M_PI / 180.0;
     canvas.begin_new_path();
     canvas.arc(centerX, centerY, outerRadius, startRadians, endRadians);
     canvas.arc_negative(centerX, centerY, innerRadius, endRadians, startRadians);
     canvas.close_path();
-    canvas.fill();
+    if(style&FILL) canvas.fill();
+    else canvas.stroke();
 }
 
 void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
@@ -94,10 +101,14 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
         float currentAngle = mRenderer->getStartAngle();
         const double innerRadius = std::max(0.0, radius - ringThickness);
         for (int i = 0; i < sLength; i++) {
-            canvas.set_color(mRenderer->getSeriesRendererAt(i)->getColor());
             const float value = (float) mDataset->getValues(category)[i];
             const float angle = (float) (value / total * 360);
-            drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle);
+            canvas.set_color(mRenderer->getSeriesRendererAt(i)->getColor());
+            drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,FILL);
+            if( (mSeriesIndex==category) && (mDataIndex==i) ) {
+                canvas.set_color(getSeriesSelectionColor(i));
+                drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,STROKE);
+            }
             drawLabel(canvas, mDataset->getTitles(category)[i], mRenderer, prevLabelsBounds, mCenterX,
                       mCenterY, shortRadius, longRadius, currentAngle, angle, left, right,
                       mRenderer->getLabelsColor(), paint, true, false);

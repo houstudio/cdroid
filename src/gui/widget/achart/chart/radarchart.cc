@@ -155,15 +155,11 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
 }
 
 int RadarChart::getLegendShapeWidth(int seriesIndex) const {
-    (void)seriesIndex;
     return SHAPE_WIDTH + 6;
 }
 
 void RadarChart::drawLegendShape(Canvas& canvas,const std::shared_ptr<SimpleSeriesRenderer>& renderer, float x, float y,
         int seriesIndex, Paint& paint) {
-    (void)renderer;
-    (void)seriesIndex;
-    (void)paint;
     canvas.move_to(x, y + SHAPE_WIDTH / 2.0f);
     canvas.line_to(x + SHAPE_WIDTH / 2.0f, y - SHAPE_WIDTH / 2.0f);
     canvas.line_to(x + SHAPE_WIDTH, y + SHAPE_WIDTH / 2.0f);
