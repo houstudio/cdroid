@@ -19,10 +19,13 @@
 #define __CALENDAR_H__
 #include <time.h>
 #include <stdint.h>
+#include <memory>
+#include <vector>
 namespace cdroid{
 
 class Calendar{
 public:
+    virtual ~Calendar() = default;
     enum{
         ERA   = 0,
         YEAR  = 1,
@@ -42,8 +45,8 @@ public:
         MILLISECOND =14,
         ZONE_OFFSET =15,
         DST_OFFSET =16,
-        FIELD_COUNT =17,
-        WEEK_YEAR =FIELD_COUNT,
+        WEEK_YEAR =17,
+        FIELD_COUNT =18,
 
         SUNDAY  =0 ,
         MONDAY  =1 ,
@@ -103,6 +106,11 @@ public:
         MILLISECOND_MASK   = (1 << MILLISECOND),
         ZONE_OFFSET_MASK   = (1 << ZONE_OFFSET),
         DST_OFFSET_MASK    = (1 << DST_OFFSET),
+        WEEK_YEAR_MASK     = (1 << WEEK_YEAR),
+        LIMIT_MINIMUM = 0,
+        LIMIT_GREATEST_MINIMUM = 1,
+        LIMIT_LEAST_MAXIMUM = 2,
+        LIMIT_MAXIMUM = 3,
     };
 private:
     /**
@@ -112,10 +120,10 @@ private:
      */
     int stamp[FIELD_COUNT];
     bool lenient = true;
-    int zone;/*time zone in seconds*/
+    int zone = 0;/*time zone in seconds*/
     bool sharedZone = false;
-    int  firstDayOfWeek;
-    int  minimalDaysInFirstWeek;
+    int  firstDayOfWeek = SUNDAY;
+    int  minimalDaysInFirstWeek = 1;
     static int nextStamp;
     int maxFieldIndex;
     int internalSetMask;
@@ -128,6 +136,7 @@ private:
     void invalidateWeekFields();
     static int aggregateStamp(int stamp_a, int stamp_b);
 protected:
+    void computeWeekFields();
     int fields[FIELD_COUNT];
     bool bisSet[FIELD_COUNT];
     int64_t mTime;
@@ -137,7 +146,8 @@ protected:
     bool areFieldsVirtuallySet;
     void internalSet(int field, int value);
     int internalGet(int field);
-    Calendar& setFields(int count,...);
+    virtual int handleGetLimit(int field, int limitType) const;
+    Calendar& setFields(const std::vector<int>&);
     void complete();
     virtual void computeTime();
     virtual void computeFields();
@@ -154,7 +164,7 @@ public:
     /*set UTC Time in seconds from epoch*/
     void setTime(int64_t millisecond);
     /*return the current time as UTC seconds from the epoch*/
-    int64_t getTime();
+    int64_t getTime() const;
     void setTimeZone(int zone);
     int getTimeZone()const;
     void set(int year, int month, int date);
@@ -162,21 +172,35 @@ public:
     void clear(int field);
     void clear();
     bool isSet(int field);
+    virtual int getActualMinimum(int field) const;
+    virtual int getActualMaximum(int field) const;
+    virtual int getMinimum(int field) const;
+    virtual int getMaximum(int field) const;
+    virtual int getGreatestMinimum(int field) const;
+    virtual int getLeastMaximum(int field) const;
+    virtual int getLimit(int field, int limitType) const;
+    static bool isLeapYear(int year);
+    static int getDaysInMonth(int year, int month);
+    static int getDaysInYear(int year);
+    static std::unique_ptr<Calendar> getInstance();
+    static std::unique_ptr<Calendar> getInstance(int zoneOffsetSeconds);
+    static std::unique_ptr<Calendar> getInstance(int64_t instantMillis);
+    static std::unique_ptr<Calendar> getInstance(int64_t instantMillis, int zoneOffsetSeconds);
     virtual void add(int field, int amount);
     virtual void roll(int field, bool up);
     void roll(int field, int amount);
     Calendar& setDate(int year, int month, int dayOfMonth);
     Calendar& setTimeOfDay(int hourOfDay, int minute, int second,int millis=0);
     Calendar& setWeekDate(int weekYear, int weekOfYear, int dayOfWeek);
-    //setTimeZone(TimeZone zone)
     Calendar& setLenient(bool lenient);
     Calendar& setWeekDefinition(int firstDayOfWeek, int minimalDaysInFirstWeek);
     Calendar& setInstant(long instant);
     int getFirstDayOfWeek();
     void setFirstDayOfWeek(int);
-    int getMinimalDaysInFirstWeek();
+    int getMinimalDaysInFirstWeek() const;
     void setMinimalDaysInFirstWeek(int value);
     int get(int);
+    int get(int) const;
     int64_t getTimeInMillis();
     void setTimeInMillis(int64_t millis);
     bool after(const Calendar&other)const;

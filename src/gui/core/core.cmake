@@ -6,6 +6,18 @@ SET(CORE_SOURCES
     #core/bundle.cc
     core/transform.cc
     core/calendar.cc
+    core/gregoriancalendar.cc
+    core/chinesecalendar.cc
+    core/ethiopiccalendar.cc
+    core/copticcalendar.cc
+    core/cecalendar.cc
+    core/buddhistcalendar.cc
+    core/dangicalendar.cc
+    core/persiancalendar.cc
+    core/japanesecalendar.cc
+    core/taiwancalendar.cc
+    core/indiancalendar.cc
+    core/hebrewcalendar.cc
     core/canvas.cc
     core/color.cc
     core/numberformat.cc
