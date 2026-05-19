@@ -163,6 +163,7 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
     std::ostringstream oss;
     std::string result;
     size_t pos = 0;
+    char buf[16];
     
     while (pos < mPattern.length()) {
         if (pos + 1 < mPattern.length() && mPattern[pos] == 'y') {
@@ -173,11 +174,9 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (year_digits == 2) {
-                char buf[3];
                 std::strftime(buf, sizeof(buf), "%y", timeinfo);
                 result += buf;
             } else if (year_digits >= 4) {
-                char buf[5];
                 std::strftime(buf, sizeof(buf), "%Y", timeinfo);
                 result += buf;
             }
@@ -189,19 +188,15 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (month_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", timeinfo->tm_mon + 1);
                 result += buf;
             } else if (month_digits == 2) {
-                char buf[3];
                 std::strftime(buf, sizeof(buf), "%m", timeinfo);
                 result += buf;
             } else if (month_digits == 3) {
-                char buf[4];
                 std::strftime(buf, sizeof(buf), "%b", timeinfo);
                 result += buf;
             } else if (month_digits >= 4) {
-                char buf[12];
                 std::strftime(buf, sizeof(buf), "%B", timeinfo);
                 result += buf;
             }
@@ -213,11 +208,9 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (day_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", timeinfo->tm_mday);
                 result += buf;
             } else if (day_digits >= 2) {
-                char buf[3];
                 std::strftime(buf, sizeof(buf), "%d", timeinfo);
                 result += buf;
             }
@@ -229,11 +222,9 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (hour_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", timeinfo->tm_hour);
                 result += buf;
             } else if (hour_digits >= 2) {
-                char buf[3];
                 std::strftime(buf, sizeof(buf), "%H", timeinfo);
                 result += buf;
             }
@@ -246,11 +237,9 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
             }
             int hour12 = (timeinfo->tm_hour % 12 == 0) ? 12 : timeinfo->tm_hour % 12;
             if (hour_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", hour12);
                 result += buf;
             } else if (hour_digits >= 2) {
-                char buf[3];
                 std::sprintf(buf, "%02d", hour12);
                 result += buf;
             }
@@ -262,7 +251,6 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (minute_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", timeinfo->tm_min);
                 result += buf;
             } else if (minute_digits >= 2) {
@@ -278,11 +266,10 @@ std::string TimeChart::DateFormat::format(std::int64_t timestamp_ms) const {
                 pos++;
             }
             if (second_digits == 1) {
-                char buf[3];
                 std::sprintf(buf, "%d", timeinfo->tm_sec);
                 result += buf;
             } else if (second_digits >= 2) {
-                char buf[3];
+                char buf[12];
                 std::strftime(buf, sizeof(buf), "%S", timeinfo);
                 result += buf;
             }

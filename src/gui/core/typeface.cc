@@ -288,7 +288,7 @@ Typeface* Typeface::getDefault() {
     return sDefaultTypeface;
 }
 
-void Typeface::buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
+void Typeface::buildSystemFallback(const std::string& xmlPath,const std::string& fontDir,
                                    std::unordered_map<std::string, Typeface*>& fontMap,
                                    std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap) {
 }
