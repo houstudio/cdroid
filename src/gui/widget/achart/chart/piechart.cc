@@ -105,14 +105,16 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
         const float radiusScale = 1.f;//std::sqrt(value/maxValue);
         float translateX = 0,translateY=0;
         if (seriesRenderer->isHighlighted()) {
-            const double rAngle = (90.0 - (currentAngle + sweepAngle / 2))*M_PI/180.0;
+            const double rAngle = (90.0 - (currentAngle + sweepAngle / 2.f))*M_PI/180.f;
             translateX = (float) (radius * 0.1 * std::sin(rAngle));
             translateY = (float) (radius * 0.1 * std::cos(rAngle));
         }
         drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,Style::FILL);
         if(mDataIndex==i){
             canvas.set_color(getSeriesSelectionColor(i));
+            canvas.set_line_width(mRenderer->getGridLineWidth()+1);
             drawArc(canvas, mCenterX+translateX,  mCenterY+translateY, (radius + 4)*radiusScale, currentAngle, sweepAngle,Style::STROKE);
+            canvas.set_line_width(mRenderer->getGridLineWidth()-1);
         }
         canvas.set_color(seriesRenderer->getColor());
         drawLabel(canvas, mDataset->getCategory(i), mRenderer, prevLabelsBounds, mCenterX, mCenterY, shortRadius,
