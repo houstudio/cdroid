@@ -31,6 +31,8 @@ public:
 protected:
     void computeTime() override;
     void computeFields() override;
+    int handleGetMonthLength(int extendedYear, int month) const override;
+    int handleGetYearLength(int extendedYear) const override;
 };
 
 } // namespace cdroid

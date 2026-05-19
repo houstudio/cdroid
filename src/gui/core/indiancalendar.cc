@@ -71,6 +71,14 @@ static int getIndianMonthLength(int sakaYear, int month) {
     return (month >= 1 && month <= 5) ? 31 : 30;
 }
 
+static int getIndianYearLength(int sakaYear) {
+    int length = 0;
+    for (int i = 0; i < 12; ++i) {
+        length += getIndianMonthLength(sakaYear, i);
+    }
+    return length;
+}
+
 static void sakaToGregorian(int sakaYear, int sakaMonth, int sakaDay, int& year, int& month, int& day) {
     year = sakaYear + 78;
     int dayOfYear = 81 + sakaDay - 1;
@@ -174,6 +182,14 @@ void IndianCalendar::computeFields() {
     internalSet(ERA, 1);
     computeWeekFields();
     setFieldsComputed(ALL_FIELDS);
+}
+
+int IndianCalendar::handleGetMonthLength(int extendedYear, int month) const {
+    return getIndianMonthLength(extendedYear, month);
+}
+
+int IndianCalendar::handleGetYearLength(int extendedYear) const {
+    return getIndianYearLength(extendedYear);
 }
 
 } // namespace cdroid

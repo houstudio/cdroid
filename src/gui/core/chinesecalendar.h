@@ -27,15 +27,15 @@ public:
     ChineseCalendar();
     ChineseCalendar(int lunarYear, int lunarMonth, int lunarDay, bool leapMonth = false);
 
-    void setLeapMonth(bool leapMonth);
-    bool isLeapMonth() const;
-
-    int getChineseYear() const;
-    int getChineseMonth() const;
-    int getChineseDayOfMonth() const;
+    // ChineseCalendar uses Calendar fields directly, like YEAR, MONTH, DATE and IS_LEAP_MONTH.
 
 protected:
     int handleGetLimit(int field, int limitType) const override;
+    int handleGetMonthLength(int extendedYear, int month) const override;
+    int handleGetYearLength(int extendedYear) const override;
+    int getActualMaximum(int field) const override;
+    void add(int field, int amount) override;
+    void roll(int field, int amount) override;
     void computeTime() override;
     void computeFields() override;
 
@@ -47,6 +47,10 @@ private:
     static int getLunarLeapMonth(int year);
     static int getLunarMonthDays(int year, int lunarMonth, bool leap);
     static int getLunarYearDays(int year);
+
+    static int getChineseMonthCount(int year);
+    static int getLinearMonthIndex(int year, int month, bool leapMonth);
+    static void decodeLinearMonthIndex(int year, int index, int& month, bool& leapMonth);
 };
 
 } // namespace cdroid

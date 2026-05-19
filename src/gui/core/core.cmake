@@ -14,6 +14,7 @@ SET(CORE_SOURCES
     core/buddhistcalendar.cc
     core/dangicalendar.cc
     core/persiancalendar.cc
+    core/islamiccalendar.cc
     core/japanesecalendar.cc
     core/taiwancalendar.cc
     core/indiancalendar.cc

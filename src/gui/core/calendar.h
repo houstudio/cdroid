@@ -146,7 +146,9 @@ protected:
     bool areFieldsVirtuallySet;
     void internalSet(int field, int value);
     int internalGet(int field);
+    int64_t internalGetTimeInMillis() const;
     virtual int handleGetLimit(int field, int limitType) const;
+    void pinField(int field);
     Calendar& setFields(const std::vector<int>&);
     void complete();
     virtual void computeTime();
@@ -158,12 +160,14 @@ protected:
     void setUnnormalized();
     static bool isFieldSet(int fieldMask, int field);
     int selectFields();
+    virtual int handleGetMonthLength(int extendedYear, int month) const;
+    virtual int handleGetYearLength(int extendedYear) const;
 public:
     Calendar();
     Calendar& set(int field, int value);
-    /*set UTC Time in seconds from epoch*/
+    /*set UTC time in milliseconds from epoch*/
     void setTime(int64_t millisecond);
-    /*return the current time as UTC seconds from the epoch*/
+    /*return the current time as UTC milliseconds from the epoch*/
     int64_t getTime() const;
     void setTimeZone(int zone);
     int getTimeZone()const;
@@ -171,7 +175,8 @@ public:
     void set(int year, int month, int date, int hourOfDay, int minute,int second=0,int millis=0);
     void clear(int field);
     void clear();
-    bool isSet(int field);
+    bool isSet(int field) const;
+    bool isEquivalentTo(const Calendar&other)const;
     virtual int getActualMinimum(int field) const;
     virtual int getActualMaximum(int field) const;
     virtual int getMinimum(int field) const;
@@ -188,14 +193,15 @@ public:
     static std::unique_ptr<Calendar> getInstance(int64_t instantMillis, int zoneOffsetSeconds);
     virtual void add(int field, int amount);
     virtual void roll(int field, bool up);
-    void roll(int field, int amount);
+    virtual void roll(int field, int amount);
     Calendar& setDate(int year, int month, int dayOfMonth);
     Calendar& setTimeOfDay(int hourOfDay, int minute, int second,int millis=0);
     Calendar& setWeekDate(int weekYear, int weekOfYear, int dayOfWeek);
     Calendar& setLenient(bool lenient);
     Calendar& setWeekDefinition(int firstDayOfWeek, int minimalDaysInFirstWeek);
     Calendar& setInstant(int64_t instant);
-    int getFirstDayOfWeek();
+    bool isLenient()const;
+    int getFirstDayOfWeek()const;
     void setFirstDayOfWeek(int);
     int getMinimalDaysInFirstWeek() const;
     void setMinimalDaysInFirstWeek(int value);

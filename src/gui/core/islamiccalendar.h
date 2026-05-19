@@ -15,18 +15,18 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#ifndef __HEBREW_CALENDAR_H__
-#define __HEBREW_CALENDAR_H__
+#ifndef __ISLAMIC_CALENDAR_H__
+#define __ISLAMIC_CALENDAR_H__
 
-#include <calendar.h>
+#include <gregoriancalendar.h>
 
 namespace cdroid {
 
-class HebrewCalendar : public Calendar {
+class IslamicCalendar : public GregorianCalendar {
 public:
-    HebrewCalendar();
-    HebrewCalendar(int year, int month, int date);
-    HebrewCalendar(int year, int month, int date, int hourOfDay, int minute, int second);
+    IslamicCalendar();
+    IslamicCalendar(int year, int month, int date);
+    IslamicCalendar(int year, int month, int date, int hourOfDay, int minute, int second);
 
 protected:
     void computeTime() override;
@@ -37,4 +37,4 @@ protected:
 
 } // namespace cdroid
 
-#endif // __HEBREW_CALENDAR_H__
+#endif // __ISLAMIC_CALENDAR_H__

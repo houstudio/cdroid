@@ -217,7 +217,7 @@ Calendar DatePickerSpinnerDelegate::getMinDate() {
     return minDate;
 }
 
-void DatePickerSpinnerDelegate::setMaxDate(long maxDate) {
+void DatePickerSpinnerDelegate::setMaxDate(int64_t maxDate) {
     mTempDate.setTimeInMillis(maxDate);
     if (mTempDate.get(Calendar::YEAR) == mMaxDate.get(Calendar::YEAR)
             && mTempDate.get(Calendar::DAY_OF_YEAR) == mMaxDate.get(Calendar::DAY_OF_YEAR)) {
@@ -460,7 +460,7 @@ void DatePickerSpinnerDelegate::setImeOptions(NumberPicker* spinner, int spinner
 
 void DatePickerSpinnerDelegate::setContentDescriptions() {
     // Day
-    trySetContentDescription(mDaySpinner, R::id::increment,
+    /*trySetContentDescription(mDaySpinner, R::id::increment,
             com.android.internal.R.string.date_picker_increment_day_button);
     trySetContentDescription(mDaySpinner, R::id::decrement,
             com.android.internal.R.string.date_picker_decrement_day_button);
@@ -473,13 +473,13 @@ void DatePickerSpinnerDelegate::setContentDescriptions() {
     trySetContentDescription(mYearSpinner, R::id::increment,
             com.android.internal.R.string.date_picker_increment_year_button);
     trySetContentDescription(mYearSpinner, R::id::decrement,
-            com.android.internal.R.string.date_picker_decrement_year_button);
+            com.android.internal.R.string.date_picker_decrement_year_button);*/
 }
 
 void DatePickerSpinnerDelegate::trySetContentDescription(View* root, int viewId, int contDescResId) {
     View* target = root->findViewById(viewId);
     if (target != nullptr) {
-        target->setContentDescription(mContext.getString(contDescResId));
+        //target->setContentDescription(mContext.getString(contDescResId));
     }
 }
 

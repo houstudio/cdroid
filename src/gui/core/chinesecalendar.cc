@@ -92,6 +92,152 @@ int ChineseCalendar::handleGetLimit(int field, int limitType) const {
     return LIMITS[field][limitType];
 }
 
+int ChineseCalendar::getChineseMonthCount(int year) {
+    return getLunarLeapMonth(year) != 0 ? 13 : 12;
+}
+
+int ChineseCalendar::getLinearMonthIndex(int year, int month, bool leapMonth) {
+    int leap = getLunarLeapMonth(year);
+    int index = month;
+    if (leap != 0) {
+        int leapIndex = leap - 1;
+        if (leapMonth) {
+            index = leapIndex + 1;
+        } else if (month > leapIndex) {
+            index = month + 1;
+        }
+    }
+    return index;
+}
+
+void ChineseCalendar::decodeLinearMonthIndex(int year, int index, int& month, bool& leapMonth) {
+    int leap = getLunarLeapMonth(year);
+    if (leap == 0) {
+        month = index;
+        leapMonth = false;
+        return;
+    }
+    int leapIndex = leap - 1;
+    if (index <= leapIndex) {
+        month = index;
+        leapMonth = false;
+    } else if (index == leapIndex + 1) {
+        month = leapIndex;
+        leapMonth = true;
+    } else {
+        month = index - 1;
+        leapMonth = false;
+    }
+}
+
+int ChineseCalendar::getActualMaximum(int field) const {
+    switch (field) {
+        case DAY_OF_MONTH:
+            return getLunarMonthDays(get(YEAR), get(MONTH) + 1, mLeapMonth);
+        case DAY_OF_YEAR:
+            return getLunarYearDays(get(YEAR));
+        default:
+            return Calendar::getActualMaximum(field);
+    }
+}
+
+int ChineseCalendar::handleGetMonthLength(int extendedYear, int month) const {
+    return getLunarMonthDays(extendedYear, month + 1, mLeapMonth);
+}
+
+int ChineseCalendar::handleGetYearLength(int extendedYear) const {
+    return getLunarYearDays(extendedYear);
+}
+
+void ChineseCalendar::add(int field, int amount) {
+    if (field == MONTH) {
+        if (amount == 0) {
+            return;
+        }
+
+        int year = get(YEAR);
+        int month = get(MONTH);
+        int day = get(DAY_OF_MONTH);
+        bool leap = mLeapMonth;
+        int linear = getLinearMonthIndex(year, month, leap);
+        int remaining = amount;
+
+        while (remaining > 0) {
+            int yearCount = getChineseMonthCount(year);
+            if (linear + remaining < yearCount) {
+                linear += remaining;
+                remaining = 0;
+                break;
+            }
+            remaining -= (yearCount - linear);
+            year++;
+            linear = 0;
+        }
+
+        while (remaining < 0) {
+            if (linear + remaining >= 0) {
+                linear += remaining;
+                remaining = 0;
+                break;
+            }
+            remaining += (linear + 1);
+            year--;
+            linear = getChineseMonthCount(year) - 1;
+        }
+
+        int newMonth;
+        bool newLeap;
+        decodeLinearMonthIndex(year, linear, newMonth, newLeap);
+        int maxDay = getLunarMonthDays(year, newMonth + 1, newLeap);
+        if (day > maxDay) {
+            day = maxDay;
+        }
+
+        set(YEAR, year);
+        set(MONTH, newMonth);
+        set(DAY_OF_MONTH, day);
+        mLeapMonth = newLeap;
+        computeTime();
+    } else {
+        Calendar::add(field, amount);
+    }
+}
+
+void ChineseCalendar::roll(int field, int amount) {
+    if (field == MONTH) {
+        if (amount == 0) {
+            return;
+        }
+
+        int year = get(YEAR);
+        int month = get(MONTH);
+        int day = get(DAY_OF_MONTH);
+        bool leap = mLeapMonth;
+        int linear = getLinearMonthIndex(year, month, leap);
+        int yearCount = getChineseMonthCount(year);
+        int next = (linear + amount) % yearCount;
+        if (next < 0) {
+            next += yearCount;
+        }
+
+        int newMonth;
+        bool newLeap;
+        decodeLinearMonthIndex(year, next, newMonth, newLeap);
+        int maxDay = getLunarMonthDays(year, newMonth + 1, newLeap);
+        if (day > maxDay) {
+            day = maxDay;
+        }
+
+        set(YEAR, year);
+        set(MONTH, newMonth);
+        set(DAY_OF_MONTH, day);
+        mLeapMonth = newLeap;
+        computeTime();
+    } else {
+        Calendar::roll(field, amount);
+    }
+}
+
 ChineseCalendar::ChineseCalendar() : GregorianCalendar() {
     mLeapMonth = false;
 }
@@ -102,26 +248,6 @@ ChineseCalendar::ChineseCalendar(int lunarYear, int lunarMonth, int lunarDay, bo
     set(MONTH, lunarMonth);
     set(DAY_OF_MONTH, lunarDay);
     mLeapMonth = leapMonth;
-}
-
-void ChineseCalendar::setLeapMonth(bool leapMonth) {
-    mLeapMonth = leapMonth;
-}
-
-bool ChineseCalendar::isLeapMonth() const {
-    return mLeapMonth;
-}
-
-int ChineseCalendar::getChineseYear() const {
-    return get(YEAR);
-}
-
-int ChineseCalendar::getChineseMonth() const {
-    return get(MONTH);
-}
-
-int ChineseCalendar::getChineseDayOfMonth() const {
-    return get(DAY_OF_MONTH);
 }
 
 int ChineseCalendar::getLunarLeapMonth(int year) {

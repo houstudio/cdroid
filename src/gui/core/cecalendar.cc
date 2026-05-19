@@ -40,4 +40,15 @@ void CECalendar::computeFields() {
     internalSet(ERA, 1);
 }
 
+int CECalendar::handleGetMonthLength(int extendedYear, int month) const {
+    if ((month + 1) % 13 != 0) {
+        return 30;
+    }
+    return ((extendedYear % 4) / 3) + 5;
+}
+
+int CECalendar::handleGetYearLength(int extendedYear) const {
+    return 365 + ((extendedYear % 4) / 3);
+}
+
 } // namespace cdroid

@@ -67,7 +67,7 @@ public:
     void setMinDate(long minDate)override;
     Calendar getMinDate() override;
 
-    void setMaxDate(long maxDate)override;
+    void setMaxDate(int64_t maxDate)override;
     Calendar getMaxDate() override;
 
     void setEnabled(bool enabled) override;

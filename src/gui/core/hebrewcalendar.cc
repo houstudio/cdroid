@@ -221,4 +221,12 @@ void HebrewCalendar::computeFields() {
     setFieldsComputed(ALL_FIELDS);
 }
 
+int HebrewCalendar::handleGetMonthLength(int extendedYear, int month) const {
+    return hebrewMonthLength(extendedYear, month);
+}
+
+int HebrewCalendar::handleGetYearLength(int extendedYear) const {
+    return hebrewYearLength(extendedYear);
+}
+
 } // namespace cdroid

@@ -241,8 +241,8 @@ Calendar& Calendar::set(int field, int value){
 }
 
 void Calendar::setTime(int64_t millis){
-    if(mTime==millis && isTimeSet && areFieldsSet && areAllFieldsSet)
-       return; 
+    if (mTime == millis && isTimeSet && areFieldsSet && areAllFieldsSet)
+        return;
     mTime = millis;
     isTimeSet = true;
     areFieldsSet = false;
@@ -264,12 +264,33 @@ void Calendar::add(int field, int amount){
     struct tm tn;
     gmtime_r(&tmLocal, &tn);
     switch (field) {
-        case YEAR:
-            tn.tm_year += amount;
+        case YEAR: {
+            int year = tn.tm_year + amount + 1900;
+            int month = tn.tm_mon;
+            int day = tn.tm_mday;
+            int maxDay = getDaysInGregorianMonth(year, month);
+            if (day > maxDay) day = maxDay;
+            tn.tm_year = year - 1900;
+            tn.tm_mday = day;
             break;
-        case MONTH:
-            tn.tm_mon += amount;
+        }
+        case MONTH: {
+            int year = tn.tm_year + 1900;
+            int month = tn.tm_mon + amount;
+            int day = tn.tm_mday;
+            year += month / 12;
+            month %= 12;
+            if (month < 0) {
+                month += 12;
+                year -= 1;
+            }
+            int maxDay = getDaysInGregorianMonth(year, month);
+            if (day > maxDay) day = maxDay;
+            tn.tm_year = year - 1900;
+            tn.tm_mon = month;
+            tn.tm_mday = day;
             break;
+        }
         case WEEK_OF_YEAR:
         case WEEK_OF_MONTH:
         case DAY_OF_WEEK:
@@ -304,52 +325,191 @@ void Calendar::add(int field, int amount){
 }
 
 void Calendar::roll(int field, bool up){
-    int amount = up ? 1 : -1;
-    if (field == MONTH) {
-        int current = get(MONTH);
-        int next = (current + amount) % 12;
-        if (next < 0) next += 12;
-        set(MONTH, next);
-        return;
-    }
-    if (field == DAY_OF_MONTH || field == DATE) {
-        int maxDay = getActualMaximum(DAY_OF_MONTH);
-        int current = get(DAY_OF_MONTH);
-        int next = current + amount;
-        if (next > maxDay) next = 1;
-        if (next < 1) next = maxDay;
-        set(DAY_OF_MONTH, next);
-        return;
-    }
-    if (field == HOUR_OF_DAY) {
-        int next = (get(HOUR_OF_DAY) + amount) % 24;
-        if (next < 0) next += 24;
-        set(HOUR_OF_DAY, next);
-        return;
-    }
-    if (field == HOUR) {
-        int next = (get(HOUR) + amount) % 12;
-        if (next < 0) next += 12;
-        set(HOUR, next);
-        return;
-    }
-    if (field == AM_PM) {
-        int next = (get(AM_PM) + amount) % 2;
-        if (next < 0) next += 2;
-        set(AM_PM, next);
-        return;
-    }
-    add(field, amount);
+    roll(field, up ? 1 : -1);
 }
 
 void Calendar::roll(int field, int amount){
-     while (amount > 0) {
-        roll(field, true);
-        amount--;
-     }
-     while (amount < 0) {
-        roll(field, false);
-        amount++;
+    if (amount == 0) {
+        return;
+    }
+
+    complete();
+
+    switch (field) {
+        case DAY_OF_MONTH:
+        case AM_PM:
+        case MINUTE:
+        case SECOND:
+        case MILLISECOND:
+        case ERA: {
+            int min = getActualMinimum(field);
+            int max = getActualMaximum(field);
+            int gap = max - min + 1;
+            int value = get(field) + amount;
+            value = (value - min) % gap;
+            if (value < 0) {
+                value += gap;
+            }
+            value += min;
+            set(field, value);
+            return;
+        }
+
+        case HOUR:
+        case HOUR_OF_DAY: {
+            int oldHour = get(field);
+            int max = getMaximum(field);
+            int newHour = (oldHour + amount) % (max + 1);
+            if (newHour < 0) {
+                newHour += max + 1;
+            }
+            setTimeInMillis(getTimeInMillis() + ONE_HOUR * static_cast<int64_t>(newHour - oldHour));
+            return;
+        }
+
+        case MONTH: {
+            int max = getActualMaximum(MONTH);
+            int mon = (get(MONTH) + amount) % (max + 1);
+            if (mon < 0) {
+                mon += max + 1;
+            }
+            set(MONTH, mon);
+            pinField(DAY_OF_MONTH);
+            return;
+        }
+
+        case YEAR: {
+            int era = get(ERA);
+            int newYear = get(YEAR) + amount;
+            int maxYear = getActualMaximum(YEAR);
+            if (maxYear < 32768) {
+                if (newYear < 1) {
+                    newYear = maxYear - ((-newYear) % maxYear);
+                } else if (newYear > maxYear) {
+                    newYear = ((newYear - 1) % maxYear) + 1;
+                }
+            } else if (newYear < 1) {
+                newYear = 1;
+            }
+            set(YEAR, newYear);
+            pinField(MONTH);
+            pinField(DAY_OF_MONTH);
+            return;
+        }
+
+        case WEEK_OF_MONTH: {
+            int dow = internalGet(DAY_OF_WEEK) - getFirstDayOfWeek();
+            if (dow < 0) dow += 7;
+
+            int fdm = (dow - internalGet(DAY_OF_MONTH) + 1) % 7;
+            if (fdm < 0) fdm += 7;
+
+            int start;
+            if ((7 - fdm) < getMinimalDaysInFirstWeek()) {
+                start = 8 - fdm;
+            } else {
+                start = 1 - fdm;
+            }
+
+            int monthLen = getActualMaximum(DAY_OF_MONTH);
+            int ldm = (monthLen - internalGet(DAY_OF_MONTH) + dow) % 7;
+            int limit = monthLen + 7 - ldm;
+            int gap = limit - start;
+            int dayOfMonth = (internalGet(DAY_OF_MONTH) + amount * 7 - start) % gap;
+            if (dayOfMonth < 0) {
+                dayOfMonth += gap;
+            }
+            dayOfMonth += start;
+            if (dayOfMonth < 1) {
+                dayOfMonth = 1;
+            }
+            if (dayOfMonth > monthLen) {
+                dayOfMonth = monthLen;
+            }
+            set(DAY_OF_MONTH, dayOfMonth);
+            return;
+        }
+
+        case WEEK_OF_YEAR: {
+            int dow = internalGet(DAY_OF_WEEK) - getFirstDayOfWeek();
+            if (dow < 0) dow += 7;
+
+            int fdy = (dow - internalGet(DAY_OF_YEAR) + 1) % 7;
+            if (fdy < 0) fdy += 7;
+
+            int start;
+            if ((7 - fdy) < getMinimalDaysInFirstWeek()) {
+                start = 8 - fdy;
+            } else {
+                start = 1 - fdy;
+            }
+
+            int yearLen = getActualMaximum(DAY_OF_YEAR);
+            int ldy = (yearLen - internalGet(DAY_OF_YEAR) + dow) % 7;
+            int limit = yearLen + 7 - ldy;
+            int gap = limit - start;
+            int dayOfYear = (internalGet(DAY_OF_YEAR) + amount * 7 - start) % gap;
+            if (dayOfYear < 0) {
+                dayOfYear += gap;
+            }
+            dayOfYear += start;
+            if (dayOfYear < 1) {
+                dayOfYear = 1;
+            }
+            if (dayOfYear > yearLen) {
+                dayOfYear = yearLen;
+            }
+            set(DAY_OF_YEAR, dayOfYear);
+            clear(MONTH);
+            return;
+        }
+
+        case DAY_OF_YEAR: {
+            int64_t delta = amount * ONE_DAY;
+            int64_t time = getTimeInMillis();
+            int64_t min2 = time - static_cast<int64_t>(internalGet(DAY_OF_YEAR) - 1) * ONE_DAY;
+            int yearLength = getActualMaximum(DAY_OF_YEAR);
+            int64_t newTime = (time + delta - min2) % (static_cast<int64_t>(yearLength) * ONE_DAY);
+            if (newTime < 0) {
+                newTime += static_cast<int64_t>(yearLength) * ONE_DAY;
+            }
+            setTimeInMillis(newTime + min2);
+            return;
+        }
+
+        case DAY_OF_WEEK: {
+            int64_t delta = amount * ONE_DAY;
+            int leadDays = internalGet(DAY_OF_WEEK) - getFirstDayOfWeek();
+            if (leadDays < 0) {
+                leadDays += 7;
+            }
+            int64_t time = getTimeInMillis();
+            int64_t min2 = time - static_cast<int64_t>(leadDays) * ONE_DAY;
+            int64_t newTime = (time + delta - min2) % ONE_WEEK;
+            if (newTime < 0) {
+                newTime += ONE_WEEK;
+            }
+            setTimeInMillis(newTime + min2);
+            return;
+        }
+
+        case DAY_OF_WEEK_IN_MONTH: {
+            int preWeeks = (internalGet(DAY_OF_MONTH) - 1) / 7;
+            int postWeeks = (getActualMaximum(DAY_OF_MONTH) - internalGet(DAY_OF_MONTH)) / 7;
+            int64_t min2 = getTimeInMillis() - static_cast<int64_t>(preWeeks) * ONE_WEEK;
+            int64_t gap2 = static_cast<int64_t>(ONE_WEEK) * (preWeeks + postWeeks + 1);
+            int64_t time = getTimeInMillis();
+            int64_t newTime = (time + static_cast<int64_t>(amount) * ONE_WEEK - min2) % gap2;
+            if (newTime < 0) {
+                newTime += gap2;
+            }
+            setTimeInMillis(newTime + min2);
+            return;
+        }
+
+        default:
+            add(field, amount);
+            return;
     }
 }
 
@@ -357,6 +517,10 @@ int64_t Calendar::getTime() const {
     if (!isTimeSet) {
         const_cast<Calendar*>(this)->updateTime();
     }
+    return mTime;
+}
+
+int64_t Calendar::internalGetTimeInMillis() const {
     return mTime;
 }
 
@@ -410,8 +574,17 @@ void Calendar::clear(){
     isTimeSet = false;
 }
 
-bool Calendar::isSet(int field){
+bool Calendar::isSet(int field) const {
     return stamp[field] != UNSET;
+}
+
+bool Calendar::isEquivalentTo(const Calendar& other) const{
+    return isLenient() == other.isLenient() &&
+            getFirstDayOfWeek() == other.getFirstDayOfWeek() &&
+            getMinimalDaysInFirstWeek() == other.getMinimalDaysInFirstWeek() &&
+            getTimeZone()==other.getTimeZone() /*&&
+            getRepeatedWallTimeOption() == other.getRepeatedWallTimeOption() &&
+            getSkippedWallTimeOption() == other.getSkippedWallTimeOption()*/;
 }
 
 void Calendar::complete(){
@@ -591,6 +764,18 @@ void Calendar::setFieldsComputed(int fieldMask){
     }
 }
 
+void Calendar::pinField(int field) {
+    int value = get(field);
+    int min = getActualMinimum(field);
+    int max = getActualMaximum(field);
+    if (value < min) {
+        value = min;
+    } else if (value > max) {
+        value = max;
+    }
+    set(field, value);
+}
+
 void Calendar::setFieldsNormalized(int fieldMask){
     if (fieldMask != ALL_FIELDS) {
         for (int i = 0; i < FIELD_COUNT/*fields.length*/; i++) {
@@ -754,6 +939,14 @@ int Calendar::aggregateStamp(int stamp_a, int stamp_b){
     return (stamp_a > stamp_b) ? stamp_a : stamp_b;
 }
 
+int Calendar::handleGetMonthLength(int extendedYear, int month) const {
+    return getDaysInGregorianMonth(extendedYear, month);
+}
+
+int Calendar::handleGetYearLength(int extendedYear) const {
+    return getDaysInGregorianYear(extendedYear);
+}
+
 int Calendar::getActualMinimum(int field) const {
     switch (field) {
         case ERA: return 0;
@@ -778,17 +971,38 @@ int Calendar::getActualMinimum(int field) const {
 
 int Calendar::getActualMaximum(int field) const {
     switch (field) {
+        case DAY_OF_MONTH:
+            return handleGetMonthLength(get(YEAR), get(MONTH));
+        case DAY_OF_YEAR:
+            return handleGetYearLength(get(YEAR));
         case ERA: return 1;
         case YEAR: return INT_MAX;
         case MONTH: return DECEMBER;
-        case WEEK_OF_YEAR: return 53;
-        case WEEK_OF_MONTH: return 6;
-        case DAY_OF_MONTH:
-            return getDaysInGregorianMonth(get(YEAR), get(MONTH));
-        case DAY_OF_YEAR:
-            return getDaysInGregorianYear(get(YEAR));
+        case WEEK_OF_YEAR: {
+            int weekYear = get(WEEK_YEAR);
+            return getWeekCount(weekYear, firstDayOfWeek, minimalDaysInFirstWeek);
+        }
+        case WEEK_OF_MONTH: {
+            int year = get(YEAR);
+            int month = get(MONTH);
+            int daysInMonth = getDaysInGregorianMonth(year, month);
+            int firstDayOfMonth = getDayOfWeek(year, month, 1);
+            int monthOffset = (firstDayOfMonth - firstDayOfWeek + 7) % 7;
+            int firstMonthWeekDays = 7 - monthOffset;
+            if (firstMonthWeekDays >= minimalDaysInFirstWeek) {
+                return (daysInMonth + monthOffset - 1) / 7 + 1;
+            }
+            return (daysInMonth + monthOffset - 1 - firstMonthWeekDays) / 7 + 1;
+        }
         case DAY_OF_WEEK: return SATURDAY;
-        case DAY_OF_WEEK_IN_MONTH: return 6;
+        case DAY_OF_WEEK_IN_MONTH: {
+            int year = get(YEAR);
+            int month = get(MONTH);
+            int daysInMonth = getDaysInGregorianMonth(year, month);
+            int firstDayOfMonth = getDayOfWeek(year, month, 1);
+            int monthOffset = (firstDayOfMonth - firstDayOfWeek + 7) % 7;
+            return (daysInMonth + monthOffset - 1) / 7 + 1;
+        }
         case AM_PM: return PM;
         case HOUR: return 11;
         case HOUR_OF_DAY: return 23;
@@ -895,6 +1109,10 @@ Calendar& Calendar::setLenient(bool lenient){
     return *this;
 }
 
+bool Calendar::isLenient()const{
+    return lenient;
+}
+
 void Calendar::invalidateWeekFields(){
     if (stamp[WEEK_OF_MONTH] != COMPUTED &&
         stamp[WEEK_OF_YEAR] != COMPUTED) {
@@ -930,7 +1148,7 @@ void Calendar::setFirstDayOfWeek(int value){
     areFieldsSet = false;//invalidateWeekFields();
 }
 
-int Calendar::getFirstDayOfWeek(){
+int Calendar::getFirstDayOfWeek()const{
     return firstDayOfWeek;
 }
 

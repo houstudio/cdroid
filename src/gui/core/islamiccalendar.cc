@@ -16,14 +16,14 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 
-#include <persiancalendar.h>
-#include <algorithm>
+#include <islamiccalendar.h>
 
 namespace {
-static const int64_t ONE_SECOND = 1000;
-static const int64_t ONE_MINUTE = 60 * ONE_SECOND;
-static const int64_t ONE_HOUR = 60 * ONE_MINUTE;
-static const int64_t ONE_DAY = 24 * ONE_HOUR;
+static constexpr int64_t ONE_SECOND = 1000;
+static constexpr int64_t ONE_MINUTE = 60 * ONE_SECOND;
+static constexpr int64_t ONE_HOUR = 60 * ONE_MINUTE;
+static constexpr int64_t ONE_DAY = 24 * ONE_HOUR;
+static constexpr int64_t ISLAMIC_EPOCH = 1948439LL;
 
 static int64_t gregorianToJdn(int year, int month, int day) {
     int a = (14 - month) / 12;
@@ -44,99 +44,77 @@ static void jdnToGregorian(int64_t jdn, int& year, int& month, int& day) {
     year = static_cast<int>(100 * b + d - 4800 + (m / 10));
 }
 
-static int64_t persianToJdn(int year, int month, int day) {
-    int epbase = year - ((year >= 0) ? 474 : 473);
-    int epyear = 474 + (epbase % 2820);
-    int64_t mdays = (month <= 7) ? ((month - 1) * 31) : (((month - 1) * 30) + 6);
-    return day + mdays + ((epyear * 682 - 110) / 2816) + (epyear - 1) * 365 + (epbase / 2820) * 1029983 + 1948320 - 1;
+static bool isIslamicLeapYear(int year) {
+    return ((11 * year + 14) % 30) < 11;
 }
 
-static void jdnToPersian(int64_t jdn, int& year, int& month, int& day) {
-    int64_t depoch = jdn - persianToJdn(475, 1, 1);
-    int64_t cycle = depoch / 1029983;
-    int64_t cyear = depoch % 1029983;
-    int64_t ycycle;
-    if (cyear == 1029982) {
-        ycycle = 2820;
-    } else {
-        int64_t aux1 = cyear / 366;
-        int64_t aux2 = cyear % 366;
-        ycycle = ((2134 * aux1 + 2816 * aux2 + 2815) / 1028522) + aux1 + 1;
-    }
-    year = static_cast<int>(ycycle + 2820 * cycle + 474);
-    if (year <= 0) {
-        year -= 1;
-    }
-    int64_t yday = jdn - persianToJdn(year, 1, 1) + 1;
-    month = (yday <= 186) ? static_cast<int>((yday - 1) / 31 + 1)
-                          : static_cast<int>(((yday - 187) / 30) + 7);
-    if (month <= 6) {
-        day = static_cast<int>(yday - 31 * (month - 1));
-    } else {
-        day = static_cast<int>(yday - 186 - 30 * (month - 7));
-    }
-}
-
-static int persianDayOfYear(int year, int month, int day) {
-    if (month <= 6) {
-        return (month - 1) * 31 + day;
-    }
-    return 186 + (month - 7) * 30 + day;
-}
-
-static bool isPersianLeapYear(int year) {
-    return (persianToJdn(year + 1, 1, 1) - persianToJdn(year, 1, 1)) == 366;
-}
-
-static int getPersianMonthLength(int year, int month) {
-    if (month < 1 || month > 12) {
-        return 0;
-    }
-    if (month <= 6) {
-        return 31;
-    }
-    if (month <= 11) {
+static int getIslamicMonthLength(int year, int month) {
+    if ((month % 2) == 1) {
         return 30;
     }
-    return isPersianLeapYear(year) ? 30 : 29;
+    if (month != 12) {
+        return 29;
+    }
+    return isIslamicLeapYear(year) ? 30 : 29;
 }
 
-static int getPersianYearLength(int year) {
-    return isPersianLeapYear(year) ? 366 : 365;
+static int getIslamicYearLength(int year) {
+    return isIslamicLeapYear(year) ? 355 : 354;
+}
+
+static int64_t islamicToJdn(int year, int month, int day) {
+    int64_t monthDays = ((month - 1) * 59 + 1) / 2;
+    int64_t yearDays = 354LL * (year - 1) + (3 + 11LL * year) / 30;
+    return day + monthDays + yearDays + ISLAMIC_EPOCH - 1;
+}
+
+static void jdnToIslamic(int64_t jdn, int& year, int& month, int& day) {
+    year = static_cast<int>((30 * (jdn - ISLAMIC_EPOCH) + 10646) / 10631);
+    while (jdn < islamicToJdn(year, 1, 1)) {
+        year--;
+    }
+    while (jdn >= islamicToJdn(year + 1, 1, 1)) {
+        year++;
+    }
+    month = 1;
+    while (month < 12 && jdn >= islamicToJdn(year, month + 1, 1)) {
+        month++;
+    }
+    day = static_cast<int>(jdn - islamicToJdn(year, month, 1) + 1);
+}
+
+static int getIslamicDayOfYear(int year, int month, int day) {
+    int dayOfYear = day;
+    for (int m = 1; m < month; ++m) {
+        dayOfYear += getIslamicMonthLength(year, m);
+    }
+    return dayOfYear;
 }
 
 } // namespace
 
 namespace cdroid {
 
-PersianCalendar::PersianCalendar() : Calendar() {
+IslamicCalendar::IslamicCalendar() : GregorianCalendar() {
 }
 
-PersianCalendar::PersianCalendar(int year, int month, int date) : Calendar() {
-    set(YEAR, year);
-    set(MONTH, month);
-    set(DAY_OF_MONTH, date);
+IslamicCalendar::IslamicCalendar(int year, int month, int date)
+        : GregorianCalendar(year, month, date) {
 }
 
-PersianCalendar::PersianCalendar(int year, int month, int date, int hourOfDay, int minute, int second)
-        : Calendar() {
-    set(YEAR, year);
-    set(MONTH, month);
-    set(DAY_OF_MONTH, date);
-    set(HOUR_OF_DAY, hourOfDay);
-    set(MINUTE, minute);
-    set(SECOND, second);
+IslamicCalendar::IslamicCalendar(int year, int month, int date, int hourOfDay, int minute, int second)
+        : GregorianCalendar(year, month, date, hourOfDay, minute, second) {
 }
 
-void PersianCalendar::computeTime() {
+void IslamicCalendar::computeTime() {
     int year = internalGet(YEAR);
     int month = internalGet(MONTH) + 1;
     int day = internalGet(DAY_OF_MONTH);
-    if (month < 1 || month > 12 || day < 1 || day > 31) {
-        Calendar::computeTime();
+    if (month < 1 || month > 12 || day < 1 || day > getIslamicMonthLength(year, month)) {
+        GregorianCalendar::computeTime();
         return;
     }
-    int64_t jdn = persianToJdn(year, month, day);
+    int64_t jdn = islamicToJdn(year, month, day);
     int gYear, gMonth, gDay;
     jdnToGregorian(jdn, gYear, gMonth, gDay);
     struct tm tn = {};
@@ -154,7 +132,7 @@ void PersianCalendar::computeTime() {
     isTimeSet = true;
 }
 
-void PersianCalendar::computeFields() {
+void IslamicCalendar::computeFields() {
     int64_t utcMillis = getTime();
     int64_t seconds = utcMillis / ONE_SECOND;
     int64_t localSeconds = seconds + getTimeZone();
@@ -163,12 +141,12 @@ void PersianCalendar::computeFields() {
     gmtime_r(&localTime, &tn);
     int64_t jdn = gregorianToJdn(tn.tm_year + 1900, tn.tm_mon + 1, tn.tm_mday);
     int year, month, day;
-    jdnToPersian(jdn, year, month, day);
+    jdnToIslamic(jdn, year, month, day);
     internalSet(YEAR, year);
     internalSet(MONTH, month - 1);
     internalSet(DATE, day);
     internalSet(DAY_OF_MONTH, day);
-    internalSet(DAY_OF_YEAR, persianDayOfYear(year, month, day));
+    internalSet(DAY_OF_YEAR, getIslamicDayOfYear(year, month, day));
     internalSet(DAY_OF_WEEK, tn.tm_wday);
     internalSet(AM_PM, tn.tm_hour / 12);
     internalSet(HOUR_OF_DAY, tn.tm_hour);
@@ -183,12 +161,12 @@ void PersianCalendar::computeFields() {
     setFieldsComputed(ALL_FIELDS);
 }
 
-int PersianCalendar::handleGetMonthLength(int extendedYear, int month) const {
-    return getPersianMonthLength(extendedYear, month + 1);
+int IslamicCalendar::handleGetMonthLength(int extendedYear, int month) const {
+    return getIslamicMonthLength(extendedYear, month + 1);
 }
 
-int PersianCalendar::handleGetYearLength(int extendedYear) const {
-    return getPersianYearLength(extendedYear);
+int IslamicCalendar::handleGetYearLength(int extendedYear) const {
+    return getIslamicYearLength(extendedYear);
 }
 
 } // namespace cdroid
