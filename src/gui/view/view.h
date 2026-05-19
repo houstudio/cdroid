@@ -882,8 +882,8 @@ protected:
     virtual void getScrollIndicatorBounds(Rect&);
     virtual void onDrawScrollIndicators(Canvas& canvas);
     virtual void onDrawScrollBars(Canvas& canvas);
-    void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
-    void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
+    virtual void onDrawHorizontalScrollBar(Canvas& canvas, Drawable* scrollBar,const Rect&);
+    virtual void onDrawVerticalScrollBar (Canvas& canvas , Drawable* scrollBar,const Rect&);
     virtual void resetSubtreeAccessibilityStateChanged();
     bool traverseAtGranularity(int granularity, bool forward,  bool extendSelection);
     void ensureTransformationInfo();
