@@ -19,7 +19,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
    {
-      "single line aliment start",
+      "single line alignment start",
       true,
       Layout::ELLIPSIS_NONE,
       View::TEXT_ALIGNMENT_GRAVITY,
@@ -27,7 +27,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT,
    },
    {
-      "single line aliment center",
+      "single line alignment center",
       true,
       Layout::ELLIPSIS_NONE,
       View::TEXT_ALIGNMENT_CENTER,
@@ -35,7 +35,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
    {
-      "single line aliment end",
+      "single line alignment end",
       true,
       Layout::ELLIPSIS_NONE,
       View::TEXT_ALIGNMENT_TEXT_END,
@@ -43,7 +43,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT,
    },
    {
-      "single line aliment center_horizontal|top",
+      "single line alignment center_horizontal|top",
       true,
       Layout::ELLIPSIS_NONE,
       0,
@@ -52,7 +52,7 @@ TestString testStrings[]={
    },
 
    {
-      "single line aliment center_horizontal|center_vertical",
+      "single line alignment center_horizontal|center_vertical",
       true,
       Layout::ELLIPSIS_NONE,
       0,
@@ -60,7 +60,7 @@ TestString testStrings[]={
       50
    },
    {
-      "single line aliment center_horizontal|bottom",
+      "single line alignment center_horizontal|bottom",
       true,
       Layout::ELLIPSIS_NONE,
       0,
@@ -87,7 +87,7 @@ TestString testStrings[]={
    },
 
    {
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_MIDDLE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
@@ -96,7 +96,7 @@ TestString testStrings[]={
    },
 
    {
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_END,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
@@ -104,7 +104,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
    {
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_MARQUEE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
@@ -115,7 +115,7 @@ TestString testStrings[]={
 
 int main(int argc,const char*argv[]){
     App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    Window*w=new Window(0,0,-1,-1);
 
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setOrientation(LinearLayout::VERTICAL);
@@ -151,8 +151,8 @@ int main(int argc,const char*argv[]){
         std::make_shared<ForegroundColorSpan>(0xFF66FF66),
         std::make_shared<AbsoluteSizeSpan>(18)
     }, 0);
-    spanText.append("Bold ", std::make_shared<StyleSpan>((int)Typeface::BOLD), 0);
-    spanText.append("Italic", std::make_shared<StyleSpan>((int)Typeface::ITALIC), 0);
+    spanText.append("Bold ", std::make_shared<StyleSpan>(Typeface::BOLD), 0);
+    spanText.append("Italic", std::make_shared<StyleSpan>(Typeface::ITALIC), 0);
     TextView* spanTv = new TextView("", 0, 0);
     spanTv->setText(spanText);
     spanTv->setTextSize(24);

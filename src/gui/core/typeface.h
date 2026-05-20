@@ -29,12 +29,12 @@ public:
     static constexpr bool ENABLE_LAZY_TYPEFACE_INITIALIZATION=true;
     static constexpr int RESOLVE_BY_FONT_TABLE = -1;
     static constexpr const char*DEFAULT_FAMILY = "sans-serif";
-    // Style
-    static constexpr int NORMAL = 0;
-    static constexpr int BOLD   = 1;
-    static constexpr int ITALIC = 2;
-    static constexpr int BOLD_ITALIC = 3;
-    static constexpr int STYLE_MASK  = 0x03;
+    enum Style{
+        NORMAL = 0,
+        BOLD   = 1,
+        ITALIC = 2,
+        BOLD_ITALIC = 3
+    };
     /** The default NORMAL typeface object */
     static Typeface* DEFAULT;
 
@@ -46,6 +46,7 @@ public:
     /** The NORMAL style of the default monospace typeface. */
     static Typeface* MONOSPACE;
 private:
+    static constexpr int STYLE_MASK  = 0x03;
     static std::string mFallbackFamilyName;
     std::string mFamily;
     std::string mStyleName;
