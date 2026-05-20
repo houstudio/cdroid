@@ -225,7 +225,7 @@ public:
     const cdroid::RefPtr<ColorFilter>getColorFilter()const override;
     void setTintList(const cdroid::RefPtr<ColorStateList>&tint)override;
     void setTintMode(int tintMode)override;
-    int getOpacity()const;
+    int getOpacity()const override;
     void getGradientCenter(float&x,float&y)const;
     std::shared_ptr<ConstantState>getConstantState()override;
     void getOutline(Outline&)override;

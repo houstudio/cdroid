@@ -166,7 +166,7 @@ public:
     int getAlpha() const override;
     void setAlpha(int alpha)override;
   
-    int getOpacity() override;
+    int getOpacity()const override;
   
     int getIntrinsicHeight() override;
     int getIntrinsicWidth() override;

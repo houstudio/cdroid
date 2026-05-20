@@ -112,7 +112,7 @@ void ProgressDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFi
     // Not supported.
 }
 
-int ProgressDrawable::getOpacity() {
+int ProgressDrawable::getOpacity()const{
     return PixelFormat::OPAQUE;
 }
 

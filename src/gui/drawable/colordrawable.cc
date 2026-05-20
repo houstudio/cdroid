@@ -143,7 +143,7 @@ bool ColorDrawable::hasFocusStateSpecified()const{
     return mColorState->mTint && mColorState->mTint->hasFocusStateSpecified();
 }
 
-int ColorDrawable::getOpacity() {
+int ColorDrawable::getOpacity() const{
     if (mTintFilter /*|| mPaint.getColorFilter() != null*/) {
        return PixelFormat::TRANSLUCENT;
     }

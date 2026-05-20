@@ -102,7 +102,7 @@ int ScaleDrawable::getGravity()const{
     return mState->mGravity;
 }
 
-int ScaleDrawable::getOpacity(){
+int ScaleDrawable::getOpacity()const{
     Drawable* d = getDrawable();
     if (d->getLevel() == 0) {
         return PixelFormat::TRANSPARENT;

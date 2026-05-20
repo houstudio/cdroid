@@ -64,7 +64,7 @@ int ClipDrawable::getOrientation()const{
     return mState->mOrientation;
 }
 
-int ClipDrawable::getOpacity(){
+int ClipDrawable::getOpacity()const{
     Drawable* dr = getDrawable();
     if (dr->getOpacity() == PixelFormat::TRANSPARENT || dr->getLevel() == 0) {
         return PixelFormat::TRANSPARENT;

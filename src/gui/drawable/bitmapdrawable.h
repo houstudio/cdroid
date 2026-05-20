@@ -93,7 +93,7 @@ public:
     void setDither(bool)override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
-    int getOpacity()override;
+    int getOpacity()const override;
     int getTileModeX()const;
     int getTileModeY()const;
     void setTileModeX(int);

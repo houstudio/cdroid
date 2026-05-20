@@ -111,7 +111,7 @@ void RoundedDrawable::draw(Canvas& canvas) {
     canvas.restore();
 }
 
-int RoundedDrawable::getOpacity() {
+int RoundedDrawable::getOpacity() const{
     return PixelFormat::TRANSLUCENT;
 }
 

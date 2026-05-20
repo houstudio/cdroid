@@ -59,7 +59,7 @@ public:
     int getAlpha()const override;
     void setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) override;
 
-    int getOpacity() override;
+    int getOpacity()const override;
 
     float getRadius()const;
 

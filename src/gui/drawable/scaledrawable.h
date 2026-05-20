@@ -49,7 +49,7 @@ public:
     ScaleDrawable(Drawable* drawable, int gravity,float scaleWidth,float scaleHeight);
     std::shared_ptr<ConstantState>getConstantState()override;
     void draw(Canvas& canvas)override;
-    int getOpacity()override;
+    int getOpacity()const override;
     int getGravity()const;
     void inflate(XmlPullParser&,const AttributeSet&atts)override;
 };

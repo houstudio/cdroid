@@ -33,7 +33,7 @@ public:
     void draw(Canvas& canvas)override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
-    int getOpacity()override;
+    int getOpacity()const override;
     void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
     void setAlpha(int alpha)override;
 };

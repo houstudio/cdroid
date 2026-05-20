@@ -44,7 +44,7 @@ protected:
 public:
     ClipDrawable();
     ClipDrawable(Drawable* drawable, int gravity,int orientation);
-    int getOpacity()override;
+    int getOpacity()const override;
     int getGravity()const;
     int getOrientation()const;
     void draw(Canvas& canvas)override;

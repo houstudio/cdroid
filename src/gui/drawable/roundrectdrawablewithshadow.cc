@@ -139,7 +139,7 @@ void RoundRectDrawableWithShadow::setColorFilter(const cdroid::RefPtr<ColorFilte
     //mPaint.setColorFilter(cf);
 }
 
-int RoundRectDrawableWithShadow::getOpacity() {
+int RoundRectDrawableWithShadow::getOpacity() const{
     return PixelFormat::TRANSLUCENT;
 }
 

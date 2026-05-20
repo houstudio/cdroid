@@ -125,7 +125,7 @@ public:
 
     void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter) override;
 
-    int getOpacity() override;
+    int getOpacity()const override;
 
     bool isRunning() override;
 

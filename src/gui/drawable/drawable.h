@@ -128,7 +128,7 @@ public:
     const std::vector<int>& getState()const;
     bool setLevel(int level);
     int getLevel()const{return mLevel;}
-    virtual int getOpacity();
+    virtual int getOpacity()const;
     virtual void setHotspot(float x,float y);
     virtual void setHotspotBounds(int left,int top,int width,int height);
     virtual void getHotspotBounds(Rect&outRect)const;

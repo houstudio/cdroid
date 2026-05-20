@@ -84,7 +84,7 @@ public:
     void setTintMode(int tintMode)override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
-    int getOpacity() override;
+    int getOpacity()const override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     Insets getOpticalInsets() override;
