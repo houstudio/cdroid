@@ -162,7 +162,7 @@ int LayerDrawable::LayerState::getChangingConfigurations()const{
    return mChangingConfigurations | mChildrenChangingConfigurations;
 }
 
-int LayerDrawable::LayerState::getOpacity(){
+int LayerDrawable::LayerState::getOpacity()const{
     if (mCheckedOpacity) {
          return mOpacity;
      }
@@ -1010,7 +1010,7 @@ void LayerDrawable::setOpacity(int opacity) {
     mLayerState->mOpacityOverride = opacity;
 }
 
-int LayerDrawable::getOpacity() {
+int LayerDrawable::getOpacity() const{
     if (mLayerState->mOpacityOverride != PixelFormat::UNKNOWN) {
         return mLayerState->mOpacityOverride;
     }

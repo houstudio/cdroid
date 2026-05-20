@@ -47,7 +47,7 @@ private:
     };
     std::shared_ptr<InsetState>mState;
     InsetDrawable(std::shared_ptr<InsetState>state);
-    void getInsets(Rect& out);
+    void getInsets(Rect& out)const;
     void verifyRequiredAttributes();
     void updateStateFromTypedArray(const AttributeSet&atts);
 protected:
@@ -62,7 +62,7 @@ public:
     int getIntrinsicHeight() override;
     void getOutline(Outline&) override;
     bool getPadding(Rect& padding)override;
-    int getOpacity()override;
+    int getOpacity()const override;
     Insets getOpticalInsets()override;
     void inflate(XmlPullParser&parser,const AttributeSet&atts)override;
 };

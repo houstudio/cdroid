@@ -62,7 +62,7 @@ public:
     void setPadding(int left, int top, int right, int bottom);
     void setAlpha(int alpha)override;
     int getAlpha()const override;
-    int getOpacity()override;
+    int getOpacity()const override;
     void setTintList(const cdroid::RefPtr<ColorStateList>&)override;
     void setTintMode(int tintMode)override;
     void setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter)override;

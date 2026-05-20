@@ -854,7 +854,7 @@ bool DrawableContainer::setVisible(bool visible, bool restart) {
     return changed;
 }
 
-int DrawableContainer::getOpacity() {
+int DrawableContainer::getOpacity() const{
     return ((mCurrDrawable == nullptr) || !mCurrDrawable->isVisible()) ? PixelFormat::TRANSPARENT :
             mDrawableContainerState->getOpacity();
 }

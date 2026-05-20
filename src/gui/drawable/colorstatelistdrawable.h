@@ -38,7 +38,7 @@ public:
     cdroid::RefPtr<ColorFilter> getColorFilter()const override;
     void setColorFilter(ColorFilter colorFilter) override;
 
-    int getOpacity() override;
+    int getOpacity()const override;
 
     void invalidateDrawable(Drawable& who) override;
     void scheduleDrawable(Drawable& who, const Runnable& what, int64_t when) override;

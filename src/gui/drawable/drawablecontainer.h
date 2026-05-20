@@ -32,16 +32,18 @@ protected:
         int mDensity;
         int mChangingConfigurations;
         int mChildrenChangingConfigurations;
-        bool mVariablePadding;
+        int mConstantWidth,mConstantHeight;
+        int mConstantMinimumWidth,mConstantMinimumHeight;
+        mutable int mOpacity;
+        int mLayoutDirection;
+        int mEnterFadeDuration,mExitFadeDuration;
+        int mTintMode;
+        
+	bool mVariablePadding;
         bool mCheckedPadding;
         bool mConstantSize;
         bool mCheckedConstantSize;
-        bool mCheckedOpacity;
-        int mConstantWidth,mConstantHeight;
-        int mConstantMinimumWidth,mConstantMinimumHeight;
-
-        int mOpacity;
-
+        mutable bool mCheckedOpacity;
         bool mCheckedConstantState;
         bool mCanConstantState;
         bool mCheckedStateful;
@@ -50,9 +52,6 @@ protected:
         bool mDither;
         bool mMutated;
         bool mAutoMirrored;
-        int mLayoutDirection;
-        int mEnterFadeDuration,mExitFadeDuration;
-        int mTintMode;
         cdroid::RefPtr<ColorFilter>mColorFilter;
         cdroid::RefPtr<ColorStateList>mTintList;
         std::vector<Drawable*>mDrawables;
@@ -130,7 +129,7 @@ public:
     void setAlpha(int)override;
     int getAlpha()const override;
     void setDither(bool dither)override;
-    int getOpacity()override;
+    int getOpacity()const override;
     int getIntrinsicWidth() override;
     int getIntrinsicHeight() override;
     int getMinimumWidth() override;

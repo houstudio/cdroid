@@ -110,7 +110,7 @@ Drawable* Drawable::createFromXmlInnerForDensity(XmlPullParser&parser,const Attr
     return def;
 }*/
 
-int Drawable::getOpacity() {
+int Drawable::getOpacity() const{
     return UNKNOWN;
 }
 

@@ -101,9 +101,9 @@ public:
     RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask);
     ~RippleDrawable()override;
     void jumpToCurrentState()override;
-    int  getOpacity()override;
+    int  getOpacity()const override;
     bool setVisible(bool visible, bool restart)override;
-    bool isProjected();
+    bool isProjected()const;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setColor(const RefPtr<ColorStateList>& color);

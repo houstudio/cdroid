@@ -88,7 +88,7 @@ public:
 
     bool isStateful() const override;
     void setColorFilter(const cdroid::RefPtr<ColorFilter>& cf) override;
-    int getOpacity() override;
+    int getOpacity()const override;
 
     float getCornerRadius() const;
     void setCornerRadius(float radius);

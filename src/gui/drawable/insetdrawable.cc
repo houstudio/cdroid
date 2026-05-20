@@ -82,7 +82,7 @@ std::shared_ptr<DrawableWrapper::DrawableWrapperState> InsetDrawable::mutateCons
     return mState;
 }
 
-void InsetDrawable::getInsets(Rect& out) {
+void InsetDrawable::getInsets(Rect& out) const{
     Rect b = getBounds();
     out.left  = mState->mInsetLeft.getDimension(b.width);
     out.width = mState->mInsetRight.getDimension(b.width);
@@ -113,7 +113,7 @@ Insets InsetDrawable::getOpticalInsets() {
             contentInsets.bottom + tmp.height);
 }
 
-int InsetDrawable::getOpacity() {
+int InsetDrawable::getOpacity() const{
     int opacity = TRANSLUCENT;
     Rect tmp;
     getInsets(tmp);

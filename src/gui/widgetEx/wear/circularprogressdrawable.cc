@@ -193,7 +193,7 @@ float CircularProgressDrawable::getRotation() const{
     return mRotation;
 }
 
-int CircularProgressDrawable::getOpacity() {
+int CircularProgressDrawable::getOpacity()const {
     return PixelFormat::TRANSLUCENT;
 }
 

@@ -331,7 +331,7 @@ void BadgeDrawable::setAlpha(int alpha) {
     invalidateSelf();
 }
 
-int BadgeDrawable::getOpacity() {
+int BadgeDrawable::getOpacity() const{
     return PixelFormat::TRANSLUCENT;
 }
 

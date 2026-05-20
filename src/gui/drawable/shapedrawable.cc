@@ -148,7 +148,7 @@ int ShapeDrawable::ShapeDrawable::getAlpha()const{
     return mShapeState->mAlpha;
 }
 
-int ShapeDrawable::getOpacity(){
+int ShapeDrawable::getOpacity()const{
     switch(mShapeState->mAlpha){
     case 255: return PixelFormat::OPAQUE;
     case   0: return PixelFormat::TRANSPARENT;

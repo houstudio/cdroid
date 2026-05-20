@@ -84,7 +84,7 @@ void ColorStateListDrawable::setColorFilter(ColorFilter* colorFilter) {
     mColorDrawable->setColorFilter(colorFilter);
 }
 
-int ColorStateListDrawable::getOpacity() {
+int ColorStateListDrawable::getOpacity() const{
     return mColorDrawable->getOpacity();
 }
 

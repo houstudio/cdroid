@@ -176,7 +176,7 @@ bool AnimatedVectorDrawable::isStateful() const{
     return mAnimatedVectorState->mVectorDrawable->isStateful();
 }
 
-int AnimatedVectorDrawable::getOpacity() {
+int AnimatedVectorDrawable::getOpacity() const{
     return PixelFormat::TRANSLUCENT;
 }
 

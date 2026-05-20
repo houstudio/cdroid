@@ -260,7 +260,7 @@ int ScrollBarDrawable::getAlpha()const{
     return mAlpha;
 }
 
-int ScrollBarDrawable::getOpacity() {
+int ScrollBarDrawable::getOpacity() const{
     return TRANSLUCENT;
 }
 
