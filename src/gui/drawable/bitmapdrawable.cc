@@ -206,7 +206,7 @@ bool BitmapDrawable::isAutoMirrored()const{
     return mBitmapState->mAutoMirrored;
 }
 
-int BitmapDrawable::getOpacity(){
+int BitmapDrawable::getOpacity()const{
     if(mBitmapState->mGravity != Gravity::FILL)
         return PixelFormat::TRANSLUCENT;
     if(mBitmapState->mBitmap==nullptr)

@@ -47,7 +47,7 @@ public:
     int getColor()const;
     int getAlpha()const override;
     void setAlpha(int a)override;
-    int getOpacity()override;
+    int getOpacity()const override;
     void getOutline(Outline&)override;
     void setTintList(const RefPtr<ColorStateList>& tint)override;
     void setTintMode(int tintMode)override;

@@ -57,7 +57,7 @@ public:
 
     void draw(Canvas& canvas) override;
 
-    int getOpacity()override;
+    int getOpacity()const override;
 
     void setAlpha(int alpha)override;
     int getAlpha()const override;

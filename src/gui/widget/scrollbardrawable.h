@@ -70,7 +70,7 @@ public:
     ScrollBarDrawable* mutate()override;
     void setAlpha(int alpha)override;
     int getAlpha() const override;
-    int getOpacity()override;
+    int getOpacity()const override;
     void invalidateDrawable(Drawable& who)override;
     void scheduleDrawable(Drawable& who,const Runnable& what, int64_t when)override;
     void unscheduleDrawable(Drawable& who,const Runnable& what)override;

@@ -197,7 +197,7 @@ int AnimatedImageDrawable::getAlpha()const{
     return mAnimatedImageState->mAlpha;
 }
 
-int AnimatedImageDrawable::getOpacity(){
+int AnimatedImageDrawable::getOpacity()const{
     return PixelFormat::TRANSLUCENT;
 }
 

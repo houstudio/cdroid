@@ -49,21 +49,21 @@ protected:
         int mPaddingStart,mPaddingEnd;
         int mOpacityOverride;
         int mChangingConfigurations,mChildrenChangingConfigurations;
-        bool mCheckedOpacity;
-        int  mOpacity;
+        mutable int  mOpacity;
+        int mPaddingMode;
         std::vector<int>mThemeAttrs;
 
+        mutable bool mCheckedOpacity;
         bool mCheckedStateful;
         bool mIsStateful;
         bool mAutoMirrored;
-        int mPaddingMode;
         std::vector< ChildDrawable*>mChildren;
         LayerState();
         LayerState(const LayerState*state,LayerDrawable*owner);
         ~LayerState()override;
         LayerDrawable*newDrawable()override;
         int getChangingConfigurations()const override;
-        int getOpacity();
+        int getOpacity()const;
         bool isStateful()const;
         bool hasFocusStateSpecified()const;
         bool canConstantState()const;
@@ -174,7 +174,7 @@ public:
     void setAlpha(int alpha)override;
     int  getAlpha()const override;
     void setOpacity(int opacity);
-    int  getOpacity()override;
+    int  getOpacity()const override;
     LayerDrawable*mutate()override;
     void clearMutated()override;
     bool onLayoutDirectionChanged(int layoutDirection)override;

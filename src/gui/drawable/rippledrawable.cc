@@ -112,7 +112,7 @@ void RippleDrawable::cancelExitingRipples(){
     invalidateSelf(false);
 }
 
-int RippleDrawable::getOpacity(){
+int RippleDrawable::getOpacity()const{
     return TRANSLUCENT;
 }
 
@@ -199,7 +199,7 @@ bool RippleDrawable::setVisible(bool visible, bool restart){
     return changed;
 }
 
-bool RippleDrawable::isProjected(){
+bool RippleDrawable::isProjected()const{
     if (isBounded())return false;
 
     // Otherwise, if the maximum radius is contained entirely within the

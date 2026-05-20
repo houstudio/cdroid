@@ -96,7 +96,7 @@ public:
     int getIntrinsicHeight() override;
     void setAlpha(int alpha)override;
     int getAlpha()const override;
-    int getOpacity()override;
+    int getOpacity()const override;
     void setAutoMirrored(bool)override;
     bool isAutoMirrored()const override;
     bool onLayoutDirectionChanged(int layoutDirection)override;

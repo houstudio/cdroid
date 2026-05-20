@@ -51,7 +51,7 @@ int PictureDrawable::getIntrinsicHeight() {
     return mPicture ? mPicture->ink_extents().height: -1;
 }
 
-int PictureDrawable::getOpacity(){
+int PictureDrawable::getOpacity()const{
         // not sure, so be safe
     return TRANSLUCENT;
 }

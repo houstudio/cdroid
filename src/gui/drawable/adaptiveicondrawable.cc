@@ -490,7 +490,7 @@ void AdaptiveIconDrawable::setOpacity(int opacity) {
     mLayerState->mOpacityOverride = opacity;
 }
 
-int AdaptiveIconDrawable::getOpacity() {
+int AdaptiveIconDrawable::getOpacity() const{
     return PixelFormat::TRANSLUCENT;
 }
 

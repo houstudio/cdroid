@@ -120,7 +120,7 @@ public:
     //void setTintBlendMode(BlendMode blendMode)override;
 
     void setOpacity(int opacity);
-    int getOpacity() override;
+    int getOpacity()const override;
 
     void setAutoMirrored(bool mirrored) override;
 

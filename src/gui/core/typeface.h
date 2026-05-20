@@ -84,7 +84,7 @@ public:
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
-    static void buildSystemFallback(const std::string xmlPath,const std::string& fontDir,
+    static void buildSystemFallback(const std::string& xmlPath,const std::string& fontDir,
            std::unordered_map<std::string, Typeface*>& fontMap, 
 	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);

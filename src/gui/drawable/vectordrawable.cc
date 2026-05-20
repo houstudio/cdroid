@@ -188,7 +188,7 @@ bool VectorDrawable::onStateChange(const std::vector<int>&stateSet) {
     return changed;
 }
 
-int VectorDrawable::getOpacity() {
+int VectorDrawable::getOpacity() const{
     // We can't tell whether the drawable is fully opaque unless we examine all the pixels,
     // but we could tell it is transparent if the root alpha is 0.
     return getAlpha() == 0 ? PixelFormat::TRANSPARENT : PixelFormat::TRANSLUCENT;

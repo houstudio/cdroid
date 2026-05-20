@@ -60,7 +60,7 @@ public:
 
     void setColorFilter(const cdroid::RefPtr<ColorFilter>& colorFilter)override;
 
-    int getOpacity() override;
+    int getOpacity()const override;
 };
 }/*endof namespace*/
 #endif/*__PROGRESS_DRAWABLE_H__*/
