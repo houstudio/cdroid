@@ -78,7 +78,7 @@ TestString testStrings[]={
    },
 
    { 
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_START,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
@@ -127,7 +127,7 @@ int main(int argc,const char*argv[]){
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,ts->height);
         layoutParams->setMargins(0,1,0,1); 
         TextView*tv=new TextView(ts->text,0,0);
-	tv->setId(i);
+        tv->setId(i);
         tv->setTextColor(0xFFFFFFFF);
         tv->setSingleLine(ts->singleline);
         tv->setEllipsize(ts->ellipsis);
@@ -140,6 +140,27 @@ int main(int argc,const char*argv[]){
         tv->setTextSize(22+i);
         layout->addView(tv,layoutParams);
     }
+
+    SpannableStringBuilder spanText;
+    spanText.append("Span sample: ");
+    spanText.append("RED ", std::vector<std::shared_ptr<CharacterStyle>>{
+        std::make_shared<ForegroundColorSpan>(0xFFFF6666),
+        std::make_shared<AbsoluteSizeSpan>(24)
+    }, 0);
+    spanText.append("GREEN ", std::vector<std::shared_ptr<CharacterStyle>>{
+        std::make_shared<ForegroundColorSpan>(0xFF66FF66),
+        std::make_shared<AbsoluteSizeSpan>(18)
+    }, 0);
+    spanText.append("Bold ", std::make_shared<StyleSpan>((int)Typeface::BOLD), 0);
+    spanText.append("Italic", std::make_shared<StyleSpan>((int)Typeface::ITALIC), 0);
+    TextView* spanTv = new TextView("", 0, 0);
+    spanTv->setText(spanText);
+    spanTv->setTextSize(24);
+    spanTv->setLineHeight(60);
+    spanTv->setTextColor(0xFFFFFFFF);
+    spanTv->setBackgroundColor(0xFF333333);
+    spanTv->setSingleLine(false);
+    layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
 
     TextView*tv=new TextView("textview with background drawable",0,0);
     tv->setBackgroundResource("cdroid:drawable/btn_default.xml");

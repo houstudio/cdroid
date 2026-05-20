@@ -811,6 +811,24 @@ int TextView::getHorizontalOffsetForDrawables()const{
     return 0;
 }
 
+void TextView::setText(const CharSequence& txt) {
+    const Spanned* spanned = dynamic_cast<const Spanned*>(&txt);
+    if (spanned != nullptr) {
+        if (mLayout->setText(*spanned) && (getVisibility() == View::VISIBLE)) {
+            std::wstring& ws = getEditable();
+            if (mCaretPos < ws.length())
+                mCaretPos = int(ws.length() - 1);
+            mLayout->setCaretPos(mCaretPos);
+            checkForRelayout();
+            startStopMarquee(false);
+            startStopMarquee(true);
+            mLayout->relayout();
+        }
+        return;
+    }
+    setText(txt.toString());
+}
+
 void TextView::setText(const std::string&txt){
     if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();

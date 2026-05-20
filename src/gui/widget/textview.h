@@ -23,6 +23,7 @@
 #include <core/typeface.h>
 #include <widget/scroller.h>
 #include <widget/textwatcher.h>
+#include <core/spannablestring.h>
 
 namespace cdroid {
 
@@ -223,6 +224,7 @@ public:
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
+    virtual void setText(const CharSequence&txt);
     const std::string getText()const;
     void  setTextAppearance(const std::string&);
     void  setTextAppearance(Context*,const std::string&);

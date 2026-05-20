@@ -19,6 +19,11 @@
 #define __LAYOUT_H__
 #include <core/canvas.h>
 #include <core/typeface.h>
+#include <core/spannablestring.h>
+#include <string>
+#include <vector>
+#include <memory>
+#include <algorithm>
 
 namespace cdroid{
 class Layout{
@@ -29,6 +34,12 @@ private:
     Typeface *mTypeface;
     Cairo::FontExtents mFontExtents;
     int mWidth;
+    struct ScaledFontCacheItem {
+        Typeface* typeface;
+        float size;
+        Cairo::RefPtr<Cairo::ScaledFont> scaledFont;
+    };
+    mutable std::vector<ScaledFontCacheItem> mScaledFontCache;
     float mLineHeight;
     int mLineCount;
     float mFontSize;
@@ -48,10 +59,28 @@ private:
     int mSpacingAdd;   //spacingAdd line spacing add
     int mLayout;        //mLayout>0 need relayout
     Rect mCaretRect;
-    void pushLineData(int start,int ytop,int descent,int width);
+    struct SpanItem {
+        std::shared_ptr<CharacterStyle> what;
+        int start;
+        int end;
+        int flags;
+        bool operator==(const SpanItem& other) const {
+            return start == other.start && end == other.end && flags == other.flags && what == other.what;
+        }
+    };
+    std::vector<SpanItem> mSpans;
+    void pushLineData(int start,int ytop,int descent,int ascent,int width);
     void resetScaledFont();
+    void clearScaledFontCache();
+    Cairo::RefPtr<Cairo::ScaledFont> getScaledFont(Typeface* tf, float size) const;
     double measureSize(const std::string&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
     double measureSize(const std::wstring&text,Cairo::TextExtents&te,Cairo::FontExtents*fe=nullptr)const;
+    // Measure text range [start,end) using spans-aware font and size
+    double measureSizeRange(int start, int end, Cairo::TextExtents& te, Cairo::FontExtents* fe=nullptr) const;
+    // Measure text using a specific Typeface and font size
+    double measureSizeWithFont(Typeface* tf, float size, const std::wstring& text, Cairo::TextExtents& te, Cairo::FontExtents* fe=nullptr) const;
+    // Get effective Typeface and font size for a character offset
+    void getEffectiveTypefaceAndSize(int pos, Typeface*& outTf, float& outSize) const;
     void calculateEllipsis(int line,int linewidth);
     void setEllipse(int line,int start,int count);
     const std::wstring getLineText(int line,bool expandSllipsis=false)const;
@@ -88,6 +117,7 @@ public:
     float getFontSize()const;
     bool setText(const std::string&);
     bool setText(const std::wstring&);
+    bool setText(const Spanned&);
     void setEditable(bool);
     bool isEditable()const;
     int getEllipsis()const;

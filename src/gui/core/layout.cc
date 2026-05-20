@@ -20,6 +20,7 @@
 #include <wordbreak.h>
 #include <linebreak.h>
 #include <gui_features.h>
+#include <core/spannablestring.h>
 #if ENABLE(FRIBIDI)
 #include <fribidi.h>
 #endif
@@ -28,15 +29,17 @@
 using namespace Cairo;
 
 namespace cdroid{
+static const std::string processBidi(const std::wstring& logstr);
 
 #define START   0
 #define TOP     1
 #define DESCENT 2
-#define LAYOUT_WIDTH   3
-#define ELLIP_START 4
-#define ELLIP_COUNT 5
-#define COLUMNS_NORMAL  4
-#define COLUMNS_ELLIPSIZE 6
+#define ASCENT  3
+#define LAYOUT_WIDTH   4
+#define ELLIP_START 5
+#define ELLIP_COUNT 6
+#define COLUMNS_NORMAL  5
+#define COLUMNS_ELLIPSIZE 7
 
 Layout::Layout(int fontSize,int width)
        :mTypeface(nullptr){
@@ -113,6 +116,7 @@ void Layout::setTypeface(Typeface*tf){
 void Layout::setFakeTextSkew(float skew){
     if(mFakeTextSkew!=skew){
         mFakeTextSkew= skew;
+        clearScaledFontCache();
         resetScaledFont();
     }
 }
@@ -129,6 +133,33 @@ void Layout::resetScaledFont(){
     options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
 
     mScaledFont = Cairo::ScaledFont::create(face, font_mtx, ctm, options);
+}
+
+void Layout::clearScaledFontCache(){
+    mScaledFontCache.clear();
+}
+
+Cairo::RefPtr<Cairo::ScaledFont> Layout::getScaledFont(Typeface* tf, float size) const {
+    if (!tf) tf = mTypeface;
+    if (tf == mTypeface && size == mFontSize) {
+        return mScaledFont;
+    }
+    for (const auto& item : mScaledFontCache) {
+        if (item.typeface == tf && item.size == size) {
+            return item.scaledFont;
+        }
+    }
+    const double skewX = mFakeTextSkew;
+    Cairo::Matrix font_mtx(size, 0.0, size * skewX, size, 0.0, 0.0);
+    Cairo::FontOptions options;
+    Cairo::Matrix ctm = Cairo::identity_matrix();
+    auto face = tf->getFontFace()->get_font_face();
+    tf->getFontFace()->get_font_options(options);
+    options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
+    options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
+    auto sf = Cairo::ScaledFont::create(face, font_mtx, ctm, options);
+    mScaledFontCache.push_back(ScaledFontCacheItem{tf, size, sf});
+    return sf;
 }
 
 void Layout::setFontSize(float size){
@@ -159,6 +190,7 @@ void Layout::setEllipsis(int ellipsis){
     if((mEllipsis!=ellipsis)&&(ellipsis>=ELLIPSIS_NONE)&&(ellipsis<=ELLIPSIS_MARQUEE)){
         mEllipsis= ellipsis;
         mColumns = (ellipsis==ELLIPSIS_NONE||ellipsis==ELLIPSIS_MARQUEE)?COLUMNS_NORMAL:COLUMNS_ELLIPSIZE;
+        LOGD("Layout::setEllipsis ellipsis=%d mColumns=%d", ellipsis, mColumns);
         mLayout++;
     }
 }
@@ -170,10 +202,83 @@ double Layout::measureSize(const std::string&text,TextExtents&te,FontExtents*fe)
 }
 
 double Layout::measureSize(const std::wstring&text,TextExtents&te,FontExtents*fe)const{
-    std::string utext = TextUtils::unicode2utf8(text);
+    std::string utext = processBidi(text);
     mScaledFont->get_text_extents(utext,te);
     if(fe) mScaledFont->get_extents(*fe);
     return te.x_advance;
+}
+
+double Layout::measureSizeWithFont(Typeface* tf, float size, const std::wstring& text, TextExtents& te, FontExtents* fe) const {
+    if (!tf) tf = mTypeface;
+    auto sf = getScaledFont(tf, size);
+    std::string utext = processBidi(text);
+    sf->get_text_extents(utext, te);
+    if (fe) sf->get_extents(*fe);
+    return te.x_advance;
+}
+
+void Layout::getEffectiveTypefaceAndSize(int pos, Typeface*& outTf, float& outSize) const {
+    Typeface* effTf = mTypeface;
+    float effSize = mFontSize;
+    for (const SpanItem& span : mSpans) {
+        if (span.start <= pos && pos < span.end) {
+            if (auto ts = std::dynamic_pointer_cast<TypefaceSpan>(span.what)) {
+                effTf = Typeface::create(ts->getFamily(), Typeface::NORMAL);
+            }
+            if (auto st = std::dynamic_pointer_cast<StyleSpan>(span.what)) {
+                effTf = Typeface::create(effTf, st->getStyle());
+            }
+            if (auto abs = std::dynamic_pointer_cast<AbsoluteSizeSpan>(span.what)) {
+                effSize = (float)abs->getSize();
+            }
+            if (auto rel = std::dynamic_pointer_cast<RelativeSizeSpan>(span.what)) {
+                effSize = mFontSize * rel->getProportion();
+            }
+        }
+    }
+    outTf = effTf;
+    outSize = effSize;
+}
+
+double Layout::measureSizeRange(int start, int end, TextExtents& te, FontExtents* fe) const {
+    if (start >= end) { te.x_advance = 0; if (fe) { fe->ascent = 0; fe->descent = 0; fe->height = 0; } return 0; }
+    double total = 0.0;
+    TextExtents tmp;
+    FontExtents maxFe;
+    bool haveFe = false;
+    int i = start;
+    while (i < end) {
+        Typeface* eftf = mTypeface;
+        float efsize = mFontSize;
+        getEffectiveTypefaceAndSize(i, eftf, efsize);
+        // find j where typeface/size stays same
+        int j = i + 1;
+        for (; j < end; ++j) {
+            Typeface* t2 = nullptr; float s2 = 0;
+            getEffectiveTypefaceAndSize(j, t2, s2);
+            if (t2 != eftf || s2 != efsize) break;
+        }
+        std::wstring segment = mText.substr(i, j - i);
+        FontExtents segFe;
+        measureSizeWithFont(eftf, efsize, segment, tmp, fe ? &segFe : nullptr);
+        total += tmp.x_advance;
+        if (fe) {
+            if (!haveFe) {
+                maxFe = segFe;
+                haveFe = true;
+            } else {
+                maxFe.ascent = std::max(maxFe.ascent, segFe.ascent);
+                maxFe.descent = std::max(maxFe.descent, segFe.descent);
+                maxFe.height = std::max(maxFe.height, segFe.height);
+            }
+        }
+        i = j;
+    }
+    te.x_advance = total;
+    if (fe && haveFe) {
+        *fe = maxFe;
+    }
+    return total;
 }
 
 const Cairo::FontExtents& Layout::getFontExtents()const{
@@ -222,7 +327,7 @@ int Layout::getLineStart(int line)const{
 }
 
 int Layout::getLineAscent(int line)const{
-    return getLineTop(line) - (getLineTop(line+1) - getLineDescent(line));
+    return mLines[line*mColumns+ASCENT];
 }
 
 int Layout::getLineBottom(int line)const{
@@ -371,11 +476,13 @@ void Layout::getCaretRect(Rect&rect)const{
 }
 
 int Layout::getLineBaseline(int line)const {
+    if (getLineCount()) {
+        return getLineTop(line) + getLineAscent(line);
+    }
     TextExtents te;
     FontExtents fe;
-    if(getLineCount())return getLineTop(line+1) - getLineDescent(line);
     measureSize(L" ",te,&fe);
-    return fe.height*mSpacingMult+mSpacingAdd + fe.descent;
+    return (int)std::ceil(fe.ascent * mSpacingMult + mSpacingAdd);
 }
 
 int Layout::getEllipsisStart(int line)const{
@@ -401,18 +508,20 @@ void Layout::setLineSpacing(int spacingAdd, float spacingMult){
 }
 
 static int bsearch(int *widths,int size,int find){
-    int lo=0;
-    int hi=size-1;
-    while((lo<hi)){
-        int mid=(lo+hi)/2;
-        if(widths[mid]>find)
-            hi=mid-1;
-        else if(widths[mid]<find)
-            lo=mid+1;
-	else break;
+    int lo = 0;
+    int hi = size;
+    while (lo < hi) {
+        int mid = lo + (hi - lo) / 2;
+        if (widths[mid] <= find)
+            lo = mid + 1;
+        else
+            hi = mid;
     }
-    LOGV("char %d/%d atpos %d",lo,size,find);
-    return lo;
+    int result = lo - 1;
+    if (result < 0)
+        result = 0;
+    LOGV("char %d/%d atpos %d",result,size,find);
+    return result;
 }
 
 void  Layout::setEllipse(int line,int start,int count){
@@ -469,7 +578,7 @@ void Layout::calculateEllipsis(int line,int nChars){
         break;
     case Layout::ELLIPSIS_END:
         ellipsisX = mWidth - ellipsisX;
-        start = bsearch(widths,nChars,ellipsisX) - 1;
+        start = bsearch(widths,nChars,ellipsisX);
         count = nChars - start;
         setEllipse(line,start,count);
         LOGV("ELLIP_END ellipsisX=%d:%d startAt %d:%d",ellipsisX,nChars,start,count);
@@ -502,8 +611,8 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
         start = getLineStart(line);
         result= mText.substr(start,getEllipsisStart(line)-start); //first string before ellipsis
         result.append(L"...");
-        count = getLineEnd(line) - getEllipsisStart(line) + getEllipsisCount(line);//the second string.size after ellipsis
-        result += mText.substr(getEllipsisStart(line) + getEllipsisCount(line),count);
+        count = getLineEnd(line) - (getEllipsisStart(line) + getEllipsisCount(line)); // the remaining suffix length
+        result += mText.substr(getEllipsisStart(line) + getEllipsisCount(line), count);
         break;
     case ELLIPSIS_END:
         start = getLineStart(line);
@@ -518,6 +627,34 @@ const std::wstring Layout::getLineText(int line,bool expandEllipsis)const{
 bool Layout::setText(const std::wstring&txt){
     if(mText.compare(txt)){
         mText=txt;
+        mSpans.clear();
+        mLayout++;
+        return true;
+    }
+    return false;
+}
+
+bool Layout::setText(const Spanned& txt){
+    const std::wstring ws = txt.toWString();
+    const std::vector<SpanInfo> sourceSpans = txt.getSpans();
+    bool changed = (mText.compare(ws) != 0) || (mSpans.size() != sourceSpans.size());
+    if (!changed) {
+        for (size_t i = 0; i < sourceSpans.size(); ++i) {
+            const SpanInfo& src = sourceSpans[i];
+            const SpanItem& dst = mSpans[i];
+            if (dst.start != src.start || dst.end != src.end || dst.flags != src.flags || dst.what != src.what) {
+                changed = true;
+                break;
+            }
+        }
+    }
+    if (changed) {
+        mText = ws;
+        mSpans.clear();
+        mSpans.reserve(sourceSpans.size());
+        for (const SpanInfo& span : sourceSpans) {
+            mSpans.push_back(SpanItem{span.what, span.start, span.end, span.flags});
+        }
         mLayout++;
         return true;
     }
@@ -563,14 +700,15 @@ int Layout::getBreakStrategy()const{
     return mBreakStrategy;
 }
 
-void Layout::pushLineData(int start,int ytop,int descent,int width){
+void Layout::pushLineData(int start,int ytop,int descent,int ascent,int width){
     mLines.push_back(start);
     mLines.push_back(ytop);
     mLines.push_back(descent);
+    mLines.push_back(ascent);
     mLines.push_back(width);
     if(mColumns==COLUMNS_ELLIPSIZE){
-        mLines.push_back(0);//4-- ELLIPSIS_START
-        mLines.push_back(0);//5-- ELLIPSIS_COUNT
+        mLines.push_back(0);//5-- ELLIPSIS_START
+        mLines.push_back(0);//6-- ELLIPSIS_COUNT
     }
 }
 
@@ -585,11 +723,15 @@ void Layout::relayout(bool force){
     mLineCount = 0;
     mLines.clear();
     measureSize(L"",extents,&fontextents);
-    mLineHeight = (fontextents.ascent + fontextents.descent);
+    float defaultLineHeight = (fontextents.ascent + fontextents.descent);
+    if(defaultLineHeight < mFontSize)
+        defaultLineHeight = fontextents.height;
+    defaultLineHeight = defaultLineHeight * mSpacingMult + mSpacingAdd;
 
-    if(mLineHeight<mFontSize)
-        mLineHeight = fontextents.height;
-    mLineHeight = mLineHeight*mSpacingMult+mSpacingAdd;
+    float lineAscent = fontextents.ascent;
+    float lineDescent = fontextents.descent;
+    float currentLineHeight = defaultLineHeight;
+    const int spanCount= mSpans.size();
     for(int i = 0; mMultiline && (mText.length()>1) && (i < mText.length()-1);i++){
         char breaks[2];
         wchar_t wch[2];
@@ -603,12 +745,21 @@ void Layout::relayout(bool force){
         switch(breaks[0]){
         case WORDBREAK_NOBREAK:
             word.append(1,mText[i]);
-            measureSize(wch,extents);
+            {
+                Typeface* eftf = mTypeface;
+                float efsize = mFontSize;
+                getEffectiveTypefaceAndSize(i, eftf, efsize);
+                FontExtents fe;
+                measureSizeWithFont(eftf, efsize, std::wstring(wch), extents, &fe);
+                lineAscent = std::max(lineAscent, (float)fe.ascent);
+                lineDescent = std::max(lineDescent, (float)fe.descent);
+            }
             word_width += extents.x_advance;
             //line_width = total_width + word_width;
             if(std::ceil(line_width+word_width) > mWidth){
-                pushLineData(start,ytop,fontextents.descent,std::ceil(line_width - extents.x_advance));
-                ytop += mLineHeight;
+                currentLineHeight = std::max(defaultLineHeight, (lineAscent + lineDescent) * mSpacingMult + mSpacingAdd);
+                pushLineData(start,ytop,(int)std::ceil(lineDescent),(int)std::ceil(lineAscent),std::ceil(line_width - extents.x_advance));
+                ytop += (int)std::ceil(currentLineHeight);
                 if(mBreakStrategy==BREAK_STRATEGY_SIMPLE){
                     start = std::max(mLineCount,int(i - 1));
                     total_width = extents.x_advance;
@@ -623,22 +774,35 @@ void Layout::relayout(bool force){
                     word_width=0;
                 }
                 mLineCount++;
+                lineAscent = fontextents.ascent;
+                lineDescent = fontextents.descent;
             }
             break;
         case WORDBREAK_BREAK:
             word.append(1,mText[i]);
-            measureSize(wch,extents);
+            {
+                Typeface* eftf = mTypeface;
+                float efsize = mFontSize;
+                getEffectiveTypefaceAndSize(i, eftf, efsize);
+                FontExtents fe;
+                measureSizeWithFont(eftf, efsize, std::wstring(wch), extents, &fe);
+                lineAscent = std::max(lineAscent, (float)fe.ascent);
+                lineDescent = std::max(lineDescent, (float)fe.descent);
+            }
             if(mText[i]==10)extents.x_advance=0;
             word_width += extents.x_advance;
             line_width = total_width + word_width;
             if( (std::ceil(line_width)>mWidth) || (linebreak==LINEBREAK_MUSTBREAK) ){
-                pushLineData(start,ytop,fontextents.descent,std::ceil(total_width));
-                ytop += mLineHeight;
+                currentLineHeight = std::max(defaultLineHeight, (lineAscent + lineDescent) * mSpacingMult + mSpacingAdd);
+                pushLineData(start,ytop,(int)std::ceil(lineDescent),(int)std::ceil(lineAscent),std::ceil(total_width));
+                ytop += (int)std::ceil(currentLineHeight);
                 mLineCount ++;
                 //char[i] is wordbreak char must be in old lines
                 start = i - word.length() + 1;//std::floor(line_width)>mWidth ? (i - word.length()): (i+1);
                 start +=!!(mText[start]=='\n');
                 total_width = 0;
+                lineAscent = fontextents.ascent;
+                lineDescent = fontextents.descent;
             }
             total_width += word_width;
             word_width = 0;
@@ -650,16 +814,19 @@ void Layout::relayout(bool force){
     }
 
     if(start <= mText.length()){
-        measureSize(mText.substr(start),extents);
-        total_width = extents.x_advance;
-        pushLineData(start,ytop,fontextents.descent,ceil(total_width));
-        ytop += mLineHeight;
+        FontExtents fe;
+        total_width = measureSizeRange(start, (int)mText.length(), extents, &fe);
+        lineAscent = std::max(lineAscent, (float)fe.ascent);
+        lineDescent = std::max(lineDescent, (float)fe.descent);
+        currentLineHeight = std::max(defaultLineHeight, (lineAscent + lineDescent) * mSpacingMult + mSpacingAdd);
+        pushLineData(start,ytop,(int)std::ceil(lineDescent),(int)std::ceil(lineAscent),ceil(total_width));
+        ytop += (int)std::ceil(currentLineHeight);
         if( (mColumns == COLUMNS_ELLIPSIZE) && (total_width > mWidth) ){
             calculateEllipsis(mLineCount,mText.length());
         }
         mLineCount++;
     }
-    pushLineData(mText.length(),ytop,fontextents.descent,0);
+    pushLineData(mText.length(),ytop,(int)std::ceil(lineDescent),(int)std::ceil(lineAscent),0);
     mLayout = 0;
 }
 
@@ -692,13 +859,27 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
         int x , y = getLineBaseline(lineNum);
         int lineStart = getLineStart(lineNum);
         int lineEnd = getLineEnd(lineNum);
-        std::string u8line;
         std::wstring line = getLineText(lineNum);
-        const int last = line.back();
+        const int last = line.empty() ? 0 : line.back();
         if((last=='\n')||(last=='\r'))
-           line.pop_back();
-        u8line = processBidi(line);
-        measureSize(u8line,te);
+            line.pop_back();
+
+        std::vector<int> boundaries;
+        boundaries.reserve(4 + mSpans.size() * 2);
+        boundaries.push_back(lineStart);
+        boundaries.push_back(lineEnd);
+
+        for (const SpanItem& span : mSpans) {
+            if (span.start < lineEnd && span.end > lineStart) {
+                boundaries.push_back(std::max(span.start, lineStart));
+                boundaries.push_back(std::min(span.end, lineEnd));
+            }
+        }
+        std::sort(boundaries.begin(), boundaries.end());
+        boundaries.erase(std::unique(boundaries.begin(), boundaries.end()), boundaries.end());
+
+        std::string u8line = processBidi(line);
+        measureSize(u8line, te);
         switch(mAlignment){
         case ALIGN_NORMAL:
         case ALIGN_LEFT  : 
@@ -710,14 +891,90 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
 
         LOGV("line[%d/%d](%d,%d) [%s](%d).width=%d",lineNum,mLineCount,x,y,TextUtils::unicode2utf8(line).c_str(),
             line.size(),int(te.x_advance));
-        canvas.move_to(x,y);
-        canvas.show_text(u8line);
-        if( (mCaretPos>=lineStart) && (mCaretPos<lineEnd) &&(mCaretPos<lineStart+line.size()) ){
-            measureSize(line.substr(0,mCaretPos-lineStart),te,nullptr);
-            mCaretRect.left= int(x + te.x_advance);
+
+        if (mSpans.empty()) {
+            canvas.move_to(x,y);
+            canvas.show_text(u8line);
+        } else {
+            float xpos = (float)x;
+            for (size_t i = 0; i + 1 < boundaries.size(); ++i) {
+                int segStart = boundaries[i];
+                int segEnd = boundaries[i + 1];
+                if (segStart >= segEnd) continue;
+                std::wstring segment = line.substr(segStart - lineStart, segEnd - segStart);
+                std::string segUtf8 = processBidi(segment);
+
+                int spanColor = 0;
+                bool hasColor = false;
+                bool underline = false;
+                bool strikethrough = false;
+
+                // Effective font properties for this segment
+                Typeface* effTypeface = mTypeface;
+                float effFontSize = mFontSize;
+
+                for (const SpanItem& span : mSpans) {
+                    if (span.start < segEnd && span.end > segStart) {
+                        if (auto fg = std::dynamic_pointer_cast<ForegroundColorSpan>(span.what)) {
+                            hasColor = true;
+                            spanColor = fg->getForegroundColor();
+                        }
+                        if (std::dynamic_pointer_cast<UnderlineSpan>(span.what)) {
+                            underline = true;
+                        }
+                        if (std::dynamic_pointer_cast<StrikethroughSpan>(span.what)) {
+                            strikethrough = true;
+                        }
+                        if (auto ts = std::dynamic_pointer_cast<TypefaceSpan>(span.what)) {
+                            // create a typeface from family name
+                            effTypeface = Typeface::create(ts->getFamily(), Typeface::NORMAL);
+                        }
+                        if (auto st = std::dynamic_pointer_cast<StyleSpan>(span.what)) {
+                            // apply style on top of current effective typeface
+                            effTypeface = Typeface::create(effTypeface, st->getStyle());
+                        }
+                        if (auto abs = std::dynamic_pointer_cast<AbsoluteSizeSpan>(span.what)) {
+                            effFontSize = (float)abs->getSize();
+                        }
+                        if (auto rel = std::dynamic_pointer_cast<RelativeSizeSpan>(span.what)) {
+                            effFontSize = mFontSize * rel->getProportion();
+                        }
+                    }
+                }
+
+                canvas.save();
+                if (hasColor) {
+                    canvas.set_color(spanColor);
+                }
+                // set scaled font for this segment
+                auto segFont = getScaledFont(effTypeface ? effTypeface : mTypeface, effFontSize);
+                canvas.set_scaled_font(segFont);
+                canvas.move_to(xpos, y);
+                LOGD("[%.f,%.d]fontsize=%.f %s",xpos,y,effFontSize,segUtf8.c_str());
+                canvas.show_text(segUtf8);
+                if (underline || strikethrough) {
+                    TextExtents underlineExt;
+                    measureSizeWithFont(effTypeface, effFontSize, segment, underlineExt);
+                    const float lineY = underline ? (float)(y + 1) : (float)(y - (underlineExt.height / 3));
+                    canvas.move_to(xpos, lineY);
+                    canvas.line_to(xpos + float(underlineExt.x_advance), lineY);
+                    canvas.stroke();
+                }
+                canvas.restore();
+
+                TextExtents advance;
+                // measure using effective font settings
+                measureSizeWithFont(effTypeface, effFontSize, segment, advance);
+                xpos += float(advance.x_advance);
+            }
+        }
+
+        if ((mCaretPos >= lineStart) && (mCaretPos < lineEnd) && (mCaretPos < lineStart + (int)line.size())) {
+            measureSize(line.substr(0, mCaretPos - lineStart), te, nullptr);
+            mCaretRect.left = int(x + te.x_advance);
             mCaretRect.top = int(lineNum * mLineHeight);
-            mCaretRect.height= mLineHeight;
-            measureSize(line.substr(mCaretPos-lineStart,1),te,nullptr);
+            mCaretRect.height = mLineHeight;
+            measureSize(line.substr(mCaretPos - lineStart, 1), te, nullptr);
             mCaretRect.width = int(te.x_advance);
         }
     }
