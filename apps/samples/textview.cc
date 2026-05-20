@@ -152,7 +152,12 @@ int main(int argc,const char*argv[]){
         std::make_shared<AbsoluteSizeSpan>(18)
     }, 0);
     spanText.append("Bold ", std::make_shared<StyleSpan>(Typeface::BOLD), 0);
-    spanText.append("Italic", std::make_shared<StyleSpan>(Typeface::ITALIC), 0);
+    spanText.append("Italic ", std::make_shared<StyleSpan>(Typeface::ITALIC), 0);
+    spanText.append("Underline ", std::make_shared<UnderlineSpan>(), 0);
+    spanText.append("Strikethrough ",std::make_shared<StrikethroughSpan>(),0);
+    spanText.append("RelativeSize ",std::make_shared<RelativeSizeSpan>(1.2),0);
+    spanText.append("o",std::make_shared<SuperscriptSpan>(),0);
+    spanText.append("cdroid",std::make_shared<URLSpan>("http://www.gitee.com/houstudio/Cdroid"),0);
     TextView* spanTv = new TextView("", 0, 0);
     spanTv->setText(spanText);
     spanTv->setTextSize(24);

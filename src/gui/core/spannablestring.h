@@ -45,7 +45,10 @@ class UnderlineSpan : public CharacterStyle {
 
 class StrikethroughSpan : public CharacterStyle {
 };
-
+class SubscriptSpan: public CharacterStyle {
+};
+class SuperscriptSpan: public CharacterStyle {
+};
 class URLSpan : public CharacterStyle {
 public:
     explicit URLSpan(const std::string& url) : mUrl(url) {}

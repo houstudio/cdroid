@@ -905,10 +905,12 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                 std::string segUtf8 = processBidi(segment);
 
                 int spanColor = 0;
+                float verticalOffset = 0.0f;
                 bool hasColor = false;
                 bool underline = false;
                 bool strikethrough = false;
-
+                bool isSuperscript = false;
+                bool isSubscript = false;
                 // Effective font properties for this segment
                 Typeface* effTypeface = mTypeface;
                 float effFontSize = mFontSize;
@@ -924,6 +926,12 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                         }
                         if (std::dynamic_pointer_cast<StrikethroughSpan>(span.what)) {
                             strikethrough = true;
+                        }
+                        if (std::dynamic_pointer_cast<SuperscriptSpan>(span.what)) {
+                            isSuperscript = true;
+                        }
+                        if (std::dynamic_pointer_cast<SubscriptSpan>(span.what)) {
+                            isSubscript = true;
                         }
                         if (auto ts = std::dynamic_pointer_cast<TypefaceSpan>(span.what)) {
                             // create a typeface from family name
@@ -941,7 +949,21 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                         }
                     }
                 }
-
+                float actualFontSize = effFontSize;
+                if (isSuperscript || isSubscript) {
+                    FontExtents fontExtents;
+                    TextExtents textExtents;
+                    actualFontSize *= 0.8f;
+                    
+                    auto tempFont = getScaledFont(effTypeface ? effTypeface : mTypeface, effFontSize);
+                    measureSizeWithFont(effTypeface,actualFontSize,segment,textExtents, &fontExtents);
+                    
+                    if (isSuperscript) {
+                        verticalOffset = -fontExtents.ascent * 0.33f;
+                    } else if (isSubscript) {
+                        verticalOffset = fontExtents.descent * 0.20f;
+                    }
+                }
                 canvas.save();
                 if (hasColor) {
                     canvas.set_color(spanColor);
@@ -949,7 +971,7 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                 // set scaled font for this segment
                 auto segFont = getScaledFont(effTypeface ? effTypeface : mTypeface, effFontSize);
                 canvas.set_scaled_font(segFont);
-                canvas.move_to(xpos, y);
+                canvas.move_to(xpos, y+verticalOffset);
                 LOGD("[%.f,%.d]fontsize=%.f %s",xpos,y,effFontSize,segUtf8.c_str());
                 canvas.show_text(segUtf8);
                 if (underline || strikethrough) {
