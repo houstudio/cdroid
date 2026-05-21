@@ -949,19 +949,17 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                         }
                     }
                 }
-                float actualFontSize = effFontSize;
                 if (isSuperscript || isSubscript) {
                     FontExtents fontExtents;
                     TextExtents textExtents;
-                    actualFontSize *= 0.8f;
-                    
+                    effFontSize *= 0.8f;
                     auto tempFont = getScaledFont(effTypeface ? effTypeface : mTypeface, effFontSize);
-                    measureSizeWithFont(effTypeface,actualFontSize,segment,textExtents, &fontExtents);
+                    measureSizeWithFont(effTypeface,effFontSize,segment,textExtents, &fontExtents);
                     
                     if (isSuperscript) {
-                        verticalOffset = -fontExtents.ascent * 0.33f;
+                        verticalOffset = -fontExtents.ascent * 0.5f;;
                     } else if (isSubscript) {
-                        verticalOffset = fontExtents.descent * 0.20f;
+                        verticalOffset = fontExtents.descent * 0.5f;;
                     }
                 }
                 canvas.save();
@@ -972,7 +970,6 @@ void  Layout::drawText(Canvas&canvas,int firstLine,int lastLine){
                 auto segFont = getScaledFont(effTypeface ? effTypeface : mTypeface, effFontSize);
                 canvas.set_scaled_font(segFont);
                 canvas.move_to(xpos, y+verticalOffset);
-                LOGD("[%.f,%.d]fontsize=%.f %s",xpos,y,effFontSize,segUtf8.c_str());
                 canvas.show_text(segUtf8);
                 if (underline || strikethrough) {
                     TextExtents underlineExt;
