@@ -113,12 +113,15 @@ list(APPEND WIDGET_SOURCES
     widget/actionbar.cc
     widget/toolbar.cc
     widget/toast.cc
-
+)
+if(ENABLE_KPLOT)
+list(APPEND WIDGET_SOURCES
     widget/plotaxis.cc
     widget/plotobject.cc
     widget/plotpoint.cc
     widget/plotview.cc
 )
+endif(ENABLE_KPLOT)
 
 list(APPEND WIDGET_SOURCES
     widget/viewanimator.cc

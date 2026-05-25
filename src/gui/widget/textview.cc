@@ -456,6 +456,7 @@ void TextView::initView(){
     mDrawables= nullptr;
     mMarquee  = nullptr;
     mScroller = nullptr;
+    mCursorDrawable = nullptr;
     mSavedMarqueeModeLayout=nullptr;
     mOriginalTypeface = nullptr;
     mMaxWidth = INT_MAX;
@@ -512,6 +513,7 @@ TextView::~TextView() {
     delete mLayout;
     delete mHintLayout;
     delete mDrawables;
+    delete mCursorDrawable;
 }
 
 #if 0
@@ -753,6 +755,14 @@ int TextView::getLastBaselineToBottomHeight(){
     return getPaddingBottom() - mLayout->getFontExtents().descent;
 }
 
+void TextView::setTextCursorDrawable(Drawable*d){
+    delete mCursorDrawable;
+    mCursorDrawable = d;
+}
+
+Drawable* TextView::getTextCursorDrawable()const{
+    return mCursorDrawable;
+}
 void TextView::setTextAppearance(Context*context,const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
@@ -2604,9 +2614,8 @@ int TextView::getBoxHeight(Layout* l){
 int TextView::getVerticalOffset(bool forceNormal){
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
-    Layout* l = mLayout;
     if (gravity != Gravity::TOP) {
-        const int boxht = getBoxHeight(l);
+        const int boxht = getBoxHeight(mLayout);
         const int textht = mLayout->getHeight();//LineHeight(true);
         if (textht < boxht) {
             if (gravity == Gravity::BOTTOM) {

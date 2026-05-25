@@ -461,7 +461,7 @@ int Layout::getSelectionEnd()const{
 int Layout::getLineHeight(bool txtonly)const{
     if(txtonly==false)
         return mLineHeight;
-    return getLineBottom(0)-getLineTop(0)+1;
+    return getLineBottom(0)-getLineTop(0);
 }
 
 int Layout::getLineBounds(int line, Rect& bounds)const{

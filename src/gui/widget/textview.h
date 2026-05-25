@@ -124,6 +124,7 @@ private:
 
     class Drawables*mDrawables;
     class Marquee*mMarquee;
+    Drawable* mCursorDrawable;
     int  mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -226,6 +227,8 @@ public:
     virtual void setText(const std::string&txt);
     virtual void setText(const CharSequence&txt);
     const std::string getText()const;
+    void setTextCursorDrawable(Drawable*);
+    Drawable* getTextCursorDrawable()const;
     void  setTextAppearance(const std::string&);
     void  setTextAppearance(Context*,const std::string&);
     virtual void setHint(const std::string&txt);

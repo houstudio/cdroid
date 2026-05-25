@@ -12,6 +12,8 @@ namespace cdroid {
 class CharSequence {
 public:
     virtual ~CharSequence() = default;
+    virtual size_t length()const{return 0;}
+    virtual int charAt(int)const{return 0;}
     virtual std::string toString() const = 0;
     virtual std::wstring toWString() const = 0;
     // Copies characters from [start, end) into dest starting at destPos.
@@ -166,10 +168,12 @@ public:
         return TextUtils::unicode2utf8(mText);
     }
 
-    size_t length() const {
+    size_t length() const override{
         return mText.length();
     }
-
+    int charAt(int idx)const override{
+        return mText.at(idx);
+    }
     std::vector<SpanInfo> getSpans() const override {
         return mSpans;
     }

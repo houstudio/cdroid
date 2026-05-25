@@ -1,0 +1,58 @@
+#include "unicode/uscript.h"
+
+U_CAPI UScriptCode U_EXPORT2 uscript_getScript(UChar32 c, UErrorCode* status) {
+    (void)status;
+    if (c >= 0x0020 && c <= 0x007E) return USCRIPT_LATIN;
+    if (c >= 0x4E00 && c <= 0x9FFF) return USCRIPT_HAN;
+    if (c >= 0x3040 && c <= 0x30FF) return USCRIPT_KATAKANA_OR_HIRAGANA;
+    if (c >= 0xAC00 && c <= 0xD7AF) return USCRIPT_HANGUL;
+    if (c >= 0x0600 && c <= 0x06FF) return USCRIPT_ARABIC;
+    if (c >= 0x0590 && c <= 0x05FF) return USCRIPT_HEBREW;
+    if (c >= 0x0C00 && c <= 0x0C7F) return USCRIPT_TELUGU;
+    if (c >= 0x0D00 && c <= 0x0D7F) return USCRIPT_MALAYALAM;
+    if (c >= 0x0B80 && c <= 0x0BFF) return USCRIPT_TAMIL;
+    if (c >= 0x0A80 && c <= 0x0AFF) return USCRIPT_GUJARATI;
+    if (c >= 0x0900 && c <= 0x097F) return USCRIPT_DEVANAGARI;
+    if (c >= 0x0980 && c <= 0x09FF) return USCRIPT_BENGALI;
+    if (c >= 0x0E00 && c <= 0x0E7F) return USCRIPT_THAI;
+    if (c >= 0x0F00 && c <= 0x0FFF) return USCRIPT_TIBETAN;
+    if (c >= 0x1000 && c <= 0x109F) return USCRIPT_MYANMAR;
+    if (c >= 0x1100 && c <= 0x11FF) return USCRIPT_HANGUL;
+    if (c >= 0x1E00 && c <= 0x1EFF) return USCRIPT_LATIN;
+    if (c >= 0x1F00 && c <= 0x1FFF) return USCRIPT_GREEK;
+    if (c >= 0x2000 && c <= 0x206F) return USCRIPT_COMMON;
+    if (c >= 0x2070 && c <= 0x209F) return USCRIPT_COMMON;
+    if (c >= 0x2100 && c <= 0x214F) return USCRIPT_COMMON;
+    if (c >= 0x2150 && c <= 0x218F) return USCRIPT_LATIN;
+    if (c >= 0x2190 && c <= 0x21FF) return USCRIPT_COMMON;
+    if (c >= 0x2200 && c <= 0x22FF) return USCRIPT_COMMON;
+    if (c >= 0x2300 && c <= 0x23FF) return USCRIPT_COMMON;
+    if (c >= 0x2400 && c <= 0x243F) return USCRIPT_COMMON;
+    if (c >= 0x2440 && c <= 0x245F) return USCRIPT_COMMON;
+    if (c >= 0x2500 && c <= 0x257F) return USCRIPT_COMMON;
+    if (c >= 0x2580 && c <= 0x259F) return USCRIPT_COMMON;
+    if (c >= 0x25A0 && c <= 0x25FF) return USCRIPT_COMMON;
+    if (c >= 0x2600 && c <= 0x26FF) return USCRIPT_COMMON;
+    if (c >= 0x2700 && c <= 0x27BF) return USCRIPT_COMMON;
+    if (c >= 0x27C0 && c <= 0x27EF) return USCRIPT_COMMON;
+    if (c >= 0x27F0 && c <= 0x27FF) return USCRIPT_COMMON;
+    if (c >= 0x2800 && c <= 0x28FF) return USCRIPT_BRAILLE;
+    if (c >= 0x2E80 && c <= 0x2EFF) return USCRIPT_COMMON;
+    if (c >= 0x2F00 && c <= 0x2FDF) return USCRIPT_COMMON;
+    if (c >= 0x2FF0 && c <= 0x2FFF) return USCRIPT_COMMON;
+    if (c >= 0x3000 && c <= 0x303F) return USCRIPT_COMMON;
+    if (c >= 0x3100 && c <= 0x312F) return USCRIPT_HANGUL;
+    if (c >= 0x3130 && c <= 0x318F) return USCRIPT_HANGUL;
+    if (c >= 0x3190 && c <= 0x319F) return USCRIPT_COMMON;
+    if (c >= 0x31A0 && c <= 0x31BF) return USCRIPT_HANGUL;
+    if (c >= 0xFE00 && c <= 0xFE0F) return USCRIPT_INHERITED;
+    if (c >= 0xFE20 && c <= 0xFE2F) return USCRIPT_INHERITED;
+    if (c >= 0x1F000 && c <= 0x1F0FF) return USCRIPT_COMMON;
+    if (c >= 0x1F100 && c <= 0x1F1FF) return USCRIPT_COMMON;
+    if (c >= 0x1F200 && c <= 0x1F2FF) return USCRIPT_COMMON;
+    if (c >= 0x1F300 && c <= 0x1F5FF) return USCRIPT_COMMON;
+    if (c >= 0x1F600 && c <= 0x1F64F) return USCRIPT_COMMON;
+    if (c >= 0x1F680 && c <= 0x1F6FF) return USCRIPT_COMMON;
+    if (c >= 0x1F900 && c <= 0x1F9FF) return USCRIPT_COMMON;
+    return USCRIPT_COMMON;
+}
