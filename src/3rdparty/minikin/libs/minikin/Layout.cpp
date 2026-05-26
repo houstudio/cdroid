@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include <hb-icu.h>
+//#include <hb-icu.h>
 #include <hb-ot.h>
 #include <log/log.h>
 #include <unicode/ubidi.h>
