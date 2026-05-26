@@ -223,7 +223,7 @@ public:
         
         // 构建 MeasuredText
         minikin::MeasuredTextBuilder builder;
-        builder.addStyleRun(0, text.size(), std::move(paint), true /* is RTL */);
+        builder.addStyleRun(0, text.size(), std::move(paint), false /* is RTL */);
         
         std::cout << "Building MeasuredText..." << std::endl;
         minikin::U16StringPiece textPiece(text.data(), text.size());
