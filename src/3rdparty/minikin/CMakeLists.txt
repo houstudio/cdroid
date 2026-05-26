@@ -38,7 +38,7 @@ target_sources(minikin
 		BASE_DIRS include
 )
 
-if(USE_MYICU)
+if(TRUE OR USE_MYICU)
    target_sources(minikin
        PRIVATE
 		libs/unicode/uchar.cpp
@@ -51,7 +51,7 @@ if(USE_MYICU)
    target_include_directories(minikin
 	  PRIVATE   libs
 		${PROJECT_SOURCE_DIR}/include
-        ${PROJECT_SOURCE_DIR}/include/micu
+        ${PROJECT_SOURCE_DIR}/include/myicu
         ${HARFBUZZ_INCLUDE_DIRS}
         /usr/include/fribidi
         BEFORE )

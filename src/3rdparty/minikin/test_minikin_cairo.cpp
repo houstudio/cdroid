@@ -532,7 +532,7 @@ int main() {
     
     // 渲染到 PNG
     renderToPng(text, result, fontCollection, fontSize, 
-                "/home/houzh/cdroidMaster/src/3rdparty/minikin/minikin_cairo_output.png");
+                "minikin_cairo_output.png");
     
     std::cout << "\nPNG output saved to: /home/houzh/cdroidMaster/src/3rdparty/minikin/minikin_cairo_output.png" << std::endl;
     std::cout << "Successfully demonstrated multi-line layout with specified width using Minikin!" << std::endl;
