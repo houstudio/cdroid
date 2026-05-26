@@ -17,7 +17,7 @@
 #define LOG_TAG "Minikin"
 
 #include "BidiUtils.h"
-
+#include <stdio.h>
 #include <algorithm>
 
 #include <unicode/ubidi.h>
@@ -118,6 +118,15 @@ BidiText::BidiText(const U16StringPiece& textBuf, const Range& range, Bidi bidiF
         return;
     }
     mRunCount = rc;
+
+    // Debug: print bidi runs
+    printf("BidiText: detected %d runs\n", mRunCount);
+    for (int32_t i = 0; i < mRunCount; i++) {
+        int32_t start, length;
+        UBiDiDirection dir = ubidi_getVisualRun(mBidi.get(), i, &start, &length);
+        printf("  Visual run %d: start=%d, length=%d, dir=%s\n", i, start, length,
+              dir == UBIDI_RTL ? "RTL" : "LTR");
+    }
 }
 
 }  // namespace minikin

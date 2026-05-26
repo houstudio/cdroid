@@ -303,8 +303,23 @@ void renderToPng(const std::vector<uint16_t>& text,
                  const minikin::LineBreakResult& lineBreakResult,
                  std::shared_ptr<minikin::FontCollection> fontCollection,
                  float fontSize, const std::string& outputPath) {
-    float fontAscent = fontSize * 0.8f;
-    float fontDescent = fontSize * 0.2f;
+    // 从 fontCollection 获取基础字体信息
+    minikin::FakedFont baseFont = fontCollection->baseFontFaked(minikin::FontStyle());
+    const minikin::Font* fontPtr = baseFont.font;
+    const minikin::MinikinFont* minikinFontPtr = fontPtr->typeface().get();
+    
+    // 从 gFontMap 获取 FullMinikinFont，然后获取 FT_Face
+    FT_Face face = nullptr;
+    auto it = gFontMap.find(minikinFontPtr);
+    if (it != gFontMap.end()) {
+        face = it->second->getFace();
+        FT_Set_Pixel_Sizes(face, 0, static_cast<int>(fontSize));
+    }
+    
+    // 使用 FT_Face 的真实 metrics
+    float fontAscent, fontDescent;
+    fontAscent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
+    fontDescent = -static_cast<float>(face->size->metrics.descender) / 64.0f;
     
     // 计算图像尺寸
     float maxWidth = 0;
@@ -406,10 +421,7 @@ void renderToPng(const std::vector<uint16_t>& text,
                 glyphIdx++;
             }
             // 渲染这组字形
-            cairo_save(cr);
-            //cairo_translate(cr, 0, y);
             cairo_show_glyphs(cr, cairoGlyphs.data(), cairoGlyphs.size());
-            cairo_restore(cr);
             x += glyphsWidth;
         }
         
