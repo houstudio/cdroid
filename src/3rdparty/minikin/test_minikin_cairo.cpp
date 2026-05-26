@@ -383,8 +383,8 @@ void renderToPng(const std::vector<uint16_t>& text,
         float x = 20;
         const minikin::MinikinFont* currentFont = nullptr;
         cairo_font_face_t* currentCairoFontFace = nullptr;
-        
-        for (size_t glyphIdx = 0; glyphIdx < layout.nGlyphs(); glyphIdx++) {
+        size_t glyphIdx=0;
+        while(glyphIdx < layout.nGlyphs()) {
             // cdroidMaster 版本的 getFont() 返回 MinikinFont*
             const minikin::MinikinFont* glyphFont = layout.getFont(glyphIdx);
             
@@ -394,19 +394,22 @@ void renderToPng(const std::vector<uint16_t>& text,
                     cairo_font_face_destroy(currentCairoFontFace);
                 }
                 
+                currentFont = glyphFont;
                 // 查找对应的 FullMinikinFont
                 auto it = gFontMap.find(glyphFont);
-                if (it != gFontMap.end()) {
-                    FT_Face face = it->second->getFace();
+                auto fullFont = dynamic_cast<const FullMinikinFont*>(glyphFont);
+                if (fullFont){// != gFontMap.end()) {
+                    FT_Face face = fullFont->getFace();
                     FT_Set_Pixel_Sizes(face, 0, static_cast<int>(fontSize));
                     currentCairoFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
                     cairo_set_font_face(cr, currentCairoFontFace);
                     cairo_set_font_size(cr, fontSize);
-                    std::cout << "  Switched to font: " << it->second->GetFontPath() << std::endl;
+                    std::cout << glyphIdx<<":Switched to font: " << fullFont->GetFontPath() << std::endl;
                 }else{
                     std::cerr << "  Warning: Could not get FullMinikinFont for glyph:"<<glyphIdx << std::endl;
+                    glyphIdx++;
+                    continue;
                 }
-                currentFont = glyphFont;
             }
  
             std::vector<cairo_glyph_t> cairoGlyphs;
@@ -444,14 +447,13 @@ void renderToPng(const std::vector<uint16_t>& text,
 int main() {
     // 查找可用字体
     const char* fontPaths[] = {
-        "/home/houzh/.fonts/harmony/HarmonyOS_Sans_SC_Regular.ttf",
-        "/home/houzh/.fonts/yilang/HarmonyOS_Sans_SC_Regular.ttf",
         "/home/houzh/.fonts/Alibaba_PuHuiTi_2.0_55_Regular_55_Regular.ttf",
+        "/home/houzh/.fonts/yilang/HarmonyOS_Sans_SC_Regular.ttf",
         "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf",
         "/usr/share/fonts/truetype/freefont/FreeSans.ttf",
         "/usr/share/fonts/truetype/liberation/LiberationSans.ttf"
     };
-    
+ 
     std::vector<std::string> availableFontPaths;
     for (const char* fontPath : fontPaths) {
         if (access(fontPath, R_OK) == 0) {
