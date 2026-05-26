@@ -1021,14 +1021,13 @@ U_CAPI UBiDiDirection U_EXPORT2 ubidi_getVisualRun(UBiDi* pBiDi, int32_t runInde
     
     // Find the run that is at position runIndex in visual order
     // Visual order: sorted by (level, RTL before LTR at same level)
-    // Create an array of indices sorted by visual order
     typedef struct {
         int32_t index;
         UBiDiLevel level;
         bool isRtl;
     } RunInfo;
     
-    RunInfo sortedRuns[256];  // Assuming max 256 runs
+    RunInfo sortedRuns[256];
     int32_t count = pBiDi->runCount < 256 ? pBiDi->runCount : 256;
     
     for (int32_t i = 0; i < count; i++) {
@@ -1037,7 +1036,7 @@ U_CAPI UBiDiDirection U_EXPORT2 ubidi_getVisualRun(UBiDi* pBiDi, int32_t runInde
         sortedRuns[i].isRtl = (pBiDi->runLevels[i] & 1) != 0;
     }
     
-    // Bubble sort by visual order (level ASC, isRtl DESC for same level)
+    // Bubble sort by visual order: level ASC, RTL before LTR at same level
     for (int32_t i = 0; i < count - 1; i++) {
         for (int32_t j = i + 1; j < count; j++) {
             bool swap = false;
@@ -1103,53 +1102,31 @@ U_CAPI int32_t U_EXPORT2 ubidi_getVisualIndex(UBiDi* pBiDi, int32_t logicalIndex
     }
     
     // Calculate visual position based on run order
-    // Runs are stored in logical order (by level), we need to process in visual order
-    // For visual order: sort runs by (level, direction) - lower levels first, RTL before LTR at same level
     int32_t visualPos = 0;
     
-    // Find the target run's level
-    UBiDiLevel targetLevel = pBiDi->runLevels[runIdx];
-    bool targetIsRtl = (targetLevel & 1) != 0;
-    
-    // First pass: count visual positions of all runs that come BEFORE our run in visual order
+    // Process runs in visual order
     for (int32_t i = 0; i < pBiDi->runCount; i++) {
-        if (i == runIdx) continue;
+        int32_t actualRunIdx = i;
+        if (pBiDi->paraLevel & 1) {
+            // RTL paragraph - process runs in reverse order
+            actualRunIdx = pBiDi->runCount - 1 - i;
+        }
         
-        UBiDiLevel level = pBiDi->runLevels[i];
-        bool isRtl = (level & 1) != 0;
-        
-        // Determine if this run comes before our run in visual order
-        bool comesBefore = false;
-        if (level < targetLevel) {
-            // Lower level always comes before
-            comesBefore = true;
-        } else if (level == targetLevel) {
-            // Same level: RTL comes before LTR
-            if (targetIsRtl) {
-                // Our run is RTL, so LTR runs at same level come after us
-                comesBefore = !isRtl;
+        if (actualRunIdx == runIdx) {
+            // This is our run
+            if (pBiDi->runLevels[actualRunIdx] & 1) {
+                // RTL run - position from end of run
+                visualPos += pBiDi->runLengths[actualRunIdx] - 1 - posInRun;
             } else {
-                // Our run is LTR, so RTL runs at same level come before us
-                comesBefore = isRtl;
+                // LTR run - position from start of run
+                visualPos += posInRun;
             }
+            return visualPos;
         }
-        // Higher level always comes after
-        
-        if (comesBefore) {
-            visualPos += pBiDi->runLengths[i];
-        }
+        visualPos += pBiDi->runLengths[actualRunIdx];
     }
     
-    // Now add position within our run
-    if (targetIsRtl) {
-        // RTL run - position from end of run
-        visualPos += pBiDi->runLengths[runIdx] - 1 - posInRun;
-    } else {
-        // LTR run - position from start of run
-        visualPos += posInRun;
-    }
-    
-    return visualPos;
+    return -1;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getLogicalIndex(UBiDi* pBiDi, int32_t visualIndex, UErrorCode* pErrorCode) {
@@ -1176,76 +1153,26 @@ U_CAPI int32_t U_EXPORT2 ubidi_getLogicalIndex(UBiDi* pBiDi, int32_t visualIndex
         return visualIndex;
     }
     
-    // Find which run contains this visual index by iterating in visual order
-    // Visual order: lower levels first, RTL before LTR at same level
-    int32_t runIdx = -1;
+    // Find which run contains this visual index
+    int32_t runIdx = 0;
     int32_t posInRun = 0;
     int32_t visualPos = 0;
     
     for (int32_t i = 0; i < pBiDi->runCount; i++) {
-        // Find the run with the lowest level that hasn't been processed yet
-        // This is a simplified approach: find the run with smallest (level, isRtl) that contains this visual index
-        // Actually, we need to iterate in visual order
-        
-        // Since runs are stored in logical order, we need to find which run "wins" at each visual position
-        // For visual position X, we need to find which run contains it when runs are ordered by (level, RTL before LTR)
-        
-        // For each position in visual order, determine which logical run it belongs to
-        for (int32_t j = 0; j < pBiDi->runCount; j++) {
-            UBiDiLevel level = pBiDi->runLevels[j];
-            bool isRtl = (level & 1) != 0;
-            
-            // Check if this run starts at the current visual position
-            // We need to track cumulative visual positions in visual order
-            
-            // First, find all runs that would appear before this one in visual order
-            int32_t runsBeforeThis = 0;
-            for (int32_t k = 0; k < pBiDi->runCount; k++) {
-                if (k == j) continue;
-                UBiDiLevel kLevel = pBiDi->runLevels[k];
-                bool kIsRtl = (kLevel & 1) != 0;
-                
-                if (kLevel < level) {
-                    runsBeforeThis++;
-                } else if (kLevel == level && kIsRtl && !isRtl) {
-                    // Same level, but k is RTL and j is LTR, so k comes before j
-                    runsBeforeThis++;
-                }
-            }
-            
-            int32_t visualStart = 0;
-            for (int32_t k = 0; k < pBiDi->runCount; k++) {
-                UBiDiLevel kLevel = pBiDi->runLevels[k];
-                bool kIsRtl = (kLevel & 1) != 0;
-                
-                // Check if k comes before j in visual order
-                bool kBeforeJ = false;
-                if (kLevel < level) {
-                    kBeforeJ = true;
-                } else if (kLevel == level && kIsRtl && !isRtl) {
-                    kBeforeJ = true;
-                }
-                
-                if (kBeforeJ) {
-                    visualStart += pBiDi->runLengths[k];
-                }
-            }
-            
-            if (visualIndex >= visualStart && visualIndex < visualStart + pBiDi->runLengths[j]) {
-                runIdx = j;
-                posInRun = visualIndex - visualStart;
-                break;
-            }
+        int32_t actualRunIdx = i;
+        if (pBiDi->paraLevel & 1) {
+            actualRunIdx = pBiDi->runCount - 1 - i;
         }
         
-        if (runIdx >= 0) break;
+        if (visualIndex < visualPos + pBiDi->runLengths[actualRunIdx]) {
+            runIdx = actualRunIdx;
+            posInRun = visualIndex - visualPos;
+            break;
+        }
+        visualPos += pBiDi->runLengths[actualRunIdx];
     }
     
-    if (runIdx < 0) {
-        return -1;
-    }
-    
-    // Convert to logical position (runs are stored in logical order)
+    // Convert to logical position
     int32_t logicalPos = 0;
     for (int32_t i = 0; i < runIdx; i++) {
         logicalPos += pBiDi->runLengths[i];

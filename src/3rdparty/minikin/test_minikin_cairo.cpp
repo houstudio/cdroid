@@ -484,12 +484,11 @@ int main() {
     
     // 测试文本 - 包含英文、阿拉伯语和波斯语
     std::string testTextUTF8 = 
-        "Hello World! السلام عليكم (Peace be upon you) مرحبا ";
-//        "This is a test with multiple languages including "
-//        "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
-//        "شكراً for testing. Thank you! متشکرم "
-  //      "Line breaking should work properly with complex scripts.";
-    
+        "Hello World! السلام عليكم (Peace be upon you) مرحبا "
+        "This is a test with multiple languages including "
+        "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
+        "شكراً for testing. Thank you! متشکرم "
+        "Line breaking should work properly with complex scripts."; 
     std::vector<uint16_t> text = utf8ToUtf16(testTextUTF8);
     std::cout << "Text length: " << text.size() << " characters" << std::endl;
     
