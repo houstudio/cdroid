@@ -33,19 +33,32 @@ target_sources(minikin
         libs/minikin/MinikinInternal.cpp
         libs/minikin/WordBreaker.cpp
 
+	PUBLIC
+		FILE_SET HEADERS
+		BASE_DIRS include
+)
 
+if(USE_MYICU)
+   target_sources(minikin
+       PRIVATE
 		libs/unicode/uchar.cpp
 		libs/unicode/ubidi.cpp
 		libs/unicode/ubrk.cpp
 		libs/unicode/uscript.cpp
 		libs/unicode/uloc.cpp
-		libs/unicode/unorm2.cpp
-	PUBLIC
-		FILE_SET HEADERS
-		BASE_DIRS include
-)
-#find_package(HarfBuzz REQUIRED)
-target_include_directories(minikin
+		libs/unicode/unorm2.cpp)
+
+   target_include_directories(minikin
+	  PRIVATE   libs
+		${PROJECT_SOURCE_DIR}/include
+        ${PROJECT_SOURCE_DIR}/include/micu
+        ${HARFBUZZ_INCLUDE_DIRS}
+        /usr/include/fribidi
+        BEFORE )
+   target_link_libraries(minikin	PRIVATE ${HARFBUZZ_LIBRARIES} fribidi)
+else()
+    find_package(ICU COMPONENTS uc REQUIRED)
+    target_include_directories(minikin
 	PRIVATE
         libs
 		${PROJECT_SOURCE_DIR}/include
@@ -54,7 +67,20 @@ target_include_directories(minikin
 )
 target_link_libraries(minikin
 	PRIVATE
-        ${HARFBUZZ_LIBRARIES}
+    ICU::uc
+)
+message(WARNING "USE ICU ${ICU_VERSION}")
+endif()
+include(FindPkgConfig)
+pkg_check_modules(PC_HARFBUZZ harfbuzz>=2.0)
+find_path(HARFBUZZ_INCLUDE_DIRS NAMES hb.h
+    HINTS ${PC_HARFBUZZ_INCLUDE_DIRS} ${PC_HARFBUZZ_INCLUDEDIR}
+    #    NO_DEFAULT_PATH
+)
+
+find_library(HARFBUZZ_LIBRARIES NAMES harfbuzz
+    HINTS ${PC_HARFBUZZ_LIBRARY_DIRS} ${PC_HARFBUZZ_LIBDIR}
+    #    NO_DEFAULT_PATH
 )
 
 enable_testing()
