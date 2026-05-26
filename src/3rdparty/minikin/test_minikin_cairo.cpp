@@ -427,7 +427,7 @@ void renderToPng(const std::vector<uint16_t>& text,
     cairo_surface_destroy(surface);
 }
 
-int main() {
+int minikinTest() {
     // 查找可用字体
     const char* fontPaths[] = {
         "/home/houzh/.fonts/Alibaba_PuHuiTi_2.0_55_Regular_55_Regular.ttf",

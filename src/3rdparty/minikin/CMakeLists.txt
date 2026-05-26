@@ -37,7 +37,6 @@ target_sources(minikin
 		FILE_SET HEADERS
 		BASE_DIRS include
 )
-
 if(TRUE OR USE_MYICU)
    target_sources(minikin
        PRIVATE
@@ -46,16 +45,21 @@ if(TRUE OR USE_MYICU)
 		libs/unicode/ubrk.cpp
 		libs/unicode/uscript.cpp
 		libs/unicode/uloc.cpp
-		libs/unicode/unorm2.cpp)
+		libs/unicode/unorm2.cpp
+        test_minikin_cairo.cpp
+        )
 
    target_include_directories(minikin
 	  PRIVATE   libs
 		${PROJECT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/include/myicu
         ${HARFBUZZ_INCLUDE_DIRS}
-        /usr/include/fribidi
+        ${FREETYPE_INCLUDE_DIRS}
+        ${FRIBIDI_INCLUDE_DIRS}
+        ${CAIRO_INCLUDE_DIRS}
+        #/usr/include/fribidi
         BEFORE )
-   target_link_libraries(minikin	PRIVATE ${HARFBUZZ_LIBRARIES} fribidi)
+   target_link_libraries(minikin	PRIVATE ${HARFBUZZ_LIBRARIES} ${FRIBIDI_LIBRARIES})
 else()
     find_package(ICU COMPONENTS uc REQUIRED)
     target_include_directories(minikin

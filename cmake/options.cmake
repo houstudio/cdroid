@@ -58,7 +58,6 @@ cmake_dependent_option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON "RTAUDIO_FO
 cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" OFF "zint_FOUND" OFF)
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)
 cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF "LCMS2_FOUND" OFF)
-cmake_dependent_option(ENABLE_FRIBIDI "Enable BiDi layout" ON "FRIBIDI_FOUND" OFF)
 
 list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
@@ -72,6 +71,8 @@ list(APPEND CDROID_DEPLIBS
     ${UNIBREAK_LIBRARIES}
     ${ZIP_LIBRARIES}
     ${Iconv_LIBRARIES}
+    ${HARFBUZZ_LIBRARIES}
+    ${FRIBIDI_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)
@@ -101,11 +102,6 @@ if (ENABLE_BARCODE)
     list( APPEND CDROID_DEPLIBS zint::zint)
 endif()
 
-if(ENABLE_FRIBIDI)
-    list(APPEND CDROID_DEPINCLUDES ${FRIBIDI_INCLUDE_DIRS})
-    list(APPEND CDROID_DEPLIBS ${FRIBIDI_LIBRARIES})
-endif(ENABLE_FRIBIDI)
-
 if(ENABLE_MATHGL)
     list(APPEND CDROID_DEPINCLUDES ${MATHGL_INCLUDE_DIRS})
     list(APPEND CDROID_DEPLIBS ${MATHGL_LIBRADIES})
@@ -115,6 +111,8 @@ list(APPEND CDROID_DEPINCLUDES
     ${ZIP_INCLUDE_DIRS}
     ${EXPAT_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
+    ${HARFBUZZ_INCLUDE_DIRS}
+    ${FRIBIDI_INCLUDE_DIRS}
 )
 
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
