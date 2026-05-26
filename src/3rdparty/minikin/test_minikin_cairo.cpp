@@ -34,9 +34,9 @@
 #include "minikin/HbUtils.h"
 #include "minikin/LineBreaker.h"
 #include "minikin/LocaleList.h"
-#include "../libs/minikin/GreedyLineBreaker.h"
-#include "../libs/minikin/OptimalLineBreaker.h"
-#include "../libs/minikin/LocaleListCache.h"
+#include "minikin/GreedyLineBreaker.h"
+#include "minikin/OptimalLineBreaker.h"
+#include "minikin/LocaleListCache.h"
 #include "minikin/MeasuredText.h"
 
 // UTF-8 to UTF-16 conversion
@@ -223,7 +223,7 @@ public:
         
         // 构建 MeasuredText
         minikin::MeasuredTextBuilder builder;
-        builder.addStyleRun(0, text.size(), std::move(paint), false /* is RTL */);
+        builder.addStyleRun(0, text.size(), std::move(paint), true /* is RTL */);
         
         std::cout << "Building MeasuredText..." << std::endl;
         minikin::U16StringPiece textPiece(text.data(), text.size());
@@ -271,9 +271,14 @@ public:
         if (result.breakPoints.empty()) {
             std::cout << "  No break points found!" << std::endl;
         } else {
+            int32_t start = 0;
             for (size_t i = 0; i < result.breakPoints.size(); i++) {
+                int32_t end = result.breakPoints[i];
+                std::u16string lineText(reinterpret_cast<const char16_t*>(&text[start]), end - start);
+                std::string lineUtf8 = utf16ToUtf8(lineText);
                 std::cout << "  Line " << i << ": break at " << result.breakPoints[i] 
                           << ", width: " << result.widths[i] << std::endl;
+                start = end;
             }
         }
         return result;
@@ -479,17 +484,17 @@ int main() {
     
     // 测试文本 - 包含英文、阿拉伯语和波斯语
     std::string testTextUTF8 = 
-        "Hello World! السلام عليكم (Peace be upon you) مرحبا "
-        "This is a test with multiple languages including "
-        "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
-        "شكراً for testing. Thank you! متشکرم "
-        "Line breaking should work properly with complex scripts.";
+        "Hello World! السلام عليكم (Peace be upon you) مرحبا ";
+//        "This is a test with multiple languages including "
+//        "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
+//        "شكراً for testing. Thank you! متشکرم "
+  //      "Line breaking should work properly with complex scripts.";
     
     std::vector<uint16_t> text = utf8ToUtf16(testTextUTF8);
     std::cout << "Text length: " << text.size() << " characters" << std::endl;
     
     // 设置行宽
-    const float lineWidth = 760.0f;
+    const float lineWidth = 800.0f;
     std::cout << "\nTarget line width: " << lineWidth << " pixels" << std::endl;
     
     // 执行排版

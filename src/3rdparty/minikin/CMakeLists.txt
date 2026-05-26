@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(Minikin)
+project(minikin)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_library(Minikin SHARED)
-target_sources(Minikin
+add_library(minikin)
+target_sources(minikin
 	PRIVATE
         libs/minikin/BidiUtils.cpp
         libs/minikin/FontFamily.cpp
@@ -44,15 +44,15 @@ target_sources(Minikin
 		FILE_SET HEADERS
 		BASE_DIRS include
 )
-find_package(PkgConfig REQUIRED)
-pkg_check_modules(HARFBUZZ REQUIRED harfbuzz>=2.0)
-target_include_directories(Minikin
+#find_package(HarfBuzz REQUIRED)
+target_include_directories(minikin
 	PRIVATE
+        libs
 		${PROJECT_SOURCE_DIR}/include
         ${HARFBUZZ_INCLUDE_DIRS}
         BEFORE
 )
-target_link_libraries(Minikin
+target_link_libraries(minikin
 	PRIVATE
         ${HARFBUZZ_LIBRARIES}
 )
@@ -61,7 +61,7 @@ enable_testing()
 if(0)
 add_executable(test_ubrk test_ubrk.cpp)
 target_include_directories(test_ubrk PRIVATE ${PROJECT_SOURCE_DIR}/include)
-target_link_libraries(test_ubrk PRIVATE Minikin)
+target_link_libraries(test_ubrk PRIVATE minikin)
 
 add_test(NAME test_ubrk COMMAND test_ubrk)
 
@@ -73,8 +73,8 @@ add_test(NAME test_ubidi COMMAND test_ubidi)
 endif()
 
 add_executable(test_minikin_cairo test_minikin_cairo.cpp)
-target_include_directories(test_minikin_cairo PRIVATE ${PROJECT_SOURCE_DIR}/include /usr/include/freetype2 /usr/include/harfbuzz /usr/include/cairo)
-target_link_libraries(test_minikin_cairo PRIVATE Minikin freetype harfbuzz cairo)
+target_include_directories(test_minikin_cairo PRIVATE libs ${PROJECT_SOURCE_DIR}/include /usr/include/freetype2 /usr/include/harfbuzz /usr/include/cairo)
+target_link_libraries(test_minikin_cairo PRIVATE minikin freetype harfbuzz cairo)
 
 add_test(NAME test_minikin_cairo COMMAND test_minikin_cairo)
 
