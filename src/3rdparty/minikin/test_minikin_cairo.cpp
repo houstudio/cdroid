@@ -225,22 +225,15 @@ public:
         minikin::MeasuredTextBuilder builder;
         builder.addStyleRun(0, text.size(), std::move(paint), true /* is RTL */);
         
-        std::cout << "Building MeasuredText..." << std::endl;
         minikin::U16StringPiece textPiece(text.data(), text.size());
         auto measuredText = builder.build(textPiece, false /* compute hyphenation */, 
                                           false /* compute layout */,
                                           nullptr /* no hint */);
-        std::cout << "MeasuredText built successfully" << std::endl;
-        std::cout << "  MeasuredText runs: " << measuredText->runs.size() << std::endl;
-        std::cout << "  Text length: " << text.size() << std::endl;
-        std::cout << "  Widths size: " << measuredText->widths.size() << std::endl;
         if (measuredText->widths.size() > 0) {
             float totalWidth = 0;
             for (float w : measuredText->widths) {
                 totalWidth += w;
             }
-            std::cout << "  Total text width: " << totalWidth << " pixels" << std::endl;
-            std::cout << "  Target line width: " << maxWidth << " pixels" << std::endl;
         }
         
         // 设置断行参数
@@ -248,36 +241,26 @@ public:
         minikin::TabStops tabStops(nullptr, 0, 10);  // 使用 10 作为 tabWidth
         
         // 执行断行 - cdroidMaster 版本的 breakLineGreedy 只有 5 个参数
-        std::cout << "Performing line breaking..." << std::endl;
-        std::cout << "  Text length: " << textPiece.size() << std::endl;
-        std::cout << "  Max width: " << maxWidth << std::endl;
-        std::cout << "  First 20 characters: ";
-        uint32_t limit = textPiece.size() < 20 ? textPiece.size() : 20;
-        for (uint32_t i = 0; i < limit; i++) {
-            std::cout << static_cast<char>(textPiece.data()[i]) << " ";
-        }
         std::cout << std::endl;
         //breakLineGreedy breakLineOptimal
 #if 10
         auto result = minikin::breakLineGreedy(textPiece, *measuredText, lineWidth, tabStops,false /* enableHyphenation */);
 #else
         auto result = minikin::breakLineOptimal(textPiece, *measuredText, lineWidth,
-                minikin::BreakStrategy::HighQuality,/*Greedy HighQuality Balanced*/
+                minikin::BreakStrategy::Greedy,/*Greedy HighQuality Balanced*/
                 minikin::HyphenationFrequency::Normal/*None Mormal Full*/,false/*justified*/);
 #endif
-        std::cout << "Line breaking completed. Lines: " << result.breakPoints.size() << std::endl;
-        
         // 打印断行结果
         if (result.breakPoints.empty()) {
-            std::cout << "  No break points found!" << std::endl;
+            //std::cout << "  No break points found!" << std::endl;
         } else {
             int32_t start = 0;
             for (size_t i = 0; i < result.breakPoints.size(); i++) {
                 int32_t end = result.breakPoints[i];
                 std::u16string lineText(reinterpret_cast<const char16_t*>(&text[start]), end - start);
                 std::string lineUtf8 = utf16ToUtf8(lineText);
-                std::cout << "  Line " << i << ": break at " << result.breakPoints[i] 
-                          << ", width: " << result.widths[i] << std::endl;
+                //std::cout << "  Line " << i << ": break at " << result.breakPoints[i] 
+                //          << ", width: " << result.widths[i] << std::endl;
                 start = end;
             }
         }
@@ -511,8 +494,16 @@ int main() {
     std::cout << "\nTarget line width: " << lineWidth << " pixels" << std::endl;
     
     // 执行排版
+    auto startTime = std::chrono::high_resolution_clock::now();
     minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
+    for(int i=0;i<999;i++){
+        minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
+    }
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
     std::cout << "Number of lines: " << result.breakPoints.size() << std::endl;
+    std::cout << "performLayout took: " << duration.count() << " microseconds" << std::endl;
+
     if (result.breakPoints.size() > 0) {
         int32_t start = 0;
         for (size_t i = 0; i < result.breakPoints.size(); i++) {
