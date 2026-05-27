@@ -117,18 +117,15 @@ public:
             file.seekg(0);
             file.read(reinterpret_cast<char*>(mFontData.data()), mFontSize);
         }
-        
         FT_Init_FreeType(&mFtLibrary);
         FT_New_Face(mFtLibrary, fontPath.c_str(), 0, &mFtFace);
         mHbFont = hb_ft_font_create(mFtFace, nullptr);
     }
-    
     ~FullMinikinFont() {
         if (mHbFont) hb_font_destroy(mHbFont);
         if (mFtFace) FT_Done_Face(mFtFace);
         if (mFtLibrary) FT_Done_FreeType(mFtLibrary);
     }
-    
     float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint,
                                const minikin::FontFakery&) const override {
         FT_Set_Pixel_Sizes(mFtFace, 0, static_cast<int>(paint.size));
@@ -137,7 +134,6 @@ public:
         }
         return static_cast<float>(mFtFace->glyph->advance.x) / 64.0f;
     }
-    
     void GetBounds(minikin::MinikinRect* bounds, uint32_t glyph_id, 
                    const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
         FT_Set_Pixel_Sizes(mFtFace, 0, static_cast<int>(paint.size));
@@ -150,25 +146,21 @@ public:
         bounds->mRight = bounds->mLeft + static_cast<float>(mFtFace->glyph->metrics.width) / 64.0f;
         bounds->mBottom = bounds->mTop + static_cast<float>(mFtFace->glyph->metrics.height) / 64.0f;
     }
-    
     void GetFontExtent(minikin::MinikinExtent* extent, const minikin::MinikinPaint& paint,
                        const minikin::FontFakery&) const override {
         FT_Set_Pixel_Sizes(mFtFace, 0, static_cast<int>(paint.size));
         extent->ascent = static_cast<float>(mFtFace->size->metrics.ascender) / 64.0f;
         extent->descent = -static_cast<float>(mFtFace->size->metrics.descender) / 64.0f;
     }
-    
     // 实现纯虚函数 GetAxes()
     const std::vector<minikin::FontVariation>& GetAxes() const override {
         static const std::vector<minikin::FontVariation> emptyAxes;
         return emptyAxes;
     }
-    
     const std::string& GetFontPath() const { return mFontPath; }  // 移除 override
     const void* GetFontData() const override { return mFontData.data(); }
     size_t GetFontSize() const override { return mFontSize; }
     int GetFontIndex() const override { return 0; }
-    
     hb_font_t* getHbFont() const { return mHbFont; }
     FT_Face getFace() const { return mFtFace; }
     
@@ -185,15 +177,12 @@ private:
 class FixedLineWidth : public minikin::LineWidth {
 public:
     FixedLineWidth(float width) : mWidth(width) {}
-    
     float getAt(size_t /* lineNo */) const override {
         return mWidth;
     }
-    
     float getMin() const override {
         return mWidth;
     }
-    
 private:
     float mWidth;
 };
@@ -206,7 +195,6 @@ class MiniTypesetter {
 public:
     MiniTypesetter(std::shared_ptr<minikin::FontCollection> fontCollection, float fontSize)
         : mFontCollection(fontCollection), mFontSize(fontSize) {}
-    
     // 执行排版，返回断行结果
     minikin::LineBreakResult performLayout(const std::vector<uint16_t>& text, float maxWidth) {
         // 创建 MinikinPaint
@@ -220,62 +208,33 @@ public:
         paint.localeListId = minikin::LocaleListCache::getId("en-US");
         paint.fontStyle = minikin::FontStyle();
         paint.familyVariant = minikin::FamilyVariant::DEFAULT;
-        
         // 构建 MeasuredText
         minikin::MeasuredTextBuilder builder;
         builder.addStyleRun(0, text.size(), std::move(paint), true /* is RTL */);
-        
         minikin::U16StringPiece textPiece(text.data(), text.size());
         auto measuredText = builder.build(textPiece, false /* compute hyphenation */, 
                                           false /* compute layout */,
                                           nullptr /* no hint */);
-        if (measuredText->widths.size() > 0) {
-            float totalWidth = 0;
-            for (float w : measuredText->widths) {
-                totalWidth += w;
-            }
-        }
-        
+
         // 设置断行参数
         FixedLineWidth lineWidth(maxWidth);
-        minikin::TabStops tabStops(nullptr, 0, 10);  // 使用 10 作为 tabWidth
-        
-        // 执行断行 - cdroidMaster 版本的 breakLineGreedy 只有 5 个参数
-        std::cout << std::endl;
-        //breakLineGreedy breakLineOptimal
+        minikin::TabStops tabStops(nullptr, 0, 10);  // 使用 10 作为 tabWidth        
 #if 10
         auto result = minikin::breakLineGreedy(textPiece, *measuredText, lineWidth, tabStops,false /* enableHyphenation */);
 #else
         auto result = minikin::breakLineOptimal(textPiece, *measuredText, lineWidth,
-                minikin::BreakStrategy::Greedy,/*Greedy HighQuality Balanced*/
-                minikin::HyphenationFrequency::Normal/*None Mormal Full*/,false/*justified*/);
+                minikin::BreakStrategy::Balanced,/*Greedy HighQuality Balanced*/
+                minikin::HyphenationFrequency::Normal/*None Mormal Full*/,true/*justified*/);
 #endif
-        // 打印断行结果
-        if (result.breakPoints.empty()) {
-            //std::cout << "  No break points found!" << std::endl;
-        } else {
-            int32_t start = 0;
-            for (size_t i = 0; i < result.breakPoints.size(); i++) {
-                int32_t end = result.breakPoints[i];
-                std::u16string lineText(reinterpret_cast<const char16_t*>(&text[start]), end - start);
-                std::string lineUtf8 = utf16ToUtf8(lineText);
-                //std::cout << "  Line " << i << ": break at " << result.breakPoints[i] 
-                //          << ", width: " << result.widths[i] << std::endl;
-                start = end;
-            }
-        }
         return result;
     }
-    
     // 获取字体集合
     std::shared_ptr<minikin::FontCollection> getFontCollection() const {
         return mFontCollection;
     }
-    
     float getFontSize() const {
         return mFontSize;
     }
-    
 private:
     std::shared_ptr<minikin::FontCollection> mFontCollection;
     float mFontSize;
@@ -290,7 +249,6 @@ void renderToPng(const std::vector<uint16_t>& text,
     minikin::FakedFont baseFont = fontCollection->baseFontFaked(minikin::FontStyle());
     const minikin::Font* fontPtr = baseFont.font;
     const minikin::MinikinFont* minikinFontPtr = fontPtr->typeface().get();
-    
     // 从 gFontMap 获取 FullMinikinFont，然后获取 FT_Face
     FT_Face face = nullptr;
     auto it = gFontMap.find(minikinFontPtr);
@@ -298,12 +256,10 @@ void renderToPng(const std::vector<uint16_t>& text,
         face = it->second->getFace();
         FT_Set_Pixel_Sizes(face, 0, static_cast<int>(fontSize));
     }
-    
     // 使用 FT_Face 的真实 metrics
     float fontAscent, fontDescent;
     fontAscent = static_cast<float>(face->size->metrics.ascender) / 64.0f;
     fontDescent = -static_cast<float>(face->size->metrics.descender) / 64.0f;
-    
     // 计算图像尺寸
     float maxWidth = 0;
     for (float w : lineBreakResult.widths) {
@@ -312,23 +268,18 @@ void renderToPng(const std::vector<uint16_t>& text,
     float lineHeight = fontAscent + fontDescent + 8;
     int imgWidth = static_cast<int>(maxWidth) + 40;
     int imgHeight = static_cast<int>(lineHeight * lineBreakResult.breakPoints.size()) + 60;
-    
     // 创建 Cairo surface 和 context
     cairo_surface_t* surface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, imgWidth, imgHeight);
     cairo_t* cr = cairo_create(surface);
-    
     // 设置白色背景
     cairo_set_source_rgb(cr, 1.0, 1.0, 1.0);
     cairo_paint(cr);
-    
     // 绘制边界框
     cairo_set_source_rgba(cr, 0.8, 0.8, 0.8, 1.0);
     cairo_rectangle(cr, 19, 19, maxWidth + 2, imgHeight - 40);
     cairo_stroke(cr);
-    
     // 设置字体颜色为黑色
     cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-    
     // 创建 MinikinPaint 用于布局
     minikin::MinikinPaint paint(fontCollection);
     paint.size = fontSize;
@@ -336,11 +287,9 @@ void renderToPng(const std::vector<uint16_t>& text,
     paint.skewX = 0.0f;
     paint.letterSpacing = 0.0f;
     paint.wordSpacing = 0.0f;
-    
     // 渲染每一行
     float y = 20 + fontAscent;
     int prevBreak = 0;
-    
     for (size_t lineIdx = 0; lineIdx < lineBreakResult.breakPoints.size(); lineIdx++) {
         int end = lineBreakResult.breakPoints[lineIdx];
         int length = end - prevBreak;
@@ -351,7 +300,6 @@ void renderToPng(const std::vector<uint16_t>& text,
         }
         std::cout << "Line " << lineIdx << ": chars " << prevBreak << "-" << end 
                   << ", width: " << lineBreakResult.widths[lineIdx] << std::endl;
-        
         // 使用 minikin Layout 进行字形布局
         // cdroidMaster 版本的 Layout 构造函数使用 U16StringPiece
         minikin::U16StringPiece lineTextPiece(text.data() + prevBreak, length);
@@ -361,7 +309,6 @@ void renderToPng(const std::vector<uint16_t>& text,
                                minikin::EndHyphenEdit::NO_EDIT);
         
         std::cout << "  Glyphs count: " << layout.nGlyphs() << std::endl;
-        
         // 渲染字形
         float x = 20;
         const minikin::MinikinFont* currentFont = nullptr;
@@ -370,13 +317,11 @@ void renderToPng(const std::vector<uint16_t>& text,
         while(glyphIdx < layout.nGlyphs()) {
             // cdroidMaster 版本的 getFont() 返回 MinikinFont*
             const minikin::MinikinFont* glyphFont = layout.getFont(glyphIdx);
-            
             // 检查是否需要切换字体
             if (glyphFont != currentFont) {
                 if (currentCairoFontFace != nullptr) {
                     cairo_font_face_destroy(currentCairoFontFace);
                 }
-                
                 currentFont = glyphFont;
                 // 查找对应的 FullMinikinFont
                 auto it = gFontMap.find(glyphFont);
@@ -410,25 +355,18 @@ void renderToPng(const std::vector<uint16_t>& text,
             cairo_show_glyphs(cr, cairoGlyphs.data(), cairoGlyphs.size());
             x += glyphsWidth;
         }
-        
         if (currentCairoFontFace != nullptr) {
             cairo_font_face_destroy(currentCairoFontFace);
-        }
-        
+        } 
         prevBreak = end;
         y += lineHeight;
     }
-    
-    // 写入 PNG
     cairo_surface_write_to_png(surface, outputPath.c_str());
-    
-    // 清理资源
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
 }
 
-int minikinTest() {
-    // 查找可用字体
+int main() {
     const char* fontPaths[] = {
         "/home/houzh/.fonts/Alibaba_PuHuiTi_2.0_55_Regular_55_Regular.ttf",
         "/home/houzh/.fonts/yilang/HarmonyOS_Sans_SC_Regular.ttf",
@@ -443,12 +381,10 @@ int minikinTest() {
             availableFontPaths.push_back(fontPath);
         }
     }
-    
     if (availableFontPaths.empty()) {
         std::cerr << "Failed to find any font" << std::endl;
         return 1;
     }
-    
     std::cout << "Available fonts:" << std::endl;
     for (const auto& path : availableFontPaths) {
         std::cout << "  - " << path << std::endl;
@@ -462,23 +398,19 @@ int minikinTest() {
         auto font = minikin::Font::Builder(minikinFont).build();
         
         // 存储到全局字体映射
-        gFontMap[minikinFont.get()] = minikinFont;
-        
+        gFontMap[minikinFont.get()] = minikinFont;   
         std::vector<minikin::Font> fonts;
-        fonts.push_back(std::move(font));
-        
+        fonts.push_back(std::move(font));   
         // cdroidMaster 版本使用构造函数创建 FontFamily
         auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
         families.push_back(fontFamily);
-    }
-    
+    } 
     // cdroidMaster 版本使用构造函数创建 FontCollection
     auto fontCollection = std::make_shared<minikin::FontCollection>(families);
-    
     // 创建排版器
     const float fontSize = 32.0f;
     MiniTypesetter typesetter(fontCollection, fontSize);
-    
+
     // 测试文本 - 包含英文、阿拉伯语和波斯语
     std::string testTextUTF8 = 
         "Hello World! السلام عليكم (Peace be upon you) مرحبا "
@@ -488,7 +420,7 @@ int minikinTest() {
         "Line breaking should work properly with complex scripts."; 
     std::vector<uint16_t> text = utf8ToUtf16(testTextUTF8);
     std::cout << "Text length: " << text.size() << " characters" << std::endl;
-    
+
     // 设置行宽
     const float lineWidth = 800.0f;
     std::cout << "\nTarget line width: " << lineWidth << " pixels" << std::endl;
@@ -496,7 +428,7 @@ int minikinTest() {
     // 执行排版
     auto startTime = std::chrono::high_resolution_clock::now();
     minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
-    for(int i=0;i<999;i++){
+    for(int i=0;i<99;i++){
         minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
     }
     auto endTime = std::chrono::high_resolution_clock::now();
@@ -510,23 +442,17 @@ int minikinTest() {
             int32_t end = result.breakPoints[i];
             std::u16string lineText(reinterpret_cast<const char16_t*>(&text[start]), end - start);
             std::string lineUtf8 = utf16ToUtf8(lineText);
-            
-            std::cout << "  Line " << i << ": [" << lineUtf8 << "]"
-                      << ", break at " << end 
-                      << ", width: " << result.widths[i] << std::endl;
-            
+            std::cout << "  Line " << i << ": [" << lineUtf8 << "]" << ", break at "
+                << end << ", width: " << result.widths[i] << std::endl;
             start = end;
         }
     } else {
         std::cout << "  Warning: No line breaks found!" << std::endl;
     }
-    
     // 渲染到 PNG
-    renderToPng(text, result, fontCollection, fontSize, 
-                "minikin_cairo_output.png");
-    
-    std::cout << "\nPNG output saved to: /home/houzh/cdroidMaster/src/3rdparty/minikin/minikin_cairo_output.png" << std::endl;
-    std::cout << "Successfully demonstrated multi-line layout with specified width using Minikin!" << std::endl;
-    
+    renderToPng(text, result, fontCollection, fontSize, "minikin_cairo_output.png");
+
+    std::cout << "\nPNG output saved to: minikin_cairo_output.png" << std::endl;
+    std::cout << "Successfully demonstrated multi-line layout with specified width using Minikin!" << std::endl; 
     return 0;
 }

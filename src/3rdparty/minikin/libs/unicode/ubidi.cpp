@@ -3,7 +3,12 @@
 #include <cstdlib>
 #include <cstring>
 #include <algorithm>
+#include <fribidi.h>
+#include <vector>
 
+#ifndef U_INDEX_OUTOFBOUNDS_ERROR
+#define U_INDEX_OUTOFBOUNDS_ERROR U_ILLEGAL_ARGUMENT_ERROR
+#endif
 struct UBiDi {
     const UChar* text;
     int32_t length;
@@ -12,39 +17,36 @@ struct UBiDi {
     int32_t runCount;
     UBiDiClassCallback* callback;
     const void* callbackContext;
-    
-    // Additional fields for full bidi implementation
+
     UBiDiLevel* levels;
     int32_t* runs;
     int32_t* runLengths;
     UBiDiLevel* runLevels;
     int32_t levelsCapacity;
     int32_t runsCapacity;
-    
-    // Fields for advanced bidi features
+
     UBool isInverse;
     UBool orderParagraphsLTR;
     UBiDiReorderingMode reorderingMode;
     uint32_t reorderingOptions;
-    
-    // Context fields
+
     const UChar* prologue;
     int32_t proLength;
     const UChar* epilogue;
     int32_t epiLength;
-    
-    // Fields for controls handling (UBIDI_OPTION_INSERT_MARKS/REMOVE_CONTROLS)
+
     UChar* processedText;
     int32_t processedLength;
-    int32_t* originalIndices;  // Maps processed index to original index
-};
+    int32_t* originalIndices;
 
-static UCharDirection getCharDirection(UBiDi* pBiDi, UChar32 c) {
-    if (pBiDi != nullptr && pBiDi->callback != nullptr) {
-        return pBiDi->callback(pBiDi->callbackContext, c);
-    }
-    return u_charDirection(c);
-}
+    FriBidiCharType* fribidiTypes;
+    FriBidiLevel* fribidiLevels;
+    FriBidiChar* visualStr;
+    FriBidiStrIndex* positionsLtoV;
+    FriBidiStrIndex* positionsVtoL;
+    FriBidiJoiningType* joiningTypes;
+    FriBidiArabicProp* arabicProps;
+};
 
 static void freeLevelsAndRuns(UBiDi* pBiDi) {
     if (pBiDi->levels != nullptr) {
@@ -71,6 +73,26 @@ static void freeLevelsAndRuns(UBiDi* pBiDi) {
         free(pBiDi->originalIndices);
         pBiDi->originalIndices = nullptr;
     }
+    if (pBiDi->fribidiTypes != nullptr) {
+        free(pBiDi->fribidiTypes);
+        pBiDi->fribidiTypes = nullptr;
+    }
+    if (pBiDi->fribidiLevels != nullptr) {
+        free(pBiDi->fribidiLevels);
+        pBiDi->fribidiLevels = nullptr;
+    }
+    if (pBiDi->visualStr != nullptr) {
+        free(pBiDi->visualStr);
+        pBiDi->visualStr = nullptr;
+    }
+    if (pBiDi->positionsLtoV != nullptr) {
+        free(pBiDi->positionsLtoV);
+        pBiDi->positionsLtoV = nullptr;
+    }
+    if (pBiDi->positionsVtoL != nullptr) {
+        free(pBiDi->positionsVtoL);
+        pBiDi->positionsVtoL = nullptr;
+    }
     pBiDi->levelsCapacity = 0;
     pBiDi->runsCapacity = 0;
     pBiDi->processedLength = 0;
@@ -80,6 +102,13 @@ static void ensureLevelsCapacity(UBiDi* pBiDi, int32_t capacity) {
     if (pBiDi->levelsCapacity < capacity) {
         freeLevelsAndRuns(pBiDi);
         pBiDi->levels = (UBiDiLevel*)malloc(capacity * sizeof(UBiDiLevel));
+        pBiDi->fribidiLevels = (FriBidiLevel*)malloc(capacity * sizeof(FriBidiLevel));
+        pBiDi->fribidiTypes = (FriBidiCharType*)malloc(capacity * sizeof(FriBidiCharType));
+        pBiDi->visualStr = (FriBidiChar*)malloc(capacity * sizeof(FriBidiChar));
+        pBiDi->positionsLtoV = (FriBidiStrIndex*)malloc(capacity * sizeof(FriBidiStrIndex));
+        pBiDi->positionsVtoL = (FriBidiStrIndex*)malloc(capacity * sizeof(FriBidiStrIndex));
+        pBiDi->joiningTypes = (FriBidiJoiningType*)malloc(capacity * sizeof(FriBidiJoiningType));
+        pBiDi->arabicProps = (FriBidiArabicProp*)malloc(capacity * sizeof(FriBidiArabicProp));
         pBiDi->levelsCapacity = capacity;
     }
 }
@@ -112,23 +141,28 @@ U_CAPI UBiDi* U_EXPORT2 ubidi_open(void) {
         pBiDi->runLevels = nullptr;
         pBiDi->levelsCapacity = 0;
         pBiDi->runsCapacity = 0;
-        
-        // Initialize advanced bidi fields
+
         pBiDi->isInverse = false;
         pBiDi->orderParagraphsLTR = true;
         pBiDi->reorderingMode = UBIDI_REORDER_DEFAULT;
         pBiDi->reorderingOptions = UBIDI_OPTION_DEFAULT;
-        
-        // Initialize context fields
+
         pBiDi->prologue = nullptr;
         pBiDi->proLength = 0;
         pBiDi->epilogue = nullptr;
         pBiDi->epiLength = 0;
-        
-        // Initialize controls handling fields
+
         pBiDi->processedText = nullptr;
         pBiDi->processedLength = 0;
         pBiDi->originalIndices = nullptr;
+
+        pBiDi->fribidiTypes = nullptr;
+        pBiDi->fribidiLevels = nullptr;
+        pBiDi->visualStr = nullptr;
+        pBiDi->positionsLtoV = nullptr;
+        pBiDi->positionsVtoL = nullptr;
+        pBiDi->joiningTypes = nullptr;
+        pBiDi->arabicProps = nullptr;
     }
     return pBiDi;
 }
@@ -149,26 +183,8 @@ U_CAPI UBiDi* U_EXPORT2 ubidi_openSized(int32_t maxLength, int32_t maxRunCount, 
         *pErrorCode = U_MEMORY_ALLOCATION_ERROR;
         return nullptr;
     }
-    if (maxLength > 0) {
-        pBiDi->levels = (UBiDiLevel*)malloc(maxLength * sizeof(UBiDiLevel));
-        if (pBiDi->levels == nullptr) {
-            *pErrorCode = U_MEMORY_ALLOCATION_ERROR;
-            ubidi_close(pBiDi);
-            return nullptr;
-        }
-        pBiDi->levelsCapacity = maxLength;
-        if (maxRunCount > 0) {
-            pBiDi->runs = (int32_t*)malloc(maxRunCount * sizeof(int32_t));
-            pBiDi->runLengths = (int32_t*)malloc(maxRunCount * sizeof(int32_t));
-            pBiDi->runLevels = (UBiDiLevel*)malloc(maxRunCount * sizeof(UBiDiLevel));
-            if (pBiDi->runs == nullptr || pBiDi->runLengths == nullptr || pBiDi->runLevels == nullptr) {
-                *pErrorCode = U_MEMORY_ALLOCATION_ERROR;
-                ubidi_close(pBiDi);
-                return nullptr;
-            }
-            pBiDi->runsCapacity = maxRunCount;
-        }
-    }
+    ensureLevelsCapacity(pBiDi, maxLength);
+    ensureRunsCapacity(pBiDi, maxRunCount);
     return pBiDi;
 }
 
@@ -186,10 +202,7 @@ U_CAPI void U_EXPORT2 ubidi_setInverse(UBiDi* pBiDi, UBool isInverse) {
 }
 
 U_CAPI UBool U_EXPORT2 ubidi_isInverse(UBiDi* pBiDi) {
-    if (pBiDi == nullptr) {
-        return false;
-    }
-    return pBiDi->isInverse;
+    return pBiDi != nullptr ? pBiDi->isInverse : false;
 }
 
 U_CAPI void U_EXPORT2 ubidi_orderParagraphsLTR(UBiDi* pBiDi, UBool orderParagraphsLTR) {
@@ -199,10 +212,7 @@ U_CAPI void U_EXPORT2 ubidi_orderParagraphsLTR(UBiDi* pBiDi, UBool orderParagrap
 }
 
 U_CAPI UBool U_EXPORT2 ubidi_isOrderParagraphsLTR(UBiDi* pBiDi) {
-    if (pBiDi == nullptr) {
-        return true;
-    }
-    return pBiDi->orderParagraphsLTR;
+    return pBiDi != nullptr ? pBiDi->orderParagraphsLTR : true;
 }
 
 U_CAPI void U_EXPORT2 ubidi_setReorderingMode(UBiDi* pBiDi, UBiDiReorderingMode reorderingMode) {
@@ -212,10 +222,7 @@ U_CAPI void U_EXPORT2 ubidi_setReorderingMode(UBiDi* pBiDi, UBiDiReorderingMode 
 }
 
 U_CAPI UBiDiReorderingMode U_EXPORT2 ubidi_getReorderingMode(UBiDi* pBiDi) {
-    if (pBiDi == nullptr) {
-        return UBIDI_REORDER_DEFAULT;
-    }
-    return pBiDi->reorderingMode;
+    return pBiDi != nullptr ? pBiDi->reorderingMode : UBIDI_REORDER_DEFAULT;
 }
 
 U_CAPI void U_EXPORT2 ubidi_setReorderingOptions(UBiDi* pBiDi, uint32_t reorderingOptions) {
@@ -225,486 +232,24 @@ U_CAPI void U_EXPORT2 ubidi_setReorderingOptions(UBiDi* pBiDi, uint32_t reorderi
 }
 
 U_CAPI uint32_t U_EXPORT2 ubidi_getReorderingOptions(UBiDi* pBiDi) {
-    if (pBiDi == nullptr) {
-        return UBIDI_OPTION_DEFAULT;
-    }
-    return pBiDi->reorderingOptions;
+    return pBiDi != nullptr ? pBiDi->reorderingOptions : UBIDI_OPTION_DEFAULT;
 }
 
 U_CAPI void U_EXPORT2 ubidi_setContext(UBiDi* pBiDi,
                                        const UChar* prologue, int32_t proLength,
                                        const UChar* epilogue, int32_t epiLength,
                                        UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
     pBiDi->prologue = prologue;
     pBiDi->proLength = proLength;
     pBiDi->epilogue = epilogue;
     pBiDi->epiLength = epiLength;
-}
-
-static UBiDiLevel resolveParaLevel(UBiDi* pBiDi, UBiDiLevel paraLevel) {
-    if (paraLevel == UBIDI_DEFAULT_LTR || paraLevel == UBIDI_DEFAULT_RTL) {
-        bool hasRTL = false;
-        bool hasLTR = false;
-        
-        for (int32_t i = 0; i < pBiDi->length; i++) {
-            UChar32 c = pBiDi->text[i];
-            UCharDirection dir = getCharDirection(pBiDi, c);
-            
-            if (dir == U_RIGHT_TO_LEFT || dir == U_RIGHT_TO_LEFT_ARABIC) {
-                hasRTL = true;
-            } else if (dir == U_LEFT_TO_RIGHT) {
-                hasLTR = true;
-            }
-            
-            if (hasRTL && hasLTR) break;
-        }
-        
-        if (paraLevel == UBIDI_DEFAULT_RTL) {
-            return hasLTR && !hasRTL ? 0 : 1;
-        } else {
-            return hasRTL && !hasLTR ? 1 : 0;
-        }
-    }
-    return paraLevel;
-}
-
-// Check if a character is a Bidi control character
-static bool isBidiControl(UChar32 c) {
-    // Bidi controls: LRE (0x202A), RLE (0x202B), LRO (0x202D), RLO (0x202E), PDF (0x202C)
-    // Isolate controls: LRI (0x2066), RLI (0x2067), FSI (0x2068), PDI (0x2069)
-    // Arabic controls: ALM (0x061C)
-    switch (c) {
-        case 0x202A: // LRE
-        case 0x202B: // RLE
-        case 0x202C: // PDF
-        case 0x202D: // LRO
-        case 0x202E: // RLO
-        case 0x2066: // LRI
-        case 0x2067: // RLI
-        case 0x2068: // FSI
-        case 0x2069: // PDI
-        case 0x061C: // ALM
-            return true;
-        default:
-            return false;
-    }
-}
-
-// Process text according to reordering options
-// Handles UBIDI_OPTION_REMOVE_CONTROLS and UBIDI_OPTION_INSERT_MARKS
-static void processTextWithOptions(UBiDi* pBiDi) {
-    if (!(pBiDi->reorderingOptions & (UBIDI_OPTION_REMOVE_CONTROLS | UBIDI_OPTION_INSERT_MARKS))) {
-        // No processing needed
-        pBiDi->processedText = nullptr;
-        pBiDi->processedLength = pBiDi->length;
-        return;
-    }
-    
-    // Allocate processed text buffer (worst case: insert marks can add up to 2 per character)
-    int32_t maxLen = pBiDi->length * 3;
-    pBiDi->processedText = (UChar*)malloc(maxLen * sizeof(UChar));
-    pBiDi->originalIndices = (int32_t*)malloc(maxLen * sizeof(int32_t));
-    
-    int32_t outIdx = 0;
-    UBiDiLevel currentLevel = pBiDi->paraLevel;
-    
-    for (int32_t i = 0; i < pBiDi->length; i++) {
-        UChar32 c = pBiDi->text[i];
-        
-        if (pBiDi->reorderingOptions & UBIDI_OPTION_REMOVE_CONTROLS && isBidiControl(c)) {
-            // Skip bidi control characters
-            continue;
-        }
-        
-        // Insert directional marks if needed (UBIDI_OPTION_INSERT_MARKS)
-        if (pBiDi->reorderingOptions & UBIDI_OPTION_INSERT_MARKS) {
-            // Check if we need to insert a mark
-            // For simplicity, we insert LRM (0x200E) for LTR and RLM (0x200F) for RTL
-            UBiDiLevel charLevel = (currentLevel & 1) ? 1 : 0;
-            if (charLevel != (pBiDi->paraLevel & 1)) {
-                // Insert mark before this character
-                pBiDi->processedText[outIdx] = (charLevel == 0) ? 0x200E : 0x200F;
-                pBiDi->originalIndices[outIdx] = i;
-                outIdx++;
-            }
-        }
-        
-        pBiDi->processedText[outIdx] = c;
-        pBiDi->originalIndices[outIdx] = i;
-        outIdx++;
-        
-        // Update current level based on explicit controls (even if we're removing them)
-        UCharDirection dir = getCharDirection(pBiDi, c);
-        switch (dir) {
-            case U_LEFT_TO_RIGHT_EMBEDDING:
-                currentLevel = (currentLevel + 1) & ~1;
-                break;
-            case U_RIGHT_TO_LEFT_EMBEDDING:
-                currentLevel = (currentLevel + 1) | 1;
-                break;
-            case U_LEFT_TO_RIGHT_OVERRIDE:
-                currentLevel = (currentLevel & ~1) | 0;
-                break;
-            case U_RIGHT_TO_LEFT_OVERRIDE:
-                currentLevel = (currentLevel & ~1) | 1;
-                break;
-            case U_POP_DIRECTIONAL_FORMAT:
-                if (currentLevel > pBiDi->paraLevel) {
-                    currentLevel--;
-                }
-                break;
-            default:
-                break;
-        }
-    }
-    
-    pBiDi->processedLength = outIdx;
-}
-
-// Character type classification for Bidi algorithm
-static int8_t getBidiClass(UBiDi* pBiDi, UChar32 c) {
-    UCharDirection dir = getCharDirection(pBiDi, c);
-    switch (dir) {
-        case U_LEFT_TO_RIGHT: return 0;   // L
-        case U_RIGHT_TO_LEFT: return 1;   // R
-        case U_RIGHT_TO_LEFT_ARABIC: return 2;   // AL
-        case U_EUROPEAN_NUMBER: return 3;   // EN
-        case U_EUROPEAN_NUMBER_SEPARATOR: return 4;   // ES
-        case U_EUROPEAN_NUMBER_TERMINATOR: return 5;   // ET
-        case U_ARABIC_NUMBER: return 6;   // AN
-        case U_COMMON_NUMBER_SEPARATOR: return 7;   // CS
-        case U_SEGMENT_SEPARATOR: return 8;   // B
-        case U_WHITE_SPACE_NEUTRAL: return 9;   // WS
-        case U_OTHER_NEUTRAL: return 10;   // ON
-        case U_LEFT_TO_RIGHT_EMBEDDING: return 11;   // LRE
-        case U_LEFT_TO_RIGHT_OVERRIDE: return 12;   // LRO
-        case U_RIGHT_TO_LEFT_EMBEDDING: return 13;   // RLE
-        case U_RIGHT_TO_LEFT_OVERRIDE: return 14;   // RLO
-        case U_POP_DIRECTIONAL_FORMAT: return 15;   // PDF
-        case U_LEFT_TO_RIGHT_ISOLATE: return 16;   // LRI
-        case U_RIGHT_TO_LEFT_ISOLATE: return 17;   // RLI
-        case U_FIRST_STRONG_ISOLATE: return 18;   // FSI
-        case U_POP_DIRECTIONAL_ISOLATE: return 19;   // PDI
-        default: return 10;  // ON - Other Neutral
-    }
-}
-
-// Apply special number reordering mode (UBIDI_REORDER_NUMBERS_SPECIAL)
-// This mode groups numbers with surrounding text differently for Windows XP compatibility
-static void applySpecialNumberReordering(UBiDi* pBiDi, int8_t* types, int32_t len) {
-    // In special mode, EN (European numbers) are treated as weak L characters
-    // when surrounded by LTR text, but still form their own runs
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 3) { // EN
-            // Check if surrounded by L characters
-            bool leftIsL = (i > 0 && types[i-1] == 0);
-            bool rightIsL = (i < len - 1 && types[i+1] == 0);
-            
-            if (leftIsL && rightIsL) {
-                // EN between L characters - keep as EN but will be treated as LTR run
-            } else if (leftIsL || rightIsL) {
-                // EN adjacent to L but not surrounded - treat as L
-                types[i] = 0; // L
-            }
-        }
-    }
-}
-
-// Apply group numbers with R mode (UBIDI_REORDER_GROUP_NUMBERS_WITH_R)
-static void applyGroupNumbersWithR(UBiDi* pBiDi, int8_t* types, int32_t len) {
-    // Group EN and AN numbers with adjacent R characters
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 3 || types[i] == 6) { // EN or AN
-            // Check left
-            if (i > 0 && types[i-1] == 1) { // R
-                types[i] = 1; // R
-            }
-            // Check right
-            if (i < len - 1 && types[i+1] == 1) { // R
-                types[i] = 1; // R
-            }
-        }
-    }
-}
-
-static void computeEmbeddingLevels(UBiDi* pBiDi) {
-    // Use processed text if available (for UBIDI_OPTION_REMOVE_CONTROLS/INSERT_MARKS)
-    const UChar* srcText = (pBiDi->processedText != nullptr) ? pBiDi->processedText : pBiDi->text;
-    int32_t len = (pBiDi->processedText != nullptr) ? pBiDi->processedLength : pBiDi->length;
-    
-    ensureLevelsCapacity(pBiDi, len);
-    
-    UBiDiLevel paraLevel = pBiDi->paraLevel;
-    
-    // Step 1: Prepare an array of character types
-    int8_t* types = (int8_t*)malloc(len * sizeof(int8_t));
-    for (int32_t i = 0; i < len; i++) {
-        types[i] = getBidiClass(pBiDi, srcText[i]);
-    }
-    
-    // Step 2: Initialize embedding levels array
-    UBiDiLevel* levels = (UBiDiLevel*)malloc(len * sizeof(UBiDiLevel));
-    for (int32_t i = 0; i < len; i++) {
-        levels[i] = paraLevel;
-    }
-    
-    // Step X1-X10: Process explicit directional marks (LRE, RLE, LRO, RLO, PDF)
-    // Also handle LRI, RLI, FSI, PDI for isolation
-    UBiDiLevel currentLevel = paraLevel;
-    int32_t isolateCount = 0;
-    
-    for (int32_t i = 0; i < len; i++) {
-        switch (types[i]) {
-            case 11: // LRE - Left-to-Right Embedding
-                currentLevel = (currentLevel + 1) & ~1;
-                levels[i] = currentLevel;
-                break;
-            case 12: // LRO - Left-to-Right Override
-                currentLevel = (currentLevel & ~1) | 0;
-                levels[i] = currentLevel;
-                break;
-            case 13: // RLE - Right-to-Left Embedding
-                currentLevel = (currentLevel + 1) | 1;
-                levels[i] = currentLevel;
-                break;
-            case 14: // RLO - Right-to-Left Override
-                currentLevel = (currentLevel & ~1) | 1;
-                levels[i] = currentLevel;
-                break;
-            case 15: // PDF - Pop Directional Format
-                if (currentLevel > paraLevel) {
-                    currentLevel--;
-                }
-                levels[i] = currentLevel;
-                break;
-            case 16: // LRI - Left-to-Right Isolate
-                isolateCount++;
-                levels[i] = currentLevel;
-                currentLevel = (currentLevel + 1) & ~1;
-                break;
-            case 17: // RLI - Right-to-Left Isolate
-                isolateCount++;
-                levels[i] = currentLevel;
-                currentLevel = (currentLevel + 1) | 1;
-                break;
-            case 18: // FSI - First Strong Isolate
-                isolateCount++;
-                levels[i] = currentLevel;
-                // Will determine direction later based on first strong character
-                break;
-            case 19: // PDI - Pop Directional Isolate
-                if (isolateCount > 0 && currentLevel > paraLevel) {
-                    isolateCount--;
-                    currentLevel--;
-                }
-                levels[i] = currentLevel;
-                break;
-            default:
-                levels[i] = currentLevel;
-                break;
-        }
-    }
-    
-    // Apply reordering mode specific transformations before W rules
-    switch (pBiDi->reorderingMode) {
-        case UBIDI_REORDER_NUMBERS_SPECIAL:
-            applySpecialNumberReordering(pBiDi, types, len);
-            break;
-        case UBIDI_REORDER_GROUP_NUMBERS_WITH_R:
-            applyGroupNumbersWithR(pBiDi, types, len);
-            break;
-        case UBIDI_REORDER_INVERSE_NUMBERS_AS_L:
-            // Treat all numbers as L for inverse mode
-            for (int32_t i = 0; i < len; i++) {
-                if (types[i] == 3 || types[i] == 6) {
-                    types[i] = 0; // L
-                }
-            }
-            break;
-        default:
-            break;
-    }
-    
-    // Step W1: Examine each non-spacing mark (NSM). For each NSM, change its type
-    // to the type of the base character to which it applies.
-    
-    // Step W2: Search backward from each instance of a European number (EN)
-    // until a strong type (L, R, AL) is found. If an AL is found, change the
-    // type of the EN to Arabic number (AN).
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 3) { // EN
-            for (int32_t j = i - 1; j >= 0; j--) {
-                if (types[j] == 0) { // L
-                    break;
-                } else if (types[j] == 1 || types[j] == 2) { // R or AL
-                    types[i] = 6; // AN
-                    break;
-                }
-            }
-        }
-    }
-    
-    // Step W3: Change all ALs to R
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 2) { // AL
-            types[i] = 1; // R
-        }
-    }
-    
-    // Step W4: A single European separator between two European numbers
-    // changes to European number. A single common separator between two
-    // numbers of the same type changes to that type.
-    for (int32_t i = 1; i < len - 1; i++) {
-        if (types[i] == 4) { // ES
-            if (types[i-1] == 3 && types[i+1] == 3) { // EN on both sides
-                types[i] = 3; // EN
-            }
-        } else if (types[i] == 7) { // CS
-            if ((types[i-1] == 3 && types[i+1] == 3) || 
-                (types[i-1] == 6 && types[i+1] == 6)) { // Same number type on both sides
-                types[i] = types[i-1];
-            }
-        }
-    }
-    
-    // Step W5: A sequence of European terminators and/or separators
-    // adjacent to European numbers changes to all EN.
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 3) { // EN
-            // Look backward
-            int32_t j = i - 1;
-            while (j >= 0 && (types[j] == 4 || types[j] == 5)) { // ES or ET
-                types[j] = 3; // EN
-                j--;
-            }
-            // Look forward
-            j = i + 1;
-            while (j < len && (types[j] == 4 || types[j] == 5)) { // ES or ET
-                types[j] = 3; // EN
-                j++;
-            }
-        }
-    }
-    
-    // Step W6: If a European number is adjacent to an Arabic number,
-    // then the European number changes to Arabic number.
-    for (int32_t i = 0; i < len; i++) {
-        if (types[i] == 3) { // EN
-            if ((i > 0 && types[i-1] == 6) || (i < len - 1 && types[i+1] == 6)) {
-                types[i] = 6; // AN
-            }
-        }
-    }
-    
-    // Step W7: European numbers become L, Arabic numbers become R
-    UBiDiLevel* resolvedLevels = (UBiDiLevel*)malloc(len * sizeof(UBiDiLevel));
-    memcpy(resolvedLevels, levels, len * sizeof(UBiDiLevel));
-    
-    // Step N0: Handle neutrals at start/end
-    for (int32_t i = 0; i < len; i++) {
-        int8_t t = types[i];
-        if (t == 0 || t == 1) { // L or R
-            resolvedLevels[i] = (t == 0) ? (levels[i] & ~1) : (levels[i] | 1);
-        } else if (t == 3) { // EN -> L
-            resolvedLevels[i] = levels[i] & ~1;
-        } else if (t == 6) { // AN -> R
-            resolvedLevels[i] = levels[i] | 1;
-        }
-    }
-    
-    // Step N1-N3: Resolve neutral characters
-    for (int32_t i = 0; i < len; i++) {
-        int8_t t = types[i];
-        if (t == 8 || t == 9 || t == 10) { // B, WS, ON - neutral types
-            // Find nearest strong character to the left
-            int32_t left = -1;
-            for (int32_t j = i - 1; j >= 0; j--) {
-                if (types[j] == 0 || types[j] == 1 || types[j] == 3 || types[j] == 6) {
-                    left = j;
-                    break;
-                }
-            }
-            // Find nearest strong character to the right
-            int32_t right = -1;
-            for (int32_t j = i + 1; j < len; j++) {
-                if (types[j] == 0 || types[j] == 1 || types[j] == 3 || types[j] == 6) {
-                    right = j;
-                    break;
-                }
-            }
-            
-            if (left >= 0 && right >= 0) {
-                // Both sides have strong characters
-                if (types[left] == types[right]) {
-                    resolvedLevels[i] = resolvedLevels[left];
-                } else {
-                    // Different directions - use paragraph level
-                    resolvedLevels[i] = paraLevel;
-                }
-            } else if (left >= 0) {
-                resolvedLevels[i] = resolvedLevels[left];
-            } else if (right >= 0) {
-                resolvedLevels[i] = resolvedLevels[right];
-            } else {
-                // No strong characters anywhere - use paragraph level
-                resolvedLevels[i] = paraLevel;
-            }
-        }
-    }
-    
-    // Step I1-I2: Handle bidirectional mirrors and resolve opposite directional runs
-    // This is handled by the reordering logic, not level assignment
-    
-    // Apply context (prologue/epilogue) if enabled
-    if ((pBiDi->reorderingOptions & UBIDI_OPTION_STREAMING) && 
-        (pBiDi->proLength > 0 || pBiDi->epiLength > 0)) {
-        // In streaming mode, consider context for boundary resolution
-        // This is a simplified implementation
-        if (pBiDi->proLength > 0) {
-            // Use prologue to influence first character's level
-            UChar32 lastChar = pBiDi->prologue[pBiDi->proLength - 1];
-            int8_t lastType = getBidiClass(pBiDi, lastChar);
-            if (lastType == 0 || lastType == 1) {
-                resolvedLevels[0] = (lastType == 0) ? (resolvedLevels[0] & ~1) : (resolvedLevels[0] | 1);
-            }
-        }
-    }
-    
-    // Copy results back
-    memcpy(pBiDi->levels, resolvedLevels, len * sizeof(UBiDiLevel));
-    
-    free(types);
-    free(levels);
-    free(resolvedLevels);
-}
-
-static void detectRuns(UBiDi* pBiDi) {
-    if (pBiDi->length == 0) {
-        pBiDi->runCount = 0;
-        return;
-    }
-    
-    ensureRunsCapacity(pBiDi, pBiDi->length);
-    
-    pBiDi->runCount = 1;
-    pBiDi->runs[0] = 0;
-    pBiDi->runLengths[0] = 1;
-    pBiDi->runLevels[0] = pBiDi->levels[0];
-    
-    for (int32_t i = 1; i < pBiDi->length; i++) {
-        if (pBiDi->levels[i] != pBiDi->runLevels[pBiDi->runCount - 1]) {
-            pBiDi->runs[pBiDi->runCount] = i;
-            pBiDi->runLengths[pBiDi->runCount] = 1;
-            pBiDi->runLevels[pBiDi->runCount] = pBiDi->levels[i];
-            pBiDi->runCount++;
-        } else {
-            pBiDi->runLengths[pBiDi->runCount - 1]++;
-        }
-    }
 }
 
 U_CAPI void U_EXPORT2 ubidi_setPara(UBiDi* pBiDi, const UChar* text, int32_t length,
@@ -713,35 +258,80 @@ U_CAPI void U_EXPORT2 ubidi_setPara(UBiDi* pBiDi, const UChar* text, int32_t len
     if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
+
     pBiDi->text = text;
     pBiDi->length = length;
-    
+
     if (length == 0) {
         pBiDi->paraLevel = 0;
         pBiDi->direction = UBIDI_LTR;
         pBiDi->runCount = 0;
         return;
     }
-    
-    // Process text with options (remove controls, insert marks)
-    processTextWithOptions(pBiDi);
-    
-    pBiDi->paraLevel = resolveParaLevel(pBiDi, paraLevel);
-    pBiDi->direction = (pBiDi->paraLevel & 1) ? UBIDI_RTL : UBIDI_LTR;
-    
-    // Compute embedding levels
-    computeEmbeddingLevels(pBiDi);
-    
-    // Detect runs
-    detectRuns(pBiDi);
-    
-    // Copy levels to output if requested
+
+    ensureLevelsCapacity(pBiDi, length);
+    ensureRunsCapacity(pBiDi, length);
+
+    if (paraLevel == UBIDI_DEFAULT_LTR) {
+        pBiDi->paraLevel = 0;
+    } else if (paraLevel == UBIDI_DEFAULT_RTL) {
+        pBiDi->paraLevel = 1;
+    } else {
+        pBiDi->paraLevel = paraLevel;
+    }
+
+    FriBidiParType baseDir = (pBiDi->paraLevel & 1) ? FRIBIDI_PAR_RTL : FRIBIDI_PAR_LTR;
+
+    std::vector<FriBidiChar> utf32Text(length);
+    for (int32_t i = 0; i < length; i++) {
+        utf32Text[i] = text[i];
+    }
+
+    fribidi_get_bidi_types(utf32Text.data(), length, pBiDi->fribidiTypes);
+
+    FriBidiLevel maxLevel = fribidi_get_par_embedding_levels_ex(pBiDi->fribidiTypes, nullptr, length,
+                                                                 &baseDir, pBiDi->fribidiLevels);
+
+    pBiDi->paraLevel = (baseDir == FRIBIDI_PAR_RTL) ? 1 : 0;
+    pBiDi->direction = (baseDir == FRIBIDI_PAR_RTL) ? UBIDI_RTL : UBIDI_LTR;
+
+    for (int32_t i = 0; i < length; i++) {
+        pBiDi->levels[i] = pBiDi->fribidiLevels[i];
+    }
+
     if (embeddingLevels != nullptr && length > 0) {
         memcpy(embeddingLevels, pBiDi->levels, length * sizeof(UBiDiLevel));
     }
+
+    FriBidiStrIndex len = length;
     
-    // Update direction to MIXED if there are multiple runs with different directions
+    for (int32_t i = 0; i < length; i++) {
+        pBiDi->visualStr[i] = utf32Text[i];
+    }
+    
+    fribidi_log2vis(pBiDi->visualStr, len, &baseDir,
+                    pBiDi->visualStr, pBiDi->positionsLtoV, pBiDi->positionsVtoL,
+                    pBiDi->fribidiLevels);
+
+    pBiDi->runCount = 0;
+    FriBidiStrIndex pos = 0;
+    while (pos < len) {
+        FriBidiLevel runLevel = pBiDi->fribidiLevels[pos];
+        
+        int32_t runLength = 1;
+        while (pos + runLength < len && pBiDi->fribidiLevels[pos + runLength] == runLevel) {
+            runLength++;
+        }
+        
+        pBiDi->runs[pBiDi->runCount] = pos;
+        pBiDi->runLengths[pBiDi->runCount] = runLength;
+        pBiDi->runLevels[pBiDi->runCount] = runLevel;
+        pBiDi->runCount++;
+        pos += runLength;
+    }
+
+
+
     if (pBiDi->runCount > 1) {
         pBiDi->direction = UBIDI_MIXED;
     }
@@ -751,45 +341,51 @@ U_CAPI void U_EXPORT2 ubidi_setLine(const UBiDi* pParaBiDi,
                                     int32_t start, int32_t limit,
                                     UBiDi* pLineBiDi,
                                     UErrorCode* pErrorCode) {
-    if (pParaBiDi == nullptr || pLineBiDi == nullptr || 
+    if (pParaBiDi == nullptr || pLineBiDi == nullptr ||
         pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
+
     if (start < 0 || limit > pParaBiDi->length || start >= limit) {
         *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
-    
+
     pLineBiDi->text = pParaBiDi->text + start;
     pLineBiDi->length = limit - start;
     pLineBiDi->paraLevel = pParaBiDi->paraLevel;
-    
+
     ensureLevelsCapacity(pLineBiDi, pLineBiDi->length);
-    memcpy(pLineBiDi->levels, pParaBiDi->levels + start, 
+    memcpy(pLineBiDi->levels, pParaBiDi->levels + start,
            pLineBiDi->length * sizeof(UBiDiLevel));
-    
-    // Detect runs for this line
+    memcpy(pLineBiDi->fribidiLevels, pParaBiDi->fribidiLevels + start,
+           pLineBiDi->length * sizeof(FriBidiLevel));
+
     if (pLineBiDi->length > 0) {
         ensureRunsCapacity(pLineBiDi, pLineBiDi->length);
-        
+
         pLineBiDi->runCount = 1;
         pLineBiDi->runs[0] = 0;
         pLineBiDi->runLengths[0] = 1;
-        pLineBiDi->runLevels[0] = pLineBiDi->levels[0];
-        
+        pLineBiDi->runLevels[0] = pLineBiDi->fribidiLevels[0];
+
         for (int32_t i = 1; i < pLineBiDi->length; i++) {
-            if (pLineBiDi->levels[i] != pLineBiDi->runLevels[pLineBiDi->runCount - 1]) {
+            if (pLineBiDi->fribidiLevels[i] != pLineBiDi->runLevels[pLineBiDi->runCount - 1]) {
                 pLineBiDi->runs[pLineBiDi->runCount] = i;
                 pLineBiDi->runLengths[pLineBiDi->runCount] = 1;
-                pLineBiDi->runLevels[pLineBiDi->runCount] = pLineBiDi->levels[i];
+                pLineBiDi->runLevels[pLineBiDi->runCount] = pLineBiDi->fribidiLevels[i];
                 pLineBiDi->runCount++;
             } else {
                 pLineBiDi->runLengths[pLineBiDi->runCount - 1]++;
             }
         }
-        
-        pLineBiDi->direction = (pLineBiDi->runCount > 1) ? UBIDI_MIXED : 
+
+        FriBidiParType lineBaseDir = (pLineBiDi->paraLevel & 1) ? FRIBIDI_PAR_RTL : FRIBIDI_PAR_LTR;
+        fribidi_log2vis((const FriBidiChar*)pLineBiDi->text, pLineBiDi->length, &lineBaseDir,
+                        pLineBiDi->visualStr, pLineBiDi->positionsLtoV, pLineBiDi->positionsVtoL,
+                        pLineBiDi->fribidiLevels);
+
+        pLineBiDi->direction = (pLineBiDi->runCount > 1) ? UBIDI_MIXED :
                                ((pLineBiDi->paraLevel & 1) ? UBIDI_RTL : UBIDI_LTR);
     } else {
         pLineBiDi->runCount = 0;
@@ -804,156 +400,134 @@ U_CAPI UBiDiDirection U_EXPORT2 ubidi_getDirection(const UBiDi* pBiDi) {
 
 U_CAPI UBiDiDirection U_EXPORT2 ubidi_getBaseDirection(const UChar* text, int32_t length) {
     if (text == nullptr || length <= 0) return UBIDI_NEUTRAL;
-    
-    bool hasRTL = false;
-    bool hasLTR = false;
-    
-    for (int32_t i = 0; i < length; i++) {
-        UCharDirection dir = u_charDirection(text[i]);
-        if (dir == U_RIGHT_TO_LEFT || dir == U_RIGHT_TO_LEFT_ARABIC) {
-            hasRTL = true;
-        } else if (dir == U_LEFT_TO_RIGHT) {
-            hasLTR = true;
-        }
-        if (hasRTL && hasLTR) return UBIDI_MIXED;
+
+    FriBidiCharType* types = (FriBidiCharType*)malloc(length * sizeof(FriBidiCharType));
+    if (types == nullptr) return UBIDI_NEUTRAL;
+
+    fribidi_get_bidi_types((const FriBidiChar*)text, length, types);
+
+    FriBidiParType dir = fribidi_get_par_direction(types, length);
+    free(types);
+
+    switch (dir) {
+        case FRIBIDI_PAR_LTR: return UBIDI_LTR;
+        case FRIBIDI_PAR_RTL: return UBIDI_RTL;
+        default: return UBIDI_NEUTRAL;
     }
-    
-    if (hasRTL) return UBIDI_RTL;
-    if (hasLTR) return UBIDI_LTR;
-    return UBIDI_NEUTRAL;
 }
 
 U_CAPI const UChar* U_EXPORT2 ubidi_getText(const UBiDi* pBiDi) {
-    if (pBiDi == nullptr) return nullptr;
-    return pBiDi->text;
+    return pBiDi != nullptr ? pBiDi->text : nullptr;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getLength(const UBiDi* pBiDi) {
-    if (pBiDi == nullptr) return 0;
-    return pBiDi->length;
+    return pBiDi != nullptr ? pBiDi->length : 0;
 }
 
 U_CAPI UBiDiLevel U_EXPORT2 ubidi_getParaLevel(const UBiDi* pBiDi) {
-    if (pBiDi == nullptr) return 0;
-    return pBiDi->paraLevel;
+    return pBiDi != nullptr ? pBiDi->paraLevel : 0;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_countParagraphs(UBiDi* pBiDi) {
-    if (pBiDi == nullptr || pBiDi->length == 0) {
-        return 0;
-    }
-    
-    int32_t count = 1;
+    if (pBiDi == nullptr) return 0;
+
+    int32_t count = 0;
     for (int32_t i = 0; i < pBiDi->length; i++) {
-        UChar c = pBiDi->text[i];
-        if (c == 0x000A || c == 0x000D) {  // LF or CR
+        if (pBiDi->text[i] == 0x0A || pBiDi->text[i] == 0x0D) {
             count++;
-            // Skip CRLF
-            if (c == 0x000D && i + 1 < pBiDi->length && pBiDi->text[i + 1] == 0x000A) {
+            if (i + 1 < pBiDi->length && pBiDi->text[i] == 0x0D && pBiDi->text[i + 1] == 0x0A) {
                 i++;
             }
         }
     }
-    return count;
+    return count + 1;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getParagraph(const UBiDi* pBiDi, int32_t charIndex, int32_t* pParaStart,
-                                            int32_t* pParaLimit, UBiDiLevel* pParaLevel,
-                                            UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
-        if (pParaStart != nullptr) *pParaStart = UBIDI_MAP_NOWHERE;
-        if (pParaLimit != nullptr) *pParaLimit = UBIDI_MAP_NOWHERE;
-        if (pParaLevel != nullptr) *pParaLevel = 0;
+                                             int32_t* pParaEnd, UBiDiLevel* pParaLevel, UErrorCode* pErrorCode) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return -1;
     }
-    
-    if (charIndex < 0 || charIndex >= pBiDi->length) {
+    if (pBiDi == nullptr) {
         *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
-        if (pParaStart != nullptr) *pParaStart = UBIDI_MAP_NOWHERE;
-        if (pParaLimit != nullptr) *pParaLimit = UBIDI_MAP_NOWHERE;
-        if (pParaLevel != nullptr) *pParaLevel = 0;
         return -1;
     }
-    
+    if (charIndex < 0 || charIndex > pBiDi->length) {
+        *pErrorCode = U_INDEX_OUTOFBOUNDS_ERROR;
+        return -1;
+    }
+
+    int32_t paraStart = 0;
     int32_t paraIndex = 0;
-    int32_t start = 0;
-    
-    for (int32_t i = 0; i <= charIndex; i++) {
-        UChar c = pBiDi->text[i];
-        if (c == 0x000A || c == 0x000D) {
-            paraIndex++;
-            start = i + 1;
-            if (c == 0x000D && i + 1 < pBiDi->length && pBiDi->text[i + 1] == 0x000A) {
-                start++;
+    for (int32_t i = 0; i < pBiDi->length; i++) {
+        if (pBiDi->text[i] == 0x0A || pBiDi->text[i] == 0x0D) {
+            if (i >= charIndex) {
+                break;
+            }
+            paraStart = i + 1;
+            if (i + 1 < pBiDi->length && pBiDi->text[i] == 0x0D && pBiDi->text[i + 1] == 0x0A) {
+                paraStart++;
                 i++;
             }
+            paraIndex++;
         }
     }
-    
-    int32_t limit = pBiDi->length;
-    for (int32_t i = charIndex + 1; i < pBiDi->length; i++) {
-        UChar c = pBiDi->text[i];
-        if (c == 0x000A || c == 0x000D) {
-            limit = i;
+
+    int32_t paraEnd = pBiDi->length;
+    for (int32_t i = paraStart; i < pBiDi->length; i++) {
+        if (pBiDi->text[i] == 0x0A || pBiDi->text[i] == 0x0D) {
+            paraEnd = i;
             break;
         }
     }
-    
-    if (pParaStart != nullptr) *pParaStart = start;
-    if (pParaLimit != nullptr) *pParaLimit = limit;
+
+    if (pParaStart != nullptr) *pParaStart = paraStart;
+    if (pParaEnd != nullptr) *pParaEnd = paraEnd;
     if (pParaLevel != nullptr) *pParaLevel = pBiDi->paraLevel;
-    
+
     return paraIndex;
 }
 
 U_CAPI void U_EXPORT2 ubidi_getParagraphByIndex(const UBiDi* pBiDi, int32_t paraIndex,
-                                                int32_t* pParaStart, int32_t* pParaLimit,
-                                                UBiDiLevel* pParaLevel, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
-        if (pParaStart != nullptr) *pParaStart = UBIDI_MAP_NOWHERE;
-        if (pParaLimit != nullptr) *pParaLimit = UBIDI_MAP_NOWHERE;
-        if (pParaLevel != nullptr) *pParaLevel = 0;
+                                                 int32_t* pParaStart, int32_t* pParaEnd,
+                                                 UBiDiLevel* pParaLevel, UErrorCode* pErrorCode) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
-    if (paraIndex < 0) {
+    if (pBiDi == nullptr) {
         *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
-        if (pParaStart != nullptr) *pParaStart = UBIDI_MAP_NOWHERE;
-        if (pParaLimit != nullptr) *pParaLimit = UBIDI_MAP_NOWHERE;
-        if (pParaLevel != nullptr) *pParaLevel = 0;
         return;
     }
-    
+
+    int32_t paraCount = ubidi_countParagraphs((UBiDi*)pBiDi);
+    if (paraIndex < 0 || paraIndex >= paraCount) {
+        *pErrorCode = U_INDEX_OUTOFBOUNDS_ERROR;
+        return;
+    }
+
     int32_t currentPara = 0;
-    int32_t start = 0;
-    
+    int32_t paraStart = 0;
     for (int32_t i = 0; i < pBiDi->length; i++) {
-        UChar c = pBiDi->text[i];
-        if (c == 0x000A || c == 0x000D) {
+        if (pBiDi->text[i] == 0x0A || pBiDi->text[i] == 0x0D) {
             if (currentPara == paraIndex) {
-                if (pParaStart != nullptr) *pParaStart = start;
-                if (pParaLimit != nullptr) *pParaLimit = i;
+                if (pParaStart != nullptr) *pParaStart = paraStart;
+                if (pParaEnd != nullptr) *pParaEnd = i;
                 if (pParaLevel != nullptr) *pParaLevel = pBiDi->paraLevel;
                 return;
             }
             currentPara++;
-            start = i + 1;
-            if (c == 0x000D && i + 1 < pBiDi->length && pBiDi->text[i + 1] == 0x000A) {
-                start++;
+            paraStart = i + 1;
+            if (i + 1 < pBiDi->length && pBiDi->text[i] == 0x0D && pBiDi->text[i + 1] == 0x0A) {
+                paraStart++;
                 i++;
             }
         }
     }
-    
+
     if (currentPara == paraIndex) {
-        if (pParaStart != nullptr) *pParaStart = start;
-        if (pParaLimit != nullptr) *pParaLimit = pBiDi->length;
+        if (pParaStart != nullptr) *pParaStart = paraStart;
+        if (pParaEnd != nullptr) *pParaEnd = pBiDi->length;
         if (pParaLevel != nullptr) *pParaLevel = pBiDi->paraLevel;
-    } else {
-        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
-        if (pParaStart != nullptr) *pParaStart = UBIDI_MAP_NOWHERE;
-        if (pParaLimit != nullptr) *pParaLimit = UBIDI_MAP_NOWHERE;
-        if (pParaLevel != nullptr) *pParaLevel = 0;
     }
 }
 
@@ -961,51 +535,46 @@ U_CAPI UBiDiLevel U_EXPORT2 ubidi_getLevelAt(const UBiDi* pBiDi, int32_t charInd
     if (pBiDi == nullptr || charIndex < 0 || charIndex >= pBiDi->length) {
         return 0;
     }
-    if (pBiDi->levels == nullptr) {
-        return pBiDi->paraLevel;
-    }
     return pBiDi->levels[charIndex];
 }
 
 U_CAPI const UBiDiLevel* U_EXPORT2 ubidi_getLevels(UBiDi* pBiDi, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+        return nullptr;
+    }
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
         return nullptr;
     }
     return pBiDi->levels;
 }
 
 U_CAPI void U_EXPORT2 ubidi_getLogicalRun(const UBiDi* pBiDi, int32_t logicalPosition,
-                                          int32_t* pLogicalLimit, UBiDiLevel* pLevel) {
-    if (pBiDi == nullptr || logicalPosition < 0 || logicalPosition >= pBiDi->length) {
-        if (pLogicalLimit != nullptr) *pLogicalLimit = UBIDI_MAP_NOWHERE;
-        if (pLevel != nullptr) *pLevel = 0;
+                                           int32_t* pLogicalStart, int32_t* pLogicalLimit,
+                                           UBiDiLevel* pLevel) {
+    if (pBiDi == nullptr) {
         return;
     }
-    
-    UBiDiLevel level = pBiDi->levels != nullptr ? pBiDi->levels[logicalPosition] : pBiDi->paraLevel;
-    
-    // Find the start of this run
-    int32_t start = logicalPosition;
-    while (start > 0) {
-        UBiDiLevel prevLevel = pBiDi->levels != nullptr ? pBiDi->levels[start - 1] : pBiDi->paraLevel;
-        if (prevLevel != level) break;
-        start--;
+
+    for (int32_t i = 0; i < pBiDi->runCount; i++) {
+        int32_t runStart = pBiDi->runs[i];
+        int32_t runEnd = runStart + pBiDi->runLengths[i];
+
+        if (logicalPosition >= runStart && logicalPosition < runEnd) {
+            if (pLogicalStart != nullptr) *pLogicalStart = runStart;
+            if (pLogicalLimit != nullptr) *pLogicalLimit = runEnd;
+            if (pLevel != nullptr) *pLevel = pBiDi->runLevels[i];
+            return;
+        }
     }
-    
-    // Find the end of this run
-    int32_t limit = logicalPosition + 1;
-    while (limit < pBiDi->length) {
-        UBiDiLevel nextLevel = pBiDi->levels != nullptr ? pBiDi->levels[limit] : pBiDi->paraLevel;
-        if (nextLevel != level) break;
-        limit++;
-    }
-    
-    if (pLogicalLimit != nullptr) *pLogicalLimit = limit;
-    if (pLevel != nullptr) *pLevel = level;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_countRuns(UBiDi* pBiDi, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+        return -1;
+    }
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
         return -1;
     }
     return pBiDi->runCount;
@@ -1018,78 +587,18 @@ U_CAPI UBiDiDirection U_EXPORT2 ubidi_getVisualRun(UBiDi* pBiDi, int32_t runInde
         if (pLength != nullptr) *pLength = UBIDI_MAP_NOWHERE;
         return UBIDI_LTR;
     }
+
+    int32_t logicalStart = pBiDi->runs[runIndex];
+    int32_t length = pBiDi->runLengths[runIndex];
+    UBiDiLevel level = pBiDi->runLevels[runIndex];
     
-    // Find the run that is at position runIndex in visual order
-    // Visual order: sorted by (level, RTL before LTR at same level)
-    typedef struct {
-        int32_t index;
-        UBiDiLevel level;
-        bool isRtl;
-    } RunInfo;
-    
-    RunInfo sortedRuns[256];
-    int32_t count = pBiDi->runCount < 256 ? pBiDi->runCount : 256;
-    
-    for (int32_t i = 0; i < count; i++) {
-        sortedRuns[i].index = i;
-        sortedRuns[i].level = pBiDi->runLevels[i];
-        sortedRuns[i].isRtl = (pBiDi->runLevels[i] & 1) != 0;
-    }
-    
-    bool isRtlPara = (pBiDi->paraLevel & 1) != 0;
-    
-    // Bubble sort by visual order based on UAX #9 rules
-    // For LTR paragraph: runs are ordered by logical start position in visual order
-    // For RTL paragraph: runs are ordered by logical start position in reverse visual order
-    // The key insight: runs should be interleaved based on their logical start positions
-    // LTR runs appear left-to-right at their logical position
-    // RTL runs appear right-to-left at their logical position
-    for (int32_t i = 0; i < count - 1; i++) {
-        for (int32_t j = i + 1; j < count; j++) {
-            bool swap = false;
-            int32_t levelI = sortedRuns[i].level;
-            int32_t levelJ = sortedRuns[j].level;
-            int32_t startI = pBiDi->runs[sortedRuns[i].index];
-            int32_t startJ = pBiDi->runs[sortedRuns[j].index];
-            
-            // Calculate visual position for sorting
-            // For LTR paragraph, visual position = logical position
-            // For RTL paragraph, visual position is reversed
-            int32_t visualPosI, visualPosJ;
-            
-            if (isRtlPara) {
-                // RTL paragraph: visual position is reversed
-                visualPosI = pBiDi->length - (startI + pBiDi->runLengths[sortedRuns[i].index]);
-                visualPosJ = pBiDi->length - (startJ + pBiDi->runLengths[sortedRuns[j].index]);
-            } else {
-                // LTR paragraph: visual position = logical start
-                visualPosI = startI;
-                visualPosJ = startJ;
-            }
-            
-            // Sort by visual position
-            // Lower visual position comes first in both LTR and RTL paragraphs
-            if (visualPosJ < visualPosI) {
-                swap = true;
-            }
-            
-            if (swap) {
-                RunInfo temp = sortedRuns[i];
-                sortedRuns[i] = sortedRuns[j];
-                sortedRuns[j] = temp;
-            }
-        }
-    }
-    
-    // Return the run at visual position runIndex
-    int32_t visualRunIdx = sortedRuns[runIndex].index;
-    if (pLogicalStart != nullptr) *pLogicalStart = pBiDi->runs[visualRunIdx];
-    if (pLength != nullptr) *pLength = pBiDi->runLengths[visualRunIdx];
-    return sortedRuns[runIndex].isRtl ? UBIDI_RTL : UBIDI_LTR;
+    if (pLogicalStart != nullptr) *pLogicalStart = logicalStart;
+    if (pLength != nullptr) *pLength = length;
+    return (level & 1) ? UBIDI_RTL : UBIDI_LTR;
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getVisualIndex(UBiDi* pBiDi, int32_t logicalIndex, UErrorCode* pErrorCode) {
-    if (pErrorCode == nullptr) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return -1;
     }
     if (*pErrorCode > U_ZERO_ERROR) {
@@ -1100,121 +609,17 @@ U_CAPI int32_t U_EXPORT2 ubidi_getVisualIndex(UBiDi* pBiDi, int32_t logicalIndex
         return -1;
     }
     if (logicalIndex < 0 || logicalIndex >= pBiDi->length) {
-        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        *pErrorCode = U_INDEX_OUTOFBOUNDS_ERROR;
         return -1;
     }
-    
-    if (pBiDi->runCount <= 1) {
-        // Single run - just mirror if RTL
-        if (pBiDi->direction == UBIDI_RTL) {
-            return pBiDi->length - 1 - logicalIndex;
-        }
+    if (pBiDi->positionsLtoV == nullptr) {
         return logicalIndex;
     }
-    
-    // Find which run contains this logical index
-    int32_t runIdx = 0;
-    int32_t posInRun = 0;
-    int32_t logicalPos = 0;
-    
-    for (int32_t i = 0; i < pBiDi->runCount; i++) {
-        if (logicalIndex < logicalPos + pBiDi->runLengths[i]) {
-            runIdx = i;
-            posInRun = logicalIndex - logicalPos;
-            break;
-        }
-        logicalPos += pBiDi->runLengths[i];
-    }
-    
-    // Calculate visual position based on run order
-    int32_t visualPos = 0;
-    
-    // Create sorted runs array for visual order
-    int32_t sortedRuns[256];
-    int32_t count = pBiDi->runCount < 256 ? pBiDi->runCount : 256;
-    
-    for (int32_t i = 0; i < count; i++) {
-        sortedRuns[i] = i;
-    }
-    
-    bool isRtlPara = (pBiDi->paraLevel & 1) != 0;
-    
-    // Sort runs by visual order (same logic as ubidi_getVisualRun)
-    for (int32_t i = 0; i < count - 1; i++) {
-        for (int32_t j = i + 1; j < count; j++) {
-            bool swap = false;
-            int32_t levelI = pBiDi->runLevels[sortedRuns[i]];
-            int32_t levelJ = pBiDi->runLevels[sortedRuns[j]];
-            int32_t startI = pBiDi->runs[sortedRuns[i]];
-            int32_t startJ = pBiDi->runs[sortedRuns[j]];
-            
-            if (isRtlPara) {
-                // RTL paragraph: higher levels come first
-                if (levelJ > levelI) {
-                    swap = true;
-                } else if (levelJ == levelI) {
-                    // Same level: RTL runs ascending, LTR runs descending
-                    if ((levelJ & 1) != 0) {
-                        if (startJ < startI) {
-                            swap = true;
-                        }
-                    } else {
-                        if (startJ > startI) {
-                            swap = true;
-                        }
-                    }
-                }
-            } else {
-                // LTR paragraph: lower levels come first
-                if (levelJ < levelI) {
-                    swap = true;
-                } else if (levelJ == levelI) {
-                    // Same level: LTR runs ascending, RTL runs descending
-                    if ((levelJ & 1) == 0) {
-                        if (startJ < startI) {
-                            swap = true;
-                        }
-                    } else {
-                        if (startJ > startI) {
-                            swap = true;
-                        }
-                    }
-                }
-            }
-            if (swap) {
-                int32_t temp = sortedRuns[i];
-                sortedRuns[i] = sortedRuns[j];
-                sortedRuns[j] = temp;
-            }
-        }
-    }
-    
-    // Process runs in visual order
-    for (int32_t i = 0; i < count; i++) {
-        int32_t actualRunIdx = sortedRuns[i];
-        
-        if (actualRunIdx == runIdx) {
-            // This is our run
-            if (pBiDi->runLevels[actualRunIdx] & 1) {
-                // RTL run - position from end of run
-                visualPos += pBiDi->runLengths[actualRunIdx] - 1 - posInRun;
-            } else {
-                // LTR run - position from start of run
-                visualPos += posInRun;
-            }
-            return visualPos;
-        }
-        visualPos += pBiDi->runLengths[actualRunIdx];
-    }
-    
-    return -1;
+    return pBiDi->positionsLtoV[logicalIndex];
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getLogicalIndex(UBiDi* pBiDi, int32_t visualIndex, UErrorCode* pErrorCode) {
-    if (pErrorCode == nullptr) {
-        return -1;
-    }
-    if (*pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return -1;
     }
     if (pBiDi == nullptr) {
@@ -1222,226 +627,146 @@ U_CAPI int32_t U_EXPORT2 ubidi_getLogicalIndex(UBiDi* pBiDi, int32_t visualIndex
         return -1;
     }
     if (visualIndex < 0 || visualIndex >= pBiDi->length) {
-        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        *pErrorCode = U_INDEX_OUTOFBOUNDS_ERROR;
         return -1;
     }
-    
-    if (pBiDi->runCount <= 1) {
-        // Single run - just mirror if RTL
-        if (pBiDi->direction == UBIDI_RTL) {
-            return pBiDi->length - 1 - visualIndex;
-        }
+    if (pBiDi->positionsVtoL == nullptr) {
         return visualIndex;
     }
-    
-    // Find which run contains this visual index
-    int32_t runIdx = 0;
-    int32_t posInRun = 0;
-    int32_t visualPos = 0;
-    
-    // Create sorted runs array for visual order
-    int32_t sortedRuns[256];
-    int32_t count = pBiDi->runCount < 256 ? pBiDi->runCount : 256;
-    
-    for (int32_t i = 0; i < count; i++) {
-        sortedRuns[i] = i;
-    }
-    
-    bool isRtlPara = (pBiDi->paraLevel & 1) != 0;
-    
-    // Sort runs by visual order (same logic as ubidi_getVisualRun)
-    for (int32_t i = 0; i < count - 1; i++) {
-        for (int32_t j = i + 1; j < count; j++) {
-            bool swap = false;
-            int32_t levelI = pBiDi->runLevels[sortedRuns[i]];
-            int32_t levelJ = pBiDi->runLevels[sortedRuns[j]];
-            int32_t startI = pBiDi->runs[sortedRuns[i]];
-            int32_t startJ = pBiDi->runs[sortedRuns[j]];
-            
-            if (isRtlPara) {
-                // RTL paragraph: higher levels come first
-                if (levelJ > levelI) {
-                    swap = true;
-                } else if (levelJ == levelI) {
-                    // Same level: RTL runs ascending, LTR runs descending
-                    if ((levelJ & 1) != 0) {
-                        if (startJ < startI) {
-                            swap = true;
-                        }
-                    } else {
-                        if (startJ > startI) {
-                            swap = true;
-                        }
-                    }
-                }
-            } else {
-                // LTR paragraph: lower levels come first
-                if (levelJ < levelI) {
-                    swap = true;
-                } else if (levelJ == levelI) {
-                    // Same level: LTR runs ascending, RTL runs descending
-                    if ((levelJ & 1) == 0) {
-                        if (startJ < startI) {
-                            swap = true;
-                        }
-                    } else {
-                        if (startJ > startI) {
-                            swap = true;
-                        }
-                    }
-                }
-            }
-            if (swap) {
-                int32_t temp = sortedRuns[i];
-                sortedRuns[i] = sortedRuns[j];
-                sortedRuns[j] = temp;
-            }
-        }
-    }
-    
-    // Find run in visual order
-    for (int32_t i = 0; i < count; i++) {
-        int32_t actualRunIdx = sortedRuns[i];
-        
-        if (visualIndex < visualPos + pBiDi->runLengths[actualRunIdx]) {
-            runIdx = actualRunIdx;
-            posInRun = visualIndex - visualPos;
-            break;
-        }
-        visualPos += pBiDi->runLengths[actualRunIdx];
-    }
-    
-    // Convert to logical position
-    int32_t logicalPos = 0;
-    for (int32_t i = 0; i < runIdx; i++) {
-        logicalPos += pBiDi->runLengths[i];
-    }
-    
-    if (pBiDi->runLevels[runIdx] & 1) {
-        // RTL run - posInRun is from visual end
-        logicalPos += pBiDi->runLengths[runIdx] - 1 - posInRun;
-    } else {
-        // LTR run - posInRun is from visual start
-        logicalPos += posInRun;
-    }
-    
-    return logicalPos;
+    return pBiDi->positionsVtoL[visualIndex];
 }
 
 U_CAPI void U_EXPORT2 ubidi_getLogicalMap(UBiDi* pBiDi, int32_t* indexMap, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || indexMap == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
-    for (int32_t i = 0; i < pBiDi->length; i++) {
-        indexMap[i] = ubidi_getLogicalIndex(pBiDi, i, pErrorCode);
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
+    if (indexMap == nullptr) {
+        return;
+    }
+    if (pBiDi->positionsLtoV != nullptr) {
+        memcpy(indexMap, pBiDi->positionsLtoV, pBiDi->length * sizeof(int32_t));
+    } else {
+        for (int32_t i = 0; i < pBiDi->length; i++) {
+            indexMap[i] = i;
+        }
     }
 }
 
 U_CAPI void U_EXPORT2 ubidi_getVisualMap(UBiDi* pBiDi, int32_t* indexMap, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || indexMap == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
-    for (int32_t i = 0; i < pBiDi->length; i++) {
-        indexMap[i] = ubidi_getVisualIndex(pBiDi, i, pErrorCode);
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
+    if (indexMap == nullptr) {
+        return;
+    }
+    if (pBiDi->positionsVtoL != nullptr) {
+        memcpy(indexMap, pBiDi->positionsVtoL, pBiDi->length * sizeof(int32_t));
+    } else {
+        for (int32_t i = 0; i < pBiDi->length; i++) {
+            indexMap[i] = i;
+        }
     }
 }
 
 U_CAPI void U_EXPORT2 ubidi_reorderLogical(const UBiDiLevel* levels, int32_t length, int32_t* indexMap) {
-    if (levels == nullptr || length <= 0 || indexMap == nullptr) {
+    if (levels == nullptr || length <= 0) {
         return;
     }
-    
-    // Create array of indices
-    int32_t* indices = (int32_t*)malloc(length * sizeof(int32_t));
+
+    int32_t* tempMap = (int32_t*)malloc(length * sizeof(int32_t));
     for (int32_t i = 0; i < length; i++) {
-        indices[i] = i;
+        tempMap[i] = i;
     }
-    
-    // Sort by level, then by original position for even levels, or reverse for odd
-    std::sort(indices, indices + length, [levels](int32_t a, int32_t b) {
-        if (levels[a] != levels[b]) {
-            return levels[a] < levels[b];
+
+    for (int32_t i = 0; i < length - 1; i++) {
+        for (int32_t j = i + 1; j < length; j++) {
+            if (levels[tempMap[i]] > levels[tempMap[j]]) {
+                int32_t temp = tempMap[i];
+                tempMap[i] = tempMap[j];
+                tempMap[j] = temp;
+            }
         }
-        // Same level: even levels are LTR, odd are RTL
-        if (levels[a] & 1) {
-            return a > b;  // RTL: reverse order
-        }
-        return a < b;  // LTR: normal order
-    });
-    
-    // Create inverse map
-    for (int32_t i = 0; i < length; i++) {
-        indexMap[indices[i]] = i;
     }
-    
-    free(indices);
+
+    if (indexMap != nullptr) {
+        memcpy(indexMap, tempMap, length * sizeof(int32_t));
+    }
+    free(tempMap);
 }
 
 U_CAPI void U_EXPORT2 ubidi_reorderVisual(const UBiDiLevel* levels, int32_t length, int32_t* indexMap) {
-    if (levels == nullptr || length <= 0 || indexMap == nullptr) {
+    if (levels == nullptr || length <= 0) {
         return;
     }
-    
-    // Create array of indices
-    int32_t* indices = (int32_t*)malloc(length * sizeof(int32_t));
+
+    int32_t* tempMap = (int32_t*)malloc(length * sizeof(int32_t));
     for (int32_t i = 0; i < length; i++) {
-        indices[i] = i;
+        tempMap[i] = i;
     }
-    
-    // Sort by level, then by original position for even levels, or reverse for odd
-    std::sort(indices, indices + length, [levels](int32_t a, int32_t b) {
-        if (levels[a] != levels[b]) {
-            return levels[a] < levels[b];
+
+    for (int32_t i = 0; i < length - 1; i++) {
+        for (int32_t j = i + 1; j < length; j++) {
+            if (levels[tempMap[i]] > levels[tempMap[j]]) {
+                int32_t temp = tempMap[i];
+                tempMap[i] = tempMap[j];
+                tempMap[j] = temp;
+            }
         }
-        if (levels[a] & 1) {
-            return a > b;
-        }
-        return a < b;
-    });
-    
-    // Direct map: visual index -> logical index
+    }
+
+    int32_t* reverseMap = (int32_t*)malloc(length * sizeof(int32_t));
     for (int32_t i = 0; i < length; i++) {
-        indexMap[i] = indices[i];
+        reverseMap[tempMap[i]] = i;
     }
-    
-    free(indices);
+
+    if (indexMap != nullptr) {
+        memcpy(indexMap, reverseMap, length * sizeof(int32_t));
+    }
+    free(reverseMap);
+    free(tempMap);
 }
 
 U_CAPI void U_EXPORT2 ubidi_invertMap(const int32_t* srcMap, int32_t* destMap, int32_t length) {
     if (srcMap == nullptr || destMap == nullptr || length <= 0) {
         return;
     }
-    
     for (int32_t i = 0; i < length; i++) {
         destMap[srcMap[i]] = i;
     }
 }
 
 U_CAPI int32_t U_EXPORT2 ubidi_getProcessedLength(const UBiDi* pBiDi) {
-    if (pBiDi == nullptr) return 0;
-    return pBiDi->length;
+    return pBiDi != nullptr ? pBiDi->processedLength : 0;
 }
 
 U_CAPI UCharDirection U_EXPORT2 ubidi_getCustomizedClass(UBiDi* pBiDi, UChar32 c) {
-    if (pBiDi == nullptr) return u_charDirection(c);
-    if (pBiDi->callback != nullptr) {
+    if (pBiDi != nullptr && pBiDi->callback != nullptr) {
         return pBiDi->callback(pBiDi->callbackContext, c);
     }
-    return u_charDirection(c);
+    return U_OTHER_NEUTRAL;
 }
 
 U_CAPI void U_EXPORT2 ubidi_setClassCallback(UBiDi* pBiDi, UBiDiClassCallback* newFn,
-                                             const void* newContext, UBiDiClassCallback** oldFn,
-                                             const void** oldContext, UErrorCode* pErrorCode) {
-    if (pBiDi == nullptr || pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
+                                             const void* newContext,
+                                             UBiDiClassCallback** oldFn, const void** oldContext,
+                                             UErrorCode* pErrorCode) {
+    if (pErrorCode == nullptr || *pErrorCode > U_ZERO_ERROR) {
         return;
     }
-    
+    if (pBiDi == nullptr) {
+        *pErrorCode = U_ILLEGAL_ARGUMENT_ERROR;
+        return;
+    }
     if (oldFn != nullptr) *oldFn = pBiDi->callback;
     if (oldContext != nullptr) *oldContext = pBiDi->callbackContext;
-    
     pBiDi->callback = newFn;
     pBiDi->callbackContext = newContext;
 }
