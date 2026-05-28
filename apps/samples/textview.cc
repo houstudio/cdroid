@@ -110,6 +110,14 @@ TestString testStrings[]={
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
+   },
+   {
+       "Hello World! السلام عليكم (Peace be upon you) مرحبا ",
+      true,
+      Layout::ELLIPSIS_NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      LayoutParams::WRAP_CONTENT
    }
 };
 

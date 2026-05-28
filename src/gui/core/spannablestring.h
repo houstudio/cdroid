@@ -1,6 +1,6 @@
 #ifndef __SPANNABLE_STRING_H__
 #define __SPANNABLE_STRING_H__
-
+#include <core/predicate.h>
 #include <core/textutils.h>
 #include <algorithm>
 #include <string>
@@ -14,6 +14,7 @@ public:
     virtual ~CharSequence() = default;
     virtual size_t length()const{return 0;}
     virtual int charAt(int)const{return 0;}
+    virtual CharSequence*subSequence(int,int){return nullptr;}
     virtual std::string toString() const = 0;
     virtual std::wstring toWString() const = 0;
     // Copies characters from [start, end) into dest starting at destPos.
@@ -93,7 +94,7 @@ struct SpanInfo {
         return start == other.start && end == other.end && flags == other.flags && what == other.what;
     }
 };
-
+using SpanFilter=Predicate<const CharacterStyle*>;
 // Spanned: read-only span-aware CharSequence (similar to Android's Spanned)
 class Spanned : public CharSequence {
 public:
@@ -117,11 +118,11 @@ public:
     };
 public:
     virtual ~Spanned() = default;
-    virtual std::vector<SpanInfo> getSpans() const = 0;
+    virtual std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const = 0;
     virtual int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const = 0;
     virtual int getSpanEnd(const std::shared_ptr<CharacterStyle>& what) const = 0;
     virtual int getSpanFlags(const std::shared_ptr<CharacterStyle>& what) const = 0;
-    virtual int nextSpanTransition(int start, int limit, const std::type_info& kind) const = 0;
+    virtual int nextSpanTransition(int start, int limit, const SpanFilter& kind) const = 0;
 };
 
 // Spannable: mutable Spanned (supports setSpan/removeSpan)
@@ -146,7 +147,7 @@ public:
     }
 
     // SpannedString is immutable, so no setSpan here. Use SpannableStringBuilder
-    SpannedString* subSequence(int start, int end) {
+    SpannedString* subSequence(int start, int end) override{
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return new SpannedString();
@@ -174,7 +175,7 @@ public:
     int charAt(int idx)const override{
         return mText.at(idx);
     }
-    std::vector<SpanInfo> getSpans() const override {
+    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override {
         return mSpans;
     }
 
@@ -196,10 +197,10 @@ public:
         }
         return 0;
     }
-    int nextSpanTransition(int start, int limit, const std::type_info& kind) const override {
+    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
         int edge = limit;
         for (const SpanInfo& s : mSpans) {
-            if (typeid(*s.what) == kind || std::string(typeid(*s.what).name()).find(kind.name()) != std::string::npos) {
+            if (kind.test(s.what.get())) {
                 if (s.start > start && s.start < edge) edge = s.start;
                 if (s.end > start && s.end < edge) edge = s.end;
             }
@@ -233,7 +234,7 @@ public:
     std::string toString() const override { return TextUtils::unicode2utf8(mText); }
     size_t length() const { return mText.length(); }
 
-    std::vector<SpanInfo> getSpans() const override { return mSpans; }
+    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override { return mSpans; }
     int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const override {
         for (const SpanInfo& s : mSpans) if (s.what == what) return s.start;
         return -1;
@@ -246,10 +247,10 @@ public:
         for (const SpanInfo& s : mSpans) if (s.what == what) return s.flags;
         return 0;
     }
-    int nextSpanTransition(int start, int limit, const std::type_info& kind) const override {
+    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
         int edge = limit;
         for (const SpanInfo& s : mSpans) {
-            if (typeid(*s.what) == kind || std::string(typeid(*s.what).name()).find(kind.name()) != std::string::npos) {
+            if (kind.test(s.what.get())) {
                 if (s.start > start && s.start < edge) edge = s.start;
                 if (s.end > start && s.end < edge) edge = s.end;
             }
@@ -283,7 +284,7 @@ public:
     std::string toString() const override { return TextUtils::unicode2utf8(mText); }
     size_t length() const { return mText.length(); }
 
-    std::vector<SpanInfo> getSpans() const override { return mSpans; }
+    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override { return mSpans; }
     int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const override {
         for (const SpanInfo& s : mSpans) if (s.what == what) return s.start;
         return -1;
@@ -296,10 +297,10 @@ public:
         for (const SpanInfo& s : mSpans) if (s.what == what) return s.flags;
         return 0;
     }
-    int nextSpanTransition(int start, int limit, const std::type_info& kind) const override {
+    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
         int edge = limit;
         for (const SpanInfo& s : mSpans) {
-            if (typeid(*s.what) == kind || std::string(typeid(*s.what).name()).find(kind.name()) != std::string::npos) {
+            if (kind.test(s.what.get())) {
                 if (s.start > start && s.start < edge) edge = s.start;
                 if (s.end > start && s.end < edge) edge = s.end;
             }
