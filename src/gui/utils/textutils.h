@@ -24,6 +24,15 @@ namespace cdroid{
 
 class TextUtils{
 public:
+    enum TruncateAt {
+        NONE=-1,
+        START=0,
+        MIDDLE,
+        END,
+        MARQUEE,
+        END_SMALL
+    };
+public:
     static const char*UCSWCHAR();
     static const char*UCS16();
     static const std::string utf16_utf8(const unsigned short*utf16,int len);

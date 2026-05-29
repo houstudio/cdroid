@@ -2,13 +2,15 @@
 #define __SPANNABLE_STRING_H__
 #include <core/predicate.h>
 #include <core/textutils.h>
+#include <text/textpaint.h>
 #include <algorithm>
 #include <string>
 #include <vector>
 #include <memory>
 
 namespace cdroid {
-
+class Canvas;
+class TextLayout;
 class CharSequence {
 public:
     virtual ~CharSequence() = default;
@@ -19,14 +21,64 @@ public:
     virtual std::wstring toWString() const = 0;
     // Copies characters from [start, end) into dest starting at destPos.
     // If dest is shorter than destPos, it will be resized.
-    virtual void getChars(int start, int end, std::wstring& dest, int destPos) const = 0;
+    virtual void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const = 0;
 };
-
-class CharacterStyle{
+class ParcelableSpan {
+public:
+    virtual ~ParcelableSpan() = default;
+};
+class ParagraphStyle : public ParcelableSpan {
+public:
+    virtual ~ParagraphStyle() = default;
+};
+class CharacterStyle : public ParcelableSpan {
 public:
     virtual ~CharacterStyle() = default;
 };
+class MetricAffectingSpan:public CharacterStyle{
+};
+class ReplacementSpan : public MetricAffectingSpan {
 
+};
+class AlignmentSpan :public ParagraphStyle{
+protected:
+    int mAlignment;
+public:
+    int getAlignment()const{return mAlignment;}
+};
+class LineHeightSpan :public ParagraphStyle{
+public:
+    class WithDensity;
+    virtual void chooseHeight(CharSequence* text, int start, int end,
+            int spanstartv, int lineHeight,Paint::FontMetricsInt fm){}
+};
+class LineHeightSpan::WithDensity :public LineHeightSpan{
+public:
+    virtual void chooseHeight(CharSequence* text, int start, int end,
+                int spanstartv, int lineHeight,
+                Paint::FontMetricsInt fm, TextPaint* paint){};
+};
+
+class LineBackgroundSpan :public ParagraphStyle{
+public:
+    int getLineBackground()const{return 0;}
+    void drawBackground(Canvas&,Paint& paint, int left, int right, int top, int baseline,
+            int bottom, CharSequence* text, int start, int end, int lineNumber){};
+};
+class LeadingMarginSpan :public ParagraphStyle{
+public:
+    int getLeadingMargin(bool)const{return 0;};
+    void drawLeadingMargin(Canvas& c, Paint& p,int x, int dir, int top, int baseline, int bottom,
+            CharSequence* text, int start, int end, bool first, TextLayout* layout){}
+};
+class LeadingMarginSpan2:public LeadingMarginSpan{
+public:
+    int getLeadingMarginLineCount()const{return 0;}
+};
+class TabStopSpan :public ParagraphStyle {
+public:
+    int getTabStop()const{return 0;}
+};
 class ForegroundColorSpan : public CharacterStyle {
 public:
     explicit ForegroundColorSpan(int color) : mColor(color) {}
@@ -85,7 +137,7 @@ private:
 };
 
 struct SpanInfo {
-    std::shared_ptr<CharacterStyle> what;
+    ParcelableSpan* what;
     int start;
     int end;
     int flags;
@@ -94,7 +146,8 @@ struct SpanInfo {
         return start == other.start && end == other.end && flags == other.flags && what == other.what;
     }
 };
-using SpanFilter=Predicate<const CharacterStyle*>;
+using SpanFilter=Predicate<const ParcelableSpan*>;
+const auto ParagraphStyleFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParagraphStyle*>(span) != nullptr;});
 // Spanned: read-only span-aware CharSequence (similar to Android's Spanned)
 class Spanned : public CharSequence {
 public:
@@ -118,10 +171,10 @@ public:
     };
 public:
     virtual ~Spanned() = default;
-    virtual std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const = 0;
-    virtual int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const = 0;
-    virtual int getSpanEnd(const std::shared_ptr<CharacterStyle>& what) const = 0;
-    virtual int getSpanFlags(const std::shared_ptr<CharacterStyle>& what) const = 0;
+    virtual std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter&) const = 0;
+    virtual int getSpanStart(ParcelableSpan* what) const = 0;
+    virtual int getSpanEnd(ParcelableSpan* what) const = 0;
+    virtual int getSpanFlags(ParcelableSpan* what) const = 0;
     virtual int nextSpanTransition(int start, int limit, const SpanFilter& kind) const = 0;
 };
 
@@ -129,18 +182,99 @@ public:
 class Spannable : public Spanned {
 public:
     virtual ~Spannable() = default;
-    virtual void setSpan(const std::shared_ptr<CharacterStyle>& what, int start, int end, int flags) = 0;
-    virtual void removeSpan(const std::shared_ptr<CharacterStyle>& what) = 0;
+    virtual void setSpan(ParcelableSpan* what, int start, int end, int flags) = 0;
+    virtual void removeSpan(ParcelableSpan* what) = 0;
+};
+
+// Internal base class for SpannedString and SpannableString (similar to Android's SpannableStringInternal)
+class SpannableStringInternal : public Spanned {
+protected:
+    std::wstring mText;
+    std::vector<SpanInfo> mSpans;
+    SpannableStringInternal() = default;
+    explicit SpannableStringInternal(const std::wstring& text) : mText(text) {}
+    
+public:
+    virtual ~SpannableStringInternal() = default;
+    
+    std::wstring toWString() const override {
+        return mText;
+    }
+
+    std::string toString() const override {
+        return TextUtils::unicode2utf8(mText);
+    }
+
+    size_t length() const override {
+        return mText.length();
+    }
+    
+    int charAt(int idx) const override {
+        return mText.at(idx);
+    }
+    
+    std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override {
+        std::vector<ParcelableSpan*> result;
+        for (const SpanInfo& span : mSpans) {
+            if (span.start >= end || span.end <= start) continue;
+            if (filter.test(span.what)) {
+                result.push_back(span.what);
+            }
+        }
+        return result;
+    }
+
+    int getSpanStart(ParcelableSpan* what) const override {
+        for (const SpanInfo& s : mSpans) {
+            if (s.what == what) return s.start;
+        }
+        return -1;
+    }
+    
+    int getSpanEnd(ParcelableSpan* what) const override {
+        for (const SpanInfo& s : mSpans) {
+            if (s.what == what) return s.end;
+        }
+        return -1;
+    }
+    
+    int getSpanFlags(ParcelableSpan* what) const override {
+        for (const SpanInfo& s : mSpans) {
+            if (s.what == what) return s.flags;
+        }
+        return 0;
+    }
+    
+    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
+        int edge = limit;
+        for (const SpanInfo& s : mSpans) {
+            if (kind.test(s.what)) {
+                if (s.start > start && s.start < edge) edge = s.start;
+                if (s.end > start && s.end < edge) edge = s.end;
+            }
+        }
+        return edge;
+    }
+    
+    void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const override {
+        if (start < 0) start = 0;
+        if (end > (int)mText.length()) end = (int)mText.length();
+        if (start >= end) return;
+        std::wstring sub = mText.substr(start, end - start);
+        if (destPos < 0) destPos = 0;
+        if ((int)dest.size() < destPos) dest.resize(destPos);
+        dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
+    }
 };
 
 // Immutable SpannedString implementation
-class SpannedString : public Spanned {
+class SpannedString : public SpannableStringInternal {
 public:
     SpannedString() = default;
     explicit SpannedString(const std::string& text)
-        : mText(TextUtils::utf8tounicode(text)) {}
+        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
     explicit SpannedString(const std::wstring& text)
-        : mText(text) {}
+        : SpannableStringInternal(text) {}
 
     static SpannedString valueOf(const std::string& text) {
         return SpannedString(text);
@@ -151,7 +285,8 @@ public:
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return new SpannedString();
-        SpannedString* result = new SpannedString(mText.substr(start, end - start));
+        SpannedString* result = new SpannedString();
+        result->mText = mText.substr(start, end - start);
         for (const SpanInfo& span : mSpans) {
             if (span.end <= start || span.start >= end) continue;
             int spanStart = std::max(span.start, start) - start;
@@ -160,155 +295,37 @@ public:
         }
         return result;
     }
-
-    std::wstring toWString() const override {
-        return mText;
-    }
-
-    std::string toString() const override {
-        return TextUtils::unicode2utf8(mText);
-    }
-
-    size_t length() const override{
-        return mText.length();
-    }
-    int charAt(int idx)const override{
-        return mText.at(idx);
-    }
-    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override {
-        return mSpans;
-    }
-
-    int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.start;
-        }
-        return -1;
-    }
-    int getSpanEnd(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.end;
-        }
-        return -1;
-    }
-    int getSpanFlags(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.flags;
-        }
-        return 0;
-    }
-    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
-        int edge = limit;
-        for (const SpanInfo& s : mSpans) {
-            if (kind.test(s.what.get())) {
-                if (s.start > start && s.start < edge) edge = s.start;
-                if (s.end > start && s.end < edge) edge = s.end;
-            }
-        }
-        return edge;
-    }
-    void getChars(int start, int end, std::wstring& dest, int destPos) const override {
-        if (start < 0) start = 0;
-        if (end > (int)mText.length()) end = (int)mText.length();
-        if (start >= end) return;
-        std::wstring sub = mText.substr(start, end - start);
-        if (destPos < 0) destPos = 0;
-        if ((int)dest.length() < destPos) dest.resize(destPos);
-        dest.insert(destPos, sub);
-    }
-private:
-    std::wstring mText;
-    std::vector<SpanInfo> mSpans;
 };
 
 // Mutable SpannableString: immutable text with mutable spans, matching Android semantics.
-class SpannableString : public Spannable {
+class SpannableString : public SpannableStringInternal, public Spannable {
 public:
     SpannableString() = default;
     explicit SpannableString(const std::string& text)
-        : mText(TextUtils::utf8tounicode(text)) {}
+        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
     explicit SpannableString(const std::wstring& text)
-        : mText(text) {}
+        : SpannableStringInternal(text) {}
 
-    std::wstring toWString() const override { return mText; }
-    std::string toString() const override { return TextUtils::unicode2utf8(mText); }
-    size_t length() const { return mText.length(); }
-
-    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override { return mSpans; }
-    int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.start;
-        return -1;
-    }
-    int getSpanEnd(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.end;
-        return -1;
-    }
-    int getSpanFlags(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.flags;
-        return 0;
-    }
-    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
-        int edge = limit;
-        for (const SpanInfo& s : mSpans) {
-            if (kind.test(s.what.get())) {
-                if (s.start > start && s.start < edge) edge = s.start;
-                if (s.end > start && s.end < edge) edge = s.end;
-            }
-        }
-        return edge;
-    }
-
-    void setSpan(const std::shared_ptr<CharacterStyle>& what, int start, int end, int flags) override {
+    void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
         if (!what) return;
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
         mSpans.push_back(SpanInfo{what, start, end, flags});
     }
-    void removeSpan(const std::shared_ptr<CharacterStyle>& what) override {
+    void removeSpan(ParcelableSpan* what) override {
         mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
     }
-
-private:
-    std::wstring mText;
-    std::vector<SpanInfo> mSpans;
 };
 
 // Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
-class SpannableStringBuilder : public Spannable {
+class SpannableStringBuilder : public SpannableStringInternal, virtual public Spannable {
 public:
     SpannableStringBuilder() = default;
-    explicit SpannableStringBuilder(const std::string& text) : mText(TextUtils::utf8tounicode(text)) {}
+    explicit SpannableStringBuilder(const std::string& text)
+        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
 
-    std::wstring toWString() const override { return mText; }
-    std::string toString() const override { return TextUtils::unicode2utf8(mText); }
-    size_t length() const { return mText.length(); }
-
-    std::vector<SpanInfo> getSpans(int,int,const SpanFilter&) const override { return mSpans; }
-    int getSpanStart(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.start;
-        return -1;
-    }
-    int getSpanEnd(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.end;
-        return -1;
-    }
-    int getSpanFlags(const std::shared_ptr<CharacterStyle>& what) const override {
-        for (const SpanInfo& s : mSpans) if (s.what == what) return s.flags;
-        return 0;
-    }
-    int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
-        int edge = limit;
-        for (const SpanInfo& s : mSpans) {
-            if (kind.test(s.what.get())) {
-                if (s.start > start && s.start < edge) edge = s.start;
-                if (s.end > start && s.end < edge) edge = s.end;
-            }
-        }
-        return edge;
-    }
-
-    void setSpan(const std::shared_ptr<CharacterStyle>& what, int start, int end, int flags) override {
+    void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
         if (!what) return;
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
@@ -316,7 +333,7 @@ public:
         SpanInfo info{what, start, end, flags};
         mSpans.push_back(std::move(info));
     }
-    void removeSpan(const std::shared_ptr<CharacterStyle>& what) override {
+    void removeSpan(ParcelableSpan* what) override {
         mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
     }
 
@@ -356,13 +373,13 @@ public:
     }
 
     SpannableStringBuilder& append(const std::string& utf8) { mText += TextUtils::utf8tounicode(utf8); return *this; }
-    SpannableStringBuilder& append(const std::string& utf8, const std::shared_ptr<CharacterStyle>& what, int flags) {
+    SpannableStringBuilder& append(const std::string& utf8, ParcelableSpan* what, int flags) {
         int start = (int)mText.length();
         append(utf8);
         setSpan(what, start, (int)mText.length(), flags);
         return *this;
     }
-    SpannableStringBuilder& append(const std::string& utf8, const std::vector<std::shared_ptr<CharacterStyle>>& whats, int flags) {
+    SpannableStringBuilder& append(const std::string& utf8, const std::vector<ParcelableSpan*>& whats, int flags) {
         int start = (int)mText.length();
         append(utf8);
         int end = (int)mText.length();
@@ -376,10 +393,10 @@ public:
     SpannableStringBuilder& append(const CharSequence& text) {
         return append(text.toString());
     }
-    SpannableStringBuilder& append(const CharSequence& text, const std::shared_ptr<CharacterStyle>& what, int flags) {
+    SpannableStringBuilder& append(const CharSequence& text, ParcelableSpan* what, int flags) {
         return append(text.toString(), what, flags);
     }
-    SpannableStringBuilder& append(const CharSequence& text, const std::vector<std::shared_ptr<CharacterStyle>>& whats, int flags) {
+    SpannableStringBuilder& append(const CharSequence& text, const std::vector<ParcelableSpan*>& whats, int flags) {
         return append(text.toString(), whats, flags);
     }
     SpannableStringBuilder& append(const std::string& utf8, int start, int end) {
@@ -445,7 +462,7 @@ public:
         mSpans.clear();
         return *this;
     }
-    void setSpanForText(const std::string& targetUtf8, const std::shared_ptr<CharacterStyle>& what, int flags, bool firstOnly = true) {
+    void setSpanForText(const std::string& targetUtf8, ParcelableSpan* what, int flags, bool firstOnly = true) {
         if (!what) return;
         std::wstring target = TextUtils::utf8tounicode(targetUtf8);
         size_t pos = 0;
@@ -457,18 +474,15 @@ public:
             pos = found + 1;
         }
     }
-    void getChars(int start, int end, std::wstring& dest, int destPos) const override {
+    void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const override {
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
         std::wstring sub = mText.substr(start, end - start);
         if (destPos < 0) destPos = 0;
-        if ((int)dest.length() < destPos) dest.resize(destPos);
-        dest.insert(destPos, sub);
+        if ((int)dest.size() < destPos) dest.resize(destPos);
+        dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
     }
-private:
-    std::wstring mText;
-    std::vector<SpanInfo> mSpans;
 };
 
 }/*endof namespace*/
