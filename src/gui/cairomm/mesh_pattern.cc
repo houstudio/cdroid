@@ -14,6 +14,7 @@
  * License along with this library; if not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <cmath>
 #include <cairomm/mesh_pattern.h>
 #include <cairomm/private.h>
 

@@ -15,8 +15,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <porting/cdlog.h>
 #include <drawable/badgedrawable.h>
 #include <drawable/badgestate.h>
+
 namespace cdroid{
 BadgeState::BadgeState(Context* context,const std::string& badgeResId,const std::string& defStyleAttr,const std::string& defStyleRes,State* storedState) {
     currentState = new State();

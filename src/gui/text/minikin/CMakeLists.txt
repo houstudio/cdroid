@@ -37,7 +37,7 @@ PUBLIC
     BASE_DIRS include
 )
 
-if(NOT USE_ICU)
+if(TRUE OR NOT USE_ICU)
    target_sources(minikin PRIVATE
        libs/unicode/uchar.cpp
        libs/unicode/ubidi.cpp
@@ -52,13 +52,15 @@ if(NOT USE_ICU)
        ${PROJECT_SOURCE_DIR}/include/myicu
        ${HARFBUZZ_INCLUDE_DIRS}
        ${FRIBIDI_INCLUDE_DIRS}
+       ${CMAKE_BINARY_DIR}/include/gui
+       ${CMAKE_BINARY_DIR}/include/porting
        BEFORE
    )
    target_link_libraries(minikin PRIVATE ${HARFBUZZ_LIBRARIES} ${FRIBIDI_LIBRARIES})
 else()
     find_package(ICU COMPONENTS uc REQUIRED)
     target_include_directories(minikin PRIVATE
-        libs
+        ${PROJECT_DSOURCE_DIR}/libs
 		${PROJECT_SOURCE_DIR}/include
         ${HARFBUZZ_INCLUDE_DIRS}
         BEFORE

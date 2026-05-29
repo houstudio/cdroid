@@ -1,4 +1,6 @@
+#include <cstdint>
 #include <cmath>
+
 namespace cdroid{
 
 static void CalGaussianCoeff(float sigma, float *a0, float *a1, float *a2, float *a3, float *b1, float *b2,

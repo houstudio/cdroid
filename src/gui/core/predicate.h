@@ -25,7 +25,7 @@ class Predicate {
 private:
     std::function<bool(const T&)> func_;
 public:
-    Predicate(std::function<bool(const T&)> func) : func_(std::move(func)) {}
+    Predicate(std::function<bool(const T&)> func) : func_(func) {}
 
     Predicate() = default;
 

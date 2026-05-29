@@ -47,7 +47,7 @@ private:
     std::condition_variable mCV;
     std::string mFPSText;
     std::string mLogo;
-    GFXHANDLE mPrimarySurface;
+    void* mPrimarySurface;
     class Canvas*mPrimaryContext;
     GraphDevice();
     void trackFPS(Canvas&);
@@ -73,7 +73,7 @@ public:
     void composeSurfaces();
     bool needCompose()const;
     Canvas*getPrimaryContext();
-    GFXHANDLE getPrimarySurface()const;
+    void* getPrimarySurface()const;
 };
 }
 #endif

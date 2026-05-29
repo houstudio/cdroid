@@ -19,7 +19,7 @@
 #define ANDROID_UTILS_LRU_CACHE_H
 #include <memory>
 #include <unordered_set>
-#include "utils/TypeHelpers.h"  // hash_t
+#include "utils/HashTypeHelpers.h"  // hash_t
 namespace android {
 /**
  * GenerationCache callback used when an item is removed

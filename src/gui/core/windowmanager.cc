@@ -18,6 +18,7 @@
 
 #include <core/app.h>
 #include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <core/graphdevice.h>
 #include <core/windowmanager.h>
 #include <core/uieventsource.h>

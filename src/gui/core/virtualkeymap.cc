@@ -18,6 +18,8 @@
 #include <core/tokenizer.h>
 #include <core/virtualkeymap.h>
 #include <utils/errors.h>
+#include <porting/cdlog.h>
+
 namespace cdroid {
 
 VirtualKeyMap::VirtualKeyMap() {

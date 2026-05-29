@@ -3,16 +3,22 @@
 namespace cdroid{
 class LineBreaker {
 public:
-    static final int BREAK_STRATEGY_SIMPLE = 0;
-    static final int BREAK_STRATEGY_HIGH_QUALITY = 1;
-    static final int BREAK_STRATEGY_BALANCED = 2;
-    static final int HYPHENATION_FREQUENCY_NONE = 0;
-    static final int HYPHENATION_FREQUENCY_NORMAL = 1;
-    static final int HYPHENATION_FREQUENCY_FULL = 2;
-    static final int JUSTIFICATION_MODE_NONE = 0;
-    static final int JUSTIFICATION_MODE_INTER_WORD = 1;
+    enum BreakStrategy{
+        BREAK_STRATEGY_SIMPLE = 0,
+        BREAK_STRATEGY_HIGH_QUALITY = 1,
+        BREAK_STRATEGY_BALANCED = 2
+    };
+    enum HyphenationFrequency{
+        HYPHENATION_FREQUENCY_NONE = 0,
+        HYPHENATION_FREQUENCY_NORMAL = 1,
+        HYPHENATION_FREQUENCY_FULL = 2
+    };
+    enum JustficationMode{
+        JUSTIFICATION_MODE_NONE = 0,
+        JUSTIFICATION_MODE_INTER_WORD = 1
+    }
 public:
-    static final class Builder {
+    class Builder {
     private:
         int mBreakStrategy = BREAK_STRATEGY_SIMPLE;
         int mHyphenationFrequency = HYPHENATION_FREQUENCY_NONE;
@@ -92,18 +98,14 @@ public:
 
     class Result {
     private:
-        static final int TAB_MASK = 0x20000000;
-        static final int HYPHEN_MASK = 0xFF;
-        static final int START_HYPHEN_MASK = 0x18;  // 0b11000
-        static final int END_HYPHEN_MASK = 0x7;  // 0b00111
-        static final int START_HYPHEN_BITS_SHIFT = 3;
-
-        static final NativeAllocationRegistry sRegistry =
-                NativeAllocationRegistry.createMalloced(
-                Result.class.getClassLoader(), nGetReleaseResultFunc());
-        private final long mPtr;
-
-        private Result(long ptr) {
+        static constexpr int TAB_MASK = 0x20000000;
+        static constexpr int HYPHEN_MASK = 0xFF;
+        static constexpr int START_HYPHEN_MASK = 0x18;  // 0b11000
+        static constexpr int END_HYPHEN_MASK = 0x7;  // 0b00111
+        static constexpr int START_HYPHEN_BITS_SHIFT = 3;
+        void* mPtr;/*minikin's internal*/ 
+    public:
+        Result(long ptr) {
             mPtr = ptr;
             sRegistry.registerNativeAllocation(this, mPtr);
         }
@@ -140,14 +142,10 @@ public:
             return nGetLineFlag(mPtr, lineIndex) & END_HYPHEN_MASK;
         }
     };
-
-    private final long mNativePtr;
-
-    /**
-     * Use Builder instead.
-     */
-    private LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents);
-
+private:
+    void* mNativePtr;
+public:
+    LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents);
     Result computeLineBreaks( MeasuredText* measuredPara, ParagraphConstraints* constraints, int lineNumber);
 };
 }/*endof namespace*/

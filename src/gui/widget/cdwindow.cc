@@ -18,7 +18,8 @@
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <windowmanager.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <uieventsource.h>
 #include <systemclock.h>
 #include <fstream>

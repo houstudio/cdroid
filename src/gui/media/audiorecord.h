@@ -23,6 +23,7 @@
 #include <atomic>
 #include <mutex>
 #include <condition_variable>
+#include <gui_features.h>
 #if ENABLE(AUDIO)
 #include <rtaudio/RtAudio.h>
 #endif

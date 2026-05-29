@@ -1,11 +1,32 @@
 #include <memory>
 #include <text/staticlayout.h>
-#include <porting/cdlog.h>
+//#include <porting/cdlog.h>
+#include <minikin/LineBreaker.h>
 namespace cdroid{
 //public class StaticLayout extends Layout {
 const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
 const auto LineHeightSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const LineHeightSpan*>(span) != nullptr;});
 const auto LeadingMarginSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const LeadingMarginSpan*>(span) != nullptr;});
+
+class LineWidth :public minikin::LineWidth{
+private:
+    float mFirstWidth;
+    int mFirstWidthLineCount;
+    float mRestWidth;
+public:
+    LineWidth(float firstWidth, int firstWidthLineCount, float restWidth) {
+        mFirstWidth = firstWidth;
+        mFirstWidthLineCount = firstWidthLineCount;
+        mRestWidth = restWidth;
+    }
+    float getAt(size_t line) const override{
+            return (line < mFirstWidthLineCount) ? mFirstWidth : mRestWidth;
+    }
+    float getMin() const override {
+        return mRestWidth;
+    }
+};
+
 StaticLayout::Builder* StaticLayout::Builder::obtain(CharSequence* source, int start, int end, TextPaint* paint,int width) {
     Builder* b = sPool.acquire();
     if (b == nullptr) {
@@ -307,8 +328,6 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             .setIndents(indents)
             .build();
 
-    LineBreaker.ParagraphConstraints constraints = new LineBreaker.ParagraphConstraints();
-
     PrecomputedText.ParagraphInfo[] paragraphInfo = null;
     Spanned* spanned = dynamic_cast<Spanned*>(source);
     /*if (dynamic_cast<PrecomputedText*>(source)) {
@@ -404,13 +423,14 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
         auto chs = measuredPara.getChars();
         auto spanEndCache = measuredPara.getSpanEndCache().getRawArray();
         auto fmCache = measuredPara.getFontMetrics().getRawArray();
+        LineBreaker.ParagraphConstraints constraints = new LineBreaker.ParagraphConstraints();
 
         constraints.setWidth(restWidth);
         constraints.setIndent(firstWidth, firstWidthLineCount);
         constraints.setTabStops(variableTabStops, TAB_INCREMENT);
 
-        LineBreaker::Result res = lineBreaker.computeLineBreaks(
-                measuredPara.getMeasuredText(), constraints, mLineCount);
+        minikin::LineBreakResult result=minikin::breakLineOptimal(const int &textBuf, const int &measured, const int &lineWidthLimits, int strategy, int frequency, bool justified)
+        LineBreaker::Result res = lineBreaker.computeLineBreaks( measuredPara.getMeasuredText(), constraints, mLineCount);
         int breakCount = res.getLineCount();
         if (lineBreakCapacity < breakCount) {
             lineBreakCapacity = breakCount;
