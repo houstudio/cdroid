@@ -1,5 +1,6 @@
 #ifndef __TEXT_PAINT_H__
 #define __TEXT_PAINT_H__
+#include <vector>
 namespace cdroid{
 class Paint{
 public:

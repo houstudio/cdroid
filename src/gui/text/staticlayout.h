@@ -13,10 +13,10 @@ private:
     StaticLayout(CharSequence* text);
     
     int out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
-            int v, float spacingmult, float spacingadd, const std::vector<LineHeightSpan*>& chooseHt,
+            int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
             const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm, bool hasTab, int hyphenEdit,
             bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
-            bool addLastLineLineSpacing, char* chs, int widthStart, TextUtils::TruncateAt ellipsize,
+            bool addLastLineLineSpacing, const std::vector<char16_t>& chs, int widthStart, TextUtils::TruncateAt ellipsize,
             float ellipsisWidth, float textWidth, TextPaint* paint, bool moreChars);
 
     void calculateEllipsis(int lineStart, int lineEnd, MeasuredParagraph* measured, int widthStart, float avail,

@@ -1,6 +1,7 @@
 #include <memory>
+#include <text/linebreaker.h>
 #include <text/staticlayout.h>
-//#include <porting/cdlog.h>
+#include <porting/cdlog.h>
 #include <minikin/LineBreaker.h>
 namespace cdroid{
 //public class StaticLayout extends Layout {
@@ -320,13 +321,14 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
     }
     //minikin::LineBreakResult result = minikin::breakLineOptimal(source, bufStart, bufEnd, b.mBreakStrategy, paint, outerWidth, breaks, lineWidths, ascents, descents, hasTabs, hyphenEdits);
 
-    LineBreaker* lineBreaker = new LineBreaker::Builder()
+    LineBreaker* lineBreaker = new LineBreaker(b.mBreakStrategy,b.mHyphenationFrequency,b.mJustificationMode,indents);
+        /*new LineBreaker::Builder()
             .setBreakStrategy(b.mBreakStrategy)
             .setHyphenationFrequency(b.mHyphenationFrequency)
             // TODO: Support more justification mode, e.g. letter spacing, stretching.
             .setJustificationMode(b.mJustificationMode)
             .setIndents(indents)
-            .build();
+            .build();*/
 
     PrecomputedText.ParagraphInfo[] paragraphInfo = null;
     Spanned* spanned = dynamic_cast<Spanned*>(source);
@@ -420,17 +422,16 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             }
         }
         MeasuredParagraph* measuredPara = paragraphInfo[paraIndex].measured;
-        auto chs = measuredPara.getChars();
-        auto spanEndCache = measuredPara.getSpanEndCache().getRawArray();
-        auto fmCache = measuredPara.getFontMetrics().getRawArray();
-        LineBreaker.ParagraphConstraints constraints = new LineBreaker.ParagraphConstraints();
+        std::vector<char16_t>chs = measuredPara->getChars();
+        auto spanEndCache = measuredPara->getSpanEndCache();
+        auto fmCache = measuredPara->getFontMetrics();
+        LineBreaker::ParagraphConstraints constraints;// = new LineBreaker.ParagraphConstraints();
 
         constraints.setWidth(restWidth);
         constraints.setIndent(firstWidth, firstWidthLineCount);
         constraints.setTabStops(variableTabStops, TAB_INCREMENT);
 
-        minikin::LineBreakResult result=minikin::breakLineOptimal(const int &textBuf, const int &measured, const int &lineWidthLimits, int strategy, int frequency, bool justified)
-        LineBreaker::Result res = lineBreaker.computeLineBreaks( measuredPara.getMeasuredText(), constraints, mLineCount);
+        LineBreaker::Result res = lineBreaker->computeLineBreaks( measuredPara->getMeasuredText(), constraints, mLineCount);
         int breakCount = res.getLineCount();
         if (lineBreakCapacity < breakCount) {
             lineBreakCapacity = breakCount;
@@ -467,7 +468,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
                     width += lineWidths[i];
                 } else {
                     for (int j = (i == 0 ? 0 : breaks[i - 1]); j < breaks[i]; j++) {
-                        width += measuredPara.getCharWidthAt(j);
+                        width += measuredPara->getCharWidthAt(j);
                     }
                 }
                 hasTab |= hasTabs[i];
@@ -526,7 +527,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
 
                 v = out(source, here, endPos,
                         ascent, descent, fmTop, fmBottom,
-                        v, spacingmult, spacingadd, chooseHt, chooseHtv, fm,
+                        v, spacingmult, spacingadd, chooseHt, &chooseHtv, fm,
                         hasTabs[breakIndex], hyphenEdits[breakIndex], needMultiply,
                         measuredPara, bufEnd, includepad, trackpad, addLastLineSpacing, chs,
                         paraStart, ellipsize, ellipsizedWidth, lineWidths[breakIndex],
@@ -556,20 +557,20 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             && mLineCount < mMaximumVisibleLineCount) {
         MeasuredParagraph* measuredPara =
                 MeasuredParagraph::buildForBidi(source, bufEnd, bufEnd, textDir, nullptr);
-        paint.getFontMetricsInt(fm);
+        paint->getFontMetricsInt(fm);
         v = out(source, bufEnd, bufEnd, fm.ascent, fm.descent,
                 fm.top, fm.bottom, v, spacingmult, spacingadd, {},
                 nullptr, fm, false, 0, needMultiply, measuredPara, bufEnd,
-                includepad, trackpad, addLastLineSpacing, nullptr,
+                includepad, trackpad, addLastLineSpacing, {},
                 bufStart, ellipsize, ellipsizedWidth, 0, paint, false);
     }
 }
 
 int StaticLayout::out(CharSequence* text, int start, int end, int above, int below,
         int top, int bottom, int v, float spacingmult, float spacingadd,
-        const std::vector<LineHeightSpan*>* chooseHt, const std::vector<int>& chooseHtv, Paint::FontMetricsInt& fm,
+        const std::vector<ParcelableSpan*>* chooseHt, const std::vector<int>& chooseHtv, Paint::FontMetricsInt& fm,
         bool hasTab, int hyphenEdit, bool needMultiply, MeasuredParagraph* measured,
-        int bufEnd, bool includePad, bool trackPad, bool addLastLineLineSpacing, char* chs,
+        int bufEnd, bool includePad, bool trackPad, bool addLastLineLineSpacing,const std::vector<char16_t>& chs,
         int widthStart, TextUtils::TruncateAt ellipsize, float ellipsisWidth,
         float textWidth, TextPaint* paint, bool moreChars) {
     const int j = mLineCount;

@@ -1,5 +1,13 @@
 #ifndef __CDROID_LINE_BREAKER_H__
 #define __CDROID_LINE_BREAKER_H__
+#include <vector>
+#include <text/measuredtext.h>
+#include <text/linebreakconfig.h>
+namespace minikin{
+    class LineBreakResult;
+    class StaticLayoutNative;
+}
+
 namespace cdroid{
 class LineBreaker {
 public:
@@ -16,41 +24,8 @@ public:
     enum JustficationMode{
         JUSTIFICATION_MODE_NONE = 0,
         JUSTIFICATION_MODE_INTER_WORD = 1
-    }
-public:
-    class Builder {
-    private:
-        int mBreakStrategy = BREAK_STRATEGY_SIMPLE;
-        int mHyphenationFrequency = HYPHENATION_FREQUENCY_NONE;
-        int mJustificationMode = JUSTIFICATION_MODE_NONE;
-        std::vector<int> mIndents;
-    public:
-        Builder& setBreakStrategy(int breakStrategy) {
-            mBreakStrategy = breakStrategy;
-            return *this;
-        }
-
-        Builder& setHyphenationFrequency(int hyphenationFrequency) {
-            mHyphenationFrequency = hyphenationFrequency;
-            return *this;
-        }
-
-        Builder& setJustificationMode(int justificationMode) {
-            mJustificationMode = justificationMode;
-            return *this;
-        }
-
-        Builder& setIndents(const std::vector<int>& indents) {
-            mIndents = indents;
-            return *this;
-        }
-
-        LineBreaker* build() {
-            return new LineBreaker(mBreakStrategy, mHyphenationFrequency, mJustificationMode,
-                    mIndents);
-        }
     };
-
+public:
     class ParagraphConstraints {
     private:
         float mWidth = 0;
@@ -70,7 +45,7 @@ public:
             mFirstWidthLineCount = firstWidthLineCount;
         }
 
-        void setTabStops(const std::vector<float> tabStops,float defaultTabStop) {
+        void setTabStops(const std::vector<float>& tabStops,float defaultTabStop) {
             mVariableTabStops = tabStops;
             mDefaultTabStop = defaultTabStop;
         }
@@ -98,55 +73,30 @@ public:
 
     class Result {
     private:
+        friend LineBreaker;
         static constexpr int TAB_MASK = 0x20000000;
         static constexpr int HYPHEN_MASK = 0xFF;
         static constexpr int START_HYPHEN_MASK = 0x18;  // 0b11000
         static constexpr int END_HYPHEN_MASK = 0x7;  // 0b00111
         static constexpr int START_HYPHEN_BITS_SHIFT = 3;
-        void* mPtr;/*minikin's internal*/ 
+        minikin::LineBreakResult* mPtr;/*minikin's internal*/ 
+        Result(minikin::LineBreakResult*p):mPtr(p){};
     public:
-        Result(long ptr) {
-            mPtr = ptr;
-            sRegistry.registerNativeAllocation(this, mPtr);
-        }
+        int getLineCount() const;
+        int getLineBreakOffset( int lineIndex)const;
 
-        int getLineCount() const{
-            return nGetLineCount(mPtr);
-        }
-
-        int getLineBreakOffset( int lineIndex) {
-            return nGetLineBreakOffset(mPtr, lineIndex);
-        }
-
-        float getLineWidth(int lineIndex) const{
-            return nGetLineWidth(mPtr, lineIndex);
-        }
-
-        float getLineAscent(int lineIndex) const{
-            return nGetLineAscent(mPtr, lineIndex);
-        }
-
-        float getLineDescent(int lineIndex) const{
-            return nGetLineDescent(mPtr, lineIndex);
-        }
-
-        bool hasLineTab(int lineIndex) const{
-            return (nGetLineFlag(mPtr, lineIndex) & TAB_MASK) != 0;
-        }
-
-        int getStartLineHyphenEdit(int lineIndex) {
-            return (nGetLineFlag(mPtr, lineIndex) & START_HYPHEN_MASK) >> START_HYPHEN_BITS_SHIFT;
-        }
-
-        int getEndLineHyphenEdit(int lineIndex) {
-            return nGetLineFlag(mPtr, lineIndex) & END_HYPHEN_MASK;
-        }
+        float getLineWidth(int lineIndex) const;
+        float getLineAscent(int lineIndex) const;
+        float getLineDescent(int lineIndex) const;
+        bool hasLineTab(int lineIndex) const;
+        int getStartLineHyphenEdit(int lineIndex)const;
+        int getEndLineHyphenEdit(int lineIndex)const;
     };
 private:
-    void* mNativePtr;
+    minikin::StaticLayoutNative*mNativePtr;
 public:
     LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents);
-    Result computeLineBreaks( MeasuredText* measuredPara, ParagraphConstraints* constraints, int lineNumber);
+    Result computeLineBreaks( MeasuredText* measuredPara, const ParagraphConstraints& constraints, int lineNumber);
 };
 }/*endof namespace*/
 #endif/*__CDROID_LINE_BREAKER_H__*/

@@ -1,3 +1,6 @@
+#include <functional>
+#include <core/spannablestring.h>
+#include <view/view.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
 using TextDirectionAlgorithm =std::function<int(CharSequence*,int,int)>;// checkRtl(CharSequence* cs, int start, int count);
@@ -180,11 +183,11 @@ namespace{
         return AnyStrong_checkRtl(cs,start,count,true);
     };
 
-    const TextDirectionHeuristicInternal TDH_LTR(nullptr /* no algorithm */, false);
-    const TextDirectionHeuristicInternal TDH_RTL(nullptr /* no algorithm */, true);
-    const TextDirectionHeuristicInternal TDH_FIRSTSTRONG_LTR(FIRSTSTRONG_INSTANCE,false);
-    const TextDirectionHeuristicInternal TDH_FIRSTSTRONG_RTL(FIRSTSTRONG_INSTANCE,true);
-    const TextDirectionHeuristicInternal TDH_ANYRTL_LTR(ANYSTRONG_RTL,false);
+    const TextDirectionHeuristicInternal TDH_LTR{nullptr /* no algorithm */, false};
+    const TextDirectionHeuristicInternal TDH_RTL{nullptr /* no algorithm */, true};
+    const TextDirectionHeuristicInternal TDH_FIRSTSTRONG_LTR{FIRSTSTRONG_INSTANCE,false};
+    const TextDirectionHeuristicInternal TDH_FIRSTSTRONG_RTL{FIRSTSTRONG_INSTANCE,true};
+    const TextDirectionHeuristicInternal TDH_ANYRTL_LTR{ANYSTRONG_RTL,false};
     const TextDirectionHeuristicLocale   TDH_LOCALE;
 }
 const TextDirectionHeuristic*const TextDirectionHeuristics::LTR=&TDH_LTR;

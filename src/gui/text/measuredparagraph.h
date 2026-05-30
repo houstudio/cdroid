@@ -96,7 +96,7 @@ public:
             MeasuredParagraph* hint, MeasuredParagraph* recycle);
 
     int breakText(int limit, bool forwards, float width);
-    float measure(int start, int limit);
+    float measure(int start, int limit)const;
 
     int getMemoryUsage() const;
 };

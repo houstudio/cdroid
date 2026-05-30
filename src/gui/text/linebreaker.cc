@@ -1,52 +1,68 @@
-#ifndef __CDROID_LINE_BREAKER_H__
-#define __CDROID_LINE_BREAKER_H__
+#include <text/linebreaker.h>
+#include <minikin/androidlinebreakerhelper.h>
 namespace cdroid{
 
 LineBreaker::LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents) {
-    mNativePtr = nInit(breakStrategy, hyphenationFrequency,
-            justify == JUSTIFICATION_MODE_INTER_WORD, indents);
+    std::vector<float>fIndents;
+    for(auto i:indents)fIndents.push_back(i);
+    
+    mNativePtr = new minikin::StaticLayoutNative(
+            static_cast<minikin::BreakStrategy>(breakStrategy),
+            static_cast<minikin::HyphenationFrequency>(hyphenationFrequency),
+            justify, std::move(fIndents));
 }
 
-Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
-        ParagraphConstraints* constraints,int lineNumber) {
-    return new Result(nComputeLineBreaks(
-            mNativePtr,
-            // Inputs
-            measuredPara.getChars(),
-            measuredPara.getNativePtr(),
-            measuredPara.getChars().length,
-            constraints.mFirstWidth,
-            constraints.mFirstWidthLineCount,
-            constraints.mWidth,
-            constraints.mVariableTabStops,
-            constraints.mDefaultTabStop,
-            lineNumber));
+LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
+        const ParagraphConstraints& constraints, int lineNumber) {
+    const minikin::StaticLayoutNative* builder = mNativePtr;
+    minikin::U16StringPiece u16Text;//(text.get(), length);
+    minikin::MeasuredText*mt;
+    minikin::LineBreakResult result=builder->computeBreaks(
+                u16Text, *(minikin::MeasuredText*)measuredPara->getNativePtr(),
+                constraints.getFirstWidth(),
+                constraints.getFirstWidthLineCount(),
+                constraints.getWidth(),0,//restWidth,indentsOffset,
+                (float*)constraints.getTabStops().data(),
+                constraints.getTabStops().size(),
+                constraints.getDefaultTabStop()
+                );
+    return Result(new minikin::LineBreakResult(std::move(result)));
 }
 
-    private static native long nInit(int breakStrategy,int hyphenationFrequency, bool isJustified,const std::vector<int>& indents);
 
-    private static native long nGetReleaseFunc();
+////////////////////////////////////////////////////////////////////////////////////////
 
-    private static native long nComputeLineBreaks(
-            long nativePtr,
-            // Inputs
-            char16_t[] text,
-            /* Non Zero */ long measuredTextPtr,
-            int length,
-            float firstWidth,
-            int firstWidthLineCount,
-            float restWidth,
-            const std::vector<float>& variableTabStops,
-            float defaultTabStop,
-            int indentsOffset);
+int LineBreaker::Result::getLineCount() const{
+    return mPtr->breakPoints.size();
+}
 
-    // Result accessors
-    int nGetLineCount(long ptr);
-    int nGetLineBreakOffset(long ptr, int idx);
-    float nGetLineWidth(long ptr, int idx);
-    float nGetLineAscent(long ptr, int idx);
-    float nGetLineDescent(long ptr, int idx);
-    int nGetLineFlag(long ptr, int idx);
-    long nGetReleaseResultFunc();
-};
+int LineBreaker::Result::getLineBreakOffset( int lineIndex) const{
+    return mPtr->breakPoints[lineIndex];
+}
 
+float LineBreaker::Result::getLineWidth(int lineIndex) const{
+    return mPtr->widths[lineIndex];
+}
+
+float LineBreaker::Result::getLineAscent(int lineIndex) const{
+    return mPtr->ascents[lineIndex];
+}
+
+float LineBreaker::Result::getLineDescent(int lineIndex) const{
+    return mPtr->descents[lineIndex];
+}
+
+bool LineBreaker::Result::hasLineTab(int lineIndex) const{
+    return (mPtr->flags[lineIndex] & TAB_MASK) != 0;
+}
+
+int LineBreaker::Result::getStartLineHyphenEdit(int lineIndex) const{
+    return (mPtr->flags[lineIndex] & START_HYPHEN_MASK) >> START_HYPHEN_BITS_SHIFT;
+}
+
+int LineBreaker::Result::getEndLineHyphenEdit(int lineIndex) const{
+    return (mPtr->flags[lineIndex]) & END_HYPHEN_MASK;
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+}/*endof namespace*/
