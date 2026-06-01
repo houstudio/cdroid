@@ -93,7 +93,7 @@ public:
         int getEndLineHyphenEdit(int lineIndex)const;
     };
 private:
-    minikin::StaticLayoutNative*mNativePtr;
+    minikin::StaticLayoutNative* mNativePtr;
 public:
     LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents);
     Result computeLineBreaks( MeasuredText* measuredPara, const ParagraphConstraints& constraints, int lineNumber);

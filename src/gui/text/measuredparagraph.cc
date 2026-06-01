@@ -1,11 +1,14 @@
 #include <text/measuredparagraph.h>
 #include <text/measuredtext.h>
 #include <text/layout.h>
+#include <text/androidbidi.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
 //public class MeasuredParagraph {
 //private static final char OBJECT_REPLACEMENT_CHARACTER = '\uFFFC';
-
+const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
+const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
+const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
 
 Pools::SynchronizedPool<MeasuredParagraph> MeasuredParagraph::sPool(1);// = new SynchronizedPool<>(1);
 
@@ -21,10 +24,10 @@ void MeasuredParagraph::recycle() {
 
 void  MeasuredParagraph::release() {
     reset();
-    mLevels.clearWithReleasingLargeArray();
-    mWidths.clearWithReleasingLargeArray();
-    mFontMetrics.clearWithReleasingLargeArray();
-    mSpanEndCache.clearWithReleasingLargeArray();
+    mLevels.clear();//clearWithReleasingLargeArray();
+    mWidths.clear();//clearWithReleasingLargeArray();
+    mFontMetrics.clear();//clearWithReleasingLargeArray();
+    mSpanEndCache.clear();//clearWithReleasingLargeArray();
 }
 
 void  MeasuredParagraph::reset() {
@@ -50,13 +53,13 @@ int MeasuredParagraph::getParagraphDir() const{
     return mParaDir;
 }*/
 
-Directions MeasuredParagraph::getDirections( int start, int end) {
+const Directions* MeasuredParagraph::getDirections( int start, int end) const{
     if (mLtrWithoutBidi) {
-        return TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
+        return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
     }
 
-    final int length = end - start;
-    return AndroidBidi.directions(mParaDir, mLevels.getRawArray(), start, mCopiedBuffer, start,
+    const int length = end - start;
+    return AndroidBidi::directions(mParaDir, mLevels, start, mCopiedBuffer, start,
             length);
 }
 
@@ -109,6 +112,20 @@ MeasuredParagraph* MeasuredParagraph::buildForBidi(CharSequence* text, int start
     return mt;
 }
 
+static void TextUtils_removeEmptySpans(std::vector<ParcelableSpan*>& spans, Spanned* spanned, const Predicate<const ParcelableSpan*>& kclass) {
+    auto it = spans.begin();
+    while (it != spans.end()) {
+        const int start = spanned->getSpanStart(*it);
+        const int end = spanned->getSpanEnd(*it);
+        
+        if (start == end) {
+            it = spans.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
 MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint, CharSequence* text,
         int start, int end, const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
@@ -121,57 +138,54 @@ MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint, Char
 
     if (mt->mSpanned == nullptr) {
         // No style change by MetricsAffectingSpan. Just measure all text.
-        mt->applyMetricsAffectingSpan(
-                paint, nullptr /* spans */, start, end, nullptr /* native builder ptr */);
+        mt->applyMetricsAffectingSpan(*paint, {/*nullptr*/} /* spans */, start, end, nullptr /* native builder ptr */);
     } else {
         // There may be a MetricsAffectingSpan. Split into span transitions and apply styles.
         int spanEnd;
         for (int spanStart = start; spanStart < end; spanStart = spanEnd) {
-            spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpan.class);
-            auto spans = mt->mSpanned.getSpans(spanStart, spanEnd, MetricAffectingSpan.class);
-            spans = TextUtils.removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpan.class);
-            mt->applyMetricsAffectingSpan(
-                    paint, spans, spanStart, spanEnd, nullptr /* native builder ptr */);
+            spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
+            auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
+            TextUtils_removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
+            mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, nullptr /* native builder ptr */);
         }
     }
     return mt;
 }
 
-MeasuredParagraph* MeasuredParagraph::buildForStaticLayout( TextPaint* paint, CharSequence* text, int start, int end,
+MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* paint, CharSequence* text, int start, int end,
         const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout, MeasuredParagraph* hint, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
     mt->resetAndAnalyzeBidi(text, start, end, textDir);
-    minikin::MeasuredText::Builder builder;
+    std::unique_ptr<MeasuredText::Builder> builder;
     if (hint == nullptr) {
-        builder = new MeasuredText::Builder(mt->mCopiedBuffer)
-                .setComputeHyphenation(computeHyphenation)
+        builder = std::make_unique<MeasuredText::Builder>(mt->mCopiedBuffer);
+        builder->setComputeHyphenation(computeHyphenation)
                 .setComputeLayout(computeLayout);
     } else {
-        builder = new minikin::MeasuredText::Builder(hint.mMeasuredText);
+        builder = std::make_unique<MeasuredText::Builder>(hint->mMeasuredText);
     }
     if (mt->mTextLength == 0) {
         // Need to build empty native measured text for StaticLayout.
         // TODO: Stop creating empty measured text for empty lines.
-        mt->mMeasuredText = builder.build();
+        mt->mMeasuredText = builder->build();
     } else {
         if (mt->mSpanned == nullptr) {
             // No style change by MetricsAffectingSpan. Just measure all text.
-            mt->applyMetricsAffectingSpan(paint, nullptr /* spans */, start, end, builder);
-            mt->mSpanEndCache.append(end);
+            mt->applyMetricsAffectingSpan(*paint, {/*nullptr*/} /* spans */, start, end, builder.get());
+            mt->mSpanEndCache.emplace_back(end);
         } else {
             // There may be a MetricsAffectingSpan. Split into span transitions and apply
             // styles.
             int spanEnd;
             for (int spanStart = start; spanStart < end; spanStart = spanEnd) {
-                spanEnd = mt->mSpanned.nextSpanTransition(spanStart, end,
-                                                         MetricAffectingSpan.class);
-                auto spans = mt->mSpanned.getSpans(spanStart, spanEnd, MetricAffectingSpan.class);
-                spans = TextUtils.removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpan.class);
-                mt->applyMetricsAffectingSpan(paint, spans, spanStart, spanEnd, builder);
-                mt->mSpanEndCache.append(spanEnd);
+                spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
+                auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
+                TextUtils_removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
+                mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, builder.get());
+                mt->mSpanEndCache.emplace_back(spanEnd);
             }
         }
-        mt.mMeasuredText = builder.build();
+        mt->mMeasuredText = builder->build();
     }
 
     return mt;
@@ -186,11 +200,11 @@ void MeasuredParagraph::resetAndAnalyzeBidi(CharSequence* text, int start, int e
     if (mCopiedBuffer.empty() || mCopiedBuffer.size() != mTextLength) {
         mCopiedBuffer.resize(mTextLength);
     }
-    TextUtils.getChars(text, start, end, mCopiedBuffer, 0);
+    //TextUtils.getChars(text, start, end, mCopiedBuffer, 0);
 
     // Replace characters associated with ReplacementSpan to U+FFFC.
     if (mSpanned != nullptr) {
-        auto spans = mSpanned->getSpans(start, end, ReplacementSpan.class);
+        auto spans = mSpanned->getSpans(start, end, ReplacementSpanFilter);
 
         for (int i = 0; i < spans.size(); i++) {
             int startInPara = mSpanned->getSpanStart(spans[i]) - start;
@@ -198,14 +212,15 @@ void MeasuredParagraph::resetAndAnalyzeBidi(CharSequence* text, int start, int e
             // The span interval may be larger and must be restricted to [start, end)
             if (startInPara < 0) startInPara = 0;
             if (endInPara > mTextLength) endInPara = mTextLength;
-            Arrays.fill(mCopiedBuffer, startInPara, endInPara, OBJECT_REPLACEMENT_CHARACTER);
+            //Arrays.fill(mCopiedBuffer, startInPara, endInPara, OBJECT_REPLACEMENT_CHARACTER);
+            for(int j=startInPara;j<endInPara;j++)mCopiedBuffer[j]=OBJECT_REPLACEMENT_CHARACTER;
         }
     }
 
     if ((textDir == TextDirectionHeuristics::LTR
             || textDir == TextDirectionHeuristics::FIRSTSTRONG_LTR
             || textDir == TextDirectionHeuristics::ANYRTL_LTR)
-            && TextUtils.doesNotNeedBidi(mCopiedBuffer, 0, mTextLength)) {
+            /*&& TextUtils.doesNotNeedBidi(mCopiedBuffer.data(), 0, mTextLength)*/) {
         mLevels.clear();
         mParaDir = TextLayout::DIR_LEFT_TO_RIGHT;
         mLtrWithoutBidi = true;
@@ -220,46 +235,47 @@ void MeasuredParagraph::resetAndAnalyzeBidi(CharSequence* text, int start, int e
         } else if (textDir == TextDirectionHeuristics::FIRSTSTRONG_RTL) {
             bidiRequest = TextLayout::DIR_REQUEST_DEFAULT_RTL;
         } else {
-            const bool isRtl = textDir->isRtl(mCopiedBuffer, 0, mTextLength);
+            const bool isRtl = textDir->isRtl(mCopiedBuffer.data(), 0, mTextLength);
             bidiRequest = isRtl ? TextLayout::DIR_REQUEST_RTL : TextLayout::DIR_REQUEST_LTR;
         }
         mLevels.resize(mTextLength);
-        mParaDir = AndroidBidi.bidi(bidiRequest, mCopiedBuffer, mLevels);
+        mParaDir = AndroidBidi::bidi(bidiRequest, mCopiedBuffer, mLevels);
         mLtrWithoutBidi = false;
     }
 }
 
-void  MeasuredParagraph::applyReplacementRun(ReplacementSpan& replacement, int start, int end, minikin::MeasuredTextBuilder* builder) {
+void  MeasuredParagraph::applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder) {
     // Use original text. Shouldn't matter.
     // TODO: passing uninitizlied FontMetrics to developers. Do we need to keep this for
     //       backward compatibility? or Should we initialize them for getFontMetricsInt?
-    const float width = replacement.getSize( mCachedPaint, mSpanned, start + mTextStart, end + mTextStart, mCachedFm);
+    const float width = replacement.getSize( mCachedPaint, mSpanned, start + mTextStart, end + mTextStart, &mCachedFm);
     if (builder == nullptr) {
         // Assigns all width to the first character. This is the same behavior as minikin.
-        mWidths.set(start, width);
+        mWidths[start]=width;//.set(start, width);
         if (end > start + 1) {
-            Arrays.fill(mWidths, start + 1, end, 0.0f);
+            //Arrays.fill(mWidths, start + 1, end, 0.0f);
+            for(int i=start + 1;i<end;i++)mWidths[i]=0;
         }
         mWholeWidth += width;
     } else {
-        builder.appendReplacementRun(mCachedPaint, end - start, width);
+        builder->appendReplacementRun(mCachedPaint, end - start, width);
     }
 }
 
-void MeasuredParagraph::applyStyleRun(int start, int end, minikin::MeasuredTextBuilder* builder) {
+void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder* builder) {
 
     if (mLtrWithoutBidi) {
         // If the whole text is LTR direction, just apply whole region.
         if (builder == nullptr) {
             mWholeWidth += mCachedPaint.getTextRunAdvances(
                     mCopiedBuffer, start, end - start, start, end - start, false /* isRtl */,
-                    mWidths, start);
+                    &mWidths, start);
         } else {
-            builder.appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
+            builder->appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
         }
     } else {
         // If there is multiple bidi levels, split into individual bidi level and apply style.
-        const uint8_t level = mLevels.at(start);
+        uint8_t level = mLevels.at(start);
         // Note that the empty text or empty range won't reach this method.
         // Safe to search from start + 1.
         for (int levelStart = start, levelEnd = start + 1;; ++levelEnd) {
@@ -269,9 +285,9 @@ void MeasuredParagraph::applyStyleRun(int start, int end, minikin::MeasuredTextB
                     const int levelLength = levelEnd - levelStart;
                     mWholeWidth += mCachedPaint.getTextRunAdvances(
                             mCopiedBuffer, levelStart, levelLength, levelStart, levelLength,
-                            isRtl, mWidths, levelStart);
+                            isRtl, &mWidths, levelStart);
                 } else {
-                    builder.appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);
+                    builder->appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);
                 }
                 if (levelEnd == end) {
                     break;
@@ -283,24 +299,24 @@ void MeasuredParagraph::applyStyleRun(int start, int end, minikin::MeasuredTextB
     }
 }
 
-void MeasuredParagraph::applyMetricsAffectingSpan( TextPaint& paint, MetricAffectingSpan* spans, int start, int end, minikin::MeasuredTextBuilder* builder) {
+void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
     mCachedPaint.set(paint);
     // XXX paint should not have a baseline shift, but...
     mCachedPaint.baselineShift = 0;
 
     const bool needFontMetrics = builder != nullptr;
 
-    if (needFontMetrics && mCachedFm == nullptr) {
-        mCachedFm = new Paint.FontMetricsInt();
+    if (needFontMetrics /*&& mCachedFm == nullptr*/) {
+        //mCachedFm = new Paint.FontMetricsInt();
     }
 
     ReplacementSpan* replacement = nullptr;
-    if (spans != nullptr) {
-        for (int i = 0; i < spans->length; i++) {
+    if (!spans.empty()) {
+        for (int i = 0; i < spans.size(); i++) {
             MetricAffectingSpan* span = (MetricAffectingSpan*)spans[i];
             if (dynamic_cast<ReplacementSpan*>(span)) {
                 // The last ReplacementSpan is effective for backward compatibility reasons.
-                replacement = (ReplacementSpan) span;
+                replacement = (ReplacementSpan*) span;
             } else {
                 // TODO: No need to call updateMeasureState for ReplacementSpan as well?
                 span->updateMeasureState(mCachedPaint);
@@ -316,7 +332,7 @@ void MeasuredParagraph::applyMetricsAffectingSpan( TextPaint& paint, MetricAffec
     }
 
     if (replacement != nullptr) {
-        applyReplacementRun(replacement, startInCopiedBuffer, endInCopiedBuffer, builder);
+        applyReplacementRun(*replacement, startInCopiedBuffer, endInCopiedBuffer, builder);
     } else {
         applyStyleRun(startInCopiedBuffer, endInCopiedBuffer, builder);
     }
@@ -330,10 +346,10 @@ void MeasuredParagraph::applyMetricsAffectingSpan( TextPaint& paint, MetricAffec
             mCachedFm.bottom += mCachedPaint.baselineShift;
         }
 
-        mFontMetrics.append(mCachedFm.top);
-        mFontMetrics.append(mCachedFm.bottom);
-        mFontMetrics.append(mCachedFm.ascent);
-        mFontMetrics.append(mCachedFm.descent);
+        mFontMetrics.emplace_back(mCachedFm.top);
+        mFontMetrics.emplace_back(mCachedFm.bottom);
+        mFontMetrics.emplace_back(mCachedFm.ascent);
+        mFontMetrics.emplace_back(mCachedFm.descent);
     }
 }
 

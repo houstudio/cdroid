@@ -4,13 +4,11 @@
 #include <core/rect.h>
 #include <core/spannablestring.h>
 #include <text/textpaint.h>
+#include <text/measuredtext.h>
 #include <text/textdirectionheuristics.h>
-namespace minikin{
-    class MeasuredText;
-    class MeasuredTextBuilder;
-}
-namespace cdroid{
 
+namespace cdroid{
+class Directions;
 class MeasuredParagraph {
 private:
     static constexpr char16_t OBJECT_REPLACEMENT_CHARACTER = 0xFFFC;
@@ -24,9 +22,9 @@ private:
     std::vector<uint8_t> mLevels;
     float mWholeWidth;
     std::vector<float> mWidths;
-    std::array<int,4> mSpanEndCache;
-    std::array<int,4*4> mFontMetrics;
-    minikin::MeasuredText* mMeasuredText;/* The native MeasuredParagraph.*/
+    std::vector<int> mSpanEndCache;/*4*/
+    std::vector<int> mFontMetrics;/*16*/
+    MeasuredText* mMeasuredText;/* The native MeasuredParagraph.*/
     TextPaint mCachedPaint;
     Paint::FontMetricsInt mCachedFm;
 private:
@@ -37,10 +35,10 @@ private:
     static MeasuredParagraph* obtain();
     void reset();
     void resetAndAnalyzeBidi(CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
-    void applyReplacementRun(ReplacementSpan& replacement, int start, int end, minikin::MeasuredTextBuilder* builder);
-    void applyStyleRun(int start, int end, minikin::MeasuredTextBuilder* builder);
-    void applyMetricsAffectingSpan( TextPaint& paint, MetricAffectingSpan* spans,
-            int start, int end, minikin::MeasuredTextBuilder* builder);
+    void applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
+    void applyStyleRun(int start, int end, MeasuredText::Builder* builder);
+    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans,
+            int start, int end, MeasuredText::Builder* builder);
 public:
     void recycle();
     void release();
@@ -57,7 +55,7 @@ public:
         return mParaDir;
     }
 
-    Directions getDirections( int start, int end);  // exclusive
+    const Directions* getDirections( int start, int end)const;  // exclusive
 
     float getWholeWidth() const{
         return mWholeWidth;
@@ -67,15 +65,15 @@ public:
         return mWidths;
     }
 
-    const std::array<int,4>& getSpanEndCache() const{
+    const std::vector<int>& getSpanEndCache() const{
         return mSpanEndCache;
     }
 
-    std::array<int,16> getFontMetrics() const{
+    std::vector<int> getFontMetrics() const{
         return mFontMetrics;
     }
 
-    minikin::MeasuredText* getMeasuredText() const{
+    MeasuredText* getMeasuredText() const{
         return mMeasuredText;
     }
 
@@ -91,7 +89,7 @@ public:
     static MeasuredParagraph* buildForMeasurement(TextPaint* paint, CharSequence* text,
             int start, int end,const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle);
 
-    static MeasuredParagraph* buildForStaticLayout( TextPaint* paint, CharSequence* text, int start, int end,
+    static MeasuredParagraph* buildForStaticLayout(const TextPaint* paint, CharSequence* text, int start, int end,
             const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout,
             MeasuredParagraph* hint, MeasuredParagraph* recycle);
 

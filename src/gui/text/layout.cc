@@ -28,7 +28,7 @@ float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int 
     float need = 0;
     int next;
     for (int i = start; i <= end; i = next) {
-        next = TextUtils.indexOf(source, '\n', i, end);
+        next = i+1;//TextUtils.indexOf(source, '\n', i, end);
 
         if (next < 0)
             next = end;
@@ -330,8 +330,8 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
             }
         }
 
-        Directions directions = getLineDirections(lineNum);
-        if (directions == DIRS_ALL_LEFT_TO_RIGHT && !mSpannedText && !hasTab && !justify) {
+        const Directions* directions = getLineDirections(lineNum);
+        if (*directions == DIRS_ALL_LEFT_TO_RIGHT && !mSpannedText && !hasTab && !justify) {
             // XXX: assumes there's nothing additional to be done
             //canvas.drawText(buf, start, end, x, lbaseline, paint);
         } else {
@@ -517,12 +517,12 @@ int TextLayout::getLineBounds(int line, Rect* bounds) const{
 
 bool TextLayout::isLevelBoundary(int offset) const{
     int line = getLineForOffset(offset);
-    Directions dirs = getLineDirections(line);
-    if (dirs == DIRS_ALL_LEFT_TO_RIGHT || dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    const Directions* dirs = getLineDirections(line);
+    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT || *dirs == DIRS_ALL_RIGHT_TO_LEFT) {
         return false;
     }
 
-    auto& runs = dirs.mDirections;
+    auto& runs = dirs->mDirections;
     int lineStart = getLineStart(line);
     int lineEnd = getLineEnd(line);
     if (offset == lineStart || offset == lineEnd) {
@@ -542,14 +542,14 @@ bool TextLayout::isLevelBoundary(int offset) const{
 
 bool TextLayout::isRtlCharAt(int offset) const{
     int line = getLineForOffset(offset);
-    Directions dirs = getLineDirections(line);
-    if (dirs == DIRS_ALL_LEFT_TO_RIGHT) {
+    const Directions* dirs = getLineDirections(line);
+    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT) {
         return false;
     }
-    if (dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    if (*dirs == DIRS_ALL_RIGHT_TO_LEFT) {
         return  true;
     }
-    auto& runs = dirs.mDirections;
+    auto& runs = dirs->mDirections;
     int lineStart = getLineStart(line);
     for (int i = 0; i < runs.size(); i += 2) {
         int start = lineStart + runs[i];
@@ -565,11 +565,11 @@ bool TextLayout::isRtlCharAt(int offset) const{
 
 int64_t TextLayout::getRunRange(int offset) const{
     int line = getLineForOffset(offset);
-    Directions dirs = getLineDirections(line);
-    if (dirs == DIRS_ALL_LEFT_TO_RIGHT || dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    const Directions* dirs = getLineDirections(line);
+    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT || *dirs == DIRS_ALL_RIGHT_TO_LEFT) {
         return getLineEnd(line);//TextUtils.packRangeInLong(0, getLineEnd(line));
     }
-    auto& runs = dirs.mDirections;
+    auto& runs = dirs->mDirections;
     int lineStart = getLineStart(line);
     for (int i = 0; i < runs.size(); i += 2) {
         int start = lineStart + runs[i];
@@ -586,7 +586,7 @@ bool TextLayout::primaryIsTrailingPrevious(int offset) const{
     int line = getLineForOffset(offset);
     int lineStart = getLineStart(line);
     int lineEnd = getLineEnd(line);
-    auto runs = getLineDirections(line).mDirections;
+    auto runs = getLineDirections(line)->mDirections;
 
     int levelAt = -1;
     for (int i = 0; i < runs.size(); i += 2) {
@@ -634,7 +634,7 @@ bool TextLayout::primaryIsTrailingPrevious(int offset) const{
 std::vector<bool> TextLayout::primaryIsTrailingPreviousAllLineOffsets(int line) const{
     const int lineStart = getLineStart(line);
     const int lineEnd = getLineEnd(line);
-    auto runs = getLineDirections(line).mDirections;
+    auto runs = getLineDirections(line)->mDirections;
 
     std::vector<bool> trailing (lineEnd - lineStart + 1);
 
@@ -677,7 +677,7 @@ float TextLayout::getHorizontal(int offset, bool trailing, int line, bool clampe
     int end = getLineEnd(line);
     int dir = getParagraphDirection(line);
     bool hasTab = getLineContainsTab(line);
-    Directions directions = getLineDirections(line);
+    const Directions* directions = getLineDirections(line);
 
     TabStops* tabStops = nullptr;
     if (hasTab && dynamic_cast<Spanned*>(mText)) {
@@ -709,7 +709,7 @@ std::vector<float> TextLayout::getLineHorizontals(int line, bool clamped, bool p
     int end = getLineEnd(line);
     int dir = getParagraphDirection(line);
     bool hasTab = getLineContainsTab(line);
-    Directions directions = getLineDirections(line);
+    const Directions* directions = getLineDirections(line);
 
     TabStops* tabStops = nullptr;
     if (hasTab && dynamic_cast<Spanned*>(mText)) {
@@ -866,9 +866,9 @@ float TextLayout::getLineExtent(int line, bool full) const{
             tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
         }
     }
-    const Directions directions = getLineDirections(line);
+    const Directions* directions = getLineDirections(line);
     // Returned directions can actually be null
-    if (directions.empty()){//directions == nullptr) {
+    if (directions == nullptr) {
         return 0.f;
     }
     const int dir = getParagraphDirection(line);
@@ -892,7 +892,7 @@ float TextLayout::getLineExtent(int line, TabStops& tabStops, bool full) const{
     const int start = getLineStart(line);
     const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
     const bool hasTabs = getLineContainsTab(line);
-    const Directions directions = getLineDirections(line);
+    const Directions* directions = getLineDirections(line);
     const int dir = getParagraphDirection(line);
 
     TextLine* tl = TextLine::obtain();
@@ -952,7 +952,7 @@ int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) cons
     const int lineEndOffset = getLineEnd(line);
     const int lineStartOffset = getLineStart(line);
 
-    Directions dirs = getLineDirections(line);
+    const Directions* dirs = getLineDirections(line);
 
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs as we just use TextLine#getOffsetToLeftRightOf here.
@@ -970,10 +970,10 @@ int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) cons
     int best = lineStartOffset;
     float bestdist = std::abs(horizontal.get(lineStartOffset) - horiz);
 
-    for (int i = 0; i < dirs.mDirections.size(); i += 2) {
-        int here = lineStartOffset + dirs.mDirections[i];
-        int there = here + (dirs.mDirections[i+1] & RUN_LENGTH_MASK);
-        bool isRtl = (dirs.mDirections[i+1] & RUN_RTL_FLAG) != 0;
+    for (int i = 0; i < dirs->mDirections.size(); i += 2) {
+        int here = lineStartOffset + dirs->mDirections[i];
+        int there = here + (dirs->mDirections[i+1] & RUN_LENGTH_MASK);
+        bool isRtl = (dirs->mDirections[i+1] & RUN_RTL_FLAG) != 0;
         int swap = isRtl ? -1 : 1;
 
         if (there > max)
@@ -1043,8 +1043,8 @@ TextLayout::HorizontalMeasurementProvider::HorizontalMeasurementProvider(TextLay
 }
 
 void TextLayout::HorizontalMeasurementProvider::init() {
-    const Directions dirs = mLayout->getLineDirections(mLine);
-    if (dirs == DIRS_ALL_LEFT_TO_RIGHT) {
+    const Directions* dirs = mLayout->getLineDirections(mLine);
+    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT) {
         return;
     }
 
@@ -1119,7 +1119,7 @@ int TextLayout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
     int lineDir = getParagraphDirection(line);
 
     bool lineChanged = false;
-    bool advance = toLeft == (lineDir == DIR_RIGHT_TO_LEFT);
+    const bool advance = toLeft == (lineDir == DIR_RIGHT_TO_LEFT);
     // if walking off line, look at the line we're headed to
     if (advance) {
         if (caret == lineEnd) {
@@ -1153,7 +1153,7 @@ int TextLayout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
             lineDir = newDir;
         }
     }
-    Directions directions = getLineDirections(line);
+    const Directions* directions = getLineDirections(line);
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs
     tl->set(&mPaint, mText, lineStart, lineEnd, lineDir, directions, false, nullptr,
@@ -1268,15 +1268,15 @@ void TextLayout::addSelection(int line, int start, int end,
         int top, int bottom,const SelectionRectangleConsumer& consumer) {
     int linestart = getLineStart(line);
     int lineend = getLineEnd(line);
-    Directions dirs = getLineDirections(line);
+    const Directions* dirs = getLineDirections(line);
 
     if (lineend > linestart && mText->charAt(lineend - 1) == '\n') {
         lineend--;
     }
 
-    for (int i = 0; i < dirs.mDirections.size(); i += 2) {
-        int here = linestart + dirs.mDirections[i];
-        int there = here + (dirs.mDirections[i + 1] & RUN_LENGTH_MASK);
+    for (int i = 0; i < dirs->mDirections.size(); i += 2) {
+        int here = linestart + dirs->mDirections[i];
+        int there = here + (dirs->mDirections[i + 1] & RUN_LENGTH_MASK);
 
         if (there > lineend) {
             there = lineend;
@@ -1293,7 +1293,7 @@ void TextLayout::addSelection(int line, int start, int end,
                 float left = std::min(h1, h2);
                 float right = std::max(h1, h2);
 
-                const int layout = ((dirs.mDirections[i + 1] & RUN_RTL_FLAG) != 0)
+                const int layout = ((dirs->mDirections[i + 1] & RUN_RTL_FLAG) != 0)
                                 ? TEXT_SELECTION_LAYOUT_RIGHT_TO_LEFT
                                 : TEXT_SELECTION_LAYOUT_LEFT_TO_RIGHT;
 
@@ -1435,7 +1435,7 @@ float TextLayout::measurePara(TextPaint& paint, CharSequence* text, int start, i
     mt = MeasuredParagraph::buildForBidi(text, start, end, textDir, mt);
     auto& chars = mt->getChars();
     const int len = chars.size();
-    const Directions directions = mt->getDirections(0, len);
+    const Directions* directions = mt->getDirections(0, len);
     const int dir = mt->getParagraphDir();
     bool hasTabs = false;
     TabStops* tabStops = nullptr;
@@ -1545,9 +1545,9 @@ std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int st
         return {};//ArrayUtils.emptyArray(type);
     }
 
-    if(dynamic_cast<SpannableStringBuilder*>(text)) {
+    /*if(dynamic_cast<SpannableStringBuilder*>(text)) {
         return ((SpannableStringBuilder*) text)->getSpans(start, end, type, false);
-    } else {
+    } else */{
         return text->getSpans(start, end, type);
     }
 }
@@ -1624,7 +1624,7 @@ void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char16_t>&
     }
 }
 
-CharSequence* TextLayout::Ellipsizer::subSequence(int start, int end) {
+CharSequence* TextLayout::Ellipsizer::subSequence(int start, int end) const{
     std::vector<char16_t> s (end - start);
     getChars(start, end, s, 0);
     return new SpannedString("");//s.data());
@@ -1637,6 +1637,6 @@ std::string TextLayout::Ellipsizer::toString() const{
 }
 
 std::wstring TextLayout::Ellipsizer::toWString() const{
-    return "";//new String(s);
+    return L"";//new String(s);
 }
 }/*endof namespace*/

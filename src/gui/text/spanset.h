@@ -11,8 +11,8 @@ public:
     std::vector<int> spanEnds;
     std::vector<int> spanFlags;
 public:
-    SpanSet(const SpanFilter&type) {
-        classType = type;
+    SpanSet(/*const SpanFilter&type*/) {
+        //classType = type;
         numberOfSpans = 0;
     }
 

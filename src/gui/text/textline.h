@@ -2,11 +2,12 @@
 #define __CDROID_TEXT_LINE__
 #include <text/textpaint.h>
 #include <core/canvas.h>
+#include <core/spannablestring.h>
 namespace cdroid{
 class Directions;
 class TabStops;
 class PrecomputedText;
-using FontMetricsInt=Cairo::FontExtents;
+//using FontMetricsInt=Cairo::FontExtents;
 class TextLine {
 private:
     class DecorationInfo {
@@ -35,7 +36,7 @@ private:
     static constexpr char TAB_CHAR = '\t';
     static constexpr int TAB_INCREMENT = 20;
 
-    TextPaint* mPaint;
+    const TextPaint* mPaint;
     CharSequence* mText;
     int mStart;
     int mLen;
@@ -45,7 +46,7 @@ private:
     bool mCharsValid;
     bool mIsJustifying;
     TabStops* mTabs;
-    char* mChars;
+    std::vector<char16_t> mChars;
     Spanned* mSpanned;
     PrecomputedText* mComputed;
 
@@ -56,85 +57,78 @@ private:
 
     TextPaint mWorkPaint;
     TextPaint mActivePaint;
-    //SpanSet<MetricAffectingSpan> mMetricAffectingSpanSpanSet;
-    //SpanSet<CharacterStyle> mCharacterStyleSpanSet;
-    //SpanSet<ReplacementSpan> mReplacementSpanSpanSet;
+    SpanSet mMetricAffectingSpanSpanSet;
+    SpanSet mCharacterStyleSpanSet;
+    SpanSet mReplacementSpanSpanSet;
 
     DecorationInfo mDecorationInfo;
     std::vector<DecorationInfo> mDecorations ;
 
-    static TextLine* sCached[3];
+    static std::array<TextLine*,3> sCached;
 private:
-    char charAt(int i) const{
+    int charAt(int i) const{
         return mCharsValid ? mChars[i] : mText->charAt(i + mStart);
     }
     float drawRun(Canvas& c, int start, int limit, bool runIsRtl, float x, int top, int y, int bottom, bool needWidth);
-    float measureRun(int start, int offset, int limit, bool runIsRtl, FontMetricsInt& fmi) {
+    float measureRun(int start, int offset, int limit, bool runIsRtl, Paint::FontMetricsInt* fmi) {
         return handleRun(start, offset, limit, runIsRtl, nullptr, 0, 0, 0, 0, fmi, true);
     }
     int getOffsetBeforeAfter(int runIndex, int runStart, int runLimit, bool runIsRtl, int offset, bool after);
 
-    static void expandMetricsFromPaint(FontMetricsInt& fmi, TextPaint& wp);
+    static void expandMetricsFromPaint(Paint::FontMetricsInt& fmi,const TextPaint& wp);
     static void drawStroke(TextPaint& wp, Canvas& c, int color, float position,
             float thickness, float xleft, float xright, float baseline);
-    float getRunAdvance(TextPaint wp, int start, int end, int contextStart, int contextEnd, bool runIsRtl, int offset);
+    float getRunAdvance(TextPaint& wp, int start, int end, int contextStart, int contextEnd, bool runIsRtl, int offset);
 
     float handleText(TextPaint& wp, int start, int end, int contextStart, int contextEnd,
-            bool runIsRtl, Canvas& c, float x, int top, int y, int bottom, FontMetricsInt& fmi,
-            bool needWidth, int offset, std::vector<DecorationInfo>& decorations);
+            bool runIsRtl, Canvas* c, float x, int top, int y, int bottom, Paint::FontMetricsInt* fmi,
+            bool needWidth, int offset, const std::vector<DecorationInfo>* decorations);
 
-    float handleReplacement(ReplacementSpan& replacement, TextPaint& wp, int start, int limit, bool runIsRtl, Canvas& c,
-           float x, int top, int y, int bottom, FontMetricsInt& fmi, bool needWidth);
+    float handleReplacement(ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
+           float x, int top, int y, int bottom,Paint::FontMetricsInt* fmi, bool needWidth);
 
     int adjustStartHyphenEdit(int start, int startHyphenEdit) {
-        // Only draw hyphens on first in line. Disable them otherwise.
         return start > 0 ? Paint::START_HYPHEN_EDIT_NO_EDIT : startHyphenEdit;
     }
 
     int adjustEndHyphenEdit(int limit, int endHyphenEdit) {
-        // Only draw hyphens on last run in line. Disable them otherwise.
         return limit < mLen ? Paint::END_HYPHEN_EDIT_NO_EDIT : endHyphenEdit;
     }
     void extractDecorationInfo(TextPaint& paint, DecorationInfo& info);
 
     float handleRun(int start, int measureLimit, int limit, bool runIsRtl, Canvas*c, float x,
-            int top, int y, int bottom, FontMetricsInt& fmi, bool needWidth);
+            int top, int y, int bottom, Paint::FontMetricsInt* fmi, bool needWidth);
 
     void drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
             int contextStart, int contextEnd, bool runIsRtl, float x, int y);
     bool isStretchableWhitespace(int ch) const{
-        // TODO: Support NBSP and other stretchable whitespace (b/34013491 and b/68204709).
         return ch == 0x0020;
     }
     int countStretchableSpaces(int start, int end) const;
-    static bool equalAttributes(TextPaint& lp, TextPaint& rp);
+    static bool equalAttributes(const TextPaint& lp, const TextPaint& rp);
 public:
     static TextLine* obtain();
     static TextLine* recycle(TextLine* tl);
-    void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir, Directions directions,
+    void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,
             bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd);
 
     void justify(float justifyWidth);
 
     void draw(Canvas& c, float x, int top, int y, int bottom);
-    float metrics(FontMetricsInt* fmi) {
+    float metrics(Paint::FontMetricsInt* fmi) {
         return measure(mLen, false, fmi);
     }
 
-    float measure(int offset, bool trailing, FontMetricsInt* fmi);
-    std::vector<float> measureAllOffsets(const std::vector<bool>& trailing, FontMetricsInt* fmi);
+    float measure(int offset, bool trailing, Paint::FontMetricsInt* fmi);
+    std::vector<float> measureAllOffsets(const std::vector<bool>& trailing, Paint::FontMetricsInt* fmi);
 
     int getOffsetToLeftRightOf(int cursor, bool toLeft);
-    static void updateMetrics(FontMetricsInt& fmi, int previousTop, int previousAscent,
+    static void updateMetrics(Paint::FontMetricsInt& fmi, int previousTop, int previousAscent,
             int previousDescent, int previousBottom, int previousLeading);
 
     float nextTab(float h);
 
-    static bool isLineEndSpace(char ch) {
-        return ch == ' ' || ch == '\t' || ch == 0x1680
-                || (0x2000 <= ch && ch <= 0x200A && ch != 0x2007)
-                || ch == 0x205F || ch == 0x3000;
-    }
+    static bool isLineEndSpace(char16_t ch);
 };
 }/*endof namespace*/
 #endif /*__CDROID_TEXT_LINE__*/

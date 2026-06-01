@@ -1,3 +1,5 @@
+#ifndef __MEASUREDTEXT_H__
+#define __MEASUREDTEXT_H__
 #include <core/rect.h>
 #include <text/textpaint.h>
 #include <text/linebreakconfig.h>
@@ -51,7 +53,7 @@ public:
         bool mComputeBounds = true;
         bool mFastHyphenation = false;
         int mCurrentOffset = 0;
-        MeasuredText* mHintMt = nullptr;
+        const MeasuredText* mHintMt = nullptr;
         int mTop = 0;
         int mBottom = 0;
         Paint::FontMetricsInt mCachedMetrics;
@@ -60,8 +62,8 @@ public:
         static constexpr int HYPHENATION_MODE_NORMAL = 1;
         static constexpr int HYPHENATION_MODE_FAST = 2;
     public:
-        Builder(std::vector<char16_t>& text);
-        Builder(MeasuredText& text);
+        Builder(const std::vector<char16_t>& text);
+        Builder(const MeasuredText* text);
 
         Builder& appendStyleRun(Paint& paint, int length, bool isRtl) {
             return appendStyleRun(paint, nullptr, length, isRtl);
@@ -88,3 +90,4 @@ public:
     };/*endof Builder*/
 };
 }/*endof namespace*/
+#endif/* __MEASUREDTEXT_H__ */

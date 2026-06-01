@@ -1,11 +1,15 @@
+#include <text/layout.h>
 #include <text/textline.h>
+#include <text/precomputedtext.h>
+
 namespace cdroid{
+const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
 TextLine* TextLine::obtain() {
-    TextLine tl;
-    for (int i = sCached.length; --i >= 0;) {
-        if (sCached[i] != null) {
+    TextLine* tl;
+    for (int i = sCached.size(); --i >= 0;) {
+        if (sCached[i] != nullptr) {
             tl = sCached[i];
-            sCached[i] = null;
+            sCached[i] = nullptr;
             return tl;
         }
     }
@@ -14,20 +18,20 @@ TextLine* TextLine::obtain() {
 }
 
 TextLine* TextLine::recycle(TextLine* tl) {
-    tl->mText = null;
-    tl->mPaint = null;
-    tl->mDirections = null;
-    tl->mSpanned = null;
-    tl->mTabs = null;
-    tl->mChars = null;
-    tl->mComputed = null;
+    tl->mText = nullptr;
+    tl->mPaint = nullptr;
+    tl->mDirections = nullptr;
+    tl->mSpanned = nullptr;
+    tl->mTabs = nullptr;
+    tl->mChars.clear();//mChars = nullptr;
+    tl->mComputed = nullptr;
 
     tl->mMetricAffectingSpanSpanSet.recycle();
     tl->mCharacterStyleSpanSet.recycle();
     tl->mReplacementSpanSpanSet.recycle();
 
-    for (int i = 0; i < sCached.length; ++i) {
-        if (sCached[i] == null) {
+    for (int i = 0; i < sCached.size(); ++i) {
+        if (sCached[i] == nullptr) {
             sCached[i] = tl;
             break;
         }
@@ -36,18 +40,18 @@ TextLine* TextLine::recycle(TextLine* tl) {
 }
 
 void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,
-        Directions directions, bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd) {
+        const Directions* directions, bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd) {
     mPaint = paint;
     mText = text;
     mStart = start;
     mLen = limit - start;
     mDir = dir;
-    mDirections = directions;
-    if (mDirections == null) {
-        throw new IllegalArgumentException("Directions cannot be null");
+    mDirections = *directions;
+    if (directions == nullptr) {
+        //LOGE("Directions cannot be null");
     }
     mHasTabs = hasTabs;
-    mSpanned = null;
+    mSpanned = nullptr;
 
     bool hasReplacement = false;
     if (dynamic_cast<Spanned*>(text)) {
@@ -56,21 +60,21 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         hasReplacement = mReplacementSpanSpanSet.numberOfSpans > 0;
     }
 
-    mComputed = null;
+    mComputed = nullptr;
     if (dynamic_cast<PrecomputedText*>(text)) {
         // Here, no need to check line break strategy or hyphenation frequency since there is no
         // line break concept here.
         mComputed = (PrecomputedText*) text;
-        if (!mComputed.getParams().getTextPaint().equalsForTextMeasurement(paint)) {
-            mComputed = null;
+        if (!mComputed->getParams().getTextPaint().equalsForTextMeasurement(*paint)) {
+            mComputed = nullptr;
         }
     }
 
     mCharsValid = hasReplacement;
 
     if (mCharsValid) {
-        if (mChars == null || mChars.length < mLen) {
-            mChars = ArrayUtils.newUnpaddedCharArray(mLen);
+        if (mChars.empty() || mChars.size() < mLen) {
+            mChars.resize(mLen);// = ArrayUtils.newUnpaddedCharArray(mLen);
         }
         TextUtils.getChars(text, start, limit, mChars, 0);
         if (hasReplacement) {
@@ -79,15 +83,15 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
             // object-replacement character and the remainder with zero width
             // non-break space aka BOM.  Cursor movement code skips these
             // zero-width characters.
-            char[] chars = mChars;
+            auto& chars = mChars;
             for (int i = start, inext; i < limit; i = inext) {
                 inext = mReplacementSpanSpanSet.getNextTransition(i, limit);
                 if (mReplacementSpanSpanSet.hasSpansIntersecting(i, inext)
                         && (i - start >= ellipsisEnd || inext - start <= ellipsisStart)) {
                     // transition into a span
-                    chars[i - start] = '\ufffc';
+                    chars[i - start] = 0xFFFC;//C'\ufffc';
                     for (int j = i - start + 1, e = inext - start; j < e; ++j) {
-                        chars[j] = '\ufeff'; // used as ZWNBS, marks positions to skip
+                        chars[j] = 0xFEFF;//'\ufeff'; // used as ZWNBS, marks positions to skip
                     }
                 }
             }
@@ -119,12 +123,12 @@ void TextLine::justify(float justifyWidth) {
 
 void TextLine::draw(Canvas& c, float x, int top, int y, int bottom) {
     float h = 0;
-    const int runCount = mDirections.getRunCount();
+    const int runCount = mDirections->getRunCount();
     for (int runIndex = 0; runIndex < runCount; runIndex++) {
-        const int runStart = mDirections.getRunStart(runIndex);
+        const int runStart = mDirections->getRunStart(runIndex);
         if (runStart > mLen) break;
-        const int runLimit = Math.min(runStart + mDirections.getRunLength(runIndex), mLen);
-        const bool runIsRtl = mDirections.isRunRtl(runIndex);
+        const int runLimit = std::min(runStart + mDirections->getRunLength(runIndex), mLen);
+        const bool runIsRtl = mDirections->isRunRtl(runIndex);
 
         int segStart = runStart;
         for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
@@ -141,11 +145,7 @@ void TextLine::draw(Canvas& c, float x, int top, int y, int bottom) {
     }
 }
 
-float TextLine::metrics(FontMetricsInt& fmi) {
-    return measure(mLen, false, fmi);
-}
-
-float TextLine::measure(int offset, bool trailing, FontMetricsInt* fmi) {
+float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi) {
     if (offset > mLen) {
         //throw new IndexOutOfBoundsException("offset(" + offset + ") should be less than line limit(" + mLen + ")");
     }
@@ -155,17 +155,17 @@ float TextLine::measure(int offset, bool trailing, FontMetricsInt* fmi) {
     }
 
     float h = 0;
-    for (int runIndex = 0; runIndex < mDirections.getRunCount(); runIndex++) {
-        const int runStart = mDirections.getRunStart(runIndex);
+    for (int runIndex = 0; runIndex < mDirections->getRunCount(); runIndex++) {
+        const int runStart = mDirections->getRunStart(runIndex);
         if (runStart > mLen) break;
-        const int runLimit = Math.min(runStart + mDirections.getRunLength(runIndex), mLen);
-        const bool runIsRtl = mDirections.isRunRtl(runIndex);
+        const int runLimit = std::min(runStart + mDirections->getRunLength(runIndex), mLen);
+        const bool runIsRtl = mDirections->isRunRtl(runIndex);
 
         int segStart = runStart;
         for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
             if (j == runLimit || charAt(j) == TAB_CHAR) {
                 const bool targetIsInThisSegment = target >= segStart && target < j;
-                const bool sameDirection = (mDir == Layout.DIR_RIGHT_TO_LEFT) == runIsRtl;
+                const bool sameDirection = (mDir == TextLayout::DIR_RIGHT_TO_LEFT) == runIsRtl;
 
                 if (targetIsInThisSegment && sameDirection) {
                     return h + measureRun(segStart, offset, j, runIsRtl, fmi);
@@ -175,7 +175,7 @@ float TextLine::measure(int offset, bool trailing, FontMetricsInt* fmi) {
                 h += sameDirection ? segmentWidth : -segmentWidth;
 
                 if (targetIsInThisSegment) {
-                    return h + measureRun(segStart, offset, j, runIsRtl, null);
+                    return h + measureRun(segStart, offset, j, runIsRtl, nullptr);
                 }
 
                 if (j != runLimit) {  // charAt(j) == TAB_CHAR
@@ -196,11 +196,11 @@ float TextLine::measure(int offset, bool trailing, FontMetricsInt* fmi) {
     return h;
 }
 
-std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing, FontMetricsInt* fmi) {
+std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing, Paint::FontMetricsInt* fmi) {
     std::vector<float> measurement(mLen + 1);
 
-    int[] target = new int[mLen + 1];
-    for (int offset = 0; offset < target.length; ++offset) {
+    std::vector<int> target(mLen + 1);
+    for (int offset = 0; offset < target.size(); ++offset) {
         target[offset] = trailing[offset] ? offset - 1 : offset;
     }
     if (target[0] < 0) {
@@ -208,22 +208,22 @@ std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing
     }
 
     float h = 0;
-    for (int runIndex = 0; runIndex < mDirections.getRunCount(); runIndex++) {
-        const int runStart = mDirections.getRunStart(runIndex);
+    for (int runIndex = 0; runIndex < mDirections->getRunCount(); runIndex++) {
+        const int runStart = mDirections->getRunStart(runIndex);
         if (runStart > mLen) break;
-        const int runLimit = Math.min(runStart + mDirections.getRunLength(runIndex), mLen);
-        const bool runIsRtl = mDirections.isRunRtl(runIndex);
+        const int runLimit = std::min(runStart + mDirections->getRunLength(runIndex), mLen);
+        const bool runIsRtl = mDirections->isRunRtl(runIndex);
 
         int segStart = runStart;
         for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; ++j) {
             if (j == runLimit || charAt(j) == TAB_CHAR) {
                 const float oldh = h;
-                const bool advance = (mDir == Layout.DIR_RIGHT_TO_LEFT) == runIsRtl;
+                const bool advance = (mDir == TextLayout::DIR_RIGHT_TO_LEFT) == runIsRtl;
                 const float w = measureRun(segStart, j, j, runIsRtl, fmi);
                 h += advance ? w : -w;
 
                 const float baseh = advance ? oldh : h;
-                FontMetricsInt crtfmi = advance ? fmi : null;
+                Paint::FontMetricsInt* crtfmi = advance ? fmi : nullptr;
                 for (int offset = segStart; offset <= j && offset <= mLen; ++offset) {
                     if (target[offset] >= segStart && target[offset] < j) {
                         measurement[offset] =
@@ -254,19 +254,13 @@ std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing
 
 float TextLine::drawRun(Canvas& c, int start, int limit, bool runIsRtl, float x, int top, int y, int bottom, bool needWidth) {
 
-    if ((mDir == Layout.DIR_LEFT_TO_RIGHT) == runIsRtl) {
-        float w = -measureRun(start, limit, limit, runIsRtl, null);
-        handleRun(start, limit, limit, runIsRtl, c, x + w, top,
-                y, bottom, null, false);
+    if ((mDir == TextLayout::DIR_LEFT_TO_RIGHT) == runIsRtl) {
+        float w = -measureRun(start, limit, limit, runIsRtl, nullptr);
+        handleRun(start, limit, limit, runIsRtl, &c, x + w, top, y, bottom, nullptr, false);
         return w;
     }
 
-    return handleRun(start, limit, limit, runIsRtl, c, x, top,
-            y, bottom, null, needWidth);
-}
-
-float TextLine::measureRun(int start, int offset, int limit, bool runIsRtl,FontMetricsInt& fmi) {
-    return handleRun(start, offset, limit, runIsRtl, null, 0, 0, 0, 0, fmi, true);
+    return handleRun(start, limit, limit, runIsRtl, &c, x, top, y, bottom, nullptr, needWidth);
 }
 
 int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
@@ -286,7 +280,7 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
     int lineStart = 0;
     int lineEnd = mLen;
     bool paraIsRtl = mDir == -1;
-    int[] runs = mDirections.mDirections;
+    auto& runs = mDirections->mDirections;
 
     int runIndex, runLevel = 0, runStart = lineStart, runLimit = lineEnd, newCaret = -1;
     bool trailing = false;
@@ -294,37 +288,37 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
     if (cursor == lineStart) {
         runIndex = -2;
     } else if (cursor == lineEnd) {
-        runIndex = runs.length;
+        runIndex = runs.size();
     } else {
       // First, get information about the run containing the character with
       // the active caret.
-      for (runIndex = 0; runIndex < runs.length; runIndex += 2) {
+      for (runIndex = 0; runIndex < runs.size(); runIndex += 2) {
         runStart = lineStart + runs[runIndex];
         if (cursor >= runStart) {
-          runLimit = runStart + (runs[runIndex+1] & Layout.RUN_LENGTH_MASK);
+          runLimit = runStart + (runs[runIndex+1] & TextLayout::RUN_LENGTH_MASK);
           if (runLimit > lineEnd) {
               runLimit = lineEnd;
           }
           if (cursor < runLimit) {
-            runLevel = (runs[runIndex+1] >>> Layout.RUN_LEVEL_SHIFT) &
-                Layout.RUN_LEVEL_MASK;
+            runLevel = (runs[runIndex+1] >> TextLayout::RUN_LEVEL_SHIFT) &
+                TextLayout::RUN_LEVEL_MASK;
             if (cursor == runStart) {
               // The caret is on a run boundary, see if we should
               // use the position on the trailing edge of the previous
               // logical character instead.
               int prevRunIndex, prevRunLevel, prevRunStart, prevRunLimit;
               int pos = cursor - 1;
-              for (prevRunIndex = 0; prevRunIndex < runs.length; prevRunIndex += 2) {
+              for (prevRunIndex = 0; prevRunIndex < runs.size(); prevRunIndex += 2) {
                 prevRunStart = lineStart + runs[prevRunIndex];
                 if (pos >= prevRunStart) {
                   prevRunLimit = prevRunStart +
-                      (runs[prevRunIndex+1] & Layout.RUN_LENGTH_MASK);
+                      (runs[prevRunIndex+1] & TextLayout::RUN_LENGTH_MASK);
                   if (prevRunLimit > lineEnd) {
                       prevRunLimit = lineEnd;
                   }
                   if (pos < prevRunLimit) {
-                    prevRunLevel = (runs[prevRunIndex+1] >>> Layout.RUN_LEVEL_SHIFT)
-                        & Layout.RUN_LEVEL_MASK;
+                    prevRunLevel = (runs[prevRunIndex+1] >> TextLayout::RUN_LEVEL_SHIFT)
+                        & TextLayout::RUN_LEVEL_MASK;
                     if (prevRunLevel < runLevel) {
                       // Start from logically previous character.
                       runIndex = prevRunIndex;
@@ -348,7 +342,7 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
       // text, in which case it doesn't.  If that happens, we ran off the
       // end of the run list, and runIndex == runs.length.  In this case,
       // we are at a run boundary so we skip the below test.
-      if (runIndex != runs.length) {
+      if (runIndex != runs.size()) {
           bool runIsRtl = (runLevel & 0x1) != 0;
           bool advance = toLeft == runIsRtl;
           if (cursor != (advance ? runLimit : runStart) || advance != trailing) {
@@ -372,15 +366,15 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
     while (true) {
       bool advance = toLeft == paraIsRtl;
       int otherRunIndex = runIndex + (advance ? 2 : -2);
-      if (otherRunIndex >= 0 && otherRunIndex < runs.length) {
+      if (otherRunIndex >= 0 && otherRunIndex < runs.size()) {
         int otherRunStart = lineStart + runs[otherRunIndex];
         int otherRunLimit = otherRunStart +
-        (runs[otherRunIndex+1] & Layout.RUN_LENGTH_MASK);
+        (runs[otherRunIndex+1] & TextLayout::RUN_LENGTH_MASK);
         if (otherRunLimit > lineEnd) {
             otherRunLimit = lineEnd;
         }
-        int otherRunLevel = (runs[otherRunIndex+1] >>> Layout.RUN_LEVEL_SHIFT) &
-            Layout.RUN_LEVEL_MASK;
+        int otherRunLevel = (runs[otherRunIndex+1] >> TextLayout::RUN_LEVEL_SHIFT) &
+            TextLayout::RUN_LEVEL_MASK;
         bool otherRunIsRtl = (otherRunLevel & 1) != 0;
 
         advance = toLeft == otherRunIsRtl;
@@ -444,44 +438,44 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
         return TextUtils.getOffsetBefore(mText, offset + mStart) - mStart;
     }
 
-    TextPaint wp = mWorkPaint;
-    wp.set(mPaint);
+    TextPaint& wp = mWorkPaint;
+    wp.set(*mPaint);
     if (mIsJustifying) {
         wp.setWordSpacing(mAddedWidthForJustify);
     }
 
     int spanStart = runStart;
     int spanLimit;
-    if (mSpanned == null) {
+    if (mSpanned == nullptr) {
         spanLimit = runLimit;
     } else {
         int target = after ? offset + 1 : offset;
         int limit = mStart + runLimit;
         while (true) {
-            spanLimit = mSpanned.nextSpanTransition(mStart + spanStart, limit,
-                    MetricAffectingSpan.class) - mStart;
+            spanLimit = mSpanned->nextSpanTransition(mStart + spanStart, limit,
+                    MetricAffectingSpanFilter) - mStart;
             if (spanLimit >= target) {
                 break;
             }
             spanStart = spanLimit;
         }
 
-        MetricAffectingSpan[] spans = mSpanned.getSpans(mStart + spanStart,
-                mStart + spanLimit, MetricAffectingSpan.class);
-        spans = TextUtils.removeEmptySpans(spans, mSpanned, MetricAffectingSpan.class);
+        auto spans = mSpanned->getSpans(mStart + spanStart,
+                mStart + spanLimit, MetricAffectingSpanFilter);
+        spans = TextUtils.removeEmptySpans(spans, mSpanned, MetricAffectingSpanFilter);
 
-        if (spans.length > 0) {
-            ReplacementSpan replacement = null;
-            for (int j = 0; j < spans.length; j++) {
-                MetricAffectingSpan span = spans[j];
-                if (span instanceof ReplacementSpan) {
-                    replacement = (ReplacementSpan)span;
+        if (spans.size() > 0) {
+            ReplacementSpan* replacement = nullptr;
+            for (int j = 0; j < spans.size(); j++) {
+                MetricAffectingSpan* span = (MetricAffectingSpan*)spans[j];
+                if (dynamic_cast<ReplacementSpan*>(span)) {
+                    replacement = (ReplacementSpan*)span;
                 } else {
-                    span.updateMeasureState(wp);
+                    span->updateMeasureState(wp);
                 }
             }
 
-            if (replacement != null) {
+            if (replacement != nullptr) {
                 // If we have a replacement span, we're moving either to
                 // the start or end of this span.
                 return after ? spanLimit : spanStart;
@@ -489,7 +483,7 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
         }
     }
 
-    int cursorOpt = after ? Paint.CURSOR_AFTER : Paint.CURSOR_BEFORE;
+    int cursorOpt = after ? Paint::CURSOR_AFTER : Paint::CURSOR_BEFORE;
     if (mCharsValid) {
         return wp.getTextRunCursor(mChars, spanStart, spanLimit - spanStart,
                 runIsRtl, offset, cursorOpt);
@@ -499,7 +493,7 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
     }
 }
 
-void TextLine::expandMetricsFromPaint(FontMetricsInt& fmi, TextPaint& wp) {
+void TextLine::expandMetricsFromPaint(Paint::FontMetricsInt& fmi,const TextPaint& wp) {
     const int previousTop     = fmi.top;
     const int previousAscent  = fmi.ascent;
     const int previousDescent = fmi.descent;
@@ -512,13 +506,13 @@ void TextLine::expandMetricsFromPaint(FontMetricsInt& fmi, TextPaint& wp) {
             previousLeading);
 }
 
-void TextLine::updateMetrics(FontMetricsInt& fmi, int previousTop, int previousAscent,
+void TextLine::updateMetrics(Paint::FontMetricsInt& fmi, int previousTop, int previousAscent,
         int previousDescent, int previousBottom, int previousLeading) {
-    fmi.top     = Math.min(fmi.top,     previousTop);
-    fmi.ascent  = Math.min(fmi.ascent,  previousAscent);
-    fmi.descent = Math.max(fmi.descent, previousDescent);
-    fmi.bottom  = Math.max(fmi.bottom,  previousBottom);
-    fmi.leading = Math.max(fmi.leading, previousLeading);
+    fmi.top     = std::min(fmi.top,     previousTop);
+    fmi.ascent  = std::min(fmi.ascent,  previousAscent);
+    fmi.descent = std::max(fmi.descent, previousDescent);
+    fmi.bottom  = std::max(fmi.bottom,  previousBottom);
+    fmi.leading = std::max(fmi.leading, previousLeading);
 }
 
 void TextLine::drawStroke(TextPaint& wp, Canvas& c, int color, float position,
@@ -526,10 +520,10 @@ void TextLine::drawStroke(TextPaint& wp, Canvas& c, int color, float position,
     const float strokeTop = baseline + wp.baselineShift + position;
 
     const int previousColor = wp.getColor();
-    const Paint.Style previousStyle = wp.getStyle();
+    const Paint::Style previousStyle = wp.getStyle();
     const bool previousAntiAlias = wp.isAntiAlias();
 
-    wp.setStyle(Paint.Style.FILL);
+    wp.setStyle(Paint::Style::FILL);
     wp.setAntiAlias(true);
 
     wp.setColor(color);
@@ -546,43 +540,43 @@ float TextLine::getRunAdvance(TextPaint& wp, int start, int end, int contextStar
         return wp.getRunAdvance(mChars, start, end, contextStart, contextEnd, runIsRtl, offset);
     } else {
         const int delta = mStart;
-        if (mComputed == null) {
+        if (mComputed == nullptr) {
             return wp.getRunAdvance(mText, delta + start, delta + end,
                     delta + contextStart, delta + contextEnd, runIsRtl, delta + offset);
         } else {
-            return mComputed.getWidth(start + delta, end + delta);
+            return mComputed->getWidth(start + delta, end + delta);
         }
     }
 }
 
 float TextLine::handleText(TextPaint& wp, int start, int end,
         int contextStart, int contextEnd, bool runIsRtl,
-        Canvas& c, float x, int top, int y, int bottom,
-        FontMetricsInt& fmi, bool needWidth, int offset,
-        std::vector<DecorationInfo> decorations) {
+        Canvas* c, float x, int top, int y, int bottom,
+        Paint::FontMetricsInt* fmi, bool needWidth, int offset,
+        const std::vector<DecorationInfo>* decorations) {
 
     if (mIsJustifying) {
         wp.setWordSpacing(mAddedWidthForJustify);
     }
     // Get metrics first (even for empty strings or "0" width runs)
-    if (fmi != null) {
-        expandMetricsFromPaint(fmi, wp);
+    if (fmi != nullptr) {
+        expandMetricsFromPaint(*fmi, wp);
     }
 
     // No need to do anything if the run width is "0"
     if (end == start) {
-        return 0f;
+        return 0.f;
     }
 
     float totalWidth = 0;
 
-    const int numDecorations = decorations == null ? 0 : decorations.size();
-    if (needWidth || (c != null && (wp.bgColor != 0 || numDecorations != 0 || runIsRtl))) {
+    const int numDecorations = decorations == nullptr ? 0 : decorations->size();
+    if (needWidth || (c != nullptr && (wp.bgColor != 0 || numDecorations != 0 || runIsRtl))) {
         totalWidth = getRunAdvance(wp, start, end, contextStart, contextEnd, runIsRtl, offset);
     }
 
-    if (c != null) {
-        const float leftX, rightX;
+    if (c != nullptr) {
+        float leftX, rightX;
         if (runIsRtl) {
             leftX = x - totalWidth;
             rightX = x;
@@ -593,30 +587,30 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
 
         if (wp.bgColor != 0) {
             int previousColor = wp.getColor();
-            Paint.Style previousStyle = wp.getStyle();
+            Paint::Style previousStyle = wp.getStyle();
 
             wp.setColor(wp.bgColor);
-            wp.setStyle(Paint.Style.FILL);
-            c.drawRect(leftX, top, rightX, bottom, wp);
-
+            //wp.setStyle(Paint::Style::FILL);
+            c->rectangle(leftX,top,totalWidth,bottom-top);//drawRect(leftX, top, rightX, bottom, wp);
+            c->fill();
             wp.setStyle(previousStyle);
             wp.setColor(previousColor);
         }
 
-        drawTextRun(c, wp, start, end, contextStart, contextEnd, runIsRtl,
+        drawTextRun(*c, wp, start, end, contextStart, contextEnd, runIsRtl,
                 leftX, y + wp.baselineShift);
 
         if (numDecorations != 0) {
             for (int i = 0; i < numDecorations; i++) {
-                const DecorationInfo info = decorations.get(i);
+                const DecorationInfo info = decorations->at(i);
 
-                const int decorationStart = Math.max(info.start, start);
-                const int decorationEnd = Math.min(info.end, offset);
+                const int decorationStart = std::max(info.start, start);
+                const int decorationEnd = std::min(info.end, offset);
                 float decorationStartAdvance = getRunAdvance(
                         wp, start, end, contextStart, contextEnd, runIsRtl, decorationStart);
                 float decorationEndAdvance = getRunAdvance(
                         wp, start, end, contextStart, contextEnd, runIsRtl, decorationEnd);
-                const float decorationXLeft, decorationXRight;
+                float decorationXLeft, decorationXRight;
                 if (runIsRtl) {
                     decorationXLeft = rightX - decorationEndAdvance;
                     decorationXRight = rightX - decorationStartAdvance;
@@ -629,20 +623,18 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
                 // setUnderLineText() are called. For backward compatibility, we need to draw
                 // both underlines, the one with custom color first.
                 if (info.underlineColor != 0) {
-                    drawStroke(wp, c, info.underlineColor, wp.getUnderlinePosition(),
+                    drawStroke(wp, *c, info.underlineColor, wp.getUnderlinePosition(),
                             info.underlineThickness, decorationXLeft, decorationXRight, y);
                 }
                 if (info.isUnderlineText) {
-                    const float thickness =
-                            Math.max(wp.getUnderlineThickness(), 1.0f);
-                    drawStroke(wp, c, wp.getColor(), wp.getUnderlinePosition(), thickness,
+                    const float thickness = std::max(wp.getUnderlineThickness(), 1.0f);
+                    drawStroke(wp, *c, wp.getColor(), wp.getUnderlinePosition(), thickness,
                             decorationXLeft, decorationXRight, y);
                 }
 
                 if (info.isStrikeThruText) {
-                    const float thickness =
-                            Math.max(wp.getStrikeThruThickness(), 1.0f);
-                    drawStroke(wp, c, wp.getColor(), wp.getStrikeThruPosition(), thickness,
+                    const float thickness = std::max(wp.getStrikeThruThickness(), 1.0f);
+                    drawStroke(wp, *c, wp.getColor(), wp.getStrikeThruPosition(), thickness,
                             decorationXLeft, decorationXRight, y);
                 }
             }
@@ -653,60 +645,48 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
     return runIsRtl ? -totalWidth : totalWidth;
 }
 
-float TextLine::handleReplacement(ReplacementSpan replacement, TextPaint& wp,
-        int start, int limit, bool runIsRtl, Canvas& c,
-        float x, int top, int y, int bottom, FontMetricsInt fmi,
-        bool needWidth) {
+float TextLine::handleReplacement(ReplacementSpan& replacement,const TextPaint& wp,
+        int start, int limit, bool runIsRtl, Canvas* c, float x, int top,
+        int y, int bottom, Paint::FontMetricsInt* fmi, bool needWidth) {
 
     float ret = 0;
 
     int textStart = mStart + start;
     int textLimit = mStart + limit;
 
-    if (needWidth || (c != null && runIsRtl)) {
+    if (needWidth || (c != nullptr && runIsRtl)) {
         int previousTop = 0;
         int previousAscent = 0;
         int previousDescent = 0;
         int previousBottom = 0;
         int previousLeading = 0;
 
-        bool needUpdateMetrics = (fmi != null);
+        bool needUpdateMetrics = (fmi != nullptr);
 
         if (needUpdateMetrics) {
-            previousTop     = fmi.top;
-            previousAscent  = fmi.ascent;
-            previousDescent = fmi.descent;
-            previousBottom  = fmi.bottom;
-            previousLeading = fmi.leading;
+            previousTop     = fmi->top;
+            previousAscent  = fmi->ascent;
+            previousDescent = fmi->descent;
+            previousBottom  = fmi->bottom;
+            previousLeading = fmi->leading;
         }
 
         ret = replacement.getSize(wp, mText, textStart, textLimit, fmi);
 
         if (needUpdateMetrics) {
-            updateMetrics(fmi, previousTop, previousAscent, previousDescent, previousBottom,
+            updateMetrics(*fmi, previousTop, previousAscent, previousDescent, previousBottom,
                     previousLeading);
         }
     }
 
-    if (c != null) {
+    if (c != nullptr) {
         if (runIsRtl) {
             x -= ret;
         }
-        replacement.draw(c, mText, textStart, textLimit,
-                x, top, y, bottom, wp);
+        replacement.draw(*c, mText, textStart, textLimit, x, top, y, bottom, wp);
     }
 
     return runIsRtl ? -ret : ret;
-}
-
-int TextLine::adjustStartHyphenEdit(int start, int startHyphenEdit) {
-    // Only draw hyphens on first in line. Disable them otherwise.
-    return start > 0 ? Paint.START_HYPHEN_EDIT_NO_EDIT : startHyphenEdit;
-}
-
-int TextLine::adjustEndHyphenEdit(int limit, int endHyphenEdit) {
-    // Only draw hyphens on last run in line. Disable them otherwise.
-    return limit < mLen ? Paint.END_HYPHEN_EDIT_NO_EDIT : endHyphenEdit;
 }
 
 void TextLine::extractDecorationInfo(TextPaint& paint, DecorationInfo& info) {
@@ -724,26 +704,26 @@ void TextLine::extractDecorationInfo(TextPaint& paint, DecorationInfo& info) {
 }
 
 float TextLine::handleRun(int start, int measureLimit,
-        int limit, bool runIsRtl, Canvas& c, float x, int top, int y,
-        int bottom, FontMetricsInt fmi, bool needWidth) {
+        int limit, bool runIsRtl, Canvas* c, float x, int top, int y,
+        int bottom, Paint::FontMetricsInt* fmi, bool needWidth) {
 
     if (measureLimit < start || measureLimit > limit) {
-        throw new IndexOutOfBoundsException("measureLimit (" + measureLimit + ") is out of "
-                + "start (" + start + ") and limit (" + limit + ") bounds");
+        //("measureLimit (" + measureLimit + ") is out of "
+        //        + "start (" + start + ") and limit (" + limit + ") bounds");
     }
 
     // Case of an empty line, make sure we update fmi according to mPaint
     if (start == measureLimit) {
-        const TextPaint wp = mWorkPaint;
-        wp.set(mPaint);
-        if (fmi != null) {
-            expandMetricsFromPaint(fmi, wp);
+        TextPaint& wp = mWorkPaint;
+        wp.set(*mPaint);
+        if (fmi != nullptr) {
+            expandMetricsFromPaint(*fmi, wp);
         }
-        return 0f;
+        return 0.f;
     }
 
-    const bool needsSpanMeasurement;
-    if (mSpanned == null) {
+    bool needsSpanMeasurement;
+    if (mSpanned == nullptr) {
         needsSpanMeasurement = false;
     } else {
         mMetricAffectingSpanSpanSet.init(mSpanned, mStart + start, mStart + limit);
@@ -753,12 +733,12 @@ float TextLine::handleRun(int start, int measureLimit,
     }
 
     if (!needsSpanMeasurement) {
-        const TextPaint wp = mWorkPaint;
-        wp.set(mPaint);
+        TextPaint& wp = mWorkPaint;
+        wp.set(*mPaint);
         wp.setStartHyphenEdit(adjustStartHyphenEdit(start, wp.getStartHyphenEdit()));
         wp.setEndHyphenEdit(adjustEndHyphenEdit(limit, wp.getEndHyphenEdit()));
         return handleText(wp, start, limit, start, limit, runIsRtl, c, x, top,
-                y, bottom, fmi, needWidth, measureLimit, null);
+                y, bottom, fmi, needWidth, measureLimit, nullptr);
     }
 
     // Shaping needs to take into account context up to metric boundaries,
@@ -768,14 +748,13 @@ float TextLine::handleRun(int start, int measureLimit,
     // for the run bounds.
     const float originalX = x;
     for (int i = start, inext; i < measureLimit; i = inext) {
-        const TextPaint wp = mWorkPaint;
-        wp.set(mPaint);
+        TextPaint& wp = mWorkPaint;
+        wp.set(*mPaint);
 
-        inext = mMetricAffectingSpanSpanSet.getNextTransition(mStart + i, mStart + limit) -
-                mStart;
-        int mlimit = Math.min(inext, measureLimit);
+        inext = mMetricAffectingSpanSpanSet.getNextTransition(mStart + i, mStart + limit) - mStart;
+        int mlimit = std::min(inext, measureLimit);
 
-        ReplacementSpan replacement = null;
+        ReplacementSpan* replacement = nullptr;
 
         for (int j = 0; j < mMetricAffectingSpanSpanSet.numberOfSpans; j++) {
             // Both intervals [spanStarts..spanEnds] and [mStart + i..mStart + mlimit] are NOT
@@ -783,44 +762,43 @@ float TextLine::handleRun(int start, int measureLimit,
             if ((mMetricAffectingSpanSpanSet.spanStarts[j] >= mStart + mlimit)
                     || (mMetricAffectingSpanSpanSet.spanEnds[j] <= mStart + i)) continue;
 
-            bool insideEllipsis =
+            const bool insideEllipsis =
                     mStart + mEllipsisStart <= mMetricAffectingSpanSpanSet.spanStarts[j]
                     && mMetricAffectingSpanSpanSet.spanEnds[j] <= mStart + mEllipsisEnd;
-            const MetricAffectingSpan span = mMetricAffectingSpanSpanSet.spans[j];
-            if (span instanceof ReplacementSpan) {
-                replacement = !insideEllipsis ? (ReplacementSpan) span : null;
+            MetricAffectingSpan* span = (MetricAffectingSpan*)mMetricAffectingSpanSpanSet.spans[j];
+            if (dynamic_cast<ReplacementSpan*>(span)) {
+                replacement = !insideEllipsis ? (ReplacementSpan*) span : nullptr;
             } else {
                 // We might have a replacement that uses the draw
                 // state, otherwise measure state would suffice.
-                span.updateDrawState(wp);
+                span->updateDrawState(wp);
             }
         }
 
-        if (replacement != null) {
-            x += handleReplacement(replacement, wp, i, mlimit, runIsRtl, c, x, top, y,
+        if (replacement != nullptr) {
+            x += handleReplacement(*replacement, wp, i, mlimit, runIsRtl, c, x, top, y,
                     bottom, fmi, needWidth || mlimit < measureLimit);
             continue;
         }
 
-        const TextPaint activePaint = mActivePaint;
-        activePaint.set(mPaint);
+        TextPaint activePaint = mActivePaint;
+        activePaint.set(*mPaint);
         int activeStart = i;
         int activeEnd = mlimit;
-        const DecorationInfo decorationInfo = mDecorationInfo;
+        DecorationInfo decorationInfo = mDecorationInfo;
         mDecorations.clear();
         for (int j = i, jnext; j < mlimit; j = jnext) {
-            jnext = mCharacterStyleSpanSet.getNextTransition(mStart + j, mStart + inext) -
-                    mStart;
+            jnext = mCharacterStyleSpanSet.getNextTransition(mStart + j, mStart + inext) - mStart;
 
-            const int offset = Math.min(jnext, mlimit);
-            wp.set(mPaint);
+            const int offset = std::min(jnext, mlimit);
+            wp.set(*mPaint);
             for (int k = 0; k < mCharacterStyleSpanSet.numberOfSpans; k++) {
                 // Intentionally using >= and <= as explained above
                 if ((mCharacterStyleSpanSet.spanStarts[k] >= mStart + offset) ||
                         (mCharacterStyleSpanSet.spanEnds[k] <= mStart + j)) continue;
 
-                const CharacterStyle span = mCharacterStyleSpanSet.spans[k];
-                span.updateDrawState(wp);
+                CharacterStyle* span = (CharacterStyle*)mCharacterStyleSpanSet.spans[k];
+                span->updateDrawState(wp);
             }
 
             extractDecorationInfo(wp, decorationInfo);
@@ -834,13 +812,11 @@ float TextLine::handleRun(int start, int measureLimit,
                 // The style of the present chunk of text is substantially different from the
                 // style of the previous chunk. We need to handle the active piece of text
                 // and restart with the present chunk.
-                activePaint.setStartHyphenEdit(
-                        adjustStartHyphenEdit(activeStart, mPaint.getStartHyphenEdit()));
-                activePaint.setEndHyphenEdit(
-                        adjustEndHyphenEdit(activeEnd, mPaint.getEndHyphenEdit()));
+                activePaint.setStartHyphenEdit(adjustStartHyphenEdit(activeStart, mPaint->getStartHyphenEdit()));
+                activePaint.setEndHyphenEdit(adjustEndHyphenEdit(activeEnd, mPaint->getEndHyphenEdit()));
                 x += handleText(activePaint, activeStart, activeEnd, i, inext, runIsRtl, c, x,
                         top, y, bottom, fmi, needWidth || activeEnd < measureLimit,
-                        Math.min(activeEnd, mlimit), mDecorations);
+                        std::min(activeEnd, mlimit), &mDecorations);
 
                 activeStart = j;
                 activePaint.set(wp);
@@ -854,20 +830,18 @@ float TextLine::handleRun(int start, int measureLimit,
 
             activeEnd = jnext;
             if (decorationInfo.hasDecoration()) {
-                const DecorationInfo copy = decorationInfo.copyInfo();
+                DecorationInfo copy = decorationInfo.copyInfo();
                 copy.start = j;
                 copy.end = jnext;
-                mDecorations.add(copy);
+                mDecorations.emplace_back(copy);
             }
         }
         // Handle the final piece of text.
-        activePaint.setStartHyphenEdit(
-                adjustStartHyphenEdit(activeStart, mPaint.getStartHyphenEdit()));
-        activePaint.setEndHyphenEdit(
-                adjustEndHyphenEdit(activeEnd, mPaint.getEndHyphenEdit()));
+        activePaint.setStartHyphenEdit(adjustStartHyphenEdit(activeStart, mPaint->getStartHyphenEdit()));
+        activePaint.setEndHyphenEdit(adjustEndHyphenEdit(activeEnd, mPaint->getEndHyphenEdit()));
         x += handleText(activePaint, activeStart, activeEnd, i, inext, runIsRtl, c, x,
                 top, y, bottom, fmi, needWidth || activeEnd < measureLimit,
-                Math.min(activeEnd, mlimit), mDecorations);
+                std::min(activeEnd, mlimit), &mDecorations);
     }
 
     return x - originalX;
@@ -895,15 +869,10 @@ float TextLine::nextTab(float h) {
     return TabStops::nextDefaultStop(h, TAB_INCREMENT);
 }
 
-bool TextLine::isStretchableWhitespace(int ch) const{
-    // TODO: Support NBSP and other stretchable whitespace (b/34013491 and b/68204709).
-    return ch == 0x0020;
-}
-
 int TextLine::countStretchableSpaces(int start, int end) const{
     int count = 0;
     for (int i = start; i < end; i++) {
-        char c = mCharsValid ? mChars[i] : mText.charAt(i + mStart);
+        char c = mCharsValid ? mChars[i] : mText->charAt(i + mStart);
         if (isStretchableWhitespace(c)) {
             count++;
         }
@@ -911,28 +880,28 @@ int TextLine::countStretchableSpaces(int start, int end) const{
     return count;
 }
 
-bool TextLine::isLineEndSpace(char ch) const{
+bool TextLine::isLineEndSpace(char16_t ch) {
     return ch == ' ' || ch == '\t' || ch == 0x1680
             || (0x2000 <= ch && ch <= 0x200A && ch != 0x2007)
             || ch == 0x205F || ch == 0x3000;
 }
 
 
-bool TextLine::equalAttributes(TextPaint& lp, TextPaint& rp) {
-    return lp.getColorFilter() == rp.getColorFilter()
-            && lp.getMaskFilter() == rp.getMaskFilter()
-            && lp.getShader() == rp.getShader()
-            && lp.getTypeface() == rp.getTypeface()
-            && lp.getXfermode() == rp.getXfermode()
-            && lp.getTextLocales().equals(rp.getTextLocales())
-            && TextUtils.equals(lp.getFontFeatureSettings(), rp.getFontFeatureSettings())
-            && TextUtils.equals(lp.getFontVariationSettings(), rp.getFontVariationSettings())
-            && lp.getShadowLayerRadius() == rp.getShadowLayerRadius()
-            && lp.getShadowLayerDx() == rp.getShadowLayerDx()
-            && lp.getShadowLayerDy() == rp.getShadowLayerDy()
-            && lp.getShadowLayerColor() == rp.getShadowLayerColor()
-            && lp.getFlags() == rp.getFlags()
-            && lp.getHinting() == rp.getHinting()
+bool TextLine::equalAttributes(const TextPaint& lp, const TextPaint& rp) {
+    return //lp.getColorFilter() == rp.getColorFilter()
+           // && lp.getMaskFilter() == rp.getMaskFilter()
+           // && lp.getShader() == rp.getShader()
+           // && lp.getTypeface() == rp.getTypeface()
+           // && lp.getXfermode() == rp.getXfermode()
+           // && lp.getTextLocales().equals(rp.getTextLocales())
+           // && TextUtils.equals(lp.getFontFeatureSettings(), rp.getFontFeatureSettings())
+           // && TextUtils.equals(lp.getFontVariationSettings(), rp.getFontVariationSettings())
+           // && lp.getShadowLayerRadius() == rp.getShadowLayerRadius()
+           // && lp.getShadowLayerDx() == rp.getShadowLayerDx()
+           // && lp.getShadowLayerDy() == rp.getShadowLayerDy()
+           // && lp.getShadowLayerColor() == rp.getShadowLayerColor()
+             lp.getFlags() == rp.getFlags()
+           // && lp.getHinting() == rp.getHinting()
             && lp.getStyle() == rp.getStyle()
             && lp.getColor() == rp.getColor()
             && lp.getStrokeWidth() == rp.getStrokeWidth()
@@ -942,8 +911,8 @@ bool TextLine::equalAttributes(TextPaint& lp, TextPaint& rp) {
             && lp.getTextAlign() == rp.getTextAlign()
             && lp.isElegantTextHeight() == rp.isElegantTextHeight()
             && lp.getTextSize() == rp.getTextSize()
-            && lp.getTextScaleX() == rp.getTextScaleX()
-            && lp.getTextSkewX() == rp.getTextSkewX()
+           // && lp.getTextScaleX() == rp.getTextScaleX()
+           // && lp.getTextSkewX() == rp.getTextSkewX()
             && lp.getLetterSpacing() == rp.getLetterSpacing()
             && lp.getWordSpacing() == rp.getWordSpacing()
             && lp.getStartHyphenEdit() == rp.getStartHyphenEdit()

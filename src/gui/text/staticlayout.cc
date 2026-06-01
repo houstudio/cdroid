@@ -1,6 +1,7 @@
 #include <memory>
 #include <text/linebreaker.h>
 #include <text/staticlayout.h>
+#include <text/precomputedtext.h>
 #include <porting/cdlog.h>
 #include <minikin/LineBreaker.h>
 namespace cdroid{
@@ -330,17 +331,17 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             .setIndents(indents)
             .build();*/
 
-    PrecomputedText.ParagraphInfo[] paragraphInfo = null;
+    std::vector<PrecomputedText::ParagraphInfo> paragraphInfo;
     Spanned* spanned = dynamic_cast<Spanned*>(source);
     /*if (dynamic_cast<PrecomputedText*>(source)) {
-        PrecomputedText precomputed = (PrecomputedText) source;
-        const int checkResult =  precomputed.checkResultUsable(bufStart, bufEnd, textDir, paint,
+        PrecomputedText* precomputed = (PrecomputedText*) source;
+        const int checkResult =  precomputed->checkResultUsable(bufStart, bufEnd, textDir, paint,
                         b.mBreakStrategy, b.mHyphenationFrequency);
         switch (checkResult) {
-            case PrecomputedText.Params.UNUSABLE:
+        case PrecomputedText::Params::UNUSABLE:
                 break;
-            case PrecomputedText.Params.NEED_RECOMPUTE:
-                PrecomputedText.Params newParams =
+        case PrecomputedText::Params::NEED_RECOMPUTE:
+             PrecomputedText::Params newParams =
                         new PrecomputedText.Params.Builder(paint)
                             .setBreakStrategy(b.mBreakStrategy)
                             .setHyphenationFrequency(b.mHyphenationFrequency)
@@ -349,7 +350,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
                 precomputed = PrecomputedText.create(precomputed, newParams);
                 paragraphInfo = precomputed.getParagraphInfo();
                 break;
-            case PrecomputedText.Params.USABLE:
+        case PrecomputedText::Params::USABLE:
                 // Some parameters are different from the ones when measured text is created.
                 paragraphInfo = precomputed.getParagraphInfo();
                 break;
@@ -566,13 +567,12 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
     }
 }
 
-int StaticLayout::out(CharSequence* text, int start, int end, int above, int below,
-        int top, int bottom, int v, float spacingmult, float spacingadd,
-        const std::vector<ParcelableSpan*>* chooseHt, const std::vector<int>& chooseHtv, Paint::FontMetricsInt& fm,
-        bool hasTab, int hyphenEdit, bool needMultiply, MeasuredParagraph* measured,
-        int bufEnd, bool includePad, bool trackPad, bool addLastLineLineSpacing,const std::vector<char16_t>& chs,
-        int widthStart, TextUtils::TruncateAt ellipsize, float ellipsisWidth,
-        float textWidth, TextPaint* paint, bool moreChars) {
+int StaticLayout::out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
+        int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
+        const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm,bool hasTab, int hyphenEdit,
+        bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
+        bool addLastLineLineSpacing,const std::vector<char16_t>& chs,int widthStart, TextUtils::TruncateAt ellipsize,
+        float ellipsisWidth,float textWidth, TextPaint* paint, bool moreChars) {
     const int j = mLineCount;
     const int off = j * mColumns;
     const int want = off + mColumns + TOP;
@@ -588,17 +588,18 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
         mLineDirections.resize(j+8);
     }
 
-    if (chooseHt!=nullptr) {
+    if (!chooseHt.empty()) {
         fm.ascent = above;
         fm.descent = below;
         fm.top = top;
         fm.bottom = bottom;
-        for (int i = 0; i < chooseHt->size(); i++) {
-            if (dynamic_cast<LineHeightSpan::WithDensity*>(chooseHt->at[i])) {
-                ((LineHeightSpan::WithDensity*) chooseHt->at(i))
-                        ->chooseHeight(text, start, end, chooseHtv[i], v, fm, paint);
+        for (size_t i = 0; i < chooseHt.size(); i++) {
+            int chooseHtvVal = chooseHtv != nullptr ? (*chooseHtv)[i] : 0;
+            if (dynamic_cast<LineHeightSpan::WithDensity*>(chooseHt[i])) {
+                ((LineHeightSpan::WithDensity*) chooseHt[i])
+                        ->chooseHeight(text, start, end, chooseHtvVal, v, fm, paint);
             } else {
-                dynamic_cast<LineHeightSpan*>(chooseHt->at(i))->chooseHeight(text, start, end, chooseHtv[i], v, fm);
+                dynamic_cast<LineHeightSpan*>(chooseHt[i])->chooseHeight(text, start, end, chooseHtvVal, v, fm);
             }
         }
         above = fm.ascent;
@@ -689,7 +690,7 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
-    mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
+    //mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
 
     mLineCount++;
     return v;
@@ -821,7 +822,7 @@ int StaticLayout::getLineForVertical(int vertical) const{
     }
 }
 
-const Directions& StaticLayout::getLineDirections(int line) const{
+const Directions* StaticLayout::getLineDirections(int line) const{
     if (line > getLineCount()) {
         //throw new ArrayIndexOutOfBoundsException();
     }

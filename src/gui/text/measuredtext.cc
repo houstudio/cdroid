@@ -91,22 +91,22 @@ float MeasuredText::getCharWidthAt(int offset) const{
 }*/
 ////////////////////////////////////////////////////////////////////////////////////////////
 //public static final class Builder {
-MeasuredText::Builder::Builder(std::vector<char16_t>& text) {
+MeasuredText::Builder::Builder(const std::vector<char16_t>& text) {
     //Preconditions.checkNotNull(text);
     mText = text;
     mNativePtr = new minikin::MeasuredTextBuilder();
 }
 
-MeasuredText::Builder::Builder(MeasuredText& text) {
+MeasuredText::Builder::Builder(const MeasuredText* text) {
     //Preconditions.checkNotNull(text);
-    mText = text.mChars;
+    mText = text->mChars;
     mNativePtr = new minikin::MeasuredTextBuilder();
-    if (!text.mComputeLayout) {
+    if (!text->mComputeLayout) {
         //LOGE("The input MeasuredText must not be created with setComputeLayout(false).");
     }
-    mComputeHyphenation = text.mComputeHyphenation;
-    mComputeLayout = text.mComputeLayout;
-    mHintMt = &text;
+    mComputeHyphenation = text->mComputeHyphenation;
+    mComputeLayout = text->mComputeLayout;
+    mHintMt = text;
 }
 
 MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineBreakConfig* lineBreakConfig, int length, bool isRtl) {

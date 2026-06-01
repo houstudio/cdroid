@@ -161,7 +161,7 @@ public:
     virtual int getLineStart(int line)const=0;
     virtual int getParagraphDirection(int line)const=0;
     virtual bool getLineContainsTab(int line)const=0;
-    virtual const Directions& getLineDirections(int line)const=0;
+    virtual const Directions* getLineDirections(int line)const=0;
     virtual int getTopPadding()const=0;
     virtual int getBottomPadding()const=0;
 
@@ -302,7 +302,7 @@ public:
         size_t length() const override{
             return mText->length();
         }
-        CharSequence* subSequence(int start, int end) override;
+        CharSequence* subSequence(int start, int end)const override;
         std::string toString()const override;
         std::wstring toWString()const override;
     };
@@ -329,7 +329,7 @@ public:
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
             return mSpanned->nextSpanTransition(start, limit, type);
         }
-        CharSequence* subSequence(int start, int end) override{
+        CharSequence* subSequence(int start, int end)const override{
             return nullptr;
         }
         int charAt(int offset) const override{

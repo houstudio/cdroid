@@ -58,7 +58,7 @@ static int isRtlCodePoint(int codePoint) {
 class TextDirectionHeuristicImpl:public TextDirectionHeuristic {
 private:
     TextDirectionAlgorithm mAlgorithm;
-    bool doCheck(CharSequence* cs, int start, int count) {
+    bool doCheck(CharSequence* cs, int start, int count) const{
         switch(mAlgorithm/*.checkRtl*/(cs, start, count)) {
         case STATE_TRUE:  return true;
         case STATE_FALSE: return false;
@@ -66,18 +66,18 @@ private:
         }
     }
 protected:
-    virtual bool defaultIsRtl()=0;
+    virtual bool defaultIsRtl()const =0;
 public:
     TextDirectionHeuristicImpl(const TextDirectionAlgorithm& algorithm) {
         mAlgorithm = algorithm;
     }
 
 public:
-    bool isRtl(const char* array, int start, int count) override{
+    bool isRtl(const char16_t* array, int start, int count)const override{
         return 0;//isRtl(CharBuffer.wrap(array), start, count);
     }
 
-    bool isRtl(CharSequence* cs, int start, int count) override{
+    bool isRtl(CharSequence* cs, int start, int count)const override{
         if (cs == nullptr || start < 0 || count < 0 || cs->length() - count < start) {
             //throw new IllegalArgumentException();
         }
@@ -92,7 +92,7 @@ class TextDirectionHeuristicInternal:public TextDirectionHeuristicImpl {
 private:
     bool mDefaultIsRtl;
 protected:
-    bool defaultIsRtl() override{
+    bool defaultIsRtl()const override{
         return mDefaultIsRtl;
     }
 public:
@@ -167,7 +167,7 @@ class TextDirectionHeuristicLocale :public TextDirectionHeuristicImpl {
 public:
     TextDirectionHeuristicLocale() :TextDirectionHeuristicImpl(nullptr){}
 protected:
-    bool defaultIsRtl() override{
+    bool defaultIsRtl() const override{
         const int dir = View::LAYOUT_DIRECTION_LTR;//TextUtils.getLayoutDirectionFromLocale(java.util.Locale.getDefault());
         return (dir == View::LAYOUT_DIRECTION_RTL);
     }

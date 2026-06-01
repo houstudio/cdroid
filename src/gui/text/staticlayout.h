@@ -63,7 +63,7 @@ public:
         return (mLines[mColumns * line + TAB] & TAB_MASK) != 0;
     }
 
-    const Directions& getLineDirections(int line) const override;
+    const Directions* getLineDirections(int line) const override;
 
     int getTopPadding() const override{
         return mTopPadding;
@@ -125,7 +125,7 @@ private:
     static constexpr int ELLIPSIS_COUNT = 6;
 
     std::vector<int> mLines;
-    std::vector<Directions> mLineDirections;
+    std::vector<Directions*> mLineDirections;
     int mMaximumVisibleLineCount = INT_MAX;
 
     static constexpr int START_MASK = 0x1FFFFFFF;

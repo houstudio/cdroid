@@ -16,7 +16,7 @@ public:
     virtual ~CharSequence() = default;
     virtual size_t length()const{return 0;}
     virtual int charAt(int)const{return 0;}
-    virtual CharSequence*subSequence(int,int){return nullptr;}
+    virtual CharSequence*subSequence(int,int)const{return nullptr;}
     virtual std::string toString() const = 0;
     virtual std::wstring toWString() const = 0;
     // Copies characters from [start, end) into dest starting at destPos.
@@ -34,11 +34,15 @@ public:
 class CharacterStyle : public ParcelableSpan {
 public:
     virtual ~CharacterStyle() = default;
+    virtual void updateDrawState(const Paint& paint){};
 };
 class MetricAffectingSpan:public CharacterStyle{
+public:
+    virtual void updateMeasureState(TextPaint& textPaint){};
 };
 class ReplacementSpan : public MetricAffectingSpan {
-
+public:
+    virtual int  getSize(const Paint& paint, CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
 };
 class AlignmentSpan :public ParagraphStyle{
 protected:
@@ -179,7 +183,7 @@ public:
 };
 
 // Spannable: mutable Spanned (supports setSpan/removeSpan)
-class Spannable : public Spanned {
+class Spannable : virtual public Spanned {
 public:
     virtual ~Spannable() = default;
     virtual void setSpan(ParcelableSpan* what, int start, int end, int flags) = 0;
@@ -187,7 +191,7 @@ public:
 };
 
 // Internal base class for SpannedString and SpannableString (similar to Android's SpannableStringInternal)
-class SpannableStringInternal : public Spanned {
+class SpannableStringInternal : virtual public Spanned {
 protected:
     std::wstring mText;
     std::vector<SpanInfo> mSpans;
@@ -281,7 +285,7 @@ public:
     }
 
     // SpannedString is immutable, so no setSpan here. Use SpannableStringBuilder
-    SpannedString* subSequence(int start, int end) override{
+    SpannedString* subSequence(int start, int end)const override{
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return new SpannedString();
@@ -298,9 +302,10 @@ public:
 };
 
 // Mutable SpannableString: immutable text with mutable spans, matching Android semantics.
-class SpannableString : public SpannableStringInternal, public Spannable {
+class SpannableString : virtual public SpannableStringInternal,virtual public Spannable {
 public:
     SpannableString() = default;
+    SpannableString(const CharSequence*, bool ignoreNoCopySpan );
     explicit SpannableString(const std::string& text)
         : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
     explicit SpannableString(const std::wstring& text)

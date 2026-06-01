@@ -1,7 +1,15 @@
 project(cdtext)
 add_subdirectory(minikin)
-add_library(cdtext 
-    textcontainer.cc
+add_library(cdtext
+    androidbidi.cc
+    textdirectionheuristics.cc
+    measuredparagraph.cc
+    measuredtext.cc
+    linebreaker.cc
+    layout.cc
+    staticlayout.cc
+    precomputedtext.cc
+    #textline.cc
     )
 target_link_libraries(cdtext minikin)
 
@@ -13,6 +21,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/minikin/include
     ${PROJECT_SOURCE_DIR}/minikin/libs
     ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/gui
     ${HARFBUZZ_INCLUDE_DIRS}
     ${FRIBIDI_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
