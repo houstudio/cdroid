@@ -43,6 +43,7 @@ public:
 class ReplacementSpan : public MetricAffectingSpan {
 public:
     virtual int  getSize(const Paint& paint, CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
+    virtual void draw(Canvas& canvas, CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)=0;
 };
 class AlignmentSpan :public ParagraphStyle{
 protected:

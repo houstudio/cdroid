@@ -527,8 +527,10 @@ void TextLine::drawStroke(TextPaint& wp, Canvas& c, int color, float position,
     wp.setAntiAlias(true);
 
     wp.setColor(color);
-    c.drawRect(xleft, strokeTop, xright, strokeTop + thickness, wp);
-
+    c.set_color(color);
+    //c.drawRect(xleft, strokeTop, xright, strokeTop + thickness, wp);
+    c.rectangle(xleft,strokeTop,xright-xleft,thickness);
+    c.fill();
     wp.setStyle(previousStyle);
     wp.setColor(previousColor);
     wp.setAntiAlias(previousAntiAlias);
