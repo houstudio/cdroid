@@ -26,7 +26,7 @@ namespace minikin {
 // These could be considered helper methods of layout, but need only be loosely coupled, so
 // are separate.
 
-static float getRunAdvance(const float* advances, const uint16_t* buf, size_t layoutStart,
+static float getRunAdvance(const float* advances, const uint32_t* buf, size_t layoutStart,
                            size_t start, size_t count, size_t offset) {
     float advance = 0.0f;
     size_t lastCluster = start;
@@ -66,7 +66,7 @@ static float getRunAdvance(const float* advances, const uint16_t* buf, size_t la
     return advance;
 }
 
-float getRunAdvance(const float* advances, const uint16_t* buf, size_t start, size_t count,
+float getRunAdvance(const float* advances, const uint32_t* buf, size_t start, size_t count,
                     size_t offset) {
     return getRunAdvance(advances, buf, start, start, count, offset);
 }
@@ -79,7 +79,7 @@ float getRunAdvance(const float* advances, const uint16_t* buf, size_t start, si
  * The actual implementation fast-forwards through clusters to get "close", then does a finer-grain
  * search within the cluster and grapheme breaks.
  */
-size_t getOffsetForAdvance(const float* advances, const uint16_t* buf, size_t start, size_t count,
+size_t getOffsetForAdvance(const float* advances, const uint32_t* buf, size_t start, size_t count,
                            float advance) {
     float x = 0.0f, xLastClusterStart = 0.0f, xSearchStart = 0.0f;
     size_t lastClusterStart = start, searchStart = start;

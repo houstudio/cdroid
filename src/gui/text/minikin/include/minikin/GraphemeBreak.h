@@ -30,12 +30,12 @@ public:
     // Determine whether the given offset is a grapheme break.
     // This implementation generally follows Unicode's UTR #29 extended
     // grapheme break, with various tweaks.
-    static bool isGraphemeBreak(const float* advances, const uint16_t* buf, size_t start,
+    static bool isGraphemeBreak(const float* advances, const uint32_t* buf, size_t start,
                                 size_t count, size_t offset);
 
     // Matches Android's Java API. Note, return (size_t)-1 for AT to
     // signal non-break because unsigned return type.
-    static size_t getTextRunCursor(const float* advances, const uint16_t* buf, size_t start,
+    static size_t getTextRunCursor(const float* advances, const uint32_t* buf, size_t start,
                                    size_t count, size_t offset, MoveOpt opt);
 };
 

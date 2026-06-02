@@ -59,7 +59,7 @@ bool isPureKiller(uint32_t c) {
             c == 0x1172B);
 }
 
-bool GraphemeBreak::isGraphemeBreak(const float* advances, const uint16_t* buf, size_t start,
+bool GraphemeBreak::isGraphemeBreak(const float* advances, const uint32_t* buf, size_t start,
                                     size_t count, const size_t offset) {
     // This implementation closely follows Unicode Standard Annex #29 on
     // Unicode Text Segmentation (http://www.unicode.org/reports/tr29/),
@@ -185,7 +185,7 @@ bool GraphemeBreak::isGraphemeBreak(const float* advances, const uint16_t* buf, 
     return true;
 }
 
-size_t GraphemeBreak::getTextRunCursor(const float* advances, const uint16_t* buf, size_t start,
+size_t GraphemeBreak::getTextRunCursor(const float* advances, const uint32_t* buf, size_t start,
                                        size_t count, size_t offset, MoveOpt opt) {
     switch (opt) {
         case AFTER:
