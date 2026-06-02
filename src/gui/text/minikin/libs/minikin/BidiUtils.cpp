@@ -29,6 +29,37 @@
 
 namespace minikin {
 
+// Helper function to convert UTF-32 to UTF-16
+// Also builds mapping tables between UTF-32 and UTF-16 indices
+static void convertUtf32ToUtf16(const char32_t* data, size_t size,
+                                std::vector<uint16_t>* outUtf16,
+                                std::vector<uint32_t>* outUtf32ToUtf16,
+                                std::vector<uint32_t>* outUtf16ToUtf32) {
+    outUtf16->reserve(size);
+    outUtf32ToUtf16->resize(size + 1);
+    outUtf16ToUtf32->reserve(size * 2);  // Worst case: all surrogate pairs
+    
+    uint32_t utf16Offset = 0;
+    for (size_t i = 0; i < size; i++) {
+        (*outUtf32ToUtf16)[i] = utf16Offset;
+        char32_t cp = data[i];
+        if (cp <= 0xFFFF) {
+            outUtf16->push_back(static_cast<uint16_t>(cp));
+            outUtf16ToUtf32->push_back(static_cast<uint32_t>(i));
+            utf16Offset++;
+        } else {
+            // Surrogate pair for characters outside BMP
+            cp -= 0x10000;
+            outUtf16->push_back(static_cast<uint16_t>(0xD800 | ((cp >> 10) & 0x3FF)));
+            outUtf16->push_back(static_cast<uint16_t>(0xDC00 | (cp & 0x3FF)));
+            outUtf16ToUtf32->push_back(static_cast<uint32_t>(i));
+            outUtf16ToUtf32->push_back(static_cast<uint32_t>(i));  // Both surrogates map to same UTF-32 index
+            utf16Offset += 2;
+        }
+    }
+    (*outUtf32ToUtf16)[size] = utf16Offset;
+}
+
 static inline UBiDiLevel bidiToUBidiLevel(Bidi bidi) {
     switch (bidi) {
         case Bidi::LTR:
@@ -52,7 +83,7 @@ static inline UBiDiLevel bidiToUBidiLevel(Bidi bidi) {
 BidiText::RunInfo BidiText::getRunInfoAt(uint32_t runOffset) const {
     MINIKIN_ASSERT(runOffset < mRunCount, "Out of range access. %d/%d", runOffset, mRunCount);
     if (mRunCount == 1) {
-        // Single run. No need to iteract with UBiDi.
+        // Single run. No need to interact with UBiDi.
         return {mRange, mIsRtl};
     }
 
@@ -63,8 +94,13 @@ BidiText::RunInfo BidiText::getRunInfoAt(uint32_t runOffset) const {
         ALOGE("invalid visual run");
         return {Range::invalidRange(), false};
     }
-    const uint32_t runStart = std::max(static_cast<uint32_t>(startRun), mRange.getStart());
-    const uint32_t runEnd = std::min(static_cast<uint32_t>(startRun + lengthRun), mRange.getEnd());
+    
+    // Convert UTF-16 offsets to UTF-32 offsets
+    const uint32_t utf32Start = mUtf16ToUtf32[static_cast<size_t>(startRun)];
+    const uint32_t utf32End = mUtf16ToUtf32[static_cast<size_t>(startRun + lengthRun - 1)] + 1;
+    
+    const uint32_t runStart = std::max(utf32Start, mRange.getStart());
+    const uint32_t runEnd = std::min(utf32End, mRange.getEnd());
     if (runEnd <= runStart) {
         // skip the empty run.
         return {Range::invalidRange(), false};
@@ -72,7 +108,7 @@ BidiText::RunInfo BidiText::getRunInfoAt(uint32_t runOffset) const {
     return {Range(runStart, runEnd), (runDir == UBIDI_RTL)};
 }
 
-BidiText::BidiText(const U16StringPiece& textBuf, const Range& range, Bidi bidiFlags)
+BidiText::BidiText(const U32StringPiece& textBuf, const Range& range, Bidi bidiFlags)
         : mRange(range), mIsRtl(isRtl(bidiFlags)), mRunCount(1 /* by default, single run */) {
     if (isOverride(bidiFlags)) {
         // force single run.
@@ -92,8 +128,13 @@ BidiText::BidiText(const U16StringPiece& textBuf, const Range& range, Bidi bidiF
         return;
     }
 
+    // Convert UTF-32 to UTF-16 for ICU BiDi (ICU only supports UTF-16)
+    const char32_t* data = textBuf.data();
+    std::vector<uint16_t> utf16Text;
+    convertUtf32ToUtf16(data, textBuf.size(), &utf16Text, &mUtf32ToUtf16, &mUtf16ToUtf32);
+
     const UBiDiLevel bidiReq = bidiToUBidiLevel(bidiFlags);
-    ubidi_setPara(mBidi.get(), reinterpret_cast<const UChar*>(textBuf.data()), textBuf.size(),
+    ubidi_setPara(mBidi.get(), reinterpret_cast<const UChar*>(utf16Text.data()), utf16Text.size(),
                   bidiReq, nullptr, &status);
     if (!U_SUCCESS(status)) {
         ALOGE("error calling ubidi_setPara, status = %d", status);

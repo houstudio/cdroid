@@ -26,7 +26,7 @@
 #include <unicode/ubidi.h>
 
 #include "minikin/Macros.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 namespace minikin {
 
@@ -44,7 +44,7 @@ public:
         bool isRtl;
     };
 
-    BidiText(const U16StringPiece& textBuf, const Range& range, Bidi bidiFlags);
+    BidiText(const U32StringPiece& textBuf, const Range& range, Bidi bidiFlags);
 
     RunInfo getRunInfoAt(uint32_t runOffset) const;
 
@@ -81,6 +81,10 @@ private:
     const Range mRange;    // The range in the original buffer. Used for range check.
     bool mIsRtl;           // The paragraph direction.
     uint32_t mRunCount;    // The number of the bidi run in this text.
+    // Mapping from UTF-32 index to UTF-16 index (needed for BiDi conversion)
+    std::vector<uint32_t> mUtf32ToUtf16;
+    // Mapping from UTF-16 index to UTF-32 index (needed for BiDi conversion)
+    std::vector<uint32_t> mUtf16ToUtf32;
 
     MINIKIN_PREVENT_COPY_AND_ASSIGN(BidiText);
 };

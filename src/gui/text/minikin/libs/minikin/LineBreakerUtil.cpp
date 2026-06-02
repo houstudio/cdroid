@@ -25,7 +25,7 @@ namespace minikin {
 constexpr size_t LONGEST_HYPHENATED_WORD = 45;
 
 // Hyphenates a string potentially containing non-breaking spaces.
-std::vector<HyphenationType> hyphenate(const U16StringPiece& str, const Hyphenator& hyphenator) {
+std::vector<HyphenationType> hyphenate(const U32StringPiece& str, const Hyphenator& hyphenator) {
     std::vector<HyphenationType> out;
     const size_t len = str.size();
     out.resize(len);
@@ -37,7 +37,7 @@ std::vector<HyphenationType> hyphenate(const U16StringPiece& str, const Hyphenat
         if (i == len || str[i] == CHAR_NBSP) {
             if (inWord) {
                 // A word just ended. Hyphenate it.
-                const U16StringPiece word = str.substr(Range(wordStart, i));
+                const U32StringPiece word = str.substr(Range(wordStart, i));
                 if (word.size() <= LONGEST_HYPHENATED_WORD) {
                     hyphenator.hyphenate(word, out.data() + wordStart);
                 } else {  // Word is too long. Inefficient to hyphenate.

@@ -23,7 +23,7 @@
 
 #include "minikin/FontFamily.h"
 #include "minikin/MinikinFont.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 namespace minikin {
 
@@ -42,11 +42,11 @@ public:
     };
 
     // Perform the itemization until given max runs.
-    std::vector<Run> itemize(U16StringPiece text, FontStyle style, uint32_t localeListId,
+    std::vector<Run> itemize(U32StringPiece text, FontStyle style, uint32_t localeListId,
                              FamilyVariant familyVariant, uint32_t runMax) const;
 
     // Perform the itemization until end of the text.
-    std::vector<Run> itemize(U16StringPiece text, FontStyle style, uint32_t localeListId,
+    std::vector<Run> itemize(U32StringPiece text, FontStyle style, uint32_t localeListId,
                              FamilyVariant familyVariant) const {
         return itemize(text, style, localeListId, familyVariant, text.size());
     }

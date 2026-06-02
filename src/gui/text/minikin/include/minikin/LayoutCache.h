@@ -36,7 +36,7 @@ const uint32_t LENGTH_LIMIT_CACHE = 128;
 // Layout cache datatypes
 class LayoutCacheKey {
 public:
-    LayoutCacheKey(const U16StringPiece& text, const Range& range, const MinikinPaint& paint,
+    LayoutCacheKey(const U32StringPiece& text, const Range& range, const MinikinPaint& paint,
                    bool dir, StartHyphenEdit startHyphen, EndHyphenEdit endHyphen)
             : mChars(text.data()),
               mNchars(text.size()),
@@ -64,14 +64,14 @@ public:
                mFontFlags == o.mFontFlags && mLocaleListId == o.mLocaleListId &&
                mFamilyVariant == o.mFamilyVariant && mStartHyphen == o.mStartHyphen &&
                mEndHyphen == o.mEndHyphen && mIsRtl == o.mIsRtl && mNchars == o.mNchars &&
-               !memcmp(mChars, o.mChars, mNchars * sizeof(uint16_t));
+               !memcmp(mChars, o.mChars, mNchars * sizeof(char32_t));
     }
 
     android::hash_t hash() const { return mHash; }
 
     void copyText() {
-        uint16_t* charsCopy = new uint16_t[mNchars];
-        memcpy(charsCopy, mChars, mNchars * sizeof(uint16_t));
+        char32_t* charsCopy = new char32_t[mNchars];
+        memcpy(charsCopy, mChars, mNchars * sizeof(char32_t));
         mChars = charsCopy;
     }
     void freeText() {
@@ -79,10 +79,10 @@ public:
         mChars = NULL;
     }
 
-    uint32_t getMemoryUsage() const { return sizeof(LayoutCacheKey) + sizeof(uint16_t) * mNchars; }
+    uint32_t getMemoryUsage() const { return sizeof(LayoutCacheKey) + sizeof(char32_t) * mNchars; }
 
 private:
-    const uint16_t* mChars;
+    const char32_t* mChars;
     size_t mNchars;
     size_t mStart;
     size_t mCount;
@@ -119,7 +119,7 @@ private:
                 .update(static_cast<uint8_t>(mFamilyVariant))
                 .update(packHyphenEdit(mStartHyphen, mEndHyphen))
                 .update(mIsRtl)
-                .updateShorts(mChars, mNchars)
+                .updateInts(reinterpret_cast<const uint32_t*>(mChars), mNchars)
                 .hash();
     }
 };
@@ -133,7 +133,7 @@ public:
 
     // Do not use LayoutCache inside the callback function, otherwise dead-lock may happen.
     template <typename F>
-    void getOrCreate(const U16StringPiece& text, const Range& range, const MinikinPaint& paint,
+    void getOrCreate(const U32StringPiece& text, const Range& range, const MinikinPaint& paint,
                      bool dir, StartHyphenEdit startHyphen, EndHyphenEdit endHyphen, F& f) {
         LayoutCacheKey key(text, range, paint, dir, startHyphen, endHyphen);
         if (paint.skipCache() || range.getLength() >= LENGTH_LIMIT_CACHE) {

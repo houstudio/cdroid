@@ -97,15 +97,29 @@ ssize_t WordBreaker::followingWithLocale(const Locale& locale, size_t from) {
     return mCurrent;
 }
 
-void WordBreaker::setText(const uint16_t* data, size_t size) {
+void WordBreaker::setText(const char32_t* data, size_t size) {
     mText = data;
     mTextSize = size;
     mLast = 0;
     mCurrent = 0;
     mScanOffset = 0;
     mInEmailOrUrl = false;
+    // Convert UTF-32 to UTF-16 for ICU
+    mUtf16Text.clear();
+    mUtf16Text.reserve(size);
+    for (size_t i = 0; i < size; i++) {
+        char32_t cp = data[i];
+        if (cp <= 0xFFFF) {
+            mUtf16Text.push_back(static_cast<uint16_t>(cp));
+        } else {
+            // Surrogate pair for characters outside BMP
+            cp -= 0x10000;
+            mUtf16Text.push_back(static_cast<uint16_t>(0xD800 | ((cp >> 10) & 0x3FF)));
+            mUtf16Text.push_back(static_cast<uint16_t>(0xDC00 | (cp & 0x3FF)));
+        }
+    }
     UErrorCode status = U_ZERO_ERROR;
-    mUText=utext_openUChars(mUText, reinterpret_cast<const UChar*>(data), size, &status);
+    mUText=utext_openUChars(mUText, reinterpret_cast<const UChar*>(mUtf16Text.data()), mUtf16Text.size(), &status);
 }
 
 ssize_t WordBreaker::current() const {
@@ -117,15 +131,13 @@ ssize_t WordBreaker::current() const {
  * represents customization beyond the ICU behavior, because plain ICU provides some
  * line break opportunities that we don't want.
  **/
-static bool isValidBreak(const uint16_t* buf, size_t bufEnd, int32_t i) {
+static bool isValidBreak(const char32_t* buf, size_t bufEnd, int32_t i) {
     const size_t position = static_cast<size_t>(i);
     if (i == UBRK_DONE || position == bufEnd) {
         // If the iterator reaches the end, treat as break.
         return true;
     }
-    uint32_t codePoint;
-    size_t prev_offset = position;
-    U16_PREV(buf, 0, prev_offset, codePoint);
+    char32_t codePoint = buf[position - 1];
     // Do not break on hard or soft hyphens. These are handled by automatic hyphenation.
     if (Hyphenator::isLineBreakingHyphen(codePoint) || codePoint == CHAR_SOFT_HYPHEN) {
         return false;
@@ -138,9 +150,7 @@ static bool isValidBreak(const uint16_t* buf, size_t bufEnd, int32_t i) {
         return false;
     }
 
-    uint32_t next_codepoint;
-    size_t next_offset = position;
-    U16_NEXT(buf, next_offset, bufEnd, next_codepoint);
+    char32_t next_codepoint = buf[position];
 
     // Rule LB8 for Emoji ZWJ sequences. We need to do this ourselves since we may have fresher
     // emoji data than ICU does.
@@ -150,9 +160,9 @@ static bool isValidBreak(const uint16_t* buf, size_t bufEnd, int32_t i) {
 
     // Rule LB30b. We need to this ourselves since we may have fresher emoji data than ICU does.
     if (isEmojiModifier(next_codepoint)) {
-        if (codePoint == 0xFE0F && prev_offset > 0) {
+        if (codePoint == 0xFE0F && position > 0) {
             // skip over emoji variation selector
-            U16_PREV(buf, 0, prev_offset, codePoint);
+            codePoint = buf[position - 2];
         }
         if (isEmojiBase(codePoint)) {
             return false;
@@ -172,12 +182,12 @@ int32_t WordBreaker::iteratorNext() {
 }
 
 // Chicago Manual of Style recommends breaking after these characters in URLs and email addresses
-static bool breakAfter(uint16_t c) {
+static bool breakAfter(char32_t c) {
     return c == ':' || c == '=' || c == '&';
 }
 
 // Chicago Manual of Style recommends breaking before these characters in URLs and email addresses
-static bool breakBefore(uint16_t c) {
+static bool breakBefore(char32_t c) {
     return c == '~' || c == '.' || c == ',' || c == '-' || c == '_' || c == '?' || c == '#' ||
            c == '%' || c == '=' || c == '&';
 }
@@ -196,7 +206,7 @@ void WordBreaker::detectEmailOrUrl() {
         ScanState state = START;
         size_t i;
         for (i = mLast; i < mTextSize; i++) {
-            uint16_t c = mText[i];
+            char32_t c = mText[i];
             // scan only ASCII characters, stop at space
             if (!(' ' < c && c <= 0x007E)) {
                 break;
@@ -230,7 +240,7 @@ void WordBreaker::detectEmailOrUrl() {
 
 ssize_t WordBreaker::findNextBreakInEmailOrUrl() {
     // special rules for email addresses and URL's as per Chicago Manual of Style (16th ed.)
-    uint16_t lastChar = mText[mLast];
+    char32_t lastChar = mText[mLast];
     ssize_t i;
     for (i = mLast + 1; i < mScanOffset; i++) {
         if (breakAfter(lastChar)) {
@@ -240,7 +250,7 @@ ssize_t WordBreaker::findNextBreakInEmailOrUrl() {
         if (lastChar == '/' && i >= mLast + 2 && mText[i - 2] == '/') {
             break;
         }
-        const uint16_t thisChar = mText[i];
+        const char32_t thisChar = mText[i];
         // never break after hyphen
         if (lastChar != '-') {
             if (breakBefore(thisChar)) {

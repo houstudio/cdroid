@@ -22,7 +22,7 @@
 #include <string>
 
 #include "minikin/FontCollection.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 namespace minikin {
 

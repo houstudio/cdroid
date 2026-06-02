@@ -85,7 +85,7 @@ struct LayoutPieces {
     }
 
     template <typename F>
-    void getOrCreate(const U16StringPiece& textBuf, const Range& range, const Range& context,
+    void getOrCreate(const U32StringPiece& textBuf, const Range& range, const Range& context,
                      const MinikinPaint& paint, bool dir, StartHyphenEdit startEdit,
                      EndHyphenEdit endEdit, uint32_t paintId, F& f) const {
         const HyphenEdit edit = packHyphenEdit(startEdit, endEdit);

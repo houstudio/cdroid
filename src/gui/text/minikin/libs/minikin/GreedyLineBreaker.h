@@ -19,13 +19,13 @@
 
 #include "minikin/LineBreaker.h"
 #include "minikin/MeasuredText.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 #include "WordBreaker.h"
 
 namespace minikin {
 
-LineBreakResult breakLineGreedy(const U16StringPiece& textBuf, const MeasuredText& measured,
+LineBreakResult breakLineGreedy(const U32StringPiece& textBuf, const MeasuredText& measured,
                                 const LineWidth& lineWidthLimits, const TabStops& tabStops,
                                 bool enableHyphenation);
 

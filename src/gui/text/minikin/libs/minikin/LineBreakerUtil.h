@@ -21,7 +21,7 @@
 
 #include "minikin/Hyphenator.h"
 #include "minikin/MeasuredText.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 #include "HyphenatorMap.h"
 #include "LayoutUtils.h"
@@ -39,7 +39,7 @@ namespace minikin {
 typedef double ParaWidth;
 
 // Hyphenates a string potentially containing non-breaking spaces.
-std::vector<HyphenationType> hyphenate(const U16StringPiece& string, const Hyphenator& hypenator);
+std::vector<HyphenationType> hyphenate(const U32StringPiece& string, const Hyphenator& hypenator);
 
 // This function determines whether a character is a space that disappears at end of line.
 // It is the Unicode set: [[:General_Category=Space_Separator:]-[:Line_Break=Glue:]], plus '\n'.
@@ -62,7 +62,7 @@ inline Locale getEffectiveLocale(uint32_t localeListId) {
 
 // Retrieves hyphenation break points from a word.
 inline void populateHyphenationPoints(
-        const U16StringPiece& textBuf,        // A text buffer.
+        const U32StringPiece& textBuf,        // A text buffer.
         const Run& run,                       // A run of this region.
         const Hyphenator& hyphenator,         // A hyphenator to be used for hyphenation.
         const Range& contextRange,            // A context range for measuring hyphenated piece.
@@ -82,8 +82,8 @@ inline void populateHyphenationPoints(
         }
 
         auto hyphenPart = contextRange.split(i);
-        U16StringPiece firstText = textBuf.substr(hyphenPart.first);
-        U16StringPiece secondText = textBuf.substr(hyphenPart.second);
+        U32StringPiece firstText = textBuf.substr(hyphenPart.first);
+        U32StringPiece secondText = textBuf.substr(hyphenPart.second);
         const float first =
                 run.measureHyphenPiece(firstText, Range(0, firstText.size()),
                                        StartHyphenEdit::NO_EDIT /* start hyphen edit */,
@@ -143,7 +143,7 @@ struct CharProcessor {
     // Returns the break penalty for the current word break point.
     inline int wordBreakPenalty() const { return breaker.breakBadness(); }
 
-    CharProcessor(const U16StringPiece& text) { breaker.setText(text.data(), text.size()); }
+    CharProcessor(const U32StringPiece& text) { breaker.setText(text.data(), text.size()); }
 
     // The user of CharProcessor must call updateLocaleIfNecessary with valid locale at least one
     // time before feeding characters.

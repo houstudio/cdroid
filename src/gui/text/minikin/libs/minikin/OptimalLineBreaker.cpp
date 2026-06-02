@@ -22,7 +22,7 @@
 #include "minikin/Characters.h"
 #include "minikin/Layout.h"
 #include "minikin/Range.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 #include "HyphenatorMap.h"
 #include "LayoutUtils.h"
@@ -204,7 +204,7 @@ void appendWithMerging(std::vector<HyphenBreak>::const_iterator hyIter,
 }
 
 // Enumerate all line break candidates.
-OptimizeContext populateCandidates(const U16StringPiece& textBuf, const MeasuredText& measured,
+OptimizeContext populateCandidates(const U32StringPiece& textBuf, const MeasuredText& measured,
                                    const LineWidth& lineWidth, HyphenationFrequency frequency,
                                    bool isJustified) {
     const ParaWidth minLineWidth = lineWidth.getMin();
@@ -274,7 +274,7 @@ class LineBreakOptimizer {
 public:
     LineBreakOptimizer() {}
 
-    LineBreakResult computeBreaks(const OptimizeContext& context, const U16StringPiece& textBuf,
+    LineBreakResult computeBreaks(const OptimizeContext& context, const U32StringPiece& textBuf,
                                   const MeasuredText& measuredText, const LineWidth& lineWidth,
                                   BreakStrategy strategy, bool justified);
 
@@ -285,14 +285,14 @@ private:
         uint32_t prev;        // index to previous break
         uint32_t lineNumber;  // the computed line number of the candidate
     };
-    LineBreakResult finishBreaksOptimal(const U16StringPiece& textBuf, const MeasuredText& measured,
+    LineBreakResult finishBreaksOptimal(const U32StringPiece& textBuf, const MeasuredText& measured,
                                         const std::vector<OptimalBreaksData>& breaksData,
                                         const std::vector<Candidate>& candidates);
 };
 
 // Follow "prev" links in candidates array, and copy to result arrays.
 LineBreakResult LineBreakOptimizer::finishBreaksOptimal(
-        const U16StringPiece& textBuf, const MeasuredText& measured,
+        const U32StringPiece& textBuf, const MeasuredText& measured,
         const std::vector<OptimalBreaksData>& breaksData,
         const std::vector<Candidate>& candidates) {
     LineBreakResult result;
@@ -318,7 +318,7 @@ LineBreakResult LineBreakOptimizer::finishBreaksOptimal(
 }
 
 LineBreakResult LineBreakOptimizer::computeBreaks(const OptimizeContext& context,
-                                                  const U16StringPiece& textBuf,
+                                                  const U32StringPiece& textBuf,
                                                   const MeasuredText& measured,
                                                   const LineWidth& lineWidth,
                                                   BreakStrategy strategy, bool justified) {
@@ -404,7 +404,7 @@ LineBreakResult LineBreakOptimizer::computeBreaks(const OptimizeContext& context
 
 }  // namespace
 
-LineBreakResult breakLineOptimal(const U16StringPiece& textBuf, const MeasuredText& measured,
+LineBreakResult breakLineOptimal(const U32StringPiece& textBuf, const MeasuredText& measured,
                                  const LineWidth& lineWidth, BreakStrategy strategy,
                                  HyphenationFrequency frequency, bool justified) {
     if (textBuf.size() == 0) {

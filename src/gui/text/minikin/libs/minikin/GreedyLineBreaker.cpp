@@ -20,7 +20,7 @@
 #include "minikin/LineBreaker.h"
 #include "minikin/MeasuredText.h"
 #include "minikin/Range.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 #include "HyphenatorMap.h"
 #include "LineBreakerUtil.h"
@@ -38,7 +38,7 @@ class GreedyLineBreaker {
 public:
     // User of this class must keep measured, lineWidthLimit, tabStop alive until the instance is
     // destructed.
-    GreedyLineBreaker(const U16StringPiece& textBuf, const MeasuredText& measured,
+    GreedyLineBreaker(const U32StringPiece& textBuf, const MeasuredText& measured,
                       const LineWidth& lineWidthLimits, const TabStops& tabStops,
                       bool enableHyphenation)
             : mLineWidthLimit(lineWidthLimits.getAt(0)),
@@ -116,7 +116,7 @@ private:
     const Hyphenator* mHyphenator = nullptr;
 
     // Input parameters.
-    const U16StringPiece& mTextBuf;
+    const U32StringPiece& mTextBuf;
     const MeasuredText& mMeasuredText;
     const LineWidth& mLineWidthLimits;
     const TabStops& mTabStops;
@@ -385,7 +385,7 @@ LineBreakResult GreedyLineBreaker::getResult() const {
 
 }  // namespace
 
-LineBreakResult breakLineGreedy(const U16StringPiece& textBuf, const MeasuredText& measured,
+LineBreakResult breakLineGreedy(const U32StringPiece& textBuf, const MeasuredText& measured,
                                 const LineWidth& lineWidthLimits, const TabStops& tabStops,
                                 bool enableHyphenation) {
     if (textBuf.size() == 0) {

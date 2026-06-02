@@ -26,7 +26,7 @@
 #include "minikin/Macros.h"
 #include "minikin/MinikinFont.h"
 #include "minikin/Range.h"
-#include "minikin/U16StringPiece.h"
+#include "minikin/U32StringPiece.h"
 
 namespace minikin {
 
@@ -45,15 +45,15 @@ public:
     virtual uint32_t getLocaleListId() const = 0;
 
     // Fills the each character's advances, extents and overhangs.
-    virtual void getMetrics(const U16StringPiece& text, std::vector<float>* advances,
+    virtual void getMetrics(const U32StringPiece& text, std::vector<float>* advances,
                             LayoutPieces* precomputed, LayoutPieces* outPieces) const = 0;
 
-    virtual std::pair<float, MinikinRect> getBounds(const U16StringPiece& text, const Range& range,
+    virtual std::pair<float, MinikinRect> getBounds(const U32StringPiece& text, const Range& range,
                                                     const LayoutPieces& pieces) const = 0;
-    virtual MinikinExtent getExtent(const U16StringPiece& text, const Range& range,
+    virtual MinikinExtent getExtent(const U32StringPiece& text, const Range& range,
                                     const LayoutPieces& pieces) const = 0;
 
-    virtual void appendLayout(const U16StringPiece& text, const Range& range,
+    virtual void appendLayout(const U32StringPiece& text, const Range& range,
                               const Range& contextRange, const LayoutPieces& pieces,
                               const MinikinPaint& paint, uint32_t outOrigin,
                               StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
@@ -67,7 +67,7 @@ public:
     virtual const MinikinPaint* getPaint() const { return nullptr; }
 
     // Measures the hyphenation piece and fills each character's advances and overhangs.
-    virtual float measureHyphenPiece(const U16StringPiece& /* text */,
+    virtual float measureHyphenPiece(const U32StringPiece& /* text */,
                                      const Range& /* hyphenPieceRange */,
                                      StartHyphenEdit /* startHyphen */,
                                      EndHyphenEdit /* endHyphen */,
@@ -90,23 +90,23 @@ public:
     uint32_t getLocaleListId() const override { return mPaint.localeListId; }
     bool isRtl() const override { return mIsRtl; }
 
-    void getMetrics(const U16StringPiece& text, std::vector<float>* advances,
+    void getMetrics(const U32StringPiece& text, std::vector<float>* advances,
                     LayoutPieces* precomputed, LayoutPieces* outPieces) const override;
 
-    std::pair<float, MinikinRect> getBounds(const U16StringPiece& text, const Range& range,
+    std::pair<float, MinikinRect> getBounds(const U32StringPiece& text, const Range& range,
                                             const LayoutPieces& pieces) const override;
 
-    MinikinExtent getExtent(const U16StringPiece& text, const Range& range,
+    MinikinExtent getExtent(const U32StringPiece& text, const Range& range,
                             const LayoutPieces& pieces) const override;
 
-    void appendLayout(const U16StringPiece& text, const Range& range, const Range& contextRange,
+    void appendLayout(const U32StringPiece& text, const Range& range, const Range& contextRange,
                       const LayoutPieces& pieces, const MinikinPaint& paint, uint32_t outOrigin,
                       StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                       Layout* outLayout) const override;
 
     const MinikinPaint* getPaint() const override { return &mPaint; }
 
-    float measureHyphenPiece(const U16StringPiece& text, const Range& range,
+    float measureHyphenPiece(const U32StringPiece& text, const Range& range,
                              StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                              LayoutPieces* pieces) const override;
 
@@ -124,25 +124,25 @@ public:
     bool canBreak() const { return false; }
     uint32_t getLocaleListId() const { return mLocaleListId; }
 
-    void getMetrics(const U16StringPiece& /* text */, std::vector<float>* advances,
+    void getMetrics(const U32StringPiece& /* text */, std::vector<float>* advances,
                     LayoutPieces* /* precomputed */, LayoutPieces* /* outPieces */) const override {
         (*advances)[mRange.getStart()] = mWidth;
         // TODO: Get the extents information from the caller.
     }
 
-    std::pair<float, MinikinRect> getBounds(const U16StringPiece& /* text */,
+    std::pair<float, MinikinRect> getBounds(const U32StringPiece& /* text */,
                                             const Range& /* range */,
                                             const LayoutPieces& /* pieces */) const override {
         // Bounding Box is not used in replacement run.
         return std::make_pair(mWidth, MinikinRect());
     }
 
-    MinikinExtent getExtent(const U16StringPiece& /* text */, const Range& /* range */,
+    MinikinExtent getExtent(const U32StringPiece& /* text */, const Range& /* range */,
                             const LayoutPieces& /* pieces */) const override {
         return MinikinExtent();
     }
 
-    void appendLayout(const U16StringPiece& /* text */, const Range& /* range */,
+    void appendLayout(const U32StringPiece& /* text */, const Range& /* range */,
                       const Range& /* contextRange */, const LayoutPieces& /* pieces */,
                       const MinikinPaint& /* paint */, uint32_t /* outOrigin */,
                       StartHyphenEdit /* startHyphen */, EndHyphenEdit /* endHyphen */,
@@ -191,11 +191,11 @@ public:
                layoutPieces.getMemoryUsage();
     }
 
-    Layout buildLayout(const U16StringPiece& textBuf, const Range& range, const Range& contextRange,
+    Layout buildLayout(const U32StringPiece& textBuf, const Range& range, const Range& contextRange,
                        const MinikinPaint& paint, StartHyphenEdit startHyphen,
                        EndHyphenEdit endHyphen);
-    MinikinRect getBounds(const U16StringPiece& textBuf, const Range& range) const;
-    MinikinExtent getExtent(const U16StringPiece& textBuf, const Range& range) const;
+    MinikinRect getBounds(const U32StringPiece& textBuf, const Range& range) const;
+    MinikinExtent getExtent(const U32StringPiece& textBuf, const Range& range) const;
 
     MeasuredText(MeasuredText&&) = default;
     MeasuredText& operator=(MeasuredText&&) = default;
@@ -205,11 +205,11 @@ public:
 private:
     friend class MeasuredTextBuilder;
 
-    void measure(const U16StringPiece& textBuf, bool computeHyphenation, bool computeLayout,
+    void measure(const U32StringPiece& textBuf, bool computeHyphenation, bool computeLayout,
                  MeasuredText* hint);
 
     // Use MeasuredTextBuilder instead.
-    MeasuredText(const U16StringPiece& textBuf, std::vector<std::unique_ptr<Run>>&& runs,
+    MeasuredText(const U32StringPiece& textBuf, std::vector<std::unique_ptr<Run>>&& runs,
                  bool computeHyphenation, bool computeLayout, MeasuredText* hint)
             : widths(textBuf.size()), runs(std::move(runs)) {
         measure(textBuf, computeHyphenation, computeLayout, hint);
@@ -234,7 +234,7 @@ public:
         mRuns.emplace_back(std::make_unique<T>(std::forward<Args>(args)...));
     }
 
-    std::unique_ptr<MeasuredText> build(const U16StringPiece& textBuf, bool computeHyphenation,
+    std::unique_ptr<MeasuredText> build(const U32StringPiece& textBuf, bool computeHyphenation,
                                         bool computeLayout, MeasuredText* hint) {
         // Unable to use make_unique here since make_unique is not a friend of MeasuredText.
         return std::unique_ptr<MeasuredText>(new MeasuredText(
