@@ -251,3 +251,12 @@ U_CAPI UBool U_EXPORT2 u_hasBinaryProperty(UChar32 c, uint32_t property) {
 U_CAPI UBool U_EXPORT2 u_iscntrl(UChar32 c) {
     return (c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F);
 }
+
+U_CAPI UBool U_EXPORT2 u_isdigit(UChar32 c) {
+    return (c >= '0' && c <= '9');
+}
+
+U_CAPI UBool U_EXPORT2 u_isWhitespace(UChar32 c) {
+    return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') ||
+           (c == '\f') || (c == '\v') || (c == 0x00A0); // NBSP
+}

@@ -47,14 +47,14 @@ if(TRUE OR NOT USE_ICU)
        libs/unicode/unorm2.cpp
    )
    target_include_directories(minikin PRIVATE
-       libs
+       PRIVATE BEFORE
+       ${PROJECT_SOURCE_DIR}/libs
        ${PROJECT_SOURCE_DIR}/include
        ${PROJECT_SOURCE_DIR}/include/myicu
        ${HARFBUZZ_INCLUDE_DIRS}
        ${FRIBIDI_INCLUDE_DIRS}
        ${CMAKE_BINARY_DIR}/include/gui
        ${CMAKE_BINARY_DIR}/include/porting
-       BEFORE
    )
    target_link_libraries(minikin PRIVATE ${HARFBUZZ_LIBRARIES} ${FRIBIDI_LIBRARIES})
 else()
@@ -69,7 +69,11 @@ else()
     message(WARNING "USE ICU ${ICU_VERSION}")
 endif()
 add_executable(test_minikin_cairo test_minikin_cairo.cpp)
-target_include_directories(test_minikin_cairo PRIVATE libs ${PROJECT_SOURCE_DIR}/include
+target_include_directories(test_minikin_cairo
+    PRIVATE BEFORE
+    ${PROJECT_SOURCE_DIR}/libs
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/include/myicu
     ${FREETYPE_INCLUDE_DIRS} ${HARFBUZZ_INCLUDE_DIRS} ${CAIRO_INCLUDE_DIRS} BEFORE)
 target_link_libraries(test_minikin_cairo PRIVATE minikin freetype harfbuzz cairo)
 

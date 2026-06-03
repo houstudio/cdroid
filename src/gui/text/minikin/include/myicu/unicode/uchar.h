@@ -263,5 +263,10 @@ u_hasBinaryProperty(UChar32 c, uint32_t property);
 U_CAPI UBool U_EXPORT2
 u_iscntrl(UChar32 c);
 
+U_CAPI UBool U_EXPORT2
+u_isdigit(UChar32 c);
+
+U_CAPI UBool U_EXPORT2
+u_isWhitespace(UChar32 c);
 
 #endif

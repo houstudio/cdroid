@@ -96,7 +96,7 @@ class FullMinikinFont : public minikin::MinikinFont {
 public:
     FullMinikinFont(const std::string& fontPath) 
         : MinikinFont(gFontIdCounter++),  // 调用父类构造函数，传递 uniqueId
-          mFontPath(fontPath), mFtLibrary(nullptr), mFtFace(nullptr), mHbFont(nullptr) {
+          mFontPath(fontPath), mFtLibrary(nullptr), mFtFace(nullptr), mHbFont(nullptr){
         std::ifstream file(fontPath, std::ios::binary | std::ios::ate);
         if (file) {
             mFontSize = file.tellg();
@@ -107,9 +107,11 @@ public:
         FT_Init_FreeType(&mFtLibrary);
         FT_New_Face(mFtLibrary, fontPath.c_str(), 0, &mFtFace);
         mHbFont = hb_ft_font_create(mFtFace, nullptr);
+        mHbFace = hb_ft_face_create(mFtFace, 0);
     }
     ~FullMinikinFont() {
         if (mHbFont) hb_font_destroy(mHbFont);
+        if (mHbFace) hb_face_destroy(mHbFace);
         if (mFtFace) FT_Done_Face(mFtFace);
         if (mFtLibrary) FT_Done_FreeType(mFtLibrary);
     }
@@ -145,12 +147,10 @@ public:
         return emptyAxes;
     }
     const std::string& GetFontPath() const { return mFontPath; }  // 移除 override
-    const void* GetFontData() const override { return mFontData.data(); }
-    size_t GetFontSize() const override { return mFontSize; }
-    int GetFontIndex() const override { return 0; }
-    hb_font_t* getHbFont() const { return mHbFont; }
+    const void* GetFontData() const override { return mHbFace/*mFontData.data()*/;}
+    size_t GetFontSize() const override { return 0/*mFontSize*/; }
     FT_Face getFace() const { return mFtFace; }
-    
+    int GetFontIndex() const override { return 0; }
 private:
     std::string mFontPath;
     std::vector<uint8_t> mFontData;
@@ -158,6 +158,7 @@ private:
     FT_Library mFtLibrary;
     FT_Face mFtFace;
     hb_font_t* mHbFont;
+    hb_face_t* mHbFace;
 };
 
 // FixedLineWidth - 固定宽度的 LineWidth 实现

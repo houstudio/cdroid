@@ -9,23 +9,51 @@ add_library(cdtext
     layout.cc
     staticlayout.cc
     precomputedtext.cc
-    #textline.cc
+    textpaint.cc
+    textutils.cc
+    textline.cc
     )
 target_link_libraries(cdtext minikin)
 
 target_include_directories(
     cdtext
     PRIVATE
-    ${PROJECT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/..
+    BEFORE
+    ${PROJECT_SOURCE_DIR}/minikin/include/myicu
     ${PROJECT_SOURCE_DIR}/minikin/include
     ${PROJECT_SOURCE_DIR}/minikin/libs
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/..
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
     ${HARFBUZZ_INCLUDE_DIRS}
     ${FRIBIDI_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
-    #AFTER
-    BEFORE
     )
+add_executable(texttest texttest.cc)
+target_include_directories(texttest
+    PRIVATE
+    BEFORE
+    ${PROJECT_SOURCE_DIR}/minikin/include/myicu
+    ${PROJECT_SOURCE_DIR}/minikin/include
+    ${PROJECT_SOURCE_DIR}/minikin/libs
+    ./
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/..
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/gui
+    ${HARFBUZZ_INCLUDE_DIRS}
+    ${FRIBIDI_INCLUDE_DIRS}
+    ${FREETYPE_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+    )
+target_link_libraries(texttest
+    minikin
+    cdtext
+    cdroid
+    ${HARFBUZZ_LIBRARIES}
+    ${FRIBIDI_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    ${CAIRO_LIBRARIES}
+)

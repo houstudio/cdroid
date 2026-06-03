@@ -61,7 +61,7 @@ HbFontUniquePtr Font::prepareFont(const std::shared_ptr<MinikinFont>& typeface) 
     uint32_t ttcIndex = typeface->GetFontIndex();
 
     HbBlobUniquePtr blob(hb_blob_create(buf, size, HB_MEMORY_MODE_READONLY, nullptr, nullptr));
-    HbFaceUniquePtr face(hb_face_create(blob.get(), ttcIndex));
+    HbFaceUniquePtr face(size?hb_face_create(blob.get(), ttcIndex):(hb_face_t*)buf);
     HbFontUniquePtr parent(hb_font_create(face.get()));
     hb_ot_font_set_funcs(parent.get());
 
