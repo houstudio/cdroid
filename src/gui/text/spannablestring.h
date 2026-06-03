@@ -3,7 +3,7 @@
 #include <core/predicate.h>
 #include <text/textutils.h>
 #include <text/textpaint.h>
-#include <core/parcelablespan.h>
+#include <text/parcelablespan.h>
 #include <algorithm>
 #include <string>
 #include <vector>

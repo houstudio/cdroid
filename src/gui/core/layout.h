@@ -19,7 +19,7 @@
 #define __LAYOUT_H__
 #include <core/canvas.h>
 #include <core/typeface.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <string>
 #include <vector>
 #include <memory>
