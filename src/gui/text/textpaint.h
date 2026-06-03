@@ -1,5 +1,6 @@
 #ifndef __TEXT_PAINT_H__
 #define __TEXT_PAINT_H__
+#include <string>
 #include <vector>
 namespace cdroid{
 class CharSequence;
@@ -40,63 +41,81 @@ public:
         FILL = 2,
         STROKE_AND_FILL = 3
     };
+private:
+    int mColor;
+    int mTextAlign;
+    int mStartHyphenEdit;
+    int mEndHyphenEdit;
+    Style mStyle;
+    bool mAntialias;
+    bool mStrikeThruText;
+    float mStrokeWidth;
+    float mTextSize;
+    float mWordSpace;
+    float mLetterSpacing;
+    float mUnderlinePosition;
+    float mUnderlineThickness;
+    float mStrikeThruPosition;
+    float mStrikeThruThickness;
 public:
     Paint();
-    Paint(int flags){};
-    Paint(const Paint&){}
+    Paint(int flags);
+    Paint(const Paint&);
     virtual ~Paint()=default;
-    virtual void set(const Paint&){}
-    bool hasEqualAttributes(const Paint&other)const{return false;}
+    virtual void set(const Paint&);
+    bool hasEqualAttributes(const Paint&other)const;
     int getFlags()const{return 0;}
-    Style getStyle()const{return NONE;}
-    void setStyle(Style);
-    int getColor()const{return 0;}
-    void setColor(int);
-    float getStrokeWidth()const{return 0;}
-    void setStrokeWidth(float);
-    void setTextSize(float);
-    float getTextSize()const{return 0;}
+    Style getStyle()const{return mStyle;}
+    void setStyle(Style v){mStyle=v;}
+    int getColor()const{return mColor;}
+    void setColor(int v){mColor=v;}
+    float getStrokeWidth()const{return mStrokeWidth;}
+    void setStrokeWidth(float v){mStrokeWidth=v;}
+    void setTextSize(float v){mTextSize=v;}
+    float getTextSize()const{return mTextSize;}
     int getTextAlign()const{return 0;}
     void setTextAlign(int);
-    bool isAntiAlias()const{return false;}
-    void setAntiAlias(bool);
+    bool isAntiAlias()const{return mAntialias;}
+    void setAntiAlias(bool v){mAntialias=v;}
     int getStrokeCap()const{return 0;}
     void setStrokeCap(int);
     int getStrokeJoin()const{return 0;}
     void setStrokeJoin(int);
     void setStrokeMiter(float);
     float getStrokeMiter()const{return 0;}
-    bool isStrikeThruText()const{return false;}
-    void setStrikeThruText(bool);
-    float getUnderlinePosition() const;
-    void setUnderlinePosition(float);
-    float getUnderlineThickness() const;
-    void setUnderlineThickness(float);
-    float getStrikeThruPosition() const;
-    void setStrikeThruPosition(float);
-    float getStrikeThruThickness() const;
-    void setStrikeThruThickness(float);
-    void setStartHyphenEdit(int);
-    int getStartHyphenEdit()const{return 0;}
-    void setEndHyphenEdit(int);
-    int getEndHyphenEdit()const{return 0;}
-    int getLetterSpacing()const{return 0;}
-    int getWordSpacing()const{return 0;}
-    void setWordSpacing(int);
+    bool isStrikeThruText()const{return mStrikeThruText;}
+    void setStrikeThruText(bool v){mStrikeThruText=v;}
+    float getUnderlinePosition() const{ return mUnderlinePosition;}
+    void setUnderlinePosition(float v){mUnderlinePosition=v;}
+    float getUnderlineThickness() const{return mUnderlineThickness;}
+    void setUnderlineThickness(float v){mUnderlineThickness=v;}
+    float getStrikeThruPosition() const{return mStrikeThruPosition;}
+    void setStrikeThruPosition(float v){mStrikeThruPosition=v;}
+    float getStrikeThruThickness() const{return mStrikeThruThickness;}
+    void setStrikeThruThickness(float v){mStrikeThruThickness=v;}
+    void setStartHyphenEdit(int v){mStartHyphenEdit=v;}
+    int getStartHyphenEdit()const{return mStartHyphenEdit;}
+    void setEndHyphenEdit(int v){mEndHyphenEdit=v;}
+    int getEndHyphenEdit()const{return mEndHyphenEdit;}
+    int getLetterSpacing()const{return mLetterSpacing;}
+    int getWordSpacing()const{return mWordSpace;}
+    void setWordSpacing(float v){mWordSpace=v;}
     bool isElegantTextHeight()const{return false;}
-    void getFontMetricsInt(CharSequence* text, int start, int count,
-        int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics){
-    }
-    int getFontMetricsInt(FontMetricsInt& fmi)const{return 0;}
-    float getTextRunAdvances(std::vector<char16_t>& chars, int index, int count, int contextIndex,
-            int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex){
-        return 80;
-    }
-    float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset);
-    float getRunAdvance(const std::vector<char16_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset);
-    float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt);
-    float getTextRunCursor(const std::vector<char16_t>& text, int start, int count, bool isRt, int offset, int cursorOpt);
+    float measureText(const std::string& text)const;
+    float measureText(const std::string& text, int start, int end)const;
+    float measureText(const CharSequence* text, int start, int end)const;
+    float measureText(const char32_t* text, int index, int count)const;
+    void getFontMetricsInt(const CharSequence* text, int start, int count,
+        int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const;
+    int getFontMetricsInt(FontMetricsInt& fmi)const;
+    float getTextRunAdvances(const std::vector<char32_t>& chars, int index, int count, int contextIndex,
+            int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex)const;
+    float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
+    float getRunAdvance(const std::vector<char32_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
+    float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const;
+    float getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRt, int offset, int cursorOpt)const;
 };
+
 class TextPaint:public Paint {
 public:
     int bgColor;
@@ -107,36 +126,15 @@ public:
     int underlineColor = 0;
     float underlineThickness;
 
-    TextPaint():Paint(){
-    }
+    TextPaint();
 
-    TextPaint(int flags):Paint(flags){
-    }
+    TextPaint(int flags);
 
-    TextPaint(const Paint& p):Paint(p){
-    }
+    TextPaint(const Paint& p);
 
-    void set(const Paint& tp) override{
-        Paint::set(tp);
-        bgColor = ((TextPaint&)tp).bgColor;
-        baselineShift = ((TextPaint&)tp).baselineShift;
-        linkColor = ((TextPaint&)tp).linkColor;
-        drawableState = ((TextPaint&)tp).drawableState;
-        density = ((TextPaint&)tp).density;
-        underlineColor = ((TextPaint&)tp).underlineColor;
-        underlineThickness = ((TextPaint&)tp).underlineThickness;
-    }
+    void set(const Paint& tp) override;
 
-    bool hasEqualAttributes(const TextPaint& other) const{
-        return bgColor == other.bgColor
-                && baselineShift == other.baselineShift
-                && linkColor == other.linkColor
-                && drawableState == other.drawableState
-                && density == other.density
-                && underlineColor == other.underlineColor
-                && underlineThickness == other.underlineThickness
-                && Paint::hasEqualAttributes((Paint&) other);
-    }
+    bool hasEqualAttributes(const TextPaint& other) const;
     void setUnderlineText(bool underline) {
     }
     void setUnderlineText(int color, float thickness) {

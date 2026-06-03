@@ -15,10 +15,11 @@ LineBreaker::LineBreaker(int breakStrategy, int hyphenationFrequency, int justif
 LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
         const ParagraphConstraints& constraints, int lineNumber) {
     const minikin::StaticLayoutNative* builder = mNativePtr;
-    minikin::U16StringPiece u16Text;//(text.get(), length);
+    auto& chars = measuredPara->getChars();
+    minikin::U32StringPiece u32Text(chars.data(), chars.size());
     minikin::MeasuredText*mt;
     minikin::LineBreakResult result=builder->computeBreaks(
-                u16Text, *(minikin::MeasuredText*)measuredPara->getNativePtr(),
+                u32Text, *(minikin::MeasuredText*)measuredPara->getNativePtr(),
                 constraints.getFirstWidth(),
                 constraints.getFirstWidthLineCount(),
                 constraints.getWidth(),0,//restWidth,indentsOffset,

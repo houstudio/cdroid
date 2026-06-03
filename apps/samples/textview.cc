@@ -148,7 +148,7 @@ int main(int argc,const char*argv[]){
         tv->setTextSize(22+i);
         layout->addView(tv,layoutParams);
     }
-
+#if 0
     SpannableStringBuilder spanText;
     spanText.append("Span sample: ");
     spanText.append("RED ", std::vector<std::shared_ptr<CharacterStyle>>{
@@ -176,7 +176,7 @@ int main(int argc,const char*argv[]){
     spanTv->setBackgroundColor(0xFF333333);
     spanTv->setSingleLine(false);
     layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
-
+#endif
     TextView*tv=new TextView("textview with background drawable",0,0);
     tv->setBackgroundResource("cdroid:drawable/btn_default.xml");
     layout->addView(tv);

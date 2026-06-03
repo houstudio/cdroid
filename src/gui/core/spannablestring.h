@@ -1,8 +1,9 @@
 #ifndef __SPANNABLE_STRING_H__
 #define __SPANNABLE_STRING_H__
 #include <core/predicate.h>
-#include <core/textutils.h>
+#include <text/textutils.h>
 #include <text/textpaint.h>
+#include <core/parcelablespan.h>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -11,39 +12,15 @@
 namespace cdroid {
 class Canvas;
 class TextLayout;
-class CharSequence {
-public:
-    virtual ~CharSequence() = default;
-    virtual size_t length()const{return 0;}
-    virtual int charAt(int)const{return 0;}
-    virtual CharSequence*subSequence(int,int)const{return nullptr;}
-    virtual std::string toString() const = 0;
-    virtual std::wstring toWString() const = 0;
-    // Copies characters from [start, end) into dest starting at destPos.
-    // If dest is shorter than destPos, it will be resized.
-    virtual void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const = 0;
-};
-class ParcelableSpan {
-public:
-    virtual ~ParcelableSpan() = default;
-};
-class ParagraphStyle : public ParcelableSpan {
-public:
-    virtual ~ParagraphStyle() = default;
-};
-class CharacterStyle : public ParcelableSpan {
-public:
-    virtual ~CharacterStyle() = default;
-    virtual void updateDrawState(const Paint& paint){};
-};
+
 class MetricAffectingSpan:public CharacterStyle{
 public:
     virtual void updateMeasureState(TextPaint& textPaint){};
 };
 class ReplacementSpan : public MetricAffectingSpan {
 public:
-    virtual int  getSize(const Paint& paint, CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
-    virtual void draw(Canvas& canvas, CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)=0;
+    virtual int  getSize(const Paint& paint,const CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
+    virtual void draw(Canvas& canvas,const CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)=0;
 };
 class AlignmentSpan :public ParagraphStyle{
 protected:
@@ -151,7 +128,6 @@ struct SpanInfo {
         return start == other.start && end == other.end && flags == other.flags && what == other.what;
     }
 };
-using SpanFilter=Predicate<const ParcelableSpan*>;
 const auto ParagraphStyleFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParagraphStyle*>(span) != nullptr;});
 // Spanned: read-only span-aware CharSequence (similar to Android's Spanned)
 class Spanned : public CharSequence {
@@ -200,6 +176,9 @@ protected:
     explicit SpannableStringInternal(const std::wstring& text) : mText(text) {}
     
 public:
+    SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan){}
+    SpannableStringInternal(const CharSequence* source, int start, int end){}
+    SpannableStringInternal(const CharSequence*){}
     virtual ~SpannableStringInternal() = default;
     
     std::wstring toWString() const override {
@@ -261,7 +240,7 @@ public:
         return edge;
     }
     
-    void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const override {
+    void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override {
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
@@ -306,7 +285,7 @@ public:
 class SpannableString : virtual public SpannableStringInternal,virtual public Spannable {
 public:
     SpannableString() = default;
-    SpannableString(const CharSequence*, bool ignoreNoCopySpan );
+    SpannableString(const CharSequence*, bool ignoreNoCopySpan ){}
     explicit SpannableString(const std::string& text)
         : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
     explicit SpannableString(const std::wstring& text)
@@ -330,7 +309,8 @@ public:
     SpannableStringBuilder() = default;
     explicit SpannableStringBuilder(const std::string& text)
         : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
-
+    SpannableStringBuilder(const CharSequence*){}
+    
     void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
         if (!what) return;
         if (start < 0) start = 0;
@@ -480,7 +460,7 @@ public:
             pos = found + 1;
         }
     }
-    void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const override {
+    void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override {
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;

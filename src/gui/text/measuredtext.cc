@@ -2,7 +2,7 @@
 #include <minikin/MeasuredText.h>
 namespace cdroid{
 // Use builder instead.
-MeasuredText::MeasuredText(void* ptr, std::vector<char16_t>& chars, bool computeHyphenation,
+MeasuredText::MeasuredText(void* ptr,const std::vector<char32_t>& chars, bool computeHyphenation,
         bool computeLayout, bool computeBounds, int top, int bottom) {
     mNativePtr = ptr;
     mChars = chars;
@@ -54,7 +54,7 @@ void MeasuredText::getBounds(int start, int end, Rect& rect) const{
     //Preconditions.checkNotNull(rect);
     //nGetBounds(mNativePtr, mChars, start, end, rect);
     minikin::MinikinRect rc;
-    const minikin::U16StringPiece usp((const uint16_t*)mChars.data(),mChars.size());
+    const minikin::U32StringPiece usp((const char32_t*)mChars.data(),mChars.size());
     const minikin::Range range((uint32_t)start,(uint32_t)end);
     ((minikin::MeasuredText*)mNativePtr)->getBounds(usp, range);
 }
@@ -64,7 +64,7 @@ void MeasuredText::getFontMetricsInt(int start, int end, Paint::FontMetricsInt& 
     //Objects.requireNonNull(outMetrics);
 
     //long packed = nGetExtent(mNativePtr, mChars, start, end);
-    const minikin::U16StringPiece usp((const uint16_t*)mChars.data(),mChars.size());
+    const minikin::U32StringPiece usp((const char32_t*)mChars.data(),mChars.size());
     const minikin::Range range((uint32_t)start,(uint32_t)end);
     const minikin::LayoutPieces lp;
     const auto ext=((minikin::MeasuredText*)mNativePtr)->getExtent(usp, range);
@@ -91,7 +91,7 @@ float MeasuredText::getCharWidthAt(int offset) const{
 }*/
 ////////////////////////////////////////////////////////////////////////////////////////////
 //public static final class Builder {
-MeasuredText::Builder::Builder(const std::vector<char16_t>& text) {
+MeasuredText::Builder::Builder(const std::vector<char32_t>& text) {
     //Preconditions.checkNotNull(text);
     mText = text;
     mNativePtr = new minikin::MeasuredTextBuilder();
@@ -189,7 +189,7 @@ MeasuredText* MeasuredText::Builder::build() {
     }
     minikin::MeasuredText* hintPtr = (mHintMt == nullptr) ? nullptr : (minikin::MeasuredText*)mHintMt->getNativePtr();
     //long ptr = nBuildMeasuredText(mNativePtr, hintPtr, mText, mComputeHyphenation, mComputeLayout, mComputeBounds, mFastHyphenation);
-     const minikin::U16StringPiece textBuffer((uint16_t*)mText.data(), mText.size());
+    const minikin::U32StringPiece textBuffer((char32_t*)mText.data(), mText.size());
     // Pass the ownership to Java.
     auto ptr= ((minikin::MeasuredTextBuilder*)mNativePtr)
         ->build(textBuffer, mComputeHyphenation, mComputeLayout, hintPtr).release();
@@ -216,7 +216,7 @@ static void nAddReplacementRun(/* Non Zero */ long nativeBuilderPtr,
 static long nBuildMeasuredText(
         long nativeBuilderPtr,
         long hintMtPtr,
-        std::vector<char16_t>& text,
+        std::vector<char32_t>& text,
         bool computeHyphenation,
         bool computeLayout,
         bool computeBounds,

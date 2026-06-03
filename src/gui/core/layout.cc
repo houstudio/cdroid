@@ -127,8 +127,8 @@ void Layout::resetScaledFont(){
 
     Cairo::FontOptions options;
     Cairo::Matrix ctm = Cairo::identity_matrix();
-    auto face = mTypeface->getFontFace()->get_font_face();
-    mTypeface->getFontFace()->get_font_options(options);
+    auto face = mTypeface->getFontFace();//->get_font_face();
+    //mTypeface->getFontFace()->get_font_options(options);
     options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
     options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
 
@@ -153,8 +153,8 @@ Cairo::RefPtr<Cairo::ScaledFont> Layout::getScaledFont(Typeface* tf, float size)
     Cairo::Matrix font_mtx(size, 0.0, size * skewX, size, 0.0, 0.0);
     Cairo::FontOptions options;
     Cairo::Matrix ctm = Cairo::identity_matrix();
-    auto face = tf->getFontFace()->get_font_face();
-    tf->getFontFace()->get_font_options(options);
+    auto face = tf->getFontFace();//->get_font_face();
+    //tf->getFontFace()->get_font_options(options);
     options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
     options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
     auto sf = Cairo::ScaledFont::create(face, font_mtx, ctm, options);
@@ -636,7 +636,7 @@ bool Layout::setText(const std::wstring&txt){
 
 bool Layout::setText(const Spanned& txt){
     const std::wstring ws = txt.toWString();
-    const std::vector<SpanInfo> sourceSpans = txt.getSpans(0,0,SpanFilter([](const CharacterStyle*){return true;}));
+    /*const std::vector<SpanInfo> sourceSpans = txt.getSpans(0,0,SpanFilter([](const CharacterStyle*){return true;}));
     bool changed = (mText.compare(ws) != 0) || (mSpans.size() != sourceSpans.size());
     if (!changed) {
         for (size_t i = 0; i < sourceSpans.size(); ++i) {
@@ -657,7 +657,7 @@ bool Layout::setText(const Spanned& txt){
         }
         mLayout++;
         return true;
-    }
+    }*/
     return false;
 }
 

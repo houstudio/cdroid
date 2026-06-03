@@ -36,6 +36,10 @@ public:
         return true;
     }
 
+    explicit operator bool() const {
+        return bool(func_);
+    }
+
     Predicate<T> operator&&(const Predicate<T>& other) const {
         return Predicate<T>([this, &other](const T& t) {
             return this->test(t) && other.test(t);

@@ -1,0 +1,302 @@
+#include <memory>
+#include <iostream>
+#include <text/textpaint.h>
+#include <text/textutils.h>
+#include <core/spannablestring.h>
+#include <minikin/GraphemeBreak.h>
+#include <minikin/LocaleList.h>
+#include <minikin/Measurement.h>
+#include <minikin/MeasuredText.h>
+#include <core/typeface.h>
+#include <hb.h>
+#include <hb-ft.h>
+
+namespace cdroid{
+
+static int32_t gFontIdCounter = 0;
+
+// MinikinFont implementation using Cairomm's FtFontFace
+class FullMinikinFont : public minikin::MinikinFont {
+public:
+    FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace)
+        : MinikinFont(gFontIdCounter++),
+          mFontFace(fontFace),
+          mHbFace(nullptr),
+          mCachedScaledFont(nullptr),
+          mCachedFontSize(0.0f) {
+        // 延迟创建，在第一次使用时创建
+    }
+
+    ~FullMinikinFont() override {
+        if (mHbFace != nullptr) {
+            hb_face_destroy(mHbFace);
+        }
+    }
+
+    float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint,
+                               const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);        
+        std::vector<Cairo::Glyph> glyphs(1);
+        glyphs[0].index = glyph_id;
+        glyphs[0].x = 0;
+        glyphs[0].y = 0;
+        Cairo::TextExtents extents;
+        scaledFont->get_glyph_extents(glyphs, extents);
+        return extents.x_advance;
+    }
+
+    void GetBounds(minikin::MinikinRect* bounds, uint32_t glyph_id,
+                   const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        
+        std::vector<Cairo::Glyph> glyphs(1);
+        glyphs[0].index = glyph_id;
+        glyphs[0].x = 0;
+        glyphs[0].y = 0;
+        Cairo::TextExtents extents;
+        scaledFont->get_glyph_extents(glyphs, extents);
+        bounds->mLeft = extents.x_bearing;
+        bounds->mTop = extents.y_bearing;
+        bounds->mRight = extents.x_bearing + extents.width;
+        bounds->mBottom = extents.y_bearing + extents.height;
+    }
+
+    void GetFontExtent(minikin::MinikinExtent* extent, const minikin::MinikinPaint& paint,
+                       const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        Cairo::FontExtents fontExtents;
+        scaledFont->get_extents(fontExtents);        
+        extent->ascent = fontExtents.ascent;
+        extent->descent = fontExtents.descent;
+    }
+
+    const std::vector<minikin::FontVariation>& GetAxes() const override {
+        static const std::vector<minikin::FontVariation> emptyAxes;
+        return emptyAxes;
+    }
+
+    const void* GetFontData() const override {
+        if (mHbFace == nullptr) {
+            Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = createScaledFont(12.0f);
+            FT_Face ftFace = scaledFont->lock_face();
+            if (ftFace != nullptr) {
+                mHbFace = hb_ft_face_create(ftFace, 0);
+            }
+            scaledFont->unlock_face();
+        }
+        return mHbFace;
+    }
+    size_t GetFontSize() const override {
+        return 0;//sizeof filedata
+    }
+    int GetFontIndex() const override {
+        return 0;
+    }
+private:
+    // 获取缓存的 ScaledFont，只有当 fontSize 改变时才重新创建
+    Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(float size) const {
+        if (mCachedScaledFont == nullptr || mCachedFontSize != size) {
+            mCachedScaledFont = createScaledFont(size);
+            mCachedFontSize = size;
+        }
+        return mCachedScaledFont;
+    }
+
+    Cairo::RefPtr<Cairo::FtScaledFont> createScaledFont(float size) const {
+        Cairo::Matrix font_mtx(size, 0.0, 0.0, size, 0.0, 0.0);
+        Cairo::FontOptions options;
+        Cairo::Matrix ctm = Cairo::identity_matrix();
+        options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
+        options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);        
+        return Cairo::FtScaledFont::create(mFontFace, font_mtx, ctm, options);
+    }
+    Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
+    mutable hb_face_t* mHbFace = nullptr;
+    mutable Cairo::RefPtr<Cairo::FtScaledFont> mCachedScaledFont;
+    mutable float mCachedFontSize;
+};
+
+static std::vector<std::shared_ptr<minikin::FontFamily>> getFamilies(){
+    std::vector<std::shared_ptr<minikin::FontFamily>>families;
+    auto fontFaces = Typeface::getFontFaces();
+    for(auto& face : fontFaces){
+        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
+        if(!ftFace) continue;
+        auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
+        minikin::Font font = minikin::Font::Builder(minikinFont).build();        
+        std::vector<minikin::Font> fonts;
+        fonts.push_back(std::move(font));
+        auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+        families.push_back(fontFamily);
+    }
+    return families;
+}
+std::shared_ptr<minikin::FontCollection> mFontCollection;
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Paint::Paint(){
+    if(!mFontCollection){
+        mFontCollection= std::make_shared<minikin::FontCollection>(getFamilies());
+    }
+    mStartHyphenEdit=0;
+    mEndHyphenEdit=0;
+    mWordSpace=0;
+    mLetterSpacing=0;
+}
+Paint::Paint(int flags):Paint(){};
+Paint::Paint(const Paint&other){
+    set(other);
+}
+
+void Paint::set(const Paint&o){
+    mColor = o.mColor;
+    mTextSize=o.mTextSize;
+    mAntialias=o.mAntialias;
+    mStartHyphenEdit = o.mStartHyphenEdit;
+    mEndHyphenEdit = o.mEndHyphenEdit;
+    mWordSpace = o.mWordSpace;
+    mLetterSpacing = o.mLetterSpacing;
+}
+
+bool Paint::hasEqualAttributes(const Paint&other)const{
+    return false;
+}
+
+minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
+    // 确保字体集合已初始化
+    if (!mFontCollection) {
+        mFontCollection = std::make_shared<minikin::FontCollection>(getFamilies());
+    }
+
+    minikin::MinikinPaint minikinPaint(mFontCollection);
+    minikinPaint.size = paint->getTextSize();
+    minikinPaint.scaleX = 1.f;
+    minikinPaint.skewX = 0.f;
+    minikinPaint.letterSpacing = paint->getLetterSpacing();
+    minikinPaint.wordSpacing = paint->getWordSpacing();
+    return minikinPaint;
+}
+
+float Paint::measureText(const std::string& text)const{
+    return 100;
+}
+
+float Paint::measureText(const std::string& text, int start, int end)const{
+    return 100;
+}
+
+float Paint::measureText(const CharSequence* text, int start, int end)const{
+    std::vector<char32_t>buf(end-start);
+    TextUtils::getChars(text, start, end, buf, 0);
+    return measureText(buf.data(),0,end-start);
+}
+
+float Paint::measureText(const char32_t* text, int index, int count)const{
+    const minikin::U32StringPiece textBuf(text+index, count);
+    const minikin::Range range(0, count);
+    const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
+    const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
+    auto bidiFlags = false/*isRtl*/ ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
+    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+                                        endHyphen, nullptr);
+}
+void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
+    int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const{
+}
+
+int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
+    return 0;
+}
+
+float Paint::getTextRunAdvances(const std::vector<char32_t>& chars, int index, int count, int contextIndex,
+        int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex)const{
+    const minikin::U32StringPiece textBuf(chars.data(), chars.size());
+    const minikin::Range range(index, index + count);
+    const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
+    const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
+    auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
+    minikin::MinikinPaint minikinPaint= prepareMinikinPaint(this);
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+                                        endHyphen, advances?advances->data():nullptr);
+}
+
+float Paint::getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
+    return 100.f;
+}
+
+float Paint::getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{
+    std::vector<char32_t>buf(end-start);
+    TextUtils::getChars(text, start, end, buf, 0);
+    return getRunAdvance(buf,0,end-start,contextStart,contextEnd,isRtl,offset);;
+}
+
+float Paint::getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
+#if 0
+    minikin::GraphemeBreak::MoveOpt moveOpt = minikin::GraphemeBreak::MoveOpt(cursorOpt);
+    minikin::Bidi bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
+    std::vector<float> advances(count);
+    MinikinUtils::measureText(paint, bidiFlags, typeface, text, start, count, start + count,
+            advances.data());
+    size_t result = minikin::GraphemeBreak::getTextRunCursor(advances.data(), text.data(), start, count, offset, moveOpt);
+    return result;
+#else
+    return 100;
+#endif
+}
+
+float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{
+    const minikin::U32StringPiece textBuf(text.data(), text.size());
+    const minikin::Range range(start, end);
+    const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
+    const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
+    auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
+    minikin::MinikinPaint minikinPaint(nullptr);// = prepareMinikinPaint(paint, typeface);
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen, endHyphen, nullptr);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+TextPaint::TextPaint():Paint(){
+}
+
+TextPaint::TextPaint(int flags):Paint(flags){
+}
+
+TextPaint::TextPaint(const Paint& p):Paint(p){
+}
+
+void TextPaint::set(const Paint& tp) {
+    Paint::set(tp);
+    bgColor = ((TextPaint&)tp).bgColor;
+    baselineShift = ((TextPaint&)tp).baselineShift;
+    linkColor = ((TextPaint&)tp).linkColor;
+    drawableState = ((TextPaint&)tp).drawableState;
+    density = ((TextPaint&)tp).density;
+    underlineColor = ((TextPaint&)tp).underlineColor;
+    underlineThickness = ((TextPaint&)tp).underlineThickness;
+}
+
+bool TextPaint::hasEqualAttributes(const TextPaint& other) const{
+    return bgColor == other.bgColor
+            && baselineShift == other.baselineShift
+            && linkColor == other.linkColor
+            && drawableState == other.drawableState
+            && density == other.density
+            && underlineColor == other.underlineColor
+            && underlineThickness == other.underlineThickness
+            && Paint::hasEqualAttributes((Paint&) other);
+}
+/*void TextPaint::setUnderlineText(bool underline) {
+}
+void TextPaint::setUnderlineText(int color, float thickness) {
+    underlineColor = color;
+    underlineThickness = thickness;
+}
+bool TextPaint::isUnderlineText()const{return false;}
+bool TextPaint::equalsForTextMeasurement(const TextPaint&)const{
+    return false;
+}*/
+
+}/*endof namespace*/

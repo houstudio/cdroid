@@ -1,1790 +1,1006 @@
-public class TextUtils {
-    private static final String TAG = "TextUtils";
+#include <cstring>
+#include <sstream>
+#include <cstdarg>
+#include <core/predicate.h>
+#include <core/spannablestring.h>
+#include <text/textutils.h>
+#include <unicode/uchar.h>
+#include <text/measuredparagraph.h>
+namespace cdroid{
 
-    // Zero-width character used to fill ellipsized strings when codepoint length must be preserved.
-    /* package */ static final char ELLIPSIS_FILLER = '\uFEFF'; // ZERO WIDTH NO-BREAK SPACE
+const auto ObjectFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParcelableSpan*>(span) != nullptr;});
+const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
 
-    private static final String ELLIPSIS_NORMAL = "\u2026"; // HORIZONTAL ELLIPSIS (…)
-    private static final String ELLIPSIS_TWO_DOTS = "\u2025"; // TWO DOT LEADER (‥)
+std::string TextUtils::getEllipsisString(TextUtils::TruncateAt method) {
+    static const char ELLIPSIS_NORMAL[] = u8"\u2026"; // HORIZONTAL ELLIPSIS (…)
+    static const char ELLIPSIS_TWO_DOTS[] = u8"\u2025"; // TWO DOT LEADER (‥)
+    return (method == TextUtils::TruncateAt::END_SMALL) ? ELLIPSIS_TWO_DOTS : ELLIPSIS_NORMAL;
+}
 
-    private static final int LINE_FEED_CODE_POINT = 10;
-    private static final int NBSP_CODE_POINT = 160;
-
-    public static final int SAFE_STRING_FLAG_TRIM = 0x1;
-
-    public static final int SAFE_STRING_FLAG_SINGLE_LINE = 0x2;
-
-    public static final int SAFE_STRING_FLAG_FIRST_LINE = 0x4;
-
-    public static String getEllipsisString(@NonNull TextUtils.TruncateAt method) {
-        return (method == TextUtils.TruncateAt.END_SMALL) ? ELLIPSIS_TWO_DOTS : ELLIPSIS_NORMAL;
-    }
-
-
-    private TextUtils() { /* cannot be instantiated */ }
-
-    public static void getChars(CharSequence s, int start, int end,
-                                char[] dest, int destoff) {
-        Class<? extends CharSequence> c = s.getClass();
-
-        if (c == String.class)
-            ((String) s).getChars(start, end, dest, destoff);
-        else if (c == StringBuffer.class)
-            ((StringBuffer) s).getChars(start, end, dest, destoff);
-        else if (c == StringBuilder.class)
-            ((StringBuilder) s).getChars(start, end, dest, destoff);
-        else if (s instanceof GetChars)
-            ((GetChars) s).getChars(start, end, dest, destoff);
-        else {
-            for (int i = start; i < end; i++)
-                dest[destoff++] = s.charAt(i);
-        }
-    }
-
-    public static int indexOf(CharSequence s, char ch) {
-        return indexOf(s, ch, 0);
-    }
-
-    public static int indexOf(CharSequence s, char ch, int start) {
-        Class<? extends CharSequence> c = s.getClass();
-
-        if (c == String.class)
-            return ((String) s).indexOf(ch, start);
-
-        return indexOf(s, ch, start, s.length());
-    }
-
-    public static int indexOf(CharSequence s, char ch, int start, int end) {
-        Class<? extends CharSequence> c = s.getClass();
-
-        if (s instanceof GetChars || c == StringBuffer.class ||
-            c == StringBuilder.class || c == String.class) {
-            final int INDEX_INCREMENT = 500;
-            char[] temp = obtain(INDEX_INCREMENT);
-
-            while (start < end) {
-                int segend = start + INDEX_INCREMENT;
-                if (segend > end)
-                    segend = end;
-
-                getChars(s, start, segend, temp, 0);
-
-                int count = segend - start;
-                for (int i = 0; i < count; i++) {
-                    if (temp[i] == ch) {
-                        recycle(temp);
-                        return i + start;
-                    }
-                }
-
-                start = segend;
-            }
-
-            recycle(temp);
-            return -1;
-        }
-
+void TextUtils::getChars(const CharSequence* s, int start, int end, std::vector<char32_t>& dest, int destoff) {
+    /*Class<? extends CharSequence> c = s.getClass();
+    if (c == String.class)
+        ((String) s).getChars(start, end, dest, destoff);
+    else if (c == StringBuffer.class)
+        ((StringBuffer) s).getChars(start, end, dest, destoff);
+    else if (c == StringBuilder.class)
+        ((StringBuilder) s).getChars(start, end, dest, destoff);
+    else if (s instanceof GetChars)
+        ((GetChars) s).getChars(start, end, dest, destoff);
+    else {
         for (int i = start; i < end; i++)
-            if (s.charAt(i) == ch)
-                return i;
+            dest[destoff++] = s.charAt(i);
+    }*/
+     s->getChars(start, end, dest, destoff);
+}
 
+int TextUtils::indexOf(const CharSequence* s, char32_t ch, int start) {
+    return indexOf(s, ch, start, s->length());
+}
+
+int TextUtils::indexOf(const CharSequence* s, char32_t ch, int start, int end) {
+    for (int i = start; i < end; i++)
+        if (s->charAt(i) == ch)
+            return i;
+    return -1;
+}
+
+int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch) {
+    return lastIndexOf(s, ch, s->length() - 1);
+}
+
+int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch, int last) {
+    return lastIndexOf(s, ch, 0, last);
+}
+
+int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch, int start, int last) {
+    if (last < 0)
         return -1;
-    }
+    if (last >= s->length())
+        last = s->length() - 1;
 
-    public static int lastIndexOf(CharSequence s, char ch) {
-        return lastIndexOf(s, ch, s.length() - 1);
-    }
+    const int end = last + 1;
 
-    public static int lastIndexOf(CharSequence s, char ch, int last) {
-        Class<? extends CharSequence> c = s.getClass();
+    for (int i = end - 1; i >= start; i--)
+        if (s->charAt(i) == ch)
+            return i;
+    return -1;
+}
 
-        if (c == String.class)
-            return ((String) s).lastIndexOf(ch, last);
+int TextUtils::indexOf(const CharSequence* s, const CharSequence* needle) {
+    return indexOf(s, needle, 0, s->length());
+}
 
-        return lastIndexOf(s, ch, 0, last);
-    }
+int TextUtils::indexOf(const CharSequence* s,const CharSequence* needle, int start) {
+    return indexOf(s, needle, start, s->length());
+}
 
-    public static int lastIndexOf(CharSequence s, char ch,
-                                  int start, int last) {
-        if (last < 0)
-            return -1;
-        if (last >= s.length())
-            last = s.length() - 1;
-
-        int end = last + 1;
-
-        Class<? extends CharSequence> c = s.getClass();
-
-        if (s instanceof GetChars || c == StringBuffer.class ||
-            c == StringBuilder.class || c == String.class) {
-            final int INDEX_INCREMENT = 500;
-            char[] temp = obtain(INDEX_INCREMENT);
-
-            while (start < end) {
-                int segstart = end - INDEX_INCREMENT;
-                if (segstart < start)
-                    segstart = start;
-
-                getChars(s, segstart, end, temp, 0);
-
-                int count = end - segstart;
-                for (int i = count - 1; i >= 0; i--) {
-                    if (temp[i] == ch) {
-                        recycle(temp);
-                        return i + segstart;
-                    }
-                }
-
-                end = segstart;
-            }
-
-            recycle(temp);
+int TextUtils::indexOf(const CharSequence* s,const CharSequence* needle, int start, int end) {
+    int nlen = needle->length();
+    if (nlen == 0)
+        return start;
+    char32_t c = needle->charAt(0);
+    for (;;) {
+        start = indexOf(s, c, start);
+        if (start > end - nlen) {
+            break;
+        }
+        if (start < 0) {
             return -1;
         }
-
-        for (int i = end - 1; i >= start; i--)
-            if (s.charAt(i) == ch)
-                return i;
-
-        return -1;
-    }
-
-    public static int indexOf(CharSequence s, CharSequence needle) {
-        return indexOf(s, needle, 0, s.length());
-    }
-
-    public static int indexOf(CharSequence s, CharSequence needle, int start) {
-        return indexOf(s, needle, start, s.length());
-    }
-
-    public static int indexOf(CharSequence s, CharSequence needle,
-                              int start, int end) {
-        int nlen = needle.length();
-        if (nlen == 0)
+        if (regionMatches(s, start, needle, 0, nlen)) {
             return start;
+        }
+        start++;
+    }
+    return -1;
+}
 
-        char c = needle.charAt(0);
+bool TextUtils::regionMatches(const CharSequence* one, int toffset, const CharSequence* two, int ooffset, int len) {
+    int tempLen = 2 * len;
+    if (tempLen < len) {
+        // Integer overflow; len is unreasonably large
+        //throw new IndexOutOfBoundsException();
+    }
+    std::vector<char32_t> temp(tempLen);
 
-        for (;;) {
-            start = indexOf(s, c, start);
-            if (start > end - nlen) {
-                break;
+    getChars(one, toffset, toffset + len, temp, 0);
+    getChars(two, ooffset, ooffset + len, temp, len);
+
+    bool match = true;
+    for (int i = 0; i < len; i++) {
+        if (temp[i] != temp[i + len]) {
+            match = false;
+            break;
+        }
+    }
+    return match;
+}
+
+std::string TextUtils::substring(const CharSequence* source, int start, int end) {
+    std::vector<char32_t> temp(end - start);
+    getChars(source, start, end, temp, 0);
+    //String ret = new String(temp, 0, end - start);
+    //return ret;
+    return "";
+}
+
+std::vector<std::string> TextUtils::split(const std::string& text, const std::string& delim) {
+    std::vector<std::string> elems;
+    size_t pos = 0;
+    size_t len = text.length();
+    size_t delim_len = delim.length();
+    if (delim_len == 0) return elems;
+    while (pos < len){
+        int find_pos = text.find(delim, pos);
+        if (find_pos < 0){
+            elems.push_back(text.substr(pos, len - pos));
+            break;
+        }
+        elems.push_back(text.substr(pos, find_pos - pos));
+        pos = find_pos + delim_len;
+    }
+    return elems;
+}
+
+std::vector<std::string> TextUtils::split(const std::string& s,int delim){
+    std::vector<std::string> elems;
+    size_t pos = 0;
+    size_t len = s.length();
+    while (pos < len){
+        auto find_pos = s.find(delim, pos);
+        if (find_pos != std::string::npos){
+            elems.push_back(s.substr(pos, len - pos));
+            break;
+        }
+        elems.push_back(s.substr(pos, find_pos - pos));
+        pos = find_pos + 1;
+    }
+    return elems;
+}
+
+bool TextUtils::isEmpty(const CharSequence* str) {
+    return str == nullptr || str->length() == 0;
+}
+
+bool TextUtils::isEmpty(const std::string&str){
+    return str.empty();
+}
+
+std::wstring TextUtils::utf8tounicode(const std::string& utf8){
+    size_t u8len = utf8.size() + 8;
+    std::unique_ptr<wchar_t[]> out(new wchar_t[u8len]);
+    wchar_t* pout = out.get();
+    for(int i = 0; i < (int)utf8.length(); ){
+        const unsigned char* p = (const unsigned char*)(utf8.c_str() + i);
+        int e = 0, n = 0;
+        if(*p >= 0xfc) {          /* 6 bytes */
+            e = (p[0] & 0x01) << 30;
+            e |= (p[1] & 0x3f) << 24;
+            e |= (p[2] & 0x3f) << 18;
+            e |= (p[3] & 0x3f) << 12;
+            e |= (p[4] & 0x3f) << 6;
+            e |= (p[5] & 0x3f);
+            n = 6;
+        } else if(*p >= 0xf8) {  /* 5 bytes */
+            e = (p[0] & 0x03) << 24;
+            e |= (p[1] & 0x3f) << 18;
+            e |= (p[2] & 0x3f) << 12;
+            e |= (p[3] & 0x3f) << 6;
+            e |= (p[4] & 0x3f);
+            n = 5;
+        } else if(*p >= 0xf0) {  /* 4 bytes */
+            e = (p[0] & 0x07) << 18;
+            e |= (p[1] & 0x3f) << 12;
+            e |= (p[2] & 0x3f) << 6;
+            e |= (p[3] & 0x3f);
+            n = 4;
+        } else if(*p >= 0xe0) {  /* 3 bytes */
+            e = (p[0] & 0x0f) << 12;
+            e |= (p[1] & 0x3f) << 6;
+            e |= (p[2] & 0x3f);
+            n = 3;
+        } else if(*p >= 0xc0) {  /* 2 bytes */
+            e = (p[0] & 0x1f) << 6;
+            e |= (p[1] & 0x3f);
+            n = 2;
+        } else {                 /* 1 byte */
+            e = p[0];
+            n = 1;
+        }
+        *pout++ = e;
+        i += n;
+    }
+    *pout = L'\0';
+    return std::wstring(out.get());
+}
+
+std::string TextUtils::unicode2utf8(const std::wstring& u32s){
+    const int u8len = u32s.length() * 4 + 8;
+    std::unique_ptr<char[]> out(new char[u8len]);
+    char* pout = out.get();
+    for(size_t i = 0; i < u32s.length(); i++){
+        wchar_t wc = u32s[i];
+        int count = 0;
+        if (wc < 0x80)         count = 1;
+        else if (wc < 0x800)   count = 2;
+        else if (wc < 0x10000) count = 3;
+        else if (wc < 0x110000) count = 4;
+        else continue;
+        
+        unsigned char* s = (unsigned char*)pout;
+        switch (count){
+        case 4: s[3] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0x10000;
+        case 3: s[2] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0x800;
+        case 2: s[1] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0xc0;
+        case 1: s[0] = wc;
+        }
+        pout += count;
+    }
+    *pout = 0;
+    return std::string(out.get());
+}
+
+std::string TextUtils::utf16_utf8(const unsigned short* utf16, int len){
+    std::unique_ptr<char[]> out(new char[len * 4]);
+    char* pout = out.get();
+    for(int i = 0; i < len; i++){
+        unsigned short wc = utf16[i];
+        int count = 0;
+        if (wc < 0x80)         count = 1;
+        else if (wc < 0x800)   count = 2;
+        else if (wc < 0x10000) count = 3;
+        else continue;
+        
+        unsigned char* s = (unsigned char*)pout;
+        switch (count){
+        case 3: s[2] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0x800;
+        case 2: s[1] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0xc0;
+        case 1: s[0] = wc;
+        }
+        pout += count;
+    }
+    *pout = 0;
+    return std::string(out.get());
+}
+
+const std::u16string TextUtils::utf8_utf16(const std::string& utf8){
+    size_t u8len = utf8.size() + 8;
+    std::unique_ptr<char16_t[]> out(new char16_t[u8len]);
+    char16_t* pout = out.get();
+    for(int i = 0; i < (int)utf8.length(); ){
+        const unsigned char* p = (const unsigned char*)(utf8.c_str() + i);
+        int e = 0, n = 0;
+        if(*p >= 0xf0) {  /* 4 bytes - surrogate pair */
+            e = (p[0] & 0x07) << 18;
+            e |= (p[1] & 0x3f) << 12;
+            e |= (p[2] & 0x3f) << 6;
+            e |= (p[3] & 0x3f);
+            n = 4;
+            if (e >= 0x10000) {
+                e -= 0x10000;
+                *pout++ = (char16_t)(0xD800 | (e >> 10));
+                *pout++ = (char16_t)(0xDC00 | (e & 0x3FF));
+                i += n;
+                continue;
             }
-
-            if (start < 0) {
-                return -1;
-            }
-
-            if (regionMatches(s, start, needle, 0, nlen)) {
-                return start;
-            }
-
-            start++;
+        } else if(*p >= 0xe0) {  /* 3 bytes */
+            e = (p[0] & 0x0f) << 12;
+            e |= (p[1] & 0x3f) << 6;
+            e |= (p[2] & 0x3f);
+            n = 3;
+        } else if(*p >= 0xc0) {  /* 2 bytes */
+            e = (p[0] & 0x1f) << 6;
+            e |= (p[1] & 0x3f);
+            n = 2;
+        } else {                 /* 1 byte */
+            e = p[0];
+            n = 1;
         }
-        return -1;
+        *pout++ = (char16_t)e;
+        i += n;
     }
-
-    public static boolean regionMatches(CharSequence one, int toffset,
-                                        CharSequence two, int ooffset,
-                                        int len) {
-        int tempLen = 2 * len;
-        if (tempLen < len) {
-            // Integer overflow; len is unreasonably large
-            throw new IndexOutOfBoundsException();
-        }
-        char[] temp = obtain(tempLen);
-
-        getChars(one, toffset, toffset + len, temp, 0);
-        getChars(two, ooffset, ooffset + len, temp, len);
-
-        boolean match = true;
-        for (int i = 0; i < len; i++) {
-            if (temp[i] != temp[i + len]) {
-                match = false;
-                break;
-            }
-        }
-
-        recycle(temp);
-        return match;
+    *pout = 0;
+    return std::u16string(out.get());
+}
+std::string TextUtils::trim(std::string&s){
+    if (s.empty()){
+        return s;
     }
+    s.erase(0,s.find_first_not_of(" \t\r\n"));
+    s.erase(s.find_last_not_of(" \t\r\n") + 1);
+    return s;
+}
 
-    public static String substring(CharSequence source, int start, int end) {
-        if (source instanceof String)
-            return ((String) source).substring(start, end);
-        if (source instanceof StringBuilder)
-            return ((StringBuilder) source).substring(start, end);
-        if (source instanceof StringBuffer)
-            return ((StringBuffer) source).substring(start, end);
+bool TextUtils::startWith(const std::string&str,const std::string&head){
+    return str.compare(0, head.size(), head) == 0;
+}
 
-        char[] temp = obtain(end - start);
-        getChars(source, start, end, temp, 0);
-        String ret = new String(temp, 0, end - start);
-        recycle(temp);
+bool TextUtils::endWith(const std::string&str,const std::string&tail){
+    return str.size()>=tail.size()&&(str.compare(str.size() - tail.size(), tail.size(), tail) == 0);
+}
 
-        return ret;
+std::string& TextUtils::replace(std::string&src,const std::string&old_value,const std::string&new_value){
+    for (std::string::size_type pos(0); pos != std::string::npos; pos += new_value.length()) {
+        if ((pos = src.find(old_value, pos)) != std::string::npos) {
+             src.replace(pos, old_value.length(), new_value);
+        }
+        else break;
     }
-
-    public static String join(@NonNull CharSequence delimiter, @NonNull Object[] tokens) {
-        final int length = tokens.length;
-        if (length == 0) {
-            return "";
-        }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(tokens[0]);
-        for (int i = 1; i < length; i++) {
-            sb.append(delimiter);
-            sb.append(tokens[i]);
-        }
-        return sb.toString();
-    }
-
-    public static String join(@NonNull CharSequence delimiter, @NonNull Iterable tokens) {
-        final Iterator<?> it = tokens.iterator();
-        if (!it.hasNext()) {
-            return "";
-        }
-        final StringBuilder sb = new StringBuilder();
-        sb.append(it.next());
-        while (it.hasNext()) {
-            sb.append(delimiter);
-            sb.append(it.next());
-        }
-        return sb.toString();
-    }
-
-    public static String[] split(String text, String expression) {
-        if (text.length() == 0) {
-            return EMPTY_STRING_ARRAY;
-        } else {
-            return text.split(expression, -1);
-        }
-    }
-
-    public static String[] split(String text, Pattern pattern) {
-        if (text.length() == 0) {
-            return EMPTY_STRING_ARRAY;
-        } else {
-            return pattern.split(text, -1);
-        }
-    }
-
-    public interface StringSplitter extends Iterable<String> {
-        public void setString(String string);
-    }
-
-    public static class SimpleStringSplitter implements StringSplitter, Iterator<String> {
-        private String mString;
-        private char mDelimiter;
-        private int mPosition;
-        private int mLength;
-
-        public SimpleStringSplitter(char delimiter) {
-            mDelimiter = delimiter;
-        }
-
-        public void setString(String string) {
-            mString = string;
-            mPosition = 0;
-            mLength = mString.length();
-        }
-
-        public Iterator<String> iterator() {
-            return this;
-        }
-
-        public boolean hasNext() {
-            return mPosition < mLength;
-        }
-
-        public String next() {
-            int end = mString.indexOf(mDelimiter, mPosition);
-            if (end == -1) {
-                end = mLength;
-            }
-            String nextString = mString.substring(mPosition, end);
-            mPosition = end + 1; // Skip the delimiter.
-            return nextString;
-        }
-
-        public void remove() {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    public static CharSequence stringOrSpannedString(CharSequence source) {
-        if (source == null)
-            return null;
-        if (source instanceof SpannedString)
-            return source;
-        if (source instanceof Spanned)
-            return new SpannedString(source);
-
-        return source.toString();
-    }
-
-    public static boolean isEmpty(@Nullable CharSequence str) {
-        return str == null || str.length() == 0;
-    }
-
-    /** {@hide} */
-    public static String nullIfEmpty(@Nullable String str) {
-        return isEmpty(str) ? null : str;
-    }
-
-    /** {@hide} */
-    public static String emptyIfNull(@Nullable String str) {
-        return str == null ? "" : str;
-    }
-
-    /** {@hide} */
-    public static String firstNotEmpty(@Nullable String a, @NonNull String b) {
-        return !isEmpty(a) ? a : Preconditions.checkStringNotEmpty(b);
-    }
-
-    /** {@hide} */
-    public static int length(@Nullable String s) {
-        return s != null ? s.length() : 0;
-    }
-
-    public static String safeIntern(String s) {
-        return (s != null) ? s.intern() : null;
-    }
-
-    public static int getTrimmedLength(CharSequence s) {
-        int len = s.length();
-
-        int start = 0;
-        while (start < len && s.charAt(start) <= ' ') {
-            start++;
-        }
-
-        int end = len;
-        while (end > start && s.charAt(end - 1) <= ' ') {
-            end--;
-        }
-
-        return end - start;
-    }
-
-    public static boolean equals(CharSequence a, CharSequence b) {
-        if (a == b) return true;
-        int length;
-        if (a != null && b != null && (length = a.length()) == b.length()) {
-            if (a instanceof String && b instanceof String) {
-                return a.equals(b);
-            } else {
-                for (int i = 0; i < length; i++) {
-                    if (a.charAt(i) != b.charAt(i)) return false;
-                }
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static CharSequence getReverse(CharSequence source, int start, int end) {
-        return new Reverser(source, start, end);
-    }
-
-    private static class Reverser
-    implements CharSequence, GetChars
-    {
-        public Reverser(CharSequence source, int start, int end) {
-            mSource = source;
-            mStart = start;
-            mEnd = end;
-        }
-
-        public int length() {
-            return mEnd - mStart;
-        }
-
-        public CharSequence subSequence(int start, int end) {
-            char[] buf = new char[end - start];
-
-            getChars(start, end, buf, 0);
-            return new String(buf);
-        }
-
-        @Override
-        public String toString() {
-            return subSequence(0, length()).toString();
-        }
-
-        public char charAt(int off) {
-            return (char) UCharacter.getMirror(mSource.charAt(mEnd - 1 - off));
-        }
-
-        @SuppressWarnings("deprecation")
-        public void getChars(int start, int end, char[] dest, int destoff) {
-            TextUtils.getChars(mSource, start + mStart, end + mStart,
-                               dest, destoff);
-            AndroidCharacter.mirror(dest, 0, end - start);
-
-            int len = end - start;
-            int n = (end - start) / 2;
-            for (int i = 0; i < n; i++) {
-                char tmp = dest[destoff + i];
-
-                dest[destoff + i] = dest[destoff + len - i - 1];
-                dest[destoff + len - i - 1] = tmp;
-            }
-        }
-
-        private CharSequence mSource;
-        private int mStart;
-        private int mEnd;
-    }
-
-    /** @hide */
-    public static final int ALIGNMENT_SPAN = 1;
-    /** @hide */
-    public static final int FIRST_SPAN = ALIGNMENT_SPAN;
-    /** @hide */
-    public static final int FOREGROUND_COLOR_SPAN = 2;
-    /** @hide */
-    public static final int RELATIVE_SIZE_SPAN = 3;
-    /** @hide */
-    public static final int SCALE_X_SPAN = 4;
-    /** @hide */
-    public static final int STRIKETHROUGH_SPAN = 5;
-    /** @hide */
-    public static final int UNDERLINE_SPAN = 6;
-    /** @hide */
-    public static final int STYLE_SPAN = 7;
-    /** @hide */
-    public static final int BULLET_SPAN = 8;
-    /** @hide */
-    public static final int QUOTE_SPAN = 9;
-    /** @hide */
-    public static final int LEADING_MARGIN_SPAN = 10;
-    /** @hide */
-    public static final int URL_SPAN = 11;
-    /** @hide */
-    public static final int BACKGROUND_COLOR_SPAN = 12;
-    /** @hide */
-    public static final int TYPEFACE_SPAN = 13;
-    /** @hide */
-    public static final int SUPERSCRIPT_SPAN = 14;
-    /** @hide */
-    public static final int SUBSCRIPT_SPAN = 15;
-    /** @hide */
-    public static final int ABSOLUTE_SIZE_SPAN = 16;
-    /** @hide */
-    public static final int TEXT_APPEARANCE_SPAN = 17;
-    /** @hide */
-    public static final int ANNOTATION = 18;
-    /** @hide */
-    public static final int SUGGESTION_SPAN = 19;
-    /** @hide */
-    public static final int SPELL_CHECK_SPAN = 20;
-    /** @hide */
-    public static final int SUGGESTION_RANGE_SPAN = 21;
-    /** @hide */
-    public static final int EASY_EDIT_SPAN = 22;
-    /** @hide */
-    public static final int LOCALE_SPAN = 23;
-    /** @hide */
-    public static final int TTS_SPAN = 24;
-    /** @hide */
-    public static final int ACCESSIBILITY_CLICKABLE_SPAN = 25;
-    /** @hide */
-    public static final int ACCESSIBILITY_URL_SPAN = 26;
-    /** @hide */
-    public static final int LINE_BACKGROUND_SPAN = 27;
-    /** @hide */
-    public static final int LINE_HEIGHT_SPAN = 28;
-    /** @hide */
-    public static final int ACCESSIBILITY_REPLACEMENT_SPAN = 29;
-    /** @hide */
-    public static final int LAST_SPAN = ACCESSIBILITY_REPLACEMENT_SPAN;
-
-    /**
-     * Flatten a CharSequence and whatever styles can be copied across processes
-     * into the parcel.
-     */
-    public static void writeToParcel(@Nullable CharSequence cs, @NonNull Parcel p,
-            int parcelableFlags) {
-        if (cs instanceof Spanned) {
-            p.writeInt(0);
-            p.writeString8(cs.toString());
-
-            Spanned sp = (Spanned) cs;
-            Object[] os = sp.getSpans(0, cs.length(), Object.class);
-
-            // note to people adding to this: check more specific types
-            // before more generic types.  also notice that it uses
-            // "if" instead of "else if" where there are interfaces
-            // so one object can be several.
-
-            for (int i = 0; i < os.length; i++) {
-                Object o = os[i];
-                Object prop = os[i];
-
-                if (prop instanceof CharacterStyle) {
-                    prop = ((CharacterStyle) prop).getUnderlying();
-                }
-
-                if (prop instanceof ParcelableSpan) {
-                    final ParcelableSpan ps = (ParcelableSpan) prop;
-                    final int spanTypeId = ps.getSpanTypeIdInternal();
-                    if (spanTypeId < FIRST_SPAN || spanTypeId > LAST_SPAN) {
-                        Log.e(TAG, "External class \"" + ps.getClass().getSimpleName()
-                                + "\" is attempting to use the frameworks-only ParcelableSpan"
-                                + " interface");
-                    } else {
-                        p.writeInt(spanTypeId);
-                        ps.writeToParcelInternal(p, parcelableFlags);
-                        writeWhere(p, sp, o);
-                    }
-                }
-            }
-
-            p.writeInt(0);
-        } else {
-            p.writeInt(1);
-            if (cs != null) {
-                p.writeString8(cs.toString());
-            } else {
-                p.writeString8(null);
-            }
-        }
-    }
-
-    private static void writeWhere(Parcel p, Spanned sp, Object o) {
-        p.writeInt(sp.getSpanStart(o));
-        p.writeInt(sp.getSpanEnd(o));
-        p.writeInt(sp.getSpanFlags(o));
-    }
-
-    public static final Parcelable.Creator<CharSequence> CHAR_SEQUENCE_CREATOR
-            = new Parcelable.Creator<CharSequence>() {
-        /**
-         * Read and return a new CharSequence, possibly with styles,
-         * from the parcel.
-         */
-        public CharSequence createFromParcel(Parcel p) {
-            int kind = p.readInt();
-
-            String string = p.readString8();
-            if (string == null) {
-                return null;
-            }
-
-            if (kind == 1) {
-                return string;
-            }
-
-            SpannableString sp = new SpannableString(string);
-
-            while (true) {
-                kind = p.readInt();
-
-                if (kind == 0)
-                    break;
-
-                switch (kind) {
-                case ALIGNMENT_SPAN:
-                    readSpan(p, sp, new AlignmentSpan.Standard(p));
-                    break;
-
-                case FOREGROUND_COLOR_SPAN:
-                    readSpan(p, sp, new ForegroundColorSpan(p));
-                    break;
-
-                case RELATIVE_SIZE_SPAN:
-                    readSpan(p, sp, new RelativeSizeSpan(p));
-                    break;
-
-                case SCALE_X_SPAN:
-                    readSpan(p, sp, new ScaleXSpan(p));
-                    break;
-
-                case STRIKETHROUGH_SPAN:
-                    readSpan(p, sp, new StrikethroughSpan(p));
-                    break;
-
-                case UNDERLINE_SPAN:
-                    readSpan(p, sp, new UnderlineSpan(p));
-                    break;
-
-                case STYLE_SPAN:
-                    readSpan(p, sp, new StyleSpan(p));
-                    break;
-
-                case BULLET_SPAN:
-                    readSpan(p, sp, new BulletSpan(p));
-                    break;
-
-                case QUOTE_SPAN:
-                    readSpan(p, sp, new QuoteSpan(p));
-                    break;
-
-                case LEADING_MARGIN_SPAN:
-                    readSpan(p, sp, new LeadingMarginSpan.Standard(p));
-                    break;
-
-                case URL_SPAN:
-                    readSpan(p, sp, new URLSpan(p));
-                    break;
-
-                case BACKGROUND_COLOR_SPAN:
-                    readSpan(p, sp, new BackgroundColorSpan(p));
-                    break;
-
-                case TYPEFACE_SPAN:
-                    readSpan(p, sp, new TypefaceSpan(p));
-                    break;
-
-                case SUPERSCRIPT_SPAN:
-                    readSpan(p, sp, new SuperscriptSpan(p));
-                    break;
-
-                case SUBSCRIPT_SPAN:
-                    readSpan(p, sp, new SubscriptSpan(p));
-                    break;
-
-                case ABSOLUTE_SIZE_SPAN:
-                    readSpan(p, sp, new AbsoluteSizeSpan(p));
-                    break;
-
-                case TEXT_APPEARANCE_SPAN:
-                    readSpan(p, sp, new TextAppearanceSpan(p));
-                    break;
-
-                case ANNOTATION:
-                    readSpan(p, sp, new Annotation(p));
-                    break;
-
-                case SUGGESTION_SPAN:
-                    readSpan(p, sp, new SuggestionSpan(p));
-                    break;
-
-                case SPELL_CHECK_SPAN:
-                    readSpan(p, sp, new SpellCheckSpan(p));
-                    break;
-
-                case SUGGESTION_RANGE_SPAN:
-                    readSpan(p, sp, new SuggestionRangeSpan(p));
-                    break;
-
-                case EASY_EDIT_SPAN:
-                    readSpan(p, sp, new EasyEditSpan(p));
-                    break;
-
-                case LOCALE_SPAN:
-                    readSpan(p, sp, new LocaleSpan(p));
-                    break;
-
-                case TTS_SPAN:
-                    readSpan(p, sp, new TtsSpan(p));
-                    break;
-
-                case ACCESSIBILITY_CLICKABLE_SPAN:
-                    readSpan(p, sp, new AccessibilityClickableSpan(p));
-                    break;
-
-                case ACCESSIBILITY_URL_SPAN:
-                    readSpan(p, sp, new AccessibilityURLSpan(p));
-                    break;
-
-                case LINE_BACKGROUND_SPAN:
-                    readSpan(p, sp, new LineBackgroundSpan.Standard(p));
-                    break;
-
-                case LINE_HEIGHT_SPAN:
-                    readSpan(p, sp, new LineHeightSpan.Standard(p));
-                    break;
-
-                case ACCESSIBILITY_REPLACEMENT_SPAN:
-                    readSpan(p, sp, new AccessibilityReplacementSpan(p));
-                    break;
-
-                default:
-                    throw new RuntimeException("bogus span encoding " + kind);
-                }
-            }
-
-            return sp;
-        }
-
-        public CharSequence[] newArray(int size)
-        {
-            return new CharSequence[size];
-        }
-    };
-
-    public static void dumpSpans(CharSequence cs, Printer printer, String prefix) {
-        if (cs instanceof Spanned) {
-            Spanned sp = (Spanned) cs;
-            Object[] os = sp.getSpans(0, cs.length(), Object.class);
-
-            for (int i = 0; i < os.length; i++) {
-                Object o = os[i];
-                printer.println(prefix + cs.subSequence(sp.getSpanStart(o),
-                        sp.getSpanEnd(o)) + ": "
-                        + Integer.toHexString(System.identityHashCode(o))
-                        + " " + o.getClass().getCanonicalName()
-                         + " (" + sp.getSpanStart(o) + "-" + sp.getSpanEnd(o)
-                         + ") fl=#" + sp.getSpanFlags(o));
-            }
-        } else {
-            printer.println(prefix + cs + ": (no spans)");
-        }
-    }
-
-    public static CharSequence replace(CharSequence template,
-                                       String[] sources,
-                                       CharSequence[] destinations) {
-        SpannableStringBuilder tb = new SpannableStringBuilder(template);
-
-        for (int i = 0; i < sources.length; i++) {
-            int where = indexOf(tb, sources[i]);
-
-            if (where >= 0)
-                tb.setSpan(sources[i], where, where + sources[i].length(),
-                           Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-
-        for (int i = 0; i < sources.length; i++) {
-            int start = tb.getSpanStart(sources[i]);
-            int end = tb.getSpanEnd(sources[i]);
-
-            if (start >= 0) {
-                tb.replace(start, end, destinations[i]);
-            }
-        }
-
-        return tb;
-    }
-
-    public static CharSequence expandTemplate(CharSequence template,
-                                              CharSequence... values) {
-        if (values.length > 9) {
-            throw new IllegalArgumentException("max of 9 values are supported");
-        }
-
-        SpannableStringBuilder ssb = new SpannableStringBuilder(template);
-
-        try {
-            int i = 0;
-            while (i < ssb.length()) {
-                if (ssb.charAt(i) == '^') {
-                    char next = ssb.charAt(i+1);
-                    if (next == '^') {
-                        ssb.delete(i+1, i+2);
-                        ++i;
-                        continue;
-                    } else if (Character.isDigit(next)) {
-                        int which = Character.getNumericValue(next) - 1;
-                        if (which < 0) {
-                            throw new IllegalArgumentException(
-                                "template requests value ^" + (which+1));
-                        }
-                        if (which >= values.length) {
-                            throw new IllegalArgumentException(
-                                "template requests value ^" + (which+1) +
-                                "; only " + values.length + " provided");
-                        }
-                        ssb.replace(i, i+2, values[which]);
-                        i += values[which].length();
-                        continue;
-                    }
-                }
-                ++i;
-            }
-        } catch (IndexOutOfBoundsException ignore) {
-            // happens when ^ is the last character in the string.
-        }
-        return ssb;
-    }
-
-    public static int getOffsetBefore(CharSequence text, int offset) {
-        if (offset == 0)
-            return 0;
-        if (offset == 1)
-            return 0;
-
-        char c = text.charAt(offset - 1);
-
-        if (c >= '\uDC00' && c <= '\uDFFF') {
-            char c1 = text.charAt(offset - 2);
-
-            if (c1 >= '\uD800' && c1 <= '\uDBFF')
-                offset -= 2;
-            else
-                offset -= 1;
-        } else {
-            offset -= 1;
-        }
-
-        if (text instanceof Spanned) {
-            ReplacementSpan[] spans = ((Spanned) text).getSpans(offset, offset,
-                                                       ReplacementSpan.class);
-
-            for (int i = 0; i < spans.length; i++) {
-                int start = ((Spanned) text).getSpanStart(spans[i]);
-                int end = ((Spanned) text).getSpanEnd(spans[i]);
-
-                if (start < offset && end > offset)
-                    offset = start;
-            }
-        }
-
-        return offset;
-    }
-
-    public static int getOffsetAfter(CharSequence text, int offset) {
-        int len = text.length();
-
-        if (offset == len)
-            return len;
-        if (offset == len - 1)
-            return len;
-
-        char c = text.charAt(offset);
-
-        if (c >= '\uD800' && c <= '\uDBFF') {
-            char c1 = text.charAt(offset + 1);
-
-            if (c1 >= '\uDC00' && c1 <= '\uDFFF')
-                offset += 2;
-            else
-                offset += 1;
-        } else {
-            offset += 1;
-        }
-
-        if (text instanceof Spanned) {
-            ReplacementSpan[] spans = ((Spanned) text).getSpans(offset, offset,
-                                                       ReplacementSpan.class);
-
-            for (int i = 0; i < spans.length; i++) {
-                int start = ((Spanned) text).getSpanStart(spans[i]);
-                int end = ((Spanned) text).getSpanEnd(spans[i]);
-
-                if (start < offset && end > offset)
-                    offset = end;
-            }
-        }
-
-        return offset;
-    }
-
-    private static void readSpan(Parcel p, Spannable sp, Object o) {
-        sp.setSpan(o, p.readInt(), p.readInt(), p.readInt());
-    }
-
-    public static void copySpansFrom(Spanned source, int start, int end,
-                                     Class kind,
-                                     Spannable dest, int destoff) {
-        if (kind == null) {
-            kind = Object.class;
-        }
-
-        Object[] spans = source.getSpans(start, end, kind);
-
-        for (int i = 0; i < spans.length; i++) {
-            int st = source.getSpanStart(spans[i]);
-            int en = source.getSpanEnd(spans[i]);
-            int fl = source.getSpanFlags(spans[i]);
-
-            if (st < start)
-                st = start;
-            if (en > end)
-                en = end;
-
-            dest.setSpan(spans[i], st - start + destoff, en - start + destoff,
-                         fl);
-        }
-    }
-
-    public static CharSequence toUpperCase(@Nullable Locale locale, @NonNull CharSequence source,
-            boolean copySpans) {
-        final Edits edits = new Edits();
-        if (!copySpans) { // No spans. Just uppercase the characters.
-            final StringBuilder result = CaseMap.toUpper().apply(
-                    locale, source, new StringBuilder(), edits);
-            return edits.hasChanges() ? result : source;
-        }
-
-        final SpannableStringBuilder result = CaseMap.toUpper().apply(
-                locale, source, new SpannableStringBuilder(), edits);
-        if (!edits.hasChanges()) {
-            // No changes happened while capitalizing. We can return the source as it was.
-            return source;
-        }
-
-        final Edits.Iterator iterator = edits.getFineIterator();
-        final int sourceLength = source.length();
-        final Spanned spanned = (Spanned) source;
-        final Object[] spans = spanned.getSpans(0, sourceLength, Object.class);
-        for (Object span : spans) {
-            final int sourceStart = spanned.getSpanStart(span);
-            final int sourceEnd = spanned.getSpanEnd(span);
-            final int flags = spanned.getSpanFlags(span);
-            // Make sure the indices are not at the end of the string, since in that case
-            // iterator.findSourceIndex() would fail.
-            final int destStart = sourceStart == sourceLength ? result.length() :
-                    toUpperMapToDest(iterator, sourceStart);
-            final int destEnd = sourceEnd == sourceLength ? result.length() :
-                    toUpperMapToDest(iterator, sourceEnd);
-            result.setSpan(span, destStart, destEnd, flags);
-        }
-        return result;
-    }
-
-    // helper method for toUpperCase()
-    private static int toUpperMapToDest(Edits.Iterator iterator, int sourceIndex) {
-        // Guaranteed to succeed if sourceIndex < source.length().
-        iterator.findSourceIndex(sourceIndex);
-        if (sourceIndex == iterator.sourceIndex()) {
-            return iterator.destinationIndex();
-        }
-        // We handle the situation differently depending on if we are in the changed slice or an
-        // unchanged one: In an unchanged slice, we can find the exact location the span
-        // boundary was before and map there.
-        //
-        // But in a changed slice, we need to treat the whole destination slice as an atomic unit.
-        // We adjust the span boundary to the end of that slice to reduce of the chance of adjacent
-        // spans in the source overlapping in the result. (The choice for the end vs the beginning
-        // is somewhat arbitrary, but was taken because we except to see slightly more spans only
-        // affecting a base character compared to spans only affecting a combining character.)
-        if (iterator.hasChange()) {
-            return iterator.destinationIndex() + iterator.newLength();
-        } else {
-            // Move the index 1:1 along with this unchanged piece of text.
-            return iterator.destinationIndex() + (sourceIndex - iterator.sourceIndex());
-        }
-    }
-
-    public enum TruncateAt {
-        START,
-        MIDDLE,
-        END,
-        MARQUEE,
-        /**
-         * @hide
-         */
-        @UnsupportedAppUsage
-        END_SMALL
-    }
-
-    public interface EllipsizeCallback {
-        public void ellipsized(int start, int end);
-    }
-
-    public static CharSequence ellipsize(CharSequence text,
-                                         TextPaint p,
-                                         float avail, TruncateAt where) {
-        return ellipsize(text, p, avail, where, false, null);
-    }
-
-    public static CharSequence ellipsize(CharSequence text,
-                                         TextPaint paint,
-                                         float avail, TruncateAt where,
-                                         boolean preserveLength,
-                                         @Nullable EllipsizeCallback callback) {
-        return ellipsize(text, paint, avail, where, preserveLength, callback,
-                TextDirectionHeuristics.FIRSTSTRONG_LTR,
-                getEllipsisString(where));
-    }
-
-    public static CharSequence ellipsize(CharSequence text,
-            TextPaint paint,
-            float avail, TruncateAt where,
-            boolean preserveLength,
-            @Nullable EllipsizeCallback callback,
-            TextDirectionHeuristic textDir, String ellipsis) {
-
-        int len = text.length();
-
-        MeasuredParagraph mt = null;
-        try {
-            mt = MeasuredParagraph.buildForMeasurement(paint, text, 0, text.length(), textDir, mt);
-            float width = mt.getWholeWidth();
-
-            if (width <= avail) {
-                if (callback != null) {
-                    callback.ellipsized(0, 0);
-                }
-
-                return text;
-            }
-
-            // XXX assumes ellipsis string does not require shaping and
-            // is unaffected by style
-            float ellipsiswid = paint.measureText(ellipsis);
-            avail -= ellipsiswid;
-
-            int left = 0;
-            int right = len;
-            if (avail < 0) {
-                // it all goes
-            } else if (where == TruncateAt.START) {
-                right = len - mt.breakText(len, false, avail);
-            } else if (where == TruncateAt.END || where == TruncateAt.END_SMALL) {
-                left = mt.breakText(len, true, avail);
-            } else {
-                right = len - mt.breakText(len, false, avail / 2);
-                avail -= mt.measure(right, len);
-                left = mt.breakText(right, true, avail);
-            }
-
-            if (callback != null) {
-                callback.ellipsized(left, right);
-            }
-
-            final char[] buf = mt.getChars();
-            Spanned sp = text instanceof Spanned ? (Spanned) text : null;
-
-            final int removed = right - left;
-            final int remaining = len - removed;
-            if (preserveLength) {
-                if (remaining > 0 && removed >= ellipsis.length()) {
-                    ellipsis.getChars(0, ellipsis.length(), buf, left);
-                    left += ellipsis.length();
-                } // else skip the ellipsis
-                for (int i = left; i < right; i++) {
-                    buf[i] = ELLIPSIS_FILLER;
-                }
-                String s = new String(buf, 0, len);
-                if (sp == null) {
-                    return s;
-                }
-                SpannableString ss = new SpannableString(s);
-                copySpansFrom(sp, 0, len, Object.class, ss, 0);
-                return ss;
-            }
-
-            if (remaining == 0) {
-                return "";
-            }
-
-            if (sp == null) {
-                StringBuilder sb = new StringBuilder(remaining + ellipsis.length());
-                sb.append(buf, 0, left);
-                sb.append(ellipsis);
-                sb.append(buf, right, len - right);
-                return sb.toString();
-            }
-
-            SpannableStringBuilder ssb = new SpannableStringBuilder();
-            ssb.append(text, 0, left);
-            ssb.append(ellipsis);
-            ssb.append(text, right, len);
-            return ssb;
-        } finally {
-            if (mt != null) {
-                mt.recycle();
-            }
-        }
-    }
-
-    public static CharSequence listEllipsize(@Nullable Context context,
-            @Nullable List<CharSequence> elements, @NonNull String separator,
-            @NonNull TextPaint paint, @FloatRange(from=0.0,fromInclusive=false) float avail,
-            @PluralsRes int moreId) {
-        if (elements == null) {
-            return "";
-        }
-        final int totalLen = elements.size();
-        if (totalLen == 0) {
-            return "";
-        }
-
-        final Resources res;
-        final BidiFormatter bidiFormatter;
-        if (context == null) {
-            res = null;
-            bidiFormatter = BidiFormatter.getInstance();
-        } else {
-            res = context.getResources();
-            bidiFormatter = BidiFormatter.getInstance(res.getConfiguration().getLocales().get(0));
-        }
-
-        final SpannableStringBuilder output = new SpannableStringBuilder();
-        final int[] endIndexes = new int[totalLen];
-        for (int i = 0; i < totalLen; i++) {
-            output.append(bidiFormatter.unicodeWrap(elements.get(i)));
-            if (i != totalLen - 1) {  // Insert a separator, except at the very end.
-                output.append(separator);
-            }
-            endIndexes[i] = output.length();
-        }
-
-        for (int i = totalLen - 1; i >= 0; i--) {
-            // Delete the tail of the string, cutting back to one less element.
-            output.delete(endIndexes[i], output.length());
-
-            final int remainingElements = totalLen - i - 1;
-            if (remainingElements > 0) {
-                CharSequence morePiece = (res == null) ?
-                        ELLIPSIS_NORMAL :
-                        res.getQuantityString(moreId, remainingElements, remainingElements);
-                morePiece = bidiFormatter.unicodeWrap(morePiece);
-                output.append(morePiece);
-            }
-
-            final float width = paint.measureText(output, 0, output.length());
-            if (width <= avail) {  // The string fits.
-                return output;
-            }
-        }
-        return "";  // Nothing fits.
-    }
-
-    public static CharSequence commaEllipsize(CharSequence text,
-                                              TextPaint p, float avail,
-                                              String oneMore,
-                                              String more) {
-        return commaEllipsize(text, p, avail, oneMore, more,
-                TextDirectionHeuristics.FIRSTSTRONG_LTR);
-    }
-
-    public static CharSequence commaEllipsize(CharSequence text, TextPaint p,
-         float avail, String oneMore, String more, TextDirectionHeuristic textDir) {
-
-        MeasuredParagraph mt = null;
-        MeasuredParagraph tempMt = null;
-        try {
-            int len = text.length();
-            mt = MeasuredParagraph.buildForMeasurement(p, text, 0, len, textDir, mt);
-            final float width = mt.getWholeWidth();
-            if (width <= avail) {
-                return text;
-            }
-
-            char[] buf = mt.getChars();
-
-            int commaCount = 0;
-            for (int i = 0; i < len; i++) {
-                if (buf[i] == ',') {
-                    commaCount++;
-                }
-            }
-
-            int remaining = commaCount + 1;
-
-            int ok = 0;
-            String okFormat = "";
-
-            int w = 0;
-            int count = 0;
-            float[] widths = mt.getWidths().getRawArray();
-
-            for (int i = 0; i < len; i++) {
-                w += widths[i];
-
-                if (buf[i] == ',') {
-                    count++;
-
-                    String format;
-                    // XXX should not insert spaces, should be part of string
-                    // XXX should use plural rules and not assume English plurals
-                    if (--remaining == 1) {
-                        format = " " + oneMore;
-                    } else {
-                        format = " " + String.format(more, remaining);
-                    }
-
-                    // XXX this is probably ok, but need to look at it more
-                    tempMt = MeasuredParagraph.buildForMeasurement(
-                            p, format, 0, format.length(), textDir, tempMt);
-                    float moreWid = tempMt.getWholeWidth();
-
-                    if (w + moreWid <= avail) {
-                        ok = i + 1;
-                        okFormat = format;
-                    }
-                }
-            }
-
-            SpannableStringBuilder out = new SpannableStringBuilder(okFormat);
-            out.insert(0, text, 0, ok);
-            return out;
-        } finally {
-            if (mt != null) {
-                mt.recycle();
-            }
-            if (tempMt != null) {
-                tempMt.recycle();
-            }
-        }
-    }
-
-    static boolean couldAffectRtl(char c) {
-        return (0x0590 <= c && c <= 0x08FF) ||  // RTL scripts
-                c == 0x200E ||  // Bidi format character
-                c == 0x200F ||  // Bidi format character
-                (0x202A <= c && c <= 0x202E) ||  // Bidi format characters
-                (0x2066 <= c && c <= 0x2069) ||  // Bidi format characters
-                (0xD800 <= c && c <= 0xDFFF) ||  // Surrogate pairs
-                (0xFB1D <= c && c <= 0xFDFF) ||  // Hebrew and Arabic presentation forms
-                (0xFE70 <= c && c <= 0xFEFE);  // Arabic presentation forms
-    }
-
-    static boolean doesNotNeedBidi(char[] text, int start, int len) {
-        final int end = start + len;
-        for (int i = start; i < end; i++) {
-            if (couldAffectRtl(text[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    /* package */ static char[] obtain(int len) {
-        char[] buf;
-
-        synchronized (sLock) {
-            buf = sTemp;
-            sTemp = null;
-        }
-
-        if (buf == null || buf.length < len)
-            buf = ArrayUtils.newUnpaddedCharArray(len);
-
-        return buf;
-    }
-
-    /* package */ static void recycle(char[] temp) {
-        if (temp.length > 1000)
+    return src;
+}
+
+long TextUtils::strtol(const std::string&value){
+    if(value.empty())return 0;
+    if(value[0]=='#')return std::strtoul(value.c_str()+1,nullptr,16);
+    if((value[0]=='0')&&((value[1]=='x')||(value[1]=='X')))
+        return std::strtoul(value.c_str()+2,nullptr,16);
+    return std::strtoul(value.c_str(),nullptr,10);
+}
+
+void TextUtils::stringAppendV(std::string& dst, const char* format, va_list ap) {
+    // First try with a small fixed size buffer
+    char space[1024];// __attribute__((__uninitialized__));
+
+    // It's possible for methods that use a va_list to invalidate
+    // the data in it upon use.  The fix is to make a copy
+    // of the structure before using it and use that copy instead.
+    va_list backup_ap;
+    va_copy(backup_ap, ap);
+    int result = vsnprintf(space, sizeof(space), format, backup_ap);
+    va_end(backup_ap);
+
+    if (result < static_cast<int>(sizeof(space))) {
+        if (result >= 0) {
+            // Normal case -- everything fit.
+            dst.append(space, result);
             return;
+        }
 
-        synchronized (sLock) {
-            sTemp = temp;
+        if (result < 0) {
+            // Just an error.
+            return;
         }
     }
 
-    public static String htmlEncode(String s) {
-        StringBuilder sb = new StringBuilder();
-        char c;
-        for (int i = 0; i < s.length(); i++) {
-            c = s.charAt(i);
-            switch (c) {
-            case '<':
-                sb.append("&lt;"); //$NON-NLS-1$
-                break;
-            case '>':
-                sb.append("&gt;"); //$NON-NLS-1$
-                break;
-            case '&':
-                sb.append("&amp;"); //$NON-NLS-1$
-                break;
-            case '\'':
-                //http://www.w3.org/TR/xhtml1
-                // The named character reference &apos; (the apostrophe, U+0027) was introduced in
-                // XML 1.0 but does not appear in HTML. Authors should therefore use &#39; instead
-                // of &apos; to work as expected in HTML 4 user agents.
-                sb.append("&#39;"); //$NON-NLS-1$
-                break;
-            case '"':
-                sb.append("&quot;"); //$NON-NLS-1$
-                break;
-            default:
-                sb.append(c);
-            }
-        }
-        return sb.toString();
+    // Increase the buffer size to the size requested by vsnprintf,
+    // plus one for the closing \0.
+    int length = result + 1;
+    char* buf = new char[length];
+
+    // Restore the va_list before we use it again
+    va_copy(backup_ap, ap);
+    result = vsnprintf(buf, length, format, backup_ap);
+    va_end(backup_ap);
+
+    if (result >= 0 && result < length) {
+        // It fit
+        dst.append(buf, result);
     }
+    delete[] buf;
+}
 
-    public static CharSequence concat(CharSequence... text) {
-        if (text.length == 0) {
-            return "";
+std::string TextUtils::stringPrintf(const char* fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    std::string result;
+    stringAppendV(result, fmt, ap);
+    va_end(ap);
+    return result;
+}
+
+void TextUtils::stringAppendF(std::string& dst, const char* format, ...) {
+    va_list ap;
+    va_start(ap, format);
+    stringAppendV(dst, format, ap);
+    va_end(ap);
+}
+
+std::string TextUtils::formatTime(const std::string& fmt, int64_t seconds){
+    bool has_ss = false;
+    uint32_t h24 = seconds / 3600;
+    uint32_t m   = (seconds % 3600) / 60;
+    uint32_t s = seconds % 60;
+    for (const char* p = fmt.c_str(); *p; ++p)
+        if (*p == 's' && *(p+1) == 's') { has_ss = true; break; }
+
+    const bool blink_colon = !has_ss && ((s & 1) == 0);
+
+    std::string out;
+    out.reserve(fmt.length() + 32);
+
+    for (const char* p = fmt.c_str(); *p; ++p) {
+        char c = *p;
+
+        if (c == ':' && !has_ss) {
+            out += (blink_colon ? ':' : ' ');
+            continue;
         }
 
-        if (text.length == 1) {
-            return text[0];
+        /* 24h*/
+        if (c == 'H' && *(p+1) != 'H') {
+            char b[3]; std::snprintf(b, 3, "%u", h24 % 24); out += b; continue;
+        }
+        if (c == 'H' && *(p+1) == 'H') {
+            char b[3]; std::snprintf(b, 3, "%02u", h24 % 24); out += b; ++p; continue;
         }
 
-        boolean spanned = false;
-        for (CharSequence piece : text) {
-            if (piece instanceof Spanned) {
-                spanned = true;
-                break;
-            }
+        /* 12h*/
+        if (c == 'h' && *(p+1) != 'h') {
+            uint32_t h12 = h24 % 12; if (h12 == 0) h12 = 12;
+            char b[16]; std::snprintf(b, 3, "%u", h12); out += b; continue;
+        }
+        if (c == 'h' && *(p+1) == 'h') {
+            uint32_t h12 = h24%12; if (h12 == 0) h12 = 12;
+            char b[16]; std::snprintf(b, 3, "%02u", h12); out += b; ++p; continue;
         }
 
-        if (spanned) {
-            final SpannableStringBuilder ssb = new SpannableStringBuilder();
-            for (CharSequence piece : text) {
-                // If a piece is null, we append the string "null" for compatibility with the
-                // behavior of StringBuilder and the behavior of the concat() method in earlier
-                // versions of Android.
-                ssb.append(piece == null ? "null" : piece);
-            }
-            return new SpannedString(ssb);
-        } else {
-            final StringBuilder sb = new StringBuilder();
-            for (CharSequence piece : text) {
-                sb.append(piece);
-            }
-            return sb.toString();
+        /* minute */
+        if (c == 'm' && *(p+1) != 'm') {
+            char b[8]; std::snprintf(b, 3, "%u", m % 60); out += b; continue;
         }
+        if (c == 'm' && *(p+1) == 'm') {
+            char b[8]; std::snprintf(b, 3, "%02u", m % 60); out += b; ++p; continue;
+        }
+
+        /* second */
+        if (c == 's' && *(p+1) != 's') {
+            char b[8]; std::snprintf(b, 3, "%u", s % 60); out += b; continue;
+        }
+        if (c == 's' && *(p+1) == 's') {
+            char b[8]; std::snprintf(b, 3, "%02u", s % 60); out += b; ++p; continue;
+        }
+
+        /* AM/PM */
+        if (c == 'A') { out += (h24 < 12 ? "AM" : "PM"); continue; }
+        if (c == 'a') { out += (h24 < 12 ? "am" : "pm"); continue; }
+
+        out += c;
     }
+    return out;
+}
 
-    public static boolean isGraphic(CharSequence str) {
-        final int len = str.length();
-        for (int cp, i=0; i<len; i+=Character.charCount(cp)) {
-            cp = Character.codePointAt(str, i);
-            int gc = Character.getType(cp);
-            if (gc != Character.CONTROL
-                    && gc != Character.FORMAT
-                    && gc != Character.SURROGATE
-                    && gc != Character.UNASSIGNED
-                    && gc != Character.LINE_SEPARATOR
-                    && gc != Character.PARAGRAPH_SEPARATOR
-                    && gc != Character.SPACE_SEPARATOR) {
-                return true;
-            }
-        }
-        return false;
+int TextUtils::getTrimmedLength(const CharSequence* s) {
+    int len = s->length();
+
+    int start = 0;
+    while (start < len && s->charAt(start) <= ' ') {
+        start++;
     }
-
-    public static boolean isGraphic(char c) {
-        int gc = Character.getType(c);
-        return     gc != Character.CONTROL
-                && gc != Character.FORMAT
-                && gc != Character.SURROGATE
-                && gc != Character.UNASSIGNED
-                && gc != Character.LINE_SEPARATOR
-                && gc != Character.PARAGRAPH_SEPARATOR
-                && gc != Character.SPACE_SEPARATOR;
+    int end = len;
+    while (end > start && s->charAt(end - 1) <= ' ') {
+        end--;
     }
+    return end - start;
+}
 
-    public static boolean isDigitsOnly(CharSequence str) {
-        final int len = str.length();
-        for (int cp, i = 0; i < len; i += Character.charCount(cp)) {
-            cp = Character.codePointAt(str, i);
-            if (!Character.isDigit(cp)) {
-                return false;
-            }
+bool TextUtils::equals(const CharSequence* a, const CharSequence* b) {
+    if (a == b) return true;
+    int length;
+    if (a != nullptr && b != nullptr && (length = a->length()) == b->length()) {
+        for (int i = 0; i < length; i++) {
+            if (a->charAt(i) != b->charAt(i)) return false;
         }
         return true;
     }
+    return false;
+}
 
-    /**
-     * @hide
-     */
-    public static boolean isPrintableAscii(final char c) {
-        final int asciiFirst = 0x20;
-        final int asciiLast = 0x7E;  // included
-        return (asciiFirst <= c && c <= asciiLast) || c == '\r' || c == '\n';
+int TextUtils::getOffsetBefore(const CharSequence* text, int offset) {
+    if (offset == 0)
+        return 0;
+    if (offset == 1)
+        return 0;
+    char32_t c = text->charAt(offset - 1);
+    if (c >= 0xDC00 && c <= 0xDFFF) {
+        char c1 = text->charAt(offset - 2);
+        if (c1 >= 0xD800 && c1 <= 0xDBFF)
+            offset -= 2;
+        else
+            offset -= 1;
+    } else {
+        offset -= 1;
+    }
+    if (dynamic_cast<const Spanned*>(text)) {
+        auto spans = ((const Spanned*) text)->getSpans(offset, offset, ReplacementSpanFilter);
+
+        for (int i = 0; i < spans.size(); i++) {
+            int start = ((const Spanned*) text)->getSpanStart(spans[i]);
+            int end = ((const Spanned*) text)->getSpanEnd(spans[i]);
+
+            if (start < offset && end > offset)
+                offset = start;
+        }
+    }
+    return offset;
+}
+
+int TextUtils::getOffsetAfter(const CharSequence* text, int offset) {
+    int len = text->length();
+
+    if (offset == len)
+        return len;
+    if (offset == len - 1)
+        return len;
+
+    char32_t c = text->charAt(offset);
+    if (c >= 0xD800 && c <= 0xDBFF) {
+        char c1 = text->charAt(offset + 1);
+        if (c1 >= 0xDC00 && c1 <= 0xDFFF)
+            offset += 2;
+        else
+            offset += 1;
+    } else {
+        offset += 1;
+    }
+    if (dynamic_cast<const Spanned*>(text)) {
+        auto spans = ((const Spanned*) text)->getSpans(offset, offset, ReplacementSpanFilter);
+
+        for (int i = 0; i < spans.size(); i++) {
+            int start = ((const Spanned*) text)->getSpanStart(spans[i]);
+            int end = ((const Spanned*) text)->getSpanEnd(spans[i]);
+            if (start < offset && end > offset)
+                offset = end;
+        }
+    }
+    return offset;
+}
+
+void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const SpanFilter& kind, Spannable* dest, int destoff) {
+    auto spans = source->getSpans(start, end, !kind?ObjectFilter:kind);
+
+    for (int i = 0; i < spans.size(); i++) {
+        int st = source->getSpanStart(spans[i]);
+        int en = source->getSpanEnd(spans[i]);
+        int fl = source->getSpanFlags(spans[i]);
+        if (st < start)
+            st = start;
+        if (en > end)
+            en = end;
+        dest->setSpan(spans[i], st - start + destoff, en - start + destoff, fl);
+    }
+}
+
+const CharSequence* TextUtils::ellipsize(const CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
+        bool preserveLength, const EllipsizeCallback& callback, const TextDirectionHeuristic* textDir, const std::string& ellipsis) {
+
+    const int len = text->length();
+
+    MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, mt);
+    float width = mt->getWholeWidth();
+    if (width <= avail) {
+        if (callback != nullptr) {
+            callback(0,0);//.ellipsized(0, 0);
+        }
+
+        return text;
+    }
+    // XXX assumes ellipsis string does not require shaping and
+    // is unaffected by style
+    float ellipsiswid = paint.measureText(ellipsis);
+    avail -= ellipsiswid;
+
+    int left = 0;
+    int right = len;
+    if (avail < 0) {
+        // it all goes
+    } else if (where == TruncateAt::START) {
+        right = len - mt->breakText(len, false, avail);
+    } else if (where == TruncateAt::END || where == TruncateAt::END_SMALL) {
+        left = mt->breakText(len, true, avail);
+    } else {
+        right = len - mt->breakText(len, false, avail / 2);
+        avail -= mt->measure(right, len);
+        left = mt->breakText(right, true, avail);
     }
 
-    /**
-     * @hide
-     */
-    @UnsupportedAppUsage
-    public static boolean isPrintableAsciiOnly(final CharSequence str) {
-        final int len = str.length();
-        for (int i = 0; i < len; i++) {
-            if (!isPrintableAscii(str.charAt(i))) {
-                return false;
-            }
-        }
-        return true;
+    if (callback != nullptr) {
+        callback/*.ellipsized*/(left, right);
     }
 
-    public static final int CAP_MODE_CHARACTERS
-            = InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS;
+    auto buf = mt->getChars();
+    const Spanned* sp = dynamic_cast<const Spanned*>(text);
 
-    public static final int CAP_MODE_WORDS
-            = InputType.TYPE_TEXT_FLAG_CAP_WORDS;
-
-    public static final int CAP_MODE_SENTENCES
-            = InputType.TYPE_TEXT_FLAG_CAP_SENTENCES;
-
-    public static int getCapsMode(CharSequence cs, int off, int reqModes) {
-        if (off < 0) {
-            return 0;
+    const int removed = right - left;
+    const int remaining = len - removed;
+    /*if (preserveLength) {
+        if (remaining > 0 && removed >= ellipsis.length()) {
+            ellipsis.getChars(0, ellipsis.length(), buf, left);
+            left += ellipsis.length();
+        } // else skip the ellipsis
+        for (int i = left; i < right; i++) {
+            buf[i] = ELLIPSIS_FILLER;
         }
-
-        int i;
-        char c;
-        int mode = 0;
-
-        if ((reqModes&CAP_MODE_CHARACTERS) != 0) {
-            mode |= CAP_MODE_CHARACTERS;
+        String s = new String(buf, 0, len);
+        if (sp == nullptr) {
+            return new SpannedString(buf,0,len);
         }
-        if ((reqModes&(CAP_MODE_WORDS|CAP_MODE_SENTENCES)) == 0) {
-            return mode;
+        SpannableString* ss = new SpannableString(s);
+        copySpansFrom(sp, 0, len, ObjectFilter, ss, 0);
+        return ss;
+    }*/
+
+    if (remaining == 0) {
+        return new SpannedString("");
+    }
+
+    if (sp == nullptr) {
+        /*StringBuilder sb = new StringBuilder(remaining + ellipsis.length());
+        sb.append(buf, 0, left);
+        sb.append(ellipsis);
+        sb.append(buf, right, len - right);
+        return sb.toString();*/
+        SpannableStringBuilder* sb=new SpannableStringBuilder();
+        //sb->append(buf, 0, left);
+        sb->append(ellipsis);
+        //sb->append(buf, right, len - right);
+        return sb;
+    }
+
+    SpannableStringBuilder* ssb = new SpannableStringBuilder();
+    ssb->append(*text, 0, left);
+    ssb->append(ellipsis);
+    ssb->append(*text, right, len);
+    return ssb;
+}
+#if 0
+CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
+     float avail, const std::string& oneMore,const std::string& more, const TextDirectionHeuristic* textDir) {
+
+    MeasuredParagraph* mt = nullptr;
+    MeasuredParagraph* tempMt = nullptr;
+
+    int len = text->length();
+    mt = MeasuredParagraph::buildForMeasurement(p, text, 0, len, textDir, mt);
+    const float width = mt->getWholeWidth();
+    if (width <= avail) {
+        return text;
+    }
+
+    auto& buf = mt->getChars();
+
+    int commaCount = 0;
+    for (int i = 0; i < len; i++) {
+        if (buf[i] == ',') {
+            commaCount++;
         }
+    }
 
-        // Back over allowed opening punctuation.
+    int remaining = commaCount + 1;
 
-        for (i = off; i > 0; i--) {
-            c = cs.charAt(i - 1);
+    int ok = 0;
+    std::string okFormat = "";
 
-            if (c != '"' && c != '\'' &&
-                Character.getType(c) != Character.START_PUNCTUATION) {
-                break;
+    int w = 0;
+    int count = 0;
+    auto& widths = mt->getWidths();
+
+    for (int i = 0; i < len; i++) {
+        w += widths[i];
+
+        if (buf[i] == ',') {
+            count++;
+
+            std::string format;
+            // XXX should not insert spaces, should be part of string
+            // XXX should use plural rules and not assume English plurals
+            if (--remaining == 1) {
+                format = " " + oneMore;
+            } else {
+                format = " " + String.format(more, remaining);
+            }
+
+            // XXX this is probably ok, but need to look at it more
+            tempMt = MeasuredParagraph::buildForMeasurement(
+                    p, format, 0, format.length(), textDir, tempMt);
+            float moreWid = tempMt->getWholeWidth();
+
+            if (w + moreWid <= avail) {
+                ok = i + 1;
+                okFormat = format;
             }
         }
+    }
 
-        // Start of paragraph, with optional whitespace.
+    SpannableStringBuilder out = new SpannableStringBuilder(okFormat);
+    out.insert(0, text, 0, ok);
+    return out;
+}
+#endif
+bool TextUtils::couldAffectRtl(char32_t c) {
+    return (0x0590 <= c && c <= 0x08FF) ||  // RTL scripts
+            c == 0x200E ||  // Bidi format character
+            c == 0x200F ||  // Bidi format character
+            (0x202A <= c && c <= 0x202E) ||  // Bidi format characters
+            (0x2066 <= c && c <= 0x2069) ||  // Bidi format characters
+            (0xD800 <= c && c <= 0xDFFF) ||  // Surrogate pairs
+            (0xFB1D <= c && c <= 0xFDFF) ||  // Hebrew and Arabic presentation forms
+            (0xFE70 <= c && c <= 0xFEFE);  // Arabic presentation forms
+}
 
-        int j = i;
-        while (j > 0 && ((c = cs.charAt(j - 1)) == ' ' || c == '\t')) {
-            j--;
+bool TextUtils::doesNotNeedBidi(const std::vector<char32_t>& text, int start, int len) {
+    const int end = start + len;
+    for (int i = start; i < end; i++) {
+        if (couldAffectRtl(text[i])) {
+            return false;
         }
-        if (j == 0 || cs.charAt(j - 1) == '\n') {
-            return mode | CAP_MODE_WORDS;
+    }
+    return true;
+}
+
+std::string TextUtils::htmlEncode(const std::string& s) {
+    std::ostringstream sb;
+    char c;
+    for (int i = 0; i < s.length(); i++) {
+        c = s[i];
+        switch (c) {
+        case '<':
+            sb<< "&lt;"; //$NON-NLS-1$
+            break;
+        case '>':
+            sb<< "&gt;"; //$NON-NLS-1$
+            break;
+        case '&':
+            sb<< "&amp;"; //$NON-NLS-1$
+            break;
+        case '\'':
+            //http://www.w3.org/TR/xhtml1
+            // The named character reference &apos; (the apostrophe, U+0027) was introduced in
+            // XML 1.0 but does not appear in HTML. Authors should therefore use &#39; instead
+            sb<< "&#39;"; //$NON-NLS-1$
+            break;
+        case '"':
+            sb<< "&quot;"; //$NON-NLS-1$
+            break;
+        default:
+            sb<< c;
         }
+    }
+    return sb.str();
+}
 
-        // Or start of word if we are that style.
+CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
+    /*if (text->size() == 0) {
+        return "";
+    }
 
-        if ((reqModes&CAP_MODE_SENTENCES) == 0) {
-            if (i != j) mode |= CAP_MODE_WORDS;
-            return mode;
+    if (text.size() == 1) {
+        return text[0];
+    }
+
+    bool spanned = false;
+    for (CharSequence* piece : text) {
+        if (dynamic_cast<Spanned*>(piece)) {
+            spanned = true;
+            break;
         }
+    }
 
-        // There must be a space if not the start of paragraph.
-
-        if (i == j) {
-            return mode;
+    if (spanned) {
+        SpannableStringBuilder ssb;
+        for (CharSequence* piece : text) {
+            // If a piece is null, we append the string "null" for compatibility with the
+            // behavior of StringBuilder and the behavior of the concat() method in earlier
+            // versions of Android.
+            ssb.append(piece == nullptr ? "null" : piece);
         }
-
-        // Back over allowed closing punctuation.
-
-        for (; j > 0; j--) {
-            c = cs.charAt(j - 1);
-
-            if (c != '"' && c != '\'' &&
-                Character.getType(c) != Character.END_PUNCTUATION) {
-                break;
-            }
+        return new SpannedString(ssb);
+    } else {
+        std::ostringstream sb;
+        for (CharSequence* piece : text) {
+            sb<<piece;
         }
+        return sb.str();
+    }*/return nullptr;
+}
 
-        if (j > 0) {
-            c = cs.charAt(j - 1);
-
-            if (c == '.' || c == '?' || c == '!') {
-                // Do not capitalize if the word ends with a period but
-                // also contains a period, in which case it is an abbreviation.
-
-                if (c == '.') {
-                    for (int k = j - 2; k >= 0; k--) {
-                        c = cs.charAt(k);
-
-                        if (c == '.') {
-                            return mode;
-                        }
-
-                        if (!Character.isLetter(c)) {
-                            break;
-                        }
-                    }
-                }
-
-                return mode | CAP_MODE_SENTENCES;
-            }
+bool TextUtils::isGraphic(const CharSequence* str) {
+    const int len = str->length();
+    for (int cp, i=0; i<len; i++){//+=Character.charCount(cp)) {
+        cp = str->charAt(i);//Character.codePointAt(str, i);
+        int gc = u_charType(cp);//Character.getType(cp);
+        if (gc != U_CONTROL//Character.CONTROL
+                && gc != U_FORMAT//Character.FORMAT
+                && gc != U_SURROGATE//Character.SURROGATE
+                && gc != U_UNASSIGNED//Character.UNASSIGNED
+                && gc != U_LINE_SEPARATOR//Character.LINE_SEPARATOR
+                && gc != U_PARAGRAPH_SEPARATOR//Character.PARAGRAPH_SEPARATOR
+                && gc != U_SPACE_SEPARATOR){//Character.SPACE_SEPARATOR) {
+            return true;
         }
+    }
+    return false;
+}
 
+bool TextUtils::isGraphic(char32_t c) {
+    int gc =  u_charType(c);//Character.getType(c);
+    return     gc != U_CONTROL//Character.CONTROL
+            && gc != U_FORMAT//Character.FORMAT
+            && gc != U_SURROGATE//Character.SURROGATE
+            && gc != U_UNASSIGNED//Character.UNASSIGNED
+            && gc != U_LINE_SEPARATOR//Character.LINE_SEPARATOR
+            && gc != U_PARAGRAPH_SEPARATOR//Character.PARAGRAPH_SEPARATOR
+            && gc != U_SPACE_SEPARATOR;//Character.SPACE_SEPARATOR;
+}
+
+bool TextUtils::isDigitsOnly(const CharSequence* str) {
+    const int len = str->length();
+    for (int cp, i = 0; i < len; i ++){//+= Character.charCount(cp)) {
+        cp = str->charAt(i);//Character.codePointAt(str, i);
+        if (!u_isdigit(cp)){//!Character.isDigit(cp)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool TextUtils::isPrintableAscii(char32_t c) {
+    const int asciiFirst = 0x20;
+    const int asciiLast = 0x7E;  // included
+    return (asciiFirst <= c && c <= asciiLast) || c == '\r' || c == '\n';
+}
+
+bool TextUtils::isPrintableAsciiOnly(const CharSequence* str) {
+    const int len = str->length();
+    for (int i = 0; i < len; i++) {
+        if (!isPrintableAscii(str->charAt(i))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
+    if (off < 0) {
+        return 0;
+    }
+
+    int i;
+    char32_t c;
+    int mode = 0;
+#if 0
+    if ((reqModes&CAP_MODE_CHARACTERS) != 0) {
+        mode |= CAP_MODE_CHARACTERS;
+    }
+    if ((reqModes&(CAP_MODE_WORDS|CAP_MODE_SENTENCES)) == 0) {
         return mode;
     }
 
-    public static boolean delimitedStringContains(
-            String delimitedString, char delimiter, String item) {
-        if (isEmpty(delimitedString) || isEmpty(item)) {
-            return false;
-        }
-        int pos = -1;
-        int length = delimitedString.length();
-        while ((pos = delimitedString.indexOf(item, pos + 1)) != -1) {
-            if (pos > 0 && delimitedString.charAt(pos - 1) != delimiter) {
-                continue;
-            }
-            int expectedDelimiterPos = pos + item.length();
-            if (expectedDelimiterPos == length) {
-                // Match at end of string.
-                return true;
-            }
-            if (delimitedString.charAt(expectedDelimiterPos) == delimiter) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // Back over allowed opening punctuation.
 
-    public static <T> T[] removeEmptySpans(T[] spans, Spanned spanned, Class<T> klass) {
-        T[] copy = null;
-        int count = 0;
+    for (i = off; i > 0; i--) {
+        c = cs.charAt(i - 1);
 
-        for (int i = 0; i < spans.length; i++) {
-            final T span = spans[i];
-            final int start = spanned.getSpanStart(span);
-            final int end = spanned.getSpanEnd(span);
-
-            if (start == end) {
-                if (copy == null) {
-                    copy = (T[]) Array.newInstance(klass, spans.length - 1);
-                    System.arraycopy(spans, 0, copy, 0, i);
-                    count = i;
-                }
-            } else {
-                if (copy != null) {
-                    copy[count] = span;
-                    count++;
-                }
-            }
-        }
-
-        if (copy != null) {
-            T[] result = (T[]) Array.newInstance(klass, count);
-            System.arraycopy(copy, 0, result, 0, count);
-            return result;
-        } else {
-            return spans;
+        if (c != '"' && c != '\'' &&
+            Character.getType(c) != Character.START_PUNCTUATION) {
+            break;
         }
     }
 
-    public static long packRangeInLong(int start, int end) {
-        return (((long) start) << 32) | end;
+    // Start of paragraph, with optional whitespace.
+
+    int j = i;
+    while (j > 0 && ((c = cs->charAt(j - 1)) == ' ' || c == '\t')) {
+        j--;
+    }
+    if (j == 0 || cs->charAt(j - 1) == '\n') {
+        return mode | CAP_MODE_WORDS;
     }
 
-    public static int unpackRangeStartFromLong(long range) {
-        return (int) (range >>> 32);
+    // Or start of word if we are that style.
+
+    if ((reqModes&CAP_MODE_SENTENCES) == 0) {
+        if (i != j) mode |= CAP_MODE_WORDS;
+        return mode;
     }
 
-    public static int unpackRangeEndFromLong(long range) {
-        return (int) (range & 0x00000000FFFFFFFFL);
+    // There must be a space if not the start of paragraph.
+
+    if (i == j) {
+        return mode;
     }
 
-    public static int getLayoutDirectionFromLocale(Locale locale) {
-        return ((locale != null && !locale.equals(Locale.ROOT)
-                        && ULocale.forLocale(locale).isRightToLeft())
-                // If forcing into RTL layout mode, return RTL as default
-                || DisplayProperties.debug_force_rtl().orElse(false))
-            ? View.LAYOUT_DIRECTION_RTL
-            : View.LAYOUT_DIRECTION_LTR;
-    }
+    // Back over allowed closing punctuation.
 
-    public static CharSequence formatSelectedCount(int count) {
-        return Resources.getSystem().getQuantityString(R.plurals.selected_count, count, count);
-    }
+    for (; j > 0; j--) {
+        c = cs->charAt(j - 1);
 
-    public static boolean hasStyleSpan(@NonNull Spanned spanned) {
-        Preconditions.checkArgument(spanned != null);
-        final Class<?>[] styleClasses = {
-                CharacterStyle.class, ParagraphStyle.class, UpdateAppearance.class};
-        for (Class<?> clazz : styleClasses) {
-            if (spanned.nextSpanTransition(-1, spanned.length(), clazz) < spanned.length()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static CharSequence trimNoCopySpans(@Nullable CharSequence charSequence) {
-        if (charSequence != null && charSequence instanceof Spanned) {
-            // SpannableStringBuilder copy constructor trims NoCopySpans.
-            return new SpannableStringBuilder(charSequence);
-        }
-        return charSequence;
-    }
-
-    public static void wrap(StringBuilder builder, String start, String end) {
-        builder.insert(0, start);
-        builder.append(end);
-    }
-
-    private static final int PARCEL_SAFE_TEXT_LENGTH = 100000;
-
-    public static <T extends CharSequence> T trimToParcelableSize(@Nullable T text) {
-        return trimToSize(text, PARCEL_SAFE_TEXT_LENGTH);
-    }
-
-    public static <T extends CharSequence> T trimToSize(@Nullable T text,
-            @IntRange(from = 1) int size) {
-        Preconditions.checkArgument(size > 0);
-        if (TextUtils.isEmpty(text) || text.length() <= size) return text;
-        if (Character.isHighSurrogate(text.charAt(size - 1))
-                && Character.isLowSurrogate(text.charAt(size))) {
-            size = size - 1;
-        }
-        return (T) text.subSequence(0, size);
-    }
-
-    public static <T extends CharSequence> T trimToLengthWithEllipsis(@Nullable T text,
-            @IntRange(from = 1) int size) {
-        T trimmed = trimToSize(text, size);
-        if (trimmed.length() < text.length()) {
-            trimmed = (T) (trimmed.toString() + "...");
-        }
-        return trimmed;
-    }
-
-    private static boolean isNewline(int codePoint) {
-        int type = Character.getType(codePoint);
-        return type == Character.PARAGRAPH_SEPARATOR || type == Character.LINE_SEPARATOR
-                || codePoint == LINE_FEED_CODE_POINT;
-    }
-
-    private static boolean isWhiteSpace(int codePoint) {
-        return Character.isWhitespace(codePoint) || codePoint == NBSP_CODE_POINT;
-    }
-
-    public static String withoutPrefix(@Nullable String prefix, @Nullable String str) {
-        if (prefix == null || str == null) return str;
-        return str.startsWith(prefix) ? str.substring(prefix.length()) : str;
-    }
-
-    public static @NonNull CharSequence makeSafeForPresentation(@NonNull String unclean,
-            @IntRange(from = 0) int maxCharactersToConsider,
-            @FloatRange(from = 0) float ellipsizeDip, @SafeStringFlags int flags) {
-        boolean onlyKeepFirstLine = ((flags & SAFE_STRING_FLAG_FIRST_LINE) != 0);
-        boolean forceSingleLine = ((flags & SAFE_STRING_FLAG_SINGLE_LINE) != 0);
-        boolean trim = ((flags & SAFE_STRING_FLAG_TRIM) != 0);
-
-        Preconditions.checkNotNull(unclean);
-        Preconditions.checkArgumentNonnegative(maxCharactersToConsider);
-        Preconditions.checkArgumentNonNegative(ellipsizeDip, "ellipsizeDip");
-        Preconditions.checkFlagsArgument(flags, SAFE_STRING_FLAG_TRIM
-                | SAFE_STRING_FLAG_SINGLE_LINE | SAFE_STRING_FLAG_FIRST_LINE);
-        Preconditions.checkArgument(!(onlyKeepFirstLine && forceSingleLine),
-                "Cannot set SAFE_STRING_FLAG_SINGLE_LINE and SAFE_STRING_FLAG_FIRST_LINE at the"
-                        + "same time");
-
-        String shortString;
-        if (maxCharactersToConsider > 0) {
-            shortString = unclean.substring(0, Math.min(unclean.length(), maxCharactersToConsider));
-        } else {
-            shortString = unclean;
-        }
-
-        // Treat string as HTML. This
-        // - converts HTML symbols: e.g. &szlig; -> ß
-        // - applies some HTML tags: e.g. <br> -> \n
-        // - removes invalid characters such as \b
-        // - removes html styling, such as <b>
-        // - applies html formatting: e.g. a<p>b</p>c -> a\n\nb\n\nc
-        // - replaces some html tags by "object replacement" markers: <img> -> \ufffc
-        // - Removes leading white space
-        // - Removes all trailing white space beside a single space
-        // - Collapses double white space
-        StringWithRemovedChars gettingCleaned = new StringWithRemovedChars(
-                Html.fromHtml(shortString).toString());
-
-        int firstNonWhiteSpace = -1;
-        int firstTrailingWhiteSpace = -1;
-
-        // Remove new lines (if requested) and control characters.
-        int uncleanLength = gettingCleaned.length();
-        for (int offset = 0; offset < uncleanLength; ) {
-            int codePoint = gettingCleaned.codePointAt(offset);
-            int type = Character.getType(codePoint);
-            int codePointLen = Character.charCount(codePoint);
-            boolean isNewline = isNewline(codePoint);
-
-            if (onlyKeepFirstLine && isNewline) {
-                gettingCleaned.removeAllCharAfter(offset);
-                break;
-            } else if (forceSingleLine && isNewline) {
-                gettingCleaned.removeRange(offset, offset + codePointLen);
-            } else if (type == Character.CONTROL && !isNewline) {
-                gettingCleaned.removeRange(offset, offset + codePointLen);
-            } else if (trim && !isWhiteSpace(codePoint)) {
-                // This is only executed if the code point is not removed
-                if (firstNonWhiteSpace == -1) {
-                    firstNonWhiteSpace = offset;
-                }
-                firstTrailingWhiteSpace = offset + codePointLen;
-            }
-
-            offset += codePointLen;
-        }
-
-        if (trim) {
-            // Remove leading and trailing white space
-            if (firstNonWhiteSpace == -1) {
-                // No non whitespace found, remove all
-                gettingCleaned.removeAllCharAfter(0);
-            } else {
-                if (firstNonWhiteSpace > 0) {
-                    gettingCleaned.removeAllCharBefore(firstNonWhiteSpace);
-                }
-                if (firstTrailingWhiteSpace < uncleanLength) {
-                    gettingCleaned.removeAllCharAfter(firstTrailingWhiteSpace);
-                }
-            }
-        }
-
-        if (ellipsizeDip == 0) {
-            return gettingCleaned.toString();
-        } else {
-            // Truncate
-            final TextPaint paint = new TextPaint();
-            paint.setTextSize(42);
-
-            return TextUtils.ellipsize(gettingCleaned.toString(), paint, ellipsizeDip,
-                    TextUtils.TruncateAt.END);
+        if (c != '"' && c != '\'' &&
+            Character.getType(c) != Character.END_PUNCTUATION) {
+            break;
         }
     }
 
-    private static class StringWithRemovedChars {
-        /** The original string */
-        private final String mOriginal;
-        private BitSet mRemovedChars;
+    if (j > 0) {
+        c = cs->charAt(j - 1);
 
-        StringWithRemovedChars(@NonNull String original) {
-            mOriginal = original;
-        }
+        if (c == '.' || c == '?' || c == '!') {
+            // Do not capitalize if the word ends with a period but
+            // also contains a period, in which case it is an abbreviation.
 
-        void removeRange(int firstRemoved, int firstNonRemoved) {
-            if (mRemovedChars == null) {
-                mRemovedChars = new BitSet(mOriginal.length());
-            }
+            if (c == '.') {
+                for (int k = j - 2; k >= 0; k--) {
+                    c = cs->charAt(k);
 
-            mRemovedChars.set(firstRemoved, firstNonRemoved);
-        }
+                    if (c == '.') {
+                        return mode;
+                    }
 
-        void removeAllCharBefore(int firstNonRemoved) {
-            if (mRemovedChars == null) {
-                mRemovedChars = new BitSet(mOriginal.length());
-            }
-
-            mRemovedChars.set(0, firstNonRemoved);
-        }
-
-        void removeAllCharAfter(int firstRemoved) {
-            if (mRemovedChars == null) {
-                mRemovedChars = new BitSet(mOriginal.length());
-            }
-
-            mRemovedChars.set(firstRemoved, mOriginal.length());
-        }
-
-        @Override
-        public String toString() {
-            // Common case, no chars removed
-            if (mRemovedChars == null) {
-                return mOriginal;
-            }
-
-            StringBuilder sb = new StringBuilder(mOriginal.length());
-            for (int i = 0; i < mOriginal.length(); i++) {
-                if (!mRemovedChars.get(i)) {
-                    sb.append(mOriginal.charAt(i));
+                    if (!Character.isLetter(c)) {
+                        break;
+                    }
                 }
             }
 
-            return sb.toString();
-        }
-
-        int length() {
-            return mOriginal.length();
-        }
-
-        int codePointAt(int offset) {
-            return mOriginal.codePointAt(offset);
+            return mode | CAP_MODE_SENTENCES;
         }
     }
-
-    private static Object sLock = new Object();
-    private static char[] sTemp = null;
-    private static String[] EMPTY_STRING_ARRAY = new String[]{};
+#endif
+    return mode;
 }
 
+void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans, Spanned* spanned, const SpanFilter& klass) {
+    auto it = spans.begin();
+    while (it != spans.end()) {
+        const int start = spanned->getSpanStart(*it);
+        const int end = spanned->getSpanEnd(*it);
+        if (start == end) {
+            it = spans.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+bool TextUtils::hasStyleSpan(const Spanned* spanned) {
+    //Preconditions.checkArgument(spanned != null);
+    /*SpanFilter[] styleClasses = {CharacterStyleFilter, ParagraphStyleFilter, UpdateAppearanceFilter};
+    for (Class<?> clazz : styleClasses) {
+        if (spanned->nextSpanTransition(-1, spanned->length(), clazz) < spanned->length()) {
+            return true;
+        }
+    }*/
+    return false;
+}
+
+const CharSequence* TextUtils::trimNoCopySpans(const CharSequence* charSequence) {
+    if (charSequence != nullptr && dynamic_cast<const Spanned*>(charSequence)) {
+        // SpannableStringBuilder copy constructor trims NoCopySpans.
+        return new SpannableStringBuilder(charSequence);
+    }
+    return charSequence;
+}
+
+bool TextUtils::isNewline(int codePoint) {
+    const int type =  u_charType(codePoint);//Character.getType(codePoint);
+    return type == U_PARAGRAPH_SEPARATOR || type == U_LINE_SEPARATOR
+            || codePoint == LINE_FEED_CODE_POINT;
+}
+
+bool TextUtils::isWhiteSpace(int codePoint) {
+    if ((codePoint >= 0x1c && codePoint <= 0x20) || (codePoint >= 0x09 && codePoint <= 0x0d)) {
+        return true;
+    }
+    if (codePoint < 0x1000) {
+        return false;
+    }
+    // OGHAM SPACE MARK or MONGOLIAN VOWEL SEPARATOR?
+    if (codePoint == 0x1680 || codePoint == 0x180e) {
+        return true;
+    }
+    if (codePoint < 0x2000) {
+        return false;
+    }
+    // Exclude General Punctuation's non-breaking spaces (which includes FIGURE SPACE).
+    if (codePoint == 0x2007 || codePoint == 0x202f) {
+        return false;
+    }
+    if (codePoint <= 0xffff) {
+        // Other whitespace from General Punctuation...
+        return codePoint <= 0x200a || codePoint == 0x2028 || codePoint == 0x2029 || codePoint == 0x205f ||
+            codePoint == 0x3000; // ...or CJK Symbols and Punctuation?
+    }
+    //return Character.isWhitespace(codePoint) || codePoint == NBSP_CODE_POINT;
+    return u_isWhitespace(codePoint)||codePoint == NBSP_CODE_POINT;
+}
+}/*endof namespace*/

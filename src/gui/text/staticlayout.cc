@@ -423,7 +423,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             }
         }
         MeasuredParagraph* measuredPara = paragraphInfo[paraIndex].measured;
-        std::vector<char16_t>chs = measuredPara->getChars();
+        std::vector<char32_t>chs = measuredPara->getChars();
         auto spanEndCache = measuredPara->getSpanEndCache();
         auto fmCache = measuredPara->getFontMetrics();
         LineBreaker::ParagraphConstraints constraints;// = new LineBreaker.ParagraphConstraints();
@@ -571,7 +571,7 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
         int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
         const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm,bool hasTab, int hyphenEdit,
         bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
-        bool addLastLineLineSpacing,const std::vector<char16_t>& chs,int widthStart, TextUtils::TruncateAt ellipsize,
+        bool addLastLineLineSpacing,const std::vector<char32_t>& chs,int widthStart, TextUtils::TruncateAt ellipsize,
         float ellipsisWidth,float textWidth, TextPaint* paint, bool moreChars) {
     const int j = mLineCount;
     const int off = j * mColumns;

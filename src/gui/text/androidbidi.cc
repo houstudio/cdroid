@@ -16,9 +16,8 @@
 #include <text/layout.h>
 #include <text/androidbidi.h>
 #include <unicode/ubidi.h>
-#include <unicode/urename.h>
 namespace cdroid {
-int AndroidBidi::bidi(int dir, const std::vector<char16_t> chs, std::vector<uint8_t>& chInfo) {
+int AndroidBidi::bidi(int dir, const std::vector<char32_t> chs, std::vector<uint8_t>& chInfo) {
     if (chs.empty() || chInfo.empty()) {
         //throw new NullPointerException();
     }
@@ -35,14 +34,7 @@ int AndroidBidi::bidi(int dir, const std::vector<char16_t> chs, std::vector<uint
         case TextLayout::DIR_REQUEST_DEFAULT_RTL: paraLevel = UBIDI_DEFAULT_RTL;break;//Bidi.LEVEL_DEFAULT_RTL; break;
         default: paraLevel = UBiDiDirection::UBIDI_LTR;break;//Bidi.LTR; break;
     }
-#if 0
-    final Bidi icuBidi = new Bidi(length /* maxLength */, 0 /* maxRunCount */);
-    icuBidi.setPara(chs, paraLevel, null /* embeddingLevels */);
-    for (int i = 0; i < length; i++) {
-        chInfo[i] = icuBidi.getLevelAt(i);
-    }
-    const uint8_t result = icuBidi.getParaLevel();
-#else
+
     UErrorCode errorCode = U_ZERO_ERROR;
     UBiDi *pBiDi = ubidi_openSized(length, 0, &errorCode);   
     ubidi_setPara(pBiDi, reinterpret_cast<const UChar*>(chs.data()), length, 
@@ -52,12 +44,11 @@ int AndroidBidi::bidi(int dir, const std::vector<char16_t> chs, std::vector<uint
     }
     const uint8_t result = ubidi_getParaLevel(pBiDi);
     ubidi_close(pBiDi);
-#endif
     return (result & 0x1) == 0 ? TextLayout::DIR_LEFT_TO_RIGHT : TextLayout::DIR_RIGHT_TO_LEFT;
 }
 
 const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& levels, int lstart,
-        const std::vector<char16_t>& chars, int cstart, int len) {
+        const std::vector<char32_t>& chars, int cstart, int len) {
     if (len == 0) {
         return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
     }

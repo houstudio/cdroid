@@ -2,7 +2,7 @@
 #define __ANDROID_TEXT_LAYOUT_H__
 #include <functional>
 #include <cfloat>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <core/canvas.h>
 #include <core/path.h>
 #include <core/rect.h>
@@ -87,7 +87,7 @@ private:
     void addSelection(int line, int start, int end,int top, int bottom,const SelectionRectangleConsumer& consumer);
     int getParagraphLeadingMargin(int line) const;
     static float measurePara(TextPaint& paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
-    void ellipsize(int start, int end, int line, std::vector<char16_t>& dest, int destoff, TextUtils::TruncateAt method);
+    void ellipsize(int start, int end, int line, std::vector<char32_t>& dest, int destoff, TextUtils::TruncateAt method);
 protected:
     TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
     TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
@@ -298,7 +298,7 @@ public:
             mText = s;
         }
         int charAt(int off) const override;
-        void getChars(int start, int end, std::vector<char16_t>& dest, int destoff) const override;
+        void getChars(int start, int end, std::vector<char32_t>& dest, int destoff) const override;
         size_t length() const override{
             return mText->length();
         }
@@ -344,7 +344,7 @@ public:
         std::wstring toWString() const override{
             return mSpanned->toWString();
         }
-        void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const override{
+        void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override{
             mSpanned->getChars(start, end, dest, destPos);
         }
     };

@@ -54,7 +54,8 @@ private:
     int mStyle;
     int mWeight;
     int mItalic;
-    Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
+    //Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
+    Cairo::RefPtr<Cairo::FontFace>mFontFace;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
@@ -62,6 +63,7 @@ private:
     static std::unordered_map<std::string,std::shared_ptr<Typeface>> sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
+    static std::vector<Cairo::RefPtr<Cairo::FontFace>>mFontFaces;
 private:
     struct Deleter;
     static void setDefault(Typeface* t);
@@ -69,7 +71,7 @@ private:
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
-    Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face);
+    Typeface(Cairo::RefPtr<Cairo::FontFace>face);
     Typeface(const FcPattern&);
     ~Typeface()=default;
     static int parseStyle(const std::string&style,std::string&normalizedName);
@@ -81,7 +83,7 @@ public:
     bool isItalic() const;
     std::string getFamily()const;
     std::string getStyleName()const;
-    Cairo::RefPtr<Cairo::FtScaledFont>getFontFace()const;
+    Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
@@ -99,6 +101,7 @@ public:
     static int loadFromFontConfig();
     static int loadFromPath(const std::string&path);
     static int loadFaceFromResource(cdroid::Context*context);
+    static std::vector<Cairo::RefPtr<Cairo::FontFace>>getFontFaces();
 };
 
 class FontStyle {

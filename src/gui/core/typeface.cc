@@ -42,6 +42,7 @@ static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 cdroid::Context* Typeface::mContext;
 std::unordered_map<std::string, std::shared_ptr<Typeface> > Typeface::sSystemFontMap;
+std::vector<Cairo::RefPtr<Cairo::FontFace>> Typeface::mFontFaces;
 
 struct Typeface::Deleter{
     void operator()(Typeface* p) const noexcept {
@@ -61,8 +62,12 @@ void Typeface::setFallback(const std::string&family){
     mFallbackFamilyName = family;
 }
 
-Typeface::Typeface(Cairo::RefPtr<Cairo::FtScaledFont>face) {
+Typeface::Typeface(Cairo::RefPtr<Cairo::FontFace>face) {
     mFontFace = face;
+}
+
+std::vector<Cairo::RefPtr<Cairo::FontFace>>Typeface::getFontFaces(){
+    return mFontFaces;
 }
 
 Typeface::Typeface(const FcPattern & font) {
@@ -112,7 +117,7 @@ Typeface::Typeface(const FcPattern & font) {
     Cairo::Matrix matrix = Cairo::identity_matrix();
     Cairo::Matrix ctm = Cairo::identity_matrix();
     Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create((FcPattern*)&font);
-    mFontFace = Cairo::FtScaledFont::create(face,matrix,ctm);
+    mFontFace = face;//Cairo::FtScaledFont::create(face,matrix,ctm);
 }
 
 int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName) {
@@ -171,7 +176,7 @@ std::string Typeface::getStyleName()const{
     return mStyleName;
 }
 
-Cairo::RefPtr<Cairo::FtScaledFont>Typeface::getFontFace()const {
+Cairo::RefPtr<Cairo::FontFace>Typeface::getFontFace()const {
     return mFontFace;
 }
 
@@ -404,6 +409,7 @@ int Typeface::loadFromFontConfig() {
         std::vector<std::string>families = TextUtils::split(family,";");
         for(std::string fm:families)
             sSystemFontMap.insert({fm,tf});
+        mFontFaces.push_back(tf->getFontFace());
         LOGV("font %s %p",family.c_str(),tf.get());
         if(std::regex_search(family,patSans)) {
             std::string ms = std::regex_search(family,patMono)?"mono":"serif";

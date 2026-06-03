@@ -4,6 +4,7 @@
 
 namespace cdroid{
 const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
+std::array<TextLine*,3> TextLine::sCached;
 TextLine* TextLine::obtain() {
     TextLine* tl;
     for (int i = sCached.size(); --i >= 0;) {
@@ -46,7 +47,7 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
     mStart = start;
     mLen = limit - start;
     mDir = dir;
-    mDirections = *directions;
+    mDirections = directions;
     if (directions == nullptr) {
         //LOGE("Directions cannot be null");
     }
@@ -60,11 +61,10 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         hasReplacement = mReplacementSpanSpanSet.numberOfSpans > 0;
     }
 
-    mComputed = nullptr;
-    if (dynamic_cast<PrecomputedText*>(text)) {
+    mComputed = dynamic_cast<PrecomputedText*>(text);
+    if (mComputed) {
         // Here, no need to check line break strategy or hyphenation frequency since there is no
         // line break concept here.
-        mComputed = (PrecomputedText*) text;
         if (!mComputed->getParams().getTextPaint().equalsForTextMeasurement(*paint)) {
             mComputed = nullptr;
         }
@@ -76,7 +76,8 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         if (mChars.empty() || mChars.size() < mLen) {
             mChars.resize(mLen);// = ArrayUtils.newUnpaddedCharArray(mLen);
         }
-        TextUtils.getChars(text, start, limit, mChars, 0);
+        //TextUtils.getChars(text, start, limit, mChars, 0);
+        text->getChars(start,limit,mChars,0);
         if (hasReplacement) {
             // Handle these all at once so we don't have to do it as we go.
             // Replace the first character of each replacement run with the
@@ -433,9 +434,9 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
         // what cursor positions are available on other lines, we can't
         // return accurate values.  These are a guess.
         if (after) {
-            return TextUtils.getOffsetAfter(mText, offset + mStart) - mStart;
+            return TextUtils::getOffsetAfter(mText, offset + mStart) - mStart;
         }
-        return TextUtils.getOffsetBefore(mText, offset + mStart) - mStart;
+        return TextUtils::getOffsetBefore(mText, offset + mStart) - mStart;
     }
 
     TextPaint& wp = mWorkPaint;
@@ -462,12 +463,12 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
 
         auto spans = mSpanned->getSpans(mStart + spanStart,
                 mStart + spanLimit, MetricAffectingSpanFilter);
-        spans = TextUtils.removeEmptySpans(spans, mSpanned, MetricAffectingSpanFilter);
+        TextUtils::removeEmptySpans(spans, mSpanned, MetricAffectingSpanFilter);
 
         if (spans.size() > 0) {
             ReplacementSpan* replacement = nullptr;
             for (int j = 0; j < spans.size(); j++) {
-                MetricAffectingSpan* span = (MetricAffectingSpan*)spans[j];
+                MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(spans[j]);
                 if (dynamic_cast<ReplacementSpan*>(span)) {
                     replacement = (ReplacementSpan*)span;
                 } else {
@@ -592,7 +593,7 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
             Paint::Style previousStyle = wp.getStyle();
 
             wp.setColor(wp.bgColor);
-            //wp.setStyle(Paint::Style::FILL);
+            wp.setStyle(Paint::Style::FILL);
             c->rectangle(leftX,top,totalWidth,bottom-top);//drawRect(leftX, top, rightX, bottom, wp);
             c->fill();
             wp.setStyle(previousStyle);
@@ -767,7 +768,7 @@ float TextLine::handleRun(int start, int measureLimit,
             const bool insideEllipsis =
                     mStart + mEllipsisStart <= mMetricAffectingSpanSpanSet.spanStarts[j]
                     && mMetricAffectingSpanSpanSet.spanEnds[j] <= mStart + mEllipsisEnd;
-            MetricAffectingSpan* span = (MetricAffectingSpan*)mMetricAffectingSpanSpanSet.spans[j];
+            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(mMetricAffectingSpanSpanSet.spans[j]);
             if (dynamic_cast<ReplacementSpan*>(span)) {
                 replacement = !insideEllipsis ? (ReplacementSpan*) span : nullptr;
             } else {
@@ -799,7 +800,7 @@ float TextLine::handleRun(int start, int measureLimit,
                 if ((mCharacterStyleSpanSet.spanStarts[k] >= mStart + offset) ||
                         (mCharacterStyleSpanSet.spanEnds[k] <= mStart + j)) continue;
 
-                CharacterStyle* span = (CharacterStyle*)mCharacterStyleSpanSet.spans[k];
+                CharacterStyle* span = dynamic_cast<CharacterStyle*>(mCharacterStyleSpanSet.spans[k]);
                 span->updateDrawState(wp);
             }
 
@@ -849,18 +850,23 @@ float TextLine::handleRun(int start, int measureLimit,
     return x - originalX;
 }
 
+static void _drawTextRun(Canvas&c,const std::vector<char32_t>&,int start,int count,
+        int contextStart,int contextCount,float x,float y,bool runIsRtl,TextPaint&paint){
+    //LOGE("TODO");
+}
+
 void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
         int contextStart, int contextEnd, bool runIsRtl, float x, int y) {
 
     if (mCharsValid) {
-        int count = end - start;
-        int contextCount = contextEnd - contextStart;
-        c.drawTextRun(mChars, start, count, contextStart, contextCount,
+        const int count = end - start;
+        const int contextCount = contextEnd - contextStart;
+        _drawTextRun(c,mChars, start, count, contextStart, contextCount,
                 x, y, runIsRtl, wp);
     } else {
-        int delta = mStart;
-        c.drawTextRun(mText, delta + start, delta + end,
-                delta + contextStart, delta + contextEnd, x, y, runIsRtl, wp);
+        const int delta = mStart;
+        //_drawTextRun(c,mText->getChars(), delta + start, delta + end,
+        //        delta + contextStart, delta + contextEnd, x, y, runIsRtl, wp);
     }
 }
 

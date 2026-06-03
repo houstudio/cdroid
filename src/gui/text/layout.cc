@@ -1555,7 +1555,7 @@ std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int st
 static std::string getEllipsisString(TextUtils::TruncateAt method){
     return (method==TextUtils::TruncateAt::END_SMALL)?"\u2025":"\u2026";
 }
-void TextLayout::ellipsize(int start, int end, int line, std::vector<char16_t>& dest, int destoff, TextUtils::TruncateAt method) {
+void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& dest, int destoff, TextUtils::TruncateAt method) {
     const int ellipsisCount = getEllipsisCount(line);
     if (ellipsisCount == 0) {
         return;
@@ -1608,14 +1608,14 @@ void TextLayout::ellipsize(int start, int end, int line, std::vector<char16_t>& 
 
 //static class Ellipsizer implements CharSequence, GetChars
 int TextLayout::Ellipsizer::charAt(int off) const {
-    std::vector<char16_t> buf(8) ;//= TextUtils.obtain(1);
+    std::vector<char32_t> buf(8) ;//= TextUtils.obtain(1);
     getChars(off, off + 1, buf, 0);
-    char ret = buf[0];
+    char32_t ret = buf[0];
     //TextUtils.recycle(buf);
     return ret;
 }
 
-void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char16_t>& dest, int destoff) const {
+void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char32_t>& dest, int destoff) const {
     const int line1 = mLayout->getLineForOffset(start);
     const int line2 = mLayout->getLineForOffset(end);
     //TextUtils.getChars(mText, start, end, dest, destoff);
@@ -1625,7 +1625,7 @@ void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char16_t>&
 }
 
 CharSequence* TextLayout::Ellipsizer::subSequence(int start, int end) const{
-    std::vector<char16_t> s (end - start);
+    std::vector<char32_t> s (end - start);
     getChars(start, end, s, 0);
     return new SpannedString("");//s.data());
 }

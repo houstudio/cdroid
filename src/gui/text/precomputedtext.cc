@@ -195,7 +195,7 @@ void PrecomputedText::removeSpan(ParcelableSpan* what) {
     mText->removeSpan(what);
 }
 
-void PrecomputedText::getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const{
+void PrecomputedText::getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const{
 }
 
 std::string PrecomputedText::toString() const {

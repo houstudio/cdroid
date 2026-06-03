@@ -112,7 +112,7 @@ MeasuredParagraph* MeasuredParagraph::buildForBidi(CharSequence* text, int start
     return mt;
 }
 
-static void TextUtils_removeEmptySpans(std::vector<ParcelableSpan*>& spans, Spanned* spanned, const Predicate<const ParcelableSpan*>& kclass) {
+static void TextUtils_removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spanned* spanned, const Predicate<const ParcelableSpan*>& kclass) {
     auto it = spans.begin();
     while (it != spans.end()) {
         const int start = spanned->getSpanStart(*it);
@@ -126,7 +126,7 @@ static void TextUtils_removeEmptySpans(std::vector<ParcelableSpan*>& spans, Span
     }
 }
 
-MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint, CharSequence* text,
+MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint,const CharSequence* text,
         int start, int end, const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
     mt->resetAndAnalyzeBidi(text, start, end, textDir);
@@ -152,7 +152,7 @@ MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint, Char
     return mt;
 }
 
-MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* paint, CharSequence* text, int start, int end,
+MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* paint,const CharSequence* text, int start, int end,
         const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout, MeasuredParagraph* hint, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
     mt->resetAndAnalyzeBidi(text, start, end, textDir);
@@ -191,9 +191,9 @@ MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* pain
     return mt;
 }
 
-void MeasuredParagraph::resetAndAnalyzeBidi(CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
+void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
     reset();
-    mSpanned = dynamic_cast<Spanned*>(text);
+    mSpanned = dynamic_cast<const Spanned*>(text);
     mTextStart = start;
     mTextLength = end - start;
 
@@ -313,7 +313,7 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
     ReplacementSpan* replacement = nullptr;
     if (!spans.empty()) {
         for (int i = 0; i < spans.size(); i++) {
-            MetricAffectingSpan* span = (MetricAffectingSpan*)spans[i];
+            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(spans[i]);
             if (dynamic_cast<ReplacementSpan*>(span)) {
                 // The last ReplacementSpan is effective for backward compatibility reasons.
                 replacement = (ReplacementSpan*) span;

@@ -41,12 +41,12 @@ private:
     int mStart;
     int mLen;
     int mDir;
-    Directions* mDirections;
+    const Directions* mDirections;
     bool mHasTabs;
     bool mCharsValid;
     bool mIsJustifying;
     TabStops* mTabs;
-    std::vector<char16_t> mChars;
+    std::vector<char32_t> mChars;
     Spanned* mSpanned;
     PrecomputedText* mComputed;
 

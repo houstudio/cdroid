@@ -1333,7 +1333,7 @@ void NumberPicker::onDraw(Canvas&canvas){
     }else{
         canvas.set_color(mTextColor);
     }
-    canvas.set_font_face(mInputText->getTypeface()->getFontFace()->get_font_face());
+    canvas.set_font_face(mInputText->getTypeface()->getFontFace());
     canvas.set_font_size(mTextSize);
     // draw the selector wheel
     for (int i = 0; i < mSelectorIndices.size(); i++) {

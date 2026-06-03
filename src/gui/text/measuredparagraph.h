@@ -13,10 +13,10 @@ class MeasuredParagraph {
 private:
     static constexpr char16_t OBJECT_REPLACEMENT_CHARACTER = 0xFFFC;
 
-    Spanned* mSpanned;
+    const Spanned* mSpanned;
     int mTextStart;
     int mTextLength;
-    std::vector<char16_t> mCopiedBuffer;
+    std::vector<char32_t> mCopiedBuffer;
     int mParaDir;
     bool mLtrWithoutBidi;
     std::vector<uint8_t> mLevels;
@@ -34,7 +34,7 @@ private:
 
     static MeasuredParagraph* obtain();
     void reset();
-    void resetAndAnalyzeBidi(CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
+    void resetAndAnalyzeBidi(const CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
     void applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
     void applyStyleRun(int start, int end, MeasuredText::Builder* builder);
     void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans,
@@ -47,7 +47,7 @@ public:
         return mTextLength;
     }
 
-    const std::vector<char16_t>& getChars() const{
+    const std::vector<char32_t>& getChars() const{
         return mCopiedBuffer;
     }
 
@@ -86,10 +86,10 @@ public:
     static MeasuredParagraph* buildForBidi(CharSequence* text, int start, int end,
             const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle);
 
-    static MeasuredParagraph* buildForMeasurement(TextPaint* paint, CharSequence* text,
+    static MeasuredParagraph* buildForMeasurement(TextPaint* paint,const CharSequence* text,
             int start, int end,const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle);
 
-    static MeasuredParagraph* buildForStaticLayout(const TextPaint* paint, CharSequence* text, int start, int end,
+    static MeasuredParagraph* buildForStaticLayout(const TextPaint* paint,const CharSequence* text, int start, int end,
             const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout,
             MeasuredParagraph* hint, MeasuredParagraph* recycle);
 
