@@ -6,7 +6,7 @@
 #include <core/canvas.h>
 #include <core/path.h>
 #include <core/rect.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <text/spanset.h>
 #include <text/textpaint.h>
 #include <text/textline.h>
@@ -94,6 +94,7 @@ protected:
     void setJustificationMode(int justificationMode);
     bool isSpanned() const;
 public:
+    virtual ~TextLayout();
     static float getDesiredWidth(CharSequence* source, TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint, const TextDirectionHeuristic* textDir);
@@ -356,7 +357,6 @@ private:
     Alignment mAlignment = Alignment::ALIGN_NORMAL;
     float mSpacingMult;
     float mSpacingAdd;
-    static Rect sTempRect;
     bool mSpannedText;
     const TextDirectionHeuristic* mTextDir;
     cdroid::SpanSet/*<LineBackgroundSpan>*/mLineBackgroundSpans;

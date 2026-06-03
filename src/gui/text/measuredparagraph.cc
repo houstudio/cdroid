@@ -112,20 +112,6 @@ MeasuredParagraph* MeasuredParagraph::buildForBidi(CharSequence* text, int start
     return mt;
 }
 
-static void TextUtils_removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spanned* spanned, const Predicate<const ParcelableSpan*>& kclass) {
-    auto it = spans.begin();
-    while (it != spans.end()) {
-        const int start = spanned->getSpanStart(*it);
-        const int end = spanned->getSpanEnd(*it);
-        
-        if (start == end) {
-            it = spans.erase(it);
-        } else {
-            ++it;
-        }
-    }
-}
-
 MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint,const CharSequence* text,
         int start, int end, const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
@@ -145,7 +131,7 @@ MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint,const
         for (int spanStart = start; spanStart < end; spanStart = spanEnd) {
             spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
             auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
-            TextUtils_removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
+            TextUtils::removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
             mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, nullptr /* native builder ptr */);
         }
     }
@@ -180,7 +166,7 @@ MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* pain
             for (int spanStart = start; spanStart < end; spanStart = spanEnd) {
                 spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
                 auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
-                TextUtils_removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
+                TextUtils::removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
                 mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, builder.get());
                 mt->mSpanEndCache.emplace_back(spanEnd);
             }
@@ -200,7 +186,7 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
     if (mCopiedBuffer.empty() || mCopiedBuffer.size() != mTextLength) {
         mCopiedBuffer.resize(mTextLength);
     }
-    //TextUtils.getChars(text, start, end, mCopiedBuffer, 0);
+    TextUtils::getChars(text, start, end, mCopiedBuffer, 0);
 
     // Replace characters associated with ReplacementSpan to U+FFFC.
     if (mSpanned != nullptr) {
@@ -220,7 +206,7 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
     if ((textDir == TextDirectionHeuristics::LTR
             || textDir == TextDirectionHeuristics::FIRSTSTRONG_LTR
             || textDir == TextDirectionHeuristics::ANYRTL_LTR)
-            /*&& TextUtils.doesNotNeedBidi(mCopiedBuffer.data(), 0, mTextLength)*/) {
+            && TextUtils::doesNotNeedBidi(mCopiedBuffer, 0, mTextLength)) {
         mLevels.clear();
         mParaDir = TextLayout::DIR_LEFT_TO_RIGHT;
         mLtrWithoutBidi = true;

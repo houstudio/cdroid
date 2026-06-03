@@ -2,7 +2,7 @@
 #define __MEASURED_PARAGRAPH_H__
 #include <core/pools.h>
 #include <core/rect.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <text/textpaint.h>
 #include <text/measuredtext.h>
 #include <text/textdirectionheuristics.h>

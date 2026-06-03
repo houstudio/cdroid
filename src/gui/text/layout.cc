@@ -28,7 +28,7 @@ float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int 
     float need = 0;
     int next;
     for (int i = start; i <= end; i = next) {
-        next = i+1;//TextUtils.indexOf(source, '\n', i, end);
+        next = TextUtils::indexOf(source, '\n', i, end);
 
         if (next < 0)
             next = end;
@@ -68,6 +68,10 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
     mSpacingAdd = spacingAdd;
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
     mTextDir = textDir;
+}
+
+TextLayout::~TextLayout(){
+    delete mText;
 }
 
 void TextLayout::setJustificationMode(int justificationMode) {
@@ -437,19 +441,19 @@ static bool getClipBounds(Canvas& cr, Rect&r){
 }
 int64_t TextLayout::getLineRangeForDraw(Canvas& canvas) const{
     int dtop, dbottom;
-    Rect sTempRect;
-    if (!getClipBounds(canvas,sTempRect)) {
+    Rect tmpRect;
+    if (!getClipBounds(canvas,tmpRect)) {
         // Negative range end used as a special flag
-        return int32_t(-1);//TextUtils.packRangeInLong(0, -1);
+        return TextUtils::packRangeInLong(0, -1);
     }
-    dtop = sTempRect.top;
-    dbottom = sTempRect.bottom();
+    dtop = tmpRect.top;
+    dbottom = tmpRect.bottom();
 
     const int top = std::max(dtop, 0);
     const int bottom = std::min(getLineTop(getLineCount()), dbottom);
 
-    if (top >= bottom) return (int32_t)(-1);//TextUtils.packRangeInLong(0, -1);
-    return (int64_t)getLineForVertical(top)<<32| getLineForVertical(bottom);
+    if (top >= bottom) return TextUtils::packRangeInLong(0, -1);
+    return  TextUtils::packRangeInLong(getLineForVertical(top), getLineForVertical(bottom));
 }
 
 int TextLayout::getLineStartPos(int line, int left, int right) const{
@@ -567,7 +571,7 @@ int64_t TextLayout::getRunRange(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
     if (*dirs == DIRS_ALL_LEFT_TO_RIGHT || *dirs == DIRS_ALL_RIGHT_TO_LEFT) {
-        return getLineEnd(line);//TextUtils.packRangeInLong(0, getLineEnd(line));
+        return TextUtils::packRangeInLong(0, getLineEnd(line));
     }
     auto& runs = dirs->mDirections;
     int lineStart = getLineStart(line);
@@ -575,11 +579,11 @@ int64_t TextLayout::getRunRange(int offset) const{
         int start = lineStart + runs[i];
         int limit = start + (runs[i+1] & RUN_LENGTH_MASK);
         if (offset >= start && offset < limit) {
-            return (int64_t)start<<32|limit;//TextUtils.packRangeInLong(start, limit);
+            return TextUtils::packRangeInLong(start, limit);
         }
     }
     // Should happen only if the offset is "out of bounds"
-    return getLineEnd(line);//TextUtils.packRangeInLong(0, getLineEnd(line));
+    return TextUtils::packRangeInLong(0, getLineEnd(line));
 }
 
 bool TextLayout::primaryIsTrailingPrevious(int offset) const{
@@ -1618,7 +1622,7 @@ int TextLayout::Ellipsizer::charAt(int off) const {
 void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char32_t>& dest, int destoff) const {
     const int line1 = mLayout->getLineForOffset(start);
     const int line2 = mLayout->getLineForOffset(end);
-    //TextUtils.getChars(mText, start, end, dest, destoff);
+    TextUtils::getChars(mText, start, end, dest, destoff);
     for (int i = line1; i <= line2; i++) {
         mLayout->ellipsize(start, end, i, dest, destoff, mMethod);
     }

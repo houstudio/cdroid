@@ -2,7 +2,7 @@
 #include <sstream>
 #include <cstdarg>
 #include <core/predicate.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <text/textutils.h>
 #include <unicode/uchar.h>
 #include <text/measuredparagraph.h>
@@ -939,7 +939,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
     return mode;
 }
 
-void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans, Spanned* spanned, const SpanFilter& klass) {
+void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spanned* spanned, const SpanFilter& klass) {
     auto it = spans.begin();
     while (it != spans.end()) {
         const int start = spanned->getSpanStart(*it);

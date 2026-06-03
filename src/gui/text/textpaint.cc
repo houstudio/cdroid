@@ -2,7 +2,7 @@
 #include <iostream>
 #include <text/textpaint.h>
 #include <text/textutils.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <minikin/GraphemeBreak.h>
 #include <minikin/LocaleList.h>
 #include <minikin/Measurement.h>

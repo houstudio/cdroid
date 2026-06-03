@@ -23,7 +23,7 @@
 #include <core/typeface.h>
 #include <widget/scroller.h>
 #include <widget/textwatcher.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 
 namespace cdroid {
 

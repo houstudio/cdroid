@@ -2,7 +2,7 @@
 #define __CDROID_TEXT_LINE__
 #include <text/textpaint.h>
 #include <core/canvas.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 namespace cdroid{
 class Directions;
 class TabStops;

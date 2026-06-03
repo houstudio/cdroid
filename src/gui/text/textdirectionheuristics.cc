@@ -1,5 +1,5 @@
 #include <functional>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #include <view/view.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{

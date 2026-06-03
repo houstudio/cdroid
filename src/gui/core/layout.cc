@@ -20,7 +20,7 @@
 #include <wordbreak.h>
 #include <linebreak.h>
 #include <gui_features.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 #if ENABLE(FRIBIDI)
 #include <fribidi.h>
 #endif

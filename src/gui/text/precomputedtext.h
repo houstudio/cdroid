@@ -1,7 +1,7 @@
 #ifndef __PRE_COMPUTED_TEXT_H__
 #define __PRE_COMPUTED_TEXT_H__
 #include <core/rect.h>
-#include <core/spannablestring.h>
+#include <text/spannablestring.h>
 namespace cdroid{
 class MeasuredParagraph;
 class TextDirectionHeuristic;

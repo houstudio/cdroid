@@ -83,7 +83,7 @@ std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParag
 
     int paraEnd = 0;
     for (int paraStart = start; paraStart < end; paraStart = paraEnd) {
-        //paraEnd = TextUtils.indexOf(text, LINE_FEED, paraStart, end);
+        paraEnd = TextUtils::indexOf(text, LINE_FEED, paraStart, end);
         if (paraEnd < 0) {
             // No LINE_FEED(U+000A) character found. Use end of the text as the paragraph
             // end.

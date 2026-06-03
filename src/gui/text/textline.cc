@@ -76,7 +76,7 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         if (mChars.empty() || mChars.size() < mLen) {
             mChars.resize(mLen);// = ArrayUtils.newUnpaddedCharArray(mLen);
         }
-        //TextUtils.getChars(text, start, limit, mChars, 0);
+        TextUtils::getChars(text, start, limit, mChars, 0);
         text->getChars(start,limit,mChars,0);
         if (hasReplacement) {
             // Handle these all at once so we don't have to do it as we go.
