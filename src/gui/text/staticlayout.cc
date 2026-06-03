@@ -333,35 +333,34 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
 
     std::vector<PrecomputedText::ParagraphInfo> paragraphInfo;
     Spanned* spanned = dynamic_cast<Spanned*>(source);
-    /*if (dynamic_cast<PrecomputedText*>(source)) {
-        PrecomputedText* precomputed = (PrecomputedText*) source;
-        const int checkResult =  precomputed->checkResultUsable(bufStart, bufEnd, textDir, paint,
+    if (dynamic_cast<PrecomputedText*>(source)) {
+        PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(source);
+        const int checkResult =  precomputed->checkResultUsable(bufStart, bufEnd, textDir, *paint,
                         b.mBreakStrategy, b.mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
-                break;
+            break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
-             PrecomputedText::Params newParams =
-                        new PrecomputedText.Params.Builder(paint)
-                            .setBreakStrategy(b.mBreakStrategy)
-                            .setHyphenationFrequency(b.mHyphenationFrequency)
-                            .setTextDirection(textDir)
-                            .build();
-                precomputed = PrecomputedText.create(precomputed, newParams);
-                paragraphInfo = precomputed.getParagraphInfo();
-                break;
+            /*PrecomputedText::Params newParams =
+                    new PrecomputedText.Params.Builder(paint).setBreakStrategy(b.mBreakStrategy)
+                        .setHyphenationFrequency(b.mHyphenationFrequency)
+                        .setTextDirection(textDir).build();*/
+            precomputed = PrecomputedText::create(precomputed, PrecomputedText::Params(
+                        *paint,textDir,b.mBreakStrategy,b.mHyphenationFrequency));
+            paragraphInfo = precomputed->getParagraphInfo();
+            break;
         case PrecomputedText::Params::USABLE:
-                // Some parameters are different from the ones when measured text is created.
-                paragraphInfo = precomputed.getParagraphInfo();
-                break;
+            // Some parameters are different from the ones when measured text is created.
+            paragraphInfo = precomputed->getParagraphInfo();
+            break;
         }
     }
-    if (paragraphInfo == null) {
-        PrecomputedText.Params param = new PrecomputedText.Params(paint, textDir,
+    if (paragraphInfo.empty()){// == null) {
+        PrecomputedText::Params param/* = new PrecomputedText::Params*/(*paint, textDir,
                 b.mBreakStrategy, b.mHyphenationFrequency);
-        paragraphInfo = PrecomputedText.createMeasuredParagraphs(source, param, bufStart,
+        paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart,
                 bufEnd, false );
-    }*/
+    }
     for (int paraIndex = 0; paraIndex < paragraphInfo.size(); paraIndex++) {
         const int paraStart = paraIndex == 0 ? bufStart : paragraphInfo[paraIndex - 1].paragraphEnd;
         const int paraEnd = paragraphInfo[paraIndex].paragraphEnd;
@@ -389,7 +388,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
 
             chooseHt = getParagraphSpans(spanned, paraStart, paraEnd, LineHeightSpanFilter);
 
-            if (chooseHt.empty() == 0) {
+            if (chooseHt.size() == 0) {
                 chooseHt.clear(); // So that out() would not assume it has any contents
             } else {
                 if (chooseHtv.empty() || chooseHtv.size() < chooseHt.size()) {

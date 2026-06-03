@@ -98,8 +98,8 @@ void TextLayout::draw(Canvas& c) {
 
 void TextLayout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical) {
     const int64_t lineRange = getLineRangeForDraw(canvas);
-    int firstLine = (int)(lineRange>>32);
-    int lastLine = (int)(lineRange&0xFFFFFFFF);
+    int firstLine = TextUtils::unpackRangeStartFromLong(lineRange);
+    int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
     if (lastLine < 0) return;
 
     drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
