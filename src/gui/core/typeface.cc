@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <memory>
 #include <set>
 #include <regex>
 #include <dirent.h>
@@ -125,6 +126,7 @@ static std::vector<std::shared_ptr<minikin::FontFamily>> getFamilies(){
     }
     return families;
 };
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 Typeface* Typeface::MONOSPACE;
 Typeface* Typeface::SANS_SERIF;
 Typeface* Typeface::SERIF;
@@ -160,9 +162,9 @@ void Typeface::setFallback(const std::string&family){
     mFallbackFamilyName = family;
 }
 
-Typeface::Typeface(Cairo::RefPtr<Cairo::FontFace>face) {
+/*Typeface::Typeface(Cairo::RefPtr<Cairo::FontFace>face) {
     mFontFace = face;
-}
+}*/
 
 std::vector<Cairo::RefPtr<Cairo::FontFace>>Typeface::getFontFaces(){
     return mFontFaces;
@@ -212,10 +214,103 @@ Typeface::Typeface(const FcPattern & font) {
     if(ret == FcResultMatch) mStyle |= SYSLANG_MATCHED;
     LOGV_IF(ret,"FcLangSetHasLang %s=%d",mSystemLang.c_str(),ret);
 
-    Cairo::Matrix matrix = Cairo::identity_matrix();
-    Cairo::Matrix ctm = Cairo::identity_matrix();
     Cairo::RefPtr<Cairo::FtFontFace> face = Cairo::FtFontFace::create((FcPattern*)&font);
-    mFontFace = face;//Cairo::FtScaledFont::create(face,matrix,ctm);
+    mFontFace = face;
+}
+
+void Typeface::createFontCollection(){
+    std::vector<std::shared_ptr<minikin::FontFamily>> families;
+    std::set<Cairo::FontFace*> addedFonts;  // 用于避免重复添加
+
+    // 1. 首先添加当前字体作为主字体
+    if (mFontFace) {
+        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
+        if (ftFace) {
+            addedFonts.insert(ftFace.get());
+            auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
+            minikin::Font font = minikin::Font::Builder(minikinFont).build();
+            std::vector<minikin::Font> fonts;
+            fonts.push_back(std::move(font));
+            auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+            families.push_back(fontFamily);
+        }
+    }
+
+    // 2. 根据字体族类型选择回退链
+    std::vector<std::string> fallbackOrder;
+
+    // 判断当前字体族类型
+    const bool isSans = (mFamily.find("sans") != std::string::npos) ||
+                  (mFamily.find("Sans") != std::string::npos);
+    const bool isSerif = (mFamily.find("serif") != std::string::npos) && !isSans;
+    const bool isMono = (mFamily.find("mono") != std::string::npos) ||
+                  (mFamily.find("Mono") != std::string::npos);
+
+    // 构建回退顺序
+    if (isMono) {
+        // Monospace 回退链：monospace -> sans-serif -> serif -> CJK
+        fallbackOrder = {"monospace", "sans-serif", "serif"};
+    } else if (isSerif) {
+        // Serif 回退链：serif -> sans-serif -> CJK
+        fallbackOrder = {"serif", "sans-serif"};
+    } else {
+        // Sans-serif 回退链（默认）：sans-serif -> serif -> CJK
+        fallbackOrder = {"sans-serif", "serif"};
+    }
+
+    // 3. 添加语言匹配的回退字体（CJK 等）
+    if (mSystemLang == "zh" || mSystemLang == "ja" || mSystemLang == "ko") {
+        // 中文/日文/韩文环境，优先添加 CJK 字体
+        fallbackOrder.push_back("Noto Sans CJK");
+        fallbackOrder.push_back("Noto Serif CJK");
+    } else if (mSystemLang == "ar") {
+        // 阿拉伯语环境
+        fallbackOrder.push_back("Noto Sans Arabic");
+    } else if (mSystemLang == "th") {
+        // 泰语环境
+        fallbackOrder.push_back("Noto Sans Thai");
+    }
+
+    // 4. 添加 Emoji 字体作为最后回退
+    fallbackOrder.push_back("Noto Color Emoji");
+    fallbackOrder.push_back("emoji");
+
+    // 5. 根据回退顺序查找并添加字体（避免重复）
+    for (const std::string& fallbackName : fallbackOrder) {
+        // 在系统字体映射中查找匹配的字体
+        auto it = sSystemFontMap.find(fallbackName);
+        if (it != sSystemFontMap.end() && it->second && it->second->getFontFace()) {
+            Cairo::RefPtr<Cairo::FtFontFace> ftFace =
+                std::dynamic_pointer_cast<Cairo::FtFontFace>(it->second->getFontFace());
+            if (ftFace && addedFonts.find(ftFace.get()) == addedFonts.end()) {
+                addedFonts.insert(ftFace.get());
+                auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
+                minikin::Font font = minikin::Font::Builder(minikinFont).build();
+                std::vector<minikin::Font> fonts;
+                fonts.push_back(std::move(font));
+                auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+                families.push_back(fontFamily);
+            }
+        }
+    }
+
+    // 6. 如果回退链不足，补充其他系统字体（避免重复）
+    if (families.size() <= 1) {
+        for (auto& face : mFontFaces) {
+            Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
+            if (ftFace && addedFonts.find(ftFace.get()) == addedFonts.end()) {
+                addedFonts.insert(ftFace.get());
+                auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
+                minikin::Font font = minikin::Font::Builder(minikinFont).build();
+                std::vector<minikin::Font> fonts;
+                fonts.push_back(std::move(font));
+                auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+                families.push_back(fontFamily);
+            }
+        }
+    }
+
+    mFontCollection = std::make_shared<minikin::FontCollection>(families);
 }
 
 int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName) {
@@ -276,6 +371,10 @@ std::string Typeface::getStyleName()const{
 
 Cairo::RefPtr<Cairo::FontFace>Typeface::getFontFace()const {
     return mFontFace;
+}
+
+std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection()const {
+    return mFontCollection;
 }
 
 Typeface* Typeface::create(Typeface*family, int style) {

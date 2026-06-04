@@ -56,7 +56,6 @@ private:
     int mStyle;
     int mWeight;
     int mItalic;
-    //Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
     std::shared_ptr<minikin::FontCollection>mFontCollection;
     static cdroid::Context*mContext;
@@ -74,11 +73,12 @@ private:
     static bool hasFontFamily(const std::string&familyName);
     static Typeface* createWeightStyle(Typeface* base,int weight, bool italic);
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
-    Typeface(Cairo::RefPtr<Cairo::FontFace>face);
+    //Typeface(Cairo::RefPtr<Cairo::FontFace>face);
     Typeface(const FcPattern&);
     ~Typeface()=default;
     static int parseStyle(const std::string&style,std::string&normalizedName);
     void fetchProps(FT_Face);
+    void createFontCollection();
 public:
     int getWeight()const;
     int getStyle() const;
@@ -87,6 +87,8 @@ public:
     std::string getFamily()const;
     std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
+    std::shared_ptr<minikin::FontCollection> getFontCollection()const;
+    std::shared_ptr<minikin::FontCollection> getFontConnection();
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
