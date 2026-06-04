@@ -174,7 +174,6 @@ protected:
     std::vector<SpanInfo> mSpans;
     SpannableStringInternal() = default;
     explicit SpannableStringInternal(const std::wstring& text) : mText(text) {}
-    
 public:
     SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan){}
     SpannableStringInternal(const CharSequence* source, int start, int end){}

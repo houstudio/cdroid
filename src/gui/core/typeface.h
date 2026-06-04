@@ -20,7 +20,9 @@
 #include <string>
 #include <unordered_map>
 #include <cairomm/scaledfont.h>
-
+namespace minikin{
+    class FontCollection;
+}
 namespace cdroid{
 class Context;
 class FontFamily{};
@@ -56,6 +58,7 @@ private:
     int mItalic;
     //Cairo::RefPtr<Cairo::FtScaledFont>mFontFace;
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
+    std::shared_ptr<minikin::FontCollection>mFontCollection;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;

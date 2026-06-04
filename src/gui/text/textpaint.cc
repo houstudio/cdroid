@@ -24,7 +24,6 @@ public:
           mHbFace(nullptr),
           mCachedScaledFont(nullptr),
           mCachedFontSize(0.0f) {
-        // 延迟创建，在第一次使用时创建
     }
 
     ~FullMinikinFont() override {
@@ -38,8 +37,8 @@ public:
         Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);        
         std::vector<Cairo::Glyph> glyphs(1);
         glyphs[0].index = glyph_id;
-        glyphs[0].x = 0;
-        glyphs[0].y = 0;
+        //glyphs[0].x = 0;
+        //glyphs[0].y = 0;
         Cairo::TextExtents extents;
         scaledFont->get_glyph_extents(glyphs, extents);
         return extents.x_advance;
@@ -51,8 +50,8 @@ public:
         
         std::vector<Cairo::Glyph> glyphs(1);
         glyphs[0].index = glyph_id;
-        glyphs[0].x = 0;
-        glyphs[0].y = 0;
+        //glyphs[0].x = 0;
+        //glyphs[0].y = 0;
         Cairo::TextExtents extents;
         scaledFont->get_glyph_extents(glyphs, extents);
         bounds->mLeft = extents.x_bearing;
@@ -138,6 +137,7 @@ Paint::Paint(){
     if(!mFontCollection){
         mFontCollection= std::make_shared<minikin::FontCollection>(getFamilies());
     }
+    mTypeface = nullptr;
     mStartHyphenEdit=0;
     mEndHyphenEdit=0;
     mWordSpace=0;
@@ -149,6 +149,7 @@ Paint::Paint(const Paint&other){
 }
 
 void Paint::set(const Paint&o){
+    mTypeface=o.mTypeface;
     mColor = o.mColor;
     mTextSize=o.mTextSize;
     mAntialias=o.mAntialias;

@@ -24,9 +24,107 @@
 #include <cairomm/matrix.h>
 #include <core/context.h>
 #include <fontconfig/fcfreetype.h>
+#include <hb.h>
+#include <hb-ft.h>
+#include <minikin/GraphemeBreak.h>
+#include <minikin/LocaleList.h>
+#include <minikin/Measurement.h>
+#include <minikin/MeasuredText.h>
 
 namespace cdroid {
 
+class FullMinikinFont : public minikin::MinikinFont {
+public:
+    FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace)
+        : MinikinFont(mFontId++), mFontFace(fontFace), mHbFace(nullptr),
+          mCachedScaledFont(nullptr), mCachedFontSize(0.0f) {
+    }
+    ~FullMinikinFont() override {
+        if (mHbFace != nullptr) {
+            hb_face_destroy(mHbFace);
+        }
+    }
+    float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        std::vector<Cairo::Glyph> glyphs{{glyph_id,0,0}};
+        Cairo::TextExtents extents;
+        scaledFont->get_glyph_extents(glyphs, extents);
+        return extents.x_advance;
+    }
+    void GetBounds(minikin::MinikinRect* bounds, uint32_t glyph_id, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+
+        std::vector<Cairo::Glyph> glyphs{{glyph_id,0,0}};
+        Cairo::TextExtents extents;
+        scaledFont->get_glyph_extents(glyphs, extents);
+        bounds->mLeft = extents.x_bearing;
+        bounds->mTop  = extents.y_bearing;
+        bounds->mRight = extents.x_bearing + extents.width;
+        bounds->mBottom= extents.y_bearing + extents.height;
+    }
+    void GetFontExtent(minikin::MinikinExtent* extent, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        Cairo::FontExtents fontExtents;
+        scaledFont->get_extents(fontExtents);
+        extent->ascent = fontExtents.ascent;
+        extent->descent= fontExtents.descent;
+    }
+    const std::vector<minikin::FontVariation>& GetAxes() const override {
+        static const std::vector<minikin::FontVariation> emptyAxes;
+        return emptyAxes;
+    }
+    const void* GetFontData() const override {
+        if (mHbFace == nullptr) {
+            Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = createScaledFont(12.0f);
+            FT_Face ftFace = scaledFont->lock_face();
+            if (ftFace != nullptr) {
+                mHbFace = hb_ft_face_create(ftFace, 0);
+            }
+            scaledFont->unlock_face();
+        }
+        return mHbFace;
+    }
+    size_t GetFontSize() const override { return 0;/*sizeof filedata*/}
+    int GetFontIndex() const override { return 0; }
+private:
+    Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(float size) const {
+        if (mCachedScaledFont == nullptr || mCachedFontSize != size) {
+            mCachedScaledFont = createScaledFont(size);
+            mCachedFontSize = size;
+        }
+        return mCachedScaledFont;
+    }
+    Cairo::RefPtr<Cairo::FtScaledFont> createScaledFont(float size) const {
+        Cairo::Matrix font_mtx(size, 0.0, 0.0, size, 0.0, 0.0);
+        Cairo::FontOptions options;
+        Cairo::Matrix ctm = Cairo::identity_matrix();
+        options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
+        options.set_hint_metrics(Cairo::FontOptions::HintMetrics::OFF);
+        return Cairo::FtScaledFont::create(mFontFace, font_mtx, ctm, options);
+    }
+    static int mFontId;
+    Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
+    mutable hb_face_t* mHbFace = nullptr;
+    mutable Cairo::RefPtr<Cairo::FtScaledFont> mCachedScaledFont;
+    mutable float mCachedFontSize;
+};
+int FullMinikinFont::mFontId=0;
+
+static std::vector<std::shared_ptr<minikin::FontFamily>> getFamilies(){
+    std::vector<std::shared_ptr<minikin::FontFamily>>families;
+    auto fontFaces = Typeface::getFontFaces();
+    for(auto& face : fontFaces){
+        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
+        if(!ftFace) continue;
+        auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
+        minikin::Font font = minikin::Font::Builder(minikinFont).build();
+        std::vector<minikin::Font> fonts;
+        fonts.push_back(std::move(font));
+        auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+        families.push_back(fontFamily);
+    }
+    return families;
+};
 Typeface* Typeface::MONOSPACE;
 Typeface* Typeface::SANS_SERIF;
 Typeface* Typeface::SERIF;

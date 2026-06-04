@@ -4,6 +4,7 @@
 #include <vector>
 namespace cdroid{
 class CharSequence;
+class Typeface;
 class Paint{
 public:
     enum StartHyphenEdit{
@@ -42,6 +43,7 @@ public:
         STROKE_AND_FILL = 3
     };
 private:
+    Typeface*mTypeface;
     int mColor;
     int mTextAlign;
     int mStartHyphenEdit;
@@ -62,6 +64,8 @@ public:
     Paint(int flags);
     Paint(const Paint&);
     virtual ~Paint()=default;
+    Typeface* getTypeface()const{return mTypeface;}
+    void setTypeface(Typeface*face){mTypeface=face;}
     virtual void set(const Paint&);
     bool hasEqualAttributes(const Paint&other)const;
     int getFlags()const{return 0;}

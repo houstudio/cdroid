@@ -1,4 +1,5 @@
 #include <text/measuredtext.h>
+#include <porting/cdlog.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
 // Use builder instead.
@@ -120,11 +121,12 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
             == LineBreakConfig::HYPHENATION_ENABLED;
     //nAddStyleRun(mNativePtr, paint, lbStyle, lbWordStyle, hyphenation, mCurrentOffset, end, isRtl);
     //const Typeface* typeface = Typeface::resolveDefault(paint->getAndroidTypeface());
-    //minikin::MinikinPaint minikinPaint = minikin::MinikinUtils::prepareMinikinPaint(paint, nullptr);
+    //minikin::MinikinPaint minikinPaint = minikin::MinikinUtils::prepareMinikinPaint(paint);
     //((minikin::MeasuredTextBuilder*)mNativePtr)->addStyleRun(mCurrentOffset,end,std::move(minikinPaint),isRtl);
+    LOGE("TODO");
     mCurrentOffset = end;
 
-    //paint.getFontMetricsInt(mCachedMetrics);
+    paint.getFontMetricsInt(mCachedMetrics);
     mTop = std::min(mTop, mCachedMetrics.top);
     mBottom = std::max(mBottom, mCachedMetrics.bottom);
     return *this;
