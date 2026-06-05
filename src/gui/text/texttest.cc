@@ -4,7 +4,7 @@
 int main(int argc,const char*argv[]){
     cdroid::App app(argc,argv);
     cdroid::TextPaint pt;
-    pt.setTextSize(24);
+    pt.setTextSize(32);
     cdroid::Canvas  canvas(1280,480);
     std::vector<float> advances(32);
     canvas.set_source_rgb(1,1,1);
@@ -18,6 +18,8 @@ int main(int argc,const char*argv[]){
         "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
         "شكراً for testing. Thank you! متشکرم "
         "Line breaking should work properly with complex scripts.");
+
+    auto startTime = std::chrono::high_resolution_clock::now();    
     cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
             span,0,200,&pt,800);
             bdr->setMaxLines(8);
@@ -29,7 +31,13 @@ int main(int argc,const char*argv[]){
     canvas.rectangle(0,0,800,480);
     canvas.stroke();
     canvas.set_color(0xFFFF0000);
+    auto endLayout = std::chrono::high_resolution_clock::now();
     staticlayout->draw(canvas);
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto durlayout = std::chrono::duration_cast<std::chrono::microseconds>(endLayout-startTime);
+    auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
+    std::cout << "StaticLayout layout:" << durlayout.count() 
+        <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
     canvas.dump2png("text.png");
     std::cout<<"staticlayout="<<staticlayout<<std::endl;
     app.exec();

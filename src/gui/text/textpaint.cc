@@ -273,7 +273,7 @@ void Paint::drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int
                 Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = fullFont->getScaledFont(fontSize);
                 currentCairoFontFace = scaledFont;
                 c.set_scaled_font(currentCairoFontFace);
-                LOGD("%d switch font %d",glyphIdx,fullFont->GetUniqueId());
+                //LOGD("%d switch font %d",glyphIdx,fullFont->GetUniqueId());
             } else {
                 glyphIdx++;
                 continue;

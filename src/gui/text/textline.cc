@@ -863,7 +863,7 @@ void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
         const int delta = mStart;
         std::vector<char32_t>buf(end-start+1);
         mText->getChars(mStart+start,mStart+end,buf,0);
-        LOGD("drawTextRun start=%d end=%d contextStart=%d contextEnd=%d",mStart+start,mStart+end,contextStart,contextEnd);
+        //LOGD("drawTextRun start=%d end=%d contextStart=%d contextEnd=%d",mStart+start,mStart+end,contextStart,contextEnd);
         wp.drawTextRun(c,buf, 0, end-start, contextStart, delta + contextEnd, x, y, runIsRtl);
     }
 }

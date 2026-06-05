@@ -416,7 +416,7 @@ int main() {
     // 执行排版
     auto startTime = std::chrono::high_resolution_clock::now();
     minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
-    for(int i=0;i<99;i++){
+    for(int i=0;i<0;i++){
         minikin::LineBreakResult result = typesetter.performLayout(text, lineWidth);
     }
     auto endTime = std::chrono::high_resolution_clock::now();
