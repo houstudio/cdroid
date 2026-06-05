@@ -7,7 +7,10 @@
 #include <minikin/LocaleList.h>
 #include <minikin/Measurement.h>
 #include <minikin/MeasuredText.h>
+#include <minikin/MinikinFont.h>
 #include <core/typeface.h>
+#include <core/canvas.h>
+#include <porting/cdlog.h>
 #include <hb.h>
 #include <hb-ft.h>
 
@@ -91,7 +94,7 @@ public:
     int GetFontIndex() const override {
         return 0;
     }
-private:
+public:
     // 获取缓存的 ScaledFont，只有当 fontSize 改变时才重新创建
     Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(float size) const {
         if (mCachedScaledFont == nullptr || mCachedFontSize != size) {
@@ -153,12 +156,12 @@ bool Paint::hasEqualAttributes(const Paint&other)const{
 }
 
 minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
-    Typeface*tf=paint->getTypeface();
-    auto collection=tf->getFontCollection();
-    minikin::MinikinPaint minikinPaint(collection);
+    Typeface* tf = paint->getTypeface();
+    // MinikinPaint 需要 FontCollection，而不是 MinikinFont
+    minikin::MinikinPaint minikinPaint(tf->getFontCollection());
     minikinPaint.size = paint->getTextSize();
-    minikinPaint.scaleX = 2.2f;
-    minikinPaint.skewX = 0.2f;
+    minikinPaint.scaleX = paint->getTextScaleX();
+    minikinPaint.skewX = paint->getTextSkewX();
     minikinPaint.letterSpacing = paint->getLetterSpacing();
     minikinPaint.wordSpacing = paint->getWordSpacing();
     return minikinPaint;
@@ -193,22 +196,16 @@ void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
 }
 
 int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
-#if 0
-    std::shared_ptr<minikin::FontCollection> fontCollection = mTypeface->getFontCollection();
-    minikin::Layout layout(32);
-    std::wstring text = L"Hello World";
-    layout.setText(text.data(), text.length()); 
-
-    float ascent = layout.getAscent();
-    float descent = layout.getDescent();
-    float leading = layout.getLeading();
-    float height = layout.getHeight();
-    return 0;
-#else
-    fmi.bottom=60;
-    printf("====\r\n");
-    return 60;
-#endif
+    std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
+    minikin::MinikinExtent extent;
+    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
+    minikinFont->GetFontExtent(&extent, minikinPaint, minikin::FontFakery());
+    fmi.ascent = extent.ascent;
+    fmi.descent = extent.descent;
+    fmi.leading = 0;
+    fmi.top = fmi.ascent;           // top 等于 ascent
+    fmi.bottom = fmi.descent;       // bottom 等于 descent
+    return fmi.descent - fmi.ascent;
 }
 
 float Paint::getTextRunAdvances(const std::vector<char32_t>& chars, int index, int count, int contextIndex,
@@ -234,17 +231,15 @@ float Paint::getRunAdvance(const CharSequence* text, int start, int end, int con
 }
 
 float Paint::getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
-#if 0
-    minikin::GraphemeBreak::MoveOpt moveOpt = minikin::GraphemeBreak::MoveOpt(cursorOpt);
-    minikin::Bidi bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    std::vector<float> advances(count);
-    MinikinUtils::measureText(paint, bidiFlags, typeface, text, start, count, start + count,
-            advances.data());
-    size_t result = minikin::GraphemeBreak::getTextRunCursor(advances.data(), text.data(), start, count, offset, moveOpt);
-    return result;
-#else
-    return 100;
-#endif
+    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
+    const minikin::Bidi bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
+    const minikin::U32StringPiece textBuf((const char32_t*)text.data(), text.size());
+    const minikin::Range range(start, start + count);
+    const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
+    const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
+
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+                                        endHyphen, nullptr);
 }
 
 float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{
@@ -256,8 +251,47 @@ float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end
     minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
     return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen, endHyphen, nullptr);
 }
+void Paint::drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
+        int contextStart,int contextCount,float x,float y,bool runIsRtl)const{
+    minikin::MinikinPaint paint = prepareMinikinPaint(this);
+    minikin::U32StringPiece lineTextPiece(chars.data() + start, count);
+    minikin::Layout layout(lineTextPiece, minikin::Range(0, count),
+                               minikin::Bidi::DEFAULT_LTR, paint,
+                               minikin::StartHyphenEdit::NO_EDIT,
+                               minikin::EndHyphenEdit::NO_EDIT);
+    const minikin::MinikinFont* currentFont = nullptr;
+    Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
+    float fontSize = getTextSize();
+    size_t glyphIdx=0;
+    while(glyphIdx < layout.nGlyphs()) {
+        const minikin::MinikinFont* glyphFont = layout.getFont(glyphIdx);
+        if (glyphFont != currentFont) {
 
+            currentFont = glyphFont;
+            auto fullFont = dynamic_cast<const FullMinikinFont*>(glyphFont);
+            if (fullFont) {
+                Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = fullFont->getScaledFont(fontSize);
+                currentCairoFontFace = scaledFont;
+                c.set_scaled_font(currentCairoFontFace);
+                LOGD("%d switch font %d",glyphIdx,fullFont->GetUniqueId());
+            } else {
+                glyphIdx++;
+                continue;
+            }
+        }
 
+        std::vector<cairo_glyph_t> cairoGlyphs;
+        while (glyphIdx < layout.nGlyphs() && layout.getFont(glyphIdx) == currentFont) {
+            cairo_glyph_t glyph;
+            glyph.index = layout.getGlyphId(glyphIdx);
+            glyph.x = x + layout.getX(glyphIdx);
+            glyph.y = y + layout.getY(glyphIdx);
+            cairoGlyphs.push_back(glyph);
+            glyphIdx++;
+        }
+        c.show_glyphs(cairoGlyphs);
+    }
+}
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 TextPaint::TextPaint():Paint(){

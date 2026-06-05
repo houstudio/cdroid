@@ -705,7 +705,7 @@ void StaticLayout::calculateEllipsis(int lineStart, int lineEnd, MeasuredParagra
         return;
     }
 
-    float ellipsisWidth = 8.f;//paint.measureText(TextUtils.getEllipsisString(where));
+    float ellipsisWidth = paint->measureText(TextUtils::getEllipsisString(where));
     int ellipsisStart = 0;
     int ellipsisCount = 0;
     int len = lineEnd - lineStart;

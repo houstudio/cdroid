@@ -135,7 +135,6 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
     builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint), isRtl);
     mCurrentOffset = end;
     paint.getFontMetricsInt(mCachedMetrics);
-    LOGD("TODO?? mBottom=%d / %d",mBottom,mCachedMetrics.bottom);
     mTop = std::min(mTop, mCachedMetrics.top);
     mBottom = std::max(mBottom, mCachedMetrics.bottom);
     return *this;

@@ -5,6 +5,7 @@
 namespace cdroid{
 class CharSequence;
 class Typeface;
+class Canvas;
 class Paint{
 public:
     enum StartHyphenEdit{
@@ -124,6 +125,8 @@ public:
     float getRunAdvance(const std::vector<char32_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
     float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const;
     float getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRt, int offset, int cursorOpt)const;
+    void drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
+        int contextStart,int contextCount,float x,float y,bool runIsRtl)const;
 };
 
 class TextPaint:public Paint {

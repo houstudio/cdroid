@@ -23,6 +23,7 @@
 namespace minikin{
     class FontFamily;
     class FontCollection;
+    class MinikinFont;
 }
 namespace cdroid{
 class Context;
@@ -59,6 +60,7 @@ private:
     int mItalic;
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
     mutable std::shared_ptr<minikin::FontCollection>mFontCollection;
+    std::shared_ptr<minikin::MinikinFont> mMinikinFont;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
@@ -89,8 +91,8 @@ public:
     std::string getFamily()const;
     std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
-    std::shared_ptr<minikin::FontCollection> getFontCollection()const;
-    std::shared_ptr<minikin::FontCollection> getFontConnection();
+    std::shared_ptr<minikin::MinikinFont> getMinikinFont() const;
+    std::shared_ptr<minikin::FontCollection> getFontCollection() const;
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);

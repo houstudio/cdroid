@@ -851,35 +851,20 @@ float TextLine::handleRun(int start, int measureLimit,
     return x - originalX;
 }
 
-static void _drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
-        int contextStart,int contextCount,float x,float y,bool runIsRtl,TextPaint&paint){
-    std::vector<Cairo::Glyph>glyphs(count);
-    c.set_color(0xFFFF0000);
-    c.set_font_size(32);
-    c.move_to(20,50);x=20;y=50;
-    for(int i=0;i<count;i++){
-        glyphs[i].index=chars[i];
-        glyphs[i].x=x;
-        glyphs[i].y=y;x+=20;
-        LOGD("[%d],pos=%.f,%.f",chars[i],x,y);
-    }
-    c.show_glyphs(glyphs);
-}
-
 void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
         int contextStart, int contextEnd, bool runIsRtl, float x, int y) {
 
     if (mCharsValid) {
         const int count = end - start;
         const int contextCount = contextEnd - contextStart;
-        _drawTextRun(c,mChars, start, count, contextStart, contextCount,
-                x, y, runIsRtl, wp);
+        wp.drawTextRun(c,mChars, start, count, contextStart, contextCount,
+                x, y, runIsRtl);
     } else {
         const int delta = mStart;
         std::vector<char32_t>buf(end-start+1);
-        mText->getChars(start,end,buf,0);
-        _drawTextRun(c,buf, 0, end-start,
-                delta + contextStart, delta + contextEnd, x, y, runIsRtl, wp);
+        mText->getChars(mStart+start,mStart+end,buf,0);
+        LOGD("drawTextRun start=%d end=%d contextStart=%d contextEnd=%d",mStart+start,mStart+end,contextStart,contextEnd);
+        wp.drawTextRun(c,buf, 0, end-start, contextStart, delta + contextEnd, x, y, runIsRtl);
     }
 }
 

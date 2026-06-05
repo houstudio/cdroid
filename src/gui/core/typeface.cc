@@ -68,8 +68,9 @@ public:
         Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
         Cairo::FontExtents fontExtents;
         scaledFont->get_extents(fontExtents);
-        extent->ascent = fontExtents.ascent;
-        extent->descent= fontExtents.descent;
+        // cairo 使用正数表示所有距离，而 minikin 期望 ascent 为负数
+        extent->ascent = -fontExtents.ascent;
+        extent->descent = fontExtents.descent;
     }
     const std::vector<minikin::FontVariation>& GetAxes() const override {
         static const std::vector<minikin::FontVariation> emptyAxes;
@@ -265,9 +266,17 @@ Cairo::RefPtr<Cairo::FontFace>Typeface::getFontFace()const {
     return mFontFace;
 }
 
-std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection()const {
-    if(!mFontCollection)
-        mFontCollection=sSystemFontFaces[0]->getFontCollection();
+std::shared_ptr<minikin::MinikinFont> Typeface::getMinikinFont() const {
+    if (!mMinikinFont && mFontFace) {
+        auto ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
+        if (ftFace) {
+            const_cast<Typeface*>(this)->mMinikinFont = std::make_shared<FullMinikinFont>(ftFace);
+        }
+    }
+    return mMinikinFont;
+}
+
+std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection() const {
     return mFontCollection;
 }
 
@@ -331,7 +340,7 @@ Typeface* Typeface::getSystemDefaultTypeface(const std::string& familyName) {
         }
         if(familyMatched>bestMatched){
             bestMatched = familyMatched;
-            bestFace = face;
+            bestFace = tf.get();  // 修复：应该设置为当前遍历到的字体
         }
     }
     face = bestFace;
@@ -510,11 +519,35 @@ void Typeface::loadPreinstalledSystemFontMap() {
     //loadFaceFromResource(mContext);
     buildSystemFallback();
 
-    DEFAULT      = create("", NORMAL);
-    DEFAULT_BOLD = create("", BOLD);
+    // 从 sSystemFontFaces 中选择默认字体（已经有 FontCollection）
+    if (!sSystemFontFaces.empty()) {
+        DEFAULT = sSystemFontFaces[0].get();
+        sDefaultTypeface = DEFAULT;
+        // 查找 Bold 版本
+        for (auto& tf : sSystemFontFaces) {
+            if (tf->isBold() && !tf->isItalic()) {
+                DEFAULT_BOLD = tf.get();
+                break;
+            }
+        }
+        // 如果没找到 Bold，使用 DEFAULT
+        if (!DEFAULT_BOLD) {
+            DEFAULT_BOLD = DEFAULT;
+        }
+    } else {
+        DEFAULT = create("", NORMAL);
+        DEFAULT_BOLD = create("", BOLD);
+    }
+    
     SANS_SERIF   = create("sans-serif",NORMAL);
     SERIF        = create("serif",NORMAL);
     MONOSPACE    = create("monospace",NORMAL);
+
+    // 验证 DEFAULT 是否有 FontCollection
+    LOGD("DEFAULT=%p [%s] FontCollection=%p", 
+         DEFAULT, DEFAULT->mFamily.c_str(), DEFAULT->mFontCollection.get());
+    LOGD("DEFAULT_BOLD=%p [%s] FontCollection=%p", 
+         DEFAULT_BOLD, DEFAULT_BOLD->mFamily.c_str(), DEFAULT_BOLD->mFontCollection.get());
 
     sDefaults[0]=DEFAULT;
     sDefaults[1]=DEFAULT_BOLD;
