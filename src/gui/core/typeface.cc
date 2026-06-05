@@ -389,7 +389,7 @@ static std::string normalizeFamilyPart(const std::string& name) {
         R"(\b(?:Bold|Italic|Regular|Normal|Light|Thin|ExtraLight|UltraLight|
             Medium|SemiBold|DemiBold|ExtraBold|UltraBold|Black|Heavy|Oblique|
             Condensed|SemiCondensed|ExtraCondensed|Narrow|Wide|Extended|
-            SemiExtended|ExtraExtended|SC|TC|HK|JP|KR)\b)",
+            SemiExtended|ExtraExtended|SC|TC|HK|JP|KR|\d+)\b)",
         std::regex_constants::icase | std::regex_constants::optimize
     );
     
