@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <memory>
 #include <set>
+#include <unordered_set>
 #include <regex>
 #include <dirent.h>
 #include <cdlog.h>
@@ -204,10 +205,6 @@ Typeface::Typeface(const FcPattern & font) {
     mFontFace = face;
 }
 
-void Typeface::createFontCollection(){
- 
-}
-
 int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName) {
     static const struct {
         const char*styleName;
@@ -387,56 +384,123 @@ Typeface* Typeface::getDefault() {
     return sDefaultTypeface;
 }
 
-static bool isSameFamily(const std::string&fm1,const std::string&fm2){
-    std::vector<std::string> fms1=TextUtils::split(fm1,";");
-    std::vector<std::string> fms2=TextUtils::split(fm2,";");
-    for (const auto& element2 : fms2) {
-        for (const auto& element1 : fms1) {
-            size_t minLength = std::min(element1.length(), element2.length());
-            if (element1.substr(0, minLength) == element2.substr(0, minLength)) {
-                return true;
-            }
+static std::string normalizeFamilyPart(const std::string& name) {
+    static const std::regex stylePattern(
+        R"(\b(?:Bold|Italic|Regular|Normal|Light|Thin|ExtraLight|UltraLight|
+            Medium|SemiBold|DemiBold|ExtraBold|UltraBold|Black|Heavy|Oblique|
+            Condensed|SemiCondensed|ExtraCondensed|Narrow|Wide|Extended|
+            SemiExtended|ExtraExtended|SC|TC|HK|JP|KR)\b)",
+        std::regex_constants::icase | std::regex_constants::optimize
+    );
+    
+    std::string result = name;
+    std::transform(result.begin(), result.end(), result.begin(), ::tolower);
+    
+    result = std::regex_replace(result, stylePattern, "");
+    
+    result.erase(std::remove_if(result.begin(), result.end(), 
+        [](char c) { return !std::isalnum(c) && c != ' '; }), result.end());
+    
+    result.erase(std::unique(result.begin(), result.end(), 
+        [](char a, char b) { return a == ' ' && b == ' '; }), result.end());
+    
+    size_t first = result.find_first_not_of(' ');
+    size_t last = result.find_last_not_of(' ');
+    return (first == std::string::npos) ? "" : result.substr(first, last - first + 1);
+}
+
+static bool isSameFamily(const std::string& fm1, const std::string& fm2) {
+    std::vector<std::string> parts1 = TextUtils::split(fm1, ";");
+    std::vector<std::string> parts2 = TextUtils::split(fm2, ";");
+    
+    std::unordered_set<std::string> normalizedParts1;
+    for (const auto& part : parts1) {
+        std::string normalized = normalizeFamilyPart(part);
+        if (!normalized.empty()) {
+            normalizedParts1.insert(normalized);
         }
     }
+    
+    for (const auto& part : parts2) {
+        std::string normalized = normalizeFamilyPart(part);
+        if (!normalized.empty() && normalizedParts1.count(normalized)) {
+            LOGV("isSameFamily: '%s' == '%s' (normalized: '%s')", 
+                 fm1.c_str(), fm2.c_str(), normalized.c_str());
+            return true;
+        }
+    }
+    
     return false;
 }
 
+std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces){
+    std::vector<minikin::Font> fonts;
+    for(auto f:faces){
+        if(isSameFamily(family,f->getFamily())){
+            auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(f->getFontFace());
+            auto minikinFont = std::make_shared<FullMinikinFont>(ft);
+            auto font = minikin::Font::Builder(minikinFont).build();
+            fonts.push_back(std::move(font));
+            LOGD("    ->[%d](%s): %s",fonts.size()-1,f->getFamily().c_str(),f->mFileName.c_str());
+        }
+    }
+    return std::make_shared<minikin::FontFamily>(std::move(fonts));
+}
 void Typeface::buildSystemFallback() {
-     for(auto tf:sSystemFontFaces) {
-         std::vector<std::shared_ptr<minikin::FontFamily>> families;
-         std::vector<minikin::Font> fonts;
-         std::vector<std::shared_ptr<Typeface>>fallbacks;
-         std::vector<std::string>names;
-         LOGD("%s",tf->mFamily.c_str());
-         auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(tf->mFontFace);
-         for(auto tf1:sSystemFontFaces){
-             if(tf1!=tf&&isSameFamily(tf->mFamily,tf1->mFamily)==false){
-                 fallbacks.push_back(tf1);
-                 continue;
-             }
-             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
-             auto font = minikin::Font::Builder(minikinFont).build();
-             fonts.push_back(std::move(font));
-             auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-             if(tf==tf1){
-                 names.insert(names.begin(),tf->mFileName);
-                 families.insert(families.begin(),fontFamily);
-             }else{
-                 names.push_back(tf->mFileName);
-                 families.push_back(fontFamily);
-             }
-         }
-         for(auto fbk:fallbacks){
-             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(fbk->mFontFace);
-             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
-             auto font = minikin::Font::Builder(minikinFont).build();
-             fonts.push_back(std::move(font));
-             auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-             families.push_back(fontFamily);
-             names.push_back(fbk->mFileName);
-         }
-         tf->mFontCollection = std::make_shared<minikin::FontCollection>(families);
-     }
+    std::map<std::string, std::shared_ptr<minikin::FontCollection>> familyCollections;
+    std::map<std::string, std::shared_ptr<minikin::FontFamily>> familyCache;  // 缓存 FontFamily
+    
+    // 双重循环：为每个唯一家族创建 FontCollection，同一家族共享
+    for (auto tf : sSystemFontFaces) {
+        // 查找是否已创建同一家族的 FontCollection
+        bool found = false;
+        for (auto& entry : familyCollections) {
+            if (isSameFamily(tf->mFamily, entry.first)) {
+                tf->mFontCollection = entry.second;
+                found = true;
+                break;
+            }
+        }
+        
+        // 未找到则创建新的 FontCollection
+        if (!found) {
+            LOGD("Build FontCollection for family: %s", tf->mFamily.c_str());
+            std::vector<std::shared_ptr<minikin::FontFamily>> families;
+            
+            // 添加所有家族的 FontFamily（当前家族优先）
+            for (auto tf2 : sSystemFontFaces) {
+                // 检查缓存：遍历已缓存的家族，看是否与当前家族相同
+                bool cached = false;
+                std::shared_ptr<minikin::FontFamily> cachedFamily;
+                for (auto& cacheEntry : familyCache) {
+                    if (isSameFamily(cacheEntry.first, tf2->mFamily)) {
+                        cachedFamily = cacheEntry.second;
+                        cached = true;
+                        break;
+                    }
+                }
+                
+                if (!cached) {
+                    cachedFamily = buildFamily(tf2->mFamily, sSystemFontFaces);
+                    familyCache[tf2->mFamily] = cachedFamily;
+                }
+                
+                if (cachedFamily && cachedFamily->getNumFonts() > 0) {
+                    if (isSameFamily(tf->mFamily, tf2->mFamily)) {
+                        families.insert(families.begin(), cachedFamily);  // 主家族放前面
+                    } else {
+                        families.push_back(cachedFamily);
+                    }
+                }
+            }
+            
+            auto collection = std::make_shared<minikin::FontCollection>(families);
+            familyCollections[tf->mFamily] = collection;
+            tf->mFontCollection = collection;
+            LOGD("[%s] -> shared FontCollection (family: %s)", 
+                 tf->mFamily.c_str(), tf->mFamily.c_str());
+        }
+    }
 }
 
 void Typeface::loadPreinstalledSystemFontMap() {

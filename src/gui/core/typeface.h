@@ -21,6 +21,7 @@
 #include <unordered_map>
 #include <cairomm/scaledfont.h>
 namespace minikin{
+    class FontFamily;
     class FontCollection;
 }
 namespace cdroid{
@@ -79,7 +80,7 @@ private:
     ~Typeface()=default;
     static int parseStyle(const std::string&style,std::string&normalizedName);
     void fetchProps(FT_Face);
-    void createFontCollection();
+    static std::shared_ptr<minikin::FontFamily>buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces);
 public:
     int getWeight()const;
     int getStyle() const;
