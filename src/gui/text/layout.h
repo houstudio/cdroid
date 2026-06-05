@@ -10,6 +10,7 @@
 #include <text/spanset.h>
 #include <text/textpaint.h>
 #include <text/textline.h>
+#include <text/linebreaker.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
 class Directions {
@@ -49,15 +50,15 @@ public:
 
 class TextLayout {
 public:
-    static constexpr int BREAK_STRATEGY_SIMPLE = 0;//LineBreaker.BREAK_STRATEGY_SIMPLE;
-    static constexpr int BREAK_STRATEGY_HIGH_QUALITY = 1;//LineBreaker.BREAK_STRATEGY_HIGH_QUALITY;
-    static constexpr int BREAK_STRATEGY_BALANCED = 2;//LineBreaker.BREAK_STRATEGY_BALANCED;
-    static constexpr int HYPHENATION_FREQUENCY_NONE = 0;//LineBreaker.HYPHENATION_FREQUENCY_NONE;
-    static constexpr int HYPHENATION_FREQUENCY_NORMAL = 1;//LineBreaker.HYPHENATION_FREQUENCY_NORMAL;
-    static constexpr int HYPHENATION_FREQUENCY_FULL = 2;//LineBreaker.HYPHENATION_FREQUENCY_FULL;
+    static constexpr int BREAK_STRATEGY_SIMPLE = LineBreaker::BREAK_STRATEGY_SIMPLE;
+    static constexpr int BREAK_STRATEGY_HIGH_QUALITY = LineBreaker::BREAK_STRATEGY_HIGH_QUALITY;
+    static constexpr int BREAK_STRATEGY_BALANCED = LineBreaker::BREAK_STRATEGY_BALANCED;
+    static constexpr int HYPHENATION_FREQUENCY_NONE = LineBreaker::HYPHENATION_FREQUENCY_NONE;
+    static constexpr int HYPHENATION_FREQUENCY_NORMAL = LineBreaker::HYPHENATION_FREQUENCY_NORMAL;
+    static constexpr int HYPHENATION_FREQUENCY_FULL = LineBreaker::HYPHENATION_FREQUENCY_FULL;
 
-    static constexpr int JUSTIFICATION_MODE_NONE = 0;//LineBreaker.JUSTIFICATION_MODE_NONE;
-    static constexpr int JUSTIFICATION_MODE_INTER_WORD = 1;//LineBreaker.JUSTIFICATION_MODE_INTER_WORD;
+    static constexpr int JUSTIFICATION_MODE_NONE = LineBreaker::JUSTIFICATION_MODE_NONE;
+    static constexpr int JUSTIFICATION_MODE_INTER_WORD = LineBreaker::JUSTIFICATION_MODE_INTER_WORD;
     static constexpr float DEFAULT_LINESPACING_MULTIPLIER = 1.0f;
     static constexpr float DEFAULT_LINESPACING_ADDITION = 0.0f;
 

@@ -246,7 +246,9 @@ public:
         std::wstring sub = mText.substr(start, end - start);
         if (destPos < 0) destPos = 0;
         if ((int)dest.size() < destPos) dest.resize(destPos);
-        dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
+        for(int i=0;i<end-start;i++)
+            dest[destPos+i]=sub[i];
+        //dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
     }
 };
 
