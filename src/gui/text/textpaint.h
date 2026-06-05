@@ -53,6 +53,8 @@ private:
     bool mStrikeThruText;
     float mStrokeWidth;
     float mTextSize;
+    float mTextSkewX;
+    float mTextScaleX;
     float mWordSpace;
     float mLetterSpacing;
     float mUnderlinePosition;
@@ -63,7 +65,7 @@ public:
     Paint();
     Paint(int flags);
     Paint(const Paint&);
-    virtual ~Paint()=default;
+    virtual ~Paint();
     Typeface* getTypeface()const{return mTypeface;}
     void setTypeface(Typeface*face){mTypeface=face;}
     virtual void set(const Paint&);
@@ -77,6 +79,10 @@ public:
     void setStrokeWidth(float v){mStrokeWidth=v;}
     void setTextSize(float v){mTextSize=v;}
     float getTextSize()const{return mTextSize;}
+    void setTextScaleX(float v){mTextScaleX=v;}
+    float getTextScaleX()const{return mTextScaleX;}
+    void setTextSkewX(float v){mTextSkewX=v;}
+    float getTextSkewX()const{return mTextSkewX;}
     int getTextAlign()const{return 0;}
     void setTextAlign(int);
     bool isAntiAlias()const{return mAntialias;}
@@ -131,9 +137,7 @@ public:
     float underlineThickness;
 
     TextPaint();
-
     TextPaint(int flags);
-
     TextPaint(const Paint& p);
 
     void set(const Paint& tp) override;

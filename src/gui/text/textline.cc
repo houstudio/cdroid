@@ -1,4 +1,5 @@
 #include <text/layout.h>
+#include <porting/cdlog.h>
 #include <text/textline.h>
 #include <text/precomputedtext.h>
 
@@ -850,9 +851,19 @@ float TextLine::handleRun(int start, int measureLimit,
     return x - originalX;
 }
 
-static void _drawTextRun(Canvas&c,const std::vector<char32_t>&,int start,int count,
+static void _drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl,TextPaint&paint){
-    //LOGE("TODO");
+    std::vector<Cairo::Glyph>glyphs(count);
+    c.set_color(0xFFFF0000);
+    c.set_font_size(32);
+    c.move_to(20,50);x=20;y=50;
+    for(int i=0;i<count;i++){
+        glyphs[i].index=chars[i];
+        glyphs[i].x=x;
+        glyphs[i].y=y;x+=20;
+        LOGD("[%d],pos=%.f,%.f",chars[i],x,y);
+    }
+    c.show_glyphs(glyphs);
 }
 
 void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
@@ -865,8 +876,10 @@ void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
                 x, y, runIsRtl, wp);
     } else {
         const int delta = mStart;
-        //_drawTextRun(c,mText->getChars(), delta + start, delta + end,
-        //        delta + contextStart, delta + contextEnd, x, y, runIsRtl, wp);
+        std::vector<char32_t>buf(end-start+1);
+        mText->getChars(start,end,buf,0);
+        _drawTextRun(c,buf, 0, end-start,
+                delta + contextStart, delta + contextEnd, x, y, runIsRtl, wp);
     }
 }
 

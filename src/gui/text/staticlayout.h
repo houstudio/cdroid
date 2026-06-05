@@ -125,7 +125,7 @@ private:
     static constexpr int ELLIPSIS_COUNT = 6;
 
     std::vector<int> mLines;
-    std::vector<Directions*> mLineDirections;
+    std::vector<const Directions*> mLineDirections;
     int mMaximumVisibleLineCount = INT_MAX;
 
     static constexpr int START_MASK = 0x1FFFFFFF;

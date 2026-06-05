@@ -115,44 +115,33 @@ private:
     mutable float mCachedFontSize;
 };
 
-static std::vector<std::shared_ptr<minikin::FontFamily>> getFamilies(){
-    std::vector<std::shared_ptr<minikin::FontFamily>>families;
-    auto fontFaces = Typeface::getFontFaces();
-    for(auto& face : fontFaces){
-        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
-        if(!ftFace) continue;
-        auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
-        minikin::Font font = minikin::Font::Builder(minikinFont).build();        
-        std::vector<minikin::Font> fonts;
-        fonts.push_back(std::move(font));
-        auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-        families.push_back(fontFamily);
-    }
-    return families;
-}
-std::shared_ptr<minikin::FontCollection> mFontCollection;
 //////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Paint::Paint(){
-    if(!mFontCollection){
-        mFontCollection= std::make_shared<minikin::FontCollection>(getFamilies());
-    }
-    mTypeface = nullptr;
+    mTypeface = Typeface::DEFAULT;
     mStartHyphenEdit=0;
     mEndHyphenEdit=0;
     mWordSpace=0;
+    mAntialias=false;
     mLetterSpacing=0;
 }
-Paint::Paint(int flags):Paint(){};
+
+Paint::Paint(int flags):Paint(){
+}
+
 Paint::Paint(const Paint&other){
     set(other);
 }
 
+Paint::~Paint(){
+}
 void Paint::set(const Paint&o){
     mTypeface=o.mTypeface;
     mColor = o.mColor;
     mTextSize=o.mTextSize;
-    mAntialias=o.mAntialias;
+    mTextSkewX=o.mTextSkewX;
+    mTextScaleX=o.mTextScaleX;
+    mAntialias = o.mAntialias;
     mStartHyphenEdit = o.mStartHyphenEdit;
     mEndHyphenEdit = o.mEndHyphenEdit;
     mWordSpace = o.mWordSpace;
@@ -164,15 +153,12 @@ bool Paint::hasEqualAttributes(const Paint&other)const{
 }
 
 minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
-    // 确保字体集合已初始化
-    if (!mFontCollection) {
-        mFontCollection = std::make_shared<minikin::FontCollection>(getFamilies());
-    }
-
-    minikin::MinikinPaint minikinPaint(mFontCollection);
+    Typeface*tf=paint->getTypeface();
+    auto collection=tf->getFontCollection();
+    minikin::MinikinPaint minikinPaint(collection);
     minikinPaint.size = paint->getTextSize();
-    minikinPaint.scaleX = 1.f;
-    minikinPaint.skewX = 0.f;
+    minikinPaint.scaleX = 2.2f;
+    minikinPaint.skewX = 0.2f;
     minikinPaint.letterSpacing = paint->getLetterSpacing();
     minikinPaint.wordSpacing = paint->getWordSpacing();
     return minikinPaint;
@@ -207,7 +193,22 @@ void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
 }
 
 int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
+#if 0
+    std::shared_ptr<minikin::FontCollection> fontCollection = mTypeface->getFontCollection();
+    minikin::Layout layout(32);
+    std::wstring text = L"Hello World";
+    layout.setText(text.data(), text.length()); 
+
+    float ascent = layout.getAscent();
+    float descent = layout.getDescent();
+    float leading = layout.getLeading();
+    float height = layout.getHeight();
     return 0;
+#else
+    fmi.bottom=60;
+    printf("====\r\n");
+    return 60;
+#endif
 }
 
 float Paint::getTextRunAdvances(const std::vector<char32_t>& chars, int index, int count, int contextIndex,
@@ -252,7 +253,7 @@ float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
     auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    minikin::MinikinPaint minikinPaint(nullptr);// = prepareMinikinPaint(paint, typeface);
+    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
     return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen, endHyphen, nullptr);
 }
 

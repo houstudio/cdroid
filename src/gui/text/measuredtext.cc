@@ -1,5 +1,6 @@
 #include <text/measuredtext.h>
 #include <porting/cdlog.h>
+#include <core/typeface.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
 // Use builder instead.
@@ -81,15 +82,6 @@ float MeasuredText::getCharWidthAt(int offset) const{
     return ((minikin::MeasuredText*)mNativePtr)->widths[offset];
 }
 
-/*static native {
-    float nGetWidth(long nativePtr,int start,int end);
-
-    static long nGetReleaseFunc();
-    static int nGetMemoryUsage( long nativePtr);
-    static void nGetBounds(long nativePtr, char[] buf, int start, int end,Rect rect);
-    static native float nGetCharWidthAt(long nativePtr, int offset);
-    static native long nGetExtent(long nativePtr, char[] buf, int start, int end);
-}*/
 ////////////////////////////////////////////////////////////////////////////////////////////
 //public static final class Builder {
 MeasuredText::Builder::Builder(const std::vector<char32_t>& text) {
@@ -110,6 +102,24 @@ MeasuredText::Builder::Builder(const MeasuredText* text) {
     mHintMt = text;
 }
 
+static minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
+    const Typeface* resolvedFace = paint->getTypeface();
+
+    minikin::MinikinPaint minikinPaint(resolvedFace->getFontCollection());
+    /* Prepare minikin Paint */
+    minikinPaint.size =paint->getTextSize();
+    minikinPaint.scaleX = paint->getTextScaleX();
+    minikinPaint.skewX = paint->getTextSkewX();
+    minikinPaint.letterSpacing = paint->getLetterSpacing();
+    minikinPaint.wordSpacing = paint->getWordSpacing();
+    minikinPaint.fontFlags = 0;
+    //minikinPaint.localeListId = paint->getMinikinLocaleListId();
+    //minikinPaint.familyVariant = paint->getFamilyVariant();
+    //minikinPaint.fontStyle = resolvedFace->fStyle;
+    //minikinPaint.fontFeatureSettings = paint->getFontFeatureSettings();
+    return minikinPaint;
+}
+
 MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineBreakConfig* lineBreakConfig, int length, bool isRtl) {
     //Preconditions.checkNotNull(paint);
     //Preconditions.checkArgument(length > 0, "length can not be negative");
@@ -119,14 +129,13 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
     const int lbWordStyle = LineBreakConfig::getResolvedLineBreakWordStyle(lineBreakConfig);
     const bool hyphenation = LineBreakConfig::getResolvedHyphenation(lineBreakConfig)
             == LineBreakConfig::HYPHENATION_ENABLED;
-    //nAddStyleRun(mNativePtr, paint, lbStyle, lbWordStyle, hyphenation, mCurrentOffset, end, isRtl);
-    //const Typeface* typeface = Typeface::resolveDefault(paint->getAndroidTypeface());
-    //minikin::MinikinPaint minikinPaint = minikin::MinikinUtils::prepareMinikinPaint(paint);
-    //((minikin::MeasuredTextBuilder*)mNativePtr)->addStyleRun(mCurrentOffset,end,std::move(minikinPaint),isRtl);
-    LOGE("TODO");
-    mCurrentOffset = end;
 
+    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(&paint);
+    minikin::MeasuredTextBuilder*builder=(minikin::MeasuredTextBuilder*)mNativePtr;
+    builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint), isRtl);
+    mCurrentOffset = end;
     paint.getFontMetricsInt(mCachedMetrics);
+    LOGD("TODO?? mBottom=%d / %d",mBottom,mCachedMetrics.bottom);
     mTop = std::min(mTop, mCachedMetrics.top);
     mBottom = std::max(mBottom, mCachedMetrics.bottom);
     return *this;
@@ -140,6 +149,7 @@ MeasuredText::Builder& MeasuredText::Builder::appendReplacementRun(Paint& paint,
     //addReplacementRun(int32_t start, int32_t end, float width, uint32_t localeListId
     ((minikin::MeasuredTextBuilder*)mNativePtr)->addReplacementRun(mCurrentOffset,end,width,0);
     mCurrentOffset = end;
+    LOGD("");
     return *this;
 }
 
@@ -198,30 +208,5 @@ MeasuredText* MeasuredText::Builder::build() {
     return new MeasuredText(ptr, mText, mComputeHyphenation, mComputeLayout, mComputeBounds, mTop, mBottom);
     //return res;
 }
-
-static /* Non Zero */ long nInitBuilder();
-static void nAddStyleRun(/* Non Zero */ long nativeBuilderPtr,
-                         /* Non Zero */ long paintPtr,
-                         int lineBreakStyle,
-                         int lineBreakWordStyle,
-                         bool hyphenation,
-                         int start,
-                         int end,
-                         bool isRtl);
-
-static void nAddReplacementRun(/* Non Zero */ long nativeBuilderPtr,
-                                      /* Non Zero */ long paintPtr,
-                                      int start,
-                                      int end,
-                                      float width);
-
-static long nBuildMeasuredText(
-        long nativeBuilderPtr,
-        long hintMtPtr,
-        std::vector<char32_t>& text,
-        bool computeHyphenation,
-        bool computeLayout,
-        bool computeBounds,
-        bool fastHyphenationMode);
 
 }

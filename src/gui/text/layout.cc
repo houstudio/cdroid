@@ -335,7 +335,7 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
         }
 
         const Directions* directions = getLineDirections(lineNum);
-        if (*directions == DIRS_ALL_LEFT_TO_RIGHT && !mSpannedText && !hasTab && !justify) {
+        if ((*directions == DIRS_ALL_LEFT_TO_RIGHT) && !mSpannedText && !hasTab && !justify) {
             // XXX: assumes there's nothing additional to be done
             //canvas.drawText(buf, start, end, x, lbaseline, paint);
         } else {

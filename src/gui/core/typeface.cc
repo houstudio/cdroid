@@ -31,7 +31,7 @@
 #include <minikin/LocaleList.h>
 #include <minikin/Measurement.h>
 #include <minikin/MeasuredText.h>
-
+#include <minikin/SystemFonts.h>
 namespace cdroid {
 
 class FullMinikinFont : public minikin::MinikinFont {
@@ -111,21 +111,6 @@ private:
 };
 int FullMinikinFont::mFontId=0;
 
-static std::vector<std::shared_ptr<minikin::FontFamily>> getFamilies(){
-    std::vector<std::shared_ptr<minikin::FontFamily>>families;
-    auto fontFaces = Typeface::getFontFaces();
-    for(auto& face : fontFaces){
-        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
-        if(!ftFace) continue;
-        auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
-        minikin::Font font = minikin::Font::Builder(minikinFont).build();
-        std::vector<minikin::Font> fonts;
-        fonts.push_back(std::move(font));
-        auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-        families.push_back(fontFamily);
-    }
-    return families;
-};
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 Typeface* Typeface::MONOSPACE;
 Typeface* Typeface::SANS_SERIF;
@@ -141,6 +126,7 @@ std::string Typeface::mFallbackFamilyName;
 static constexpr int SYSLANG_MATCHED = 0x80000000;
 
 cdroid::Context* Typeface::mContext;
+std::vector<std::shared_ptr<Typeface>> Typeface::sSystemFontFaces;
 std::unordered_map<std::string, std::shared_ptr<Typeface> > Typeface::sSystemFontMap;
 std::vector<Cairo::RefPtr<Cairo::FontFace>> Typeface::mFontFaces;
 
@@ -219,98 +205,7 @@ Typeface::Typeface(const FcPattern & font) {
 }
 
 void Typeface::createFontCollection(){
-    std::vector<std::shared_ptr<minikin::FontFamily>> families;
-    std::set<Cairo::FontFace*> addedFonts;  // 用于避免重复添加
-
-    // 1. 首先添加当前字体作为主字体
-    if (mFontFace) {
-        Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(mFontFace);
-        if (ftFace) {
-            addedFonts.insert(ftFace.get());
-            auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
-            minikin::Font font = minikin::Font::Builder(minikinFont).build();
-            std::vector<minikin::Font> fonts;
-            fonts.push_back(std::move(font));
-            auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-            families.push_back(fontFamily);
-        }
-    }
-
-    // 2. 根据字体族类型选择回退链
-    std::vector<std::string> fallbackOrder;
-
-    // 判断当前字体族类型
-    const bool isSans = (mFamily.find("sans") != std::string::npos) ||
-                  (mFamily.find("Sans") != std::string::npos);
-    const bool isSerif = (mFamily.find("serif") != std::string::npos) && !isSans;
-    const bool isMono = (mFamily.find("mono") != std::string::npos) ||
-                  (mFamily.find("Mono") != std::string::npos);
-
-    // 构建回退顺序
-    if (isMono) {
-        // Monospace 回退链：monospace -> sans-serif -> serif -> CJK
-        fallbackOrder = {"monospace", "sans-serif", "serif"};
-    } else if (isSerif) {
-        // Serif 回退链：serif -> sans-serif -> CJK
-        fallbackOrder = {"serif", "sans-serif"};
-    } else {
-        // Sans-serif 回退链（默认）：sans-serif -> serif -> CJK
-        fallbackOrder = {"sans-serif", "serif"};
-    }
-
-    // 3. 添加语言匹配的回退字体（CJK 等）
-    if (mSystemLang == "zh" || mSystemLang == "ja" || mSystemLang == "ko") {
-        // 中文/日文/韩文环境，优先添加 CJK 字体
-        fallbackOrder.push_back("Noto Sans CJK");
-        fallbackOrder.push_back("Noto Serif CJK");
-    } else if (mSystemLang == "ar") {
-        // 阿拉伯语环境
-        fallbackOrder.push_back("Noto Sans Arabic");
-    } else if (mSystemLang == "th") {
-        // 泰语环境
-        fallbackOrder.push_back("Noto Sans Thai");
-    }
-
-    // 4. 添加 Emoji 字体作为最后回退
-    fallbackOrder.push_back("Noto Color Emoji");
-    fallbackOrder.push_back("emoji");
-
-    // 5. 根据回退顺序查找并添加字体（避免重复）
-    for (const std::string& fallbackName : fallbackOrder) {
-        // 在系统字体映射中查找匹配的字体
-        auto it = sSystemFontMap.find(fallbackName);
-        if (it != sSystemFontMap.end() && it->second && it->second->getFontFace()) {
-            Cairo::RefPtr<Cairo::FtFontFace> ftFace =
-                std::dynamic_pointer_cast<Cairo::FtFontFace>(it->second->getFontFace());
-            if (ftFace && addedFonts.find(ftFace.get()) == addedFonts.end()) {
-                addedFonts.insert(ftFace.get());
-                auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
-                minikin::Font font = minikin::Font::Builder(minikinFont).build();
-                std::vector<minikin::Font> fonts;
-                fonts.push_back(std::move(font));
-                auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-                families.push_back(fontFamily);
-            }
-        }
-    }
-
-    // 6. 如果回退链不足，补充其他系统字体（避免重复）
-    if (families.size() <= 1) {
-        for (auto& face : mFontFaces) {
-            Cairo::RefPtr<Cairo::FtFontFace> ftFace = std::dynamic_pointer_cast<Cairo::FtFontFace>(face);
-            if (ftFace && addedFonts.find(ftFace.get()) == addedFonts.end()) {
-                addedFonts.insert(ftFace.get());
-                auto minikinFont = std::make_shared<FullMinikinFont>(ftFace);
-                minikin::Font font = minikin::Font::Builder(minikinFont).build();
-                std::vector<minikin::Font> fonts;
-                fonts.push_back(std::move(font));
-                auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
-                families.push_back(fontFamily);
-            }
-        }
-    }
-
-    mFontCollection = std::make_shared<minikin::FontCollection>(families);
+ 
 }
 
 int Typeface::parseStyle(const std::string&styleName,std::string&normalizedName) {
@@ -374,6 +269,8 @@ Cairo::RefPtr<Cairo::FontFace>Typeface::getFontFace()const {
 }
 
 std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection()const {
+    if(!mFontCollection)
+        mFontCollection=sSystemFontFaces[0]->getFontCollection();
     return mFontCollection;
 }
 
@@ -490,9 +387,56 @@ Typeface* Typeface::getDefault() {
     return sDefaultTypeface;
 }
 
-void Typeface::buildSystemFallback(const std::string& xmlPath,const std::string& fontDir,
-                                   std::unordered_map<std::string, Typeface*>& fontMap,
-                                   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap) {
+static bool isSameFamily(const std::string&fm1,const std::string&fm2){
+    std::vector<std::string> fms1=TextUtils::split(fm1,";");
+    std::vector<std::string> fms2=TextUtils::split(fm2,";");
+    for (const auto& element2 : fms2) {
+        for (const auto& element1 : fms1) {
+            size_t minLength = std::min(element1.length(), element2.length());
+            if (element1.substr(0, minLength) == element2.substr(0, minLength)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void Typeface::buildSystemFallback() {
+     for(auto tf:sSystemFontFaces) {
+         std::vector<std::shared_ptr<minikin::FontFamily>> families;
+         std::vector<minikin::Font> fonts;
+         std::vector<std::shared_ptr<Typeface>>fallbacks;
+         std::vector<std::string>names;
+         LOGD("%s",tf->mFamily.c_str());
+         auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(tf->mFontFace);
+         for(auto tf1:sSystemFontFaces){
+             if(tf1!=tf&&isSameFamily(tf->mFamily,tf1->mFamily)==false){
+                 fallbacks.push_back(tf1);
+                 continue;
+             }
+             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
+             auto font = minikin::Font::Builder(minikinFont).build();
+             fonts.push_back(std::move(font));
+             auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+             if(tf==tf1){
+                 names.insert(names.begin(),tf->mFileName);
+                 families.insert(families.begin(),fontFamily);
+             }else{
+                 names.push_back(tf->mFileName);
+                 families.push_back(fontFamily);
+             }
+         }
+         for(auto fbk:fallbacks){
+             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(fbk->mFontFace);
+             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
+             auto font = minikin::Font::Builder(minikinFont).build();
+             fonts.push_back(std::move(font));
+             auto fontFamily = std::make_shared<minikin::FontFamily>(std::move(fonts));
+             families.push_back(fontFamily);
+             names.push_back(fbk->mFileName);
+         }
+         tf->mFontCollection = std::make_shared<minikin::FontCollection>(families);
+     }
 }
 
 void Typeface::loadPreinstalledSystemFontMap() {
@@ -500,7 +444,8 @@ void Typeface::loadPreinstalledSystemFontMap() {
     loadFromFontConfig();
     //loadFromPath("");
     //loadFaceFromResource(mContext);
-    
+    buildSystemFallback();
+
     DEFAULT      = create("", NORMAL);
     DEFAULT_BOLD = create("", BOLD);
     SANS_SERIF   = create("sans-serif",NORMAL);
@@ -602,10 +547,10 @@ int Typeface::loadFromFontConfig() {
             font = font.substr(pos+1);
         std::string fontKey = mContext->getPackageName()+":font/"+font;
         LOGI("%d [%s] <%s> @%s=%s",i,family.c_str(),style.c_str(),fontKey.c_str(),tf->mFileName.c_str());
+        sSystemFontFaces.push_back(tf);
         sSystemFontMap.insert({fontKey,tf});
         std::vector<std::string>families = TextUtils::split(family,";");
-        for(std::string fm:families)
-            sSystemFontMap.insert({fm,tf});
+        for(std::string fm:families) sSystemFontMap.insert({fm,tf});
         mFontFaces.push_back(tf->getFontFace());
         LOGV("font %s %p",family.c_str(),tf.get());
         if(std::regex_search(family,patSans)) {

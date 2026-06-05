@@ -689,7 +689,7 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
-    //mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
+    mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
 
     mLineCount++;
     return v;

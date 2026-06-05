@@ -57,11 +57,12 @@ private:
     int mWeight;
     int mItalic;
     Cairo::RefPtr<Cairo::FontFace>mFontFace;
-    std::shared_ptr<minikin::FontCollection>mFontCollection;
+    mutable std::shared_ptr<minikin::FontCollection>mFontCollection;
     static cdroid::Context*mContext;
     static std::string mSystemLang;
     static Typeface* sDefaultTypeface;
     static Typeface* sDefaults[4];
+    static std::vector<std::shared_ptr<Typeface>> sSystemFontFaces;
     static std::unordered_map<std::string,std::shared_ptr<Typeface>> sSystemFontMap;
     static std::unordered_map<std::string,std::vector<FontFamily>>systemFallbackMap;
     static std::unordered_map<void*,Typeface*>sStyledTypefaceCache;
@@ -92,9 +93,7 @@ public:
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
-    static void buildSystemFallback(const std::string& xmlPath,const std::string& fontDir,
-           std::unordered_map<std::string, Typeface*>& fontMap, 
-	   std::unordered_map<std::string, std::vector<FontFamily>>& fallbackMap);
+    static void buildSystemFallback();
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);
     static std::shared_ptr<Typeface> make(const FcPattern& pat);
     static Typeface* create(const std::string& familyName,int style);
