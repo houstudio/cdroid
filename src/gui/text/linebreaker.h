@@ -3,10 +3,6 @@
 #include <vector>
 #include <text/measuredtext.h>
 #include <text/linebreakconfig.h>
-namespace minikin{
-    class LineBreakResult;
-    class StaticLayoutNative;
-}
 
 namespace cdroid{
 class LineBreaker {
@@ -79,9 +75,10 @@ public:
         static constexpr int START_HYPHEN_MASK = 0x18;  // 0b11000
         static constexpr int END_HYPHEN_MASK = 0x7;  // 0b00111
         static constexpr int START_HYPHEN_BITS_SHIFT = 3;
-        minikin::LineBreakResult* mPtr;/*minikin's internal*/ 
-        Result(minikin::LineBreakResult*p):mPtr(p){};
+        void* mPtr;/*minikin's internal minikin::LineBreakResult*/ 
+        Result(void*p):mPtr(p){};
     public:
+        ~Result();
         int getLineCount() const;
         int getLineBreakOffset( int lineIndex)const;
 
@@ -93,9 +90,10 @@ public:
         int getEndLineHyphenEdit(int lineIndex)const;
     };
 private:
-    minikin::StaticLayoutNative* mNativePtr;
+    void* mNativePtr;/*minikin::StaticLayoutNative*/
 public:
     LineBreaker(int breakStrategy, int hyphenationFrequency, int justify, const std::vector<int>& indents);
+    ~LineBreaker();
     Result computeLineBreaks( MeasuredText* measuredPara, const ParagraphConstraints& constraints, int lineNumber);
 };
 }/*endof namespace*/

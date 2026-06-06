@@ -9,7 +9,7 @@ class StaticLayout :public TextLayout {
 public:
     class Builder;
 private:
-    StaticLayout(Builder& b);
+    StaticLayout(const Builder& b);
     StaticLayout(CharSequence* text);
     
     int out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
@@ -24,15 +24,8 @@ private:
 
     float getTotalInsets(int line);
 public:
-    StaticLayout(CharSequence* source, TextPaint* paint, int width, Alignment align, float spacingmult, float spacingadd, bool includepad);
-    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
-            Alignment align, float spacingmult, float spacingadd, bool includepad);
-    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth, Alignment align,float spacingmult,
-            float spacingadd, bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
-    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth, Alignment align, const TextDirectionHeuristic* textDir,
-            float spacingmult, float spacingadd, bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth, int maxLines);
-
-    void generate(Builder& b, bool includepad, bool trackpad);
+    ~StaticLayout()override;
+    void generate(const Builder& b, bool includepad, bool trackpad);
     int getLineForVertical(int vertical)const override;
 
     int getLineCount() const override{

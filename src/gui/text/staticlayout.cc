@@ -172,80 +172,7 @@ Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-StaticLayout::StaticLayout(CharSequence* source, TextPaint* paint, int width,
-        Alignment align, float spacingmult, float spacingadd, bool includepad)
-    :StaticLayout(source, 0, source->length(), paint, width, align,
-         spacingmult, spacingadd, includepad){
-}
-
-StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
-                    Alignment align, float spacingmult, float spacingadd, bool includepad)
-    :StaticLayout(source, bufstart, bufend, paint, outerwidth, align,
-         spacingmult, spacingadd, includepad, TextUtils::TruncateAt::NONE, 0){
-}
-
-StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
-        Alignment align, float spacingmult, float spacingadd, bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
-    :StaticLayout(source, bufstart, bufend, paint, outerwidth, align, TextDirectionHeuristics::FIRSTSTRONG_LTR,
-            spacingmult, spacingadd, includepad, ellipsize, ellipsizedWidth, INT_MAX){
-}
-
-StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
-        Alignment align, const TextDirectionHeuristic* textDir, float spacingmult, float spacingadd,
-        bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth, int maxLines)
-    :TextLayout((ellipsize == TextUtils::TruncateAt::NONE) ? source : dynamic_cast<Spanned*>(source) ? new SpannedEllipsizer(source) : new Ellipsizer(source),
-          paint, outerwidth, align, textDir, spacingmult, spacingadd){
-
-    Builder* b = Builder::obtain(source, bufstart, bufend, paint, outerwidth);
-        b->setAlignment(align)
-        .setTextDirection(textDir)
-        .setLineSpacing(spacingadd, spacingmult)
-        .setIncludePad(includepad)
-        .setEllipsizedWidth(ellipsizedWidth)
-        .setEllipsize(ellipsize)
-        .setMaxLines(maxLines);
-    /*
-     * This is annoying, but we can't refer to the layout until superclass construction is
-     * finished, and the superclass constructor wants the reference to the display text.
-     *
-     * In other words, the two Ellipsizer classes in Layout.java need a (Dynamic|Static)Layout
-     * as a parameter to do their calculations, but the Ellipsizers also need to be the input
-     * to the superclass's constructor (Layout). In order to go around the circular
-     * dependency, we construct the Ellipsizer with only one of the parameters, the text. And
-     * we fill in the rest of the needed information (layout, width, and method) later, here.
-     *
-     * This will break if the superclass constructor ever actually cares about the content
-     * instead of just holding the reference.
-     */
-    if (ellipsize != TextUtils::TruncateAt::NONE) {
-        Ellipsizer* e = (Ellipsizer*) getText();
-
-        e->mLayout = this;
-        e->mWidth = ellipsizedWidth;
-        e->mMethod = ellipsize;
-        mEllipsizedWidth = ellipsizedWidth;
-
-        mColumns = COLUMNS_ELLIPSIZE;
-    } else {
-        mColumns = COLUMNS_NORMAL;
-        mEllipsizedWidth = outerwidth;
-    }
-    mLineDirections.resize(2);// = ArrayUtils.newUnpaddedArray(Directions.class, 2);
-    mLines.resize(2 * mColumns);
-    mMaximumVisibleLineCount = maxLines;
-    generate(*b, b->mIncludePad, b->mIncludePad);
-    Builder::recycle(b);
-}
-
-StaticLayout::StaticLayout(CharSequence* text)
-    :TextLayout(text, nullptr, 0, Alignment::NONE, 0.0f, 0.0f){
-
-    mColumns = COLUMNS_ELLIPSIZE;
-    mLineDirections.resize(2);// = ArrayUtils.newUnpaddedArray(Directions.class, 2);
-    mLines.resize(2 * mColumns);
-}
-
-StaticLayout::StaticLayout(Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
+StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
             ? b.mText : dynamic_cast<Spanned*>(b.mText) ? new SpannedEllipsizer(b.mText) : new Ellipsizer(b.mText),
             b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
 
@@ -273,7 +200,15 @@ StaticLayout::StaticLayout(Builder& b):TextLayout((b.mEllipsize == TextUtils::Tr
     generate(b, b.mIncludePad, b.mIncludePad);
 }
 
-void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
+StaticLayout::~StaticLayout(){
+    for(auto dir:mLineDirections){
+        if((dir!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT)){
+            delete dir;
+        }
+    }
+}
+
+void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
     CharSequence* source = b.mText;
     const int bufStart = b.mStart;
     const int bufEnd = b.mEnd;
@@ -320,16 +255,8 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
     } else {
         indents.clear();// = null;
     }
-    //minikin::LineBreakResult result = minikin::breakLineOptimal(source, bufStart, bufEnd, b.mBreakStrategy, paint, outerWidth, breaks, lineWidths, ascents, descents, hasTabs, hyphenEdits);
 
-    LineBreaker* lineBreaker = new LineBreaker(b.mBreakStrategy,b.mHyphenationFrequency,b.mJustificationMode,indents);
-        /*new LineBreaker::Builder()
-            .setBreakStrategy(b.mBreakStrategy)
-            .setHyphenationFrequency(b.mHyphenationFrequency)
-            // TODO: Support more justification mode, e.g. letter spacing, stretching.
-            .setJustificationMode(b.mJustificationMode)
-            .setIndents(indents)
-            .build();*/
+    LineBreaker lineBreaker(b.mBreakStrategy,b.mHyphenationFrequency,b.mJustificationMode,indents);
 
     std::vector<PrecomputedText::ParagraphInfo> paragraphInfo;
     Spanned* spanned = dynamic_cast<Spanned*>(source);
@@ -341,10 +268,6 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
         case PrecomputedText::Params::UNUSABLE:
             break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
-            /*PrecomputedText::Params newParams =
-                    new PrecomputedText.Params.Builder(paint).setBreakStrategy(b.mBreakStrategy)
-                        .setHyphenationFrequency(b.mHyphenationFrequency)
-                        .setTextDirection(textDir).build();*/
             precomputed = PrecomputedText::create(precomputed, PrecomputedText::Params(
                         *paint,textDir,b.mBreakStrategy,b.mHyphenationFrequency));
             paragraphInfo = precomputed->getParagraphInfo();
@@ -355,12 +278,13 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
             break;
         }
     }
+    static int ccc;
     if (paragraphInfo.empty()){// == null) {
-        PrecomputedText::Params param/* = new PrecomputedText::Params*/(*paint, textDir,
-                b.mBreakStrategy, b.mHyphenationFrequency);
-        paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart,
-                bufEnd, false );
+        const PrecomputedText::Params param(*paint, textDir, b.mBreakStrategy, b.mHyphenationFrequency);
+        paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart, bufEnd, false );
     }
+    ccc+=paragraphInfo.size();
+    LOGD("ccc+=%d",ccc,paragraphInfo.size());
     for (int paraIndex = 0; paraIndex < paragraphInfo.size(); paraIndex++) {
         const int paraStart = paraIndex == 0 ? bufStart : paragraphInfo[paraIndex - 1].paragraphEnd;
         const int paraEnd = paragraphInfo[paraIndex].paragraphEnd;
@@ -381,8 +305,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
                 // leading margin spans, not just this particular one
                 if (dynamic_cast<LeadingMarginSpan2*>(lms)) {
                     LeadingMarginSpan2* lms2 = (LeadingMarginSpan2*) lms;
-                    firstWidthLineCount = std::max(firstWidthLineCount,
-                            lms2->getLeadingMarginLineCount());
+                    firstWidthLineCount = std::max(firstWidthLineCount, lms2->getLeadingMarginLineCount());
                 }
             }
 
@@ -417,7 +340,7 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
                 for (int i = 0; i < spans.size(); i++) {
                     stops[i] = ((TabStopSpan*)spans[i])->getTabStop();
                 }
-                std::sort(stops.begin(),stops.end());//Arrays.sort(stops, 0, stops.length);
+                std::sort(stops.begin(),stops.end());
                 variableTabStops = stops;
             }
         }
@@ -425,13 +348,13 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
         std::vector<char32_t>chs = measuredPara->getChars();
         auto spanEndCache = measuredPara->getSpanEndCache();
         auto fmCache = measuredPara->getFontMetrics();
-        LineBreaker::ParagraphConstraints constraints;// = new LineBreaker.ParagraphConstraints();
+        LineBreaker::ParagraphConstraints constraints;
 
         constraints.setWidth(restWidth);
         constraints.setIndent(firstWidth, firstWidthLineCount);
         constraints.setTabStops(variableTabStops, TAB_INCREMENT);
 
-        LineBreaker::Result res = lineBreaker->computeLineBreaks( measuredPara->getMeasuredText(), constraints, mLineCount);
+        LineBreaker::Result res = lineBreaker.computeLineBreaks( measuredPara->getMeasuredText(), constraints, mLineCount);
         int breakCount = res.getLineCount();
         if (lineBreakCapacity < breakCount) {
             lineBreakCapacity = breakCount;
@@ -480,7 +403,6 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
 
             breakCount = remainingLineCount;
         }
-
         // here is the offset of the starting character of the line we are currently
         // measuring
         int here = paraStart;
@@ -544,25 +466,26 @@ void StaticLayout::generate(Builder& b, bool includepad, bool trackpad) {
                 here = endPos;
                 breakIndex++;
                 if (mLineCount >= mMaximumVisibleLineCount && mEllipsized) {
+                    LOGD("TODO free remained measuredPara");
                     return;
                 }
             }
         }
+        delete measuredPara;ccc--;
+LOGD("--ccc=%d",ccc);
         if (paraEnd == bufEnd) {
             break;
         }
     }
-
     if ((bufEnd == bufStart || source->charAt(bufEnd - 1) == CHAR_NEW_LINE)
             && mLineCount < mMaximumVisibleLineCount) {
-        MeasuredParagraph* measuredPara =
-                MeasuredParagraph::buildForBidi(source, bufEnd, bufEnd, textDir, nullptr);
+        MeasuredParagraph* measuredPara = MeasuredParagraph::buildForBidi(source, bufEnd, bufEnd, textDir, nullptr);
         paint->getFontMetricsInt(fm);
-        v = out(source, bufEnd, bufEnd, fm.ascent, fm.descent,
-                fm.top, fm.bottom, v, spacingmult, spacingadd, {},
-                nullptr, fm, false, 0, needMultiply, measuredPara, bufEnd,
-                includepad, trackpad, addLastLineSpacing, {},
+        v = out(source, bufEnd, bufEnd, fm.ascent, fm.descent, fm.top, fm.bottom,
+                v, spacingmult, spacingadd, {}, nullptr, fm, false, 0, needMultiply,
+                measuredPara, bufEnd, includepad, trackpad, addLastLineSpacing, {},
                 bufStart, ellipsize, ellipsizedWidth, 0, paint, false);
+        delete measuredPara;
     }
 }
 

@@ -12,9 +12,13 @@ LineBreaker::LineBreaker(int breakStrategy, int hyphenationFrequency, int justif
             justify, std::move(fIndents));
 }
 
+LineBreaker::~LineBreaker(){
+    delete (minikin::StaticLayoutNative*)mNativePtr;
+}
+
 LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
         const ParagraphConstraints& constraints, int lineNumber) {
-    const minikin::StaticLayoutNative* builder = mNativePtr;
+    const minikin::StaticLayoutNative* builder = (const minikin::StaticLayoutNative*)mNativePtr;
     auto& chars = measuredPara->getChars();
     minikin::U32StringPiece u32Text(chars.data(), chars.size());
     minikin::MeasuredText*mt;
@@ -32,37 +36,40 @@ LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
 
 
 ////////////////////////////////////////////////////////////////////////////////////////
-
+LineBreaker::Result::~Result(){
+    delete (minikin::LineBreakResult*)mPtr;
+}
+#define toResult(p) ((minikin::LineBreakResult*)(p))
 int LineBreaker::Result::getLineCount() const{
-    return mPtr->breakPoints.size();
+    return toResult(mPtr)->breakPoints.size();
 }
 
 int LineBreaker::Result::getLineBreakOffset( int lineIndex) const{
-    return mPtr->breakPoints[lineIndex];
+    return toResult(mPtr)->breakPoints[lineIndex];
 }
 
 float LineBreaker::Result::getLineWidth(int lineIndex) const{
-    return mPtr->widths[lineIndex];
+    return toResult(mPtr)->widths[lineIndex];
 }
 
 float LineBreaker::Result::getLineAscent(int lineIndex) const{
-    return mPtr->ascents[lineIndex];
+    return toResult(mPtr)->ascents[lineIndex];
 }
 
 float LineBreaker::Result::getLineDescent(int lineIndex) const{
-    return mPtr->descents[lineIndex];
+    return toResult(mPtr)->descents[lineIndex];
 }
 
 bool LineBreaker::Result::hasLineTab(int lineIndex) const{
-    return (mPtr->flags[lineIndex] & TAB_MASK) != 0;
+    return (toResult(mPtr)->flags[lineIndex] & TAB_MASK) != 0;
 }
 
 int LineBreaker::Result::getStartLineHyphenEdit(int lineIndex) const{
-    return (mPtr->flags[lineIndex] & START_HYPHEN_MASK) >> START_HYPHEN_BITS_SHIFT;
+    return (toResult(mPtr)->flags[lineIndex] & START_HYPHEN_MASK) >> START_HYPHEN_BITS_SHIFT;
 }
 
 int LineBreaker::Result::getEndLineHyphenEdit(int lineIndex) const{
-    return (mPtr->flags[lineIndex]) & END_HYPHEN_MASK;
+    return (toResult(mPtr)->flags[lineIndex]) & END_HYPHEN_MASK;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////

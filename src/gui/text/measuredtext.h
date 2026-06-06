@@ -64,6 +64,7 @@ public:
     public:
         Builder(const std::vector<char32_t>& text);
         Builder(const MeasuredText* text);
+        ~Builder();
 
         Builder& appendStyleRun(Paint& paint, int length, bool isRtl) {
             return appendStyleRun(paint, nullptr, length, isRtl);

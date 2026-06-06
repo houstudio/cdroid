@@ -49,7 +49,7 @@ public:
         int staticLayoutHeight=0;
 
         for(int i=0;i<2;i++){
-        cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
+            cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 //span,0,span->length(),&pt,800);
                 &mystr,0,mystr.length(),&pt,800);
                 bdr->setMaxLines(8).setLineSpacing(0,1.5);
@@ -73,6 +73,7 @@ public:
             auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
             std::cout << "StaticLayout layout:" << durlayout.count()
                <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            delete staticlayout;
         }
 
         for(int j=0;j<2;j++){
@@ -92,6 +93,7 @@ public:
             std::cout << "CdroidLayout layout:" << durlayout.count()
                 <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
         }
+        delete span;
         canvas.dump2png("text.png");
     }
 };

@@ -72,7 +72,7 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
 }
 
 TextLayout::~TextLayout(){
-    delete mText;
+    //delete mText;
 }
 
 void TextLayout::setJustificationMode(int justificationMode) {

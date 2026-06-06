@@ -93,6 +93,14 @@ static void freeLevelsAndRuns(UBiDi* pBiDi) {
         free(pBiDi->positionsVtoL);
         pBiDi->positionsVtoL = nullptr;
     }
+    if (pBiDi->joiningTypes != nullptr) {
+        free(pBiDi->joiningTypes);
+        pBiDi->joiningTypes = nullptr;
+    }
+    if (pBiDi->arabicProps != nullptr) {
+        free(pBiDi->arabicProps);
+        pBiDi->arabicProps = nullptr;
+    }
     pBiDi->levelsCapacity = 0;
     pBiDi->runsCapacity = 0;
     pBiDi->processedLength = 0;
@@ -192,6 +200,7 @@ U_CAPI void U_EXPORT2 ubidi_close(UBiDi* pBiDi) {
     if (pBiDi != nullptr) {
         freeLevelsAndRuns(pBiDi);
         free(pBiDi);
+        pBiDi= nullptr;
     }
 }
 

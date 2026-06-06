@@ -90,6 +90,10 @@ MeasuredText::Builder::Builder(const std::vector<char32_t>& text) {
     mNativePtr = new minikin::MeasuredTextBuilder();
 }
 
+MeasuredText::Builder::~Builder(){
+    delete (minikin::MeasuredTextBuilder*)mNativePtr;
+}
+
 MeasuredText::Builder::Builder(const MeasuredText* text) {
     //Preconditions.checkNotNull(text);
     mText = text->mChars;
