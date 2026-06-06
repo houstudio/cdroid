@@ -26,6 +26,13 @@ public:
         END_HYPHEN_EDIT_INSERT_UCAS_HYPHEN = 0x05,
         END_HYPHEN_EDIT_INSERT_ZWJ_AND_HYPHEN = 0x06
     };
+    struct FontMetrics {
+        float top;
+        float ascent;
+        float descent;
+        float bottom;
+        float leading;
+    };
     struct FontMetricsInt {
         int top;
         int ascent;

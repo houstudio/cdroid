@@ -18,6 +18,7 @@ private:
     static bool hasAnyInterestingChars(CharSequence* text, int textLength);
 public:
     class Metrics :public Paint::FontMetricsInt {
+    friend BoringLayout;
     private:
         RectF mDrawingBounds;
         void reset();
@@ -33,21 +34,9 @@ public:
             Alignment align, float spacingmult, float spacingadd, BoringLayout::Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
-    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth,
-            Alignment align, BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
-            int ellipsizedWidth, bool useFallbackLineSpacing);
-
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
             Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad);
 
-    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
-            Alignment align, BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
-            int ellipsizedWidth, bool useFallbackLineSpacing);
-    /** @hide */
-    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingMultiplier, float spacingAmount, BoringLayout::Metrics& metrics, bool includePad,
-            TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing,
-            bool useBoundsForWidth, Paint::FontMetrics* minimumFontMetrics);
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
             Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,
@@ -60,25 +49,8 @@ public:
             float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad,
             TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
-    BoringLayout(CharSequence* source, TextPaint* paint,int outerWidth, Alignment align, float spacingMult,
-            float spacingAdd, BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
-            int ellipsizedWidth,bool useFallbackLineSpacing);
-
-    BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult,
-            float spacingAdd, bool includePad, bool fallbackLineSpacing, int ellipsizedWidth,
-            TextUtils::TruncateAt ellipsize, Metrics& metrics, bool useBoundsForWidth,
-            bool shiftDrawingOffsetForStartOverhang, Paint::FontMetrics minimumFontMetrics);
-
-    /* package */ BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
-            const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd, bool includePad,
-            bool fallbackLineSpacing, int ellipsizedWidth, TextUtils::TruncateAt ellipsize, int maxLines,
-            int breakStrategy, int hyphenationFrequency, const std::vector<int>& leftIndents,
-            const std::vector<int>& rightIndents, int justificationMode, LineBreakConfig lineBreakConfig,
-            Metrics& metrics, bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
-            Paint::FontMetrics minimumFontMetrics);
-
     /* package */ void init(CharSequence* source, TextPaint* paint, Alignment align,
-            BoringLayout::Metrics& metrics, bool includePad, bool trustWidth,  bool useFallbackLineSpacing);
+            BoringLayout::Metrics& metrics, bool includePad, bool trustWidth);
 
     static Metrics* isBoring(CharSequence* text, TextPaint* paint);
     static Metrics* isBoring(CharSequence* text, TextPaint* paint, Metrics* metrics);
@@ -108,8 +80,8 @@ public:
     int getEllipsisCount(int line) const override;
     int getEllipsisStart(int line) const override;
     int getEllipsizedWidth() const override;
-    bool isFallbackLineSpacingEnabled() const override;
-    RectF computeDrawingBoundingBox() const override;
+    bool isFallbackLineSpacingEnabled() const /*override*/;
+    RectF computeDrawingBoundingBox() const /*override*/;
 
     void draw(Canvas& c, Path* highlight, Paint* highlightpaint,int cursorOffset)override;
 

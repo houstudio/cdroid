@@ -1,4 +1,4 @@
-#if 0
+#if 10
 #include <text/boringlayout.h>
 namespace cdroid{
 
@@ -15,163 +15,92 @@ BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int out
             includePad, ellipsize, ellipsizedWidth);
 }
 
-BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint,int outerWidth, Alignment align,
-        BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
-        int ellipsizedWidth, bool useFallbackLineSpacing) {
-    return new BoringLayout(source, paint, outerWidth, align, 1.f, 0.f, metrics, includePad,
-            ellipsize, ellipsizedWidth, useFallbackLineSpacing);
-}
-
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
         Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad) {
-    replaceWith(source, paint, outerwidth, align, spacingMult, spacingAdd);
+    replaceWith(source, *paint, outerwidth, align, spacingMult, spacingAdd);
 
     mEllipsizedWidth = outerwidth;
     mEllipsizedStart = 0;
     mEllipsizedCount = 0;
     mUseFallbackLineSpacing = false;
 
-    init(source, paint, align, metrics, includePad, true, false /* useFallbackLineSpacing */);
-    return this;
-}
-
-BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,Alignment align,
-        BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing) {
-    return replaceOrMake(source, paint, outerWidth, align, 1.0f, 0.0f, metrics, includePad,
-            ellipsize, ellipsizedWidth, useFallbackLineSpacing, false /* useBoundsForWidth */,
-            nullptr /* minimumFontMetrics */);
-}
-
-/** @hide */
-BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingMultiplier, float spacingAmount, BoringLayout::Metrics& metrics, bool includePad,
-        TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing, bool useBoundsForWidth,
-        Paint::FontMetrics* minimumFontMetrics) {
-    bool trust;
-
-    if (ellipsize == nullptr || ellipsize == TextUtils::TruncateAt::MARQUEE) {
-        replaceWith(source, paint, outerWidth, align, 1.f, 0.f);
-
-        mEllipsizedWidth = outerWidth;
-        mEllipsizedStart = 0;
-        mEllipsizedCount = 0;
-        trust = true;
-    } else {
-        replaceWith(TextUtils::ellipsize(source, paint, ellipsizedWidth, ellipsize, true, this),
-                paint, outerWidth, align, spacingMultiplier, spacingAmount);
-
-        mEllipsizedWidth = ellipsizedWidth;
-        trust = false;
-    }
-
-    mUseFallbackLineSpacing = useFallbackLineSpacing;
-
-    init(getText(), paint, align, metrics, includePad, trust,
-            useFallbackLineSpacing);
+    init(source, paint, align, metrics, includePad, true);
     return this;
 }
 
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
         Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
-    return replaceOrMake(source, paint, outerWidth, align, metrics,
-            includePad, ellipsize, ellipsizedWidth, false /* useFallbackLineSpacing */);
+    bool trust;
+
+    if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
+        replaceWith(source, *paint, outerWidth, align, spacingMult, spacingAdd);
+
+        mEllipsizedWidth = outerWidth;
+        mEllipsizedStart = 0;
+        mEllipsizedCount = 0;
+        trust = true;
+    } else {
+        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
+                    [this](int start,int end){ellipsized(start,end);}),
+                *paint, outerWidth, align, spacingMult, spacingAdd);
+
+        mEllipsizedWidth = ellipsizedWidth;
+        trust = false;
+    }
+
+    init(getText(), paint, align, metrics, includePad, trust);
+    return this;
 }
 
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
         float spacingMult, float spacingAdd, BoringLayout::Metrics &metrics, bool includePad)
-    :TextLayout(source, paint, outerwidth, align, TextDirectionHeuristics.LTR, spacingMult,
-            spacingAdd, includePad, false /* fallbackLineSpacing */,
-            outerwidth /* ellipsizedWidth */, nullptr /* ellipsize */, 1 /* maxLines */,
-            BREAK_STRATEGY_SIMPLE, HYPHENATION_FREQUENCY_NONE, nullptr /* leftIndents */,
-            nullptr /* rightIndents */, JUSTIFICATION_MODE_NONE, LineBreakConfig::NONE, false,
-            false /* shiftDrawingOffsetForStartOverhang */, nullptr){
+    :TextLayout(source, paint, outerwidth, align, TextDirectionHeuristics::LTR, spacingMult,
+            spacingAdd, includePad){
 
     mEllipsizedWidth = outerwidth;
     mEllipsizedStart = 0;
     mEllipsizedCount = 0;
     mUseFallbackLineSpacing = false;
 
-    init(source, paint, align, metrics, includePad, true, false /* useFallbackLineSpacing */);
+    init(source, paint, align, metrics, includePad, true);
 }
 
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
         float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad,
         TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
-    :BoringLayout(source, paint, outerWidth, align, spacingMult, spacingAdd, metrics, includePad,
-            ellipsize, ellipsizedWidth, false /* fallbackLineSpacing */){
-}
-
-BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align, float spacingMult,
-        float spacingAdd, BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth,
-        bool useFallbackLineSpacing)
-    :BoringLayout(source, paint, outerWidth, align, TextDirectionHeuristics::LTR, spacingMult,
-            spacingAdd, includePad, useFallbackLineSpacing,
-            ellipsizedWidth, ellipsize, 1 /* maxLines */,
-            BREAK_STRATEGY_SIMPLE, HYPHENATION_FREQUENCY_NONE, nullptr /* leftIndents */,
-            nullptr /* rightIndents */, JUSTIFICATION_MODE_NONE,
-            LineBreakConfig::NONE, metrics, false /* useBoundsForWidth */,
-            false /* shiftDrawingOffsetForStartOverhang */, nullptr){
-}
-
-BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
-        float spacingMult, float spacingAdd, bool includePad, bool fallbackLineSpacing,
-        int ellipsizedWidth, TextUtils::TruncateAt ellipsize, Metrics& metrics,
-        bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
-        Paint::FontMetrics minimumFontMetrics)
-    :BoringLayout(text, paint, width, align, TextDirectionHeuristics::LTR,
-            spacingMult, spacingAdd, includePad, fallbackLineSpacing, ellipsizedWidth,
-            ellipsize, 1 /* maxLines */, TextLayout::BREAK_STRATEGY_SIMPLE,
-            TextLayout::HYPHENATION_FREQUENCY_NONE, nullptr, nullptr, TextLayout::JUSTIFICATION_MODE_NONE,
-            LineBreakConfig::NONE, metrics, useBoundsForWidth,
-            shiftDrawingOffsetForStartOverhang, minimumFontMetrics){
-}
-
-BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
-        const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd, bool includePad,
-        bool fallbackLineSpacing, int ellipsizedWidth, TextUtils::TruncateAt ellipsize,
-        int maxLines, int breakStrategy, int hyphenationFrequency,
-        const std::vector<int>& leftIndents, const std::vector<int>& rightIndents,
-        int justificationMode, LineBreakConfig lineBreakConfig, Metrics& metrics,
-        bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
-        Paint::FontMetrics minimumFontMetrics)
-    :TextLayout(text, paint, width, align, textDir, spacingMult, spacingAdd, includePad,
-            fallbackLineSpacing, ellipsizedWidth, ellipsize, maxLines, breakStrategy,
-            hyphenationFrequency, leftIndents, rightIndents, justificationMode,
-            lineBreakConfig, useBoundsForWidth, shiftDrawingOffsetForStartOverhang,
-            minimumFontMetrics){
-
+    :TextLayout(source, *paint, outerWidth, align, spacingMult, spacingAdd){
 
     bool trust;
 
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
-        mEllipsizedWidth = width;
+        mEllipsizedWidth = outerWidth;
         mEllipsizedStart = 0;
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(text, paint, ellipsizedWidth, ellipsize, true, this),
-                    paint, width, align, spacingMult, spacingAdd);
+        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
+                    [this](int start,int end){ellipsized(start,end);}),
+                    *paint, outerWidth, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
     }
 
-    mUseFallbackLineSpacing = fallbackLineSpacing;
-    init(getText(), paint, align, metrics, includePad, trust, fallbackLineSpacing);
+    init(getText(), paint, align, metrics, includePad, trust);
 }
 
 void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
-        BoringLayout::Metrics& metrics, bool includePad, bool trustWidth, bool useFallbackLineSpacing) {
+        BoringLayout::Metrics& metrics, bool includePad, bool trustWidth) {
     int spacing;
 
-    if (source instanceof String && align == Layout::Alignment::ALIGN_NORMAL) {
+    if (source instanceof String && align == TextLayout::Alignment::ALIGN_NORMAL) {
         mDirect = source.toString();
     } else {
         mDirect = nullptr;
     }
 
-    mPaint = paint;
+    mPaint = *paint;
 
     if (includePad) {
         spacing = metrics.bottom - metrics.top;
@@ -193,9 +122,9 @@ void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
          */
         TextLine* line = TextLine::obtain();
         line->set(paint, source, 0, source->length(), TextLayout::DIR_LEFT_TO_RIGHT,
-                TextLayout::DIRS_ALL_LEFT_TO_RIGHT, false, nullptr,
-                mEllipsizedStart, mEllipsizedStart + mEllipsizedCount, useFallbackLineSpacing);
-        mMax = (int) std::ceil(line->metrics(null, null, false, null));
+                &TextLayout::DIRS_ALL_LEFT_TO_RIGHT, false/*hasTabs*/, nullptr/*TabStops*/,
+                mEllipsizedStart, mEllipsizedStart + mEllipsizedCount);
+        mMax = (int) std::ceil(line->metrics(nullptr));
         TextLine::recycle(line);
     }
 
@@ -204,7 +133,7 @@ void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
         mBottomPadding = metrics.bottom - metrics.descent;
     }
 
-    mDrawingBounds.set(metrics.mDrawingBounds);
+    mDrawingBounds=metrics.mDrawingBounds;
     mDrawingBounds.offset(0, mBottom - mDesc);
 }
 
@@ -273,24 +202,12 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
         fm->reset();
     }
 
-    if (ClientFlags.fixLineHeightForLocale()) {
-        if (minimumFontMetrics != nullptr) {
-            fm->set(minimumFontMetrics);
-            // Because the font metrics is provided by APIs, adjust the top/bottom with
-            // ascent/descent: top must be smaller than ascent, bottom must be larger than
-            // descent.
-            fm->top = std::min(fm->top, fm->ascent);
-            fm->bottom = std::max(fm->bottom, fm->descent);
-        }
-    }
-
     TextLine* line = TextLine::obtain();
     line->set(paint, text, 0, textLength, TextLayout::DIR_LEFT_TO_RIGHT,
-            TextLayout::DIRS_ALL_LEFT_TO_RIGHT, false, nullptr,
+            &TextLayout::DIRS_ALL_LEFT_TO_RIGHT, false, nullptr,
             0 /* ellipsisStart, 0 since text has not been ellipsized at this point */,
-            0 /* ellipsisEnd, 0 since text has not been ellipsized at this point */,
-            useFallbackLineSpacing);
-    fm->width = (int) std::ceil(line->metrics(fm, fm->mDrawingBounds, false, nullptr));
+            0 /* ellipsisEnd, 0 since text has not been ellipsized at this point */);
+    fm->width = (int) std::ceil(line->metrics(fm));
     TextLine::recycle(line);
 
     return fm;
@@ -331,19 +248,11 @@ bool BoringLayout::getLineContainsTab(int line) const{
 }
 
 float BoringLayout::getLineMax(int line) const{
-    if (getUseBoundsForWidth()) {
-        return TextLayout::getLineMax(line);
-    } else {
-        return mMax;
-    }
+    return mMax;
 }
 
 float BoringLayout::getLineWidth(int line) const{
-    if (getUseBoundsForWidth()) {
-        return TextLayout::getLineWidth(line);
-    } else {
-        return (line == 0 ? mMax : 0);
-    }
+    return (line == 0 ? mMax : 0);
 }
 
 const Directions* BoringLayout::getLineDirections(int line) const{
@@ -370,9 +279,9 @@ int BoringLayout::getEllipsizedWidth() const{
     return mEllipsizedWidth;
 }
 
-bool BoringLayout::isFallbackLineSpacingEnabled() const{
+/*bool BoringLayout::isFallbackLineSpacingEnabled() const{
     return mUseFallbackLineSpacing;
-}
+}*/
 
 RectF BoringLayout::computeDrawingBoundingBox() const{
     return mDrawingBounds;
@@ -380,22 +289,7 @@ RectF BoringLayout::computeDrawingBoundingBox() const{
 
 void BoringLayout::draw(Canvas& c, Path* highlight, Paint* highlightpaint, int cursorOffset) {
     if (mDirect != nullptr && highlight == nullptr) {
-        float leftShift = 0;
-        if (getUseBoundsForWidth() && getShiftDrawingOffsetForStartOverhang()) {
-            RectF drawingRect = computeDrawingBoundingBox();
-            if (drawingRect.left < 0) {
-                leftShift = -drawingRect.left;
-                c.translate(leftShift, 0);
-            }
-        }
-
         c.drawText(mDirect, 0, mBottom - mDesc, mPaint);
-
-        if (leftShift != 0) {
-            // Manually translate back to the original position because of b/324498002, using
-            // save/restore disappears the toggle switch drawables.
-            c.translate(-leftShift, 0);
-        }
     } else {
         TextLayout::draw(c, highlight, highlightpaint, cursorOffset);
     }

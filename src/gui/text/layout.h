@@ -87,7 +87,7 @@ private:
     int getOffsetAtStartOf(int offset)const;
     void addSelection(int line, int start, int end,int top, int bottom,const SelectionRectangleConsumer& consumer);
     int getParagraphLeadingMargin(int line) const;
-    static float measurePara(TextPaint& paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
+    static float measurePara(const TextPaint* paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
     void ellipsize(int start, int end, int line, std::vector<char32_t>& dest, int destoff, TextUtils::TruncateAt method);
 protected:
     TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
@@ -96,16 +96,16 @@ protected:
     bool isSpanned() const;
 public:
     virtual ~TextLayout();
-    static float getDesiredWidth(CharSequence* source, TextPaint& paint);
-    static float getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint);
-    static float getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint, const TextDirectionHeuristic* textDir);
+    static float getDesiredWidth(CharSequence* source, const TextPaint& paint);
+    static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint);
+    static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint, const TextDirectionHeuristic* textDir);
     static float getDesiredWidthWithLimit(CharSequence* source, int start, int end,
-            TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit);
+            const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit);
 
     void replaceWith(CharSequence* text, TextPaint& paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);
-    void draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical);
+    virtual void draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical);
     void drawText(Canvas& canvas, int firstLine, int lastLine);
 
     void drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical, int firstLine, int lastLine);

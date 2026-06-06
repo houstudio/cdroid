@@ -131,8 +131,7 @@ public:
     static const CharSequence* ellipsize(const CharSequence* text, TextPaint& paint,
                 float avail, TruncateAt where, bool preserveLength,const  EllipsizeCallback& callback) {
         return ellipsize(text, paint, avail, where, preserveLength, callback,
-                TextDirectionHeuristics::FIRSTSTRONG_LTR,
-                getEllipsisString(where));
+                TextDirectionHeuristics::FIRSTSTRONG_LTR, getEllipsisString(where));
     }
 
     static const CharSequence* ellipsize(const CharSequence* text,
@@ -142,8 +141,7 @@ public:
 
     static CharSequence* commaEllipsize(const CharSequence* text,TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more) {
-        return commaEllipsize(text, p, avail, oneMore, more,
-                TextDirectionHeuristics::FIRSTSTRONG_LTR);
+        return commaEllipsize(text, p, avail, oneMore, more, TextDirectionHeuristics::FIRSTSTRONG_LTR);
     }
 
     static CharSequence* commaEllipsize(const CharSequence* text, TextPaint& p, float avail,

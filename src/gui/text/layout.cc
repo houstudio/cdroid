@@ -13,19 +13,19 @@ const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const Parce
 const auto AlignmentSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const AlignmentSpan*>(span) != nullptr;});
 const auto StyleSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const StyleSpan*>(span);});
 
-float TextLayout::getDesiredWidth(CharSequence* source, TextPaint& paint) {
+float TextLayout::getDesiredWidth(CharSequence* source, const TextPaint& paint) {
     return getDesiredWidth(source, 0, source->length(), paint);
 }
 
-float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint) {
+float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint) {
     return getDesiredWidth(source, start, end, paint, TextDirectionHeuristics::FIRSTSTRONG_LTR);
 }
 
-float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, TextPaint& paint,const TextDirectionHeuristic* textDir) {
+float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint,const TextDirectionHeuristic* textDir) {
     return getDesiredWidthWithLimit(source, start, end, paint, textDir, FLT_MAX);
 }
 
-float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int end, TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit) {
+float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit) {
     float need = 0;
     int next;
     for (int i = start; i <= end; i = next) {
@@ -34,7 +34,7 @@ float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int 
         if (next < 0)
             next = end;
         // note, omits trailing paragraph char
-        float w = measurePara(paint, source, i, next, textDir);
+        float w = measurePara(&paint, source, i, next, textDir);
         if (w > upperLimit) {
             return upperLimit;
         }
@@ -1438,7 +1438,7 @@ int TextLayout::getParagraphLeadingMargin(int line) const{
     return margin;
 }
 
-float TextLayout::measurePara(TextPaint& paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
+float TextLayout::measurePara(const TextPaint* paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
     MeasuredParagraph* mt = nullptr;
     TextLine* tl = TextLine::obtain();
     mt = MeasuredParagraph::buildForBidi(text, start, end, textDir, mt);
@@ -1471,7 +1471,7 @@ float TextLayout::measurePara(TextPaint& paint, CharSequence* text, int start, i
             break;
         }
     }
-    tl->set(&paint, text, start, end, dir, directions, hasTabs, tabStops,
+    tl->set(paint, text, start, end, dir, directions, hasTabs, tabStops,
             0 /* ellipsisStart */, 0 /* ellipsisEnd */);
     auto ret =margin + std::abs(tl->metrics(nullptr));
     TextLine::recycle(tl);
@@ -1561,9 +1561,6 @@ std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int st
     }
 }
 
-static std::string getEllipsisString(TextUtils::TruncateAt method){
-    return (method==TextUtils::TruncateAt::END_SMALL)?"\u2025":"\u2026";
-}
 void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& dest, int destoff, TextUtils::TruncateAt method) {
     const int ellipsisCount = getEllipsisCount(line);
     if (ellipsisCount == 0) {
@@ -1572,7 +1569,7 @@ void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& 
     const int ellipsisStart = getEllipsisStart(line);
     const int lineStart = getLineStart(line);
 
-    std::string ellipsisString = /*TextUtils.*/getEllipsisString(method);
+    std::string ellipsisString = TextUtils::getEllipsisString(method);
     const int ellipsisStringLen = ellipsisString.length();
     // Use the ellipsis string only if there are that at least as many characters to replace.
     const bool useEllipsisString = ellipsisCount >= ellipsisStringLen;
@@ -1590,30 +1587,6 @@ void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& 
         dest[destoff + a - start] = c;
     }
 }
-
-/*class Directions {
-    public int[] mDirections;
-
-    public Directions(int[] dirs) {
-        mDirections = dirs;
-    }
-
-    public int getRunCount() {
-        return mDirections.length / 2;
-    }
-
-    public int getRunStart(int runIndex) {
-        return mDirections[runIndex * 2];
-    }
-
-    public int getRunLength(int runIndex) {
-        return mDirections[runIndex * 2 + 1] & RUN_LENGTH_MASK;
-    }
-
-    public bool isRunRtl(int runIndex) {
-        return (mDirections[runIndex * 2 + 1] & RUN_RTL_FLAG) != 0;
-    }
-};*/
 
 //static class Ellipsizer implements CharSequence, GetChars
 int TextLayout::Ellipsizer::charAt(int off) const {
