@@ -127,7 +127,7 @@ Paint::Paint(){
     mWordSpace=0;
     mAntialias=false;
     mLetterSpacing=0;
-    mMinikinPaint=new minikin::MinikinPaint(mTypeface->getFontCollection());
+    mMinikinPaint=std::make_shared<minikin::MinikinPaint>(mTypeface->getFontCollection());
     mMinikinPaint->size=32;
     mMinikinPaint->scaleX=1.0;
     mMinikinPaint->skewX=0;
@@ -153,10 +153,11 @@ void Paint::set(const Paint&o){
     mEndHyphenEdit = o.mEndHyphenEdit;
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
+    mMinikinPaint=o.mMinikinPaint;
 }
 
 bool Paint::hasEqualAttributes(const Paint&other)const{
-    return false;
+    return true;
 }
 
 float Paint::measureText(const std::string& text)const{
@@ -184,6 +185,7 @@ float Paint::measureText(const char32_t* text, int index, int count)const{
 }
 void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
     int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const{
+    LOGD("TODO");
 }
 
 int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
@@ -241,8 +243,9 @@ float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end
 void Paint::drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl)const{
     minikin::U32StringPiece lineTextPiece(chars.data() + start, count);
+    auto bidiFlags = runIsRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
     minikin::Layout layout(lineTextPiece, minikin::Range(0, count),
-                               minikin::Bidi::DEFAULT_LTR, *mMinikinPaint,
+                               bidiFlags, *mMinikinPaint,
                                minikin::StartHyphenEdit::NO_EDIT,
                                minikin::EndHyphenEdit::NO_EDIT);
     const minikin::MinikinFont* currentFont = nullptr;

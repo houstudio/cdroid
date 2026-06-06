@@ -102,24 +102,6 @@ MeasuredText::Builder::Builder(const MeasuredText* text) {
     mHintMt = text;
 }
 
-static minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
-    const Typeface* resolvedFace = paint->getTypeface();
-
-    minikin::MinikinPaint minikinPaint(resolvedFace->getFontCollection());
-    /* Prepare minikin Paint */
-    minikinPaint.size =paint->getTextSize();
-    minikinPaint.scaleX = paint->getTextScaleX();
-    minikinPaint.skewX = paint->getTextSkewX();
-    minikinPaint.letterSpacing = paint->getLetterSpacing();
-    minikinPaint.wordSpacing = paint->getWordSpacing();
-    minikinPaint.fontFlags = 0;
-    //minikinPaint.localeListId = paint->getMinikinLocaleListId();
-    //minikinPaint.familyVariant = paint->getFamilyVariant();
-    //minikinPaint.fontStyle = resolvedFace->fStyle;
-    //minikinPaint.fontFeatureSettings = paint->getFontFeatureSettings();
-    return minikinPaint;
-}
-
 MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineBreakConfig* lineBreakConfig, int length, bool isRtl) {
     //Preconditions.checkNotNull(paint);
     //Preconditions.checkArgument(length > 0, "length can not be negative");
@@ -130,7 +112,7 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
     const bool hyphenation = LineBreakConfig::getResolvedHyphenation(lineBreakConfig)
             == LineBreakConfig::HYPHENATION_ENABLED;
 
-    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(&paint);
+    minikin::MinikinPaint minikinPaint = *paint.getMinikinPaint();
     minikin::MeasuredTextBuilder*builder=(minikin::MeasuredTextBuilder*)mNativePtr;
     builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint), isRtl);
     mCurrentOffset = end;

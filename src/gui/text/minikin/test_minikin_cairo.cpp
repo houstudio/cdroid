@@ -229,11 +229,12 @@ private:
 };
 
 // 使用 Cairo 渲染布局结果到 PNG
-void renderToPng(const std::vector<char32_t>& text,
+int renderToPng(const std::vector<char32_t>& text,
                  const minikin::LineBreakResult& lineBreakResult,
                  std::shared_ptr<minikin::FontCollection> fontCollection,
                  float fontSize, const std::string& outputPath) {
     // 从 fontCollection 获取基础字体信息
+    auto startTime = std::chrono::high_resolution_clock::now();
     minikin::FakedFont baseFont = fontCollection->baseFontFaked(minikin::FontStyle());
     const minikin::Font* fontPtr = baseFont.font;
     const minikin::MinikinFont* minikinFontPtr = fontPtr->typeface().get();
@@ -286,8 +287,8 @@ void renderToPng(const std::vector<char32_t>& text,
             y += lineHeight;
             continue;
         }
-        std::cout << "Line " << lineIdx << ": chars " << prevBreak << "-" << end 
-                  << ", width: " << lineBreakResult.widths[lineIdx] << std::endl;
+        //std::cout << "Line " << lineIdx << ": chars " << prevBreak << "-" << end 
+        //          << ", width: " << lineBreakResult.widths[lineIdx] << std::endl;
         // 使用 minikin Layout 进行字形布局
         // cdroidMaster 版本的 Layout 构造函数使用 U32StringPiece
         minikin::U32StringPiece lineTextPiece(text.data() + prevBreak, length);
@@ -296,7 +297,7 @@ void renderToPng(const std::vector<char32_t>& text,
                                minikin::StartHyphenEdit::NO_EDIT,
                                minikin::EndHyphenEdit::NO_EDIT);
         
-        std::cout << "  Glyphs count: " << layout.nGlyphs() << std::endl;
+        //std::cout << "  Glyphs count: " << layout.nGlyphs() << std::endl;
         // 渲染字形
         float x = 20;
         const minikin::MinikinFont* currentFont = nullptr;
@@ -320,7 +321,7 @@ void renderToPng(const std::vector<char32_t>& text,
                     currentCairoFontFace = cairo_ft_font_face_create_for_ft_face(face, 0);
                     cairo_set_font_face(cr, currentCairoFontFace);
                     cairo_set_font_size(cr, fontSize);
-                    std::cout << glyphIdx<<":Switched to font: " << fullFont->GetFontPath() << std::endl;
+                    //std::cout << glyphIdx<<":Switched to font: " << fullFont->GetFontPath() << std::endl;
                 }else{
                     std::cerr << "  Warning: Could not get FullMinikinFont for glyph:"<<glyphIdx << std::endl;
                     glyphIdx++;
@@ -349,9 +350,12 @@ void renderToPng(const std::vector<char32_t>& text,
         prevBreak = end;
         y += lineHeight;
     }
+    auto endTime = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(endTime - startTime);
     cairo_surface_write_to_png(surface, outputPath.c_str());
     cairo_destroy(cr);
     cairo_surface_destroy(surface);
+    return (int)duration.count();
 }
 
 int main() {
@@ -430,15 +434,16 @@ int main() {
             int32_t end = result.breakPoints[i];
             std::u32string lineText(reinterpret_cast<const char32_t*>(&text[start]), end - start);
             std::string lineUtf8 = utf32ToUtf8(lineText);
-            std::cout << "  Line " << i << ": [" << lineUtf8 << "]" << ", break at "
-                << end << ", width: " << result.widths[i] << std::endl;
+            //std::cout << "  Line " << i << ": [" << lineUtf8 << "]" << ", break at "
+            //    << end << ", width: " << result.widths[i] << std::endl;
             start = end;
         }
     } else {
         std::cout << "  Warning: No line breaks found!" << std::endl;
     }
     // 渲染到 PNG
-    renderToPng(text, result, fontCollection, fontSize, "minikin_cairo_output.png");
+    const int durmicro=renderToPng(text, result, fontCollection, fontSize, "minikin_cairo_output.png");
+    std::cout<<"drawtext use:"<<durmicro<<" microseconds"<<std::endl;
 
     std::cout << "\nPNG output saved to: minikin_cairo_output.png" << std::endl;
     std::cout << "Successfully demonstrated multi-line layout with specified width using Minikin!" << std::endl; 

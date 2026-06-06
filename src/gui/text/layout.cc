@@ -1,3 +1,4 @@
+#include <charconv>
 #include <cstdint>
 #include <text/layout.h>
 #include <text/measuredparagraph.h>
@@ -195,7 +196,7 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     int previousLineEnd = getLineStart(firstLine);
     std::vector<ParcelableSpan*> spans;
     int spanEnd = 0;
-    TextPaint paint = mWorkPaint;
+    TextPaint& paint = mWorkPaint;
     paint.set(mPaint);
     CharSequence* buf = mText;
 
@@ -338,6 +339,9 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
         if ((*directions == DIRS_ALL_LEFT_TO_RIGHT) && !mSpannedText && !hasTab && !justify) {
             // XXX: assumes there's nothing additional to be done
             //canvas.drawText(buf, start, end, x, lbaseline, paint);
+            std::vector<char32_t>dest;
+            buf->getChars(start,end,dest,0);
+            paint.drawTextRun(canvas,dest,0,dest.size(),0,0,x,lbaseline,false);
         } else {
             tl->set(&paint, buf, start, end, dir, directions, hasTab, tabStops,
                     getEllipsisStart(lineNum), getEllipsisStart(lineNum) + getEllipsisCount(lineNum));
@@ -879,7 +883,7 @@ float TextLayout::getLineExtent(int line, bool full) const{
     const int dir = getParagraphDirection(line);
 
     TextLine* tl = TextLine::obtain();
-    TextPaint paint = mWorkPaint;
+    TextPaint& paint = mWorkPaint;
     paint.set(mPaint);
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
@@ -901,7 +905,7 @@ float TextLayout::getLineExtent(int line, TabStops& tabStops, bool full) const{
     const int dir = getParagraphDirection(line);
 
     TextLine* tl = TextLine::obtain();
-    TextPaint paint = mWorkPaint;
+    TextPaint& paint = mWorkPaint;
     paint.set(mPaint);
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));

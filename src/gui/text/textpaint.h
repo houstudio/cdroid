@@ -49,7 +49,7 @@ public:
     };
 private:
     Typeface*mTypeface;
-    minikin::MinikinPaint*mMinikinPaint;
+    std::shared_ptr<minikin::MinikinPaint>mMinikinPaint;
     int mColor;
     int mTextAlign;
     int mStartHyphenEdit;
@@ -74,6 +74,7 @@ public:
     virtual ~Paint();
     Typeface* getTypeface()const{return mTypeface;}
     void setTypeface(Typeface*face){mTypeface=face;}
+    minikin::MinikinPaint* getMinikinPaint()const{return mMinikinPaint.get();}
     virtual void set(const Paint&);
     bool hasEqualAttributes(const Paint&other)const;
     int getFlags()const{return 0;}

@@ -353,7 +353,7 @@ public:
 private:
     CharSequence* mText;
     TextPaint mPaint;
-    TextPaint mWorkPaint;
+    mutable TextPaint mWorkPaint;
     int mWidth;
     Alignment mAlignment = Alignment::ALIGN_NORMAL;
     float mSpacingMult;
