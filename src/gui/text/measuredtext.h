@@ -23,6 +23,7 @@ private:
     void offsetCheck(int offset)const;
     void throwOffsetError(int offset)const;
 public:
+    ~MeasuredText();
     const std::vector<char32_t>& getChars() const{
         return mChars;
     }

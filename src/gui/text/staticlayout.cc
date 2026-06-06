@@ -278,13 +278,10 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
             break;
         }
     }
-    static int ccc;
     if (paragraphInfo.empty()){// == null) {
         const PrecomputedText::Params param(*paint, textDir, b.mBreakStrategy, b.mHyphenationFrequency);
         paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart, bufEnd, false );
     }
-    ccc+=paragraphInfo.size();
-    LOGD("ccc+=%d",ccc,paragraphInfo.size());
     for (int paraIndex = 0; paraIndex < paragraphInfo.size(); paraIndex++) {
         const int paraStart = paraIndex == 0 ? bufStart : paragraphInfo[paraIndex - 1].paragraphEnd;
         const int paraEnd = paragraphInfo[paraIndex].paragraphEnd;
@@ -471,8 +468,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
                 }
             }
         }
-        delete measuredPara;ccc--;
-LOGD("--ccc=%d",ccc);
+        delete measuredPara;
         if (paraEnd == bufEnd) {
             break;
         }

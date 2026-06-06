@@ -15,6 +15,10 @@ MeasuredText::MeasuredText(void* ptr,const std::vector<char32_t>& chars, bool co
     mBottom = bottom;
 }
 
+MeasuredText::~MeasuredText(){
+    delete (minikin::MeasuredText*)mNativePtr;
+}
+
 void MeasuredText::rangeCheck(int start, int end) const{
     if (start < 0 || start > end || end > mChars.size()) {
         throwRangeError(start, end);
@@ -191,7 +195,6 @@ MeasuredText* MeasuredText::Builder::build() {
     auto ptr= ((minikin::MeasuredTextBuilder*)mNativePtr)
         ->build(textBuffer, mComputeHyphenation, mComputeLayout, hintPtr).release();
     return new MeasuredText(ptr, mText, mComputeHyphenation, mComputeLayout, mComputeBounds, mTop, mBottom);
-    //return res;
 }
 
 }

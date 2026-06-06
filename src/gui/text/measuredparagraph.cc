@@ -38,6 +38,7 @@ void  MeasuredParagraph::reset() {
     mWidths.clear();
     mFontMetrics.clear();
     mSpanEndCache.clear();
+    delete mMeasuredText;
     mMeasuredText = nullptr;
 }
 

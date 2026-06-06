@@ -40,6 +40,9 @@ private:
     void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans,
             int start, int end, MeasuredText::Builder* builder);
 public:
+    ~MeasuredParagraph(){
+        delete mMeasuredText;
+    }
     void recycle();
     void release();
 
