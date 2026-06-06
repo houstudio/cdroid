@@ -7,11 +7,13 @@ namespace cdroid{
 const Directions TextLayout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
 const Directions TextLayout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
 
-const auto TabStopSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
-const auto LeadingMarginSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const LeadingMarginSpan*>(span) != nullptr;});
-const auto ReplacementSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
-const auto AlignmentSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const AlignmentSpan*>(span) != nullptr;});
-const auto StyleSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const StyleSpan*>(span);});
+namespace{
+   const auto TabStopSpanFilter = make_span_filter<TabStopSpan>();
+   const auto LeadingMarginSpanFilter = make_span_filter<LeadingMarginSpan>();
+   const auto ReplacementSpanFilter = make_span_filter<ReplacementSpan>();
+   const auto AlignmentSpanFilter = make_span_filter<AlignmentSpan>();
+   const auto StyleSpanFilter = make_span_filter<StyleSpan>();
+}
 
 float TextLayout::getDesiredWidth(CharSequence* source, const TextPaint& paint) {
     return getDesiredWidth(source, 0, source->length(), paint);

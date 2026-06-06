@@ -58,7 +58,7 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
     bool hasReplacement = false;
     if (dynamic_cast<Spanned*>(text)) {
         mSpanned = (Spanned*) text;
-        mReplacementSpanSpanSet.init(mSpanned, start, limit);
+        mReplacementSpanSpanSet.init(mSpanned, start, limit,make_span_filter<ReplacementSpan>());
         hasReplacement = mReplacementSpanSpanSet.numberOfSpans > 0;
     }
 
@@ -730,8 +730,8 @@ float TextLine::handleRun(int start, int measureLimit,
     if (mSpanned == nullptr) {
         needsSpanMeasurement = false;
     } else {
-        mMetricAffectingSpanSpanSet.init(mSpanned, mStart + start, mStart + limit);
-        mCharacterStyleSpanSet.init(mSpanned, mStart + start, mStart + limit);
+        mMetricAffectingSpanSpanSet.init(mSpanned, mStart + start, mStart + limit,make_span_filter<MetricAffectingSpan>());
+        mCharacterStyleSpanSet.init(mSpanned, mStart + start, mStart + limit,make_span_filter<CharacterStyle>());
         needsSpanMeasurement = mMetricAffectingSpanSpanSet.numberOfSpans != 0
                 || mCharacterStyleSpanSet.numberOfSpans != 0;
     }

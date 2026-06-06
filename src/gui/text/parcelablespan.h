@@ -13,7 +13,6 @@ class ParcelableSpan {
 public:
     virtual ~ParcelableSpan() = default;
 };
-using SpanFilter=Predicate<const ParcelableSpan*>;
 
 class CharSequence : virtual public ParcelableSpan {
 public:
@@ -40,6 +39,15 @@ public:
     virtual ~CharacterStyle() = default;
     virtual void updateDrawState(const Paint& paint){};
 };
+
+using SpanFilter=Predicate<const ParcelableSpan*>;
+
+template<typename T>
+SpanFilter make_span_filter() {
+    return SpanFilter([](const ParcelableSpan* o) -> bool {
+        return dynamic_cast<const T*>(o) != nullptr;
+    });
+}
 
 }/*endof namespace*/
 #endif/*__PARCELABLE_SPAN_H__*/
