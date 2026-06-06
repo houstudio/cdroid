@@ -3,7 +3,6 @@
 #include <core/predicate.h>
 namespace cdroid{
 class SpanSet{
-    SpanFilter classType;
 public:
     int numberOfSpans;
     std::vector<ParcelableSpan*> spans;
@@ -16,7 +15,7 @@ public:
         numberOfSpans = 0;
     }
 
-    void init(Spanned* spanned, int start, int limit) {
+    void init(Spanned* spanned, int start, int limit,const SpanFilter& classType) {
         auto allSpans = spanned->getSpans(start, limit, classType);
         const int length = allSpans.size();
 

@@ -7,11 +7,11 @@ namespace cdroid{
 const Directions TextLayout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
 const Directions TextLayout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
 
-const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
-const auto LeadingMarginSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const LeadingMarginSpan*>(span) != nullptr;});
-const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
-const auto AlignmentSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const AlignmentSpan*>(span) != nullptr;});
-const auto StyleSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const StyleSpan*>(span);});
+const auto TabStopSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
+const auto LeadingMarginSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const LeadingMarginSpan*>(span) != nullptr;});
+const auto ReplacementSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
+const auto AlignmentSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const AlignmentSpan*>(span) != nullptr;});
+const auto StyleSpanFilter = SpanFilter([](const ParcelableSpan* span){return dynamic_cast<const StyleSpan*>(span);});
 
 float TextLayout::getDesiredWidth(CharSequence* source, const TextPaint& paint) {
     return getDesiredWidth(source, 0, source->length(), paint);
@@ -362,13 +362,11 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
     // direction of the layout or line.  XXX: Should they?
     // They are evaluated at each line.
     if (mSpannedText) {
-        /*if (mLineBackgroundSpans == null) {
-            mLineBackgroundSpans = new SpanSet<LineBackgroundSpan>(LineBackgroundSpan.class);
-        }*/
 
         Spanned* buffer = (Spanned*) mText;
-        int textLength = buffer->length();
-        mLineBackgroundSpans.init(buffer, 0, textLength);
+        const int textLength = buffer->length();
+        mLineBackgroundSpans.init(buffer, 0, textLength,SpanFilter([](const ParcelableSpan*o){
+                    return dynamic_cast<const LineBackgroundSpan*>(o)!=nullptr;}));
 
         if (mLineBackgroundSpans.numberOfSpans > 0) {
             int previousLineBottom = getLineTop(firstLine);
