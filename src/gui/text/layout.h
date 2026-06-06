@@ -209,7 +209,7 @@ public:
 
     float getLineLeft(int line) const;
     float getLineRight(int line) const;
-    float getLineMax(int line) const;
+    virtual float getLineMax(int line) const;
     virtual float getLineWidth(int line) const;
 
     virtual int getLineForVertical(int vertical) const;

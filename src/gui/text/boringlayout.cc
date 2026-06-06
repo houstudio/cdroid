@@ -1,4 +1,4 @@
-#if 10
+#if 0
 #include <text/boringlayout.h>
 namespace cdroid{
 
@@ -56,7 +56,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
         float spacingMult, float spacingAdd, BoringLayout::Metrics &metrics, bool includePad)
     :TextLayout(source, paint, outerwidth, align, TextDirectionHeuristics::LTR, spacingMult,
-            spacingAdd, includePad){
+            spacingAdd){
 
     mEllipsizedWidth = outerwidth;
     mEllipsizedStart = 0;
@@ -69,7 +69,7 @@ BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidt
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
         float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad,
         TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
-    :TextLayout(source, *paint, outerWidth, align, spacingMult, spacingAdd){
+    :TextLayout(source, paint, outerWidth, align, spacingMult, spacingAdd){
 
     bool trust;
 

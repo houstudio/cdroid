@@ -561,7 +561,7 @@ void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const S
     }
 }
 
-const CharSequence* TextUtils::ellipsize(const CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
+CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
         bool preserveLength, const EllipsizeCallback& callback, const TextDirectionHeuristic* textDir, const std::string& ellipsis) {
 
     const int len = text->length();

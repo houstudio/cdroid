@@ -124,18 +124,17 @@ public:
 
     using EllipsizeCallback =std::function<void(int,int)>;//void ellipsized(int start, int end);
 
-    static const CharSequence* ellipsize(const CharSequence* text, TextPaint& p, float avail, TruncateAt where) {
+    static CharSequence* ellipsize(CharSequence* text, TextPaint& p, float avail, TruncateAt where) {
         return ellipsize(text, p, avail, where, false, nullptr);
     }
 
-    static const CharSequence* ellipsize(const CharSequence* text, TextPaint& paint,
+    static CharSequence* ellipsize(CharSequence* text, TextPaint& paint,
                 float avail, TruncateAt where, bool preserveLength,const  EllipsizeCallback& callback) {
         return ellipsize(text, paint, avail, where, preserveLength, callback,
                 TextDirectionHeuristics::FIRSTSTRONG_LTR, getEllipsisString(where));
     }
 
-    static const CharSequence* ellipsize(const CharSequence* text,
-            TextPaint& paint, float avail, TruncateAt where,
+    static CharSequence* ellipsize(CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
             bool preserveLength,const EllipsizeCallback& callback,
             const TextDirectionHeuristic* textDir,const std::string& ellipsis);
 
