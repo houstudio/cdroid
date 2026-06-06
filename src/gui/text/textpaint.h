@@ -1,7 +1,11 @@
 #ifndef __TEXT_PAINT_H__
 #define __TEXT_PAINT_H__
+#include <memory>
 #include <string>
 #include <vector>
+namespace minikin{
+    class MinikinPaint;
+}
 namespace cdroid{
 class CharSequence;
 class Typeface;
@@ -45,6 +49,7 @@ public:
     };
 private:
     Typeface*mTypeface;
+    minikin::MinikinPaint*mMinikinPaint;
     int mColor;
     int mTextAlign;
     int mStartHyphenEdit;

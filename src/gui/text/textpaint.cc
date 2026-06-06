@@ -127,6 +127,10 @@ Paint::Paint(){
     mWordSpace=0;
     mAntialias=false;
     mLetterSpacing=0;
+    mMinikinPaint=new minikin::MinikinPaint(mTypeface->getFontCollection());
+    mMinikinPaint->size=32;
+    mMinikinPaint->scaleX=1.0;
+    mMinikinPaint->skewX=0;
 }
 
 Paint::Paint(int flags):Paint(){
@@ -155,18 +159,6 @@ bool Paint::hasEqualAttributes(const Paint&other)const{
     return false;
 }
 
-minikin::MinikinPaint prepareMinikinPaint(const Paint* paint) {
-    Typeface* tf = paint->getTypeface();
-    // MinikinPaint 需要 FontCollection，而不是 MinikinFont
-    minikin::MinikinPaint minikinPaint(tf->getFontCollection());
-    minikinPaint.size = paint->getTextSize();
-    minikinPaint.scaleX = paint->getTextScaleX();
-    minikinPaint.skewX = paint->getTextSkewX();
-    minikinPaint.letterSpacing = paint->getLetterSpacing();
-    minikinPaint.wordSpacing = paint->getWordSpacing();
-    return minikinPaint;
-}
-
 float Paint::measureText(const std::string& text)const{
     return 100;
 }
@@ -187,8 +179,7 @@ float Paint::measureText(const char32_t* text, int index, int count)const{
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
     auto bidiFlags = false/*isRtl*/ ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen,
                                         endHyphen, nullptr);
 }
 void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
@@ -198,8 +189,7 @@ void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
 int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
     std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
     minikin::MinikinExtent extent;
-    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
-    minikinFont->GetFontExtent(&extent, minikinPaint, minikin::FontFakery());
+    minikinFont->GetFontExtent(&extent, *mMinikinPaint, minikin::FontFakery());
     fmi.ascent = extent.ascent;
     fmi.descent = extent.descent;
     fmi.leading = 0;
@@ -215,8 +205,7 @@ float Paint::getTextRunAdvances(const std::vector<char32_t>& chars, int index, i
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
     auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    minikin::MinikinPaint minikinPaint= prepareMinikinPaint(this);
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen,
                                         endHyphen, advances?advances->data():nullptr);
 }
 
@@ -231,14 +220,13 @@ float Paint::getRunAdvance(const CharSequence* text, int start, int end, int con
 }
 
 float Paint::getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
-    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
     const minikin::Bidi bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
     const minikin::U32StringPiece textBuf((const char32_t*)text.data(), text.size());
     const minikin::Range range(start, start + count);
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
 
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen,
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen,
                                         endHyphen, nullptr);
 }
 
@@ -248,15 +236,13 @@ float Paint::getRunAdvance(const std::vector<char32_t>& text, int start, int end
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
     auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    minikin::MinikinPaint minikinPaint = prepareMinikinPaint(this);
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, minikinPaint, startHyphen, endHyphen, nullptr);
+    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen, endHyphen, nullptr);
 }
 void Paint::drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl)const{
-    minikin::MinikinPaint paint = prepareMinikinPaint(this);
     minikin::U32StringPiece lineTextPiece(chars.data() + start, count);
     minikin::Layout layout(lineTextPiece, minikin::Range(0, count),
-                               minikin::Bidi::DEFAULT_LTR, paint,
+                               minikin::Bidi::DEFAULT_LTR, *mMinikinPaint,
                                minikin::StartHyphenEdit::NO_EDIT,
                                minikin::EndHyphenEdit::NO_EDIT);
     const minikin::MinikinFont* currentFont = nullptr;

@@ -8,6 +8,8 @@ add_library(cdtext
     linebreaker.cc
     layout.cc
     staticlayout.cc
+    boringlayout.cc
+    dynamiclayout.cc
     precomputedtext.cc
     textpaint.cc
     textutils.cc

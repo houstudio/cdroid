@@ -857,7 +857,7 @@ void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
     if (mCharsValid) {
         const int count = end - start;
         const int contextCount = contextEnd - contextStart;
-        wp.drawTextRun(c,mChars, start, count, contextStart, contextCount,
+        wp.drawTextRun(c,mChars, mStart+start, count, contextStart, contextCount,
                 x, y, runIsRtl);
     } else {
         const int delta = mStart;

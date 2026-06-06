@@ -130,7 +130,7 @@ public:
 
     void increaseWidthTo(int wid);
 
-    int getHeight() const{
+    virtual int getHeight() const{
         return getLineTop(getLineCount());
     }
 
@@ -210,7 +210,7 @@ public:
     float getLineLeft(int line) const;
     float getLineRight(int line) const;
     float getLineMax(int line) const;
-    float getLineWidth(int line) const;
+    virtual float getLineWidth(int line) const;
 
     virtual int getLineForVertical(int vertical) const;
     int getLineForOffset(int offset) const;

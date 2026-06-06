@@ -98,8 +98,8 @@ void TextLayout::draw(Canvas& c) {
 
 void TextLayout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical) {
     const int64_t lineRange = getLineRangeForDraw(canvas);
-    int firstLine = TextUtils::unpackRangeStartFromLong(lineRange);
-    int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
+    const int firstLine = TextUtils::unpackRangeStartFromLong(lineRange);
+    const int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
     if (lastLine < 0) return;
 
     drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
@@ -420,6 +420,7 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
     if (highlight != nullptr) {
         if (cursorOffsetVertical != 0) canvas.translate(0, cursorOffsetVertical);
         //canvas.drawPath(highlight, highlightPaint);
+        Paint::Style style=highlightPaint->getStyle();
         highlight->append_to_context(&canvas);
         canvas.fill();
         if (cursorOffsetVertical != 0) canvas.translate(0, -cursorOffsetVertical);
