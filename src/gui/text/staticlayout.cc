@@ -617,7 +617,8 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
-    if(mLineDirections[j]){
+    if( mLineDirections[j] && mLineDirections[j]!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT
+            &&mLineDirections[j]!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT){
         delete mLineDirections[j];
     }
     mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
