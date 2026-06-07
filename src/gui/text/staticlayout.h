@@ -5,10 +5,12 @@
 #include <text/textutils.h>
 #include <text/measuredparagraph.h>
 namespace cdroid{
+class DynamicLayout;
 class StaticLayout :public TextLayout {
 public:
     class Builder;
 private:
+    friend DynamicLayout;
     StaticLayout(const Builder& b);
     StaticLayout(CharSequence* text);
     

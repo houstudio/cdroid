@@ -1,7 +1,12 @@
 #ifndef __DYNAMIC_LAYOUT_H__
 #define __DYNAMIC_LAYOUT_H__
-#include <text/layout.h>
+#include <set>
+#include <core/pools.h>
+#include <text/staticlayout.h>
+#include <text/packedintvector.h>
+#include <text/packedobjectvector.h>
 namespace cdroid{
+class Editable;
 class DynamicLayout :public TextLayout {
 private:
     static constexpr int PRIORITY = 128;
@@ -11,6 +16,7 @@ public:
 public:
     class Builder {
     private:
+        friend DynamicLayout;
         CharSequence* mBase;
         CharSequence* mDisplay;
         TextPaint* mPaint;
@@ -26,13 +32,13 @@ public:
         int mJustificationMode;
         TextUtils::TruncateAt mEllipsize;
         int mEllipsizedWidth;
-        Paint::FontMetricsInt mFontMetricsInt;
+        mutable Paint::FontMetricsInt mFontMetricsInt;
         static Pools::SynchronizedPool<Builder> sPool;
     private:
         Builder()=default;
         static void recycle(Builder* b);
     public:
-        static Builder obtain(CharSequence* base, TextPaint* paint,int width);
+        static Builder* obtain(CharSequence* base, TextPaint* paint,int width);
         Builder& setDisplayText(CharSequence* display);
         Builder& setAlignment(Alignment alignment);
         Builder& setTextDirection(const TextDirectionHeuristic* textDir);
@@ -50,7 +56,7 @@ private:
     DynamicLayout(const Builder& b);
     static CharSequence* createEllipsizer(TextUtils::TruncateAt ellipsize, CharSequence* display);
     void generate(const Builder& b);
-    bool contentMayProtrudeFromLineTopOrBottom(CharSequence text, int start, int end);
+    bool contentMayProtrudeFromLineTopOrBottom(CharSequence* text, int start, int end);
     void createBlocks();
     void updateAlwaysNeedsToBeRedrawn(int blockIndex);
     void addBlockAtOffset(int offset);
@@ -80,7 +86,7 @@ public:
     int getLineStart(int line) const override;
     bool getLineContainsTab(int line) const override;
     int getParagraphDirection(int line) const override;
-    Directions* getLineDirections(int line) const override;
+    const Directions* getLineDirections(int line) const override;
     int getTopPadding() const override;
     int getBottomPadding() const override;
     int getStartHyphenEdit(int line) const override;
@@ -90,19 +96,19 @@ public:
     int getEllipsisStart(int line) const override;
     int getEllipsisCount(int line) const override;
 private:
-    class ChangeWatcher implements TextWatcher, SpanWatcher {
+    class ChangeWatcher {//implements TextWatcher, SpanWatcher {
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);
     public:
         ChangeWatcher(DynamicLayout* layout);
         void beforeTextChanged(CharSequence* s, int where, int before, int after);
-        void onTextChanged(CharSequence s, int where, int before, int after);
+        void onTextChanged(CharSequence* s, int where, int before, int after);
 
-        void afterTextChanged(Editable s);
-        void onSpanAdded(Spannable s, Object o, int start, int end);
-        void onSpanRemoved(Spannable s, Object o, int start, int end);
-        void onSpanChanged(Spannable s, Object o, int start, int end, int nstart, int nend);
+        void afterTextChanged(Editable* s);
+        void onSpanAdded(Spannable* s, ParcelableSpan* o, int start, int end);
+        void onSpanRemoved(Spannable* s, ParcelableSpan* o, int start, int end);
+        void onSpanChanged(Spannable* s, ParcelableSpan* o, int start, int end, int nstart, int nend);
     };
 private:
     CharSequence* mBase;
@@ -117,8 +123,8 @@ private:
     int mHyphenationFrequency;
     int mJustificationMode;
 
-    PackedIntVector mInts;
-    PackedObjectVector<Directions> mObjects;
+    PackedIntVector* mInts;
+    PackedObjectVector<const Directions*>* mObjects;
 
     // Stores the line numbers of the last line of each block (inclusive)
     std::vector<int> mBlockEndLines;
@@ -126,7 +132,7 @@ private:
     // INVALID_BLOCK_INDEX if this block has been invalidated during an edition
     std::vector<int> mBlockIndices;
     // Set of blocks that always need to be redrawn.
-    td::set<int> mBlocksAlwaysNeedToBeRedrawn;
+    std::set<int> mBlocksAlwaysNeedToBeRedrawn;
     // Number of items actually currently being used in the above 2 arrays
     int mNumberOfBlocks;
     // The first index of the blocks whose locations are changed
@@ -134,9 +140,8 @@ private:
 
     int mTopPadding, mBottomPadding;
 
-    static StaticLayout sStaticLayout;
-    static StaticLayout::Builder sBuilder;
-    static constexpr Object[] sLock = new Object[0];
+    static StaticLayout* sStaticLayout;
+    static StaticLayout::Builder* sBuilder;
 
     // START, DIR, and TAB share the same entry.
     static constexpr int START = 0;

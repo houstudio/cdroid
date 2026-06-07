@@ -116,10 +116,12 @@ public:
         return mText;
     }
 
-    TextPaint getPaint() const{
+    const TextPaint& getPaint() const{
         return mPaint;
     }
-
+    TextPaint& getPaint(){
+        return mPaint;
+    }
     int getWidth() const{
         return mWidth;
     }

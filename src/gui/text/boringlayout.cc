@@ -95,7 +95,7 @@ void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
     int spacing;
 
     if (source instanceof String && align == TextLayout::Alignment::ALIGN_NORMAL) {
-        mDirect = source.toString();
+        mDirect = source->toString();
     } else {
         mDirect = nullptr;
     }
@@ -146,8 +146,8 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
 }
 
 bool BoringLayout::hasAnyInterestingChars(CharSequence* text, int textLength) {
-    const int MAX_BUF_LEN = 500;
-    char32_t* buffer = TextUtils::obtain(MAX_BUF_LEN);
+    constexpr int MAX_BUF_LEN = 500;
+    std::vector<char32_t> buffer(MAX_BUF_LEN);
     for (int start = 0; start < textLength; start += MAX_BUF_LEN) {
         const int end = std::min(start + MAX_BUF_LEN, textLength);
 
@@ -163,7 +163,6 @@ bool BoringLayout::hasAnyInterestingChars(CharSequence* text, int textLength) {
             }
         }
     }
-    TextUtils::recycle(buffer);
     return false;
 }
 
@@ -189,7 +188,7 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
     }
     if (dynamic_cast<Spanned*>(text)) {
         Spanned* sp = (Spanned*) text;
-        auto styles = sp->getSpans(0, textLength, ParagraphStyle.class);
+        auto styles = sp->getSpans(0, textLength, make_span_filter<ParagraphStyle>());
         if (styles.size() > 0) {
             return nullptr;  // There are some ParagraphStyle spans. Not boring.
         }

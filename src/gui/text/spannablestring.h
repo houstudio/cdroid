@@ -53,6 +53,10 @@ public:
     void drawLeadingMargin(Canvas& c, Paint& p,int x, int dir, int top, int baseline, int bottom,
             CharSequence* text, int start, int end, bool first, TextLayout* layout){}
 };
+
+class WrapTogetherSpan:public ParagraphStyle{
+};
+
 class LeadingMarginSpan2:public LeadingMarginSpan{
 public:
     int getLeadingMarginLineCount()const{return 0;}
