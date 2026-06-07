@@ -66,7 +66,7 @@ void PackedIntVector::setValueInternal(int row, int column, int value) {
 void PackedIntVector::adjustValuesBelow(int startRow, int column, int delta) {
     if (((startRow | column) < 0) || (startRow > size()) ||
             (column >= width())) {
-        throw new IndexOutOfBoundsException(startRow + ", " + column);
+        //throw new IndexOutOfBoundsException(startRow + ", " + column);
     }
 
     if (startRow >= mRowGapStart) {
@@ -77,12 +77,12 @@ void PackedIntVector::adjustValuesBelow(int startRow, int column, int delta) {
     mValueGap[column + mColumns] += delta;
 }
 
-PackedIntVector::void insertAt(int row, const std::vector<int>& values) {
+void PackedIntVector::insertAt(int row, const std::vector<int>& values) {
     if ((row < 0) || (row > size())) {
         //throw new IndexOutOfBoundsException("row " + row);
     }
 
-    if ((values != null) && (values.size() < width())) {
+    if (/*(values != null) &&*/ (values.size() < width())) {
         //throw new IndexOutOfBoundsException("value count " + values.length);
     }
 
@@ -95,7 +95,7 @@ PackedIntVector::void insertAt(int row, const std::vector<int>& values) {
     mRowGapStart++;
     mRowGapLength--;
 
-    if (values == null) {
+    if (values.empty()){//values == null) {
         for (int i = mColumns - 1; i >= 0; i--) {
             setValueInternal(row, i, 0);
         }
@@ -108,7 +108,7 @@ PackedIntVector::void insertAt(int row, const std::vector<int>& values) {
 
 void PackedIntVector::deleteAt(int row, int count) {
     if (((row | count) < 0) || (row + count > size())) {
-        throw new IndexOutOfBoundsException(row + ", " + count);
+        ///throw new IndexOutOfBoundsException(row + ", " + count);
     }
 
     moveRowGapTo(row + count);
@@ -128,16 +128,16 @@ int PackedIntVector::width() const{
     return mColumns;
 }
 
-int growSize(int currentSize) const{
+static int growSize(int currentSize) {
     return currentSize <= 4 ? 8 : currentSize * 2;
 }
 
 void PackedIntVector::growBuffer() {
-    const int newCapacity = growSize(growSize(size())*columns;
+    const int newCapacity = growSize(size())*mColumns;
     auto& valuegap = mValueGap;
     const int rowgapstart = mRowGapStart;
     const int after = mRows - (rowgapstart + mRowGapLength);
-    const int newsize = newCapacity/columns;
+    const int newsize = newCapacity/mColumns;
     mValues.resize(newCapacity);
     if (after > 0 && mColumns > 0) {
         std::copy_backward(
@@ -146,7 +146,7 @@ void PackedIntVector::growBuffer() {
             mValues.begin() + newsize * mColumns
         );
     }
-    for (int i = 0; i < columns; i++) {
+    for (int i = 0; i < mColumns; i++) {
         if (valuegap[i] >= rowgapstart) {
             valuegap[i] += newsize - mRows;
 

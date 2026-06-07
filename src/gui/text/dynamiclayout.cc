@@ -1,7 +1,13 @@
 #include <text/dynamiclayout.h>
 #include <text/precomputedtext.h>
 namespace cdroid{
+
 class UpdateLayout:public Spannable{}; 
+
+Pools::SynchronizedPool<DynamicLayout::Builder>DynamicLayout::Builder::sPool(3);
+StaticLayout* DynamicLayout::sStaticLayout=nullptr;
+StaticLayout::Builder* DynamicLayout::sBuilder=nullptr;
+
 DynamicLayout::Builder* DynamicLayout::Builder::obtain(CharSequence* base, TextPaint* paint,int width) {
     Builder* b = sPool.acquire();
     if (b == nullptr) {

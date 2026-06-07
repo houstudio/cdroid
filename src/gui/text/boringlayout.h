@@ -10,10 +10,10 @@ private:
     Paint mPaint;
     bool mUseFallbackLineSpacing;
 
-    /* package */ int mBottom, mDesc;   // for Direct
+    int mBottom, mDesc;// for Direct
     int mTopPadding, mBottomPadding;
-    float mMax;
     int mEllipsizedWidth, mEllipsizedStart, mEllipsizedCount;
+    float mMax;
     RectF mDrawingBounds;
     
     static bool hasAnyInterestingChars(CharSequence* text, int textLength);
@@ -37,7 +37,6 @@ public:
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
             Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad);
-
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
             Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,

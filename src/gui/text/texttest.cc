@@ -2,7 +2,7 @@
 #include <core/app.h>
 #include <core/layout.h>
 #include <widget/cdwindow.h>
-#include <text/staticlayout.h>
+#include <text/dynamiclayout.h>
 class MyString:public cdroid::CharSequence{
 private:
     std::wstring mStr;
@@ -48,7 +48,7 @@ public:
         
         int staticLayoutHeight=0;
 
-        for(int i=0;i<2;i++){
+        for(int i=0;i<10;i++){
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 //span,0,span->length(),&pt,800);
                 &mystr,0,mystr.length(),&pt,800);
@@ -76,6 +76,15 @@ public:
             delete staticlayout;
         }
 
+        for(int i=0;i<10;i++){
+            cdroid::DynamicLayout::Builder*bdr=cdroid::DynamicLayout::Builder::obtain(span,&pt,800);
+            auto dl = bdr->setLineSpacing(5,1.0).build();
+            canvas.set_color(0x80112233);
+            canvas.translate(5,5);
+            dl->draw(canvas);
+            canvas.translate(-5,-5);
+        }
+        canvas.translate(0,staticLayoutHeight+10);
         for(int j=0;j<2;j++){
             cdroid::Layout layout(32,800);
             layout.setMultiline(true);
@@ -84,7 +93,6 @@ public:
             layout.relayout(true);
             auto endLayout = std::chrono::high_resolution_clock::now();
 
-            canvas.translate(0,staticLayoutHeight+10);
             canvas.set_color(0xFF000000);
             layout.draw(canvas);
             auto endTime = std::chrono::high_resolution_clock::now();

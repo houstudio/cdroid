@@ -1,5 +1,6 @@
 #ifndef __PACKED_INT_VECTOR_H__
 #define __PACKED_INT_VECTOR_H__
+#include <vector>
 namespace cdroid{
 class PackedIntVector {
 private:
