@@ -115,6 +115,11 @@ DynamicLayout::DynamicLayout(const Builder& b):TextLayout(createEllipsizer(b.mEl
     generate(b);
 }
 
+DynamicLayout::~DynamicLayout(){
+    delete mInts;
+    delete mObjects;
+}
+
 CharSequence* DynamicLayout::createEllipsizer(TextUtils::TruncateAt ellipsize,CharSequence* display) {
     if (ellipsize == TextUtils::TruncateAt::NONE) {
         return display;

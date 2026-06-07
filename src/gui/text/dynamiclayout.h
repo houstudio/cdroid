@@ -62,6 +62,7 @@ private:
     void addBlockAtOffset(int offset);
     bool getContentMayProtrudeFromTopOrBottom(int line) const;
 public:
+    ~DynamicLayout()override;
     void reflow(CharSequence* s, int where, int before, int after);
     std::set<int> getBlocksAlwaysNeedToBeRedrawn() const;
 

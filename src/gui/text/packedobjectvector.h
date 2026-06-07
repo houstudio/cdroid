@@ -98,8 +98,7 @@ private:
         } else {/* where < mRowGapStart */
             const int moving = mRowGapStart - where;
             for (int i = where + moving - 1; i >= where; i--){
-                int destrow = i - where + mRowGapStart + mRowGapLength - moving;
-
+                const int destrow = i - where + mRowGapStart + mRowGapLength - moving;
                 for (int j = 0; j < mColumns; j++){
                     E val = mValues[i * mColumns + j];
                     mValues[destrow * mColumns + j] = val;
