@@ -64,7 +64,7 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
     }
 
     mText = text;
-    mPaint = *paint;
+    mPaint = paint;
     mWidth = width;
     mAlignment = align;
     mSpacingMult = spacingMult;
@@ -81,7 +81,7 @@ void TextLayout::setJustificationMode(int justificationMode) {
     mJustificationMode = justificationMode;
 }
 
-void TextLayout::replaceWith(CharSequence* text, TextPaint& paint,int width, Alignment align, float spacingmult, float spacingadd) {
+void TextLayout::replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd) {
     if (width < 0) {
         //throw new IllegalArgumentException("Layout: " + width + " < 0");
     }
@@ -199,7 +199,7 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     std::vector<ParcelableSpan*> spans;
     int spanEnd = 0;
     TextPaint& paint = mWorkPaint;
-    paint.set(mPaint);
+    paint.set(*mPaint);
     CharSequence* buf = mText;
 
     Alignment paraAlign = mAlignment;
@@ -375,7 +375,7 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
             int previousLineEnd = getLineStart(firstLine);
             std::vector<ParcelableSpan*> spans ;
             int spansLength = 0;
-            TextPaint paint = mPaint;
+            TextPaint* paint = mPaint;
             int spanEnd = 0;
             const int width = mWidth;
             for (int i = firstLine; i <= lastLine; i++) {
@@ -411,7 +411,7 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
 
                 for (int n = 0; n < spansLength; n++) {
                     LineBackgroundSpan* lineBackgroundSpan = (LineBackgroundSpan*) spans[n];
-                    lineBackgroundSpan->drawBackground(canvas, paint, 0, width,
+                    lineBackgroundSpan->drawBackground(canvas, *paint, 0, width,
                             ltop, lbaseline, lbottom, buffer, start, end, i);
                 }
             }
@@ -700,7 +700,7 @@ float TextLayout::getHorizontal(int offset, bool trailing, int line, bool clampe
     }
 
     TextLine* tl = TextLine::obtain();
-    tl->set(&mPaint, mText, start, end, dir, directions, hasTab, tabStops,
+    tl->set(mPaint, mText, start, end, dir, directions, hasTab, tabStops,
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
     float wid = tl->measure(offset - start, trailing, nullptr);
     TextLine::recycle(tl);
@@ -733,7 +733,7 @@ std::vector<float> TextLayout::getLineHorizontals(int line, bool clamped, bool p
     }
 
     TextLine* tl = TextLine::obtain();
-    tl->set(&mPaint, mText, start, end, dir, directions, hasTab, tabStops,
+    tl->set(mPaint, mText, start, end, dir, directions, hasTab, tabStops,
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
     auto trailings = primaryIsTrailingPreviousAllLineOffsets(line);
     if (!primary) {
@@ -887,7 +887,7 @@ float TextLayout::getLineExtent(int line, bool full) const{
 
     TextLine* tl = TextLine::obtain();
     TextPaint& paint = mWorkPaint;
-    paint.set(mPaint);
+    paint.set(*mPaint);
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
     tl->set(&paint, mText, start, end, dir, directions, hasTabs, tabStops,
@@ -909,7 +909,7 @@ float TextLayout::getLineExtent(int line, TabStops& tabStops, bool full) const{
 
     TextLine* tl = TextLine::obtain();
     TextPaint& paint = mWorkPaint;
-    paint.set(mPaint);
+    paint.set(*mPaint);
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
     tl->set(&paint, mText, start, end, dir, directions, hasTabs, &tabStops,
@@ -968,7 +968,7 @@ int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) cons
 
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs as we just use TextLine#getOffsetToLeftRightOf here.
-    tl->set(&mPaint, mText, lineStartOffset, lineEndOffset, getParagraphDirection(line), dirs,
+    tl->set(mPaint, mText, lineStartOffset, lineEndOffset, getParagraphDirection(line), dirs,
             false, nullptr, getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
     HorizontalMeasurementProvider horizontal((TextLayout*)this,line, primary);
 
@@ -1168,7 +1168,7 @@ int TextLayout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
     const Directions* directions = getLineDirections(line);
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs
-    tl->set(&mPaint, mText, lineStart, lineEnd, lineDir, directions, false, nullptr,
+    tl->set(mPaint, mText, lineStart, lineEnd, lineDir, directions, false, nullptr,
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
     caret = lineStart + tl->getOffsetToLeftRightOf(caret - lineStart, toLeft);
     TextLine::recycle(tl);

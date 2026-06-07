@@ -171,6 +171,12 @@ StaticLayout* StaticLayout::Builder::build() {
 Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);// = new SynchronizedPool<>(3);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+StaticLayout::StaticLayout(CharSequence* text)
+    :TextLayout(text, nullptr, 0, Alignment::NONE, 0, 0){
+        mColumns = COLUMNS_ELLIPSIZE;
+        mLineDirections.resize(2);
+        mLines.resize(2 * mColumns);
+}
 
 StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
             ? b.mText : [this, &b]() -> CharSequence* {

@@ -102,7 +102,7 @@ public:
     static float getDesiredWidthWithLimit(CharSequence* source, int start, int end,
             const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit);
 
-    void replaceWith(CharSequence* text, TextPaint& paint,int width, Alignment align, float spacingmult, float spacingadd);
+    void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);
     virtual void draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical);
@@ -116,10 +116,10 @@ public:
         return mText;
     }
 
-    const TextPaint& getPaint() const{
+    const TextPaint* getPaint() const{
         return mPaint;
     }
-    TextPaint& getPaint(){
+    TextPaint* getPaint(){
         return mPaint;
     }
     int getWidth() const{
@@ -335,7 +335,7 @@ public:
 };
 private:
     CharSequence* mText;
-    TextPaint mPaint;
+    TextPaint* mPaint;
     mutable TextPaint mWorkPaint;
     int mWidth;
     Alignment mAlignment = Alignment::ALIGN_NORMAL;

@@ -16,7 +16,7 @@ BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int out
 
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
         Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad) {
-    replaceWith(source, *paint, outerwidth, align, spacingMult, spacingAdd);
+    replaceWith(source, paint, outerwidth, align, spacingMult, spacingAdd);
 
     mEllipsizedWidth = outerwidth;
     mEllipsizedStart = 0;
@@ -33,7 +33,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
     bool trust;
 
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
-        replaceWith(source, *paint, outerWidth, align, spacingMult, spacingAdd);
+        replaceWith(source, paint, outerWidth, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = outerWidth;
         mEllipsizedStart = 0;
@@ -42,7 +42,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
     } else {
         replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
                     [this](int start,int end){ellipsized(start,end);}),
-                *paint, outerWidth, align, spacingMult, spacingAdd);
+                paint, outerWidth, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
@@ -80,7 +80,7 @@ BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidt
     } else {
         replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
                     [this](int start,int end){ellipsized(start,end);}),
-                    *paint, outerWidth, align, spacingMult, spacingAdd);
+                    paint, outerWidth, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;

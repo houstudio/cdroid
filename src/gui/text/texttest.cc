@@ -33,7 +33,7 @@ public:
     }
     void onDraw(Canvas&canvas)override {
         cdroid::TextPaint pt;
-        pt.setTextSize(32);
+        pt.setTextSize(24);
         std::string u8str=
             "Hello World! السلام عليكم (Peace be upon you) مرحبا "
             "This is a test with multiple languages including "
@@ -43,11 +43,11 @@ public:
 
         cdroid::SpannedString*span= new cdroid::SpannedString(u8str);
         MyString mystr(u8str);
-        std::cout<<" spansize="<<span->length()<<std::endl;
+        std::cout<<" spansize="<<span->length()<<std::endl<<std::endl;
         
         
         int staticLayoutHeight=0;
-
+        int dynamicLayoutHeight=0;
         for(int i=0;i<10;i++){
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 //span,0,span->length(),&pt,800);
@@ -75,18 +75,27 @@ public:
                <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
             delete staticlayout;
         }
-
+        std::cout<<std::endl;
+        canvas.translate(0,staticLayoutHeight);
         for(int i=0;i<10;i++){
             cdroid::DynamicLayout::Builder*bdr=cdroid::DynamicLayout::Builder::obtain(span,&pt,800);
-            auto dl = bdr->setLineSpacing(5,1.0).build();
+            auto startTime = std::chrono::high_resolution_clock::now();
+            auto dl = bdr->setLineSpacing(0,1.2).build();
+            auto endLayout = std::chrono::high_resolution_clock::now();
+            
             canvas.set_color(0x80112233);
-            canvas.translate(5,5);
             dl->draw(canvas);
-            canvas.translate(-5,-5);
+            auto endTime = std::chrono::high_resolution_clock::now();
+            auto durlayout = std::chrono::duration_cast<std::chrono::microseconds>(endLayout-startTime);
+            auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
+            std::cout << "DynamicLayout layout:" << durlayout.count()
+               <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            dynamicLayoutHeight=dl->getHeight(false);
         }
-        canvas.translate(0,staticLayoutHeight+10);
+        std::cout<<std::endl;
+        canvas.translate(0,dynamicLayoutHeight+20);
         for(int j=0;j<2;j++){
-            cdroid::Layout layout(32,800);
+            cdroid::Layout layout(24,800);
             layout.setMultiline(true);
             layout.setText(u8str);
             auto startTime = std::chrono::high_resolution_clock::now();
