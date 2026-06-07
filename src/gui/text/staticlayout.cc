@@ -174,7 +174,7 @@ Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);/
 StaticLayout::StaticLayout(CharSequence* text)
     :TextLayout(text, nullptr, 0, Alignment::NONE, 0, 0){
         mColumns = COLUMNS_ELLIPSIZE;
-        mLineDirections.resize(2);
+        mLineDirections.resize(2,nullptr);
         mLines.resize(2 * mColumns);
 }
 
@@ -198,7 +198,7 @@ StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUti
         mEllipsizedWidth = b.mWidth;
     }
 
-    mLineDirections.resize(2);// = ArrayUtils.newUnpaddedArray(Directions.class, 2);
+    mLineDirections.resize(2,nullptr);
     mLines.resize(2 * mColumns);
     mMaximumVisibleLineCount = b.mMaxLines;
 
@@ -512,7 +512,7 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     }
 
     if (j >= mLineDirections.size()) {
-        mLineDirections.resize(j+8);
+        mLineDirections.resize(j+8,nullptr);
     }
 
     if (!chooseHt.empty()) {
@@ -617,6 +617,9 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
+    if(mLineDirections[j]){
+        delete mLineDirections[j];
+    }
     mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
 
     mLineCount++;
