@@ -96,7 +96,7 @@ public:
     int getEllipsisStart(int line) const override;
     int getEllipsisCount(int line) const override;
 private:
-    class ChangeWatcher {//implements TextWatcher, SpanWatcher {
+    class ChangeWatcher : public ParcelableSpan {//implements TextWatcher, SpanWatcher {
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);

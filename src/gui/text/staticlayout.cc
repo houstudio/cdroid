@@ -6,9 +6,9 @@
 #include <minikin/LineBreaker.h>
 namespace cdroid{
 //public class StaticLayout extends Layout {
-const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
-const auto LineHeightSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const LineHeightSpan*>(span) != nullptr;});
-const auto LeadingMarginSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const LeadingMarginSpan*>(span) != nullptr;});
+const auto TabStopSpanFilter=make_span_filter<TabStopSpan>();
+const auto LineHeightSpanFilter=make_span_filter<LineHeightSpan>();
+const auto LeadingMarginSpanFilter=make_span_filter<LeadingMarginSpan>();
 
 class LineWidth :public minikin::LineWidth{
 private:
@@ -173,11 +173,14 @@ Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);/
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
-            ? b.mText : dynamic_cast<Spanned*>(b.mText) ? new SpannedEllipsizer(b.mText) : new Ellipsizer(b.mText),
+            ? b.mText : [this, &b]() -> CharSequence* {
+                Spanned* spanned = dynamic_cast<Spanned*>(b.mText);
+                return spanned != nullptr ? new SpannedEllipsizer(spanned) : new Ellipsizer(b.mText);
+            }(),
             b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
 
     if (b.mEllipsize != TextUtils::TruncateAt::NONE/*nullptr*/) {
-        Ellipsizer* e = (Ellipsizer*) getText();
+        Ellipsizer* e = dynamic_cast<Ellipsizer*>(getText());
 
         e->mLayout = this;
         e->mWidth = b.mEllipsizedWidth;

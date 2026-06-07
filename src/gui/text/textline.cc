@@ -56,8 +56,8 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
     mSpanned = nullptr;
 
     bool hasReplacement = false;
-    if (dynamic_cast<Spanned*>(text)) {
-        mSpanned = (Spanned*) text;
+    mSpanned = dynamic_cast<Spanned*>(text);
+    if (mSpanned != nullptr) {
         mReplacementSpanSpanSet.init(mSpanned, start, limit,make_span_filter<ReplacementSpan>());
         hasReplacement = mReplacementSpanSpanSet.numberOfSpans > 0;
     }

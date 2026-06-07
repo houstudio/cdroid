@@ -134,7 +134,7 @@ struct SpanInfo {
 };
 const auto ParagraphStyleFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParagraphStyle*>(span) != nullptr;});
 // Spanned: read-only span-aware CharSequence (similar to Android's Spanned)
-class Spanned : public CharSequence {
+class Spanned : virtual public CharSequence {
 public:
     enum{
         SPAN_POINT_MARK_MASK = 0x33,

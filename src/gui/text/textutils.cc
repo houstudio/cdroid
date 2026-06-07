@@ -501,12 +501,13 @@ int TextUtils::getOffsetBefore(const CharSequence* text, int offset) {
     } else {
         offset -= 1;
     }
-    if (dynamic_cast<const Spanned*>(text)) {
-        auto spans = ((const Spanned*) text)->getSpans(offset, offset, ReplacementSpanFilter);
+    const Spanned* spanned = dynamic_cast<const Spanned*>(text);
+    if (spanned != nullptr) {
+        auto spans = spanned->getSpans(offset, offset, ReplacementSpanFilter);
 
         for (int i = 0; i < spans.size(); i++) {
-            int start = ((const Spanned*) text)->getSpanStart(spans[i]);
-            int end = ((const Spanned*) text)->getSpanEnd(spans[i]);
+            int start = spanned->getSpanStart(spans[i]);
+            int end = spanned->getSpanEnd(spans[i]);
 
             if (start < offset && end > offset)
                 offset = start;
@@ -533,12 +534,13 @@ int TextUtils::getOffsetAfter(const CharSequence* text, int offset) {
     } else {
         offset += 1;
     }
-    if (dynamic_cast<const Spanned*>(text)) {
-        auto spans = ((const Spanned*) text)->getSpans(offset, offset, ReplacementSpanFilter);
+    const Spanned* spanned = dynamic_cast<const Spanned*>(text);
+    if (spanned != nullptr) {
+        auto spans = spanned->getSpans(offset, offset, ReplacementSpanFilter);
 
         for (int i = 0; i < spans.size(); i++) {
-            int start = ((const Spanned*) text)->getSpanStart(spans[i]);
-            int end = ((const Spanned*) text)->getSpanEnd(spans[i]);
+            int start = spanned->getSpanStart(spans[i]);
+            int end = spanned->getSpanEnd(spans[i]);
             if (start < offset && end > offset)
                 offset = end;
         }

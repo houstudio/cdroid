@@ -1,4 +1,3 @@
-#if 0
 #include <text/boringlayout.h>
 namespace cdroid{
 
@@ -94,11 +93,11 @@ void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
         BoringLayout::Metrics& metrics, bool includePad, bool trustWidth) {
     int spacing;
 
-    if (source instanceof String && align == TextLayout::Alignment::ALIGN_NORMAL) {
+    /*if (source instanceof String && align == TextLayout::Alignment::ALIGN_NORMAL) {
         mDirect = source->toString();
     } else {
         mDirect = nullptr;
-    }
+    }*/
 
     mPaint = *paint;
 
@@ -186,8 +185,8 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
     if (textDir != nullptr && textDir->isRtl(text, 0, textLength)) {
        return nullptr;  // The heuristic considers the whole text RTL. Not boring.
     }
-    if (dynamic_cast<Spanned*>(text)) {
-        Spanned* sp = (Spanned*) text;
+    Spanned* sp = dynamic_cast<Spanned*>(text);
+    if (sp != nullptr) {
         auto styles = sp->getSpans(0, textLength, make_span_filter<ParagraphStyle>());
         if (styles.size() > 0) {
             return nullptr;  // There are some ParagraphStyle spans. Not boring.
@@ -287,9 +286,9 @@ RectF BoringLayout::computeDrawingBoundingBox() const{
 }
 
 void BoringLayout::draw(Canvas& c, Path* highlight, Paint* highlightpaint, int cursorOffset) {
-    if (mDirect != nullptr && highlight == nullptr) {
-        c.drawText(mDirect, 0, mBottom - mDesc, mPaint);
-    } else {
+    /*if (!mDirect.empty() && highlight == nullptr) {
+        c.draw_text(mDirect, 0, mBottom - mDesc, mPaint);
+    } else */{
         TextLayout::draw(c, highlight, highlightpaint, cursorOffset);
     }
 }
@@ -315,4 +314,3 @@ void BoringLayout::Metrics::reset() {
     mDrawingBounds.setEmpty();
 }
 }/*endof namespace*/
-#endif

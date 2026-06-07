@@ -291,7 +291,7 @@ public:
     virtual int getEllipsisStart(int line)const=0;
     virtual int getEllipsisCount(int line)const=0;
 
-    class Ellipsizer :public CharSequence{//, public GetChars {
+    class Ellipsizer : virtual public CharSequence{//, public GetChars {
     public:
         CharSequence* mText;
         TextLayout* mLayout;
@@ -311,47 +311,28 @@ public:
         std::wstring toWString()const override;
     };
 
-    class SpannedEllipsizer:virtual Spanned,virtual public Ellipsizer{
+    class SpannedEllipsizer : public Ellipsizer, public Spanned {
     private:
         Spanned* mSpanned;
     public:
-        SpannedEllipsizer(CharSequence* display):Ellipsizer(display) {
-            mSpanned = (Spanned*) display;
+        SpannedEllipsizer(Spanned* display) : Ellipsizer(display), mSpanned(display) {
         }
-        std::vector<ParcelableSpan*>getSpans(int start, int end,const SpanFilter& type) const override {
+        std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter& type) const override {
             return mSpanned->getSpans(start, end, type);
         }
-        int getSpanStart(ParcelableSpan* tag) const override{
+        int getSpanStart(ParcelableSpan* tag) const override {
             return mSpanned->getSpanStart(tag);
         }
-        int getSpanEnd(ParcelableSpan* tag) const override{
+        int getSpanEnd(ParcelableSpan* tag) const override {
             return mSpanned->getSpanEnd(tag);
         }
-        int getSpanFlags(ParcelableSpan* tag) const override{
+        int getSpanFlags(ParcelableSpan* tag) const override {
             return mSpanned->getSpanFlags(tag);
         }
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
             return mSpanned->nextSpanTransition(start, limit, type);
         }
-        CharSequence* subSequence(int start, int end)const override{
-            return nullptr;
-        }
-        int charAt(int offset) const override{
-            return mSpanned->charAt(offset);
-        }
-        size_t length() const override{
-            return mSpanned->length();
-        }
-        std::string toString() const override{
-            return mSpanned->toString();
-        }
-        std::wstring toWString() const override{
-            return mSpanned->toWString();
-        }
-        void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override{
-            mSpanned->getChars(start, end, dest, destPos);
-        }
-    };
+};
 private:
     CharSequence* mText;
     TextPaint mPaint;

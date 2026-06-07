@@ -124,7 +124,7 @@ float TextLayout::getJustifyWidth(int lineNum) const{
 
     std::vector<ParcelableSpan*> spans;
     if (mSpannedText) {
-        Spanned* sp = (Spanned*) mText;
+        Spanned* sp = dynamic_cast<Spanned*>(mText);
         const int start = getLineStart(lineNum);
         const bool isFirstParaLine = (start == 0 || mText->charAt(start - 1) == '\n');
 
@@ -228,7 +228,7 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
         int right = mWidth;
 
         if (mSpannedText) {
-            Spanned* sp = (Spanned*) buf;
+            Spanned* sp = dynamic_cast<Spanned*>(buf);
             int textLength = buf->length();
             bool isFirstParaLine = (start == 0 || buf->charAt(start - 1) == '\n');
 
@@ -365,7 +365,7 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
     // They are evaluated at each line.
     if (mSpannedText) {
 
-        Spanned* buffer = (Spanned*) mText;
+        Spanned* buffer = dynamic_cast<Spanned*>(mText);
         const int textLength = buffer->length();
         mLineBackgroundSpans.init(buffer, 0, textLength,SpanFilter([](const ParcelableSpan*o){
                     return dynamic_cast<const LineBackgroundSpan*>(o)!=nullptr;}));
@@ -483,7 +483,7 @@ int TextLayout::getLineStartPos(int line, int left, int right) const{
     } else {
         TabStops* tabStops = nullptr;
         if (mSpannedText && getLineContainsTab(line)) {
-            Spanned* spanned = (Spanned*) mText;
+            Spanned* spanned = dynamic_cast<Spanned*>(mText);
             int start = getLineStart(line);
             int spanEnd = spanned->nextSpanTransition(start, spanned->length(), TabStopSpanFilter);
             auto tabSpans = getParagraphSpans(spanned, start, spanEnd, TabStopSpanFilter);
@@ -689,10 +689,11 @@ float TextLayout::getHorizontal(int offset, bool trailing, int line, bool clampe
     const Directions* directions = getLineDirections(line);
 
     TabStops* tabStops = nullptr;
-    if (hasTab && dynamic_cast<Spanned*>(mText)) {
+    Spanned* spannedText = dynamic_cast<Spanned*>(mText);
+    if (hasTab && spannedText != nullptr) {
         // Just checking this line should be good enough, tabs should be
         // consistent across all lines in a paragraph.
-        auto tabs = getParagraphSpans((Spanned*) mText, start, end, TabStopSpanFilter);
+        auto tabs = getParagraphSpans(spannedText, start, end, TabStopSpanFilter);
         if (tabs.size() > 0) {
             tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
         }
@@ -721,10 +722,11 @@ std::vector<float> TextLayout::getLineHorizontals(int line, bool clamped, bool p
     const Directions* directions = getLineDirections(line);
 
     TabStops* tabStops = nullptr;
-    if (hasTab && dynamic_cast<Spanned*>(mText)) {
+    Spanned* spannedText = dynamic_cast<Spanned*>(mText);
+    if (hasTab && spannedText != nullptr) {
         // Just checking this line should be good enough, tabs should be
         // consistent across all lines in a paragraph.
-        auto tabs = getParagraphSpans((Spanned*) mText, start, end, TabStopSpanFilter);
+        auto tabs = getParagraphSpans(spannedText, start, end, TabStopSpanFilter);
         if (tabs.size() > 0) {
             tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
         }
@@ -867,10 +869,11 @@ float TextLayout::getLineExtent(int line, bool full) const{
 
     const bool hasTabs = getLineContainsTab(line);
     TabStops* tabStops = nullptr;
-    if (hasTabs && dynamic_cast<Spanned*>(mText) != nullptr) {
+    Spanned* spannedText = dynamic_cast<Spanned*>(mText);
+    if (hasTabs && spannedText != nullptr) {
         // Just checking this line should be good enough, tabs should be
         // consistent across all lines in a paragraph.
-        auto tabs = getParagraphSpans((Spanned*) mText, start, end, TabStopSpanFilter);
+        auto tabs = getParagraphSpans(spannedText, start, end, TabStopSpanFilter);
         if (tabs.size() > 0) {
             tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
         }
@@ -1186,12 +1189,15 @@ int TextLayout::getOffsetAtStartOf(int offset) const{
             offset -= 1;
     }
     if (mSpannedText) {
-        auto spans = ((Spanned*) text)->getSpans(offset, offset, ReplacementSpanFilter);
-        for (int i = 0; i < spans.size(); i++) {
-            int start = ((Spanned*) text)->getSpanStart(spans[i]);
-            int end = ((Spanned*) text)->getSpanEnd(spans[i]);
-            if (start < offset && end > offset)
-                offset = start;
+        Spanned* spanned = dynamic_cast<Spanned*>(text);
+        if (spanned != nullptr) {
+            auto spans = spanned->getSpans(offset, offset, ReplacementSpanFilter);
+            for (int i = 0; i < spans.size(); i++) {
+                int start = spanned->getSpanStart(spans[i]);
+                int end = spanned->getSpanEnd(spans[i]);
+                if (start < offset && end > offset)
+                    offset = start;
+            }
         }
     }
     return offset;
@@ -1376,7 +1382,7 @@ void TextLayout::getSelection(int start, int end,const SelectionRectangleConsume
 TextLayout::Alignment TextLayout::getParagraphAlignment(int line) const {
     Alignment align = mAlignment;
     if (mSpannedText) {
-        Spanned* sp = (Spanned*) mText;
+        Spanned* sp = dynamic_cast<Spanned*>(mText);
         auto spans = getParagraphSpans(sp, getLineStart(line), getLineEnd(line),AlignmentSpanFilter);
 
         int spanLength = spans.size();
@@ -1408,7 +1414,7 @@ int TextLayout::getParagraphLeadingMargin(int line) const{
     if (!mSpannedText) {
         return 0;
     }
-    Spanned* spanned = (Spanned*) mText;
+    Spanned* spanned = dynamic_cast<Spanned*>(mText);
 
     int lineStart = getLineStart(line);
     int lineEnd = getLineEnd(line);
@@ -1450,8 +1456,8 @@ float TextLayout::measurePara(const TextPaint* paint, CharSequence* text, int st
     TabStops* tabStops = nullptr;
     // leading margins should be taken into account when measuring a paragraph
     int margin = 0;
-    if (dynamic_cast<Spanned*>(text)) {
-        Spanned* spanned = (Spanned*) text;
+    Spanned* spanned = dynamic_cast<Spanned*>(text);
+    if (spanned != nullptr) {
         auto spans = getParagraphSpans(spanned, start, end, LeadingMarginSpanFilter);
         for (auto lms : spans) {
             margin += ((LeadingMarginSpan*)lms)->getLeadingMargin(true);
@@ -1460,8 +1466,7 @@ float TextLayout::measurePara(const TextPaint* paint, CharSequence* text, int st
     for (int i = 0; i < len; ++i) {
         if (chars[i] == '\t') {
             hasTabs = true;
-            if (dynamic_cast<Spanned*>(text)) {
-                Spanned* spanned = (Spanned*) text;
+            if (spanned != nullptr) {
                 int spanEnd = spanned->nextSpanTransition(start, end, TabStopSpanFilter);
                 auto spans = getParagraphSpans(spanned, start, spanEnd,TabStopSpanFilter);
                 if (spans.size() > 0) {
@@ -1525,9 +1530,10 @@ float TextLayout::nextTab(CharSequence* text, int start, int end,
                                    float h,std::vector<ParcelableSpan*>& tabs) {
     float nh = FLT_MAX;
     bool alltabs = false;
-    if (dynamic_cast<Spanned*>(text)) {
+    Spanned* spanned = dynamic_cast<Spanned*>(text);
+    if (spanned != nullptr) {
         if (tabs.empty()) {
-            tabs = getParagraphSpans((Spanned*) text, start, end, TabStopSpanFilter);
+            tabs = getParagraphSpans(spanned, start, end, TabStopSpanFilter);
             alltabs = true;
         }
         for (int i = 0; i < tabs.size(); i++) {

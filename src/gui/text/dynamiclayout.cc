@@ -1,4 +1,3 @@
-#if 0
 #include <text/dynamiclayout.h>
 #include <text/precomputedtext.h>
 namespace cdroid{
@@ -113,10 +112,13 @@ DynamicLayout::DynamicLayout(const Builder& b):TextLayout(createEllipsizer(b.mEl
 CharSequence* DynamicLayout::createEllipsizer(TextUtils::TruncateAt ellipsize,CharSequence* display) {
     if (ellipsize == TextUtils::TruncateAt::NONE) {
         return display;
-    } else if (dynamic_cast<Spanned*>(display)) {
-        return new SpannedEllipsizer(display);
     } else {
-        return new Ellipsizer(display);
+        Spanned* spanned = dynamic_cast<Spanned*>(display);
+        if (spanned != nullptr) {
+            return new SpannedEllipsizer(spanned);
+        } else {
+            return new Ellipsizer(display);
+        }
     }
 }
 
@@ -128,7 +130,7 @@ void DynamicLayout::generate(const Builder& b) {
         mEllipsizedWidth = b.mEllipsizedWidth;
         mEllipsizeAt = b.mEllipsize;
 
-        Ellipsizer* e = (Ellipsizer*) getText();
+        Ellipsizer* e = dynamic_cast<Ellipsizer*>(getText());
         e->mLayout = this;
         e->mWidth = b.mEllipsizedWidth;
         e->mMethod = b.mEllipsize;
@@ -174,12 +176,12 @@ void DynamicLayout::generate(const Builder& b) {
     // Update from 0 characters to whatever the real text is
     reflow(mBase, 0, 0, baseLength);
 
-    if (dynamic_cast<Spannable*>(mBase)) {
+    Spannable* sp = dynamic_cast<Spannable*>(mBase);
+    if (sp != nullptr) {
         if (mWatcher == nullptr)
             mWatcher = new ChangeWatcher(this);
 
         // Strip out any watchers for other DynamicLayouts.
-        Spannable* sp = (Spannable*)((Spanned*) mBase);
         auto spans = sp->getSpans(0, baseLength, make_span_filter<ChangeWatcher>());
         for (int i = 0; i < spans.size(); i++) {
             sp->removeSpan(spans[i]);
@@ -226,8 +228,8 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
 
     // seek further out to cover anything that is forced to wrap together
 
-    if (dynamic_cast<Spanned*>(text)) {
-        Spanned* sp = (Spanned*) text;
+    Spanned* sp = dynamic_cast<Spanned*>(text);
+    if (sp != nullptr) {
         bool again;
 
         do {
@@ -392,8 +394,8 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
 }
 
 bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, int start, int end) {
-    if (dynamic_cast<Spanned*>(text)) {
-        Spanned* spanned = (Spanned*) text;
+    Spanned* spanned = dynamic_cast<Spanned*>(text);
+    if (spanned != nullptr) {
         if (spanned->getSpans(start, end, make_span_filter<ReplacementSpan>()).size() > 0) {
             return true;
         }
@@ -402,11 +404,11 @@ bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, in
     // disjunction of all tops and bottoms, although it's not optimal.
     Paint paint = getPaint();
     Rect mTempRect;
-    if (dynamic_cast<PrecomputedText*>(text)) {
-        PrecomputedText* precomputed = (PrecomputedText*) text;
+    PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(text);
+    if (precomputed != nullptr) {
         precomputed->getBounds(start, end, mTempRect);
     } else {
-        paint.getTextBounds(text, start, end, mTempRect);
+        //paint.getTextBounds(text, start, end, mTempRect);
     }
     Paint::FontMetricsInt fm;
     paint.getFontMetricsInt(fm);
@@ -722,8 +724,11 @@ void DynamicLayout::ChangeWatcher::reflow(CharSequence* s, int where, int before
 
     if (ml != nullptr) {
         ml->reflow(s, where, before, after);
-    } else if (dynamic_cast<Spannable*>(s)) {
-        ((Spannable*) s)->removeSpan(this);
+    } else {
+        Spannable* sp = dynamic_cast<Spannable*>(s);
+        if (sp != nullptr) {
+            sp->removeSpan(this);
+        }
     }
 }
 
@@ -762,4 +767,3 @@ void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable* s, ParcelableSpan* o
 }
 
 }/*endof namespace*/
-#endif

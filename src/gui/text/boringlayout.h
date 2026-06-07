@@ -2,10 +2,11 @@
 #define __BORING_LAYOUT_H__
 #include <text/layout.h>
 #include <text/textpaint.h>
+#include <string>
 namespace cdroid{
 class BoringLayout :public TextLayout {//TextUtils.EllipsizeCallback {
 private:
-    String mDirect;
+    std::string/*String*/ mDirect;
     Paint mPaint;
     bool mUseFallbackLineSpacing;
 
