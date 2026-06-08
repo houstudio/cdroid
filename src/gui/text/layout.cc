@@ -527,7 +527,7 @@ int TextLayout::getLineBounds(int line, Rect* bounds) const{
 bool TextLayout::isLevelBoundary(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
-    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT || *dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    if (dirs == &DIRS_ALL_LEFT_TO_RIGHT || dirs == &DIRS_ALL_RIGHT_TO_LEFT) {
         return false;
     }
 
@@ -552,10 +552,10 @@ bool TextLayout::isLevelBoundary(int offset) const{
 bool TextLayout::isRtlCharAt(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
-    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT) {
+    if (dirs == &DIRS_ALL_LEFT_TO_RIGHT) {
         return false;
     }
-    if (*dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    if (dirs == &DIRS_ALL_RIGHT_TO_LEFT) {
         return  true;
     }
     auto& runs = dirs->mDirections;
@@ -575,7 +575,7 @@ bool TextLayout::isRtlCharAt(int offset) const{
 int64_t TextLayout::getRunRange(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
-    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT || *dirs == DIRS_ALL_RIGHT_TO_LEFT) {
+    if (dirs == &DIRS_ALL_LEFT_TO_RIGHT || dirs == &DIRS_ALL_RIGHT_TO_LEFT) {
         return TextUtils::packRangeInLong(0, getLineEnd(line));
     }
     auto& runs = dirs->mDirections;
@@ -1056,7 +1056,7 @@ TextLayout::HorizontalMeasurementProvider::HorizontalMeasurementProvider(TextLay
 
 void TextLayout::HorizontalMeasurementProvider::init() {
     const Directions* dirs = mLayout->getLineDirections(mLine);
-    if (*dirs == DIRS_ALL_LEFT_TO_RIGHT) {
+    if (dirs == &DIRS_ALL_LEFT_TO_RIGHT) {
         return;
     }
 

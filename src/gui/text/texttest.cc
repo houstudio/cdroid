@@ -73,6 +73,7 @@ public:
             auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
             std::cout << "StaticLayout layout:" << durlayout.count()
                <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            auto dirs = staticLayout->getLineDirections(1);
             delete staticLayout;
         }
         std::cout<<std::endl;
