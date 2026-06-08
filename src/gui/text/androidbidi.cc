@@ -95,7 +95,7 @@ const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& le
     if ((curLevel & 1) != (baseLevel & 1)) {
         // look for visible end
         while (--visLen >= 0) {
-            char ch = chars[cstart + visLen];
+            char32_t ch = chars[cstart + visLen];
 
             if (ch == '\n') {
                 --visLen;
