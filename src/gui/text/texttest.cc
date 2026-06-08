@@ -48,6 +48,9 @@ public:
         
         int staticLayoutHeight=0;
         int dynamicLayoutHeight=0;
+        int layoutWidth=0;
+        canvas.set_source_rgba(1,1,1,1);
+        canvas.paint();
         for(int i=0;i<10;i++){
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 //span,0,span->length(),&pt,800);
@@ -58,15 +61,9 @@ public:
 
             auto endLayout = std::chrono::high_resolution_clock::now();
 
-            canvas.set_source_rgba(1,1,1,1);
-            //canvas.rectangle(0,0,1280,480);
-            canvas.paint();
-            canvas.set_line_width(3);
-            canvas.set_color(0xFF00FF00);
-            canvas.rectangle(0,0,staticLayout->getWidth(),staticLayout->getHeight(false));
-            canvas.stroke();
             canvas.set_color(0xFFFF0000);
             staticLayout->draw(canvas);
+            layoutWidth= staticLayout->getWidth();
             staticLayoutHeight=staticLayout->getHeight(false);
             auto endTime = std::chrono::high_resolution_clock::now();
             auto durlayout = std::chrono::duration_cast<std::chrono::microseconds>(endLayout-startTime);
@@ -76,26 +73,31 @@ public:
             auto dirs = staticLayout->getLineDirections(1);
             delete staticLayout;
         }
+        canvas.set_line_width(3);
+        canvas.set_color(0xFF00FF00);
+        canvas.rectangle(0,0,layoutWidth,staticLayoutHeight);
+        canvas.stroke();
         std::cout<<std::endl;
         canvas.translate(0,staticLayoutHeight);
+        canvas.set_color(0x80112233);
         for(int i=0;i<10;i++){
             cdroid::DynamicLayout::Builder*bdr=cdroid::DynamicLayout::Builder::obtain(span,&pt,800);
             auto startTime = std::chrono::high_resolution_clock::now();
             auto dynamicLayout = bdr->setLineSpacing(0,1.2).build();
             auto endLayout = std::chrono::high_resolution_clock::now();
             
-            canvas.set_color(0x80112233);
-            canvas.rectangle(0,0,dynamicLayout->getWidth(),dynamicLayout->getHeight(false));
-            canvas.stroke();
             dynamicLayout->draw(canvas);
             auto endTime = std::chrono::high_resolution_clock::now();
             auto durlayout = std::chrono::duration_cast<std::chrono::microseconds>(endLayout-startTime);
             auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
             std::cout << "DynamicLayout layout:" << durlayout.count()
                <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            layoutWidth=dynamicLayout->getWidth();
             dynamicLayoutHeight=dynamicLayout->getHeight(false);
             delete dynamicLayout;
         }
+        canvas.rectangle(0,0,layoutWidth,dynamicLayoutHeight);
+        canvas.stroke();
         std::cout<<std::endl;
         canvas.translate(0,dynamicLayoutHeight+20);
         for(int j=0;j<2;j++){
