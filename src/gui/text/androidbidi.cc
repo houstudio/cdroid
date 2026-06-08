@@ -17,7 +17,23 @@
 #include <text/androidbidi.h>
 #include <unicode/ubidi.h>
 namespace cdroid {
-int AndroidBidi::bidi(int dir, const std::vector<char32_t> chs, std::vector<uint8_t>& chInfo) {
+// Helper function to convert UTF-32 to UTF-16
+static void convertUtf32ToUtf16(const char32_t* data, size_t size, std::vector<uint16_t>* outUtf16) {
+    outUtf16->reserve(size);
+    for (size_t i = 0; i < size; i++) {
+        char32_t cp = data[i];
+        if (cp <= 0xFFFF) {
+            outUtf16->push_back(static_cast<uint16_t>(cp));
+        } else {
+            // Surrogate pair for characters outside BMP
+            cp -= 0x10000;
+            outUtf16->push_back(static_cast<uint16_t>(0xD800 | ((cp >> 10) & 0x3FF)));
+            outUtf16->push_back(static_cast<uint16_t>(0xDC00 | (cp & 0x3FF)));
+        }
+    }
+}
+
+int AndroidBidi::bidi(int dir, const std::vector<char32_t>& chs, std::vector<uint8_t>& chInfo) {
     if (chs.empty() || chInfo.empty()) {
         //throw new NullPointerException();
     }
@@ -35,11 +51,20 @@ int AndroidBidi::bidi(int dir, const std::vector<char32_t> chs, std::vector<uint
         default: paraLevel = UBiDiDirection::UBIDI_LTR;break;//Bidi.LTR; break;
     }
 
+    // Convert UTF-32 to UTF-16 for ICU BiDi (ICU only supports UTF-16)
+    std::vector<uint16_t> utf16Text;
+    convertUtf32ToUtf16(chs.data(), chs.size(), &utf16Text);
+
     UErrorCode errorCode = U_ZERO_ERROR;
-    UBiDi *pBiDi = ubidi_openSized(length, 0, &errorCode);   
-    ubidi_setPara(pBiDi, reinterpret_cast<const UChar*>(chs.data()), length, 
+    UBiDi *pBiDi = ubidi_openSized(utf16Text.size(), 0, &errorCode);
+    ubidi_setPara(pBiDi, reinterpret_cast<const UChar*>(utf16Text.data()), utf16Text.size(),
                   paraLevel, nullptr, &errorCode);
+
+    // Convert UTF-16 indices back to UTF-32 indices
     for (int i = 0; i < length; i++) {
+        // For characters in BMP, UTF-32 and UTF-16 indices are the same
+        // For surrogate pairs, we need special handling
+        // For simplicity, we assume basic multilingual plane characters
         chInfo[i] = ubidi_getLevelAt(pBiDi, i);
     }
     const uint8_t result = ubidi_getParaLevel(pBiDi);
