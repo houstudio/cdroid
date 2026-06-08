@@ -635,8 +635,8 @@ bool Layout::setText(const std::wstring&txt){
 }
 
 bool Layout::setText(const Spanned& txt){
-    const std::wstring ws = txt.toWString();
-    /*const std::vector<SpanInfo> sourceSpans = txt.getSpans(0,0,SpanFilter([](const CharacterStyle*){return true;}));
+    /*const std::wstring ws = txt.toWString();
+    const std::vector<SpanInfo> sourceSpans = txt.getSpans(0,0,SpanFilter([](const CharacterStyle*){return true;}));
     bool changed = (mText.compare(ws) != 0) || (mSpans.size() != sourceSpans.size());
     if (!changed) {
         for (size_t i = 0; i < sourceSpans.size(); ++i) {

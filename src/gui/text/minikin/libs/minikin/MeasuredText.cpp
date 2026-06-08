@@ -53,7 +53,7 @@ private:
     LayoutPieces* mOutPieces;
 };
 
-void StyleRun::getMetrics(const U32StringPiece& textBuf, std::vector<float>* advances,
+void StyleRun::getMetrics(const U16StringPiece& textBuf, std::vector<float>* advances,
                           LayoutPieces* precomputed, LayoutPieces* outPieces) const {
     AdvancesCompositor compositor(advances, outPieces);
     const Bidi bidiFlag = mIsRtl ? Bidi::FORCE_RTL : Bidi::FORCE_LTR;
@@ -105,7 +105,7 @@ private:
     LayoutPieces* mOutPieces;
 };
 
-float StyleRun::measureHyphenPiece(const U32StringPiece& textBuf, const Range& range,
+float StyleRun::measureHyphenPiece(const U16StringPiece& textBuf, const Range& range,
                                    StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                                    LayoutPieces* pieces) const {
     TotalAdvanceCompositor compositor(pieces);
@@ -128,7 +128,7 @@ float StyleRun::measureHyphenPiece(const U32StringPiece& textBuf, const Range& r
     return compositor.advance();
 }
 
-void MeasuredText::measure(const U32StringPiece& textBuf, bool computeHyphenation,
+void MeasuredText::measure(const U16StringPiece& textBuf, bool computeHyphenation,
                            bool computeLayout, MeasuredText* hint) {
     if (textBuf.size() == 0) {
         return;
@@ -179,7 +179,7 @@ public:
     float mExtraAdvance;
 };
 
-void StyleRun::appendLayout(const U32StringPiece& textBuf, const Range& range,
+void StyleRun::appendLayout(const U16StringPiece& textBuf, const Range& range,
                             const Range& /* context */, const LayoutPieces& pieces,
                             const MinikinPaint& paint, uint32_t outOrigin,
                             StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
@@ -234,7 +234,7 @@ private:
     MinikinRect mBounds;
 };
 
-std::pair<float, MinikinRect> StyleRun::getBounds(const U32StringPiece& textBuf, const Range& range,
+std::pair<float, MinikinRect> StyleRun::getBounds(const U16StringPiece& textBuf, const Range& range,
                                                   const LayoutPieces& pieces) const {
     BoundsCompositor compositor;
     const Bidi bidiFlag = mIsRtl ? Bidi::FORCE_RTL : Bidi::FORCE_LTR;
@@ -266,7 +266,7 @@ private:
     MinikinExtent mExtent;
 };
 
-MinikinExtent StyleRun::getExtent(const U32StringPiece& textBuf, const Range& range,
+MinikinExtent StyleRun::getExtent(const U16StringPiece& textBuf, const Range& range,
                                   const LayoutPieces& pieces) const {
     ExtentCompositor compositor;
     Bidi bidiFlag = mIsRtl ? Bidi::FORCE_RTL : Bidi::FORCE_LTR;
@@ -283,7 +283,7 @@ MinikinExtent StyleRun::getExtent(const U32StringPiece& textBuf, const Range& ra
     return compositor.extent();
 }
 
-Layout MeasuredText::buildLayout(const U32StringPiece& textBuf, const Range& range,
+Layout MeasuredText::buildLayout(const U16StringPiece& textBuf, const Range& range,
                                  const Range& contextRange, const MinikinPaint& paint,
                                  StartHyphenEdit startHyphen, EndHyphenEdit endHyphen) {
     Layout outLayout(range.getLength());
@@ -303,7 +303,7 @@ Layout MeasuredText::buildLayout(const U32StringPiece& textBuf, const Range& ran
     return outLayout;
 }
 
-MinikinRect MeasuredText::getBounds(const U32StringPiece& textBuf, const Range& range) const {
+MinikinRect MeasuredText::getBounds(const U16StringPiece& textBuf, const Range& range) const {
     MinikinRect rect;
     float totalAdvance = 0.0f;
 
@@ -321,7 +321,7 @@ MinikinRect MeasuredText::getBounds(const U32StringPiece& textBuf, const Range& 
     return rect;
 }
 
-MinikinExtent MeasuredText::getExtent(const U32StringPiece& textBuf, const Range& range) const {
+MinikinExtent MeasuredText::getExtent(const U16StringPiece& textBuf, const Range& range) const {
     MinikinExtent extent;
     for (const auto& run : runs) {
         const Range& runRange = run->getRange();

@@ -187,7 +187,7 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
     if (mCopiedBuffer.empty() || mCopiedBuffer.size() != mTextLength) {
         mCopiedBuffer.resize(mTextLength);
     }
-    TextUtils::getChars(text, start, end, mCopiedBuffer, 0);
+    TextUtils::getChars(text, start, end, mCopiedBuffer.data(), 0);
 
     // Replace characters associated with ReplacementSpan to U+FFFC.
     if (mSpanned != nullptr) {
@@ -255,7 +255,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
         // If the whole text is LTR direction, just apply whole region.
         if (builder == nullptr) {
             mWholeWidth += mCachedPaint.getTextRunAdvances(
-                    mCopiedBuffer, start, end - start, start, end - start, false /* isRtl */,
+                    mCopiedBuffer.data(), start, end - start, start, end - start, false /* isRtl */,
                     &mWidths, start);
         } else {
             builder->appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
@@ -271,7 +271,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
                 if (builder == nullptr) {
                     const int levelLength = levelEnd - levelStart;
                     mWholeWidth += mCachedPaint.getTextRunAdvances(
-                            mCopiedBuffer, levelStart, levelLength, levelStart, levelLength,
+                            mCopiedBuffer.data(), levelStart, levelLength, levelStart, levelLength,
                             isRtl, &mWidths, levelStart);
                 } else {
                     builder->appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);

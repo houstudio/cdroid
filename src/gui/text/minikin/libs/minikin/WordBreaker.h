@@ -92,7 +92,7 @@ public:
 
     WordBreaker();
 
-    void setText(const char32_t* data, size_t size);
+    void setText(const uint16_t* data, size_t size);
 
     // Advance iterator to next word break with current locale. Return offset, or -1 if EOT
     ssize_t next();
@@ -138,7 +138,7 @@ private:
     ICULineBreakerPool::Slot mIcuBreaker;
 
     UText* mUText;// = UTEXT_INITIALIZER;
-    const char32_t* mText = nullptr;
+    const uint16_t* mText = nullptr;
     size_t mTextSize;
     ssize_t mLast;
     ssize_t mCurrent;
@@ -146,9 +146,6 @@ private:
     // state for the email address / url detector
     ssize_t mScanOffset;
     bool mInEmailOrUrl;
-    
-    // UTF-16 buffer for ICU (since ICU works with UTF-16)
-    std::vector<uint16_t> mUtf16Text;
 };
 
 }  // namespace minikin

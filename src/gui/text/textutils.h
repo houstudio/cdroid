@@ -13,7 +13,7 @@ class Spanned;
 class Spannable;
 class TextUtils {
     // Zero-width character used to fill ellipsized strings when codepoint length must be preserved.
-    /*package*/static constexpr char32_t ELLIPSIS_FILLER = 0xFEFF; // ZERO WIDTH NO-BREAK SPACE
+    /*package*/static constexpr char16_t ELLIPSIS_FILLER = 0xFEFF; // ZERO WIDTH NO-BREAK SPACE
 
 private:
 
@@ -70,7 +70,8 @@ private:
 public:
     static std::wstring utf8tounicode(const std::string&);
     static std::string unicode2utf8(const std::wstring&);
-    static std::string utf16_utf8(const unsigned short*utf16,int len);
+    static std::string utf16_utf8(const uint16_t*utf16,size_t);
+    static std::string utf16_utf8(const std::u16string&utf16);
     static const std::u16string utf8_utf16(const std::string&utf8);
     static bool isEmpty(const CharSequence* str);
     static bool isEmpty(const std::string&);
@@ -85,20 +86,20 @@ public:
     static std::string formatTime(const std::string& fmt, int64_t seconds);
 
     static std::string getEllipsisString(TextUtils::TruncateAt method);
-    static void getChars(const CharSequence* s, int start, int end,  std::vector<char32_t>& dest, int destoff);
+    static void getChars(const CharSequence* s, int start, int end, char16_t* dest, int destoff);
 
-    static int indexOf(const CharSequence* s, char32_t ch) {
+    static int indexOf(const CharSequence* s, char16_t ch) {
         return indexOf(s, ch, 0);
     }
 
-    static int indexOf(const CharSequence* s, char32_t ch, int start);
+    static int indexOf(const CharSequence* s, char16_t ch, int start);
 
-    static int indexOf(const CharSequence* s, char32_t ch, int start, int end);
+    static int indexOf(const CharSequence* s, char16_t ch, int start, int end);
 
-    static int lastIndexOf(const CharSequence* s, char32_t ch);
+    static int lastIndexOf(const CharSequence* s, char16_t ch);
 
-    static int lastIndexOf(const CharSequence* s, char32_t ch, int last);
-    static int lastIndexOf(const CharSequence* s, char32_t ch, int start, int last);
+    static int lastIndexOf(const CharSequence* s, char16_t ch, int last);
+    static int lastIndexOf(const CharSequence* s, char16_t ch, int start, int last);
     static int indexOf(const CharSequence* s,const CharSequence* needle);
 
     static int indexOf(const CharSequence* s, const CharSequence* needle, int start);
@@ -146,17 +147,17 @@ public:
     static CharSequence* commaEllipsize(const CharSequence* text, TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more, const TextDirectionHeuristic* textDir);
 
-    static bool couldAffectRtl(char32_t c);
+    static bool couldAffectRtl(char16_t c);
 
-    static bool doesNotNeedBidi(const std::vector<char32_t>& text, int start, int len);
+    static bool doesNotNeedBidi(const std::vector<char16_t>& text, int start, int len);
 
     static std::string htmlEncode(const std::string& s);
     static CharSequence* concat(const std::vector<CharSequence*>&text);
 
     static bool isGraphic(const CharSequence* str);
-    static bool isGraphic(char32_t c);
+    static bool isGraphic(char16_t c);
     static bool isDigitsOnly(const CharSequence* str);
-    static bool isPrintableAscii(char32_t c);
+    static bool isPrintableAscii(char16_t c);
     static bool isPrintableAsciiOnly(const CharSequence* str);
 
     static int getCapsMode(const CharSequence* cs, int off, int reqModes);

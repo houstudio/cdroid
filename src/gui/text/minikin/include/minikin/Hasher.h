@@ -49,14 +49,6 @@ public:
         return *this;
     }
 
-    inline Hasher& updateInts(const uint32_t* data, uint32_t length) {
-        update(length);
-        for (uint32_t i = 0; i < length; i++) {
-            update(data[i]);
-        }
-        return *this;
-    }
-
     inline Hasher& updateString(const std::string& str) {
         uint32_t size = str.size();
         update(size);

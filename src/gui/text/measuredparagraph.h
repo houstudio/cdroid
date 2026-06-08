@@ -16,7 +16,7 @@ private:
     const Spanned* mSpanned;
     int mTextStart;
     int mTextLength;
-    std::vector<char32_t> mCopiedBuffer;
+    std::vector<char16_t> mCopiedBuffer;
     int mParaDir;
     bool mLtrWithoutBidi;
     std::vector<uint8_t> mLevels;
@@ -50,7 +50,7 @@ public:
         return mTextLength;
     }
 
-    const std::vector<char32_t>& getChars() const{
+    const std::vector<char16_t>& getChars() const{
         return mCopiedBuffer;
     }
 

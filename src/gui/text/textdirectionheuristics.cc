@@ -73,7 +73,7 @@ public:
     }
 
 public:
-    bool isRtl(const char32_t* array, int start, int count)const override{
+    bool isRtl(const char16_t* array, int start, int count)const override{
         return 0;//isRtl(CharBuffer.wrap(array), start, count);
     }
 

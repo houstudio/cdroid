@@ -21,7 +21,7 @@
 
 namespace minikin {
 
-LineBreakResult breakIntoLines(const U32StringPiece& textBuffer, BreakStrategy strategy,
+LineBreakResult breakIntoLines(const U16StringPiece& textBuffer, BreakStrategy strategy,
                                HyphenationFrequency frequency, bool justified,
                                const MeasuredText& measuredText, const LineWidth& lineWidth,
                                const TabStops& tabStops) {

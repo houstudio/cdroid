@@ -77,8 +77,8 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         if (mChars.empty() || mChars.size() < mLen) {
             mChars.resize(mLen);// = ArrayUtils.newUnpaddedCharArray(mLen);
         }
-        TextUtils::getChars(text, start, limit, mChars, 0);
-        text->getChars(start,limit,mChars,0);
+        TextUtils::getChars(text, start, limit, mChars.data(), 0);
+        text->getChars(start,limit,mChars.data(),0);
         if (hasReplacement) {
             // Handle these all at once so we don't have to do it as we go.
             // Replace the first character of each replacement run with the
@@ -487,7 +487,7 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
 
     int cursorOpt = after ? Paint::CURSOR_AFTER : Paint::CURSOR_BEFORE;
     if (mCharsValid) {
-        return wp.getTextRunCursor(mChars, spanStart, spanLimit - spanStart,
+        return wp.getTextRunCursor(mChars.data(), spanStart, spanLimit - spanStart,
                 runIsRtl, offset, cursorOpt);
     } else {
         return wp.getTextRunCursor(mText, mStart + spanStart,
@@ -541,7 +541,7 @@ void TextLine::drawStroke(TextPaint& wp, Canvas& c, int color, float position,
 float TextLine::getRunAdvance(TextPaint& wp, int start, int end, int contextStart, int contextEnd,
         bool runIsRtl, int offset) {
     if (mCharsValid) {
-        return wp.getRunAdvance(mChars, start, end, contextStart, contextEnd, runIsRtl, offset);
+        return wp.getRunAdvance(mChars.data(), start, end, contextStart, contextEnd, runIsRtl, offset);
     } else {
         const int delta = mStart;
         if (mComputed == nullptr) {
@@ -857,14 +857,14 @@ void TextLine::drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
     if (mCharsValid) {
         const int count = end - start;
         const int contextCount = contextEnd - contextStart;
-        wp.drawTextRun(c,mChars, mStart+start, count, contextStart, contextCount,
+        wp.drawTextRun(c,mChars.data(), mStart+start, count, contextStart, contextCount,
                 x, y, runIsRtl);
     } else {
         const int delta = mStart;
-        std::vector<char32_t>buf(end-start+1);
-        mText->getChars(mStart+start,mStart+end,buf,0);
+        std::vector<char16_t>buf(end-start+1);
+        mText->getChars(mStart+start,mStart+end,buf.data(),0);
         //LOGD("drawTextRun start=%d end=%d contextStart=%d contextEnd=%d",mStart+start,mStart+end,contextStart,contextEnd);
-        wp.drawTextRun(c,buf, 0, end-start, contextStart, delta + contextEnd, x, y, runIsRtl);
+        wp.drawTextRun(c,buf.data(), 0, end-start, contextStart, delta + contextEnd, x, y, runIsRtl);
     }
 }
 

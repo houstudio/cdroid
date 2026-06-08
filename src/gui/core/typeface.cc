@@ -22,7 +22,7 @@
 #include <dirent.h>
 #include <cdlog.h>
 #include <core/typeface.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <cairomm/matrix.h>
 #include <core/context.h>
 #include <fontconfig/fcfreetype.h>

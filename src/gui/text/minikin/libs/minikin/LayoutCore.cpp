@@ -53,8 +53,8 @@ struct SkiaArguments {
 };
 
 // Returns true if the character needs to be excluded for the line spacing.
-inline bool isLineSpaceExcludeChar(char32_t c) {
-    return c == 0x000A || c == 0x000D;  // LINE FEED (U+000A) and CARRIAGE RETURN (U+000D)
+inline bool isLineSpaceExcludeChar(uint16_t c) {
+    return c == CHAR_LINE_FEED || c == CHAR_CARRIAGE_RETURN;
 }
 
 static hb_position_t harfbuzzGetGlyphHorizontalAdvance(hb_font_t* /* hbFont */, void* fontData,
@@ -136,29 +136,26 @@ static bool isColorBitmapFont(const HbFontUniquePtr& font) {
     return cbdt;
 }
 
-static hb_codepoint_t decodeUtf32(const char32_t* chars, size_t len, ssize_t* iter) {
-    if (size_t(*iter) >= len) {
-        return HB_CODEPOINT_INVALID;
+static hb_codepoint_t decodeUtf16(const uint16_t* chars, size_t len, ssize_t* iter) {
+    UChar32 result;
+    U16_NEXT(chars, *iter, (ssize_t)len, result);
+    if (U_IS_SURROGATE(result)) {  // isolated surrogate
+        result = 0xFFFDu;          // U+FFFD REPLACEMENT CHARACTER
     }
-    char32_t cp = chars[(*iter)++];
-    // Validate the codepoint (Unicode range is 0x0000 to 0x10FFFF)
-    if (cp > 0x10FFFF) {
-        return 0xFFFDu;  // U+FFFD REPLACEMENT CHARACTER
-    }
-    return (hb_codepoint_t)cp;
+    return (hb_codepoint_t)result;
 }
 
-static hb_script_t getScriptRun(const char32_t* chars, size_t len, ssize_t* iter) {
+static hb_script_t getScriptRun(const uint16_t* chars, size_t len, ssize_t* iter) {
     if (size_t(*iter) == len) {
         return HB_SCRIPT_UNKNOWN;
     }
-    uint32_t cp = decodeUtf32(chars, len, iter);
+    uint32_t cp = decodeUtf16(chars, len, iter);
     hb_unicode_funcs_t* unicode_func = hb_unicode_funcs_get_default();
     hb_script_t current_script = hb_unicode_script(unicode_func, cp);
     for (;;) {
         if (size_t(*iter) == len) break;
         const ssize_t prev_iter = *iter;
-        cp = decodeUtf32(chars, len, iter);
+        cp = decodeUtf16(chars, len, iter);
         const hb_script_t script = hb_unicode_script(unicode_func, cp);
         if (script != current_script) {
             if (current_script == HB_SCRIPT_INHERITED || current_script == HB_SCRIPT_COMMON) {
@@ -243,7 +240,7 @@ static inline void addHyphenToHbBuffer(const HbBufferUniquePtr& buffer, const Hb
 
 // Returns the cluster value assigned to the first codepoint added to the buffer, which can be used
 // to translate cluster values returned by HarfBuzz to input indices.
-static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char32_t* buf,
+static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const uint16_t* buf,
                                      size_t start, size_t count, size_t bufSize,
                                      ssize_t scriptRunStart, ssize_t scriptRunEnd,
                                      StartHyphenEdit inStartHyphen, EndHyphenEdit inEndHyphen,
@@ -275,7 +272,7 @@ static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char
         addHyphenToHbBuffer(buffer, hbFont, startHyphen, 0 /* cluster */);
     }
 
-    const char32_t* hbText;
+    const uint16_t* hbText;
     int hbTextLength;
     unsigned int hbItemOffset;
     unsigned int hbItemLength = scriptRunEnd - scriptRunStart;  // This is >= 1.
@@ -283,7 +280,9 @@ static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char
     const bool hasEndInsertion = isInsertion(endHyphen);
     const bool hasEndReplacement = isReplacement(endHyphen);
     if (hasEndReplacement) {
-        // Skip the last codepoint while copying the buffer for HarfBuzz if it's a replacement.
+        // Skip the last code unit while copying the buffer for HarfBuzz if it's a replacement. We
+        // don't need to worry about non-BMP characters yet since replacements are only done for
+        // code units at the moment.
         hbItemLength -= 1;
     }
 
@@ -306,7 +305,7 @@ static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char
         hbTextLength = hbItemOffset + hbItemLength;
     }
 
-    hb_buffer_add_utf32(buffer.get(), reinterpret_cast<const uint32_t*>(hbText), hbTextLength, hbItemOffset, hbItemLength);
+    hb_buffer_add_utf16(buffer.get(), hbText, hbTextLength, hbItemOffset, hbItemLength);
 
     unsigned int numCodepoints;
     hb_glyph_info_t* cpInfo = hb_buffer_get_glyph_infos(buffer.get(), &numCodepoints);
@@ -320,11 +319,12 @@ static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char
         //
         // When a replacement happens instead, we want it to get the cluster value of
         // the character it's replacing, which is one "codepoint length" larger than
-        // the last cluster.
+        // the last cluster. But since the character replaced is always just one
+        // code unit, we can just add 1.
         uint32_t hyphenCluster;
         if (numCodepoints == 0) {
             // Nothing was added to the HarfBuzz buffer. This can only happen if
-            // we have a replacement that is replacing a one-codepoint script run.
+            // we have a replacement that is replacing a one-code unit script run.
             hyphenCluster = 0;
         } else {
             hyphenCluster = cpInfo[numCodepoints - 1].cluster + (uint32_t)hasEndReplacement;
@@ -339,10 +339,10 @@ static inline uint32_t addToHbBuffer(const HbBufferUniquePtr& buffer, const char
 
 }  // namespace
 
-LayoutPiece::LayoutPiece(const U32StringPiece& textBuf, const Range& range, bool isRtl,
+LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool isRtl,
                          const MinikinPaint& paint, StartHyphenEdit startHyphen,
                          EndHyphenEdit endHyphen) {
-    const char32_t* buf = textBuf.data();
+    const uint16_t* buf = textBuf.data();
     const size_t start = range.getStart();
     const size_t count = range.getLength();
     const size_t bufSize = textBuf.size();

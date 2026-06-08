@@ -117,7 +117,7 @@ Hyphenator::Hyphenator(const uint8_t* patternData, size_t minPrefix, size_t minS
           mMinSuffix(minSuffix),
           mHyphenationLocale(hyphenLocale) {}
 
-void Hyphenator::hyphenate(const U32StringPiece& word, HyphenationType* out) const {
+void Hyphenator::hyphenate(const U16StringPiece& word, HyphenationType* out) const {
     const size_t len = word.size();
     const size_t paddedLen = len + 2;  // start and stop code each count for 1
     if (mPatternData != nullptr && len >= mMinPrefix + mMinSuffix &&
@@ -222,7 +222,7 @@ static inline int32_t getJoiningType(UChar32 codepoint) {
 
 // Assumption for caller: location must be >= 2 and word[location] == CHAR_SOFT_HYPHEN.
 // This function decides if the letters before and after the hyphen should appear as joining.
-static inline HyphenationType getHyphTypeForArabic(const U32StringPiece& word, size_t location) {
+static inline HyphenationType getHyphTypeForArabic(const U16StringPiece& word, size_t location) {
     ssize_t i = location;
     int32_t type = U_JT_NON_JOINING;
     while (static_cast<size_t>(i) < word.size() &&
@@ -247,7 +247,7 @@ static inline HyphenationType getHyphTypeForArabic(const U32StringPiece& word, s
 // Use various recommendations of UAX #14 Unicode Line Breaking Algorithm for hyphenating words
 // that didn't match patterns, especially words that contain hyphens or soft hyphens (See sections
 // 5.3, Use of Hyphen, and 5.4, Use of Soft Hyphen).
-void Hyphenator::hyphenateWithNoPatterns(const U32StringPiece& word, HyphenationType* out) const {
+void Hyphenator::hyphenateWithNoPatterns(const U16StringPiece& word, HyphenationType* out) const {
     out[0] = HyphenationType::DONT_BREAK;
     for (size_t i = 1; i < word.size(); i++) {
         const uint16_t prevChar = word[i - 1];
@@ -289,7 +289,7 @@ void Hyphenator::hyphenateWithNoPatterns(const U32StringPiece& word, Hyphenation
 }
 
 HyphenationType Hyphenator::alphabetLookup(uint16_t* alpha_codes,
-                                           const U32StringPiece& word) const {
+                                           const U16StringPiece& word) const {
     const Header* header = getHeader();
     HyphenationType result = HyphenationType::BREAK_AND_INSERT_HYPHEN;
     // TODO: check header magic

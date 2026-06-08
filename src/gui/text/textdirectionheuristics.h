@@ -3,7 +3,7 @@
 namespace cdroid{
 class CharSequence;
 struct TextDirectionHeuristic {
-    virtual bool isRtl(const char32_t* array, int start, int count)const=0;
+    virtual bool isRtl(const char16_t* array, int start, int count)const=0;
     virtual bool isRtl(CharSequence* cs, int start, int count)const=0;
 };
 class TextDirectionHeuristics {

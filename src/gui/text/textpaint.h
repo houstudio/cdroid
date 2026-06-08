@@ -128,17 +128,17 @@ public:
     float measureText(const std::string& text)const;
     float measureText(const std::string& text, int start, int end)const;
     float measureText(const CharSequence* text, int start, int end)const;
-    float measureText(const char32_t* text, int index, int count)const;
+    float measureText(const char16_t* text, int index, int count)const;
     void getFontMetricsInt(const CharSequence* text, int start, int count,
         int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const;
     int getFontMetricsInt(FontMetricsInt& fmi)const;
-    float getTextRunAdvances(const std::vector<char32_t>& chars, int index, int count, int contextIndex,
+    float getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
             int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex)const;
     float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
-    float getRunAdvance(const std::vector<char32_t>& text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
+    float getRunAdvance(const char16_t* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
     float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const;
-    float getTextRunCursor(const std::vector<char32_t>& text, int start, int count, bool isRt, int offset, int cursorOpt)const;
-    void drawTextRun(Canvas&c,const std::vector<char32_t>&chars,int start,int count,
+    float getTextRunCursor(const char16_t* text, int start, int count, bool isRt, int offset, int cursorOpt)const;
+    void drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl)const;
 };
 

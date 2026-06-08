@@ -367,11 +367,11 @@ bool FontCollection::hasVariationSelector(uint32_t baseCodepoint,
 
 constexpr uint32_t REPLACEMENT_CHARACTER = 0xFFFD;
 
-std::vector<FontCollection::Run> FontCollection::itemize(U32StringPiece text, FontStyle style,
+std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, FontStyle style,
                                                          uint32_t localeListId,
                                                          FamilyVariant familyVariant,
                                                          uint32_t runMax) const {
-    const char32_t* string = text.data();
+    const uint16_t* string = text.data();
     const uint32_t string_size = text.size();
     std::vector<Run> result;
 
@@ -386,20 +386,22 @@ std::vector<FontCollection::Run> FontCollection::itemize(U32StringPiece text, Fo
 
     uint32_t nextCh = 0;
     uint32_t prevCh = 0;
-    size_t nextPos = 0;
+    size_t nextUtf16Pos = 0;
     size_t readLength = 0;
-    if (readLength < string_size) {
-        nextCh = string[readLength];
-        readLength++;
+    U16_NEXT(string, readLength, string_size, nextCh);
+    if (U_IS_SURROGATE(nextCh)) {
+        nextCh = REPLACEMENT_CHARACTER;
     }
 
     do {
         const uint32_t ch = nextCh;
-        const size_t pos = nextPos;
-        nextPos = readLength;
+        const size_t utf16Pos = nextUtf16Pos;
+        nextUtf16Pos = readLength;
         if (readLength < string_size) {
-            nextCh = string[readLength];
-            readLength++;
+            U16_NEXT(string, readLength, string_size, nextCh);
+            if (U_IS_SURROGATE(nextCh)) {
+                nextCh = REPLACEMENT_CHARACTER;
+            }
         } else {
             nextCh = kEndOfString;
         }
@@ -416,17 +418,17 @@ std::vector<FontCollection::Run> FontCollection::itemize(U32StringPiece text, Fo
         if (!shouldContinueRun) {
             const std::shared_ptr<FontFamily>& family = getFamilyForChar(
                     ch, isVariationSelector(nextCh) ? nextCh : 0, localeListId, familyVariant);
-            if (pos == 0 || family.get() != lastFamily) {
-                size_t start = pos;
+            if (utf16Pos == 0 || family.get() != lastFamily) {
+                size_t start = utf16Pos;
                 // Workaround for combining marks and emoji modifiers until we implement
                 // per-cluster font selection: if a combining mark or an emoji modifier is found in
                 // a different font that also supports the previous character, attach previous
                 // character to the new run. U+20E3 COMBINING ENCLOSING KEYCAP, used in emoji, is
                 // handled properly by this since it's a combining mark too.
-                if (pos != 0 &&
+                if (utf16Pos != 0 &&
                     (isCombining(ch) || (isEmojiModifier(ch) && isEmojiBase(prevCh))) &&
                     family != nullptr && family->getCoverage().get(prevCh)) {
-                    const size_t prevChLength = 1;  // UTF-32: each character is 1 unit
+                    const size_t prevChLength = U16_LENGTH(prevCh);
                     if (run != nullptr) {
                         run->end -= prevChLength;
                         if (run->start == run->end) {
@@ -449,7 +451,7 @@ std::vector<FontCollection::Run> FontCollection::itemize(U32StringPiece text, Fo
         }
         prevCh = ch;
         if (run != nullptr) {
-            run->end = nextPos;  // exclusive
+            run->end = nextUtf16Pos;  // exclusive
         }
 
         // Stop searching the remaining characters if the result length gets runMax + 2.

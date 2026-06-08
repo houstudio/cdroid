@@ -341,9 +341,9 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
         if ((directions == &DIRS_ALL_LEFT_TO_RIGHT) && !mSpannedText && !hasTab && !justify) {
             // XXX: assumes there's nothing additional to be done
             //canvas.drawText(buf, start, end, x, lbaseline, paint);
-            std::vector<char32_t>dest;
-            buf->getChars(start,end,dest,0);
-            paint.drawTextRun(canvas,dest,0,dest.size(),0,0,x,lbaseline,false);
+            std::vector<char16_t>dest(end-start);
+            buf->getChars(start,end,dest.data(),0);
+            paint.drawTextRun(canvas,dest.data(),0,dest.size(),0,0,x,lbaseline,false);
         } else {
             tl->set(&paint, buf, start, end, dir, directions, hasTab, tabStops,
                     getEllipsisStart(lineNum), getEllipsisStart(lineNum) + getEllipsisCount(lineNum));
@@ -1567,7 +1567,7 @@ std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int st
     }
 }
 
-void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& dest, int destoff, TextUtils::TruncateAt method) {
+void TextLayout::ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method) {
     const int ellipsisCount = getEllipsisCount(line);
     if (ellipsisCount == 0) {
         return;
@@ -1596,14 +1596,14 @@ void TextLayout::ellipsize(int start, int end, int line, std::vector<char32_t>& 
 
 //static class Ellipsizer implements CharSequence, GetChars
 int TextLayout::Ellipsizer::charAt(int off) const {
-    std::vector<char32_t> buf(8) ;//= TextUtils.obtain(1);
+    char16_t buf[8] ;//= TextUtils.obtain(1);
     getChars(off, off + 1, buf, 0);
-    char32_t ret = buf[0];
+    char16_t ret = buf[0];
     //TextUtils.recycle(buf);
     return ret;
 }
 
-void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char32_t>& dest, int destoff) const {
+void TextLayout::Ellipsizer::getChars(int start, int end, char16_t* dest, int destoff) const {
     const int line1 = mLayout->getLineForOffset(start);
     const int line2 = mLayout->getLineForOffset(end);
     TextUtils::getChars(mText, start, end, dest, destoff);
@@ -1613,9 +1613,9 @@ void TextLayout::Ellipsizer::getChars(int start, int end, std::vector<char32_t>&
 }
 
 CharSequence* TextLayout::Ellipsizer::subSequence(int start, int end) const{
-    std::vector<char32_t> s (end - start);
-    getChars(start, end, s, 0);
-    return new SpannedString("");//s.data());
+    std::vector<char16_t> s (end - start);
+    getChars(start, end, s.data(), 0);
+    return new SpannedString((const char16_t*)s.data());
 }
 
 std::string TextLayout::Ellipsizer::toString() const{
@@ -1624,7 +1624,4 @@ std::string TextLayout::Ellipsizer::toString() const{
     return "";//new String(s);
 }
 
-std::wstring TextLayout::Ellipsizer::toWString() const{
-    return L"";//new String(s);
-}
 }/*endof namespace*/

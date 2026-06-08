@@ -31,7 +31,7 @@
 #include "minikin/MeasuredText.h"
 #include "minikin/MinikinFont.h"
 #include "minikin/Range.h"
-#include "minikin/U32StringPiece.h"
+#include "minikin/U16StringPiece.h"
 
 namespace minikin {
 
@@ -112,7 +112,7 @@ private:
     MINIKIN_PREVENT_COPY_AND_ASSIGN(LineBreakResult);
 };
 
-LineBreakResult breakIntoLines(const U32StringPiece& textBuffer, BreakStrategy strategy,
+LineBreakResult breakIntoLines(const U16StringPiece& textBuffer, BreakStrategy strategy,
                                HyphenationFrequency frequency, bool justified,
                                const MeasuredText& measuredText, const LineWidth& lineWidth,
                                const TabStops& tabStops);

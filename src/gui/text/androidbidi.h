@@ -21,10 +21,10 @@ namespace cdroid{
 class Directions;
 class AndroidBidi {
 public:
-    static int bidi(int dir, const std::vector<char32_t>& chs, std::vector<uint8_t>& chInfo);
+    static int bidi(int dir, const std::vector<char16_t>& chs, std::vector<uint8_t>& chInfo);
 
     static const Directions* directions(int dir,const std::vector<uint8_t>& levels, int lstart,
-            const std::vector<char32_t>& chars, int cstart, int len);
+            const std::vector<char16_t>& chars, int cstart, int len);
 };
 }/*end namespace*/
 #endif/*__ANDROID_BIDI_H__*/

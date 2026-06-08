@@ -146,17 +146,17 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
 
 bool BoringLayout::hasAnyInterestingChars(CharSequence* text, int textLength) {
     constexpr int MAX_BUF_LEN = 500;
-    std::vector<char32_t> buffer(MAX_BUF_LEN);
+    std::vector<char16_t> buffer(MAX_BUF_LEN);
     for (int start = 0; start < textLength; start += MAX_BUF_LEN) {
         const int end = std::min(start + MAX_BUF_LEN, textLength);
 
         // No need to worry about getting half codepoints, since we consider surrogate code
         // units "interesting" as soon we see one.
-        TextUtils::getChars(text, start, end, buffer, 0);
+        TextUtils::getChars(text, start, end, buffer.data(), 0);
 
         const int len = end - start;
         for (int i = 0; i < len; i++) {
-            const char32_t c = buffer[i];
+            const char16_t c = buffer[i];
             if (c == '\n' || c == '\t' || TextUtils::couldAffectRtl(c)) {
                 return true;
             }

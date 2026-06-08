@@ -19,11 +19,11 @@
 
 #include "minikin/LineBreaker.h"
 #include "minikin/MeasuredText.h"
-#include "minikin/U32StringPiece.h"
+#include "minikin/U16StringPiece.h"
 
 namespace minikin {
 
-LineBreakResult breakLineOptimal(const U32StringPiece& textBuf, const MeasuredText& measured,
+LineBreakResult breakLineOptimal(const U16StringPiece& textBuf, const MeasuredText& measured,
                                  const LineWidth& lineWidthLimits, BreakStrategy strategy,
                                  HyphenationFrequency frequency, bool justified);
 

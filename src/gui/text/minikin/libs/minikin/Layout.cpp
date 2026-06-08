@@ -45,7 +45,7 @@
 
 namespace minikin {
 
-void Layout::doLayout(const U32StringPiece& textBuf, const Range& range, Bidi bidiFlags,
+void Layout::doLayout(const U16StringPiece& textBuf, const Range& range, Bidi bidiFlags,
                       const MinikinPaint& paint, StartHyphenEdit startHyphen,
                       EndHyphenEdit endHyphen) {
     const uint32_t count = range.getLength();
@@ -57,7 +57,7 @@ void Layout::doLayout(const U32StringPiece& textBuf, const Range& range, Bidi bi
     }
 }
 
-float Layout::measureText(const U32StringPiece& textBuf, const Range& range, Bidi bidiFlags,
+float Layout::measureText(const U16StringPiece& textBuf, const Range& range, Bidi bidiFlags,
                           const MinikinPaint& paint, StartHyphenEdit startHyphen,
                           EndHyphenEdit endHyphen, float* advances) {
     float advance = 0;
@@ -70,7 +70,7 @@ float Layout::measureText(const U32StringPiece& textBuf, const Range& range, Bid
     return advance;
 }
 
-float Layout::doLayoutRunCached(const U32StringPiece& textBuf, const Range& range, bool isRtl,
+float Layout::doLayoutRunCached(const U16StringPiece& textBuf, const Range& range, bool isRtl,
                                 const MinikinPaint& paint, size_t dstStart,
                                 StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                                 Layout* layout, float* advances) {
@@ -127,14 +127,14 @@ private:
     const float mWordSpacing;
 };
 
-float Layout::doLayoutWord(const char32_t* buf, size_t start, size_t count, size_t bufSize,
+float Layout::doLayoutWord(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
                            bool isRtl, const MinikinPaint& paint, size_t bufStart,
                            StartHyphenEdit startHyphen, EndHyphenEdit endHyphen, Layout* layout,
                            float* advances) {
     float wordSpacing = count == 1 && isWordSpace(buf[start]) ? paint.wordSpacing : 0;
     float totalAdvance = 0;
 
-    const U32StringPiece textBuf(buf, bufSize);
+    const U16StringPiece textBuf(buf, bufSize);
     const Range range(start, start + count);
     LayoutAppendFunctor f(layout, advances, &totalAdvance, bufStart, wordSpacing);
     LayoutCache::getInstance().getOrCreate(textBuf, range, paint, isRtl, startHyphen, endHyphen, f);

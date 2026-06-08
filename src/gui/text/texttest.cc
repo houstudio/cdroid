@@ -19,10 +19,9 @@ public:
     virtual std::string toString() const {
         return TextUtils::unicode2utf8(mStr);
     }
-    virtual std::wstring toWString() const {return mStr;}
     // Copies characters from [start, end) into dest starting at destPos.
     // If dest is shorter than destPos, it will be resized.
-    virtual void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const {
+    virtual void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const {
         dest.assign(mStr.begin()+start,mStr.begin()+end);
     }
 };
@@ -34,15 +33,15 @@ public:
     void onDraw(Canvas&canvas)override {
         cdroid::TextPaint pt;
         pt.setTextSize(24);
-        std::string u8str=
-            "Hello World! السلام عليكم (Peace be upon you) مرحبا "
+        std::u16string u16str=
+            u"Hello World! السلام عليكم (Peace be upon you) مرحبا "
             "This is a test with multiple languages including "
             "Arabic: مرحبا بالعالم and Persian: سلام دنیا "
             "شكراً for testing. Thank you! متشکرم "
             "Line breaking should work properly with complex scripts.";
 
-        cdroid::SpannedString*span= new cdroid::SpannedString(u8str);
-        MyString mystr(u8str);
+        cdroid::SpannedString*span= new cdroid::SpannedString(u16str);
+        //MyString mystr(u8str);
         std::cout<<" spansize="<<span->length()<<std::endl<<std::endl;
         
         
@@ -53,8 +52,8 @@ public:
         canvas.paint();
         for(int i=0;i<10;i++){
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
-                //span,0,span->length(),&pt,800);
-                &mystr,0,mystr.length(),&pt,800);
+                span,0,span->length(),&pt,800);
+                //&mystr,0,mystr.length(),&pt,800);
                 bdr->setMaxLines(8).setLineSpacing(0,1.0f);
             auto startTime = std::chrono::high_resolution_clock::now();
             cdroid::StaticLayout*staticLayout=bdr->build();
@@ -100,6 +99,7 @@ public:
         canvas.stroke();
         std::cout<<std::endl;
         canvas.translate(0,dynamicLayoutHeight+20);
+        std::string u8str=TextUtils::utf16_utf8(u16str);
         for(int j=0;j<10;j++){
             cdroid::Layout layout(24,800);
             layout.setMultiline(true);
@@ -125,8 +125,8 @@ int main(int argc,const char*argv[]){
     cdroid::TextPaint pt;
     pt.setTextSize(32);
     std::vector<float> advances(32);
-    float advance1=pt.measureText((const char32_t*)L"Hello World!Haha!.",0,18);
-    std::cout<<"advance="<<advance1<<std::endl;
+    //float advance1=pt.measureText((const char32_t*)L"Hello World!Haha!.",0,18);
+    //std::cout<<"advance="<<advance1<<std::endl;
     MyWindow mw(0,0,-1,-1);
     app.exec();
 }

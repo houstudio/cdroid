@@ -119,7 +119,7 @@ public:
         return mText->nextSpanTransition(start, limit, type);
     }
     ///////////////////////////////////////////////////////////////////////////////////////////////
-    void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override;
+    void getChars(int start, int end, char16_t* dest, int destPos) const override;
     size_t length() const override{
         return mText->length();
     }
@@ -130,7 +130,6 @@ public:
         return PrecomputedText::create(mText->subSequence(start, end), mParams);
     }
     std::string toString() const override;
-    std::wstring toWString() const override;
 };
 }/*endof namespace*/
 #endif/*__PRE_COMPUTED_TEXT_H__*/

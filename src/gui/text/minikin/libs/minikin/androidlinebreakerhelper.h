@@ -80,7 +80,7 @@ public:
               mIsJustified(isJustified),
               mIndents(std::move(indents)) {}
 
-    LineBreakResult computeBreaks(const U32StringPiece& textBuf, const MeasuredText& measuredText,
+    LineBreakResult computeBreaks(const U16StringPiece& textBuf, const MeasuredText& measuredText,
                                   // Line width arguments
                                   float firstWidth, int32_t firstWidthLineCount, float restWidth,
                                   int32_t indentsOffset,

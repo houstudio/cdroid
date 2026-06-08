@@ -20,10 +20,10 @@ LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
         const ParagraphConstraints& constraints, int lineNumber) {
     const minikin::StaticLayoutNative* builder = (const minikin::StaticLayoutNative*)mNativePtr;
     auto& chars = measuredPara->getChars();
-    minikin::U32StringPiece u32Text(chars.data(), chars.size());
+    minikin::U16StringPiece u16Text((const uint16_t*)chars.data(), chars.size());
     minikin::MeasuredText*mt;
     minikin::LineBreakResult result=builder->computeBreaks(
-                u32Text, *(minikin::MeasuredText*)measuredPara->getNativePtr(),
+                u16Text, *(minikin::MeasuredText*)measuredPara->getNativePtr(),
                 constraints.getFirstWidth(),
                 constraints.getFirstWidthLineCount(),
                 constraints.getWidth(),0,//restWidth,indentsOffset,

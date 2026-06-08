@@ -11,12 +11,12 @@ private:
     bool mComputeHyphenation;
     bool mComputeLayout;
     bool mComputeBounds;
-    std::vector<char32_t> mChars;
+    std::vector<char16_t> mChars;
     int mTop;
     int mBottom;
 private:
     // Use builder instead.
-    MeasuredText(void* ptr,const std::vector<char32_t>& chars, bool computeHyphenation,
+    MeasuredText(void* ptr,const std::vector<char16_t>& chars, bool computeHyphenation,
             bool computeLayout, bool computeBounds, int top, int bottom);
     void rangeCheck(int start, int end)const;
     void throwRangeError(int start, int end)const;
@@ -24,7 +24,7 @@ private:
     void throwOffsetError(int offset)const;
 public:
     ~MeasuredText();
-    const std::vector<char32_t>& getChars() const{
+    const std::vector<char16_t>& getChars() const{
         return mChars;
     }
 
@@ -48,7 +48,7 @@ public:
     class Builder {
     private:
         void* mNativePtr;
-        std::vector<char32_t> mText;
+        std::vector<char16_t> mText;
         bool mComputeHyphenation = false;
         bool mComputeLayout = true;
         bool mComputeBounds = true;
@@ -63,7 +63,7 @@ public:
         static constexpr int HYPHENATION_MODE_NORMAL = 1;
         static constexpr int HYPHENATION_MODE_FAST = 2;
     public:
-        Builder(const std::vector<char32_t>& text);
+        Builder(const std::vector<char16_t>& text);
         Builder(const MeasuredText* text);
         ~Builder();
 

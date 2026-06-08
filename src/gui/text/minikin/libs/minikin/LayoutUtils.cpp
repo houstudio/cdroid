@@ -53,7 +53,7 @@ static bool isWordBreakBefore(uint16_t c) {
 /**
  * Return offset of previous word break. It is either < offset or == 0.
  */
-uint32_t getPrevWordBreakForCache(const U32StringPiece& textBuf, uint32_t offset) {
+uint32_t getPrevWordBreakForCache(const U16StringPiece& textBuf, uint32_t offset) {
     if (offset == 0) return 0;
     if (offset > textBuf.size()) offset = textBuf.size();
     if (isWordBreakBefore(textBuf[offset - 1])) {
@@ -70,7 +70,7 @@ uint32_t getPrevWordBreakForCache(const U32StringPiece& textBuf, uint32_t offset
 /**
  * Return offset of next word break. It is either > offset or == len.
  */
-uint32_t getNextWordBreakForCache(const U32StringPiece& textBuf, uint32_t offset) {
+uint32_t getNextWordBreakForCache(const U16StringPiece& textBuf, uint32_t offset) {
     if (offset >= textBuf.size()) return textBuf.size();
     if (isWordBreakAfter(textBuf[offset])) {
         return offset + 1;

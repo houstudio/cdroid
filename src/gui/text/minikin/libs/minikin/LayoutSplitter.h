@@ -26,7 +26,7 @@
 #include <unicode/ubidi.h>
 
 #include "minikin/Macros.h"
-#include "minikin/U32StringPiece.h"
+#include "minikin/U16StringPiece.h"
 
 #include "LayoutUtils.h"
 
@@ -54,7 +54,7 @@ namespace minikin {
 //   Piece Range   :                          |-------|
 class LayoutSplitter {
 public:
-    LayoutSplitter(const U32StringPiece& textBuf, const Range& range, bool isRtl)
+    LayoutSplitter(const U16StringPiece& textBuf, const Range& range, bool isRtl)
             : mTextBuf(textBuf), mRange(range), mIsRtl(isRtl) {}
 
     class iterator {
@@ -68,7 +68,7 @@ public:
         }
 
         iterator& operator++() {
-            const U32StringPiece& textBuf = mParent->mTextBuf;
+            const U16StringPiece& textBuf = mParent->mTextBuf;
             const Range& range = mParent->mRange;
             if (mParent->mIsRtl) {
                 mPos = mPieceRange.getStart();
@@ -90,7 +90,7 @@ public:
         friend class LayoutSplitter;
 
         iterator(const LayoutSplitter* parent, uint32_t pos) : mParent(parent), mPos(pos) {
-            const U32StringPiece& textBuf = mParent->mTextBuf;
+            const U16StringPiece& textBuf = mParent->mTextBuf;
             const Range& range = mParent->mRange;
             if (parent->mIsRtl) {
                 mContextRange.setStart(getPrevWordBreakForCache(textBuf, pos));
@@ -116,7 +116,7 @@ public:
     iterator end() const { return iterator(this, mIsRtl ? mRange.getStart() : mRange.getEnd()); }
 
 private:
-    U32StringPiece mTextBuf;
+    U16StringPiece mTextBuf;
     Range mRange;  // The range in the original buffer. Used for range check.
     bool mIsRtl;   // The paragraph direction.
 

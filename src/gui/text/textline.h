@@ -46,7 +46,7 @@ private:
     bool mCharsValid;
     bool mIsJustifying;
     TabStops* mTabs;
-    std::vector<char32_t> mChars;
+    std::vector<char16_t> mChars;
     Spanned* mSpanned;
     PrecomputedText* mComputed;
 

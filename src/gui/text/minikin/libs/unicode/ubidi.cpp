@@ -200,7 +200,6 @@ U_CAPI void U_EXPORT2 ubidi_close(UBiDi* pBiDi) {
     if (pBiDi != nullptr) {
         freeLevelsAndRuns(pBiDi);
         free(pBiDi);
-        pBiDi= nullptr;
     }
 }
 

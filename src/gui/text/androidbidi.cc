@@ -18,22 +18,8 @@
 #include <unicode/ubidi.h>
 namespace cdroid {
 // Helper function to convert UTF-32 to UTF-16
-static void convertUtf32ToUtf16(const char32_t* data, size_t size, std::vector<uint16_t>* outUtf16) {
-    outUtf16->reserve(size);
-    for (size_t i = 0; i < size; i++) {
-        char32_t cp = data[i];
-        if (cp <= 0xFFFF) {
-            outUtf16->push_back(static_cast<uint16_t>(cp));
-        } else {
-            // Surrogate pair for characters outside BMP
-            cp -= 0x10000;
-            outUtf16->push_back(static_cast<uint16_t>(0xD800 | ((cp >> 10) & 0x3FF)));
-            outUtf16->push_back(static_cast<uint16_t>(0xDC00 | (cp & 0x3FF)));
-        }
-    }
-}
 
-int AndroidBidi::bidi(int dir, const std::vector<char32_t>& chs, std::vector<uint8_t>& chInfo) {
+int AndroidBidi::bidi(int dir, const std::vector<char16_t>& chs, std::vector<uint8_t>& chInfo) {
     if (chs.empty() || chInfo.empty()) {
         //throw new NullPointerException();
     }
@@ -52,12 +38,10 @@ int AndroidBidi::bidi(int dir, const std::vector<char32_t>& chs, std::vector<uin
     }
 
     // Convert UTF-32 to UTF-16 for ICU BiDi (ICU only supports UTF-16)
-    std::vector<uint16_t> utf16Text;
-    convertUtf32ToUtf16(chs.data(), chs.size(), &utf16Text);
 
     UErrorCode errorCode = U_ZERO_ERROR;
-    UBiDi *pBiDi = ubidi_openSized(utf16Text.size(), 0, &errorCode);
-    ubidi_setPara(pBiDi, reinterpret_cast<const UChar*>(utf16Text.data()), utf16Text.size(),
+    UBiDi *pBiDi = ubidi_openSized(chs.size(), 0, &errorCode);
+    ubidi_setPara(pBiDi, reinterpret_cast<const UChar*>(chs.data()), chs.size(),
                   paraLevel, nullptr, &errorCode);
 
     // Convert UTF-16 indices back to UTF-32 indices
@@ -73,7 +57,7 @@ int AndroidBidi::bidi(int dir, const std::vector<char32_t>& chs, std::vector<uin
 }
 
 const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& levels, int lstart,
-        const std::vector<char32_t>& chars, int cstart, int len) {
+        const std::vector<char16_t>& chars, int cstart, int len) {
     if (len == 0) {
         return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
     }
@@ -95,7 +79,7 @@ const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& le
     if ((curLevel & 1) != (baseLevel & 1)) {
         // look for visible end
         while (--visLen >= 0) {
-            char32_t ch = chars[cstart + visLen];
+            char16_t ch = chars[cstart + visLen];
 
             if (ch == '\n') {
                 --visLen;

@@ -21,12 +21,9 @@ public:
     virtual int charAt(int)const{return 0;}
     virtual CharSequence*subSequence(int,int)const{return nullptr;}
     virtual std::string toString() const = 0;
-    virtual std::wstring toWString() const = 0;
     // Copies characters from [start, end) into dest starting at destPos.
     // If dest is shorter than destPos, it will be resized.
-    virtual void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const = 0;
-    static std::wstring utf8tounicode(const std::string&);
-    static std::string unicode2utf8(const std::wstring&);
+    virtual void getChars(int start, int end, char16_t* dest, int destPos) const = 0;
 };
 
 class ParagraphStyle : public ParcelableSpan {

@@ -27,7 +27,7 @@
 #include "minikin/MinikinFont.h"
 #include "minikin/MinikinRect.h"
 #include "minikin/Range.h"
-#include "minikin/U32StringPiece.h"
+#include "minikin/U16StringPiece.h"
 
 namespace minikin {
 
@@ -44,7 +44,7 @@ struct Point {
 // Immutable, recycle-able layout result.
 class LayoutPiece {
 public:
-    LayoutPiece(const U32StringPiece& textBuf, const Range& range, bool isRtl,
+    LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool isRtl,
                 const MinikinPaint& paint, StartHyphenEdit startHyphen, EndHyphenEdit endHyphen);
 
     // Low level accessors.

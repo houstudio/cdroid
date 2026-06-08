@@ -174,22 +174,18 @@ public:
 // Internal base class for SpannedString and SpannableString (similar to Android's SpannableStringInternal)
 class SpannableStringInternal : virtual public Spanned {
 protected:
-    std::wstring mText;
+    std::u16string mText;
     std::vector<SpanInfo> mSpans;
     SpannableStringInternal() = default;
-    explicit SpannableStringInternal(const std::wstring& text) : mText(text) {}
+    explicit SpannableStringInternal(const std::u16string& text) : mText(text) {}
 public:
     SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan){}
     SpannableStringInternal(const CharSequence* source, int start, int end){}
     SpannableStringInternal(const CharSequence*){}
     virtual ~SpannableStringInternal() = default;
     
-    std::wstring toWString() const override {
-        return mText;
-    }
-
     std::string toString() const override {
-        return TextUtils::unicode2utf8(mText);
+        return "";//TextUtils::unicode2utf8(mText);
     }
 
     size_t length() const override {
@@ -243,16 +239,11 @@ public:
         return edge;
     }
     
-    void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override {
-        if (start < 0) start = 0;
-        if (end > (int)mText.length()) end = (int)mText.length();
+    void getChars(int start, int end, char16_t* dest, int destPos) const override {
         if (start >= end) return;
-        std::wstring sub = mText.substr(start, end - start);
-        if (destPos < 0) destPos = 0;
-        if ((int)dest.size() < destPos) dest.resize(destPos);
+        //if ((int)dest.size() < destPos) dest.resize(destPos);
         for(int i=0;i<end-start;i++)
-            dest[destPos+i]=sub[i];
-        //dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
+            dest[destPos+i]=mText[start+i];
     }
 };
 
@@ -260,12 +251,10 @@ public:
 class SpannedString : public SpannableStringInternal {
 public:
     SpannedString() = default;
-    explicit SpannedString(const std::string& text)
-        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
-    explicit SpannedString(const std::wstring& text)
+    explicit SpannedString(const std::u16string& text)
         : SpannableStringInternal(text) {}
 
-    static SpannedString valueOf(const std::string& text) {
+    static SpannedString valueOf(const std::u16string& text) {
         return SpannedString(text);
     }
 
@@ -291,9 +280,7 @@ class SpannableString : virtual public SpannableStringInternal,virtual public Sp
 public:
     SpannableString() = default;
     SpannableString(const CharSequence*, bool ignoreNoCopySpan ){}
-    explicit SpannableString(const std::string& text)
-        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
-    explicit SpannableString(const std::wstring& text)
+    explicit SpannableString(const std::u16string& text)
         : SpannableStringInternal(text) {}
 
     void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
@@ -312,8 +299,8 @@ public:
 class SpannableStringBuilder : public SpannableStringInternal, virtual public Spannable {
 public:
     SpannableStringBuilder() = default;
-    explicit SpannableStringBuilder(const std::string& text)
-        : SpannableStringInternal(TextUtils::utf8tounicode(text)) {}
+    explicit SpannableStringBuilder(const std::u16string& text)
+        : SpannableStringInternal(text) {}
     SpannableStringBuilder(const CharSequence*){}
     
     void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
@@ -363,7 +350,7 @@ public:
         mSpans.swap(result);
     }
 
-    SpannableStringBuilder& append(const std::string& utf8) { mText += TextUtils::utf8tounicode(utf8); return *this; }
+    SpannableStringBuilder& append(const std::string& utf8) { mText += TextUtils::utf8_utf16(utf8); return *this; }
     SpannableStringBuilder& append(const std::string& utf8, ParcelableSpan* what, int flags) {
         int start = (int)mText.length();
         append(utf8);
@@ -391,7 +378,7 @@ public:
         return append(text.toString(), whats, flags);
     }
     SpannableStringBuilder& append(const std::string& utf8, int start, int end) {
-        std::wstring source = TextUtils::utf8tounicode(utf8);
+        std::u16string source = TextUtils::utf8_utf16(utf8);
         if (start < 0) start = 0;
         if (end > (int)source.length()) end = (int)source.length();
         if (start >= end) return *this;
@@ -399,19 +386,19 @@ public:
         return *this;
     }
     SpannableStringBuilder& append(const CharSequence& text, int start, int end) {
-        std::wstring source = text.toWString();
+        /*std::u16string source = text.toWString();
         if (start < 0) start = 0;
         if (end > (int)source.length()) end = (int)source.length();
         if (start >= end) return *this;
-        mText += source.substr(start, end - start);
+        mText += source.substr(start, end - start);*/
         return *this;
     }
     SpannableStringBuilder& insert(int where, const std::string& utf8) {
-        std::wstring insertText = TextUtils::utf8tounicode(utf8);
+        /*std::wstring insertText = TextUtils::utf8tounicode(utf8);
         if (where < 0) where = 0;
         if (where > (int)mText.length()) where = (int)mText.length();
         mText.insert(where, insertText);
-        shiftSpans(where, (int)insertText.length());
+        shiftSpans(where, (int)insertText.length());*/
         return *this;
     }
     SpannableStringBuilder& insert(int where, const CharSequence& text) {
@@ -423,18 +410,18 @@ public:
         return replace(start, end, std::string());
     }
     SpannableStringBuilder& replace(int start, int end, const std::string& utf8) {
-        if (start < 0) start = 0;
+        /*if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return *this;
         std::wstring insertText = TextUtils::utf8tounicode(utf8);
         int oldLen = end - start;
         mText.replace(start, oldLen, insertText);
         int delta = (int)insertText.length() - oldLen;
-        adjustSpansForReplace(start, end, delta);
+        adjustSpansForReplace(start, end, delta);*/
         return *this;
     }
     SpannableStringBuilder& replace(int start, int end, const CharSequence& text, int tbeg, int tend) {
-        std::wstring source = text.toWString();
+        /*std::wstring source = text.toWString();
         if (tbeg < 0) tbeg = 0;
         if (tend > (int)source.length()) tend = (int)source.length();
         if (tbeg >= tend) return replace(start, end, std::string());
@@ -445,7 +432,7 @@ public:
         int oldLen = end - start;
         mText.replace(start, oldLen, insertText);
         int delta = (int)insertText.length() - oldLen;
-        adjustSpansForReplace(start, end, delta);
+        adjustSpansForReplace(start, end, delta);*/
         return *this;
     }
     SpannableStringBuilder& clear() {
@@ -455,7 +442,7 @@ public:
     }
     void setSpanForText(const std::string& targetUtf8, ParcelableSpan* what, int flags, bool firstOnly = true) {
         if (!what) return;
-        std::wstring target = TextUtils::utf8tounicode(targetUtf8);
+        /*std::wstring target = TextUtils::utf8tounicode(targetUtf8);
         size_t pos = 0;
         while (pos < mText.size()) {
             size_t found = mText.find(target, pos);
@@ -463,16 +450,11 @@ public:
             setSpan(what, (int)found, (int)(found + target.length()), flags);
             if (firstOnly) break;
             pos = found + 1;
-        }
+        }*/
     }
-    void getChars(int start, int end, std::vector<char32_t>& dest, int destPos) const override {
-        if (start < 0) start = 0;
-        if (end > (int)mText.length()) end = (int)mText.length();
-        if (start >= end) return;
-        std::wstring sub = mText.substr(start, end - start);
-        if (destPos < 0) destPos = 0;
-        if ((int)dest.size() < destPos) dest.resize(destPos);
-        dest.insert(dest.begin() + destPos, sub.begin(), sub.end());
+    void getChars(int start, int end, char16_t* dest, int destPos) const override {
+        for(int i=start;i<end;i++)
+            dest[i+destPos]=mText[start+i];
     }
 };
 

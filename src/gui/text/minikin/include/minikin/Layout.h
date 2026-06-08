@@ -26,7 +26,7 @@
 #include "minikin/FontCollection.h"
 #include "minikin/LayoutCore.h"
 #include "minikin/Range.h"
-#include "minikin/U32StringPiece.h"
+#include "minikin/U16StringPiece.h"
 
 namespace minikin {
 
@@ -65,7 +65,7 @@ inline bool isOverride(Bidi bidi) {
 // may not mutate it at the same time.
 class Layout {
 public:
-    Layout(const U32StringPiece& str, const Range& range, Bidi bidiFlags, const MinikinPaint& paint,
+    Layout(const U16StringPiece& str, const Range& range, Bidi bidiFlags, const MinikinPaint& paint,
            StartHyphenEdit startHyphen, EndHyphenEdit endHyphen)
             : mAdvance(0) {
         doLayout(str, range, bidiFlags, paint, startHyphen, endHyphen);
@@ -76,7 +76,7 @@ public:
         mGlyphs.reserve(count);
     }
 
-    static float measureText(const U32StringPiece& str, const Range& range, Bidi bidiFlags,
+    static float measureText(const U16StringPiece& str, const Range& range, Bidi bidiFlags,
                              const MinikinPaint& paint, StartHyphenEdit startHyphen,
                              EndHyphenEdit endHyphen, float* advances);
 
@@ -107,25 +107,25 @@ public:
 private:
     //FRIEND_TEST(LayoutTest, doLayoutWithPrecomputedPiecesTest);
 
-    void doLayout(const U32StringPiece& str, const Range& range, Bidi bidiFlags,
+    void doLayout(const U16StringPiece& str, const Range& range, Bidi bidiFlags,
                   const MinikinPaint& paint, StartHyphenEdit startHyphen, EndHyphenEdit endHyphen);
 
     // Lay out a single bidi run
     // When layout is not null, layout info will be stored in the object.
     // When advances is not null, measurement results will be stored in the array.
-    static float doLayoutRunCached(const U32StringPiece& textBuf, const Range& range, bool isRtl,
+    static float doLayoutRunCached(const U16StringPiece& textBuf, const Range& range, bool isRtl,
                                    const MinikinPaint& paint, size_t dstStart,
                                    StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                                    Layout* layout, float* advances);
 
     // Lay out a single word
-    static float doLayoutWord(const char32_t* buf, size_t start, size_t count, size_t bufSize,
+    static float doLayoutWord(const uint16_t* buf, size_t start, size_t count, size_t bufSize,
                               bool isRtl, const MinikinPaint& paint, size_t bufStart,
                               StartHyphenEdit startHyphen, EndHyphenEdit endHyphen, Layout* layout,
                               float* advances);
 
     // Lay out a single bidi run
-    void doLayoutRun(const char32_t* buf, size_t start, size_t count, size_t bufSize, bool isRtl,
+    void doLayoutRun(const uint16_t* buf, size_t start, size_t count, size_t bufSize, bool isRtl,
                      const MinikinPaint& paint, StartHyphenEdit startHyphen,
                      EndHyphenEdit endHyphen);
 

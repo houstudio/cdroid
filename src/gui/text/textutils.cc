@@ -17,7 +17,7 @@ std::string TextUtils::getEllipsisString(TextUtils::TruncateAt method) {
     return (method == TextUtils::TruncateAt::END_SMALL) ? ELLIPSIS_TWO_DOTS : ELLIPSIS_NORMAL;
 }
 
-void TextUtils::getChars(const CharSequence* s, int start, int end, std::vector<char32_t>& dest, int destoff) {
+void TextUtils::getChars(const CharSequence* s, int start, int end, char16_t* dest, int destoff) {
     /*Class<? extends CharSequence> c = s.getClass();
     if (c == String.class)
         ((String) s).getChars(start, end, dest, destoff);
@@ -34,26 +34,26 @@ void TextUtils::getChars(const CharSequence* s, int start, int end, std::vector<
      s->getChars(start, end, dest, destoff);
 }
 
-int TextUtils::indexOf(const CharSequence* s, char32_t ch, int start) {
+int TextUtils::indexOf(const CharSequence* s, char16_t ch, int start) {
     return indexOf(s, ch, start, s->length());
 }
 
-int TextUtils::indexOf(const CharSequence* s, char32_t ch, int start, int end) {
+int TextUtils::indexOf(const CharSequence* s, char16_t ch, int start, int end) {
     for (int i = start; i < end; i++)
         if (s->charAt(i) == ch)
             return i;
     return -1;
 }
 
-int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch) {
+int TextUtils::lastIndexOf(const CharSequence* s, char16_t ch) {
     return lastIndexOf(s, ch, s->length() - 1);
 }
 
-int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch, int last) {
+int TextUtils::lastIndexOf(const CharSequence* s, char16_t ch, int last) {
     return lastIndexOf(s, ch, 0, last);
 }
 
-int TextUtils::lastIndexOf(const CharSequence* s, char32_t ch, int start, int last) {
+int TextUtils::lastIndexOf(const CharSequence* s, char16_t ch, int start, int last) {
     if (last < 0)
         return -1;
     if (last >= s->length())
@@ -79,7 +79,7 @@ int TextUtils::indexOf(const CharSequence* s,const CharSequence* needle, int sta
     int nlen = needle->length();
     if (nlen == 0)
         return start;
-    char32_t c = needle->charAt(0);
+    char16_t c = needle->charAt(0);
     for (;;) {
         start = indexOf(s, c, start);
         if (start > end - nlen) {
@@ -102,10 +102,10 @@ bool TextUtils::regionMatches(const CharSequence* one, int toffset, const CharSe
         // Integer overflow; len is unreasonably large
         //throw new IndexOutOfBoundsException();
     }
-    std::vector<char32_t> temp(tempLen);
+    std::vector<char16_t> temp(tempLen);
 
-    getChars(one, toffset, toffset + len, temp, 0);
-    getChars(two, ooffset, ooffset + len, temp, len);
+    getChars(one, toffset, toffset + len, temp.data(), 0);
+    getChars(two, ooffset, ooffset + len, temp.data(), len);
 
     bool match = true;
     for (int i = 0; i < len; i++) {
@@ -118,8 +118,8 @@ bool TextUtils::regionMatches(const CharSequence* one, int toffset, const CharSe
 }
 
 std::string TextUtils::substring(const CharSequence* source, int start, int end) {
-    std::vector<char32_t> temp(end - start);
-    getChars(source, start, end, temp, 0);
+    std::vector<char16_t> temp(end - start);
+    getChars(source, start, end, temp.data(), 0);
     //String ret = new String(temp, 0, end - start);
     //return ret;
     return "";
@@ -241,8 +241,11 @@ std::string TextUtils::unicode2utf8(const std::wstring& u32s){
     return std::string(out.get());
 }
 
-std::string TextUtils::utf16_utf8(const unsigned short* utf16, int len){
-    std::unique_ptr<char[]> out(new char[len * 4]);
+std::string TextUtils::utf16_utf8(const std::u16string&utf16){
+    return utf16_utf8((const uint16_t*)utf16.c_str(),(size_t)utf16.length());
+}
+std::string TextUtils::utf16_utf8(const uint16_t*utf16,size_t len){
+    std::unique_ptr<char[]> out(new char[len * 2]);
     char* pout = out.get();
     for(int i = 0; i < len; i++){
         unsigned short wc = utf16[i];
@@ -491,7 +494,7 @@ int TextUtils::getOffsetBefore(const CharSequence* text, int offset) {
         return 0;
     if (offset == 1)
         return 0;
-    char32_t c = text->charAt(offset - 1);
+    char16_t c = text->charAt(offset - 1);
     if (c >= 0xDC00 && c <= 0xDFFF) {
         char c1 = text->charAt(offset - 2);
         if (c1 >= 0xD800 && c1 <= 0xDBFF)
@@ -524,7 +527,7 @@ int TextUtils::getOffsetAfter(const CharSequence* text, int offset) {
     if (offset == len - 1)
         return len;
 
-    char32_t c = text->charAt(offset);
+    char16_t c = text->charAt(offset);
     if (c >= 0xD800 && c <= 0xDBFF) {
         char c1 = text->charAt(offset + 1);
         if (c1 >= 0xDC00 && c1 <= 0xDFFF)
@@ -623,7 +626,7 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
     }*/
 
     if (remaining == 0) {
-        return new SpannedString("");
+        return new SpannedString(u"");
     }
 
     if (sp == nullptr) {
@@ -709,7 +712,7 @@ CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
     return out;
 }
 #endif
-bool TextUtils::couldAffectRtl(char32_t c) {
+bool TextUtils::couldAffectRtl(char16_t c) {
     return (0x0590 <= c && c <= 0x08FF) ||  // RTL scripts
             c == 0x200E ||  // Bidi format character
             c == 0x200F ||  // Bidi format character
@@ -720,7 +723,7 @@ bool TextUtils::couldAffectRtl(char32_t c) {
             (0xFE70 <= c && c <= 0xFEFE);  // Arabic presentation forms
 }
 
-bool TextUtils::doesNotNeedBidi(const std::vector<char32_t>& text, int start, int len) {
+bool TextUtils::doesNotNeedBidi(const std::vector<char16_t>& text, int start, int len) {
     const int end = start + len;
     for (int i = start; i < end; i++) {
         if (couldAffectRtl(text[i])) {
@@ -814,7 +817,7 @@ bool TextUtils::isGraphic(const CharSequence* str) {
     return false;
 }
 
-bool TextUtils::isGraphic(char32_t c) {
+bool TextUtils::isGraphic(char16_t c) {
     int gc =  u_charType(c);//Character.getType(c);
     return     gc != U_CONTROL//Character.CONTROL
             && gc != U_FORMAT//Character.FORMAT
@@ -836,7 +839,7 @@ bool TextUtils::isDigitsOnly(const CharSequence* str) {
     return true;
 }
 
-bool TextUtils::isPrintableAscii(char32_t c) {
+bool TextUtils::isPrintableAscii(char16_t c) {
     const int asciiFirst = 0x20;
     const int asciiLast = 0x7E;  // included
     return (asciiFirst <= c && c <= asciiLast) || c == '\r' || c == '\n';
@@ -858,7 +861,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
     }
 
     int i;
-    char32_t c;
+    char16_t c;
     int mode = 0;
 #if 0
     if ((reqModes&CAP_MODE_CHARACTERS) != 0) {
