@@ -1,4 +1,5 @@
-#include <text/packedintvector.h>
+#include "text/packedintvector.h"
+#include <porting/cdlog.h>
 namespace cdroid{
 
 PackedIntVector::PackedIntVector(int columns) {
@@ -133,13 +134,13 @@ static int growSize(int currentSize) {
 }
 
 void PackedIntVector::growBuffer() {
-    const int newCapacity = growSize(size())*mColumns;
+    const int newCapacity = growSize(size()) * mColumns;
     auto& valuegap = mValueGap;
     const int rowgapstart = mRowGapStart;
     const int after = mRows - (rowgapstart + mRowGapLength);
-    const int newsize = newCapacity/mColumns;
+    const int newsize = newCapacity / mColumns;
     mValues.resize(newCapacity);
-    if (after > 0 && mColumns > 0) {
+    if (after > 0&& mColumns > 0) {
         std::copy_backward(
             mValues.begin() + (mRows - after) * mColumns,
             mValues.begin() + mRows * mColumns,
@@ -149,7 +150,6 @@ void PackedIntVector::growBuffer() {
     for (int i = 0; i < mColumns; i++) {
         if (valuegap[i] >= rowgapstart) {
             valuegap[i] += newsize - mRows;
-
             if (valuegap[i] < rowgapstart) {
                 valuegap[i] = rowgapstart;
             }
@@ -210,7 +210,7 @@ void PackedIntVector::moveRowGapTo(int where) {
         int moving = mRowGapStart - where;
         const int columns = mColumns;
         auto& valuegap = mValueGap;
-        auto values = mValues;
+        auto& values = mValues;
         const int gapend = mRowGapStart + mRowGapLength;
 
         for (int i = where + moving - 1; i >= where; i--) {
