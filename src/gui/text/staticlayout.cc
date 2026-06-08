@@ -271,7 +271,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
     Spanned* spanned = dynamic_cast<Spanned*>(source);
     if (dynamic_cast<PrecomputedText*>(source)) {
         PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(source);
-        const int checkResult =  precomputed->checkResultUsable(bufStart, bufEnd, textDir, *paint,
+        const int checkResult = precomputed->checkResultUsable(bufStart, bufEnd, textDir, *paint,
                         b.mBreakStrategy, b.mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
@@ -453,8 +453,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
                         ? std::max(fmDescent, (int)std::round(descents[breakIndex]))
                         : fmDescent;
 
-                v = out(source, here, endPos,
-                        ascent, descent, fmTop, fmBottom,
+                v = out(source, here, endPos, ascent, descent, fmTop, fmBottom,
                         v, spacingmult, spacingadd, chooseHt, &chooseHtv, fm,
                         hasTabs[breakIndex], hyphenEdits[breakIndex], needMultiply,
                         measuredPara, bufEnd, includepad, trackpad, addLastLineSpacing, chs,

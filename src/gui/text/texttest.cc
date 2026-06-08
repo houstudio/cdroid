@@ -55,7 +55,7 @@ public:
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 //span,0,span->length(),&pt,800);
                 &mystr,0,mystr.length(),&pt,800);
-                bdr->setMaxLines(8).setLineSpacing(0,1.2);
+                bdr->setMaxLines(8).setLineSpacing(0,1.0f);
             auto startTime = std::chrono::high_resolution_clock::now();
             cdroid::StaticLayout*staticLayout=bdr->build();
 
@@ -83,7 +83,7 @@ public:
         for(int i=0;i<10;i++){
             cdroid::DynamicLayout::Builder*bdr=cdroid::DynamicLayout::Builder::obtain(span,&pt,800);
             auto startTime = std::chrono::high_resolution_clock::now();
-            auto dynamicLayout = bdr->setLineSpacing(0,1.2).build();
+            auto dynamicLayout = bdr->setLineSpacing(0,1.0f).build();
             auto endLayout = std::chrono::high_resolution_clock::now();
             
             dynamicLayout->draw(canvas);
@@ -100,7 +100,7 @@ public:
         canvas.stroke();
         std::cout<<std::endl;
         canvas.translate(0,dynamicLayoutHeight+20);
-        for(int j=0;j<2;j++){
+        for(int j=0;j<10;j++){
             cdroid::Layout layout(24,800);
             layout.setMultiline(true);
             layout.setText(u8str);

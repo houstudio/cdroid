@@ -190,4 +190,3 @@ const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& le
     return new Directions(ld);
 }
 }
-
