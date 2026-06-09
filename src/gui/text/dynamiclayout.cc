@@ -111,7 +111,7 @@ DynamicLayout::DynamicLayout(const Builder& b):TextLayout(createEllipsizer(b.mEl
     mBreakStrategy = b.mBreakStrategy;
     mJustificationMode = b.mJustificationMode;
     mHyphenationFrequency = b.mHyphenationFrequency;
-
+    mEllipsize = false;
     generate(b);
 }
 
@@ -414,7 +414,7 @@ bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, in
     // Spans other than ReplacementSpan can be ignored because line top and bottom are
     // disjunction of all tops and bottoms, although it's not optimal.
     Paint* paint = getPaint();
-    Rect mTempRect;
+    Rect mTempRect={};
     PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(text);
     if (precomputed != nullptr) {
         precomputed->getBounds(start, end, mTempRect);

@@ -101,6 +101,7 @@ public:
             this->name = name;
         }
     public:
+        virtual ~Subset()=default;
         int hashCode() const{
             return name.size();
         }

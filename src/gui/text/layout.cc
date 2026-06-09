@@ -70,6 +70,7 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
     mSpacingMult = spacingMult;
     mSpacingAdd = spacingAdd;
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
+    mJustificationMode = JUSTIFICATION_MODE_NONE;
     mTextDir = textDir;
 }
 
