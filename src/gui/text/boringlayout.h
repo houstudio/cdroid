@@ -28,29 +28,29 @@ public:
         RectF getDrawingBoundingBox() const;
     };
 public:
-    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth,
-            Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,bool includePad);
+    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,bool includePad);
 
-    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth,
-            Alignment align, float spacingmult, float spacingadd, BoringLayout::Metrics& metrics,
+    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            float spacingmult, float spacingadd, const BoringLayout::Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
-    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
-            Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad);
+    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
+            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad);
 
-    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
-            Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,
+    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
-            float spacingMult, float spacingAdd, BoringLayout::Metrics &metrics, bool includePad);
+            float spacingMult, float spacingAdd, const BoringLayout::Metrics &metrics, bool includePad);
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad,
+            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad,
             TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
     /* package */ void init(CharSequence* source, TextPaint* paint, Alignment align,
-            BoringLayout::Metrics& metrics, bool includePad, bool trustWidth);
+            const BoringLayout::Metrics& metrics, bool includePad, bool trustWidth);
 
     static Metrics* isBoring(CharSequence* text, TextPaint* paint);
     static Metrics* isBoring(CharSequence* text, TextPaint* paint, Metrics* metrics);

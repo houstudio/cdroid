@@ -2,20 +2,20 @@
 namespace cdroid{
 
 BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad) {
+        float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad) {
     return new BoringLayout(source, paint, outerWidth, align, spacingMult, spacingAdd, metrics,
             includePad);
 }
 
 BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingmult, float spacingadd, BoringLayout::Metrics& metrics,
+        float spacingmult, float spacingadd, const BoringLayout::Metrics& metrics,
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
     return new BoringLayout(source, paint, outerWidth, align, spacingmult, spacingadd, metrics,
             includePad, ellipsize, ellipsizedWidth);
 }
 
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
-        Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad) {
+        Alignment align, float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad) {
     replaceWith(source, paint, outerwidth, align, spacingMult, spacingAdd);
 
     mEllipsizedWidth = outerwidth;
@@ -28,7 +28,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
 }
 
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
-        Alignment align, float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics,
+        Alignment align, float spacingMult, float spacingAdd,const BoringLayout::Metrics& metrics,
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
     bool trust;
 
@@ -53,7 +53,7 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
 }
 
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
-        float spacingMult, float spacingAdd, BoringLayout::Metrics &metrics, bool includePad)
+        float spacingMult, float spacingAdd, const BoringLayout::Metrics &metrics, bool includePad)
     :TextLayout(source, paint, outerwidth, align, TextDirectionHeuristics::LTR, spacingMult,
             spacingAdd){
 
@@ -66,7 +66,7 @@ BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidt
 }
 
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingMult, float spacingAdd, BoringLayout::Metrics& metrics, bool includePad,
+        float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad,
         TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
     :TextLayout(source, paint, outerWidth, align, spacingMult, spacingAdd){
 
@@ -90,7 +90,7 @@ BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidt
 }
 
 void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
-        BoringLayout::Metrics& metrics, bool includePad, bool trustWidth) {
+        const BoringLayout::Metrics& metrics, bool includePad, bool trustWidth) {
     int spacing;
 
     /*if (source instanceof String && align == TextLayout::Alignment::ALIGN_NORMAL) {

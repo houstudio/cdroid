@@ -2,6 +2,7 @@
 #include <core/app.h>
 #include <core/layout.h>
 #include <widget/cdwindow.h>
+#include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
 class MyString:public cdroid::CharSequence{
 private:
@@ -98,7 +99,31 @@ public:
         canvas.rectangle(0,0,layoutWidth,dynamicLayoutHeight);
         canvas.stroke();
         std::cout<<std::endl;
+        BoringLayout::Metrics metrics;//={0,20,-7,28,0,0};
+        metrics.ascent=-7;metrics.descent=20;
+        metrics.bottom=32;metrics.top=0;
+        int boringWidth,boringHeight;
+        auto hintBoring = BoringLayout::isBoring(span, &pt,TextDirectionHeuristics::LTR,nullptr);//mHintBoring);
         canvas.translate(0,dynamicLayoutHeight+20);
+        pt.setTextSize(8);
+        for(int i=0;i<10;i++){
+            auto startTime = std::chrono::high_resolution_clock::now();
+            auto boringLayout=BoringLayout::make(span,&pt,getWidth(),TextLayout::Alignment::ALIGN_NORMAL, 1.f/*mSpacingMult*/, 0/*mSpacingAdd*/,metrics, true);
+            auto endLayout = std::chrono::high_resolution_clock::now();
+            boringLayout->draw(canvas,nullptr,nullptr,0);
+            auto endTime = std::chrono::high_resolution_clock::now();
+             auto durlayout = std::chrono::duration_cast<std::chrono::microseconds>(endLayout-startTime);
+            auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
+            boringWidth=boringLayout->getWidth();
+            boringHeight=boringLayout->getHeight();
+            std::cout << "BoringLayout layout:" << durlayout.count()
+               <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            delete boringLayout;
+        }
+        canvas.set_color(0xFF0000FF);
+        canvas.rectangle(0,0,boringWidth,boringHeight);
+        canvas.stroke();
+        canvas.translate(0,boringHeight+20);
         std::string u8str=TextUtils::utf16_utf8(u16str);
         for(int j=0;j<10;j++){
             cdroid::Layout layout(24,800);
