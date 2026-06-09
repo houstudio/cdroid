@@ -39,4 +39,32 @@ extern const int g_unicodeRangesCount;
 // 查找函数声明
 const UnicodeRange* findUnicodeRange(UChar32 c);
 
+// ========== 大小写转换功能 ==========
+
+// ASCII 快速转换（内联函数，零空间开销）
+inline UChar32 toLower(UChar32 c) {
+    if (c >= 'A' && c <= 'Z') return c | 0x20;
+    return c;
+}
+
+inline UChar32 toUpper(UChar32 c) {
+    if (c >= 'a' && c <= 'z') return c & ~0x20;
+    return c;
+}
+
+// 特殊字符大小写映射结构（用于非ASCII字符）
+struct CaseMapping {
+    uint16_t from;   // 原始字符（U+0080 以上）
+    uint16_t lower;  // 小写形式
+    uint16_t upper;  // 大写形式
+};
+
+// 大小写映射数据表声明
+extern const CaseMapping g_caseMappings[];
+extern const int g_caseMappingsCount;
+
+// 完整大小写转换函数
+UChar32 toLowerFull(UChar32 c);
+UChar32 toUpperFull(UChar32 c);
+
 #endif // __UNICODE_RANGE_DATA_H__

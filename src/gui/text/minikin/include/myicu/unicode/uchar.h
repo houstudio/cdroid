@@ -286,4 +286,8 @@ u_isWhitespace(UChar32 c);
 U_CAPI int32_t U_EXPORT2
 u_getCombiningClass(UChar32 c);
 
+U_CAPI UChar32 U_EXPORT2
+u_tolower(UChar32 c);
+U_CAPI UChar32 U_EXPORT2
+u_toupper(UChar32 c);
 #endif

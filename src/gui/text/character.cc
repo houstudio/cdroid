@@ -5833,11 +5833,9 @@ int Character::toLowerCase(int codePoint) {
         return codePoint;
     }
 
-    return toLowerCaseImpl(codePoint);
+    return u_tolower(codePoint);
 }
 
-static native int toLowerCaseImpl(int codePoint);
-// END Android-changed: Reimplement methods natively on top of ICU4C.
 
 char16_t Character::toUpperCase(char16_t ch) {
     return (char)toUpperCase((int)ch);
@@ -5853,7 +5851,7 @@ int Character::toUpperCase(int codePoint) {
         return codePoint;
     }
 
-    return toUpperCaseImpl(codePoint);
+    return u_toupper(codePoint);
 }
 
 static native int toUpperCaseImpl(int codePoint);
