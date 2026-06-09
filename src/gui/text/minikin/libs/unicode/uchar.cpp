@@ -1,263 +1,408 @@
 #include "unicode/uchar.h"
-#include <cstdint>
+#include "unicode/uscript.h"
+#include "unicode/ubidi.h"
+#include "unicode_range_data.h"
+#include <algorithm>
 
-static int32_t getGraphemeClusterBreak(UChar32 c) {
-    if (c == 0x000D) return U_GCB_CR;
-    if (c == 0x000A) return U_GCB_LF;
-    if ((c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F)) {
-        return U_GCB_CONTROL;
+// Unicode 范围数据表（精简版，覆盖常用字符）
+
+const UnicodeRange g_unicodeRanges[] = {
+    // 控制字符 (0x0000-0x001F)
+    {0x0000, 0x001F, U_OTHER_NEUTRAL, U_CONTROL, U_GCB_CONTROL, U_LB_MANDATORY_BREAK, 0, USCRIPT_COMMON, 0},
+    
+    // 空格 (0x0020)
+    {0x0020, 0x0020, U_WHITE_SPACE_NEUTRAL, U_SPACE_SEPARATOR, U_GCB_OTHER, U_LB_SPACE, 0, USCRIPT_COMMON, (1u << 0)},  // U_WHITE_SPACE = 0
+    
+    // 标点符号 (!") (0x0021-0x0022)
+    {0x0021, 0x0022, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_EXCLAMATION, 0, USCRIPT_COMMON, 0},
+    
+    // #$%
+    {0x0023, 0x0023, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, 0},
+    {0x0024, 0x0024, U_EUROPEAN_NUMBER_TERMINATOR, U_CURRENCY_SYMBOL, U_GCB_OTHER, U_LB_PREFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    {0x0025, 0x0025, U_EUROPEAN_NUMBER_TERMINATOR, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_POSTFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // &'
+    {0x0026, 0x0027, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, 0},
+    
+    // 括号 ()
+    {0x0028, 0x0028, U_OTHER_NEUTRAL, U_OPEN_PUNCTUATION, U_GCB_OTHER, U_LB_OPEN_PUNCTUATION, 0, USCRIPT_COMMON, (1u << 1)},
+    {0x0029, 0x0029, U_OTHER_NEUTRAL, U_CLOSE_PUNCTUATION, U_GCB_OTHER, U_LB_CLOSE_PARENTHESIS, 0, USCRIPT_COMMON, (1u << 1)},
+    
+    // *+
+    {0x002A, 0x002A, U_OTHER_NEUTRAL, U_MATH_SYMBOL, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, 0},
+    {0x002B, 0x002B, U_EUROPEAN_NUMBER_SEPARATOR, U_MATH_SYMBOL, U_GCB_OTHER, U_LB_INFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // ,
+    {0x002C, 0x002C, U_COMMON_NUMBER_SEPARATOR, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_INFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // -
+    {0x002D, 0x002D, U_EUROPEAN_NUMBER_SEPARATOR, U_DASH_PUNCTUATION, U_GCB_OTHER, U_LB_HYPHEN, 0, USCRIPT_COMMON, 0},
+    
+    // .
+    {0x002E, 0x002E, U_COMMON_NUMBER_SEPARATOR, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_INFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // /
+    {0x002F, 0x002F, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_BREAK_SYMBOLS, 0, USCRIPT_COMMON, 0},
+    
+    // 数字 0-9
+    {0x0030, 0x0039, U_EUROPEAN_NUMBER, U_DECIMAL_DIGIT_NUMBER, U_GCB_OTHER, U_LB_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // :;
+    {0x003A, 0x003A, U_EUROPEAN_NUMBER_SEPARATOR, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_INFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    {0x003B, 0x003B, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_INFIX_NUMERIC, 0, USCRIPT_COMMON, 0},
+    
+    // <=>
+    {0x003C, 0x003E, U_OTHER_NEUTRAL, U_MATH_SYMBOL, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, (1u << 1)},
+    
+    // ?@
+    {0x003F, 0x0040, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, 0},
+    
+    // 大写字母 A-Z
+    {0x0041, 0x005A, U_LEFT_TO_RIGHT, U_UPPERCASE_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN, 0},
+    
+    // [\]^_`
+    {0x005B, 0x0060, U_OTHER_NEUTRAL, U_OPEN_PUNCTUATION, U_GCB_OTHER, U_LB_OPEN_PUNCTUATION, 0, USCRIPT_COMMON, 0},
+    
+    // 小写字母 a-z
+    {0x0061, 0x007A, U_LEFT_TO_RIGHT, U_LOWERCASE_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN, 0},
+    
+    // {|}~
+    {0x007B, 0x007E, U_OTHER_NEUTRAL, U_CLOSE_PUNCTUATION, U_GCB_OTHER, U_LB_CLOSE_PUNCTUATION, 0, USCRIPT_COMMON, 0},
+    
+    // DEL 和控制字符 (0x007F-0x009F)
+    {0x007F, 0x009F, U_OTHER_NEUTRAL, U_CONTROL, U_GCB_CONTROL, U_LB_MANDATORY_BREAK, 0, USCRIPT_COMMON, 0},
+    
+    // 不间断空格 (0x00A0)
+    {0x00A0, 0x00A0, U_WHITE_SPACE_NEUTRAL, U_SPACE_SEPARATOR, U_GCB_OTHER, U_LB_BREAK_BOTH, 0, USCRIPT_COMMON, (1u << 0)},  // U_WHITE_SPACE = 0
+    
+    // 上标、下标等
+    {0x00AA, 0x00AA, U_OTHER_NEUTRAL, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN, 0},
+    {0x00B5, 0x00B5, U_OTHER_NEUTRAL, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN, 0},
+    
+    // 中间点
+    {0x00B7, 0x00B7, U_OTHER_NEUTRAL, U_OTHER_PUNCTUATION, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_COMMON, 0},
+    
+    {0x00BA, 0x00BA, U_OTHER_NEUTRAL, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN, 0},
+    
+    // 组合变音符号 (0x0300-0x036F)
+    {0x0300, 0x036F, U_DIR_NON_SPACING_MARK, U_NON_SPACING_MARK, U_GCB_EXTEND, U_LB_COMBINING_MARK, 0, USCRIPT_INHERITED, 0},
+    
+    // 希腊文 (0x0370-0x03FF)
+    {0x0370, 0x03FF, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_GREEK, 0},
+    
+    // 西里尔文 (0x0400-0x04FF)
+    {0x0400, 0x04FF, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_CYRILLIC, 0},
+    
+    // 希伯来文 (0x0590-0x05FF)
+    {0x0590, 0x05FF, U_RIGHT_TO_LEFT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_HEBREW_LETTER, 0, USCRIPT_HEBREW, 0},
+    
+    // 阿拉伯文 (0x0600-0x06FF)
+    {0x0600, 0x06FF, U_RIGHT_TO_LEFT_ARABIC, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ARABIC_LETTER, 0, USCRIPT_ARABIC, 0},
+    
+    // CJK 统一表意文字 (0x4E00-0x9FFF)
+    {0x4E00, 0x9FFF, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_IDEOGRAPHIC, 0, USCRIPT_HAN, 0},
+    
+    // 平假名 (0x3040-0x309F)
+    {0x3040, 0x309F, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_IDEOGRAPHIC, 0, USCRIPT_HIRAGANA, 0},
+    
+    // 片假名 (0x30A0-0x30FF)
+    {0x30A0, 0x30FF, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_IDEOGRAPHIC, 0, USCRIPT_KATAKANA, 0},
+    
+    // Hangul 音节 (0xAC00-0xD7AF)
+    {0xAC00, 0xD7AF, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_LV, U_LB_LV, 0, USCRIPT_HANGUL, 0},
+    
+    // Emoji (0x1F600-0x1F64F)
+    {0x1F600, 0x1F64F, U_OTHER_NEUTRAL, U_OTHER_SYMBOL, U_GCB_OTHER, U_LB_IDEOGRAPHIC, 0, USCRIPT_COMMON, 0},
+    
+    // Emoji (0x1F300-0x1F5FF)
+    {0x1F300, 0x1F5FF, U_OTHER_NEUTRAL, U_OTHER_SYMBOL, U_GCB_OTHER, U_LB_IDEOGRAPHIC, 0, USCRIPT_COMMON, 0},
+    
+    // 区域指示符号 (0x1F1E0-0x1F1FF)
+    {0x1F1E0, 0x1F1FF, U_OTHER_NEUTRAL, U_OTHER_SYMBOL, U_GCB_REGIONAL_INDICATOR, U_LB_REGIONAL_INDICATOR, 0, USCRIPT_COMMON, 0},
+};
+
+const int g_unicodeRangesCount = sizeof(g_unicodeRanges) / sizeof(g_unicodeRanges[0]);
+
+// ============================================================================
+// 查找函数实现
+// ============================================================================
+
+const UnicodeRange* findUnicodeRange(UChar32 c) {
+    // 处理无效码点
+    if (c < 0 || c > 0x10FFFF) {
+        static const UnicodeRange invalidRange = {
+            0, 0, U_OTHER_NEUTRAL, U_UNASSIGNED, U_GCB_OTHER, U_LB_AMBIGUOUS, 0, USCRIPT_UNKNOWN, 0
+        };
+        return &invalidRange;
     }
-    if ((c >= 0x0300 && c <= 0x036F) || (c >= 0x1DC0 && c <= 0x1DFF) ||
-        (c >= 0x20D0 && c <= 0x20FF) || (c >= 0xFE20 && c <= 0xFE2F)) {
-        return U_GCB_EXTEND;
+    
+    // 二分查找
+    int left = 0;
+    int right = g_unicodeRangesCount - 1;
+    
+    while (left <= right) {
+        int mid = left + (right - left) / 2;
+        const auto& range = g_unicodeRanges[mid];
+        
+        if (c >= range.start && c <= range.end) {
+            return &range;
+        } else if (c < range.start) {
+            right = mid - 1;
+        } else {
+            left = mid + 1;
+        }
     }
-    if (c == 0x200D) return U_GCB_ZWJ;
-    if (c >= 0x1F1E6 && c <= 0x1F1FF) return U_GCB_REGIONAL_INDICATOR;
-    if (c >= 0x0E40 && c <= 0x0E4F) return U_GCB_PREPEND;
-    if (c >= 0x09BE && c <= 0x09CC) return U_GCB_SPACING_MARK;
-    if (c >= 0xAC00 && c <= 0xD7AF) {
-        uint32_t s = c - 0xAC00;
-        uint32_t t = s % 28;
-        uint32_t v = (s / 28) % 21;
-        if (v == 0 && t == 0) return U_GCB_L;
-        if (v > 0 && t == 0) return U_GCB_LV;
-        if (t > 0) return U_GCB_LVT;
-    }
-    if (c >= 0x1100 && c <= 0x115F) return U_GCB_L;
-    if (c >= 0x1160 && c <= 0x11A7) return U_GCB_V;
-    if (c >= 0x11A8 && c <= 0x11FF) return U_GCB_T;
-    return U_GCB_OTHER;
+    
+    // 返回默认范围
+    static const UnicodeRange defaultRange = {
+        0, 0, U_LEFT_TO_RIGHT, U_OTHER_LETTER, U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_UNKNOWN, 0
+    };
+    return &defaultRange;
 }
 
-static int32_t getCanonicalCombiningClass(UChar32 c) {
-    if (c >= 0x0300 && c <= 0x0345) return c - 0x0300 + 1;
-    if (c >= 0x034B && c <= 0x034D) return c - 0x034B + 0x20;
-    if (c >= 0x0350 && c <= 0x0352) return c - 0x0350 + 0x23;
-    if (c >= 0x0359 && c <= 0x036F) return c - 0x0359 + 0x2A;
-    if (c >= 0x1DC0 && c <= 0x1DF9) return c - 0x1DC0 + 0x200;
-    return 0;
+// ============================================================================
+// 统一的属性查询接口
+// ============================================================================
+
+U_CAPI UCharDirection U_EXPORT2 u_charDirection(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (UCharDirection)range->directionality;
 }
 
-static int32_t getGeneralCategory(UChar32 c) {
-    if (c >= 'A' && c <= 'Z') return U_UPPERCASE_LETTER;
-    if (c >= 'a' && c <= 'z') return U_LOWERCASE_LETTER;
-    if (c >= '0' && c <= '9') return U_DECIMAL_DIGIT_NUMBER;
-    if (c == ' ') return U_SPACE_SEPARATOR;
-    if (c == '\t') return U_SPACE_SEPARATOR;
-    if (c == '\n') return U_CONTROL;
-    if (c == '\r') return U_CONTROL;
-    if ((c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F)) {
-        return U_CONTROL;
-    }
-    if (c >= 0x0020 && c <= 0x007E) return U_UNASSIGNED;
-    if (c >= 0x4E00 && c <= 0x9FFF) return U_OTHER_LETTER;
-    if (c >= 0x3040 && c <= 0x309F) return U_LOWERCASE_LETTER;
-    if (c >= 0x30A0 && c <= 0x30FF) return U_UPPERCASE_LETTER;
-    if (c >= 0xAC00 && c <= 0xD7AF) return U_OTHER_LETTER;
-    if (c >= 0x0600 && c <= 0x06FF) return U_OTHER_LETTER;
-    if (c >= 0x0590 && c <= 0x05FF) return U_OTHER_LETTER;
-    if (c >= 0x0900 && c <= 0x097F) return U_OTHER_LETTER;
-    if (c >= 0x0980 && c <= 0x09FF) return U_OTHER_LETTER;
-    if (c >= 0x0A00 && c <= 0x0A7F) return U_OTHER_LETTER;
-    if (c >= 0x0A80 && c <= 0x0AFF) return U_OTHER_LETTER;
-    if (c >= 0x0B00 && c <= 0x0B7F) return U_OTHER_LETTER;
-    if (c >= 0x0B80 && c <= 0x0BFF) return U_OTHER_LETTER;
-    if (c >= 0x0C00 && c <= 0x0C7F) return U_OTHER_LETTER;
-    if (c >= 0x0C80 && c <= 0x0CFF) return U_OTHER_LETTER;
-    if (c >= 0x0D00 && c <= 0x0D7F) return U_OTHER_LETTER;
-    if (c >= 0x0E00 && c <= 0x0E7F) return U_OTHER_LETTER;
-    if (c >= 0x0300 && c <= 0x036F) return U_NON_SPACING_MARK;
-    if (c >= 0x1DC0 && c <= 0x1DFF) return U_NON_SPACING_MARK;
-    if (c >= 0x20D0 && c <= 0x20FF) return U_NON_SPACING_MARK;
-    if (c >= 0xFE20 && c <= 0xFE2F) return U_COMBINING_SPACING_MARK;
-    return U_UNASSIGNED;
+U_CAPI UBool U_EXPORT2 u_isMirrored(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->hasBinaryProperty(1);  // UCHAR_BIDI_MIRRORED = 1
 }
 
-static int32_t getJoiningType(UChar32 c) {
-    if (c >= 0x0621 && c <= 0x063A) return U_JT_RIGHT_JOINING;
-    if (c >= 0x0641 && c <= 0x064A) return U_JT_RIGHT_JOINING;
-    if (c >= 0x066E && c <= 0x066F) return U_JT_RIGHT_JOINING;
-    if (c >= 0x0671 && c <= 0x06D3) return U_JT_RIGHT_JOINING;
-    if (c >= 0x06D5 && c <= 0x06DC) return U_JT_RIGHT_JOINING;
-    if (c >= 0x06DE && c <= 0x06E8) return U_JT_RIGHT_JOINING;
-    if (c >= 0x06EA && c <= 0x06ED) return U_JT_RIGHT_JOINING;
-    if (c >= 0xFB50 && c <= 0xFDFF) return U_JT_RIGHT_JOINING;
-    if (c >= 0xFE70 && c <= 0xFEFE) return U_JT_RIGHT_JOINING;
-    if (c == 0x0622 || c == 0x0623 || c == 0x0625 || c == 0x0624) {
-        return U_JT_DUAL_JOINING;
+U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
+    if (u_isMirrored(c)) {
+        return c;
     }
-    if (c == 0x0640) return U_JT_JOIN_CAUSING;
-    if ((c >= 0x0300 && c <= 0x036F) || (c >= 0x20D0 && c <= 0x20FF)) {
-        return U_JT_TRANSPARENT;
-    }
-    return U_JT_NON_JOINING;
-}
-
-static int32_t getLineBreak(UChar32 c) {
-    if (c == '\r') return U_LB_CARRIAGE_RETURN;
-    if (c == '\n') return U_LB_LINE_FEED;
-    if (c == ' ' || c == '\t') return U_LB_SPACE;
-    if ((c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F)) {
-        return U_LB_COMBINING_MARK;
-    }
-    if (c >= 'A' && c <= 'Z') return U_LB_ALPHABETIC;
-    if (c >= 'a' && c <= 'z') return U_LB_ALPHABETIC;
-    if (c >= '0' && c <= '9') return U_LB_NUMERIC;
-    if (c >= 0x4E00 && c <= 0x9FFF) return U_LB_IDEOGRAPHIC;
-    if (c >= 0xAC00 && c <= 0xD7AF) return U_LB_HEBREW_LETTER;
-    if (c >= 0x0600 && c <= 0x06FF) return U_LB_ALPHABETIC;
-    if (c >= 0x0590 && c <= 0x05FF) return U_LB_ALPHABETIC;
-    if (c >= 0x0900 && c <= 0x0D7F) return U_LB_IDEOGRAPHIC;
-    if (c >= 0x0E00 && c <= 0x0E7F) return U_LB_COMPLEX_CONTEXT;
-    if (c == '(' || c == '[' || c == '{' || c == '<') return U_LB_OPEN_PUNCTUATION;
-    if (c == ')' || c == ']' || c == '}' || c == '>') return U_LB_CLOSE_PUNCTUATION;
-    if (c == '"' || c == '\'' || c == 0x201C || c == 0x201D) return U_LB_QUOTATION;
-    if (c == '-' || c == 0x2010 || c == 0x2011) return U_LB_HYPHEN;
-    if (c == '.' || c == ',' || c == ';' || c == ':' || c == '!') {
-        return U_LB_POSTFIX_NUMERIC;
-    }
-    return U_LB_UNKNOWN;
+    return c;
 }
 
 U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, uint32_t property) {
+    const auto* range = findUnicodeRange(c);
+    
     switch (property) {
-        case UCHAR_GRAPHEME_CLUSTER_BREAK:
-            return getGraphemeClusterBreak(c);
-        case UCHAR_CANONICAL_COMBINING_CLASS:
-            return getCanonicalCombiningClass(c);
+        case UCHAR_BIDI_CLASS:
+            return range->directionality;
+        
         case UCHAR_GENERAL_CATEGORY:
-            return getGeneralCategory(c);
-        case UCHAR_JOINING_TYPE:
-            return getJoiningType(c);
+            return range->category;
+        
+        case UCHAR_GRAPHEME_CLUSTER_BREAK:
+            return range->gcb;
+        
         case UCHAR_LINE_BREAK:
-            return getLineBreak(c);
+            return range->lb;
+        
+        case UCHAR_CANONICAL_COMBINING_CLASS:
+            return range->ccc;
+        
+        case UCHAR_EMOJI:
+            return range->hasBinaryProperty(8) ? 1 : 0;
+        
+        case UCHAR_EXTENDED_PICTOGRAPHIC:
+            return range->hasBinaryProperty(151) ? 1 : 0;
+        
+        case UCHAR_EMOJI_MODIFIER:
+            return range->hasBinaryProperty(149) ? 1 : 0;
+        
+        case UCHAR_EMOJI_MODIFIER_BASE:
+            return range->hasBinaryProperty(150) ? 1 : 0;
+        
         default:
             return 0;
     }
 }
 
+U_CAPI UBool U_EXPORT2 u_hasBinaryProperty(UChar32 c, uint32_t property) {
+    const auto* range = findUnicodeRange(c);
+    return range->hasBinaryProperty(property);
+}
+
+U_CAPI UScriptCode U_EXPORT2 u_getScript(UChar32 c, UErrorCode* pErrorCode) {
+    if (pErrorCode && U_FAILURE(*pErrorCode)) {
+        return USCRIPT_INVALID_CODE;
+    }
+    
+    const auto* range = findUnicodeRange(c);
+    
+    if (pErrorCode) {
+        *pErrorCode = U_ZERO_ERROR;
+    }
+    
+    return (UScriptCode)range->script;
+}
+
+U_CAPI int32_t U_EXPORT2 u_getCombiningClass(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->ccc;
+}
+
+U_CAPI int8_t U_EXPORT2 u_charType(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (int8_t)range->category;
+}
+
+// 辅助函数
 U_CAPI UBool U_EXPORT2 u_isbase(UChar32 c) {
-    int32_t cat = getGeneralCategory(c);
+    const auto* range = findUnicodeRange(c);
+    int32_t cat = range->category;
     return (cat >= U_UPPERCASE_LETTER && cat <= U_OTHER_LETTER) ||
            (cat >= U_DECIMAL_DIGIT_NUMBER && cat <= U_OTHER_NUMBER);
 }
 
-U_CAPI UCharDirection U_EXPORT2 u_charDirection(UChar32 c) {
-    if (c >= 0x0600 && c <= 0x06FF) return U_RIGHT_TO_LEFT_ARABIC;
-    if (c >= 0x0590 && c <= 0x05FF) return U_RIGHT_TO_LEFT;
-    if (c >= 0x07B0 && c <= 0x07FF) return U_RIGHT_TO_LEFT_ARABIC;
-    if (c >= 0xFB50 && c <= 0xFDFF) return U_RIGHT_TO_LEFT_ARABIC;
-    if (c >= 0xFE70 && c <= 0xFEFF) return U_RIGHT_TO_LEFT_ARABIC;
-    if (c >= '0' && c <= '9') return U_EUROPEAN_NUMBER;
-    if (c == '.' || c == ',') return U_COMMON_NUMBER_SEPARATOR;
-    if (c == ' ') return U_WHITE_SPACE_NEUTRAL;
-    return U_LEFT_TO_RIGHT;
+U_CAPI UBool U_EXPORT2 u_isUAlphabetic(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_UPPERCASE_LETTER && range->category <= U_OTHER_LETTER);
 }
 
-U_CAPI UBool U_EXPORT2 u_isMirrored(UChar32 c) {
-    switch (c) {
-        case '(': case ')':
-        case '[': case ']':
-        case '{': case '}':
-        case '<': case '>':
-        case 0x00AB: case 0x00BB:
-        case 0x2039: case 0x203A:
-        case 0x2018: case 0x2019:
-        case 0x201C: case 0x201D:
-            return true;
-        default:
-            return false;
-    }
+U_CAPI UBool U_EXPORT2 u_isULowercase(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category == U_LOWERCASE_LETTER;
 }
 
-U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
-    switch (c) {
-        case '(': return ')';
-        case ')': return '(';
-        case '[': return ']';
-        case ']': return '[';
-        case '{': return '}';
-        case '}': return '{';
-        case '<': return '>';
-        case '>': return '<';
-        case 0x00AB: return 0x00BB;
-        case 0x00BB: return 0x00AB;
-        case 0x2039: return 0x203A;
-        case 0x203A: return 0x2039;
-        default:
-            return c;
-    }
-}
-
-U_CAPI UChar32 U_EXPORT2 u_getBidiPairedBracket(UChar32 c) {
-    switch (c) {
-        case '(': return ')';
-        case ')': return '(';
-        case '[': return ']';
-        case ']': return '[';
-        case '{': return '}';
-        case '}': return '{';
-        case '<': return '>';
-        case '>': return '<';
-        case 0x00AB: return 0x00BB;
-        case 0x00BB: return 0x00AB;
-        case 0x2018: return 0x2019;
-        case 0x2019: return 0x2018;
-        case 0x201C: return 0x201D;
-        case 0x201D: return 0x201C;
-        case 0x2039: return 0x203A;
-        case 0x203A: return 0x2039;
-        default:
-            return c;
-    }
-}
-
-U_CAPI int8_t U_EXPORT2 u_charType(UChar32 c) {
-    return getGeneralCategory(c);
-}
-
-U_CAPI UBool U_EXPORT2 u_hasBinaryProperty(UChar32 c, uint32_t property) {
-    switch (property) {
-        case UCHAR_EMOJI:
-            return (c >= 0x2600 && c <= 0x26FF) ||
-                   (c >= 0x2700 && c <= 0x27BF) ||
-                   (c >= 0x1F300 && c <= 0x1F5FF) ||
-                   (c >= 0x1F600 && c <= 0x1F64F) ||
-                   (c >= 0x1F680 && c <= 0x1F6FF) ||
-                   (c >= 0x1F900 && c <= 0x1F9FF);
-        case UCHAR_EMOJI_MODIFIER:
-            return (c >= 0x1F3FB && c <= 0x1F3FF);
-        case UCHAR_EMOJI_MODIFIER_BASE:
-            return (c >= 0x1F466 && c <= 0x1F469) ||
-                   (c >= 0x1F910 && c <= 0x1F917) ||
-                   (c >= 0x1F930 && c <= 0x1F939) ||
-                   (c >= 0x1F9B0 && c <= 0x1F9B9);
-        case UCHAR_EXTENDED_PICTOGRAPHIC:
-            return (c >= 0x2600 && c <= 0x26FF) ||
-                   (c >= 0x2700 && c <= 0x27BF) ||
-                   (c >= 0x1F000 && c <= 0x1F0FF) ||
-                   (c >= 0x1F100 && c <= 0x1F1FF) ||
-                   (c >= 0x1F200 && c <= 0x1F2FF) ||
-                   (c >= 0x1F300 && c <= 0x1F5FF) ||
-                   (c >= 0x1F600 && c <= 0x1F64F) ||
-                   (c >= 0x1F680 && c <= 0x1F6FF) ||
-                   (c >= 0x1F700 && c <= 0x1F77F) ||
-                   (c >= 0x1F900 && c <= 0x1F9FF);
-        default:
-            return false;
-    }
-}
-
-U_CAPI UBool U_EXPORT2 u_iscntrl(UChar32 c) {
-    return (c >= 0x0000 && c <= 0x001F) || (c >= 0x007F && c <= 0x009F);
-}
-
-U_CAPI UBool U_EXPORT2 u_isdigit(UChar32 c) {
-    return (c >= '0' && c <= '9');
+U_CAPI UBool U_EXPORT2 u_isUUppercase(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category == U_UPPERCASE_LETTER;
 }
 
 U_CAPI UBool U_EXPORT2 u_isWhitespace(UChar32 c) {
-    return (c == ' ') || (c == '\t') || (c == '\n') || (c == '\r') ||
-           (c == '\f') || (c == '\v') || (c == 0x00A0); // NBSP
+    const auto* range = findUnicodeRange(c);
+    return range->hasBinaryProperty(40);  // U_WHITE_SPACE = 40
 }
 
+U_CAPI UBool U_EXPORT2 u_isSpaceChar(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category == U_SPACE_SEPARATOR;
+}
+
+U_CAPI UBool U_EXPORT2 u_isPrintable(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category != U_CONTROL && range->category != U_FORMAT && 
+           range->category != U_UNASSIGNED && range->category != U_PRIVATE_USE &&
+           range->category != U_SURROGATE;
+}
+
+U_CAPI UBool U_EXPORT2 u_isDefined(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category != U_UNASSIGNED;
+}
+
+U_CAPI UBool U_EXPORT2 u_isLetter(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_UPPERCASE_LETTER && range->category <= U_OTHER_LETTER);
+}
+
+U_CAPI UBool U_EXPORT2 u_isDigit(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category == U_DECIMAL_DIGIT_NUMBER;
+}
+
+U_CAPI UBool U_EXPORT2 u_isPunct(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_CONTROL && range->category <= U_FORMAT);
+}
+
+U_CAPI UBool U_EXPORT2 u_isSymbol(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return range->category >= U_CURRENCY_SYMBOL;
+}
+
+U_CAPI UBool U_EXPORT2 u_isMark(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_NON_SPACING_MARK && range->category <= U_COMBINING_SPACING_MARK);
+}
+
+U_CAPI UBool U_EXPORT2 u_isNumber(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_DECIMAL_DIGIT_NUMBER && range->category <= U_OTHER_NUMBER);
+}
+
+U_CAPI UBool U_EXPORT2 u_isSeparator(UChar32 c) {
+    const auto* range = findUnicodeRange(c);
+    return (range->category >= U_SPACE_SEPARATOR && range->category <= U_PARAGRAPH_SEPARATOR);
+}
+
+// ============================================================================
+// 字符大小写转换函数
+// ============================================================================
+
+U_CAPI UChar32 U_EXPORT2 u_tolower(UChar32 c) {
+    if (c >= 'A' && c <= 'Z') {
+        return c + ('a' - 'A');
+    }
+    return c;
+}
+
+U_CAPI UChar32 U_EXPORT2 u_toupper(UChar32 c) {
+    if (c >= 'a' && c <= 'z') {
+        return c - ('a' - 'A');
+    }
+    return c;
+}
+
+U_CAPI UChar32 U_EXPORT2 u_totitle(UChar32 c) {
+    if (c >= 'a' && c <= 'z') {
+        return c - ('a' - 'A');
+    }
+    return c;
+}
+
+// ============================================================================
+// 数字相关函数
+// ============================================================================
+
+U_CAPI int32_t U_EXPORT2 u_digit(UChar32 c, int32_t radix) {
+    if (radix < 2 || radix > 36) {
+        return -1;
+    }
+    
+    if (c >= '0' && c <= '9') {
+        int digit = c - '0';
+        return (digit < radix) ? digit : -1;
+    }
+    
+    if (c >= 'A' && c <= 'Z') {
+        int digit = 10 + (c - 'A');
+        return (digit < radix) ? digit : -1;
+    }
+    
+    if (c >= 'a' && c <= 'z') {
+        int digit = 10 + (c - 'a');
+        return (digit < radix) ? digit : -1;
+    }
+    
+    return -1;
+}
+
+U_CAPI double U_EXPORT2 u_getNumericValue(UChar32 c) {
+    if (c >= '0' && c <= '9') {
+        return c - '0';
+    }
+    return -1.0;
+}
+
+// ============================================================================
+// 字符名称函数
+// ============================================================================
+
+U_CAPI int32_t U_EXPORT2 u_charName(UChar32 c, int32_t choice, 
+                                      char* result, int32_t resultLength, 
+                                      UErrorCode* pErrorCode) {
+    if (pErrorCode && U_FAILURE(*pErrorCode)) {
+        return 0;
+    }
+    
+    if (resultLength > 0) {
+        result[0] = '\0';
+    }
+    
+    if (pErrorCode) {
+        *pErrorCode = U_ZERO_ERROR;
+    }
+    
+    return 0;
+}

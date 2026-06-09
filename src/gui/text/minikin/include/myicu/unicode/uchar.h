@@ -80,6 +80,17 @@ typedef enum UCharCategory {
     U_FORMAT = 16,
     U_PRIVATE_USE = 17,
     U_SURROGATE = 18,
+    U_DASH_PUNCTUATION = 19,
+    U_OPEN_PUNCTUATION = 20,
+    U_CLOSE_PUNCTUATION = 21,
+    U_CONNECTOR_PUNCTUATION = 22,
+    U_OTHER_PUNCTUATION = 23,
+    U_MATH_SYMBOL = 24,
+    U_CURRENCY_SYMBOL = 25,
+    U_MODIFIER_SYMBOL = 26,
+    U_OTHER_SYMBOL = 27,
+    U_INITIAL_PUNCTUATION = 28,
+    U_FINAL_PUNCTUATION = 29,
 } UCharCategory;
 
 typedef enum UJoiningType {
@@ -142,22 +153,25 @@ typedef enum ULineBreak {
     U_LB_H2 = 31,               /*[H2]*/
     U_LB_H3 = 32,               /*[H3]*/
     U_LB_JL = 33,               /*[JL]*/
-    U_LB_JT = 34,               /*[JT]*/
-    U_LB_JV = 35,               /*[JV]*/
-    U_LB_CLOSE_PARENTHESIS = 36,/*[CP]*/
-    U_LB_CONDITIONAL_JAPANESE_STARTER = 37,/*[CJ]*/
-    U_LB_HEBREW_LETTER = 38,    /*[HL]*/
-    U_LB_REGIONAL_INDICATOR = 39,/*[RI]*/
-    U_LB_E_BASE = 40,           /*[EB]*/
-    U_LB_E_MODIFIER = 41,       /*[EM]*/
-    U_LB_ZWJ = 42,              /*[ZWJ]*/
-    U_LB_AKSARA = 43,           /*[AK]*/
-    U_LB_AKSARA_PREBASE = 44,   /*[AP]*/
-    U_LB_AKSARA_START = 45,     /*[AS]*/
-    U_LB_VIRAMA_FINAL = 46,     /*[VF]*/
-    U_LB_VIRAMA = 47,           /*[VI]*/
-    U_LB_UNAMBIGUOUS_HYPHEN = 48,/*[HH]*/
-    U_LB_COUNT = 49
+    U_LB_JV = 34,               /*[JV]*/
+    U_LB_JT = 35,               /*[JT]*/
+    U_LB_LV = 36,               /*[LV]*/
+    U_LB_LVT = 37,              /*[LVT]*/
+    U_LB_CLOSE_PARENTHESIS = 38,/*[CP]*/
+    U_LB_CONDITIONAL_JAPANESE_STARTER = 39,/*[CJ]*/
+    U_LB_HEBREW_LETTER = 40,    /*[HL]*/
+    U_LB_REGIONAL_INDICATOR = 41,/*[RI]*/
+    U_LB_E_BASE = 42,           /*[EB]*/
+    U_LB_E_MODIFIER = 43,       /*[EM]*/
+    U_LB_ZWJ = 44,              /*[ZWJ]*/
+    U_LB_AKSARA = 45,           /*[AK]*/
+    U_LB_AKSARA_PREBASE = 46,   /*[AP]*/
+    U_LB_AKSARA_START = 47,     /*[AS]*/
+    U_LB_VIRAMA_FINAL = 48,     /*[VF]*/
+    U_LB_VIRAMA = 49,           /*[VI]*/
+    U_LB_UNAMBIGUOUS_HYPHEN = 50,/*[HH]*/
+    U_LB_ARABIC_LETTER = 51,    /*[AL]*/
+    U_LB_COUNT = 52
 } ULineBreak;
 
 #define UCHAR_JOINING_TYPE 14
@@ -268,5 +282,8 @@ u_isdigit(UChar32 c);
 
 U_CAPI UBool U_EXPORT2
 u_isWhitespace(UChar32 c);
+
+U_CAPI int32_t U_EXPORT2
+u_getCombiningClass(UChar32 c);
 
 #endif

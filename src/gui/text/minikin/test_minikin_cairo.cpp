@@ -412,7 +412,7 @@ int main() {
     MiniTypesetter typesetter(fontCollection, fontSize);
 
     // 测试文本 - 包含英文、阿拉伯语和波斯语
-    std::string testTextUTF8 ="Hello"; 
+    std::string testTextUTF8 = 
         "Hello World! السلام عليكم (Peace be upon you) مرحبا "
         "This is a test with multiple languages including "
         "Arabic: مرحبا بالعالم and Persian: سلام دنیا "

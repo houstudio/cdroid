@@ -2,6 +2,7 @@
 #include <sstream>
 #include <cstdarg>
 #include <core/predicate.h>
+#include <text/character.h>
 #include <text/spannablestring.h>
 #include <text/textutils.h>
 #include <unicode/uchar.h>
@@ -801,16 +802,16 @@ CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
 
 bool TextUtils::isGraphic(const CharSequence* str) {
     const int len = str->length();
-    for (int cp, i=0; i<len; i++){//+=Character.charCount(cp)) {
-        cp = str->charAt(i);//Character.codePointAt(str, i);
-        int gc = u_charType(cp);//Character.getType(cp);
-        if (gc != U_CONTROL//Character.CONTROL
-                && gc != U_FORMAT//Character.FORMAT
-                && gc != U_SURROGATE//Character.SURROGATE
-                && gc != U_UNASSIGNED//Character.UNASSIGNED
-                && gc != U_LINE_SEPARATOR//Character.LINE_SEPARATOR
-                && gc != U_PARAGRAPH_SEPARATOR//Character.PARAGRAPH_SEPARATOR
-                && gc != U_SPACE_SEPARATOR){//Character.SPACE_SEPARATOR) {
+    for (int cp, i=0; i<len; i+=Character::charCount(cp)) {
+        cp = Character::codePointAt(str, i);
+        int gc = Character::getType(cp);
+        if (gc != Character::CONTROL
+                && gc != Character::FORMAT
+                && gc != Character::SURROGATE
+                && gc != Character::UNASSIGNED
+                && gc != Character::LINE_SEPARATOR
+                && gc != Character::PARAGRAPH_SEPARATOR
+                && gc != Character::SPACE_SEPARATOR) {
             return true;
         }
     }
@@ -818,21 +819,21 @@ bool TextUtils::isGraphic(const CharSequence* str) {
 }
 
 bool TextUtils::isGraphic(char16_t c) {
-    int gc =  u_charType(c);//Character.getType(c);
-    return     gc != U_CONTROL//Character.CONTROL
-            && gc != U_FORMAT//Character.FORMAT
-            && gc != U_SURROGATE//Character.SURROGATE
-            && gc != U_UNASSIGNED//Character.UNASSIGNED
-            && gc != U_LINE_SEPARATOR//Character.LINE_SEPARATOR
-            && gc != U_PARAGRAPH_SEPARATOR//Character.PARAGRAPH_SEPARATOR
-            && gc != U_SPACE_SEPARATOR;//Character.SPACE_SEPARATOR;
+    int gc =  Character::getType(c);
+    return  gc != Character::CONTROL
+            && gc != Character::FORMAT
+            && gc != Character::SURROGATE
+            && gc != Character::UNASSIGNED
+            && gc != Character::LINE_SEPARATOR
+            && gc != Character::PARAGRAPH_SEPARATOR
+            && gc != Character::SPACE_SEPARATOR;
 }
 
 bool TextUtils::isDigitsOnly(const CharSequence* str) {
     const int len = str->length();
-    for (int cp, i = 0; i < len; i ++){//+= Character.charCount(cp)) {
-        cp = str->charAt(i);//Character.codePointAt(str, i);
-        if (!u_isdigit(cp)){//!Character.isDigit(cp)) {
+    for (int cp, i = 0; i < len; i += Character::charCount(cp)) {
+        cp = Character::codePointAt(str, i);
+        if (!!Character::isDigit(cp)) {
             return false;
         }
     }

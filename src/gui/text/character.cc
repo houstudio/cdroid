@@ -1,3 +1,4 @@
+#include "character.h"
 #include <text/character.h>
 #include <text/spannablestring.h>
 #include <unicode/uchar.h>
@@ -24,7 +25,28 @@ constexpr uint8_t Character::DIRECTIONALITY[]{
 
 // See http://www.unicode.org/Public/UNIDATA/Blocks.txt
 // for the latest specification of Unicode Blocks.
+std::unordered_map<std::string,const Character::UnicodeBlock*> Character::UnicodeBlock::map;
 
+Character::UnicodeBlock::UnicodeBlock(const std::string& idName)
+    : Subset(idName) {
+    map.insert({idName,this});
+}
+
+Character::UnicodeBlock::UnicodeBlock(const std::string& idName, bool isMap)
+    : Subset(idName) {
+    if(isMap)map.insert({idName,this});
+}
+
+Character::UnicodeBlock::UnicodeBlock(const std::string& idName, const std::string& alias)
+    : Subset(idName) {
+}
+
+Character::UnicodeBlock::UnicodeBlock(const std::string& idName, const std::initializer_list<const std::string>& aliases)
+    : UnicodeBlock(idName) {
+    for(auto a:aliases){
+        map.insert({a,this});
+    }
+}
 const Character::UnicodeBlock  Character::UnicodeBlock::BASIC_LATIN("BASIC_LATIN",{"BASIC LATIN","BASICLATIN"});
 const Character::UnicodeBlock Character::UnicodeBlock::LATIN_1_SUPPLEMENT("LATIN_1_SUPPLEMENT",{"LATIN-1 SUPPLEMENT","LATIN-1SUPPLEMENT"});
 const Character::UnicodeBlock Character::UnicodeBlock::LATIN_EXTENDED_A("LATIN_EXTENDED_A",{"LATIN EXTENDED-A","LATINEXTENDED-A"});
@@ -1954,7 +1976,6 @@ const Character::UnicodeBlock* Character::UnicodeBlock::forName(const std::strin
     }
     return it->second;
 }
-std::unordered_map<std::string,const Character::UnicodeBlock*> Character::UnicodeBlock::map;
 
 ////////////////////////////////////////////////////////////////////////////////////////////
 //public static enum UnicodeScript {
@@ -6146,4 +6167,138 @@ int Character::codePointOf(const std::string& name) {
 // Implement getNameImpl() and codePointOfImpl() natively.
 //private static native String getNameImpl(int codePoint);
 //private static native int codePointOfImpl(String name);
+
+// ============================================================================
+// Character 内部实现函数（使用基础实现）
+// ============================================================================
+
+bool Character::isLowerCaseImpl(int codePoint) {
+    return u_charType(codePoint) == U_LOWERCASE_LETTER;
+}
+
+bool Character::isUpperCaseImpl(int codePoint) {
+    return u_charType(codePoint) == U_UPPERCASE_LETTER;
+}
+
+bool Character::isTitleCaseImpl(int codePoint) {
+    return u_charType(codePoint) == U_TITLECASE_LETTER;
+}
+
+bool Character::isDigitImpl(int codePoint) {
+    return u_charType(codePoint) == U_DECIMAL_DIGIT_NUMBER;
+}
+
+bool Character::isDefinedImpl(int codePoint) {
+    return u_charType(codePoint) != U_UNASSIGNED;
+}
+
+bool Character::isLetterImpl(int codePoint) {
+    int8_t type = u_charType(codePoint);
+    return type >= U_UPPERCASE_LETTER && type <= U_OTHER_LETTER;
+}
+
+bool Character::isLetterOrDigitImpl(int codePoint) {
+    int8_t type = u_charType(codePoint);
+    return (type >= U_UPPERCASE_LETTER && type <= U_OTHER_LETTER) ||
+           (type == U_DECIMAL_DIGIT_NUMBER);
+}
+
+bool Character::isAlphabeticImpl(int codePoint) {
+    int8_t type = u_charType(codePoint);
+    return type >= U_UPPERCASE_LETTER && type <= U_OTHER_LETTER;
+}
+
+bool Character::isIdeographicImpl(int codePoint) {
+    return codePoint >= 0x4E00 && codePoint <= 0x9FFF;
+}
+
+bool Character::isUnicodeIdentifierStartImpl(int codePoint) {
+    int8_t type = u_charType(codePoint);
+    return (type >= U_UPPERCASE_LETTER && type <= U_OTHER_LETTER) ||
+           codePoint == '_';
+}
+
+bool Character::isUnicodeIdentifierPartImpl(int codePoint) {
+    int8_t type = u_charType(codePoint);
+    return (type >= U_UPPERCASE_LETTER && type <= U_OTHER_LETTER) ||
+           (type >= U_DECIMAL_DIGIT_NUMBER && type <= U_OTHER_NUMBER) ||
+           codePoint == '_';
+}
+
+bool Character::isIdentifierIgnorableImpl(int codePoint) {
+    return false;
+}
+
+int Character::toLowerCaseImpl(int codePoint) {
+    if (codePoint >= 'A' && codePoint <= 'Z') {
+        return codePoint + ('a' - 'A');
+    }
+    return codePoint;
+}
+
+int Character::toUpperCaseImpl(int codePoint) {
+    if (codePoint >= 'a' && codePoint <= 'z') {
+        return codePoint - ('a' - 'A');
+    }
+    return codePoint;
+}
+
+int Character::toTitleCaseImpl(int codePoint) {
+    if (codePoint >= 'a' && codePoint <= 'z') {
+        return codePoint - ('a' - 'A');
+    }
+    return codePoint;
+}
+
+int Character::digitImpl(int codePoint, int radix) {
+    if (radix < 2 || radix > 36) {
+        return -1;
+    }
+    if (codePoint >= '0' && codePoint <= '9') {
+        int digit = codePoint - '0';
+        return (digit < radix) ? digit : -1;
+    }
+    if (codePoint >= 'A' && codePoint <= 'Z') {
+        int digit = 10 + (codePoint - 'A');
+        return (digit < radix) ? digit : -1;
+    }
+    if (codePoint >= 'a' && codePoint <= 'z') {
+        int digit = 10 + (codePoint - 'a');
+        return (digit < radix) ? digit : -1;
+    }
+    return -1;
+}
+
+int Character::getNumericValueImpl(int codePoint) {
+    if (codePoint >= '0' && codePoint <= '9') {
+        return codePoint - '0';
+    }
+    return -1;
+}
+
+bool Character::isSpaceCharImpl(int codePoint) {
+    return codePoint == ' ' || codePoint == '\t' || 
+           codePoint == '\n' || codePoint == '\r';
+}
+
+bool Character::isWhitespaceImpl(int codePoint) {
+    return u_isWhitespace(codePoint);
+}
+
+int Character::getTypeImpl(int codePoint) {
+    return u_charType(codePoint);
+}
+
+unsigned char Character::getDirectionalityImpl(int codePoint) {
+    return u_charDirection(codePoint);
+}
+
+std::string Character::getNameImpl(int codePoint) {
+    return "";
+}
+
+int Character::codePointOfImpl(std::string name) {
+    return codePointOf(name);
+}
+
 }/*endof namespace*/

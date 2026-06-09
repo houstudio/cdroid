@@ -2,6 +2,7 @@
 #include "unicode/utf16.h"
 #include "unicode/uchar.h"
 #include "unicode/uscript.h"
+#include "unicode_range_data.h"
 #include <cstdlib>
 #include <cstring>
 
@@ -30,10 +31,8 @@ typedef enum {
     WBP_MID_NUMLET,
     WBP_MID_LETTER,
     WBP_MID_NUM,
-    WBP_COMPLEX_CONTEXT,
     WBP_E_BASE,
     WBP_E_MODIFIER,
-    WBP_GLUE_AFTER_ZWJ,
     WBP_ZWJ,
     WBP_REGIONAL_INDICATOR,
     WBP_BREAK,
@@ -93,17 +92,11 @@ typedef enum {
     LBP_SG,      // Surrogate
 } LBProperty;
 
-// Helper to get general category
-static inline int32_t getGeneralCategory(UChar32 c) {
-    return u_getIntPropertyValue(c, UCHAR_GENERAL_CATEGORY);
-}
+// ============================================================================
+// 使用 UnicodeRange 数据表实现词和行断行属性查询
+// ============================================================================
 
-// Helper to get joining type for Arabic/Hebrew script
-static inline int32_t getJoiningType(UChar32 c) {
-    return u_getIntPropertyValue(c, UCHAR_JOINING_TYPE);
-}
-
-// Check if script is Indic
+// 辅助函数：判断是否是 Indic 脚本
 static inline UBool isIndicScript(UScriptCode script) {
     switch (script) {
         case USCRIPT_DEVANAGARI:
@@ -122,7 +115,7 @@ static inline UBool isIndicScript(UScriptCode script) {
     }
 }
 
-// Check if script is Southeast Asian
+// 辅助函数：判断是否是东南亚脚本
 static inline UBool isSEAsianScript(UScriptCode script) {
     switch (script) {
         case USCRIPT_THAI:
@@ -135,164 +128,217 @@ static inline UBool isSEAsianScript(UScriptCode script) {
     }
 }
 
-// Get Word Break property for a character
+// 辅助函数：获取通用类别
+static inline int32_t getGeneralCategory(UChar32 c) {
+    return u_getIntPropertyValue(c, UCHAR_GENERAL_CATEGORY);
+}
+
+// 获取词断行属性
 static WBProperty getWBProperty(UChar32 c) {
-    // Newline and separators
+    const auto* range = findUnicodeRange(c);
+    
+    // 特殊字符优先处理
     if (c == '\r') return WBP_CR;
     if (c == '\n') return WBP_LF;
+    if (c == 0x200D) return WBP_ZWJ;  // ZWJ
+    if (c == '\'' || c == 0x2019) return WBP_SINGLE_QUOTE;
+    if (c == '"' || c == 0x201D) return WBP_DOUBLE_QUOTE;
+    if (c == '_') return WBP_LINK;
+    if (c == '-') return WBP_MID_LETTER;
+    if (c == '.' || c == ',' || c == ';' || c == ':' || c == '/') {
+        return WBP_MID_NUMLET;
+    }
     
-    int32_t cat = getGeneralCategory(c);
+    // 使用数据表中的属性
+    uint8_t cat = range->category;
+    uint8_t script = range->script;
+    uint8_t gcb = range->gcb;
     
-    // Whitespace and control
+    // 空白和分隔符
     if (cat == U_SPACE_SEPARATOR || cat == U_LINE_SEPARATOR || 
         cat == U_PARAGRAPH_SEPARATOR || cat == U_CONTROL) {
         return WBP_BREAK;
     }
     
-    // Marks - Extend category
+    // 标记 - Extend 类别（包括组合标记）
     if (cat == U_NON_SPACING_MARK || cat == U_ENCLOSING_MARK || 
-        cat == U_COMBINING_SPACING_MARK) {
+        cat == U_COMBINING_SPACING_MARK || gcb == U_GCB_EXTEND) {
         return WBP_EXTEND;
     }
     
-    // Format characters
+    // 格式字符
     if (cat == U_FORMAT) {
         return WBP_FORMAT;
     }
     
-    // Zero-Width Joiner
-    if (c == 0x200D) return WBP_ZWJ;
-    
-    // Use uscript_getScript to determine script
-    UErrorCode status = U_ZERO_ERROR;
-    UScriptCode script = uscript_getScript(c, &status);
-    
-    // Arabic/Persian letters with joining behavior
-    if (script == USCRIPT_ARABIC) {
-        int32_t joinType = getJoiningType(c);
-        if (joinType == U_JT_RIGHT_JOINING || joinType == U_JT_DUAL_JOINING || 
-            joinType == U_JT_JOIN_CAUSING) {
+    // 特殊脚本处理
+    switch (script) {
+        case USCRIPT_ARABIC:
+            // Arabic/Persian letters with joining behavior
             return WBP_ARABIC;
-        }
-        return WBP_ALPHA;
+            
+        case USCRIPT_HEBREW:
+            // Hebrew letters with joining behavior
+            return WBP_HEBREW;
+            
+        case USCRIPT_DEVANAGARI:
+        case USCRIPT_BENGALI:
+        case USCRIPT_GURMUKHI:
+        case USCRIPT_GUJARATI:
+        case USCRIPT_ORIYA:
+        case USCRIPT_TAMIL:
+        case USCRIPT_TELUGU:
+        case USCRIPT_KANNADA:
+        case USCRIPT_MALAYALAM:
+        case USCRIPT_SINHALA:
+            // Indic scripts
+            return WBP_INDIC;
+            
+        case USCRIPT_THAI:
+        case USCRIPT_LAO:
+        case USCRIPT_KHMER:
+        case USCRIPT_MYANMAR:
+            // Southeast Asian
+            return WBP_SE_ASIAN;
+            
+        case USCRIPT_TIBETAN:
+            return WBP_TIBETAN;
+            
+        case USCRIPT_ETHIOPIC:
+            return WBP_ETHIOPIC;
+            
+        case USCRIPT_MONGOLIAN:
+            return WBP_MONGOLIAN;
+            
+        case USCRIPT_KATAKANA:
+        case USCRIPT_KATAKANA_OR_HIRAGANA:
+            return WBP_KATAKANA;
+            
+        case USCRIPT_HAN:
+            return WBP_IDEOGRAPHIC;
+            
+        default:
+            break;
     }
     
-    // Hebrew letters with joining behavior
-    if (script == USCRIPT_HEBREW) {
-        return WBP_HEBREW;
-    }
-    
-    // Indic scripts (Devanagari, Bengali, etc.)
-    if (isIndicScript(script)) {
-        return WBP_INDIC;
-    }
-    
-    // Southeast Asian scripts (Thai, Lao, Khmer)
-    if (isSEAsianScript(script)) {
-        return WBP_SE_ASIAN;
-    }
-    
-    // Tibetan
-    if (script == USCRIPT_TIBETAN) {
-        return WBP_TIBETAN;
-    }
-    
-    // Ethiopic
-    if (script == USCRIPT_ETHIOPIC) {
-        return WBP_ETHIOPIC;
-    }
-    
-    // Mongolian
-    if (script == USCRIPT_MONGOLIAN) {
-        return WBP_MONGOLIAN;
-    }
-    
-    // Letters
+    // 字母
     if (cat >= U_UPPERCASE_LETTER && cat <= U_OTHER_LETTER) {
         return WBP_ALPHA;
     }
     
-    // Digits
+    // 数字
     if (cat == U_DECIMAL_DIGIT_NUMBER) {
         return WBP_NUMERIC;
-    }
-    
-    // Katakana
-    if (script == USCRIPT_KATAKANA || script == USCRIPT_KATAKANA_OR_HIRAGANA) {
-        return WBP_KATAKANA;
-    }
-    
-    // CJK ideographs
-    if (script == USCRIPT_HAN) {
-        return WBP_IDEOGRAPHIC;
-    }
-    
-    // Special characters
-    if (c == '\'' || c == 0x2019) return WBP_SINGLE_QUOTE;
-    if (c == '"' || c == 0x201D) return WBP_DOUBLE_QUOTE;
-    if (c == '_') return WBP_LINK;
-    if (c == '-') return WBP_MID_LETTER;
-    
-    // Mid characters
-    if (c == '.' || c == ',' || c == ';' || c == ':' || c == '/') {
-        return WBP_MID_NUMLET;
     }
     
     return WBP_OTHER;
 }
 
-// Get Line Break property for a character
+// 获取行断行属性
 static LBProperty getLBProperty(UChar32 c) {
-    // Newline
+    const auto* range = findUnicodeRange(c);
+    
+    // 特殊字符优先处理
     if (c == '\r') return LBP_CR;
     if (c == '\n') return LBP_LF;
-    
-    // Whitespace
     if (c == ' ') return LBP_WS;
     if (c == '\t') return LBP_WS;
     
-    int32_t cat = getGeneralCategory(c);
+    uint8_t cat = range->category;
+    uint8_t script = range->script;
+    uint8_t lb = range->lb;
     
-    // Use uscript_getScript to determine script
-    UErrorCode status = U_ZERO_ERROR;
-    UScriptCode script = uscript_getScript(c, &status);
-    
-    // Arabic letters
-    if (script == USCRIPT_ARABIC) {
-        return LBP_ALM;
+    // 使用数据表中的行断行属性
+    if (lb != U_LB_UNKNOWN && lb != U_LB_AMBIGUOUS) {
+        // 将 ULineBreak 转换为 LBProperty
+        switch (lb) {
+            case U_LB_ALPHABETIC: return LBP_AL;
+            case U_LB_NUMERIC: return LBP_NU;
+            case U_LB_IDEOGRAPHIC: return LBP_ID;
+            case U_LB_INSEPARABLE: return LBP_INS;
+            case U_LB_HYPHEN: return LBP_HY;
+            case U_LB_BREAK_AFTER: return LBP_BA;
+            case U_LB_BREAK_BEFORE: return LBP_BB;
+            case U_LB_BREAK_BOTH: return LBP_B2;
+            case U_LB_ZWSPACE: return LBP_ZW;
+            case U_LB_COMBINING_MARK: return LBP_CM;
+            case U_LB_WORD_JOINER: return LBP_WJ;
+            case U_LB_LV: return LBP_H2;
+            case U_LB_LVT: return LBP_H3;
+            case U_LB_JL: return LBP_JL;
+            case U_LB_JV: return LBP_JV;
+            case U_LB_JT: return LBP_JT;
+            case U_LB_CONTINGENT_BREAK: return LBP_CN;
+            case U_LB_CARRIAGE_RETURN: return LBP_CR;
+            case U_LB_LINE_FEED: return LBP_LF;
+            case U_LB_NEXT_LINE: return LBP_NL;
+            case U_LB_MANDATORY_BREAK: return LBP_BK;
+            case U_LB_COMPLEX_CONTEXT: return LBP_SA;
+            case U_LB_HEBREW_LETTER: return LBP_HE;
+            case U_LB_ARABIC_LETTER: return LBP_ALM;
+            case U_LB_SPACE: return LBP_WS;
+            case U_LB_BREAK_SYMBOLS: return LBP_SY;
+            case U_LB_INFIX_NUMERIC: return LBP_IS;
+            case U_LB_OPEN_PUNCTUATION: return LBP_OP;
+            case U_LB_CLOSE_PUNCTUATION: return LBP_CL;
+            case U_LB_QUOTATION: return LBP_QU;
+            case U_LB_EXCLAMATION: return LBP_EX;
+            case U_LB_PREFIX_NUMERIC: return LBP_PR;
+            case U_LB_POSTFIX_NUMERIC: return LBP_PO;
+            default:
+                break;
+        }
     }
     
-    // Hebrew letters
-    if (script == USCRIPT_HEBREW) {
-        return LBP_HE;
+    // 特殊脚本处理（仅当数据表中没有明确指定 lb 属性时使用）
+    // 注意：大部分脚本的 lb 属性已经在数据表中定义了，这里只处理特殊情况
+    if (lb == U_LB_UNKNOWN || lb == U_LB_AMBIGUOUS) {
+        switch (script) {
+            case USCRIPT_ARABIC:
+                return LBP_ALM;
+                
+            case USCRIPT_HEBREW:
+                return LBP_HE;
+                
+            case USCRIPT_DEVANAGARI:
+            case USCRIPT_BENGALI:
+            case USCRIPT_GURMUKHI:
+            case USCRIPT_GUJARATI:
+            case USCRIPT_ORIYA:
+            case USCRIPT_TAMIL:
+            case USCRIPT_TELUGU:
+            case USCRIPT_KANNADA:
+            case USCRIPT_MALAYALAM:
+            case USCRIPT_SINHALA:
+                return LBP_IN;
+                
+            case USCRIPT_THAI:
+            case USCRIPT_LAO:
+            case USCRIPT_KHMER:
+            case USCRIPT_MYANMAR:
+                return LBP_SA;
+                
+            default:
+                break;
+        }
     }
     
-    // Indic scripts
-    if (isIndicScript(script)) {
-        return LBP_IN;
-    }
-    
-    // Southeast Asian
-    if (isSEAsianScript(script)) {
-        return LBP_SA;
-    }
-    
-    // Letters
+    // 字母
     if (cat >= U_UPPERCASE_LETTER && cat <= U_OTHER_LETTER) {
         return LBP_AL;
     }
     
-    // Digits
+    // 数字
     if (cat == U_DECIMAL_DIGIT_NUMBER) {
         return LBP_NU;
     }
     
-    // CJK ideographs
+    // CJK 统一表意文字
     if (script == USCRIPT_HAN) {
         return LBP_ID;
     }
     
-    // Hangul
+    // Hangul 音节
     if (script == USCRIPT_HANGUL || script == USCRIPT_JAMO) {
         if (c >= 0xAC00 && c <= 0xD7AF) {
             uint32_t s = c - 0xAC00;
@@ -309,7 +355,7 @@ static LBProperty getLBProperty(UChar32 c) {
         if (c >= 0x11A8 && c <= 0x11FF) return LBP_JT;
     }
     
-    // Punctuation
+    // 标点符号
     if (c == '(' || c == '[' || c == '{' || c == '<') return LBP_OP;
     if (c == ')' || c == ']' || c == '}' || c == '>') return LBP_CL;
     if (c == '"' || c == '\'' || c == 0x201C || c == 0x201D ||
@@ -317,7 +363,7 @@ static LBProperty getLBProperty(UChar32 c) {
     if (c == '!' || c == '?') return LBP_EX;
     if (c == '-' || c == 0x2010 || c == 0x2011) return LBP_HY;
     
-    // Symbols
+    // 符号
     if (c == ',' || c == ';' || c == ':' || c == '/') {
         return LBP_SY;
     }
@@ -326,11 +372,24 @@ static LBProperty getLBProperty(UChar32 c) {
     return LBP_AL;
 }
 
+// ============================================================================
+// WORD BREAK 规则实现（UAX #29）
+// ============================================================================
+
+// 判断是否是字母类（用于 WB6-WB9 规则）
+static inline bool isLetterLike(WBProperty prop) {
+    return prop == WBP_ALPHA || prop == WBP_ARABIC || prop == WBP_HEBREW || 
+           prop == WBP_INDIC || prop == WBP_SE_ASIAN || prop == WBP_TIBETAN ||
+           prop == WBP_ETHIOPIC || prop == WBP_MONGOLIAN;
+}
+
 // Check word boundary according to UAX #29 rules with script-specific handling
 static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     if (pos <= 0 || pos >= length) {
         return true;
     }
+    
+    // 获取前后字符
     UChar32 prev = text[pos - 1];
     int32_t prevLen = 1;
     if (U16_IS_TRAIL(prev) && pos > 1) {
@@ -345,6 +404,7 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
         currLen = 2;
     }
     
+    // 获取属性（使用数据表）
     WBProperty propPrev = getWBProperty(prev);
     WBProperty propCurr = getWBProperty(curr);
     
@@ -358,7 +418,7 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     // WB4: Don't break within surrogate pairs
     if (U16_IS_LEAD(prev) && U16_IS_TRAIL(curr)) return false;
     
-    // WB5: Ignore format and extend characters
+    // WB5: Ignore format and extend characters（递归跳过）
     if (propPrev == WBP_EXTEND || propPrev == WBP_FORMAT) {
         return isWordBoundary(text, length, pos - prevLen);
     }
@@ -374,16 +434,9 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
         return isWordBoundary(text, length, pos + currLen);
     }
     
-    // WB6: Don't break between letters (including Arabic, Hebrew, Indic, etc.)
-    bool prevIsLetter = (propPrev == WBP_ALPHA || propPrev == WBP_ARABIC || 
-                         propPrev == WBP_HEBREW || propPrev == WBP_INDIC ||
-                         propPrev == WBP_SE_ASIAN || propPrev == WBP_TIBETAN ||
-                         propPrev == WBP_ETHIOPIC || propPrev == WBP_MONGOLIAN);
-    bool currIsLetter = (propCurr == WBP_ALPHA || propCurr == WBP_ARABIC || 
-                         propCurr == WBP_HEBREW || propCurr == WBP_INDIC ||
-                         propCurr == WBP_SE_ASIAN || propCurr == WBP_TIBETAN ||
-                         propCurr == WBP_ETHIOPIC || propCurr == WBP_MONGOLIAN);
-    
+    // WB6: Don't break between letters（使用辅助函数简化）
+    bool prevIsLetter = isLetterLike(propPrev);
+    bool currIsLetter = isLetterLike(propCurr);
     if (prevIsLetter && currIsLetter) {
         return false;
     }
@@ -418,67 +471,47 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
         return false;
     }
     
-    // Special: Indic consonant clusters - don't break within clusters
+    // 特殊脚本处理：Indic 辅音丛（使用数据表，避免 ICU 调用）
     if (propPrev == WBP_INDIC && propCurr == WBP_INDIC) {
-        UErrorCode status = U_ZERO_ERROR;
-        UScriptCode prevScript = uscript_getScript(prev, &status);
-        UScriptCode currScript = uscript_getScript(curr, &status);
+        const auto* rangePrev = findUnicodeRange(prev);
+        const auto* rangeCurr = findUnicodeRange(curr);
         
-        // Check if both are in the same Indic script
-        if (isIndicScript(prevScript) && isIndicScript(currScript)) {
-            // For Indic, consider characters to be part of the same word
-            // unless there's explicit punctuation or space
-            int32_t prevCat = getGeneralCategory(prev);
-            int32_t currCat = getGeneralCategory(curr);
+        // 同一 Indic 脚本内的字母不分割
+        if (rangePrev->script == rangeCurr->script &&
+            isIndicScript((UScriptCode)rangePrev->script)) {
+            uint8_t catPrev = rangePrev->category;
+            uint8_t catCurr = rangeCurr->category;
             
-            // Allow break after combining marks, punctuation, etc.
-            if ((prevCat == U_NON_SPACING_MARK || prevCat == U_ENCLOSING_MARK ||
-                 prevCat == U_COMBINING_SPACING_MARK) &&
-                (currCat >= U_UPPERCASE_LETTER && currCat <= U_OTHER_LETTER)) {
-                // Don't break between combining mark and letter
-                return false;
-            }
-            if ((prevCat >= U_UPPERCASE_LETTER && prevCat <= U_OTHER_LETTER) &&
-                (currCat == U_NON_SPACING_MARK || currCat == U_ENCLOSING_MARK ||
-                 currCat == U_COMBINING_SPACING_MARK)) {
-                // Don't break between letter and combining mark
-                return false;
-            }
-            // For Indic consonant clusters, we don't break
-            if ((prevCat >= U_UPPERCASE_LETTER && prevCat <= U_OTHER_LETTER) &&
-                (currCat >= U_UPPERCASE_LETTER && currCat <= U_OTHER_LETTER)) {
+            // 字母 + 标记不分割
+            bool prevIsLet = (catPrev >= U_UPPERCASE_LETTER && catPrev <= U_OTHER_LETTER);
+            bool currIsLet = (catCurr >= U_UPPERCASE_LETTER && catCurr <= U_OTHER_LETTER);
+            bool prevIsMark = (catPrev == U_NON_SPACING_MARK || catPrev == U_ENCLOSING_MARK ||
+                               catPrev == U_COMBINING_SPACING_MARK);
+            bool currIsMark = (catCurr == U_NON_SPACING_MARK || catCurr == U_ENCLOSING_MARK ||
+                               catCurr == U_COMBINING_SPACING_MARK);
+            
+            if ((prevIsMark && currIsLet) || (prevIsLet && currIsMark) ||
+                (prevIsLet && currIsLet)) {
                 return false;
             }
         }
     }
     
-    // Special: Southeast Asian - don't break between letters (no word boundaries)
+    // 特殊脚本：东南亚文字（泰文、老挝文等）不分割
     if (propPrev == WBP_SE_ASIAN && propCurr == WBP_SE_ASIAN) {
         return false;
     }
     
-    // Special: Tibetan - don't break between letters
-    if (propPrev == WBP_TIBETAN && propCurr == WBP_TIBETAN) {
+    // 特殊脚本：藏文、埃塞俄比亚文、蒙古文不分割
+    if ((propPrev == WBP_TIBETAN && propCurr == WBP_TIBETAN) ||
+        (propPrev == WBP_ETHIOPIC && propCurr == WBP_ETHIOPIC) ||
+        (propPrev == WBP_MONGOLIAN && propCurr == WBP_MONGOLIAN)) {
         return false;
     }
     
-    // Special: Ethiopic - don't break between letters
-    if (propPrev == WBP_ETHIOPIC && propCurr == WBP_ETHIOPIC) {
-        return false;
-    }
-    
-    // Special: Mongolian - don't break between letters
-    if (propPrev == WBP_MONGOLIAN && propCurr == WBP_MONGOLIAN) {
-        return false;
-    }
-    
-    // WB12: CJK rule - break between ideographs
+    // WB12-WB14: CJK 规则
     if (propPrev == WBP_IDEOGRAPHIC && propCurr == WBP_IDEOGRAPHIC) return true;
-    
-    // WB13: CJK rule - break after ideograph before non-ideograph
     if (propPrev == WBP_IDEOGRAPHIC && propCurr != WBP_IDEOGRAPHIC) return true;
-    
-    // WB14: CJK rule - break before ideograph after non-ideograph
     if (propPrev != WBP_IDEOGRAPHIC && propCurr == WBP_IDEOGRAPHIC) return true;
     
     // Default: break

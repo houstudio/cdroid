@@ -15,6 +15,7 @@ add_library(cdtext
     textutils.cc
     textline.cc
     packedintvector.cc
+    character.cc
     )
 target_link_libraries(cdtext minikin)
 
