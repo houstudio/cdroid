@@ -28,9 +28,9 @@ TextLine* TextLine::recycle(TextLine* tl) {
     tl->mChars.clear();//mChars = nullptr;
     tl->mComputed = nullptr;
 
-    tl->mMetricAffectingSpanSpanSet.recycle();
-    tl->mCharacterStyleSpanSet.recycle();
-    tl->mReplacementSpanSpanSet.recycle();
+    tl->mMetricAffectingSpanSpanSet->recycle();
+    tl->mCharacterStyleSpanSet->recycle();
+    tl->mReplacementSpanSpanSet->recycle();
 
     for (int i = 0; i < sCached.size(); ++i) {
         if (sCached[i] == nullptr) {
@@ -39,6 +39,18 @@ TextLine* TextLine::recycle(TextLine* tl) {
         }
     }
     return nullptr;
+}
+
+TextLine::TextLine(){
+    mMetricAffectingSpanSpanSet=new SpanSet(make_span_filter<MetricAffectingSpan>());
+    mCharacterStyleSpanSet=new SpanSet(make_span_filter<CharacterStyle>());
+    mReplacementSpanSpanSet=new SpanSet(make_span_filter<ReplacementSpan>());
+}
+
+TextLine::~TextLine(){
+    delete mMetricAffectingSpanSpanSet;
+    delete mCharacterStyleSpanSet;
+    delete mReplacementSpanSpanSet;
 }
 
 void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,
@@ -58,8 +70,8 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
     bool hasReplacement = false;
     mSpanned = dynamic_cast<Spanned*>(text);
     if (mSpanned != nullptr) {
-        mReplacementSpanSpanSet.init(mSpanned, start, limit,make_span_filter<ReplacementSpan>());
-        hasReplacement = mReplacementSpanSpanSet.numberOfSpans > 0;
+        mReplacementSpanSpanSet->init(mSpanned, start, limit);
+        hasReplacement = mReplacementSpanSpanSet->numberOfSpans > 0;
     }
 
     mComputed = dynamic_cast<PrecomputedText*>(text);
@@ -87,8 +99,8 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
             // zero-width characters.
             auto& chars = mChars;
             for (int i = start, inext; i < limit; i = inext) {
-                inext = mReplacementSpanSpanSet.getNextTransition(i, limit);
-                if (mReplacementSpanSpanSet.hasSpansIntersecting(i, inext)
+                inext = mReplacementSpanSpanSet->getNextTransition(i, limit);
+                if (mReplacementSpanSpanSet->hasSpansIntersecting(i, inext)
                         && (i - start >= ellipsisEnd || inext - start <= ellipsisStart)) {
                     // transition into a span
                     chars[i - start] = 0xFFFC;//C'\ufffc';
@@ -730,10 +742,10 @@ float TextLine::handleRun(int start, int measureLimit,
     if (mSpanned == nullptr) {
         needsSpanMeasurement = false;
     } else {
-        mMetricAffectingSpanSpanSet.init(mSpanned, mStart + start, mStart + limit,make_span_filter<MetricAffectingSpan>());
-        mCharacterStyleSpanSet.init(mSpanned, mStart + start, mStart + limit,make_span_filter<CharacterStyle>());
-        needsSpanMeasurement = mMetricAffectingSpanSpanSet.numberOfSpans != 0
-                || mCharacterStyleSpanSet.numberOfSpans != 0;
+        mMetricAffectingSpanSpanSet->init(mSpanned, mStart + start, mStart + limit);
+        mCharacterStyleSpanSet->init(mSpanned, mStart + start, mStart + limit);
+        needsSpanMeasurement = mMetricAffectingSpanSpanSet->numberOfSpans != 0
+                || mCharacterStyleSpanSet->numberOfSpans != 0;
     }
 
     if (!needsSpanMeasurement) {
@@ -755,21 +767,21 @@ float TextLine::handleRun(int start, int measureLimit,
         TextPaint& wp = mWorkPaint;
         wp.set(*mPaint);
 
-        inext = mMetricAffectingSpanSpanSet.getNextTransition(mStart + i, mStart + limit) - mStart;
+        inext = mMetricAffectingSpanSpanSet->getNextTransition(mStart + i, mStart + limit) - mStart;
         int mlimit = std::min(inext, measureLimit);
 
         ReplacementSpan* replacement = nullptr;
 
-        for (int j = 0; j < mMetricAffectingSpanSpanSet.numberOfSpans; j++) {
+        for (int j = 0; j < mMetricAffectingSpanSpanSet->numberOfSpans; j++) {
             // Both intervals [spanStarts..spanEnds] and [mStart + i..mStart + mlimit] are NOT
             // empty by construction. This special case in getSpans() explains the >= & <= tests
-            if ((mMetricAffectingSpanSpanSet.spanStarts[j] >= mStart + mlimit)
-                    || (mMetricAffectingSpanSpanSet.spanEnds[j] <= mStart + i)) continue;
+            if ((mMetricAffectingSpanSpanSet->spanStarts[j] >= mStart + mlimit)
+                    || (mMetricAffectingSpanSpanSet->spanEnds[j] <= mStart + i)) continue;
 
             const bool insideEllipsis =
-                    mStart + mEllipsisStart <= mMetricAffectingSpanSpanSet.spanStarts[j]
-                    && mMetricAffectingSpanSpanSet.spanEnds[j] <= mStart + mEllipsisEnd;
-            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(mMetricAffectingSpanSpanSet.spans[j]);
+                    mStart + mEllipsisStart <= mMetricAffectingSpanSpanSet->spanStarts[j]
+                    && mMetricAffectingSpanSpanSet->spanEnds[j] <= mStart + mEllipsisEnd;
+            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(mMetricAffectingSpanSpanSet->spans[j]);
             if (dynamic_cast<ReplacementSpan*>(span)) {
                 replacement = !insideEllipsis ? (ReplacementSpan*) span : nullptr;
             } else {
@@ -792,16 +804,16 @@ float TextLine::handleRun(int start, int measureLimit,
         DecorationInfo decorationInfo = mDecorationInfo;
         mDecorations.clear();
         for (int j = i, jnext; j < mlimit; j = jnext) {
-            jnext = mCharacterStyleSpanSet.getNextTransition(mStart + j, mStart + inext) - mStart;
+            jnext = mCharacterStyleSpanSet->getNextTransition(mStart + j, mStart + inext) - mStart;
 
             const int offset = std::min(jnext, mlimit);
             wp.set(*mPaint);
-            for (int k = 0; k < mCharacterStyleSpanSet.numberOfSpans; k++) {
+            for (int k = 0; k < mCharacterStyleSpanSet->numberOfSpans; k++) {
                 // Intentionally using >= and <= as explained above
-                if ((mCharacterStyleSpanSet.spanStarts[k] >= mStart + offset) ||
-                        (mCharacterStyleSpanSet.spanEnds[k] <= mStart + j)) continue;
+                if ((mCharacterStyleSpanSet->spanStarts[k] >= mStart + offset) ||
+                        (mCharacterStyleSpanSet->spanEnds[k] <= mStart + j)) continue;
 
-                CharacterStyle* span = dynamic_cast<CharacterStyle*>(mCharacterStyleSpanSet.spans[k]);
+                CharacterStyle* span = dynamic_cast<CharacterStyle*>(mCharacterStyleSpanSet->spans[k]);
                 span->updateDrawState(wp);
             }
 

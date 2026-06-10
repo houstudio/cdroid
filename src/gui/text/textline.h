@@ -57,9 +57,9 @@ private:
 
     TextPaint mWorkPaint;
     TextPaint mActivePaint;
-    SpanSet mMetricAffectingSpanSpanSet;
-    SpanSet mCharacterStyleSpanSet;
-    SpanSet mReplacementSpanSpanSet;
+    SpanSet* mMetricAffectingSpanSpanSet;
+    SpanSet* mCharacterStyleSpanSet;
+    SpanSet* mReplacementSpanSpanSet;
 
     DecorationInfo mDecorationInfo;
     std::vector<DecorationInfo> mDecorations ;
@@ -107,6 +107,8 @@ private:
     int countStretchableSpaces(int start, int end) const;
     static bool equalAttributes(const TextPaint& lp, const TextPaint& rp);
 public:
+    TextLine();
+    virtual ~TextLine();
     static TextLine* obtain();
     static TextLine* recycle(TextLine* tl);
     void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,

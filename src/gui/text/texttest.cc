@@ -105,7 +105,7 @@ public:
         int boringWidth,boringHeight;
         auto hintBoring = BoringLayout::isBoring(span, &pt,TextDirectionHeuristics::LTR,nullptr);//mHintBoring);
         canvas.translate(0,dynamicLayoutHeight+20);
-        pt.setTextSize(8);
+        pt.setTextSize(24);
         for(int i=0;i<10;i++){
             auto startTime = std::chrono::high_resolution_clock::now();
             auto boringLayout=BoringLayout::make(span,&pt,getWidth(),TextLayout::Alignment::ALIGN_NORMAL, 1.f/*mSpacingMult*/, 0/*mSpacingAdd*/,metrics, true);
@@ -126,8 +126,8 @@ public:
         canvas.translate(0,boringHeight+20);
         std::string u8str=TextUtils::utf16_utf8(u16str);
         for(int j=0;j<10;j++){
-            cdroid::Layout layout(24,800);
-            layout.setMultiline(true);
+            cdroid::Layout layout(24,getWidth());
+            //layout.setMultiline(true);
             layout.setText(u8str);
             auto startTime = std::chrono::high_resolution_clock::now();
             layout.relayout(true);

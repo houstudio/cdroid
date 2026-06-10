@@ -69,13 +69,14 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
     mAlignment = align;
     mSpacingMult = spacingMult;
     mSpacingAdd = spacingAdd;
+    mLineBackgroundSpans=nullptr;
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
     mJustificationMode = JUSTIFICATION_MODE_NONE;
     mTextDir = textDir;
 }
 
 TextLayout::~TextLayout(){
-    //delete mText;
+    delete mLineBackgroundSpans;
 }
 
 void TextLayout::setJustificationMode(int justificationMode) {
@@ -368,10 +369,11 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
 
         Spanned* buffer = dynamic_cast<Spanned*>(mText);
         const int textLength = buffer->length();
-        mLineBackgroundSpans.init(buffer, 0, textLength,SpanFilter([](const ParcelableSpan*o){
-                    return dynamic_cast<const LineBackgroundSpan*>(o)!=nullptr;}));
-
-        if (mLineBackgroundSpans.numberOfSpans > 0) {
+        if(mLineBackgroundSpans==nullptr){
+            mLineBackgroundSpans=new SpanSet(make_span_filter<LineBackgroundSpan>());
+        }
+        mLineBackgroundSpans->init(buffer, 0, textLength);
+        if (mLineBackgroundSpans->numberOfSpans > 0) {
             int previousLineBottom = getLineTop(firstLine);
             int previousLineEnd = getLineStart(firstLine);
             std::vector<ParcelableSpan*> spans ;
@@ -392,19 +394,19 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
                 if (end >= spanEnd) {
                     // These should be infrequent, so we'll use this so that
                     // we don't have to check as often.
-                    spanEnd = mLineBackgroundSpans.getNextTransition(start, textLength);
+                    spanEnd = mLineBackgroundSpans->getNextTransition(start, textLength);
                     // All LineBackgroundSpans on a line contribute to its background.
                     spansLength = 0;
                     // Duplication of the logic of getParagraphSpans
                     if (start != end || start == 0) {
                         // Equivalent to a getSpans(start, end), but filling the 'spans' local
                         // array instead to reduce memory allocation
-                        for (int j = 0; j < mLineBackgroundSpans.numberOfSpans; j++) {
+                        for (int j = 0; j < mLineBackgroundSpans->numberOfSpans; j++) {
                             // equal test is valid since both intervals are not empty by
                             // construction
-                            if (mLineBackgroundSpans.spanStarts[j] >= end ||
-                                    mLineBackgroundSpans.spanEnds[j] <= start) continue;
-                            spans.push_back(mLineBackgroundSpans.spans[j]);// = GrowingArrayUtils.append( spans, spansLength, mLineBackgroundSpans.spans[j]);
+                            if (mLineBackgroundSpans->spanStarts[j] >= end ||
+                                    mLineBackgroundSpans->spanEnds[j] <= start) continue;
+                            spans.push_back(mLineBackgroundSpans->spans[j]);// = GrowingArrayUtils.append( spans, spansLength, mLineBackgroundSpans.spans[j]);
                             spansLength++;
                         }
                     }
@@ -417,7 +419,7 @@ void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highligh
                 }
             }
         }
-        mLineBackgroundSpans.recycle();
+        mLineBackgroundSpans->recycle();
     }
 
     // There can be a highlight even without spans if we are drawing

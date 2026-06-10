@@ -342,7 +342,7 @@ private:
     float mSpacingAdd;
     bool mSpannedText;
     const TextDirectionHeuristic* mTextDir;
-    cdroid::SpanSet/*<LineBackgroundSpan>*/mLineBackgroundSpans;
+    cdroid::SpanSet*mLineBackgroundSpans;
     int mJustificationMode;
 public:
     static constexpr int DIR_LEFT_TO_RIGHT = 1;

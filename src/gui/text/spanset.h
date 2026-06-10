@@ -5,17 +5,17 @@ namespace cdroid{
 class SpanSet{
 public:
     int numberOfSpans;
+    const SpanFilter classType;
     std::vector<ParcelableSpan*> spans;
     std::vector<int> spanStarts;
     std::vector<int> spanEnds;
     std::vector<int> spanFlags;
 public:
-    SpanSet(/*const SpanFilter&type*/) {
-        //classType = type;
+    SpanSet(const SpanFilter&type):classType(type){
         numberOfSpans = 0;
     }
 
-    void init(Spanned* spanned, int start, int limit,const SpanFilter& classType) {
+    void init(Spanned* spanned, int start, int limit) {
         auto allSpans = spanned->getSpans(start, limit, classType);
         const int length = allSpans.size();
 
@@ -50,6 +50,7 @@ public:
         if (numberOfSpans < prevNumberOfSpans) {
             // prevNumberofSpans was > 0, therefore spans != null
             //Arrays.fill(spans, numberOfSpans, prevNumberOfSpans, null);
+            std::fill(spans.begin() + numberOfSpans, spans.begin() + prevNumberOfSpans, nullptr);
         }
     }
 
@@ -74,7 +75,7 @@ public:
 
     void recycle() {
         if (!spans.empty()) {
-            //Arrays.fill(spans, 0, numberOfSpans, null);
+            std::fill(spans.begin(),spans.end(),nullptr);
         }
     }
 };
