@@ -60,6 +60,7 @@ target_include_directories(
     ${PROJECT_SOURCE_DIR}/cairomm
     ${PROJECT_SOURCE_DIR}/image-decoders
     ${PROJECT_SOURCE_DIR}/../porting/include
+    ${PROJECT_SOURCE_DIR}/text/minikin/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include
     ${PROJECT_BINARY_DIR}

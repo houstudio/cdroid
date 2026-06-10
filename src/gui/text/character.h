@@ -115,7 +115,7 @@ public:
     class UnicodeBlock:public Subset {
     private:
         static constexpr int NUM_ENTITIES = 684;
-        static std::unordered_map<std::string,const UnicodeBlock*> map;
+        static std::unordered_map<std::string,const UnicodeBlock*>& getMap();
         UnicodeBlock(const std::string& idName);
         // BEGIN Android-added: ICU consistency: Don't map deprecated SURROGATES_AREA. b/26140229
         // Add a (String, bool) constructor for use by SURROGATES_AREA.
@@ -607,7 +607,7 @@ public:
     private:
         static const int scriptStarts[];
         static const int scripts[];
-        static const std::unordered_map<std::string, int> aliases;
+        static const std::unordered_map<std::string, int>& getAliases();
     public:
         static int of(int codePoint);
         static int forName(const std::string& scriptName);

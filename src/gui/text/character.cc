@@ -25,16 +25,19 @@ constexpr uint8_t Character::DIRECTIONALITY[]{
 
 // See http://www.unicode.org/Public/UNIDATA/Blocks.txt
 // for the latest specification of Unicode Blocks.
-std::unordered_map<std::string,const Character::UnicodeBlock*> Character::UnicodeBlock::map;
+std::unordered_map<std::string, const Character::UnicodeBlock*>& Character::UnicodeBlock::getMap() {
+    static std::unordered_map<std::string, const UnicodeBlock*> map_instance;
+    return map_instance;
+}
 
 Character::UnicodeBlock::UnicodeBlock(const std::string& idName)
     : Subset(idName) {
-    map.insert({idName,this});
+    getMap().insert({idName,this});
 }
 
 Character::UnicodeBlock::UnicodeBlock(const std::string& idName, bool isMap)
     : Subset(idName) {
-    if(isMap)map.insert({idName,this});
+    if(isMap)getMap().insert({idName,this});
 }
 
 Character::UnicodeBlock::UnicodeBlock(const std::string& idName, const std::string& alias)
@@ -44,9 +47,10 @@ Character::UnicodeBlock::UnicodeBlock(const std::string& idName, const std::stri
 Character::UnicodeBlock::UnicodeBlock(const std::string& idName, const std::initializer_list<const std::string>& aliases)
     : UnicodeBlock(idName) {
     for(auto a:aliases){
-        map.insert({a,this});
+        getMap().insert({a,this});
     }
 }
+
 const Character::UnicodeBlock  Character::UnicodeBlock::BASIC_LATIN("BASIC_LATIN",{"BASIC LATIN","BASICLATIN"});
 const Character::UnicodeBlock Character::UnicodeBlock::LATIN_1_SUPPLEMENT("LATIN_1_SUPPLEMENT",{"LATIN-1 SUPPLEMENT","LATIN-1SUPPLEMENT"});
 const Character::UnicodeBlock Character::UnicodeBlock::LATIN_EXTENDED_A("LATIN_EXTENDED_A",{"LATIN EXTENDED-A","LATINEXTENDED-A"});
@@ -1970,8 +1974,8 @@ const Character::UnicodeBlock* Character::UnicodeBlock::of(int codePoint) {
 }
 
 const Character::UnicodeBlock* Character::UnicodeBlock::forName(const std::string& blockName) {
-    auto it = map.find(blockName);//.toUpperCase(Locale.US));
-    if (it == map.end()) {
+    auto it = getMap().find(blockName);//.toUpperCase(Locale.US));
+    if (it == getMap().end()) {
         //throw new IllegalArgumentException("Not a valid block name: %s",blockName);
     }
     return it->second;
@@ -5159,7 +5163,8 @@ const int Character::UnicodeScript::scripts[] = {
     Character::UnicodeScript::INHERITED,                // E0100..E01EF
     Character::UnicodeScript::UNKNOWN,                  // E01F0..10FFFF
 };
-const std::unordered_map<std::string, int> Character::UnicodeScript::aliases={
+const std::unordered_map<std::string, int>& Character::UnicodeScript::getAliases() {
+    static const std::unordered_map<std::string, int> aliases_map = {
     {"ADLM", Character::UnicodeScript::ADLAM},
     {"AGHB", Character::UnicodeScript::CAUCASIAN_ALBANIAN},
     {"AHOM", Character::UnicodeScript::AHOM},
@@ -5319,7 +5324,9 @@ const std::unordered_map<std::string, int> Character::UnicodeScript::aliases={
     {"ZINH", Character::UnicodeScript::INHERITED},
     {"ZYYY", Character::UnicodeScript::COMMON},
     {"ZZZZ", Character::UnicodeScript::UNKNOWN},
-};
+    };
+    return aliases_map;
+}
 
 int Character::UnicodeScript::of(int codePoint) {
     if (!isValidCodePoint(codePoint)){
@@ -5345,6 +5352,7 @@ int Character::UnicodeScript::of(int codePoint) {
 int Character::UnicodeScript::forName(const std::string& scriptName) {
     //scriptName = scriptName.toUpperCase(Locale.ENGLISH);
     //                        //.replace(' ', '_'));
+    auto& aliases=getAliases();
     auto it = aliases.find(scriptName);
     if (it != aliases.end())
         return it->second;
