@@ -152,11 +152,13 @@ private:
     BoringLayout::Metrics* mHintBoring;
 private:
     void initView();
-    int  getLayoutAlignment()const;
+    Layout::Alignment getLayoutAlignment()const;
     void applyCompoundDrawableTint();
     int  getVerticalOffset(bool forceNormal);
     int  getBottomVerticalOffset(bool forceNormal);
     void updateTextColors();
+    int findLargestTextSizeWhichFits(const RectF& availableSpace);
+    bool suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& availableSpace);
     int  getDesiredHeight();
     int  getDesiredHeight(Layout* layout, bool cap);
     void getInterestingRect(Rect& r, int line);

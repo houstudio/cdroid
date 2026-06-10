@@ -579,8 +579,8 @@ void TextView::onDetachedFromWindowInternal(){
     View::onDetachedFromWindowInternal();
 }
 
-int TextView::getLayoutAlignment()const{
-    int alignment;
+Layout::Alignment TextView::getLayoutAlignment()const{
+    Layout::Alignment alignment;
     switch (getTextAlignment()) {
     case TEXT_ALIGNMENT_GRAVITY:
         switch (mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) {
@@ -1751,6 +1751,61 @@ void TextView::autoSizeText() {
     // Always try to auto-size if enabled. Functions that do not want to trigger auto-sizing
     // after the next layout pass should set this to false.
     mNeedsAutoSizeText = true;
+}
+
+int TextView::findLargestTextSizeWhichFits(const RectF& availableSpace) {
+    int sizesCount = 0;//mAutoSizeTextSizesInPx.length;
+    if (sizesCount == 0) {
+        //throw new IllegalStateException("No available text sizes to choose from.");
+    }
+
+    int bestSizeIndex = 0;
+    int lowIndex = bestSizeIndex + 1;
+    int highIndex = sizesCount - 1;
+    int sizeToTryIndex;
+    while (lowIndex <= highIndex) {
+        sizeToTryIndex = (lowIndex + highIndex) / 2;
+        if (suggestedSizeFitsInSpace(mAutoSizeTextSizesInPx[sizeToTryIndex], availableSpace)) {
+            bestSizeIndex = lowIndex;
+            lowIndex = sizeToTryIndex + 1;
+        } else {
+            highIndex = sizeToTryIndex - 1;
+            bestSizeIndex = highIndex;
+        }
+    }
+    return mAutoSizeTextSizesInPx[bestSizeIndex];
+}
+
+bool TextView::suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& availableSpace) {
+    CharSequence* text = nullptr;//mTransformed != nullptr? mTransformed: getText();
+    const int maxLines = getMaxLines();
+    TextPaint mTempTextPaint;
+    mTempTextPaint.set(getPaint());
+    mTempTextPaint.setTextSize(suggestedSizeInPx);
+
+    StaticLayout::Builder* layoutBuilder = StaticLayout::Builder::obtain(
+            text, 0, text->length(), &mTempTextPaint, std::round(availableSpace.right()));
+
+    layoutBuilder->setAlignment(getLayoutAlignment())
+            .setLineSpacing(getLineSpacingExtra(), getLineSpacingMultiplier())
+            .setIncludePad(getIncludeFontPadding())
+            .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
+            .setBreakStrategy(getBreakStrategy())
+            .setHyphenationFrequency(mHyphenationFrequency)
+            .setJustificationMode(mJustificationMode)
+            .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
+            .setTextDirection(getTextDirectionHeuristic());
+
+    StaticLayout* layout = layoutBuilder->build();
+    // Lines overflow.
+    if (maxLines != -1 && layout->getLineCount() > maxLines) {
+        return false;
+    }
+    // Height overflow.
+    if (layout->getHeight() > availableSpace.bottom()) {
+        return false;
+    }
+    return true;
 }
 
 int TextView::getDesiredHeight(){
