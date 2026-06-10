@@ -52,7 +52,7 @@ WindowManager::~WindowManager() {
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
-    };
+    }
     mWindows.clear();
     LOGD("%p Destroied",this);
 }
