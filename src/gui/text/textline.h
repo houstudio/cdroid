@@ -64,7 +64,7 @@ private:
     DecorationInfo mDecorationInfo;
     std::vector<DecorationInfo> mDecorations ;
 
-    static std::array<TextLine*,3> sCached;
+    static TextLine* sCached[3];
 private:
     int charAt(int i) const{
         return mCharsValid ? mChars[i] : mText->charAt(i + mStart);

@@ -5,10 +5,10 @@
 
 namespace cdroid{
 const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
-std::array<TextLine*,3> TextLine::sCached;
+TextLine* TextLine::sCached[3];
 TextLine* TextLine::obtain() {
     TextLine* tl;
-    for (int i = sCached.size(); --i >= 0;) {
+    for (int i = sizeof(sCached)/sizeof(sCached[0]); --i >= 0;) {
         if (sCached[i] != nullptr) {
             tl = sCached[i];
             sCached[i] = nullptr;
@@ -32,7 +32,7 @@ TextLine* TextLine::recycle(TextLine* tl) {
     tl->mCharacterStyleSpanSet->recycle();
     tl->mReplacementSpanSpanSet->recycle();
 
-    for (int i = 0; i < sCached.size(); ++i) {
+    for (int i = 0; i < sizeof(sCached)/sizeof(sCached[0]); ++i) {
         if (sCached[i] == nullptr) {
             sCached[i] = tl;
             break;
