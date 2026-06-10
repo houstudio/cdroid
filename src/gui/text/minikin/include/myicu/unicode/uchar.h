@@ -48,159 +48,181 @@ typedef enum UGraphemeClusterBreak {
 } UGraphemeClusterBreak;
 
 typedef enum UProperty {
-    // 通用属性
-    UCHAR_GENERAL_CATEGORY = 0,
-    UCHAR_CANONICAL_COMBINING_CLASS = 3,
-    UCHAR_BIDI_CLASS = 4,
+    /* Binary properties start at 0 */
+    UCHAR_ALPHABETIC=0,
+    UCHAR_BINARY_START=UCHAR_ALPHABETIC,
+    UCHAR_ASCII_HEX_DIGIT=1,
+    UCHAR_BIDI_CONTROL=2,
+    UCHAR_BIDI_MIRRORED=3,
+    UCHAR_DASH=4,
+    UCHAR_DEFAULT_IGNORABLE_CODE_POINT=5,
+    UCHAR_DEPRECATED=6,
+    UCHAR_DIACRITIC=7,
+    UCHAR_EXTENDER=8,
+    UCHAR_FULL_COMPOSITION_EXCLUSION=9,
+    UCHAR_GRAPHEME_BASE=10,
+    UCHAR_GRAPHEME_EXTEND=11,
+    UCHAR_GRAPHEME_LINK=12,
+    UCHAR_HEX_DIGIT=13,
+    UCHAR_HYPHEN=14,
+    UCHAR_ID_CONTINUE=15,
+    UCHAR_ID_START=16,
+    UCHAR_IDEOGRAPHIC=17,
+    UCHAR_IDS_BINARY_OPERATOR=18,
+    UCHAR_IDS_TRINARY_OPERATOR=19,
+    UCHAR_JOIN_CONTROL=20,
+    UCHAR_LOGICAL_ORDER_EXCEPTION=21,
+    UCHAR_LOWERCASE=22,
+    UCHAR_MATH=23,
+    UCHAR_NONCHARACTER_CODE_POINT=24,
+    UCHAR_QUOTATION_MARK=25,
+    UCHAR_RADICAL=26,
+    UCHAR_SOFT_DOTTED=27,
+    UCHAR_TERMINAL_PUNCTUATION=28,
+    UCHAR_UNIFIED_IDEOGRAPH=29,
+    UCHAR_UPPERCASE=30,
+    UCHAR_WHITE_SPACE=31,
+    UCHAR_XID_CONTINUE=32,
+    UCHAR_XID_START=33,
+    UCHAR_CASE_SENSITIVE=34,
+    UCHAR_S_TERM=35,
+    UCHAR_VARIATION_SELECTOR=36,
+    UCHAR_NFD_INERT=37,
+    UCHAR_NFKD_INERT=38,
+    UCHAR_NFC_INERT=39,
+    UCHAR_NFKC_INERT=40,
+    UCHAR_SEGMENT_STARTER=41,
+    UCHAR_PATTERN_SYNTAX=42,
+    UCHAR_PATTERN_WHITE_SPACE=43,
+    UCHAR_POSIX_ALNUM=44,
+    UCHAR_POSIX_BLANK=45,
+    UCHAR_POSIX_GRAPH=46,
+    UCHAR_POSIX_PRINT=47,
+    UCHAR_POSIX_XDIGIT=48,
+    UCHAR_CASED=49,
+    UCHAR_CASE_IGNORABLE=50,
+    UCHAR_CHANGES_WHEN_LOWERCASED=51,
+    UCHAR_CHANGES_WHEN_UPPERCASED=52,
+    UCHAR_CHANGES_WHEN_TITLECASED=53,
+    UCHAR_CHANGES_WHEN_CASEFOLDED=54,
+    UCHAR_CHANGES_WHEN_CASEMAPPED=55,
+    UCHAR_CHANGES_WHEN_NFKC_CASEFOLDED=56,
+    UCHAR_EMOJI=57,
+    UCHAR_EMOJI_PRESENTATION=58,
+    UCHAR_EMOJI_MODIFIER=59,
+    UCHAR_EMOJI_MODIFIER_BASE=60,
+    UCHAR_EMOJI_COMPONENT=61,
+    UCHAR_REGIONAL_INDICATOR=62,
+    UCHAR_PREPENDED_CONCATENATION_MARK=63,
+    UCHAR_EXTENDED_PICTOGRAPHIC=64,
+    UCHAR_BINARY_LIMIT=72,
     
-    // 双向属性
-    UCHAR_BIDI_PAIRED_BRACKET_TYPE = 7,
-    UCHAR_BIDI_PAIRED_BRACKET = 8,
+    /* Enumerated/catalog properties */
+    UCHAR_BIDI_CLASS=0x1000,
+    UCHAR_INT_START=UCHAR_BIDI_CLASS,
+    UCHAR_BLOCK=0x1001,
+    UCHAR_CANONICAL_COMBINING_CLASS=0x1002,
+    UCHAR_DECOMPOSITION_TYPE=0x1003,
+    UCHAR_EAST_ASIAN_WIDTH=0x1004,
+    UCHAR_GENERAL_CATEGORY=0x1005,
+    UCHAR_JOINING_GROUP=0x1006,
+    UCHAR_JOINING_TYPE=0x1007,
+    UCHAR_LINE_BREAK=0x1008,
+    UCHAR_NUMERIC_TYPE=0x1009,
+    UCHAR_SCRIPT=0x100A,
+    UCHAR_HANGUL_SYLLABLE_TYPE=0x100B,
+    UCHAR_NFD_QUICK_CHECK=0x100C,
+    UCHAR_NFKD_QUICK_CHECK=0x100D,
+    UCHAR_NFC_QUICK_CHECK=0x100E,
+    UCHAR_NFKC_QUICK_CHECK=0x100F,
+    UCHAR_LEAD_CANONICAL_COMBINING_CLASS=0x1010,
+    UCHAR_TRAIL_CANONICAL_COMBINING_CLASS=0x1011,
+    UCHAR_BIDI_MIRRORED_TYPE=0x1012,
+    UCHAR_NUMERIC_VALUE=0x1013,
+    UCHAR_BIDI_PAIRED_BRACKET=0x1014,
+    UCHAR_BIDI_PAIRED_BRACKET_TYPE=0x1015,
+    UCHAR_JAVA_LOWERCASE=0x1016,
+    UCHAR_JAVA_UPPERCASE=0x1017,
+    UCHAR_JAVA_WHITESPACE=0x1018,
+    UCHAR_GRAPHEME_CLUSTER_BREAK=0x1019,
+    UCHAR_WORD_BREAK=0x101A,
+    UCHAR_SENTENCE_BREAK=0x101B,
+    UCHAR_UPPERCASE_MAPPING=0x101C,
+    UCHAR_LOWERCASE_MAPPING=0x101D,
+    UCHAR_TITLECASE_MAPPING=0x101E,
+    UCHAR_CASE_FOLDING=0x101F,
+    UCHAR_SIMPLE_CASE_FOLDING=0x1020,
+    UCHAR_ENUM_LIMIT=0x2000,
     
-    // 脚本属性
-    UCHAR_SCRIPT = 10,
+    /* Mask properties */
+    UCHAR_GENERAL_CATEGORY_MASK=0x2000,
+    UCHAR_MASK_START=UCHAR_GENERAL_CATEGORY_MASK,
+    UCHAR_SCRIPT_MASK=0x2001,
+    UCHAR_MASK_LIMIT=0x3000,
     
-    // 行断属性
-    UCHAR_LINE_BREAK = 13,
+    /* String properties */
+    UCHAR_NAME=0x3000,
+    UCHAR_STRING_START=UCHAR_NAME,
+    UCHAR_NAME_ALIAS=0x3001,
+    UCHAR_UNICODE_1_NAME=0x3002,
+    UCHAR_STRING_LIMIT=0x4000,
     
-    // 连接类型
-    UCHAR_JOINING_TYPE = 14,
-    UCHAR_JOINING_GROUP = 15,
-    
-    // 分解类型
-    UCHAR_DECOMPOSITION_TYPE = 18,
-    
-    // 数值属性
-    UCHAR_NUMERIC_VALUE = 21,
-    
-    // 大小写映射
-    UCHAR_LOWERCASE_MAPPING = 24,
-    UCHAR_UPPERCASE_MAPPING = 25,
-    UCHAR_TITLECASE_MAPPING = 26,
-    
-    // 字符名称
-    UCHAR_NAME = 28,
-    UCHAR_NAME_ALIAS = 29,
-    
-    // 块属性
-    UCHAR_BLOCK = 30,
-    
-    // 字素聚类
-    UCHAR_GRAPHEME_CLUSTER_BREAK = 41,
-    
-    // 词断属性
-    UCHAR_WORD_BREAK = 42,
-    
-    // 句子断属性
-    UCHAR_SENTENCE_BREAK = 43,
-    
-    // 二进制属性起始
-    UCHAR_BINARY_START = 0x100,
-    UCHAR_WHITE_SPACE = 0x100,
-    UCHAR_BIDI_MIRRORED = 0x101,
-    UCHAR_ALPHABETIC = 0x102,
-    UCHAR_NUMERIC = 0x103,
-    UCHAR_BIDI_CONTROL = 0x104,
-    UCHAR_JOIN_CONTROL = 0x105,
-    UCHAR_DASH = 0x106,
-    UCHAR_HYPHEN = 0x107,
-    UCHAR_LOWERCASE = 0x108,
-    UCHAR_UPPERCASE = 0x109,
-    UCHAR_TITLECASE = 0x10A,
-    UCHAR_IDEOGRAPHIC = 0x10B,
-    UCHAR_DIACRITIC = 0x10C,
-    UCHAR_EXTENDER = 0x10D,
-    UCHAR_BREAK_WHITESPACE = 0x10E,
-    UCHAR_HEX_DIGIT = 0x10F,
-    UCHAR_ASCII_HEX_DIGIT = 0x110,
-    UCHAR_ALPHANUMERIC = 0x111,
-    UCHAR_PUNCTUATION = 0x112,
-    UCHAR_MATH = 0x113,
-    UCHAR_LOWERCASE_LETTER = 0x114,
-    UCHAR_UPPERCASE_LETTER = 0x115,
-    UCHAR_IDEOGRAPHIC_LETTER = 0x116,
-    UCHAR_NONCHARACTER_CODE_POINT = 0x117,
-    UCHAR_DEFAULT_IGNORABLE_CODE_POINT = 0x118,
-    UCHAR_DEPRECATED = 0x119,
-    UCHAR_SOFTHYPHEN = 0x11A,
-    UCHAR_QUOTATION_MARK = 0x11B,
-    UCHAR_TERMINAL_PUNCTUATION = 0x11C,
-    UCHAR_SEGMENT_STARTER = 0x11D,
-    UCHAR_XID_START = 0x11E,
-    UCHAR_XID_CONTINUE = 0x11F,
-    UCHAR_GRAPHEME_EXTEND = 0x120,
-    UCHAR_GRAPHEME_LINK = 0x121,
-    UCHAR_IDS_BINARY_OPERATOR = 0x122,
-    UCHAR_IDS_TRINARY_OPERATOR = 0x123,
-    UCHAR_RADICAL = 0x124,
-    UCHAR_UNIFIED_IDEOGRAPH = 0x125,
-    UCHAR_VARIATION_SELECTOR = 0x126,
-    UCHAR_PATTERN_SYNTAX = 0x127,
-    UCHAR_PATTERN_WHITE_SPACE = 0x128,
-    UCHAR_PREPENDED_CONCATENATION_MARK = 0x129,
-    
-    // Emoji 属性
-    UCHAR_EMOJI = 148,
-    UCHAR_EMOJI_MODIFIER = 149,
-    UCHAR_EMOJI_MODIFIER_BASE = 150,
-    UCHAR_EXTENDED_PICTOGRAPHIC = 151,
+    /* Reserved */
+    UCHAR_RESERVED_0=0xFFFF
 } UProperty;
 
 typedef enum UCharCategory {
-    U_UNASSIGNED = 0,
-    U_UPPERCASE_LETTER = 1,
-    U_LOWERCASE_LETTER = 2,
-    U_TITLECASE_LETTER = 3,
-    U_MODIFIER_LETTER = 4,
-    U_OTHER_LETTER = 5,
-    U_NON_SPACING_MARK = 6,
-    U_ENCLOSING_MARK = 7,
-    U_COMBINING_SPACING_MARK = 8,
-    U_DECIMAL_DIGIT_NUMBER = 9,
-    U_LETTER_NUMBER = 10,
-    U_OTHER_NUMBER = 11,
-    U_SPACE_SEPARATOR = 12,
-    U_LINE_SEPARATOR = 13,
-    U_PARAGRAPH_SEPARATOR = 14,
-    U_CONTROL = 15,
-    U_FORMAT = 16,
-    U_PRIVATE_USE = 17,
-    U_SURROGATE = 18,
-    U_DASH_PUNCTUATION = 19,
-    U_OPEN_PUNCTUATION = 20,
-    U_CLOSE_PUNCTUATION = 21,
-    U_CONNECTOR_PUNCTUATION = 22,
-    U_OTHER_PUNCTUATION = 23,
-    U_MATH_SYMBOL = 24,
-    U_CURRENCY_SYMBOL = 25,
-    U_MODIFIER_SYMBOL = 26,
-    U_OTHER_SYMBOL = 27,
-    U_INITIAL_PUNCTUATION = 28,
-    U_FINAL_PUNCTUATION = 29,
+    U_UNASSIGNED              = 0,
+    U_GENERAL_OTHER_TYPES     = 0,
+    U_UPPERCASE_LETTER        = 1,
+    U_LOWERCASE_LETTER        = 2,
+    U_TITLECASE_LETTER        = 3,
+    U_MODIFIER_LETTER         = 4,
+    U_OTHER_LETTER            = 5,
+    U_NON_SPACING_MARK        = 6,
+    U_ENCLOSING_MARK          = 7,
+    U_COMBINING_SPACING_MARK  = 8,
+    U_DECIMAL_DIGIT_NUMBER    = 9,
+    U_LETTER_NUMBER           = 10,
+    U_OTHER_NUMBER            = 11,
+    U_SPACE_SEPARATOR         = 12,
+    U_LINE_SEPARATOR          = 13,
+    U_PARAGRAPH_SEPARATOR     = 14,
+    U_CONTROL_CHAR            = 15,
+    U_FORMAT_CHAR             = 16,
+    U_PRIVATE_USE_CHAR        = 17,
+    U_SURROGATE               = 18,
+    U_DASH_PUNCTUATION        = 19,
+    U_START_PUNCTUATION       = 20,
+    U_END_PUNCTUATION         = 21,
+    U_CONNECTOR_PUNCTUATION   = 22,
+    U_OTHER_PUNCTUATION       = 23,
+    U_MATH_SYMBOL             = 24,
+    U_CURRENCY_SYMBOL         = 25,
+    U_MODIFIER_SYMBOL         = 26,
+    U_OTHER_SYMBOL            = 27,
+    U_INITIAL_PUNCTUATION     = 28,
+    U_FINAL_PUNCTUATION       = 29,
+    U_CHAR_CATEGORY_COUNT     = 30
 } UCharCategory;
 
-typedef enum UJoiningType {
-    /*
-     * Note: UJoiningType constants are parsed by preparseucd.py.
-     * It matches lines like
-     *     U_JT_<Unicode Joining_Type value name>
-     */
+/* Compatibility aliases */
+#define U_CONTROL U_CONTROL_CHAR
+#define U_FORMAT U_FORMAT_CHAR
+#define U_PRIVATE_USE U_PRIVATE_USE_CHAR
+#define U_OPEN_PUNCTUATION U_START_PUNCTUATION
+#define U_CLOSE_PUNCTUATION U_END_PUNCTUATION
 
-    U_JT_NON_JOINING,       /*[U]*/
-    U_JT_JOIN_CAUSING,      /*[C]*/
-    U_JT_DUAL_JOINING,      /*[D]*/
-    U_JT_LEFT_JOINING,      /*[L]*/
-    U_JT_RIGHT_JOINING,     /*[R]*/
-    U_JT_TRANSPARENT,       /*[T]*/
+typedef enum UJoiningType {
+    U_JT_NON_JOINING=0,        /*[U]*/
+    U_JT_JOIN_CAUSING=1,       /*[C]*/
+    U_JT_DUAL_JOINING=2,       /*[D]*/
+    U_JT_LEFT_JOINING=3,       /*[L]*/
+    U_JT_RIGHT_JOINING=4,      /*[R]*/
+    U_JT_TRANSPARENT=5,        /*[T]*/
 #ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest normal UJoiningType value.
-     * The highest value is available via u_getIntPropertyMaxValue(UCHAR_JOINING_TYPE).
-     *
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_JT_COUNT /* 6 */
-#endif  // U_HIDE_DEPRECATED_API
+    U_JT_COUNT=6
+#endif
 } UJoiningType;
 
 typedef enum ULineBreak {
@@ -260,120 +282,86 @@ typedef enum ULineBreak {
     U_LB_COUNT = 52
 } ULineBreak;
 
-#define UCHAR_JOINING_TYPE 14
-#define UCHAR_LINE_BREAK 13
-
 #define U_GET_GC_MASK(c) (1 << u_charType(c))
 
-#define U_GC_ZS_MASK (1 << U_SPACE_SEPARATOR)
-#define U_GC_P_MASK (1 << U_ENCLOSING_MARK)
-#define U_GC_CC_MASK (1 << U_CONTROL)
-#define U_GC_M_MASK ((1 << U_NON_SPACING_MARK) | (1 << U_ENCLOSING_MARK) | (1 << U_COMBINING_SPACING_MARK))
+#define U_GC_CN_MASK    (1 << U_UNASSIGNED)
+#define U_GC_LU_MASK    (1 << U_UPPERCASE_LETTER)
+#define U_GC_LL_MASK    (1 << U_LOWERCASE_LETTER)
+#define U_GC_LT_MASK    (1 << U_TITLECASE_LETTER)
+#define U_GC_LM_MASK    (1 << U_MODIFIER_LETTER)
+#define U_GC_LO_MASK    (1 << U_OTHER_LETTER)
+#define U_GC_MN_MASK    (1 << U_NON_SPACING_MARK)
+#define U_GC_ME_MASK    (1 << U_ENCLOSING_MARK)
+#define U_GC_MC_MASK    (1 << U_COMBINING_SPACING_MARK)
+#define U_GC_ND_MASK    (1 << U_DECIMAL_DIGIT_NUMBER)
+#define U_GC_NL_MASK    (1 << U_LETTER_NUMBER)
+#define U_GC_NO_MASK    (1 << U_OTHER_NUMBER)
+#define U_GC_ZS_MASK    (1 << U_SPACE_SEPARATOR)
+#define U_GC_ZL_MASK    (1 << U_LINE_SEPARATOR)
+#define U_GC_ZP_MASK    (1 << U_PARAGRAPH_SEPARATOR)
+#define U_GC_CC_MASK    (1 << U_CONTROL_CHAR)
+#define U_GC_CF_MASK    (1 << U_FORMAT_CHAR)
+#define U_GC_CO_MASK    (1 << U_PRIVATE_USE_CHAR)
+#define U_GC_CS_MASK    (1 << U_SURROGATE)
+#define U_GC_PD_MASK    (1 << U_DASH_PUNCTUATION)
+#define U_GC_PS_MASK    (1 << U_START_PUNCTUATION)
+#define U_GC_PE_MASK    (1 << U_END_PUNCTUATION)
+#define U_GC_PC_MASK    (1 << U_CONNECTOR_PUNCTUATION)
+#define U_GC_PO_MASK    (1 << U_OTHER_PUNCTUATION)
+#define U_GC_SM_MASK    (1 << U_MATH_SYMBOL)
+#define U_GC_SC_MASK    (1 << U_CURRENCY_SYMBOL)
+#define U_GC_SK_MASK    (1 << U_MODIFIER_SYMBOL)
+#define U_GC_SO_MASK    (1 << U_OTHER_SYMBOL)
+#define U_GC_PI_MASK    (1 << U_INITIAL_PUNCTUATION)
+#define U_GC_PF_MASK    (1 << U_FINAL_PUNCTUATION)
+
+#define U_GC_L_MASK     (U_GC_LU_MASK | U_GC_LL_MASK | U_GC_LT_MASK | U_GC_LM_MASK | U_GC_LO_MASK)
+#define U_GC_M_MASK     (U_GC_MN_MASK | U_GC_ME_MASK | U_GC_MC_MASK)
+#define U_GC_N_MASK     (U_GC_ND_MASK | U_GC_NL_MASK | U_GC_NO_MASK)
+#define U_GC_Z_MASK     (U_GC_ZS_MASK | U_GC_ZL_MASK | U_GC_ZP_MASK)
+#define U_GC_C_MASK     (U_GC_CC_MASK | U_GC_CF_MASK | U_GC_CO_MASK | U_GC_CS_MASK | U_GC_CN_MASK)
+#define U_GC_P_MASK     (U_GC_PD_MASK | U_GC_PS_MASK | U_GC_PE_MASK | U_GC_PC_MASK | U_GC_PO_MASK | U_GC_PI_MASK | U_GC_PF_MASK)
+#define U_GC_S_MASK     (U_GC_SM_MASK | U_GC_SC_MASK | U_GC_SK_MASK | U_GC_SO_MASK)
 
 typedef enum UCharDirection {
-    /*
-     * Note: UCharDirection constants and their API comments are parsed by preparseucd.py.
-     * It matches pairs of lines like
-     *     / ** <Unicode 1..3-letter Bidi_Class value> comment... * /
-     *     U_<[A-Z_]+> = <integer>,
-     */
-
-    /** L @stable ICU 2.0 */
     U_LEFT_TO_RIGHT               = 0,
-    /** R @stable ICU 2.0 */
     U_RIGHT_TO_LEFT               = 1,
-    /** EN @stable ICU 2.0 */
     U_EUROPEAN_NUMBER             = 2,
-    /** ES @stable ICU 2.0 */
     U_EUROPEAN_NUMBER_SEPARATOR   = 3,
-    /** ET @stable ICU 2.0 */
     U_EUROPEAN_NUMBER_TERMINATOR  = 4,
-    /** AN @stable ICU 2.0 */
     U_ARABIC_NUMBER               = 5,
-    /** CS @stable ICU 2.0 */
     U_COMMON_NUMBER_SEPARATOR     = 6,
-    /** B @stable ICU 2.0 */
     U_BLOCK_SEPARATOR             = 7,
-    /** S @stable ICU 2.0 */
     U_SEGMENT_SEPARATOR           = 8,
-    /** WS @stable ICU 2.0 */
     U_WHITE_SPACE_NEUTRAL         = 9,
-    /** ON @stable ICU 2.0 */
     U_OTHER_NEUTRAL               = 10,
-    /** LRE @stable ICU 2.0 */
     U_LEFT_TO_RIGHT_EMBEDDING     = 11,
-    /** LRO @stable ICU 2.0 */
     U_LEFT_TO_RIGHT_OVERRIDE      = 12,
-    /** AL @stable ICU 2.0 */
     U_RIGHT_TO_LEFT_ARABIC        = 13,
-    /** RLE @stable ICU 2.0 */
     U_RIGHT_TO_LEFT_EMBEDDING     = 14,
-    /** RLO @stable ICU 2.0 */
     U_RIGHT_TO_LEFT_OVERRIDE      = 15,
-    /** PDF @stable ICU 2.0 */
     U_POP_DIRECTIONAL_FORMAT      = 16,
-    /** NSM @stable ICU 2.0 */
     U_DIR_NON_SPACING_MARK        = 17,
-    /** BN @stable ICU 2.0 */
     U_BOUNDARY_NEUTRAL            = 18,
-    /** FSI @stable ICU 52 */
     U_FIRST_STRONG_ISOLATE        = 19,
-    /** LRI @stable ICU 52 */
     U_LEFT_TO_RIGHT_ISOLATE       = 20,
-    /** RLI @stable ICU 52 */
     U_RIGHT_TO_LEFT_ISOLATE       = 21,
-    /** PDI @stable ICU 52 */
     U_POP_DIRECTIONAL_ISOLATE     = 22,
 #ifndef U_HIDE_DEPRECATED_API
-    /**
-     * One more than the highest UCharDirection value.
-     * The highest value is available via u_getIntPropertyMaxValue(UCHAR_BIDI_CLASS).
-     *
-     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
-     */
-    U_CHAR_DIRECTION_COUNT
-#endif  // U_HIDE_DEPRECATED_API
+    U_CHAR_DIRECTION_COUNT        = 23
+#endif
 } UCharDirection;
 
+/* Functions */
+UCharDirection u_charDirection(UChar32 c);
+UCharCategory u_charType(UChar32 c);
+UBool u_hasBinaryProperty(UChar32 c, UProperty prop);
+UBool u_isMirrored(UChar32 c);
+UBool u_isWhiteSpace(UChar32 c);
+UChar32 u_tolower(UChar32 c);
+UChar32 u_toupper(UChar32 c);
 
-U_CAPI UBool U_EXPORT2
-u_isbase(UChar32 c);
+int32_t u_getIntPropertyValue(UChar32 c, UProperty prop);
+const char* u_charName(UChar32 c, int32_t nameChoice);
 
-U_CAPI UCharDirection U_EXPORT2
-u_charDirection(UChar32 c);
-
-U_CAPI UBool U_EXPORT2
-u_isMirrored(UChar32 c);
-
-U_CAPI UChar32 U_EXPORT2
-u_charMirror(UChar32 c);
-
-U_CAPI UChar32 U_EXPORT2
-u_getBidiPairedBracket(UChar32 c);
-
-U_CAPI int8_t U_EXPORT2
-u_charType(UChar32 c);
-
-U_CAPI int32_t U_EXPORT2
-u_getIntPropertyValue(UChar32 c, uint32_t property);
-
-U_CAPI UBool U_EXPORT2
-u_hasBinaryProperty(UChar32 c, uint32_t property);
-
-U_CAPI UBool U_EXPORT2
-u_iscntrl(UChar32 c);
-
-U_CAPI UBool U_EXPORT2
-u_isdigit(UChar32 c);
-
-U_CAPI UBool U_EXPORT2
-u_isWhitespace(UChar32 c);
-
-U_CAPI int32_t U_EXPORT2
-u_getCombiningClass(UChar32 c);
-
-U_CAPI UChar32 U_EXPORT2
-u_tolower(UChar32 c);
-U_CAPI UChar32 U_EXPORT2
-u_toupper(UChar32 c);
-#endif
+#endif // __UCHAR_H__

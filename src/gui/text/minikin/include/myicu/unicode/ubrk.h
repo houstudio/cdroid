@@ -20,7 +20,31 @@ enum UBreakIteratorType {
   UBRK_COUNT = 5
 };
 
-#define UBRK_DONE (-1)
+#define UBRK_DONE ((int32_t) -1)
+
+/* Word break status values returned by ubrk_getRuleStatus() */
+#define UBRK_WORD_NONE           0
+#define UBRK_WORD_NONE_LIMIT     100
+#define UBRK_WORD_NUMBER         100
+#define UBRK_WORD_NUMBER_LIMIT   200
+#define UBRK_WORD_LETTER         200
+#define UBRK_WORD_LETTER_LIMIT   300
+#define UBRK_WORD_KANA           300
+#define UBRK_WORD_KANA_LIMIT     400
+#define UBRK_WORD_IDEO           400
+#define UBRK_WORD_IDEO_LIMIT     500
+
+/* Line break status values returned by ubrk_getRuleStatus() */
+#define UBRK_LINE_SOFT            0
+#define UBRK_LINE_SOFT_LIMIT      100
+#define UBRK_LINE_HARD            100
+#define UBRK_LINE_HARD_LIMIT      200
+
+/* Sentence break status values returned by ubrk_getRuleStatus() */
+#define UBRK_SENTENCE_TERM       0
+#define UBRK_SENTENCE_TERM_LIMIT 100
+#define UBRK_SENTENCE_SEP        100
+#define UBRK_SENTENCE_SEP_LIMIT  200
 
 U_CAPI UBreakIterator* U_EXPORT2
 ubrk_open(int32_t type, const char* locale, const UChar* text, int32_t length, UErrorCode* status);

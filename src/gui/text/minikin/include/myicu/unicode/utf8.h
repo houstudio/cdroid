@@ -18,7 +18,7 @@
 #define U8_LEAD4_T1_BITS "\x00\x00\x00\x00\x00\x00\x00\x00\x1E\x0F\x0F\x0F\x00\x00\x00\x00"
 
 
-#define U8_IS_SINGLE(c) ((int8_t)(c)>=0)
+#define U8_IS_SINGLE(c) (((c)&0x80)==0)
 
 #define U8_IS_LEAD(c) ((uint8_t)((c)-0xc2)<=0x32)
 
