@@ -169,7 +169,7 @@ void DynamicLayout::generate(const Builder& b) {
     std::vector<const Directions*> dirs ={ &DIRS_ALL_LEFT_TO_RIGHT };
 
     Paint::FontMetricsInt& fm = b.mFontMetricsInt;
-    b.mPaint->getFontMetricsInt(fm);
+    b.mPaint->getFontMetricsInt(&fm);
     const int asc = fm.ascent;
     const int desc = fm.descent;
 
@@ -422,7 +422,7 @@ bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, in
         //paint.getTextBounds(text, start, end, mTempRect);
     }
     Paint::FontMetricsInt fm;
-    paint->getFontMetricsInt(fm);
+    paint->getFontMetricsInt(&fm);
     return mTempRect.top < fm.top || mTempRect.bottom() > fm.bottom;
 }
 

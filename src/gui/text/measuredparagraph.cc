@@ -315,7 +315,7 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
     const int endInCopiedBuffer = end - mTextStart;
 
     if (builder != nullptr) {
-        mCachedPaint.getFontMetricsInt(mCachedFm);
+        mCachedPaint.getFontMetricsInt(&mCachedFm);
     }
 
     if (replacement != nullptr) {

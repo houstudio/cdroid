@@ -124,7 +124,7 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
     minikin::MeasuredTextBuilder*builder=(minikin::MeasuredTextBuilder*)mNativePtr;
     builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint), isRtl);
     mCurrentOffset = end;
-    paint.getFontMetricsInt(mCachedMetrics);
+    paint.getFontMetricsInt(&mCachedMetrics);
     mTop = std::min(mTop, mCachedMetrics.top);
     mBottom = std::max(mBottom, mCachedMetrics.bottom);
     return *this;

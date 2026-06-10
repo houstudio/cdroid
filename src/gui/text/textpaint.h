@@ -131,7 +131,8 @@ public:
     float measureText(const char16_t* text, int index, int count)const;
     void getFontMetricsInt(const CharSequence* text, int start, int count,
         int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const;
-    int getFontMetricsInt(FontMetricsInt& fmi)const;
+    int getFontMetricsInt(FontMetricsInt* fmi)const;
+    FontMetricsInt getFontMetricsInt()const;
     float getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
             int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex)const;
     float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;

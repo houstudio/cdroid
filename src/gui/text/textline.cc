@@ -514,7 +514,7 @@ void TextLine::expandMetricsFromPaint(Paint::FontMetricsInt& fmi,const TextPaint
     const int previousBottom  = fmi.bottom;
     const int previousLeading = fmi.leading;
 
-    wp.getFontMetricsInt(fmi);
+    wp.getFontMetricsInt(&fmi);
 
     updateMetrics(fmi, previousTop, previousAscent, previousDescent, previousBottom,
             previousLeading);

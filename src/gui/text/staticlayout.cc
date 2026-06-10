@@ -484,7 +484,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
     if ((bufEnd == bufStart || source->charAt(bufEnd - 1) == CHAR_NEW_LINE)
             && mLineCount < mMaximumVisibleLineCount) {
         MeasuredParagraph* measuredPara = MeasuredParagraph::buildForBidi(source, bufEnd, bufEnd, textDir, nullptr);
-        paint->getFontMetricsInt(fm);
+        paint->getFontMetricsInt(&fm);
         v = out(source, bufEnd, bufEnd, fm.ascent, fm.descent, fm.top, fm.bottom,
                 v, spacingmult, spacingadd, {}, nullptr, fm, false, 0, needMultiply,
                 measuredPara, bufEnd, includepad, trackpad, addLastLineSpacing, {},

@@ -188,16 +188,23 @@ void Paint::getFontMetricsInt(const CharSequence* text, int start, int count,
     LOGD("TODO");
 }
 
-int Paint::getFontMetricsInt(FontMetricsInt& fmi)const{
+Paint::FontMetricsInt Paint::getFontMetricsInt()const{
+    FontMetricsInt fm;
+    getFontMetricsInt(&fm);
+    return fm;
+}
+int Paint::getFontMetricsInt(FontMetricsInt* fmi)const{
     std::shared_ptr<minikin::MinikinFont> minikinFont = mTypeface->getMinikinFont();
     minikin::MinikinExtent extent;
     minikinFont->GetFontExtent(&extent, *mMinikinPaint, minikin::FontFakery());
-    fmi.ascent = extent.ascent;
-    fmi.descent = extent.descent;
-    fmi.leading = 0;
-    fmi.top = fmi.ascent;           // top 等于 ascent
-    fmi.bottom = fmi.descent;       // bottom 等于 descent
-    return fmi.descent - fmi.ascent;
+    if(fmi){
+        fmi->ascent = extent.ascent;
+        fmi->descent = extent.descent;
+        fmi->leading = 0;
+        fmi->top = fmi->ascent;           // top 等于 ascent
+        fmi->bottom = fmi->descent;       // bottom 等于 descent
+    }
+    return extent.descent - extent.ascent;
 }
 
 float Paint::getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
