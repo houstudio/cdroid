@@ -31,9 +31,9 @@ int AndroidBidi::bidi(int dir, const std::vector<char16_t>& chs, std::vector<uin
 
     uint8_t paraLevel;
     switch (dir) {
-        case TextLayout::DIR_REQUEST_RTL: paraLevel = UBiDiDirection::UBIDI_RTL;break;//Bidi.RTL; break;
-        case TextLayout::DIR_REQUEST_DEFAULT_LTR: paraLevel = UBIDI_DEFAULT_LTR;break;//Bidi.LEVEL_DEFAULT_LTR; break;
-        case TextLayout::DIR_REQUEST_DEFAULT_RTL: paraLevel = UBIDI_DEFAULT_RTL;break;//Bidi.LEVEL_DEFAULT_RTL; break;
+        case Layout::DIR_REQUEST_RTL: paraLevel = UBiDiDirection::UBIDI_RTL;break;//Bidi.RTL; break;
+        case Layout::DIR_REQUEST_DEFAULT_LTR: paraLevel = UBIDI_DEFAULT_LTR;break;//Bidi.LEVEL_DEFAULT_LTR; break;
+        case Layout::DIR_REQUEST_DEFAULT_RTL: paraLevel = UBIDI_DEFAULT_RTL;break;//Bidi.LEVEL_DEFAULT_RTL; break;
         default: paraLevel = UBiDiDirection::UBIDI_LTR;break;//Bidi.LTR; break;
     }
 
@@ -53,16 +53,16 @@ int AndroidBidi::bidi(int dir, const std::vector<char16_t>& chs, std::vector<uin
     }
     const uint8_t result = ubidi_getParaLevel(pBiDi);
     ubidi_close(pBiDi);
-    return (result & 0x1) == 0 ? TextLayout::DIR_LEFT_TO_RIGHT : TextLayout::DIR_RIGHT_TO_LEFT;
+    return (result & 0x1) == 0 ? Layout::DIR_LEFT_TO_RIGHT : Layout::DIR_RIGHT_TO_LEFT;
 }
 
 const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& levels, int lstart,
         const std::vector<char16_t>& chars, int cstart, int len) {
     if (len == 0) {
-        return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
+        return &Layout::DIRS_ALL_LEFT_TO_RIGHT;
     }
 
-    int baseLevel = dir == TextLayout::DIR_LEFT_TO_RIGHT ? 0 : 1;
+    int baseLevel = dir == Layout::DIR_LEFT_TO_RIGHT ? 0 : 1;
     int curLevel = levels[lstart];
     int minLevel = curLevel;
     int runCount = 1;
@@ -99,14 +99,14 @@ const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& le
     if (runCount == 1 && minLevel == baseLevel) {
         // we're done, only one run on this line
         if ((minLevel & 1) != 0) {
-            return &TextLayout::DIRS_ALL_RIGHT_TO_LEFT;
+            return &Layout::DIRS_ALL_RIGHT_TO_LEFT;
         }
-        return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
+        return &Layout::DIRS_ALL_LEFT_TO_RIGHT;
     }
 
     std::vector<int> ld(runCount * 2);
     int maxLevel = minLevel;
-    int levelBits = minLevel << TextLayout::RUN_LEVEL_SHIFT;
+    int levelBits = minLevel << Layout::RUN_LEVEL_SHIFT;
     {
         // Start of first pair is always 0, we write
         // length then start at each new run, and the
@@ -126,14 +126,14 @@ const Directions* AndroidBidi::directions(int dir,const std::vector<uint8_t>& le
                 // XXX ignore run length limit of 2^RUN_LEVEL_SHIFT
                 ld[n++] = (i - prev) | levelBits;
                 ld[n++] = i - lstart;
-                levelBits = curLevel << TextLayout::RUN_LEVEL_SHIFT;
+                levelBits = curLevel << Layout::RUN_LEVEL_SHIFT;
                 prev = i;
             }
         }
         ld[n] = (lstart + visLen - prev) | levelBits;
         if (visLen < len) {
             ld[++n] = visLen;
-            ld[++n] = (len - visLen) | (baseLevel << TextLayout::RUN_LEVEL_SHIFT);
+            ld[++n] = (len - visLen) | (baseLevel << Layout::RUN_LEVEL_SHIFT);
         }
     }
 

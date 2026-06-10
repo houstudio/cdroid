@@ -44,11 +44,11 @@ if(ENABLE_FLEXBOXLAYOUT)
 endif(ENABLE_FLEXBOXLAYOUT)
 
 list(APPEND WIDGETEX_SOURCES
-    widgetEx/viewpager2.cc
-    widgetEx/tablayoutmediator.cc
-    widgetEx/scrolleventadapter.cc
-    widgetEx/plotview.cc
-    widgetEx/fakedrag.cc
+    #widgetEx/viewpager2.cc
+    #widgetEx/tablayoutmediator.cc
+    #widgetEx/scrolleventadapter.cc
+    #widgetEx/plotview.cc
+    #widgetEx/fakedrag.cc
     #widgetEx/mathglview.cc
 )
 

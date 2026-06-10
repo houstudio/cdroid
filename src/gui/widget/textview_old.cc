@@ -15,12 +15,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <widget/textview.h>
+#include <widget/textview_old.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
-#include <text/layout.h>
-#include <text/precomputedtext.h>
+#include <core/layout.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
 #include <float.h>
@@ -28,7 +27,7 @@
 #define VERY_WIDE 1024*1024
 #define KEY_EVENT_NOT_HANDLED 0
 #define KEY_EVENT_HANDLED -1
-#if 10
+
 namespace cdroid{
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
@@ -365,7 +364,6 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static BoringLayout::Metrics UNKNOWN_BORING;
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
@@ -395,7 +393,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setHeight(attrs.getDimensionPixelSize("height",-1));
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
-    setTextScaleX(attrs.getFloat("textScaleX",1.f));
+    setTextScaleX(attrs.getFloat("textScaleX",mTextScaleX));
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
@@ -426,10 +424,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
-    setEllipsize(static_cast<TextUtils::TruncateAt>(attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
-        {"start",TextUtils::TruncateAt::START},{"middle",TextUtils::TruncateAt::MIDDLE},
-        {"end" ,TextUtils::TruncateAt::END},{"marquee",TextUtils::TruncateAt::MARQUEE}
-      },TextUtils::TruncateAt::NONE)));
+    setEllipsize(attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
+        {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
+        {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
+      },Layout::ELLIPSIS_NONE));
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -449,9 +447,9 @@ TextView::TextView(int width, int height):TextView(std::string(),width,height){
 TextView::TextView(const std::string& text, int width, int height)
   : View( width, height) {
     initView();
-    //mHintLayout->setWidth(width);
-    //mLayout->setWidth(width);
-    //mLayout->setText(text);
+    mHintLayout->setWidth(width);
+    mLayout->setWidth(width);
+    mLayout->setText(text);
 }
 
 void TextView::initView(){
@@ -467,6 +465,7 @@ void TextView::initView(){
     mMinimum  = 0;
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
+    mTextScaleX = 1.f;
     mRestartMarquee = true;
     mCaretPos = 0;
     mCaretRect.set(0,0,0,0);
@@ -480,22 +479,18 @@ void TextView::initView(){
     mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
-    mLayout = nullptr;
-    mSavedLayout = nullptr;
-    mSavedMarqueeModeLayout = nullptr;
-    mBoring = mHintBoring =nullptr;
     mLastLayoutDirection = -1;
     mFontWeightAdjustment= 16;//INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
-    mEllipsize = TextUtils::TruncateAt::NONE;
+    mEllipsize = Layout::ELLIPSIS_NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
-    //mLayout = new Layout(18,1);
-    //mHintLayout = new Layout(mLayout->getFontSize(),1);
-    //mLayout->setMultiline(!mSingleLine);
-    //mHintLayout->setMultiline(!mSingleLine);
+    mLayout = new Layout(18,1);
+    mHintLayout = new Layout(mLayout->getFontSize(),1);
+    mLayout->setMultiline(!mSingleLine);
+    mHintLayout->setMultiline(!mSingleLine);
     mGravity = Gravity::START|Gravity::TOP;
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
@@ -687,22 +682,18 @@ void TextView::sendOnTextChanged(const std::wstring& text, int start, int before
 }
 
 void TextView::setRawTextSize(float size, bool shouldRequestLayout){
-    if(size != mTextPaint.getTextSize()){
-        mTextPaint.setTextSize(size);
-        if (shouldRequestLayout && mLayout != nullptr) {
-            // Do not auto-size right after setting the text size.
-            mNeedsAutoSizeText = false;
-            nullLayouts();
-            requestLayout();
-            invalidate();
-        }
+    if((size!=mLayout->getFontSize())&&shouldRequestLayout){
+        mLayout->setFontSize(size);
+        mHintLayout->setFontSize(size);
+        requestLayout();
     }
 }
 
 void TextView::setPadding(int left, int top, int right, int bottom){
     if ((left != mPaddingLeft) || (right != mPaddingRight)
             || (top != mPaddingTop) ||(bottom != mPaddingBottom)) {
-        nullLayouts();
+        mLayout->relayout(true);
+        mHintLayout->relayout(true);
     }
     // the super call will requestLayout()
     View::setPadding(left, top, right, bottom);
@@ -712,7 +703,8 @@ void TextView::setPadding(int left, int top, int right, int bottom){
 void TextView::setPaddingRelative(int start, int top, int end, int bottom){
     if ( (start != getPaddingStart()) || (end != getPaddingEnd())
             || (top != mPaddingTop) || (bottom != mPaddingBottom)) {
-        nullLayouts();
+        mLayout->relayout(true);//nullLayouts();
+        mHintLayout->relayout(true);
     }
 
     // the super call will requestLayout()
@@ -721,10 +713,10 @@ void TextView::setPaddingRelative(int start, int top, int end, int bottom){
 }
 
 void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
-    const Paint::FontMetricsInt fontMetrics = getPaint().getFontMetricsInt();
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
     int fontMetricsTop;
     if (getIncludeFontPadding()) {
-        fontMetricsTop = fontMetrics.top;
+        fontMetricsTop = fontMetrics.max_y_advance;
     } else {
         fontMetricsTop = fontMetrics.ascent;
     }
@@ -738,10 +730,10 @@ void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
 }
 
 void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
-    const Paint::FontMetricsInt fontMetrics = getPaint().getFontMetricsInt();
+    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();
     int fontMetricsBottom;
     if (getIncludeFontPadding()) {
-        fontMetricsBottom = fontMetrics.bottom;
+        fontMetricsBottom = fontMetrics.descent;//bottom;
     } else {
         fontMetricsBottom = fontMetrics.descent;
     }
@@ -756,11 +748,11 @@ void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
 }
 
 int TextView::getFirstBaselineToTopHeight(){
-    return getPaddingTop() - getPaint().getFontMetricsInt().top;
+    return getPaddingTop() - mLayout->getFontExtents().ascent;
 }
 
 int TextView::getLastBaselineToBottomHeight(){
-    return getPaddingBottom() - getPaint().getFontMetricsInt().bottom;
+    return getPaddingBottom() - mLayout->getFontExtents().descent;
 }
 
 void TextView::setTextCursorDrawable(Drawable*d){
@@ -799,20 +791,18 @@ void TextView::setTextSize(float size){
 }
 
 float TextView::getTextSize()const{
-    return mTextPaint.getTextSize();
+    return mLayout->getFontSize();
 }
 
 float TextView::getTextScaleX()const{
-    return mTextPaint.getTextScaleX();
+    return mTextScaleX;
 }
 
 void TextView::setTextScaleX(float size){
-    if( size!=mTextPaint.getTextScaleX() ){
+    if( (size!=mTextScaleX) && (size>FLT_EPSILON) ){
+        mTextScaleX = size;
         mUserSetTextScaleX = true;
-        mTextPaint.setTextScaleX(size);
-        mUserSetTextScaleX = true;
-        if(mLayout!=nullptr){
-            nullLayouts();
+        if(mLayout){
             requestLayout();
             invalidate();
         }
@@ -820,246 +810,78 @@ void TextView::setTextScaleX(float size){
 }
 
 int TextView::computeVerticalScrollRange(){
-    if (mLayout != nullptr) {
-            return mLayout->getHeight();
-    }
-    return View::computeVerticalScrollRange();
+    return mLayout->getHeight();
 }
 
 int TextView::computeHorizontalScrollRange(){
-    if (mLayout != nullptr) {
-            return mSingleLine && (mGravity & Gravity::HORIZONTAL_GRAVITY_MASK) == Gravity::LEFT
-                    ? (int) mLayout->getLineWidth(0) : mLayout->getWidth();
-    }
-    return View::computeHorizontalScrollRange();
+    return mLayout->getMaxLineWidth();
 }
 
 int TextView::getHorizontalOffsetForDrawables()const{
     return 0;
 }
 
-void TextView::setText(CharSequence* txt) {
-    setTextInternal(txt);
-    checkForRelayout();
-    startStopMarquee(false);
-    startStopMarquee(true);
-    setText(txt->toString());
+void TextView::setText(const CharSequence& txt) {
+    const Spanned* spanned = dynamic_cast<const Spanned*>(&txt);
+    if (spanned != nullptr) {
+        if (mLayout->setText(*spanned) && (getVisibility() == View::VISIBLE)) {
+            std::wstring& ws = getEditable();
+            if (mCaretPos < ws.length())
+                mCaretPos = int(ws.length() - 1);
+            mLayout->setCaretPos(mCaretPos);
+            checkForRelayout();
+            startStopMarquee(false);
+            startStopMarquee(true);
+            mLayout->relayout();
+        }
+        return;
+    }
+    setText(txt.toString());
 }
 
 void TextView::setText(const std::string&txt){
-    /*if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
+    if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
             mCaretPos = int(ws.length()-1);
+        mLayout->setCaretPos(mCaretPos);
         checkForRelayout();
         startStopMarquee(false);
         startStopMarquee(true);
-    }*/
-}
-
-void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
-#if 0
-    mTextSetFromXmlOrResourceId = false;
-    if (text == nullptr) {
-        //text = "";
+        mLayout->relayout();//use to fix getBaselineError for empty text
     }
-
-    // If suggestions are not enabled, remove the suggestion spans from the text
-    /*if (!isSuggestionsEnabled()) {
-        text = removeSuggestionSpans(text);
-    }*/
-
-    if (!mUserSetTextScaleX) mTextPaint.setTextScaleX(1.0f);
-    auto spannedText=dynamic_cast<Spanned*>(text);
-    if (spannedText && spannedText->getSpanStart(TextUtils::TruncateAt::MARQUEE) >= 0) {
-        if (ViewConfiguration::get(mContext)->isFadingMarqueeEnabled()) {
-            setHorizontalFadingEdgeEnabled(true);
-            mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
-        } else {
-            setHorizontalFadingEdgeEnabled(false);
-            mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
-        }
-        setEllipsize(TextUtils::TruncateAt::MARQUEE);
-    }
-
-    /*int n = mFilters.length;
-    for (int i = 0; i < n; i++) {
-        CharSequence* out = mFilters[i].filter(text, 0, text.length(), EMPTY_SPANNED, 0, 0);
-        if (out != nullptr) {
-            text = out;
-        }
-    }*/
-
-    if (notifyBefore) {
-        if (mText != nullptr) {
-            oldlen = mText->length();
-            //sendBeforeTextChanged(mText, 0, oldlen, text.length());
-        } else {
-            //sendBeforeTextChanged("", 0, 0, text.length());
-        }
-    }
-
-    bool needEditableForNotification = false;
-
-    if (/*mListeners != nullptr &&*/ mListeners.size() != 0) {
-        needEditableForNotification = true;
-    }
-
-    PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
-    if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
-        createEditorIfNeeded();
-        //mEditor->forgetUndoRedo();
-        //Editable* t = mEditableFactory.newEditable(text);
-        //text = t;
-        //setFilters(t, mFilters);
-        //InputMethodManager* imm = getInputMethodManager();
-        //if (imm != nullptr) imm->restartInput(this);
-    } else if (precomputed != nullptr) {
-        if (mTextDir == nullptr) {
-            mTextDir = getTextDirectionHeuristic();
-        }
-        const int checkResult =
-                precomputed.getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
-                        mHyphenationFrequency);
-        switch (checkResult) {
-        case PrecomputedText::Params::UNUSABLE:
-            throw
-                "PrecomputedText's Parameters don't match the parameters of this TextView."
-                "Consider using setTextMetricsParams(precomputedText.getParams()) "
-                "to override the settings of this TextView: "
-                "PrecomputedText: ";// + precomputed.getParams()
-                "TextView: ";// + getTextMetricsParams());
-        case PrecomputedText::Params::NEED_RECOMPUTE:
-            precomputed = PrecomputedText::create(precomputed, getTextMetricsParams());
-            break;
-        case PrecomputedText::Params::USABLE:/*pass through*/break;
-        }
-    } else if (type == BufferType::SPANNABLE || mMovement != nullptr) {
-        text = mSpannableFactory.newSpannable(text);
-    } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
-        text = TextUtils::stringOrSpannedString(text);
-    }
-
-    if (mAutoLinkMask != 0) {
-        Spannable* s2;
-
-        if (type == BufferType::EDITABLE || dynamic_cast<Spannable*>(text)) {
-            s2 = (Spannable) text;
-        } else {
-            s2 = mSpannableFactory.newSpannable(text);
-        }
-
-        if (Linkify.addLinks(s2, mAutoLinkMask)) {
-            text = s2;
-            type = (type == BufferType::EDITABLE) ? BufferType::EDITABLE : BufferType::SPANNABLE;
-
-            /*
-             * We must go ahead and set the text before changing the
-             * movement method, because setMovementMethod() may call
-             * setText() again to try to upgrade the buffer type.
-             */
-            setTextInternal(text);
-
-            // Do not change the movement method for text that support text selection as it
-            // would prevent an arbitrary cursor displacement.
-            if (mLinksClickable && !textCanBeSelected()) {
-                //setMovementMethod(LinkMovementMethod.getInstance());
-            }
-        }
-    }
-
-    mBufferType = type;
-    setTextInternal(text);
-
-    /*if (mTransformation == nullptr) {
-        mTransformed = text;
-    } else {
-        mTransformed = mTransformation.getTransformation(text, this);
-    }
-    if (mTransformed == nullptr) {
-        // Should not happen if the transformation method follows the non-null postcondition.
-        mTransformed = "";
-    }*/
-
-    const int textLength = text->length();
-
-    if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
-        Spannable* sp = (Spannable*) text;
-
-        // Remove any ChangeWatchers that might have come from other TextViews.
-        auto watchers = sp->getSpans(0, sp->length(), make_span_filter<ChangeWatcher>());
-        const int count = watchers.size();
-        for (int i = 0; i < count; i++) {
-            sp->removeSpan(watchers[i]);
-        }
-
-        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher();
-
-        sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
-                | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
-
-        /*if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
-        if (mTransformation != nullptr) {
-            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
-        }
-        if (mMovement != nullptr) {
-            mMovement.initialize(this, (Spannable) text);
-            if (mEditor != nullptr) mEditor->SelectionMoved = false;
-        }*/
-    }
-
-    if (mLayout != nullptr) {
-        checkForRelayout();
-    }
-
-    /*sendOnTextChanged(text, 0, oldlen, textLength);
-    onTextChanged(text, 0, oldlen, textLength);
-
-    notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
-    if (needEditableForNotification) {
-        sendAfterTextChanged((Editable) text);
-    } else {
-        notifyListeningManagersAfterTextChanged();
-    }
-    SelectionModifierCursorController depends on textCanBeSelected, which depends on text
-    if (mEditor != nullptr) mEditor->prepareCursorControllers();
-    */
-#endif
-}
-
-void TextView::setTextInternal(CharSequence* text){
-    mText =text;
-    mSpannable = dynamic_cast<Spannable*>(text);
-    mPrecomputed = dynamic_cast<PrecomputedText*>(text);
 }
 
 const std::string TextView::getText()const{
-    return mText->toString();
+    return mLayout->getString();
 }
 
 void TextView::setHint(const std::string& hint){
-    //mHint = hint;
-    //mHintLayout->setText(hint);
+    mHint = hint;
+    mHintLayout->setText(hint);
     checkForRelayout();
 }
 
 std::string TextView::getHint()const{
-    return mHint->toString();
+    return mHint;
 }
 
 std::wstring& TextView::getEditable(){
-    static std::wstring ss;
-    return ss;//mLayout->getText();
+    return mLayout->getText();
 }
 
 void TextView::setEditable(bool b){
-    //mLayout->setEditable(b);
+    mLayout->setEditable(b);
+}
+
+int TextView::getFontSize()const{
+    return mLayout->getFontSize();
 }
 
 void TextView::setCaretPos(int pos){
-    mCaretPos= pos;
-    mBlinkOn = true;
-    //mLayout->setCaretPos(pos);
+    mCaretPos=pos;
+    mBlinkOn=true;
+    mLayout->setCaretPos(pos);
     invalidate(true);
 }
 
@@ -1091,8 +913,8 @@ void TextView::setLineSpacing(float add, float mult) {
     if ((mSpacingAdd != add) || (mSpacingMult != mult)) {
         mSpacingAdd = add;
         mSpacingMult = mult;
-        if (mLayout != nullptr) {
-            nullLayouts();
+        if ( mLayout ) {
+            mLayout->setLineSpacing(add,mult);
             requestLayout();
             invalidate();
         }
@@ -1113,23 +935,24 @@ void TextView::checkForRelayout() {
     if(mLayoutParams==nullptr) return;
     if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
             || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
-            && ((mHint==nullptr)||(mHintLayout==nullptr) )
+            && ((mHintLayout==nullptr) || mHintLayout->getText().empty())
             && (mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight() > 0)) {
         // Static width, so try making a new text layout.
 
         const int oldht = mLayout->getHeight();
-        const int want = mLayout->getWidth();
-        const int hintWant = mHintLayout ?mHintLayout->getWidth():0;
+        const int want = mLayout->getMaxLineWidth();
+        const int hintWant = mHintLayout ?mHintLayout->getMaxLineWidth():0;
 
         /*
          * No need to bring the text into view, since the size is not
          * changing (unless we do the requestLayout(), in which case it
          * will happen at measure).
          */
-        makeNewLayout(want, hintWant, &UNKNOWN_BORING, &UNKNOWN_BORING,
+        /*makeNewLayout(want, hintWant, UNKNOWN_BORING, UNKNOWN_BORING,
                       mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
-                      false);
-        if (mEllipsize != TextUtils::TruncateAt::MARQUEE) {
+                      false);*/
+        mLayout->relayout();
+        if (mEllipsize != Layout::ELLIPSIS_MARQUEE){//TextUtils.TruncateAt.MARQUEE) {
             // In a fixed-height view, so use our new text layout.
             if (mLayoutParams->height != LayoutParams::WRAP_CONTENT
                     && mLayoutParams->height != LayoutParams::MATCH_PARENT) {
@@ -1140,7 +963,7 @@ void TextView::checkForRelayout() {
 
             // Dynamic height, but height has stayed the same,
             // so use our new text layout.
-            if ( (mLayout->getHeight() == oldht) && ((mHintLayout==nullptr) || (mHintLayout->getHeight() == oldht))) {
+            if ( (mLayout->getHeight() == oldht) && (mHintLayout->getText().empty() || (mHintLayout->getHeight() == oldht))) {
                 autoSizeText();
                 invalidate();
                 return;
@@ -1154,15 +977,14 @@ void TextView::checkForRelayout() {
     } else {
         // Dynamic width, so we have no choice but to request a new
         // view layout with a new text layout.
-        nullLayouts();
+        //nullLayouts();
         requestLayout();
         invalidate();
     }
 }
 
 bool TextView::isShowingHint()const{
-    //mLayout->getText().empty()&&(mHintLayout->getText().empty()==false);
-    return TextUtils::isEmpty(mText) && !TextUtils::isEmpty(mHint) && !mHideHint;
+    return mLayout->getText().empty()&&(mHintLayout->getText().empty()==false);
 }
 
 bool TextView::bringTextIntoView(){
@@ -1579,7 +1401,7 @@ void TextView::setSelected(bool selected){
 
     View::setSelected(selected);
 
-    if ((selected != wasSelected) && (mEllipsize == TextUtils::TruncateAt::MARQUEE)) {
+    if ((selected != wasSelected) && (mEllipsize == Layout::ELLIPSIS_MARQUEE)) {
         if (selected) {
             startMarquee();
         } else {
@@ -1606,14 +1428,8 @@ void TextView::setGravity(int gravity){
     if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
-    if(mLayout!=nullptr && newLayout){
-        // XXX this is heavy-handed because no actual content changes.
-        const int want = mLayout->getWidth();
-        const int hintWant = mHintLayout == nullptr ? 0 : mHintLayout->getWidth();
-
-        makeNewLayout(want, hintWant, &UNKNOWN_BORING, &UNKNOWN_BORING,
-                 mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(), true);
-    }
+    mLayout->setAlignment(getLayoutAlignment());
+    mLayout->setWidth(mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
 }
 
 int TextView::getGravity()const{
@@ -1624,7 +1440,7 @@ void TextView::setHorizontallyScrolling(bool whether) {
     if (mHorizontallyScrolling != whether) {
         mHorizontallyScrolling = whether;
         if (mLayout != nullptr) {
-            nullLayouts();
+            //nullLayouts();
             requestLayout();
             invalidate();
         }
@@ -1662,23 +1478,20 @@ int TextView::getLineCount()const{
 }
 
 int TextView::getLineBounds(int line, Rect&bounds) {
-    if(mLayout==nullptr){
-        bounds.setEmpty();
-        return 0;
-    }else{
-        int baseline = mLayout->getLineBounds(line, &bounds);
-        int voffset = getExtendedPaddingTop();
-        if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
-            voffset += getVerticalOffset(true);
-        }
-        bounds.offset(getCompoundPaddingLeft(), voffset);
-        return baseline + voffset;
+    int baseline = mLayout->getLineBounds(line, bounds);
+
+    int voffset = getExtendedPaddingTop();
+    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
+        voffset += getVerticalOffset(true);
     }
+    bounds.offset(getCompoundPaddingLeft(), voffset);
+    return baseline + voffset;
 }
 
 int TextView::getBaseline(){
     if(mLayout == nullptr)
         return View::getBaseline();
+    mLayout->relayout(false);
     return getBaselineOffset() + mLayout->getLineBaseline(0);
 }
 
@@ -1692,11 +1505,12 @@ int TextView::getBaselineOffset(){
 }
 
 int TextView::getLineHeight()const{
-    return std::round(mTextPaint.getFontMetricsInt(nullptr) * mSpacingMult + mSpacingAdd);
+    return std::round(mLayout->getFontExtents().height * mSpacingMult + mSpacingAdd);
+    //return mLayout->getLineBottom(0)-mLayout->getLineTop(0);
 }
 
 void TextView::setLineHeight(int lineHeight){
-    const int fontHeight = getPaint().getFontMetricsInt(nullptr);
+    const int fontHeight = mLayout->getFontExtents().height;
     // Make sure we don't setLineSpacing if it's not needed to avoid unnecessary redraw.
     if(lineHeight!=fontHeight){
         // Set lineSpacingExtra by the difference of lineSpacing with lineHeight
@@ -1741,7 +1555,7 @@ void TextView::autoSizeText() {
                 setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, optimalTextSize,
                         false /* shouldRequestLayout */);
 
-                makeNewLayout(availableWidth, 0 /* hintWidth */, &UNKNOWN_BORING,&UNKNOWN_BORING,
+                makeNewLayout(availableWidth, 0 /* hintWidth */, UNKNOWN_BORING, UNKNOWN_BORING,
                         mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
                         false /* bringIntoView */);
             }
@@ -1762,6 +1576,7 @@ int TextView::getDesiredHeight(Layout* layout, bool cap){
         return 0;
     }
 
+    layout->relayout();
     /*
     * Don't cap the hint to a certain number of lines.
     * (Do cap it, though, if we have a maximum pixel height.)
@@ -1781,8 +1596,8 @@ int TextView::getDesiredHeight(Layout* layout, bool cap){
 
     if (mMaxMode != LINES) {
         desired = std::min(desired, mMaximum);
-    } else if (cap && (linecount > mMaximum) && (dynamic_cast<DynamicLayout*>(layout)
-            || dynamic_cast<BoringLayout*>(layout))) {
+    } else if (cap && linecount > mMaximum/* && (layout instanceof DynamicLayout
+            || layout instanceof BoringLayout)*/) {
         desired = layout->getLineTop(mMaximum);
 
         if (dr != nullptr) {
@@ -1869,250 +1684,12 @@ void TextView::setHeight(int pixels) {
     invalidate();
 }
 
-void TextView::nullLayouts() {
-    if (dynamic_cast<BoringLayout*>(mLayout) && mSavedLayout == nullptr) {
-        mSavedLayout = (BoringLayout*) mLayout;
-    }
-    if (dynamic_cast<BoringLayout*>(mHintLayout) && mSavedHintLayout == nullptr) {
-        mSavedHintLayout = (BoringLayout*) mHintLayout;
-    }
-
-    mSavedMarqueeModeLayout = mLayout = mHintLayout = nullptr;
-
-    mBoring = mHintBoring = nullptr;
-
-    // Since it depends on the value of mLayout
-    //if (mEditor != nullptr) mEditor.prepareCursorControllers();
-}
-
-void TextView::assumeLayout() {
-    int width = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
-    if (width < 1) {
-        width = 0;
-    }
-    const int physicalWidth = width;
-    if (mHorizontallyScrolling) {
-        width = VERY_WIDE;
-    }
-    makeNewLayout(width, physicalWidth, &UNKNOWN_BORING, &UNKNOWN_BORING, physicalWidth, false);
-}
-
-void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics* boring,
-            BoringLayout::Metrics* hintBoring,int ellipsisWidth, bool bringIntoView){
-    stopMarquee();
-
-    // Update "old" cached values
-    mOldMaximum = mMaximum;
-    mOldMaxMode = mMaxMode;
-
-    mHighlightPathBogus = true;
-
-    if (wantWidth < 0) {
-        wantWidth = 0;
-    }
-    if (hintWidth < 0) {
-        hintWidth = 0;
-    }
-
-    Layout::Alignment alignment = static_cast<Layout::Alignment>(getLayoutAlignment());
-    const bool testDirChange = mSingleLine && mLayout != nullptr
-            && (alignment == Layout::Alignment::ALIGN_NORMAL
-                    || alignment == Layout::Alignment::ALIGN_OPPOSITE);
-    int oldDir = 0;
-    if (testDirChange) oldDir = mLayout->getParagraphDirection(0);
-    bool shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;// && getKeyListener() == nullptr;
-    const bool switchEllipsize = mEllipsize == TextUtils::TruncateAt::MARQUEE
-            && mMarqueeFadeMode != MARQUEE_FADE_NORMAL;
-    TextUtils::TruncateAt effectiveEllipsize = mEllipsize;
-    if (mEllipsize == TextUtils::TruncateAt::MARQUEE
-            && mMarqueeFadeMode == MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
-        effectiveEllipsize = TextUtils::TruncateAt::END_SMALL;
-    }
-
-    if (mTextDir == nullptr) {
-        mTextDir = getTextDirectionHeuristic();
-    }
-
-    mLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize,
-            effectiveEllipsize, effectiveEllipsize == mEllipsize);
-    if (switchEllipsize) {
-        TextUtils::TruncateAt oppositeEllipsize = effectiveEllipsize == TextUtils::TruncateAt::MARQUEE
-                ? TextUtils::TruncateAt::END : TextUtils::TruncateAt::MARQUEE;
-        mSavedMarqueeModeLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment,
-                shouldEllipsize, oppositeEllipsize, effectiveEllipsize != mEllipsize);
-    }
-
-    shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;
-    mHintLayout = nullptr;
-
-    if (mHint != nullptr) {
-        if (shouldEllipsize) hintWidth = wantWidth;
-
-        if (hintBoring == &UNKNOWN_BORING) {
-            hintBoring = BoringLayout::isBoring(mHint, &mTextPaint, mTextDir, mHintBoring);
-            if (hintBoring != nullptr) {
-                mHintBoring = hintBoring;
-            }
-        }
-
-        if (hintBoring != nullptr) {
-            if (hintBoring->width <= hintWidth
-                    && (!shouldEllipsize || hintBoring->width <= ellipsisWidth)) {
-                if (mSavedHintLayout != nullptr) {
-                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad);
-                } else {
-                    mHintLayout = BoringLayout::make(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad);
-                }
-
-                mSavedHintLayout = (BoringLayout*) mHintLayout;
-            } else if (shouldEllipsize && hintBoring->width <= hintWidth) {
-                if (mSavedHintLayout != nullptr) {
-                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad, mEllipsize,
-                            ellipsisWidth);
-                } else {
-                    mHintLayout = BoringLayout::make(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad, mEllipsize,
-                            ellipsisWidth);
-                }
-            }
-        }
-        // TODO: code duplication with makeSingleLayout()
-        if (mHintLayout == nullptr) {
-            StaticLayout::Builder* builder = StaticLayout::Builder::obtain(mHint, 0,
-                       mHint->length(), &mTextPaint, hintWidth);
-                    builder->setAlignment(alignment)
-                    .setTextDirection(mTextDir)
-                    .setLineSpacing(mSpacingAdd, mSpacingMult)
-                    .setIncludePad(mIncludePad)
-                    .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
-                    .setBreakStrategy(mBreakStrategy)
-                    .setHyphenationFrequency(mHyphenationFrequency)
-                    .setJustificationMode(mJustificationMode)
-                    .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
-            if (shouldEllipsize) {
-                builder->setEllipsize(mEllipsize)
-                        .setEllipsizedWidth(ellipsisWidth);
-            }
-            mHintLayout = builder->build();
-        }
-    }
-
-    if (bringIntoView || (testDirChange && oldDir != mLayout->getParagraphDirection(0))) {
-        //registerForPreDraw();
-    }
-
-    if (mEllipsize == TextUtils::TruncateAt::MARQUEE) {
-        if (!compressText(ellipsisWidth)) {
-            const int height = mLayoutParams->height;
-            // If the size of the view does not depend on the size of the text, try to
-            // start the marquee immediately
-            if (height != LayoutParams::WRAP_CONTENT && height != LayoutParams::MATCH_PARENT) {
-                startMarquee();
-            } else {
-                // Defer the start of the marquee until we know our width (see setFrame())
-                mRestartMarquee = true;
-            }
-        }
-    }
-
-    // CursorControllers need a non-null mLayout
-    //if (mEditor != nullptr) mEditor->prepareCursorControllers();
-}
-
-bool TextView::useDynamicLayout() const{
-    return isTextSelectable() || (mSpannable != nullptr && mPrecomputed == nullptr);
-}
-
-Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
-        Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved) {
-    Layout* result = nullptr;
-    if (useDynamicLayout()) {
-        DynamicLayout::Builder* builder = DynamicLayout::Builder::obtain(mText, &mTextPaint,wantWidth);
-                builder->setDisplayText(mTransformed)
-                .setAlignment(alignment)
-                .setTextDirection(mTextDir)
-                .setLineSpacing(mSpacingAdd, mSpacingMult)
-                .setIncludePad(mIncludePad)
-                .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
-                .setBreakStrategy(mBreakStrategy)
-                .setHyphenationFrequency(mHyphenationFrequency)
-                .setJustificationMode(mJustificationMode)
-                .setEllipsize(/*getKeyListener()==nullptr?effectiveEllipsize:*/TextUtils::TruncateAt::NONE)
-                .setEllipsizedWidth(ellipsisWidth);
-        result = builder->build();
-    } else {
-        if (boring == &UNKNOWN_BORING) {
-            boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
-            if (boring != nullptr) {
-                mBoring = boring;
-            }
-        }
-
-        if (boring != nullptr) {
-            if (boring->width <= wantWidth
-                    && (effectiveEllipsize == TextUtils::TruncateAt::NONE || boring->width <= ellipsisWidth)) {
-                if (useSaved && mSavedLayout != nullptr) {
-                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad);
-                } else {
-                    result = BoringLayout::make(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad);
-                }
-
-                if (useSaved) {
-                    mSavedLayout = (BoringLayout*) result;
-                }
-            } else if (shouldEllipsize && boring->width <= wantWidth) {
-                if (useSaved && mSavedLayout != nullptr) {
-                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad, effectiveEllipsize,
-                            ellipsisWidth);
-                } else {
-                    result = BoringLayout::make(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad, effectiveEllipsize,
-                            ellipsisWidth);
-                }
-            }
-        }
-    }
-    if (result == nullptr) {
-        StaticLayout::Builder* builder = StaticLayout::Builder::obtain(mTransformed,
-                    0, mTransformed->length(), &mTextPaint, wantWidth);
-                builder->setAlignment(alignment)
-                .setTextDirection(mTextDir)
-                .setLineSpacing(mSpacingAdd, mSpacingMult)
-                .setIncludePad(mIncludePad)
-                .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
-                .setBreakStrategy(mBreakStrategy)
-                .setHyphenationFrequency(mHyphenationFrequency)
-                .setJustificationMode(mJustificationMode)
-                .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
-        if (shouldEllipsize) {
-            builder->setEllipsize(effectiveEllipsize)
-                    .setEllipsizedWidth(ellipsisWidth);
-        }
-        result = builder->build();
-    }
-    return result;
-}
-
 bool TextView::compressText(float width) {
     if (isHardwareAccelerated()) return false;
 
     // Only compress the text if it hasn't been compressed by the previous pass
     if ((width > 0.0f) && mLayout && (getLineCount() == 1) && !mUserSetTextScaleX
-            && (mTextPaint.getTextScaleX() == 1.0f)) {
+            && (mTextScaleX == 1.0f)) {
         const float textWidth = mLayout->getLineWidth(0);
         const float overflow = (textWidth + 1.0f - width) / width;
         if (overflow > 0.0f && overflow <= Marquee::MARQUEE_DELTA_MAX) {
@@ -2129,19 +1706,18 @@ bool TextView::compressText(float width) {
 int TextView::desired(Layout*layout){
     int max = 0;
     const int N = layout->getLineCount();
-    CharSequence* text = layout->getText();
+    const std::wstring& text=layout->getText();
     for (int i = 0; i < N - 1; i++) {
-        if (text->charAt(layout->getLineEnd(i) - 1)!= '\n') {
+        if (text[layout->getLineEnd(i) - 1]!= '\n') {
             return -1;
         }
     }
+
     for (int i = 0; i < N; i++) {
-        max = std::max(max, (int)layout->getLineWidth(i));
+        max = std::max(max, layout->getLineWidth(i));
     }
-    /*if (useBoundsForWidth) {
-        max = std::max(max, layout->computeDrawingBoundingBox().width());
-    }*/
-    return (int) std::ceil(max);
+
+    return max;
 }
 
 void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -2153,97 +1729,39 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width;
     int height;
 
-    BoringLayout::Metrics* boring = &UNKNOWN_BORING;
-    BoringLayout::Metrics* hintBoring = &UNKNOWN_BORING;
-    if (mTextDir == nullptr) {
-        mTextDir = getTextDirectionHeuristic();
-    }
     int des = -1;
     bool fromexisting = false;
-    const float widthLimit = (widthMode == MeasureSpec::AT_MOST) ?  (float) widthSize : FLT_MAX;
+    mLayout->setAlignment(getLayoutAlignment());
     if (widthMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         width = widthSize;
+        //mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
     } else {
-        if (mLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
-            des = desired(mLayout);
-        }
-
-        if (des < 0) {
-            boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
-            if (boring != nullptr) {
-                mBoring = boring;
-            }
-        } else {
-            fromexisting = true;
-        }
-
-        if (boring == nullptr || boring == &UNKNOWN_BORING) {
-            if (des < 0) {
-                des = (int) std::ceil(Layout::getDesiredWidthWithLimit(mTransformed, 0,
-                        mTransformed->length(), mTextPaint, mTextDir, widthLimit));
-            }
-            width = des;
-        } else {
-            width = boring->width;
-        }
-
+        int txtWidth,txtHeight;
+        mLayout->setWidth(widthSize/*mRight - mLeft*/ - getCompoundPaddingLeft() - getCompoundPaddingRight());
+        mLayout->relayout();
+        mHintLayout->relayout();
+        txtWidth = mLayout->getMaxLineWidth();//desired(mLayout);
+        txtHeight= mLayout->getHeight();
+        width = txtWidth;
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);
             width = std::max(width, dr->mDrawableWidthBottom);
         }
 
-        if (mHint != nullptr) {
-            int hintDes = -1;
-            int hintWidth;
-
-            if (mHintLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
-                hintDes = desired(mHintLayout);
-            }
-
-            if (hintDes < 0) {
-                hintBoring = BoringLayout::isBoring(mHint, &mTextPaint, mTextDir, mHintBoring);
-                if (hintBoring != nullptr) {
-                    mHintBoring = hintBoring;
-                }
-            }
-
-            if (hintBoring == nullptr || hintBoring == &UNKNOWN_BORING) {
-                if (hintDes < 0) {
-                    hintDes = (int) std::ceil(Layout::getDesiredWidthWithLimit(mHint, 0,
-                            mHint->length(), mTextPaint, mTextDir, widthLimit));
-                }
-                hintWidth = hintDes;
-            } else {
-                hintWidth = hintBoring->width;
-            }
-
-            if (hintWidth > width) {
-                width = hintWidth;
-            }
-        }
-
         width += getCompoundPaddingLeft() + getCompoundPaddingRight();
 
-        if (mMaxWidthMode == EMS) {
-            width = std::min(width, mMaxWidth * getLineHeight());
-        } else {
-            width = std::min(width, mMaxWidth);
-        }
+        if (mMaxWidthMode == EMS)width = std::min(width, mMaxWidth * getLineHeight());
+        else width = std::min(width, mMaxWidth);
 
-        if (mMinWidthMode == EMS) {
-            width = std::max(width, mMinWidth * getLineHeight());
-        } else {
-            width = std::max(width, mMinWidth);
-        }
+        if (mMinWidthMode == EMS) width = std::max(width, mMinWidth * getLineHeight());
+        else width = std::max(width, mMinWidth);
 
         // Check against our minimum width
         width = std::max(width, getSuggestedMinimumWidth());
-
-        if (widthMode == MeasureSpec::AT_MOST) {
+        if (widthMode == MeasureSpec::AT_MOST)
             width = std::min(widthSize, width);
-        }
     }
 
     int want = width - getCompoundPaddingLeft() - getCompoundPaddingRight();
@@ -2252,42 +1770,15 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mHorizontallyScrolling) want = VERY_WIDE;
 
     int hintWant = want;
-    int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getWidth();
+    int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getMaxLineWidth();
 
-    if (mLayout == nullptr) {
-        makeNewLayout(want, hintWant, boring, hintBoring,
-                      width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
-    } else {
-        const bool layoutChanged = (mLayout->getWidth() != want) || (hintWidth != hintWant)
-                || (mLayout->getEllipsizedWidth()
-                        != width - getCompoundPaddingLeft() - getCompoundPaddingRight());
-
-        const bool widthChanged = (mHint == nullptr) && (mEllipsize == TextUtils::TruncateAt::NONE)
-                && (want > mLayout->getWidth())
-                && (dynamic_cast<BoringLayout*>(mLayout)
-                        || (fromexisting && des >= 0 && des <= want));
-
-        const bool maximumChanged = (mMaxMode != mOldMaxMode) || (mMaximum != mOldMaximum);
-
-        if (layoutChanged || maximumChanged) {
-            if (!maximumChanged && widthChanged) {
-                mLayout->increaseWidthTo(want);
-            } else {
-                makeNewLayout(want, hintWant, boring, hintBoring,
-                        width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
-            }
-        } else {
-            // Nothing has changed
-        }
-    }
-
+    mLayout->setWidth(want);
     if (heightMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         height = heightSize;
         mDesiredHeightAtMeasure = -1;
     } else {
-        int desired = getDesiredHeight();
-
+        const int desired = getDesiredHeight();
         height = desired;
         mDesiredHeightAtMeasure = desired;
 
@@ -2297,21 +1788,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     }
 
     int unpaddedHeight = height - getCompoundPaddingTop() - getCompoundPaddingBottom();
-    if (mMaxMode == LINES && mLayout->getLineCount() > mMaximum) {
-        unpaddedHeight = std::min(unpaddedHeight, mLayout->getLineTop(mMaximum));
-    }
-
-    /*
-     * We didn't let makeNewLayout() register to bring the cursor into view,
-     * so do it here if there is any possibility that it is needed.
-     */
-    if (/*mMovement != nullptr ||*/ mLayout->getWidth() > unpaddedWidth
-            || mLayout->getHeight() > unpaddedHeight) {
-        //registerForPreDraw();
-    } else {
-        scrollTo(0, 0);
-    }
-
     setMeasuredDimension(width, height);
 }
 
@@ -2465,55 +1941,6 @@ std::vector<Drawable*> TextView::getCompoundDrawablesRelative() const{
     }
 }
 
-const TextDirectionHeuristic*TextView::getTextDirectionHeuristic()const{
-    if (hasPasswordTransformationMethod()) {
-        // passwords fields should be LTR
-        return TextDirectionHeuristics::LTR;
-    }
-
-    /*if (mEditor != nullptr && (mEditor.mInputType & EditorInfo.TYPE_MASK_CLASS)  == EditorInfo.TYPE_CLASS_PHONE) {
-        // Phone numbers must be in the direction of the locale's digits. Most locales have LTR
-        // digits, but some locales, such as those written in the Adlam or N'Ko scripts, have
-        // RTL digits.
-        final DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(getTextLocale());
-         String zero = symbols.getDigitStrings()[0];
-        // In case the zero digit is multi-codepoint, just use the first codepoint to determine
-        // direction.
-        const int firstCodepoint = zero.codePointAt(0);
-        const uint8_t digitDirection = Character::getDirectionality(firstCodepoint);
-        if (digitDirection == Character::DIRECTIONALITY_RIGHT_TO_LEFT
-                || digitDirection == Character::DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC) {
-            return TextDirectionHeuristics::RTL;
-        } else {
-            return TextDirectionHeuristics::LTR;
-        }
-    }*/
-
-    // Always need to resolve layout direction first
-    const bool defaultIsRtl = (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL);
-
-    // Now, we can select the heuristic
-    switch (getTextDirection()) {
-        default:
-        case View::TEXT_DIRECTION_FIRST_STRONG:
-            return (defaultIsRtl ? TextDirectionHeuristics::FIRSTSTRONG_RTL :
-                    TextDirectionHeuristics::FIRSTSTRONG_LTR);
-        case View::TEXT_DIRECTION_ANY_RTL:
-            return TextDirectionHeuristics::ANYRTL_LTR;
-        case View::TEXT_DIRECTION_LTR:
-            return TextDirectionHeuristics::LTR;
-        case View::TEXT_DIRECTION_RTL:
-            return TextDirectionHeuristics::RTL;
-        case View::TEXT_DIRECTION_LOCALE:
-            return TextDirectionHeuristics::LOCALE;
-        case View::TEXT_DIRECTION_FIRST_STRONG_LTR:
-            return TextDirectionHeuristics::FIRSTSTRONG_LTR;
-        case View::TEXT_DIRECTION_FIRST_STRONG_RTL:
-            return TextDirectionHeuristics::FIRSTSTRONG_RTL;
-    }
-    return TextDirectionHeuristics::FIRSTSTRONG_LTR;
-}
-
 void TextView::onResolveDrawables(int layoutDirection){
     if (mLastLayoutDirection == layoutDirection) {
         return;
@@ -2617,22 +2044,36 @@ void TextView::setTypeface(Typeface* tf,int style){
         // now compute what (if any) algorithmic styling is needed
         const int typefaceStyle = tf ? tf->getStyle() : 0;
         const int need = style & ~typefaceStyle;
-        //mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
         //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
     } else {
-        //mLayout->setFakeTextSkew(0.0);
-        //mHintLayout->setFakeTextSkew(0.0);
+        mLayout->setFakeTextSkew(0.0);
+        mHintLayout->setFakeTextSkew(0.0);
         //mTextPaint.setFakeBoldText(false);
         setTypeface(tf);
     }
 }
 
 void TextView::setTypeface(Typeface* tf){
-    if(mTextPaint.getTypeface()!=tf){
-        mTextPaint.setTypeface(tf);
+    mOriginalTypeface = tf;
+    if ( (mFontWeightAdjustment != 0)
+            && (mFontWeightAdjustment != INT_MAX)/*Configuration::FONT_WEIGHT_ADJUSTMENT_UNDEFINED*/) {
+        if (tf == nullptr) {
+            tf = Typeface::DEFAULT;
+        } else {
+            const int newWeight = std::min(
+                    std::max(tf->getWeight() + mFontWeightAdjustment, (int)FontStyle::FONT_WEIGHT_MIN),
+                    (int)FontStyle::FONT_WEIGHT_MAX);
+            const int typefaceStyle = tf ? tf->getStyle() : 0;
+            const bool italic = (typefaceStyle & Typeface::ITALIC) != 0;
+            tf = Typeface::create(tf, newWeight, italic);
+        }
+    }
+    if ( tf && mLayout && (tf!=mLayout->getTypeface()) ){
         if (mLayout != nullptr) {
-            nullLayouts();
+            //nullLayouts();
+            mLayout->setTypeface(tf);
             requestLayout();
             invalidate();
         }
@@ -2817,13 +2258,6 @@ void TextView::invalidateDrawable(Drawable& drawable){
     }
 }
 
-bool TextView::isTextSelectable()const{
-    return false;
-}
-
-void TextView::setTextSelectable(bool v){
-}
-
 void TextView::updateTextColors(){
     bool inval = false;
     int color;
@@ -2842,9 +2276,7 @@ void TextView::updateTextColors(){
         color = mHintTextColor->getColorForState(drawableState,0);
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
-            if(mText->length()==0){
-                inval = true;
-            }
+            inval = !mLayout->getText().empty();
         }
     }
     if (inval) {
@@ -2870,15 +2302,16 @@ int TextView::getMarqueeRepeatLimit()const{
     return mMarqueeRepeatLimit;
 }
 
-TextUtils::TruncateAt TextView::getEllipsize()const{
+int TextView::getEllipsize()const{
     return mEllipsize;
 }
 
-void TextView::setEllipsize(TextUtils::TruncateAt where){
+void TextView::setEllipsize(int where){
     if (mEllipsize != where) {
         mEllipsize = where;
-        if (mLayout!=nullptr) {
-            nullLayouts();
+        if (mLayout) {
+            mLayout->setEllipsis(where);
+            //nullLayouts();
             requestLayout();
             invalidate();
         }
@@ -3239,18 +2672,14 @@ int TextView::getShadowColor()const{
     return mShadowColor;
 }
 
-const TextPaint& TextView::getPaint() const{
-        return mTextPaint;
-}
-
 bool TextView::canSelectAllText()const{
-    //mLayout->setSelection(-1,-1);
+    mLayout->setSelection(-1,-1);
     return false;
 }
 
 bool TextView::selectAllText(){
-    //const int length = (int)mLayout->getText().length();
-    //mLayout->setSelection(0,length);
+    const int length = (int)mLayout->getText().length();
+    mLayout->setSelection(0,length);
     return false;
 }
 
@@ -3263,11 +2692,11 @@ int TextView::getTotalPaddingBottom(){
 }
 
 int TextView::getSelectionStart()const{
-    return -1;
+    return mLayout ? mLayout->getSelectionStart():-1;
 }
 
 int TextView::getSelectionEnd()const{
-    return -1;
+    return  mLayout ? mLayout->getSelectionEnd():-1;
 }
 
 bool TextView::hasSelection()const{
@@ -3282,35 +2711,28 @@ std::string TextView::getSelectedText()const{
      }
      const int start = getSelectionStart();
      const int end = getSelectionEnd();
-     //const std::wstring &text =mLayout->getText();
-     //std::wstring ret = start<end?text.substr(start,end):text.substr(end,start);
-     return "";//TextUtils::unicode2utf8(ret);
+     const std::wstring &text =mLayout->getText();
+     std::wstring ret = start<end?text.substr(start,end):text.substr(end,start);
+     return TextUtils::unicode2utf8(ret);
 }
 
 void TextView::setSingleLine(bool single){
     mSingleLine = single;
+    mLayout->setMultiline(!single);
+    mLayout->relayout();
     applySingleLine(single,true,true);
 }
 
 void TextView::setBreakStrategy(int breakStrategy){
-    mBreakStrategy = breakStrategy;
-    if (mLayout != nullptr) {
-        nullLayouts();
-        requestLayout();
-        invalidate();
-    }
+    mLayout->setBreakStrategy(breakStrategy);
 }
 
 int TextView::getBreakStrategy()const{
-    return mBreakStrategy;
+    return mLayout->getBreakStrategy();
 }
 
 bool TextView::isSingleLine()const{
     return mSingleLine;
-}
-
-bool TextView::hasPasswordTransformationMethod()const{
-    return false;//mTransformation;
 }
 
 float TextView::getLeftFadingEdgeStrength(){
@@ -3350,7 +2772,7 @@ float TextView::getHorizontalFadingEdgeStrength(float position1, float position2
 }
 
 bool TextView::isMarqueeFadeEnabled()const{
-    return (mEllipsize == TextUtils::TruncateAt::MARQUEE) && (mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS);
+    return (mEllipsize == Layout::ELLIPSIS_MARQUEE) && (mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS);
 }
 
 bool TextView::canMarquee()const{
@@ -3399,7 +2821,7 @@ void TextView::stopMarquee(){
 }
 
 void TextView::startStopMarquee(bool start){
-    if (mEllipsize == TextUtils::TruncateAt::MARQUEE) {
+    if (mEllipsize == Layout::ELLIPSIS_MARQUEE) {
         if (start) {
             startMarquee();
         } else {
@@ -3421,7 +2843,8 @@ bool TextView::setFrame(int l, int t, int w, int h) {
 }
 
 void TextView::restartMarqueeIfNeeded(){
-    if (mRestartMarquee && mEllipsize == TextUtils::TruncateAt::MARQUEE) {
+    if (mRestartMarquee && mEllipsize == Layout::ELLIPSIS_MARQUEE) {
+        mLayout->relayout();
         mRestartMarquee = false;
         startMarquee();
     }
@@ -3441,6 +2864,13 @@ void TextView::onDraw(Canvas& canvas) {
     const int vspace = getHeight()- compoundPaddingBottom - compoundPaddingTop;
     const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
+    mLayout->setWidth(hspace);
+    mLayout->setTextDirection(getTextDirection());
+    mHintLayout->setWidth(hspace);
+    mHintLayout->setTextDirection(getTextDirection());
+    mHintLayout->setAlignment(getLayoutAlignment());
+    mLayout->setAlignment(getLayoutAlignment());
+    mLayout->relayout();
     if (dr != nullptr) {
         /* Compound, not extended, because the icon is not clipped if the text height is smaller. */
 
@@ -3483,17 +2913,7 @@ void TextView::onDraw(Canvas& canvas) {
             canvas.restore();
         }
     }
-    int color = mCurTextColor;
-    if(mLayout==nullptr){
-        assumeLayout();
-    }
-    Layout*layout = mLayout;
-    if(getText().empty()&&mHint->length()){
-        color = mCurHintTextColor;
-        layout= mHintLayout;
-    }
-    mTextPaint.setColor(color);
-
+    // Text
     canvas.save();
     const int extendedPaddingTop = getExtendedPaddingTop();
     const int extendedPaddingBottom = getExtendedPaddingBottom();
@@ -3527,7 +2947,13 @@ void TextView::onDraw(Canvas& canvas) {
         voffsetText = getVerticalOffset(false);
         voffsetCursor = getVerticalOffset(true);
     }
-
+    int color=mCurTextColor;
+    Layout*layout=mLayout;
+    if(getText().empty()&&mHint.length()){
+        color = mCurHintTextColor;
+        layout= mHintLayout;
+        mHintLayout->relayout();
+    }
 
     canvas.translate(compoundPaddingLeft , extendedPaddingTop + voffsetText);
 
@@ -3550,6 +2976,8 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
+    if(mUserSetTextScaleX)
+        canvas.scale(mTextScaleX,1.f);
     if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
         canvas.translate(mShadowDx,mShadowDy);
@@ -3558,7 +2986,7 @@ void TextView::onDraw(Canvas& canvas) {
     }
     canvas.set_color(color);
     layout->draw(canvas);
-    //mLayout->getCaretRect(mCaretRect);
+    mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
 
     if (mMarquee && mMarquee->shouldDrawGhost()) {
@@ -3591,11 +3019,11 @@ void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event)
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     View::onInitializeAccessibilityNodeInfoInternal(info);
     const bool isPassword =false;// hasPasswordTransformationMethod();
-#if 0
     info.setPassword(isPassword);
     info.setText(getText());//getTextForAccessibility());
     info.setHintText(mHint);
     info.setShowingHintText(isShowingHint());
+#if 0
     if (mBufferType == BufferType.EDITABLE) {
         info.setEditable(true);
         if (isEnabled()) {
@@ -3681,4 +3109,3 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
     View::sendAccessibilityEventUnchecked(event);
 }
 }/*endof namespace*/
-#endif

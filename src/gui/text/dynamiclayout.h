@@ -7,7 +7,7 @@
 #include <text/packedobjectvector.h>
 namespace cdroid{
 class Editable;
-class DynamicLayout :public TextLayout {
+class DynamicLayout :public Layout {
 private:
     static constexpr int PRIORITY = 128;
     static constexpr int BLOCK_MINIMUM_CHARACTER_LENGTH = 400;

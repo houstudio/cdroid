@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cdroid.h>
+//#include <cdroid.h>
+#include <core/app.h>
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>

@@ -4,7 +4,7 @@
 #include <text/textpaint.h>
 #include <string>
 namespace cdroid{
-class BoringLayout :public TextLayout {//TextUtils.EllipsizeCallback {
+class BoringLayout :public Layout {//TextUtils.EllipsizeCallback {
 private:
     std::string/*String*/ mDirect;
     Paint mPaint;

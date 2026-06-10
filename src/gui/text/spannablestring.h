@@ -11,7 +11,7 @@
 
 namespace cdroid {
 class Canvas;
-class TextLayout;
+class Layout;
 
 class MetricAffectingSpan:public CharacterStyle{
 public:
@@ -51,7 +51,7 @@ class LeadingMarginSpan :public ParagraphStyle{
 public:
     int getLeadingMargin(bool)const{return 0;};
     void drawLeadingMargin(Canvas& c, Paint& p,int x, int dir, int top, int baseline, int bottom,
-            CharSequence* text, int start, int end, bool first, TextLayout* layout){}
+            CharSequence* text, int start, int end, bool first, Layout* layout){}
 };
 
 class WrapTogetherSpan:public ParagraphStyle{

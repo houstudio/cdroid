@@ -19,17 +19,16 @@
 #define __TEXTVIEW_H__
 
 #include <view/view.h>
+#include <core/layout.h>
 #include <core/typeface.h>
 #include <widget/scroller.h>
 #include <widget/textwatcher.h>
-#include <text/textutils.h>
 #include <text/spannablestring.h>
-#include <text/boringlayout.h>
-#include <text/dynamiclayout.h>
+
 namespace cdroid {
-class Layout;
+
 class CompletionInfo;
-class PrecomputesText;
+
 class TextView : public View{
 private:
     static constexpr int DEFAULT_TYPEFACE = -1;
@@ -40,9 +39,6 @@ private:
 public:
     static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
     static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
-    enum BufferType {
-        NORMAL, SPANNABLE, EDITABLE
-    };
     class Drawables {
     public:
         enum{
@@ -97,8 +93,6 @@ private:
     int mMinMode;
     int mMaxWidth;
     int mMinWidth;
-    int mOldMaximum;
-    int mOldMaxMode;
     int mMaxWidthMode;
     int mMinWidthMode;
     int mDesiredHeightAtMeasure;
@@ -108,23 +102,16 @@ private:
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
-    int mBreakStrategy;
-    int mHyphenationFrequency;
-    int mJustificationMode;
-    bool mHideHint;
+    float mTextScaleX;
     bool mSingleLine;
     bool mIncludePad;
     bool mHorizontallyScrolling;
     bool mNeedsAutoSizeText;
     bool mRestartMarquee;
     bool mUserSetTextScaleX;
-    bool mHighlightPathBogus;
-    bool mTextSetFromXmlOrResourceId;
-    bool mUseFallbackLineSpacing;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
-    TextPaint mTextPaint;
     Typeface* mOriginalTypeface;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
@@ -138,18 +125,13 @@ private:
     class Drawables*mDrawables;
     class Marquee*mMarquee;
     Drawable* mCursorDrawable;
-    TextUtils::TruncateAt mEllipsize;
+    int  mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
     int  mLastLayoutDirection;
     int64_t mLastScroll;
-    BoringLayout* mSavedLayout;
-    BoringLayout* mSavedHintLayout;
     Layout* mSavedMarqueeModeLayout;
-    const TextDirectionHeuristic* mTextDir;
     Scroller*mScroller;
-    BoringLayout::Metrics* mBoring;
-    BoringLayout::Metrics* mHintBoring;
 private:
     void initView();
     int  getLayoutAlignment()const;
@@ -158,7 +140,7 @@ private:
     int  getBottomVerticalOffset(bool forceNormal);
     void updateTextColors();
     int  getDesiredHeight();
-    int  getDesiredHeight(Layout* layout, bool cap);
+    int  getDesiredHeight( Layout* layout, bool cap);
     void getInterestingRect(Rect& r, int line);
     void convertFromViewportToContentCoordinates(Rect&);
 
@@ -171,8 +153,6 @@ private:
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
-    void createEditorIfNeeded();
-    void assumeLayout();
     bool isAutoSizeEnabled()const;
     bool isMarqueeFadeEnabled()const;
     void startStopMarquee(bool start);
@@ -185,8 +165,6 @@ private:
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
-    void setText(CharSequence* text, BufferType type, bool notifyBefore, int oldlen);
-    void setTextInternal(CharSequence* text);
     void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) ;
     void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
     void sendAfterTextChanged(std::wstring& text);
@@ -200,12 +178,7 @@ protected:
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
-    //std::string mHint;
-    CharSequence*mText;
-    CharSequence*mHint;
-    Spannable*mSpannable;
-    PrecomputedText* mPrecomputed;
-    CharSequence*mTransformed;
+    std::string mHint;
     std::wstring& getEditable();
     void setEditable(bool b);
     int getFontSize()const;
@@ -237,8 +210,6 @@ protected:
     int viewportToContentVerticalOffset();
     float getLeftFadingEdgeStrength()override;
     float getRightFadingEdgeStrength()override;
-    Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
-        Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
     enum EDITMODE{
        READONLY,
@@ -254,7 +225,7 @@ public:
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
-    virtual void setText(CharSequence*txt);
+    virtual void setText(const CharSequence&txt);
     const std::string getText()const;
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
@@ -273,7 +244,6 @@ public:
     std::string getSelectedText()const;
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
-    bool hasPasswordTransformationMethod()const;
     void setBreakStrategy(int breakStrategy);
     int getBreakStrategy()const;
     int getLineHeight()const;
@@ -292,7 +262,6 @@ public:
     float getShadowDx()const;
     float getShadowDy()const;
     int getShadowColor()const;
-    const TextPaint& getPaint()const;
     void setLineSpacing(float add, float mult);
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
@@ -308,8 +277,8 @@ public:
     bool getIncludeFontPadding()const;
     void setMarqueeRepeatLimit(int marqueeLimit);
     int  getMarqueeRepeatLimit() const;
-    TextUtils::TruncateAt  getEllipsize() const;
-    void setEllipsize(TextUtils::TruncateAt ellipsize);
+    int  getEllipsize() const;
+    void setEllipsize(int ellipsize);
 
     const cdroid::RefPtr<ColorStateList> getTextColors()const;
     int getCurrentTextColor()const;
@@ -372,8 +341,6 @@ public:
     int getCompoundDrawableTintMode()const;
     void jumpDrawablesToCurrentState()override;
     void invalidateDrawable(Drawable& drawable)override;
-    bool isTextSelectable()const;
-    void setTextSelectable(bool);
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
@@ -383,14 +350,9 @@ public:
 
     void addTextChangedListener(const TextWatcher& watcher);
     void removeTextChangedListener(const TextWatcher& watcher);
-    const TextDirectionHeuristic*getTextDirectionHeuristic()const;
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent& event)override;
     virtual void onCommitCompletion(CompletionInfo* completion);
-    bool useDynamicLayout() const;
-    void nullLayouts();
-    void makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics* boring,
-                    BoringLayout::Metrics* hintBoring,int ellipsisWidth, bool bringIntoView);
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;

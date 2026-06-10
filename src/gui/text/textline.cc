@@ -179,7 +179,7 @@ float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi) {
         for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
             if (j == runLimit || charAt(j) == TAB_CHAR) {
                 const bool targetIsInThisSegment = target >= segStart && target < j;
-                const bool sameDirection = (mDir == TextLayout::DIR_RIGHT_TO_LEFT) == runIsRtl;
+                const bool sameDirection = (mDir == Layout::DIR_RIGHT_TO_LEFT) == runIsRtl;
 
                 if (targetIsInThisSegment && sameDirection) {
                     return h + measureRun(segStart, offset, j, runIsRtl, fmi);
@@ -232,7 +232,7 @@ std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing
         for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; ++j) {
             if (j == runLimit || charAt(j) == TAB_CHAR) {
                 const float oldh = h;
-                const bool advance = (mDir == TextLayout::DIR_RIGHT_TO_LEFT) == runIsRtl;
+                const bool advance = (mDir == Layout::DIR_RIGHT_TO_LEFT) == runIsRtl;
                 const float w = measureRun(segStart, j, j, runIsRtl, fmi);
                 h += advance ? w : -w;
 
@@ -268,7 +268,7 @@ std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing
 
 float TextLine::drawRun(Canvas& c, int start, int limit, bool runIsRtl, float x, int top, int y, int bottom, bool needWidth) {
 
-    if ((mDir == TextLayout::DIR_LEFT_TO_RIGHT) == runIsRtl) {
+    if ((mDir == Layout::DIR_LEFT_TO_RIGHT) == runIsRtl) {
         float w = -measureRun(start, limit, limit, runIsRtl, nullptr);
         handleRun(start, limit, limit, runIsRtl, &c, x + w, top, y, bottom, nullptr, false);
         return w;
@@ -309,13 +309,13 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
       for (runIndex = 0; runIndex < runs.size(); runIndex += 2) {
         runStart = lineStart + runs[runIndex];
         if (cursor >= runStart) {
-          runLimit = runStart + (runs[runIndex+1] & TextLayout::RUN_LENGTH_MASK);
+          runLimit = runStart + (runs[runIndex+1] & Layout::RUN_LENGTH_MASK);
           if (runLimit > lineEnd) {
               runLimit = lineEnd;
           }
           if (cursor < runLimit) {
-            runLevel = (runs[runIndex+1] >> TextLayout::RUN_LEVEL_SHIFT) &
-                TextLayout::RUN_LEVEL_MASK;
+            runLevel = (runs[runIndex+1] >> Layout::RUN_LEVEL_SHIFT) &
+                Layout::RUN_LEVEL_MASK;
             if (cursor == runStart) {
               // The caret is on a run boundary, see if we should
               // use the position on the trailing edge of the previous
@@ -326,13 +326,13 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
                 prevRunStart = lineStart + runs[prevRunIndex];
                 if (pos >= prevRunStart) {
                   prevRunLimit = prevRunStart +
-                      (runs[prevRunIndex+1] & TextLayout::RUN_LENGTH_MASK);
+                      (runs[prevRunIndex+1] & Layout::RUN_LENGTH_MASK);
                   if (prevRunLimit > lineEnd) {
                       prevRunLimit = lineEnd;
                   }
                   if (pos < prevRunLimit) {
-                    prevRunLevel = (runs[prevRunIndex+1] >> TextLayout::RUN_LEVEL_SHIFT)
-                        & TextLayout::RUN_LEVEL_MASK;
+                    prevRunLevel = (runs[prevRunIndex+1] >> Layout::RUN_LEVEL_SHIFT)
+                        & Layout::RUN_LEVEL_MASK;
                     if (prevRunLevel < runLevel) {
                       // Start from logically previous character.
                       runIndex = prevRunIndex;
@@ -383,12 +383,12 @@ int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
       if (otherRunIndex >= 0 && otherRunIndex < runs.size()) {
         int otherRunStart = lineStart + runs[otherRunIndex];
         int otherRunLimit = otherRunStart +
-        (runs[otherRunIndex+1] & TextLayout::RUN_LENGTH_MASK);
+        (runs[otherRunIndex+1] & Layout::RUN_LENGTH_MASK);
         if (otherRunLimit > lineEnd) {
             otherRunLimit = lineEnd;
         }
-        int otherRunLevel = (runs[otherRunIndex+1] >> TextLayout::RUN_LEVEL_SHIFT) &
-            TextLayout::RUN_LEVEL_MASK;
+        int otherRunLevel = (runs[otherRunIndex+1] >> Layout::RUN_LEVEL_SHIFT) &
+            Layout::RUN_LEVEL_MASK;
         bool otherRunIsRtl = (otherRunLevel & 1) != 0;
 
         advance = toLeft == otherRunIsRtl;

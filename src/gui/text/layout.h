@@ -48,7 +48,7 @@ public:
     }
 };
 
-class TextLayout {
+class Layout {
 public:
     static constexpr int BREAK_STRATEGY_SIMPLE = LineBreaker::BREAK_STRATEGY_SIMPLE;
     static constexpr int BREAK_STRATEGY_HIGH_QUALITY = LineBreaker::BREAK_STRATEGY_HIGH_QUALITY;
@@ -63,6 +63,13 @@ public:
     static constexpr float DEFAULT_LINESPACING_ADDITION = 0.0f;
 
     using SelectionRectangleConsumer = std::function<void(float left, float top, float right, float bottom,int textSelectionLayout)>;
+    enum{
+        ELLIPSIS_NONE=TextUtils::TruncateAt::NONE,
+        ELLIPSIS_START=TextUtils::TruncateAt::START,
+        ELLIPSIS_MIDDLE=TextUtils::TruncateAt::MIDDLE,
+        ELLIPSIS_END=TextUtils::TruncateAt::END,
+        ELLIPSIS_MARQUEE=TextUtils::TruncateAt::MARQUEE
+    };
     enum Alignment {
         NONE=-1,
         ALIGN_NORMAL=0,
@@ -90,12 +97,12 @@ private:
     static float measurePara(const TextPaint* paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
     void ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method);
 protected:
-    TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
-    TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
+    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
+    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
     void setJustificationMode(int justificationMode);
     bool isSpanned() const;
 public:
-    virtual ~TextLayout();
+    virtual ~Layout();
     static float getDesiredWidth(CharSequence* source, const TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint, const TextDirectionHeuristic* textDir);
@@ -224,13 +231,13 @@ public:
     int getOffsetForHorizontal(int line, float horiz, bool primary) const;
 
     /*private */class HorizontalMeasurementProvider {
-        TextLayout* mLayout;
+        Layout* mLayout;
         int mLine;
         int mLineStartOffset;
         bool mPrimary;
         std::vector<float> mHorizontals;
     public:
-        HorizontalMeasurementProvider(TextLayout* layout, int line, bool primary);
+        HorizontalMeasurementProvider(Layout* layout, int line, bool primary);
         void init();
         float get(int offset);
     };
@@ -294,7 +301,7 @@ public:
     class Ellipsizer : virtual public CharSequence{//, public GetChars {
     public:
         CharSequence* mText;
-        TextLayout* mLayout;
+        Layout* mLayout;
         int mWidth;
         TextUtils::TruncateAt mMethod;
     public:

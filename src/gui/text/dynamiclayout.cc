@@ -27,9 +27,9 @@ DynamicLayout::Builder* DynamicLayout::Builder::obtain(CharSequence* base, TextP
     b->mFallbackLineSpacing = false;
     b->mEllipsizedWidth = width;
     b->mEllipsize = TextUtils::TruncateAt::NONE;
-    b->mBreakStrategy = TextLayout::BREAK_STRATEGY_SIMPLE;
-    b->mHyphenationFrequency = TextLayout::HYPHENATION_FREQUENCY_NONE;
-    b->mJustificationMode = TextLayout::JUSTIFICATION_MODE_NONE;
+    b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
     return b;
 }
 
@@ -103,7 +103,7 @@ DynamicLayout* DynamicLayout::Builder::build() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-DynamicLayout::DynamicLayout(const Builder& b):TextLayout(createEllipsizer(b.mEllipsize, b.mDisplay),
+DynamicLayout::DynamicLayout(const Builder& b):Layout(createEllipsizer(b.mEllipsize, b.mDisplay),
             b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
 
     mDisplay = b.mDisplay;

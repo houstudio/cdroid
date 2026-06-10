@@ -50,9 +50,9 @@ StaticLayout::Builder* StaticLayout::Builder::obtain(CharSequence* source, int s
     b->mEllipsizedWidth = width;
     b->mEllipsize = TextUtils::TruncateAt::NONE;//nullptr;
     b->mMaxLines = INT_MAX;//Integer.MAX_VALUE;
-    b->mBreakStrategy = TextLayout::BREAK_STRATEGY_SIMPLE;
-    b->mHyphenationFrequency = TextLayout::HYPHENATION_FREQUENCY_NONE;
-    b->mJustificationMode = TextLayout::JUSTIFICATION_MODE_NONE;
+    b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
     return b;
 }
 
@@ -172,13 +172,13 @@ Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 StaticLayout::StaticLayout(CharSequence* text)
-    :TextLayout(text, nullptr, 0, Alignment::NONE, 0, 0){
+    :Layout(text, nullptr, 0, Alignment::NONE, 0, 0){
         mColumns = COLUMNS_ELLIPSIZE;
         mLineDirections.resize(2,nullptr);
         mLines.resize(2 * mColumns);
 }
 
-StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
+StaticLayout::StaticLayout(const Builder& b):Layout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
             ? b.mText : [this, &b]() -> CharSequence* {
                 Spanned* spanned = dynamic_cast<Spanned*>(b.mText);
                 return spanned != nullptr ? new SpannedEllipsizer(spanned) : new Ellipsizer(b.mText);
@@ -211,7 +211,7 @@ StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUti
 
 StaticLayout::~StaticLayout(){
     for(auto dir:mLineDirections){
-        if((dir!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT)){
+        if((dir!=&Layout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&Layout::DIRS_ALL_RIGHT_TO_LEFT)){
             delete dir;
         }
     }
@@ -616,8 +616,8 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
-    if( mLineDirections[j] && mLineDirections[j]!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT
-            &&mLineDirections[j]!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT){
+    if( mLineDirections[j] && mLineDirections[j]!=&Layout::DIRS_ALL_LEFT_TO_RIGHT
+            &&mLineDirections[j]!=&Layout::DIRS_ALL_RIGHT_TO_LEFT){
         delete mLineDirections[j];
     }
     mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
@@ -810,7 +810,7 @@ int StaticLayout::getHeight(bool cap) const{
     }
 
     return cap && mLineCount > mMaximumVisibleLineCount && mMaxLineHeight != -1
-            ? mMaxLineHeight : TextLayout::getHeight();
+            ? mMaxLineHeight : Layout::getHeight();
 }
 
 }

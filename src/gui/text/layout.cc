@@ -4,8 +4,8 @@
 #include <text/measuredparagraph.h>
 namespace cdroid{
 
-const Directions TextLayout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
-const Directions TextLayout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
+const Directions Layout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
+const Directions Layout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
 
 namespace{
    const auto TabStopSpanFilter = make_span_filter<TabStopSpan>();
@@ -15,19 +15,19 @@ namespace{
    const auto StyleSpanFilter = make_span_filter<StyleSpan>();
 }
 
-float TextLayout::getDesiredWidth(CharSequence* source, const TextPaint& paint) {
+float Layout::getDesiredWidth(CharSequence* source, const TextPaint& paint) {
     return getDesiredWidth(source, 0, source->length(), paint);
 }
 
-float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint) {
+float Layout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint) {
     return getDesiredWidth(source, start, end, paint, TextDirectionHeuristics::FIRSTSTRONG_LTR);
 }
 
-float TextLayout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint,const TextDirectionHeuristic* textDir) {
+float Layout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint,const TextDirectionHeuristic* textDir) {
     return getDesiredWidthWithLimit(source, start, end, paint, textDir, FLT_MAX);
 }
 
-float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit) {
+float Layout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit) {
     float need = 0;
     int next;
     for (int i = start; i <= end; i = next) {
@@ -47,11 +47,11 @@ float TextLayout::getDesiredWidthWithLimit(CharSequence* source, int start, int 
     return need;
 }
 
-TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd)
-    :TextLayout(text, paint, width, align, TextDirectionHeuristics::FIRSTSTRONG_LTR, spacingMult, spacingAdd){
+Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd)
+    :Layout(text, paint, width, align, TextDirectionHeuristics::FIRSTSTRONG_LTR, spacingMult, spacingAdd){
 }
 
-TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd) {
+Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align,const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd) {
     //FATAL_ERROR("Layout: " + width + " < 0");
 
     // Ensure paint doesn't have baselineShift set.
@@ -75,15 +75,15 @@ TextLayout::TextLayout(CharSequence* text, TextPaint* paint, int width, Alignmen
     mTextDir = textDir;
 }
 
-TextLayout::~TextLayout(){
+Layout::~Layout(){
     delete mLineBackgroundSpans;
 }
 
-void TextLayout::setJustificationMode(int justificationMode) {
+void Layout::setJustificationMode(int justificationMode) {
     mJustificationMode = justificationMode;
 }
 
-void TextLayout::replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd) {
+void Layout::replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd) {
     if (width < 0) {
         //throw new IllegalArgumentException("Layout: " + width + " < 0");
     }
@@ -97,11 +97,11 @@ void TextLayout::replaceWith(CharSequence* text, TextPaint* paint,int width, Ali
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
 }
 
-void TextLayout::draw(Canvas& c) {
+void Layout::draw(Canvas& c) {
     draw(c, nullptr, nullptr, 0);
 }
 
-void TextLayout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical) {
+void Layout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical) {
     const int64_t lineRange = getLineRangeForDraw(canvas);
     const int firstLine = TextUtils::unpackRangeStartFromLong(lineRange);
     const int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
@@ -111,13 +111,13 @@ void TextLayout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, in
     drawText(canvas, firstLine, lastLine);
 }
 
-bool TextLayout::isJustificationRequired(int lineNum) const{
+bool Layout::isJustificationRequired(int lineNum) const{
     if (mJustificationMode == JUSTIFICATION_MODE_NONE) return false;
     const int lineEnd = getLineEnd(lineNum);
     return lineEnd < mText->length() && mText->charAt(lineEnd - 1) != '\n';
 }
 
-float TextLayout::getJustifyWidth(int lineNum) const{
+float Layout::getJustifyWidth(int lineNum) const{
     Alignment paraAlign = mAlignment;
 
     int left = 0;
@@ -195,7 +195,7 @@ float TextLayout::getJustifyWidth(int lineNum) const{
     return right - left - indentWidth;
 }
 
-void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
+void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     int previousLineBottom = getLineTop(firstLine);
     int previousLineEnd = getLineStart(firstLine);
     std::vector<ParcelableSpan*> spans;
@@ -359,7 +359,7 @@ void TextLayout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     TextLine::recycle(tl);
 }
 
-void TextLayout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPaint,
+void Layout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPaint,
         int cursorOffsetVertical, int firstLine, int lastLine) {
     // First, draw LineBackgroundSpans.
     // LineBackgroundSpans know nothing about the alignment, margins, or
@@ -447,7 +447,7 @@ static bool getClipBounds(Canvas& cr, Rect&r){
     r.height = static_cast<int>(std::ceil(y2) - std::floor(y1));
     return true;
 }
-int64_t TextLayout::getLineRangeForDraw(Canvas& canvas) const{
+int64_t Layout::getLineRangeForDraw(Canvas& canvas) const{
     int dtop, dbottom;
     Rect tmpRect;
     if (!getClipBounds(canvas,tmpRect)) {
@@ -464,7 +464,7 @@ int64_t TextLayout::getLineRangeForDraw(Canvas& canvas) const{
     return  TextUtils::packRangeInLong(getLineForVertical(top), getLineForVertical(bottom));
 }
 
-int TextLayout::getLineStartPos(int line, int left, int right) const{
+int Layout::getLineStartPos(int line, int left, int right) const{
     // Adjust the point at which to start rendering depending on the
     // alignment of the paragraph.
     Alignment align = getParagraphAlignment(line);
@@ -510,14 +510,14 @@ int TextLayout::getLineStartPos(int line, int left, int right) const{
     return x;
 }
 
-void TextLayout::increaseWidthTo(int wid) {
+void Layout::increaseWidthTo(int wid) {
     if (wid < mWidth) {
         //throw new RuntimeException("attempted to reduce Layout width");
     }
     mWidth = wid;
 }
 
-int TextLayout::getLineBounds(int line, Rect* bounds) const{
+int Layout::getLineBounds(int line, Rect* bounds) const{
     if (bounds != nullptr) {
         bounds->left = 0;     // ???
         bounds->top = getLineTop(line);
@@ -527,7 +527,7 @@ int TextLayout::getLineBounds(int line, Rect* bounds) const{
     return getLineBaseline(line);
 }
 
-bool TextLayout::isLevelBoundary(int offset) const{
+bool Layout::isLevelBoundary(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
     if (dirs == &DIRS_ALL_LEFT_TO_RIGHT || dirs == &DIRS_ALL_RIGHT_TO_LEFT) {
@@ -552,7 +552,7 @@ bool TextLayout::isLevelBoundary(int offset) const{
     return false;
 }
 
-bool TextLayout::isRtlCharAt(int offset) const{
+bool Layout::isRtlCharAt(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
     if (dirs == &DIRS_ALL_LEFT_TO_RIGHT) {
@@ -575,7 +575,7 @@ bool TextLayout::isRtlCharAt(int offset) const{
     return false;
 }
 
-int64_t TextLayout::getRunRange(int offset) const{
+int64_t Layout::getRunRange(int offset) const{
     int line = getLineForOffset(offset);
     const Directions* dirs = getLineDirections(line);
     if (dirs == &DIRS_ALL_LEFT_TO_RIGHT || dirs == &DIRS_ALL_RIGHT_TO_LEFT) {
@@ -594,7 +594,7 @@ int64_t TextLayout::getRunRange(int offset) const{
     return TextUtils::packRangeInLong(0, getLineEnd(line));
 }
 
-bool TextLayout::primaryIsTrailingPrevious(int offset) const{
+bool Layout::primaryIsTrailingPrevious(int offset) const{
     int line = getLineForOffset(offset);
     int lineStart = getLineStart(line);
     int lineEnd = getLineEnd(line);
@@ -643,7 +643,7 @@ bool TextLayout::primaryIsTrailingPrevious(int offset) const{
     return levelBefore < levelAt;
 }
 
-std::vector<bool> TextLayout::primaryIsTrailingPreviousAllLineOffsets(int line) const{
+std::vector<bool> Layout::primaryIsTrailingPreviousAllLineOffsets(int line) const{
     const int lineStart = getLineStart(line);
     const int lineEnd = getLineEnd(line);
     auto runs = getLineDirections(line)->mDirections;
@@ -675,16 +675,16 @@ std::vector<bool> TextLayout::primaryIsTrailingPreviousAllLineOffsets(int line) 
     return trailing;
 }
 
-float TextLayout::getHorizontal(int offset, bool primary) const{
+float Layout::getHorizontal(int offset, bool primary) const{
     return primary ? getPrimaryHorizontal(offset) : getSecondaryHorizontal(offset);
 }
 
-float TextLayout::getHorizontal(int offset, bool trailing, bool clamped) const{
+float Layout::getHorizontal(int offset, bool trailing, bool clamped) const{
     int line = getLineForOffset(offset);
     return getHorizontal(offset, trailing, line, clamped);
 }
 
-float TextLayout::getHorizontal(int offset, bool trailing, int line, bool clamped) const{
+float Layout::getHorizontal(int offset, bool trailing, int line, bool clamped) const{
     int start = getLineStart(line);
     int end = getLineEnd(line);
     int dir = getParagraphDirection(line);
@@ -717,7 +717,7 @@ float TextLayout::getHorizontal(int offset, bool trailing, int line, bool clampe
     return getLineStartPos(line, left, right) + wid;
 }
 
-std::vector<float> TextLayout::getLineHorizontals(int line, bool clamped, bool primary) {
+std::vector<float> Layout::getLineHorizontals(int line, bool clamped, bool primary) {
     int start = getLineStart(line);
     int end = getLineEnd(line);
     int dir = getParagraphDirection(line);
@@ -765,7 +765,7 @@ std::vector<float> TextLayout::getLineHorizontals(int line, bool clamped, bool p
     return horizontal;
 }
 
-float TextLayout::getLineLeft(int line) const{
+float Layout::getLineLeft(int line) const{
     const int dir = getParagraphDirection(line);
     Alignment align = getParagraphAlignment(line);
     // Before Q, StaticLayout.Builder.setAlignment didn't check whether the input alignment
@@ -815,7 +815,7 @@ float TextLayout::getLineLeft(int line) const{
     return 0;
 }
 
-float TextLayout::getLineRight(int line) const {
+float Layout::getLineRight(int line) const {
     const int dir = getParagraphDirection(line);
     Alignment align = getParagraphAlignment(line);
     // Before Q, StaticLayout.Builder.setAlignment didn't check whether the input alignment
@@ -854,19 +854,19 @@ float TextLayout::getLineRight(int line) const {
     return 0;
 }
 
-float TextLayout::getLineMax(int line) const {
+float Layout::getLineMax(int line) const {
     float margin = getParagraphLeadingMargin(line);
     float signedExtent = getLineExtent(line, false);
     return margin + (signedExtent >= 0 ? signedExtent : -signedExtent);
 }
 
-float TextLayout::getLineWidth(int line) const {
+float Layout::getLineWidth(int line) const {
     float margin = getParagraphLeadingMargin(line);
     float signedExtent = getLineExtent(line, true);
     return margin + (signedExtent >= 0 ? signedExtent : -signedExtent);
 }
 
-float TextLayout::getLineExtent(int line, bool full) const{
+float Layout::getLineExtent(int line, bool full) const{
     const int start = getLineStart(line);
     const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
 
@@ -903,7 +903,7 @@ float TextLayout::getLineExtent(int line, bool full) const{
     return width;
 }
 
-float TextLayout::getLineExtent(int line, TabStops& tabStops, bool full) const{
+float Layout::getLineExtent(int line, TabStops& tabStops, bool full) const{
     const int start = getLineStart(line);
     const int end = full ? getLineEnd(line) : getLineVisibleEnd(line);
     const bool hasTabs = getLineContainsTab(line);
@@ -925,7 +925,7 @@ float TextLayout::getLineExtent(int line, TabStops& tabStops, bool full) const{
     return width;
 }
 
-int TextLayout::getLineForVertical(int vertical) const{
+int Layout::getLineForVertical(int vertical) const{
     int high = getLineCount(), low = -1, guess;
 
     while (high - low > 1) {
@@ -943,7 +943,7 @@ int TextLayout::getLineForVertical(int vertical) const{
         return low;
 }
 
-int TextLayout::getLineForOffset(int offset) const{
+int Layout::getLineForOffset(int offset) const{
     int high = getLineCount(), low = -1, guess;
 
     while (high - low > 1) {
@@ -962,7 +962,7 @@ int TextLayout::getLineForOffset(int offset) const{
     }
 }
 
-int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) const{
+int Layout::getOffsetForHorizontal(int line, float horiz, bool primary) const{
     // TODO: use Paint.getOffsetForAdvance to avoid binary search
     const int lineEndOffset = getLineEnd(line);
     const int lineStartOffset = getLineStart(line);
@@ -973,7 +973,7 @@ int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) cons
     // XXX: we don't care about tabs as we just use TextLine#getOffsetToLeftRightOf here.
     tl->set(mPaint, mText, lineStartOffset, lineEndOffset, getParagraphDirection(line), dirs,
             false, nullptr, getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
-    HorizontalMeasurementProvider horizontal((TextLayout*)this,line, primary);
+    HorizontalMeasurementProvider horizontal((Layout*)this,line, primary);
 
     int max;
     if (line == getLineCount() - 1) {
@@ -1050,14 +1050,14 @@ int TextLayout::getOffsetForHorizontal(int line, float horiz, bool primary) cons
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-TextLayout::HorizontalMeasurementProvider::HorizontalMeasurementProvider(TextLayout* layout, int line, bool primary) {
+Layout::HorizontalMeasurementProvider::HorizontalMeasurementProvider(Layout* layout, int line, bool primary) {
     mLayout = layout;
     mLine = line;
     mPrimary = primary;
     init();
 }
 
-void TextLayout::HorizontalMeasurementProvider::init() {
+void Layout::HorizontalMeasurementProvider::init() {
     const Directions* dirs = mLayout->getLineDirections(mLine);
     if (dirs == &DIRS_ALL_LEFT_TO_RIGHT) {
         return;
@@ -1067,7 +1067,7 @@ void TextLayout::HorizontalMeasurementProvider::init() {
     mLineStartOffset = mLayout->getLineStart(mLine);
 }
 
-float TextLayout::HorizontalMeasurementProvider::get(int offset) {
+float Layout::HorizontalMeasurementProvider::get(int offset) {
     const int index = offset - mLineStartOffset;
     if (mHorizontals.empty() || index < 0 || index >= mHorizontals.size()) {
         return mLayout->getHorizontal(offset, mPrimary);
@@ -1078,7 +1078,7 @@ float TextLayout::HorizontalMeasurementProvider::get(int offset) {
 
 ///////////////////////////////////////////////////////////////////////////////////
 
-int TextLayout::getLineVisibleEnd(int line, int start, int end) const{
+int Layout::getLineVisibleEnd(int line, int start, int end) const{
     CharSequence* text = mText;
     char16_t ch;
     if (line == getLineCount() - 1) {
@@ -1097,37 +1097,37 @@ int TextLayout::getLineVisibleEnd(int line, int start, int end) const{
     return end;
 }
 
-/*int TextLayout::getLineBottom(int line) const{
+/*int Layout::getLineBottom(int line) const{
     return getLineTop(line + 1);
 }
 
-int TextLayout::getLineBottomWithoutSpacing(int line) const{
+int Layout::getLineBottomWithoutSpacing(int line) const{
     return getLineTop(line + 1) - getLineExtra(line);
 }
 
-int TextLayout::getLineBaseline(int line) const{
+int Layout::getLineBaseline(int line) const{
     // getLineTop(line+1) == getLineBottom(line)
     return getLineTop(line+1) - getLineDescent(line);
 }
 
-int TextLayout::getLineAscent(int line) const{
+int Layout::getLineAscent(int line) const{
     // getLineTop(line+1) - getLineDescent(line) == getLineBaseLine(line)
     return getLineTop(line) - (getLineTop(line+1) - getLineDescent(line));
 }
 
-int TextLayout::getLineExtra(int line) const{
+int Layout::getLineExtra(int line) const{
     return 0;
 }
 
-int TextLayout::getOffsetToLeftOf(int offset) const{
+int Layout::getOffsetToLeftOf(int offset) const{
     return getOffsetToLeftRightOf(offset, true);
 }
 
-int TextLayout::getOffsetToRightOf(int offset) const{
+int Layout::getOffsetToRightOf(int offset) const{
     return getOffsetToLeftRightOf(offset, false);
 }*/
 
-int TextLayout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
+int Layout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
     int line = getLineForOffset(caret);
     int lineStart = getLineStart(line);
     int lineEnd = getLineEnd(line);
@@ -1178,7 +1178,7 @@ int TextLayout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
     return caret;
 }
 
-int TextLayout::getOffsetAtStartOf(int offset) const{
+int Layout::getOffsetAtStartOf(int offset) const{
     // XXX this probably should skip local reorderings and
     // zero-width characters, look at callers
     if (offset == 0)
@@ -1206,7 +1206,7 @@ int TextLayout::getOffsetAtStartOf(int offset) const{
     return offset;
 }
 
-bool TextLayout::shouldClampCursor(int line) {
+bool Layout::shouldClampCursor(int line) {
     // Only clamp cursor position in left-aligned displays.
     switch (getParagraphAlignment(line)) {
         case ALIGN_LEFT:
@@ -1219,7 +1219,7 @@ bool TextLayout::shouldClampCursor(int line) {
 
 }
 
-void TextLayout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
+void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
     dest.reset();
 
     const int line = getLineForOffset(point);
@@ -1282,7 +1282,7 @@ void TextLayout::getCursorPath(int point, Path& dest, CharSequence* editingBuffe
     }
 }
 
-void TextLayout::addSelection(int line, int start, int end,
+void Layout::addSelection(int line, int start, int end,
         int top, int bottom,const SelectionRectangleConsumer& consumer) {
     int linestart = getLineStart(line);
     int lineend = getLineEnd(line);
@@ -1321,7 +1321,7 @@ void TextLayout::addSelection(int line, int start, int end,
     }
 }
 
-void TextLayout::getSelectionPath(int start, int end, Path& dest) {
+void Layout::getSelectionPath(int start, int end, Path& dest) {
     dest.reset();
     SelectionRectangleConsumer ff=[&dest](float left, float top, float right, float bottom, int textSelectionLayout) {
         //dest.addRect(left, top, right, bottom, Path.Direction.CW);
@@ -1330,7 +1330,7 @@ void TextLayout::getSelectionPath(int start, int end, Path& dest) {
     getSelection(start, end, ff);
 }
 
-void TextLayout::getSelection(int start, int end,const SelectionRectangleConsumer& consumer) {
+void Layout::getSelection(int start, int end,const SelectionRectangleConsumer& consumer) {
     if (start == end) {
         return;
     }
@@ -1382,7 +1382,7 @@ void TextLayout::getSelection(int start, int end,const SelectionRectangleConsume
     }
 }
 
-TextLayout::Alignment TextLayout::getParagraphAlignment(int line) const {
+Layout::Alignment Layout::getParagraphAlignment(int line) const {
     Alignment align = mAlignment;
     if (mSpannedText) {
         Spanned* sp = dynamic_cast<Spanned*>(mText);
@@ -1396,7 +1396,7 @@ TextLayout::Alignment TextLayout::getParagraphAlignment(int line) const {
     return align;
 }
 
-int TextLayout::getParagraphLeft(int line) const{
+int Layout::getParagraphLeft(int line) const{
     const int left = 0;
     const int dir = getParagraphDirection(line);
     if (dir == DIR_RIGHT_TO_LEFT || !mSpannedText) {
@@ -1405,7 +1405,7 @@ int TextLayout::getParagraphLeft(int line) const{
     return getParagraphLeadingMargin(line);
 }
 
-int TextLayout::getParagraphRight(int line) const{
+int Layout::getParagraphRight(int line) const{
     const int right = mWidth;
     const int dir = getParagraphDirection(line);
     if (dir == DIR_LEFT_TO_RIGHT || !mSpannedText) {
@@ -1413,7 +1413,7 @@ int TextLayout::getParagraphRight(int line) const{
     }
     return right - getParagraphLeadingMargin(line);
 }
-int TextLayout::getParagraphLeadingMargin(int line) const{
+int Layout::getParagraphLeadingMargin(int line) const{
     if (!mSpannedText) {
         return 0;
     }
@@ -1447,7 +1447,7 @@ int TextLayout::getParagraphLeadingMargin(int line) const{
     return margin;
 }
 
-float TextLayout::measurePara(const TextPaint* paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
+float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
     MeasuredParagraph* mt = nullptr;
     TextLine* tl = TextLine::obtain();
     mt = MeasuredParagraph::buildForBidi(text, start, end, textDir, mt);
@@ -1529,7 +1529,7 @@ float TabStops::nextTab(float h) {
 
 //////////////////////////////////////////////////////////////////////
 
-float TextLayout::nextTab(CharSequence* text, int start, int end,
+float Layout::nextTab(CharSequence* text, int start, int end,
                                    float h,std::vector<ParcelableSpan*>& tabs) {
     float nh = FLT_MAX;
     bool alltabs = false;
@@ -1554,11 +1554,11 @@ float TextLayout::nextTab(CharSequence* text, int start, int end,
     return ((int) ((h + TAB_INCREMENT) / TAB_INCREMENT)) * TAB_INCREMENT;
 }
 
- bool TextLayout::isSpanned() const{
+ bool Layout::isSpanned() const{
     return mSpannedText;
 }
 
-std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int start, int end, const SpanFilter& type) {
+std::vector<ParcelableSpan*> Layout::getParagraphSpans(Spanned* text, int start, int end, const SpanFilter& type) {
     if (start == end && start > 0) {
         return {};//ArrayUtils.emptyArray(type);
     }
@@ -1570,7 +1570,7 @@ std::vector<ParcelableSpan*> TextLayout::getParagraphSpans(Spanned* text, int st
     }
 }
 
-void TextLayout::ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method) {
+void Layout::ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method) {
     const int ellipsisCount = getEllipsisCount(line);
     if (ellipsisCount == 0) {
         return;
@@ -1598,7 +1598,7 @@ void TextLayout::ellipsize(int start, int end, int line, char16_t* dest, int des
 }
 
 //static class Ellipsizer implements CharSequence, GetChars
-int TextLayout::Ellipsizer::charAt(int off) const {
+int Layout::Ellipsizer::charAt(int off) const {
     char16_t buf[8] ;//= TextUtils.obtain(1);
     getChars(off, off + 1, buf, 0);
     char16_t ret = buf[0];
@@ -1606,7 +1606,7 @@ int TextLayout::Ellipsizer::charAt(int off) const {
     return ret;
 }
 
-void TextLayout::Ellipsizer::getChars(int start, int end, char16_t* dest, int destoff) const {
+void Layout::Ellipsizer::getChars(int start, int end, char16_t* dest, int destoff) const {
     const int line1 = mLayout->getLineForOffset(start);
     const int line2 = mLayout->getLineForOffset(end);
     TextUtils::getChars(mText, start, end, dest, destoff);
@@ -1615,13 +1615,13 @@ void TextLayout::Ellipsizer::getChars(int start, int end, char16_t* dest, int de
     }
 }
 
-CharSequence* TextLayout::Ellipsizer::subSequence(int start, int end) const{
+CharSequence* Layout::Ellipsizer::subSequence(int start, int end) const{
     std::vector<char16_t> s (end - start);
     getChars(start, end, s.data(), 0);
     return new SpannedString((const char16_t*)s.data());
 }
 
-std::string TextLayout::Ellipsizer::toString() const{
+std::string Layout::Ellipsizer::toString() const{
     //char[] s = new char[length()];
     //getChars(0, length(), s, 0);
     return "";//new String(s);

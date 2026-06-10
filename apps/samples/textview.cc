@@ -1,5 +1,8 @@
-#include<cdroid.h>
-#include<cdlog.h>
+#include<widget/cdwindow.h>
+#include<widget/textview.h>
+#include<widget/linearlayout.h>
+#include<porting/cdlog.h>
+#include<core/app.h>
 struct TestString{
     const char*text;
     bool singleline;
@@ -138,7 +141,7 @@ int main(int argc,const char*argv[]){
         tv->setId(i);
         tv->setTextColor(0xFFFFFFFF);
         tv->setSingleLine(ts->singleline);
-        tv->setEllipsize(ts->ellipsis);
+        tv->setEllipsize(static_cast<TextUtils::TruncateAt>(ts->ellipsis));
         tv->setTextAlignment(ts->txtalignment);
         tv->setGravity(ts->gravity);
         if(ts->ellipsis==Layout::ELLIPSIS_MARQUEE)

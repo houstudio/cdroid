@@ -56,7 +56,7 @@ int MeasuredParagraph::getParagraphDir() const{
 
 const Directions* MeasuredParagraph::getDirections( int start, int end) const{
     if (mLtrWithoutBidi) {
-        return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
+        return &Layout::DIRS_ALL_LEFT_TO_RIGHT;
     }
 
     const int length = end - start;
@@ -209,21 +209,21 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
             || textDir == TextDirectionHeuristics::ANYRTL_LTR)
             && TextUtils::doesNotNeedBidi(mCopiedBuffer, 0, mTextLength)) {
         mLevels.clear();
-        mParaDir = TextLayout::DIR_LEFT_TO_RIGHT;
+        mParaDir = Layout::DIR_LEFT_TO_RIGHT;
         mLtrWithoutBidi = true;
     } else {
         int bidiRequest;
         if (textDir == TextDirectionHeuristics::LTR) {
-            bidiRequest = TextLayout::DIR_REQUEST_LTR;
+            bidiRequest = Layout::DIR_REQUEST_LTR;
         } else if (textDir == TextDirectionHeuristics::RTL) {
-            bidiRequest = TextLayout::DIR_REQUEST_RTL;
+            bidiRequest = Layout::DIR_REQUEST_RTL;
         } else if (textDir == TextDirectionHeuristics::FIRSTSTRONG_LTR) {
-            bidiRequest = TextLayout::DIR_REQUEST_DEFAULT_LTR;
+            bidiRequest = Layout::DIR_REQUEST_DEFAULT_LTR;
         } else if (textDir == TextDirectionHeuristics::FIRSTSTRONG_RTL) {
-            bidiRequest = TextLayout::DIR_REQUEST_DEFAULT_RTL;
+            bidiRequest = Layout::DIR_REQUEST_DEFAULT_RTL;
         } else {
             const bool isRtl = textDir->isRtl(mCopiedBuffer.data(), 0, mTextLength);
-            bidiRequest = isRtl ? TextLayout::DIR_REQUEST_RTL : TextLayout::DIR_REQUEST_LTR;
+            bidiRequest = isRtl ? Layout::DIR_REQUEST_RTL : Layout::DIR_REQUEST_LTR;
         }
         mLevels.resize(mTextLength);
         mParaDir = AndroidBidi::bidi(bidiRequest, mCopiedBuffer, mLevels);

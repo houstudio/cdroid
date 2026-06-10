@@ -6,7 +6,7 @@
 #include <text/measuredparagraph.h>
 namespace cdroid{
 class DynamicLayout;
-class StaticLayout :public TextLayout {
+class StaticLayout :public Layout {
 public:
     class Builder;
 private:

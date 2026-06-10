@@ -4,7 +4,7 @@
 #include <regex>
 #include <math.h>
 #include <utils/textutils.h>
-#include <core/layout.h>
+#include <text/layout.h>
 
 namespace cdroid{
 
@@ -16,8 +16,8 @@ EditText::EditText(int w,int h):EditText(std::string(),w,h){
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     initEditText();
-    mHint = ctx->getString(attrs.getString("hint"));
-    mHintLayout->setText(mHint);
+    //mHint = ctx->getString(attrs.getString("hint"));
+    //mHintLayout->setText(mHint);
     mInputType = attrs.getInt("inputType",std::unordered_map<std::string,int>{
 		    {"none",TYPE_NONE}    , {"any", TYPE_ANY},
 		    {"number",TYPE_NUMBER}, {"text",TYPE_TEXT},
@@ -78,7 +78,7 @@ int EditText::commitText(const std::wstring&ws){
             wText.append(ws);
         break;
     }
-    mLayout->relayout(true);
+    //mLayout->relayout(true);
     setCaretPos(mCaretPos+ws.length());
     invalidate(true);
     return ws.length();
@@ -125,7 +125,7 @@ void EditText::checkMatch(const std::wstring&ws){
     if(!match()){
         getEditable()=ws;
     }
-    mLayout->relayout();
+    //mLayout->relayout();
     invalidate(true);
 }
 
@@ -192,7 +192,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             changed = match();
             if(changed){
                 setCaretPos(mCaretPos-1);
-                mLayout->relayout(true);
+                //mLayout->relayout(true);
             }else
                 wText.insert(mCaretPos-1,1,wc0);
             ret=true;
@@ -204,7 +204,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             wText.erase(mCaretPos,1);
             changed=match();
             if(!changed) wText.insert(mCaretPos,1,wc0);
-            else mLayout->relayout(true);
+            //else mLayout->relayout(true);
             ret=true; 
         }break;
     case KeyEvent::KEYCODE_INSERT:
@@ -223,7 +223,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
         if(!isSingleLine()){
             if(mCaretPos<wText.length()) wText.insert(mCaretPos,1,'\n');
             else wText.append(1,'\n');
-            mLayout->relayout(true);
+            //mLayout->relayout(true);
             invalidate(true);
             return true;
         }
@@ -239,7 +239,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
         return TextView::onKeyDown(keyCode,event);
     }
     if(changed){
-        mLayout->relayout();  
+        //mLayout->relayout();  
         invalidate(true);
         if(nullptr!=afterChanged)
             afterChanged(*this);
@@ -271,9 +271,9 @@ void EditText::setPasswordChar(int ch){
 
 void EditText::onDraw(Canvas&canvas){
     const std::wstring& wText=getEditable();
-    mLayout->relayout();
-    canvas.set_font_size(getFontSize());
-    if(wText.empty()||(mInputType==TYPE_PASSWORD) ){
+    //mLayout->relayout();
+    canvas.set_font_size(getTextSize());
+    /*if(wText.empty()||(mInputType==TYPE_PASSWORD) ){
         Layout hpl(*mLayout);
         Layout* tmp=mLayout;
         if((mInputType==TYPE_PASSWORD)&&wText.length())
@@ -284,7 +284,7 @@ void EditText::onDraw(Canvas&canvas){
         mLayout = &hpl;
         TextView::onDraw(canvas);
         mLayout = tmp;
-    }else{
+    }else*/{
         TextView::onDraw(canvas);
     }
     
