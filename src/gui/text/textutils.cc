@@ -1006,7 +1006,6 @@ bool TextUtils::isWhiteSpace(int codePoint) {
         return codePoint <= 0x200a || codePoint == 0x2028 || codePoint == 0x2029 || codePoint == 0x205f ||
             codePoint == 0x3000; // ...or CJK Symbols and Punctuation?
     }
-    //return Character.isWhitespace(codePoint) || codePoint == NBSP_CODE_POINT;
-    return u_isWhitespace(codePoint)||codePoint == NBSP_CODE_POINT;
+    return Character::isWhitespace(codePoint) || codePoint == NBSP_CODE_POINT;
 }
 }/*endof namespace*/

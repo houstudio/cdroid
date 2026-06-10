@@ -21,7 +21,7 @@ U_CAPI UChar32 U_EXPORT2 u_charMirror(UChar32 c) {
     return c;
 }
 
-U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, uint32_t property) {
+U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, UProperty property) {
     const auto* range = findUnicodeRange(c);
     
     switch (property) {
@@ -57,7 +57,7 @@ U_CAPI int32_t U_EXPORT2 u_getIntPropertyValue(UChar32 c, uint32_t property) {
     }
 }
 
-U_CAPI UBool U_EXPORT2 u_hasBinaryProperty(UChar32 c, uint32_t property) {
+U_CAPI UBool U_EXPORT2 u_hasBinaryProperty(UChar32 c, UProperty property) {
     const auto* range = findUnicodeRange(c);
     return range->hasBinaryProperty(property);
 }
@@ -81,9 +81,9 @@ U_CAPI int32_t U_EXPORT2 u_getCombiningClass(UChar32 c) {
     return range->ccc;
 }
 
-U_CAPI int8_t U_EXPORT2 u_charType(UChar32 c) {
+U_CAPI UCharCategory U_EXPORT2 u_charType(UChar32 c) {
     const auto* range = findUnicodeRange(c);
-    return (int8_t)range->category;
+    return (UCharCategory)range->category;
 }
 
 // 辅助函数
@@ -109,7 +109,7 @@ U_CAPI UBool U_EXPORT2 u_isUUppercase(UChar32 c) {
     return range->category == U_UPPERCASE_LETTER;
 }
 
-U_CAPI UBool U_EXPORT2 u_isWhitespace(UChar32 c) {
+U_CAPI UBool U_EXPORT2 u_isWhiteSpace(UChar32 c) {
     const auto* range = findUnicodeRange(c);
     return range->hasBinaryProperty(40);  // U_WHITE_SPACE = 40
 }

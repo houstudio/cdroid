@@ -6280,7 +6280,7 @@ bool Character::isSpaceCharImpl(int codePoint) {
 }
 
 bool Character::isWhitespaceImpl(int codePoint) {
-    return u_isWhitespace(codePoint);
+    return u_isWhiteSpace(codePoint);
 }
 
 int Character::getTypeImpl(int codePoint) {
