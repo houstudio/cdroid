@@ -484,6 +484,7 @@ void TextView::initView(){
     mMarqueeRepeatLimit =3;
     mText = nullptr;
     mHint = nullptr;
+    mTransformed = nullptr;
     mTextDir= nullptr;
     mLayout = nullptr;
     mSpannable = nullptr;
