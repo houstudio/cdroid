@@ -181,14 +181,14 @@ void Switch::setSwitchTypeface(Typeface* tf, int style){
         // now compute what (if any) algorithmic styling is needed
         int typefaceStyle = tf ? tf->getStyle() : 0;
         int need = style & ~typefaceStyle;
-        //mTextPaint.setFakeBoldText((need & Typeface.BOLD) != 0);
-        //mTextPaint.setTextSkewX((need & Typeface.ITALIC) != 0 ? -0.25f : 0);
+        mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+        mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25f : 0);
     } else {
         if (tf == nullptr) {
             tf = Typeface::defaultFromStyle(style);
         }
-        //mTextPaint.setFakeBoldText(false);
-        //mTextPaint.setTextSkewX(0);
+        mTextPaint.setFakeBoldText(false);
+        mTextPaint.setTextSkewX(0);
         setSwitchTypeface(tf);
     }
 }
@@ -822,7 +822,9 @@ void Switch::onDraw(Canvas& canvas) {
     if (switchText) {
         std::vector<int> drawableState = getDrawableState();
         if (mTextColors) {
-            canvas.set_color(mTextColors->getColorForState(drawableState, 0));
+            const int stateColor = mTextColors->getColorForState(drawableState, 0);
+            mTextPaint.setColor(stateColor);
+            canvas.set_color(stateColor);
         }
         //mTextPaint.drawableState = drawableState;
         int cX;

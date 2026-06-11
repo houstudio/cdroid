@@ -63,6 +63,7 @@ private:
     int mEndHyphenEdit;
     Style mStyle;
     bool mAntialias;
+    bool mFakeBoldText;
     bool mStrikeThruText;
     float mStrokeWidth;
     float mTextSize;
@@ -88,6 +89,7 @@ public:
     int getFlags()const{return 0;}
     Style getStyle()const{return mStyle;}
     void setStyle(Style v){mStyle=v;}
+    void setFakeBoldText(bool v){mFakeBoldText=v;}
     int getColor()const{return mColor;}
     void setColor(int v){mColor=v;}
     float getStrokeWidth()const{return mStrokeWidth;}

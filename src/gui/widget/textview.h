@@ -396,7 +396,7 @@ public:
     void setMinEms(int minEms);
     int getMinEms()const;
     void setMaxEms(int maxEms);
-    int getMaxEms();
+    int getMaxEms()const;
     void setEms(int ems);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);

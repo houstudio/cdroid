@@ -827,13 +827,11 @@ void TextView::setTypeface(Typeface* tf,int style){
         // now compute what (if any) algorithmic styling is needed
         const int typefaceStyle = tf ? tf->getStyle() : 0;
         const int need = style & ~typefaceStyle;
-        //mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+        mTextPaint.setFakeBoldText((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
     } else {
-        //mLayout->setFakeTextSkew(0.0);
-        //mHintLayout->setFakeTextSkew(0.0);
-        //mTextPaint.setFakeBoldText(false);
+        mTextPaint.setFakeBoldText(false);
+        mTextPaint.setTextSkewX(0.0);
         setTypeface(tf);
     }
 }
