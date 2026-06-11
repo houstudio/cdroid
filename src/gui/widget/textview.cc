@@ -25,10 +25,6 @@
 #include <porting/cdlog.h>
 #include <float.h>
 
-#define VERY_WIDE 1024*1024
-#define KEY_EVENT_NOT_HANDLED 0
-#define KEY_EVENT_HANDLED -1
-
 namespace cdroid{
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
@@ -1522,7 +1518,11 @@ bool TextView::bringTextIntoView(){
 
         int left = (int) std::floor(layout->getLineLeft(line));
         int right = (int) std::ceil(layout->getLineRight(line));
-
+        if(mHorizontallyScrolling&&mLayout->getWidth()==VERY_WIDE){
+            mLayout->increaseWidthTo(right-left);//this case added by zhhou
+            left = (int) std::floor(layout->getLineLeft(line));
+            right= (int) std::ceil(layout->getLineRight(line));
+        }
         if (right - left < hspace) {
             scrollx = (right + left) / 2 - hspace / 2;
         } else {

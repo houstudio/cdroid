@@ -36,7 +36,12 @@ private:
     static constexpr int SANS = 1;
     static constexpr int SERIF= 2;
     static constexpr int MONOSPACE = 3;
+    static constexpr int VERY_WIDE = 1024 * 1024;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
+    static constexpr int KEY_EVENT_NOT_HANDLED = 0;
+    static constexpr int KEY_EVENT_HANDLED = -1;
+    static constexpr int KEY_DOWN_HANDLED_BY_KEY_LISTENER = 1;
+    static constexpr int KEY_DOWN_HANDLED_BY_MOVEMENT_METHOD = 2;
 public:
     static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
     static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
