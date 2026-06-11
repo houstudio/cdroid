@@ -497,6 +497,8 @@ void TextView::initView(){
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
+    mPreDrawRegistered=false;
+    mPreDrawListenerDetached=true;
     mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     //mLayout = new Layout(18,1);
@@ -835,55 +837,69 @@ void TextView::setTypeface(Typeface* tf,int style){
     }
 }
 
-#if 0
+void TextView::registerForPreDraw() {
+    if (!mPreDrawRegistered) {
+        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawRegistered = true;
+    }
+}
+
+void TextView::unregisterForPreDraw() {
+    getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+    mPreDrawRegistered = false;
+    mPreDrawListenerDetached = false;
+}
+
 bool TextView::onPreDraw() {
     if (mLayout == nullptr) {
         assumeLayout();
     }
 
-    if (mMovement != null) {
-        /* This code also provides auto-scrolling when a cursor is moved using a
-         * CursorController (insertion point or selection limits).
-         * For selection, ensure start or end is visible depending on controller's state.
-         */
+    /*if (mMovement != nullptr) {
         int curs = getSelectionEnd();
         // Do not create the controller if it is not already created.
         if (mEditor != null && mEditor.mSelectionModifierCursorController != null
                 && mEditor.mSelectionModifierCursorController.isSelectionStartDragged()) {
             curs = getSelectionStart();
         }
-
-        /*
-         * TODO: This should really only keep the end in view if
-         * it already was before the text changed.  I'm not sure
-         * of a good way to tell from here if it was.
-         */
         if (curs < 0 && (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
-            curs = mText.length();
+            curs = mText->length();
         }
-
         if (curs >= 0) {
             bringPointIntoView(curs);
         }
-    } else {
+    } else */{
         bringTextIntoView();
     }
 
     // This has to be checked here since:
     // - onFocusChanged cannot start it when focus is given to a view with selected text (after
     //   a screen rotation) since layout is not yet initialized at that point.
-    if (mEditor != null && mEditor.mCreatedWithASelection) {
+    /*if (mEditor != null && mEditor.mCreatedWithASelection) {
         mEditor.refreshTextActionMode();
         mEditor.mCreatedWithASelection = false;
-    }
-
+    }*/
     unregisterForPreDraw();
-
     return true;
 }
-#endif
+
+void TextView::onAttachedToWindow() {
+    View::onAttachedToWindow();
+    //if (mEditor != null) mEditor.onAttachedToWindow();
+    if(mOnPreDrawListener==nullptr){
+        mOnPreDrawListener=[this](){return onPreDraw();};
+    }
+    if (mPreDrawListenerDetached) {
+        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawListenerDetached = false;
+    }
+}
 
 void TextView::onDetachedFromWindowInternal(){
+    if (mPreDrawRegistered) {
+        getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawListenerDetached = true;
+    }
     stopMarquee();
     for(int i = 0; mDrawables && ( i<4 );i++){
         Drawable*d = mDrawables->mShowing[i];
@@ -1485,7 +1501,7 @@ bool TextView::bringTextIntoView(){
     int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
     int ht = layout->getHeight();
     int scrollx, scrolly;
-#if __TODO_
+
     Layout::Alignment a = layout->getParagraphAlignment(line);
 
     // Convert to left, center, or right alignment.
@@ -1521,7 +1537,6 @@ bool TextView::bringTextIntoView(){
     } else { // a == Layout.Alignment.ALIGN_LEFT (will also be the default)
         scrollx = (int) std::floor(layout->getLineLeft(line));
     }
-#endif
     if (ht < vspace) {
         scrolly = 0;
     } else {
@@ -1554,22 +1569,20 @@ bool TextView::bringPointIntoView(int offset) {
     int line = layout->getLineForOffset(offset);
 
     int grav;
-#if __TODO_
     switch (layout->getParagraphAlignment(line)) {
-    case ALIGN_LEFT:
+    case Layout::ALIGN_LEFT:
         grav = 1;   break;
-    case ALIGN_RIGHT:
+    case Layout::ALIGN_RIGHT:
         grav = -1;  break;
-    case ALIGN_NORMAL:
+    case Layout::ALIGN_NORMAL:
         grav = layout->getParagraphDirection(line);
         break;
-    case ALIGN_OPPOSITE:
+    case Layout::ALIGN_OPPOSITE:
         grav = -layout->getParagraphDirection(line);
         break;
-    case ALIGN_CENTER:
+    case Layout::ALIGN_CENTER:
     default:   grav = 0;   break;
     }
-#endif
     // We only want to clamp the cursor to fit within the layout width
     // in left-to-right modes, because in a right to left alignment,
     // we want to scroll to keep the line-right on the screen, as other
@@ -1735,8 +1748,7 @@ bool TextView::bringPointIntoView(int offset) {
 }
 
 bool TextView::moveCursorToVisibleOffset() {
-#if _TODO_
-    if (!(mText instanceof Spannable)) {
+    if (dynamic_cast<Spannable*>(mText)==nullptr){
         return false;
     }
     int start = getSelectionStart();
@@ -1783,10 +1795,9 @@ bool TextView::moveCursorToVisibleOffset() {
     }
 
     if (newStart != start) {
-        Selection.setSelection(mSpannable, newStart);
+        //Selection.setSelection(mSpannable, newStart);
         return true;
     }
-#endif
     return false;
 }
 
@@ -2277,7 +2288,7 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
         hintWidth = 0;
     }
 
-    Layout::Alignment alignment = static_cast<Layout::Alignment>(getLayoutAlignment());
+    Layout::Alignment alignment = getLayoutAlignment();
     const bool testDirChange = mSingleLine && mLayout != nullptr
             && (alignment == Layout::Alignment::ALIGN_NORMAL
                     || alignment == Layout::Alignment::ALIGN_OPPOSITE);

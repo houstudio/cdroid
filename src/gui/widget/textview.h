@@ -126,11 +126,14 @@ private:
     bool mTextSetFromXmlOrResourceId;
     bool mUseFallbackLineSpacing;
     bool mHasPresetAutoSizeValues;
+    bool mPreDrawRegistered;
+    bool mPreDrawListenerDetached;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
     TextPaint mTextPaint;
     Typeface* mOriginalTypeface;
+    ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
     cdroid::RefPtr<ColorStateList> mHintTextColor;
@@ -174,6 +177,8 @@ private:
     void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end);///
     Layout::Alignment getLayoutAlignment()const;
     void applyCompoundDrawableTint();
+    void registerForPreDraw();
+    void unregisterForPreDraw();
     int  getVerticalOffset(bool forceNormal);
     int  getBottomVerticalOffset(bool forceNormal);
     void updateTextColors();
@@ -227,7 +232,6 @@ protected:
     void setEditable(bool b);
     int getFontSize()const;
     void drawableStateChanged()override;
-    void onDetachedFromWindowInternal()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     bool supportsAutoSizeText()const;
@@ -242,6 +246,9 @@ protected:
     void stopMarquee();
     virtual void onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
+    void onAttachedToWindow();
+    void onDetachedFromWindowInternal()override;
+    bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
     virtual int getHorizontalOffsetForDrawables()const;
     void onLayout(bool changed, int left, int top, int w, int h)override;
