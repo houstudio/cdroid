@@ -85,6 +85,8 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
+    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
+    mSelectorWheelPaint.setTextSize(mTextSize);
     updateInputTextView();
     setFocusable(int(View::FOCUSABLE));
     setFocusableInTouchMode(true);
@@ -198,6 +200,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
     else
         setSelectedTextColor(mInputText->getCurrentTextColor());
+    
+    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
+    mSelectorWheelPaint.setTextSize(mTextSize);
+    
     updateInputTextView();
 
     //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
@@ -929,14 +935,11 @@ void NumberPicker::tryComputeMaxWidth(){
         return;
     }
     int maxTextWidth = 0;
-    Layout l(mTextSize,-1);
-    l.setTypeface(mInputText->getTypeface());
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         for (int i = 0; i <= 9; i++) {
-            l.setText(std::to_string(i));
-            l.relayout();
-            const float digitWidth = l.getMaxLineWidth();
+            char16_t num='0'+i;
+            const float digitWidth = mSelectorWheelPaint.measureText(&num,0,1);
             if (digitWidth > maxDigitWidth) {
                 maxDigitWidth = digitWidth;
             }
@@ -951,9 +954,8 @@ void NumberPicker::tryComputeMaxWidth(){
     } else {
         const int valueCount = mDisplayedValues.size();
         for (int i = 0; i < valueCount; i++) {
-            l.setText(mDisplayedValues[i]);
-            l.relayout();
-            const float textWidth = l.getMaxLineWidth();
+            auto u16=TextUtils::utf8_utf16(mDisplayedValues[i]);
+            const float textWidth = mSelectorWheelPaint.measureText(u16.c_str(),0,u16.size());
             if (textWidth > maxTextWidth) {
                 maxTextWidth = (int) textWidth;
             }

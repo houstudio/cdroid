@@ -87,6 +87,7 @@ private:
     int mMinValue;
     int mMaxValue;
     int mValue;
+    Paint mSelectorWheelPaint;
     OnClickListener mOnClickListener;
     OnValueChangeListener mOnValueChangeListener;
     Formatter mFormatter;

@@ -28,7 +28,7 @@
 #define VERY_WIDE 1024*1024
 #define KEY_EVENT_NOT_HANDLED 0
 #define KEY_EVENT_HANDLED -1
-#if 10
+
 namespace cdroid{
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
@@ -4039,4 +4039,3 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
     View::sendAccessibilityEventUnchecked(event);
 }
 }/*endof namespace*/
-#endif
