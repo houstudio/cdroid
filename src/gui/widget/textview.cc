@@ -458,7 +458,6 @@ void TextView::initView(){
     mScroller = nullptr;
     mCursorDrawable = nullptr;
     mSavedMarqueeModeLayout=nullptr;
-    mOriginalTypeface = nullptr;
     mMaxWidth = INT_MAX;
     mMinWidth = 0;
     mMaximum  = INT_MAX;
@@ -486,6 +485,7 @@ void TextView::initView(){
     mSpannable = nullptr;
     mHintLayout= nullptr;
     mSavedLayout = nullptr;
+    mTransformation = nullptr;
     mSavedMarqueeModeLayout = nullptr;
     mBoring = mHintBoring =nullptr;
     mLastLayoutDirection = -1;
@@ -519,6 +519,10 @@ TextView::~TextView() {
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
+    if(mTransformed!=mText)
+        delete mTransformed;
+    delete mHint;
+    delete mText;
     delete mMarquee;
     delete mScroller;
     delete mLayout;
@@ -1174,6 +1178,10 @@ void TextView::setText(CharSequence* txt) {
 }
 
 void TextView::setText(const std::string&txt){
+    if(mText==nullptr)
+        mText=new SpannableString(TextUtils::utf8_utf16(txt));
+    if(mTransformed==nullptr)
+        mTransformed=mText;
     /*if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
@@ -2043,22 +2051,23 @@ void TextView::autoSizeText() {
         }
 
         const int availableWidth = mHorizontallyScrolling  ? VERY_WIDE
-                : getMeasuredWidth() //- getTotalPaddingLeft() - getTotalPaddingRight();
-				 - getCompoundPaddingLeft()-getCompoundPaddingRight();
+                : getMeasuredWidth() - getTotalPaddingLeft() - getTotalPaddingRight();
+				 //- getCompoundPaddingLeft()-getCompoundPaddingRight();
         const int availableHeight = getMeasuredHeight() - getExtendedPaddingBottom()
                     - getExtendedPaddingTop();
 
         if (availableWidth <= 0 || availableHeight <= 0) {
             return;
         }
-#if 0
-        synchronized (TEMP_RECTF) {
+#if 1
+        /*synchronized (TEMP_RECTF) */{
+            RectF TEMP_RECTF;
             TEMP_RECTF.setEmpty();
-            TEMP_RECTF.right = availableWidth;
-            TEMP_RECTF.bottom = availableHeight;
-            final float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
+            TEMP_RECTF.width = availableWidth;
+            TEMP_RECTF.height = availableHeight;
+            const float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
             if (optimalTextSize != getTextSize()) {
-                setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, optimalTextSize,
+                setTextSizeInternal(TypedValue::COMPLEX_UNIT_PX, optimalTextSize,
                         false /* shouldRequestLayout */);
 
                 makeNewLayout(availableWidth, 0 /* hintWidth */, &UNKNOWN_BORING,&UNKNOWN_BORING,
@@ -2964,11 +2973,12 @@ void TextView::setTypeface(Typeface* tf){
 }
 
 Typeface*TextView::getTypeface()const{
-    return mOriginalTypeface;
+    return mTextPaint.getTypeface();
 }
 
 int TextView::getTypefaceStyle() const{
-    return mOriginalTypeface?mOriginalTypeface->getStyle():Typeface::NORMAL;
+    Typeface* typeface = mTextPaint.getTypeface();
+    return typeface != nullptr ? typeface->getStyle() : Typeface::NORMAL;
 }
 
 void TextView::drawableStateChanged(){
@@ -3365,6 +3375,40 @@ void TextView::applyCompoundDrawableTint(){
     }
 }
 
+TransformationMethod* TextView::getTransformationMethod()const{
+    return mTransformation;
+}
+
+void TextView::setTransformationMethod(TransformationMethod*method){
+    if (method == mTransformation) {
+        // Avoid the setText() below if the transformation is
+        // the same.
+        return;
+    }
+    if (mTransformation != nullptr) {
+        if (mSpannable != nullptr) {
+            //mSpannable->removeSpan(mTransformation);
+        }
+    }
+    mTransformation = method;
+#if 0
+    if (method instanceof TransformationMethod2) {
+        TransformationMethod2 method2 = (TransformationMethod2) method;
+        mAllowTransformationLengthChange = !isTextSelectable() && !(mText instanceof Editable);
+        method2.setLengthChangesAllowed(mAllowTransformationLengthChange);
+    } else {
+        mAllowTransformationLengthChange = false;
+    }
+    setText(mText);
+    if (hasPasswordTransformationMethod()) {
+        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+#endif
+    // PasswordTransformationMethod always have LTR text direction heuristics returned by
+    // getTextDirectionHeuristic, needs reset
+    mTextDir = getTextDirectionHeuristic();
+
+}
 void TextView::setCompoundDrawablePadding(int pad){
     if (pad == 0) {
        if (mDrawables != nullptr)
@@ -3435,12 +3479,14 @@ int TextView::getCompoundPaddingEnd(){
     }
 }
 
-int TextView::getExtendedPaddingTop()const{
+int TextView::getExtendedPaddingTop() {
     if (mMaxMode != LINES) {
         return getCompoundPaddingTop();
     }
 
-    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout == nullptr){
+        assumeLayout();
+    }
 
     if (mLayout->getLineCount() <= mMaximum) {
         return getCompoundPaddingTop();
@@ -3464,12 +3510,14 @@ int TextView::getExtendedPaddingTop()const{
     }
 }
 
-int TextView::getExtendedPaddingBottom()const{
+int TextView::getExtendedPaddingBottom() {
     if(mMaxMode !=LINES){
         return getCompoundPaddingBottom();
     }
 
-    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout == nullptr) {
+        assumeLayout();
+    }
     if (mLayout->getLineCount() <= mMaximum) {
         return getCompoundPaddingBottom();
     }
@@ -3521,7 +3569,7 @@ int TextView::getCompoundDrawableTintMode()const{
     return mDrawables ? mDrawables->mTintMode : -1;
 }
 
-int TextView::getBoxHeight(Layout* l){
+int TextView::getBoxHeight(Layout* l) {
     Insets opticalInsets = isLayoutModeOptical((View*)mParent) ? getOpticalInsets() : Insets::NONE;
     const int padding = (l ==mHintLayout)
 	    ?getCompoundPaddingTop() + getCompoundPaddingBottom()
@@ -3531,7 +3579,7 @@ int TextView::getBoxHeight(Layout* l){
     return measuedHeight - padding +opticalInsets.top + opticalInsets.bottom;
 }
 
-int TextView::getVerticalOffset(bool forceNormal){
+int TextView::getVerticalOffset(bool forceNormal) {
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     Layout* l = mLayout;
@@ -3613,11 +3661,39 @@ bool TextView::selectAllText(){
     return false;
 }
 
-int TextView::getTotalPaddingTop(){
+int TextView::getTotalPaddingLeft() {
+    return getCompoundPaddingLeft();
+}
+
+/**
+ * Returns the total right padding of the view, including the right
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingRight() {
+    return getCompoundPaddingRight();
+}
+
+/**
+ * Returns the total start padding of the view, including the start
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingStart() {
+    return getCompoundPaddingStart();
+}
+
+/**
+ * Returns the total end padding of the view, including the end
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingEnd() {
+    return getCompoundPaddingEnd();
+}
+
+int TextView::getTotalPaddingTop() {
     return getExtendedPaddingTop() + getVerticalOffset(true);
 }
 
-int TextView::getTotalPaddingBottom(){
+int TextView::getTotalPaddingBottom() {
     return getExtendedPaddingBottom() + getBottomVerticalOffset(true);
 }
 
@@ -3669,7 +3745,7 @@ bool TextView::isSingleLine()const{
 }
 
 bool TextView::hasPasswordTransformationMethod()const{
-    return false;//mTransformation;
+    return mTransformation;
 }
 
 float TextView::getLeftFadingEdgeStrength(){
@@ -4018,7 +4094,6 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
     }
 }
 bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments){
-    LOGD("TODO");
     return true;
 }
 void TextView::sendAccessibilityEventInternal(int eventType){
@@ -4030,7 +4105,6 @@ void TextView::sendAccessibilityEventInternal(int eventType){
 }
 
 void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
-    LOGD("TODO");
     // Do not send scroll events since first they are not interesting for
     // accessibility and second such events a generated too frequently.
     // For details see the implementation of bringTextIntoView().

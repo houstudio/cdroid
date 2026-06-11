@@ -26,6 +26,7 @@
 #include <text/spannablestring.h>
 #include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
+#include <text/transformationmethod.h>
 namespace cdroid {
 class Layout;
 class CompletionInfo;
@@ -137,7 +138,6 @@ private:
     // more bold.
     int mFontWeightAdjustment;
     TextPaint mTextPaint;
-    Typeface* mOriginalTypeface;
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
@@ -228,6 +228,7 @@ protected:
     Layout* mLayout;
     Layout* mHintLayout;
     //std::string mHint;
+    TransformationMethod* mTransformation;
     CharSequence*mText;
     CharSequence*mHint;
     Spannable*mSpannable;
@@ -389,14 +390,20 @@ public:
     void setHorizontallyScrolling(bool whether);
     bool getHorizontallyScrolling()const;
     void setSelected(bool selected)override;
+    TransformationMethod* getTransformationMethod()const;
+    void setTransformationMethod(TransformationMethod*);
     virtual int getCompoundPaddingLeft()const;
     virtual int getCompoundPaddingRight()const;
     virtual int getCompoundPaddingTop()const;
     virtual int getCompoundPaddingBottom()const;
-    int getExtendedPaddingTop()const;
-    int getExtendedPaddingBottom()const;
+    int getExtendedPaddingTop();
+    int getExtendedPaddingBottom();
     virtual int getCompoundPaddingStart();
     virtual int getCompoundPaddingEnd();
+    int getTotalPaddingLeft();
+    int getTotalPaddingRight();
+    int getTotalPaddingStart();
+    int getTotalPaddingEnd();
     int getTotalPaddingTop();
     int getTotalPaddingBottom();
 
