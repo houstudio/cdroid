@@ -570,16 +570,18 @@ void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const S
 
 CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
         bool preserveLength, const EllipsizeCallback& callback, const TextDirectionHeuristic* textDir, const std::string& ellipsis) {
-
+    auto deleter= [](MeasuredParagraph* mt) {
+        if(mt)mt->recycle();
+    };
     const int len = text->length();
 
     MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, nullptr);
+    std::unique_ptr<MeasuredParagraph, decltype(deleter)> autoFree(mt, deleter);
     float width = mt->getWholeWidth();
     if (width <= avail) {
         if (callback != nullptr) {
             callback(0,0);//.ellipsized(0, 0);
         }
-        mt->recycle();
         return text;
     }
     // XXX assumes ellipsis string does not require shaping and
@@ -621,7 +623,6 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
             buf[i] = ELLIPSIS_FILLER;
         }
         if (sp == nullptr) {
-            mt->recycle();
             return new SpannedString(std::u16string(buf.data(),len));
         }
         SpannableString* ss = new SpannableString(std::u16string(buf.data(),len));
@@ -639,7 +640,6 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
         sb->append(buf.data(), 0, left);
         sb->append(u16elps);
         sb->append(buf.data(), right, len - right);
-        mt->recycle();
         return sb;//.toString();
     }
 
@@ -647,7 +647,6 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
     ssb->append(*text, 0, left);
     ssb->append(ellipsis);
     ssb->append(*text, right, len);
-    mt->recycle();
     return ssb;
 }
 
