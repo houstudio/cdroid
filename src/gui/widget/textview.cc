@@ -449,6 +449,8 @@ TextView::TextView(int width, int height):TextView(std::string(),width,height){
 TextView::TextView(const std::string& text, int width, int height)
   : View( width, height) {
     initView();
+    mText=new SpannedString(TextUtils::utf8_utf16(text));
+    mTransformed=mText;
     //mHintLayout->setWidth(width);
     //mLayout->setWidth(width);
     //mLayout->setText(text);
@@ -480,7 +482,12 @@ void TextView::initView(){
     mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
+    mText = nullptr;
+    mHint = nullptr;
+    mTextDir= nullptr;
     mLayout = nullptr;
+    mSpannable = nullptr;
+    mHintLayout= nullptr;
     mSavedLayout = nullptr;
     mSavedMarqueeModeLayout = nullptr;
     mBoring = mHintBoring =nullptr;
@@ -519,6 +526,313 @@ TextView::~TextView() {
     delete mHintLayout;
     delete mDrawables;
     delete mCursorDrawable;
+}
+
+void TextView::setTextInternal(CharSequence* text){
+    mText =text;
+    mSpannable = dynamic_cast<Spannable*>(text);
+    mPrecomputed = dynamic_cast<PrecomputedText*>(text);
+}
+
+void TextView::setAutoSizeTextTypeWithDefaults(int autoSizeTextType) {
+    const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+    float autoSizeMinTextSizeInPx,autoSizeMaxTextSizeInPx;
+    if (supportsAutoSizeText()) {
+         switch (autoSizeTextType) {
+         case AUTO_SIZE_TEXT_TYPE_NONE:
+             clearAutoSizeConfiguration();
+             break;
+         case AUTO_SIZE_TEXT_TYPE_UNIFORM:
+             autoSizeMinTextSizeInPx =DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP;
+                 //TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_SP,
+                 //    DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP, displayMetrics);
+             autoSizeMaxTextSizeInPx = DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP;
+                 //TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_SP,
+                 //    DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP, displayMetrics);
+
+             validateAndSetAutoSizeTextTypeUniformConfiguration(
+                     autoSizeMinTextSizeInPx, autoSizeMaxTextSizeInPx,
+                     DEFAULT_AUTO_SIZE_GRANULARITY_IN_PX);
+             if (setupAutoSizeText()) {
+                 autoSizeText();
+                 invalidate();
+             }
+             break;
+         default:
+             LOGE("Unknown auto-size text type: %d",autoSizeTextType);
+         }
+    }
+}
+
+void TextView::setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,
+        int autoSizeMaxTextSize, int autoSizeStepGranularity, int unit) {
+    if (supportsAutoSizeText()) {
+        const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+        const float autoSizeMinTextSizeInPx = autoSizeMinTextSize;//TypedValue.applyDimension(unit, autoSizeMinTextSize, displayMetrics);
+        const float autoSizeMaxTextSizeInPx = autoSizeMaxTextSize;//TypedValue.applyDimension(unit, autoSizeMaxTextSize, displayMetrics);
+        const float autoSizeStepGranularityInPx = autoSizeStepGranularity;//TypedValue.applyDimension( unit, autoSizeStepGranularity, displayMetrics);
+
+        validateAndSetAutoSizeTextTypeUniformConfiguration(autoSizeMinTextSizeInPx,
+                autoSizeMaxTextSizeInPx, autoSizeStepGranularityInPx);
+
+        if (setupAutoSizeText()) {
+            autoSizeText();
+            invalidate();
+        }
+    }
+}
+
+void TextView::setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>& presetSizes, int unit){
+    if (supportsAutoSizeText()) {
+        const int presetSizesLength = presetSizes.size();
+        if (presetSizesLength > 0) {
+            std::vector<int> presetSizesInPx(presetSizesLength);
+
+            if (unit == TypedValue::COMPLEX_UNIT_PX) {
+                presetSizesInPx = presetSizes;
+            } else {
+                const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+                // Convert all to sizes to pixels.
+                for (int i = 0; i < presetSizesLength; i++) {
+                    presetSizesInPx[i] = presetSizes[i];
+                        //std::round(TypedValue::applyDimension(unit,presetSizes[i], displayMetrics));
+                }
+            }
+
+            mAutoSizeTextSizesInPx = cleanupAutoSizePresetSizes(presetSizesInPx);
+            if (!setupAutoSizeUniformPresetSizesConfiguration()) {
+                FATAL("None of the preset sizes is valid: ");// + Arrays.toString(presetSizes));
+            }
+        } else {
+            mHasPresetAutoSizeValues = false;
+        }
+
+        if (setupAutoSizeText()) {
+            autoSizeText();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getAutoSizeTextType() const{
+    return mAutoSizeTextType;
+}
+int TextView::getAutoSizeStepGranularity() const{
+    return std::round(mAutoSizeStepGranularityInPx);
+}
+int TextView::getAutoSizeMinTextSize() const{
+    return std::round(mAutoSizeMinTextSizeInPx);
+}
+int TextView::getAutoSizeMaxTextSize() const{
+    return std::round(mAutoSizeMaxTextSizeInPx);
+}
+std::vector<int> TextView::getAutoSizeTextAvailableSizes() const{
+    return mAutoSizeTextSizesInPx;
+}
+bool TextView::setupAutoSizeUniformPresetSizesConfiguration() {
+    const int sizesLength = mAutoSizeTextSizesInPx.size();
+    mHasPresetAutoSizeValues = sizesLength > 0;
+    if (mHasPresetAutoSizeValues) {
+        mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_UNIFORM;
+        mAutoSizeMinTextSizeInPx = mAutoSizeTextSizesInPx[0];
+        mAutoSizeMaxTextSizeInPx = mAutoSizeTextSizesInPx[sizesLength - 1];
+        mAutoSizeStepGranularityInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    }
+    return mHasPresetAutoSizeValues;
+}
+void TextView::validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
+         float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx){
+    // First validate.
+    if (autoSizeMinTextSizeInPx <= 0) {
+        FATAL("Minimum auto-size text size (%dpx) is less or equal to (0px)",autoSizeMinTextSizeInPx);
+    }
+
+    if (autoSizeMaxTextSizeInPx <= autoSizeMinTextSizeInPx) {
+        FATAL("Maximum auto-size text size (%dpx) is less or equal to minimum auto-size text size (%dpx)",
+                autoSizeMaxTextSizeInPx,autoSizeMinTextSizeInPx);
+    }
+
+    if (autoSizeStepGranularityInPx <= 0) {
+        FATAL("The auto-size step granularity (%d px) is less or equal to (0px)",autoSizeStepGranularityInPx);
+    }
+
+    // All good, persist the configuration.
+    mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_UNIFORM;
+    mAutoSizeMinTextSizeInPx = autoSizeMinTextSizeInPx;
+    mAutoSizeMaxTextSizeInPx = autoSizeMaxTextSizeInPx;
+    mAutoSizeStepGranularityInPx = autoSizeStepGranularityInPx;
+    mHasPresetAutoSizeValues = false;
+}
+void TextView::clearAutoSizeConfiguration() {
+    mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
+    mAutoSizeMinTextSizeInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeMaxTextSizeInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeStepGranularityInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeTextSizesInPx.clear();// = EmptyArray.INT;
+    mNeedsAutoSizeText = false;
+}
+
+std::vector<int> TextView::cleanupAutoSizePresetSizes(std::vector<int>&presetValues){
+    const int presetValuesLength = presetValues.size();
+    if (presetValuesLength == 0) {
+        return presetValues;
+    }
+    std::sort(presetValues.begin(),presetValues.end());
+
+    std::vector<int>uniqueValidSizes;
+    for (int i = 0; i < presetValuesLength; i++) {
+        const int currentPresetValue = presetValues[i];
+
+        if (currentPresetValue > 0
+                && std::binary_search(uniqueValidSizes.begin(),uniqueValidSizes.end(),currentPresetValue)==false) {
+            uniqueValidSizes.push_back(currentPresetValue);
+        }
+    }
+
+    return presetValuesLength == uniqueValidSizes.size()
+        ? presetValues
+        : uniqueValidSizes;
+}
+
+bool TextView::setupAutoSizeText() {
+    if (supportsAutoSizeText() && mAutoSizeTextType == AUTO_SIZE_TEXT_TYPE_UNIFORM) {
+        // Calculate the sizes set based on minimum size, maximum size and step size if we do
+        // not have a predefined set of sizes or if the current sizes array is empty.
+        if (!mHasPresetAutoSizeValues || mAutoSizeTextSizesInPx.size() == 0) {
+            const int autoSizeValuesLength = ((int) std::floor((mAutoSizeMaxTextSizeInPx
+                    - mAutoSizeMinTextSizeInPx) / mAutoSizeStepGranularityInPx)) + 1;
+            std::vector<int> autoSizeTextSizesInPx(autoSizeValuesLength);
+            for (int i = 0; i < autoSizeValuesLength; i++) {
+                autoSizeTextSizesInPx[i] = std::round(
+                        mAutoSizeMinTextSizeInPx + (i * mAutoSizeStepGranularityInPx));
+            }
+            mAutoSizeTextSizesInPx = cleanupAutoSizePresetSizes(autoSizeTextSizesInPx);
+        }
+
+        mNeedsAutoSizeText = true;
+    } else {
+        mNeedsAutoSizeText = false;
+    }
+
+    return mNeedsAutoSizeText;
+}
+
+void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+       int typefaceIndex,int style,int weight){
+    if ((typeface == nullptr) && (familyName.empty()==false)) {
+         // Lookup normal Typeface from system font map.
+         Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
+         resolveStyleAndSetTypeface(normalTypeface, style, weight);
+     } else if (typeface != nullptr) {
+         resolveStyleAndSetTypeface(typeface, style, weight);
+     } else {// both typeface and familyName is null.
+         switch (typefaceIndex) {
+         case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
+         case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
+         case MONOSPACE:  resolveStyleAndSetTypeface(Typeface::MONOSPACE, style, weight);  break;
+         case DEFAULT_TYPEFACE:
+         default: resolveStyleAndSetTypeface(nullptr, style, weight);  break;
+        }
+    }
+}
+
+void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
+    if (weight >= 0) {
+        weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
+        const bool italic = (style & Typeface::ITALIC) != 0;
+        setTypeface(Typeface::create(typeface, weight, italic));
+    } else {
+        setTypeface(typeface, style);
+    }
+}
+
+void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
+    if (start||end) {
+        Drawables* dr = mDrawables;
+        if (dr == nullptr) {
+            mDrawables = dr = new Drawables(getContext());
+        }
+        mDrawables->mOverride = true;
+        Rect compoundRect = dr->mCompoundRect;
+        std::vector<int> state = getDrawableState();
+        if (start) {
+            start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
+            start->setState(state);
+            compoundRect = start->getBounds();
+            start->setCallback(this);
+
+            dr->mDrawableStart = start;
+            dr->mDrawableSizeStart = compoundRect.width;
+            dr->mDrawableHeightStart = compoundRect.height;
+        } else {
+            dr->mDrawableSizeStart = dr->mDrawableHeightStart = 0;
+        }
+        if (end){
+            end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
+            end->setState(state);
+            compoundRect = end->getBounds();
+            end->setCallback(this);
+
+            dr->mDrawableEnd = end;
+            dr->mDrawableSizeEnd = compoundRect.width;
+            dr->mDrawableHeightEnd = compoundRect.height;
+        } else {
+            dr->mDrawableSizeEnd = dr->mDrawableHeightEnd = 0;
+        }
+        resetResolvedDrawables();
+        resolveDrawables();
+        applyCompoundDrawableTint();
+    }
+}
+
+void TextView::setEnabled(bool _enabled) {
+    if (_enabled == isEnabled()) {
+        return;
+    }
+    /*if (!_enabled) {
+        // Hide the soft input if the currently active TextView is disabled
+        InputMethodManager imm = getInputMethodManager();
+        if (imm != nullptr && imm.isActive(this)) {
+            imm.hideSoftInputFromWindow(getWindowToken(), 0);
+        }
+    }*/
+    View::setEnabled(_enabled);
+    /*if (_enabled) {
+        // Make sure IME is updated with current editor info.
+        InputMethodManager imm = getInputMethodManager();
+        if (imm != nullptr) imm->restartInput(this);
+    }
+
+    // Will change text color
+    if (mEditor != nullptr) {
+        mEditor.invalidateTextDisplayList();
+        mEditor.prepareCursorControllers();
+
+        // start or stop the cursor blinking as appropriate
+        mEditor.makeBlink();
+    }*/
+}
+
+void TextView::setTypeface(Typeface* tf,int style){
+    if (style > 0) {
+        if (tf == nullptr) {
+            tf = Typeface::defaultFromStyle(style);
+        } else {
+            tf = Typeface::create(tf, style);
+        }
+        setTypeface(tf);
+        // now compute what (if any) algorithmic styling is needed
+        const int typefaceStyle = tf ? tf->getStyle() : 0;
+        const int need = style & ~typefaceStyle;
+        //mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        //mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+    } else {
+        //mLayout->setFakeTextSkew(0.0);
+        //mHintLayout->setFakeTextSkew(0.0);
+        //mTextPaint.setFakeBoldText(false);
+        setTypeface(tf);
+    }
 }
 
 #if 0
@@ -1025,12 +1339,6 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
     */
 #endif
-}
-
-void TextView::setTextInternal(CharSequence* text){
-    mText =text;
-    mSpannable = dynamic_cast<Spannable*>(text);
-    mPrecomputed = dynamic_cast<PrecomputedText*>(text);
 }
 
 const std::string TextView::getText()const{
@@ -1754,7 +2062,7 @@ void TextView::autoSizeText() {
 }
 
 int TextView::findLargestTextSizeWhichFits(const RectF& availableSpace) {
-    int sizesCount = 0;//mAutoSizeTextSizesInPx.length;
+    int sizesCount = mAutoSizeTextSizesInPx.size();
     if (sizesCount == 0) {
         //throw new IllegalStateException("No available text sizes to choose from.");
     }
@@ -2632,57 +2940,6 @@ void TextView::resetResolvedDrawables(){
     mLastLayoutDirection = -1;
 }
 
-void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
-       int typefaceIndex,int style,int weight){
-    if ((typeface == nullptr) && (familyName.empty()==false)) {
-         // Lookup normal Typeface from system font map.
-         Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
-         resolveStyleAndSetTypeface(normalTypeface, style, weight);
-     } else if (typeface != nullptr) {
-         resolveStyleAndSetTypeface(typeface, style, weight);
-     } else {// both typeface and familyName is null.
-         switch (typefaceIndex) {
-         case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
-         case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
-         case MONOSPACE:  resolveStyleAndSetTypeface(Typeface::MONOSPACE, style, weight);  break;
-         case DEFAULT_TYPEFACE:
-         default: resolveStyleAndSetTypeface(nullptr, style, weight);  break;
-        }
-    }
-}
-
-void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
-    if (weight >= 0) {
-        weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
-        const bool italic = (style & Typeface::ITALIC) != 0;
-        setTypeface(Typeface::create(typeface, weight, italic));
-    } else {
-        setTypeface(typeface, style);
-    }
-}
-
-void TextView::setTypeface(Typeface* tf,int style){
-    if (style > 0) {
-        if (tf == nullptr) {
-            tf = Typeface::defaultFromStyle(style);
-        } else {
-            tf = Typeface::create(tf, style);
-        }
-        setTypeface(tf);
-        // now compute what (if any) algorithmic styling is needed
-        const int typefaceStyle = tf ? tf->getStyle() : 0;
-        const int need = style & ~typefaceStyle;
-        //mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
-    } else {
-        //mLayout->setFakeTextSkew(0.0);
-        //mHintLayout->setFakeTextSkew(0.0);
-        //mTextPaint.setFakeBoldText(false);
-        setTypeface(tf);
-    }
-}
-
 void TextView::setTypeface(Typeface* tf){
     if(mTextPaint.getTypeface()!=tf){
         mTextPaint.setTypeface(tf);
@@ -2700,45 +2957,6 @@ Typeface*TextView::getTypeface()const{
 
 int TextView::getTypefaceStyle() const{
     return mOriginalTypeface?mOriginalTypeface->getStyle():Typeface::NORMAL;
-}
-
-void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
-    if (start||end) {
-        Drawables* dr = mDrawables;
-        if (dr == nullptr) {
-            mDrawables = dr = new Drawables(getContext());
-        }
-        mDrawables->mOverride = true;
-        Rect compoundRect = dr->mCompoundRect;
-        std::vector<int> state = getDrawableState();
-        if (start) {
-            start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
-            start->setState(state);
-            compoundRect = start->getBounds();
-            start->setCallback(this);
-
-            dr->mDrawableStart = start;
-            dr->mDrawableSizeStart = compoundRect.width;
-            dr->mDrawableHeightStart = compoundRect.height;
-        } else {
-            dr->mDrawableSizeStart = dr->mDrawableHeightStart = 0;
-        }
-        if (end){
-            end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
-            end->setState(state);
-            compoundRect = end->getBounds();
-            end->setCallback(this);
-
-            dr->mDrawableEnd = end;
-            dr->mDrawableSizeEnd = compoundRect.width;
-            dr->mDrawableHeightEnd = compoundRect.height;
-        } else {
-            dr->mDrawableSizeEnd = dr->mDrawableHeightEnd = 0;
-        }
-        resetResolvedDrawables();
-        resolveDrawables();
-        applyCompoundDrawableTint();
-    }
 }
 
 void TextView::drawableStateChanged(){
@@ -2941,22 +3159,90 @@ void TextView::setEllipsize(TextUtils::TruncateAt where){
 }
 
 void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines) {
-    mSingleLine = singleLine;
-    if (singleLine) {
-        setLines(1);
-        setHorizontallyScrolling(true);
-        /*if (applyTransformation) {
-            setTransformationMethod(SingleLineTransformationMethod.getInstance());
-        }*/
-    } else {
-        if (changeMaxLines) {
-            setMaxLines(INT_MAX);//Integer.MAX_VALUE);
-        }
-        setHorizontallyScrolling(false);
-        /*if (applyTransformation) {
-            setTransformationMethod(null);
-        }*/
-    }
+   if (singleLine) {
+       setLines(1);
+       setHorizontallyScrolling(true);
+#if 0
+       if (applyTransformation) {
+           setTransformationMethod(SingleLineTransformationMethod.getInstance());
+       }
+
+       if (!changeMaxLength) return;
+       // Single line length filter is only applicable editable text.
+       if (mBufferType != BufferType::EDITABLE) return;
+
+       final InputFilter[] prevFilters = getFilters();
+       for (InputFilter filter: getFilters()) {
+           // We don't add LengthFilter if already there.
+           if (filter instanceof InputFilter.LengthFilter) return;
+       }
+
+       if (mSingleLineLengthFilter == nullptr) {
+           mSingleLineLengthFilter = new InputFilter.LengthFilter(
+               MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
+       }
+
+       final InputFilter[] newFilters = new InputFilter[prevFilters.length + 1];
+       System.arraycopy(prevFilters, 0, newFilters, 0, prevFilters.length);
+       newFilters[prevFilters.length] = mSingleLineLengthFilter;
+
+       setFilters(newFilters);
+
+       // Since filter doesn't apply to existing text, trigger filter by setting text.
+        setText(getText());
+#endif
+   } else {
+       if (changeMaxLines) {
+           setMaxLines(INT_MAX);
+       }
+       setHorizontallyScrolling(false);
+#if 0
+       if (applyTransformation) {
+           setTransformationMethod(null);
+       }
+
+       if (!changeMaxLength) return;
+
+       // Single line length filter is only applicable editable text.
+       if (mBufferType != BufferType::EDITABLE) return;
+
+       final InputFilter[] prevFilters = getFilters();
+       if (prevFilters.length == 0) return;
+
+       // Short Circuit: if mSingleLineLengthFilter is not allocated, nobody sets automated
+       // single line char limit filter.
+       if (mSingleLineLengthFilter == nullptr) return;
+
+       // If we need to remove mSingleLineLengthFilter, we need to allocate another array.
+       // Since filter list is expected to be small and want to avoid unnecessary array
+       // allocation, check if there is mSingleLengthFilter first.
+       int targetIndex = -1;
+       for (int i = 0; i < prevFilters.length; ++i) {
+           if (prevFilters[i] == mSingleLineLengthFilter) {
+               targetIndex = i;
+               break;
+           }
+       }
+       if (targetIndex == -1) return;  // not found. Do nothing.
+
+       if (prevFilters.length == 1) {
+           setFilters(NO_FILTERS);
+           return;
+       }
+
+       // Create new array which doesn't include mSingleLengthFilter.
+       InputFilter[] newFilters = new InputFilter[prevFilters.length - 1];
+       System.arraycopy(prevFilters, 0, newFilters, 0, targetIndex);
+       System.arraycopy(
+               prevFilters,
+               targetIndex + 1,
+               newFilters,
+               targetIndex,
+               prevFilters.length - targetIndex - 1);
+       setFilters(newFilters);
+       mSingleLineLengthFilter = nullptr;
+#endif
+   }
 }
 
 void TextView::setTextColor(int color){
@@ -3236,9 +3522,13 @@ int TextView::getBoxHeight(Layout* l){
 int TextView::getVerticalOffset(bool forceNormal){
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
+    Layout* l = mLayout;
+    if (!forceNormal && mText->length() == 0 && mHintLayout != nullptr) {
+        l = mHintLayout;
+    }
     if (gravity != Gravity::TOP) {
-        const int boxht = getBoxHeight(mLayout);
-        const int textht = mLayout->getHeight();//LineHeight(true);
+        const int boxht = getBoxHeight(l);
+        const int textht = l->getHeight();
         if (textht < boxht) {
             if (gravity == Gravity::BOTTOM) {
                 voffset = boxht - textht;
@@ -3254,7 +3544,9 @@ int TextView::getBottomVerticalOffset(bool forceNormal){
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     Layout* l = mLayout;
-
+    if (!forceNormal && mText->length() == 0 && mHintLayout != nullptr) {
+        l = mHintLayout;
+    }
     if (gravity != Gravity::BOTTOM) {
         int boxht = getBoxHeight(l);
         int textht = l->getHeight();
@@ -3543,7 +3835,7 @@ void TextView::onDraw(Canvas& canvas) {
         assumeLayout();
     }
     Layout*layout = mLayout;
-    if(getText().empty()&&mHint->length()){
+    if(mHint!=nullptr && mText->length()==0){
         color = mCurHintTextColor;
         layout= mHintLayout;
     }

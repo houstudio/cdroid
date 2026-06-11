@@ -97,6 +97,7 @@ public:
         return mEllipsizedWidth;
     }
 
+    using Layout::getHeight;
     int getHeight(bool cap)const override;
 private:
     int mLineCount;

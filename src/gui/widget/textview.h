@@ -90,6 +90,10 @@ private:
     static constexpr int MARQUEE_FADE_NORMAL=0;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS =1;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_FADE =2;
+    static constexpr int DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP=12;
+    static constexpr int DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP = 112;
+    static constexpr int DEFAULT_AUTO_SIZE_GRANULARITY_IN_PX = 1;
+    static constexpr float UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE = -1.f;
     int mGravity;
     int mMaximum;
     int mMinimum;
@@ -121,6 +125,7 @@ private:
     bool mHighlightPathBogus;
     bool mTextSetFromXmlOrResourceId;
     bool mUseFallbackLineSpacing;
+    bool mHasPresetAutoSizeValues;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -133,6 +138,10 @@ private:
     int mCurTextColor;
     int mCurHintTextColor;
     int mHighlightColor;
+    int mAutoSizeMinTextSizeInPx;
+    int mAutoSizeMaxTextSizeInPx;
+    int mAutoSizeStepGranularityInPx;
+    std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
 
     class Drawables*mDrawables;
@@ -152,6 +161,17 @@ private:
     BoringLayout::Metrics* mHintBoring;
 private:
     void initView();
+    void setTextInternal(CharSequence* text);
+    bool setupAutoSizeUniformPresetSizesConfiguration();
+    void validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
+            float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx);
+    void clearAutoSizeConfiguration();
+    std::vector<int> cleanupAutoSizePresetSizes(std::vector<int>&presetValues);
+    bool setupAutoSizeText();
+    void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+           int typefaceIndex,int style,int weight);
+    void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
+    void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end);///
     Layout::Alignment getLayoutAlignment()const;
     void applyCompoundDrawableTint();
     int  getVerticalOffset(bool forceNormal);
@@ -180,16 +200,11 @@ private:
     void startStopMarquee(bool start);
     float getHorizontalFadingEdgeStrength(float position1, float position2);
     void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
-    void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
-           int typefaceIndex,int style,int weight);
-    void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
     void restartMarqueeIfNeeded();
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
     void setText(CharSequence* text, BufferType type, bool notifyBefore, int oldlen);
-    void setTextInternal(CharSequence* text);
-    void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) ;
     void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
     void sendAfterTextChanged(std::wstring& text);
     void sendOnTextChanged(const std::wstring& text, int start, int before, int after);
@@ -243,16 +258,26 @@ protected:
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
     enum EDITMODE{
-       READONLY,
-       INSERT,
-       REPLACE
+        READONLY,
+        INSERT,
+        REPLACE
     };
     TextView(Context*ctx,const AttributeSet&attrs);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
     ~TextView()override;
+    void setAutoSizeTextTypeWithDefaults(int autoSizeTextType);
+    void setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,
+        int autoSizeMaxTextSize, int autoSizeStepGranularity, int unit);
+    void setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>& presetSizes, int unit);
+    int getAutoSizeTextType()const;
+    int getAutoSizeStepGranularity()const;
+    int getAutoSizeMinTextSize()const;
+    int getAutoSizeMaxTextSize()const;
+    void setEnabled(bool);
     void setTypeface(Typeface* tf);
-    void setTypeface(Typeface* tf,int style);
+    void setTypeface(Typeface* tf,int style);///
+    std::vector<int> getAutoSizeTextAvailableSizes()const;
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
@@ -260,8 +285,8 @@ public:
     const std::string getText()const;
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
-    void  setTextAppearance(const std::string&);
-    void  setTextAppearance(Context*,const std::string&);
+    void setTextAppearance(const std::string&);
+    void setTextAppearance(Context*,const std::string&);
     virtual void setHint(const std::string&txt);
     std::string getHint()const;
     bool bringPointIntoView(int offset);

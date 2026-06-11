@@ -18,23 +18,24 @@ private:
     Drawable* mThumbDrawable;
     cdroid::RefPtr<ColorStateList> mThumbTintList;
     //BlendMode mThumbBlendMode = null;
-    bool mHasThumbTint = false;
-    bool mHasThumbTintMode = false;
 
     Drawable* mTrackDrawable;
     cdroid::RefPtr<ColorStateList> mTrackTintList;
     //BlendMode* mTrackBlendMode = null;
+    bool mHasThumbTint = false;
+    bool mHasThumbTintMode = false;
     bool mHasTrackTint = false;
     bool mHasTrackTintMode = false;
+    bool mSplitTrack;
+    bool mShowText;
+    bool mUseFallbackLineSpacing;
 
     int mThumbTextPadding;
     int mSwitchMinWidth;
     int mSwitchPadding;
-    bool mSplitTrack;
     std::string mTextOn;
     std::string mTextOff;
-    bool mShowText;
-    bool mUseFallbackLineSpacing;
+    TextPaint mTextPaint;
 
     int mTouchMode;
     int mTouchSlop;

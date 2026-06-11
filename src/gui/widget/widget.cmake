@@ -34,7 +34,7 @@ list(APPEND WIDGET_SOURCES
     widget/compoundbutton.cc
     widget/togglebutton.cc
     widget/radiogroup.cc
-    #widget/switch.cc
+    widget/switch.cc
     widget/analogclock.cc
     #widget/numberpicker.cc
     widget/popupwindow.cc
