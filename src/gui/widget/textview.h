@@ -287,14 +287,16 @@ public:
     int getAutoSizeStepGranularity()const;
     int getAutoSizeMinTextSize()const;
     int getAutoSizeMaxTextSize()const;
+    std::vector<int> getAutoSizeTextAvailableSizes()const;
     void setEnabled(bool);
     void setTypeface(Typeface* tf);
     void setTypeface(Typeface* tf,int style);///
-    std::vector<int> getAutoSizeTextAvailableSizes()const;
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
     virtual void setText(CharSequence*txt);
+    void append(CharSequence* text);
+    void append(CharSequence* text, int start, int end);
     const std::string getText()const;
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
@@ -321,8 +323,19 @@ public:
     void setTextSize(float size);
     void setTextSize(int unit, float size);
     float getTextSize()const;
+    float getScaledTextSize() const;
     float getTextScaleX()const;
     void setTextScaleX(float);
+    void setElegantTextHeight(bool elegant);
+    bool isElegantTextHeight()const;
+    void setFallbackLineSpacing(bool);
+    bool isFallbackLineSpacing()const;
+    float getLetterSpacing() const;
+    void setLetterSpacing(float letterSpacing);
+    void setHyphenationFrequency(int hyphenationFrequency);
+    int getHyphenationFrequency()const;
+    void setJustificationMode(int justificationMode);
+    int getJustificationMode() const;
     void setTextColor(int color);
     void setTextColor(const cdroid::RefPtr<ColorStateList>& colors);
     Layout* getLayout()const;
@@ -333,6 +346,8 @@ public:
     float getShadowDy()const;
     int getShadowColor()const;
     const TextPaint& getPaint()const;
+    int getPaintFlags() const;
+    void setPaintFlags(int);
     void setLineSpacing(float add, float mult);
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
@@ -378,6 +393,11 @@ public:
     void setMaxHeight(int maxPixels);
     void setHeight(int pixels);
     void setLines(int lines);
+    void setMinEms(int minEms);
+    int getMinEms()const;
+    void setMaxEms(int maxEms);
+    int getMaxEms();
+    void setEms(int ems);
     int getLineCount()const;
     int getLineBounds(int line, Rect&bounds);
     int getBaseline()override;
@@ -388,6 +408,7 @@ public:
     int getGravity()const;
     void setGravity(int gravity);
     void setHorizontallyScrolling(bool whether);
+    bool isHorizontallyScrollable()const;
     bool getHorizontallyScrolling()const;
     void setSelected(bool selected)override;
     TransformationMethod* getTransformationMethod()const;

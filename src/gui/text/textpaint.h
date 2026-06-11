@@ -84,6 +84,7 @@ public:
     minikin::MinikinPaint* getMinikinPaint()const{return mMinikinPaint.get();}
     virtual void set(const Paint&);
     bool hasEqualAttributes(const Paint&other)const;
+    void setFlags(int v){}
     int getFlags()const{return 0;}
     Style getStyle()const{return mStyle;}
     void setStyle(Style v){mStyle=v;}
@@ -121,9 +122,11 @@ public:
     int getStartHyphenEdit()const{return mStartHyphenEdit;}
     void setEndHyphenEdit(int v){mEndHyphenEdit=v;}
     int getEndHyphenEdit()const{return mEndHyphenEdit;}
-    int getLetterSpacing()const{return mLetterSpacing;}
+    void setLetterSpacing(float v){mLetterSpacing=v;}
+    float getLetterSpacing()const{return mLetterSpacing;}
     int getWordSpacing()const{return mWordSpace;}
     void setWordSpacing(float v){mWordSpace=v;}
+    void setElegantTextHeight(bool){}
     bool isElegantTextHeight()const{return false;}
     float measureText(const std::string& text)const;
     float measureText(const std::string& text, int start, int end)const;

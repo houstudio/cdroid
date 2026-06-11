@@ -1133,6 +1133,10 @@ float TextView::getTextSize()const{
     return mTextPaint.getTextSize();
 }
 
+float TextView::getScaledTextSize() const{
+    return mTextPaint.getTextSize();// / mTextPaint.density;
+}
+
 float TextView::getTextScaleX()const{
     return mTextPaint.getTextScaleX();
 }
@@ -1150,9 +1154,67 @@ void TextView::setTextScaleX(float size){
     }
 }
 
+void TextView::setElegantTextHeight(bool elegant) {
+    if (elegant != mTextPaint.isElegantTextHeight()) {
+        mTextPaint.setElegantTextHeight(elegant);
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::isElegantTextHeight() const{
+    return mTextPaint.isElegantTextHeight();
+}
+
+void TextView::setFallbackLineSpacing(bool enabled) {
+    if (mUseFallbackLineSpacing != enabled) {
+        mUseFallbackLineSpacing = enabled;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::isFallbackLineSpacing() const{
+        return mUseFallbackLineSpacing;
+}
+
+float TextView::getLetterSpacing() const{
+    return mTextPaint.getLetterSpacing();
+}
+
+void TextView::setLetterSpacing(float letterSpacing) {
+    if (letterSpacing != mTextPaint.getLetterSpacing()) {
+        mTextPaint.setLetterSpacing(letterSpacing);
+
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+void TextView::setJustificationMode(int justificationMode) {
+    mJustificationMode = justificationMode;
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+int TextView::getJustificationMode() const{
+        return mJustificationMode;
+}
+
 int TextView::computeVerticalScrollRange(){
     if (mLayout != nullptr) {
-            return mLayout->getHeight();
+        return mLayout->getHeight();
     }
     return View::computeVerticalScrollRange();
 }
@@ -1175,6 +1237,29 @@ void TextView::setText(CharSequence* txt) {
     startStopMarquee(false);
     startStopMarquee(true);
     setText(txt->toString());
+}
+
+void TextView::append(CharSequence* text){
+    append(text,0,text->length());
+}
+
+void TextView::append(CharSequence* text, int start, int end){
+#if 0
+    if (!(mText instanceof Editable)) {
+            setText(mText, BufferType::EDITABLE);
+    }
+
+    ((Editable*) mText)->append(text, start, end);
+
+    if (mAutoLinkMask != 0) {
+        bool linksWereAdded = Linkify.addLinks(mSpannable, mAutoLinkMask);
+        // Do not change the movement method for text that support text selection as it
+        // would prevent an arbitrary cursor displacement.
+        if (linksWereAdded && mLinksClickable && !textCanBeSelected()) {
+            setMovementMethod(LinkMovementMethod.getInstance());
+        }
+    }
+#endif
 }
 
 void TextView::setText(const std::string&txt){
@@ -1948,6 +2033,27 @@ int TextView::getGravity()const{
     return mGravity;
 }
 
+int TextView::getPaintFlags() const{
+    return mTextPaint.getFlags();
+}
+
+/**
+ * Sets flags on the Paint being used to display the text and
+ * reflows the text if they are different from the old flags.
+ * @see Paint#setFlags
+ */
+void TextView::setPaintFlags(int flags) {
+    if (mTextPaint.getFlags() != flags) {
+        mTextPaint.setFlags(flags);
+
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
 void TextView::setHorizontallyScrolling(bool whether) {
     if (mHorizontallyScrolling != whether) {
         mHorizontallyScrolling = whether;
@@ -1958,7 +2064,9 @@ void TextView::setHorizontallyScrolling(bool whether) {
         }
     }
 }
-
+bool TextView::isHorizontallyScrollable() const{
+    return mHorizontallyScrolling;
+}
 bool TextView::getHorizontallyScrolling() const{
     return mHorizontallyScrolling;
 }
@@ -2052,30 +2160,25 @@ void TextView::autoSizeText() {
 
         const int availableWidth = mHorizontallyScrolling  ? VERY_WIDE
                 : getMeasuredWidth() - getTotalPaddingLeft() - getTotalPaddingRight();
-				 //- getCompoundPaddingLeft()-getCompoundPaddingRight();
         const int availableHeight = getMeasuredHeight() - getExtendedPaddingBottom()
                     - getExtendedPaddingTop();
 
         if (availableWidth <= 0 || availableHeight <= 0) {
             return;
         }
-#if 1
-        /*synchronized (TEMP_RECTF) */{
-            RectF TEMP_RECTF;
-            TEMP_RECTF.setEmpty();
-            TEMP_RECTF.width = availableWidth;
-            TEMP_RECTF.height = availableHeight;
-            const float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
-            if (optimalTextSize != getTextSize()) {
-                setTextSizeInternal(TypedValue::COMPLEX_UNIT_PX, optimalTextSize,
-                        false /* shouldRequestLayout */);
+        RectF TEMP_RECTF;
+        TEMP_RECTF.setEmpty();
+        TEMP_RECTF.width = availableWidth;
+        TEMP_RECTF.height = availableHeight;
+        const float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
+        if (optimalTextSize != getTextSize()) {
+            setTextSizeInternal(TypedValue::COMPLEX_UNIT_PX, optimalTextSize,
+                    false /* shouldRequestLayout */);
 
-                makeNewLayout(availableWidth, 0 /* hintWidth */, &UNKNOWN_BORING,&UNKNOWN_BORING,
-                        mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
-                        false /* bringIntoView */);
-            }
+            makeNewLayout(availableWidth, 0 /* hintWidth */, &UNKNOWN_BORING,&UNKNOWN_BORING,
+                    mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
+                    false /* bringIntoView */);
         }
-#endif
     }
     // Always try to auto-size if enabled. Functions that do not want to trigger auto-sizing
     // after the next layout pass should set this to false.
@@ -2248,6 +2351,38 @@ void TextView::setLines(int lines){
 void TextView::setHeight(int pixels) {
     mMaximum = mMinimum = pixels;
     mMaxMode = mMinMode = PIXELS;
+
+    requestLayout();
+    invalidate();
+}
+
+void TextView::setMinEms(int minEms) {
+    mMinWidth = minEms;
+    mMinWidthMode = EMS;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMinEms() const{
+    return mMinWidthMode == EMS ? mMinWidth : -1;
+}
+
+void TextView::setMaxEms(int maxEms) {
+    mMaxWidth = maxEms;
+    mMaxWidthMode = EMS;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMaxEms() const{
+    return mMaxWidthMode == EMS ? mMaxWidth : -1;
+}
+
+void TextView::setEms(int ems) {
+    mMaxWidth = mMinWidth = ems;
+    mMaxWidthMode = mMinWidthMode = EMS;
 
     requestLayout();
     invalidate();
@@ -3738,6 +3873,18 @@ void TextView::setBreakStrategy(int breakStrategy){
 
 int TextView::getBreakStrategy()const{
     return mBreakStrategy;
+}
+
+void TextView::setHyphenationFrequency(int hyphenationFrequency) {
+    mHyphenationFrequency = hyphenationFrequency;
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+int TextView::getHyphenationFrequency() const{
+    return mHyphenationFrequency;
 }
 
 bool TextView::isSingleLine()const{
