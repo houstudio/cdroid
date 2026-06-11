@@ -657,7 +657,7 @@ CharSequence* TextUtils::commaEllipsize(CharSequence* text, TextPaint& p,
     MeasuredParagraph* tempMt = nullptr;
 #if 0
     int len = text->length();
-    mt = MeasuredParagraph::buildForMeasurement(p, text, 0, len, textDir, mt);
+    mt = MeasuredParagraph::buildForMeasurement(&p, text, 0, len, textDir, mt);
     const float width = mt->getWholeWidth();
     if (width <= avail) {
         return text;
@@ -673,9 +673,8 @@ CharSequence* TextUtils::commaEllipsize(CharSequence* text, TextPaint& p,
     }
 
     int remaining = commaCount + 1;
-
     int ok = 0;
-    std::string okFormat = "";
+    std::u16string okFormat = u"";
 
     int w = 0;
     int count = 0;
@@ -683,30 +682,28 @@ CharSequence* TextUtils::commaEllipsize(CharSequence* text, TextPaint& p,
 
     for (int i = 0; i < len; i++) {
         w += widths[i];
-
         if (buf[i] == ',') {
             count++;
 
-            std::string format;
+            std::u16string format;
             // XXX should not insert spaces, should be part of string
             // XXX should use plural rules and not assume English plurals
             if (--remaining == 1) {
-                format = " " + oneMore;
+                //format = " " + oneMore;
             } else {
-                format = " " + String.format(more, remaining);
+                //format = " " + String.format(more, remaining);
             }
 
             // XXX this is probably ok, but need to look at it more
-            tempMt = MeasuredParagraph::buildForMeasurement( p, format, 0, format.length(), textDir, tempMt);
+            tempMt = MeasuredParagraph::buildForMeasurement(&p, format, 0, format.length(), textDir, tempMt);
             float moreWid = tempMt->getWholeWidth();
 
             if (w + moreWid <= avail) {
                 ok = i + 1;
-                okFormat = format;
+                //okFormat = format;
             }
         }
     }
-
     SpannableStringBuilder* out = new SpannableStringBuilder(okFormat);
     out->insert(0, text, 0, ok);
     return out;
@@ -880,7 +877,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
         c = cs.charAt(i - 1);
 
         if (c != '"' && c != '\'' &&
-            Character.getType(c) != Character.START_PUNCTUATION) {
+            Character::getType(c) != Character::START_PUNCTUATION) {
             break;
         }
     }
@@ -914,7 +911,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
         c = cs->charAt(j - 1);
 
         if (c != '"' && c != '\'' &&
-            Character.getType(c) != Character.END_PUNCTUATION) {
+            Character::getType(c) != Character::END_PUNCTUATION) {
             break;
         }
     }
@@ -934,7 +931,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
                         return mode;
                     }
 
-                    if (!Character.isLetter(c)) {
+                    if (!Character::isLetter(c)) {
                         break;
                     }
                 }
@@ -962,12 +959,17 @@ void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spann
 
 bool TextUtils::hasStyleSpan(const Spanned* spanned) {
     //Preconditions.checkArgument(spanned != null);
-    /*SpanFilter[] styleClasses = {CharacterStyleFilter, ParagraphStyleFilter, UpdateAppearanceFilter};
-    for (Class<?> clazz : styleClasses) {
+    SpanFilter styleClasses[] = {
+        make_span_filter<CharacterStyle>(),
+        make_span_filter<ParagraphStyle>()
+        //make_span_filter<UpdateAppearance>()
+    };
+    for (int i=0;i<sizeof(styleClasses)/sizeof(SpanFilter);i++) {
+        auto clazz = styleClasses[i];
         if (spanned->nextSpanTransition(-1, spanned->length(), clazz) < spanned->length()) {
             return true;
         }
-    }*/
+    }
     return false;
 }
 
@@ -980,9 +982,9 @@ const CharSequence* TextUtils::trimNoCopySpans(const CharSequence* charSequence)
 }
 
 bool TextUtils::isNewline(int codePoint) {
-    const int type =  u_charType(codePoint);//Character.getType(codePoint);
-    return type == U_PARAGRAPH_SEPARATOR || type == U_LINE_SEPARATOR
-            || codePoint == LINE_FEED_CODE_POINT;
+    const int type =  Character::getType(codePoint);
+    return type == Character::PARAGRAPH_SEPARATOR || type == Character::LINE_SEPARATOR
+                || codePoint == LINE_FEED_CODE_POINT;
 }
 
 bool TextUtils::isWhiteSpace(int codePoint) {
