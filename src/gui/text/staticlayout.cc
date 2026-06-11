@@ -49,7 +49,7 @@ StaticLayout::Builder* StaticLayout::Builder::obtain(CharSequence* source, int s
     b->mFallbackLineSpacing = false;
     b->mEllipsizedWidth = width;
     b->mEllipsize = TextUtils::TruncateAt::NONE;//nullptr;
-    b->mMaxLines = INT_MAX;//Integer.MAX_VALUE;
+    b->mMaxLines = INT_MAX;
     b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;

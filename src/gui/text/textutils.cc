@@ -6,6 +6,7 @@
 #include <text/spannablestring.h>
 #include <text/textutils.h>
 #include <unicode/uchar.h>
+#include <porting/cdlog.h>
 #include <text/measuredparagraph.h>
 namespace cdroid{
 
@@ -572,13 +573,13 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
 
     const int len = text->length();
 
-    MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, mt);
+    MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, nullptr);
     float width = mt->getWholeWidth();
     if (width <= avail) {
         if (callback != nullptr) {
             callback(0,0);//.ellipsized(0, 0);
         }
-
+        mt->recycle();
         return text;
     }
     // XXX assumes ellipsis string does not require shaping and
@@ -609,53 +610,53 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
 
     const int removed = right - left;
     const int remaining = len - removed;
-    /*if (preserveLength) {
-        if (remaining > 0 && removed >= ellipsis.length()) {
-            ellipsis.getChars(0, ellipsis.length(), buf, left);
-            left += ellipsis.length();
+    std::u16string u16elps=utf8_utf16(ellipsis);
+    if (preserveLength) {
+        if (remaining > 0 && removed >= u16elps.length()) {
+            memcpy(buf.data()+left,u16elps.data(),u16elps.size()*sizeof(char16_t));
+            //ellipsis.getChars(0, u16elps.length(), buf, left);
+            left += u16elps.length();
         } // else skip the ellipsis
         for (int i = left; i < right; i++) {
             buf[i] = ELLIPSIS_FILLER;
         }
-        String s = new String(buf, 0, len);
         if (sp == nullptr) {
-            return new SpannedString(buf,0,len);
+            mt->recycle();
+            return new SpannedString(std::u16string(buf.data(),len));
         }
-        SpannableString* ss = new SpannableString(s);
-        copySpansFrom(sp, 0, len, ObjectFilter, ss, 0);
+        SpannableString* ss = new SpannableString(std::u16string(buf.data(),len));
+        copySpansFrom(sp, 0, len, make_span_filter<ParcelableSpan>(), ss, 0);
         return ss;
-    }*/
+    }
 
     if (remaining == 0) {
         return new SpannedString(u"");
     }
 
     if (sp == nullptr) {
-        /*StringBuilder sb = new StringBuilder(remaining + ellipsis.length());
-        sb.append(buf, 0, left);
-        sb.append(ellipsis);
-        sb.append(buf, right, len - right);
-        return sb.toString();*/
-        SpannableStringBuilder* sb=new SpannableStringBuilder();
-        //sb->append(buf, 0, left);
-        sb->append(ellipsis);
-        //sb->append(buf, right, len - right);
-        return sb;
+        //StringBuilder* sb = new StringBuilder(remaining + u16elps.length());
+        SpannableStringBuilder*sb=new SpannableStringBuilder();
+        sb->append(buf.data(), 0, left);
+        sb->append(u16elps);
+        sb->append(buf.data(), right, len - right);
+        mt->recycle();
+        return sb;//.toString();
     }
 
     SpannableStringBuilder* ssb = new SpannableStringBuilder();
     ssb->append(*text, 0, left);
     ssb->append(ellipsis);
     ssb->append(*text, right, len);
+    mt->recycle();
     return ssb;
 }
-#if 0
-CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
+
+CharSequence* TextUtils::commaEllipsize(CharSequence* text, TextPaint& p,
      float avail, const std::string& oneMore,const std::string& more, const TextDirectionHeuristic* textDir) {
 
     MeasuredParagraph* mt = nullptr;
     MeasuredParagraph* tempMt = nullptr;
-
+#if 0
     int len = text->length();
     mt = MeasuredParagraph::buildForMeasurement(p, text, 0, len, textDir, mt);
     const float width = mt->getWholeWidth();
@@ -697,8 +698,7 @@ CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
             }
 
             // XXX this is probably ok, but need to look at it more
-            tempMt = MeasuredParagraph::buildForMeasurement(
-                    p, format, 0, format.length(), textDir, tempMt);
+            tempMt = MeasuredParagraph::buildForMeasurement( p, format, 0, format.length(), textDir, tempMt);
             float moreWid = tempMt->getWholeWidth();
 
             if (w + moreWid <= avail) {
@@ -708,11 +708,14 @@ CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
         }
     }
 
-    SpannableStringBuilder out = new SpannableStringBuilder(okFormat);
-    out.insert(0, text, 0, ok);
+    SpannableStringBuilder* out = new SpannableStringBuilder(okFormat);
+    out->insert(0, text, 0, ok);
     return out;
-}
+#else
+    return text;
 #endif
+}
+
 bool TextUtils::couldAffectRtl(char16_t c) {
     return (0x0590 <= c && c <= 0x08FF) ||  // RTL scripts
             c == 0x200E ||  // Bidi format character

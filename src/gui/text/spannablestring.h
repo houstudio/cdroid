@@ -351,6 +351,11 @@ public:
     }
 
     SpannableStringBuilder& append(const std::string& utf8) { mText += TextUtils::utf8_utf16(utf8); return *this; }
+    SpannableStringBuilder& append(const std::u16string& utf16) {mText+=utf16;return *this;}
+    SpannableStringBuilder& append(const char16_t*utf16,int start,int count){
+        mText+=std::u16string(utf16+start,count);
+        return *this;
+    }
     SpannableStringBuilder& append(const std::string& utf8, ParcelableSpan* what, int flags) {
         int start = (int)mText.length();
         append(utf8);

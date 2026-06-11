@@ -139,12 +139,12 @@ public:
             bool preserveLength,const EllipsizeCallback& callback,
             const TextDirectionHeuristic* textDir,const std::string& ellipsis);
 
-    static CharSequence* commaEllipsize(const CharSequence* text,TextPaint& p, float avail,
+    static CharSequence* commaEllipsize(CharSequence* text,TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more) {
         return commaEllipsize(text, p, avail, oneMore, more, TextDirectionHeuristics::FIRSTSTRONG_LTR);
     }
 
-    static CharSequence* commaEllipsize(const CharSequence* text, TextPaint& p, float avail,
+    static CharSequence* commaEllipsize(CharSequence* text, TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more, const TextDirectionHeuristic* textDir);
 
     static bool couldAffectRtl(char16_t c);

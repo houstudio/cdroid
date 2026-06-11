@@ -127,6 +127,8 @@ Paint::Paint(){
     mWordSpace=0;
     mAntialias=false;
     mLetterSpacing=0;
+    mTextScaleX=1.f;
+    mTextSize=12;
     mMinikinPaint=std::make_shared<minikin::MinikinPaint>(mTypeface->getFontCollection());
     mMinikinPaint->size=32;
     mMinikinPaint->scaleX=1.0;
@@ -161,11 +163,13 @@ bool Paint::hasEqualAttributes(const Paint&other)const{
 }
 
 float Paint::measureText(const std::string& text)const{
-    return 100;
+    std::u16string u16=TextUtils::utf8_utf16(text);
+    return measureText(u16.c_str(),0,u16.size());
 }
 
 float Paint::measureText(const std::string& text, int start, int end)const{
-    return 100;
+    std::u16string u16=TextUtils::utf8_utf16(text.substr(start,end-start));
+    return measureText(u16.c_str(),0,u16.size());
 }
 
 float Paint::measureText(const CharSequence* text, int start, int end)const{

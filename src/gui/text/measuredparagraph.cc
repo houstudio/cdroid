@@ -4,8 +4,7 @@
 #include <text/androidbidi.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
-//public class MeasuredParagraph {
-//private static final char OBJECT_REPLACEMENT_CHARACTER = '\uFFFC';
+
 const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
 const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
 const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
