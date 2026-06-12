@@ -38,13 +38,17 @@ namespace cdroid {
 class FullMinikinFont : public minikin::MinikinFont {
 public:
     FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace)
-        : MinikinFont(mFontId++), mFontFace(fontFace), mHbFace(nullptr),
+        : mFontFace(fontFace), mHbFace(nullptr),
           mCachedScaledFont(nullptr), mCachedFontSize(0.0f) {
+          mSourceId = mFontId++;
     }
     ~FullMinikinFont() override {
         if (mHbFace != nullptr) {
             hb_face_destroy(mHbFace);
         }
+    }
+    int32_t GetSourceId() const override{
+        return mSourceId;
     }
     float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
         Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
@@ -89,6 +93,10 @@ public:
     }
     size_t GetFontSize() const override { return 0;/*sizeof filedata*/}
     int GetFontIndex() const override { return 0; }
+    const std::string& GetFontPath() const override {
+        static const std::string empty;
+        return empty;
+    }
 private:
     Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(float size) const {
         if (mCachedScaledFont == nullptr || mCachedFontSize != size) {
@@ -106,6 +114,7 @@ private:
         return Cairo::FtScaledFont::create(mFontFace, font_mtx, ctm, options);
     }
     static int mFontId;
+    int mSourceId;
     Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
     mutable hb_face_t* mHbFace = nullptr;
     mutable Cairo::RefPtr<Cairo::FtScaledFont> mCachedScaledFont;
@@ -443,17 +452,17 @@ static bool isSameFamily(const std::string& fm1, const std::string& fm2) {
 }
 
 std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces){
-    std::vector<minikin::Font> fonts;
+    std::vector<std::shared_ptr<minikin::Font>> fonts;
     for(auto f:faces){
         if(isSameFamily(family,f->getFamily())){
             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(f->getFontFace());
             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
             auto font = minikin::Font::Builder(minikinFont).build();
-            fonts.push_back(std::move(font));
+            fonts.push_back(font);
             LOGD("    ->[%d](%s): %s",fonts.size()-1,f->getFamily().c_str(),f->mFileName.c_str());
         }
     }
-    return std::make_shared<minikin::FontFamily>(std::move(fonts));
+    return minikin::FontFamily::create(std::move(fonts));
 }
 void Typeface::buildSystemFallback() {
     std::map<std::string, std::shared_ptr<minikin::FontCollection>> familyCollections;
@@ -503,7 +512,7 @@ void Typeface::buildSystemFallback() {
                 }
             }
             
-            auto collection = std::make_shared<minikin::FontCollection>(families);
+            auto collection = minikin::FontCollection::create(std::move(families));
             familyCollections[tf->mFamily] = collection;
             tf->mFontCollection = collection;
             LOGD("[%s] -> shared FontCollection (family: %s)", 

@@ -17,7 +17,9 @@
 #ifndef MINIKIN_SPARSE_BIT_SET_H
 #define MINIKIN_SPARSE_BIT_SET_H
 
+#include <minikin/Buffer.h>
 #include <sys/types.h>
+#include <cstdlib>
 #include <cstdint>
 #include <memory>
 
@@ -33,7 +35,7 @@ namespace minikin {
 class SparseBitSet {
 public:
     // Create an empty bit set.
-    SparseBitSet() : mMaxVal(0) {}
+    SparseBitSet() : mData(nullptr) {}
 
     // Initialize the set to a new value, represented by ranges. For
     // simplicity, these ranges are arranged as pairs of values,
@@ -42,19 +44,25 @@ public:
         initFromRanges(ranges, nRanges);
     }
 
+    explicit SparseBitSet(BufferReader* reader) : SparseBitSet() { initFromBuffer(reader); }
+
     SparseBitSet(SparseBitSet&&) = default;
     SparseBitSet& operator=(SparseBitSet&&) = default;
 
+    void writeTo(BufferWriter* writer) const;
+
     // Determine whether the value is included in the set
     bool get(uint32_t ch) const {
-        if (ch >= mMaxVal) return false;
-        const uint32_t* bitmap = &mBitmaps[mIndices[ch >> kLogValuesPerPage]];
+        if (ch >= length()) return false;
+        const uint32_t* bitmap = mData->bitmaps() + mData->indices()[ch >> kLogValuesPerPage];
         uint32_t index = ch & kPageMask;
         return (bitmap[index >> kLogBitsPerEl] & (kElFirst >> (index & kElMask))) != 0;
     }
 
     // One more than the maximum value in the set, or zero if empty
-    uint32_t length() const { return mMaxVal; }
+    uint32_t length() const { return mData != nullptr ? mData->mMaxVal : 0; }
+
+    bool empty() const { return mData == nullptr || mData->mMaxVal == 0; }
 
     // The next set bit starting at fromIndex, inclusive, or kNotFound
     // if none exists.
@@ -64,6 +72,7 @@ public:
 
 private:
     void initFromRanges(const uint32_t* ranges, size_t nRanges);
+    void initFromBuffer(BufferReader* reader);
 
     static const uint32_t kMaximumCapacity = 0xFFFFFF;
     static const int kLogValuesPerPage = 8;
@@ -80,15 +89,53 @@ private:
     static uint32_t calcNumPages(const uint32_t* ranges, size_t nRanges);
     static int CountLeadingZeros(element x);
 
-    uint32_t mMaxVal;
+    // MappableData represents memory block holding SparseBitSet's fields.
+    // 'packed' is used so that the object layout won't change between
+    // 32-bit and 64-bit processes.
+    // 'aligned(4)' is only for optimization.
+    struct __attribute__((packed, aligned(4))) MappableData {
+        uint32_t mMaxVal;
+        uint32_t mIndicesCount;
+        uint32_t mBitmapsCount;
+        uint16_t mZeroPageIndex;
+        // Whether the memory is mapped (BufferReader::map()) or allocated
+        // (malloc()).
+        uint16_t mIsMapped;
+        // mArray packs two arrays:
+        // element mBitmaps[mBitmapsCount];
+        // uint16_t mIndices[mIndicesCount];
+        __attribute__((aligned(4))) uint32_t mArray[];
+        const element* bitmaps() const { return mArray; }
+        element* bitmaps() { return mArray; }
+        const uint16_t* indices() const {
+            return reinterpret_cast<const uint16_t*>(mArray + mBitmapsCount);
+        }
+        uint16_t* indices() { return reinterpret_cast<uint16_t*>(mArray + mBitmapsCount); }
+        size_t size() const { return calcSize(mIndicesCount, mBitmapsCount); }
+        static size_t calcSize(uint32_t indicesCount, uint32_t bitmapsCount) {
+            static_assert(std::is_same<element, uint32_t>::value);
+            static_assert(sizeof(uint32_t) == 4);
+            static_assert(sizeof(uint16_t) == 2);
+            // Round-up indicesCount / 2
+            size_t arrayCount = bitmapsCount + (indicesCount + 1) / 2;
+            return offsetof(MappableData, mArray) + sizeof(uint32_t) * arrayCount;
+        }
+        static MappableData* allocate(uint32_t indicesCount, uint32_t bitmapsCount);
+    };
 
-    std::unique_ptr<uint16_t[]> mIndices;
-    std::unique_ptr<element[]> mBitmaps;
-    uint16_t mZeroPageIndex;
+    // MappableDataDeleter does NOT call free() if the data is on a memory map.
+    class MappableDataDeleter {
+    public:
+        void operator()(const MappableData* data) const {
+            if (data != nullptr && !data->mIsMapped) free((void*)data);
+        }
+    };
+
+    std::unique_ptr<const MappableData, MappableDataDeleter> mData;
 
     // Forbid copy and assign.
     SparseBitSet(const SparseBitSet&) = delete;
-    void operator=(const SparseBitSet&) = delete;
+    SparseBitSet& operator=(const SparseBitSet&) = delete;
 };
 
 }  // namespace minikin

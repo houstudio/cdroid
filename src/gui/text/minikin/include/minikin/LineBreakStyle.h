@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2013 The Android Open Source Project
+ * Copyright (C) 2022 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,22 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef MINIKIN_CMAP_COVERAGE_H
-#define MINIKIN_CMAP_COVERAGE_H
-
-#include "minikin/SparseBitSet.h"
-
-#include <memory>
-#include <vector>
+#ifndef MINIKIN_LINE_BREAK_STYLE_H
+#define MINIKIN_LINE_BREAK_STYLE_H
 
 namespace minikin {
 
-class CmapCoverage {
-public:
-    static SparseBitSet getCoverage(const uint8_t* cmap_data, size_t cmap_size,
-                                    std::vector<SparseBitSet>* out);
+// The line break style(lb) of the strings.
+// See https://www.unicode.org/reports/tr35/#Key_Type_Definitions
+enum class LineBreakStyle : uint8_t {
+    None = 0,
+    Loose = 1,
+    Normal = 2,
+    Strict = 3,
+};
+
+// The line break word style(lw) of the strings.
+// See the key "lw" in https://www.unicode.org/reports/tr35/#Key_Type_Definitions
+enum class LineBreakWordStyle : uint8_t {
+    None = 0,
+    Phrase = 1,
 };
 
 }  // namespace minikin
 
-#endif  // MINIKIN_CMAP_COVERAGE_H
+#endif  // MINIKIN_LINE_BREAK_STYLE_H

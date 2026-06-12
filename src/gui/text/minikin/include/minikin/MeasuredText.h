@@ -23,6 +23,7 @@
 #include "minikin/FontCollection.h"
 #include "minikin/Layout.h"
 #include "minikin/LayoutPieces.h"
+#include "minikin/LineBreakStyle.h"
 #include "minikin/Macros.h"
 #include "minikin/MinikinFont.h"
 #include "minikin/Range.h"
@@ -41,6 +42,12 @@ public:
     // Returns true if this run can be broken into multiple pieces for line breaking.
     virtual bool canBreak() const = 0;
 
+    // Return the line break style(lb) for this run.
+    virtual LineBreakStyle lineBreakStyle() const = 0;
+
+    // Return the line break word style(lw) for this run.
+    virtual LineBreakWordStyle lineBreakWordStyle() const = 0;
+
     // Returns the locale list ID for this run.
     virtual uint32_t getLocaleListId() const = 0;
 
@@ -58,6 +65,8 @@ public:
                               const MinikinPaint& paint, uint32_t outOrigin,
                               StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                               Layout* outLayout) const = 0;
+
+    virtual float measureText(const U16StringPiece& text) const = 0;
 
     // Following two methods are only called when the implementation returns true for
     // canBreak method.
@@ -83,10 +92,21 @@ protected:
 
 class StyleRun : public Run {
 public:
-    StyleRun(const Range& range, MinikinPaint&& paint, bool isRtl)
-            : Run(range), mPaint(std::move(paint)), mIsRtl(isRtl) {}
+    StyleRun(const Range& range, MinikinPaint&& paint, int lineBreakStyle, int lineBreakWordStyle,
+             bool isRtl)
+            : Run(range),
+              mPaint(std::move(paint)),
+              mLineBreakStyle(lineBreakStyle),
+              mLineBreakWordStyle(lineBreakWordStyle),
+              mIsRtl(isRtl) {}
 
     bool canBreak() const override { return true; }
+    LineBreakStyle lineBreakStyle() const override {
+        return static_cast<LineBreakStyle>(mLineBreakStyle);
+    }
+    LineBreakWordStyle lineBreakWordStyle() const override {
+        return static_cast<LineBreakWordStyle>(mLineBreakWordStyle);
+    }
     uint32_t getLocaleListId() const override { return mPaint.localeListId; }
     bool isRtl() const override { return mIsRtl; }
 
@@ -109,9 +129,12 @@ public:
     float measureHyphenPiece(const U16StringPiece& text, const Range& range,
                              StartHyphenEdit startHyphen, EndHyphenEdit endHyphen,
                              LayoutPieces* pieces) const override;
+    float measureText(const U16StringPiece& text) const;
 
 private:
     MinikinPaint mPaint;
+    int mLineBreakStyle;
+    int mLineBreakWordStyle;
     const bool mIsRtl;
 };
 
@@ -122,6 +145,8 @@ public:
 
     bool isRtl() const { return false; }
     bool canBreak() const { return false; }
+    LineBreakStyle lineBreakStyle() const override { return LineBreakStyle::None; }
+    LineBreakWordStyle lineBreakWordStyle() const override { return LineBreakWordStyle::None; }
     uint32_t getLocaleListId() const { return mLocaleListId; }
 
     void getMetrics(const U16StringPiece& /* text */, std::vector<float>* advances,
@@ -147,6 +172,8 @@ public:
                       const MinikinPaint& /* paint */, uint32_t /* outOrigin */,
                       StartHyphenEdit /* startHyphen */, EndHyphenEdit /* endHyphen */,
                       Layout* /* outLayout*/) const override {}
+
+    float measureText(const U16StringPiece&) const { return 0; }
 
 private:
     const float mWidth;
@@ -206,13 +233,14 @@ private:
     friend class MeasuredTextBuilder;
 
     void measure(const U16StringPiece& textBuf, bool computeHyphenation, bool computeLayout,
-                 MeasuredText* hint);
+                 bool ignoreHyphenKerning, MeasuredText* hint);
 
     // Use MeasuredTextBuilder instead.
     MeasuredText(const U16StringPiece& textBuf, std::vector<std::unique_ptr<Run>>&& runs,
-                 bool computeHyphenation, bool computeLayout, MeasuredText* hint)
+                 bool computeHyphenation, bool computeLayout, bool ignoreHyphenKerning,
+                 MeasuredText* hint)
             : widths(textBuf.size()), runs(std::move(runs)) {
-        measure(textBuf, computeHyphenation, computeLayout, hint);
+        measure(textBuf, computeHyphenation, computeLayout, ignoreHyphenKerning, hint);
     }
 };
 
@@ -220,8 +248,10 @@ class MeasuredTextBuilder {
 public:
     MeasuredTextBuilder() {}
 
-    void addStyleRun(int32_t start, int32_t end, MinikinPaint&& paint, bool isRtl) {
-        mRuns.emplace_back(std::make_unique<StyleRun>(Range(start, end), std::move(paint), isRtl));
+    void addStyleRun(int32_t start, int32_t end, MinikinPaint&& paint, int lineBreakStyle,
+                     int lineBreakWordStyle, bool isRtl) {
+        mRuns.emplace_back(std::make_unique<StyleRun>(Range(start, end), std::move(paint),
+                                                      lineBreakStyle, lineBreakWordStyle, isRtl));
     }
 
     void addReplacementRun(int32_t start, int32_t end, float width, uint32_t localeListId) {
@@ -235,10 +265,12 @@ public:
     }
 
     std::unique_ptr<MeasuredText> build(const U16StringPiece& textBuf, bool computeHyphenation,
-                                        bool computeLayout, MeasuredText* hint) {
+                                        bool computeLayout, bool ignoreHyphenKerning,
+                                        MeasuredText* hint) {
         // Unable to use make_unique here since make_unique is not a friend of MeasuredText.
-        return std::unique_ptr<MeasuredText>(new MeasuredText(
-                textBuf, std::move(mRuns), computeHyphenation, computeLayout, hint));
+        return std::unique_ptr<MeasuredText>(new MeasuredText(textBuf, std::move(mRuns),
+                                                              computeHyphenation, computeLayout,
+                                                              ignoreHyphenKerning, hint));
     }
 
     MINIKIN_PREVENT_COPY_ASSIGN_AND_MOVE(MeasuredTextBuilder);

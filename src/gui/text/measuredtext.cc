@@ -122,7 +122,8 @@ MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineB
 
     minikin::MinikinPaint minikinPaint = *paint.getMinikinPaint();
     minikin::MeasuredTextBuilder*builder=(minikin::MeasuredTextBuilder*)mNativePtr;
-    builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint), isRtl);
+    //addStyleRun(int32_t start, int32_t end, MinikinPaint&& paint, int lineBreakStyle, int lineBreakWordStyle, bool isRtl)
+    builder->addStyleRun(mCurrentOffset, mCurrentOffset+length, std::move(minikinPaint),lbStyle, lbWordStyle,isRtl);
     mCurrentOffset = end;
     paint.getFontMetricsInt(&mCachedMetrics);
     mTop = std::min(mTop, mCachedMetrics.top);
@@ -193,7 +194,7 @@ MeasuredText* MeasuredText::Builder::build() {
     const minikin::U16StringPiece textBuffer((const uint16_t*)mText.data(), mText.size());
     // Pass the ownership to Java.
     auto ptr= ((minikin::MeasuredTextBuilder*)mNativePtr)
-        ->build(textBuffer, mComputeHyphenation, mComputeLayout, hintPtr).release();
+        ->build(textBuffer, mComputeHyphenation, mComputeLayout,false/*ignoreHyphenKerning*/, hintPtr).release();
     return new MeasuredText(ptr, mText, mComputeHyphenation, mComputeLayout, mComputeBounds, mTop, mBottom);
 }
 

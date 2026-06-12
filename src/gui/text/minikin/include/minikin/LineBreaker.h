@@ -62,6 +62,9 @@ public:
                 return mStops[i];
             }
         }
+        if (mTabWidth == 0) {
+            return 0;
+        }
         return floor(widthSoFar / mTabWidth + 1) * mTabWidth;
     }
 

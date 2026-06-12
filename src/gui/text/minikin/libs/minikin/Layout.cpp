@@ -80,8 +80,8 @@ float Layout::doLayoutRunCached(const U16StringPiece& textBuf, const Range& rang
     float advance = 0;
     for (const auto it/*[context, piece]*/ : LayoutSplitter(textBuf, range, isRtl)) {
         // Hyphenation only applies to the start/end of run.
-        auto context = it.first;
-        auto piece = it.second;
+        auto context=it.first;
+        auto piece=it.second;
         const StartHyphenEdit pieceStartHyphen =
                 (piece.getStart() == range.getStart()) ? startHyphen : StartHyphenEdit::NO_EDIT;
         const EndHyphenEdit pieceEndHyphen =
@@ -160,9 +160,6 @@ void Layout::appendLayout(const LayoutPiece& src, size_t start, float extraAdvan
             mAdvances[start] += extraAdvance;
         }
     }
-    MinikinRect srcBounds(src.bounds());
-    srcBounds.offset(mAdvance, 0);
-    mBounds.join(srcBounds);
     mAdvance += src.advance() + extraAdvance;
 }
 

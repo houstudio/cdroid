@@ -26,13 +26,33 @@ SystemFonts& SystemFonts::getInstance() {
 }
 
 std::shared_ptr<FontCollection> SystemFonts::findFontCollectionInternal(
-        const std::string& familyName) const {
+        const std::string& familyName) {
+    std::lock_guard<std::mutex> lock(mMutex);
     auto it = mSystemFallbacks.find(familyName);
     if (it != mSystemFallbacks.end()) {
         return it->second;
     }
     // TODO: Lookup by PostScript name.
     return mDefaultFallback;
+}
+
+void SystemFonts::buildFontSetLocked() {
+    std::unordered_set<FontFamily*> uniqueFamilies;
+
+    for (const auto& collection : mCollections) {
+        for (size_t i = 0; i < collection->getFamilyCount(); ++i) {
+            const auto& family = collection->getFamilyAt(i);
+            uniqueFamilies.insert(family.get());
+        }
+    }
+
+    std::vector<std::shared_ptr<Font>> result;
+    for (const auto family : uniqueFamilies) {
+        for (size_t i = 0; i < family->getNumFonts(); ++i) {
+            result.push_back(family->getFontRef(i));
+        }
+    }
+    mFonts = std::move(result);
 }
 
 }  // namespace minikin

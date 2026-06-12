@@ -22,11 +22,11 @@ static int32_t gFontIdCounter = 0;
 class FullMinikinFont : public minikin::MinikinFont {
 public:
     FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace)
-        : MinikinFont(gFontIdCounter++),
-          mFontFace(fontFace),
+        : mFontFace(fontFace),
           mHbFace(nullptr),
           mCachedScaledFont(nullptr),
           mCachedFontSize(0.0f) {
+          mSourceId=gFontIdCounter++;
     }
 
     ~FullMinikinFont() override {
@@ -34,7 +34,9 @@ public:
             hb_face_destroy(mHbFace);
         }
     }
-
+    int32_t GetSourceId() const override{
+        return mSourceId;
+    }
     float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint,
                                const minikin::FontFakery&) const override {
         Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);        
@@ -113,6 +115,7 @@ public:
         return Cairo::FtScaledFont::create(mFontFace, font_mtx, ctm, options);
     }
     Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
+    int mSourceId;
     mutable hb_face_t* mHbFace = nullptr;
     mutable Cairo::RefPtr<Cairo::FtScaledFont> mCachedScaledFont;
     mutable float mCachedFontSize;
@@ -259,21 +262,22 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
                                bidiFlags, *mMinikinPaint,
                                minikin::StartHyphenEdit::NO_EDIT,
                                minikin::EndHyphenEdit::NO_EDIT);
-    const minikin::MinikinFont* currentFont = nullptr;
+    std::shared_ptr<const minikin::Font> currentFontRef = nullptr;
     Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
     float fontSize = getTextSize();
     size_t glyphIdx=0;
     while(glyphIdx < layout.nGlyphs()) {
-        const minikin::MinikinFont* glyphFont = layout.getFont(glyphIdx);
-        if (glyphFont != currentFont) {
-
-            currentFont = glyphFont;
-            auto fullFont = dynamic_cast<const FullMinikinFont*>(glyphFont);
+        // minikin14: getFontRef 返回 shared_ptr<Font>，通过 typeface() 获取 MinikinFont
+        const std::shared_ptr<const minikin::Font>& glyphFontRef = layout.getFontRef(glyphIdx);
+        if (glyphFontRef != currentFontRef) {
+            currentFontRef = glyphFontRef;
+            // 从 Font 获取底层的 MinikinFont
+            const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
+            auto fullFont = dynamic_cast<const FullMinikinFont*>(minikinFont);
             if (fullFont) {
                 Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = fullFont->getScaledFont(fontSize);
                 currentCairoFontFace = scaledFont;
                 c.set_scaled_font(currentCairoFontFace);
-                //LOGD("%d switch font %d",glyphIdx,fullFont->GetUniqueId());
             } else {
                 glyphIdx++;
                 continue;
@@ -281,7 +285,7 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         }
 
         std::vector<cairo_glyph_t> cairoGlyphs;
-        while (glyphIdx < layout.nGlyphs() && layout.getFont(glyphIdx) == currentFont) {
+        while (glyphIdx < layout.nGlyphs() && layout.getFontRef(glyphIdx) == currentFontRef) {
             cairo_glyph_t glyph;
             glyph.index = layout.getGlyphId(glyphIdx);
             glyph.x = x + layout.getX(glyphIdx);

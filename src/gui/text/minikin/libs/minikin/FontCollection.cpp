@@ -17,17 +17,19 @@
 #define LOG_TAG "Minikin"
 
 #include "minikin/FontCollection.h"
-#include <atomic>
-#include <algorithm>
 
 #include <log/log.h>
 #include <unicode/unorm2.h>
 
-#include "minikin/Emoji.h"
+#include <algorithm>
+#include <unordered_set>
 
 #include "Locale.h"
 #include "LocaleListCache.h"
 #include "MinikinInternal.h"
+#include "minikin/Characters.h"
+#include "minikin/Emoji.h"
+//#include "minikin/FontFileParser.h"
 
 using std::vector;
 
@@ -43,13 +45,99 @@ const uint32_t TEXT_STYLE_VS = 0xFE0E;
 
 static std::atomic<uint32_t> gNextCollectionId = {0};
 
-FontCollection::FontCollection(std::shared_ptr<FontFamily>&& typeface) : mMaxChar(0) {
-    std::vector<std::shared_ptr<FontFamily>> typefaces;
-    typefaces.push_back(typeface);
-    init(typefaces);
+namespace {
+
+inline bool isEmojiBreak(uint32_t prevCh, uint32_t ch) {
+    return !(isEmojiModifier(ch) || (isRegionalIndicator(prevCh) && isRegionalIndicator(ch)) ||
+             isKeyCap(ch) || isTagChar(ch) || ch == CHAR_ZWJ || prevCh == CHAR_ZWJ);
 }
 
-FontCollection::FontCollection(const vector<std::shared_ptr<FontFamily>>& typefaces) : mMaxChar(0) {
+// Lower is better
+uint32_t getGlyphScore(U16StringPiece text, uint32_t start, uint32_t end,
+                       const HbFontUniquePtr& font) {
+    HbBufferUniquePtr buffer(hb_buffer_create());
+    hb_buffer_set_direction(buffer.get(), HB_DIRECTION_LTR);
+    hb_buffer_add_utf16(buffer.get(), text.data() + start, end - start, 0, end - start);
+    hb_buffer_guess_segment_properties(buffer.get());
+
+    unsigned int numGlyphs = -1;
+    hb_shape(font.get(), buffer.get(), nullptr, 0);
+    hb_glyph_info_t* info = hb_buffer_get_glyph_infos(buffer.get(), &numGlyphs);
+
+    // HarfBuzz squashed unsupported tag sequence into first emoji glyph. So, we cannot use glyph
+    // count for the font selection score. Give extra score if the base score is different from the
+    // first glyph.
+    if (numGlyphs == 1) {
+        constexpr uint32_t TAG_SEQUENCE_FALLBACK_PENALTY = 0x10000;
+
+        uint32_t ch = 0;
+        const uint16_t* string = text.data();
+        const uint32_t string_size = text.size();
+        uint32_t readLength = 0;
+
+        U16_NEXT(string, readLength, string_size, ch);
+        if (U_IS_SURROGATE(ch)) {
+            return numGlyphs;  // Broken surrogate pair.
+        }
+
+        if (readLength >= string_size) {
+            return numGlyphs;  // No more characters remaining.
+        }
+
+        uint32_t nextCh = 0;
+        U16_NEXT(string, readLength, string_size, nextCh);
+
+        if (!isTagChar(nextCh)) {
+            return numGlyphs;  // Not a tag sequence.
+        }
+
+        uint32_t composedGlyphId = info[0].codepoint;
+
+        // Shape only the first base emoji.
+        hb_buffer_reset(buffer.get());
+        hb_buffer_set_direction(buffer.get(), HB_DIRECTION_LTR);
+        hb_buffer_add_codepoints(buffer.get(), &ch, 1, 0, 1);
+        hb_buffer_guess_segment_properties(buffer.get());
+
+        unsigned int numGlyphs = -1;
+        hb_shape(font.get(), buffer.get(), nullptr, 0);
+        info = hb_buffer_get_glyph_infos(buffer.get(), &numGlyphs);
+
+        if (numGlyphs != 1) {
+            // If the single code point of the first base emoji is decomposed to multiple glyphs,
+            // we don't support it.
+            return numGlyphs;
+        }
+
+        uint32_t baseGlyphId = info[0].codepoint;
+        if (composedGlyphId == baseGlyphId) {
+            return numGlyphs + TAG_SEQUENCE_FALLBACK_PENALTY;
+        } else {
+            return numGlyphs;
+        }
+    }
+
+    return numGlyphs;
+}
+
+}  // namespace
+
+// static
+std::shared_ptr<FontCollection> FontCollection::create(std::shared_ptr<FontFamily>&& typeface) {
+    std::vector<std::shared_ptr<FontFamily>> typefaces;
+    typefaces.push_back(typeface);
+    return create(typefaces);
+}
+
+// static
+std::shared_ptr<FontCollection> FontCollection::create(
+        const vector<std::shared_ptr<FontFamily>>& typefaces) {
+    // TODO(b/174672300): Revert back to make_shared.
+    return std::shared_ptr<FontCollection>(new FontCollection(typefaces));
+}
+
+FontCollection::FontCollection(const vector<std::shared_ptr<FontFamily>>& typefaces)
+        : mMaxChar(0), mSupportedAxes(nullptr) {
     init(typefaces);
 }
 
@@ -58,48 +146,157 @@ void FontCollection::init(const vector<std::shared_ptr<FontFamily>>& typefaces) 
     vector<uint32_t> lastChar;
     size_t nTypefaces = typefaces.size();
     const FontStyle defaultStyle;
+    auto families = std::make_shared<vector<std::shared_ptr<FontFamily>>>();
+    std::unordered_set<AxisTag> supportedAxesSet;
     for (size_t i = 0; i < nTypefaces; i++) {
         const std::shared_ptr<FontFamily>& family = typefaces[i];
         if (family->getClosestMatch(defaultStyle).font == nullptr) {
             continue;
         }
         const SparseBitSet& coverage = family->getCoverage();
-        mFamilies.push_back(family);  // emplace_back would be better
+        families->emplace_back(family);
         if (family->hasVSTable()) {
             mVSFamilyVec.push_back(family);
         }
         mMaxChar = max(mMaxChar, coverage.length());
         lastChar.push_back(coverage.nextSetBit(0));
 
-        const std::unordered_set<AxisTag>& supportedAxes = family->supportedAxes();
-        mSupportedAxes.insert(supportedAxes.begin(), supportedAxes.end());
+        for (size_t i = 0; i < family->getSupportedAxesCount(); i++) {
+            supportedAxesSet.insert(family->getSupportedAxisAt(i));
+        }
     }
-    nTypefaces = mFamilies.size();
-    MINIKIN_ASSERT(nTypefaces > 0, "Font collection must have at least one valid typeface");
-    MINIKIN_ASSERT(nTypefaces <= MAX_FAMILY_COUNT,
+    // mMaybeSharedFamilies is not shared.
+    mMaybeSharedFamilies = families;
+    mFamilyCount = families->size();
+    mFamilyIndices = nullptr;
+    MINIKIN_ASSERT(mFamilyCount > 0, "Font collection must have at least one valid typeface");
+    MINIKIN_ASSERT(mFamilyCount <= MAX_FAMILY_COUNT,
                    "Font collection may only have up to %d font families.", MAX_FAMILY_COUNT);
+    // Although OpenType supports up to 2^16-1 axes per font,
+    // mSupportedAxesCount may exceed 2^16-1 as we have multiple fonts.
+    mSupportedAxesCount = static_cast<uint32_t>(supportedAxesSet.size());
+    if (mSupportedAxesCount > 0) {
+        mSupportedAxes = sortedArrayFromSet(supportedAxesSet);
+    }
     size_t nPages = (mMaxChar + kPageMask) >> kLogCharsPerPage;
     // TODO: Use variation selector map for mRanges construction.
     // A font can have a glyph for a base code point and variation selector pair but no glyph for
     // the base code point without variation selector. The family won't be listed in the range in
     // this case.
+    mOwnedRanges = std::make_unique<Range[]>(nPages);
+    mRanges = mOwnedRanges.get();
+    mRangesCount = nPages;
     for (size_t i = 0; i < nPages; i++) {
-        Range dummy;
-        mRanges.push_back(dummy);
-        Range* range = &mRanges.back();
-        range->start = mFamilyVec.size();
-        for (size_t j = 0; j < nTypefaces; j++) {
+        Range* range = &mOwnedRanges[i];
+        range->start = mOwnedFamilyVec.size();
+        for (size_t j = 0; j < getFamilyCount(); j++) {
             if (lastChar[j] < (i + 1) << kLogCharsPerPage) {
-                const std::shared_ptr<FontFamily>& family = mFamilies[j];
-                mFamilyVec.push_back(static_cast<uint8_t>(j));
+                const std::shared_ptr<FontFamily>& family = getFamilyAt(j);
+                mOwnedFamilyVec.push_back(static_cast<uint8_t>(j));
                 uint32_t nextChar = family->getCoverage().nextSetBit((i + 1) << kLogCharsPerPage);
                 lastChar[j] = nextChar;
             }
         }
-        range->end = mFamilyVec.size();
+        range->end = mOwnedFamilyVec.size();
     }
     // See the comment in Range for more details.
-    //LOG_ALWAYS_FATAL_IF(mFamilyVec.size() >= 0xFFFF, "Exceeded the maximum indexable cmap coverage.");
+    LOG_ALWAYS_FATAL_IF(mOwnedFamilyVec.size() >= 0xFFFF,
+                        "Exceeded the maximum indexable cmap coverage.");
+    mFamilyVec = mOwnedFamilyVec.data();
+    mFamilyVecCount = mOwnedFamilyVec.size();
+}
+
+FontCollection::FontCollection(
+        BufferReader* reader,
+        const std::shared_ptr<std::vector<std::shared_ptr<FontFamily>>>& families)
+        : mSupportedAxes(nullptr) {
+    mId = gNextCollectionId++;
+    mMaxChar = reader->read<uint32_t>();
+    mMaybeSharedFamilies = families;
+    std::tie(mFamilyIndices, mFamilyCount) = reader->readArray<uint32_t>();
+    for (size_t i = 0; i < getFamilyCount(); i++) {
+        const auto& family = getFamilyAt(i);
+        if (family->hasVSTable()) mVSFamilyVec.emplace_back(family);
+    }
+    // Range is two packed uint16_t
+    static_assert(sizeof(Range) == 4);
+    std::tie(mRanges, mRangesCount) = reader->readArray<Range>();
+    std::tie(mFamilyVec, mFamilyVecCount) = reader->readArray<uint8_t>();
+    const auto& kv/*[axesPtr, axesCount]*/ = reader->readArray<AxisTag>();
+    auto axesPtr  = kv.first;
+    auto axesCount= kv.second;
+    mSupportedAxesCount = axesCount;
+    if (axesCount > 0) {
+        mSupportedAxes = std::unique_ptr<AxisTag[]>(new AxisTag[axesCount]);
+        std::copy(axesPtr, axesPtr + axesCount, mSupportedAxes.get());
+    }
+}
+
+void FontCollection::writeTo(BufferWriter* writer,
+                             const std::unordered_map<std::shared_ptr<FontFamily>, uint32_t>&
+                                     fontFamilyToIndexMap) const {
+    writer->write<uint32_t>(mMaxChar);
+    std::vector<uint32_t> indices;
+    indices.reserve(getFamilyCount());
+    for (size_t i = 0; i < getFamilyCount(); ++i) {
+        const std::shared_ptr<FontFamily>& fontFamily = getFamilyAt(i);
+        auto it = fontFamilyToIndexMap.find(fontFamily);
+        if (it == fontFamilyToIndexMap.end()) {
+            ALOGE("fontFamily not found in fontFamilyToIndexMap");
+        } else {
+            indices.push_back(it->second);
+        }
+    }
+    writer->writeArray<uint32_t>(indices.data(), indices.size());
+    writer->writeArray<Range>(mRanges, mRangesCount);
+    writer->writeArray<uint8_t>(mFamilyVec, mFamilyVecCount);
+    // No need to serialize mVSFamilyVec as it can be reconstructed easily from mFamilies.
+    writer->writeArray<AxisTag>(mSupportedAxes.get(), mSupportedAxesCount);
+}
+
+// static
+std::vector<std::shared_ptr<FontCollection>> FontCollection::readVector(BufferReader* reader) {
+    auto allFontFamilies = std::make_shared<std::vector<std::shared_ptr<FontFamily>>>(
+            FontFamily::readVector(reader));
+    uint32_t count = reader->read<uint32_t>();
+    std::vector<std::shared_ptr<FontCollection>> fontCollections;
+    fontCollections.reserve(count);
+    for (uint32_t i = 0; i < count; i++) {
+        fontCollections.emplace_back(new FontCollection(reader, allFontFamilies));
+    }
+    return fontCollections;
+}
+
+// static
+void FontCollection::writeVector(
+        BufferWriter* writer, const std::vector<std::shared_ptr<FontCollection>>& fontCollections) {
+    std::vector<std::shared_ptr<FontFamily>> allFontFamilies;
+    // Note: operator== for shared_ptr compares raw pointer values.
+    std::unordered_map<std::shared_ptr<FontFamily>, uint32_t> fontFamilyToIndexMap;
+    collectAllFontFamilies(fontCollections, &allFontFamilies, &fontFamilyToIndexMap);
+
+    FontFamily::writeVector(writer, allFontFamilies);
+    writer->write<uint32_t>(fontCollections.size());
+    for (const auto& fontCollection : fontCollections) {
+        fontCollection->writeTo(writer, fontFamilyToIndexMap);
+    }
+}
+
+// static
+void FontCollection::collectAllFontFamilies(
+        const std::vector<std::shared_ptr<FontCollection>>& fontCollections,
+        std::vector<std::shared_ptr<FontFamily>>* outAllFontFamilies,
+        std::unordered_map<std::shared_ptr<FontFamily>, uint32_t>* outFontFamilyToIndexMap) {
+    for (const auto& fontCollection : fontCollections) {
+        for (size_t i = 0; i < fontCollection->getFamilyCount(); ++i) {
+            const std::shared_ptr<FontFamily>& fontFamily = fontCollection->getFamilyAt(i);
+            bool inserted =
+                    outFontFamilyToIndexMap->emplace(fontFamily, outAllFontFamilies->size()).second;
+            if (inserted) {
+                outAllFontFamilies->push_back(fontFamily);
+            }
+        }
+    }
 }
 
 // Special scores for the font fallback.
@@ -140,6 +337,22 @@ uint32_t FontCollection::calcFamilyScore(uint32_t ch, uint32_t vs, FamilyVariant
     return coverageScore << 29 | localeScore << 1 | variantScore;
 }
 
+// Returns true if
+//  - the fontFamily is a developer specified custom fallback.
+//  - no custom fallback is provided and the fontFamily is a default fallback.
+bool FontCollection::isPrimaryFamily(const std::shared_ptr<FontFamily>& fontFamily) const {
+    // If the font family is provided by developers, it is primary.
+    if (fontFamily->isCustomFallback()) {
+        return true;
+    }
+
+    if (getFamilyAt(0)->isCustomFallback()) {
+        return false;
+    } else {
+        return fontFamily->isDefaultFallback();
+    }
+}
+
 // Calculates a font score based on variation sequence coverage.
 // - Returns kUnsupportedFontScore if the font doesn't support the variation sequence or its base
 //   character.
@@ -158,7 +371,7 @@ uint32_t FontCollection::calcCoverageScore(uint32_t ch, uint32_t vs, uint32_t lo
         return kUnsupportedFontScore;
     }
 
-    if ((vs == 0 || hasVSGlyph) && (mFamilies[0] == fontFamily || fontFamily->isCustomFallback())) {
+    if ((vs == 0 || hasVSGlyph) && isPrimaryFamily(fontFamily)) {
         // If the first font family supports the given character or variation sequence, always use
         // it.
         return kFirstFontScore;
@@ -248,36 +461,40 @@ uint32_t FontCollection::calcVariantMatchingScore(FamilyVariant variant,
 // 2. Calculate a score for the font family. See comments in calcFamilyScore for the detail.
 // 3. Highest score wins, with ties resolved to the first font.
 // This method never returns nullptr.
-const std::shared_ptr<FontFamily>& FontCollection::getFamilyForChar(uint32_t ch, uint32_t vs,
-                                                                    uint32_t localeListId,
-                                                                    FamilyVariant variant) const {
+FontCollection::FamilyMatchResult FontCollection::getFamilyForChar(uint32_t ch, uint32_t vs,
+                                                                   uint32_t localeListId,
+                                                                   FamilyVariant variant) const {
     if (ch >= mMaxChar) {
-        return mFamilies[0];
+        return FamilyMatchResult::Builder().add(0).build();
     }
 
     Range range = mRanges[ch >> kLogCharsPerPage];
 
     if (vs != 0) {
-        range = {0, static_cast<uint16_t>(mFamilies.size())};
+        range = {0, static_cast<uint16_t>(getFamilyCount())};
     }
 
-    int bestFamilyIndex = -1;
     uint32_t bestScore = kUnsupportedFontScore;
+    FamilyMatchResult::Builder builder;
+
     for (size_t i = range.start; i < range.end; i++) {
-        const std::shared_ptr<FontFamily>& family =
-                vs == 0 ? mFamilies[mFamilyVec[i]] : mFamilies[i];
+        const uint8_t familyIndex = vs == 0 ? mFamilyVec[i] : i;
+        const std::shared_ptr<FontFamily>& family = getFamilyAt(familyIndex);
         const uint32_t score = calcFamilyScore(ch, vs, variant, localeListId, family);
         if (score == kFirstFontScore) {
             // If the first font family supports the given character or variation sequence, always
             // use it.
-            return family;
+            return builder.add(familyIndex).build();
         }
-        if (score > bestScore) {
-            bestScore = score;
-            bestFamilyIndex = i;
+        if (score != kUnsupportedFontScore && score >= bestScore) {
+            if (score > bestScore) {
+                builder.reset();
+                bestScore = score;
+            }
+            builder.add(familyIndex);
         }
     }
-    if (bestFamilyIndex == -1) {
+    if (builder.empty()) {
         UErrorCode errorCode = U_ZERO_ERROR;
         const UNormalizer2* normalizer = unorm2_getNFDInstance(&errorCode);
         if (U_SUCCESS(errorCode)) {
@@ -289,9 +506,9 @@ const std::shared_ptr<FontFamily>& FontCollection::getFamilyForChar(uint32_t ch,
                 return getFamilyForChar(ch, vs, localeListId, variant);
             }
         }
-        return mFamilies[0];
+        return FamilyMatchResult::Builder().add(0).build();
     }
-    return vs == 0 ? mFamilies[mFamilyVec[bestFamilyIndex]] : mFamilies[bestFamilyIndex];
+    return builder.build();
 }
 
 // Characters where we want to continue using existing font run for (or stick to the next run if
@@ -311,7 +528,7 @@ static bool doesNotNeedFontSupport(uint32_t c) {
 
 // Characters where we want to continue using existing font run instead of
 // recomputing the best match in the fallback list.
-static const uint32_t stickyWhitelist[] = {
+static const uint32_t stickyAllowlist[] = {
         '!',    ',', '-', '.', ':', ';', '?',
         0x00A0,  // NBSP
         0x2010,  // HYPHEN
@@ -322,9 +539,9 @@ static const uint32_t stickyWhitelist[] = {
         0x2695,  // STAFF_OF_AESCULAPIUS
 };
 
-static bool isStickyWhitelisted(uint32_t c) {
-    for (size_t i = 0; i < sizeof(stickyWhitelist) / sizeof(stickyWhitelist[0]); i++) {
-        if (stickyWhitelist[i] == c) return true;
+static bool isStickyAllowlisted(uint32_t c) {
+    for (size_t i = 0; i < sizeof(stickyAllowlist) / sizeof(stickyAllowlist[0]); i++) {
+        if (stickyAllowlist[i] == c) return true;
     }
     return false;
 }
@@ -355,8 +572,9 @@ bool FontCollection::hasVariationSelector(uint32_t baseCodepoint,
     // sequences, since Unicode is adding variation sequences more frequently now and may even move
     // towards allowing text and emoji variation selectors on any character.
     if (variationSelector == TEXT_STYLE_VS) {
-        for (size_t i = 0; i < mFamilies.size(); ++i) {
-            if (!mFamilies[i]->isColorEmojiFamily() && mFamilies[i]->hasGlyph(baseCodepoint, 0)) {
+        for (size_t i = 0; i < getFamilyCount(); ++i) {
+            const std::shared_ptr<FontFamily>& family = getFamilyAt(i);
+            if (!family->isColorEmojiFamily() && family->hasGlyph(baseCodepoint, 0)) {
                 return true;
             }
         }
@@ -367,22 +585,45 @@ bool FontCollection::hasVariationSelector(uint32_t baseCodepoint,
 
 constexpr uint32_t REPLACEMENT_CHARACTER = 0xFFFD;
 
-std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, FontStyle style,
+FontCollection::FamilyMatchResult FontCollection::FamilyMatchResult::intersect(
+        FontCollection::FamilyMatchResult l, FontCollection::FamilyMatchResult r) {
+    if (l == r) {
+        return l;
+    }
+
+    uint32_t li = 0;
+    uint32_t ri = 0;
+    FamilyMatchResult::Builder b;
+    while (li < l.size() && ri < r.size()) {
+        if (l[li] < r[ri]) {
+            li++;
+        } else if (l[li] > r[ri]) {
+            ri++;
+        } else {  // l[li] == r[ri]
+            b.add(l[li]);
+            li++;
+            ri++;
+        }
+    }
+    return b.build();
+}
+
+std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, FontStyle,
                                                          uint32_t localeListId,
                                                          FamilyVariant familyVariant,
                                                          uint32_t runMax) const {
     const uint16_t* string = text.data();
     const uint32_t string_size = text.size();
-    std::vector<Run> result;
 
-    const FontFamily* lastFamily = nullptr;
-    Run* run = nullptr;
+    FamilyMatchResult lastFamilyIndices = FamilyMatchResult();
 
     if (string_size == 0) {
-        return result;
+        return std::vector<Run>();
     }
 
     const uint32_t kEndOfString = 0xFFFFFFFF;
+    std::vector<Run> result;
+    Run* run = nullptr;
 
     uint32_t nextCh = 0;
     uint32_t prevCh = 0;
@@ -410,15 +651,51 @@ std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, Fo
         if (doesNotNeedFontSupport(ch)) {
             // Always continue if the character is a format character not needed to be in the font.
             shouldContinueRun = true;
-        } else if (lastFamily != nullptr && (isStickyWhitelisted(ch) || isCombining(ch))) {
+        } else if (!lastFamilyIndices.empty() && (isStickyAllowlisted(ch) || isCombining(ch))) {
             // Continue using existing font as long as it has coverage and is whitelisted.
-            shouldContinueRun = lastFamily->getCoverage().get(ch);
+
+            const std::shared_ptr<FontFamily>& lastFamily = getFamilyAt(lastFamilyIndices[0]);
+            if (lastFamily->isColorEmojiFamily()) {
+                // If the last family is color emoji font, find the longest family.
+                shouldContinueRun = false;
+                for (uint8_t ix : lastFamilyIndices) {
+                    shouldContinueRun |= getFamilyAt(ix)->getCoverage().get(ch);
+                }
+            } else {
+                shouldContinueRun = lastFamily->getCoverage().get(ch);
+            }
         }
 
         if (!shouldContinueRun) {
-            const std::shared_ptr<FontFamily>& family = getFamilyForChar(
+            FamilyMatchResult familyIndices = getFamilyForChar(
                     ch, isVariationSelector(nextCh) ? nextCh : 0, localeListId, familyVariant);
-            if (utf16Pos == 0 || family.get() != lastFamily) {
+            bool breakRun;
+            if (utf16Pos == 0 || lastFamilyIndices.empty()) {
+                breakRun = true;
+            } else {
+                const std::shared_ptr<FontFamily>& lastFamily = getFamilyAt(lastFamilyIndices[0]);
+                if (lastFamily->isColorEmojiFamily()) {
+                    FamilyMatchResult intersection =
+                            FamilyMatchResult::intersect(familyIndices, lastFamilyIndices);
+                    if (intersection.empty()) {
+                        breakRun = true;  // None of last family can draw the given char.
+                    } else {
+                        breakRun = isEmojiBreak(prevCh, ch);
+                        if (!breakRun) {
+                            // To select sequence supported families, update family indices with the
+                            // intersection between the supported families between prev char and
+                            // current char.
+                            familyIndices = intersection;
+                            lastFamilyIndices = intersection;
+                            run->familyMatch = intersection;
+                        }
+                    }
+                } else {
+                    breakRun = familyIndices[0] != lastFamilyIndices[0];
+                }
+            }
+
+            if (breakRun) {
                 size_t start = utf16Pos;
                 // Workaround for combining marks and emoji modifiers until we implement
                 // per-cluster font selection: if a combining mark or an emoji modifier is found in
@@ -426,27 +703,31 @@ std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, Fo
                 // character to the new run. U+20E3 COMBINING ENCLOSING KEYCAP, used in emoji, is
                 // handled properly by this since it's a combining mark too.
                 if (utf16Pos != 0 &&
-                    (isCombining(ch) || (isEmojiModifier(ch) && isEmojiBase(prevCh))) &&
-                    family != nullptr && family->getCoverage().get(prevCh)) {
-                    const size_t prevChLength = U16_LENGTH(prevCh);
-                    if (run != nullptr) {
-                        run->end -= prevChLength;
-                        if (run->start == run->end) {
-                            result.pop_back();
+                    (isCombining(ch) || (isEmojiModifier(ch) && isEmojiBase(prevCh)))) {
+                    for (uint8_t ix : familyIndices) {
+                        if (getFamilyAt(ix)->getCoverage().get(prevCh)) {
+                            const size_t prevChLength = U16_LENGTH(prevCh);
+                            if (run != nullptr) {
+                                run->end -= prevChLength;
+                                if (run->start == run->end) {
+                                    result.pop_back();
+                                }
+                            }
+                            start -= prevChLength;
+                            break;
                         }
                     }
-                    start -= prevChLength;
                 }
-                if (lastFamily == nullptr) {
+                if (lastFamilyIndices.empty()) {
                     // This is the first family ever assigned. We are either seeing the very first
                     // character (which means start would already be zero), or we have only seen
                     // characters that don't need any font support (which means we need to adjust
                     // start to be 0 to include those characters).
                     start = 0;
                 }
-                result.push_back({family->getClosestMatch(style), static_cast<int>(start), 0});
+                result.push_back({familyIndices, static_cast<int>(start), 0});
                 run = &result.back();
-                lastFamily = family.get();
+                lastFamilyIndices = run->familyMatch;
             }
         }
         prevCh = ch;
@@ -464,32 +745,57 @@ std::vector<FontCollection::Run> FontCollection::itemize(U16StringPiece text, Fo
         }
     } while (nextCh != kEndOfString);
 
-    if (lastFamily == nullptr) {
+    if (lastFamilyIndices.empty()) {
         // No character needed any font support, so it doesn't really matter which font they end up
         // getting displayed in. We put the whole string in one run, using the first font.
-        result.push_back({mFamilies[0]->getClosestMatch(style), 0, static_cast<int>(string_size)});
+        result.push_back(
+                {FamilyMatchResult::Builder().add(0).build(), 0, static_cast<int>(string_size)});
     }
 
     if (result.size() > runMax) {
         // The itemization has terminated since it reaches the runMax. Remove last unfinalized runs.
-        result.resize(runMax);
+        return std::vector<Run>(result.begin(), result.begin() + runMax);
     }
+
     return result;
 }
 
+FakedFont FontCollection::getBestFont(U16StringPiece text, const Run& run, FontStyle style) {
+    uint8_t bestIndex = 0;
+    uint32_t bestScore = 0xFFFFFFFF;
+
+    const std::shared_ptr<FontFamily>& family = getFamilyAt(run.familyMatch[0]);
+    if (family->isColorEmojiFamily() && run.familyMatch.size() > 1) {
+        for (size_t i = 0; i < run.familyMatch.size(); ++i) {
+            const std::shared_ptr<FontFamily>& family = getFamilyAt(run.familyMatch[i]);
+            const HbFontUniquePtr& font = family->getFont(0)->baseFont();
+            uint32_t score = getGlyphScore(text, run.start, run.end, font);
+
+            if (score < bestScore) {
+                bestIndex = run.familyMatch[i];
+                bestScore = score;
+            }
+        }
+    } else {
+        bestIndex = run.familyMatch[0];
+    }
+    return getFamilyAt(bestIndex)->getClosestMatch(style);
+}
+
 FakedFont FontCollection::baseFontFaked(FontStyle style) {
-    return mFamilies[0]->getClosestMatch(style);
+    return getFamilyAt(0)->getClosestMatch(style);
 }
 
 std::shared_ptr<FontCollection> FontCollection::createCollectionWithVariation(
         const std::vector<FontVariation>& variations) {
-    if (variations.empty() || mSupportedAxes.empty()) {
+    if (variations.empty() || mSupportedAxesCount == 0) {
         return nullptr;
     }
 
     bool hasSupportedAxis = false;
     for (const FontVariation& variation : variations) {
-        if (mSupportedAxes.find(variation.axisTag) != mSupportedAxes.end()) {
+        if (std::binary_search(mSupportedAxes.get(), mSupportedAxes.get() + mSupportedAxesCount,
+                               variation.axisTag)) {
             hasSupportedAxis = true;
             break;
         }
@@ -500,7 +806,8 @@ std::shared_ptr<FontCollection> FontCollection::createCollectionWithVariation(
     }
 
     std::vector<std::shared_ptr<FontFamily>> families;
-    for (const std::shared_ptr<FontFamily>& family : mFamilies) {
+    for (size_t i = 0; i < getFamilyCount(); ++i) {
+        const std::shared_ptr<FontFamily>& family = getFamilyAt(i);
         std::shared_ptr<FontFamily> newFamily = family->createFamilyWithVariation(variations);
         if (newFamily) {
             families.push_back(newFamily);
@@ -510,6 +817,15 @@ std::shared_ptr<FontCollection> FontCollection::createCollectionWithVariation(
     }
 
     return std::shared_ptr<FontCollection>(new FontCollection(families));
+}
+
+std::shared_ptr<FontCollection> FontCollection::createCollectionWithFamilies(
+        std::vector<std::shared_ptr<FontFamily>>&& families) const {
+    families.reserve(families.size() + getFamilyCount());
+    for (size_t i = 0; i < getFamilyCount(); i++) {
+        families.push_back(getFamilyAt(i));
+    }
+    return FontCollection::create(families);
 }
 
 uint32_t FontCollection::getId() const {

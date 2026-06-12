@@ -32,21 +32,24 @@
 namespace minikin {
 
 namespace {
-static UBreakIterator* createNewIterator(const Locale& locale) {
+static UBreakIterator* createNewIterator(const Locale& locale, LineBreakStyle lbStyle,
+                                         LineBreakWordStyle lbWordStyle) {
     // TODO: handle failure status
     UErrorCode status = U_ZERO_ERROR;
     char localeID[ULOC_FULLNAME_CAPACITY] = {};
-    uloc_forLanguageTag(locale.getString().c_str(), localeID, ULOC_FULLNAME_CAPACITY, nullptr,
-                        &status);
+    uloc_forLanguageTag(locale.getStringWithLineBreakOption(lbStyle, lbWordStyle).c_str(), localeID,
+                        ULOC_FULLNAME_CAPACITY, nullptr, &status);
     return ubrk_open(UBreakIteratorType::UBRK_LINE, localeID, nullptr, 0, &status);
 }
 }  // namespace
 
-ICULineBreakerPool::Slot ICULineBreakerPoolImpl::acquire(const Locale& locale) {
+ICULineBreakerPool::Slot ICULineBreakerPoolImpl::acquire(const Locale& locale,
+                                                         LineBreakStyle lbStyle,
+                                                         LineBreakWordStyle lbWordStyle) {
     const uint64_t id = locale.getIdentifier();
     std::lock_guard<std::mutex> lock(mMutex);
     for (auto i = mPool.begin(); i != mPool.end(); i++) {
-        if (i->localeId == id) {
+        if (i->localeId == id && i->lbStyle == lbStyle && i->lbWordStyle == lbWordStyle) {
             Slot slot = std::move(*i);
             mPool.erase(i);
             return slot;
@@ -54,7 +57,8 @@ ICULineBreakerPool::Slot ICULineBreakerPoolImpl::acquire(const Locale& locale) {
     }
 
     // Not found in pool. Create new one.
-    return {id, IcuUbrkUniquePtr(createNewIterator(locale))};
+    return {id, lbStyle, lbWordStyle,
+            IcuUbrkUniquePtr(createNewIterator(locale, lbStyle, lbWordStyle))};
 }
 
 void ICULineBreakerPoolImpl::release(ICULineBreakerPool::Slot&& slot) {
@@ -71,18 +75,21 @@ void ICULineBreakerPoolImpl::release(ICULineBreakerPool::Slot&& slot) {
     mPool.push_front(std::move(slot));
 }
 
-WordBreaker::WordBreaker() : mPool(&ICULineBreakerPoolImpl::getInstance()) {
-    mUText = nullptr;
-}
+WordBreaker::WordBreaker()
+        : mPool(&ICULineBreakerPoolImpl::getInstance()), mUText(nullptr, &utext_close) {}
 
-WordBreaker::WordBreaker(ICULineBreakerPool* pool) : mPool(pool) {}
+WordBreaker::WordBreaker(ICULineBreakerPool* pool) : mPool(pool), mUText(nullptr, &utext_close) {}
 
-ssize_t WordBreaker::followingWithLocale(const Locale& locale, size_t from) {
-    mIcuBreaker = mPool->acquire(locale);
+ssize_t WordBreaker::followingWithLocale(const Locale& locale, LineBreakStyle lbStyle,
+                                         LineBreakWordStyle lbWordStyle, size_t from) {
+    if (!mUText) {
+        return mCurrent;
+    }
+    mIcuBreaker = mPool->acquire(locale, lbStyle, lbWordStyle);
     UErrorCode status = U_ZERO_ERROR;
     MINIKIN_ASSERT(mText != nullptr, "setText must be called first");
     // TODO: handle failure status
-    ubrk_setUText(mIcuBreaker.breaker.get(), mUText, &status);
+    ubrk_setUText(mIcuBreaker.breaker.get(), mUText.get(), &status);
     if (mInEmailOrUrl) {
         // Note:
         // Don't reset mCurrent, mLast, or mScanOffset for keeping email/URL context.
@@ -105,7 +112,7 @@ void WordBreaker::setText(const uint16_t* data, size_t size) {
     mScanOffset = 0;
     mInEmailOrUrl = false;
     UErrorCode status = U_ZERO_ERROR;
-    mUText=utext_openUChars(mUText, reinterpret_cast<const UChar*>(data), size, &status);
+    mUText.reset(utext_openUChars(nullptr, reinterpret_cast<const UChar*>(data), size, &status));
 }
 
 ssize_t WordBreaker::current() const {
@@ -314,8 +321,7 @@ int WordBreaker::breakBadness() const {
 
 void WordBreaker::finish() {
     mText = nullptr;
-    // Note: calling utext_close multiply is safe
-    utext_close(mUText);
+    mUText.reset();
     mPool->release(std::move(mIcuBreaker));
 }
 

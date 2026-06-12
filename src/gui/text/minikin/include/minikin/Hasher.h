@@ -37,6 +37,26 @@ public:
         return *this;
     }
 
+    inline Hasher& update(int32_t data) {
+        update(static_cast<uint32_t>(data));
+        return *this;
+    }
+
+    inline Hasher& update(uint64_t data) {
+        update(static_cast<uint32_t>(data));
+        update(static_cast<uint32_t>(data >> 32));
+        return *this;
+    }
+
+    inline Hasher& update(float data) {
+        union {
+            float f;
+            uint32_t i;
+        } bits;
+        bits.f = data;
+        return update(bits.i);
+    }
+
     inline Hasher& updateShorts(const uint16_t* data, uint32_t length) {
         update(length);
         uint32_t i;

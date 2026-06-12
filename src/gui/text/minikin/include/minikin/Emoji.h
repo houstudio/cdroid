@@ -27,6 +27,18 @@ bool isEmojiBase(uint32_t c);
 // Returns true if c is emoji modifier.
 bool isEmojiModifier(uint32_t c);
 
+inline bool isRegionalIndicator(uint32_t c) {
+    return 0x1F1E6 <= c && c <= 0x1F1FF;
+}
+
+inline bool isKeyCap(uint32_t c) {
+    return c == 0x20E3;
+}
+
+inline bool isTagChar(uint32_t c) {
+    return 0xE0000 <= c && c <= 0xE007F;
+}
+
 // Bidi override for ICU that knows about new emoji.
 UCharDirection emojiBidiOverride(const void* context, UChar32 c);
 

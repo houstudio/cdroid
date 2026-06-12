@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <vector>
+#include <cmath>
 #include <climits>
 #include "minikin/Range.h"
 #include "minikin/SparseBitSet.h"
@@ -368,8 +369,7 @@ static bool getVSCoverage(std::vector<uint32_t>* out_ranges, const uint8_t* data
     return true;
 }
 
-static void getCoverageFormat14(std::vector<std::unique_ptr<SparseBitSet>>* out,
-                                const uint8_t* data, size_t size,
+static void getCoverageFormat14(std::vector<SparseBitSet>* out, const uint8_t* data, size_t size,
                                 const SparseBitSet& baseCoverage) {
     constexpr size_t kHeaderSize = 10;
     constexpr size_t kRecordSize = 11;
@@ -417,14 +417,14 @@ static void getCoverageFormat14(std::vector<std::unique_ptr<SparseBitSet>>* out,
         if (out->size() < vsIndex + 1) {
             out->resize(vsIndex + 1);
         }
-        (*out)[vsIndex].reset(new SparseBitSet(ranges.data(), ranges.size() >> 1));
+        (*out)[vsIndex] = SparseBitSet(ranges.data(), ranges.size() >> 1);
     }
 
     out->shrink_to_fit();
 }
 
 SparseBitSet CmapCoverage::getCoverage(const uint8_t* cmap_data, size_t cmap_size,
-                                       std::vector<std::unique_ptr<SparseBitSet>>* out) {
+                                       std::vector<SparseBitSet>* out) {
     constexpr size_t kHeaderSize = 4;
     constexpr size_t kNumTablesOffset = 2;
     constexpr size_t kTableSize = 8;

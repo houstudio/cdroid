@@ -36,7 +36,7 @@ namespace minikin {
 // paragraphs, accuracy could degrade using only 32-bit float. Note however that float is used
 // extensively on the Java side for this. This is a typedef so that we can easily change it based
 // on performance/accuracy tradeoff.
-typedef double ParaWidth;
+typedef float ParaWidth;
 
 // Hyphenates a string potentially containing non-breaking spaces.
 std::vector<HyphenationType> hyphenate(const U16StringPiece& string, const Hyphenator& hypenator);
@@ -62,13 +62,15 @@ inline Locale getEffectiveLocale(uint32_t localeListId) {
 
 // Retrieves hyphenation break points from a word.
 inline void populateHyphenationPoints(
-        const U16StringPiece& textBuf,        // A text buffer.
-        const Run& run,                       // A run of this region.
-        const Hyphenator& hyphenator,         // A hyphenator to be used for hyphenation.
-        const Range& contextRange,            // A context range for measuring hyphenated piece.
-        const Range& hyphenationTargetRange,  // An actual range for the hyphenation target.
-        std::vector<HyphenBreak>* out,        // An output to be appended.
-        LayoutPieces* pieces) {               // An output of layout pieces. Maybe null.
+        const U16StringPiece& textBuf,         // A text buffer.
+        const Run& run,                        // A run of this region.
+        const Hyphenator& hyphenator,          // A hyphenator to be used for hyphenation.
+        const Range& contextRange,             // A context range for measuring hyphenated piece.
+        const Range& hyphenationTargetRange,   // An actual range for the hyphenation target.
+        const std::vector<float>& charWidths,  // Char width used for hyphen piece estimation.
+        bool ignoreKerning,                    // True use full shaping for hyphenation piece.
+        std::vector<HyphenBreak>* out,         // An output to be appended.
+        LayoutPieces* pieces) {                // An output of layout pieces. Maybe null.
     if (!run.getRange().contains(contextRange) || !contextRange.contains(hyphenationTargetRange)) {
         return;
     }
@@ -81,19 +83,45 @@ inline void populateHyphenationPoints(
             continue;  // Not a hyphenation point.
         }
 
-        auto hyphenPart = contextRange.split(i);
-        U16StringPiece firstText = textBuf.substr(hyphenPart.first);
-        U16StringPiece secondText = textBuf.substr(hyphenPart.second);
-        const float first =
-                run.measureHyphenPiece(firstText, Range(0, firstText.size()),
-                                       StartHyphenEdit::NO_EDIT /* start hyphen edit */,
-                                       editForThisLine(hyph) /* end hyphen edit */, pieces);
-        const float second =
-                run.measureHyphenPiece(secondText, Range(0, secondText.size()),
-                                       editForNextLine(hyph) /* start hyphen edit */,
-                                       EndHyphenEdit::NO_EDIT /* end hyphen edit */, pieces);
+        if (!ignoreKerning) {
+            auto hyphenPart = contextRange.split(i);
+            U16StringPiece firstText = textBuf.substr(hyphenPart.first);
+            U16StringPiece secondText = textBuf.substr(hyphenPart.second);
+            const float first =
+                    run.measureHyphenPiece(firstText, Range(0, firstText.size()),
+                                           StartHyphenEdit::NO_EDIT /* start hyphen edit */,
+                                           editForThisLine(hyph) /* end hyphen edit */, pieces);
+            const float second =
+                    run.measureHyphenPiece(secondText, Range(0, secondText.size()),
+                                           editForNextLine(hyph) /* start hyphen edit */,
+                                           EndHyphenEdit::NO_EDIT /* end hyphen edit */, pieces);
 
-        out->emplace_back(i, hyph, first, second);
+            out->emplace_back(i, hyph, first, second);
+        } else {
+            float first = 0;
+            float second = 0;
+            for (uint32_t j = contextRange.getStart(); j < i; ++j) {
+                first += charWidths[j];
+            }
+            for (uint32_t j = i; j < contextRange.getEnd(); ++j) {
+                second += charWidths[j];
+            }
+
+            EndHyphenEdit endEdit = editForThisLine(hyph);
+            StartHyphenEdit startEdit = editForNextLine(hyph);
+
+            if (endEdit != EndHyphenEdit::NO_EDIT) {
+                auto it/*[str, strSize]*/ = getHyphenString(endEdit);
+                first += run.measureText(U16StringPiece(it.first/*str*/, it.second/*strSize*/));
+            }
+
+            if (startEdit != StartHyphenEdit::NO_EDIT) {
+                auto it/*[str, strSize]*/ = getHyphenString(startEdit);
+                second += run.measureText(U16StringPiece(it.first/*str*/, it.second/*strSize*/));
+            }
+
+            out->emplace_back(i, hyph, first, second);
+        }
     }
 }
 
@@ -151,7 +179,9 @@ struct CharProcessor {
         uint32_t newLocaleListId = run.getLocaleListId();
         if (localeListId != newLocaleListId) {
             Locale locale = getEffectiveLocale(newLocaleListId);
-            nextWordBreak = breaker.followingWithLocale(locale, run.getRange().getStart());
+            nextWordBreak = breaker.followingWithLocale(locale, run.lineBreakStyle(),
+                                                        run.lineBreakWordStyle(),
+                                                        run.getRange().getStart());
             hyphenator = HyphenatorMap::lookup(locale);
             localeListId = newLocaleListId;
         }

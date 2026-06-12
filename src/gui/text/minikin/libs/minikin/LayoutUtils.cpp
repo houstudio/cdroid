@@ -16,6 +16,8 @@
 
 #include "LayoutUtils.h"
 
+#include "StringPiece.h"
+
 namespace minikin {
 
 /*
