@@ -46,9 +46,9 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     mInputText =(EditText*)findViewById(R::id::numberpicker_input);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mInputTextSize = mInputText->getTextSize();
-        mTextSize = mInputTextSize;
-        mSelectorElementSize = mInputTextSize;
+        mTextSize2 = mInputText->getTextSize();
+        mTextSize = mTextSize2;
+        mSelectorElementSize = mTextSize2;
     }
     mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
     mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
@@ -98,7 +98,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
     mDividerDrawable = atts.getDrawable("selectionDivider");
-    mInputTextSize = atts.getDimensionPixelSize("selectedTextSize",mInputTextSize);
+    mTextSize2 = atts.getDimensionPixelSize("selectedTextSize",mTextSize2);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
         mDividerDrawable->setLayoutDirection(getLayoutDirection());
@@ -181,17 +181,17 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText->setFocusable(false);
     mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
-    mInputTextSize = mInputText->getTextSize();
+    mTextSize2 = mInputText->getTextSize();
     mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
     mSelectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
     //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     if(atts.hasAttribute("selectedTextSize"))
-        mInputTextSize = atts.getDimensionPixelSize("selectedTextSize");
+        mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
     else if(!atts.hasAttribute("internalLayout"))
-        mInputTextSize =std::max(mInputTextSize,mTextSize);
-    setSelectedTextSize(mInputTextSize);
+        mTextSize2 =std::max(mTextSize2,mTextSize);
+    setSelectedTextSize(mTextSize2);
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
@@ -221,7 +221,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     }
 
     updateWrapSelectorWheel();
-    LOGV("%p:%d textSize=%d,%d",this,mID,mInputTextSize,mTextSize);
+    LOGV("%p:%d textSize=%d,%d",this,mID,mTextSize,mTextSize2);
     if(getFocusable()==View::FOCUSABLE_AUTO){
         setFocusable(int(View::FOCUSABLE));
         setFocusableInTouchMode(true);
@@ -297,7 +297,7 @@ void NumberPicker::initView(){
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
     mItemSpacing= 0;
-    mInputTextSize = 24;
+    mTextSize2 = 24;
     mEndDividerEnd = 0;
     mStartDividerStart= 0;
     mInputTextColor = 0xFFFFFFFF;
@@ -895,7 +895,7 @@ void NumberPicker::setValue(int value) {
 }
 
 float NumberPicker::getMaxTextSize()const {
-    return std::max(std::max(mTextSize,mDisplayedDrawableSize), mInputTextSize);
+    return std::max(std::max(mTextSize,mDisplayedDrawableSize), mTextSize2);
 }
 
 bool NumberPicker::performClick() {
@@ -1229,11 +1229,11 @@ void NumberPicker::setSelectedTextColor(int textColor){
 }
 
 int  NumberPicker::getSelectedTextSize()const{
-    return mInputTextSize;
+    return mTextSize2;
 }
 
 void NumberPicker::setSelectedTextSize(int textSize) {
-    mInputTextSize = textSize;
+    mTextSize2 = textSize;
     mInputText->setTextSize(textSize);
     requestLayout();
     invalidate();
@@ -1589,7 +1589,7 @@ void NumberPicker::initializeSelectorWheel(){
     const float textGapCount = selectorIndices.size();
     const int inputEdit_Size = isHorizontalMode()?mInputText->getWidth():mInputText->getHeight();
     if (isHorizontalMode()) {
-        int selectedWidth= (mInputText->getVisibility()==View::VISIBLE)?std::max(mInputTextSize,inputEdit_Size):inputEdit_Size;//mInputTextSize;
+        int selectedWidth= (mInputText->getVisibility()==View::VISIBLE)?std::max(mTextSize2,inputEdit_Size):inputEdit_Size;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedWidth);
         const float totalTextGapWidth = getWidth() - totalTextSize;
         mInputTextGapWidth = (int) (totalTextGapWidth / (textGapCount-1));
@@ -1598,7 +1598,7 @@ void NumberPicker::initializeSelectorWheel(){
             selectedWidth = mSelectorElementSize;
         mInitialScrollOffset = (int) (mInputTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
-        int selectedHeight= std::max(mSelectorElementSize,inputEdit_Size);//:mInputTextSize;
+        int selectedHeight= std::max(mSelectorElementSize,inputEdit_Size);
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedHeight);
         const float totalTextGapHeight= getHeight() - totalTextSize;
         mInputTextGapHeight = (int) (totalTextGapHeight / (textGapCount-1));
@@ -1607,7 +1607,7 @@ void NumberPicker::initializeSelectorWheel(){
             selectedHeight = mSelectorElementSize;
         mInitialScrollOffset = (int) (mInputTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
-    LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mInputText->getHeight(),mInputTextSize,mTextSize);
+    LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mInputText->getHeight(),mTextSize2,mTextSize);
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }

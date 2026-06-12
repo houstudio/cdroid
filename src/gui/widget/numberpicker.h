@@ -72,7 +72,6 @@ private:
     int mMinWidth;
     int mMaxWidth;
     int mTextSize,mTextSize2;
-    int mInputTextSize;
     int mTextColor,mTextColor2;
     int mInputTextColor;
     int mInputTextGapWidth;
