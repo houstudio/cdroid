@@ -121,7 +121,7 @@ void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
          */
         TextLine* line = TextLine::obtain();
         line->set(paint, source, 0, source->length(), Layout::DIR_LEFT_TO_RIGHT,
-                &Layout::DIRS_ALL_LEFT_TO_RIGHT, false/*hasTabs*/, nullptr/*TabStops*/,
+                &DIRS_ALL_LEFT_TO_RIGHT, false/*hasTabs*/, nullptr/*TabStops*/,
                 mEllipsizedStart, mEllipsizedStart + mEllipsizedCount);
         mMax = (int) std::ceil(line->metrics(nullptr));
         TextLine::recycle(line);
@@ -202,7 +202,7 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
 
     TextLine* line = TextLine::obtain();
     line->set(paint, text, 0, textLength, Layout::DIR_LEFT_TO_RIGHT,
-            &Layout::DIRS_ALL_LEFT_TO_RIGHT, false, nullptr,
+            &DIRS_ALL_LEFT_TO_RIGHT, false, nullptr,
             0 /* ellipsisStart, 0 since text has not been ellipsized at this point */,
             0 /* ellipsisEnd, 0 since text has not been ellipsized at this point */);
     fm->width = (int) std::ceil(line->metrics(fm));

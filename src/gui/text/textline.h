@@ -7,7 +7,6 @@ namespace cdroid{
 class Directions;
 class TabStops;
 class PrecomputedText;
-//using FontMetricsInt=Cairo::FontExtents;
 class TextLine {
 private:
     class DecorationInfo {

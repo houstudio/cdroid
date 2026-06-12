@@ -13,43 +13,27 @@
 #include <text/linebreaker.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
-class Directions {
-public:
-    std::vector<int> mDirections;
-    Directions(const std::vector<int>& dirs) {
-        mDirections = dirs;
-    }
-    int getRunCount() const{
-        return mDirections.size() / 2;
-    }
-    int getRunStart(int runIndex) const{
-        return mDirections[runIndex * 2];
-    }
-    int getRunLength(int runIndex) const{
-        return mDirections[runIndex * 2 + 1] & 0x03ffffff/*0xRUN_LENGTH_MASK*/;
-    }
-    bool isRunRtl(int runIndex) const{
-        return (mDirections[runIndex * 2 + 1] & (1<<26/*RUN_RTL_FLAG*/)) != 0;
-    }
-    bool operator==(const Directions&o)const{
-        return mDirections==o.mDirections;
-    }
-};
-class TabStops {
-    std::vector<float> mStops;
-    int mNumStops;
-    float mIncrement;
-public:
-    TabStops(float increment, const std::vector<ParcelableSpan*>& spans);
-    void reset(float increment, const std::vector<ParcelableSpan*>& spans);
-    float nextTab(float h);
-    static float nextDefaultStop(float h, float inc) {
-        return ((int) ((h + inc) / inc)) * inc;
-    }
-};
-
+class Directions;
+class TabStops;
 class Layout {
 public:
+    static constexpr int DIR_LEFT_TO_RIGHT = 1;
+    static constexpr int DIR_RIGHT_TO_LEFT = -1;
+
+    static constexpr int DIR_REQUEST_LTR = 1;
+    static constexpr int DIR_REQUEST_RTL = -1;
+    static constexpr int DIR_REQUEST_DEFAULT_LTR = 2;
+    static constexpr int DIR_REQUEST_DEFAULT_RTL = -2;
+
+    static constexpr int RUN_LENGTH_MASK = 0x03ffffff;
+    static constexpr int RUN_LEVEL_SHIFT = 26;
+    static constexpr int RUN_LEVEL_MASK = 0x3f;
+    static constexpr int RUN_RTL_FLAG = 1 << RUN_LEVEL_SHIFT;
+
+    static constexpr float TAB_INCREMENT = 20;
+
+    static constexpr int TEXT_SELECTION_LAYOUT_RIGHT_TO_LEFT = 0;
+    static constexpr int TEXT_SELECTION_LAYOUT_LEFT_TO_RIGHT = 1;
     static constexpr int BREAK_STRATEGY_SIMPLE = LineBreaker::BREAK_STRATEGY_SIMPLE;
     static constexpr int BREAK_STRATEGY_HIGH_QUALITY = LineBreaker::BREAK_STRATEGY_HIGH_QUALITY;
     static constexpr int BREAK_STRATEGY_BALANCED = LineBreaker::BREAK_STRATEGY_BALANCED;
@@ -65,6 +49,7 @@ public:
 
     static constexpr float DEFAULT_LINESPACING_MULTIPLIER = 1.0f;
     static constexpr float DEFAULT_LINESPACING_ADDITION = 0.0f;
+
 
     using SelectionRectangleConsumer = std::function<void(float left, float top, float right, float bottom,int textSelectionLayout)>;
     enum{
@@ -82,6 +67,8 @@ public:
         ALIGN_LEFT,
         ALIGN_RIGHT,
     };
+    static const Directions DIRS_ALL_LEFT_TO_RIGHT;
+    static const Directions DIRS_ALL_RIGHT_TO_LEFT;
 private:
     bool isJustificationRequired(int lineNum)const;
     float getJustifyWidth(int lineNum)const;
@@ -92,7 +79,7 @@ private:
     float getHorizontal(int offset, bool trailing, int line, bool clamped)const;
     std::vector<float> getLineHorizontals(int line, bool clamped, bool primary);
     float getLineExtent(int line, bool full)const;
-    float getLineExtent(int line, TabStops& tabStops, bool full)const;
+    float getLineExtent(int line, class TabStops& tabStops, bool full)const;
     int getLineVisibleEnd(int line, int start, int end)const;
     int getOffsetToLeftRightOf(int caret, bool toLeft)const;
     int getOffsetAtStartOf(int offset)const;
@@ -361,7 +348,7 @@ public:
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
             return mSpanned->nextSpanTransition(start, limit, type);
         }
-};
+   };
 private:
     CharSequence* mText;
     TextPaint* mPaint;
@@ -385,27 +372,44 @@ private:
     const TextDirectionHeuristic* mTextDir;
     cdroid::SpanSet*mLineBackgroundSpans;
 public:
-    static constexpr int DIR_LEFT_TO_RIGHT = 1;
-    static constexpr int DIR_RIGHT_TO_LEFT = -1;
-
-    static constexpr int DIR_REQUEST_LTR = 1;
-    static constexpr int DIR_REQUEST_RTL = -1;
-    static constexpr int DIR_REQUEST_DEFAULT_LTR = 2;
-    static constexpr int DIR_REQUEST_DEFAULT_RTL = -2;
-
-    static constexpr int RUN_LENGTH_MASK = 0x03ffffff;
-    static constexpr int RUN_LEVEL_SHIFT = 26;
-    static constexpr int RUN_LEVEL_MASK = 0x3f;
-    static constexpr int RUN_RTL_FLAG = 1 << RUN_LEVEL_SHIFT;
-
-    static constexpr float TAB_INCREMENT = 20;
-
-    static const Directions DIRS_ALL_LEFT_TO_RIGHT;
-    static const Directions DIRS_ALL_RIGHT_TO_LEFT;
-
-    static constexpr int TEXT_SELECTION_LAYOUT_RIGHT_TO_LEFT = 0;
-    static constexpr int TEXT_SELECTION_LAYOUT_LEFT_TO_RIGHT = 1;
 };
 
+class Directions {
+public:
+    std::vector<int> mDirections;
+    Directions(const std::vector<int>& dirs) {
+        mDirections = dirs;
+    }
+    int getRunCount() const{
+        return mDirections.size() / 2;
+    }
+    int getRunStart(int runIndex) const{
+        return mDirections[runIndex * 2];
+    }
+    int getRunLength(int runIndex) const{
+        return mDirections[runIndex * 2 + 1] & Layout::RUN_LENGTH_MASK;
+    }
+    int getRunLevel(int runIndex) const{
+        return (mDirections[runIndex * 2 + 1] >> Layout::RUN_LEVEL_SHIFT) & Layout::RUN_LEVEL_MASK;
+    }
+    bool isRunRtl(int runIndex) const{
+        return (mDirections[runIndex * 2 + 1] & Layout::RUN_RTL_FLAG) != 0;
+    }
+    bool operator==(const Directions&o)const{
+        return mDirections==o.mDirections;
+    }
+};
+class TabStops {
+    std::vector<float> mStops;
+    int mNumStops;
+    float mIncrement;
+public:
+    TabStops(float increment, const std::vector<ParcelableSpan*>& spans);
+    void reset(float increment, const std::vector<ParcelableSpan*>& spans);
+    float nextTab(float h);
+    static float nextDefaultStop(float h, float inc) {
+        return ((int) ((h + inc) / inc)) * inc;
+    }
+};
 }/*endof namespace*/
 #endif/*__ANDROID_TEXT_LAYOUT_H__*/

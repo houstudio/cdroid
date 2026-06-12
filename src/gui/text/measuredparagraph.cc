@@ -255,7 +255,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
         if (builder == nullptr) {
             mWholeWidth += mCachedPaint.getTextRunAdvances(
                     mCopiedBuffer.data(), start, end - start, start, end - start, false /* isRtl */,
-                    &mWidths, start);
+                    mWidths.data(), start);
         } else {
             builder->appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
         }
@@ -271,7 +271,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
                     const int levelLength = levelEnd - levelStart;
                     mWholeWidth += mCachedPaint.getTextRunAdvances(
                             mCopiedBuffer.data(), levelStart, levelLength, levelStart, levelLength,
-                            isRtl, &mWidths, levelStart);
+                            isRtl, mWidths.data(), levelStart);
                 } else {
                     builder->appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);
                 }

@@ -139,7 +139,7 @@ public:
     int getFontMetricsInt(FontMetricsInt* fmi)const;
     FontMetricsInt getFontMetricsInt()const;
     float getTextRunAdvances(const char16_t* chars, int index, int count, int contextIndex,
-            int contextCount, bool isRtl, std::vector<float>* advances, int advancesIndex)const;
+            int contextCount, bool isRtl, float* advances, int advancesIndex)const;
     float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
     float getRunAdvance(const char16_t* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
     float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const;

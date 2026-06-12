@@ -17,8 +17,8 @@
 #define __ANDROID_BIDI_H__
 #include <cstdint>
 #include <vector>
+#include <text/layout.h>
 namespace cdroid{
-class Directions;
 class AndroidBidi {
 public:
     static int bidi(int dir, const std::vector<char16_t>& chs, std::vector<uint8_t>& chInfo);

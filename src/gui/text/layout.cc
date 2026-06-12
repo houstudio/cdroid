@@ -1,9 +1,9 @@
 #include <charconv>
 #include <cstdint>
+#include <text/spannablestring.h>
 #include <text/layout.h>
 #include <text/measuredparagraph.h>
 namespace cdroid{
-
 const Directions Layout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
 const Directions Layout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
 
