@@ -56,9 +56,13 @@ public:
     static constexpr int HYPHENATION_FREQUENCY_NONE = LineBreaker::HYPHENATION_FREQUENCY_NONE;
     static constexpr int HYPHENATION_FREQUENCY_NORMAL = LineBreaker::HYPHENATION_FREQUENCY_NORMAL;
     static constexpr int HYPHENATION_FREQUENCY_FULL = LineBreaker::HYPHENATION_FREQUENCY_FULL;
+    static constexpr int HYPHENATION_FREQUENCY_NORMAL_FAST = LineBreaker::HYPHENATION_FREQUENCY_NORMAL_FAST;
+    static constexpr int HYPHENATION_FREQUENCY_FULL_FAST = LineBreaker::HYPHENATION_FREQUENCY_FULL_FAST;
 
     static constexpr int JUSTIFICATION_MODE_NONE = LineBreaker::JUSTIFICATION_MODE_NONE;
     static constexpr int JUSTIFICATION_MODE_INTER_WORD = LineBreaker::JUSTIFICATION_MODE_INTER_WORD;
+    static constexpr int JUSTIFICATION_MODE_INTER_CHARACTER=LineBreaker::JUSTIFICATION_MODE_INTER_CHARACTER;
+
     static constexpr float DEFAULT_LINESPACING_MULTIPLIER = 1.0f;
     static constexpr float DEFAULT_LINESPACING_ADDITION = 0.0f;
 
@@ -134,9 +138,23 @@ public:
     }
 
     virtual int getEllipsizedWidth() const{
-        return mWidth;
+        return mEllipsizedWidth;
     }
-
+    TextUtils::TruncateAt getEllipsize()const{
+        return mEllipsize;
+    }
+    int getMaxLines() const{
+        return mMaxLines;
+    }
+    int getBreakStrategy() const{
+        return mBreakStrategy;
+    }
+    int getHyphenationFrequency() const{
+        return mHyphenationFrequency;
+    }
+    int getJustificationMode() const{
+        return mJustificationMode;
+    }
     void increaseWidthTo(int wid);
 
     virtual int getHeight() const{
@@ -156,9 +174,14 @@ public:
     }
 
     float getSpacingAdd() const{
+        return getLineSpacingAmount();
+    }
+    float getLineSpacingAmount() const{
         return mSpacingAdd;
     }
-
+    bool isFontPaddingIncluded() const{
+        return mIncludePad;
+    }
     const TextDirectionHeuristic* getTextDirectionHeuristic() const{
         return mTextDir;
     }
@@ -344,13 +367,23 @@ private:
     TextPaint* mPaint;
     mutable TextPaint mWorkPaint;
     int mWidth;
+    int mEllipsizedWidth;
     Alignment mAlignment = Alignment::ALIGN_NORMAL;
     float mSpacingMult;
-    float mSpacingAdd;
+    float mSpacingAdd; 
     bool mSpannedText;
+    bool mIncludePad;
+    bool mFallbackLineSpacing;
+    bool mUseBoundsForWidth;
+    bool mShiftDrawingOffsetForStartOverhang;
+    TextUtils::TruncateAt mEllipsize;
+    int mMaxLines;
+    int mBreakStrategy;
+    int mHyphenationFrequency;
+    int mJustificationMode;
+    LineBreakConfig* mLineBreakConfig;
     const TextDirectionHeuristic* mTextDir;
     cdroid::SpanSet*mLineBackgroundSpans;
-    int mJustificationMode;
 public:
     static constexpr int DIR_LEFT_TO_RIGHT = 1;
     static constexpr int DIR_RIGHT_TO_LEFT = -1;

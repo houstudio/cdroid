@@ -181,6 +181,75 @@ void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
     }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
+class CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
+private:
+    std::vector<char16_t> mChars;
+    int mStart, mLength;
+public:
+    CharWrapper(const std::vector<char16_t>&chars, int start, int len) {
+        mChars = chars;
+        mStart = start;
+        mLength = len;
+    }
+    void set(const std::vector<char16_t>& chars, int start, int len) {
+        mChars = chars;
+        mStart = start;
+        mLength = len;
+    }
+    size_t length() const override{
+        return mLength;
+    }
+    int charAt(int off) const override{
+        return mChars[off + mStart];
+    }
+    std::string toString() const{
+        return "";//std::u16tring(mChars.data()+mStart, mLength);
+    }
+    CharSequence* subSequence(int start, int end) const override{
+        if (start < 0 || end < 0 || start > mLength || end > mLength) {
+            //throw new IndexOutOfBoundsException(start + ", " + end);
+        }
+        return nullptr;//new SpannedString(mChars, start + mStart, end - start);
+    }
+    void getChars(int start, int end, char16_t* buf, int off) const override{
+        if (start < 0 || end < 0 || start > mLength || end > mLength) {
+            //throw new IndexOutOfBoundsException(start + ", " + end);
+        }
+        memcpy(buf+off,mChars.data()+(mStart+start),(end-start)*2);
+        //System.arraycopy(mChars, start + mStart, buf, off, end - start);
+    }
+    void drawText(Canvas& c, int start, int end, float x, float y, Paint& p) {
+        p.drawTextRun(c,mChars.data(), start + mStart, end - start,0,0, x, y,false);
+    }
+    void drawTextRun(Canvas& c, int start, int end,
+            int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p) {
+        const int count = end - start;
+        const int contextCount = contextEnd - contextStart;
+        p.drawTextRun(c,mChars.data(), start + mStart, count, contextStart + mStart,
+                contextCount, x, y, isRtl);
+    }
+    float measureText(int start, int end, Paint p) {
+        return p.measureText(mChars.data(), start + mStart, end - start);
+    }
+    int getTextWidths(int start, int end, float* widths, Paint& p) {
+        return 0;//p.getTextWidths(mChars.data(), start + mStart, end - start, widths);
+    }
+    float getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
+            bool isRtl, float* advances, int advancesIndex,Paint& p) {
+        const int count = end - start;
+        const int contextCount = contextEnd - contextStart;
+        return p.getTextRunAdvances(mChars.data(), start + mStart, count,
+                contextStart + mStart, contextCount, isRtl, advances,
+                advancesIndex);
+    }
+    int getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
+            int offset, int cursorOpt, Paint& p) {
+        int contextCount = contextEnd - contextStart;
+        return p.getTextRunCursor(mChars.data(), contextStart + mStart,
+                contextCount, isRtl, offset + mStart, cursorOpt);
+    }
+};
+
 class Marquee {
 private:
     static constexpr  float MARQUEE_DELTA_MAX = 0.07f;

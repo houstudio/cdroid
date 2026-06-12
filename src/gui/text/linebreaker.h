@@ -15,11 +15,14 @@ public:
     enum HyphenationFrequency{
         HYPHENATION_FREQUENCY_NONE = 0,
         HYPHENATION_FREQUENCY_NORMAL = 1,
-        HYPHENATION_FREQUENCY_FULL = 2
+        HYPHENATION_FREQUENCY_FULL = 2,
+        HYPHENATION_FREQUENCY_NORMAL_FAST = 3,
+        HYPHENATION_FREQUENCY_FULL_FAST = 4
     };
     enum JustficationMode{
         JUSTIFICATION_MODE_NONE = 0,
-        JUSTIFICATION_MODE_INTER_WORD = 1
+        JUSTIFICATION_MODE_INTER_WORD = 1,
+        JUSTIFICATION_MODE_INTER_CHARACTER=2
     };
 public:
     class ParagraphConstraints {
