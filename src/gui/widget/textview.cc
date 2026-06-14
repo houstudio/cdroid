@@ -2482,7 +2482,8 @@ void TextView::nullLayouts() {
     }
 
     mSavedMarqueeModeLayout = mLayout = mHintLayout = nullptr;
-
+    delete mBoring;
+    delete mHintBoring;
     mBoring = mHintBoring = nullptr;
 
     // Since it depends on the value of mLayout
