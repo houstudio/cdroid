@@ -154,6 +154,7 @@ private:
 
     class Drawables*mDrawables;
     class Marquee*mMarquee;
+    class CharWrapper* mCharWrapper;
     Drawable* mCursorDrawable;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
@@ -234,6 +235,7 @@ protected:
     Spannable*mSpannable;
     PrecomputedText* mPrecomputed;
     CharSequence*mTransformed;
+    BufferType mBufferType = BufferType::NORMAL;
     std::wstring& getEditable();
     void setEditable(bool b);
     int getFontSize()const;
@@ -295,6 +297,7 @@ public:
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
     virtual void setText(CharSequence*txt);
+    void setText(const std::vector<char16_t>&text, int start, int len);
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
     const std::string getText()const;

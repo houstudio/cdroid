@@ -516,15 +516,13 @@ TextView::TextView(const std::string& text, int width, int height)
     initView();
     mText=new SpannedString(TextUtils::utf8_utf16(text));
     mTransformed=mText;
-    //mHintLayout->setWidth(width);
-    //mLayout->setWidth(width);
-    //mLayout->setText(text);
 }
 
 void TextView::initView(){
     mDrawables= nullptr;
     mMarquee  = nullptr;
     mScroller = nullptr;
+    mCharWrapper = nullptr;
     mCursorDrawable = nullptr;
     mSavedMarqueeModeLayout=nullptr;
     mMaxWidth = INT_MAX;
@@ -567,10 +565,6 @@ void TextView::initView(){
     mPreDrawListenerDetached=true;
     mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
-    //mLayout = new Layout(18,1);
-    //mHintLayout = new Layout(mLayout->getFontSize(),1);
-    //mLayout->setMultiline(!mSingleLine);
-    //mHintLayout->setMultiline(!mSingleLine);
     mGravity = Gravity::START|Gravity::TOP;
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
@@ -588,6 +582,14 @@ TextView::~TextView() {
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
+    delete mBoring;
+    delete mHintBoring;
+    if(mHintBoring!=&UNKNOWN_BORING)
+        delete mHintBoring;
+    if(mBoring!=&UNKNOWN_BORING)
+        delete mBoring;
+    if(mText!=mCharWrapper)
+        delete mCharWrapper;
     if(mTransformed!=mText)
         delete mTransformed;
     delete mHint;
@@ -1330,9 +1332,10 @@ void TextView::append(CharSequence* text, int start, int end){
 }
 
 void TextView::setText(const std::string&txt){
-    if(mText==nullptr)
-        mText=new SpannableString(TextUtils::utf8_utf16(txt));
-    if(mTransformed==nullptr)
+    std::u16string u16s=TextUtils::utf8_utf16(txt);
+    std::vector<char16_t>v16(u16s.data(),u16s.data()+u16s.length());
+    setText(v16,0,v16.size());
+    //if(mTransformed==nullptr)
         mTransformed=mText;
     /*if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
@@ -1344,11 +1347,28 @@ void TextView::setText(const std::string&txt){
     }*/
 }
 
+void TextView::setText(const std::vector<char16_t>&text, int start, int len){
+    int oldlen = 0;
+    if (mText != nullptr) {
+        oldlen = mText->length();
+        //sendBeforeTextChanged(mText, 0, oldlen, len);
+    } else {
+        //sendBeforeTextChanged("", 0, 0, len);
+    }
+    if (mCharWrapper == nullptr) {
+        mCharWrapper = new CharWrapper(text, start, len);
+    } else {
+        mCharWrapper->set(text, start, len);
+    }
+    setText(mCharWrapper, mBufferType, false, oldlen);
+
+}
+
 void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
 #if 0
     mTextSetFromXmlOrResourceId = false;
     if (text == nullptr) {
-        //text = "";
+        text = new SpannedString(u"");
     }
 
     // If suggestions are not enabled, remove the suggestion spans from the text
@@ -1406,7 +1426,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             mTextDir = getTextDirectionHeuristic();
         }
         const int checkResult =
-                precomputed.getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
+                precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
                         mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
@@ -1431,7 +1451,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         Spannable* s2;
 
         if (type == BufferType::EDITABLE || dynamic_cast<Spannable*>(text)) {
-            s2 = (Spannable) text;
+            s2 = (Spannable*) text;
         } else {
             s2 = mSpannableFactory.newSpannable(text);
         }
@@ -1454,24 +1474,24 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             }
         }
     }
-
+#endif
     mBufferType = type;
     setTextInternal(text);
 
-    /*if (mTransformation == nullptr) {
+    if (mTransformation == nullptr) {
         mTransformed = text;
     } else {
-        mTransformed = mTransformation.getTransformation(text, this);
+        //mTransformed = mTransformation.getTransformation(text, this);
     }
     if (mTransformed == nullptr) {
         // Should not happen if the transformation method follows the non-null postcondition.
-        mTransformed = "";
-    }*/
+        mTransformed = new SpannedString(u"");
+    }
 
     const int textLength = text->length();
-
+#if 0
     if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
-        Spannable* sp = (Spannable*) text;
+        Spannable* sp = dynamic_cast<Spannable*>(text);
 
         // Remove any ChangeWatchers that might have come from other TextViews.
         auto watchers = sp->getSpans(0, sp->length(), make_span_filter<ChangeWatcher>());
@@ -1494,7 +1514,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             if (mEditor != nullptr) mEditor->SelectionMoved = false;
         }*/
     }
-
+#endif
     if (mLayout != nullptr) {
         checkForRelayout();
     }
@@ -1511,7 +1531,6 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     SelectionModifierCursorController depends on textCanBeSelected, which depends on text
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
     */
-#endif
 }
 
 const std::string TextView::getText()const{
@@ -1642,7 +1661,6 @@ void TextView::checkForRelayout() {
 }
 
 bool TextView::isShowingHint()const{
-    //mLayout->getText().empty()&&(mHintLayout->getText().empty()==false);
     return TextUtils::isEmpty(mText) && !TextUtils::isEmpty(mHint) && !mHideHint;
 }
 
@@ -2754,7 +2772,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         if (mLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
             des = desired(mLayout);
         }
-
         if (des < 0) {
             boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
             if (boring != nullptr) {
