@@ -1483,6 +1483,7 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
             0 /* ellipsisStart */, 0 /* ellipsisEnd */);
     auto ret =margin + std::abs(tl->metrics(nullptr));
     TextLine::recycle(tl);
+    mt->recycle();
     return ret;
 }
 
