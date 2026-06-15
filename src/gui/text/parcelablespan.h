@@ -37,6 +37,9 @@ public:
     virtual void updateDrawState(const Paint& paint){};
 };
 
+class NoCopySpan:virtual public ParcelableSpan{
+};
+
 using SpanFilter=Predicate<const ParcelableSpan*>;
 
 template<typename T>

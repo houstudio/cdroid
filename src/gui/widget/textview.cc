@@ -554,7 +554,8 @@ void TextView::initView(){
     mSavedLayout = nullptr;
     mTransformation = nullptr;
     mSavedMarqueeModeLayout = nullptr;
-    mBoring = mHintBoring =nullptr;
+    mBoring = nullptr;//new BoringLayout::Metrics;
+    mHintBoring = nullptr;//new BoringLayout::Metrics;
     mLastLayoutDirection = -1;
     mFontWeightAdjustment= 16;//INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
@@ -584,10 +585,6 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
-    if(mHintBoring!=&UNKNOWN_BORING)
-        delete mHintBoring;
-    if(mBoring!=&UNKNOWN_BORING)
-        delete mBoring;
     if(mText!=mCharWrapper)
         delete mCharWrapper;
     if(mTransformed!=mText)
@@ -915,9 +912,11 @@ void TextView::registerForPreDraw() {
 }
 
 void TextView::unregisterForPreDraw() {
-    getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
-    mPreDrawRegistered = false;
-    mPreDrawListenerDetached = false;
+    if(mPreDrawRegistered){
+        getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawRegistered = false;
+        mPreDrawListenerDetached = false;
+    }
 }
 
 bool TextView::onPreDraw() {

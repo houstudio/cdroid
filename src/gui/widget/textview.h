@@ -366,7 +366,7 @@ public:
     bool getIncludeFontPadding()const;
     void setMarqueeRepeatLimit(int marqueeLimit);
     int  getMarqueeRepeatLimit() const;
-    TextUtils::TruncateAt  getEllipsize() const;
+    TextUtils::TruncateAt getEllipsize() const;
     void setEllipsize(TextUtils::TruncateAt ellipsize);
 
     const cdroid::RefPtr<ColorStateList> getTextColors()const;
