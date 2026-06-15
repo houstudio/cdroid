@@ -52,13 +52,12 @@ public:
 
 
     using SelectionRectangleConsumer = std::function<void(float left, float top, float right, float bottom,int textSelectionLayout)>;
-    enum{
-        ELLIPSIS_NONE=TextUtils::TruncateAt::NONE,
-        ELLIPSIS_START=TextUtils::TruncateAt::START,
-        ELLIPSIS_MIDDLE=TextUtils::TruncateAt::MIDDLE,
-        ELLIPSIS_END=TextUtils::TruncateAt::END,
-        ELLIPSIS_MARQUEE=TextUtils::TruncateAt::MARQUEE
-    };
+    static constexpr TextUtils::TruncateAt ELLIPSIS_NONE=TextUtils::TruncateAt::NONE;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_START=TextUtils::TruncateAt::START;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_MIDDLE=TextUtils::TruncateAt::MIDDLE;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_END=TextUtils::TruncateAt::END;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_MARQUEE=TextUtils::TruncateAt::MARQUEE;
+
     enum Alignment {
         NONE=-1,
         ALIGN_NORMAL=0,

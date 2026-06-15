@@ -191,6 +191,9 @@ public:
         mStart = start;
         mLength = len;
     }
+    ~CharWrapper()override{
+        LOGD("destroy %p",this);
+    }
     void set(const std::vector<char16_t>& chars, int start, int len) {
         mChars = chars;
         mStart = start;
@@ -585,12 +588,16 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
-    if(mText!=mCharWrapper)
-        delete mCharWrapper;
-    if(mTransformed!=mText)
-        delete mTransformed;
-    delete mHint;
+    if(mText==mTransformed){
+        mTransformed = nullptr;
+    }
+    if(mText==mCharWrapper){
+        mText = nullptr;
+    }
+    delete mCharWrapper;
     delete mText;
+    delete mTransformed;
+    delete mHint;
     delete mMarquee;
     delete mScroller;
     delete mLayout;
@@ -1360,7 +1367,6 @@ void TextView::setText(const std::vector<char16_t>&text, int start, int len){
         mCharWrapper->set(text, start, len);
     }
     setText(mCharWrapper, mBufferType, false, oldlen);
-
 }
 
 void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
@@ -2609,7 +2615,7 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
     }
 
     if (bringIntoView || (testDirChange && oldDir != mLayout->getParagraphDirection(0))) {
-        //registerForPreDraw();
+        registerForPreDraw();
     }
 
     if (mEllipsize == TextUtils::TruncateAt::MARQUEE) {
@@ -2910,7 +2916,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
      */
     if (/*mMovement != nullptr ||*/ mLayout->getWidth() > unpaddedWidth
             || mLayout->getHeight() > unpaddedHeight) {
-        //registerForPreDraw();
+        registerForPreDraw();
     } else {
         scrollTo(0, 0);
     }
