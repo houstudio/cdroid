@@ -289,8 +289,6 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     return E_OK;
 }
 
-#define DMAFLIP 1//uncomment this line to use GFXFLIP
-
 int32_t GFXFlip(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
     const size_t screen_size=surf->height*surf->pitch;
@@ -301,22 +299,12 @@ int32_t GFXFlip(GFXHANDLE surface) {
         if(surf->current==0) {
             LOGI_IF(dev->fix.smem_start!=surf->kbuffer,"kbuffer error1");
             dstSurf.kbuffer=surf->kbuffer+screen_size;
-#if defined(DMAFLIP)&&DMAFLIP
-            MI_SYS_MemcpyPa(0,surf->kbuffer+screen_size,surf->kbuffer,screen_size);
-#else
-            GFXBlit(&dstSurf,0,0,surf,NULL);
-#endif
             surf->buffer = surf->orig_buffer+screen_size;
             surf->kbuffer+=screen_size;
             dev->var.yoffset = 0;
         } else {
             LOGI_IF(dev->fix.smem_start!=surf->kbuffer-screen_size,"kbuffer error2");
             dstSurf.kbuffer=surf->kbuffer-screen_size;
-#if defined(DMAFLIP)&&DMAFLIP
-            MI_SYS_MemcpyPa(0,surf->kbuffer-screen_size,surf->kbuffer,screen_size);
-#else
-            GFXBlit(&dstSurf,0,0,surf,NULL);
-#endif
             surf->buffer = surf->orig_buffer;
             dev->var.yoffset = dev->var.yres;
             surf->kbuffer-=screen_size;

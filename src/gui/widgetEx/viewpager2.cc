@@ -72,6 +72,7 @@ ViewPager2::ViewPager2(Context* context,const AttributeSet& attrs)
 }
 
 ViewPager2::~ViewPager2(){
+    delete mAccessibilityProvider;
     delete mScrollEventAdapter;
     delete mFakeDragger;
     delete mPagerSnapHelper;
@@ -305,13 +306,13 @@ void ViewPager2::setAdapter(RecyclerView::Adapter* adapter) {
 }
 
 void ViewPager2::registerCurrentItemDataSetTracker(RecyclerView::Adapter*adapter) {
-    if (adapter && mCurrentItemDataSetChangeObserver) {
+    if ((adapter!=nullptr) && (mCurrentItemDataSetChangeObserver!=nullptr)) {
         adapter->registerAdapterDataObserver(mCurrentItemDataSetChangeObserver);
     }
 }
 
 void ViewPager2::unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter) {
-    if (adapter != nullptr) {
+    if ((adapter != nullptr) && (mCurrentItemDataSetChangeObserver!=nullptr)) {
         adapter->unregisterAdapterDataObserver(mCurrentItemDataSetChangeObserver);
     }
 }
