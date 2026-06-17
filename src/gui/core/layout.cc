@@ -105,7 +105,8 @@ Typeface*Layout::getTypeface()const{
 
 void Layout::setTypeface(Typeface*tf){
     if(mTypeface!=tf){
-        mTypeface = tf ;
+        mTypeface = tf;
+        mLayout++;
         resetScaledFont();
     }
 }
