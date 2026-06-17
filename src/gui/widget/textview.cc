@@ -916,14 +916,18 @@ void TextView::setTypeface(Typeface* tf,int style){
 
 void TextView::registerForPreDraw() {
     if (!mPreDrawRegistered) {
-        if(getViewTreeObserver())getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        if(getViewTreeObserver()){
+            getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        }
         mPreDrawRegistered = true;
     }
 }
 
 void TextView::unregisterForPreDraw() {
     if(/*getViewTreeObserver()&&*/mPreDrawRegistered){
-       getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+       if(getViewTreeObserver()){
+           getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+       }
        mPreDrawRegistered = false;
        mPreDrawListenerDetached = false;
     }
@@ -2863,7 +2867,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getWidth();
 
     if (mLayout == nullptr) {
-        LOGD("%p:%d mLayout=%p",this,mID,mLayout);
         makeNewLayout(want, hintWant, boring, hintBoring,
                       width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
     } else {
@@ -2882,7 +2885,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             if (!maximumChanged && widthChanged) {
                 mLayout->increaseWidthTo(want);
             } else {
-                LOGD("%p:%d mLayout=%p",this,mID,mLayout);
                 makeNewLayout(want, hintWant, boring, hintBoring,
                         width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
             }
@@ -2905,7 +2907,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             height = std::min(desired, heightSize);
         }
     }
-    LOGD("%p:%d mLayout=%p",this,mID,mLayout);
     int unpaddedHeight = height - getCompoundPaddingTop() - getCompoundPaddingBottom();
     if (mMaxMode == LINES && mLayout->getLineCount() > mMaximum) {
         unpaddedHeight = std::min(unpaddedHeight, mLayout->getLineTop(mMaximum));
