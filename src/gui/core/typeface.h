@@ -24,6 +24,7 @@ namespace minikin{
     class FontFamily;
     class FontCollection;
     class MinikinFont;
+    class MinikinPaint;
 }
 namespace cdroid{
 class Context;
@@ -92,7 +93,12 @@ public:
     std::string getStyleName()const;
     Cairo::RefPtr<Cairo::FontFace>getFontFace()const;
     std::shared_ptr<minikin::MinikinFont> getMinikinFont() const;
+    std::shared_ptr<Cairo::ScaledFont> getScaledFont(const minikin::MinikinPaint&,
+            const minikin::MinikinFont* minikinFont = nullptr) const;
     std::shared_ptr<minikin::FontCollection> getFontCollection() const;
+    // ScaledFont cache statistics
+    static void getScaledFontCacheStats(uint64_t& hits, uint64_t& misses);
+    static void resetScaledFontCacheStats();
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);

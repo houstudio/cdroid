@@ -11,6 +11,7 @@ add_library(cdtext
     boringlayout.cc
     dynamiclayout.cc
     precomputedtext.cc
+    paint.cc
     textpaint.cc
     textutils.cc
     textline.cc

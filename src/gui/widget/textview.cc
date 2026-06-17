@@ -192,7 +192,7 @@ public:
         mLength = len;
     }
     ~CharWrapper()override{
-        LOGD("destroy %p",this);
+        //LOGD("destroy %p",this);
     }
     void set(const std::vector<char16_t>& chars, int start, int len) {
         mChars = chars;
@@ -591,6 +591,9 @@ TextView::~TextView() {
     if(mText==mTransformed){
         mTransformed = nullptr;
     }
+    if(mTransformed==mCharWrapper){
+        mTransformed=nullptr;
+    }
     if(mText==mCharWrapper){
         mText = nullptr;
     }
@@ -913,16 +916,16 @@ void TextView::setTypeface(Typeface* tf,int style){
 
 void TextView::registerForPreDraw() {
     if (!mPreDrawRegistered) {
-        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        if(getViewTreeObserver())getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
         mPreDrawRegistered = true;
     }
 }
 
 void TextView::unregisterForPreDraw() {
-    if(mPreDrawRegistered){
-        getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
-        mPreDrawRegistered = false;
-        mPreDrawListenerDetached = false;
+    if(/*getViewTreeObserver()&&*/mPreDrawRegistered){
+       getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+       mPreDrawRegistered = false;
+       mPreDrawListenerDetached = false;
     }
 }
 
@@ -972,7 +975,7 @@ void TextView::onAttachedToWindow() {
 }
 
 void TextView::onDetachedFromWindowInternal(){
-    if (mPreDrawRegistered) {
+    if (/*mPreDrawRegistered*/getViewTreeObserver()) {
         getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
         mPreDrawListenerDetached = true;
     }
@@ -1209,7 +1212,7 @@ float TextView::getTextSize()const{
 }
 
 float TextView::getScaledTextSize() const{
-    return mTextPaint.getTextSize();// / mTextPaint.density;
+    return mTextPaint.getTextSize()/mTextPaint.density;
 }
 
 float TextView::getTextScaleX()const{
@@ -1222,6 +1225,7 @@ void TextView::setTextScaleX(float size){
         mTextPaint.setTextScaleX(size);
         mUserSetTextScaleX = true;
         if(mLayout!=nullptr){
+            LOGD("%p:%d",this,mID,"reset mLayout,textScaledX=%.3f",size);
             nullLayouts();
             requestLayout();
             invalidate();
@@ -2524,15 +2528,15 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
         hintWidth = 0;
     }
 
-    Layout::Alignment alignment = getLayoutAlignment();
+    const Layout::Alignment alignment = getLayoutAlignment();
     const bool testDirChange = mSingleLine && mLayout != nullptr
             && (alignment == Layout::Alignment::ALIGN_NORMAL
                     || alignment == Layout::Alignment::ALIGN_OPPOSITE);
     int oldDir = 0;
     if (testDirChange) oldDir = mLayout->getParagraphDirection(0);
     bool shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;// && getKeyListener() == nullptr;
-    const bool switchEllipsize = mEllipsize == TextUtils::TruncateAt::MARQUEE
-            && mMarqueeFadeMode != MARQUEE_FADE_NORMAL;
+    const bool switchEllipsize = (mEllipsize == TextUtils::TruncateAt::MARQUEE)
+            && (mMarqueeFadeMode != MARQUEE_FADE_NORMAL);
     TextUtils::TruncateAt effectiveEllipsize = mEllipsize;
     if (mEllipsize == TextUtils::TruncateAt::MARQUEE
             && mMarqueeFadeMode == MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
@@ -2569,27 +2573,21 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
             if (hintBoring->width <= hintWidth
                     && (!shouldEllipsize || hintBoring->width <= ellipsisWidth)) {
                 if (mSavedHintLayout != nullptr) {
-                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad);
+                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint, hintWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad);
                 } else {
-                    mHintLayout = BoringLayout::make(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad);
+                    mHintLayout = BoringLayout::make(mHint, &mTextPaint, hintWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad);
                 }
 
                 mSavedHintLayout = (BoringLayout*) mHintLayout;
             } else if (shouldEllipsize && hintBoring->width <= hintWidth) {
                 if (mSavedHintLayout != nullptr) {
-                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad, mEllipsize,
-                            ellipsisWidth);
+                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint, hintWidth, alignment,
+                            mSpacingMult, mSpacingAdd,*hintBoring, mIncludePad, mEllipsize, ellipsisWidth);
                 } else {
-                    mHintLayout = BoringLayout::make(mHint, &mTextPaint,
-                            hintWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *hintBoring, mIncludePad, mEllipsize,
-                            ellipsisWidth);
+                    mHintLayout = BoringLayout::make(mHint, &mTextPaint, hintWidth, alignment,
+                            mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad, mEllipsize, ellipsisWidth);
                 }
             }
         }
@@ -2718,7 +2716,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
 }
 
 bool TextView::compressText(float width) {
-    if (isHardwareAccelerated()) return false;
+    if (isHardwareAccelerated()||1) return false;
 
     // Only compress the text if it hasn't been compressed by the previous pass
     if ((width > 0.0f) && mLayout && (getLineCount() == 1) && !mUserSetTextScaleX
@@ -2726,6 +2724,7 @@ bool TextView::compressText(float width) {
         const float textWidth = mLayout->getLineWidth(0);
         const float overflow = (textWidth + 1.0f - width) / width;
         if (overflow > 0.0f && overflow <= Marquee::MARQUEE_DELTA_MAX) {
+            LOGD("%p:%d TextView::compressText textscaledX=%.3f",this,mID,getTextScaleX());
             setTextScaleX(1.0f - overflow - 0.005f);
             post([this]() {
                 requestLayout();
@@ -2749,7 +2748,7 @@ int TextView::desired(Layout*layout){
         max = std::max(max, (int)layout->getLineWidth(i));
     }
     /*if (useBoundsForWidth) {
-        max = std::max(max, layout->computeDrawingBoundingBox().width());
+        max = std::max(max, layout->computeDrawingBoundingBox().width);
     }*/
     return (int) std::ceil(max);
 }
@@ -2864,6 +2863,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getWidth();
 
     if (mLayout == nullptr) {
+        LOGD("%p:%d mLayout=%p",this,mID,mLayout);
         makeNewLayout(want, hintWant, boring, hintBoring,
                       width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
     } else {
@@ -2882,6 +2882,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             if (!maximumChanged && widthChanged) {
                 mLayout->increaseWidthTo(want);
             } else {
+                LOGD("%p:%d mLayout=%p",this,mID,mLayout);
                 makeNewLayout(want, hintWant, boring, hintBoring,
                         width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
             }
@@ -2904,7 +2905,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             height = std::min(desired, heightSize);
         }
     }
-
+    LOGD("%p:%d mLayout=%p",this,mID,mLayout);
     int unpaddedHeight = height - getCompoundPaddingTop() - getCompoundPaddingBottom();
     if (mMaxMode == LINES && mLayout->getLineCount() > mMaximum) {
         unpaddedHeight = std::min(unpaddedHeight, mLayout->getLineTop(mMaximum));

@@ -1,5 +1,6 @@
 #include <charconv>
 #include <cstdint>
+#include <porting/cdlog.h>
 #include <text/spannablestring.h>
 #include <text/layout.h>
 #include <text/measuredparagraph.h>
@@ -207,7 +208,6 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     Alignment paraAlign = mAlignment;
     TabStops* tabStops = nullptr;
     bool tabStopsIsInitialized = false;
-
     TextLine* tl = TextLine::obtain();
 
     // Draw the lines, one at a time.
