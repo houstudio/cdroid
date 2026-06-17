@@ -566,7 +566,7 @@ void TextView::initView(){
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
     mPreDrawRegistered=false;
-    mPreDrawListenerDetached=true;
+    mPreDrawListenerDetached=false;
     mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mGravity = Gravity::START|Gravity::TOP;
@@ -580,6 +580,9 @@ void TextView::initView(){
     mEditMode   = READONLY;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
+    if(mOnPreDrawListener==nullptr){
+        mOnPreDrawListener=[this](){return onPreDraw();};
+    }
 }
 
 TextView::~TextView() {
@@ -966,9 +969,6 @@ bool TextView::onPreDraw() {
 void TextView::onAttachedToWindow() {
     View::onAttachedToWindow();
     //if (mEditor != null) mEditor.onAttachedToWindow();
-    if(mOnPreDrawListener==nullptr){
-        mOnPreDrawListener=[this](){return onPreDraw();};
-    }
     if (mPreDrawListenerDetached) {
         getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
         mPreDrawListenerDetached = false;
