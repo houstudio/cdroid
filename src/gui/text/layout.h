@@ -150,7 +150,7 @@ public:
     virtual int getHeight(bool cap) const{
         return getHeight();
     }
-
+    virtual RectF computeDrawingBoundingBox()const;
     Alignment getAlignment() const{
         return mAlignment;
     }
@@ -167,6 +167,9 @@ public:
     }
     bool isFontPaddingIncluded() const{
         return mIncludePad;
+    }
+    bool isFallbackLineSpacingEnabled() const{
+        return mFallbackLineSpacing;
     }
     const TextDirectionHeuristic* getTextDirectionHeuristic() const{
         return mTextDir;

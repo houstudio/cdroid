@@ -44,6 +44,7 @@ private:
     bool mHasTabs;
     bool mCharsValid;
     bool mIsJustifying;
+    bool mUseFallbackExtent;
     TabStops* mTabs;
     std::vector<char16_t> mChars;
     Spanned* mSpanned;
@@ -111,7 +112,7 @@ public:
     static TextLine* obtain();
     static TextLine* recycle(TextLine* tl);
     void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,
-            bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd);
+            bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd,bool useFallbackLineSpacing);
 
     void justify(float justifyWidth);
 

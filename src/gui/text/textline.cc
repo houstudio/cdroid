@@ -42,25 +42,28 @@ TextLine* TextLine::recycle(TextLine* tl) {
 }
 
 TextLine::TextLine(){
+    mTabs = nullptr;
     mMetricAffectingSpanSpanSet=new SpanSet(make_span_filter<MetricAffectingSpan>());
     mCharacterStyleSpanSet=new SpanSet(make_span_filter<CharacterStyle>());
     mReplacementSpanSpanSet=new SpanSet(make_span_filter<ReplacementSpan>());
 }
 
 TextLine::~TextLine(){
+    delete mTabs;
     delete mMetricAffectingSpanSpanSet;
     delete mCharacterStyleSpanSet;
     delete mReplacementSpanSpanSet;
 }
 
-void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,
-        const Directions* directions, bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd) {
+void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir, const Directions* directions,
+        bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd, bool useFallbackLineSpacing) {
     mPaint = paint;
     mText = text;
     mStart = start;
     mLen = limit - start;
     mDir = dir;
     mDirections = directions;
+    mUseFallbackExtent = useFallbackLineSpacing;
     if (directions == nullptr) {
         //LOGE("Directions cannot be null");
     }

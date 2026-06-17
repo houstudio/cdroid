@@ -517,8 +517,8 @@ TextView::TextView(int width, int height):TextView(std::string(),width,height){
 TextView::TextView(const std::string& text, int width, int height)
   : View( width, height) {
     initView();
-    mText=new SpannedString(TextUtils::utf8_utf16(text));
-    mTransformed=mText;
+    mText = new SpannedString(TextUtils::utf8_utf16(text));
+    mTransformed = mText;
 }
 
 void TextView::initView(){
@@ -591,11 +591,11 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
-    if(mText==mTransformed){
+    if(mText == mTransformed){
         mTransformed = nullptr;
     }
-    if(mTransformed==mCharWrapper){
-        mTransformed=nullptr;
+    if(mTransformed == mCharWrapper){
+        mTransformed = nullptr;
     }
     if(mText==mCharWrapper){
         mText = nullptr;
@@ -1346,8 +1346,8 @@ void TextView::setText(const std::string&txt){
     std::u16string u16s=TextUtils::utf8_utf16(txt);
     std::vector<char16_t>v16(u16s.data(),u16s.data()+u16s.length());
     setText(v16,0,v16.size());
-    //if(mTransformed==nullptr)
-        mTransformed=mText;
+    if(mTransformed == nullptr)
+        mTransformed = mText;
     /*if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
@@ -2304,7 +2304,7 @@ int TextView::findLargestTextSizeWhichFits(const RectF& availableSpace) {
 }
 
 bool TextView::suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& availableSpace) {
-    CharSequence* text = nullptr;//mTransformed != nullptr? mTransformed: getText();
+    CharSequence* text = mTransformed != nullptr? mTransformed: mText;//getText();
     const int maxLines = getMaxLines();
     TextPaint mTempTextPaint;
     mTempTextPaint.set(getPaint());

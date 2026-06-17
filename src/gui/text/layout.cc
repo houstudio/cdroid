@@ -348,7 +348,8 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
             paint.drawTextRun(canvas,dest.data(),0,dest.size(),0,0,x,lbaseline,false);
         } else {
             tl->set(&paint, buf, start, end, dir, directions, hasTab, tabStops,
-                    getEllipsisStart(lineNum), getEllipsisStart(lineNum) + getEllipsisCount(lineNum));
+                    getEllipsisStart(lineNum), getEllipsisStart(lineNum) + getEllipsisCount(lineNum),
+                    isFallbackLineSpacingEnabled());
             if (justify) {
                 tl->justify(right - left - indentWidth);
             }
@@ -515,6 +516,71 @@ void Layout::increaseWidthTo(int wid) {
         //throw new RuntimeException("attempted to reduce Layout width");
     }
     mWidth = wid;
+}
+
+RectF Layout::computeDrawingBoundingBox() const{
+    float left = 0;
+    float right = 0;
+    float top = 0;
+    float bottom = 0;
+    TextLine* tl = TextLine::obtain();
+    RectF rectF;
+    for (int line = 0; line < getLineCount(); ++line) {
+        const int start = getLineStart(line);
+        const int end = getLineVisibleEnd(line);
+
+        const bool hasTabs = getLineContainsTab(line);
+        TabStops* tabStops = nullptr;
+        if (hasTabs && dynamic_cast<Spanned*>(mText)) {
+            // Just checking this line should be good enough, tabs should be
+            // consistent across all lines in a paragraph.
+            auto tabs = getParagraphSpans(dynamic_cast<Spanned*>(mText), start, end, make_span_filter<TabStopSpan>());
+            if (tabs.size() > 0) {
+                tabStops = new TabStops(TAB_INCREMENT, tabs); // XXX should reuse
+            }
+        }
+        const Directions* directions = getLineDirections(line);
+        // Returned directions can actually be null
+        if (directions == nullptr) {
+            continue;
+        }
+        const int dir = getParagraphDirection(line);
+
+        TextPaint& paint = mWorkPaint;
+        paint.set(*mPaint);
+        paint.setStartHyphenEdit(getStartHyphenEdit(line));
+        paint.setEndHyphenEdit(getEndHyphenEdit(line));
+        tl->set(&paint, mText, start, end, dir, directions, hasTabs, tabStops,
+                getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+                isFallbackLineSpacingEnabled());
+        if (isJustificationRequired(line)) {
+            //tl->justify(mJustificationMode, getJustifyWidth(line));
+        }
+        //tl->metrics(nullptr, rectF, false, nullptr);
+
+        float lineLeft = rectF.left;
+        float lineRight = rectF.right();
+        float lineTop = rectF.top + getLineBaseline(line);
+        float lineBottom = rectF.bottom() + getLineBaseline(line);
+        if (getParagraphDirection(line) == Layout::DIR_RIGHT_TO_LEFT) {
+            lineLeft += getWidth();
+            lineRight += getWidth();
+        }
+
+        if (line == 0) {
+            left = lineLeft;
+            right = lineRight;
+            top = lineTop;
+            bottom = lineBottom;
+        } else {
+            left = std::min(left, lineLeft);
+            right = std::max(right, lineRight);
+            top = std::min(top, lineTop);
+            bottom = std::max(bottom, lineBottom);
+        }
+    }
+    TextLine::recycle(tl);
+    return {left, top, right-left, bottom-top};
 }
 
 int Layout::getLineBounds(int line, Rect* bounds) const{
@@ -704,7 +770,8 @@ float Layout::getHorizontal(int offset, bool trailing, int line, bool clamped) c
 
     TextLine* tl = TextLine::obtain();
     tl->set(mPaint, mText, start, end, dir, directions, hasTab, tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     float wid = tl->measure(offset - start, trailing, nullptr);
     TextLine::recycle(tl);
 
@@ -737,7 +804,8 @@ std::vector<float> Layout::getLineHorizontals(int line, bool clamped, bool prima
 
     TextLine* tl = TextLine::obtain();
     tl->set(mPaint, mText, start, end, dir, directions, hasTab, tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     auto trailings = primaryIsTrailingPreviousAllLineOffsets(line);
     if (!primary) {
         for (int offset = 0; offset < trailings.size(); ++offset) {
@@ -894,7 +962,8 @@ float Layout::getLineExtent(int line, bool full) const{
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
     tl->set(&paint, mText, start, end, dir, directions, hasTabs, tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     if (isJustificationRequired(line)) {
         tl->justify(getJustifyWidth(line));
     }
@@ -916,7 +985,8 @@ float Layout::getLineExtent(int line, TabStops& tabStops, bool full) const{
     paint.setStartHyphenEdit(getStartHyphenEdit(line));
     paint.setEndHyphenEdit(getEndHyphenEdit(line));
     tl->set(&paint, mText, start, end, dir, directions, hasTabs, &tabStops,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     if (isJustificationRequired(line)) {
         tl->justify(getJustifyWidth(line));
     }
@@ -972,7 +1042,8 @@ int Layout::getOffsetForHorizontal(int line, float horiz, bool primary) const{
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs as we just use TextLine#getOffsetToLeftRightOf here.
     tl->set(mPaint, mText, lineStartOffset, lineEndOffset, getParagraphDirection(line), dirs,
-            false, nullptr, getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            false, nullptr, getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     HorizontalMeasurementProvider horizontal((Layout*)this,line, primary);
 
     int max;
@@ -1172,7 +1243,8 @@ int Layout::getOffsetToLeftRightOf(int caret, bool toLeft) const{
     TextLine* tl = TextLine::obtain();
     // XXX: we don't care about tabs
     tl->set(mPaint, mText, lineStart, lineEnd, lineDir, directions, false, nullptr,
-            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line));
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
     caret = lineStart + tl->getOffsetToLeftRightOf(caret - lineStart, toLeft);
     TextLine::recycle(tl);
     return caret;
@@ -1480,7 +1552,8 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
         }
     }
     tl->set(paint, text, start, end, dir, directions, hasTabs, tabStops,
-            0 /* ellipsisStart */, 0 /* ellipsisEnd */);
+            0 /*ellipsisStart*/, 0 /*ellipsisEnd*/,
+            false/* use fallback line spacing. unused*/);
     auto ret =margin + std::abs(tl->metrics(nullptr));
     TextLine::recycle(tl);
     mt->recycle();
