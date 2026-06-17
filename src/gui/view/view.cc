@@ -6283,7 +6283,7 @@ void View::assignParent(ViewGroup*parent){
 
 ViewTreeObserver*View::getViewTreeObserver(){
     if(mAttachInfo)return mAttachInfo->mTreeObserver;
-    if(mFloatingTreeObserver)
+    if(mFloatingTreeObserver==nullptr)
         mFloatingTreeObserver = new ViewTreeObserver(mContext);
     return mFloatingTreeObserver;
 }

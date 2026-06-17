@@ -916,18 +916,15 @@ void TextView::setTypeface(Typeface* tf,int style){
 
 void TextView::registerForPreDraw() {
     if (!mPreDrawRegistered) {
-        if(getViewTreeObserver()){
-            getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
-        }
+        auto tree=getViewTreeObserver();
+        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
         mPreDrawRegistered = true;
     }
 }
 
 void TextView::unregisterForPreDraw() {
-    if(/*getViewTreeObserver()&&*/mPreDrawRegistered){
-       if(getViewTreeObserver()){
-           getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
-       }
+    if(mPreDrawRegistered){
+       getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
        mPreDrawRegistered = false;
        mPreDrawListenerDetached = false;
     }
@@ -979,7 +976,7 @@ void TextView::onAttachedToWindow() {
 }
 
 void TextView::onDetachedFromWindowInternal(){
-    if (/*mPreDrawRegistered*/getViewTreeObserver()) {
+    if (mPreDrawRegistered) {
         getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
         mPreDrawListenerDetached = true;
     }
