@@ -1070,16 +1070,16 @@ void TextView::removeTextChangedListener(const TextWatcher& watcher){
     }
 }
 
-void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int before, int after){
+void TextView::sendBeforeTextChanged(CharSequence* text, int start, int before, int after){
     for(auto l:mListeners){
-        if(l.beforeTextChanged) l.beforeTextChanged(text, start, before, after);
+        if(l.beforeTextChanged) l.beforeTextChanged(*text, start, before, after);
     }
 }
 
-void TextView::sendAfterTextChanged(std::wstring& text){
+void TextView::sendAfterTextChanged(CharSequence* text){
     for (auto l:mListeners) {
         if(l.afterTextChanged){
-            l.afterTextChanged(*this,text);
+            l.afterTextChanged(*text);
         }
     }
 
@@ -1087,10 +1087,10 @@ void TextView::sendAfterTextChanged(std::wstring& text){
     //notifyAutoFillManagerAfterTextChangedIfNeeded();
     //hideErrorIfUnchanged();
 }
-void TextView::sendOnTextChanged(const std::wstring& text, int start, int before, int after){
+void TextView::sendOnTextChanged(CharSequence* text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.onTextChanged){
-            l.onTextChanged(text, start, before, after);
+            l.onTextChanged(*text, start, before, after);
         }
     }
     //if (mEditor != null) mEditor.sendOnTextChanged(start, before, after);
@@ -1362,7 +1362,7 @@ void TextView::setText(const std::vector<char16_t>&text, int start, int len){
     int oldlen = 0;
     if (mText != nullptr) {
         oldlen = mText->length();
-        //sendBeforeTextChanged(mText, 0, oldlen, len);
+        sendBeforeTextChanged(mText, 0, oldlen, len);
     } else {
         //sendBeforeTextChanged("", 0, 0, len);
     }
@@ -1389,7 +1389,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (!mUserSetTextScaleX) mTextPaint.setTextScaleX(1.0f);
     auto spannedText=dynamic_cast<Spanned*>(text);
     if (spannedText && spannedText->getSpanStart(TextUtils::TruncateAt::MARQUEE) >= 0) {
-        if (ViewConfiguration::get(mContext)->isFadingMarqueeEnabled()) {
+        if (ViewConfiguration::get(mContext).isFadingMarqueeEnabled()) {
             setHorizontalFadingEdgeEnabled(true);
             mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
         } else {
@@ -1398,7 +1398,6 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         }
         setEllipsize(TextUtils::TruncateAt::MARQUEE);
     }
-
     /*int n = mFilters.length;
     for (int i = 0; i < n; i++) {
         CharSequence* out = mFilters[i].filter(text, 0, text.length(), EMPTY_SPANNED, 0, 0);
@@ -1410,7 +1409,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (notifyBefore) {
         if (mText != nullptr) {
             oldlen = mText->length();
-            //sendBeforeTextChanged(mText, 0, oldlen, text.length());
+            sendBeforeTextChanged(mText, 0, oldlen, text.length());
         } else {
             //sendBeforeTextChanged("", 0, 0, text.length());
         }
@@ -1529,10 +1528,10 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         checkForRelayout();
     }
 
-    /*sendOnTextChanged(text, 0, oldlen, textLength);
+    sendOnTextChanged(text, 0, oldlen, textLength);
     onTextChanged(text, 0, oldlen, textLength);
 
-    notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
+    /*notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
     if (needEditableForNotification) {
         sendAfterTextChanged((Editable) text);
     } else {
@@ -1547,6 +1546,9 @@ const std::string TextView::getText()const{
     return mText->toString();
 }
 
+Editable* TextView::getEditableText()const{
+    return dynamic_cast<Editable*>(mText);
+}
 void TextView::setHint(const std::string& hint){
     //mHint = hint;
     //mHintLayout->setText(hint);
@@ -1681,10 +1683,10 @@ bool TextView::bringTextIntoView(){
         line = layout->getLineCount() - 1;
     }
 
-    int dir = layout->getParagraphDirection(line);
-    int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
-    int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
-    int ht = layout->getHeight();
+    const int dir = layout->getParagraphDirection(line);
+    const int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    const int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
+    const int ht = layout->getHeight();
     int scrollx, scrolly;
 
     Layout::Alignment a = layout->getParagraphAlignment(line);
@@ -2653,7 +2655,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
                 .setBreakStrategy(mBreakStrategy)
                 .setHyphenationFrequency(mHyphenationFrequency)
                 .setJustificationMode(mJustificationMode)
-                .setEllipsize(/*getKeyListener()==nullptr?effectiveEllipsize:*/TextUtils::TruncateAt::NONE)
+                .setEllipsize(effectiveEllipsize/*getKeyListener()==nullptr?effectiveEllipsize:TextUtils::TruncateAt::NONE*/)
                 .setEllipsizedWidth(ellipsisWidth);
         result = builder->build();
     } else {
@@ -2668,13 +2670,11 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
             if (boring->width <= wantWidth
                     && (effectiveEllipsize == TextUtils::TruncateAt::NONE || boring->width <= ellipsisWidth)) {
                 if (useSaved && mSavedLayout != nullptr) {
-                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad);
+                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint, wantWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *boring, mIncludePad);
                 } else {
-                    result = BoringLayout::make(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad);
+                    result = BoringLayout::make(mTransformed, &mTextPaint, wantWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *boring, mIncludePad);
                 }
 
                 if (useSaved) {
@@ -2682,15 +2682,11 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
                 }
             } else if (shouldEllipsize && boring->width <= wantWidth) {
                 if (useSaved && mSavedLayout != nullptr) {
-                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad, effectiveEllipsize,
-                            ellipsisWidth);
+                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint, wantWidth, alignment,
+                            mSpacingMult, mSpacingAdd, *boring, mIncludePad, effectiveEllipsize, ellipsisWidth);
                 } else {
-                    result = BoringLayout::make(mTransformed, &mTextPaint,
-                            wantWidth, alignment, mSpacingMult, mSpacingAdd,
-                            *boring, mIncludePad, effectiveEllipsize,
-                            ellipsisWidth);
+                    result = BoringLayout::make(mTransformed, &mTextPaint, wantWidth, alignment,mSpacingMult,
+                            mSpacingAdd, *boring, mIncludePad, effectiveEllipsize, ellipsisWidth);
                 }
             }
         }
@@ -2717,7 +2713,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
 }
 
 bool TextView::compressText(float width) {
-    if (isHardwareAccelerated()||1) return false;
+    if (isHardwareAccelerated()||1) return false;/*return true will crashed onMeasure */
 
     // Only compress the text if it hasn't been compressed by the previous pass
     if ((width > 0.0f) && mLayout && (getLineCount() == 1) && !mUserSetTextScaleX
@@ -4079,7 +4075,7 @@ void TextView::startStopMarquee(bool start){
     }
 }
 
-void TextView::onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter){
+void TextView::onTextChanged(CharSequence* text, int start, int lengthBefore, int lengthAfter){
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){

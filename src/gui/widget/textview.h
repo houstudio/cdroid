@@ -26,6 +26,7 @@
 #include <text/spannablestring.h>
 #include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
+#include <text/editable.h>
 #include <text/transformationmethod.h>
 namespace cdroid {
 class Layout;
@@ -81,13 +82,13 @@ public:
         int mDrawableSaved = DRAWABLE_NONE;
         Rect mCompoundRect;
     private:
-	void applyErrorDrawableIfNeeded(int layoutDirection);
+        void applyErrorDrawableIfNeeded(int layoutDirection);
     public:
         Drawables(Context*ctx);
         ~Drawables();
         bool hasMetadata()const;
-	bool resolveWithLayoutDirection(int layoutDirection);
-	void setErrorDrawable(Drawable* dr, TextView* tv);
+        bool resolveWithLayoutDirection(int layoutDirection);
+        void setErrorDrawable(Drawable* dr, TextView* tv);
     };
 private:
     static constexpr int LINES = 1;
@@ -129,11 +130,11 @@ private:
     bool mRestartMarquee;
     bool mUserSetTextScaleX;
     bool mHighlightPathBogus;
-    bool mTextSetFromXmlOrResourceId;
     bool mUseFallbackLineSpacing;
     bool mHasPresetAutoSizeValues;
     bool mPreDrawRegistered;
     bool mPreDrawListenerDetached;
+    bool mTextSetFromXmlOrResourceId;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -216,9 +217,9 @@ private:
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
     void setText(CharSequence* text, BufferType type, bool notifyBefore, int oldlen);
-    void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
-    void sendAfterTextChanged(std::wstring& text);
-    void sendOnTextChanged(const std::wstring& text, int start, int before, int after);
+    void sendBeforeTextChanged(CharSequence* text, int start, int before, int after);
+    void sendAfterTextChanged(CharSequence* text);
+    void sendOnTextChanged(CharSequence* text, int start, int before, int after);
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
     int mCaretPos;
@@ -252,7 +253,7 @@ protected:
     bool canMarquee()const;
     void startMarquee();
     void stopMarquee();
-    virtual void onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter);
+    virtual void onTextChanged(CharSequence* text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
     void onAttachedToWindow();
     void onDetachedFromWindowInternal()override;
@@ -301,6 +302,7 @@ public:
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
     const std::string getText()const;
+    Editable* getEditableText()const;
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
     void setTextAppearance(const std::string&);
