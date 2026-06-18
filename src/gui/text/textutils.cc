@@ -3,7 +3,7 @@
 #include <cstdarg>
 #include <core/predicate.h>
 #include <text/character.h>
-#include <text/spannablestring.h>
+#include <text/spannablestringbuilder.h>
 #include <text/textutils.h>
 #include <unicode/uchar.h>
 #include <porting/cdlog.h>

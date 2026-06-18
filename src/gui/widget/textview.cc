@@ -1414,19 +1414,19 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             //sendBeforeTextChanged("", 0, 0, text.length());
         }
     }
-
+#endif
     bool needEditableForNotification = false;
 
     if (/*mListeners != nullptr &&*/ mListeners.size() != 0) {
         needEditableForNotification = true;
     }
-
+#if 0
     PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
     if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
         createEditorIfNeeded();
         //mEditor->forgetUndoRedo();
-        //Editable* t = mEditableFactory.newEditable(text);
-        //text = t;
+        Editable* t = mEditableFactory.newEditable(text);
+        text = t;
         //setFilters(t, mFilters);
         //InputMethodManager* imm = getInputMethodManager();
         //if (imm != nullptr) imm->restartInput(this);
@@ -1434,17 +1434,16 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         if (mTextDir == nullptr) {
             mTextDir = getTextDirectionHeuristic();
         }
-        const int checkResult =
-                precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
+        const int checkResult = precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
                         mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
-            throw
-                "PrecomputedText's Parameters don't match the parameters of this TextView."
+            LOGE("PrecomputedText's Parameters don't match the parameters of this TextView."
                 "Consider using setTextMetricsParams(precomputedText.getParams()) "
                 "to override the settings of this TextView: "
-                "PrecomputedText: ";// + precomputed.getParams()
-                "TextView: ";// + getTextMetricsParams());
+                "PrecomputedText: "// + precomputed.getParams()
+                "TextView: ");// + getTextMetricsParams());
+            break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
             precomputed = PrecomputedText::create(precomputed, getTextMetricsParams());
             break;
