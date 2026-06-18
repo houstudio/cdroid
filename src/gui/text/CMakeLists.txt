@@ -6,6 +6,7 @@ add_library(cdtext
     measuredparagraph.cc
     measuredtext.cc
     linebreaker.cc
+    selection.cc
     layout.cc
     staticlayout.cc
     boringlayout.cc
