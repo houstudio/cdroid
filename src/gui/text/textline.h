@@ -84,7 +84,7 @@ private:
             bool runIsRtl, Canvas* c, float x, int top, int y, int bottom, Paint::FontMetricsInt* fmi,
             bool needWidth, int offset, const std::vector<DecorationInfo>* decorations);
 
-    float handleReplacement(ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
+    float handleReplacement(const ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
            float x, int top, int y, int bottom,Paint::FontMetricsInt* fmi, bool needWidth);
 
     int adjustStartHyphenEdit(int start, int startHyphenEdit) {

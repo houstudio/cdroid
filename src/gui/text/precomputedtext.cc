@@ -181,15 +181,15 @@ int PrecomputedText::getMemoryUsage() const{
     return r;
 }
 
-void PrecomputedText::setSpan(ParcelableSpan* what, int start, int end, int flags) {
-    if (dynamic_cast<MetricAffectingSpan*>(what)) {
+void PrecomputedText::setSpan(const ParcelableSpan* what, int start, int end, int flags) {
+    if (dynamic_cast<const MetricAffectingSpan*>(what)) {
         //LOGE("MetricAffectingSpan can not be set to PrecomputedText.");
     }
     mText->setSpan(what, start, end, flags);
 }
 
-void PrecomputedText::removeSpan(ParcelableSpan* what) {
-    if (dynamic_cast<MetricAffectingSpan*>(what)) {
+void PrecomputedText::removeSpan(const ParcelableSpan* what) {
+    if (dynamic_cast<const MetricAffectingSpan*>(what)) {
         //LOGE("MetricAffectingSpan can not be removed from PrecomputedText.");
     }
     mText->removeSpan(what);

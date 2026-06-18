@@ -303,9 +303,9 @@ public:
     int getParagraphLeft(int line) const;
     int getParagraphRight(int line) const;
 
-    static float nextTab(CharSequence* text, int start, int end, float h, std::vector<ParcelableSpan*>& tabs);
+    static float nextTab(CharSequence* text, int start, int end, float h, std::vector<const ParcelableSpan*>& tabs);
 
-    static std::vector<ParcelableSpan*> getParagraphSpans(Spanned* text, int start, int end, const SpanFilter&type);
+    static std::vector<const ParcelableSpan*> getParagraphSpans(Spanned* text, int start, int end, const SpanFilter&type);
 
     virtual int getEllipsisStart(int line)const=0;
     virtual int getEllipsisCount(int line)const=0;
@@ -335,16 +335,16 @@ public:
     public:
         SpannedEllipsizer(Spanned* display) : Ellipsizer(display), mSpanned(display) {
         }
-        std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter& type) const override {
+        std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& type) const override {
             return mSpanned->getSpans(start, end, type);
         }
-        int getSpanStart(ParcelableSpan* tag) const override {
+        int getSpanStart(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanStart(tag);
         }
-        int getSpanEnd(ParcelableSpan* tag) const override {
+        int getSpanEnd(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanEnd(tag);
         }
-        int getSpanFlags(ParcelableSpan* tag) const override {
+        int getSpanFlags(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanFlags(tag);
         }
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
@@ -406,8 +406,8 @@ class TabStops {
     int mNumStops;
     float mIncrement;
 public:
-    TabStops(float increment, const std::vector<ParcelableSpan*>& spans);
-    void reset(float increment, const std::vector<ParcelableSpan*>& spans);
+    TabStops(float increment, const std::vector<const ParcelableSpan*>& spans);
+    void reset(float increment, const std::vector<const ParcelableSpan*>& spans);
     float nextTab(float h);
     static float nextDefaultStop(float h, float inc) {
         return ((int) ((h + inc) / inc)) * inc;

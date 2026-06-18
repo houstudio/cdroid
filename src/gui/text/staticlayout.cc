@@ -299,7 +299,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
         int firstWidth = outerWidth;
         int restWidth = outerWidth;
 
-        std::vector<ParcelableSpan*> chooseHt;
+        std::vector<const ParcelableSpan*> chooseHt;
         if (spanned != nullptr) {
             auto sp = getParagraphSpans(spanned, paraStart, paraEnd, LeadingMarginSpanFilter);
             for (int i = 0; i < sp.size(); i++) {
@@ -494,7 +494,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
 }
 
 int StaticLayout::out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
-        int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
+        int v, float spacingmult, float spacingadd, const std::vector<const ParcelableSpan*>& chooseHt,
         const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm,bool hasTab, int hyphenEdit,
         bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
         bool addLastLineLineSpacing,const std::vector<char16_t>& chs,int widthStart, TextUtils::TruncateAt ellipsize,
@@ -521,11 +521,11 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
         fm.bottom = bottom;
         for (size_t i = 0; i < chooseHt.size(); i++) {
             int chooseHtvVal = chooseHtv != nullptr ? (*chooseHtv)[i] : 0;
-            if (dynamic_cast<LineHeightSpan::WithDensity*>(chooseHt[i])) {
-                ((LineHeightSpan::WithDensity*) chooseHt[i])
+            if (dynamic_cast<const LineHeightSpan::WithDensity*>(chooseHt[i])) {
+                ((const LineHeightSpan::WithDensity*) chooseHt[i])
                         ->chooseHeight(text, start, end, chooseHtvVal, v, fm, paint);
             } else {
-                dynamic_cast<LineHeightSpan*>(chooseHt[i])->chooseHeight(text, start, end, chooseHtvVal, v, fm);
+                dynamic_cast<const LineHeightSpan*>(chooseHt[i])->chooseHeight(text, start, end, chooseHtvVal, v, fm);
             }
         }
         above = fm.ascent;

@@ -944,7 +944,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
     return mode;
 }
 
-void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spanned* spanned, const SpanFilter& klass) {
+void TextUtils::removeEmptySpans(std::vector<const ParcelableSpan*>& spans,const Spanned* spanned, const SpanFilter& klass) {
     auto it = spans.begin();
     while (it != spans.end()) {
         const int start = spanned->getSpanStart(*it);

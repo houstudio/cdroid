@@ -15,12 +15,12 @@ class Layout;
 
 class MetricAffectingSpan:public CharacterStyle{
 public:
-    virtual void updateMeasureState(TextPaint& textPaint){};
+    virtual void updateMeasureState(TextPaint& textPaint)const{};
 };
 class ReplacementSpan : public MetricAffectingSpan {
 public:
     virtual int  getSize(const Paint& paint,const CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
-    virtual void draw(Canvas& canvas,const CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)=0;
+    virtual void draw(Canvas& canvas,const CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)const=0;
 };
 class AlignmentSpan :public ParagraphStyle{
 protected:
@@ -32,26 +32,26 @@ class LineHeightSpan :public ParagraphStyle{
 public:
     class WithDensity;
     virtual void chooseHeight(CharSequence* text, int start, int end,
-            int spanstartv, int lineHeight,Paint::FontMetricsInt fm){}
+            int spanstartv, int lineHeight,Paint::FontMetricsInt& fm)const{}
 };
 class LineHeightSpan::WithDensity :public LineHeightSpan{
 public:
     virtual void chooseHeight(CharSequence* text, int start, int end,
                 int spanstartv, int lineHeight,
-                Paint::FontMetricsInt fm, TextPaint* paint){};
+                Paint::FontMetricsInt& fm, TextPaint* paint)const{};
 };
 
 class LineBackgroundSpan :public ParagraphStyle{
 public:
     int getLineBackground()const{return 0;}
     void drawBackground(Canvas&,Paint& paint, int left, int right, int top, int baseline,
-            int bottom, CharSequence* text, int start, int end, int lineNumber){};
+            int bottom, CharSequence* text, int start, int end, int lineNumber)const{};
 };
 class LeadingMarginSpan :public ParagraphStyle{
 public:
     int getLeadingMargin(bool)const{return 0;};
     void drawLeadingMargin(Canvas& c, Paint& p,int x, int dir, int top, int baseline, int bottom,
-            CharSequence* text, int start, int end, bool first, Layout* layout){}
+            CharSequence* text, int start, int end, bool first, Layout* layout)const{}
 };
 
 class WrapTogetherSpan:public ParagraphStyle{
@@ -123,7 +123,7 @@ private:
 };
 
 struct SpanInfo {
-    ParcelableSpan* what;
+    const ParcelableSpan* what;
     int start;
     int end;
     int flags;
@@ -156,10 +156,10 @@ public:
     };
 public:
     virtual ~Spanned() = default;
-    virtual std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter&) const = 0;
-    virtual int getSpanStart(ParcelableSpan* what) const = 0;
-    virtual int getSpanEnd(ParcelableSpan* what) const = 0;
-    virtual int getSpanFlags(ParcelableSpan* what) const = 0;
+    virtual std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter&) const = 0;
+    virtual int getSpanStart(const ParcelableSpan* what) const = 0;
+    virtual int getSpanEnd(const ParcelableSpan* what) const = 0;
+    virtual int getSpanFlags(const ParcelableSpan* what) const = 0;
     virtual int nextSpanTransition(int start, int limit, const SpanFilter& kind) const = 0;
 };
 
@@ -167,8 +167,8 @@ public:
 class Spannable : virtual public Spanned {
 public:
     virtual ~Spannable() = default;
-    virtual void setSpan(ParcelableSpan* what, int start, int end, int flags) = 0;
-    virtual void removeSpan(ParcelableSpan* what) = 0;
+    virtual void setSpan(const ParcelableSpan* what, int start, int end, int flags) = 0;
+    virtual void removeSpan(const ParcelableSpan* what) = 0;
 };
 
 // Internal base class for SpannedString and SpannableString (similar to Android's SpannableStringInternal)
@@ -196,8 +196,8 @@ public:
         return mText.at(idx);
     }
     
-    std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override {
-        std::vector<ParcelableSpan*> result;
+    std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override {
+        std::vector<const ParcelableSpan*> result;
         for (const SpanInfo& span : mSpans) {
             if (span.start >= end || span.end <= start) continue;
             if (filter.test(span.what)) {
@@ -207,21 +207,21 @@ public:
         return result;
     }
 
-    int getSpanStart(ParcelableSpan* what) const override {
+    int getSpanStart(const ParcelableSpan* what) const override {
         for (const SpanInfo& s : mSpans) {
             if (s.what == what) return s.start;
         }
         return -1;
     }
     
-    int getSpanEnd(ParcelableSpan* what) const override {
+    int getSpanEnd(const ParcelableSpan* what) const override {
         for (const SpanInfo& s : mSpans) {
             if (s.what == what) return s.end;
         }
         return -1;
     }
     
-    int getSpanFlags(ParcelableSpan* what) const override {
+    int getSpanFlags(const ParcelableSpan* what) const override {
         for (const SpanInfo& s : mSpans) {
             if (s.what == what) return s.flags;
         }
@@ -283,14 +283,14 @@ public:
     explicit SpannableString(const std::u16string& text)
         : SpannableStringInternal(text) {}
 
-    void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
+    void setSpan(const ParcelableSpan* what, int start, int end, int flags) override {
         if (!what) return;
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
         mSpans.push_back(SpanInfo{what, start, end, flags});
     }
-    void removeSpan(ParcelableSpan* what) override {
+    void removeSpan(const ParcelableSpan* what) override {
         mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
     }
 };
@@ -303,7 +303,7 @@ public:
         : SpannableStringInternal(text) {}
     SpannableStringBuilder(const CharSequence*){}
     
-    void setSpan(ParcelableSpan* what, int start, int end, int flags) override {
+    void setSpan(const ParcelableSpan* what, int start, int end, int flags) override {
         if (!what) return;
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
@@ -311,7 +311,7 @@ public:
         SpanInfo info{what, start, end, flags};
         mSpans.push_back(std::move(info));
     }
-    void removeSpan(ParcelableSpan* what) override {
+    void removeSpan(const ParcelableSpan* what) override {
         mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
     }
 
@@ -356,13 +356,13 @@ public:
         mText+=std::u16string(utf16+start,count);
         return *this;
     }
-    SpannableStringBuilder& append(const std::string& utf8, ParcelableSpan* what, int flags) {
+    SpannableStringBuilder& append(const std::string& utf8,const ParcelableSpan* what, int flags) {
         int start = (int)mText.length();
         append(utf8);
         setSpan(what, start, (int)mText.length(), flags);
         return *this;
     }
-    SpannableStringBuilder& append(const std::string& utf8, const std::vector<ParcelableSpan*>& whats, int flags) {
+    SpannableStringBuilder& append(const std::string& utf8, const std::vector<const ParcelableSpan*>& whats, int flags) {
         int start = (int)mText.length();
         append(utf8);
         int end = (int)mText.length();
@@ -376,10 +376,10 @@ public:
     SpannableStringBuilder& append(const CharSequence& text) {
         return append(text.toString());
     }
-    SpannableStringBuilder& append(const CharSequence& text, ParcelableSpan* what, int flags) {
+    SpannableStringBuilder& append(const CharSequence& text, const ParcelableSpan* what, int flags) {
         return append(text.toString(), what, flags);
     }
-    SpannableStringBuilder& append(const CharSequence& text, const std::vector<ParcelableSpan*>& whats, int flags) {
+    SpannableStringBuilder& append(const CharSequence& text, const std::vector<const ParcelableSpan*>& whats, int flags) {
         return append(text.toString(), whats, flags);
     }
     SpannableStringBuilder& append(const std::string& utf8, int start, int end) {
@@ -445,7 +445,7 @@ public:
         mSpans.clear();
         return *this;
     }
-    void setSpanForText(const std::string& targetUtf8, ParcelableSpan* what, int flags, bool firstOnly = true) {
+    void setSpanForText(const std::string& targetUtf8, const ParcelableSpan* what, int flags, bool firstOnly = true) {
         if (!what) return;
         /*std::wstring target = TextUtils::utf8tounicode(targetUtf8);
         size_t pos = 0;

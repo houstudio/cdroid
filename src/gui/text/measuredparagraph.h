@@ -35,9 +35,9 @@ private:
     static MeasuredParagraph* obtain();
     void reset();
     void resetAndAnalyzeBidi(const CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
-    void applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
+    void applyReplacementRun(const ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
     void applyStyleRun(int start, int end, MeasuredText::Builder* builder);
-    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans,
+    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans,
             int start, int end, MeasuredText::Builder* builder);
 public:
     ~MeasuredParagraph(){

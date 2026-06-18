@@ -230,7 +230,7 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
     }
 }
 
-void  MeasuredParagraph::applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder) {
+void  MeasuredParagraph::applyReplacementRun(const ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder) {
     // Use original text. Shouldn't matter.
     // TODO: passing uninitizlied FontMetrics to developers. Do we need to keep this for
     //       backward compatibility? or Should we initialize them for getFontMetricsInt?
@@ -285,7 +285,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
     }
 }
 
-void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
+void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
     mCachedPaint.set(paint);
     // XXX paint should not have a baseline shift, but...
     mCachedPaint.baselineShift = 0;
@@ -296,13 +296,13 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
         //mCachedFm = new Paint.FontMetricsInt();
     }
 
-    ReplacementSpan* replacement = nullptr;
+    const ReplacementSpan* replacement = nullptr;
     if (!spans.empty()) {
         for (int i = 0; i < spans.size(); i++) {
-            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(spans[i]);
-            if (dynamic_cast<ReplacementSpan*>(span)) {
+            const MetricAffectingSpan* span = dynamic_cast<const MetricAffectingSpan*>(spans[i]);
+            if (dynamic_cast<const ReplacementSpan*>(span)) {
                 // The last ReplacementSpan is effective for backward compatibility reasons.
-                replacement = (ReplacementSpan*) span;
+                replacement = (const ReplacementSpan*) span;
             } else {
                 // TODO: No need to call updateMeasureState for ReplacementSpan as well?
                 span->updateMeasureState(mCachedPaint);

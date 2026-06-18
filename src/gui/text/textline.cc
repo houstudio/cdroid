@@ -482,11 +482,11 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
         TextUtils::removeEmptySpans(spans, mSpanned, MetricAffectingSpanFilter);
 
         if (spans.size() > 0) {
-            ReplacementSpan* replacement = nullptr;
+            const ReplacementSpan* replacement = nullptr;
             for (int j = 0; j < spans.size(); j++) {
-                MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(spans[j]);
-                if (dynamic_cast<ReplacementSpan*>(span)) {
-                    replacement = (ReplacementSpan*)span;
+                const MetricAffectingSpan* span = dynamic_cast<const MetricAffectingSpan*>(spans[j]);
+                if (dynamic_cast<const ReplacementSpan*>(span)) {
+                    replacement = (const ReplacementSpan*)span;
                 } else {
                     span->updateMeasureState(wp);
                 }
@@ -664,7 +664,7 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
     return runIsRtl ? -totalWidth : totalWidth;
 }
 
-float TextLine::handleReplacement(ReplacementSpan& replacement,const TextPaint& wp,
+float TextLine::handleReplacement(const ReplacementSpan& replacement,const TextPaint& wp,
         int start, int limit, bool runIsRtl, Canvas* c, float x, int top,
         int y, int bottom, Paint::FontMetricsInt* fmi, bool needWidth) {
 
@@ -773,7 +773,7 @@ float TextLine::handleRun(int start, int measureLimit,
         inext = mMetricAffectingSpanSpanSet->getNextTransition(mStart + i, mStart + limit) - mStart;
         int mlimit = std::min(inext, measureLimit);
 
-        ReplacementSpan* replacement = nullptr;
+        const ReplacementSpan* replacement = nullptr;
 
         for (int j = 0; j < mMetricAffectingSpanSpanSet->numberOfSpans; j++) {
             // Both intervals [spanStarts..spanEnds] and [mStart + i..mStart + mlimit] are NOT
@@ -784,9 +784,9 @@ float TextLine::handleRun(int start, int measureLimit,
             const bool insideEllipsis =
                     mStart + mEllipsisStart <= mMetricAffectingSpanSpanSet->spanStarts[j]
                     && mMetricAffectingSpanSpanSet->spanEnds[j] <= mStart + mEllipsisEnd;
-            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(mMetricAffectingSpanSpanSet->spans[j]);
-            if (dynamic_cast<ReplacementSpan*>(span)) {
-                replacement = !insideEllipsis ? (ReplacementSpan*) span : nullptr;
+            const MetricAffectingSpan* span = dynamic_cast<const MetricAffectingSpan*>(mMetricAffectingSpanSpanSet->spans[j]);
+            if (dynamic_cast<const ReplacementSpan*>(span)) {
+                replacement = !insideEllipsis ? (const ReplacementSpan*) span : nullptr;
             } else {
                 // We might have a replacement that uses the draw
                 // state, otherwise measure state would suffice.
@@ -816,7 +816,7 @@ float TextLine::handleRun(int start, int measureLimit,
                 if ((mCharacterStyleSpanSet->spanStarts[k] >= mStart + offset) ||
                         (mCharacterStyleSpanSet->spanEnds[k] <= mStart + j)) continue;
 
-                CharacterStyle* span = dynamic_cast<CharacterStyle*>(mCharacterStyleSpanSet->spans[k]);
+                const CharacterStyle* span = dynamic_cast<const CharacterStyle*>(mCharacterStyleSpanSet->spans[k]);
                 span->updateDrawState(wp);
             }
 

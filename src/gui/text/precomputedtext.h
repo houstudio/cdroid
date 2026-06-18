@@ -97,22 +97,22 @@ public:
     void getBounds(int start, int end, Rect& bounds) const;
     float getCharWidthAt(int offset) const;
     int getMemoryUsage() const;
-    void setSpan(ParcelableSpan* what, int start, int end, int flags) override;
-    void removeSpan(ParcelableSpan* what) override;
+    void setSpan(const ParcelableSpan* what, int start, int end, int flags) override;
+    void removeSpan(const ParcelableSpan* what) override;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     // Spanned overrides
 
-    std::vector<ParcelableSpan*> getSpans(int start, int end,const SpanFilter& type)const override{
+    std::vector<const ParcelableSpan*> getSpans(int start, int end,const SpanFilter& type)const override{
         return mText->getSpans(start, end, type);
     }
-    int getSpanStart(ParcelableSpan* tag)const override{
+    int getSpanStart(const ParcelableSpan* tag)const override{
         return mText->getSpanStart(tag);
     }
-    int getSpanEnd(ParcelableSpan* tag)const override{
+    int getSpanEnd(const ParcelableSpan* tag)const override{
         return mText->getSpanEnd(tag);
     }
-    int getSpanFlags(ParcelableSpan* tag)const override{
+    int getSpanFlags(const ParcelableSpan* tag)const override{
         return mText->getSpanFlags(tag);
     }
     int nextSpanTransition(int start, int limit,const SpanFilter& type)const override{

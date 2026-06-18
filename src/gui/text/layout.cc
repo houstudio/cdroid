@@ -125,7 +125,7 @@ float Layout::getJustifyWidth(int lineNum) const{
     int right = mWidth;
     const int dir = getParagraphDirection(lineNum);
 
-    std::vector<ParcelableSpan*> spans;
+    std::vector<const ParcelableSpan*> spans;
     if (mSpannedText) {
         Spanned* sp = dynamic_cast<Spanned*>(mText);
         const int start = getLineStart(lineNum);
@@ -136,8 +136,8 @@ float Layout::getJustifyWidth(int lineNum) const{
             spans = getParagraphSpans(sp, start, spanEnd, ParagraphStyleFilter);
 
             for (int n = spans.size() - 1; n >= 0; n--) {
-                if (dynamic_cast<AlignmentSpan*>(spans[n])) {
-                    paraAlign = (Alignment)((AlignmentSpan*) spans[n])->getAlignment();
+                if (dynamic_cast<const AlignmentSpan*>(spans[n])) {
+                    paraAlign = (Alignment)((const AlignmentSpan*) spans[n])->getAlignment();
                     break;
                 }
             }
@@ -146,8 +146,8 @@ float Layout::getJustifyWidth(int lineNum) const{
         const int length = spans.size();
         bool useFirstLineMargin = isFirstParaLine;
         for (int n = 0; n < length; n++) {
-            if (dynamic_cast<LeadingMarginSpan2*>(spans[n])) {
-                int count = ((LeadingMarginSpan2*) spans[n])->getLeadingMarginLineCount();
+            if (dynamic_cast<const LeadingMarginSpan2*>(spans[n])) {
+                int count = ((const LeadingMarginSpan2*) spans[n])->getLeadingMarginLineCount();
                 int startLine = getLineForOffset(sp->getSpanStart(spans[n]));
                 if (lineNum < startLine + count) {
                     useFirstLineMargin = true;
@@ -156,8 +156,8 @@ float Layout::getJustifyWidth(int lineNum) const{
             }
         }
         for (int n = 0; n < length; n++) {
-            if (dynamic_cast<LeadingMarginSpan*>(spans[n])) {
-                LeadingMarginSpan* margin = (LeadingMarginSpan*) spans[n];
+            if (dynamic_cast<const LeadingMarginSpan*>(spans[n])) {
+                const LeadingMarginSpan* margin = (const LeadingMarginSpan*) spans[n];
                 if (dir == DIR_RIGHT_TO_LEFT) {
                     right -= margin->getLeadingMargin(useFirstLineMargin);
                 } else {
@@ -199,7 +199,7 @@ float Layout::getJustifyWidth(int lineNum) const{
 void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     int previousLineBottom = getLineTop(firstLine);
     int previousLineEnd = getLineStart(firstLine);
-    std::vector<ParcelableSpan*> spans;
+    std::vector<const ParcelableSpan*> spans;
     int spanEnd = 0;
     TextPaint& paint = mWorkPaint;
     paint.set(*mPaint);
@@ -250,8 +250,8 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
 
                 paraAlign = mAlignment;
                 for (int n = spans.size() - 1; n >= 0; n--) {
-                    if (dynamic_cast<AlignmentSpan*>(spans[n])) {
-                        paraAlign = (Alignment)((AlignmentSpan*)spans[n])->getAlignment();
+                    if (dynamic_cast<const AlignmentSpan*>(spans[n])) {
+                        paraAlign = (Alignment)((const AlignmentSpan*)spans[n])->getAlignment();
                         break;
                     }
                 }
@@ -264,8 +264,8 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
             const int length = spans.size();
             bool useFirstLineMargin = isFirstParaLine;
             for (int n = 0; n < length; n++) {
-                if (dynamic_cast<LeadingMarginSpan2*>(spans[n])) {
-                    int count = ((LeadingMarginSpan2*) spans[n])->getLeadingMarginLineCount();
+                if (dynamic_cast<const LeadingMarginSpan2*>(spans[n])) {
+                    int count = ((const LeadingMarginSpan2*) spans[n])->getLeadingMarginLineCount();
                     int startLine = getLineForOffset(sp->getSpanStart(spans[n]));
                     // if there is more than one LeadingMarginSpan2, use
                     // the count that is greatest
@@ -276,8 +276,8 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
                 }
             }
             for (int n = 0; n < length; n++) {
-                if (dynamic_cast<LeadingMarginSpan*>(spans[n])) {
-                    LeadingMarginSpan* margin = (LeadingMarginSpan*) spans[n];
+                if (dynamic_cast<const LeadingMarginSpan*>(spans[n])) {
+                    const LeadingMarginSpan* margin = (const LeadingMarginSpan*) spans[n];
                     if (dir == DIR_RIGHT_TO_LEFT) {
                         margin->drawLeadingMargin(canvas, paint, right, dir, ltop,
                                 lbaseline, lbottom, buf, start, end, isFirstParaLine, this);
@@ -377,7 +377,7 @@ void Layout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPai
         if (mLineBackgroundSpans->numberOfSpans > 0) {
             int previousLineBottom = getLineTop(firstLine);
             int previousLineEnd = getLineStart(firstLine);
-            std::vector<ParcelableSpan*> spans ;
+            std::vector<const ParcelableSpan*> spans ;
             int spansLength = 0;
             TextPaint* paint = mPaint;
             int spanEnd = 0;
@@ -1503,10 +1503,10 @@ int Layout::getParagraphLeadingMargin(int line) const{
 
     bool useFirstLineMargin = lineStart == 0 || spanned->charAt(lineStart - 1) == '\n';
     for (int i = 0; i < spans.size(); i++) {
-        if (dynamic_cast<LeadingMarginSpan2*>(spans[i])) {
+        if (dynamic_cast<const LeadingMarginSpan2*>(spans[i])) {
             int spStart = spanned->getSpanStart(spans[i]);
             int spanLine = getLineForOffset(spStart);
-            int count = ((LeadingMarginSpan2*) spans[i])->getLeadingMarginLineCount();
+            int count = ((const LeadingMarginSpan2*) spans[i])->getLeadingMarginLineCount();
             // if there is more than one LeadingMarginSpan2, use the count that is greatest
             useFirstLineMargin |= line < spanLine + count;
         }
@@ -1562,23 +1562,23 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
 
 ////////////////public static class TabStops////////////////////
 
-TabStops::TabStops(float increment, const std::vector<ParcelableSpan*>& spans) {
+TabStops::TabStops(float increment, const std::vector<const ParcelableSpan*>& spans) {
     reset(increment, spans);
 }
 
-void TabStops::reset(float increment, const std::vector<ParcelableSpan*>& spans) {
+void TabStops::reset(float increment, const std::vector<const ParcelableSpan*>& spans) {
     this->mIncrement = increment;
     int ns = 0;
     if (!spans.empty()) {
         auto& stops = this->mStops;
         for (auto o : spans) {
-            if (dynamic_cast<TabStopSpan*>(o)) {
+            if (dynamic_cast<const TabStopSpan*>(o)) {
                 if (stops.empty()) {
                     stops.resize(10);
                 } else if (ns == stops.size()) {
                     stops.resize(ns * 2);
                 }
-                stops[ns++] = ((TabStopSpan*) o)->getTabStop();
+                stops[ns++] = ((const TabStopSpan*) o)->getTabStop();
             }
         }
         if (ns > 1) {
@@ -1604,7 +1604,7 @@ float TabStops::nextTab(float h) {
 //////////////////////////////////////////////////////////////////////
 
 float Layout::nextTab(CharSequence* text, int start, int end,
-                                   float h,std::vector<ParcelableSpan*>& tabs) {
+                                   float h,std::vector<const ParcelableSpan*>& tabs) {
     float nh = FLT_MAX;
     bool alltabs = false;
     Spanned* spanned = dynamic_cast<Spanned*>(text);
@@ -1615,10 +1615,10 @@ float Layout::nextTab(CharSequence* text, int start, int end,
         }
         for (int i = 0; i < tabs.size(); i++) {
             if (!alltabs) {
-                if (!(dynamic_cast<TabStopSpan*>(tabs[i])))
+                if (!(dynamic_cast<const TabStopSpan*>(tabs[i])))
                     continue;
             }
-            int where = ((TabStopSpan*) tabs[i])->getTabStop();
+            int where = ((const TabStopSpan*) tabs[i])->getTabStop();
             if (where < nh && where > h)
                 nh = where;
         }
@@ -1632,7 +1632,7 @@ float Layout::nextTab(CharSequence* text, int start, int end,
     return mSpannedText;
 }
 
-std::vector<ParcelableSpan*> Layout::getParagraphSpans(Spanned* text, int start, int end, const SpanFilter& type) {
+std::vector<const ParcelableSpan*> Layout::getParagraphSpans(Spanned* text, int start, int end, const SpanFilter& type) {
     if (start == end && start > 0) {
         return {};//ArrayUtils.emptyArray(type);
     }

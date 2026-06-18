@@ -157,7 +157,7 @@ public:
 
     static int getCapsMode(const CharSequence* cs, int off, int reqModes);
 
-    static void removeEmptySpans(std::vector<ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
+    static void removeEmptySpans(std::vector<const ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
     static int64_t packRangeInLong(int start, int end) {
         return (((long) start) << 32) | end;
     }
