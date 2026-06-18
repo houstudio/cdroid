@@ -92,7 +92,7 @@ void Assets::setTheme(const std::string&theme) {
 
 static std::string convertXmlToCString(const std::string& xml) {
     static std::unordered_map<std::string, std::string> escapeMap = {
-        {"\\n", "\n"},     {"\\'", "\'"},   {"\\\"", "\""}
+        {"\\n", "\n"}, {"\\t","\t"}, {"\\'", "\'"}, {"\\\"", "\""}
     };
     std::string result;
     result.reserve(xml.length());

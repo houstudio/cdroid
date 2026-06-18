@@ -151,6 +151,7 @@ protected:
     ViewPager2*mVP;
 public:
     AccessibilityProvider(ViewPager2*);
+    virtual ~AccessibilityProvider()=default;
     virtual void onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView);
     virtual bool handlesGetAccessibilityClassName();
     virtual std::string onGetAccessibilityClassName();
@@ -194,6 +195,7 @@ protected:
     void updatePageAccessibilityActions();
 public:
     PageAwareAccessibilityProvider(ViewPager2*);
+    ~PageAwareAccessibilityProvider()override;
     void onInitialize(OnPageChangeCallback pageChangeEventDispatcher, RecyclerView* recyclerView)override;
     bool handlesGetAccessibilityClassName()override;
     std::string onGetAccessibilityClassName()override;

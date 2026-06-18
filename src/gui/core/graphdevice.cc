@@ -344,6 +344,7 @@ void GraphDevice::composeSurfaces(){
         if(rgn->empty())continue; 
         rgn->intersect(wins[i]->mVisibleRgn);/*it is already empty*/
         LOGV_IF(!rgn->empty(),"surface[%d] has %d rects to compose",i,rgn->get_num_rectangles());
+#if defined(__x86_64__) ||defined(__x86_64) ||defined(__amd64__)||defined(__amd64)
         for(int j = 0; j < rgn->get_num_rectangles(); j++){
             const RectangleInt rc = rgn->get_rectangle(j);
             int dx = rcw.left+ rc.x;
@@ -357,6 +358,14 @@ void GraphDevice::composeSurfaces(){
             if(hdlSurface)GFXBlit(mPrimarySurface , dx , dy , hdlSurface,(const GFXRect*)&rd);
             else mPrimaryContext->rectangle(rcw.left + rc.x , rcw.top + rc.y , rc.width , rc.height);
         }
+#else
+        int dx = rcw.left;
+        int dy = rcw.top;
+        RectangleInt rs={0,0,rcw.width,rcw.height};
+        RectangleInt rd={0,0,rcw.width,rcw.height};
+        rotateRectInWindow(rcw,(const Rect&)rs,(Rect&)rd,dx,dy,rotation);
+        GFXBlit(mPrimarySurface ,dx,dy,hdlSurface,(const GFXRect*)&rd);
+#endif
         commitedRects +=rgn->get_num_rectangles();
         if(mShowFPS && (i == wSurfaces.size()-1) && mPrimaryContext){
             Rect recFPS = mRectBanner;
@@ -364,7 +373,6 @@ void GraphDevice::composeSurfaces(){
             int dx =0,dy =0;
             wSurfaces[i]->reset_clip();
             mPrimaryContext->reset_clip();
-            //trackFPS(*mPrimaryContext);
             trackFPS(*wSurfaces[i]);
             LOGV("FPS=%s fpsrect=(%d,%d,%d,%d)->(%d,%d)",mFPSText.c_str(),recFPS.left,recFPS.top,recFPS.width,recFPS.height,dx,dy);
             rotateRectInWindow(rcw,mRectBanner,recFPS,dx,dy,rotation);

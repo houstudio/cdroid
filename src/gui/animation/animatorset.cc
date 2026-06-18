@@ -887,17 +887,17 @@ void AnimatorSet::endAnimation() {
     mPauseTime = -1;
     mSeekState->reset();
     mPlayingSet.clear();
-
+    const bool reversing = mReversing;
     // No longer receive callbacks
     removeAnimationCallback();
-    // Call end listener
-    std::vector<AnimatorListener>tmpListeners = mListeners;
-    for (Animator::AnimatorListener& ls:tmpListeners){
-        if(ls.onAnimationEnd)ls.onAnimationEnd(*this, mReversing);
-    }
     removeDummyListener();
     mSelfPulse = true;
     mReversing = false;
+    // Call end listener
+    std::vector<AnimatorListener>tmpListeners = mListeners;
+    for (Animator::AnimatorListener& ls:tmpListeners){
+        if(ls.onAnimationEnd)ls.onAnimationEnd(*this, reversing);
+    }
 }
 
 void AnimatorSet::removeAnimationCallback() {
