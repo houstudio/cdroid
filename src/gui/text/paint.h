@@ -94,11 +94,11 @@ public:
     void setColor(int v){mColor=v;}
     float getStrokeWidth()const{return mStrokeWidth;}
     void setStrokeWidth(float v){mStrokeWidth=v;}
-    void setTextSize(float v){mTextSize=v;}
+    void setTextSize(float v);
     float getTextSize()const{return mTextSize;}
-    void setTextScaleX(float v){mTextScaleX=v;}
+    void setTextScaleX(float v);
     float getTextScaleX()const{return mTextScaleX;}
-    void setTextSkewX(float v){mTextSkewX=v;}
+    void setTextSkewX(float v);
     float getTextSkewX()const{return mTextSkewX;}
     int getTextAlign()const{return 0;}
     void setTextAlign(int);

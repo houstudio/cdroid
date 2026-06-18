@@ -6,7 +6,9 @@
 #include <text/textpaint.h>
 #include <text/measuredtext.h>
 #include <text/textdirectionheuristics.h>
-
+#include <text/style/metricaffectingspan.h>
+#include <text/style/paragraphstyles.h>
+#include <text/style/characterstyles.h>
 namespace cdroid{
 class Directions;
 class MeasuredParagraph {

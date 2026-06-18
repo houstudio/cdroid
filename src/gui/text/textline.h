@@ -3,6 +3,7 @@
 #include <text/textpaint.h>
 #include <core/canvas.h>
 #include <text/spannablestring.h>
+#include <text/style/metricaffectingspan.h>
 namespace cdroid{
 class Directions;
 class TabStops;

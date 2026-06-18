@@ -7,132 +7,10 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <tuple>
 #include <memory>
 
 namespace cdroid {
-class Canvas;
-class Layout;
-
-class MetricAffectingSpan:public CharacterStyle{
-public:
-    virtual void updateMeasureState(TextPaint& textPaint)const{};
-};
-class ReplacementSpan : public MetricAffectingSpan {
-public:
-    virtual int  getSize(const Paint& paint,const CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
-    virtual void draw(Canvas& canvas,const CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)const=0;
-};
-class AlignmentSpan :public ParagraphStyle{
-protected:
-    int mAlignment;
-public:
-    int getAlignment()const{return mAlignment;}
-};
-class LineHeightSpan :public ParagraphStyle{
-public:
-    class WithDensity;
-    virtual void chooseHeight(CharSequence* text, int start, int end,
-            int spanstartv, int lineHeight,Paint::FontMetricsInt& fm)const{}
-};
-class LineHeightSpan::WithDensity :public LineHeightSpan{
-public:
-    virtual void chooseHeight(CharSequence* text, int start, int end,
-                int spanstartv, int lineHeight,
-                Paint::FontMetricsInt& fm, TextPaint* paint)const{};
-};
-
-class LineBackgroundSpan :public ParagraphStyle{
-public:
-    int getLineBackground()const{return 0;}
-    void drawBackground(Canvas&,Paint& paint, int left, int right, int top, int baseline,
-            int bottom, CharSequence* text, int start, int end, int lineNumber)const{};
-};
-class LeadingMarginSpan :public ParagraphStyle{
-public:
-    int getLeadingMargin(bool)const{return 0;};
-    void drawLeadingMargin(Canvas& c, Paint& p,int x, int dir, int top, int baseline, int bottom,
-            CharSequence* text, int start, int end, bool first, Layout* layout)const{}
-};
-
-class WrapTogetherSpan:public ParagraphStyle{
-};
-
-class LeadingMarginSpan2:public LeadingMarginSpan{
-public:
-    int getLeadingMarginLineCount()const{return 0;}
-};
-class TabStopSpan :public ParagraphStyle {
-public:
-    int getTabStop()const{return 0;}
-};
-class ForegroundColorSpan : public CharacterStyle {
-public:
-    explicit ForegroundColorSpan(int color) : mColor(color) {}
-    int getForegroundColor() const { return mColor; }
-private:
-    int mColor;
-};
-
-class StyleSpan : public CharacterStyle {
-public:
-    explicit StyleSpan(int style) : mStyle(style) {}
-    int getStyle() const { return mStyle; }
-private:
-    int mStyle;
-};
-
-class UnderlineSpan : public CharacterStyle {
-};
-
-class StrikethroughSpan : public CharacterStyle {
-};
-class SubscriptSpan: public CharacterStyle {
-};
-class SuperscriptSpan: public CharacterStyle {
-};
-class URLSpan : public CharacterStyle {
-public:
-    explicit URLSpan(const std::string& url) : mUrl(url) {}
-    const std::string& getUrl() const { return mUrl; }
-private:
-    std::string mUrl;
-};
-
-class TypefaceSpan : public CharacterStyle {
-public:
-    explicit TypefaceSpan(const std::string& family) : mFamily(family) {}
-    const std::string& getFamily() const { return mFamily; }
-private:
-    std::string mFamily;
-};
-
-class AbsoluteSizeSpan : public CharacterStyle {
-public:
-    explicit AbsoluteSizeSpan(int size) : mSize(size) {}
-    int getSize() const { return mSize; }
-private:
-    int mSize;
-};
-
-class RelativeSizeSpan : public CharacterStyle {
-public:
-    explicit RelativeSizeSpan(float proportion) : mProportion(proportion) {}
-    float getProportion() const { return mProportion; }
-private:
-    float mProportion;
-};
-
-struct SpanInfo {
-    const ParcelableSpan* what;
-    int start;
-    int end;
-    int flags;
-
-    bool operator==(const SpanInfo& other) const {
-        return start == other.start && end == other.end && flags == other.flags && what == other.what;
-    }
-};
-const auto ParagraphStyleFilter =Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ParagraphStyle*>(span) != nullptr;});
 // Spanned: read-only span-aware CharSequence (similar to Android's Spanned)
 class Spanned : virtual public CharSequence {
 public:
@@ -175,7 +53,7 @@ public:
 class SpannableStringInternal : virtual public Spanned {
 protected:
     std::u16string mText;
-    std::vector<SpanInfo> mSpans;
+    std::vector<std::tuple<const ParcelableSpan*,int,int,int>> mSpans;
     SpannableStringInternal() = default;
     explicit SpannableStringInternal(const std::u16string& text) : mText(text) {}
 public:
@@ -198,42 +76,57 @@ public:
     
     std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override {
         std::vector<const ParcelableSpan*> result;
-        for (const SpanInfo& span : mSpans) {
-            if (span.start >= end || span.end <= start) continue;
-            if (filter.test(span.what)) {
-                result.push_back(span.what);
+        for (const auto & t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (sstart >= end || send <= start) continue;
+            if (filter.test(span)) {
+                result.push_back(span);
             }
         }
         return result;
     }
 
     int getSpanStart(const ParcelableSpan* what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.start;
+        for (const auto& t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (span == what) return sstart;
         }
         return -1;
     }
     
     int getSpanEnd(const ParcelableSpan* what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.end;
+        for (auto& t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (span == what) return send;
         }
         return -1;
     }
     
     int getSpanFlags(const ParcelableSpan* what) const override {
-        for (const SpanInfo& s : mSpans) {
-            if (s.what == what) return s.flags;
+        for (auto t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (span == what) return sflags;
         }
         return 0;
     }
     
     int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override {
         int edge = limit;
-        for (const SpanInfo& s : mSpans) {
-            if (kind.test(s.what)) {
-                if (s.start > start && s.start < edge) edge = s.start;
-                if (s.end > start && s.end < edge) edge = s.end;
+        for (auto t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (kind.test(span)) {
+                if (sstart > start && sstart < edge) edge = sstart;
+                if (send > start && send < edge) edge = send;
             }
         }
         return edge;
@@ -265,11 +158,14 @@ public:
         if (start >= end) return new SpannedString();
         SpannedString* result = new SpannedString();
         result->mText = mText.substr(start, end - start);
-        for (const SpanInfo& span : mSpans) {
-            if (span.end <= start || span.start >= end) continue;
-            int spanStart = std::max(span.start, start) - start;
-            int spanEnd = std::min(span.end, end) - start;
-            result->mSpans.push_back(SpanInfo{span.what, spanStart, spanEnd, span.flags});
+        for (auto& t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (send <= start || sstart >= end) continue;
+            int spanStart = std::max(sstart, start) - start;
+            int spanEnd = std::min(send, end) - start;
+            result->mSpans.push_back({span, spanStart, spanEnd, sflags});
         }
         return result;
     }
@@ -288,10 +184,13 @@ public:
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
-        mSpans.push_back(SpanInfo{what, start, end, flags});
+        mSpans.push_back({what, start, end, flags});
     }
     void removeSpan(const ParcelableSpan* what) override {
-        mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
+        mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), 
+            [&](const std::tuple<const ParcelableSpan*,int,int,int>& s){ 
+                return std::get<0>(s) == what; 
+            }), mSpans.end());
     }
 };
 
@@ -308,43 +207,51 @@ public:
         if (start < 0) start = 0;
         if (end > (int)mText.length()) end = (int)mText.length();
         if (start >= end) return;
-        SpanInfo info{what, start, end, flags};
-        mSpans.push_back(std::move(info));
+        mSpans.push_back({what,start,end,flags});
     }
     void removeSpan(const ParcelableSpan* what) override {
-        mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), [&](const SpanInfo& s){ return s.what == what; }), mSpans.end());
+        mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), 
+            [&](const std::tuple<const ParcelableSpan*,int,int,int>& s){ 
+                return std::get<0>(s) == what; 
+            }), mSpans.end());
     }
 
     void shiftSpans(int index, int delta) {
-        for (SpanInfo& span : mSpans) {
-            if (span.start >= index) {
-                span.start += delta;
-                span.end += delta;
-            } else if (span.end > index) {
-                span.end += delta;
+        for (auto t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (sstart >= index) {
+                sstart += delta;
+                send += delta;
+            } else if (send > index) {
+                send += delta;
             }
         }
     }
 
     void adjustSpansForReplace(int start, int end, int delta) {
-        std::vector<SpanInfo> result;
-        for (SpanInfo span : mSpans) {
-            if (span.end <= start) {
-                result.push_back(span);
-            } else if (span.start >= end) {
-                span.start += delta;
-                span.end += delta;
-                result.push_back(span);
-            } else if (span.start < start && span.end > end) {
-                span.end = start;
-                result.push_back(span);
-            } else if (span.start < start && span.end > start) {
-                span.end = start;
-                result.push_back(span);
-            } else if (span.start < end && span.end > end) {
-                span.start = start + delta;
-                span.end += delta;
-                result.push_back(span);
+        std::vector<std::tuple<const ParcelableSpan*,int,int,int>> result;
+        for (auto& t : mSpans) {
+            const ParcelableSpan*span;
+            int sstart,send,sflags;
+            std::tie(span,sstart,send,sflags) = t;
+            if (send <= start) {
+                result.push_back({span,sstart,send,sflags});
+            } else if (sstart >= end) {
+                sstart += delta;
+                send += delta;
+                result.push_back({span,sstart,send,sflags});
+            } else if (sstart < start && send > end) {
+                send = start;
+                result.push_back({span,sstart,send,sflags});
+            } else if (sstart < start && send > start) {
+                send = start;
+                result.push_back({span,sstart,send,sflags});
+            } else if (sstart < end && send > end) {
+                sstart = start + delta;
+                send += delta;
+                result.push_back({span,sstart,send,sflags});
             }
         }
         mSpans.swap(result);

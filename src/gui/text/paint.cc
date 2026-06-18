@@ -27,8 +27,8 @@ Paint::Paint(){
     mLetterSpacing=0;
     mTextScaleX=1.f;
     mTextSize=12;
-    mMinikinPaint=std::make_shared<minikin::MinikinPaint>(mTypeface->getFontCollection());
-    mMinikinPaint->size=32;
+    mMinikinPaint = std::make_shared<minikin::MinikinPaint>(mTypeface->getFontCollection());
+    mMinikinPaint->size=12;
     mMinikinPaint->scaleX=1.0;
     mMinikinPaint->skewX=0;
 }
@@ -42,6 +42,7 @@ Paint::Paint(const Paint&other){
 
 Paint::~Paint(){
 }
+
 void Paint::set(const Paint&o){
     mTypeface=o.mTypeface;
     mColor = o.mColor;
@@ -54,6 +55,21 @@ void Paint::set(const Paint&o){
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
     mMinikinPaint=o.mMinikinPaint;
+}
+
+void Paint::setTextSize(float v){
+    mTextSize = v;
+    mMinikinPaint->size = v;
+}
+
+void Paint::setTextScaleX(float v){
+    mTextScaleX =v;
+    mMinikinPaint->scaleX = v;
+}
+
+void Paint::setTextSkewX(float v){
+    mTextSkewX = v;
+    mMinikinPaint->skewX = v;
 }
 
 bool Paint::hasEqualAttributes(const Paint&other)const{

@@ -132,8 +132,9 @@ float Layout::getJustifyWidth(int lineNum) const{
         const bool isFirstParaLine = (start == 0 || mText->charAt(start - 1) == '\n');
 
         if (isFirstParaLine) {
-            const int spanEnd = sp->nextSpanTransition(start, mText->length(), ParagraphStyleFilter);
-            spans = getParagraphSpans(sp, start, spanEnd, ParagraphStyleFilter);
+            const auto paragraphFilter = make_span_filter<ParagraphStyle>();
+            const int spanEnd = sp->nextSpanTransition(start, mText->length(), paragraphFilter);
+            spans = getParagraphSpans(sp, start, spanEnd, paragraphFilter);
 
             for (int n = spans.size() - 1; n >= 0; n--) {
                 if (dynamic_cast<const AlignmentSpan*>(spans[n])) {
@@ -245,8 +246,9 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
             // If spanEnd is before the end of the paragraph, that's not
             // our problem.
             if (start >= spanEnd && (lineNum == firstLine || isFirstParaLine)) {
-                spanEnd = sp->nextSpanTransition(start, textLength,ParagraphStyleFilter);
-                spans = getParagraphSpans(sp, start, spanEnd, ParagraphStyleFilter);
+                const auto paragraphFilter = make_span_filter<ParagraphStyle>();
+                spanEnd = sp->nextSpanTransition(start, textLength,paragraphFilter);
+                spans = getParagraphSpans(sp, start, spanEnd, paragraphFilter);
 
                 paraAlign = mAlignment;
                 for (int n = spans.size() - 1; n >= 0; n--) {
