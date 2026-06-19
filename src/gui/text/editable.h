@@ -4,7 +4,7 @@ namespace cdroid{
 class CharSequence;
 class Editable:virtual public CharSequence, virtual public Spannable{
 public:
-    virtual Editable replace(int st, int en,const CharSequence& source, int start, int end)=0;
+    virtual Editable& replace(int st, int en,const CharSequence& source, int start, int end)=0;
 
     /**
      * Convenience for replace(st, en, text, 0, text.length())

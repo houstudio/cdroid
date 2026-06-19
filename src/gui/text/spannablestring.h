@@ -57,9 +57,46 @@ protected:
     SpannableStringInternal() = default;
     explicit SpannableStringInternal(const std::u16string& text) : mText(text) {}
 public:
-    SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan){}
-    SpannableStringInternal(const CharSequence* source, int start, int end){}
-    SpannableStringInternal(const CharSequence*){}
+    SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan) {
+        if (source == nullptr) return;
+        const int len = source->length();
+        if (start < 0) start = 0;
+        if (end > len) end = len;
+        if (start >= end) return;
+        
+        // Copy text
+        mText.resize(end - start);
+        for (int i = 0; i < end - start; i++) {
+            mText[i] = source->charAt(start + i);
+        }
+        
+        // Copy spans if source is Spanned
+        const Spanned* spanned = dynamic_cast<const Spanned*>(source);
+        if (spanned != nullptr) {
+            const SpanFilter filter; // Default filter accepts all spans
+            auto spans = spanned->getSpans(start, end, filter);
+            for (const ParcelableSpan* span : spans) {
+                (void)ignoreNoCopySpan; // IgnoreNoCopySpan handling can be added later
+                int spanStart = spanned->getSpanStart(span);
+                int spanEnd = spanned->getSpanEnd(span);
+                int spanFlags = spanned->getSpanFlags(span);
+                
+                // Adjust span positions relative to the new substring
+                int newStart = std::max(0, spanStart - start);
+                int newEnd = std::min(end - start, spanEnd - start);
+                
+                if (newStart < newEnd) {
+                    mSpans.emplace_back(span, newStart, newEnd, spanFlags);
+                }
+            }
+        }
+    }
+    
+    SpannableStringInternal(const CharSequence* source, int start, int end)
+        : SpannableStringInternal(source, start, end, false) {}
+    
+    SpannableStringInternal(const CharSequence* source)
+        : SpannableStringInternal(source, 0, source ? source->length() : 0, false) {}
     virtual ~SpannableStringInternal() = default;
     
     std::string toString() const override {
