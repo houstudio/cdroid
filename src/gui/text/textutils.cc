@@ -635,17 +635,24 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
     }
 
     if (sp == nullptr) {
-        //StringBuilder* sb = new StringBuilder(remaining + u16elps.length());
-        SpannableStringBuilder*sb=new SpannableStringBuilder();
-        sb->append(buf.data(), 0, left);
-        sb->append(u16elps);
-        sb->append(buf.data(), right, len - right);
-        return sb;//.toString();
+        SpannableStringBuilder* sb = new SpannableStringBuilder();
+        for (int i = 0; i < left; i++) {
+            sb->append(buf[i]);
+        }
+        for (char16_t c : u16elps) {
+            sb->append(c);
+        }
+        for (int i = right; i < len; i++) {
+            sb->append(buf[i]);
+        }
+        return sb;
     }
 
     SpannableStringBuilder* ssb = new SpannableStringBuilder();
     ssb->append(*text, 0, left);
-    ssb->append(ellipsis);
+    for (char16_t c : TextUtils::utf8_utf16(ellipsis)) {
+        ssb->append(c);
+    }
     ssb->append(*text, right, len);
     return ssb;
 }

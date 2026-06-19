@@ -16,21 +16,15 @@ public:
     void removeSpan(const ParcelableSpan* what) override;
     void shiftSpans(int index, int delta);
     void adjustSpansForReplace(int start, int end, int delta);
-    SpannableStringBuilder& append(const std::string& utf8);
-    SpannableStringBuilder& append(const std::u16string& utf16);
-    SpannableStringBuilder& append(const char16_t*utf16,int start,int count);
-    SpannableStringBuilder& append(const std::string& utf8,const ParcelableSpan* what, int flags);
-    SpannableStringBuilder& append(const std::string& utf8, const std::vector<const ParcelableSpan*>& whats, int flags);
+
     Editable& append(const CharSequence& text);
     SpannableStringBuilder& append(const CharSequence& text, const ParcelableSpan* what, int flags);
     SpannableStringBuilder& append(const CharSequence& text, const std::vector<const ParcelableSpan*>& whats, int flags);
-    SpannableStringBuilder& append(const std::string& utf8, int start, int end);
+
     Editable& append(const CharSequence& text, int start, int end);
     SpannableStringBuilder& insert(int where, const std::string& utf8);
     Editable& insert(int where, const CharSequence& text);
     SpannableStringBuilder& deleteText(int start, int end);
-    SpannableStringBuilder& replace(int start, int end, const std::string& utf8);
-    void setSpanForText(const std::string& targetUtf8, const ParcelableSpan* what, int flags, bool firstOnly = true);
     void getChars(int start, int end, char16_t* dest, int destPos) const override;
     
     // Editable interface methods

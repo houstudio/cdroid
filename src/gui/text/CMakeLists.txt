@@ -18,6 +18,7 @@ add_library(cdtext
     textline.cc
     packedintvector.cc
     character.cc
+    spannablestring.cc
     spannablestringbuilder.cc
     )
 target_link_libraries(cdtext minikin)

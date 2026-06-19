@@ -65,59 +65,32 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
     mSpans.swap(result);
 }
 
-SpannableStringBuilder& SpannableStringBuilder::append(const std::string& utf8){
-    mText += TextUtils::utf8_utf16(utf8);
+Editable& SpannableStringBuilder::append(const CharSequence& text) {
+    const int textLen = (int)text.length();
+    for (int i = 0; i < textLen; i++) {
+        mText += (char16_t)text.charAt(i);
+    }
     return *this;
 }
 
-SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string& utf16){
-    mText+=utf16;
-    return *this;
-}
-
-SpannableStringBuilder& SpannableStringBuilder::append(const char16_t*utf16,int start,int count){
-    mText+=std::u16string(utf16+start,count);
-    return *this;
-}
-
-SpannableStringBuilder& SpannableStringBuilder::append(const std::string& utf8,const ParcelableSpan* what, int flags) {
+SpannableStringBuilder& SpannableStringBuilder::append(const CharSequence& text, const ParcelableSpan* what, int flags) {
     int start = (int)mText.length();
-    append(utf8);
-    setSpan(what, start, (int)mText.length(), flags);
+    append(text);
+    if (what) {
+        setSpan(what, start, (int)mText.length(), flags);
+    }
     return *this;
 }
 
-SpannableStringBuilder& SpannableStringBuilder::append(const std::string& utf8, const std::vector<const ParcelableSpan*>& whats, int flags) {
+SpannableStringBuilder& SpannableStringBuilder::append(const CharSequence& text, const std::vector<const ParcelableSpan*>& whats, int flags) {
     int start = (int)mText.length();
-    append(utf8);
+    append(text);
     int end = (int)mText.length();
     for (const auto& what : whats) {
         if (what) {
             setSpan(what, start, end, flags);
         }
     }
-    return *this;
-}
-
-Editable& SpannableStringBuilder::append(const CharSequence& text) {
-    append(text.toString());
-    return *this;
-}
-
-SpannableStringBuilder& SpannableStringBuilder::append(const CharSequence& text, const ParcelableSpan* what, int flags) {
-    return append(text.toString(), what, flags);
-}
-
-SpannableStringBuilder& SpannableStringBuilder::append(const CharSequence& text, const std::vector<const ParcelableSpan*>& whats, int flags) {
-    return append(text.toString(), whats, flags);
-}
-
-SpannableStringBuilder& SpannableStringBuilder::append(const std::string& utf8, int start, int end) {
-    std::u16string source = TextUtils::utf8_utf16(utf8);
-    if (start < 0) start = 0;
-    if (end > (int)source.length()) end = (int)source.length();
-    if (start >= end) return *this;
-    mText += source.substr(start, end - start);
     return *this;
 }
 
@@ -148,32 +121,9 @@ Editable& SpannableStringBuilder::insert(int where, const CharSequence& text) {
 // Android equivalent: delete(start, end)
 // C++ cannot use the keyword `delete` as a method name.
 SpannableStringBuilder& SpannableStringBuilder::deleteText(int start, int end) {
-    return replace(start, end, std::string());
-}
-
-SpannableStringBuilder& SpannableStringBuilder::replace(int start, int end, const std::string& utf8) {
-    /*if (start < 0) start = 0;
-    if (end > (int)mText.length()) end = (int)mText.length();
-    if (start >= end) return *this;
-    std::wstring insertText = TextUtils::utf8tounicode(utf8);
-    int oldLen = end - start;
-    mText.replace(start, oldLen, insertText);
-    int delta = (int)insertText.length() - oldLen;
-    adjustSpansForReplace(start, end, delta);*/
+    SpannedString empty;
+    replace(start, end, empty);
     return *this;
-}
-
-void SpannableStringBuilder::setSpanForText(const std::string& targetUtf8, const ParcelableSpan* what, int flags, bool firstOnly) {
-    if (!what) return;
-    /*std::wstring target = TextUtils::utf8tounicode(targetUtf8);
-    size_t pos = 0;
-    while (pos < mText.size()) {
-        size_t found = mText.find(target, pos);
-        if (found == std::wstring::npos) break;
-        setSpan(what, (int)found, (int)(found + target.length()), flags);
-        if (firstOnly) break;
-        pos = found + 1;
-    }*/
 }
 
 void SpannableStringBuilder::getChars(int start, int end, char16_t* dest, int destPos) const{
@@ -242,8 +192,8 @@ Editable& SpannableStringBuilder::insert(int where, const CharSequence& text, in
     return *this;
 }
 
-Editable& SpannableStringBuilder::Delete(int st, int en) {
-    deleteText(st, en);
+Editable& SpannableStringBuilder::Delete(int start, int end) {
+    deleteText(start, end);
     return *this;
 }
 
