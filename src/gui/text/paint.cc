@@ -235,7 +235,6 @@ void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int 
     Cairo::RefPtr<cdroid::Path> pathRef = Cairo::RefPtr<cdroid::Path>(new cdroid::Path(path));
     PathMeasure measure(pathRef, false);
     double pathLen = measure.getLength();
-
     double currentPathPos = hOffset;
 
     for (size_t glyphIdx = 0; glyphIdx < layout.nGlyphs(); glyphIdx++) {
@@ -256,25 +255,22 @@ void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int 
             break;
         }
         double pos[2], tan[2];
-        if (measure.getPosTan(currentPathPos, pos, tan)) {
+        const float glyphAdvance = advances[glyphIdx];
+        if (measure.getPosTan(currentPathPos+glyphAdvance/2.0, pos, tan)) {
             double angle = atan2(tan[1], tan[0]);
-
-            float glyphAdvance = (glyphIdx < advances.size()) ? advances[glyphIdx] : 0;
 
             canvas.save();
             canvas.translate(pos[0], pos[1]);
             canvas.rotate(angle);
             canvas.translate(0, vOffset);
-            
+
             cairo_glyph_t glyph;
             glyph.index = layout.getGlyphId(glyphIdx);
-            glyph.x = 0;
+            glyph.x = -glyphAdvance/2.0;
             glyph.y = 0;
             canvas.show_glyphs(std::vector<cairo_glyph_t>{glyph});
             canvas.restore();
         }
-
-        float glyphAdvance = (glyphIdx < advances.size()) ? advances[glyphIdx] : 0;
         currentPathPos += glyphAdvance;
     }
 }
