@@ -51,7 +51,7 @@ public:
         canvas.set_source_rgba(1,1,1,1);
         canvas.paint();
         int32_t avgLayoutTime=0,avgDrawTime=0;
-        for(int i=0;i<1000;i++){
+        for(int i=0;i<10;i++){
             cdroid::StaticLayout::Builder *bdr=cdroid::StaticLayout::Builder::obtain(
                 span,0,span->length(),&pt,800);
                 //&mystr,0,mystr.length(),&pt,800);
@@ -70,8 +70,8 @@ public:
             auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
             avgLayoutTime+=durlayout.count();
             avgDrawTime+=durDraw.count();
-            //std::cout << "StaticLayout layout:" << durlayout.count()
-            //  <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            std::cout << "StaticLayout layout:" << durlayout.count()
+              <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
             auto dirs = staticLayout->getLineDirections(1);
             delete staticLayout;
         }
@@ -86,7 +86,7 @@ public:
         canvas.translate(0,staticLayoutHeight);
         canvas.set_color(0x80112233);
         avgLayoutTime=0,avgDrawTime=0;
-        for(int i=0;i<1000;i++){
+        for(int i=0;i<10;i++){
             cdroid::DynamicLayout::Builder*bdr=cdroid::DynamicLayout::Builder::obtain(span,&pt,800);
             auto startTime = std::chrono::high_resolution_clock::now();
             auto dynamicLayout = bdr->setLineSpacing(0,1.0f).build();
@@ -98,8 +98,8 @@ public:
             auto durDraw=std::chrono::duration_cast<std::chrono::microseconds>(endTime-endLayout);
             avgLayoutTime+=durlayout.count();
             avgDrawTime+=durDraw.count();
-            //std::cout << "DynamicLayout layout:" << durlayout.count()
-            //  <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            std::cout << "DynamicLayout layout:" << durlayout.count()
+              <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
             layoutWidth=dynamicLayout->getWidth();
             dynamicLayoutHeight=dynamicLayout->getHeight(false);
             delete dynamicLayout;
@@ -117,7 +117,7 @@ public:
         auto hintBoring = BoringLayout::isBoring(span, &pt,TextDirectionHeuristics::LTR,nullptr);//mHintBoring);
         canvas.translate(0,dynamicLayoutHeight+20);
         pt.setTextSize(24);
-        for(int i=0;i<100;i++){
+        for(int i=0;i<10;i++){
             auto startTime = std::chrono::high_resolution_clock::now();
             auto boringLayout=BoringLayout::make(span,&pt,getWidth(),Layout::Alignment::ALIGN_NORMAL, 1.f/*mSpacingMult*/, 0/*mSpacingAdd*/,metrics, false);
             auto endLayout = std::chrono::high_resolution_clock::now();
@@ -129,8 +129,8 @@ public:
             boringHeight=boringLayout->getHeight();
             avgLayoutTime+=durlayout.count();
             avgDrawTime+=durDraw.count();
-            //std::cout << "BoringLayout layout:" << durlayout.count()
-            //  <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
+            std::cout << "BoringLayout layout:" << durlayout.count()
+              <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
             delete boringLayout;
         }
         avgLayoutTime/=100;
@@ -160,6 +160,19 @@ public:
                 <<" draw:"<< durDraw.count() <<" microseconds" << std::endl;
         }*/
         delete span;
+        cdroid::Path path;
+        float startX = 100, startY = 200;
+        float w = 300, h = 100;
+        
+        path.move_to(startX, startY);
+        path.curve_to(startX + w/3, startY - h, startX + w*2/3, startY + h, startX + w, startY);
+        path.curve_to(startX + w + w/3, startY - h, startX + w + w*2/3, startY + h, startX + w*2, startY);
+        path.curve_to(startX + w*2 + w/3, startY - h, startX + w*2 + w*2/3, startY + h, startX + w*3, startY);
+        path.append_to_context(&canvas);
+        canvas.stroke();
+        canvas.set_color(0xFFFF0000);
+        pt.setTextSize(48);
+        pt.drawTextOnPath(canvas,"Hello world!,Perfect CDROID.",path,30,10);
         canvas.dump2png("text.png");
     }
 };

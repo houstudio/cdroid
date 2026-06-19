@@ -10,6 +10,7 @@ namespace cdroid{
 class CharSequence;
 class Typeface;
 class Canvas;
+class Path;
 class Paint{
 public:
     enum StartHyphenEdit{
@@ -146,7 +147,9 @@ public:
     float getTextRunCursor(const char16_t* text, int start, int count, bool isRt, int offset, int cursorOpt)const;
     void drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl)const;
-};
-
-}/*endof namespace*/
+    void drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int count,
+            const Path& path, float hOffset, float vOffset)const;
+    void drawTextOnPath(Canvas& canvas, const std::string& text,
+            const Path& path, float hOffset, float vOffset)const;
+};}/*endof namespace*/
 #endif/*__CDROID_PAINT_H__*/

@@ -10,6 +10,8 @@
 #include <minikin/MinikinFont.h>
 #include <core/typeface.h>
 #include <core/canvas.h>
+#include <core/path.h>
+#include <core/pathmeasure.h>
 #include <porting/cdlog.h>
 #include <hb.h>
 #include <hb-ft.h>
@@ -209,6 +211,71 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
             glyphIdx++;
         }
         c.show_glyphs(cairoGlyphs);
+    }
+}
+
+void Paint::drawTextOnPath(Canvas& canvas, const std::string& text,
+        const Path& path, float hOffset, float vOffset)const {
+    std::u16string u16text(text.begin(), text.end());
+    drawTextOnPath(canvas, u16text.c_str(), 0, u16text.length(), path, hOffset, vOffset);
+}
+
+void Paint::drawTextOnPath(Canvas& canvas, const char16_t* text, int index, int count,
+        const Path& path, float hOffset, float vOffset)const {
+    if (count <= 0) return;
+
+    minikin::U16StringPiece lineTextPiece((const uint16_t*)text + index, count);
+    minikin::Layout layout(lineTextPiece, minikin::Range(0, count),
+                           minikin::Bidi::FORCE_LTR, *mMinikinPaint,
+                           minikin::StartHyphenEdit::NO_EDIT,
+                           minikin::EndHyphenEdit::NO_EDIT);
+
+    const std::vector<float>& advances = layout.getAdvances();
+
+    Cairo::RefPtr<cdroid::Path> pathRef = Cairo::RefPtr<cdroid::Path>(new cdroid::Path(path));
+    PathMeasure measure(pathRef, false);
+    double pathLen = measure.getLength();
+
+    double currentPathPos = hOffset;
+
+    for (size_t glyphIdx = 0; glyphIdx < layout.nGlyphs(); glyphIdx++) {
+        const std::shared_ptr<const minikin::Font>& glyphFontRef = layout.getFontRef(glyphIdx);
+        const minikin::MinikinFont* minikinFont = glyphFontRef->typeface().get();
+        
+        if (mTypeface != nullptr && mMinikinPaint != nullptr) {
+            auto scaledFont = mTypeface->getScaledFont(*mMinikinPaint, minikinFont);
+            Cairo::RefPtr<Cairo::FtScaledFont> cairoFont = std::dynamic_pointer_cast<Cairo::FtScaledFont>(scaledFont);
+            if (cairoFont) {
+                canvas.set_scaled_font(cairoFont);
+            } else {
+                continue;
+            }
+        }
+
+        if (currentPathPos > pathLen) {
+            break;
+        }
+        double pos[2], tan[2];
+        if (measure.getPosTan(currentPathPos, pos, tan)) {
+            double angle = atan2(tan[1], tan[0]);
+
+            float glyphAdvance = (glyphIdx < advances.size()) ? advances[glyphIdx] : 0;
+
+            canvas.save();
+            canvas.translate(pos[0], pos[1]);
+            canvas.rotate(angle);
+            canvas.translate(0, vOffset);
+            
+            cairo_glyph_t glyph;
+            glyph.index = layout.getGlyphId(glyphIdx);
+            glyph.x = 0;
+            glyph.y = 0;
+            canvas.show_glyphs(std::vector<cairo_glyph_t>{glyph});
+            canvas.restore();
+        }
+
+        float glyphAdvance = (glyphIdx < advances.size()) ? advances[glyphIdx] : 0;
+        currentPathPos += glyphAdvance;
     }
 }
 }/*endof namespace*/
