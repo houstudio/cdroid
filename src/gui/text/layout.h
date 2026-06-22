@@ -401,6 +401,7 @@ public:
         return mDirections==o.mDirections;
     }
 };
+
 class TabStops {
     std::vector<float> mStops;
     int mNumStops;
@@ -408,7 +409,7 @@ class TabStops {
 public:
     TabStops(float increment, const std::vector<const ParcelableSpan*>& spans);
     void reset(float increment, const std::vector<const ParcelableSpan*>& spans);
-    float nextTab(float h);
+    float nextTab(float h)const;
     static float nextDefaultStop(float h, float inc) {
         return ((int) ((h + inc) / inc)) * inc;
     }

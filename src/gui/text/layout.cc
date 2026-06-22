@@ -1593,7 +1593,7 @@ void TabStops::reset(float increment, const std::vector<const ParcelableSpan*>& 
     this->mNumStops = ns;
 }
 
-float TabStops::nextTab(float h) {
+float TabStops::nextTab(float h) const{
     int ns = this->mNumStops;
     if (ns > 0) {
         for (int i = 0; i < ns; ++i) {

@@ -102,9 +102,6 @@ void Switch::init(){
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mVelocityTracker  = VelocityTracker::obtain();
-    /*if(Property::fromName("thumbPos")==nullptr){
-        Property::reigsterProperty("thumbPos",new THUMB_POS());
-    }*/
 }
 
 Switch::~Switch(){
