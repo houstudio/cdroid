@@ -20,6 +20,7 @@
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
 #include <text/layout.h>
+#include <text/selection.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -28,352 +29,6 @@
 namespace cdroid{
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
-
-TextView::Drawables::Drawables(Context*ctx){
-    mIsRtlCompatibilityMode= false;
-    mHasTintMode= mOverride = false;
-    mTintList= nullptr;
-    mShowing[0] = mShowing[1] = nullptr;
-    mShowing[2] = mShowing[3] = nullptr;
-    mDrawableStart = mDrawableEnd  = nullptr;
-    mDrawableError = mDrawableTemp = nullptr;
-    mDrawableLeftInitial= mDrawableRightInitial = nullptr;
-    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft = 0;
-    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd= 0;
-    mDrawableSizeError  = mDrawableSizeTemp  = 0;
-    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft= 0;
-    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd = 0;
-    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding   = 0;
-    mCompoundRect.set(0,0,0,0);
-}
-
-TextView::Drawables::~Drawables(){
-    for(int i=0;i<4;i++){
-        delete mShowing[i];
-    }
-}
-
-bool TextView::Drawables::hasMetadata()const{
-    return (mDrawablePadding != 0) || mHasTintMode || (mTintList!=nullptr);
-}
-
-bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
-    Drawable* previousLeft = mShowing[Drawables::LEFT];
-    Drawable* previousRight = mShowing[Drawables::RIGHT];
-
-    // First reset "left" and "right" drawables to their initial values
-    mShowing[Drawables::LEFT] = mDrawableLeftInitial;
-    mShowing[Drawables::RIGHT] = mDrawableRightInitial;
-
-    if (mIsRtlCompatibilityMode) {
-        // Use "start" drawable as "left" drawable if the "left" drawable was not defined
-        if (mDrawableStart && mShowing[Drawables::LEFT] == nullptr) {
-            mShowing[Drawables::LEFT] = mDrawableStart;
-            mDrawableSizeLeft = mDrawableSizeStart;
-            mDrawableHeightLeft = mDrawableHeightStart;
-        }
-        // Use "end" drawable as "right" drawable if the "right" drawable was not defined
-        if (mDrawableEnd  && mShowing[Drawables::RIGHT] == nullptr) {
-            mShowing[Drawables::RIGHT] = mDrawableEnd;
-            mDrawableSizeRight = mDrawableSizeEnd;
-            mDrawableHeightRight = mDrawableHeightEnd;
-        }
-    } else {
-        // JB-MR1+ normal case: "start" / "end" drawables are overriding "left" / "right"
-        // drawable if and only if they have been defined
-        switch(layoutDirection) {
-        case LAYOUT_DIRECTION_RTL:
-            if (mOverride) {
-                mShowing[Drawables::RIGHT] = mDrawableStart;
-                mDrawableSizeRight = mDrawableSizeStart;
-                mDrawableHeightRight = mDrawableHeightStart;
-
-                mShowing[Drawables::LEFT] = mDrawableEnd;
-                mDrawableSizeLeft = mDrawableSizeEnd;
-                mDrawableHeightLeft = mDrawableHeightEnd;
-            }
-            break;
-
-        case LAYOUT_DIRECTION_LTR:
-        default:
-            if (mOverride) {
-                mShowing[Drawables::LEFT] = mDrawableStart;
-                mDrawableSizeLeft = mDrawableSizeStart;
-                mDrawableHeightLeft = mDrawableHeightStart;
-
-                mShowing[Drawables::RIGHT] = mDrawableEnd;
-                mDrawableSizeRight = mDrawableSizeEnd;
-                mDrawableHeightRight = mDrawableHeightEnd;
-            }
-            break;
-        }
-    }
-
-    applyErrorDrawableIfNeeded(layoutDirection);
-
-    return (mShowing[Drawables::LEFT] != previousLeft)
-            || (mShowing[Drawables::RIGHT] != previousRight);
-}
-
-void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
-    if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
-        mDrawableError->setCallback(nullptr);
-    }
-    mDrawableError = dr;
-
-    if (mDrawableError != nullptr) {
-        Rect compoundRect = mCompoundRect;
-        const std::vector<int> state = tv->getDrawableState();
-
-        mDrawableError->setState(state);
-        compoundRect = mDrawableError->getBounds();
-        mDrawableError->setCallback(tv);
-        mDrawableSizeError = compoundRect.width;
-        mDrawableHeightError = compoundRect.height;
-    } else {
-        mDrawableSizeError = mDrawableHeightError = 0;
-    }
-}
-
-void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
-    // first restore the initial state if needed
-    switch (mDrawableSaved) {
-    case DRAWABLE_LEFT:
-        mShowing[Drawables::LEFT] = mDrawableTemp;
-        mDrawableSizeLeft = mDrawableSizeTemp;
-        mDrawableHeightLeft = mDrawableHeightTemp;
-        break;
-    case DRAWABLE_RIGHT:
-        mShowing[Drawables::RIGHT] = mDrawableTemp;
-        mDrawableSizeRight = mDrawableSizeTemp;
-        mDrawableHeightRight = mDrawableHeightTemp;
-        break;
-    case DRAWABLE_NONE:
-        default:break;
-    }
-    // then, if needed, assign the Error drawable to the correct location
-    if (mDrawableError != nullptr) {
-        switch(layoutDirection) {
-        case LAYOUT_DIRECTION_RTL:
-            mDrawableSaved = DRAWABLE_LEFT;
-
-            mDrawableTemp = mShowing[Drawables::LEFT];
-            mDrawableSizeTemp = mDrawableSizeLeft;
-            mDrawableHeightTemp = mDrawableHeightLeft;
-
-            mShowing[Drawables::LEFT] = mDrawableError;
-            mDrawableSizeLeft = mDrawableSizeError;
-            mDrawableHeightLeft = mDrawableHeightError;
-            break;
-        case LAYOUT_DIRECTION_LTR:
-        default:
-            mDrawableSaved = DRAWABLE_RIGHT;
-
-            mDrawableTemp = mShowing[Drawables::RIGHT];
-            mDrawableSizeTemp = mDrawableSizeRight;
-            mDrawableHeightTemp = mDrawableHeightRight;
-
-            mShowing[Drawables::RIGHT] = mDrawableError;
-            mDrawableSizeRight = mDrawableSizeError;
-            mDrawableHeightRight = mDrawableHeightError;
-            break;
-        }
-    }
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
-private:
-    std::vector<char16_t> mChars;
-    int mStart, mLength;
-public:
-    CharWrapper(const std::vector<char16_t>&chars, int start, int len) {
-        mChars = chars;
-        mStart = start;
-        mLength = len;
-    }
-    ~CharWrapper()override{
-        //LOGD("destroy %p",this);
-    }
-    void set(const std::vector<char16_t>& chars, int start, int len) {
-        mChars = chars;
-        mStart = start;
-        mLength = len;
-    }
-    size_t length() const override{
-        return mLength;
-    }
-    int charAt(int off) const override{
-        return mChars[off + mStart];
-    }
-    std::string toString() const{
-        return "";//std::u16tring(mChars.data()+mStart, mLength);
-    }
-    CharSequence* subSequence(int start, int end) const override{
-        if (start < 0 || end < 0 || start > mLength || end > mLength) {
-            //throw new IndexOutOfBoundsException(start + ", " + end);
-        }
-        return nullptr;//new SpannedString(mChars, start + mStart, end - start);
-    }
-    void getChars(int start, int end, char16_t* buf, int off) const override{
-        if (start < 0 || end < 0 || start > mLength || end > mLength) {
-            //throw new IndexOutOfBoundsException(start + ", " + end);
-        }
-        memcpy(buf+off,mChars.data()+(mStart+start),(end-start)*2);
-        //System.arraycopy(mChars, start + mStart, buf, off, end - start);
-    }
-    void drawText(Canvas& c, int start, int end, float x, float y, Paint& p) {
-        p.drawTextRun(c,mChars.data(), start + mStart, end - start,0,0, x, y,false);
-    }
-    void drawTextRun(Canvas& c, int start, int end,
-            int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p) {
-        const int count = end - start;
-        const int contextCount = contextEnd - contextStart;
-        p.drawTextRun(c,mChars.data(), start + mStart, count, contextStart + mStart,
-                contextCount, x, y, isRtl);
-    }
-    float measureText(int start, int end, Paint p) {
-        return p.measureText(mChars.data(), start + mStart, end - start);
-    }
-    int getTextWidths(int start, int end, float* widths, Paint& p) {
-        return 0;//p.getTextWidths(mChars.data(), start + mStart, end - start, widths);
-    }
-    float getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
-            bool isRtl, float* advances, int advancesIndex,Paint& p) {
-        const int count = end - start;
-        const int contextCount = contextEnd - contextStart;
-        return p.getTextRunAdvances(mChars.data(), start + mStart, count,
-                contextStart + mStart, contextCount, isRtl, advances,
-                advancesIndex);
-    }
-    int getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
-            int offset, int cursorOpt, Paint& p) {
-        int contextCount = contextEnd - contextStart;
-        return p.getTextRunCursor(mChars.data(), contextStart + mStart,
-                contextCount, isRtl, offset + mStart, cursorOpt);
-    }
-};
-
-class Marquee {
-private:
-    static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
-    static constexpr  int MARQUEE_DELAY = 1200;
-    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
-
-    static constexpr  int MARQUEE_STOPPED = 0x0;
-    static constexpr  int MARQUEE_STARTING= 0x1;
-    static constexpr  int MARQUEE_RUNNING = 0x2;
-    friend TextView;
-    TextView* mView;
-    Layout*mLayout;
-    Choreographer*mChoreographer;
-    int mStatus ;//= MARQUEE_STOPPED;
-    float mPixelsPerMs;
-    float mMaxScroll;
-    float mMaxFadeScroll;
-    float mGhostStart;
-    float mGhostOffset;
-    float mFadeStop;
-    int mRepeatLimit;
-
-    float mScroll;
-    int64_t mLastAnimationMs;
-    Choreographer::FrameCallback mTickCallback;
-    Choreographer::FrameCallback mStartCallback;
-    Choreographer::FrameCallback mRestartCallback;
-
-private:
-    void resetScroll() {
-        mScroll = 0.0f;
-        if (mView ) mView->invalidate();
-    }
-public:
-    Marquee(TextView* v,Layout*lt) {
-        const float density = v->getContext()->getDisplayMetrics().density;
-        mStatus = MARQUEE_STOPPED;
-        mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
-        mView = v;
-        mLayout=lt;
-        mChoreographer=&Choreographer::getInstance();
-        mTickCallback = [this](int64_t) {tick();};
-        mStartCallback= [this](int64_t) {
-            mStatus = MARQUEE_RUNNING;
-            mLastAnimationMs = mChoreographer->getFrameTime();
-            tick();
-        };
-        mRestartCallback= [this](int64_t) {
-            if (mStatus == MARQUEE_RUNNING) {
-                if (mRepeatLimit >= 0) mRepeatLimit--;
-                start(mRepeatLimit);
-            }
-        };
-    }
-
-    ~Marquee(){
-        stop();
-    }
-
-    void tick() {
-        if (mStatus != MARQUEE_RUNNING) {
-            return;
-        }
-
-        mChoreographer->removeFrameCallback(mTickCallback);
-
-        if (mView  && (mView->isFocused() || mView->isSelected())) {
-            const int64_t currentMs = mChoreographer->getFrameTime();
-            const int64_t deltaMs = currentMs - mLastAnimationMs;
-            const float deltaPx = deltaMs * mPixelsPerMs;
-            mLastAnimationMs = currentMs;
-            mScroll += deltaPx;
-            if (mScroll > mMaxScroll) {
-                mScroll = mMaxScroll;
-                mChoreographer->postFrameCallbackDelayed(mRestartCallback,MARQUEE_DELAY);
-            } else {
-                mChoreographer->postFrameCallback(mTickCallback);
-            }
-            mView->invalidate();
-        }
-    }
-
-    void stop() {
-        mStatus = MARQUEE_STOPPED;
-        mChoreographer->removeFrameCallback(mStartCallback);
-        mChoreographer->removeFrameCallback(mRestartCallback);
-        mChoreographer->removeFrameCallback(mTickCallback);
-        resetScroll();
-    }
-
-    void start(int repeatLimit) {
-        if (repeatLimit == 0) {
-            stop();
-            return;
-        }
-        mRepeatLimit = repeatLimit;
-        if (mView && mLayout ) {
-            mStatus = MARQUEE_STARTING;
-            mScroll = 0.0f;
-            const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
-                    - mView->getCompoundPaddingRight();
-            const float lineWidth = mLayout->getLineWidth(0);
-            const float gap = textWidth / 3.0f;
-            mGhostStart = lineWidth - textWidth + gap;
-            mMaxScroll = mGhostStart + textWidth;
-            mGhostOffset = lineWidth + gap;
-            mFadeStop = lineWidth + textWidth / 6.0f;
-            mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
-	
-            mView->invalidate();
-            mChoreographer->postFrameCallback(mStartCallback);
-        }
-    }
-    float getGhostOffset()const { return mGhostOffset; }
-    float getScroll()const { return mScroll; }
-    float getMaxFadeScroll()const { return mMaxFadeScroll; }
-    bool shouldDrawLeftFade()const { return mScroll <= mFadeStop; }
-    bool shouldDrawGhost()const { return (mStatus == MARQUEE_RUNNING) && (mScroll > mGhostStart); }
-    bool isRunning()const{ return mStatus == MARQUEE_RUNNING; }
-    bool isStopped()const{ return mStatus == MARQUEE_STOPPED; }
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TextAppearanceAttributes{
@@ -526,8 +181,8 @@ void TextView::initView(){
     mMarquee  = nullptr;
     mScroller = nullptr;
     mCharWrapper = nullptr;
+    mChangeWatcher= nullptr;
     mCursorDrawable = nullptr;
-    mSavedMarqueeModeLayout=nullptr;
     mMaxWidth = INT_MAX;
     mMinWidth = 0;
     mMaximum  = INT_MAX;
@@ -556,6 +211,7 @@ void TextView::initView(){
     mHintLayout= nullptr;
     mSavedLayout = nullptr;
     mTransformation = nullptr;
+    mSavedHintLayout = nullptr;
     mSavedMarqueeModeLayout = nullptr;
     mBoring = nullptr;//new BoringLayout::Metrics;
     mHintBoring = nullptr;//new BoringLayout::Metrics;
@@ -565,8 +221,9 @@ void TextView::initView(){
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
-    mPreDrawRegistered=false;
-    mPreDrawListenerDetached=false;
+    mPreDrawRegistered = false;
+    mPreDrawListenerDetached = false;
+    mAllowTransformationLengthChange = false;
     mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mGravity = Gravity::START|Gravity::TOP;
@@ -601,6 +258,7 @@ TextView::~TextView() {
         mText = nullptr;
     }
     delete mCharWrapper;
+    delete mChangeWatcher;
     delete mText;
     delete mTransformed;
     delete mHint;
@@ -679,7 +337,7 @@ void TextView::setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>&
                 // Convert all to sizes to pixels.
                 for (int i = 0; i < presetSizesLength; i++) {
                     presetSizesInPx[i] = presetSizes[i];
-                        //std::round(TypedValue::applyDimension(unit,presetSizes[i], displayMetrics));
+                    //std::round(TypedValue::applyDimension(unit,presetSizes[i], displayMetrics));
                 }
             }
 
@@ -1070,16 +728,49 @@ void TextView::removeTextChangedListener(const TextWatcher& watcher){
     }
 }
 
-void TextView::sendBeforeTextChanged(CharSequence* text, int start, int before, int after){
+void TextView::sendBeforeTextChanged(CharSequence& text, int start, int before, int after){
     for(auto l:mListeners){
-        if(l.beforeTextChanged) l.beforeTextChanged(*text, start, before, after);
+        if(l.beforeTextChanged) l.beforeTextChanged(text, start, before, after);
+    }
+    //removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SpellCheckSpan>());
+    //removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SuggestionSpan>());
+}
+
+void TextView::removeIntersectingNonAdjacentSpans(int start, int end, const SpanFilter&type) {
+    Editable* text = dynamic_cast<Editable*>(mText);
+    if (mText==nullptr) return;
+
+    auto spans = text->getSpans(start, end, type);
+    const int length = spans.size();
+    for (int i = 0; i < length; i++) {
+        const int spanStart = text->getSpanStart(spans[i]);
+        const int spanEnd = text->getSpanEnd(spans[i]);
+        if (spanEnd == start || spanStart == end) break;
+        text->removeSpan(spans[i]);
     }
 }
 
-void TextView::sendAfterTextChanged(CharSequence* text){
+void TextView::removeAdjacentSuggestionSpans(int pos){
+    Editable* text = dynamic_cast<Editable*>(mText);
+    if (text==nullptr) return;
+
+    /*auto spans = text->getSpans(pos, pos, make_span_filter<SuggestionSpan>());
+    const int length = spans->size();
+    for (int i = 0; i < length; i++) {
+        const int spanStart = text->getSpanStart(spans[i]);
+        const int spanEnd = text->getSpanEnd(spans[i]);
+        if (spanEnd == pos || spanStart == pos) {
+            if (SpellChecker::haveWordBoundariesChanged(text, pos, pos, spanStart, spanEnd)) {
+                text->removeSpan(spans[i]);
+            }
+        }
+    }*/
+}
+
+void TextView::sendAfterTextChanged(Editable& text){
     for (auto l:mListeners) {
         if(l.afterTextChanged){
-            l.afterTextChanged(*text);
+            l.afterTextChanged(text);
         }
     }
 
@@ -1087,13 +778,17 @@ void TextView::sendAfterTextChanged(CharSequence* text){
     //notifyAutoFillManagerAfterTextChangedIfNeeded();
     //hideErrorIfUnchanged();
 }
-void TextView::sendOnTextChanged(CharSequence* text, int start, int before, int after){
+
+void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.onTextChanged){
-            l.onTextChanged(*text, start, before, after);
+            l.onTextChanged(text, start, before, after);
         }
     }
     //if (mEditor != null) mEditor.sendOnTextChanged(start, before, after);
+}
+
+void TextView::spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
 }
 
 void TextView::setRawTextSize(float size, bool shouldRequestLayout){
@@ -1312,11 +1007,7 @@ int TextView::getHorizontalOffsetForDrawables()const{
 }
 
 void TextView::setText(CharSequence* txt) {
-    setTextInternal(txt);
-    checkForRelayout();
-    startStopMarquee(false);
-    startStopMarquee(true);
-    setText(txt->toString());
+    setText(txt,mBufferType);
 }
 
 void TextView::append(CharSequence* text){
@@ -1326,7 +1017,7 @@ void TextView::append(CharSequence* text){
 void TextView::append(CharSequence* text, int start, int end){
 #if 0
     if (!(mText instanceof Editable)) {
-            setText(mText, BufferType::EDITABLE);
+        setText(mText, BufferType::EDITABLE);
     }
 
     ((Editable*) mText)->append(text, start, end);
@@ -1362,7 +1053,7 @@ void TextView::setText(const std::vector<char16_t>&text, int start, int len){
     int oldlen = 0;
     if (mText != nullptr) {
         oldlen = mText->length();
-        sendBeforeTextChanged(mText, 0, oldlen, len);
+        sendBeforeTextChanged(*mText, 0, oldlen, len);
     } else {
         //sendBeforeTextChanged("", 0, 0, len);
     }
@@ -1372,6 +1063,14 @@ void TextView::setText(const std::vector<char16_t>&text, int start, int len){
         mCharWrapper->set(text, start, len);
     }
     setText(mCharWrapper, mBufferType, false, oldlen);
+}
+
+void TextView::setText(CharSequence* text, BufferType type) {
+    setText(text, type, true, 0);
+
+    if (mCharWrapper != nullptr) {
+        mCharWrapper->mChars.clear();// = null;
+    }
 }
 
 void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
@@ -1409,9 +1108,9 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (notifyBefore) {
         if (mText != nullptr) {
             oldlen = mText->length();
-            sendBeforeTextChanged(mText, 0, oldlen, text.length());
+            sendBeforeTextChanged(mText, 0, oldlen, text->length());
         } else {
-            //sendBeforeTextChanged("", 0, 0, text.length());
+            //sendBeforeTextChanged("", 0, 0, text->length());
         }
     }
 #endif
@@ -1420,13 +1119,13 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (/*mListeners != nullptr &&*/ mListeners.size() != 0) {
         needEditableForNotification = true;
     }
-#if 0
+
     PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
     if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
-        createEditorIfNeeded();
+        //createEditorIfNeeded();
         //mEditor->forgetUndoRedo();
-        Editable* t = mEditableFactory.newEditable(text);
-        text = t;
+        Editable* t = nullptr;//mEditableFactory.newEditable(text);
+        //text = t;
         //setFilters(t, mFilters);
         //InputMethodManager* imm = getInputMethodManager();
         //if (imm != nullptr) imm->restartInput(this);
@@ -1436,6 +1135,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         }
         const int checkResult = precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
                         mHyphenationFrequency);
+        const PrecomputedText::Params textMetricsParams(mTextPaint,getTextDirectionHeuristic(),mBreakStrategy, mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
             LOGE("PrecomputedText's Parameters don't match the parameters of this TextView."
@@ -1445,16 +1145,16 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
                 "TextView: ");// + getTextMetricsParams());
             break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
-            precomputed = PrecomputedText::create(precomputed, getTextMetricsParams());
+            precomputed = PrecomputedText::create(precomputed, textMetricsParams);
             break;
         case PrecomputedText::Params::USABLE:/*pass through*/break;
         }
-    } else if (type == BufferType::SPANNABLE || mMovement != nullptr) {
-        text = mSpannableFactory.newSpannable(text);
+    } else if (type == BufferType::SPANNABLE /*|| mMovement != nullptr*/) {
+        //text = mSpannableFactory.newSpannable(text);
     } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
-        text = TextUtils::stringOrSpannedString(text);
+        //text = TextUtils::stringOrSpannedString(text);
     }
-
+#if 0
     if (mAutoLinkMask != 0) {
         Spannable* s2;
 
@@ -1483,6 +1183,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         }
     }
 #endif
+    LOGD_IF(mID==10100,"%p mLayout=%p",this,mLayout);
     mBufferType = type;
     setTextInternal(text);
 
@@ -1497,7 +1198,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     }
 
     const int textLength = text->length();
-#if 0
+
     if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
         Spannable* sp = dynamic_cast<Spannable*>(text);
 
@@ -1508,13 +1209,13 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             sp->removeSpan(watchers[i]);
         }
 
-        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher();
+        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
 
         sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
                 | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
 
-        /*if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
-        if (mTransformation != nullptr) {
+        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+        /*if (mTransformation != nullptr) {
             sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
         }
         if (mMovement != nullptr) {
@@ -1522,21 +1223,20 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             if (mEditor != nullptr) mEditor->SelectionMoved = false;
         }*/
     }
-#endif
     if (mLayout != nullptr) {
         checkForRelayout();
     }
 
-    sendOnTextChanged(text, 0, oldlen, textLength);
-    onTextChanged(text, 0, oldlen, textLength);
+    sendOnTextChanged(*text, 0, oldlen, textLength);
+    onTextChanged(*text, 0, oldlen, textLength);
 
-    /*notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
+    //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
     if (needEditableForNotification) {
-        sendAfterTextChanged((Editable) text);
+        sendAfterTextChanged(*dynamic_cast<Editable*>(text));
     } else {
-        notifyListeningManagersAfterTextChanged();
+        //notifyListeningManagersAfterTextChanged();
     }
-    SelectionModifierCursorController depends on textCanBeSelected, which depends on text
+    /*SelectionModifierCursorController depends on textCanBeSelected, which depends on text
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
     */
 }
@@ -1545,9 +1245,18 @@ const std::string TextView::getText()const{
     return mText->toString();
 }
 
+int TextView::length()const{
+    return mText->length();
+}
+
+CharSequence* TextView::getTransformed()const{
+    return mTransformed;
+}
+
 Editable* TextView::getEditableText()const{
     return dynamic_cast<Editable*>(mText);
 }
+
 void TextView::setHint(const std::string& hint){
     //mHint = hint;
     //mHintLayout->setText(hint);
@@ -1561,6 +1270,10 @@ std::string TextView::getHint()const{
 std::wstring& TextView::getEditable(){
     static std::wstring ss;
     return ss;//mLayout->getText();
+}
+
+bool TextView::getDefaultEditable()const{
+    return false;
 }
 
 void TextView::setEditable(bool b){
@@ -1616,6 +1329,36 @@ float TextView::getLineSpacingMultiplier()const{
 
 float TextView::getLineSpacingExtra()const{
     return mSpacingAdd;
+}
+
+
+void TextView::checkForResize() {
+    bool sizeChanged = false;
+    if (mLayout != nullptr) {
+        // Check if our width changed
+        if (mLayoutParams->width == LayoutParams::WRAP_CONTENT) {
+            sizeChanged = true;
+            invalidate();
+        }
+        // Check if our height changed
+        if (mLayoutParams->height == LayoutParams::WRAP_CONTENT) {
+            const int desiredHeight = getDesiredHeight();
+            if (desiredHeight != this->getHeight()) {
+                sizeChanged = true;
+            }
+        } else if (mLayoutParams->height == LayoutParams::MATCH_PARENT) {
+            if (mDesiredHeightAtMeasure >= 0) {
+                const int desiredHeight = getDesiredHeight();
+                if (desiredHeight != mDesiredHeightAtMeasure) {
+                    sizeChanged = true;
+                }
+            }
+        }
+    }
+    if (sizeChanged) {
+        requestLayout();
+        // caller will have already invalidated
+    }
 }
 
 void TextView::checkForRelayout() {
@@ -1692,11 +1435,9 @@ bool TextView::bringTextIntoView(){
 
     // Convert to left, center, or right alignment.
     if (a == Layout::Alignment::ALIGN_NORMAL) {
-        a = dir == Layout::DIR_LEFT_TO_RIGHT
-                ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
+        a = (dir == Layout::DIR_LEFT_TO_RIGHT) ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
     } else if (a == Layout::Alignment::ALIGN_OPPOSITE) {
-        a = dir == Layout::DIR_LEFT_TO_RIGHT
-                ? Layout::Alignment::ALIGN_RIGHT : Layout::Alignment::ALIGN_LEFT;
+        a = (dir == Layout::DIR_LEFT_TO_RIGHT) ? Layout::Alignment::ALIGN_RIGHT : Layout::Alignment::ALIGN_LEFT;
     }
 
     if (a == Layout::Alignment::ALIGN_CENTER) {
@@ -1756,14 +1497,12 @@ bool TextView::bringPointIntoView(int offset) {
 
     if (layout == nullptr) return changed;
 
-    int line = layout->getLineForOffset(offset);
+    const int line = layout->getLineForOffset(offset);
 
     int grav;
     switch (layout->getParagraphAlignment(line)) {
-    case Layout::ALIGN_LEFT:
-        grav = 1;   break;
-    case Layout::ALIGN_RIGHT:
-        grav = -1;  break;
+    case Layout::ALIGN_LEFT :  grav = 1;   break;
+    case Layout::ALIGN_RIGHT:  grav = -1;  break;
     case Layout::ALIGN_NORMAL:
         grav = layout->getParagraphDirection(line);
         break;
@@ -1785,7 +1524,7 @@ bool TextView::bringPointIntoView(int offset) {
     // right where it is most likely to be annoying.
     const bool clamped = grav > 0;
     // FIXME: Is it okay to truncate this, or should we round?
-    const int x = 0;// (int) layout->getPrimaryHorizontal(offset, clamped);
+    const int x = (int) layout->getPrimaryHorizontal(offset, clamped);
     const int top = layout->getLineTop(line);
     const int bottom = layout->getLineTop(line + 1);
 
@@ -1985,7 +1724,7 @@ bool TextView::moveCursorToVisibleOffset() {
     }
 
     if (newStart != start) {
-        //Selection.setSelection(mSpannable, newStart);
+        //Selection::setSelection(mSpannable, newStart);
         return true;
     }
     return false;
@@ -2032,6 +1771,46 @@ void TextView::computeScroll() {
             postInvalidate();  // So we draw again
         }
     }
+}
+
+void TextView::updateAfterEdit() {
+    invalidate();
+    const int curs = getSelectionStart();
+
+    if (curs >= 0 || (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
+        registerForPreDraw();
+    }
+
+    checkForResize();
+
+    if (curs >= 0) {
+        //mHighlightPathBogus = true;
+        //if (mEditor != nullptr) mEditor.makeBlink();
+        bringPointIntoView(curs);
+    }
+}
+
+void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
+    /*sLastCutCopyOrTextChangedTime = 0;
+
+    Editor.InputMethodState ims = mEditor == null ? null : mEditor.mInputMethodState;
+    if (ims == null || ims.mBatchEditNesting == 0) {
+        updateAfterEdit();
+    }
+    if (ims != null) {
+        ims.mContentChanged = true;
+        if (ims.mChangedStart < 0) {
+            ims.mChangedStart = start;
+            ims.mChangedEnd = start + before;
+        } else {
+            ims.mChangedStart = Math.min(ims.mChangedStart, start);
+            ims.mChangedEnd = Math.max(ims.mChangedEnd, start + before - ims.mChangedDelta);
+        }
+        ims.mChangedDelta += after - before;
+    }
+    resetErrorChangedFlag();*/
+    sendOnTextChanged(buffer, start, before, after);
+    onTextChanged(buffer, start, before, after);
 }
 
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
@@ -2487,11 +2266,18 @@ void TextView::setEms(int ems) {
 void TextView::nullLayouts() {
     if (dynamic_cast<BoringLayout*>(mLayout) && mSavedLayout == nullptr) {
         mSavedLayout = (BoringLayout*) mLayout;
+        mLayout = nullptr;
     }
     if (dynamic_cast<BoringLayout*>(mHintLayout) && mSavedHintLayout == nullptr) {
         mSavedHintLayout = (BoringLayout*) mHintLayout;
+        mHintLayout = nullptr;
     }
-
+    if( (mLayout!=nullptr) && (mSavedLayout!=mLayout) ){
+        delete mLayout;
+    }
+    if( (mHintLayout!=nullptr) && (mSavedHintLayout!=mHintLayout) ){
+        delete mHintLayout;
+    }
     mSavedMarqueeModeLayout = mLayout = mHintLayout = nullptr;
     delete mBoring;
     delete mHintBoring;
@@ -2549,6 +2335,9 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
         mTextDir = getTextDirectionHeuristic();
     }
 
+    if( (mSavedLayout!=mLayout) && (mLayout!=nullptr) ){
+        delete mLayout;
+    }
     mLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize,
             effectiveEllipsize, effectiveEllipsize == mEllipsize);
     if (switchEllipsize) {
@@ -2572,6 +2361,9 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
         }
 
         if (hintBoring != nullptr) {
+            if( (mSavedHintLayout!=mHintLayout) && (mHintLayout!=nullptr) ){
+                delete mHintLayout;
+            }
             if (hintBoring->width <= hintWidth
                     && (!shouldEllipsize || hintBoring->width <= ellipsisWidth)) {
                 if (mSavedHintLayout != nullptr) {
@@ -2884,7 +2676,6 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             // Nothing has changed
         }
     }
-
     if (heightMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         height = heightSize;
@@ -3869,8 +3660,17 @@ const TextPaint& TextView::getPaint() const{
         return mTextPaint;
 }
 
+bool TextView::isSuggestionsEnabled()const{
+    return false;
+}
+
+bool TextView::canSelectText() const{
+    return mText->length() != 0 ;//&& mEditor != null && mEditor.hasSelectionController();
+}
+
 bool TextView::canSelectAllText()const{
-    //mLayout->setSelection(-1,-1);
+    return canSelectText() && !hasPasswordTransformationMethod()
+                && !(getSelectionStart() == 0 && getSelectionEnd() == mText->length());
     return false;
 }
 
@@ -3975,6 +3775,27 @@ bool TextView::isSingleLine()const{
     return mSingleLine;
 }
 
+CharSequence* TextView::removeSuggestionSpans(CharSequence* text) {
+    /*if (text instanceof Spanned) {
+        Spannable spannable;
+        if (text instanceof Spannable) {
+            spannable = (Spannable) text;
+        } else {
+            spannable = mSpannableFactory.newSpannable(text);
+        }
+        auto spans = spannable->getSpans(0, text->length(), make_span_filter<SuggestionSpan>());
+        if (spans.size() == 0) {
+            return text;
+        } else {
+            text = spannable;
+        }
+        for (int i = 0; i < spans.size(); i++) {
+            spannable->removeSpan(spans[i]);
+        }
+    }*/
+    return text;
+}
+
 bool TextView::hasPasswordTransformationMethod()const{
     return mTransformation;
 }
@@ -4074,7 +3895,7 @@ void TextView::startStopMarquee(bool start){
     }
 }
 
-void TextView::onTextChanged(CharSequence* text, int start, int lengthBefore, int lengthAfter){
+void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter){
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){
@@ -4344,4 +4165,362 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
     }
     View::sendAccessibilityEventUnchecked(event);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+TextView::Drawables::Drawables(Context*ctx){
+    mIsRtlCompatibilityMode= false;
+    mHasTintMode= mOverride = false;
+    mTintList= nullptr;
+    mShowing[0] = mShowing[1] = nullptr;
+    mShowing[2] = mShowing[3] = nullptr;
+    mDrawableStart = mDrawableEnd  = nullptr;
+    mDrawableError = mDrawableTemp = nullptr;
+    mDrawableLeftInitial= mDrawableRightInitial = nullptr;
+    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft = 0;
+    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd= 0;
+    mDrawableSizeError  = mDrawableSizeTemp  = 0;
+    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft= 0;
+    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd = 0;
+    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding   = 0;
+    mCompoundRect.set(0,0,0,0);
+}
+
+TextView::Drawables::~Drawables(){
+    for(int i=0;i<4;i++){
+        delete mShowing[i];
+    }
+}
+
+bool TextView::Drawables::hasMetadata()const{
+    return (mDrawablePadding != 0) || mHasTintMode || (mTintList!=nullptr);
+}
+
+bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
+    Drawable* previousLeft = mShowing[Drawables::LEFT];
+    Drawable* previousRight = mShowing[Drawables::RIGHT];
+
+    // First reset "left" and "right" drawables to their initial values
+    mShowing[Drawables::LEFT] = mDrawableLeftInitial;
+    mShowing[Drawables::RIGHT] = mDrawableRightInitial;
+
+    if (mIsRtlCompatibilityMode) {
+        // Use "start" drawable as "left" drawable if the "left" drawable was not defined
+        if (mDrawableStart && mShowing[Drawables::LEFT] == nullptr) {
+            mShowing[Drawables::LEFT] = mDrawableStart;
+            mDrawableSizeLeft = mDrawableSizeStart;
+            mDrawableHeightLeft = mDrawableHeightStart;
+        }
+        // Use "end" drawable as "right" drawable if the "right" drawable was not defined
+        if (mDrawableEnd  && mShowing[Drawables::RIGHT] == nullptr) {
+            mShowing[Drawables::RIGHT] = mDrawableEnd;
+            mDrawableSizeRight = mDrawableSizeEnd;
+            mDrawableHeightRight = mDrawableHeightEnd;
+        }
+    } else {
+        // JB-MR1+ normal case: "start" / "end" drawables are overriding "left" / "right"
+        // drawable if and only if they have been defined
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            if (mOverride) {
+                mShowing[Drawables::RIGHT] = mDrawableStart;
+                mDrawableSizeRight = mDrawableSizeStart;
+                mDrawableHeightRight = mDrawableHeightStart;
+
+                mShowing[Drawables::LEFT] = mDrawableEnd;
+                mDrawableSizeLeft = mDrawableSizeEnd;
+                mDrawableHeightLeft = mDrawableHeightEnd;
+            }
+            break;
+
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            if (mOverride) {
+                mShowing[Drawables::LEFT] = mDrawableStart;
+                mDrawableSizeLeft = mDrawableSizeStart;
+                mDrawableHeightLeft = mDrawableHeightStart;
+
+                mShowing[Drawables::RIGHT] = mDrawableEnd;
+                mDrawableSizeRight = mDrawableSizeEnd;
+                mDrawableHeightRight = mDrawableHeightEnd;
+            }
+            break;
+        }
+    }
+
+    applyErrorDrawableIfNeeded(layoutDirection);
+
+    return (mShowing[Drawables::LEFT] != previousLeft)
+            || (mShowing[Drawables::RIGHT] != previousRight);
+}
+
+void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
+    if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
+        mDrawableError->setCallback(nullptr);
+    }
+    mDrawableError = dr;
+
+    if (mDrawableError != nullptr) {
+        Rect compoundRect = mCompoundRect;
+        const std::vector<int> state = tv->getDrawableState();
+
+        mDrawableError->setState(state);
+        compoundRect = mDrawableError->getBounds();
+        mDrawableError->setCallback(tv);
+        mDrawableSizeError = compoundRect.width;
+        mDrawableHeightError = compoundRect.height;
+    } else {
+        mDrawableSizeError = mDrawableHeightError = 0;
+    }
+}
+
+void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
+    // first restore the initial state if needed
+    switch (mDrawableSaved) {
+    case DRAWABLE_LEFT:
+        mShowing[Drawables::LEFT] = mDrawableTemp;
+        mDrawableSizeLeft = mDrawableSizeTemp;
+        mDrawableHeightLeft = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_RIGHT:
+        mShowing[Drawables::RIGHT] = mDrawableTemp;
+        mDrawableSizeRight = mDrawableSizeTemp;
+        mDrawableHeightRight = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_NONE:
+        default:break;
+    }
+    // then, if needed, assign the Error drawable to the correct location
+    if (mDrawableError != nullptr) {
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            mDrawableSaved = DRAWABLE_LEFT;
+
+            mDrawableTemp = mShowing[Drawables::LEFT];
+            mDrawableSizeTemp = mDrawableSizeLeft;
+            mDrawableHeightTemp = mDrawableHeightLeft;
+
+            mShowing[Drawables::LEFT] = mDrawableError;
+            mDrawableSizeLeft = mDrawableSizeError;
+            mDrawableHeightLeft = mDrawableHeightError;
+            break;
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            mDrawableSaved = DRAWABLE_RIGHT;
+
+            mDrawableTemp = mShowing[Drawables::RIGHT];
+            mDrawableSizeTemp = mDrawableSizeRight;
+            mDrawableHeightTemp = mDrawableHeightRight;
+
+            mShowing[Drawables::RIGHT] = mDrawableError;
+            mDrawableSizeRight = mDrawableSizeError;
+            mDrawableHeightRight = mDrawableHeightError;
+            break;
+        }
+    }
+}
+
+//////////////////////////////////class Marquee /////////////////////////////////
+
+void TextView::Marquee::resetScroll() {
+    mScroll = 0.0f;
+    if (mView ) mView->invalidate();
+}
+
+TextView::Marquee::Marquee(TextView* v,Layout*lt) {
+    const float density = v->getContext()->getDisplayMetrics().density;
+    mStatus = MARQUEE_STOPPED;
+    mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
+    mView = v;
+    mLayout=lt;
+    mChoreographer=&Choreographer::getInstance();
+    mTickCallback = [this](int64_t) {tick();};
+    mStartCallback= [this](int64_t) {
+        mStatus = MARQUEE_RUNNING;
+        mLastAnimationMs = mChoreographer->getFrameTime();
+        tick();
+    };
+    mRestartCallback= [this](int64_t) {
+        if (mStatus == MARQUEE_RUNNING) {
+            if (mRepeatLimit >= 0) mRepeatLimit--;
+            start(mRepeatLimit);
+        }
+    };
+}
+
+TextView::Marquee::~Marquee(){
+    stop();
+}
+
+void TextView::Marquee::tick() {
+    if (mStatus != MARQUEE_RUNNING) {
+        return;
+    }
+
+    mChoreographer->removeFrameCallback(mTickCallback);
+
+    if (mView  && (mView->isFocused() || mView->isSelected())) {
+        const int64_t currentMs = mChoreographer->getFrameTime();
+        const int64_t deltaMs = currentMs - mLastAnimationMs;
+        const float deltaPx = deltaMs * mPixelsPerMs;
+        mLastAnimationMs = currentMs;
+        mScroll += deltaPx;
+        if (mScroll > mMaxScroll) {
+            mScroll = mMaxScroll;
+            mChoreographer->postFrameCallbackDelayed(mRestartCallback,MARQUEE_DELAY);
+        } else {
+            mChoreographer->postFrameCallback(mTickCallback);
+        }
+        mView->invalidate();
+    }
+}
+
+void TextView::Marquee::stop() {
+    mStatus = MARQUEE_STOPPED;
+    mChoreographer->removeFrameCallback(mStartCallback);
+    mChoreographer->removeFrameCallback(mRestartCallback);
+    mChoreographer->removeFrameCallback(mTickCallback);
+    resetScroll();
+}
+
+void TextView::Marquee::start(int repeatLimit) {
+    if (repeatLimit == 0) {
+        stop();
+        return;
+    }
+    mRepeatLimit = repeatLimit;
+    if (mView && mLayout ) {
+        mStatus = MARQUEE_STARTING;
+        mScroll = 0.0f;
+        const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
+                - mView->getCompoundPaddingRight();
+        const float lineWidth = mLayout->getLineWidth(0);
+        const float gap = textWidth / 3.0f;
+        mGhostStart = lineWidth - textWidth + gap;
+        mMaxScroll = mGhostStart + textWidth;
+        mGhostOffset = lineWidth + gap;
+        mFadeStop = lineWidth + textWidth / 6.0f;
+        mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
+
+        mView->invalidate();
+        mChoreographer->postFrameCallback(mStartCallback);
+    }
+}
+
+//class CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
+TextView::CharWrapper::CharWrapper(const std::vector<char16_t>&chars, int start, int len) {
+    mChars = chars;
+    mStart = start;
+    mLength = len;
+}
+
+TextView::CharWrapper::~CharWrapper(){
+    //LOGD("destroy %p",this);
+}
+
+void TextView::CharWrapper::set(const std::vector<char16_t>& chars, int start, int len) {
+    mChars = chars;
+    mStart = start;
+    mLength = len;
+}
+
+int TextView::CharWrapper::charAt(int off) const{
+    return mChars[off + mStart];
+}
+
+std::string TextView::CharWrapper::toString() const{
+    return TextUtils::utf16_utf8((uint16_t*)(mChars.data()+mStart), mLength);
+}
+
+CharSequence* TextView::CharWrapper::subSequence(int start, int end) const{
+    if (start < 0 || end < 0 || start > mLength || end > mLength) {
+        //throw new IndexOutOfBoundsException(start + ", " + end);
+    }
+    return nullptr;//new SpannedString(mChars, start + mStart, end - start);
+}
+
+void TextView::CharWrapper::getChars(int start, int end, char16_t* buf, int off) const{
+    if (start < 0 || end < 0 || start > mLength || end > mLength) {
+        //throw new IndexOutOfBoundsException(start + ", " + end);
+    }
+    memcpy(buf+off,mChars.data()+(mStart+start),(end-start)*2);
+    //System.arraycopy(mChars, start + mStart, buf, off, end - start);
+}
+
+void TextView::CharWrapper::drawText(Canvas& c, int start, int end, float x, float y, Paint& p) {
+    p.drawTextRun(c,mChars.data(), start + mStart, end - start,0,0, x, y,false);
+}
+
+void TextView::CharWrapper::drawTextRun(Canvas& c, int start, int end,
+        int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p) {
+    const int count = end - start;
+    const int contextCount = contextEnd - contextStart;
+    p.drawTextRun(c,mChars.data(), start + mStart, count, contextStart + mStart,
+            contextCount, x, y, isRtl);
+}
+
+float TextView::CharWrapper::measureText(int start, int end, Paint& p) {
+    return p.measureText(mChars.data(), start + mStart, end - start);
+}
+
+int TextView::CharWrapper::getTextWidths(int start, int end, float* widths, Paint& p) {
+    return 0;//p.getTextWidths(mChars.data(), start + mStart, end - start, widths);
+}
+
+float TextView::CharWrapper::getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
+        bool isRtl, float* advances, int advancesIndex,Paint& p) {
+    const int count = end - start;
+    const int contextCount = contextEnd - contextStart;
+    return p.getTextRunAdvances(mChars.data(), start + mStart, count,
+            contextStart + mStart, contextCount, isRtl, advances,
+            advancesIndex);
+}
+
+int TextView::CharWrapper::getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
+        int offset, int cursorOpt, Paint& p) {
+    int contextCount = contextEnd - contextStart;
+    return p.getTextRunCursor(mChars.data(), contextStart + mStart,
+            contextCount, isRtl, offset + mStart, cursorOpt);
+}
+
+//class ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+TextView::ChangeWatcher::ChangeWatcher(TextView*tv):mTV(tv){
+}
+
+void TextView::ChangeWatcher::beforeTextChanged(CharSequence& buffer, int start, int before, int after) {
+    /**if (AccessibilityManager.getInstance(mContext).isEnabled() && (mTransformed != null)) {
+        mBeforeText = mTransformed.toString();
+    }*/
+    mTV->sendBeforeTextChanged(buffer, start, before, after);
+}
+
+void TextView::ChangeWatcher::onTextChanged(CharSequence& buffer, int start, int before, int after) {
+    mTV->handleTextChanged(buffer, start, before, after);
+    /*if (AccessibilityManager.getInstance(mContext).isEnabled()
+            && (isFocused() || isSelected() && isShown())) {
+        sendAccessibilityEventTypeViewTextChanged(mBeforeText, start, before, after);
+        mBeforeText = null;
+    }*/
+}
+
+void TextView::ChangeWatcher::afterTextChanged(Editable& buffer) {
+    mTV->sendAfterTextChanged(buffer);
+    /*if (MetaKeyKeyListener.getMetaState(buffer, MetaKeyKeyListener.META_SELECTING) != 0) {
+        MetaKeyKeyListener.stopSelecting(TextView.this, buffer);
+    }*/
+}
+
+void TextView::ChangeWatcher::onSpanChanged(Spannable& buf,ParcelableSpan* what, int s, int e, int st, int en) {
+    mTV->spanChange(buf, what, s, st, e, en);
+}
+
+void TextView::ChangeWatcher::onSpanAdded(Spannable& buf, ParcelableSpan* what, int s, int e) {
+    mTV->spanChange(buf, what, -1, s, -1, e);
+}
+
+void TextView::ChangeWatcher::onSpanRemoved(Spannable& buf, ParcelableSpan* what, int s, int e) {
+    mTV->spanChange(buf, what, s, -1, e, -1);
+}
+
+
 }/*endof namespace*/

@@ -19,12 +19,12 @@ private:
 public:
     class MemoryTextWatcher:public TextWatcher {
     public:
-        void beforeTextChanged(CharSequence& s, int start, int count, int after)override {}
+        /*void beforeTextChanged(CharSequence& s, int start, int count, int after)override {}
         void onTextChanged(CharSequence& s, int start, int before, int count)override {}
         void afterTextChanged(Editable& s)override {
             s.removeSpan(SELECTION_MEMORY);
             s.removeSpan(this);
-        }
+        }*/
     };
 public:
     /**

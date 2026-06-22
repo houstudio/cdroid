@@ -1,6 +1,7 @@
 #include <widget/edittext.h>
+#include <text/selection.h>
 #include <core/inputmethodmanager.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 #include <regex>
 #include <math.h>
 #include <utils/textutils.h>
@@ -46,39 +47,47 @@ void EditText::initEditText(){
 }
 
 void EditText::onDetachedFromWindow(){
-    mBlinkOn=false;
+    mBlinkOn = false;
     removeCallbacks(mRBLink);
 }
 
 void EditText::setTextWatcher(AfterTextChanged ls){
-    afterChanged=ls;
+    afterChanged = ls;
 }
 
 void EditText::setText(const std::string&txt){
+    mBufferType = BufferType::EDITABLE;
     TextView::setText(txt);
     setCaretPos(0);
 }
 
+void EditText::setText(CharSequence* text, BufferType type){
+    TextView::setText(text, BufferType::EDITABLE);
+}
+
+bool EditText::getDefaultEditable() const{
+    return true;
+}
+
 int EditText::commitText(const std::wstring&ws){
-    std::wstring& wText=getEditable();
+    Editable* editable = getEditableText();
     switch(mEditMode){
     case READONLY:return 0;
     case INSERT:
-        if((mMaxLength>0)&&(wText.size()>=mMaxLength))
+        if((mMaxLength>0)&&(editable->length()>=mMaxLength))
             break;
-        if(mCaretPos<wText.size())
-            wText.insert(mCaretPos,ws);
+        /*if(mCaretPos < editable->length())
+            editable->insert(mCaretPos,ws);
         else 
-            wText.append(ws);
+            editable->append(ws);*/
         break;
     case REPLACE:
-        if(mCaretPos<wText.size())
-            wText.replace(mCaretPos,ws.length(),ws);
+        /*if(mCaretPos < editable->length())
+            editable->replace(mCaretPos,ws.length(),ws);
         else
-            wText.append(ws);
+            editable->append(ws);*/
         break;
     }
-    //mLayout->relayout(true);
     setCaretPos(mCaretPos+ws.length());
     invalidate(true);
     return ws.length();
@@ -100,8 +109,31 @@ void EditText::setInputType(INPUTTYPE tp){
     }
 }
 
-int EditText::getInputType(){
+int EditText::getInputType()const{
     return mInputType;
+}
+
+void EditText::setSelection(int start, int stop) {
+    //Selection::setSelection(mText/*getText()*/, start, stop);
+}
+
+void EditText::setSelection(int index) {
+    //Selection::setSelection(mText/*getText()*/, index);
+}
+
+void EditText::selectAll() {
+    //Selection::selectAll(mText/*getText()*/);
+}
+
+void EditText::extendSelection(int index) {
+    //Selection::extendSelection(mText/*getText()*/, index);
+}
+
+void EditText::setEllipsize(TextUtils::TruncateAt ellipsis){
+    if (ellipsis == TextUtils::TruncateAt::MARQUEE) {
+        FATAL("EditText cannot use the ellipsize mode TextUtils::TruncateAt::MARQUEE");
+    }
+    TextView::setEllipsize(ellipsis);
 }
 
 void EditText::setPattern(const std::string&pattern){
@@ -165,11 +197,11 @@ void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
 
 bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     wchar_t ch;
-    bool ret=false;
-    int changed=0;
+    bool ret = false;
+    int changed = 0;
 
-    std::wstring& wText=getEditable();
-    int line=mLayout->getLineForOffset(mCaretPos);
+    Editable*editable = getEditableText();
+    int line = mLayout->getLineForOffset(mCaretPos);
     switch(keyCode){
     case KeyEvent::KEYCODE_DPAD_LEFT:
         if(mCaretPos>0){
@@ -177,7 +209,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
             return true;
         }break;
     case KeyEvent::KEYCODE_DPAD_RIGHT:
-        if(mCaretPos<(int)wText.size()){
+        if(mCaretPos<(int)editable->length()){
             setCaretPos(mCaretPos+1);
             return true;
         }break;
@@ -186,24 +218,22 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     case KeyEvent::KEYCODE_DPAD_UP:
         return (!isSingleLine())&&moveCaret2Line(line-1);
     case KeyEvent::KEYCODE_BACKSPACE:
-        if(wText.size() && (mCaretPos>0) && (mCaretPos<=wText.size()) ){
-            wchar_t wc0 = wText[mCaretPos-1];
-            wText.erase(mCaretPos-1,1);
+        if(editable->length() && (mCaretPos>0) && (mCaretPos<=editable->length()) ){
+            editable->Delete(mCaretPos-1,mCaretPos);
             changed = match();
             if(changed){
                 setCaretPos(mCaretPos-1);
-                //mLayout->relayout(true);
-            }else
-                wText.insert(mCaretPos-1,1,wc0);
+            }else{
+                //editable->insert(mCaretPos-1,wc0);
+            }
             ret=true;
-        }else setCaretPos(wText.size()-1);
+        }else setCaretPos(editable->length()-1);
         break;
     case KeyEvent::KEYCODE_DEL:
-        if(mCaretPos<wText.size()){
-            wchar_t wc0=wText[mCaretPos];
-            wText.erase(mCaretPos,1);
+        if(mCaretPos<editable->length()){
+            editable->Delete(mCaretPos,mCaretPos+1);
             changed=match();
-            if(!changed) wText.insert(mCaretPos,1,wc0);
+            //if(!changed) editable->insert(mCaretPos,1,wc0);
             //else mLayout->relayout(true);
             ret=true; 
         }break;
@@ -221,8 +251,10 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
         return true;
     case KeyEvent::KEYCODE_ENTER:
         if(!isSingleLine()){
-            if(mCaretPos<wText.length()) wText.insert(mCaretPos,1,'\n');
-            else wText.append(1,'\n');
+            if(mCaretPos<editable->length()){
+                //editable->insert(mCaretPos,1,'\n');
+            }
+            else editable->append('\n');
             //mLayout->relayout(true);
             invalidate(true);
             return true;
@@ -231,9 +263,8 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     default:
         ch = InputMethodManager::getInstance().getCharacter(keyCode,event.getMetaState());
         if(ch!=0){
-            std::wstring ws;
-            ws.append(1,ch); 
-            commitText(ws);
+            editable->append(ch); 
+            //commitText(ws);
             return true; 
         }
         return TextView::onKeyDown(keyCode,event);

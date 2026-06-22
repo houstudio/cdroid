@@ -472,7 +472,7 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 Layout* Switch::makeLayout(const std::string& text){
     //Layout*layout = new Layout(getTextSize(),getWidth());
     //layout->setText(text);
-    mText=new SpannedString(TextUtils::utf8_utf16(text));
+    mText = new SpannedString(TextUtils::utf8_utf16(text));
     CharSequence* transformed = mText;
         //(mSwitchTransformationMethod != null)? mSwitchTransformationMethod.getTransformation(text, this):text;
 

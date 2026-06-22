@@ -1,17 +1,23 @@
 #ifndef __SPANNABLE_STRING_BUILDER_H__
 #define __SPANNABLE_STRING_BUILDER_H__
+
 #include <core/predicate.h>
 #include <text/textutils.h>
 #include <text/textpaint.h>
 #include <text/spannablestring.h>
 #include <text/editable.h>
-namespace cdroid{
-// Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
-class SpannableStringBuilder : public SpannableStringInternal, virtual public Spannable, virtual public Editable{
+#include <vector>
+
+namespace cdroid {
+
+class InputFilter;
+
+class SpannableStringBuilder : public SpannableStringInternal, virtual public Spannable, virtual public Editable {
 public:
     SpannableStringBuilder() = default;
     explicit SpannableStringBuilder(const std::u16string& text);
     SpannableStringBuilder(const CharSequence*);    
+
     void setSpan(const ParcelableSpan* what, int start, int end, int flags) override;
     void removeSpan(const ParcelableSpan* what) override;
     void shiftSpans(int index, int delta);
@@ -35,6 +41,12 @@ public:
     Editable& append(char16_t text) override;
     void clear() override;
     void clearSpans() override;
+    void setFilters(InputFilter** filters, int count) override;
+    InputFilter** getFilters(int* outCount) const override;
+
+    // Appendable interface methods
+    Appendable& append(const char16_t* s, int start, int len) override;
 };
+
 }/* namespace cdroid */
 #endif/*__SPANNABLE_STRING_BUILDER_H__*/

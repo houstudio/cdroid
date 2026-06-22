@@ -21,7 +21,9 @@
 #include <view/view.h>
 #include <core/typeface.h>
 #include <widget/scroller.h>
-#include <widget/textwatcher.h>
+//#include <widget/textwatcher.h>
+#include <text/spanwatcher.h>
+#include <text/textwatcher.h>
 #include <text/textutils.h>
 #include <text/spannablestring.h>
 #include <text/boringlayout.h>
@@ -39,56 +41,21 @@ private:
     static constexpr int SERIF= 2;
     static constexpr int MONOSPACE = 3;
     static constexpr int VERY_WIDE = 1024 * 1024;
+    static constexpr int CHANGE_WATCHER_PRIORITY = 100;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr int KEY_EVENT_NOT_HANDLED = 0;
     static constexpr int KEY_EVENT_HANDLED = -1;
     static constexpr int KEY_DOWN_HANDLED_BY_KEY_LISTENER = 1;
     static constexpr int KEY_DOWN_HANDLED_BY_MOVEMENT_METHOD = 2;
+    class Marquee;
+    class CharWrapper;
+    class ChangeWatcher;
 public:
     static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
     static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
+    class Drawables;
     enum BufferType {
         NORMAL, SPANNABLE, EDITABLE
-    };
-    class Drawables {
-    public:
-        enum{
-            LEFT  = 0,
-            TOP   = 1,
-            RIGHT = 2,
-            BOTTOM= 3
-        };
-        enum{
-            DRAWABLE_NONE = -1,
-            DRAWABLE_RIGHT= 0,
-            DRAWABLE_LEFT = 1
-        };
-    private:
-        friend class TextView;
-        Drawable* mShowing[4];
-        Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
-        Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
-        bool mIsRtlCompatibilityMode;
-        bool mOverride;
-        bool mHasTint, mHasTintMode;
-        cdroid::RefPtr<ColorStateList> mTintList;
-        int mTintMode;
-        int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
-        int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
-
-        int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
-        int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
-        int mDrawablePadding;
-        int mDrawableSaved = DRAWABLE_NONE;
-        Rect mCompoundRect;
-    private:
-        void applyErrorDrawableIfNeeded(int layoutDirection);
-    public:
-        Drawables(Context*ctx);
-        ~Drawables();
-        bool hasMetadata()const;
-        bool resolveWithLayoutDirection(int layoutDirection);
-        void setErrorDrawable(Drawable* dr, TextView* tv);
     };
 private:
     static constexpr int LINES = 1;
@@ -135,6 +102,7 @@ private:
     bool mPreDrawRegistered;
     bool mPreDrawListenerDetached;
     bool mTextSetFromXmlOrResourceId;
+    bool mAllowTransformationLengthChange;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -153,9 +121,9 @@ private:
     std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
 
-    class Drawables*mDrawables;
-    class Marquee*mMarquee;
-    class CharWrapper* mCharWrapper;
+    Drawables*mDrawables;
+    Marquee*mMarquee;
+    CharWrapper* mCharWrapper;
     Drawable* mCursorDrawable;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
@@ -196,6 +164,7 @@ private:
     void getInterestingRect(Rect& r, int line);
     void convertFromViewportToContentCoordinates(Rect&);
 
+    void checkForResize();
     void checkForRelayout();
     bool isShowingHint()const;
     bool bringTextIntoView();
@@ -217,9 +186,12 @@ private:
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
     void setText(CharSequence* text, BufferType type, bool notifyBefore, int oldlen);
-    void sendBeforeTextChanged(CharSequence* text, int start, int before, int after);
-    void sendAfterTextChanged(CharSequence* text);
-    void sendOnTextChanged(CharSequence* text, int start, int before, int after);
+    void sendBeforeTextChanged(CharSequence& text, int start, int before, int after);
+    void removeIntersectingNonAdjacentSpans(int,int,const SpanFilter&type);
+    void removeAdjacentSuggestionSpans(int pos);
+    void sendAfterTextChanged(Editable& text);
+    void spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
+    void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
     int mCaretPos;
@@ -236,9 +208,11 @@ protected:
     Spannable*mSpannable;
     PrecomputedText* mPrecomputed;
     CharSequence*mTransformed;
+    ChangeWatcher* mChangeWatcher;
     BufferType mBufferType = BufferType::NORMAL;
     std::wstring& getEditable();
     void setEditable(bool b);
+    virtual bool getDefaultEditable()const;
     int getFontSize()const;
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
@@ -253,8 +227,11 @@ protected:
     bool canMarquee()const;
     void startMarquee();
     void stopMarquee();
-    virtual void onTextChanged(CharSequence* text, int start, int lengthBefore, int lengthAfter);
+    virtual void onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
+    void updateAfterEdit();
+    CharSequence* removeSuggestionSpans(CharSequence* text);
+    void handleTextChanged(CharSequence& buffer, int start, int before, int after);
     void onAttachedToWindow();
     void onDetachedFromWindowInternal()override;
     bool onPreDraw();
@@ -297,11 +274,14 @@ public:
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
-    virtual void setText(CharSequence*txt);
+    virtual void setText(CharSequence* txt);
+    virtual void setText(CharSequence* text, BufferType type);
     void setText(const std::vector<char16_t>&text, int start, int len);
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
     const std::string getText()const;
+    int length()const;
+    CharSequence* getTransformed()const;
     Editable* getEditableText()const;
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
@@ -312,6 +292,8 @@ public:
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();
     void computeScroll()override;
+    bool isSuggestionsEnabled()const;
+    bool canSelectText()const;
     bool canSelectAllText()const;
     bool selectAllText();
     int getSelectionStart()const;
@@ -369,7 +351,7 @@ public:
     void setMarqueeRepeatLimit(int marqueeLimit);
     int  getMarqueeRepeatLimit() const;
     TextUtils::TruncateAt getEllipsize() const;
-    void setEllipsize(TextUtils::TruncateAt ellipsize);
+    virtual void setEllipsize(TextUtils::TruncateAt ellipsize);
 
     const cdroid::RefPtr<ColorStateList> getTextColors()const;
     int getCurrentTextColor()const;
@@ -470,6 +452,134 @@ public:
     bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     void sendAccessibilityEventInternal(int eventType)override;
     void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TextView::Drawables {
+public:
+    enum{
+        LEFT  = 0,
+        TOP   = 1,
+        RIGHT = 2,
+        BOTTOM= 3
+    };
+    enum{
+        DRAWABLE_NONE = -1,
+        DRAWABLE_RIGHT= 0,
+        DRAWABLE_LEFT = 1
+    };
+private:
+    friend class TextView;
+    Drawable* mShowing[4];
+    Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
+    Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
+    bool mIsRtlCompatibilityMode;
+    bool mOverride;
+    bool mHasTint, mHasTintMode;
+    cdroid::RefPtr<ColorStateList> mTintList;
+    int mTintMode;
+    int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
+    int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
+
+    int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
+    int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
+    int mDrawablePadding;
+    int mDrawableSaved = DRAWABLE_NONE;
+    Rect mCompoundRect;
+private:
+    void applyErrorDrawableIfNeeded(int layoutDirection);
+public:
+    Drawables(Context*ctx);
+    ~Drawables();
+    bool hasMetadata()const;
+    bool resolveWithLayoutDirection(int layoutDirection);
+    void setErrorDrawable(Drawable* dr, TextView* tv);
+};
+class TextView::Marquee {
+private:
+    static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
+    static constexpr  int MARQUEE_DELAY = 1200;
+    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
+
+    static constexpr  int MARQUEE_STOPPED = 0x0;
+    static constexpr  int MARQUEE_STARTING= 0x1;
+    static constexpr  int MARQUEE_RUNNING = 0x2;
+    friend TextView;
+    TextView* mView;
+    Layout*mLayout;
+    Choreographer*mChoreographer;
+    int mStatus ;//= MARQUEE_STOPPED;
+    float mPixelsPerMs;
+    float mMaxScroll;
+    float mMaxFadeScroll;
+    float mGhostStart;
+    float mGhostOffset;
+    float mFadeStop;
+    int mRepeatLimit;
+
+    float mScroll;
+    int64_t mLastAnimationMs;
+    Choreographer::FrameCallback mTickCallback;
+    Choreographer::FrameCallback mStartCallback;
+    Choreographer::FrameCallback mRestartCallback;
+
+private:
+    void resetScroll();
+public:
+    Marquee(TextView* v,Layout*lt);
+    ~Marquee();
+    void tick();
+    void stop();
+    void start(int repeatLimit);
+    float getGhostOffset()const { return mGhostOffset; }
+    float getScroll()const { return mScroll; }
+    float getMaxFadeScroll()const { return mMaxFadeScroll; }
+    bool shouldDrawLeftFade()const { return mScroll <= mFadeStop; }
+    bool shouldDrawGhost()const { return (mStatus == MARQUEE_RUNNING) && (mScroll > mGhostStart); }
+    bool isRunning()const{ return mStatus == MARQUEE_RUNNING; }
+    bool isStopped()const{ return mStatus == MARQUEE_STOPPED; }
+};
+
+class TextView::CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
+private:
+    std::vector<char16_t> mChars;
+    int mStart, mLength;
+    friend TextView;
+public:
+    CharWrapper(const std::vector<char16_t>&chars, int start, int len);
+    ~CharWrapper()override;
+    void set(const std::vector<char16_t>& chars, int start, int len);
+    size_t length() const override{
+        return mLength;
+    }
+    int charAt(int off) const override;
+    std::string toString() const override;
+    CharSequence* subSequence(int start, int end) const override;
+    void getChars(int start, int end, char16_t* buf, int off) const override;
+    void drawText(Canvas& c, int start, int end, float x, float y, Paint& p);
+    void drawTextRun(Canvas& c, int start, int end,
+            int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p);
+    float measureText(int start, int end, Paint& p);
+    int getTextWidths(int start, int end, float* widths, Paint& p);
+    float getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
+            bool isRtl, float* advances, int advancesIndex,Paint& p);
+    int getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
+            int offset, int cursorOpt, Paint& p);
+};
+
+class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+private:
+    CharSequence* mBeforeText;
+    TextView*mTV;
+public:
+    ChangeWatcher(TextView*tv);
+    void beforeTextChanged(CharSequence& buffer, int start, int before, int after);
+    void onTextChanged(CharSequence& buffer, int start, int before, int after);
+    void afterTextChanged(Editable& buffer);
+    void onSpanChanged(Spannable& buf,ParcelableSpan* what, int s, int e, int st, int en);
+    void onSpanAdded(Spannable& buf, ParcelableSpan* what, int s, int e);
+    void onSpanRemoved(Spannable& buf, ParcelableSpan* what, int s, int e);
 };
 
 }  // namespace cdroid

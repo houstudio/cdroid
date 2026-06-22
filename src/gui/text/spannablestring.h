@@ -9,6 +9,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <stdexcept>
 
 namespace cdroid {
 
@@ -69,6 +70,11 @@ public:
     int getSpanFlags(const ParcelableSpan* what) const override;
     int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override;
     void getChars(int start, int end, char16_t* dest, int destPos) const override;
+
+protected:
+    void sendSpanAdded(const ParcelableSpan* what, int start, int end);
+    void sendSpanRemoved(const ParcelableSpan* what, int start, int end);
+    void sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend);
 };
 
 class SpannedString : public SpannableStringInternal {

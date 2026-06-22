@@ -1559,6 +1559,7 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
     auto ret =margin + std::abs(tl->metrics(nullptr));
     TextLine::recycle(tl);
     mt->recycle();
+    delete directions;
     return ret;
 }
 

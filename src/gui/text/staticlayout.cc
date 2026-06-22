@@ -5,10 +5,10 @@
 #include <porting/cdlog.h>
 #include <minikin/LineBreaker.h>
 namespace cdroid{
-//public class StaticLayout extends Layout {
-const auto TabStopSpanFilter=make_span_filter<TabStopSpan>();
-const auto LineHeightSpanFilter=make_span_filter<LineHeightSpan>();
-const auto LeadingMarginSpanFilter=make_span_filter<LeadingMarginSpan>();
+
+const auto TabStopSpanFilter = make_span_filter<TabStopSpan>();
+const auto LineHeightSpanFilter = make_span_filter<LineHeightSpan>();
+const auto LeadingMarginSpanFilter = make_span_filter<LeadingMarginSpan>();
 
 class LineWidth :public minikin::LineWidth{
 private:
@@ -61,7 +61,9 @@ void StaticLayout::Builder::recycle(Builder* b) {
     b->mText = nullptr;
     b->mLeftIndents.clear();
     b->mRightIndents.clear();
-    sPool.release(b);
+    if(sPool.release(b)==false){
+        delete b;
+    }
 }
 
 void StaticLayout::Builder::finish() {
@@ -545,9 +547,8 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
                 (!firstLine && (currentLineIsTheLastVisibleOne || !moreChars) &&
                         ellipsize == TextUtils::TruncateAt::END);
         if (doEllipsis) {
-            calculateEllipsis(start, end, measured, widthStart,
-                    ellipsisWidth, ellipsize, j,
-                    textWidth, paint, forceEllipsis);
+            calculateEllipsis(start, end, measured, widthStart, ellipsisWidth,
+                    ellipsize, j, textWidth, paint, forceEllipsis);
         }
     }
 

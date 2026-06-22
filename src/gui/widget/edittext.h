@@ -22,6 +22,7 @@ protected:
     virtual void onDrawCaret(Canvas&canvas,const Rect&r);
     virtual void onFocusChanged(bool,int,Rect*)override;
     virtual void onDraw(Canvas&ctx)override;
+    bool getDefaultEditable()const override;
     int commitText(const std::wstring&ws)override;
 public:
     typedef enum{
@@ -43,7 +44,13 @@ public:
     int getPasswordChar()const;
     void setPasswordChar(int ch);
     void setInputType(INPUTTYPE tp);
-    int getInputType();
+    int getInputType()const;
+    void setSelection(int start, int stop);
+    void setSelection(int index);
+    void selectAll();
+    void extendSelection(int index);
+    void setEllipsize(TextUtils::TruncateAt ellipsis)override;
+    void setText(CharSequence* text, BufferType type)override;
     virtual void setTextWatcher(AfterTextChanged ls);
     virtual void setEditMode(EDITMODE mode);
     void setCaretBlink(bool blink=true);

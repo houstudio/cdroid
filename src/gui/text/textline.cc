@@ -24,6 +24,7 @@ TextLine* TextLine::recycle(TextLine* tl) {
     tl->mPaint = nullptr;
     tl->mDirections = nullptr;
     tl->mSpanned = nullptr;
+    delete tl->mTabs;
     tl->mTabs = nullptr;
     tl->mChars.clear();//mChars = nullptr;
     tl->mComputed = nullptr;

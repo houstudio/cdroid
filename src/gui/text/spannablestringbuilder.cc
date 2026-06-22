@@ -210,4 +210,19 @@ void SpannableStringBuilder::clear() {
     mText.clear();
     mSpans.clear();
 }
+
+void SpannableStringBuilder::setFilters(InputFilter** filters, int count) {
+    (void)filters;
+    (void)count;
+}
+
+InputFilter** SpannableStringBuilder::getFilters(int* outCount) const {
+    *outCount = 0;
+    return nullptr;
+}
+
+Appendable& SpannableStringBuilder::append(const char16_t* s, int start, int len) {
+    mText.append(s + start, len);
+    return *this;
+}
 }/* namespace cdroid */
