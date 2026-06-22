@@ -4532,9 +4532,9 @@ void View::resolveDrawables(){
     const int layoutDirection = isLayoutDirectionResolved() ?
             getLayoutDirection() : getRawLayoutDirection();
 
-    if (mBackground)  mBackground->setLayoutDirection(layoutDirection);
+    if (mBackground) mBackground->setLayoutDirection(layoutDirection);
 
-    if (mForegroundInfo  && mForegroundInfo->mDrawable )
+    if (mForegroundInfo && mForegroundInfo->mDrawable )
         mForegroundInfo->mDrawable->setLayoutDirection(layoutDirection);
     if (mDefaultFocusHighlight ) mDefaultFocusHighlight->setLayoutDirection(layoutDirection);
     
@@ -6283,7 +6283,7 @@ void View::assignParent(ViewGroup*parent){
 
 ViewTreeObserver*View::getViewTreeObserver(){
     if(mAttachInfo)return mAttachInfo->mTreeObserver;
-    if(mFloatingTreeObserver)
+    if(mFloatingTreeObserver==nullptr)
         mFloatingTreeObserver = new ViewTreeObserver(mContext);
     return mFloatingTreeObserver;
 }

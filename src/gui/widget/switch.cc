@@ -102,9 +102,6 @@ void Switch::init(){
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
     mVelocityTracker  = VelocityTracker::obtain();
-    /*if(Property::fromName("thumbPos")==nullptr){
-        Property::reigsterProperty("thumbPos",new THUMB_POS());
-    }*/
 }
 
 Switch::~Switch(){
@@ -129,10 +126,8 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 
     int ts = atts.getDimensionPixelSize("textSize", 0);
     if (ts != 0) {
-        if (ts != mOnLayout->getFontSize()){//mTextPaint.getTextSize()) {
-            //mTextPaint.setTextSize(ts);
-            mOnLayout->setFontSize(ts);
-            mOffLayout->setFontSize(ts);
+        if (ts != mTextPaint.getTextSize()) {
+            mTextPaint.setTextSize(ts);
             requestLayout();
         }
     }
@@ -183,23 +178,21 @@ void Switch::setSwitchTypeface(Typeface* tf, int style){
         // now compute what (if any) algorithmic styling is needed
         int typefaceStyle = tf ? tf->getStyle() : 0;
         int need = style & ~typefaceStyle;
-        //mTextPaint.setFakeBoldText((need & Typeface.BOLD) != 0);
-        //mTextPaint.setTextSkewX((need & Typeface.ITALIC) != 0 ? -0.25f : 0);
+        mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+        mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25f : 0);
     } else {
         if (tf == nullptr) {
             tf = Typeface::defaultFromStyle(style);
         }
-        //mTextPaint.setFakeBoldText(false);
-        //mTextPaint.setTextSkewX(0);
+        mTextPaint.setFakeBoldText(false);
+        mTextPaint.setTextSkewX(0);
         setSwitchTypeface(tf);
     }
 }
 
 void Switch::setSwitchTypeface(Typeface* tf){
-    if (mOnLayout->getTypeface() != tf) {
-        //mTextPaint.setTypeface(tf);
-        mOnLayout->setTypeface(tf);
-        mOffLayout->setTypeface(tf);
+    if (mTextPaint.getTypeface() != tf) {
+        mTextPaint.setTypeface(tf);
         requestLayout();
         invalidate();
     }
@@ -434,7 +427,7 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     int maxTextWidth;
     if (mShowText) {
-        maxTextWidth = std::max(mOnLayout->getMaxLineWidth(), mOffLayout->getMaxLineWidth())
+        maxTextWidth = std::max(mOnLayout->getWidth(), mOffLayout->getWidth())
                 + mThumbTextPadding * 2;
     } else {
         maxTextWidth = 0;
@@ -474,9 +467,16 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 Layout* Switch::makeLayout(const std::string& text){
-    Layout*layout = new Layout(getTextSize(),getWidth());
-    layout->setText(text);
-    return layout;
+    //Layout*layout = new Layout(getTextSize(),getWidth());
+    //layout->setText(text);
+    mText = new SpannedString(TextUtils::utf8_utf16(text));
+    CharSequence* transformed = mText;
+        //(mSwitchTransformationMethod != null)? mSwitchTransformationMethod.getTransformation(text, this):text;
+
+    const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
+                transformed->length(), mTextPaint, getTextDirectionHeuristic()));
+    auto builder= StaticLayout::Builder::obtain(transformed, 0, transformed->length(), &mTextPaint, width);
+    return builder->setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing).build();
 }
 
 bool Switch::hitThumb(float x, float y) {
@@ -781,8 +781,6 @@ void Switch::draw(Canvas& c) {
 
 void Switch::onDraw(Canvas& canvas) {
     CompoundButton::onDraw(canvas);
-    mOnLayout->relayout();
-    mOffLayout->relayout();
 
     Rect padding;
     if (mTrackDrawable) {
@@ -821,7 +819,9 @@ void Switch::onDraw(Canvas& canvas) {
     if (switchText) {
         std::vector<int> drawableState = getDrawableState();
         if (mTextColors) {
-            canvas.set_color(mTextColors->getColorForState(drawableState, 0));
+            const int stateColor = mTextColors->getColorForState(drawableState, 0);
+            mTextPaint.setColor(stateColor);
+            canvas.set_color(stateColor);
         }
         //mTextPaint.drawableState = drawableState;
         int cX;
@@ -831,7 +831,7 @@ void Switch::onDraw(Canvas& canvas) {
         } else {
             cX = getWidth();
         }
-        const int left = cX / 2 - switchText->getMaxLineWidth() / 2;
+        const int left = cX / 2 - switchText->getWidth() / 2;
         const int top = (switchInnerTop + switchInnerBottom) / 2 - switchText->getHeight() / 2;
         canvas.translate(left, 0);//top);
         switchText->draw(canvas);

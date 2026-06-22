@@ -59,8 +59,8 @@ PrecomputedText* PrecomputedText::create(CharSequence* text,const Params& params
 }
 
 std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParagraphsFromPrecomputedText( PrecomputedText* pct,const Params& params, bool computeLayout) {
-    const bool needHyphenation = params.getBreakStrategy() != TextLayout::BREAK_STRATEGY_SIMPLE
-            && params.getHyphenationFrequency() != TextLayout::HYPHENATION_FREQUENCY_NONE;
+    const bool needHyphenation = params.getBreakStrategy() != Layout::BREAK_STRATEGY_SIMPLE
+            && params.getHyphenationFrequency() != Layout::HYPHENATION_FREQUENCY_NONE;
     std::vector<ParagraphInfo> result;
     for (int i = 0; i < pct->getParagraphCount(); ++i) {
         const int paraStart = pct->getParagraphStart(i);
@@ -78,8 +78,8 @@ std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParag
 
     //Preconditions.checkNotNull(text);
     //Preconditions.checkNotNull(params);
-    const bool needHyphenation = params.getBreakStrategy() != TextLayout::BREAK_STRATEGY_SIMPLE
-            && params.getHyphenationFrequency() != TextLayout::HYPHENATION_FREQUENCY_NONE;
+    const bool needHyphenation = params.getBreakStrategy() != Layout::BREAK_STRATEGY_SIMPLE
+            && params.getHyphenationFrequency() != Layout::HYPHENATION_FREQUENCY_NONE;
 
     int paraEnd = 0;
     for (int paraStart = start; paraStart < end; paraStart = paraEnd) {
@@ -181,15 +181,15 @@ int PrecomputedText::getMemoryUsage() const{
     return r;
 }
 
-void PrecomputedText::setSpan(ParcelableSpan* what, int start, int end, int flags) {
-    if (dynamic_cast<MetricAffectingSpan*>(what)) {
+void PrecomputedText::setSpan(const ParcelableSpan* what, int start, int end, int flags) {
+    if (dynamic_cast<const MetricAffectingSpan*>(what)) {
         //LOGE("MetricAffectingSpan can not be set to PrecomputedText.");
     }
     mText->setSpan(what, start, end, flags);
 }
 
-void PrecomputedText::removeSpan(ParcelableSpan* what) {
-    if (dynamic_cast<MetricAffectingSpan*>(what)) {
+void PrecomputedText::removeSpan(const ParcelableSpan* what) {
+    if (dynamic_cast<const MetricAffectingSpan*>(what)) {
         //LOGE("MetricAffectingSpan can not be removed from PrecomputedText.");
     }
     mText->removeSpan(what);

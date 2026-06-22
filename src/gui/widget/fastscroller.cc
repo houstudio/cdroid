@@ -280,7 +280,7 @@ TextView* FastScroller::createPreviewTextView(Context* context) {
     TextView* textView = new TextView(context,atts);
     textView->setLayoutParams(params);
     textView->setSingleLine(true);
-    textView->setEllipsize(Layout::ELLIPSIS_MIDDLE);
+    textView->setEllipsize(TextUtils::TruncateAt::MIDDLE);
     textView->setGravity(Gravity::CENTER);
     textView->setAlpha(.0f);
 

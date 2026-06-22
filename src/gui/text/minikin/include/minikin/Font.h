@@ -17,12 +17,17 @@
 #ifndef MINIKIN_FONT_H
 #define MINIKIN_FONT_H
 
+//#include <gtest/gtest_prod.h>
+
+#include <atomic>
 #include <memory>
 #include <unordered_set>
 
+#include "minikin/Buffer.h"
 #include "minikin/FontStyle.h"
 #include "minikin/FontVariation.h"
 #include "minikin/HbUtils.h"
+#include "minikin/LocaleList.h"
 #include "minikin/Macros.h"
 #include "minikin/MinikinFont.h"
 
@@ -55,7 +60,10 @@ struct FakedFont {
     inline bool operator!=(const FakedFont& o) const { return !(*this == o); }
 
     // ownership is the enclosing FontCollection
-    const Font* font;
+    // FakedFont will be stored in the LayoutCache. It is not a good idea too keep font instance
+    // even if the enclosing FontCollection, i.e. Typeface is GC-ed. The layout cache is only
+    // purged when it is overflown, thus intentionally keep only reference.
+    const std::shared_ptr<Font>& font;
     FontFakery fakery;
 };
 
@@ -88,44 +96,80 @@ public:
             return *this;
         }
 
-        Font build();
+        Builder& setLocaleListId(uint32_t id) {
+            mLocaleListId = id;
+            return *this;
+        }
+
+        std::shared_ptr<Font> build();
 
     private:
         std::shared_ptr<MinikinFont> mTypeface;
         uint16_t mWeight = static_cast<uint16_t>(FontStyle::Weight::NORMAL);
         FontStyle::Slant mSlant = FontStyle::Slant::UPRIGHT;
+        uint32_t mLocaleListId = kEmptyLocaleListId;
         bool mIsWeightSet = false;
         bool mIsSlantSet = false;
     };
 
-    Font(Font&& o) = default;
-    Font& operator=(Font&& o) = default;
+    explicit Font(BufferReader* reader);
+    void writeTo(BufferWriter* writer) const;
 
-    Font& operator=(const Font& o) {
-        mTypeface = o.mTypeface;
-        mStyle = o.mStyle;
-        mBaseFont = HbFontUniquePtr(hb_font_reference(o.mBaseFont.get()));
-        return *this;
-    }
-    Font(const Font& o) { *this = o; }
-
-    inline const std::shared_ptr<MinikinFont>& typeface() const { return mTypeface; }
+    Font(Font&& o) noexcept;
+    Font& operator=(Font&& o) noexcept;
+    ~Font();
+    // This locale list is just for API compatibility. This is not used in font selection or family
+    // fallback.
+    uint32_t getLocaleListId() const { return mLocaleListId; }
+    const std::shared_ptr<MinikinFont>& typeface() const;
     inline FontStyle style() const { return mStyle; }
-    inline const HbFontUniquePtr& baseFont() const { return mBaseFont; }
+    const HbFontUniquePtr& baseFont() const;
+    BufferReader typefaceMetadataReader() const { return mTypefaceMetadataReader; }
 
     std::unordered_set<AxisTag> getSupportedAxes() const;
 
 private:
+    // ExternalRefs holds references to objects provided by external libraries.
+    // Because creating these external objects is costly,
+    // ExternalRefs is lazily created if Font was created by readFrom().
+    class ExternalRefs {
+    public:
+        ExternalRefs(std::shared_ptr<MinikinFont>&& typeface, HbFontUniquePtr&& baseFont)
+                : mTypeface(std::move(typeface)), mBaseFont(std::move(baseFont)) {}
+
+        std::shared_ptr<MinikinFont> mTypeface;
+        HbFontUniquePtr mBaseFont;
+    };
+
     // Use Builder instead.
-    Font(std::shared_ptr<MinikinFont>&& typeface, FontStyle style, HbFontUniquePtr&& baseFont)
-            : mTypeface(std::move(typeface)), mStyle(style), mBaseFont(std::move(baseFont)) {}
+    Font(std::shared_ptr<MinikinFont>&& typeface, FontStyle style, HbFontUniquePtr&& baseFont,
+         uint32_t localeListId)
+            : mExternalRefsHolder(new ExternalRefs(std::move(typeface), std::move(baseFont))),
+              mStyle(style),
+              mLocaleListId(localeListId),
+              mTypefaceMetadataReader(nullptr) {}
+
+    void resetExternalRefs(ExternalRefs* refs);
+
+    const ExternalRefs* getExternalRefs() const;
 
     static HbFontUniquePtr prepareFont(const std::shared_ptr<MinikinFont>& typeface);
     static FontStyle analyzeStyle(const HbFontUniquePtr& font);
 
-    std::shared_ptr<MinikinFont> mTypeface;
+    // Lazy-initialized if created by readFrom().
+    mutable std::atomic<ExternalRefs*> mExternalRefsHolder;
     FontStyle mStyle;
-    HbFontUniquePtr mBaseFont;
+    uint32_t mLocaleListId;
+
+    // Non-null if created by readFrom().
+    BufferReader mTypefaceMetadataReader;
+
+    // Stop copying.
+    Font(const Font& o) = delete;
+    Font& operator=(const Font& o) = delete;
+
+    //FRIEND_TEST(FontTest, MoveConstructorTest);
+    //FRIEND_TEST(FontTest, MoveAssignmentTest);
 };
 
 }  // namespace minikin

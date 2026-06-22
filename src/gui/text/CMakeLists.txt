@@ -6,16 +6,20 @@ add_library(cdtext
     measuredparagraph.cc
     measuredtext.cc
     linebreaker.cc
+    selection.cc
     layout.cc
     staticlayout.cc
     boringlayout.cc
     dynamiclayout.cc
     precomputedtext.cc
+    paint.cc
     textpaint.cc
     textutils.cc
     textline.cc
     packedintvector.cc
     character.cc
+    spannablestring.cc
+    spannablestringbuilder.cc
     )
 target_link_libraries(cdtext minikin)
 

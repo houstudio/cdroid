@@ -75,6 +75,7 @@ ViewPager2::~ViewPager2(){
     delete mScrollEventAdapter;
     delete mFakeDragger;
     delete mPagerSnapHelper;
+    delete mAccessibilityProvider;
     //delete mPageChangeEventDispatcher;
     //delete mExternalPageChangeCallbacks;
     delete mPageTransformerAdapter;
@@ -311,7 +312,7 @@ void ViewPager2::registerCurrentItemDataSetTracker(RecyclerView::Adapter*adapter
 }
 
 void ViewPager2::unregisterCurrentItemDataSetTracker(RecyclerView::Adapter*adapter) {
-    if (adapter != nullptr) {
+    if (adapter != nullptr&&mCurrentItemDataSetChangeObserver!=nullptr) {
         adapter->unregisterAdapterDataObserver(mCurrentItemDataSetChangeObserver);
     }
 }
@@ -873,6 +874,9 @@ ViewPager2::PageAwareAccessibilityProvider::PageAwareAccessibilityProvider(ViewP
     mAdapterDataObserver = nullptr;
 }
 
+ViewPager2::PageAwareAccessibilityProvider::~PageAwareAccessibilityProvider(){
+    delete mAdapterDataObserver;
+}
 void ViewPager2::PageAwareAccessibilityProvider::onInitialize(OnPageChangeCallback pageChangeEventDispatcher,RecyclerView* recyclerView) {
 
     class MyDataSetChangeObserver:public ViewPager2::DataSetChangeObserver{

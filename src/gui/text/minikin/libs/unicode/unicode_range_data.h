@@ -80,4 +80,21 @@ extern const int g_caseMappingsCount;
 UChar32 toLowerFull(UChar32 c);
 UChar32 toUpperFull(UChar32 c);
 
+// ========== Canonical (NFD) Decomposition ==========
+
+// 单个 NFD 分解条目：把一个源码点分解为 1~4 个 BMP code unit。
+// decompLen 为 0 表示该码点无规范分解。
+struct NfdMapping {
+    uint32_t cp;          // 源码点
+    uint16_t decomp[4];   // 分解结果（BMP code unit）
+    uint8_t  decompLen;   // 有效 code unit 个数（0..4）
+};
+
+// 全局 NFD 分解表声明（按 cp 升序排列，支持二分查找）
+extern const NfdMapping g_nfdMappings[];
+extern const int g_nfdMappingsCount;
+
+// 二分查找：返回匹配条目指针，未找到返回 nullptr
+const NfdMapping* findNfdMapping(UChar32 c);
+
 #endif // __UNICODE_RANGE_DATA_H__

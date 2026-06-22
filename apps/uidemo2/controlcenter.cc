@@ -37,10 +37,10 @@ void ControlCenter::onItemClick(View&v,int pos){
     delete mRightPanel;
     switch(pos){
     case 0: 
-        mRightPanel=new SencePanel(getContext(),AttributeSet());
+        mRightPanel=new SencePanel(getContext(),AttributeSet(getContext(),""));
         mRightPanel->loadFrame("@layout/sence");  break;
     case 1:
-        mRightPanel=new DevicePanel(getContext(),AttributeSet());
+        mRightPanel=new DevicePanel(getContext(),AttributeSet(getContext(),""));
         mRightPanel->loadFrame("@layout/devices");break;
     default: return;
     }

@@ -5,10 +5,10 @@
 #include <porting/cdlog.h>
 #include <minikin/LineBreaker.h>
 namespace cdroid{
-//public class StaticLayout extends Layout {
-const auto TabStopSpanFilter=make_span_filter<TabStopSpan>();
-const auto LineHeightSpanFilter=make_span_filter<LineHeightSpan>();
-const auto LeadingMarginSpanFilter=make_span_filter<LeadingMarginSpan>();
+
+const auto TabStopSpanFilter = make_span_filter<TabStopSpan>();
+const auto LineHeightSpanFilter = make_span_filter<LineHeightSpan>();
+const auto LeadingMarginSpanFilter = make_span_filter<LeadingMarginSpan>();
 
 class LineWidth :public minikin::LineWidth{
 private:
@@ -49,10 +49,10 @@ StaticLayout::Builder* StaticLayout::Builder::obtain(CharSequence* source, int s
     b->mFallbackLineSpacing = false;
     b->mEllipsizedWidth = width;
     b->mEllipsize = TextUtils::TruncateAt::NONE;//nullptr;
-    b->mMaxLines = INT_MAX;//Integer.MAX_VALUE;
-    b->mBreakStrategy = TextLayout::BREAK_STRATEGY_SIMPLE;
-    b->mHyphenationFrequency = TextLayout::HYPHENATION_FREQUENCY_NONE;
-    b->mJustificationMode = TextLayout::JUSTIFICATION_MODE_NONE;
+    b->mMaxLines = INT_MAX;
+    b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
     return b;
 }
 
@@ -61,7 +61,9 @@ void StaticLayout::Builder::recycle(Builder* b) {
     b->mText = nullptr;
     b->mLeftIndents.clear();
     b->mRightIndents.clear();
-    sPool.release(b);
+    if(sPool.release(b)==false){
+        delete b;
+    }
 }
 
 void StaticLayout::Builder::finish() {
@@ -172,13 +174,13 @@ Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 StaticLayout::StaticLayout(CharSequence* text)
-    :TextLayout(text, nullptr, 0, Alignment::NONE, 0, 0){
+    :Layout(text, nullptr, 0, Alignment::NONE, 0, 0){
         mColumns = COLUMNS_ELLIPSIZE;
         mLineDirections.resize(2,nullptr);
         mLines.resize(2 * mColumns);
 }
 
-StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
+StaticLayout::StaticLayout(const Builder& b):Layout((b.mEllipsize == TextUtils::TruncateAt::NONE/*nullptr*/)
             ? b.mText : [this, &b]() -> CharSequence* {
                 Spanned* spanned = dynamic_cast<Spanned*>(b.mText);
                 return spanned != nullptr ? new SpannedEllipsizer(spanned) : new Ellipsizer(b.mText);
@@ -211,7 +213,7 @@ StaticLayout::StaticLayout(const Builder& b):TextLayout((b.mEllipsize == TextUti
 
 StaticLayout::~StaticLayout(){
     for(auto dir:mLineDirections){
-        if((dir!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT)){
+        if((dir!=&Layout::DIRS_ALL_LEFT_TO_RIGHT)&&(dir!=&Layout::DIRS_ALL_RIGHT_TO_LEFT)){
             delete dir;
         }
     }
@@ -299,7 +301,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
         int firstWidth = outerWidth;
         int restWidth = outerWidth;
 
-        std::vector<ParcelableSpan*> chooseHt;
+        std::vector<const ParcelableSpan*> chooseHt;
         if (spanned != nullptr) {
             auto sp = getParagraphSpans(spanned, paraStart, paraEnd, LeadingMarginSpanFilter);
             for (int i = 0; i < sp.size(); i++) {
@@ -494,7 +496,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
 }
 
 int StaticLayout::out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
-        int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
+        int v, float spacingmult, float spacingadd, const std::vector<const ParcelableSpan*>& chooseHt,
         const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm,bool hasTab, int hyphenEdit,
         bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
         bool addLastLineLineSpacing,const std::vector<char16_t>& chs,int widthStart, TextUtils::TruncateAt ellipsize,
@@ -521,11 +523,11 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
         fm.bottom = bottom;
         for (size_t i = 0; i < chooseHt.size(); i++) {
             int chooseHtvVal = chooseHtv != nullptr ? (*chooseHtv)[i] : 0;
-            if (dynamic_cast<LineHeightSpan::WithDensity*>(chooseHt[i])) {
-                ((LineHeightSpan::WithDensity*) chooseHt[i])
+            if (dynamic_cast<const LineHeightSpan::WithDensity*>(chooseHt[i])) {
+                ((const LineHeightSpan::WithDensity*) chooseHt[i])
                         ->chooseHeight(text, start, end, chooseHtvVal, v, fm, paint);
             } else {
-                dynamic_cast<LineHeightSpan*>(chooseHt[i])->chooseHeight(text, start, end, chooseHtvVal, v, fm);
+                dynamic_cast<const LineHeightSpan*>(chooseHt[i])->chooseHeight(text, start, end, chooseHtvVal, v, fm);
             }
         }
         above = fm.ascent;
@@ -545,9 +547,8 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
                 (!firstLine && (currentLineIsTheLastVisibleOne || !moreChars) &&
                         ellipsize == TextUtils::TruncateAt::END);
         if (doEllipsis) {
-            calculateEllipsis(start, end, measured, widthStart,
-                    ellipsisWidth, ellipsize, j,
-                    textWidth, paint, forceEllipsis);
+            calculateEllipsis(start, end, measured, widthStart, ellipsisWidth,
+                    ellipsize, j, textWidth, paint, forceEllipsis);
         }
     }
 
@@ -616,8 +617,8 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
     lines[off + HYPHEN] = hyphenEdit;
     lines[off + DIR] |= dir << DIR_SHIFT;
-    if( mLineDirections[j] && mLineDirections[j]!=&TextLayout::DIRS_ALL_LEFT_TO_RIGHT
-            &&mLineDirections[j]!=&TextLayout::DIRS_ALL_RIGHT_TO_LEFT){
+    if( mLineDirections[j] && mLineDirections[j]!=&Layout::DIRS_ALL_LEFT_TO_RIGHT
+            &&mLineDirections[j]!=&Layout::DIRS_ALL_RIGHT_TO_LEFT){
         delete mLineDirections[j];
     }
     mLineDirections[j] = measured->getDirections(start - widthStart, end - widthStart);
@@ -810,7 +811,7 @@ int StaticLayout::getHeight(bool cap) const{
     }
 
     return cap && mLineCount > mMaximumVisibleLineCount && mMaxLineHeight != -1
-            ? mMaxLineHeight : TextLayout::getHeight();
+            ? mMaxLineHeight : Layout::getHeight();
 }
 
 }

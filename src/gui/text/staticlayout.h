@@ -6,7 +6,7 @@
 #include <text/measuredparagraph.h>
 namespace cdroid{
 class DynamicLayout;
-class StaticLayout :public TextLayout {
+class StaticLayout :public Layout {
 public:
     class Builder;
 private:
@@ -15,7 +15,7 @@ private:
     StaticLayout(CharSequence* text);
     
     int out(CharSequence* text, int start, int end, int above, int below, int top, int bottom,
-            int v, float spacingmult, float spacingadd, const std::vector<ParcelableSpan*>& chooseHt,
+            int v, float spacingmult, float spacingadd, const std::vector<const ParcelableSpan*>& chooseHt,
             const std::vector<int>* chooseHtv, Paint::FontMetricsInt& fm, bool hasTab, int hyphenEdit,
             bool needMultiply, MeasuredParagraph* measured, int bufEnd, bool includePad, bool trackPad,
             bool addLastLineLineSpacing, const std::vector<char16_t>& chs, int widthStart, TextUtils::TruncateAt ellipsize,
@@ -97,6 +97,7 @@ public:
         return mEllipsizedWidth;
     }
 
+    using Layout::getHeight;
     int getHeight(bool cap)const override;
 private:
     int mLineCount;

@@ -34,7 +34,10 @@ public:
 class CharacterStyle : virtual public ParcelableSpan {
 public:
     virtual ~CharacterStyle() = default;
-    virtual void updateDrawState(const Paint& paint){};
+    virtual void updateDrawState(const Paint& paint)const{};
+};
+
+class NoCopySpan:virtual public ParcelableSpan{
 };
 
 using SpanFilter=Predicate<const ParcelableSpan*>;

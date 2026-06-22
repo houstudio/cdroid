@@ -6,7 +6,7 @@ class SpanSet{
 public:
     int numberOfSpans;
     const SpanFilter classType;
-    std::vector<ParcelableSpan*> spans;
+    std::vector<const ParcelableSpan*> spans;
     std::vector<int> spanStarts;
     std::vector<int> spanEnds;
     std::vector<int> spanFlags;

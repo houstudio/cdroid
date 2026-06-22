@@ -17,7 +17,7 @@
 #define LOG_TAG "Minikin"
 
 #include "BidiUtils.h"
-#include <stdio.h>
+
 #include <algorithm>
 
 #include <unicode/ubidi.h>

@@ -6,19 +6,19 @@ LineBreaker::LineBreaker(int breakStrategy, int hyphenationFrequency, int justif
     std::vector<float>fIndents;
     for(auto i:indents)fIndents.push_back(i);
     
-    mNativePtr = new minikin::StaticLayoutNative(
+    mNativePtr = new minikin::android::StaticLayoutNative(
             static_cast<minikin::BreakStrategy>(breakStrategy),
             static_cast<minikin::HyphenationFrequency>(hyphenationFrequency),
             justify, std::move(fIndents));
 }
 
 LineBreaker::~LineBreaker(){
-    delete (minikin::StaticLayoutNative*)mNativePtr;
+    delete (minikin::android::StaticLayoutNative*)mNativePtr;
 }
 
 LineBreaker::Result LineBreaker::computeLineBreaks(MeasuredText* measuredPara,
         const ParagraphConstraints& constraints, int lineNumber) {
-    const minikin::StaticLayoutNative* builder = (const minikin::StaticLayoutNative*)mNativePtr;
+    const minikin::android::StaticLayoutNative* builder = (const minikin::android::StaticLayoutNative*)mNativePtr;
     auto& chars = measuredPara->getChars();
     minikin::U16StringPiece u16Text((const uint16_t*)chars.data(), chars.size());
     minikin::MeasuredText*mt;

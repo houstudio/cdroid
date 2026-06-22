@@ -13,10 +13,8 @@ class Spanned;
 class Spannable;
 class TextUtils {
     // Zero-width character used to fill ellipsized strings when codepoint length must be preserved.
-    /*package*/static constexpr char16_t ELLIPSIS_FILLER = 0xFEFF; // ZERO WIDTH NO-BREAK SPACE
-
+    static constexpr char16_t ELLIPSIS_FILLER = 0xFEFF;//ZERO WIDTH NO-BREAK SPACE
 private:
-
     static constexpr int LINE_FEED_CODE_POINT = 10;
     static constexpr int NBSP_CODE_POINT = 160;
     static constexpr int PARCEL_SAFE_TEXT_LENGTH = 100000;
@@ -56,6 +54,7 @@ public:
     static constexpr int ACCESSIBILITY_REPLACEMENT_SPAN = 29;
     static constexpr int LAST_SPAN = ACCESSIBILITY_REPLACEMENT_SPAN;
 
+    using EllipsizeCallback =std::function<void(int,int)>;//void ellipsized(int start, int end);
     enum TruncateAt {
         NONE=0,
         START,
@@ -93,15 +92,13 @@ public:
     }
 
     static int indexOf(const CharSequence* s, char16_t ch, int start);
-
     static int indexOf(const CharSequence* s, char16_t ch, int start, int end);
 
     static int lastIndexOf(const CharSequence* s, char16_t ch);
-
     static int lastIndexOf(const CharSequence* s, char16_t ch, int last);
     static int lastIndexOf(const CharSequence* s, char16_t ch, int start, int last);
-    static int indexOf(const CharSequence* s,const CharSequence* needle);
 
+    static int indexOf(const CharSequence* s,const CharSequence* needle);
     static int indexOf(const CharSequence* s, const CharSequence* needle, int start);
     static int indexOf(const CharSequence* s,const CharSequence* needle, int start, int end);
 
@@ -123,8 +120,6 @@ public:
     static void copySpansFrom(const Spanned* source, int start, int end,
                                      const SpanFilter& kind, Spannable* dest, int destoff);
 
-    using EllipsizeCallback =std::function<void(int,int)>;//void ellipsized(int start, int end);
-
     static CharSequence* ellipsize(CharSequence* text, TextPaint& p, float avail, TruncateAt where) {
         return ellipsize(text, p, avail, where, false, nullptr);
     }
@@ -139,12 +134,12 @@ public:
             bool preserveLength,const EllipsizeCallback& callback,
             const TextDirectionHeuristic* textDir,const std::string& ellipsis);
 
-    static CharSequence* commaEllipsize(const CharSequence* text,TextPaint& p, float avail,
+    static CharSequence* commaEllipsize(CharSequence* text,TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more) {
         return commaEllipsize(text, p, avail, oneMore, more, TextDirectionHeuristics::FIRSTSTRONG_LTR);
     }
 
-    static CharSequence* commaEllipsize(const CharSequence* text, TextPaint& p, float avail,
+    static CharSequence* commaEllipsize(CharSequence* text, TextPaint& p, float avail,
             const std::string& oneMore, const std::string& more, const TextDirectionHeuristic* textDir);
 
     static bool couldAffectRtl(char16_t c);
@@ -162,7 +157,7 @@ public:
 
     static int getCapsMode(const CharSequence* cs, int off, int reqModes);
 
-    static void removeEmptySpans(std::vector<ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
+    static void removeEmptySpans(std::vector<const ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
     static int64_t packRangeInLong(int start, int end) {
         return (((long) start) << 32) | end;
     }

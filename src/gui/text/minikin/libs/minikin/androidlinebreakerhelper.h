@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-#ifndef __MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H__
-#define __MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H__
+#ifndef MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H
+#define MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H
 
 #include <algorithm>
 
 #include "minikin/LineBreaker.h"
 
 namespace minikin {
-//namespace android {
+namespace android {
 
 class AndroidLineWidth : public LineWidth {
 public:
@@ -106,7 +106,7 @@ private:
     const std::vector<float> mRightPaddings;
 };
 
-//}  // namespace android
+}  // namespace android
 }  // namespace minikin
 
-#endif  //__MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H__
+#endif  // MINIKIN_ANDROID_LINE_BREAKER_HELPERS_H

@@ -18,7 +18,7 @@
 #define MINIKIN_FONT_UTILS_H
 
 #include <cstdint>
-#include <cstddef>
+#include <cstdlib>
 #include <unordered_set>
 
 namespace minikin {

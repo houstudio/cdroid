@@ -39,7 +39,7 @@ SET(CORE_SOURCES
     core/keyboard.cc
     core/keycharactermap.cc
     core/keylayoutmap.cc
-    core/layout.cc
+    #core/layout.cc
     core/looper.cc
     core/parcel.cc
     core/path.cc

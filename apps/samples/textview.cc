@@ -1,5 +1,8 @@
-#include<cdroid.h>
-#include<cdlog.h>
+#include<widget/cdwindow.h>
+#include<widget/textview.h>
+#include<widget/linearlayout.h>
+#include<porting/cdlog.h>
+#include<core/app.h>
 struct TestString{
     const char*text;
     bool singleline;
@@ -51,7 +54,7 @@ TestString testStrings[]={
       50
    },
 
-   {
+   {//5
       "single line alignment center_horizontal|center_vertical",
       true,
       Layout::ELLIPSIS_NONE,
@@ -95,7 +98,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
 
-   {
+   {//10
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_END,
@@ -107,6 +110,14 @@ TestString testStrings[]={
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_MARQUEE,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      LayoutParams::WRAP_CONTENT
+   },
+   {//12
+      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
+      true,
+      Layout::ELLIPSIS_NONE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -138,7 +149,7 @@ int main(int argc,const char*argv[]){
         tv->setId(i);
         tv->setTextColor(0xFFFFFFFF);
         tv->setSingleLine(ts->singleline);
-        tv->setEllipsize(ts->ellipsis);
+        tv->setEllipsize(static_cast<TextUtils::TruncateAt>(ts->ellipsis));
         tv->setTextAlignment(ts->txtalignment);
         tv->setGravity(ts->gravity);
         if(ts->ellipsis==Layout::ELLIPSIS_MARQUEE)
@@ -195,6 +206,11 @@ int main(int argc,const char*argv[]){
     };
     w->postDelayed(run,500);
 
+    w->postDelayed([&layout](){
+            TextView*tv=(TextView*)layout->getChildAt(12);
+            tv->setEllipsize(TextUtils::TruncateAt::MARQUEE);
+            tv->setSelected(true);
+            },1000);
     w->requestLayout();//addView by code must call requestLayout ,auto call only used by Window::inflate.
     return app.exec();
 }

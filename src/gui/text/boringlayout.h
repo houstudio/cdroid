@@ -4,7 +4,7 @@
 #include <text/textpaint.h>
 #include <string>
 namespace cdroid{
-class BoringLayout :public TextLayout {//TextUtils.EllipsizeCallback {
+class BoringLayout :public Layout {//TextUtils.EllipsizeCallback {
 private:
     std::string/*String*/ mDirect;
     Paint mPaint;
@@ -50,7 +50,7 @@ public:
             TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
     /* package */ void init(CharSequence* source, TextPaint* paint, Alignment align,
-            const BoringLayout::Metrics& metrics, bool includePad, bool trustWidth);
+            const BoringLayout::Metrics& metrics, bool includePad, bool trustWidth, bool useFallbackLineSpacing);
 
     static Metrics* isBoring(CharSequence* text, TextPaint* paint);
     static Metrics* isBoring(CharSequence* text, TextPaint* paint, Metrics* metrics);

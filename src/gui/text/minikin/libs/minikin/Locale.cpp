@@ -34,6 +34,18 @@ uint32_t registerLocaleList(const std::string& locales) {
     return LocaleListCache::getId(locales);
 }
 
+std::string getLocaleString(uint32_t localeId) {
+    const LocaleList& localeList = LocaleListCache::getById(localeId);
+    std::string out;
+    for (size_t i = 0; i < localeList.size(); ++i) {
+        if (i != 0) {
+            out += ",";
+        }
+        out += localeList[i].getString();
+    }
+    return out;
+}
+
 // Check if a language code supports extension such as emoji and line break etc. according to its
 // subtag
 static bool isSubtag(const char* buf, size_t bufLen, const char* subtag, size_t subtagLen) {
@@ -221,33 +233,8 @@ void Locale::resolveUnicodeExtension(const char* buf, size_t length) {
     if (pos != buf + length) {
         pos += strlen(kPrefix);
         const size_t remainingLength = length - (pos - buf);
-        mLBStyle = resolveLineBreakStyle(pos, remainingLength);
         mEmojiStyle = resolveEmojiStyle(pos, remainingLength);
     }
-}
-
-// static
-// Lookup line break subtag and determine the line break style.
-LineBreakStyle Locale::resolveLineBreakStyle(const char* buf, size_t length) {
-    // 8 is the length of "-u-lb-loose", which is the shortest line break subtag,
-    // unnecessary comparison can be avoided if total length is smaller than 11.
-    const size_t kMinSubtagLength = 8;
-    if (length >= kMinSubtagLength) {
-        static const char kPrefix[] = "lb-";
-        const char* pos = std::search(buf, buf + length, kPrefix, kPrefix + strlen(kPrefix));
-        if (pos != buf + length) {  // found
-            pos += strlen(kPrefix);
-            const size_t remainingLength = length - (pos - buf);
-            if (isSubtag(pos, remainingLength, "loose", 5)) {
-                return LineBreakStyle::LOOSE;
-            } else if (isSubtag(pos, remainingLength, "normal", 6)) {
-                return LineBreakStyle::NORMAL;
-            } else if (isSubtag(pos, remainingLength, "strict", 6)) {
-                return LineBreakStyle::STRICT;
-            }
-        }
-    }
-    return LineBreakStyle::EMPTY;
 }
 
 // static
@@ -327,7 +314,78 @@ uint8_t Locale::scriptToSubScriptBits(uint32_t script) {
 }
 
 std::string Locale::getString() const {
-    char buf[32] = {};
+    char buf[32];
+    int i = buildLocaleString(buf);
+    return std::string(buf, i);
+}
+
+std::string Locale::getStringWithLineBreakOption(LineBreakStyle lbStyle,
+                                                 LineBreakWordStyle lbWordStyle) const {
+    char buf[48];
+    int i = buildLocaleString(buf);
+
+    // Add line break unicode extension.
+    if (lbStyle != LineBreakStyle::None || lbWordStyle != LineBreakWordStyle::None) {
+        buf[i++] = '-';
+        buf[i++] = 'u';
+    }
+
+    if (lbStyle != LineBreakStyle::None) {
+        buf[i++] = '-';
+        buf[i++] = 'l';
+        buf[i++] = 'b';
+        buf[i++] = '-';
+        switch (lbStyle) {
+            case LineBreakStyle::Loose:
+                buf[i++] = 'l';
+                buf[i++] = 'o';
+                buf[i++] = 'o';
+                buf[i++] = 's';
+                buf[i++] = 'e';
+                break;
+            case LineBreakStyle::Normal:
+                buf[i++] = 'n';
+                buf[i++] = 'o';
+                buf[i++] = 'r';
+                buf[i++] = 'm';
+                buf[i++] = 'a';
+                buf[i++] = 'l';
+                break;
+            case LineBreakStyle::Strict:
+                buf[i++] = 's';
+                buf[i++] = 't';
+                buf[i++] = 'r';
+                buf[i++] = 'i';
+                buf[i++] = 'c';
+                buf[i++] = 't';
+                break;
+            default:
+                MINIKIN_ASSERT(false, "Must not reached.");
+        }
+    }
+
+    if (lbWordStyle != LineBreakWordStyle::None) {
+        buf[i++] = '-';
+        buf[i++] = 'l';
+        buf[i++] = 'w';
+        buf[i++] = '-';
+        switch (lbWordStyle) {
+            case LineBreakWordStyle::Phrase:
+                buf[i++] = 'p';
+                buf[i++] = 'h';
+                buf[i++] = 'r';
+                buf[i++] = 'a';
+                buf[i++] = 's';
+                buf[i++] = 'e';
+                break;
+            default:
+                MINIKIN_ASSERT(false, "Must not reached.");
+        }
+    }
+    return std::string(buf, i);
+}
+
+int Locale::buildLocaleString(char* buf) const {
     size_t i;
     if (mLanguage == NO_LANGUAGE) {
         buf[0] = 'u';
@@ -366,43 +424,7 @@ std::string Locale::getString() const {
                 MINIKIN_ASSERT(false, "Must not reached.");
         }
     }
-    // Add line break unicode extension.
-    if (mLBStyle != LineBreakStyle::EMPTY) {
-        buf[i++] = '-';
-        buf[i++] = 'u';
-        buf[i++] = '-';
-        buf[i++] = 'l';
-        buf[i++] = 'b';
-        buf[i++] = '-';
-        switch (mLBStyle) {
-            case LineBreakStyle::LOOSE:
-                buf[i++] = 'l';
-                buf[i++] = 'o';
-                buf[i++] = 'o';
-                buf[i++] = 's';
-                buf[i++] = 'e';
-                break;
-            case LineBreakStyle::NORMAL:
-                buf[i++] = 'n';
-                buf[i++] = 'o';
-                buf[i++] = 'r';
-                buf[i++] = 'm';
-                buf[i++] = 'a';
-                buf[i++] = 'l';
-                break;
-            case LineBreakStyle::STRICT:
-                buf[i++] = 's';
-                buf[i++] = 't';
-                buf[i++] = 'r';
-                buf[i++] = 'i';
-                buf[i++] = 'c';
-                buf[i++] = 't';
-                break;
-            default:
-                MINIKIN_ASSERT(false, "Must not reached.");
-        }
-    }
-    return std::string(buf, i);
+    return i;
 }
 
 Locale Locale::getPartialLocale(SubtagBits bits) const {
@@ -437,7 +459,7 @@ bool Locale::supportsScript(uint8_t providedBits, uint8_t requestedBits) {
     return requestedBits != 0 && (providedBits & requestedBits) == requestedBits;
 }
 
-bool Locale::supportsHbScript(hb_script_t script) const {
+bool Locale::supportsScript(uint32_t script) const {
     static_assert(unpackScript(packScript('J', 'p', 'a', 'n')) == HB_TAG('J', 'p', 'a', 'n'),
                   "The Minikin script and HarfBuzz hb_script_t have different encodings.");
     uint32_t packedScript = packScript(script);

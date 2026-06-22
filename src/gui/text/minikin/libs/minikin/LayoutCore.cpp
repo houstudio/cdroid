@@ -18,12 +18,6 @@
 
 #include "minikin/LayoutCore.h"
 
-#include <cmath>
-#include <iostream>
-#include <mutex>
-#include <string>
-#include <vector>
-
 //#include <hb-icu.h>
 #include <hb-ot.h>
 #include <log/log.h>
@@ -31,16 +25,22 @@
 #include <unicode/utf16.h>
 #include <utils/LruCache.h>
 
+#include <cmath>
+#include <iostream>
+#include <mutex>
+#include <string>
+#include <vector>
+
+#include "BidiUtils.h"
+#include "FontFeatureUtils.h"
+#include "LayoutUtils.h"
+#include "LocaleListCache.h"
+#include "MinikinInternal.h"
 #include "minikin/Emoji.h"
 #include "minikin/HbUtils.h"
 #include "minikin/LayoutCache.h"
 #include "minikin/LayoutPieces.h"
 #include "minikin/Macros.h"
-
-#include "BidiUtils.h"
-#include "LayoutUtils.h"
-#include "LocaleListCache.h"
-#include "MinikinInternal.h"
 
 namespace minikin {
 
@@ -189,20 +189,6 @@ static bool isScriptOkForLetterspacing(hb_script_t script) {
              script == HB_SCRIPT_TIRHUTA || script == HB_SCRIPT_OGHAM);
 }
 
-static void addFeatures(const std::string& str, std::vector<hb_feature_t>* features) {
-    SplitIterator it(str, ',');
-    while (it.hasNext()) {
-        StringPiece featureStr = it.next();
-        static hb_feature_t feature;
-        /* We do not allow setting features on ranges.  As such, reject any
-         * setting that has non-universal range. */
-        if (hb_feature_from_string(featureStr.data(), featureStr.size(), &feature) &&
-            feature.start == 0 && feature.end == (unsigned int)-1) {
-            features->push_back(feature);
-        }
-    }
-}
-
 static inline hb_codepoint_t determineHyphenChar(hb_codepoint_t preferredHyphen, hb_font_t* font) {
     hb_codepoint_t glyph;
     if (preferredHyphen == 0x058A    /* ARMENIAN_HYPHEN */
@@ -230,11 +216,9 @@ static inline hb_codepoint_t determineHyphenChar(hb_codepoint_t preferredHyphen,
 template <typename HyphenEdit>
 static inline void addHyphenToHbBuffer(const HbBufferUniquePtr& buffer, const HbFontUniquePtr& font,
                                        HyphenEdit hyphen, uint32_t cluster) {
-    const uint32_t* chars;
-    size_t size;
-    std::tie(chars, size) = getHyphenString(hyphen);
-    for (size_t i = 0; i < size; i++) {
-        hb_buffer_add(buffer.get(), determineHyphenChar(chars[i], font.get()), cluster);
+    auto it/*[chars, size]*/ = getHyphenString(hyphen);
+    for (size_t i = 0; i < it.second/*size*/; i++) {
+        hb_buffer_add(buffer.get(), determineHyphenChar(it.first/*chars*/[i], font.get()), cluster);
     }
 }
 
@@ -355,22 +339,11 @@ LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool
     mPoints.reserve(count);
 
     HbBufferUniquePtr buffer(hb_buffer_create());
-    std::vector<FontCollection::Run> items = paint.font->itemize(
-            textBuf.substr(range), paint.fontStyle, paint.localeListId, paint.familyVariant);
+    U16StringPiece substr = textBuf.substr(range);
+    std::vector<FontCollection::Run> items =
+            paint.font->itemize(substr, paint.fontStyle, paint.localeListId, paint.familyVariant);
 
-    std::vector<hb_feature_t> features;
-    // Disable default-on non-required ligature features if letter-spacing
-    // See http://dev.w3.org/csswg/css-text-3/#letter-spacing-property
-    // "When the effective spacing between two characters is not zero (due to
-    // either justification or a non-zero value of letter-spacing), user agents
-    // should not apply optional ligatures."
-    if (fabs(paint.letterSpacing) > 0.03) {
-        static const hb_feature_t no_liga = {HB_TAG('l', 'i', 'g', 'a'), 0, 0, ~0u};
-        static const hb_feature_t no_clig = {HB_TAG('c', 'l', 'i', 'g'), 0, 0, ~0u};
-        features.push_back(no_liga);
-        features.push_back(no_clig);
-    }
-    addFeatures(paint.fontFeatureSettings, &features);
+    std::vector<hb_feature_t> features = cleanAndAddDefaultFontFeatures(paint);
 
     std::vector<HbFontUniquePtr> hbFonts;
     double size = paint.size;
@@ -384,14 +357,14 @@ LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool
          isRtl ? run_ix >= 0 : run_ix < static_cast<int>(items.size());
          isRtl ? --run_ix : ++run_ix) {
         FontCollection::Run& run = items[run_ix];
-        const FakedFont& fakedFont = run.fakedFont;
-        auto it = fontMap.find(fakedFont.font);
+        FakedFont fakedFont = paint.font->getBestFont(substr, run, paint.fontStyle);
+        auto it = fontMap.find(fakedFont.font.get());
         uint8_t font_ix;
         if (it == fontMap.end()) {
             // First time to see this font.
             font_ix = mFonts.size();
             mFonts.push_back(fakedFont);
-            fontMap.insert(std::make_pair(fakedFont.font, font_ix));
+            fontMap.insert(std::make_pair(fakedFont.font.get(), font_ix));
 
             // We override some functions which are not thread safe.
             HbFontUniquePtr font(hb_font_create_sub_font(fakedFont.font->baseFont().get()));
@@ -420,8 +393,6 @@ LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool
 
         hb_font_set_ppem(hbFont.get(), size * scaleX, size);
         hb_font_set_scale(hbFont.get(), HBFloatToFixed(size * scaleX), HBFloatToFixed(size));
-
-        const bool is_color_bitmap_font = isColorBitmapFont(hbFont);
 
         // TODO: if there are multiple scripts within a font in an RTL run,
         // we need to reorder those runs. This is unlikely with our current
@@ -456,7 +427,7 @@ LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool
             if (localeList.size() != 0) {
                 hb_language_t hbLanguage = localeList.getHbLanguage(0);
                 for (size_t i = 0; i < localeList.size(); ++i) {
-                    if (localeList[i].supportsHbScript(script)) {
+                    if (localeList[i].supportsScript(hb_script_to_iso15924_tag(script))) {
                         hbLanguage = localeList.getHbLanguage(i);
                         break;
                     }
@@ -502,31 +473,13 @@ LayoutPiece::LayoutPiece(const U16StringPiece& textBuf, const Range& range, bool
                 mGlyphIds.push_back(glyph_ix);
                 mPoints.emplace_back(x + xoff, y + yoff);
                 float xAdvance = HBFixedToFloat(positions[i].x_advance);
-                MinikinRect glyphBounds;
-                hb_glyph_extents_t extents = {};
-                if (is_color_bitmap_font &&
-                    hb_font_get_glyph_extents(hbFont.get(), glyph_ix, &extents)) {
-                    // Note that it is technically possible for a TrueType font to have outline and
-                    // embedded bitmap at the same time. We ignore modified bbox of hinted outline
-                    // glyphs in that case.
-                    glyphBounds.mLeft = roundf(HBFixedToFloat(extents.x_bearing));
-                    glyphBounds.mTop = roundf(HBFixedToFloat(-extents.y_bearing));
-                    glyphBounds.mRight = roundf(HBFixedToFloat(extents.x_bearing + extents.width));
-                    glyphBounds.mBottom =
-                            roundf(HBFixedToFloat(-extents.y_bearing - extents.height));
-                } else {
-                    fakedFont.font->typeface()->GetBounds(&glyphBounds, glyph_ix, paint,
-                                                          fakedFont.fakery);
-                }
-                glyphBounds.offset(xoff, yoff);
 
                 if (clusterBaseIndex < count) {
                     mAdvances[clusterBaseIndex] += xAdvance;
                 } else {
-                    ALOGE("cluster %zu (start %zu) out of bounds of count %zu", clusterBaseIndex, start, count);
+                    ALOGE("cluster %zu (start %zu) out of bounds of count %zu", clusterBaseIndex,
+                          start, count);
                 }
-                glyphBounds.offset(x, y);
-                mBounds.join(glyphBounds);
                 x += xAdvance;
             }
             if (numGlyphs) {

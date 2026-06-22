@@ -4,8 +4,7 @@
 #include <text/androidbidi.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
-//public class MeasuredParagraph {
-//private static final char OBJECT_REPLACEMENT_CHARACTER = '\uFFFC';
+
 const auto TabStopSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const TabStopSpan*>(span) != nullptr;});
 const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
 const auto ReplacementSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const ReplacementSpan*>(span) != nullptr;});
@@ -56,7 +55,7 @@ int MeasuredParagraph::getParagraphDir() const{
 
 const Directions* MeasuredParagraph::getDirections( int start, int end) const{
     if (mLtrWithoutBidi) {
-        return &TextLayout::DIRS_ALL_LEFT_TO_RIGHT;
+        return &Layout::DIRS_ALL_LEFT_TO_RIGHT;
     }
 
     const int length = end - start;
@@ -209,21 +208,21 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
             || textDir == TextDirectionHeuristics::ANYRTL_LTR)
             && TextUtils::doesNotNeedBidi(mCopiedBuffer, 0, mTextLength)) {
         mLevels.clear();
-        mParaDir = TextLayout::DIR_LEFT_TO_RIGHT;
+        mParaDir = Layout::DIR_LEFT_TO_RIGHT;
         mLtrWithoutBidi = true;
     } else {
         int bidiRequest;
         if (textDir == TextDirectionHeuristics::LTR) {
-            bidiRequest = TextLayout::DIR_REQUEST_LTR;
+            bidiRequest = Layout::DIR_REQUEST_LTR;
         } else if (textDir == TextDirectionHeuristics::RTL) {
-            bidiRequest = TextLayout::DIR_REQUEST_RTL;
+            bidiRequest = Layout::DIR_REQUEST_RTL;
         } else if (textDir == TextDirectionHeuristics::FIRSTSTRONG_LTR) {
-            bidiRequest = TextLayout::DIR_REQUEST_DEFAULT_LTR;
+            bidiRequest = Layout::DIR_REQUEST_DEFAULT_LTR;
         } else if (textDir == TextDirectionHeuristics::FIRSTSTRONG_RTL) {
-            bidiRequest = TextLayout::DIR_REQUEST_DEFAULT_RTL;
+            bidiRequest = Layout::DIR_REQUEST_DEFAULT_RTL;
         } else {
             const bool isRtl = textDir->isRtl(mCopiedBuffer.data(), 0, mTextLength);
-            bidiRequest = isRtl ? TextLayout::DIR_REQUEST_RTL : TextLayout::DIR_REQUEST_LTR;
+            bidiRequest = isRtl ? Layout::DIR_REQUEST_RTL : Layout::DIR_REQUEST_LTR;
         }
         mLevels.resize(mTextLength);
         mParaDir = AndroidBidi::bidi(bidiRequest, mCopiedBuffer, mLevels);
@@ -231,7 +230,7 @@ void MeasuredParagraph::resetAndAnalyzeBidi(const CharSequence* text, int start,
     }
 }
 
-void  MeasuredParagraph::applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder) {
+void  MeasuredParagraph::applyReplacementRun(const ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder) {
     // Use original text. Shouldn't matter.
     // TODO: passing uninitizlied FontMetrics to developers. Do we need to keep this for
     //       backward compatibility? or Should we initialize them for getFontMetricsInt?
@@ -256,7 +255,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
         if (builder == nullptr) {
             mWholeWidth += mCachedPaint.getTextRunAdvances(
                     mCopiedBuffer.data(), start, end - start, start, end - start, false /* isRtl */,
-                    &mWidths, start);
+                    mWidths.data(), start);
         } else {
             builder->appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
         }
@@ -272,7 +271,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
                     const int levelLength = levelEnd - levelStart;
                     mWholeWidth += mCachedPaint.getTextRunAdvances(
                             mCopiedBuffer.data(), levelStart, levelLength, levelStart, levelLength,
-                            isRtl, &mWidths, levelStart);
+                            isRtl, mWidths.data(), levelStart);
                 } else {
                     builder->appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);
                 }
@@ -286,7 +285,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
     }
 }
 
-void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
+void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
     mCachedPaint.set(paint);
     // XXX paint should not have a baseline shift, but...
     mCachedPaint.baselineShift = 0;
@@ -297,13 +296,13 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
         //mCachedFm = new Paint.FontMetricsInt();
     }
 
-    ReplacementSpan* replacement = nullptr;
+    const ReplacementSpan* replacement = nullptr;
     if (!spans.empty()) {
         for (int i = 0; i < spans.size(); i++) {
-            MetricAffectingSpan* span = dynamic_cast<MetricAffectingSpan*>(spans[i]);
-            if (dynamic_cast<ReplacementSpan*>(span)) {
+            const MetricAffectingSpan* span = dynamic_cast<const MetricAffectingSpan*>(spans[i]);
+            if (dynamic_cast<const ReplacementSpan*>(span)) {
                 // The last ReplacementSpan is effective for backward compatibility reasons.
-                replacement = (ReplacementSpan*) span;
+                replacement = (const ReplacementSpan*) span;
             } else {
                 // TODO: No need to call updateMeasureState for ReplacementSpan as well?
                 span->updateMeasureState(mCachedPaint);

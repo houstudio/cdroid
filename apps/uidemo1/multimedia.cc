@@ -133,7 +133,7 @@ protected:
     TextView*mFilePath;
     FileTypeAdapter*mAdapter;
     std::string media_path;
-    HANDLE player;
+    void* player;
     Runnable run;
 public:
     MediaWindow(int x,int y,int w,int h);

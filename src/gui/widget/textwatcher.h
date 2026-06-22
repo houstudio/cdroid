@@ -3,7 +3,7 @@
 #include <core/callbackbase.h>
 
 namespace cdroid{
-class TextView;
+class CharSequence;
 class TextWatcher:virtual public EventSet{
 public:
     /**
@@ -13,7 +13,7 @@ public:
      * It is an error to attempt to make changes to <code>s</code> from
      * this callback.
      */
-    std::function<void(const std::wstring&, int /*start*/, int /*count*/, int /*after*/)> beforeTextChanged;
+    std::function<void(CharSequence&, int /*start*/, int /*count*/, int /*after*/)> beforeTextChanged;
     /**
      * This method is called to notify you that, within <code>s</code>,
      * the <code>count</code> characters beginning at <code>start</code>
@@ -21,7 +21,7 @@ public:
      * It is an error to attempt to make changes to <code>s</code> from
      * this callback.
      */
-    std::function<void(const std::wstring&, int /*start*/, int /*count*/, int /*after*/)>onTextChanged;
+    std::function<void(CharSequence&, int /*start*/, int /*count*/, int /*after*/)>onTextChanged;
 
     /**
      * This method is called to notify you that, somewhere within
@@ -37,7 +37,7 @@ public:
      * to mark your place and then look up from here where the span
      * ended up.
      */
-    std::function<void(TextView&,const std::wstring&)>afterTextChanged;
+    std::function<void(CharSequence&)>afterTextChanged;
 };
 
 }

@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <memory>
+#include <list>
 #include <set>
 #include <unordered_set>
 #include <regex>
@@ -38,23 +39,26 @@ namespace cdroid {
 class FullMinikinFont : public minikin::MinikinFont {
 public:
     FullMinikinFont(const Cairo::RefPtr<Cairo::FtFontFace>& fontFace)
-        : MinikinFont(mFontId++), mFontFace(fontFace), mHbFace(nullptr),
-          mCachedScaledFont(nullptr), mCachedFontSize(0.0f) {
+        : mFontFace(fontFace), mHbFace(nullptr) {
+          mSourceId = mFontId++;
     }
     ~FullMinikinFont() override {
         if (mHbFace != nullptr) {
             hb_face_destroy(mHbFace);
         }
     }
+    int32_t GetSourceId() const override{
+        return mSourceId;
+    }
     float GetHorizontalAdvance(uint32_t glyph_id, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
-        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint);
         std::vector<Cairo::Glyph> glyphs{{glyph_id,0,0}};
         Cairo::TextExtents extents;
         scaledFont->get_glyph_extents(glyphs, extents);
         return extents.x_advance;
     }
     void GetBounds(minikin::MinikinRect* bounds, uint32_t glyph_id, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
-        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint);
 
         std::vector<Cairo::Glyph> glyphs{{glyph_id,0,0}};
         Cairo::TextExtents extents;
@@ -65,7 +69,7 @@ public:
         bounds->mBottom= extents.y_bearing + extents.height;
     }
     void GetFontExtent(minikin::MinikinExtent* extent, const minikin::MinikinPaint& paint, const minikin::FontFakery&) const override {
-        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint.size);
+        Cairo::RefPtr<Cairo::FtScaledFont> scaledFont = getScaledFont(paint);
         Cairo::FontExtents fontExtents;
         scaledFont->get_extents(fontExtents);
         // cairo 使用正数表示所有距离，而 minikin 期望 ascent 为负数
@@ -89,16 +93,91 @@ public:
     }
     size_t GetFontSize() const override { return 0;/*sizeof filedata*/}
     int GetFontIndex() const override { return 0; }
-private:
-    Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(float size) const {
-        if (mCachedScaledFont == nullptr || mCachedFontSize != size) {
-            mCachedScaledFont = createScaledFont(size);
-            mCachedFontSize = size;
-        }
-        return mCachedScaledFont;
+    const std::string& GetFontPath() const override {
+        static const std::string empty;
+        return empty;
     }
-    Cairo::RefPtr<Cairo::FtScaledFont> createScaledFont(float size) const {
-        Cairo::Matrix font_mtx(size, 0.0, 0.0, size, 0.0, 0.0);
+    // LRU Cache key for ScaledFont: fontId + MinikinPaint hash
+    struct ScaledFontKey {
+        int fontId;
+        uint32_t paintHash;
+
+        bool operator==(const ScaledFontKey& other) const {
+            return fontId == other.fontId && paintHash == other.paintHash;
+        }
+    };
+
+    struct ScaledFontKeyHash {
+        size_t operator()(const ScaledFontKey& k) const {
+            size_t h = std::hash<int>()(k.fontId);
+            h ^= std::hash<uint32_t>()(k.paintHash) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
+
+    struct ScaledFontEntry {
+        Cairo::RefPtr<Cairo::FtScaledFont> font;
+        std::list<ScaledFontKey>::iterator lruIter;
+    };
+
+    // Global LRU cache for ScaledFonts, shared by all FullMinikinFont instances
+    // Reduced from 64 to 32 for better cache locality
+    static constexpr size_t MAX_SCALED_FONT_CACHE = 32;
+    static std::unordered_map<ScaledFontKey, ScaledFontEntry, ScaledFontKeyHash>& getGlobalScaledFontCache() {
+        static std::unordered_map<ScaledFontKey, ScaledFontEntry, ScaledFontKeyHash> cache;
+        return cache;
+    }
+    static std::list<ScaledFontKey>& getGlobalLruList() {
+        static std::list<ScaledFontKey> lru;
+        return lru;
+    }
+    // Cache statistics
+    static std::atomic<uint64_t>& getCacheHits() {
+        static std::atomic<uint64_t> hits(0);
+        return hits;
+    }
+    static std::atomic<uint64_t>& getCacheMisses() {
+        static std::atomic<uint64_t> misses(0);
+        return misses;
+    }
+
+    Cairo::RefPtr<Cairo::FtScaledFont> getScaledFont(const minikin::MinikinPaint& paint) const {
+        // 快速路径：简单情况下直接创建，跳过缓存开销
+        // 当 scaleX=1, skewX=0, 且没有字体特性设置时，直接创建
+    #if 1
+        //if (paint.scaleX == 1.0f && paint.skewX == 0.0f && paint.fontFeatureSettings.empty()) {
+            return createScaledFont(paint.size, 1.0f, 0.0f);
+        //}
+    #else
+        // 复杂情况使用缓存
+        ScaledFontKey key{mSourceId, paint.hash()};
+        auto& cache = getGlobalScaledFontCache();
+        auto& lru = getGlobalLruList();
+        auto it = cache.find(key);
+        if (it != cache.end()) {
+            getCacheHits()++;
+            if (it->second.lruIter != lru.begin()) {
+                lru.erase(it->second.lruIter);
+                lru.push_front(key);
+                it->second.lruIter = lru.begin();
+            }
+            return it->second.font;
+        }
+        getCacheMisses()++;
+        auto newFont = createScaledFont(paint.size, paint.scaleX, paint.skewX);
+        // 只有当缓存未满时才添加（减少频繁的 LRU 淘汰开销）
+        if (lru.size() < MAX_SCALED_FONT_CACHE) {
+            lru.push_front(key);
+            cache[key] = {newFont, lru.begin()};
+        }
+        return newFont;
+    #endif
+    }
+private:
+    Cairo::RefPtr<Cairo::FtScaledFont> createScaledFont(float size, float scaleX = 1.0f, float skewX = 0.0f) const {
+        // Apply scaleX and skewX to the font matrix
+        float scaledSize = size * scaleX;
+        Cairo::Matrix font_mtx(scaledSize, skewX, 0.0f, size, 0.0f, 0.0f);
         Cairo::FontOptions options;
         Cairo::Matrix ctm = Cairo::identity_matrix();
         options.set_hint_style(Cairo::FontOptions::HintStyle::MEDIUM);
@@ -106,10 +185,9 @@ private:
         return Cairo::FtScaledFont::create(mFontFace, font_mtx, ctm, options);
     }
     static int mFontId;
+    int mSourceId;
     Cairo::RefPtr<Cairo::FtFontFace> mFontFace;
     mutable hb_face_t* mHbFace = nullptr;
-    mutable Cairo::RefPtr<Cairo::FtScaledFont> mCachedScaledFont;
-    mutable float mCachedFontSize;
 };
 int FullMinikinFont::mFontId=0;
 
@@ -276,8 +354,37 @@ std::shared_ptr<minikin::MinikinFont> Typeface::getMinikinFont() const {
     return mMinikinFont;
 }
 
+std::shared_ptr<Cairo::ScaledFont> Typeface::getScaledFont(const minikin::MinikinPaint& paint,
+        const minikin::MinikinFont* minikinFont) const {
+    // 如果提供了 minikinFont，优先使用它；否则使用 mMinikinFont
+    const minikin::MinikinFont* fontToUse = minikinFont;
+    if (fontToUse == nullptr) {
+        fontToUse = mMinikinFont.get();
+    }
+
+    if (fontToUse != nullptr) {
+        // 将 MinikinFont 转换为 FullMinikinFont
+        const FullMinikinFont* fullFont = dynamic_cast<const FullMinikinFont*>(fontToUse);
+        if (fullFont != nullptr) {
+            // 使用 paint 获取 ScaledFont（会使用 LRU 缓存）
+            return fullFont->getScaledFont(paint);
+        }
+    }
+    return nullptr;
+}
+
 std::shared_ptr<minikin::FontCollection> Typeface::getFontCollection() const {
     return mFontCollection;
+}
+
+void Typeface::getScaledFontCacheStats(uint64_t& hits, uint64_t& misses) {
+    hits = FullMinikinFont::getCacheHits().load();
+    misses = FullMinikinFont::getCacheMisses().load();
+}
+
+void Typeface::resetScaledFontCacheStats() {
+    FullMinikinFont::getCacheHits().store(0);
+    FullMinikinFont::getCacheMisses().store(0);
 }
 
 Typeface* Typeface::create(Typeface*family, int style) {
@@ -443,17 +550,17 @@ static bool isSameFamily(const std::string& fm1, const std::string& fm2) {
 }
 
 std::shared_ptr<minikin::FontFamily>Typeface::buildFamily(const std::string&family,const std::vector<std::shared_ptr<Typeface>>&faces){
-    std::vector<minikin::Font> fonts;
+    std::vector<std::shared_ptr<minikin::Font>> fonts;
     for(auto f:faces){
         if(isSameFamily(family,f->getFamily())){
             auto ft = std::dynamic_pointer_cast<Cairo::FtFontFace>(f->getFontFace());
             auto minikinFont = std::make_shared<FullMinikinFont>(ft);
             auto font = minikin::Font::Builder(minikinFont).build();
-            fonts.push_back(std::move(font));
+            fonts.push_back(font);
             LOGD("    ->[%d](%s): %s",fonts.size()-1,f->getFamily().c_str(),f->mFileName.c_str());
         }
     }
-    return std::make_shared<minikin::FontFamily>(std::move(fonts));
+    return minikin::FontFamily::create(std::move(fonts));
 }
 void Typeface::buildSystemFallback() {
     std::map<std::string, std::shared_ptr<minikin::FontCollection>> familyCollections;
@@ -503,7 +610,7 @@ void Typeface::buildSystemFallback() {
                 }
             }
             
-            auto collection = std::make_shared<minikin::FontCollection>(families);
+            auto collection = minikin::FontCollection::create(std::move(families));
             familyCollections[tf->mFamily] = collection;
             tf->mFontCollection = collection;
             LOGD("[%s] -> shared FontCollection (family: %s)", 

@@ -3,11 +3,11 @@
 #include <text/textpaint.h>
 #include <core/canvas.h>
 #include <text/spannablestring.h>
+#include <text/style/metricaffectingspan.h>
 namespace cdroid{
 class Directions;
 class TabStops;
 class PrecomputedText;
-//using FontMetricsInt=Cairo::FontExtents;
 class TextLine {
 private:
     class DecorationInfo {
@@ -45,6 +45,7 @@ private:
     bool mHasTabs;
     bool mCharsValid;
     bool mIsJustifying;
+    bool mUseFallbackExtent;
     TabStops* mTabs;
     std::vector<char16_t> mChars;
     Spanned* mSpanned;
@@ -84,7 +85,7 @@ private:
             bool runIsRtl, Canvas* c, float x, int top, int y, int bottom, Paint::FontMetricsInt* fmi,
             bool needWidth, int offset, const std::vector<DecorationInfo>* decorations);
 
-    float handleReplacement(ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
+    float handleReplacement(const ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
            float x, int top, int y, int bottom,Paint::FontMetricsInt* fmi, bool needWidth);
 
     int adjustStartHyphenEdit(int start, int startHyphenEdit) {
@@ -112,7 +113,7 @@ public:
     static TextLine* obtain();
     static TextLine* recycle(TextLine* tl);
     void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,
-            bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd);
+            bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd,bool useFallbackLineSpacing);
 
     void justify(float justifyWidth);
 

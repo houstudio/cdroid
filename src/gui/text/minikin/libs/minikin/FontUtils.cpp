@@ -17,6 +17,7 @@
 #include "FontUtils.h"
 
 #include <cstdint>
+
 #include <log/log.h>
 
 namespace minikin {

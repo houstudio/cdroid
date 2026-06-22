@@ -28,6 +28,7 @@ struct MinikinRect {
     bool operator==(const MinikinRect& o) const {
         return mLeft == o.mLeft && mTop == o.mTop && mRight == o.mRight && mBottom == o.mBottom;
     }
+    bool operator!=(const MinikinRect& o) const { return !(*this == o); }
     float mLeft;
     float mTop;
     float mRight;

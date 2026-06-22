@@ -20,6 +20,7 @@
 #include <mutex>
 #include <unordered_map>
 
+#include "minikin/Buffer.h"
 #include "minikin/Macros.h"
 
 #include "Locale.h"
@@ -28,30 +29,39 @@ namespace minikin {
 
 class LocaleListCache {
 public:
-    // A special ID for the empty locale list.
-    // This value must be 0 since the empty locale list is inserted into mLocaleLists by
-    // default.
-    const static uint32_t kEmptyListId = 0;
-
     // A special ID for the invalid locale list.
     const static uint32_t kInvalidListId = (uint32_t)(-1);
 
     // Returns the locale list ID for the given string representation of LocaleList.
-    // Caller should acquire a lock before calling the method.
     static inline uint32_t getId(const std::string& locales) {
         return getInstance().getIdInternal(locales);
     }
 
-    // Caller should acquire a lock before calling the method.
+    // Returns the locale list ID for the LocaleList serialized in the buffer.
+    static inline uint32_t readFrom(BufferReader* reader) {
+        return getInstance().readFromInternal(reader);
+    }
+
+    static inline void writeTo(BufferWriter* writer, uint32_t id) {
+        return getInstance().writeToInternal(writer, id);
+    }
+
     static inline const LocaleList& getById(uint32_t id) {
         return getInstance().getByIdInternal(id);
     }
 
 private:
+    struct LocaleVectorHash {
+        size_t operator()(const std::vector<Locale>& locales) const;
+    };
+
     LocaleListCache();  // Singleton
     ~LocaleListCache() {}
 
     uint32_t getIdInternal(const std::string& locales);
+    uint32_t getIdInternal(std::vector<Locale>&& locales) EXCLUSIVE_LOCKS_REQUIRED(mMutex);
+    uint32_t readFromInternal(BufferReader* reader);
+    void writeToInternal(BufferWriter* writer, uint32_t id);
     const LocaleList& getByIdInternal(uint32_t id);
 
     // Caller should acquire a lock before calling the method.
@@ -62,8 +72,18 @@ private:
 
     std::vector<LocaleList> mLocaleLists GUARDED_BY(mMutex);
 
-    // A map from the string representation of the font locale list to the ID.
-    std::unordered_map<std::string, uint32_t> mLocaleListLookupTable GUARDED_BY(mMutex);
+    // A map from the list of locale identifier to the ID.
+    //
+    // Locale's operator==() doesn't have reflexivity for unsupported locales,
+    // but it won't cause problems because we never store unsupported locales in
+    // LocaleListCache. See parseLocaleList() in LocaleListCache.cpp.
+    std::unordered_map<std::vector<Locale>, uint32_t, LocaleVectorHash> mLocaleListLookupTable
+            GUARDED_BY(mMutex);
+
+    // A cache map from the string representation of the font locale list to the ID.
+    // This is a mere cache over mLocaleListLookupTable. Some LocaleList objects may be in
+    // mLocaleListLookupTable even if they are not in mLocaleListStringCache.
+    std::unordered_map<std::string, uint32_t> mLocaleListStringCache GUARDED_BY(mMutex);
 
     std::mutex mMutex;
 };

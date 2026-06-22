@@ -20,9 +20,14 @@
 #define MINIKIN_INTERNAL_H
 
 #include <hb.h>
-#include <utils/log.h>
+#include <utils/Log.h>
 //#include <utils/Mutex.h>
 
+#include <algorithm>
+#include <memory>
+#include <unordered_set>
+
+#include "minikin/FontVariation.h"
 #include "minikin/HbUtils.h"
 #include "minikin/MinikinFont.h"
 
@@ -74,6 +79,14 @@ public:
 private:
     HbBlobUniquePtr mBlob;
 };
+
+template <typename T>
+std::unique_ptr<T[]> sortedArrayFromSet(const std::unordered_set<T>& set) {
+    std::unique_ptr<T[]> array(new T[set.size()]);
+    std::copy(set.begin(), set.end(), array.get());
+    std::sort(array.get(), array.get() + set.size());
+    return array;
+}
 
 }  // namespace minikin
 

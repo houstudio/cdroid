@@ -54,11 +54,16 @@ void SparseBitSet::initFromRanges(const uint32_t* ranges, size_t nRanges) {
     if (maxVal >= kMaximumCapacity) {
         return;
     }
-    mMaxVal = maxVal;
-    mIndices.reset(new uint16_t[(mMaxVal + kPageMask) >> kLogValuesPerPage]);
+    uint32_t indicesCount = (maxVal + kPageMask) >> kLogValuesPerPage;
     uint32_t nPages = calcNumPages(ranges, nRanges);
-    mBitmaps.reset(new element[nPages << (kLogValuesPerPage - kLogBitsPerEl)]());
-    mZeroPageIndex = noZeroPage;
+    uint32_t bitmapsCount = nPages << (kLogValuesPerPage - kLogBitsPerEl);
+    MappableData* data = MappableData::allocate(indicesCount, bitmapsCount);
+    mData.reset(data);
+    data->mMaxVal = maxVal;
+    uint16_t* indices = data->indices();
+    element* bitmaps = data->bitmaps();
+    memset(bitmaps, 0, sizeof(uint32_t) * bitmapsCount);
+    data->mZeroPageIndex = noZeroPage;
     uint32_t nonzeroPageEnd = 0;
     uint32_t currentPage = 0;
     for (size_t i = 0; i < nRanges; i++) {
@@ -69,33 +74,55 @@ void SparseBitSet::initFromRanges(const uint32_t* ranges, size_t nRanges) {
         uint32_t endPage = (end - 1) >> kLogValuesPerPage;
         if (startPage >= nonzeroPageEnd) {
             if (startPage > nonzeroPageEnd) {
-                if (mZeroPageIndex == noZeroPage) {
-                    mZeroPageIndex = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
+                if (data->mZeroPageIndex == noZeroPage) {
+                    data->mZeroPageIndex = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
                 }
                 for (uint32_t j = nonzeroPageEnd; j < startPage; j++) {
-                    mIndices[j] = mZeroPageIndex;
+                    indices[j] = data->mZeroPageIndex;
                 }
             }
-            mIndices[startPage] = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
+            indices[startPage] = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
         }
 
         size_t index = ((currentPage - 1) << (kLogValuesPerPage - kLogBitsPerEl)) +
                        ((start & kPageMask) >> kLogBitsPerEl);
         size_t nElements = (end - (start & ~kElMask) + kElMask) >> kLogBitsPerEl;
         if (nElements == 1) {
-            mBitmaps[index] |=
+            bitmaps[index] |=
                     (kElAllOnes >> (start & kElMask)) & (kElAllOnes << ((~end + 1) & kElMask));
         } else {
-            mBitmaps[index] |= kElAllOnes >> (start & kElMask);
+            bitmaps[index] |= kElAllOnes >> (start & kElMask);
             for (size_t j = 1; j < nElements - 1; j++) {
-                mBitmaps[index + j] = kElAllOnes;
+                bitmaps[index + j] = kElAllOnes;
             }
-            mBitmaps[index + nElements - 1] |= kElAllOnes << ((~end + 1) & kElMask);
+            bitmaps[index + nElements - 1] |= kElAllOnes << ((~end + 1) & kElMask);
         }
         for (size_t j = startPage + 1; j < endPage + 1; j++) {
-            mIndices[j] = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
+            indices[j] = (currentPage++) << (kLogValuesPerPage - kLogBitsPerEl);
         }
         nonzeroPageEnd = endPage + 1;
+    }
+}
+
+void SparseBitSet::initFromBuffer(BufferReader* reader) {
+    uint32_t size = reader->read<uint32_t>();
+    if (size == 0) return;
+    mData.reset(reader->map<MappableData, alignof(MappableData)>(size));
+}
+
+void SparseBitSet::writeTo(BufferWriter* writer) const {
+    if (mData == nullptr) {
+        // Write 0 for empty SparseBitSet.
+        writer->write<uint32_t>(0);
+        return;
+    }
+    size_t size = mData->size();
+    writer->write<uint32_t>(size);
+    static_assert(alignof(MappableData) == 4);
+    MappableData* out = writer->reserve<MappableData, alignof(MappableData)>(size);
+    if (out != nullptr) {
+        memcpy(out, mData.get(), size);
+        out->mIsMapped = 1;
     }
 }
 
@@ -105,11 +132,11 @@ int SparseBitSet::CountLeadingZeros(element x) {
 }
 
 uint32_t SparseBitSet::nextSetBit(uint32_t fromIndex) const {
-    if (fromIndex >= mMaxVal) {
+    if (mData == nullptr || fromIndex >= mData->mMaxVal) {
         return kNotFound;
     }
     uint32_t fromPage = fromIndex >> kLogValuesPerPage;
-    const element* bitmap = &mBitmaps[mIndices[fromPage]];
+    const element* bitmap = mData->bitmaps() + mData->indices()[fromPage];
     uint32_t offset = (fromIndex & kPageMask) >> kLogBitsPerEl;
     element e = bitmap[offset] & (kElAllOnes >> (fromIndex & kElMask));
     if (e != 0) {
@@ -121,13 +148,13 @@ uint32_t SparseBitSet::nextSetBit(uint32_t fromIndex) const {
             return (fromIndex & ~kPageMask) + (j << kLogBitsPerEl) + CountLeadingZeros(e);
         }
     }
-    uint32_t maxPage = (mMaxVal + kPageMask) >> kLogValuesPerPage;
+    uint32_t maxPage = (mData->mMaxVal + kPageMask) >> kLogValuesPerPage;
     for (uint32_t page = fromPage + 1; page < maxPage; page++) {
-        uint16_t index = mIndices[page];
-        if (index == mZeroPageIndex) {
+        uint16_t index = mData->indices()[page];
+        if (index == mData->mZeroPageIndex) {
             continue;
         }
-        bitmap = &mBitmaps[index];
+        bitmap = mData->bitmaps() + index;
         for (uint32_t j = 0; j < (1 << (kLogValuesPerPage - kLogBitsPerEl)); j++) {
             e = bitmap[j];
             if (e != 0) {
@@ -136,6 +163,17 @@ uint32_t SparseBitSet::nextSetBit(uint32_t fromIndex) const {
         }
     }
     return kNotFound;
+}
+
+// static
+SparseBitSet::MappableData* SparseBitSet::MappableData::allocate(uint32_t indicesCount,
+                                                                 uint32_t bitmapsCount) {
+    MappableData* data = reinterpret_cast<MappableData*>(
+            malloc(MappableData::calcSize(indicesCount, bitmapsCount)));
+    data->mIndicesCount = indicesCount;
+    data->mBitmapsCount = bitmapsCount;
+    data->mIsMapped = 0;
+    return data;
 }
 
 }  // namespace minikin

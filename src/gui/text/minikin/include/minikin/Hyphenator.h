@@ -125,16 +125,16 @@ template <typename T, size_t size>
 constexpr size_t ARRAYSIZE(T const (&)[size]) {
     return size;
 }
-constexpr uint32_t HYPHEN_STR_ZWJ[] = {CHAR_ZWJ};
-constexpr uint32_t HYPHEN_STR_HYPHEN[] = {CHAR_HYPHEN};
-constexpr uint32_t HYPHEN_STR_ARMENIAN_HYPHEN[] = {CHAR_ARMENIAN_HYPHEN};
-constexpr uint32_t HYPHEN_STR_MAQAF[] = {CHAR_MAQAF};
-constexpr uint32_t HYPHEN_STR_UCAS_HYPHEN[] = {CHAR_UCAS_HYPHEN};
-constexpr uint32_t HYPHEN_STR_ZWJ_AND_HYPHEN[] = {CHAR_ZWJ, CHAR_HYPHEN};
-constexpr std::pair<const uint32_t*, size_t> EMPTY_HYPHEN_STR(nullptr, 0);
+constexpr uint16_t HYPHEN_STR_ZWJ[] = {CHAR_ZWJ};
+constexpr uint16_t HYPHEN_STR_HYPHEN[] = {CHAR_HYPHEN};
+constexpr uint16_t HYPHEN_STR_ARMENIAN_HYPHEN[] = {CHAR_ARMENIAN_HYPHEN};
+constexpr uint16_t HYPHEN_STR_MAQAF[] = {CHAR_MAQAF};
+constexpr uint16_t HYPHEN_STR_UCAS_HYPHEN[] = {CHAR_UCAS_HYPHEN};
+constexpr uint16_t HYPHEN_STR_ZWJ_AND_HYPHEN[] = {CHAR_ZWJ, CHAR_HYPHEN};
+constexpr std::pair<const uint16_t*, size_t> EMPTY_HYPHEN_STR(nullptr, 0);
 #define MAKE_HYPHEN_STR(chars) std::make_pair((chars), ARRAYSIZE(chars))
 
-inline std::pair<const uint32_t*, size_t> getHyphenString(StartHyphenEdit hyph) {
+inline std::pair<const uint16_t*, size_t> getHyphenString(StartHyphenEdit hyph) {
     if (hyph == StartHyphenEdit::INSERT_ZWJ) {
         return MAKE_HYPHEN_STR(HYPHEN_STR_ZWJ);
     } else if (hyph == StartHyphenEdit::INSERT_HYPHEN) {
@@ -144,7 +144,7 @@ inline std::pair<const uint32_t*, size_t> getHyphenString(StartHyphenEdit hyph) 
     }
 }
 
-inline std::pair<const uint32_t*, size_t> getHyphenString(EndHyphenEdit hyph) {
+inline std::pair<const uint16_t*, size_t> getHyphenString(EndHyphenEdit hyph) {
     switch (hyph) {
         case EndHyphenEdit::REPLACE_WITH_HYPHEN:  // fall through
         case EndHyphenEdit::INSERT_HYPHEN:

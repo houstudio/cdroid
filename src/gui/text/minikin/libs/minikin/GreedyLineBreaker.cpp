@@ -255,7 +255,7 @@ bool GreedyLineBreaker::tryLineBreakWithHyphenation(const Range& range, WordBrea
 
 // TODO: Respect trailing line end spaces.
 bool GreedyLineBreaker::doLineBreakWithGraphemeBounds(const Range& range) {
-    double width = mMeasuredText.widths[range.getStart()];
+    float width = mMeasuredText.widths[range.getStart()];
 
     // Starting from + 1 since at least one character needs to be assigned to a line.
     for (uint32_t i = range.getStart() + 1; i < range.getEnd(); ++i) {
@@ -333,7 +333,8 @@ void GreedyLineBreaker::process() {
         uint32_t newLocaleListId = run->getLocaleListId();
         if (localeListId != newLocaleListId) {
             Locale locale = getEffectiveLocale(newLocaleListId);
-            nextWordBoundaryOffset = wordBreaker.followingWithLocale(locale, range.getStart());
+            nextWordBoundaryOffset = wordBreaker.followingWithLocale(
+                    locale, run->lineBreakStyle(), run->lineBreakWordStyle(), range.getStart());
             mHyphenator = HyphenatorMap::lookup(locale);
             localeListId = newLocaleListId;
         }

@@ -3,9 +3,10 @@
 #include <cstdarg>
 #include <core/predicate.h>
 #include <text/character.h>
-#include <text/spannablestring.h>
+#include <text/spannablestringbuilder.h>
 #include <text/textutils.h>
 #include <unicode/uchar.h>
+#include <porting/cdlog.h>
 #include <text/measuredparagraph.h>
 namespace cdroid{
 
@@ -245,24 +246,44 @@ std::string TextUtils::unicode2utf8(const std::wstring& u32s){
 std::string TextUtils::utf16_utf8(const std::u16string&utf16){
     return utf16_utf8((const uint16_t*)utf16.c_str(),(size_t)utf16.length());
 }
+
 std::string TextUtils::utf16_utf8(const uint16_t*utf16,size_t len){
-    std::unique_ptr<char[]> out(new char[len * 2]);
+    if (utf16 == nullptr || len == 0) return "";
+    std::unique_ptr<char[]> out(new char[len * 4 + 1]);
     char* pout = out.get();
-    for(int i = 0; i < len; i++){
-        unsigned short wc = utf16[i];
+    for(size_t i = 0; i < len; ){
+        uint32_t wc = utf16[i];
         int count = 0;
-        if (wc < 0x80)         count = 1;
-        else if (wc < 0x800)   count = 2;
-        else if (wc < 0x10000) count = 3;
-        else continue;
-        
+        if (wc < 0x80) {
+            count = 1;
+        } else if (wc < 0x800) {
+            count = 2;
+        } else if (wc < 0xD800 || wc > 0xDFFF) {
+            count = 3;
+        } else if (wc >= 0xD800 && wc <= 0xDBFF && i + 1 < len) {
+            uint32_t wc2 = utf16[i + 1];
+            if (wc2 >= 0xDC00 && wc2 <= 0xDFFF) {
+                wc = ((wc - 0xD800) << 10) | (wc2 - 0xDC00) + 0x10000;
+                count = 4;
+                i++;
+            } else {
+                i++;
+                continue;
+            }
+        } else {
+            i++;
+            continue;
+        }
+
         unsigned char* s = (unsigned char*)pout;
         switch (count){
-        case 3: s[2] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0x800;
-        case 2: s[1] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0xc0;
-        case 1: s[0] = wc;
+        case 4: s[3] = 0x80 | (wc & 0x3f); wc >>= 6; s[2] = 0x80 | (wc & 0x3f); wc >>= 6; s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xf0 | wc; break;
+        case 3: s[2] = 0x80 | (wc & 0x3f); wc >>= 6; s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xe0 | wc; break;
+        case 2: s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xc0 | wc; break;
+        case 1: s[0] = wc; break;
         }
         pout += count;
+        i++;
     }
     *pout = 0;
     return std::string(out.get());
@@ -569,16 +590,18 @@ void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const S
 
 CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
         bool preserveLength, const EllipsizeCallback& callback, const TextDirectionHeuristic* textDir, const std::string& ellipsis) {
-
+    auto deleter= [](MeasuredParagraph* mt) {
+        if(mt)mt->recycle();
+    };
     const int len = text->length();
 
-    MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, mt);
+    MeasuredParagraph* mt = MeasuredParagraph::buildForMeasurement(&paint, text, 0, text->length(), textDir, nullptr);
+    std::unique_ptr<MeasuredParagraph, decltype(deleter)> autoFree(mt, deleter);
     float width = mt->getWholeWidth();
     if (width <= avail) {
         if (callback != nullptr) {
             callback(0,0);//.ellipsized(0, 0);
         }
-
         return text;
     }
     // XXX assumes ellipsis string does not require shaping and
@@ -609,55 +632,59 @@ CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float a
 
     const int removed = right - left;
     const int remaining = len - removed;
-    /*if (preserveLength) {
-        if (remaining > 0 && removed >= ellipsis.length()) {
-            ellipsis.getChars(0, ellipsis.length(), buf, left);
-            left += ellipsis.length();
+    std::u16string u16elps=utf8_utf16(ellipsis);
+    if (preserveLength) {
+        if (remaining > 0 && removed >= u16elps.length()) {
+            memcpy(buf.data()+left,u16elps.data(),u16elps.size()*sizeof(char16_t));
+            //ellipsis.getChars(0, u16elps.length(), buf, left);
+            left += u16elps.length();
         } // else skip the ellipsis
         for (int i = left; i < right; i++) {
             buf[i] = ELLIPSIS_FILLER;
         }
-        String s = new String(buf, 0, len);
         if (sp == nullptr) {
-            return new SpannedString(buf,0,len);
+            return new SpannedString(std::u16string(buf.data(),len));
         }
-        SpannableString* ss = new SpannableString(s);
-        copySpansFrom(sp, 0, len, ObjectFilter, ss, 0);
+        SpannableString* ss = new SpannableString(std::u16string(buf.data(),len));
+        copySpansFrom(sp, 0, len, make_span_filter<ParcelableSpan>(), ss, 0);
         return ss;
-    }*/
+    }
 
     if (remaining == 0) {
         return new SpannedString(u"");
     }
 
     if (sp == nullptr) {
-        /*StringBuilder sb = new StringBuilder(remaining + ellipsis.length());
-        sb.append(buf, 0, left);
-        sb.append(ellipsis);
-        sb.append(buf, right, len - right);
-        return sb.toString();*/
-        SpannableStringBuilder* sb=new SpannableStringBuilder();
-        //sb->append(buf, 0, left);
-        sb->append(ellipsis);
-        //sb->append(buf, right, len - right);
+        SpannableStringBuilder* sb = new SpannableStringBuilder();
+        for (int i = 0; i < left; i++) {
+            sb->append(buf[i]);
+        }
+        for (char16_t c : u16elps) {
+            sb->append(c);
+        }
+        for (int i = right; i < len; i++) {
+            sb->append(buf[i]);
+        }
         return sb;
     }
 
     SpannableStringBuilder* ssb = new SpannableStringBuilder();
     ssb->append(*text, 0, left);
-    ssb->append(ellipsis);
+    for (char16_t c : TextUtils::utf8_utf16(ellipsis)) {
+        ssb->append(c);
+    }
     ssb->append(*text, right, len);
     return ssb;
 }
-#if 0
-CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
+
+CharSequence* TextUtils::commaEllipsize(CharSequence* text, TextPaint& p,
      float avail, const std::string& oneMore,const std::string& more, const TextDirectionHeuristic* textDir) {
 
     MeasuredParagraph* mt = nullptr;
     MeasuredParagraph* tempMt = nullptr;
-
+#if 0
     int len = text->length();
-    mt = MeasuredParagraph::buildForMeasurement(p, text, 0, len, textDir, mt);
+    mt = MeasuredParagraph::buildForMeasurement(&p, text, 0, len, textDir, mt);
     const float width = mt->getWholeWidth();
     if (width <= avail) {
         return text;
@@ -673,9 +700,8 @@ CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
     }
 
     int remaining = commaCount + 1;
-
     int ok = 0;
-    std::string okFormat = "";
+    std::u16string okFormat = u"";
 
     int w = 0;
     int count = 0;
@@ -683,36 +709,36 @@ CharSequence* TextUtils::commaEllipsize(const CharSequence* text, TextPaint& p,
 
     for (int i = 0; i < len; i++) {
         w += widths[i];
-
         if (buf[i] == ',') {
             count++;
 
-            std::string format;
+            std::u16string format;
             // XXX should not insert spaces, should be part of string
             // XXX should use plural rules and not assume English plurals
             if (--remaining == 1) {
-                format = " " + oneMore;
+                //format = " " + oneMore;
             } else {
-                format = " " + String.format(more, remaining);
+                //format = " " + String.format(more, remaining);
             }
 
             // XXX this is probably ok, but need to look at it more
-            tempMt = MeasuredParagraph::buildForMeasurement(
-                    p, format, 0, format.length(), textDir, tempMt);
+            tempMt = MeasuredParagraph::buildForMeasurement(&p, format, 0, format.length(), textDir, tempMt);
             float moreWid = tempMt->getWholeWidth();
 
             if (w + moreWid <= avail) {
                 ok = i + 1;
-                okFormat = format;
+                //okFormat = format;
             }
         }
     }
-
-    SpannableStringBuilder out = new SpannableStringBuilder(okFormat);
-    out.insert(0, text, 0, ok);
+    SpannableStringBuilder* out = new SpannableStringBuilder(okFormat);
+    out->insert(0, text, 0, ok);
     return out;
-}
+#else
+    return text;
 #endif
+}
+
 bool TextUtils::couldAffectRtl(char16_t c) {
     return (0x0590 <= c && c <= 0x08FF) ||  // RTL scripts
             c == 0x200E ||  // Bidi format character
@@ -878,7 +904,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
         c = cs.charAt(i - 1);
 
         if (c != '"' && c != '\'' &&
-            Character.getType(c) != Character.START_PUNCTUATION) {
+            Character::getType(c) != Character::START_PUNCTUATION) {
             break;
         }
     }
@@ -912,7 +938,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
         c = cs->charAt(j - 1);
 
         if (c != '"' && c != '\'' &&
-            Character.getType(c) != Character.END_PUNCTUATION) {
+            Character::getType(c) != Character::END_PUNCTUATION) {
             break;
         }
     }
@@ -932,7 +958,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
                         return mode;
                     }
 
-                    if (!Character.isLetter(c)) {
+                    if (!Character::isLetter(c)) {
                         break;
                     }
                 }
@@ -945,7 +971,7 @@ int TextUtils::getCapsMode(const CharSequence* cs, int off, int reqModes) {
     return mode;
 }
 
-void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spanned* spanned, const SpanFilter& klass) {
+void TextUtils::removeEmptySpans(std::vector<const ParcelableSpan*>& spans,const Spanned* spanned, const SpanFilter& klass) {
     auto it = spans.begin();
     while (it != spans.end()) {
         const int start = spanned->getSpanStart(*it);
@@ -960,12 +986,17 @@ void TextUtils::removeEmptySpans(std::vector<ParcelableSpan*>& spans,const Spann
 
 bool TextUtils::hasStyleSpan(const Spanned* spanned) {
     //Preconditions.checkArgument(spanned != null);
-    /*SpanFilter[] styleClasses = {CharacterStyleFilter, ParagraphStyleFilter, UpdateAppearanceFilter};
-    for (Class<?> clazz : styleClasses) {
+    SpanFilter styleClasses[] = {
+        make_span_filter<CharacterStyle>(),
+        make_span_filter<ParagraphStyle>()
+        //make_span_filter<UpdateAppearance>()
+    };
+    for (int i=0;i<sizeof(styleClasses)/sizeof(SpanFilter);i++) {
+        auto clazz = styleClasses[i];
         if (spanned->nextSpanTransition(-1, spanned->length(), clazz) < spanned->length()) {
             return true;
         }
-    }*/
+    }
     return false;
 }
 
@@ -978,9 +1009,9 @@ const CharSequence* TextUtils::trimNoCopySpans(const CharSequence* charSequence)
 }
 
 bool TextUtils::isNewline(int codePoint) {
-    const int type =  u_charType(codePoint);//Character.getType(codePoint);
-    return type == U_PARAGRAPH_SEPARATOR || type == U_LINE_SEPARATOR
-            || codePoint == LINE_FEED_CODE_POINT;
+    const int type =  Character::getType(codePoint);
+    return type == Character::PARAGRAPH_SEPARATOR || type == Character::LINE_SEPARATOR
+                || codePoint == LINE_FEED_CODE_POINT;
 }
 
 bool TextUtils::isWhiteSpace(int codePoint) {

@@ -13,56 +13,51 @@
 #include <text/linebreaker.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
-class Directions {
+class Directions;
+class TabStops;
+class Layout {
 public:
-    std::vector<int> mDirections;
-    Directions(const std::vector<int>& dirs) {
-        mDirections = dirs;
-    }
-    int getRunCount() const{
-        return mDirections.size() / 2;
-    }
-    int getRunStart(int runIndex) const{
-        return mDirections[runIndex * 2];
-    }
-    int getRunLength(int runIndex) const{
-        return mDirections[runIndex * 2 + 1] & 0x03ffffff/*0xRUN_LENGTH_MASK*/;
-    }
-    bool isRunRtl(int runIndex) const{
-        return (mDirections[runIndex * 2 + 1] & (1<<26/*RUN_RTL_FLAG*/)) != 0;
-    }
-    bool operator==(const Directions&o)const{
-        return mDirections==o.mDirections;
-    }
-};
-class TabStops {
-    std::vector<float> mStops;
-    int mNumStops;
-    float mIncrement;
-public:
-    TabStops(float increment, const std::vector<ParcelableSpan*>& spans);
-    void reset(float increment, const std::vector<ParcelableSpan*>& spans);
-    float nextTab(float h);
-    static float nextDefaultStop(float h, float inc) {
-        return ((int) ((h + inc) / inc)) * inc;
-    }
-};
+    static constexpr int DIR_LEFT_TO_RIGHT = 1;
+    static constexpr int DIR_RIGHT_TO_LEFT = -1;
 
-class TextLayout {
-public:
+    static constexpr int DIR_REQUEST_LTR = 1;
+    static constexpr int DIR_REQUEST_RTL = -1;
+    static constexpr int DIR_REQUEST_DEFAULT_LTR = 2;
+    static constexpr int DIR_REQUEST_DEFAULT_RTL = -2;
+
+    static constexpr int RUN_LENGTH_MASK = 0x03ffffff;
+    static constexpr int RUN_LEVEL_SHIFT = 26;
+    static constexpr int RUN_LEVEL_MASK = 0x3f;
+    static constexpr int RUN_RTL_FLAG = 1 << RUN_LEVEL_SHIFT;
+
+    static constexpr float TAB_INCREMENT = 20;
+
+    static constexpr int TEXT_SELECTION_LAYOUT_RIGHT_TO_LEFT = 0;
+    static constexpr int TEXT_SELECTION_LAYOUT_LEFT_TO_RIGHT = 1;
     static constexpr int BREAK_STRATEGY_SIMPLE = LineBreaker::BREAK_STRATEGY_SIMPLE;
     static constexpr int BREAK_STRATEGY_HIGH_QUALITY = LineBreaker::BREAK_STRATEGY_HIGH_QUALITY;
     static constexpr int BREAK_STRATEGY_BALANCED = LineBreaker::BREAK_STRATEGY_BALANCED;
     static constexpr int HYPHENATION_FREQUENCY_NONE = LineBreaker::HYPHENATION_FREQUENCY_NONE;
     static constexpr int HYPHENATION_FREQUENCY_NORMAL = LineBreaker::HYPHENATION_FREQUENCY_NORMAL;
     static constexpr int HYPHENATION_FREQUENCY_FULL = LineBreaker::HYPHENATION_FREQUENCY_FULL;
+    static constexpr int HYPHENATION_FREQUENCY_NORMAL_FAST = LineBreaker::HYPHENATION_FREQUENCY_NORMAL_FAST;
+    static constexpr int HYPHENATION_FREQUENCY_FULL_FAST = LineBreaker::HYPHENATION_FREQUENCY_FULL_FAST;
 
     static constexpr int JUSTIFICATION_MODE_NONE = LineBreaker::JUSTIFICATION_MODE_NONE;
     static constexpr int JUSTIFICATION_MODE_INTER_WORD = LineBreaker::JUSTIFICATION_MODE_INTER_WORD;
+    static constexpr int JUSTIFICATION_MODE_INTER_CHARACTER=LineBreaker::JUSTIFICATION_MODE_INTER_CHARACTER;
+
     static constexpr float DEFAULT_LINESPACING_MULTIPLIER = 1.0f;
     static constexpr float DEFAULT_LINESPACING_ADDITION = 0.0f;
 
+
     using SelectionRectangleConsumer = std::function<void(float left, float top, float right, float bottom,int textSelectionLayout)>;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_NONE=TextUtils::TruncateAt::NONE;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_START=TextUtils::TruncateAt::START;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_MIDDLE=TextUtils::TruncateAt::MIDDLE;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_END=TextUtils::TruncateAt::END;
+    static constexpr TextUtils::TruncateAt ELLIPSIS_MARQUEE=TextUtils::TruncateAt::MARQUEE;
+
     enum Alignment {
         NONE=-1,
         ALIGN_NORMAL=0,
@@ -71,6 +66,8 @@ public:
         ALIGN_LEFT,
         ALIGN_RIGHT,
     };
+    static const Directions DIRS_ALL_LEFT_TO_RIGHT;
+    static const Directions DIRS_ALL_RIGHT_TO_LEFT;
 private:
     bool isJustificationRequired(int lineNum)const;
     float getJustifyWidth(int lineNum)const;
@@ -81,7 +78,7 @@ private:
     float getHorizontal(int offset, bool trailing, int line, bool clamped)const;
     std::vector<float> getLineHorizontals(int line, bool clamped, bool primary);
     float getLineExtent(int line, bool full)const;
-    float getLineExtent(int line, TabStops& tabStops, bool full)const;
+    float getLineExtent(int line, class TabStops& tabStops, bool full)const;
     int getLineVisibleEnd(int line, int start, int end)const;
     int getOffsetToLeftRightOf(int caret, bool toLeft)const;
     int getOffsetAtStartOf(int offset)const;
@@ -90,12 +87,12 @@ private:
     static float measurePara(const TextPaint* paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
     void ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method);
 protected:
-    TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
-    TextLayout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
+    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
+    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
     void setJustificationMode(int justificationMode);
     bool isSpanned() const;
 public:
-    virtual ~TextLayout();
+    virtual ~Layout();
     static float getDesiredWidth(CharSequence* source, const TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint, const TextDirectionHeuristic* textDir);
@@ -127,9 +124,23 @@ public:
     }
 
     virtual int getEllipsizedWidth() const{
-        return mWidth;
+        return mEllipsizedWidth;
     }
-
+    TextUtils::TruncateAt getEllipsize()const{
+        return mEllipsize;
+    }
+    int getMaxLines() const{
+        return mMaxLines;
+    }
+    int getBreakStrategy() const{
+        return mBreakStrategy;
+    }
+    int getHyphenationFrequency() const{
+        return mHyphenationFrequency;
+    }
+    int getJustificationMode() const{
+        return mJustificationMode;
+    }
     void increaseWidthTo(int wid);
 
     virtual int getHeight() const{
@@ -139,7 +150,7 @@ public:
     virtual int getHeight(bool cap) const{
         return getHeight();
     }
-
+    virtual RectF computeDrawingBoundingBox()const;
     Alignment getAlignment() const{
         return mAlignment;
     }
@@ -149,9 +160,17 @@ public:
     }
 
     float getSpacingAdd() const{
+        return getLineSpacingAmount();
+    }
+    float getLineSpacingAmount() const{
         return mSpacingAdd;
     }
-
+    bool isFontPaddingIncluded() const{
+        return mIncludePad;
+    }
+    bool isFallbackLineSpacingEnabled() const{
+        return mFallbackLineSpacing;
+    }
     const TextDirectionHeuristic* getTextDirectionHeuristic() const{
         return mTextDir;
     }
@@ -224,13 +243,13 @@ public:
     int getOffsetForHorizontal(int line, float horiz, bool primary) const;
 
     /*private */class HorizontalMeasurementProvider {
-        TextLayout* mLayout;
+        Layout* mLayout;
         int mLine;
         int mLineStartOffset;
         bool mPrimary;
         std::vector<float> mHorizontals;
     public:
-        HorizontalMeasurementProvider(TextLayout* layout, int line, bool primary);
+        HorizontalMeasurementProvider(Layout* layout, int line, bool primary);
         void init();
         float get(int offset);
     };
@@ -284,9 +303,9 @@ public:
     int getParagraphLeft(int line) const;
     int getParagraphRight(int line) const;
 
-    static float nextTab(CharSequence* text, int start, int end, float h, std::vector<ParcelableSpan*>& tabs);
+    static float nextTab(CharSequence* text, int start, int end, float h, std::vector<const ParcelableSpan*>& tabs);
 
-    static std::vector<ParcelableSpan*> getParagraphSpans(Spanned* text, int start, int end, const SpanFilter&type);
+    static std::vector<const ParcelableSpan*> getParagraphSpans(Spanned* text, int start, int end, const SpanFilter&type);
 
     virtual int getEllipsisStart(int line)const=0;
     virtual int getEllipsisCount(int line)const=0;
@@ -294,7 +313,7 @@ public:
     class Ellipsizer : virtual public CharSequence{//, public GetChars {
     public:
         CharSequence* mText;
-        TextLayout* mLayout;
+        Layout* mLayout;
         int mWidth;
         TextUtils::TruncateAt mMethod;
     public:
@@ -316,56 +335,84 @@ public:
     public:
         SpannedEllipsizer(Spanned* display) : Ellipsizer(display), mSpanned(display) {
         }
-        std::vector<ParcelableSpan*> getSpans(int start, int end, const SpanFilter& type) const override {
+        std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& type) const override {
             return mSpanned->getSpans(start, end, type);
         }
-        int getSpanStart(ParcelableSpan* tag) const override {
+        int getSpanStart(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanStart(tag);
         }
-        int getSpanEnd(ParcelableSpan* tag) const override {
+        int getSpanEnd(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanEnd(tag);
         }
-        int getSpanFlags(ParcelableSpan* tag) const override {
+        int getSpanFlags(const ParcelableSpan* tag) const override {
             return mSpanned->getSpanFlags(tag);
         }
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
             return mSpanned->nextSpanTransition(start, limit, type);
         }
-};
+   };
 private:
     CharSequence* mText;
     TextPaint* mPaint;
     mutable TextPaint mWorkPaint;
     int mWidth;
+    int mEllipsizedWidth;
     Alignment mAlignment = Alignment::ALIGN_NORMAL;
     float mSpacingMult;
-    float mSpacingAdd;
+    float mSpacingAdd; 
     bool mSpannedText;
+    bool mIncludePad;
+    bool mFallbackLineSpacing;
+    bool mUseBoundsForWidth;
+    bool mShiftDrawingOffsetForStartOverhang;
+    TextUtils::TruncateAt mEllipsize;
+    int mMaxLines;
+    int mBreakStrategy;
+    int mHyphenationFrequency;
+    int mJustificationMode;
+    LineBreakConfig* mLineBreakConfig;
     const TextDirectionHeuristic* mTextDir;
     cdroid::SpanSet*mLineBackgroundSpans;
-    int mJustificationMode;
 public:
-    static constexpr int DIR_LEFT_TO_RIGHT = 1;
-    static constexpr int DIR_RIGHT_TO_LEFT = -1;
-
-    static constexpr int DIR_REQUEST_LTR = 1;
-    static constexpr int DIR_REQUEST_RTL = -1;
-    static constexpr int DIR_REQUEST_DEFAULT_LTR = 2;
-    static constexpr int DIR_REQUEST_DEFAULT_RTL = -2;
-
-    static constexpr int RUN_LENGTH_MASK = 0x03ffffff;
-    static constexpr int RUN_LEVEL_SHIFT = 26;
-    static constexpr int RUN_LEVEL_MASK = 0x3f;
-    static constexpr int RUN_RTL_FLAG = 1 << RUN_LEVEL_SHIFT;
-
-    static constexpr float TAB_INCREMENT = 20;
-
-    static const Directions DIRS_ALL_LEFT_TO_RIGHT;
-    static const Directions DIRS_ALL_RIGHT_TO_LEFT;
-
-    static constexpr int TEXT_SELECTION_LAYOUT_RIGHT_TO_LEFT = 0;
-    static constexpr int TEXT_SELECTION_LAYOUT_LEFT_TO_RIGHT = 1;
 };
 
+class Directions {
+public:
+    std::vector<int> mDirections;
+    Directions(const std::vector<int>& dirs) {
+        mDirections = dirs;
+    }
+    int getRunCount() const{
+        return mDirections.size() / 2;
+    }
+    int getRunStart(int runIndex) const{
+        return mDirections[runIndex * 2];
+    }
+    int getRunLength(int runIndex) const{
+        return mDirections[runIndex * 2 + 1] & Layout::RUN_LENGTH_MASK;
+    }
+    int getRunLevel(int runIndex) const{
+        return (mDirections[runIndex * 2 + 1] >> Layout::RUN_LEVEL_SHIFT) & Layout::RUN_LEVEL_MASK;
+    }
+    bool isRunRtl(int runIndex) const{
+        return (mDirections[runIndex * 2 + 1] & Layout::RUN_RTL_FLAG) != 0;
+    }
+    bool operator==(const Directions&o)const{
+        return mDirections==o.mDirections;
+    }
+};
+
+class TabStops {
+    std::vector<float> mStops;
+    int mNumStops;
+    float mIncrement;
+public:
+    TabStops(float increment, const std::vector<const ParcelableSpan*>& spans);
+    void reset(float increment, const std::vector<const ParcelableSpan*>& spans);
+    float nextTab(float h)const;
+    static float nextDefaultStop(float h, float inc) {
+        return ((int) ((h + inc) / inc)) * inc;
+    }
+};
 }/*endof namespace*/
 #endif/*__ANDROID_TEXT_LAYOUT_H__*/

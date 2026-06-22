@@ -6,7 +6,9 @@
 #include <text/textpaint.h>
 #include <text/measuredtext.h>
 #include <text/textdirectionheuristics.h>
-
+#include <text/style/metricaffectingspan.h>
+#include <text/style/paragraphstyles.h>
+#include <text/style/characterstyles.h>
 namespace cdroid{
 class Directions;
 class MeasuredParagraph {
@@ -35,9 +37,9 @@ private:
     static MeasuredParagraph* obtain();
     void reset();
     void resetAndAnalyzeBidi(const CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
-    void applyReplacementRun(ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
+    void applyReplacementRun(const ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
     void applyStyleRun(int start, int end, MeasuredText::Builder* builder);
-    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<ParcelableSpan*>& spans,
+    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans,
             int start, int end, MeasuredText::Builder* builder);
 public:
     ~MeasuredParagraph(){

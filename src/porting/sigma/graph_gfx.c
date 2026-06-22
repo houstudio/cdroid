@@ -292,7 +292,7 @@ int32_t GFXFillRect(GFXHANDLE surface,const GFXRect*rect,uint32_t color) {
     return E_OK;
 }
 
-#define DMAFLIP 1//uncomment this line to use GFXFLIP
+#define DMAFLIP 0//uncomment this line to use GFXFLIP
 
 int32_t GFXFlip(GFXHANDLE surface) {
     FBSURFACE*surf=(FBSURFACE*)surface;
