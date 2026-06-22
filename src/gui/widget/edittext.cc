@@ -140,34 +140,6 @@ void EditText::setPattern(const std::string&pattern){
     mInputPattern=TextUtils::utf8tounicode(pattern);
 }
 
-bool EditText::match(){
-    if(mInputPattern.empty())
-       return true;
-    try{
-        std::wstring& wText = getEditable();
-        std::wregex reg(mInputPattern);
-        return std::regex_match(wText,reg);
-    }catch(std::exception &ex){
-        LOGE("Error:%s",ex.what());
-        return false;
-    }
-}
-
-void EditText::checkMatch(const std::wstring&ws){
-    if(!match()){
-        getEditable()=ws;
-    }
-    //mLayout->relayout();
-    invalidate(true);
-}
-
-void EditText::replace(size_t start,size_t len,const std::string&txt){
-    std::wstring wtxt=TextUtils::utf8tounicode(txt);
-    getEditable().replace(start,len,wtxt);
-    mCaretPos=start+wtxt.size()-len;
-    invalidate(true);
-}
-
 void EditText::setEditMode(EDITMODE mode){
     mEditMode=mode;
 }
@@ -220,7 +192,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     case KeyEvent::KEYCODE_BACKSPACE:
         if(editable->length() && (mCaretPos>0) && (mCaretPos<=editable->length()) ){
             editable->Delete(mCaretPos-1,mCaretPos);
-            changed = match();
+            //changed = match();
             if(changed){
                 setCaretPos(mCaretPos-1);
             }else{
@@ -232,7 +204,7 @@ bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     case KeyEvent::KEYCODE_DEL:
         if(mCaretPos<editable->length()){
             editable->Delete(mCaretPos,mCaretPos+1);
-            changed=match();
+            //changed=match();
             //if(!changed) editable->insert(mCaretPos,1,wc0);
             //else mLayout->relayout(true);
             ret=true; 
@@ -301,8 +273,6 @@ void EditText::setPasswordChar(int ch){
 }
 
 void EditText::onDraw(Canvas&canvas){
-    const std::wstring& wText=getEditable();
-    //mLayout->relayout();
     canvas.set_font_size(getTextSize());
     /*if(wText.empty()||(mInputType==TYPE_PASSWORD) ){
         Layout hpl(*mLayout);

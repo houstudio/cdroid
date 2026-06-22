@@ -1267,11 +1267,6 @@ std::string TextView::getHint()const{
     return mHint->toString();
 }
 
-std::wstring& TextView::getEditable(){
-    static std::wstring ss;
-    return ss;//mLayout->getText();
-}
-
 bool TextView::getDefaultEditable()const{
     return false;
 }

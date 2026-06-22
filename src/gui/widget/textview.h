@@ -210,7 +210,6 @@ protected:
     CharSequence*mTransformed;
     ChangeWatcher* mChangeWatcher;
     BufferType mBufferType = BufferType::NORMAL;
-    std::wstring& getEditable();
     void setEditable(bool b);
     virtual bool getDefaultEditable()const;
     int getFontSize()const;

@@ -7,7 +7,6 @@ namespace cdroid{
 class EditText:public TextView{
 private:
     void initEditText();
-    void checkMatch(const std::wstring&w);
 public:
     DECLARE_UIEVENT(void,AfterTextChanged,EditText&);
 protected:
@@ -16,7 +15,6 @@ protected:
     int mInputType;
     std::wstring mInputPattern;
     AfterTextChanged afterChanged;
-    bool match();
     void blinkCaret();
     void onDetachedFromWindow()override;
     virtual void onDrawCaret(Canvas&canvas,const Rect&r);
@@ -38,7 +36,6 @@ public:
     EditText(Context*ctx,const AttributeSet&attrs);
     void setText(const std::string&txt)override;
     void setLabelColor(int color);
-    void replace(size_t start,size_t len,const std::string&txt);
     void setPattern(const std::string&pattern);
     void setHint(const std::string&txt)override;
     int getPasswordChar()const;
