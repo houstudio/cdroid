@@ -1559,7 +1559,9 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
     auto ret =margin + std::abs(tl->metrics(nullptr));
     TextLine::recycle(tl);
     mt->recycle();
-    delete directions;
+    if( (directions!=&DIRS_ALL_LEFT_TO_RIGHT) && (directions!=&DIRS_ALL_RIGHT_TO_LEFT) ){
+        delete directions;
+    }
     return ret;
 }
 
