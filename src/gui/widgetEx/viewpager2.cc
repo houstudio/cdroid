@@ -75,6 +75,7 @@ ViewPager2::~ViewPager2(){
     delete mScrollEventAdapter;
     delete mFakeDragger;
     delete mPagerSnapHelper;
+    delete mAccessibilityProvider;
     //delete mPageChangeEventDispatcher;
     //delete mExternalPageChangeCallbacks;
     delete mPageTransformerAdapter;
