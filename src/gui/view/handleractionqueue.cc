@@ -68,6 +68,7 @@ void HandlerActionQueue::executeActions(UIEventSource& handler) {
     for (size_t i = 0, count = mActions.size(); i < count; i++) {
         HandlerAction* handlerAction = mActions[i];
         handler.postDelayed(handlerAction->action, handlerAction->delay);
+        delete handlerAction;
     }
     mActions.clear();
 }
