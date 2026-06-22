@@ -246,24 +246,44 @@ std::string TextUtils::unicode2utf8(const std::wstring& u32s){
 std::string TextUtils::utf16_utf8(const std::u16string&utf16){
     return utf16_utf8((const uint16_t*)utf16.c_str(),(size_t)utf16.length());
 }
+
 std::string TextUtils::utf16_utf8(const uint16_t*utf16,size_t len){
-    std::unique_ptr<char[]> out(new char[len * 2]);
+    if (utf16 == nullptr || len == 0) return "";
+    std::unique_ptr<char[]> out(new char[len * 4 + 1]);
     char* pout = out.get();
-    for(int i = 0; i < len; i++){
-        unsigned short wc = utf16[i];
+    for(size_t i = 0; i < len; ){
+        uint32_t wc = utf16[i];
         int count = 0;
-        if (wc < 0x80)         count = 1;
-        else if (wc < 0x800)   count = 2;
-        else if (wc < 0x10000) count = 3;
-        else continue;
-        
+        if (wc < 0x80) {
+            count = 1;
+        } else if (wc < 0x800) {
+            count = 2;
+        } else if (wc < 0xD800 || wc > 0xDFFF) {
+            count = 3;
+        } else if (wc >= 0xD800 && wc <= 0xDBFF && i + 1 < len) {
+            uint32_t wc2 = utf16[i + 1];
+            if (wc2 >= 0xDC00 && wc2 <= 0xDFFF) {
+                wc = ((wc - 0xD800) << 10) | (wc2 - 0xDC00) + 0x10000;
+                count = 4;
+                i++;
+            } else {
+                i++;
+                continue;
+            }
+        } else {
+            i++;
+            continue;
+        }
+
         unsigned char* s = (unsigned char*)pout;
         switch (count){
-        case 3: s[2] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0x800;
-        case 2: s[1] = 0x80 | (wc & 0x3f); wc = wc >> 6; wc |= 0xc0;
-        case 1: s[0] = wc;
+        case 4: s[3] = 0x80 | (wc & 0x3f); wc >>= 6; s[2] = 0x80 | (wc & 0x3f); wc >>= 6; s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xf0 | wc; break;
+        case 3: s[2] = 0x80 | (wc & 0x3f); wc >>= 6; s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xe0 | wc; break;
+        case 2: s[1] = 0x80 | (wc & 0x3f); wc >>= 6; s[0] = 0xc0 | wc; break;
+        case 1: s[0] = wc; break;
         }
         pout += count;
+        i++;
     }
     *pout = 0;
     return std::string(out.get());
