@@ -3859,7 +3859,7 @@ void TextView::startMarquee(){
             invalidate();
         }
 
-        if (mMarquee == nullptr) mMarquee = new Marquee(this,mLayout);
+        if (mMarquee == nullptr) mMarquee = new Marquee(this);
         mMarquee->start(mMarqueeRepeatLimit);
     }
 }
@@ -4322,12 +4322,11 @@ void TextView::Marquee::resetScroll() {
     if (mView ) mView->invalidate();
 }
 
-TextView::Marquee::Marquee(TextView* v,Layout*lt) {
+TextView::Marquee::Marquee(TextView* v) {
     const float density = v->getContext()->getDisplayMetrics().density;
     mStatus = MARQUEE_STOPPED;
     mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
     mView = v;
-    mLayout=lt;
     mChoreographer=&Choreographer::getInstance();
     mTickCallback = [this](int64_t) {tick();};
     mStartCallback= [this](int64_t) {
@@ -4384,12 +4383,12 @@ void TextView::Marquee::start(int repeatLimit) {
         return;
     }
     mRepeatLimit = repeatLimit;
-    if (mView && mLayout ) {
+    if ((mView!=nullptr) && (mView->mLayout!=nullptr) ) {
         mStatus = MARQUEE_STARTING;
         mScroll = 0.0f;
         const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
                 - mView->getCompoundPaddingRight();
-        const float lineWidth = mLayout->getLineWidth(0);
+        const float lineWidth = mView->mLayout->getLineWidth(0);
         const float gap = textWidth / 3.0f;
         mGhostStart = lineWidth - textWidth + gap;
         mMaxScroll = mGhostStart + textWidth;

@@ -506,7 +506,6 @@ private:
     static constexpr  int MARQUEE_RUNNING = 0x2;
     friend TextView;
     TextView* mView;
-    Layout*mLayout;
     Choreographer*mChoreographer;
     int mStatus ;//= MARQUEE_STOPPED;
     float mPixelsPerMs;
@@ -526,7 +525,7 @@ private:
 private:
     void resetScroll();
 public:
-    Marquee(TextView* v,Layout*lt);
+    Marquee(TextView* v);
     ~Marquee();
     void tick();
     void stop();
