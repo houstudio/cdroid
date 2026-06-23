@@ -19,10 +19,12 @@
 #define __BADGE_DRAWABLE_H__
 #include <core/parcel.h>
 #include <core/parcelable.h>
+#include <text/textpaint.h>
 #include <drawable/gradientdrawable.h>
 #include <drawable/badgestate.h>
 namespace cdroid{
 class View;
+class TextPaint;
 class Layout;
 class FrameLayout;
 class BadgeDrawable:public Drawable{// implements TextDrawableDelegate {
@@ -52,7 +54,7 @@ private:
 
     int mMaxBadgeNumber;
     
-    Layout*mTextLayout;
+    TextPaint mTextPaint;
     BadgeState* mState;
     View* mAnchorView;
     FrameLayout* mCustomBadgeParent;
