@@ -48,9 +48,9 @@ int main(int argc,const char*argv[]){
     LOGI("Indeterminate drawable=%p",d);
     w->addView(pb3);
     pb3->setOnClickListener([&pb3](View&v){
-            static int cc=0;
-            if(cc++%2==0)pb3->setIndeterminate(cc%2==0);
-        });
+         static int cc=0;
+         pb3->setIndeterminate(cc++%2);
+    });
     pb3->setId(104);
     pb3->layout(680,60,72,72);
     pb3->setIndeterminate(true);

@@ -845,7 +845,12 @@ void ProgressBar::startAnimation() {
 
 void ProgressBar::stopAnimation() {
     mHasAnimation = false;
-    if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
+    auto animatable = dynamic_cast<Animatable*>(mIndeterminateDrawable);
+    if(animatable!=nullptr){
+        animatable->stop();
+        mShouldStartAnimationDrawable = false;
+    }
+    /*if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
         ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
         mShouldStartAnimationDrawable = false;
     }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
@@ -857,7 +862,7 @@ void ProgressBar::stopAnimation() {
     }else if(dynamic_cast<AnimatedVectorDrawable*>(mIndeterminateDrawable)){
         ((AnimatedVectorDrawable*)mIndeterminateDrawable)->stop();
         mShouldStartAnimationDrawable = false;
-    }
+    }*/
 
     postInvalidate();
 }
