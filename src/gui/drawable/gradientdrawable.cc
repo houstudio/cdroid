@@ -1268,7 +1268,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         // Since 0.5f is default value, try to take the one that isn't 0.5f
         st->mPositions[1] = st->mCenterX != 0.5f ? st->mCenterX : st->mCenterY;
         st->mPositions[2] = 1.f;
-    } else {
+    } else if(atts.hasAttribute("startColor")||atts.hasAttribute("endColor")){
         st->mPositions.resize(2);
         st->mGradientColors.resize(2);
         st->mGradientColors[0] = startColor;
