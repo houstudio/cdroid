@@ -418,13 +418,6 @@ void AnimatedStateListDrawable::AnimatableTransition::start() {
     if(animator!=nullptr){
         animator->start();
     }
-    /*if(dynamic_cast<AnimatedRotateDrawable*>(mDrawable)){
-        AnimatedRotateDrawable*ard=(AnimatedRotateDrawable*)mDrawable;
-        ard->start();
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mDrawable)){
-        AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
-        aid->start();
-    }*/
 }
 
 void AnimatedStateListDrawable::AnimatableTransition::stop() {
@@ -432,13 +425,6 @@ void AnimatedStateListDrawable::AnimatableTransition::stop() {
     if(animator!=nullptr){
         animator->stop();
     }
-    /*if(dynamic_cast<AnimatedRotateDrawable*>(mDrawable)){
-        AnimatedRotateDrawable*ard=(AnimatedRotateDrawable*)mDrawable;
-        ard->stop();
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mDrawable)){
-        AnimatedImageDrawable*aid=(AnimatedImageDrawable*)mDrawable;
-        aid->stop();
-    }*/
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -850,20 +850,6 @@ void ProgressBar::stopAnimation() {
         animatable->stop();
         mShouldStartAnimationDrawable = false;
     }
-    /*if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
-        ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedImageDrawable*)mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedImageDrawable*) mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedVectorDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedVectorDrawable*)mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }*/
-
     postInvalidate();
 }
 
@@ -892,19 +878,11 @@ void ProgressBar::drawTrack(Canvas&canvas){
     }
     d->draw(canvas);
     canvas.restore();
-
-    if (mShouldStartAnimationDrawable && dynamic_cast<Animatable*>(d)){
-        if(dynamic_cast<AnimatedRotateDrawable*>(d)) 
-            ((AnimatedRotateDrawable*) d)->start();
-        else if(dynamic_cast<AnimatedImageDrawable*>(d))
-            ((AnimatedImageDrawable*)d)->start();
-        else if(dynamic_cast<AnimationDrawable*>(d))
-            ((AnimationDrawable*) d)->start();
-        else if(dynamic_cast<AnimatedVectorDrawable*>(d))
-            ((AnimatedVectorDrawable*)d)->start();
+    auto animatable = dynamic_cast<Animatable*>(d);
+    if(mShouldStartAnimationDrawable && (animatable!=nullptr)){
+        animatable->start();
         mShouldStartAnimationDrawable = false;
     }
-    
 }
 
 void ProgressBar::onVisibilityAggregated(bool isVisible){
