@@ -37,6 +37,11 @@ ToggleButton::ToggleButton(int w,int h):CompoundButton(std::string(),w,h){
     mDisabledAlpha=0.5f;
 }
 
+void ToggleButton::setChecked(bool checked){
+    CompoundButton::setChecked(checked);
+    syncTextState();
+}
+
 const std::string ToggleButton::getTextOn()const{
     return mTextOn;
 }
@@ -57,12 +62,6 @@ void ToggleButton::setTextOff(const std::string& textOff){
 
 float ToggleButton::getDisabledAlpha() const{
     return mDisabledAlpha;
-}
-
-void ToggleButton::doSetChecked(bool checked) {
-    CompoundButton::doSetChecked(checked);
-    LOGV("%p :%d checked=%d",this,getId(),checked);	
-    syncTextState();
 }
 
 void ToggleButton::syncTextState(){

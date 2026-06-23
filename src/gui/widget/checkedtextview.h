@@ -38,11 +38,11 @@ protected:
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
     ~CheckedTextView()override;
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
-    void toggle();
-    bool isChecked()const;
-    void setChecked(bool checked);
-#endif
+
+    void toggle()override;
+    bool isChecked()const override;
+    void setChecked(bool checked)override;
+
     Drawable* getCheckMarkDrawable()const;
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);

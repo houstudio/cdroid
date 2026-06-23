@@ -647,8 +647,12 @@ std::string Switch::getButtonStateDescription(){
     }
 }
 
-void Switch::doSetChecked(bool checked){
-    CompoundButton::doSetChecked(checked);
+void Switch::toggle(){
+    setChecked(!isChecked());
+}
+
+void Switch::setChecked(bool checked){
+    CompoundButton::setChecked(checked);
 
     // Calling the super method may result in setChecked() getting called
     // recursively with a different value, so load the REAL value...

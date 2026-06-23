@@ -98,7 +98,6 @@ private:
     int getThumbOffset();
     int getThumbScrollRange();
 protected:
-    void doSetChecked(bool checked)override;
     void onDetachedFromWindow()override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas&)override;
@@ -148,6 +147,8 @@ public:
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool onTouchEvent(MotionEvent& ev)override;
     std::string getButtonStateDescription()override;
+    void toggle()override;
+    void setChecked(bool checked)override;
     void draw(Canvas&)override;
 
     int getCompoundPaddingLeft()const override;
