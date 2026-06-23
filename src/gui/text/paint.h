@@ -55,10 +55,16 @@ public:
         FILL = 2,
         STROKE_AND_FILL = 3
     };
+    enum Align {
+        LEFT=0,
+        CENTER=1,
+        RIGHT=2
+    };
 private:
     Typeface*mTypeface;
     std::shared_ptr<minikin::MinikinPaint>mMinikinPaint;
     int mColor;
+    int mAlpha;
     int mTextAlign;
     int mStartHyphenEdit;
     int mEndHyphenEdit;
@@ -93,6 +99,8 @@ public:
     void setFakeBoldText(bool v){mFakeBoldText=v;}
     int getColor()const{return mColor;}
     void setColor(int v){mColor=v;}
+    int getAlpha()const{return mAlpha;}
+    void setAlpha(int v){mAlpha=v;}
     float getStrokeWidth()const{return mStrokeWidth;}
     void setStrokeWidth(float v){mStrokeWidth=v;}
     void setTextSize(float v);

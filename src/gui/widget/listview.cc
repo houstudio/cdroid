@@ -1433,8 +1433,9 @@ void ListView::setupChild(View* child, int position, int y, bool flowDown, int c
 
     if ((mChoiceMode != CHOICE_MODE_NONE) && (mCheckStates!=nullptr)) {
         const bool checked = mCheckStates->get(position,false);
-        if (dynamic_cast<Checkable*>(child)) {
-            ((Checkable*)child)->setChecked(checked);
+        Checkable* checkable = dynamic_cast<Checkable*>(child);
+        if (checkable) {
+            checkable->setChecked(checked);
         } else {
             child->setActivated(checked);
         }

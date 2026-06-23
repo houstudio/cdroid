@@ -18,7 +18,7 @@
 #include <widget/compoundbutton.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 DECLARE_WIDGET(CompoundButton)
