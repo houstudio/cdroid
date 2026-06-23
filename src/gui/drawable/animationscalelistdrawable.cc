@@ -96,7 +96,11 @@ void AnimationScaleListDrawable::clearMutated(){
 
 void AnimationScaleListDrawable::start(){
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        animatable->start();
+    }
+    /*if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
         ((Animatable*) dr)->start();
         if(dynamic_cast<AnimatedImageDrawable*>(dr))
             ((AnimatedImageDrawable*)dr)->start();
@@ -106,12 +110,16 @@ void AnimationScaleListDrawable::start(){
             ((AnimationDrawable*)dr)->start();
         else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
             ((AnimatedVectorDrawable*)dr)->start();
-    }
+    }*/
 }
 
 void AnimationScaleListDrawable::stop(){
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        animatable->stop();
+    }
+    /*if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
         if(dynamic_cast<AnimationDrawable*>(dr))
             ((AnimationDrawable*)dr)->stop();
         else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
@@ -120,13 +128,17 @@ void AnimationScaleListDrawable::stop(){
             ((AnimatedImageDrawable*)dr)->stop();
         else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
             ((AnimatedVectorDrawable*)dr)->stop();
-    }
+    }*/
 }
 
 bool AnimationScaleListDrawable::isRunning(){
     bool result = false;
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        result = animatable->isRunning();
+    }
+    /*if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
         if(dynamic_cast<AnimationDrawable*>(dr))
             result = ((AnimationDrawable*)dr)->isRunning();
         else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
@@ -135,7 +147,7 @@ bool AnimationScaleListDrawable::isRunning(){
             result = ((AnimatedImageDrawable*)dr)->isRunning();
         else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
             result = ((AnimatedVectorDrawable*)dr)->isRunning();
-    }
+    }*/
     return result;
 }
 

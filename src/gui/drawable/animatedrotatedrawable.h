@@ -26,10 +26,10 @@ private:
     class AnimatedRotateState:public DrawableWrapperState{
     public:
         std::vector<int> mThemeAttrs;
-        bool mPivotXRel;
         float mPivotX;
-        bool mPivotYRel;
         float mPivotY;
+        bool mPivotXRel;
+        bool mPivotYRel;
         int mFrameDuration;
         int mFramesCount;
         AnimatedRotateState();
