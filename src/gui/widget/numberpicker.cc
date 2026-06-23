@@ -1346,6 +1346,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         if(mTextSize != mTextSize2){
             font_size = MathUtils::lerp(float(mTextSize),float(mTextSize2),fraction);
             canvas.set_font_size(font_size);
+            mSelectorWheelPaint.setTextSize(font_size);
         }
 
         const int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
@@ -1400,7 +1401,7 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                     mItemBackground->draw(canvas);
                 }
-                canvas.draw_text(recText,scrollSelectorValue,textGravity);
+                drawText(scrollSelectorValue,recText,textGravity,canvas);
             }
         }
         if (isHorizontalMode()) {
@@ -1474,29 +1475,40 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     }
 }
 
-void NumberPicker::drawText(const std::string& text, float x, float y,Canvas& canvas) {
-    /*if (text.contains("\n")) {
-        std::string[] lines = text.split("\n");
-        float height = Math.abs(paint.descent() + paint.ascent())
-                * mLineSpacingMultiplier;
-        float diff = (lines.length - 1) * height / 2;
-        y -= diff;
-        for (String line : lines) {
-            canvas.drawText(line, x, y, paint);
-            y += height;
-        }
-    } else */{
-        canvas.move_to(x,y);
-        canvas.show_text(text);
+void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Canvas& canvas) {
+    std::u16string u16s=TextUtils::utf8_utf16(text);
+    auto fm=mSelectorWheelPaint.getFontMetricsInt();
+    auto textHeight = (fm.bottom-fm.top);
+    auto textWidth = mSelectorWheelPaint.measureText(text,0,text.length());
+    int x,y;
+    switch(gravity&Gravity::HORIZONTAL_GRAVITY_MASK){
+    case Gravity::LEFT: x = r.left; break;
+    case Gravity::CENTER_HORIZONTAL:
+        x = r.left + (r.width - textWidth)/2;
+        break;
+    case Gravity::RIGHT:
+        x = r.left + r.width-textWidth;
+        break;
     }
+    switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
+    case Gravity::TOP: y = r.top; break;
+    case Gravity::CENTER_VERTICAL:
+        y = r.top + (r.height - textHeight)/2;
+        break;
+    case Gravity::BOTTOM:
+        y = r.top + r.height - textHeight;
+        break;
+    }
+    y-=fm.ascent;
+    mSelectorWheelPaint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
 }
 
 int NumberPicker::makeMeasureSpec(int measureSpec, int maxSize){
     if (maxSize == SIZE_UNSPECIFIED) {
         return measureSpec;
     }
-    int size = MeasureSpec::getSize(measureSpec);
-    int mode = MeasureSpec::getMode(measureSpec);
+    const int size = MeasureSpec::getSize(measureSpec);
+    const int mode = MeasureSpec::getMode(measureSpec);
     switch (mode) {
     case MeasureSpec::EXACTLY:     return measureSpec;
     case MeasureSpec::AT_MOST:     return MeasureSpec::makeMeasureSpec(std::min(size, maxSize), MeasureSpec::EXACTLY);

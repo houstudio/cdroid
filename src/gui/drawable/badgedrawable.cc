@@ -765,13 +765,14 @@ float BadgeDrawable::getRightCutoff(float ancestorWidth, float totalAnchorXOffse
 void BadgeDrawable::drawBadgeContent(Canvas& canvas) {
     const std::string badgeContent = getBadgeContent();
     std::u16string u16s=TextUtils::utf8_utf16(badgeContent);
+    const auto fm = mTextPaint.getFontMetricsInt();
     const auto badgeTextWidth = mTextPaint.measureText(badgeContent);
-    const auto badgeTextHeight= mTextPaint.getFontMetricsInt().bottom-mTextPaint.getFontMetricsInt().top;
+    const auto badgeTextHeight= fm.bottom - fm.top;
     canvas.set_color(mState->getBadgeTextColor());
     mTextPaint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,u16s.length(),
-            mBadgeCenterX-badgeTextWidth/2.f,
-            (float)mBadgeBounds.top+(mBadgeBounds.height-badgeTextHeight)/2.f,false);
-            //mBadgeCenterY+badgeTextHeight/2.f,false);//mBadgeBounds.height/2,false);
+            mBadgeCenterX - badgeTextWidth/2.f,
+            (float)mBadgeBounds.top + (mBadgeBounds.height-badgeTextHeight)/2.f - fm.ascent,
+            getLayoutDirection()==LayoutDirection::RTL);
 }
 
 bool BadgeDrawable::hasBadgeContent() const{

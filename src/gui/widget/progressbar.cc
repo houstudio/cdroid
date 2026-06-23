@@ -923,7 +923,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     int top = 0;
     int left = 0;
 
-    LOGV("mIndeterminateDrawable=%p,mOnlyIndeterminate=%d",mIndeterminateDrawable,mOnlyIndeterminate);
+    LOGD_IF((w*h==0)&&(w+h),"%p:%d size(%d,%d) Padding(%d,%d,%d,%d) error check yout drawable and theme",this,mID,w,h,mPaddingLeft,mPaddingRight,mPaddingTop,mPaddingBottom);
     if (mIndeterminateDrawable) {
         // Aspect ratio logic does not apply to AnimationDrawables
         if (mOnlyIndeterminate && !(dynamic_cast<AnimationDrawable*>(mIndeterminateDrawable))) {
@@ -946,24 +946,21 @@ void ProgressBar::updateDrawableBounds(int w,int h){
                     bottom = top + height;
                 }
             }
-            LOGD_IF(intrinsicWidth*intrinsicHeight==0,"intrinsicsize=%dx%d",intrinsicWidth,intrinsicHeight);
         }
         if (isLayoutRtl() && mMirrorForRtl) {
             int tempLeft = left;
             left = w - right;
             right = w - tempLeft;
         }
-        LOGV("%p setBounds(%d,%d-%d,%d) wh=%dx%d",this,left, top, right, bottom,w,h);
-        mIndeterminateDrawable->setBounds(left, top, right-left, bottom-top);
+        mIndeterminateDrawable->setBounds(left, top, w, h);//right-left, bottom-top);
     }
 
     if (mProgressDrawable != nullptr) {
-        mProgressDrawable->setBounds(0, 0, right, bottom);
+        mProgressDrawable->setBounds(0, 0, w, h);//right, bottom);
     }
 }
 
 void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
-    LOGV("%p:%d sizechanged->(%d,%d)",this,mID,w,h);
     updateDrawableBounds(w,h);
 }
 

@@ -148,7 +148,7 @@ private:
     bool isHorizontalMode()const;
     void drawHorizontalDividers(Canvas& canvas);
     void drawVerticalDividers(Canvas& canvas);
-    void drawText(const std::string& text, float x, float y,Canvas& canvas);
+    void drawText(const std::string& text,const Rect&,int gravity,Canvas& canvas);
     int makeMeasureSpec(int measureSpec, int maxSize);
     int resolveSizeAndStateRespectingMinSize(int minSize, int measuredSize, int measureSpec);
     void initializeSelectorWheelIndices();
