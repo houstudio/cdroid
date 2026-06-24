@@ -48,7 +48,6 @@
     <color name="button_material_light">#ffd6d7d7</color>
     <color name="error_color_material">#F4511E</color>
 
-    <color name="colorAccent">#ff112233</color>
     <color name="ratingbar_background_material">#ff112233</color>
     <color name="switch_thumb_normal_material_dark">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>

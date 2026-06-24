@@ -274,26 +274,67 @@ int Assets::addResource(const std::string&path,const std::string&name) {
     });
     if(name.compare("cdroid")==0)
         setTheme("cdroid:style/Theme.Material");
-    for(auto& c:pending.colors){
-        auto it = mColors.find(c.second);
-        LOGD_IF(it==mColors.end(),"%s-->%s [X]",c.first.c_str(),c.second.c_str());
-        if( it != mColors.end() ){
-            mColors.insert({c.first,it->second});
+
+    while (!pending.colors.empty()) {
+        bool resolved = false;
+        for (auto it = pending.colors.begin(); it != pending.colors.end(); ) {
+            auto found = mColors.find(it->second);
+            if (found != mColors.end()) {
+                mColors.insert({it->first, found->second});
+                it = pending.colors.erase(it);
+                resolved = true;
+            } else {
+                ++it;
+            }
         }
+        if (!resolved) break;
     }
-    for(auto& d:pending.dimens){
-        auto it = mDimensions.find(d.second);
-        LOGD_IF(it==mDimensions.end(),"dimen %s losting refto %s",d.first.c_str(),d.second.c_str());
-        if(it != mDimensions.end()){
-            mDimensions.insert({d.first,it->second});
+
+    while (!pending.dimens.empty()) {
+        bool resolved = false;
+        for (auto it = pending.dimens.begin(); it != pending.dimens.end(); ) {
+            auto found = mDimensions.find(it->second);
+            if (found != mDimensions.end()) {
+                mDimensions.insert({it->first, found->second});
+                it = pending.dimens.erase(it);
+                resolved = true;
+            } else {
+                ++it;
+            }
         }
+        if (!resolved) break;
     }
-    for(auto& cs:pending.colorStateList){
-        auto cls = std::make_shared<ColorStateList>();
-        for(auto& attr:cs.second){
-            cls->addStateColor(this,attr);
+
+    for (auto& c : pending.colors) {
+        LOGD("color %s-->%s unresolved", c.first.c_str(), c.second.c_str());
+    }
+    for (auto& d : pending.dimens) {
+        LOGD("dimen %s-->%s unresolved", d.first.c_str(), d.second.c_str());
+    }
+    while (!pending.colorStateList.empty()) {
+        bool resolved = false;
+        for (auto it = pending.colorStateList.begin(); it != pending.colorStateList.end(); ) {
+            bool allSuccess = true;
+            auto cls = std::make_shared<ColorStateList>();
+            for (auto& attr : it->second) {
+                if (cls->addStateColor(this, attr) < 0) {
+                    allSuccess = false;
+                    LOGD("%s tobe done",it->first.c_str());
+                    break;
+                }
+            }
+            if (allSuccess) {
+                mStateColors.insert({it->first, cls});
+                it = pending.colorStateList.erase(it);
+                resolved = true;
+            } else {
+                ++it;
+            }
         }
-        mStateColors.insert({cs.first,cls});
+        if (!resolved) break;
+    }
+    for(auto c:pending.colorStateList){
+        LOGD("colorStateList %s unresolved", c.first.c_str());
     }
     const size_t preloadCount = mColors.size()+mDimensions.size()+mStateColors.size()+mArraies.size()+mStyles.size()+mStrings.size();
     LOGI("[%s] load %d assets from %d files [%d id,%d colors,%d stateColors, %d array,%d style,%d string,%d dimens] mTheme.size=%d used %dms",
