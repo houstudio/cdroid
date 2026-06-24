@@ -38,7 +38,7 @@ private:
 private:
     void inflate(XmlPullParser& parser,const AttributeSet&atts);
     void onColorsChanged();
-    int modulateColorAlpha(int baseColor, float alphaMod)const;
+    static int modulateColorAlpha(int baseColor, float alphaMod);
 public:
     ColorStateList();
     ColorStateList(int color);

@@ -41,7 +41,8 @@ ColorStateList::ColorStateList(int color)
 int ColorStateList::addStateColor(cdroid::Context*ctx,const AttributeSet&atts){
     std::vector<int>states;
     const float alpha = atts.getFloat("alpha",1.f);
-    int baseColor = atts.getColor("color",0);
+    auto cls = atts.getColorStateList("color");
+    auto baseColor = atts.getColor("color");//cls->getDefaultColor();//cls?cls->getDefaultColor():atts.getColor("color");
     StateSet::parseState(states,atts);
     baseColor = modulateColorAlpha(baseColor,alpha);
     return addStateColor(states,baseColor);
@@ -91,13 +92,12 @@ int ColorStateList::addStateColor(const std::vector<int>&stateSet,int color){
     return mColors.size()-1;
 }
 
-int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod)const{
+int ColorStateList::modulateColorAlpha(int baseColor, float alphaMod){
     if (alphaMod == 1.0f)  return baseColor;
 
     const int baseAlpha = Color::alpha(baseColor);
     const int alpha = (int)(baseAlpha * alphaMod + 0.5f)&0xFF;
-    //MathUtils::constrain((int) (baseAlpha * alphaMod + 0.5f), 0, 255);
-    return (baseColor & 0xFFFFFF) | ((unsigned int)alpha << 24);    
+    return (baseColor & 0xFFFFFF) | ((uint32_t)alpha << 24);
 }
 
 cdroid::RefPtr<ColorStateList>ColorStateList::withAlpha(int alpha)const{
@@ -127,7 +127,6 @@ void ColorStateList::inflate(XmlPullParser& parser,const AttributeSet&attrs){
         // Parse all unrecognized attributes as state specifiers.
         const int baseColor = attrs.getColor("color",Color::MAGENTA);
         const float alphaMod = attrs.getFloat("alpha",1.f);
-    
         std::vector<int>stateSpec;
         StateSet::parseState(stateSpec,attrs);
 
@@ -275,9 +274,13 @@ cdroid::RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::str
             continue;
         }
         std::vector<int>states;
-        const int color = atts.getColor("color");
+        const int baseColor = atts.getColor("color");
+        const float alphaMod = atts.getFloat("alpha", 1.0f);
+        const bool hasAlpha =atts.hasAttribute("alpha");
+        //const float lStar = atts.getFloat("lStar", -1.0f);
+        const int color = modulateColorAlpha(baseColor, alphaMod);
         StateSet::parseState(states,atts);
-        if(colorStateList==nullptr)
+        if(colorStateList == nullptr)
             colorStateList = std::make_shared<ColorStateList>();
         colorStateList->addStateColor(states,color);
     }

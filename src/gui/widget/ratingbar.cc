@@ -94,8 +94,8 @@ float RatingBar::getRating()const{
 void RatingBar::setStepSize(float stepSize){
     if (stepSize <= 0) return;
 
-    float newMax = mNumStars / stepSize;
-    int newProgress = (int) (newMax / getMax() * getProgress());
+    const float newMax = mNumStars / stepSize;
+    const int newProgress = (int) (newMax / getMax() * getProgress());
     setMax((int) newMax);
     setProgress(newProgress);
 }
@@ -125,10 +125,10 @@ void RatingBar::onProgressRefresh(float scale, bool fromUser, int progress){
 }
 
 void RatingBar::updateSecondaryProgress(int progress){
-    float ratio = getProgressPerStar();
+    const float ratio = getProgressPerStar();
     if (ratio > 0) {
-        float progressInStars = progress / ratio;
-        int secondaryProgress = (int) (std::ceil(progressInStars) * ratio);
+        const float progressInStars = progress / ratio;
+        const int secondaryProgress = (int) (std::ceil(progressInStars) * ratio);
         setSecondaryProgress(secondaryProgress);
     }
 }

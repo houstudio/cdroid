@@ -3,16 +3,16 @@
     <item android:id="@+id/background">
         <bitmap
             android:src="@mipmap/ic_star_black_48dp"
-            android:tint="@color/ratingbar_background_material" />
+            android:tint="@color/ratingbar_background_material"/>
     </item>
     <item android:id="@+id/secondaryProgress">
         <bitmap
             android:src="@mipmap/ic_star_half_black_48dp"
-            android:tint="?attr/colorControlActivated" />
+            android:tint="?attr/colorControlActivated"/>
     </item>
     <item android:id="@+id/progress">
         <bitmap
             android:src="@mipmap/ic_star_black_48dp"
-            android:tint="?attr/colorControlActivated" />
+            android:tint="?attr/colorControlActivated"/>
     </item>
 </layer-list>
