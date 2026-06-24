@@ -771,10 +771,9 @@ void ImageView::updateDrawable(Drawable*d){
         mRecycleableBitmapDrawable->setBitmap(nullptr);
     }
 
-    bool sameDrawable = false;
+    const bool sameDrawable = (mDrawable == d);
 
     if (mDrawable != nullptr) {
-        sameDrawable = (mDrawable == d);
         mDrawable->setCallback(nullptr);
         unscheduleDrawable(*mDrawable);
         if ( !sameDrawable && isAttachedToWindow()) {
