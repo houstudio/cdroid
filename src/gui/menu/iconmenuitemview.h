@@ -47,7 +47,7 @@ protected:
 
     void drawableStateChanged()override;
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
-    void onTextChanged(const std::wstring& text, int start, int before, int after)override;
+    void onTextChanged(CharSequence& text, int start, int before, int after)override;
 public:
     IconMenuItemView(Context* context,const AttributeSet& attrs);
     void initialize(const std::string& title, Drawable* icon);
