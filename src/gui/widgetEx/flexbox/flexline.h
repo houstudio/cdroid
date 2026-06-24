@@ -58,6 +58,22 @@ public:
         return mFirstIndex;
     }
 
+    void setMainSize(int mainSize) {
+        mMainSize = mainSize;
+    }
+
+    void setDividerLengthInMainSize(int dividerLengthInMainSize) {
+        mDividerLengthInMainSize = dividerLengthInMainSize;
+    }
+
+    int getDividerLengthInMainSize() {
+        return mDividerLengthInMainSize;
+    }
+
+    int getLastIndex() {
+        return mLastIndex;
+    }
+
     void updatePositionFromView(View* view, int leftDecoration, int topDecoration,
             int rightDecoration, int bottomDecoration) {
 #if 0

@@ -30,6 +30,10 @@ public:
             mChildState = 0;
         }
     };
+
+    const std::vector<int>& getIndexToFlexLine() const {
+        return mIndexToFlexLine;
+    }
 private:
     std::vector<Order> createOrders(int childCount);
     std::vector<int> sortOrdersIntoReorderedIndices(int childCount, std::vector<Order>& orders,SparseIntArray& orderCache);
@@ -103,6 +107,10 @@ public:
 
     void ensureMeasuredSizeCache(int size);
     void ensureMeasureSpecCache(int size);
+
+    int64_t getMeasureSpecCache(int index) const {
+        return mMeasureSpecCache[index];
+    }
 
     int extractLowerInt(int64_t longValue);
     int extractHigherInt(int64_t longValue);
