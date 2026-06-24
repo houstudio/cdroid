@@ -1183,7 +1183,6 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         }
     }
 #endif
-    LOGD_IF(mID==10100,"%p mLayout=%p",this,mLayout);
     mBufferType = type;
     setTextInternal(text);
 

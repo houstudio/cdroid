@@ -47,12 +47,12 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
         mTextSize2 = mInputText->getTextSize();
-        mTextSize = mTextSize2;
+        mTextSize  = mTextSize2;
         mSelectorElementSize = mTextSize2;
     }
     mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
     mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
-    View::OnClickListener onClick= [this](View& v) {
+    const View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
         if (v.getId() == R::id::increment) {
@@ -61,7 +61,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
             changeValueByOne(false);
         }
     };
-    View::OnLongClickListener onLongClick=[this](View& v) {
+    const View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
         if (v.getId() == R::id::increment) {
@@ -105,8 +105,6 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         if (mDividerDrawable->isStateful()) {
             mDividerDrawable->setState(getDrawableState());
         }
-    }else{
-        setDividerColor(atts.getColor("dividerColor",mDividerColor));
     }
     mItemBackground =  atts.getDrawable("itemBackground");
     if(mItemBackground){
@@ -183,7 +181,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mTextAlign = mInputText->getGravity();
     mTextSize2 = mInputText->getTextSize();
     mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
-    mSelectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
+    auto selectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
+    if(selectedTypeface!=nullptr){
+        setSelectedTypeface(selectedTypeface);
+    }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
@@ -301,15 +302,13 @@ void NumberPicker::initView(){
     mEndDividerEnd = 0;
     mStartDividerStart= 0;
     mInputTextColor = 0xFFFFFFFF;
-    mSelectedTypeface = nullptr;
+    mTypeface = nullptr;
     mComputeMaxWidth  = false;
     mHasSelectorWheel = false;
-    mTypeface = nullptr;
     mItemBackground = nullptr;
     mVirtualButtonPressedDrawable = nullptr;
     mBeginSoftInputOnLongPressCommand = nullptr;
     mChangeCurrentByOneFromLongPressCommand = nullptr;
-    mDividerColor = DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
     mDividerThickness =2;
@@ -1015,15 +1014,6 @@ Drawable*NumberPicker::getSelectionDivider()const{
     return mDividerDrawable;
 }
 
-int  NumberPicker::getDividerColor()const{
-    return mDividerColor;
-}
-
-void NumberPicker::setDividerColor(int color){
-    mDividerColor = color;
-    mDividerDrawable = new ColorDrawable(color);
-}
-
 int NumberPicker::getDividerType()const{
     return mDividerType;
 }
@@ -1156,12 +1146,12 @@ float NumberPicker::getBottomFadingEdgeStrength(){
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    if (mDividerDrawable  && mDividerDrawable->isStateful()
+    if (mDividerDrawable && mDividerDrawable->isStateful()
         && mDividerDrawable->setState(getDrawableState())) {
         invalidateDrawable(*mDividerDrawable);
     }
 
-    if (mItemBackground  && mItemBackground->isStateful()
+    if (mItemBackground && mItemBackground->isStateful()
         && mItemBackground->setState(getDrawableState())) {
         invalidateDrawable(*mItemBackground);
     }
@@ -1240,13 +1230,12 @@ void NumberPicker::setSelectedTextSize(int textSize) {
 }
 
 void NumberPicker::setSelectedTypeface(Typeface* typeface){
-    mSelectedTypeface = typeface;
-    if (mSelectedTypeface != nullptr) {
-        //do nothing mSelectorWheelPaint.setTypeface(mSelectedTypeface);
+    if (typeface != nullptr) {
+        mSelectorWheelPaint.setTypeface(typeface);
     } else if (mTypeface != nullptr) {
-        mSelectedTypeface = mTypeface;
+        mSelectorWheelPaint.setTypeface(mTypeface);
     } else {
-        mSelectedTypeface = Typeface::MONOSPACE;
+        mSelectorWheelPaint.setTypeface(Typeface::MONOSPACE);
     }
 }
 
@@ -1255,14 +1244,13 @@ void NumberPicker::setSelectedTypeface(const std::string& string, int style){
 }
 
 Typeface* NumberPicker::getSelectedTypeface()const{
-    return mSelectedTypeface;
+    return mSelectorWheelPaint.getTypeface();
 }
 
 void NumberPicker::setTypeface(Typeface* typeface){
     mTypeface = typeface;
     if (mTypeface != nullptr) {
         mInputText->setTypeface(mTypeface);
-        setSelectedTypeface(mSelectedTypeface);
     } else {
         mInputText->setTypeface(Typeface::MONOSPACE);
     }

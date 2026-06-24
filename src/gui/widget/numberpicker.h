@@ -53,7 +53,6 @@ private:
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT =2;
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE =48;
     static constexpr int SIZE_UNSPECIFIED =-1;
-    static constexpr int DEFAULT_DIVIDER_COLOR = 0x0;
     static constexpr int DEFAULT_MAX_HEIGHT= 180;
     static constexpr int DEFAULT_MIN_WIDTH = 64;
     static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
@@ -78,7 +77,6 @@ private:
     int mInputTextGapHeight;
     int mTextAlign;
     Typeface *mTypeface;
-    Typeface *mSelectedTypeface; 
     std::vector<std::string> mDisplayedValues;
     std::vector<Drawable*> mDisplayedDrawables;
     int mDisplayedDrawableCount;
@@ -128,7 +126,6 @@ private:
     Drawable* mItemBackground;
     Drawable* mVirtualButtonPressedDrawable;
     AccessibilityNodeProviderImpl* mAccessibilityNodeProvider;
-    int mDividerColor;
     int mDividerType;
     int mDividerDistance;
     int mDividerThickness;
@@ -224,8 +221,6 @@ public:
     void setSelectionDivider(Drawable*d);
     Drawable* getSelectionDivider()const;
 
-    int  getDividerColor()const;
-    void setDividerColor(int);
     int  getDividerType()const;
     void setDividerType(int);
     int  getDividerThickness()const;
