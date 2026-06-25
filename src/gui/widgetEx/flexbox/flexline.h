@@ -47,31 +47,31 @@ public:
     FlexLine() {
     }
 
-    int getMainSize() {
+    int getMainSize() const{
         return mMainSize;
     }
 
-    int getCrossSize() {
+    int getCrossSize() const{
         return mCrossSize;
     }
 
-    int getItemCount() {
+    int getItemCount() const{
         return mItemCount;
     }
 
-    int getItemCountNotGone() {
+    int getItemCountNotGone() const{
         return mItemCount - mGoneItemCount;
     }
 
-    float getTotalFlexGrow() {
+    float getTotalFlexGrow() const{
         return mTotalFlexGrow;
     }
 
-    float getTotalFlexShrink() {
+    float getTotalFlexShrink() const{
         return mTotalFlexShrink;
     }
 
-    int getFirstIndex() {
+    int getFirstIndex() const{
         return mFirstIndex;
     }
 
@@ -83,11 +83,11 @@ public:
         mDividerLengthInMainSize = dividerLengthInMainSize;
     }
 
-    int getDividerLengthInMainSize() {
+    int getDividerLengthInMainSize() const{
         return mDividerLengthInMainSize;
     }
 
-    int getLastIndex() {
+    int getLastIndex() const{
         return mLastIndex;
     }
 

@@ -1227,11 +1227,11 @@ void FlexboxLayoutManager::resolveLayoutDirection() {
 }
 
 // FlexContainer interface implementation
-int FlexboxLayoutManager::getFlexItemCount() {
+int FlexboxLayoutManager::getFlexItemCount() const{
     return  mState->getItemCount();
 }
 
-View* FlexboxLayoutManager::getFlexItemAt(int index) {
+View* FlexboxLayoutManager::getFlexItemAt(int index) const {
     View* cachedView = mViewCache.get(index);
     if (cachedView != nullptr) {
         return cachedView;
@@ -1239,7 +1239,7 @@ View* FlexboxLayoutManager::getFlexItemAt(int index) {
     return mRecycler->getViewForPosition(index);
 }
 
-View* FlexboxLayoutManager::getReorderedFlexItemAt(int index) {
+View* FlexboxLayoutManager::getReorderedFlexItemAt(int index) const {
     return getFlexItemAt(index);
 }
 
@@ -1259,7 +1259,7 @@ void FlexboxLayoutManager::removeViewAt(int index) {
     RecyclerView::LayoutManager::removeViewAt(index);
 }
 
-int FlexboxLayoutManager::getFlexDirection() {
+int FlexboxLayoutManager::getFlexDirection() const {
     return mFlexDirection;
 }
 
@@ -1276,7 +1276,7 @@ void FlexboxLayoutManager::setFlexDirection(int flexDirection) {
     }
 }
 
-int FlexboxLayoutManager::getFlexWrap() {
+int FlexboxLayoutManager::getFlexWrap() const {
     return mFlexWrap;
 }
 
@@ -1299,7 +1299,7 @@ void FlexboxLayoutManager::setFlexWrap(int flexWrap) {
     }
 }
 
-int FlexboxLayoutManager::getJustifyContent() {
+int FlexboxLayoutManager::getJustifyContent() const {
     return mJustifyContent;
 }
 
@@ -1310,7 +1310,7 @@ void FlexboxLayoutManager::setJustifyContent(int justifyContent) {
     }
 }
 
-int FlexboxLayoutManager::getAlignItems() {
+int FlexboxLayoutManager::getAlignItems() const {
     return mAlignItems;
 }
 
@@ -1325,7 +1325,7 @@ void FlexboxLayoutManager::setAlignItems(int alignItems) {
     }
 }
 
-int FlexboxLayoutManager::getAlignContent() {
+int FlexboxLayoutManager::getAlignContent() const {
     return (int)AlignContent::STRETCH;
 }
 
@@ -1334,7 +1334,7 @@ void FlexboxLayoutManager::setAlignContent(int alignContent) {
          "Use FlexboxLayout if you need this attribute.");
 }
 
-std::vector<FlexLine> FlexboxLayoutManager::getFlexLines() {
+std::vector<FlexLine> FlexboxLayoutManager::getFlexLines()const {
     std::vector<FlexLine> result;
     result.reserve(mFlexLines.size());
     for (auto& flexLine : mFlexLines) {
@@ -1350,7 +1350,7 @@ bool FlexboxLayoutManager::isMainAxisDirectionHorizontal() const {
     return mFlexDirection == (int)FlexDirection::ROW || mFlexDirection == (int)FlexDirection::ROW_REVERSE;
 }
 
-int FlexboxLayoutManager::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) {
+int FlexboxLayoutManager::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) const {
     if (isMainAxisDirectionHorizontal()) {
         return getLeftDecorationWidth(view) + getRightDecorationWidth(view);
     } else {
@@ -1358,7 +1358,7 @@ int FlexboxLayoutManager::getDecorationLengthMainAxis(View* view, int index, int
     }
 }
 
-int FlexboxLayoutManager::getDecorationLengthCrossAxis(View* view) {
+int FlexboxLayoutManager::getDecorationLengthCrossAxis(View* view) const {
     if (isMainAxisDirectionHorizontal()) {
         return getTopDecorationHeight(view) + getBottomDecorationHeight(view);
     } else {
@@ -1390,17 +1390,17 @@ int FlexboxLayoutManager::getPaddingEnd() {
     return RecyclerView::LayoutManager::getPaddingEnd();
 }
 
-int FlexboxLayoutManager::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) {
+int FlexboxLayoutManager::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) const{
     return RecyclerView::LayoutManager::getChildMeasureSpec(getWidth(), getWidthMode(),
             padding, childDimension, canScrollHorizontally());
 }
 
-int FlexboxLayoutManager::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) {
+int FlexboxLayoutManager::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) const{
     return RecyclerView::LayoutManager::getChildMeasureSpec(getHeight(), getHeightMode(),
             padding, childDimension, canScrollVertically());
 }
 
-int FlexboxLayoutManager::getLargestMainSize() {
+int FlexboxLayoutManager::getLargestMainSize()const {
     int largest = 0;
     for (auto& line : mFlexLines) {
         largest = std::max(largest, line.getMainSize());
@@ -1408,7 +1408,7 @@ int FlexboxLayoutManager::getLargestMainSize() {
     return largest;
 }
 
-int FlexboxLayoutManager::getSumOfCrossSize() {
+int FlexboxLayoutManager::getSumOfCrossSize() const{
     int sum = 0;
     for (auto& line : mFlexLines) {
         sum += line.getCrossSize();
@@ -1437,7 +1437,7 @@ void FlexboxLayoutManager::setFlexLines(const std::vector<FlexLine>& flexLines) 
     mFlexLines = flexLines;
 }
 
-int FlexboxLayoutManager::getMaxLine() {
+int FlexboxLayoutManager::getMaxLine() const{
     return mMaxLine;
 }
 

@@ -157,34 +157,34 @@ public:
     bool supportsPredictiveItemAnimations() override;
  
     // FlexContainer interface implementation
-    int getFlexItemCount() override;
-    View* getFlexItemAt(int index) override;
-    View* getReorderedFlexItemAt(int index) override;
+    int getFlexItemCount()const override;
+    View* getFlexItemAt(int index) const override;
+    View* getReorderedFlexItemAt(int index) const override;
 
     void addView(View* view) override;
     void addView(View* view, int index) override;
     void removeAllViews() override;
     void removeViewAt(int index) override;
 
-    int getFlexDirection() override;
+    int getFlexDirection() const override;
     void setFlexDirection(int flexDirection) override;
 
-    int getFlexWrap() override;
+    int getFlexWrap() const override;
     void setFlexWrap(int flexWrap) override;
 
-    int getJustifyContent() override;
+    int getJustifyContent() const override;
     void setJustifyContent(int justifyContent) override;
 
-    int getAlignContent() override;
+    int getAlignContent() const override;
     void setAlignContent(int alignContent) override;
-    int getAlignItems() override;
+    int getAlignItems() const override;
     void setAlignItems(int alignItems) override;
 
-    std::vector<FlexLine> getFlexLines() override;
+    std::vector<FlexLine> getFlexLines()const override;
     bool isMainAxisDirectionHorizontal() const override;
 
-    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) override;
-    int getDecorationLengthCrossAxis(View* view) override;
+    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine)const override;
+    int getDecorationLengthCrossAxis(View* view)const override;
 
     int getPaddingTop() override;
     int getPaddingLeft() override;
@@ -193,17 +193,17 @@ public:
     int getPaddingStart() override;
     int getPaddingEnd() override;
 
-    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) override;
-    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) override;
+    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension)const override;
+    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension)const override;
 
-    int getLargestMainSize() override;
-    int getSumOfCrossSize() override;
+    int getLargestMainSize()const override;
+    int getSumOfCrossSize()const override;
 
     void onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine& flexLine) override;
     void onNewFlexLineAdded(FlexLine& flexLine) override;
     void setFlexLines(const std::vector<FlexLine>& flexLines) override;
 
-    int getMaxLine() override;
+    int getMaxLine()const override;
     void setMaxLine(int maxLine) override;
 
     std::vector<FlexLine>& getFlexLinesInternal() override;

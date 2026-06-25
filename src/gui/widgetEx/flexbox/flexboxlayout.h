@@ -76,11 +76,11 @@ private:
     void drawVerticalDivider(Canvas& canvas, int left, int top, int length);
     void drawHorizontalDivider(Canvas& canvas, int left, int top, int length);
     void setWillNotDrawFlag();
-    bool hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine);
-    bool allViewsAreGoneBefore(int index, int indexInFlexLine);
-    bool hasDividerBeforeFlexLine(int flexLineIndex);
-    bool allFlexLinesAreDummyBefore(int flexLineIndex);
-    bool hasEndDividerAfterFlexLine(int flexLineIndex);
+    bool hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine)const;
+    bool allViewsAreGoneBefore(int index, int indexInFlexLine)const;
+    bool hasDividerBeforeFlexLine(int flexLineIndex)const;
+    bool allFlexLinesAreDummyBefore(int flexLineIndex)const;
+    bool hasEndDividerAfterFlexLine(int flexLineIndex)const;
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     void onLayout(bool changed, int left, int top, int right, int bottom)override;
@@ -97,37 +97,37 @@ public:
     
     ////////////////////////////////////////////////////////////////////////////////////////////
     // FlexContainer interface implementation
-    int getFlexItemCount() override;
-    View* getFlexItemAt(int index) override;
-    View* getReorderedFlexItemAt(int index) override;
+    int getFlexItemCount()const override;
+    View* getFlexItemAt(int index)const override;
+    View* getReorderedFlexItemAt(int index)const override;
     
     // Internal helper method for reordering children
-    View* getReorderedChildAt(int index);
+    View* getReorderedChildAt(int index)const;
     
     void addView(View* view) override;
     void addView(View* view, int index) override;
     void removeAllViews() override;
     void removeViewAt(int index) override;
 
-    int getFlexDirection() override;
+    int getFlexDirection()const override;
     void setFlexDirection(int flexDirection) override;
 
-    int getFlexWrap() override;
+    int getFlexWrap()const override;
     void setFlexWrap(int flexWrap) override;
 
-    int getJustifyContent() override;
+    int getJustifyContent()const override;
     void setJustifyContent(int justifyContent) override;
 
-    int getAlignContent() override;
+    int getAlignContent()const override;
     void setAlignContent(int alignContent) override;
-    int getAlignItems() override;
+    int getAlignItems()const override;
     void setAlignItems(int alignItems) override;
 
-    std::vector<FlexLine> getFlexLines() override;
+    std::vector<FlexLine> getFlexLines()const override;
     bool isMainAxisDirectionHorizontal() const override;
 
-    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) override;
-    int getDecorationLengthCrossAxis(View* view) override;
+    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine)const override;
+    int getDecorationLengthCrossAxis(View* view)const override;
 
     int getPaddingTop() override;
     int getPaddingLeft() override;
@@ -136,25 +136,25 @@ public:
     int getPaddingStart() override;
     int getPaddingEnd() override;
 
-    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) override;
-    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) override;
+    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension)const override;
+    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension)const override;
 
-    int getLargestMainSize() override;
-    int getSumOfCrossSize() override;
+    int getLargestMainSize()const override;
+    int getSumOfCrossSize()const override;
 
     void onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine& flexLine) override;
     void onNewFlexLineAdded(FlexLine& flexLine) override;
     void setFlexLines(const std::vector<FlexLine>& flexLines) override;
 
-    int getMaxLine() override;
+    int getMaxLine() const override;
     void setMaxLine(int maxLine) override;
 
     std::vector<FlexLine>& getFlexLinesInternal() override;
     void updateViewCache(int position, View* view) override;
     ////////////////////////////////////////////////////////////////////////////////////////////
 
-    Drawable* getDividerDrawableHorizontal();
-    Drawable* getDividerDrawableVertical();
+    Drawable* getDividerDrawableHorizontal()const;
+    Drawable* getDividerDrawableVertical()const;
     void setDividerDrawable(Drawable* divider);
     void setDividerDrawableHorizontal(Drawable* divider);
     void setDividerDrawableVertical(Drawable* divider);

@@ -147,22 +147,22 @@ void FlexboxLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     }
 }
 
-int FlexboxLayout::getFlexItemCount() {
+int FlexboxLayout::getFlexItemCount() const{
     return getChildCount();
 }
 
-View* FlexboxLayout::getFlexItemAt(int index) {
+View* FlexboxLayout::getFlexItemAt(int index) const {
     return getChildAt(index);
 }
 
-View* FlexboxLayout::getReorderedChildAt(int index) {
+View* FlexboxLayout::getReorderedChildAt(int index) const {
     if ((index < 0) || (index >= mReorderedIndices.size())) {
         return nullptr;
     }
     return getChildAt(mReorderedIndices[index]);
 }
 
-View* FlexboxLayout::getReorderedFlexItemAt(int index) {
+View* FlexboxLayout::getReorderedFlexItemAt(int index) const {
     return getReorderedChildAt(index);
 }
 
@@ -310,18 +310,18 @@ void FlexboxLayout::setMeasuredDimensionForFlex(int flexDirection, int widthMeas
     setMeasuredDimension(widthSizeAndState, heightSizeAndState);
 }
 
-int FlexboxLayout::getLargestMainSize() {
+int FlexboxLayout::getLargestMainSize()const {
     int largestSize = INT_MIN;
-    for (FlexLine& flexLine : mFlexLines) {
+    for (const FlexLine& flexLine : mFlexLines) {
         largestSize = std::max(largestSize, flexLine.mMainSize);
     }
     return largestSize;
 }
 
-int FlexboxLayout::getSumOfCrossSize() {
+int FlexboxLayout::getSumOfCrossSize()const {
     int sum = 0;
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine& flexLine = mFlexLines.at(i);
+        const FlexLine& flexLine = mFlexLines.at(i);
 
         // Judge if the beginning or middle dividers are required
         if (hasDividerBeforeFlexLine(i)) {
@@ -843,7 +843,7 @@ ViewGroup::LayoutParams* FlexboxLayout::generateLayoutParams(const ViewGroup::La
     return new LayoutParams(*lp);
 }
 
-int FlexboxLayout::getFlexDirection() {
+int FlexboxLayout::getFlexDirection() const {
     return mFlexDirection;
 }
 
@@ -854,7 +854,7 @@ void FlexboxLayout::setFlexDirection(int flexDirection) {
     }
 }
 
-int FlexboxLayout::getFlexWrap() {
+int FlexboxLayout::getFlexWrap() const {
     return mFlexWrap;
 }
 
@@ -865,7 +865,7 @@ void FlexboxLayout::setFlexWrap(int flexWrap) {
     }
 }
 
-int FlexboxLayout::getJustifyContent() {
+int FlexboxLayout::getJustifyContent() const {
     return mJustifyContent;
 }
 
@@ -876,7 +876,7 @@ void FlexboxLayout::setJustifyContent(int justifyContent) {
     }
 }
 
-int FlexboxLayout::getAlignItems() {
+int FlexboxLayout::getAlignItems() const {
     return mAlignItems;
 }
 
@@ -887,7 +887,7 @@ void FlexboxLayout::setAlignItems(int alignItems) {
     }
 }
 
-int FlexboxLayout::getAlignContent() {
+int FlexboxLayout::getAlignContent() const {
     return mAlignContent;
 }
 
@@ -898,7 +898,7 @@ void FlexboxLayout::setAlignContent(int alignContent) {
     }
 }
 
-int FlexboxLayout::getMaxLine() {
+int FlexboxLayout::getMaxLine() const {
     return mMaxLine;
 }
 
@@ -909,9 +909,9 @@ void FlexboxLayout::setMaxLine(int maxLine) {
     }
 }
 
-std::vector<FlexLine> FlexboxLayout::getFlexLines() {
+std::vector<FlexLine> FlexboxLayout::getFlexLines() const {
     std::vector<FlexLine> result;
-    for (FlexLine& flexLine : mFlexLines) {
+    for (const FlexLine& flexLine : mFlexLines) {
         if (flexLine.getItemCountNotGone() == 0) {
             continue;
         }
@@ -920,7 +920,7 @@ std::vector<FlexLine> FlexboxLayout::getFlexLines() {
     return result;
 }
 
-int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) {
+int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) const {
     int decorationLength = 0;
     if (isMainAxisDirectionHorizontal()) {
         if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
@@ -940,7 +940,7 @@ int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexI
     return decorationLength;
 }
 
-int FlexboxLayout::getDecorationLengthCrossAxis(View* view) {
+int FlexboxLayout::getDecorationLengthCrossAxis(View* view) const{
     // Decoration along the cross axis for an individual view is not supported in the
     // FlexboxLayout.
     return 0;
@@ -962,11 +962,11 @@ void FlexboxLayout::onNewFlexLineAdded(FlexLine& flexLine) {
     }
 }
 
-int FlexboxLayout::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) {
+int FlexboxLayout::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) const{
     return getChildMeasureSpec(widthSpec, padding, childDimension);
 }
 
-int FlexboxLayout::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) {
+int FlexboxLayout::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) const{
     return getChildMeasureSpec(heightSpec, padding, childDimension);
 }
 
@@ -995,11 +995,11 @@ void FlexboxLayout::updateViewCache(int position, View* view) {
     // No op
 }
 
-Drawable* FlexboxLayout::getDividerDrawableHorizontal() {
+Drawable* FlexboxLayout::getDividerDrawableHorizontal() const{
     return mDividerDrawableHorizontal;
 }
 
-Drawable* FlexboxLayout::getDividerDrawableVertical() {
+Drawable* FlexboxLayout::getDividerDrawableVertical() const{
     return mDividerDrawableVertical;
 }
 
@@ -1078,7 +1078,7 @@ void FlexboxLayout::setWillNotDrawFlag() {
     }
 }
 
-bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine) {
+bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine) const{
     if (allViewsAreGoneBefore(index, indexInFlexLine)) {
         if (isMainAxisDirectionHorizontal()) {
             return (mShowDividerVertical & SHOW_DIVIDER_BEGINNING) != 0;
@@ -1094,7 +1094,7 @@ bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInF
     }
 }
 
-bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) {
+bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) const{
     for (int i = 1; i <= indexInFlexLine; i++) {
         View* view = getReorderedChildAt(index - i);
         if (view != nullptr && view->getVisibility() != View::GONE) {
@@ -1104,7 +1104,7 @@ bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) {
     return true;
 }
 
-bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex) {
+bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex)const {
     if (flexLineIndex < 0 || flexLineIndex >= mFlexLines.size()) {
         return false;
     }
@@ -1123,7 +1123,7 @@ bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex) {
     }
 }
 
-bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex) {
+bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex)const {
     for (int i = 0; i < flexLineIndex; i++) {
         if (mFlexLines.at(i).getItemCountNotGone() > 0) {
             return false;
@@ -1132,7 +1132,7 @@ bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex) {
     return true;
 }
 
-bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex) {
+bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex)const {
     if (flexLineIndex < 0 || flexLineIndex >= mFlexLines.size()) {
         return false;
     }
