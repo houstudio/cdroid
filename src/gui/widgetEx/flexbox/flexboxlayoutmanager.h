@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __FLEXBOX_LAYOUT_MANAGER_H__
 #define __FLEXBOX_LAYOUT_MANAGER_H__
 
@@ -16,6 +33,7 @@
 #include <core/sparsearray.h>
 
 namespace cdroid {
+class Context;
 class OrientationHelper;
 class LayoutChunkResult;
 
@@ -29,31 +47,22 @@ private:
     void init();
 
     int mFlexDirection = (int)FlexDirection::ROW;
-    int mFlexWrap = (int)FlexWrap::NOWRAP;
+    int mFlexWrap = (int)FlexWrap::WRAP;
     int mJustifyContent = (int)JustifyContent::FLEX_START;
-    int mAlignItems = (int)AlignItems::FLEX_START;
-    int mAlignContent = (int)AlignContent::FLEX_START;
+    int mAlignItems = (int)AlignItems::STRETCH;
     int mMaxLine = -1;
 
-    bool mShouldReverseLayout = false;
     bool mRecycleChildrenOnDetach = false;
     int mPendingScrollPosition = RecyclerView::NO_POSITION;
     int mPendingScrollPositionOffset = INT_MIN;
     class SavedState* mPendingSavedState = nullptr;
 
+    Context* mContext = nullptr;
     FlexboxHelper* mFlexboxHelper = nullptr;
     RecyclerView::Recycler *mRecycler;
     RecyclerView::State *mState;
     std::vector<FlexLine> mFlexLines;
     FlexboxHelper::FlexLinesResult* mFlexLinesResult = nullptr;
-
-    std::vector<int> mReorderedIndices;
-    SparseIntArray mOrderCache;
-    bool mOrderChanged = false;
-
-    int mAnchorPosition = RecyclerView::NO_POSITION;
-    int mAnchorOffset = 0;
-    bool mAnchorLayoutFromEnd = false;
 
     /** True if the layout direction is right to left, false otherwise. */
     bool mIsRtl = false;
@@ -117,6 +126,13 @@ protected:
     int computeScrollOffset(RecyclerView::State& state);
     int computeScrollExtent(RecyclerView::State& state);
     int computeScrollRange(RecyclerView::State& state);
+
+    void clearFlexLines();
+    void resolveInfiniteAmount();
+    int getChildLeft(View* view);
+    int getChildRight(View* view);
+    int getChildTop(View* view);
+    int getChildBottom(View* view);
 public:
     void scrollToPositionWithOffset(int position, int offset);
 public:
@@ -139,6 +155,7 @@ public:
     void onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state) override;
     void onLayoutCompleted(RecyclerView::State& state) override;
     void scrollToPosition(int position) override;
+    void smoothScrollToPosition(RecyclerView& recyclerView, RecyclerView::State& state, int position) override;
     int scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state) override;
     int scrollVerticallyBy(int dy, RecyclerView::Recycler& recycler, RecyclerView::State& state) override;
 
@@ -176,7 +193,7 @@ public:
     void setAlignItems(int alignItems) override;
 
     std::vector<FlexLine> getFlexLines() override;
-    bool isMainAxisDirectionHorizontal() const;
+    bool isMainAxisDirectionHorizontal() const override;
 
     int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) override;
     int getDecorationLengthCrossAxis(View* view) override;
@@ -201,7 +218,7 @@ public:
     int getMaxLine() override;
     void setMaxLine(int maxLine) override;
 
-    std::vector<FlexLine> getFlexLinesInternal() override;
+    std::vector<FlexLine>& getFlexLinesInternal() override;
     void updateViewCache(int position, View* view) override;
 
     bool computeScrollVectorForPosition(int targetPosition, PointF& scrollVector) override;
@@ -230,38 +247,30 @@ private:
 };
 class FlexboxLayoutManager::LayoutState {
 public:
+    static constexpr int SCROLLING_OFFSET_NaN = INT_MIN;
     static constexpr int LAYOUT_START = -1;
     static constexpr int LAYOUT_END = 1;
-    static constexpr int INVALID_LAYOUT = INT_MIN;
-    static constexpr int ITEM_DIRECTION_HEAD = -1;
     static constexpr int ITEM_DIRECTION_TAIL = 1;
-    static constexpr int SCROLLING_OFFSET_NaN = INT_MIN;
 
-    bool mRecycle = true;
-    bool mShouldRecycle = true;
-    int mScrollingOffset = 0;
-    int mLastScrollDelta = 0;
-
+    /** Number of pixels that we should fill, in the layout direction. */
     int mAvailable;
-    int mCurrentPosition;
-    int mItemDirection;
-    int mLayoutDirection;
-    int mStartLine = 0;
-    int mEndLine = 0;
-    bool mStopInFocusable;
+    /** If set to true, the value of mAvailable is considered as infinite. */
     bool mInfinite;
+    /** Current position on the flex lines being laid out in the layout call */
+    int mFlexLinePosition;
+    /** Current position on the adapter to get the next item. */
+    int mPosition;
+    /** Pixel offset where layout should start */
+    int mOffset;
+    int mScrollingOffset;
+    int mLastScrollDelta;
+    int mItemDirection = LayoutState::ITEM_DIRECTION_TAIL;
+    int mLayoutDirection = LayoutState::LAYOUT_END;
+    bool mShouldRecycle;
 
-    int mFlexLinePosition = -1;
-    int mOffset = 0;
-    int mPosition = 0;
-
-    bool hasMore(RecyclerView::State& state) {
-        return mCurrentPosition >= 0 && mCurrentPosition < state.getItemCount();
-    }
-    View* next(RecyclerView::Recycler& recycler) {
-        View* view = recycler.getViewForPosition(mCurrentPosition);
-        mCurrentPosition += mItemDirection;
-        return view;
+    bool hasMore(RecyclerView::State& state, std::vector<FlexLine>& flexLines) {
+        return mPosition >= 0 && mPosition < state.getItemCount() &&
+                mFlexLinePosition >= 0 && mFlexLinePosition < (int)flexLines.size();
     }
 };
 class FlexboxLayoutManager::AnchorInfo {
@@ -274,12 +283,25 @@ public:
     bool mValid = false;
     bool mAssignedFromSavedState = false;
 
-    void reset() {
+    void reset(FlexboxLayoutManager* manager) {
         mPosition = RecyclerView::NO_POSITION;
         mFlexLinePosition = RecyclerView::NO_POSITION;
         mCoordinate = INT_MIN;
         mValid = false;
         mAssignedFromSavedState = false;
+        if (manager->isMainAxisDirectionHorizontal()) {
+            if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
+                mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::ROW_REVERSE;
+            } else {
+                mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
+            }
+        } else {
+            if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
+                mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::COLUMN_REVERSE;
+            } else {
+                mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
+            }
+        }
     }
 
     void assignCoordinateFromPadding(FlexboxLayoutManager* manager) {
@@ -378,7 +400,6 @@ class FlexboxLayoutManager::SavedState : public Parcelable {
 private:
     int mAnchorPosition = RecyclerView::NO_POSITION;
     int mAnchorOffset = 0;
-    bool mAnchorLayoutFromEnd = false;
 
 public:
     SavedState();

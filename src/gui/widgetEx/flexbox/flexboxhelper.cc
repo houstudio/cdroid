@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widgetEx/flexbox/flexitem.h>
 #include <widgetEx/flexbox/flexwrap.h>
 #include <widgetEx/flexbox/aligndefs.h>
@@ -16,7 +33,7 @@ std::vector<int> FlexboxHelper::createReorderedIndices(View* viewBeforeAdded, in
     std::vector<Order> orders = createOrders(childCount);
     Order orderForViewToBeAdded;// = new Order();
     if (viewBeforeAdded != nullptr && dynamic_cast<FlexItem*>(paramsForViewBeforeAdded)) {
-        orderForViewToBeAdded.order = ((FlexItem*)paramsForViewBeforeAdded)->getOrder();
+        orderForViewToBeAdded.order = dynamic_cast<FlexItem*>(paramsForViewBeforeAdded)->getOrder();
     } else {
         orderForViewToBeAdded.order = FlexItem::ORDER_DEFAULT;
     }
@@ -48,7 +65,7 @@ std::vector<FlexboxHelper::Order> FlexboxHelper::createOrders(int childCount) {
     std::vector<Order> orders;
     for (int i = 0; i < childCount; i++) {
         View* child = mFlexContainer->getFlexItemAt(i);
-        FlexItem* flexItem = (FlexItem*) child->getLayoutParams();
+        FlexItem* flexItem = dynamic_cast<FlexItem*>(child->getLayoutParams());
         Order order;// = new Order();
         order.order = flexItem->getOrder();
         order.index = i;
@@ -67,7 +84,7 @@ bool FlexboxHelper::isOrderChangedFromLastMeasurement(const SparseIntArray& orde
         if (view == nullptr) {
             continue;
         }
-        FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+        FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
         if (flexItem->getOrder() != orderCache.get(i)) {
             return true;
         }
@@ -77,8 +94,8 @@ bool FlexboxHelper::isOrderChangedFromLastMeasurement(const SparseIntArray& orde
 
 std::vector<int> FlexboxHelper::sortOrdersIntoReorderedIndices(int childCount, std::vector<Order>& orders,SparseIntArray& orderCache) {
     std::sort(orders.begin(),orders.end(),[](const Order& a, const Order&b ){
-        if(a.order!=b.order)return a.order-b.order;
-        return a.index-b.index;
+        if(a.order!=b.order)return a.order<b.order;
+        return a.index<b.index;
     });
     orderCache.clear();
     std::vector<int>reorderedIndices(childCount);
@@ -136,8 +153,6 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
         flexLines = *existingLines;
     }
 
-    result->mFlexLines = flexLines;
-
     bool reachedToIndex = (toIndex == (int)NO_POSITION);
 
     int mainPaddingStart = getPaddingStartMain(isMainHorizontal);
@@ -175,7 +190,7 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
             continue;
         }
 
-        FlexItem* flexItem = (FlexItem*) child->getLayoutParams();
+        FlexItem* flexItem = dynamic_cast<FlexItem*>(child->getLayoutParams());
 
         if (flexItem->getAlignSelf() == (int)AlignItems::STRETCH) {
             flexLine.mIndicesAlignSelfStretch.push_back(i);
@@ -343,6 +358,7 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
         }
     }
 
+    result->mFlexLines = flexLines;
     result->mChildState = childState;
 }
 
@@ -480,7 +496,7 @@ void FlexboxHelper::addFlexLine(std::vector<FlexLine>& flexLines, FlexLine flexL
 
 void FlexboxHelper::checkSizeConstraints(View* view, int index) {
     bool needsMeasure = false;
-    FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
     int childWidth = view->getMeasuredWidth();
     int childHeight = view->getMeasuredHeight();
 
@@ -528,7 +544,7 @@ void FlexboxHelper::determineMainSize(int widthMeasureSpec, int heightMeasureSpe
         if (widthMode == View::MeasureSpec::EXACTLY) {
             mainSize = widthSize;
         } else {
-            mainSize = mFlexContainer->getLargestMainSize();
+            mainSize = std::min(mFlexContainer->getLargestMainSize(), widthSize);
         }
         paddingAlongMainAxis = mFlexContainer->getPaddingLeft()
                 + mFlexContainer->getPaddingRight();
@@ -553,9 +569,9 @@ void FlexboxHelper::determineMainSize(int widthMeasureSpec, int heightMeasureSpe
     if (!mIndexToFlexLine.empty()) {
         flexLineIndex = mIndexToFlexLine[fromIndex];
     }
-    std::vector<FlexLine> flexLines = mFlexContainer->getFlexLinesInternal();
+    std::vector<FlexLine>& flexLines = mFlexContainer->getFlexLinesInternal();
     for (int i = flexLineIndex, size = flexLines.size(); i < size; i++) {
-        FlexLine flexLine = flexLines.at(i);
+        FlexLine& flexLine = flexLines.at(i);
         if (flexLine.mMainSize < mainSize && flexLine.mAnyItemsHaveFlexGrow) {
             expandFlexItems(widthMeasureSpec, heightMeasureSpec, flexLine,
                     mainSize, paddingAlongMainAxis, false);
@@ -575,7 +591,7 @@ void FlexboxHelper::ensureChildrenFrozen(int size) {
     }
 }
 
-void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
+void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine& flexLine,
         int maxMainSize, int paddingAlongMainAxis, bool calledRecursively) {
     if (flexLine.mTotalFlexGrow <= 0 || maxMainSize < flexLine.mMainSize) {
         return;
@@ -605,7 +621,7 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
         if (child == nullptr || child->getVisibility() == View::GONE) {
             continue;
         }
-        FlexItem* flexItem = (FlexItem*) child->getLayoutParams();
+        FlexItem* flexItem = dynamic_cast<FlexItem*>(child->getLayoutParams());
         int flexDirection = mFlexContainer->getFlexDirection();
         if (flexDirection == FlexDirection::ROW || flexDirection == FlexDirection::ROW_REVERSE) {
             // The direction of the main axis is horizontal
@@ -740,7 +756,7 @@ void FlexboxHelper::expandFlexItems(int widthMeasureSpec, int heightMeasureSpec,
     }
 }
 
-void FlexboxHelper::shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
+void FlexboxHelper::shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine& flexLine,
         int maxMainSize, int paddingAlongMainAxis, bool calledRecursively) {
     int sizeBeforeShrink = flexLine.mMainSize;
     if (flexLine.mTotalFlexShrink <= 0 || maxMainSize > flexLine.mMainSize) {
@@ -770,7 +786,7 @@ void FlexboxHelper::shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec,
         if (child == nullptr || child->getVisibility() == View::GONE) {
             continue;
         }
-        FlexItem* flexItem = (FlexItem*) child->getLayoutParams();
+        FlexItem* flexItem = dynamic_cast<FlexItem*>(child->getLayoutParams());
         int flexDirection = mFlexContainer->getFlexDirection();
         if (flexDirection == FlexDirection::ROW || flexDirection == FlexDirection::ROW_REVERSE) {
             // The direction of main axis is horizontal
@@ -950,7 +966,7 @@ void FlexboxHelper::determineCrossSize(int widthMeasureSpec, int heightMeasureSp
     default:
         LOGE("Invalid flex direction:%d" , flexDirection);
     }
-    std::vector<FlexLine> flexLines = mFlexContainer->getFlexLinesInternal();
+    std::vector<FlexLine>& flexLines = mFlexContainer->getFlexLinesInternal();
     if (mode == View::MeasureSpec::EXACTLY) {
         int totalCrossSize = mFlexContainer->getSumOfCrossSize() + paddingAlongCrossAxis;
         if (flexLines.size() == 1) {
@@ -965,7 +981,7 @@ void FlexboxHelper::determineCrossSize(int widthMeasureSpec, int heightMeasureSp
                 float freeSpaceUnit = (size - totalCrossSize) / (float) flexLines.size();
                 float accumulatedError = 0;
                 for (int i = 0, flexLinesSize = flexLines.size(); i < flexLinesSize; i++) {
-                    FlexLine flexLine = flexLines.at(i);
+                    FlexLine& flexLine = flexLines.at(i);
                     float newCrossSizeAsFloat = flexLine.mCrossSize + freeSpaceUnit;
                     if (i == flexLines.size() - 1) {
                         newCrossSizeAsFloat += accumulatedError;
@@ -1104,19 +1120,19 @@ void FlexboxHelper::stretchViews(int fromIndex) {
         if (!mIndexToFlexLine.empty()) {
             flexLineIndex = mIndexToFlexLine[fromIndex];
         }
-        std::vector<FlexLine> flexLines = mFlexContainer->getFlexLinesInternal();
+        std::vector<FlexLine>& flexLines = mFlexContainer->getFlexLinesInternal();
         for (int i = flexLineIndex, size = flexLines.size(); i < size; i++) {
-            FlexLine flexLine = flexLines.at(i);
+            FlexLine& flexLine = flexLines.at(i);
             for (int j = 0, itemCount = flexLine.mItemCount; j < itemCount; j++) {
                 int viewIndex = flexLine.mFirstIndex + j;
-                if (j >= mFlexContainer->getFlexItemCount()) {
+                if (viewIndex >= mFlexContainer->getFlexItemCount()) {
                     continue;
                 }
                 View* view = mFlexContainer->getReorderedFlexItemAt(viewIndex);
                 if (view == nullptr || view->getVisibility() == View::GONE) {
                     continue;
                 }
-                FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+                FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
                 if (flexItem->getAlignSelf() != (int)AlignSelf::AUTO &&
                         flexItem->getAlignSelf() != (int)AlignItems::STRETCH) {
                     continue;
@@ -1157,7 +1173,7 @@ void FlexboxHelper::stretchViews(int fromIndex) {
 }
 
 void FlexboxHelper::stretchViewVertically(View* view, int crossSize, int index) {
-    FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
     int newHeight = crossSize - flexItem->getMarginTop() - flexItem->getMarginBottom() -
             mFlexContainer->getDecorationLengthCrossAxis(view);
     newHeight = std::max(newHeight, flexItem->getMinHeight());
@@ -1184,7 +1200,7 @@ void FlexboxHelper::stretchViewVertically(View* view, int crossSize, int index) 
 }
 
 void FlexboxHelper::stretchViewHorizontally(View* view, int crossSize, int index) {
-    FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
     int newWidth = crossSize - flexItem->getMarginLeft() - flexItem->getMarginRight()
             - mFlexContainer->getDecorationLengthCrossAxis(view);
     newWidth = std::max(newWidth, flexItem->getMinWidth());
@@ -1209,8 +1225,8 @@ void FlexboxHelper::stretchViewHorizontally(View* view, int crossSize, int index
     mFlexContainer->updateViewCache(index, view);
 }
 
-void FlexboxHelper::layoutSingleChildHorizontal(View* view, FlexLine flexLine, int left, int top, int width, int height) {
-    FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+void FlexboxHelper::layoutSingleChildHorizontal(View* view, FlexLine flexLine, int left, int top, int right, int bottom) {
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
     int alignItems = mFlexContainer->getAlignItems();
     if (flexItem->getAlignSelf() != (int)AlignSelf::AUTO) {
         // Expecting the values for alignItems and mAlignSelf match except for ALIGN_SELF_AUTO.
@@ -1218,51 +1234,60 @@ void FlexboxHelper::layoutSingleChildHorizontal(View* view, FlexLine flexLine, i
         alignItems = flexItem->getAlignSelf();
     }
     int crossSize = flexLine.mCrossSize;
+    // cdroid's View::layout takes (left, top, width, height) unlike Android's (l, t, r, b).
+    // The width/height equal the view's measured size (right - left, bottom - top).
+    int measuredWidth = view->getMeasuredWidth();
+    int measuredHeight = view->getMeasuredHeight();
+    (void) right;
+    (void) bottom;
     switch ((AlignItems)alignItems) {
     case AlignItems::FLEX_START: // Intentional fall through
     case AlignItems::STRETCH:
         if (mFlexContainer->getFlexWrap() != (int)FlexWrap::WRAP_REVERSE) {
-            view->layout(left, top + flexItem->getMarginTop(), width,height);
+            view->layout(left, top + flexItem->getMarginTop(), measuredWidth, measuredHeight);
         } else {
-            view->layout(left, top - flexItem->getMarginBottom(), width,height);
+            view->layout(left, top - flexItem->getMarginBottom(), measuredWidth, measuredHeight);
         }
         break;
     case AlignItems::BASELINE:
         if (mFlexContainer->getFlexWrap() != (int)FlexWrap::WRAP_REVERSE) {
             int marginTop = flexLine.mMaxBaseline - view->getBaseline();
             marginTop = std::max(marginTop, flexItem->getMarginTop());
-            view->layout(left, top + marginTop, width, height);
+            view->layout(left, top + marginTop, measuredWidth, measuredHeight);
         } else {
             int marginBottom = flexLine.mMaxBaseline - view->getMeasuredHeight() + view->getBaseline();
             marginBottom = std::max(marginBottom, flexItem->getMarginBottom());
-            view->layout(left, top - marginBottom, width, height);
+            view->layout(left, top - marginBottom, measuredWidth, measuredHeight);
         }
         break;
     case AlignItems::FLEX_END:
         if (mFlexContainer->getFlexWrap() != (int)FlexWrap::WRAP_REVERSE) {
-            view->layout(left,top + crossSize - view->getMeasuredHeight() - flexItem->getMarginBottom(),width,height);
-                    //right, top + crossSize - flexItem->getMarginBottom());
+            view->layout(left,
+                    top + crossSize - view->getMeasuredHeight() - flexItem->getMarginBottom(),
+                    measuredWidth, measuredHeight);
         } else {
             // If the flexWrap == WRAP_REVERSE, the direction of the
             // flexEnd is flipped (from top to bottom).
-            view->layout(left, top - crossSize + view->getMeasuredHeight() + flexItem->getMarginTop(), width, height);
+            view->layout(left,
+                    top - crossSize + view->getMeasuredHeight() + flexItem->getMarginTop(),
+                    measuredWidth, measuredHeight);
         }
         break;
     case AlignItems::CENTER:
         int topFromCrossAxis = (crossSize - view->getMeasuredHeight()
                 + flexItem->getMarginTop() - flexItem->getMarginBottom()) / 2;
         if (mFlexContainer->getFlexWrap() != (int)FlexWrap::WRAP_REVERSE) {
-            view->layout(left, top + topFromCrossAxis, width, view->getMeasuredHeight());
+            view->layout(left, top + topFromCrossAxis, measuredWidth, measuredHeight);
         } else {
-            view->layout(left, top - topFromCrossAxis, width, view->getMeasuredHeight());
+            view->layout(left, top - topFromCrossAxis, measuredWidth, measuredHeight);
         }
         break;
     }
 }
 
 void FlexboxHelper::layoutSingleChildVertical(View* view, FlexLine flexLine, bool isRtl,
-        int left, int top, int width, int height) {
-    FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
+        int left, int top, int right, int bottom) {
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(view->getLayoutParams());
     int alignItems = mFlexContainer->getAlignItems();
     if (flexItem->getAlignSelf() != (int)AlignSelf::AUTO) {
         // Expecting the values for alignItems and mAlignSelf match except for ALIGN_SELF_AUTO.
@@ -1270,25 +1295,31 @@ void FlexboxHelper::layoutSingleChildVertical(View* view, FlexLine flexLine, boo
         alignItems = flexItem->getAlignSelf();
     }
     int crossSize = flexLine.mCrossSize;
+    // cdroid's View::layout takes (left, top, width, height) unlike Android's (l, t, r, b).
+    // The width/height equal the view's measured size (right - left, bottom - top).
+    int measuredWidth = view->getMeasuredWidth();
+    int measuredHeight = view->getMeasuredHeight();
+    (void) right;
+    (void) bottom;
     switch ((AlignItems)alignItems) {
     case AlignItems::FLEX_START: // Intentional fall through
     case AlignItems::STRETCH: // Intentional fall through
     case AlignItems::BASELINE:
         if (!isRtl) {
-            view->layout(left + flexItem->getMarginLeft(), top,width,height);//right + flexItem->getMarginLeft(), bottom);
+            view->layout(left + flexItem->getMarginLeft(), top, measuredWidth, measuredHeight);
         } else {
-            view->layout(left - flexItem->getMarginRight(), top,width,height);//right - flexItem->getMarginRight(), bottom);
+            view->layout(left - flexItem->getMarginRight(), top, measuredWidth, measuredHeight);
         }
         break;
     case AlignItems::FLEX_END:
         if (!isRtl) {
-            view->layout(left + crossSize - view->getMeasuredWidth() - flexItem->getMarginRight(), top,width,height);
-                    //right + crossSize - view->getMeasuredWidth() - flexItem->getMarginRight(), bottom);
+            view->layout(left + crossSize - view->getMeasuredWidth() - flexItem->getMarginRight(),
+                    top, measuredWidth, measuredHeight);
         } else {
             // If the flexWrap == WRAP_REVERSE, the direction of the
             // flexEnd is flipped (from left to right).
-            view->layout(left - crossSize + view->getMeasuredWidth() + flexItem->getMarginLeft(), top,width,height);
-                    //right - crossSize + view->getMeasuredWidth() + flexItem->getMarginLeft(), bottom);
+            view->layout(left - crossSize + view->getMeasuredWidth() + flexItem->getMarginLeft(),
+                    top, measuredWidth, measuredHeight);
         }
         break;
     case AlignItems::CENTER:
@@ -1296,9 +1327,9 @@ void FlexboxHelper::layoutSingleChildVertical(View* view, FlexLine flexLine, boo
         int leftFromCrossAxis = (crossSize - view->getMeasuredWidth()
                 + lp->getMarginStart() - lp->getMarginEnd()) / 2;
         if (!isRtl) {
-            view->layout(left + leftFromCrossAxis, top, width,height);//right + leftFromCrossAxis, bottom);
+            view->layout(left + leftFromCrossAxis, top, measuredWidth, measuredHeight);
         } else {
-            view->layout(left - leftFromCrossAxis, top, width,height);//right - leftFromCrossAxis, bottom);
+            view->layout(left - leftFromCrossAxis, top, measuredWidth, measuredHeight);
         }
         break;
     }

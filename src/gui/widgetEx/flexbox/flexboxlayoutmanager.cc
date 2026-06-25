@@ -1,40 +1,69 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widgetEx/flexbox/flexboxlayoutmanager.h>
 #include <view/viewgroup.h>
 #include <algorithm>
+#include <core/context.h>
 #include <widgetEx/recyclerview/linearlayoutmanager.h>
 #include <widgetEx/recyclerview/orientationhelper.h>
 #include <widgetEx/recyclerview/layoutstate.h>
+#include <widgetEx/recyclerview/linearsmoothscroller.h>
 
 namespace cdroid {
 
-FlexboxLayoutManager::FlexboxLayoutManager(Context* context) {
-    init();
+FlexboxLayoutManager::FlexboxLayoutManager(Context* context)
+    : FlexboxLayoutManager(context, (int)FlexDirection::ROW, (int)FlexWrap::WRAP) {
 }
 
 FlexboxLayoutManager::FlexboxLayoutManager(Context* context, int flexDirection)
-    : mFlexDirection(flexDirection) {
-    init();
+    : FlexboxLayoutManager(context, flexDirection, (int)FlexWrap::WRAP) {
 }
 
 FlexboxLayoutManager::FlexboxLayoutManager(Context* context, int flexDirection, int flexWrap)
-    : mFlexDirection(flexDirection), mFlexWrap(flexWrap) {
+    : mFlexDirection(flexDirection), mFlexWrap(flexWrap), mAlignItems((int)AlignItems::STRETCH),
+      mContext(context) {
     init();
 }
 
-FlexboxLayoutManager::FlexboxLayoutManager(Context* context, const AttributeSet& attrs) {
-    mFlexDirection = attrs.getInt("flexDirection", (int)FlexDirection::ROW);
-    mFlexWrap = attrs.getInt("flexWrap", (int)FlexWrap::NOWRAP);
-    mJustifyContent = attrs.getInt("justifyContent", (int)JustifyContent::FLEX_START);
-    mAlignItems = attrs.getInt("alignItems", (int)AlignItems::FLEX_START);
-    mAlignContent = attrs.getInt("alignContent", (int)AlignContent::FLEX_START);
+FlexboxLayoutManager::FlexboxLayoutManager(Context* context, const AttributeSet& attrs)
+    : mContext(context) {
+    auto properties = getProperties(context, attrs, 0, 0);
+    switch (properties.orientation) {
+        case LinearLayoutManager::HORIZONTAL:
+            mFlexDirection = properties.reverseLayout
+                    ? (int)FlexDirection::ROW_REVERSE : (int)FlexDirection::ROW;
+            break;
+        case LinearLayoutManager::VERTICAL:
+            mFlexDirection = properties.reverseLayout
+                    ? (int)FlexDirection::COLUMN_REVERSE : (int)FlexDirection::COLUMN;
+            break;
+        default:
+            mFlexDirection = (int)FlexDirection::ROW;
+            break;
+    }
+    mFlexWrap = (int)FlexWrap::WRAP;
+    mAlignItems = (int)AlignItems::STRETCH;
     init();
 }
 
 void FlexboxLayoutManager::init() {
-    mFlexLinesResult = new FlexboxHelper::FlexLinesResult();
-    mOrientationHelper = OrientationHelper::createOrientationHelper(this, 
-        isMainAxisDirectionHorizontal() ? RecyclerView::HORIZONTAL : RecyclerView::VERTICAL);
     ensureFlexboxHelper();
+    mFlexLinesResult = new FlexboxHelper::FlexLinesResult();
     mAnchorInfo = new AnchorInfo();
 }
 
@@ -42,6 +71,7 @@ FlexboxLayoutManager::~FlexboxLayoutManager() {
     delete mFlexLinesResult;
     delete mFlexboxHelper;
     delete mOrientationHelper;
+    delete mSubOrientationHelper;
     delete mAnchorInfo;
 }
 
@@ -181,14 +211,14 @@ void FlexboxLayoutManager::updateLayoutState(int layoutDirection, int absDelta) 
 
 void FlexboxLayoutManager::updateLayoutStateToFillEnd(AnchorInfo* anchorInfo, bool fromNextLine, bool considerInfinite) {
     if (considerInfinite) {
-        // resolveInfiniteAmount() - will be implemented later if needed
+        resolveInfiniteAmount();
     } else {
         mLayoutState->mInfinite = false;
     }
     if (!isMainAxisDirectionHorizontal() && mIsRtl) {
         mLayoutState->mAvailable = anchorInfo->mCoordinate - getPaddingRight();
     } else {
-        mLayoutState->mAvailable = mOrientationHelper->getEnd() - anchorInfo->mCoordinate;
+        mLayoutState->mAvailable = mOrientationHelper->getEndAfterPadding() - anchorInfo->mCoordinate;
     }
     mLayoutState->mPosition = anchorInfo->mPosition;
     mLayoutState->mItemDirection = LayoutState::ITEM_DIRECTION_TAIL;
@@ -208,12 +238,13 @@ void FlexboxLayoutManager::updateLayoutStateToFillEnd(AnchorInfo* anchorInfo, bo
 
 void FlexboxLayoutManager::updateLayoutStateToFillStart(AnchorInfo* anchorInfo, bool fromPreviousLine, bool considerInfinite) {
     if (considerInfinite) {
-        // resolveInfiniteAmount() - will be implemented later if needed
+        resolveInfiniteAmount();
     } else {
         mLayoutState->mInfinite = false;
     }
     if (!isMainAxisDirectionHorizontal() && mIsRtl) {
-        mLayoutState->mAvailable = getWidth() - anchorInfo->mCoordinate - mOrientationHelper->getStartAfterPadding();
+        mLayoutState->mAvailable = (mParent != nullptr ? mParent->getWidth() : 0)
+                - anchorInfo->mCoordinate - mOrientationHelper->getStartAfterPadding();
     } else {
         mLayoutState->mAvailable = anchorInfo->mCoordinate - mOrientationHelper->getStartAfterPadding();
     }
@@ -284,8 +315,7 @@ bool FlexboxLayoutManager::isAutoMeasureEnabled() const {
 }
 
 RecyclerView::LayoutParams* FlexboxLayoutManager::generateDefaultLayoutParams() const {
-    return new RecyclerView::LayoutParams(RecyclerView::LayoutParams::WRAP_CONTENT,
-                                         RecyclerView::LayoutParams::WRAP_CONTENT);
+    return new LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
 }
 
 bool FlexboxLayoutManager::canScrollHorizontally() const {
@@ -307,17 +337,19 @@ bool FlexboxLayoutManager::canScrollVertically() const {
 }
 
 void FlexboxLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, RecyclerView::State& state) {
+    mRecycler = &recycler;
+    mState = &state;
     int childCount = state.getItemCount();
     if (childCount == 0 && state.isPreLayout()) {
         return;
     }
-    mRecycler = &recycler;
-    mState = &state;
     ensureFlexboxHelper();
     resolveLayoutDirection();
     ensureOrientationHelper();
     ensureLayoutState();
-    
+    mFlexboxHelper->ensureMeasureSpecCache(childCount);
+    mFlexboxHelper->ensureMeasuredSizeCache(childCount);
+
     mFlexboxHelper->ensureIndexToFlexLine(childCount);
 
     mLayoutState->mShouldRecycle = false;
@@ -328,7 +360,7 @@ void FlexboxLayoutManager::onLayoutChildren(RecyclerView::Recycler& recycler, Re
 
     if (!mAnchorInfo->mValid || mPendingScrollPosition != RecyclerView::NO_POSITION ||
             mPendingSavedState != nullptr) {
-        mAnchorInfo->reset();
+        mAnchorInfo->reset(this);
         updateAnchorInfoForLayout(state, mAnchorInfo);
         mAnchorInfo->mValid = true;
     }
@@ -376,14 +408,24 @@ void FlexboxLayoutManager::onLayoutCompleted(RecyclerView::State& state) {
     mPendingSavedState = nullptr;
     mPendingScrollPosition = RecyclerView::NO_POSITION;
     mPendingScrollPositionOffset = INT_MIN;
-    mAnchorInfo->reset();
+    mDirtyPosition = RecyclerView::NO_POSITION;
+    mAnchorInfo->reset(this);
     mViewCache.clear();
 }
 
 void FlexboxLayoutManager::scrollToPosition(int position) {
     mPendingScrollPosition = position;
     mPendingScrollPositionOffset = INT_MIN;
+    if (mPendingSavedState != nullptr) {
+        mPendingSavedState->invalidateAnchor();
+    }
     requestLayout();
+}
+
+void FlexboxLayoutManager::smoothScrollToPosition(RecyclerView& recyclerView, RecyclerView::State& state, int position) {
+    LinearSmoothScroller* linearSmoothScroller = new LinearSmoothScroller(recyclerView.getContext());
+    linearSmoothScroller->setTargetPosition(position);
+    startSmoothScroll(linearSmoothScroller);
 }
 
 void FlexboxLayoutManager::scrollToPositionWithOffset(int position, int offset) {
@@ -462,7 +504,8 @@ int FlexboxLayoutManager::handleScrollingSubOrientation(int delta) {
     int parentLength = isMainAxisHorizontal ? (mParent != nullptr ? mParent->getWidth() : 0) : (mParent != nullptr ? mParent->getHeight() : 0);
     int mainAxisLength = isMainAxisHorizontal ? getWidth() : getHeight();
 
-    if (mIsRtl) {
+    bool layoutRtl = (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL);
+    if (layoutRtl) {
         int absDelta = std::abs(delta);
         if (delta < 0) {
             delta = std::min(mainAxisLength + mAnchorInfo->mPerpendicularCoordinate - parentLength, absDelta);
@@ -546,8 +589,8 @@ int FlexboxLayoutManager::fixLayoutEndGap(int endOffset, RecyclerView::Recycler&
 }
 
 void FlexboxLayoutManager::updateFlexLines(int childCount) {
-    int widthMeasureSpec = View::MeasureSpec::makeMeasureSpec(getWidth(), View::MeasureSpec::EXACTLY);
-    int heightMeasureSpec = View::MeasureSpec::makeMeasureSpec(getHeight(), View::MeasureSpec::EXACTLY);
+    int widthMeasureSpec = View::MeasureSpec::makeMeasureSpec(getWidth(), getWidthMode());
+    int heightMeasureSpec = View::MeasureSpec::makeMeasureSpec(getHeight(), getHeightMode());
     int width = getWidth();
     int height = getHeight();
     bool isMainSizeChanged;
@@ -555,10 +598,14 @@ void FlexboxLayoutManager::updateFlexLines(int childCount) {
 
     if (isMainAxisDirectionHorizontal()) {
         isMainSizeChanged = mLastWidth != INT_MIN && mLastWidth != width;
-        needsToFill = mLayoutState->mInfinite ? height : mLayoutState->mAvailable;
+        needsToFill = mLayoutState->mInfinite
+                ? (mContext != nullptr ? mContext->getDisplayMetrics().heightPixels : height)
+                : mLayoutState->mAvailable;
     } else {
         isMainSizeChanged = mLastHeight != INT_MIN && mLastHeight != height;
-        needsToFill = mLayoutState->mInfinite ? width : mLayoutState->mAvailable;
+        needsToFill = mLayoutState->mInfinite
+                ? (mContext != nullptr ? mContext->getDisplayMetrics().widthPixels : width)
+                : mLayoutState->mAvailable;
     }
 
     mLastWidth = width;
@@ -640,7 +687,7 @@ int FlexboxLayoutManager::fill(RecyclerView::Recycler& recycler, LayoutState& la
     int consumed = 0;
     bool mainAxisHorizontal = isMainAxisDirectionHorizontal();
     while ((remainingSpace > 0 || mLayoutState->mInfinite) &&
-            layoutState.hasMore(state)) {
+            layoutState.hasMore(state, mFlexLines)) {
         FlexLine* flexLine = &mFlexLines[layoutState.mFlexLinePosition];
         layoutState.mPosition = flexLine->getFirstIndex();
         consumed += layoutFlexLine(*flexLine, layoutState, recycler);
@@ -875,13 +922,13 @@ int FlexboxLayoutManager::layoutFlexLineMainAxisHorizontal(FlexLine& flexLine, L
         int topWithDecoration = childTop + getTopDecorationHeight(view);
         if (mIsRtl) {
             mFlexboxHelper->layoutSingleChildHorizontal(view, flexLine,
-                    (int)(childRight - view->getMeasuredWidth()),
-                    topWithDecoration, (int)childRight,
+                    (int)roundf(childRight) - view->getMeasuredWidth(),
+                    topWithDecoration, (int)roundf(childRight),
                     topWithDecoration + view->getMeasuredHeight());
         } else {
             mFlexboxHelper->layoutSingleChildHorizontal(view, flexLine,
-                    (int)childLeft, topWithDecoration,
-                    (int)childLeft + view->getMeasuredWidth(),
+                    (int)roundf(childLeft), topWithDecoration,
+                    (int)roundf(childLeft) + view->getMeasuredWidth(),
                     topWithDecoration + view->getMeasuredHeight());
         }
         childLeft += (view->getMeasuredWidth() + lp->rightMargin + getRightDecorationWidth(view)
@@ -972,7 +1019,7 @@ int FlexboxLayoutManager::layoutFlexLineMainAxisVertical(FlexLine& flexLine, Lay
         }
 
         childTop += (lp->topMargin + getTopDecorationHeight(view));
-        childBottom -= (lp->bottomMargin + getBottomDecorationHeight(view));
+        childBottom -= (lp->rightMargin + getBottomDecorationHeight(view));
         Rect TEMP_RECT;
         if (layoutState.mLayoutDirection == LayoutState::LAYOUT_END) {
             calculateItemDecorationsForChild(view, TEMP_RECT);
@@ -989,29 +1036,29 @@ int FlexboxLayoutManager::layoutFlexLineMainAxisVertical(FlexLine& flexLine, Lay
             if (mFromBottomToTop) {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
                         rightWithDecoration - view->getMeasuredWidth(),
-                        (int)(childBottom - view->getMeasuredHeight()),
-                        rightWithDecoration, (int)childBottom);
+                        (int)roundf(childBottom) - view->getMeasuredHeight(),
+                        rightWithDecoration, (int)roundf(childBottom));
             } else {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
                         rightWithDecoration - view->getMeasuredWidth(),
-                        (int)childTop, rightWithDecoration,
-                        (int)childTop + view->getMeasuredHeight());
+                        (int)roundf(childTop), rightWithDecoration,
+                        (int)roundf(childTop) + view->getMeasuredHeight());
             }
         } else {
             if (mFromBottomToTop) {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
-                        leftWithDecoration, (int)(childBottom - view->getMeasuredHeight()),
-                        leftWithDecoration + view->getMeasuredWidth(), (int)childBottom);
+                        leftWithDecoration, (int)roundf(childBottom) - view->getMeasuredHeight(),
+                        leftWithDecoration + view->getMeasuredWidth(), (int)roundf(childBottom));
             } else {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
-                        leftWithDecoration, (int)childTop,
+                        leftWithDecoration, (int)roundf(childTop),
                         leftWithDecoration + view->getMeasuredWidth(),
-                        (int)childTop + view->getMeasuredHeight());
+                        (int)roundf(childTop) + view->getMeasuredHeight());
             }
         }
-        childTop += (view->getMeasuredHeight() + lp->bottomMargin + getBottomDecorationHeight(view)
+        childTop += (view->getMeasuredHeight() + lp->topMargin + getBottomDecorationHeight(view)
                 + spaceBetweenItem);
-        childBottom -= (view->getMeasuredHeight() + lp->topMargin + getTopDecorationHeight(view)
+        childBottom -= (view->getMeasuredHeight() + lp->bottomMargin + getTopDecorationHeight(view)
                 + spaceBetweenItem);
     }
     layoutState.mFlexLinePosition += mLayoutState->mLayoutDirection;
@@ -1034,7 +1081,7 @@ int FlexboxLayoutManager::computeVerticalScrollOffset(RecyclerView::State& state
     return scrollOffset;
 }
 
- int FlexboxLayoutManager::computeScrollOffset(RecyclerView::State& state) {
+int FlexboxLayoutManager::computeScrollOffset(RecyclerView::State& state) {
     if (getChildCount() == 0) {
         return 0;
     }
@@ -1044,33 +1091,33 @@ int FlexboxLayoutManager::computeVerticalScrollOffset(RecyclerView::State& state
     if (state.getItemCount() == 0 || firstReferenceView == nullptr || lastReferenceView == nullptr) {
         return 0;
     }
-    //assert mFlexboxHelper->mIndexToFlexLine != nullptr;
+    const std::vector<int>& indexToFlexLine = mFlexboxHelper->getIndexToFlexLine();
     int minPosition = getPosition(firstReferenceView);
     int maxPosition = getPosition(lastReferenceView);
     int laidOutArea = std::abs(mOrientationHelper->getDecoratedEnd(lastReferenceView) -
             mOrientationHelper->getDecoratedStart(firstReferenceView));
-    int firstLinePosition = mFlexboxHelper->mIndexToFlexLine[minPosition];
-    if (firstLinePosition == 0 || firstLinePosition == NO_POSITION) {
+    int firstLinePosition = indexToFlexLine[minPosition];
+    if (firstLinePosition == 0 || firstLinePosition == RecyclerView::NO_POSITION) {
         return 0;
     }
-    int lastLinePosition = mFlexboxHelper->mIndexToFlexLine[maxPosition];
+    int lastLinePosition = indexToFlexLine[maxPosition];
     int lineRange = lastLinePosition - firstLinePosition + 1;
     float averageSizePerLine = (float) laidOutArea / lineRange;
     // The number of lines before the first line is equal to the value of firstLinePosition
-    return roundf(
-            firstLinePosition * averageSizePerLine + (mOrientationHelper->getAfterPadding()
+    return (int)roundf(
+            firstLinePosition * averageSizePerLine + (mOrientationHelper->getStartAfterPadding()
                     - mOrientationHelper->getDecoratedStart(firstReferenceView)));
 }
 
 int FlexboxLayoutManager::computeHorizontalScrollExtent(RecyclerView::State& state) {
     int scrollExtent = computeScrollExtent(state);
-    LOGD("computeHorizontalScrollExtent: " + scrollExtent);
+    LOGD("computeHorizontalScrollExtent: %d",scrollExtent);
     return scrollExtent;
 }
 
 int FlexboxLayoutManager::computeVerticalScrollExtent(RecyclerView::State& state) {
     int scrollExtent = computeScrollExtent(state);
-    LOGD("computeVerticalScrollExtent: " + scrollExtent);
+    LOGD("computeVerticalScrollExtent: %d",scrollExtent);
     return scrollExtent;
 }
 int FlexboxLayoutManager::computeScrollExtent(RecyclerView::State& state) {
@@ -1092,13 +1139,13 @@ int FlexboxLayoutManager::computeScrollExtent(RecyclerView::State& state) {
 
 int FlexboxLayoutManager::computeHorizontalScrollRange(RecyclerView::State& state) {
     int scrollRange = computeScrollRange(state);
-    LOGD("computeHorizontalScrollRange: " + scrollRange);
+    LOGD("computeHorizontalScrollRange:%d",scrollRange);
     return scrollRange;
 }
 
 int FlexboxLayoutManager::computeVerticalScrollRange(RecyclerView::State& state) {
     int scrollRange = computeScrollRange(state);
-    LOGD("computeVerticalScrollRange: " + scrollRange);
+    LOGD("computeVerticalScrollRange: %d" ,scrollRange);
     return scrollRange;
 }
 
@@ -1127,24 +1174,32 @@ bool FlexboxLayoutManager::supportsPredictiveItemAnimations() {
 void FlexboxLayoutManager::onDetachedFromWindow(RecyclerView& view, RecyclerView::Recycler& recycler) {
     if (mRecycleChildrenOnDetach) {
         removeAndRecycleAllViews(recycler);
-    } else {
-        detachAndScrapAttachedViews(recycler);
+        recycler.clear();
     }
 }
 
 Parcelable* FlexboxLayoutManager::onSaveInstanceState() {
-    SavedState* state = new SavedState();
-    state->mAnchorPosition = mAnchorPosition;
-    state->mAnchorOffset = mAnchorOffset;
-    state->mAnchorLayoutFromEnd = mAnchorLayoutFromEnd;
-    return state;
+    if (mPendingSavedState != nullptr) {
+        return new SavedState(*mPendingSavedState);
+    }
+    SavedState* savedState = new SavedState();
+    if (getChildCount() > 0) {
+        View* firstView = getChildClosestToStart();
+        savedState->mAnchorPosition = getPosition(firstView);
+        savedState->mAnchorOffset = mOrientationHelper->getDecoratedStart(firstView)
+                - mOrientationHelper->getStartAfterPadding();
+    } else {
+        savedState->invalidateAnchor();
+    }
+    return savedState;
 }
 
 void FlexboxLayoutManager::onRestoreInstanceState(Parcelable& state) {
-    SavedState* savedState = static_cast<SavedState*>(&state);
-    mAnchorPosition = savedState->mAnchorPosition;
-    mAnchorOffset = savedState->mAnchorOffset;
-    mAnchorLayoutFromEnd = savedState->mAnchorLayoutFromEnd;
+    SavedState* savedState = dynamic_cast<SavedState*>(&state);
+    if (savedState != nullptr) {
+        mPendingSavedState = savedState;
+        requestLayout();
+    }
 }
 
 bool FlexboxLayoutManager::isLayoutRTL() {
@@ -1177,6 +1232,8 @@ void FlexboxLayoutManager::resolveLayoutDirection() {
             mFromBottomToTop = true;
             break;
         default:
+            mIsRtl = false;
+            mFromBottomToTop = false;
             break;
     }
 }
@@ -1191,14 +1248,11 @@ View* FlexboxLayoutManager::getFlexItemAt(int index) {
     if (cachedView != nullptr) {
         return cachedView;
     }
-    return findViewByPosition(index);
+    return mRecycler->getViewForPosition(index);
 }
 
 View* FlexboxLayoutManager::getReorderedFlexItemAt(int index) {
-    if (index >= 0 && index < mReorderedIndices.size()) {
-        return findViewByPosition(mReorderedIndices[index]);
-    }
-    return nullptr;
+    return getFlexItemAt(index);
 }
 
 void FlexboxLayoutManager::addView(View* view) {
@@ -1223,7 +1277,13 @@ int FlexboxLayoutManager::getFlexDirection() {
 
 void FlexboxLayoutManager::setFlexDirection(int flexDirection) {
     if (mFlexDirection != flexDirection) {
+        removeAllViews();
         mFlexDirection = flexDirection;
+        delete mOrientationHelper;
+        mOrientationHelper = nullptr;
+        delete mSubOrientationHelper;
+        mSubOrientationHelper = nullptr;
+        clearFlexLines();
         requestLayout();
     }
 }
@@ -1233,8 +1293,20 @@ int FlexboxLayoutManager::getFlexWrap() {
 }
 
 void FlexboxLayoutManager::setFlexWrap(int flexWrap) {
+    if (flexWrap == (int)FlexWrap::WRAP_REVERSE) {
+        LOGE("wrap_reverse is not supported in FlexboxLayoutManager");
+        return;
+    }
     if (mFlexWrap != flexWrap) {
+        if (mFlexWrap == (int)FlexWrap::NOWRAP || flexWrap == (int)FlexWrap::NOWRAP) {
+            removeAllViews();
+            clearFlexLines();
+        }
         mFlexWrap = flexWrap;
+        delete mOrientationHelper;
+        mOrientationHelper = nullptr;
+        delete mSubOrientationHelper;
+        mSubOrientationHelper = nullptr;
         requestLayout();
     }
 }
@@ -1256,24 +1328,34 @@ int FlexboxLayoutManager::getAlignItems() {
 
 void FlexboxLayoutManager::setAlignItems(int alignItems) {
     if (mAlignItems != alignItems) {
+        if (mAlignItems == (int)AlignItems::STRETCH || alignItems == (int)AlignItems::STRETCH) {
+            removeAllViews();
+            clearFlexLines();
+        }
         mAlignItems = alignItems;
         requestLayout();
     }
 }
 
 int FlexboxLayoutManager::getAlignContent() {
-    return mAlignContent;
+    return (int)AlignContent::STRETCH;
 }
 
 void FlexboxLayoutManager::setAlignContent(int alignContent) {
-    if (mAlignContent != alignContent) {
-        mAlignContent = alignContent;
-        requestLayout();
-    }
+    LOGE("Setting the alignContent in FlexboxLayoutManager is not supported. "
+         "Use FlexboxLayout if you need this attribute.");
 }
 
 std::vector<FlexLine> FlexboxLayoutManager::getFlexLines() {
-    return mFlexLines;
+    std::vector<FlexLine> result;
+    result.reserve(mFlexLines.size());
+    for (auto& flexLine : mFlexLines) {
+        if (flexLine.getItemCount() == 0) {
+            continue;
+        }
+        result.push_back(flexLine);
+    }
+    return result;
 }
 
 bool FlexboxLayoutManager::isMainAxisDirectionHorizontal() const {
@@ -1321,11 +1403,13 @@ int FlexboxLayoutManager::getPaddingEnd() {
 }
 
 int FlexboxLayoutManager::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) {
-    return ViewGroup::getChildMeasureSpec(widthSpec, padding, childDimension);
+    return RecyclerView::LayoutManager::getChildMeasureSpec(getWidth(), getWidthMode(),
+            padding, childDimension, canScrollHorizontally());
 }
 
 int FlexboxLayoutManager::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) {
-    return ViewGroup::getChildMeasureSpec(heightSpec, padding, childDimension);
+    return RecyclerView::LayoutManager::getChildMeasureSpec(getHeight(), getHeightMode(),
+            padding, childDimension, canScrollVertically());
 }
 
 int FlexboxLayoutManager::getLargestMainSize() {
@@ -1376,7 +1460,7 @@ void FlexboxLayoutManager::setMaxLine(int maxLine) {
     }
 }
 
-std::vector<FlexLine> FlexboxLayoutManager::getFlexLinesInternal() {
+std::vector<FlexLine>& FlexboxLayoutManager::getFlexLinesInternal() {
     return mFlexLines;
 }
 
@@ -1395,11 +1479,11 @@ bool FlexboxLayoutManager::computeScrollVectorForPosition(int targetPosition, Po
     int firstChildPos = getPosition(view);
     int direction = targetPosition < firstChildPos ? -1 : 1;
     if (isMainAxisDirectionHorizontal()) {
-        scrollVector.x = direction;
-        scrollVector.y = 0;
-    } else {
         scrollVector.x = 0;
         scrollVector.y = direction;
+    } else {
+        scrollVector.x = direction;
+        scrollVector.y = 0;
     }
     return true;
 }
@@ -1495,6 +1579,18 @@ void FlexboxLayoutManager::updateDirtyPosition(int positionStart) {
     if (firstView == nullptr) {
         return;
     }
+
+    // Assign the pending scroll position and offset so that the first visible position is
+    // restored in the next layout.
+    ensureOrientationHelper();
+    mPendingScrollPosition = getPosition(firstView);
+    if (!isMainAxisDirectionHorizontal() && mIsRtl) {
+        mPendingScrollPositionOffset = mOrientationHelper->getDecoratedEnd(firstView)
+                + mOrientationHelper->getEndPadding();
+    } else {
+        mPendingScrollPositionOffset = mOrientationHelper->getDecoratedStart(firstView)
+                - mOrientationHelper->getStartAfterPadding();
+    }
 }
 
 View* FlexboxLayoutManager::findOneVisibleChild(int fromIndex, int toIndex, bool completelyVisible) {
@@ -1513,10 +1609,10 @@ bool FlexboxLayoutManager::isViewVisible(View* view, bool completelyVisible) {
     int top = getPaddingTop();
     int right = getWidth() - getPaddingRight();
     int bottom = getHeight() - getPaddingBottom();
-    int childLeft = getDecoratedLeft(view);
-    int childTop = getDecoratedTop(view);
-    int childRight = getDecoratedRight(view);
-    int childBottom = getDecoratedBottom(view);
+    int childLeft = getChildLeft(view);
+    int childTop = getChildTop(view);
+    int childRight = getChildRight(view);
+    int childBottom = getChildBottom(view);
 
     bool horizontalCompletelyVisible = false;
     bool horizontalPartiallyVisible = false;
@@ -1526,14 +1622,14 @@ bool FlexboxLayoutManager::isViewVisible(View* view, bool completelyVisible) {
     if (left <= childLeft && right >= childRight) {
         horizontalCompletelyVisible = true;
     }
-    if (childLeft < right && childRight > left) {
+    if (childLeft >= right || childRight >= left) {
         horizontalPartiallyVisible = true;
     }
 
     if (top <= childTop && bottom >= childBottom) {
         verticalCompletelyVisible = true;
     }
-    if (childTop < bottom && childBottom > top) {
+    if (childTop >= bottom || childBottom >= top) {
         verticalPartiallyVisible = true;
     }
 
@@ -1544,19 +1640,54 @@ bool FlexboxLayoutManager::isViewVisible(View* view, bool completelyVisible) {
     }
 }
 
+int FlexboxLayoutManager::getChildLeft(View* view) {
+    ViewGroup::MarginLayoutParams* params = (ViewGroup::MarginLayoutParams*) view->getLayoutParams();
+    return getDecoratedLeft(view) - params->leftMargin;
+}
+
+int FlexboxLayoutManager::getChildRight(View* view) {
+    ViewGroup::MarginLayoutParams* params = (ViewGroup::MarginLayoutParams*) view->getLayoutParams();
+    return getDecoratedRight(view) + params->rightMargin;
+}
+
+int FlexboxLayoutManager::getChildTop(View* view) {
+    ViewGroup::MarginLayoutParams* params = (ViewGroup::MarginLayoutParams*) view->getLayoutParams();
+    return getDecoratedTop(view) - params->topMargin;
+}
+
+int FlexboxLayoutManager::getChildBottom(View* view) {
+    ViewGroup::MarginLayoutParams* params = (ViewGroup::MarginLayoutParams*) view->getLayoutParams();
+    return getDecoratedBottom(view) + params->bottomMargin;
+}
+
+void FlexboxLayoutManager::clearFlexLines() {
+    mFlexLines.clear();
+    mAnchorInfo->reset(this);
+    mAnchorInfo->mPerpendicularCoordinate = 0;
+}
+
+void FlexboxLayoutManager::resolveInfiniteAmount() {
+    int crossMode;
+    if (isMainAxisDirectionHorizontal()) {
+        crossMode = getHeightMode();
+    } else {
+        crossMode = getWidthMode();
+    }
+    mLayoutState->mInfinite = crossMode == View::MeasureSpec::UNSPECIFIED
+            || crossMode == View::MeasureSpec::AT_MOST;
+}
+
 // SavedState implementation
 FlexboxLayoutManager::SavedState::SavedState() {}
 
 FlexboxLayoutManager::SavedState::SavedState(Parcel& in) {
     mAnchorPosition = in.readInt();
     mAnchorOffset = in.readInt();
-    mAnchorLayoutFromEnd = in.readInt() != 0;
 }
 
 FlexboxLayoutManager::SavedState::SavedState(const SavedState& other) {
     mAnchorPosition = other.mAnchorPosition;
     mAnchorOffset = other.mAnchorOffset;
-    mAnchorLayoutFromEnd = other.mAnchorLayoutFromEnd;
 }
 
 bool FlexboxLayoutManager::SavedState::hasValidAnchor(int itemCount) const {
@@ -1574,7 +1705,6 @@ int FlexboxLayoutManager::SavedState::describeContents() {
 void FlexboxLayoutManager::SavedState::writeToParcel(Parcel& dest, int flags) {
     dest.writeInt(mAnchorPosition);
     dest.writeInt(mAnchorOffset);
-    dest.writeInt(mAnchorLayoutFromEnd ? 1 : 0);
 }
 
 void FlexboxLayoutManager::updateAnchorInfoForLayout(RecyclerView::State& state, AnchorInfo* anchorInfo) {
@@ -1706,6 +1836,8 @@ View* FlexboxLayoutManager::findReferenceChild(int start, int end, int itemCount
     ensureLayoutState();
     View* invalidMatch = nullptr;
     View* outOfBoundsMatch = nullptr;
+    int boundStart = mOrientationHelper->getStartAfterPadding();
+    int boundEnd = mOrientationHelper->getEndAfterPadding();
     int increment = end > start ? 1 : -1;
     for (int i = start; i != end; i += increment) {
         View* child = getChildAt(i);
@@ -1713,16 +1845,84 @@ View* FlexboxLayoutManager::findReferenceChild(int start, int end, int itemCount
             continue;
         }
         int position = getPosition(child);
-        if (position == RecyclerView::NO_POSITION) {
-            continue;
+        if (position >= 0 && position < itemCount) {
+            RecyclerView::LayoutParams* params =
+                    (RecyclerView::LayoutParams*) child->getLayoutParams();
+            if (params->isItemRemoved()) {
+                if (invalidMatch == nullptr) {
+                    invalidMatch = child;
+                }
+            } else if (mOrientationHelper->getDecoratedStart(child) < boundStart ||
+                    mOrientationHelper->getDecoratedEnd(child) > boundEnd) {
+                if (outOfBoundsMatch == nullptr) {
+                    outOfBoundsMatch = child;
+                }
+            } else {
+                return child;
+            }
         }
-        if (position < 0 || position >= itemCount) {
-            outOfBoundsMatch = child;
-            continue;
-        }
-        return child;
     }
-    return invalidMatch != nullptr ? invalidMatch : outOfBoundsMatch;
+    return outOfBoundsMatch != nullptr ? outOfBoundsMatch : invalidMatch;
 }
+
+// LayoutParams implementation
+FlexboxLayoutManager::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
+    : RecyclerView::LayoutParams(c, attrs) {
+}
+
+FlexboxLayoutManager::LayoutParams::LayoutParams(int width, int height)
+    : RecyclerView::LayoutParams(width, height) {
+}
+
+FlexboxLayoutManager::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
+    : RecyclerView::LayoutParams(source) {
+}
+
+FlexboxLayoutManager::LayoutParams::LayoutParams(const RecyclerView::LayoutParams& source)
+    : RecyclerView::LayoutParams(source) {
+}
+
+int FlexboxLayoutManager::LayoutParams::getWidth() { return width; }
+void FlexboxLayoutManager::LayoutParams::setWidth(int w) { width = w; }
+int FlexboxLayoutManager::LayoutParams::getHeight() { return height; }
+void FlexboxLayoutManager::LayoutParams::setHeight(int h) { height = h; }
+
+int FlexboxLayoutManager::LayoutParams::getOrder() {
+    return FlexItem::ORDER_DEFAULT;
+}
+
+void FlexboxLayoutManager::LayoutParams::setOrder(int order) {
+    // Unlike the FlexboxLayout, the order attribute is not supported, we don't calculate
+    // the order attribute because preparing the order attribute requires all view holders
+    // to be inflated at least once, which is inefficient if the number of items is large.
+    LOGE("Setting the order in FlexboxLayoutManager is not supported. "
+         "Use FlexboxLayout if you need to reorder using the attribute.");
+}
+
+float FlexboxLayoutManager::LayoutParams::getFlexGrow() { return mFlexGrow; }
+void FlexboxLayoutManager::LayoutParams::setFlexGrow(float flexGrow) { mFlexGrow = flexGrow; }
+float FlexboxLayoutManager::LayoutParams::getFlexShrink() { return mFlexShrink; }
+void FlexboxLayoutManager::LayoutParams::setFlexShrink(float flexShrink) { mFlexShrink = flexShrink; }
+int FlexboxLayoutManager::LayoutParams::getAlignSelf() { return mAlignSelf; }
+void FlexboxLayoutManager::LayoutParams::setAlignSelf(int alignSelf) { mAlignSelf = alignSelf; }
+int FlexboxLayoutManager::LayoutParams::getMinWidth() { return mMinWidth; }
+void FlexboxLayoutManager::LayoutParams::setMinWidth(int minWidth) { mMinWidth = minWidth; }
+int FlexboxLayoutManager::LayoutParams::getMinHeight() { return mMinHeight; }
+void FlexboxLayoutManager::LayoutParams::setMinHeight(int minHeight) { mMinHeight = minHeight; }
+int FlexboxLayoutManager::LayoutParams::getMaxWidth() { return mMaxWidth; }
+void FlexboxLayoutManager::LayoutParams::setMaxWidth(int maxWidth) { mMaxWidth = maxWidth; }
+int FlexboxLayoutManager::LayoutParams::getMaxHeight() { return mMaxHeight; }
+void FlexboxLayoutManager::LayoutParams::setMaxHeight(int maxHeight) { mMaxHeight = maxHeight; }
+bool FlexboxLayoutManager::LayoutParams::isWrapBefore() { return mWrapBefore; }
+void FlexboxLayoutManager::LayoutParams::setWrapBefore(bool wrapBefore) { mWrapBefore = wrapBefore; }
+float FlexboxLayoutManager::LayoutParams::getFlexBasisPercent() { return mFlexBasisPercent; }
+void FlexboxLayoutManager::LayoutParams::setFlexBasisPercent(float flexBasisPercent) { mFlexBasisPercent = flexBasisPercent; }
+
+int FlexboxLayoutManager::LayoutParams::getMarginLeft() { return leftMargin; }
+int FlexboxLayoutManager::LayoutParams::getMarginTop() { return topMargin; }
+int FlexboxLayoutManager::LayoutParams::getMarginRight() { return rightMargin; }
+int FlexboxLayoutManager::LayoutParams::getMarginBottom() { return bottomMargin; }
+int FlexboxLayoutManager::LayoutParams::getMarginStart() { return startMargin; }
+int FlexboxLayoutManager::LayoutParams::getMarginEnd() { return endMargin; }
 
 } // namespace cdroid

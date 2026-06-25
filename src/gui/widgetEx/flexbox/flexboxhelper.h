@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __FLEX_HELPER_H__
 #define __FLEX_HELPER_H__
 #include <view/viewgroup.h>
@@ -26,7 +43,7 @@ public:
         std::vector<FlexLine> mFlexLines;
         int mChildState;
         void reset() {
-            mFlexLines;
+            mFlexLines.clear();
             mChildState = 0;
         }
     };
@@ -59,9 +76,9 @@ private:
     void checkSizeConstraints(View* view, int index);
     void ensureChildrenFrozen(int size);
 
-    void expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
+    void expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine& flexLine,
          int maxMainSize, int paddingAlongMainAxis, bool calledRecursively);
-    void shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine flexLine,
+    void shrinkFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine& flexLine,
          int maxMainSize, int paddingAlongMainAxis, bool calledRecursively);
 
     int getChildWidthMeasureSpecInternal(int widthMeasureSpec,FlexItem* flexItem,int padding);

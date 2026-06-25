@@ -1,8 +1,29 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widgetEx/flexbox/flexboxlayout.h>
 //REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
 
 DECLARE_WIDGET(FlexboxLayout)
+
+FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
+    init();
+}
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
     init();
@@ -18,12 +39,12 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
             {"wrap_reverse" , FlexWrap::WRAP_REVERSE}
         }, (int)FlexWrap::NOWRAP);
     mJustifyContent = attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
-            {"flex_start",JustifyContent::FLEX_START},
-            {"flex_end", JustifyContent::FLEX_END},
-            {"center"  , JustifyContent::CENTER},
-            {"space_between", JustifyContent::SPACE_BETWEEN},
-            {"space_around" , JustifyContent::SPACE_AROUND},
-            {"space_evenly" , JustifyContent::SPACE_EVENLY}
+            {"flex_start",(int)JustifyContent::FLEX_START},
+            {"flex_end", (int)JustifyContent::FLEX_END},
+            {"center"  , (int)JustifyContent::CENTER},
+            {"space_between", (int)JustifyContent::SPACE_BETWEEN},
+            {"space_around" , (int)JustifyContent::SPACE_AROUND},
+            {"space_evenly" , (int)JustifyContent::SPACE_EVENLY}
         }, (int)JustifyContent::FLEX_START);
     mAlignItems = attrs.getInt("alignItems",std::unordered_map<std::string,int>{
             {"flex_start",(int)AlignItems::FLEX_START},
@@ -56,7 +77,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
     }
     std::unordered_map<std::string,int>divs={
             {"beginning",(int)SHOW_DIVIDER_BEGINNING},
-            {"midle",(int)SHOW_DIVIDER_MIDDLE},
+            {"middle",(int)SHOW_DIVIDER_MIDDLE},
             {"end",(int)SHOW_DIVIDER_END},
             {"none",(int)SHOW_DIVIDER_NONE}
         };
@@ -89,7 +110,7 @@ FlexboxLayout::~FlexboxLayout(){
 void FlexboxLayout::init(){
     mFlexDirection= FlexDirection::ROW;
     mFlexWrap = FlexWrap::NOWRAP;
-    mJustifyContent = JustifyContent::FLEX_START;
+    mJustifyContent = (int)JustifyContent::FLEX_START;
     mAlignItems  = (int)AlignItems::FLEX_START;
     mAlignContent= (int)AlignContent::FLEX_START;
     mMaxLine = NOT_SET;
@@ -160,6 +181,13 @@ void FlexboxLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpe
     mFlexLinesResult->reset();
     mFlexboxHelper->calculateHorizontalFlexLines(mFlexLinesResult, widthMeasureSpec,heightMeasureSpec);
     mFlexLines = mFlexLinesResult->mFlexLines;
+    LOGD("measureHorizontal: childCount=%d flexLines=%zu largestMain=%d sumCross=%d",
+            getChildCount(), mFlexLines.size(), getLargestMainSize(), getSumOfCrossSize());
+    if (getChildCount() > 0) {
+        LOGD("  child0 measured=%dx%d vis=%d",
+                getChildAt(0)->getMeasuredWidth(), getChildAt(0)->getMeasuredHeight(),
+                (int) getChildAt(0)->getVisibility());
+    }
 
     mFlexboxHelper->determineMainSize(widthMeasureSpec, heightMeasureSpec);
 
@@ -324,7 +352,7 @@ int FlexboxLayout::getSumOfCrossSize() {
     return sum;
 }
 
-bool FlexboxLayout::isMainAxisDirectionHorizontal() {
+bool FlexboxLayout::isMainAxisDirectionHorizontal() const {
     return (mFlexDirection == FlexDirection::ROW) || (mFlexDirection == FlexDirection::ROW_REVERSE);
 }
 
@@ -360,6 +388,8 @@ void FlexboxLayout::onLayout(bool changed, int left, int top, int width, int hei
 }
 
 void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, int height) {
+    LOGD("layoutHorizontal: childCount=%d flexLines=%zu isRtl=%d w=%d h=%d",
+            getChildCount(), mFlexLines.size(), (int) isRtl, width, height);
     int paddingLeft = getPaddingLeft();
     int paddingRight = getPaddingRight();
     // Use float to reduce the round error that may happen in when justifyContent ==
@@ -382,7 +412,7 @@ void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, i
             childTop += mDividerHorizontalHeight;
         }
         float spaceBetweenItem = 0.f;
-        switch (mJustifyContent) {
+        switch ((JustifyContent)mJustifyContent) {
         case JustifyContent::FLEX_START:
             childLeft = paddingLeft;
             childRight = width - paddingRight;
@@ -472,6 +502,11 @@ void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, i
             }
             childLeft += child->getMeasuredWidth() + spaceBetweenItem + lp->rightMargin;
             childRight -= child->getMeasuredWidth() + spaceBetweenItem + lp->leftMargin;
+            if (i == 0 && j == 0) {
+                LOGD("  first child laid out: l=%d t=%d r=%d b=%d measured=%dx%d",
+                        child->getLeft(), child->getTop(), child->getRight(), child->getBottom(),
+                        child->getMeasuredWidth(), child->getMeasuredHeight());
+            }
 
             if (isRtl) {
                 flexLine.updatePositionFromView(child, /*leftDecoration*/endDividerLength, 0,
@@ -511,7 +546,7 @@ void FlexboxLayout::layoutVertical(bool isRtl, bool fromBottomToTop, int left, i
             childRight -= mDividerVerticalWidth;
         }
         float spaceBetweenItem = 0.f;
-        switch (mJustifyContent) {
+        switch ((JustifyContent)mJustifyContent) {
         case JustifyContent::FLEX_START:
             childTop = paddingTop;
             childBottom = height - paddingBottom;
@@ -966,7 +1001,7 @@ void FlexboxLayout::setFlexLines(const std::vector<FlexLine>& flexLines) {
     mFlexLines = flexLines;
 }
 
-std::vector<FlexLine> FlexboxLayout::getFlexLinesInternal() {
+std::vector<FlexLine>& FlexboxLayout::getFlexLinesInternal() {
     return mFlexLines;
 }
 
@@ -1327,6 +1362,14 @@ int FlexboxLayout::LayoutParams::getMarginRight() {
 
 int FlexboxLayout::LayoutParams::getMarginBottom() {
     return bottomMargin;
+}
+
+int FlexboxLayout::LayoutParams::getMarginStart() {
+    return startMargin;
+}
+
+int FlexboxLayout::LayoutParams::getMarginEnd() {
+    return endMargin;
 }
 
 }

@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __FLEX_CONTAINER_H__
 #define __FLEX_CONTAINER_H__
 #include <view/view.h>
@@ -33,7 +50,7 @@ public:
 
     virtual std::vector<FlexLine> getFlexLines()=0;
 
-    virtual bool isMainAxisDirectionHorizontal()=0;
+    virtual bool isMainAxisDirectionHorizontal() const=0;
 
     virtual int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine)=0;
     virtual int getDecorationLengthCrossAxis(View* view)=0;
@@ -59,7 +76,7 @@ public:
     virtual int getMaxLine()=0;
     virtual void setMaxLine(int maxLine)=0;
 
-    virtual std::vector<FlexLine> getFlexLinesInternal()=0;
+    virtual std::vector<FlexLine>& getFlexLinesInternal()=0;
     virtual void updateViewCache(int position, View* view)=0;
 };
 }/*endof namespace*/

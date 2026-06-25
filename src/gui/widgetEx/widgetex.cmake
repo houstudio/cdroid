@@ -40,6 +40,7 @@ if(ENABLE_FLEXBOXLAYOUT)
     list(APPEND WIDGETEX_SOURCES
         widgetEx/flexbox/flexboxlayout.cc
         widgetEx/flexbox/flexboxhelper.cc
+        widgetEx/flexbox/flexboxlayoutmanager.cc
     )
 endif(ENABLE_FLEXBOXLAYOUT)
 

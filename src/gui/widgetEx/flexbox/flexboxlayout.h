@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __FLEXBOX_LAYOUT_H__
 #define __FLEXBOX_LAYOUT_H__
 #include <view/viewgroup.h>
@@ -72,6 +89,7 @@ protected:
     ViewGroup::LayoutParams* generateLayoutParams(const ViewGroup::LayoutParams* lp)const override;
 public:
     class LayoutParams;
+    FlexboxLayout(int w,int h);
     FlexboxLayout(Context* context,const AttributeSet& attrs);
     ~FlexboxLayout()override;
     void addView(View* child, int index,ViewGroup::LayoutParams* params)override;
@@ -106,7 +124,7 @@ public:
     void setAlignItems(int alignItems) override;
 
     std::vector<FlexLine> getFlexLines() override;
-    bool isMainAxisDirectionHorizontal() override;
+    bool isMainAxisDirectionHorizontal() const override;
 
     int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) override;
     int getDecorationLengthCrossAxis(View* view) override;
@@ -131,7 +149,7 @@ public:
     int getMaxLine() override;
     void setMaxLine(int maxLine) override;
 
-    std::vector<FlexLine> getFlexLinesInternal() override;
+    std::vector<FlexLine>& getFlexLinesInternal() override;
     void updateViewCache(int position, View* view) override;
     ////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -147,7 +165,7 @@ public:
     void setShowDividerHorizontal(int dividerMode);
 };
 
-class FlexboxLayout::LayoutParams:public ViewGroup::MarginLayoutParams{//,public FlexItem {
+class FlexboxLayout::LayoutParams:public ViewGroup::MarginLayoutParams,public FlexItem {
 private:
    static constexpr int ORDER_DEFAULT = 1;
    static constexpr float FLEX_GROW_DEFAULT = 0.f;
@@ -172,34 +190,36 @@ public:
    LayoutParams(int width, int height);
    LayoutParams(const MarginLayoutParams& source);
 
-   int getWidth();//override;
-   void setWidth(int width);//override;
-   int getHeight();//override;
-   void setHeight(int height);//override;
-   int getOrder();//override;
-   void setOrder(int order);//override;
-   float getFlexGrow();//override;
-   void setFlexGrow(float flexGrow);//override;
-   float getFlexShrink();//override;
-   void setFlexShrink(float flexShrink);//override;
-   int getAlignSelf();//override;
-   void setAlignSelf(int alignSelf);//override;
-   int getMinWidth();//override;
-   void setMinWidth(int minWidth);//override;
-   int getMinHeight();//override;
-   void setMinHeight(int minHeight);//override;
-   int getMaxWidth();//override;
-   void setMaxWidth(int maxWidth);//override;
-   int getMaxHeight();//override;
-   void setMaxHeight(int maxHeight);//override;
-   bool isWrapBefore();//override;
-   void setWrapBefore(bool wrapBefore);//override;
-   float getFlexBasisPercent();//override;
-   void setFlexBasisPercent(float flexBasisPercent);//override;
-   int getMarginLeft();//override;
-   int getMarginTop();//override;
-   int getMarginRight();//override;
-   int getMarginBottom();//override;
+   int getWidth() override;
+   void setWidth(int width) override;
+   int getHeight() override;
+   void setHeight(int height) override;
+   int getOrder() override;
+   void setOrder(int order) override;
+   float getFlexGrow() override;
+   void setFlexGrow(float flexGrow) override;
+   float getFlexShrink() override;
+   void setFlexShrink(float flexShrink) override;
+   int getAlignSelf() override;
+   void setAlignSelf(int alignSelf) override;
+   int getMinWidth() override;
+   void setMinWidth(int minWidth) override;
+   int getMinHeight() override;
+   void setMinHeight(int minHeight) override;
+   int getMaxWidth() override;
+   void setMaxWidth(int maxWidth) override;
+   int getMaxHeight() override;
+   void setMaxHeight(int maxHeight) override;
+   bool isWrapBefore() override;
+   void setWrapBefore(bool wrapBefore) override;
+   float getFlexBasisPercent() override;
+   void setFlexBasisPercent(float flexBasisPercent) override;
+   int getMarginLeft() override;
+   int getMarginTop() override;
+   int getMarginRight() override;
+   int getMarginBottom() override;
+   int getMarginStart() override;
+   int getMarginEnd() override;
 };
 }/*endof namespace*/
 #endif/*__FLEXBOX_LAYOUT_H__*/

@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #ifndef __FLEX_LINE_H__
 #define __FLEX_LINE_H__
 namespace cdroid{
@@ -7,23 +24,23 @@ protected:
     int mTop = INT_MAX;
     int mRight = INT_MIN;
     int mBottom = INT_MIN;
-    int mMainSize;
-    int mDividerLengthInMainSize;
-    int mCrossSize;
-    int mItemCount;
-    int mGoneItemCount;
-    int mMaxBaseline;
-    int mSumCrossSizeBefore;
-    int mFirstIndex;
-    int mLastIndex;
+    int mMainSize = 0;
+    int mDividerLengthInMainSize = 0;
+    int mCrossSize = 0;
+    int mItemCount = 0;
+    int mGoneItemCount = 0;
+    int mMaxBaseline = 0;
+    int mSumCrossSizeBefore = 0;
+    int mFirstIndex = 0;
+    int mLastIndex = 0;
 
-    float mTotalFlexGrow;
-    float mTotalFlexShrink;
+    float mTotalFlexGrow = 0.f;
+    float mTotalFlexShrink = 0.f;
 
     std::vector<int> mIndicesAlignSelfStretch;
 
-    bool mAnyItemsHaveFlexGrow;
-    bool mAnyItemsHaveFlexShrink;
+    bool mAnyItemsHaveFlexGrow = false;
+    bool mAnyItemsHaveFlexShrink = false;
     friend class FlexboxLayout;
     friend class FlexboxHelper;
 public:
