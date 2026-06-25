@@ -17,6 +17,7 @@
  *********************************************************************************/
 #ifndef __FLEX_LINE_H__
 #define __FLEX_LINE_H__
+#include<widgetEx/flexbox/flexitem.h>
 namespace cdroid{
 class FlexLine {
 protected:
@@ -93,13 +94,11 @@ public:
 
     void updatePositionFromView(View* view, int leftDecoration, int topDecoration,
             int rightDecoration, int bottomDecoration) {
-#if 0
         FlexItem* flexItem = (FlexItem*) view->getLayoutParams();
         mLeft = std::min(mLeft, view->getLeft() - flexItem->getMarginLeft() - leftDecoration);
         mTop = std::min(mTop, view->getTop() - flexItem->getMarginTop() - topDecoration);
         mRight = std::max(mRight, view->getRight() + flexItem->getMarginRight() + rightDecoration);
         mBottom = std::max(mBottom, view->getBottom() + flexItem->getMarginBottom() + bottomDecoration);
-#endif
     }
 };
 }/*endof namespace*/
