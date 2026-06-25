@@ -130,6 +130,8 @@ private:
     int  mMarqueeRepeatLimit;
     int  mLastLayoutDirection;
     int64_t mLastScroll;
+    Cairo::RefPtr<Path> mHighlightPath;
+    Paint mHighlightPaint;
     BoringLayout* mSavedLayout;
     BoringLayout* mSavedHintLayout;
     Layout* mSavedMarqueeModeLayout;
@@ -182,6 +184,7 @@ private:
     float getHorizontalFadingEdgeStrength(float position1, float position2);
     void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
     void restartMarqueeIfNeeded();
+    void invalidateCursor(int a, int b, int c);
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
@@ -212,7 +215,9 @@ protected:
     BufferType mBufferType = BufferType::NORMAL;
     void setEditable(bool b);
     virtual bool getDefaultEditable()const;
-    int getFontSize()const;
+    void invalidateCursorPath();
+    void invalidateCursor();
+    void invalidateRegion(int start, int end, bool invalidateCursor);
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;

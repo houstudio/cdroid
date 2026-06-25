@@ -17,7 +17,7 @@
  *********************************************************************************/
 #ifndef __FLEX_LINE_H__
 #define __FLEX_LINE_H__
-#include<widgetEx/flexbox/flexitem.h>
+#include <widgetEx/flexbox/flexitem.h>
 namespace cdroid{
 class FlexLine {
 protected:

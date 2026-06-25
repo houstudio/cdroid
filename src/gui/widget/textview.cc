@@ -1778,7 +1778,7 @@ void TextView::updateAfterEdit() {
     checkForResize();
 
     if (curs >= 0) {
-        //mHighlightPathBogus = true;
+        mHighlightPathBogus = true;
         //if (mEditor != nullptr) mEditor.makeBlink();
         bringPointIntoView(curs);
     }
@@ -3626,6 +3626,115 @@ int TextView::getBottomVerticalOffset(bool forceNormal){
     return voffset;
 }
 
+void TextView::invalidateCursorPath() {
+    if (mHighlightPathBogus) {
+        invalidateCursor();
+    } else {
+        const int horizontalPadding = getCompoundPaddingLeft();
+        const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
+#if 0
+        if (mEditor->mDrawableForCursor == nullptr) {
+            RectF TEMP_RECTF;
+            /*
+             * The reason for this concern about the thickness of the
+             * cursor and doing the floor/ceil on the coordinates is that
+             * some EditTexts (notably textfields in the Browser) have
+             * anti-aliased text where not all the characters are
+             * necessarily at integer-multiple locations.  This should
+             * make sure the entire cursor gets invalidated instead of
+             * sometimes missing half a pixel.
+             */
+            float thick = (float) std::ceil(mTextPaint.getStrokeWidth());
+            if (thick < 1.0f) {
+                thick = 1.0f;
+            }
+
+            thick /= 2.0f;
+
+            // mHighlightPath is guaranteed to be non null at that point.
+            mHighlightPath->computeBounds(TEMP_RECTF, false);
+
+            invalidate((int) std::floor(horizontalPadding + TEMP_RECTF.left - thick),
+                    (int) std::floor(verticalPadding + TEMP_RECTF.top - thick),
+                    (int) std::ceil(TEMP_RECTF.width + 2.f*thick),
+                    (int) std::ceil(TEMP_RECTF.height + 2.f*thick));
+        } else {
+            Rect bounds = mEditor->mDrawableForCursor.getBounds();
+            invalidate(bounds.left + horizontalPadding, bounds.top + verticalPadding,
+                    bounds.width, bounds.height);
+        }
+#endif
+    }
+}
+
+void TextView::invalidateCursor() {
+    int where = getSelectionEnd();
+
+    invalidateCursor(where, where, where);
+}
+
+void TextView::invalidateCursor(int a, int b, int c) {
+    if (a >= 0 || b >= 0 || c >= 0) {
+        const int start = std::min(std::min(a, b), c);
+        const int end = std::max(std::max(a, b), c);
+        invalidateRegion(start, end, true /* Also invalidates blinking cursor */);
+    }
+}
+
+void TextView::invalidateRegion(int start, int end, bool invalidateCursor){
+    if (mLayout == nullptr) {
+        invalidate();
+    } else {
+        int lineStart = mLayout->getLineForOffset(start);
+        int top = mLayout->getLineTop(lineStart);
+
+        // This is ridiculous, but the descent from the line above
+        // can hang down into the line we really want to redraw,
+        // so we have to invalidate part of the line above to make
+        // sure everything that needs to be redrawn really is.
+        // (But not the whole line above, because that would cause
+        // the same problem with the descenders on the line above it!)
+        if (lineStart > 0) {
+            top -= mLayout->getLineDescent(lineStart - 1);
+        }
+
+        int lineEnd;
+
+        if (start == end) {
+            lineEnd = lineStart;
+        } else {
+            lineEnd = mLayout->getLineForOffset(end);
+        }
+
+        int bottom = mLayout->getLineBottom(lineEnd);
+
+        // mEditor can be null in case selection is set programmatically.
+        /*if (invalidateCursor && mEditor != nullptr && mEditor->mDrawableForCursor != nullptr) {
+            Rect bounds = mEditor->mDrawableForCursor->getBounds();
+            top = std::min(top, bounds.top);
+            bottom = std::max(bottom, bounds.bottom());
+        }*/
+
+        const int compoundPaddingLeft = getCompoundPaddingLeft();
+        const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
+
+        int left, right;
+        if (lineStart == lineEnd && !invalidateCursor) {
+            left = (int) mLayout->getPrimaryHorizontal(start);
+            right = (int) (mLayout->getPrimaryHorizontal(end) + 1.0);
+            left += compoundPaddingLeft;
+            right += compoundPaddingLeft;
+        } else {
+            // Rectangle bounding box when the region spans several lines
+            left = compoundPaddingLeft;
+            right = getWidth() - getCompoundPaddingRight();
+        }
+
+        invalidate(mScrollX + left, verticalPadding + top,
+                right-left, bottom-top);
+    }
+}
+
 void TextView::setShadowLayer(float radius, float dx, float dy, int color){
     mShadowRadius = radius;
     mShadowDx = dx;
@@ -3669,9 +3778,13 @@ bool TextView::canSelectAllText()const{
 }
 
 bool TextView::selectAllText(){
-    //const int length = (int)mLayout->getText().length();
-    //mLayout->setSelection(0,length);
-    return false;
+    /*if (mEditor != nullptr) {
+        // Hide the toolbar before changing the selection to avoid flickering.
+        hideFloatingToolbar(FLOATING_TOOLBAR_SELECT_ALL_REFRESH_DELAY);
+    }*/
+    const int length = mText->length();
+    //Selection::setSelection(mSpannable, 0, length);
+    return length > 0;
 }
 
 int TextView::getTotalPaddingLeft() {
