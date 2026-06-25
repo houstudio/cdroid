@@ -19,7 +19,6 @@
 #define __FLEXBOX_LAYOUT_MANAGER_H__
 
 #include <widgetEx/recyclerview/recyclerview.h>
-#include <widgetEx/recyclerview/orientationhelper.h>
 #include <widgetEx/flexbox/flexline.h>
 #include <widgetEx/flexbox/flexitem.h>
 #include <widgetEx/flexbox/flexwrap.h>
@@ -33,7 +32,6 @@
 #include <core/sparsearray.h>
 
 namespace cdroid {
-class Context;
 class OrientationHelper;
 class LayoutChunkResult;
 
@@ -254,8 +252,6 @@ public:
 
     /** Number of pixels that we should fill, in the layout direction. */
     int mAvailable;
-    /** If set to true, the value of mAvailable is considered as infinite. */
-    bool mInfinite;
     /** Current position on the flex lines being laid out in the layout call */
     int mFlexLinePosition;
     /** Current position on the adapter to get the next item. */
@@ -267,8 +263,9 @@ public:
     int mItemDirection = LayoutState::ITEM_DIRECTION_TAIL;
     int mLayoutDirection = LayoutState::LAYOUT_END;
     bool mShouldRecycle;
-
-    bool hasMore(RecyclerView::State& state, std::vector<FlexLine>& flexLines) {
+    /** If set to true, the value of mAvailable is considered as infinite. */
+    bool mInfinite;
+    bool hasMore(RecyclerView::State& state, std::vector<FlexLine>& flexLines)const {
         return mPosition >= 0 && mPosition < state.getItemCount() &&
                 mFlexLinePosition >= 0 && mFlexLinePosition < (int)flexLines.size();
     }
@@ -283,68 +280,11 @@ public:
     bool mValid = false;
     bool mAssignedFromSavedState = false;
 
-    void reset(FlexboxLayoutManager* manager) {
-        mPosition = RecyclerView::NO_POSITION;
-        mFlexLinePosition = RecyclerView::NO_POSITION;
-        mCoordinate = INT_MIN;
-        mValid = false;
-        mAssignedFromSavedState = false;
-        if (manager->isMainAxisDirectionHorizontal()) {
-            if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
-                mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::ROW_REVERSE;
-            } else {
-                mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
-            }
-        } else {
-            if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
-                mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::COLUMN_REVERSE;
-            } else {
-                mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
-            }
-        }
-    }
-
-    void assignCoordinateFromPadding(FlexboxLayoutManager* manager) {
-        if (!manager->isMainAxisDirectionHorizontal() && manager->mIsRtl) {
-            mCoordinate = mLayoutFromEnd ? manager->mOrientationHelper->getEndAfterPadding()
-                    : manager->getWidth() - manager->mOrientationHelper->getStartAfterPadding();
-        } else {
-            mCoordinate = mLayoutFromEnd ? manager->mOrientationHelper->getEndAfterPadding()
-                    : manager->mOrientationHelper->getStartAfterPadding();
-        }
-    }
-
-    void assignFromView(View* anchor, FlexboxLayoutManager* manager) {
-        OrientationHelper* orientationHelper;
-        if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
-            orientationHelper = manager->mSubOrientationHelper;
-        } else {
-            orientationHelper = manager->mOrientationHelper;
-        }
-        if (!manager->isMainAxisDirectionHorizontal() && manager->mIsRtl) {
-            if (mLayoutFromEnd) {
-                mCoordinate = orientationHelper->getDecoratedStart(anchor) +
-                        orientationHelper->getTotalSpaceChange();
-            } else {
-                mCoordinate = orientationHelper->getDecoratedEnd(anchor);
-            }
-        } else {
-            if (mLayoutFromEnd) {
-                mCoordinate = orientationHelper->getDecoratedEnd(anchor) +
-                        orientationHelper->getTotalSpaceChange();
-            } else {
-                mCoordinate = orientationHelper->getDecoratedStart(anchor);
-            }
-        }
-        mPosition = manager->getPosition(anchor);
-        mAssignedFromSavedState = false;
-        int flexLinePosition = manager->mFlexboxHelper->getIndexToFlexLine()[mPosition != RecyclerView::NO_POSITION ? mPosition : 0];
-        mFlexLinePosition = flexLinePosition != RecyclerView::NO_POSITION ? flexLinePosition : 0;
-        if (manager->mFlexLines.size() > mFlexLinePosition) {
-            mPosition = manager->mFlexLines[mFlexLinePosition].getFirstIndex();
-        }
-    }
+    void reset(FlexboxLayoutManager* manager);
+    void assignCoordinateFromPadding(FlexboxLayoutManager* manager);
+    void assignFromView(View* anchor, FlexboxLayoutManager* manager);
 };
+
 class FlexboxLayoutManager::LayoutParams:public RecyclerView::LayoutParams, public FlexItem {
 private:
     float mFlexGrow = FlexItem::FLEX_GROW_DEFAULT;

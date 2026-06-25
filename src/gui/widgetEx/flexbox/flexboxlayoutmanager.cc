@@ -1858,7 +1858,67 @@ View* FlexboxLayoutManager::findReferenceChild(int start, int end, int itemCount
     }
     return outOfBoundsMatch != nullptr ? outOfBoundsMatch : invalidMatch;
 }
+//AnchorInfo implementation
+void FlexboxLayoutManager::AnchorInfo::reset(FlexboxLayoutManager* manager) {
+    mPosition = RecyclerView::NO_POSITION;
+    mFlexLinePosition = RecyclerView::NO_POSITION;
+    mCoordinate = INT_MIN;
+    mValid = false;
+    mAssignedFromSavedState = false;
+    if (manager->isMainAxisDirectionHorizontal()) {
+        if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
+            mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::ROW_REVERSE;
+        } else {
+            mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
+        }
+    } else {
+        if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
+            mLayoutFromEnd = manager->mFlexDirection == (int)FlexDirection::COLUMN_REVERSE;
+        } else {
+            mLayoutFromEnd = manager->mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
+        }
+    }
+}
+void FlexboxLayoutManager::AnchorInfo::assignCoordinateFromPadding(FlexboxLayoutManager* manager) {
+    if (!manager->isMainAxisDirectionHorizontal() && manager->mIsRtl) {
+        mCoordinate = mLayoutFromEnd ? manager->mOrientationHelper->getEndAfterPadding()
+                : manager->getWidth() - manager->mOrientationHelper->getStartAfterPadding();
+    } else {
+        mCoordinate = mLayoutFromEnd ? manager->mOrientationHelper->getEndAfterPadding()
+                : manager->mOrientationHelper->getStartAfterPadding();
+    }
+}
 
+void FlexboxLayoutManager::AnchorInfo::assignFromView(View* anchor, FlexboxLayoutManager* manager) {
+    OrientationHelper* orientationHelper;
+    if (manager->mFlexWrap == (int)FlexWrap::NOWRAP) {
+        orientationHelper = manager->mSubOrientationHelper;
+    } else {
+        orientationHelper = manager->mOrientationHelper;
+    }
+    if (!manager->isMainAxisDirectionHorizontal() && manager->mIsRtl) {
+        if (mLayoutFromEnd) {
+            mCoordinate = orientationHelper->getDecoratedStart(anchor) +
+                    orientationHelper->getTotalSpaceChange();
+        } else {
+            mCoordinate = orientationHelper->getDecoratedEnd(anchor);
+        }
+    } else {
+        if (mLayoutFromEnd) {
+            mCoordinate = orientationHelper->getDecoratedEnd(anchor) +
+                    orientationHelper->getTotalSpaceChange();
+        } else {
+            mCoordinate = orientationHelper->getDecoratedStart(anchor);
+        }
+    }
+    mPosition = manager->getPosition(anchor);
+    mAssignedFromSavedState = false;
+    int flexLinePosition = manager->mFlexboxHelper->getIndexToFlexLine()[mPosition != RecyclerView::NO_POSITION ? mPosition : 0];
+    mFlexLinePosition = flexLinePosition != RecyclerView::NO_POSITION ? flexLinePosition : 0;
+    if (manager->mFlexLines.size() > mFlexLinePosition) {
+        mPosition = manager->mFlexLines[mFlexLinePosition].getFirstIndex();
+    }
+}
 // LayoutParams implementation
 FlexboxLayoutManager::LayoutParams::LayoutParams(Context* c, const AttributeSet& attrs)
     : RecyclerView::LayoutParams(c, attrs) {
