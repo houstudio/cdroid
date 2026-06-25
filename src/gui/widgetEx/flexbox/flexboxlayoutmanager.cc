@@ -1203,6 +1203,7 @@ bool FlexboxLayoutManager::isLayoutRTL() {
 void FlexboxLayoutManager::resolveLayoutDirection() {
     int layoutDirection = getLayoutDirection();
     switch (mFlexDirection) {
+        case FlexDirection::ROW:
             mIsRtl = layoutDirection == View::LAYOUT_DIRECTION_RTL;
             mFromBottomToTop = mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
             break;
