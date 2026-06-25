@@ -428,12 +428,6 @@ void FlexboxLayoutManager::smoothScrollToPosition(RecyclerView& recyclerView, Re
     startSmoothScroll(linearSmoothScroller);
 }
 
-void FlexboxLayoutManager::scrollToPositionWithOffset(int position, int offset) {
-    mPendingScrollPosition = position;
-    mPendingScrollPositionOffset = offset;
-    requestLayout();
-}
-
 int FlexboxLayoutManager::scrollHorizontallyBy(int dx, RecyclerView::Recycler& recycler, RecyclerView::State& state) {
     if (!isMainAxisDirectionHorizontal() || (mFlexWrap == (int)FlexWrap::NOWRAP)) {
         int scrolled = handleScrollingMainOrientation(dx, recycler, state);
@@ -922,13 +916,13 @@ int FlexboxLayoutManager::layoutFlexLineMainAxisHorizontal(FlexLine& flexLine, L
         int topWithDecoration = childTop + getTopDecorationHeight(view);
         if (mIsRtl) {
             mFlexboxHelper->layoutSingleChildHorizontal(view, flexLine,
-                    (int)roundf(childRight) - view->getMeasuredWidth(),
-                    topWithDecoration, (int)roundf(childRight),
+                    int(childRight) - view->getMeasuredWidth(),
+                    topWithDecoration, int(childRight),
                     topWithDecoration + view->getMeasuredHeight());
         } else {
             mFlexboxHelper->layoutSingleChildHorizontal(view, flexLine,
-                    (int)roundf(childLeft), topWithDecoration,
-                    (int)roundf(childLeft) + view->getMeasuredWidth(),
+                    int(childLeft), topWithDecoration,
+                    int(childLeft) + view->getMeasuredWidth(),
                     topWithDecoration + view->getMeasuredHeight());
         }
         childLeft += (view->getMeasuredWidth() + lp->rightMargin + getRightDecorationWidth(view)
@@ -1036,24 +1030,24 @@ int FlexboxLayoutManager::layoutFlexLineMainAxisVertical(FlexLine& flexLine, Lay
             if (mFromBottomToTop) {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
                         rightWithDecoration - view->getMeasuredWidth(),
-                        (int)roundf(childBottom) - view->getMeasuredHeight(),
-                        rightWithDecoration, (int)roundf(childBottom));
+                        int(childBottom) - view->getMeasuredHeight(),
+                        rightWithDecoration, int(childBottom));
             } else {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
                         rightWithDecoration - view->getMeasuredWidth(),
-                        (int)roundf(childTop), rightWithDecoration,
-                        (int)roundf(childTop) + view->getMeasuredHeight());
+                        int(childTop), rightWithDecoration,
+                        int(childTop) + view->getMeasuredHeight());
             }
         } else {
             if (mFromBottomToTop) {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
-                        leftWithDecoration, (int)roundf(childBottom) - view->getMeasuredHeight(),
-                        leftWithDecoration + view->getMeasuredWidth(), (int)roundf(childBottom));
+                        leftWithDecoration, int(childBottom) - view->getMeasuredHeight(),
+                        leftWithDecoration + view->getMeasuredWidth(), int(childBottom));
             } else {
                 mFlexboxHelper->layoutSingleChildVertical(view, flexLine, mIsRtl,
-                        leftWithDecoration, (int)roundf(childTop),
+                        leftWithDecoration, int(childTop),
                         leftWithDecoration + view->getMeasuredWidth(),
-                        (int)roundf(childTop) + view->getMeasuredHeight());
+                        int(childTop) + view->getMeasuredHeight());
             }
         }
         childTop += (view->getMeasuredHeight() + lp->topMargin + getBottomDecorationHeight(view)
@@ -1102,7 +1096,7 @@ int FlexboxLayoutManager::computeScrollOffset(RecyclerView::State& state) {
     int lineRange = lastLinePosition - firstLinePosition + 1;
     float averageSizePerLine = (float) laidOutArea / lineRange;
     // The number of lines before the first line is equal to the value of firstLinePosition
-    return (int)roundf(
+    return int(
             firstLinePosition * averageSizePerLine + (mOrientationHelper->getStartAfterPadding()
                     - mOrientationHelper->getDecoratedStart(firstReferenceView)));
 }

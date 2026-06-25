@@ -42,19 +42,21 @@ public:
 private:
     class LayoutState;
     class AnchorInfo;
-    void init();
-
+    /** True if the layout direction is right to left, false otherwise. */
+    bool mIsRtl = false;
+    bool mFromBottomToTop = false;
+    bool mRecycleChildrenOnDetach = false;
     int mFlexDirection = (int)FlexDirection::ROW;
     int mFlexWrap = (int)FlexWrap::WRAP;
     int mJustifyContent = (int)JustifyContent::FLEX_START;
     int mAlignItems = (int)AlignItems::STRETCH;
     int mMaxLine = -1;
-
-    bool mRecycleChildrenOnDetach = false;
+    int mDirtyPosition = RecyclerView::NO_POSITION;
+    int mLastWidth = INT_MIN;
+    int mLastHeight = INT_MIN;
     int mPendingScrollPosition = RecyclerView::NO_POSITION;
     int mPendingScrollPositionOffset = INT_MIN;
-    class SavedState* mPendingSavedState = nullptr;
-
+    SavedState* mPendingSavedState = nullptr;
     Context* mContext = nullptr;
     FlexboxHelper* mFlexboxHelper = nullptr;
     RecyclerView::Recycler *mRecycler;
@@ -62,22 +64,13 @@ private:
     std::vector<FlexLine> mFlexLines;
     FlexboxHelper::FlexLinesResult* mFlexLinesResult = nullptr;
 
-    /** True if the layout direction is right to left, false otherwise. */
-    bool mIsRtl = false;
-    bool mFromBottomToTop = false;
-
     View* mParent = nullptr;
-    int mDirtyPosition = RecyclerView::NO_POSITION;
-
     AnchorInfo* mAnchorInfo = nullptr;
-    int mLastWidth = INT_MIN;
-    int mLastHeight = INT_MIN;
-
-    SparseArray<View*> mViewCache;
-
     OrientationHelper* mOrientationHelper = nullptr;
     OrientationHelper* mSubOrientationHelper = nullptr;
     LayoutState* mLayoutState = nullptr;
+    SparseArray<View*> mViewCache;
+    void init();
 protected:
     void ensureFlexboxHelper();
     void ensureOrientationHelper();
@@ -131,9 +124,6 @@ protected:
     int getChildRight(View* view);
     int getChildTop(View* view);
     int getChildBottom(View* view);
-public:
-    void scrollToPositionWithOffset(int position, int offset);
-public:
 
 public:
     FlexboxLayoutManager(Context* context);
