@@ -181,13 +181,6 @@ void FlexboxLayout::measureHorizontal(int widthMeasureSpec, int heightMeasureSpe
     mFlexLinesResult->reset();
     mFlexboxHelper->calculateHorizontalFlexLines(mFlexLinesResult, widthMeasureSpec,heightMeasureSpec);
     mFlexLines = mFlexLinesResult->mFlexLines;
-    LOGD("measureHorizontal: childCount=%d flexLines=%zu largestMain=%d sumCross=%d",
-            getChildCount(), mFlexLines.size(), getLargestMainSize(), getSumOfCrossSize());
-    if (getChildCount() > 0) {
-        LOGD("  child0 measured=%dx%d vis=%d",
-                getChildAt(0)->getMeasuredWidth(), getChildAt(0)->getMeasuredHeight(),
-                (int) getChildAt(0)->getVisibility());
-    }
 
     mFlexboxHelper->determineMainSize(widthMeasureSpec, heightMeasureSpec);
 
@@ -388,8 +381,6 @@ void FlexboxLayout::onLayout(bool changed, int left, int top, int width, int hei
 }
 
 void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, int height) {
-    LOGD("layoutHorizontal: childCount=%d flexLines=%zu isRtl=%d w=%d h=%d",
-            getChildCount(), mFlexLines.size(), (int) isRtl, width, height);
     int paddingLeft = getPaddingLeft();
     int paddingRight = getPaddingRight();
     // Use float to reduce the round error that may happen in when justifyContent ==
@@ -502,11 +493,6 @@ void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, i
             }
             childLeft += child->getMeasuredWidth() + spaceBetweenItem + lp->rightMargin;
             childRight -= child->getMeasuredWidth() + spaceBetweenItem + lp->leftMargin;
-            if (i == 0 && j == 0) {
-                LOGD("  first child laid out: l=%d t=%d r=%d b=%d measured=%dx%d",
-                        child->getLeft(), child->getTop(), child->getRight(), child->getBottom(),
-                        child->getMeasuredWidth(), child->getMeasuredHeight());
-            }
 
             if (isRtl) {
                 flexLine.updatePositionFromView(child, /*leftDecoration*/endDividerLength, 0,

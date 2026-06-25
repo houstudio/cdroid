@@ -1070,14 +1070,12 @@ View* FlexboxLayoutManager::getChildClosestToStart() {
 }
 
 int FlexboxLayoutManager::computeHorizontalScrollOffset(RecyclerView::State& state) {
-   int scrollOffset = computeScrollOffset(state);
-    LOGD("computeHorizontalScrollOffset: " + scrollOffset);
+    const int scrollOffset = computeScrollOffset(state);
     return scrollOffset;
 }
 
 int FlexboxLayoutManager::computeVerticalScrollOffset(RecyclerView::State& state) {
-    int scrollOffset = computeScrollOffset(state);
-    LOGD("computeVerticalScrollOffset: " + scrollOffset);
+    const int scrollOffset = computeScrollOffset(state);
     return scrollOffset;
 }
 
@@ -1110,14 +1108,12 @@ int FlexboxLayoutManager::computeScrollOffset(RecyclerView::State& state) {
 }
 
 int FlexboxLayoutManager::computeHorizontalScrollExtent(RecyclerView::State& state) {
-    int scrollExtent = computeScrollExtent(state);
-    LOGD("computeHorizontalScrollExtent: %d",scrollExtent);
+    const int scrollExtent = computeScrollExtent(state);
     return scrollExtent;
 }
 
 int FlexboxLayoutManager::computeVerticalScrollExtent(RecyclerView::State& state) {
-    int scrollExtent = computeScrollExtent(state);
-    LOGD("computeVerticalScrollExtent: %d",scrollExtent);
+    const int scrollExtent = computeScrollExtent(state);
     return scrollExtent;
 }
 int FlexboxLayoutManager::computeScrollExtent(RecyclerView::State& state) {
@@ -1138,14 +1134,12 @@ int FlexboxLayoutManager::computeScrollExtent(RecyclerView::State& state) {
 }
 
 int FlexboxLayoutManager::computeHorizontalScrollRange(RecyclerView::State& state) {
-    int scrollRange = computeScrollRange(state);
-    LOGD("computeHorizontalScrollRange:%d",scrollRange);
+    const int scrollRange = computeScrollRange(state);
     return scrollRange;
 }
 
 int FlexboxLayoutManager::computeVerticalScrollRange(RecyclerView::State& state) {
-    int scrollRange = computeScrollRange(state);
-    LOGD("computeVerticalScrollRange: %d" ,scrollRange);
+    const int scrollRange = computeScrollRange(state);
     return scrollRange;
 }
 
@@ -1209,7 +1203,6 @@ bool FlexboxLayoutManager::isLayoutRTL() {
 void FlexboxLayoutManager::resolveLayoutDirection() {
     int layoutDirection = getLayoutDirection();
     switch (mFlexDirection) {
-        case FlexDirection::ROW:
             mIsRtl = layoutDirection == View::LAYOUT_DIRECTION_RTL;
             mFromBottomToTop = mFlexWrap == (int)FlexWrap::WRAP_REVERSE;
             break;
