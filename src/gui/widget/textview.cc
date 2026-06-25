@@ -794,7 +794,6 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
             l.onTextChanged(text, start, before, after);
         }
     }
-    //if (mEditor != nullptr) mEditor->sendOnTextChanged(start, before, after);
     if (mEditor) mEditor->sendOnTextChanged(start, before, after);
 }
 
@@ -1133,7 +1132,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
     if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
         createEditorIfNeeded();
-        //mEditor->forgetUndoRedo();
+        // TODO(editor): mEditor->forgetUndoRedo(); -- deferred: needs undo/redo stack.
         // Wrap the buffer in an Editable (Android's mEditableFactory.newEditable) so
         // that Editor/Selection can operate on it. `text` can be the reused
         // mCharWrapper member, so copy its content without deleting the original.
@@ -1227,7 +1226,9 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
                 | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
 
-        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+        // TODO(editor): if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+        //   deferred: attaches Editor's SpanController (easy-delete/spelling) +
+        //   keylistener span; both arrive with the suggestions/handles pass.
         /*if (mTransformation != nullptr) {
             sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
         }
@@ -1814,7 +1815,7 @@ void TextView::updateAfterEdit() {
 
     if (curs >= 0) {
         mHighlightPathBogus = true;
-        //if (mEditor != nullptr) mEditor->makeBlink();
+        if (mEditor != nullptr) mEditor->makeBlink();
         bringPointIntoView(curs);
     }
 }
@@ -2313,7 +2314,7 @@ void TextView::nullLayouts() {
     mBoring = mHintBoring = nullptr;
 
     // Since it depends on the value of mLayout
-    //if (mEditor != nullptr) mEditor->prepareCursorControllers();
+    if (mEditor != nullptr) mEditor->prepareCursorControllers();
 }
 
 void TextView::assumeLayout() {
@@ -2454,7 +2455,7 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
     }
 
     // CursorControllers need a non-null mLayout
-    //if (mEditor != nullptr) mEditor->prepareCursorControllers();
+    if (mEditor != nullptr) mEditor->prepareCursorControllers();
 }
 
 bool TextView::useDynamicLayout() const{
@@ -2968,8 +2969,8 @@ bool TextView::onTouchEvent(MotionEvent& event){
         return superResult;
     }
     bool handled = false;
-    const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused();
-           //&& (mEditor == null || !mEditor->mIgnoreActionUpEvent);
+    const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
+           && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
     if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
         InputMethodManager& imm = InputMethodManager::getInstance();
         viewClicked(&imm);
@@ -2979,7 +2980,7 @@ bool TextView::onTouchEvent(MotionEvent& event){
         }*/
 
         // The above condition ensures that the mEditor is not null
-        //mEditor->onTouchUpEvent(event);
+        if (mEditor) mEditor->onTouchUpEvent(event);
 
         handled = true;
     }

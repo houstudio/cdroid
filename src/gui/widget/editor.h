@@ -105,7 +105,13 @@ public:
     // ----- editing input (moved here from EditText in Step B) -----
     bool onKeyDown(int keyCode, KeyEvent& event);
     bool onTouchEvent(MotionEvent& event);   // tap -> caret, drag -> extend selection
+    void onTouchUpEvent(MotionEvent& event); // touch-up: place caret, (later) hide handles
     int  commitText(const std::wstring& text);
+
+    // Set while a drag handle consumes the touch stream so the host TextView's
+    // ACTION_UP handling (soft-input etc.) is suppressed. Always false until the
+    // handles pass lands.
+    bool ignoreActionUpEvent() const { return mIgnoreActionUpEvent; }
 
     // ----- cursor controllers (deferred: no-ops until the handles pass) -----
     void prepareCursorControllers();
@@ -119,6 +125,9 @@ private:
     bool isEditing() const;
     /** Current caret offset: selection end if there is a real selection, else caret pos. */
     int cursorOffset() const;
+    /** Insert point for new text: deletes any active selection first (so typing
+     *  replaces the selection, as in Android), else returns the caret offset. */
+    int insertPosition();
 
     TextView* mTextView;
 
@@ -128,6 +137,7 @@ private:
     bool mBlinkVisible = true;
     bool mBlinkSuspended = false;
     bool mCursorVisible = true;
+    bool mIgnoreActionUpEvent = false;  // see ignoreActionUpEvent()
 
     Rect mCaretRect;                        // caret geometry, recomputed by updateCursorPosition()
 

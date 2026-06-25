@@ -139,34 +139,61 @@ float Paint::getTextRunAdvances(const char16_t* chars, int index, int count, int
 }
 
 float Paint::getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
-    return 100.f;
+    std::vector<char16_t>buf(count);
+    TextUtils::getChars(text, start, start + count, buf.data(), 0);
+    return getTextRunCursor(buf.data(), 0, count, isRtl, offset - start, cursorOpt);
 }
 
 float Paint::getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{
+    // Copy the run [start, end) into a 0-based buffer and translate the absolute
+    // offset/context into buffer-local coordinates before delegating. (Previously
+    // the absolute offset was passed unchanged against a sliced buffer.)
     std::vector<char16_t>buf(end-start);
     TextUtils::getChars(text, start, end, buf.data(), 0);
-    return getRunAdvance(buf.data(),0,end-start,contextStart,contextEnd,isRtl,offset);;
+    return getRunAdvance(buf.data(), /*start=*/0, /*end=*/end-start,
+                         /*contextStart=*/0, /*contextEnd=*/end-start, isRtl,
+                         /*offset=*/offset - start);
 }
 
 float Paint::getTextRunCursor(const char16_t* text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
+    // Grapheme-cluster cursor offset nearest to `offset` per `cursorOpt`, via
+    // minikin's GraphemeBreak. (Previously returned a constant 100.f, which broke
+    // cursor left/right movement and tap snapping for any non-trivial run.)
+    std::vector<float> advances(count, 0.f);
     const minikin::Bidi bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
     const minikin::U16StringPiece textBuf((const uint16_t*)text, start+count);
     const minikin::Range range(start, start + count);
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
-
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen,
-                                        endHyphen, nullptr);
+    minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen, endHyphen, advances.data());
+    const auto opt = static_cast<minikin::GraphemeBreak::MoveOpt>(cursorOpt);
+    const size_t result = minikin::GraphemeBreak::getTextRunCursor(
+            advances.data(), (const uint16_t*)text, start, count, (size_t)offset, opt);
+    return (float)result;
 }
 
 float Paint::getRunAdvance(const char16_t* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{
+    // Advance from `start` up to `offset` within the run [start, end). Measure the
+    // per-code-unit advances over the run and sum the leading [start, offset)
+    // slice. (Previously this ignored `offset` and returned the whole-run width,
+    // which left the caret pinned to the line edge for every offset.)
+    if (offset < start) offset = start;
+    if (offset > end) offset = end;
+    const int count = end - start;
+    if (count <= 0) return 0.f;
+    std::vector<float> advances(count, 0.f);
     const minikin::U16StringPiece textBuf((const uint16_t*)text, end);
     const minikin::Range range(start, end);
     const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
     const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
     auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
-    return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen, endHyphen, nullptr);
+    minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen, endHyphen, advances.data());
+    float adv = 0.f;
+    const int limit = offset - start;   // advances[] is 0-based within [start, end)
+    for (int i = 0; i < limit; i++) adv += advances[i];
+    return adv;
 }
+
 void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
         int contextStart,int contextCount,float x,float y,bool runIsRtl)const{
     minikin::U16StringPiece lineTextPiece((const uint16_t*)chars + start, count);

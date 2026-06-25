@@ -313,9 +313,9 @@ public:
     class Ellipsizer : virtual public CharSequence{//, public GetChars {
     public:
         CharSequence* mText;
-        Layout* mLayout;
-        int mWidth;
-        TextUtils::TruncateAt mMethod;
+        Layout* mLayout = nullptr;
+        int mWidth = 0;
+        TextUtils::TruncateAt mMethod = TextUtils::TruncateAt::NONE;
     public:
         Ellipsizer(CharSequence* s) {
             mText = s;

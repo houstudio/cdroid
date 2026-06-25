@@ -143,6 +143,8 @@ public:
     float measureText(const std::string& text, int start, int end)const;
     float measureText(const CharSequence* text, int start, int end)const;
     float measureText(const char16_t* text, int index, int count)const;
+    void getFontMetricsInt(const char16_t*,int start,int end,int contextStart,
+            int contextCount,bool isRtl,FontMetricsInt& outMetrics)const;
     void getFontMetricsInt(const CharSequence* text, int start, int count,
         int contextStart, int contextCount,bool isRtl,FontMetricsInt& outMetrics)const;
     int getFontMetricsInt(FontMetricsInt* fmi)const;

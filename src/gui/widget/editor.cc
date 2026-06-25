@@ -19,6 +19,7 @@
 #include <widget/textview.h>
 #include <text/selection.h>
 #include <text/editable.h>
+#include <text/spannablestringbuilder.h>
 #include <text/layout.h>
 #include <text/parcelablespan.h>
 #include <view/keyevent.h>
@@ -71,6 +72,24 @@ int Editor::cursorOffset() const {
         if (end >= 0) return end;
     }
     return mTextView->getCaretPos();   // legacy fallback
+}
+
+int Editor::insertPosition() {
+    Editable* ed = mTextView->getEditableText();
+    Spannable* e = editable();
+    if (ed && e) {
+        const int selStart = Selection::getSelectionStart(e);
+        const int selEnd = Selection::getSelectionEnd(e);
+        // A real selection (start != end) is replaced by the typed text; a bare
+        // caret has start == end and is left untouched.
+        if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
+            const int lo = std::min(selStart, selEnd);
+            const int hi = std::max(selStart, selEnd);
+            ed->Delete(lo, hi);
+            return lo;
+        }
+    }
+    return cursorOffset();
 }
 
 // =====================================================================================
@@ -272,8 +291,9 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         // Key->char via the InputMethodManager (this is NOT an InputConnection).
         const wchar_t ch = InputMethodManager::getInstance().getCharacter(keyCode, event.getMetaState());
         if (ch != 0) {
-            editable->append((char16_t)ch);   // foundation: append (matches prior EditText behavior)
-            mTextView->setCaretPos((int)editable->length());
+            const int where = insertPosition();   // insert at caret (replaces any selection)
+            editable->insert(where, SpannableStringBuilder(std::u16string(1, (char16_t)ch)));
+            setSelection(where + 1);
             handled = true;
         }
         break;
@@ -290,13 +310,16 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
 int Editor::commitText(const std::wstring& text) {
     Editable* editable = mTextView->getEditableText();
     if (editable == nullptr) return 0;
-    // Foundation: append at end (preserves prior EditText semantics). A later pass
-    // will insert at the caret and advance it.
-    for (wchar_t ch : text) editable->append((char16_t)ch);
-    mTextView->setCaretPos((int)editable->length());
+    // Insert at the caret (replacing any active selection) and advance the caret
+    // past the inserted text.
+    std::u16string u16;
+    for (wchar_t ch : text) u16.push_back((char16_t)ch);
+    const int where = insertPosition();
+    editable->insert(where, SpannableStringBuilder(u16));
+    setSelection(where + (int)u16.size());
     makeBlink();
     mTextView->invalidate(true);
-    return (int)text.size();
+    return (int)u16.size();
 }
 
 bool Editor::onTouchEvent(MotionEvent& event) {
@@ -325,6 +348,15 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         extendSelection(offset);   // drag to extend the selection
     }
     return true;
+}
+
+void Editor::onTouchUpEvent(MotionEvent& event) {
+    // Touch-up. The caret is already placed in onTouchEvent (ACTION_DOWN), so the
+    // foundation has nothing to do here. In Android this is where the Editor
+    // hides the drag handles and stops the floating selection action mode; both
+    // arrive with the handles / action-mode passes. Kept as the hook so the host
+    // TextView can route ACTION_UP here unconditionally.
+    (void)event;
 }
 
 // =====================================================================================
