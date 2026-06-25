@@ -1979,7 +1979,7 @@ void CoordinatorLayout::setupForInsets() {
 
     if (this->getFitsSystemWindows()) {
         if (mApplyWindowInsetsListener == nullptr) {
-            mApplyWindowInsetsListener = [this](View& v, WindowInsets& insets) {
+            mApplyWindowInsetsListener = [this](View& v,const WindowInsets& insets) {
                     return setWindowInsets(insets);
                 };
         }
