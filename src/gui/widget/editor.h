@@ -108,6 +108,11 @@ public:
     void onTouchUpEvent(MotionEvent& event); // touch-up: place caret, (later) hide handles
     int  commitText(const std::wstring& text);
 
+    /** Selects the word at the last touch offset (double-tap gesture). Faithful
+     *  port of android.widget.Editor.selectCurrentWord(), minus the URLSpan and
+     *  needsToSelectAllToSelectWordOrParagraph branches (deferred). */
+    bool selectCurrentWord();
+
     // Set while a drag handle consumes the touch stream so the host TextView's
     // ACTION_UP handling (soft-input etc.) is suppressed. Always false until the
     // handles pass lands.
@@ -138,6 +143,14 @@ private:
     bool mBlinkSuspended = false;
     bool mCursorVisible = true;
     bool mIgnoreActionUpEvent = false;  // see ignoreActionUpEvent()
+
+    // double-tap word selection: the offset of the most recent ACTION_DOWN, plus
+    // the time/position of the most recent ACTION_UP so a second tap landing
+    // within DOUBLE_TAP_TIMEOUT + DOUBLE_TAP_SLOP is recognized as a double tap.
+    int   mLastTouchOffset = 0;
+    int64_t mLastUpTime = 0;            // nsecs; 0 means "no recent tap"
+    float mLastUpX = -1.f;
+    float mLastUpY = -1.f;
 
     Rect mCaretRect;                        // caret geometry, recomputed by updateCursorPosition()
 

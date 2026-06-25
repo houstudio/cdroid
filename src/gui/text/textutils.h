@@ -67,6 +67,7 @@ private:
     static bool isNewline(int codePoint);
     static bool isWhiteSpace(int codePoint);
 public:
+    static bool isPunctuation(int codePoint);
     static std::wstring utf8tounicode(const std::string&);
     static std::string unicode2utf8(const std::wstring&);
     static std::string utf16_utf8(const uint16_t*utf16,size_t);

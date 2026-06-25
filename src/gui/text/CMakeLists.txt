@@ -20,6 +20,7 @@ add_library(cdtext
     character.cc
     spannablestring.cc
     spannablestringbuilder.cc
+    worditerator.cc
     )
 target_link_libraries(cdtext minikin)
 

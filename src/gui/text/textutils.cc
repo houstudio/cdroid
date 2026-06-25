@@ -1039,4 +1039,16 @@ bool TextUtils::isWhiteSpace(int codePoint) {
     }
     return Character::isWhitespace(codePoint) || codePoint == NBSP_CODE_POINT;
 }
+
+// Faithful port of android.text.TextUtils.isPunctuation.
+bool TextUtils::isPunctuation(int codePoint) {
+    const int type = Character::getType(codePoint);
+    return type == Character::CONNECTOR_PUNCTUATION
+            || type == Character::DASH_PUNCTUATION
+            || type == Character::END_PUNCTUATION
+            || type == Character::FINAL_QUOTE_PUNCTUATION
+            || type == Character::INITIAL_QUOTE_PUNCTUATION
+            || type == Character::OTHER_PUNCTUATION
+            || type == Character::START_PUNCTUATION;
+}
 }/*endof namespace*/

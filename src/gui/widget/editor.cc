@@ -20,11 +20,13 @@
 #include <text/selection.h>
 #include <text/editable.h>
 #include <text/spannablestringbuilder.h>
+#include <text/worditerator.h>
 #include <text/layout.h>
 #include <text/parcelablespan.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <view/view.h>
+#include <view/viewconfiguration.h>
 #include <core/inputmethodmanager.h>
 #include <core/canvas.h>
 #include <algorithm>
@@ -342,7 +344,23 @@ bool Editor::onTouchEvent(MotionEvent& event) {
     const int offset = layout->getOffsetForHorizontal(line, horiz);
 
     if (action == MotionEvent::ACTION_DOWN) {
-        setSelection(offset);
+        mLastTouchOffset = offset;
+        // Double-tap → select the word at the tap. A tap is a double-tap when the
+        // UP→DOWN gap is within DOUBLE_TAP_TIMEOUT and the two taps are within
+        // DOUBLE_TAP_SLOP (mirrors Android's SelectionModifierCursorController).
+        const int64_t now = (int64_t)event.getEventTime();
+        const int64_t timeoutNs = (int64_t)ViewConfiguration::getDoubleTapTimeout() * 1000000LL;
+        const float dx = x - mLastUpX, dy = y - mLastUpY;
+        const float slop = (float)ViewConfiguration::getDoubleTapSlop();
+        const bool isDoubleTap = mLastUpTime != 0
+                && (now - mLastUpTime) <= timeoutNs
+                && (dx * dx + dy * dy) <= slop * slop;
+        if (isDoubleTap) {
+            selectCurrentWord();
+            mLastUpTime = 0;   // consume: a third tap must not be a "double" of the 2nd
+        } else {
+            setSelection(offset);
+        }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {
         extendSelection(offset);   // drag to extend the selection
@@ -351,12 +369,40 @@ bool Editor::onTouchEvent(MotionEvent& event) {
 }
 
 void Editor::onTouchUpEvent(MotionEvent& event) {
-    // Touch-up. The caret is already placed in onTouchEvent (ACTION_DOWN), so the
-    // foundation has nothing to do here. In Android this is where the Editor
-    // hides the drag handles and stops the floating selection action mode; both
-    // arrive with the handles / action-mode passes. Kept as the hook so the host
-    // TextView can route ACTION_UP here unconditionally.
-    (void)event;
+    // Record this tap (time + position) so the next ACTION_DOWN can recognize a
+    // double-tap (UP→DOWN within DOUBLE_TAP_TIMEOUT + DOUBLE_TAP_SLOP). The
+    // drag-handle / action-mode teardown Android also does here arrives with the
+    // handles / action-mode passes.
+    mLastUpTime = (int64_t)event.getEventTime();
+    mLastUpX = event.getX();
+    mLastUpY = event.getY();
+}
+
+bool Editor::selectCurrentWord() {
+    Spannable* e = editable();
+    if (e == nullptr) return false;
+
+    const int offset = mLastTouchOffset;
+    const int len = mTextView->length();
+    if (offset < 0 || offset > len) return false;
+
+    // Port of android.widget.Editor.selectCurrentWord(): find the word boundaries
+    // around the touch offset via WordIterator, then set the selection. Deferred
+    // (not in this foundation): URLSpan selection and the
+    // needsToSelectAllToSelectWordOrParagraph / getCharClusterRange fallbacks.
+    WordIterator wordIterator;
+    wordIterator.setCharSequence(e, offset, offset);
+    const int selStart = wordIterator.getBeginning(offset);
+    const int selEnd = wordIterator.getEnd(offset);
+
+    if (selStart == WordIterator::DONE || selEnd == WordIterator::DONE || selStart == selEnd) {
+        return false;   // not inside a word (whitespace/edge) — nothing to select
+    }
+
+    Selection::setSelection(e, selStart, selEnd);
+    mTextView->setCaretPos(selEnd);
+    mTextView->invalidate(true);
+    return true;
 }
 
 // =====================================================================================
