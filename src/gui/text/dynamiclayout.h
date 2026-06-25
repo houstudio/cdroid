@@ -114,7 +114,7 @@ private:
 private:
     CharSequence* mBase;
     CharSequence* mDisplay;
-    ChangeWatcher* mWatcher;
+    ChangeWatcher* mWatcher = nullptr;
     bool mIncludePad;
     bool mFallbackLineSpacing;
     bool mEllipsize;

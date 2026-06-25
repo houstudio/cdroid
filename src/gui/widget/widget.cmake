@@ -23,6 +23,7 @@ list(APPEND WIDGET_SOURCES
     widget/ratingbar.cc
     widget/space.cc
     widget/textview.cc
+    widget/editor.cc
     widget/edittext.cc
     widget/textclock.cc
     #widget/datetimeview.cc

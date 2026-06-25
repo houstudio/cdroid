@@ -34,7 +34,9 @@ namespace cdroid {
 class Layout;
 class CompletionInfo;
 class PrecomputesText;
+class Editor;
 class TextView : public View{
+    friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
     static constexpr int DEFAULT_TYPEFACE = -1;
     static constexpr int SANS = 1;
@@ -125,6 +127,7 @@ private:
     Marquee*mMarquee;
     CharWrapper* mCharWrapper;
     Drawable* mCursorDrawable;
+    Editor* mEditor = nullptr;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -240,6 +243,9 @@ protected:
     void onDetachedFromWindowInternal()override;
     bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
+    // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
+    // the caret appearance (the blink cadence and geometry are owned by Editor).
+    virtual void onDrawCaret(Canvas& canvas, const Rect& caretRect);
     virtual int getHorizontalOffsetForDrawables()const;
     void onLayout(bool changed, int left, int top, int w, int h)override;
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect)override;
@@ -287,6 +293,7 @@ public:
     int length()const;
     CharSequence* getTransformed()const;
     Editable* getEditableText()const;
+    Editor* getEditor();
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
     void setTextAppearance(const std::string&);

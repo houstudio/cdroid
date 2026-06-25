@@ -1,11 +1,25 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widget/edittext.h>
-#include <text/selection.h>
+#include <widget/editor.h>
 #include <core/inputmethodmanager.h>
-#include <porting/cdlog.h>
-#include <regex>
-#include <math.h>
 #include <utils/textutils.h>
-#include <text/layout.h>
+#include <porting/cdlog.h>
 
 namespace cdroid{
 
@@ -17,8 +31,6 @@ EditText::EditText(int w,int h):EditText(std::string(),w,h){
 EditText::EditText(Context*ctx,const AttributeSet& attrs)
   :TextView(ctx,attrs){
     initEditText();
-    //mHint = ctx->getString(attrs.getString("hint"));
-    //mHintLayout->setText(mHint);
     mInputType = attrs.getInt("inputType",std::unordered_map<std::string,int>{
 		    {"none",TYPE_NONE}    , {"any", TYPE_ANY},
 		    {"number",TYPE_NUMBER}, {"text",TYPE_TEXT},
@@ -37,18 +49,10 @@ EditText::EditText(const std::string&txt,int w,int h):TextView(txt,w,h){
 
 void EditText::initEditText(){
     mPasswordChar = '*';
-    mBlinkOn = true;
-    mEditMode= INSERT;
+    mEditMode = INSERT;
     mInputType = TYPE_NONE;
     afterChanged = nullptr;
     mCaretRect.set(0,0,1,1);
-    mBlinkOn = false;
-    mRBLink = [this](){blinkCaret();};
-}
-
-void EditText::onDetachedFromWindow(){
-    mBlinkOn = false;
-    removeCallbacks(mRBLink);
 }
 
 void EditText::setTextWatcher(AfterTextChanged ls){
@@ -70,27 +74,9 @@ bool EditText::getDefaultEditable() const{
 }
 
 int EditText::commitText(const std::wstring&ws){
-    Editable* editable = getEditableText();
-    switch(mEditMode){
-    case READONLY:return 0;
-    case INSERT:
-        if((mMaxLength>0)&&(editable->length()>=mMaxLength))
-            break;
-        /*if(mCaretPos < editable->length())
-            editable->insert(mCaretPos,ws);
-        else 
-            editable->append(ws);*/
-        break;
-    case REPLACE:
-        /*if(mCaretPos < editable->length())
-            editable->replace(mCaretPos,ws.length(),ws);
-        else
-            editable->append(ws);*/
-        break;
-    }
-    setCaretPos(mCaretPos+ws.length());
-    invalidate(true);
-    return ws.length();
+    // Editing logic lives in Editor now (it owns the editable buffer + caret).
+    if (getEditor()) return getEditor()->commitText(ws);
+    return 0;
 }
 
 void EditText::setInputType(INPUTTYPE tp){
@@ -114,19 +100,19 @@ int EditText::getInputType()const{
 }
 
 void EditText::setSelection(int start, int stop) {
-    //Selection::setSelection(mText/*getText()*/, start, stop);
+    if (getEditor()) getEditor()->setSelection(start, stop);
 }
 
 void EditText::setSelection(int index) {
-    //Selection::setSelection(mText/*getText()*/, index);
+    if (getEditor()) getEditor()->setSelection(index);
 }
 
 void EditText::selectAll() {
-    //Selection::selectAll(mText/*getText()*/);
+    if (getEditor()) getEditor()->selectAll();
 }
 
 void EditText::extendSelection(int index) {
-    //Selection::extendSelection(mText/*getText()*/, index);
+    if (getEditor()) getEditor()->extendSelection(index);
 }
 
 void EditText::setEllipsize(TextUtils::TruncateAt ellipsis){
@@ -152,114 +138,23 @@ void EditText::setHint(const std::string&txt){
 void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
     InputMethodManager & imm = InputMethodManager::getInstance();
     if(focus){
-	imm.setInputType(mInputType);
+        imm.setInputType(mInputType);
         imm.focusIn((View*)this);
     }else{
         imm.focusOut((View*)this);
     }
+    // Editor handles cursor blink on focus change via TextView::onFocusChanged.
     TextView::onFocusChanged(focus,direction,prevfocusrect);
-    mBlinkOn = focus;
-    if(mBlinkOn){
-        if(mCaretRect.empty())
-            mCaretRect=getClientRect();
-        blinkCaret();
-    }
     if(mInputType!=TYPE_NONE)imm.showIme();
 }
 
 bool EditText::onKeyDown(int keyCode,KeyEvent & event){
-    wchar_t ch;
-    bool ret = false;
-    int changed = 0;
-
-    Editable*editable = getEditableText();
-    int line = mLayout->getLineForOffset(mCaretPos);
-    switch(keyCode){
-    case KeyEvent::KEYCODE_DPAD_LEFT:
-        if(mCaretPos>0){
-            setCaretPos(mCaretPos-1);
-            return true;
-        }break;
-    case KeyEvent::KEYCODE_DPAD_RIGHT:
-        if(mCaretPos<(int)editable->length()){
-            setCaretPos(mCaretPos+1);
-            return true;
-        }break;
-    case KeyEvent::KEYCODE_DPAD_DOWN:
-        return (!isSingleLine())&&moveCaret2Line(line+1);
-    case KeyEvent::KEYCODE_DPAD_UP:
-        return (!isSingleLine())&&moveCaret2Line(line-1);
-    case KeyEvent::KEYCODE_BACKSPACE:
-        if(editable->length() && (mCaretPos>0) && (mCaretPos<=editable->length()) ){
-            editable->Delete(mCaretPos-1,mCaretPos);
-            //changed = match();
-            if(changed){
-                setCaretPos(mCaretPos-1);
-            }else{
-                //editable->insert(mCaretPos-1,wc0);
-            }
-            ret=true;
-        }else setCaretPos(editable->length()-1);
-        break;
-    case KeyEvent::KEYCODE_DEL:
-        if(mCaretPos<editable->length()){
-            editable->Delete(mCaretPos,mCaretPos+1);
-            //changed=match();
-            //if(!changed) editable->insert(mCaretPos,1,wc0);
-            //else mLayout->relayout(true);
-            ret=true; 
-        }break;
-    case KeyEvent::KEYCODE_INSERT:
-         mEditMode=!mEditMode;
-         invalidate(true);
-         break;
-#if 0
-    case KeyEvent::KEYCODE_OK:
-         if(nullptr!=afterChanged)
-             afterChanged(*this);
-         return false;
-#endif
-    case KeyEvent::KEYCODE_MENU:
-        return true;
-    case KeyEvent::KEYCODE_ENTER:
-        if(!isSingleLine()){
-            if(mCaretPos<editable->length()){
-                //editable->insert(mCaretPos,1,'\n');
-            }
-            else editable->append('\n');
-            //mLayout->relayout(true);
-            invalidate(true);
-            return true;
-        }
-        return false;
-    default:
-        ch = InputMethodManager::getInstance().getCharacter(keyCode,event.getMetaState());
-        if(ch!=0){
-            editable->append(ch); 
-            //commitText(ws);
-            return true; 
-        }
-        return TextView::onKeyDown(keyCode,event);
+    if (getEditor()) {
+        const bool handled = getEditor()->onKeyDown(keyCode, event);
+        if (handled && afterChanged) afterChanged(*this);
+        return handled;
     }
-    if(changed){
-        //mLayout->relayout();  
-        invalidate(true);
-        if(nullptr!=afterChanged)
-            afterChanged(*this);
-    }
-    return ret;
-}
-
-void EditText::blinkCaret(){
-    if(isFocused()){
-        invalidate((const Rect*)&mCaretRect);
-        postDelayed(mRBLink,500);
-    }
-}
-
-void EditText::onDrawCaret(Canvas&canvas,const Rect&r){
-    canvas.rectangle(r);
-    canvas.fill();
+    return TextView::onKeyDown(keyCode, event);
 }
 
 int EditText::getPasswordChar()const{
@@ -274,27 +169,8 @@ void EditText::setPasswordChar(int ch){
 
 void EditText::onDraw(Canvas&canvas){
     canvas.set_font_size(getTextSize());
-    /*if(wText.empty()||(mInputType==TYPE_PASSWORD) ){
-        Layout hpl(*mLayout);
-        Layout* tmp=mLayout;
-        if((mInputType==TYPE_PASSWORD)&&wText.length())
-            hpl.setText(std::string(wText.length(),'*'));
-        else
-            hpl.setText(mHint);
-        hpl.relayout();
-        mLayout = &hpl;
-        TextView::onDraw(canvas);
-        mLayout = tmp;
-    }else*/{
-        TextView::onDraw(canvas);
-    }
-    
-    if(isFocused()){
-        canvas.set_color(getCurrentTextColor()&0x80FFFFFF);
-        if(!mCaretRect.empty()&&mBlinkOn)
-            onDrawCaret(canvas,mCaretRect);
-        mBlinkOn=!mBlinkOn;
-    }
+    // Caret is drawn by Editor inside TextView::onDraw (when focused/editing).
+    TextView::onDraw(canvas);
 }
 
 std::string EditText::getAccessibilityClassName()const{
@@ -304,9 +180,7 @@ std::string EditText::getAccessibilityClassName()const{
 void EditText::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     TextView::onInitializeAccessibilityNodeInfoInternal(info);
     if (isEnabled()) {
-        info.addAction(AccessibilityNodeInfo::ACTION_SET_TEXT);//AccessibilityAction::ACTION_SET_TEXT);
+        info.addAction(AccessibilityNodeInfo::ACTION_SET_TEXT);
     }
 }
 }//end namespace
-
-

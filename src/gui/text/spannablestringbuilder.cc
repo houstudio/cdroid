@@ -11,10 +11,14 @@ SpannableStringBuilder::SpannableStringBuilder(const CharSequence*text)
     
 void SpannableStringBuilder::setSpan(const ParcelableSpan* what, int start, int end, int flags) {
     if (!what) return;
+    const int len = (int)mText.length();
     if (start < 0) start = 0;
-    if (end > (int)mText.length()) end = (int)mText.size();
-    if (start >= end) return;
-    mSpans.push_back({what,start,end,flags});
+    if (end < 0) end = 0;
+    if (start > len) start = len;
+    if (end > len) end = len;
+    if (start > end) { const int t = start; start = end; end = t; }
+    // Android allows zero-length (point) spans — selection cursors rely on them.
+    mSpans.push_back({what, start, end, flags});
 }
 
 void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
@@ -25,7 +29,7 @@ void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
 }
 
 void SpannableStringBuilder::shiftSpans(int index, int delta) {
-    for (auto t : mSpans) {
+    for (auto& t : mSpans) {
         const ParcelableSpan*span;
         int sstart,send,sflags;
         std::tie(span,sstart,send,sflags) = t;
@@ -35,6 +39,7 @@ void SpannableStringBuilder::shiftSpans(int index, int delta) {
         } else if (send > index) {
             send += delta;
         }
+        t = std::make_tuple(span, sstart, send, sflags);
     }
 }
 
@@ -127,8 +132,17 @@ SpannableStringBuilder& SpannableStringBuilder::deleteText(int start, int end) {
 }
 
 void SpannableStringBuilder::getChars(int start, int end, char16_t* dest, int destPos) const{
-    for(int i=start;i<end;i++)
-        dest[i+destPos]=mText[start+i];
+    // Copy mText[start, end) to dest[destPos, ...). The previous override used
+    // wrong indices (`dest[i+destPos] = mText[start+i]`) which, for start != 0,
+    // wrote out of bounds and corrupted the heap — surfacing later as garbage
+    // span pointers in getSpans. Match SpannableStringInternal::getChars exactly.
+    if (start >= end) return;
+    const int len = (int)mText.length();
+    if (start < 0) start = 0;
+    if (end > len) end = len;
+    for (int i = 0; i < end - start; i++) {
+        dest[destPos + i] = mText[start + i];
+    }
 }
 
 // Editable interface implementations

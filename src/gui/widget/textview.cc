@@ -16,11 +16,13 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/textview.h>
+#include <widget/editor.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
 #include <text/layout.h>
 #include <text/selection.h>
+#include <text/spannablestringbuilder.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -268,6 +270,7 @@ TextView::~TextView() {
     delete mHintLayout;
     delete mDrawables;
     delete mCursorDrawable;
+    delete mEditor;
 }
 
 void TextView::setTextInternal(CharSequence* text){
@@ -539,6 +542,11 @@ void TextView::setEnabled(bool _enabled) {
         }
     }*/
     View::setEnabled(_enabled);
+    if (mEditor) {
+        mEditor->invalidateTextDisplayList();
+        mEditor->prepareCursorControllers();
+        mEditor->makeBlink();
+    }
     /*if (_enabled) {
         // Make sure IME is updated with current editor info.
         InputMethodManager imm = getInputMethodManager();
@@ -547,11 +555,11 @@ void TextView::setEnabled(bool _enabled) {
 
     // Will change text color
     if (mEditor != nullptr) {
-        mEditor.invalidateTextDisplayList();
-        mEditor.prepareCursorControllers();
+        mEditor->invalidateTextDisplayList();
+        mEditor->prepareCursorControllers();
 
         // start or stop the cursor blinking as appropriate
-        mEditor.makeBlink();
+        mEditor->makeBlink();
     }*/
 }
 
@@ -599,8 +607,8 @@ bool TextView::onPreDraw() {
     /*if (mMovement != nullptr) {
         int curs = getSelectionEnd();
         // Do not create the controller if it is not already created.
-        if (mEditor != null && mEditor.mSelectionModifierCursorController != null
-                && mEditor.mSelectionModifierCursorController.isSelectionStartDragged()) {
+        if (mEditor != nullptr && mEditor->mSelectionModifierCursorController != nullptr
+                && mEditor->mSelectionModifierCursorController->isSelectionStartDragged()) {
             curs = getSelectionStart();
         }
         if (curs < 0 && (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
@@ -616,9 +624,9 @@ bool TextView::onPreDraw() {
     // This has to be checked here since:
     // - onFocusChanged cannot start it when focus is given to a view with selected text (after
     //   a screen rotation) since layout is not yet initialized at that point.
-    /*if (mEditor != null && mEditor.mCreatedWithASelection) {
-        mEditor.refreshTextActionMode();
-        mEditor.mCreatedWithASelection = false;
+    /*if (mEditor != nullptr && mEditor->mCreatedWithASelection) {
+        mEditor->refreshTextActionMode();
+        mEditor->mCreatedWithASelection = false;
     }*/
     unregisterForPreDraw();
     return true;
@@ -626,7 +634,7 @@ bool TextView::onPreDraw() {
 
 void TextView::onAttachedToWindow() {
     View::onAttachedToWindow();
-    //if (mEditor != null) mEditor.onAttachedToWindow();
+    if (mEditor) mEditor->onAttachedToWindow();
     if (mPreDrawListenerDetached) {
         getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
         mPreDrawListenerDetached = false;
@@ -644,6 +652,7 @@ void TextView::onDetachedFromWindowInternal(){
         if( d == nullptr)continue;
         unscheduleDrawable(*d);
     }
+    if (mEditor) mEditor->onDetachedFromWindow();
     View::onDetachedFromWindowInternal();
 }
 
@@ -785,7 +794,8 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
             l.onTextChanged(text, start, before, after);
         }
     }
-    //if (mEditor != null) mEditor.sendOnTextChanged(start, before, after);
+    //if (mEditor != nullptr) mEditor->sendOnTextChanged(start, before, after);
+    if (mEditor) mEditor->sendOnTextChanged(start, before, after);
 }
 
 void TextView::spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
@@ -1122,10 +1132,14 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
 
     PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
     if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
-        //createEditorIfNeeded();
+        createEditorIfNeeded();
         //mEditor->forgetUndoRedo();
-        Editable* t = nullptr;//mEditableFactory.newEditable(text);
-        //text = t;
+        // Wrap the buffer in an Editable (Android's mEditableFactory.newEditable) so
+        // that Editor/Selection can operate on it. `text` can be the reused
+        // mCharWrapper member, so copy its content without deleting the original.
+        if (!dynamic_cast<Editable*>(text)) {
+            text = new SpannableStringBuilder(text);
+        }
         //setFilters(t, mFilters);
         //InputMethodManager* imm = getInputMethodManager();
         //if (imm != nullptr) imm->restartInput(this);
@@ -1271,7 +1285,28 @@ bool TextView::getDefaultEditable()const{
 }
 
 void TextView::setEditable(bool b){
-    //mLayout->setEditable(b);
+    if (b) {
+        createEditorIfNeeded();
+        // Ensure the buffer is actually an Editable so Editor/Selection can work.
+        if (mText != nullptr && dynamic_cast<Editable*>(mText) == nullptr
+                && mText != mCharWrapper) {
+            SpannableStringBuilder* editable = new SpannableStringBuilder(mText);
+            mText = editable;
+            mSpannable = dynamic_cast<Spannable*>(mText);
+            if (mTransformed == nullptr) mTransformed = mText;
+            if (mLayout != nullptr) checkForRelayout();
+        }
+    }
+}
+
+void TextView::createEditorIfNeeded(){
+    if (mEditor == nullptr) {
+        mEditor = new Editor(this);
+    }
+}
+
+Editor* TextView::getEditor(){
+    return mEditor;
 }
 
 void TextView::setCaretPos(int pos){
@@ -1779,7 +1814,7 @@ void TextView::updateAfterEdit() {
 
     if (curs >= 0) {
         mHighlightPathBogus = true;
-        //if (mEditor != nullptr) mEditor.makeBlink();
+        //if (mEditor != nullptr) mEditor->makeBlink();
         bringPointIntoView(curs);
     }
 }
@@ -1787,7 +1822,7 @@ void TextView::updateAfterEdit() {
 void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
     /*sLastCutCopyOrTextChangedTime = 0;
 
-    Editor.InputMethodState ims = mEditor == null ? null : mEditor.mInputMethodState;
+    Editor.InputMethodState ims = mEditor == null ? null : mEditor->mInputMethodState;
     if (ims == null || ims.mBatchEditNesting == 0) {
         updateAfterEdit();
     }
@@ -1825,20 +1860,20 @@ void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocus
         return;
     }
     startStopMarquee(focused);
+    if (mEditor) mEditor->onFocusChanged(focused, direction, previouslyFocusedRect);
     View::onFocusChanged(focused, direction, previouslyFocusedRect);
 }
 
 void TextView::onWindowFocusChanged(bool hasWindowFocus) {
     View::onWindowFocusChanged(hasWindowFocus);
-    //if (mEditor != null) mEditor.onWindowFocusChanged(hasWindowFocus);
+    if (mEditor) mEditor->onWindowFocusChanged(hasWindowFocus);
     startStopMarquee(hasWindowFocus);
 }
 
 void TextView::onVisibilityChanged(View& changedView, int visibility) {
     View::onVisibilityChanged(changedView, visibility);
-    if (/*mEditor != null &&*/ visibility != VISIBLE) {
-        //mEditor.hideCursorAndSpanControllers();
-        //stopTextActionMode();
+    if (mEditor && visibility != VISIBLE) {
+        mEditor->hide();
     }
 }
 
@@ -2278,7 +2313,7 @@ void TextView::nullLayouts() {
     mBoring = mHintBoring = nullptr;
 
     // Since it depends on the value of mLayout
-    //if (mEditor != nullptr) mEditor.prepareCursorControllers();
+    //if (mEditor != nullptr) mEditor->prepareCursorControllers();
 }
 
 void TextView::assumeLayout() {
@@ -2859,7 +2894,7 @@ const TextDirectionHeuristic*TextView::getTextDirectionHeuristic()const{
         return TextDirectionHeuristics::LTR;
     }
 
-    /*if (mEditor != nullptr && (mEditor.mInputType & EditorInfo.TYPE_MASK_CLASS)  == EditorInfo.TYPE_CLASS_PHONE) {
+    /*if (mEditor != nullptr && (mEditor->mInputType & EditorInfo.TYPE_MASK_CLASS)  == EditorInfo.TYPE_CLASS_PHONE) {
         // Phone numbers must be in the direction of the locale's digits. Most locales have LTR
         // digits, but some locales, such as those written in the Adlam or N'Ko scripts, have
         // RTL digits.
@@ -2926,22 +2961,25 @@ void TextView::viewClicked(InputMethodManager*imm){
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     const bool superResult = View::onTouchEvent(event);
+    if (mEditor && action != MotionEvent::ACTION_UP) {
+        mEditor->onTouchEvent(event);
+    }
     if(action == MotionEvent::ACTION_UP){
         return superResult;
     }
     bool handled = false;
     const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused();
-           //&& (mEditor == null || !mEditor.mIgnoreActionUpEvent);
+           //&& (mEditor == null || !mEditor->mIgnoreActionUpEvent);
     if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
         InputMethodManager& imm = InputMethodManager::getInstance();
         viewClicked(&imm);
-        /*if (isTextEditable() && mEditor.mShowSoftInputOnFocus && imm != null
+        /*if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != null
                 && !showAutofillDialog()) {
             imm.showSoftInput(this, 0);
         }*/
 
         // The above condition ensures that the mEditor is not null
-        //mEditor.onTouchUpEvent(event);
+        //mEditor->onTouchUpEvent(event);
 
         handled = true;
     }
@@ -3148,7 +3186,7 @@ void TextView::updateTextColors(){
     }
     if (inval) {
         // Text needs to be redrawn with the new color
-        //if (mEditor != null) mEditor.invalidateTextDisplayList();
+        if (mEditor != nullptr) mEditor->invalidateTextDisplayList();
         invalidate(true);
     }
 }
@@ -3768,7 +3806,7 @@ bool TextView::isSuggestionsEnabled()const{
 }
 
 bool TextView::canSelectText() const{
-    return mText->length() != 0 ;//&& mEditor != null && mEditor.hasSelectionController();
+    return mText->length() != 0 && (mEditor != nullptr);//&& mEditor->hasSelectionController();
 }
 
 bool TextView::canSelectAllText()const{
@@ -3783,7 +3821,7 @@ bool TextView::selectAllText(){
         hideFloatingToolbar(FLOATING_TOOLBAR_SELECT_ALL_REFRESH_DELAY);
     }*/
     const int length = mText->length();
-    //Selection::setSelection(mSpannable, 0, length);
+    if (mSpannable) Selection::setSelection(mSpannable, 0, length);
     return length > 0;
 }
 
@@ -3824,11 +3862,11 @@ int TextView::getTotalPaddingBottom() {
 }
 
 int TextView::getSelectionStart()const{
-    return -1;
+    return Selection::getSelectionStart(mText);
 }
 
 int TextView::getSelectionEnd()const{
-    return -1;
+    return Selection::getSelectionEnd(mText);
 }
 
 bool TextView::hasSelection()const{
@@ -3843,9 +3881,13 @@ std::string TextView::getSelectedText()const{
      }
      const int start = getSelectionStart();
      const int end = getSelectionEnd();
-     //const std::wstring &text =mLayout->getText();
-     //std::wstring ret = start<end?text.substr(start,end):text.substr(end,start);
-     return "";//TextUtils::unicode2utf8(ret);
+     const int lo = std::min(start, end);
+     const int hi = std::max(start, end);
+     // Offsets are in char16 units; use subSequence (not UTF-8 substr) to stay correct.
+     CharSequence* sub = mText->subSequence(lo, hi);
+     std::string result = sub ? sub->toString() : std::string();
+     if (sub && sub != mText) delete sub;
+     return result;
 }
 
 void TextView::setSingleLine(bool single){
@@ -4161,6 +4203,20 @@ void TextView::onDraw(Canvas& canvas) {
         layout->draw(canvas);//, highlight, mHighlightPaint, cursorOffsetVertical);
     }
     canvas.restore();
+    if (mEditor) mEditor->drawCursor(canvas);
+}
+
+void TextView::onDrawCaret(Canvas& canvas, const Rect& caretRect) {
+    // Default caret paint: the cursor drawable if one is set, otherwise a thin
+    // filled rect in the current text color. Subclasses override to customize.
+    if (mCursorDrawable) {
+        mCursorDrawable->setBounds(caretRect);
+        mCursorDrawable->draw(canvas);
+    } else {
+        canvas.set_color((uint32_t)getCurrentTextColor());
+        canvas.rectangle(caretRect);
+        canvas.fill();
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -4197,12 +4253,12 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         }
     }
 
-    if (mEditor != null) {
-        info.setInputType(mEditor.mInputType);
+    if (mEditor != nullptr) {
+        info.setInputType(mEditor->mInputType);
 
-        if (mEditor.mError != null) {
+        if (mEditor->mError != nullptr) {
             info.setContentInvalid(true);
-            info.setError(mEditor.mError);
+            info.setError(mEditor->mError);
         }
     }
 
@@ -4235,7 +4291,7 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
                     getResources().getString(com.android.internal.R.string.share)));
         }
         if (canProcessText()) {  // also implies mEditor is not null.
-            mEditor.mProcessTextIntentActionsHandler.onInitializeAccessibilityNodeInfo(info);
+            mEditor->mProcessTextIntentActionsHandler.onInitializeAccessibilityNodeInfo(info);
         }
     }
 
@@ -4257,8 +4313,8 @@ bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments)
 }
 void TextView::sendAccessibilityEventInternal(int eventType){
     LOGD_IF(AccessibilityManager::getInstance(mContext).isEnabled(),"TODO");
-    /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != null) {
-        mEditor.mProcessTextIntentActionsHandler.initializeAccessibilityActions();
+    /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != nullptr) {
+        mEditor->mProcessTextIntentActionsHandler.initializeAccessibilityActions();
     }*/
     View::sendAccessibilityEventInternal(eventType);
 }

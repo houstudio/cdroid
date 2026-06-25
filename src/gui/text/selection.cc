@@ -1,6 +1,17 @@
 #include <text/layout.h>
 #include <text/selection.h>
+#include <text/parcelablespan.h>
 namespace cdroid{
+
+// ODR-use definitions of the selection marker spans. Declared as `const static`
+// pointers in the header but never defined before, which is why the Selection
+// API could not actually be linked/called. These are distinct process-lifetime
+// singletons (mirroring Android's START/END/MEMORY NoCopySpan markers); only
+// pointer identity matters.
+const ParcelableSpan* Selection::SELECTION_MEMORY = new ParcelableSpan();
+const ParcelableSpan* Selection::SELECTION_START  = new ParcelableSpan();
+const ParcelableSpan* Selection::SELECTION_END    = new ParcelableSpan();
+
 int Selection::getSelectionStart(CharSequence* text) {
     Spanned*spanned = dynamic_cast<Spanned*>(text);
     if (spanned) {
