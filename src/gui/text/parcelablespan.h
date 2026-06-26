@@ -20,8 +20,9 @@ public:
     virtual size_t length() const = 0;
     virtual int charAt(int) const = 0;
     virtual CharSequence* subSequence(int, int) const { return nullptr; }
-    virtual std::string toString() const = 0;
     virtual void getChars(int start, int end, char16_t* dest, int destPos) const = 0;
+
+    virtual std::string toString() const = 0;
     virtual std::u16string toU16String() const = 0;
 
     // Convenience: implicit conversion to either string type (non-virtual; delegates
