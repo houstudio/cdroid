@@ -33,6 +33,7 @@ namespace cdroid {
 struct WordIterator::Impl {
     UBreakIterator* bi = nullptr;
     std::string locale;
+    std::u16string buffer;   // MUST outlive bi — ubrk_open stores a pointer into it
 };
 
 // =====================================================================================
@@ -65,18 +66,22 @@ void WordIterator::setCharSequence(const CharSequence* charSequence, int start, 
     mStart = std::max(0, start - WINDOW_WIDTH);
     mEnd = std::min(len, end + WINDOW_WIDTH);
 
-    std::u16string buf((size_t)(mEnd - mStart), u'\0');
-    TextUtils::getChars(charSequence, mStart, mEnd, &buf[0], 0);
+    // The buffer MUST outlive the UBreakIterator (ubrk_open stores the pointer),
+    // so keep it on the Impl, not as a local — a local here would leave bi->text
+    // dangling after this function returns (use-after-free → garbage boundaries).
+    mImpl->buffer.assign((size_t)(mEnd - mStart), u'\0');
+    TextUtils::getChars(charSequence, mStart, mEnd, &mImpl->buffer[0], 0);
 
     if (mImpl->bi) { ubrk_close(mImpl->bi); mImpl->bi = nullptr; }
     UErrorCode status = U_ZERO_ERROR;
     mImpl->bi = ubrk_open(UBRK_WORD, mImpl->locale.empty() ? "" : mImpl->locale.c_str(),
-                          reinterpret_cast<const UChar*>(buf.data()), (int32_t)buf.size(), &status);
+                          reinterpret_cast<const UChar*>(mImpl->buffer.data()),
+                          (int32_t)mImpl->buffer.size(), &status);
     if (mImpl->bi == nullptr) {
         // Fall back to the root locale if the requested locale failed to open.
         status = U_ZERO_ERROR;
-        mImpl->bi = ubrk_open(UBRK_WORD, "", reinterpret_cast<const UChar*>(buf.data()),
-                              (int32_t)buf.size(), &status);
+        mImpl->bi = ubrk_open(UBRK_WORD, "", reinterpret_cast<const UChar*>(mImpl->buffer.data()),
+                              (int32_t)mImpl->buffer.size(), &status);
     }
 }
 
