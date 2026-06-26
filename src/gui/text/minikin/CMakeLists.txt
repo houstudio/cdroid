@@ -49,7 +49,8 @@ if(TRUE OR NOT USE_ICU)
        libs/unicode/ubrk.cpp
        libs/unicode/uscript.cpp
        libs/unicode/uloc.cpp
-       libs/unicode/unicode_data.cpp
+       libs/unicode/unicode_casemap_nfd.cpp
+       libs/unicode/unicode_data_props.cpp
        libs/unicode/unorm2.cpp
    )
    target_include_directories(minikin PRIVATE

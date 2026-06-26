@@ -1,202 +1,230 @@
 #!/usr/bin/env python3
 """
-Unicode 范围数据表生成器
-从 Unicode 官方数据文件生成 C++ 范围表
+unicode_data.cpp generator (root-cure rewrite).
+
+Reads authoritative UCD files (UnicodeData.txt, Scripts.txt, LineBreak.txt,
+GraphemeBreakProperty.txt, DerivedCoreProperties.txt) and emits a SORTED,
+NON-OVERLAPPING, property-merged g_unicodeRanges table matching myicu's
+UnicodeRange struct. Enum values are parsed from myicu's own headers so the
+mapping cannot drift.
+
+Data size is driven by the number of property *runs*, not codepoint count —
+so even full Unicode (incl. astral planes) stays compact: big blocks like CJK
+Extension B (U+20000..U+2A6DF, ~55k Han chars) collapse to a single range.
+
+Env:
+  UCD_DIR        UCD .txt directory          (default /usr/share/unicode)
+  UNICODE_MAX_CP cap (0x10FFFF = all planes) (default 0x10FFFF; 0xFFFF = BMP only)
 """
+import os, re
 
-import re
-from dataclasses import dataclass
-from typing import List, Tuple, Dict
+HERE = os.path.dirname(os.path.abspath(__file__))
+INC  = os.path.join(HERE, "../../", "include", "myicu", "unicode")
+UCD  = os.environ.get("UCD_DIR", "/usr/share/unicode")
+OUT  = os.path.join(HERE, "unicode_data_generated.cpp")
+MAX_CP = int(os.environ.get("UNICODE_MAX_CP", "0x10FFFF"), 0)
 
-@dataclass
-class UnicodeRange:
-    start: int
-    end: int
-    directionality: int
-    category: int
-    gcb: int
-    lb: int
-    ccc: int
-    script: int
-    binaryProps: int
+# UCharCategory: UCD 2-letter -> myicu int (matches uchar.h UCharCategory enum)
+CAT_MAP = {'Lu':1,'Ll':2,'Lt':3,'Lm':4,'Lo':5,'Mn':6,'Me':7,'Mc':8,'Nd':9,'Nl':10,
+           'No':11,'Zs':12,'Zl':13,'Zp':14,'Cc':15,'Cf':16,'Co':17,'Cs':18,'Pd':19,
+           'Ps':20,'Pe':21,'Pc':22,'Po':23,'Sm':24,'Sc':25,'Sk':26,'So':27,'Pi':28,
+           'Pf':29,'Cn':0}
+# UCharDirection (bidi class): UCD letter -> myicu int
+DIR_MAP = {'L':0,'R':1,'EN':2,'ES':3,'ET':4,'AN':5,'CS':6,'B':7,'S':8,'WS':9,'ON':10,
+           'LRE':11,'LRO':12,'AL':13,'RLE':14,'RLO':15,'PDF':16,'NSM':17,'BN':18,
+           'FSI':19,'LRI':20,'RLI':21,'PDI':22}
 
-# UCharCategory 映射
-CATEGORY_MAP = {
-    'Cc': 15, 'Cf': 16, 'Cn': 0, 'Co': 17, 'Cs': 18,
-    'Ll': 2, 'Lm': 4, 'Lo': 5, 'Lt': 3, 'Lu': 1,
-    'Mc': 8, 'Me': 7, 'Mn': 6,
-    'Nd': 9, 'Nl': 10, 'No': 11,
-    'Pc': 19, 'Pd': 20, 'Pe': 21, 'Pf': 22, 'Pi': 23, 'Po': 24, 'Ps': 25,
-    'Sc': 26, 'Sk': 27, 'Sm': 28, 'So': 29,
-    'Zl': 13, 'Zp': 14, 'Zs': 12,
-}
 
-# UCharDirection 映射
-DIRECTION_MAP = {
-    'L': 0, 'R': 1, 'EN': 2, 'ES': 3, 'ET': 4, 'AN': 5, 'CS': 6,
-    'B': 7, 'S': 8, 'WS': 9, 'ON': 10, 'LRE': 11, 'LRO': 12,
-    'AL': 13, 'RLE': 14, 'RLO': 15, 'PDF': 16, 'NSM': 17, 'BN': 18,
-    'FSI': 19, 'LRI': 20, 'RLI': 21, 'PDI': 22,
-}
+def parse_enum(path, prefix, want_code=False):
+    """Parse PREFIX_NAME = int  ...  [CODE] -> dict (by NAME, and by [CODE] if present)."""
+    out = {}
+    pat = re.compile(r'\b' + re.escape(prefix) + r'([A-Z0-9_]+)\s*=\s*(\d+)(?:.*?\[(\w+)\])?')
+    for line in open(path, encoding='utf-8'):
+        m = pat.search(line)
+        if m:
+            out[m.group(1).upper()] = int(m.group(2))
+            if m.group(3):
+                # [code] keys may collide (e.g. U_LB_ALPHABETIC and U_LB_ARABIC_LETTER
+                # both carry [AL] in myicu's header). First wins — the UAX short code
+                # maps to the primary class (AL=Alphabetic=2, not Arabic_Letter=51).
+                out.setdefault(m.group(3).upper(), int(m.group(2)))
+    return out
 
-# UGraphemeClusterBreak 映射
-GCB_MAP = {
-    'Other': 0, 'Control': 1, 'CR': 2, 'LF': 5, 'Extend': 3,
-    'Regional_Indicator': 12, 'Prepend': 11, 'SpacingMark': 10,
-    'L': 4, 'V': 9, 'T': 8, 'LV': 6, 'LVT': 7,
-    'E_Base': 13, 'E_Modifier': 15, 'Glue_After_ZWJ': 16, 'E_Base_GAZ': 14, 'ZWJ': 17,
-}
 
-# ULineBreak 映射
-LB_MAP = {
-    'XX': 0, 'AI': 1, 'AL': 2, 'B2': 3, 'BA': 4, 'BB': 5, 'BK': 6,
-    'CB': 7, 'CL': 8, 'CM': 9, 'CR': 10, 'EX': 11, 'GL': 12, 'HY': 13,
-    'ID': 14, 'IN': 15, 'IS': 16, 'LF': 17, 'NS': 18, 'NU': 19, 'OP': 20,
-    'PO': 21, 'PR': 22, 'QU': 23, 'SA': 24, 'SG': 25, 'SP': 26, 'SY': 27,
-    'ZW': 28, 'NL': 29, 'WJ': 30, 'H2': 31, 'H3': 32, 'JL': 33, 'JT': 34,
-    'JV': 35, 'CP': 36, 'CJ': 37, 'HL': 38, 'RI': 39, 'EB': 40, 'EM': 41,
-    'ZWJ': 42,
-}
+GCB_ENUM = parse_enum(os.path.join(INC, "uchar.h"), "U_GCB_")
+LB_ENUM  = parse_enum(os.path.join(INC, "uchar.h"), "U_LB_")
+SCRIPT_ENUM = {m.group(1).upper(): int(m.group(2))
+               for m in (re.compile(r'\bUSCRIPT_([A-Z0-9_]+)\s*=\s*(\d+)').search(l)
+                         for l in open(os.path.join(INC, "uscript.h"), encoding='utf-8')) if m}
+USCRIPT_UNKNOWN = SCRIPT_ENUM.get('UNKNOWN', 103)
 
-# UScriptCode 映射（简化版）
-SCRIPT_MAP = {
-    'Common': 0, 'Inherited': 1, 'Unknown': 2,
-    'Arabic': 3, 'Armenian': 4, 'Bengali': 5, 'Bopomofo': 6,
-    'Cherokee': 7, 'Coptic': 8, 'Cyrillic': 9, 'Deseret': 10,
-    'Devanagari': 11, 'Ethiopic': 12, 'Georgian': 13, 'Gothic': 14,
-    'Greek': 15, 'Gujarati': 16, 'Gurmukhi': 17, 'Han': 18,
-    'Hangul': 19, 'Hebrew': 20, 'Hiragana': 21, 'Kannada': 22,
-    'Katakana': 23, 'Khmer': 24, 'Lao': 25, 'Latin': 26,
-    'Malayalam': 27, 'Mongolian': 28, 'Myanmar': 29, 'Ogham': 30,
-    'Old_Italic': 31, 'Oriya': 32, 'Runic': 33,
-}
 
-# 二进制属性索引
-BINARY_PROPS = {
-    'White_Space': 40,
-    'Bidi_Mirrored': 1,
-    'Emoji': 8,
-    'Emoji_Modifier': 149,
-    'Emoji_Modifier_Base': 150,
-    'Extended_Pictographic': 151,
-    'Hex_Digit': 18,
-    'ID_Start': 20,
-    'ID_Continue': 21,
-    'Ideographic': 22,
-    'Lowercase': 27,
-    'Uppercase': 38,
-    'Grapheme_Extend': 16,
-}
+def parse_enum_names(path, prefix):
+    """name-only parse: {value: NAME} (first-wins), ignoring [code] aliases —
+    used to emit the symbolic ICU constant for each value."""
+    out = {}
+    pat = re.compile(r'\b' + re.escape(prefix) + r'([A-Z0-9_]+)\s*=\s*(\d+)')
+    for line in open(path, encoding='utf-8'):
+        m = pat.search(line)
+        if m:
+            out.setdefault(int(m.group(2)), m.group(1))  # first (canonical) name wins
+    return out
 
-def parse_unicode_data(filename: str) -> List[UnicodeRange]:
-    """解析 UnicodeData.txt"""
-    ranges = []
-    current_range = None
-    
-    with open(filename, 'r', encoding='utf-8') as f:
+
+# value -> symbolic ICU constant, for emitting readable tables
+DIR_REV = {0:'U_LEFT_TO_RIGHT',1:'U_RIGHT_TO_LEFT',2:'U_EUROPEAN_NUMBER',3:'U_EUROPEAN_NUMBER_SEPARATOR',
+ 4:'U_EUROPEAN_NUMBER_TERMINATOR',5:'U_ARABIC_NUMBER',6:'U_COMMON_NUMBER_SEPARATOR',7:'U_BLOCK_SEPARATOR',
+ 8:'U_SEGMENT_SEPARATOR',9:'U_WHITE_SPACE_NEUTRAL',10:'U_OTHER_NEUTRAL',11:'U_LEFT_TO_RIGHT_EMBEDDING',
+ 12:'U_LEFT_TO_RIGHT_OVERRIDE',13:'U_RIGHT_TO_LEFT_ARABIC',14:'U_RIGHT_TO_LEFT_EMBEDDING',
+ 15:'U_RIGHT_TO_LEFT_OVERRIDE',16:'U_POP_DIRECTIONAL_FORMAT',17:'U_DIR_NON_SPACING_MARK',
+ 18:'U_BOUNDARY_NEUTRAL',19:'U_FIRST_STRONG_ISOLATE',20:'U_LEFT_TO_RIGHT_ISOLATE',21:'U_RIGHT_TO_LEFT_ISOLATE',
+ 22:'U_POP_DIRECTIONAL_ISOLATE'}
+CAT_REV = {0:'U_UNASSIGNED',1:'U_UPPERCASE_LETTER',2:'U_LOWERCASE_LETTER',3:'U_TITLECASE_LETTER',4:'U_MODIFIER_LETTER',
+ 5:'U_OTHER_LETTER',6:'U_NON_SPACING_MARK',7:'U_ENCLOSING_MARK',8:'U_COMBINING_SPACING_MARK',9:'U_DECIMAL_DIGIT_NUMBER',
+ 10:'U_LETTER_NUMBER',11:'U_OTHER_NUMBER',12:'U_SPACE_SEPARATOR',13:'U_LINE_SEPARATOR',14:'U_PARAGRAPH_SEPARATOR',
+ 15:'U_CONTROL_CHAR',16:'U_FORMAT_CHAR',17:'U_PRIVATE_USE_CHAR',18:'U_SURROGATE',19:'U_DASH_PUNCTUATION',
+ 20:'U_START_PUNCTUATION',21:'U_END_PUNCTUATION',22:'U_CONNECTOR_PUNCTUATION',23:'U_OTHER_PUNCTUATION',
+ 24:'U_MATH_SYMBOL',25:'U_CURRENCY_SYMBOL',26:'U_MODIFIER_SYMBOL',27:'U_OTHER_SYMBOL',28:'U_INITIAL_PUNCTUATION',29:'U_FINAL_PUNCTUATION'}
+GCB_REV    = {k: 'U_GCB_' + v for k, v in parse_enum_names(os.path.join(INC, "uchar.h"), "U_GCB_").items()}
+LB_REV     = {k: 'U_LB_'  + v for k, v in parse_enum_names(os.path.join(INC, "uchar.h"), "U_LB_").items()}
+SCRIPT_REV = {v: 'USCRIPT_' + k for k, v in SCRIPT_ENUM.items() if 'RESERVED' not in k}
+USCRIPT_COMMON  = SCRIPT_ENUM.get('COMMON', 0)
+
+# GraphemeBreakProperty.txt uses long labels -> GCB enum value
+GCB_LABEL_MAP = {k: GCB_ENUM.get(k.upper().replace('-', '_'),
+                                 GCB_ENUM.get({'Regional_Indicator': 'REGIONAL_INDICATOR'}.get(k, k.upper()), 0))
+                 for k in ['Other','Control','CR','LF','Extend','Regional_Indicator','Prepend',
+                           'SpacingMark','L','V','T','LV','LVT','ZWJ']}
+
+# Binary properties we care about -> their UCHAR_* bit index (parsed from uchar.h)
+BIN_BIT = {m.group(1): int(m.group(2))
+           for m in (re.compile(r'\bUCHAR_([A-Z0-9_]+)\s*=\s*(\d+)').search(l)
+                     for l in open(os.path.join(INC, "uchar.h"), encoding='utf-8')) if m}
+BIN_ALIASES = {'Alphabetic':'ALPHABETIC','Uppercase':'UPPERCASE','Lowercase':'LOWERCASE',
+               'White_Space':'WHITE_SPACE','Hex_Digit':'HEX_DIGIT','ID_Start':'ID_START',
+               'ID_Continue':'ID_CONTINUE','Ideographic':'IDEOGRAPHIC',
+               'Grapheme_Extend':'GRAPHEME_EXTEND','Math':'MATH','Dash':'DASH',
+               'Extended_Pictographic':'EXTENDED_PICTOGRAPHIC'}
+
+
+def cp_span(field):
+    if '..' in field:
+        a, b = field.split('..'); return int(a, 16), int(b, 16)
+    v = int(field, 16); return v, v
+
+
+def each_prop_range(path):
+    print(path)
+    with open(path, encoding='utf-8') as f:
         for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            
-            parts = line.split(';')
-            if len(parts) < 3:
-                continue
-            
-            code_point = int(parts[0], 16)
-            name = parts[1]
-            category_str = parts[2]
-            category = CATEGORY_MAP.get(category_str, 0)
-            
-            # 处理范围（首尾标记）
-            if name.endswith('First>') or name.endswith('Last>'):
-                if name.endswith('First>'):
-                    current_range = {
-                        'start': code_point,
-                        'category': category,
-                    }
-                else:
-                    if current_range:
-                        ranges.append(UnicodeRange(
-                            start=current_range['start'],
-                            end=code_point,
-                            directionality=0,
-                            category=category,
-                            gcb=0,
-                            lb=0,
-                            ccc=0,
-                            script=0,
-                            binaryProps=0,
-                        ))
-                        current_range = None
-            else:
-                # 单个字符
-                ranges.append(UnicodeRange(
-                    start=code_point,
-                    end=code_point,
-                    directionality=0,
-                    category=category,
-                    gcb=0,
-                    lb=0,
-                    ccc=0,
-                    script=0,
-                    binaryProps=0,
-                ))
-    
-    return ranges
+            line = line.split('#', 1)[0].strip()
+            if not line: continue
+            p = line.split(';')
+            if len(p) < 2: continue
+            yield (*cp_span(p[0].strip()), p[1].strip())
 
-def merge_ranges(ranges: List[UnicodeRange]) -> List[UnicodeRange]:
-    """合并相邻的相同属性范围"""
-    if not ranges:
-        return []
-    
-    merged = []
-    current = ranges[0]
-    
-    for r in ranges[1:]:
-        if (r.start == current.end + 1 and
-            r.directionality == current.directionality and
-            r.category == current.category and
-            r.gcb == current.gcb and
-            r.lb == current.lb and
-            r.script == current.script):
-            # 可以合并
-            current.end = r.end
-        else:
-            merged.append(current)
-            current = r
-    
-    merged.append(current)
-    return merged
-
-def generate_cpp_code(ranges: List[UnicodeRange]) -> str:
-    """生成 C++ 代码"""
-    lines = []
-    lines.append('// Unicode 范围数据表（由 generate_unicode_data.py 自动生成）')
-    lines.append('static const UnicodeRange g_unicodeRanges[] = {')
-    
-    for r in ranges:
-        lines.append(f'    {{0x{r.start:04X}, 0x{r.end:04X}, {r.directionality}, {r.category}, '
-                    f'{r.gcb}, 0, {r.lb}, {r.ccc}, {r.script}, 0, 0, 0, 0, 0x{r.binaryProps:04X}}},')
-    
-    lines.append('};')
-    lines.append(f'static const int g_unicodeRangesCount = sizeof(g_unicodeRanges) / sizeof(g_unicodeRanges[0]);')
-    
-    return '\n'.join(lines)
 
 def main():
-    # 示例：生成基本拉丁文范围
-    ranges = [
-        UnicodeRange(0x0000, 0x001F, 10, 15, 1, 6, 0, 0, 0),  # 控制字符
-        UnicodeRange(0x0020, 0x0020, 9, 12, 0, 26, 0, 0, 1 << 40),  # 空格
-        UnicodeRange(0x0030, 0x0039, 2, 9, 0, 19, 0, 0, (1 << 18) | (1 << 20) | (1 << 21)),  # 数字
-        UnicodeRange(0x0041, 0x005A, 0, 1, 0, 2, 0, 26, (1 << 20) | (1 << 21) | (1 << 38)),  # 大写
-        UnicodeRange(0x0061, 0x007A, 0, 2, 0, 2, 0, 26, (1 << 20) | (1 << 21) | (1 << 27)),  # 小写
-    ]
-    
-    merged = merge_ranges(ranges)
-    cpp_code = generate_cpp_code(merged)
-    print(cpp_code)
+    # props[cp] = [category, ccc, dir, gcb, lb, script, binaryProps]
+    props = {}
+
+    def setprop(s, e, fn):
+        s = max(s, 0); e = min(e, MAX_CP)
+        for cp in range(s, e + 1):
+            p = props.get(cp) or [0, 0, 0, 0, 0, USCRIPT_COMMON, 0]  # Cn/0/L/Other/XX/Common
+            fn(p); props[cp] = p
+
+    # 1) UnicodeData.txt — category, ccc, bidi (handles First/Last ranges)
+    pending = None
+    for line in open(os.path.join(UCD, "UnicodeData.txt"), encoding='utf-8'):
+        line = line.strip()
+        if not line or line.startswith('#'): continue
+        f = line.split(';')
+        cp = int(f[0], 16); name = f[1]
+        if cp > MAX_CP and not name.endswith(', First>'): continue
+        cat = CAT_MAP.get(f[2], 0); ccc = int(f[3]) if f[3].isdigit() else 0; d = DIR_MAP.get(f[4], 0)
+        if name.endswith(', First>'): pending = (cp, cat, ccc, d)
+        elif name.endswith(', Last>'):
+            if pending:
+                s, c, cc, dd = pending
+                setprop(s, cp, lambda p, c=c, cc=cc, dd=dd: (p.__setitem__(0, c), p.__setitem__(1, cc), p.__setitem__(2, dd)))
+                pending = None
+        else:
+            setprop(cp, cp, lambda p, c=cat, cc=ccc, dd=d: (p.__setitem__(0, c), p.__setitem__(1, cc), p.__setitem__(2, dd)))
+
+    # 2) Scripts.txt
+    for s, e, val in each_prop_range(os.path.join(UCD, "Scripts.txt")):
+        sc = SCRIPT_ENUM.get(val.upper().replace('-', '_'), USCRIPT_UNKNOWN)
+        setprop(s, e, lambda p, sc=sc: p.__setitem__(5, sc))
+    # 3) LineBreak.txt
+    for s, e, val in each_prop_range(os.path.join(UCD, "LineBreak.txt")):
+        lb = LB_ENUM.get(val.upper(), LB_ENUM.get('UNKNOWN', 0))
+        setprop(s, e, lambda p, lb=lb: p.__setitem__(4, lb))
+    # 4) GraphemeBreakProperty.txt
+    for s, e, val in each_prop_range(os.path.join(UCD, "GraphemeBreakProperty.txt")):
+        g = GCB_LABEL_MAP.get(val, 0)
+        setprop(s, e, lambda p, g=g: p.__setitem__(3, g))
+    # 5) DerivedCoreProperties.txt — selected binary props
+    for s, e, val in each_prop_range(os.path.join(UCD, "DerivedCoreProperties.txt")):
+        key = BIN_ALIASES.get(val)
+        if not key or key not in BIN_BIT: continue
+        bit = BIN_BIT[key]
+        setprop(s, e, lambda p, bit=bit: p.__setitem__(6, p[6] | (1 << bit)))
+
+    # 5b) PropList.txt — the rest of the binary props (White_Space, Hex_Digit,
+    #     Ideographic, Bidi_Mirrored, ...). These are NOT in DerivedCoreProperties.
+    for s, e, val in each_prop_range(os.path.join(UCD, "PropList.txt")):
+        key = BIN_ALIASES.get(val)
+        if not key or key not in BIN_BIT: continue
+        bit = BIN_BIT[key]
+        setprop(s, e, lambda p, bit=bit: p.__setitem__(6, p[6] | (1 << bit)))
+
+    # 6) Merge adjacent codepoints with identical property tuples -> ranges
+    cps = sorted(props)
+    ranges = []
+    cur_s = cps[0]; cur = props[cur_s]; prev = cur_s
+    for cp in cps[1:]:
+        if cp == prev + 1 and props[cp] == cur:
+            prev = cp
+        else:
+            ranges.append((cur_s, prev, cur)); cur_s = cp; cur = props[cp]; prev = cp
+    ranges.append((cur_s, prev, cur))
+
+    # 7) Emit — fully symbolic: all fields use ICU enum constants; binaryProps
+    #    use BP_<NAME> shorthand macros (defined below) for maximum readability.
+    IDX_TO_NAME = {}
+    for _k, _v in BIN_BIT.items():
+        if 'RESERVED' not in _k and _v not in IDX_TO_NAME:
+            IDX_TO_NAME[_v] = _k
+
+    L = ["// Unicode range table — AUTO-GENERATED by generate_unicode_data.py from UCD.",
+         "// Sorted, non-overlapping, property-merged. Do not edit by hand.", "",
+         '#include "unicode/uchar.h"', '#include "unicode/uscript.h"',
+         '#include "unicode_range_data.h"', ""]
+    # BP_<NAME> shorthand: one name per binary property bit.
+    for idx in sorted(IDX_TO_NAME):
+        nm = IDX_TO_NAME[idx]
+        L.append("#define BP_%-26s (1ULL<<UCHAR_%s)" % (nm, nm))
+    L += ["", "const UnicodeRange g_unicodeRanges[] = {"]
+    for s, e, p in ranges:
+        cat, ccc, d, gcb, lb, sc, bp = p
+        names = ["BP_%s" % IDX_TO_NAME[b]
+                 for b in range(64) if (bp >> b) & 1 and b in IDX_TO_NAME]
+        bp_expr = "|".join(names) if names else "0"
+        hi = (bp >> 64) & ((1 << 64) - 1)
+        bp2_expr = ("0x%016XULL" % hi) if hi else "0"
+        L.append("    {0x%04X, 0x%04X, %s, %s, %s, %s, %d, %s, %s, %s},"
+                 % (s, e, DIR_REV.get(d, str(d)), CAT_REV.get(cat, str(cat)),
+                    GCB_REV.get(gcb, str(gcb)), LB_REV.get(lb, str(lb)), ccc,
+                    SCRIPT_REV.get(sc, str(sc)), bp_expr, bp2_expr))
+    L += ["};", "", "const int g_unicodeRangesCount = sizeof(g_unicodeRanges) / sizeof(g_unicodeRanges[0]);", ""]
+    open(OUT, 'w', encoding='utf-8').write('\n'.join(L))
+
+    bad = sum(1 for i in range(1, len(ranges)) if ranges[i][0] <= ranges[i-1][1])
+    print("MAX_CP=0x%X  ranges=%d  codepoints=%d  out=%s" % (MAX_CP, len(ranges), len(cps), OUT))
+    print("first=0x%04X last=0x%04X  sort/overlap violations=%d  src~%.0fKB"
+          % (ranges[0][0], ranges[-1][1], bad, os.path.getsize(OUT)/1024))
+
 
 if __name__ == '__main__':
     main()
