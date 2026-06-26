@@ -251,16 +251,32 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
     if (editable == nullptr) return false;
 
     Layout* layout = mTextView->getLayout();
-    const int caret = mTextView->getCaretPos();
+    const int len = (int)editable->length();
+    // Read the caret/selection from the Spannable (Selection spans) — the same
+    // source the caret is rendered from. The old code read the legacy
+    // getCaretPos() field, which drifted out of sync and made backspace delete
+    // from the wrong end.
+    int selStart = Selection::getSelectionStart(editable);
+    int selEnd = Selection::getSelectionEnd(editable);
+    if (selStart < 0) selStart = 0;
+    if (selEnd < 0) selEnd = len;
+    const int caret = selEnd;                     // == start when there is no selection
+    const int lo = std::min(selStart, selEnd);
+    const int hi = std::max(selStart, selEnd);
+    const bool hasSelection = (selStart != selEnd);
     const int line = layout ? layout->getLineForOffset(caret) : 0;
     bool handled = false;
 
     switch (keyCode) {
     case KeyEvent::KEYCODE_DPAD_LEFT:
-        if (caret > 0) { setSelection(caret - 1); handled = true; }
+        if (hasSelection) setSelection(lo);        // collapse a selection to its start
+        else if (caret > 0) setSelection(caret - 1);
+        handled = true;
         break;
     case KeyEvent::KEYCODE_DPAD_RIGHT:
-        if (caret < (int)editable->length()) { setSelection(caret + 1); handled = true; }
+        if (hasSelection) setSelection(hi);        // collapse a selection to its end
+        else if (caret < len) setSelection(caret + 1);
+        handled = true;
         break;
     case KeyEvent::KEYCODE_DPAD_DOWN:
         handled = (!mTextView->isSingleLine()) && mTextView->moveCaret2Line(line + 1);
@@ -269,16 +285,22 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         handled = (!mTextView->isSingleLine()) && mTextView->moveCaret2Line(line - 1);
         break;
     case KeyEvent::KEYCODE_BACKSPACE:
-        if (editable->length() && caret > 0 && caret <= (int)editable->length()) {
+        if (hasSelection) {                        // delete the whole selection
+            editable->Delete(lo, hi);
+            setSelection(lo);
+            handled = true;
+        } else if (caret > 0 && caret <= len) {
             editable->Delete(caret - 1, caret);
             setSelection(caret - 1);
             handled = true;
-        } else {
-            mTextView->setCaretPos((int)editable->length() - 1);
         }
         break;
     case KeyEvent::KEYCODE_DEL:
-        if (caret < (int)editable->length()) {
+        if (hasSelection) {                        // delete the whole selection
+            editable->Delete(lo, hi);
+            setSelection(lo);
+            handled = true;
+        } else if (caret < len) {
             editable->Delete(caret, caret + 1);
             handled = true;
         }
@@ -345,21 +367,29 @@ bool Editor::onTouchEvent(MotionEvent& event) {
 
     if (action == MotionEvent::ACTION_DOWN) {
         mLastTouchOffset = offset;
-        // Double-tap → select the word at the tap. A tap is a double-tap when the
-        // UP→DOWN gap is within DOUBLE_TAP_TIMEOUT and the two taps are within
-        // DOUBLE_TAP_SLOP (mirrors Android's SelectionModifierCursorController).
+        // Multi-tap: consecutive taps landing within DOUBLE_TAP_TIMEOUT +
+        // DOUBLE_TAP_SLOP of the previous UP extend the sequence. Mirrors
+        // Android's SelectionModifierCursorController tap-counting.
         const int64_t now = (int64_t)event.getEventTime();
-        const int64_t timeoutNs = (int64_t)ViewConfiguration::getDoubleTapTimeout() * 1000000LL;
+        // event.getEventTime() is MICROSECONDS (SystemClock::uptimeMicros — see
+        // inputdevice.cc); getDoubleTapTimeout() is milliseconds, so convert ms→µs.
+        // (The previous *1000000 assumed nanoseconds → a 300-SECOND window, which
+        // made every tap count as consecutive and broke double/triple-tap.)
+        const int64_t timeoutUs = (int64_t)ViewConfiguration::getDoubleTapTimeout() * 1000LL;
         const float dx = x - mLastUpX, dy = y - mLastUpY;
         const float slop = (float)ViewConfiguration::getDoubleTapSlop();
-        const bool isDoubleTap = mLastUpTime != 0
-                && (now - mLastUpTime) <= timeoutNs
+        const bool inMultiTapWindow = mLastUpTime != 0
+                && (now - mLastUpTime) <= timeoutUs
                 && (dx * dx + dy * dy) <= slop * slop;
-        if (isDoubleTap) {
-            selectCurrentWord();
-            mLastUpTime = 0;   // consume: a third tap must not be a "double" of the 2nd
+        mTapCount = inMultiTapWindow ? mTapCount + 1 : 1;
+        if (mTapCount > 3) mTapCount = 1;   // a 4th tap cycles back to a single tap
+
+        if (mTapCount == 2) {
+            selectCurrentWord();            // double-tap → select word
+        } else if (mTapCount >= 3) {
+            selectAll();                    // triple-tap → select all
         } else {
-            setSelection(offset);
+            setSelection(offset);           // single tap → place caret
         }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {

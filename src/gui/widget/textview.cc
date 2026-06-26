@@ -2962,8 +2962,13 @@ void TextView::viewClicked(InputMethodManager*imm){
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     const bool superResult = View::onTouchEvent(event);
-    if (mEditor && action != MotionEvent::ACTION_UP) {
-        mEditor->onTouchEvent(event);
+    if (mEditor) {
+        // UP is dispatched separately (records the tap for double/triple-tap
+        // detection; later also hides handles). DOWN/MOVE place/move the caret.
+        // Must run before the ACTION_UP early-return below — otherwise the UP
+        // path (and the old onTouchUpEvent call further down) is unreachable.
+        if (action == MotionEvent::ACTION_UP) mEditor->onTouchUpEvent(event);
+        else mEditor->onTouchEvent(event);
     }
     if(action == MotionEvent::ACTION_UP){
         return superResult;
@@ -2974,13 +2979,10 @@ bool TextView::onTouchEvent(MotionEvent& event){
     if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
         InputMethodManager& imm = InputMethodManager::getInstance();
         viewClicked(&imm);
-        /*if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != null
+        /*if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != nullptr
                 && !showAutofillDialog()) {
             imm.showSoftInput(this, 0);
         }*/
-
-        // The above condition ensures that the mEditor is not null
-        if (mEditor) mEditor->onTouchUpEvent(event);
 
         handled = true;
     }
@@ -4187,14 +4189,29 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
+
+    // Selection highlight — mirrors Android TextView.onDraw: build the highlight
+    // path for the current selection (Layout.getSelectionPath) and let Layout.draw
+    // fill it behind the text. drawBackground fills the path using the canvas's
+    // current color, so set it to the highlight color when there is a selection.
+    Path highlightPath;
+    Path* highlight = nullptr;
+    const int selStart = getSelectionStart();
+    const int selEnd = getSelectionEnd();
+    if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
+        layout->getSelectionPath(selStart, selEnd, highlightPath);
+        highlight = &highlightPath;
+    }
+
     if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
         canvas.translate(mShadowDx,mShadowDy);
         layout->draw(canvas);
         canvas.translate(-mShadowDx,-mShadowDy);
     }
-    canvas.set_color(color);
-    layout->draw(canvas);
+    if (highlight) canvas.set_color(mHighlightColor);
+    else canvas.set_color(color);
+    layout->draw(canvas, highlight, &mHighlightPaint, cursorOffsetVertical);
     //mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
 

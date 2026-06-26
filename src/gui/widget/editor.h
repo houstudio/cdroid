@@ -144,10 +144,12 @@ private:
     bool mCursorVisible = true;
     bool mIgnoreActionUpEvent = false;  // see ignoreActionUpEvent()
 
-    // double-tap word selection: the offset of the most recent ACTION_DOWN, plus
-    // the time/position of the most recent ACTION_UP so a second tap landing
-    // within DOUBLE_TAP_TIMEOUT + DOUBLE_TAP_SLOP is recognized as a double tap.
+    // Multi-tap selection: the offset of the most recent ACTION_DOWN, plus the
+    // time/position of the most recent ACTION_UP so consecutive taps landing
+    // within DOUBLE_TAP_TIMEOUT + DOUBLE_TAP_SLOP extend the sequence. Count:
+    // 1 = place caret, 2 = select word, 3 = select all (then it cycles).
     int   mLastTouchOffset = 0;
+    int   mTapCount = 0;
     int64_t mLastUpTime = 0;            // nsecs; 0 means "no recent tap"
     float mLastUpX = -1.f;
     float mLastUpY = -1.f;
