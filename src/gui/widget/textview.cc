@@ -1261,8 +1261,8 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     */
 }
 
-const std::string TextView::getText()const{
-    return mText->toString();
+const CharSequence& TextView::getText()const{
+    return *mText;//->toString();
 }
 
 int TextView::length()const{
@@ -1283,8 +1283,33 @@ void TextView::setHint(const std::string& hint){
     checkForRelayout();
 }
 
-std::string TextView::getHint()const{
-    return mHint->toString();
+void TextView::setHint(CharSequence*hint){
+     setHintInternal(hint);
+     if (mEditor != nullptr/* && isInputMethodTarget()*/) {
+          //mEditor->reportExtractedText();
+     }
+}
+
+void TextView::setHintInternal(CharSequence* hint) {
+    mHideHint = false;
+    mHint = hint;//TextUtils::stringOrSpannedString(hint);
+
+    if (mLayout != nullptr) {
+        checkForRelayout();
+    }
+
+    if (mText->length() == 0) {
+        invalidate();
+    }
+
+    // Invalidate display list if hint is currently used
+    if (mEditor != nullptr && mText->length() == 0 && mHint != nullptr) {
+        mEditor->invalidateTextDisplayList();
+    }
+}
+
+CharSequence* TextView::getHint()const{
+    return mHint;
 }
 
 bool TextView::getDefaultEditable()const{
@@ -4671,6 +4696,10 @@ int TextView::CharWrapper::charAt(int off) const{
 
 std::string TextView::CharWrapper::toString() const{
     return TextUtils::utf16_utf8((uint16_t*)(mChars.data()+mStart), mLength);
+}
+
+std::u16string TextView::CharWrapper::toU16String() const{
+    return std::u16string(mChars.data() + mStart, mLength);
 }
 
 CharSequence* TextView::CharWrapper::subSequence(int start, int end) const{

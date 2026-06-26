@@ -62,6 +62,7 @@ public:
     virtual ~SpannableStringInternal() = default;
 
     std::string toString() const override;
+    std::u16string toU16String() const override;   // fast path: return mText directly
     size_t length() const override;
     int charAt(int idx) const override;
     std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override;
@@ -70,6 +71,9 @@ public:
     int getSpanFlags(const ParcelableSpan* what) const override;
     int nextSpanTransition(int start, int limit, const SpanFilter& kind) const override;
     void getChars(int start, int end, char16_t* dest, int destPos) const override;
+    // Each class returns its own type — SSI returns SSI*, SpannedString returns
+    // SpannedString* (covariant). No forward declaration needed.
+    SpannableStringInternal* subSequence(int start, int end) const override;
 
 protected:
     void sendSpanAdded(const ParcelableSpan* what, int start, int end);

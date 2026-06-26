@@ -111,15 +111,6 @@ Editable& SpannableStringBuilder::append(const CharSequence& text, int start, in
     return *this;
 }
 
-SpannableStringBuilder& SpannableStringBuilder::insert(int where, const std::string& utf8) {
-    /*std::wstring insertText = TextUtils::utf8tounicode(utf8);
-    if (where < 0) where = 0;
-    if (where > (int)mText.length()) where = (int)mText.length();
-    mText.insert(where, insertText);
-    shiftSpans(where, (int)insertText.length());*/
-    return *this;
-}
-
 Editable& SpannableStringBuilder::insert(int where, const CharSequence& text) {
     // Delegate to the 4-arg insert, which actually does mText.insert + shiftSpans.
     // (The previous body called the `std::string` overload, whose body is stubbed

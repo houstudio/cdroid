@@ -17,13 +17,18 @@ public:
 class CharSequence : virtual public ParcelableSpan {
 public:
     virtual ~CharSequence() = default;
-    virtual size_t length()const{return 0;}
-    virtual int charAt(int)const{return 0;}
-    virtual CharSequence*subSequence(int,int)const{return nullptr;}
+    virtual size_t length() const = 0;
+    virtual int charAt(int) const = 0;
+    virtual CharSequence* subSequence(int, int) const { return nullptr; }
     virtual std::string toString() const = 0;
-    // Copies characters from [start, end) into dest starting at destPos.
-    // If dest is shorter than destPos, it will be resized.
     virtual void getChars(int start, int end, char16_t* dest, int destPos) const = 0;
+    virtual std::u16string toU16String() const = 0;
+
+    // Convenience: implicit conversion to either string type (non-virtual; delegates
+    // to the pure virtuals). Lets you write `std::string s = *charSeq;` or
+    // `std::u16string u = *charSeq;` — perfect backward compat for getText().
+    operator std::string() const { return toString(); }
+    operator std::u16string() const { return toU16String(); }
 };
 
 class ParagraphStyle : public ParcelableSpan {

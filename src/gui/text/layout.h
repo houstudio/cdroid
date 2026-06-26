@@ -327,6 +327,7 @@ public:
         }
         CharSequence* subSequence(int start, int end)const override;
         std::string toString()const override;
+        std::u16string toU16String() const override { return mText->toU16String(); }
     };
 
     class SpannedEllipsizer : public Ellipsizer, public Spanned {

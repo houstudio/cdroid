@@ -1,6 +1,6 @@
 #include <widget/switch.h>
 #include <utils/mathutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <view/viewgroup.h>
 
 namespace cdroid{
@@ -848,7 +848,7 @@ int Switch::getCompoundPaddingLeft() const{
         return CompoundButton::getCompoundPaddingLeft();
     }
     int padding = CompoundButton::getCompoundPaddingLeft() + mSwitchWidth;
-    if (!getText().empty()){//!TextUtils.isEmpty(getText())) {
+    if (!TextUtils::isEmpty(this->mText)) {
         padding += mSwitchPadding;
     }
     return padding;
@@ -859,7 +859,7 @@ int Switch::getCompoundPaddingRight() const{
         return CompoundButton::getCompoundPaddingRight();
     }
     int padding = CompoundButton::getCompoundPaddingRight() + mSwitchWidth;
-    if (!getText().empty()){//!TextUtils.isEmpty(getText())) {
+    if(!TextUtils::isEmpty(this->mText)) {
         padding += mSwitchPadding;
     }
     return padding;

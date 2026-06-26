@@ -1,5 +1,6 @@
 #include <text/spannablestring.h>
 #include <text/spanwatcher.h>
+#include <text/textutils.h>   // TextUtils::utf16_utf8
 
 namespace cdroid {
 
@@ -45,7 +46,15 @@ SpannableStringInternal::SpannableStringInternal(const CharSequence* source)
     : SpannableStringInternal(source, 0, source ? source->length() : 0, false) {}
 
 std::string SpannableStringInternal::toString() const {
-    return std::string(mText.begin(), mText.end());
+    return TextUtils::utf16_utf8(mText);   // proper UTF-8 (was lossy: char16-as-byte)
+}
+
+std::u16string SpannableStringInternal::toU16String() const {
+    return mText;   // fast path — mText IS the char16 buffer
+}
+
+SpannableStringInternal* SpannableStringInternal::subSequence(int start, int end) const {
+    return new SpannableStringInternal(this, start, end);
 }
 
 size_t SpannableStringInternal::length() const {

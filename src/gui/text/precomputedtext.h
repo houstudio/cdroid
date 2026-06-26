@@ -130,6 +130,7 @@ public:
         return PrecomputedText::create(mText->subSequence(start, end), mParams);
     }
     std::string toString() const override;
+    std::u16string toU16String() const override { return mText->toU16String(); }
 };
 }/*endof namespace*/
 #endif/*__PRE_COMPUTED_TEXT_H__*/

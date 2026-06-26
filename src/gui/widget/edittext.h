@@ -50,7 +50,6 @@ public:
     void setText(const std::string&txt)override;
     void setLabelColor(int color);
     void setPattern(const std::string&pattern);
-    void setHint(const std::string&txt)override;
     int getPasswordChar()const;
     void setPasswordChar(int ch);
     void setInputType(INPUTTYPE tp);

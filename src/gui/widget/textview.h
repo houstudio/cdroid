@@ -147,6 +147,7 @@ private:
 private:
     void initView();
     void setTextInternal(CharSequence* text);
+    void setHintInternal(CharSequence* hint);
     bool setupAutoSizeUniformPresetSizesConfiguration();
     void validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
             float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx);
@@ -291,7 +292,7 @@ public:
     void setText(const std::vector<char16_t>&text, int start, int len);
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
-    const std::string getText()const;
+    const CharSequence& getText()const;
     int length()const;
     CharSequence* getTransformed()const;
     Editable* getEditableText()const;
@@ -304,7 +305,8 @@ public:
     void setTextAppearance(const std::string&);
     void setTextAppearance(Context*,const std::string&);
     virtual void setHint(const std::string&txt);
-    std::string getHint()const;
+    virtual void setHint(CharSequence*);
+    CharSequence* getHint()const;
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();
     void computeScroll()override;
@@ -581,6 +583,7 @@ public:
     }
     int charAt(int off) const override;
     std::string toString() const override;
+    std::u16string toU16String() const override;
     CharSequence* subSequence(int start, int end) const override;
     void getChars(int start, int end, char16_t* buf, int off) const override;
     void drawText(Canvas& c, int start, int end, float x, float y, Paint& p);

@@ -28,7 +28,6 @@ public:
     SpannableStringBuilder& append(const CharSequence& text, const std::vector<const ParcelableSpan*>& whats, int flags);
 
     Editable& append(const CharSequence& text, int start, int end);
-    SpannableStringBuilder& insert(int where, const std::string& utf8);
     Editable& insert(int where, const CharSequence& text);
     SpannableStringBuilder& deleteText(int start, int end);
     void getChars(int start, int end, char16_t* dest, int destPos) const override;
