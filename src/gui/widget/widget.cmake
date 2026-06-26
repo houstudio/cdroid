@@ -168,4 +168,4 @@ if(ENABLE_ACHART)
         widget/achart/chartfactory.cc
     )
 endif(ENABLE_ACHART)
-
+add_subdirectory(widget/achart)
