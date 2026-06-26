@@ -21,6 +21,9 @@ add_library(cdtext
     spannablestring.cc
     spannablestringbuilder.cc
     worditerator.cc
+    method/basemovementmethod.cc
+    method/arrowkeymovementmethod.cc
+    method/scrollingmovementmethod.cc
     )
 target_link_libraries(cdtext minikin)
 
