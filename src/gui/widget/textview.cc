@@ -3805,7 +3805,7 @@ const TextPaint& TextView::getPaint() const{
 }
 
 bool TextView::isSuggestionsEnabled()const{
-    return false;
+    return mEditor && mEditor->isSuggestionsEnabled();
 }
 
 bool TextView::canSelectText() const{
@@ -3815,7 +3815,6 @@ bool TextView::canSelectText() const{
 bool TextView::canSelectAllText()const{
     return canSelectText() && !hasPasswordTransformationMethod()
                 && !(getSelectionStart() == 0 && getSelectionEnd() == mText->length());
-    return false;
 }
 
 bool TextView::selectAllText(){
@@ -3826,6 +3825,54 @@ bool TextView::selectAllText(){
     const int length = mText->length();
     if (mSpannable) Selection::setSelection(mSpannable, 0, length);
     return length > 0;
+}
+
+// Android public API — delegate to Editor when editable. (Faithful A34 ports.)
+int TextView::getOffsetForPosition(float x, float y) {
+    Layout* l = getLayout();
+    if (l == nullptr) return -1;   // Android returns -1 when there is no layout
+    // Mirrors Android's getLineAtCoordinate / convertToHorizontalCoordinate:
+    // subtract total padding then add scroll (touch coords are view-local; text
+    // is drawn pre-scrolled by the framework).
+    const int vpad = getExtendedPaddingTop() + getVerticalOffset(true);
+    int line = l->getLineForVertical((int)y - vpad + getScrollY());
+    if (line < 0) line = 0;
+    if (line >= l->getLineCount()) line = l->getLineCount() - 1;
+    const float horiz = x - getCompoundPaddingLeft() + getScrollX();
+    return l->getOffsetForHorizontal(line, horiz);
+}
+
+void TextView::setCursorVisible(bool visible) {
+    if (mEditor) mEditor->setCursorVisible(visible);
+    // Non-editable TextViews have no Editor and draw no cursor — nothing else to do.
+}
+
+bool TextView::isCursorVisible()const {
+    return mEditor ? mEditor->isCursorVisible() : false;
+}
+
+void TextView::setShowSoftInputOnFocus(bool show) {
+    if (mEditor) mEditor->setShowSoftInputOnFocus(show);
+}
+
+bool TextView::getShowSoftInputOnFocus()const {
+    return mEditor ? mEditor->getShowSoftInputOnFocus() : true;
+}
+
+void TextView::setSelectAllOnFocus(bool selectAll) {
+    if (mEditor) mEditor->setSelectAllOnFocus(selectAll);
+}
+
+bool TextView::isSelectAllOnFocus()const {
+    return mEditor ? mEditor->isSelectAllOnFocus() : false;
+}
+
+void TextView::beginBatchEdit() {
+    if (mEditor) mEditor->beginBatchEdit();
+}
+
+void TextView::endBatchEdit() {
+    if (mEditor) mEditor->endBatchEdit();
 }
 
 int TextView::getTotalPaddingLeft() {

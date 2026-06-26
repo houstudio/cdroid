@@ -109,6 +109,8 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
     if (focused) {
         mCursorVisible = true;
         makeBlink();
+        // Android: TextView.mSelectAllOnFocus — select all when focus is gained.
+        if (mSelectAllOnFocus && isEditing()) selectAll();
     } else {
         suspendBlink();
         hideCursorControllers();
@@ -347,23 +349,15 @@ int Editor::commitText(const std::wstring& text) {
 }
 
 bool Editor::onTouchEvent(MotionEvent& event) {
-    Layout* layout = mTextView->getLayout();
-    if (layout == nullptr) return false;
+    if (mTextView->getLayout() == nullptr) return false;
 
     const int action = event.getActionMasked();
     const float x = event.getX();
     const float y = event.getY();
 
-    // Convert view coordinates to text-buffer coordinates (inverse of the
-    // transform applied in TextView::onDraw). getVerticalOffset() is private
-    // to TextView (friend access).
-    const int vpad = mTextView->getExtendedPaddingTop() + mTextView->getVerticalOffset(true);
-    int line = layout->getLineForVertical((int)y - vpad + mTextView->getScrollY());
-    if (line < 0) line = 0;
-    if (line >= layout->getLineCount()) line = layout->getLineCount() - 1;
-
-    const float horiz = x - mTextView->getCompoundPaddingLeft() + mTextView->getScrollX();
-    const int offset = layout->getOffsetForHorizontal(line, horiz);
+    // Reuse TextView::getOffsetForPosition (Android public API) — single source
+    // of truth for view-local (x,y) → buffer offset. It accounts for padding + scroll.
+    const int offset = mTextView->getOffsetForPosition(x, y);
 
     if (action == MotionEvent::ACTION_DOWN) {
         mLastTouchOffset = offset;
@@ -433,6 +427,48 @@ bool Editor::selectCurrentWord() {
     mTextView->setCaretPos(selEnd);
     mTextView->invalidate(true);
     return true;
+}
+
+// =====================================================================================
+//  Android public API forwarded from TextView
+// =====================================================================================
+void Editor::setCursorVisible(bool visible) {
+    if (mCursorVisible == visible) return;
+    mCursorVisible = visible;
+    if (visible) {
+        makeBlink();
+    } else {
+        if (mTextView) mTextView->removeCallbacks(mBlink);
+        mBlinkVisible = false;
+        invalidateCursor();
+    }
+}
+
+void Editor::setShowSoftInputOnFocus(bool show) {
+    mShowSoftInputOnFocus = show;
+}
+
+void Editor::setSelectAllOnFocus(bool selectAll) {
+    mSelectAllOnFocus = selectAll;
+}
+
+void Editor::beginBatchEdit() {
+    // Android nests on mInputMethodState.mBatchEditNesting and, on the outermost
+    // batch, defers IME updates. CDROID has no InputConnection yet, so just keep
+    // the nesting count (faithful skeleton for the future IME pass).
+    mBatchEditNesting++;
+}
+
+void Editor::endBatchEdit() {
+    if (mBatchEditNesting > 0) mBatchEditNesting--;
+    // On the outermost close, Android notifies the IME; nothing to do without one.
+}
+
+bool Editor::isSuggestionsEnabled() const {
+    // Faithful port of the non-spell-check preconditions in Editor.isSuggestionsEnabled():
+    // suggestions require an editable, cursor-visible, non-password field. (The actual
+    // spell-check / SuggestionSpan machinery is still deferred.)
+    return isEditing() && mCursorVisible && !mTextView->hasPasswordTransformationMethod();
 }
 
 // =====================================================================================

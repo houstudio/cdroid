@@ -69,6 +69,11 @@ void Paint::setTextScaleX(float v){
     mMinikinPaint->scaleX = v;
 }
 
+void Paint::setLetterSpacing(float v){
+    mLetterSpacing = v;
+    mMinikinPaint->letterSpacing = v;   // Android: Paint.letterSpacing → MinikinPaint
+}
+
 void Paint::setTextSkewX(float v){
     mTextSkewX = v;
     mMinikinPaint->skewX = v;

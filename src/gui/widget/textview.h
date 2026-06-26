@@ -311,6 +311,17 @@ public:
     int getSelectionEnd()const;
     bool hasSelection()const;
     std::string getSelectedText()const;
+    // Android public API — touch→offset, cursor visibility, IME-on-focus,
+    // select-all-on-focus, batch editing (all delegate to Editor when editable).
+    int  getOffsetForPosition(float x, float y);
+    void setCursorVisible(bool visible);
+    bool isCursorVisible()const;
+    void setShowSoftInputOnFocus(bool show);
+    bool getShowSoftInputOnFocus()const;
+    void setSelectAllOnFocus(bool selectAll);
+    bool isSelectAllOnFocus()const;
+    void beginBatchEdit();
+    void endBatchEdit();
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
     bool hasPasswordTransformationMethod()const;

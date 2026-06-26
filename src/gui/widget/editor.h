@@ -52,6 +52,8 @@ class Canvas;
  */
 class Editor {
 public:
+    friend class TextView;   // TextView owns an Editor and forwards its Android
+                             // public API to these (private) Editor implementations.
     /** Interface implemented by the insertion/selection cursor controllers.
      *  Real implementations arrive with the handles pass; foundation ships no
      *  concrete controller, so the default methods are no-ops. */
@@ -134,6 +136,19 @@ private:
      *  replaces the selection, as in Android), else returns the caret offset. */
     int insertPosition();
 
+    // Internal implementation of TextView's Android public API (TextView is a
+    // friend, so it calls these). Kept private so Editor's own public surface
+    // doesn't duplicate the TextView-facing API.
+    void setCursorVisible(bool visible);
+    bool isCursorVisible() const { return mCursorVisible; }
+    void setShowSoftInputOnFocus(bool show);          // Editor.mShowSoftInputOnFocus
+    bool getShowSoftInputOnFocus() const { return mShowSoftInputOnFocus; }
+    void setSelectAllOnFocus(bool selectAll);         // TextView.mSelectAllOnFocus
+    bool isSelectAllOnFocus() const { return mSelectAllOnFocus; }
+    void beginBatchEdit();
+    void endBatchEdit();
+    bool isSuggestionsEnabled() const;
+
     TextView* mTextView;
 
     // blink — represented as a Runnable posted via View::postDelayed (500ms),
@@ -143,6 +158,9 @@ private:
     bool mBlinkSuspended = false;
     bool mCursorVisible = true;
     bool mIgnoreActionUpEvent = false;  // see ignoreActionUpEvent()
+    bool mShowSoftInputOnFocus = true;  // Android: Editor.mShowSoftInputOnFocus
+    bool mSelectAllOnFocus = false;     // Android: TextView.mSelectAllOnFocus (Editor hook)
+    int  mBatchEditNesting = 0;         // Android: mInputMethodState.mBatchEditNesting
 
     // Multi-tap selection: the offset of the most recent ACTION_DOWN, plus the
     // time/position of the most recent ACTION_UP so consecutive taps landing

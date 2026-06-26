@@ -44,30 +44,32 @@ void SpannableStringBuilder::shiftSpans(int index, int delta) {
 }
 
 void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta) {
-    std::vector<std::tuple<const ParcelableSpan*,int,int,int>> result;
+    // Adjust every span to a replacement of [start, end) with text of length
+    // (end-start)+delta. The previous logic truncated the tail of spans that
+    // contained the changed region (`send = start`), which silently shrank the
+    // whole-range watcher spans (mChangeWatcher, DynamicLayout::mWatcher) on
+    // every edit. This mirrors Android's intent: spans before the change are
+    // untouched, spans after shift by delta, and overlapping spans are clamped
+    // — start into [.., start], end into [end+delta, ..].
+    const int newlen = (end - start) + delta;
     for (auto& t : mSpans) {
         const ParcelableSpan*span;
         int sstart,send,sflags;
         std::tie(span,sstart,send,sflags) = t;
         if (send <= start) {
-            result.push_back({span,sstart,send,sflags});
+            // entirely before the change — unchanged
         } else if (sstart >= end) {
+            // entirely after the change — shift by delta
             sstart += delta;
             send += delta;
-            result.push_back({span,sstart,send,sflags});
-        } else if (sstart < start && send > end) {
-            send = start;
-            result.push_back({span,sstart,send,sflags});
-        } else if (sstart < start && send > start) {
-            send = start;
-            result.push_back({span,sstart,send,sflags});
-        } else if (sstart < end && send > end) {
-            sstart = start + delta;
-            send += delta;
-            result.push_back({span,sstart,send,sflags});
+        } else {
+            // overlaps the change
+            if (sstart > start) sstart = start;
+            if (send >= end) send += delta;
+            else send = end + delta;   // end was inside the replaced region
         }
+        t = std::make_tuple(span, sstart, send, sflags);
     }
-    mSpans.swap(result);
 }
 
 Editable& SpannableStringBuilder::append(const CharSequence& text) {
@@ -119,8 +121,11 @@ SpannableStringBuilder& SpannableStringBuilder::insert(int where, const std::str
 }
 
 Editable& SpannableStringBuilder::insert(int where, const CharSequence& text) {
-    insert(where, text.toString());
-    return *this;
+    // Delegate to the 4-arg insert, which actually does mText.insert + shiftSpans.
+    // (The previous body called the `std::string` overload, whose body is stubbed
+    // out — so inserting a char via the Editable interface silently did nothing,
+    // which broke Editor's commitText / on-the-fly replace and desynced the caret.)
+    return insert(where, text, 0, (int)text.length());
 }
 
 // Android equivalent: delete(start, end)
