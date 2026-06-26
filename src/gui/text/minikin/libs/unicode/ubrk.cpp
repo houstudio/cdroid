@@ -135,8 +135,17 @@ static inline int32_t getGeneralCategory(UChar32 c) {
 
 // 获取词断行属性
 static WBProperty getWBProperty(UChar32 c) {
+    // ASCII fast-path: basic Latin letters/digits/space are well-defined and must
+    // not depend on findUnicodeRange's data tables (which don't categorize ASCII
+    // reliably here). Without this, WB6 (letter+letter → no break) never fired,
+    // so every mid-word position counted as a boundary and word selection picked
+    // the offset itself ("HELL" / "O WORLD").
+    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return WBP_ALPHA;
+    if (c >= '0' && c <= '9') return WBP_NUMERIC;
+    if (c == ' ' || c == '\t') return WBP_BREAK;
+
     const auto* range = findUnicodeRange(c);
-    
+
     // 特殊字符优先处理
     if (c == '\r') return WBP_CR;
     if (c == '\n') return WBP_LF;
@@ -407,7 +416,7 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     // 获取属性（使用数据表）
     WBProperty propPrev = getWBProperty(prev);
     WBProperty propCurr = getWBProperty(curr);
-    
+
     // WB1: Break at start and end of text
     if (pos == 0 || pos == length) return true;
     
@@ -908,47 +917,31 @@ U_CAPI int32_t U_EXPORT2 ubrk_following(UBreakIterator* bi, int32_t offset) {
     bi->current = offset;
     switch (bi->type) {
         case UBRK_WORD:
+            // First boundary STRICTLY after offset (ICU ubrk_following semantics).
+            // The previous "find boundary, step past, find next" skipped a boundary
+            // (e.g. for offset 2 in "HELLO WORLD" it returned 6, not 5), which broke
+            // word selection. Single loop from offset+1.
+            bi->current++;
             while (bi->current < bi->length && !isWordBoundary(bi->text, bi->length, bi->current)) {
                 bi->current++;
             }
-            if (bi->current < bi->length) {
-                bi->current++;
-                while (bi->current < bi->length && !isWordBoundary(bi->text, bi->length, bi->current)) {
-                    bi->current++;
-                }
-            }
             break;
         case UBRK_LINE:
+            bi->current++;
             while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current)) {
                 bi->current++;
             }
-            if (bi->current < bi->length) {
-                bi->current++;
-                while (bi->current < bi->length && !isLineBoundary(bi->text, bi->length, bi->current)) {
-                    bi->current++;
-                }
-            }
             break;
         case UBRK_SENTENCE:
+            bi->current++;
             while (bi->current < bi->length && !isSentenceBoundary(bi->text, bi->length, bi->current)) {
                 bi->current++;
             }
-            if (bi->current < bi->length) {
-                bi->current++;
-                while (bi->current < bi->length && !isSentenceBoundary(bi->text, bi->length, bi->current)) {
-                    bi->current++;
-                }
-            }
             break;
         case UBRK_TITLE:
+            bi->current++;
             while (bi->current < bi->length && !isTitleBoundary(bi->text, bi->length, bi->current)) {
                 bi->current++;
-            }
-            if (bi->current < bi->length) {
-                bi->current++;
-                while (bi->current < bi->length && !isTitleBoundary(bi->text, bi->length, bi->current)) {
-                    bi->current++;
-                }
             }
             break;
         default:
