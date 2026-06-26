@@ -35,6 +35,7 @@ class Layout;
 class CompletionInfo;
 class PrecomputesText;
 class Editor;
+class MovementMethod;
 class TextView : public View{
     friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
@@ -128,6 +129,7 @@ private:
     CharWrapper* mCharWrapper;
     Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
+    MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -294,6 +296,9 @@ public:
     CharSequence* getTransformed()const;
     Editable* getEditableText()const;
     Editor* getEditor();
+    // Android: movement method — arrow/nav/scroll handling delegated here.
+    void setMovementMethod(MovementMethod* movement);
+    MovementMethod* getMovementMethod() const { return mMovement; }
     void setTextCursorDrawable(Drawable*);
     Drawable* getTextCursorDrawable()const;
     void setTextAppearance(const std::string&);

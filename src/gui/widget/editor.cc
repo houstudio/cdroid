@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/editor.h>
 #include <widget/textview.h>
+#include <text/method/movementmethod.h>
 #include <text/selection.h>
 #include <text/editable.h>
 #include <text/spannablestringbuilder.h>
@@ -251,6 +252,18 @@ void Editor::sendOnTextChanged(int /*start*/, int /*before*/, int /*after*/) {
 bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
     Editable* editable = mTextView->getEditableText();
     if (editable == nullptr) return false;
+
+    // Delegate navigation keys (arrows/page/home/end + ctrl/alt/shift modifiers)
+    // to the movement method — Android's TextView.onKeyDown → mMovement.onKeyDown.
+    // Editing keys (BACKSPACE/DEL/ENTER/typing) fall through to the switch below.
+    if (MovementMethod* mm = mTextView->getMovementMethod()) {
+        Spannable* sp = editable;   // Editable is-a Spannable; the local pointer
+                                    // upcasts directly (avoids the shadowed editable()).
+        if (sp != nullptr && mm->onKeyDown(*mTextView, *sp, keyCode, event)) {
+            mTextView->invalidate(true);
+            return true;
+        }
+    }
 
     Layout* layout = mTextView->getLayout();
     const int len = (int)editable->length();

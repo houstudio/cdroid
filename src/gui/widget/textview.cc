@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/textview.h>
 #include <widget/editor.h>
+#include <text/method/movementmethod.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
@@ -1236,6 +1237,11 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             mMovement.initialize(this, (Spannable) text);
             if (mEditor != nullptr) mEditor->SelectionMoved = false;
         }*/
+        // Live: initialize the movement method on the freshly-set Spannable text.
+        if (mMovement != nullptr) {
+            Spannable* sp2 = dynamic_cast<Spannable*>(text);
+            if (sp2 != nullptr) mMovement->initialize(*this, *sp2);
+        }
     }
     if (mLayout != nullptr) {
         checkForRelayout();
@@ -1308,6 +1314,14 @@ void TextView::createEditorIfNeeded(){
 
 Editor* TextView::getEditor(){
     return mEditor;
+}
+
+void TextView::setMovementMethod(MovementMethod* movement) {
+    // Android: stores, and (re)initializes if there's already a laid-out Spannable.
+    mMovement = movement;
+    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+        mMovement->initialize(*this, *mSpannable);
+    }
 }
 
 void TextView::setCaretPos(int pos){

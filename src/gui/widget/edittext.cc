@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/edittext.h>
 #include <widget/editor.h>
+#include <text/method/arrowkeymovementmethod.h>
 #include <core/inputmethodmanager.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
@@ -53,6 +54,9 @@ void EditText::initEditText(){
     mInputType = TYPE_NONE;
     afterChanged = nullptr;
     mCaretRect.set(0,0,1,1);
+    // Android's default movement method for editable text — arrow/page/home/end
+    // navigation + shift-select via the standard android.text.method path.
+    setMovementMethod(ArrowKeyMovementMethod::getInstance());
 }
 
 void EditText::setTextWatcher(AfterTextChanged ls){
