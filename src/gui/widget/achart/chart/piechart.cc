@@ -36,13 +36,13 @@ void PieChart::drawArc(Canvas& canvas,double centerX, double centerY, double rad
     canvas.move_to(centerX, centerY);
     canvas.arc(centerX, centerY, radius, startRad, endRad);
     canvas.close_path();
-    if(paintStyle&Style::FILL)canvas.fill();
+    if(paintStyle&Paint::Style::FILL)canvas.fill();
     else canvas.stroke();
 }
 
 void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
     //paint.setAntiAlias(mRenderer->isAntialiasing());
-    //paint.setStyle(Style::FILL);
+    //paint.setStyle(Paint::Style::FILL);
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
     const int left = x;
@@ -109,11 +109,11 @@ void PieChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint&
             translateX = (float) (radius * 0.1 * std::sin(rAngle));
             translateY = (float) (radius * 0.1 * std::cos(rAngle));
         }
-        drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,Style::FILL);
+        drawArc(canvas, mCenterX+translateX, mCenterY+translateY, radius*radiusScale, currentAngle, sweepAngle,Paint::Style::FILL);
         if(mDataIndex==i){
             canvas.set_color(getSeriesSelectionColor(i));
             canvas.set_line_width(mRenderer->getGridLineWidth()+1);
-            drawArc(canvas, mCenterX+translateX,  mCenterY+translateY, (radius + 4)*radiusScale, currentAngle, sweepAngle,Style::STROKE);
+            drawArc(canvas, mCenterX+translateX,  mCenterY+translateY, (radius + 4)*radiusScale, currentAngle, sweepAngle,Paint::Style::STROKE);
             canvas.set_line_width(mRenderer->getGridLineWidth()-1);
         }
         canvas.set_color(seriesRenderer->getColor());

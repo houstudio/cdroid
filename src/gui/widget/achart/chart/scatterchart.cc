@@ -40,9 +40,9 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
     canvas.save();
     canvas.set_color(renderer->getColor());
     if(!renderer->isFillPoints()){
-        paint.setStyle(Style::FILL);
+        paint.setStyle(Paint::Style::FILL);
     }else{
-        paint.setStyle(Style::STROKE);
+        paint.setStyle(Paint::Style::STROKE);
         canvas.set_line_width(renderer->getPointStrokeWidth());
     }
     if(seriesIndex==mSeriesIndex){
@@ -55,7 +55,7 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
     funcs[CIRCLE_FILLED]=[this](Canvas& c, Paint& p, float x, float y){
         Paint fill;
         fill.setColor(Color::WHITE); // TODO
-        fill.setStyle(Style::FILL);
+        fill.setStyle(Paint::Style::FILL);
         drawCircle(c,fill,x,y);
         drawCircle(c,p,x,y);
     };
@@ -70,11 +70,11 @@ void ScatterChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& 
     for(int i=0;i<length;i+=2){
         draw(canvas,paint,points.at(i), points.at(i + 1));
         if( (seriesIndex==mSeriesIndex) && (startIndex+i/2==mDataIndex) ){
-            const int oldStyle=paint.style;
+            const Paint::Style oldStyle=paint.getStyle();
             mSize+=4;
-            paint.style=STROKE;
+            paint.setStyle(Paint::Style::STROKE);
             drawCircle(canvas,paint,points.at(i), points.at(i + 1));
-            paint.style=oldStyle;
+            paint.setStyle(oldStyle);
             mSize-=4;
         }
     }
@@ -109,9 +109,9 @@ int ScatterChart::getLegendShapeWidth(int seriesIndex) const{
 void ScatterChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,
         float x, float y,int seriesIndex,  Paint& paint) {
      if (((XYSeriesRenderer*) renderer.get())->isFillPoints()) {
-        paint.setStyle(Style::FILL);
+        paint.setStyle(Paint::Style::FILL);
     } else {
-        paint.setStyle(Style::STROKE);
+        paint.setStyle(Paint::Style::STROKE);
     }
     switch (((XYSeriesRenderer*) renderer.get())->getPointStyle()) {
     case PointStyle::X:
@@ -133,7 +133,7 @@ void ScatterChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleS
         drawPoint(canvas,paint,x + SHAPE_WIDTH, y);
         break;
     }
-    if(paint.style==Style::FILL){
+    if(paint.getStyle()==Paint::Style::FILL){
         canvas.fill();
     }else{
         canvas.stroke();
@@ -150,13 +150,13 @@ void ScatterChart::drawX(Canvas& canvas,  Paint& paint, float x, float y) {
 
 void ScatterChart::drawPoint(Canvas& canvas, Paint& paint, float x, float y){
     canvas.arc(x,y,mSize,0,M_PI*2.0);
-    if(paint.style&FILL)canvas.fill();
+    if(paint.getStyle()&Paint::Style::FILL)canvas.fill();
     else canvas.stroke();
 }
 
 void ScatterChart::drawCircle(Canvas& canvas,  Paint& paint, float x, float y) {
     canvas.arc(x,y,mSize,0,M_PI*2.0);
-    if(paint.style&Style::FILL)canvas.fill();
+    if(paint.getStyle()&Paint::Style::FILL)canvas.fill();
     else canvas.stroke();
 }
 
@@ -173,7 +173,7 @@ void ScatterChart::drawTriangle(Canvas& canvas,  Paint& paint, float x, float y)
 
 void ScatterChart::ScatterChart::drawSquare(Canvas& canvas,  Paint& paint, float x, float y) {
     canvas.rectangle(x - mSize, y - mSize,mSize*2.0,mSize*2.0);
-    if(paint.style==Style::STROKE)
+    if(paint.getStyle()==Paint::Style::STROKE)
         canvas.stroke();
     else canvas.fill();
 }

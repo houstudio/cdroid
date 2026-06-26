@@ -21,28 +21,13 @@
 #include <core/rect.h>
 #include <core/canvas.h>
 #include <core/numberformat.h>
+#include <text/paint.h>
 #include <widget/achart/model/seriesselection.h>
 #include <widget/achart/renderer/defaultrenderer.h>
 #include <widget/achart/renderer/simpleseriesrenderer.h>
 namespace cdroid{
 class AbstractChart {
-public:
-    struct Paint{
-        int color;
-        int style;
-        int textAlign;
-        Paint(){
-            color=0;
-            textAlign=0;
-            style=0;
-        }
-        void setColor(int c){color=c;}
-        void setTextAlign(int a){textAlign=a;}
-        void setStyle(int s){style=s;}
-    };
 protected:
-    enum Style{STROKE=1,FILL=2};
-    enum Align{LEFT,CENTER,RIGHT};
     int mSeriesIndex;
     int mDataIndex;
 private:

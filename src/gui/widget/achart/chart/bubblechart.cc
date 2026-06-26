@@ -30,7 +30,7 @@ BubbleChart::BubbleChart(const std::shared_ptr<XYMultipleSeriesDataset>& dataset
 void BubbleChart::drawSeries(Canvas& canvas, Paint& paint,std::vector<float>& points,
         const std::shared_ptr<XYSeriesRenderer>& renderer, float yAxisValue, int seriesIndex, int startIndex) {
     canvas.set_color(renderer->getColor());
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     const int length = points.size();
     auto series = std::dynamic_pointer_cast<XYValueSeries>(mDataset->getSeriesAt(seriesIndex));
     const double max = series->getMaxValue();
@@ -66,14 +66,14 @@ int BubbleChart::getLegendShapeWidth(int seriesIndex) const{
 
 void BubbleChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,
         float x, float y,int seriesIndex,  Paint& paint) {
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     canvas.set_color(renderer->getColor());
     drawCircle(canvas, paint, x + SHAPE_WIDTH, y, 3);
 }
 
 void BubbleChart::drawCircle(Canvas& canvas,  Paint& paint, float x, float y, float radius) {
      canvas.arc(x,y,radius,0,M_PI*2.0);
-     if(paint.style==Style::FILL)canvas.fill();canvas.stroke();
+     if(paint.getStyle()&Paint::Style::FILL)canvas.fill();canvas.stroke();
 }
 
 std::string BubbleChart::getChartType() const{

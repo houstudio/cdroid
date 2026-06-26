@@ -38,13 +38,13 @@ void DoughnutChart::drawRingSlice(Canvas& canvas, double centerX, double centerY
     canvas.arc(centerX, centerY, outerRadius, startRadians, endRadians);
     canvas.arc_negative(centerX, centerY, innerRadius, endRadians, startRadians);
     canvas.close_path();
-    if(style&FILL) canvas.fill();
+    if(style&Paint::Style::FILL) canvas.fill();
     else canvas.stroke();
 }
 
 void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
     //paint.setAntiAlias(mRenderer->isAntialiasing());
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
     int left = x;
@@ -104,11 +104,11 @@ void DoughnutChart::draw(Canvas& canvas, int x, int y, int width, int height,  P
             const float value = (float) mDataset->getValues(category)[i];
             const float angle = (float) (value / total * 360);
             canvas.set_color(mRenderer->getSeriesRendererAt(i)->getColor());
-            drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,FILL);
+            drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,Paint::Style::FILL);
             if( (mSeriesIndex==category) && (mDataIndex==i) ) {
                 canvas.set_color(getSeriesSelectionColor(i));
                 canvas.set_line_width(mRenderer->getGridLineWidth()+1);
-                drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,STROKE);
+                drawRingSlice(canvas, mCenterX, mCenterY, radius, innerRadius, currentAngle, angle,Paint::Style::STROKE);
                 canvas.set_line_width(mRenderer->getGridLineWidth()-1);
             }
             drawLabel(canvas, mDataset->getTitles(category)[i], mRenderer, prevLabelsBounds, mCenterX,
@@ -136,7 +136,7 @@ void DoughnutChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<Simple
     mStep = std::max(1, mStep - 1);
     //canvas.drawCircle(x + SHAPE_WIDTH - mStep, y, mStep, paint);
     canvas.arc(x+SHAPE_WIDTH,y,mStep,0,M_PI*2.0);
-    if(paint.style==Style::FILL)canvas.fill();else canvas.stroke();
+    if(paint.getStyle()&Paint::Style::FILL)canvas.fill();else canvas.stroke();
 }
 
 bool DoughnutChart::getSeriesAndPointForScreenCoordinate(const PointF& screenPoint,SeriesSelection&selection) const{

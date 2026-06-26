@@ -35,7 +35,7 @@ int RoundChart::getSeriesSelectionColor(int seriesIndex)const{
 void RoundChart::drawTitle(Canvas& canvas, int x, int y, int width,  Paint& paint) {
     if (mRenderer->isShowLabels()) {
         canvas.set_color(mRenderer->getLabelsColor());
-        paint.setTextAlign(Align::CENTER);
+        paint.setTextAlign(Paint::Align::CENTER);
         canvas.set_font_size(mRenderer->getChartTitleTextSize());
         drawString(canvas, mRenderer->getChartTitle(), x + width / 2,
                    y + mRenderer->getChartTitleTextSize(), paint);
@@ -50,7 +50,7 @@ void RoundChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSer
         float x, float y,int seriesIndex,  Paint& paint) {
     //canvas.drawRect(x, y - SHAPE_WIDTH / 2, x + SHAPE_WIDTH, y + SHAPE_WIDTH / 2, paint);
     canvas.rectangle(x,y-SHAPE_WIDTH/2,SHAPE_WIDTH,SHAPE_WIDTH);
-    if(paint.style==Style::FILL)canvas.fill();else canvas.stroke();
+    if(paint.getStyle()&Paint::Style::FILL)canvas.fill();else canvas.stroke();
 }
 
 const std::shared_ptr<DefaultRenderer>& RoundChart::getRenderer() const{
