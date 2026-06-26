@@ -135,15 +135,10 @@ static inline int32_t getGeneralCategory(UChar32 c) {
 
 // 获取词断行属性
 static WBProperty getWBProperty(UChar32 c) {
-    // ASCII fast-path: basic Latin letters/digits/space are well-defined and must
-    // not depend on findUnicodeRange's data tables (which don't categorize ASCII
-    // reliably here). Without this, WB6 (letter+letter → no break) never fired,
-    // so every mid-word position counted as a boundary and word selection picked
-    // the offset itself ("HELL" / "O WORLD").
-    if ((c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z')) return WBP_ALPHA;
-    if (c >= '0' && c <= '9') return WBP_NUMERIC;
-    if (c == ' ' || c == '\t') return WBP_BREAK;
-
+    // Derive WBP from the table (category + script) — no hardcoded ASCII cases:
+    // findUnicodeRange now returns correct category/script for basic Latin, so the
+    // cat checks below (SPACE_SEPARATOR→BREAK, UPPERCASE/LOWERCASE_LETTER→ALPHA,
+    // DECIMAL_DIGIT_NUMBER→NUMERIC) and the script switch handle ASCII correctly.
     const auto* range = findUnicodeRange(c);
 
     // 特殊字符优先处理

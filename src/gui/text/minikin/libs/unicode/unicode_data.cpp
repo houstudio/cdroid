@@ -131,7 +131,25 @@ const UnicodeRange* findUnicodeRange(UChar32 c) {
         };
         return &invalidRange;
     }
-    
+
+    // ASCII fast-path: g_unicodeRanges does NOT cover basic Latin, so without this
+    // every ASCII char returned the "other letter" defaultRange — which made
+    // u_isDigit('5'), u_isspace(' ') and uscript_getScript('A') all wrong (digits
+    // and space categorized as letters; script UNKNOWN instead of LATIN). Fixing
+    // it here corrects every findUnicodeRange consumer at once.
+    if (c < 0x80) {
+        static const UnicodeRange rUpper = { 'A','Z', U_LEFT_TO_RIGHT, U_UPPERCASE_LETTER,     U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN,  0, 0 };
+        static const UnicodeRange rLower = { 'a','z', U_LEFT_TO_RIGHT, U_LOWERCASE_LETTER,     U_GCB_OTHER, U_LB_ALPHABETIC, 0, USCRIPT_LATIN,  0, 0 };
+        static const UnicodeRange rDigit = { '0','9', U_LEFT_TO_RIGHT, U_DECIMAL_DIGIT_NUMBER, U_GCB_OTHER, U_LB_NUMERIC,    0, USCRIPT_LATIN,  0, 0 };
+        static const UnicodeRange rSpace = { ' ',' ', U_WHITE_SPACE_NEUTRAL, U_SPACE_SEPARATOR, U_GCB_OTHER, U_LB_SPACE,      0, USCRIPT_COMMON, 0, 0 };
+        if (c >= 'A' && c <= 'Z') return &rUpper;
+        if (c >= 'a' && c <= 'z') return &rLower;
+        if (c >= '0' && c <= '9') return &rDigit;
+        if (c == ' ' || c == '\t') return &rSpace;
+        // other ASCII (control / punctuation / symbols / DEL) → fall through to
+        // the table lookup, then defaultRange — same as before, no regression.
+    }
+
     // 二分查找
     int left = 0;
     int right = g_unicodeRangesCount - 1;
