@@ -28,6 +28,7 @@
 #include <view/motionevent.h>
 #include <view/view.h>
 #include <view/viewconfiguration.h>
+#include <core/inputdevice.h>
 #include <core/inputmethodmanager.h>
 #include <core/canvas.h>
 #include <core/systemclock.h>
@@ -102,11 +103,11 @@ int Editor::insertPosition() {
 }
 
 void Editor::replace() {
-    /*if (mSuggestionsPopupWindow == null) {
-        mSuggestionsPopupWindow = new SuggestionsPopupWindow();
-    }
-    hideCursorAndSpanControllers();
-    mSuggestionsPopupWindow.show();*/
+    // Android.Editor.replace() hides any active cursor/span controllers and
+    // shows the suggestions popup for replacement. CDROID has no suggestions
+    // popup yet, so preserve the shadow semantics by hiding controllers.
+    hideCursorControllers();
+
     int middle = (mTextView->getSelectionStart() + mTextView->getSelectionEnd()) / 2;
     if (Spannable* e = editable()) Selection::setSelection(e, middle);
 }
@@ -114,30 +115,85 @@ void Editor::replace() {
 //  Lifecycle
 // =====================================================================================
 void Editor::onAttachedToWindow() {
-    makeBlink();
+    // Android attaches controller listeners and spell-check helpers here.
+    // CDROID does not yet implement those systems. Resume blinking the cursor
+    // when the view is reattached, as Android does.
+    mShowCursor = SystemClock::uptimeMillis();
+    resumeBlink();
 }
 
 void Editor::onDetachedFromWindow() {
-    if (mTextView) mTextView->removeCallbacks(mBlink);
+    // Android detaches controllers, hides popups, and cancels pending IME
+    // callbacks. CDROID suspends the blink state and hides cursor controllers.
+    suspendBlink();
+    hideCursorControllers();
 }
 
 void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyFocusedRect*/) {
+    // Android.Editor.onFocusChanged preserves the last tap position, invokes
+    // MovementMethod.onTakeFocus, and updates selection/highlight state.
+    mShowCursor = SystemClock::uptimeMillis();
+
     if (focused) {
+        Spannable* e = editable();
+        const int selStart = mTextView->getSelectionStart();
+        const int selEnd = mTextView->getSelectionEnd();
+        const bool isFocusHighlighted = mSelectAllOnFocus && selStart == 0
+                && selEnd == mTextView->length();
+
+        mCreatedWithASelection = mFrozenWithFocus && mTextView->hasSelection()
+                && !isFocusHighlighted;
+
+        if (!mFrozenWithFocus || selStart < 0 || selEnd < 0) {
+            const int lastTapPosition = getLastTapPosition();
+            if (lastTapPosition >= 0 && e) {
+                Selection::setSelection(e, lastTapPosition);
+            }
+
+            if (MovementMethod* mm = mTextView->getMovementMethod()) {
+                if (e) mm->onTakeFocus(*mTextView, *e, /*direction*/ 0);
+            }
+
+            if (mSelectAllOnFocus) {
+                mTextView->selectAllText();
+            }
+
+            mTouchFocusSelected = true;
+        }
+
+        mFrozenWithFocus = false;
+        mSelectionMoved = false;
         mCursorVisible = true;
-        makeBlink();
-        // Android: TextView.mSelectAllOnFocus — select all when focus is gained.
-        if (mSelectAllOnFocus && isEditing()) selectAll();
+        resumeBlink();
     } else {
-        suspendBlink();
+        mTextView->endBatchEdit();
         hideCursorControllers();
+        suspendBlink();
+        ensureNoSelectionIfNonSelectable();
+        // Android also cancels selection/action-mode on focus loss. That is
+        // still deferred in CDROID's current foundation pass.
     }
 }
 
 void Editor::onWindowFocusChanged(bool hasWindowFocus) {
     if (hasWindowFocus) {
-        makeBlink();
+        resumeBlink();
+        // Android refreshes text action mode when the window returns focus.
+        // CDROID defers action mode state until the selection/handle pass.
     } else {
         suspendBlink();
+        hideCursorControllers();
+        ensureNoSelectionIfNonSelectable();
+        mTextView->endBatchEdit();
+        // Android hides popups and controllers before parent focus loss.
+    }
+}
+
+void Editor::ensureNoSelectionIfNonSelectable() {
+    if (!mTextView->canSelectText() && mTextView->hasSelection()) {
+        const int len = mTextView->length();
+        Spannable* e = editable();
+        if (e) Selection::setSelection(e, len, len);
     }
 }
 
@@ -365,11 +421,13 @@ void Editor::extendSelection(int index) {
 //  Text-change hook
 // =====================================================================================
 void Editor::sendOnTextChanged(int /*start*/, int /*before*/, int /*after*/) {
-    // The buffer changed: refresh cursor geometry, keep blinking, and let the
-    // (deferred) controllers know conditions may have changed.
+    // The buffer changed: refresh cursor geometry, reset blink timing, and hide
+    // active cursor controllers. Android also updates spell-check spans and
+    // selection action mode helpers here; those subsystems are still deferred.
     invalidateTextDisplayList();
     updateCursorPosition();
     makeBlink();
+    hideCursorControllers();
     prepareCursorControllers();
 }
 
@@ -491,24 +549,30 @@ int Editor::commitText(const std::wstring& text) {
 bool Editor::onTouchEvent(MotionEvent& event) {
     if (mTextView->getLayout() == nullptr) return false;
 
+    const bool filterOutEvent = shouldFilterOutTouchEvent(event);
+    mLastButtonState = event.getButtonState();
+    if (filterOutEvent) {
+        if (event.getActionMasked() == MotionEvent::ACTION_UP) {
+            mIgnoreActionUpEvent = true;
+        }
+        return false;
+    }
+
     const int action = event.getActionMasked();
     const float x = event.getX();
     const float y = event.getY();
-
-    // Reuse TextView::getOffsetForPosition (Android public API) — single source
-    // of truth for view-local (x,y) → buffer offset. It accounts for padding + scroll.
     const int offset = mTextView->getOffsetForPosition(x, y);
 
+    // Android's Editor.onTouchEvent also dispatches to the insertion/selection
+    // controllers; CDROID has no handle controllers yet, so this is a simplified
+    // gesture port that retains caret placement and drag selection.
     if (action == MotionEvent::ACTION_DOWN) {
+        mTouchFocusSelected = false;
+        mIgnoreActionUpEvent = false;
+        mLastButtonState = event.getButtonState();
         mLastTouchOffset = offset;
-        // Multi-tap: consecutive taps landing within DOUBLE_TAP_TIMEOUT +
-        // DOUBLE_TAP_SLOP of the previous UP extend the sequence. Mirrors
-        // Android's SelectionModifierCursorController tap-counting.
+
         const int64_t now = (int64_t)event.getEventTime();
-        // event.getEventTime() is MICROSECONDS (SystemClock::uptimeMicros — see
-        // inputdevice.cc); getDoubleTapTimeout() is milliseconds, so convert ms→µs.
-        // (The previous *1000000 assumed nanoseconds → a 300-SECOND window, which
-        // made every tap count as consecutive and broke double/triple-tap.)
         const int64_t timeoutUs = (int64_t)ViewConfiguration::getDoubleTapTimeout() * 1000LL;
         const float dx = x - mLastUpX, dy = y - mLastUpY;
         const float slop = (float)ViewConfiguration::getDoubleTapSlop();
@@ -516,20 +580,37 @@ bool Editor::onTouchEvent(MotionEvent& event) {
                 && (now - mLastUpTime) <= timeoutUs
                 && (dx * dx + dy * dy) <= slop * slop;
         mTapCount = inMultiTapWindow ? mTapCount + 1 : 1;
-        if (mTapCount > 3) mTapCount = 1;   // a 4th tap cycles back to a single tap
+        if (mTapCount > 3) mTapCount = 1;
 
         if (mTapCount == 2) {
-            selectCurrentWord();            // double-tap → select word
+            selectCurrentWord();
         } else if (mTapCount >= 3) {
-            selectAll();                    // triple-tap → select all
+            selectAll();
         } else {
-            setSelection(offset);           // single tap → place caret
+            setSelection(offset);
         }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {
-        extendSelection(offset);   // drag to extend the selection
+        extendSelection(offset);
     }
     return true;
+}
+
+bool Editor::shouldFilterOutTouchEvent(MotionEvent& event) const {
+    if (!event.isFromSource(InputDevice::SOURCE_MOUSE)) {
+        return false;
+    }
+    const bool primaryButtonStateChanged =
+            ((mLastButtonState ^ event.getButtonState()) & MotionEvent::BUTTON_PRIMARY) != 0;
+    const int action = event.getActionMasked();
+    if ((action == MotionEvent::ACTION_DOWN || action == MotionEvent::ACTION_UP)
+            && !primaryButtonStateChanged) {
+        return true;
+    }
+    if (action == MotionEvent::ACTION_MOVE && !event.isButtonPressed(MotionEvent::BUTTON_PRIMARY)) {
+        return true;
+    }
+    return false;
 }
 
 void Editor::onTouchUpEvent(MotionEvent& event) {
@@ -540,6 +621,13 @@ void Editor::onTouchUpEvent(MotionEvent& event) {
     mLastUpTime = (int64_t)event.getEventTime();
     mLastUpX = event.getX();
     mLastUpY = event.getY();
+}
+
+int Editor::getLastTapPosition() const {
+    if (mLastTouchOffset >= 0 && mTextView && mLastTouchOffset <= mTextView->length()) {
+        return mLastTouchOffset;
+    }
+    return -1;
 }
 
 bool Editor::selectCurrentWord() {
@@ -614,11 +702,25 @@ bool Editor::isSuggestionsEnabled() const {
 //  Cursor controllers — deferred to the handles pass (intentional no-ops).
 // =====================================================================================
 void Editor::prepareCursorControllers() {
-    // Insertion/selection HandleView controllers land in a follow-up pass.
+    // Android Editor builds and updates insertion/selection handle controllers
+    // here. CDROID defers the actual controller implementation to a later pass,
+    // but we can still keep the enable/disable state aligned with the text view
+    // and cursor visibility.
+    const bool enabled = mTextView->getLayout() != nullptr;
+    mInsertionControllerEnabled = enabled && isCursorVisible();
+    mSelectionControllerEnabled = enabled && mTextView->canSelectText();
+
+    if (!mInsertionControllerEnabled || !mSelectionControllerEnabled) {
+        hideCursorControllers();
+    }
 }
 
 void Editor::hideCursorControllers() {
-    // No controllers exist yet in the foundation.
+    // Android Editor hides any active cursor controllers when focus changes or
+    // text mutations occur. No controller implementation is available yet, but
+    // the state is still tracked.
+    mInsertionControllerEnabled = false;
+    mSelectionControllerEnabled = false;
 }
 
 }  // namespace cdroid
