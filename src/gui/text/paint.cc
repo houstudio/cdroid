@@ -80,10 +80,19 @@ void Paint::setTextSkewX(float v){
 }
 
 float Paint::ascent()const{
-    return 0;
+    minikin::MinikinExtent extent;
+    minikin::FontFakery  ffk;
+    auto minikinFont = mTypeface->getMinikinFont();
+    minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
+    return extent.ascent;
 }
+
 float Paint::descent()const{
-    return 0;
+    minikin::MinikinExtent extent;
+    minikin::FontFakery  ffk;
+    auto minikinFont = mTypeface->getMinikinFont();
+    minikinFont->GetFontExtent(&extent,*mMinikinPaint,ffk);
+    return extent.descent;
 }
 
 bool Paint::hasEqualAttributes(const Paint&other)const{
