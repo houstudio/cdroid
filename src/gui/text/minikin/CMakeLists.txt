@@ -7,7 +7,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(minikin)
 
+set(MYICU_SOURCES
+       libs/unicode/uchar.cpp
+       libs/unicode/ubidi.cpp
+       libs/unicode/ubrk.cpp
+       libs/unicode/uscript.cpp
+       libs/unicode/uloc.cpp
+       libs/unicode/unicode_casemap_nfd.cpp
+       libs/unicode/unicode_data_props.cpp
+       libs/unicode/unorm2.cpp
+   )
 target_sources(minikin PRIVATE
+    ${MYICU_SOURCES}
     libs/minikin/BidiUtils.cpp
     libs/minikin/BoundsCache.cpp
     libs/minikin/CmapCoverage.cpp
@@ -43,16 +54,6 @@ PUBLIC
 )
 
 if(TRUE OR NOT USE_ICU)
-   target_sources(minikin PRIVATE
-       libs/unicode/uchar.cpp
-       libs/unicode/ubidi.cpp
-       libs/unicode/ubrk.cpp
-       libs/unicode/uscript.cpp
-       libs/unicode/uloc.cpp
-       libs/unicode/unicode_casemap_nfd.cpp
-       libs/unicode/unicode_data_props.cpp
-       libs/unicode/unorm2.cpp
-   )
    target_include_directories(minikin PRIVATE
        libs
        ${PROJECT_SOURCE_DIR}/include
@@ -75,8 +76,4 @@ else()
     target_link_libraries(minikin PRIVATE  ICU::uc)
     message(WARNING "USE ICU ${ICU_VERSION}")
 endif()
-#add_executable(test_minikin_cairo test_minikin_cairo.cpp)
-#target_include_directories(test_minikin_cairo PRIVATE libs ${PROJECT_SOURCE_DIR}/include
-#    ${FREETYPE_INCLUDE_DIRS} ${HARFBUZZ_INCLUDE_DIRS} ${CAIRO_INCLUDE_DIRS} BEFORE)
-#target_link_libraries(test_minikin_cairo PRIVATE minikin freetype harfbuzz cairo)
 
