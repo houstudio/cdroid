@@ -4307,7 +4307,7 @@ void TextView::onDraw(Canvas& canvas) {
         layout->draw(canvas);//, highlight, mHighlightPaint, cursorOffsetVertical);
     }
     canvas.restore();
-    if (mEditor) mEditor->drawCursor(canvas);
+    if (mEditor) mEditor->drawCursor(canvas, cursorOffsetVertical);
 }
 
 void TextView::onDrawCaret(Canvas& canvas, const Rect& caretRect) {

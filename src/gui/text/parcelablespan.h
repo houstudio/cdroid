@@ -8,6 +8,8 @@
 namespace cdroid{
 
 class Paint;
+class TextPaint;
+class CharacterStylePassthrough;
 
 class ParcelableSpan {
 public:
@@ -37,14 +39,48 @@ public:
     virtual ~ParagraphStyle() = default;
 };
 
+class UpdateAppearance : public ParcelableSpan {
+public:
+    virtual ~UpdateAppearance() = default;
+};
+
+class UpdateLayout : public UpdateAppearance {
+public:
+    virtual ~UpdateLayout() = default;
+};
+
 class CharacterStyle : virtual public ParcelableSpan {
 public:
     virtual ~CharacterStyle() = default;
-    virtual void updateDrawState(const Paint& paint)const{};
+    virtual void updateDrawState(TextPaint& paint) const {}
+
+    static CharacterStyle* wrap(CharacterStyle* cs);
+
+    virtual CharacterStyle* getUnderlying() const {
+        return const_cast<CharacterStyle*>(this);
+    }
+};
+
+class CharacterStylePassthrough : public CharacterStyle {
+public:
+    explicit CharacterStylePassthrough(CharacterStyle* cs) : mStyle(cs) {}
+    void updateDrawState(TextPaint& paint) const override {
+        if (mStyle) mStyle->updateDrawState(paint);
+    }
+    CharacterStyle* getUnderlying() const override {
+        return mStyle ? mStyle->getUnderlying() : nullptr;
+    }
+private:
+    CharacterStyle* mStyle;
 };
 
 class NoCopySpan:virtual public ParcelableSpan{
 };
+
+inline CharacterStyle* CharacterStyle::wrap(CharacterStyle* cs) {
+    if (cs == nullptr) return nullptr;
+    return new CharacterStylePassthrough(cs);
+}
 
 using SpanFilter=Predicate<const ParcelableSpan*>;
 

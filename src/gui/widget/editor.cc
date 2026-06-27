@@ -30,6 +30,7 @@
 #include <view/viewconfiguration.h>
 #include <core/inputmethodmanager.h>
 #include <core/canvas.h>
+#include <core/systemclock.h>
 #include <algorithm>
 
 namespace cdroid {
@@ -43,12 +44,17 @@ constexpr int BLINK = 500;
 //  Construction / destruction
 // =====================================================================================
 Editor::Editor(TextView* textView) : mTextView(textView) {
-    // The blink runnable toggles visibility, invalidates the caret region, and
-    // reschedules itself while the caret should keep blinking.
+    // Body mirrors Android's Editor.Blink.run(): a cancelled blink is a no-op;
+    // otherwise drop any pending duplicate, and while still blinking invalidate
+    // the caret path and reschedule for the next half-cycle. The visible on/off
+    // is decided at draw time by shouldRenderCursor() (time-based), not here.
     mBlink = [this]() {
-        mBlinkVisible = !mBlinkVisible;
-        invalidateCursor();
-        if (shouldBlink()) mTextView->postDelayed(mBlink, BLINK);
+        if (mBlinkCancelled) return;
+        mTextView->removeCallbacks(mBlink);
+        if (shouldBlink()) {
+            if (mTextView->getLayout() != nullptr) mTextView->invalidateCursorPath();
+            mTextView->postDelayed(mBlink, BLINK);
+        }
     };
 }
 
@@ -95,6 +101,15 @@ int Editor::insertPosition() {
     return cursorOffset();
 }
 
+void Editor::replace() {
+    /*if (mSuggestionsPopupWindow == null) {
+        mSuggestionsPopupWindow = new SuggestionsPopupWindow();
+    }
+    hideCursorAndSpanControllers();
+    mSuggestionsPopupWindow.show();*/
+    int middle = (mTextView->getSelectionStart() + mTextView->getSelectionEnd()) / 2;
+    if (Spannable* e = editable()) Selection::setSelection(e, middle);
+}
 // =====================================================================================
 //  Lifecycle
 // =====================================================================================
@@ -127,37 +142,133 @@ void Editor::onWindowFocusChanged(bool hasWindowFocus) {
 }
 
 // =====================================================================================
-//  Cursor blink + geometry / draw
+//  Cursor blink + geometry / draw  (faithful ports of android.widget.Editor)
+//  (isCursorVisible is inline in editor.h: mCursorVisible && isEditing().)
 // =====================================================================================
 bool Editor::shouldBlink() const {
-    if (!mCursorVisible || mBlinkSuspended) return false;
-    if (!isEditing()) return false;
-    return mTextView->isFocused();
+    // Android.shouldBlink: visible, focused, the window is visible, and the
+    // selection is a zero-length caret.
+    if (!isCursorVisible() || !mTextView->isFocused()
+            || mTextView->getWindowVisibility() != View::VISIBLE) return false;
+
+    Spannable* e = editable();
+    const int start = e ? Selection::getSelectionStart(e) : -1;
+    if (start < 0) return false;
+    const int end = e ? Selection::getSelectionEnd(e) : -1;
+    if (end < 0) return false;
+    return start == end;
+}
+
+bool Editor::shouldRenderCursor() const {
+    // Android.shouldRenderCursor: on during the first half of each 2*BLINK cycle
+    // since mShowCursor, or always when mRenderCursorRegardlessTiming.
+    if (!isCursorVisible()) return false;
+    if (mRenderCursorRegardlessTiming) return true;
+    const int64_t showCursorDelta = SystemClock::uptimeMillis() - mShowCursor;
+    return (showCursorDelta % (2 * BLINK)) < BLINK;
+}
+
+bool Editor::isBlinking() const {
+    // Android.isBlinking: mBlink != null && !mBlink.mCancelled.
+    return !mBlinkCancelled;
 }
 
 void Editor::makeBlink() {
-    if (!shouldBlink()) {
+    // Android.makeBlink: stamp the blink start time, (un)cancel, then schedule (or
+    // drop) the Blink runnable.
+    if (shouldBlink()) {
+        mShowCursor = SystemClock::uptimeMillis();
+        mBlinkCancelled = false;                 // mBlink.uncancel()
         mTextView->removeCallbacks(mBlink);
-        return;
+        mTextView->postDelayed(mBlink, BLINK);
+    } else {
+        mTextView->removeCallbacks(mBlink);
     }
-    mBlinkVisible = true;
-    mTextView->removeCallbacks(mBlink);   // avoid duplicate scheduling
-    mTextView->postDelayed(mBlink, BLINK);
 }
 
 void Editor::suspendBlink() {
-    mBlinkSuspended = true;
-    mBlinkVisible = true;                 // draw solid while typing / briefly
-    if (mTextView) mTextView->removeCallbacks(mBlink);
-    invalidateCursor();
+    // Android.suspendBlink == mBlink.cancel(): remove the pending tick + mark cancelled.
+    if (!mBlinkCancelled) {
+        if (mTextView) mTextView->removeCallbacks(mBlink);
+        mBlinkCancelled = true;
+    }
 }
 
 void Editor::resumeBlink() {
-    mBlinkSuspended = false;
+    // Android.resumeBlink: mBlink.uncancel() then makeBlink().
+    mBlinkCancelled = false;
     makeBlink();
 }
 
+void Editor::loadCursorDrawable() {
+    // Android.loadCursorDrawable: lazily fetch the host's cursor drawable once.
+    if (mDrawableForCursor == nullptr) {
+        mDrawableForCursor = mTextView->getTextCursorDrawable();
+    }
+}
+
+Drawable* Editor::getCursorDrawable() const {
+    // Android.getCursorDrawable.
+    return mDrawableForCursor;
+}
+
+int Editor::clampHorizontalPosition(Drawable* drawable, float horizontal) {
+    // Android.clampHorizontalPosition, verbatim. NOTE: CDROID Rect is {left, top,
+    // width, height} and Drawable::getPadding stores right/bottom padding in the
+    // width/height fields (so mTempRect.width==Android.right, .height==.bottom).
+    horizontal = std::max(0.5f, horizontal - 0.5f);
+
+    int drawableWidth = 0;
+    if (drawable != nullptr) {
+        drawable->getPadding(mTempRect);
+        drawableWidth = drawable->getIntrinsicWidth();
+    } else {
+        mTempRect.setEmpty();
+    }
+
+    const int scrollX = mTextView->getScrollX();
+    const float horizontalDiff = horizontal - scrollX;
+    const int viewClippedWidth = mTextView->getWidth()
+            - mTextView->getCompoundPaddingLeft() - mTextView->getCompoundPaddingRight();
+
+    int left;
+    if (horizontalDiff >= (viewClippedWidth - 1.f)) {
+        // at the rightmost position
+        left = viewClippedWidth + scrollX - (drawableWidth - mTempRect.width);
+    } else if (std::abs(horizontalDiff) <= 1.f
+            || (mTextView->length() == 0   // TextUtils.isEmpty(mTextView.getText())
+                && (TextView::VERY_WIDE - scrollX) <= (viewClippedWidth + 1.f)
+                && horizontal <= 1.f)) {
+        // at the leftmost position
+        left = scrollX - mTempRect.left;
+    } else {
+        left = (int) horizontal - mTempRect.left;
+    }
+    return left;
+}
+
+void Editor::updateCursorPosition(int top, int bottom, float horizontal) {
+    // Android.updateCursorPosition(top, bottom, horizontal): set the cursor
+    // drawable's bounds, honoring its padding and clamping to the view edges.
+    // Android setBounds(left, top, right, bottom); CDROID Drawable::setBounds is
+    // (x, y, w, h) — so w = right - left (= intrinsic width), h as derived below.
+    loadCursorDrawable();
+    const int left = clampHorizontalPosition(mDrawableForCursor, horizontal);
+    const int x = left;
+    const int y = top - mTempRect.top;
+    const int w = mDrawableForCursor->getIntrinsicWidth();           // (left + w) - left
+    const int h = (bottom + mTempRect.height) - y;                   // bottom + pad.bottom - y
+    mDrawableForCursor->setBounds(x, y, w, h);
+}
+
 void Editor::updateCursorPosition() {
+    // Android.updateCursorPosition (no-arg): load the drawable, then place it at
+    // the caret. CDROID draws the cursor in view space (the canvas is NOT
+    // pre-translated to the text origin at this point, unlike Android), so the
+    // drawable bounds are placed in text-local coords and mirrored into view space
+    // (mCaretRect) for invalidation; drawCursor applies the text-origin translate.
+    loadCursorDrawable();
+
     Layout* layout = mTextView->getLayout();
     if (layout == nullptr || !isEditing()) {
         mCaretRect.setEmpty();
@@ -166,21 +277,31 @@ void Editor::updateCursorPosition() {
     const int offset = cursorOffset();
     const int line = layout->getLineForOffset(offset);
     const int top = layout->getLineTop(line);
-    const int bottom = layout->getLineBottom(line);
-    const float horizontal = layout->getPrimaryHorizontal(offset);
+    const int bottom = layout->getLineBottomWithoutSpacing(line);   // includeLineSpacing=false
+    const bool clamped = layout->shouldClampCursor(line);
+    const float horizontal = layout->getPrimaryHorizontal(offset, clamped);
 
-    // Match the coordinate space TextView::onDraw uses for the caret (see the
-    // mCaretRect.offset(...) line there): the canvas is pre-scrolled by the
-    // framework, so we position in untranslated view space at
-    // (compoundPaddingLeft + drawable hoff, extendedPaddingTop + vertical offset).
-    // getHorizontalOffsetForDrawables()/getVerticalOffset() are TextView-private
-    // (friend access).
-    const int hoff = mTextView->getHorizontalOffsetForDrawables();
-    const int x = mTextView->getCompoundPaddingLeft() + hoff + (int)horizontal;
-    const int y = mTextView->getExtendedPaddingTop() + mTextView->getVerticalOffset(true) + top;
+    // View-space origin offset (compound padding + vertical offset) — applied by
+    // drawCursor via canvas.translate for the drawable, and baked into mCaretRect
+    // for the onDrawCaret fallback / invalidation.
+    const int dx = mTextView->getCompoundPaddingLeft() + mTextView->getHorizontalOffsetForDrawables();
+    const int dy = mTextView->getExtendedPaddingTop() + mTextView->getVerticalOffset(true);
 
-    constexpr int caretThickness = 2;
-    mCaretRect.set(x, y, caretThickness, bottom - top);
+    if (mDrawableForCursor != nullptr) {
+        updateCursorPosition(top, bottom, horizontal);   // text-local drawable bounds
+        const Rect& b = mDrawableForCursor->getBounds();
+        mCaretRect.set(b.left + dx, b.top + dy, b.width, b.height);
+    } else {
+        // No drawable: fixed-thickness caret rect for TextView::onDrawCaret.
+        constexpr int caretThickness = 2;
+        mCaretRect.set(dx + (int) horizontal, dy + top, caretThickness, bottom - top);
+    }
+}
+
+void Editor::invalidateCursorPath() {
+    // Android.Editor delegates to TextView.invalidateCursorPath() (the Blink
+    // runnable invalidates the caret region through this on each half-cycle).
+    mTextView->invalidateCursorPath();
 }
 
 void Editor::invalidateCursor() {
@@ -193,13 +314,19 @@ void Editor::invalidateTextDisplayList() {
     mTextView->invalidate(true);
 }
 
-void Editor::drawCursor(Canvas& canvas) {
-    if (!mCursorVisible || !isEditing() || !mBlinkVisible) return;
-    updateCursorPosition();
+void Editor::drawCursor(Canvas& canvas, int cursorOffsetVertical) {
+    // Mirrors the gate in Android.TextView.onDraw / Editor.onDraw: only the caret
+    // (zero-width selection) is drawn here; a real selection is a highlight path.
+    const bool translate = cursorOffsetVertical != 0;
+    if (translate) canvas.translate(0, cursorOffsetVertical);
+    if (mDrawableForCursor != nullptr) {
+        mDrawableForCursor->draw(canvas);
+    }
+    if (translate) canvas.translate(0, -cursorOffsetVertical);
+
+    // Back-compat fallback (CDROID's own wheel): no cursor drawable, so paint the
+    // caret via TextView::onDrawCaret — kept so subclasses can still customize it.
     if (mCaretRect.empty()) return;
-    // Delegate the actual caret painting to TextView's onDrawCaret hook so that
-    // subclasses can customize the caret appearance (mirrors Android, where the
-    // cursor drawable is drawn here but apps can supply their own).
     mTextView->onDrawCaret(canvas, mCaretRect);
 }
 
@@ -452,7 +579,6 @@ void Editor::setCursorVisible(bool visible) {
         makeBlink();
     } else {
         if (mTextView) mTextView->removeCallbacks(mBlink);
-        mBlinkVisible = false;
         invalidateCursor();
     }
 }

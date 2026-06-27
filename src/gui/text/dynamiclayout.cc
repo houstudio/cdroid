@@ -2,8 +2,6 @@
 #include <text/precomputedtext.h>
 namespace cdroid{
 
-class UpdateLayout:public Spannable{}; 
-
 Pools::SynchronizedPool<DynamicLayout::Builder>DynamicLayout::Builder::sPool(3);
 StaticLayout* DynamicLayout::sStaticLayout=nullptr;
 StaticLayout::Builder* DynamicLayout::sBuilder=nullptr;

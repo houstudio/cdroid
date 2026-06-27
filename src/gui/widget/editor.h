@@ -79,21 +79,38 @@ public:
     explicit Editor(TextView* textView);
     ~Editor();
 
+    void replace();
     // ----- lifecycle (wired from TextView hooks in Step B) -----
     void onAttachedToWindow();
     void onDetachedFromWindow();
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect);
     void onWindowFocusChanged(bool hasWindowFocus);
 
-    // ----- cursor blink + geometry / draw -----
+    // ----- cursor blink + geometry / draw (faithful ports of android.widget.Editor) -----
     void makeBlink();
     void suspendBlink();
     void resumeBlink();
     bool shouldBlink() const;
-    void updateCursorPosition();        // recompute mCaretRect from selection + Layout
+    /** Android.shouldRenderCursor: time-based blink on/off — true during the "on"
+     *  half of each 2*BLINK ms cycle (or whenever mRenderCursorRegardlessTiming). */
+    bool shouldRenderCursor() const;
+    /** Android.updateCursorPosition (no-arg): load the cursor drawable, then place it
+     *  at the caret for the current selection (drawable path); otherwise recompute
+     *  mCaretRect for the onDrawCaret fallback. */
+    void updateCursorPosition();
+    /** Android.invalidateCursorPath: invalidate the caret region on the host. */
+    void invalidateCursorPath();
     void invalidateCursor();            // invalidate the caret region on the TextView
     void invalidateTextDisplayList();   // foundation: just invalidate()
-    void drawCursor(Canvas& canvas);    // called at the end of TextView::onDraw
+    /** Android.drawCursor: draws the cursor drawable at cursorOffsetVertical (the
+     *  official Android path), and falls back to TextView::onDrawCaret when no
+     *  drawable is set — kept for back-compat with CDROID's custom caret painting. */
+    void drawCursor(Canvas& canvas, int cursorOffsetVertical = 0);
+    /** @return the cursor drawable currently used for the caret (Android
+     *  Editor.getCursorDrawable). Lazily loaded from TextView::getTextCursorDrawable. */
+    Drawable* getCursorDrawable() const;
+    /** Android.isBlinking: true while the Blink runnable is active (not cancelled). */
+    bool isBlinking() const;
 
     // ----- selection (delegate to cdroid::Selection on the editable) -----
     void setSelection(int index);
@@ -136,11 +153,23 @@ private:
      *  replaces the selection, as in Android), else returns the caret offset. */
     int insertPosition();
 
+    /** Android.updateCursorPosition(top, bottom, horizontal): set the cursor
+     *  drawable's bounds, honoring its padding and clamping to the view edges. */
+    void updateCursorPosition(int top, int bottom, float horizontal);
+    /** Android.loadCursorDrawable: lazily load mDrawableForCursor from the host. */
+    void loadCursorDrawable();
+    /** Android.clampHorizontalPosition: clamped left for the cursor drawable so it
+     *  never escapes the view's padded edges (sits at the very left/right edge when
+     *  the caret is at either end). */
+    int clampHorizontalPosition(Drawable* drawable, float horizontal);
+
     // Internal implementation of TextView's Android public API (TextView is a
     // friend, so it calls these). Kept private so Editor's own public surface
     // doesn't duplicate the TextView-facing API.
     void setCursorVisible(bool visible);
-    bool isCursorVisible() const { return mCursorVisible; }
+    /** Android.isCursorVisible: mCursorVisible && the host has an editable buffer
+     *  (≈ Android's mTextView.isTextEditable()). */
+    bool isCursorVisible() const { return mCursorVisible && isEditing(); }
     void setShowSoftInputOnFocus(bool show);          // Editor.mShowSoftInputOnFocus
     bool getShowSoftInputOnFocus() const { return mShowSoftInputOnFocus; }
     void setSelectAllOnFocus(bool selectAll);         // TextView.mSelectAllOnFocus
@@ -149,14 +178,22 @@ private:
     void endBatchEdit();
     bool isSuggestionsEnabled() const;
 
+    Drawable* mDrawableForCursor = nullptr;
+    Drawable* mSelectHandleLeft = nullptr;
+    Drawable* mSelectHandleRight = nullptr;
+    Drawable* mSelectHandleCenter = nullptr;
     TextView* mTextView;
 
-    // blink — represented as a Runnable posted via View::postDelayed (500ms),
-    // toggling mBlinkVisible. A dedicated Blink inner class can replace this later.
+    // blink — a Runnable (body mirrors Android's Editor.Blink.run) posted via
+    // View::postDelayed every BLINK ms; each tick invalidates the caret region and
+    // reschedules while shouldBlink(). mBlinkCancelled mirrors Blink.mCancelled.
     Runnable mBlink;
-    bool mBlinkVisible = true;
-    bool mBlinkSuspended = false;
+    bool mBlinkCancelled = false;
     bool mCursorVisible = true;
+    // Android cursor-draw timing/geometry state.
+    int64_t mShowCursor = 0;                    // Android mShowCursor (uptimeMillis, ms)
+    bool mRenderCursorRegardlessTiming = false; // Android: force-render the cursor
+    Rect mTempRect;                             // Android mTempRect: drawable padding scratch
     bool mIgnoreActionUpEvent = false;  // see ignoreActionUpEvent()
     bool mShowSoftInputOnFocus = true;  // Android: Editor.mShowSoftInputOnFocus
     bool mSelectAllOnFocus = false;     // Android: TextView.mSelectAllOnFocus (Editor hook)
