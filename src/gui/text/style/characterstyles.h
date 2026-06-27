@@ -75,24 +75,6 @@ public:
     }
 };
 
-class SubscriptSpan: public CharacterStyle {
-public:
-    void updateDrawState(TextPaint& paint) const override {
-        float size = paint.getTextSize();
-        paint.baselineShift -= static_cast<int>(size * 0.25f);
-        paint.setTextSize(size * 0.75f);
-    }
-};
-
-class SuperscriptSpan: public CharacterStyle {
-public:
-    void updateDrawState(TextPaint& paint) const override {
-        float size = paint.getTextSize();
-        paint.baselineShift += static_cast<int>(size * 0.25f);
-        paint.setTextSize(size * 0.75f);
-    }
-};
-
 class URLSpan : public CharacterStyle {
 public:
     explicit URLSpan(const std::string& url) : mUrl(url) {}

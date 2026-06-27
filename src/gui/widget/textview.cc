@@ -609,20 +609,20 @@ bool TextView::onPreDraw() {
         assumeLayout();
     }
 
-    /*if (mMovement != nullptr) {
+    if (mMovement != nullptr) {
         int curs = getSelectionEnd();
         // Do not create the controller if it is not already created.
-        if (mEditor != nullptr && mEditor->mSelectionModifierCursorController != nullptr
+        /*if (mEditor != nullptr && mEditor->mSelectionModifierCursorController != nullptr
                 && mEditor->mSelectionModifierCursorController->isSelectionStartDragged()) {
             curs = getSelectionStart();
-        }
+        }*/
         if (curs < 0 && (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
             curs = mText->length();
         }
         if (curs >= 0) {
             bringPointIntoView(curs);
         }
-    } else */{
+    } else {
         bringTextIntoView();
     }
 
@@ -1176,7 +1176,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             break;
         case PrecomputedText::Params::USABLE:/*pass through*/break;
         }
-    } else if (type == BufferType::SPANNABLE /*|| mMovement != nullptr*/) {
+    } else if (type == BufferType::SPANNABLE || mMovement != nullptr) {
         //text = mSpannableFactory.newSpannable(text);
     } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
         //text = TextUtils::stringOrSpannedString(text);
@@ -1240,16 +1240,16 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
                 | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
 
-        // TODO(editor): if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
         //   deferred: attaches Editor's SpanController (easy-delete/spelling) +
         //   keylistener span; both arrive with the suggestions/handles pass.
-        /*if (mTransformation != nullptr) {
-            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+        if (mTransformation != nullptr) {
+            //sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
         }
         if (mMovement != nullptr) {
-            mMovement.initialize(this, (Spannable) text);
-            if (mEditor != nullptr) mEditor->SelectionMoved = false;
-        }*/
+            mMovement->initialize(*this, dynamic_cast<Spannable&>(*text));
+            if (mEditor != nullptr) mEditor->mSelectionMoved = false;
+        }
         // Live: initialize the movement method on the freshly-set Spannable text.
         if (mMovement != nullptr) {
             Spannable* sp2 = dynamic_cast<Spannable*>(text);
@@ -1269,9 +1269,8 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     } else {
         //notifyListeningManagersAfterTextChanged();
     }
-    /*SelectionModifierCursorController depends on textCanBeSelected, which depends on text
+    //SelectionModifierCursorController depends on textCanBeSelected, which depends on text
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
-    */
 }
 
 const CharSequence& TextView::getText()const{
@@ -1365,7 +1364,6 @@ void TextView::setMovementMethod(MovementMethod* movement) {
 void TextView::setCaretPos(int pos){
     mCaretPos= pos;
     mBlinkOn = true;
-    //mLayout->setCaretPos(pos);
     invalidate(true);
 }
 
@@ -2789,7 +2787,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
      * We didn't let makeNewLayout() register to bring the cursor into view,
      * so do it here if there is any possibility that it is needed.
      */
-    if (/*mMovement != nullptr ||*/ mLayout->getWidth() > unpaddedWidth
+    if ((mMovement != nullptr) || mLayout->getWidth() > unpaddedWidth
             || mLayout->getHeight() > unpaddedHeight) {
         registerForPreDraw();
     } else {
@@ -3036,12 +3034,12 @@ bool TextView::onTouchEvent(MotionEvent& event){
     const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
            && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
     if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
-        InputMethodManager& imm = InputMethodManager::getInstance();
-        viewClicked(&imm);
-        /*if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != nullptr
-                && !showAutofillDialog()) {
-            imm.showSoftInput(this, 0);
-        }*/
+        InputMethodManager* imm = InputMethodManager::peekInstance();
+        viewClicked(imm);
+        if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != nullptr
+                /*&& !showAutofillDialog()*/) {
+            imm->focusIn(this/*, 0*/);
+        }
         mEditor->onTouchUpEvent(event);
         handled = true;
     }
@@ -3747,7 +3745,6 @@ void TextView::invalidateCursorPath() {
     } else {
         const int horizontalPadding = getCompoundPaddingLeft();
         const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
-#if 0
         if (mEditor->mDrawableForCursor == nullptr) {
             RectF TEMP_RECTF;
             /*
@@ -3767,18 +3764,17 @@ void TextView::invalidateCursorPath() {
             thick /= 2.0f;
 
             // mHighlightPath is guaranteed to be non null at that point.
-            mHighlightPath->computeBounds(TEMP_RECTF, false);
+            mHighlightPath->compute_bounds(TEMP_RECTF, false);
 
             invalidate((int) std::floor(horizontalPadding + TEMP_RECTF.left - thick),
                     (int) std::floor(verticalPadding + TEMP_RECTF.top - thick),
                     (int) std::ceil(TEMP_RECTF.width + 2.f*thick),
                     (int) std::ceil(TEMP_RECTF.height + 2.f*thick));
         } else {
-            Rect bounds = mEditor->mDrawableForCursor.getBounds();
+            Rect bounds = mEditor->mDrawableForCursor->getBounds();
             invalidate(bounds.left + horizontalPadding, bounds.top + verticalPadding,
                     bounds.width, bounds.height);
         }
-#endif
     }
 }
 
@@ -3824,11 +3820,11 @@ void TextView::invalidateRegion(int start, int end, bool invalidateCursor){
         int bottom = mLayout->getLineBottom(lineEnd);
 
         // mEditor can be null in case selection is set programmatically.
-        /*if (invalidateCursor && mEditor != nullptr && mEditor->mDrawableForCursor != nullptr) {
+        if (invalidateCursor && mEditor != nullptr && mEditor->mDrawableForCursor != nullptr) {
             Rect bounds = mEditor->mDrawableForCursor->getBounds();
             top = std::min(top, bounds.top);
             bottom = std::max(bottom, bounds.bottom());
-        }*/
+        }
 
         const int compoundPaddingLeft = getCompoundPaddingLeft();
         const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
@@ -3883,7 +3879,7 @@ bool TextView::isSuggestionsEnabled()const{
 }
 
 bool TextView::canSelectText() const{
-    return mText->length() != 0 && (mEditor != nullptr);//&& mEditor->hasSelectionController();
+    return mText->length() != 0 && (mEditor != nullptr) && mEditor->hasSelectionController();
 }
 
 bool TextView::canSelectAllText()const{
@@ -3892,10 +3888,10 @@ bool TextView::canSelectAllText()const{
 }
 
 bool TextView::selectAllText(){
-    /*if (mEditor != nullptr) {
+    if (mEditor != nullptr) {
         // Hide the toolbar before changing the selection to avoid flickering.
-        hideFloatingToolbar(FLOATING_TOOLBAR_SELECT_ALL_REFRESH_DELAY);
-    }*/
+        //hideFloatingToolbar(FLOATING_TOOLBAR_SELECT_ALL_REFRESH_DELAY);
+    }
     const int length = mText->length();
     if (mSpannable) Selection::setSelection(mSpannable, 0, length);
     return length > 0;
@@ -3926,6 +3922,7 @@ bool TextView::isCursorVisible()const {
 }
 
 void TextView::setShowSoftInputOnFocus(bool show) {
+    createEditorIfNeeded();
     if (mEditor) mEditor->setShowSoftInputOnFocus(show);
 }
 

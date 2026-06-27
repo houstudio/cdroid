@@ -135,6 +135,12 @@ public:
     void invalidateCursorPath();
     void invalidateCursor();
     void invalidateTextDisplayList();
+    bool hasInsertionController() const{
+        return mInsertionControllerEnabled;
+    }
+    bool hasSelectionController() const{
+        return mSelectionControllerEnabled;
+    }
     void drawCursor(Canvas& canvas, int cursorOffsetVertical = 0);
     Drawable* getCursorDrawable() const;
     bool isBlinking() const;

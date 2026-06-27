@@ -114,6 +114,8 @@ public:
     float getTextSkewX()const{return mTextSkewX;}
     int getTextAlign()const{return mTextAlign;}
     void setTextAlign(int v){mTextAlign=v;}
+    float ascent()const;
+    float descent()const;
     bool isAntiAlias()const{return mAntialias;}
     void setAntiAlias(bool v){mAntialias=v;}
     int getStrokeCap()const{return 0;}

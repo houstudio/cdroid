@@ -79,6 +79,13 @@ void Paint::setTextSkewX(float v){
     mMinikinPaint->skewX = v;
 }
 
+float Paint::ascent()const{
+    return 0;
+}
+float Paint::descent()const{
+    return 0;
+}
+
 bool Paint::hasEqualAttributes(const Paint&other)const{
     return true;
 }
