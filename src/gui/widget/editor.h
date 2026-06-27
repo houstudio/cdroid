@@ -72,6 +72,8 @@ private:
     bool getShowSoftInputOnFocus() const { return mShowSoftInputOnFocus; }
     void setSelectAllOnFocus(bool selectAll);
     bool isSelectAllOnFocus() const { return mSelectAllOnFocus; }
+    void setTextIsSelectable(bool selectable);
+    bool isTextSelectable() const { return mTextIsSelectable; }
     void beginBatchEdit();
     void endBatchEdit();
     bool isSuggestionsEnabled() const;
@@ -108,6 +110,7 @@ private:
     bool mCreatedWithASelection = false;
     bool mTouchFocusSelected = false;
     bool mSelectionMoved = false;
+    bool mTextIsSelectable = false;
 
     Rect mCaretRect;
     bool mInsertionControllerEnabled = false;

@@ -79,6 +79,14 @@ TestString testStrings[]={
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
    },
+   { 
+     "Multiple lines (setted by setSingleLine(false),\nword soft break is supported by default",
+      false, 
+      Layout::ELLIPSIS_NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      80
+   },
 
    { 
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
@@ -89,7 +97,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
 
-   {
+   {//10
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_MIDDLE,
@@ -98,7 +106,7 @@ TestString testStrings[]={
       LayoutParams::WRAP_CONTENT
    },
 
-   {//10
+   {
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_END,
@@ -114,7 +122,7 @@ TestString testStrings[]={
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
    },
-   {//12
+   {//13
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
       Layout::ELLIPSIS_NONE,
@@ -158,6 +166,7 @@ int main(int argc,const char*argv[]){
         tv->setBackgroundColor(0xFF000000|(cc<<16)|(cc<<8)|cc);
         tv->setTextSize(22+i);
         layout->addView(tv,layoutParams);
+        if(i==8)tv->setLineSpacing(10,1.0);
     }
 #if 0
     SpannableStringBuilder spanText;

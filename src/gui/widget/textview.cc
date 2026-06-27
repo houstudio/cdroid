@@ -742,30 +742,35 @@ void TextView::sendBeforeTextChanged(CharSequence& text, int start, int before, 
     for(auto l:mListeners){
         if(l.beforeTextChanged) l.beforeTextChanged(text, start, before, after);
     }
-    //removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SpellCheckSpan>());
-    //removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SuggestionSpan>());
+    if (mText != nullptr && dynamic_cast<Editable*>(mText) != nullptr) {
+        // Remove stale spellcheck / suggestion spans that overlap the removed range.
+        removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SpellCheckSpan>());
+        removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SuggestionSpan>());
+    }
 }
 
 void TextView::removeIntersectingNonAdjacentSpans(int start, int end, const SpanFilter&type) {
     Editable* text = dynamic_cast<Editable*>(mText);
-    if (mText==nullptr) return;
+    if (text == nullptr) return;
 
     auto spans = text->getSpans(start, end, type);
     const int length = spans.size();
     for (int i = 0; i < length; i++) {
         const int spanStart = text->getSpanStart(spans[i]);
         const int spanEnd = text->getSpanEnd(spans[i]);
-        if (spanEnd == start || spanStart == end) break;
-        text->removeSpan(spans[i]);
+        if (spanEnd == start || spanStart == end) continue;
+        if (spanStart < end && spanEnd > start) {
+            text->removeSpan(spans[i]);
+        }
     }
 }
 
 void TextView::removeAdjacentSuggestionSpans(int pos){
     Editable* text = dynamic_cast<Editable*>(mText);
-    if (text==nullptr) return;
+    if (text == nullptr) return;
 
-    /*auto spans = text->getSpans(pos, pos, make_span_filter<SuggestionSpan>());
-    const int length = spans->size();
+    auto spans = text->getSpans(pos, pos, make_span_filter<SuggestionSpan>());
+    const int length = spans.size();
     for (int i = 0; i < length; i++) {
         const int spanStart = text->getSpanStart(spans[i]);
         const int spanEnd = text->getSpanEnd(spans[i]);
@@ -774,7 +779,7 @@ void TextView::removeAdjacentSuggestionSpans(int pos){
                 text->removeSpan(spans[i]);
             }
         }
-    }*/
+    }
 }
 
 void TextView::sendAfterTextChanged(Editable& text){
@@ -799,6 +804,21 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
 }
 
 void TextView::spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
+    if (dynamic_cast<SuggestionSpan*>(what) != nullptr) {
+        if (oldStart < 0 || oldEnd < 0) {
+            // A new suggestion span was added.
+            return;
+        }
+        // A suggestion span moved or was removed.
+        if (newStart < 0 || newEnd < 0) {
+            // Removed suggestion span: nothing to do.
+            return;
+        }
+        // Span boundaries changed; update selection controllers if needed.
+        if (mEditor) {
+            mEditor->prepareCursorControllers();
+        }
+    }
 }
 
 void TextView::setRawTextSize(float size, bool shouldRequestLayout){
@@ -1899,8 +1919,16 @@ void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocus
         View::onFocusChanged(focused, direction, previouslyFocusedRect);
         return;
     }
-    startStopMarquee(focused);
+    mHideHint = false;
     if (mEditor) mEditor->onFocusChanged(focused, direction, previouslyFocusedRect);
+    startStopMarquee(focused);
+    if (mTransformation != nullptr) {
+        CharSequence* sourceText = mText != nullptr ? mText : mTransformed;
+        if (sourceText != nullptr) {
+            mTransformation->onFocusChanged(*this, *sourceText, focused, direction,
+                previouslyFocusedRect != nullptr ? *previouslyFocusedRect : Rect());
+        }
+    }
     View::onFocusChanged(focused, direction, previouslyFocusedRect);
 }
 
@@ -3002,30 +3030,29 @@ bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     const bool superResult = View::onTouchEvent(event);
     if (mEditor) {
-        // UP is dispatched separately (records the tap for double/triple-tap
-        // detection; later also hides handles). DOWN/MOVE place/move the caret.
-        // Must run before the ACTION_UP early-return below — otherwise the UP
-        // path (and the old onTouchUpEvent call further down) is unreachable.
-        if (action == MotionEvent::ACTION_UP) mEditor->onTouchUpEvent(event);
-        else mEditor->onTouchEvent(event);
+        if (action == MotionEvent::ACTION_UP) {
+            // Only record the tap after the UI has had a chance to process the
+            // touch finish. Android calls Editor.onTouchUpEvent after the tap
+            // is considered finished by TextView.
+        } else {
+            mEditor->onTouchEvent(event);
+        }
     }
-    if(action == MotionEvent::ACTION_UP){
-        return superResult;
-    }
+
     bool handled = false;
     const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
            && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
-    if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
+    if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
         InputMethodManager& imm = InputMethodManager::getInstance();
         viewClicked(&imm);
         /*if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != nullptr
                 && !showAutofillDialog()) {
             imm.showSoftInput(this, 0);
         }*/
-
+        mEditor->onTouchUpEvent(event);
         handled = true;
     }
-    if(handled)return true;
+    if (handled) return true;
     return superResult;
 }
 
@@ -3197,10 +3224,25 @@ void TextView::invalidateDrawable(Drawable& drawable){
 }
 
 bool TextView::isTextSelectable()const{
-    return false;
+    return mEditor ? mEditor->isTextSelectable() : false;
 }
 
-void TextView::setTextSelectable(bool v){
+void TextView::setTextIsSelectable(bool selectable) {
+    if (!selectable||mEditor==nullptr) return;
+    createEditorIfNeeded();
+    if (mEditor->mTextIsSelectable == selectable) return;
+    mEditor->mTextIsSelectable = selectable;
+    setFocusableInTouchMode(selectable);
+    setFocusable(FOCUSABLE_AUTO);
+    setClickable(selectable);
+    setLongClickable(selectable);
+    //setMovementMethod(selectable ? ArrowKeyMovementMethod.getInstance() : nullptr);
+    setText(mText, selectable ? BufferType::SPANNABLE : BufferType::NORMAL);
+    mEditor->prepareCursorControllers();
+}
+
+bool TextView::isTextEditable()const {
+    return getEditableText() != nullptr;
 }
 
 void TextView::updateTextColors(){
@@ -3304,7 +3346,7 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
        setHorizontallyScrolling(false);
 #if 0
        if (applyTransformation) {
-           setTransformationMethod(null);
+           setTransformationMethod(nullptr);
        }
 
        if (!changeMaxLength) return;

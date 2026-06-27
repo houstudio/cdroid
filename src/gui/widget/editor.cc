@@ -679,6 +679,10 @@ void Editor::setSelectAllOnFocus(bool selectAll) {
     mSelectAllOnFocus = selectAll;
 }
 
+void Editor::setTextIsSelectable(bool selectable) {
+    mTextIsSelectable = selectable;
+}
+
 void Editor::beginBatchEdit() {
     // Android nests on mInputMethodState.mBatchEditNesting and, on the outermost
     // batch, defers IME updates. CDROID has no InputConnection yet, so just keep

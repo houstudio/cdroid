@@ -327,6 +327,9 @@ public:
     bool getShowSoftInputOnFocus()const;
     void setSelectAllOnFocus(bool selectAll);
     bool isSelectAllOnFocus()const;
+    void setTextIsSelectable(bool selectable);
+    bool isTextSelectable()const;
+    bool isTextEditable()const;
     void beginBatchEdit();
     void endBatchEdit();
     virtual void setSingleLine(bool single);
@@ -455,8 +458,6 @@ public:
     int getCompoundDrawableTintMode()const;
     void jumpDrawablesToCurrentState()override;
     void invalidateDrawable(Drawable& drawable)override;
-    bool isTextSelectable()const;
-    void setTextSelectable(bool);
     void setCompoundDrawables(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(Drawable* left,Drawable* top,Drawable* right,Drawable*bottom);
     void setCompoundDrawablesWithIntrinsicBounds(const std::string& left, const std::string& top,
