@@ -30,6 +30,10 @@
 #include <float.h>
 
 namespace cdroid{
+class SuggestionSpan;
+class SpellCheckSpan;
+
+
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
@@ -775,9 +779,8 @@ void TextView::removeAdjacentSuggestionSpans(int pos){
         const int spanStart = text->getSpanStart(spans[i]);
         const int spanEnd = text->getSpanEnd(spans[i]);
         if (spanEnd == pos || spanStart == pos) {
-            if (SpellChecker::haveWordBoundariesChanged(text, pos, pos, spanStart, spanEnd)) {
-                text->removeSpan(spans[i]);
-            }
+            // Fall back to removing adjacent suggestion spans when boundaries are changed.
+            text->removeSpan(spans[i]);
         }
     }
 }
@@ -805,16 +808,6 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
 
 void TextView::spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
     if (dynamic_cast<SuggestionSpan*>(what) != nullptr) {
-        if (oldStart < 0 || oldEnd < 0) {
-            // A new suggestion span was added.
-            return;
-        }
-        // A suggestion span moved or was removed.
-        if (newStart < 0 || newEnd < 0) {
-            // Removed suggestion span: nothing to do.
-            return;
-        }
-        // Span boundaries changed; update selection controllers if needed.
         if (mEditor) {
             mEditor->prepareCursorControllers();
         }
@@ -4056,23 +4049,19 @@ bool TextView::isSingleLine()const{
 }
 
 CharSequence* TextView::removeSuggestionSpans(CharSequence* text) {
-    /*if (text instanceof Spanned) {
-        Spannable spannable;
-        if (text instanceof Spannable) {
-            spannable = (Spannable) text;
-        } else {
-            spannable = mSpannableFactory.newSpannable(text);
-        }
-        auto spans = spannable->getSpans(0, text->length(), make_span_filter<SuggestionSpan>());
-        if (spans.size() == 0) {
-            return text;
-        } else {
-            text = spannable;
-        }
-        for (int i = 0; i < spans.size(); i++) {
-            spannable->removeSpan(spans[i]);
-        }
-    }*/
+    Spannable* spannable = dynamic_cast<Spannable*>(text);
+    if (spannable == nullptr) {
+        Spanned* spanned = dynamic_cast<Spanned*>(text);
+        if (spanned == nullptr) return text;
+        spannable = new SpannableStringBuilder(text);
+        text = spannable;
+    }
+
+    auto spans = spannable->getSpans(0, text->length(), make_span_filter<SuggestionSpan>());
+    const int length = spans.size();
+    for (int i = 0; i < length; i++) {
+        spannable->removeSpan(spans[i]);
+    }
     return text;
 }
 

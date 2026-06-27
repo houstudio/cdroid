@@ -30,7 +30,18 @@ public:
     }
 
     void drawLeadingMargin(Canvas& c, Paint& p, int x, int dir, int top, int baseline, int bottom,
-            CharSequence* text, int start, int end, bool first, Layout* layout) const override {}
+            CharSequence* text, int start, int end, bool first, Layout* layout) const override {
+        if (!first) return;
+        const int color = mWantColor ? mColor : p.getColor();
+        const float cy = (top + bottom) * 0.5f;
+        const float cx = x + dir * (mBulletRadius + mGapWidth / 2);
+        c.save();
+        c.set_color(color);
+        c.begin_new_sub_path();
+        c.arc(cx, cy, static_cast<double>(mBulletRadius), 0.0, 2.0 * M_PI);
+        c.fill();
+        c.restore();
+    }
 
 private:
     int mGapWidth;
@@ -49,7 +60,18 @@ public:
     }
 
     void drawLeadingMargin(Canvas& c, Paint& p, int x, int dir, int top, int baseline, int bottom,
-            CharSequence* text, int start, int end, bool first, Layout* layout) const override {}
+            CharSequence* text, int start, int end, bool first, Layout* layout) const override {
+        const int color = mColor != 0 ? mColor : p.getColor();
+        c.save();
+        c.set_color(color);
+        if (dir == 1) {
+            c.rectangle(x, top, mStripeWidth, bottom - top);
+        } else {
+            c.rectangle(x - mStripeWidth, top, mStripeWidth, bottom - top);
+        }
+        c.fill();
+        c.restore();
+    }
 
 private:
     int mColor;

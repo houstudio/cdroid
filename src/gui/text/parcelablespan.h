@@ -61,6 +61,17 @@ public:
     }
 };
 
+class SuggestionSpan : public CharacterStyle {
+public:
+    virtual ~SuggestionSpan() = default;
+    void updateDrawState(TextPaint& paint) const override {}
+};
+
+class SpellCheckSpan : public ParcelableSpan {
+public:
+    virtual ~SpellCheckSpan() = default;
+};
+
 class CharacterStylePassthrough : public CharacterStyle {
 public:
     explicit CharacterStylePassthrough(CharacterStyle* cs) : mStyle(cs) {}
