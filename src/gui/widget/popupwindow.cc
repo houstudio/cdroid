@@ -928,7 +928,9 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
         //mWindowManager.removeViewImmediate(decorView);
     }
 
-    if (contentHolder != nullptr) {
+    // When we own the content view, leave it in the decor tree so the window
+    // teardown cascade (~ViewGroup) frees it; otherwise detach it for reuse.
+    if (!mOwnsContentView && (contentHolder != nullptr)) {
         ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
         contentHolder->removeView(contentView);
     }

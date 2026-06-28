@@ -60,6 +60,11 @@ private:
     /** The contents of the popup. May be identical to the background view. */
     View* mContentView;
 
+    /** When true, this PopupWindow owns its content view: on dismiss the content
+     *  view is left in the decor tree and freed by the window teardown cascade
+     *  (~ViewGroup) instead of being detached for caller reuse. */
+    bool mOwnsContentView = false;
+
     int mInputMethodMode = INPUT_METHOD_FROM_FOCUSABLE;
     int mSoftInputMode;//= WindowManager.LayoutParams.SOFT_INPUT_STATE_UNCHANGED;
     int mSplitTouchEnabled;
@@ -171,6 +176,8 @@ public:
     void setElevation(float elevation);
     View*getContentView();
     void setContentView(View* contentView);
+    /** Claim ownership of the content view so it is freed when the popup is torn down. */
+    void setOwnsContentView(bool owns) { mOwnsContentView = owns; }
     void setTouchInterceptor(const View::OnTouchListener& l);
     bool isFocusable()const;
     void setFocusable(bool focusable);
