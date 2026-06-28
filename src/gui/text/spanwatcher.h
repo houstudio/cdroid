@@ -28,12 +28,12 @@ public:
     }
 
     virtual ~SpanWatcher() = default;
-    //virtual void onSpanAdded(Spanned& text, const ParcelableSpan* what, int start, int end) = 0;
-    //virtual void onSpanRemoved(Spanned& text, const ParcelableSpan* what, int start, int end) = 0;
-    //virtual void onSpanChanged(Spanned& text, const ParcelableSpan* what, int ostart, int oend, int nstart, int nend) = 0;
-    std::function<void(Spanned&,const ParcelableSpan*,int,int)>onSpanAdded;
-    std::function<void(Spanned&,const ParcelableSpan*,int,int)>onSpanRemoved;
-    std::function<void(Spanned&,const ParcelableSpan*,int,int,int,int)>onSpanChanged;
+    virtual void onSpanAdded(Spannable& text, const ParcelableSpan* what, int start, int end) = 0;
+    virtual void onSpanRemoved(Spannable& text, const ParcelableSpan* what, int start, int end) = 0;
+    virtual void onSpanChanged(Spannable& text, const ParcelableSpan* what, int ostart, int oend, int nstart, int nend) = 0;
+    //std::function<void(Spanned&,const ParcelableSpan*,int,int)>onSpanAdded;
+    //std::function<void(Spanned&,const ParcelableSpan*,int,int)>onSpanRemoved;
+    //std::function<void(Spanned&,const ParcelableSpan*,int,int,int,int)>onSpanChanged;
 };
 
 }/* namespace cdroid */

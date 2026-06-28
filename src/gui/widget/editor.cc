@@ -55,6 +55,7 @@ Editor::Editor(TextView* textView) : mTextView(textView) {
         if (shouldBlink()) {
             if (mTextView->getLayout() != nullptr) mTextView->invalidateCursorPath();
             mTextView->postDelayed(mBlink, BLINK);
+            LOGV("%p:%d blink cursor",mTextView,mTextView->getId());
         }
     };
 }
@@ -69,10 +70,6 @@ Editor::~Editor() {
 Spannable* Editor::editable() const {
     // Editable is-a Spannable; the upcast is implicit and valid for a complete object.
     return mTextView->getEditableText();
-}
-
-bool Editor::isEditing() const {
-    return editable() != nullptr;
 }
 
 int Editor::cursorOffset() const {
@@ -118,6 +115,9 @@ void Editor::onAttachedToWindow() {
     // Android attaches controller listeners and spell-check helpers here.
     // CDROID does not yet implement those systems. Resume blinking the cursor
     // when the view is reattached, as Android does.
+    if(mTextView->hasSelection()){
+        //refreshTextActionMode();
+    }
     mShowCursor = SystemClock::uptimeMillis();
     resumeBlink();
 }
@@ -204,8 +204,7 @@ void Editor::ensureNoSelectionIfNonSelectable() {
 bool Editor::shouldBlink() const {
     // Android.shouldBlink: visible, focused, the window is visible, and the
     // selection is a zero-length caret.
-    if (!isCursorVisible() || !mTextView->isFocused()
-            || mTextView->getWindowVisibility() != View::VISIBLE) return false;
+    if (!isCursorVisible() || !mTextView->isFocused()) return false;
 
     Spannable* e = editable();
     const int start = e ? Selection::getSelectionStart(e) : -1;
@@ -233,8 +232,11 @@ void Editor::makeBlink() {
     // Android.makeBlink: stamp the blink start time, (un)cancel, then schedule (or
     // drop) the Blink runnable.
     if (shouldBlink()) {
+        if(mTextView->getLayout()!=nullptr){
+            mTextView->invalidateCursorPath();
+        }
         mShowCursor = SystemClock::uptimeMillis();
-        mBlinkCancelled = false;                 // mBlink.uncancel()
+        mBlinkCancelled = false;
         mTextView->removeCallbacks(mBlink);
         mTextView->postDelayed(mBlink, BLINK);
     } else {
@@ -269,9 +271,6 @@ Drawable* Editor::getCursorDrawable() const {
 }
 
 int Editor::clampHorizontalPosition(Drawable* drawable, float horizontal) {
-    // Android.clampHorizontalPosition, verbatim. NOTE: CDROID Rect is {left, top,
-    // width, height} and Drawable::getPadding stores right/bottom padding in the
-    // width/height fields (so mTempRect.width==Android.right, .height==.bottom).
     horizontal = std::max(0.5f, horizontal - 0.5f);
 
     int drawableWidth = 0;
@@ -292,7 +291,7 @@ int Editor::clampHorizontalPosition(Drawable* drawable, float horizontal) {
         // at the rightmost position
         left = viewClippedWidth + scrollX - (drawableWidth - mTempRect.width);
     } else if (std::abs(horizontalDiff) <= 1.f
-            || (mTextView->length() == 0   // TextUtils.isEmpty(mTextView.getText())
+            || (TextUtils::isEmpty(mTextView->mText)
                 && (TextView::VERY_WIDE - scrollX) <= (viewClippedWidth + 1.f)
                 && horizontal <= 1.f)) {
         // at the leftmost position
@@ -304,32 +303,21 @@ int Editor::clampHorizontalPosition(Drawable* drawable, float horizontal) {
 }
 
 void Editor::updateCursorPosition(int top, int bottom, float horizontal) {
-    // Android.updateCursorPosition(top, bottom, horizontal): set the cursor
-    // drawable's bounds, honoring its padding and clamping to the view edges.
-    // Android setBounds(left, top, right, bottom); CDROID Drawable::setBounds is
-    // (x, y, w, h) — so w = right - left (= intrinsic width), h as derived below.
     loadCursorDrawable();
     const int left = clampHorizontalPosition(mDrawableForCursor, horizontal);
-    const int x = left;
+    const int width = mDrawableForCursor->getIntrinsicWidth();
     const int y = top - mTempRect.top;
-    const int w = mDrawableForCursor->getIntrinsicWidth();           // (left + w) - left
-    const int h = (bottom + mTempRect.height) - y;                   // bottom + pad.bottom - y
-    mDrawableForCursor->setBounds(x, y, w, h);
+    const int h = (bottom + mTempRect.height) - y;
+    LOGD("updateCursorPositio left=%d, top=%d wh=%d,%d", left, (top - mTempRect.top),width,h);
+    mDrawableForCursor->setBounds(left, top-mTempRect.top, (width<0?2:width), h);
 }
 
 void Editor::updateCursorPosition() {
-    // Android.updateCursorPosition (no-arg): load the drawable, then place it at
-    // the caret. CDROID draws the cursor in view space (the canvas is NOT
-    // pre-translated to the text origin at this point, unlike Android), so the
-    // drawable bounds are placed in text-local coords and mirrored into view space
-    // (mCaretRect) for invalidation; drawCursor applies the text-origin translate.
     loadCursorDrawable();
-
-    Layout* layout = mTextView->getLayout();
-    if (layout == nullptr || !isEditing()) {
-        mCaretRect.setEmpty();
-        return;
+    if(mDrawableForCursor==nullptr){
+        return ;
     }
+    Layout* layout = mTextView->getLayout();
     const int offset = cursorOffset();
     const int line = layout->getLineForOffset(offset);
     const int top = layout->getLineTop(line);
@@ -337,21 +325,7 @@ void Editor::updateCursorPosition() {
     const bool clamped = layout->shouldClampCursor(line);
     const float horizontal = layout->getPrimaryHorizontal(offset, clamped);
 
-    // View-space origin offset (compound padding + vertical offset) — applied by
-    // drawCursor via canvas.translate for the drawable, and baked into mCaretRect
-    // for the onDrawCaret fallback / invalidation.
-    const int dx = mTextView->getCompoundPaddingLeft() + mTextView->getHorizontalOffsetForDrawables();
-    const int dy = mTextView->getExtendedPaddingTop() + mTextView->getVerticalOffset(true);
-
-    if (mDrawableForCursor != nullptr) {
-        updateCursorPosition(top, bottom, horizontal);   // text-local drawable bounds
-        const Rect& b = mDrawableForCursor->getBounds();
-        mCaretRect.set(b.left + dx, b.top + dy, b.width, b.height);
-    } else {
-        // No drawable: fixed-thickness caret rect for TextView::onDrawCaret.
-        constexpr int caretThickness = 2;
-        mCaretRect.set(dx + (int) horizontal, dy + top, caretThickness, bottom - top);
-    }
+    updateCursorPosition(top,bottom,horizontal);
 }
 
 void Editor::invalidateCursorPath() {
@@ -382,7 +356,6 @@ void Editor::drawCursor(Canvas& canvas, int cursorOffsetVertical) {
 
     // Back-compat fallback (CDROID's own wheel): no cursor drawable, so paint the
     // caret via TextView::onDrawCaret — kept so subclasses can still customize it.
-    if (mCaretRect.empty()) return;
     mTextView->onDrawCaret(canvas, mCaretRect);
 }
 
@@ -425,7 +398,7 @@ void Editor::sendOnTextChanged(int /*start*/, int /*before*/, int /*after*/) {
     // active cursor controllers. Android also updates spell-check spans and
     // selection action mode helpers here; those subsystems are still deferred.
     invalidateTextDisplayList();
-    updateCursorPosition();
+    //updateCursorPosition();
     makeBlink();
     hideCursorControllers();
     prepareCursorControllers();
@@ -647,8 +620,9 @@ bool Editor::selectCurrentWord() {
     const int selStart = wordIterator.getBeginning(offset);
     const int selEnd = wordIterator.getEnd(offset);
 
+    LOGD("selStart=%d selEnd=%d",selStart,selEnd);
     if (selStart == WordIterator::DONE || selEnd == WordIterator::DONE || selStart == selEnd) {
-        return false;   // not inside a word (whitespace/edge) — nothing to select
+        return false; // not inside a word (whitespace/edge) — nothing to select
     }
 
     Selection::setSelection(e, selStart, selEnd);
@@ -657,18 +631,52 @@ bool Editor::selectCurrentWord() {
     return true;
 }
 
+void Editor::onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint, int cursorOffsetVertical){
+    const int selectionStart = mTextView->getSelectionStart();
+    const int selectionEnd = mTextView->getSelectionEnd();
+
+    /*const InputMethodState ims = mInputMethodState;
+    if (ims != null && ims.mBatchEditNesting == 0) {
+        InputMethodManager imm = getInputMethodManager();
+        if (imm != null) {
+            if (imm.isActive(mTextView)) {
+                if (ims.mContentChanged || ims.mSelectionModeChanged) {
+                    // We are in extract mode and the content has changed
+                    // in some way... just report complete new text to the
+                    // input method.
+                    reportExtractedText();
+                }
+            }
+        }
+    }
+
+    if (mCorrectionHighlighter != null) {
+        mCorrectionHighlighter->draw(canvas, cursorOffsetVertical);
+    }*/
+
+    if (highlight != nullptr && selectionStart == selectionEnd && mDrawableForCursor != nullptr) {
+        drawCursor(canvas, cursorOffsetVertical);
+        // Rely on the drawable entirely, do not draw the cursor line.
+        // Has to be done after the IMM related code above which relies on the highlight.
+        highlight = nullptr;
+    }
+    /*if (mSelectionActionModeHelper != nullptr) {
+        mSelectionActionModeHelper.onDraw(canvas);
+        if (mSelectionActionModeHelper.isDrawingHighlight()) {
+            highlight = nullptr;
+        }
+    }*/
+    /*if (mTextView.canHaveDisplayList() && canvas.isHardwareAccelerated()) {
+        drawHardwareAccelerated(canvas, layout, highlight, highlightPaint,cursorOffsetVertical);
+    } else */{
+        layout->draw(canvas, highlight, &highlightPaint, cursorOffsetVertical);
+    }
+}
 // =====================================================================================
 //  Android public API forwarded from TextView
 // =====================================================================================
-void Editor::setCursorVisible(bool visible) {
-    if (mCursorVisible == visible) return;
-    mCursorVisible = visible;
-    if (visible) {
-        makeBlink();
-    } else {
-        if (mTextView) mTextView->removeCallbacks(mBlink);
-        invalidateCursor();
-    }
+bool Editor::isCursorVisible() const{
+    return mCursorVisible&&mTextView->isTextEditable();
 }
 
 void Editor::setShowSoftInputOnFocus(bool show) {
@@ -693,13 +701,6 @@ void Editor::beginBatchEdit() {
 void Editor::endBatchEdit() {
     if (mBatchEditNesting > 0) mBatchEditNesting--;
     // On the outermost close, Android notifies the IME; nothing to do without one.
-}
-
-bool Editor::isSuggestionsEnabled() const {
-    // Faithful port of the non-spell-check preconditions in Editor.isSuggestionsEnabled():
-    // suggestions require an editable, cursor-visible, non-password field. (The actual
-    // spell-check / SuggestionSpan machinery is still deferred.)
-    return isEditing() && mCursorVisible && !mTextView->hasPasswordTransformationMethod();
 }
 
 // =====================================================================================

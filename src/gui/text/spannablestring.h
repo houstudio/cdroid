@@ -74,11 +74,6 @@ public:
     // Each class returns its own type — SSI returns SSI*, SpannedString returns
     // SpannedString* (covariant). No forward declaration needed.
     SpannableStringInternal* subSequence(int start, int end) const override;
-
-protected:
-    void sendSpanAdded(const ParcelableSpan* what, int start, int end);
-    void sendSpanRemoved(const ParcelableSpan* what, int start, int end);
-    void sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend);
 };
 
 class SpannedString : public SpannableStringInternal {
@@ -94,6 +89,10 @@ public:
 };
 
 class SpannableString : virtual public SpannableStringInternal, virtual public Spannable {
+protected:
+    void sendSpanAdded(const ParcelableSpan* what, int start, int end);
+    void sendSpanRemoved(const ParcelableSpan* what, int start, int end);
+    void sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend);
 public:
     SpannableString() = default;
     SpannableString(const CharSequence*, bool ignoreNoCopySpan);

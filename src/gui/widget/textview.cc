@@ -229,6 +229,7 @@ void TextView::initView(){
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
     mPreDrawRegistered = false;
+    mHighlightPathBogus= true;
     mPreDrawListenerDetached = false;
     mAllowTransformationLengthChange = false;
     mEllipsize = TextUtils::TruncateAt::NONE;
@@ -629,10 +630,10 @@ bool TextView::onPreDraw() {
     // This has to be checked here since:
     // - onFocusChanged cannot start it when focus is given to a view with selected text (after
     //   a screen rotation) since layout is not yet initialized at that point.
-    /*if (mEditor != nullptr && mEditor->mCreatedWithASelection) {
-        mEditor->refreshTextActionMode();
+    if (mEditor != nullptr && mEditor->mCreatedWithASelection) {
+        //mEditor->refreshTextActionMode();
         mEditor->mCreatedWithASelection = false;
-    }*/
+    }
     unregisterForPreDraw();
     return true;
 }
@@ -657,7 +658,7 @@ void TextView::onDetachedFromWindowInternal(){
         if( d == nullptr)continue;
         unscheduleDrawable(*d);
     }
-    if (mEditor) mEditor->onDetachedFromWindow();
+    if (mEditor!=nullptr) mEditor->onDetachedFromWindow();
     View::onDetachedFromWindowInternal();
 }
 
@@ -806,8 +807,12 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
     if (mEditor) mEditor->sendOnTextChanged(start, before, after);
 }
 
-void TextView::spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
-    if (dynamic_cast<SuggestionSpan*>(what) != nullptr) {
+void TextView::spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
+    bool selChanged = false;
+    int newSelStart = -1, newSelEnd = -1;
+    mHighlightPathBogus = true;
+    LOGD("%d,%d->%d,%d",oldStart,oldEnd,newStart,newEnd);
+    if (dynamic_cast<const SuggestionSpan*>(what) != nullptr) {
         if (mEditor) {
             mEditor->prepareCursorControllers();
         }
@@ -897,6 +902,9 @@ void TextView::setTextCursorDrawable(Drawable*d){
 }
 
 Drawable* TextView::getTextCursorDrawable()const{
+    if(mCursorDrawable==nullptr){
+        mCursorDrawable=new ColorDrawable(0xFF000000);
+    }
     return mCursorDrawable;
 }
 void TextView::setTextAppearance(Context*context,const std::string&appearance){
@@ -1932,6 +1940,7 @@ void TextView::onWindowFocusChanged(bool hasWindowFocus) {
 void TextView::onVisibilityChanged(View& changedView, int visibility) {
     View::onVisibilityChanged(changedView, visibility);
     if (mEditor && visibility != VISIBLE) {
+        //mEditor->hideCursorAndSpanControllers();
         mEditor->hide();
     }
 }
@@ -3227,7 +3236,7 @@ void TextView::setTextIsSelectable(bool selectable) {
     setFocusable(FOCUSABLE_AUTO);
     setClickable(selectable);
     setLongClickable(selectable);
-    //setMovementMethod(selectable ? ArrowKeyMovementMethod.getInstance() : nullptr);
+    //setMovementMethod(selectable ? ArrowKeyMovementMethod::getInstance() : nullptr);
     setText(mText, selectable ? BufferType::SPANNABLE : BufferType::NORMAL);
     mEditor->prepareCursorControllers();
 }
@@ -3875,7 +3884,7 @@ const TextPaint& TextView::getPaint() const{
 }
 
 bool TextView::isSuggestionsEnabled()const{
-    return mEditor && mEditor->isSuggestionsEnabled();
+    /*if(mEditor ==nullptr)*/return false;
 }
 
 bool TextView::canSelectText() const{
@@ -3913,8 +3922,14 @@ int TextView::getOffsetForPosition(float x, float y) {
 }
 
 void TextView::setCursorVisible(bool visible) {
-    if (mEditor) mEditor->setCursorVisible(visible);
-    // Non-editable TextViews have no Editor and draw no cursor — nothing else to do.
+    if(visible&&(mEditor==nullptr))return;
+    createEditorIfNeeded();
+    if (mEditor->mCursorVisible!=visible){
+        mEditor->mCursorVisible = visible;
+        invalidate();
+        mEditor->makeBlink();
+        mEditor->prepareCursorControllers();
+    }
 }
 
 bool TextView::isCursorVisible()const {
@@ -4165,6 +4180,7 @@ void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, in
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){
+    LOGD("%d,%d",selStart,selEnd);
 }
 
 bool TextView::setFrame(int l, int t, int w, int h) {
@@ -4178,6 +4194,46 @@ void TextView::restartMarqueeIfNeeded(){
         mRestartMarquee = false;
         startMarquee();
     }
+}
+
+Cairo::RefPtr<cdroid::Path> TextView::getUpdatedHighlightPath() {
+    Cairo::RefPtr<Path> highlight;
+    Paint& highlightPaint = mHighlightPaint;
+
+    const int selStart = getSelectionStart();
+    const int selEnd = getSelectionEnd();
+    if (mMovement != nullptr && (isFocused() || isPressed()) && selStart >= 0) {
+        if (selStart == selEnd) {
+            if (mEditor != nullptr && mEditor->shouldRenderCursor()) {
+                if (mHighlightPathBogus) {
+                    if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                    mHighlightPath->reset();
+                    mLayout->getCursorPath(selStart, *mHighlightPath, mText);
+                    mEditor->updateCursorPosition();
+                    mHighlightPathBogus = false;
+                }
+
+                // XXX should pass to skin instead of drawing directly
+                highlightPaint.setColor(mCurTextColor);
+                highlightPaint.setStyle(Paint::Style::STROKE);
+                highlight = mHighlightPath;
+            }
+        } else {
+            if (mHighlightPathBogus) {
+                if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                mHighlightPath->reset();
+                mLayout->getSelectionPath(selStart, selEnd, *mHighlightPath);
+                mHighlightPathBogus = false;
+            }
+
+            // XXX should pass to skin instead of drawing directly
+            highlightPaint.setColor(mHighlightColor);
+            highlightPaint.setStyle(Paint::Style::FILL);
+
+            highlight = mHighlightPath;
+        }
+    }
+    return highlight;
 }
 
 void TextView::onDraw(Canvas& canvas) {
@@ -4308,14 +4364,6 @@ void TextView::onDraw(Canvas& canvas) {
     // path for the current selection (Layout.getSelectionPath) and let Layout.draw
     // fill it behind the text. drawBackground fills the path using the canvas's
     // current color, so set it to the highlight color when there is a selection.
-    Path highlightPath;
-    Path* highlight = nullptr;
-    const int selStart = getSelectionStart();
-    const int selEnd = getSelectionEnd();
-    if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
-        layout->getSelectionPath(selStart, selEnd, highlightPath);
-        highlight = &highlightPath;
-    }
 
     if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
@@ -4323,16 +4371,31 @@ void TextView::onDraw(Canvas& canvas) {
         layout->draw(canvas);
         canvas.translate(-mShadowDx,-mShadowDy);
     }
-    if (highlight) canvas.set_color(mHighlightColor);
-    else canvas.set_color(color);
-    layout->draw(canvas, highlight, &mHighlightPaint, cursorOffsetVertical);
+#if 0
+    Path hp;
+    const int selStart = getSelectionStart();
+    const int selEnd = getSelectionEnd();
+    Path*highlight=nullptr;
+    if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
+        layout->getSelectionPath(selStart, selEnd, hp);
+        highlight = &hp;//getUpdatedHighlightPath();
+    }
+#endif
+    auto highlight=getUpdatedHighlightPath();
+    if(mEditor != nullptr){
+        mEditor->onDraw(canvas, layout, highlight.get(), mHighlightPaint, cursorOffsetVertical);
+    }else{
+        if(highlight)canvas.set_color(mHighlightColor);
+        canvas.set_color(color);
+        layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
+    }
     //mLayout->getCaretRect(mCaretRect);
     mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
 
     if (mMarquee && mMarquee->shouldDrawGhost()) {
         const float dx = mMarquee->getGhostOffset();
         canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);
-        layout->draw(canvas);//, highlight, mHighlightPaint, cursorOffsetVertical);
+        layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
     canvas.restore();
     if (mEditor) mEditor->drawCursor(canvas, cursorOffsetVertical);
@@ -4808,15 +4871,15 @@ void TextView::ChangeWatcher::afterTextChanged(Editable& buffer) {
     }*/
 }
 
-void TextView::ChangeWatcher::onSpanChanged(Spannable& buf,ParcelableSpan* what, int s, int e, int st, int en) {
+void TextView::ChangeWatcher::onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en) {
     mTV->spanChange(buf, what, s, st, e, en);
 }
 
-void TextView::ChangeWatcher::onSpanAdded(Spannable& buf, ParcelableSpan* what, int s, int e) {
+void TextView::ChangeWatcher::onSpanAdded(Spannable& buf, const ParcelableSpan* what, int s, int e) {
     mTV->spanChange(buf, what, -1, s, -1, e);
 }
 
-void TextView::ChangeWatcher::onSpanRemoved(Spannable& buf, ParcelableSpan* what, int s, int e) {
+void TextView::ChangeWatcher::onSpanRemoved(Spannable& buf, const ParcelableSpan* what, int s, int e) {
     mTV->spanChange(buf, what, s, -1, e, -1);
 }
 

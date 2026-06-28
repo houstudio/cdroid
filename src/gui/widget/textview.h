@@ -127,7 +127,7 @@ private:
     Drawables*mDrawables;
     Marquee*mMarquee;
     CharWrapper* mCharWrapper;
-    Drawable* mCursorDrawable;
+    mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
     MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
     TextUtils::TruncateAt mEllipsize;
@@ -199,7 +199,7 @@ private:
     void removeIntersectingNonAdjacentSpans(int,int,const SpanFilter&type);
     void removeAdjacentSuggestionSpans(int pos);
     void sendAfterTextChanged(Editable& text);
-    void spanChange(Spanned& buf,ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
+    void spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
     void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
@@ -224,6 +224,7 @@ protected:
     void invalidateCursorPath();
     void invalidateCursor();
     void invalidateRegion(int start, int end, bool invalidateCursor);
+    Cairo::RefPtr<cdroid::Path>getUpdatedHighlightPath();
     void drawableStateChanged()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
@@ -607,9 +608,9 @@ public:
     void beforeTextChanged(CharSequence& buffer, int start, int before, int after);
     void onTextChanged(CharSequence& buffer, int start, int before, int after);
     void afterTextChanged(Editable& buffer);
-    void onSpanChanged(Spannable& buf,ParcelableSpan* what, int s, int e, int st, int en);
-    void onSpanAdded(Spannable& buf, ParcelableSpan* what, int s, int e);
-    void onSpanRemoved(Spannable& buf, ParcelableSpan* what, int s, int e);
+    void onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en)override;
+    void onSpanAdded(Spannable& buf, const ParcelableSpan* what, int s, int e)override;
+    void onSpanRemoved(Spannable& buf, const ParcelableSpan* what, int s, int e)override;
 };
 
 }  // namespace cdroid

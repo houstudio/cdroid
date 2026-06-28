@@ -152,8 +152,8 @@ void SpannableStringInternal::getChars(int start, int end, char16_t* dest, int d
     }
 }
 
-void SpannableStringInternal::sendSpanAdded(const ParcelableSpan* what, int start, int end) {
-    Spanned& self = const_cast<SpannableStringInternal&>(*this);
+void SpannableString::sendSpanAdded(const ParcelableSpan* what, int start, int end) {
+    Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
     for (const ParcelableSpan* w : watchers) {
@@ -164,8 +164,8 @@ void SpannableStringInternal::sendSpanAdded(const ParcelableSpan* what, int star
     }
 }
 
-void SpannableStringInternal::sendSpanRemoved(const ParcelableSpan* what, int start, int end) {
-    Spanned& self = const_cast<SpannableStringInternal&>(*this);
+void SpannableString::sendSpanRemoved(const ParcelableSpan* what, int start, int end) {
+    Spannable& self = dynamic_cast<SpannableString&>(*this);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
     auto watchers = getSpans(start, end, watcherFilter);
     for (const ParcelableSpan* w : watchers) {
@@ -176,8 +176,8 @@ void SpannableStringInternal::sendSpanRemoved(const ParcelableSpan* what, int st
     }
 }
 
-void SpannableStringInternal::sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend) {
-    Spanned& self = const_cast<SpannableStringInternal&>(*this);
+void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend) {
+    Spannable& self = dynamic_cast<SpannableString&>(*this);
     int start = std::min(ostart, nstart);
     int end = std::max(oend, nend);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();

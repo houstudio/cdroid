@@ -20,10 +20,12 @@
 
 #include <string>
 #include <core/rect.h>
+#include <text/paint.h>
 #include <core/callbackbase.h>   // Runnable
 
 namespace cdroid {
-
+class Layout;
+class Path;
 class TextView;
 class Spannable;
 class Drawable;
@@ -53,12 +55,11 @@ class Canvas;
 class Editor {
 private:
     friend class TextView;
-
     class CursorController;
+    class InsertionPointCursorController;
     class TextViewPositionListener;
 
     Spannable* editable() const;
-    bool isEditing() const;
     int cursorOffset() const;
     int insertPosition();
 
@@ -66,8 +67,7 @@ private:
     void loadCursorDrawable();
     int clampHorizontalPosition(Drawable* drawable, float horizontal);
 
-    void setCursorVisible(bool visible);
-    bool isCursorVisible() const { return mCursorVisible && isEditing(); }
+    bool isCursorVisible() const;
     void setShowSoftInputOnFocus(bool show);
     bool getShowSoftInputOnFocus() const { return mShowSoftInputOnFocus; }
     void setSelectAllOnFocus(bool selectAll);
@@ -76,7 +76,6 @@ private:
     bool isTextSelectable() const { return mTextIsSelectable; }
     void beginBatchEdit();
     void endBatchEdit();
-    bool isSuggestionsEnabled() const;
 
     Drawable* mDrawableForCursor = nullptr;
     Drawable* mSelectHandleLeft = nullptr;
@@ -163,6 +162,7 @@ public:
     void prepareCursorControllers();
     void hideCursorControllers();
     void hide() { hideCursorControllers(); }
+    void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
 
 class Editor::CursorController {
@@ -173,7 +173,23 @@ public:
     virtual void updatePosition(int x, int y) {}
     virtual bool isActive() const { return false; }
 };
-
+class Editor::InsertionPointCursorController:public CursorController{
+private:
+    bool mIsDraggingCursor;
+    bool mIsTouchSnappedToHandleDuringDrag;
+    int mPrevLineDuringDrag;
+private:
+    void positionCursorDuringDrag(MotionEvent& event);
+    int getLineDuringDrag(MotionEvent& event);
+    void startCursorDrag(MotionEvent& event);
+    void performCursorDrag(MotionEvent& event);
+    void endCursorDrag(MotionEvent& event);
+public:
+    void onTouchEvent(MotionEvent&);
+    void show();
+    void hide();
+    void onTouchModeChanged(bool isInTouchMode);
+};
 class Editor::TextViewPositionListener {
 public:
     virtual ~TextViewPositionListener() = default;
