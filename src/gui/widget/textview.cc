@@ -1252,7 +1252,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         //   deferred: attaches Editor's SpanController (easy-delete/spelling) +
         //   keylistener span; both arrive with the suggestions/handles pass.
         if (mTransformation != nullptr) {
-            //sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
         }
         if (mMovement != nullptr) {
             mMovement->initialize(*this, dynamic_cast<Spannable&>(*text));
@@ -3513,15 +3513,14 @@ void TextView::setTransformationMethod(TransformationMethod*method){
     }
     if (mTransformation != nullptr) {
         if (mSpannable != nullptr) {
-            //mSpannable->removeSpan(mTransformation);
+            mSpannable->removeSpan(mTransformation);
         }
     }
     mTransformation = method;
-#if 0
-    if (method instanceof TransformationMethod2) {
-        TransformationMethod2 method2 = (TransformationMethod2) method;
-        mAllowTransformationLengthChange = !isTextSelectable() && !(mText instanceof Editable);
-        method2.setLengthChangesAllowed(mAllowTransformationLengthChange);
+    TransformationMethod2* method2 = dynamic_cast<TransformationMethod2*>(method);
+    if (method2) {
+        mAllowTransformationLengthChange = !isTextSelectable() && !(dynamic_cast<Editable*>(mText));
+        method2->setLengthChangesAllowed(mAllowTransformationLengthChange);
     } else {
         mAllowTransformationLengthChange = false;
     }
@@ -3529,7 +3528,6 @@ void TextView::setTransformationMethod(TransformationMethod*method){
     if (hasPasswordTransformationMethod()) {
         //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
     }
-#endif
     // PasswordTransformationMethod always have LTR text direction heuristics returned by
     // getTextDirectionHeuristic, needs reset
     mTextDir = getTextDirectionHeuristic();
@@ -4422,7 +4420,7 @@ std::string TextView::getAccessibilityClassName()const{
 void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
     View::onInitializeAccessibilityEventInternal(event);
 
-    const bool isPassword =false;//hasPasswordTransformationMethod();
+    const bool isPassword = hasPasswordTransformationMethod();
     event.setPassword(isPassword);
 
     if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED) {
@@ -4435,7 +4433,7 @@ void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event)
 
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     View::onInitializeAccessibilityNodeInfoInternal(info);
-    const bool isPassword =false;// hasPasswordTransformationMethod();
+    const bool isPassword =  hasPasswordTransformationMethod();
 #if 0
     info.setPassword(isPassword);
     info.setText(getText());//getTextForAccessibility());
