@@ -24,6 +24,8 @@
 #include <text/layout.h>
 #include <text/selection.h>
 #include <text/spannablestringbuilder.h>
+#include <text/inputfilter.h>
+#include <text/inputtype.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -32,8 +34,6 @@
 namespace cdroid{
 class SuggestionSpan;
 class SpellCheckSpan;
-
-
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
@@ -243,6 +243,19 @@ void TextView::initView(){
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
     mEditMode   = READONLY;
+    // 新增的成员变量初始化
+    mAutoLinkMask = 0;
+    mLinksClickable = true;
+    mCursorVisible = true;
+    mShowSoftInputOnFocus = true;
+    mSelectionStart = -1;
+    mSelectionEnd = -1;
+    mKeyListener = nullptr;
+    mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
+    mLineBreakStyle = LineBreakConfig::LINE_BREAK_STYLE_NONE;
+    mLineBreakWordStyle = LineBreakConfig::LINE_BREAK_WORD_STYLE_NONE;
     setTextColor(0xFFFFFFFF);
     setHintTextColor(0xFFFFFFFF);
     if(mOnPreDrawListener==nullptr){
@@ -804,7 +817,7 @@ void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int 
             l.onTextChanged(text, start, before, after);
         }
     }
-    if (mEditor) mEditor->sendOnTextChanged(start, before, after);
+    if (mEditor!=nullptr) mEditor->sendOnTextChanged(start, before, after);
 }
 
 void TextView::spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
@@ -812,6 +825,67 @@ void TextView::spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart,
     int newSelStart = -1, newSelEnd = -1;
     mHighlightPathBogus = true;
     LOGD("%d,%d->%d,%d",oldStart,oldEnd,newStart,newEnd);
+    if(what==Selection::SELECTION_END){
+        selChanged = true;
+        newSelEnd = newStart;
+
+        if (oldStart >= 0 || newStart >= 0) {
+            invalidateCursor(Selection::getSelectionStart(&buf), oldStart, newStart);
+            checkForResize();
+            registerForPreDraw();
+            if (mEditor != nullptr) mEditor->makeBlink();
+        }
+    }
+    if (what == Selection::SELECTION_START) {
+        selChanged = true;
+        newSelStart = newStart;
+
+        if (oldStart >= 0 || newStart >= 0) {
+            const int end = Selection::getSelectionEnd(&buf);
+            invalidateCursor(end, oldStart, newStart);
+        }
+    }
+
+    if (selChanged) {
+        mHighlightPathBogus = true;
+        if (mEditor != nullptr && !isFocused()) mEditor->mSelectionMoved = true;
+
+        if ((buf.getSpanFlags(what) & Spanned::SPAN_INTERMEDIATE) == 0) {
+            if (newSelStart < 0) {
+                newSelStart = Selection::getSelectionStart(&buf);
+            }
+            if (newSelEnd < 0) {
+                newSelEnd = Selection::getSelectionEnd(&buf);
+            }
+
+            if (mEditor != nullptr) {
+                /*mEditor->refreshTextActionMode();
+                if (!hasSelection()
+                        && mEditor->getTextActionMode() == nullptr && hasTransientState()) {
+                    // User generated selection has been removed.
+                    setHasTransientState(false);
+                }*/
+            }
+            onSelectionChanged(newSelStart, newSelEnd);
+        }
+    }
+
+    if (dynamic_cast<const UpdateAppearance*>(what) || dynamic_cast<const ParagraphStyle*>(what)
+            || dynamic_cast<const CharacterStyle*>(what)) {
+        if (true/*ims == nullptr || ims.mBatchEditNesting == 0*/) {
+            invalidate();
+            mHighlightPathBogus = true;
+            checkForResize();
+        } else {
+            //ims.mContentChanged = true;
+        }
+        if (mEditor != nullptr) {
+            //if (oldStart >= 0) mEditor->invalidateTextDisplayList(mLayout, oldStart, oldEnd);
+            //if (newStart >= 0) mEditor->invalidateTextDisplayList(mLayout, newStart, newEnd);
+            //mEditor->invalidateHandlesAndActionMode();
+        }
+    }
+
     if (dynamic_cast<const SuggestionSpan*>(what) != nullptr) {
         if (mEditor) {
             mEditor->prepareCursorControllers();
@@ -3882,7 +3956,12 @@ const TextPaint& TextView::getPaint() const{
 }
 
 bool TextView::isSuggestionsEnabled()const{
-    /*if(mEditor ==nullptr)*/return false;
+    if(mEditor ==nullptr)return false;
+    if ((mEditor->mInputType & InputType::TYPE_MASK_CLASS) != InputType::TYPE_CLASS_TEXT) {
+        return false;
+    }
+    if ((mEditor->mInputType & InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS) > 0) return false;
+    return false;
 }
 
 bool TextView::canSelectText() const{
@@ -4050,8 +4129,90 @@ void TextView::setHyphenationFrequency(int hyphenationFrequency) {
         invalidate();
     }
 }
+
 int TextView::getHyphenationFrequency() const{
     return mHyphenationFrequency;
+}
+
+void TextView::setAutoLinkMask(int mask) {
+    mAutoLinkMask = mask;
+}
+
+int TextView::getAutoLinkMask() const {
+    return mAutoLinkMask;
+}
+
+void TextView::setLinksClickable(bool whether) {
+    mLinksClickable = whether;
+}
+
+bool TextView::getLinksClickable() const {
+    return mLinksClickable;
+}
+
+// TODO: KeyListener 尚未实现，需要添加 KeyListener 类的定义
+// void TextView::setKeyListener(KeyListener* input) {
+//     mKeyListener = input;
+//     // 如果TextView是可编辑的，需要应用过滤器
+//     if (mEditableFactory != nullptr || mBufferType == BufferType::EDITABLE) {
+//         applyFilters();
+//     }
+// }
+// 
+// KeyListener* TextView::getKeyListener() const {
+//     return mKeyListener;
+// }
+
+void TextView::setFilters(const std::vector<InputFilter*>& filters) {
+    mFilters = filters;
+
+    Editable* editable = dynamic_cast<Editable*>(mText);
+    if (editable != nullptr) {
+        // Convert vector to array for Editable::setFilters
+        int count = mFilters.size();
+        InputFilter** filterArray = count > 0 ? new InputFilter*[count] : nullptr;
+        for (int i = 0; i < count; i++) {
+            filterArray[i] = mFilters[i];
+        }
+        editable->setFilters(filterArray, count);
+        if (filterArray != nullptr) {
+            delete[] filterArray;
+        }
+    }
+}
+
+std::vector<InputFilter*> TextView::getFilters() {
+    return mFilters;
+}
+
+void TextView::setLineBreakStyle(int lineBreakStyle) {
+    if (mLineBreakStyle != lineBreakStyle) {
+        mLineBreakStyle = lineBreakStyle;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getLineBreakStyle() const {
+    return mLineBreakStyle;
+}
+
+void TextView::setLineBreakWordStyle(int lineBreakWordStyle) {
+    if (mLineBreakWordStyle != lineBreakWordStyle) {
+        mLineBreakWordStyle = lineBreakWordStyle;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getLineBreakWordStyle() const {
+    return mLineBreakWordStyle;
 }
 
 bool TextView::isSingleLine()const{
@@ -4300,6 +4461,8 @@ void TextView::onDraw(Canvas& canvas) {
         layout= mHintLayout;
     }
     mTextPaint.setColor(color);
+    mHighlightPaint.setColor(mHighlightColor);
+    mHighlightPaint.setStyle(Paint::Style::FILL);
 
     canvas.save();
     const int extendedPaddingTop = getExtendedPaddingTop();
@@ -4383,8 +4546,8 @@ void TextView::onDraw(Canvas& canvas) {
     if(mEditor != nullptr){
         mEditor->onDraw(canvas, layout, highlight.get(), mHighlightPaint, cursorOffsetVertical);
     }else{
-        if(highlight)canvas.set_color(mHighlightColor);
-        canvas.set_color(color);
+        //if(highlight)canvas.set_color(mHighlightColor);
+        //canvas.set_color(color);
         layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
     //mLayout->getCaretRect(mCaretRect);

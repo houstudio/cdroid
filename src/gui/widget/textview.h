@@ -30,12 +30,17 @@
 #include <text/dynamiclayout.h>
 #include <text/editable.h>
 #include <text/transformationmethod.h>
+#include <text/method/keylistener.h>
+
 namespace cdroid {
 class Layout;
 class CompletionInfo;
 class PrecomputesText;
 class Editor;
 class MovementMethod;
+class InputFilter;
+class InputConnection;
+class EditorInfo;
 class TextView : public View{
     friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
@@ -106,9 +111,17 @@ private:
     bool mPreDrawListenerDetached;
     bool mTextSetFromXmlOrResourceId;
     bool mAllowTransformationLengthChange;
+    bool mLinksClickable;
+    bool mCursorVisible;
+    bool mShowSoftInputOnFocus;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
+    int mAutoLinkMask;
+    int mSelectionStart;
+    int mSelectionEnd;
+    int mLineBreakStyle;
+    int mLineBreakWordStyle;
     TextPaint mTextPaint;
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
@@ -123,6 +136,7 @@ private:
     int mAutoSizeStepGranularityInPx;
     std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
+    std::vector<InputFilter*> mFilters;
 
     Drawables*mDrawables;
     Marquee*mMarquee;
@@ -130,6 +144,7 @@ private:
     mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
     MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
+    KeyListener* mKeyListener = nullptr;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -338,8 +353,22 @@ public:
     bool hasPasswordTransformationMethod()const;
     void setBreakStrategy(int breakStrategy);
     int getBreakStrategy()const;
+    void setHyphenationFrequency(int hyphenationFrequency);
+    int getHyphenationFrequency()const;
+    void setAutoLinkMask(int mask);
+    int getAutoLinkMask()const;
+    void setLinksClickable(bool whether);
+    bool getLinksClickable()const;
+    void setKeyListener(KeyListener* input);
+    KeyListener* getKeyListener()const;
+    void setFilters(const std::vector<InputFilter*>& filters);
+    std::vector<InputFilter*> getFilters();
     int getLineHeight()const;
     void setLineHeight(int height);
+    void setLineBreakStyle(int lineBreakStyle);
+    int getLineBreakStyle()const;
+    void setLineBreakWordStyle(int lineBreakWordStyle);
+    int getLineBreakWordStyle()const;
     void setTextSize(float size);
     void setTextSize(int unit, float size);
     float getTextSize()const;
@@ -352,8 +381,6 @@ public:
     bool isFallbackLineSpacing()const;
     float getLetterSpacing() const;
     void setLetterSpacing(float letterSpacing);
-    void setHyphenationFrequency(int hyphenationFrequency);
-    int getHyphenationFrequency()const;
     void setJustificationMode(int justificationMode);
     int getJustificationMode() const;
     void setTextColor(int color);

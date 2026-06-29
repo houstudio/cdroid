@@ -622,7 +622,7 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
 
         if (numDecorations != 0) {
             for (int i = 0; i < numDecorations; i++) {
-                const DecorationInfo info = decorations->at(i);
+                const DecorationInfo& info = decorations->at(i);
 
                 const int decorationStart = std::max(info.start, start);
                 const int decorationEnd = std::min(info.end, offset);
@@ -805,7 +805,7 @@ float TextLine::handleRun(int start, int measureLimit,
         activePaint.set(*mPaint);
         int activeStart = i;
         int activeEnd = mlimit;
-        DecorationInfo decorationInfo = mDecorationInfo;
+        DecorationInfo& decorationInfo = mDecorationInfo;
         mDecorations.clear();
         for (int j = i, jnext; j < mlimit; j = jnext) {
             jnext = mCharacterStyleSpanSet->getNextTransition(mStart + j, mStart + inext) - mStart;

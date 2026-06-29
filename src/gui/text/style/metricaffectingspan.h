@@ -50,7 +50,7 @@ public:
         return getSpanTypeIdInternal();
     }
     int getSpanTypeIdInternal() {
-        return TextUtils.SUBSCRIPT_SPAN;
+        return TextUtils::SUBSCRIPT_SPAN;
     }*/
     void updateDrawState(TextPaint& textPaint)const override;
     void updateMeasureState(TextPaint& textPaint)const override;
@@ -63,7 +63,7 @@ public:
         return getSpanTypeIdInternal();
     }
     int getSpanTypeIdInternal() {
-        return TextUtils.SUPERSCRIPT_SPAN;
+        return TextUtils::SUPERSCRIPT_SPAN;
     }*/
     void updateDrawState(TextPaint& textPaint)const override;
     void updateMeasureState(TextPaint& textPaint)const override;

@@ -37,7 +37,7 @@ public:
     return getSpanTypeIdInternal();
 }
 int getSpanTypeIdInternal() {
-    return TextUtils.SUBSCRIPT_SPAN;
+    return TextUtils::SUBSCRIPT_SPAN;
 }*/
 void SubscriptSpan::updateDrawState(TextPaint& textPaint)const {
     textPaint.baselineShift -= (int) (textPaint.ascent() / 2);
@@ -63,21 +63,19 @@ void SuperscriptSpan::updateMeasureState(TextPaint& textPaint)const {
 
 //class StyleSpan:public MetricAffectingSpan{
 void StyleSpan::apply(Paint& paint, int style, int fontWeightAdjustment){
-    int oldStyle;
+    int oldStyle =0;
     Typeface* old = paint.getTypeface();
-    if (old == nullptr) {
-        oldStyle = 0;
-    } else {
+    if (old != nullptr) {
         oldStyle = old->getStyle();
     }
-    int want = oldStyle | style;
+    const int want = oldStyle | style;
     Typeface* tf;
     if (old == nullptr) {
         tf = Typeface::defaultFromStyle(want);
     } else {
         tf = Typeface::create(old, want);
     }
-    int fake = want & ~tf->getStyle();
+    const int fake = want & ~tf->getStyle();
     if ((fake & Typeface::BOLD) != 0) {
         paint.setFakeBoldText(true);
     }

@@ -12,13 +12,15 @@ class TextLine {
 private:
     class DecorationInfo {
     public:
-        bool isStrikeThruText;
-        bool isUnderlineText;
-        int underlineColor;
-        float underlineThickness;
+        bool isStrikeThruText=false;
+        bool isUnderlineText=false;
+        int underlineColor=0;
+        float underlineThickness=0;
         int start = -1;
         int end = -1;
     public:
+        DecorationInfo():isStrikeThruText(false),isUnderlineText(false),
+            underlineColor(0),underlineThickness(0){}
         bool hasDecoration() const{
             return isStrikeThruText || isUnderlineText || underlineColor != 0;
         }
