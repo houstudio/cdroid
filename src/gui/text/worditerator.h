@@ -57,40 +57,40 @@ public:
     /** Sets the char sequence to analyze over the [start, end] window. */
     void setCharSequence(const CharSequence* charSequence, int start, int end);
 
-    int preceding(int offset);
-    int following(int offset);
-    bool isBoundary(int offset);
+    int preceding(int offset)const;
+    int following(int offset)const;
+    bool isBoundary(int offset)const;
 
     /** Position of next boundary after the given offset, or DONE. */
-    int nextBoundary(int offset);
+    int nextBoundary(int offset)const;
     /** Position of boundary preceding the given offset, or DONE. */
-    int prevBoundary(int offset);
+    int prevBoundary(int offset)const;
 
     /** First-character index of the word containing offset, or DONE. */
-    int getBeginning(int offset);
+    int getBeginning(int offset)const;
     /** Last-character-plus-one index of the word containing offset, or DONE. */
-    int getEnd(int offset);
+    int getEnd(int offset)const;
 
-    int getPrevWordBeginningOnTwoWordsBoundary(int offset);
-    int getNextWordEndOnTwoWordBoundary(int offset);
+    int getPrevWordBeginningOnTwoWordsBoundary(int offset)const;
+    int getNextWordEndOnTwoWordBoundary(int offset)const;
 
-    int getPunctuationBeginning(int offset);
-    int getPunctuationEnd(int offset);
+    int getPunctuationBeginning(int offset)const;
+    int getPunctuationEnd(int offset)const;
 
-    bool isOnPunctuation(int offset);
-    bool isAfterPunctuation(int offset);
+    bool isOnPunctuation(int offset)const;
+    bool isAfterPunctuation(int offset)const;
     static bool isMidWordPunctuation(int codePoint);
 private:
-    int getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBoundary);
-    int getEnd(int offset, bool getNextWordEndOnTwoWordBoundary);
+    int getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBoundary)const;
+    int getEnd(int offset, bool getNextWordEndOnTwoWordBoundary)const;
 
-    bool isAfterLetterOrDigit(int offset);
-    bool isOnLetterOrDigit(int offset);
+    bool isAfterLetterOrDigit(int offset)const;
+    bool isOnLetterOrDigit(int offset)const;
 
-    bool isPunctuationStartBoundary(int offset);
-    bool isPunctuationEndBoundary(int offset);
+    bool isPunctuationStartBoundary(int offset)const;
+    bool isPunctuationEndBoundary(int offset)const;
 
-    void checkOffsetIsValid(int offset);
+    void checkOffsetIsValid(int offset)const;
 
     const CharSequence* mCharSeq = nullptr;
     int mStart = 0;

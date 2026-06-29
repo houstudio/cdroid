@@ -90,7 +90,7 @@ void WordIterator::setCharSequence(const CharSequence* charSequence, int start, 
 //  Boundary walks — faithful ports of preceding/following/isBoundary. ubrk works
 //  0-based over the windowed buffer, hence the ± mStart translation.
 // =====================================================================================
-int WordIterator::preceding(int offset) {
+int WordIterator::preceding(int offset) const{
     checkOffsetIsValid(offset);
     while (true) {
         const int32_t b = ubrk_preceding(mImpl->bi, offset - mStart);
@@ -100,7 +100,7 @@ int WordIterator::preceding(int offset) {
     }
 }
 
-int WordIterator::following(int offset) {
+int WordIterator::following(int offset) const{
     checkOffsetIsValid(offset);
     while (true) {
         const int32_t b = ubrk_following(mImpl->bi, offset - mStart);
@@ -110,18 +110,18 @@ int WordIterator::following(int offset) {
     }
 }
 
-bool WordIterator::isBoundary(int offset) {
+bool WordIterator::isBoundary(int offset) const{
     checkOffsetIsValid(offset);
     return ubrk_isBoundary(mImpl->bi, offset - mStart);
 }
 
-int WordIterator::nextBoundary(int offset) {
+int WordIterator::nextBoundary(int offset) const{
     checkOffsetIsValid(offset);
     const int32_t b = ubrk_following(mImpl->bi, offset - mStart);
     return (b == UBRK_DONE) ? DONE : b + mStart;
 }
 
-int WordIterator::prevBoundary(int offset) {
+int WordIterator::prevBoundary(int offset) const{
     checkOffsetIsValid(offset);
     const int32_t b = ubrk_preceding(mImpl->bi, offset - mStart);
     return (b == UBRK_DONE) ? DONE : b + mStart;
@@ -130,12 +130,23 @@ int WordIterator::prevBoundary(int offset) {
 // =====================================================================================
 //  getBeginning / getEnd — the word-boundary queries used by Editor.selectCurrentWord.
 // =====================================================================================
-int WordIterator::getBeginning(int offset) { return getBeginning(offset, false); }
-int WordIterator::getEnd(int offset) { return getEnd(offset, false); }
-int WordIterator::getPrevWordBeginningOnTwoWordsBoundary(int offset) { return getBeginning(offset, true); }
-int WordIterator::getNextWordEndOnTwoWordBoundary(int offset) { return getEnd(offset, true); }
+int WordIterator::getBeginning(int offset) const{
+    return getBeginning(offset, false);
+}
 
-int WordIterator::getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBoundary) {
+int WordIterator::getEnd(int offset) const{
+    return getEnd(offset, false);
+}
+
+int WordIterator::getPrevWordBeginningOnTwoWordsBoundary(int offset) const{
+    return getBeginning(offset, true);
+}
+
+int WordIterator::getNextWordEndOnTwoWordBoundary(int offset) const{
+    return getEnd(offset, true);
+}
+
+int WordIterator::getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBoundary) const{
     checkOffsetIsValid(offset);
     if (isOnLetterOrDigit(offset)) {
         if (ubrk_isBoundary(mImpl->bi, offset - mStart)
@@ -154,7 +165,7 @@ int WordIterator::getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBo
     return DONE;
 }
 
-int WordIterator::getEnd(int offset, bool getNextWordEndOnTwoWordBoundary) {
+int WordIterator::getEnd(int offset, bool getNextWordEndOnTwoWordBoundary) const{
     checkOffsetIsValid(offset);
     if (isAfterLetterOrDigit(offset)) {
         if (ubrk_isBoundary(mImpl->bi, offset - mStart)
@@ -176,7 +187,7 @@ int WordIterator::getEnd(int offset, bool getNextWordEndOnTwoWordBoundary) {
 // =====================================================================================
 //  Punctuation queries — faithful ports.
 // =====================================================================================
-int WordIterator::getPunctuationBeginning(int offset) {
+int WordIterator::getPunctuationBeginning(int offset) const{
     checkOffsetIsValid(offset);
     while (offset != DONE && !isPunctuationStartBoundary(offset)) {
         offset = prevBoundary(offset);
@@ -184,7 +195,7 @@ int WordIterator::getPunctuationBeginning(int offset) {
     return offset;
 }
 
-int WordIterator::getPunctuationEnd(int offset) {
+int WordIterator::getPunctuationEnd(int offset) const{
     checkOffsetIsValid(offset);
     while (offset != DONE && !isPunctuationEndBoundary(offset)) {
         offset = nextBoundary(offset);
@@ -192,7 +203,7 @@ int WordIterator::getPunctuationEnd(int offset) {
     return offset;
 }
 
-bool WordIterator::isOnPunctuation(int offset) {
+bool WordIterator::isOnPunctuation(int offset) const{
     if (mStart <= offset && offset < mEnd && mCharSeq) {
         const int codePoint = Character::codePointAt(mCharSeq, offset);
         return TextUtils::isPunctuation(codePoint);
@@ -200,7 +211,7 @@ bool WordIterator::isOnPunctuation(int offset) {
     return false;
 }
 
-bool WordIterator::isAfterPunctuation(int offset) {
+bool WordIterator::isAfterPunctuation(int offset) const{
     if (mStart < offset && offset <= mEnd && mCharSeq) {
         const int codePoint = Character::codePointBefore(mCharSeq, offset);
         return TextUtils::isPunctuation(codePoint);
@@ -209,18 +220,18 @@ bool WordIterator::isAfterPunctuation(int offset) {
 }
 
 bool WordIterator::isMidWordPunctuation(int codePoint) {
-    auto wb = u_getIntPropertyValue(codePoint, UCHAR_WORD_BREAK);
+    const auto wb = u_getIntPropertyValue(codePoint, UCHAR_WORD_BREAK);
 
     // Check if the word break property matches MIDLETTER, MIDNUMLET, or SINGLE_QUOTE
     // These indicate punctuation that can appear within a word without necessarily breaking it.
-    return (wb == U_WB_MIDLETTER || wb == U_WB_MIDNUMLET || wb == U_WB_SINGLE_QUOTE);
+    return (wb == U_WB_MIDLETTER) || (wb == U_WB_MIDNUMLET) || (wb == U_WB_SINGLE_QUOTE);
 }
 
-bool WordIterator::isPunctuationStartBoundary(int offset) {
+bool WordIterator::isPunctuationStartBoundary(int offset) const{
     return isOnPunctuation(offset) && !isAfterPunctuation(offset);
 }
 
-bool WordIterator::isPunctuationEndBoundary(int offset) {
+bool WordIterator::isPunctuationEndBoundary(int offset) const{
     return !isOnPunctuation(offset) && isAfterPunctuation(offset);
 }
 
@@ -233,7 +244,7 @@ static bool isLetterOrDigit(int codePoint) {
     return Character::isLetter(codePoint) || Character::isDigit(codePoint);
 }
 
-bool WordIterator::isAfterLetterOrDigit(int offset) {
+bool WordIterator::isAfterLetterOrDigit(int offset) const{
     if (mStart < offset && offset <= mEnd && mCharSeq) {
         const int codePoint = Character::codePointBefore(mCharSeq, offset);
         if (isLetterOrDigit(codePoint)) return true;
@@ -241,7 +252,7 @@ bool WordIterator::isAfterLetterOrDigit(int offset) {
     return false;
 }
 
-bool WordIterator::isOnLetterOrDigit(int offset) {
+bool WordIterator::isOnLetterOrDigit(int offset) const{
     if (mStart <= offset && offset < mEnd && mCharSeq) {
         const int codePoint = Character::codePointAt(mCharSeq, offset);
         if (isLetterOrDigit(codePoint)) return true;
@@ -249,7 +260,7 @@ bool WordIterator::isOnLetterOrDigit(int offset) {
     return false;
 }
 
-void WordIterator::checkOffsetIsValid(int offset) {
+void WordIterator::checkOffsetIsValid(int offset) const{
     // Android throws IllegalArgumentException; we just assert in debug builds —
     // every public method already bounds-checks via the isOn*/preceding probes.
     assert(mStart <= offset && offset <= mEnd);
