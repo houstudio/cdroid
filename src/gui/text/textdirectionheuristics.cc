@@ -1,16 +1,16 @@
 #include <functional>
+#include <text/character.h>
 #include <text/spannablestring.h>
 #include <view/view.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
-using TextDirectionAlgorithm =std::function<int(CharSequence*,int,int)>;// checkRtl(CharSequence* cs, int start, int count);
+using TextDirectionAlgorithm =std::function<int(const CharSequence*,int,int)>;// checkRtl(CharSequence* cs, int start, int count);
 
 static constexpr int STATE_TRUE = 0;
 static constexpr int STATE_FALSE = 1;
 static constexpr int STATE_UNKNOWN = 2;
 
 static int isRtlCodePoint(int codePoint) {
-#if 0
     switch (Character::getDirectionality(codePoint)) {
         case Character::DIRECTIONALITY_LEFT_TO_RIGHT:
             return STATE_FALSE;
@@ -51,14 +51,12 @@ static int isRtlCodePoint(int codePoint) {
         default:
             return STATE_UNKNOWN;
     }
-#else
     return 2;
-#endif
 }
 class TextDirectionHeuristicImpl:public TextDirectionHeuristic {
 private:
     TextDirectionAlgorithm mAlgorithm;
-    bool doCheck(CharSequence* cs, int start, int count) const{
+    bool doCheck(const CharSequence* cs, int start, int count) const{
         switch(mAlgorithm/*.checkRtl*/(cs, start, count)) {
         case STATE_TRUE:  return true;
         case STATE_FALSE: return false;
@@ -77,7 +75,7 @@ public:
         return 0;//isRtl(CharBuffer.wrap(array), start, count);
     }
 
-    bool isRtl(CharSequence* cs, int start, int count)const override{
+    bool isRtl(const CharSequence* cs, int start, int count)const override{
         if (cs == nullptr || start < 0 || count < 0 || cs->length() - count < start) {
             //throw new IllegalArgumentException();
         }
@@ -103,13 +101,11 @@ public:
 };
 
 //class FirstStrong :public TextDirectionAlgorithm {
-static int FirstString_checkRtl(CharSequence* cs, int start, int count) {
+static int FirstString_checkRtl(const CharSequence* cs, int start, int count) {
     int result = STATE_UNKNOWN;
     int openIsolateCount = 0;
-    /*for (int cp, i = start, end = start + count;
-            i < end && result == STATE_UNKNOWN;
-            i += Character.charCount(cp)) {
-        cp = Character.codePointAt(cs, i);
+    for (int cp, i = start, end = start + count; i < end && result == STATE_UNKNOWN; i += Character::charCount(cp)) {
+        cp = Character::codePointAt(cs, i);
         if (0x2066 <= cp && cp <= 0x2068) { // Opening isolates
             openIsolateCount += 1;
         } else if (cp == 0x2069) { // POP DIRECTIONAL ISOLATE (PDI)
@@ -118,18 +114,18 @@ static int FirstString_checkRtl(CharSequence* cs, int start, int count) {
             // Only consider the characters outside isolate pairs
             result = isRtlCodePoint(cp);
         }
-    }*/
+    }
     return result;
 }
 
 
 //class AnyStrong implements TextDirectionAlgorithm {
 
-static int AnyStrong_checkRtl(CharSequence* cs, int start, int count,bool mLookForRtl) {
+static int AnyStrong_checkRtl(const CharSequence* cs, int start, int count,bool mLookForRtl) {
     bool haveUnlookedFor = false;
     int openIsolateCount = 0;
-    for (int cp, i = start, end = start + count; i < end; i += 1/*Character.charCount(cp)*/) {
-        cp = 0;//Character.codePointAt(cs, i);
+    for (int cp, i = start, end = start + count; i < end; i += Character::charCount(cp)) {
+        cp = Character::codePointAt(cs, i);
         if (0x2066 <= cp && cp <= 0x2068) { // Opening isolates
             openIsolateCount += 1;
         } else if (cp == 0x2069) { // POP DIRECTIONAL ISOLATE (PDI)
@@ -175,11 +171,11 @@ protected:
 
 namespace{
     TextDirectionAlgorithm FIRSTSTRONG_INSTANCE = FirstString_checkRtl;
-    TextDirectionAlgorithm ANYSTRONG_RTL = [](CharSequence* cs, int start, int count){
+    TextDirectionAlgorithm ANYSTRONG_RTL = [](const CharSequence* cs, int start, int count){
         return AnyStrong_checkRtl(cs,start,count,true);
     };
 
-    TextDirectionAlgorithm ANYSTRONG_LTR =  [](CharSequence* cs, int start, int count){
+    TextDirectionAlgorithm ANYSTRONG_LTR =  [](const CharSequence* cs, int start, int count){
         return AnyStrong_checkRtl(cs,start,count,true);
     };
 
