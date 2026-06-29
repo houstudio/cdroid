@@ -47,6 +47,63 @@ typedef enum UGraphemeClusterBreak {
 #endif  // U_HIDE_DEPRECATED_API
 } UGraphemeClusterBreak;
 
+typedef enum UWordBreakValues {
+    /*
+     * Note: UWordBreakValues constants are parsed by preparseucd.py.
+     * It matches lines like
+     *     U_WB_<Unicode Word_Break value name>
+     */
+
+    U_WB_OTHER = 0,             /*[XX]*/
+    U_WB_ALETTER = 1,           /*[LE]*/
+    U_WB_FORMAT = 2,            /*[FO]*/
+    U_WB_KATAKANA = 3,          /*[KA]*/
+    U_WB_MIDLETTER = 4,         /*[ML]*/
+    U_WB_MIDNUM = 5,            /*[MN]*/
+    U_WB_NUMERIC = 6,           /*[NU]*/
+    U_WB_EXTENDNUMLET = 7,      /*[EX]*/
+    /** @stable ICU 4.0 */
+    U_WB_CR = 8,                /*[CR]*/ /* from here on: new in Unicode 5.1/ICU 4.0 */
+    /** @stable ICU 4.0 */
+    U_WB_EXTEND = 9,            /*[Extend]*/
+    /** @stable ICU 4.0 */
+    U_WB_LF = 10,               /*[LF]*/
+    /** @stable ICU 4.0 */
+    U_WB_MIDNUMLET =11,         /*[MB]*/
+    /** @stable ICU 4.0 */
+    U_WB_NEWLINE =12,           /*[NL]*/
+    /** @stable ICU 50 */
+    U_WB_REGIONAL_INDICATOR = 13,   /*[RI]*/ /* new in Unicode 6.2/ICU 50 */
+    /** @stable ICU 52 */
+    U_WB_HEBREW_LETTER = 14,    /*[HL]*/ /* from here on: new in Unicode 6.3/ICU 52 */
+    /** @stable ICU 52 */
+    U_WB_SINGLE_QUOTE = 15,     /*[SQ]*/
+    /** @stable ICU 52 */
+    U_WB_DOUBLE_QUOTE = 16,     /*[DQ]*/
+    /** @stable ICU 58 */
+    U_WB_E_BASE = 17,           /*[EB]*/ /* from here on: new in Unicode 9.0/ICU 58 */
+    /** @stable ICU 58 */
+    U_WB_E_BASE_GAZ = 18,       /*[EBG]*/
+    /** @stable ICU 58 */
+    U_WB_E_MODIFIER = 19,       /*[EM]*/
+    /** @stable ICU 58 */
+    U_WB_GLUE_AFTER_ZWJ = 20,   /*[GAZ]*/
+    /** @stable ICU 58 */
+    U_WB_ZWJ = 21,              /*[ZWJ]*/
+    /** @stable ICU 62 */
+    U_WB_WSEGSPACE = 22,        /*[WSEGSPACE]*/
+
+#ifndef U_HIDE_DEPRECATED_API
+    /**
+     * One more than the highest normal UWordBreakValues value.
+     * The highest value is available via u_getIntPropertyMaxValue(UCHAR_WORD_BREAK).
+     *
+     * @deprecated ICU 58 The numeric value may change over time, see ICU ticket #12420.
+     */
+    U_WB_COUNT = 23
+#endif  // U_HIDE_DEPRECATED_API
+} UWordBreakValues;
+
 typedef enum UProperty {
     /* Binary properties start at 0 */
     UCHAR_ALPHABETIC=0,

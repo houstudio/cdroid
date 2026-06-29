@@ -20,6 +20,7 @@
 #include <text/textutils.h>      // TextUtils::getChars, TextUtils::isPunctuation
 #include <unicode/ubrk.h>        // UBreakIterator (C API — matches minikin/myicu convention)
 #include <unicode/utypes.h>      // UErrorCode, U_ZERO_ERROR
+#include <unicode/uchar.h>
 #include <algorithm>
 #include <cassert>
 
@@ -205,6 +206,14 @@ bool WordIterator::isAfterPunctuation(int offset) {
         return TextUtils::isPunctuation(codePoint);
     }
     return false;
+}
+
+bool WordIterator::isMidWordPunctuation(int codePoint) {
+    auto wb = u_getIntPropertyValue(codePoint, UCHAR_WORD_BREAK);
+
+    // Check if the word break property matches MIDLETTER, MIDNUMLET, or SINGLE_QUOTE
+    // These indicate punctuation that can appear within a word without necessarily breaking it.
+    return (wb == U_WB_MIDLETTER || wb == U_WB_MIDNUMLET || wb == U_WB_SINGLE_QUOTE);
 }
 
 bool WordIterator::isPunctuationStartBoundary(int offset) {

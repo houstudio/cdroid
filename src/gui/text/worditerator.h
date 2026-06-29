@@ -79,7 +79,7 @@ public:
 
     bool isOnPunctuation(int offset);
     bool isAfterPunctuation(int offset);
-
+    static bool isMidWordPunctuation(int codePoint);
 private:
     int getBeginning(int offset, bool getPrevWordBeginningOnTwoWordsBoundary);
     int getEnd(int offset, bool getNextWordEndOnTwoWordBoundary);
