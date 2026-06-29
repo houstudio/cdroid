@@ -108,8 +108,10 @@ void Layout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cu
     const int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
     if (lastLine < 0) return;
 
+    canvas.save();
     drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
     drawText(canvas, firstLine, lastLine);
+    canvas.restore();
 }
 
 bool Layout::isJustificationRequired(int lineNum) const{
@@ -431,6 +433,7 @@ void Layout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPai
         if (cursorOffsetVertical != 0) canvas.translate(0, cursorOffsetVertical);
         //canvas.drawPath(highlight, highlightPaint);
         Paint::Style style=highlightPaint->getStyle();
+        canvas.set_color(highlightPaint->getColor());
         highlight->append_to_context(&canvas);
         canvas.fill();
         if (cursorOffsetVertical != 0) canvas.translate(0, -cursorOffsetVertical);

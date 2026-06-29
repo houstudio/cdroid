@@ -226,6 +226,7 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
     std::shared_ptr<const minikin::Font> currentFontRef = nullptr;
     Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
     size_t glyphIdx=0;
+    c.set_color(getColor());
     while(glyphIdx < layout.nGlyphs()) {
         // minikin14: getFontRef 返回 shared_ptr<Font>，通过 typeface() 获取 MinikinFont
         const std::shared_ptr<const minikin::Font>& glyphFontRef = layout.getFontRef(glyphIdx);
