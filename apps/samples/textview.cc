@@ -2,6 +2,7 @@
 #include<widget/textview.h>
 #include<widget/linearlayout.h>
 #include<porting/cdlog.h>
+#include<text/spannablestringbuilder.h>
 #include<core/app.h>
 struct TestString{
     const char*text;
@@ -184,26 +185,15 @@ int main(int argc,const char*argv[]){
         layout->addView(tv,layoutParams);
         if(i>=8&&i<=10)tv->setLineSpacing(4,1.00);
     }
-#if 0
-    SpannableStringBuilder spanText;
-    spanText.append("Span sample: ");
-    spanText.append("RED ", std::vector<std::shared_ptr<CharacterStyle>>{
-        std::make_shared<ForegroundColorSpan>(0xFFFF6666),
-        std::make_shared<AbsoluteSizeSpan>(24)
+    SpannableStringBuilder* spanText=new SpannableStringBuilder();
+    spanText->append(u"Span sample:",0,12);
+    spanText->append(u"RED ", {
+        new ForegroundColorSpan(0xFFFF6666),
+        new AbsoluteSizeSpan(24) }, 0);
+    spanText->append(u"GREEN ",{
+        new ForegroundColorSpan(0xFF66FF66),
+        new AbsoluteSizeSpan(18)
     }, 0);
-    spanText.append("GREEN ", std::vector<std::shared_ptr<CharacterStyle>>{
-        std::make_shared<ForegroundColorSpan>(0xFF66FF66),
-        std::make_shared<AbsoluteSizeSpan>(18)
-    }, 0);
-    spanText.append("Bold ", std::make_shared<StyleSpan>(Typeface::BOLD), 0);
-    spanText.append("Italic ", std::make_shared<StyleSpan>(Typeface::ITALIC), 0);
-    spanText.append("Underline ", std::make_shared<UnderlineSpan>(), 0);
-    spanText.append("Strikethrough ",std::make_shared<StrikethroughSpan>(),0);
-    spanText.append("RelativeSize X",std::make_shared<RelativeSizeSpan>(1.2),0);
-    spanText.append("2",std::make_shared<SuperscriptSpan>(),0);
-    spanText.append("H",std::make_shared<StyleSpan>(Typeface::ITALIC), 0);
-    spanText.append("2",std::make_shared<SubscriptSpan>(),0);
-    spanText.append(" cdroid",std::make_shared<URLSpan>("http://www.gitee.com/houstudio/Cdroid"),0);
     TextView* spanTv = new TextView("", 0, 0);
     spanTv->setText(spanText);
     spanTv->setTextSize(24);
@@ -212,7 +202,7 @@ int main(int argc,const char*argv[]){
     spanTv->setBackgroundColor(0xFF333333);
     spanTv->setSingleLine(false);
     layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
-#endif
+
     TextView*tv=new TextView("textview with background drawable",0,0);
     tv->setBackgroundResource("cdroid:drawable/btn_default.xml");
     layout->addView(tv);
