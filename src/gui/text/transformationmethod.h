@@ -14,7 +14,7 @@ public:
 class TransformationMethod2:public TransformationMethod {
 public:
     //@UnsupportedAppUsage
-    void setLengthChangesAllowed(bool allowLengthChanges);
+    virtual void setLengthChangesAllowed(bool allowLengthChanges){};
 };
 }/*endof namespace*/
 #endif/*__TRANSFORMATION_METHOD_H__*/

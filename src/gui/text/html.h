@@ -98,19 +98,19 @@ private:
     static constexpr int TO_HTML_PARAGRAPH_FLAG = 0x00000001;
 private:
     Html()=default;
-    static void withinHtml(std::stringstream& out, Spanned* text, int option);
-    static void encodeTextAlignmentByDiv(std::stringstream& out, Spanned* text, int option);
-    static void withinDiv(std::stringstream& out, Spanned* text, int start, int end, int option);
-    static std::string getTextDirection(Spanned* text, int start, int end);
-    static std::string getTextStyles(Spanned* text, int start, int end, bool forceNoVerticalMargin, bool includeTextAlign);
+    static void withinHtml(std::stringstream& out, const Spanned& text, int option);
+    static void encodeTextAlignmentByDiv(std::stringstream& out,const Spanned& text, int option);
+    static void withinDiv(std::stringstream& out,const Spanned& text, int start, int end, int option);
+    static std::string getTextDirection(const Spanned& text, int start, int end);
+    static std::string getTextStyles(const Spanned& text, int start, int end, bool forceNoVerticalMargin, bool includeTextAlign);
 
-    static void withinBlockquote(std::stringstream& out, Spanned* text, int start, int end, int option);
-    static void withinBlockquoteIndividual(std::stringstream& out, Spanned* text, int start, int end);
-    static void withinBlockquoteConsecutive(std::stringstream& out, Spanned* text, int start, int end);
+    static void withinBlockquote(std::stringstream& out,const Spanned& text, int start, int end, int option);
+    static void withinBlockquoteIndividual(std::stringstream& out,const Spanned& text, int start, int end);
+    static void withinBlockquoteConsecutive(std::stringstream& out,const Spanned& text, int start, int end);
     static float getDisplayMetricsDensity();
     //static float getDisplayMetricsDensity$ravenwood();
-    static void withinParagraph(std::stringstream& out, Spanned* text, int start, int end);
-    static void withinStyle(std::stringstream& out, CharSequence* text, int start, int end);
+    static void withinParagraph(std::stringstream& out,const Spanned& text, int start, int end);
+    static void withinStyle(std::stringstream& out,const CharSequence& text, int start, int end);
 public:
     /**
      * Returns displayable styled text from the provided HTML string with the legacy flags
@@ -150,7 +150,7 @@ public:
     /**
      * @deprecated use {@link #toHtml(Spanned, int)} instead.
      */
-    static std::string toHtml(Spanned* text);
+    static std::string toHtml(const Spanned& text);
 
     /**
      * Returns an HTML representation of the provided Spanned text. A best effort is
@@ -162,9 +162,9 @@ public:
      *     {@link #TO_HTML_PARAGRAPH_LINES_INDIVIDUAL}
      * @return string containing input converted to HTML
      */
-    static std::string toHtml(Spanned* text, int option);
+    static std::string toHtml(const Spanned& text, int option);
 
-    static std::string escapeHtml(CharSequence* text);
+    static std::string escapeHtml(const CharSequence& text);
 };/*endof Html*/
 
 #if 0
@@ -289,39 +289,39 @@ class HtmlToSpannedConverter implements ContentHandler {
         return 2;
     }
 
-    private static void appendNewlines(Editable text, int minNewline);
+    private static void appendNewlines(Editable& text, int minNewline);
 
-    private static void startBlockElement(Editable text, Attributes attributes, int margin);
+    private static void startBlockElement(Editable& text, Attributes attributes, int margin);
 
-    private static void endBlockElement(Editable text);
+    private static void endBlockElement(Editable& text);
 
-    private static void handleBr(Editable text) {
+    private static void handleBr(Editable& text) {
         text.append('\n');
     }
 
-    private void startLi(Editable text, Attributes attributes) {
+    private void startLi(Editable& text, Attributes attributes) {
         startBlockElement(text, attributes, getMarginListItem());
         start(text, new Bullet());
         startCssStyle(text, attributes);
     }
 
-    private static void endLi(Editable text) {
+    private static void endLi(Editable& text) {
         endCssStyle(text);
         endBlockElement(text);
         end(text, Bullet.class, new BulletSpan());
     }
 
-    private void startBlockquote(Editable text, Attributes attributes) {
+    private void startBlockquote(Editable& text, Attributes attributes) {
         startBlockElement(text, attributes, getMarginBlockquote());
         start(text, new Blockquote());
     }
 
-    private static void endBlockquote(Editable text) {
+    private static void endBlockquote(Editable& text) {
         endBlockElement(text);
         end(text, Blockquote.class, new QuoteSpan());
     }
 
-    private void startHeading(Editable text, Attributes attributes, int level) {
+    private void startHeading(Editable& text, Attributes attributes, int level) {
         startBlockElement(text, attributes, getMarginHeading());
         start(text, new Heading(level));
     }
@@ -342,23 +342,23 @@ class HtmlToSpannedConverter implements ContentHandler {
         }
     }
 
-    private static void setSpanFromMark(Spannable text, Object mark, Object... spans) {
+    private static void setSpanFromMark(Spannable& text, ParcelableSpan& mark, const std::vector<ParcelableSpan*>&spans) {
         int where = text.getSpanStart(mark);
         text.removeSpan(mark);
         int len = text.length();
         if (where != len) {
-            for (Object span : spans) {
-                text.setSpan(span, where, len, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            for (auto span : spans) {
+                text.setSpan(span, where, len, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
             }
         }
     }
 
-    private static void start(Editable text, Object mark) {
+    private static void start(Editable& text, Object mark) {
         int len = text.length();
-        text.setSpan(mark, len, len, Spannable.SPAN_INCLUSIVE_EXCLUSIVE);
+        text.setSpan(mark, len, len, Spannable::SPAN_INCLUSIVE_EXCLUSIVE);
     }
 
-    private static void end(Editable text, Class kind, Object repl) {
+    private static void end(Editable& text, SpanFilter& kind, Object repl) {
         int len = text.length();
         Object obj = getLast(text, kind);
         if (obj != null) {

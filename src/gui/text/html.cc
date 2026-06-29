@@ -1,6 +1,17 @@
-#include <core/html.h>
+#include <text/html.h>
+#include <text/textutils.h>
+#include <text/style/alignmentspan.h>
+#include <text/style/characterstyles.h>
+#include <text/style/clickablespan.h>
+#include <text/style/leadingmarginspan.h>
+#include <text/style/linebackgroundspan.h>
+#include <text/style/lineheightspan.h>
+#include <text/style/metricaffectingspan.h>
+#include <text/style/paragraphstyles.h>
+#include <text/style/tabstopspan.h>
+#include <text/style/wraptogetherspan.h>
+#include <expat.h>
 namespace cdroid{
-#if 0
 Spanned* Html::fromHtml(const std::string& source) {
     return fromHtml(source, FROM_HTML_MODE_LEGACY, nullptr, nullptr);
 }
@@ -31,45 +42,44 @@ Spanned* Html::fromHtml(const std::string& source, int flags, ImageGetter imageG
     return nullptr;
 }
 
-std::string Html::toHtml(Spanned* text) {
+std::string Html::toHtml(const Spanned& text) {
     return toHtml(text, TO_HTML_PARAGRAPH_LINES_CONSECUTIVE);
 }
 
-std::string Html::toHtml(Spanned* text, int option) {
+std::string Html::toHtml(const Spanned& text, int option) {
     std::stringstream out;
     withinHtml(out, text, option);
     return out.str();
 }
 
-std::string Html::escapeHtml(CharSequence* text) {
+std::string Html::escapeHtml(const CharSequence& text) {
     std::stringstream out;
-    withinStyle(out, text, 0, text->length());
+    withinStyle(out, text, 0, text.length());
     return out.str();
 }
 
-void Html::withinHtml(std::stringstream& out, Spanned* text, int option) {
+void Html::withinHtml(std::stringstream& out,const Spanned& text, int option) {
     if ((option & TO_HTML_PARAGRAPH_FLAG) == TO_HTML_PARAGRAPH_LINES_CONSECUTIVE) {
         encodeTextAlignmentByDiv(out, text, option);
         return;
     }
 
-    withinDiv(out, text, 0, text->length(), option);
+    withinDiv(out, text, 0, text.length(), option);
 }
 
-void Html::encodeTextAlignmentByDiv(std::stringstream& out, Spanned* text, int option) {
-#if 0
+void Html::encodeTextAlignmentByDiv(std::stringstream& out,const Spanned& text, int option) {
     int next;
-    size_t len = text->length();
-    for (size_t i = 0; i < len; i = next) {//const std::type_info&
-        next = text->nextSpanTransition(i, len, typeid());//ParagraphStyle.class);
-        ParagraphStyle[] style = text->getSpans(i, next, ParagraphStyle.class);
+    size_t len = text.length();
+    for (size_t i = 0; i < len; i = next) {
+        auto kindClass = make_span_filter<ParagraphStyle>();
+        next = text.nextSpanTransition(i, len, kindClass);
+        auto style = text.getSpans(i, next, kindClass);
         std::string elements = " ";
         bool needDiv = false;
 
-        for(int j = 0; j < style.length; j++) {
-            if (style[j] instanceof AlignmentSpan) {
-                Layout::Alignment align =
-                    ((AlignmentSpan) style[j]).getAlignment();
+        for(int j = 0; j < style.size(); j++) {
+            if (dynamic_cast<const AlignmentSpan*>(style[j])) {
+                auto align =(dynamic_cast<const AlignmentSpan*>(style[j]))->getAlignment();
                 needDiv = true;
                 if (align == Layout::Alignment::ALIGN_CENTER) {
                     elements = "align=\"center\" " + elements;
@@ -90,38 +100,32 @@ void Html::encodeTextAlignmentByDiv(std::stringstream& out, Spanned* text, int o
             out << "</div>";
         }
     }
-#endif
 }
 
-void Html::withinDiv(std::stringstream& out, Spanned* text, int start, int end, int option) {
-#if 0
+void Html::withinDiv(std::stringstream& out,const Spanned& text, int start, int end, int option) {
     int next;
     for (int i = start; i < end; i = next) {
-        next = text->nextSpanTransition(i, end, QuoteSpan.class);
-        QuoteSpan[] quotes = text->getSpans(i, next, QuoteSpan.class);
-
-        for (QuoteSpan quote : quotes) {
+        next = text.nextSpanTransition(i, end, make_span_filter<QuoteSpan>());
+        auto quotes = text.getSpans(i, next, make_span_filter<QuoteSpan>());
+        for (auto& quote : quotes) {
             out << "<blockquote>";
         }
-
         withinBlockquote(out, text, i, next, option);
-
-        for (QuoteSpan quote : quotes) {
+        for (auto& quote : quotes) {
             out << "</blockquote>\n";
         }
     }
-#endif
 }
 
-std::string Html::getTextDirection(Spanned* text, int start, int end) {
-    /*if (TextDirectionHeuristics.FIRSTSTRONG_LTR.isRtl(text, start, end - start)) {
+std::string Html::getTextDirection(const Spanned& text, int start, int end) {
+    if (TextDirectionHeuristics::FIRSTSTRONG_LTR->isRtl(&text, start, end - start)) {
         return " dir=\"rtl\"";
-    } else */{
+    } else {
         return " dir=\"ltr\"";
     }
 }
 
-std::string Html::getTextStyles(Spanned* text, int start, int end, bool forceNoVerticalMargin, bool includeTextAlign) {
+std::string Html::getTextStyles(const Spanned& text, int start, int end, bool forceNoVerticalMargin, bool includeTextAlign) {
     std::string margin;
     std::string textAlign;
 
@@ -129,18 +133,18 @@ std::string Html::getTextStyles(Spanned* text, int start, int end, bool forceNoV
         margin = "margin-top:0; margin-bottom:0;";
     }
     if (includeTextAlign) {
-        AlignmentSpan[] alignmentSpans = text->getSpans(start, end, AlignmentSpan.class);
+        auto alignmentSpans = text.getSpans(start, end, make_span_filter<AlignmentSpan>());
 
         // Only use the last AlignmentSpan with flag SPAN_PARAGRAPH
-        for (int i = alignmentSpans.length - 1; i >= 0; i--) {
-            AlignmentSpan s = alignmentSpans[i];
-            if ((text.getSpanFlags(s) & Spanned.SPAN_PARAGRAPH) == Spanned.SPAN_PARAGRAPH) {
-                Layout.Alignment alignment = s.getAlignment();
-                if (alignment == Layout.Alignment.ALIGN_NORMAL) {
+        for (int i = alignmentSpans.size() - 1; i >= 0; i--) {
+            AlignmentSpan* s = (AlignmentSpan*)alignmentSpans[i];
+            if ((text.getSpanFlags(s) & Spanned::SPAN_PARAGRAPH) == Spanned::SPAN_PARAGRAPH) {
+                auto alignment = s->getAlignment();
+                if (alignment == Layout::Alignment::ALIGN_NORMAL) {
                     textAlign = "text-align:start;";
-                } else if (alignment == Layout.Alignment.ALIGN_CENTER) {
+                } else if (alignment == Layout::Alignment::ALIGN_CENTER) {
                     textAlign = "text-align:center;";
-                } else if (alignment == Layout.Alignment.ALIGN_OPPOSITE) {
+                } else if (alignment == Layout::Alignment::ALIGN_OPPOSITE) {
                     textAlign = "text-align:end;";
                 }
                 break;
@@ -148,23 +152,24 @@ std::string Html::getTextStyles(Spanned* text, int start, int end, bool forceNoV
         }
     }
 
-    if (margin == null && textAlign == null) {
+    if (margin.empty() && textAlign.empty()) {
         return "";
     }
 
     std::stringstream style;
-    if (margin != null && textAlign != null) {
+    if (!margin.empty()&& !textAlign.empty()) {
         style << margin <<" " << textAlign;
-    } else if (margin != null) {
+    } else if (!margin.empty()) {
         style <<margin;
-    } else if (textAlign != null) {
+    } else if (!textAlign.empty()) {
         style << textAlign;
     }
 
-    return style.append("\"").toString();
+    style<<"\"";
+    return style.str();
 }
 
-void Html::withinBlockquote(std::stringstream& out, Spanned* text, int start, int end, int option) {
+void Html::withinBlockquote(std::stringstream& out,const Spanned& text, int start, int end, int option) {
     if ((option & TO_HTML_PARAGRAPH_FLAG) == TO_HTML_PARAGRAPH_LINES_CONSECUTIVE) {
         withinBlockquoteConsecutive(out, text, start, end);
     } else {
@@ -172,11 +177,11 @@ void Html::withinBlockquote(std::stringstream& out, Spanned* text, int start, in
     }
 }
 
-void Html::withinBlockquoteIndividual(std::stringstream& out, Spanned* text, int start, int end) {
+void Html::withinBlockquoteIndividual(std::stringstream& out,const Spanned& text, int start, int end) {
     bool isInList = false;
     int next;
     for (int i = start; i <= end; i = next) {
-        next = TextUtils.indexOf(text, '\n', i, end);
+        next = TextUtils::indexOf(&text, '\n', i, end);
         if (next < 0) {
             next = end;
         }
@@ -190,11 +195,11 @@ void Html::withinBlockquoteIndividual(std::stringstream& out, Spanned* text, int
             out << "<br>\n";
         } else {
             bool isListItem = false;
-            ParagraphStyle[] paragraphStyles = text.getSpans(i, next, ParagraphStyle.class);
-            for (ParagraphStyle paragraphStyle : paragraphStyles) {
+            auto paragraphStyles = text.getSpans(i, next, make_span_filter<ParagraphStyle>());
+            for (auto paragraphStyle : paragraphStyles) {
                 const int spanFlags = text.getSpanFlags(paragraphStyle);
-                if ((spanFlags & Spanned.SPAN_PARAGRAPH) == Spanned.SPAN_PARAGRAPH
-                        && paragraphStyle instanceof BulletSpan) {
+                if ((spanFlags & Spanned::SPAN_PARAGRAPH) == Spanned::SPAN_PARAGRAPH
+                        && dynamic_cast<const BulletSpan*>(paragraphStyle)) {
                     isListItem = true;
                     break;
                 }
@@ -230,25 +235,21 @@ void Html::withinBlockquoteIndividual(std::stringstream& out, Spanned* text, int
     }
 }
 
-void Html::withinBlockquoteConsecutive(std::stringstream& out, Spanned* text, int start, int end) {
+void Html::withinBlockquoteConsecutive(std::stringstream& out,const Spanned& text, int start, int end) {
     out << "<p" << getTextDirection(text, start, end) << ">";
 
     int next;
     for (int i = start; i < end; i = next) {
-        next = TextUtils.indexOf(text, '\n', i, end);
+        next = TextUtils::indexOf(&text, '\n', i, end);
         if (next < 0) {
             next = end;
         }
-
         int nl = 0;
-
-        while (next < end && text->charAt(next) == '\n') {
+        while (next < end && text.charAt(next) == '\n') {
             nl++;
             next++;
         }
-
         withinParagraph(out, text, i, next - nl);
-
         if (nl == 1) {
             out<<"<br>\n";
         } else {
@@ -266,131 +267,132 @@ void Html::withinBlockquoteConsecutive(std::stringstream& out, Spanned* text, in
 }
 
 float Html::getDisplayMetricsDensity() {
-    return ActivityThread.currentApplication().getResources().getDisplayMetrics().density;
+    return 1.f;//ActivityThread.currentApplication().getResources().getDisplayMetrics().density;
 }
 
-float Html::getDisplayMetricsDensity$ravenwood() {
+/*float Html::getDisplayMetricsDensity$ravenwood() {
     return Resources.getSystem().getDisplayMetrics().density;
-}
+}*/
 
-void Html::withinParagraph(std::stringstream& out, Spanned* text, int start, int end) {
+void Html::withinParagraph(std::stringstream& out,const Spanned& text, int start, int end) {
     int next;
     for (int i = start; i < end; i = next) {
-        next = text->nextSpanTransition(i, end, CharacterStyle.class);
-        CharacterStyle[] style = text.getSpans(i, next, CharacterStyle.class);
+        next = text.nextSpanTransition(i, end, make_span_filter<CharacterStyle>());
+        auto style = text.getSpans(i, next, make_span_filter<CharacterStyle>());
 
-        for (int j = 0; j < style.length; j++) {
-            if (style[j] instanceof StyleSpan) {
-                int s = ((StyleSpan) style[j]).getStyle();
+        for (int j = 0; j < style.size(); j++) {
+            if (dynamic_cast<const StyleSpan*>(style[j])) {
+                int s = dynamic_cast<const StyleSpan*>(style[j])->getStyle();
 
-                if ((s & Typeface.BOLD) != 0) {
+                if ((s & Typeface::BOLD) != 0) {
                     out<<"<b>";
                 }
-                if ((s & Typeface.ITALIC) != 0) {
+                if ((s & Typeface::ITALIC) != 0) {
                     out<<"<i>";
                 }
             }
-            if (style[j] instanceof TypefaceSpan) {
-                std::string s = ((TypefaceSpan) style[j]).getFamily();
+            if (dynamic_cast<const TypefaceSpan*>(style[j])) {
+                std::string s = dynamic_cast<const TypefaceSpan*>(style[j])->getFamily();
 
-                if ("monospace".equals(s)) {
+                if (s.compare("monospace")==0) {
                     out<<"<tt>";
                 }
             }
-            if (style[j] instanceof SuperscriptSpan) {
+            if (dynamic_cast<const SuperscriptSpan*>(style[j])) {
                 out<<"<sup>";
             }
-            if (style[j] instanceof SubscriptSpan) {
+            if (dynamic_cast<const SubscriptSpan*>(style[j])) {
                 out<<"<sub>";
             }
-            if (style[j] instanceof UnderlineSpan) {
+            if (dynamic_cast<const UnderlineSpan*>(style[j])) {
                 out<<"<u>";
             }
-            if (style[j] instanceof StrikethroughSpan) {
+            if (dynamic_cast<const StrikethroughSpan*>(style[j])) {
                 out<<"<span style=\"text-decoration:line-through;\">";
             }
-            if (style[j] instanceof URLSpan) {
+            if (dynamic_cast<const URLSpan*>(style[j])) {
                 out<<"<a href=\"";
-                out<<((URLSpan) style[j]).getURL();
+                out<<dynamic_cast<const URLSpan*>(style[j])->getURL();
                 out<<"\">";
             }
-            if (style[j] instanceof ImageSpan) {
+#if 0
+            if (dynamic_cast<const ImageSpan*>(style[j])) {
                 out<<"<img src=\"";
-                out<<((ImageSpan) style[j]).getSource();
+                out<<((const ImageSpan*) style[j])->getSource();
                 out<<"\">";
 
                 // Don't output the placeholder character underlying the image.
                 i = next;
             }
-            if (style[j] instanceof AbsoluteSizeSpan) {
-                AbsoluteSizeSpan s = ((AbsoluteSizeSpan) style[j]);
-                float sizeDip = s.getSize();
-                if (!s.getDip()) {
+#endif
+            if (dynamic_cast<const AbsoluteSizeSpan*>(style[j])) {
+                const AbsoluteSizeSpan* s = dynamic_cast<const AbsoluteSizeSpan*>(style[j]);
+                float sizeDip = s->getSize();
+                if (!s->getDip()) {
                     sizeDip /= getDisplayMetricsDensity();
                 }
 
                 // px in CSS is the equivalance of dip in Android
-                out.append(String.format("<span style=\"font-size:%.0fpx\";>", sizeDip));
+                out<<TextUtils::stringPrintf("<span style=\"font-size:%.0fpx\";>", sizeDip);
             }
-            if (style[j] instanceof RelativeSizeSpan) {
-                float sizeEm = ((RelativeSizeSpan) style[j]).getSizeChange();
-                out.append(String.format("<span style=\"font-size:%.2fem;\">", sizeEm));
+            if (dynamic_cast<const RelativeSizeSpan*>(style[j])) {
+                const float sizeEm = dynamic_cast<const RelativeSizeSpan*>(style[j])->getSizeChange();
+                out<<TextUtils::stringPrintf("<span style=\"font-size:%.2fem;\">", sizeEm);
             }
-            if (style[j] instanceof ForegroundColorSpan) {
-                int color = ((ForegroundColorSpan) style[j]).getForegroundColor();
-                out.append(String.format("<span style=\"color:#%06X;\">", 0xFFFFFF & color));
+            if (dynamic_cast<const ForegroundColorSpan*>(style[j])) {
+                const int color = dynamic_cast<const ForegroundColorSpan*>(style[j])->getForegroundColor();
+                out<<TextUtils::stringPrintf("<span style=\"color:#%06X;\">", 0xFFFFFF & color);
             }
-            if (style[j] instanceof BackgroundColorSpan) {
-                int color = ((BackgroundColorSpan) style[j]).getBackgroundColor();
-                out.append(String.format("<span style=\"background-color:#%06X;\">",
-                        0xFFFFFF & color));
+            if (dynamic_cast<const BackgroundColorSpan*>(style[j])) {
+                const int color = dynamic_cast<const BackgroundColorSpan*>(style[j])->getBackgroundColor();
+                out<<TextUtils::stringPrintf("<span style=\"background-color:#%06X;\">", 0xFFFFFF & color);
             }
         }
 
         withinStyle(out, text, i, next);
 
-        for (int j = style.length - 1; j >= 0; j--) {
-            if (style[j] instanceof BackgroundColorSpan) {
+        for (int j = style.size() - 1; j >= 0; j--) {
+            if (dynamic_cast<const BackgroundColorSpan*>(style[j])) {
                 out << "</span>";
             }
-            if (style[j] instanceof ForegroundColorSpan) {
+            if (dynamic_cast<const ForegroundColorSpan*>(style[j])) {
                 out << "</span>";
             }
-            if (style[j] instanceof RelativeSizeSpan) {
+            if (dynamic_cast<const RelativeSizeSpan*>(style[j])) {
                 out << "</span>";
             }
-            if (style[j] instanceof AbsoluteSizeSpan) {
+            if (dynamic_cast<const AbsoluteSizeSpan*>(style[j])) {
                 out << "</span>";
             }
-            if (style[j] instanceof URLSpan) {
+            if (dynamic_cast<const URLSpan*>(style[j])) {
                 out << "</a>";
             }
-            if (style[j] instanceof StrikethroughSpan) {
+            if (dynamic_cast<const StrikethroughSpan*>(style[j])) {
                 out << "</span>";
             }
-            if (style[j] instanceof UnderlineSpan) {
+            if (dynamic_cast<const UnderlineSpan*>(style[j])) {
                 out << "</u>";
             }
-            if (style[j] instanceof SubscriptSpan) {
+            if (dynamic_cast<const SubscriptSpan*>(style[j])) {
                 out << "</sub>";
             }
-            if (style[j] instanceof SuperscriptSpan) {
+            if (dynamic_cast<const SuperscriptSpan*>(style[j])) {
                 out << "</sup>";
             }
-            if (style[j] instanceof TypefaceSpan) {
-                std::string s = ((TypefaceSpan) style[j]).getFamily();
+            if (dynamic_cast<const TypefaceSpan*>(style[j])) {
+                std::string s = dynamic_cast<const TypefaceSpan*>(style[j])->getFamily();
 
-                if ("monospace".equals(s)) {
+                if (s.compare("monospace")==0) {
                     out << "</tt>";
                 }
             }
-            if (style[j] instanceof StyleSpan) {
-                int s = ((StyleSpan) style[j]).getStyle();
+            if (dynamic_cast<const StyleSpan*>(style[j])) {
+                int s = (dynamic_cast<const StyleSpan*>(style[j]))->getStyle();
 
-                if ((s & Typeface.BOLD) != 0) {
+                if ((s & Typeface::BOLD) != 0) {
                     out << "</b>";
                 }
-                if ((s & Typeface.ITALIC) != 0) {
+                if ((s & Typeface::ITALIC) != 0) {
                     out << "</i>";
                 }
             }
@@ -398,9 +400,9 @@ void Html::withinParagraph(std::stringstream& out, Spanned* text, int start, int
     }
 }
 
-void Html::withinStyle(std::stringstream& out, CharSequence* text, int start, int end) {
+void Html::withinStyle(std::stringstream& out,const CharSequence& text, int start, int end) {
     for (int i = start; i < end; i++) {
-        char c = text->charAt(i);
+        char c = text.charAt(i);
 
         if (c == '<') {
             out << "&lt;";
@@ -431,7 +433,6 @@ void Html::withinStyle(std::stringstream& out, CharSequence* text, int start, in
         }
     }
 }
-#endif
 ///////////////////////////////////////////////////////////////////////////////////////////
 #if 0
 class HtmlToSpannedConverter implements ContentHandler {

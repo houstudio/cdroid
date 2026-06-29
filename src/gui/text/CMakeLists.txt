@@ -5,6 +5,7 @@ add_library(cdtext
     textdirectionheuristics.cc
     measuredparagraph.cc
     measuredtext.cc
+    html.cc
     linebreaker.cc
     selection.cc
     layout.cc
@@ -21,6 +22,7 @@ add_library(cdtext
     spannablestring.cc
     spannablestringbuilder.cc
     worditerator.cc
+    style/metricaffectingspan.cc
     method/basemovementmethod.cc
     method/arrowkeymovementmethod.cc
     method/scrollingmovementmethod.cc
