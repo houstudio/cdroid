@@ -8,6 +8,9 @@
 #include <minikin/Measurement.h>
 #include <minikin/MeasuredText.h>
 #include <minikin/MinikinFont.h>
+#include <minikin/Layout.h>
+#include <minikin/MinikinRect.h>
+#include <cmath>
 #include <core/typeface.h>
 #include <core/canvas.h>
 #include <core/path.h>
@@ -157,6 +160,44 @@ float Paint::getTextRunAdvances(const char16_t* chars, int index, int count, int
     auto bidiFlags = isRtl ? minikin::Bidi::FORCE_RTL : minikin::Bidi::FORCE_LTR;
     return minikin::Layout::measureText(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen,
                                         endHyphen, advances);
+}
+
+void Paint::getTextBounds(const std::u16string& text, int start, int end, Rect& bounds) const {
+    getTextBounds(text.c_str(), start, end - start, bounds);
+}
+
+void Paint::getTextBounds(const CharSequence* text, int start, int end, Rect& bounds) const {
+    std::vector<char16_t> buf(end - start);
+    TextUtils::getChars(text, start, end, buf.data(), 0);
+    getTextBounds(buf.data(), 0, end - start, bounds);
+}
+
+void Paint::getTextBounds(const char16_t* text, int index, int count, Rect& bounds) const {
+    const minikin::U16StringPiece textBuf((const uint16_t*)(text + index), count);
+    const minikin::Range range(0, count);
+    const minikin::StartHyphenEdit startHyphen = static_cast<minikin::StartHyphenEdit>(getStartHyphenEdit());
+    const minikin::EndHyphenEdit endHyphen = static_cast<minikin::EndHyphenEdit>(getEndHyphenEdit());
+    const minikin::Bidi bidiFlags = minikin::Bidi::FORCE_LTR;
+
+    // Lay out the run, then union each glyph's ink bounds (offset by its pen position)
+    // to form the smallest rectangle enclosing all characters, origin at (0,0).
+    const minikin::Layout layout(textBuf, range, bidiFlags, *mMinikinPaint, startHyphen, endHyphen);
+
+    minikin::MinikinRect r;
+    for (size_t i = 0; i < layout.nGlyphs(); i++) {
+        minikin::MinikinRect g;
+        const std::shared_ptr<minikin::MinikinFont>& minikinFont = layout.getFontRef(i)->typeface();
+        minikinFont->GetBounds(&g, layout.getGlyphId(i), *mMinikinPaint, layout.getFakery(i));
+        g.offset(layout.getX(i), layout.getY(i));
+        r.join(g);
+    }
+
+    if (r.isEmpty()) {
+        bounds.setEmpty();
+    } else {
+        bounds = Rect::MakeLTRB((int) std::floor(r.mLeft), (int) std::floor(r.mTop),
+                                (int) std::ceil(r.mRight), (int) std::ceil(r.mBottom));
+    }
 }
 
 float Paint::getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const{

@@ -21,8 +21,8 @@ public:
     static constexpr int LINE_BREAK_WORD_STYLE_PHRASE = 1;
     static constexpr int LINE_BREAK_WORD_STYLE_AUTO = 2;
 private:
-    int mLineBreakStyle;
-    int mLineBreakWordStyle;
+    int mLineBreakStyle=LINE_BREAK_STYLE_NONE;
+    int mLineBreakWordStyle=LINE_BREAK_WORD_STYLE_NONE;
     int mHyphenation;
 public:
     class Builder {
@@ -92,12 +92,16 @@ public:
         // =new Builder().setLineBreakStyle(LINE_BREAK_STYLE_NONE)
         //.setLineBreakWordStyle(LINE_BREAK_WORD_STYLE_NONE).build();
 
+    LineBreakConfig(){}
     LineBreakConfig(int lineBreakStyle,int lineBreakWordStyle,int hyphenation) {
         mLineBreakStyle = lineBreakStyle;
         mLineBreakWordStyle = lineBreakWordStyle;
         mHyphenation = hyphenation;
     }
 
+    void setLineBreakStyle(int lbs){
+        mLineBreakStyle=lbs;
+    }
     int getLineBreakStyle() const{
         return mLineBreakStyle;
     }
@@ -111,6 +115,9 @@ public:
                 ? defaultStyle : config->mLineBreakStyle;
     }
 
+    void setLineBreakWordStyle(int lbws){
+        mLineBreakWordStyle = lbws;
+    }
     int getLineBreakWordStyle() const{
         return mLineBreakWordStyle;
     }

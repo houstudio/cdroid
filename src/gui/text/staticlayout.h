@@ -26,6 +26,17 @@ private:
 
     float getTotalInsets(int line);
 public:
+    StaticLayout(CharSequence* source, TextPaint* paint, int width, Alignment align,
+            float spacingmult, float spacingadd, bool includepad);
+    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
+            Alignment align, float spacingmult, float spacingadd, bool includepad);
+    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
+            Alignment align, float spacingmult, float spacingadd, bool includepad,
+            TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
+    StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint, int outerwidth,
+            Alignment align, const TextDirectionHeuristic* textDir, float spacingmult,
+            float spacingadd, bool includepad, TextUtils::TruncateAt ellipsize,
+            int ellipsizedWidth, int maxLines);
     ~StaticLayout()override;
     void generate(const Builder& b, bool includepad, bool trackpad);
     int getLineForVertical(int vertical)const override;
@@ -97,6 +108,8 @@ public:
         return mEllipsizedWidth;
     }
 
+    RectF computeDrawingBoundingBox() const override;
+
     using Layout::getHeight;
     int getHeight(bool cap)const override;
 private:
@@ -104,6 +117,9 @@ private:
     int mTopPadding, mBottomPadding;
     int mColumns;
     int mEllipsizedWidth;
+
+    mutable RectF mDrawingBounds;
+    mutable bool mDrawingBoundsValid = false;
 
     bool mEllipsized;
     int mMaxLineHeight = DEFAULT_MAX_LINE_HEIGHT;
@@ -178,7 +194,13 @@ public:
     Builder& setIndents(const std::vector<int>&leftIndents,const std::vector<int>& rightIndents);
     Builder& setJustificationMode(int justificationMode);
     Builder& setAddLastLineLineSpacing(bool value);
+    Builder& setLineBreakConfig(const LineBreakConfig& lineBreakConfig);
+    Builder& setUseBoundsForWidth(bool useBoundsForWidth);
+    Builder& setShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang);
+    Builder& setCalculateBounds(bool value);
+    Builder& setMinimumFontMetrics(const Paint::FontMetrics* minimumFontMetrics);
     StaticLayout* build();
+    StaticLayout* buildPartialStaticLayoutForDynamicLayout(bool trackpadding, StaticLayout* recycle);
 private:
     CharSequence* mText;
     int mStart;
@@ -190,8 +212,12 @@ private:
     float mSpacingMult;
     float mSpacingAdd;
     bool mIncludePad;
+    bool mCalculateBounds;
     bool mFallbackLineSpacing;
     bool mAddLastLineLineSpacing;
+    bool mUseBoundsForWidth;
+    bool mShiftDrawingOffsetForStartOverhang;
+    LineBreakConfig mLineBreakConfig;
     int mEllipsizedWidth;
     TextUtils::TruncateAt mEllipsize;
     int mMaxLines;
@@ -201,6 +227,7 @@ private:
     std::vector<int> mRightIndents;
     int mJustificationMode;
 
+    const Paint::FontMetrics* mMinimumFontMetrics;
     Paint::FontMetricsInt mFontMetricsInt;// = new Paint.FontMetricsInt();
     static Pools::SynchronizedPool<Builder> sPool;// = new SynchronizedPool<>(3);
 };

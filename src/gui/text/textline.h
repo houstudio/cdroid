@@ -2,6 +2,7 @@
 #define __CDROID_TEXT_LINE__
 #include <text/textpaint.h>
 #include <core/canvas.h>
+#include <core/rect.h>
 #include <text/spannablestring.h>
 #include <text/style/metricaffectingspan.h>
 namespace cdroid{
@@ -73,8 +74,9 @@ private:
         return mCharsValid ? mChars[i] : mText->charAt(i + mStart);
     }
     float drawRun(Canvas& c, int start, int limit, bool runIsRtl, float x, int top, int y, int bottom, bool needWidth);
-    float measureRun(int start, int offset, int limit, bool runIsRtl, Paint::FontMetricsInt* fmi) {
-        return handleRun(start, offset, limit, runIsRtl, nullptr, 0, 0, 0, 0, fmi, true);
+    float measureRun(int start, int offset, int limit, bool runIsRtl, Paint::FontMetricsInt* fmi,
+            RectF* drawBounds = nullptr) {
+        return handleRun(start, offset, limit, runIsRtl, nullptr, 0, 0, 0, 0, fmi, drawBounds, true);
     }
     int getOffsetBeforeAfter(int runIndex, int runStart, int runLimit, bool runIsRtl, int offset, bool after);
 
@@ -85,7 +87,8 @@ private:
 
     float handleText(TextPaint& wp, int start, int end, int contextStart, int contextEnd,
             bool runIsRtl, Canvas* c, float x, int top, int y, int bottom, Paint::FontMetricsInt* fmi,
-            bool needWidth, int offset, const std::vector<DecorationInfo>* decorations);
+            RectF* drawBounds, bool needWidth, int offset,
+            const std::vector<DecorationInfo>* decorations);
 
     float handleReplacement(const ReplacementSpan& replacement,const TextPaint& wp, int start, int limit, bool runIsRtl, Canvas* c,
            float x, int top, int y, int bottom,Paint::FontMetricsInt* fmi, bool needWidth);
@@ -100,7 +103,8 @@ private:
     void extractDecorationInfo(TextPaint& paint, DecorationInfo& info);
 
     float handleRun(int start, int measureLimit, int limit, bool runIsRtl, Canvas*c, float x,
-            int top, int y, int bottom, Paint::FontMetricsInt* fmi, bool needWidth);
+            int top, int y, int bottom, Paint::FontMetricsInt* fmi, RectF* drawBounds,
+            bool needWidth);
 
     void drawTextRun(Canvas& c, TextPaint& wp, int start, int end,
             int contextStart, int contextEnd, bool runIsRtl, float x, int y);
@@ -110,21 +114,43 @@ private:
     int countStretchableSpaces(int start, int end) const;
     static bool equalAttributes(const TextPaint& lp, const TextPaint& rp);
 public:
+    // Carries per-line information filled during measure()/metrics().
+    // NB: cluster counting is not yet wired to minikin; setClusterCount is currently unused.
+    class LineInfo {
+    private:
+        int mClusterCount = 0;
+    public:
+        int getClusterCount() const { return mClusterCount; }
+        void setClusterCount(int clusterCount) { mClusterCount = clusterCount; }
+    };
+
     TextLine();
     virtual ~TextLine();
     static TextLine* obtain();
     static TextLine* recycle(TextLine* tl);
+
+    float getAddedWordSpacingInPx() const{
+        return mAddedWidthForJustify;
+    }
+    float getAddedLetterSpacingInPx() const{
+        // Letter-spacing justification is not yet supported.
+        return 0.f;
+    }
+    bool isJustifying() const{
+        return mIsJustifying;
+    }
+
     void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,
             bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd,bool useFallbackLineSpacing);
 
     void justify(float justifyWidth);
 
     void draw(Canvas& c, float x, int top, int y, int bottom);
-    float metrics(Paint::FontMetricsInt* fmi) {
-        return measure(mLen, false, fmi);
-    }
+    float metrics(Paint::FontMetricsInt* fmi, RectF* drawBounds = nullptr,
+            bool returnDrawWidth = false, LineInfo* lineInfo = nullptr);
 
-    float measure(int offset, bool trailing, Paint::FontMetricsInt* fmi);
+    float measure(int offset, bool trailing, Paint::FontMetricsInt* fmi,
+            RectF* drawBounds = nullptr, LineInfo* lineInfo = nullptr);
     std::vector<float> measureAllOffsets(const std::vector<bool>& trailing, Paint::FontMetricsInt* fmi);
 
     int getOffsetToLeftRightOf(int cursor, bool toLeft);

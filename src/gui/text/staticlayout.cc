@@ -163,11 +163,44 @@ StaticLayout::Builder& StaticLayout::Builder::setAddLastLineLineSpacing(bool val
     mAddLastLineLineSpacing = value;
     return *this;
 }
+StaticLayout::Builder& StaticLayout::Builder::setLineBreakConfig(const LineBreakConfig& lineBreakConfig){
+    mLineBreakConfig = lineBreakConfig;
+    return *this;
+}
+
+StaticLayout::Builder& StaticLayout::Builder::setUseBoundsForWidth(bool useBoundsForWidth){
+    mUseBoundsForWidth = useBoundsForWidth;
+    return *this;
+}
+
+StaticLayout::Builder& StaticLayout::Builder::setShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang){
+    mShiftDrawingOffsetForStartOverhang = shiftDrawingOffsetForStartOverhang;
+    return *this;
+}
+
+StaticLayout::Builder& StaticLayout::Builder::setCalculateBounds(bool value){
+    mCalculateBounds = value;
+    return *this;
+}
+
+StaticLayout::Builder& StaticLayout::Builder::setMinimumFontMetrics(const Paint::FontMetrics* minimumFontMetrics){
+    mMinimumFontMetrics = minimumFontMetrics;
+    return *this;
+}
 
 StaticLayout* StaticLayout::Builder::build() {
     StaticLayout* result = new StaticLayout(*this);
     Builder::recycle(this);
     return result;
+}
+
+StaticLayout* StaticLayout::Builder::buildPartialStaticLayoutForDynamicLayout(bool trackpadding,
+        StaticLayout* recycle) {
+    if (recycle == nullptr) {
+        recycle = new StaticLayout(nullptr);
+    }
+    recycle->generate(*this, mIncludePad, trackpadding);
+    return recycle;
 }
 
 Pools::SynchronizedPool<StaticLayout::Builder> StaticLayout::Builder::sPool(3);// = new SynchronizedPool<>(3);
@@ -185,8 +218,12 @@ StaticLayout::StaticLayout(const Builder& b):Layout((b.mEllipsize == TextUtils::
                 Spanned* spanned = dynamic_cast<Spanned*>(b.mText);
                 return spanned != nullptr ? new SpannedEllipsizer(spanned) : new Ellipsizer(b.mText);
             }(),
-            b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
-
+            //b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
+b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd,
+                b.mIncludePad, b.mFallbackLineSpacing, b.mEllipsizedWidth, b.mEllipsize,
+                b.mMaxLines, b.mBreakStrategy, b.mHyphenationFrequency, b.mLeftIndents,
+                b.mRightIndents, b.mJustificationMode, b.mLineBreakConfig, b.mUseBoundsForWidth,
+                b.mShiftDrawingOffsetForStartOverhang, b.mMinimumFontMetrics){
     if (b.mEllipsize != TextUtils::TruncateAt::NONE/*nullptr*/) {
         Ellipsizer* e = dynamic_cast<Ellipsizer*>(getText());
 
@@ -209,6 +246,42 @@ StaticLayout::StaticLayout(const Builder& b):Layout((b.mEllipsize == TextUtils::
     setJustificationMode(b.mJustificationMode);
 
     generate(b, b.mIncludePad, b.mIncludePad);
+}
+
+// Deprecated public constructors — delegate toward the 13-arg master below,
+// matching android-36 StaticLayout's constructor chain.
+StaticLayout::StaticLayout(CharSequence* source, TextPaint* paint, int width, Alignment align,
+        float spacingmult, float spacingadd, bool includepad)
+    : StaticLayout(source, 0, source->length(), paint, width, align, spacingmult, spacingadd,
+            includepad) {
+}
+
+StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint,
+        int outerwidth, Alignment align, float spacingmult, float spacingadd, bool includepad)
+    : StaticLayout(source, bufstart, bufend, paint, outerwidth, align, spacingmult, spacingadd,
+            includepad, TextUtils::TruncateAt::NONE, 0) {
+}
+
+StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint,
+        int outerwidth, Alignment align, float spacingmult, float spacingadd, bool includepad,
+        TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
+    : StaticLayout(source, bufstart, bufend, paint, outerwidth, align,
+            TextDirectionHeuristics::FIRSTSTRONG_LTR, spacingmult, spacingadd, includepad,
+            ellipsize, ellipsizedWidth, INT_MAX) {
+}
+
+StaticLayout::StaticLayout(CharSequence* source, int bufstart, int bufend, TextPaint* paint,
+        int outerwidth, Alignment align, const TextDirectionHeuristic* textDir, float spacingmult,
+        float spacingadd, bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth,
+        int maxLines)
+    : StaticLayout(Builder::obtain(source, bufstart, bufend, paint, outerwidth)
+            ->setAlignment(align)
+            .setTextDirection(textDir)
+            .setLineSpacing(spacingadd, spacingmult)
+            .setIncludePad(includepad)
+            .setEllipsize(ellipsize)
+            .setEllipsizedWidth(ellipsizedWidth)
+            .setMaxLines(maxLines)) {
 }
 
 StaticLayout::~StaticLayout(){
@@ -274,13 +347,13 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
     if (dynamic_cast<PrecomputedText*>(source)) {
         PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(source);
         const int checkResult = precomputed->checkResultUsable(bufStart, bufEnd, textDir, *paint,
-                        b.mBreakStrategy, b.mHyphenationFrequency);
+                        b.mBreakStrategy, b.mHyphenationFrequency,b.mLineBreakConfig);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
             break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
             precomputed = PrecomputedText::create(precomputed, PrecomputedText::Params(
-                        *paint,textDir,b.mBreakStrategy,b.mHyphenationFrequency));
+                        *paint,b.mLineBreakConfig,textDir,b.mBreakStrategy,b.mHyphenationFrequency));
             paragraphInfo = precomputed->getParagraphInfo();
             break;
         case PrecomputedText::Params::USABLE:
@@ -290,7 +363,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
         }
     }
     if (paragraphInfo.empty()){// == null) {
-        const PrecomputedText::Params param(*paint, textDir, b.mBreakStrategy, b.mHyphenationFrequency);
+        const PrecomputedText::Params param(*paint,b.mLineBreakConfig, textDir, b.mBreakStrategy, b.mHyphenationFrequency);
         paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart, bufEnd, false );
     }
     for (int paraIndex = 0; paraIndex < paragraphInfo.size(); paraIndex++) {
@@ -812,6 +885,15 @@ int StaticLayout::getHeight(bool cap) const{
 
     return cap && mLineCount > mMaximumVisibleLineCount && mMaxLineHeight != -1
             ? mMaxLineHeight : Layout::getHeight();
+}
+
+RectF StaticLayout::computeDrawingBoundingBox() const{
+    // Cache the drawing bounds result because it does not change after created.
+    if (!mDrawingBoundsValid) {
+        mDrawingBounds = Layout::computeDrawingBoundingBox();
+        mDrawingBoundsValid = true;
+    }
+    return mDrawingBounds;
 }
 
 }

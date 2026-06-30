@@ -1242,9 +1242,10 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         if (mTextDir == nullptr) {
             mTextDir = getTextDirectionHeuristic();
         }
+        const auto lbConfig=LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle);
         const int checkResult = precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
-                        mHyphenationFrequency);
-        const PrecomputedText::Params textMetricsParams(mTextPaint,getTextDirectionHeuristic(),mBreakStrategy, mHyphenationFrequency);
+                        mHyphenationFrequency,lbConfig);
+        const PrecomputedText::Params textMetricsParams(mTextPaint,lbConfig,getTextDirectionHeuristic(),mBreakStrategy, mHyphenationFrequency);
         switch (checkResult) {
         case PrecomputedText::Params::UNUSABLE:
             LOGE("PrecomputedText's Parameters don't match the parameters of this TextView."

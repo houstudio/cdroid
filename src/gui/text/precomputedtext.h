@@ -1,8 +1,9 @@
 #ifndef __PRE_COMPUTED_TEXT_H__
 #define __PRE_COMPUTED_TEXT_H__
 #include <core/rect.h>
-#include <text/measuredparagraph.h>
+#include <text/linebreakconfig.h>
 #include <text/spannablestring.h>
+#include <text/measuredparagraph.h>
 namespace cdroid{
 class MeasuredParagraph;
 class TextDirectionHeuristic;
@@ -21,8 +22,9 @@ public:
         const TextDirectionHeuristic* mTextDir;
         int mBreakStrategy;
         int mHyphenationFrequency;
+        LineBreakConfig mLineBreakConfig;
     public:
-        Params(const TextPaint& paint,const TextDirectionHeuristic* textDir,int strategy, int frequency);
+        Params(const TextPaint& paint,const LineBreakConfig&lbConfig,const TextDirectionHeuristic* textDir,int strategy, int frequency);
         const TextPaint& getTextPaint() const{
             return mPaint;
         }
@@ -35,7 +37,7 @@ public:
         int getHyphenationFrequency() const{
             return mHyphenationFrequency;
         }
-        int checkResultUsable(const TextPaint& paint,const TextDirectionHeuristic* textDir, int strategy,  int frequency) const;
+        int checkResultUsable(const TextPaint& paint,const TextDirectionHeuristic* textDir, int strategy,  int frequency,const LineBreakConfig&lbc) const;
     };
 
     class ParagraphInfo {
@@ -90,7 +92,8 @@ public:
         return mParagraphInfo;
     }
 
-    int checkResultUsable(int start, int end, const TextDirectionHeuristic* textDir,const TextPaint& paint, int strategy, int frequency)const;
+    int checkResultUsable(int start, int end, const TextDirectionHeuristic* textDir,const TextPaint& paint,
+            int strategy, int frequency,const LineBreakConfig&lbConfig)const;
 
     int findParaIndex(int pos) const;
     float getWidth(int start,int end) const;

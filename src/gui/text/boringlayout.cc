@@ -1,6 +1,10 @@
 #include <text/boringlayout.h>
 namespace cdroid{
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// make
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
         float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad) {
     return new BoringLayout(source, paint, outerWidth, align, spacingMult, spacingAdd, metrics,
@@ -8,14 +12,19 @@ BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int out
 }
 
 BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingmult, float spacingadd, const BoringLayout::Metrics& metrics,
+        float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
-    return new BoringLayout(source, paint, outerWidth, align, spacingmult, spacingadd, metrics,
+    return new BoringLayout(source, paint, outerWidth, align, spacingMult, spacingAdd, metrics,
             includePad, ellipsize, ellipsizedWidth);
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// replaceOrMake
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth,
-        Alignment align, float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad) {
+        Alignment align, float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
+        bool includePad) {
     replaceWith(source, paint, outerwidth, align, spacingMult, spacingAdd);
 
     mEllipsizedWidth = outerwidth;
@@ -23,17 +32,17 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
     mEllipsizedCount = 0;
     mUseFallbackLineSpacing = false;
 
-    init(source, paint, align, metrics, includePad, true,false/*useFallbackLineSpacing*/);
+    init(source, paint, align, metrics, includePad, true, false /* useFallbackLineSpacing */);
     return this;
 }
 
 BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
-        Alignment align, float spacingMult, float spacingAdd,const BoringLayout::Metrics& metrics,
+        Alignment align, float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
         bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth) {
     bool trust;
 
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
-        replaceWith(source, paint, outerWidth, align, spacingMult, spacingAdd);
+        replaceWith(source, paint, outerWidth, align, 1.f, 0.f);
 
         mEllipsizedWidth = outerWidth;
         mEllipsizedStart = 0;
@@ -41,52 +50,106 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
         trust = true;
     } else {
         replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start,int end){ellipsized(start,end);}),
+                    [this](int start, int end){ ellipsized(start, end); }),
                 paint, outerWidth, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
     }
 
-    init(getText(), paint, align, metrics, includePad, trust,false/*,useFallbackLineSpacing*/);
+    mUseFallbackLineSpacing = false;
+
+    init(getText(), paint, align, metrics, includePad, trust, false /* useFallbackLineSpacing */);
     return this;
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// constructors
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
-        float spacingMult, float spacingAdd, const BoringLayout::Metrics &metrics, bool includePad)
-    :Layout(source, paint, outerwidth, align, TextDirectionHeuristics::LTR, spacingMult,
-            spacingAdd){
+        float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad)
+    : Layout(source, paint, outerwidth, align, TextDirectionHeuristics::LTR, spacingMult, spacingAdd,
+            includePad, false /* fallbackLineSpacing */,
+            outerwidth /* ellipsizedWidth */, TextUtils::TruncateAt::NONE /* ellipsize */,
+            1 /* maxLines */, BREAK_STRATEGY_SIMPLE, HYPHENATION_FREQUENCY_NONE,
+            {} /* leftIndents */, {} /* rightIndents */, JUSTIFICATION_MODE_NONE,
+            LineBreakConfig(), false /* useBoundsForWidth */,
+            false /* shiftDrawingOffsetForStartOverhang */, nullptr) {
 
     mEllipsizedWidth = outerwidth;
     mEllipsizedStart = 0;
     mEllipsizedCount = 0;
     mUseFallbackLineSpacing = false;
 
-    init(source, paint, align, metrics, includePad, true,false);
+    init(source, paint, align, metrics, includePad, true, false /* useFallbackLineSpacing */);
 }
 
 BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-        float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad,
+        float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad,
         TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
-    :Layout(source, paint, outerWidth, align, spacingMult, spacingAdd){
+    : BoringLayout(source, paint, outerWidth, align, spacingMult, spacingAdd, metrics, includePad,
+            ellipsize, ellipsizedWidth, false /* useFallbackLineSpacing */) {
+}
+
+BoringLayout::BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+        float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad,
+        TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing)
+    : BoringLayout(source, paint, outerWidth, align, TextDirectionHeuristics::LTR, spacingMult,
+            spacingAdd, includePad, useFallbackLineSpacing,
+            ellipsizedWidth, ellipsize, 1 /* maxLines */,
+            BREAK_STRATEGY_SIMPLE, HYPHENATION_FREQUENCY_NONE, {} /* leftIndents */,
+            {} /* rightIndents */, JUSTIFICATION_MODE_NONE,
+            LineBreakConfig(), metrics, false /* useBoundsForWidth */,
+            false /* shiftDrawingOffsetForStartOverhang */, nullptr) {
+}
+
+BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
+        float spacingMult, float spacingAdd, bool includePad, bool fallbackLineSpacing,
+        int ellipsizedWidth, TextUtils::TruncateAt ellipsize, const Metrics& metrics,
+        bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
+        const Paint::FontMetrics* minimumFontMetrics)
+    : BoringLayout(text, paint, width, align, TextDirectionHeuristics::LTR,
+            spacingMult, spacingAdd, includePad, fallbackLineSpacing, ellipsizedWidth,
+            ellipsize, 1 /* maxLines */, BREAK_STRATEGY_SIMPLE,
+            HYPHENATION_FREQUENCY_NONE, {} /* leftIndents */, {} /* rightIndents */,
+            JUSTIFICATION_MODE_NONE, LineBreakConfig(), metrics, useBoundsForWidth,
+            shiftDrawingOffsetForStartOverhang, minimumFontMetrics) {
+}
+
+BoringLayout::BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
+        const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd,
+        bool includePad, bool fallbackLineSpacing, int ellipsizedWidth,
+        TextUtils::TruncateAt ellipsize, int maxLines, int breakStrategy,
+        int hyphenationFrequency, const std::vector<int>& leftIndents,
+        const std::vector<int>& rightIndents, int justificationMode,
+        const LineBreakConfig& lineBreakConfig, const Metrics& metrics,
+        bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
+        const Paint::FontMetrics* minimumFontMetrics)
+    : Layout(text, paint, width, align, textDir, spacingMult, spacingAdd, includePad,
+            fallbackLineSpacing, ellipsizedWidth, ellipsize, maxLines, breakStrategy,
+            hyphenationFrequency, leftIndents, rightIndents, justificationMode,
+            lineBreakConfig, useBoundsForWidth, shiftDrawingOffsetForStartOverhang,
+            minimumFontMetrics) {
 
     bool trust;
 
     if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
-        mEllipsizedWidth = outerWidth;
+        mEllipsizedWidth = width;
         mEllipsizedStart = 0;
         mEllipsizedCount = 0;
         trust = true;
     } else {
-        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
-                    [this](int start,int end){ellipsized(start,end);}),
-                    paint, outerWidth, align, spacingMult, spacingAdd);
+        replaceWith(TextUtils::ellipsize(text, *paint, ellipsizedWidth, ellipsize, true,
+                    [this](int start, int end){ ellipsized(start, end); }),
+                    paint, width, align, spacingMult, spacingAdd);
 
         mEllipsizedWidth = ellipsizedWidth;
         trust = false;
     }
 
-    init(getText(), paint, align, metrics, includePad, trust,false/*useFallbackLineSpacing*/);
+    mUseFallbackLineSpacing = fallbackLineSpacing;
+    init(getText(), paint, align, metrics, includePad, trust, fallbackLineSpacing);
 }
 
 void BoringLayout::init(CharSequence* source, TextPaint* paint, Alignment align,
@@ -206,7 +269,7 @@ BoringLayout::Metrics* BoringLayout::isBoring(CharSequence* text, TextPaint* pai
             0 /* ellipsisStart, 0 since text has not been ellipsized at this point */,
             0 /* ellipsisEnd, 0 since text has not been ellipsized at this point */,
             useFallbackLineSpacing);
-    fm->width = (int) std::ceil(line->metrics(fm));
+    fm->width = (int) std::ceil(line->metrics(fm, &fm->mDrawingBounds, false, nullptr));
     TextLine::recycle(line);
 
     return fm;

@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <core/rect.h>
 namespace minikin{
     class MinikinPaint;
 }
@@ -158,6 +159,9 @@ public:
             int contextCount, bool isRtl, float* advances, int advancesIndex)const;
     float getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
     float getRunAdvance(const char16_t* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const;
+    void getTextBounds(const std::u16string& text, int start, int end, Rect& bounds) const;
+    void getTextBounds(const CharSequence* text, int start, int end, Rect& bounds) const;
+    void getTextBounds(const char16_t* text, int index, int count, Rect& bounds) const;
     float getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const;
     float getTextRunCursor(const char16_t* text, int start, int count, bool isRt, int offset, int cursorOpt)const;
     void drawTextRun(Canvas&c,const char16_t*chars,int start,int count,

@@ -86,6 +86,8 @@ public:
 
     void getBounds(int start, int end, Rect& bounds) const;
 
+    void getFontMetricsInt(int start, int end, Paint::FontMetricsInt& outFmi) const;
+
     float getCharWidthAt( int offset) const;
 
     static MeasuredParagraph* buildForBidi(CharSequence* text, int start, int end,

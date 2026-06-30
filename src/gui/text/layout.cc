@@ -49,10 +49,15 @@ float Layout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,
 }
 
 Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd)
-    :Layout(text, paint, width, align, TextDirectionHeuristics::FIRSTSTRONG_LTR, spacingMult, spacingAdd){
+    :Layout(text, paint, width, align, TextDirectionHeuristics::FIRSTSTRONG_LTR, spacingMult, spacingAdd,false, false,
+            0, TextUtils::TruncateAt::NONE, INT_MAX, BREAK_STRATEGY_SIMPLE, HYPHENATION_FREQUENCY_NONE,
+            {}/*leftIndents*/, {}/*leftIndents*/,JUSTIFICATION_MODE_NONE, LineBreakConfig(), false, false, nullptr){
 }
 
-Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align,const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd) {
+Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align,const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd,
+        bool includePad,bool fallbackLineSpacing,int ellipsizedWidth,TextUtils::TruncateAt ellipsize,int maxLines,int breakStrategy,
+        int hyphenationFrequency,const std::vector<int>&leftIndents,const std::vector<int>&rightIndents,int justificationMode,
+        const LineBreakConfig&lineBreakConfig, bool useBoundsForWidth,bool shiftDrawingOffsetForStartOverhang,const Paint::FontMetrics* minimumFontMetrics) {
     //FATAL_ERROR("Layout: " + width + " < 0");
 
     // Ensure paint doesn't have baselineShift set.
@@ -70,9 +75,23 @@ Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align,
     mAlignment = align;
     mSpacingMult = spacingMult;
     mSpacingAdd = spacingAdd;
-    mLineBackgroundSpans=nullptr;
+    mIncludePad = includePad;
+    mFallbackLineSpacing = fallbackLineSpacing;
+    mEllipsizedWidth = ellipsize == TextUtils::TruncateAt::NONE ? width : ellipsizedWidth;
+    mEllipsize = ellipsize;
+    mMaxLines = maxLines;
+    mBreakStrategy = breakStrategy;
+    mHyphenationFrequency = hyphenationFrequency;
+
+    mLineBackgroundSpans = nullptr;
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
+    mLeftIndents = leftIndents;
+    mRightIndents = rightIndents;
     mJustificationMode = JUSTIFICATION_MODE_NONE;
+    mLineBreakConfig = lineBreakConfig;
+    mUseBoundsForWidth = useBoundsForWidth;
+    mShiftDrawingOffsetForStartOverhang = shiftDrawingOffsetForStartOverhang;
+    mMinimumFontMetrics = minimumFontMetrics;
     mTextDir = textDir;
 }
 
@@ -1143,7 +1162,7 @@ void Layout::HorizontalMeasurementProvider::init() {
     mLineStartOffset = mLayout->getLineStart(mLine);
 }
 
-float Layout::HorizontalMeasurementProvider::get(int offset) {
+float Layout::HorizontalMeasurementProvider::get(int offset) const{
     const int index = offset - mLineStartOffset;
     if (mHorizontals.empty() || index < 0 || index >= mHorizontals.size()) {
         return mLayout->getHorizontal(offset, mPrimary);

@@ -32,6 +32,10 @@ public:
         int mJustificationMode;
         TextUtils::TruncateAt mEllipsize;
         int mEllipsizedWidth;
+        LineBreakConfig mLineBreakConfig;
+        bool mUseBoundsForWidth;
+        bool mShiftDrawingOffsetForStartOverhang;
+        const Paint::FontMetrics* mMinimumFontMetrics = nullptr;
         mutable Paint::FontMetricsInt mFontMetricsInt;
         static Pools::SynchronizedPool<Builder> sPool;
     private:
@@ -50,6 +54,10 @@ public:
         Builder& setBreakStrategy(int breakStrategy);
         Builder& setHyphenationFrequency(int hyphenationFrequency);
         Builder& setJustificationMode(int justificationMode);
+        Builder& setLineBreakConfig(const LineBreakConfig& lineBreakConfig);
+        Builder& setUseBoundsForWidth(bool useBoundsForWidth);
+        Builder& setShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang);
+        Builder& setMinimumFontMetrics(const Paint::FontMetrics* minimumFontMetrics);
         DynamicLayout* build();
     };
 private:
@@ -62,6 +70,20 @@ private:
     void addBlockAtOffset(int offset);
     bool getContentMayProtrudeFromTopOrBottom(int line) const;
 public:
+    DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+            int width, Alignment align, const TextDirectionHeuristic* textDir,
+            float spacingmult, float spacingadd, bool includepad, int breakStrategy,
+            int hyphenationFrequency, int justificationMode,
+            const LineBreakConfig& lineBreakConfig, TextUtils::TruncateAt ellipsize,
+            int ellipsizedWidth);
+    DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+            int width, Alignment align, float spacingmult, float spacingadd,
+            bool includepad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
+    DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+            int width, Alignment align, float spacingmult, float spacingadd,
+            bool includepad);
+    DynamicLayout(CharSequence* base, TextPaint* paint, int width, Alignment align,
+            float spacingmult, float spacingadd, bool includepad);
     ~DynamicLayout()override;
     void reflow(CharSequence* s, int where, int before, int after);
     std::set<int> getBlocksAlwaysNeedToBeRedrawn() const;
@@ -96,6 +118,7 @@ public:
 
     int getEllipsisStart(int line) const override;
     int getEllipsisCount(int line) const override;
+    LineBreakConfig getLineBreakConfig() const;
 private:
     class ChangeWatcher : public ParcelableSpan {//implements TextWatcher, SpanWatcher {
     private:
@@ -123,6 +146,7 @@ private:
     int mBreakStrategy;
     int mHyphenationFrequency;
     int mJustificationMode;
+    LineBreakConfig mLineBreakConfig;
 
     PackedIntVector* mInts;
     PackedObjectVector<const Directions*>* mObjects;
@@ -140,6 +164,10 @@ private:
     int mIndexFirstChangedBlock;
 
     int mTopPadding, mBottomPadding;
+
+    bool mUseBoundsForWidth;
+    bool mShiftDrawingOffsetForStartOverhang;
+    const Paint::FontMetrics* mMinimumFontMetrics = nullptr;
 
     static StaticLayout* sStaticLayout;
     static StaticLayout::Builder* sBuilder;

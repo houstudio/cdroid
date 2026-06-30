@@ -11,7 +11,558 @@
 #include <text/style/tabstopspan.h>
 #include <text/style/wraptogetherspan.h>
 #include <expat.h>
+#include <text/spannablestringbuilder.h>
+#include <core/color.h>
+#include <regex>
+#include <cstdint>
+#include <initializer_list>
 namespace cdroid{
+
+// Concrete XMLReader. Forward-declared in html.h so the public TagHandler
+// signature (which takes an XMLReader&) compiles; defined here because
+// Html::fromHtml drives parsing directly via expat. As in Android, real
+// TagHandler implementations only use the Editable and the tag name, so this
+// is intentionally minimal.
+class XMLReader {
+public:
+    XMLReader() = default;
+    virtual ~XMLReader() = default;
+};
+
+namespace {
+
+// HTML named entities expat (an XML parser) does not know about. Expanded to
+// numeric character references before parsing. XML predefined entities
+// (&amp; &lt; &gt; &quot; &apos;) and numeric refs (&#NNN;) are left for expat.
+struct HtmlEntity { const char* name; uint32_t cp; };
+static const HtmlEntity kHtmlEntities[] = {
+    {"nbsp",160},{"copy",169},{"reg",174},{"trade",8482},{"mdash",8212},
+    {"ndash",8211},{"hellip",8230},{"laquo",171},{"raquo",187},{"times",215},
+    {"divide",247},{"deg",176},{"plusmn",177},{"para",182},{"middot",183},
+    {"frac12",189},{"frac14",188},{"frac34",190},{"sup2",178},{"sup3",179},
+    {"sup1",185},{"euro",8364},{"pound",163},{"yen",165},{"cent",162},
+    {"sect",167},{"bull",8226},{"dagger",8224},{"Dagger",8225},{"lsquo",8216},
+    {"rsquo",8217},{"ldquo",8220},{"rdquo",8221},{"szlig",223},{"agrave",224},
+    {"aacute",225},{"acirc",226},{"atilde",227},{"auml",228},{"aring",229},
+    {"aelig",230},{"ccedil",231},{"egrave",232},{"eacute",233},{"ecirc",234},
+    {"euml",235},{"igrave",236},{"iacute",237},{"icirc",238},{"iuml",239},
+    {"ntilde",241},{"ograve",242},{"oacute",243},{"ocirc",244},{"otilde",245},
+    {"ouml",246},{"oslash",248},{"ugrave",249},{"uacute",250},{"ucirc",251},
+    {"uuml",252},{"yacute",253},{"yuml",255},{"Agrave",192},{"Aacute",193},
+    {"Acirc",194},{"Atilde",195},{"Auml",196},{"Aring",197},{"AElig",198},
+    {"Ccedil",199},{"Egrave",200},{"Eacute",201},{"Ecirc",202},{"Euml",203},
+    {"Igrave",204},{"Iacute",205},{"Icirc",206},{"Iuml",207},{"Ntilde",209},
+    {"Ograve",210},{"Oacute",211},{"Ocirc",212},{"Otilde",213},{"Ouml",214},
+    {"Oslash",216},{"Ugrave",217},{"Uacute",218},{"Ucirc",219},{"Uuml",220},
+    {"Yacute",221}
+};
+
+std::string expandHtmlEntities(const std::string& src) {
+    std::string out;
+    out.reserve(src.size());
+    const size_t n = src.size();
+    for (size_t i = 0; i < n; ) {
+        if (src[i] == '&') {
+            size_t semi = src.find(';', i + 1);
+            if (semi != std::string::npos && semi - (i + 1) <= 8) {
+                std::string name = src.substr(i + 1, semi - (i + 1));
+                if (!name.empty() && name[0] != '#') {
+                    bool matched = false;
+                    for (const auto& e : kHtmlEntities) {
+                        if (name == e.name) {
+                            out += "&#";
+                            out += std::to_string(e.cp);
+                            out += ';';
+                            i = semi + 1;
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if (matched) continue;
+                }
+            }
+        }
+        out += src[i++];
+    }
+    return out;
+}
+
+// Decode a UTF-8 byte run into UTF-16 (char16_t, with surrogate pairs).
+std::u16string utf8ToU16(const char* s, int len) {
+    std::u16string out;
+    for (int i = 0; i < len; ) {
+        unsigned char c = (unsigned char)s[i];
+        uint32_t cp;
+        int extra;
+        if (c < 0x80)               { cp = c;        extra = 0; }
+        else if ((c & 0xE0) == 0xC0){ cp = c & 0x1F; extra = 1; }
+        else if ((c & 0xF0) == 0xE0){ cp = c & 0x0F; extra = 2; }
+        else if ((c & 0xF8) == 0xF0){ cp = c & 0x07; extra = 3; }
+        else { out.push_back((char16_t)c); ++i; continue; }
+        for (int j = 1; j <= extra && i + j < len; ++j)
+            cp = (cp << 6) | (((unsigned char)s[i + j]) & 0x3F);
+        i += 1 + extra;
+        if (cp <= 0xFFFF) {
+            out.push_back((char16_t)cp);
+        } else {
+            cp -= 0x10000;
+            out.push_back((char16_t)(0xD800 | (cp >> 10)));
+            out.push_back((char16_t)(0xDC00 | (cp & 0x3FF)));
+        }
+    }
+    return out;
+}
+
+inline bool equalsIgnoreCase(const std::string& a, const char* b) {
+    size_t i = 0;
+    for (; i < a.size() && b[i]; ++i) {
+        char x = (a[i] >= 'a' && a[i] <= 'z') ? char(a[i] - 32) : a[i];
+        char y = (b[i] >= 'a' && b[i] <= 'z') ? char(b[i] - 32) : b[i];
+        if (x != y) return false;
+    }
+    return i == a.size() && b[i] == 0;
+}
+inline bool equalsIgnoreCase(const std::string& a, const std::string& b) {
+    return equalsIgnoreCase(a, b.c_str());
+}
+
+// Case-insensitive lookup over expat's null-terminated name/value attribute pairs.
+std::string getAttr(const XML_Char** atts, const char* name) {
+    if (!atts) return std::string();
+    for (int i = 0; atts[i]; i += 2) {
+        if (equalsIgnoreCase(atts[i], name))
+            return atts[i + 1] ? std::string(atts[i + 1]) : std::string();
+    }
+    return std::string();
+}
+
+// Sentinel root element so fragments with several top-level blocks parse.
+constexpr const char* kHtmlRootTag = "cdroid-html-root";
+
+// SAX-style converter. Expat's start/end/character callbacks are the analog of
+// Android's ContentHandler. Tags drop inert "mark" bookmarks; real spans are
+// created only at the matching end tag via setSpanFromMark().
+class HtmlToSpannedConverter {
+public:
+    HtmlToSpannedConverter(const std::string& source, Html::ImageGetter imageGetter,
+                           Html::TagHandler tagHandler, int flags)
+        : mSource(source)
+        , mImageGetter(std::move(imageGetter))
+        , mTagHandler(std::move(tagHandler))
+        , mFlags(flags) {}
+
+    Spanned* convert() {
+        XML_Parser parser = XML_ParserCreate(nullptr); // UTF-8, no namespaces
+        XML_SetUserData(parser, this);
+        XML_SetElementHandler(parser, &HtmlToSpannedConverter::startThunk,
+                                     &HtmlToSpannedConverter::endThunk);
+        XML_SetCharacterDataHandler(parser, &HtmlToSpannedConverter::charsThunk);
+
+        std::string body = expandHtmlEntities(mSource);
+        const std::string rootOpen  = std::string("<") + kHtmlRootTag + ">";
+        const std::string rootClose = std::string("</") + kHtmlRootTag + ">";
+        bool ok = true;
+        auto feed = [&](const char* p, int len, int isFinal) {
+            if (ok && XML_Parse(parser, p, len, isFinal) == XML_STATUS_ERROR) ok = false;
+        };
+        feed(rootOpen.data(),  (int)rootOpen.size(),  XML_FALSE);
+        feed(body.data(),      (int)body.size(),      XML_FALSE);
+        feed(rootClose.data(), (int)rootClose.size(), XML_TRUE);
+        XML_ParserFree(parser);
+
+        // Fix flags and range for paragraph-type markup.
+        auto paragraphs = mBuilder.getSpans(0, (int)mBuilder.length(),
+                                            make_span_filter<ParagraphStyle>());
+        for (auto span : paragraphs) {
+            int start = mBuilder.getSpanStart(span);
+            int end   = mBuilder.getSpanEnd(span);
+            if (end - 2 >= 0) {
+                if (mBuilder.charAt(end - 1) == '\n' &&
+                    mBuilder.charAt(end - 2) == '\n') {
+                    end--;
+                }
+            }
+            // CDROID's setSpan appends rather than replacing an existing span,
+            // so drop the old entry first to mirror Android's replace-on-setSpan.
+            mBuilder.removeSpan(span);
+            if (end != start) {
+                mBuilder.setSpan(span, start, end, Spanned::SPAN_PARAGRAPH);
+            }
+        }
+        return new SpannableStringBuilder(mBuilder);
+    }
+
+private:
+    static void startThunk(void* ud, const XML_Char* name, const XML_Char** atts) {
+        static_cast<HtmlToSpannedConverter*>(ud)->startElement(name, atts);
+    }
+    static void endThunk(void* ud, const XML_Char* name) {
+        static_cast<HtmlToSpannedConverter*>(ud)->endElement(name);
+    }
+    static void charsThunk(void* ud, const XML_Char* s, int len) {
+        static_cast<HtmlToSpannedConverter*>(ud)->characters(s, len);
+    }
+
+    void startElement(const XML_Char* name, const XML_Char** atts) {
+        std::string tag(name);
+        if (!equalsIgnoreCase(tag, kHtmlRootTag)) handleStartTag(tag, atts);
+    }
+    void endElement(const XML_Char* name) {
+        std::string tag(name);
+        if (!equalsIgnoreCase(tag, kHtmlRootTag)) handleEndTag(tag);
+    }
+    void characters(const XML_Char* s, int len) {
+        // Collapse whitespace runs the way Android's characters() does.
+        std::u16string decoded = utf8ToU16(s, len);
+        for (char16_t c : decoded) {
+            if (c == u' ' || c == u'\n') {
+                int blen = (int)mBuilder.length();
+                char16_t pred = (blen == 0) ? u'\n' : (char16_t)mBuilder.charAt(blen - 1);
+                if (pred != u' ' && pred != u'\n') mBuilder.append((char16_t)u' ');
+            } else {
+                mBuilder.append(c);
+            }
+        }
+    }
+
+    static float headingSize(int level) {
+        static const float kSizes[6] = {1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1.0f};
+        return kSizes[level];
+    }
+
+    // ---- mark objects: inert ParcelableSpan bookmarks (members are public). ----
+    struct Bold         : ParcelableSpan {};
+    struct Italic       : ParcelableSpan {};
+    struct Underline    : ParcelableSpan {};
+    struct Strikethrough: ParcelableSpan {};
+    struct Big          : ParcelableSpan {};
+    struct Small        : ParcelableSpan {};
+    struct Monospace    : ParcelableSpan {};
+    struct Blockquote   : ParcelableSpan {};
+    struct Super        : ParcelableSpan {};
+    struct Sub          : ParcelableSpan {};
+    struct Bullet       : ParcelableSpan {};
+    struct Font         : ParcelableSpan { std::string mFace; explicit Font(const std::string& f):mFace(f){} };
+    struct Href         : ParcelableSpan { std::string mHref; explicit Href(const std::string& h):mHref(h){} };
+    struct Foreground   : ParcelableSpan { int mColor; explicit Foreground(int c):mColor(c){} };
+    struct Background   : ParcelableSpan { int mColor; explicit Background(int c):mColor(c){} };
+    struct Heading      : ParcelableSpan { int mLevel; explicit Heading(int l):mLevel(l){} };
+    struct Newline      : ParcelableSpan { int mNum;  explicit Newline(int n):mNum(n){}  };
+    struct Align        : ParcelableSpan { Layout::Alignment mAlign; explicit Align(Layout::Alignment a):mAlign(a){} };
+
+    std::string mSource;
+    Html::ImageGetter mImageGetter;
+    Html::TagHandler mTagHandler;
+    int mFlags;
+    XMLReader mReader;
+    SpannableStringBuilder mBuilder;
+
+    static const std::regex& textAlignRe() {
+        static const std::regex re(R"((?:^|\s+)text-align\s*:\s*([^\s;]+))", std::regex::icase);
+        return re;
+    }
+    static const std::regex& colorRe() {
+        static const std::regex re(R"((?:^|\s+)color\s*:\s*([^\s;]+))", std::regex::icase);
+        return re;
+    }
+    static const std::regex& backgroundRe() {
+        static const std::regex re(R"((?:^|\s+)background(?:-color)?\s*:\s*([^\s;]+))", std::regex::icase);
+        return re;
+    }
+    static const std::regex& textDecorationRe() {
+        static const std::regex re(R"((?:^|\s+)text-decoration\s*:\s*([^\s;]+))", std::regex::icase);
+        return re;
+    }
+
+    int getFontWeightAdjustment() const { return 0; }
+
+    int getMargin(int flag) const { return (flag & mFlags) != 0 ? 1 : 2; }
+    int getMarginParagraph() const  { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH); }
+    int getMarginHeading() const    { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_HEADING); }
+    int getMarginListItem() const   { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM); }
+    int getMarginList() const       { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_LIST); }
+    int getMarginDiv() const        { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_DIV); }
+    int getMarginBlockquote() const { return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE); }
+
+    static void appendNewlines(SpannableStringBuilder& text, int minNewline) {
+        int len = (int)text.length();
+        if (len == 0) return;
+        int existing = 0;
+        for (int i = len - 1; i >= 0 && text.charAt(i) == '\n'; --i) existing++;
+        for (int j = existing; j < minNewline; ++j) text.append((char16_t)u'\n');
+    }
+
+    static void start(SpannableStringBuilder& text, const ParcelableSpan* mark) {
+        int len = (int)text.length();
+        text.setSpan(mark, len, len, Spanned::SPAN_INCLUSIVE_EXCLUSIVE);
+    }
+    static void setSpanFromMark(SpannableStringBuilder& text, const ParcelableSpan* mark,
+                                std::initializer_list<const ParcelableSpan*> spans) {
+        int where = text.getSpanStart(mark);
+        text.removeSpan(mark);
+        int len = (int)text.length();
+        if (where != len) {
+            for (auto sp : spans) text.setSpan(sp, where, len, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        }
+    }
+    template<typename T>
+    static const T* getLast(const SpannableStringBuilder& text) {
+        auto objs = text.getSpans(0, (int)text.length(), make_span_filter<T>());
+        if (objs.empty()) return nullptr;
+        return static_cast<const T*>(objs.back());
+    }
+    template<typename T>
+    static void end(SpannableStringBuilder& text, const ParcelableSpan* repl) {
+        const T* obj = getLast<T>(text);
+        if (obj) setSpanFromMark(text, obj, { repl });
+    }
+
+    static bool isHeadingTag(const std::string& tag) {
+        return tag.size() == 2 && (tag[0] == 'h' || tag[0] == 'H')
+            && tag[1] >= '1' && tag[1] <= '6';
+    }
+
+    void handleStartTag(const std::string& tag, const XML_Char** atts) {
+        if (equalsIgnoreCase(tag, "br")) {
+            // newline emitted on the end tag
+        } else if (equalsIgnoreCase(tag, "p")) {
+            startBlockElement(mBuilder, atts, getMarginParagraph());
+            startCssStyle(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "ul")) {
+            startBlockElement(mBuilder, atts, getMarginList());
+        } else if (equalsIgnoreCase(tag, "li")) {
+            startLi(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "div")) {
+            startBlockElement(mBuilder, atts, getMarginDiv());
+        } else if (equalsIgnoreCase(tag, "span")) {
+            startCssStyle(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "strong") || equalsIgnoreCase(tag, "b")) {
+            start(mBuilder, new Bold());
+        } else if (equalsIgnoreCase(tag, "em") || equalsIgnoreCase(tag, "cite") ||
+                   equalsIgnoreCase(tag, "dfn") || equalsIgnoreCase(tag, "i")) {
+            start(mBuilder, new Italic());
+        } else if (equalsIgnoreCase(tag, "big")) {
+            start(mBuilder, new Big());
+        } else if (equalsIgnoreCase(tag, "small")) {
+            start(mBuilder, new Small());
+        } else if (equalsIgnoreCase(tag, "font")) {
+            startFont(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "blockquote")) {
+            startBlockquote(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "tt")) {
+            start(mBuilder, new Monospace());
+        } else if (equalsIgnoreCase(tag, "a")) {
+            startA(mBuilder, atts);
+        } else if (equalsIgnoreCase(tag, "u")) {
+            start(mBuilder, new Underline());
+        } else if (equalsIgnoreCase(tag, "del") || equalsIgnoreCase(tag, "s") ||
+                   equalsIgnoreCase(tag, "strike")) {
+            start(mBuilder, new Strikethrough());
+        } else if (equalsIgnoreCase(tag, "sup")) {
+            start(mBuilder, new Super());
+        } else if (equalsIgnoreCase(tag, "sub")) {
+            start(mBuilder, new Sub());
+        } else if (isHeadingTag(tag)) {
+            startHeading(mBuilder, atts, tag[1] - '1');
+        } else if (equalsIgnoreCase(tag, "img")) {
+            startImg(atts);
+        } else if (mTagHandler) {
+            mTagHandler(true, tag, mBuilder, mReader);
+        }
+    }
+
+    void handleEndTag(const std::string& tag) {
+        if (equalsIgnoreCase(tag, "br")) {
+            mBuilder.append((char16_t)u'\n');
+        } else if (equalsIgnoreCase(tag, "p")) {
+            endCssStyle(mBuilder);
+            endBlockElement(mBuilder);
+        } else if (equalsIgnoreCase(tag, "ul")) {
+            endBlockElement(mBuilder);
+        } else if (equalsIgnoreCase(tag, "li")) {
+            endLi(mBuilder);
+        } else if (equalsIgnoreCase(tag, "div")) {
+            endBlockElement(mBuilder);
+        } else if (equalsIgnoreCase(tag, "span")) {
+            endCssStyle(mBuilder);
+        } else if (equalsIgnoreCase(tag, "strong") || equalsIgnoreCase(tag, "b")) {
+            end<Bold>(mBuilder, new StyleSpan(Typeface::BOLD, getFontWeightAdjustment()));
+        } else if (equalsIgnoreCase(tag, "em") || equalsIgnoreCase(tag, "cite") ||
+                   equalsIgnoreCase(tag, "dfn") || equalsIgnoreCase(tag, "i")) {
+            end<Italic>(mBuilder, new StyleSpan(Typeface::ITALIC));
+        } else if (equalsIgnoreCase(tag, "big")) {
+            end<Big>(mBuilder, new RelativeSizeSpan(1.25f));
+        } else if (equalsIgnoreCase(tag, "small")) {
+            end<Small>(mBuilder, new RelativeSizeSpan(0.8f));
+        } else if (equalsIgnoreCase(tag, "font")) {
+            endFont(mBuilder);
+        } else if (equalsIgnoreCase(tag, "blockquote")) {
+            endBlockquote(mBuilder);
+        } else if (equalsIgnoreCase(tag, "tt")) {
+            end<Monospace>(mBuilder, new TypefaceSpan("monospace"));
+        } else if (equalsIgnoreCase(tag, "a")) {
+            endA(mBuilder);
+        } else if (equalsIgnoreCase(tag, "u")) {
+            end<Underline>(mBuilder, new UnderlineSpan());
+        } else if (equalsIgnoreCase(tag, "del") || equalsIgnoreCase(tag, "s") ||
+                   equalsIgnoreCase(tag, "strike")) {
+            end<Strikethrough>(mBuilder, new StrikethroughSpan());
+        } else if (equalsIgnoreCase(tag, "sup")) {
+            end<Super>(mBuilder, new SuperscriptSpan());
+        } else if (equalsIgnoreCase(tag, "sub")) {
+            end<Sub>(mBuilder, new SubscriptSpan());
+        } else if (isHeadingTag(tag)) {
+            endHeading(mBuilder);
+        } else if (mTagHandler) {
+            mTagHandler(false, tag, mBuilder, mReader);
+        }
+    }
+
+    void startBlockElement(SpannableStringBuilder& text, const XML_Char** atts, int margin) {
+        if (margin > 0) {
+            appendNewlines(text, margin);
+            start(text, new Newline(margin));
+        }
+        std::string style = getAttr(atts, "style");
+        std::smatch m;
+        if (!style.empty() && std::regex_search(style, m, textAlignRe())) {
+            const std::string& a = m[1].str();
+            if (equalsIgnoreCase(a, "start") || equalsIgnoreCase(a, "left"))
+                start(text, new Align(Layout::Alignment::ALIGN_NORMAL));
+            else if (equalsIgnoreCase(a, "center"))
+                start(text, new Align(Layout::Alignment::ALIGN_CENTER));
+            else if (equalsIgnoreCase(a, "end") || equalsIgnoreCase(a, "right"))
+                start(text, new Align(Layout::Alignment::ALIGN_OPPOSITE));
+        }
+    }
+    void endBlockElement(SpannableStringBuilder& text) {
+        const Newline* n = getLast<Newline>(text);
+        if (n) { appendNewlines(text, n->mNum); text.removeSpan(n); }
+        const Align* a = getLast<Align>(text);
+        if (a) setSpanFromMark(text, a, { new AlignmentSpan::Standard(a->mAlign) });
+    }
+
+    void startLi(SpannableStringBuilder& text, const XML_Char** atts) {
+        startBlockElement(text, atts, getMarginListItem());
+        start(text, new Bullet());
+        startCssStyle(text, atts);
+    }
+    void endLi(SpannableStringBuilder& text) {
+        endCssStyle(text);
+        endBlockElement(text);
+        end<Bullet>(text, new BulletSpan());
+    }
+
+    void startBlockquote(SpannableStringBuilder& text, const XML_Char** atts) {
+        startBlockElement(text, atts, getMarginBlockquote());
+        start(text, new Blockquote());
+    }
+    void endBlockquote(SpannableStringBuilder& text) {
+        endBlockElement(text);
+        end<Blockquote>(text, new QuoteSpan());
+    }
+
+    void startHeading(SpannableStringBuilder& text, const XML_Char** atts, int level) {
+        startBlockElement(text, atts, getMarginHeading());
+        start(text, new Heading(level));
+    }
+    void endHeading(SpannableStringBuilder& text) {
+        const Heading* h = getLast<Heading>(text);
+        if (h) {
+            setSpanFromMark(text, h, {
+                new RelativeSizeSpan(headingSize(h->mLevel)),
+                new StyleSpan(Typeface::BOLD, getFontWeightAdjustment())
+            });
+        }
+        endBlockElement(text);
+    }
+
+    void startCssStyle(SpannableStringBuilder& text, const XML_Char** atts) {
+        std::string style = getAttr(atts, "style");
+        if (style.empty()) return;
+        std::smatch m;
+        if (std::regex_search(style, m, colorRe())) {
+            int c = getHtmlColor(m[1].str());
+            if (c != -1) start(text, new Foreground(c | 0xFF000000));
+        }
+        if (std::regex_search(style, m, backgroundRe())) {
+            int c = getHtmlColor(m[1].str());
+            if (c != -1) start(text, new Background(c | 0xFF000000));
+        }
+        if (std::regex_search(style, m, textDecorationRe())) {
+            if (equalsIgnoreCase(m[1].str(), "line-through")) start(text, new Strikethrough());
+        }
+    }
+    void endCssStyle(SpannableStringBuilder& text) {
+        const Strikethrough* s = getLast<Strikethrough>(text);
+        if (s) setSpanFromMark(text, s, { new StrikethroughSpan() });
+        const Background* b = getLast<Background>(text);
+        if (b) setSpanFromMark(text, b, { new BackgroundColorSpan(b->mColor) });
+        const Foreground* f = getLast<Foreground>(text);
+        if (f) setSpanFromMark(text, f, { new ForegroundColorSpan(f->mColor) });
+    }
+
+    void startFont(SpannableStringBuilder& text, const XML_Char** atts) {
+        std::string color = getAttr(atts, "color");
+        std::string face  = getAttr(atts, "face");
+        if (!color.empty()) {
+            int c = getHtmlColor(color);
+            if (c != -1) start(text, new Foreground(c | 0xFF000000));
+        }
+        if (!face.empty()) start(text, new Font(face));
+    }
+    void endFont(SpannableStringBuilder& text) {
+        const Font* font = getLast<Font>(text);
+        if (font) setSpanFromMark(text, font, { new TypefaceSpan(font->mFace) });
+        const Foreground* fg = getLast<Foreground>(text);
+        if (fg) setSpanFromMark(text, fg, { new ForegroundColorSpan(fg->mColor) });
+    }
+
+    void startA(SpannableStringBuilder& text, const XML_Char** atts) {
+        start(text, new Href(getAttr(atts, "href")));
+    }
+    void endA(SpannableStringBuilder& text) {
+        const Href* h = getLast<Href>(text);
+        if (!h) return;
+        // Reserved: URLSpan is abstract in this port (pure-virtual
+        // ClickableSpan::onClick). Re-enable once URLSpan is instantiable:
+        //     if (!h->mHref.empty()) setSpanFromMark(text, h, { new URLSpan(h->mHref) });
+        setSpanFromMark(text, h, {});
+    }
+
+    void startImg(const XML_Char** /*atts*/) {
+        // Reserved: ImageSpan/ImageGetter are unavailable in this port. Re-enable
+        // once ImageSpan exists (mirrors Android's behavior):
+        //     std::string src = getAttr(atts, "src");
+        //     Drawable* d = mImageGetter ? mImageGetter(src) : nullptr;
+        //     int len = (int)mBuilder.length();
+        //     mBuilder.append(u'￼');
+        //     mBuilder.setSpan(new ImageSpan(d, src), len, (int)mBuilder.length(),
+        //                      Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        (void)mImageGetter;
+    }
+
+    int getHtmlColor(const std::string& color) const {
+        if (color.empty()) return -1;
+        if ((mFlags & Html::FROM_HTML_OPTION_USE_CSS_COLORS) != 0) {
+            struct Nv { const char* n; unsigned int v; };
+            static const Nv cssMap[] = {
+                {"darkgray",0xFFA9A9A9},{"gray",0xFF808080},{"lightgray",0xFFD3D3D3},
+                {"darkgrey",0xFFA9A9A9},{"grey",0xFF808080},{"lightgrey",0xFFD3D3D3},
+                {"green",0xFF008000}
+            };
+            std::string lower = color;
+            for (auto& ch : lower) if (ch >= 'A' && ch <= 'Z') ch = char(ch + 32);
+            for (const auto& e : cssMap) if (lower == e.n) return (int)e.v;
+        }
+        try { return (int)Color::parseColor(color); } catch (...) {}
+        try { return (int)std::stoul(color, nullptr, 0); }   // 0x.. / decimal
+        catch (...) { return -1; }
+    }
+};
+
+} // anonymous namespace
+
 Spanned* Html::fromHtml(const std::string& source) {
     return fromHtml(source, FROM_HTML_MODE_LEGACY, nullptr, nullptr);
 }
@@ -25,21 +576,8 @@ Spanned* Html::fromHtml(const std::string& source, ImageGetter imageGetter, TagH
 }
 
 Spanned* Html::fromHtml(const std::string& source, int flags, ImageGetter imageGetter, TagHandler tagHandler) {
-    /*Parser parser = new Parser();
-    try {
-        parser.setProperty(Parser.schemaProperty, HtmlParser.schema);
-    } catch (org.xml.sax.SAXNotRecognizedException e) {
-        // Should not happen.
-        throw new RuntimeException(e);
-    } catch (org.xml.sax.SAXNotSupportedException e) {
-        // Should not happen.
-        throw new RuntimeException(e);
-    }
-
-    HtmlToSpannedConverter converter =
-            new HtmlToSpannedConverter(source, imageGetter, tagHandler, parser, flags);
-    return converter.convert();*/
-    return nullptr;
+    HtmlToSpannedConverter converter(source, std::move(imageGetter), std::move(tagHandler), flags);
+    return converter.convert();
 }
 
 std::string Html::toHtml(const Spanned& text) {
@@ -433,689 +971,5 @@ void Html::withinStyle(std::stringstream& out,const CharSequence& text, int star
         }
     }
 }
-///////////////////////////////////////////////////////////////////////////////////////////
-#if 0
-class HtmlToSpannedConverter implements ContentHandler {
 
-    private static float HEADING_SIZES []= {
-        1.5f, 1.4f, 1.3f, 1.2f, 1.1f, 1f,
-    };
-
-    private std::string mSource;
-    private XMLReader mReader;
-    private SpannableStringBuilder mSpannableStringBuilder;
-    private Html::ImageGetter mImageGetter;
-    private Html::TagHandler mTagHandler;
-    private int mFlags;
-
-    private static Pattern sTextAlignPattern;
-    private static Pattern sForegroundColorPattern;
-    private static Pattern sBackgroundColorPattern;
-    private static Pattern sTextDecorationPattern;
-
-    private static std::unordered_map<std::string, uint32_t> sColorMap={
-        {"darkgray", 0xFFA9A9A9},
-        {"gray", 0xFF808080},
-        {"lightgray", 0xFFD3D3D3},
-        {"darkgrey", 0xFFA9A9A9},
-        {"grey", 0xFF808080},
-        {"lightgrey", 0xFFD3D3D3},
-        {"green", 0xFF008000}
-    };
-
-    private static Pattern getTextAlignPattern() {
-        if (sTextAlignPattern == null) {
-            sTextAlignPattern = Pattern.compile("(?:\\s+|\\A)text-align\\s*:\\s*(\\S*)\\b");
-        }
-        return sTextAlignPattern;
-    }
-
-    private static Pattern getForegroundColorPattern() {
-        if (sForegroundColorPattern == null) {
-            sForegroundColorPattern = Pattern.compile(
-                    "(?:\\s+|\\A)color\\s*:\\s*(\\S*)\\b");
-        }
-        return sForegroundColorPattern;
-    }
-
-    private static Pattern getBackgroundColorPattern() {
-        if (sBackgroundColorPattern == null) {
-            sBackgroundColorPattern = Pattern.compile(
-                    "(?:\\s+|\\A)background(?:-color)?\\s*:\\s*(\\S*)\\b");
-        }
-        return sBackgroundColorPattern;
-    }
-
-    private static Pattern getTextDecorationPattern() {
-        if (sTextDecorationPattern == null) {
-            sTextDecorationPattern = Pattern.compile(
-                    "(?:\\s+|\\A)text-decoration\\s*:\\s*(\\S*)\\b");
-        }
-        return sTextDecorationPattern;
-    }
-
-    public HtmlToSpannedConverter::HtmlToSpannedConverter(const std::string& source, Html::ImageGetter imageGetter,
-            Html::TagHandler tagHandler, Parser parser, int flags) {
-        mSource = source;
-        mSpannableStringBuilder = new SpannableStringBuilder();
-        mImageGetter = imageGetter;
-        mTagHandler = tagHandler;
-        mReader = parser;
-        mFlags = flags;
-    }
-
-    public Spanned* HtmlToSpannedConverter::convert() {
-
-        mReader.setContentHandler(this);
-        try {
-            mReader.parse(new InputSource(new StringReader(mSource)));
-        } catch (IOException e) {
-            // We are reading from a string. There should not be IO problems.
-            throw new RuntimeException(e);
-        } catch (SAXException e) {
-            // TagSoup doesn't throw parse exceptions.
-            throw new RuntimeException(e);
-        }
-
-        // Fix flags and range for paragraph-type markup.
-        Object[] obj = mSpannableStringBuilder.getSpans(0, mSpannableStringBuilder.length(), ParagraphStyle.class);
-        for (int i = 0; i < obj.length; i++) {
-            int start = mSpannableStringBuilder.getSpanStart(obj[i]);
-            int end = mSpannableStringBuilder.getSpanEnd(obj[i]);
-
-            // If the last line of the range is blank, back off by one.
-            if (end - 2 >= 0) {
-                if (mSpannableStringBuilder.charAt(end - 1) == '\n' &&
-                    mSpannableStringBuilder.charAt(end - 2) == '\n') {
-                    end--;
-                }
-            }
-
-            if (end == start) {
-                mSpannableStringBuilder.removeSpan(obj[i]);
-            } else {
-                mSpannableStringBuilder.setSpan(obj[i], start, end, Spannable.SPAN_PARAGRAPH);
-            }
-        }
-
-        return mSpannableStringBuilder;
-    }
-
-    private void HtmlToSpannedConverter::handleStartTag(const std::string& tag, Attributes attributes) {
-        if (tag.equalsIgnoreCase("br")) {
-            // We don't need to handle this. TagSoup will ensure that there's a </br> for each <br>
-            // so we can safely emit the linebreaks when we handle the close tag.
-        } else if (tag.equalsIgnoreCase("p")) {
-            startBlockElement(mSpannableStringBuilder, attributes, getMarginParagraph());
-            startCssStyle(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("ul")) {
-            startBlockElement(mSpannableStringBuilder, attributes, getMarginList());
-        } else if (tag.equalsIgnoreCase("li")) {
-            startLi(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("div")) {
-            startBlockElement(mSpannableStringBuilder, attributes, getMarginDiv());
-        } else if (tag.equalsIgnoreCase("span")) {
-            startCssStyle(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("strong")) {
-            start(mSpannableStringBuilder, new Bold());
-        } else if (tag.equalsIgnoreCase("b")) {
-            start(mSpannableStringBuilder, new Bold());
-        } else if (tag.equalsIgnoreCase("em")) {
-            start(mSpannableStringBuilder, new Italic());
-        } else if (tag.equalsIgnoreCase("cite")) {
-            start(mSpannableStringBuilder, new Italic());
-        } else if (tag.equalsIgnoreCase("dfn")) {
-            start(mSpannableStringBuilder, new Italic());
-        } else if (tag.equalsIgnoreCase("i")) {
-            start(mSpannableStringBuilder, new Italic());
-        } else if (tag.equalsIgnoreCase("big")) {
-            start(mSpannableStringBuilder, new Big());
-        } else if (tag.equalsIgnoreCase("small")) {
-            start(mSpannableStringBuilder, new Small());
-        } else if (tag.equalsIgnoreCase("font")) {
-            startFont(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("blockquote")) {
-            startBlockquote(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("tt")) {
-            start(mSpannableStringBuilder, new Monospace());
-        } else if (tag.equalsIgnoreCase("a")) {
-            startA(mSpannableStringBuilder, attributes);
-        } else if (tag.equalsIgnoreCase("u")) {
-            start(mSpannableStringBuilder, new Underline());
-        } else if (tag.equalsIgnoreCase("del")) {
-            start(mSpannableStringBuilder, new Strikethrough());
-        } else if (tag.equalsIgnoreCase("s")) {
-            start(mSpannableStringBuilder, new Strikethrough());
-        } else if (tag.equalsIgnoreCase("strike")) {
-            start(mSpannableStringBuilder, new Strikethrough());
-        } else if (tag.equalsIgnoreCase("sup")) {
-            start(mSpannableStringBuilder, new Super());
-        } else if (tag.equalsIgnoreCase("sub")) {
-            start(mSpannableStringBuilder, new Sub());
-        } else if (tag.length() == 2 &&
-                Character.toLowerCase(tag.charAt(0)) == 'h' &&
-                tag.charAt(1) >= '1' && tag.charAt(1) <= '6') {
-            startHeading(mSpannableStringBuilder, attributes, tag.charAt(1) - '1');
-        } else if (tag.equalsIgnoreCase("img")) {
-            startImg(mSpannableStringBuilder, attributes, mImageGetter);
-        } else if (mTagHandler != null) {
-            mTagHandler.handleTag(true, tag, mSpannableStringBuilder, mReader);
-        }
-    }
-
-    @RavenwoodReplace(blockedBy = ActivityThread.class)
-    private static int HtmlToSpannedConverter::getFontWeightAdjustment() {
-        return ActivityThread.currentApplication().getResources()
-                .getConfiguration().fontWeightAdjustment;
-    }
-
-    private static int HtmlToSpannedConverter::getFontWeightAdjustment$ravenwood() {
-        return Resources.getSystem().getConfiguration().fontWeightAdjustment;
-    }
-
-    private void HtmlToSpannedConverter::handleEndTag(const std::string& tag) {
-        if (tag.equalsIgnoreCase("br")) {
-            handleBr(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("p")) {
-            endCssStyle(mSpannableStringBuilder);
-            endBlockElement(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("ul")) {
-            endBlockElement(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("li")) {
-            endLi(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("div")) {
-            endBlockElement(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("span")) {
-            endCssStyle(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("strong")) {
-            end(mSpannableStringBuilder, Bold.class, new StyleSpan(Typeface.BOLD,
-                    getFontWeightAdjustment()));
-        } else if (tag.equalsIgnoreCase("b")) {
-            end(mSpannableStringBuilder, Bold.class, new StyleSpan(Typeface.BOLD,
-                    getFontWeightAdjustment()));
-        } else if (tag.equalsIgnoreCase("em")) {
-            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
-        } else if (tag.equalsIgnoreCase("cite")) {
-            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
-        } else if (tag.equalsIgnoreCase("dfn")) {
-            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
-        } else if (tag.equalsIgnoreCase("i")) {
-            end(mSpannableStringBuilder, Italic.class, new StyleSpan(Typeface.ITALIC));
-        } else if (tag.equalsIgnoreCase("big")) {
-            end(mSpannableStringBuilder, Big.class, new RelativeSizeSpan(1.25f));
-        } else if (tag.equalsIgnoreCase("small")) {
-            end(mSpannableStringBuilder, Small.class, new RelativeSizeSpan(0.8f));
-        } else if (tag.equalsIgnoreCase("font")) {
-            endFont(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("blockquote")) {
-            endBlockquote(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("tt")) {
-            end(mSpannableStringBuilder, Monospace.class, new TypefaceSpan("monospace"));
-        } else if (tag.equalsIgnoreCase("a")) {
-            endA(mSpannableStringBuilder);
-        } else if (tag.equalsIgnoreCase("u")) {
-            end(mSpannableStringBuilder, Underline.class, new UnderlineSpan());
-        } else if (tag.equalsIgnoreCase("del")) {
-            end(mSpannableStringBuilder, Strikethrough.class, new StrikethroughSpan());
-        } else if (tag.equalsIgnoreCase("s")) {
-            end(mSpannableStringBuilder, Strikethrough.class, new StrikethroughSpan());
-        } else if (tag.equalsIgnoreCase("strike")) {
-            end(mSpannableStringBuilder, Strikethrough.class, new StrikethroughSpan());
-        } else if (tag.equalsIgnoreCase("sup")) {
-            end(mSpannableStringBuilder, Super.class, new SuperscriptSpan());
-        } else if (tag.equalsIgnoreCase("sub")) {
-            end(mSpannableStringBuilder, Sub.class, new SubscriptSpan());
-        } else if (tag.length() == 2 &&
-                Character.toLowerCase(tag.charAt(0)) == 'h' &&
-                tag.charAt(1) >= '1' && tag.charAt(1) <= '6') {
-            endHeading(mSpannableStringBuilder);
-        } else if (mTagHandler != null) {
-            mTagHandler.handleTag(false, tag, mSpannableStringBuilder, mReader);
-        }
-    }
-
-    private int HtmlToSpannedConverter::getMarginParagraph() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_PARAGRAPH);
-    }
-
-    private int HtmlToSpannedConverter::getMarginHeading() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_HEADING);
-    }
-
-    private int HtmlToSpannedConverter::getMarginListItem() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_LIST_ITEM);
-    }
-
-    private int HtmlToSpannedConverter::getMarginList() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_LIST);
-    }
-
-    private int HtmlToSpannedConverter::getMarginDiv() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_DIV);
-    }
-
-    private int getMarginBlockquote() {
-        return getMargin(Html::FROM_HTML_SEPARATOR_LINE_BREAK_BLOCKQUOTE);
-    }
-
-    /**
-     * Returns the minimum number of newline characters needed before and after a given block-level
-     * element.
-     *
-     * @param flag the corresponding option flag defined in {@link Html} of a block-level element
-     */
-    private int HtmlToSpannedConverter::getMargin(int flag) {
-        if ((flag & mFlags) != 0) {
-            return 1;
-        }
-        return 2;
-    }
-
-    private static void HtmlToSpannedConverter::appendNewlines(Editable text, int minNewline) {
-        const int len = text.length();
-
-        if (len == 0) {
-            return;
-        }
-
-        int existingNewlines = 0;
-        for (int i = len - 1; i >= 0 && text.charAt(i) == '\n'; i--) {
-            existingNewlines++;
-        }
-
-        for (int j = existingNewlines; j < minNewline; j++) {
-            text.append("\n");
-        }
-    }
-
-    private static void HtmlToSpannedConverter::startBlockElement(Editable text, Attributes attributes, int margin) {
-        const int len = text.length();
-        if (margin > 0) {
-            appendNewlines(text, margin);
-            start(text, new Newline(margin));
-        }
-
-        std::string style = attributes.getValue("", "style");
-        if (style != null) {
-            Matcher m = getTextAlignPattern().matcher(style);
-            if (m.find()) {
-                std::string alignment = m.group(1);
-                if (alignment.equalsIgnoreCase("start")) {
-                    start(text, new Alignment(Layout.Alignment.ALIGN_NORMAL));
-                } else if (alignment.equalsIgnoreCase("center")) {
-                    start(text, new Alignment(Layout.Alignment.ALIGN_CENTER));
-                } else if (alignment.equalsIgnoreCase("end")) {
-                    start(text, new Alignment(Layout.Alignment.ALIGN_OPPOSITE));
-                }
-            }
-        }
-    }
-
-    private static void HtmlToSpannedConverter::endBlockElement(Editable text) {
-        Newline n = getLast(text, Newline.class);
-        if (n != null) {
-            appendNewlines(text, n.mNumNewlines);
-            text.removeSpan(n);
-        }
-
-        Alignment a = getLast(text, Alignment.class);
-        if (a != null) {
-            setSpanFromMark(text, a, new AlignmentSpan.Standard(a.mAlignment));
-        }
-    }
-
-    private static void HtmlToSpannedConverter::handleBr(Editable text) {
-        text.append('\n');
-    }
-
-    private void HtmlToSpannedConverter::startLi(Editable text, Attributes attributes) {
-        startBlockElement(text, attributes, getMarginListItem());
-        start(text, new Bullet());
-        startCssStyle(text, attributes);
-    }
-
-    private static void HtmlToSpannedConverter::endLi(Editable text) {
-        endCssStyle(text);
-        endBlockElement(text);
-        end(text, Bullet.class, new BulletSpan());
-    }
-
-    private void HtmlToSpannedConverter::startBlockquote(Editable text, Attributes attributes) {
-        startBlockElement(text, attributes, getMarginBlockquote());
-        start(text, new Blockquote());
-    }
-
-    private static void HtmlToSpannedConverter::endBlockquote(Editable text) {
-        endBlockElement(text);
-        end(text, Blockquote.class, new QuoteSpan());
-    }
-
-    private void HtmlToSpannedConverter::startHeading(Editable text, Attributes attributes, int level) {
-        startBlockElement(text, attributes, getMarginHeading());
-        start(text, new Heading(level));
-    }
-
-    private static void HtmlToSpannedConverter::endHeading(Editable text) {
-        // RelativeSizeSpan and StyleSpan are CharacterStyles
-        // Their ranges should not include the newlines at the end
-        Heading h = getLast(text, Heading.class);
-        if (h != null) {
-            setSpanFromMark(text, h, new RelativeSizeSpan(HEADING_SIZES[h.mLevel]),
-                    new StyleSpan(Typeface.BOLD, getFontWeightAdjustment()));
-        }
-
-        endBlockElement(text);
-    }
-
-    private static <T> T getLast(Spanned text, Class<T> kind) {
-        /*
-         * This knows that the last returned object from getSpans()
-         * will be the most recently added.
-         */
-        T[] objs = text.getSpans(0, text.length(), kind);
-
-        if (objs.length == 0) {
-            return null;
-        } else {
-            return objs[objs.length - 1];
-        }
-    }
-
-    private static void HtmlToSpannedConverter::setSpanFromMark(Spannable text, Object mark, Object... spans) {
-        int where = text.getSpanStart(mark);
-        text.removeSpan(mark);
-        int len = text.length();
-        if (where != len) {
-            for (Object span : spans) {
-                text.setSpan(span, where, len, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
-        }
-    }
-
-    private static void start(Editable text, Object mark) {
-        int len = text.length();
-        text.setSpan(mark, len, len, Spannable::SPAN_INCLUSIVE_EXCLUSIVE);
-    }
-
-    private static void HtmlToSpannedConverter::end(Editable text, Class kind, Object repl) {
-        int len = text.length();
-        Object obj = getLast(text, kind);
-        if (obj != null) {
-            setSpanFromMark(text, obj, repl);
-        }
-    }
-
-    private void HtmlToSpannedConverter::startCssStyle(Editable text, Attributes attributes) {
-        std::string style = attributes.getValue("", "style");
-        if (style != null) {
-            Matcher m = getForegroundColorPattern().matcher(style);
-            if (m.find()) {
-                int c = getHtmlColor(m.group(1));
-                if (c != -1) {
-                    start(text, new Foreground(c | 0xFF000000));
-                }
-            }
-
-            m = getBackgroundColorPattern().matcher(style);
-            if (m.find()) {
-                int c = getHtmlColor(m.group(1));
-                if (c != -1) {
-                    start(text, new Background(c | 0xFF000000));
-                }
-            }
-
-            m = getTextDecorationPattern().matcher(style);
-            if (m.find()) {
-                std::string textDecoration = m.group(1);
-                if (textDecoration.equalsIgnoreCase("line-through")) {
-                    start(text, new Strikethrough());
-                }
-            }
-        }
-    }
-
-    private static void HtmlToSpannedConverter::endCssStyle(Editable text) {
-        Strikethrough s = getLast(text, Strikethrough.class);
-        if (s != null) {
-            setSpanFromMark(text, s, new StrikethroughSpan());
-        }
-
-        Background b = getLast(text, Background.class);
-        if (b != null) {
-            setSpanFromMark(text, b, new BackgroundColorSpan(b.mBackgroundColor));
-        }
-
-        Foreground f = getLast(text, Foreground.class);
-        if (f != null) {
-            setSpanFromMark(text, f, new ForegroundColorSpan(f.mForegroundColor));
-        }
-    }
-
-    private static void HtmlToSpannedConverter::startImg(Editable text, Attributes attributes, Html::ImageGetter img) {
-        std::string src = attributes.getValue("", "src");
-        Drawable d = null;
-
-        if (img != null) {
-            d = img.getDrawable(src);
-        }
-
-        if (d == null) {
-            d = Resources.getSystem().
-                    getDrawable(com.android.internal.R.drawable.unknown_image);
-            d.setBounds(0, 0, d.getIntrinsicWidth(), d.getIntrinsicHeight());
-        }
-
-        int len = text.length();
-        text.append("\uFFFC");
-
-        text.setSpan(new ImageSpan(d, src), len, text.length(),
-                     Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-    }
-
-    private void HtmlToSpannedConverter::startFont(Editable text, Attributes attributes) {
-        std::string color = attributes.getValue("", "color");
-        std::string face = attributes.getValue("", "face");
-
-        if (!TextUtils.isEmpty(color)) {
-            int c = getHtmlColor(color);
-            if (c != -1) {
-                start(text, new Foreground(c | 0xFF000000));
-            }
-        }
-
-        if (!TextUtils.isEmpty(face)) {
-            start(text, new Font(face));
-        }
-    }
-
-    private static void HtmlToSpannedConverter::endFont(Editable text) {
-        Font font = getLast(text, Font.class);
-        if (font != null) {
-            setSpanFromMark(text, font, new TypefaceSpan(font.mFace));
-        }
-
-        Foreground foreground = getLast(text, Foreground.class);
-        if (foreground != null) {
-            setSpanFromMark(text, foreground,
-                    new ForegroundColorSpan(foreground.mForegroundColor));
-        }
-    }
-
-    private static void HtmlToSpannedConverter::startA(Editable text, Attributes attributes) {
-        std::string href = attributes.getValue("", "href");
-        start(text, new Href(href));
-    }
-
-    private static void HtmlToSpannedConverter::endA(Editable text) {
-        Href h = getLast(text, Href.class);
-        if (h != null) {
-            if (h.mHref != null) {
-                setSpanFromMark(text, h, new URLSpan((h.mHref)));
-            }
-        }
-    }
-
-    private int HtmlToSpannedConverter::getHtmlColor(const std::string& color) {
-        if ((mFlags & Html.FROM_HTML_OPTION_USE_CSS_COLORS)
-                == Html.FROM_HTML_OPTION_USE_CSS_COLORS) {
-            Integer i = sColorMap.get(color.toLowerCase(Locale.US));
-            if (i != null) {
-                return i;
-            }
-        }
-
-        // If |color| is the name of a color, pass it to Color to convert it. Otherwise,
-        // it may start with "#", "0", "0x", "+", or a digit. All of these cases are
-        // handled below by XmlUtils. (Note that parseColor accepts colors starting
-        // with "#", but it treats them differently from XmlUtils.)
-        if (Character.isLetter(color.charAt(0))) {
-            try {
-                return Color.parseColor(color);
-            } catch (IllegalArgumentException e) {
-                return -1;
-            }
-        }
-
-        try {
-            return XmlUtils.convertValueToInt(color, -1);
-        } catch (NumberFormatException nfe) {
-            return -1;
-        }
-
-    }
-
-    public void setDocumentLocator(Locator locator) {
-    }
-
-    public void startDocument() throws SAXException {
-    }
-
-    public void endDocument() throws SAXException {
-    }
-
-    public void HtmlToSpannedConverter::startPrefixMapping(const std::string& prefix, const std::string& uri) throws SAXException {
-    }
-
-    public void HtmlToSpannedConverter::endPrefixMapping(const std::string& prefix) throws SAXException {
-    }
-
-    public void HtmlToSpannedConverter::startElement(const std::string& uri, const std::string& localName, const std::string& qName, Attributes attributes)
-            throws SAXException {
-        handleStartTag(localName, attributes);
-    }
-
-    public void HtmlToSpannedConverter::endElement(const std::string& uri, const std::string& localName, const std::string& qName) throws SAXException {
-        handleEndTag(localName);
-    }
-
-    public void HtmlToSpannedConverter::characters(char* ch, int start, int length) throws SAXException {
-        std::stringstream sb;
-        for (int i = 0; i < length; i++) {
-            char c = ch[i + start];
-
-            if (c == ' ' || c == '\n') {
-                char pred;
-                int len = sb.length();
-
-                if (len == 0) {
-                    len = mSpannableStringBuilder.length();
-
-                    if (len == 0) {
-                        pred = '\n';
-                    } else {
-                        pred = mSpannableStringBuilder.charAt(len - 1);
-                    }
-                } else {
-                    pred = sb.charAt(len - 1);
-                }
-
-                if (pred != ' ' && pred != '\n') {
-                    sb.append(' ');
-                }
-            } else {
-                sb.append(c);
-            }
-        }
-
-        mSpannableStringBuilder.append(sb);
-    }
-
-    public void HtmlToSpannedConverter::ignorableWhitespace(char ch[], int start, int length) throws SAXException {
-    }
-
-    public void HtmlToSpannedConverter::processingInstruction(const std::string& target, const std::string& data) throws SAXException {
-    }
-
-    public void HtmlToSpannedConverter::skippedEntity(const std::string& name) throws SAXException {
-    }
-
-    private static class Bold { }
-    private static class Italic { }
-    private static class Underline { }
-    private static class Strikethrough { }
-    private static class Big { }
-    private static class Small { }
-    private static class Monospace { }
-    private static class Blockquote { }
-    private static class Super { }
-    private static class Sub { }
-    private static class Bullet { }
-
-    private static class Font {
-        public String mFace;
-
-        public Font(String face) {
-            mFace = face;
-        }
-    }
-
-    private static class Href {
-        public String mHref;
-
-        public Href(String href) {
-            mHref = href;
-        }
-    }
-
-    private static class Foreground {
-        private int mForegroundColor;
-
-        public Foreground(int foregroundColor) {
-            mForegroundColor = foregroundColor;
-        }
-    }
-
-    private static class Background {
-        private int mBackgroundColor;
-
-        public Background(int backgroundColor) {
-            mBackgroundColor = backgroundColor;
-        }
-    }
-
-    private static class Heading {
-        private int mLevel;
-
-        public Heading(int level) {
-            mLevel = level;
-        }
-    }
-
-    private static class Newline {
-        private int mNumNewlines;
-
-        public Newline(int numNewlines) {
-            mNumNewlines = numNewlines;
-        }
-    }
-
-    private static class Alignment {
-        private Layout.Alignment mAlignment;
-
-        public Alignment(Layout.Alignment alignment) {
-            mAlignment = alignment;
-        }
-    }
-}
-#endif
 }/*endof namespace*/

@@ -98,9 +98,10 @@ private:
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
 
-    int   mLastButtonState = 0;
-    int   mLastTouchOffset = 0;
-    int   mTapCount = 0;
+    int  mInputType;
+    int  mLastButtonState = 0;
+    int  mLastTouchOffset = 0;
+    int  mTapCount = 0;
     int64_t mLastUpTime = 0;
     float mLastUpX = -1.f;
     float mLastUpY = -1.f;

@@ -28,6 +28,10 @@ DynamicLayout::Builder* DynamicLayout::Builder::obtain(CharSequence* base, TextP
     b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
+    b->mLineBreakConfig = LineBreakConfig();  // LineBreakConfig.NONE
+    b->mUseBoundsForWidth = false;
+    b->mShiftDrawingOffsetForStartOverhang = false;
+    b->mMinimumFontMetrics = nullptr;
     return b;
 }
 
@@ -94,6 +98,27 @@ DynamicLayout::Builder& DynamicLayout::Builder::setJustificationMode(int justifi
     return *this;
 }
 
+DynamicLayout::Builder& DynamicLayout::Builder::setLineBreakConfig(const LineBreakConfig& lineBreakConfig) {
+    mLineBreakConfig = lineBreakConfig;
+    return *this;
+}
+
+DynamicLayout::Builder& DynamicLayout::Builder::setUseBoundsForWidth(bool useBoundsForWidth) {
+    mUseBoundsForWidth = useBoundsForWidth;
+    return *this;
+}
+
+DynamicLayout::Builder& DynamicLayout::Builder::setShiftDrawingOffsetForStartOverhang(
+        bool shiftDrawingOffsetForStartOverhang) {
+    mShiftDrawingOffsetForStartOverhang = shiftDrawingOffsetForStartOverhang;
+    return *this;
+}
+
+DynamicLayout::Builder& DynamicLayout::Builder::setMinimumFontMetrics(const Paint::FontMetrics* minimumFontMetrics) {
+    mMinimumFontMetrics = minimumFontMetrics;
+    return *this;
+}
+
 DynamicLayout* DynamicLayout::Builder::build() {
     DynamicLayout* result = new DynamicLayout(*this);
     Builder::recycle(this);
@@ -101,15 +126,77 @@ DynamicLayout* DynamicLayout::Builder::build() {
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-DynamicLayout::DynamicLayout(const Builder& b):Layout(createEllipsizer(b.mEllipsize, b.mDisplay),
-            b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd){
+// Deprecated public constructors — each delegates toward the master constructor below,
+// matching android-36 DynamicLayout's constructor chain.
+DynamicLayout::DynamicLayout(CharSequence* base, TextPaint* paint, int width, Alignment align,
+        float spacingmult, float spacingadd, bool includepad)
+    : DynamicLayout(base, base, paint, width, align, spacingmult, spacingadd, includepad) {
+}
+
+DynamicLayout::DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+        int width, Alignment align, float spacingmult, float spacingadd, bool includepad)
+    : DynamicLayout(base, display, paint, width, align, spacingmult, spacingadd, includepad,
+            TextUtils::TruncateAt::NONE, 0) {
+}
+
+DynamicLayout::DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+        int width, Alignment align, float spacingmult, float spacingadd, bool includepad,
+        TextUtils::TruncateAt ellipsize, int ellipsizedWidth)
+    : DynamicLayout(base, display, paint, width, align, TextDirectionHeuristics::FIRSTSTRONG_LTR,
+            spacingmult, spacingadd, includepad, Layout::BREAK_STRATEGY_SIMPLE,
+            Layout::HYPHENATION_FREQUENCY_NONE, Layout::JUSTIFICATION_MODE_NONE,
+            LineBreakConfig(), ellipsize, ellipsizedWidth) {
+}
+
+DynamicLayout::DynamicLayout(CharSequence* base, CharSequence* display, TextPaint* paint,
+        int width, Alignment align, const TextDirectionHeuristic* textDir,
+        float spacingmult, float spacingadd, bool includepad, int breakStrategy,
+        int hyphenationFrequency, int justificationMode,
+        const LineBreakConfig& lineBreakConfig, TextUtils::TruncateAt ellipsize,
+        int ellipsizedWidth)
+    : Layout(createEllipsizer(ellipsize, display),
+            paint, width, align, textDir, spacingmult, spacingadd, includepad,
+            false /* fallbackLineSpacing */, ellipsizedWidth, ellipsize,
+            INT_MAX /* maxLines */, breakStrategy, hyphenationFrequency,
+            {} /* leftIndents */, {} /* rightIndents */, justificationMode,
+            lineBreakConfig, false /* useBoundsForWidth */, false,
+            nullptr /* minimumFontMetrics */) {
+
+    Builder* bp = Builder::obtain(base, paint, width);
+    Builder& b = bp->setAlignment(align)
+            .setTextDirection(textDir)
+            .setLineSpacing(spacingadd, spacingmult)
+            .setEllipsizedWidth(ellipsizedWidth)
+            .setEllipsize(ellipsize);
+
+    mDisplay = display;
+    mIncludePad = includepad;
+    mBreakStrategy = breakStrategy;
+    mJustificationMode = justificationMode;
+    mHyphenationFrequency = hyphenationFrequency;
+    mLineBreakConfig = lineBreakConfig;
+
+    generate(b);
+
+    Builder::recycle(&b);
+}
+
+DynamicLayout::DynamicLayout(const Builder& b)
+    : Layout(createEllipsizer(b.mEllipsize, b.mDisplay),
+            b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd,
+            b.mIncludePad, b.mFallbackLineSpacing, b.mEllipsizedWidth, b.mEllipsize,
+            INT_MAX /* maxLines */, b.mBreakStrategy, b.mHyphenationFrequency,
+            {} /* leftIndents */, {} /* rightIndents */, b.mJustificationMode,
+            b.mLineBreakConfig, b.mUseBoundsForWidth, b.mShiftDrawingOffsetForStartOverhang,
+            b.mMinimumFontMetrics) {
 
     mDisplay = b.mDisplay;
     mIncludePad = b.mIncludePad;
     mBreakStrategy = b.mBreakStrategy;
     mJustificationMode = b.mJustificationMode;
     mHyphenationFrequency = b.mHyphenationFrequency;
-    mEllipsize = false;
+    mLineBreakConfig = b.mLineBreakConfig;
+
     generate(b);
 }
 
@@ -134,6 +221,9 @@ CharSequence* DynamicLayout::createEllipsizer(TextUtils::TruncateAt ellipsize,Ch
 void DynamicLayout::generate(const Builder& b) {
     mBase = b.mBase;
     mFallbackLineSpacing = b.mFallbackLineSpacing;
+    mUseBoundsForWidth = b.mUseBoundsForWidth;
+    mShiftDrawingOffsetForStartOverhang = b.mShiftDrawingOffsetForStartOverhang;
+    mMinimumFontMetrics = b.mMinimumFontMetrics;
     if (b.mEllipsize != TextUtils::TruncateAt::NONE) {
         mInts = new PackedIntVector(COLUMNS_ELLIPSIZE);
         mEllipsizedWidth = b.mEllipsizedWidth;
@@ -294,8 +384,7 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
         sBuilder = nullptr;
     }
 
-    if (reflowed == nullptr) {
-        reflowed = new StaticLayout(nullptr);
+    if (b == nullptr) {
         b = StaticLayout::Builder::obtain(text, where, where + after, getPaint(), getWidth());
     }
 
@@ -310,9 +399,15 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
             .setBreakStrategy(mBreakStrategy)
             .setHyphenationFrequency(mHyphenationFrequency)
             .setJustificationMode(mJustificationMode)
-            .setAddLastLineLineSpacing(!islast);
+            .setLineBreakConfig(mLineBreakConfig)
+            .setAddLastLineLineSpacing(!islast)
+            .setIncludePad(false)
+            .setUseBoundsForWidth(mUseBoundsForWidth)
+            .setShiftDrawingOffsetForStartOverhang(mShiftDrawingOffsetForStartOverhang)
+            .setMinimumFontMetrics(mMinimumFontMetrics)
+            .setCalculateBounds(true);
 
-    reflowed->generate(*b, false /*includepad*/, true /*trackpad*/);
+    reflowed = b->buildPartialStaticLayoutForDynamicLayout(true /* trackpadding */, reflowed);
     int n = reflowed->getLineCount();
     // If the new layout has a blank line at the end, but it is not
     // the very end of the buffer, then we already have a line that
@@ -417,7 +512,7 @@ bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, in
     if (precomputed != nullptr) {
         precomputed->getBounds(start, end, mTempRect);
     } else {
-        //paint.getTextBounds(text, start, end, mTempRect);
+        paint->getTextBounds(text, start, end, mTempRect);
     }
     Paint::FontMetricsInt fm;
     paint->getFontMetricsInt(&fm);
@@ -720,6 +815,10 @@ int DynamicLayout::getEllipsisCount(int line) const{
     }
 
     return mInts->getValue(line, ELLIPSIS_COUNT);
+}
+
+LineBreakConfig DynamicLayout::getLineBreakConfig() const{
+    return mLineBreakConfig;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////

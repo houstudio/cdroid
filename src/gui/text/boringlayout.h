@@ -15,7 +15,7 @@ private:
     int mEllipsizedWidth, mEllipsizedStart, mEllipsizedCount;
     float mMax;
     RectF mDrawingBounds;
-    
+
     static bool hasAnyInterestingChars(CharSequence* text, int textLength);
 public:
     class Metrics :public Paint::FontMetricsInt {
@@ -29,25 +29,45 @@ public:
     };
 public:
     static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,bool includePad);
+            float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);
 
     static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingmult, float spacingadd, const BoringLayout::Metrics& metrics,
+            float spacingMult, float spacingAdd, const Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
-            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad);
+            float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics,
+            float spacingMult, float spacingAdd, const Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
-            float spacingMult, float spacingAdd, const BoringLayout::Metrics &metrics, bool includePad);
+            float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
-            float spacingMult, float spacingAdd, const BoringLayout::Metrics& metrics, bool includePad,
+            float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad,
             TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
+
+    BoringLayout(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad,
+            TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing);
+
+    BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
+            float spacingMult, float spacingAdd, bool includePad, bool fallbackLineSpacing,
+            int ellipsizedWidth, TextUtils::TruncateAt ellipsize, const Metrics& metrics,
+            bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
+            const Paint::FontMetrics* minimumFontMetrics);
+
+    BoringLayout(CharSequence* text, TextPaint* paint, int width, Alignment align,
+            const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd,
+            bool includePad, bool fallbackLineSpacing, int ellipsizedWidth,
+            TextUtils::TruncateAt ellipsize, int maxLines, int breakStrategy,
+            int hyphenationFrequency, const std::vector<int>& leftIndents,
+            const std::vector<int>& rightIndents, int justificationMode,
+            const LineBreakConfig& lineBreakConfig, const Metrics& metrics,
+            bool useBoundsForWidth, bool shiftDrawingOffsetForStartOverhang,
+            const Paint::FontMetrics* minimumFontMetrics);
 
     /* package */ void init(CharSequence* source, TextPaint* paint, Alignment align,
             const BoringLayout::Metrics& metrics, bool includePad, bool trustWidth, bool useFallbackLineSpacing);

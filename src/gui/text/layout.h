@@ -88,7 +88,10 @@ private:
     void ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method);
 protected:
     Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
-    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd);
+    Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, const TextDirectionHeuristic* textDir, float spacingMult, float spacingAdd,
+            bool includePad,bool fallbackLineSpacing,int ellipsizedWidth,TextUtils::TruncateAt ellipsize,int maxLines,int breakStrategy,
+            int hyphenationFrequency,const std::vector<int>&leftIndents,const std::vector<int>&rightIndents,int justificationMode,
+            const LineBreakConfig&,bool useBoundsForWidth,bool shiftDrawingOffsetForStartOverhang,const Paint::FontMetrics* minimumFontMetrics);
     void setJustificationMode(int justificationMode);
     bool isSpanned() const;
 public:
@@ -251,7 +254,7 @@ public:
     public:
         HorizontalMeasurementProvider(Layout* layout, int line, bool primary);
         void init();
-        float get(int offset);
+        float get(int offset)const;
     };
 
     int getLineEnd(int line) const{
@@ -371,9 +374,13 @@ private:
     int mBreakStrategy;
     int mHyphenationFrequency;
     int mJustificationMode;
-    LineBreakConfig* mLineBreakConfig;
+
+    std::vector<int>mLeftIndents;
+    std::vector<int>mRightIndents;
+    LineBreakConfig mLineBreakConfig;
     const TextDirectionHeuristic* mTextDir;
-    cdroid::SpanSet*mLineBackgroundSpans;
+    const Paint::FontMetrics* mMinimumFontMetrics;
+    cdroid::SpanSet* mLineBackgroundSpans;
 public:
 };
 

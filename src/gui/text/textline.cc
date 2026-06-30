@@ -163,7 +163,33 @@ void TextLine::draw(Canvas& c, float x, int top, int y, int bottom) {
     }
 }
 
-float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi) {
+float TextLine::metrics(Paint::FontMetricsInt* fmi, RectF* drawBounds, bool returnDrawWidth,
+        LineInfo* lineInfo) {
+    if (returnDrawWidth) {
+        RectF tmp;
+        RectF* db = drawBounds != nullptr ? drawBounds : &tmp;
+        db->setEmpty();
+        float w = measure(mLen, false, fmi, db, lineInfo);
+        float boundsWidth;
+        if (w >= 0) {
+            boundsWidth = std::max(db->right(), w) - std::min(0.f, db->left);
+        } else {
+            boundsWidth = std::max(db->right(), 0.f) - std::min(w, db->left);
+        }
+        if (std::abs(w) > boundsWidth) {
+            return w;
+        }
+        // bounds width is always positive but output of measure is signed width.
+        // To be able to use bounds width as signed width, use the sign of the width.
+        const float sign = (w < 0) ? -1.f : ((w > 0) ? 1.f : 0.f);
+        return sign * boundsWidth;
+    } else {
+        return measure(mLen, false, fmi, drawBounds, lineInfo);
+    }
+}
+
+float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi,
+        RectF* drawBounds, LineInfo* /*lineInfo*/) {
     if (offset > mLen) {
         //throw new IndexOutOfBoundsException("offset(" + offset + ") should be less than line limit(" + mLen + ")");
     }
@@ -186,14 +212,14 @@ float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi) {
                 const bool sameDirection = (mDir == Layout::DIR_RIGHT_TO_LEFT) == runIsRtl;
 
                 if (targetIsInThisSegment && sameDirection) {
-                    return h + measureRun(segStart, offset, j, runIsRtl, fmi);
+                    return h + measureRun(segStart, offset, j, runIsRtl, fmi, drawBounds);
                 }
 
-                const float segmentWidth = measureRun(segStart, j, j, runIsRtl, fmi);
+                const float segmentWidth = measureRun(segStart, j, j, runIsRtl, fmi, drawBounds);
                 h += sameDirection ? segmentWidth : -segmentWidth;
 
                 if (targetIsInThisSegment) {
-                    return h + measureRun(segStart, offset, j, runIsRtl, nullptr);
+                    return h + measureRun(segStart, offset, j, runIsRtl, nullptr, drawBounds);
                 }
 
                 if (j != runLimit) {  // charAt(j) == TAB_CHAR
@@ -274,11 +300,11 @@ float TextLine::drawRun(Canvas& c, int start, int limit, bool runIsRtl, float x,
 
     if ((mDir == Layout::DIR_LEFT_TO_RIGHT) == runIsRtl) {
         float w = -measureRun(start, limit, limit, runIsRtl, nullptr);
-        handleRun(start, limit, limit, runIsRtl, &c, x + w, top, y, bottom, nullptr, false);
+        handleRun(start, limit, limit, runIsRtl, &c, x + w, top, y, bottom, nullptr, nullptr, false);
         return w;
     }
 
-    return handleRun(start, limit, limit, runIsRtl, &c, x, top, y, bottom, nullptr, needWidth);
+    return handleRun(start, limit, limit, runIsRtl, &c, x, top, y, bottom, nullptr, nullptr, needWidth);
 }
 
 int TextLine::getOffsetToLeftRightOf(int cursor, bool toLeft) {
@@ -572,7 +598,7 @@ float TextLine::getRunAdvance(TextPaint& wp, int start, int end, int contextStar
 float TextLine::handleText(TextPaint& wp, int start, int end,
         int contextStart, int contextEnd, bool runIsRtl,
         Canvas* c, float x, int top, int y, int bottom,
-        Paint::FontMetricsInt* fmi, bool needWidth, int offset,
+        Paint::FontMetricsInt* fmi, RectF* drawBounds, bool needWidth, int offset,
         const std::vector<DecorationInfo>* decorations) {
 
     if (mIsJustifying) {
@@ -593,6 +619,32 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
     const int numDecorations = decorations == nullptr ? 0 : decorations->size();
     if (needWidth || (c != nullptr && (wp.bgColor != 0 || numDecorations != 0 || runIsRtl))) {
         totalWidth = getRunAdvance(wp, start, end, contextStart, contextEnd, runIsRtl, offset);
+
+        if (drawBounds != nullptr) {
+            // Union this run's ink bounds (offset by the pen position) into drawBounds.
+            Rect runRect;
+            if (mCharsValid) {
+                wp.getTextBounds(mChars.data(), start, end - start, runRect);
+            } else if (mComputed != nullptr) {
+                mComputed->getBounds(mStart + start, mStart + end, runRect);
+            } else {
+                wp.getTextBounds(mText, mStart + start, mStart + end, runRect);
+            }
+            const float dx = runIsRtl ? (x - totalWidth) : x;
+            const float rl = runRect.left + dx;
+            const float rt = runRect.top;
+            const float rr = runRect.right() + dx;
+            const float rb = runRect.bottom();
+            if (drawBounds->empty()) {
+                drawBounds->set(rl, rt, rr - rl, rb - rt);
+            } else {
+                const float nl = std::min(drawBounds->left, rl);
+                const float nt = std::min(drawBounds->top, rt);
+                const float nr = std::max(drawBounds->right(), rr);
+                const float nb = std::max(drawBounds->bottom(), rb);
+                drawBounds->set(nl, nt, nr - nl, nb - nt);
+            }
+        }
     }
 
     if (c != nullptr) {
@@ -725,7 +777,7 @@ void TextLine::extractDecorationInfo(TextPaint& paint, DecorationInfo& info) {
 
 float TextLine::handleRun(int start, int measureLimit,
         int limit, bool runIsRtl, Canvas* c, float x, int top, int y,
-        int bottom, Paint::FontMetricsInt* fmi, bool needWidth) {
+        int bottom, Paint::FontMetricsInt* fmi, RectF* drawBounds, bool needWidth) {
 
     if (measureLimit < start || measureLimit > limit) {
         //("measureLimit (" + measureLimit + ") is out of "
@@ -758,7 +810,7 @@ float TextLine::handleRun(int start, int measureLimit,
         wp.setStartHyphenEdit(adjustStartHyphenEdit(start, wp.getStartHyphenEdit()));
         wp.setEndHyphenEdit(adjustEndHyphenEdit(limit, wp.getEndHyphenEdit()));
         return handleText(wp, start, limit, start, limit, runIsRtl, c, x, top,
-                y, bottom, fmi, needWidth, measureLimit, nullptr);
+                y, bottom, fmi, drawBounds, needWidth, measureLimit, nullptr);
     }
 
     // Shaping needs to take into account context up to metric boundaries,
@@ -835,7 +887,7 @@ float TextLine::handleRun(int start, int measureLimit,
                 activePaint.setStartHyphenEdit(adjustStartHyphenEdit(activeStart, mPaint->getStartHyphenEdit()));
                 activePaint.setEndHyphenEdit(adjustEndHyphenEdit(activeEnd, mPaint->getEndHyphenEdit()));
                 x += handleText(activePaint, activeStart, activeEnd, i, inext, runIsRtl, c, x,
-                        top, y, bottom, fmi, needWidth || activeEnd < measureLimit,
+                        top, y, bottom, fmi, drawBounds, needWidth || activeEnd < measureLimit,
                         std::min(activeEnd, mlimit), &mDecorations);
 
                 activeStart = j;
@@ -860,7 +912,7 @@ float TextLine::handleRun(int start, int measureLimit,
         activePaint.setStartHyphenEdit(adjustStartHyphenEdit(activeStart, mPaint->getStartHyphenEdit()));
         activePaint.setEndHyphenEdit(adjustEndHyphenEdit(activeEnd, mPaint->getEndHyphenEdit()));
         x += handleText(activePaint, activeStart, activeEnd, i, inext, runIsRtl, c, x,
-                top, y, bottom, fmi, needWidth || activeEnd < measureLimit,
+                top, y, bottom, fmi, drawBounds, needWidth || activeEnd < measureLimit,
                 std::min(activeEnd, mlimit), &mDecorations);
     }
 

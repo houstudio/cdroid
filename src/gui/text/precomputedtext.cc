@@ -7,15 +7,16 @@ namespace cdroid{
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-PrecomputedText::Params::Params(const TextPaint& paint, const TextDirectionHeuristic* textDir,int strategy, int frequency) {
+PrecomputedText::Params::Params(const TextPaint& paint,const LineBreakConfig&lbConfig, const TextDirectionHeuristic* textDir,int strategy, int frequency) {
     mPaint = paint;
     mTextDir = textDir;
     mBreakStrategy = strategy;
     mHyphenationFrequency = frequency;
+    mLineBreakConfig = lbConfig;
 }
 
 int PrecomputedText::Params::checkResultUsable(const TextPaint& paint,
-        const TextDirectionHeuristic* textDir, int strategy,  int frequency) const{
+        const TextDirectionHeuristic* textDir, int strategy,  int frequency,const LineBreakConfig&blc) const{
     if (mBreakStrategy == strategy && mHyphenationFrequency == frequency
             && mPaint.equalsForTextMeasurement(paint)) {
         return mTextDir == textDir ? USABLE : NEED_RECOMPUTE;
@@ -32,7 +33,8 @@ PrecomputedText* PrecomputedText::create(CharSequence* text,const Params& params
     if (hintPct != nullptr) {
         const PrecomputedText::Params& hintParams = hintPct->getParams();
         const int checkResult = hintParams.checkResultUsable(params.mPaint, params.mTextDir,
-                        params.mBreakStrategy, params.mHyphenationFrequency);
+                        params.mBreakStrategy, params.mHyphenationFrequency,
+                        params.mLineBreakConfig);
         switch (checkResult) {
             case Params::USABLE:
                 return hintPct;
@@ -111,11 +113,11 @@ PrecomputedText::PrecomputedText(CharSequence* text, int start,  int end, const 
 }
 
 int PrecomputedText::checkResultUsable(int start, int end, const TextDirectionHeuristic* textDir,
-        const TextPaint& paint, int strategy, int frequency) const{
+        const TextPaint& paint, int strategy, int frequency,const LineBreakConfig& lbConfig) const{
     if (mStart != start || mEnd != end) {
         return Params::UNUSABLE;
     } else {
-        return mParams.checkResultUsable(paint, textDir, strategy, frequency);
+        return mParams.checkResultUsable(paint, textDir, strategy, frequency,lbConfig);
     }
 }
 

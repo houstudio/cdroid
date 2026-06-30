@@ -102,6 +102,10 @@ void MeasuredParagraph::getBounds(int start, int end, Rect& bounds) const{
     mMeasuredText->getBounds(start, end, bounds);
 }
 
+void MeasuredParagraph::getFontMetricsInt(int start, int end, Paint::FontMetricsInt& outFmi) const{
+    mMeasuredText->getFontMetricsInt(start, end, outFmi);
+}
+
 float MeasuredParagraph::getCharWidthAt( int offset) const{
     return mMeasuredText->getCharWidthAt(offset);
 }
