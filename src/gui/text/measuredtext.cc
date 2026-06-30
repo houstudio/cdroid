@@ -110,7 +110,7 @@ MeasuredText::Builder::Builder(const MeasuredText* text) {
     mHintMt = text;
 }
 
-MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, LineBreakConfig* lineBreakConfig, int length, bool isRtl) {
+MeasuredText::Builder& MeasuredText::Builder::appendStyleRun(Paint& paint, const LineBreakConfig* lineBreakConfig, int length, bool isRtl) {
     //Preconditions.checkNotNull(paint);
     //Preconditions.checkArgument(length > 0, "length can not be negative");
     const int end = mCurrentOffset + length;

@@ -70,7 +70,7 @@ public:
         Builder& appendStyleRun(Paint& paint, int length, bool isRtl) {
             return appendStyleRun(paint, nullptr, length, isRtl);
         }
-        Builder& appendStyleRun(Paint& paint, LineBreakConfig* lineBreakConfig, int length, bool isRtl);
+        Builder& appendStyleRun(Paint& paint, const LineBreakConfig* lineBreakConfig, int length, bool isRtl);
         Builder& appendReplacementRun(Paint& paint,int length, float width);
 
         Builder& setComputeHyphenation(bool computeHyphenation) {

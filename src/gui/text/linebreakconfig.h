@@ -99,6 +99,15 @@ public:
         mHyphenation = hyphenation;
     }
 
+    bool operator==(const LineBreakConfig& o) const{
+        return mLineBreakStyle == o.mLineBreakStyle
+                && mLineBreakWordStyle == o.mLineBreakWordStyle
+                && mHyphenation == o.mHyphenation;
+    }
+    bool operator!=(const LineBreakConfig& o) const{
+        return !(*this == o);
+    }
+
     void setLineBreakStyle(int lbs){
         mLineBreakStyle=lbs;
     }

@@ -37,6 +37,9 @@ public:
         int getHyphenationFrequency() const{
             return mHyphenationFrequency;
         }
+        const LineBreakConfig& getLineBreakConfig() const{
+            return mLineBreakConfig;
+        }
         int checkResultUsable(const TextPaint& paint,const TextDirectionHeuristic* textDir, int strategy,  int frequency,const LineBreakConfig&lbc) const;
     };
 
@@ -62,7 +65,7 @@ private:
 public:
     static PrecomputedText* create(CharSequence* text,const Params& params);
 
-    static std::vector<ParagraphInfo> createMeasuredParagraphs(CharSequence* text,const Params& params, int start, int end, bool computeLayout);
+    static std::vector<ParagraphInfo> createMeasuredParagraphs(CharSequence* text,const Params& params, int start, int end, bool computeLayout, bool computeBounds);
 
     CharSequence* getText() const{
         return mText;

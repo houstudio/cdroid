@@ -5,6 +5,7 @@
 #include <text/spannablestring.h>
 #include <text/textpaint.h>
 #include <text/measuredtext.h>
+#include <text/linebreakconfig.h>
 #include <text/textdirectionheuristics.h>
 #include <text/style/metricaffectingspan.h>
 #include <text/style/paragraphstyles.h>
@@ -29,6 +30,7 @@ private:
     MeasuredText* mMeasuredText;/* The native MeasuredParagraph.*/
     TextPaint mCachedPaint;
     Paint::FontMetricsInt mCachedFm;
+    mutable LineBreakConfig::Builder mLineBreakConfigBuilder;
 private:
     MeasuredParagraph()=default;
 
@@ -38,8 +40,9 @@ private:
     void reset();
     void resetAndAnalyzeBidi(const CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir);
     void applyReplacementRun(const ReplacementSpan& replacement, int start, int end, MeasuredText::Builder* builder);
-    void applyStyleRun(int start, int end, MeasuredText::Builder* builder);
-    void applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans,
+    void applyStyleRun(int start, int end, const LineBreakConfig* lineBreakConfig, MeasuredText::Builder* builder);
+    void applyMetricsAffectingSpan(const TextPaint& paint, const LineBreakConfig* lineBreakConfig,
+            const std::vector<const ParcelableSpan*>& spans, const std::vector<const ParcelableSpan*>& lbcSpans,
             int start, int end, MeasuredText::Builder* builder);
 public:
     ~MeasuredParagraph(){
@@ -96,9 +99,10 @@ public:
     static MeasuredParagraph* buildForMeasurement(TextPaint* paint,const CharSequence* text,
             int start, int end,const TextDirectionHeuristic* textDir, MeasuredParagraph* recycle);
 
-    static MeasuredParagraph* buildForStaticLayout(const TextPaint* paint,const CharSequence* text, int start, int end,
+    static MeasuredParagraph* buildForStaticLayout(const TextPaint* paint, const LineBreakConfig* lineBreakConfig,
+            const CharSequence* text, int start, int end,
             const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout,
-            MeasuredParagraph* hint, MeasuredParagraph* recycle);
+            bool computeBounds, MeasuredParagraph* hint, MeasuredParagraph* recycle);
 
     int breakText(int limit, bool forwards, float width);
     float measure(int start, int limit)const;

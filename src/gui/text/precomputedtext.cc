@@ -55,7 +55,7 @@ PrecomputedText* PrecomputedText::create(CharSequence* text,const Params& params
 
     }
     if (paraInfo.empty()) {
-        paraInfo = createMeasuredParagraphs(text, params, 0, text->length(), true /* computeLayout */);
+        paraInfo = createMeasuredParagraphs(text, params, 0, text->length(), true /* computeLayout */, true /* computeBounds */);
     }
     return new PrecomputedText(text, 0, text->length(), params, paraInfo);
 }
@@ -68,14 +68,14 @@ std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParag
         const int paraStart = pct->getParagraphStart(i);
         const int paraEnd = pct->getParagraphEnd(i);
         result.push_back(ParagraphInfo(paraEnd, MeasuredParagraph::buildForStaticLayout(
-                &params.getTextPaint(), pct, paraStart, paraEnd, params.getTextDirection(),
-                needHyphenation, computeLayout, pct->getMeasuredParagraph(i),
-                nullptr /* no recycle */)));
+                &params.getTextPaint(), &params.getLineBreakConfig(), pct, paraStart, paraEnd,
+                params.getTextDirection(), needHyphenation, computeLayout, true /* computeBounds */,
+                pct->getMeasuredParagraph(i), nullptr /* no recycle */)));
     }
     return result;
 }
 
-std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParagraphs(CharSequence* text,const Params& params, int start, int end, bool computeLayout) {
+std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParagraphs(CharSequence* text,const Params& params, int start, int end, bool computeLayout, bool computeBounds) {
     std::vector<ParagraphInfo> result;
 
     //Preconditions.checkNotNull(text);
@@ -95,9 +95,9 @@ std::vector<PrecomputedText::ParagraphInfo> PrecomputedText::createMeasuredParag
         }
 
         result.emplace_back(ParagraphInfo(paraEnd, MeasuredParagraph::buildForStaticLayout(
-                &params.getTextPaint(), text, paraStart, paraEnd, params.getTextDirection(),
-                needHyphenation, computeLayout, nullptr /* no hint */,
-                nullptr /* no recycle */)));
+                &params.getTextPaint(), &params.getLineBreakConfig(), text, paraStart, paraEnd,
+                params.getTextDirection(), needHyphenation, computeLayout, computeBounds,
+                nullptr /* no hint */, nullptr /* no recycle */)));
     }
     return result;
 }

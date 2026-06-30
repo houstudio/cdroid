@@ -364,7 +364,7 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
     }
     if (paragraphInfo.empty()){// == null) {
         const PrecomputedText::Params param(*paint,b.mLineBreakConfig, textDir, b.mBreakStrategy, b.mHyphenationFrequency);
-        paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart, bufEnd, false );
+        paragraphInfo = PrecomputedText::createMeasuredParagraphs(source, param, bufStart, bufEnd, false /* computeLayout */, b.mCalculateBounds);
     }
     for (int paraIndex = 0; paraIndex < paragraphInfo.size(); paraIndex++) {
         const int paraStart = paraIndex == 0 ? bufStart : paragraphInfo[paraIndex - 1].paragraphEnd;

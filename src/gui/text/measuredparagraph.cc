@@ -2,6 +2,7 @@
 #include <text/measuredtext.h>
 #include <text/layout.h>
 #include <text/androidbidi.h>
+#include <text/style/linebreakconfigspan.h>
 #include <minikin/MeasuredText.h>
 namespace cdroid{
 
@@ -128,7 +129,8 @@ MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint,const
 
     if (mt->mSpanned == nullptr) {
         // No style change by MetricsAffectingSpan. Just measure all text.
-        mt->applyMetricsAffectingSpan(*paint, {/*nullptr*/} /* spans */, start, end, nullptr /* native builder ptr */);
+        mt->applyMetricsAffectingSpan(*paint, nullptr /* lineBreakConfig */, {/*nullptr*/} /* spans */, {},
+                start, end, nullptr /* native builder ptr */);
     } else {
         // There may be a MetricsAffectingSpan. Split into span transitions and apply styles.
         int spanEnd;
@@ -136,21 +138,25 @@ MeasuredParagraph* MeasuredParagraph::buildForMeasurement(TextPaint* paint,const
             spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
             auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
             TextUtils::removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
-            mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, nullptr /* native builder ptr */);
+            mt->applyMetricsAffectingSpan(*paint, nullptr /* lineBreakConfig */, spans, {},
+                    spanStart, spanEnd, nullptr /* native builder ptr */);
         }
     }
     return mt;
 }
 
-MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* paint,const CharSequence* text, int start, int end,
-        const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout, MeasuredParagraph* hint, MeasuredParagraph* recycle) {
+MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* paint, const LineBreakConfig* lineBreakConfig,
+        const CharSequence* text, int start, int end,
+        const TextDirectionHeuristic* textDir, bool computeHyphenation, bool computeLayout,
+        bool computeBounds, MeasuredParagraph* hint, MeasuredParagraph* recycle) {
     MeasuredParagraph* mt = recycle == nullptr ? obtain() : recycle;
     mt->resetAndAnalyzeBidi(text, start, end, textDir);
     std::unique_ptr<MeasuredText::Builder> builder;
     if (hint == nullptr) {
         builder = std::make_unique<MeasuredText::Builder>(mt->mCopiedBuffer);
         builder->setComputeHyphenation(computeHyphenation)
-                .setComputeLayout(computeLayout);
+                .setComputeLayout(computeLayout)
+                .setComputeBounds(computeBounds);
     } else {
         builder = std::make_unique<MeasuredText::Builder>(hint->mMeasuredText);
     }
@@ -161,17 +167,24 @@ MeasuredParagraph* MeasuredParagraph::buildForStaticLayout(const TextPaint* pain
     } else {
         if (mt->mSpanned == nullptr) {
             // No style change by MetricsAffectingSpan. Just measure all text.
-            mt->applyMetricsAffectingSpan(*paint, {/*nullptr*/} /* spans */, start, end, builder.get());
+            mt->applyMetricsAffectingSpan(*paint, lineBreakConfig, {/*nullptr*/} /* spans */, {},
+                    start, end, builder.get());
             mt->mSpanEndCache.emplace_back(end);
         } else {
-            // There may be a MetricsAffectingSpan. Split into span transitions and apply
-            // styles.
+            // There may be a MetricsAffectingSpan or LineBreakConfigSpan. Split into span
+            // transitions on both, and apply styles.
+            const auto lbcFilter = make_span_filter<LineBreakConfigSpan>();
             int spanEnd;
             for (int spanStart = start; spanStart < end; spanStart = spanEnd) {
-                spanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
+                const int maSpanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, MetricAffectingSpanFilter);
+                const int lbcSpanEnd = mt->mSpanned->nextSpanTransition(spanStart, end, lbcFilter);
+                spanEnd = std::min(maSpanEnd, lbcSpanEnd);
                 auto spans = mt->mSpanned->getSpans(spanStart, spanEnd, MetricAffectingSpanFilter);
+                auto lbcSpans = mt->mSpanned->getSpans(spanStart, spanEnd, lbcFilter);
                 TextUtils::removeEmptySpans(spans, mt->mSpanned, MetricAffectingSpanFilter);
-                mt->applyMetricsAffectingSpan(*paint, spans, spanStart, spanEnd, builder.get());
+                TextUtils::removeEmptySpans(lbcSpans, mt->mSpanned, lbcFilter);
+                mt->applyMetricsAffectingSpan(*paint, lineBreakConfig, spans, lbcSpans,
+                        spanStart, spanEnd, builder.get());
                 mt->mSpanEndCache.emplace_back(spanEnd);
             }
         }
@@ -252,7 +265,8 @@ void  MeasuredParagraph::applyReplacementRun(const ReplacementSpan& replacement,
     }
 }
 
-void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder* builder) {
+void MeasuredParagraph::applyStyleRun(int start, int end, const LineBreakConfig* lineBreakConfig,
+        MeasuredText::Builder* builder) {
 
     if (mLtrWithoutBidi) {
         // If the whole text is LTR direction, just apply whole region.
@@ -261,7 +275,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
                     mCopiedBuffer.data(), start, end - start, start, end - start, false /* isRtl */,
                     mWidths.data(), start);
         } else {
-            builder->appendStyleRun(mCachedPaint, end - start, false /* isRtl */);
+            builder->appendStyleRun(mCachedPaint, lineBreakConfig, end - start, false /* isRtl */);
         }
     } else {
         // If there is multiple bidi levels, split into individual bidi level and apply style.
@@ -277,7 +291,7 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
                             mCopiedBuffer.data(), levelStart, levelLength, levelStart, levelLength,
                             isRtl, mWidths.data(), levelStart);
                 } else {
-                    builder->appendStyleRun(mCachedPaint, levelEnd - levelStart, isRtl);
+                    builder->appendStyleRun(mCachedPaint, lineBreakConfig, levelEnd - levelStart, isRtl);
                 }
                 if (levelEnd == end) {
                     break;
@@ -289,7 +303,9 @@ void MeasuredParagraph::applyStyleRun(int start, int end, MeasuredText::Builder*
     }
 }
 
-void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const std::vector<const ParcelableSpan*>& spans, int start, int end, MeasuredText::Builder* builder) {
+void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint, const LineBreakConfig* lineBreakConfig,
+        const std::vector<const ParcelableSpan*>& spans, const std::vector<const ParcelableSpan*>& lbcSpans,
+        int start, int end, MeasuredText::Builder* builder) {
     mCachedPaint.set(paint);
     // XXX paint should not have a baseline shift, but...
     mCachedPaint.baselineShift = 0;
@@ -314,6 +330,22 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
         }
     }
 
+    // Merge any overlapping LineBreakConfigSpans into the base lineBreakConfig, matching
+    // android-36 MeasuredParagraph.applyMetricsAffectingSpan.
+    LineBreakConfig effectiveStorage;
+    const LineBreakConfig* effective = lineBreakConfig;
+    if (!lbcSpans.empty()) {
+        mLineBreakConfigBuilder.reset(lineBreakConfig);
+        for (const ParcelableSpan* s : lbcSpans) {
+            const LineBreakConfigSpan* lbcs = dynamic_cast<const LineBreakConfigSpan*>(s);
+            if (lbcs != nullptr) {
+                mLineBreakConfigBuilder.merge(lbcs->getLineBreakConfig());
+            }
+        }
+        effectiveStorage = mLineBreakConfigBuilder.build();
+        effective = &effectiveStorage;
+    }
+
     const int startInCopiedBuffer = start - mTextStart;
     const int endInCopiedBuffer = end - mTextStart;
 
@@ -324,7 +356,7 @@ void MeasuredParagraph::applyMetricsAffectingSpan(const TextPaint& paint,const s
     if (replacement != nullptr) {
         applyReplacementRun(*replacement, startInCopiedBuffer, endInCopiedBuffer, builder);
     } else {
-        applyStyleRun(startInCopiedBuffer, endInCopiedBuffer, builder);
+        applyStyleRun(startInCopiedBuffer, endInCopiedBuffer, effective, builder);
     }
 
     if (needFontMetrics) {
