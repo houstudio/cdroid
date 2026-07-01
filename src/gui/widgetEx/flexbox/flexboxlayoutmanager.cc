@@ -23,6 +23,7 @@
 #include <widgetEx/recyclerview/orientationhelper.h>
 #include <widgetEx/recyclerview/layoutstate.h>
 #include <widgetEx/recyclerview/linearsmoothscroller.h>
+#include <cassert>
 
 namespace cdroid {
 
@@ -1190,8 +1191,13 @@ void FlexboxLayoutManager::onRestoreInstanceState(Parcelable& state) {
     }
 }
 
-bool FlexboxLayoutManager::isLayoutRTL() {
+bool FlexboxLayoutManager::isLayoutRtl() {
     return mIsRtl;
+}
+
+int FlexboxLayoutManager::getPositionToFlexLineIndex(int position) {
+    assert(mFlexboxHelper != nullptr);
+    return mFlexboxHelper->getIndexToFlexLine()[position];
 }
 
 void FlexboxLayoutManager::resolveLayoutDirection() {
@@ -1923,6 +1929,10 @@ FlexboxLayoutManager::LayoutParams::LayoutParams(int width, int height)
 }
 
 FlexboxLayoutManager::LayoutParams::LayoutParams(const ViewGroup::MarginLayoutParams& source)
+    : RecyclerView::LayoutParams(source) {
+}
+
+FlexboxLayoutManager::LayoutParams::LayoutParams(const ViewGroup::LayoutParams& source)
     : RecyclerView::LayoutParams(source) {
 }
 

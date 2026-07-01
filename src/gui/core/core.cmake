@@ -55,6 +55,7 @@ SET(CORE_SOURCES
     core/xmlpullparser.cc
     core/typedvalue.cc
     core/typeface.cc
+    core/fontlistparser.cc
     core/uieventsource.cc
     core/virtualkeymap.cc
     core/windowmanager.cc

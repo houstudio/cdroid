@@ -27,7 +27,7 @@ add_library(cdtext
     method/arrowkeymovementmethod.cc
     method/scrollingmovementmethod.cc
     )
-target_link_libraries(cdtext minikin)
+target_link_libraries(cdtext minikin expat)
 
 target_include_directories(
     cdtext

@@ -22,6 +22,7 @@
 namespace cdroid{
 class FlexItem;
 class FlexContainer;
+class CompoundButton;
 class FlexboxHelper {
 private:
     static constexpr int NO_POSITION = -1;
@@ -74,6 +75,7 @@ private:
     bool isLastFlexItem(int childIndex, int childCount, FlexLine flexLine);
     void addFlexLine(std::vector<FlexLine>& flexLines, FlexLine flexLine, int viewIndex,int usedCrossSizeSoFar);
     void checkSizeConstraints(View* view, int index);
+    void evaluateMinimumSizeForCompoundButton(CompoundButton* compoundButton);
     void ensureChildrenFrozen(int size);
 
     void expandFlexItems(int widthMeasureSpec, int heightMeasureSpec, FlexLine& flexLine,

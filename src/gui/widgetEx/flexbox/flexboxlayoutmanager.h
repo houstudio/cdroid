@@ -86,8 +86,6 @@ protected:
     View* findLastReferenceViewInLine(View* lastFound, FlexLine* flexLine);
     void ensureLayoutState();
 
-    bool isLayoutRTL();
-
     int fixLayoutStartGap(int startOffset, RecyclerView::Recycler& recycler, RecyclerView::State& state, bool canOffsetChildren);
     int fixLayoutEndGap(int endOffset, RecyclerView::Recycler& recycler, RecyclerView::State& state, bool canOffsetChildren);
 
@@ -228,6 +226,9 @@ public:
     bool getRecycleChildrenOnDetach();
     void setRecycleChildrenOnDetach(bool recycleChildrenOnDetach);
 
+    bool isLayoutRtl();
+    int getPositionToFlexLineIndex(int position);
+
 private:
     void updateDirtyPosition(int positionStart);
     View* findOneVisibleChild(int fromIndex, int toIndex, bool completelyVisible);
@@ -292,6 +293,7 @@ public:
     LayoutParams(Context* c, const AttributeSet& attrs);
     LayoutParams(int width, int height);
     LayoutParams(const ViewGroup::MarginLayoutParams& source);
+    LayoutParams(const ViewGroup::LayoutParams& source);
     LayoutParams(const RecyclerView::LayoutParams& source);
 
     // FlexItem interface implementation

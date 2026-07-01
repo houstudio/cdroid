@@ -19,6 +19,8 @@
 #define __TYPEFACE_H__
 #include <string>
 #include <unordered_map>
+#include <vector>
+#include <memory>
 #include <cairomm/scaledfont.h>
 namespace minikin{
     class FontFamily;
@@ -53,9 +55,11 @@ public:
 private:
     static constexpr int STYLE_MASK  = 0x03;
     static std::string mFallbackFamilyName;
+    static std::string sFontConfigXml;  // optional Android fonts.xml/font_fallback.xml path
     std::string mFamily;
     std::string mStyleName;
     std::string mFileName;
+    int mFaceIndex = 0;
     int mStyle;
     int mWeight;
     int mItalic;
@@ -80,6 +84,14 @@ private:
     static Typeface* getSystemDefaultTypeface(const std::string& familyName);
     //Typeface(Cairo::RefPtr<Cairo::FontFace>face);
     Typeface(const FcPattern&);
+    // Build a Typeface directly from font fields (Android fonts.xml path) — no fontconfig.
+    // If `family` is empty (a fallback <family lang=...>), the real family is read from the
+    // font file's family_name so buildSystemFallback/buildFamily can group it correctly.
+    Typeface(const std::string& family, int weight, bool italic, const std::string& fileName, int faceIndex);
+    // Memory-backed Typeface (e.g. PAK @font): font bytes live in `fontData`.
+    Typeface(const std::string& family, int weight, bool italic,
+             std::shared_ptr<std::vector<uint8_t>> fontData, int faceIndex);
+    static int loadFromFontsXml(const std::string& fontDir, const std::string& xmlPath);
     ~Typeface()=default;
     static int parseStyle(const std::string&style,std::string&normalizedName);
     void fetchProps(FT_Face);
@@ -101,6 +113,10 @@ public:
     static void resetScaledFontCacheStats();
     static void setContext(cdroid::Context*);
     static void setFallback(const std::string&);
+    // Optional: set an Android fonts.xml / font_fallback.xml path. If set and the file
+    // exists, loadPreinstalledSystemFontMap() uses it (curated named families + fallback
+    // chain) instead of fontconfig. Unset/missing => fontconfig (no behavior change).
+    static void setFontConfigXml(const std::string& path);
     //static Typeface* createFromResources(cdroid::Context*context,const std::string& path);
     static void buildSystemFallback();
     //static Typeface* findFromCache(AssetManager mgr, const std::string& path);

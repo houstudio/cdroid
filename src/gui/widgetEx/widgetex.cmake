@@ -41,6 +41,7 @@ if(ENABLE_FLEXBOXLAYOUT)
         widgetEx/flexbox/flexboxlayout.cc
         widgetEx/flexbox/flexboxhelper.cc
         widgetEx/flexbox/flexboxlayoutmanager.cc
+        widgetEx/flexbox/flexboxitemdecoration.cc
     )
 endif(ENABLE_FLEXBOXLAYOUT)
 

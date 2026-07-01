@@ -21,6 +21,7 @@
 #include <widgetEx/flexbox/flexboxhelper.h>
 #include <widgetEx/flexbox/flexcontainer.h>
 #include <widgetEx/flexbox/flexdirection.h>
+#include <widget/compoundbutton.h>
 namespace cdroid{
 
 FlexboxHelper::FlexboxHelper(FlexContainer* flexContainer) {
@@ -188,6 +189,8 @@ void FlexboxHelper::calculateFlexLines(FlexLinesResult* result, int mainMeasureS
                 addFlexLine(flexLines, flexLine, i, sumCrossSize);
             }
             continue;
+        } else if (dynamic_cast<CompoundButton*>(child) != nullptr) {
+            evaluateMinimumSizeForCompoundButton(dynamic_cast<CompoundButton*>(child));
         }
 
         FlexItem* flexItem = dynamic_cast<FlexItem*>(child->getLayoutParams());
@@ -580,6 +583,18 @@ void FlexboxHelper::determineMainSize(int widthMeasureSpec, int heightMeasureSpe
                     mainSize, paddingAlongMainAxis, false);
         }
     }
+}
+
+void FlexboxHelper::evaluateMinimumSizeForCompoundButton(CompoundButton* compoundButton) {
+    FlexItem* flexItem = dynamic_cast<FlexItem*>(compoundButton->getLayoutParams());
+    int minWidth = flexItem->getMinWidth();
+    int minHeight = flexItem->getMinHeight();
+
+    Drawable* drawable = compoundButton->getButtonDrawable();
+    int drawableMinWidth = drawable == nullptr ? 0 : drawable->getMinimumWidth();
+    int drawableMinHeight = drawable == nullptr ? 0 : drawable->getMinimumHeight();
+    flexItem->setMinWidth(minWidth == FlexContainer::NOT_SET ? drawableMinWidth : minWidth);
+    flexItem->setMinHeight(minHeight == FlexContainer::NOT_SET ? drawableMinHeight : minHeight);
 }
 
 void FlexboxHelper::ensureChildrenFrozen(int size) {
