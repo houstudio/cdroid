@@ -4544,9 +4544,9 @@ void TextView::onDraw(Canvas& canvas) {
     }
 #endif
     auto highlight=getUpdatedHighlightPath();
-    if(mEditor != nullptr){
+    /*if(mEditor != nullptr){
         mEditor->onDraw(canvas, layout, highlight.get(), mHighlightPaint, cursorOffsetVertical);
-    }else{
+    }else*/{
         //if(highlight)canvas.set_color(mHighlightColor);
         //canvas.set_color(color);
         layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
@@ -4559,8 +4559,8 @@ void TextView::onDraw(Canvas& canvas) {
         canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);
         layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
+    //if (mEditor) mEditor->drawCursor(canvas, cursorOffsetVertical);
     canvas.restore();
-    if (mEditor) mEditor->drawCursor(canvas, cursorOffsetVertical);
 }
 
 void TextView::onDrawCaret(Canvas& canvas, const Rect& caretRect) {
