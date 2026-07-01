@@ -51,6 +51,10 @@ public:
     std::string getSource()const{
         return mContentUri;
     }
+    // mContext/mDrawable are BORROWED (lifetime managed elsewhere; ImageSpan
+    // never deletes them), so the implicit copy ctor's shallow pointer copy is
+    // correct here — matches Android's drawable-shared-across-copies behavior.
+    ImageSpan* clone() const override { return new ImageSpan(*this); }
 };
 }/*endof namespace*/
 #endif/*__REPLACEMENT_SPAN_H__*/

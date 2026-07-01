@@ -4,6 +4,8 @@
 namespace cdroid {
 
 class WrapTogetherSpan : public ParagraphStyle {
+public:
+    WrapTogetherSpan* clone() const override { return new WrapTogetherSpan(*this); }
 };
 
 } /* end namespace */

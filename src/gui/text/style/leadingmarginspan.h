@@ -43,6 +43,8 @@ public:
         c.restore();
     }
 
+    BulletSpan* clone() const override { return new BulletSpan(*this); }
+
 private:
     int mGapWidth;
     int mBulletRadius;
@@ -72,6 +74,8 @@ public:
         c.fill();
         c.restore();
     }
+
+    QuoteSpan* clone() const override { return new QuoteSpan(*this); }
 
 private:
     int mColor;

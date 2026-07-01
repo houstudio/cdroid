@@ -28,6 +28,9 @@ public:
     URLSpan(const std::string&url):mURL(url){
     }
     std::string getURL()const{return mURL;}
+    void onClick(View& widget)override{
+    }
+    URLSpan* clone() const override { return new URLSpan(*this); }
 };
 }/*endof namespace*/
 #endif/*__CLICKABLE_SPAN_H__*/

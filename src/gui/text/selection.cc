@@ -3,14 +3,24 @@
 #include <text/parcelablespan.h>
 namespace cdroid{
 
+namespace {
+// Selection cursor markers. NoCopySpan so the owning Spannable treats them as
+// BORROWED: it never deletes them (they are process-lifetime singletons) and
+// never clones them on text copy — matching Android's
+// `static final class START/END/MEMORY implements NoCopySpan`. Only pointer
+// identity matters, which the singleton instance guarantees.
+struct SelectionStartMarker  : public NoCopySpan {};
+struct SelectionEndMarker    : public NoCopySpan {};
+struct SelectionMemoryMarker : public NoCopySpan {};
+} // namespace
+
 // ODR-use definitions of the selection marker spans. Declared as `const static`
 // pointers in the header but never defined before, which is why the Selection
-// API could not actually be linked/called. These are distinct process-lifetime
-// singletons (mirroring Android's START/END/MEMORY NoCopySpan markers); only
-// pointer identity matters.
-const ParcelableSpan* Selection::SELECTION_MEMORY = new ParcelableSpan();
-const ParcelableSpan* Selection::SELECTION_START  = new ParcelableSpan();
-const ParcelableSpan* Selection::SELECTION_END    = new ParcelableSpan();
+// API could not actually be linked/called. Distinct process-lifetime singletons;
+// only pointer identity matters.
+const ParcelableSpan* Selection::SELECTION_MEMORY = new SelectionMemoryMarker();
+const ParcelableSpan* Selection::SELECTION_START  = new SelectionStartMarker();
+const ParcelableSpan* Selection::SELECTION_END    = new SelectionEndMarker();
 
 int Selection::getSelectionStart(CharSequence* text) {
     Spanned*spanned = dynamic_cast<Spanned*>(text);

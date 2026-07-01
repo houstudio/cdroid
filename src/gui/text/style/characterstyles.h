@@ -12,6 +12,7 @@ public:
     void updateDrawState(TextPaint& paint) const override {
         paint.setUnderlineText(true);
     }
+    UnderlineSpan* clone() const override { return new UnderlineSpan(*this); }
 };
 
 class StrikethroughSpan : public CharacterStyle {
@@ -19,6 +20,7 @@ public:
     void updateDrawState(TextPaint& paint) const override {
         paint.setStrikeThruText(true);
     }
+    StrikethroughSpan* clone() const override { return new StrikethroughSpan(*this); }
 };
 
 class ForegroundColorSpan : public CharacterStyle {
@@ -29,6 +31,8 @@ public:
     void updateDrawState(TextPaint& paint) const override {
         paint.setColor(mColor);
     }
+
+    ForegroundColorSpan* clone() const override { return new ForegroundColorSpan(*this); }
 
 private:
     int mColor;
@@ -42,6 +46,8 @@ public:
     void updateDrawState(TextPaint& paint) const override {
         paint.bgColor = mColor;
     }
+
+    BackgroundColorSpan* clone() const override { return new BackgroundColorSpan(*this); }
 
 private:
     int mColor;

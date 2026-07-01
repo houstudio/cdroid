@@ -28,6 +28,9 @@ public:
     bool equals(const LineBreakConfigSpan& o) const{
         return mLineBreakConfig == o.mLineBreakConfig;
     }
+
+    LineBreakConfigSpan* clone() const override { return new LineBreakConfigSpan(*this); }
+
 private:
     LineBreakConfig mLineBreakConfig;
 };

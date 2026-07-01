@@ -528,10 +528,11 @@ private:
     void endA(SpannableStringBuilder& text) {
         const Href* h = getLast<Href>(text);
         if (!h) return;
-        // Reserved: URLSpan is abstract in this port (pure-virtual
-        // ClickableSpan::onClick). Re-enable once URLSpan is instantiable:
-        //     if (!h->mHref.empty()) setSpanFromMark(text, h, { new URLSpan(h->mHref) });
-        setSpanFromMark(text, h, {});
+        if (h->mHref.empty()) {
+            text.removeSpan(h);
+            return;
+        }
+        setSpanFromMark(text, h, { new URLSpan(h->mHref) });
     }
 
     void startImg(const XML_Char** atts) {

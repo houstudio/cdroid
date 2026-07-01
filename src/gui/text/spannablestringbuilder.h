@@ -24,6 +24,7 @@ public:
     void adjustSpansForReplace(int start, int end, int delta);
 
     Editable& append(const CharSequence& text);
+    SpannableStringBuilder& append(const std::u16string&text,int flags);
     SpannableStringBuilder& append(const std::u16string&text, const ParcelableSpan* what, int flags);
     SpannableStringBuilder& append(const std::u16string& text, const std::vector<const ParcelableSpan*>& whats, int flags);
     SpannableStringBuilder& append(const CharSequence& text, const ParcelableSpan* what, int flags);

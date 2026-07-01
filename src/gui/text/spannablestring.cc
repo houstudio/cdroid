@@ -4,6 +4,65 @@
 
 namespace cdroid {
 
+// --- SpannableStringInternal centralized span mutation (owned/borrowed) -----
+
+void SpannableStringInternal::addSpan(const ParcelableSpan* span, int start, int end, int flags) {
+    // The public API is const-correct (Android's setSpan takes a non-const
+    // Object; CDROID passes const ParcelableSpan*). Every span is a non-const
+    // heap allocation reached through a const pointer only for API convenience,
+    // so casting away const here to later manage/delete it is well-defined.
+    // This is the ONLY const_cast in the span subsystem.
+    ParcelableSpan* s = const_cast<ParcelableSpan*>(span);
+    const bool owned = (dynamic_cast<NoCopySpan*>(s) == nullptr);
+    mSpans.push_back({s, start, end, flags, owned});
+}
+
+bool SpannableStringInternal::removeSpanRecord(const ParcelableSpan* span) {
+    for (auto it = mSpans.begin(); it != mSpans.end(); ++it) {
+        if (it->span == span) {
+            disposeSpan(*it);
+            mSpans.erase(it);
+            return true;
+        }
+    }
+    return false;
+}
+
+void SpannableStringInternal::deleteAllOwnedSpans() {
+    for (auto& r : mSpans) {
+        disposeSpan(r);
+    }
+    mSpans.clear();
+}
+
+void SpannableStringInternal::appendSpanCopy(std::vector<SpanRecord>& dest,
+        const ParcelableSpan* srcSpan, int newStart, int newEnd, int flags,
+        bool ignoreNoCopySpan) {
+    const bool isNoCopy = (dynamic_cast<const NoCopySpan*>(srcSpan) != nullptr);
+    if (ignoreNoCopySpan && isNoCopy) {
+        return;  // Android: NoCopySpan is skipped on slice/copy
+    }
+    if (isNoCopy) {
+        // Borrowed: share the raw pointer; never deleted, never cloned.
+        dest.push_back({const_cast<ParcelableSpan*>(srcSpan), newStart, newEnd, flags, false});
+    } else {
+        // Owned: clone so the destination owns an independent copy (avoids two
+        // containers deleting the same object).
+        ParcelableSpan* c = srcSpan->clone();
+        assert(c && "owned span subclass forgot to override clone()");
+        dest.push_back({c, newStart, newEnd, flags, true});
+    }
+}
+
+void SpannableStringInternal::disposeSpan(SpanRecord& r) {
+    // STEP 3: intentionally a no-op so the storage refactor (SpanRecord +
+    // centralized helpers) can be validated before any span is freed. The
+    // copy path already clones owned spans, so no use-after-free is possible
+    // in this state — only a (temporary) leak remains. Step 4 flips the body
+    // to: if (r.owned) delete r.span;
+    (void)r;
+}
+
 // SpannableStringInternal implementations
 SpannableStringInternal::SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan) {
     if (source == nullptr) return;
@@ -11,29 +70,26 @@ SpannableStringInternal::SpannableStringInternal(const CharSequence* source, int
     if (start < 0) start = 0;
     if (end > len) end = len;
     if (start >= end) return;
-    
+
     mText.resize(end - start);
     for (int i = 0; i < end - start; i++) {
         mText[i] = source->charAt(start + i);
     }
-    
+
     const Spanned* spanned = dynamic_cast<const Spanned*>(source);
     if (spanned != nullptr) {
         const SpanFilter filter;
         auto spans = spanned->getSpans(start, end, filter);
         for (const ParcelableSpan* span : spans) {
-            if (ignoreNoCopySpan && dynamic_cast<const NoCopySpan*>(span)) {
-                continue;
-            }
             int spanStart = spanned->getSpanStart(span);
             int spanEnd = spanned->getSpanEnd(span);
             int spanFlags = spanned->getSpanFlags(span);
-            
+
             int newStart = std::max(start, spanStart) - start;
             int newEnd = std::min(end, spanEnd) - start;
-            
+
             if (newStart < newEnd) {
-                mSpans.emplace_back(span, newStart, newEnd, spanFlags);
+                appendSpanCopy(mSpans, span, newStart, newEnd, spanFlags, ignoreNoCopySpan);
             }
         }
     }
@@ -67,27 +123,23 @@ int SpannableStringInternal::charAt(int idx) const {
 
 std::vector<const ParcelableSpan*> SpannableStringInternal::getSpans(int queryStart, int queryEnd, const SpanFilter& filter) const {
     std::vector<const ParcelableSpan*> result;
-    
-    for (const auto& t : mSpans) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = t;
-        
-        if (sstart > queryEnd || send < queryStart) {
+
+    for (const auto& r : mSpans) {
+        if (r.start > queryEnd || r.end < queryStart) {
             continue;
         }
-        
-        if (sstart != send && queryStart != queryEnd) {
-            if (sstart == queryEnd || send == queryStart) {
+
+        if (r.start != r.end && queryStart != queryEnd) {
+            if (r.start == queryEnd || r.end == queryStart) {
                 continue;
             }
         }
-        
-        if (!filter.test(span)) {
+
+        if (!filter.test(r.span)) {
             continue;
         }
-        
-        const int priority = sflags & Spanned::SPAN_PRIORITY;
+
+        const int priority = r.flags & Spanned::SPAN_PRIORITY;
         auto it = result.begin();
         for (; it != result.end(); ++it) {
             int existingPriority = getSpanFlags(*it) & Spanned::SPAN_PRIORITY;
@@ -95,51 +147,39 @@ std::vector<const ParcelableSpan*> SpannableStringInternal::getSpans(int querySt
                 break;
             }
         }
-        result.insert(it, span);
+        result.insert(it, r.span);
     }
-    
+
     return result;
 }
 
 int SpannableStringInternal::getSpanStart(const ParcelableSpan* what) const {
     for (auto it = mSpans.rbegin(); it != mSpans.rend(); ++it) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = *it;
-        if (span == what) return sstart;
+        if (it->span == what) return it->start;
     }
     return -1;
 }
 
 int SpannableStringInternal::getSpanEnd(const ParcelableSpan* what) const {
     for (auto it = mSpans.rbegin(); it != mSpans.rend(); ++it) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = *it;
-        if (span == what) return send;
+        if (it->span == what) return it->end;
     }
     return -1;
 }
 
 int SpannableStringInternal::getSpanFlags(const ParcelableSpan* what) const {
     for (auto it = mSpans.rbegin(); it != mSpans.rend(); ++it) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = *it;
-        if (span == what) return sflags;
+        if (it->span == what) return it->flags;
     }
     return 0;
 }
 
 int SpannableStringInternal::nextSpanTransition(int start, int limit, const SpanFilter& kind) const {
     int edge = limit;
-    for (const auto& t : mSpans) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = t;
-        if (kind.test(span)) {
-            if (sstart > start && sstart < edge) edge = sstart;
-            if (send > start && send < edge) edge = send;
+    for (const auto& r : mSpans) {
+        if (kind.test(r.span)) {
+            if (r.start > start && r.start < edge) edge = r.start;
+            if (r.end > start && r.end < edge) edge = r.end;
         }
     }
     return edge;
@@ -197,14 +237,11 @@ SpannedString* SpannedString::subSequence(int start, int end) const {
     if (start >= end) return new SpannedString();
     SpannedString* result = new SpannedString();
     result->mText = mText.substr(start, end - start);
-    for (auto& t : mSpans) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = t;
-        if (send <= start || sstart >= end) continue;
-        int spanStart = std::max(sstart, start) - start;
-        int spanEnd = std::min(send, end) - start;
-        result->mSpans.push_back({span, spanStart, spanEnd, sflags});
+    for (const auto& r : mSpans) {
+        if (r.end <= start || r.start >= end) continue;
+        int spanStart = std::max(r.start, start) - start;
+        int spanEnd = std::min(r.end, end) - start;
+        appendSpanCopy(result->mSpans, r.span, spanStart, spanEnd, r.flags, /*ignoreNoCopy=*/false);
     }
     return result;
 }

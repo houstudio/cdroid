@@ -10,6 +10,8 @@ public:
             : mAlignment(alignment) {}
     int getAlignment() const { return mAlignment; }
 
+    AlignmentSpan* clone() const override { return new AlignmentSpan(*this); }
+
     class Standard;
 
 private:
@@ -19,6 +21,7 @@ private:
 class AlignmentSpan::Standard : public AlignmentSpan {
 public:
     explicit Standard(Layout::Alignment alignment) : AlignmentSpan(alignment) {}
+    Standard* clone() const override { return new Standard(*this); }
 };
 
 } /* end namespace */

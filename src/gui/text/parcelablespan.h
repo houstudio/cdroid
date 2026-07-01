@@ -14,6 +14,14 @@ class CharacterStylePassthrough;
 class ParcelableSpan {
 public:
     virtual ~ParcelableSpan() = default;
+    // Deep copy used when a Spanned carrying OWNED spans is copied/sliced
+    // (see SpannableStringInternal). NON-pure: the root is directly instantiated
+    // (Selection markers do `new ParcelableSpan()`), so it returns nullptr by
+    // default. Concrete owned value-spans override this covariantly, returning
+    // their own type; the copy path asserts non-null to catch a forgotten
+    // override. NoCopySpan/borrowed spans inherit the default and are never
+    // cloned (they are skipped on copy, matching Android's ignoreNoCopySpan).
+    virtual ParcelableSpan* clone() const { return nullptr; }
 };
 
 class CharSequence : virtual public ParcelableSpan {
@@ -65,6 +73,7 @@ class SuggestionSpan : public CharacterStyle {
 public:
     virtual ~SuggestionSpan() = default;
     void updateDrawState(TextPaint& paint) const override {}
+    SuggestionSpan* clone() const override { return new SuggestionSpan(*this); }
 };
 
 class SpellCheckSpan : public ParcelableSpan {
@@ -81,6 +90,10 @@ public:
     CharacterStyle* getUnderlying() const override {
         return mStyle ? mStyle->getUnderlying() : nullptr;
     }
+    // mStyle is BORROWED (owned elsewhere, e.g. by CharacterStyle::wrap caller);
+    // the copy shallow-copies the pointer, preserving the borrow — it must NOT
+    // transfer or clone mStyle's ownership.
+    CharacterStylePassthrough* clone() const override { return new CharacterStylePassthrough(*this); }
 private:
     CharacterStyle* mStyle;
 };

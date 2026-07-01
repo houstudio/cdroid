@@ -9,6 +9,7 @@
 #include <vector>
 #include <tuple>
 #include <memory>
+#include <cassert>
 #include <stdexcept>
 
 namespace cdroid {
@@ -51,8 +52,40 @@ public:
 
 class SpannableStringInternal : virtual public Spanned {
 protected:
+    // One stored span plus its [start, end) bounds, flags, and ownership mode.
+    // `owned == true`  => this container manages the span's lifetime (it is a
+    //                     non-NoCopySpan passed to setSpan): the container deletes
+    //                     it on removal/destruction and clones it on copy.
+    // `owned == false` => BORROWED (a NoCopySpan: watcher or selection marker):
+    //                     never deleted, never cloned; only its pointer is
+    //                     (optionally) shared. Mirrors Android's NoCopySpan.
+    struct SpanRecord {
+        ParcelableSpan* span;   // non-const; const is cast away once in addSpan()
+        int start;
+        int end;
+        int flags;
+        bool owned;
+    };
     std::u16string mText;
-    std::vector<std::tuple<const ParcelableSpan*, int, int, int>> mSpans;
+    std::vector<SpanRecord> mSpans;
+
+    // --- centralized span mutation: the owned/borrowed logic lives ONLY here ---
+    // Insert. The SINGLE point where const is cast away and `owned` is decided.
+    void addSpan(const ParcelableSpan* span, int start, int end, int flags);
+    // Remove the first record whose span == `span` (pointer identity) and
+    // dispose it. Returns true if a record was removed.
+    bool removeSpanRecord(const ParcelableSpan* span);
+    // Dispose every owned span, then clear the vector. Used by dtor/clearSpans.
+    void deleteAllOwnedSpans();
+    // Append a copy of `srcSpan` into `dest` at [newStart, newEnd): clone it if
+    // the span is owned, share the raw pointer if borrowed, and honor
+    // ignoreNoCopySpan (skip NoCopySpan entirely when true). The single clone
+    // decision point, used by the copy-ctor and subSequence.
+    static void appendSpanCopy(std::vector<SpanRecord>& dest, const ParcelableSpan* srcSpan,
+                               int newStart, int newEnd, int flags, bool ignoreNoCopySpan);
+    // Delete the span object iff this record owns it.
+    static void disposeSpan(SpanRecord& r);
+
     SpannableStringInternal() = default;
     explicit SpannableStringInternal(const std::u16string& text) : mText(text) {}
 public:

@@ -20,6 +20,7 @@ public:
 
     void updateDrawState(TextPaint& paint) const override;
     void updateMeasureState(TextPaint& paint) const override;
+    AbsoluteSizeSpan* clone() const override { return new AbsoluteSizeSpan(*this); }
 private:
     int mSize;
     bool mDip;
@@ -33,6 +34,7 @@ public:
 
     void updateDrawState(TextPaint& paint) const override;
     void updateMeasureState(TextPaint& paint) const override;
+    RelativeSizeSpan* clone() const override { return new RelativeSizeSpan(*this); }
 private:
     float mProportion;
 };
@@ -48,6 +50,7 @@ public:
     }*/
     void updateDrawState(TextPaint& textPaint)const override;
     void updateMeasureState(TextPaint& textPaint)const override;
+    SubscriptSpan* clone() const override { return new SubscriptSpan(*this); }
 };
 
 class SuperscriptSpan :public MetricAffectingSpan {
@@ -61,6 +64,7 @@ public:
     }*/
     void updateDrawState(TextPaint& textPaint)const override;
     void updateMeasureState(TextPaint& textPaint)const override;
+    SuperscriptSpan* clone() const override { return new SuperscriptSpan(*this); }
 };
 
 class StyleSpan:public MetricAffectingSpan{
@@ -79,6 +83,7 @@ public:
     }
     void updateDrawState(TextPaint& paint)const override;
     void updateMeasureState(TextPaint& paint) const override;
+    StyleSpan* clone() const override { return new StyleSpan(*this); }
 };
 
 class TypefaceSpan : public MetricAffectingSpan {
@@ -88,6 +93,7 @@ public:
 
     void updateDrawState(TextPaint& paint) const override;
     void updateMeasureState(TextPaint& paint) const override;
+    TypefaceSpan* clone() const override { return new TypefaceSpan(*this); }
 private:
     std::string mFamily;
 };

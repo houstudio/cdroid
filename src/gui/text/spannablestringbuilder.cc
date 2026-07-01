@@ -72,6 +72,11 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
     }
 }
 
+SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text,int flags){
+     mText.append(text);
+     return *this;
+}
+
 SpannableStringBuilder& SpannableStringBuilder::append(const std::u16string&text, const ParcelableSpan* what, int flags){
     const size_t start=mText.length();
     const size_t end=start+text.length();
