@@ -197,14 +197,15 @@ int main(int argc,const char*argv[]){
         new AbsoluteSizeSpan(18)
     }, 0);
     spanText->append(u"2",new SuperscriptSpan(),0);
+    spanText->append(u"Hello,",new ForegroundColorSpan(0xFF66FF66),0);
     TextView* spanTv = new TextView("", 0, 0);
+    spanTv->setSingleLine(false);
     spanTv->setText(spanText);
     spanTv->setTextSize(24);
     spanTv->setLineHeight(60);
     spanTv->setTextColor(0xFFFFFFFF);
     spanTv->setBackgroundColor(0xFF333333);
-    spanTv->setSingleLine(false);
-    layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT));
+    layout->addView(spanTv,new LinearLayout::LayoutParams(LayoutParams::WRAP_CONTENT,LayoutParams::WRAP_CONTENT));
 
     TextView*tv=new TextView("textview with background drawable",0,0);
     tv->setBackgroundResource("cdroid:drawable/btn_default.xml");
