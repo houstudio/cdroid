@@ -264,6 +264,18 @@ void Paint::drawTextRun(Canvas&c,const char16_t*chars,int start,int count,
                                bidiFlags, *mMinikinPaint,
                                minikin::StartHyphenEdit::NO_EDIT,
                                minikin::EndHyphenEdit::NO_EDIT);
+    // Honor Paint.Align on the run origin, matching Android's Canvas.drawText
+    // (where Paint::alignText shifts x by the run advance). cdroid has no
+    // separate drawText() wrapper -- every text path (Layout, TextView, ...) is
+    // routed through drawTextRun -- so the align is applied here. Align::LEFT is
+    // the default and a no-op, leaving the Layout/TextView path unchanged.
+    const float runAdvance = layout.getAdvance();
+    switch (mTextAlign) {
+    case Align::CENTER: x -= runAdvance / 2.f; break;
+    case Align::RIGHT:  x -= runAdvance;        break;
+    case Align::LEFT:
+    default: break;
+    }
     std::shared_ptr<const minikin::Font> currentFontRef = nullptr;
     Cairo::RefPtr<Cairo::FtScaledFont> currentCairoFontFace = nullptr;
     size_t glyphIdx=0;
