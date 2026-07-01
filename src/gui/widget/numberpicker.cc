@@ -1319,9 +1319,11 @@ void NumberPicker::onDraw(Canvas&canvas){
                                  MathUtils::lerp(c2.blue(),c1.blue(),fraction), std::abs(MathUtils::lerp(c2.alpha(),c1.alpha(),fraction)));
             }
         }
-        canvas.set_source(mPat);
+        mSelectorWheelPaint.setShader(mPat);
+        mSelectorWheelPaint.setColor(mTextColor);
     }else{
-        canvas.set_color(mTextColor);
+        mSelectorWheelPaint.setShader(nullptr);
+        mSelectorWheelPaint.setColor(mTextColor);
     }
     canvas.set_font_face(mInputText->getTypeface()->getFontFace());
     canvas.set_font_size(mTextSize);
@@ -1389,6 +1391,7 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                     mItemBackground->draw(canvas);
                 }
+                mSelectorWheelPaint.setColor(mTextColor);
                 drawText(scrollSelectorValue,recText,textGravity,canvas);
             }
         }
@@ -1465,7 +1468,7 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
 
 void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Canvas& canvas) {
     std::u16string u16s=TextUtils::utf8_utf16(text);
-    auto fm=mSelectorWheelPaint.getFontMetricsInt();
+    auto fm = mSelectorWheelPaint.getFontMetricsInt();
     auto textHeight = (fm.bottom-fm.top);
     auto textWidth = mSelectorWheelPaint.measureText(text,0,text.length());
     int x,y;
@@ -1488,6 +1491,7 @@ void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Can
         break;
     }
     y-=fm.ascent;
+    //mSelectorWheelPaint.setTextAlign(Paint::Align::LEFT);
     mSelectorWheelPaint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
 }
 

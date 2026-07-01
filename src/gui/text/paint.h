@@ -3,6 +3,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cairomm/pattern.h>
 #include <core/rect.h>
 namespace minikin{
     class MinikinPaint;
@@ -66,6 +67,7 @@ private:
     std::shared_ptr<minikin::MinikinPaint>mMinikinPaint;
     int mColor;
     int mAlpha;
+    Cairo::RefPtr<Cairo::Pattern> mShader;
     int mTextAlign;
     int mStartHyphenEdit;
     int mEndHyphenEdit;
@@ -103,6 +105,8 @@ public:
     void setFakeBoldText(bool v){mFakeBoldText=v;}
     int getColor()const{return mColor;}
     void setColor(int v){mColor=v;}
+    void setShader(const Cairo::RefPtr<Cairo::Pattern>& shader){mShader = shader;}
+    Cairo::RefPtr<Cairo::Pattern> getShader()const{return mShader;}
     int getAlpha()const{return mAlpha;}
     void setAlpha(int v){mAlpha=v;}
     float getStrokeWidth()const{return mStrokeWidth;}
