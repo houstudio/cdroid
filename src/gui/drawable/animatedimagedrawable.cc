@@ -41,7 +41,6 @@ namespace cdroid{
 #define ENABLE_DMABLIT 0
 /*delay (ms) used to re-check whether the decode thread has finished a slow frame;
   everything scheduled with this is posted on the UI thread, never on the decode thread*/
-#define ANIMATION_POLL_DELAY_MS 10
 
 std::queue<AnimatedImageDrawable::DecodeTask> AnimatedImageDrawable::sDecodeQueue;
 std::thread AnimatedImageDrawable::sDecodeThread;
@@ -307,8 +306,10 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
     }
     canvas.restore();
 
-    /*Drive the cadence on the UI thread. After a promotion, show the next frame after
-      mFrameDelay; while waiting for a slow decode, poll briefly so we promote as soon as
+    /*Drive the cadence on the UI thread. After a promotion, schedule the next frame using
+      mFrameDelay — the per-frame delay returned by drawFrame() (captured by the decode
+      thread into mDecodedFrameDelay), which differs per frame. Never substitute a fixed/
+      default value. While waiting for a slow decode, poll briefly so we promote as soon as
       the decode thread is done. None of this is ever invoked from the decode thread.
       Gated on mRunning: once the repeat count is exhausted (or stop() is called) mRunning
       becomes false and no more frames are scheduled.*/
@@ -316,13 +317,16 @@ void AnimatedImageDrawable::draw(Canvas& canvas){
         if(!mFrameScheduled){
             int64_t delay;
             if(promoted){
-                delay = (mFrameDelay > 0) ? mFrameDelay : Choreographer::DEFAULT_FRAME_DELAY;
+                /*per-frame delay from drawFrame(); a <=0 return (rare 0-delay frame)
+                  advances on the next tick instead of stalling or using a fixed value*/
+                delay = (mFrameDelay > 0) ? mFrameDelay : 0;
             } else if(mDecodeFuture.valid()){
-                delay = ANIMATION_POLL_DELAY_MS;
+                /*still decoding the next frame: re-check shortly*/
+                delay = 10;
             } else {
-                delay = 0;
+                delay = -1;/*nothing pending — do not schedule*/
             }
-            if(delay > 0){
+            if(delay >= 0){
                 unscheduleSelf(mRunnable);
                 scheduleSelf(mRunnable, SystemClock::uptimeMillis() + delay);
                 LOGV("%p schedule next frame %d in %lld ms",this,mNextFrame,(long long)delay);
