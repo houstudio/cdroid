@@ -1,6 +1,6 @@
-#include <text/style/replacementspan.h>
 #include <core/canvas.h>
 #include <drawable/drawable.h>
+#include <text/style/replacementspan.h>
 namespace cdroid{
 int DynamicDrawableSpan::getSize(const Paint& paint, const CharSequence* text, int start, int end, Paint::FontMetricsInt* fm)const{
     Drawable* d = getDrawable();

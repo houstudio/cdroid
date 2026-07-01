@@ -273,6 +273,10 @@ private:
         static const std::regex re(R"((?:^|\s+)text-decoration\s*:\s*([^\s;]+))", std::regex::icase);
         return re;
     }
+    static const std::regex& verticalAlignRe() {
+        static const std::regex re(R"((?:^|\s+)vertical-align\s*:\s*([^\s;]+))", std::regex::icase);
+        return re;
+    }
 
     int getFontWeightAdjustment() const { return 0; }
 
@@ -530,15 +534,38 @@ private:
         setSpanFromMark(text, h, {});
     }
 
-    void startImg(const XML_Char** /*atts*/) {
+    void startImg(const XML_Char** atts) {
         // Reserved: ImageSpan/ImageGetter are unavailable in this port. Re-enable
         // once ImageSpan exists (mirrors Android's behavior):
-        //     std::string src = getAttr(atts, "src");
-        //     Drawable* d = mImageGetter ? mImageGetter(src) : nullptr;
-        //     int len = (int)mBuilder.length();
-        //     mBuilder.append(u'￼');
-        //     mBuilder.setSpan(new ImageSpan(d, src), len, (int)mBuilder.length(),
-        //                      Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        std::string src = getAttr(atts, "src");
+        Drawable* d = mImageGetter ? mImageGetter(src) : nullptr;
+
+        // 解析对齐参数：优先使用 img 的 align 属性，其次在 style 中解析 vertical-align
+        int valign = DynamicDrawableSpan::ALIGN_BOTTOM;
+        std::string align = getAttr(atts, "align");
+        if (!align.empty()) {
+            if (equalsIgnoreCase(align, "baseline")) valign = DynamicDrawableSpan::ALIGN_BASELINE;
+            else if (equalsIgnoreCase(align, "center") || equalsIgnoreCase(align, "middle"))
+                valign = DynamicDrawableSpan::ALIGN_CENTER;
+            else valign = DynamicDrawableSpan::ALIGN_BOTTOM;
+        }
+        std::string style = getAttr(atts, "style");
+        if (!style.empty()) {
+            std::smatch m;
+            if (std::regex_search(style, m, verticalAlignRe())) {
+                const std::string& va = m[1].str();
+                if (equalsIgnoreCase(va, "baseline")) valign = DynamicDrawableSpan::ALIGN_BASELINE;
+                else if (equalsIgnoreCase(va, "center") || equalsIgnoreCase(va, "middle"))
+                    valign = DynamicDrawableSpan::ALIGN_CENTER;
+                else if (equalsIgnoreCase(va, "bottom"))
+                    valign = DynamicDrawableSpan::ALIGN_BOTTOM;
+            }
+        }
+
+        const int len = (int)mBuilder.length();
+        mBuilder.append(u'￼');/*0xFFFC*/
+        mBuilder.setSpan(new ImageSpan(d, valign), len, (int)mBuilder.length(),
+                            Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
         (void)mImageGetter;
     }
 

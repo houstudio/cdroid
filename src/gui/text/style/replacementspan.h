@@ -39,8 +39,8 @@ protected:
     std::string mContentUri;
 public:
     ImageSpan(Drawable* drawable) :DynamicDrawableSpan(ALIGN_BOTTOM) {
+        mContext = nullptr;
         mDrawable = drawable;
-        mContext=nullptr;
     }
     ImageSpan(Drawable* drawable,int verticalAlignment):DynamicDrawableSpan(verticalAlignment){
         mDrawable = drawable;
