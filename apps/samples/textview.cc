@@ -1,7 +1,9 @@
 #include<widget/cdwindow.h>
 #include<widget/textview.h>
+#include<widget/scrollview.h>
 #include<widget/linearlayout.h>
 #include<porting/cdlog.h>
+#include<text/html.h>
 #include<text/spannablestringbuilder.h>
 #include<core/app.h>
 struct TestString{
@@ -160,11 +162,11 @@ TestString testStrings[]={
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
-
+    ScrollView*sv=new ScrollView(0,0);
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
+    sv->addView(layout);
     layout->setOrientation(LinearLayout::VERTICAL);
     layout->setBackgroundColor(0xFF111111);
-    w->addView(layout);
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
         TestString*ts=testStrings+i;
@@ -227,6 +229,8 @@ int main(int argc,const char*argv[]){
             tv->setEllipsize(TextUtils::TruncateAt::MARQUEE);
             tv->setSelected(true);
             },1000);
+    w->addView(sv);
     w->requestLayout();//addView by code must call requestLayout ,auto call only used by Window::inflate.
+    auto spannedstr=Html::fromHtml("",0,nullptr,nullptr);
     return app.exec();
 }
