@@ -3,7 +3,11 @@
 #include <text/parcelablespan.h>
 namespace cdroid{
 class Editable;
-class TextWatcher :public NoCopySpan {
+// NoCopySpan is inherited VIRTUALLY so that a class multiply inheriting
+// TextWatcher and SpanWatcher (e.g. TextView::ChangeWatcher) has a SINGLE
+// NoCopySpan subobject — otherwise dynamic_cast<NoCopySpan*> would be
+// ambiguous and the span would be misclassified as owned (→ double-free).
+class TextWatcher :virtual public NoCopySpan {
 protected:
     std::shared_ptr<void*>mID;
 public:

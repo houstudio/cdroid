@@ -86,13 +86,23 @@ protected:
     // Delete the span object iff this record owns it.
     static void disposeSpan(SpanRecord& r);
 
+    // Deep-copy copy/assign: the implicit ops would bitwise-copy the owned raw
+    // span pointers and double-free on destruction. These clone owned spans and
+    // share borrowed (NoCopySpan) ones. Protected to prevent slicing copies of
+    // the base (subclasses still get their own implicit public copy ops that
+    // delegate here).
+    SpannableStringInternal(const SpannableStringInternal& o);
+    SpannableStringInternal& operator=(const SpannableStringInternal& o);
+
     SpannableStringInternal() = default;
     explicit SpannableStringInternal(const std::u16string& text) : mText(text) {}
 public:
     SpannableStringInternal(const CharSequence* source, int start, int end, bool ignoreNoCopySpan);
     SpannableStringInternal(const CharSequence* source, int start, int end);
     SpannableStringInternal(const CharSequence* source);
-    virtual ~SpannableStringInternal() = default;
+    // Frees every owned span. Defined (not `= default`) so destruction releases
+    // the spans this container owns; borrowed (NoCopySpan) spans are left alone.
+    virtual ~SpannableStringInternal();
 
     std::string toString() const override;
     std::u16string toU16String() const override;   // fast path: return mText directly

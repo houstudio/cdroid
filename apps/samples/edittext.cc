@@ -24,7 +24,7 @@ int main(int argc,const char*argv[]){
 
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setOrientation(LinearLayout::VERTICAL);
-    layout->setBackgroundColor(0xFF111111);
+    layout->setBackgroundColor(0xFF112233);
     w->addView(layout);
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
@@ -32,17 +32,13 @@ int main(int argc,const char*argv[]){
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
         layoutParams->setMargins(0,1,0,1); 
         EditText*edt=new EditText(ts->text,0,0);
-        edt->setTextColor(0xFFFFFFFF);
+        edt->setTextColor(0xFF00FF00);
         edt->setFocusable(true);
         edt->setSingleLine(ts->singleline);
-        edt->setEllipsize(ts->ellipsis);
         edt->setTextAlignment(ts->txtalignment);
         edt->setGravity(ts->gravity);
-        if(ts->ellipsis==Layout::ELLIPSIS_MARQUEE)
-            edt->setSelected(true);//onle focused or selected ot checked state can be marqueed
         edt->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         int cc=i*10+8;
-        edt->setBackgroundColor(0xFF000000|(cc<<16)|(cc<<8)|cc);
         edt->setTextSize(22+i);
         layout->addView(edt,layoutParams);
     }

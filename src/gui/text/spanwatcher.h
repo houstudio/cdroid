@@ -6,7 +6,11 @@
 
 namespace cdroid {
 
-class SpanWatcher : public NoCopySpan {
+// NoCopySpan is inherited VIRTUALLY so that a class multiply inheriting
+// SpanWatcher and TextWatcher (e.g. TextView::ChangeWatcher) has a SINGLE
+// NoCopySpan subobject — otherwise dynamic_cast<NoCopySpan*> would be
+// ambiguous and the span would be misclassified as owned (→ double-free).
+class SpanWatcher : virtual public NoCopySpan {
 protected:
     std::shared_ptr<void*>mID;
 public:

@@ -197,7 +197,7 @@ int main(int argc,const char*argv[]){
         new AbsoluteSizeSpan(18)
     }, 0);
     spanText->append(u"2",new SuperscriptSpan(),0);
-    spanText->append(u"Hello,",new ForegroundColorSpan(0xFF66FF66),0);
+    spanText->append(u"Hello,你好",new ForegroundColorSpan(0xFF66FF66),0);
     TextView* spanTv = new TextView("", 0, 0);
     spanTv->setSingleLine(false);
     spanTv->setText(spanText);

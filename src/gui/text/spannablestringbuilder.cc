@@ -18,28 +18,32 @@ void SpannableStringBuilder::setSpan(const ParcelableSpan* what, int start, int 
     if (end > len) end = len;
     if (start > end) { const int t = start; start = end; end = t; }
     // Android allows zero-length (point) spans — selection cursors rely on them.
-    mSpans.push_back({what, start, end, flags});
+    // Update in place if the span is already present (Android does this); this
+    // also prevents a duplicate owned pointer that would double-free on destroy.
+    for (auto& r : mSpans) {
+        if (r.span == what) {
+            r.start = start;
+            r.end = end;
+            r.flags = flags;
+            return;
+        }
+    }
+    addSpan(what, start, end, flags);
 }
 
 void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
-    mSpans.erase(std::remove_if(mSpans.begin(), mSpans.end(), 
-        [&](const std::tuple<const ParcelableSpan*,int,int,int>& s){ 
-            return std::get<0>(s) == what; 
-        }), mSpans.end());
+    // Loop in case legacy data held duplicate records for the same pointer.
+    while (removeSpanRecord(what)) { /* removed all matching */ }
 }
 
 void SpannableStringBuilder::shiftSpans(int index, int delta) {
-    for (auto& t : mSpans) {
-        const ParcelableSpan*span;
-        int sstart,send,sflags;
-        std::tie(span,sstart,send,sflags) = t;
-        if (sstart >= index) {
-            sstart += delta;
-            send += delta;
-        } else if (send > index) {
-            send += delta;
+    for (auto& r : mSpans) {
+        if (r.start >= index) {
+            r.start += delta;
+            r.end += delta;
+        } else if (r.end > index) {
+            r.end += delta;
         }
-        t = std::make_tuple(span, sstart, send, sflags);
     }
 }
 
@@ -51,24 +55,19 @@ void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta
     // every edit. This mirrors Android's intent: spans before the change are
     // untouched, spans after shift by delta, and overlapping spans are clamped
     // — start into [.., start], end into [end+delta, ..].
-    const int newlen = (end - start) + delta;
-    for (auto& t : mSpans) {
-        const ParcelableSpan*span;
-        int sstart,send,sflags;
-        std::tie(span,sstart,send,sflags) = t;
-        if (send <= start) {
+    for (auto& r : mSpans) {
+        if (r.end <= start) {
             // entirely before the change — unchanged
-        } else if (sstart >= end) {
+        } else if (r.start >= end) {
             // entirely after the change — shift by delta
-            sstart += delta;
-            send += delta;
+            r.start += delta;
+            r.end += delta;
         } else {
             // overlaps the change
-            if (sstart > start) sstart = start;
-            if (send >= end) send += delta;
-            else send = end + delta;   // end was inside the replaced region
+            if (r.start > start) r.start = start;
+            if (r.end >= end) r.end += delta;
+            else r.end = end + delta;   // end was inside the replaced region
         }
-        t = std::make_tuple(span, sstart, send, sflags);
     }
 }
 
@@ -236,12 +235,12 @@ Editable& SpannableStringBuilder::append(char16_t text) {
 }
 
 void SpannableStringBuilder::clearSpans() {
-    mSpans.clear();
+    deleteAllOwnedSpans();
 }
 
 void SpannableStringBuilder::clear() {
     mText.clear();
-    mSpans.clear();
+    deleteAllOwnedSpans();
 }
 
 void SpannableStringBuilder::setFilters(InputFilter** filters, int count) {

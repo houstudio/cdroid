@@ -55,12 +55,37 @@ void SpannableStringInternal::appendSpanCopy(std::vector<SpanRecord>& dest,
 }
 
 void SpannableStringInternal::disposeSpan(SpanRecord& r) {
-    // STEP 3: intentionally a no-op so the storage refactor (SpanRecord +
-    // centralized helpers) can be validated before any span is freed. The
-    // copy path already clones owned spans, so no use-after-free is possible
-    // in this state — only a (temporary) leak remains. Step 4 flips the body
-    // to: if (r.owned) delete r.span;
-    (void)r;
+    // Free the span iff this container owns it (i.e. it is a non-NoCopySpan).
+    // Borrowed (NoCopySpan) spans — watchers, selection markers — are owned
+    // elsewhere and are never deleted here.
+    if (r.owned) {
+        delete r.span;
+        r.span = nullptr;
+        r.owned = false;
+    }
+}
+
+SpannableStringInternal::~SpannableStringInternal() {
+    deleteAllOwnedSpans();
+}
+
+SpannableStringInternal::SpannableStringInternal(const SpannableStringInternal& o)
+    : mText(o.mText) {
+    // Clone owned spans, share borrowed (NoCopySpan) ones. ignoreNoCopy=false
+    // so borrowed spans are carried along (shared by pointer, never deleted).
+    for (const auto& r : o.mSpans) {
+        appendSpanCopy(mSpans, r.span, r.start, r.end, r.flags, /*ignoreNoCopy=*/false);
+    }
+}
+
+SpannableStringInternal& SpannableStringInternal::operator=(const SpannableStringInternal& o) {
+    if (this == &o) return *this;
+    deleteAllOwnedSpans();   // release our current owned spans first
+    mText = o.mText;
+    for (const auto& r : o.mSpans) {
+        appendSpanCopy(mSpans, r.span, r.start, r.end, r.flags, /*ignoreNoCopy=*/false);
+    }
+    return *this;
 }
 
 // SpannableStringInternal implementations
@@ -252,7 +277,7 @@ SpannableString::SpannableString(const CharSequence* source, bool ignoreNoCopySp
 
 void SpannableString::setSpan(const ParcelableSpan* what, int start, int end, int flags) {
     if (!what) return;
-    
+
     const int len = (int)mText.length();
     if (end < start) {
         throw std::out_of_range("setSpan has end before start");
@@ -263,33 +288,28 @@ void SpannableString::setSpan(const ParcelableSpan* what, int start, int end, in
     if (start < 0 || end < 0) {
         throw std::out_of_range("setSpan starts before 0");
     }
-    
+
     if (start >= end) return;
-    
-    for (auto& t : mSpans) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = t;
-        if (span == what) {
-            this->sendSpanChanged(what, sstart, send, start, end);
-            std::get<1>(t) = start;
-            std::get<2>(t) = end;
-            std::get<3>(t) = flags;
+
+    for (auto& r : mSpans) {
+        if (r.span == what) {
+            this->sendSpanChanged(what, r.start, r.end, start, end);
+            r.start = start;
+            r.end = end;
+            r.flags = flags;
             return;
         }
     }
-    
-    mSpans.push_back({what, start, end, flags});
+
+    addSpan(what, start, end, flags);
     this->sendSpanAdded(what, start, end);
 }
 
 void SpannableString::removeSpan(const ParcelableSpan* what) {
     for (auto it = mSpans.begin(); it != mSpans.end(); ++it) {
-        const ParcelableSpan* span;
-        int sstart, send, sflags;
-        std::tie(span, sstart, send, sflags) = *it;
-        if (span == what) {
-            this->sendSpanRemoved(what, sstart, send);
+        if (it->span == what) {
+            this->sendSpanRemoved(what, it->start, it->end);
+            disposeSpan(*it);
             mSpans.erase(it);
             return;
         }

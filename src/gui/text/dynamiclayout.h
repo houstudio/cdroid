@@ -120,7 +120,13 @@ public:
     int getEllipsisCount(int line) const override;
     LineBreakConfig getLineBreakConfig() const;
 private:
-    class ChangeWatcher : public ParcelableSpan {//implements TextWatcher, SpanWatcher {
+    // NoCopySpan so the Spannable treats this as BORROWED: it never deletes
+    // mWatcher (DynamicLayout owns it solely and deletes it in its destructor).
+    // Note: not literally inheriting TextWatcher+SpanWatcher here — both derive
+    // NoCopySpan non-virtually, so multiple-inheriting them would duplicate the
+    // NoCopySpan base and make dynamic_cast<NoCopySpan*> ambiguous (treated as
+    // owned → double-free). The reflow callbacks stay plain methods for now.
+    class ChangeWatcher : public NoCopySpan {//implements TextWatcher, SpanWatcher {
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);

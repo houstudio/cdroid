@@ -1,6 +1,7 @@
 #include <cstring>
 #include <sstream>
 #include <cstdarg>
+#include <cassert>
 #include <core/predicate.h>
 #include <text/character.h>
 #include <text/spannablestringbuilder.h>
@@ -584,7 +585,18 @@ void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const S
             st = start;
         if (en > end)
             en = end;
-        dest->setSpan(spans[i], st - start + destoff, en - start + destoff, fl);
+        // Owned (non-NoCopySpan) spans must be cloned into the destination, else
+        // source and dest would both own (and delete) the same object. NoCopySpan
+        // spans are borrowed: shared by pointer and never deleted.
+        const ParcelableSpan* span = spans[i];
+        const bool isNoCopy = (dynamic_cast<const NoCopySpan*>(span) != nullptr);
+        if (isNoCopy) {
+            dest->setSpan(span, st - start + destoff, en - start + destoff, fl);
+        } else {
+            ParcelableSpan* c = span->clone();
+            assert(c && "owned span subclass forgot to override clone()");
+            dest->setSpan(c, st - start + destoff, en - start + destoff, fl);
+        }
     }
 }
 

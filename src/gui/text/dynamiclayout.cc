@@ -201,6 +201,17 @@ DynamicLayout::DynamicLayout(const Builder& b)
 }
 
 DynamicLayout::~DynamicLayout(){
+    // Detach and free our watcher. It is attached to mBase as a NoCopySpan
+    // (borrowed), so mBase's Spannable never deletes it; DynamicLayout owns it
+    // solely. removeSpan first so no callback fires against a half-destroyed
+    // layout during mBase teardown.
+    if (mWatcher) {
+        if (Spannable* sp = dynamic_cast<Spannable*>(mBase)) {
+            sp->removeSpan(mWatcher);
+        }
+        delete mWatcher;
+        mWatcher = nullptr;
+    }
     delete mInts;
     delete mObjects;
 }

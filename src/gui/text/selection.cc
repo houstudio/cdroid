@@ -87,6 +87,12 @@ void Selection::removeMemory(Spannable* text) {
     auto watchers = text->getSpans(0, text->length(), make_span_filter<MemoryTextWatcher>());
     for (auto watcher : watchers) {
         text->removeSpan(watcher);
+        // MemoryTextWatcher is a NoCopySpan (via TextWatcher), so the Spannable
+        // treats it as borrowed and never deletes it. Selection owns it and
+        // frees it here. The object was a non-const `new MemoryTextWatcher()`,
+        // so casting away const to delete is well-defined.
+        delete const_cast<MemoryTextWatcher*>(
+                dynamic_cast<const MemoryTextWatcher*>(watcher));
     }
 }
 
