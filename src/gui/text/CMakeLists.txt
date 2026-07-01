@@ -23,6 +23,7 @@ add_library(cdtext
     spannablestringbuilder.cc
     worditerator.cc
     style/metricaffectingspan.cc
+    style/replacementspan.cc
     method/basemovementmethod.cc
     method/arrowkeymovementmethod.cc
     method/scrollingmovementmethod.cc

@@ -6,7 +6,7 @@
 #include <text/style/leadingmarginspan.h>
 #include <text/style/linebackgroundspan.h>
 #include <text/style/lineheightspan.h>
-#include <text/style/metricaffectingspan.h>
+#include <text/style/replacementspan.h>
 #include <text/style/paragraphstyles.h>
 #include <text/style/tabstopspan.h>
 #include <text/style/wraptogetherspan.h>
@@ -853,16 +853,14 @@ void Html::withinParagraph(std::stringstream& out,const Spanned& text, int start
                 out<<dynamic_cast<const URLSpan*>(style[j])->getURL();
                 out<<"\">";
             }
-#if 0
             if (dynamic_cast<const ImageSpan*>(style[j])) {
                 out<<"<img src=\"";
-                out<<((const ImageSpan*) style[j])->getSource();
+                out<<dynamic_cast<const ImageSpan*>(style[j])->getSource();
                 out<<"\">";
 
                 // Don't output the placeholder character underlying the image.
                 i = next;
             }
-#endif
             if (dynamic_cast<const AbsoluteSizeSpan*>(style[j])) {
                 const AbsoluteSizeSpan* s = dynamic_cast<const AbsoluteSizeSpan*>(style[j]);
                 float sizeDip = s->getSize();

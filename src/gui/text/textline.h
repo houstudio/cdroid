@@ -4,7 +4,7 @@
 #include <core/canvas.h>
 #include <core/rect.h>
 #include <text/spannablestring.h>
-#include <text/style/metricaffectingspan.h>
+#include <text/style/replacementspan.h>
 namespace cdroid{
 class Directions;
 class TabStops;

@@ -3,6 +3,7 @@
 #include <core/pools.h>
 #include <core/rect.h>
 #include <text/spannablestring.h>
+#include <text/style/replacementspan.h>
 #include <text/textpaint.h>
 #include <text/measuredtext.h>
 #include <text/linebreakconfig.h>

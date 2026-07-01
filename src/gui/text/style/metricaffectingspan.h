@@ -37,12 +37,6 @@ private:
     float mProportion;
 };
 
-class ReplacementSpan : public MetricAffectingSpan {
-public:
-    virtual int  getSize(const Paint& paint,const CharSequence* text,int start, int end, Paint::FontMetricsInt* fm)const{return 0;}
-    virtual void draw(Canvas& canvas,const CharSequence* text, int start, int end, float x, int top, int y, int bottom,const Paint& paint)const=0;
-};
-
 class SubscriptSpan :public MetricAffectingSpan {
 public:
     SubscriptSpan() { }
