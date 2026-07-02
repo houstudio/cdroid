@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/edittext.h>
 #include <widget/editor.h>
+#include <text/selection.h>
 #include <text/method/arrowkeymovementmethod.h>
 #include <core/inputmethodmanager.h>
 #include <utils/textutils.h>
@@ -53,7 +54,6 @@ void EditText::initEditText(){
     mEditMode = INSERT;
     mInputType = TYPE_NONE;
     afterChanged = nullptr;
-    mCaretRect.set(0,0,1,1);
     // Android's default movement method for editable text — arrow/page/home/end
     // navigation + shift-select via the standard android.text.method path.
     setMovementMethod(ArrowKeyMovementMethod::getInstance());
@@ -66,7 +66,6 @@ void EditText::setTextWatcher(AfterTextChanged ls){
 void EditText::setText(const std::string&txt){
     mBufferType = BufferType::EDITABLE;
     TextView::setText(txt);
-    setCaretPos(0);
 }
 
 void EditText::setText(CharSequence* text, BufferType type){
@@ -104,19 +103,23 @@ int EditText::getInputType()const{
 }
 
 void EditText::setSelection(int start, int stop) {
-    if (getEditor()) getEditor()->setSelection(start, stop);
+    // Android EditText.setSelection: Selection.setSelection(getText(), start, stop).
+    if (Spannable* e = getEditableText()) Selection::setSelection(e, start, stop);
 }
 
 void EditText::setSelection(int index) {
-    if (getEditor()) getEditor()->setSelection(index);
+    // Android EditText.setSelection(index): Selection.setSelection(getText(), index).
+    if (Spannable* e = getEditableText()) Selection::setSelection(e, index);
 }
 
 void EditText::selectAll() {
-    if (getEditor()) getEditor()->selectAll();
+    // Android EditText.selectAll: Selection::selectAll(&getText());
+    if (Spannable* e = getEditableText()) Selection::selectAll(e);
 }
 
 void EditText::extendSelection(int index) {
-    if (getEditor()) getEditor()->extendSelection(index);
+    // Android EditText.extendSelection: Selection.extendSelection(getText(), index).
+    if (Spannable* e = getEditableText()) Selection::extendSelection(e, index);
 }
 
 void EditText::setEllipsize(TextUtils::TruncateAt ellipsis){
