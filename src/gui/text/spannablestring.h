@@ -122,6 +122,7 @@ public:
 class SpannedString : public SpannableStringInternal {
 public:
     SpannedString() = default;
+    SpannedString(const CharSequence*);
     explicit SpannedString(const std::u16string& text) : SpannableStringInternal(text) {}
 
     static SpannedString valueOf(const std::u16string& text) {

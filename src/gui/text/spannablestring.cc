@@ -255,6 +255,9 @@ void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, in
     }
 }
 
+SpannedString::SpannedString(const CharSequence* source)
+    : SpannableStringInternal(source) {
+}
 // SpannedString implementations
 SpannedString* SpannedString::subSequence(int start, int end) const {
     if (start < 0) start = 0;

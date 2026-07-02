@@ -162,6 +162,16 @@ std::vector<std::string> TextUtils::split(const std::string& s,int delim){
     return elems;
 }
 
+CharSequence* TextUtils::stringOrSpannedString(CharSequence* source) {
+    if (source == nullptr)
+        return nullptr;
+    if (dynamic_cast<SpannedString*>(source))
+        return source;
+    if (dynamic_cast<Spanned*>(source))
+        return new SpannedString(source);
+    return nullptr;//source.toString();
+}
+
 bool TextUtils::isEmpty(const CharSequence* str) {
     return str == nullptr || str->length() == 0;
 }

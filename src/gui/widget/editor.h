@@ -60,7 +60,6 @@ private:
     class TextViewPositionListener;
 
     Spannable* editable() const;
-    int cursorOffset() const;
     int insertPosition();
 
     void updateCursorPosition(int top, int bottom, float horizontal);
@@ -68,12 +67,6 @@ private:
     int clampHorizontalPosition(Drawable* drawable, float horizontal);
 
     bool isCursorVisible() const;
-    void setShowSoftInputOnFocus(bool show);
-    bool getShowSoftInputOnFocus() const { return mShowSoftInputOnFocus; }
-    void setSelectAllOnFocus(bool selectAll);
-    bool isSelectAllOnFocus() const { return mSelectAllOnFocus; }
-    void setTextIsSelectable(bool selectable);
-    bool isTextSelectable() const { return mTextIsSelectable; }
     void beginBatchEdit();
     void endBatchEdit();
 
@@ -90,8 +83,6 @@ private:
     bool mRenderCursorRegardlessTiming = false;
     Rect mTempRect;
     bool mIgnoreActionUpEvent = false;
-    bool mShowSoftInputOnFocus = true;
-    bool mSelectAllOnFocus = false;
     int  mBatchEditNesting = 0;
 
     bool shouldFilterOutTouchEvent(MotionEvent& event) const;
@@ -110,7 +101,6 @@ private:
     bool mCreatedWithASelection = false;
     bool mTouchFocusSelected = false;
     bool mSelectionMoved = false;
-    bool mTextIsSelectable = false;
 
     Rect mCaretRect;
     bool mInsertionControllerEnabled = false;
@@ -143,12 +133,6 @@ public:
     }
     void drawCursor(Canvas& canvas, int cursorOffsetVertical = 0);
     Drawable* getCursorDrawable() const;
-    bool isBlinking() const;
-
-    void setSelection(int index);
-    void setSelection(int start, int stop);
-    void selectAll();
-    void extendSelection(int index);
 
     void sendOnTextChanged(int start, int before, int after);
 
@@ -162,7 +146,6 @@ public:
 
     void prepareCursorControllers();
     void hideCursorControllers();
-    void hide() { hideCursorControllers(); }
     void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
 

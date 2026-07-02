@@ -22,6 +22,7 @@ public:
     static MovementMethod* getInstance();
 
 protected:
+    bool handleMovementKey(TextView&, Spannable&, int keyCode, int movementMetaState, KeyEvent&) override;
     bool left(TextView&, Spannable&) override;
     bool right(TextView&, Spannable&) override;
     bool up(TextView&, Spannable&) override;
@@ -32,6 +33,8 @@ protected:
     bool bottom(TextView&, Spannable&) override;
     bool lineStart(TextView&, Spannable&) override;
     bool lineEnd(TextView&, Spannable&) override;
+    bool leftWord(TextView&, Spannable&) override;
+    bool rightWord(TextView&, Spannable&) override;
     bool home(TextView&, Spannable&) override;
     bool end(TextView&, Spannable&) override;
     bool previousParagraph(TextView&, Spannable&) override;

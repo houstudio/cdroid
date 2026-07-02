@@ -3,6 +3,7 @@
 
 #include <text/getchars.h>
 #include <text/appendable.h>
+#include <text/spannablestring.h>   // full CharSequence + Spannable bases (Editable inherits both)
 
 namespace cdroid {
 

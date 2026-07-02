@@ -73,6 +73,7 @@ public:
     static std::string utf16_utf8(const uint16_t*utf16,size_t);
     static std::string utf16_utf8(const std::u16string&utf16);
     static const std::u16string utf8_utf16(const std::string&utf8);
+    static CharSequence* stringOrSpannedString(CharSequence* source);
     static bool isEmpty(const CharSequence* str);
     static bool isEmpty(const std::string&);
     static std::string trim(std::string&);

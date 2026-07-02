@@ -113,7 +113,9 @@ private:
     bool mAllowTransformationLengthChange;
     bool mLinksClickable;
     bool mCursorVisible;
-    bool mShowSoftInputOnFocus;
+    bool mShowSoftInputOnFocus = true;
+    bool mSelectAllOnFocus = false;   // Android: TextView field (was misplaced on Editor)
+    bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mFontWeightAdjustment;
@@ -145,6 +147,9 @@ private:
     Editor* mEditor = nullptr;
     MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
     KeyListener* mKeyListener = nullptr;
+    // Android: mPreventDefaultMovement — once the movement method consumes an
+    // initial key down, swallow subsequent focus-traversal defaults until key up.
+    bool mPreventDefaultMovement = false;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -160,6 +165,9 @@ private:
     BoringLayout::Metrics* mBoring;
     BoringLayout::Metrics* mHintBoring;
 private:
+    // Android: doKeyDown — shared key-down logic for onKeyDown/onKeyMultiple.
+    int doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent);
+
     void initView();
     void setTextInternal(CharSequence* text);
     void setHintInternal(CharSequence* hint);
@@ -218,14 +226,11 @@ private:
     void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
     int mEditMode;//0--readonly 1--insert 2--replace
-    int mCaretPos;
     int mMaxLength;
     bool mBlinkOn;
-    Rect mCaretRect;
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
-    //std::string mHint;
     TransformationMethod* mTransformation;
     CharSequence*mText;
     CharSequence*mHint;
@@ -308,7 +313,7 @@ public:
     void setText(const std::vector<char16_t>&text, int start, int len);
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
-    const CharSequence& getText()const;
+    CharSequence& getText()const;
     int length()const;
     CharSequence* getTransformed()const;
     Editable* getEditableText()const;
@@ -342,7 +347,6 @@ public:
     void setShowSoftInputOnFocus(bool show);
     bool getShowSoftInputOnFocus()const;
     void setSelectAllOnFocus(bool selectAll);
-    bool isSelectAllOnFocus()const;
     void setTextIsSelectable(bool selectable);
     bool isTextSelectable()const;
     bool isTextEditable()const;
@@ -449,9 +453,6 @@ public:
     int getLineBounds(int line, Rect&bounds);
     int getBaseline()override;
     int getBaselineOffset();
-    void setCaretPos(int pos);
-    bool moveCaret2Line(int line);
-    int getCaretPos()const;
     int getGravity()const;
     void setGravity(int gravity);
     void setHorizontallyScrolling(bool whether);
@@ -460,6 +461,12 @@ public:
     void setSelected(bool selected)override;
     TransformationMethod* getTransformationMethod()const;
     void setTransformationMethod(TransformationMethod*);
+    // Android TextView offset-mapping helpers (TextView.java:10386/15827/15842).
+    // True when the transformed text implements OffsetMapping (length-altering
+    // TransformationMethod such as password). Used by movement/Editor.
+    bool isOffsetMappingAvailable()const;
+    int transformedToOriginal(int offset, int strategy)const;
+    int originalToTransformed(int offset, int strategy)const;
     virtual int getCompoundPaddingLeft()const;
     virtual int getCompoundPaddingRight()const;
     virtual int getCompoundPaddingTop()const;
@@ -498,6 +505,8 @@ public:
     const TextDirectionHeuristic*getTextDirectionHeuristic()const;
     void onResolveDrawables(int layoutDirection)override;
     bool onTouchEvent(MotionEvent& event)override;
+    bool onKeyDown(int keyCode, KeyEvent& event)override;
+    bool onKeyUp(int keyCode, KeyEvent& event)override;
     virtual void onCommitCompletion(CompletionInfo* completion);
     bool useDynamicLayout() const;
     void nullLayouts();

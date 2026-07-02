@@ -6,6 +6,7 @@
 #include <widget/textview.h>
 #include <text/selection.h>
 #include <text/layout.h>
+#include <text/worditerator.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/rect.h>
@@ -22,11 +23,18 @@ void ArrowKeyMovementMethod::initialize(TextView& /*widget*/, Spannable& text) {
     Selection::setSelection(&text, 0);
 }
 
-void ArrowKeyMovementMethod::onTakeFocus(TextView& widget, Spannable& text, int /*direction*/) {
-    // Android places the caret at the end when taking focus forward/down with no
-    // layout, else 0. Keep it simple: end of text.
-    if (widget.getLayout() == nullptr) Selection::setSelection(&text, (int)text.length());
-    else Selection::setSelection(&text, (int)text.length());
+void ArrowKeyMovementMethod::onTakeFocus(TextView& view, Spannable& text, int direction) {
+    // Ported from Android ArrowKeyMovementMethod.onTakeFocus: taking focus
+    // forward/down with a layout leaves the caret where initialize() put it (0);
+    // every other case (back/up, or forward/down before layout) moves to the end.
+    if ((direction & (View::FOCUS_FORWARD | View::FOCUS_DOWN)) != 0) {
+        if (view.getLayout() == nullptr) {
+            // This shouldn't be null, but do something sensible if it is.
+            Selection::setSelection(&text, (int)text.length());
+        }
+    } else {
+        Selection::setSelection(&text, (int)text.length());
+    }
 }
 
 bool ArrowKeyMovementMethod::onKeyDown(TextView& widget, Spannable& text, int keyCode, KeyEvent& event) {
@@ -53,19 +61,63 @@ int ArrowKeyMovementMethod::getPageHeight(TextView& widget) {
     return widget.getHeight();
 }
 
+bool ArrowKeyMovementMethod::handleMovementKey(TextView& widget, Spannable& buffer, int keyCode,
+        int movementMetaState, KeyEvent& event) {
+    // Ported from Android ArrowKeyMovementMethod.handleMovementKey. Its only
+    // special case is DPAD_CENTER while selecting → showContextMenu(); that path
+    // needs MetaKeyKeyListener (META_SELECTING in the buffer) and View.showContextMenu,
+    // neither of which is ported yet, so for now every key falls through to the
+    // base decoder.
+    switch (keyCode) {
+        case KeyEvent::KEYCODE_DPAD_CENTER:
+            if (KeyEvent::metaStateHasNoModifiers(movementMetaState)) {
+                if (event.getAction() == KeyEvent::ACTION_DOWN
+                        && event.getRepeatCount() == 0) {
+                    // Android: && MetaKeyKeyListener.getMetaState(buffer,
+                    //           META_SELECTING, event) != 0 → widget.showContextMenu();
+                    // Deferred: META_SELECTING is not tracked (no MetaKeyKeyListener).
+                }
+            }
+            break;
+    }
+    return BaseMovementMethod::handleMovementKey(widget, buffer, keyCode, movementMetaState, event);
+}
+
+bool ArrowKeyMovementMethod::leftWord(TextView& widget, Spannable& buffer) {
+    // Ported from Android ArrowKeyMovementMethod.leftWord. Android reuses the
+    // widget's cached WordIterator via getWordIterator(); CDROID has none, so
+    // construct one for the default locale (Android's getWordIterator does the same
+    // lazily).
+    const int selectionEnd = widget.getSelectionEnd();
+    WordIterator wordIterator;
+    wordIterator.setCharSequence(&buffer, selectionEnd, selectionEnd);
+    return Selection::moveToPreceding(&buffer, wordIterator, isSelecting());
+}
+
+bool ArrowKeyMovementMethod::rightWord(TextView& widget, Spannable& buffer) {
+    const int selectionEnd = widget.getSelectionEnd();
+    WordIterator wordIterator;
+    wordIterator.setCharSequence(&buffer, selectionEnd, selectionEnd);
+    return Selection::moveToFollowing(&buffer, wordIterator, isSelecting());
+}
+
 bool ArrowKeyMovementMethod::left(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendLeft(&buffer, layout) : Selection::moveLeft(&buffer, layout));
 }
 bool ArrowKeyMovementMethod::right(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendRight(&buffer, layout) : Selection::moveRight(&buffer, layout));
 }
 bool ArrowKeyMovementMethod::up(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendUp(&buffer, layout) : Selection::moveUp(&buffer, layout));
 }
 bool ArrowKeyMovementMethod::down(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendDown(&buffer, layout) : Selection::moveDown(&buffer, layout));
 }
@@ -82,25 +134,30 @@ bool ArrowKeyMovementMethod::bottom(TextView&, Spannable& buffer) {
     return true;
 }
 bool ArrowKeyMovementMethod::lineStart(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendToLeftEdge(&buffer, layout) : Selection::moveToLeftEdge(&buffer, layout));
 }
 bool ArrowKeyMovementMethod::lineEnd(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     return layout && (isSelecting() ? Selection::extendToRightEdge(&buffer, layout) : Selection::moveToRightEdge(&buffer, layout));
 }
 bool ArrowKeyMovementMethod::home(TextView& widget, Spannable& buffer)            { return lineStart(widget, buffer); }
 bool ArrowKeyMovementMethod::end(TextView& widget, Spannable& buffer)             { return lineEnd(widget, buffer); }
 bool ArrowKeyMovementMethod::previousParagraph(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     if (widget.getLayout() == nullptr) return false;
     return isSelecting() ? Selection::extendToParagraphStart(&buffer) : Selection::moveToParagraphStart(&buffer, widget.getLayout());
 }
 bool ArrowKeyMovementMethod::nextParagraph(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     if (widget.getLayout() == nullptr) return false;
     return isSelecting() ? Selection::extendToParagraphEnd(&buffer) : Selection::moveToParagraphEnd(&buffer, widget.getLayout());
 }
 
 bool ArrowKeyMovementMethod::pageUp(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     if (!layout) return false;
     const bool selecting = isSelecting();
@@ -117,6 +174,7 @@ bool ArrowKeyMovementMethod::pageUp(TextView& widget, Spannable& buffer) {
 }
 
 bool ArrowKeyMovementMethod::pageDown(TextView& widget, Spannable& buffer) {
+    if (widget.isOffsetMappingAvailable()) return false;
     Layout* layout = widget.getLayout();
     if (!layout) return false;
     const bool selecting = isSelecting();

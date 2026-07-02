@@ -3,6 +3,7 @@
 #include <text/editable.h>
 #include <text/textwatcher.h>
 namespace cdroid{
+class Layout;   // used only as Layout* in the move/extend signatures below
 class Selection {
 private:
     static constexpr char16_t PARAGRAPH_SEPARATOR = '\n';
@@ -153,8 +154,8 @@ public:
     class PositionIterator {
     public:
         //static int DONE = BreakIterator::DONE;
-        virtual int preceding(int position)=0;
-        virtual int following(int position)=0;
+        virtual int preceding(int position) const = 0;
+        virtual int following(int position) const = 0;
     };
 
     static bool moveToPreceding(Spannable* text, PositionIterator& iter, bool extendSelection);

@@ -19,6 +19,7 @@
 #define __WORD_ITERATOR_H__
 
 #include <string>
+#include <text/selection.h>   // Selection::PositionIterator (Android: implements Selection.PositionIterator)
 
 namespace cdroid {
 
@@ -36,7 +37,7 @@ class CharSequence;
  * (android.text.method has no CDROID equivalent yet; this is the first piece
  * of that package to be ported.)
  */
-class WordIterator {
+class WordIterator : public Selection::PositionIterator {
 public:
     // Size of the window for the word iterator, should be greater than the
     // longest word's length.
@@ -57,8 +58,8 @@ public:
     /** Sets the char sequence to analyze over the [start, end] window. */
     void setCharSequence(const CharSequence* charSequence, int start, int end);
 
-    int preceding(int offset)const;
-    int following(int offset)const;
+    int preceding(int offset) const override;
+    int following(int offset) const override;
     bool isBoundary(int offset)const;
 
     /** Position of next boundary after the given offset, or DONE. */

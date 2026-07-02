@@ -396,27 +396,31 @@ bool Selection::moveToRightEdge(Spannable* text, Layout* layout) {
     return true;
 }
 
-bool Selection::moveToPreceding(Spannable* text, PositionIterator& iter, bool _extendSelection) {
-    /*const int offset = iter.preceding(getSelectionEnd(text));
-    if (offset != PositionIterator.DONE) {
-        if (_extendSelection) {
-            extendSelection(text, offset);
+bool Selection::moveToPreceding(Spannable* text, PositionIterator& iter, bool extendSelection) {
+    // Ported from Android Selection.moveToPreceding. DONE == BreakIterator.DONE == -1.
+    // NB: the `extendSelection` param shadows the static Selection::extendSelection /
+    // setSelection members, so the calls below are qualified.
+    const int offset = iter.preceding(getSelectionEnd(text));
+    if (offset != -1) {
+        if (extendSelection) {
+            Selection::extendSelection(text, offset);
         } else {
-            setSelection(text, offset);
+            Selection::setSelection(text, offset);
         }
-    }*/
+    }
     return true;
 }
 
-bool Selection::moveToFollowing( Spannable* text, PositionIterator& iter, bool _extendSelection) {
-    /*const int offset = iter.following(getSelectionEnd(text));
-    if (offset != PositionIterator.DONE) {
-        if (_extendSelection) {
-            extendSelection(text, offset);
+bool Selection::moveToFollowing(Spannable* text, PositionIterator& iter, bool extendSelection) {
+    // Ported from Android Selection.moveToFollowing. DONE == BreakIterator.DONE == -1.
+    const int offset = iter.following(getSelectionEnd(text));
+    if (offset != -1) {
+        if (extendSelection) {
+            Selection::extendSelection(text, offset);
         } else {
-            setSelection(text, offset);
+            Selection::setSelection(text, offset);
         }
-    }*/
+    }
     return true;
 }
 

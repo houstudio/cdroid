@@ -18,6 +18,7 @@
 #include <widget/textview.h>
 #include <widget/editor.h>
 #include <text/method/movementmethod.h>
+#include <text/method/offsetmapping.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
@@ -197,8 +198,6 @@ void TextView::initView(){
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
     mRestartMarquee = true;
-    mCaretPos = 0;
-    mCaretRect.set(0,0,0,0);
     mMaxWidthMode = PIXELS;
     mMinWidthMode = PIXELS;
     mMaxMode = LINES;
@@ -264,11 +263,22 @@ void TextView::initView(){
 }
 
 TextView::~TextView() {
+    // mHint may alias mText (e.g. setHint(getText())) or mCharWrapper; drop the
+    // alias so the shared object is freed exactly once below.
+    if (mHint == mText || mHint == mCharWrapper) mHint = nullptr;
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
+    // Layouts reference mText/mHint (DynamicLayout::mBase) and dereference that
+    // base in their own destructor (removeSpan on the watcher), so the layouts
+    // MUST be destroyed before the text objects they reference — otherwise
+    // ~DynamicLayout touches freed memory.
+    delete mLayout;
+    delete mHintLayout;
+    mLayout = nullptr;
+    mHintLayout = nullptr;
     if(mText == mTransformed){
         mTransformed = nullptr;
     }
@@ -285,15 +295,19 @@ TextView::~TextView() {
     delete mHint;
     delete mMarquee;
     delete mScroller;
-    delete mLayout;
-    delete mHintLayout;
     delete mDrawables;
     delete mCursorDrawable;
     delete mEditor;
 }
 
 void TextView::setTextInternal(CharSequence* text){
-    mText =text;
+    // NOTE: do NOT free the old mText/mTransformed here. DynamicLayout holds
+    // mBase = mText (and displays mTransformed) and dereferences mBase in its
+    // destructor (dynamic_cast + removeSpan). Freeing the text here would leave
+    // the still-alive mLayout with a dangling mBase, crashed in ~DynamicLayout
+    // when makeNewLayout() later destroys it. Text freeing must happen only AFTER
+    // the referencing layout has been torn down. See the ownership rule doc.
+    mText = text;
     mSpannable = dynamic_cast<Spannable*>(text);
     mPrecomputed = dynamic_cast<PrecomputedText*>(text);
 }
@@ -977,7 +991,7 @@ void TextView::setTextCursorDrawable(Drawable*d){
 
 Drawable* TextView::getTextCursorDrawable()const{
     if(mCursorDrawable==nullptr){
-        mCursorDrawable=new ColorDrawable(0xFF000000);
+        mCursorDrawable=new ColorDrawable(0xFFFF0000);
     }
     return mCursorDrawable;
 }
@@ -1179,6 +1193,12 @@ void TextView::setText(CharSequence* text, BufferType type) {
 }
 
 void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
+    // Capture the text state being replaced. It is freed ONLY after
+    // checkForRelayout() below has torn down any DynamicLayout referencing it (a
+    // DynamicLayout dereferences its base text in its destructor, so freeing the
+    // text earlier crashes in ~DynamicLayout). See the CharSequence ownership rule.
+    CharSequence* prevText = mText;
+    CharSequence* prevTransformed = mTransformed;
 #if 0
     mTextSetFromXmlOrResourceId = false;
     if (text == nullptr) {
@@ -1343,6 +1363,24 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         checkForRelayout();
     }
 
+    // checkForRelayout() has either rebuilt mLayout (now referencing the new
+    // mText/mTransformed) or null'd it via nullLayouts() (the old DynamicLayout is
+    // destroyed); if mLayout was already null, nothing referenced the old text. In
+    // every case no DynamicLayout references prevText/prevTransformed now, so they
+    // are safe to free. Never free the incoming `text` (re-adopted, e.g.
+    // setText(mText) from setTransformationMethod), mCharWrapper (a reused member),
+    // or the now-current mText/mTransformed. prevTransformed may have aliased
+    // prevText (no-transform case) — free each owned object at most once.
+    auto isKept = [&](CharSequence* p) {
+        return p == text || p == mCharWrapper || p == mText || p == mTransformed;
+    };
+    if (prevTransformed != nullptr && prevTransformed != prevText && !isKept(prevTransformed)) {
+        delete prevTransformed;
+    }
+    if (prevText != nullptr && !isKept(prevText)) {
+        delete prevText;
+    }
+
     sendOnTextChanged(*text, 0, oldlen, textLength);
     onTextChanged(*text, 0, oldlen, textLength);
 
@@ -1356,7 +1394,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
 }
 
-const CharSequence& TextView::getText()const{
+CharSequence& TextView::getText()const{
     return *mText;//->toString();
 }
 
@@ -1387,6 +1425,9 @@ void TextView::setHint(CharSequence*hint){
 
 void TextView::setHintInternal(CharSequence* hint) {
     mHideHint = false;
+    // NOTE: freeing the old mHint here has the same DynamicLayout hazard as
+    // setTextInternal(): mHintLayout may be a DynamicLayout whose mBase == mHint,
+    // and its destructor dereferences mBase. Free only at a layout-safe point.
     mHint = hint;//TextUtils::stringOrSpannedString(hint);
 
     if (mLayout != nullptr) {
@@ -1442,28 +1483,6 @@ void TextView::setMovementMethod(MovementMethod* movement) {
     if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
         mMovement->initialize(*this, *mSpannable);
     }
-}
-
-void TextView::setCaretPos(int pos){
-    mCaretPos= pos;
-    mBlinkOn = true;
-    invalidate(true);
-}
-
-int TextView::getCaretPos()const{
-    return mCaretPos;
-}
-
-bool TextView::moveCaret2Line(int line){
-    int curline = mLayout->getLineForOffset(mCaretPos);
-    int curcolumns = mCaretPos - mLayout->getLineStart(curline);
-    if( (line<getLineCount()) && (line>=0) ){
-        int newcolumns = mLayout->getLineEnd(line)-mLayout->getLineStart(line);
-        newcolumns=std::min(newcolumns,curcolumns);
-        setCaretPos(mLayout->getLineStart(line) + newcolumns);
-        return true;
-    }
-    return false;
 }
 
 void TextView::setWidth(int pixels) {
@@ -1887,7 +1906,7 @@ bool TextView::moveCursorToVisibleOffset() {
     }
 
     if (newStart != start) {
-        //Selection::setSelection(mSpannable, newStart);
+        Selection::setSelection(mSpannable, newStart);
         return true;
     }
     return false;
@@ -2016,7 +2035,7 @@ void TextView::onVisibilityChanged(View& changedView, int visibility) {
     View::onVisibilityChanged(changedView, visibility);
     if (mEditor && visibility != VISIBLE) {
         //mEditor->hideCursorAndSpanControllers();
-        mEditor->hide();
+        mEditor->hideCursorControllers();
     }
 }
 
@@ -3101,6 +3120,146 @@ void TextView::viewClicked(InputMethodManager*imm){
     LOGV("%p:%d",this,mID);
 }
 
+// Ported from Android TextView.onKeyUp (TextView.java:9952). Cursor-movement-
+// relevant parts: reset mPreventDefaultMovement, and delegate to the movement
+// method's onKeyUp. The DPAD_CENTER (show IME) and ENTER (onEditorActionListener
+// / advance-focus) branches depend on mInputContentType / shouldAdvanceFocusOnEnter
+// / IME show-path, none of which are ported yet — they are guarded out like in
+// doKeyDown and fall through to super.
+bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
+    if (!isEnabled()) {
+        return View::onKeyUp(keyCode, event);
+    }
+
+    if (!KeyEvent::isModifierKey(keyCode)) {
+        mPreventDefaultMovement = false;
+    }
+
+    switch (keyCode) {
+        case KeyEvent::KEYCODE_DPAD_CENTER:
+            if (event.hasNoModifiers()) {
+                // Android: if there is no click listener and this is an editable
+                // text editor, viewClicked(imm) + imm.showSoftInput(...). CDROID's
+                // IME show path / hasOnClickListeners aren't wired here yet.
+            }
+            return View::onKeyUp(keyCode, event);
+
+        case KeyEvent::KEYCODE_ENTER:
+        case KeyEvent::KEYCODE_NUMPAD_ENTER:
+            if (event.hasNoModifiers()) {
+                // Android: fire mInputContentType.onEditorActionListener (enterDown)
+                // and maybe advance focus (shouldAdvanceFocusOnEnter). Neither
+                // mInputContentType nor shouldAdvanceFocusOnEnter is ported yet.
+            }
+            return View::onKeyUp(keyCode, event);
+    }
+
+    // CDROID has no separate KeyListener; ArrowKeyMovementMethod handles nav keys.
+    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+        if (mMovement->onKeyUp(*this, *mSpannable, keyCode, event)) {
+            return true;
+        }
+    }
+
+    return View::onKeyUp(keyCode, event);
+}
+
+// Ported from Android TextView.onKeyDown (TextView.java:9635).
+bool TextView::onKeyDown(int keyCode, KeyEvent& event) {
+    const int which = doKeyDown(keyCode, event, nullptr);
+    if (which == KEY_EVENT_NOT_HANDLED) {
+        return View::onKeyDown(keyCode, event);   // super
+    }
+    return true;
+}
+
+// Ported from Android TextView.doKeyDown (TextView.java:9725).
+// The two delegation targets are adapted to CDROID's existing primitives:
+//  - the KeyListener path routes to Editor::onKeyDown, which in CDROID already
+//    subsumes the movement-method call for navigation keys (so a nav key handled
+//    there returns true and never reaches the movement block below — no double
+//    dispatch). It returns bool, matching Android's KeyListener.onKeyDown.
+//  - the movement path calls MovementMethod::onKeyDown directly.
+// Branches whose Android deps are not yet ported to CDROID (mInputContentType /
+// onEditorActionListener, getTextActionMode()/stopTextActionMode(),
+// onTextContextMenuItem(ID_*), shouldAdvanceFocusOnEnter(), canCut/Copy/Paste(),
+// InputDevice.SOURCE_KEYBOARD) are intentionally omitted, mirroring the gaps
+// already marked elsewhere in this file.
+int TextView::doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent) {
+    if (!isEnabled()) {
+        return KEY_EVENT_NOT_HANDLED;
+    }
+
+    // If this is the initial keydown, we don't want to prevent a movement away
+    // from this view.  While this shouldn't be necessary because any time we're
+    // preventing default movement we should be restricting the focus to remain
+    // within this view, thus we'll also receive the key up event, occasionally
+    // key up events will get dropped and we don't want to prevent the user from
+    // traversing out of this on the next key down.
+    if (event.getRepeatCount() == 0 && !KeyEvent::isModifierKey(keyCode)) {
+        mPreventDefaultMovement = false;
+    }
+
+    switch (keyCode) {
+        case KeyEvent::KEYCODE_TAB:
+            if (event.hasNoModifiers() || event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
+                // Tab is used to move focus.
+                return KEY_EVENT_NOT_HANDLED;
+            }
+            break;
+        // KEYCODE_ENTER / NUMPAD_ENTER / DPAD_CENTER / BACK / ESCAPE / CUT / COPY /
+        // PASTE / FORWARD_DEL / INSERT: Android routes these through the editor's
+        // mInputContentType (onEditorActionListener), the text action mode, and
+        // onTextContextMenuItem(ID_*) — none of which are ported to CDROID's
+        // Editor yet, so the editable cases (enter insertion, etc.) are left to
+        // the Editor::onKeyDown dispatch below.
+    }
+
+    // --- key listener (CDROID: Editor::onKeyDown stands in for mKeyListener) ---
+    if (mEditor != nullptr) {
+        bool doDown = true;
+        // otherEvent (ACTION_MULTIPLE repeat) is only passed from onKeyMultiple;
+        // CDROID's Editor exposes no onKeyOther, so there is nothing to try here.
+        (void)otherEvent;
+
+        if (doDown) {
+            beginBatchEdit();
+            const bool handled = mEditor->onKeyDown(keyCode, event);
+            endBatchEdit();
+            // hideErrorIfUnchanged(); -- not ported
+            if (handled) return KEY_DOWN_HANDLED_BY_KEY_LISTENER;
+        }
+    }
+
+    // bug 650865: sometimes we get a key event before a layout.
+    // don't try to move around if we don't know the layout.
+    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+        bool doDown = true;
+        // otherEvent path (mMovement.onKeyOther) is only exercised by onKeyMultiple.
+        if (otherEvent != nullptr) {
+            const bool handled = mMovement->onKeyOther(*this, *mSpannable, *otherEvent);
+            doDown = false;
+            if (handled) {
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        if (doDown) {
+            if (mMovement->onKeyDown(*this, *mSpannable, keyCode, event)) {
+                if (event.getRepeatCount() == 0 && !KeyEvent::isModifierKey(keyCode)) {
+                    mPreventDefaultMovement = true;
+                }
+                return KEY_DOWN_HANDLED_BY_MOVEMENT_METHOD;
+            }
+        }
+        // Consume arrows from keyboard devices to prevent focus leaving the editor.
+        // (Android gates this on InputDevice.SOURCE_KEYBOARD + isDirectionalNavigationKey;
+        //  CDROID's InputEvent has no device-class source, so this is skipped.)
+    }
+
+    return mPreventDefaultMovement && !KeyEvent::isModifierKey(keyCode)
+            ? KEY_EVENT_HANDLED : KEY_EVENT_NOT_HANDLED;
+}
+
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     const bool superResult = View::onTouchEvent(event);
@@ -3120,7 +3279,7 @@ bool TextView::onTouchEvent(MotionEvent& event){
     if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
         InputMethodManager* imm = InputMethodManager::peekInstance();
         viewClicked(imm);
-        if (isTextEditable() && mEditor->mShowSoftInputOnFocus && imm != nullptr
+        if (isTextEditable() && mShowSoftInputOnFocus && imm != nullptr
                 /*&& !showAutofillDialog()*/) {
             imm->focusIn(this/*, 0*/);
         }
@@ -3299,14 +3458,14 @@ void TextView::invalidateDrawable(Drawable& drawable){
 }
 
 bool TextView::isTextSelectable()const{
-    return mEditor ? mEditor->isTextSelectable() : false;
+    return mTextIsSelectable;
 }
 
 void TextView::setTextIsSelectable(bool selectable) {
     if (!selectable||mEditor==nullptr) return;
     createEditorIfNeeded();
-    if (mEditor->mTextIsSelectable == selectable) return;
-    mEditor->mTextIsSelectable = selectable;
+    if (mTextIsSelectable == selectable) return;
+    mTextIsSelectable = selectable;
     setFocusableInTouchMode(selectable);
     setFocusable(FOCUSABLE_AUTO);
     setClickable(selectable);
@@ -3578,6 +3737,30 @@ void TextView::applyCompoundDrawableTint(){
 
 TransformationMethod* TextView::getTransformationMethod()const{
     return mTransformation;
+}
+
+// Ported from Android TextView (TextView.java:10386/15827/15842). The transformed
+// text (mTransformed) may implement OffsetMapping when a length-altering
+// TransformationMethod is active; otherwise offsets are identity.
+bool TextView::isOffsetMappingAvailable()const{
+    return mTransformation != nullptr
+        && dynamic_cast<const OffsetMapping*>(mTransformed) != nullptr;
+}
+
+int TextView::transformedToOriginal(int offset, int strategy)const{
+    if (getTransformationMethod() == nullptr) return offset;
+    if (OffsetMapping* om = dynamic_cast<OffsetMapping*>(mTransformed)) {
+        return om->transformedToOriginal(offset, strategy);
+    }
+    return offset;
+}
+
+int TextView::originalToTransformed(int offset, int strategy)const{
+    if (getTransformationMethod() == nullptr) return offset;
+    if (OffsetMapping* om = dynamic_cast<OffsetMapping*>(mTransformed)) {
+        return om->originalToTransformed(offset, strategy);
+    }
+    return offset;
 }
 
 void TextView::setTransformationMethod(TransformationMethod*method){
@@ -4015,20 +4198,15 @@ bool TextView::isCursorVisible()const {
 }
 
 void TextView::setShowSoftInputOnFocus(bool show) {
-    createEditorIfNeeded();
-    if (mEditor) mEditor->setShowSoftInputOnFocus(show);
+    mShowSoftInputOnFocus = show;
 }
 
 bool TextView::getShowSoftInputOnFocus()const {
-    return mEditor ? mEditor->getShowSoftInputOnFocus() : true;
+    return mShowSoftInputOnFocus;
 }
 
 void TextView::setSelectAllOnFocus(bool selectAll) {
-    if (mEditor) mEditor->setSelectAllOnFocus(selectAll);
-}
-
-bool TextView::isSelectAllOnFocus()const {
-    return mEditor ? mEditor->isSelectAllOnFocus() : false;
+    mSelectAllOnFocus = selectAll;
 }
 
 void TextView::beginBatchEdit() {
@@ -4533,33 +4711,20 @@ void TextView::onDraw(Canvas& canvas) {
         layout->draw(canvas);
         canvas.translate(-mShadowDx,-mShadowDy);
     }
-#if 0
-    Path hp;
-    const int selStart = getSelectionStart();
-    const int selEnd = getSelectionEnd();
-    Path*highlight=nullptr;
-    if (selStart >= 0 && selEnd >= 0 && selStart != selEnd) {
-        layout->getSelectionPath(selStart, selEnd, hp);
-        highlight = &hp;//getUpdatedHighlightPath();
-    }
-#endif
+
     auto highlight=getUpdatedHighlightPath();
-    /*if(mEditor != nullptr){
+    if(mEditor != nullptr){
         mEditor->onDraw(canvas, layout, highlight.get(), mHighlightPaint, cursorOffsetVertical);
-    }else*/{
-        //if(highlight)canvas.set_color(mHighlightColor);
-        //canvas.set_color(color);
+    }else{
         layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
-    //mLayout->getCaretRect(mCaretRect);
-    mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
 
     if (mMarquee && mMarquee->shouldDrawGhost()) {
         const float dx = mMarquee->getGhostOffset();
         canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);
         layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
-    //if (mEditor) mEditor->drawCursor(canvas, cursorOffsetVertical);
+
     canvas.restore();
 }
 

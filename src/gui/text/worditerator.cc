@@ -90,7 +90,7 @@ void WordIterator::setCharSequence(const CharSequence* charSequence, int start, 
 //  Boundary walks — faithful ports of preceding/following/isBoundary. ubrk works
 //  0-based over the windowed buffer, hence the ± mStart translation.
 // =====================================================================================
-int WordIterator::preceding(int offset) const{
+int WordIterator::preceding(int offset) const {
     checkOffsetIsValid(offset);
     while (true) {
         const int32_t b = ubrk_preceding(mImpl->bi, offset - mStart);
@@ -100,7 +100,7 @@ int WordIterator::preceding(int offset) const{
     }
 }
 
-int WordIterator::following(int offset) const{
+int WordIterator::following(int offset) const {
     checkOffsetIsValid(offset);
     while (true) {
         const int32_t b = ubrk_following(mImpl->bi, offset - mStart);

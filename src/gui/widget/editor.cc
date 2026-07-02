@@ -18,6 +18,7 @@
 #include <widget/editor.h>
 #include <widget/textview.h>
 #include <text/method/movementmethod.h>
+#include <text/method/offsetmapping.h>
 #include <text/selection.h>
 #include <text/editable.h>
 #include <text/spannablestringbuilder.h>
@@ -72,15 +73,6 @@ Spannable* Editor::editable() const {
     return mTextView->getEditableText();
 }
 
-int Editor::cursorOffset() const {
-    Spannable* e = editable();
-    if (e) {
-        const int end = Selection::getSelectionEnd(e);
-        if (end >= 0) return end;
-    }
-    return mTextView->getCaretPos();   // legacy fallback
-}
-
 int Editor::insertPosition() {
     Editable* ed = mTextView->getEditableText();
     Spannable* e = editable();
@@ -95,8 +87,9 @@ int Editor::insertPosition() {
             ed->Delete(lo, hi);
             return lo;
         }
+        if (selEnd >= 0) return selEnd;   // bare caret — insert at its offset
     }
-    return cursorOffset();
+    return 0;   // no selection yet — caret at start
 }
 
 void Editor::replace() {
@@ -138,7 +131,8 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
         Spannable* e = editable();
         const int selStart = mTextView->getSelectionStart();
         const int selEnd = mTextView->getSelectionEnd();
-        const bool isFocusHighlighted = mSelectAllOnFocus && selStart == 0
+        // mSelectAllOnFocus lives on TextView now; Editor reaches it via friendship.
+        const bool isFocusHighlighted = mTextView->mSelectAllOnFocus && selStart == 0
                 && selEnd == mTextView->length();
 
         mCreatedWithASelection = mFrozenWithFocus && mTextView->hasSelection()
@@ -154,7 +148,7 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
                 if (e) mm->onTakeFocus(*mTextView, *e, /*direction*/ 0);
             }
 
-            if (mSelectAllOnFocus) {
+            if (mTextView->mSelectAllOnFocus) {
                 mTextView->selectAllText();
             }
 
@@ -223,10 +217,6 @@ bool Editor::shouldRenderCursor() const {
     return (showCursorDelta % (2 * BLINK)) < BLINK;
 }
 
-bool Editor::isBlinking() const {
-    // Android.isBlinking: mBlink != null && !mBlink.mCancelled.
-    return !mBlinkCancelled;
-}
 
 void Editor::makeBlink() {
     // Android.makeBlink: stamp the blink start time, (un)cancel, then schedule (or
@@ -308,7 +298,6 @@ void Editor::updateCursorPosition(int top, int bottom, float horizontal) {
     const int width = mDrawableForCursor->getIntrinsicWidth();
     const int y = top - mTempRect.top;
     const int h = (bottom + mTempRect.height) - y;
-    LOGD("updateCursorPositio left=%d, top=%d wh=%d,%d", left, (top - mTempRect.top),width,h);
     mDrawableForCursor->setBounds(left, top-mTempRect.top, (width<0?2:width), h);
 }
 
@@ -318,12 +307,17 @@ void Editor::updateCursorPosition() {
         return ;
     }
     Layout* layout = mTextView->getLayout();
-    const int offset = cursorOffset();
-    const int line = layout->getLineForOffset(offset);
+    // Ported from Android Editor.updateCursorPosition() (Editor.java:2428): use
+    // selection START and map through OffsetMapping with the CURSOR strategy so a
+    // length-altering transformation (e.g. password dots) positions the caret right.
+    const int offset = mTextView->getSelectionStart();
+    const int transformedOffset = mTextView->originalToTransformed(offset,
+            OffsetMapping::MAP_STRATEGY_CURSOR);
+    const int line = layout->getLineForOffset(transformedOffset);
     const int top = layout->getLineTop(line);
     const int bottom = layout->getLineBottomWithoutSpacing(line);   // includeLineSpacing=false
     const bool clamped = layout->shouldClampCursor(line);
-    const float horizontal = layout->getPrimaryHorizontal(offset, clamped);
+    const float horizontal = layout->getPrimaryHorizontal(transformedOffset, clamped);
 
     updateCursorPosition(top,bottom,horizontal);
 }
@@ -353,42 +347,18 @@ void Editor::drawCursor(Canvas& canvas, int cursorOffsetVertical) {
         mDrawableForCursor->draw(canvas);
     }
     if (translate) canvas.translate(0, -cursorOffsetVertical);
-
-    // Back-compat fallback (CDROID's own wheel): no cursor drawable, so paint the
-    // caret via TextView::onDrawCaret — kept so subclasses can still customize it.
-    mTextView->onDrawCaret(canvas, mCaretRect);
+    // NOTE: do NOT call TextView::onDrawCaret here. That legacy path re-applies
+    // mCaretRect bounds to the SAME drawable object (mDrawableForCursor aliases
+    // TextView::mCursorDrawable) and redraws it — which fills the whole edit box
+    // with the cursor color. Android's Editor.drawCursor draws the cursor once.
 }
 
 // =====================================================================================
 //  Selection
 // =====================================================================================
-void Editor::setSelection(int index) {
-    Spannable* e = editable();
-    if (!e) return;
-    Selection::setSelection(e, index);
-    mTextView->setCaretPos(index);   // keep legacy caret state in sync
-}
-
-void Editor::setSelection(int start, int stop) {
-    Spannable* e = editable();
-    if (!e) return;
-    Selection::setSelection(e, start, stop);
-    mTextView->setCaretPos(stop);
-}
-
-void Editor::selectAll() {
-    Spannable* e = editable();
-    if (!e) return;
-    Selection::selectAll(e);
-    mTextView->setCaretPos(mTextView->length());
-}
-
-void Editor::extendSelection(int index) {
-    Spannable* e = editable();
-    if (!e) return;
-    Selection::extendSelection(e, index);
-    mTextView->setCaretPos(index);
-}
+//  Selection — Android EditText owns setSelection/selectAll/extendSelection as
+//  Selection:: convenience wrappers; Editor calls Selection:: directly.
+// =====================================================================================
 
 // =====================================================================================
 //  Text-change hook
@@ -418,12 +388,14 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         Spannable* sp = editable;   // Editable is-a Spannable; the local pointer
                                     // upcasts directly (avoids the shadowed editable()).
         if (sp != nullptr && mm->onKeyDown(*mTextView, *sp, keyCode, event)) {
-            mTextView->invalidate(true);
+            // The movement method updated the Selection spans but did NOT touch the
+            // cursor drawable's bounds — reposition it before invalidating, otherwise
+            // the caret is redrawn at its stale offset.
+            invalidateCursor();
             return true;
         }
     }
 
-    Layout* layout = mTextView->getLayout();
     const int len = (int)editable->length();
     // Read the caret/selection from the Spannable (Selection spans) — the same
     // source the caret is rendered from. The old code read the legacy
@@ -437,41 +409,30 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
     const int lo = std::min(selStart, selEnd);
     const int hi = std::max(selStart, selEnd);
     const bool hasSelection = (selStart != selEnd);
-    const int line = layout ? layout->getLineForOffset(caret) : 0;
     bool handled = false;
 
+    LOGD("keyCode=%d[%s] to %p:%d",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),mTextView,mTextView->getId());
     switch (keyCode) {
-    case KeyEvent::KEYCODE_DPAD_LEFT:
-        if (hasSelection) setSelection(lo);        // collapse a selection to its start
-        else if (caret > 0) setSelection(caret - 1);
-        handled = true;
-        break;
-    case KeyEvent::KEYCODE_DPAD_RIGHT:
-        if (hasSelection) setSelection(hi);        // collapse a selection to its end
-        else if (caret < len) setSelection(caret + 1);
-        handled = true;
-        break;
-    case KeyEvent::KEYCODE_DPAD_DOWN:
-        handled = (!mTextView->isSingleLine()) && mTextView->moveCaret2Line(line + 1);
-        break;
-    case KeyEvent::KEYCODE_DPAD_UP:
-        handled = (!mTextView->isSingleLine()) && mTextView->moveCaret2Line(line - 1);
-        break;
+    // Navigation keys (DPAD_LEFT/RIGHT/UP/DOWN, PAGE_*, HOME/END, etc.) are handled
+    // entirely by the movement method in the delegation block above (Android's
+    // MovementMethod role). This switch only owns the editing keys below
+    // (Android's KeyListener role): when the movement method returns false at a
+    // boundary, these keys simply aren't handled here.
     case KeyEvent::KEYCODE_BACKSPACE:
         if (hasSelection) {                        // delete the whole selection
             editable->Delete(lo, hi);
-            setSelection(lo);
+            Selection::setSelection(editable, lo);
             handled = true;
         } else if (caret > 0 && caret <= len) {
             editable->Delete(caret - 1, caret);
-            setSelection(caret - 1);
+            Selection::setSelection(editable, caret - 1);
             handled = true;
         }
         break;
     case KeyEvent::KEYCODE_DEL:
         if (hasSelection) {                        // delete the whole selection
             editable->Delete(lo, hi);
-            setSelection(lo);
+            Selection::setSelection(editable, lo);
             handled = true;
         } else if (caret < len) {
             editable->Delete(caret, caret + 1);
@@ -490,7 +451,7 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         if (ch != 0) {
             const int where = insertPosition();   // insert at caret (replaces any selection)
             editable->insert(where, SpannableStringBuilder(std::u16string(1, (char16_t)ch)));
-            setSelection(where + 1);
+            Selection::setSelection(editable, where + 1);
             handled = true;
         }
         break;
@@ -499,7 +460,9 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
 
     if (handled) {
         makeBlink();
-        mTextView->invalidate(true);
+        // Reposition the cursor drawable to the new Selection (Android flow), then
+        // invalidate. invalidateCursor() == updateCursorPosition() + invalidate.
+        invalidateCursor();
     }
     return handled;
 }
@@ -513,7 +476,7 @@ int Editor::commitText(const std::wstring& text) {
     for (wchar_t ch : text) u16.push_back((char16_t)ch);
     const int where = insertPosition();
     editable->insert(where, SpannableStringBuilder(u16));
-    setSelection(where + (int)u16.size());
+    Selection::setSelection(editable, where + (int)u16.size());
     makeBlink();
     mTextView->invalidate(true);
     return (int)u16.size();
@@ -558,13 +521,13 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         if (mTapCount == 2) {
             selectCurrentWord();
         } else if (mTapCount >= 3) {
-            selectAll();
+            Selection::selectAll(editable());
         } else {
-            setSelection(offset);
+            Selection::setSelection(editable(), offset);
         }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {
-        extendSelection(offset);
+        Selection::extendSelection(editable(), offset);
     }
     return true;
 }
@@ -626,7 +589,7 @@ bool Editor::selectCurrentWord() {
     }
 
     Selection::setSelection(e, selStart, selEnd);
-    mTextView->setCaretPos(selEnd);
+    // Cursor update is driven by the Selection span change via spanChange.
     mTextView->invalidate(true);
     return true;
 }
@@ -677,18 +640,6 @@ void Editor::onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& high
 // =====================================================================================
 bool Editor::isCursorVisible() const{
     return mCursorVisible&&mTextView->isTextEditable();
-}
-
-void Editor::setShowSoftInputOnFocus(bool show) {
-    mShowSoftInputOnFocus = show;
-}
-
-void Editor::setSelectAllOnFocus(bool selectAll) {
-    mSelectAllOnFocus = selectAll;
-}
-
-void Editor::setTextIsSelectable(bool selectable) {
-    mTextIsSelectable = selectable;
 }
 
 void Editor::beginBatchEdit() {
