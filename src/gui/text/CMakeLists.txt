@@ -30,6 +30,12 @@ add_library(cdtext
     method/allcapstransformationmethod.cc
     method/touch.cc
     method/worditerator.cc
+    method/metakeylistener.cc
+    method/basekeylistener.cc
+    method/numberkeylistener.cc
+    method/digitskeylistener.cc
+    method/qwertykeylistener.cc
+    method/textkeylistener.cc
     )
 target_link_libraries(cdtext minikin expat)
 
