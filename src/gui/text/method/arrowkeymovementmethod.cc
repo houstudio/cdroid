@@ -3,6 +3,7 @@
  * (LGPL v2.1+) — ported from Android's android.text.method.ArrowKeyMovementMethod.
  *********************************************************************************/
 #include <text/method/arrowkeymovementmethod.h>
+#include <text/method/touch.h>
 #include <widget/textview.h>
 #include <text/selection.h>
 #include <text/layout.h>
@@ -44,12 +45,16 @@ bool ArrowKeyMovementMethod::onKeyDown(TextView& widget, Spannable& text, int ke
     return BaseMovementMethod::onKeyDown(widget, text, keyCode, event);
 }
 
-bool ArrowKeyMovementMethod::onTouchEvent(TextView& /*widget*/, Spannable& /*text*/, MotionEvent& /*event*/) {
-    // The Android version handles tap/drag/selecting-mode touch via the Touch
-    // helper + a LAST_TAP_DOWN span. In CDROID the Editor currently owns touch
-    // (tap→caret, drag→extend, double/triple-tap). Defer wiring MovementMethod
-    // touch until that path migrates; return false so the host keeps handling it.
-    return false;
+bool ArrowKeyMovementMethod::onTouchEvent(TextView& widget, Spannable& text, MotionEvent& event) {
+    // Ported from Android ArrowKeyMovementMethod.onTouchEvent (the non-selecting
+    // path). The selecting-mode drag-to-extend (LAST_TAP_DOWN span + isSelecting)
+    // needs MetaKeyKeyListener, which isn't ported — SHIFT is deferred, so only the
+    // Touch scroll helper runs here. TextView::onTouchEvent does not yet dispatch
+    // touch to the movement method; this is left in place for when it does.
+    // TODO(android): selecting-mode branch (LAST_TAP_DOWN, requestFocus,
+    //                requestDisallowInterceptTouchEvent, didTouchFocusSelect,
+    //                MetaKeyKeyListener.adjust/resetLockedMeta) once MetaKeyKeyListener lands.
+    return Touch::onTouchEvent(widget, text, event);
 }
 
 int ArrowKeyMovementMethod::getCurrentLineTop(Spannable& buffer, Layout* layout) {

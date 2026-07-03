@@ -122,6 +122,14 @@ public:
     static void copySpansFrom(const Spanned* source, int start, int end,
                                      const SpanFilter& kind, Spannable* dest, int destoff);
 
+    // Uppercase a CharSequence codepoint-wise via Character::toUpperCase. When
+    // copySpans is true and source is a Spanned, owned spans are CLONED into the
+    // result (see copySpansFrom) so source and result never share an owned span
+    // (which would double-free); NoCopySpan spans are shared borrowed.
+    // v1: locale-insensitive (no Turkish i->I handling); length-changing uppercase
+    // (e.g. ss->SS) keeps the TEXT correct but does not reposition copied spans.
+    static CharSequence* toUpperCase(const CharSequence* source, bool copySpans);
+
     static CharSequence* ellipsize(CharSequence* text, TextPaint& p, float avail, TruncateAt where) {
         return ellipsize(text, p, avail, where, false, nullptr);
     }

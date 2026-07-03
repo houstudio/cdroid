@@ -610,6 +610,47 @@ void TextUtils::copySpansFrom(const Spanned* source, int start, int end, const S
     }
 }
 
+CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans) {
+    if (source == nullptr) return nullptr;
+    const Spanned* spanned = copySpans ? dynamic_cast<const Spanned*>(source) : nullptr;
+
+    // Uppercase codepoint-wise, decoding/encoding UTF-16 so surrogate pairs and
+    // length-changing case mappings (e.g. U+00DF SS -> "SS") are handled in the
+    // text itself.
+    const std::u16string s = source->toU16String();
+    std::u16string out;
+    out.reserve(s.size());
+    for (size_t i = 0; i < s.size(); ) {
+        char16_t c = s[i];
+        int cp;
+        if (c >= 0xD800 && c <= 0xDBFF && (i + 1) < s.size()
+                && s[i + 1] >= 0xDC00 && s[i + 1] <= 0xDFFF) {
+            cp = 0x10000 + (((int)(c - 0xD800)) << 10) + (int)(s[i + 1] - 0xDC00);
+            i += 2;
+        } else {
+            cp = (int)c;
+            i += 1;
+        }
+        int upper = Character::toUpperCase(cp);
+        if (upper <= 0xFFFF) {
+            out.push_back((char16_t)upper);
+        } else {
+            upper -= 0x10000;
+            out.push_back((char16_t)(0xD800 + (upper >> 10)));
+            out.push_back((char16_t)(0xDC00 + (upper & 0x3FF)));
+        }
+    }
+
+    if (spanned != nullptr) {
+        // Clone owned spans into the result (copySpansFrom handles ownership) so
+        // the source and this transformed CharSequence never share an owned span.
+        SpannableStringBuilder* ss = new SpannableStringBuilder(out);
+        copySpansFrom(spanned, 0, source->length(), make_span_filter<ParcelableSpan>(), ss, 0);
+        return ss;
+    }
+    return new SpannedString(out);
+}
+
 CharSequence* TextUtils::ellipsize(CharSequence* text, TextPaint& paint, float avail, TruncateAt where,
         bool preserveLength, const EllipsizeCallback& callback, const TextDirectionHeuristic* textDir, const std::string& ellipsis) {
     auto deleter= [](MeasuredParagraph* mt) {

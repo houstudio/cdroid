@@ -28,6 +28,8 @@ add_library(cdtext
     method/arrowkeymovementmethod.cc
     method/scrollingmovementmethod.cc
     method/passwordtransformationmethod.cc
+    method/allcapstransformationmethod.cc
+    method/touch.cc
     )
 target_link_libraries(cdtext minikin expat)
 

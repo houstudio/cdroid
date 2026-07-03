@@ -2,6 +2,7 @@
 #include <utils/mathutils.h>
 #include <text/textutils.h>
 #include <view/viewgroup.h>
+#include <text/method/allcapstransformationmethod.h>
 
 namespace cdroid{
 
@@ -101,6 +102,7 @@ void Switch::init(){
     mOffLayout = makeLayout("");
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
+    mSwitchTransformationMethod = nullptr;
     mVelocityTracker  = VelocityTracker::obtain();
 }
 
@@ -110,6 +112,7 @@ Switch::~Switch(){
     delete mPositionAnimator;
     delete mOnLayout;
     delete mOffLayout;
+    delete mSwitchTransformationMethod;
     mVelocityTracker->recycle();
 }
 
@@ -139,13 +142,13 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    /*bool allCaps = appearance.getBoolean(com.android.internal.R.styleable.TextAppearance_textAllCaps, false);
+    const bool allCaps = atts.getBoolean("textAllCaps", false);
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
-        mSwitchTransformationMethod.setLengthChangesAllowed(true);
+        mSwitchTransformationMethod->setLengthChangesAllowed(true);
     } else {
-        mSwitchTransformationMethod = null;
-    }*/
+        mSwitchTransformationMethod = nullptr;
+    }
 }
 
 void Switch::setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex){

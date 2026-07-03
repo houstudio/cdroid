@@ -3,7 +3,7 @@
 #include <widget/compoundbutton.h>
 
 namespace cdroid{
-
+class AllCapsTransformationMethod;
 class Switch:public CompoundButton{
 private:
     static constexpr int THUMB_ANIMATION_DURATION = 250;
@@ -39,12 +39,13 @@ private:
 
     int mTouchMode;
     int mTouchSlop;
+    int mMinFlingVelocity;
     float mTouchX;
     float mTouchY;
-    VelocityTracker* mVelocityTracker;
-    int mMinFlingVelocity;
-
     float mThumbPosition;
+    VelocityTracker* mVelocityTracker;
+    AllCapsTransformationMethod* mSwitchTransformationMethod;
+
 
     /**
      * Width required to draw the switch track and thumb. Includes padding and

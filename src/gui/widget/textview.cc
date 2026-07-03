@@ -28,6 +28,7 @@
 #include <text/inputfilter.h>
 #include <text/inputtype.h>
 #include <text/method/passwordtransformationmethod.h>
+#include <text/method/allcapstransformationmethod.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -93,6 +94,15 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mFontFamily   = atts.getString("fontFamily","");
     mFontTypeface = Typeface::create(mFontFamily,mTextStyle);
     mAllCaps   = atts.getBoolean("textAllCaps",false);
+
+    // The mHas* flags mirror Android's "explicitly set" semantics so applyTextAppearance
+    // only applies the value when the attribute was actually present.
+    mHasElegant          = atts.hasAttribute("elegantTextHeight");
+    mElegant             = atts.getBoolean("elegantTextHeight", false);
+    mHasFallbackLineSpacing = atts.hasAttribute("fallbackLineSpacing");
+    mFallbackLineSpacing    = atts.getBoolean("fallbackLineSpacing", false);
+    mHasLetterSpacing    = atts.hasAttribute("letterSpacing");
+    mLetterSpacing       = atts.getFloat("letterSpacing", 0.f);   // Android: plain float, not a dimension
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -739,21 +749,25 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
     }
 
-    /*if (attr->mAllCaps) setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    if (attr->mAllCaps) {
+        setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    }
 
-    if (attr->mHasElegant) setElegantTextHeight(attr->mElegant);
+    if (attr->mHasElegant) {
+        setElegantTextHeight(attr->mElegant);
+    }
 
     if (attr->mHasFallbackLineSpacing) {
         setFallbackLineSpacing(attr->mFallbackLineSpacing);
     }
 
     if (attr->mHasLetterSpacing) {
-        setLetterSpacing(attr.mLetterSpacing);
+        setLetterSpacing(attr->mLetterSpacing);
     }
-
-    if (attr->mFontFeatureSettings != null) {
-        setFontFeatureSettings(attr->mFontFeatureSettings);
-    }*/
+    // fontFeatureSettings deferred: needs Paint->MinikinPaint plumbing (MinikinPaint
+    // already has the field + FontFeatureUtils parses it, but Paint does not yet
+    // store or propagate it). Re-enable together with Paint::setFontFeatureSettings.
+    // if (!attr->mFontFeatureSettings.empty()) setFontFeatureSettings(attr->mFontFeatureSettings);
 }
 
 void TextView::addTextChangedListener(const TextWatcher& watcher){
