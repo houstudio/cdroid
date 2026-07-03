@@ -330,8 +330,10 @@ void Editor::invalidateCursorPath() {
 
 void Editor::invalidateCursor() {
     updateCursorPosition();
-    if (mCaretRect.empty()) mTextView->invalidate(true);
-    else mTextView->invalidate(mCaretRect);
+    // mCaretRect is gone; invalidate the whole view (the cursor drawable moved).
+    // TODO(android): invalidate just the union of the old+new cursor rect, as Android
+    //                does via the cursor Rect it tracks.
+    mTextView->invalidate(true);
 }
 
 void Editor::invalidateTextDisplayList() {
@@ -411,7 +413,6 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
     const bool hasSelection = (selStart != selEnd);
     bool handled = false;
 
-    LOGD("keyCode=%d[%s] to %p:%d",keyCode,KeyEvent::keyCodeToString(keyCode).c_str(),mTextView,mTextView->getId());
     switch (keyCode) {
     // Navigation keys (DPAD_LEFT/RIGHT/UP/DOWN, PAGE_*, HOME/END, etc.) are handled
     // entirely by the movement method in the delegation block above (Android's
@@ -450,7 +451,7 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         const wchar_t ch = InputMethodManager::getInstance().getCharacter(keyCode, event.getMetaState());
         if (ch != 0) {
             const int where = insertPosition();   // insert at caret (replaces any selection)
-            editable->insert(where, SpannableStringBuilder(std::u16string(1, (char16_t)ch)));
+            editable->insert(where, SpannedString(std::u16string(1, (char16_t)ch)));
             Selection::setSelection(editable, where + 1);
             handled = true;
         }
@@ -678,5 +679,12 @@ void Editor::hideCursorControllers() {
     mInsertionControllerEnabled = false;
     mSelectionControllerEnabled = false;
 }
-
+void Editor::hideCursorAndSpanControllers() {
+    // Android Editor hides any active cursor controllers and span controllers
+    // when focus changes or text mutations occur. No controller implementation is
+    // available yet, but the state is still tracked.
+    mInsertionControllerEnabled = false;
+    mSelectionControllerEnabled = false;
+    //mSpanControllerEnabled = false;
+}
 }  // namespace cdroid

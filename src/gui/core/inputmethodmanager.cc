@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <inputmethodmanager.h>
+#include <text/inputtype.h>
 #include <windowmanager.h>
 #include <cdlog.h>
 #include <chrono>
@@ -342,7 +343,7 @@ void InputMethodManager::setInputType(int inputType){
         LOGD("screenHeight=%d imewin.height=%d",screenHeight,mInst->imeWindow->getHeight());
     }
     switch(mInputType){
-    case EditText::TYPE_NONE:
+    case InputType::TYPE_NULL:
         if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
         break;
     default:

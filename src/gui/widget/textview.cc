@@ -49,7 +49,7 @@ public:
     std::string mFontFamily;
     Typeface* mFontTypeface;
     int mTypefaceIndex = -1;
-    int mTextStyle=0;
+    int mTextStyle = 0;
     int mFontWeight = -1;
     int mShadowColor = 0;
     float mLetterSpacing = 0;
@@ -241,7 +241,6 @@ void TextView::initView(){
     mShadowDy = 0.0f;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
-    mEditMode   = READONLY;
     // 新增的成员变量初始化
     mAutoLinkMask = 0;
     mLinksClickable = true;
@@ -1329,35 +1328,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     const int textLength = text->length();
 
     if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
-        Spannable* sp = dynamic_cast<Spannable*>(text);
-
-        // Remove any ChangeWatchers that might have come from other TextViews.
-        auto watchers = sp->getSpans(0, sp->length(), make_span_filter<ChangeWatcher>());
-        const int count = watchers.size();
-        for (int i = 0; i < count; i++) {
-            sp->removeSpan(watchers[i]);
-        }
-
-        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
-
-        sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
-                | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
-
-        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
-        //   deferred: attaches Editor's SpanController (easy-delete/spelling) +
-        //   keylistener span; both arrive with the suggestions/handles pass.
-        if (mTransformation != nullptr) {
-            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
-        }
-        if (mMovement != nullptr) {
-            mMovement->initialize(*this, dynamic_cast<Spannable&>(*text));
-            if (mEditor != nullptr) mEditor->mSelectionMoved = false;
-        }
-        // Live: initialize the movement method on the freshly-set Spannable text.
-        if (mMovement != nullptr) {
-            Spannable* sp2 = dynamic_cast<Spannable*>(text);
-            if (sp2 != nullptr) mMovement->initialize(*this, *sp2);
-        }
+        addChangeWatcher(*dynamic_cast<Spannable*>(text));
     }
     if (mLayout != nullptr) {
         checkForRelayout();
@@ -1394,7 +1365,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (mEditor != nullptr) mEditor->prepareCursorControllers();
 }
 
-CharSequence& TextView::getText()const{
+CharSequence& TextView::getText(){
     return *mText;//->toString();
 }
 
@@ -1450,21 +1421,6 @@ CharSequence* TextView::getHint()const{
 
 bool TextView::getDefaultEditable()const{
     return false;
-}
-
-void TextView::setEditable(bool b){
-    if (b) {
-        createEditorIfNeeded();
-        // Ensure the buffer is actually an Editable so Editor/Selection can work.
-        if (mText != nullptr && dynamic_cast<Editable*>(mText) == nullptr
-                && mText != mCharWrapper) {
-            SpannableStringBuilder* editable = new SpannableStringBuilder(mText);
-            mText = editable;
-            mSpannable = dynamic_cast<Spannable*>(mText);
-            if (mTransformed == nullptr) mTransformed = mText;
-            if (mLayout != nullptr) checkForRelayout();
-        }
-    }
 }
 
 void TextView::createEditorIfNeeded(){
@@ -1963,7 +1919,11 @@ void TextView::updateAfterEdit() {
         registerForPreDraw();
     }
 
-    checkForResize();
+    // Android's TextView.updateAfterEdit calls checkForRelayout() here so that an
+    // edit rebuilds the text layout (makeNewLayout) and the redraw shows the new
+    // text. checkForResize() only handles WRAP_CONTENT size growth and does NOT
+    // rebuild the layout, so a fixed-size EditText never refreshed on typing.
+    checkForRelayout();
 
     if (curs >= 0) {
         mHighlightPathBogus = true;
@@ -1972,25 +1932,45 @@ void TextView::updateAfterEdit() {
     }
 }
 
-void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
-    /*sLastCutCopyOrTextChangedTime = 0;
+// The span-setup block Android does inline in TextView.setText: attach this
+// view's ChangeWatcher (and transformation/movement spans) to an editable
+// Spannable buffer. Shared by setText() and setEditable() so that every editable
+// buffer is observed — otherwise edits mutate the buffer but the host TextView is
+// never notified (handleTextChanged never runs → no relayout → no refresh).
+void TextView::addChangeWatcher(Spannable& sp) {
+    const int textLength = sp.length();
+    // Remove any ChangeWatchers that might have come from other TextViews.
+    auto watchers = sp.getSpans(0, textLength, make_span_filter<ChangeWatcher>());
+    const int count = (int)watchers.size();
+    for (int i = 0; i < count; i++) {
+        sp.removeSpan(watchers[i]);
+    }
 
-    Editor.InputMethodState ims = mEditor == null ? null : mEditor->mInputMethodState;
-    if (ims == null || ims.mBatchEditNesting == 0) {
-        updateAfterEdit();
+    if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
+
+    sp.setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
+            | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
+
+    // mEditor->addSpanWatchers(sp) deferred: attaches Editor's SpanController
+    // (easy-delete/spelling) + keylistener span (suggestions/handles pass).
+    if (mTransformation != nullptr) {
+        sp.setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
     }
-    if (ims != null) {
-        ims.mContentChanged = true;
-        if (ims.mChangedStart < 0) {
-            ims.mChangedStart = start;
-            ims.mChangedEnd = start + before;
-        } else {
-            ims.mChangedStart = Math.min(ims.mChangedStart, start);
-            ims.mChangedEnd = Math.max(ims.mChangedEnd, start + before - ims.mChangedDelta);
-        }
-        ims.mChangedDelta += after - before;
+    if (mMovement != nullptr) {
+        mMovement->initialize(*this, sp);
+        if (mEditor != nullptr) mEditor->mSelectionMoved = false;
     }
-    resetErrorChangedFlag();*/
+}
+
+void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
+    // Android gates updateAfterEdit() on the Editor InputMethodState's batch-edit
+    // nesting, deferring the relayout until endBatchEdit. CDROID's endBatchEdit is
+    // a nesting-counter skeleton that does not flush, so gating would never fire —
+    // call unconditionally (per-edit relayout is correct, just not batched). This
+    // is the link that makes typing refresh: the ChangeWatcher (attached in
+    // setText/setEditable) fires here on every edit, and updateAfterEdit rebuilds
+    // the layout + invalidates.
+    updateAfterEdit();
     sendOnTextChanged(buffer, start, before, after);
     onTextChanged(buffer, start, before, after);
 }
@@ -2034,7 +2014,7 @@ void TextView::onWindowFocusChanged(bool hasWindowFocus) {
 void TextView::onVisibilityChanged(View& changedView, int visibility) {
     View::onVisibilityChanged(changedView, visibility);
     if (mEditor && visibility != VISIBLE) {
-        //mEditor->hideCursorAndSpanControllers();
+        mEditor->hideCursorAndSpanControllers();
         mEditor->hideCursorControllers();
     }
 }
@@ -4139,6 +4119,88 @@ const TextPaint& TextView::getPaint() const{
         return mTextPaint;
 }
 
+// Ported from Android TextView's package-private statics (TextView.java:7747/7867).
+// Pure InputType bitmask logic — no dependencies.
+bool TextView::isPasswordInputType(int inputType) {
+    const int v = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
+    return v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_PASSWORD)
+        || v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD)
+        || v == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
+}
+bool TextView::isVisiblePasswordInputType(int inputType) {
+    const int v = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
+    return v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+}
+bool TextView::isMultilineInputType(int type) {
+    return (type & (InputType::TYPE_MASK_CLASS | InputType::TYPE_TEXT_FLAG_MULTI_LINE))
+        == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE);
+}
+
+// Ported from Android TextView.setInputType (TextView.java:7793). Feasible pieces
+// are wired in (password transformation + monospace typeface, single-line,
+// suggestion-span strip); the two pieces needing the not-yet-ported
+// inputmethod/KeyListener stack are left as comments for later.
+void TextView::setInputType(int inputType) {
+    createEditorIfNeeded();
+    const bool wasPassword = isPasswordInputType(getInputType());
+    const bool wasVisiblePassword = isVisiblePasswordInputType(getInputType());
+
+    // --- Android's private setInputType(type, false): builds a per-class KeyListener
+    //     and stores the type. CDROID has no KeyListener subclasses yet, so only the
+    //     store (setRawInputType) is done. When TextKeyListener/DigitsKeyListener/
+    //     DateKeyListener/TimeKeyListener/DateTimeKeyListener/DialerKeyListener are
+    //     ported, restore this block and call setKeyListenerOnly(input).
+    /*
+    const int cls = inputType & InputType::TYPE_MASK_CLASS;
+    KeyListener* input;
+    if (cls == InputType::TYPE_CLASS_TEXT)         input = TextKeyListener::getInstance(...);
+    else if (cls == InputType::TYPE_CLASS_NUMBER)  input = DigitsKeyListener::getInstance(...);
+    else if (cls == InputType::TYPE_CLASS_DATETIME) input = DateKeyListener/TimeKeyListener/...;
+    else if (cls == InputType::TYPE_CLASS_PHONE)   input = DialerKeyListener::getInstance();
+    else                                            input = TextKeyListener::getInstance();
+    setKeyListenerOnly(input);
+    */
+    mEditor->mInputType = inputType;   // setRawInputType
+
+    const bool isPassword = isPasswordInputType(inputType);
+    const bool isVisiblePassword = isVisiblePasswordInputType(inputType);
+    if (isPassword) {
+        // TODO(android): setTransformationMethod(PasswordTransformationMethod::getInstance())
+        //                — PTM is not yet aligned with the current TextWatcher (std::function)
+        //                design, so password masking isn't applied here yet.
+        setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
+    } else if (isVisiblePassword) {
+        setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
+    } else if (wasPassword || wasVisiblePassword) {
+        // not in password mode any more — restore the default typeface
+        setTypefaceFromAttrs(nullptr, std::string(), DEFAULT_TYPEFACE, Typeface::NORMAL, -1);
+    }
+
+    const bool singleLine = !isMultilineInputType(inputType);
+    if (mSingleLine != singleLine) {
+        // Android: applySingleLine(singleLine, !isPassword, true, true). CDROID's
+        // overload is 3-arg (no maxLinesSpecified).
+        applySingleLine(singleLine, !isPassword, true);
+    }
+
+    if (!isSuggestionsEnabled()) {
+        setTextInternal(removeSuggestionSpans(mText));
+    }
+
+    // TODO(android): InputMethodManager imm = getInputMethodManager();
+    //                if (imm != null) imm.restartInput(this);  // needs InputConnection
+}
+
+int TextView::getInputType()const{
+    return mEditor ? mEditor->mInputType : InputType::TYPE_NULL;
+}
+
+// Android TextView.isAnyPasswordInputType (TextView.java:7862).
+bool TextView::isAnyPasswordInputType() const{
+    const int t = getInputType();
+    return isPasswordInputType(t) || isVisiblePasswordInputType(t);
+}
+
 bool TextView::isSuggestionsEnabled()const{
     if(mEditor ==nullptr)return false;
     if ((mEditor->mInputType & InputType::TYPE_MASK_CLASS) != InputType::TYPE_CLASS_TEXT) {
@@ -4728,19 +4790,6 @@ void TextView::onDraw(Canvas& canvas) {
     canvas.restore();
 }
 
-void TextView::onDrawCaret(Canvas& canvas, const Rect& caretRect) {
-    // Default caret paint: the cursor drawable if one is set, otherwise a thin
-    // filled rect in the current text color. Subclasses override to customize.
-    if (mCursorDrawable) {
-        mCursorDrawable->setBounds(caretRect);
-        mCursorDrawable->draw(canvas);
-    } else {
-        canvas.set_color((uint32_t)getCurrentTextColor());
-        canvas.rectangle(caretRect);
-        canvas.fill();
-    }
-}
-
 //////////////////////////////////////////////////////////////////////////////////////////////////
 std::string TextView::getAccessibilityClassName()const{
     return "TextView";
@@ -5173,29 +5222,17 @@ int TextView::CharWrapper::getTextRunCursor(int contextStart, int contextEnd, bo
 
 //class ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
 TextView::ChangeWatcher::ChangeWatcher(TextView*tv):mTV(tv){
-}
-
-void TextView::ChangeWatcher::beforeTextChanged(CharSequence& buffer, int start, int before, int after) {
-    /**if (AccessibilityManager.getInstance(mContext).isEnabled() && (mTransformed != null)) {
-        mBeforeText = mTransformed.toString();
-    }*/
-    mTV->sendBeforeTextChanged(buffer, start, before, after);
-}
-
-void TextView::ChangeWatcher::onTextChanged(CharSequence& buffer, int start, int before, int after) {
-    mTV->handleTextChanged(buffer, start, before, after);
-    /*if (AccessibilityManager.getInstance(mContext).isEnabled()
-            && (isFocused() || isSelected() && isShown())) {
-        sendAccessibilityEventTypeViewTextChanged(mBeforeText, start, before, after);
-        mBeforeText = null;
-    }*/
-}
-
-void TextView::ChangeWatcher::afterTextChanged(Editable& buffer) {
-    mTV->sendAfterTextChanged(buffer);
-    /*if (MetaKeyKeyListener.getMetaState(buffer, MetaKeyKeyListener.META_SELECTING) != 0) {
-        MetaKeyKeyListener.stopSelecting(TextView.this, buffer);
-    }*/
+    // Wire the inherited TextWatcher std::function members to forward into the
+    // host TextView. SpannableStringBuilder::replace() fires these on every edit.
+    beforeTextChanged = [this](CharSequence& buffer, int start, int before, int after) {
+        mTV->sendBeforeTextChanged(buffer, start, before, after);
+    };
+    onTextChanged = [this](CharSequence& buffer, int start, int before, int after) {
+        mTV->handleTextChanged(buffer, start, before, after);
+    };
+    afterTextChanged = [this](Editable& buffer) {
+        mTV->sendAfterTextChanged(buffer);
+    };
 }
 
 void TextView::ChangeWatcher::onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en) {

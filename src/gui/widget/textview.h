@@ -21,7 +21,6 @@
 #include <view/view.h>
 #include <core/typeface.h>
 #include <widget/scroller.h>
-//#include <widget/textwatcher.h>
 #include <text/spanwatcher.h>
 #include <text/textwatcher.h>
 #include <text/textutils.h>
@@ -168,6 +167,11 @@ private:
     // Android: doKeyDown — shared key-down logic for onKeyDown/onKeyMultiple.
     int doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent);
 
+    // Android TextView statics (TextView.java:7747/7867) — InputType classification.
+    static bool isPasswordInputType(int inputType);
+    static bool isVisiblePasswordInputType(int inputType);
+    static bool isMultilineInputType(int type);
+
     void initView();
     void setTextInternal(CharSequence* text);
     void setHintInternal(CharSequence* hint);
@@ -225,7 +229,6 @@ private:
     void spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
     void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
-    int mEditMode;//0--readonly 1--insert 2--replace
     int mMaxLength;
     bool mBlinkOn;
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
@@ -239,7 +242,6 @@ protected:
     CharSequence*mTransformed;
     ChangeWatcher* mChangeWatcher;
     BufferType mBufferType = BufferType::NORMAL;
-    void setEditable(bool b);
     virtual bool getDefaultEditable()const;
     void invalidateCursorPath();
     void invalidateCursor();
@@ -261,6 +263,12 @@ protected:
     virtual void onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
     void updateAfterEdit();
+    // Attach this TextView's ChangeWatcher (plus the transformation/movement
+    // spans) to an editable Spannable buffer — the span-setup block Android does
+    // inline in TextView.setText. Factored out so setEditable() (which wraps a
+    // non-editable buffer on the fly) attaches the same watchers; without it,
+    // edits mutate the buffer but never notify this view, so no refresh.
+    void addChangeWatcher(Spannable& sp);
     CharSequence* removeSuggestionSpans(CharSequence* text);
     void handleTextChanged(CharSequence& buffer, int start, int before, int after);
     void onAttachedToWindow();
@@ -269,7 +277,6 @@ protected:
     virtual void onDraw(Canvas& canvas) override;
     // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
     // the caret appearance (the blink cadence and geometry are owned by Editor).
-    virtual void onDrawCaret(Canvas& canvas, const Rect& caretRect);
     virtual int getHorizontalOffsetForDrawables()const;
     void onLayout(bool changed, int left, int top, int w, int h)override;
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect)override;
@@ -284,11 +291,6 @@ protected:
     Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
-    enum EDITMODE{
-        READONLY,
-        INSERT,
-        REPLACE
-    };
     TextView(Context*ctx,const AttributeSet&attrs);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
@@ -313,7 +315,7 @@ public:
     void setText(const std::vector<char16_t>&text, int start, int len);
     void append(CharSequence* text);
     void append(CharSequence* text, int start, int end);
-    CharSequence& getText()const;
+    virtual CharSequence& getText();
     int length()const;
     CharSequence* getTransformed()const;
     Editable* getEditableText()const;
@@ -365,6 +367,9 @@ public:
     bool getLinksClickable()const;
     void setKeyListener(KeyListener* input);
     KeyListener* getKeyListener()const;
+    void setInputType(int inputType);
+    int  getInputType()const;
+    bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);
     std::vector<InputFilter*> getFilters();
     int getLineHeight()const;
@@ -641,9 +646,9 @@ private:
     TextView*mTV;
 public:
     ChangeWatcher(TextView*tv);
-    void beforeTextChanged(CharSequence& buffer, int start, int before, int after);
-    void onTextChanged(CharSequence& buffer, int start, int before, int after);
-    void afterTextChanged(Editable& buffer);
+    // TextWatcher callbacks are wired by assigning the inherited std::function
+    // members (beforeTextChanged/onTextChanged/afterTextChanged) in the ctor —
+    // see textview.cc. (Defining same-named methods here would hide them.)
     void onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en)override;
     void onSpanAdded(Spannable& buf, const ParcelableSpan* what, int s, int e)override;
     void onSpanRemoved(Spannable& buf, const ParcelableSpan* what, int s, int e)override;

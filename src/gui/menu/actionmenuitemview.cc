@@ -183,7 +183,7 @@ void ActionMenuItemView::setIcon(Drawable* icon) {
 }
 
 bool ActionMenuItemView::hasText()const {
-    return !TextUtils::isEmpty(getText());
+    return !TextUtils::isEmpty(mText);//&getText());
 }
 
 void ActionMenuItemView::setShortcut(bool showShortcut, int shortcutKey) {

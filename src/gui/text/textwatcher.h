@@ -32,8 +32,8 @@ public:
     //virtual void onTextChanged(CharSequence& s, int start, int before, int count)=0;
     //virtual void afterTextChanged(Editable& s)=0;
     std::function<void(CharSequence&, int /*start*/, int /*count*/, int /*after*/)> beforeTextChanged;
-    std::function<void(CharSequence&, int /*start*/, int /*count*/, int /*after*/)>onTextChanged;
-    std::function<void(Editable&)>afterTextChanged;
+    std::function<void(CharSequence&, int /*start*/, int /*count*/, int /*after*/)> onTextChanged;
+    std::function<void(Editable&)> afterTextChanged;
 };
 }/*endof namespace*/
 #endif/*__TEXTWATCHER_H__*/

@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/numberpicker.h>
+#include <text/inputtype.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
 #include <core/color.h>
@@ -922,7 +923,7 @@ void NumberPicker::showSoftInput(){
 }
 
 void NumberPicker::hideSoftInput(){
-    if (mInputText->getInputType() != EditText::TYPE_NONE) {
+    if (mInputText->getInputType() != InputType::TYPE_NULL) {
         if(mHasSelectorWheel){
             mInputText->setVisibility(View::INVISIBLE);
         }

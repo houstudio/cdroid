@@ -39,26 +39,26 @@ public:
      * otherwise return false and the caller (i.e. the widget host)
      * will handle the key.
      */
-    virtual bool onKeyDown(View* view, Editable& text, int keyCode, const KeyEvent& event) = 0;
+    virtual bool onKeyDown(View& view, Editable& text, int keyCode, const KeyEvent& event) = 0;
     
     /**
      * If the key listener wants to handle this key release, return true,
      * otherwise return false and the caller (i.e. the widget host)
      * will handle the key.
      */
-    virtual bool onKeyUp(View* view, Editable& text, int keyCode, const KeyEvent& event) = 0;
+    virtual bool onKeyUp(View& view, Editable& text, int keyCode, const KeyEvent& event) = 0;
     
     /**
      * If the key listener wants to other kinds of key events, return true,
      * otherwise return false and the caller (i.e. the widget host)
      * will handle the key.
      */
-    virtual bool onKeyOther(View* view, Editable& text, const KeyEvent& event);
+    virtual bool onKeyOther(View& view, Editable& text, const KeyEvent& event);
     
     /**
      * Remove the given shift states from the edited text.
      */
-    virtual void clearMetaKeyState(View* view, Editable& content, int states) = 0;
+    virtual void clearMetaKeyState(View& view, Editable& content, int states) = 0;
 };
 
 } // namespace cdroid

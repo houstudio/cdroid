@@ -1,4 +1,5 @@
 #include <text/spannablestringbuilder.h>
+#include <text/textwatcher.h>   // TextWatcher spans — fired by replace()
 namespace cdroid{
 // Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
 SpannableStringBuilder::SpannableStringBuilder(const std::u16string& text)
@@ -34,17 +35,6 @@ void SpannableStringBuilder::setSpan(const ParcelableSpan* what, int start, int 
 void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
     // Loop in case legacy data held duplicate records for the same pointer.
     while (removeSpanRecord(what)) { /* removed all matching */ }
-}
-
-void SpannableStringBuilder::shiftSpans(int index, int delta) {
-    for (auto& r : mSpans) {
-        if (r.start >= index) {
-            r.start += delta;
-            r.end += delta;
-        } else if (r.end > index) {
-            r.end += delta;
-        }
-    }
 }
 
 void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta) {
@@ -165,63 +155,71 @@ void SpannableStringBuilder::getChars(int start, int end, char16_t* dest, int de
 
 // Editable interface implementations
 Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& text) {
-    if (st < 0) st = 0;
-    if (en > (int)mText.length()) en = (int)mText.length();
-    if (st >= en) return *this;
-    
-    const int textLen = (int)text.length();
-    std::u16string insertText;
-    insertText.reserve(textLen);
-    for (int i = 0; i < textLen; i++) {
-        insertText += (char16_t)text.charAt(i);
-    }
-    
-    const int oldLen = en - st;
-    mText.replace(st, oldLen, insertText);
-    const int delta = (int)insertText.length() - oldLen;
-    adjustSpansForReplace(st, en, delta);
-    return *this;
+    return replace(st, en, text, 0, (int)text.length());
 }
 
 Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& source, int srcStart, int srcEnd) {
+    // The single text-mutation point (Android: SpannableStringBuilder.replace).
+    // insert()/2-arg replace()/deleteText() all delegate here, so this is also the
+    // single place that fires the TextWatcher spans (sendBefore/On/AfterToTextWatchers)
+    // — without it, edits update the buffer but never notify the host TextView, so
+    // typing doesn't refresh the screen.
     if (srcStart < 0) srcStart = 0;
     if (srcEnd > (int)source.length()) srcEnd = (int)source.length();
-    if (srcStart >= srcEnd) return *this;
-    
-    std::u16string insertText;
-    insertText.reserve(srcEnd - srcStart);
-    for (int i = srcStart; i < srcEnd; i++) {
-        insertText += (char16_t)source.charAt(i);
-    }
-    
     if (st < 0) st = 0;
     if (en > (int)mText.length()) en = (int)mText.length();
-    if (st >= en) return *this;
-    
-    const int oldLen = en - st;
-    mText.replace(st, oldLen, insertText);
-    const int delta = (int)insertText.length() - oldLen;
-    adjustSpansForReplace(st, en, delta);
+    if (st > en) st = en;
+    if (srcStart >= srcEnd && st == en) return *this;   // nothing to insert or delete
+
+    const int replacedLen = en - st;
+    const int insertLen = srcEnd - srcStart;
+
+    // Snapshot the TextWatcher spans once (their pointer identity is stable; ranges
+    // get adjusted below). Mirrors Android's sendBeforeToTextWatchers / sendToTextWatchers.
+    auto watchers = getSpans(0, (int)mText.length(), make_span_filter<TextWatcher>());
+    auto asWatcher = [](const ParcelableSpan* p) -> TextWatcher* {
+        return dynamic_cast<TextWatcher*>(const_cast<ParcelableSpan*>(p));
+    };
+
+    // 1) beforeTextChanged
+    for (const ParcelableSpan* p : watchers) {
+        if (TextWatcher* w = asWatcher(p)) {
+            if (w->beforeTextChanged) w->beforeTextChanged(*this, st, replacedLen, insertLen);
+        }
+    }
+
+    // 2) mutate the buffer + adjust span ranges
+    if (insertLen > 0) {
+        std::u16string ins;
+        ins.reserve(insertLen);
+        for (int i = srcStart; i < srcEnd; i++) ins += (char16_t)source.charAt(i);
+        if (st < en) mText.replace(st, replacedLen, ins);
+        else mText.insert(st, ins);
+    } else if (st < en) {
+        mText.erase(st, replacedLen);
+    }
+    adjustSpansForReplace(st, en, insertLen - replacedLen);
+
+    // 3) onTextChanged
+    for (const ParcelableSpan* p : watchers) {
+        if (TextWatcher* w = asWatcher(p)) {
+            if (w->onTextChanged) w->onTextChanged(*this, st, replacedLen, insertLen);
+        }
+    }
+    // 4) afterTextChanged
+    for (const ParcelableSpan* p : watchers) {
+        if (TextWatcher* w = asWatcher(p)) {
+            if (w->afterTextChanged) w->afterTextChanged(*this);
+        }
+    }
     return *this;
 }
 
 Editable& SpannableStringBuilder::insert(int where, const CharSequence& text, int start, int end) {
-    if (start < 0) start = 0;
-    if (end > (int)text.length()) end = (int)text.length();
-    if (start >= end) return *this;
-    
-    std::u16string insertText;
-    insertText.reserve(end - start);
-    for (int i = start; i < end; i++) {
-        insertText += (char16_t)text.charAt(i);
-    }
-    
-    if (where < 0) where = 0;
-    if (where > (int)mText.length()) where = (int)mText.length();
-    
-    mText.insert(where, insertText);
-    shiftSpans(where, (int)insertText.length());
-    return *this;
+    // Insert = replace the empty range [where, where). Delegating keeps a single
+    // mutation/TextWatcher-fire point in replace(...). adjustSpansForReplace with
+    // start==end is equivalent to shiftSpans for the insert case.
+    return replace(where, where, text, start, end);
 }
 
 Editable& SpannableStringBuilder::Delete(int start, int end) {

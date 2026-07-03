@@ -89,7 +89,7 @@ private:
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
 
-    int  mInputType;
+    int  mInputType = 0;   // Android: Editor field (EditorInfo.TYPE_NULL == 0)
     int  mLastButtonState = 0;
     int  mLastTouchOffset = 0;
     int  mTapCount = 0;
@@ -102,7 +102,6 @@ private:
     bool mTouchFocusSelected = false;
     bool mSelectionMoved = false;
 
-    Rect mCaretRect;
     bool mInsertionControllerEnabled = false;
     bool mSelectionControllerEnabled = false;
 
@@ -146,6 +145,7 @@ public:
 
     void prepareCursorControllers();
     void hideCursorControllers();
+    void hideCursorAndSpanControllers();
     void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
 

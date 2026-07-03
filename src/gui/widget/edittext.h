@@ -27,8 +27,6 @@ private:
 public:
     DECLARE_UIEVENT(void,AfterTextChanged,EditText&);
 protected:
-    int mPasswordChar;
-    int mInputType;
     std::wstring mInputPattern;
     AfterTextChanged afterChanged;
     virtual void onFocusChanged(bool,int,Rect*)override;
@@ -36,24 +34,11 @@ protected:
     bool getDefaultEditable()const override;
     int commitText(const std::wstring&ws)override;
 public:
-    typedef enum{
-        TYPE_NONE,
-        TYPE_ANY,
-        TYPE_NUMBER,
-        TYPE_TEXT,
-        TYPE_PASSWORD,
-        TYPE_IP
-    }INPUTTYPE;
     EditText(int w,int h);
     EditText(const std::string&txt,int w,int h);
     EditText(Context*ctx,const AttributeSet&attrs);
     void setText(const std::string&txt)override;
-    void setLabelColor(int color);
     void setPattern(const std::string&pattern);
-    int getPasswordChar()const;
-    void setPasswordChar(int ch);
-    void setInputType(INPUTTYPE tp);
-    int getInputType()const;
     void setSelection(int start, int stop);
     void setSelection(int index);
     void selectAll();
@@ -61,8 +46,7 @@ public:
     void setEllipsize(TextUtils::TruncateAt ellipsis)override;
     void setText(CharSequence* text, BufferType type)override;
     virtual void setTextWatcher(AfterTextChanged ls);
-    virtual void setEditMode(EDITMODE mode);
-    void setCaretBlink(bool blink=true);
+    Editable& getText() override;
     virtual bool onKeyDown(int,KeyEvent&evt)override;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
