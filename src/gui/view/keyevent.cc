@@ -18,8 +18,29 @@
 #include <view/keyevent.h>
 #include <private/inputeventlabels.h>
 #include <porting/cdlog.h>
+#include <core/inputmethodmanager.h>
 #include <sstream>
 namespace cdroid{
+
+// Ported from Android KeyEvent.getUnicodeChar(int). CDROID resolves the char
+// through the InputMethodManager's loaded device KeyCharacterMap rather than
+// KeyCharacterMap.load(getDeviceId()); for a single-keyboard desktop framework
+// the global map is equivalent.
+int KeyEvent::getUnicodeChar(int metaState) const {
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    if (imm == nullptr) return 0;
+    return imm->getCharacter(mKeyCode, metaState);
+}
+
+int KeyEvent::getUnicodeChar() const {
+    return getUnicodeChar(mMetaState);
+}
+
+char16_t KeyEvent::getMatch(const char16_t* chars, int len, int metaState) const {
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    if (imm == nullptr || chars == nullptr || len <= 0) return 0;
+    return imm->getMatch(mKeyCode, chars, (size_t)len, metaState);
+}
 
 KeyEvent* KeyEvent::obtain(){
     KeyEvent*ev = PooledInputEventFactory::getInstance().createKeyEvent();

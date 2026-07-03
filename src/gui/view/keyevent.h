@@ -156,6 +156,15 @@ public:
         return normalizeMetaState(mMetaState) & META_MODIFIER_MASK;
     }
     int getRepeatCount()const {return mRepeatCount;}
+    // Ported from Android KeyEvent.getUnicodeChar. Maps this key + modifier state
+    // to a Unicode char via the device KeyCharacterMap. CDROID routes through the
+    // InputMethodManager's loaded key map (equivalent to Android's per-device
+    // KeyCharacterMap.load). Returns 0 if the key produces no character.
+    int getUnicodeChar(int metaState) const;
+    int getUnicodeChar() const;
+    // Ported from Android KeyEvent.getMatch: the first char in `chars` producible
+    // by this key under `metaState`, else 0. Used by NumberKeyListener.lookup.
+    char16_t getMatch(const char16_t* chars, int len, int metaState) const;
     inline nsecs_t getDownTime() const { return mDownTime; }
     bool hasNoModifiers()const;
     bool hasModifiers(int modifiers)const;
