@@ -53,7 +53,7 @@ public:
      * otherwise return false and the caller (i.e. the widget host)
      * will handle the key.
      */
-    virtual bool onKeyOther(View& view, Editable& text, const KeyEvent& event);
+    virtual bool onKeyOther(View& view, Editable& text, const KeyEvent& event) { (void)view; (void)text; (void)event; return false; }
     
     /**
      * Remove the given shift states from the edited text.

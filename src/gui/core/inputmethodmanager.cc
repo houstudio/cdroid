@@ -301,6 +301,11 @@ int InputMethodManager::getCharacter(int keycode,int metaState)const{
     return kcm->getCharacter(keycode,metaState);
 }
 
+char16_t InputMethodManager::getMatch(int keycode,const char16_t* chars,size_t numChars,int metaState)const{
+    if(kcm == nullptr)return 0;
+    return kcm->getMatch(keycode,chars,numChars,metaState);
+}
+
 void InputMethodManager::viewClicked(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
 }

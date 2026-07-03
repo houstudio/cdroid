@@ -399,73 +399,40 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
     }
 
     const int len = (int)editable->length();
-    // Read the caret/selection from the Spannable (Selection spans) — the same
-    // source the caret is rendered from. The old code read the legacy
-    // getCaretPos() field, which drifted out of sync and made backspace delete
-    // from the wrong end.
-    int selStart = Selection::getSelectionStart(editable);
-    int selEnd = Selection::getSelectionEnd(editable);
-    if (selStart < 0) selStart = 0;
-    if (selEnd < 0) selEnd = len;
-    const int caret = selEnd;                     // == start when there is no selection
-    const int lo = std::min(selStart, selEnd);
-    const int hi = std::max(selStart, selEnd);
-    const bool hasSelection = (selStart != selEnd);
-    bool handled = false;
+    (void)len;
 
-    switch (keyCode) {
-    // Navigation keys (DPAD_LEFT/RIGHT/UP/DOWN, PAGE_*, HOME/END, etc.) are handled
-    // entirely by the movement method in the delegation block above (Android's
-    // MovementMethod role). This switch only owns the editing keys below
-    // (Android's KeyListener role): when the movement method returns false at a
-    // boundary, these keys simply aren't handled here.
-    case KeyEvent::KEYCODE_BACKSPACE:
-        if (hasSelection) {                        // delete the whole selection
-            editable->Delete(lo, hi);
-            Selection::setSelection(editable, lo);
-            handled = true;
-        } else if (caret > 0 && caret <= len) {
-            editable->Delete(caret - 1, caret);
-            Selection::setSelection(editable, caret - 1);
-            handled = true;
-        }
-        break;
-    case KeyEvent::KEYCODE_DEL:
-        if (hasSelection) {                        // delete the whole selection
-            editable->Delete(lo, hi);
-            Selection::setSelection(editable, lo);
-            handled = true;
-        } else if (caret < len) {
-            editable->Delete(caret, caret + 1);
-            handled = true;
-        }
-        break;
-    case KeyEvent::KEYCODE_ENTER:
+    // ENTER is handled here, not in the KeyListener: Android routes it through
+    // TextView (onEditorAction / newline insertion gated on single-line), and the
+    // QwertyKeyListener would otherwise insert '\n' unconditionally. Insert at the
+    // caret (replacing any selection) for multi-line editors only.
+    if (keyCode == KeyEvent::KEYCODE_ENTER) {
         if (!mTextView->isSingleLine()) {
-            editable->append((char16_t)'\n');
-            handled = true;
-        }
-        break;
-    default: {
-        // Key->char via the InputMethodManager (this is NOT an InputConnection).
-        const wchar_t ch = InputMethodManager::getInstance().getCharacter(keyCode, event.getMetaState());
-        if (ch != 0) {
-            const int where = insertPosition();   // insert at caret (replaces any selection)
-            editable->insert(where, SpannedString(std::u16string(1, (char16_t)ch)));
+            const int where = insertPosition();
+            editable->insert(where, SpannedString(std::u16string(1, u'\n')));
             Selection::setSelection(editable, where + 1);
-            handled = true;
+            makeBlink();
+            invalidateCursor();
+            return true;
         }
-        break;
-    }
+        return false;   // single-line: ENTER not handled (focus advance not ported)
     }
 
-    if (handled) {
-        makeBlink();
-        // Reposition the cursor drawable to the new Selection (Android flow), then
-        // invalidate. invalidateCursor() == updateCursorPosition() + invalidate.
-        invalidateCursor();
+    // Editing keys (BACKSPACE/DEL delete + character typing) are routed through the
+    // ported Android KeyListener stack (TextKeyListener → QwertyKeyListener /
+    // DigitsKeyListener → BaseKeyListener → MetaKeyKeyListener) in
+    // src/gui/text/method/. This replaces the former hand-written switch that stood
+    // in for the KeyListener role. Selection/caret bookkeeping lives inside the
+    // listener chain (and Selection spans), same as Android.
+    if (KeyListener* kl = mTextView->getKeyListener()) {
+        if (kl->onKeyDown(*mTextView, *editable, keyCode, event)) {
+            makeBlink();
+            // Reposition the cursor drawable to the new Selection, then invalidate.
+            invalidateCursor();
+            return true;
+        }
     }
-    return handled;
+
+    return false;
 }
 
 int Editor::commitText(const std::wstring& text) {

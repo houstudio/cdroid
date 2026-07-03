@@ -49,6 +49,10 @@ public:
     void shutDown(){delete mInst;}
     int setKeyCharacterMap(const std::string&kcm);
     int getCharacter(int keycode,int metaState)const;
+    // Mirrors KeyCharacterMap.getMatch: first accepted char producible by `keycode`
+    // under `metaState`, or 0. Exposed so KeyListener subclasses (NumberKeyListener)
+    // can resolve a key to an accepted character via the loaded device key map.
+    char16_t getMatch(int keycode,const char16_t* chars,size_t numChars,int metaState)const;
     void viewClicked(View*v);
     void focusIn(View*);
     void focusOut(View*);

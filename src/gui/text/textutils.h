@@ -167,6 +167,13 @@ public:
 
     static int getCapsMode(const CharSequence* cs, int off, int reqModes);
 
+    // Capitalization mode flags (Android TextUtils constants), used by
+    // getCapsMode / TextKeyListener.shouldCap.
+    static constexpr int CAP_MODE_CHARACTERS = 0x1000;
+    static constexpr int CAP_MODE_WORDS      = 0x2000;
+    static constexpr int CAP_MODE_SENTENCES  = 0x4000;
+    static constexpr int CAP_MODE_ALL        = 0x7000;
+
     static void removeEmptySpans(std::vector<const ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
     static int64_t packRangeInLong(int start, int end) {
         return (((long) start) << 32) | end;

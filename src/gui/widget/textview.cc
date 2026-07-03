@@ -29,6 +29,9 @@
 #include <text/inputtype.h>
 #include <text/method/passwordtransformationmethod.h>
 #include <text/method/allcapstransformationmethod.h>
+#include <text/method/keylistener.h>
+#include <text/method/textkeylistener.h>
+#include <text/method/digitskeylistener.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -4160,21 +4163,35 @@ void TextView::setInputType(int inputType) {
     const bool wasPassword = isPasswordInputType(getInputType());
     const bool wasVisiblePassword = isVisiblePasswordInputType(getInputType());
 
-    // --- Android's private setInputType(type, false): builds a per-class KeyListener
-    //     and stores the type. CDROID has no KeyListener subclasses yet, so only the
-    //     store (setRawInputType) is done. When TextKeyListener/DigitsKeyListener/
-    //     DateKeyListener/TimeKeyListener/DateTimeKeyListener/DialerKeyListener are
-    //     ported, restore this block and call setKeyListenerOnly(input).
-    /*
+    // --- Android's private setInputType(type, false): build a per-class KeyListener
+    //     and store the type. TEXT→TextKeyListener, NUMBER→DigitsKeyListener;
+    //     DATETIME/PHONE fall back to TextKeyListener until Date/Time/Dialer are
+    //     ported (Phase 2). The cached getInstance singletons are stored without
+    //     ownership (never deleted), matching Android.
     const int cls = inputType & InputType::TYPE_MASK_CLASS;
-    KeyListener* input;
-    if (cls == InputType::TYPE_CLASS_TEXT)         input = TextKeyListener::getInstance(...);
-    else if (cls == InputType::TYPE_CLASS_NUMBER)  input = DigitsKeyListener::getInstance(...);
-    else if (cls == InputType::TYPE_CLASS_DATETIME) input = DateKeyListener/TimeKeyListener/...;
-    else if (cls == InputType::TYPE_CLASS_PHONE)   input = DialerKeyListener::getInstance();
-    else                                            input = TextKeyListener::getInstance();
-    setKeyListenerOnly(input);
-    */
+    KeyListener* input = nullptr;
+    if (cls == InputType::TYPE_CLASS_TEXT) {
+        const bool autoText = (inputType & InputType::TYPE_TEXT_FLAG_AUTO_CORRECT) != 0;
+        TextKeyListener::Capitalize cap = TextKeyListener::Capitalize::NONE;
+        if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0) {
+            cap = TextKeyListener::Capitalize::CHARACTERS;
+        } else if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_WORDS) != 0) {
+            cap = TextKeyListener::Capitalize::WORDS;
+        } else if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_SENTENCES) != 0) {
+            cap = TextKeyListener::Capitalize::SENTENCES;
+        }
+        input = TextKeyListener::getInstance(autoText, cap);
+    } else if (cls == InputType::TYPE_CLASS_NUMBER) {
+        input = DigitsKeyListener::getInstance(
+                (inputType & InputType::TYPE_NUMBER_FLAG_SIGNED) != 0,
+                (inputType & InputType::TYPE_NUMBER_FLAG_DECIMAL) != 0);
+    } else {
+        // TYPE_CLASS_DATETIME / TYPE_CLASS_PHONE / TYPE_NULL: DateKeyListener,
+        // TimeKeyListener and DialerKeyListener are Phase 2; fall back to the
+        // plain TextKeyListener for now.
+        input = TextKeyListener::getInstance();
+    }
+    setKeyListener(input);
     mEditor->mInputType = inputType;   // setRawInputType
 
     const bool isPassword = isPasswordInputType(inputType);
@@ -4405,18 +4422,19 @@ bool TextView::getLinksClickable() const {
     return mLinksClickable;
 }
 
-// TODO: KeyListener 尚未实现，需要添加 KeyListener 类的定义
-// void TextView::setKeyListener(KeyListener* input) {
-//     mKeyListener = input;
-//     // 如果TextView是可编辑的，需要应用过滤器
-//     if (mEditableFactory != nullptr || mBufferType == BufferType::EDITABLE) {
-//         applyFilters();
-//     }
-// }
-// 
-// KeyListener* TextView::getKeyListener() const {
-//     return mKeyListener;
-// }
+// Ported from Android TextView.setKeyListener. Stores the listener (no ownership:
+// cached getInstance singletons are never deleted, matching Android; a caller-
+// supplied listener is held by reference, also like Android). The focusable
+// fix-up (fixFocusableAndClickableSettings) and registering the listener as a
+// SpanWatcher are deferred — EditText is already focusable, and the SpanWatcher
+// behavior only matters for the (deferred) dead-key ACTIVE span.
+void TextView::setKeyListener(KeyListener* input) {
+    mKeyListener = input;
+}
+
+KeyListener* TextView::getKeyListener() const {
+    return mKeyListener;
+}
 
 void TextView::setFilters(const std::vector<InputFilter*>& filters) {
     mFilters = filters;
