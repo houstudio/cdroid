@@ -23,13 +23,14 @@ public:
     void set(const Paint& tp) override;
 
     bool hasEqualAttributes(const TextPaint& other) const;
-    void setUnderlineText(bool underline) {
-    }
+    // void setUnderlineText(bool underline) {
+    // }
+    using Paint::setUnderlineText; // 引入基类 setUnderlineText(bool)，避免被下方 (int,float) 重载隐藏
     void setUnderlineText(int color, float thickness) {
         underlineColor = color;
         underlineThickness = thickness;
     }
-    bool isUnderlineText()const{return false;}
+    // bool isUnderlineText()const{return false;}
     bool equalsForTextMeasurement(const TextPaint&)const{
         return false;
     }

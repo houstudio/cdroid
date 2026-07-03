@@ -773,6 +773,17 @@ void TextLine::extractDecorationInfo(TextPaint& paint, DecorationInfo& info) {
     info.underlineColor = paint.underlineColor;
     info.underlineThickness = paint.underlineThickness;
     paint.setUnderlineText(0, 0.0f);
+
+    if (info.isUnderlineText || info.underlineColor != 0) {
+        const float ts = paint.getTextSize();
+        if (paint.getUnderlinePosition() == 0.f)  paint.setUnderlinePosition(ts * 0.18f);
+        if (paint.getUnderlineThickness() == 0.f) paint.setUnderlineThickness(std::max(ts * 0.06f, 1.0f));
+    }
+    if (info.isStrikeThruText) {
+        const float ts = paint.getTextSize();
+        if (paint.getStrikeThruPosition() == 0.f)  paint.setStrikeThruPosition(-(ts * 0.22f));
+        if (paint.getStrikeThruThickness() == 0.f) paint.setStrikeThruThickness(std::max(ts * 0.06f, 1.0f));
+    }
 }
 
 float TextLine::handleRun(int start, int measureLimit,

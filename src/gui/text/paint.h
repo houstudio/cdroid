@@ -75,6 +75,7 @@ private:
     bool mAntialias;
     bool mFakeBoldText;
     bool mStrikeThruText;
+    bool mUnderlineText;
     float mStrokeWidth;
     float mTextSize;
     float mTextSkewX;
@@ -131,6 +132,8 @@ public:
     float getStrokeMiter()const{return 0;}
     bool isStrikeThruText()const{return mStrikeThruText;}
     void setStrikeThruText(bool v){mStrikeThruText=v;}
+    bool isUnderlineText()const{return mUnderlineText;}
+    void setUnderlineText(bool v){mUnderlineText=v;}
     float getUnderlinePosition() const{ return mUnderlinePosition;}
     void setUnderlinePosition(float v){mUnderlinePosition=v;}
     float getUnderlineThickness() const{return mUnderlineThickness;}

@@ -32,6 +32,13 @@ Paint::Paint(){
     mLetterSpacing=0;
     mTextScaleX=1.f;
     mTextSize=12;
+    mFakeBoldText=false;
+    mStrikeThruText=false;
+    mUnderlineText=false;
+    mUnderlinePosition=0;
+    mUnderlineThickness=0;
+    mStrikeThruPosition=0;
+    mStrikeThruThickness=0;
     mMinikinPaint = std::make_shared<minikin::MinikinPaint>(mTypeface->getFontCollection());
     mMinikinPaint->size=12;
     mMinikinPaint->scaleX=1.0;
@@ -61,6 +68,15 @@ void Paint::set(const Paint&o){
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
     mMinikinPaint=o.mMinikinPaint;
+    mFakeBoldText = o.mFakeBoldText;
+    mStrikeThruText = o.mStrikeThruText;
+    mUnderlineText = o.mUnderlineText;
+    mStyle = o.mStyle;
+    mStrokeWidth = o.mStrokeWidth;
+    mUnderlinePosition = o.mUnderlinePosition;
+    mUnderlineThickness = o.mUnderlineThickness;
+    mStrikeThruPosition = o.mStrikeThruPosition;
+    mStrikeThruThickness = o.mStrikeThruThickness;
 }
 
 void Paint::setTextSize(float v){
