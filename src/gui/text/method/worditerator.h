@@ -19,7 +19,7 @@
 #define __WORD_ITERATOR_H__
 
 #include <string>
-#include <text/selection.h>   // Selection::PositionIterator (Android: implements Selection.PositionIterator)
+#include <text/selection.h>
 
 namespace cdroid {
 

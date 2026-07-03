@@ -2,12 +2,12 @@
  * Copyright (C) [2019] [houzh@msn.com]
  * (LGPL v2.1+) — ported from Android's android.text.method.ArrowKeyMovementMethod.
  *********************************************************************************/
-#include <text/method/arrowkeymovementmethod.h>
 #include <text/method/touch.h>
+#include <text/method/worditerator.h>
+#include <text/method/arrowkeymovementmethod.h>
 #include <widget/textview.h>
 #include <text/selection.h>
 #include <text/layout.h>
-#include <text/worditerator.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
 #include <core/rect.h>

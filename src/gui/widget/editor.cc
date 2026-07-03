@@ -17,12 +17,12 @@
  *********************************************************************************/
 #include <widget/editor.h>
 #include <widget/textview.h>
-#include <text/method/movementmethod.h>
+#include <text/method/worditerator.h>
 #include <text/method/offsetmapping.h>
+#include <text/method/movementmethod.h>
 #include <text/selection.h>
 #include <text/editable.h>
 #include <text/spannablestringbuilder.h>
-#include <text/worditerator.h>
 #include <text/layout.h>
 #include <text/parcelablespan.h>
 #include <view/keyevent.h>

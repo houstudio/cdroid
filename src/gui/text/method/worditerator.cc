@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <text/worditerator.h>
+#include <text/method/worditerator.h>
 #include <text/character.h>      // Character::codePointAt/codePointBefore/isLetter/isDigit
 #include <text/textutils.h>      // TextUtils::getChars, TextUtils::isPunctuation
 #include <unicode/ubrk.h>        // UBreakIterator (C API — matches minikin/myicu convention)

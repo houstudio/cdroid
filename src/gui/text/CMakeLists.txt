@@ -21,7 +21,6 @@ add_library(cdtext
     character.cc
     spannablestring.cc
     spannablestringbuilder.cc
-    worditerator.cc
     style/metricaffectingspan.cc
     style/replacementspan.cc
     method/basemovementmethod.cc
@@ -30,6 +29,7 @@ add_library(cdtext
     method/passwordtransformationmethod.cc
     method/allcapstransformationmethod.cc
     method/touch.cc
+    method/worditerator.cc
     )
 target_link_libraries(cdtext minikin expat)
 
