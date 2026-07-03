@@ -1,7 +1,9 @@
 #ifndef __TRANSFORMATION_METHOD_H__
 #define __TRANSFORMATION_METHOD_H__
 #include <text/parcelablespan.h>
+#include <core/rect.h>   // Rect is a typedef (CRect<int>), so it must be included, not forward-declared
 namespace cdroid{
+class View;
 class TransformationMethod:public NoCopySpan{
 public:
     virtual ~TransformationMethod()=default;

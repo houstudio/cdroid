@@ -27,6 +27,7 @@
 #include <text/spannablestringbuilder.h>
 #include <text/inputfilter.h>
 #include <text/inputtype.h>
+#include <text/method/passwordtransformationmethod.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -1318,7 +1319,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     if (mTransformation == nullptr) {
         mTransformed = text;
     } else {
-        //mTransformed = mTransformation.getTransformation(text, this);
+        mTransformed = mTransformation->getTransformation(*text, *this);
     }
     if (mTransformed == nullptr) {
         // Should not happen if the transformation method follows the non-null postcondition.
@@ -4165,15 +4166,14 @@ void TextView::setInputType(int inputType) {
     const bool isPassword = isPasswordInputType(inputType);
     const bool isVisiblePassword = isVisiblePasswordInputType(inputType);
     if (isPassword) {
-        // TODO(android): setTransformationMethod(PasswordTransformationMethod::getInstance())
-        //                — PTM is not yet aligned with the current TextWatcher (std::function)
-        //                design, so password masking isn't applied here yet.
+        setTransformationMethod(PasswordTransformationMethod::getInstance());
         setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
     } else if (isVisiblePassword) {
         setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
     } else if (wasPassword || wasVisiblePassword) {
-        // not in password mode any more — restore the default typeface
+        // not in password mode any more — restore the default typeface + drop masking
         setTypefaceFromAttrs(nullptr, std::string(), DEFAULT_TYPEFACE, Typeface::NORMAL, -1);
+        setTransformationMethod(nullptr);
     }
 
     const bool singleLine = !isMultilineInputType(inputType);

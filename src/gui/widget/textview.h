@@ -28,7 +28,7 @@
 #include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
 #include <text/editable.h>
-#include <text/transformationmethod.h>
+#include <text/method/transformationmethod.h>
 #include <text/method/keylistener.h>
 
 namespace cdroid {
