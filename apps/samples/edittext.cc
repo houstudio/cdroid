@@ -1,5 +1,6 @@
 #include<cdroid.h>
 #include<cdlog.h>
+#include <text/inputtype.h>
 struct TestString{
     const char*text;
     bool singleline;
@@ -9,9 +10,16 @@ struct TestString{
 };
 
 TestString testStrings[]={
-   { 
-      "Single line textView (setted by setSingleLine(true) ",
-      true, 
+   {
+      "Single",
+      true,
+      Layout::ELLIPSIS_NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+   },
+   {
+      "Password",
+      true,
       Layout::ELLIPSIS_NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
@@ -24,22 +32,24 @@ int main(int argc,const char*argv[]){
 
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setOrientation(LinearLayout::VERTICAL);
-    layout->setBackgroundColor(0xFF112233);
+    layout->setBackgroundColor(0xFF334455);
     w->addView(layout);
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
         TestString*ts=testStrings+i;
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
-        layoutParams->setMargins(0,1,0,1); 
+        layoutParams->setMargins(0,8,0,8);
         EditText*edt=new EditText(ts->text,0,0);
-        edt->setTextColor(0xFF00FF00);
+        edt->setTextColor(i?0xffff0000:0xFF44FFaa);
         edt->setFocusable(true);
         edt->setSingleLine(ts->singleline);
         edt->setTextAlignment(ts->txtalignment);
         edt->setGravity(ts->gravity);
+        edt->setBackgroundColor(i?0xffaabbcc:0xff112233);
         edt->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         int cc=i*10+8;
         edt->setTextSize(22+i);
+        if(i==1)edt->setInputType(InputType::TYPE_CLASS_TEXT|InputType::TYPE_TEXT_VARIATION_PASSWORD);
         layout->addView(edt,layoutParams);
     }
 
