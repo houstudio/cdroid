@@ -22,18 +22,17 @@ public:
       }
    }
    int sendEvents(InputDevice&d,MTEvent*mts,int size,MotionEvent**eventOut){
-      int eventCount = 0;
       int32_t tmEVT = 0;
       for(int i=0;i<size;i++){
          d.putEvent(0,tmEVT,mts[i].type,mts[i].code,mts[i].value);
          if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
              tmEVT+=200*1000000;
       }
-      eventCount = d.getEventCount();
+      const int eventCount = d.getEventCount();
       LOGI("%d Events",eventCount);
       std::vector<InputEvent*>events;
       d.drainEvents(events);
-      for(int i=0;d.getEventCount();i++){
+      for(int i=0;i<eventCount;i++){
           MotionEvent*e=(MotionEvent*)events.at(i);
           const int pointerCount=e->getPointerCount();
           const int hisCount = e->getHistorySize();
