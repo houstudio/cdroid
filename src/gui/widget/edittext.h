@@ -27,9 +27,7 @@ private:
 public:
     DECLARE_UIEVENT(void,AfterTextChanged,EditText&);
 protected:
-    std::wstring mInputPattern;
     AfterTextChanged afterChanged;
-    virtual void onDraw(Canvas&ctx)override;
     bool getDefaultEditable()const override;
     int commitText(const std::wstring&ws)override;
 public:
@@ -46,7 +44,6 @@ public:
     void setText(CharSequence* text, BufferType type)override;
     virtual void setTextWatcher(AfterTextChanged ls);
     Editable& getText() override;
-    virtual bool onKeyDown(int,KeyEvent&evt)override;
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
 };

@@ -102,7 +102,7 @@ int EditText::commitText(const std::wstring&ws){
 }
 
 void EditText::setSelection(int start, int stop) {
-    // Android EditText.setSelection: Selection.setSelection(getText(), start, stop).
+    // Android EditText.setSelection:Selection::setSelection(&getText(), start, stop).
     if (Spannable* e = getEditableText()) Selection::setSelection(e, start, stop);
 }
 
@@ -126,25 +126,6 @@ void EditText::setEllipsize(TextUtils::TruncateAt ellipsis){
         FATAL("EditText cannot use the ellipsize mode TextUtils::TruncateAt::MARQUEE");
     }
     TextView::setEllipsize(ellipsis);
-}
-
-void EditText::setPattern(const std::string&pattern){
-    mInputPattern=TextUtils::utf8tounicode(pattern);
-}
-
-bool EditText::onKeyDown(int keyCode,KeyEvent & event){
-    if (getEditor()) {
-        const bool handled = getEditor()->onKeyDown(keyCode, event);
-        if (handled && afterChanged) afterChanged(*this);
-        return handled;
-    }
-    return TextView::onKeyDown(keyCode, event);
-}
-
-void EditText::onDraw(Canvas&canvas){
-    canvas.set_font_size(getTextSize());
-    // Caret is drawn by Editor inside TextView::onDraw (when focused/editing).
-    TextView::onDraw(canvas);
 }
 
 std::string EditText::getAccessibilityClassName()const{
