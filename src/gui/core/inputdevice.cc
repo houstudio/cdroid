@@ -743,9 +743,10 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             mActionButton = MotionEvent::BUTTON_SECONDARY;
             if(value) mButtonState|=MotionEvent::BUTTON_SECONDARY;
             else mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+            break;
         case BTN_STYLUS2:
             mActionButton = MotionEvent::BUTTON_TERTIARY;
-            if(value) mButtonState = MotionEvent::BUTTON_TERTIARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_TERTIARY;
             else mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
             break;
 #ifdef BTN_STYLUS3
@@ -799,12 +800,31 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         slot = mProp.id;
         if( (mProp.id==-1)||((mTrackID==-1)&&(mSlotID==-1)))
             slot = mProp.id = 0;
+        // mPointerProps/mPointerCoords are reserved(16) but not resized, so
+        // operator[] past size() is UB. Grow on demand before indexing by slot.
+        if (slot >= MAX_POINTERS) {
+            // Malformed driver / state bug. Deliberately NOT clamping or bailing:
+            // LOGE for diagnostics, then let the out-of-bounds access crash so
+            // the defect surfaces instead of being silently masked.
+            LOGE("pointer slot %d exceeds MAX_POINTERS(%d) — letting it crash",
+                 slot, MAX_POINTERS);
+        }
+        if ((int)mPointerProps.size() <= slot) {
+            mPointerProps.resize(slot + 1);
+            mPointerCoords.resize(slot + 1);
+        }
         mPointerProps [slot] = mProp;
         mPointerCoords[slot] = mCoord;
         if( code == SYN_MT_REPORT ) break;
         action = getActionByBits(pointerIndex);
         mMoveTime = (sec * 1000LL + usec/1000);
-        lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
+        // mEvents holds both MotionEvent* and KeyEvent* (the virtual-key path
+        // pushes KeyEvent). A C-style cast to MotionEvent* is UB when back() is
+        // a KeyEvent, and the later getActionMasked()/addSample calls would
+        // corrupt / crash. Guard on getType() and let it be nullptr otherwise.
+        InputEvent* back = (mEvents.size() > 1) ? mEvents.back() : nullptr;
+        lastEvent = (back && back->getType() == INPUT_EVENT_TYPE_MOTION)
+                    ? static_cast<MotionEvent*>(back) : nullptr;
         pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
         if(pointerCount==0)break;/*pointerCount==0 is KeyEvent!*/
         if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
