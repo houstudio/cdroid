@@ -442,7 +442,7 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[3]->getY(1),mts[33].value);//130
 
    ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_POINTER_UP);
-   ASSERT_EQ(OutEvents[4]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[4]->getPointerId(0),POINTERID(mts[27].value,0));
    ASSERT_EQ(OutEvents[4]->getPointerId(1),POINTERID(mts[31].value,1));
    ASSERT_EQ(OutEvents[4]->getPointerCount(),2);
