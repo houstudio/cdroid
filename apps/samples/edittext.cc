@@ -7,15 +7,17 @@ struct TestString{
     TextUtils::TruncateAt ellipsis;
     int txtalignment;
     int gravity;
+    int intputType;
 };
 
 TestString testStrings[]={
    {
-      "Single",
+      "Text",
       true,
       Layout::ELLIPSIS_NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_TEXT
    },
    {
       "Password",
@@ -23,6 +25,15 @@ TestString testStrings[]={
       Layout::ELLIPSIS_NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_TEXT|InputType::TYPE_TEXT_VARIATION_PASSWORD
+   },
+   {
+      "666",
+      true,
+      Layout::ELLIPSIS_NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_NUMBER
    }
 };
 
@@ -49,7 +60,7 @@ int main(int argc,const char*argv[]){
         edt->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         int cc=i*10+8;
         edt->setTextSize(22+i);
-        if(i==1)edt->setInputType(InputType::TYPE_CLASS_TEXT|InputType::TYPE_TEXT_VARIATION_PASSWORD);
+        edt->setInputType(ts->intputType);
         layout->addView(edt,layoutParams);
     }
 

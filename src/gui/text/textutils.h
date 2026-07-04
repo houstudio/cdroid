@@ -176,7 +176,7 @@ public:
 
     static void removeEmptySpans(std::vector<const ParcelableSpan*>&spans,const Spanned* spanned,const SpanFilter&type);
     static int64_t packRangeInLong(int start, int end) {
-        return (((long) start) << 32) | end;
+        return (((int64_t) start) << 32) | end;
     }
 
     static int unpackRangeStartFromLong(int64_t range) {

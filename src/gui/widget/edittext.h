@@ -29,7 +29,6 @@ public:
 protected:
     std::wstring mInputPattern;
     AfterTextChanged afterChanged;
-    virtual void onFocusChanged(bool,int,Rect*)override;
     virtual void onDraw(Canvas&ctx)override;
     bool getDefaultEditable()const override;
     int commitText(const std::wstring&ws)override;

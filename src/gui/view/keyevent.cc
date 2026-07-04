@@ -27,9 +27,9 @@ namespace cdroid{
 // KeyCharacterMap.load(getDeviceId()); for a single-keyboard desktop framework
 // the global map is equivalent.
 int KeyEvent::getUnicodeChar(int metaState) const {
-    InputMethodManager* imm = InputMethodManager::peekInstance();
-    if (imm == nullptr) return 0;
-    return imm->getCharacter(mKeyCode, metaState);
+    // Match the prior Editor typing path exactly: getInstance() (not peek),
+    // which both resolves the device key map and guarantees the IMM exists.
+    return InputMethodManager::getInstance().getCharacter(mKeyCode, metaState);
 }
 
 int KeyEvent::getUnicodeChar() const {

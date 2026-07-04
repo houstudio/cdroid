@@ -132,20 +132,6 @@ void EditText::setPattern(const std::string&pattern){
     mInputPattern=TextUtils::utf8tounicode(pattern);
 }
 
-
-void EditText::onFocusChanged(bool focus,int direction,Rect*prevfocusrect){
-    InputMethodManager & imm = InputMethodManager::getInstance();
-    if(focus){
-        imm.setInputType(getInputType());
-        imm.focusIn((View*)this);
-    }else{
-        imm.focusOut((View*)this);
-    }
-    // Editor handles cursor blink on focus change via TextView::onFocusChanged.
-    TextView::onFocusChanged(focus,direction,prevfocusrect);
-    if(getInputType()!=InputType::TYPE_NULL)imm.showIme();
-}
-
 bool EditText::onKeyDown(int keyCode,KeyEvent & event){
     if (getEditor()) {
         const bool handled = getEditor()->onKeyDown(keyCode, event);

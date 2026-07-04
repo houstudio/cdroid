@@ -14,3 +14,4 @@ src/gui/core/build.h
 deps
 appdevops*
 src/tools/po2json.py
+docs/*worklog.*
