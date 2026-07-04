@@ -358,6 +358,7 @@ protected:
     int32_t mKeyboardType;
     int32_t mScreenWidth;
     int32_t mScreenHeight;
+    int32_t mCorrectedDeviceClasses;
     int32_t mScreenRotation;
     int32_t mSeqID;
     int32_t mDisplayId;
@@ -394,6 +395,7 @@ class KeyDevice:public InputDevice{
 private:
     int32_t mLastDownKey;
     int32_t mRepeatCount;
+    int32_t mMetaState;   // accumulated Shift/Alt/Ctrl/Meta/Sym/Lock state, attached to every KeyEvent
 protected:
     int32_t msckey;
     KeyEvent mEvent;
