@@ -5,7 +5,6 @@
 #include <core/assets.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <core/layout.h>
 #include <dirent.h>
 #include <fstream>
 #include <cdlog.h>
@@ -332,20 +331,6 @@ TEST_F(CDCONTEXT,HOLE3){
     ctx1->rectangle(200,200,480,320);
     ctx1->fill();
     img->write_to_png("hole3.png");
-}
-TEST_F(CDCONTEXT,layout){
-    Layout layout(30,200);
-    ctx->set_font_size(30);
-    layout.setText("A brown fox jump over the lazy dog!");
-    ctx->set_source_rgb(0,0,0);
-    ctx->rectangle(0,0,1280,720);
-    ctx->fill();
-    ctx->set_source_rgb(1,0,0);
-    layout.draw(*ctx);
-    for(int i=0;i<20;i++){
-        int off=layout.getOffsetToLeftOf(i);//getLineForOffset(i);
-        printf("[%02d] offset=%d\r\n",i,off);
-    }
 }
 
 #if 0

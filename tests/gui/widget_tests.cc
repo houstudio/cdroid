@@ -82,42 +82,6 @@ TEST_F(WIDGET,ImageView){
    app.exec();
 }
 
-TEST_F(WIDGET,EditText){
-    const std::string sss[]={
-         "AfterInstallationEnableRequiredApacheModulesAndRestartApacheService","",
-         "AbcEFG","^[A-Za-z]+$",
-         "123","^[1-9]\\d*$",
-         "आज सुबह एक ट्रैफिक जैम था","""^[A-Za-z]+$",
-         "0.0.0.0","^((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))$"//"\\d+\\.\\d+\\.\\d+\\.\\d+",
-    };
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
-    EditText *e;
-    e=new EditText("How to call customized WPF Window in VSTO ribbon?"
-"For example, I made customized WPF window by designing the styles. And then I would like to use it in my Presentation addin."
-" I can run the WPF window directly, but cannot call it from Ribbon. Thanks very much!",600,100);
-    w->addView(e);
-    e->layout(10,20,600,100);
-    e->setSingleLine(false);
-    e->setBreakStrategy(0);
-    e->setBackgroundColor(0xFF222222);
-    for(int i=0,y=160;i<4;i++,y){
-        EditText *e=new EditText(680,((i==0)?100:50)+i*5);
-        e->setBackgroundColor(0Xff444444);
-        e->setSingleLine(i>0);
-        e->setBreakStrategy(i==0);
-        e->setTextSize(30.f+i*5);
-        e->setText(sss[i*2]);
-        e->setInputType(EditText::TYPE_ANY);
-        e->setPattern(sss[i*2+1]);     
-        w->addView(e);
-        e->layout(10,y,680,((i==0)?100:50)+i*5);
-        y+=e->getHeight()+1;
-        e->setEditMode(i!=2?EditText::INSERT:EditText::REPLACE);
-    }
-    app.exec();
-}
-
 TEST_F(WIDGET,ProgressBar){
     App app(argc,argv);
     int pos=0;

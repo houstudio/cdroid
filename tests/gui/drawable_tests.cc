@@ -5,6 +5,7 @@
 #include <sstream>
 #include <core/systemclock.h>
 #include <core/xmlpullparser.h>
+#include <porting/cdgraph.h>
 #include <drawable/drawableinflater.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
