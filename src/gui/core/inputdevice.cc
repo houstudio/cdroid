@@ -98,7 +98,6 @@ InputDevice::InputDevice(int32_t fdev){
     mSeqID = 0;
     mDisplayId = 0;
     mDeviceClasses= 0;
-    //mAxisFlags =0;
     mScreenRotation =0;
     mLastAction=-1;
     mLastEventTime = 0;
@@ -233,7 +232,6 @@ InputDevice::InputDevice(int32_t fdev){
             mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
         }
     }
-    mCorrectedDeviceClasses = mDeviceClasses;
     mKeyMap = nullptr;
     std::string fname=App::getInstance().getDataPath()+getName()+".kl";
     if(0==access(fname.c_str(),F_OK)){
@@ -412,7 +410,7 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
         }
 
         mEvent.initialize(getId(),getSources(),mDisplayId,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-              keyCode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
+              keyCode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMillis()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keyCode, KeyEvent::keyCodeToString(keyCode).c_str(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
@@ -433,7 +431,6 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
     mProp.id = 0;
     mVirtualKeyCode=0;
     mVirtualScanCode=0;
-    mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
     for(int i=0;i<axesRange.size();i++){
@@ -616,8 +613,6 @@ void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     mv->applyTransform(rowMajor);
     LOGD("xy=%.f,%.f",mv->getX(),mv->getY());
 #endif
-    //if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
-    //    mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
     case ABS_X:
     case ABS_Y:
@@ -656,6 +651,7 @@ void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         break;
     case ABS_MT_TOOL_TYPE:
         mProp.toolType = toMotionToolType(value);
+        break;
     default:break;
     }
 }
@@ -669,10 +665,6 @@ int32_t TouchDevice::getActionByBits(int& pointerIndex){
     pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
     if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
         pointerIndex = 0;
-    /*if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
-        if(mLastAction==MotionEvent::ACTION_UP)
-            return MotionEvent::ACTION_DOWN;
-    }*/
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
     }else if(mLastBits.count()<mCurrBits.count()){
@@ -782,20 +774,6 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         }break;
     case EV_SYN:
         if((code != SYN_REPORT) && (code != SYN_MT_REPORT))break;
-#define DISABLE_MTASST
-#ifndef DISABLE_MTASST
-    #define HASMTFLAG(f) (mAxisFlags&(1<<((f)-ABS_MT_SLOT)))
-    #define HASTRACKORSLOT (HASMTFLAG(ABS_MT_TRACKING_ID)||HASMTFLAG(ABS_MT_SLOT))
-    #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
-        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((HASMTFLAG(ABS_MT_POSITION_X)||HASMTFLAG(ABS_MT_POSITION_Y))&&(HASTRACKORSLOT==0)) ){
-            mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            LOGI("mCurrBits=%x last=%x mAxisFlags=%x/%x pos=%.f,%.f code=%d",mCurrBits.value,mLastBits.value,mAxisFlags,TRACKING_FLAG,mCoord.getX(),mCoord.getY(),code);
-            if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
-            if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
-            mTrack2Slot.put(0,0); mProp.id = 0;
-        }
-        if(code == SYN_REPORT) mAxisFlags = 0;
-#endif
 
         slot = mProp.id;
         if( (mProp.id==-1)||((mTrackID==-1)&&(mSlotID==-1)))
@@ -823,9 +801,9 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         // a KeyEvent, and the later getActionMasked()/addSample calls would
         // corrupt / crash. Guard on getType() and let it be nullptr otherwise.
         InputEvent* back = (mEvents.size() > 1) ? mEvents.back() : nullptr;
-        lastEvent = (back && back->getType() == INPUT_EVENT_TYPE_MOTION)
+        lastEvent = (back && back->getType() == InputEvent::INPUT_EVENT_TYPE_MOTION)
                     ? static_cast<MotionEvent*>(back) : nullptr;
-        pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
+        pointerCount = (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
         if(pointerCount==0)break;/*pointerCount==0 is KeyEvent!*/
         if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
             auto lastTime = lastEvent->getDownTime();
@@ -881,6 +859,12 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         mLastEventTime = SystemClock::uptimeMillis();
         mLastEventPos.set(mCoord.getX(),mCoord.getY());
         if( mLastBits.count() > mCurrBits.count() ){
+            // 抬指帧：在 erase 前也快照，避免连续抬指时 backup 停在更早的帧（F3）。
+            // 根治需 S3/S4 的 per-slot 重构（届时整套 backup 可移除）。
+            mPointerCoordsBak.clear();
+            mPointerCoordsBak.assign(mPointerCoords.begin(), mPointerCoords.begin() + pointerCount);
+            mPointerPropsBak.clear();
+            mPointerPropsBak.assign(mPointerProps.begin(), mPointerProps.begin() + pointerCount);
             // Find bits that were present in last but are gone in current
             uint32_t disappeared = mLastBits.value & (~mCurrBits.value);
             if (disappeared) {
@@ -910,8 +894,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
 
         mLastBits.value = mCurrBits.value;
         //mProp.clear();
-        if(/*(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)
-                &&*/ (mCurrBits.count()>1) && (mTypeB==false)){
+        if((mCurrBits.count()>1) && (mTypeB==false)){
             mCoord.clear();
             mCurrBits.clear();//only typeA
             mTrack2Slot.clear();
