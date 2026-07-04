@@ -467,8 +467,8 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
         mInvertY = mPrefs.getBool(section,"invertY",false);
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
     }
-    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX + 1):mScreenWidth;
-    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY + 1):mScreenHeight;
+    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
+    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
     mLastBits.clear();
     mCurrBits.clear();
     mEvent = nullptr;
