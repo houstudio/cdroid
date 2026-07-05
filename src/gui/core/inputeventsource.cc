@@ -246,6 +246,16 @@ void InputEventSource::sendEvent(InputEvent&event){
     WindowManager::getInstance().processEvent(event);
 }
 
+int32_t InputEventSource::getGlobalMetaState(){
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    int32_t global = 0;
+    for(const auto&item:mDevices){
+        const KeyDevice*kd = dynamic_cast<const KeyDevice*>(item.second.get());
+        if(kd) global |= kd->getMetaState();
+    }
+    return global;
+}
+
 void InputEventSource::recordEvent(InputEvent&inputEvent){
     std::ostringstream oss;
     const int type = inputEvent.getType();

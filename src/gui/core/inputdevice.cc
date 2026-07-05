@@ -29,6 +29,7 @@
 #include <core/tokenizer.h>
 #include <core/transform.h>
 #include <core/inputdevice.h>
+#include <core/inputeventsource.h>
 #include <core/systemclock.h>
 #include <core/virtualkeymap.h>
 #include <core/windowmanager.h>
@@ -372,6 +373,10 @@ void InputDevice::getLastEvent(int&action,nsecs_t&etime,Point*pos)const{
     *pos = mLastEventPos;
 }
 
+int32_t InputDevice::globalMetaState()const{
+    return InputEventSource::getInstance().getGlobalMetaState();
+}
+
 // keyCode → modifier meta bits contributed while the key is held (0 if not a
 // chord modifier). Mirrors Android InputReader: pressing Shift_Left sets both
 // META_SHIFT_ON and META_SHIFT_LEFT_ON, etc.
@@ -441,7 +446,10 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
             break;
         }
 
-        // Maintain accumulated modifier state and attach it to the KeyEvent.
+        // Maintain this device's accumulated modifier state, then attach the
+        // GLOBAL view (all keyboards OR'd together) to the KeyEvent — matching
+        // Android, where KeyboardInputMapper updates its own state and the
+        // InputReader re-aggregates before the event is emitted.
         // Chorded-keyboard model (see MetaKeyKeyListener): a modifier's down
         // and up events both report the key as active — down sets the bit then
         // reads, up reads then clears — so chorded characters observe a
@@ -451,13 +459,19 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
             const int32_t modMask  = modifierMetaMask(keyCode);
             const int32_t lockMask = lockMetaMask(keyCode);
             if (modMask && value != 0) {
-                mMetaState |= modMask;            // down/repeat: set
+                mMetaState |= modMask;            // down/repeat: set local before reading
             } else if (lockMask && value == 1) {
                 mMetaState ^= lockMask;           // down edge: toggle
             }
-            meta = mMetaState;                    // up still carries the key (read-before-clear)
+            // Attach the global view (Android). We OR the local snapshot so the
+            // chorded read-before-clear still holds before this device has joined
+            // InputEventSource's aggregation set (and in unit tests). In production
+            // the device is always aggregated, so global already includes mMetaState
+            // and the |mMetaState is a no-op — behaviour is identical to a plain
+            // getGlobalMetaState().
+            meta = mMetaState | globalMetaState();
             if (modMask && value == 0) {
-                mMetaState &= ~modMask;           // up: clear after snapshot
+                mMetaState &= ~modMask;           // up: clear local after reading
             }
         }
 
@@ -816,7 +830,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
                 KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),
                     (value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/, code/*KeyCode*/,0/*repeat*/,
-                    0/*metaState*/,getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
+                    globalMetaState()/*metaState*/,getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
                 LOGD("RECV KEY %d %s",code,(value?"down":"up"));
                 mEvents.push_back(keyEvent);
             }
@@ -868,7 +882,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             if(action==MotionEvent::ACTION_DOWN){
                 int keyFlags;
                 if(mVirtualScanCode){
-                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,globalMetaState()/*metaState*/,
                         getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                     mEvents.push_back(k);
                     k->recycle();
@@ -879,7 +893,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                     if((mKeyMap==nullptr)||mKeyMap->mapKey(mVirtualScanCode/*scancode*/,0,&mVirtualKeyCode/*keycode*/,(uint32_t*)&keyFlags)){
                         mVirtualKeyCode = mVirtualScanCode;/*mapKey failed or no map specified*/
                     }
-                    KeyEvent*k = KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                    KeyEvent*k = KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,globalMetaState()/*metaState*/,
                         getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                     mEvents.push_back(k);
                     k->recycle();
@@ -887,7 +901,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 }
             }
             if(mVirtualScanCode==0){
-                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount,props,coords, globalMetaState()/*metaState*/,mButtonState,
                      0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
                 LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                      mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
@@ -899,7 +913,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 mEvent->recycle();
             }
             if((action==MotionEvent::ACTION_UP)&&mVirtualScanCode){
-                KeyEvent*k=KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
+                KeyEvent*k=KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,globalMetaState()/*metaState*/,
                         getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                 mEvents.push_back(k);
                 k->recycle();
@@ -1189,7 +1203,7 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
                 LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
             }else {
-                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , mPendingAction , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , mPendingAction , 1,&mPointerProp,&mPointerCoord, globalMetaState()/*metaState*/,mButtonState,
                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
                 LOGV_IF(mPendingAction != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);

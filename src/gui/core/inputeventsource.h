@@ -64,6 +64,11 @@ public:
     int checkEvents()override;
     int handleEvents()override;
     void sendEvent(InputEvent&);
+    /*OR of every KeyDevice's local meta state. Mirrors Android
+      InputReader::getGlobalMetaState — the global modifier view attached to
+      KeyEvents/MotionEvents from any device. Safe to call from putEvent
+      (mtxEvents is recursive and already held on the input thread).*/
+    int32_t getGlobalMetaState();
 };
 }
 #endif

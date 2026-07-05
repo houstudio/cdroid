@@ -370,6 +370,9 @@ protected:
     static Preferences mPrefs;
     std::vector<InputEvent*>mEvents;
     virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
+    /*OR of every KeyDevice's meta state — the InputReader-level global view used by
+      all event producers (Android InputReader::getGlobalMetaState).*/
+    int32_t globalMetaState()const;
 public:
     InputDevice(int32_t fdev);
     virtual ~InputDevice();
@@ -404,6 +407,9 @@ protected:
 public:
     KeyDevice(int32_t fd);
     int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
+    /*this keyboard device's own accumulated modifier state (KeyboardInputMapper::mMetaState).
+      InputEventSource::getGlobalMetaState ORs these across all keyboards.*/
+    int32_t getMetaState()const{return mMetaState;}
 };
 
 static constexpr int MAX_POINTERS=16;

@@ -273,6 +273,16 @@ TEST_F(INPUTDEVICE,MTASST2){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[3]->getAction(),MotionEvent::ACTION_UP);
    ASSERT_EQ(OutEvents[3]->getX(),mts[8].value);
    ASSERT_EQ(OutEvents[3]->getY(),mts[9].value);
+
+   ASSERT_EQ(OutEvents[4]->getAction(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[4]->getX(),mts[15].value);
+   ASSERT_EQ(OutEvents[4]->getY(),mts[16].value);
+
+   ASSERT_EQ(OutEvents[5]->getAction(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[5]->getX(),mts[19].value);
+   ASSERT_EQ(OutEvents[5]->getY(),mts[20].value);
 }
 
 TEST_F(INPUTDEVICE,MTASST3){//some wrong MT device ,can working:)
@@ -326,6 +336,16 @@ TEST_F(INPUTDEVICE,MTASST3){//some wrong MT device ,can working:)
    ASSERT_EQ(OutEvents[3]->getActionMasked(),MotionEvent::ACTION_UP);
    ASSERT_EQ(OutEvents[3]->getX(),mts[8].value);
    ASSERT_EQ(OutEvents[3]->getY(),mts[9].value);
+
+   ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[4]->getX(),mts[15].value);
+   ASSERT_EQ(OutEvents[4]->getY(),mts[16].value);
+
+   ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[5]->getX(),mts[19].value);
+   ASSERT_EQ(OutEvents[5]->getY(),mts[20].value);
 }
 
 TEST_F(INPUTDEVICE,MTA){//TypeA Events
@@ -532,6 +552,54 @@ TEST_F(INPUTDEVICE,MTA2){
    };
    EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
    ASSERT_EQ(EventCount,9);
+
+   ASSERT_EQ(OutEvents[0]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[0]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[0]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[0]->getPointerId(0),POINTERID(mts[0].value,0));
+   ASSERT_EQ(OutEvents[0]->getX(0),mts[1].value);//20
+   ASSERT_EQ(OutEvents[0]->getY(0),mts[2].value);//30
+
+   ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[1]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[1]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[1]->getPointerId(0),POINTERID(mts[5].value,0));
+   ASSERT_EQ(OutEvents[1]->getX(0),mts[6].value);//22
+   ASSERT_EQ(OutEvents[1]->getY(0),mts[7].value);//32
+
+   ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[2]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[2]->getPointerId(0),POINTERID(mts[10].value,0));
+   ASSERT_EQ(OutEvents[2]->getX(0),mts[11].value);//24
+   ASSERT_EQ(OutEvents[2]->getY(0),mts[12].value);//34
+
+   ASSERT_EQ(OutEvents[3]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[3]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[3]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[3]->getPointerId(0),POINTERID(mts[15].value,0));
+   ASSERT_EQ(OutEvents[3]->getX(0),mts[16].value);//26
+   ASSERT_EQ(OutEvents[3]->getY(0),mts[17].value);//36
+
+   ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[4]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[4]->getPointerId(0),POINTERID(mts[20].value,0));
+   ASSERT_EQ(OutEvents[4]->getX(0),mts[21].value);//28
+   ASSERT_EQ(OutEvents[4]->getY(0),mts[22].value);//38
+
+   ASSERT_EQ(OutEvents[5]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[5]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[5]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[5]->getPointerId(0),POINTERID(mts[25].value,0));
+   ASSERT_EQ(OutEvents[5]->getX(0),mts[26].value);//30
+   ASSERT_EQ(OutEvents[5]->getY(0),mts[27].value);//40
+
+   ASSERT_EQ(OutEvents[6]->getActionMasked(),MotionEvent::ACTION_UP);
+   ASSERT_EQ(OutEvents[6]->getActionIndex(),0);
+   ASSERT_EQ(OutEvents[6]->getPointerCount(),1);
+   ASSERT_EQ(OutEvents[6]->getX(0),mts[26].value);//30
+   ASSERT_EQ(OutEvents[6]->getY(0),mts[27].value);//40
 
    ASSERT_EQ(OutEvents[7]->getActionMasked(),MotionEvent::ACTION_DOWN);
    ASSERT_EQ(OutEvents[7]->getX(0),mts[35].value);
