@@ -433,7 +433,16 @@ static struct{int xkey;int key;}X11KEY2CD[]={
    {XK_Insert,124},{XK_Delete,67},{XK_KP_Enter,23/*DPAD_CENTER*/},{XK_Escape,111},{XK_Return,66},{XK_KP_Space,62},{XK_BackSpace,112},{XK_Menu,82},
    {XK_q,45},{XK_w,51},{XK_e,33},{XK_r,46},{XK_t,48},{XK_y,53/*Y*/},{XK_u,49},{XK_i,37},{XK_o,43},{XK_p,44},
    {XK_a,29},{XK_s,47},{XK_d,32},{XK_f,34},{XK_g,35},{XK_h,36},{XK_j,38},{XK_k,39},{XK_l,40},
-   {XK_z,54},{XK_x,52},{XK_c,31},{XK_v,50},{XK_b,30},{XK_n,42},{XK_m,41}
+   {XK_z,54},{XK_x,52},{XK_c,31},{XK_v,50},{XK_b,30},{XK_n,42},{XK_m,41},
+   /*Modifiers MUST be forwarded so KeyDevice accumulates metaState (Shift/Ctrl/Alt/Meta/Caps)
+     via modifierMetaMask/lockMetaMask — otherwise getUnicodeChar() never sees SHIFT and
+     typing stays lowercase. Values are Android KeyEvent keycodes.*/
+   {XK_Shift_L,59/*SHIFT_LEFT*/},{XK_Shift_R,60/*SHIFT_RIGHT*/},
+   {XK_Alt_L,57/*ALT_LEFT*/},{XK_Alt_R,58/*ALT_RIGHT*/},
+   {XK_Control_L,113/*CTRL_LEFT*/},{XK_Control_R,114/*CTRL_RIGHT*/},
+   {XK_Meta_L,117/*META_LEFT*/},{XK_Meta_R,118/*META_RIGHT*/},
+   {XK_Caps_Lock,115/*CAPS_LOCK*/},
+   {XK_Tab,61/*TAB*/},{XK_space,62/*SPACE*/}
 };
 
 static void* X11EventProc(void*p) {
