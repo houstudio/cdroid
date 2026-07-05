@@ -212,6 +212,22 @@ void Drawable::setTintList(const RefPtr<ColorStateList>& tint) {
 void Drawable::setTintMode(int mode) {
 }
 
+void Drawable::setTintBlendMode(int blendMode) {
+    setTintMode(BlendMode::toPorterDuffMode(blendMode));
+}
+
+int Drawable::parseBlendMode(int value,int defaultMode){
+    switch(value){
+    case  3: return BlendMode::SRC_OVER; /* XML: src_over  */
+    case  5: return BlendMode::SRC_IN;   /* XML: src_in    */
+    case  9: return BlendMode::SRC_ATOP; /* XML: src_atop  */
+    case 14: return BlendMode::MODULATE; /* XML: multiply  (b/73224934 -> MODULATE) */
+    case 15: return BlendMode::SCREEN;   /* XML: screen    */
+    case 16: return BlendMode::PLUS;     /* XML: add       */
+    default: return defaultMode;
+    }
+}
+
 void Drawable::setSrcDensityOverride(int density){
     mSrcDensityOverride = density;
 }

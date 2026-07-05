@@ -52,4 +52,32 @@ int PorterDuff::toOperator(int tintMode){
     LOGD("TintMode %d is not support",tintMode);
     return CAIRO_OPERATOR_SOURCE;
 }
+
+int BlendMode::fromValue(int value){
+    return (value>=CLEAR && value<=LUMINOSITY) ? value : -1;
+}
+
+PorterDuff::Mode BlendMode::toPorterDuffMode(int mode){
+    switch(mode){
+    case BlendMode::CLEAR    : return PorterDuff::CLEAR;
+    case BlendMode::SRC      : return PorterDuff::SRC;
+    case BlendMode::DST      : return PorterDuff::DST;
+    case BlendMode::SRC_OVER : return PorterDuff::SRC_OVER;
+    case BlendMode::DST_OVER : return PorterDuff::DST_OVER;
+    case BlendMode::SRC_IN   : return PorterDuff::SRC_IN;
+    case BlendMode::DST_IN   : return PorterDuff::DST_IN;
+    case BlendMode::SRC_OUT  : return PorterDuff::SRC_OUT;
+    case BlendMode::DST_OUT  : return PorterDuff::DST_OUT;
+    case BlendMode::SRC_ATOP : return PorterDuff::SRC_ATOP;
+    case BlendMode::DST_ATOP : return PorterDuff::DST_ATOP;
+    case BlendMode::XOR      : return PorterDuff::XOR;
+    case BlendMode::PLUS     : return PorterDuff::ADD;
+    case BlendMode::MODULATE : return PorterDuff::MULTIPLY;
+    case BlendMode::SCREEN   : return PorterDuff::SCREEN;
+    case BlendMode::OVERLAY  : return PorterDuff::OVERLAY;
+    case BlendMode::DARKEN   : return PorterDuff::DARKEN;
+    case BlendMode::LIGHTEN  : return PorterDuff::LIGHTEN;
+    default: return PorterDuff::NOOP; /* MULTIPLY + DODGE/BURN/HARD/SOFT_LIGHT/DIFF/EXCL + HSL */
+    }
+}
 }/*endof namespace*/

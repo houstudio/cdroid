@@ -138,6 +138,11 @@ public:
      * */
     virtual void setTintList(const cdroid::RefPtr<ColorStateList>& tint);
     virtual void setTintMode(int);
+    /* API 29+ BlendMode tint API. Stub: forwards to setTintMode via
+     * BlendMode::toPorterDuffMode, so legacy-overlapping modes work today; modes
+     * with no PorterDuff equivalent stub to NOOP until the per-pixel path lands. */
+    virtual void setTintBlendMode(int blendMode);
+    static int parseBlendMode(int value,int defaultMode); /* XML attr enum -> BlendMode */
     bool setState(const std::vector<int>&state);
     const std::vector<int>& getState()const;
     bool setLevel(int level);

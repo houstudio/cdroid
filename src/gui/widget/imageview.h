@@ -119,6 +119,7 @@ public:
     void setImageTintList(const cdroid::RefPtr<ColorStateList>&tint);
     const cdroid::RefPtr<ColorStateList> getImageTintList()const;
     void setImageTintMode(int mode);
+    void setImageTintBlendMode(int blendMode); /* API29 stub: forwards to setImageTintMode */
     int getImageTintMode()const;
     void setColorFilter(int color,int mode);
     void setColorFilter(int color);

@@ -603,7 +603,11 @@ void ImageView::setImageTintMode(int tintMode){
     mDrawableTintMode = tintMode;
     mHasDrawableTintMode = true;
 
-    applyImageTint();    
+    applyImageTint();
+}
+
+void ImageView::setImageTintBlendMode(int blendMode){
+    setImageTintMode(BlendMode::toPorterDuffMode(blendMode));
 }
 
 int ImageView::getImageTintMode()const{
