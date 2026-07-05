@@ -49,6 +49,21 @@ public:
     int getMode()const;
 };
 
+/* API 29+ BlendModeColorFilter. cairo operators are W3C == Android BlendMode
+ * semantics, so apply just paints the tint color with BlendMode::toOperator —
+ * exact for all 28 modes (MODULATE approximated). Usable via Drawable/ImageView
+ * setColorFilter(), which the begin/endTintGroup path already drives. */
+class BlendModeColorFilter:public ColorFilter{
+protected:
+    int mColor;
+    int mBlendMode;
+public:
+    BlendModeColorFilter(int color,int blendMode);
+    void apply(Canvas&canvas,const Rect&)override;
+    int getColor()const;
+    int getBlendMode()const;
+};
+
 /* R' = R * colorMultiply.R + colorAdd.R
  * G' = G * colorMultiply.G + colorAdd.G
  * B' = B * colorMultiply.B + colorAdd.B

@@ -64,6 +64,26 @@ int PorterDuffColorFilter::getMode()const{
     return mMode;
 }
 
+BlendModeColorFilter::BlendModeColorFilter(int color,int blendMode):mColor(color),mBlendMode(blendMode){
+}
+
+void BlendModeColorFilter::apply(Canvas&canvas,const Rect&){
+    /* Same in-group contract as PorterDuffColorFilter: a group holding the drawable's
+     * content is the active target (DST). Paint the tint color (SRC) over it with the
+     * BlendMode's cairo operator — which is W3C-exact for BlendMode. */
+    canvas.set_operator((Cairo::Context::Operator)BlendMode::toOperator(mBlendMode));
+    canvas.set_color(mColor);
+    canvas.paint();
+}
+
+int BlendModeColorFilter::getColor()const{
+    return mColor;
+}
+
+int BlendModeColorFilter::getBlendMode()const{
+    return mBlendMode;
+}
+
 LightingColorFilter::LightingColorFilter(int mul,int add){
     mMul = mul;
     mAdd = add;

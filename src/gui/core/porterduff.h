@@ -213,6 +213,7 @@ public:
     };
     static int fromValue(int value);                    /* 0..28 valid, else -1 */
     static PorterDuff::Mode toPorterDuffMode(int mode); /* Android blendModeToPorterDuffMode */
+    static int toOperator(int mode);                    /* BlendMode -> cairo operator (W3C, 1:1 except MODULATE) */
 };
 typedef BlendMode::Mode BlendModeMode;
 
