@@ -25,8 +25,11 @@ ColorMatrixColorFilter::ColorMatrixColorFilter(const float(&v)[20]){
 }
 
 void ColorMatrixColorFilter::apply(Canvas&canvas,const Rect&rect){
-    Cairo::ImageSurface*img=dynamic_cast<Cairo::ImageSurface*>(canvas.get_target().get());
-    uint8_t *data=img->get_data();
+    /* TODO: implement per-pixel 4x5 matrix. The group is already the active target
+     * (see Drawable::begin/endTintGroup): get it via canvas.get_group_target(), cast
+     * to ImageSurface, run mCM over each ARGB pixel, mark_dirty(). ColorMatrix even
+     * has a ready transform(ImageSurface) helper. Deferred per project scope. */
+    LOGW("ColorMatrixColorFilter::apply not yet implemented");
 }
 
 PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
@@ -35,10 +38,13 @@ PorterDuffColorFilter::PorterDuffColorFilter(int color,int mode){
 }
 
 void PorterDuffColorFilter::apply(Canvas&canvas,const Rect&rect){
-    Cairo::RefPtr<Cairo::Pattern> pattern = canvas.get_source();
+    /* New contract (Drawable::endTintGroup): a group holding the drawable's content
+     * is the active target (the DST). Composite the tint color (SRC) onto it using the
+     * PorterDuff/blend operator. Option A: cairo's native operator — exact for the 12
+     * classic Porter-Duff modes + ADD; W3C-semantic (close, not bit-exact vs Skia) for
+     * MULTIPLY/SCREEN/OVERLAY/DARKEN/LIGHTEN (alpha-handling differs; see memory note). */
+    canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mMode));
     canvas.set_color(mColor);
-    canvas.mask(pattern);
-    canvas.set_operator(Cairo::Context::Operator(10));//(Cairo::Context::Operator)PorterDuff::toOperator(mMode));
     canvas.paint();
 }
 
@@ -80,41 +86,11 @@ void LightingColorFilter::setColorAdd(int add){
 }
 
 void LightingColorFilter::apply(Canvas&canvas,const Rect&rect){
-    // extract source pattern and rasterize it to an image surface if needed
-    Cairo::RefPtr<Cairo::Pattern> pat = canvas.get_source();
-    if (pat->get_type() != Cairo::Pattern::Type::SURFACE) {
-        LOGE("LightingColorFilter only supports surface pattern as source");
-        return;
-    }
-
-    // always work on an ImageSurface copy so we can access pixels
-    auto img = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32, rect.width, rect.height);
-    {
-        auto cr = Cairo::Context::create(img);
-        cr->set_source(pat);
-        cr->paint();
-    }
-
-    Color cmul(mMul);
-    Color cadd(mAdd);
-
-    // perform multiply/add by painting with appropriate operators
-    auto cr2 = Cairo::Context::create(img);
-
-    cr2->set_operator((Cairo::Context::Operator)CAIRO_OPERATOR_MULTIPLY);
-    cr2->set_source_rgba(cmul.red(), cmul.green(), cmul.blue(), cmul.alpha());
-    cr2->paint();
-
-    cr2->set_operator((Cairo::Context::Operator)CAIRO_OPERATOR_ADD);
-    cr2->set_source_rgba(cadd.red(), cadd.green(), cadd.blue(), cadd.alpha());
-    cr2->paint();
-
-    img->mark_dirty();
-
-    // replace canvas source with filtered image
-    auto new_pat = Cairo::SurfacePattern::create(img);
-    canvas.set_source(new_pat);
-    canvas.paint();
+    /* TODO: implement per-channel mul+add (a subset of ColorMatrixColorFilter). On the
+     * active group surface (canvas.get_group_target()) do R'=R*mul.R+add.R per channel.
+     * Deferred alongside ColorMatrixColorFilter; the previous operator-based body did
+     * not match the new in-group contract. */
+    LOGW("LightingColorFilter::apply not yet implemented");
 }
 
 }

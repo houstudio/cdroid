@@ -1064,12 +1064,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;
     
     canvas.save();
-    if(mTintFilter){
-        const Rect&r =mBounds;
-        canvas.rectangle(r.left,r.top,r.width,r.height);
-        canvas.clip();
-        canvas.push_group();
-    }
+    ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
     if(mFillPaint)
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
@@ -1143,11 +1138,7 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
     }
-    if(mTintFilter){
-        //canvas.set_source(canvas.pop_group());
-        canvas.pop_group_to_source();
-        mTintFilter->apply(canvas,mBounds);
-    }
+    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     canvas.restore();
 }
 

@@ -274,11 +274,7 @@ std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){
 void NinePatchDrawable::draw(Canvas&canvas){
     if(mNinePatchState->mNinePatch){
         canvas.save();
-        if(mTintFilter){
-            canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-            canvas.clip();
-            canvas.push_group();
-        }
+        ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
         if(needsMirroring()){
             const float cx=mBounds.left+mBounds.width/2.f;
             const float cy=mBounds.left+mBounds.height/2.f;
@@ -286,11 +282,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
             canvas.translate(cx,cy);
         }
         mNinePatchState->draw(canvas,mBounds,mAlpha);
-        if(mTintFilter){
-            //canvas.set_source(canvas.pop_group());
-            canvas.pop_group_to_source();
-            mTintFilter->apply(canvas,mBounds);
-        }
+        if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
         canvas.restore();
     }
 }

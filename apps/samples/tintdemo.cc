@@ -4,11 +4,10 @@
  * (red tint), via the mTintFilter path (Drawable::setTint + setTintMode) that
  * Drawable::begin/endTintGroup drives. Compare against Android.
  *
- * Note: a fully-opaque test drawable (like a solid bar) collapses several modes
- * (SRC_IN/SRC_OVER/SRC_ATOP all -> solid tint; SRC_OUT/DST_OUT/CLEAR -> blank),
- * which is the *correct* Porter-Duff result, not a bug. To visually differentiate
- * every mode, pass a drawable with transparency, e.g. an icon with transparent bg:
- *   ./tintdemo cdroid:drawable/some_icon
+ * Default drawable is a transparent magnifier icon (cdroid:mipmap/ic_search) so
+ * the alpha-dependent modes (SRC_IN shows the red icon shape, SRC_OUT its inverse,
+ * CLEAR/DST_OUT go blank, MULTIPLY/SCREEN/... recolor) are all distinguishable.
+ * Pass any drawable resource as argv[1] to swap it.
  *
  * Build: from outX64-Debug, `make` then `make tintdemo`.
  */
@@ -45,7 +44,7 @@ int main(int argc,const char*argv[]){
     const int iconSize=96, labelH=26, gap=8;
     const int cellW=iconSize+gap, cellH=iconSize+labelH+gap, cols=7;
     const int ox=16, oy=16;
-    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:mipmap/ic_search");//menuitem_checkbox_on");
+    const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:mipmap/ic_search");
 
     for(int i=0;i<N;i++){
         const int col=i%cols, row=i/cols;

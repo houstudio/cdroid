@@ -182,6 +182,30 @@ cdroid::RefPtr<PorterDuffColorFilter>Drawable::updateTintFilter(const cdroid::Re
     return tintFilter;
 }
 
+ColorFilter* Drawable::beginTintGroup(Canvas& canvas, const Rect& clipRect, ColorFilter* filter) {
+    /* mColorFilter overrides the passed-in tint filter (Android: setColorFilter beats
+     * tint). This single line is what makes ImageView/Drawable::setColorFilter work. */
+    if (mColorFilter) filter = mColorFilter.get();
+    if (!filter) return nullptr;
+    canvas.save();
+    canvas.rectangle(clipRect.left, clipRect.top, clipRect.width, clipRect.height);
+    canvas.clip();
+    canvas.push_group();
+    return filter;
+}
+
+void Drawable::endTintGroup(Canvas& canvas, const Rect& filterRect, ColorFilter* filter) {
+    /* Precondition: a group pushed by beginTintGroup is the active target holding the
+     * drawable's content. The filter transforms that content in place (PorterDuff just
+     * paints the tint color with a cairo operator — zero extra surfaces), then we pop
+     * the group and composite the result back onto the real surface. */
+    filter->apply(canvas, filterRect);
+    canvas.pop_group_to_source();
+    canvas.set_operator(Cairo::Context::Operator::OVER);
+    canvas.paint();
+    canvas.restore();
+}
+
 void Drawable::setTintList(const RefPtr<ColorStateList>& tint) {
 }
 

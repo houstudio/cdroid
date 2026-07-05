@@ -163,12 +163,9 @@ void ColorDrawable::draw(Canvas&canvas){
     LOGV("%p color=%x  bounds=%d,%d-%d,%d mTintFilter=%p",this,mColorState->mUseColor,
 	mBounds.left,mBounds.top,mBounds.width,mBounds.height,mTintFilter);
     canvas.save();
-    if((mColorState->mUseColor>>24)||mTintFilter){
+    ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
+    if((mColorState->mUseColor>>24)||tintFilter){
         canvas.set_color(mColorState->mUseColor);
-        if(mTintFilter)
-            canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mTintFilter->getMode()));
-        else if(mTintFilter&&(mColorState->mTintMode!=PorterDuff::Mode::NOOP))
-            canvas.set_operator((Cairo::Context::Operator)PorterDuff::toOperator(mColorState->mTintMode));
         /*HANDLE handler = canvas.getHandler();
         if(handler&&(mBounds.width==1024||mBounds.width==600)){
             GFXFillRect(handler,nullptr,mColorState->mUseColor);
@@ -177,8 +174,7 @@ void ColorDrawable::draw(Canvas&canvas){
             canvas.fill();
         }
     }
-    if(mTintFilter)
-        mTintFilter->apply(canvas,mBounds);
+    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     canvas.restore();
 }
 
