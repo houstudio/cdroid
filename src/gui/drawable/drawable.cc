@@ -155,7 +155,7 @@ void Drawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&cf) {
 }
 
 const cdroid::RefPtr<ColorFilter>Drawable::getColorFilter()const{
-    return nullptr;
+    return mColorFilter;
 }
 
 void Drawable::clearColorFilter(){

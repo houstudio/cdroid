@@ -29,7 +29,7 @@ PorterDuff::Mode PorterDuff::intToMode(int val) {
 
 int PorterDuff::toOperator(int tintMode){
     switch(tintMode){
-    case PorterDuff::NOOP    :/*=-1*/ return CAIRO_OPERATOR_CLEAR;
+    case PorterDuff::NOOP    :/*=-1*/ return CAIRO_OPERATOR_OVER; /* no-op: draw normally, do not clear */
     case PorterDuff::CLEAR   :/*= 0*/ return CAIRO_OPERATOR_CLEAR;    /*0*/
     case PorterDuff::SRC     :/*= 1*/ return CAIRO_OPERATOR_SOURCE;   /*1*/
     case PorterDuff::DST     :/*= 2*/ return CAIRO_OPERATOR_DEST;     /*6*/
