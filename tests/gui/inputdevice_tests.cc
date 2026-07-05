@@ -514,13 +514,13 @@ TEST_F(INPUTDEVICE,MTA2){
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//15 POINTER_UP finger 2(trackid 3) is up
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//15
       {EV_ABS,ABS_MT_POSITION_X ,26},
       {EV_ABS,ABS_MT_POSITION_Y ,36},
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},
 
-      {EV_ABS,ABS_MT_TRACKING_ID,1},//20 POINTER_UP finger 1(tracckid 1) isup
+      {EV_ABS,ABS_MT_TRACKING_ID,1},//20
       {EV_ABS,ABS_MT_POSITION_X ,28},
       {EV_ABS,ABS_MT_POSITION_Y ,38},
       {EV_SYN,SYN_MT_REPORT,0},
@@ -533,7 +533,7 @@ TEST_F(INPUTDEVICE,MTA2){
       {EV_SYN,SYN_REPORT,0},
 
       {EV_ABS,ABS_MT_TRACKING_ID,-1},//30
-      {EV_KEY,BTN_TOUCH,0},//20
+      {EV_KEY,BTN_TOUCH,0},//31
       {EV_SYN,SYN_MT_REPORT,0},
       {EV_SYN,SYN_REPORT,0},
 
@@ -1277,13 +1277,13 @@ TEST_F(INPUTDEVICE, MTB6) {
       
       // 第3次移动
       {EV_ABS, ABS_MT_SLOT, 0},               // 18 - 切换到触点1
-      {EV_ABS, ABS_MT_POSITION_X, 50},        // 19 - 触点2 X: 50
-      {EV_ABS, ABS_MT_POSITION_Y, 500},       // 20 - 触点2 Y: 500
+      {EV_ABS, ABS_MT_POSITION_X, 50},        // 19 - 触点1 X: 50
+      {EV_ABS, ABS_MT_POSITION_Y, 500},       // 20 - 触点1 Y: 500
       {EV_SYN, SYN_REPORT, 0},                // 21 - 同步报告
       
       // 第4次移动
-      {EV_ABS, ABS_MT_POSITION_X, 60},        // 22 - 触点2 X: 60
-      {EV_ABS, ABS_MT_POSITION_Y, 600},       // 23 - 触点2 Y: 600
+      {EV_ABS, ABS_MT_POSITION_X, 60},        // 22 - 触点1 X: 60
+      {EV_ABS, ABS_MT_POSITION_Y, 600},       // 23 - 触点1 Y: 600
       {EV_SYN, SYN_REPORT, 0},                // 24 - 同步报告
       
       // 第5次移动
