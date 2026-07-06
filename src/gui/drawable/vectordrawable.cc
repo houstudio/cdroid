@@ -344,9 +344,9 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = atts.extractThemeAttrs();
 
-    const int tintMode = atts.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode::SRC_IN);
+    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = atts.getColorStateList("tint");

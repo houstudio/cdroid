@@ -548,7 +548,7 @@ private:
     Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
     bool mIsRtlCompatibilityMode;
     bool mOverride;
-    bool mHasTint, mHasTintMode;
+    bool mHasTint;
     cdroid::RefPtr<ColorStateList> mTintList;
     int mTintMode;
     int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;

@@ -328,9 +328,9 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
     state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
     state->mBaseAlpha = a.getFloat("alpha", state->mBaseAlpha);
 
-    const int tintMode = a.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode.SRC_IN);
+    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = a.getColorStateList("tint");

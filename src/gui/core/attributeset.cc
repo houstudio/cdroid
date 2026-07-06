@@ -18,6 +18,7 @@
 #include <core/attributeset.h>
 #include <widget/linearlayout.h>
 #include <core/windowmanager.h>
+#include <core/porterduff.h>
 #include <core/xmlpullparser.h>
 #include <core/color.h>
 #include <vector>
@@ -346,7 +347,20 @@ static std::unordered_map<std::string,int> tintModes={
 };
 
 int AttributeSet::getTintMode(const std::string&key,int def)const{
-    return def;
+    /* android:tintMode enum -> PorterDuff::Mode. multiply maps to MULTIPLY per
+     * Android b/73224934 (same as Drawable::parseTintMode). Matches the 6 enum
+     * values declared in attrs.xml (src_over/src_in/src_atop/multiply/screen/add).
+     * Delegates to getInt() so absent-value and flag-style ("a|b") handling stay
+     * consistent with every other enum attribute. */
+    static const std::unordered_map<std::string,int> kvs={
+        {"src_over",PorterDuff::Mode::SRC_OVER},
+        {"src_in",  PorterDuff::Mode::SRC_IN},
+        {"src_atop",PorterDuff::Mode::SRC_ATOP},
+        {"multiply",PorterDuff::Mode::MULTIPLY},
+        {"screen",  PorterDuff::Mode::SCREEN},
+        {"add",     PorterDuff::Mode::ADD},
+    };
+    return getInt(key,kvs,def);
 }
 
 int AttributeSet::getDimension(const std::string&key,int def)const{

@@ -129,6 +129,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
         mDrawables->mTintList = attrs.getColorStateList("drawableTint");
+        mDrawables->mTintMode = attrs.getTintMode("drawableTintMode",PorterDuff::NOOP);
     }
     applyCompoundDrawableTint();
     setRelativeDrawablesIfNeeded(start, end);
@@ -3703,12 +3704,12 @@ const cdroid::RefPtr<ColorStateList> TextView::getLinkTextColors()const{
 
 void TextView::applyCompoundDrawableTint(){
     if (mDrawables == nullptr) return;
-    if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mHasTintMode==false) )return ;
+    if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mTintMode==PorterDuff::NOOP) )return ;
 
     const auto tintList = mDrawables->mTintList;
     const int tintMode = mDrawables->mTintMode;
     const bool hasTint = (mDrawables->mTintList!=nullptr);
-    const bool hasTintMode = mDrawables->mHasTintMode;
+    const bool hasTintMode = mDrawables->mTintMode != PorterDuff::NOOP;
     const std::vector<int>state = getDrawableState();
 
     for (int i=0;i<4;i++){
@@ -3940,7 +3941,6 @@ void TextView::setCompoundDrawableTintMode(int tintMode){
         mDrawables = new Drawables(getContext());
     }
     mDrawables->mTintMode = tintMode;
-    mDrawables->mHasTintMode = true;
 
     applyCompoundDrawableTint();
 }
@@ -4936,7 +4936,8 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
 
 TextView::Drawables::Drawables(Context*ctx){
     mIsRtlCompatibilityMode= false;
-    mHasTintMode= mOverride = false;
+    mOverride = false;
+    mTintMode = PorterDuff::NOOP;
     mTintList= nullptr;
     mShowing[0] = mShowing[1] = nullptr;
     mShowing[2] = mShowing[3] = nullptr;
@@ -4959,7 +4960,7 @@ TextView::Drawables::~Drawables(){
 }
 
 bool TextView::Drawables::hasMetadata()const{
-    return (mDrawablePadding != 0) || mHasTintMode || (mTintList!=nullptr);
+    return (mDrawablePadding != 0) || (mTintMode != PorterDuff::NOOP) || (mTintList!=nullptr);
 }
 
 bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){

@@ -37,9 +37,7 @@ private:
     bool mColorMod;
     bool mHasColorFilter;
     bool mHasDrawableTint;
-    bool mHasDrawableTintMode;
     bool mBaselineAlignBottom;
-    int mDrawableBlendMode;
     int mBaseline;
     int mAlpha;
     int mViewAlphaScale;

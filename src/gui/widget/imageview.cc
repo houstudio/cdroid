@@ -40,10 +40,11 @@ ImageView::ImageView(Context*ctx,const AttributeSet& attrs)
     Drawable*d = attrs.getDrawable("src");
     if(d)setImageDrawable(d);
     mDrawableTintList = attrs.getColorStateList("tint");
-    if(mDrawableTintList){
-        mDrawableBlendMode =attrs.getTintMode("tintMode",PorterDuff::SRC_ATOP);
-    }
     mHasDrawableTint = mDrawableTintList!=nullptr;
+    if(mDrawableTintList){
+        /* ImageView's default tint mode is SRC_ATOP once a tint is applied. */
+        mDrawableTintMode = attrs.getTintMode("tintMode",PorterDuff::SRC_ATOP);
+    }
     setMaxWidth (attrs.getDimensionPixelSize("maxWidth" ,INT_MAX));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight",INT_MAX));
     setImageAlpha(attrs.getInt("alpha",255));
@@ -65,7 +66,6 @@ void ImageView::initImageView(){
     mColorMod = false;
     mHasColorFilter = false;
     mHasDrawableTint= false;
-    mHasDrawableTintMode = false;
     mBaselineAlignBottom = false;
     mBaseline = -1;
     mAlpha = 255;
@@ -84,8 +84,7 @@ void ImageView::initImageView(){
     mMaxWidth = mMaxHeight = INT_MAX;
     mDrawableTintList = nullptr;
     mColorFilter = nullptr;
-    mDrawableTintMode = -1;
-    mDrawableBlendMode= -1;
+    mDrawableTintMode = PorterDuff::NOOP;
     mRadii[0] = mRadii[1] = 0;
     mRadii[2] = mRadii[3] = 0;
 }
@@ -601,7 +600,6 @@ const cdroid::RefPtr<ColorStateList> ImageView::getImageTintList()const{
 
 void ImageView::setImageTintMode(int tintMode){
     mDrawableTintMode = tintMode;
-    mHasDrawableTintMode = true;
 
     applyImageTint();
 }
@@ -718,14 +716,14 @@ void ImageView::onDetachedFromWindow() {
 }
 
 void ImageView::applyImageTint() {
-    if ((mDrawable != nullptr) && (mHasDrawableTint || mHasDrawableTintMode)) {
+    if ((mDrawable != nullptr) && (mHasDrawableTint || mDrawableTintMode != PorterDuff::NOOP)) {
         mDrawable = mDrawable->mutate();
 
         if (mHasDrawableTint) {
             mDrawable->setTintList(mDrawableTintList);
         }
 
-        if (mHasDrawableTintMode) {
+        if (mDrawableTintMode != PorterDuff::NOOP) {
             mDrawable->setTintMode(mDrawableTintMode);
         }
 

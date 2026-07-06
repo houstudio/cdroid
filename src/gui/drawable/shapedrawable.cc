@@ -274,9 +274,9 @@ void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
     state->mIntrinsicWidth = (int) a.getDimension("width", state->mIntrinsicWidth);
     state->mIntrinsicHeight = (int) a.getDimension("height", state->mIntrinsicHeight);
 
-    const int tintMode = a.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
+    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = a.getColorStateList("tint");

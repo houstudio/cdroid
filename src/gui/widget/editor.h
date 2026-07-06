@@ -59,6 +59,37 @@ private:
     class InsertionPointCursorController;
     class TextViewPositionListener;
 
+    Drawable* mDrawableForCursor = nullptr;
+    Drawable* mSelectHandleLeft = nullptr;
+    Drawable* mSelectHandleRight = nullptr;
+    Drawable* mSelectHandleCenter = nullptr;
+    TextView* mTextView;
+
+    Runnable mBlink;
+    bool mBlinkCancelled = false;
+    bool mCursorVisible = true;
+    bool mIgnoreActionUpEvent = false;
+    bool mRenderCursorRegardlessTiming = false;
+    bool mFrozenWithFocus = false;
+    bool mCreatedWithASelection = false;
+    bool mTouchFocusSelected = false;
+    bool mSelectionMoved = false;
+
+    bool mInsertionControllerEnabled = false;
+    bool mSelectionControllerEnabled = false;
+
+    int64_t mShowCursor = 0;
+    Rect mTempRect;
+    int  mBatchEditNesting = 0;
+
+    int  mInputType = 0;   // Android: Editor field (EditorInfo.TYPE_NULL == 0)
+    int  mLastButtonState = 0;
+    int  mLastTouchOffset = 0;
+    int  mTapCount = 0;
+    int64_t mLastUpTime = 0;
+    float mLastUpX = -1.f;
+    float mLastUpY = -1.f;
+private:
     Spannable* editable() const;
     int insertPosition();
 
@@ -69,42 +100,9 @@ private:
     bool isCursorVisible() const;
     void beginBatchEdit();
     void endBatchEdit();
-
-    Drawable* mDrawableForCursor = nullptr;
-    Drawable* mSelectHandleLeft = nullptr;
-    Drawable* mSelectHandleRight = nullptr;
-    Drawable* mSelectHandleCenter = nullptr;
-    TextView* mTextView;
-
-    Runnable mBlink;
-    bool mBlinkCancelled = false;
-    bool mCursorVisible = true;
-    int64_t mShowCursor = 0;
-    bool mRenderCursorRegardlessTiming = false;
-    Rect mTempRect;
-    bool mIgnoreActionUpEvent = false;
-    int  mBatchEditNesting = 0;
-
     bool shouldFilterOutTouchEvent(MotionEvent& event) const;
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
-
-    int  mInputType = 0;   // Android: Editor field (EditorInfo.TYPE_NULL == 0)
-    int  mLastButtonState = 0;
-    int  mLastTouchOffset = 0;
-    int  mTapCount = 0;
-    int64_t mLastUpTime = 0;
-    float mLastUpX = -1.f;
-    float mLastUpY = -1.f;
-
-    bool mFrozenWithFocus = false;
-    bool mCreatedWithASelection = false;
-    bool mTouchFocusSelected = false;
-    bool mSelectionMoved = false;
-
-    bool mInsertionControllerEnabled = false;
-    bool mSelectionControllerEnabled = false;
-
 public:
     explicit Editor(TextView* textView);
     ~Editor();

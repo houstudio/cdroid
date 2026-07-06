@@ -263,12 +263,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mTintList = csl;
         mBackgroundTint->mHasTintList = true;
     }
-    const std::unordered_map<std::string,int>tintModes={
-           {"add",PorterDuff::Mode::ADD},       {"multiply",PorterDuff::Mode::MULTIPLY},
-           {"screen",PorterDuff::Mode::SCREEN}, {"src_atop",PorterDuff::Mode::SRC_ATOP},
-           {"src_in",PorterDuff::Mode::SRC_IN}, {"src_over",PorterDuff::Mode::SRC_OVER} };
-
-    const int bgTintMode = Drawable::parseTintMode(attrs.getInt("backgroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    const int bgTintMode = attrs.getTintMode("backgroundTintMode",PorterDuff::Mode::NOOP);
     if( bgTintMode != PorterDuff::Mode::NOOP ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
         mBackgroundTint->mTintMode = bgTintMode;
@@ -282,7 +277,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setOutlineProviderFromAttribute(providerInt);
 
     setForeground(attrs.getDrawable("foreground"));
-    const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    const int fgTintMode = attrs.getTintMode("foregroundTintMode",PorterDuff::Mode::NOOP);
     setForegroundTintMode(fgTintMode);
     mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
 

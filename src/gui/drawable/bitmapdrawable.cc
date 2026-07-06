@@ -484,6 +484,10 @@ void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     const int tileMode=atts.getInt("tileMode",kvs,-1);
     mBitmapState->mDither =atts.getBoolean("dither",true);
     mBitmapState->mTint = atts.getColorStateList("tint");
+    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        mBitmapState->mTintMode = tintMode;
+    }
     mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
     mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
     mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);
