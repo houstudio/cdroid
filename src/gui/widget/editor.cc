@@ -477,7 +477,7 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         mLastTouchOffset = offset;
 
         const int64_t now = (int64_t)event.getEventTime();
-        const int64_t timeoutUs = (int64_t)ViewConfiguration::getDoubleTapTimeout() * 1000LL;
+        const int64_t timeoutUs = (int64_t)ViewConfiguration::getDoubleTapTimeout();
         const float dx = x - mLastUpX, dy = y - mLastUpY;
         const float slop = (float)ViewConfiguration::getDoubleTapSlop();
         const bool inMultiTapWindow = mLastUpTime != 0
@@ -485,7 +485,6 @@ bool Editor::onTouchEvent(MotionEvent& event) {
                 && (dx * dx + dy * dy) <= slop * slop;
         mTapCount = inMultiTapWindow ? mTapCount + 1 : 1;
         if (mTapCount > 3) mTapCount = 1;
-
         if (mTapCount == 2) {
             selectCurrentWord();
         } else if (mTapCount >= 3) {

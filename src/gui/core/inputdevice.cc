@@ -1020,7 +1020,7 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
                 if(mVirtualScanCode==0){
                     mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount, outProps, outCoords, globalMetaState(),mButtonState,
                          0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
-                    LOGV_IF(action != MotionEvent::ACTION_MOVE||1,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+                    LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
                          outCoords[0].getX(),outCoords[0].getY(),printEvent(mEvent).c_str());
                     mEvent->setActionButton(mActionButton);
                     mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));

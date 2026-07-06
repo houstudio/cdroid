@@ -44,6 +44,7 @@ class InputMethodManager;
 class TextView : public View{
     friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
+    static constexpr int NO_POINTER_ID = -1;
     static constexpr int DEFAULT_TYPEFACE = -1;
     static constexpr int SANS = 1;
     static constexpr int SERIF= 2;
@@ -116,8 +117,11 @@ private:
     bool mShowSoftInputOnFocus = true;
     bool mSelectAllOnFocus = false;   // Android: TextView field (was misplaced on Editor)
     bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
+    bool mIsPrimePointerFromHandleView=false;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
+    int mLastInputSource=InputDevice::SOURCE_TOUCHSCREEN;
+    int mPrimePointerId=NO_POINTER_ID;
     int mFontWeightAdjustment;
     int mAutoLinkMask;
     int mSelectionStart;
@@ -511,6 +515,7 @@ public:
     void removeTextChangedListener(const TextWatcher& watcher);
     const TextDirectionHeuristic*getTextDirectionHeuristic()const;
     void onResolveDrawables(int layoutDirection)override;
+    bool isFromPrimePointer(MotionEvent& event, bool fromHandleView);
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;

@@ -3266,17 +3266,38 @@ int TextView::doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent) {
             ? KEY_EVENT_HANDLED : KEY_EVENT_NOT_HANDLED;
 }
 
+bool TextView::isFromPrimePointer(MotionEvent& event, bool fromHandleView) {
+    bool res = true;
+    if (mPrimePointerId == NO_POINTER_ID)  {
+        mPrimePointerId = event.getPointerId(0);
+        mIsPrimePointerFromHandleView = fromHandleView;
+    } else if (mPrimePointerId != event.getPointerId(0)) {
+        res = mIsPrimePointerFromHandleView && fromHandleView;
+    }
+    if (event.getActionMasked() == MotionEvent::ACTION_UP
+        || event.getActionMasked() == MotionEvent::ACTION_CANCEL) {
+        mPrimePointerId = -1;
+    }
+    return res;
+}
+
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
     const bool superResult = View::onTouchEvent(event);
+    mLastInputSource = event.getSource();
     if (mEditor) {
-        if (action == MotionEvent::ACTION_UP) {
-            // Only record the tap after the UI has had a chance to process the
-            // touch finish. Android calls Editor.onTouchUpEvent after the tap
-            // is considered finished by TextView.
-        } else {
-            mEditor->onTouchEvent(event);
+        if(!isFromPrimePointer(event, false)){
+            return true;
         }
+        mEditor->onTouchEvent(event);
+        /*if (mEditor->mInsertionPointCursorController != nullptr
+                && mEditor->mInsertionPointCursorController->isCursorBeingModified()) {
+            return true;
+        }
+        if (mEditor->mSelectionModifierCursorController != nullptr
+                && mEditor->mSelectionModifierCursorController->isDragAcceleratorActive()) {
+            return true;
+        }*/
     }
 
     bool handled = false;

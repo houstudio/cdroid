@@ -34,6 +34,14 @@ TestString testStrings[]={
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       InputType::TYPE_CLASS_NUMBER
+   },
+   {
+       "zhhou@sanboen.com",
+       true,
+       Layout::ELLIPSIS_NONE/*0*/,
+       View::TEXT_ALIGNMENT_INHERIT/*0*/,
+       Gravity::NO_GRAVITY/*0*/,
+       InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
    }
 };
 
@@ -53,6 +61,7 @@ int main(int argc,const char*argv[]){
         EditText*edt=new EditText(ts->text,0,0);
         edt->setTextColor(i?0xffff0000:0xFF44FFaa);
         edt->setFocusable(true);
+        edt->setClickable(true);
         edt->setSingleLine(ts->singleline);
         edt->setTextAlignment(ts->txtalignment);
         edt->setGravity(ts->gravity);
