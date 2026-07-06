@@ -27,22 +27,22 @@ namespace cdroid{
 class ProgressTintInfo{
 public:
     cdroid::RefPtr<ColorStateList> mIndeterminateTintList;
-    PorterDuffMode mIndeterminateTintMode;
+    int mIndeterminateTintMode;
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
     cdroid::RefPtr<ColorStateList> mProgressTintList;
-    PorterDuffMode mProgressTintMode;
+    int mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
     cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
-    PorterDuffMode mProgressBackgroundTintMode;
+    int mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
     cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
-    PorterDuffMode mSecondaryProgressTintMode;
+    int mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
 public:
