@@ -247,9 +247,6 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
         /* getTintMode decodes the 6-value tintMode enum straight to a mode value
          * (valid as BlendMode — PorterDuff and BlendMode coincide for these 6). */
         mItemIconBlendMode = attrs.getTintMode("iconTintMode", -1);
-    } else {
-        // Reset to null so that it's not carried over to the next item
-        mItemIconBlendMode = -1;
     }
     if (attrs.hasAttribute("iconTint")) {
         itemIconTintList = attrs.getColorStateList("iconTint");

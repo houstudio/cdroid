@@ -409,18 +409,23 @@ void TextView::setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>&
 int TextView::getAutoSizeTextType() const{
     return mAutoSizeTextType;
 }
+
 int TextView::getAutoSizeStepGranularity() const{
     return std::round(mAutoSizeStepGranularityInPx);
 }
+
 int TextView::getAutoSizeMinTextSize() const{
     return std::round(mAutoSizeMinTextSizeInPx);
 }
+
 int TextView::getAutoSizeMaxTextSize() const{
     return std::round(mAutoSizeMaxTextSizeInPx);
 }
+
 std::vector<int> TextView::getAutoSizeTextAvailableSizes() const{
     return mAutoSizeTextSizesInPx;
 }
+
 bool TextView::setupAutoSizeUniformPresetSizesConfiguration() {
     const int sizesLength = mAutoSizeTextSizesInPx.size();
     mHasPresetAutoSizeValues = sizesLength > 0;
@@ -432,6 +437,7 @@ bool TextView::setupAutoSizeUniformPresetSizesConfiguration() {
     }
     return mHasPresetAutoSizeValues;
 }
+
 void TextView::validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
          float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx){
     // First validate.
@@ -455,6 +461,7 @@ void TextView::validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSize
     mAutoSizeStepGranularityInPx = autoSizeStepGranularityInPx;
     mHasPresetAutoSizeValues = false;
 }
+
 void TextView::clearAutoSizeConfiguration() {
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
     mAutoSizeMinTextSizeInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
@@ -577,27 +584,31 @@ void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
     }
 }
 
+InputMethodManager*TextView::getInputMethodManager(){
+    return InputMethodManager::peekInstance();
+}
+
 void TextView::setEnabled(bool _enabled) {
     if (_enabled == isEnabled()) {
         return;
     }
-    /*if (!_enabled) {
+    if (!_enabled) {
         // Hide the soft input if the currently active TextView is disabled
-        InputMethodManager imm = getInputMethodManager();
-        if (imm != nullptr && imm.isActive(this)) {
-            imm.hideSoftInputFromWindow(getWindowToken(), 0);
-        }
-    }*/
+        /*InputMethodManager* imm = getInputMethodManager();
+        if (imm != nullptr && imm->isActive(this)) {
+            imm->hideSoftInputFromWindow(getWindowToken(), 0);
+        }*/
+    }
     View::setEnabled(_enabled);
     if (mEditor) {
         mEditor->invalidateTextDisplayList();
         mEditor->prepareCursorControllers();
         mEditor->makeBlink();
     }
-    /*if (_enabled) {
+    if (_enabled) {
         // Make sure IME is updated with current editor info.
-        InputMethodManager imm = getInputMethodManager();
-        if (imm != nullptr) imm->restartInput(this);
+        InputMethodManager* imm = getInputMethodManager();
+        //if (imm != nullptr) imm->restartInput(this);
     }
 
     // Will change text color
@@ -607,7 +618,7 @@ void TextView::setEnabled(bool _enabled) {
 
         // start or stop the cursor blinking as appropriate
         mEditor->makeBlink();
-    }*/
+    }
 }
 
 void TextView::setTypeface(Typeface* tf,int style){
@@ -1147,27 +1158,23 @@ void TextView::setText(CharSequence* txt) {
     setText(txt,mBufferType);
 }
 
-void TextView::append(CharSequence* text){
-    append(text,0,text->length());
+void TextView::append(const CharSequence& text){
+    append(text,0,text.length());
 }
 
-void TextView::append(CharSequence* text, int start, int end){
-#if 0
-    if (!(mText instanceof Editable)) {
+void TextView::append(const CharSequence& text, int start, int end){
+    if (dynamic_cast<Editable*>(mText)!=nullptr) {
         setText(mText, BufferType::EDITABLE);
     }
-
-    ((Editable*) mText)->append(text, start, end);
-
-    if (mAutoLinkMask != 0) {
+    dynamic_cast<Editable*>(mText)->append(text, start, end);
+    /*if (mAutoLinkMask != 0) {
         bool linksWereAdded = Linkify.addLinks(mSpannable, mAutoLinkMask);
         // Do not change the movement method for text that support text selection as it
         // would prevent an arbitrary cursor displacement.
         if (linksWereAdded && mLinksClickable && !textCanBeSelected()) {
             setMovementMethod(LinkMovementMethod.getInstance());
         }
-    }
-#endif
+    }*/
 }
 
 void TextView::setText(const std::string&txt){

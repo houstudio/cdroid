@@ -40,6 +40,7 @@ class MovementMethod;
 class InputFilter;
 class InputConnection;
 class EditorInfo;
+class InputMethodManager;
 class TextView : public View{
     friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
@@ -173,6 +174,7 @@ private:
     static bool isMultilineInputType(int type);
 
     void initView();
+    InputMethodManager* getInputMethodManager();
     void setTextInternal(CharSequence* text);
     void setHintInternal(CharSequence* hint);
     bool setupAutoSizeUniformPresetSizesConfiguration();
@@ -313,8 +315,8 @@ public:
     virtual void setText(CharSequence* txt);
     virtual void setText(CharSequence* text, BufferType type);
     void setText(const std::vector<char16_t>&text, int start, int len);
-    void append(CharSequence* text);
-    void append(CharSequence* text, int start, int end);
+    void append(const CharSequence& text);
+    void append(const CharSequence& text, int start, int end);
     virtual CharSequence& getText();
     int length()const;
     CharSequence* getTransformed()const;
