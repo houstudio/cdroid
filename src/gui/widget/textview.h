@@ -51,6 +51,7 @@ private:
     static constexpr int MONOSPACE = 3;
     static constexpr int VERY_WIDE = 1024 * 1024;
     static constexpr int CHANGE_WATCHER_PRIORITY = 100;
+    static constexpr int OFFSET_MAPPING_SPAN_PRIORITY = 200;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
     static constexpr int KEY_EVENT_NOT_HANDLED = 0;
     static constexpr int KEY_EVENT_HANDLED = -1;
@@ -269,12 +270,6 @@ protected:
     virtual void onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
     void updateAfterEdit();
-    // Attach this TextView's ChangeWatcher (plus the transformation/movement
-    // spans) to an editable Spannable buffer — the span-setup block Android does
-    // inline in TextView.setText. Factored out so setEditable() (which wraps a
-    // non-editable buffer on the fly) attaches the same watchers; without it,
-    // edits mutate the buffer but never notify this view, so no refresh.
-    void addChangeWatcher(Spannable& sp);
     CharSequence* removeSuggestionSpans(CharSequence* text);
     void handleTextChanged(CharSequence& buffer, int start, int before, int after);
     void onAttachedToWindow();

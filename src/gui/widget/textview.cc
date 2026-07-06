@@ -1271,7 +1271,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     }
 
     PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
-    if (type == BufferType::EDITABLE /*|| getKeyListener() != nullptr*/|| needEditableForNotification) {
+    if ( (type == BufferType::EDITABLE) || (getKeyListener() != nullptr)|| needEditableForNotification) {
         createEditorIfNeeded();
         // TODO(editor): mEditor->forgetUndoRedo(); -- deferred: needs undo/redo stack.
         // Wrap the buffer in an Editable (Android's mEditableFactory.newEditable) so
@@ -1352,9 +1352,40 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     }
 
     const int textLength = text->length();
-
+    const bool isOffsetMapping = dynamic_cast<OffsetMapping*>(mTransformed);
     if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
-        addChangeWatcher(*dynamic_cast<Spannable*>(text));
+        Spannable* sp = dynamic_cast<Spannable*>(text);
+        // Remove any ChangeWatchers that might have come from other TextViews.
+        auto watchers = sp->getSpans(0, sp->length(), make_span_filter<ChangeWatcher>());
+        const int count = watchers.size();
+        for (int i = 0; i < count; i++) {
+            sp->removeSpan(watchers[i]);
+        }
+
+        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
+
+        sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
+                | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
+
+        LOGD("TODO  mEditor->addSpanWatchers");
+        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+
+        if (mTransformation != nullptr) {
+            const int priority = isOffsetMapping ? OFFSET_MAPPING_SPAN_PRIORITY : 0;
+            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
+                    | (priority << Spanned::SPAN_PRIORITY_SHIFT));
+        }
+
+        if (mMovement != nullptr) {
+            mMovement->initialize(*this, *sp);//(Spannable*) text);
+
+            /*
+             * Initializing the movement method will have set the
+             * selection, so reset mSelectionMoved to keep that from
+             * interfering with the normal on-focus selection-setting.
+             */
+            if (mEditor != nullptr) mEditor->mSelectionMoved = false;
+        }
     }
     if (mLayout != nullptr) {
         checkForRelayout();
@@ -1381,14 +1412,18 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     sendOnTextChanged(*text, 0, oldlen, textLength);
     onTextChanged(*text, 0, oldlen, textLength);
 
+    mHideHint = false;
     //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
     if (needEditableForNotification) {
         sendAfterTextChanged(*dynamic_cast<Editable*>(text));
     } else {
         //notifyListeningManagersAfterTextChanged();
     }
-    //SelectionModifierCursorController depends on textCanBeSelected, which depends on text
-    if (mEditor != nullptr) mEditor->prepareCursorControllers();
+    if (mEditor != nullptr) {
+        //SelectionModifierCursorController depends on textCanBeSelected, which depends on text
+        mEditor->prepareCursorControllers();
+        //mEditor->maybeFireScheduledRestartInputForSetText();
+    }
 }
 
 CharSequence& TextView::getText(){
@@ -1958,36 +1993,6 @@ void TextView::updateAfterEdit() {
     }
 }
 
-// The span-setup block Android does inline in TextView.setText: attach this
-// view's ChangeWatcher (and transformation/movement spans) to an editable
-// Spannable buffer. Shared by setText() and setEditable() so that every editable
-// buffer is observed — otherwise edits mutate the buffer but the host TextView is
-// never notified (handleTextChanged never runs → no relayout → no refresh).
-void TextView::addChangeWatcher(Spannable& sp) {
-    const int textLength = sp.length();
-    // Remove any ChangeWatchers that might have come from other TextViews.
-    auto watchers = sp.getSpans(0, textLength, make_span_filter<ChangeWatcher>());
-    const int count = (int)watchers.size();
-    for (int i = 0; i < count; i++) {
-        sp.removeSpan(watchers[i]);
-    }
-
-    if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
-
-    sp.setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
-            | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
-
-    // mEditor->addSpanWatchers(sp) deferred: attaches Editor's SpanController
-    // (easy-delete/spelling) + keylistener span (suggestions/handles pass).
-    if (mTransformation != nullptr) {
-        sp.setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
-    }
-    if (mMovement != nullptr) {
-        mMovement->initialize(*this, sp);
-        if (mEditor != nullptr) mEditor->mSelectionMoved = false;
-    }
-}
-
 void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
     // Android gates updateAfterEdit() on the Editor InputMethodState's batch-edit
     // nesting, deferring the relayout until endBatchEdit. CDROID's endBatchEdit is
@@ -2519,7 +2524,7 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
                     || alignment == Layout::Alignment::ALIGN_OPPOSITE);
     int oldDir = 0;
     if (testDirChange) oldDir = mLayout->getParagraphDirection(0);
-    bool shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;// && getKeyListener() == nullptr;
+    bool shouldEllipsize = (mEllipsize != TextUtils::TruncateAt::NONE) && (getKeyListener() == nullptr);
     const bool switchEllipsize = (mEllipsize == TextUtils::TruncateAt::MARQUEE)
             && (mMarqueeFadeMode != MARQUEE_FADE_NORMAL);
     TextUtils::TruncateAt effectiveEllipsize = mEllipsize;
@@ -2643,7 +2648,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
                 .setBreakStrategy(mBreakStrategy)
                 .setHyphenationFrequency(mHyphenationFrequency)
                 .setJustificationMode(mJustificationMode)
-                .setEllipsize(effectiveEllipsize/*getKeyListener()==nullptr?effectiveEllipsize:TextUtils::TruncateAt::NONE*/)
+                .setEllipsize((getKeyListener()==nullptr)?effectiveEllipsize:TextUtils::TruncateAt::NONE)
                 .setEllipsizedWidth(ellipsisWidth);
         result = builder->build();
     } else {
@@ -4589,7 +4594,7 @@ bool TextView::canMarquee()const{
 }
 
 void TextView::startMarquee(){
-    //if (getKeyListener() != nullptr) return;
+    if (getKeyListener() != nullptr) return;
     if (compressText(getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight())) {
         return;
     }
@@ -4637,6 +4642,7 @@ void TextView::startStopMarquee(bool start){
 }
 
 void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter){
+    LOGD("%d->%d",start,lengthAfter);
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){

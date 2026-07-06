@@ -243,10 +243,8 @@ void SpannableString::sendSpanRemoved(const ParcelableSpan* what, int start, int
 
 void SpannableString::sendSpanChanged(const ParcelableSpan* what, int ostart, int oend, int nstart, int nend) {
     Spannable& self = dynamic_cast<SpannableString&>(*this);
-    int start = std::min(ostart, nstart);
-    int end = std::max(oend, nend);
     SpanFilter watcherFilter = make_span_filter<SpanWatcher>();
-    auto watchers = getSpans(start, end, watcherFilter);
+    auto watchers = getSpans(std::min(ostart,nstart), std::max(oend,nend), watcherFilter);
     for (const ParcelableSpan* w : watchers) {
         SpanWatcher* watcher = const_cast<SpanWatcher*>(dynamic_cast<const SpanWatcher*>(w));
         if (watcher) {
