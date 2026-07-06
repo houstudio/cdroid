@@ -47,6 +47,8 @@ public:
     bool mHasSecondaryProgressTintMode;
 public:
     ProgressTintInfo(){
+        mIndeterminateTintMode = mProgressTintMode
+            = mProgressBackgroundTintMode = mSecondaryProgressTintMode = PorterDuff::Mode::NOOP;
     }
 };
 
@@ -108,6 +110,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressTintMode = attrs.getTintMode("progressTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasProgressTintMode=true;
     }
 
@@ -119,6 +122,8 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressBackgroundTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressBackgroundTintMode = attrs.getTintMode("progressBackgroundTintMode", PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mHasProgressBackgroundTintMode = true;
     }
 
     if(attrs.hasAttribute("progressBackgroundTint")){
@@ -129,6 +134,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("secondaryProgressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mSecondaryProgressTintMode = attrs.getTintMode("secondaryProgressTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasSecondaryProgressTintMode = true;
     }
 
@@ -140,8 +146,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if (attrs.hasAttribute("indeterminateTintMode")) {
         if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        //mProgressTintInfo.mIndeterminateBlendMode = Drawable.parseBlendMode(a.getInt(
-        //        R.styleable.ProgressBar_indeterminateTintMode, -1), null);
+        mProgressTintInfo->mIndeterminateTintMode = attrs.getTintMode("indeterminateTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasIndeterminateTintMode = true;
     }
 

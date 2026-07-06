@@ -477,14 +477,14 @@ void AdaptiveIconDrawable::setTintList(const cdroid::RefPtr<ColorStateList>& tin
     }
 }
 
-/*void AdaptiveIconDrawable::setTintBlendMode(BlendMode blendMode) {
+void AdaptiveIconDrawable::setTintBlendMode(int blendMode) {
     for (int i = 0; i < LayerState::N_CHILDREN; i++) {
         Drawable* dr = mLayerState->mChildren[i]->mDrawable;
         if (dr != nullptr) {
             dr->setTintBlendMode(blendMode);
         }
     }
-}*/
+}
 
 void AdaptiveIconDrawable::setOpacity(int opacity) {
     mLayerState->mOpacityOverride = opacity;

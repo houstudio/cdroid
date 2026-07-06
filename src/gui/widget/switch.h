@@ -17,11 +17,11 @@ private:
     static constexpr int MONOSPACE = 3;
     Drawable* mThumbDrawable;
     cdroid::RefPtr<ColorStateList> mThumbTintList;
-    //BlendMode mThumbBlendMode = null;
+    int mThumbBlendMode = -1; /* null == -1; otherwise a BlendMode value */
 
     Drawable* mTrackDrawable;
     cdroid::RefPtr<ColorStateList> mTrackTintList;
-    //BlendMode* mTrackBlendMode = null;
+    int mTrackBlendMode = -1; /* null == -1; otherwise a BlendMode value */
     bool mHasThumbTint = false;
     bool mHasThumbTintMode = false;
     bool mHasTrackTint = false;

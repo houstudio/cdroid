@@ -11,7 +11,7 @@ private:
     std::string mCheckMarkResource;
     Drawable* mCheckMarkDrawable;
     cdroid::RefPtr<ColorStateList> mCheckMarkTintList;
-    //BlendMode mCheckMarkBlendMode = null;
+    int mCheckMarkBlendMode = -1; /* null == -1; otherwise a BlendMode value */
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
 

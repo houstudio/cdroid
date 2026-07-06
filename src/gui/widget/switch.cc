@@ -36,11 +36,11 @@ Switch::Switch(Context* context,const AttributeSet& a)
     mThumbTintList = a.getColorStateList("thumbTint");
     mHasThumbTint = (mThumbTintList!=nullptr);
 
-    /*BlendMode thumbTintMode = Drawable.parseBlendMode( a.getInt(com.android.internal.R.styleable.Switch_thumbTintMode, -1),null);
+    const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
     if (mThumbBlendMode != thumbTintMode) {
-        //mThumbBlendMode = thumbTintMode;
+        mThumbBlendMode = thumbTintMode;
         mHasThumbTintMode = true;
-    }*/
+    }
     if (mHasThumbTint || mHasThumbTintMode) {
         applyThumbTint();
     }
@@ -48,11 +48,11 @@ Switch::Switch(Context* context,const AttributeSet& a)
     mTrackTintList = a.getColorStateList("trackTint");
     mHasTrackTint = (mTrackTintList!=nullptr);
 
-    /*BlendMode trackTintMode = Drawable.parseBlendMode(a.getInt(com.android.internal.R.styleable.Switch_trackTintMode, -1), null);
+    const int trackTintMode = a.getTintMode("trackTintMode", -1);
     if (mTrackBlendMode != trackTintMode) {
         mTrackBlendMode = trackTintMode;
         mHasTrackTintMode = true;
-    }*/
+    }
     if (mHasTrackTint || mHasTrackTintMode) {
         applyTrackTint();
     }
@@ -258,7 +258,9 @@ const cdroid::RefPtr<ColorStateList> Switch::getTrackTintList() {
 }
 
 void Switch::setTrackTintMode(PorterDuffMode tintMode){
-
+    mTrackBlendMode = tintMode;
+    mHasTrackTintMode = true;
+    applyTrackTint();
 }
 
 void Switch::applyTrackTint(){
@@ -270,7 +272,7 @@ void Switch::applyTrackTint(){
         }
 
         if (mHasTrackTintMode) {
-            //mTrackDrawable->setTintBlendMode(mTrackBlendMode);
+            mTrackDrawable->setTintBlendMode(mTrackBlendMode);
         }
 
         // The drawable (or one of its children) may not have been
@@ -282,7 +284,7 @@ void Switch::applyTrackTint(){
 }
 
 PorterDuffMode Switch::getTrackTintMode()const{
-    return (PorterDuffMode)0;
+    return (PorterDuffMode)mTrackBlendMode;
 }
 
 void Switch::setThumbDrawable(Drawable* thumb){
@@ -317,10 +319,13 @@ const cdroid::RefPtr<ColorStateList> Switch::getThumbTintList()const{
 }
 
 void Switch::setThumbTintMode(PorterDuffMode tintMode){
+    mThumbBlendMode = tintMode;
+    mHasThumbTintMode = true;
+    applyThumbTint();
 }
 
 PorterDuffMode Switch::getThumbTintMode()const{
-    return (PorterDuffMode)0;
+    return (PorterDuffMode)mThumbBlendMode;
 }
 
 void Switch::applyThumbTint() {
@@ -331,7 +336,7 @@ void Switch::applyThumbTint() {
             mThumbDrawable->setTintList(mThumbTintList);
         }
 
-        //if (mHasThumbTintMode) mThumbDrawable->setTintBlendMode(mThumbBlendMode);
+        if (mHasThumbTintMode) mThumbDrawable->setTintBlendMode(mThumbBlendMode);
 
         // The drawable (or one of its children) may not have been
         // stateful before applying the tint, so let's try again.
