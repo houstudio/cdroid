@@ -12,7 +12,7 @@ namespace cdroid {
 
 class InputFilter;
 
-class SpannableStringBuilder : public SpannableStringInternal, virtual public Spannable, virtual public Editable {
+class SpannableStringBuilder : public SpannableString, virtual public Spannable, virtual public Editable {
 public:
     SpannableStringBuilder() = default;
     explicit SpannableStringBuilder(const std::u16string& text);

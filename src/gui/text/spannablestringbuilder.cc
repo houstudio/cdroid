@@ -1,5 +1,6 @@
 #include <text/spannablestringbuilder.h>
-#include <text/textwatcher.h>   // TextWatcher spans — fired by replace()
+#include <text/textwatcher.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 // Mutable SpannableStringBuilder: builder-style mutable spannable (similar to Android's SpannableStringBuilder)
 SpannableStringBuilder::SpannableStringBuilder(const std::u16string& text)
@@ -23,6 +24,7 @@ void SpannableStringBuilder::setSpan(const ParcelableSpan* what, int start, int 
     // also prevents a duplicate owned pointer that would double-free on destroy.
     for (auto& r : mSpans) {
         if (r.span == what) {
+            sendSpanChanged(what, r.start, r.end, start, end);
             r.start = start;
             r.end = end;
             r.flags = flags;
