@@ -78,6 +78,61 @@ int main(int argc,const char*argv[]){
     tv->setCompoundDrawablesWithIntrinsicBounds("cdroid:drawable/progress_large.xml","","cdroid:drawable/progress_small.xml","");
     layout->addView(tv);
     tv->setFocusable(true);
+
+    // ---- RTL/LTR interleaved bidi cursor-movement tests ----
+    // Place the caret at the LTR<->RTL boundary and arrow left/right: Android
+    // moves the caret one LOGICAL char per step (which may be visually right in
+    // an RTL run), so the caret should walk the text in logical order, not jump.
+    // Numbers are weak-LTR even inside RTL. These cases stress that.
+    static struct { const char* label; const char* text; } bidiCases[] = {
+        { "pure RTL (Arabic)",       "مرحبا بالعالم" },
+        { "LTR / RTL / LTR",         "Hello مرحبا World" },
+        { "RTL / LTR / RTL",         "مرحبا Hello مرحبا" },
+        { "LTR digits inside RTL",   "abc123مرحبة" },
+        { "RTL + digits + LTR",      "مرحبا 1234 hello" },
+        { "Hebrew RTL",              "שלום עולם" },
+    };
+    for (int i = 0; i < (int)(sizeof(bidiCases) / sizeof(bidiCases[0])); i++) {
+        auto* lbl = new TextView(bidiCases[i].label, 0, 0);
+        lbl->setTextSize(14);
+        lbl->setTextColor(0xFFAABBCC);
+        layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+
+        EditText* edt = new EditText(bidiCases[i].text, 0, 0);
+        edt->setTextSize(24);
+        edt->setFocusable(true);
+        edt->setClickable(true);
+        edt->setSingleLine(true);
+        edt->setGravity(Gravity::LEFT | Gravity::CENTER_VERTICAL);
+        edt->setBackgroundColor(0xFF223344);
+        edt->setId(200000+i);
+        layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+    }
+
+    // ---- same bidi cases under RTL LAYOUT_DIRECTION (paragraph base direction RTL) ----
+    static struct { const char* label; const char* text; } bidiRtlCases[] = {
+        { "RTL layout: pure LTR text", "Hello World" },
+        { "RTL layout: LTR/RTL/LTR",   "Hello مرحبا World" },
+        { "RTL layout: RTL/LTR/RTL",   "مرحبا Hello مرحبا" },
+    };
+    for (int i = 0; i < (int)(sizeof(bidiRtlCases) / sizeof(bidiRtlCases[0])); i++) {
+        auto* lbl = new TextView(bidiRtlCases[i].label, 0, 0);
+        lbl->setTextSize(14);
+        lbl->setTextColor(0xFFCCBBAA);
+        lbl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+        layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+
+        EditText* edt = new EditText(bidiRtlCases[i].text, 0, 0);
+        edt->setTextSize(24);
+        edt->setFocusable(true);
+        edt->setClickable(true);
+        edt->setSingleLine(true);
+        edt->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+        edt->setBackgroundColor(0xFF332211);
+        edt->setId(210000+i);
+        layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+    }
+
     w->requestLayout();//addView by code must call requestLayout ,auto call only used by Window::inflate.
     return app.exec();
 }

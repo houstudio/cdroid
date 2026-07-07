@@ -218,9 +218,15 @@ void Paint::getTextBounds(const char16_t* text, int index, int count, Rect& boun
 }
 
 float Paint::getTextRunCursor(const CharSequence* text, int start, int count, bool isRtl, int offset, int cursorOpt)const{
+    // Returns a TEXT-ABSOLUTE offset (same coord domain as `start`/`offset`), matching
+    // the char16_t* overload below and Android's contract. The inner call runs on a
+    // substring buffer with start=0, so it yields a buf-relative index in [0, count];
+    // add `start` back to lift it into the caller's text-absolute coords. (Returning
+    // the raw buf-relative index silently broke callers whose span doesn't start at
+    // the line start — e.g. bidi cursor stepping at an LTR/RTL boundary.)
     std::vector<char16_t>buf(count);
     TextUtils::getChars(text, start, start + count, buf.data(), 0);
-    return getTextRunCursor(buf.data(), 0, count, isRtl, offset - start, cursorOpt);
+    return getTextRunCursor(buf.data(), 0, count, isRtl, offset - start, cursorOpt) + start;
 }
 
 float Paint::getRunAdvance(const CharSequence* text, int start, int end, int contextStart, int contextEnd, bool isRtl, int offset)const{

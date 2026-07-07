@@ -6,6 +6,26 @@ Pools::SynchronizedPool<DynamicLayout::Builder>DynamicLayout::Builder::sPool(3);
 StaticLayout* DynamicLayout::sStaticLayout=nullptr;
 StaticLayout::Builder* DynamicLayout::sBuilder=nullptr;
 
+// mObjects owns its OWN Directions copies (clone-on-store), so the recycled
+// reflow StaticLayout freeing its Directions (StaticLayout::generate deletes the
+// old mLineDirections entries; ~StaticLayout deletes them too) cannot leave
+// mObjects dangling. The shared static DIRS_ALL_* constants are passed through
+// unchanged and never freed (matches StaticLayout's ownership rule).
+static const Directions* cloneOwnedDirections(const Directions* d) {
+    if (d == nullptr) return nullptr;
+    if (d == &Layout::DIRS_ALL_LEFT_TO_RIGHT || d == &Layout::DIRS_ALL_RIGHT_TO_LEFT) {
+        return d;
+    }
+    return new Directions(*d);   // deep copy (Directions copies its std::vector<int>)
+}
+static void freeOwnedDirections(const Directions* d) {
+    if (d != nullptr
+            && d != &Layout::DIRS_ALL_LEFT_TO_RIGHT
+            && d != &Layout::DIRS_ALL_RIGHT_TO_LEFT) {
+        delete d;
+    }
+}
+
 DynamicLayout::Builder* DynamicLayout::Builder::obtain(CharSequence* base, TextPaint* paint,int width) {
     Builder* b = sPool.acquire();
     if (b == nullptr) {
@@ -211,6 +231,12 @@ DynamicLayout::~DynamicLayout(){
         }
         delete mWatcher;
         mWatcher = nullptr;
+    }
+    // Free the Directions clones mObjects owns before dropping the vector.
+    if (mObjects != nullptr) {
+        for (int k = 0; k < mObjects->size(); k++) {
+            freeOwnedDirections(mObjects->getValue(k, 0));
+        }
     }
     delete mInts;
     delete mObjects;
@@ -429,6 +455,10 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
 
     // remove affected lines from old layout
     mInts->deleteAt(startline, endline - startline);
+    // Free the Directions clones we own for the lines about to be dropped.
+    for (int k = startline; k < endline; k++) {
+        freeOwnedDirections(mObjects->getValue(k, 0));
+    }
     mObjects->deleteAt(startline, endline - startline);
 
     // adjust offsets in layout for new height and offsets
@@ -480,7 +510,10 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
 
         ints[DESCENT] = desc;
         ints[EXTRA] = reflowed->getLineExtra(i);
-        objects[0] = reflowed->getLineDirections(i);
+        // Clone non-static Directions so mObjects owns an independent copy — the
+        // reflowed StaticLayout is recycled (sStaticLayout) and regenerating it
+        // frees its old Directions, which would otherwise dangle this pointer.
+        objects[0] = cloneOwnedDirections(reflowed->getLineDirections(i));
 
         const int end = (i == n - 1) ? where + after : reflowed->getLineStart(i + 1);
         ints[HYPHEN] = StaticLayout::packHyphenEdit(

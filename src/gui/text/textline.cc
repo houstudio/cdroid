@@ -532,8 +532,11 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
         return wp.getTextRunCursor(mChars.data(), spanStart, spanLimit - spanStart,
                 runIsRtl, offset, cursorOpt);
     } else {
+        // 3rd arg is COUNT (Paint::getTextRunCursor signature), not END — pass
+        // spanLimit - spanStart. The overload now returns a text-absolute offset,
+        // so -mStart lifts it to line-relative (matching the mCharsValid branch).
         return wp.getTextRunCursor(mText, mStart + spanStart,
-                mStart + spanLimit, runIsRtl, mStart + offset, cursorOpt) - mStart;
+                spanLimit - spanStart, runIsRtl, mStart + offset, cursorOpt) - mStart;
     }
 }
 
