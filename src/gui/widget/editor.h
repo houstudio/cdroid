@@ -22,7 +22,7 @@
 #include <core/rect.h>
 #include <text/paint.h>
 #include <core/callbackbase.h>   // Runnable
-
+#include <text/method/keylistener.h>
 namespace cdroid {
 class Layout;
 class Path;
@@ -32,7 +32,6 @@ class Drawable;
 class KeyEvent;
 class MotionEvent;
 class Canvas;
-
 /**
  * Helper class used by TextView to handle editable text views.
  *
@@ -64,7 +63,7 @@ private:
     Drawable* mSelectHandleRight = nullptr;
     Drawable* mSelectHandleCenter = nullptr;
     TextView* mTextView;
-
+    KeyListener* mKeyListener = nullptr;
     Runnable mBlink;
     bool mBlinkCancelled = false;
     bool mCursorVisible = true;

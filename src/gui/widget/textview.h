@@ -115,6 +115,7 @@ private:
     bool mAllowTransformationLengthChange;
     bool mLinksClickable;
     bool mCursorVisible;
+    bool mListenerChanged;
     bool mShowSoftInputOnFocus = true;
     bool mSelectAllOnFocus = false;   // Android: TextView field (was misplaced on Editor)
     bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
@@ -151,7 +152,7 @@ private:
     mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
     MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
-    KeyListener* mKeyListener = nullptr;
+    //KeyListener* mKeyListener = nullptr;
     // Android: mPreventDefaultMovement — once the movement method consumes an
     // initial key down, swallow subsequent focus-traversal defaults until key up.
     bool mPreventDefaultMovement = false;
@@ -216,12 +217,16 @@ private:
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
+    void setInputTypeFromEditor();
+    void setKeyListenerOnly(KeyListener* input);
+    void fixFocusableAndClickableSettings();
     void createEditorIfNeeded();
     void assumeLayout();
     bool isAutoSizeEnabled()const;
     bool isMarqueeFadeEnabled()const;
     void startStopMarquee(bool start);
     float getHorizontalFadingEdgeStrength(float position1, float position2);
+    void setInputTypeSingleLine(bool singleLine);
     void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
     void restartMarqueeIfNeeded();
     void invalidateCursor(int a, int b, int c);
@@ -355,6 +360,8 @@ public:
     bool isTextEditable()const;
     void beginBatchEdit();
     void endBatchEdit();
+    void setAllCaps(bool allCaps);
+    bool isAllCaps() const;
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
     bool hasPasswordTransformationMethod()const;

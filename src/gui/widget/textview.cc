@@ -263,7 +263,7 @@ void TextView::initView(){
     mShowSoftInputOnFocus = true;
     mSelectionStart = -1;
     mSelectionEnd = -1;
-    mKeyListener = nullptr;
+    //mKeyListener = nullptr;
     mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
@@ -1499,6 +1499,18 @@ void TextView::setMovementMethod(MovementMethod* movement) {
     mMovement = movement;
     if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
         mMovement->initialize(*this, *mSpannable);
+    }
+}
+
+void TextView::fixFocusableAndClickableSettings() {
+    if (mMovement != nullptr || (mEditor != nullptr && mEditor->mKeyListener != nullptr)) {
+        setFocusable(FOCUSABLE);
+        setClickable(true);
+        setLongClickable(true);
+    } else {
+        setFocusable(FOCUSABLE_AUTO);
+        setClickable(false);
+        setLongClickable(false);
     }
 }
 
@@ -4408,9 +4420,34 @@ std::string TextView::getSelectedText()const{
      return result;
 }
 
+void TextView::setAllCaps(bool allCaps) {
+    if (allCaps) {
+        setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    } else {
+        setTransformationMethod(nullptr);
+    }
+}
+
+bool TextView::isAllCaps() const{
+    TransformationMethod* method = getTransformationMethod();
+    return method != nullptr && dynamic_cast<AllCapsTransformationMethod*>(method);
+}
+
 void TextView::setSingleLine(bool single){
     mSingleLine = single;
     applySingleLine(single,true,true);
+}
+
+void TextView::setInputTypeSingleLine(bool singleLine) {
+    if ((mEditor != nullptr)
+            && ((mEditor->mInputType & InputType::TYPE_MASK_CLASS)
+                    == InputType::TYPE_CLASS_TEXT)) {
+        if (singleLine) {
+            mEditor->mInputType &= ~InputType::TYPE_TEXT_FLAG_MULTI_LINE;
+        } else {
+            mEditor->mInputType |= InputType::TYPE_TEXT_FLAG_MULTI_LINE;
+        }
+    }
 }
 
 void TextView::setBreakStrategy(int breakStrategy){
@@ -4462,11 +4499,46 @@ bool TextView::getLinksClickable() const {
 // SpanWatcher are deferred — EditText is already focusable, and the SpanWatcher
 // behavior only matters for the (deferred) dead-key ACTIVE span.
 void TextView::setKeyListener(KeyListener* input) {
-    mKeyListener = input;
+    mListenerChanged= true;
+    setKeyListenerOnly(input);
+    fixFocusableAndClickableSettings();
+    if (input != nullptr) {
+        createEditorIfNeeded();
+        setInputTypeFromEditor();
+    } else {
+        if (mEditor != nullptr) mEditor->mInputType = InputType::TYPE_NULL;
+    }
+
+    InputMethodManager* imm = getInputMethodManager();
+    //if (imm != nullptr) imm->restartInput(this);
 }
 
 KeyListener* TextView::getKeyListener() const {
-    return mKeyListener;
+    return mEditor==nullptr?nullptr:mEditor->mKeyListener;
+}
+
+void TextView::setInputTypeFromEditor() {
+    try {
+        mEditor->mInputType = mEditor->mKeyListener->getInputType();
+    } catch (std::exception& e) {
+        mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
+    }
+    // Change inputType, without affecting transformation.
+    // No need to applySingleLine since mSingleLine is unchanged.
+    setInputTypeSingleLine(mSingleLine);
+}
+
+void TextView::setKeyListenerOnly(KeyListener* input) {
+    if (mEditor == nullptr && input == nullptr) return; // null is the default value
+
+    createEditorIfNeeded();
+    if (mEditor->mKeyListener != input) {
+        mEditor->mKeyListener = input;
+        if (input != nullptr && (dynamic_cast<Editable*>(mText)==nullptr)) {
+            setText(mText);
+        }
+        //setFilters(dynamic_cast<Editable*>(mText), mFilters);
+    }
 }
 
 void TextView::setFilters(const std::vector<InputFilter*>& filters) {

@@ -477,11 +477,11 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         mLastTouchOffset = offset;
 
         const int64_t now = (int64_t)event.getEventTime();
-        const int64_t timeoutUs = (int64_t)ViewConfiguration::getDoubleTapTimeout();
+        const int64_t timeoutMS = (int64_t)ViewConfiguration::getDoubleTapTimeout();
         const float dx = x - mLastUpX, dy = y - mLastUpY;
         const float slop = (float)ViewConfiguration::getDoubleTapSlop();
         const bool inMultiTapWindow = mLastUpTime != 0
-                && (now - mLastUpTime) <= timeoutUs
+                && (now - mLastUpTime) <= timeoutMS
                 && (dx * dx + dy * dy) <= slop * slop;
         mTapCount = inMultiTapWindow ? mTapCount + 1 : 1;
         if (mTapCount > 3) mTapCount = 1;
@@ -489,12 +489,14 @@ bool Editor::onTouchEvent(MotionEvent& event) {
             selectCurrentWord();
         } else if (mTapCount >= 3) {
             Selection::selectAll(editable());
-        } else {
+        } else {LOGD("selection from %d",offset);
             Selection::setSelection(editable(), offset);
         }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {
+        LOGD("Selection extendTo %d->%d",Selection::getSelectionStart(editable()),offset);
         Selection::extendSelection(editable(), offset);
+        mTextView->invalidate(true);
     }
     return true;
 }
