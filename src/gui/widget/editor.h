@@ -73,7 +73,7 @@ private:
     bool mCreatedWithASelection = false;
     bool mTouchFocusSelected = false;
     bool mSelectionMoved = false;
-
+    bool mSelectAllOnFocus= false;
     bool mInsertionControllerEnabled = false;
     bool mSelectionControllerEnabled = false;
 

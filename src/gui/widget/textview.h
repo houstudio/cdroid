@@ -71,6 +71,9 @@ private:
     static constexpr int LINES = 1;
     static constexpr int EMS = LINES;
     static constexpr int PIXELS = 2;
+    static constexpr int SIGNED = 2;
+    static constexpr int DECIMAL = 4;
+
     static constexpr int MARQUEE_FADE_NORMAL=0;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS =1;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_FADE =2;
@@ -117,7 +120,6 @@ private:
     bool mCursorVisible;
     bool mListenerChanged;
     bool mShowSoftInputOnFocus = true;
-    bool mSelectAllOnFocus = false;   // Android: TextView field (was misplaced on Editor)
     bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
     bool mIsPrimePointerFromHandleView=false;
     // This is used to reflect the current user preference for changing font weight and making text

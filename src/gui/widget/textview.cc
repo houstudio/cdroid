@@ -125,6 +125,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     Drawable*bottom= attrs.getDrawable("drawableBottom");
     Drawable*start = attrs.getDrawable("drawableStart");
     Drawable*  end = attrs.getDrawable("drawableEnd");
+    const bool selectallonfocus = attrs.getBoolean("selectAllOnFocus");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
@@ -151,6 +152,37 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
+    int inputType =attrs.getInt("inputType",std::unordered_map<std::string,int>{
+            {"none", (int)InputType::TYPE_NULL},
+            {"text", (int)InputType::TYPE_CLASS_TEXT},
+            {"textCapCharacters", (int)InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS},
+            {"textCapWords", (int)InputType::TYPE_TEXT_FLAG_CAP_WORDS},
+            {"textCapSentences", (int)InputType::TYPE_TEXT_FLAG_CAP_SENTENCES},
+            {"textAutoCorrect", (int)InputType::TYPE_TEXT_FLAG_AUTO_CORRECT},
+            {"textPassword", (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
+            {"textVisiblePassword", (int)InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD},
+            {"textEmailAddress", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS},
+            {"textUri", (int)InputType::TYPE_TEXT_VARIATION_URI},
+            {"textPersonName", (int)InputType::TYPE_TEXT_VARIATION_PERSON_NAME},
+            {"textShortMessage", (int)InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE},
+            {"textLongMessage", (int)InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE},
+            {"textMultiLine", (int)InputType::TYPE_TEXT_FLAG_MULTI_LINE},
+            {"textNoSuggestions", (int)InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS},
+            {"textWebEditText", (int)InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT},
+            {"textFilter", (int)InputType::TYPE_TEXT_VARIATION_FILTER},
+            {"textPhonetic", (int)InputType::TYPE_TEXT_VARIATION_PHONETIC},
+            {"textEmailSubject", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT},
+            {"textPostalAddress", (int)InputType::TYPE_TEXT_VARIATION_POSTAL_ADDRESS},
+            {"number", (int)InputType::TYPE_CLASS_NUMBER},
+
+            {"numberDecimal", (int)InputType::TYPE_NUMBER_FLAG_DECIMAL},
+            {"numberSigned", (int)InputType::TYPE_NUMBER_FLAG_SIGNED},
+            {"numberPassword", (int)InputType::TYPE_NUMBER_VARIATION_PASSWORD},
+            {"phone", (int)InputType::TYPE_CLASS_PHONE},
+            {"date", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_DATE},
+            {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},
+            {"datetime", (int)InputType::TYPE_CLASS_DATETIME}
+        },InputType::TYPE_NULL);
     const int breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
         {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
         {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
@@ -181,12 +213,138 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
+    BufferType bufferType = BufferType::EDITABLE;
+    const int variation = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
+    const bool passwordInputType = variation== (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_PASSWORD);
+    const bool webPasswordInputType = variation == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD);
+    const bool numberPasswordInputType = variation == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
+#if 0
+    const int targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
+    mUseInternationalizedInput = true;//targetSdkVersion >= VERSION_CODES.O;
+    mUseFallbackLineSpacing = true;//targetSdkVersion >= VERSION_CODES.P;
+
+    if (inputMethod != nullptr) {
+        try {
+            c = Class.forName(inputMethod.toString());
+        } catch (ClassNotFoundException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        try {
+            createEditorIfNeeded();
+            mEditor->mKeyListener = (KeyListener) c.newInstance();
+        } catch (InstantiationException ex) {
+            throw new RuntimeException(ex);
+        } catch (IllegalAccessException ex) {
+            throw new RuntimeException(ex);
+        }
+        try {
+            mEditor->mInputType = (inputType != InputType::TYPE_NULL)
+                    ? inputType : mEditor->mKeyListener->getInputType();
+        } catch (IncompatibleClassChangeError e) {
+            mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
+        }
+    } else if (digits != nullptr) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(digits.toString());
+        // If no input type was specified, we will default to generic
+        // text, since we can't tell the IME about the set of digits
+        // that was selected.
+        mEditor->mInputType = inputType != InputType::TYPE_NULL
+                ? inputType : InputType::TYPE_CLASS_TEXT;
+    } else if (inputType != InputType::TYPE_NULL) {
+        setInputType(inputType, true);
+        // If set, the input type overrides what was set using the deprecated singleLine flag.
+        singleLine = !isMultilineInputType(inputType);
+    } else if (phone) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DialerKeyListener::getInstance();
+        mEditor->mInputType = inputType = InputType::TYPE_CLASS_PHONE;
+    }else if (numeric != 0) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(nullptr,  // locale
+                (numeric & SIGNED) != 0, (numeric & DECIMAL) != 0);
+        inputType = mEditor->mKeyListener->getInputType();
+        mEditor->mInputType = inputType;
+    }else if (autotext || autocap != -1) {
+        TextKeyListener::Capitalize cap;
+        inputType = InputType::TYPE_CLASS_TEXT;
+
+        switch (autocap) {
+        case 1:
+            cap = TextKeyListener::Capitalize::SENTENCES;
+            inputType |= InputType::TYPE_TEXT_FLAG_CAP_SENTENCES;
+            break;
+        case 2:
+            cap = TextKeyListener::Capitalize::WORDS;
+            inputType |= InputType::TYPE_TEXT_FLAG_CAP_WORDS;
+            break;
+        case 3:
+            cap = TextKeyListener::Capitalize::CHARACTERS;
+            inputType |= InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS;
+            break;
+        default:
+            cap = TextKeyListener::Capitalize::NONE;
+            break;
+        }
+        createEditorIfNeeded();
+        mEditor->mKeyListener = TextKeyListener::getInstance(autotext, cap);
+        mEditor->mInputType = inputType;
+    }else if (editable) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = TextKeyListener::getInstance();
+        mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
+    } else if (isTextSelectable()) {
+        // Prevent text changes from keyboard.
+        if (mEditor != nullptr) {
+            mEditor->mKeyListener = nullptr;
+            mEditor->mInputType = InputType::TYPE_NULL;
+        }
+        bufferType = BufferType::SPANNABLE;
+        // So that selection can be changed using arrow keys and touch is handled.
+        setMovementMethod(ArrowKeyMovementMethod::getInstance());
+    } else {
+        if (mEditor != nullptr) mEditor->mKeyListener = nullptr;
+
+        switch (buffertype) {
+        case 0:
+            bufferType = BufferType::NORMAL;
+            break;
+        case 1:
+            bufferType = BufferType::SPANNABLE;
+            break;
+        case 2:
+            bufferType = BufferType::EDITABLE;
+            break;
+        }
+    }
+
+    if (mEditor != nullptr) {
+        mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
+                numberPasswordInputType);
+    }
+
+    if (selectallonfocus) {
+        createEditorIfNeeded();
+        mEditor->mSelectAllOnFocus = true;
+
+        if (bufferType == BufferType::NORMAL) {
+            bufferType = BufferType::SPANNABLE;
+        }
+    }
+#endif
     const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
     const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
     const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
-    if (firstBaselineToTopHeight >= 0) setFirstBaselineToTopHeight(firstBaselineToTopHeight);
-    if (lastBaselineToBottomHeight >= 0) setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
-    if(lineHeight>=0) setLineHeight(lineHeight);
+    if (firstBaselineToTopHeight >= 0){
+        setFirstBaselineToTopHeight(firstBaselineToTopHeight);
+    }
+    if (lastBaselineToBottomHeight >= 0){
+        setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
+    }
+    if(lineHeight>=0){
+        setLineHeight(lineHeight);
+    }
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
@@ -4343,8 +4501,12 @@ bool TextView::getShowSoftInputOnFocus()const {
     return mShowSoftInputOnFocus;
 }
 
-void TextView::setSelectAllOnFocus(bool selectAll) {
-    mSelectAllOnFocus = selectAll;
+void TextView::setSelectAllOnFocus(bool selectAllOnFocus) {
+    createEditorIfNeeded();
+    mEditor->mSelectAllOnFocus = selectAllOnFocus;
+    if(selectAllOnFocus && (dynamic_cast<Spannable*>(mText)==nullptr)){
+        setText(mText,BufferType::SPANNABLE);
+    }
 }
 
 void TextView::beginBatchEdit() {

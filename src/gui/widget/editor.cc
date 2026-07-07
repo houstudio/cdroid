@@ -132,7 +132,7 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
         const int selStart = mTextView->getSelectionStart();
         const int selEnd = mTextView->getSelectionEnd();
         // mSelectAllOnFocus lives on TextView now; Editor reaches it via friendship.
-        const bool isFocusHighlighted = mTextView->mSelectAllOnFocus && selStart == 0
+        const bool isFocusHighlighted = mSelectAllOnFocus && selStart == 0
                 && selEnd == mTextView->length();
 
         mCreatedWithASelection = mFrozenWithFocus && mTextView->hasSelection()
@@ -148,7 +148,7 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
                 if (e) mm->onTakeFocus(*mTextView, *e, /*direction*/ 0);
             }
 
-            if (mTextView->mSelectAllOnFocus) {
+            if (mSelectAllOnFocus) {
                 mTextView->selectAllText();
             }
 
