@@ -55,7 +55,6 @@ target_include_directories(
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
     ${HARFBUZZ_INCLUDE_DIRS}
-    ${FRIBIDI_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     )
@@ -72,7 +71,6 @@ target_include_directories(texttest
     ${CMAKE_BINARY_DIR}/include
     ${CMAKE_BINARY_DIR}/include/gui
     ${HARFBUZZ_INCLUDE_DIRS}
-    ${FRIBIDI_INCLUDE_DIRS}
     ${FREETYPE_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     )
@@ -81,7 +79,6 @@ target_link_libraries(texttest
     cdtext
     cdroid
     ${HARFBUZZ_LIBRARIES}
-    ${FRIBIDI_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${CAIRO_LIBRARIES}
 )

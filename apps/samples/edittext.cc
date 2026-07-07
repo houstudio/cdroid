@@ -114,6 +114,7 @@ int main(int argc,const char*argv[]){
         edt->setGravity(Gravity::LEFT | Gravity::CENTER_VERTICAL);
         edt->setBackgroundColor(0xFF223344);
         edt->setId(200000+i);
+        edt->setInputType(InputType::TYPE_CLASS_TEXT);
         layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
     }
 
@@ -138,6 +139,7 @@ int main(int argc,const char*argv[]){
         edt->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
         edt->setBackgroundColor(0xFF332211);
         edt->setId(210000+i);
+        edt->setInputType(InputType::TYPE_CLASS_TEXT);
         layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
     }
 

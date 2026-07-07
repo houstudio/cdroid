@@ -14,7 +14,6 @@ find_package(EXPAT REQUIRED)
 find_package(Cairo REQUIRED)
 find_package(Fontconfig REQUIRED)
 find_package(UniBreak REQUIRED)
-find_package(Fribidi)
 find_package(RTAUDIO)
 find_package(Pthread)
 find_package(GIF)
@@ -72,7 +71,6 @@ list(APPEND CDROID_DEPLIBS
     ${ZIP_LIBRARIES}
     ${Iconv_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
-    #${FRIBIDI_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)
@@ -112,7 +110,6 @@ list(APPEND CDROID_DEPINCLUDES
     ${EXPAT_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     ${HARFBUZZ_INCLUDE_DIRS}
-    #${FRIBIDI_INCLUDE_DIRS}
 )
 
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")

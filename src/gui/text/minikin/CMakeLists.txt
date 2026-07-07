@@ -59,12 +59,11 @@ if(TRUE OR NOT USE_ICU)
        ${PROJECT_SOURCE_DIR}/include
        ${PROJECT_SOURCE_DIR}/include/myicu
        ${HARFBUZZ_INCLUDE_DIRS}
-       ${FRIBIDI_INCLUDE_DIRS}
        ${CMAKE_BINARY_DIR}/include/gui
        ${CMAKE_BINARY_DIR}/include/porting
        BEFORE
    )
-   target_link_libraries(minikin PRIVATE ${HARFBUZZ_LIBRARIES} )#${FRIBIDI_LIBRARIES})
+   target_link_libraries(minikin PRIVATE ${HARFBUZZ_LIBRARIES})
 else()
     find_package(ICU COMPONENTS uc REQUIRED)
     target_include_directories(minikin PRIVATE

@@ -38,7 +38,6 @@
 #cmakedefine ENABLE_OPENJPEG 1
 #cmakedefine ENABLE_LOTTIE 1
 #cmakedefine ENABLE_TURBOJPEG 1
-#cmakedefine ENABLE_FRIBIDI  1
 #cmakedefine ENABLE_PINYIN2HZ 1
 #cmakedefine ENABLE_ACHART    1
 #cmakedefine ENABLE_LITEHTML  1
