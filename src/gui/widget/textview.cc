@@ -1315,6 +1315,20 @@ int TextView::getHorizontalOffsetForDrawables()const{
     return 0;
 }
 
+void TextView::setTextKeepState(CharSequence* text, BufferType type) {
+    const int start = getSelectionStart();
+    const int end = getSelectionEnd();
+    const int len = text->length();
+    setText(text, type);
+    if (start >= 0 || end >= 0) {
+        if (mSpannable != nullptr) {
+            Selection::setSelection(mSpannable,
+                                   std::max(0, std::min(start, len)),
+                                   std::max(0, std::min(end, len)));
+        }
+    }
+}
+
 void TextView::setText(CharSequence* txt) {
     setText(txt,mBufferType);
 }

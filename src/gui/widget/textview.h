@@ -321,6 +321,7 @@ public:
     virtual void setText(CharSequence* txt);
     virtual void setText(CharSequence* text, BufferType type);
     void setText(const std::vector<char16_t>&text, int start, int len);
+    void setTextKeepState(CharSequence* text, BufferType type);
     void append(const CharSequence& text);
     void append(const CharSequence& text, int start, int end);
     virtual CharSequence& getText();
