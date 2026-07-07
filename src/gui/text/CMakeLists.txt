@@ -35,6 +35,9 @@ add_library(cdtext
     method/numberkeylistener.cc
     method/digitskeylistener.cc
     method/dialerkeylistener.cc
+    method/datekeylistener.cc
+    method/datetimekeylistener.cc
+    method/timekeylistener.cc
     method/qwertykeylistener.cc
     method/textkeylistener.cc
     )

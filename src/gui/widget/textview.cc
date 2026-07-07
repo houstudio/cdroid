@@ -31,7 +31,11 @@
 #include <text/method/allcapstransformationmethod.h>
 #include <text/method/keylistener.h>
 #include <text/method/textkeylistener.h>
+#include <text/method/dialerkeylistener.h>
 #include <text/method/digitskeylistener.h>
+#include <text/method/datekeylistener.h>
+#include <text/method/timekeylistener.h>
+#include <text/method/datetimekeylistener.h>
 #include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
@@ -4346,10 +4350,12 @@ bool TextView::isPasswordInputType(int inputType) {
         || v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD)
         || v == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
 }
+
 bool TextView::isVisiblePasswordInputType(int inputType) {
     const int v = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
     return v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
 }
+
 bool TextView::isMultilineInputType(int type) {
     return (type & (InputType::TYPE_MASK_CLASS | InputType::TYPE_TEXT_FLAG_MULTI_LINE))
         == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE);
@@ -4386,6 +4392,24 @@ void TextView::setInputType(int inputType) {
         input = DigitsKeyListener::getInstance(
                 (inputType & InputType::TYPE_NUMBER_FLAG_SIGNED) != 0,
                 (inputType & InputType::TYPE_NUMBER_FLAG_DECIMAL) != 0);
+    } else if (cls == InputType::TYPE_CLASS_DATETIME) {
+        //final Locale locale = getCustomLocaleForKeyListenerOrNull();
+        switch (inputType & InputType::TYPE_MASK_VARIATION) {
+        case InputType::TYPE_DATETIME_VARIATION_DATE:
+            input = DateKeyListener::getInstance(/*locale*/);
+            break;
+        case InputType::TYPE_DATETIME_VARIATION_TIME:
+            input = TimeKeyListener::getInstance(/*locale*/);
+            break;
+        default:
+            input = DateTimeKeyListener::getInstance(/*locale*/);
+            break;
+        }
+        if (1/*mUseInternationalizedInput*/) {
+            inputType = input->getInputType(); // Override type, if necessary for i18n.
+        }
+    } else if (cls == InputType::TYPE_CLASS_PHONE) {
+        input = DialerKeyListener::getInstance();
     } else {
         // TYPE_CLASS_DATETIME / TYPE_CLASS_PHONE / TYPE_NULL: DateKeyListener,
         // TimeKeyListener and DialerKeyListener are Phase 2; fall back to the
