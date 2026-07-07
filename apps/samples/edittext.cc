@@ -36,6 +36,14 @@ TestString testStrings[]={
       InputType::TYPE_CLASS_NUMBER
    },
    {
+      "666",
+      true,
+      Layout::ELLIPSIS_NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_PHONE
+   },
+   {
        "zhhou@sanboen.com",
        true,
        Layout::ELLIPSIS_NONE/*0*/,
