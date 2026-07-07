@@ -139,6 +139,14 @@ std::shared_ptr<InputDevice>InputEventSource::getDevice(int fd){
     return itr->second;
 }
 
+InputDevice* InputEventSource::getInputDevice(int id) {
+    // Pure lookup (no auto-create, unlike getDevice) — KeyEvent resolves chars
+    // from any thread, so take the recursive mutex ourselves.
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    auto it = mDevices.find(id);
+    return (it != mDevices.end()) ? it->second.get() : nullptr;
+}
+
 bool InputEventSource::needCancel(InputDevice*dev){
     int32_t action;
     nsecs_t etime;

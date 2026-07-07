@@ -35,6 +35,7 @@
 #include <core/windowmanager.h>
 #include <utils/textutils.h>
 #include <private/keylayoutmap.h>
+#include <private/keycharactermap.h>
 
 #if defined(__linux__)||defined(__unix__)
   #include <linux/input.h>
@@ -243,6 +244,24 @@ InputDevice::InputDevice(int32_t fdev){
                 mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
          KeyLayoutMap::load(fname,mKeyMap);
     }
+    // Per-device .kcm, same 3-step lookup as .kl above (name → vendor/product →
+    // shared default). Touch/mouse devices have no device-specific .kcm and fall
+    // through to getDefault(); only keyboards typically resolve a real map.
+    mKeyCharacterMap = nullptr;
+    fname = App::getInstance().getDataPath()+getName()+".kcm";
+    if(0==access(fname.c_str(),F_OK)){
+        KeyCharacterMap::load(fname,KeyCharacterMap::FORMAT_ANY,mKeyCharacterMap);
+    }else{
+        fname = TextUtils::stringPrintf("%s/Vendor_%04x_Productor_%04x.kcm",
+                App::getInstance().getDataPath().c_str(),
+                mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
+        if(0==access(fname.c_str(),F_OK)){
+            KeyCharacterMap::load(fname,KeyCharacterMap::FORMAT_ANY,mKeyCharacterMap);
+        }
+    }
+    if(mKeyCharacterMap==nullptr){
+        mKeyCharacterMap = KeyCharacterMap::getDefault();   // shared, never freed
+    }
     LOGI("%d:[%s] Props=%02x%02x%02x%02x[%s]",fdev,devInfos.name,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3],oss.str().c_str());
     for(int j=0;(j<ABS_CNT) && (j<sizeof(devInfos.axis)/sizeof(INPUTAXISINFO));j++){
@@ -255,6 +274,16 @@ InputDevice::InputDevice(int32_t fdev){
 
 InputDevice::~InputDevice(){
     delete mKeyMap;
+    // Only free a device-specific map we loaded; never the shared default
+    // (pointer-equal to KeyCharacterMap::getDefault()), which is process-lifetime.
+    if(mKeyCharacterMap!=nullptr && mKeyCharacterMap!=KeyCharacterMap::getDefault()){
+        delete mKeyCharacterMap;
+    }
+    mKeyCharacterMap = nullptr;
+}
+
+KeyCharacterMap* InputDevice::getKeyCharacterMap()const{
+    return mKeyCharacterMap;
 }
 
 void InputDevice::bindDisplay(int32_t id){

@@ -18,18 +18,28 @@
 #include <view/keyevent.h>
 #include <private/inputeventlabels.h>
 #include <porting/cdlog.h>
-#include <core/inputmethodmanager.h>
+#include <core/inputeventsource.h>
+#include <private/keycharactermap.h>
 #include <sstream>
 namespace cdroid{
 
-// Ported from Android KeyEvent.getUnicodeChar(int). CDROID resolves the char
-// through the InputMethodManager's loaded device KeyCharacterMap rather than
-// KeyCharacterMap.load(getDeviceId()); for a single-keyboard desktop framework
-// the global map is equivalent.
+// Ported from Android KeyEvent.getKeyCharacterMap: the map for this event's
+// device (looked up by mDeviceId), or the shared default (VIRTUAL_KEYBOARD) when
+// the device is unknown / synthetic (mDeviceId < 0) or has been hot-removed.
+KeyCharacterMap* KeyEvent::getKeyCharacterMap() const {
+    if (mDeviceId >= 0) {
+        InputDevice* dev = InputEventSource::getInstance().getInputDevice(mDeviceId);
+        if (dev != nullptr) {
+            if (KeyCharacterMap* kcm = dev->getKeyCharacterMap()) return kcm;
+        }
+    }
+    return KeyCharacterMap::getDefault();
+}
+
+// Ported from Android KeyEvent.getUnicodeChar(int): resolved via this key's
+// device KeyCharacterMap (KeyEvent → KeyCharacterMap, as in Android — no IMM).
 int KeyEvent::getUnicodeChar(int metaState) const {
-    // Match the prior Editor typing path exactly: getInstance() (not peek),
-    // which both resolves the device key map and guarantees the IMM exists.
-    return InputMethodManager::getInstance().getCharacter(mKeyCode, metaState);
+    return getKeyCharacterMap()->getCharacter(mKeyCode, metaState);
 }
 
 int KeyEvent::getUnicodeChar() const {
@@ -37,24 +47,17 @@ int KeyEvent::getUnicodeChar() const {
 }
 
 char16_t KeyEvent::getMatch(const char16_t* chars, int len, int metaState) const {
-    InputMethodManager* imm = InputMethodManager::peekInstance();
-    if (imm == nullptr || chars == nullptr || len <= 0) return 0;
-    return imm->getMatch(mKeyCode, chars, (size_t)len, metaState);
+    if (chars == nullptr || len <= 0) return 0;
+    return getKeyCharacterMap()->getMatch(mKeyCode, chars, (size_t)len, metaState);
 }
 
-// Ported from Android KeyEvent.getNumber/getDisplayLabel. Android goes
-// KeyEvent → KeyCharacterMap directly; CDROID's KCM lives behind InputMethodManager
-// (same routing as getUnicodeChar/getMatch above), so we bridge through it.
+// Ported from Android KeyEvent.getNumber/getDisplayLabel via the device KCM.
 char16_t KeyEvent::getNumber() const {
-    InputMethodManager* imm = InputMethodManager::peekInstance();
-    if (imm == nullptr) return 0;
-    return imm->getNumber(mKeyCode);
+    return getKeyCharacterMap()->getNumber(mKeyCode);
 }
 
 char16_t KeyEvent::getDisplayLabel() const {
-    InputMethodManager* imm = InputMethodManager::peekInstance();
-    if (imm == nullptr) return 0;
-    return imm->getDisplayLabel(mKeyCode);
+    return getKeyCharacterMap()->getDisplayLabel(mKeyCode);
 }
 
 // Ported from Android KeyCharacterMap.getKeyData (Android's KeyEvent.getKeyData

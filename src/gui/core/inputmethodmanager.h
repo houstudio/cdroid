@@ -30,7 +30,6 @@ private:
     std::vector<std::pair<std::string,InputMethod*>>imeMethods;
     int setInputMethod(InputMethod*,const std::string&name);
 protected:
-    class KeyCharacterMap*kcm;
     std::string predictSource;
     InputMethod*im;
     static class InputMethodManager*mInst;
@@ -47,17 +46,6 @@ public:
     InputMethod*getInputMethod(int idx);
     InputMethod*getInputMethod(const std::string&name);
     void shutDown(){delete mInst;}
-    int setKeyCharacterMap(const std::string&kcm);
-    int getCharacter(int keycode,int metaState)const;
-    // Mirrors KeyCharacterMap.getMatch: first accepted char producible by `keycode`
-    // under `metaState`, or 0. Exposed so KeyListener subclasses (NumberKeyListener)
-    // can resolve a key to an accepted character via the loaded device key map.
-    char16_t getMatch(int keycode,const char16_t* chars,size_t numChars,int metaState)const;
-    // Mirrors KeyCharacterMap.getNumber / getDisplayLabel (the numeric/symbol label
-    // and the printed glyph label of a key). Used by KeyEvent.getNumber/getDisplayLabel
-    // (DialerKeyListener.lookup prefers the key's number). 0 if the key has none.
-    char16_t getNumber(int keycode)const;
-    char16_t getDisplayLabel(int keycode)const;
     void viewClicked(View*v);
     void focusIn(View*);
     void focusOut(View*);

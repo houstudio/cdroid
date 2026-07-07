@@ -64,6 +64,12 @@ public:
     int checkEvents()override;
     int handleEvents()override;
     void sendEvent(InputEvent&);
+    /*Lookup an input device by id (== fd) WITHOUT creating it — a pure registry
+      query, the equivalent of Android InputManagerGlobal.getInputDevice(id).
+      Returns nullptr if no device with that id is registered (e.g. a synthetic
+      KeyEvent with deviceId < 0, or a hot-removed device). Thread-safe: takes
+      mtxEvents (KeyEvent resolves chars from any thread, not just the input one).*/
+    InputDevice* getInputDevice(int id);
     /*OR of every KeyDevice's local meta state. Mirrors Android
       InputReader::getGlobalMetaState — the global modifier view attached to
       KeyEvents/MotionEvents from any device. Safe to call from putEvent

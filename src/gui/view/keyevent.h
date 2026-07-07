@@ -22,6 +22,8 @@
 #include <core/sparsearray.h>
 namespace cdroid{
 
+class KeyCharacterMap;
+
 class KeyEvent:public InputEvent{
 private:
     int32_t mFlags;
@@ -165,6 +167,10 @@ public:
     // Ported from Android KeyEvent.getMatch: the first char in `chars` producible
     // by this key under `metaState`, else 0. Used by NumberKeyListener.lookup.
     char16_t getMatch(const char16_t* chars, int len, int metaState) const;
+    // Ported from Android KeyEvent.getKeyCharacterMap: this key's device map, or
+    // the shared default (VIRTUAL_KEYBOARD) if deviceId is unknown / < 0. All
+    // char-producing methods below route through it.
+    KeyCharacterMap* getKeyCharacterMap() const;
     // Ported from Android KeyEvent.getNumber/getDisplayLabel: the number/symbol
     // and the printed glyph label of this key (independent of pressed modifiers),
     // via the loaded device KeyCharacterMap. 0 if the key has none. DialerKeyListener

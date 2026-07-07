@@ -366,6 +366,10 @@ protected:
     Point mLastEventPos;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*mKeyMap;
+    // Per-device KeyCharacterMap (.kcm), loaded like mKeyMap (.kl): by device name,
+    // then Vendor_%04x_Productor_%04x.kcm, else the shared KeyCharacterMap::getDefault().
+    // Borrowed from the shared default (pointer-equal) is NOT freed in the dtor.
+    class KeyCharacterMap*mKeyCharacterMap=nullptr;
     static Preferences mPrefs;
     std::vector<InputEvent*>mEvents;
     virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
@@ -384,6 +388,9 @@ public:
     bool supportsSource(int32_t source)const;
     int32_t getSources()const;
     int32_t getClasses()const;
+    /*This device's KeyCharacterMap (.kcm), or the shared default if it had no
+      device-specific map. KeyEvent resolves chars through this via deviceId.*/
+    KeyCharacterMap* getKeyCharacterMap()const;
     int32_t getEventCount()const;
     void pushEvent(InputEvent*);
     int32_t drainEvents(std::vector<InputEvent*>&out);

@@ -243,14 +243,12 @@ InputMethod*InputMethodManager::getInputMethod(const std::string&name){
 
 InputMethodManager::InputMethodManager(){
     im = nullptr;
-    kcm= nullptr;
     mInputType = 0;
     imeWindow = nullptr;
 }
 
 InputMethodManager::~InputMethodManager(){
     mInst = nullptr;
-    delete kcm;
     LOGD("InputMethodManager Destroied!");
     if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
     for(auto ime:imeMethods){
@@ -259,25 +257,11 @@ InputMethodManager::~InputMethodManager(){
     imeMethods.clear();
 }
 
-int InputMethodManager::setKeyCharacterMap(const std::string&filename){
-    std::ifstream fs(filename);
-    delete kcm;
-    kcm = nullptr;
-    if(fs.good()){
-        KeyCharacterMap::load(filename,fs,KeyCharacterMap::FORMAT_ANY,kcm);
-    }else{
-        std::shared_ptr<std::istream>in=App::getInstance().getInputStream(filename);
-        if(in)KeyCharacterMap::load(filename,*in,KeyCharacterMap::FORMAT_ANY,kcm);
-    }
-    LOGI("load Keyboard Character map from %s  kcm=%p",filename.c_str(),kcm);
-    return kcm?0:-1;
-}
-
 InputMethodManager& InputMethodManager::getInstance(){
     if(mInst == nullptr){
         mInst = new InputMethodManager();
-        if(mInst->setKeyCharacterMap("Generic.kcm"))
-            mInst->setKeyCharacterMap("qwerty.kcm");
+        // The device KeyCharacterMap is no longer loaded here — it is per-device
+        // now (InputDevice loads its .kcm; KeyEvent resolves via its deviceId).
     }
     if(mInst->imeMethods.size() == 0){
         InputMethod*m = new InputMethod("@cdroid:xml/qwerty.xml");
@@ -293,27 +277,6 @@ InputMethodManager& InputMethodManager::getInstance(){
 
 InputMethodManager* InputMethodManager::peekInstance(){
     return mInst;
-}
-
-int InputMethodManager::getCharacter(int keycode,int metaState)const{
-    LOGE_IF(kcm==nullptr,"KeyCharacterMap(kcm) not setted,cant map keycode to character!!!");
-    if(kcm == nullptr)return keycode;
-    return kcm->getCharacter(keycode,metaState);
-}
-
-char16_t InputMethodManager::getMatch(int keycode,const char16_t* chars,size_t numChars,int metaState)const{
-    if(kcm == nullptr)return 0;
-    return kcm->getMatch(keycode,chars,numChars,metaState);
-}
-
-char16_t InputMethodManager::getNumber(int keycode)const{
-    if(kcm == nullptr)return 0;
-    return kcm->getNumber(keycode);
-}
-
-char16_t InputMethodManager::getDisplayLabel(int keycode)const{
-    if(kcm == nullptr)return 0;
-    return kcm->getDisplayLabel(keycode);
 }
 
 void InputMethodManager::viewClicked(View*view){
