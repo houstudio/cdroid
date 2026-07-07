@@ -1,9 +1,10 @@
 #include <charconv>
 #include <cstdint>
 #include <porting/cdlog.h>
-#include <text/spannablestring.h>
 #include <text/layout.h>
+#include <text/spannablestring.h>
 #include <text/measuredparagraph.h>
+#include <text/method/textkeylistener.h>
 namespace cdroid{
 const Directions Layout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
 const Directions Layout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
@@ -1325,9 +1326,9 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
     const bool clamped = shouldClampCursor(line);
     float h1 = getPrimaryHorizontal(point, clamped) - 0.5f;
 
-    const int caps = 0;//TextKeyListener.getMetaState(editingBuffer, TextKeyListener.META_SHIFT_ON) |
-               //TextKeyListener.getMetaState(editingBuffer, TextKeyListener.META_SELECTING);
-    const int fn = 0;//TextKeyListener.getMetaState(editingBuffer, TextKeyListener.META_ALT_ON);
+    const int caps = TextKeyListener::getMetaState(*editingBuffer, TextKeyListener::META_SHIFT_ON) |
+               TextKeyListener::getMetaState(*editingBuffer, TextKeyListener::META_SELECTING);
+    const int fn = TextKeyListener::getMetaState(*editingBuffer, TextKeyListener::META_ALT_ON);
     int dist = 0;
 
     if (caps != 0 || fn != 0) {
