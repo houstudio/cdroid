@@ -494,9 +494,7 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         }
         makeBlink();
     } else if (action == MotionEvent::ACTION_MOVE) {
-        LOGD("Selection extendTo %d->%d",Selection::getSelectionStart(editable()),offset);
         Selection::extendSelection(editable(), offset);
-        mTextView->invalidate(true);
     }
     return true;
 }

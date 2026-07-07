@@ -32,34 +32,67 @@ void SpannableStringBuilder::setSpan(const ParcelableSpan* what, int start, int 
         }
     }
     addSpan(what, start, end, flags);
+    // Fire SpanWatcher.onSpanAdded — Android's SpannableStringBuilder.setSpan does
+    // this for a newly-inserted span. Without it the host TextView::spanChange is
+    // never notified of the FIRST selection (markers are added fresh), so the
+    // selection highlight never appears until a later in-place update.
+    sendSpanAdded(what, start, end);
 }
 
 void SpannableStringBuilder::removeSpan(const ParcelableSpan* what) {
-    // Loop in case legacy data held duplicate records for the same pointer.
-    while (removeSpanRecord(what)) { /* removed all matching */ }
+    // Fire sendSpanRemoved for each matching record (Android fires it per span),
+    // then drop it. disposeSpan frees owned spans and no-ops borrowed ones
+    // (NoCopySpan, e.g. Selection markers). Loop covers legacy duplicate records.
+    for (auto it = mSpans.begin(); it != mSpans.end();) {
+        if (it->span == what) {
+            sendSpanRemoved(what, it->start, it->end);
+            disposeSpan(*it);
+            it = mSpans.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 void SpannableStringBuilder::adjustSpansForReplace(int start, int end, int delta) {
-    // Adjust every span to a replacement of [start, end) with text of length
-    // (end-start)+delta. The previous logic truncated the tail of spans that
-    // contained the changed region (`send = start`), which silently shrank the
-    // whole-range watcher spans (mChangeWatcher, DynamicLayout::mWatcher) on
-    // every edit. This mirrors Android's intent: spans before the change are
-    // untouched, spans after shift by delta, and overlapping spans are clamped
-    // — start into [.., start], end into [end+delta, ..].
+    // The region [start, end) is replaced by text of length (end - start) + delta,
+    // so the region's new right edge is newEnd = end + delta. Adjust each span's
+    // two edges independently per Android's POINT/MARK anchor semantics
+    // (Spanned.SPAN_POINT_MARK_MASK): a POINT edge follows text inserted at it
+    // (lands at the new region end); a MARK edge stays anchored to the preceding
+    // text (lands at the region start). Edges strictly past the region just shift
+    // by delta; edges strictly before it are unchanged.
+    //
+    // Why: TextView's ChangeWatcher is attached as a whole-text
+    // SPAN_INCLUSIVE_INCLUSIVE (= SPAN_MARK_POINT) span over [0, length]. The
+    // previous geometric rule treated a span whose end sat exactly on the insert
+    // point as "entirely before" (`r.end <= start`) and never grew it, so for an
+    // EditText that started empty the watcher stayed degenerate [0, 0] forever.
+    // getSpans(selPos, selPos, SpanWatcher) then skipped it for any selPos > 0,
+    // so selection-cursor SpanWatcher notifications never reached the host
+    // TextView and the selection highlight never repainted. (selectAll still
+    // worked because its query starts at offset 0, which overlaps even [0, 0].)
+    const int newEnd = end + delta;
     for (auto& r : mSpans) {
-        if (r.end <= start) {
-            // entirely before the change — unchanged
-        } else if (r.start >= end) {
-            // entirely after the change — shift by delta
-            r.start += delta;
-            r.end += delta;
-        } else {
-            // overlaps the change
-            if (r.start > start) r.start = start;
-            if (r.end >= end) r.end += delta;
-            else r.end = end + delta;   // end was inside the replaced region
-        }
+        const int oldStart = r.start;
+        const int oldEnd = r.end;
+        // SPAN_POINT_MARK_MASK: start edge POINT = 0x20, end edge POINT = 0x02.
+        const bool startIsPoint = (r.flags & 0x20) != 0;
+        const bool endIsPoint   = (r.flags & 0x02) != 0;
+
+        if (oldEnd > end) {
+            r.end = oldEnd + delta;          // strictly past the old region: shift
+        } else if (oldEnd >= start) {
+            r.end = endIsPoint ? newEnd : start;  // inside/at region: follow or anchor
+        } // else oldEnd < start: unchanged
+
+        if (oldStart > end) {
+            r.start = oldStart + delta;      // strictly past the old region: shift
+        } else if (oldStart >= start) {
+            r.start = startIsPoint ? newEnd : start;
+        } // else oldStart < start: unchanged
+
+        if (r.start > r.end) r.start = r.end;  // keep a valid (possibly empty) range
     }
 }
 

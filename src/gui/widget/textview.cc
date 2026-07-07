@@ -1025,7 +1025,6 @@ void TextView::spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart,
     bool selChanged = false;
     int newSelStart = -1, newSelEnd = -1;
     mHighlightPathBogus = true;
-    LOGD("%d,%d->%d,%d",oldStart,oldEnd,newStart,newEnd);
     if(what==Selection::SELECTION_END){
         selChanged = true;
         newSelEnd = newStart;
@@ -4880,7 +4879,6 @@ void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, in
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){
-    LOGD("%d,%d",selStart,selEnd);
 }
 
 bool TextView::setFrame(int l, int t, int w, int h) {
