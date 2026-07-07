@@ -392,7 +392,11 @@ bool Editor::onKeyDown(int keyCode, KeyEvent& event) {
         if (sp != nullptr && mm->onKeyDown(*mTextView, *sp, keyCode, event)) {
             // The movement method updated the Selection spans but did NOT touch the
             // cursor drawable's bounds — reposition it before invalidating, otherwise
-            // the caret is redrawn at its stale offset.
+            // the caret is redrawn at its stale offset. makeBlink() also re-stamps
+            // mShowCursor so shouldRenderCursor() is back in its ON phase; without it
+            // the caret draws against a stale blink start time and intermittently
+            // disappears (it only comes back once the cycle randomly lands ON again).
+            makeBlink();
             invalidateCursor();
             return true;
         }

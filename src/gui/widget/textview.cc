@@ -4875,7 +4875,6 @@ void TextView::startStopMarquee(bool start){
 }
 
 void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter){
-    LOGD("%d->%d",start,lengthAfter);
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){
