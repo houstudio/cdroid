@@ -45,7 +45,7 @@ option(ENABLE_NAVIGATION "Enable Navigation" OFF)
 option(ENABLE_FLEXBOXLAYOUT "Enable FlexboxLayout" OFF)
 option(ENABLE_COORDINATORLAYOUT "Enable CoordinatorLayout" OFF)
 option(ENABLE_I18N "Enable I18N" OFF)
-option(ENABLE_MENU "Enable MENU(Experience)" OFF)
+option(ENABLE_MENU "Enable MENU(Experience)" ON)
 option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" ON)
 option(ENABLE_KPLOT "Enable QT KPlot " ON)
 option(ENABLE_ACHART "Enable AChartEngine " ON)
@@ -72,7 +72,7 @@ list(APPEND CDROID_DEPLIBS
     ${ZIP_LIBRARIES}
     ${Iconv_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
-    ${FRIBIDI_LIBRARIES}
+    #${FRIBIDI_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)
@@ -112,7 +112,7 @@ list(APPEND CDROID_DEPINCLUDES
     ${EXPAT_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
     ${HARFBUZZ_INCLUDE_DIRS}
-    ${FRIBIDI_INCLUDE_DIRS}
+    #${FRIBIDI_INCLUDE_DIRS}
 )
 
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
