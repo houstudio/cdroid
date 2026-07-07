@@ -57,6 +57,7 @@ private:
     class CursorController;
     class InsertionPointCursorController;
     class TextViewPositionListener;
+    class SpanController;
 
     Drawable* mDrawableForCursor = nullptr;
     Drawable* mSelectHandleLeft = nullptr;
@@ -64,6 +65,7 @@ private:
     Drawable* mSelectHandleCenter = nullptr;
     TextView* mTextView;
     KeyListener* mKeyListener = nullptr;
+    SpanController* mSpanController = nullptr;   // owned; attached as a borrowed NoCopySpan span
     Runnable mBlink;
     bool mBlinkCancelled = false;
     bool mCursorVisible = true;
@@ -121,6 +123,7 @@ public:
     void invalidateCursorPath();
     void invalidateCursor();
     void invalidateTextDisplayList();
+    void sendUpdateSelection();   // Android: InputMethodManager.updateSelection (IME — deferred)
     bool hasInsertionController() const{
         return mInsertionControllerEnabled;
     }
@@ -143,6 +146,7 @@ public:
     void prepareCursorControllers();
     void hideCursorControllers();
     void hideCursorAndSpanControllers();
+    void addSpanWatchers(Spannable& text);
     void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
 

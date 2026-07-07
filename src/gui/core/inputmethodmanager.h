@@ -53,6 +53,11 @@ public:
     // under `metaState`, or 0. Exposed so KeyListener subclasses (NumberKeyListener)
     // can resolve a key to an accepted character via the loaded device key map.
     char16_t getMatch(int keycode,const char16_t* chars,size_t numChars,int metaState)const;
+    // Mirrors KeyCharacterMap.getNumber / getDisplayLabel (the numeric/symbol label
+    // and the printed glyph label of a key). Used by KeyEvent.getNumber/getDisplayLabel
+    // (DialerKeyListener.lookup prefers the key's number). 0 if the key has none.
+    char16_t getNumber(int keycode)const;
+    char16_t getDisplayLabel(int keycode)const;
     void viewClicked(View*v);
     void focusIn(View*);
     void focusOut(View*);

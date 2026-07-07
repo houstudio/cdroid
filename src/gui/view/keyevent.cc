@@ -42,6 +42,36 @@ char16_t KeyEvent::getMatch(const char16_t* chars, int len, int metaState) const
     return imm->getMatch(mKeyCode, chars, (size_t)len, metaState);
 }
 
+// Ported from Android KeyEvent.getNumber/getDisplayLabel. Android goes
+// KeyEvent → KeyCharacterMap directly; CDROID's KCM lives behind InputMethodManager
+// (same routing as getUnicodeChar/getMatch above), so we bridge through it.
+char16_t KeyEvent::getNumber() const {
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    if (imm == nullptr) return 0;
+    return imm->getNumber(mKeyCode);
+}
+
+char16_t KeyEvent::getDisplayLabel() const {
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    if (imm == nullptr) return 0;
+    return imm->getDisplayLabel(mKeyCode);
+}
+
+// Ported from Android KeyCharacterMap.getKeyData (Android's KeyEvent.getKeyData
+// delegates to it). meta[0..3] = char under [none, shift, alt, shift+alt]; the
+// char source (getUnicodeChar) is the same nativeGetCharacter the Java path uses.
+bool KeyEvent::getKeyData(KeyData& results) const {
+    const char16_t displayLabel = getDisplayLabel();
+    if (displayLabel == 0) return false;
+    results.displayLabel = displayLabel;
+    results.number = getNumber();
+    results.meta[0] = (char16_t)getUnicodeChar(0);
+    results.meta[1] = (char16_t)getUnicodeChar(META_SHIFT_ON);
+    results.meta[2] = (char16_t)getUnicodeChar(META_ALT_ON);
+    results.meta[3] = (char16_t)getUnicodeChar(META_ALT_ON | META_SHIFT_ON);
+    return true;
+}
+
 KeyEvent* KeyEvent::obtain(){
     KeyEvent*ev = PooledInputEventFactory::getInstance().createKeyEvent();
     ev->prepareForReuse();

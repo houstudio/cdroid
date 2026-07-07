@@ -23,6 +23,7 @@
 #include <text/selection.h>
 #include <text/editable.h>
 #include <text/spannablestringbuilder.h>
+#include <text/spanwatcher.h>
 #include <text/layout.h>
 #include <text/parcelablespan.h>
 #include <view/keyevent.h>
@@ -41,6 +42,63 @@ namespace {
 // Cursor blink period, in milliseconds (matches Android's Editor.BLINK).
 constexpr int BLINK = 500;
 }  // namespace
+
+// =====================================================================================
+//  SpanController — port of Android's Editor.SpanController (a SpanWatcher).
+//  Defined early so Editor's destructor sees a complete type (it deletes the
+//  instance). Attached to the editable buffer over [0, length] by
+//  addSpanWatchers. In Android it does two things: (1) on non-intermediate
+//  SELECTION_START/END span changes it calls sendUpdateSelection() to push the
+//  new selection to the IME; (2) on EasyEditSpan add/remove/change it shows/
+//  hides the EasyEditPopupWindow. CDROID has neither an IME connection nor
+//  EasyEditSpan/EasyEditPopupWindow, so only the selection→sendUpdateSelection
+//  path is wired (and sendUpdateSelection is itself a deferred no-op). The
+//  structure is kept for parity and so future IME / EasyEdit work drops in.
+// =====================================================================================
+class Editor::SpanController : public SpanWatcher {
+public:
+    explicit SpanController(Editor* editor) : mEditor(editor) {}
+
+    // Android.Editor.SpanController.isNonIntermediateSelectionSpan: a START/END
+    // selection marker that is not carrying SPAN_INTERMEDIATE.
+    static bool isNonIntermediateSelectionSpan(Spannable& text, const ParcelableSpan* span) {
+        const bool isSelection = (span == Selection::SELECTION_START || span == Selection::SELECTION_END);
+        const bool intermediate = (text.getSpanFlags(span) & Spanned::SPAN_INTERMEDIATE) != 0;
+        return isSelection && !intermediate;
+    }
+
+    void onSpanAdded(Spannable& text, const ParcelableSpan* what, int /*start*/, int /*end*/) override {
+        if (isNonIntermediateSelectionSpan(text, what)) {
+            mEditor->sendUpdateSelection();
+        }
+        // Android else-branch: EasyEditSpan → build/show EasyEditPopupWindow +
+        // schedule a 3s hide. Deferred (no EasyEditSpan / EasyEditPopupWindow).
+    }
+
+    void onSpanRemoved(Spannable& text, const ParcelableSpan* what, int /*start*/, int /*end*/) override {
+        if (isNonIntermediateSelectionSpan(text, what)) {
+            mEditor->sendUpdateSelection();
+        }
+        // Android else-branch: if the removed span was the popup's EasyEditSpan, hide().
+    }
+
+    void onSpanChanged(Spannable& text, const ParcelableSpan* what,
+            int /*ostart*/, int /*oend*/, int /*nstart*/, int /*nend*/) override {
+        if (isNonIntermediateSelectionSpan(text, what)) {
+            mEditor->sendUpdateSelection();
+        }
+        // Android else-branch: EasyEditSpan moved → sendEasySpanNotification(TEXT_MODIFIED)
+        // + removeSpan. Deferred.
+    }
+
+    void hide() {
+        // Android: dismiss the EasyEditPopupWindow + cancel the hide runnable.
+        // No popup in CDROID → intentional no-op.
+    }
+
+private:
+    Editor* mEditor;
+};
 
 // =====================================================================================
 //  Construction / destruction
@@ -63,6 +121,15 @@ Editor::Editor(TextView* textView) : mTextView(textView) {
 
 Editor::~Editor() {
     if (mTextView) mTextView->removeCallbacks(mBlink);
+    // SpanController is owned by Editor but attached to the editable buffer as a
+    // borrowed (NoCopySpan) span. In TextView's destruction order mText (line 252)
+    // is destroyed BEFORE mEditor (line 155), so by the time we get here the
+    // buffer is already gone and we must NOT touch it (getEditableText() would
+    // deref freed memory). That is safe: a NoCopySpan record is never deleted or
+    // dereferenced by the Spannable's own cleanup, so the just-freed buffer left
+    // a harmless dangling record, and we free the object here.
+    delete mSpanController;
+    mSpanController = nullptr;
 }
 
 // =====================================================================================
@@ -484,16 +551,16 @@ bool Editor::onTouchEvent(MotionEvent& event) {
         const int64_t timeoutMS = (int64_t)ViewConfiguration::getDoubleTapTimeout();
         const float dx = x - mLastUpX, dy = y - mLastUpY;
         const float slop = (float)ViewConfiguration::getDoubleTapSlop();
-        const bool inMultiTapWindow = mLastUpTime != 0
-                && (now - mLastUpTime) <= timeoutMS
-                && (dx * dx + dy * dy) <= slop * slop;
+        const bool inMultiTapWindow = (mLastUpTime != 0)
+                && ((now - mLastUpTime) <= timeoutMS)
+                && ((dx * dx + dy * dy) <= (slop * slop));
         mTapCount = inMultiTapWindow ? mTapCount + 1 : 1;
         if (mTapCount > 3) mTapCount = 1;
         if (mTapCount == 2) {
             selectCurrentWord();
         } else if (mTapCount >= 3) {
             Selection::selectAll(editable());
-        } else {LOGD("selection from %d",offset);
+        } else {
             Selection::setSelection(editable(), offset);
         }
         makeBlink();
@@ -657,4 +724,29 @@ void Editor::hideCursorAndSpanControllers() {
     mSelectionControllerEnabled = false;
     //mSpanControllerEnabled = false;
 }
+
+void Editor::addSpanWatchers(Spannable& text) {
+    // Port of Android Editor.addSpanWatchers. Android attaches two spans over
+    // [0, textLength]: mKeyListener (BaseKeyListener implements SpanWatcher, used
+    // to react to SuggestionSpan changes) and mSpanController. CDROID's KeyListener
+    // is NOT a SpanWatcher/ParcelableSpan (the KeyListener→SpanWatcher wiring is a
+    // deferred Phase-1 item, see text/method/textkeylistener.h), so only the
+    // SpanController is attached here.
+    const int textLength = (int)text.length();
+
+    if (mSpanController == nullptr) {
+        mSpanController = new SpanController(this);
+    }
+    text.setSpan(mSpanController, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+}
+
+void Editor::sendUpdateSelection() {
+    // Android: InputMethodManager.updateSelection(view, selStart, selEnd, ...) —
+    // pushes the current selection to the IME so candidates/composition track it.
+    // CDROID has no IME connection (deferred by scope), so this is a structural
+    // no-op hook. The selection itself is already authoritative (Selection spans)
+    // and the host TextView is notified independently via spanChange →
+    // onSelectionChanged.
+}
+
 }  // namespace cdroid

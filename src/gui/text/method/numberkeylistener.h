@@ -31,7 +31,9 @@ public:
     virtual std::u16string getAcceptedChars() const = 0;
 
 protected:
-    int lookup(const KeyEvent& event, Spannable& content);
+    // Virtual so dialer/date/time subclasses can override the key→char resolution
+    // (Android's NumberKeyListener.lookup is an overridable protected method).
+    virtual int lookup(const KeyEvent& event, Spannable& content);
     static bool ok(const std::u16string& accept, char16_t c);
 };
 

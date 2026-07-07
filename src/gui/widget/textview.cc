@@ -1524,8 +1524,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
                 | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
 
-        LOGD("TODO  mEditor->addSpanWatchers");
-        //if (mEditor != nullptr) mEditor->addSpanWatchers(sp);
+        if (mEditor != nullptr) mEditor->addSpanWatchers(*sp);
 
         if (mTransformation != nullptr) {
             const int priority = isOffsetMapping ? OFFSET_MAPPING_SPAN_PRIORITY : 0;

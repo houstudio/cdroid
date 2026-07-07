@@ -306,6 +306,16 @@ char16_t InputMethodManager::getMatch(int keycode,const char16_t* chars,size_t n
     return kcm->getMatch(keycode,chars,numChars,metaState);
 }
 
+char16_t InputMethodManager::getNumber(int keycode)const{
+    if(kcm == nullptr)return 0;
+    return kcm->getNumber(keycode);
+}
+
+char16_t InputMethodManager::getDisplayLabel(int keycode)const{
+    if(kcm == nullptr)return 0;
+    return kcm->getDisplayLabel(keycode);
+}
+
 void InputMethodManager::viewClicked(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
 }
