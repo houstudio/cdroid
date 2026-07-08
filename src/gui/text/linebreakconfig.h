@@ -23,7 +23,7 @@ public:
 private:
     int mLineBreakStyle=LINE_BREAK_STYLE_NONE;
     int mLineBreakWordStyle=LINE_BREAK_WORD_STYLE_NONE;
-    int mHyphenation;
+    int mHyphenation = HYPHENATION_UNSPECIFIED;
 public:
     class Builder {
     private:

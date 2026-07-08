@@ -195,7 +195,7 @@ DynamicLayout::DynamicLayout(CharSequence* base, CharSequence* display, TextPain
     mJustificationMode = justificationMode;
     mHyphenationFrequency = hyphenationFrequency;
     mLineBreakConfig = lineBreakConfig;
-
+    mEllipsize = false;
     generate(b);
 
     Builder::recycle(&b);
@@ -275,6 +275,7 @@ void DynamicLayout::generate(const Builder& b) {
         mInts = new PackedIntVector(COLUMNS_NORMAL);
         mEllipsizedWidth = b.mWidth;
         mEllipsizeAt = TextUtils::TruncateAt::NONE;
+        mEllipsize= false;
     }
 
     mObjects = new PackedObjectVector<const Directions*>(1);
@@ -488,7 +489,7 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
         ints.resize(COLUMNS_ELLIPSIZE);
         ints[ELLIPSIS_START] = ELLIPSIS_UNDEFINED;
     } else {
-        ints.resize(COLUMNS_NORMAL);
+        ints.resize(COLUMNS_NORMAL,0);
     }
 
     std::vector<const Directions*> objects(1);

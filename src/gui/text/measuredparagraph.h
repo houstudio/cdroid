@@ -78,7 +78,7 @@ public:
         return mSpanEndCache;
     }
 
-    std::vector<int> getFontMetrics() const{
+    const std::vector<int>& getFontMetrics() const{
         return mFontMetrics;
     }
 

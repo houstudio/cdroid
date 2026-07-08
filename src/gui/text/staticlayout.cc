@@ -426,9 +426,9 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
             }
         }
         MeasuredParagraph* measuredPara = paragraphInfo[paraIndex].measured;
-        std::vector<char16_t>chs = measuredPara->getChars();
-        auto spanEndCache = measuredPara->getSpanEndCache();
-        auto fmCache = measuredPara->getFontMetrics();
+        auto& chs = measuredPara->getChars();
+        auto& spanEndCache = measuredPara->getSpanEndCache();
+        auto& fmCache = measuredPara->getFontMetrics();
         LineBreaker::ParagraphConstraints constraints;
 
         constraints.setWidth(restWidth);
@@ -439,12 +439,12 @@ void StaticLayout::generate(const Builder& b, bool includepad, bool trackpad) {
         int breakCount = res.getLineCount();
         if (lineBreakCapacity < breakCount) {
             lineBreakCapacity = breakCount;
-            breaks.resize(lineBreakCapacity);
-            lineWidths.resize(lineBreakCapacity);
-            ascents.resize(lineBreakCapacity);
-            descents.resize(lineBreakCapacity);
-            hasTabs.resize(lineBreakCapacity);
-            hyphenEdits.resize(lineBreakCapacity);
+            breaks.resize(lineBreakCapacity,0);
+            lineWidths.resize(lineBreakCapacity,0);
+            ascents.resize(lineBreakCapacity,0);
+            descents.resize(lineBreakCapacity,0);
+            hasTabs.resize(lineBreakCapacity,0);
+            hyphenEdits.resize(lineBreakCapacity,0);
         }
 
         for (int i = 0; i < breakCount; ++i) {
