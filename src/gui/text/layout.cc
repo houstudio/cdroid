@@ -1692,7 +1692,7 @@ void Layout::ellipsize(int start, int end, int line, char16_t* dest, int destoff
         if (useEllipsisString && i < ellipsisStringLen) {
             c = ellipsisString[i];//.charAt(i);
         } else {
-            //c = TextUtils::ELLIPSIS_FILLER;
+            c = TextUtils::ELLIPSIS_FILLER;
         }
         const int a = i + ellipsisStart + lineStart;
         dest[destoff + a - start] = c;

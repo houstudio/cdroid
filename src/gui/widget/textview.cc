@@ -18,6 +18,7 @@
 #include <widget/textview.h>
 #include <widget/editor.h>
 #include <text/method/movementmethod.h>
+#include <text/method/arrowkeymovementmethod.h>
 #include <text/method/offsetmapping.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
@@ -217,84 +218,102 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
+    // Attributes handled by Android's TextView styled-attr switch but not previously
+    // wired. ems/width setters don't guard -1, so only apply when the attribute is
+    // present (Android fires them only inside the switch case for a present attr).
+    if (attrs.hasAttribute("maxEms")) setMaxEms(attrs.getInt("maxEms", -1));
+    if (attrs.hasAttribute("ems"))   setEms(attrs.getInt("ems", -1));
+    if (attrs.hasAttribute("minEms"))setMinEms(attrs.getInt("minEms", -1));
+    if (attrs.hasAttribute("width")) setWidth(attrs.getDimensionPixelSize("width", -1));
+
+    if (!attrs.getBoolean("includeFontPadding", true)) setIncludeFontPadding(false);
+    if (!attrs.getBoolean("cursorVisible", true)) setCursorVisible(false);
+    setEnabled(attrs.getBoolean("enabled", isEnabled()));
+    setAutoLinkMask(attrs.getInt("autoLink", std::unordered_map<std::string,int>{
+        {"none", 0}, {"web", 0x01}, {"email", 0x02},
+        {"phone", 0x04}, {"map", 0x08}, {"all", 0x0f}
+    }, mAutoLinkMask));
+    setLinksClickable(attrs.getBoolean("linksClickable", true));
+    setHyphenationFrequency(attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
+        {"none",   (int)Layout::HYPHENATION_FREQUENCY_NONE},
+        {"normal", (int)Layout::HYPHENATION_FREQUENCY_NORMAL},
+        {"full",   (int)Layout::HYPHENATION_FREQUENCY_FULL}
+    }, mHyphenationFrequency));
+    setJustificationMode(attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
+        {"none",            (int)Layout::JUSTIFICATION_MODE_NONE},
+        {"inter_word",      (int)Layout::JUSTIFICATION_MODE_INTER_WORD},
+        {"inter_character", (int)Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
+    }, mJustificationMode));
+    setTextIsSelectable(attrs.getBoolean("textIsSelectable", false));
+    if (attrs.hasAttribute("imeOptions"))
+        setImeOptions(attrs.getInt("imeOptions", 0)); // Editor has no mInputContentType yet (DEFERRED)
+
     BufferType bufferType = BufferType::EDITABLE;
     const int variation = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
     const bool passwordInputType = variation== (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_PASSWORD);
     const bool webPasswordInputType = variation == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD);
     const bool numberPasswordInputType = variation == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
-#if 0
-    const int targetSdkVersion = context.getApplicationInfo().targetSdkVersion;
-    mUseInternationalizedInput = true;//targetSdkVersion >= VERSION_CODES.O;
-    mUseFallbackLineSpacing = true;//targetSdkVersion >= VERSION_CODES.P;
+    bool singleLine = mSingleLine;
+    // Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
+    // Android gathers these into locals first, then resolves a KeyListener below.
+    const std::string inputMethod = attrs.getString("inputMethod");
+    const std::string digits = attrs.getString("digits");
+    const bool phone = attrs.getBoolean("phoneNumber", false);
+    const int numeric = attrs.getInt("numeric", std::unordered_map<std::string,int>{
+        {"signed", (int)SIGNED}, {"decimal", (int)DECIMAL} }, 0);
+    const bool autotext = attrs.getBoolean("autoText", false);
+    const int autocap = attrs.getInt("capitalize", std::unordered_map<std::string,int>{
+        {"sentences", 1}, {"words", 2}, {"characters", 3} }, -1);
+    const bool editable = attrs.getBoolean("editable", getDefaultEditable());
+    const int buffertype = attrs.getInt("bufferType", std::unordered_map<std::string,int>{
+        {"normal", 0}, {"spannable", 1}, {"editable", 2} }, 0);
+    const bool password = attrs.getBoolean("password", false);
+    mUseFallbackLineSpacing = true; // Android: targetSdk >= P (BORINGLAYOUT_FALLBACK_LINESPACING)
 
-    if (inputMethod != nullptr) {
-        try {
-            c = Class.forName(inputMethod.toString());
-        } catch (ClassNotFoundException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        try {
-            createEditorIfNeeded();
-            mEditor->mKeyListener = (KeyListener) c.newInstance();
-        } catch (InstantiationException ex) {
-            throw new RuntimeException(ex);
-        } catch (IllegalAccessException ex) {
-            throw new RuntimeException(ex);
-        }
-        try {
-            mEditor->mInputType = (inputType != InputType::TYPE_NULL)
-                    ? inputType : mEditor->mKeyListener->getInputType();
-        } catch (IncompatibleClassChangeError e) {
-            mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
-        }
-    } else if (digits != nullptr) {
+    // CDROID has no reflection, so Android's inputMethod branch —
+    //   c = Class.forName(inputMethod); mEditor.mKeyListener = c.newInstance();
+    // — cannot be honored. We still record the requested input type and DEFER the
+    //   KeyListener instantiation.
+    // TODO(DEFERRED): port inputMethod KeyListener instantiation.
+    if (!inputMethod.empty()) {
         createEditorIfNeeded();
-        mEditor->mKeyListener = DigitsKeyListener::getInstance(digits.toString());
+        mEditor->mInputType = (inputType != InputType::TYPE_NULL)
+                ? inputType : InputType::TYPE_CLASS_TEXT;
+    } else if (!digits.empty()) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(
+                std::u16string(digits.begin(), digits.end()));
         // If no input type was specified, we will default to generic
-        // text, since we can't tell the IME about the set of digits
-        // that was selected.
-        mEditor->mInputType = inputType != InputType::TYPE_NULL
+        // text, since we can't tell the IME about the set of digits that was selected.
+        mEditor->mInputType = (inputType != InputType::TYPE_NULL)
                 ? inputType : InputType::TYPE_CLASS_TEXT;
     } else if (inputType != InputType::TYPE_NULL) {
-        setInputType(inputType, true);
+        setInputType(inputType); // builds the per-class KeyListener (TEXT/NUMBER/DATE/PHONE)
         // If set, the input type overrides what was set using the deprecated singleLine flag.
         singleLine = !isMultilineInputType(inputType);
     } else if (phone) {
         createEditorIfNeeded();
         mEditor->mKeyListener = DialerKeyListener::getInstance();
         mEditor->mInputType = inputType = InputType::TYPE_CLASS_PHONE;
-    }else if (numeric != 0) {
+    } else if (numeric != 0) {
         createEditorIfNeeded();
-        mEditor->mKeyListener = DigitsKeyListener::getInstance(nullptr,  // locale
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(
                 (numeric & SIGNED) != 0, (numeric & DECIMAL) != 0);
         inputType = mEditor->mKeyListener->getInputType();
         mEditor->mInputType = inputType;
-    }else if (autotext || autocap != -1) {
+    } else if (autotext || autocap != -1) {
         TextKeyListener::Capitalize cap;
         inputType = InputType::TYPE_CLASS_TEXT;
-
         switch (autocap) {
-        case 1:
-            cap = TextKeyListener::Capitalize::SENTENCES;
-            inputType |= InputType::TYPE_TEXT_FLAG_CAP_SENTENCES;
-            break;
-        case 2:
-            cap = TextKeyListener::Capitalize::WORDS;
-            inputType |= InputType::TYPE_TEXT_FLAG_CAP_WORDS;
-            break;
-        case 3:
-            cap = TextKeyListener::Capitalize::CHARACTERS;
-            inputType |= InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS;
-            break;
-        default:
-            cap = TextKeyListener::Capitalize::NONE;
-            break;
+        case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= InputType::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
+        case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= InputType::TYPE_TEXT_FLAG_CAP_WORDS;      break;
+        case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
+        default: cap = TextKeyListener::Capitalize::NONE; break;
         }
         createEditorIfNeeded();
         mEditor->mKeyListener = TextKeyListener::getInstance(autotext, cap);
         mEditor->mInputType = inputType;
-    }else if (editable) {
+    } else if (editable) {
         createEditorIfNeeded();
         mEditor->mKeyListener = TextKeyListener::getInstance();
         mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
@@ -309,34 +328,35 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         setMovementMethod(ArrowKeyMovementMethod::getInstance());
     } else {
         if (mEditor != nullptr) mEditor->mKeyListener = nullptr;
-
         switch (buffertype) {
-        case 0:
-            bufferType = BufferType::NORMAL;
-            break;
-        case 1:
-            bufferType = BufferType::SPANNABLE;
-            break;
-        case 2:
-            bufferType = BufferType::EDITABLE;
-            break;
+        case 0: bufferType = BufferType::NORMAL;   break;
+        case 1: bufferType = BufferType::SPANNABLE; break;
+        case 2: bufferType = BufferType::EDITABLE;  break;
         }
     }
 
-    if (mEditor != nullptr) {
-        mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
-                numberPasswordInputType);
+    // Android: mEditor.adjustInputType(password, passwordInputType, webPasswordInputType,
+    //   numberPasswordInputType) flips variation flags for password fields. CDROID's Editor
+    //   has no adjustInputType yet → DEFERRED.
+    // TODO(DEFERRED): port Editor::adjustInputType.
+    (void)password; (void)passwordInputType; (void)webPasswordInputType; (void)numberPasswordInputType;
+
+    if (singleLine != mSingleLine) {
+        setSingleLine(singleLine);
     }
 
     if (selectallonfocus) {
         createEditorIfNeeded();
         mEditor->mSelectAllOnFocus = true;
-
         if (bufferType == BufferType::NORMAL) {
             bufferType = BufferType::SPANNABLE;
         }
     }
-#endif
+
+    // Android applies the resolved buffer type via setText(text, bufferType) at the end of
+    // the ctor. mText was already set above; record the type so later setText() upgrades
+    // the buffer correctly. (TODO: move the initial setText after this for full fidelity.)
+    mBufferType = bufferType;
     const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
     const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
     const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
@@ -425,7 +445,6 @@ void TextView::initView(){
     mShowSoftInputOnFocus = true;
     mSelectionStart = -1;
     mSelectionEnd = -1;
-    //mKeyListener = nullptr;
     mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
@@ -1347,7 +1366,7 @@ void TextView::append(const CharSequence& text, int start, int end){
         // Do not change the movement method for text that support text selection as it
         // would prevent an arbitrary cursor displacement.
         if (linksWereAdded && mLinksClickable && !textCanBeSelected()) {
-            setMovementMethod(LinkMovementMethod.getInstance());
+            setMovementMethod(LinkMovementMethod::getInstance());
         }
     }*/
 }
@@ -1508,7 +1527,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             // Do not change the movement method for text that support text selection as it
             // would prevent an arbitrary cursor displacement.
             if (mLinksClickable && !textCanBeSelected()) {
-                //setMovementMethod(LinkMovementMethod.getInstance());
+                setMovementMethod(LinkMovementMethod::getInstance());
             }
         }
     }
@@ -3253,7 +3272,7 @@ const TextDirectionHeuristic*TextView::getTextDirectionHeuristic()const{
         return TextDirectionHeuristics::LTR;
     }
 
-    /*if (mEditor != nullptr && (mEditor->mInputType & EditorInfo.TYPE_MASK_CLASS)  == EditorInfo.TYPE_CLASS_PHONE) {
+    /*if (mEditor != nullptr && (mEditor->mInputType & InputType::TYPE_MASK_CLASS)  == InputType::TYPE_CLASS_PHONE) {
         // Phone numbers must be in the direction of the locale's digits. Most locales have LTR
         // digits, but some locales, such as those written in the Adlam or N'Ko scripts, have
         // RTL digits.
@@ -3688,7 +3707,7 @@ void TextView::setTextIsSelectable(bool selectable) {
     setFocusable(FOCUSABLE_AUTO);
     setClickable(selectable);
     setLongClickable(selectable);
-    //setMovementMethod(selectable ? ArrowKeyMovementMethod::getInstance() : nullptr);
+    setMovementMethod(selectable ? ArrowKeyMovementMethod::getInstance() : nullptr);
     setText(mText, selectable ? BufferType::SPANNABLE : BufferType::NORMAL);
     mEditor->prepareCursorControllers();
 }
@@ -3764,7 +3783,7 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
        setHorizontallyScrolling(true);
 #if 0
        if (applyTransformation) {
-           setTransformationMethod(SingleLineTransformationMethod.getInstance());
+           setTransformationMethod(SingleLineTransformationMethod::getInstance());
        }
 
        if (!changeMaxLength) return;

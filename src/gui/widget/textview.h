@@ -154,7 +154,6 @@ private:
     mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
     MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
-    //KeyListener* mKeyListener = nullptr;
     // Android: mPreventDefaultMovement — once the movement method consumes an
     // initial key down, swallow subsequent focus-traversal defaults until key up.
     bool mPreventDefaultMovement = false;

@@ -12,13 +12,13 @@ class CharSequence;
 class Spanned;
 class Spannable;
 class TextUtils {
-    // Zero-width character used to fill ellipsized strings when codepoint length must be preserved.
-    static constexpr char16_t ELLIPSIS_FILLER = 0xFEFF;//ZERO WIDTH NO-BREAK SPACE
 private:
     static constexpr int LINE_FEED_CODE_POINT = 10;
     static constexpr int NBSP_CODE_POINT = 160;
     static constexpr int PARCEL_SAFE_TEXT_LENGTH = 100000;
 public:
+    // Zero-width character used to fill ellipsized strings when codepoint length must be preserved.
+    static constexpr char16_t ELLIPSIS_FILLER = 0xFEFF;//ZERO WIDTH NO-BREAK SPACE
     static constexpr int SAFE_STRING_FLAG_TRIM = 0x1;
     static constexpr int SAFE_STRING_FLAG_SINGLE_LINE = 0x2;
     static constexpr int SAFE_STRING_FLAG_FIRST_LINE = 0x4;
