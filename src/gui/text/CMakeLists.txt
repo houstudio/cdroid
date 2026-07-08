@@ -40,6 +40,12 @@ add_library(cdtext
     method/timekeylistener.cc
     method/qwertykeylistener.cc
     method/textkeylistener.cc
+    method/multitapkeylistener.cc
+    method/replacementtransformationmethod.cc
+    method/hidereturnstransformationmethod.cc
+    method/singlelinetransformationmethod.cc
+    method/insertmodetransformationmethod.cc
+    method/translationtransformationmethod.cc
     )
 target_link_libraries(cdtext minikin expat)
 
