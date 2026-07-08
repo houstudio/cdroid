@@ -100,8 +100,8 @@ public:
     int getEllipsisCount(int line) const override;
     int getEllipsisStart(int line) const override;
     int getEllipsizedWidth() const override;
-    bool isFallbackLineSpacingEnabled() const /*override*/;
-    RectF computeDrawingBoundingBox() const /*override*/;
+    bool isFallbackLineSpacingEnabled() const override;
+    RectF computeDrawingBoundingBox() const override;
 
     void draw(Canvas& c, Path* highlight, Paint* highlightpaint,int cursorOffset)override;
 

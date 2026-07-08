@@ -88,7 +88,7 @@ Layout::Layout(CharSequence* text, TextPaint* paint, int width, Alignment align,
     mSpannedText = (dynamic_cast<Spanned*>(text)!=nullptr);//text instanceof Spanned;
     mLeftIndents = leftIndents;
     mRightIndents = rightIndents;
-    mJustificationMode = JUSTIFICATION_MODE_NONE;
+    mJustificationMode = justificationMode;
     mLineBreakConfig = lineBreakConfig;
     mUseBoundsForWidth = useBoundsForWidth;
     mShiftDrawingOffsetForStartOverhang = shiftDrawingOffsetForStartOverhang;
@@ -1688,11 +1688,11 @@ void Layout::ellipsize(int start, int end, int line, char16_t* dest, int destoff
     const int max = std::min(ellipsisCount, end - ellipsisStart - lineStart);
 
     for (int i = min; i < max; i++) {
-        char c;
+        char16_t c;
         if (useEllipsisString && i < ellipsisStringLen) {
             c = ellipsisString[i];//.charAt(i);
         } else {
-            //c = TextUtils.ELLIPSIS_FILLER;
+            //c = TextUtils::ELLIPSIS_FILLER;
         }
         const int a = i + ellipsisStart + lineStart;
         dest[destoff + a - start] = c;

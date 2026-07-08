@@ -341,9 +341,9 @@ int BoringLayout::getEllipsizedWidth() const{
     return mEllipsizedWidth;
 }
 
-/*bool BoringLayout::isFallbackLineSpacingEnabled() const{
+bool BoringLayout::isFallbackLineSpacingEnabled() const{
     return mUseFallbackLineSpacing;
-}*/
+}
 
 RectF BoringLayout::computeDrawingBoundingBox() const{
     return mDrawingBounds;

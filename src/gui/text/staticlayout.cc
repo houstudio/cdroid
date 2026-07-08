@@ -889,10 +889,7 @@ int StaticLayout::getHeight(bool cap) const{
 
 RectF StaticLayout::computeDrawingBoundingBox() const{
     // Cache the drawing bounds result because it does not change after created.
-    if (!mDrawingBoundsValid) {
-        mDrawingBounds = Layout::computeDrawingBoundingBox();
-        mDrawingBoundsValid = true;
-    }
+    mDrawingBounds = Layout::computeDrawingBoundingBox();
     return mDrawingBounds;
 }
 

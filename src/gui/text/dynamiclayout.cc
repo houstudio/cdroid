@@ -310,8 +310,10 @@ void DynamicLayout::generate(const Builder& b) {
     mObjects->insertAt(0, dirs);
 
     const int baseLength = mBase->length();
-    // Update from 0 characters to whatever the real text is
-    reflow(mBase, 0, 0, baseLength);
+    // Update from 0 characters to whatever the displayed text is (android uses
+    // mDisplay.length() here — base≠display for transformed/password text).
+    // baseLength (mBase) is still used below for the watcher span, which lives on mBase.
+    reflow(mBase, 0, 0, mDisplay->length());
 
     Spannable* sp = dynamic_cast<Spannable*>(mBase);
     if (sp != nullptr) {

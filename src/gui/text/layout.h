@@ -52,11 +52,6 @@ public:
 
 
     using SelectionRectangleConsumer = std::function<void(float left, float top, float right, float bottom,int textSelectionLayout)>;
-    static constexpr TextUtils::TruncateAt ELLIPSIS_NONE=TextUtils::TruncateAt::NONE;
-    static constexpr TextUtils::TruncateAt ELLIPSIS_START=TextUtils::TruncateAt::START;
-    static constexpr TextUtils::TruncateAt ELLIPSIS_MIDDLE=TextUtils::TruncateAt::MIDDLE;
-    static constexpr TextUtils::TruncateAt ELLIPSIS_END=TextUtils::TruncateAt::END;
-    static constexpr TextUtils::TruncateAt ELLIPSIS_MARQUEE=TextUtils::TruncateAt::MARQUEE;
 
     enum Alignment {
         NONE=-1,
@@ -171,7 +166,7 @@ public:
     bool isFontPaddingIncluded() const{
         return mIncludePad;
     }
-    bool isFallbackLineSpacingEnabled() const{
+    virtual bool isFallbackLineSpacingEnabled() const{
         return mFallbackLineSpacing;
     }
     const TextDirectionHeuristic* getTextDirectionHeuristic() const{

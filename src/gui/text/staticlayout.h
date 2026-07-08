@@ -119,7 +119,6 @@ private:
     int mEllipsizedWidth;
 
     mutable RectF mDrawingBounds;
-    mutable bool mDrawingBoundsValid = false;
 
     bool mEllipsized;
     int mMaxLineHeight = DEFAULT_MAX_LINE_HEIGHT;
