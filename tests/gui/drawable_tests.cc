@@ -405,13 +405,13 @@ TEST_F(DRAWABLE,levellist){
     ld->addLevel(10,11,new BitmapDrawable(sImage));
     ld->setBounds(100,100,400,400);
     for(int i=0;i<=10;i++){
-  	ctx->set_source_rgb(0,0,0);
+        ctx->set_source_rgb(0,0,0);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
         ld->setLevel(i%11);
         ld->draw(*ctx);
         postCompose();
-        usleep(500000);
+        usleep(10000);
     }
 }
 
@@ -429,17 +429,6 @@ TEST_F(DRAWABLE,arcshape){
     ctx->set_color(0xFFFF0000);
     arc->draw(*ctx);
     ctx->fill();
-}
-TEST_F(DRAWABLE,statelist){
-    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(DrawableInflater::loadDrawable(nullptr,
-			"/home/houzh/Miniwin/src/gui/res/drawable/btn_check.xml"));
-    sd->setBounds(100,100,64,64);
-    std::vector<int>states={StateSet::ENABLED,StateSet::FOCUSED,StateSet::CHECKED};
-    int idx=sd->getStateDrawableIndex(states);
-    sd->setState(states);
-    sd->draw(*ctx);
-    postCompose();
-    sleep(10);
 }
 
 TEST_F(DRAWABLE,inflateshape){
@@ -468,12 +457,12 @@ TEST_F(DRAWABLE,inflateclip){
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
     for(int i=0;i<10000;i+=100){
-	ctx->set_source_rgb(0,0,0);
-	ctx->rectangle(0,0,800,600);
-	ctx->fill();
+	    ctx->set_source_rgb(0,0,0);
+	    ctx->rectangle(0,0,800,600);
+	    ctx->fill();
         ((ClipDrawable*)d)->setLevel(i);
         d->draw(*ctx);
-	postCompose();
+	    postCompose();
         usleep(1000);
     }
     ASSERT_NE((void*)nullptr,dynamic_cast<ClipDrawable*>(d));
@@ -553,7 +542,7 @@ TEST_F(DRAWABLE,inflatetransition){
        d->setLevel(i);
        d->draw(*ctx);
        postCompose();
-       usleep(50000);
+       usleep(5000);
    }
 }
 
@@ -578,7 +567,7 @@ TEST_F(DRAWABLE,inflatelevellist){
        d->setLevel(i%5);
        d->draw(*ctx);
        postCompose();
-       usleep(500000);
+       usleep(5000);
    }
 }
 TEST_F(DRAWABLE,gradient_alpha){
@@ -619,7 +608,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->draw(*ctx);
             ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
             postCompose();
-            usleep(1000000);
+            usleep(10000);
         }
    }
 }

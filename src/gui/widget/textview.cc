@@ -4465,6 +4465,17 @@ int TextView::getInputType()const{
     return mEditor ? mEditor->mInputType : InputType::TYPE_NULL;
 }
 
+int TextView::getImeOptions() const{
+    return 0;//(mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
+            //? mEditor.mInputContentType.imeOptions : EditorInfo.IME_NULL;
+}
+
+void TextView::setImeOptions(int imeOptions) {
+    createEditorIfNeeded();
+    //mEditor->createInputContentTypeIfNeeded();
+    //mEditor->mInputContentType->imeOptions = imeOptions;
+}
+
 // Android TextView.isAnyPasswordInputType (TextView.java:7862).
 bool TextView::isAnyPasswordInputType() const{
     const int t = getInputType();

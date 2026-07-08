@@ -1,6 +1,11 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
+#include <core/app.h>
+#include <view/gravity.h>
+#include <core/canvas.h>
+#include <widget/cdwindow.h>
 #include <widget/edgeeffect.h>
+#include <guienvironment.h>
+using namespace cdroid;
 
 class EDGEEFFECT:public testing::Test{
 
@@ -29,18 +34,18 @@ public:
 };
 
 TEST_F(EDGEEFFECT,top){
-    App app;
+    App&app=App::getInstance();
     int format[]={Gravity::LEFT,Gravity::CENTER_HORIZONTAL,Gravity::RIGHT};
     EdgeWindow*w=new EdgeWindow(100,50,800,640);
     w->setType(true);
-    app.exec();
+    pumpFor(500);
 }
 
 TEST_F(EDGEEFFECT,bottom){
-    App app;
+    App&app=App::getInstance();
     EdgeWindow*w=new EdgeWindow(100,50,800,640);
     w->setType(false);
-    app.exec();
+    pumpFor(500);
 }
 
 

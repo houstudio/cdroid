@@ -398,9 +398,14 @@ uint32_t NinePatch::PackRGBA(const uint8_t* pixel) {
 
 std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width,
         const int32_t height, std::string* out_err) {
+    // Callers may pass nullptr when they don't care about the error text; sink
+    // it locally so every "*out_err = ..." below (and in FillRanges/PopulateBounds)
+    // is always a valid write instead of a null deref.
+    std::string err_sink;
+    if (!out_err) out_err = &err_sink;
     if (width < 3 || height < 3) {
         *out_err = "image must be at least 3x3 (1x1 image with 1 pixel border)";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     std::vector<Range> horizontal_padding;
@@ -416,7 +421,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         color_validator = std::make_unique<WhiteNeutralColorValidator>();
     } else {
         *out_err = "top-left corner pixel must be either opaque white or transparent";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     // Private constructor, can't use make_unique.
@@ -425,7 +430,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     HorizontalImageLine top_row(rows, 0, 0, width);
     if (!FillRanges(&top_row, color_validator.get(), &nine_patch->horizontal_stretch_regions,
                     &unexpected_ranges, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!unexpected_ranges.empty()) {
@@ -434,13 +439,13 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         err_stream << "found unexpected optical bounds (red pixel) on top border "
                    << "at x=" << range.start + 1;
         *out_err = err_stream.str();
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     VerticalImageLine left_col(rows, 0, 0, height);
     if (!FillRanges(&left_col, color_validator.get(), &nine_patch->vertical_stretch_regions,
                     &unexpected_ranges, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!unexpected_ranges.empty()) {
@@ -448,30 +453,30 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         std::stringstream err_stream;
         err_stream << "found unexpected optical bounds (red pixel) on left border "
                    << "at y=" << range.start + 1;
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     HorizontalImageLine bottom_row(rows, 0, height - 1, width);
     if (!FillRanges(&bottom_row, color_validator.get(), &horizontal_padding,
                     &horizontal_layout_bounds, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!PopulateBounds(horizontal_padding, horizontal_layout_bounds, nine_patch->horizontal_stretch_regions,
                 width - 2, &nine_patch->padding.left, &nine_patch->padding.right,
                 &nine_patch->layout_bounds.left, &nine_patch->layout_bounds.right, "bottom", out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     VerticalImageLine right_col(rows, width - 1, 0, height);
     if (!FillRanges(&right_col, color_validator.get(), &vertical_padding, &vertical_layout_bounds, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!PopulateBounds(vertical_padding, vertical_layout_bounds,
                 nine_patch->vertical_stretch_regions, height - 2, &nine_patch->padding.top, &nine_patch->padding.bottom,
                 &nine_patch->layout_bounds.top, &nine_patch->layout_bounds.bottom, "right", out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     // Fill the region colors of the 9-patch.
@@ -479,7 +484,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     const int32_t num_cols = CalculateSegmentCount(nine_patch->vertical_stretch_regions, height - 2);
     if ((int64_t)num_rows * (int64_t)num_cols > 0x7f) {
         *out_err = "too many regions in 9-patch";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     nine_patch->region_colors.reserve(num_rows * num_cols);

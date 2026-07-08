@@ -3,7 +3,15 @@
 #include <algorithm>
 #include <vector>
 #include <list>
-#include <cdroid.h>
+#include <core/app.h>
+#include <view/view.h>
+#include <widget/button.h>
+#include <widget/edittext.h>
+#include <widget/linearlayout.h>
+#include <widget/cdwindow.h>
+#include <porting/cdlog.h>
+using namespace cdroid;
+#include <guienvironment.h>
 
 class KEYNAV:public testing::Test{
 public :
@@ -14,8 +22,8 @@ public :
 };
 
 TEST_F(KEYNAV,btns){
-   App app;
-   Window*w=new Window(0,0,800,600);
+   App&app=App::getInstance();
+   Window*w=GUIEnvironment::stage();
    for(int i=0;i<8;i++){
        Button*btn=new Button("Button_"+std::to_string(i),200,50);
        btn->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
@@ -28,21 +36,21 @@ TEST_F(KEYNAV,btns){
       LOGD("focusedview=%p:%d direction=%d \r\n",fv,fv->getId(),View::FOCUS_DOWN);
       fv=w->focusSearch(fv,View::FOCUS_DOWN);
    }
-   app.exec();
+   pumpFor(500);
 }
 TEST_F(KEYNAV,edts){
-   App app;
-   Window*w=new Window(0,0,800,600);
+   App&app=App::getInstance();
+   Window*w=GUIEnvironment::stage();
    for(int i=0;i<6;i++){
        EditText*tv=new EditText("EditText_"+std::to_string(i),200,50);
        w->addView(tv);
        tv->layout(10,i*55,200,50);
    }
-   app.exec();
+   pumpFor(500);
 }
 TEST_F(KEYNAV,edts1){
-   App app;
-   Window*w=new Window(0,0,800,600);
+   App&app=App::getInstance();
+   Window*w=GUIEnvironment::stage();
    LinearLayout*ll1=new LinearLayout(800,200);
    LinearLayout*ll2=new LinearLayout(800,200);
    w->addView(ll1);
@@ -72,7 +80,7 @@ TEST_F(KEYNAV,edts1){
       ASSERT_EQ((fv->getId()+5)%6,fv->getNextFocusUpId());
    }
 
-   app.exec();
+   pumpFor(500);
 }
 
 

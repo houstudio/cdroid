@@ -380,6 +380,8 @@ public:
     KeyListener* getKeyListener()const;
     void setInputType(int inputType);
     int  getInputType()const;
+    int getImeOptions()const;
+    void setImeOptions(int imeOptions);
     bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);
     std::vector<InputFilter*> getFilters();

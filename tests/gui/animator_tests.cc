@@ -1,8 +1,15 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
-#include <cdlog.h>
+#include <core/app.h>
+#include <widget/cdwindow.h>
+#include <widget/textview.h>
+#include <animation/animator.h>
+#include <animation/valueanimator.h>
+#include <animation/property.h>
+#include <animation/propertyvaluesholder.h>
+#include <porting/cdlog.h>
 #include <animation/objectanimator.h>
 #include <guienvironment.h>
+using namespace cdroid;
 class ANIMATOR:public testing::Test{
 public:
     int argc;
@@ -16,12 +23,22 @@ public :
    }
 };
 
+/* Pump until onAnimationEnd — the definitive completion signal (isStarted()/
+   isRunning() are unreliable during startDelay). maxMs is a safety cap. */
+static void pumpUntilEnd(Animator&anim,int maxMs){
+    bool ended=false;
+    Animator::AnimatorListener lst;
+    lst.onAnimationEnd=[&ended](Animator&,bool){ ended=true; };
+    anim.addListener(lst);
+    pumpUntil([&ended]{ return ended; }, maxMs);
+}
+
 TEST_F(ANIMATOR,callback){
-    App app(argc,argv);
+    App&app=App::getInstance();
     ValueAnimator *anim=new ValueAnimator();
     anim->getAnimationHandler().addAnimationFrameCallback(anim,100);
     anim->getAnimationHandler().removeCallback(anim);
-    app.exec();
+    pumpUntilIdle(300);
 }
 
 TEST_F(ANIMATOR,ofInt1){
@@ -59,7 +76,7 @@ TEST_F(ANIMATOR,ofFloat){
 }
 
 TEST_F(ANIMATOR,start){
-    App app(argc,argv);
+    App&app=App::getInstance();
     FloatPropertyValuesHolder fprop;
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
@@ -69,10 +86,10 @@ TEST_F(ANIMATOR,start){
     anim->setDuration(200);
     anim->start();
     LOGD("====");
-    app.exec();
+    pumpUntilEnd(*anim, 700);
 }
 TEST_F(ANIMATOR,startDelay){
-    App app(argc,argv);
+    App&app=App::getInstance();
     FloatPropertyValuesHolder fprop;
     fprop.setValues(std::vector<float>({0,100}));
     ValueAnimator*anim=ValueAnimator::ofPropertyValuesHolder({&fprop});
@@ -83,7 +100,7 @@ TEST_F(ANIMATOR,startDelay){
     anim->setStartDelay(1000);
     anim->start();
     LOGD("====");
-    app.exec();
+    pumpUntilEnd(*anim, 1500);
 }
 
 class MyProperty: public Property{
@@ -103,7 +120,7 @@ TEST_F(ANIMATOR,ofProperty){
 }
 
 TEST_F(ANIMATOR,loopdrivered){
-    App app(argc,argv);
+    App&app=App::getInstance();
     IntPropertyValuesHolder iprop;
     iprop.setValues(std::vector<int>({0,100}));
 
@@ -113,12 +130,12 @@ TEST_F(ANIMATOR,loopdrivered){
     })); 
     anim->setDuration(2000);
     anim->start();
-    app.exec();
+    pumpUntilEnd(*anim, 2500);
 }
 
 TEST_F(ANIMATOR,translate){
-    App app(argc,argv);
-    Window*w=new Window(0,0,800,600);
+    App&app=App::getInstance();
+    Window*w=GUIEnvironment::stage();
     TextView*tv=new TextView("Hello World!",120,30);
     tv->setBackgroundColor(0xFF111111);
     w->addView(tv);
@@ -146,11 +163,11 @@ TEST_F(ANIMATOR,translate){
 
     anim->setDuration(5000);
     anim->start();
-    app.exec();
+    pumpUntilEnd(*anim, 5500);
 }
 TEST_F(ANIMATOR,scale){
-    App app(argc,argv);
-    Window*w=new Window(0,0,800,600);
+    App&app=App::getInstance();
+    Window*w=GUIEnvironment::stage();
     TextView*tv=new TextView("Hello World!",120,30);
     tv->setBackgroundColor(0xFF111111);
     w->addView(tv);
@@ -167,6 +184,6 @@ TEST_F(ANIMATOR,scale){
     }));
     anim->setDuration(5000);
     anim->start();
-    app.exec();
+    pumpUntilEnd(*anim, 5500);
 }
 
