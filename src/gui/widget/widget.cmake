@@ -114,10 +114,10 @@ list(APPEND WIDGET_SOURCES
     widget/toolbar.cc
     widget/toast.cc
 
-    #widget/plotaxis.cc
-    #widget/plotobject.cc
-    #widget/plotpoint.cc
-    #widget/plotview.cc
+    widget/plotaxis.cc
+    widget/plotobject.cc
+    widget/plotpoint.cc
+    widget/plotview.cc
 )
 
 list(APPEND WIDGET_SOURCES
