@@ -1,4 +1,5 @@
 #include <text/spannablestringbuilder.h>
+#include <text/inputfilter.h>
 #include <text/textwatcher.h>
 #include <porting/cdlog.h>
 namespace cdroid{
@@ -204,10 +205,32 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     if (st < 0) st = 0;
     if (en > (int)mText.length()) en = (int)mText.length();
     if (st > en) st = en;
-    if (srcStart >= srcEnd && st == en) return *this;   // nothing to insert or delete
+
+    // Android SpannableStringBuilder.replace: run the attached InputFilters on the
+    // replacement text BEFORE mutating. A filter returns an owned replacement
+    // CharSequence (use it) or nullptr (keep the original). Intermediate results are
+    // owned by us and deleted before returning; the borrowed `source` is never freed.
+    const CharSequence* tb = &source;
+    int tbstart = srcStart, tbend = srcEnd;
+    CharSequence* ownedFilterResult = nullptr;
+    for (size_t i = 0; i < m_filters.size(); i++) {
+        CharSequence* repl = m_filters[i]->filter(
+                const_cast<CharSequence*>(tb), tbstart, tbend, this, st, en);
+        if (repl != nullptr) {
+            delete ownedFilterResult; // previous intermediate is superseded
+            ownedFilterResult = repl;
+            tb = repl;
+            tbstart = 0;
+            tbend = (int)repl->length();
+        }
+    }
 
     const int replacedLen = en - st;
-    const int insertLen = srcEnd - srcStart;
+    const int insertLen = tbend - tbstart;
+    if (insertLen == 0 && replacedLen == 0) {
+        delete ownedFilterResult;
+        return *this;   // nothing to insert or delete
+    }
 
     // Snapshot the TextWatcher spans once (their pointer identity is stable; ranges
     // get adjusted below). Mirrors Android's sendBeforeToTextWatchers / sendToTextWatchers.
@@ -227,7 +250,7 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     if (insertLen > 0) {
         std::u16string ins;
         ins.reserve(insertLen);
-        for (int i = srcStart; i < srcEnd; i++) ins += (char16_t)source.charAt(i);
+        for (int i = tbstart; i < tbend; i++) ins += (char16_t)tb->charAt(i);
         if (st < en) mText.replace(st, replacedLen, ins);
         else mText.insert(st, ins);
     } else if (st < en) {
@@ -247,6 +270,7 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
             if (w->afterTextChanged) w->afterTextChanged(*this);
         }
     }
+    delete ownedFilterResult;
     return *this;
 }
 
@@ -277,13 +301,15 @@ void SpannableStringBuilder::clear() {
 }
 
 void SpannableStringBuilder::setFilters(InputFilter** filters, int count) {
-    (void)filters;
-    (void)count;
+    m_filters.clear();
+    if (filters && count > 0) {
+        m_filters.insert(m_filters.end(), filters, filters + count);
+    }
 }
 
 InputFilter** SpannableStringBuilder::getFilters(int* outCount) const {
-    *outCount = 0;
-    return nullptr;
+    *outCount = (int)m_filters.size();
+    return const_cast<InputFilter**>(m_filters.data());
 }
 
 Appendable& SpannableStringBuilder::append(const char16_t* s, int start, int len) {

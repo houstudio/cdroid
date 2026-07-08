@@ -28,6 +28,7 @@
 #include <text/spannablestringbuilder.h>
 #include <text/inputfilter.h>
 #include <text/inputtype.h>
+#include <text/editable.h>
 #include <text/method/passwordtransformationmethod.h>
 #include <text/method/allcapstransformationmethod.h>
 #include <text/method/keylistener.h>
@@ -357,6 +358,17 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     // the ctor. mText was already set above; record the type so later setText() upgrades
     // the buffer correctly. (TODO: move the initial setText after this for full fidelity.)
     mBufferType = bufferType;
+
+    // Apply android:maxLength as an InputFilter (Android ctor ~1883-1891). The single-line
+    // auto LengthFilter (MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT) is DEFERRED (needs the
+    // mSingleLineLengthFilter machinery; see applySingleLine). The initial text is filtered
+    // on the next edit, not retroactively (Android filters it inside setText — TODO).
+    if (mMaxLength >= 0) {
+        mMaxLengthFilter = new InputFilter_LengthFilter(mMaxLength);
+        setFilters({ mMaxLengthFilter });
+    } else {
+        setFilters({}); // NO_FILTERS
+    }
     const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
     const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
     const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
@@ -466,6 +478,7 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
+    delete mMaxLengthFilter; // owned LengthFilter for android:maxLength (borrowed by mFilters)
     // Layouts reference mText/mHint (DynamicLayout::mBase) and dereference that
     // base in their own destructor (removeSpan on the watcher), so the layouts
     // MUST be destroyed before the text objects they reference — otherwise
@@ -3793,7 +3806,7 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
        final InputFilter[] prevFilters = getFilters();
        for (InputFilter filter: getFilters()) {
            // We don't add LengthFilter if already there.
-           if (filter instanceof InputFilter.LengthFilter) return;
+           if (filter instanceof InputFilter::LengthFilter) return;
        }
 
        if (mSingleLineLengthFilter == nullptr) {
@@ -4774,17 +4787,25 @@ void TextView::setFilters(const std::vector<InputFilter*>& filters) {
 
     Editable* editable = dynamic_cast<Editable*>(mText);
     if (editable != nullptr) {
-        // Convert vector to array for Editable::setFilters
-        int count = mFilters.size();
-        InputFilter** filterArray = count > 0 ? new InputFilter*[count] : nullptr;
-        for (int i = 0; i < count; i++) {
-            filterArray[i] = mFilters[i];
-        }
-        editable->setFilters(filterArray, count);
-        if (filterArray != nullptr) {
-            delete[] filterArray;
+        setFilters(editable, mFilters);
+    }
+}
+
+// Sets the filters on the Editable, prepending the key listener when it is itself an
+// InputFilter (Android TextView.setFilters(Editable, InputFilter[])). mEditor.mUndoInputFilter
+// is not ported yet → DEFERRED. The Editable borrows these pointers (never deletes them);
+// the key listener is a shared getInstance singleton, and mFilters is caller/this-owned.
+void TextView::setFilters(Editable* e, const std::vector<InputFilter*>& filters) {
+    if (mEditor != nullptr) {
+        InputFilter* keyFilter = dynamic_cast<InputFilter*>(mEditor->mKeyListener);
+        if (keyFilter != nullptr) {
+            std::vector<InputFilter*> combined = filters;
+            combined.push_back(keyFilter);
+            e->setFilters(combined.data(), (int)combined.size());
+            return;
         }
     }
+    e->setFilters(const_cast<InputFilter**>(filters.data()), (int)filters.size());
 }
 
 std::vector<InputFilter*> TextView::getFilters() {
@@ -5197,7 +5218,7 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         }
     }
 
-    if (!TextUtils.isEmpty(mText)) {
+    if (!TextUtils::isEmpty(mText)) {
         info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
         info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
         info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER
@@ -5243,6 +5264,7 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         info.setMultiLine(true);
     }
 }
+
 bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments){
     return true;
 }

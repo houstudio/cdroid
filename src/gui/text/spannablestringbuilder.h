@@ -48,6 +48,12 @@ public:
 
     // Appendable interface methods
     Appendable& append(const char16_t* s, int start, int len) override;
+
+private:
+    // Borrowed (caller-/TextView-owned) InputFilter pointers; never deleted here.
+    // Applied to the replacement text at the top of replace() — the single edit
+    // chokepoint — matching Android SpannableStringBuilder.replace.
+    std::vector<InputFilter*> m_filters;
 };
 
 }/* namespace cdroid */

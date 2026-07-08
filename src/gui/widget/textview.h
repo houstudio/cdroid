@@ -38,6 +38,7 @@ class PrecomputesText;
 class Editor;
 class MovementMethod;
 class InputFilter;
+class Editable;
 class InputConnection;
 class EditorInfo;
 class InputMethodManager;
@@ -147,6 +148,7 @@ private:
     std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
     std::vector<InputFilter*> mFilters;
+    InputFilter* mMaxLengthFilter = nullptr; // owned LengthFilter for android:maxLength (Android: ctor-created)
 
     Drawables*mDrawables;
     Marquee*mMarquee;
@@ -220,6 +222,10 @@ private:
 
     void setInputTypeFromEditor();
     void setKeyListenerOnly(KeyListener* input);
+    // Android TextView.setFilters(Editable, InputFilter[]) — installs the filters on the
+    // Editable, prepending the key listener when it is itself an InputFilter. mEditor
+    // mUndoInputFilter is not ported yet → DEFERRED.
+    void setFilters(Editable* e, const std::vector<InputFilter*>& filters);
     void fixFocusableAndClickableSettings();
     void createEditorIfNeeded();
     void assumeLayout();

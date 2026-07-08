@@ -5,19 +5,35 @@
 
 namespace cdroid {
 
+// android.text.InputFilter — faithful C++ port. Filters are attached to an Editable
+// to constrain edits; each filter() may return an owned replacement CharSequence or
+// nullptr to accept the original replacement. (Empty CharSequence return = reject.)
 class InputFilter {
 public:
     virtual ~InputFilter() = default;
-    virtual CharSequence* filter(CharSequence* source, int start, int end, Spanned* dest, int dstart, int dend) = 0;
+    virtual CharSequence* filter(CharSequence* source, int start, int end,
+            Spanned* dest, int dstart, int dend) = 0;
 };
 
+// android.text.InputFilter.LengthFilter — caps the total text length at mMax.
 class InputFilter_LengthFilter : public InputFilter {
 private:
     int mMax;
 public:
-    InputFilter_LengthFilter(int max);
-    CharSequence* filter(CharSequence* source, int start, int end, Spanned* dest, int dstart, int dend) override;
+    explicit InputFilter_LengthFilter(int max);
+    CharSequence* filter(CharSequence* source, int start, int end,
+            Spanned* dest, int dstart, int dend) override;
     int getMax() const;
+};
+
+// android.text.InputFilter.AllCaps — uppercases lowercase/titlecase letters added
+// through edits. Locale-insensitive in CDROID (no Locale wiring yet), matching
+// AllCapsTransformationMethod; spans are preserved when the source is a Spanned.
+class InputFilter_AllCaps : public InputFilter {
+public:
+    InputFilter_AllCaps();
+    CharSequence* filter(CharSequence* source, int start, int end,
+            Spanned* dest, int dstart, int dend) override;
 };
 
 }
