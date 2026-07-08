@@ -19,7 +19,7 @@ TestString testStrings[]={
    { 
       "Single line textView (setted by setSingleLine(true) ",
       true, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -27,7 +27,7 @@ TestString testStrings[]={
    {
       "single line alignment start",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       View::TEXT_ALIGNMENT_GRAVITY,
       Gravity::START,
       LayoutParams::WRAP_CONTENT,
@@ -35,7 +35,7 @@ TestString testStrings[]={
    {
       "single line alignment center",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       View::TEXT_ALIGNMENT_CENTER,
       Gravity::CENTER,
       LayoutParams::WRAP_CONTENT
@@ -43,7 +43,7 @@ TestString testStrings[]={
    {
       "single line alignment end",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       View::TEXT_ALIGNMENT_TEXT_END,
       Gravity::END,
       LayoutParams::WRAP_CONTENT,
@@ -51,7 +51,7 @@ TestString testStrings[]={
    {
       "single line alignment center_horizontal|top",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       0,
       Gravity::CENTER_HORIZONTAL|Gravity::TOP,
       50
@@ -60,7 +60,7 @@ TestString testStrings[]={
    {//5
       "single line alignment center_horizontal|center_vertical",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       0,
       Gravity::CENTER_HORIZONTAL|Gravity::CENTER_VERTICAL,
       50
@@ -68,7 +68,7 @@ TestString testStrings[]={
    {
       "single line alignment center_horizontal|bottom",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       0,
       Gravity::CENTER_HORIZONTAL|Gravity::BOTTOM,
       50
@@ -77,7 +77,7 @@ TestString testStrings[]={
    { 
      "Multiple lines (setted by setSingleLine(false),word break is supported by default",
       false, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -85,7 +85,7 @@ TestString testStrings[]={
    {
      "Multiple lines (setted by setSingleLine(false),\nword soft break is supported by default(TOP)",
       false, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::TOP/*0*/,
       88
@@ -93,7 +93,7 @@ TestString testStrings[]={
    { 
      "Multiple lines (setted by setSingleLine(false),\nword soft break is supported by default(VCENTER)",
       false, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::CENTER_VERTICAL/*0*/,
       88
@@ -101,7 +101,7 @@ TestString testStrings[]={
    {//10 
      "Multiple lines (setted by setSingleLine(false),\nword soft break is supported by default(BOTTOM)",
       false, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::BOTTOM/*0*/,
       88
@@ -110,7 +110,7 @@ TestString testStrings[]={
    { 
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
-      Layout::ELLIPSIS_START,
+      TextUtils::TruncateAt::START,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -119,7 +119,7 @@ TestString testStrings[]={
    {
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
-      Layout::ELLIPSIS_MIDDLE,
+      TextUtils::TruncateAt::MIDDLE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -128,7 +128,7 @@ TestString testStrings[]={
    {
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
-      Layout::ELLIPSIS_END,
+      TextUtils::TruncateAt::END,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -136,7 +136,7 @@ TestString testStrings[]={
    {
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
-      Layout::ELLIPSIS_MARQUEE,
+      TextUtils::TruncateAt::MARQUEE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -144,7 +144,7 @@ TestString testStrings[]={
    {//15
       "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showed",
       true,
-      Layout::ELLIPSIS_NONE,
+      TextUtils::TruncateAt::NONE,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -152,7 +152,7 @@ TestString testStrings[]={
    {
        "Hello World! السلام عليكم (Peace be upon you) مرحبا ",
       true,
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
@@ -179,7 +179,7 @@ int main(int argc,const char*argv[]){
         tv->setEllipsize(static_cast<TextUtils::TruncateAt>(ts->ellipsis));
         tv->setTextAlignment(ts->txtalignment);
         tv->setGravity(ts->gravity);
-        if(ts->ellipsis==Layout::ELLIPSIS_MARQUEE)
+        if(ts->ellipsis== TextUtils::TruncateAt::MARQUEE)
             tv->setSelected(true);//onle focused or selected ot checked state can be marqueed
         int cc=i*10+8;
         tv->setBackgroundColor(0xFF000000|(cc<<16)|(cc<<8)|cc);

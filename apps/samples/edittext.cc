@@ -14,7 +14,7 @@ TestString testStrings[]={
    {
       "Text",
       true,
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       InputType::TYPE_CLASS_TEXT
@@ -22,7 +22,7 @@ TestString testStrings[]={
    {
       "Password",
       true,
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       InputType::TYPE_CLASS_TEXT|InputType::TYPE_TEXT_VARIATION_PASSWORD
@@ -30,7 +30,7 @@ TestString testStrings[]={
    {
       "666",
       true,
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       InputType::TYPE_CLASS_NUMBER
@@ -38,7 +38,7 @@ TestString testStrings[]={
    {
       "666",
       true,
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       InputType::TYPE_CLASS_PHONE
@@ -46,7 +46,7 @@ TestString testStrings[]={
    {
        "zhhou@sanboen.com",
        true,
-       Layout::ELLIPSIS_NONE/*0*/,
+       TextUtils::TruncateAt::NONE/*0*/,
        View::TEXT_ALIGNMENT_INHERIT/*0*/,
        Gravity::NO_GRAVITY/*0*/,
        InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
