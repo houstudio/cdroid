@@ -104,10 +104,6 @@ public:
 
     int getEllipsisStart(int line) const override;
 
-    int getEllipsizedWidth() const override{
-        return mEllipsizedWidth;
-    }
-
     RectF computeDrawingBoundingBox() const override;
 
     using Layout::getHeight;
@@ -116,7 +112,6 @@ private:
     int mLineCount;
     int mTopPadding, mBottomPadding;
     int mColumns;
-    int mEllipsizedWidth;
 
     mutable RectF mDrawingBounds;
 

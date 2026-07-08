@@ -230,11 +230,9 @@ b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd,
         e->mLayout = this;
         e->mWidth = b.mEllipsizedWidth;
         e->mMethod = b.mEllipsize;
-        mEllipsizedWidth = b.mEllipsizedWidth;
         mColumns = COLUMNS_ELLIPSIZE;
     } else {
         mColumns = COLUMNS_NORMAL;
-        mEllipsizedWidth = b.mWidth;
     }
 
     mLineDirections.resize(2,nullptr);
