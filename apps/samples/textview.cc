@@ -196,7 +196,8 @@ int main(int argc,const char*argv[]){
         layout->addView(tv,layoutParams);
         if(i>=8&&i<=10)tv->setLineSpacing(4,1.00);
         if(i==sizeof(testStrings)/sizeof(testStrings[0])-1){
-            tv->setJustificationMode(Layout::JUSTIFICATION_MODE_INTER_WORD);
+            //tv->setJustificationMode(Layout::JUSTIFICATION_MODE_INTER_WORD);
+            tv->setJustificationMode(Layout::JUSTIFICATION_MODE_INTER_CHARACTER);
         }
     }
     SpannableStringBuilder* spanText=new SpannableStringBuilder();

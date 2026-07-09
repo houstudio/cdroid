@@ -1761,6 +1761,93 @@ CharSequence* Layout::SpannedEllipsizer::subSequence(int start, int end) const{
     return ss;
 }
 
+void Layout::fillHorizontalBoundsForLine(int line, float* horizontalBounds) {
+    const int lineStart = getLineStart(line);
+    const int lineEnd = getLineEnd(line);
+    const int dir = getParagraphDirection(line);
+    const Directions* directions = getLineDirections(line);
+    const bool hasTab = getLineContainsTab(line);
+
+    TabStops* tabStops = nullptr;
+    if (hasTab && mSpannedText) {
+        Spanned* sp = dynamic_cast<Spanned*>(mText);
+        if (sp != nullptr) {
+            auto spans = getParagraphSpans(sp, lineStart, lineEnd, make_span_filter<TabStopSpan>());
+            if (!spans.empty()) {
+                tabStops = new TabStops(TAB_INCREMENT, spans);  // XXX should reuse across lines
+            }
+        }
+    }
+
+    TextLine* tl = TextLine::obtain();
+    tl->set(mPaint, mText, lineStart, lineEnd, dir, directions, hasTab, tabStops,
+            getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
+            isFallbackLineSpacingEnabled());
+    tl->measureAllBounds(horizontalBounds, nullptr);
+    TextLine::recycle(tl);
+    delete tabStops;  // android leaks this per-line TabStops (GC); CDROID frees it.
+}
+
+void Layout::forEachCharacterBounds(int start, int end, int startLine, int endLine,
+        const CharacterBoundsListener& listener) {
+    std::vector<float> horizontalBounds;
+    for (int line = startLine; line <= endLine; ++line) {
+        const int lineStart = getLineStart(line);
+        const int lineEnd = getLineEnd(line);
+        const int lineLength = lineEnd - lineStart;
+        if (static_cast<int>(horizontalBounds.size()) < 2 * lineLength) {
+            horizontalBounds.assign(2 * lineLength, 0.f);
+        }
+        fillHorizontalBoundsForLine(line, horizontalBounds.data());
+
+        const int lineLeft = getParagraphLeft(line);
+        const int lineRight = getParagraphRight(line);
+        const int lineStartPos = getLineStartPos(line, lineLeft, lineRight);
+
+        const int lineTop = getLineTop(line);
+        const int lineBottom = getLineBottom(line);
+
+        const int startIndex = std::max(start, lineStart);
+        const int endIndex = std::min(end, lineEnd);
+        for (int index = startIndex; index < endIndex; ++index) {
+            const int offset = index - lineStart;
+            const float left = horizontalBounds[offset * 2] + lineStartPos;
+            const float right = horizontalBounds[offset * 2 + 1] + lineStartPos;
+            if (listener.onCharacterBounds) {
+                listener.onCharacterBounds(index, line, left, lineTop, right, lineBottom);
+            }
+        }
+    }
+    if (listener.onEnd) {
+        listener.onEnd();
+    }
+}
+
+void Layout::fillCharacterBounds(int start, int end, float* bounds, int boundsStart) {
+    if (start < 0 || end < start || end > static_cast<int>(mText->length())) {
+        return;  // IndexOutOfBoundsException-equivalent: range out of text bounds
+    }
+    if (bounds == nullptr) {
+        return;  // IllegalArgumentException-equivalent
+    }
+    if (start == end) {
+        return;
+    }
+    const int startLine = getLineForOffset(start);
+    const int endLine = getLineForOffset(end - 1);
+    forEachCharacterBounds(start, end, startLine, endLine,
+            CharacterBoundsListener{
+                    [bounds, start, boundsStart](int index, int /*lineNum*/, float left,
+                            float lineTop, float right, float lineBottom) {
+                        const int boundsIndex = boundsStart + 4 * (index - start);
+                        bounds[boundsIndex] = left;
+                        bounds[boundsIndex + 1] = lineTop;
+                        bounds[boundsIndex + 2] = right;
+                        bounds[boundsIndex + 3] = lineBottom;
+                    },
+                    {}});
+}
+
 Layout* Layout::Builder::build() {
     BoringLayout::Metrics* metrics = BoringLayout::isBoring(mText, mPaint, mTextDir,
             mFallbackLineSpacing, mMinimumFontMetrics, nullptr);

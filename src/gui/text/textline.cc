@@ -2,6 +2,7 @@
 #include <porting/cdlog.h>
 #include <text/textline.h>
 #include <text/precomputedtext.h>
+#include <minikin/GraphemeBreak.h>
 
 namespace cdroid{
 const auto MetricAffectingSpanFilter=Predicate<const ParcelableSpan*>([](const ParcelableSpan* span){return dynamic_cast<const MetricAffectingSpan*>(span) != nullptr;});
@@ -215,13 +216,20 @@ float TextLine::metrics(Paint::FontMetricsInt* fmi, RectF* drawBounds, bool retu
 }
 
 float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi,
-        RectF* drawBounds, LineInfo* /*lineInfo*/) {
+        RectF* drawBounds, LineInfo* lineInfo) {
     if (offset > mLen) {
         //throw new IndexOutOfBoundsException("offset(" + offset + ") should be less than line limit(" + mLen + ")");
     }
     const int target = trailing ? offset - 1 : offset;
     if (target < 0) {
+        if (lineInfo) lineInfo->setClusterCount(0);
         return 0;
+    }
+    if (lineInfo) {
+        // android counts shaping clusters via TextShaper (not ported). CDROID approximates with
+        // grapheme clusters (minikin GraphemeBreak) over [0, target], using advances from
+        // measureAllBounds. This unblocks INTER_CHARACTER justify's letter-spacing distribution.
+        lineInfo->setClusterCount(countClusters(target));
     }
 
     float h = 0;
@@ -264,6 +272,109 @@ float TextLine::measure(int offset, bool trailing, Paint::FontMetricsInt* fmi,
     }
 
     return h;
+}
+
+void TextLine::measureAllBounds(float* bounds, float* advances) {
+    std::vector<float> localAdvances;
+    float* adv = advances;
+    if (adv == nullptr) {
+        localAdvances.assign(mLen, 0.f);
+        adv = localAdvances.data();
+    }
+
+    const char16_t* buf;
+    std::vector<char16_t> extracted;
+    if (mCharsValid) {
+        buf = mChars.data();
+    } else {
+        extracted.resize(mLen);
+        mText->getChars(mStart, mStart + mLen, extracted.data(), 0);
+        buf = extracted.data();
+    }
+
+    float h = 0;
+    const int runCount = mDirections->getRunCount();
+    for (int runIndex = 0; runIndex < runCount; runIndex++) {
+        const int runStart = mDirections->getRunStart(runIndex);
+        if (runStart > mLen) break;
+        const int runLimit = std::min(runStart + mDirections->getRunLength(runIndex), mLen);
+        const bool runIsRtl = mDirections->isRunRtl(runIndex);
+
+        int segStart = runStart;
+        for (int j = mHasTabs ? runStart : runLimit; j <= runLimit; j++) {
+            if (j == runLimit || charAt(j) == TAB_CHAR) {
+                const bool sameDirection = (mDir == Layout::DIR_RIGHT_TO_LEFT) == runIsRtl;
+
+                const int segLen = j - segStart;
+                float segmentWidth = 0;
+                if (segLen > 0) {
+                    segmentWidth = mPaint->getTextRunAdvances(buf, segStart, segLen, segStart, segLen,
+                            runIsRtl, adv, segStart);
+                }
+
+                const float oldh = h;
+                h += sameDirection ? segmentWidth : -segmentWidth;
+                float currh = sameDirection ? oldh : h;
+                for (int offset = segStart; offset < j && offset < mLen; ++offset) {
+                    if (runIsRtl) {
+                        bounds[2 * offset + 1] = currh;
+                        currh -= adv[offset];
+                        bounds[2 * offset] = currh;
+                    } else {
+                        bounds[2 * offset] = currh;
+                        currh += adv[offset];
+                        bounds[2 * offset + 1] = currh;
+                    }
+                }
+
+                if (j != runLimit) {  // charAt(j) == TAB_CHAR
+                    float leftX, rightX;
+                    if (runIsRtl) {
+                        rightX = h;
+                        h = mDir * nextTab(h * mDir);
+                        leftX = h;
+                    } else {
+                        leftX = h;
+                        h = mDir * nextTab(h * mDir);
+                        rightX = h;
+                    }
+                    bounds[2 * j] = leftX;
+                    bounds[2 * j + 1] = rightX;
+                    adv[j] = rightX - leftX;
+                }
+
+                segStart = j + 1;
+            }
+        }
+    }
+}
+
+int TextLine::countClusters(int end) {
+    if (end <= 0) return 0;
+    const int n = std::min(end, mLen);
+
+    // GraphemeBreak needs per-char advances (for emoji width); get them via measureAllBounds.
+    std::vector<float> bounds(2 * mLen);
+    std::vector<float> advances(mLen);
+    measureAllBounds(bounds.data(), advances.data());
+
+    std::vector<char16_t> extracted;
+    const uint16_t* buf;
+    if (mCharsValid) {
+        buf = reinterpret_cast<const uint16_t*>(mChars.data());
+    } else {
+        extracted.resize(mLen);
+        mText->getChars(mStart, mStart + mLen, extracted.data(), 0);
+        buf = reinterpret_cast<const uint16_t*>(extracted.data());
+    }
+
+    int count = 1;  // the cluster beginning at offset 0
+    for (int i = 1; i < n; i++) {
+        if (minikin::GraphemeBreak::isGraphemeBreak(advances.data(), buf, 0, mLen, i)) {
+            count++;
+        }
+    }
+    return count;
 }
 
 std::vector<float> TextLine::measureAllOffsets(const std::vector<bool>& trailing, Paint::FontMetricsInt* fmi) {
@@ -512,6 +623,7 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
     wp.set(*mPaint);
     if (mIsJustifying) {
         wp.setWordSpacing(mAddedWordSpacingInPx);
+        wp.setLetterSpacing(mAddedLetterSpacingInPx / wp.getTextSize());  // px → em
     }
 
     int spanStart = runStart;
@@ -632,6 +744,7 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
 
     if (mIsJustifying) {
         wp.setWordSpacing(mAddedWordSpacingInPx);
+        wp.setLetterSpacing(mAddedLetterSpacingInPx / wp.getTextSize());  // px → em
     }
     // Get metrics first (even for empty strings or "0" width runs)
     if (fmi != nullptr) {

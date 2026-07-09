@@ -152,6 +152,14 @@ public:
     float measure(int offset, bool trailing, Paint::FontMetricsInt* fmi,
             RectF* drawBounds = nullptr, LineInfo* lineInfo = nullptr);
     std::vector<float> measureAllOffsets(const std::vector<bool>& trailing, Paint::FontMetricsInt* fmi);
+    // Fill per-character horizontal bounds: bounds[2*i]=left, bounds[2*i+1]=right of char i.
+    // `bounds` must hold 2*mLen floats. `advances` (optional, size mLen) is reused if non-null.
+    // Implemented via Paint::getTextRunAdvances per bidi/tab segment (TextLine::measureRun has no
+    // advances out-param), consistent with CDROID's edge-flag-less measure path.
+    void measureAllBounds(float* bounds, float* advances = nullptr);
+    // Count grapheme clusters in [0, end) via minikin GraphemeBreak (advances from measureAllBounds).
+    // Approximates android's shaping-cluster count for INTER_CHARACTER justify letter distribution.
+    int countClusters(int end);
 
     int getOffsetToLeftRightOf(int cursor, bool toLeft);
     static void updateMetrics(Paint::FontMetricsInt& fmi, int previousTop, int previousAscent,

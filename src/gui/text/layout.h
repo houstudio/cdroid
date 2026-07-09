@@ -162,6 +162,10 @@ public:
     static const TextInclusionStrategy INCLUSION_STRATEGY_CONTAINS_CENTER;
     static const TextInclusionStrategy INCLUSION_STRATEGY_CONTAINS_ALL;
 
+    // android-36: fill bounds[boundsStart + 4*k .. +3] = left/top/right/bottom of char (start+k),
+    // for k in [0, end-start). Caller must size `bounds` to >= boundsStart + 4*(end-start).
+    void fillCharacterBounds(int start, int end, float* bounds, int boundsStart);
+
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);
@@ -335,6 +339,9 @@ public:
     int getLineBottomWithoutSpacing(int line) const{
         return getLineTop(line + 1) - getLineExtra(line);
     }
+    int getLineBottom(int line, bool includeLineSpacing) const{
+        return includeLineSpacing ? getLineBottom(line) : getLineBottomWithoutSpacing(line);
+    }
 
     int getLineBaseline(int line) const{
         // getLineTop(line+1) == getLineBottom(line)
@@ -420,6 +427,16 @@ public:
         CharSequence* subSequence(int start, int end) const override;
    };
 private:
+    // Fills horizontalBounds[2*(i-lineStart)]/[+1] with the left/right x of each char on `line`.
+    // Caller must size horizontalBounds to 2 * (lineEnd - lineStart). Backs fillCharacterBounds.
+    void fillHorizontalBoundsForLine(int line, float* horizontalBounds);
+    // android-36 per-character bounds callback. onEnd (optional) is called after the last char.
+    struct CharacterBoundsListener {
+        std::function<void(int index, int lineNum, float left, float top, float right, float bottom)> onCharacterBounds;
+        std::function<void()> onEnd;
+    };
+    void forEachCharacterBounds(int start, int end, int startLine, int endLine,
+            const CharacterBoundsListener& listener);
     CharSequence* mText;
     mutable TextPaint mWorkPaint;
     int mWidth;
