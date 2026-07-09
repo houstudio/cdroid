@@ -26,10 +26,11 @@ float Layout::getDesiredWidth(CharSequence* source, int start, int end, const Te
 }
 
 float Layout::getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint,const TextDirectionHeuristic* textDir) {
-    return getDesiredWidthWithLimit(source, start, end, paint, textDir, FLT_MAX);
+    return getDesiredWidthWithLimit(source, start, end, paint, textDir, FLT_MAX, false);
 }
 
-float Layout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit) {
+float Layout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit,
+        bool useBoundsForWidth) {
     float need = 0;
     int next;
     for (int i = start; i <= end; i = next) {
@@ -38,7 +39,7 @@ float Layout::getDesiredWidthWithLimit(CharSequence* source, int start, int end,
         if (next < 0)
             next = end;
         // note, omits trailing paragraph char
-        float w = measurePara(&paint, source, i, next, textDir);
+        float w = measurePara(&paint, source, i, next, textDir, useBoundsForWidth);
         if (w > upperLimit) {
             return upperLimit;
         }
@@ -100,10 +101,6 @@ Layout::~Layout(){
     delete mLineBackgroundSpans;
 }
 
-void Layout::setJustificationMode(int justificationMode) {
-    mJustificationMode = justificationMode;
-}
-
 void Layout::replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd) {
     if (width < 0) {
         //throw new IllegalArgumentException("Layout: " + width + " < 0");
@@ -129,6 +126,12 @@ void Layout::draw(Canvas& canvas, Path* highlight,const Paint* highlightPaint, i
     if (lastLine < 0) return;
 
     canvas.save();
+    if (mUseBoundsForWidth && mShiftDrawingOffsetForStartOverhang) {
+        const RectF drawingRect = computeDrawingBoundingBox();
+        if (drawingRect.left < 0) {
+            canvas.translate(-drawingRect.left, 0);
+        }
+    }
     drawBackground(canvas, highlight, highlightPaint, cursorOffsetVertical, firstLine, lastLine);
     drawText(canvas, firstLine, lastLine);
     canvas.restore();
@@ -375,7 +378,7 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
                     getEllipsisStart(lineNum), getEllipsisStart(lineNum) + getEllipsisCount(lineNum),
                     isFallbackLineSpacingEnabled());
             if (justify) {
-                tl->justify(right - left - indentWidth);
+                tl->justify(mJustificationMode, right - left - indentWidth);
             }
             tl->draw(canvas, x, ltop, lbaseline, lbottom);
         }
@@ -990,9 +993,9 @@ float Layout::getLineExtent(int line, bool full) const{
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
             isFallbackLineSpacingEnabled());
     if (isJustificationRequired(line)) {
-        tl->justify(getJustifyWidth(line));
+        tl->justify(mJustificationMode, getJustifyWidth(line));
     }
-    const float width = tl->metrics(nullptr);
+    const float width = tl->metrics(nullptr, nullptr, mUseBoundsForWidth, nullptr);
     TextLine::recycle(tl);
     return width;
 }
@@ -1013,9 +1016,9 @@ float Layout::getLineExtent(int line, TabStops& tabStops, bool full) const{
             getEllipsisStart(line), getEllipsisStart(line) + getEllipsisCount(line),
             isFallbackLineSpacingEnabled());
     if (isJustificationRequired(line)) {
-        tl->justify(getJustifyWidth(line));
+        tl->justify(mJustificationMode, getJustifyWidth(line));
     }
-    const float width = tl->metrics(nullptr);
+    const float width = tl->metrics(nullptr, nullptr, mUseBoundsForWidth, nullptr);
     TextLine::recycle(tl);
     return width;
 }
@@ -1544,7 +1547,7 @@ int Layout::getParagraphLeadingMargin(int line) const{
     return margin;
 }
 
-float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir) {
+float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start, int end, const TextDirectionHeuristic* textDir, bool useBoundsForWidth) {
     MeasuredParagraph* mt = nullptr;
     TextLine* tl = TextLine::obtain();
     mt = MeasuredParagraph::buildForBidi(text, start, end, textDir, mt);
@@ -1579,7 +1582,7 @@ float Layout::measurePara(const TextPaint* paint, CharSequence* text, int start,
     tl->set(paint, text, start, end, dir, directions, hasTabs, tabStops,
             0 /*ellipsisStart*/, 0 /*ellipsisEnd*/,
             false/* use fallback line spacing. unused*/);
-    auto ret =margin + std::abs(tl->metrics(nullptr));
+    auto ret =margin + std::abs(tl->metrics(nullptr, nullptr, useBoundsForWidth, nullptr));
     TextLine::recycle(tl);
     mt->recycle();
     if( (directions!=&DIRS_ALL_LEFT_TO_RIGHT) && (directions!=&DIRS_ALL_RIGHT_TO_LEFT) ){
@@ -1724,9 +1727,17 @@ CharSequence* Layout::Ellipsizer::subSequence(int start, int end) const{
 }
 
 std::string Layout::Ellipsizer::toString() const{
-    //char[] s = new char[length()];
-    //getChars(0, length(), s, 0);
-    return "";//new String(s);
+    const int len = (int) length();
+    std::u16string s(len, u'\0');
+    getChars(0, len, &s[0], 0);
+    return TextUtils::utf16_utf8(s);
+}
+
+std::u16string Layout::Ellipsizer::toU16String() const{
+    const int len = (int) length();
+    std::u16string s(len, u'\0');
+    getChars(0, len, &s[0], 0);
+    return s;
 }
 
 }/*endof namespace*/

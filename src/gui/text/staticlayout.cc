@@ -53,6 +53,9 @@ StaticLayout::Builder* StaticLayout::Builder::obtain(CharSequence* source, int s
     b->mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     b->mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     b->mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
+    b->mLineBreakConfig = LineBreakConfig();
+    b->mUseBoundsForWidth = false;
+    b->mMinimumFontMetrics = nullptr;
     return b;
 }
 
@@ -241,7 +244,6 @@ b.mPaint, b.mWidth, b.mAlignment, b.mTextDir, b.mSpacingMult, b.mSpacingAdd,
 
     mLeftIndents = b.mLeftIndents;
     mRightIndents = b.mRightIndents;
-    setJustificationMode(b.mJustificationMode);
 
     generate(b, b.mIncludePad, b.mIncludePad);
 }

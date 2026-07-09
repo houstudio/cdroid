@@ -205,11 +205,11 @@ private:
     float mSpacingMult;
     float mSpacingAdd;
     bool mIncludePad;
-    bool mCalculateBounds;
+    bool mCalculateBounds = false;
     bool mFallbackLineSpacing;
-    bool mAddLastLineLineSpacing;
+    bool mAddLastLineLineSpacing = false;
     bool mUseBoundsForWidth;
-    bool mShiftDrawingOffsetForStartOverhang;
+    bool mShiftDrawingOffsetForStartOverhang = false;
     LineBreakConfig mLineBreakConfig;
     int mEllipsizedWidth;
     TextUtils::TruncateAt mEllipsize;

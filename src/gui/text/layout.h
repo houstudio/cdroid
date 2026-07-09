@@ -79,7 +79,7 @@ private:
     int getOffsetAtStartOf(int offset)const;
     void addSelection(int line, int start, int end,int top, int bottom,const SelectionRectangleConsumer& consumer);
     int getParagraphLeadingMargin(int line) const;
-    static float measurePara(const TextPaint* paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir);
+    static float measurePara(const TextPaint* paint, CharSequence* text, int start, int end,const TextDirectionHeuristic* textDir, bool useBoundsForWidth);
     void ellipsize(int start, int end, int line, char16_t* dest, int destoff, TextUtils::TruncateAt method);
 protected:
     Layout(CharSequence* text, TextPaint* paint, int width, Alignment align, float spacingMult, float spacingAdd);
@@ -87,7 +87,6 @@ protected:
             bool includePad,bool fallbackLineSpacing,int ellipsizedWidth,TextUtils::TruncateAt ellipsize,int maxLines,int breakStrategy,
             int hyphenationFrequency,const std::vector<int>&leftIndents,const std::vector<int>&rightIndents,int justificationMode,
             const LineBreakConfig&,bool useBoundsForWidth,bool shiftDrawingOffsetForStartOverhang,const Paint::FontMetrics* minimumFontMetrics);
-    void setJustificationMode(int justificationMode);
     bool isSpanned() const;
 public:
     virtual ~Layout();
@@ -95,7 +94,8 @@ public:
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint);
     static float getDesiredWidth(CharSequence* source, int start, int end, const TextPaint& paint, const TextDirectionHeuristic* textDir);
     static float getDesiredWidthWithLimit(CharSequence* source, int start, int end,
-            const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit);
+            const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit,
+            bool useBoundsForWidth);
 
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
@@ -120,6 +120,12 @@ public:
 
     virtual int getEllipsizedWidth() const{
         return mEllipsizedWidth;
+    }
+    bool getUseBoundsForWidth() const{
+        return mUseBoundsForWidth;
+    }
+    bool getShiftDrawingOffsetForStartOverhang() const{
+        return mShiftDrawingOffsetForStartOverhang;
     }
     TextUtils::TruncateAt getEllipsize()const{
         return mEllipsize;
@@ -322,7 +328,7 @@ public:
         }
         CharSequence* subSequence(int start, int end)const override;
         std::string toString()const override;
-        std::u16string toU16String() const override { return mText->toU16String(); }
+        std::u16string toU16String() const override;
     };
 
     class SpannedEllipsizer : public Ellipsizer, public Spanned {
@@ -396,9 +402,6 @@ public:
     }
     bool isRunRtl(int runIndex) const{
         return (mDirections[runIndex * 2 + 1] & Layout::RUN_RTL_FLAG) != 0;
-    }
-    bool operator==(const Directions&o)const{
-        return mDirections==o.mDirections;
     }
 };
 

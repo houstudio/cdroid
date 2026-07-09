@@ -156,6 +156,15 @@ TestString testStrings[]={
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
       LayoutParams::WRAP_CONTENT
+   },
+   {
+       "The quick brown fox jumps over the lazy dog. Justification "
+       "should stretch word spacing on every wrapped line except the last.",
+      false,
+      TextUtils::TruncateAt::NONE/*0*/,
+      View::TEXT_ALIGNMENT_INHERIT/*0*/,
+      Gravity::NO_GRAVITY/*0*/,
+      LayoutParams::WRAP_CONTENT
    }
 };
 
@@ -186,6 +195,9 @@ int main(int argc,const char*argv[]){
         tv->setTextSize(22+i);
         layout->addView(tv,layoutParams);
         if(i>=8&&i<=10)tv->setLineSpacing(4,1.00);
+        if(i==sizeof(testStrings)/sizeof(testStrings[0])-1){
+            tv->setJustificationMode(Layout::JUSTIFICATION_MODE_INTER_WORD);
+        }
     }
     SpannableStringBuilder* spanText=new SpannableStringBuilder();
     spanText->append(u"Span sample:",0,12);

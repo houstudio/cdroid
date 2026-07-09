@@ -310,10 +310,16 @@ bool BoringLayout::getLineContainsTab(int line) const{
 }
 
 float BoringLayout::getLineMax(int line) const{
+    if (getUseBoundsForWidth()) {
+        return Layout::getLineMax(line);
+    }
     return mMax;
 }
 
 float BoringLayout::getLineWidth(int line) const{
+    if (getUseBoundsForWidth()) {
+        return Layout::getLineWidth(line);
+    }
     return (line == 0 ? mMax : 0);
 }
 

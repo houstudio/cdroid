@@ -69,7 +69,11 @@ void Paint::set(const Paint&o){
     mEndHyphenEdit = o.mEndHyphenEdit;
     mWordSpace = o.mWordSpace;
     mLetterSpacing = o.mLetterSpacing;
-    mMinikinPaint=o.mMinikinPaint;
+    mFontFeatureSettings = o.mFontFeatureSettings;
+    // Clone (not share) the MinikinPaint, matching android Paint's nSet deep-copy. Without this,
+    // per-line mutations on a work paint (e.g. justify's setWordSpacing/setLetterSpacing) would
+    // leak into the source paint's shared MinikinPaint and contaminate later lines.
+    mMinikinPaint = std::make_shared<minikin::MinikinPaint>(*o.mMinikinPaint);
     mFakeBoldText = o.mFakeBoldText;
     mStrikeThruText = o.mStrikeThruText;
     mUnderlineText = o.mUnderlineText;
@@ -94,6 +98,18 @@ void Paint::setTextScaleX(float v){
 void Paint::setLetterSpacing(float v){
     mLetterSpacing = v;
     mMinikinPaint->letterSpacing = v;   // Android: Paint.letterSpacing → MinikinPaint
+}
+
+void Paint::setWordSpacing(float v){
+    mWordSpace = v;
+    mMinikinPaint->wordSpacing = v;   // Android: Paint.wordSpacing → MinikinPaint (Measurement adds it per word space)
+}
+
+void Paint::setFontFeatureSettings(const std::string& settings){
+    // Android Paint.setFontFeatureSettings: no-op if unchanged (keeps minikin layout cache valid).
+    if (settings == mFontFeatureSettings) return;
+    mFontFeatureSettings = settings;
+    mMinikinPaint->fontFeatureSettings = settings;   // Android: Paint.fontFeatureSettings → MinikinPaint (FontFeatureUtils parses it)
 }
 
 void Paint::setTextSkewX(float v){

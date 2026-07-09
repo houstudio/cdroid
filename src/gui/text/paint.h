@@ -82,6 +82,7 @@ private:
     float mTextScaleX;
     float mWordSpace;
     float mLetterSpacing;
+    std::string mFontFeatureSettings;
     bool mElegantTextHeight = false;   // stored; minikin's MinikinPaint has no
                                        // `elegant` field in this version, so not yet
                                        // propagated to layout (CJK elegant height).
@@ -148,8 +149,10 @@ public:
     int getEndHyphenEdit()const{return mEndHyphenEdit;}
     void setLetterSpacing(float v);   // defined in paint.cc (propagates to minikin)
     float getLetterSpacing()const{return mLetterSpacing;}
-    int getWordSpacing()const{return mWordSpace;}
-    void setWordSpacing(float v){mWordSpace=v;}
+    void setFontFeatureSettings(const std::string& settings);   // defined in paint.cc (propagates to minikin)
+    std::string getFontFeatureSettings()const{return mFontFeatureSettings;}
+    float getWordSpacing()const{return mWordSpace;}
+    void setWordSpacing(float v);   // defined in paint.cc (propagates to minikin)
     void setElegantTextHeight(bool v){ mElegantTextHeight=v; }   // see mElegantTextHeight note
     bool isElegantTextHeight()const{return mElegantTextHeight;}
     float measureText(const std::string& text)const;

@@ -103,6 +103,7 @@ private:
     int mBreakStrategy;
     int mHyphenationFrequency;
     int mJustificationMode;
+    bool mUseBoundsForWidth = false;
     bool mHideHint;
     bool mSingleLine;
     bool mIncludePad;
@@ -410,6 +411,8 @@ public:
     void setLetterSpacing(float letterSpacing);
     void setJustificationMode(int justificationMode);
     int getJustificationMode() const;
+    void setUseBoundsForWidth(bool useBoundsForWidth);
+    bool getUseBoundsForWidth() const { return mUseBoundsForWidth; }
     void setTextColor(int color);
     void setTextColor(const cdroid::RefPtr<ColorStateList>& colors);
     Layout* getLayout()const;

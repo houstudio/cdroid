@@ -1324,6 +1324,16 @@ void TextView::setJustificationMode(int justificationMode) {
         invalidate();
     }
 }
+void TextView::setUseBoundsForWidth(bool useBoundsForWidth) {
+    if (mUseBoundsForWidth != useBoundsForWidth) {
+        mUseBoundsForWidth = useBoundsForWidth;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
 int TextView::getJustificationMode() const{
         return mJustificationMode;
 }
@@ -2519,7 +2529,7 @@ bool TextView::suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& avail
             .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
             .setBreakStrategy(getBreakStrategy())
             .setHyphenationFrequency(mHyphenationFrequency)
-            .setJustificationMode(mJustificationMode)
+            .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
             .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
             .setTextDirection(getTextDirectionHeuristic());
 
@@ -2816,7 +2826,7 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
                     .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
                     .setBreakStrategy(mBreakStrategy)
                     .setHyphenationFrequency(mHyphenationFrequency)
-                    .setJustificationMode(mJustificationMode)
+                    .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
                     .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
             if (shouldEllipsize) {
                 builder->setEllipsize(mEllipsize)
@@ -2865,7 +2875,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
                 .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
                 .setBreakStrategy(mBreakStrategy)
                 .setHyphenationFrequency(mHyphenationFrequency)
-                .setJustificationMode(mJustificationMode)
+                .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
                 .setEllipsize((getKeyListener()==nullptr)?effectiveEllipsize:TextUtils::TruncateAt::NONE)
                 .setEllipsizedWidth(ellipsisWidth);
         result = builder->build();
@@ -2912,7 +2922,7 @@ Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring,
                 .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
                 .setBreakStrategy(mBreakStrategy)
                 .setHyphenationFrequency(mHyphenationFrequency)
-                .setJustificationMode(mJustificationMode)
+                .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
                 .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
         if (shouldEllipsize) {
             builder->setEllipsize(effectiveEllipsize)
@@ -2997,7 +3007,8 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         if (boring == nullptr || boring == &UNKNOWN_BORING) {
             if (des < 0) {
                 des = (int) std::ceil(Layout::getDesiredWidthWithLimit(mTransformed, 0,
-                        mTransformed->length(), mTextPaint, mTextDir, widthLimit));
+                        mTransformed->length(), mTextPaint, mTextDir, widthLimit,
+                        mUseBoundsForWidth));
             }
             width = des;
         } else {
@@ -3028,7 +3039,8 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             if (hintBoring == nullptr || hintBoring == &UNKNOWN_BORING) {
                 if (hintDes < 0) {
                     hintDes = (int) std::ceil(Layout::getDesiredWidthWithLimit(mHint, 0,
-                            mHint->length(), mTextPaint, mTextDir, widthLimit));
+                            mHint->length(), mTextPaint, mTextDir, widthLimit,
+                            mUseBoundsForWidth));
                 }
                 hintWidth = hintDes;
             } else {

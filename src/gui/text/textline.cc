@@ -116,26 +116,52 @@ void TextLine::set(const TextPaint* paint, CharSequence* text, int start, int li
         }
     }
     mTabs = tabStops;
-    mAddedWidthForJustify = 0;
+    mAddedWordSpacingInPx = 0;
+    mAddedLetterSpacingInPx = 0;
     mIsJustifying = false;
 
     mEllipsisStart = ellipsisStart != ellipsisEnd ? ellipsisStart : 0;
     mEllipsisEnd = ellipsisStart != ellipsisEnd ? ellipsisEnd : 0;
 }
 
-void TextLine::justify(float justifyWidth) {
+void TextLine::justify(int justificationMode, float justifyWidth) {
     int end = mLen;
     while (end > 0 && isLineEndSpace(mText->charAt(mStart + end - 1))) {
         end--;
     }
-    int spaces = countStretchableSpaces(0, end);
-    if (spaces == 0) {
-        // There are no stretchable spaces, so we can't help the justification by adding any
-        // width.
-        return;
+    if (justificationMode == Layout::JUSTIFICATION_MODE_INTER_WORD) {
+        const float width = std::abs(measure(end, false, nullptr));
+        const int spaces = countStretchableSpaces(0, end);
+        if (spaces == 0) {
+            // There are no stretchable spaces, so we can't help the justification by adding any
+            // width.
+            return;
+        }
+        mAddedWordSpacingInPx = (justifyWidth - width) / spaces;
+        mAddedLetterSpacingInPx = 0;
+    } else {  // justificationMode == Layout::JUSTIFICATION_MODE_INTER_CHARACTER
+        LineInfo lineInfo;
+        float width = std::abs(measure(end, false, nullptr, nullptr, &lineInfo));
+
+        int lettersCount = lineInfo.getClusterCount();
+        if (lettersCount < 2) {
+            return;
+        }
+        mAddedLetterSpacingInPx = (justifyWidth - width) / (lettersCount - 1);
+        if (mAddedLetterSpacingInPx > 0.03f) {
+            // If the letter spacing is more than 0.03em, ligatures are automatically disabled,
+            // so re-calculate everything without ligatures. mPaint points at the caller's mutable
+            // TextPaint (Layout's mWorkPaint), so the const_cast below is safe.
+            TextPaint* paint = const_cast<TextPaint*>(mPaint);
+            const std::string oldFontFeatures = paint->getFontFeatureSettings();
+            paint->setFontFeatureSettings(oldFontFeatures + ", \"liga\" off, \"cliga\" off");
+            width = std::abs(measure(end, false, nullptr, nullptr, &lineInfo));
+            lettersCount = lineInfo.getClusterCount();
+            mAddedLetterSpacingInPx = (justifyWidth - width) / (lettersCount - 1);
+            paint->setFontFeatureSettings(oldFontFeatures);
+        }
+        mAddedWordSpacingInPx = 0;
     }
-    const float width = std::abs(measure(end, false, nullptr));
-    mAddedWidthForJustify = (justifyWidth - width) / spaces;
     mIsJustifying = true;
 }
 
@@ -485,7 +511,7 @@ int TextLine::getOffsetBeforeAfter(int runIndex, int runStart, int runLimit,
     TextPaint& wp = mWorkPaint;
     wp.set(*mPaint);
     if (mIsJustifying) {
-        wp.setWordSpacing(mAddedWidthForJustify);
+        wp.setWordSpacing(mAddedWordSpacingInPx);
     }
 
     int spanStart = runStart;
@@ -605,7 +631,7 @@ float TextLine::handleText(TextPaint& wp, int start, int end,
         const std::vector<DecorationInfo>* decorations) {
 
     if (mIsJustifying) {
-        wp.setWordSpacing(mAddedWidthForJustify);
+        wp.setWordSpacing(mAddedWordSpacingInPx);
     }
     // Get metrics first (even for empty strings or "0" width runs)
     if (fmi != nullptr) {

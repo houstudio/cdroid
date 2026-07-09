@@ -57,7 +57,8 @@ private:
     int mEllipsisStart;
     int mEllipsisEnd;
 
-    float mAddedWidthForJustify;
+    float mAddedWordSpacingInPx;
+    float mAddedLetterSpacingInPx = 0;
 
     TextPaint mWorkPaint;
     TextPaint mActivePaint;
@@ -130,11 +131,10 @@ public:
     static TextLine* recycle(TextLine* tl);
 
     float getAddedWordSpacingInPx() const{
-        return mAddedWidthForJustify;
+        return mAddedWordSpacingInPx;
     }
     float getAddedLetterSpacingInPx() const{
-        // Letter-spacing justification is not yet supported.
-        return 0.f;
+        return mAddedLetterSpacingInPx;
     }
     bool isJustifying() const{
         return mIsJustifying;
@@ -143,7 +143,7 @@ public:
     void set(const TextPaint* paint, CharSequence* text, int start, int limit, int dir,const Directions* directions,
             bool hasTabs, TabStops* tabStops, int ellipsisStart, int ellipsisEnd,bool useFallbackLineSpacing);
 
-    void justify(float justifyWidth);
+    void justify(int justificationMode, float justifyWidth);
 
     void draw(Canvas& c, float x, int top, int y, int bottom);
     float metrics(Paint::FontMetricsInt* fmi, RectF* drawBounds = nullptr,
