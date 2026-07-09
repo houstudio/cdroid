@@ -5,6 +5,10 @@
 #include <core/looper.h>
 #include <core/systemclock.h>
 #include <widget/cdwindow.h>
+#include <widget/drawerlayout.h>
+#include <widget/framelayout.h>
+#include <widget/linearlayout.h>
+#include <view/gravity.h>
 #include <porting/cdlog.h>
 
 class GUIEnvironment: public testing::Environment{
@@ -12,7 +16,10 @@ private:
     int argc;
     const char**argv;
     static GUIEnvironment*mInst;
-    static cdroid::Window*mStage;
+    static cdroid::Window*       mStage;       // the one shared Window (full screen)
+    static cdroid::DrawerLayout* mDrawerLayout;// root: holds content + results drawer
+    static cdroid::ViewGroup*    mContent;     // test-screen area (DrawerLayout content)
+    static cdroid::LinearLayout* mDrawerPanel; // START drawer host; interior built in testmain
 public:
     GUIEnvironment(int c,const char*v[]):argc(c),argv(v){
         mInst=this;
@@ -22,10 +29,33 @@ public:
            deleted: App registers an AtExit callback capturing `this`, so it
            must outlive AtExit teardown. */
         new cdroid::App(argc, argv);
-        /* The single shared Window ("stage"). Tests add their views to it
-           instead of creating a Window per case. width/height -1 = the
-           display's full size (see Window ctor). */
+        /* The single shared Window ("stage"). Tests add their views to its
+           content area (see content()), not to the Window directly. -1/-1 =
+           the display's full size (see Window ctor). */
         mStage = new cdroid::Window(0, 0, -1, -1);
+
+        /* Root tree:
+             Window
+             └─ DrawerLayout
+                ├─ content FrameLayout (gravity NO_GRAVITY) = "test screen"
+                └─ drawer  LinearLayout (gravity START)      = results panel
+           DrawerLayout drawers overlay the content (they don't shrink it): the
+           drawer is opened to read results and closed for a full-screen test.
+           The drawer interior (header + suite list + detail) is built lazily by
+           GuiTestListener in testmain.cc. */
+        mDrawerLayout = new cdroid::DrawerLayout(1, 1);
+
+        mContent = new cdroid::FrameLayout(1, 1);
+        mDrawerLayout->addView(mContent, 0,
+            new cdroid::DrawerLayout::LayoutParams(-1, -1, cdroid::Gravity::NO_GRAVITY));
+
+        mDrawerPanel = new cdroid::LinearLayout(1, 1);
+        mDrawerPanel->setOrientation(cdroid::LinearLayout::VERTICAL);
+        const int drawerWidth = 320; // tweakable
+        mDrawerLayout->addView(mDrawerPanel, 1,
+            new cdroid::DrawerLayout::LayoutParams(drawerWidth, -1, cdroid::Gravity::START));
+
+        mStage->addView(mDrawerLayout);
         printf("GUIEnvironment Setup\r\n");
     }
     void TearDown()override{
@@ -40,10 +70,23 @@ public:
     static GUIEnvironment*getInstance(){
         return mInst;
     }
-    /* The one shared Window. Add views to it; it is cleared between cases by
-       the StageResetListener registered in main(). */
+    /* The one shared Window. */
     static cdroid::Window*stage(){
         return mStage;
+    }
+    /* Where every test case adds its views (the DrawerLayout "content"). Cleared
+       between cases by the listener — the results drawer is a sibling, so it is
+       left untouched. */
+    static cdroid::ViewGroup*content(){
+        return mContent;
+    }
+    /* The DrawerLayout itself, for open/closeDrawer(). */
+    static cdroid::DrawerLayout*drawerLayout(){
+        return mDrawerLayout;
+    }
+    /* The START drawer panel (its interior is populated by the listener). */
+    static cdroid::LinearLayout*drawerPanel(){
+        return mDrawerPanel;
     }
 };
 

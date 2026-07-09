@@ -23,7 +23,7 @@ public :
 
 TEST_F(KEYNAV,btns){
    App&app=App::getInstance();
-   Window*w=GUIEnvironment::stage();
+   ViewGroup*w=GUIEnvironment::content();
    for(int i=0;i<8;i++){
        Button*btn=new Button("Button_"+std::to_string(i),200,50);
        btn->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
@@ -40,7 +40,7 @@ TEST_F(KEYNAV,btns){
 }
 TEST_F(KEYNAV,edts){
    App&app=App::getInstance();
-   Window*w=GUIEnvironment::stage();
+   ViewGroup*w=GUIEnvironment::content();
    for(int i=0;i<6;i++){
        EditText*tv=new EditText("EditText_"+std::to_string(i),200,50);
        w->addView(tv);
@@ -50,7 +50,7 @@ TEST_F(KEYNAV,edts){
 }
 TEST_F(KEYNAV,edts1){
    App&app=App::getInstance();
-   Window*w=GUIEnvironment::stage();
+   ViewGroup*w=GUIEnvironment::content();
    LinearLayout*ll1=new LinearLayout(800,200);
    LinearLayout*ll2=new LinearLayout(800,200);
    w->addView(ll1);

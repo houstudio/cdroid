@@ -1753,7 +1753,7 @@ DrawerLayout::LayoutParams::LayoutParams(int width, int height)
 
 DrawerLayout::LayoutParams::LayoutParams(int width, int height, int gravity)
   :LayoutParams(width, height){
-    gravity = gravity;
+    this->gravity = gravity; // param shadows member → must qualify (Android: this.gravity = gravity)
 }
 
 DrawerLayout::LayoutParams::LayoutParams(const LayoutParams& source)

@@ -35,7 +35,7 @@ public:
 
 TEST_F(LAYOUT,linear){
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     LinearLayout*ll=new LinearLayout(800,80);
     ShapeDrawable*sd=new ShapeDrawable();
     Shape*shape=new RectShape();
@@ -86,7 +86,7 @@ TEST_F(LAYOUT,linear){
 TEST_F(LAYOUT,radiogroup){
     App&app=App::getInstance();
     const char*captions[]={"News","Sport","Reading","Walking","I saw A brown fox jump over a lazy dog!"};
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     AttributeSet attrs;
     RadioGroup *rg=new RadioGroup(500,300);//&app,attrs);
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
@@ -107,7 +107,7 @@ TEST_F(LAYOUT,radiogroup){
 }
 TEST_F(LAYOUT,frame){
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     FrameLayout*frame=new FrameLayout(800,600);
     FrameLayout::LayoutParams*lp=new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
 
@@ -132,7 +132,7 @@ TEST_F(LAYOUT,frame){
 
 TEST_F(LAYOUT,absolute){
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     AbsoluteLayout*ll=new AbsoluteLayout(800,600);
     AbsoluteLayout::LayoutParams*lp=new AbsoluteLayout::LayoutParams(300,50,100,100);
     TextView*tv=new TextView("A crown fox jump over the lazy dog!",0,0);
@@ -154,7 +154,7 @@ TEST_F(LAYOUT,absolute){
 TEST_F(LAYOUT,tablerow){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     TableRow*row=new TableRow(800,80);
     row->setBackground(new ColorDrawable(0xFF444444));
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
@@ -174,7 +174,7 @@ TEST_F(LAYOUT,tablerow){
 TEST_F(LAYOUT,table){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     TableLayout*tbl=new TableLayout(800,320);
     TableRow* row[4];
     for(int j=0;j<4;j++){
@@ -202,7 +202,7 @@ TEST_F(LAYOUT,table){
 TEST_F(LAYOUT,grid){
     App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore","Hello world!","Sina News"};
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     GridLayout*grd=new GridLayout(800,400);
     const int N=sizeof(captions)/sizeof(captions[0]);
     for(int i=0;i<9;i++){

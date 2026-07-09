@@ -52,7 +52,7 @@ TEST_F(WIDGET,View){
     ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_VIEW_END);
 }
 TEST_F(WIDGET,TextView){
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     const char*strings[]={"LEFT","CENTER","RIGHT","LEFT|TOP","CENTER|TOP","RIGHT|TOP"};
     TextView*t1=new TextView("",400,200);
     TextView*t2=new TextView(std::string(),400,300);
@@ -62,7 +62,7 @@ TEST_F(WIDGET,TextView){
 }
 
 TEST_F(WIDGET,Button){
-   Window*w=GUIEnvironment::stage();
+   ViewGroup*w=GUIEnvironment::content();
    LinearLayout*layout=new LinearLayout(800,600);
    Button*btn1=new Button("OK",100,30);
    Button*btn2=new Button("Cancel",100,30);
@@ -83,7 +83,7 @@ TEST_F(WIDGET,Button){
 }
 
 TEST_F(WIDGET,ImageView){
-   Window*w=GUIEnvironment::stage();
+   ViewGroup*w=GUIEnvironment::content();
    ImageView*iv=new ImageView(400,400);
    Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
    iv->setImageDrawable(d);
@@ -94,7 +94,7 @@ TEST_F(WIDGET,ImageView){
 
 TEST_F(WIDGET,ProgressBar){
     int pos=0,ticks=0;
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     ProgressBar*pb;
     LinearLayout*ll=new LinearLayout(800,600);
     pb=new ProgressBar(800,20);
@@ -131,7 +131,7 @@ TEST_F(WIDGET,ProgressBar){
 }
 
 TEST_F(WIDGET,SeekBar){
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     SeekBar*sb=new SeekBar(400,40);
     w->addView(sb);
     pumpFor(500);
@@ -145,18 +145,18 @@ static const char*texts[]={
 
 
 TEST_F(WIDGET,Selector){
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     pumpFor(500);
 }
 
 TEST_F(WIDGET,ListView){
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     pumpFor(500);
 }
 
 TEST_F(WIDGET,Keyboard){
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     KeyboardView*kbv=new KeyboardView(800,300);
     kbv->setBackgroundColor(0xFFEEEEEE);
     Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);

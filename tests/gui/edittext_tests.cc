@@ -19,7 +19,7 @@ class EDITTEXT:public testing::Test{
 TEST_F(EDITTEXT,edit){
     App&app=App::getInstance();
     int format[]={Gravity::LEFT,Gravity::CENTER_HORIZONTAL,Gravity::RIGHT};
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     for(int i=0;i<sizeof(format)/sizeof(format[0]);i++){
         EditText*g=new EditText("Hello world!",600,32);
         g->setGravity(format[i]|Gravity::CENTER_VERTICAL);
@@ -31,7 +31,7 @@ TEST_F(EDITTEXT,edit){
 
 TEST_F(EDITTEXT,multiline){
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     EditText*edt=new EditText("Hello world!\nThis is the second line\n The last line",400,200);
     edt->setSingleLine(false);
     edt->setTextColor(0xFFFFFFFF);
@@ -47,7 +47,7 @@ TEST_F(EDITTEXT,hebrew){
              0x05ad,0x0020,0x05dc,0x059d,0x0020,0x05dc,0x0599,0x0020,0x05dc,0x05b6,
              0x0020,0xfb3c,0x0020,0x05dc,0x0592,0x00};
     std::string u8text=TextUtils::unicode2utf8(text);
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     EditText*edt=new EditText(u8text,400,200);
     edt->setTextSize(40);
     edt->setSingleLine(false);
@@ -60,7 +60,7 @@ TEST_F(EDITTEXT,hebrew){
 TEST_F(EDITTEXT,hindi){//印地语
     const char*text="आज सुबह एक ट्रैफिक जैम था";
     App&app=App::getInstance();
-    Window*w=GUIEnvironment::stage();
+    ViewGroup*w=GUIEnvironment::content();
     EditText*edt=new EditText(text,400,200);
     edt->setTextSize(40);
     edt->setSingleLine(false);
