@@ -4778,7 +4778,7 @@ void TextView::setKeyListenerOnly(KeyListener* input) {
         if (input != nullptr && (dynamic_cast<Editable*>(mText)==nullptr)) {
             setText(mText);
         }
-        //setFilters(dynamic_cast<Editable*>(mText), mFilters);
+        setFilters(dynamic_cast<Editable*>(mText), mFilters);
     }
 }
 

@@ -21,6 +21,7 @@ add_library(cdtext
     character.cc
     spannablestring.cc
     spannablestringbuilder.cc
+    inputfilter.cc
     style/metricaffectingspan.cc
     style/replacementspan.cc
     method/basemovementmethod.cc
