@@ -144,14 +144,18 @@ static WBProperty getWBProperty(UChar32 c) {
     // 特殊字符优先处理
     if (c == '\r') return WBP_CR;
     if (c == '\n') return WBP_LF;
+    // UAX#29 WBP Newline: VT(000B), FF(000C), NEL(0085), LS(2028), PS(2029) — break around.
+    if (c == 0x000B || c == 0x000C || c == 0x0085 || c == 0x2028 || c == 0x2029) return WBP_NEWLINE;
     if (c == 0x200D) return WBP_ZWJ;  // ZWJ
     if (c == '\'' || c == 0x2019) return WBP_SINGLE_QUOTE;
     if (c == '"' || c == 0x201D) return WBP_DOUBLE_QUOTE;
     if (c == '_') return WBP_LINK;
-    if (c == '-') return WBP_MID_LETTER;
-    if (c == '.' || c == ',' || c == ';' || c == ':' || c == '/') {
-        return WBP_MID_NUMLET;
-    }
+    // UAX#29 Word_Break for ASCII punctuation (verified against UCD WordBreakProperty.txt):
+    //   ':' Colon = MidLetter; ',' Comma, ';' Semicolon = MidNum; '.' Full Stop = MidNumLet.
+    //   '-' Hyphen-Minus and '/' Solidus are WBP_Other (not listed in UCD) → fall through.
+    if (c == ':') return WBP_MID_LETTER;
+    if (c == ',' || c == ';') return WBP_MID_NUM;
+    if (c == '.') return WBP_MID_NUMLET;
     
     // 使用数据表中的属性
     uint8_t cat = range->category;
@@ -387,6 +391,47 @@ static inline bool isLetterLike(WBProperty prop) {
            prop == WBP_ETHIOPIC || prop == WBP_MONGOLIAN;
 }
 
+// WB4 helper: walk backward from `pos` over Extend/Format/ZWJ to the previous base code point.
+// Returns the base char, or (UChar32)-1 if none (reached start through only-ignorable chars).
+static UChar32 prevBaseChar(const UChar* text, int32_t length, int32_t pos, int32_t* basePos) {
+    int32_t i = pos;
+    while (i > 0) {
+        UChar32 c = text[i - 1];
+        int32_t cl = 1;
+        if (U16_IS_TRAIL(c) && i > 1 && U16_IS_LEAD(text[i - 2])) {
+            c = U16_GET_SUPPLEMENTARY(text[i - 2], text[i - 1]);
+            cl = 2;
+        }
+        WBProperty p = getWBProperty(c);
+        if (p != WBP_EXTEND && p != WBP_FORMAT && p != WBP_ZWJ) {
+            *basePos = i - cl;
+            return c;
+        }
+        i -= cl;
+    }
+    return (UChar32)-1;
+}
+
+// WB4 helper: walk forward from `pos` over Extend/Format/ZWJ to the next base code point.
+static UChar32 nextBaseChar(const UChar* text, int32_t length, int32_t pos, int32_t* basePos) {
+    int32_t i = pos;
+    while (i < length) {
+        UChar32 c = text[i];
+        int32_t cl = 1;
+        if (U16_IS_LEAD(c) && i + 1 < length && U16_IS_TRAIL(text[i + 1])) {
+            c = U16_GET_SUPPLEMENTARY(text[i], text[i + 1]);
+            cl = 2;
+        }
+        WBProperty p = getWBProperty(c);
+        if (p != WBP_EXTEND && p != WBP_FORMAT && p != WBP_ZWJ) {
+            *basePos = i;
+            return c;
+        }
+        i += cl;
+    }
+    return (UChar32)-1;
+}
+
 // Check word boundary according to UAX #29 rules with script-specific handling
 static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     if (pos <= 0 || pos >= length) {
@@ -415,27 +460,24 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     // WB1: Break at start and end of text
     if (pos == 0 || pos == length) return true;
     
-    // WB2 & WB3: Newline handling
-    if (propPrev == WBP_CR && propCurr != WBP_LF) return true;
-    if (propPrev == WBP_LF || propPrev == WBP_CR) return true;
+    // WB3: CR × LF — keep CRLF together (do not break between CR and LF).
+    if (propPrev == WBP_CR && propCurr == WBP_LF) return false;
+    // WB3a/b: Break before/after newlines (CR, LF, Newline).
+    if (propPrev == WBP_CR || propPrev == WBP_LF || propPrev == WBP_NEWLINE) return true;
     
     // WB4: Don't break within surrogate pairs
     if (U16_IS_LEAD(prev) && U16_IS_TRAIL(curr)) return false;
-    
-    // WB5: Ignore format and extend characters（递归跳过）
-    if (propPrev == WBP_EXTEND || propPrev == WBP_FORMAT) {
-        return isWordBoundary(text, length, pos - prevLen);
-    }
-    if (propCurr == WBP_EXTEND || propCurr == WBP_FORMAT) {
-        return isWordBoundary(text, length, pos + currLen);
-    }
-    
-    // WB5a: Ignore ZWJ
-    if (propPrev == WBP_ZWJ) {
-        return isWordBoundary(text, length, pos - prevLen);
-    }
-    if (propCurr == WBP_ZWJ) {
-        return isWordBoundary(text, length, pos + currLen);
+
+    // WB4 (× Extend/Format/ZWJ): an Extend/Format/ZWJ attaches to the preceding char, so never
+    // break BEFORE one. (The boundary, if any, is decided at the position after the run.)
+    if (propCurr == WBP_EXTEND || propCurr == WBP_FORMAT || propCurr == WBP_ZWJ) return false;
+    // WB4: if prev is Extend/Format/ZWJ, evaluate the rules using the base char before the run.
+    if (propPrev == WBP_EXTEND || propPrev == WBP_FORMAT || propPrev == WBP_ZWJ) {
+        int32_t pp = 0;
+        UChar32 pb = prevBaseChar(text, length, pos, &pp);
+        if (pb == (UChar32)-1) return true;  // only ignorables before pos → break
+        prev = pb;
+        propPrev = getWBProperty(prev);
     }
     
     // WB6: Don't break between letters（使用辅助函数简化）
@@ -448,33 +490,50 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     // WB7: Don't break within sequences of Katakana
     if (propPrev == WBP_KATAKANA && propCurr == WBP_KATAKANA) return false;
     
-    // WB8: Don't break between letters and apostrophes
-    if ((prevIsLetter && propCurr == WBP_SINGLE_QUOTE) ||
-        (propPrev == WBP_SINGLE_QUOTE && currIsLetter)) {
-        return false;
-    }
-    
-    // WB9: Don't break between letters and link
-    if ((prevIsLetter && propCurr == WBP_LINK) ||
-        (propPrev == WBP_LINK && currIsLetter)) {
-        return false;
-    }
-    
-    // WB9a: Don't break between letter and mid-letter
-    if ((prevIsLetter && propCurr == WBP_MID_LETTER) ||
-        (propPrev == WBP_MID_LETTER && currIsLetter)) {
-        return false;
-    }
-    
     // WB10: Don't break between numbers
     if (propPrev == WBP_NUMERIC && propCurr == WBP_NUMERIC) return false;
-    
+
     // WB11: Don't break between letter and number
     if ((prevIsLetter && propCurr == WBP_NUMERIC) ||
         (propPrev == WBP_NUMERIC && currIsLetter)) {
         return false;
     }
-    
+
+    // WB6/7 + MidNum/MidNumLet: a MidChar only prevents a break when it sits BETWEEN two matching
+    // chars (ALetter×MidLetter×ALetter, Numeric×MidNum×Numeric, X×MidNumLet×X, X×SingleQuote×X,
+    // X×ExtendNumLet(Link)×X). The previous pairwise rules over-bound when the MidChar was at the
+    // end. Look at the char on the OTHER side of the MidChar (Extend/Format/ZWJ-skipping).
+    auto nextProp = [&](int32_t from) -> WBProperty {
+        int32_t np;
+        UChar32 n = nextBaseChar(text, length, from, &np);
+        return (n == (UChar32)-1) ? WBP_OTHER : getWBProperty(n);
+    };
+    auto prevBaseProp = [&](int32_t from) -> WBProperty {
+        int32_t pp;
+        UChar32 p = prevBaseChar(text, length, from, &pp);
+        return (p == (UChar32)-1) ? WBP_OTHER : getWBProperty(p);
+    };
+    const bool prevIsAlphaOrNum = prevIsLetter || propPrev == WBP_NUMERIC;
+    const bool currIsAlphaOrNum = currIsLetter || propCurr == WBP_NUMERIC;
+    // curr is the MidChar → check the char after it.
+    if (propCurr == WBP_MID_LETTER || propCurr == WBP_SINGLE_QUOTE) {
+        if (prevIsLetter && isLetterLike(nextProp(pos + currLen))) return false;
+    } else if (propCurr == WBP_MID_NUM) {
+        if (propPrev == WBP_NUMERIC && nextProp(pos + currLen) == WBP_NUMERIC) return false;
+    } else if (propCurr == WBP_MID_NUMLET || propCurr == WBP_LINK) {
+        if (prevIsAlphaOrNum && (isLetterLike(nextProp(pos + currLen)) || nextProp(pos + currLen) == WBP_NUMERIC))
+            return false;
+    }
+    // prev is the MidChar → check the char before it.
+    if (propPrev == WBP_MID_LETTER || propPrev == WBP_SINGLE_QUOTE) {
+        if (currIsLetter && isLetterLike(prevBaseProp(pos - prevLen))) return false;
+    } else if (propPrev == WBP_MID_NUM) {
+        if (propCurr == WBP_NUMERIC && prevBaseProp(pos - prevLen) == WBP_NUMERIC) return false;
+    } else if (propPrev == WBP_MID_NUMLET || propPrev == WBP_LINK) {
+        if (currIsAlphaOrNum && (isLetterLike(prevBaseProp(pos - prevLen)) || prevBaseProp(pos - prevLen) == WBP_NUMERIC))
+            return false;
+    }
+
     // 特殊脚本处理：Indic 辅音丛（使用数据表，避免 ICU 调用）
     if (propPrev == WBP_INDIC && propCurr == WBP_INDIC) {
         const auto* rangePrev = findUnicodeRange(prev);
