@@ -622,6 +622,9 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
         if (doEllipsis) {
             calculateEllipsis(start, end, measured, widthStart, ellipsisWidth,
                     ellipsize, j, textWidth, paint, forceEllipsis);
+        } else {
+            mLines[mColumns * j + ELLIPSIS_START] = 0;
+            mLines[mColumns * j + ELLIPSIS_COUNT] = 0;
         }
     }
 
@@ -688,7 +691,20 @@ int StaticLayout::out(CharSequence* text, int start, int end, int above, int bel
     // TODO: could move TAB to share same column as HYPHEN, simplifying this code and gaining
     // one bit for start field
     lines[off + TAB] |= hasTab ? TAB_MASK : 0;
-    lines[off + HYPHEN] = hyphenEdit;
+    if (mEllipsized) {
+        if (ellipsize == TextUtils::TruncateAt::START) {
+            lines[off + HYPHEN] = packHyphenEdit(Paint::START_HYPHEN_EDIT_NO_EDIT,
+                    unpackEndHyphenEdit(hyphenEdit));
+        } else if (ellipsize == TextUtils::TruncateAt::END) {
+            lines[off + HYPHEN] = packHyphenEdit(unpackStartHyphenEdit(hyphenEdit),
+                    Paint::END_HYPHEN_EDIT_NO_EDIT);
+        } else {  // Middle and marquee ellipsize should show text at the start/end edge.
+            lines[off + HYPHEN] = packHyphenEdit(
+                    Paint::START_HYPHEN_EDIT_NO_EDIT, Paint::END_HYPHEN_EDIT_NO_EDIT);
+        }
+    } else {
+        lines[off + HYPHEN] = hyphenEdit;
+    }
     lines[off + DIR] |= dir << DIR_SHIFT;
     if( mLineDirections[j] && mLineDirections[j]!=&Layout::DIRS_ALL_LEFT_TO_RIGHT
             &&mLineDirections[j]!=&Layout::DIRS_ALL_RIGHT_TO_LEFT){

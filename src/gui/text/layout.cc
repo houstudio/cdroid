@@ -2,6 +2,8 @@
 #include <cstdint>
 #include <porting/cdlog.h>
 #include <text/layout.h>
+#include <text/boringlayout.h>
+#include <text/staticlayout.h>
 #include <text/spannablestring.h>
 #include <text/measuredparagraph.h>
 #include <text/method/textkeylistener.h>
@@ -1738,6 +1740,48 @@ std::u16string Layout::Ellipsizer::toU16String() const{
     std::u16string s(len, u'\0');
     getChars(0, len, &s[0], 0);
     return s;
+}
+
+CharSequence* Layout::SpannedEllipsizer::subSequence(int start, int end) const{
+    std::vector<char16_t> s(end - start);
+    getChars(start, end, s.data(), 0);
+    SpannableString* ss = new SpannableString(std::u16string(s.data(), end - start));
+    TextUtils::copySpansFrom(mSpanned, start, end, make_span_filter<ParcelableSpan>(), ss, 0);
+    return ss;
+}
+
+Layout* Layout::Builder::build() {
+    BoringLayout::Metrics* metrics = BoringLayout::isBoring(mText, mPaint, mTextDir,
+            mFallbackLineSpacing, mMinimumFontMetrics, nullptr);
+    const bool boring = metrics != nullptr
+            && (metrics->width <= mWidth || mEllipsize != TextUtils::TruncateAt::NONE);
+    if (boring) {
+        BoringLayout* bl = new BoringLayout(mText, mPaint, mWidth, mAlignment, mTextDir,
+                mSpacingMult, mSpacingAdd, mIncludePad, mFallbackLineSpacing, mEllipsizedWidth,
+                mEllipsize, mMaxLines, mBreakStrategy, mHyphenationFrequency, mLeftIndents,
+                mRightIndents, mJustificationMode, mLineBreakConfig, *metrics,
+                mUseBoundsForWidth, mShiftDrawingOffsetForStartOverhang, mMinimumFontMetrics);
+        delete metrics;  // BoringLayout ctor copies the metrics by value
+        return bl;
+    }
+    delete metrics;  // not boring (null, or width overflow without ellipsize)
+    return StaticLayout::Builder::obtain(mText, mStart, mEnd, mPaint, mWidth)
+            ->setAlignment(mAlignment)
+            .setLineSpacing(mSpacingAdd, mSpacingMult)
+            .setTextDirection(mTextDir)
+            .setIncludePad(mIncludePad)
+            .setUseLineSpacingFromFallbacks(mFallbackLineSpacing)
+            .setEllipsizedWidth(mEllipsizedWidth)
+            .setEllipsize(mEllipsize)
+            .setMaxLines(mMaxLines)
+            .setBreakStrategy(mBreakStrategy)
+            .setHyphenationFrequency(mHyphenationFrequency)
+            .setIndents(mLeftIndents, mRightIndents)
+            .setJustificationMode(mJustificationMode)
+            .setLineBreakConfig(mLineBreakConfig)
+            .setUseBoundsForWidth(mUseBoundsForWidth)
+            .setShiftDrawingOffsetForStartOverhang(mShiftDrawingOffsetForStartOverhang)
+            .build();
 }
 
 }/*endof namespace*/

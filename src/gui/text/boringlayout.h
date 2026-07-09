@@ -35,12 +35,20 @@ public:
             float spacingMult, float spacingAdd, const Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
 
+    static BoringLayout* make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            const Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
+            int ellipsizedWidth, bool useFallbackLineSpacing);
+
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
             float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);
 
     BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
             float spacingMult, float spacingAdd, const Metrics& metrics,
             bool includePad, TextUtils::TruncateAt ellipsize, int ellipsizedWidth);
+
+    BoringLayout* replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+            const Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
+            int ellipsizedWidth, bool useFallbackLineSpacing);
 
     BoringLayout(CharSequence* source, TextPaint* paint, int outerwidth, Alignment align,
             float spacingMult, float spacingAdd, const Metrics& metrics, bool includePad);

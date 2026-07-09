@@ -18,6 +18,13 @@ BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int out
             includePad, ellipsize, ellipsizedWidth);
 }
 
+BoringLayout* BoringLayout::make(CharSequence* source, TextPaint* paint, int outerWidth, Alignment align,
+        const BoringLayout::Metrics& metrics, bool includePad, TextUtils::TruncateAt ellipsize,
+        int ellipsizedWidth, bool useFallbackLineSpacing) {
+    return new BoringLayout(source, paint, outerWidth, align, 1.f, 0.f, metrics, includePad,
+            ellipsize, ellipsizedWidth, useFallbackLineSpacing);
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // replaceOrMake
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -60,6 +67,33 @@ BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint
     mUseFallbackLineSpacing = false;
 
     init(getText(), paint, align, metrics, includePad, trust, false /* useFallbackLineSpacing */);
+    return this;
+}
+
+BoringLayout* BoringLayout::replaceOrMake(CharSequence* source, TextPaint* paint, int outerWidth,
+        Alignment align, const BoringLayout::Metrics& metrics, bool includePad,
+        TextUtils::TruncateAt ellipsize, int ellipsizedWidth, bool useFallbackLineSpacing) {
+    bool trust;
+
+    if (ellipsize == TextUtils::TruncateAt::NONE || ellipsize == TextUtils::TruncateAt::MARQUEE) {
+        replaceWith(source, paint, outerWidth, align, 1.f, 0.f);
+
+        mEllipsizedWidth = outerWidth;
+        mEllipsizedStart = 0;
+        mEllipsizedCount = 0;
+        trust = true;
+    } else {
+        replaceWith(TextUtils::ellipsize(source, *paint, ellipsizedWidth, ellipsize, true,
+                    [this](int start, int end){ ellipsized(start, end); }),
+                paint, outerWidth, align, 1.f, 0.f);
+
+        mEllipsizedWidth = ellipsizedWidth;
+        trust = false;
+    }
+
+    mUseFallbackLineSpacing = useFallbackLineSpacing;
+
+    init(getText(), paint, align, metrics, includePad, trust, useFallbackLineSpacing);
     return this;
 }
 

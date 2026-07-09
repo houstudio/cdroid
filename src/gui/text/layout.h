@@ -97,6 +97,61 @@ public:
             const TextPaint& paint, const TextDirectionHeuristic* textDir, float upperLimit,
             bool useBoundsForWidth);
 
+    // android-36 Layout.Builder: high-level facade that picks BoringLayout (single boring line)
+    // vs StaticLayout (everything else). Implementation (build/isBoring) is in layout.cc since it
+    // needs the BoringLayout/StaticLayout full definitions.
+    class Builder {
+    public:
+        Builder(CharSequence* text, int start, int end, TextPaint* paint, int width)
+            : mText(text), mStart(start), mEnd(end), mPaint(paint), mWidth(width),
+              mEllipsizedWidth(width) {}
+
+        Builder& setAlignment(Alignment alignment){ mAlignment = alignment; return *this; }
+        Builder& setTextDirection(const TextDirectionHeuristic* textDir){ mTextDir = textDir; return *this; }
+        Builder& setLineSpacingAmount(float amount){ mSpacingAdd = amount; return *this; }
+        Builder& setLineSpacingMultiplier(float multiplier){ mSpacingMult = multiplier; return *this; }
+        Builder& setFontPaddingIncluded(bool includeFontPadding){ mIncludePad = includeFontPadding; return *this; }
+        Builder& setFallbackLineSpacingEnabled(bool fallbackLineSpacing){ mFallbackLineSpacing = fallbackLineSpacing; return *this; }
+        Builder& setEllipsizedWidth(int ellipsizedWidth){ mEllipsizedWidth = ellipsizedWidth; return *this; }
+        Builder& setEllipsize(TextUtils::TruncateAt ellipsize){ mEllipsize = ellipsize; return *this; }
+        Builder& setMaxLines(int maxLines){ mMaxLines = maxLines; return *this; }
+        Builder& setBreakStrategy(int breakStrategy){ mBreakStrategy = breakStrategy; return *this; }
+        Builder& setHyphenationFrequency(int hyphenationFrequency){ mHyphenationFrequency = hyphenationFrequency; return *this; }
+        Builder& setLeftIndents(const std::vector<int>& leftIndents){ mLeftIndents = leftIndents; return *this; }
+        Builder& setRightIndents(const std::vector<int>& rightIndents){ mRightIndents = rightIndents; return *this; }
+        Builder& setJustificationMode(int justificationMode){ mJustificationMode = justificationMode; return *this; }
+        Builder& setLineBreakConfig(const LineBreakConfig& lineBreakConfig){ mLineBreakConfig = lineBreakConfig; return *this; }
+        Builder& setUseBoundsForWidth(bool useBoundsForWidth){ mUseBoundsForWidth = useBoundsForWidth; return *this; }
+        Builder& setShiftDrawingOffsetForStartOverhang(bool shift){ mShiftDrawingOffsetForStartOverhang = shift; return *this; }
+        Builder& setMinimumFontMetrics(Paint::FontMetrics* minimumFontMetrics){ mMinimumFontMetrics = minimumFontMetrics; return *this; }
+
+        Layout* build();
+    private:
+        CharSequence* mText;
+        int mStart;
+        int mEnd;
+        TextPaint* mPaint;
+        int mWidth;
+        Alignment mAlignment = Alignment::ALIGN_NORMAL;
+        float mSpacingMult = 1.0f;
+        float mSpacingAdd = 0.0f;
+        const TextDirectionHeuristic* mTextDir = TextDirectionHeuristics::FIRSTSTRONG_LTR;
+        bool mIncludePad = true;
+        bool mFallbackLineSpacing = false;
+        int mEllipsizedWidth;
+        TextUtils::TruncateAt mEllipsize = TextUtils::TruncateAt::NONE;
+        int mMaxLines = INT_MAX;
+        int mBreakStrategy = BREAK_STRATEGY_SIMPLE;
+        int mHyphenationFrequency = HYPHENATION_FREQUENCY_NONE;
+        std::vector<int> mLeftIndents;
+        std::vector<int> mRightIndents;
+        int mJustificationMode = JUSTIFICATION_MODE_NONE;
+        LineBreakConfig mLineBreakConfig;
+        bool mUseBoundsForWidth = false;
+        bool mShiftDrawingOffsetForStartOverhang = false;
+        Paint::FontMetrics* mMinimumFontMetrics = nullptr;
+    };
+
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);
@@ -352,6 +407,7 @@ public:
         int nextSpanTransition(int start, int limit, const SpanFilter& type) const override {
             return mSpanned->nextSpanTransition(start, limit, type);
         }
+        CharSequence* subSequence(int start, int end) const override;
    };
 private:
     CharSequence* mText;
