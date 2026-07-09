@@ -8,6 +8,17 @@
 #include <text/measuredparagraph.h>
 #include <text/method/textkeylistener.h>
 namespace cdroid{
+
+const Layout::TextInclusionStrategy Layout::INCLUSION_STRATEGY_ANY_OVERLAP =
+        [](const RectF& s, const RectF& a) {
+            // Two rects intersect iff they are NOT separated on either axis.
+            return !(s.right() <= a.left || a.right() <= s.left
+                     || s.bottom() <= a.top || a.bottom() <= s.top);
+        };
+const Layout::TextInclusionStrategy Layout::INCLUSION_STRATEGY_CONTAINS_CENTER =
+        [](const RectF& s, const RectF& a) { return a.contains(s.centerX(), s.centerY()); };
+const Layout::TextInclusionStrategy Layout::INCLUSION_STRATEGY_CONTAINS_ALL =
+        [](const RectF& s, const RectF& a) { return a.contains(s); };
 const Directions Layout::DIRS_ALL_LEFT_TO_RIGHT({ 0, RUN_LENGTH_MASK });
 const Directions Layout::DIRS_ALL_RIGHT_TO_LEFT({ 0, RUN_LENGTH_MASK | RUN_RTL_FLAG });
 

@@ -888,10 +888,38 @@ void DynamicLayout::ChangeWatcher::reflow(CharSequence* s, int where, int before
 }
 
 void DynamicLayout::ChangeWatcher::beforeTextChanged(CharSequence* s, int where, int before, int after) {
-    // Intentionally empty
+    DynamicLayout* dynamicLayout = mLayout;
+    if (dynamicLayout != nullptr) {
+        if (OffsetMapping* transformedText = dynamic_cast<OffsetMapping*>(dynamicLayout->mDisplay)) {
+            // When the display text is transformed (e.g. password), reflow must use the
+            // transformed indices, not the base-text range. The range must be transformed BEFORE
+            // the base text changes, since transformedText is updated simultaneously with it.
+            //   base:         abcd  >  abce     (where=3, before=1, after=1)
+            //   transformed:  abxxcd > abxxce    (where=5, before=1, after=1)
+            mTransformedTextUpdate.where = where;
+            mTransformedTextUpdate.before = before;
+            mTransformedTextUpdate.after = after;
+            transformedText->originalToTransformed(mTransformedTextUpdate);
+        }
+    }
 }
 
 void DynamicLayout::ChangeWatcher::onTextChanged(CharSequence* s, int where, int before, int after) {
+    DynamicLayout* dynamicLayout = mLayout;
+    if (dynamicLayout != nullptr && dynamic_cast<OffsetMapping*>(dynamicLayout->mDisplay)) {
+        if (mTransformedTextUpdate.where >= 0) {
+            where = mTransformedTextUpdate.where;
+            before = mTransformedTextUpdate.before;
+            after = mTransformedTextUpdate.after;
+            // Mark consumed so we can tell whether beforeTextChanged ran.
+            mTransformedTextUpdate.where = -1;
+        } else {
+            // onTextChanged without beforeTextChanged: reflow the entire text.
+            where = 0;
+            before = dynamicLayout->getLineEnd(dynamicLayout->getLineCount() - 1);
+            after = dynamicLayout->mDisplay->length();
+        }
+    }
     reflow(s, where, before, after);
 }
 
@@ -899,14 +927,25 @@ void DynamicLayout::ChangeWatcher::afterTextChanged(Editable* s) {
     // Intentionally empty
 }
 
+void DynamicLayout::ChangeWatcher::transformAndReflow(Spannable* s, int start, int end) {
+    DynamicLayout* dynamicLayout = mLayout;
+    if (dynamicLayout != nullptr) {
+        if (OffsetMapping* transformedText = dynamic_cast<OffsetMapping*>(dynamicLayout->mDisplay)) {
+            start = transformedText->originalToTransformed(start, OffsetMapping::MAP_STRATEGY_CHARACTER);
+            end = transformedText->originalToTransformed(end, OffsetMapping::MAP_STRATEGY_CHARACTER);
+        }
+    }
+    reflow(s, start, end - start, end - start);
+}
+
 void DynamicLayout::ChangeWatcher::onSpanAdded(Spannable* s, ParcelableSpan* o, int start, int end) {
     if (dynamic_cast<UpdateLayout*>(o))
-        reflow(s, start, end - start, end - start);
+        transformAndReflow(s, start, end);
 }
 
 void DynamicLayout::ChangeWatcher::onSpanRemoved(Spannable* s, ParcelableSpan* o, int start, int end) {
     if (dynamic_cast<UpdateLayout*>(o))
-        reflow(s, start, end - start, end - start);
+        transformAndReflow(s, start, end);
 }
 
 void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable* s, ParcelableSpan* o, int start, int end, int nstart, int nend) {
@@ -916,8 +955,8 @@ void DynamicLayout::ChangeWatcher::onSpanChanged(Spannable* s, ParcelableSpan* o
             // instead of causing an exception
             start = 0;
         }
-        reflow(s, start, end - start, end - start);
-        reflow(s, nstart, nend - nstart, nend - nstart);
+        transformAndReflow(s, start, end);
+        transformAndReflow(s, nstart, nend);
     }
 }
 

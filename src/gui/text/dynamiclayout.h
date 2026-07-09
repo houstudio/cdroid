@@ -5,6 +5,7 @@
 #include <text/staticlayout.h>
 #include <text/packedintvector.h>
 #include <text/packedobjectvector.h>
+#include <text/method/offsetmapping.h>
 namespace cdroid{
 class Editable;
 class DynamicLayout :public Layout {
@@ -130,6 +131,11 @@ private:
     private:
         DynamicLayout* mLayout;
         void reflow(CharSequence* s, int where, int before, int after);
+        // android-36 OffsetMapping support: when mDisplay is an OffsetMapping (transformed text,
+        // e.g. password), text-change ranges must be mapped original→transformed before reflow.
+        // `where >= 0` is the "beforeTextChanged ran" sentinel; reset to -1 after consumption.
+        OffsetMapping::TextUpdate mTransformedTextUpdate{-1, 0, 0};
+        void transformAndReflow(Spannable* s, int start, int end);
     public:
         ChangeWatcher(DynamicLayout* layout);
         void beforeTextChanged(CharSequence* s, int where, int before, int after);

@@ -152,6 +152,16 @@ public:
         Paint::FontMetrics* mMinimumFontMetrics = nullptr;
     };
 
+    // android-36 TextInclusionStrategy: decides whether a text segment's bounds are "inside" a rect
+    // area. It is the consumer of getRangeForRect. NB: the char-bounds methods that USE it
+    // (getRangeForRect/fillCharacterBounds/forEachCharacterBounds) are deferred — they need
+    // TextLine::measureAllBounds, which needs measureRun's per-char advances + edge-flag support
+    // (the TextShaper/advances gap). The interface + strategies are ported for API completeness.
+    using TextInclusionStrategy = std::function<bool(const RectF& segmentBounds, const RectF& area)>;
+    static const TextInclusionStrategy INCLUSION_STRATEGY_ANY_OVERLAP;
+    static const TextInclusionStrategy INCLUSION_STRATEGY_CONTAINS_CENTER;
+    static const TextInclusionStrategy INCLUSION_STRATEGY_CONTAINS_ALL;
+
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);

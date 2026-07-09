@@ -8,6 +8,7 @@ add_library(cdtext
     html.cc
     linebreaker.cc
     selection.cc
+    segmentfinder.cc
     layout.cc
     staticlayout.cc
     boringlayout.cc
