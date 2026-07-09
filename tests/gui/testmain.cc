@@ -169,6 +169,7 @@ void buildDrawer(){
 
     // upper: suite list (selectable) — drives the lower detail
     gSuiteList=new ListView(-1,-1);
+    gSuiteList->setBackgroundColor(0xFF141B22); // a touch lighter than the panel base
     gAdapter=new SuiteAdapter();
     gSuiteList->setAdapter(gAdapter);
     gSuiteList->setOnItemClickListener([](AdapterView&,View&,int pos,long){
@@ -179,6 +180,7 @@ void buildDrawer(){
 
     // lower: per-case detail (scrollable, span-colored)
     gScroller=new ScrollView(-1,-1);
+    gScroller->setBackgroundColor(0xFF0C1116); // a touch darker than the panel base
     gDetail=new TextView("",-1,-2);
     gDetail->setTextSize(13);
     gDetail->setTextColor(0xFFECEFF1);

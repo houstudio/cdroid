@@ -46,6 +46,7 @@ public:
         mDrawerLayout = new cdroid::DrawerLayout(1, 1);
 
         mContent = new cdroid::FrameLayout(1, 1);
+        mContent->setBackgroundColor(0xFF23282E); // the "canvas": distinct from the dark drawer
         mDrawerLayout->addView(mContent, 0,
             new cdroid::DrawerLayout::LayoutParams(-1, -1, cdroid::Gravity::NO_GRAVITY));
 
