@@ -122,7 +122,7 @@ void Layout::draw(Canvas& c) {
     draw(c, nullptr, nullptr, 0);
 }
 
-void Layout::draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical) {
+void Layout::draw(Canvas& canvas, Path* highlight,const Paint* highlightPaint, int cursorOffsetVertical) {
     const int64_t lineRange = getLineRangeForDraw(canvas);
     const int firstLine = TextUtils::unpackRangeStartFromLong(lineRange);
     const int lastLine = TextUtils::unpackRangeEndFromLong(lineRange);
@@ -384,7 +384,7 @@ void Layout::drawText(Canvas& canvas, int firstLine, int lastLine) {
     TextLine::recycle(tl);
 }
 
-void Layout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPaint,
+void Layout::drawBackground(Canvas& canvas, Path* highlight,const Paint* highlightPaint,
         int cursorOffsetVertical, int firstLine, int lastLine) {
     // First, draw LineBackgroundSpans.
     // LineBackgroundSpans know nothing about the alignment, margins, or
@@ -403,7 +403,7 @@ void Layout::drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPai
             int previousLineEnd = getLineStart(firstLine);
             std::vector<const ParcelableSpan*> spans ;
             int spansLength = 0;
-            TextPaint* paint = mPaint;
+            const TextPaint* paint = mPaint;
             int spanEnd = 0;
             const int width = mWidth;
             for (int i = firstLine; i <= lastLine; i++) {

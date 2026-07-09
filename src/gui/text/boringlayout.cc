@@ -349,7 +349,7 @@ RectF BoringLayout::computeDrawingBoundingBox() const{
     return mDrawingBounds;
 }
 
-void BoringLayout::draw(Canvas& c, Path* highlight, Paint* highlightpaint, int cursorOffset) {
+void BoringLayout::draw(Canvas& c, Path* highlight,const Paint* highlightpaint, int cursorOffset) {
     /*if (!mDirect.empty() && highlight == nullptr) {
         c.draw_text(mDirect, 0, mBottom - mDesc, mPaint);
     } else */{

@@ -100,10 +100,10 @@ public:
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
     void draw(Canvas& c);
-    virtual void draw(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical);
+    virtual void draw(Canvas& canvas, Path* highlight,const Paint* highlightPaint, int cursorOffsetVertical);
     void drawText(Canvas& canvas, int firstLine, int lastLine);
 
-    void drawBackground(Canvas& canvas, Path* highlight, Paint* highlightPaint, int cursorOffsetVertical, int firstLine, int lastLine);
+    void drawBackground(Canvas& canvas, Path* highlight,const Paint* highlightPaint, int cursorOffsetVertical, int firstLine, int lastLine);
 
     int64_t getLineRangeForDraw(Canvas& canvas) const;
 
@@ -112,9 +112,6 @@ public:
     }
 
     const TextPaint* getPaint() const{
-        return mPaint;
-    }
-    TextPaint* getPaint(){
         return mPaint;
     }
     int getWidth() const{
@@ -352,7 +349,6 @@ public:
    };
 private:
     CharSequence* mText;
-    TextPaint* mPaint;
     mutable TextPaint mWorkPaint;
     int mWidth;
     int mEllipsizedWidth;
@@ -376,7 +372,8 @@ private:
     const TextDirectionHeuristic* mTextDir;
     const Paint::FontMetrics* mMinimumFontMetrics;
     cdroid::SpanSet* mLineBackgroundSpans;
-public:
+protected:
+    TextPaint* mPaint;
 };
 
 class Directions {

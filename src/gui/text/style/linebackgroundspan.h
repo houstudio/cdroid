@@ -9,9 +9,9 @@ class Paint;
 class LineBackgroundSpan : public ParagraphStyle {
 public:
     virtual int getLineBackground() const { return 0; }
-    virtual void drawBackground(Canvas& canvas, Paint& paint, int left, int right, int top, int baseline,
+    virtual void drawBackground(Canvas& canvas,const Paint& paint, int left, int right, int top, int baseline,
             int bottom, CharSequence* text, int start, int end, int lineNumber) const {
-        const int color = getLineBackground();
+        const int color = paint.getColor();
         if (color == 0) return;
         canvas.save();
         canvas.set_color(color);

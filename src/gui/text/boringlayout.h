@@ -103,7 +103,7 @@ public:
     bool isFallbackLineSpacingEnabled() const override;
     RectF computeDrawingBoundingBox() const override;
 
-    void draw(Canvas& c, Path* highlight, Paint* highlightpaint,int cursorOffset)override;
+    void draw(Canvas& c, Path* highlight,const Paint* highlightpaint,int cursorOffset)override;
 
     void ellipsized(int start, int end);
 };

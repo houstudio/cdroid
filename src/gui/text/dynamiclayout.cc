@@ -425,11 +425,11 @@ void DynamicLayout::reflow(CharSequence* s, int where, int before, int after) {
     }
 
     if (b == nullptr) {
-        b = StaticLayout::Builder::obtain(text, where, where + after, getPaint(), getWidth());
+        b = StaticLayout::Builder::obtain(text, where, where + after, mPaint/*getPaint()*/, getWidth());
     }
 
     b->setText(text, where, where + after)
-            .setPaint(getPaint())
+            .setPaint(mPaint/*getPaint()*/)
             .setWidth(getWidth())
             .setTextDirection(getTextDirectionHeuristic())
             .setLineSpacing(getSpacingAdd(), getSpacingMultiplier())
@@ -553,7 +553,7 @@ bool DynamicLayout::contentMayProtrudeFromLineTopOrBottom(CharSequence* text, in
     }
     // Spans other than ReplacementSpan can be ignored because line top and bottom are
     // disjunction of all tops and bottoms, although it's not optimal.
-    Paint* paint = getPaint();
+    const Paint* paint = getPaint();
     Rect mTempRect={};
     PrecomputedText* precomputed = dynamic_cast<PrecomputedText*>(text);
     if (precomputed != nullptr) {
