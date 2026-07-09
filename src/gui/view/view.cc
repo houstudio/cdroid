@@ -4600,17 +4600,19 @@ void View::drawableStateChanged(){
     const std::vector<int>state = getDrawableState();
 
     Drawable*d = mBackground;
-    if(d && d->isStateful())
+    if((d!=nullptr) && d->isStateful()){
         changed |= d->setState(state);
+    }
 
     d = mDefaultFocusHighlight;
-    if(d && d->isStateful()){
+    if((d!=nullptr) && d->isStateful()){
         changed|= d->setState(state);
     }
 
     d = mForegroundInfo ? mForegroundInfo->mDrawable:nullptr;
-    if(d && d->isStateful())
+    if((d!=nullptr) && d->isStateful()){
         changed|= d->setState(state);
+    }
 
     if(mScrollCache){
         d = mScrollCache->scrollBar;
@@ -4618,7 +4620,14 @@ void View::drawableStateChanged(){
             changed |= d->setState(state) && mScrollCache->state!=ScrollabilityCache::OFF;
         } 
     }
-    if (mStateListAnimator) mStateListAnimator->setState(state);
+    if (mStateListAnimator!=nullptr){
+        mStateListAnimator->setState(state);
+    }
+    if (!isAggregatedVisible()) {
+        // If we're not visible, skip any animated changes
+        jumpDrawablesToCurrentState();
+    }
+
     if(changed) invalidate(true);
 }
 
