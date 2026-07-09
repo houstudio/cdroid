@@ -13,37 +13,38 @@ struct UBreakIterator {
     int32_t type;
 };
 
-// Word Break Rule Types (from Unicode UAX #29)
+// Word Break Rule Types (from Unicode UAX #29). Explicit values so generate_unicode_data.py
+// can parse this enum (WBP_ prefix) and map UAX#29 WordBreakProperty labels → values without drift.
 typedef enum {
-    WBP_OTHER,
-    WBP_CR,
-    WBP_LF,
-    WBP_NEWLINE,
-    WBP_ALPHA,
-    WBP_NUMERIC,
-    WBP_KATAKANA,
-    WBP_IDEOGRAPHIC,
-    WBP_EXTEND,
-    WBP_FORMAT,
-    WBP_LINK,
-    WBP_DOUBLE_QUOTE,
-    WBP_SINGLE_QUOTE,
-    WBP_MID_NUMLET,
-    WBP_MID_LETTER,
-    WBP_MID_NUM,
-    WBP_E_BASE,
-    WBP_E_MODIFIER,
-    WBP_ZWJ,
-    WBP_REGIONAL_INDICATOR,
-    WBP_BREAK,
-    WBP_NON_BREAK,
-    WBP_ARABIC,          // Arabic/Persian with joining behavior
-    WBP_HEBREW,          // Hebrew with joining behavior
-    WBP_INDIC,           // Indic scripts (Devanagari, Bengali, etc.)
-    WBP_SE_ASIAN,        // Southeast Asian (Thai, Lao, Khmer)
-    WBP_TIBETAN,         // Tibetan
-    WBP_ETHIOPIC,        // Ethiopic (Ge'ez)
-    WBP_MONGOLIAN,       // Mongolian
+    WBP_OTHER = 0,
+    WBP_CR = 1,
+    WBP_LF = 2,
+    WBP_NEWLINE = 3,
+    WBP_ALPHA = 4,        // UAX#29 ALetter
+    WBP_NUMERIC = 5,
+    WBP_KATAKANA = 6,
+    WBP_IDEOGRAPHIC = 7,  // legacy (UAX#29 maps Han→ALetter; kept for old CJK rules)
+    WBP_EXTEND = 8,
+    WBP_FORMAT = 9,
+    WBP_LINK = 10,        // ExtendNumLet
+    WBP_DOUBLE_QUOTE = 11,
+    WBP_SINGLE_QUOTE = 12,
+    WBP_MID_NUMLET = 13,
+    WBP_MID_LETTER = 14,
+    WBP_MID_NUM = 15,
+    WBP_E_BASE = 16,
+    WBP_E_MODIFIER = 17,
+    WBP_ZWJ = 18,
+    WBP_REGIONAL_INDICATOR = 19,
+    WBP_BREAK = 20,       // legacy
+    WBP_NON_BREAK = 21,   // legacy
+    WBP_ARABIC = 22,      // legacy (UAX#29 maps Arabic→ALetter)
+    WBP_HEBREW = 23,      // UAX#29 Hebrew_Letter
+    WBP_INDIC = 24,       // legacy
+    WBP_SE_ASIAN = 25,    // legacy
+    WBP_TIBETAN = 26,     // legacy
+    WBP_ETHIOPIC = 27,    // legacy
+    WBP_MONGOLIAN = 28,   // legacy
 } WBProperty;
 
 // Line Break Rule Types (from Unicode UAX #14)
@@ -135,111 +136,12 @@ static inline int32_t getGeneralCategory(UChar32 c) {
 
 // 获取词断行属性
 static WBProperty getWBProperty(UChar32 c) {
-    // Derive WBP from the table (category + script) — no hardcoded ASCII cases:
-    // findUnicodeRange now returns correct category/script for basic Latin, so the
-    // cat checks below (SPACE_SEPARATOR→BREAK, UPPERCASE/LOWERCASE_LETTER→ALPHA,
-    // DECIMAL_DIGIT_NUMBER→NUMERIC) and the script switch handle ASCII correctly.
+    // UAX#29 Word_Break property is now AUTHORITATIVE in the data table (the `wbp` field),
+    // generated from UCD auxiliary/WordBreakProperty.txt. This replaces the old script/category
+    // derivation, which misclassified chars whose WBP != script (e.g. 3031 Katakana symbols are
+    // script Common but WBP Katakana) and non-conformantly forced CJK/Indic into custom buckets.
     const auto* range = findUnicodeRange(c);
-
-    // 特殊字符优先处理
-    if (c == '\r') return WBP_CR;
-    if (c == '\n') return WBP_LF;
-    // UAX#29 WBP Newline: VT(000B), FF(000C), NEL(0085), LS(2028), PS(2029) — break around.
-    if (c == 0x000B || c == 0x000C || c == 0x0085 || c == 0x2028 || c == 0x2029) return WBP_NEWLINE;
-    if (c == 0x200D) return WBP_ZWJ;  // ZWJ
-    if (c == '\'' || c == 0x2019) return WBP_SINGLE_QUOTE;
-    if (c == '"' || c == 0x201D) return WBP_DOUBLE_QUOTE;
-    if (c == '_') return WBP_LINK;
-    // UAX#29 Word_Break for ASCII punctuation (verified against UCD WordBreakProperty.txt):
-    //   ':' Colon = MidLetter; ',' Comma, ';' Semicolon = MidNum; '.' Full Stop = MidNumLet.
-    //   '-' Hyphen-Minus and '/' Solidus are WBP_Other (not listed in UCD) → fall through.
-    if (c == ':') return WBP_MID_LETTER;
-    if (c == ',' || c == ';') return WBP_MID_NUM;
-    if (c == '.') return WBP_MID_NUMLET;
-    
-    // 使用数据表中的属性
-    uint8_t cat = range->category;
-    uint8_t script = range->script;
-    uint8_t gcb = range->gcb;
-    
-    // 空白和分隔符
-    if (cat == U_SPACE_SEPARATOR || cat == U_LINE_SEPARATOR || 
-        cat == U_PARAGRAPH_SEPARATOR || cat == U_CONTROL) {
-        return WBP_BREAK;
-    }
-    
-    // 标记 - Extend 类别（包括组合标记）
-    if (cat == U_NON_SPACING_MARK || cat == U_ENCLOSING_MARK || 
-        cat == U_COMBINING_SPACING_MARK || gcb == U_GCB_EXTEND) {
-        return WBP_EXTEND;
-    }
-    
-    // 格式字符
-    if (cat == U_FORMAT) {
-        return WBP_FORMAT;
-    }
-    
-    // 特殊脚本处理
-    switch (script) {
-        case USCRIPT_ARABIC:
-            // Arabic/Persian letters with joining behavior
-            return WBP_ARABIC;
-            
-        case USCRIPT_HEBREW:
-            // Hebrew letters with joining behavior
-            return WBP_HEBREW;
-            
-        case USCRIPT_DEVANAGARI:
-        case USCRIPT_BENGALI:
-        case USCRIPT_GURMUKHI:
-        case USCRIPT_GUJARATI:
-        case USCRIPT_ORIYA:
-        case USCRIPT_TAMIL:
-        case USCRIPT_TELUGU:
-        case USCRIPT_KANNADA:
-        case USCRIPT_MALAYALAM:
-        case USCRIPT_SINHALA:
-            // Indic scripts
-            return WBP_INDIC;
-            
-        case USCRIPT_THAI:
-        case USCRIPT_LAO:
-        case USCRIPT_KHMER:
-        case USCRIPT_MYANMAR:
-            // Southeast Asian
-            return WBP_SE_ASIAN;
-            
-        case USCRIPT_TIBETAN:
-            return WBP_TIBETAN;
-            
-        case USCRIPT_ETHIOPIC:
-            return WBP_ETHIOPIC;
-            
-        case USCRIPT_MONGOLIAN:
-            return WBP_MONGOLIAN;
-            
-        case USCRIPT_KATAKANA:
-        case USCRIPT_KATAKANA_OR_HIRAGANA:
-            return WBP_KATAKANA;
-            
-        case USCRIPT_HAN:
-            return WBP_IDEOGRAPHIC;
-            
-        default:
-            break;
-    }
-    
-    // 字母
-    if (cat >= U_UPPERCASE_LETTER && cat <= U_OTHER_LETTER) {
-        return WBP_ALPHA;
-    }
-    
-    // 数字
-    if (cat == U_DECIMAL_DIGIT_NUMBER) {
-        return WBP_NUMERIC;
-    }
-    
-    return WBP_OTHER;
+    return (WBProperty)range->wbp;
 }
 
 // 获取行断行属性
@@ -445,6 +347,9 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
         prev = U16_GET_SUPPLEMENTARY(text[pos - 2], text[pos - 1]);
         prevLen = 2;
     }
+    // Position whose predecessor is the char BEFORE `prev` (for MidChar "between two" lookahead).
+    // Defaults to prev's start; updated by WB4 when prev is re-set to a base char past an Extend run.
+    int32_t prevMidBasePos = pos - prevLen;
     
     UChar32 curr = text[pos];
     int32_t currLen = 1;
@@ -477,6 +382,7 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
         UChar32 pb = prevBaseChar(text, length, pos, &pp);
         if (pb == (UChar32)-1) return true;  // only ignorables before pos → break
         prev = pb;
+        prevMidBasePos = pp;  // base char's position; char-before-MidChar = prevBaseChar(pp)
         propPrev = getWBProperty(prev);
     }
     
@@ -515,23 +421,37 @@ static UBool isWordBoundary(const UChar* text, int32_t length, int32_t pos) {
     };
     const bool prevIsAlphaOrNum = prevIsLetter || propPrev == WBP_NUMERIC;
     const bool currIsAlphaOrNum = currIsLetter || propCurr == WBP_NUMERIC;
-    // curr is the MidChar → check the char after it.
-    if (propCurr == WBP_MID_LETTER || propCurr == WBP_SINGLE_QUOTE) {
-        if (prevIsLetter && isLetterLike(nextProp(pos + currLen))) return false;
-    } else if (propCurr == WBP_MID_NUM) {
-        if (propPrev == WBP_NUMERIC && nextProp(pos + currLen) == WBP_NUMERIC) return false;
-    } else if (propCurr == WBP_MID_NUMLET || propCurr == WBP_LINK) {
-        if (prevIsAlphaOrNum && (isLetterLike(nextProp(pos + currLen)) || nextProp(pos + currLen) == WBP_NUMERIC))
-            return false;
+    auto isWordLike = [](WBProperty p) { return isLetterLike(p) || p == WBP_NUMERIC || p == WBP_KATAKANA; };
+    // ExtendNumLet (Link) — PAIRWISE (UAX#29 WB15/16): binds ALetter/Numeric/Hebrew_Letter/Katakana
+    // unconditionally (no "between two" requirement, unlike MidLetter/MidNum).
+    if ((isWordLike(propPrev) && propCurr == WBP_LINK) ||
+        (propPrev == WBP_LINK && isWordLike(propCurr))) {
+        return false;
     }
-    // prev is the MidChar → check the char before it.
-    if (propPrev == WBP_MID_LETTER || propPrev == WBP_SINGLE_QUOTE) {
-        if (currIsLetter && isLetterLike(prevBaseProp(pos - prevLen))) return false;
+    // MidChar (MidLetter/MidNum/MidNumLet/SingleQuote) — must sit BETWEEN two chars of the SAME
+    // broad class (ALetter×MidLetter×ALetter, Numeric×MidNum×Numeric; MidNumLet/SingleQuote bind
+    // either letters or numbers but both sides must match — Numeric×SingleQuote×ALetter breaks).
+    // curr is the MidChar → check the char after it.
+    WBProperty nextP = nextProp(pos + currLen);
+    bool prevLet = prevIsLetter, nextLet = isLetterLike(nextP);
+    bool prevNum = (propPrev == WBP_NUMERIC), nextNum = (nextP == WBP_NUMERIC);
+    if (propCurr == WBP_MID_LETTER) {
+        if (prevLet && nextLet) return false;
+    } else if (propCurr == WBP_MID_NUM) {
+        if (prevNum && nextNum) return false;
+    } else if (propCurr == WBP_MID_NUMLET || propCurr == WBP_SINGLE_QUOTE) {
+        if ((prevLet && nextLet) || (prevNum && nextNum)) return false;
+    }
+    // prev is the MidChar → check the char before it (prevMidBasePos handles WB4 Extend runs).
+    WBProperty prevBaseP = prevBaseProp(prevMidBasePos);
+    bool currLet = currIsLetter, baseLet = isLetterLike(prevBaseP);
+    bool currNum = (propCurr == WBP_NUMERIC), baseNum = (prevBaseP == WBP_NUMERIC);
+    if (propPrev == WBP_MID_LETTER) {
+        if (currLet && baseLet) return false;
     } else if (propPrev == WBP_MID_NUM) {
-        if (propCurr == WBP_NUMERIC && prevBaseProp(pos - prevLen) == WBP_NUMERIC) return false;
-    } else if (propPrev == WBP_MID_NUMLET || propPrev == WBP_LINK) {
-        if (currIsAlphaOrNum && (isLetterLike(prevBaseProp(pos - prevLen)) || prevBaseProp(pos - prevLen) == WBP_NUMERIC))
-            return false;
+        if (currNum && baseNum) return false;
+    } else if (propPrev == WBP_MID_NUMLET || propPrev == WBP_SINGLE_QUOTE) {
+        if ((currLet && baseLet) || (currNum && baseNum)) return false;
     }
 
     // 特殊脚本处理：Indic 辅音丛（使用数据表，避免 ICU 调用）
