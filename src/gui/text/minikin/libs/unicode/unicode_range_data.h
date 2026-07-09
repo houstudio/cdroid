@@ -19,6 +19,7 @@ struct UnicodeRange {
     uint8_t lb;             // 1 字节：ULineBreak
     uint8_t ccc;            // 1 字节：规范组合类
     uint8_t script;         // 1 字节：UScriptCode
+    uint8_t wbp;            // 1 字节：UAX#29 Word_Break property (matches ubrk.cpp WBProperty enum)
     uint64_t binaryProps;   // 8 字节：二进制属性位图（支持 UCHAR_BINARY_START 到 UCHAR_BINARY_LIMIT-1）
     uint64_t binaryProps2;  // 8 字节：扩展属性位图（保留）
     

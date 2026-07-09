@@ -143,12 +143,14 @@ U_CAPI UBool U_EXPORT2 u_isDigit(UChar32 c) {
 
 U_CAPI UBool U_EXPORT2 u_isPunct(UChar32 c) {
     const auto* range = findUnicodeRange(c);
-    return (range->category >= U_CONTROL && range->category <= U_FORMAT);
+    int32_t cat = range->category;
+    return (cat >= U_DASH_PUNCTUATION && cat <= U_OTHER_PUNCTUATION) ||  // Pd Ps Pe Pc Po (19-23)
+           cat == U_INITIAL_PUNCTUATION || cat == U_FINAL_PUNCTUATION;     // Pi Pf (28-29)
 }
 
 U_CAPI UBool U_EXPORT2 u_isSymbol(UChar32 c) {
     const auto* range = findUnicodeRange(c);
-    return range->category >= U_CURRENCY_SYMBOL;
+    return range->category >= U_MATH_SYMBOL;  // Sm(24) Sc(25) Sk(26) So(27)
 }
 
 U_CAPI UBool U_EXPORT2 u_isMark(UChar32 c) {

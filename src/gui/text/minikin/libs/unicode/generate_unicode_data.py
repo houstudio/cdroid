@@ -106,6 +106,20 @@ BIN_ALIASES = {'Alphabetic':'ALPHABETIC','Uppercase':'UPPERCASE','Lowercase':'LO
                'Grapheme_Extend':'GRAPHEME_EXTEND','Math':'MATH','Dash':'DASH',
                'Extended_Pictographic':'EXTENDED_PICTOGRAPHIC'}
 
+# UAX#29 WordBreakProperty.txt label -> ubrk WBProperty enum value.
+# Values are PARSED from ubrk.cpp's WBProperty enum (explicit values) to prevent drift —
+# the earlier hardcoded map miscounted (WBP_BREAK/NON_BREAK shift HEBREW to 23, not 21).
+WBP_ENUM = parse_enum(os.path.join(HERE, "ubrk.cpp"), "WBP_")
+WBP_NAME_MAP = {  # UAX#29 label -> ubrk enum NAME (most map 1:1; exceptions noted)
+    'ALetter':'ALPHA', 'Numeric':'NUMERIC', 'Katakana':'KATAKANA', 'Hebrew_Letter':'HEBREW',
+    'Extend':'EXTEND', 'Format':'FORMAT', 'ExtendNumLet':'LINK', 'Double_Quote':'DOUBLE_QUOTE',
+    'Single_Quote':'SINGLE_QUOTE', 'MidNumLet':'MID_NUMLET', 'MidLetter':'MID_LETTER',
+    'MidNum':'MID_NUM', 'E_Base':'E_BASE', 'E_Base_GAZ':'E_BASE', 'E_Modifier':'E_MODIFIER',
+    'ZWJ':'ZWJ', 'Regional_Indicator':'REGIONAL_INDICATOR', 'CR':'CR', 'LF':'LF',
+    'Newline':'NEWLINE', 'WSegSpace':'OTHER',  # ubrk has no WSegSpace; treat as Other
+}
+WBP_MAP = {label: WBP_ENUM.get(name, 0) for label, name in WBP_NAME_MAP.items()}
+
 
 def cp_span(field):
     if '..' in field:
@@ -131,7 +145,7 @@ def main():
     def setprop(s, e, fn):
         s = max(s, 0); e = min(e, MAX_CP)
         for cp in range(s, e + 1):
-            p = props.get(cp) or [0, 0, 0, 0, 0, USCRIPT_COMMON, 0]  # Cn/0/L/Other/XX/Common
+            p = props.get(cp) or [0, 0, 0, 0, 0, USCRIPT_COMMON, 0, 0]  # Cn/0/L/Other/XX/Common/binaryProps/wbp
             fn(p); props[cp] = p
 
     # 1) UnicodeData.txt — category, ccc, bidi (handles First/Last ranges)
@@ -164,6 +178,10 @@ def main():
     for s, e, val in each_prop_range(os.path.join(UCD, "GraphemeBreakProperty.txt")):
         g = GCB_LABEL_MAP.get(val, 0)
         setprop(s, e, lambda p, g=g: p.__setitem__(3, g))
+    # 4b) WordBreakProperty.txt (UAX#29) — authoritative Word_Break property for ubrk.
+    for s, e, val in each_prop_range(os.path.join(UCD, "auxiliary", "WordBreakProperty.txt")):
+        w = WBP_MAP.get(val, 0)
+        setprop(s, e, lambda p, w=w: p.__setitem__(7, w))
     # 5) DerivedCoreProperties.txt — selected binary props
     for s, e, val in each_prop_range(os.path.join(UCD, "DerivedCoreProperties.txt")):
         key = BIN_ALIASES.get(val)
@@ -207,16 +225,16 @@ def main():
         L.append("#define BP_%-26s (1ULL<<UCHAR_%s)" % (nm, nm))
     L += ["", "const UnicodeRange g_unicodeRanges[] = {"]
     for s, e, p in ranges:
-        cat, ccc, d, gcb, lb, sc, bp = p
+        cat, ccc, d, gcb, lb, sc, bp, wbp = p
         names = ["BP_%s" % IDX_TO_NAME[b]
                  for b in range(64) if (bp >> b) & 1 and b in IDX_TO_NAME]
         bp_expr = "|".join(names) if names else "0"
         hi = (bp >> 64) & ((1 << 64) - 1)
         bp2_expr = ("0x%016XULL" % hi) if hi else "0"
-        L.append("    {0x%04X, 0x%04X, %s, %s, %s, %s, %d, %s, %s, %s},"
+        L.append("    {0x%04X, 0x%04X, %s, %s, %s, %s, %d, %s, %d, %s, %s},"
                  % (s, e, DIR_REV.get(d, str(d)), CAT_REV.get(cat, str(cat)),
                     GCB_REV.get(gcb, str(gcb)), LB_REV.get(lb, str(lb)), ccc,
-                    SCRIPT_REV.get(sc, str(sc)), bp_expr, bp2_expr))
+                    SCRIPT_REV.get(sc, str(sc)), wbp, bp_expr, bp2_expr))
     L += ["};", "", "const int g_unicodeRangesCount = sizeof(g_unicodeRanges) / sizeof(g_unicodeRanges[0]);", ""]
     open(OUT, 'w', encoding='utf-8').write('\n'.join(L))
 
