@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 #include <core/app.h>
+#include <view/view.h>
 #include <view/gravity.h>
 #include <core/canvas.h>
-#include <widget/cdwindow.h>
 #include <widget/edgeeffect.h>
 #include <guienvironment.h>
 using namespace cdroid;
@@ -16,36 +16,36 @@ class EDGEEFFECT:public testing::Test{
    }
 };
 
-class EdgeWindow:public Window{
+/* EdgeEffect drawn in a plain View hosted by the shared content area (was a
+   private Window subclass). EdgeEffect just needs a Canvas, so a View's onDraw
+   works the same; it is constructed with the App context directly. */
+class EdgeView:public View{
 public:
    EdgeEffect *mEF;
 public:
-   EdgeWindow(int x,int y,int w,int h):Window(x,y,w,h){
-       mEF=new EdgeEffect(getContext());
+   EdgeView(int w,int h):View(w,h){
+       mEF=new EdgeEffect(&App::getInstance());
        mEF->setSize(w,100);
    }
    void onDraw(Canvas&canvas){
+       View::onDraw(canvas);
        mEF->draw(canvas);
    }
    void setType(bool top){
-       
        mEF->onPull(top?20.f:-20.f);
    }
 };
 
 TEST_F(EDGEEFFECT,top){
-    App&app=App::getInstance();
-    int format[]={Gravity::LEFT,Gravity::CENTER_HORIZONTAL,Gravity::RIGHT};
-    EdgeWindow*w=new EdgeWindow(100,50,800,640);
+    EdgeView*w=new EdgeView(800,640);
+    GUIEnvironment::content()->addView(w);
     w->setType(true);
     pumpFor(500);
 }
 
 TEST_F(EDGEEFFECT,bottom){
-    App&app=App::getInstance();
-    EdgeWindow*w=new EdgeWindow(100,50,800,640);
+    EdgeView*w=new EdgeView(800,640);
+    GUIEnvironment::content()->addView(w);
     w->setType(false);
     pumpFor(500);
 }
-
-

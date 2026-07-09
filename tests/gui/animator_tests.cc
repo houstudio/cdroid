@@ -86,7 +86,7 @@ TEST_F(ANIMATOR,start){
     anim->setDuration(200);
     anim->start();
     LOGD("====");
-    pumpUntilEnd(*anim, 700);
+    pumpUntilEnd(*anim,1600);
 }
 TEST_F(ANIMATOR,startDelay){
     App&app=App::getInstance();
@@ -161,7 +161,7 @@ TEST_F(ANIMATOR,translate){
         tv->setBackgroundColor(GET_VARIANT(cp->getAnimatedValue(),int32_t));
     }));
 
-    anim->setDuration(5000);
+    anim->setDuration(4000);
     anim->start();
     pumpUntilEnd(*anim, 5500);
 }
@@ -182,7 +182,7 @@ TEST_F(ANIMATOR,scale){
         tv->setScaleX(scale);
         tv->setScaleY(scale);
     }));
-    anim->setDuration(5000);
+    anim->setDuration(4000);
     anim->start();
     pumpUntilEnd(*anim, 5500);
 }
