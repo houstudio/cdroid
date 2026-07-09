@@ -1848,6 +1848,165 @@ void Layout::fillCharacterBounds(int start, int end, float* bounds, int boundsSt
                     {}});
 }
 
+namespace {
+// android Layout.getStartOffsetForAreaWithinRun (static helper for getRangeForRect).
+int getStartOffsetForAreaWithinRun(const RectF& area, int lineTop, int lineBottom,
+        int lineStartOffset, int lineStartPos, const float* horizontalBounds,
+        int runStartOffset, int runEndOffset, float runLeft, float runRight, bool isRtl,
+        SegmentFinder& segmentFinder, const Layout::TextInclusionStrategy& inclusionStrategy) {
+    if (runRight < area.left || runLeft > area.right()) return -1;  // run doesn't overlap area
+
+    int firstCharOffset;
+    if ((!isRtl && area.left <= runLeft) || (isRtl && area.right() >= runRight)) {
+        firstCharOffset = runStartOffset;
+    } else {
+        int low = runStartOffset, high = runEndOffset;
+        while (high - low > 1) {
+            int guess = (high + low) / 2;
+            float pos = lineStartPos + horizontalBounds[2 * guess];
+            if ((!isRtl && pos > area.left) || (isRtl && pos < area.right())) high = guess;
+            else low = guess;
+        }
+        firstCharOffset = isRtl ? high : low;
+    }
+
+    int segmentEndOffset = segmentFinder.nextEndBoundary(lineStartOffset + firstCharOffset);
+    if (segmentEndOffset == SegmentFinder::DONE) return -1;
+    int segmentStartOffset = segmentFinder.previousStartBoundary(segmentEndOffset);
+    if (segmentStartOffset >= lineStartOffset + runEndOffset) return -1;
+    segmentStartOffset = std::max(segmentStartOffset, lineStartOffset + runStartOffset);
+    segmentEndOffset = std::min(segmentEndOffset, lineStartOffset + runEndOffset);
+
+    RectF segmentBounds;
+    segmentBounds.top = lineTop;
+    segmentBounds.height = lineBottom - lineTop;
+    while (true) {
+        float segmentStart = lineStartPos + horizontalBounds[2 * (segmentStartOffset - lineStartOffset) + (isRtl ? 1 : 0)];
+        if ((!isRtl && segmentStart > area.right()) || (isRtl && segmentStart < area.left)) return -1;
+        float segmentEnd = lineStartPos + horizontalBounds[2 * (segmentEndOffset - lineStartOffset - 1) + (isRtl ? 0 : 1)];
+        segmentBounds.left = isRtl ? segmentEnd : segmentStart;
+        segmentBounds.width = (isRtl ? segmentStart : segmentEnd) - segmentBounds.left;
+        if (inclusionStrategy(segmentBounds, area)) return segmentStartOffset;
+        segmentStartOffset = segmentFinder.nextStartBoundary(segmentStartOffset);
+        if (segmentStartOffset == SegmentFinder::DONE || segmentStartOffset >= lineStartOffset + runEndOffset) return -1;
+        segmentEndOffset = segmentFinder.nextEndBoundary(segmentStartOffset);
+        segmentEndOffset = std::min(segmentEndOffset, lineStartOffset + runEndOffset);
+    }
+}
+
+// android Layout.getEndOffsetForAreaWithinRun (static helper for getRangeForRect).
+int getEndOffsetForAreaWithinRun(const RectF& area, int lineTop, int lineBottom,
+        int lineStartOffset, int lineStartPos, const float* horizontalBounds,
+        int runStartOffset, int runEndOffset, float runLeft, float runRight, bool isRtl,
+        SegmentFinder& segmentFinder, const Layout::TextInclusionStrategy& inclusionStrategy) {
+    if (runRight < area.left || runLeft > area.right()) return -1;
+
+    int lastCharOffset;
+    if ((!isRtl && area.right() >= runRight) || (isRtl && area.left <= runLeft)) {
+        lastCharOffset = runEndOffset - 1;
+    } else {
+        int low = runStartOffset, high = runEndOffset;
+        while (high - low > 1) {
+            int guess = (high + low) / 2;
+            float pos = lineStartPos + horizontalBounds[2 * guess];
+            if ((!isRtl && pos > area.right()) || (isRtl && pos < area.left)) high = guess;
+            else low = guess;
+        }
+        lastCharOffset = isRtl ? high : low;
+    }
+
+    int segmentStartOffset = segmentFinder.previousStartBoundary(lineStartOffset + lastCharOffset + 1);
+    if (segmentStartOffset == SegmentFinder::DONE) return -1;
+    int segmentEndOffset = segmentFinder.nextEndBoundary(segmentStartOffset);
+    if (segmentEndOffset <= lineStartOffset + runStartOffset) return -1;
+    segmentStartOffset = std::max(segmentStartOffset, lineStartOffset + runStartOffset);
+    segmentEndOffset = std::min(segmentEndOffset, lineStartOffset + runEndOffset);
+
+    RectF segmentBounds;
+    segmentBounds.top = lineTop;
+    segmentBounds.height = lineBottom - lineTop;
+    while (true) {
+        float segmentEnd = lineStartPos + horizontalBounds[2 * (segmentEndOffset - lineStartOffset - 1) + (isRtl ? 0 : 1)];
+        if ((!isRtl && segmentEnd < area.left) || (isRtl && segmentEnd > area.right())) return -1;
+        float segmentStart = lineStartPos + horizontalBounds[2 * (segmentStartOffset - lineStartOffset) + (isRtl ? 1 : 0)];
+        segmentBounds.left = isRtl ? segmentEnd : segmentStart;
+        segmentBounds.width = (isRtl ? segmentStart : segmentEnd) - segmentBounds.left;
+        if (inclusionStrategy(segmentBounds, area)) return segmentEndOffset;
+        segmentEndOffset = segmentFinder.previousEndBoundary(segmentEndOffset);
+        if (segmentEndOffset == SegmentFinder::DONE || segmentEndOffset <= lineStartOffset + runStartOffset) return -1;
+        segmentStartOffset = segmentFinder.previousStartBoundary(segmentEndOffset);
+        segmentStartOffset = std::max(segmentStartOffset, lineStartOffset + runStartOffset);
+    }
+}
+}  // namespace
+
+int Layout::getStartOrEndOffsetForAreaWithinLine(int line, const RectF& area,
+        SegmentFinder& segmentFinder, const TextInclusionStrategy& inclusionStrategy, bool getStart) {
+    const int lineTop = getLineTop(line);
+    const int lineBottom = getLineBottom(line, /*includeLineSpacing=*/false);
+    const int lineStartOffset = getLineStart(line);
+    const int lineEndOffset = getLineEnd(line);
+    if (lineStartOffset == lineEndOffset) return -1;
+
+    std::vector<float> horizontalBounds(2 * (lineEndOffset - lineStartOffset));
+    fillHorizontalBoundsForLine(line, horizontalBounds.data());
+    const int lineStartPos = getLineStartPos(line, getParagraphLeft(line), getParagraphRight(line));
+
+    const Directions* directions = getLineDirections(line);
+    int runIndex = getStart ? 0 : directions->getRunCount() - 1;
+    while ((getStart && runIndex < directions->getRunCount()) || (!getStart && runIndex >= 0)) {
+        const int runStartOffset = directions->getRunStart(runIndex);
+        const int runEndOffset = std::min(runStartOffset + directions->getRunLength(runIndex),
+                lineEndOffset - lineStartOffset);
+        const bool isRtl = directions->isRunRtl(runIndex);
+        const float runLeft = lineStartPos + (isRtl ? horizontalBounds[2 * (runEndOffset - 1)]
+                                                    : horizontalBounds[2 * runStartOffset]);
+        const float runRight = lineStartPos + (isRtl ? horizontalBounds[2 * runStartOffset + 1]
+                                                     : horizontalBounds[2 * (runEndOffset - 1) + 1]);
+        const int result = getStart
+                ? getStartOffsetForAreaWithinRun(area, lineTop, lineBottom, lineStartOffset,
+                        lineStartPos, horizontalBounds.data(), runStartOffset, runEndOffset,
+                        runLeft, runRight, isRtl, segmentFinder, inclusionStrategy)
+                : getEndOffsetForAreaWithinRun(area, lineTop, lineBottom, lineStartOffset,
+                        lineStartPos, horizontalBounds.data(), runStartOffset, runEndOffset,
+                        runLeft, runRight, isRtl, segmentFinder, inclusionStrategy);
+        if (result >= 0) return result;
+        runIndex += getStart ? 1 : -1;
+    }
+    return -1;
+}
+
+std::pair<int,int> Layout::getRangeForRect(const RectF& area, SegmentFinder& segmentFinder,
+        const TextInclusionStrategy& inclusionStrategy) {
+    int startLine = getLineForVertical((int)area.top);
+    if (area.top > getLineBottom(startLine, /*includeLineSpacing=*/false)) {
+        startLine++;
+        if (startLine >= getLineCount()) return {-1, -1};  // area below last line
+    }
+    int endLine = getLineForVertical((int)area.bottom());
+    if (endLine == 0 && area.bottom() < getLineTop(0)) return {-1, -1};  // area above first line
+    if (endLine < startLine) return {-1, -1};  // area between lines
+
+    int start = getStartOrEndOffsetForAreaWithinLine(startLine, area, segmentFinder, inclusionStrategy, /*getStart=*/true);
+    while (start == -1 && startLine < endLine) {
+        startLine++;
+        start = getStartOrEndOffsetForAreaWithinLine(startLine, area, segmentFinder, inclusionStrategy, /*getStart=*/true);
+    }
+    if (start == -1) return {-1, -1};
+
+    int end = getStartOrEndOffsetForAreaWithinLine(endLine, area, segmentFinder, inclusionStrategy, /*getStart=*/false);
+    while (end == -1 && startLine < endLine) {
+        endLine--;
+        end = getStartOrEndOffsetForAreaWithinLine(endLine, area, segmentFinder, inclusionStrategy, /*getStart=*/false);
+    }
+    if (end == -1) return {-1, -1};
+
+    // Extend to whole segments (handles segments spanning lines/runs).
+    start = segmentFinder.previousStartBoundary(start + 1);
+    end = segmentFinder.nextEndBoundary(end - 1);
+    return {start, end};
+}
+
 Layout* Layout::Builder::build() {
     BoringLayout::Metrics* metrics = BoringLayout::isBoring(mText, mPaint, mTextDir,
             mFallbackLineSpacing, mMinimumFontMetrics, nullptr);

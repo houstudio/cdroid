@@ -1,6 +1,7 @@
 #ifndef __ANDROID_TEXT_LAYOUT_H__
 #define __ANDROID_TEXT_LAYOUT_H__
 #include <functional>
+#include <utility>
 #include <cfloat>
 #include <text/textutils.h>
 #include <core/canvas.h>
@@ -9,6 +10,7 @@
 #include <text/spannablestring.h>
 #include <text/spanset.h>
 #include <text/textpaint.h>
+#include <text/segmentfinder.h>
 #include <text/textline.h>
 #include <text/linebreaker.h>
 #include <text/textdirectionheuristics.h>
@@ -165,6 +167,14 @@ public:
     // android-36: fill bounds[boundsStart + 4*k .. +3] = left/top/right/bottom of char (start+k),
     // for k in [0, end-start). Caller must size `bounds` to >= boundsStart + 4*(end-start).
     void fillCharacterBounds(int start, int end, float* bounds, int boundsStart);
+
+    // android-36: returns the [start,end) character range of text segments inside `area` (segments
+    // defined by `segmentFinder`, inclusion decided by `inclusionStrategy`). Returns {-1,-1} if
+    // the area contains no text. android's callers (TextView HandwritingGesture, TextBoundsInfo)
+    // are IME/stylus features + need BreakIterator-driven SegmentFinders — out of CDROID scope;
+    // the API itself works with any SegmentFinder (e.g. PrescribedSegmentFinder).
+    std::pair<int,int> getRangeForRect(const RectF& area, SegmentFinder& segmentFinder,
+            const TextInclusionStrategy& inclusionStrategy);
 
     void replaceWith(CharSequence* text, TextPaint* paint,int width, Alignment align, float spacingmult, float spacingadd);
 
@@ -437,6 +447,9 @@ private:
     };
     void forEachCharacterBounds(int start, int end, int startLine, int endLine,
             const CharacterBoundsListener& listener);
+    int getStartOrEndOffsetForAreaWithinLine(int line, const RectF& area,
+            SegmentFinder& segmentFinder, const TextInclusionStrategy& inclusionStrategy,
+            bool getStart);
     CharSequence* mText;
     mutable TextPaint mWorkPaint;
     int mWidth;
