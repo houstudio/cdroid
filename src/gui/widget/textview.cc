@@ -3564,15 +3564,12 @@ bool TextView::onTouchEvent(MotionEvent& event){
     const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
            && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
     if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
+        // The IME is shown on focus gain (onFocusChanged), NOT on every touch-up.
+        // Repeatedly tapping the same already-focused editor — e.g. after
+        // dismissing the keyboard — is just cursor positioning and must not pop
+        // the keyboard again. Keep viewClicked so the IMM still tracks the target.
         InputMethodManager* imm = InputMethodManager::peekInstance();
         viewClicked(imm);
-        if (isTextEditable() && mShowSoftInputOnFocus && imm != nullptr) {
-            // Push this editor's input type (selects the right keyboard layout)
-            // then show the IME. showSoftInput also designates this view as the
-            // commit target (replaces the old focusIn-only call that never showed).
-            imm->setInputType(getInputType());
-            imm->showSoftInput(this, 0);
-        }
         mEditor->onTouchUpEvent(event);
         handled = true;
     }
