@@ -9875,7 +9875,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mDebugLayout  = false;
     mViewVelocityApi=true;
     mDrawingTime  = 0;
-    mInTouchMode  = true;
+    mInTouchMode  = false;
     mKeepScreenOn = true;
     mDisplayState = true;
     mRootView     = nullptr;
