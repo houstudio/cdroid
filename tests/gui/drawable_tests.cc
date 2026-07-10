@@ -46,7 +46,10 @@ public:
         /* Offscreen Cairo target only — no GFXInit()/GFXCreateSurface(). Display
            happens via SurfaceBlitView in the shared content area. */
         auto surface=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight);
-        rm=new Assets("cdroid.pak");
+        /* Reuse the global App (built by GUIEnvironment) as the resource Context —
+           App is-a Assets, so getDrawable()/XmlPullParser resolve against the same
+           .pak the rest of the harness uses. No private Assets, nothing to free. */
+        rm=&App::getInstance();
         ctx=new Canvas(surface);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         cdroid::RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
@@ -74,7 +77,7 @@ public:
     }
     static void TearDownTestCase(){
         delete ctx;
-        delete rm;
+        /* rm aliases the global App — never deleted here. */
     }
     virtual void SetUp(){
         /* A fresh blit view per case — content() is cleared between cases by the
@@ -142,7 +145,7 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
+    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
     Outline outline,outline2;
     d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     d->getOutline(outline);
@@ -153,7 +156,7 @@ TEST_F(DRAWABLE,ninepatch1){
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
+    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
     ctx->set_source_rgb(.4,.4,.0);
     ctx->rectangle(0,0,700,300);
     ctx->fill();

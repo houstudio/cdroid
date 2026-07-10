@@ -252,7 +252,7 @@ public:
         // the list so the current item is always visible.
         g.selected=suite;
         int idx=indexOfSuite(suite);
-        if(gSuiteList && idx>=0) gSuiteList->setSelectionFromTop(idx, 0);
+        if(gSuiteList && idx>=0) gSuiteList->setSelection(idx);
         refreshSummary();
         rebuildDetail();
     }
