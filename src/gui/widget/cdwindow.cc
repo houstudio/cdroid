@@ -432,8 +432,11 @@ void Window::onSizeChanged(int w,int h,int oldw,int oldh){
 }
 
 void Window::onVisibilityChanged(View& changedView,int visibility){
-    //GraphDevice::getInstance().invalidate(getBound());
-    GraphDevice::getInstance().flip();
+    // When a window hides (INVISIBLE/GONE), the screen area it covered must be
+    // redrawn from the windows below. invalidate() dirties this window's screen
+    // rect on every covering window; composeSurfaces() then repaints the exposed
+    // area. (invalidate() also flips, scheduling the compose.)
+    GraphDevice::getInstance().invalidate(getBound());
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){

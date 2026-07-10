@@ -72,6 +72,13 @@ public:
     void unlock();
     void composeSurfaces();
     bool needCompose()const;
+    /* Mark a screen-space rectangle as dirty on every window whose bounds
+     * intersect it (translated to that window's local coords). The next
+     * composeSurfaces() blits those dirty regions, so an area uncovered by a
+     * window that hid / moved / was removed is correctly redrawn from the
+     * windows below. This is required by dirty-rect backends (xlib); full-flush
+     * backends (DRM/FB) repaint everything anyway, so it's a harmless extra. */
+    void invalidate(const Rect& screenRect);
     Canvas*getPrimaryContext();
     void* getPrimarySurface()const;
 };

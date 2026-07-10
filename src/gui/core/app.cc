@@ -136,6 +136,12 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         inputsource->playback(monkey);
     }
     AnimationHandler::getInstance();
+    // IMM is a process-wide service (Android: created early, peekInstance() then
+    // returns non-null once the app is up). Create it here so the View focus path
+    // (View::onFocusChanged uses peekInstance -> focusIn/focusOut) and TextView's
+    // editor show/hide actually engage, instead of silently no-oping on a null
+    // singleton.
+    InputMethodManager::getInstance();
 }
 
 std::atomic<App*>App::mInst;

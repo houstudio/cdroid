@@ -402,8 +402,10 @@ void WindowManager::onMotion(MotionEvent&event) {
 }
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
-    // Notify the focused child
-    if(mActiveWindow){
+    // Notify the focused child. Skip an active window that is not visible (e.g.
+    // a dismissed IME window hidden via setVisibility(INVISIBLE)) so it does not
+    // keep consuming key events; fall through to the next visible focusable window.
+    if(mActiveWindow && mActiveWindow->getVisibility()==View::VISIBLE){
         mActiveWindow->processKeyEvent(event);
         return ;
     }

@@ -85,13 +85,21 @@ public:
    }
    void onCloseKeyboard(View&v){
        LOGD("close IME'sKeyboard");
-       Point sz;
-       WindowManager::getInstance().getDefaultDisplay().getSize(sz);
-       setPos(0,sz.y);
+       // Pure visibility hide. setVisibility(INVISIBLE) triggers
+       // Window::onVisibilityChanged -> GraphDevice::invalidate(getBound()), which
+       // redraws the uncovered area from the windows below, and INVISIBLE removes
+       // the window from touch routing + key dispatch (WindowManager) so a
+       // dismissed keyboard stops consuming input events. showSoftInput's
+       // positionIMEWindow()+VISIBLE bring it back on the next show.
+       setVisibility(View::INVISIBLE);
    }
 };
 
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
+    // The IME window stays focusable (default). It only consumes input events
+    // while VISIBLE; hiding it via setVisibility(INVISIBLE) removes it from both
+    // touch routing and key dispatch in WindowManager, so a dismissed keyboard
+    // does not keep eating events.
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
     View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);

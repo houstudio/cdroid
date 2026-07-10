@@ -230,6 +230,20 @@ void GraphDevice::flip(){
     mPendingCompose++;
 }
 
+void GraphDevice::invalidate(const Rect& screenRect){
+    if(screenRect.empty())return;
+    WindowManager::getInstance().enumWindows([&screenRect](Window*w){
+        Rect local = screenRect;
+        Rect wb = w->getBound();
+        if(local.intersect(wb)){           // local -> intersection, in screen coords
+            local.offset(-wb.left,-wb.top);// -> window-local coords
+            w->mPendingRgn->do_union((const RectangleInt&)local);
+        }
+        return true;                       // keep enumerating every window
+    });
+    flip();                                // schedule a compose
+}
+
 bool GraphDevice::needCompose()const{
     return mPendingCompose && mComposing;
 }
