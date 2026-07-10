@@ -686,20 +686,18 @@ bool Window::isInLayout()const{
 }
 
 void Window::doLayout(){
-    LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
+    LOGV("doLayout(%dx%d) child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
-    if(mChildren.size()==1){
-        View*view = mChildren[0];
-        const MarginLayoutParams*lp= (const MarginLayoutParams*)view->getLayoutParams();
-        const int horzMargin = lp->leftMargin+lp->rightMargin;
-        const int vertMargin = lp->topMargin+lp->bottomMargin;
-        const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth() - horzMargin,MeasureSpec::EXACTLY);
-        const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()- vertMargin,MeasureSpec::EXACTLY);
-        FrameLayout::measure(widthSpec,heightSpec);
-        FrameLayout::layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
-    }
+    // Measure the whole subtree and lay out every child — matches Android's
+    // ViewRootImpl.performTraversals (measure the root, then lay it out). The
+    // previous code only did this when mChildren.size()==1 and only positioned
+    // mChildren[0], which left any window whose direct child count wasn't exactly
+    // 1 (and that child's descendants) permanently unmeasured.
+    const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth(),MeasureSpec::EXACTLY);
+    const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight(),MeasureSpec::EXACTLY);
+    FrameLayout::measure(widthSpec,heightSpec);
+    FrameLayout::layout(getLeft(),getTop(),getMeasuredWidth(),getMeasuredHeight());
     getViewTreeObserver()->dispatchOnGlobalLayout();
-    mAttachInfo->mTreeObserver->dispatchOnGlobalLayout();
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
     mInLayout = false;
 }

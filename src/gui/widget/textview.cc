@@ -2254,6 +2254,19 @@ void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocus
     }
     mHideHint = false;
     if (mEditor) mEditor->onFocusChanged(focused, direction, previouslyFocusedRect);
+
+    // Drive the in-process IME from focus — this is the trigger that actually
+    // fires for editors in CDROID (setEnabled/onTouchEvent are not reliable
+    // triggers here). On focus gain, show the keyboard for editable editors; on
+    // loss, hide it. getInstance() ensures the IMM singleton exists.
+    InputMethodManager& imm = InputMethodManager::getInstance();
+    if (focused && isTextEditable() && mShowSoftInputOnFocus) {
+        imm.setInputType(getInputType());
+        imm.showSoftInput(this, 0);
+    } else if (!focused && imm.isActive(this)) {
+        imm.hideSoftInputFromView(this, 0);
+    }
+
     startStopMarquee(focused);
     if (mTransformation != nullptr) {
         CharSequence* sourceText = mText != nullptr ? mText : mTransformed;

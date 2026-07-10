@@ -21,7 +21,8 @@
 #include <animation/animationutils.h>
 #include <widget/framelayout.h>
 #include <core/xmlpullparser.h>
-#include <core/layout.h>
+#include <core/typeface.h>
+#include <text/textutils.h>
 #include <widget/R.h>
 namespace cdroid{
 

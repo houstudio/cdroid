@@ -22,7 +22,7 @@ KeyboardView::KeyboardView(int w,int h):View(w,h){
 KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
   :View(ctx,atts){
     init();
-    Drawable *dr = ctx->getDrawable("keyBackground");
+    Drawable *dr = atts.getDrawable("keyBackground");
     mKeyBackground = dr ? dr:new ColorDrawable(0xFF889988);
     mVerticalCorrection= atts.getDimensionPixelOffset("verticalCorrection",0);
     mPreviewOffset     = atts.getDimensionPixelOffset("keyPreviewOffset",0);
@@ -39,6 +39,10 @@ void KeyboardView::init(){
     mKeyTextColor = 0xFFFFFFFF;
     mInMultiTap   = false;
     mShowPreview  = false;
+    // KeyboardView renders entirely in onDraw (no background drawable, children
+    // are drawn manually). Make sure the draw path invokes onDraw instead of
+    // taking the WILL_NOT_DRAW / PFLAG_SKIP_DRAW fast path that would skip it.
+    setWillNotDraw(false);
 
     mKeyboard      = nullptr;
     mInvalidatedKey= nullptr;

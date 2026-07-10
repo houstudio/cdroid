@@ -54,7 +54,7 @@ public:
        Window::onSizeChanged(w,h,ow,oh);
    }
    bool onKeyUp(int keyCode,KeyEvent& evt)override{
-       LOGV("...%d flags=%x",keyCode,evt.getFlags());
+       LOGD("...%d flags=%x",keyCode,evt.getFlags());
        switch(keyCode){
        case KeyEvent::KEYCODE_ESCAPE:setVisibility(View::INVISIBLE);return true;
        default: return Window::onKeyDown(keyCode,evt);
@@ -94,14 +94,16 @@ public:
 IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     KeyboardView::OnKeyboardActionListener listener;
     InputMethodManager&imm = InputMethodManager::getInstance();
-    LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this);
-    kbdView = (KeyboardView*)findViewById(cdroid::R::id::keyboardview);
-    candidateView = (CandidateView*)findViewById(cdroid::R::id::predict2);
+    View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);
+    kbdView = (KeyboardView*)vg->findViewById(cdroid::R::id::keyboardview);
+    candidateView = (CandidateView*)vg->findViewById(cdroid::R::id::predict2);
     candidateView->setPredictListener(std::bind(&IMEWindow::onPredict,this,std::placeholders::_1,
 	   std::placeholders::_2,std::placeholders::_3));
-    View* closeKbd = findViewById(cdroid::R::id::closekeyboard);
+    View* closeKbd = vg->findViewById(cdroid::R::id::closekeyboard);
     closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
-    requestLayout();
+    addView(vg);//layout(0,0,getWidth(),h);
+    vg->requestLayout();
+    setId(123);
     setVisibility(INVISIBLE);
     listener.onPress=[this](int primaryCode){
         LOGD("primaryCode=%d %x",primaryCode,primaryCode);
@@ -140,7 +142,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     listener.onKey = [this](int primaryCode,const std::vector<int>&keyCodes){
         KeyEvent keyEvent;
         InputMethodManager&imm = InputMethodManager::getInstance();
-        LOGV("primaryCode=%x %d keys",primaryCode,keyCodes.size());
+        LOGD("primaryCode=%x %d keys",primaryCode,keyCodes.size());
         switch(primaryCode){
         case Keyboard::KEYCODE_MODE_CHANGE://changeMode();break;
         case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
@@ -157,13 +159,13 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     kbdView->setButtonListener([&](const Keyboard::Key&k){
         std::vector<std::string>candidates;
         InputMethod*im=InputMethodManager::getInstance().im;
-        LOGV("key %d modifer=%d sticky=%d im=%p",k.codes[0],k.modifier,k.sticky,im);
+        LOGD("key %d modifer=%d sticky=%d im=%p",k.codes[0],k.modifier,k.sticky,im);
         if((k.modifier|k.sticky)==0){
             text2IM.append(1,k.codes[0]);
             std::string u8txt=TextUtils::unicode2utf8(text2IM);
             int rc=im->search(u8txt,candidates);
             updatePredicts(candidates);
-            LOGV("key[%s]CHAR:%c u8txt=%s predicts=%d ",k.label.c_str(),k.codes[0],u8txt.c_str(),rc);
+            LOGD("key[%s]CHAR:%c u8txt=%s predicts=%d ",k.label.c_str(),k.codes[0],u8txt.c_str(),rc);
             if(rc<0){
                 const wchar_t text[2]={k.codes[0],0};
                 imm.commitText(text,1);
@@ -182,7 +184,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
             KeyEvent keyEvent;
             keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
                 KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
-            LOGV("key[%s]code:%d keylabel=%s ",k.label.c_str(),k.codes[0],KeyEvent::getLabel(k.codes[0]));
+            LOGD("key[%s]code:%d keylabel=%s ",k.label.c_str(),k.codes[0],KeyEvent::getLabel(k.codes[0]));
             switch(k.codes[0]){
             case Keyboard::KEYCODE_MODE_CHANGE://changeMode();break;
             case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
@@ -285,18 +287,18 @@ void InputMethodManager::viewClicked(View*view){
 
 void InputMethodManager::focusIn(View*view){
     if(imeWindow)imeWindow->mBuddy = view;
-    LOGV("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());
+    LOGD("imeWindow=%d buddy=%p %d",imeWindow,view,view->getId());
 }
 
 void InputMethodManager::focusOut(View*view){
     if(imeWindow){
         imeWindow->setVisibility(View::INVISIBLE);
     }
-    LOGV("view=%p %d",view,view->getId());
+    LOGD("view=%p %d",view,view->getId());
 }
 
 void InputMethodManager::showIme(){
-    LOGV("imeWindow=%p",imeWindow);
+    LOGD("imeWindow=%p",imeWindow);
     if(imeWindow)imeWindow->setVisibility(View::VISIBLE);
 }
 
@@ -348,7 +350,7 @@ int InputMethodManager::setInputMethod(const std::string&name){
 
 void InputMethodManager::onViewDetachedFromWindow(View*view){
     if(imeWindow)imeWindow->mBuddy = nullptr;
-    LOGV("view=%p  %d",view,view->getId());
+    LOGD("view=%p  %d",view,view->getId());
 }
 
 void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
@@ -362,7 +364,7 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     std::string layout = method->getKeyboardLayout(mInputType);
     Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
     imeWindow->kbdView->setKeyboard(kbd);
-    LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);
+    LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p %d keys loaded",name.c_str(),im,layout.c_str(),kbd,kbd->getKeys().size());
     return 0;
 }
 
@@ -380,6 +382,7 @@ void InputMethodManager::showSoftInput(View*v,int /*flags*/){
     if(imeWindow == nullptr) return; // only if creation failed
     imeWindow->mBuddy = v;
     imeWindow->setVisibility(View::VISIBLE);
+    imeWindow->requestLayout(); // make sure the freshly-shown subtree is measured/laid out
     LOGD("showSoftInput view=%p type=%d imeWindow=%p",v,mInputType,imeWindow);
 }
 
@@ -389,7 +392,7 @@ void InputMethodManager::hideSoftInputFromView(View*v,int /*flags*/){
     if(imeWindow && imeWindow->mBuddy == v){
         imeWindow->setVisibility(View::INVISIBLE);
     }
-    LOGV("hideSoftInputFromView view=%p",v);
+    LOGD("hideSoftInputFromView view=%p",v);
 }
 
 void InputMethodManager::hideSoftInputFromWindow(View*v,int flags){
