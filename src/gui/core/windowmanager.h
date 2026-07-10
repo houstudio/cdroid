@@ -60,6 +60,13 @@ public:
     void removeWindow(Window*w);
     void removeWindows(const std::vector<Window*>&);
     void moveWindow(Window*w,int x,int y);
+    /* Hide a window: set it INVISIBLE and dirty the screen area it covered on
+     * every other window, so composeSurfaces repaints the uncovered region from
+     * the windows below. This is the WindowManager-owned equivalent of the old
+     * GraphDevice::invalidate(getBound()) called from Window::onVisibilityChanged
+     * — hiding + damage propagation is a window-stack concern, not a graph one.
+     * Required by dirty-rect backends (xlib); harmless on full-flush ones. */
+    void hideWindow(Window*w);
     void sendToBack(Window*w);
     void bringToFront(Window*w);
     void processEvent(InputEvent&e);

@@ -243,6 +243,26 @@ void WindowManager::moveWindow(Window*w,int x,int y){
     }
 }
 
+void WindowManager::hideWindow(Window*w){
+    if(w==nullptr) return;
+    const Rect wrect = w->getBound();
+    // w has just been hidden (INVISIBLE/GONE) by its caller's setVisibility,
+    // which is what triggered the onVisibilityChanged that calls us. Propagate
+    // the now-exposed screen area as dirty (in each window's local coords) to
+    // every other window so composeSurfaces repaints it from the windows below.
+    // We do NOT set visibility here (the caller already did) — same damage-
+    // propagation pattern as removeWindow/moveWindow.
+    for(auto itr=mWindows.begin(); itr!=mWindows.end(); itr++){
+        Window* w1 = (*itr);
+        if(w1==w) continue;
+        Rect rc = w1->getBound();
+        if(!rc.intersect(wrect)) continue;
+        rc.offset(-w1->getLeft(),-w1->getTop());
+        w1->mPendingRgn->do_union((const Cairo::RectangleInt&)rc);
+    }
+    GraphDevice::getInstance().flip();
+}
+
 Window*WindowManager::getActiveWindow()const{
     return mActiveWindow;
 }

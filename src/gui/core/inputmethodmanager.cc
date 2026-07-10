@@ -85,12 +85,10 @@ public:
    }
    void onCloseKeyboard(View&v){
        LOGD("close IME'sKeyboard");
-       // Pure visibility hide. setVisibility(INVISIBLE) triggers
-       // Window::onVisibilityChanged -> GraphDevice::invalidate(getBound()), which
-       // redraws the uncovered area from the windows below, and INVISIBLE removes
-       // the window from touch routing + key dispatch (WindowManager) so a
-       // dismissed keyboard stops consuming input events. showSoftInput's
-       // positionIMEWindow()+VISIBLE bring it back on the next show.
+       // Just hide. setVisibility(INVISIBLE) triggers Window::onVisibilityChanged,
+       // which calls WindowManager::hideWindow to repaint the uncovered area; and
+       // INVISIBLE itself takes the window out of touch routing + key dispatch so
+       // a dismissed keyboard stops consuming input. showSoftInput brings it back.
        setVisibility(View::INVISIBLE);
    }
 };
@@ -311,6 +309,8 @@ void InputMethodManager::focusIn(View*view){
 }
 
 void InputMethodManager::focusOut(View*view){
+    // setVisibility(INVISIBLE) -> onVisibilityChanged -> WindowManager::hideWindow
+    // repaints the uncovered area.
     if(imeWindow){
         imeWindow->setVisibility(View::INVISIBLE);
     }
@@ -413,6 +413,8 @@ void InputMethodManager::showSoftInput(View*v,int /*flags*/){
 void InputMethodManager::hideSoftInputFromView(View*v,int /*flags*/){
     // Hide the keyboard only when it is currently attached to v (matching
     // Android's "from this view" semantics).
+    // setVisibility(INVISIBLE) -> onVisibilityChanged -> WindowManager::hideWindow
+    // repaints the uncovered area.
     if(imeWindow && imeWindow->mBuddy == v){
         imeWindow->setVisibility(View::INVISIBLE);
     }
