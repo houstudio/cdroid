@@ -168,13 +168,12 @@ bool BaseKeyListener::deleteLineFromCursor(View& view, Editable& content, bool f
 bool BaseKeyListener::onKeyDown(View& view, Editable& content, int keyCode, const KeyEvent& event) {
     bool handled = false;
     switch (keyCode) {
-        case KeyEvent::KEYCODE_BACKSPACE:
-            // CDROID: physical BackSpace (112) deletes to the LEFT. (Android's
-            // KEYCODE_DEL=backspace; see the header note on the keycode swap.)
+        case KeyEvent::KEYCODE_DEL:
+            // Android KEYCODE_DEL(67) = backspace, deletes to the LEFT.
             handled = backspace(view, content, keyCode, event);
             break;
-        case KeyEvent::KEYCODE_DEL:
-            // CDROID: physical Delete (67) deletes to the RIGHT (forward delete).
+        case KeyEvent::KEYCODE_FORWARD_DEL:
+            // Android KEYCODE_FORWARD_DEL(112) = forward delete, deletes to the RIGHT.
             handled = forwardDelete(view, content, keyCode, event);
             break;
         default:

@@ -152,7 +152,7 @@ bool QwertyKeyListener::onKeyDown(View& view, Editable& content, int keyCode, co
         }
 
         return true;
-    } else if (keyCode == KeyEvent::KEYCODE_BACKSPACE
+    } else if (keyCode == KeyEvent::KEYCODE_DEL
             && (event.hasNoModifiers() || event.hasModifiers(KeyEvent::META_ALT_ON))
             && selStart == selEnd) {
         // Special backspace case for undoing autotext. With AutoText deferred no

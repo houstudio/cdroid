@@ -4,13 +4,12 @@
  * (delete selection / char / Alt-line / Ctrl-word) and exposes makeTextContentType
  * plus the Capitalize enum shared by QwertyKeyListener/TextKeyListener.
  *
- * IMPORTANT CDROID keycode note (see AGENTS.md plan): the input layer maps the
- * physical BackSpace key to KEYCODE_BACKSPACE(112) [deletes LEFT] and the
- * physical Delete key to KEYCODE_DEL(67) [deletes RIGHT] — the LEFT/RIGHT
- * sense is opposite to Android's *names* (Android KEYCODE_DEL=backspace,
- * KEYCODE_FORWARD_DEL=forward) but is physically correct here. This class
- * therefore routes KEYCODE_BACKSPACE→backspace() and KEYCODE_DEL→forwardDelete()
- * to preserve existing editor behavior; do NOT copy Android's literal switch.
+ * Delete keycodes are aligned with Android (2026-07-10): KEYCODE_DEL(67)=backspace
+ * (delete LEFT), KEYCODE_FORWARD_DEL(112)=forward delete (delete RIGHT). The old
+ * CDROID-specific KEYCODE_BACKSPACE (which collided with FORWARD_DEL at 112) has
+ * been removed. The keylayout files map the physical Backspace key (linux 14) via
+ * `key 14 DEL` -> KEYCODE_DEL, matching Android's Generic.kl, so PC Backspace
+ * deletes left and PC Delete (linux 111, `key 111 FORWARD_DEL`) deletes right.
  */
 #ifndef CDROID_BASEKEYLISTENER_H
 #define CDROID_BASEKEYLISTENER_H

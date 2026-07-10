@@ -98,7 +98,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     kbdView = (KeyboardView*)vg->findViewById(cdroid::R::id::keyboardview);
     candidateView = (CandidateView*)vg->findViewById(cdroid::R::id::predict2);
     candidateView->setPredictListener(std::bind(&IMEWindow::onPredict,this,std::placeholders::_1,
-	   std::placeholders::_2,std::placeholders::_3));
+           std::placeholders::_2,std::placeholders::_3));
     View* closeKbd = vg->findViewById(cdroid::R::id::closekeyboard);
     closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     addView(vg);//layout(0,0,getWidth(),h);
@@ -121,17 +121,26 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              /*sendKeyEvent(keyEvent);*/break;
         case -101:break;
         default:
-	    if(primaryCode>0){
+            if(primaryCode>0){
                 int rc;
-   	        std::string u8txt;
-	        std::vector<std::string> candidates;
-	        InputMethod* im = InputMethodManager::getInstance().im;
-	        mText2IM.append(1,primaryCode);
-	        u8txt = TextUtils::unicode2utf8(mText2IM);
-	        rc = im->search(u8txt,candidates);
-	        updatePredicts(candidates);
+                std::string u8txt;
+                std::vector<std::string> candidates;
+                InputMethod* im = InputMethodManager::getInstance().im;
+                mText2IM.append(1,primaryCode);
+                u8txt = TextUtils::unicode2utf8(mText2IM);
+                rc = im->search(u8txt,candidates);
+                if(rc < 0){
+                    // InputMethod has no candidate search (e.g. the English/qwerty
+                    // method) -> commit the typed character straight into the editor
+                    // via EditText->Editor::commitText (the in-process equivalent of
+                    // Android's InputConnection.commitText -> Editable).
+                    commitText(u8txt);
+                    mText2IM.clear();
+                }else{
+                    updatePredicts(candidates);
+                }
                 LOGD("txt=%s primaryCode=%x/%c",u8txt.c_str(),primaryCode,primaryCode);
-	    }break;
+            }break;
         }
     };
     listener.onRelease = [this](int primaryCode){
@@ -149,10 +158,13 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_DONE     :  break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
-             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_UP/*action*/,0,KeyEvent::KEYCODE_BACK,
-		        0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+             // Send Android's KEYCODE_DEL (backspace, deletes LEFT). sendKeyEvent()
+             // dispatches onKeyDown, so use ACTION_DOWN. (KEYCODE_BACK is the Back
+             // button and is not a delete.)
+             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_DOWN/*action*/,0,KeyEvent::KEYCODE_DEL,
+                        0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
              imm.sendKeyEvent(keyEvent);break;
-	}
+        }
     };
     kbdView->setOnKeyboardActionListener(listener);
 #if 0
@@ -309,14 +321,22 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
 
 void InputMethodManager::ensureIMEWindow(){
     if(mInst->imeWindow != nullptr) return;
-    Point dspSize;
     mInst->imeWindow = new IMEWindow(-1,300);
+    positionIMEWindow();
+    LOGD("IMEWindow created: height=%d",mInst->imeWindow->getHeight());
+}
+
+void InputMethodManager::positionIMEWindow(){
+    // Dock the keyboard to the bottom of the screen. The close button hides the
+    // window by setPos()-ing it off-screen, so every (re)show must move it back,
+    // otherwise setVisibility(VISIBLE) alone leaves it parked below the screen.
+    if(imeWindow == nullptr) return;
+    Point dspSize;
     Display& dp = WindowManager::getInstance().getDefaultDisplay();
     const int rotation = dp.getRotation();
     dp.getRealSize(dspSize);
     const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
-    mInst->imeWindow->setPos(0,screenHeight-mInst->imeWindow->getHeight());
-    LOGD("IMEWindow created: screenHeight=%d height=%d",screenHeight,mInst->imeWindow->getHeight());
+    imeWindow->setPos(0,screenHeight-imeWindow->getHeight());
 }
 
 void InputMethodManager::setInputType(int inputType){
@@ -353,11 +373,6 @@ void InputMethodManager::onViewDetachedFromWindow(View*view){
     LOGD("view=%p  %d",view,view->getId());
 }
 
-void InputMethodManager::commitText(const std::wstring&text,int newCursorPos){
-    if(imeWindow&&imeWindow->mBuddy){
-        imeWindow->mBuddy->commitText(text);
-    }
-}
 
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
     im = method;
@@ -381,6 +396,7 @@ void InputMethodManager::showSoftInput(View*v,int /*flags*/){
     ensureIMEWindow();
     if(imeWindow == nullptr) return; // only if creation failed
     imeWindow->mBuddy = v;
+    positionIMEWindow();             // undo any off-screen hide from the close button
     imeWindow->setVisibility(View::VISIBLE);
     imeWindow->requestLayout(); // make sure the freshly-shown subtree is measured/laid out
     LOGD("showSoftInput view=%p type=%d imeWindow=%p",v,mInputType,imeWindow);

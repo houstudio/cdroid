@@ -29,7 +29,8 @@ private:
     std::wstring text2IM;
     std::vector<std::pair<std::string,InputMethod*>>imeMethods;
     int setInputMethod(InputMethod*,const std::string&name);
-    void ensureIMEWindow();   // lazily create + position the on-screen IMEWindow
+    void ensureIMEWindow();   // lazily create the on-screen IMEWindow
+    void positionIMEWindow(); // place it docked to the bottom of the screen (undo any off-screen hide)
 protected:
     std::string predictSource;
     InputMethod*im;
@@ -37,7 +38,6 @@ protected:
     class IMEWindow*imeWindow;
     InputMethodManager();
     ~InputMethodManager();
-    void commitText(const std::wstring&text,int newcursorPos);
 public:
     static InputMethodManager&getInstance();
     static InputMethodManager*peekInstance();
