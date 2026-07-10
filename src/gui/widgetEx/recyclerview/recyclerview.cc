@@ -3725,7 +3725,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mEatRunOnAnimationRequest = false;
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
-    mInterpolator = nullptr;
+    mInterpolator = &sQuinticInterpolator;
     mRunnable = [this](){run();};
     mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
 }
@@ -3920,6 +3920,7 @@ void RecyclerView::ViewFlinger::fling(int velocityX, int velocityY) {
     // changed our interpolator.
     if (mInterpolator != &sQuinticInterpolator) {
         mInterpolator = &sQuinticInterpolator;
+        delete mOverScroller;
         mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
     }
     mOverScroller->fling(0, 0, velocityX, velocityY, INT_MIN, INT_MAX, INT_MIN, INT_MAX);
