@@ -3725,7 +3725,7 @@ RecyclerView::ViewFlinger::ViewFlinger(RecyclerView*rv) {
     mEatRunOnAnimationRequest = false;
     mReSchedulePostAnimationCallback = false;
     mRV = rv;
-    mInterpolator = nullptr;
+    mInterpolator = &sQuinticInterpolator;
     mRunnable = [this](){run();};
     mOverScroller = new OverScroller(mRV->getContext(), &sQuinticInterpolator);
 }
