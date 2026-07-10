@@ -305,21 +305,24 @@ void InputMethodManager::sendKeyEvent(KeyEvent&k){
     LOGD("%s",KeyEvent::keyCodeToString(k.getKeyCode()).c_str());
 }
 
+void InputMethodManager::ensureIMEWindow(){
+    if(mInst->imeWindow != nullptr) return;
+    Point dspSize;
+    mInst->imeWindow = new IMEWindow(-1,300);
+    Display& dp = WindowManager::getInstance().getDefaultDisplay();
+    const int rotation = dp.getRotation();
+    dp.getRealSize(dspSize);
+    const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
+    mInst->imeWindow->setPos(0,screenHeight-mInst->imeWindow->getHeight());
+    LOGD("IMEWindow created: screenHeight=%d height=%d",screenHeight,mInst->imeWindow->getHeight());
+}
+
 void InputMethodManager::setInputType(int inputType){
-    LOGV("type=%d",inputType);
+    LOGD("setInputType type=%d (prev=%d)",inputType,mInputType);
+    ensureIMEWindow(); // the window must exist before we can show/hide or switch keyboards
     if(mInputType==inputType)
         return;
     mInputType = inputType;
-    if( mInst->imeWindow == nullptr){
-        Point dspSize;
-        mInst->imeWindow = new IMEWindow(-1,300);
-        Display& dp = WindowManager::getInstance().getDefaultDisplay();
-        const int rotation = dp.getRotation();
-        dp.getRealSize(dspSize);
-        const int screenHeight=((rotation==Display::ROTATION_90)||(rotation==Display::ROTATION_270))?dspSize.x:dspSize.y;
-        mInst->imeWindow->setPos(0,screenHeight-mInst->imeWindow->getHeight());
-        LOGD("screenHeight=%d imewin.height=%d",screenHeight,mInst->imeWindow->getHeight());
-    }
     switch(mInputType){
     case InputType::TYPE_NULL:
         if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
@@ -330,10 +333,10 @@ void InputMethodManager::setInputType(int inputType){
             setInputMethod(it->second,it->first);
         }break;
     }
-    if(mInst->imeWindow){
-        //imeWindow->kbdView->setKeyboard(kbd);
-        imeWindow->mBuddy = nullptr;
-    }
+    // Note: do NOT clear imeWindow->mBuddy here. Switching the keyboard layout is
+    // independent of the commit target, and nulling the buddy would detach an
+    // editor that is focused while its input type changes. The buddy is owned by
+    // the focus/touch flow (viewClicked/focusIn/showSoftInput).
 }
 
 int InputMethodManager::setInputMethod(const std::string&name){
@@ -361,6 +364,56 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p",name.c_str(),im,layout.c_str(),kbd);
     return 0;
+}
+
+bool InputMethodManager::isActive(View*v){
+    return imeWindow != nullptr && imeWindow->mBuddy == v;
+}
+
+void InputMethodManager::showSoftInput(View*v,int /*flags*/){
+    // Android: request the IME to show for this view. In the in-process model
+    // that is: designate v as the commit target and make the keyboard visible.
+    // Never silently no-op: ensure the keyboard window exists first (it used to
+    // be created lazily only inside setInputType, so a TYPE_NULL/untyped editor
+    // would leave it null and the keyboard would never appear).
+    ensureIMEWindow();
+    if(imeWindow == nullptr) return; // only if creation failed
+    imeWindow->mBuddy = v;
+    imeWindow->setVisibility(View::VISIBLE);
+    LOGD("showSoftInput view=%p type=%d imeWindow=%p",v,mInputType,imeWindow);
+}
+
+void InputMethodManager::hideSoftInputFromView(View*v,int /*flags*/){
+    // Hide the keyboard only when it is currently attached to v (matching
+    // Android's "from this view" semantics).
+    if(imeWindow && imeWindow->mBuddy == v){
+        imeWindow->setVisibility(View::INVISIBLE);
+    }
+    LOGV("hideSoftInputFromView view=%p",v);
+}
+
+void InputMethodManager::hideSoftInputFromWindow(View*v,int flags){
+    // CDROID has no IBinder window token; key the hide by the view instead.
+    hideSoftInputFromView(v,flags);
+}
+
+void InputMethodManager::restartInput(View*v){
+    // Android: notify the IME that the editor's content/type changed so it
+    // re-queries the editor through its InputConnection. CDROID's in-process IME
+    // caches no editor text or composing state (it commits keystrokes directly),
+    // so there is nothing to re-push here: the keyboard layout is driven by
+    // setInputType(), which TextView pushes explicitly when the type changes or
+    // when an editor is shown. Intentional no-op, kept so call sites read like
+    // Android.
+    LOGV("restartInput view=%p (in-process IME: no-op)",v);
+}
+
+void InputMethodManager::updateSelection(View* /*v*/,int /*selStart*/,int /*selEnd*/,
+                                          int /*candidatesStart*/,int /*candidatesEnd*/){
+    // In-process IME: selection and composing state are not tracked here. The
+    // composing buffer lives inside IMEWindow (independent of the editor's
+    // Selection spans), and committed text flows directly into the buddy view.
+    // Intentional no-op, kept as a real call so TextView/Editor read like Android.
 }
 
 }

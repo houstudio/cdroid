@@ -787,11 +787,12 @@ void TextView::setEnabled(bool _enabled) {
         return;
     }
     if (!_enabled) {
-        // Hide the soft input if the currently active TextView is disabled
-        /*InputMethodManager* imm = getInputMethodManager();
+        // Hide the soft input if the currently active TextView is disabled.
+        InputMethodManager* imm = getInputMethodManager();
         if (imm != nullptr && imm->isActive(this)) {
-            imm->hideSoftInputFromWindow(getWindowToken(), 0);
-        }*/
+            // CDROID has no window token; key the hide by this view instead.
+            imm->hideSoftInputFromView(this, 0);
+        }
     }
     View::setEnabled(_enabled);
     if (mEditor) {
@@ -802,7 +803,7 @@ void TextView::setEnabled(bool _enabled) {
     if (_enabled) {
         // Make sure IME is updated with current editor info.
         InputMethodManager* imm = getInputMethodManager();
-        //if (imm != nullptr) imm->restartInput(this);
+        if (imm != nullptr) imm->restartInput(this);
     }
 
     // Will change text color
@@ -1498,8 +1499,8 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             text = new SpannableStringBuilder(text);
         }
         //setFilters(t, mFilters);
-        //InputMethodManager* imm = getInputMethodManager();
-        //if (imm != nullptr) imm->restartInput(this);
+        InputMethodManager* imm = getInputMethodManager();
+        if (imm != nullptr) imm->restartInput(this);
     } else if (precomputed != nullptr) {
         if (mTextDir == nullptr) {
             mTextDir = getTextDirectionHeuristic();
@@ -3379,9 +3380,20 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
     switch (keyCode) {
         case KeyEvent::KEYCODE_DPAD_CENTER:
             if (event.hasNoModifiers()) {
-                // Android: if there is no click listener and this is an editable
-                // text editor, viewClicked(imm) + imm.showSoftInput(...). CDROID's
-                // IME show path / hasOnClickListeners aren't wired here yet.
+                // Android: when there is no click listener and this is an editable
+                // text editor, treat DPAD-center as "show the IME". CDROID does not
+                // port hasOnClickListeners(), so gate on the editable-editor case
+                // (the meaningful condition) and push the editor's input type so the
+                // correct keyboard layout is shown.
+                if (mMovement != nullptr && isTextEditable() && mLayout != nullptr
+                        && mShowSoftInputOnFocus) {
+                    InputMethodManager* imm = getInputMethodManager();
+                    viewClicked(imm);
+                    if (imm != nullptr) {
+                        imm->setInputType(getInputType());
+                        imm->showSoftInput(this, 0);
+                    }
+                }
             }
             return View::onKeyUp(keyCode, event);
 
@@ -3541,9 +3553,12 @@ bool TextView::onTouchEvent(MotionEvent& event){
     if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
         InputMethodManager* imm = InputMethodManager::peekInstance();
         viewClicked(imm);
-        if (isTextEditable() && mShowSoftInputOnFocus && imm != nullptr
-                /*&& !showAutofillDialog()*/) {
-            imm->focusIn(this/*, 0*/);
+        if (isTextEditable() && mShowSoftInputOnFocus && imm != nullptr) {
+            // Push this editor's input type (selects the right keyboard layout)
+            // then show the IME. showSoftInput also designates this view as the
+            // commit target (replaces the old focusIn-only call that never showed).
+            imm->setInputType(getInputType());
+            imm->showSoftInput(this, 0);
         }
         mEditor->onTouchUpEvent(event);
         handled = true;
@@ -4501,8 +4516,13 @@ void TextView::setInputType(int inputType) {
         setTextInternal(removeSuggestionSpans(mText));
     }
 
-    // TODO(android): InputMethodManager imm = getInputMethodManager();
-    //                if (imm != null) imm.restartInput(this);  // needs InputConnection
+    // If this editor currently owns the IME, refresh the keyboard so its layout
+    // follows the new input type. (Android: imm.restartInput(this); CDROID pushes
+    // the type directly since there is no InputConnection for the IME to re-query.)
+    InputMethodManager* imm = getInputMethodManager();
+    if (imm != nullptr && imm->isActive(this)) {
+        imm->setInputType(inputType);
+    }
 }
 
 int TextView::getInputType()const{
@@ -4763,7 +4783,7 @@ void TextView::setKeyListener(KeyListener* input) {
     }
 
     InputMethodManager* imm = getInputMethodManager();
-    //if (imm != nullptr) imm->restartInput(this);
+    if (imm != nullptr) imm->restartInput(this);
 }
 
 KeyListener* TextView::getKeyListener() const {

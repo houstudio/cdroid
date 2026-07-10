@@ -123,6 +123,7 @@ int main(int argc,const char*argv[]){
         { "RTL layout: pure LTR text", "Hello World" },
         { "RTL layout: LTR/RTL/LTR",   "Hello مرحبا World" },
         { "RTL layout: RTL/LTR/RTL",   "مرحبا Hello مرحبا" },
+        { "RTL layout: pure RTL (Arabic)", "مرحبا بالعالم" },
     };
     for (int i = 0; i < (int)(sizeof(bidiRtlCases) / sizeof(bidiRtlCases[0])); i++) {
         auto* lbl = new TextView(bidiRtlCases[i].label, 0, 0);
@@ -136,6 +137,7 @@ int main(int argc,const char*argv[]){
         edt->setFocusable(true);
         edt->setClickable(true);
         edt->setSingleLine(true);
+        edt->setTextDirection(View::TEXT_DIRECTION_RTL);
         edt->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
         edt->setBackgroundColor(0xFF332211);
         edt->setId(210000+i);

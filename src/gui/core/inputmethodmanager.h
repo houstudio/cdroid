@@ -29,6 +29,7 @@ private:
     std::wstring text2IM;
     std::vector<std::pair<std::string,InputMethod*>>imeMethods;
     int setInputMethod(InputMethod*,const std::string&name);
+    void ensureIMEWindow();   // lazily create + position the on-screen IMEWindow
 protected:
     std::string predictSource;
     InputMethod*im;
@@ -65,6 +66,24 @@ public:
      *        locations there.
     */
     void showIme();
+    /* ------------------------------------------------------------------
+     *  Android-compatible adapter surface.
+     *
+     *  CDROID's IMM is an *in-process* on-screen-keyboard router: the IMEWindow
+     *  is the single input sink and a "buddy" view is the commit target. There
+     *  is no InputConnection / EditorInfo / ExtractedText protocol (intentionally
+     *  deferred). These methods therefore map Android's IMM vocabulary onto the
+     *  buddy+window model rather than reproducing the IME<->editor text sync:
+     *    show/hide  -> real behaviour (toggle the keyboard window)
+     *    isActive   -> real (this view is the current commit target)
+     *    restartInput/updateSelection -> no-op-by-design here (documented)
+     * ------------------------------------------------------------------ */
+    bool isActive(View*v);                                   // imm.isActive(view)
+    void showSoftInput(View*v,int flags);                    // imm.showSoftInput(view,0)
+    void hideSoftInputFromView(View*v,int flags);            // imm.hideSoftInputFromView(view,0)
+    void hideSoftInputFromWindow(View*v,int flags);          // no window token in CDROID -> view-keyed alias
+    void restartInput(View*v);                               // imm.restartInput(view)
+    void updateSelection(View*v,int selStart,int selEnd,int candidatesStart,int candidatesEnd);
 };
 
 }

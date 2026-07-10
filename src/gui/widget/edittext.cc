@@ -42,7 +42,7 @@ EditText::EditText(Context*ctx,const AttributeSet& attrs)
 		    {"textPassword",        InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
 		    {"textVisiblePassword", InputType::TYPE_CLASS_TEXT | (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
 		    {"ip",   (int)InputType::TYPE_CLASS_TEXT}
-	  }, (int)InputType::TYPE_NULL));
+	  }, (int)InputType::TYPE_CLASS_TEXT));
     // Android-aligned: an EditText's buffer is Editable from construction via
     // setText(EDITABLE) — not a runtime setEditable() conversion. setText also
     // creates the Editor and syncs mTransformed, so the Layout draws the same

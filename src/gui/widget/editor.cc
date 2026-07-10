@@ -636,29 +636,15 @@ void Editor::onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& high
     const int selectionStart = mTextView->getSelectionStart();
     const int selectionEnd = mTextView->getSelectionEnd();
 
-    /*const InputMethodState ims = mInputMethodState;
-    if (ims != null && ims.mBatchEditNesting == 0) {
-        InputMethodManager imm = getInputMethodManager();
-        if (imm != null) {
-            if (imm.isActive(mTextView)) {
-                if (ims.mContentChanged || ims.mSelectionModeChanged) {
-                    // We are in extract mode and the content has changed
-                    // in some way... just report complete new text to the
-                    // input method.
-                    reportExtractedText();
-                }
-            }
-        }
-    }
-
-    if (mCorrectionHighlighter != null) {
-        mCorrectionHighlighter->draw(canvas, cursorOffsetVertical);
-    }*/
+    // Android Editor.onDraw reports the full text to the IME here when in extract
+    // mode (imm.isActive(mTextView) + reportExtractedText()) and draws the
+    // correction highlighter. Neither extract mode nor InputMethodState/
+    // mCorrectionHighlighter is ported, and the in-process IMM needs no extracted
+    // text (it commits directly into the buddy view), so this block stays deferred.
 
     if (highlight != nullptr && selectionStart == selectionEnd && mDrawableForCursor != nullptr) {
         drawCursor(canvas, cursorOffsetVertical);
         // Rely on the drawable entirely, do not draw the cursor line.
-        // Has to be done after the IMM related code above which relies on the highlight.
         highlight = nullptr;
     }
     /*if (mSelectionActionModeHelper != nullptr) {
@@ -689,7 +675,12 @@ void Editor::beginBatchEdit() {
 
 void Editor::endBatchEdit() {
     if (mBatchEditNesting > 0) mBatchEditNesting--;
-    // On the outermost close, Android notifies the IME; nothing to do without one.
+    // On the outermost close, Android notifies the IME of the new selection. The
+    // downstream IMM call is a no-op in the in-process model, but issue it so the
+    // edit/batch path mirrors Android and stays live for a future IME pass.
+    if (mBatchEditNesting == 0) {
+        sendUpdateSelection();
+    }
 }
 
 // =====================================================================================
@@ -741,12 +732,22 @@ void Editor::addSpanWatchers(Spannable& text) {
 }
 
 void Editor::sendUpdateSelection() {
-    // Android: InputMethodManager.updateSelection(view, selStart, selEnd, ...) —
-    // pushes the current selection to the IME so candidates/composition track it.
-    // CDROID has no IME connection (deferred by scope), so this is a structural
-    // no-op hook. The selection itself is already authoritative (Selection spans)
-    // and the host TextView is notified independently via spanChange →
-    // onSelectionChanged.
+    // Android: InputMethodManager.updateSelection(view, selStart, selEnd,
+    // candidatesStart, candidatesEnd) pushes the editor's selection to the IME so
+    // its candidates/composing region can track it. CDROID's in-process IME keeps
+    // no such state (composing lives inside IMEWindow and committed text flows
+    // straight into the buddy view), so the downstream call is a documented
+    // no-op — but we still issue it so the SpanController path reads like Android
+    // and the hook is live for a future InputConnection pass. The selection itself
+    // stays authoritative via the Selection spans; the host TextView is notified
+    // independently via spanChange -> onSelectionChanged.
+    InputMethodManager* imm = mTextView->getInputMethodManager();
+    if (imm != nullptr) {
+        const int selStart = mTextView->getSelectionStart();
+        const int selEnd   = mTextView->getSelectionEnd();
+        imm->updateSelection(mTextView, selStart, selEnd, /*candidatesStart*/ -1,
+                             /*candidatesEnd*/ -1);
+    }
 }
 
 }  // namespace cdroid
