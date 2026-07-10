@@ -18,6 +18,7 @@
 
 #include <core/app.h>
 #include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <core/graphdevice.h>
 #include <core/windowmanager.h>
 #include <core/uieventsource.h>
@@ -51,7 +52,7 @@ WindowManager::~WindowManager() {
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
-    };
+    }
     mWindows.clear();
     LOGD("%p Destroied",this);
 }
@@ -326,13 +327,13 @@ void WindowManager::onMotion(MotionEvent&event) {
    if (event.isFromSource(InputDevice::SOURCE_CLASS_POINTER)){
        for (auto itr = mWindows.rbegin(); itr != mWindows.rend(); itr++) {
            auto w = (*itr);
-           ViewTreeObserver*obv = w->getViewTreeObserver();
-           if (action == MotionEvent::ACTION_DOWN) {
+           /* Enter touch mode on ACTION_DOWN. Per Android, ACTION_UP does NOT
+              exit touch mode — touch mode is only left by non-touch (key/dpad)
+              input or requestFocusFromTouch(), never on finger lift. */
+           if ((action == MotionEvent::ACTION_DOWN)&&!w->mAttachInfo->mInTouchMode) {
+               ViewTreeObserver*obv = w->getViewTreeObserver();
                w->mAttachInfo->mInTouchMode = true;
                obv->dispatchOnTouchModeChanged(true);
-           } else if (action == MotionEvent::ACTION_UP) {
-               w->mAttachInfo->mInTouchMode = false;
-               obv->dispatchOnTouchModeChanged(false);
            }
            LOGV_IF(action != MotionEvent::ACTION_MOVE, "%s at(%d,%d)", MotionEvent::actionToString(action).c_str(), x, y);
            if ((w->getVisibility() == View::VISIBLE) && w->getBound().contains(x, y)) {
@@ -411,6 +412,11 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
         if ( win->hasFlag(View::FOCUSABLE) && (win->getVisibility()==View::VISIBLE) ) {
             const int keyCode = event.getKeyCode();
             LOGV("Window:%p Key:%s[%x] action=%d",win,KeyEvent::keyCodeToString(keyCode).c_str(),keyCode,event.getAction());
+            if(win->mAttachInfo->mInTouchMode){
+                ViewTreeObserver*obv = win->getViewTreeObserver();
+                win->mAttachInfo->mInTouchMode=false;
+                obv->dispatchOnTouchModeChanged(false);
+            }
             win->processKeyEvent(event);
             //dispatchKeyEvent(event);
             return;
