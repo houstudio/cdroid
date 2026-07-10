@@ -163,9 +163,8 @@ void WindowManager::removeWindow(Window*w){
             }
             mActiveWindow = (*it);
             break;
-        } 
+        }
     }
-    //GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
 }
@@ -213,8 +212,6 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             break;
         }
     }
-    //const Cairo::RectangleInt re = rgn->get_extents();
-    //GraphDevice::getInstance().invalidate({re.x,re.y,re.width,re.height});
     GraphDevice::getInstance().flip();
 }
 
@@ -226,8 +223,6 @@ void WindowManager::moveWindow(Window*w,int x,int y){
     w->setFrame(x,y,rcw.width,rcw.height);
     const auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
-        //GraphDevice::getInstance().invalidate(rcw);
-        //GraphDevice::getInstance().invalidate(rcw2);
         for(auto it = mWindows.begin();it<itw;it++){
            Rect rc = w->getBound();
            Cairo::RefPtr<Cairo::Region>newrgn = Cairo::Region::create((Cairo::RectangleInt&)rc);

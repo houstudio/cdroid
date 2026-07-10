@@ -35,7 +35,7 @@ static std::unordered_map<std::string,int>edgeFlagKVS={
 int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
     const std::string value=attrs.getAttributeValue(key);
     if(value.find("%")!=std::string::npos){
-	LOGD("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
+        LOGV("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
         return base*std::stof(value)/100;
     }else if(value.find("px")!=std::string::npos){
         return std::stoi(value);

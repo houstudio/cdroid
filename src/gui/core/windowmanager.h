@@ -30,7 +30,7 @@ namespace cdroid {
 class WindowManager {
 private:
     int mDisplayRotation;
-    Window*mActiveWindow;/*activeWindow*/
+    Window*mActiveWindow;
     std::vector< Window* > mWindows;
     Window* mHoveredWindow;
     std::vector< Display > mDisplays;
