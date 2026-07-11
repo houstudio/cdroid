@@ -496,6 +496,7 @@ public:
     int getMaxEms()const;
     void setEms(int ems);
     int getLineCount()const;
+    void getFocusedRect(Rect& r)override;
     int getLineBounds(int line, Rect&bounds);
     int getBaseline()override;
     int getBaselineOffset();

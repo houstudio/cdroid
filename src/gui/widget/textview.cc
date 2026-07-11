@@ -5348,6 +5348,60 @@ void TextView::onDraw(Canvas& canvas) {
     canvas.restore();
 }
 
+void TextView::getFocusedRect(Rect& r) {
+    if (mLayout == nullptr) {
+        View::getFocusedRect(r);
+        return;
+    }
+
+    int selEnd = getSelectionEndTransformed();
+    if (selEnd < 0) {
+        View::getFocusedRect(r);
+        return;
+    }
+
+    int selStart = getSelectionStartTransformed();
+    if (selStart < 0 || selStart >= selEnd) {
+        int line = mLayout->getLineForOffset(selEnd);
+        r.top = mLayout->getLineTop(line);
+        r.height = mLayout->getLineBottom(line)-r.top;
+        r.left = (int) mLayout->getPrimaryHorizontal(selEnd) - 2;
+        r.width = 4;
+    } else {
+        int lineStart = mLayout->getLineForOffset(selStart);
+        int lineEnd = mLayout->getLineForOffset(selEnd);
+        r.top = mLayout->getLineTop(lineStart);
+        r.height = mLayout->getLineBottom(lineEnd)-r.top;
+        if (lineStart == lineEnd) {
+            r.left = (int) mLayout->getPrimaryHorizontal(selStart);
+            r.width = (int) mLayout->getPrimaryHorizontal(selEnd)-r.left;
+        } else {
+            // Selection extends across multiple lines -- make the focused
+            // rect cover the entire width.
+            if (mHighlightPathBogus) {
+                if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                mHighlightPath->reset();
+                mLayout->getSelectionPath(selStart, selEnd, *mHighlightPath);
+                mHighlightPathBogus = false;
+            }
+            RectF TEMP_RECTF;
+            mHighlightPath->compute_bounds(TEMP_RECTF, true);
+            r.left = (int) TEMP_RECTF.left - 1;
+            r.width = (int) TEMP_RECTF.width + 2;
+        }
+    }
+
+    // Adjust for padding and gravity.
+    int paddingLeft = getCompoundPaddingLeft();
+    int paddingTop = getExtendedPaddingTop();
+    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
+        paddingTop += getVerticalOffset(false);
+    }
+    r.offset(paddingLeft, paddingTop);
+    int paddingBottom = getExtendedPaddingBottom();
+    r.height += paddingBottom;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////
 std::string TextView::getAccessibilityClassName()const{
     return "TextView";
