@@ -112,6 +112,7 @@ private:
     bool mRestartMarquee;
     bool mUserSetTextScaleX;
     bool mHighlightPathBogus;
+    bool mHighlightPathsBogus;
     bool mUseFallbackLineSpacing;
     bool mHasPresetAutoSizeValues;
     bool mPreDrawRegistered;
@@ -131,9 +132,12 @@ private:
     int mAutoLinkMask;
     int mSelectionStart;
     int mSelectionEnd;
+    int mGesturePreviewHighlightStart=-1;
+    int mGesturePreviewHighlightEnd=-1;
     int mLineBreakStyle;
     int mLineBreakWordStyle;
     TextPaint mTextPaint;
+    Paint *mGesturePreviewHighlightPaint = nullptr;
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
@@ -159,6 +163,8 @@ private:
     // Android: mPreventDefaultMovement — once the movement method consumes an
     // initial key down, swallow subsequent focus-traversal defaults until key up.
     bool mPreventDefaultMovement = false;
+    bool mImeIsConsumingInput;
+    bool mCursorVisibleFromAttr = true;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
@@ -220,6 +226,12 @@ private:
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
+    void setSelectGesturePreviewHighlight(int start, int end);
+    void setDeleteGesturePreviewHighlight(int start, int end);
+    void setGesturePreviewHighlight(int start, int end, int color);
+    void clearGesturePreviewHighlight();
+    bool hasGesturePreviewHighlight()const;
+
     void setInputTypeFromEditor();
     void setKeyListenerOnly(KeyListener* input);
     // Android TextView.setFilters(Editable, InputFilter[]) — installs the filters on the
@@ -232,6 +244,7 @@ private:
     bool isAutoSizeEnabled()const;
     bool isMarqueeFadeEnabled()const;
     void startStopMarquee(bool start);
+    void updateCursorVisibleInternal();
     float getHorizontalFadingEdgeStrength(float position1, float position2);
     void setInputTypeSingleLine(bool singleLine);
     void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
@@ -353,6 +366,8 @@ public:
     bool selectAllText();
     int getSelectionStart()const;
     int getSelectionEnd()const;
+    int getSelectionStartTransformed() const;
+    int getSelectionEndTransformed() const;
     bool hasSelection()const;
     std::string getSelectedText()const;
     // Android public API — touch→offset, cursor visibility, IME-on-focus,
@@ -360,6 +375,7 @@ public:
     int  getOffsetForPosition(float x, float y);
     void setCursorVisible(bool visible);
     bool isCursorVisible()const;
+    bool isCursorVisibleFromAttr()const;
     void setShowSoftInputOnFocus(bool show);
     bool getShowSoftInputOnFocus()const;
     void setSelectAllOnFocus(bool selectAll);
@@ -369,6 +385,8 @@ public:
     bool isTextAutofillable() const;
     bool didTouchFocusSelect() const;
     void cancelLongPress()override;
+    bool onTrackballEvent(MotionEvent& event)override;
+    void setScroller(Scroller* s);
     void beginBatchEdit();
     void endBatchEdit();
     void setAllCaps(bool allCaps);

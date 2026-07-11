@@ -147,6 +147,7 @@ public:
     void hideCursorControllers();
     void hideCursorAndSpanControllers();
     void addSpanWatchers(Spannable& text);
+    void stopTextActionModeWithPreservingSelection();
     void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
 

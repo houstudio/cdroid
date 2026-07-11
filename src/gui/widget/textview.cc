@@ -506,6 +506,7 @@ TextView::~TextView() {
     delete mDrawables;
     delete mCursorDrawable;
     delete mEditor;
+    delete mGesturePreviewHighlightPaint;
 }
 
 void TextView::setTextInternal(CharSequence* text){
@@ -654,6 +655,36 @@ void TextView::validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSize
     mAutoSizeMaxTextSizeInPx = autoSizeMaxTextSizeInPx;
     mAutoSizeStepGranularityInPx = autoSizeStepGranularityInPx;
     mHasPresetAutoSizeValues = false;
+}
+
+void TextView::setSelectGesturePreviewHighlight(int start, int end) {
+    // Selection preview highlight color is the same as selection highlight color.
+    setGesturePreviewHighlight(start, end, mHighlightColor);
+}
+
+void TextView::setDeleteGesturePreviewHighlight(int start, int end) {
+    // Deletion preview highlight color is 20% opacity of the default text color.
+    int color = mTextColor->getDefaultColor();
+    //color = ColorUtils::setAlphaComponent(color, (int) (0.2f * Color.alpha(color)));
+    setGesturePreviewHighlight(start, end, color);
+}
+
+void TextView::setGesturePreviewHighlight(int start, int end, int color) {
+    mGesturePreviewHighlightStart = start;
+    mGesturePreviewHighlightEnd = end;
+    if (mGesturePreviewHighlightPaint == nullptr) {
+        mGesturePreviewHighlightPaint = new Paint();
+        mGesturePreviewHighlightPaint->setStyle(Paint::Style::FILL);
+    }
+    mGesturePreviewHighlightPaint->setColor(color);
+
+    if (mEditor != nullptr) {
+        mEditor->hideCursorAndSpanControllers();
+        mEditor->stopTextActionModeWithPreservingSelection();
+    }
+
+    mHighlightPathsBogus = true;
+    invalidate();
 }
 
 void TextView::clearAutoSizeConfiguration() {
@@ -1374,6 +1405,17 @@ void TextView::setTextKeepState(CharSequence* text, BufferType type) {
 
 void TextView::setText(CharSequence* txt) {
     setText(txt,mBufferType);
+}
+
+void TextView::clearGesturePreviewHighlight() {
+    mGesturePreviewHighlightStart = -1;
+    mGesturePreviewHighlightEnd = -1;
+    mHighlightPathsBogus = true;
+    invalidate();
+}
+
+bool TextView::hasGesturePreviewHighlight() const{
+    return mGesturePreviewHighlightStart >= 0;
 }
 
 void TextView::append(const CharSequence& text){
@@ -2108,8 +2150,8 @@ bool TextView::moveCursorToVisibleOffset() {
     if (dynamic_cast<Spannable*>(mText)==nullptr){
         return false;
     }
-    int start = getSelectionStart();
-    int end = getSelectionEnd();
+    const int start = getSelectionStart();
+    const int end = getSelectionEnd();
     if (start != end) {
         return false;
     }
@@ -2209,11 +2251,7 @@ void TextView::updateAfterEdit() {
         registerForPreDraw();
     }
 
-    // Android's TextView.updateAfterEdit calls checkForRelayout() here so that an
-    // edit rebuilds the text layout (makeNewLayout) and the redraw shows the new
-    // text. checkForResize() only handles WRAP_CONTENT size growth and does NOT
-    // rebuild the layout, so a fixed-size EditText never refreshed on typing.
-    checkForRelayout();
+    checkForResize();
 
     if (curs >= 0) {
         mHighlightPathBogus = true;
@@ -2233,6 +2271,8 @@ void TextView::handleTextChanged(CharSequence& buffer, int start, int before, in
     updateAfterEdit();
     sendOnTextChanged(buffer, start, before, after);
     onTextChanged(buffer, start, before, after);
+    mHideHint = false;
+    clearGesturePreviewHighlight();
 }
 
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
@@ -3815,6 +3855,22 @@ void TextView::cancelLongPress() {
     if (mEditor != nullptr) mEditor->mIgnoreActionUpEvent = true;
 }
 
+bool TextView::onTrackballEvent(MotionEvent& event){
+    if (mMovement != nullptr && mSpannable != nullptr && mLayout != nullptr) {
+        if (mMovement->onTrackballEvent(*this, *mSpannable, event)) {
+            return true;
+        }
+    }
+    return View::onTrackballEvent(event);
+}
+
+void TextView::setScroller(Scroller* s){
+    if(s!=mScroller){
+        delete mScroller;
+    }
+    mScroller = s;
+}
+
 void TextView::updateTextColors(){
     bool inval = false;
     int color;
@@ -4649,18 +4705,31 @@ int TextView::getOffsetForPosition(float x, float y) {
 }
 
 void TextView::setCursorVisible(bool visible) {
-    if(visible&&(mEditor==nullptr))return;
+    mCursorVisibleFromAttr = visible;
+    updateCursorVisibleInternal();
+}
+
+void TextView::updateCursorVisibleInternal()  {
+    bool visible = mCursorVisibleFromAttr && !mImeIsConsumingInput;
+    if (visible && mEditor == nullptr) return; // visible is the default value with no edit data
     createEditorIfNeeded();
-    if (mEditor->mCursorVisible!=visible){
+    if (mEditor->mCursorVisible != visible) {
         mEditor->mCursorVisible = visible;
         invalidate();
+
         mEditor->makeBlink();
+
+        // InsertionPointCursorController depends on mCursorVisible
         mEditor->prepareCursorControllers();
     }
 }
 
 bool TextView::isCursorVisible()const {
     return mEditor ? mEditor->isCursorVisible() : false;
+}
+
+bool TextView::isCursorVisibleFromAttr() const{
+    return mCursorVisibleFromAttr;
 }
 
 void TextView::setShowSoftInputOnFocus(bool show) {
@@ -4730,6 +4799,18 @@ int TextView::getSelectionStart()const{
 
 int TextView::getSelectionEnd()const{
     return Selection::getSelectionEnd(mText);
+}
+
+int TextView::getSelectionStartTransformed() const{
+    const int start = getSelectionStart();
+    if (start < 0) return start;
+    return originalToTransformed(start, OffsetMapping::MAP_STRATEGY_CURSOR);
+}
+
+int TextView::getSelectionEndTransformed() const{
+    const int end = getSelectionEnd();
+    if (end < 0) return end;
+    return originalToTransformed(end, OffsetMapping::MAP_STRATEGY_CURSOR);
 }
 
 bool TextView::hasSelection()const{

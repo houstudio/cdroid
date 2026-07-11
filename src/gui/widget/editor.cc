@@ -632,6 +632,9 @@ bool Editor::selectCurrentWord() {
     return true;
 }
 
+void Editor::stopTextActionModeWithPreservingSelection(){
+}
+
 void Editor::onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint, int cursorOffsetVertical){
     const int selectionStart = mTextView->getSelectionStart();
     const int selectionEnd = mTextView->getSelectionEnd();

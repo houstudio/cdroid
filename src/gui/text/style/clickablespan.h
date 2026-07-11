@@ -11,7 +11,7 @@ public:
         static int sIdCounter;
         mID = sIdCounter++;
     }
-    virtual void onClick(View& widget)=0;
+    virtual void onClick(View& widget)const=0;
     void updateDrawState(TextPaint& paint)const override{
         paint.setUnderlineText(true);
         paint.setColor(paint.linkColor);
@@ -28,7 +28,7 @@ public:
     URLSpan(const std::string&url):mURL(url){
     }
     std::string getURL()const{return mURL;}
-    void onClick(View& widget)override{
+    void onClick(View& widget)const override{
     }
     URLSpan* clone() const override { return new URLSpan(*this); }
 };
