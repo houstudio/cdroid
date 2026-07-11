@@ -1112,7 +1112,7 @@ public:
     void getHotspotBounds(Rect& outRect);
     void getBoundsOnScreen(Rect& outRect, bool clipToParent=false);
     void cancelPendingInputEvents();
-    void cancelLongPress();
+    virtual void cancelLongPress();
     void setTouchDelegate(TouchDelegate* delegate);
     TouchDelegate* getTouchDelegate()const;
     bool  performContextClick(float x, float y);

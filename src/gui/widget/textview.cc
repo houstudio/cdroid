@@ -29,6 +29,7 @@
 #include <text/inputfilter.h>
 #include <text/inputtype.h>
 #include <text/editable.h>
+#include <text/style/clickablespan.h>
 #include <text/method/passwordtransformationmethod.h>
 #include <text/method/allcapstransformationmethod.h>
 #include <text/method/keylistener.h>
@@ -454,7 +455,6 @@ void TextView::initView(){
     mAutoLinkMask = 0;
     mLinksClickable = true;
     mCursorVisible = true;
-    mShowSoftInputOnFocus = true;
     mSelectionStart = -1;
     mSelectionEnd = -1;
     mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
@@ -2260,7 +2260,7 @@ void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocus
     // triggers here). On focus gain, show the keyboard for editable editors; on
     // loss, hide it. getInstance() ensures the IMM singleton exists.
     InputMethodManager& imm = InputMethodManager::getInstance();
-    if (focused && isTextEditable() && mShowSoftInputOnFocus) {
+    if (focused && isTextEditable() && mEditor->mShowSoftInputOnFocus) {
         imm.setInputType(getInputType());
         imm.showSoftInput(this, 0);
     } else if (!focused && imm.isActive(this)) {
@@ -3399,7 +3399,7 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
                 // (the meaningful condition) and push the editor's input type so the
                 // correct keyboard layout is shown.
                 if (mMovement != nullptr && isTextEditable() && mLayout != nullptr
-                        && mShowSoftInputOnFocus) {
+                        && onCheckIsTextEditor()){
                     InputMethodManager* imm = getInputMethodManager();
                     viewClicked(imm);
                     if (imm != nullptr) {
@@ -3428,6 +3428,10 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
     }
 
     return View::onKeyUp(keyCode, event);
+}
+
+bool TextView::onCheckIsTextEditor() const{
+    return mEditor != nullptr && mEditor->mInputType != InputType::TYPE_NULL;
 }
 
 // Ported from Android TextView.onKeyDown (TextView.java:9635).
@@ -3543,7 +3547,6 @@ bool TextView::isFromPrimePointer(MotionEvent& event, bool fromHandleView) {
 
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
-    const bool superResult = View::onTouchEvent(event);
     mLastInputSource = event.getSource();
     if (mEditor) {
         if(!isFromPrimePointer(event, false)){
@@ -3559,21 +3562,54 @@ bool TextView::onTouchEvent(MotionEvent& event){
             return true;
         }*/
     }
-
-    bool handled = false;
+    const bool superResult = View::onTouchEvent(event);
+    /*
+     * Don't handle the release after a long press, because it will move the selection away from
+     * whatever the menu action was trying to affect. If the long press should have triggered an
+     * insertion action mode, we can now actually show it.
+     */
+    /*if (mEditor != nullptr && mEditor->mDiscardNextActionUp && action == MotionEvent::ACTION_UP) {
+        mEditor->mDiscardNextActionUp = false;
+        if (mEditor->mIsInsertionActionModeStartPending) {
+            mEditor->startInsertionActionMode();
+            mEditor->mIsInsertionActionModeStartPending = false;
+        }
+        return superResult;
+    }*/
+        
     const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
            && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
-    if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
-        // The IME is shown on focus gain (onFocusChanged), NOT on every touch-up.
-        // Repeatedly tapping the same already-focused editor — e.g. after
-        // dismissing the keyboard — is just cursor positioning and must not pop
-        // the keyboard again. Keep viewClicked so the IMM still tracks the target.
-        InputMethodManager* imm = InputMethodManager::peekInstance();
-        viewClicked(imm);
-        mEditor->onTouchUpEvent(event);
-        handled = true;
+    if((mMovement!=nullptr||onCheckIsTextEditor()) && isEnabled() && dynamic_cast<Spannable*>(mText) &&mLayout!=nullptr){
+        bool handled = false;
+        if(mMovement!=nullptr){
+            handled |= mMovement->onTouchEvent(*this, *mSpannable, event);
+        }
+        bool textIsSelectable = isTextSelectable();
+        if (touchIsFinished && mLinksClickable && mAutoLinkMask != 0 && textIsSelectable) {
+            // The LinkMovementMethod which should handle taps on links has not been installed
+            // on non editable text that support text selection.
+            // We reproduce its behavior here to open links for these.
+            auto links = mSpannable->getSpans(getSelectionStart(),
+                getSelectionEnd(), make_span_filter<ClickableSpan>());
+
+            if (links.size() > 0) {
+                dynamic_cast<const ClickableSpan*>(links[0])->onClick(*this);
+                handled = true;
+            }
+        }
+
+       if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
+            // The IME is shown on focus gain (onFocusChanged), NOT on every touch-up.
+            // Repeatedly tapping the same already-focused editor — e.g. after
+            // dismissing the keyboard — is just cursor positioning and must not pop
+            // the keyboard again. Keep viewClicked so the IMM still tracks the target.
+            InputMethodManager* imm = InputMethodManager::peekInstance();
+            viewClicked(imm);
+            mEditor->onTouchUpEvent(event);
+            handled = true;
+        }
+        if (handled) return true;
     }
-    if (handled) return true;
     return superResult;
 }
 
@@ -3763,7 +3799,20 @@ void TextView::setTextIsSelectable(bool selectable) {
 }
 
 bool TextView::isTextEditable()const {
-    return getEditableText() != nullptr;
+    return  dynamic_cast<Editable*>(mText) && onCheckIsTextEditor() && isEnabled();
+}
+
+bool TextView::isTextAutofillable() const{
+    return dynamic_cast<Editable*>(mText) && onCheckIsTextEditor();
+}
+
+bool TextView::didTouchFocusSelect() const{
+    return mEditor != nullptr && mEditor->mTouchFocusSelected;
+}
+
+void TextView::cancelLongPress() {
+    View::cancelLongPress();
+    if (mEditor != nullptr) mEditor->mIgnoreActionUpEvent = true;
 }
 
 void TextView::updateTextColors(){
@@ -4615,11 +4664,12 @@ bool TextView::isCursorVisible()const {
 }
 
 void TextView::setShowSoftInputOnFocus(bool show) {
-    mShowSoftInputOnFocus = show;
+    createEditorIfNeeded();
+    mEditor->mShowSoftInputOnFocus = show;
 }
 
 bool TextView::getShowSoftInputOnFocus()const {
-    return mShowSoftInputOnFocus;
+    return mEditor==nullptr||mEditor->mShowSoftInputOnFocus;
 }
 
 void TextView::setSelectAllOnFocus(bool selectAllOnFocus) {

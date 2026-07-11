@@ -121,7 +121,6 @@ private:
     bool mLinksClickable;
     bool mCursorVisible;
     bool mListenerChanged;
-    bool mShowSoftInputOnFocus = true;
     bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
     bool mIsPrimePointerFromHandleView=false;
     // This is used to reflect the current user preference for changing font weight and making text
@@ -367,6 +366,9 @@ public:
     void setTextIsSelectable(bool selectable);
     bool isTextSelectable()const;
     bool isTextEditable()const;
+    bool isTextAutofillable() const;
+    bool didTouchFocusSelect() const;
+    void cancelLongPress()override;
     void beginBatchEdit();
     void endBatchEdit();
     void setAllCaps(bool allCaps);
@@ -534,6 +536,7 @@ public:
     bool onTouchEvent(MotionEvent& event)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;
+    bool onCheckIsTextEditor() const;
     virtual void onCommitCompletion(CompletionInfo* completion);
     bool useDynamicLayout() const;
     void nullLayouts();

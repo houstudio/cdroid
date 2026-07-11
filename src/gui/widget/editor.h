@@ -78,7 +78,7 @@ private:
     bool mSelectAllOnFocus= false;
     bool mInsertionControllerEnabled = false;
     bool mSelectionControllerEnabled = false;
-
+    bool mShowSoftInputOnFocus = true;
     int64_t mShowCursor = 0;
     Rect mTempRect;
     int  mBatchEditNesting = 0;
