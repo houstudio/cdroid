@@ -20,8 +20,8 @@
 
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
     android:keyWidth="10%p"
-    android:horizontalGap="0px"
-    android:verticalGap="0px"
+    android:horizontalGap=".3%p"
+    android:verticalGap="5%p"
     android:keyHeight="21%p">
 
     <Row>
