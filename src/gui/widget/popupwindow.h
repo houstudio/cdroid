@@ -33,7 +33,7 @@ private:
     private:
         PopupWindow*mPop;
     public:
-        PopupDecorView(int w,int h);
+        PopupDecorView(int w,int h,int type);
         bool dispatchKeyEvent(KeyEvent& event)override;
         bool dispatchTouchEvent(MotionEvent& ev)override;
         bool onTouchEvent(MotionEvent& event)override;

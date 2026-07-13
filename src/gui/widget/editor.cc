@@ -119,6 +119,16 @@ Editor::Editor(TextView* textView) : mTextView(textView) {
     };
 }
 
+void Editor::setTransformationMethod(TransformationMethod* method) {
+    // AOSP Editor.setTransformationMethod also has an mInsertModeController
+    // branch (handwriting "insert mode"). That whole feature is out of scope for
+    // CDROID -- it rides on the @hide AI handwriting stack + ReplacementSpan
+    // drawing, and we've decided not to pursue it -- so we always take the
+    // equivalent of AOSP's "no controller" path: forward straight to the host's
+    // setTransformationMethodInternal.
+    mTextView->setTransformationMethodInternal(method, /*updateText*/ true);
+}
+
 Editor::~Editor() {
     if (mTextView) mTextView->removeCallbacks(mBlink);
     // SpanController is owned by Editor but attached to the editable buffer as a

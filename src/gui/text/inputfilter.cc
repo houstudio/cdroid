@@ -4,13 +4,13 @@
 
 namespace cdroid {
 
-InputFilter_LengthFilter::InputFilter_LengthFilter(int max)
+InputFilter::LengthFilter::LengthFilter(int max)
     : mMax(max) {
 }
 
 // android.text.InputFilter.LengthFilter#filter, ported verbatim. Returning a non-null
 // empty CharSequence *rejects* the edit; nullptr means keep the original replacement.
-CharSequence* InputFilter_LengthFilter::filter(CharSequence* source, int start, int end,
+CharSequence* InputFilter::LengthFilter::filter(CharSequence* source, int start, int end,
         Spanned* dest, int dstart, int dend) {
     int keep = mMax - ((int)dest->length() - (dend - dstart));
     if (keep <= 0) {
@@ -30,17 +30,17 @@ CharSequence* InputFilter_LengthFilter::filter(CharSequence* source, int start, 
     }
 }
 
-int InputFilter_LengthFilter::getMax() const {
+int InputFilter::LengthFilter::getMax() const {
     return mMax;
 }
 
-InputFilter_AllCaps::InputFilter_AllCaps() {
+InputFilter::AllCaps::AllCaps() {
 }
 
 // android.text.InputFilter.AllCaps#filter. CDROID has no CharSequenceWrapper, so the
 // [start,end) view is obtained via subSequence (owned, deleted below). Spans are copied
 // into the result by TextUtils::toUpperCase when the source is a Spanned.
-CharSequence* InputFilter_AllCaps::filter(CharSequence* source, int start, int end,
+CharSequence* InputFilter::AllCaps::filter(CharSequence* source, int start, int end,
         Spanned* /*dest*/, int /*dstart*/, int /*dend*/) {
     CharSequence* slice = source->subSequence(start, end);
     if (slice == nullptr) return nullptr; // keep original

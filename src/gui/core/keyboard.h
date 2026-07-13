@@ -77,6 +77,7 @@ private:
     friend Row;
     friend Key;
 private:
+    Keyboard();/*no-XML base ctor, for createMiniKeyboard*/
     void computeNearestNeighbors();
     void skipToEndOfRow(XmlPullParser& parser);
     void parseKeyboardAttributes(XmlPullParser& parser,const AttributeSet&atts);
@@ -90,6 +91,16 @@ protected:
 public:
     Keyboard(Context* context,const std::string&resid,int w,int h,int modeId=0);
     Keyboard(Context* context,const std::string& xmlLayoutResId, int modeId=0);
+    /* AOSP Keyboard(Context, layoutTemplateResId, characters, columns,
+     * horizontalPadding): build a mini-keyboard (the long-press accent popup)
+     * from a popupCharacters string, sizing keys from the template. */
+    Keyboard(Context* context,const std::string& layoutTemplateResId,const std::string& characters,int columns,int horizontalPadding);
+    /* Build a one-row mini-keyboard (the long-press accent popup) from a
+     * popupCharacters string, each key sized keyWidth x keyHeight. CDROID's
+     * main keyboard is created with non-display dims and resized, so the
+     * AOSP template ctor (which sizes via display metrics) won't match it;
+     * passing the pressed key's own width/height gives an exact match. */
+    static Keyboard* createMiniKeyboard(Context* context,const std::string& characters,int keyWidth,int keyHeight,int columns);
     ~Keyboard();
     void resize(int w,int h);
     std::vector<Key*>& getKeys();
@@ -138,6 +149,11 @@ public:
     Drawable* iconPreview;
     std::string action;
     std::string popupResId;
+    /* Accent/alt characters offered on a long-press popup mini-keyboard
+     * (AOSP android:popupCharacters), e.g. a key labeled 'a' may have
+     * "àáâäãåæ". Empty for keys with no popup. Consumed by KeyboardView's
+     * onLongPress to build the mini-keyboard. */
+    std::string popupCharacters;
     Key(Row*parent=nullptr);
     Key(Row*parent,int x,int y,XmlPullParser&,const AttributeSet&);
     void onPressed();
@@ -163,6 +179,7 @@ public:
    std::vector<Key*>mKeys;
 public:
    Row(Context*ctx,Keyboard*parent,XmlPullParser&parser,const AttributeSet&attrs);
+   Row(Keyboard*parent);/*programmatic ctor (mini-keyboard)*/
 };
 
 }//namespace

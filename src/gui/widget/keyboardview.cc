@@ -1,9 +1,14 @@
 #include <widget/keyboardview.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
+#include <widget/popupwindow.h>
+#include <widget/R.h>
+#include <view/layoutinflater.h>
+#include <view/gravity.h>
 #include <fstream>
 #include <cstring>
 #include <climits>
+#include <functional>
 #include <float.h>
 #if (__cplusplus >= 201703L)&&__has_include(<execution>)
 #include <execution>
@@ -30,6 +35,7 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
     mKeyTextSize       = atts.getDimensionPixelOffset("keyTextSize",20);
     mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
     mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",20);
+    mPopupLayout       = atts.getString("popupLayout");
     resetMultiTap();
 }
 
@@ -58,11 +64,35 @@ void KeyboardView::init(){
     mDistances.resize(MAX_NEARBY_KEYS);
     mKeyIndices.resize(MAX_NEARBY_KEYS);
     std::memset(&mKeyboardActionListener,0,sizeof(mKeyboardActionListener));
+    mPopupLayout.clear();
+    /* AOSP schedules the long-press popup via a Handler; CDROID's Handler is
+     * now usable, so wire it faithfully (replaces the early Runnable workaround
+     * and the commented-out scheduling). */
+    if(!mHandler){
+        mHandler = new Handler([this](Message& msg)->bool{
+            if(msg.what == MSG_LONGPRESS){
+                /* Only fire while the finger is still down; otherwise a stale
+                 * delayed message (if removeMessages is unreliable) would pop up
+                 * after release and freeze input behind mMiniKeyboardOnScreen. */
+                if(mInLongPress){ openPopupIfRequired(); }
+                return true;
+            }
+            return false;
+        });
+    }
+    if(!mPopupKeyboard){
+        mPopupKeyboard = new PopupWindow(0,0);
+        mPopupKeyboard->setBackgroundDrawable(nullptr);
+    }
 }
 
 KeyboardView::~KeyboardView(){
     delete mKeyBackground;
     delete mKeyboard;
+    delete mHandler;
+    for(auto& kv : mMiniKeyboardCache) delete kv.second;
+    mMiniKeyboardCache.clear();
+    delete mPopupKeyboard;
 }
 
 void KeyboardView::setOnKeyboardActionListener(const OnKeyboardActionListener& listener){
@@ -206,7 +236,6 @@ void KeyboardView::onDraw(Canvas& canvas) {
     int kbdPaddingLeft = mPaddingLeft;
     int kbdPaddingTop = mPaddingTop;
     Keyboard::Key* invalidKey = mInvalidatedKey;
-    LOGD("%d keys size=%dx%d",mKeys.size(),getWidth(),getHeight());
     canvas.set_color(mKeyTextColor);
     bool drawSingleKey = false;
     double cx1,cy1,cx2,cy2;
@@ -286,8 +315,8 @@ void KeyboardView::invalidateKey(int keyIndex) {
     invalidate(key->x + mPaddingLeft, key->y + mPaddingTop,key->width, key->height);
 }
 
-bool KeyboardView::openPopupIfRequired(MotionEvent& me){
-    if ((mPopupLayout == 0)||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
+bool KeyboardView::openPopupIfRequired(){
+    if ((mPopupLayout.empty())||(mCurrentKey < 0) || (mCurrentKey >= mKeys.size())) {
         return false;
     }
     Keyboard::Key* popupKey = mKeys[mCurrentKey];
@@ -404,8 +433,83 @@ void KeyboardView::showPreview(int){
 void KeyboardView::showKey(int keyIndex){
 }
 
+/* AOSP KeyboardView.onLongPress: inflate the popup container (mPopupLayout),
+ * build a mini-keyboard from the key's popupCharacters (sized by the key's
+ * popupResId template), host it in mPopupKeyboard (a PopupWindow) above the
+ * key, and forward the mini-keyboard's key events to our own listener. */
 bool KeyboardView::onLongPress(Keyboard::Key* popupKey){
-    return false;
+    if(popupKey->popupResId.empty()) return false; // AOSP: popupResId != 0
+
+    auto cached = mMiniKeyboardCache.find(popupKey);
+    if(cached != mMiniKeyboardCache.end()){
+        mMiniKeyboardContainer = cached->second;
+    } else {
+        mMiniKeyboardContainer = LayoutInflater::from(getContext())->inflate(mPopupLayout,nullptr);
+        mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
+        View* closeButton = mMiniKeyboardContainer->findViewById(R::id::closeButton);
+        if(closeButton) closeButton->setOnClickListener(std::bind(&KeyboardView::onClick,this,std::placeholders::_1));
+
+        OnKeyboardActionListener listener;
+        listener.onKey = [this](int primaryCode,const std::vector<int>& keyCodes){
+            if(mKeyboardActionListener.onKey) mKeyboardActionListener.onKey(primaryCode,keyCodes);
+            dismissPopupKeyboard();
+        };
+        listener.onText = [this](std::string& text){
+            if(mKeyboardActionListener.onText) mKeyboardActionListener.onText(text);
+            dismissPopupKeyboard();
+        };
+        listener.onPress = [this](int primaryCode){
+            if(mKeyboardActionListener.onPress) mKeyboardActionListener.onPress(primaryCode);
+        };
+        listener.onRelease = [this](int primaryCode){
+            if(mKeyboardActionListener.onRelease) mKeyboardActionListener.onRelease(primaryCode);
+        };
+        mMiniKeyboard->setOnKeyboardActionListener(listener);
+
+        /* Size the mini keys to match the main keyboard's actual geometry
+         * (CDROID resizes the main keyboard, so the AOSP template ctor's
+         * display-metric %p would not match). Height = one main row
+         * (KeyboardView height / row count), width = the pressed key's width. */
+        const int numRows = mKeyboard ? mKeyboard->getRows() : 4;
+        const int rowH = (numRows > 0) ? (getHeight() / numRows) : popupKey->height;
+        /* Wrap accents into a compact 3-column grid so 5-7 accents form 2-3
+         * short rows (less finger travel) instead of one wide strip. */
+        Keyboard* keyboard = Keyboard::createMiniKeyboard(
+                getContext(), popupKey->popupCharacters, popupKey->width, rowH, 3);
+        mMiniKeyboard->setKeyboard(keyboard);
+        mMiniKeyboard->setPopupParent(this);
+        mMiniKeyboardContainer->measure(
+                View::MeasureSpec::makeMeasureSpec(getWidth(), View::MeasureSpec::AT_MOST),
+                View::MeasureSpec::makeMeasureSpec(getHeight(), View::MeasureSpec::AT_MOST));
+        mMiniKeyboardCache[popupKey] = mMiniKeyboardContainer;
+    }
+
+    mMiniKeyboard = (KeyboardView*)mMiniKeyboardContainer->findViewById(R::id::keyboardview);
+    int coords[2] = {0,0};
+    getLocationInWindow(coords);
+    /* Center the popup on the long-pressed key, so the finger -- already on the
+     * key -- stays at the popup's middle and selecting an accent needs minimal
+     * movement. (AOSP right-aligns the popup above the key; centering is the
+     * more thumb-friendly layout.) */
+    const int cw = mMiniKeyboardContainer->getMeasuredWidth();
+    const int ch = mMiniKeyboardContainer->getMeasuredHeight();
+    int x = popupKey->x + getPaddingLeft() + (popupKey->width  - cw) / 2 + coords[0];
+    int y = popupKey->y + getPaddingTop()  + (popupKey->height - ch) / 2 + coords[1];
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    mMiniKeyboard->setPopupOffset(x, y);
+    mMiniKeyboard->setShifted(isShifted());
+    mPopupKeyboard->setContentView(mMiniKeyboardContainer);
+    mPopupKeyboard->setWidth(mMiniKeyboardContainer->getMeasuredWidth());
+    mPopupKeyboard->setHeight(mMiniKeyboardContainer->getMeasuredHeight());
+    /* Raise the popup above the IMEWindow (TYPE_SYSTEM_WINDOW=2000). The
+     * PopupDecorView defaults to TYPE_APPLICATION(2), so without this the
+     * keyboard composites over the popup and hides it. */
+    mPopupKeyboard->setWindowLayoutType(Window::TYPE_SYSTEM_ALERT);
+    mPopupKeyboard->showAtLocation(this, Gravity::NO_GRAVITY, x, y);
+    mMiniKeyboardOnScreen = true;
+    invalidateAllKeys();
+    return true;
 }
 
 bool KeyboardView::onHoverEvent(MotionEvent& event){
@@ -480,6 +584,11 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
     // Needs to be called after the gesture detector gets a turn, as it may have
     // displayed the mini keyboard
     if (mMiniKeyboardOnScreen && action != MotionEvent::ACTION_CANCEL) {
+        // AOSP blocks the main keyboard while the popup mini-keyboard is up.
+        // Also dismiss on a fresh DOWN, so a popup that can't be interacted
+        // with (drawn off-screen, or PopupWindow not dispatching touches) never
+        // permanently blocks input behind mMiniKeyboardOnScreen.
+        if (action == MotionEvent::ACTION_DOWN) dismissPopupKeyboard();
         return true;
     }
     bool continueLongPress=false;
@@ -512,8 +621,9 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             }
         }
         if (mCurrentKey != NOT_A_KEY) {
-            //Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
-            //mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
+            mInLongPress = true; // armed while the finger stays down on this key
+            Message msg = mHandler->obtainMessage(MSG_LONGPRESS);
+            mHandler->sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
         }
         showPreview(keyIndex);
         break;
@@ -538,21 +648,24 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
                 }
             }
         }
-        /*if (!continueLongPress) {
-            // Cancel old longpress
-            mHandler.removeMessages(MSG_LONGPRESS);
-            // Start new longpress if key has changed
-            if (keyIndex != NOT_A_KEY) {
-                Message msg = mHandler.obtainMessage(MSG_LONGPRESS, me);
-                mHandler.sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
+        if (!continueLongPress) {
+            // Finger moved to a different key: drop the old long-press and
+            // re-arm for the new one (mInLongPress gates the callback, so a
+            // flaky removeMessages can't fire a stale popup).
+            mHandler->removeMessages(MSG_LONGPRESS);
+            mInLongPress = (keyIndex != NOT_A_KEY);
+            if (mInLongPress) {
+                Message msg = mHandler->obtainMessage(MSG_LONGPRESS);
+                mHandler->sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
             }
-        }*/
+        }
         showPreview(mCurrentKey);
         mLastMoveTime = eventTime;
         break;
 
     case MotionEvent::ACTION_UP:
-        //removeMessages();
+        mInLongPress = false;
+        mHandler->removeMessages(MSG_LONGPRESS);
         if (keyIndex == mCurrentKey) {
             mCurrentKeyTime += eventTime - mLastMoveTime;
         } else {
@@ -634,11 +747,11 @@ void KeyboardView::onDetachedFromWindow(){
 }
 
 void KeyboardView::dismissPopupKeyboard(){
-    /*if (mPopupKeyboard.isShowing()) {
-         mPopupKeyboard.dismiss();
+    if(mPopupKeyboard && mPopupKeyboard->isShowing()){
+         mPopupKeyboard->dismiss();
          mMiniKeyboardOnScreen = false;
          invalidateAllKeys();
-    }*/
+    }
 }
 
 

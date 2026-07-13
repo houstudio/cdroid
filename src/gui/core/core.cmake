@@ -25,12 +25,15 @@ SET(CORE_SOURCES
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc
+    core/englishinputmethod.cc
     core/graphdevice.cc
+    core/googlepinyin.cc
     core/handler.cc
     core/inputdevice.cc
     #core/virtualinputdevice.cc
     core/inputeventsource.cc
     core/inputmethod.cc
+    core/imeselectioncontroller.cc
     core/inputmethodmanager.cc
     core/insets.cc
     core/intent.cc

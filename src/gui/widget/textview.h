@@ -28,6 +28,7 @@
 #include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
 #include <text/editable.h>
+#include <text/inputfilter.h>
 #include <text/method/transformationmethod.h>
 #include <text/method/keylistener.h>
 
@@ -74,7 +75,7 @@ private:
     static constexpr int PIXELS = 2;
     static constexpr int SIGNED = 2;
     static constexpr int DECIMAL = 4;
-
+    static constexpr int MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT = 5000;
     static constexpr int MARQUEE_FADE_NORMAL=0;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS =1;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_FADE =2;
@@ -122,7 +123,6 @@ private:
     bool mLinksClickable;
     bool mCursorVisible;
     bool mListenerChanged;
-    bool mTextIsSelectable = false;   // Android: TextView field (was misplaced on Editor)
     bool mIsPrimePointerFromHandleView=false;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
@@ -130,8 +130,6 @@ private:
     int mPrimePointerId=NO_POINTER_ID;
     int mFontWeightAdjustment;
     int mAutoLinkMask;
-    int mSelectionStart;
-    int mSelectionEnd;
     int mGesturePreviewHighlightStart=-1;
     int mGesturePreviewHighlightEnd=-1;
     int mLineBreakStyle;
@@ -152,10 +150,9 @@ private:
     std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
     std::vector<InputFilter*> mFilters;
-    InputFilter* mMaxLengthFilter = nullptr; // owned LengthFilter for android:maxLength (Android: ctor-created)
-
-    Drawables*mDrawables;
-    Marquee*mMarquee;
+    InputFilter::LengthFilter* mSingleLineLengthFilter = nullptr;
+    Drawables* mDrawables;
+    Marquee* mMarquee;
     CharWrapper* mCharWrapper;
     mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
@@ -163,7 +160,7 @@ private:
     // Android: mPreventDefaultMovement — once the movement method consumes an
     // initial key down, swallow subsequent focus-traversal defaults until key up.
     bool mPreventDefaultMovement = false;
-    bool mImeIsConsumingInput;
+    bool mImeIsConsumingInput = false;
     bool mCursorVisibleFromAttr = true;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
@@ -247,7 +244,7 @@ private:
     void updateCursorVisibleInternal();
     float getHorizontalFadingEdgeStrength(float position1, float position2);
     void setInputTypeSingleLine(bool singleLine);
-    void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
+    void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines,bool changeMaxLength);
     void restartMarqueeIfNeeded();
     void invalidateCursor(int a, int b, int c);
     void setRawTextSize(float size, bool shouldRequestLayout);
@@ -261,8 +258,6 @@ private:
     void spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
     void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
-    int mMaxLength;
-    bool mBlinkOn;
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
@@ -297,8 +292,9 @@ protected:
     void updateAfterEdit();
     CharSequence* removeSuggestionSpans(CharSequence* text);
     void handleTextChanged(CharSequence& buffer, int start, int before, int after);
-    void onAttachedToWindow();
+    void onAttachedToWindow()override;
     void onDetachedFromWindowInternal()override;
+    std::vector<int> onCreateDrawableState(int)override;
     bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
     // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
@@ -314,6 +310,7 @@ protected:
     int viewportToContentVerticalOffset();
     float getLeftFadingEdgeStrength()override;
     float getRightFadingEdgeStrength()override;
+    void setTransformationMethodInternal(TransformationMethod*method,bool updateText);
     Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
         Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
@@ -379,8 +376,8 @@ public:
     void setShowSoftInputOnFocus(bool show);
     bool getShowSoftInputOnFocus()const;
     void setSelectAllOnFocus(bool selectAll);
-    void setTextIsSelectable(bool selectable);
     bool isTextSelectable()const;
+    void setTextIsSelectable(bool selectable);
     bool isTextEditable()const;
     bool isTextAutofillable() const;
     bool didTouchFocusSelect() const;
@@ -429,6 +426,8 @@ public:
     bool isFallbackLineSpacing()const;
     float getLetterSpacing() const;
     void setLetterSpacing(float letterSpacing);
+    void setFontFeatureSettings(const std::string& fontFeatureSettings);
+    std::string getFontFeatureSettings() const;
     void setJustificationMode(int justificationMode);
     int getJustificationMode() const;
     void setUseBoundsForWidth(bool useBoundsForWidth);

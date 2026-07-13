@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Long-press popup container (AOSP keyboard_popup_keyboard.xml, faithfully
+  ported). Inflated by KeyboardView.onLongPress (mPopupLayout / android:popupLayout)
+  to host the mini KeyboardView (id=keyboardview) plus a close button (id=closeButton).
+  AOSP references framework drawables (keyboard_popup_panel_background, btn_close)
+  that CDROID has no equivalent of, so those are substituted with plain colors
+  while keeping the structure/attributes intact.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:background="#FF112233">
+
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboardview"
+        android:background="#00000000"
+        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:keyBackground="#332211"
+        android:keyTextColor="#FFFFFFFF"
+        android:popupLayout="@cdroid:layout/keyboard_popup_keyboard"
+        android:keyTextSize="22sp"/>
+
+    <ImageButton
+        android:id="@+id/closeButton"
+        android:background="#00000000"
+        android:src="@cdroid:mipmap/sym_keyboard_delete"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="8dp"
+        android:clickable="true"/>
+</LinearLayout>

@@ -185,6 +185,7 @@ int main(int argc,const char*argv[]){
         tv->setId(i);
         tv->setTextColor(0xFFFFFFFF);
         tv->setSingleLine(ts->singleline);
+        tv->setAllCaps(i==0);
         tv->setEllipsize(static_cast<TextUtils::TruncateAt>(ts->ellipsis));
         tv->setTextAlignment(ts->txtalignment);
         tv->setGravity(ts->gravity);

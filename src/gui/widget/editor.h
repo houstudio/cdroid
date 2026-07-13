@@ -32,6 +32,7 @@ class Drawable;
 class KeyEvent;
 class MotionEvent;
 class Canvas;
+class TransformationMethod;
 /**
  * Helper class used by TextView to handle editable text views.
  *
@@ -76,6 +77,7 @@ private:
     bool mTouchFocusSelected = false;
     bool mSelectionMoved = false;
     bool mSelectAllOnFocus= false;
+    bool mTextIsSelectable= false;
     bool mInsertionControllerEnabled = false;
     bool mSelectionControllerEnabled = false;
     bool mShowSoftInputOnFocus = true;
@@ -109,6 +111,12 @@ public:
     ~Editor();
 
     void replace();
+    /* Mirror of AOSP Editor.setTransformationMethod: forward to the host
+     * TextView's setTransformationMethodInternal so an EditText (which owns an
+     * Editor) actually applies the transformation. AOSP also has an
+     * mInsertModeController branch (handwriting insert mode) -- out of scope for
+     * CDROID, so this is the simplified "no controller" path. */
+    void setTransformationMethod(TransformationMethod* method);
     void onAttachedToWindow();
     void onDetachedFromWindow();
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect);

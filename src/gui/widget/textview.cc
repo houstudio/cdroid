@@ -32,6 +32,7 @@
 #include <text/style/clickablespan.h>
 #include <text/method/passwordtransformationmethod.h>
 #include <text/method/allcapstransformationmethod.h>
+#include <text/method/singlelinetransformationmethod.h>
 #include <text/method/keylistener.h>
 #include <text/method/textkeylistener.h>
 #include <text/method/dialerkeylistener.h>
@@ -65,6 +66,7 @@ public:
     int mFontWeight = -1;
     int mShadowColor = 0;
     float mLetterSpacing = 0;
+    std::string mFontFeatureSettings;
     float mShadowDx = 0, mShadowDy = 0, mShadowRadius = 0;
     bool mFontFamilyExplicit = false;
     bool mAllCaps = false;
@@ -113,6 +115,7 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mFallbackLineSpacing    = atts.getBoolean("fallbackLineSpacing", false);
     mHasLetterSpacing    = atts.hasAttribute("letterSpacing");
     mLetterSpacing       = atts.getFloat("letterSpacing", 0.f);   // Android: plain float, not a dimension
+    mFontFeatureSettings = atts.getString("fontFeatureSettings", "");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -155,7 +158,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
     setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
-    mMaxLength = attrs.getInt("maxLength",-1);
+    const int maxLength = attrs.getInt("maxLength",-1);
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
@@ -364,9 +367,13 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     // auto LengthFilter (MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT) is DEFERRED (needs the
     // mSingleLineLengthFilter machinery; see applySingleLine). The initial text is filtered
     // on the next edit, not retroactively (Android filters it inside setText — TODO).
-    if (mMaxLength >= 0) {
-        mMaxLengthFilter = new InputFilter_LengthFilter(mMaxLength);
-        setFilters({ mMaxLengthFilter });
+    if ((bufferType==BufferType::EDITABLE)&&singleLine&&maxLength ==-1) {
+        mSingleLineLengthFilter = new InputFilter::LengthFilter(MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
+    }
+    if (mSingleLineLengthFilter != nullptr) {
+        setFilters({ mSingleLineLengthFilter });
+    } else if (maxLength >= 0) {
+         setFilters({ new InputFilter::LengthFilter(maxLength) });
     } else {
         setFilters({}); // NO_FILTERS
     }
@@ -413,8 +420,6 @@ void TextView::initView(){
     mMaxMode = LINES;
     mMinMode = LINES;
     mDeferScroll = -1;
-    mMaxLength= -1;
-    mBlinkOn  = false;
     mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
@@ -455,15 +460,13 @@ void TextView::initView(){
     mAutoLinkMask = 0;
     mLinksClickable = true;
     mCursorVisible = true;
-    mSelectionStart = -1;
-    mSelectionEnd = -1;
     mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
     mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
     mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
     mLineBreakStyle = LineBreakConfig::LINE_BREAK_STYLE_NONE;
     mLineBreakWordStyle = LineBreakConfig::LINE_BREAK_WORD_STYLE_NONE;
     setTextColor(0xFFFFFFFF);
-    setHintTextColor(0xFFFFFFFF);
+    //setHintTextColor(0xFFFFFFFF);
     if(mOnPreDrawListener==nullptr){
         mOnPreDrawListener=[this](){return onPreDraw();};
     }
@@ -478,7 +481,6 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
-    delete mMaxLengthFilter; // owned LengthFilter for android:maxLength (borrowed by mFilters)
     // Layouts reference mText/mHint (DynamicLayout::mBase) and dereference that
     // base in their own destructor (removeSpan on the watcher), so the layouts
     // MUST be destroyed before the text objects they reference — otherwise
@@ -506,6 +508,25 @@ TextView::~TextView() {
     delete mDrawables;
     delete mCursorDrawable;
     delete mEditor;
+    // Free the owned InputFilters. mFilters borrows every installed filter
+    // (SpannableStringBuilder::m_filters never deletes them), and only
+    // LengthFilter entries are TextView-owned (allocated by the ctor / setFilters
+    // callers). Singleton filters are borrowed; the auto single-line LengthFilter
+    // is a member alias freed by the line just below -- skip it here to avoid a
+    // double-free.
+    for (InputFilter* f : mFilters) {
+        if (f == mSingleLineLengthFilter) continue;
+        if (dynamic_cast<InputFilter::LengthFilter*>(f)) delete f;
+    }
+    mFilters.clear();
+    delete mSingleLineLengthFilter;
+    // mTransformation is a NoCopySpan (TransformationMethod : public NoCopySpan),
+    // so mText's Spannable never frees it. Singleton TMs (SingleLine/Password/
+    // HideReturns via getInstance) are global; only AllCaps TM is TextView-owned.
+    if (dynamic_cast<AllCapsTransformationMethod*>(mTransformation)) {
+        delete mTransformation;
+        mTransformation = nullptr;
+    }
     delete mGesturePreviewHighlightPaint;
 }
 
@@ -1005,10 +1026,9 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
     if (attr->mHasLetterSpacing) {
         setLetterSpacing(attr->mLetterSpacing);
     }
-    // fontFeatureSettings deferred: needs Paint->MinikinPaint plumbing (MinikinPaint
-    // already has the field + FontFeatureUtils parses it, but Paint does not yet
-    // store or propagate it). Re-enable together with Paint::setFontFeatureSettings.
-    // if (!attr->mFontFeatureSettings.empty()) setFontFeatureSettings(attr->mFontFeatureSettings);
+    if (!attr->mFontFeatureSettings.empty()){
+        setFontFeatureSettings(attr->mFontFeatureSettings);
+    }
 }
 
 void TextView::addTextChangedListener(const TextWatcher& watcher){
@@ -1348,6 +1368,25 @@ void TextView::setLetterSpacing(float letterSpacing) {
     }
 }
 
+void TextView::setFontFeatureSettings(const std::string& fontFeatureSettings) {
+    // Mirrors AOSP TextView.setFontFeatureSettings: the value lives on mTextPaint
+    // (Paint.mFontFeatureSettings, propagated to MinikinPaint); TextView only
+    // forwards + re-layouts. Same shape as setLetterSpacing.
+    if (fontFeatureSettings != mTextPaint.getFontFeatureSettings()) {
+        mTextPaint.setFontFeatureSettings(fontFeatureSettings);
+
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+std::string TextView::getFontFeatureSettings() const {
+    return mTextPaint.getFontFeatureSettings();
+}
+
 void TextView::setJustificationMode(int justificationMode) {
     mJustificationMode = justificationMode;
     if (mLayout != nullptr) {
@@ -1509,7 +1548,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     }
     /*int n = mFilters.length;
     for (int i = 0; i < n; i++) {
-        CharSequence* out = mFilters[i].filter(text, 0, text.length(), EMPTY_SPANNED, 0, 0);
+        CharSequence* out = mFilters[i]->filter(text, 0, text.length(), EMPTY_SPANNED, 0, 0);
         if (out != nullptr) {
             text = out;
         }
@@ -2251,7 +2290,7 @@ void TextView::updateAfterEdit() {
         registerForPreDraw();
     }
 
-    checkForResize();
+    checkForRelayout();//checkForResize();
 
     if (curs >= 0) {
         mHighlightPathBogus = true;
@@ -2278,7 +2317,7 @@ void TextView::handleTextChanged(CharSequence& buffer, int start, int before, in
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
     View::onLayout(changed, left, top, width, height);
     if (mDeferScroll >= 0) {
-       int curs = mDeferScroll;
+       const int curs = mDeferScroll;
        mDeferScroll = -1;
        bringPointIntoView(std::min(curs, (int)getText().length()));
     }
@@ -2423,9 +2462,11 @@ void TextView::setHorizontallyScrolling(bool whether) {
         }
     }
 }
+
 bool TextView::isHorizontallyScrollable() const{
     return mHorizontallyScrolling;
 }
+
 bool TextView::getHorizontallyScrolling() const{
     return mHorizontallyScrolling;
 }
@@ -3821,22 +3862,60 @@ void TextView::invalidateDrawable(Drawable& drawable){
 }
 
 bool TextView::isTextSelectable()const{
-    return mTextIsSelectable;
+    return mEditor==nullptr?false:mEditor->mTextIsSelectable;
 }
 
 void TextView::setTextIsSelectable(bool selectable) {
-    if (!selectable||mEditor==nullptr) return;
+    if (!selectable && mEditor == nullptr) return; // false is default value with no edit data
+
     createEditorIfNeeded();
-    if (mTextIsSelectable == selectable) return;
-    mTextIsSelectable = selectable;
+    if (mEditor->mTextIsSelectable == selectable) return;
+
+    mEditor->mTextIsSelectable = selectable;
     setFocusableInTouchMode(selectable);
     setFocusable(FOCUSABLE_AUTO);
     setClickable(selectable);
     setLongClickable(selectable);
+
+    // mInputType should already be EditorInfo.TYPE_NULL and mInput should be null
+
     setMovementMethod(selectable ? ArrowKeyMovementMethod::getInstance() : nullptr);
     setText(mText, selectable ? BufferType::SPANNABLE : BufferType::NORMAL);
+
+    // Called by setText above, but safer in case of future code changes
     mEditor->prepareCursorControllers();
 }
+
+std::vector<int> TextView::onCreateDrawableState(int extraSpace) {
+    std::vector<int>drawableState;
+
+    if (mSingleLine) {
+        drawableState = View::onCreateDrawableState(extraSpace);
+    } else {
+        drawableState = View::onCreateDrawableState(extraSpace+1);
+        //mergeDrawableStates(drawableState, MULTILINE_STATE_SET);
+    }
+
+    if (isTextSelectable()) {
+        // Disable pressed state, which was introduced when TextView was made clickable.
+        // Prevents text color change.
+        // setClickable(false) would have a similar effect, but it also disables focus changes
+        // and long press actions, which are both needed by text selection.
+        const int length = drawableState.size();
+        for (int i = 0; i < length; i++) {
+            if (drawableState[i] == StateSet::VIEW_STATE_PRESSED){//R.attr.state_pressed) {
+                std::vector<int> nonPressedState(length - 1);
+                //System.arraycopy(drawableState, 0, nonPressedState, 0, i);
+                //System.arraycopy(drawableState, i + 1, nonPressedState, i, length - i - 1);
+                nonPressedState.insert(nonPressedState.end(), drawableState.begin(), drawableState.begin() + i);
+                nonPressedState.insert(nonPressedState.end(), drawableState.begin() + i + 1, drawableState.end());
+                return nonPressedState;
+            }
+        }
+    }
+    return drawableState;
+}
+
 
 bool TextView::isTextEditable()const {
     return  dynamic_cast<Editable*>(mText) && onCheckIsTextEditor() && isEnabled();
@@ -3873,23 +3952,25 @@ void TextView::setScroller(Scroller* s){
 
 void TextView::updateTextColors(){
     bool inval = false;
-    int color;
     const std::vector<int>&drawableState = getDrawableState();
-    if (mTextColor) {
-        color = mTextColor->getColorForState(drawableState,0);
-        LOGV("%p:%d change color %x->%x",this,mID,mCurTextColor,color);
+    int color = mTextColor->getColorForState(drawableState, 0);;
+    if (color!=mCurTextColor) {
         mCurTextColor = color;
+        LOGV("%p:%d change color %x->%x",this,mID,mCurTextColor,color);
         inval = true;
     }
-    if (mLinkTextColor) {
+    if (mLinkTextColor!=nullptr) {
         color = mLinkTextColor->getColorForState(drawableState,0);
-        inval = true;
+        if(color!=mTextPaint.linkColor){
+            mTextPaint.linkColor = color;
+            inval = true;
+        }
     }
-    if (mHintTextColor) {
+    if (mHintTextColor!=nullptr) {
         color = mHintTextColor->getColorForState(drawableState,0);
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
-            if(mText->length()==0){
+            if((mText!=nullptr)&&(mText->length()==0)){
                 inval = true;
             }
         }
@@ -3932,11 +4013,12 @@ void TextView::setEllipsize(TextUtils::TruncateAt where){
     }
 }
 
-void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines) {
+void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines,bool changeMaxLength) {
+   mSingleLine = singleLine;
+
    if (singleLine) {
        setLines(1);
        setHorizontallyScrolling(true);
-#if 0
        if (applyTransformation) {
            setTransformationMethod(SingleLineTransformationMethod::getInstance());
        }
@@ -3945,32 +4027,33 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
        // Single line length filter is only applicable editable text.
        if (mBufferType != BufferType::EDITABLE) return;
 
-       final InputFilter[] prevFilters = getFilters();
-       for (InputFilter filter: getFilters()) {
+       std::vector<InputFilter*> prevFilters = getFilters();
+       for (InputFilter* filter : prevFilters) {
            // We don't add LengthFilter if already there.
-           if (filter instanceof InputFilter::LengthFilter) return;
+           if (dynamic_cast<InputFilter::LengthFilter*>(filter)) return;
        }
 
        if (mSingleLineLengthFilter == nullptr) {
-           mSingleLineLengthFilter = new InputFilter.LengthFilter(
+           mSingleLineLengthFilter = new InputFilter::LengthFilter(
                MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
        }
 
-       final InputFilter[] newFilters = new InputFilter[prevFilters.length + 1];
-       System.arraycopy(prevFilters, 0, newFilters, 0, prevFilters.length);
-       newFilters[prevFilters.length] = mSingleLineLengthFilter;
-
+       std::vector<InputFilter*> newFilters = prevFilters;
+       newFilters.push_back(mSingleLineLengthFilter);
        setFilters(newFilters);
 
        // Since filter doesn't apply to existing text, trigger filter by setting text.
-        setText(getText());
-#endif
+       // CDROID: setText() does not yet run InputFilters (the filter loop inside
+       // setText is still #if 0), so this only re-runs the setText pipeline for now;
+       // it will re-filter existing text once that loop is ported. setText(mText,...)
+       // is safe — TextView::setText's isKept guard skips freeing an incoming `text`
+       // that aliases mText.
+       setText(mText, mBufferType);
    } else {
        if (changeMaxLines) {
            setMaxLines(INT_MAX);
        }
        setHorizontallyScrolling(false);
-#if 0
        if (applyTransformation) {
            setTransformationMethod(nullptr);
        }
@@ -3980,42 +4063,45 @@ void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool c
        // Single line length filter is only applicable editable text.
        if (mBufferType != BufferType::EDITABLE) return;
 
-       final InputFilter[] prevFilters = getFilters();
-       if (prevFilters.length == 0) return;
+       std::vector<InputFilter*> prevFilters = getFilters();
+       if (prevFilters.empty()) return;
 
-       // Short Circuit: if mSingleLineLengthFilter is not allocated, nobody sets automated
-       // single line char limit filter.
+       // Short circuit: if mSingleLineLengthFilter is not allocated, nobody sets
+       // automated single line char limit filter.
        if (mSingleLineLengthFilter == nullptr) return;
 
-       // If we need to remove mSingleLineLengthFilter, we need to allocate another array.
-       // Since filter list is expected to be small and want to avoid unnecessary array
-       // allocation, check if there is mSingleLengthFilter first.
+       // If we need to remove mSingleLineLengthFilter, we need to build another
+       // vector. Since the filter list is expected to be small and we want to avoid
+       // unnecessary allocation, check if mSingleLineLengthFilter is present first.
        int targetIndex = -1;
-       for (int i = 0; i < prevFilters.length; ++i) {
+       for (size_t i = 0; i < prevFilters.size(); ++i) {
            if (prevFilters[i] == mSingleLineLengthFilter) {
-               targetIndex = i;
+               targetIndex = (int)i;
                break;
            }
        }
-       if (targetIndex == -1) return;  // not found. Do nothing.
+       if (targetIndex == -1) return;  // not found, do nothing
 
-       if (prevFilters.length == 1) {
-           setFilters(NO_FILTERS);
+       if (prevFilters.size() == 1) {
+           setFilters({});
+           delete mSingleLineLengthFilter;
+           mSingleLineLengthFilter = nullptr;
            return;
        }
 
-       // Create new array which doesn't include mSingleLengthFilter.
-       InputFilter[] newFilters = new InputFilter[prevFilters.length - 1];
-       System.arraycopy(prevFilters, 0, newFilters, 0, targetIndex);
-       System.arraycopy(
-               prevFilters,
-               targetIndex + 1,
-               newFilters,
-               targetIndex,
-               prevFilters.length - targetIndex - 1);
+       // Create new vector which doesn't include mSingleLineLengthFilter.
+       std::vector<InputFilter*> newFilters;
+       newFilters.reserve(prevFilters.size() - 1);
+       for (size_t i = 0; i < prevFilters.size(); ++i) {
+           if ((int)i != targetIndex) newFilters.push_back(prevFilters[i]);
+       }
        setFilters(newFilters);
+       // C++ has no GC: AOSP just drops the reference (mSingleLineLengthFilter=null);
+       // we must free it. Safe here because setFilters above already re-installed the
+       // filter list (without this pointer) on the Editable, and ~TextView also
+       // null-guards the delete.
+       delete mSingleLineLengthFilter;
        mSingleLineLengthFilter = nullptr;
-#endif
    }
 }
 
@@ -4060,8 +4146,8 @@ int TextView::getHighlightColor()const{
 }
 
 void TextView::setHintTextColor(int color){
-    mCurHintTextColor = color;
-    //setHintTextColor(ColorStateList::valueOf(color));
+    mHintTextColor = ColorStateList::valueOf(color);
+    updateTextColors();
 }
 
 void TextView::setHintTextColor(const cdroid::RefPtr<ColorStateList>& colors){
@@ -4155,15 +4241,24 @@ int TextView::originalToTransformed(int offset, int strategy)const{
     return offset;
 }
 
-void TextView::setTransformationMethod(TransformationMethod*method){
+void TextView::setTransformationMethod(TransformationMethod* method) {
+    if (mEditor != nullptr) {
+        mEditor->setTransformationMethod(method);
+    } else {
+        setTransformationMethodInternal(method, /* updateText */ true);
+    }
+}
+
+void TextView::setTransformationMethodInternal(TransformationMethod*method,bool updateText){
     if (method == mTransformation) {
         // Avoid the setText() below if the transformation is
         // the same.
         return;
     }
-    if (mTransformation != nullptr) {
+    TransformationMethod* old = mTransformation;
+    if (old != nullptr) {
         if (mSpannable != nullptr) {
-            mSpannable->removeSpan(mTransformation);
+            mSpannable->removeSpan(old);
         }
     }
     mTransformation = method;
@@ -4174,7 +4269,11 @@ void TextView::setTransformationMethod(TransformationMethod*method){
     } else {
         mAllowTransformationLengthChange = false;
     }
-    setText(mText);
+
+    if(updateText){
+        setText(mText);
+    }
+
     if (hasPasswordTransformationMethod()) {
         //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
     }
@@ -4182,7 +4281,17 @@ void TextView::setTransformationMethod(TransformationMethod*method){
     // getTextDirectionHeuristic, needs reset
     mTextDir = getTextDirectionHeuristic();
 
+    // TransformationMethod is a NoCopySpan (transformationmethod.h), so the
+    // Spannable never frees it (disposeSpan no-ops borrowed spans). Singleton
+    // TMs (SingleLine/Password/HideReturns via getInstance) are global; only
+    // AllCapsTransformationMethod is new'd per setAllCaps, so free that one.
+    // After setText() above, which re-applies the new transformation and no
+    // longer references `old`.
+    if (old != nullptr && dynamic_cast<AllCapsTransformationMethod*>(old)) {
+        delete old;
+    }
 }
+
 void TextView::setCompoundDrawablePadding(int pad){
     if (pad == 0) {
        if (mDrawables != nullptr)
@@ -4624,7 +4733,7 @@ void TextView::setInputType(int inputType) {
     if (mSingleLine != singleLine) {
         // Android: applySingleLine(singleLine, !isPassword, true, true). CDROID's
         // overload is 3-arg (no maxLinesSpecified).
-        applySingleLine(singleLine, !isPassword, true);
+        applySingleLine(singleLine, !isPassword, true,false);
     }
 
     if (!isSuggestionsEnabled()) {
@@ -4844,12 +4953,12 @@ void TextView::setAllCaps(bool allCaps) {
 
 bool TextView::isAllCaps() const{
     TransformationMethod* method = getTransformationMethod();
-    return method != nullptr && dynamic_cast<AllCapsTransformationMethod*>(method);
+    return (method != nullptr) && dynamic_cast<AllCapsTransformationMethod*>(method);
 }
 
 void TextView::setSingleLine(bool single){
     mSingleLine = single;
-    applySingleLine(single,true,true);
+    applySingleLine(single,true,true,true);
 }
 
 void TextView::setInputTypeSingleLine(bool singleLine) {
@@ -4956,6 +5065,16 @@ void TextView::setKeyListenerOnly(KeyListener* input) {
 }
 
 void TextView::setFilters(const std::vector<InputFilter*>& filters) {
+    // Free the LengthFilter entries being replaced. The Editable only borrows
+    // mFilters (SpannableStringBuilder::m_filters is never deleted); TextView
+    // owns the LengthFilter instances it new'd (ctor / prior setFilters), so
+    // drop them before overwriting. Singleton filters and the
+    // mSingleLineLengthFilter member alias are skipped (the member is freed in
+    // ~TextView / applySingleLine's else branch).
+    for (InputFilter* f : mFilters) {
+        if (f == mSingleLineLengthFilter) continue;
+        if (dynamic_cast<InputFilter::LengthFilter*>(f)) delete f;
+    }
     mFilters = filters;
 
     Editable* editable = dynamic_cast<Editable*>(mText);
@@ -5153,6 +5272,133 @@ void TextView::restartMarqueeIfNeeded(){
         startMarquee();
     }
 }
+#if 0
+void TextView::maybeUpdateHighlightPaths() {
+    if (!mHighlightPathsBogus) {
+        return;
+    }
+
+    if (mHighlightPaths != nullptr) {
+        mPathRecyclePool.addAll(mHighlightPaths);
+        mHighlightPaths.clear();
+        mHighlightPaints.clear();
+    } else {
+        mHighlightPaths = new ArrayList<>();
+        mHighlightPaints = new ArrayList<>();
+    }
+
+    if (mHighlights != null) {
+        for (int i = 0; i < mHighlights.getSize(); ++i) {
+            final int[] ranges = mHighlights->getRanges(i);
+            final Paint paint = mHighlights->getPaint(i);
+            final Path path;
+            if (mPathRecyclePool.isEmpty()) {
+                path = new Path();
+            } else {
+                path = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+                mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+                path.reset();
+            }
+
+            boolean atLeastOnePathAdded = false;
+            for (int j = 0; j < ranges.length / 2; ++j) {
+                final int start = ranges[2 * j];
+                final int end = ranges[2 * j + 1];
+                if (start < end) {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            path.addRect(left, top, right, bottom, Path.Direction.CW)
+                    );
+                    atLeastOnePathAdded = true;
+                }
+            }
+            if (atLeastOnePathAdded) {
+                mHighlightPaths.add(path);
+                mHighlightPaints.add(paint);
+            }
+        }
+    }
+
+    addSearchHighlightPaths();
+
+    if (hasGesturePreviewHighlight()) {
+        final Path path;
+        if (mPathRecyclePool.isEmpty()) {
+            path = new Path();
+        } else {
+            path = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            path.reset();
+        }
+        mLayout.getSelectionPath(
+                mGesturePreviewHighlightStart, mGesturePreviewHighlightEnd, path);
+        mHighlightPaths.add(path);
+        mHighlightPaints.add(mGesturePreviewHighlightPaint);
+    }
+
+    mHighlightPathsBogus = false;
+}
+
+void TextView::addSearchHighlightPaths() {
+    if (mSearchResultHighlights != nullptr) {
+        final Path searchResultPath;
+        if (mPathRecyclePool.isEmpty()) {
+            searchResultPath = new Path();
+        } else {
+            searchResultPath = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            searchResultPath.reset();
+        }
+        final Path focusedSearchResultPath;
+        if (mFocusedSearchResultIndex == FOCUSED_SEARCH_RESULT_INDEX_NONE) {
+            focusedSearchResultPath = null;
+        } else if (mPathRecyclePool.isEmpty()) {
+            focusedSearchResultPath = new Path();
+        } else {
+            focusedSearchResultPath = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            focusedSearchResultPath.reset();
+        }
+
+        boolean atLeastOnePathAdded = false;
+        for (int j = 0; j < mSearchResultHighlights.length / 2; ++j) {
+            final int start = mSearchResultHighlights[2 * j];
+            final int end = mSearchResultHighlights[2 * j + 1];
+            if (start < end) {
+                if (j == mFocusedSearchResultIndex) {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            focusedSearchResultPath.addRect(left, top, right, bottom,
+                                    Path.Direction.CW)
+                    );
+                } else {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            searchResultPath.addRect(left, top, right, bottom,
+                                    Path.Direction.CW)
+                    );
+                    atLeastOnePathAdded = true;
+                }
+            }
+        }
+        if (atLeastOnePathAdded) {
+            if (mSearchResultHighlightPaint == null) {
+                mSearchResultHighlightPaint = new Paint();
+            }
+            mSearchResultHighlightPaint.setColor(mSearchResultHighlightColor);
+            mSearchResultHighlightPaint.setStyle(Paint.Style.FILL);
+            mHighlightPaths.add(searchResultPath);
+            mHighlightPaints.add(mSearchResultHighlightPaint);
+        }
+        if (focusedSearchResultPath != null) {
+            if (mFocusedSearchResultHighlightPaint == null) {
+                mFocusedSearchResultHighlightPaint = new Paint();
+            }
+            mFocusedSearchResultHighlightPaint.setColor(mFocusedSearchResultHighlightColor);
+            mFocusedSearchResultHighlightPaint.setStyle(Paint.Style.FILL);
+            mHighlightPaths.add(focusedSearchResultPath);
+            mHighlightPaints.add(mFocusedSearchResultHighlightPaint);
+        }
+    }
+}
+#endif
 
 Cairo::RefPtr<cdroid::Path> TextView::getUpdatedHighlightPath() {
     Cairo::RefPtr<Path> highlight;

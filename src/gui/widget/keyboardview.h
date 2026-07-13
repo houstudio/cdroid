@@ -3,9 +3,13 @@
 
 #include <widget/edittext.h>
 #include <vector>
+#include <map>
 #include <core/keyboard.h>
+#include <core/handler.h>
 
 namespace cdroid{
+
+class PopupWindow;
 
 class KeyboardView:public View{
 public:
@@ -60,6 +64,7 @@ private:
     static constexpr int DEBOUNCE_TIME   = 70;
     static constexpr int REPEAT_INTERVAL = 50;
     static constexpr int REPEAT_START_DELAY = 400;
+    static constexpr int LONGPRESS_TIMEOUT  = 400; /* AOSP ViewConfiguration.getLongPressTimeout() */
     static constexpr int MAX_NEARBY_KEYS = 12;
     static constexpr int MULTITAP_INTERVAL =800;
 
@@ -101,6 +106,19 @@ private:
     bool mMiniKeyboardOnScreen;
     int  mMiniKeyboardOffsetX;
     int  mMiniKeyboardOffsetY;
+    /* The popup-keyboard container layout (AOSP android:popupKeyboard). Empty
+     * => no long-press popup. Inflated by onLongPress to host the mini keyboard. */
+    std::string mPopupLayout;
+    /* Drives the delayed long-press (AOSP used a Handler; CDROID's Handler is
+     * now usable, so we use it faithfully instead of the Runnable workaround). */
+    Handler* mHandler = nullptr;
+    /* Long-press mini-keyboard state (AOSP KeyboardView: mPopupKeyboard hosts
+     * the popup, mMiniKeyboardContainer is the inflated popup layout, mMiniKeyboard
+     * is the embedded KeyboardView, mMiniKeyboardCache reuses them per key). */
+    PopupWindow* mPopupKeyboard = nullptr;
+    View* mMiniKeyboardContainer = nullptr;
+    KeyboardView* mMiniKeyboard = nullptr;
+    std::map<Keyboard::Key*, View*> mMiniKeyboardCache;
     std::vector<Keyboard::Key*>mKeys;
     OnKeyboardActionListener mKeyboardActionListener;
     int  mVerticalCorrection;
@@ -135,7 +153,6 @@ private:
     int  mPopupX;
     int  mPopupY;
     int  mRepeatKeyIndex = NOT_A_KEY;
-    int  mPopupLayout;
     bool mAbortKey;
     Keyboard::Key* mInvalidatedKey;
     Rect mClipRegion;
@@ -158,6 +175,10 @@ private:
     int64_t mLastTapTime;
     bool mInMultiTap;
     bool mKeyboardChanged;
+    /* True while a finger is down on a key (DOWN..UP/CANCEL). Gates the
+     * MSG_LONGPRESS callback so a flaky removeMessages() can't fire the popup
+     * after the finger has lifted (which would freeze input behind the popup). */
+    bool mInLongPress = false;
     Rect mDirtyRect;
 private:
     void init();
@@ -168,7 +189,7 @@ private:
     void showKey(int keyIndex);
     int  getKeyIndices(int x, int y, std::vector<int>* allKeys);
     void detectAndSendKey(int index, int x, int y, long eventTime);
-    bool openPopupIfRequired(MotionEvent& me);
+    bool openPopupIfRequired();
     bool onModifiedTouchEvent(MotionEvent& me, bool possiblePoly);
     bool repeatKey();
     void resetMultiTap();
@@ -183,6 +204,9 @@ public:
     void setOnKeyboardActionListener(const OnKeyboardActionListener& listener);
     Keyboard*getKeyboard();
     void setKeyboard(Keyboard*k);
+    /* True while the long-press accent popup is on screen. Lets the IME tell a
+     * popup accent selection (which should commit) from a normal key press. */
+    bool isMiniKeyboardOnScreen()const{ return mMiniKeyboardOnScreen; }
     bool setShifted(bool shifted);
     bool isShifted()const;
     void setPreviewEnabled(bool previewEnabled);

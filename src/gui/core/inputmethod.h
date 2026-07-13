@@ -25,37 +25,44 @@ class InputMethod{
 protected:
    std::string sysdict;
    std::string userdict;
-   std::string keyboardlayout;
 public:
-   InputMethod(const std::string&layout);
+   InputMethod();
    virtual ~InputMethod();
-   const std::string getSysdict()const;
-   const std::string getUserDict()const;
-   const std::string getKeyboardLayout(int type)const;
-   virtual int load_dicts(const std::string&sys,const std::string&user);
-   /*return :>=0 success,<0 search is not supportrd,char can be commit directly*/
-   virtual int search(const std::string&,std::vector<std::string>&candidates);
-   virtual void close_search();
-   /*return :>=0 success,<0 predict is not supportrd*/
-   virtual int get_predicts(const std::string&,std::vector<std::string>&predicts);
-   //Get the segmentation information(the starting positions) of the spelling
-   virtual int get_spellings(std::vector<int>&){return 0;}
-   virtual int get_spellings(std::vector<std::string>&){return 0;}
-};
-
-
-class GooglePinyin:public InputMethod{
-protected:
-   void*handle;
-public:
-   GooglePinyin(const std::string&layout);
-   ~GooglePinyin()override;
-   int load_dicts(const std::string&sys,const std::string&user)override;
-   int search(const std::string&,std::vector<std::string>&candidates)override;
-   void close_search()override;
-   int get_predicts(const std::string&,std::vector<std::string>&predicts)override;
-   int get_spellings(std::vector<int>&)override;
-   int get_spellings(std::vector<std::string>&)override;
+   /* Dictionary paths (reserved for a future dictionary-management UI). */
+   const std::string& getSysDict()const;
+   const std::string& getUserDict()const;
+   /* Load system/user dictionaries. Returns true on success. */
+   virtual bool loadDicts(const std::string&sys,const std::string&user);
+   /* Decode pinyin -> candidates. Returns candidate count (>=0), or <0 if the
+    * method does no candidate search (e.g. the English/qwerty method) and the
+    * typed char should be committed directly. */
+   virtual int search(const std::string&pinyin,std::vector<std::string>&candidates);
+   /* Reset the current search/composition workspace. */
+   virtual void closeSearch();
+   /* Next-word predictions from a committed history string. Returns count (>=0),
+    * or <0 if prediction is unsupported. */
+   virtual int getPredicts(const std::string&history,std::vector<std::string>&predicts);
+   /* Pinyin syllable segmentation of the current input (strings). Returns count
+    * (>=0), or <0 if unsupported. */
+   virtual int getSpellings(std::vector<std::string>&syllables){return -1;}
+   /* The already-fixed composing prefix (chosen so far) for the composing display;
+    * empty if unsupported / nothing fixed yet. */
+   virtual std::string fixedString()const{return "";}
+   /* Two-level / continuous selection (pinyin). choose() fixes candidate[candId]
+    * as the current prefix and refills `candidates` with the remaining pinyin's
+    * candidate list; returns the new candidate count, or <0 if the method does
+    * not support in-composition selection (e.g. the English/qwerty method, which
+    * commits each key directly). cancelLastChoice() reverts the last choose and
+    * refills `candidates` likewise. */
+   virtual int choose(size_t candId,std::vector<std::string>&candidates);
+   virtual int cancelLastChoice(std::vector<std::string>&candidates);
+   /* Whether choosing a candidate fixes a prefix and continues with more
+    * candidates for the unfixed tail (two-level / phrase selection, e.g.
+    * pinyin). Default true: any candidate-producing engine is treated as
+    * two-level unless it opts out. Single-level engines (word-completion, e.g.
+    * the English method) override to false -- a candidate tap commits the whole
+    * word instead of fixing a prefix. */
+   virtual bool supportsTwoLevel()const{return true;}
 };
 
 };

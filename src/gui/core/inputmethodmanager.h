@@ -23,16 +23,23 @@
 namespace cdroid{
 
 class InputMethodManager{
+public:
+    /* A registered input method + the keyboard layout it uses. The layout lives
+     * here (a UI concern), not on InputMethod (an engine), so the engine stays
+     * decoupled from the keyboard UI. */
+    struct ImMethod{
+        std::string name;
+        InputMethod* method;
+        std::string layout;
+    };
 private:
     friend class IMEWindow;
     int mInputType;
-    std::wstring text2IM;
-    std::vector<std::pair<std::string,InputMethod*>>imeMethods;
+    std::vector<ImMethod>imeMethods;
     int setInputMethod(InputMethod*,const std::string&name);
     void ensureIMEWindow();   // lazily create the on-screen IMEWindow
     void positionIMEWindow(); // place it docked to the bottom of the screen (undo any off-screen hide)
 protected:
-    std::string predictSource;
     InputMethod*im;
     static class InputMethodManager*mInst;
     class IMEWindow*imeWindow;
@@ -41,7 +48,7 @@ protected:
 public:
     static InputMethodManager&getInstance();
     static InputMethodManager*peekInstance();
-    int registeMethod(const std::string&name,InputMethod*);
+    int registeMethod(const std::string&name,InputMethod*,const std::string&layout);
     std::vector<std::string>getInputMethods(std::vector<InputMethod*>*methods);
     int getInputMethodCount()const;
     InputMethod*getInputMethod(int idx);

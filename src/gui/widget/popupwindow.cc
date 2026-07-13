@@ -489,7 +489,13 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
         height = LayoutParams::MATCH_PARENT;
     }
 
-    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight);
+    /* WindowManager sorts windows for compositing by window_type
+     * (mLayer = window_type<<16|idx). PopupDecorView defaults to
+     * TYPE_APPLICATION, which sorts BELOW an IMEWindow (TYPE_SYSTEM_WINDOW),
+     * hiding the popup behind the keyboard. Pass mWindowLayoutType so callers
+     * can raise the popup (e.g. KeyboardView sets TYPE_SYSTEM_ALERT). */
+    const int wtype = mWindowLayoutType ? mWindowLayoutType : Window::TYPE_APPLICATION;
+    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight,wtype);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
     //decorView->setClipChildren(false);
     //decorView->setClipToPadding(false);
@@ -1188,8 +1194,8 @@ void PopupWindow::alignToAnchor() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-PopupWindow::PopupDecorView::PopupDecorView(int w,int h)
-   :Window(0,0,w,h){
+PopupWindow::PopupDecorView::PopupDecorView(int w,int h,int type)
+   :Window(0,0,w,h,type){
     mPop = nullptr;
 }
 

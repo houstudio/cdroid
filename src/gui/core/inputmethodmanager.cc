@@ -23,9 +23,12 @@
 #include <fstream>
 #include <keycharactermap.h>
 #include <utils/textutils.h>
-#include <widget/candidateview.h> 
+#include <widget/candidateview.h>
 #include <widget/R.h>
 #include <core/app.h>
+#include <core/englishinputmethod.h>
+#include <core/googlepinyin.h>
+#include <core/imeselectioncontroller.h>
 #include <core/windowmanager.h>
 
 namespace cdroid{
@@ -37,18 +40,18 @@ protected:
    View* mBuddy;
    KeyboardView* kbdView;
    CandidateView* candidateView;
-   std::wstring mText2IM;
+   /* Owns all the 1/2-level selection logic (search/choose/predict/backspace),
+    * decoupled from this window so other keyboards can reuse it. */
+   ImeSelectionController* mController = nullptr;
 public:
    IMEWindow(int w,int h);
    ~IMEWindow(){
        LOGD("delete IMEWindow %p",this);
+       delete mController;
        InputMethodManager::getInstance().imeWindow=nullptr;
    }
-   void updatePredicts(std::vector<std::string>candidates){
-       candidateView->setSuggestions(candidates,true,true);
-       LOGD("%d sugguestions",candidates.size());
-       candidateView->invalidate(true);
-   }
+   /* The active engine changed (method switch); hand it to the controller. */
+   void setActiveMethod(InputMethod* im){ if(mController) mController->setInputMethod(im); }
    void onSizeChanged(int w,int h,int ow,int oh)override{
        kbdView->onSizeChanged(w,h,ow,oh);
        Window::onSizeChanged(w,h,ow,oh);
@@ -60,6 +63,8 @@ public:
        default: return Window::onKeyDown(keyCode,evt);
        }
    }
+   /* Deliver a committed UTF-8 string to the editor (the controller's committer
+    * target). */
    void commitText(const std::string&txt){
        const std::wstring uniTxt = TextUtils::utf8tounicode(txt);
        if(mBuddy)mBuddy->commitText(uniTxt);
@@ -72,16 +77,6 @@ public:
            if((isalpha(k.codes[0])==false)||k.modifier||k.sticky)continue;
            k.codes[0]=islower(k.codes[0])?toupper(k.codes[0]):tolower(k.codes[0]);
        }
-   }
-   void onPredict(CandidateView&v,const std::string&s,int id){
-       std::vector<std::string> predicts;
-       LOGD("predict '%s' selected",s.c_str(),id);
-       v.clear();
-       InputMethod* im = InputMethodManager::getInstance().im;
-       im->get_predicts(s,predicts);
-       commitText(s);
-       mText2IM.clear();
-       candidateView->setSuggestions(predicts,true,true);
    }
    void onCloseKeyboard(View&v){
        LOGD("close IME'sKeyboard");
@@ -103,8 +98,13 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     View*vg=LayoutInflater::from(mContext)->inflate("@cdroid:layout/ime_pinyin_keyboard",this,false);
     kbdView = (KeyboardView*)vg->findViewById(cdroid::R::id::keyboardview);
     candidateView = (CandidateView*)vg->findViewById(cdroid::R::id::predict2);
-    candidateView->setPredictListener(std::bind(&IMEWindow::onPredict,this,std::placeholders::_1,
-           std::placeholders::_2,std::placeholders::_3));
+    // The controller owns the 1/2-level selection logic; the committer delivers
+    // each committed phrase/word to the focused editor via this->commitText.
+    mController = new ImeSelectionController(candidateView,
+        [this](const std::string& s){ commitText(s); });
+    candidateView->setPredictListener([this](CandidateView&,const std::string&s,int id){
+        mController->onCandidateSelected(s,id);
+    });
     View* closeKbd = vg->findViewById(cdroid::R::id::closekeyboard);
     closeKbd->setOnClickListener(std::bind(&IMEWindow::onCloseKeyboard,this,std::placeholders::_1));
     addView(vg);//layout(0,0,getWidth(),h);
@@ -113,41 +113,10 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
     setVisibility(INVISIBLE);
     listener.onPress=[this](int primaryCode){
         LOGD("primaryCode=%d %x",primaryCode,primaryCode);
-        KeyEvent keyEvent;
-        switch(primaryCode){
-        case Keyboard::KEYCODE_SHIFT:
-        case Keyboard::KEYCODE_ALT:
-        case Keyboard::KEYCODE_DONE:
-        case Keyboard::KEYCODE_CANCEL:
-        case Keyboard::KEYCODE_MODE_CHANGE:break;
-        case Keyboard::KEYCODE_BACKSPACE:
-        case Keyboard::KEYCODE_DELETE:
-             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_UP/*action*/,0,
-             KeyEvent::KEYCODE_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
-             /*sendKeyEvent(keyEvent);*/break;
-        case -101:break;
-        default:
-            if(primaryCode>0){
-                int rc;
-                std::string u8txt;
-                std::vector<std::string> candidates;
-                InputMethod* im = InputMethodManager::getInstance().im;
-                mText2IM.append(1,primaryCode);
-                u8txt = TextUtils::unicode2utf8(mText2IM);
-                rc = im->search(u8txt,candidates);
-                if(rc < 0){
-                    // InputMethod has no candidate search (e.g. the English/qwerty
-                    // method) -> commit the typed character straight into the editor
-                    // via EditText->Editor::commitText (the in-process equivalent of
-                    // Android's InputConnection.commitText -> Editable).
-                    commitText(u8txt);
-                    mText2IM.clear();
-                }else{
-                    updatePredicts(candidates);
-                }
-                LOGD("txt=%s primaryCode=%x/%c",u8txt.c_str(),primaryCode,primaryCode);
-            }break;
-        }
+        // Chars are committed on RELEASE via onKey (not here on press), so that
+        // a long-press popup can abort the base char through mAbortKey (AOSP:
+        // detectAndSendKey/onKey runs on ACTION_UP and is skipped when aborted).
+        (void)primaryCode;
     };
     listener.onRelease = [this](int primaryCode){
     };
@@ -164,74 +133,36 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         case Keyboard::KEYCODE_DONE     :  break;
         case Keyboard::KEYCODE_DELETE:
         case Keyboard::KEYCODE_BACKSPACE:
-             // Send Android's KEYCODE_DEL (backspace, deletes LEFT). sendKeyEvent()
-             // dispatches onKeyDown, so use ACTION_DOWN. (KEYCODE_BACK is the Back
-             // button and is not a delete.)
-             keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_DOWN/*action*/,0,KeyEvent::KEYCODE_DEL,
-                        0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
-             imm.sendKeyEvent(keyEvent);break;
+             // Composing-aware: while a pinyin is in progress the backspace edits
+             // the composing buffer (undo last fixed word, or drop the last typed
+             // char); only when nothing is composing do we forward a real
+             // KEYCODE_DEL to delete in the editor.
+             if(!mController->onBackspace()){
+                 keyEvent.initialize(0,InputDevice::SOURCE_KEYBOARD,0,KeyEvent::ACTION_DOWN/*action*/,0,KeyEvent::KEYCODE_DEL,
+                            0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
+                 imm.sendKeyEvent(keyEvent);
+             }break;
+        default:
+             // Printable key delivered on RELEASE (AOSP onKey model). A long-
+             // press popup aborts the base char via mAbortKey, and the chosen
+             // accent arrives here while the popup is still showing -- commit
+             // it directly (pickChar) instead of composing (onChar).
+             if(primaryCode>0){
+                 if(kbdView && kbdView->isMiniKeyboardOnScreen())
+                     mController->pickChar(primaryCode);
+                 else
+                     mController->onChar(primaryCode);
+             }break;
         }
     };
     kbdView->setOnKeyboardActionListener(listener);
-#if 0
-    kbdView->setButtonListener([&](const Keyboard::Key&k){
-        std::vector<std::string>candidates;
-        InputMethod*im=InputMethodManager::getInstance().im;
-        LOGD("key %d modifer=%d sticky=%d im=%p",k.codes[0],k.modifier,k.sticky,im);
-        if((k.modifier|k.sticky)==0){
-            text2IM.append(1,k.codes[0]);
-            std::string u8txt=TextUtils::unicode2utf8(text2IM);
-            int rc=im->search(u8txt,candidates);
-            updatePredicts(candidates);
-            LOGD("key[%s]CHAR:%c u8txt=%s predicts=%d ",k.label.c_str(),k.codes[0],u8txt.c_str(),rc);
-            if(rc<0){
-                const wchar_t text[2]={k.codes[0],0};
-                imm.commitText(text,1);
-                text2IM.erase();
-                return;
-            }else if(k.codes[0]==' '){
-                /*int idx=0;candidateView->getIndex();
-                const std::string&txt=candidateView->getItem(idx)->getText();
-                const std::wstring wtext=TextUtils::utf8tounicode(txt);
-                imm.commitText(wtext,1);
-                im->get_predicts(imm.predictSource,candidates);
-                updatePredicts(candidates);
-                im->close_search();*/
-            }
-        }else if(k.modifier|k.sticky){
-            KeyEvent keyEvent;
-            keyEvent.initialize(0,0,KeyEvent::ACTION_UP/*action*/,0,
-                KEY_BACK,0/*scancode*/,0/*metaState*/,1/*repeatCount*/,NOW,NOW/*eventtime*/);
-            LOGD("key[%s]code:%d keylabel=%s ",k.label.c_str(),k.codes[0],KeyEvent::getLabel(k.codes[0]));
-            switch(k.codes[0]){
-            case Keyboard::KEYCODE_MODE_CHANGE://changeMode();break;
-            case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
-            case Keyboard::KEYCODE_DONE     :  break;
-            case Keyboard::KEYCODE_DELETE:
-            case Keyboard::KEYCODE_BACKSPACE:  imm.sendKeyEvent(keyEvent);break;
-            }
-        }
-    });
-#endif
-    /*candidateView->setItemClickListener([&](AbsListView&lv,const ListView::ListItem&itm,int index){
-        std::wstring wtext;
-        std::vector<std::string>candidates;
-        InputMethod*im = InputMethodManager::getInstance().im;
-        imm.predictSource = itm.getText();
-        wtext = TextUtils::utf8tounicode(imm.predictSource);
-        imm.commitText(wtext,1);
-        text2IM = std::wstring();
-        im->close_search();
-        im->get_predicts(imm.predictSource,candidates);
-        updatePredicts(candidates);
-    });*/
 }
 
 InputMethodManager*InputMethodManager::mInst=nullptr;
 
-int InputMethodManager::registeMethod(const std::string&name,InputMethod*method){
-    imeMethods.push_back({name,method});
-    LOGD("registeInputMethod(%s)%p",name.c_str(),method);
+int InputMethodManager::registeMethod(const std::string&name,InputMethod*method,const std::string&layout){
+    imeMethods.push_back({name,method,layout});
+    LOGD("registeInputMethod(%s)%p layout=%s",name.c_str(),method,layout.c_str());
     return 0;
 }
 
@@ -240,23 +171,23 @@ int InputMethodManager::getInputMethodCount()const{
 }
 
 InputMethod*InputMethodManager::getInputMethod(int idx){
-    return imeMethods.at(idx).second;
+    return imeMethods.at(idx).method;
 }
 
 std::vector<std::string>InputMethodManager::getInputMethods(std::vector<InputMethod*>*methods){
     std::vector<std::string>ms;
     if(methods)methods->clear();
     for(auto m:imeMethods){
-        ms.push_back(m.first);
-        if(methods)methods->push_back(m.second);
+        ms.push_back(m.name);
+        if(methods)methods->push_back(m.method);
     }
     return ms;
 }
 
 InputMethod*InputMethodManager::getInputMethod(const std::string&name){
     for(auto m:imeMethods){
-        if(m.first.compare(name)==0)
-            return m.second;
+        if(m.name.compare(name)==0)
+            return m.method;
     }
     return nullptr;
 }
@@ -272,7 +203,7 @@ InputMethodManager::~InputMethodManager(){
     LOGD("InputMethodManager Destroied!");
     if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
     for(auto ime:imeMethods){
-        delete ime.second;
+        delete ime.method;
     }
     imeMethods.clear();
 }
@@ -284,12 +215,16 @@ InputMethodManager& InputMethodManager::getInstance(){
         // now (InputDevice loads its .kcm; KeyEvent resolves via its deviceId).
     }
     if(mInst->imeMethods.size() == 0){
-        InputMethod*m = new InputMethod("@cdroid:xml/qwerty.xml");
-        mInst->registeMethod("English",m);
+        // English uses a word-completion method (built-in baseline word list,
+        // optionally overridden by english_words.txt in the data path). If the
+        // override file is absent it simply keeps the built-in list.
+        InputMethod*m = new EnglishInputMethod();
+        m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
+        mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
 #ifdef ENABLE_PINYIN2HZ
-        m = new GooglePinyin("@cdroid:xml/qwerty.xml");
-        m->load_dicts("dict_pinyin.dat","userdict.dat");
-        mInst->registeMethod("GooglePinyin26",m);
+        m = new GooglePinyin();
+        m->loadDicts("dict_pinyin.dat","userdict.dat");
+        mInst->registeMethod("GooglePinyin26",m,"@cdroid:xml/qwerty.xml");
 #endif
     }
     return *mInst;
@@ -360,7 +295,7 @@ void InputMethodManager::setInputType(int inputType){
     default:
         if(imeMethods.size()){
             auto it = imeMethods.begin();
-            setInputMethod(it->second,it->first);
+            setInputMethod(it->method,it->name);
         }break;
     }
     // Note: do NOT clear imeWindow->mBuddy here. Switching the keyboard layout is
@@ -377,14 +312,30 @@ int InputMethodManager::setInputMethod(const std::string&name){
 }
 
 void InputMethodManager::onViewDetachedFromWindow(View*view){
-    if(imeWindow)imeWindow->mBuddy = nullptr;
-    LOGD("view=%p  %d",view,view->getId());
+    /* AOSP's IMM only drops its served-view state when the served view itself
+     * (or an ancestor) detaches. CDROID collapses that to the single mBuddy
+     * pointer, so mirror the guard: null mBuddy ONLY when this view is the
+     * buddy. Otherwise a transient popup dismissing (its contentView subtree
+     * detaches) would wrongly clear the editor target, and the next popup
+     * accent pick would commit to nothing until the editor is tapped again. */
+    if(imeWindow && imeWindow->mBuddy == view)
+        imeWindow->mBuddy = nullptr;
+    LOGV("view=%p  %d",view,view?view->getId():-1);
 }
 
 
 int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name){
     im = method;
-    std::string layout = method->getKeyboardLayout(mInputType);
+    // The controller keeps its own pointer to the active engine; update it on
+    // every method switch (and reset any half-composed pinyin).
+    if(imeWindow) imeWindow->setActiveMethod(method);
+    // The keyboard layout is a UI concern owned by the registered ImMethod, not
+    // by the InputMethod engine (the base engine has no layout of its own); look
+    // it up by the method name here.
+    std::string layout;
+    for(const auto&mthd:imeMethods){
+        if(mthd.name==name){ layout = mthd.layout; break; }
+    }
     Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p %d keys loaded",name.c_str(),im,layout.c_str(),kbd,kbd->getKeys().size());

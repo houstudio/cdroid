@@ -119,7 +119,7 @@ void WindowManager::addWindow(Window*win){
     Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post([win](){win->onCreate();});
-    //the first create only call onCreate,no onActive 
+    //the first create only call onCreate,no onActive
     win->post([info](){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
