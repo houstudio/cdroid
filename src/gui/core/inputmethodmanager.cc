@@ -43,6 +43,11 @@ protected:
    /* Owns all the 1/2-level selection logic (search/choose/predict/backspace),
     * decoupled from this window so other keyboards can reuse it. */
    ImeSelectionController* mController = nullptr;
+   /* Numeric/phone/datetime keyboards commit each key straight to the editor,
+    * bypassing the composition/candidate engine (a digit fed to onChar would
+    * be held as composing text and never committed). True while such a layout
+    * is shown. */
+   bool mDirectCommit = false;
 public:
    IMEWindow(int w,int h);
    ~IMEWindow(){
@@ -52,6 +57,13 @@ public:
    }
    /* The active engine changed (method switch); hand it to the controller. */
    void setActiveMethod(InputMethod* im){ if(mController) mController->setInputMethod(im); }
+   /* Toggle direct-commit mode for the numeric/phone/datetime layouts. Entering
+    * it drops any half-composed text so a stale composition does not leak back
+    * when the user returns to a text field. */
+   void setDirectCommit(bool d){
+       if(d && mController) mController->reset();
+       mDirectCommit = d;
+   }
    void onSizeChanged(int w,int h,int ow,int oh)override{
        kbdView->onSizeChanged(w,h,ow,oh);
        Window::onSizeChanged(w,h,ow,oh);
@@ -148,7 +160,12 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
              // accent arrives here while the popup is still showing -- commit
              // it directly (pickChar) instead of composing (onChar).
              if(primaryCode>0){
-                 if(kbdView && kbdView->isMiniKeyboardOnScreen())
+                 if(mDirectCommit)
+                     // Numeric/phone/datetime: commit straight to the editor,
+                     // no composition / candidate strip (a digit through onChar
+                     // would be held as composing and never committed).
+                     commitText(std::string(1,(char)primaryCode));
+                 else if(kbdView && kbdView->isMiniKeyboardOnScreen())
                      mController->pickChar(primaryCode);
                  else
                      mController->onChar(primaryCode);
@@ -226,6 +243,10 @@ InputMethodManager& InputMethodManager::getInstance(){
         m->loadDicts("dict_pinyin.dat","userdict.dat");
         mInst->registeMethod("GooglePinyin26",m,"@cdroid:xml/qwerty.xml");
 #endif
+        // Default the active method to the first registered one so the
+        // composition controller always has an engine before any explicit
+        // setInputMethod() (otherwise onChar() no-ops on mIm==null).
+        mInst->im = mInst->imeMethods.begin()->method;
     }
     return *mInst;
 }
@@ -288,20 +309,65 @@ void InputMethodManager::setInputType(int inputType){
     if(mInputType==inputType)
         return;
     mInputType = inputType;
-    switch(mInputType){
-    case InputType::TYPE_NULL:
+    if(inputType==InputType::TYPE_NULL){
         if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
-        break;
-    default:
-        if(imeMethods.size()){
-            auto it = imeMethods.begin();
-            setInputMethod(it->method,it->name);
-        }break;
+        return;
     }
+    // Decode the inputType class and pick a matching soft-keyboard layout, plus
+    // whether keys commit straight to the editor (numeric/phone/datetime, no
+    // composition). This is the inputType<->IME linkage: the editor advertises
+    // its type, and the IME shows an appropriate keyboard. Android's full design
+    // routes this through EditorInfo + onCreateInputConnection; this is the
+    // in-process equivalent (path A -- layout only, no InputConnection).
+    const int cls = inputType & InputType::TYPE_MASK_CLASS;
+    std::string layout;
+    bool directCommit = false;
+    switch(cls){
+    case InputType::TYPE_CLASS_NUMBER:
+        layout = "@cdroid:xml/keyboard_number.xml";  directCommit = true; break;
+    case InputType::TYPE_CLASS_PHONE:
+        layout = "@cdroid:xml/keyboard_phone.xml";   directCommit = true; break;
+    case InputType::TYPE_CLASS_DATETIME:
+        layout = "@cdroid:xml/keyboard_datetime.xml";directCommit = true; break;
+    default:
+        // TYPE_CLASS_TEXT (and anything else): keep the active text method's own
+        // layout -- fall back to the first registered method, then qwerty.
+        directCommit = false;
+        // Ensure the composition controller has an engine. im may still be null
+        // before any explicit setInputMethod(), so fall back to the first
+        // registered method; without this, onChar() bails on mIm==null and text
+        // keys never reach the editor.
+        if(im==nullptr && !imeMethods.empty()) im = imeMethods.begin()->method;
+        for(const auto&mthd:imeMethods){ if(mthd.method==im){ layout=mthd.layout; break; } }
+        if(layout.empty() && !imeMethods.empty()) layout = imeMethods.begin()->layout;
+        if(layout.empty()) layout = "@cdroid:xml/qwerty.xml";
+        if(imeWindow) imeWindow->setActiveMethod(im);
+        break;
+    }
+    applyKeyboard(layout);
+    imeWindow->setDirectCommit(directCommit);
     // Note: do NOT clear imeWindow->mBuddy here. Switching the keyboard layout is
     // independent of the commit target, and nulling the buddy would detach an
     // editor that is focused while its input type changes. The buddy is owned by
     // the focus/touch flow (viewClicked/focusIn/showSoftInput).
+}
+
+void InputMethodManager::applyKeyboard(const std::string&layout){
+    if(imeWindow==nullptr) return;
+    // AOSP sizes a Keyboard from the display metrics (the %p base). CDROID's
+    // Keyboard ctor takes that width explicitly; imeWindow->getWidth() can be 0
+    // or stale before the window is laid out, which parses every %p gap/width
+    // to 0 and the keys then render flush with no gaps (resize() only reflows
+    // widths on overflow, never gaps). Use the screen width so the geometry is
+    // stable across every (re)show.
+    Point dspSize;
+    Display& dp = WindowManager::getInstance().getDefaultDisplay();
+    const int rot = dp.getRotation();
+    dp.getRealSize(dspSize);
+    const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
+    Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
+    imeWindow->kbdView->setKeyboard(kbd);
+    LOGD("applyKeyboard layout='%s' w=%d %p %d keys",layout.c_str(),screenW,kbd,kbd->getKeys().size());
 }
 
 int InputMethodManager::setInputMethod(const std::string&name){
@@ -336,9 +402,11 @@ int InputMethodManager::setInputMethod(InputMethod*method,const std::string&name
     for(const auto&mthd:imeMethods){
         if(mthd.name==name){ layout = mthd.layout; break; }
     }
-    Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,imeWindow->getWidth(),240);
-    imeWindow->kbdView->setKeyboard(kbd);
-    LOGD("inputmethod '%s':%p keyboardlayout:'%s' %p %d keys loaded",name.c_str(),im,layout.c_str(),kbd,kbd->getKeys().size());
+    // Switching to a named text method always leaves direct-commit off -- the
+    // engine drives composition/candidates.
+    if(imeWindow) imeWindow->setDirectCommit(false);
+    applyKeyboard(layout);
+    LOGD("inputmethod '%s':%p keyboardlayout:'%s'",name.c_str(),im,layout.c_str());
     return 0;
 }
 

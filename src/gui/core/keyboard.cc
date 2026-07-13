@@ -314,6 +314,7 @@ Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,i
     const DisplayMetrics& dm = context->getDisplayMetrics();
     mDisplayWidth = width;//dm.widthPixels;
     mDisplayHeight= height;//dm.heightPixels;
+    mTotalWidth = 0; // loadKeyboard only assigns when x > mTotalWidth
     mShifted =false;
     mDefaultHorizontalGap = 0;
     mDefaultWidth = mDisplayWidth / 10;
@@ -332,7 +333,6 @@ Keyboard::~Keyboard(){
 
 void Keyboard::resize(int newWidth,int newHeight){
     int numRows = rows.size();
-    LOGD("%dx%d",newWidth,newHeight);
     for (int rowIndex = 0; rowIndex < numRows; ++rowIndex) {
         Row* row = rows.at(rowIndex);
         int numKeys = row->mKeys.size();
@@ -356,7 +356,6 @@ void Keyboard::resize(int newWidth,int newHeight){
             }
         }
     }
-    LOGD("resizeTO(%dx%d)",newWidth,newHeight);
     mTotalWidth = newWidth;
 }
 

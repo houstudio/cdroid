@@ -185,9 +185,13 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
             {"textPostalAddress", (int)InputType::TYPE_TEXT_VARIATION_POSTAL_ADDRESS},
             {"number", (int)InputType::TYPE_CLASS_NUMBER},
 
-            {"numberDecimal", (int)InputType::TYPE_NUMBER_FLAG_DECIMAL},
-            {"numberSigned", (int)InputType::TYPE_NUMBER_FLAG_SIGNED},
-            {"numberPassword", (int)InputType::TYPE_NUMBER_VARIATION_PASSWORD},
+            // Number variants carry the class bit too (Android's attr constants
+            // are pre-OR'd, e.g. numberDecimal = TYPE_CLASS_NUMBER|DECIMAL).
+            // Without the class the TYPE_MASK_CLASS decode in IMM would miss
+            // them and a numberDecimal field would show the text keyboard.
+            {"numberDecimal", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_DECIMAL},
+            {"numberSigned", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_SIGNED},
+            {"numberPassword", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_VARIATION_PASSWORD},
             {"phone", (int)InputType::TYPE_CLASS_PHONE},
             {"date", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_DATE},
             {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},

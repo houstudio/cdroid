@@ -230,6 +230,17 @@ void KeyboardView::onDraw(Canvas& canvas) {
     mDirtyRect.setEmpty();
     //canvas.clip();
 
+    // Paint the keyboard background over the whole view BEFORE the (solid) key
+    // rects. Without this the slivers between keys keep the previous frame's
+    // pixels -- the surface is only re-blitted where onDraw actually draws, so
+    // gaps looked correct on the very first show (clean surface) and vanished on
+    // every later show (gap pixels still held the previous keyboard's key color).
+    // Standard View background painting is not relied on here (setWillNotDraw
+    // (false) drives onDraw directly), so fill explicitly.
+    canvas.set_color(0xFF112233);
+    canvas.rectangle(0, 0, getWidth(), getHeight());
+    canvas.fill();
+
     Drawable* keyBackground = mKeyBackground;
     Rect clipRegion = mClipRegion;
     Rect padding = mPadding;

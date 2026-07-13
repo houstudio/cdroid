@@ -39,6 +39,10 @@ private:
     int setInputMethod(InputMethod*,const std::string&name);
     void ensureIMEWindow();   // lazily create the on-screen IMEWindow
     void positionIMEWindow(); // place it docked to the bottom of the screen (undo any off-screen hide)
+    /* Load a Keyboard from the given XML layout id and install it on the IME
+     * window's KeyboardView. Shared by setInputType (class-driven layout) and
+     * setInputMethod (method-switch layout). */
+    void applyKeyboard(const std::string&layout);
 protected:
     InputMethod*im;
     static class InputMethodManager*mInst;
