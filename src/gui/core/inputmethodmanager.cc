@@ -239,11 +239,11 @@ InputMethodManager& InputMethodManager::getInstance(){
         // English uses a word-completion method (built-in baseline word list,
         // optionally overridden by english_words.txt in the data path). If the
         // override file is absent it simply keeps the built-in list.
-        InputMethod*m = new EnglishInputMethod();
-        m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
-        mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
+        //InputMethod*m = new EnglishInputMethod();
+        //m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
+        //mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
 #ifdef ENABLE_PINYIN2HZ
-        m = new GooglePinyin();
+        InputMethod* m = new GooglePinyin();
         m->loadDicts("dict_pinyin.dat","userdict.dat");
         mInst->registeMethod("GooglePinyin26",m,"@cdroid:xml/qwerty.xml");
 #endif
@@ -322,32 +322,34 @@ void InputMethodManager::setInputType(int inputType){
     if(imeWindow) imeWindow->mSymbolMode = false;
     // Decode the inputType class and pick a matching soft-keyboard layout, plus
     // whether keys commit straight to the editor (numeric/phone/datetime, no
-    // composition). This is the inputType<->IME linkage: the editor advertises
-    // its type, and the IME shows an appropriate keyboard. Android's full design
-    // routes this through EditorInfo + onCreateInputConnection; this is the
-    // in-process equivalent (path A -- layout only, no InputConnection).
+    // composition). The active InputMethod is asked FIRST for a custom layout
+    // for THIS inputType (getKeyboardLayout(int) -- it may vary by class AND
+    // variation, e.g. password); empty -> built-in default. This is the
+    // customization hook: a product subclass overrides getKeyboardLayout to ship
+    // its own keyboards. Android's full design routes this through EditorInfo +
+    // onCreateInputConnection; this is the in-process equivalent (path A).
     const int cls = inputType & InputType::TYPE_MASK_CLASS;
+    if(im==nullptr && !imeMethods.empty()) im = imeMethods.begin()->method;
+    const std::string custom = im ? im->getKeyboardLayout(inputType) : std::string();
     std::string layout;
     bool directCommit = false;
     switch(cls){
     case InputType::TYPE_CLASS_NUMBER:
-        layout = "@cdroid:xml/keyboard_number.xml";  directCommit = true; break;
+        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_number.xml";
+        directCommit = true; break;
     case InputType::TYPE_CLASS_PHONE:
-        layout = "@cdroid:xml/keyboard_phone.xml";   directCommit = true; break;
+        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_phone.xml";
+        directCommit = true; break;
     case InputType::TYPE_CLASS_DATETIME:
-        layout = "@cdroid:xml/keyboard_datetime.xml";directCommit = true; break;
+        layout = !custom.empty()?custom:"@cdroid:xml/keyboard_datetime.xml";
+        directCommit = true; break;
     default:
-        // TYPE_CLASS_TEXT (and anything else): keep the active text method's own
-        // layout -- fall back to the first registered method, then qwerty.
+        // TYPE_CLASS_TEXT (and anything else): the method's custom layout, else
+        // its registered layout, else qwerty.
+        layout = !custom.empty()?custom:activeTextLayout();
         directCommit = false;
-        // Ensure the composition controller has an engine. im may still be null
-        // before any explicit setInputMethod(), so fall back to the first
-        // registered method; without this, onChar() bails on mIm==null and text
-        // keys never reach the editor.
-        if(im==nullptr && !imeMethods.empty()) im = imeMethods.begin()->method;
-        for(const auto&mthd:imeMethods){ if(mthd.method==im){ layout=mthd.layout; break; } }
-        if(layout.empty() && !imeMethods.empty()) layout = imeMethods.begin()->layout;
-        if(layout.empty()) layout = "@cdroid:xml/qwerty.xml";
+        // Ensure the composition controller has an engine (see the null-guard
+        // above); without it onChar() bails and text keys never reach the editor.
         if(imeWindow) imeWindow->setActiveMethod(im);
         break;
     }
@@ -374,26 +376,47 @@ void InputMethodManager::applyKeyboard(const std::string&layout){
     const int screenW = (rot==Display::ROTATION_90||rot==Display::ROTATION_270) ? dspSize.y : dspSize.x;
     Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
     imeWindow->kbdView->setKeyboard(kbd);
+    // A product's InputMethod may supply a custom long-press popup container
+    // (getPopupLayout); apply it as the KeyboardView's popup layout so the
+    // accent mini-keyboard window is customizable. Empty -> keep the popupLayout
+    // declared in the IME layout (keyboard_popup_keyboard.xml).
+    if(im){
+        const std::string popup = im->getPopupLayout();
+        if(!popup.empty()) imeWindow->kbdView->setPopupLayout(popup);
+    }
     LOGD("applyKeyboard layout='%s' w=%d %p %d keys",layout.c_str(),screenW,kbd,kbd->getKeys().size());
+}
+
+std::string InputMethodManager::activeTextLayout() const {
+    // The method's custom layout for the field is resolved by the caller (via
+    // getKeyboardLayout(inputType)); here we only fall back to the method's
+    // registered ImMethod layout, then the first registered, then qwerty.
+    if(im){
+        for(const auto&mthd:imeMethods){ if(mthd.method==im) return mthd.layout; }
+    }
+    if(!imeMethods.empty()) return imeMethods.begin()->layout;
+    return "@cdroid:xml/qwerty.xml";
 }
 
 void InputMethodManager::toggleSymbolMode(){
     if(imeWindow==nullptr) return;
     imeWindow->mSymbolMode = !imeWindow->mSymbolMode;
+    std::string layout;
     if(imeWindow->mSymbolMode){
-        // 123 pressed on the text keyboard: show the symbols page (digits +
-        // punctuation, with an ABC key to switch back). The field is still text,
-        // so keys still go through the composition engine (directCommit stays
-        // off); a digit/symbol commits via the engine's word-boundary flush.
-        applyKeyboard("@cdroid:xml/symbols.xml");
+        // 123 pressed on the text keyboard: show the built-in symbols page
+        // (digits + punctuation, with an ABC key to switch back). The symbol
+        // page is IME-internal (not inputType-driven), so it is not routed
+        // through getKeyboardLayout. The field is still text, so keys still go
+        // through the composition engine (directCommit stays off); a digit/
+        // symbol commits via the engine's word-boundary flush.
+        layout = "@cdroid:xml/symbols.xml";
     } else {
-        // ABC pressed: restore the active text method's own layout.
-        std::string layout;
-        for(const auto&mthd:imeMethods){ if(mthd.method==im){ layout=mthd.layout; break; } }
-        if(layout.empty() && !imeMethods.empty()) layout = imeMethods.begin()->layout;
-        if(layout.empty()) layout = "@cdroid:xml/qwerty.xml";
-        applyKeyboard(layout);
+        // ABC pressed: restore the field's text layout (custom if the method
+        // supplies one for the current inputType, else its registered layout).
+        const std::string c = im?im->getKeyboardLayout(mInputType):std::string();
+        layout = !c.empty()?c:activeTextLayout();
     }
+    applyKeyboard(layout);
     LOGD("toggleSymbolMode -> %d", (int)imeWindow->mSymbolMode);
 }
 

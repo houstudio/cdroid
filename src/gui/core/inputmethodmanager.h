@@ -43,6 +43,10 @@ private:
      * window's KeyboardView. Shared by setInputType (class-driven layout) and
      * setInputMethod (method-switch layout). */
     void applyKeyboard(const std::string&layout);
+    /* Resolve the letter (TYPE_CLASS_TEXT) layout: the active method's custom
+     * LETTER layout if it supplies one, else its registered ImMethod layout,
+     * else the first registered, else qwerty. */
+    std::string activeTextLayout() const;
     /* 123/ABC toggle on the text keyboard: flip between the symbols page and the
      * active text method's layout. Independent of inputType (the field is still
      * text); reset by setInputType on every editor change. */

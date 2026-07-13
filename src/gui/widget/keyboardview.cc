@@ -36,6 +36,8 @@ KeyboardView::KeyboardView(Context*ctx,const AttributeSet&atts)
     mKeyTextColor      = atts.getColor("keyTextColor",0xFF000000);
     mLabelTextSize     = atts.getDimensionPixelOffset("labelTextSize",20);
     mPopupLayout       = atts.getString("popupLayout");
+    mPaint.setTextSize(mLabelTextSize);
+    mPaint.setTextAlign(Paint::Align::CENTER);
     resetMultiTap();
 }
 
@@ -164,6 +166,16 @@ void KeyboardView::setPopupOffset(int x, int y) {
     }*/
 }
 
+void KeyboardView::setPopupLayout(const std::string& popupLayout) {
+    if(popupLayout.empty()) return;
+    if(mPopupLayout != popupLayout){
+        mPopupLayout = popupLayout;
+        // Cached popups were inflated from the old layout; drop them so the next
+        // long-press re-inflates with the new container.
+        mMiniKeyboardCache.clear();
+    }
+}
+
 /* When enabled, calls to {@link OnKeyboardActionListener#onKey} will include key
  * codes for adjacent keys.  When disabled, only the primary key code will be
  * reported.
@@ -224,6 +236,18 @@ void KeyboardView::onSizeChanged(int w, int h, int oldw, int oldh) {
     // Release the buffer, if any and it will be reallocated on the next draw
 }
 
+static void drawText(Canvas& canvas,const std::string& text,const Rect&r,Paint&paint) {
+    std::u16string u16s=TextUtils::utf8_utf16(text);
+    auto fm = paint.getFontMetricsInt();
+    auto textHeight = (fm.bottom-fm.top);
+    auto textWidth = paint.measureText(text,0,text.length());
+    int x,y;
+    x = r.left + (r.width - textWidth)/2;
+    y = r.top + (r.height - textHeight)/2;
+    y-=fm.ascent;
+    paint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
+}
+
 void KeyboardView::onDraw(Canvas& canvas) {
     canvas.save();
     //canvas.rectangle(mDirtyRect.left,mDirtyRect.top,mDirtyRect.width,mDirtyRect.height);
@@ -241,6 +265,7 @@ void KeyboardView::onDraw(Canvas& canvas) {
     canvas.rectangle(0, 0, getWidth(), getHeight());
     canvas.fill();
 
+    Paint& paint = mPaint;
     Drawable* keyBackground = mKeyBackground;
     Rect clipRegion = mClipRegion;
     Rect padding = mPadding;
@@ -279,16 +304,16 @@ void KeyboardView::onDraw(Canvas& canvas) {
             // For characters, use large font. For labels like "Done", use small font.
             canvas.set_color(mKeyTextColor);
             if( (label.length() > 1 ) && (key->codes.size() < 2)) {
-                canvas.set_font_size(mLabelTextSize);
+                paint.setTextSize(mLabelTextSize);
             } else {
-                canvas.set_font_size(mKeyTextSize);
-                //paint.setTypeface(Typeface.DEFAULT);
+                paint.setTextSize(mKeyTextSize);
             }
+            paint.setColor(mKeyTextColor);
             // Draw a drop shadow for the text
             //paint.setShadowLayer(mShadowRadius, 0, 0, mShadowColor);
             // Draw the text
             Rect rctxt={padding.left,padding.top,key->width-padding.left - padding.width,key->height-padding.top - padding.height};
-            canvas.draw_text(rctxt,label,Gravity::CENTER);
+            drawText(canvas,label,rctxt,paint);
             // Turn off drop shadow
         } else if (key->icon) {
             const int drawableX = (key->width - padding.left - padding.width

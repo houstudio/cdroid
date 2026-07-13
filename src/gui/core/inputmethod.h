@@ -63,6 +63,27 @@ public:
     * the English method) override to false -- a candidate tap commits the whole
     * word instead of fixing a prefix. */
    virtual bool supportsTwoLevel()const{return true;}
+
+   /* Custom keyboard layout provisioning (per-product customization).
+    *
+    * getKeyboardLayout(int inputType): return the layout resource for the given
+    * editor inputType (e.g. "@myprod:xml/keypad.xml", resolved from the
+    * product's app pak the same way "@cdroid:xml/qwerty.xml" is, or a
+    * filesystem path), or empty to use the IME's built-in default for that
+    * class. The value can inspect the inputType's class AND variation (e.g.
+    * return a distinct layout for password fields). Covers the field-driven
+    * keyboards: text / number / phone / datetime. The 123 symbol page is IME-
+    * internal (not inputType-driven) and uses the built-in symbols.xml.
+    *
+    * getPopupLayout(): the long-press accent mini-keyboard's container layout
+    * (the popup window hosting the mini KeyboardView), or empty for the
+    * KeyboardView's declared android:popupLayout (keyboard_popup_keyboard.xml).
+    *
+    * Both default to empty, so the bundled English/Pinyin methods are
+    * unchanged -- override in a product subclass to ship custom keyboards
+    * without modifying CDROID. */
+   virtual std::string getKeyboardLayout(int inputType)const{ (void)inputType; return {}; }
+   virtual std::string getPopupLayout()const{ return {}; }
 };
 
 };
