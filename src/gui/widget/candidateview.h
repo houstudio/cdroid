@@ -19,7 +19,7 @@
 #ifndef __CANDIDATE_VIEW_H__
 #define __CANDIDATE_VIEW_H__
 #include <view/view.h>
-
+#include <text/paint.h>
 namespace cdroid{
 
 class CandidateView:public View{
@@ -44,6 +44,7 @@ private:
     bool mTypedWordValid;
     std::vector<std::string>mSuggestions;
     Drawable*mSelectionHighlight;
+    Paint mPaint;
     OnPredictChange mOnPredict;
     Rect mBgPadding;
     std::vector<int>mWordWidth;

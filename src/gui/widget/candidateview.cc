@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-
+#include <text/textutils.h>
 #include <widget/candidateview.h>
 namespace cdroid{
 
@@ -70,6 +70,18 @@ void CandidateView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setMeasuredDimension(measuredWidth, resolveSize(desiredHeight, heightMeasureSpec));
 }
 
+static void drawText(Canvas& canvas,const std::string& text,const Rect&r,Paint&paint) {
+    std::u16string u16s=TextUtils::utf8_utf16(text);
+    auto fm = paint.getFontMetricsInt();
+    auto textHeight = (fm.bottom-fm.top);
+    auto textWidth = paint.measureText(text,0,text.length());
+    int x,y;
+    x = r.left + (r.width - textWidth)/2;
+    y = r.top + (r.height - textHeight)/2;
+    y-=fm.ascent;
+    paint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
+}
+
 void CandidateView::onDrawInternal(Canvas* canvas) {
     if (mSuggestions.empty()) return;
     LOGV("%d suggestion canvas=%p",mSuggestions.size(),canvas);
@@ -88,20 +100,17 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
     Rect suggestionRect;
     Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,1,1);
     Cairo::RefPtr<Cairo::Context>mContext = Cairo::Context::create(image);
-    mContext->set_font_size(mTextSize);
     mTotalWidth = 0;
-    if(canvas)canvas->set_font_size(mTextSize);
+    mPaint.setTextSize(mTextSize);
     for (int i = 0; i < count; i++) {
-	Cairo::TextExtents te;
-	std::string suggestion = mSuggestions.at(i);
-	mContext->get_text_extents(suggestion,te);
-        int wordWidth = (int) te.x_advance + X_GAP * 2;
+	    std::string suggestion = mSuggestions.at(i);
+        const int wordWidth = mPaint.measureText(suggestion) + X_GAP * 2;
 
         mWordX[i] = x;
         mWordWidth[i] = wordWidth;
-	if(x+wordWidth<scrollX)continue;
-	if(x>=scrollX+getWidth())break;
-	suggestionRect.set(x,bgPadding.top,wordWidth,height);
+	    if(x+wordWidth<scrollX)continue;
+	    if(x>=scrollX+getWidth())break;
+	    suggestionRect.set(x,bgPadding.top,wordWidth,height);
         if (touchX + scrollX >= x && touchX + scrollX < x + wordWidth && !scrolled) {
             if (canvas && mSelectionHighlight) {
                 canvas->translate(x, 0);
@@ -111,25 +120,25 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
             }
             mSelectedIndex = i;
         }
-	if(canvas){
-	    bool fakeBold = false;
-	    canvas->set_color(mColorNormal);
+	    if(canvas){
+            bool fakeBold = false;
+	        canvas->set_color(mColorNormal);
             if ((i == 1 && !typedWordValid) || (i == 0 && typedWordValid)) {
-		fakeBold = true;
-                canvas->set_color(mColorRecommended);
+		        fakeBold = true;
+                mPaint.setColor(mColorRecommended);
             } else if (i != 0) {
-                canvas->set_color(mColorOther);
+                mPaint.setColor(mColorOther);
             }
-	    canvas->draw_text(suggestionRect,suggestion,Gravity::CENTER);
-	    if(fakeBold){
-		canvas->translate(.5f,.5f);
-		canvas->draw_text(suggestionRect,suggestion,Gravity::CENTER);
-		canvas->translate(-.5f,-.5f);
-	    }
+	        drawText(*canvas,suggestion,suggestionRect,mPaint);
+	        if(fakeBold){
+                canvas->translate(.5f,.5f);
+                drawText(*canvas,suggestion,suggestionRect,mPaint);
+                canvas->translate(-.5f,-.5f);
+	        }
             canvas->set_color(mColorOther);
-	    canvas->move_to(x + wordWidth + 0.5f, bgPadding.top);
+	        canvas->move_to(x + wordWidth + 0.5f, bgPadding.top);
             canvas->line_to(x + wordWidth + 0.5f, height + 1);
-	}
+        }
         x += wordWidth;
     }
     mTotalWidth = x;
