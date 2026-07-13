@@ -25,6 +25,7 @@ private:
     static constexpr int HIDE_FLOATING_TOOLBAR_DELAY_MS = 200;
     static NoCopySpan FROM_BELOW;
 private:
+    static MovementMethod* sInstance;
     bool action(int what, TextView& widget, Spannable& buffer);
 protected:
     bool handleMovementKey(TextView& widget, Spannable& buffer, int keyCode,

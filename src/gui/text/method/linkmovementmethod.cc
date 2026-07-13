@@ -18,12 +18,10 @@
 #include <text/selection.h>
 #include <text/spannablestring.h>
 #include <text/style/clickablespan.h>
-//#include <text/style/textlinkspan.h>
+#include <text/method/textlinkspan.h>
 #include <text/method/linkmovementmethod.h>
 
 namespace cdroid{
-
-class TextLinkSpan:public:ClickableSpan{};
 
 bool LinkMovementMethod::handleMovementKey(TextView& widget, Spannable& buffer, int keyCode,
         int movementMetaState, KeyEvent& event) {
@@ -111,7 +109,7 @@ bool LinkMovementMethod::action(int what, TextView& widget, Spannable& buffer) {
         selStart = selEnd = -1;
 
     switch (what) {
-        case CLICK:
+        case CLICK: {
             if (selStart == selEnd) {
                 return false;
             }
@@ -129,12 +127,11 @@ bool LinkMovementMethod::action(int what, TextView& widget, Spannable& buffer) {
                 link->onClick(widget);
             }
             break;
+        }
 
-        case UP:
-            int bestStart, bestEnd;
-
-            bestStart = -1;
-            bestEnd = -1;
+        case UP: {
+            int bestStart = -1;
+            int bestEnd = -1;
 
             for (int i = 0; i < candidates.size(); i++) {
                 int end = buffer.getSpanEnd(candidates[i]);
@@ -153,10 +150,11 @@ bool LinkMovementMethod::action(int what, TextView& widget, Spannable& buffer) {
             }
 
             break;
+        }
 
-        case DOWN:
-            bestStart = INT_MAX;
-            bestEnd = INT_MAX;
+        case DOWN: {
+            int bestStart = INT_MAX;
+            int bestEnd = INT_MAX;
 
             for (int i = 0; i < candidates.size(); i++) {
                 int start = buffer.getSpanStart(candidates[i]);
@@ -175,6 +173,7 @@ bool LinkMovementMethod::action(int what, TextView& widget, Spannable& buffer) {
             }
 
             break;
+        }
     }
 
     return false;
@@ -194,13 +193,13 @@ bool LinkMovementMethod::onTouchEvent(TextView& widget, Spannable& buffer,Motion
         y += widget.getScrollY();
 
         Layout* layout = widget.getLayout();
-        std::vector<ParcelableSpan*> links;
+        std::vector<const ParcelableSpan*> links;
         if (y < 0 || y > layout->getHeight()) {
-            //links = null;
+            // no links in this region
         } else {
             int line = layout->getLineForVertical(y);
             if (x < layout->getLineLeft(line) || x > layout->getLineRight(line)) {
-                //links = null;
+                // no links in this region
             } else {
                 int off = layout->getOffsetForHorizontal(line, x);
                 links = buffer.getSpans(off, off, make_span_filter<ClickableSpan>());
@@ -208,21 +207,18 @@ bool LinkMovementMethod::onTouchEvent(TextView& widget, Spannable& buffer,Motion
         }
 
         if (!links.empty()) {
-            ClickableSpan* link = dynamic_cast<ClickableSpan*>(links[0]);
+            const ClickableSpan* link = dynamic_cast<const ClickableSpan*>(links[0]);
             if (action == MotionEvent::ACTION_UP) {
-                if (dynamic_cast<TextLinkSpan*>(link)) {
-                    dynamic_cast<TextLinkSpan*>(link)->onClick(
-                            widget, TextLinkSpan::NVOCATION_METHOD_TOUCH);
+                if (dynamic_cast<const TextLinkSpan*>(link)) {
+                    dynamic_cast<const TextLinkSpan*>(link)->onClick(
+                            widget, TextLinkSpan::INVOCATION_METHOD_TOUCH);
                 } else {
                     link->onClick(widget);
                 }
             } else if (action == MotionEvent::ACTION_DOWN) {
-                if (widget.getContext().getApplicationInfo().targetSdkVersion
-                        >= Build.VERSION_CODES.P) {
-                    // Selection change will reposition the toolbar. Hide it for a few ms for a
-                    // smoother transition.
-                    widget.hideFloatingToolbar(HIDE_FLOATING_TOOLBAR_DELAY_MS);
-                }
+                // AOSP hides the floating toolbar here (on P+) for a smoother
+                // selection transition; CDROID has no floating toolbar yet, so
+                // just set the selection to the link span.
                 Selection::setSelection(&buffer, buffer.getSpanStart(link), buffer.getSpanEnd(link));
             }
             return true;
@@ -257,5 +253,6 @@ MovementMethod* LinkMovementMethod::getInstance() {
 }
 
 //private static LinkMovementMethod sInstance;
+MovementMethod* LinkMovementMethod::sInstance = nullptr;
 NoCopySpan LinkMovementMethod::FROM_BELOW;
 }

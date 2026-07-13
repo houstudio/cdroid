@@ -1,5 +1,7 @@
 #ifndef __CLICKABLE_SPAN_H__
 #define __CLICKABLE_SPAN_H__
+#include <text/textpaint.h>
+#include <text/parcelablespan.h>
 namespace cdroid{
 class View;
 class TextPaint;
