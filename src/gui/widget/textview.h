@@ -270,6 +270,7 @@ protected:
     ChangeWatcher* mChangeWatcher;
     BufferType mBufferType = BufferType::NORMAL;
     virtual bool getDefaultEditable()const;
+    bool textCanBeSelected()const;
     void invalidateCursorPath();
     void invalidateCursor();
     void invalidateRegion(int start, int end, bool invalidateCursor);
@@ -404,6 +405,7 @@ public:
     void setInputType(int inputType);
     int  getInputType()const;
     int getImeOptions()const;
+    bool isInputMethodTarget()const;
     void setImeOptions(int imeOptions);
     bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);

@@ -81,11 +81,15 @@ private:
     CandidateView* mCandidates;
     InputMethod*   mIm;
     Committer      mCommit;
-    std::wstring   mComposing;   // raw pinyin letters typed (level-2)
+    std::wstring   mComposing;   // raw letters typed (pinyin or english prefix)
+    /* Last candidate list shown in the strip; a conversion method's
+     * space-while-composing finalizes the best (front) one. */
+    std::vector<std::string> mLastCandidates;
 
     void refreshCandidates(const std::vector<std::string>& cands);
-    void chooseCandidate(size_t id);
     void commitAndPredict(const std::string& committed);
+    /* Conversion methods (pinyin) finalize the best candidate on space. */
+    void commitBestCandidate();
     /* Single-level (English) only: commit the composing text as-is followed by
      * the separator char, then reset -- a word boundary flushes the buffer so
      * typing reads normally while completions stay optional. */

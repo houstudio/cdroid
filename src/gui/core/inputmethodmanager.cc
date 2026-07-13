@@ -239,11 +239,11 @@ InputMethodManager& InputMethodManager::getInstance(){
         // English uses a word-completion method (built-in baseline word list,
         // optionally overridden by english_words.txt in the data path). If the
         // override file is absent it simply keeps the built-in list.
-        //InputMethod*m = new EnglishInputMethod();
-        //m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
-        //mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
+        InputMethod*m = new EnglishInputMethod();
+        m->loadDicts(App::getInstance().getDataPath() + "english_words.txt", "");
+        mInst->registeMethod("English",m,"@cdroid:xml/qwerty.xml");
 #ifdef ENABLE_PINYIN2HZ
-        InputMethod* m = new GooglePinyin();
+        m = new GooglePinyin();
         m->loadDicts("dict_pinyin.dat","userdict.dat");
         mInst->registeMethod("GooglePinyin26",m,"@cdroid:xml/qwerty.xml");
 #endif
@@ -377,11 +377,11 @@ void InputMethodManager::applyKeyboard(const std::string&layout){
     Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
     imeWindow->kbdView->setKeyboard(kbd);
     // A product's InputMethod may supply a custom long-press popup container
-    // (getPopupLayout); apply it as the KeyboardView's popup layout so the
-    // accent mini-keyboard window is customizable. Empty -> keep the popupLayout
-    // declared in the IME layout (keyboard_popup_keyboard.xml).
+    // (getKeyboardLayout(POPUP)); apply it as the KeyboardView's popup layout so
+    // the accent mini-keyboard window is customizable. Empty -> keep the
+    // popupLayout declared in the IME layout (keyboard_popup_keyboard.xml).
     if(im){
-        const std::string popup = im->getPopupLayout();
+        const std::string popup = im->getKeyboardLayout(InputMethod::POPUP);
         if(!popup.empty()) imeWindow->kbdView->setPopupLayout(popup);
     }
     LOGD("applyKeyboard layout='%s' w=%d %p %d keys",layout.c_str(),screenW,kbd,kbd->getKeys().size());

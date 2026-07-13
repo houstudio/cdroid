@@ -16,10 +16,27 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <core/inputmethod.h>
+#include <text/inputtype.h>
 
 namespace cdroid{
 
 InputMethod::InputMethod(){
+}
+
+std::string InputMethod::getKeyboardLayout(int inputType)const{
+    // System-default keyboard set. The bundled English/Pinyin methods inherit
+    // this unchanged (they do not override), so they return the system layouts
+    // explicitly rather than relying on the IME's magic fallback. A product
+    // subclass overrides to ship its own keyboards. POPUP -> empty so the
+    // KeyboardView's android:popupLayout (keyboard_popup_keyboard.xml) supplies
+    // the accent popup container.
+    if(inputType == POPUP) return {};
+    switch(inputType & InputType::TYPE_MASK_CLASS){
+    case InputType::TYPE_CLASS_NUMBER:  return "@cdroid:xml/keyboard_number.xml";
+    case InputType::TYPE_CLASS_PHONE:   return "@cdroid:xml/keyboard_phone.xml";
+    case InputType::TYPE_CLASS_DATETIME:return "@cdroid:xml/keyboard_datetime.xml";
+    default: return "@cdroid:xml/qwerty.xml"; // TYPE_CLASS_TEXT
+    }
 }
 
 InputMethod::~InputMethod(){
@@ -47,18 +64,6 @@ void InputMethod::closeSearch(){
 }
 
 int InputMethod::getPredicts(const std::string&history,std::vector<std::string>&predicts){
-   return -1;
-}
-
-/* Base InputMethod does no candidate search and no in-composition selection:
- * search() returns <0 (the typed char is committed directly) and choose/
- * cancelLastChoice are unsupported. Concrete engines live in their own files
- * (googlepinyin.{h,cc}, englishinputmethod.{h,cc}). */
-int InputMethod::choose(size_t,std::vector<std::string>&){
-   return -1;
-}
-
-int InputMethod::cancelLastChoice(std::vector<std::string>&){
    return -1;
 }
 

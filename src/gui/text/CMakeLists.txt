@@ -43,6 +43,8 @@ add_library(cdtext
     method/timekeylistener.cc
     method/qwertykeylistener.cc
     method/textkeylistener.cc
+    method/linkmovementmethod.cc
+    method/textlinkspan.cc
     method/multitapkeylistener.cc
     method/replacementtransformationmethod.cc
     method/hidereturnstransformationmethod.cc

@@ -471,7 +471,7 @@ void TextView::initView(){
     mLineBreakStyle = LineBreakConfig::LINE_BREAK_STYLE_NONE;
     mLineBreakWordStyle = LineBreakConfig::LINE_BREAK_WORD_STYLE_NONE;
     setTextColor(0xFFFFFFFF);
-    //setHintTextColor(0xFFFFFFFF);
+    setHintTextColor(0xFF888888);
     if(mOnPreDrawListener==nullptr){
         mOnPreDrawListener=[this](){return onPreDraw();};
     }
@@ -839,6 +839,11 @@ InputMethodManager*TextView::getInputMethodManager(){
     return InputMethodManager::peekInstance();
 }
 
+bool TextView::isInputMethodTarget() const{
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    return imm != nullptr && imm->isActive(const_cast<TextView*>(this));
+}
+
 void TextView::setEnabled(bool _enabled) {
     if (_enabled == isEnabled()) {
         return;
@@ -895,7 +900,6 @@ void TextView::setTypeface(Typeface* tf,int style){
 
 void TextView::registerForPreDraw() {
     if (!mPreDrawRegistered) {
-        auto tree=getViewTreeObserver();
         getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
         mPreDrawRegistered = true;
     }
@@ -1473,8 +1477,7 @@ void TextView::append(const CharSequence& text, int start, int end){
     dynamic_cast<Editable*>(mText)->append(text, start, end);
     if (mAutoLinkMask != 0) {
         bool linksWereAdded = Linkify::addLinks(mSpannable, mAutoLinkMask);
-        // AOSP also gates on !textCanBeSelected(); not ported yet, gate on linksClickable.
-        if (linksWereAdded && mLinksClickable) {
+        if (linksWereAdded && mLinksClickable &&!textCanBeSelected()) {
             setMovementMethod(LinkMovementMethod::getInstance());
         }
     }
@@ -1619,9 +1622,8 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         Spannable* s2 = dynamic_cast<Spannable*>(text);
         if (s2 != nullptr && Linkify::addLinks(s2, mAutoLinkMask)) {
             setTextInternal(text);
-            // AOSP also gates this on !textCanBeSelected(); that method isn't
             // ported yet, so gate only on linksClickable.
-            if (mLinksClickable) {
+            if (mLinksClickable &&!textCanBeSelected()) {
                 setMovementMethod(LinkMovementMethod::getInstance());
             }
         }
@@ -1737,7 +1739,7 @@ void TextView::setHint(const std::string& hint){
 
 void TextView::setHint(CharSequence*hint){
      setHintInternal(hint);
-     if (mEditor != nullptr/* && isInputMethodTarget()*/) {
+     if (mEditor != nullptr && isInputMethodTarget()) {
           //mEditor->reportExtractedText();
      }
 }
@@ -1784,13 +1786,13 @@ Editor* TextView::getEditor(){
 void TextView::setMovementMethod(MovementMethod* movement) {
     // Android: stores, and (re)initializes if there's already a laid-out Spannable.
     mMovement = movement;
-    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+    if ((mMovement != nullptr) && (mLayout != nullptr) && (mSpannable != nullptr)) {
         mMovement->initialize(*this, *mSpannable);
     }
 }
 
 void TextView::fixFocusableAndClickableSettings() {
-    if (mMovement != nullptr || (mEditor != nullptr && mEditor->mKeyListener != nullptr)) {
+    if ((mMovement != nullptr) || (mEditor != nullptr && mEditor->mKeyListener != nullptr)) {
         setFocusable(FOCUSABLE);
         setClickable(true);
         setLongClickable(true);
@@ -2406,7 +2408,7 @@ void TextView::setGravity(int gravity){
     if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
-    if(mLayout!=nullptr && newLayout){
+    if((mLayout!=nullptr) && newLayout){
         // XXX this is heavy-handed because no actual content changes.
         const int want = mLayout->getWidth();
         const int hintWant = mHintLayout == nullptr ? 0 : mHintLayout->getWidth();
@@ -3404,22 +3406,22 @@ const TextDirectionHeuristic*TextView::getTextDirectionHeuristic()const{
 
     // Now, we can select the heuristic
     switch (getTextDirection()) {
-        default:
-        case View::TEXT_DIRECTION_FIRST_STRONG:
-            return (defaultIsRtl ? TextDirectionHeuristics::FIRSTSTRONG_RTL :
-                    TextDirectionHeuristics::FIRSTSTRONG_LTR);
-        case View::TEXT_DIRECTION_ANY_RTL:
-            return TextDirectionHeuristics::ANYRTL_LTR;
-        case View::TEXT_DIRECTION_LTR:
-            return TextDirectionHeuristics::LTR;
-        case View::TEXT_DIRECTION_RTL:
-            return TextDirectionHeuristics::RTL;
-        case View::TEXT_DIRECTION_LOCALE:
-            return TextDirectionHeuristics::LOCALE;
-        case View::TEXT_DIRECTION_FIRST_STRONG_LTR:
-            return TextDirectionHeuristics::FIRSTSTRONG_LTR;
-        case View::TEXT_DIRECTION_FIRST_STRONG_RTL:
-            return TextDirectionHeuristics::FIRSTSTRONG_RTL;
+    default:
+    case View::TEXT_DIRECTION_FIRST_STRONG:
+        return (defaultIsRtl ? TextDirectionHeuristics::FIRSTSTRONG_RTL :
+                TextDirectionHeuristics::FIRSTSTRONG_LTR);
+    case View::TEXT_DIRECTION_ANY_RTL:
+        return TextDirectionHeuristics::ANYRTL_LTR;
+    case View::TEXT_DIRECTION_LTR:
+        return TextDirectionHeuristics::LTR;
+    case View::TEXT_DIRECTION_RTL:
+        return TextDirectionHeuristics::RTL;
+    case View::TEXT_DIRECTION_LOCALE:
+        return TextDirectionHeuristics::LOCALE;
+    case View::TEXT_DIRECTION_FIRST_STRONG_LTR:
+        return TextDirectionHeuristics::FIRSTSTRONG_LTR;
+    case View::TEXT_DIRECTION_FIRST_STRONG_RTL:
+        return TextDirectionHeuristics::FIRSTSTRONG_RTL;
     }
     return TextDirectionHeuristics::FIRSTSTRONG_LTR;
 }
@@ -3848,6 +3850,15 @@ void TextView::invalidateDrawable(Drawable& drawable){
     if (!handled) {
         View::invalidateDrawable(drawable);
     }
+}
+
+bool TextView::textCanBeSelected() const{
+    // prepareCursorController() relies on this method.
+    // If you change this condition, make sure prepareCursorController is called anywhere
+    // the value of this condition might be changed.
+    if (mMovement == nullptr || !mMovement->canSelectArbitrarily()) return false;
+    return isTextEditable()
+            || (isTextSelectable() && dynamic_cast<Spannable*>(mText) && isEnabled());
 }
 
 bool TextView::isTextSelectable()const{
@@ -4765,7 +4776,12 @@ bool TextView::isSuggestionsEnabled()const{
         return false;
     }
     if ((mEditor->mInputType & InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS) > 0) return false;
-    return false;
+    const int variation = mEditor->mInputType & InputType::TYPE_MASK_VARIATION;
+    return (variation == InputType::TYPE_TEXT_VARIATION_NORMAL
+          || variation == InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT
+          || variation == InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE
+          || variation == InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE
+          || variation == InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);;
 }
 
 bool TextView::canSelectText() const{
@@ -5650,8 +5666,8 @@ void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event)
 
     if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED) {
         std::string text = getText();
-        event.setFromIndex(0);//Selection.getSelectionStart(mText));
-        event.setToIndex(text.length());//Selection.getSelectionEnd(mText));
+        event.setFromIndex(Selection::getSelectionStart(mText));
+        event.setToIndex(Selection::getSelectionEnd(mText));
         event.setItemCount(text.length());
     }
 }

@@ -48,35 +48,37 @@ void ImeSelectionController::reset(){
 
 void ImeSelectionController::onChar(int primaryCode){
     if(mIm == nullptr) return;
-    const bool twoLevel = mIm->supportsTwoLevel();
+    const bool conversion = mIm->isConversionMethod();
 
-    if(twoLevel && primaryCode == ' ' && isComposing()){
-        // Pinyin convention: space while composing finalizes the best phrase.
-        chooseCandidate(0);
+    // Space while composing: a conversion method (pinyin) finalizes the best
+    // candidate; a literal method (english) treats it as a word boundary.
+    if(primaryCode == ' ' && isComposing()){
+        if(conversion) commitBestCandidate();
+        else flushComposing(primaryCode);
         return;
     }
-    if(!twoLevel){
-        // Single-level (English word-completion): a non-alphanumeric key is a
-        // word boundary. With text being composed it flushes the typed text +
-        // the separator; with nothing composed the separator is just committed
-        // directly (a standalone space/punct). This keeps plain typing normal
-        // while completions stay an optional tap in the strip.
-        if(isComposing() && !std::isalnum(primaryCode)){
-            flushComposing(primaryCode);
-            return;
-        }
-        if(!isComposing() && !std::isalnum(primaryCode)){
+    // Only composable characters go to the engine/buffer: pinyin letters for a
+    // conversion method, letters+digits for a literal method. Anything else
+    // (space when not composing, punctuation, a digit in pinyin) is a separator:
+    // commit it directly and never feed it to search -- pinyin only takes
+    // letters, and a stray space/punct sent to the engine leaves it stuck so
+    // subsequent pinyin won't update the candidate list.
+    const bool composable = conversion ? std::isalpha(primaryCode) : std::isalnum(primaryCode);
+    if(!composable){
+        if(!conversion && isComposing()){
+            flushComposing(primaryCode);  // literal: separator follows the word
+        } else {
             mCommit(std::string(1, (char)primaryCode));
-            return;
         }
+        return;
     }
     mComposing.append(1, primaryCode);
     const std::string u8txt = TextUtils::unicode2utf8(mComposing);
     std::vector<std::string> candidates;
     const int rc = mIm->search(u8txt, candidates);
     if(rc < 0){
-        // Level-1 engine with no candidate search: commit the typed character
-        // straight to the editor.
+        // Engine with no candidate search: commit the typed character straight
+        // to the editor.
         mCommit(u8txt);
         mComposing.clear();
     } else {
@@ -87,83 +89,47 @@ void ImeSelectionController::onChar(int primaryCode){
 
 bool ImeSelectionController::onBackspace(){
     if(mIm == nullptr || !isComposing()) return false;
-    if(!mIm->fixedString().empty()){
-        // choose phase: revert the last fixed word
-        std::vector<std::string> candidates;
-        mIm->cancelLastChoice(candidates);
-        refreshCandidates(candidates);
+    // One-level: drop the last typed char and re-search.
+    mComposing.pop_back();
+    if(mComposing.empty()){
+        mIm->closeSearch();
+        if(mCandidates) mCandidates->clear();
+        mLastCandidates.clear();
     } else {
-        // search phase: drop the last typed char and re-search
-        mComposing.pop_back();
-        if(mComposing.empty()){
-            mIm->closeSearch();
-            if(mCandidates) mCandidates->clear();
-        } else {
-            std::vector<std::string> candidates;
-            mIm->search(TextUtils::unicode2utf8(mComposing), candidates);
-            refreshCandidates(candidates);
-        }
+        std::vector<std::string> candidates;
+        mIm->search(TextUtils::unicode2utf8(mComposing), candidates);
+        refreshCandidates(candidates);
     }
     return true;
 }
 
-void ImeSelectionController::onCandidateSelected(const std::string& displayed, int id){
-    if(isComposing() && mIm && !mIm->supportsTwoLevel()){
-        // Single-level completion (English): a tap commits the whole shown word
-        // (the strip mirrors the engine's candidates, so `displayed` is the word
-        // itself) and resets the composition.
-        mIm->closeSearch();
-        mComposing.clear();
-        commitAndPredict(displayed);
-        return;
-    }
-    if(isComposing()){
-        // Two-level composing: the suggestions are search/choose candidates;
-        // tapping one fixes it (continuous selection). The strip mirrors the
-        // engine's candidate list in order, so `id` indexes it directly.
-        chooseCandidate((size_t)id);
-    } else {
-        // Prediction strip (after a commit): there is no search/choose workspace
-        // (it was reset on commit), so the tap must commit the shown suggestion
-        // directly and chain to the next round of next-word predictions. Routing
-        // it through choose() would no-op on the reset engine.
-        commitAndPredict(displayed);
-    }
+void ImeSelectionController::onCandidateSelected(const std::string& displayed, int /*id*/){
+    // One-level selection: a tap commits the shown candidate (the strip mirrors
+    // the engine's candidate list, so `displayed` is the word/phrase itself)
+    // and chains to next-word predictions. Works the same for a composing
+    // candidate and a post-commit prediction.
+    if(mIm) mIm->closeSearch();
+    mComposing.clear();
+    commitAndPredict(displayed);
 }
 
-/* Show `candidates` in the strip, each prefixed with the engine's already-fixed
- * composing text so the user sees the phrase being built (empty prefix during
- * plain typing -> the raw candidates). */
+/* Show `candidates` in the strip (cached so a conversion method's space-while-
+ * composing can finalize the best one). */
 void ImeSelectionController::refreshCandidates(const std::vector<std::string>& candidates){
     if(mCandidates == nullptr) return;
-    const std::string fixed = mIm ? mIm->fixedString() : std::string();
-    std::vector<std::string> shown;
-    shown.reserve(candidates.size());
-    for(const auto& c : candidates) shown.push_back(fixed + c);
-    mCandidates->setSuggestions(shown, true, true);
-    LOGD("%d suggestions (fixed='%s')", (int)candidates.size(), fixed.c_str());
+    mLastCandidates = candidates;
+    mCandidates->setSuggestions(candidates, true, true);
+    LOGD("%d suggestions", (int)candidates.size());
     mCandidates->invalidate(true);
 }
 
-/* Two-level selection: fix candidate[id] as the composing prefix. If the whole
- * pinyin is now fixed (the engine then returns exactly one candidate -- the
- * complete phrase), commit it and offer next-word predictions; otherwise
- * refresh the strip with the candidates for the still-unfixed tail. */
-void ImeSelectionController::chooseCandidate(size_t id){
-    if(mIm == nullptr) return;
-    std::vector<std::string> candidates;
-    const int rc = mIm->choose(id, candidates);
-    if(rc < 0) return; // method has no in-composition selection (level-1)
-    if(rc <= 1 && !candidates.empty()){
-        // Fully fixed: candidates[0] is the whole phrase. Reset the composing
-        // workspace before committing so a later prediction tap does not drive a
-        // reset engine through choose().
-        mIm->closeSearch();
-        mComposing.clear();
-        commitAndPredict(candidates[0]);
-    } else {
-        refreshCandidates(candidates);
-    }
+/* Conversion methods (pinyin) use space-while-composing to finalize the best
+ * candidate (the pinyin convention) instead of inserting a literal space. */
+void ImeSelectionController::commitBestCandidate(){
+    if(mLastCandidates.empty()) return;
+    if(mIm) mIm->closeSearch();
+    mComposing.clear();
+    commitAndPredict(mLastCandidates.front());
 }
 
 /* A long-press popup accent pick: commit the chosen char directly (the base

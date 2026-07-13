@@ -23,13 +23,13 @@
 
 namespace cdroid{
 
-/* Single-level English word-completion method. Holds a word list (a built-in
- * baseline, optionally overridden by a file) and produces prefix completions:
- * search("hel") -> ["hel", "hello", "help", ...]. It does NOT do in-composition
- * selection -- tapping a candidate commits the whole word -- so it opts out of
- * two-level via supportsTwoLevel()==false. The same pattern (a word list +
- * prefix search) can be reused for other Western-script keyboards, each with
- * its own word file and keyboard layout. */
+/* English word-completion method. Holds a word list (a built-in baseline,
+ * optionally overridden by a file) and produces prefix completions:
+ * search("hel") -> ["hel", "hello", "help", ...]. The typed letters ARE the
+ * text (it is a literal-input method, isConversionMethod()==false), so tapping
+ * a candidate commits the whole word. The same pattern (a word list + prefix
+ * search) can be reused for other Western-script keyboards, each with its own
+ * word file and keyboard layout. */
 class EnglishInputMethod:public InputMethod{
 public:
    EnglishInputMethod();
@@ -37,7 +37,6 @@ public:
     * If the file is missing or empty, the built-in baseline is kept. */
    bool loadDicts(const std::string&sys,const std::string&user)override;
    int search(const std::string&prefix,std::vector<std::string>&candidates)override;
-   bool supportsTwoLevel()const override{return false;}
 private:
    std::vector<std::string> mWords;
 };

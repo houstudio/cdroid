@@ -22,10 +22,11 @@
 #include <gui_features.h>
 #include <core/inputmethod.h>
 
-/* Two-level pinyin input method backed by the vendored Google Pinyin engine
+/* Pinyin input method backed by the vendored Google Pinyin engine
  * (src/3rdparty/pinyin, treated as third-party). The whole class only exists
  * when ENABLE_PINYIN2HZ is on, so the base InputMethod / EnglishInputMethod in
- * inputmethod.h stay free of any pinyin dependency. */
+ * inputmethod.h stay free of any pinyin dependency. It is a conversion method
+ * (isConversionMethod()==true): typed letters are pinyin, candidates are hanzi. */
 #ifdef ENABLE_PINYIN2HZ
 namespace cdroid{
 
@@ -41,10 +42,7 @@ public:
    int search(const std::string&pinyin,std::vector<std::string>&candidates)override;
    void closeSearch()override;
    int getPredicts(const std::string&history,std::vector<std::string>&predicts)override;
-   int getSpellings(std::vector<std::string>&syllables)override;
-   std::string fixedString()const override;
-   int choose(size_t candId,std::vector<std::string>&candidates)override;
-   int cancelLastChoice(std::vector<std::string>&candidates)override;
+   bool isConversionMethod()const override{return true;}
 };
 
 }/*endof namespace*/

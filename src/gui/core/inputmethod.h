@@ -42,48 +42,34 @@ public:
    /* Next-word predictions from a committed history string. Returns count (>=0),
     * or <0 if prediction is unsupported. */
    virtual int getPredicts(const std::string&history,std::vector<std::string>&predicts);
-   /* Pinyin syllable segmentation of the current input (strings). Returns count
-    * (>=0), or <0 if unsupported. */
-   virtual int getSpellings(std::vector<std::string>&syllables){return -1;}
-   /* The already-fixed composing prefix (chosen so far) for the composing display;
-    * empty if unsupported / nothing fixed yet. */
-   virtual std::string fixedString()const{return "";}
-   /* Two-level / continuous selection (pinyin). choose() fixes candidate[candId]
-    * as the current prefix and refills `candidates` with the remaining pinyin's
-    * candidate list; returns the new candidate count, or <0 if the method does
-    * not support in-composition selection (e.g. the English/qwerty method, which
-    * commits each key directly). cancelLastChoice() reverts the last choose and
-    * refills `candidates` likewise. */
-   virtual int choose(size_t candId,std::vector<std::string>&candidates);
-   virtual int cancelLastChoice(std::vector<std::string>&candidates);
-   /* Whether choosing a candidate fixes a prefix and continues with more
-    * candidates for the unfixed tail (two-level / phrase selection, e.g.
-    * pinyin). Default true: any candidate-producing engine is treated as
-    * two-level unless it opts out. Single-level engines (word-completion, e.g.
-    * the English method) override to false -- a candidate tap commits the whole
-    * word instead of fixing a prefix. */
-   virtual bool supportsTwoLevel()const{return true;}
+   /* Whether this method CONVERTS the typed letters into different text (pinyin:
+    * the letters are pinyin and candidates are hanzi, so a candidate tap or space
+    * commits a candidate) vs treats them as literal input (english: the typed
+    * letters are the text, space is a word separator). The controller uses this
+    * only to pick the space-while-composing behaviour. Default false (literal). */
+   virtual bool isConversionMethod()const{return false;}
 
    /* Custom keyboard layout provisioning (per-product customization).
     *
-    * getKeyboardLayout(int inputType): return the layout resource for the given
-    * editor inputType (e.g. "@myprod:xml/keypad.xml", resolved from the
-    * product's app pak the same way "@cdroid:xml/qwerty.xml" is, or a
-    * filesystem path), or empty to use the IME's built-in default for that
-    * class. The value can inspect the inputType's class AND variation (e.g.
-    * return a distinct layout for password fields). Covers the field-driven
-    * keyboards: text / number / phone / datetime. The 123 symbol page is IME-
-    * internal (not inputType-driven) and uses the built-in symbols.xml.
+    * Return the layout resource for the given inputType (e.g.
+    * "@myprod:xml/keypad.xml", resolved from the product's app pak the same way
+    * "@cdroid:xml/qwerty.xml" is, or a filesystem path), or empty to use the
+    * IME's built-in default.
     *
-    * getPopupLayout(): the long-press accent mini-keyboard's container layout
-    * (the popup window hosting the mini KeyboardView), or empty for the
-    * KeyboardView's declared android:popupLayout (keyboard_popup_keyboard.xml).
+    * - A real editor inputType (>= 0): the field-driven keyboard. The value can
+    *   inspect class AND variation (e.g. a distinct layout for password). Covers
+    *   text / number / phone / datetime.
+    * - POPUP (-1): the long-press accent mini-keyboard's container layout. The
+    *   popup is not inputType-driven, so it is requested via this sentinel.
     *
-    * Both default to empty, so the bundled English/Pinyin methods are
-    * unchanged -- override in a product subclass to ship custom keyboards
-    * without modifying CDROID. */
-   virtual std::string getKeyboardLayout(int inputType)const{ (void)inputType; return {}; }
-   virtual std::string getPopupLayout()const{ return {}; }
+    * The 123 symbol page is IME-internal and uses the built-in symbols.xml
+    * (not routed through here). Defaults return empty, so the bundled
+    * English/Pinyin methods are unchanged -- override in a product subclass to
+    * ship custom keyboards without modifying CDROID. */
+   static constexpr int POPUP = -1;  // sentinel inputType: request the popup layout
+   /* Returns the system-default keyboard set (inherited unchanged by the bundled
+    * English/Pinyin methods). Override in a product subclass to customize. */
+   virtual std::string getKeyboardLayout(int inputType)const;
 };
 
 };
