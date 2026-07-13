@@ -19,6 +19,7 @@
 #include <widget/editor.h>
 #include <text/method/movementmethod.h>
 #include <text/method/arrowkeymovementmethod.h>
+#include <text/method/linkmovementmethod.h>
 #include <text/method/offsetmapping.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
@@ -27,6 +28,7 @@
 #include <text/selection.h>
 #include <text/spannablestringbuilder.h>
 #include <text/inputfilter.h>
+#include <text/linkify.h>
 #include <text/inputtype.h>
 #include <text/editable.h>
 #include <text/style/clickablespan.h>
@@ -1469,14 +1471,13 @@ void TextView::append(const CharSequence& text, int start, int end){
         setText(mText, BufferType::EDITABLE);
     }
     dynamic_cast<Editable*>(mText)->append(text, start, end);
-    /*if (mAutoLinkMask != 0) {
-        bool linksWereAdded = Linkify.addLinks(mSpannable, mAutoLinkMask);
-        // Do not change the movement method for text that support text selection as it
-        // would prevent an arbitrary cursor displacement.
-        if (linksWereAdded && mLinksClickable && !textCanBeSelected()) {
+    if (mAutoLinkMask != 0) {
+        bool linksWereAdded = Linkify::addLinks(mSpannable, mAutoLinkMask);
+        // AOSP also gates on !textCanBeSelected(); not ported yet, gate on linksClickable.
+        if (linksWereAdded && mLinksClickable) {
             setMovementMethod(LinkMovementMethod::getInstance());
         }
-    }*/
+    }
 }
 
 void TextView::setText(const std::string&txt){
@@ -1611,35 +1612,20 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
         //text = TextUtils::stringOrSpannedString(text);
     }
-#if 0
     if (mAutoLinkMask != 0) {
-        Spannable* s2;
-
-        if (type == BufferType::EDITABLE || dynamic_cast<Spannable*>(text)) {
-            s2 = (Spannable*) text;
-        } else {
-            s2 = mSpannableFactory.newSpannable(text);
-        }
-
-        if (Linkify.addLinks(s2, mAutoLinkMask)) {
-            text = s2;
-            type = (type == BufferType::EDITABLE) ? BufferType::EDITABLE : BufferType::SPANNABLE;
-
-            /*
-             * We must go ahead and set the text before changing the
-             * movement method, because setMovementMethod() may call
-             * setText() again to try to upgrade the buffer type.
-             */
+        // AOSP wraps non-Spannable buffers via mSpannableFactory.newSpannable;
+        // CDROID hasn't ported that factory, so only already-Spannable buffers
+        // (the editable / Spannable cases) get auto-linked here.
+        Spannable* s2 = dynamic_cast<Spannable*>(text);
+        if (s2 != nullptr && Linkify::addLinks(s2, mAutoLinkMask)) {
             setTextInternal(text);
-
-            // Do not change the movement method for text that support text selection as it
-            // would prevent an arbitrary cursor displacement.
-            if (mLinksClickable && !textCanBeSelected()) {
+            // AOSP also gates this on !textCanBeSelected(); that method isn't
+            // ported yet, so gate only on linksClickable.
+            if (mLinksClickable) {
                 setMovementMethod(LinkMovementMethod::getInstance());
             }
         }
     }
-#endif
     mBufferType = type;
     setTextInternal(text);
 
