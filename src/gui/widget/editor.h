@@ -106,6 +106,8 @@ private:
     bool shouldFilterOutTouchEvent(MotionEvent& event) const;
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
+    void adjustInputType(bool password, bool passwordInputType,
+        bool webPasswordInputType, bool numberPasswordInputType);
 public:
     explicit Editor(TextView* textView);
     ~Editor();

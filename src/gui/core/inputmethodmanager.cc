@@ -48,6 +48,10 @@ protected:
     * be held as composing text and never committed). True while such a layout
     * is shown. */
    bool mDirectCommit = false;
+   /* User pressed the 123 key on the text keyboard -> the symbols layout is
+    * shown temporarily; ABC switches back. Independent of inputType (the field
+    * is still text). Reset whenever setInputType loads a fresh layout. */
+   bool mSymbolMode = false;
 public:
    IMEWindow(int w,int h);
    ~IMEWindow(){
@@ -140,7 +144,7 @@ IMEWindow::IMEWindow(int w,int h):Window(0,0,w,h,TYPE_SYSTEM_WINDOW){
         InputMethodManager&imm = InputMethodManager::getInstance();
         LOGD("primaryCode=%x %d keys",primaryCode,keyCodes.size());
         switch(primaryCode){
-        case Keyboard::KEYCODE_MODE_CHANGE://changeMode();break;
+        case Keyboard::KEYCODE_MODE_CHANGE: imm.toggleSymbolMode(); break;
         case Keyboard::KEYCODE_SHIFT    :  changeCapital();break;
         case Keyboard::KEYCODE_DONE     :  break;
         case Keyboard::KEYCODE_DELETE:
@@ -313,6 +317,9 @@ void InputMethodManager::setInputType(int inputType){
         if(imeWindow)imeWindow->setVisibility(View::INVISIBLE);
         return;
     }
+    // A new editor resets the 123/ABC toggle -- always start in the layout the
+    // inputType asks for, never inherit a stale symbol-mode layout.
+    if(imeWindow) imeWindow->mSymbolMode = false;
     // Decode the inputType class and pick a matching soft-keyboard layout, plus
     // whether keys commit straight to the editor (numeric/phone/datetime, no
     // composition). This is the inputType<->IME linkage: the editor advertises
@@ -368,6 +375,26 @@ void InputMethodManager::applyKeyboard(const std::string&layout){
     Keyboard*kbd = new Keyboard(imeWindow->getContext(),layout,screenW,240);
     imeWindow->kbdView->setKeyboard(kbd);
     LOGD("applyKeyboard layout='%s' w=%d %p %d keys",layout.c_str(),screenW,kbd,kbd->getKeys().size());
+}
+
+void InputMethodManager::toggleSymbolMode(){
+    if(imeWindow==nullptr) return;
+    imeWindow->mSymbolMode = !imeWindow->mSymbolMode;
+    if(imeWindow->mSymbolMode){
+        // 123 pressed on the text keyboard: show the symbols page (digits +
+        // punctuation, with an ABC key to switch back). The field is still text,
+        // so keys still go through the composition engine (directCommit stays
+        // off); a digit/symbol commits via the engine's word-boundary flush.
+        applyKeyboard("@cdroid:xml/symbols.xml");
+    } else {
+        // ABC pressed: restore the active text method's own layout.
+        std::string layout;
+        for(const auto&mthd:imeMethods){ if(mthd.method==im){ layout=mthd.layout; break; } }
+        if(layout.empty() && !imeMethods.empty()) layout = imeMethods.begin()->layout;
+        if(layout.empty()) layout = "@cdroid:xml/qwerty.xml";
+        applyKeyboard(layout);
+    }
+    LOGD("toggleSymbolMode -> %d", (int)imeWindow->mSymbolMode);
 }
 
 int InputMethodManager::setInputMethod(const std::string&name){

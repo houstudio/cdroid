@@ -25,6 +25,7 @@
 #include <text/spannablestringbuilder.h>
 #include <text/spanwatcher.h>
 #include <text/layout.h>
+#include <text/inputtype.h>
 #include <text/parcelablespan.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
@@ -323,6 +324,28 @@ void Editor::resumeBlink() {
     // Android.resumeBlink: mBlink.uncancel() then makeBlink().
     mBlinkCancelled = false;
     makeBlink();
+}
+
+void Editor::adjustInputType(bool password, bool passwordInputType,
+        bool webPasswordInputType, bool numberPasswordInputType) {
+    // mInputType has been set from inputType, possibly modified by mInputMethod.
+    // Specialize mInputType to [web]password if we have a text class and the original input
+    // type was a password.
+    if ((mInputType & InputType::TYPE_MASK_CLASS) == InputType::TYPE_CLASS_TEXT) {
+        if (password || passwordInputType) {
+            mInputType = (mInputType & ~(InputType::TYPE_MASK_VARIATION))
+                    | InputType::TYPE_TEXT_VARIATION_PASSWORD;
+        }
+        if (webPasswordInputType) {
+            mInputType = (mInputType & ~(InputType::TYPE_MASK_VARIATION))
+                    | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD;
+        }
+    } else if ((mInputType & InputType::TYPE_MASK_CLASS) == InputType::TYPE_CLASS_NUMBER) {
+        if (numberPasswordInputType) {
+            mInputType = (mInputType & ~(InputType::TYPE_MASK_VARIATION))
+                    | InputType::TYPE_NUMBER_VARIATION_PASSWORD;
+        }
+    }
 }
 
 void Editor::loadCursorDrawable() {

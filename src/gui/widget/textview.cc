@@ -344,11 +344,10 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         }
     }
 
-    // Android: mEditor.adjustInputType(password, passwordInputType, webPasswordInputType,
-    //   numberPasswordInputType) flips variation flags for password fields. CDROID's Editor
-    //   has no adjustInputType yet → DEFERRED.
-    // TODO(DEFERRED): port Editor::adjustInputType.
-    (void)password; (void)passwordInputType; (void)webPasswordInputType; (void)numberPasswordInputType;
+    if(mEditor!=nullptr){
+        mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
+                numberPasswordInputType);
+    }
 
     if (singleLine != mSingleLine) {
         setSingleLine(singleLine);
