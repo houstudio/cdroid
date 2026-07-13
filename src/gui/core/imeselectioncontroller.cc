@@ -123,8 +123,18 @@ void ImeSelectionController::onCandidateSelected(const std::string& displayed, i
 void ImeSelectionController::refreshCandidates(const std::vector<std::string>& candidates){
     if(mCandidates == nullptr) return;
     mLastCandidates = candidates;
-    mCandidates->setSuggestions(candidates, true, true);
-    LOGD("%d suggestions", (int)candidates.size());
+    std::vector<std::string> shown = candidates;
+    /* For a conversion method (pinyin) the engine only returns hanzi candidates,
+     * so prepend the raw typed pinyin as the first item -- the user sees what
+     * they entered, and backspace edits it (onBackspace drops a composing char).
+     * A literal method's engine already includes the typed prefix as
+     * candidates[0], so it needs no prepending. mLastCandidates keeps the raw
+     * engine list so space-while-composing still finalizes the best hanzi. */
+    if(mIm && mIm->isConversionMethod() && !mComposing.empty()){
+        shown.insert(shown.begin(), TextUtils::unicode2utf8(mComposing));
+    }
+    mCandidates->setSuggestions(shown, true, true);
+    LOGD("%d suggestions (pinyin='%ls')", (int)shown.size(), mComposing.c_str());
     mCandidates->invalidate(true);
 }
 
