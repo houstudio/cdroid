@@ -18,7 +18,7 @@
 #include <core/imeselectioncontroller.h>
 #include <core/inputmethod.h>
 #include <utility>
-#include <cctype>
+#include <text/character.h>
 #include <widget/candidateview.h>
 #include <utils/textutils.h>
 #include <porting/cdlog.h>
@@ -63,12 +63,17 @@ void ImeSelectionController::onChar(int primaryCode){
     // commit it directly and never feed it to search -- pinyin only takes
     // letters, and a stray space/punct sent to the engine leaves it stuck so
     // subsequent pinyin won't update the candidate list.
-    const bool composable = conversion ? std::isalpha(primaryCode) : std::isalnum(primaryCode);
+    // Character::isLetter/isLetterOrDigit are Unicode-aware (any codepoint,
+    // including non-BMP), unlike std::isalpha/isalnum which are UB past 0xFF.
+    const bool composable = conversion ? Character::isLetter(primaryCode)
+                                       : Character::isLetterOrDigit(primaryCode);
     if(!composable){
         if(!conversion && isComposing()){
             flushComposing(primaryCode);  // literal: separator follows the word
         } else {
-            mCommit(std::string(1, (char)primaryCode));
+            // Commit the codepoint as proper UTF-8 (a (char) cast would truncate
+            // any codepoint > 0xFF).
+            mCommit(TextUtils::unicode2utf8(std::wstring(1, (wchar_t)primaryCode)));
         }
         return;
     }
