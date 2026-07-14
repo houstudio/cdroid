@@ -27,10 +27,8 @@ CandidateView::CandidateView(int w,int h):View(w,h){
     mColorRecommended =0xFFFF0000;
     mColorOther =0xFF00FF00;
     mVerticalPadding=0;
-    mTextSize=20;
     mBgPadding.set(5,5,5,5);
-    setMinimumHeight(mTextSize+8);
-    mOnPredict = nullptr;
+    setMinimumHeight(28);
 }
 
 CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
@@ -40,15 +38,48 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts)
      mColorRecommended = atts.getColor("candidate_recommand");
      mColorOther = atts.getColor("candidate_other");
      mVerticalPadding = atts.getDimensionPixelSize("candidate_vertical_padding");
-     mTextSize = atts.getDimensionPixelSize("candidate_text_size",20);
+     const int textSize = atts.getDimensionPixelSize("candidate_text_size",20);
      setHorizontalFadingEdgeEnabled(true);
      setWillNotDraw(false);
      setHorizontalScrollBarEnabled(false);
      setVerticalScrollBarEnabled(false);
      setMaxSuggestion(MAX_SUGGESTION);
      mBgPadding.set(5,5,5,5);
+     mPaint.setTextSize(textSize);
+     initView();
+}
+
+void CandidateView::initView(){
      mOnPredict = nullptr;
-     setMinimumHeight(mTextSize+8);
+     GestureDetector::OnGestureListener gl;
+     gl.onScroll=[this](MotionEvent* e1, MotionEvent& e2, float distanceX, float distanceY){
+         mScrolled = true;
+         int sx = getScrollX();
+         sx += distanceX;
+         if (sx < 0) {
+             sx = 0;
+         }
+         if (sx + getWidth() > mTotalWidth) {
+             sx -= distanceX;
+         }
+         mTargetScrollX = sx;
+         scrollTo(sx, getScrollY());
+         invalidate();
+         return true;
+     };
+     mGestureDetector = new GestureDetector(mContext,gl);
+     mPaint.setColor(mColorNormal);
+     setMinimumHeight(mPaint.getTextSize()+8);
+
+     setWillNotDraw(false);
+     setHorizontalFadingEdgeEnabled(true);
+     setHorizontalScrollBarEnabled(false);
+     setVerticalScrollBarEnabled(false);
+}
+
+CandidateView::~CandidateView(){
+    delete mSelectionHighlight;
+    delete mGestureDetector;
 }
 
 int CandidateView::computeHorizontalScrollRange(){
@@ -63,7 +94,7 @@ void CandidateView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     Rect padding={0,0,0,0};
     if(mSelectionHighlight)
         mSelectionHighlight->getPadding(padding);
-    int desiredHeight = mTextSize + mVerticalPadding + padding.top + padding.height;
+    int desiredHeight = mPaint.getTextSize() + mVerticalPadding + padding.top + padding.height;
     if(getBackground())desiredHeight =std::max(desiredHeight,getSuggestedMinimumHeight());
     // Maximum possible width and desired height
     LOGV("size=%dx%d",measuredWidth,resolveSize(desiredHeight, heightMeasureSpec));
@@ -83,10 +114,14 @@ static void drawText(Canvas& canvas,const std::string& text,const Rect&r,Paint&p
 }
 
 void CandidateView::onDrawInternal(Canvas* canvas) {
+    if(canvas!=nullptr){
+        View::onDraw(*canvas);
+    }
+    mTotalWidth = 0;
     if (mSuggestions.empty()) return;
     LOGV("%d suggestion canvas=%p",mSuggestions.size(),canvas);
 
-    if (getBackground() ) {
+    if (mBgPadding.empty()&&(getBackground()!=nullptr)) {
         getBackground()->getPadding(mBgPadding);
     }
     int  x = 0;
@@ -100,8 +135,6 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
     Rect suggestionRect;
     Cairo::RefPtr<Cairo::ImageSurface>image = Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,1,1);
     Cairo::RefPtr<Cairo::Context>mContext = Cairo::Context::create(image);
-    mTotalWidth = 0;
-    mPaint.setTextSize(mTextSize);
     for (int i = 0; i < count; i++) {
 	    std::string suggestion = mSuggestions.at(i);
         const int wordWidth = mPaint.measureText(suggestion) + X_GAP * 2;
@@ -185,6 +218,7 @@ void CandidateView::setSuggestions(const std::vector<std::string>& suggestions, 
     mTargetScrollX = 0;
     // Compute the total width
     onDrawInternal(nullptr);
+    invalidate();
     requestLayout();
 }
 
@@ -200,9 +234,12 @@ void CandidateView::setPredictListener(const OnPredictChange& ls){
 }
 
 bool CandidateView::onTouchEvent(MotionEvent& me) {
-    int action = me.getAction();
-    int x = (int) me.getX();
-    int y = (int) me.getY();
+    const int action = me.getAction();
+    const int x = (int) me.getX();
+    const int y = (int) me.getY();
+    if(mGestureDetector->onTouchEvent(me)){
+        return true;
+    }
     mTouchX = x;
 
     switch (action) {
@@ -223,7 +260,7 @@ bool CandidateView::onTouchEvent(MotionEvent& me) {
     case MotionEvent::ACTION_UP:
         if (!mScrolled) {
             if (mSelectedIndex >= 0) {
-		mOnPredict(*this,mSuggestions[mSelectedIndex],mSelectedIndex);
+                mOnPredict(*this,mSuggestions[mSelectedIndex],mSelectedIndex);
                 //mService.pickSuggestionManually(mSelectedIndex);
             }
         }
