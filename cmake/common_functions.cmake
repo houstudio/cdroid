@@ -51,9 +51,10 @@ except ImportError:
 
     if(CHECK_LXML_RESULT EQUAL 0)
         set(XMLPACKAGE ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath})
-        # XmlOptimized2Zip.py also embeds an npTc chunk into each *.9.png and adds them
-        # to the pak itself (name + relative path preserved) — exclude them here so the
-        # binary zip doesn't re-add the unchunked originals.
+        # XmlOptimized2Zip.py aapt-compiles each *.9.png: strips the 1px guide border,
+        # embeds a "cdNp" chunk (npTc+npLb+npOl), and adds the result to the pak as
+        # <name>.png (the .9 is dropped) — exclude *.9.png here so the binary zip
+        # doesn't re-add the bordered originals.
         set(BINZIP_9PATCH_EXCLUDE -x "*.9.png")
     else()
         set(XMLPACKAGE zip -q -r -D -1 ${PakPath} ./  -i "*.xml")
