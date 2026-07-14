@@ -29,6 +29,8 @@ CandidateView::CandidateView(int w,int h):View(w,h){
     mVerticalPadding=0;
     mBgPadding.set(5,5,5,5);
     setMinimumHeight(28);
+    mPaint.setTextSize(20);
+    initView();
 }
 
 CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts){
@@ -141,10 +143,10 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
 
         mWordX[i] = x;
         mWordWidth[i] = wordWidth;
-	    if(x+wordWidth<scrollX)continue;
-	    if(x>=scrollX+getWidth())break;
+	    if((x + wordWidth) < scrollX)continue;
+	    if(x >= (scrollX+getWidth()))break;
 	    suggestionRect.set(x,bgPadding.top,wordWidth,height);
-        if (touchX + scrollX >= x && touchX + scrollX < x + wordWidth && !scrolled) {
+        if ((touchX + scrollX >= x) && (touchX + scrollX < x + wordWidth) && !scrolled) {
             if (canvas && mSelectionHighlight) {
                 canvas->translate(x, 0);
                 mSelectionHighlight->setBounds(0, bgPadding.top, wordWidth, height);
