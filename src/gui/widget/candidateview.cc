@@ -252,6 +252,7 @@ bool CandidateView::onTouchEvent(MotionEvent& me) {
         if (y <= 0) {
             // Fling up!?
             if (mSelectedIndex >= 0) {
+                mOnPredict(*this,mSuggestions[mSelectedIndex],mSelectedIndex);
                 //mService.pickSuggestionManually(mSelectedIndex);
                 mSelectedIndex = -1;
             }
