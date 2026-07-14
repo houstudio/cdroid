@@ -10,6 +10,7 @@
 #include <tuple>
 #include <memory>
 #include <cassert>
+#include <functional>
 #include <stdexcept>
 
 namespace cdroid {
@@ -45,6 +46,7 @@ public:
 
 class Spannable : virtual public Spanned {
 public:
+    using Factory =std::function<Spannable*(CharSequence*)>;
     virtual ~Spannable() = default;
     virtual void setSpan(const ParcelableSpan* what, int start, int end, int flags) = 0;
     virtual void removeSpan(const ParcelableSpan* what) = 0;

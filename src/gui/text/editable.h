@@ -13,7 +13,7 @@ class InputFilter;
 class Editable : virtual public CharSequence, virtual public Spannable, public GetChars, public Appendable {
 public:
     using Appendable::append;
-
+    using Factory = std::function<Editable*(CharSequence*)>;
     virtual Editable& replace(int st, int en, const CharSequence& source, int start, int end) = 0;
 
     virtual Editable& replace(int st, int en, const CharSequence& text) = 0;
@@ -38,13 +38,6 @@ public:
 
     virtual InputFilter** getFilters(int* outCount) const = 0;
 
-    class Factory {
-    private:
-        static Factory* sInstance;
-    public:
-        static Factory* getInstance();
-        virtual Editable* newEditable(const CharSequence* source);
-    };
 };
 
 }/*endof namespace*/

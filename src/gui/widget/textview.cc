@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <set>
 #include <widget/textview.h>
 #include <widget/editor.h>
 #include <text/method/movementmethod.h>
@@ -475,6 +476,8 @@ void TextView::initView(){
     if(mOnPreDrawListener==nullptr){
         mOnPreDrawListener=[this](){return onPreDraw();};
     }
+    mSpannableFactory=[](CharSequence*txt){return new SpannableString(txt,false);};
+    mEditableFactory=[](CharSequence*txt){return new SpannableStringBuilder(txt);};
 }
 
 TextView::~TextView() {
@@ -486,14 +489,20 @@ TextView::~TextView() {
     //delete mLinkTextColor;
     delete mBoring;
     delete mHintBoring;
-    // Layouts reference mText/mHint (DynamicLayout::mBase) and dereference that
-    // base in their own destructor (removeSpan on the watcher), so the layouts
-    // MUST be destroyed before the text objects they reference — otherwise
-    // ~DynamicLayout touches freed memory.
-    delete mLayout;
-    delete mHintLayout;
-    mLayout = nullptr;
-    mHintLayout = nullptr;
+    // Free every owned layout, each distinct object exactly once. The mSavedLayout /
+    // mSavedHintLayout caches and mSavedMarqueeModeLayout (the second layout swapped
+    // with mLayout in marquee-fade-switch mode) may ALIAS mLayout/mHintLayout or each
+    // other (makeSingleLayout's useSaved path reuses the cache), so dedupe by pointer
+    // identity — a naive per-pointer delete would double-free. Layouts reference
+    // mText/mHint (DynamicLayout::mBase) and dereference that base in their own dtor,
+    // so they MUST be destroyed before the text objects below. (The three mSaved* were
+    // previously never freed → leaked.) delete nullptr is a safe no-op.
+    std::set<Layout*> layouts = { mLayout, mHintLayout, static_cast<Layout*>(mSavedLayout),
+                                  static_cast<Layout*>(mSavedHintLayout), mSavedMarqueeModeLayout };
+    for (Layout* l : layouts) delete l;
+    mLayout = mHintLayout = nullptr;
+    mSavedLayout = mSavedHintLayout = nullptr;
+    mSavedMarqueeModeLayout = nullptr;
     if(mText == mTransformed){
         mTransformed = nullptr;
     }
@@ -1581,10 +1590,23 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         createEditorIfNeeded();
         // TODO(editor): mEditor->forgetUndoRedo(); -- deferred: needs undo/redo stack.
         // Wrap the buffer in an Editable (Android's mEditableFactory.newEditable) so
-        // that Editor/Selection can operate on it. `text` can be the reused
-        // mCharWrapper member, so copy its content without deleting the original.
+        // that Editor/Selection can operate on it. SpannableStringBuilder(CharSequence*)
+        // COPIES the source content + clones spans (spannablestring.cc), so wrapping
+        // orphans the original `text`. Free that original here unless it is a pointer
+        // setText manages elsewhere: mCharWrapper (reused member, freed once in dtor),
+        // or prevText/prevTransformed (old mText/mTransformed, freed by the layout-safe
+        // logic at the end of this function). A fresh caller object passed to the
+        // transfer-ownership setText(CharSequence*) would otherwise leak.
         if (!dynamic_cast<Editable*>(text)) {
-            text = new SpannableStringBuilder(text);
+            CharSequence* original = text;
+            // mEditableFactory (default: new SpannableStringBuilder) COPIES the source
+            // content + clones spans, orphaning `original` — freed below unless setText
+            // manages it elsewhere. Going through the factory (not a hardcoded new) lets
+            // setEditableFactory() customize buffer creation, like Android.
+            text = mEditableFactory(text);
+            if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+                delete original;
+            }
         }
         //setFilters(t, mFilters);
         InputMethodManager* imm = getInputMethodManager();
@@ -1606,12 +1628,35 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
                 "TextView: ");// + getTextMetricsParams());
             break;
         case PrecomputedText::Params::NEED_RECOMPUTE:
+            // create() returns a NEW PrecomputedText owning its own content copy
+            // (PrecomputedText's ctor news a SpannableString from the source), so the
+            // original incoming `text` (a PrecomputedText) is superseded. AOSP follows
+            // this with `text = precomputed`; CDROID dropped the recompute result,
+            // leaking the new object AND discarding the recomputed metrics. Use the
+            // recomputed one and free the original unless setText frees it as prevText
+            // (setText(mText) case) or it's the reused mCharWrapper — same ownership
+            // guard as the EDITABLE-wrap branch above.
             precomputed = PrecomputedText::create(precomputed, textMetricsParams);
+            {
+                CharSequence* original = text;
+                text = precomputed;
+                if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+                    delete original;
+                }
+            }
             break;
         case PrecomputedText::Params::USABLE:/*pass through*/break;
         }
     } else if (type == BufferType::SPANNABLE || mMovement != nullptr) {
-        //text = mSpannableFactory.newSpannable(text);
+        // mSpannableFactory wraps `text` in a fresh Spannable (default: new
+        // SpannableString, which COPIES the source) — same copy-and-orphan hazard as
+        // the EDITABLE branch above. Free the original unless setText manages it
+        // elsewhere (mCharWrapper member, or prevText/prevTransformed freed at the end).
+        CharSequence* original = text;
+        text = mSpannableFactory(text);
+        if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+            delete original;
+        }
     } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
         //text = TextUtils::stringOrSpannedString(text);
     }
@@ -4762,7 +4807,21 @@ void TextView::setInputType(int inputType) {
     }
 
     if (!isSuggestionsEnabled()) {
-        setTextInternal(removeSuggestionSpans(mText));
+        // removeSuggestionSpans returns mText unchanged when it is already a
+        // Spannable (mutated in place) — the only case reachable here, since
+        // setKeyListener() above already wrapped mText into a SpannableStringBuilder.
+        // Its return ownership is otherwise ambiguous: for an immutable Spanned
+        // (SpannedString) it returns a NEW SpannableStringBuilder copy (owned). If
+        // that ever happens, re-adopt the copy through setText so the old mText is
+        // freed at a layout-safe point — a direct delete here would dangle mLayout,
+        // which still references the old text until the next layout pass.
+        // SpannableStringBuilder IS-A Editable, so setText's wrap branch won't copy.
+        CharSequence* cleaned = removeSuggestionSpans(mText);
+        if (cleaned != mText) {
+            setText(cleaned, mBufferType);
+        } else {
+            setTextInternal(cleaned);
+        }
     }
 
     // If this editor currently owns the IME, refresh the keyboard so its layout
@@ -5132,6 +5191,20 @@ void TextView::setFilters(Editable* e, const std::vector<InputFilter*>& filters)
 
 std::vector<InputFilter*> TextView::getFilters() {
     return mFilters;
+}
+
+// Android TextView.setSpannableFactory / setEditableFactory: store a custom buffer
+// factory. The defaults (initView) are new SpannableString / new SpannableStringBuilder
+// (copy the source). A custom factory must likewise return a freshly-owned object;
+// setText adopts it and frees the source (copy-and-orphan handling in setText).
+void TextView::setSpannableFactory(const Spannable::Factory& factory) {
+    mSpannableFactory = factory;
+    setText(mText);
+}
+
+void TextView::setEditableFactory(const Editable::Factory& factory) {
+    mEditableFactory = factory;
+    setText(mText);
 }
 
 void TextView::setLineBreakStyle(int lineBreakStyle) {

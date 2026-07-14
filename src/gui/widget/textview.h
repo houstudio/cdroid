@@ -136,6 +136,8 @@ private:
     int mLineBreakWordStyle;
     TextPaint mTextPaint;
     Paint *mGesturePreviewHighlightPaint = nullptr;
+    Spannable::Factory mSpannableFactory;
+    Editable::Factory mEditableFactory;
     ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
@@ -410,6 +412,13 @@ public:
     bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
     void setFilters(const std::vector<InputFilter*>& filters);
     std::vector<InputFilter*> getFilters();
+    // Android TextView.setSpannableFactory / setEditableFactory: replace the factory
+    // used to wrap a buffer into a Spannable / Editable inside setText (BufferType
+    // SPANNABLE / EDITABLE). The factory MUST return a freshly-owned object (default:
+    // new SpannableString / new SpannableStringBuilder, which copy the source); setText
+    // adopts the result and frees the source — see the copy-and-orphan handling there.
+    void setSpannableFactory(coinst Spannable::Factory& factory);
+    void setEditableFactory(const Editable::Factory& factory);
     int getLineHeight()const;
     void setLineHeight(int height);
     void setLineBreakStyle(int lineBreakStyle);
