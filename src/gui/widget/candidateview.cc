@@ -277,6 +277,7 @@ void CandidateView::takeSuggestionAt(float x) {
     // To detect candidate
     onDrawInternal(nullptr);
     if (mSelectedIndex >= 0) {
+        mOnPredict(*this,mSuggestions[mSelectedIndex],mSelectedIndex);
         //mService.pickSuggestionManually(mSelectedIndex);
     }
     invalidate();
