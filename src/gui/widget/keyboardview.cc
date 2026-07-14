@@ -241,9 +241,8 @@ static void drawText(Canvas& canvas,const std::string& text,const Rect&r,Paint&p
     auto fm = paint.getFontMetricsInt();
     auto textHeight = (fm.bottom-fm.top);
     auto textWidth = paint.measureText(text,0,text.length());
-    int x,y;
-    x = r.left + (r.width - textWidth)/2;
-    y = r.top + (r.height - textHeight)/2;
+    int x = r.left + (r.width - textWidth)/2;
+    int y = r.top + (r.height - textHeight)/2;
     y-=fm.ascent;
     paint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
 }

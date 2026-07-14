@@ -40,7 +40,7 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts)
      mColorRecommended = atts.getColor("candidate_recommand");
      mColorOther = atts.getColor("candidate_other");
      mVerticalPadding = atts.getDimensionPixelSize("candidate_vertical_padding");
-     const int textSize = atts.getDimensionPixelSize("candidate_text_size",20);
+     const int textSize = atts.getDimensionPixelSize("candidate_font_height",20);
      setHorizontalFadingEdgeEnabled(true);
      setWillNotDraw(false);
      setHorizontalScrollBarEnabled(false);
@@ -108,9 +108,8 @@ static void drawText(Canvas& canvas,const std::string& text,const Rect&r,Paint&p
     auto fm = paint.getFontMetricsInt();
     auto textHeight = (fm.bottom-fm.top);
     auto textWidth = paint.measureText(text,0,text.length());
-    int x,y;
-    x = r.left + (r.width - textWidth)/2;
-    y = r.top + (r.height - textHeight)/2;
+    int x = r.left + (r.width - textWidth)/2;
+    int y = r.top + (r.height - textHeight)/2;
     y-=fm.ascent;
     paint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
 }
@@ -145,7 +144,7 @@ void CandidateView::onDrawInternal(Canvas* canvas) {
         mWordWidth[i] = wordWidth;
 	    if((x + wordWidth) < scrollX)continue;
 	    if(x >= (scrollX+getWidth()))break;
-	    suggestionRect.set(x,bgPadding.top,wordWidth,height);
+	    suggestionRect.set(x,0,wordWidth,height);
         if ((touchX + scrollX >= x) && (touchX + scrollX < x + wordWidth) && !scrolled) {
             if (canvas && mSelectionHighlight) {
                 canvas->translate(x, 0);
