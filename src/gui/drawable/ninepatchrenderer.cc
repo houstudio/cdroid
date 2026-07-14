@@ -291,82 +291,90 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         mResizeDistancesY.push_back({r.start,r.end-r.start});
     }
 
-    const int midX = image->get_width() / 2;
-    const int midY = image->get_height() / 2;
-    const int endX = image->get_width() - 2;
-    const int endY = image->get_height() - 2;
-
-   // find left and right extent of nine patch content on center row
-    if (image->get_width() > 4) {
-        findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
-        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.right);
+    if (anp->outlineFromChunk) {
+        // cd9p chunk provided optical (npLb) + outline (npOl) computed at build time;
+        // trust it and skip the border pixel scan. The 1px guide border is still present
+        // in the image, but the chunk already encodes what the scan would compute.
+        mOpticalInsets.left   = anp->layout_bounds.left;
+        mOpticalInsets.top    = anp->layout_bounds.top;
+        mOpticalInsets.right  = anp->layout_bounds.right;
+        mOpticalInsets.bottom = anp->layout_bounds.bottom;
     } else {
-        mOutlineInsets.left = 0;
-        mOutlineInsets.right = 0;
-    }
- 
-    // find top and bottom extent of nine patch content on center column
-    if (image->get_height() > 4) {
-        findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOutlineInsets.top);
-        findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
-    } else {
-        mOutlineInsets.top = 0;
-        mOutlineInsets.bottom = 0;
-    }
+        // Scan path: pixel-scan the 1px guide border for outline insets + optical ticks.
+        const int midX = image->get_width() / 2;
+        const int midY = image->get_height() / 2;
+        const int endX = image->get_width() - 2;
+        const int endY = image->get_height() - 2;
 
-    
-    // Find left and right of layout padding...(maybe its is android's OpticalInsets)
-    const bool transparent = rows[0][3]==0;
-    const char* errorMsg=nullptr;
-    getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
-                                   &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
-  
-    getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
-                                 &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
-  
-    const bool haveLayoutBounds = (mOpticalInsets.left != 0) || (mOpticalInsets.right != 0)
-        ||(mOpticalInsets.top != 0) || (mOpticalInsets.bottom != 0);
+       // find left and right extent of nine patch content on center row
+        if (image->get_width() > 4) {
+            findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
+            findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.right);
+        } else {
+            mOutlineInsets.left = 0;
+            mOutlineInsets.right = 0;
+        }
 
-    const int innerStartX = 1 + mOutlineInsets.left;
-    const int innerStartY = 1 + mOutlineInsets.top;
-    const int innerEndX = endX - mOutlineInsets.right;
-    const int innerEndY = endY - mOutlineInsets.bottom;
-    const int innerMidX = (innerEndX + innerStartX) / 2;
-    const int innerMidY = (innerEndY + innerStartY) / 2;
-  
-    // assuming the image is a round rect, compute the radius by marching
-    // diagonally from the top left corner towards the center
-    mAlpha = std::max(maxAlphaOverRow(rows[innerMidY], innerStartX, innerEndX),
-                 maxAlphaOverCol(rows.get(), innerMidX, innerStartY, innerStartY));
-  
-    int diagonalInset = 0;
-    findMaxOpacity(rows.get(), innerStartX, innerStartY, innerMidX, innerMidY, 1, 1, &diagonalInset);
-  
-    /* Determine source radius based upon inset:
-     *     sqrt(r^2 + r^2) = sqrt(i^2 + i^2) + r
-     *     sqrt(2) * r = sqrt(2) * i + r
-     *     (sqrt(2) - 1) * r = sqrt(2) * i
-     *     r = sqrt(2) / (sqrt(2) - 1) * i
-     */
-    mRadius = int32_t(3.4142f * diagonalInset);
+        // find top and bottom extent of nine patch content on center column
+        if (image->get_height() > 4) {
+            findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOutlineInsets.top);
+            findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
+        } else {
+            mOutlineInsets.top = 0;
+            mOutlineInsets.bottom = 0;
+        }
+
+        // Find left and right of layout padding...(maybe its is android's OpticalInsets)
+        const bool transparent = rows[0][3]==0;
+        const char* errorMsg=nullptr;
+        getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
+                                       &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
+
+        getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
+                                     &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
+
+        const int innerStartX = 1 + mOutlineInsets.left;
+        const int innerStartY = 1 + mOutlineInsets.top;
+        const int innerEndX = endX - mOutlineInsets.right;
+        const int innerEndY = endY - mOutlineInsets.bottom;
+        const int innerMidX = (innerEndX + innerStartX) / 2;
+        const int innerMidY = (innerEndY + innerStartY) / 2;
+
+        // assuming the image is a round rect, compute the radius by marching
+        // diagonally from the top left corner towards the center
+        mAlpha = std::max(maxAlphaOverRow(rows[innerMidY], innerStartX, innerEndX),
+                     maxAlphaOverCol(rows.get(), innerMidX, innerStartY, innerStartY));
+
+        int diagonalInset = 0;
+        findMaxOpacity(rows.get(), innerStartX, innerStartY, innerMidX, innerMidY, 1, 1, &diagonalInset);
+
+        /* Determine source radius based upon inset:
+         *     sqrt(r^2 + r^2) = sqrt(i^2 + i^2) + r
+         *     sqrt(2) * r = sqrt(2) * i + r
+         *     (sqrt(2) - 1) * r = sqrt(2) * i
+         *     r = sqrt(2) / (sqrt(2) - 1) * i
+         */
+        mRadius = int32_t(3.4142f * diagonalInset);
+        // The scanner's NinePatch (built from the same border scan) recomputes
+        // outline_radius the same way; let it override when it actually provided one.
+        if (anp->outline_radius > 0.f) mRadius = static_cast<int>(anp->outline_radius);
+    }
 
     mPadding.left = anp->padding.left;
     mPadding.top  = anp->padding.top;
     mPadding.width = anp->padding.right;
     mPadding.height= anp->padding.bottom;
-    // A chunk-built NinePatch leaves outline_radius at its default 0 (CDROID's
-    // Res_png_9patch struct has no outline fields), so only let the NinePatch override
-    // the renderer's own pixel-computed radius (diagonal march above) when it actually
-    // provides one — i.e. the border-scan path.
-    if (anp->outline_radius > 0.f) mRadius = static_cast<int>(anp->outline_radius);
-    // Faithful outline from the scanner: anp->outline is edge insets {left,top,right,
-    // bottom} and outline_alpha is the content's max alpha (0..255). Store them for
-    // getOutlineRect()/getOutlineAlpha(). anp->outline.right/bottom are insets, so they
-    // map to Rect's .width/.height (the Rect-as-insets convention consumers expect). For
-    // a chunk-built NinePatch (no outline in npTc) these are the all-zero/opaque defaults
-    // and getOutlineRect falls back to mContentArea below.
+    // anp->outline is edge insets {left,top,right,bottom} (right/bottom map to Rect's
+    // .width/.height per the Rect-as-insets convention); outline_alpha is the content's
+    // max alpha (0..255). On the cd9p path these come from npOl; on the scan path from
+    // NinePatch::Create's pixel scan. Stored for getOutlineRect()/getOutlineAlpha().
     mOutlineRect.set(anp->outline.left, anp->outline.top, anp->outline.right, anp->outline.bottom);
     mOutlineAlpha = anp->outline_alpha;
+    if (anp->outlineFromChunk) {
+        // npOl radius is authoritative even when 0 (sharp corner) — the pixel diagonal
+        // march above was skipped on this path.
+        mRadius = static_cast<int>(anp->outline_radius);
+    }
     mOpacity = ImageDecoder::getTransparency(mImage);
     mContentArea.set(mPadding.left,mPadding.top,
         image->get_width()-mPadding.left-2,
@@ -376,6 +384,7 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
+    const bool haveLayoutBounds = (mOpticalInsets.left|mOpticalInsets.top|mOpticalInsets.right|mOpticalInsets.bottom)!=0;
     LOGD_IF(haveLayoutBounds,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,

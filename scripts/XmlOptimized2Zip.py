@@ -2,6 +2,7 @@ import os
 import shutil
 import struct
 import zlib
+import io
 from lxml import etree
 import zipfile
 from PIL import Image
@@ -42,15 +43,23 @@ def zip_xml_files(output_directory, zip_file_path):
                     zipf.write(file_path, relative_path)
 
 # ----------------------------------------------------------------------------
-# 9-patch npTc chunk embedding (Android aapt-equivalent, build-time).
+# 9-patch aapt-style compile (Android aapt2-equivalent, build-time).
 #
-# A source .9.png carries its stretch/padding info only as the 1px guide border.
-# We scan that border, serialize it into an Android npTc chunk (Res_png_9patch in
-# big-endian "file" order — the same layout the C++ Res_png_9patch::deserialize
-# consumes), and splice the chunk into the PNG just before IEND. At runtime
-# NinePatch::Create then builds from the chunk instead of re-scanning the border.
-# The image, its filename (.9.png) and its relative path inside the pak are all
-# preserved — only the chunk is added.
+# A source .9.png carries stretch/padding as the 1px guide border. We scan that
+# border for three things — npTc (stretch/padding, big-endian Res_png_9patch),
+# npLb (optical/layout-bounds from the red ticks), npOl (outline rect/radius/alpha
+# via findMaxOpacity) — bundle all three into ONE custom "cdNp" chunk, and splice
+# it into the PNG before IEND. The 1px guide border and the ".9.png" name are
+# KEPT (bordered-cdNp design): the runtime is chunk-driven for stretch/padding/
+# optical/outline, but every load path (createAsDrawable, <nine-patch> XML,
+# backgrounds) still sees a normal bordered .9.png, so nothing else has to change.
+# cdNp DATA = [u8 version=1][u16 npTcLen BE + bytes][u16 npLbLen BE + bytes]
+#             [u16 npOlLen BE + bytes]. Sub-blob byte orders match the C++ side:
+# npTc = Res_png_9patch big-endian; npLb/npOl = native little-endian (memcpy).
+# The chunk TYPE is "cdNp" (not "cd9p"): PNG chunk-type names must be 4 ASCII
+# letters, and byte 2's reserved bit must be 0 (uppercase) — a digit like '9' is
+# rejected by libpng with "bad header (invalid type)". c/d=ancillary+private,
+# N=reserved-bit-0, p=safe-to-copy.
 # ----------------------------------------------------------------------------
 
 def _np_guide(px, x, y):
@@ -135,10 +144,143 @@ def _insert_chunk_before_iend(png_bytes, chunk_type, chunk_data):
         return png_bytes
     return png_bytes[:idx - 4] + chunk + png_bytes[idx - 4:]
 
+# ----------------------------------------------------------------------------
+# npLb (optical / layout-bounds) and npOl (outline) — computed on the BORDERED
+# source (before the border is stripped), replicating NinePatchRenderer's pixel
+# logic so the chunk values match today's runtime. Byte order is native LE
+# (matches NinePatch::SerializeLayoutBounds / SerializeRoundedRectOutline, which
+# memcpy without swapping; CDROID targets are little-endian).
+#
+# AUDIT of the referenced C++ (ninepatchrenderer.cc) before porting:
+#  - findMaxOpacity (line 236): correct (march, track inset of new opacity max,
+#    stop at 0xff). Ported verbatim.
+#  - radius via diagonal findMaxOpacity: correct (this is what yields 3/6 today).
+#  - outline alpha (line 339-340): BUG in C++ — maxAlphaOverCol is called with
+#    endY=innerStartY (should be innerEndY), so the column scan is empty and the
+#    column term is always 0; alpha degenerates to row-only. FIXED here: scan the
+#    column over [innerStartY, innerEndY) and take max(row, col).
+# ----------------------------------------------------------------------------
+
+_TICK_NONE, _TICK_TICK, _TICK_LB = 0, 1, 2
+_K_WHITE = 0xffffffff
+_K_TICK  = 0xff000000       # opaque black  (stretch/padding guide)
+_K_LB    = 0xff0000ff       # opaque red    (layout-bounds / optical guide)
+
+def _tick_type(p, transparent):
+    """Classify a guide pixel like ninepatchrenderer.cc tickType. p = (R,G,B,A)."""
+    r, g, b, a = p
+    color = r | (g << 8) | (b << 16) | (a << 24)
+    if transparent:
+        if a == 0:            return _TICK_NONE
+        if color == _K_LB:    return _TICK_LB
+        if color == _K_TICK:  return _TICK_TICK
+        return _TICK_TICK
+    if color == _K_WHITE:    return _TICK_NONE
+    if color == _K_TICK:     return _TICK_TICK
+    if color == _K_LB:       return _TICK_LB
+    return _TICK_TICK
+
+def _scan_layout_bounds(im):
+    """Optical/layout-bounds insets from the bottom-row (L/R) and right-col (T/B) red
+    guide ticks. Returns (left, top, right, bottom), content-relative. Usually all-zero."""
+    W, H = im.size
+    px = im.load()
+    transparent = px[0, 0][3] == 0
+    left = right = top = bottom = 0
+    # horizontal: bottom row (y = H-1), cols 1..W-2
+    if _tick_type(px[1, H - 1], transparent) == _TICK_LB:
+        i = 1
+        while i < W - 1:
+            left += 1; i += 1
+            if _tick_type(px[i, H - 1], transparent) != _TICK_LB: break
+    if _tick_type(px[W - 2, H - 1], transparent) == _TICK_LB:
+        i = W - 2
+        while i > 1:
+            right += 1; i -= 1
+            if _tick_type(px[i, H - 1], transparent) != _TICK_LB: break
+    # vertical: right col (x = W-1), rows 1..H-2
+    if _tick_type(px[W - 1, 1], transparent) == _TICK_LB:
+        i = 1
+        while i < H - 1:
+            top += 1; i += 1
+            if _tick_type(px[W - 1, i], transparent) != _TICK_LB: break
+    if _tick_type(px[W - 1, H - 2], transparent) == _TICK_LB:
+        i = H - 2
+        while i > 1:
+            bottom += 1; i -= 1
+            if _tick_type(px[W - 1, i], transparent) != _TICK_LB: break
+    return left, top, right, bottom
+
+def _find_max_opacity(px, startX, startY, endX, endY, dX, dY):
+    """Port of findMaxOpacity: march (startX,startY)->(endX,endY) by (dX,dY); return the
+    inset (step count) at which opacity last rose to a new max; stop at fully opaque."""
+    max_op = 0; out = 0; inset = 0
+    x, y = startX, startY
+    while x != endX and y != endY:
+        op = px[x, y][3]
+        if op > max_op:
+            max_op = op; out = inset
+        if op == 0xff:
+            return out
+        x += dX; y += dY; inset += 1
+    return out
+
+def _compute_outline(im):
+    """Replicate NinePatchRenderer's outline computation on the BORDERED source.
+    Returns (left, top, right, bottom, radius, alpha) — edge insets + corner radius
+    + content max alpha (alpha column-scan FIXED vs the C++ bug)."""
+    W, H = im.size
+    px = im.load()
+    midX, midY = W // 2, H // 2
+    endX, endY = W - 2, H - 2
+    left = right = top = bottom = 0
+    if W > 4:
+        left  = _find_max_opacity(px, 1,    midY, midX, -1, 1, 0)
+        right = _find_max_opacity(px, endX, midY, midX, -1, -1, 0)
+    if H > 4:
+        top    = _find_max_opacity(px, midX, 1,    -1, midY, 0, 1)
+        bottom = _find_max_opacity(px, midX, endY, -1, midY, 0, -1)
+    innerSX = 1 + left
+    innerSY = 1 + top
+    innerEX = endX - right
+    innerEY = endY - bottom
+    innerMX = (innerEX + innerSX) // 2
+    innerMY = (innerEY + innerSY) // 2
+    # alpha: max over the center row AND center column of the outline area.
+    alpha = 0
+    for x in range(innerSX, innerEX):
+        op = px[x, innerMY][3]
+        if op > alpha: alpha = op
+    for y in range(innerSY, innerEY):           # FIXED: C++ passed innerStartY twice (dead col)
+        op = px[innerMX, y][3]
+        if op > alpha: alpha = op
+    diagonal = _find_max_opacity(px, innerSX, innerSY, innerMX, innerMY, 1, 1)
+    radius = int(3.4142 * diagonal)
+    return left, top, right, bottom, radius, alpha
+
+def _serialize_nplb(left, top, right, bottom):
+    return struct.pack("<iiii", left, top, right, bottom)
+
+def _serialize_outline(left, top, right, bottom, radius, alpha):
+    return struct.pack("<iiiifI", left, top, right, bottom, radius, alpha)
+
+def _serialize_cdNp(nptc, nplb, npol):
+    """Bundle npTc + npLb + npOl into one "cdNp" chunk DATA blob:
+    [u8 version=1] then, for each sub-blob, [u16 BE length][bytes]. Matches the
+    C++ NinePatch::Create cdNp parser exactly."""
+    out = bytes([1])  # version
+    for blob in (nptc, nplb, npol):
+        if len(blob) > 0xffff:
+            raise ValueError(f"cdNp sub-blob too large ({len(blob)} bytes)")
+        out += struct.pack(">H", len(blob)) + blob
+    return out
+
 def embed_9patch_assets(input_directory, zip_file_path):
-    """Walk input_directory for *.9.png, embed an npTc chunk into each, and append them
-    to the pak at their original relative path/name (ZIP_STORED — PNGs are already
-    compressed, matching the binary-zip -0 policy)."""
+    """aapt-compile each *.9.png: scan the guide border for stretch/padding (npTc),
+    optical/layout-bounds (npLb) and outline (npOl); bundle them into one "cdNp"
+    chunk and splice it into the (still-bordered) PNG before IEND. The asset keeps
+    its ".9.png" name and its 1px guide border. ZIP_STORED (PNGs are already
+    compressed)."""
     count = 0
     with zipfile.ZipFile(zip_file_path, 'a', zipfile.ZIP_STORED) as zipf:
         for root, dirs, files in os.walk(input_directory):
@@ -151,15 +293,25 @@ def embed_9patch_assets(input_directory, zip_file_path):
                     im = Image.open(path); im.load()
                     if im.mode != "RGBA":
                         im = im.convert("RGBA")
+                    W, H = im.size
+                    if W < 3 or H < 3:
+                        zipf.write(path, rel); continue
+                    # scan the bordered source
                     xd, yd, pl, pr, pt, pb = _scan_9patch(im)
-                    data = _serialize_nptc(xd, yd, pl, pr, pt, pb)
+                    lb_l, lb_t, lb_r, lb_b = _scan_layout_bounds(im)
+                    ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha = _compute_outline(im)
+                    nptc = _serialize_nptc(xd, yd, pl, pr, pt, pb)
+                    nplb = _serialize_nplb(lb_l, lb_t, lb_r, lb_b)
+                    npol = _serialize_outline(ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha)
+                    cdNp = _serialize_cdNp(nptc, nplb, npol)
+                    # keep the bordered source bytes verbatim, splicing cdNp before IEND
                     with open(path, "rb") as fh:
                         raw = fh.read()
-                    raw = _insert_chunk_before_iend(raw, b"npTc", data)
+                    raw = _insert_chunk_before_iend(raw, b"cdNp", cdNp)
                     zipf.writestr(rel, raw)
                     count += 1
                 except Exception as e:
-                    print(f"9patch embed failed for {path}: {e}; storing as-is")
+                    print(f"9patch embed failed for {path}: {e}; storing bordered as-is")
                     zipf.write(path, rel)
     return count
 

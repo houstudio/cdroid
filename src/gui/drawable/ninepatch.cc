@@ -539,18 +539,51 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     std::string err_sink;
     if (!out_err) out_err = &err_sink;
 
-    // Validate the chunk before trusting it: at least the 32-byte header, and at least
-    // the bytes its header claims (32 + xDivs + yDivs + colors arrays).
-    if (npTc_chunk != nullptr && chunkLen >= 32) {
-        const Res_png_9patch* peek = static_cast<const Res_png_9patch*>(npTc_chunk);
-        const size_t need = peek->serializedSize();
-        if (chunkLen >= need && need >= 32) {
+    const uint8_t* data = static_cast<const uint8_t*>(npTc_chunk);
+
+    // Locate the npTc/npLb/npOl sub-blobs. A cdNp bundle starts with version byte 1
+    // ([u8 ver=1] then 3 x [u16 BE len][bytes]); a legacy raw npTc is the whole chunk.
+    const uint8_t* nptc = nullptr; size_t nptcLen = 0;
+    const uint8_t* nplb = nullptr; size_t nplbLen = 0;
+    const uint8_t* npol = nullptr; size_t npolLen = 0;
+    bool isCd9p = false;
+    if (data != nullptr && chunkLen >= 1 && data[0] == 1) {
+        size_t off = 1;
+        const uint8_t* subs[3] = {nullptr, nullptr, nullptr};
+        size_t lens[3] = {0, 0, 0};
+        bool ok = true;
+        for (int i = 0; i < 3 && ok; i++) {
+            if (off + 2 > chunkLen) { ok = false; break; }
+            size_t l = (size_t(data[off]) << 8) | data[off + 1];
+            off += 2;
+            if (off + l > chunkLen) { ok = false; break; }
+            subs[i] = data + off; lens[i] = l; off += l;
+        }
+        if (ok && off == chunkLen) {
+            isCd9p = true;
+            nptc = subs[0]; nptcLen = lens[0];
+            nplb = subs[1]; nplbLen = lens[1];
+            npol = subs[2]; npolLen = lens[2];
+        } else {
+            LOGW("cdNp bundle malformed; falling back to border scan");
+        }
+    } else if (data != nullptr && chunkLen >= 32) {
+        nptc = data; nptcLen = chunkLen;  // legacy raw npTc
+    }
+
+    if (nptc != nullptr) {
+        // npTc serialized size = 32-byte header + the xDivs/yDivs/colors arrays. The
+        // counts are single bytes at [1],[2],[3] (endian-independent), so read them
+        // directly — nptc may point into the middle of a cdNp blob (unaligned).
+        const size_t need = (nptcLen >= 32)
+            ? (32 + size_t(nptc[1]) * 4 + size_t(nptc[2]) * 4 + size_t(nptc[3]) * 4)
+            : 0;
+        if (need >= 32 && nptcLen >= need) {
             // deserialize() rewrites the buffer in place (recomputes offsets, byte-swaps
             // the big-endian arrays). The decoder hands us const bytes, so copy into a
-            // writable buffer first. new uint8_t[] is max_align_t-aligned, which satisfies
-            // the struct's alignas(uintptr_t).
+            // writable, max_align_t-aligned buffer first.
             auto buf = std::make_unique<uint8_t[]>(need);
-            std::memcpy(buf.get(), npTc_chunk, need);
+            std::memcpy(buf.get(), nptc, need);
             Res_png_9patch* patch = Res_png_9patch::deserialize(buf.get());
 
             auto nine_patch = std::unique_ptr<NinePatch>(new NinePatch());
@@ -577,13 +610,31 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
             nine_patch->padding.right  = patch->paddingRight;
             nine_patch->padding.top    = patch->paddingTop;
             nine_patch->padding.bottom = patch->paddingBottom;
-            const uint32_t* colors = patch->getColors();
             if (patch->numColors > 0) {
+                const uint32_t* colors = patch->getColors();
                 nine_patch->region_colors.assign(colors, colors + patch->numColors);
             }
-            // outline*/outline_radius left at default (0.0f); NinePatchRenderer guards on
-            // outline_radius > 0 so it keeps its own pixel-computed radius for chunk-built
-            // patches. buf freed here (NinePatch copies the data out, doesn't retain it).
+
+            // npLb = optical / layout-bounds insets (4 x int32, native little-endian —
+            // matches SerializeLayoutBounds, which memcpy's without swapping).
+            if (isCd9p && nplb != nullptr && nplbLen >= 16) {
+                std::memcpy(&nine_patch->layout_bounds.left,   nplb + 0,  4);
+                std::memcpy(&nine_patch->layout_bounds.top,    nplb + 4,  4);
+                std::memcpy(&nine_patch->layout_bounds.right,  nplb + 8,  4);
+                std::memcpy(&nine_patch->layout_bounds.bottom, nplb + 12, 4);
+            }
+            // npOl = rounded-rect outline (4 x int32 rect + float radius + uint32 alpha,
+            // native little-endian — matches SerializeRoundedRectOutline).
+            if (isCd9p && npol != nullptr && npolLen >= 24) {
+                std::memcpy(&nine_patch->outline.left,   npol + 0,  4);
+                std::memcpy(&nine_patch->outline.top,    npol + 4,  4);
+                std::memcpy(&nine_patch->outline.right,  npol + 8,  4);
+                std::memcpy(&nine_patch->outline.bottom, npol + 12, 4);
+                std::memcpy(&nine_patch->outline_radius, npol + 16, 4);
+                std::memcpy(&nine_patch->outline_alpha,  npol + 20, 4);
+                nine_patch->outlineFromChunk = true;
+            }
+            // buf freed here (NinePatch copies the data out, doesn't retain it).
 
             // A chunk that yields no stretch regions isn't a usable 9-patch — fall through
             // to the border scan rather than rendering as a non-stretching flat bitmap.
@@ -591,10 +642,10 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
                     || !nine_patch->vertical_stretch_regions.empty()) {
                 return nine_patch;
             }
-            LOGW("npTc chunk parsed but yielded no stretch regions; falling back to border scan");
-        } else {
-            LOGW("npTc chunk present but truncated (have %zu, need %zu); falling back to border scan",
-                 chunkLen, need);
+            LOGW("9-patch chunk parsed but yielded no stretch regions; falling back to border scan");
+        } else if (need > 0) {
+            LOGW("npTc sub-blob truncated (have %zu, need %zu); falling back to border scan",
+                 nptcLen, need);
         }
     }
 

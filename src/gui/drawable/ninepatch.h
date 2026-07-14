@@ -118,11 +118,14 @@ class NinePatch {
 public:
     static std::unique_ptr<NinePatch> Create(uint8_t** rows, const int32_t width,
                         const int32_t height, std::string* err_out);
-    // Build from an Android npTc chunk when present (chunk = the chunk DATA bytes,
-    // i.e. after the 8-byte PNG chunk header). Falls back to the border-scan Create
-    // above when chunk is null/too short/malformed. The image is assumed to still
-    // carry its 1px guide border (Step 1), so the chunk's content-relative divs drop
-    // straight into horizontal/vertical_stretch_regions like the scan output.
+    // Build from a 9-patch chunk when present (chunk = the chunk DATA bytes,
+    // i.e. after the 8-byte PNG chunk header). The chunk may be a CDROID "cdNp"
+    // bundle (version byte 1, then npTc + npLb + npOl sub-blobs — sets layout_bounds
+    // and outline/radius/alpha too, and marks outlineFromChunk) or a legacy raw npTc
+    // (stretch/padding only). Falls back to the border-scan Create above when chunk
+    // is null/too short/malformed. The image is assumed to still carry its 1px guide
+    // border, so the chunk's content-relative divs drop straight into the stretch
+    // regions like the scan output.
     static std::unique_ptr<NinePatch> Create(uint8_t** rows, const int32_t width,
                         const int32_t height, const void* npTc_chunk, size_t chunkLen,
                         std::string* err_out);
@@ -134,6 +137,10 @@ public:
 
     float outline_radius = 0.0f;
     uint32_t outline_alpha = 0x000000ffu;
+    // True when layout_bounds + outline/radius/alpha came from a cdNp bundle (npLb +
+    // npOl). The renderer uses this to skip its own border pixel-scan for optical/
+    // outline and trust the chunk values instead.
+    bool outlineFromChunk = false;
     std::vector<Range> horizontal_stretch_regions;
     std::vector<Range> vertical_stretch_regions;
     std::vector<uint32_t> region_colors;
