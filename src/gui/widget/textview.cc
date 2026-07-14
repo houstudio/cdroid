@@ -1746,13 +1746,29 @@ void TextView::setHint(CharSequence*hint){
 
 void TextView::setHintInternal(CharSequence* hint) {
     mHideHint = false;
-    // NOTE: freeing the old mHint here has the same DynamicLayout hazard as
-    // setTextInternal(): mHintLayout may be a DynamicLayout whose mBase == mHint,
-    // and its destructor dereferences mBase. Free only at a layout-safe point.
+    // Capture the hint being replaced. It is freed ONLY after checkForRelayout()
+    // below has torn down any DynamicLayout referencing it: mHintLayout may be a
+    // DynamicLayout whose mBase == mHint, and its destructor dereferences mBase
+    // (removeSpan on the watcher). Freeing earlier crashes in ~DynamicLayout.
+    // Mirrors setText()'s layout-safe free point; see the CharSequence ownership rule.
+    CharSequence* prevHint = mHint;
     mHint = hint;//TextUtils::stringOrSpannedString(hint);
 
     if (mLayout != nullptr) {
         checkForRelayout();
+    }
+
+    // checkForRelayout() has either rebuilt mHintLayout (now on the new mHint) or
+    // null'd it via nullLayouts() (old mHintLayout destroyed); if there was no
+    // layout, nothing referenced prevHint. In every case no DynamicLayout
+    // references prevHint now, so it is safe to free. Never free the incoming
+    // `hint` (re-adopted, e.g. setHint(getHint())), mCharWrapper (a reused member),
+    // or mText (prevHint may alias mText via setHint(getText())).
+    auto isKept = [&](CharSequence* p) {
+        return p == hint || p == mCharWrapper || p == mText;
+    };
+    if (prevHint != nullptr && !isKept(prevHint)) {
+        delete prevHint;
     }
 
     if (mText->length() == 0) {
@@ -2864,6 +2880,18 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
     }
 
     shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;
+    // Free the previous hint layout unless it is the cached BoringLayout we are
+    // about to reuse — mSavedHintLayout aliases that object and it is rebuilt in
+    // place via replaceOrMake below, so it must survive. Any other previous hint
+    // layout (a StaticLayout from a wrapping/multiline hint, or a non-saved
+    // BoringLayout from the ellipsize branch) is a distinct object that would leak
+    // if merely overwritten. makeNewLayout runs on every re-measure (onMeasure),
+    // so free it here, BEFORE nulling. The old code nulled first, which made the
+    // delete-guard inside the boring branch dead (mHintLayout was already null)
+    // and orphaned a StaticLayout hint layout on each re-measure.
+    if (mSavedHintLayout != mHintLayout && mHintLayout != nullptr) {
+        delete mHintLayout;
+    }
     mHintLayout = nullptr;
 
     if (mHint != nullptr) {
@@ -2877,9 +2905,6 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
         }
 
         if (hintBoring != nullptr) {
-            if( (mSavedHintLayout!=mHintLayout) && (mHintLayout!=nullptr) ){
-                delete mHintLayout;
-            }
             if (hintBoring->width <= hintWidth
                     && (!shouldEllipsize || hintBoring->width <= ellipsisWidth)) {
                 if (mSavedHintLayout != nullptr) {

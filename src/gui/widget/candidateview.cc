@@ -46,7 +46,6 @@ CandidateView::CandidateView(Context*ctx,const AttributeSet&atts):View(ctx,atts)
      setHorizontalScrollBarEnabled(false);
      setVerticalScrollBarEnabled(false);
      setMaxSuggestion(MAX_SUGGESTION);
-     mBgPadding.set(5,5,5,5);
      mPaint.setTextSize(textSize);
      initView();
 }
