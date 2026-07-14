@@ -53,7 +53,11 @@ except ImportError:
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
         COMMAND ${XMLPACKAGE}
-        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc"
+        # Append binary assets (images/fonts). When a project ships only XML (no
+        # matching files), zip exits 12 "Nothing to do!" — which would abort the
+        # whole assets target and block PakPath/APK production. `|| true` makes the
+        # empty case non-fatal (XML-only pak still ships from the step above).
+        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc" || true
         COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")
