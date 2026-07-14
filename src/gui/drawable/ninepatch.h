@@ -118,6 +118,14 @@ class NinePatch {
 public:
     static std::unique_ptr<NinePatch> Create(uint8_t** rows, const int32_t width,
                         const int32_t height, std::string* err_out);
+    // Build from an Android npTc chunk when present (chunk = the chunk DATA bytes,
+    // i.e. after the 8-byte PNG chunk header). Falls back to the border-scan Create
+    // above when chunk is null/too short/malformed. The image is assumed to still
+    // carry its 1px guide border (Step 1), so the chunk's content-relative divs drop
+    // straight into horizontal/vertical_stretch_regions like the scan output.
+    static std::unique_ptr<NinePatch> Create(uint8_t** rows, const int32_t width,
+                        const int32_t height, const void* npTc_chunk, size_t chunkLen,
+                        std::string* err_out);
     static uint32_t PackRGBA(const uint8_t* pixel);
 
     Bounds padding;

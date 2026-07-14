@@ -29,6 +29,8 @@ private:
     int mRadius;
     Rect mContentArea;
     Rect mPadding;
+    Rect mOutlineRect;       // scanner outline insets {left,top,right→width,bottom→height}
+    int mOutlineAlpha = 0xff; // scanner outline alpha (0..255); default opaque
     Insets mOutlineInsets;
     Insets mOpticalInsets;
     float mAlpha;
@@ -43,7 +45,8 @@ private:
     int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
     Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap)const;
 public:
-    NinePatchRenderer(Cairo::RefPtr<Cairo::ImageSurface> image);
+    NinePatchRenderer(Cairo::RefPtr<Cairo::ImageSurface> image,
+                      const std::vector<uint8_t>*ninePatchChunk=nullptr);
     NinePatchRenderer(cdroid::Context*ctx,const std::string&resid);
     ~NinePatchRenderer();
     void draw(Canvas& painter, int x, int y,float alpha=1.f);
@@ -57,6 +60,7 @@ public:
     int getRadius()const;
     Rect getOutlineRect() const;
     int getOutlineRadius() const;
+    int getOutlineAlpha() const { return mOutlineAlpha; }
 };
 }/*endof namespace*/
 #endif

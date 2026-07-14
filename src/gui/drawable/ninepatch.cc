@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <sstream>
+#include <cstring>
+#include <memory>
+#include <porting/cdlog.h>
 #include <drawable/ninepatch.h>
 namespace cdroid {
 
@@ -530,6 +533,75 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     return nine_patch;
 }
 
+std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width,
+        const int32_t height, const void* npTc_chunk, size_t chunkLen,
+        std::string* out_err) {
+    std::string err_sink;
+    if (!out_err) out_err = &err_sink;
+
+    // Validate the chunk before trusting it: at least the 32-byte header, and at least
+    // the bytes its header claims (32 + xDivs + yDivs + colors arrays).
+    if (npTc_chunk != nullptr && chunkLen >= 32) {
+        const Res_png_9patch* peek = static_cast<const Res_png_9patch*>(npTc_chunk);
+        const size_t need = peek->serializedSize();
+        if (chunkLen >= need && need >= 32) {
+            // deserialize() rewrites the buffer in place (recomputes offsets, byte-swaps
+            // the big-endian arrays). The decoder hands us const bytes, so copy into a
+            // writable buffer first. new uint8_t[] is max_align_t-aligned, which satisfies
+            // the struct's alignas(uintptr_t).
+            auto buf = std::make_unique<uint8_t[]>(need);
+            std::memcpy(buf.get(), npTc_chunk, need);
+            Res_png_9patch* patch = Res_png_9patch::deserialize(buf.get());
+
+            auto nine_patch = std::unique_ptr<NinePatch>(new NinePatch());
+            // Dividers are content-relative (0..width-2 / 0..height-2), the same basis the
+            // border scan emits. xDivs/yDivs are (start,end) pairs; clamp into the content
+            // bounds (a malformed chunk could be out of range) and drop empty spans.
+            const int32_t cw = width  > 2 ? width  - 2 : width;
+            const int32_t ch = height > 2 ? height - 2 : height;
+            const int32_t* xd = patch->getXDivs();
+            for (int i = 0; i + 1 < patch->numXDivs; i += 2) {
+                int32_t s = xd[i], e = xd[i + 1];
+                if (s < 0) s = 0;  if (s > cw) s = cw;
+                if (e < 0) e = 0;  if (e > cw) e = cw;
+                if (s < e) nine_patch->horizontal_stretch_regions.emplace_back(s, e);
+            }
+            const int32_t* yd = patch->getYDivs();
+            for (int i = 0; i + 1 < patch->numYDivs; i += 2) {
+                int32_t s = yd[i], e = yd[i + 1];
+                if (s < 0) s = 0;  if (s > ch) s = ch;
+                if (e < 0) e = 0;  if (e > ch) e = ch;
+                if (s < e) nine_patch->vertical_stretch_regions.emplace_back(s, e);
+            }
+            nine_patch->padding.left   = patch->paddingLeft;
+            nine_patch->padding.right  = patch->paddingRight;
+            nine_patch->padding.top    = patch->paddingTop;
+            nine_patch->padding.bottom = patch->paddingBottom;
+            const uint32_t* colors = patch->getColors();
+            if (patch->numColors > 0) {
+                nine_patch->region_colors.assign(colors, colors + patch->numColors);
+            }
+            // outline*/outline_radius left at default (0.0f); NinePatchRenderer guards on
+            // outline_radius > 0 so it keeps its own pixel-computed radius for chunk-built
+            // patches. buf freed here (NinePatch copies the data out, doesn't retain it).
+
+            // A chunk that yields no stretch regions isn't a usable 9-patch — fall through
+            // to the border scan rather than rendering as a non-stretching flat bitmap.
+            if (!nine_patch->horizontal_stretch_regions.empty()
+                    || !nine_patch->vertical_stretch_regions.empty()) {
+                return nine_patch;
+            }
+            LOGW("npTc chunk parsed but yielded no stretch regions; falling back to border scan");
+        } else {
+            LOGW("npTc chunk present but truncated (have %zu, need %zu); falling back to border scan",
+                 chunkLen, need);
+        }
+    }
+
+    // No chunk (or unusable chunk) — scan the 1px guide border as before.
+    return Create(rows, width, height, out_err);
+}
+
 std::unique_ptr<uint8_t[]> NinePatch::SerializeBase(size_t* outLen) const {
     Res_png_9patch data;
     data.numXDivs = static_cast<uint8_t>(horizontal_stretch_regions.size()) * 2;
@@ -710,6 +782,21 @@ void Res_png_9patch::fileToDevice(){
     for (int i=0; i<numColors; i++) {
         colors[i] = ntohl(colors[i]);
     }
+}
+
+Res_png_9patch* Res_png_9patch::deserialize(void* data) {
+    // The npTc chunk DATA is a serialized Res_png_9patch in big-endian "file" order
+    // (as written by Android aapt / our own Res_png_9patch::serialize + deviceToFile).
+    // Operate IN PLACE on the caller-owned buffer: recompute the in-object offsets to
+    // the trailing arrays (defensive against struct-layout drift between writer/reader),
+    // byte-swap the arrays into host order via fileToDevice, then mark deserialized.
+    // The caller must pass a writable, sufficiently-aligned copy — deserialize does NOT
+    // copy (the chunk bytes from the decoder are const).
+    Res_png_9patch* patch = reinterpret_cast<Res_png_9patch*>(data);
+    fill9patchOffsets(patch);
+    patch->fileToDevice();
+    patch->wasDeserialized = true;
+    return patch;
 }
 
 size_t Res_png_9patch::serializedSize() const{

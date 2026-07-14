@@ -268,7 +268,8 @@ static uint8_t maxAlphaOverCol(uint8_t** rows, int offsetX, int startY, int endY
     return maxAlpha;
 }
 
-NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
+NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
+        const std::vector<uint8_t>*ninePatchChunk)
     : mImage(image){
     const uint32_t numRows = image->get_height();
     auto rows = std::unique_ptr<uint8_t*[]>(new uint8_t*[numRows]);
@@ -277,7 +278,12 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         rows[i] = pd;
         pd += image->get_stride();
     }
-    auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,nullptr);
+    // Prefer the npTc chunk when present (Android-aapt-processed / self-chunked 9-patch);
+    // NinePatch::Create falls back to scanning the 1px guide border when the chunk is
+    // null or malformed.
+    auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,
+            ninePatchChunk ? ninePatchChunk->data() : nullptr,
+            ninePatchChunk ? ninePatchChunk->size() : 0, nullptr);
     for(auto&r:anp->horizontal_stretch_regions){
         mResizeDistancesX.push_back({r.start,r.end-r.start});
     }
@@ -293,7 +299,7 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
    // find left and right extent of nine patch content on center row
     if (image->get_width() > 4) {
         findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
-        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.bottom);
+        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.right);
     } else {
         mOutlineInsets.left = 0;
         mOutlineInsets.right = 0;
@@ -348,7 +354,19 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
     mPadding.top  = anp->padding.top;
     mPadding.width = anp->padding.right;
     mPadding.height= anp->padding.bottom;
-    mRadius = static_cast<int>(anp->outline_radius);
+    // A chunk-built NinePatch leaves outline_radius at its default 0 (CDROID's
+    // Res_png_9patch struct has no outline fields), so only let the NinePatch override
+    // the renderer's own pixel-computed radius (diagonal march above) when it actually
+    // provides one — i.e. the border-scan path.
+    if (anp->outline_radius > 0.f) mRadius = static_cast<int>(anp->outline_radius);
+    // Faithful outline from the scanner: anp->outline is edge insets {left,top,right,
+    // bottom} and outline_alpha is the content's max alpha (0..255). Store them for
+    // getOutlineRect()/getOutlineAlpha(). anp->outline.right/bottom are insets, so they
+    // map to Rect's .width/.height (the Rect-as-insets convention consumers expect). For
+    // a chunk-built NinePatch (no outline in npTc) these are the all-zero/opaque defaults
+    // and getOutlineRect falls back to mContentArea below.
+    mOutlineRect.set(anp->outline.left, anp->outline.top, anp->outline.right, anp->outline.bottom);
+    mOutlineAlpha = anp->outline_alpha;
     mOpacity = ImageDecoder::getTransparency(mImage);
     mContentArea.set(mPadding.left,mPadding.top,
         image->get_width()-mPadding.left-2,
@@ -729,13 +747,14 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
 }
 
 Rect NinePatchRenderer::getOutlineRect() const {
-    // 如果有专用的 mOutlineRect，优先返回
-    // return mOutlineRect;
-    // 否则用内容区或 padding 作为 fallback
+    // Prefer the scanner's faithful outline (anp->outline) when it has real insets.
+    // When it's all-zero (chunk-built NinePatch has no outline in npTc, or no opaque
+    // content), fall back to the content area.
+    if (mOutlineRect.left | mOutlineRect.top | mOutlineRect.width | mOutlineRect.height)
+        return mOutlineRect;
     if (!mContentArea.empty())
         return mContentArea;
-    else
-        return getPadding();
+    return getPadding();
 }
 
 int NinePatchRenderer::getOutlineRadius() const {

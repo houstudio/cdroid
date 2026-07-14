@@ -24,6 +24,10 @@ ENDMACRO()
 if(NOT Python_EXECUTABLE)
     #compiled error with vcpkg (for Android platform)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    # find_package(Python3) sets Python3_EXECUTABLE, not Python_EXECUTABLE — wire it up
+    # so the lxml/Pillow checks and the packaging scripts are invoked with a real interpreter
+    # (otherwise ${Python_EXECUTABLE} expands empty and every script silently falls back).
+    set(Python_EXECUTABLE ${Python3_EXECUTABLE})
 endif()
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
@@ -47,8 +51,13 @@ except ImportError:
 
     if(CHECK_LXML_RESULT EQUAL 0)
         set(XMLPACKAGE ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath})
+        # XmlOptimized2Zip.py also embeds an npTc chunk into each *.9.png and adds them
+        # to the pak itself (name + relative path preserved) — exclude them here so the
+        # binary zip doesn't re-add the unchunked originals.
+        set(BINZIP_9PATCH_EXCLUDE -x "*.9.png")
     else()
         set(XMLPACKAGE zip -q -r -D -1 ${PakPath} ./  -i "*.xml")
+        set(BINZIP_9PATCH_EXCLUDE)
     endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
@@ -57,7 +66,7 @@ except ImportError:
         # matching files), zip exits 12 "Nothing to do!" — which would abort the
         # whole assets target and block PakPath/APK production. `|| true` makes the
         # empty case non-fatal (XML-only pak still ships from the step above).
-        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc" || true
+        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc" ${BINZIP_9PATCH_EXCLUDE} || true
         COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")

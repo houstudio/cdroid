@@ -238,7 +238,7 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
     if(image && decoder && (decoder->getFrameCount()==1)){
         Drawable*d = nullptr;
         if(TextUtils::endWith(resourceId,".9.png"))
-            d = new NinePatchDrawable(image);
+            d = new NinePatchDrawable(image, decoder ? decoder->getNinePatchChunk() : nullptr);
         else if( (image->get_width() >0) && (image->get_height() > 0) ){
             //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);
