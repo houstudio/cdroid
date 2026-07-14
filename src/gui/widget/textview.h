@@ -417,7 +417,7 @@ public:
     // SPANNABLE / EDITABLE). The factory MUST return a freshly-owned object (default:
     // new SpannableString / new SpannableStringBuilder, which copy the source); setText
     // adopts the result and frees the source — see the copy-and-orphan handling there.
-    void setSpannableFactory(coinst Spannable::Factory& factory);
+    void setSpannableFactory(const Spannable::Factory& factory);
     void setEditableFactory(const Editable::Factory& factory);
     int getLineHeight()const;
     void setLineHeight(int height);

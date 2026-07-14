@@ -1777,9 +1777,10 @@ Editable* TextView::getEditableText()const{
 }
 
 void TextView::setHint(const std::string& hint){
-    //mHint = hint;
-    //mHintLayout->setText(hint);
-    checkForRelayout();
+    // Android: mHint = TextUtils.stringOrSpannedString(hint) — wrap the plain string
+    // in a SpannedString and route through setHint(CharSequence*) → setHintInternal,
+    // which frees the previous mHint at a layout-safe point (capture→checkForRelayout→free).
+    setHint(new SpannedString(TextUtils::utf8_utf16(hint)));
 }
 
 void TextView::setHint(CharSequence*hint){
