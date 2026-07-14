@@ -278,12 +278,13 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         rows[i] = pd;
         pd += image->get_stride();
     }
-    // Prefer the npTc chunk when present (Android-aapt-processed / self-chunked 9-patch);
-    // NinePatch::Create falls back to scanning the 1px guide border when the chunk is
-    // null or malformed.
+    // Prefer the cdNp/npTc chunk when present (Android-aapt-processed / self-chunked
+    // 9-patch); NinePatch::Create falls back to scanning the 1px guide border when the
+    // chunk is null or malformed. A cdNp chunk means the image is border-stripped.
     auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,
             ninePatchChunk ? ninePatchChunk->data() : nullptr,
             ninePatchChunk ? ninePatchChunk->size() : 0, nullptr);
+    mBorderless = anp->borderless;
     for(auto&r:anp->horizontal_stretch_regions){
         mResizeDistancesX.push_back({r.start,r.end-r.start});
     }
@@ -376,9 +377,11 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         mRadius = static_cast<int>(anp->outline_radius);
     }
     mOpacity = ImageDecoder::getTransparency(mImage);
+    // B = source border thickness to skip (1 for a bordered image, 0 for borderless).
+    const int B = mBorderless ? 0 : 1;
     mContentArea.set(mPadding.left,mPadding.top,
-        image->get_width()-mPadding.left-2,
-        image->get_height()-mPadding.top-2);
+        image->get_width()-mPadding.left-2*B,
+        image->get_height()-mPadding.top-2*B);
     mAlpha =1.f;
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
@@ -432,15 +435,19 @@ void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
         resizeHeight += mResizeDistancesY[i].second;
     }
 
-    if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
-                <<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
+    // Minimum drawable size = image content extent (image minus the 2*Bpx border) minus
+    // the stretchable portion. B=1 for a bordered image, 0 for borderless.
+    const int B = mBorderless ? 0 : 1;
+    const int minWidth  = mImage->get_width()  - 2*B - resizeWidth;
+    const int minHeight = mImage->get_height() - 2*B - resizeHeight;
+    if (width < minWidth && height < minHeight) {
+        oss<<"IncorrectWidth("<<width<<") must>="<<minWidth<<" && incorrectHeight("<<height<<")>="<<minHeight;
     }
-    if (width < (mImage->get_width() - 2 - resizeWidth)) {
-        oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
+    if (width < minWidth) {
+        oss<<"IncorrectWidth("<<width<<" must>="<<minWidth;
     }
-    if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
+    if (height < minHeight) {
+        oss<<"IncorrectHeight("<<height<<" must>="<<minHeight;
     }
     const bool hasErrors = (oss.str().empty()==false);
     LOGE_IF(hasErrors,"%s",oss.str().c_str());
@@ -463,15 +470,17 @@ void NinePatchRenderer::setImageSize(int width, int height) {
     for (int i = 0; i < mResizeDistancesY.size(); i++) {
         resizeHeight += mResizeDistancesY[i].second;
     }
-    if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
-		<<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
+    const int B = mBorderless ? 0 : 1;
+    const int minWidth  = mImage->get_width()  - 2*B - resizeWidth;
+    const int minHeight = mImage->get_height() - 2*B - resizeHeight;
+    if (width < minWidth && height < minHeight) {
+        oss<<"IncorrectWidth("<<width<<") must>="<<minWidth<<" && incorrectHeight("<<height<<")>="<<minHeight;
     }
-    if (width < (mImage->get_width() - 2 - resizeWidth)) {
-		oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
+    if (width < minWidth) {
+		oss<<"IncorrectWidth("<<width<<" must>="<<minWidth;
     }
-    if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
+    if (height < minHeight) {
+        oss<<"IncorrectHeight("<<height<<" must>="<<minHeight;
     }
     if(oss.str().empty()==false){
         LOG(ERROR)<<oss.str();
@@ -627,8 +636,9 @@ Insets NinePatchRenderer::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) co
 }
 
 void NinePatchRenderer::getFactor(int width, int height, double& factorX, double& factorY) {
-    int topResize = width - (mImage->get_width() - 2);
-    int leftResize = height - (mImage->get_height() - 2);
+    const int B = mBorderless ? 0 : 1;
+    int topResize = width - (mImage->get_width() - 2*B);
+    int leftResize = height - (mImage->get_height() - 2*B);
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         topResize += mResizeDistancesX[i].second;
         factorX += mResizeDistancesX[i].second;
@@ -648,7 +658,10 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
     int widthResize,heightResize; //width/height for image parts
     int resizeX = 0 , resizeY ;
     int offsetX = 0 , offsetY = 0;
-    
+    // Source border thickness: skip Bpx into the source for each content coordinate
+    // (1 for a bordered image, 0 for borderless) and subtract 2*B from content extent.
+    const int B = mBorderless ? 0 : 1;
+
     RefPtr<Cairo::Context> imgPainter;
     Cairo::Context*ppainter = painterIn;
     if(painterIn==nullptr){
@@ -671,7 +684,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             widthResize = mResizeDistancesX[i].first - x1;
             heightResize = mResizeDistancesY[j].first - y1;
 
-            drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+            drawConstPart(Rect{x1 + B, y1 + B, widthResize, heightResize},
                  Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 
             int  y2 = mResizeDistancesY[j].first;
@@ -682,7 +695,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
                 if (lostY < 0) {  resizeY += 1;   lostY += 1.0; }
                 else { resizeY -= 1;  lostY -= 1.0; }
             }
-            drawScaledPart(Rect{x1 + 1, y2 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x1 + B, y2 + B, widthResize, heightResize},
                 Rect{x1 + offsetX, y2 + offsetY, widthResize, resizeY}, painter);
 
             int  x2 = mResizeDistancesX[i].first;
@@ -694,11 +707,11 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
                 if (lostX < 0) { resizeX += 1; lostX += 1.0;}
                 else { resizeX -= 1; lostX -= 1.0; }
             }
-            drawScaledPart(Rect{x2 + 1, y1 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x2 + B, y1 + B, widthResize, heightResize},
                 Rect{x2 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
 
             heightResize = mResizeDistancesY[j].second;
-            drawScaledPart(Rect{x2 + 1, y2 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x2 + B, y2 + B, widthResize, heightResize},
                 Rect{x2 + offsetX, y2 + offsetY, resizeX, resizeY}, painter);
 
             y1 = mResizeDistancesY[j].first + mResizeDistancesY[j].second;
@@ -708,13 +721,13 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
         offsetX += resizeX - mResizeDistancesX[i].second;
     }
     x1 = mResizeDistancesX[mResizeDistancesX.size() - 1].first + mResizeDistancesX[mResizeDistancesX.size() - 1].second;
-    widthResize = mImage->get_width() - x1 - 2;
+    widthResize = mImage->get_width() - x1 - 2*B;
     y1 = 0;
     lostX = 0.0;
     lostY = 0.0;
     offsetY = 0;
     for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].first - y1},
+        drawConstPart(Rect{x1 + B, y1 + B, widthResize, mResizeDistancesY[i].first - y1},
             Rect{x1 + offsetX, y1 + offsetY, widthResize, mResizeDistancesY[i].first - y1}, painter);
         y1 = mResizeDistancesY[i].first;
         resizeY = round((double)mResizeDistancesY[i].second * factorY);
@@ -723,17 +736,17 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             if (lostY < 0) { resizeY += 1;  lostY += 1.0; }
             else { resizeY -= 1;  lostY -= 1.0; }
         }
-        drawScaledPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].second},
+        drawScaledPart(Rect{x1 + B, y1 + B, widthResize, mResizeDistancesY[i].second},
             Rect{x1 + offsetX, y1 + offsetY, widthResize, resizeY}, painter);
         y1 = mResizeDistancesY[i].first + mResizeDistancesY[i].second;
         offsetY += resizeY - mResizeDistancesY[i].second;
     }
     y1 = mResizeDistancesY[mResizeDistancesY.size() - 1].first + mResizeDistancesY[mResizeDistancesY.size() - 1].second;
-    heightResize = mImage->get_height() - y1 - 2;
+    heightResize = mImage->get_height() - y1 - 2*B;
     x1 = 0;
     offsetX = 0;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        drawConstPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].first - x1, heightResize},
+        drawConstPart(Rect{x1 + B, y1 + B, mResizeDistancesX[i].first - x1, heightResize},
             Rect{x1 + offsetX, y1 + offsetY, mResizeDistancesX[i].first - x1, heightResize}, painter);
         x1 = mResizeDistancesX[i].first;
         resizeX = round((double)mResizeDistancesX[i].second * factorX);
@@ -742,16 +755,16 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             if (lostX < 0) {  resizeX += 1;  lostX += 1.0; }
             else { resizeX -= 1;  lostX += 1.0; }
         }
-        drawScaledPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].second, heightResize},
+        drawScaledPart(Rect{x1 + B, y1 + B, mResizeDistancesX[i].second, heightResize},
             Rect{x1 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
         x1 = mResizeDistancesX[i].first + mResizeDistancesX[i].second;
         offsetX += resizeX - mResizeDistancesX[i].second;
     }
     x1 = mResizeDistancesX[mResizeDistancesX.size() - 1].first + mResizeDistancesX[mResizeDistancesX.size() - 1].second;
-    widthResize = mImage->get_width() - x1 - 2;
+    widthResize = mImage->get_width() - x1 - 2*B;
     y1 = mResizeDistancesY[mResizeDistancesY.size() - 1].first + mResizeDistancesY[mResizeDistancesY.size() - 1].second;
-    heightResize = mImage->get_height() - y1 - 2;
-    drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+    heightResize = mImage->get_height() - y1 - 2*B;
+    drawConstPart(Rect{x1 + B, y1 + B, widthResize, heightResize},
          Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 }
 

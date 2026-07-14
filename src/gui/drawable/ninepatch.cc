@@ -587,11 +587,12 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
             Res_png_9patch* patch = Res_png_9patch::deserialize(buf.get());
 
             auto nine_patch = std::unique_ptr<NinePatch>(new NinePatch());
-            // Dividers are content-relative (0..width-2 / 0..height-2), the same basis the
-            // border scan emits. xDivs/yDivs are (start,end) pairs; clamp into the content
-            // bounds (a malformed chunk could be out of range) and drop empty spans.
-            const int32_t cw = width  > 2 ? width  - 2 : width;
-            const int32_t ch = height > 2 ? height - 2 : height;
+            // Dividers are content-relative (start,end) pairs. For a bordered image (raw
+            // npTc / scan fallback) content width = width-2; for a borderless cdNp image
+            // the decoded image IS the content (the 1px guide border was stripped at build
+            // time), so content width = full width. Clamp into bounds; drop empty spans.
+            const int32_t cw = isCd9p ? width  : (width  > 2 ? width  - 2 : width);
+            const int32_t ch = isCd9p ? height : (height > 2 ? height - 2 : height);
             const int32_t* xd = patch->getXDivs();
             for (int i = 0; i + 1 < patch->numXDivs; i += 2) {
                 int32_t s = xd[i], e = xd[i + 1];
@@ -634,6 +635,9 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
                 std::memcpy(&nine_patch->outline_alpha,  npol + 20, 4);
                 nine_patch->outlineFromChunk = true;
             }
+            // A cdNp bundle only ever lives in a border-stripped (aapt-style) image, so
+            // its presence means the renderer must draw on a borderless basis.
+            if (isCd9p) nine_patch->borderless = true;
             // buf freed here (NinePatch copies the data out, doesn't retain it).
 
             // A chunk that yields no stretch regions isn't a usable 9-patch — fall through

@@ -141,6 +141,11 @@ public:
     // npOl). The renderer uses this to skip its own border pixel-scan for optical/
     // outline and trust the chunk values instead.
     bool outlineFromChunk = false;
+    // True when the source image had its 1px guide border stripped at build time
+    // (aapt-style) and carries a cdNp chunk. The renderer then draws on a borderless
+    // coordinate basis (no +1/-2 border offsets). cdNp presence implies borderless —
+    // the embedder strips the border and embeds the chunk atomically.
+    bool borderless = false;
     std::vector<Range> horizontal_stretch_regions;
     std::vector<Range> vertical_stretch_regions;
     std::vector<uint32_t> region_colors;

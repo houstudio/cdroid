@@ -237,8 +237,12 @@ Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId
 
     if(image && decoder && (decoder->getFrameCount()==1)){
         Drawable*d = nullptr;
-        if(TextUtils::endWith(resourceId,".9.png"))
-            d = new NinePatchDrawable(image, decoder ? decoder->getNinePatchChunk() : nullptr);
+        // A 9-patch is detected by the cdNp chunk (aapt-stripped assets are renamed to
+        // .png, so the filename no longer carries .9). Keep the .9.png fallback for any
+        // bordered source loaded directly without an embedded chunk.
+        const std::vector<uint8_t>* npChunk = decoder ? decoder->getNinePatchChunk() : nullptr;
+        if(npChunk != nullptr || TextUtils::endWith(resourceId,".9.png"))
+            d = new NinePatchDrawable(image, npChunk);
         else if( (image->get_width() >0) && (image->get_height() > 0) ){
             //TextUtils::endWith(resourceId,".png")||TextUtils::endWith(resourceId,".jpg")||TextUtils::endWith(resourceId,".webp")||TextUtils::endWith(resourceId,".gif"))
             d = new BitmapDrawable(image);

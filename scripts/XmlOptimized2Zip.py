@@ -48,11 +48,15 @@ def zip_xml_files(output_directory, zip_file_path):
 # A source .9.png carries stretch/padding as the 1px guide border. We scan that
 # border for three things — npTc (stretch/padding, big-endian Res_png_9patch),
 # npLb (optical/layout-bounds from the red ticks), npOl (outline rect/radius/alpha
-# via findMaxOpacity) — bundle all three into ONE custom "cdNp" chunk, and splice
-# it into the PNG before IEND. The 1px guide border and the ".9.png" name are
-# KEPT (bordered-cdNp design): the runtime is chunk-driven for stretch/padding/
-# optical/outline, but every load path (createAsDrawable, <nine-patch> XML,
-# backgrounds) still sees a normal bordered .9.png, so nothing else has to change.
+# via findMaxOpacity) — bundle all three into ONE custom "cdNp" chunk, STRIP the
+# 1px guide border, and splice cdNp into the borderless PNG before IEND. The asset
+# is stored as <name>.png (the ".9" is dropped) — aapt-style. The divs/padding/
+# optical/outline are content-relative on the bordered source, which after the
+# strip equals image-relative on the borderless image, so the same values apply.
+# common_functions.cmake shell-zips with -x "*.9.png" so only these processed
+# borderless .png copies reach the pak. createAsDrawable detects a 9-patch by the
+# cdNp chunk (not the filename). The <nine-patch> XML path is developer-guaranteed
+# (its srcs are plain animation PNGs, not .9.png), so it's untouched.
 # cdNp DATA = [u8 version=1][u16 npTcLen BE + bytes][u16 npLbLen BE + bytes]
 #             [u16 npOlLen BE + bytes]. Sub-blob byte orders match the C++ side:
 # npTc = Res_png_9patch big-endian; npLb/npOl = native little-endian (memcpy).
@@ -278,9 +282,9 @@ def _serialize_cdNp(nptc, nplb, npol):
 def embed_9patch_assets(input_directory, zip_file_path):
     """aapt-compile each *.9.png: scan the guide border for stretch/padding (npTc),
     optical/layout-bounds (npLb) and outline (npOl); bundle them into one "cdNp"
-    chunk and splice it into the (still-bordered) PNG before IEND. The asset keeps
-    its ".9.png" name and its 1px guide border. ZIP_STORED (PNGs are already
-    compressed)."""
+    chunk; STRIP the 1px guide border and splice cdNp into the borderless PNG
+    before IEND; store as <name>.png (drop the .9) at the same relative path.
+    ZIP_STORED (PNGs are already compressed)."""
     count = 0
     with zipfile.ZipFile(zip_file_path, 'a', zipfile.ZIP_STORED) as zipf:
         for root, dirs, files in os.walk(input_directory):
@@ -289,14 +293,16 @@ def embed_9patch_assets(input_directory, zip_file_path):
                     continue
                 path = os.path.join(root, f)
                 rel = os.path.relpath(path, input_directory).replace(os.sep, "/")
+                arcname = rel[:-6] + ".png"   # foo.9.png -> foo.png
                 try:
                     im = Image.open(path); im.load()
                     if im.mode != "RGBA":
                         im = im.convert("RGBA")
                     W, H = im.size
                     if W < 3 or H < 3:
-                        zipf.write(path, rel); continue
-                    # scan the bordered source
+                        zipf.write(path, arcname); continue
+                    # scan the bordered source (divs/padding/optical/outline are
+                    # content-relative, which == image-relative after the strip)
                     xd, yd, pl, pr, pt, pb = _scan_9patch(im)
                     lb_l, lb_t, lb_r, lb_b = _scan_layout_bounds(im)
                     ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha = _compute_outline(im)
@@ -304,15 +310,17 @@ def embed_9patch_assets(input_directory, zip_file_path):
                     nplb = _serialize_nplb(lb_l, lb_t, lb_r, lb_b)
                     npol = _serialize_outline(ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha)
                     cdNp = _serialize_cdNp(nptc, nplb, npol)
-                    # keep the bordered source bytes verbatim, splicing cdNp before IEND
-                    with open(path, "rb") as fh:
-                        raw = fh.read()
-                    raw = _insert_chunk_before_iend(raw, b"cdNp", cdNp)
-                    zipf.writestr(rel, raw)
+                    # strip the 1px guide border -> inner (W-2)x(H-2), re-encode PNG,
+                    # splice cdNp before IEND
+                    inner = im.crop((1, 1, W - 1, H - 1))
+                    buf = io.BytesIO()
+                    inner.save(buf, format="PNG")
+                    raw = _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
+                    zipf.writestr(arcname, raw)
                     count += 1
                 except Exception as e:
                     print(f"9patch embed failed for {path}: {e}; storing bordered as-is")
-                    zipf.write(path, rel)
+                    zipf.write(path, arcname)
     return count
 
 if __name__ == "__main__":

@@ -37,6 +37,10 @@ private:
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
     Cairo::RefPtr<Cairo::ImageSurface> mCachedImage;
+    // True when the source image is border-stripped (cdNp/aapt-style): the renderer
+    // then draws on a borderless basis — source origin offset B=0 (vs 1 for a
+    // bordered image) and no 2px border subtracted from content extent.
+    bool mBorderless = false;
 public:
     Cairo::RefPtr<Cairo::ImageSurface> mImage;
 private:
