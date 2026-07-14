@@ -8,6 +8,10 @@
  *   cairo operators are W3C == Android BlendMode, so these should be exact.
  *
  * Build: from outX64-Debug, `make` then `make tintdemo`.
+ *
+ * NOTE: the cells form a grid. Window::doLayout now always lays out direct children,
+ * so the old absolute layout() grid piled up at (0,0); the grid is now built from
+ * nested LinearLayouts (rows of cells) inside a ScrollView.
  */
 #include <cdroid.h>
 #include <cdlog.h>
@@ -17,50 +21,63 @@
 
 struct Mode{ const char* name; int mode; };
 
-static void addCell(Window*w,App&app,const std::string&res,int x,int y,int sz,
-                    const char*name,std::function<void(Drawable*)>apply){
-    ImageView*iv=new ImageView(sz,sz);
-    Drawable*dr=app.getDrawable(res);
-    if(dr) dr=dr->mutate();
-    iv->setImageDrawable(dr);
-    if(dr) apply(dr);
-    iv->setBackgroundColor(0xFF1b2330);
-    iv->setScaleType(ScaleType::FIT_CENTER);
-    w->addView(iv);
-    iv->layout(x,y,sz,sz);
-    TextView*lbl=new TextView(0,0);
-    lbl->setText(name);
-    lbl->setTextSize(12);
-    lbl->setGravity(Gravity::CENTER);
-    lbl->setTextColor(0xFFcfd8dc);
-    w->addView(lbl);
-    lbl->layout(x,y+sz+1,sz,18);
-}
-
-static int addSection(Window*w,const char*title,int y){
-    TextView*h=new TextView(0,0);
-    h->setText(title);
-    h->setTextSize(14);
-    h->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
-    h->setTextColor(0xFF8aa0b4);
-    w->addView(h);
-    h->layout(20,y,984,22);
-    return y+26;
-}
-
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
     w->setBackgroundColor(0xFF10141c);
 
+    ScrollView*scroller=new ScrollView(-1,-1);
+    scroller->setVerticalScrollBarEnabled(true);
+    w->addView(scroller);
+    LinearLayout*content=new LinearLayout(-1,-2); // MATCH_PARENT w, WRAP_CONTENT h
+    content->setOrientation(LinearLayout::VERTICAL);
+    scroller->addView(content);
+
     const int tintColor=0xFFFF4040; /* red */
     const std::string res=(argc>1)?std::string(argv[1]):std::string("cdroid:mipmap/ic_search");
-    const int sz=78, gap=6, labelH=18, cellW=sz+gap, cellH=sz+labelH+gap, cols=8;
-    const int ox=24;
+    const int sz=78, gap=6, labelH=18, cols=8;
+
+    auto lp=[&](int ww,int hh,int lmargin=0,int tmargin=0){
+        LinearLayout::LayoutParams*p=new LinearLayout::LayoutParams(ww,hh);
+        p->leftMargin=lmargin; p->topMargin=tmargin; return p;
+    };
+    auto addSection=[&](const char*title){
+        TextView*h=new TextView(0,0);
+        h->setText(title);
+        h->setTextSize(14);
+        h->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
+        h->setTextColor(0xFF8aa0b4);
+        content->addView(h, lp(-1,22,24,8));
+    };
+    auto newRow=[&](){
+        LinearLayout*r=new LinearLayout(-1,-2);
+        r->setOrientation(LinearLayout::HORIZONTAL);
+        content->addView(r, lp(-1,-2,0,2));
+        return r;
+    };
+    auto addCell=[&](LinearLayout*row,const char*name,std::function<void(Drawable*)>apply){
+        LinearLayout*cell=new LinearLayout(sz,sz+labelH);
+        cell->setOrientation(LinearLayout::VERTICAL);
+        ImageView*iv=new ImageView(sz,sz);
+        Drawable*dr=app.getDrawable(res);
+        if(dr) dr=dr->mutate();
+        iv->setImageDrawable(dr);
+        if(dr) apply(dr);
+        iv->setBackgroundColor(0xFF1b2330);
+        iv->setScaleType(ScaleType::FIT_CENTER);
+        cell->addView(iv, lp(sz,sz));
+        TextView*lbl=new TextView(0,0);
+        lbl->setText(name);
+        lbl->setTextSize(12);
+        lbl->setGravity(Gravity::CENTER);
+        lbl->setTextColor(0xFFcfd8dc);
+        cell->addView(lbl, lp(sz,labelH));
+        row->addView(cell, lp(sz,-2,gap,0));
+    };
 
     /* ---- Section 1: PorterDuff::Mode tint (setTint path) ---- */
-    int y=addSection(w,"PorterDuff::Mode  (setTint / setTintMode  ->  mTintFilter)",6);
+    addSection("PorterDuff::Mode  (setTint / setTintMode  ->  mTintFilter)");
     const Mode pd[]={
         {"(none)",PorterDuff::NOOP},{"SRC",PorterDuff::SRC},{"SRC_IN",PorterDuff::SRC_IN},
         {"SRC_OVER",PorterDuff::SRC_OVER},{"SRC_ATOP",PorterDuff::SRC_ATOP},{"SRC_OUT",PorterDuff::SRC_OUT},
@@ -68,16 +85,16 @@ int main(int argc,const char*argv[]){
         {"OVERLAY",PorterDuff::OVERLAY},{"DARKEN",PorterDuff::DARKEN},{"LIGHTEN",PorterDuff::LIGHTEN},
         {"ADD",PorterDuff::ADD},{"CLEAR",PorterDuff::CLEAR},
     };
+    LinearLayout*row=nullptr;
     for(size_t i=0;i<sizeof(pd)/sizeof(pd[0]);i++){
-        const int col=i%cols,row=i/cols;
+        if(i%cols==0) row=newRow();
         const int m=pd[i].mode;
-        addCell(w,app,res, ox+col*cellW, y+row*cellH, sz, pd[i].name,
+        addCell(row, pd[i].name,
             [tintColor,m](Drawable*d){ if(m!=PorterDuff::NOOP){ d->setTint(tintColor); d->setTintMode(m);} });
     }
-    y += ((sizeof(pd)/sizeof(pd[0])+cols-1)/cols)*cellH + 6;
 
     /* ---- Section 2: BlendMode (setColorFilter + BlendModeColorFilter) ---- */
-    y=addSection(w,"BlendMode  (setColorFilter(BlendModeColorFilter)  ->  mColorFilter)  [extended modes]",y);
+    addSection("BlendMode  (setColorFilter(BlendModeColorFilter)  ->  mColorFilter)  [extended modes]");
     const Mode bm[]={
         {"SRC_IN",BlendMode::SRC_IN},{"MULTIPLY",BlendMode::MULTIPLY},      /* sanity vs section 1 */
         {"PLUS",BlendMode::PLUS},{"MODULATE",BlendMode::MODULATE},
@@ -87,13 +104,14 @@ int main(int argc,const char*argv[]){
         {"HUE",BlendMode::HUE},{"SATURATION",BlendMode::SATURATION},
         {"COLOR",BlendMode::COLOR},{"LUMINOSITY",BlendMode::LUMINOSITY},
     };
+    row=nullptr;
     for(size_t i=0;i<sizeof(bm)/sizeof(bm[0]);i++){
-        const int col=i%cols,row=i/cols;
+        if(i%cols==0) row=newRow();
         const int m=bm[i].mode;
-        addCell(w,app,res, ox+col*cellW, y+row*cellH, sz, bm[i].name,
+        addCell(row, bm[i].name,
             [tintColor,m](Drawable*d){ d->setColorFilter(std::make_shared<BlendModeColorFilter>(tintColor,m)); });
     }
 
-    w->requestLayout();
+    content->requestLayout();
     return app.exec();
 }

@@ -30,6 +30,19 @@ public:
 int main(int argc,const char*argv[]){
     App app(argc,argv);
     Window*w=new Window(0,0,-1,-1);
+
+    // Window::doLayout now always lays out direct children, so absolute layout() on
+    // multiple direct children piles them up at (0,0). Put the two ListViews + toggle
+    // side by side in a horizontal LinearLayout (avoids ListView-inside-ScrollView).
+    LinearLayout*content=new LinearLayout(-1,-1);
+    content->setOrientation(LinearLayout::HORIZONTAL);
+    w->addView(content);
+    auto add=[&](View*v,int ww,int hh){
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(ww,hh);
+        lp->leftMargin=lp->topMargin=10;
+        content->addView(v,lp);
+    };
+
     MyAdapter*adapter=new MyAdapter(0);
 
     Animation *anim= new ScaleAnimation(0.5,1,0.1,1,Animation::RELATIVE_TO_PARENT,.5,Animation::RELATIVE_TO_SELF,.5);
@@ -37,9 +50,8 @@ int main(int argc,const char*argv[]){
     w->setId(10);
     LayoutAnimationController*lac = new LayoutAnimationController(anim,0.02);
     ListView*lv = new ListView(460,500);
-    w->addView(lv);
+    add(lv,460,500);
     lv->setId(100);
-    lv->layout(10,10,460,500);
     adapter->setNotifyOnChange(true);
     lv->setAdapter(adapter);
     for(int i=0;i<56;i++) adapter->add("");
@@ -47,7 +59,7 @@ int main(int argc,const char*argv[]){
     lv->setLayoutAnimation(lac);
     adapter->notifyDataSetChanged();
     lv->startLayoutAnimation();
-    lv->setVerticalScrollBarEnabled(true);    
+    lv->setVerticalScrollBarEnabled(true);
     lv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv->setSmoothScrollbarEnabled(true);
     lv->setSelector(new ColorDrawable(0x8800FF00));
@@ -61,21 +73,19 @@ int main(int argc,const char*argv[]){
     ListView::OnItemSelectedListener listener={nullptr,nullptr};
     listener.onItemSelected=[](AdapterView&lv,View&v,int pos,long id){
         LOGD("selected position %d",pos);
-    }; 
+    };
     lv->setOnItemSelectedListener(listener);
 ////////////////////////////////////////////////////////////////////////////////////////
 
     MyAdapter*adapter2=new MyAdapter(1);
     ListView*lv2 = new ListView(500,500);
-    w->addView(lv2);
+    add(lv2,500,500);
     lv2->setId(200);
     ToggleButton *toggle=new ToggleButton(300,40);
-    w->addView(toggle);
-    toggle->layout(500,520,300,40);
-    lv2->layout(500,10,500,500);
+    add(toggle,300,40);
     lv2->setAdapter(adapter2);
     for(int i=0;i<56;i++)  adapter2->add("");
-   
+
     lv2->setDivider(new ColorDrawable(0x80224422));
     lv2->setDividerHeight(1);
     lv2->setVerticalScrollBarEnabled(true);
@@ -107,6 +117,7 @@ int main(int argc,const char*argv[]){
         //w->postDelayed(rd,1000);
     };
     w->postDelayed(rd,10000);
+    content->requestLayout();
     app.exec();
     return 0;
 };

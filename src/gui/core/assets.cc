@@ -272,8 +272,10 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         }
         return 0;
     });
-    if(name.compare("cdroid")==0)
-        setTheme("cdroid:style/Theme.Material");
+    if(name.compare("cdroid")==0){
+        setTheme("cdroid:style/Theme");
+        //setTheme("cdroid:style/Theme.Material");
+    }
 
     while (!pending.colors.empty()) {
         bool resolved = false;
