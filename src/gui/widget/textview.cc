@@ -6226,5 +6226,4 @@ void TextView::ChangeWatcher::onSpanRemoved(Spannable& buf, const ParcelableSpan
     mTV->spanChange(buf, what, s, -1, e, -1);
 }
 
-
 }/*endof namespace*/

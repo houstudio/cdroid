@@ -393,7 +393,8 @@ static uint32_t FindMaxAlpha(const ImageLine* image_line) {
 
 // Pack the pixels in as 0xAARRGGBB (as 9-patch expects it).
 uint32_t NinePatch::PackRGBA(const uint8_t* pixel) {
-    return (pixel[3] << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
+    //return (pixel[3] << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
+    return (uint32_t(pixel[3]) << 24) | (uint32_t(pixel[2]) << 16) | (uint32_t(pixel[1]) << 8) | pixel[0];
 }
 
 std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width,
