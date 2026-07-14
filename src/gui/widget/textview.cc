@@ -2921,8 +2921,23 @@ void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics
     if (switchEllipsize) {
         TextUtils::TruncateAt oppositeEllipsize = effectiveEllipsize == TextUtils::TruncateAt::MARQUEE
                 ? TextUtils::TruncateAt::END : TextUtils::TruncateAt::MARQUEE;
+        // Free the previous mSavedMarqueeModeLayout before overwriting — makeNewLayout
+        // runs on every relayout while in marquee-fade-switch mode, so otherwise each
+        // relayout leaks the prior layout. It may ALIAS another live TEXT layout: the
+        // marquee start/stop swap trades it with mLayout, and makeSingleLayout's useSaved
+        // path may have made it == the mSavedLayout cache. It can never be a hint layout
+        // (mHintLayout/mSavedHintLayout) — makeSingleLayout builds only from mText/
+        // mTransformed, and the marquee swap only exchanges text layouts — so those are
+        // not checked. Free it only if distinct from the text layouts currently held
+        // (incl. the one just assigned below).
+        Layout* oldMarquee = mSavedMarqueeModeLayout;
         mSavedMarqueeModeLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment,
                 shouldEllipsize, oppositeEllipsize, effectiveEllipsize != mEllipsize);
+        if (oldMarquee != nullptr && oldMarquee != mLayout
+                && oldMarquee != static_cast<Layout*>(mSavedLayout)
+                && oldMarquee != mSavedMarqueeModeLayout) {
+            delete oldMarquee;
+        }
     }
 
     shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;
