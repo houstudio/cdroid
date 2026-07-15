@@ -2729,7 +2729,7 @@ void View::setOnClickListener(const OnClickListener& l){
     getListenerInfo()->mOnClickListener=l;
 }
 
-bool View::hasOnClickListener()const{
+bool View::hasOnClickListeners()const{
     return mListenerInfo&&(mListenerInfo->mOnClickListener!=nullptr);
 }
 
