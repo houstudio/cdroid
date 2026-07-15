@@ -69,6 +69,7 @@ public:
     enum BufferType {
         NORMAL, SPANNABLE, EDITABLE
     };
+    DECLARE_UIEVENT(bool, OnEditorActionListener, TextView&, int, KeyEvent&);
 private:
     static constexpr int LINES = 1;
     static constexpr int EMS = LINES;
@@ -179,6 +180,9 @@ private:
     BoringLayout::Metrics* mBoring;
     BoringLayout::Metrics* mHintBoring;
 private:
+    int getActionIdForEnterEvent()const;
+    bool shouldAdvanceFocusOnEnter()const;
+    bool isDirectionalNavigationKey(int keyCode)const;
     // Android: doKeyDown — shared key-down logic for onKeyDown/onKeyMultiple.
     int doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent);
 
@@ -300,6 +304,8 @@ protected:
     std::vector<int> onCreateDrawableState(int)override;
     bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
+    void stopTextActionMode();
+    float convertToLocalHorizontalCoordinate(float x);
     // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
     // the caret appearance (the blink cadence and geometry are owned by Editor).
     virtual int getHorizontalOffsetForDrawables()const;
@@ -363,6 +369,9 @@ public:
     bool isSuggestionsEnabled()const;
     bool canSelectText()const;
     bool canSelectAllText()const;
+    bool canCopy()const;
+    bool canReplace()const;
+    bool canPaste()const;
     bool selectAllText();
     int getSelectionStart()const;
     int getSelectionEnd()const;
@@ -373,6 +382,9 @@ public:
     // Android public API — touch→offset, cursor visibility, IME-on-focus,
     // select-all-on-focus, batch editing (all delegate to Editor when editable).
     int  getOffsetForPosition(float x, float y);
+    int getLineAtCoordinate(float y);
+    int getLineAtCoordinateUnclamped(float y);
+    int getOffsetAtCoordinate(int line, float x);
     void setCursorVisible(bool visible);
     bool isCursorVisible()const;
     bool isCursorVisibleFromAttr()const;

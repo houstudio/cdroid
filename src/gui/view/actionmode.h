@@ -1,5 +1,6 @@
 #ifndef __ACTIONMODE_H__
 #define __ACTIONMODE_H__
+#include <view/view.h>
 namespace cdroid{
 class ActionMode {
 public:

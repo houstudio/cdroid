@@ -21,7 +21,8 @@
 #include <string>
 #include <core/rect.h>
 #include <text/paint.h>
-#include <core/callbackbase.h>   // Runnable
+#include <view/actionmode.h>
+#include <widget/textview.h>
 #include <text/method/keylistener.h>
 namespace cdroid {
 class Layout;
@@ -53,20 +54,23 @@ class TransformationMethod;
  * spell-check, undo/redo, magnifier, text classification.
  */
 class Editor {
-private:
+protected:
     friend class TextView;
     class CursorController;
     class InsertionPointCursorController;
     class TextViewPositionListener;
     class SpanController;
-
+    class InputContentType;
+private:
     Drawable* mDrawableForCursor = nullptr;
     Drawable* mSelectHandleLeft = nullptr;
     Drawable* mSelectHandleRight = nullptr;
     Drawable* mSelectHandleCenter = nullptr;
     TextView* mTextView;
     KeyListener* mKeyListener = nullptr;
-    SpanController* mSpanController = nullptr;   // owned; attached as a borrowed NoCopySpan span
+    SpanController* mSpanController = nullptr;// owned; attached as a borrowed NoCopySpan span
+    InputContentType* mInputContentType =nullptr;
+    ActionMode* mTextActionMode=nullptr;
     Runnable mBlink;
     bool mBlinkCancelled = false;
     bool mCursorVisible = true;
@@ -108,6 +112,10 @@ private:
     void ensureNoSelectionIfNonSelectable();
     void adjustInputType(bool password, bool passwordInputType,
         bool webPasswordInputType, bool numberPasswordInputType);
+    void createInputContentTypeIfNeeded();
+protected:
+    ActionMode*getTextActionMode()const{return mTextActionMode;}
+    void stopTextActionMode();
 public:
     explicit Editor(TextView* textView);
     ~Editor();
@@ -160,7 +168,17 @@ public:
     void stopTextActionModeWithPreservingSelection();
     void onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint,int cursorOffsetVertical);
 };
-
+class Editor::InputContentType {
+public:
+    int imeOptions = 0;//EditorInfo.IME_NULL;
+    std::string privateImeOptions;
+    CharSequence* imeActionLabel;
+    int imeActionId;
+    //Bundle extras;
+    TextView::OnEditorActionListener onEditorActionListener;
+    bool enterDown;
+    //LocaleList imeHintLocales;
+};
 class Editor::CursorController {
 public:
     virtual ~CursorController() = default;

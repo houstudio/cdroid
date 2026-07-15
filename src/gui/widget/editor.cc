@@ -141,8 +141,17 @@ Editor::~Editor() {
     // a harmless dangling record, and we free the object here.
     delete mSpanController;
     mSpanController = nullptr;
+    delete mInputContentType;
+    mInputContentType = nullptr;
 }
 
+void Editor::stopTextActionMode() {
+    if (mTextActionMode != nullptr) {
+        // This will hide the mSelectionModifierCursorController
+        mTextActionMode->finish();
+    }
+    //unregisterOnBackInvokedCallback();
+}
 // =====================================================================================
 //  Helpers
 // =====================================================================================
@@ -269,6 +278,11 @@ void Editor::ensureNoSelectionIfNonSelectable() {
     }
 }
 
+void Editor::createInputContentTypeIfNeeded() {
+    if (mInputContentType == nullptr) {
+        mInputContentType = new InputContentType();
+    }
+}
 // =====================================================================================
 //  Cursor blink + geometry / draw  (faithful ports of android.widget.Editor)
 //  (isCursorVisible is inline in editor.h: mCursorVisible && isEditing().)

@@ -3571,9 +3571,33 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
         case KeyEvent::KEYCODE_ENTER:
         case KeyEvent::KEYCODE_NUMPAD_ENTER:
             if (event.hasNoModifiers()) {
-                // Android: fire mInputContentType.onEditorActionListener (enterDown)
-                // and maybe advance focus (shouldAdvanceFocusOnEnter). Neither
-                // mInputContentType nor shouldAdvanceFocusOnEnter is ported yet.
+                if((mEditor!=nullptr) && (mEditor->mInputContentType != nullptr)
+                   &&(mEditor->mInputContentType->onEditorActionListener != nullptr)
+                   &&mEditor->mInputContentType->enterDown) {
+                       mEditor->mInputContentType->enterDown = false;
+                       if (mEditor->mInputContentType->onEditorActionListener(
+                            *this, getActionIdForEnterEvent(), event)) {
+                                 return true;
+                        }
+                
+                    }
+                    if((event.getFlags()&KeyEvent::FLAG_EDITOR_ACTION) != 0||shouldAdvanceFocusOnEnter()) {
+                        if(!hasOnClickListeners()){
+                            View*v = focusSearch(View::FOCUS_DOWN);
+                            if(v!=nullptr){
+                                if(!v->requestFocus(FOCUS_DOWN)) {
+                                    LOGE("focus search returned a view that wasn't able to take focus!");
+                                }
+                                View::onKeyUp(keyCode,event);
+                                return true;
+                            }else if(event.getFlags()&KeyEvent::FLAG_EDITOR_ACTION) {
+                                InputMethodManager* imm = getInputMethodManager();
+                                if(imm != nullptr) {
+                                    imm->hideSoftInputFromWindow(this, 0);
+                            }
+                        }
+                    }
+                }
             }
             return View::onKeyUp(keyCode, event);
     }
@@ -3588,6 +3612,15 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
     return View::onKeyUp(keyCode, event);
 }
 
+int TextView::getActionIdForEnterEvent() const{
+    // If it's not single line, no action
+    if (!isSingleLine()) {
+        return 0;//EditorInfo.IME_NULL;
+    }
+    // Return the action that was specified for Enter
+    return getImeOptions();// & EditorInfo.IME_MASK_ACTION;
+}
+
 bool TextView::onCheckIsTextEditor() const{
     return mEditor != nullptr && mEditor->mInputType != InputType::TYPE_NULL;
 }
@@ -3599,6 +3632,39 @@ bool TextView::onKeyDown(int keyCode, KeyEvent& event) {
         return View::onKeyDown(keyCode, event);   // super
     }
     return true;
+}
+
+bool TextView::shouldAdvanceFocusOnEnter() const{
+    if (getKeyListener() == nullptr) {
+        return false;
+    }
+
+    if (mSingleLine) {
+        return true;
+    }
+
+    if (mEditor != nullptr
+            && (mEditor->mInputType & InputType::TYPE_MASK_CLASS)
+                    == InputType::TYPE_CLASS_TEXT) {
+        const int variation = mEditor->mInputType & InputType::TYPE_MASK_VARIATION;
+        if (variation == InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                || variation == InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TextView::isDirectionalNavigationKey(int keyCode) const{
+    switch(keyCode) {
+        case KeyEvent::KEYCODE_DPAD_UP:
+        case KeyEvent::KEYCODE_DPAD_DOWN:
+        case KeyEvent::KEYCODE_DPAD_LEFT:
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
+            return true;
+    }
+    return false;
 }
 
 // Ported from Android TextView.doKeyDown (TextView.java:9725).
@@ -3629,18 +3695,73 @@ int TextView::doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent) {
     }
 
     switch (keyCode) {
-        case KeyEvent::KEYCODE_TAB:
-            if (event.hasNoModifiers() || event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
-                // Tab is used to move focus.
+    case KeyEvent::KEYCODE_ENTER:
+    case KeyEvent::KEYCODE_NUMPAD_ENTER:
+        if (event.hasNoModifiers()) {
+            // When mInputContentType is set, we know that we are
+            // running in a "modern" cupcake environment, so don't need
+            // to worry about the application trying to capture
+            // enter key events.
+            if (mEditor != nullptr && mEditor->mInputContentType != nullptr) {
+                // If there is an action listener, given them a
+                // chance to consume the event.
+                if (mEditor->mInputContentType->onEditorActionListener != nullptr
+                        && mEditor->mInputContentType->onEditorActionListener(
+                                *this, getActionIdForEnterEvent(), event)) {
+                    mEditor->mInputContentType->enterDown = true;
+                    // We are consuming the enter key for them.
+                    return KEY_EVENT_HANDLED;
+                }
+            }
+
+            // If our editor should move focus when enter is pressed, or
+            // this is a generated event from an IME action button, then
+            // don't let it be inserted into the text.
+            if ((event.getFlags() & KeyEvent::FLAG_EDITOR_ACTION) != 0
+                    || shouldAdvanceFocusOnEnter()) {
+                if (hasOnClickListeners()) {
+                    return KEY_EVENT_NOT_HANDLED;
+                }
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        break;
+    case KeyEvent::KEYCODE_DPAD_CENTER:
+        if (event.hasNoModifiers()) {
+            if (shouldAdvanceFocusOnEnter()) {
                 return KEY_EVENT_NOT_HANDLED;
             }
-            break;
-        // KEYCODE_ENTER / NUMPAD_ENTER / DPAD_CENTER / BACK / ESCAPE / CUT / COPY /
-        // PASTE / FORWARD_DEL / INSERT: Android routes these through the editor's
-        // mInputContentType (onEditorActionListener), the text action mode, and
-        // onTextContextMenuItem(ID_*) — none of which are ported to CDROID's
-        // Editor yet, so the editable cases (enter insertion, etc.) are left to
-        // the Editor::onKeyDown dispatch below.
+        }
+        break;
+    case KeyEvent::KEYCODE_TAB:
+        if (event.hasNoModifiers() || event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
+            // Tab is used to move focus.
+            return KEY_EVENT_NOT_HANDLED;
+        }
+        break;
+    case KeyEvent::KEYCODE_BACK:
+        if (mEditor != nullptr && mEditor->getTextActionMode() != nullptr) {
+            stopTextActionMode();
+            return KEY_EVENT_HANDLED;
+        }
+        break;
+
+    case KeyEvent::KEYCODE_ESCAPE:
+        if (/*Flags.escapeClearsFocus() &&*/ event.hasNoModifiers()) {
+            if (mEditor != nullptr && mEditor->getTextActionMode() != nullptr) {
+                stopTextActionMode();
+                return KEY_EVENT_HANDLED;
+            }
+            if (hasFocus()) {
+                clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
+                InputMethodManager* imm = getInputMethodManager();
+                if (imm != nullptr) {
+                    imm->hideSoftInputFromView(this, 0);
+                }
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        break;
     }
 
     // --- key listener (CDROID: Editor::onKeyDown stands in for mKeyListener) ---
@@ -4854,14 +4975,14 @@ int TextView::getInputType()const{
 }
 
 int TextView::getImeOptions() const{
-    return 0;//(mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
-            //? mEditor.mInputContentType.imeOptions : EditorInfo.IME_NULL;
+    return (mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
+            ? mEditor->mInputContentType->imeOptions : 0;//EditorInfo.IME_NULL;
 }
 
 void TextView::setImeOptions(int imeOptions) {
     createEditorIfNeeded();
-    //mEditor->createInputContentTypeIfNeeded();
-    //mEditor->mInputContentType->imeOptions = imeOptions;
+    mEditor->createInputContentTypeIfNeeded();
+    mEditor->mInputContentType->imeOptions = imeOptions;
 }
 
 // Android TextView.isAnyPasswordInputType (TextView.java:7862).
@@ -4882,6 +5003,40 @@ bool TextView::isSuggestionsEnabled()const{
           || variation == InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE
           || variation == InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE
           || variation == InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);;
+}
+
+void TextView::stopTextActionMode() {
+    if (mEditor != nullptr) {
+        mEditor->stopTextActionMode();
+    }
+}
+
+bool TextView::canCopy()const{
+    if (hasPasswordTransformationMethod()) {
+        return false;
+    }
+
+    if (mText->length() > 0 && hasSelection() && mEditor != nullptr) {
+        return true;
+    }
+
+    return false;
+}
+
+bool TextView::canReplace()const{
+    if (hasPasswordTransformationMethod()) {
+        return false;
+    }
+
+    return (mText->length() > 0) && dynamic_cast<Editable*>(mText) && (mEditor != nullptr)
+            && isSuggestionsEnabled() /*&& mEditor->shouldOfferToShowSuggestions()*/;
+}
+
+bool TextView::canPaste()const{
+    return (dynamic_cast<Editable*>(mText)
+         && (mEditor != nullptr) && (mEditor->mKeyListener != nullptr)
+         && (getSelectionStart() >= 0) && (getSelectionEnd() >= 0)
+         /*&& getClipboardManagerForUser().hasPrimaryClip()*/);
 }
 
 bool TextView::canSelectText() const{
@@ -4905,17 +5060,40 @@ bool TextView::selectAllText(){
 
 // Android public API — delegate to Editor when editable. (Faithful A34 ports.)
 int TextView::getOffsetForPosition(float x, float y) {
-    Layout* l = getLayout();
-    if (l == nullptr) return -1;   // Android returns -1 when there is no layout
-    // Mirrors Android's getLineAtCoordinate / convertToHorizontalCoordinate:
-    // subtract total padding then add scroll (touch coords are view-local; text
-    // is drawn pre-scrolled by the framework).
-    const int vpad = getExtendedPaddingTop() + getVerticalOffset(true);
-    int line = l->getLineForVertical((int)y - vpad + getScrollY());
-    if (line < 0) line = 0;
-    if (line >= l->getLineCount()) line = l->getLineCount() - 1;
-    const float horiz = x - getCompoundPaddingLeft() + getScrollX();
-    return l->getOffsetForHorizontal(line, horiz);
+    if (getLayout() == nullptr) return -1;
+    const int line = getLineAtCoordinate(y);
+    const int offset = getOffsetAtCoordinate(line, x);
+    return offset;
+}
+
+float TextView::convertToLocalHorizontalCoordinate(float x) {
+    x -= getTotalPaddingLeft();
+    // Clamp the position to inside of the view.
+    x = std::max(0.0f, x);
+    x = std::min((float)getWidth() - getTotalPaddingRight() - 1, x);
+    x += getScrollX();
+    return x;
+}
+
+int TextView::getLineAtCoordinate(float y) {
+    y -= getTotalPaddingTop();
+    // Clamp the position to inside of the view.
+    y = std::max(0.0f, y);
+    y = std::min((float)getHeight() - getTotalPaddingBottom() - 1, y);
+    y += getScrollY();
+    return getLayout()->getLineForVertical((int) y);
+}
+
+int TextView::getLineAtCoordinateUnclamped(float y) {
+    y -= getTotalPaddingTop();
+    y += getScrollY();
+    return getLayout()->getLineForVertical((int) y);
+}
+
+int TextView::getOffsetAtCoordinate(int line, float x) {
+    x = convertToLocalHorizontalCoordinate(x);
+    const int offset = getLayout()->getOffsetForHorizontal(line, x);
+    return transformedToOriginal(offset, OffsetMapping::MAP_STRATEGY_CURSOR);
 }
 
 void TextView::setCursorVisible(bool visible) {
