@@ -301,15 +301,21 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
         mOpticalInsets.right  = anp->layout_bounds.right;
         mOpticalInsets.bottom = anp->layout_bounds.bottom;
     } else {
-        // Scan path: pixel-scan the 1px guide border for outline insets + optical ticks.
+        // Scan path: the chunk carried no npOl outline, so derive outline insets,
+        // radius and alpha from pixels. Generalized over the border model via
+        // B = source border thickness to skip: B=1 for a bordered image (1px guide
+        // border surrounds the content), B=0 for a borderless cdNp image whose npOl
+        // was missing/truncated (the decoded image IS the content). B=1 reproduces
+        // the original bordered behavior exactly.
+        const int B = mBorderless ? 0 : 1;
         const int midX = image->get_width() / 2;
         const int midY = image->get_height() / 2;
-        const int endX = image->get_width() - 2;
-        const int endY = image->get_height() - 2;
+        const int endX = image->get_width() - 1 - B;
+        const int endY = image->get_height() - 1 - B;
 
-       // find left and right extent of nine patch content on center row
+        // find left and right extent of nine patch content on center row
         if (image->get_width() > 4) {
-            findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
+            findMaxOpacity(rows.get(), B, midY, midX, -1, 1, 0, &mOutlineInsets.left);
             findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.right);
         } else {
             mOutlineInsets.left = 0;
@@ -318,24 +324,34 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
 
         // find top and bottom extent of nine patch content on center column
         if (image->get_height() > 4) {
-            findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOutlineInsets.top);
+            findMaxOpacity(rows.get(), midX, B, -1, midY, 0, 1, &mOutlineInsets.top);
             findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
         } else {
             mOutlineInsets.top = 0;
             mOutlineInsets.bottom = 0;
         }
 
-        // Find left and right of layout padding...(maybe its is android's OpticalInsets)
-        const bool transparent = rows[0][3]==0;
-        const char* errorMsg=nullptr;
-        getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
-                                       &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
+        // Optical / layout-bounds insets. A bordered image encodes them as ticks on
+        // the 1px guide border (bottom row / right column); scan those. A borderless
+        // image has no guide border to scan — use the npLb insets the chunk already
+        // parsed into anp->layout_bounds (which are 0 if the bundle lacked npLb).
+        if (mBorderless) {
+            mOpticalInsets.left   = anp->layout_bounds.left;
+            mOpticalInsets.top    = anp->layout_bounds.top;
+            mOpticalInsets.right  = anp->layout_bounds.right;
+            mOpticalInsets.bottom = anp->layout_bounds.bottom;
+        } else {
+            const bool transparent = rows[0][3]==0;
+            const char* errorMsg=nullptr;
+            getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
+                                           &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
 
-        getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
-                                     &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
+            getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
+                                         &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
+        }
 
-        const int innerStartX = 1 + mOutlineInsets.left;
-        const int innerStartY = 1 + mOutlineInsets.top;
+        const int innerStartX = B + mOutlineInsets.left;
+        const int innerStartY = B + mOutlineInsets.top;
         const int innerEndX = endX - mOutlineInsets.right;
         const int innerEndY = endY - mOutlineInsets.bottom;
         const int innerMidX = (innerEndX + innerStartX) / 2;

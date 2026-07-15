@@ -64,7 +64,7 @@ void InputMethod::closeSearch(){
 }
 
 int InputMethod::getPredicts(const std::string&history,std::vector<std::string>&predicts){
-   return -1;
+    return -1;
 }
 
 }/*endof namespace*/
