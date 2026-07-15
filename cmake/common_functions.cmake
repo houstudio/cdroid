@@ -31,51 +31,17 @@ if(NOT Python_EXECUTABLE)
 endif()
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
-    set(CHECK_LXML_SCRIPT "
-import sys
-try:
-    import lxml
-    print('lxml is available')
-    sys.exit(0)
-except ImportError:
-    print('lxml is not available')
-    sys.exit(1)
-")
-    execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "${CHECK_LXML_SCRIPT}"
-        RESULT_VARIABLE CHECK_LXML_RESULT
-        OUTPUT_VARIABLE CHECK_LXML_OUTPUT
-        ERROR_VARIABLE CHECK_LXML_ERROR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_STRIP_TRAILING_WHITESPACE)
-
-    if(CHECK_LXML_RESULT EQUAL 0)
-        set(XMLPACKAGE ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath})
-        # XmlOptimized2Zip.py aapt-compiles each *.9.png: strips the 1px guide border,
-        # embeds a "cdNp" chunk (npTc+npLb+npOl), and adds the result to the pak as
-        # <name>.png (the .9 is dropped) — exclude *.9.png here so the binary zip
-        # doesn't re-add the bordered originals.
-        set(BINZIP_9PATCH_EXCLUDE -x "*.9.png")
-    else()
-        set(XMLPACKAGE zip -q -r -D -1 ${PakPath} ./  -i "*.xml")
-        set(BINZIP_9PATCH_EXCLUDE)
-    endif()
+    # One Python class (scripts/pakbuilder.py) does it all: generates R.h/ID.xml
+    # (reusing idgen.py) and builds the pak — stripped XML + aapt-compiled 9-patch
+    # (cdNp chunk, borderless) + verbatim binaries. lxml+Pillow are hard deps;
+    # pakbuilder.py fails loud if either is missing (no silent half-broken path).
     add_custom_target(${project}_assets
-        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
-        COMMAND ${XMLPACKAGE}
-        # Append binary assets (images/fonts). When a project ships only XML (no
-        # matching files), zip exits 12 "Nothing to do!" — which would abort the
-        # whole assets target and block PakPath/APK production. `|| true` makes the
-        # empty case non-fatal (XML-only pak still ships from the step above).
-        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc" ${BINZIP_9PATCH_EXCLUDE} || true
-        COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
+                ${project} ${ResourceDIR} ${PakPath} ${rhpath}
+        COMMAND cp ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
-        COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")
+        COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
     add_dependencies(${project} ${project}_assets)
-
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/temp_xml)
-    endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 

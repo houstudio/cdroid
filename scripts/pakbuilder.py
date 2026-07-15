@@ -1,46 +1,40 @@
+#!/usr/bin/env python3
+# ----------------------------------------------------------------------------
+# pakbuilder.py — single-class resource compiler for CreatePAK.
+#
+# Replaces the former idgen.py + XmlOptimized2Zip.py two-script dance:
+#  - ID generation (R.h + values/ID.xml) is REUSED by inheriting idgen.py's
+#    IDGenerater (that file is not modified);
+#  - XML comment/blank-line stripping, 9-patch aapt-style compile, and .pak
+#    packaging (formerly XmlOptimized2Zip.py) live on this class.
+#
+# lxml + Pillow are HARD dependencies: 9-patch compile needs PIL and there is no
+# correct fallback without it (a .9.png stored without a cdNp chunk is treated
+# as a plain bitmap at runtime). Missing either fails loud.
+#
+# CLI mirrors CreatePAK's 4 args:
+#   pakbuilder.py <namespace> <resdir> <pakpath> <rhpath>
+# Extra cmake args (e.g. kaidu_ms7's PIXMAN_INCLUDE_DIRS) are ignored.
+# ----------------------------------------------------------------------------
 import os
+import sys
+import io
 import shutil
 import struct
 import zlib
-import io
-from lxml import etree
+import tempfile
+import filecmp
 import zipfile
-from PIL import Image
 
-def remove_comments_and_blank_lines(input_file, output_file):
-    try:
-        parser = etree.XMLParser(remove_comments=True)
-        tree = etree.parse(input_file, parser)
-        with open(output_file, 'wb') as f:
-            xml_content = etree.tostring(tree, encoding='UTF-8', xml_declaration=True, pretty_print=False)
-            non_blank_lines = [line for line in xml_content.decode('utf-8').splitlines() if line.strip()]
-            f.write('\n'.join(non_blank_lines).encode('utf-8'))
-    except Exception as e:
-        print(f"Error processing {input_file}: {e}")
+try:
+    from lxml import etree
+    from PIL import Image
+except ImportError as e:
+    sys.stderr.write("pakbuilder requires lxml and Pillow: %s\n" % e)
+    sys.exit(1)
 
-def process_xml_files(input_directory, output_directory):
-    if os.path.exists(output_directory):
-        shutil.rmtree(output_directory)
-    os.makedirs(output_directory)
-    for root, dirs, files in os.walk(input_directory):
-        for file in files:
-            if file.endswith('.xml'):
-                input_file_path = os.path.join(root, file)
-                relative_path = os.path.relpath(input_file_path, input_directory)
-                output_file_path = os.path.join(output_directory, relative_path)
-                output_file_dir = os.path.dirname(output_file_path)
-                if not os.path.exists(output_file_dir):
-                    os.makedirs(output_file_dir)
-                remove_comments_and_blank_lines(input_file_path, output_file_path)
-
-def zip_xml_files(output_directory, zip_file_path):
-    with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(output_directory):
-            for file in files:
-                if file.endswith('.xml'):
-                    file_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(file_path, output_directory)
-                    zipf.write(file_path, relative_path)
+import idgen  # sibling module: Python prepends this script's dir to sys.path.
+              # idgen.py guards its work in __main__, so importing has no side effect.
 
 # ----------------------------------------------------------------------------
 # 9-patch aapt-style compile (Android aapt2-equivalent, build-time).
@@ -53,10 +47,7 @@ def zip_xml_files(output_directory, zip_file_path):
 # is stored as <name>.png (the ".9" is dropped) — aapt-style. The divs/padding/
 # optical/outline are content-relative on the bordered source, which after the
 # strip equals image-relative on the borderless image, so the same values apply.
-# common_functions.cmake shell-zips with -x "*.9.png" so only these processed
-# borderless .png copies reach the pak. createAsDrawable detects a 9-patch by the
-# cdNp chunk (not the filename). The <nine-patch> XML path is developer-guaranteed
-# (its srcs are plain animation PNGs, not .9.png), so it's untouched.
+# createAsDrawable detects a 9-patch by the cdNp chunk (not the filename).
 # cdNp DATA = [u8 version=1][u16 npTcLen BE + bytes][u16 npLbLen BE + bytes]
 #             [u16 npOlLen BE + bytes]. Sub-blob byte orders match the C++ side:
 # npTc = Res_png_9patch big-endian; npLb/npOl = native little-endian (memcpy).
@@ -279,61 +270,93 @@ def _serialize_cdNp(nptc, nplb, npol):
         out += struct.pack(">H", len(blob)) + blob
     return out
 
-def embed_9patch_assets(input_directory, zip_file_path):
-    """aapt-compile each *.9.png: scan the guide border for stretch/padding (npTc),
-    optical/layout-bounds (npLb) and outline (npOl); bundle them into one "cdNp"
-    chunk; STRIP the 1px guide border and splice cdNp into the borderless PNG
-    before IEND; store as <name>.png (drop the .9) at the same relative path.
-    ZIP_STORED (PNGs are already compressed)."""
-    count = 0
-    with zipfile.ZipFile(zip_file_path, 'a', zipfile.ZIP_STORED) as zipf:
-        for root, dirs, files in os.walk(input_directory):
-            for f in files:
-                if not f.endswith(".9.png"):
-                    continue
-                path = os.path.join(root, f)
-                rel = os.path.relpath(path, input_directory).replace(os.sep, "/")
-                arcname = rel[:-6] + ".png"   # foo.9.png -> foo.png
-                try:
-                    im = Image.open(path); im.load()
-                    if im.mode != "RGBA":
-                        im = im.convert("RGBA")
-                    W, H = im.size
-                    if W < 3 or H < 3:
-                        zipf.write(path, arcname); continue
-                    # scan the bordered source (divs/padding/optical/outline are
-                    # content-relative, which == image-relative after the strip)
-                    xd, yd, pl, pr, pt, pb = _scan_9patch(im)
-                    lb_l, lb_t, lb_r, lb_b = _scan_layout_bounds(im)
-                    ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha = _compute_outline(im)
-                    nptc = _serialize_nptc(xd, yd, pl, pr, pt, pb)
-                    nplb = _serialize_nplb(lb_l, lb_t, lb_r, lb_b)
-                    npol = _serialize_outline(ol_l, ol_t, ol_r, ol_b, ol_rad, ol_alpha)
-                    cdNp = _serialize_cdNp(nptc, nplb, npol)
-                    # strip the 1px guide border -> inner (W-2)x(H-2), re-encode PNG,
-                    # splice cdNp before IEND
-                    inner = im.crop((1, 1, W - 1, H - 1))
-                    buf = io.BytesIO()
-                    inner.save(buf, format="PNG")
-                    raw = _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
-                    zipf.writestr(arcname, raw)
-                    count += 1
-                except Exception as e:
-                    print(f"9patch embed failed for {path}: {e}; storing bordered as-is")
-                    zipf.write(path, arcname)
-    return count
+
+# Binary asset extensions stored verbatim (PNGs are already compressed -> ZIP_STORED).
+BIN_EXTS = (".png", ".jpg", ".jpeg", ".gif", ".apng", ".webp", ".ttf", ".otf", ".ttc")
+
+
+class PakBuilder(idgen.IDGenerater):
+    """One-shot resource compiler: generates R.h/ID.xml (via inherited idgen) and
+    builds the .pak zip (stripped XML + aapt-compiled 9-patch + verbatim binaries)."""
+
+    def __init__(self, namespace, res_dir, pak_path, rh_path):
+        idstart = 1000 if namespace == "cdroid" else 10000   # preserve idgen __main__ rule
+        super().__init__(idstart, namespace)                 # wires self.Handler/scanxml/dict2ID/dict2RH
+        self.res_dir = res_dir
+        self.pak_path = pak_path
+        self.rh_path = rh_path
+
+    # ----- ID generation: drive inherited idgen, with its filecmp change gate -----
+    def generate_ids(self):
+        values = os.path.join(self.res_dir, "values")
+        os.makedirs(values, exist_ok=True)
+        self.scanxml(self.res_dir)                           # inherited -> fills self.Handler.idlist
+        fd, tmp = tempfile.mkstemp(prefix=self.namespace + "_ID", suffix=".xml")
+        os.close(fd)
+        self.dict2ID(tmp)                                    # inherited
+        id_xml = os.path.join(values, "ID.xml")
+        same = os.path.exists(id_xml) and filecmp.cmp(tmp, id_xml)
+        if not same or not os.path.exists(self.rh_path):
+            shutil.copyfile(tmp, id_xml)
+            self.dict2RH(self.rh_path)                       # inherited -> R.h
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
+
+    # ----- XML processing (in-memory strip; no temp dir) -----
+    def _strip_xml(self, src):
+        parser = etree.XMLParser(remove_comments=True)
+        tree = etree.parse(src, parser)
+        s = etree.tostring(tree, encoding="UTF-8", xml_declaration=True, pretty_print=False)
+        non_blank = [ln for ln in s.decode("utf-8").splitlines() if ln.strip()]
+        return "\n".join(non_blank).encode("utf-8")
+
+    # ----- 9-patch aapt compile: returns borderless+cdNp bytes, or None to store as-is -----
+    def _compile_9patch(self, path):
+        im = Image.open(path); im.load()
+        if im.mode != "RGBA":
+            im = im.convert("RGBA")
+        W, H = im.size
+        if W < 3 or H < 3:
+            return None
+        xd, yd, pl, pr, pt, pb = _scan_9patch(im)
+        cdNp = _serialize_cdNp(
+            _serialize_nptc(xd, yd, pl, pr, pt, pb),
+            _serialize_nplb(*_scan_layout_bounds(im)),
+            _serialize_outline(*_compute_outline(im)))
+        # strip the 1px guide border -> inner (W-2)x(H-2), re-encode, splice cdNp
+        buf = io.BytesIO()
+        im.crop((1, 1, W - 1, H - 1)).save(buf, format="PNG")
+        return _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
+
+    # ----- packaging: one walk, XML deflated / binaries stored -----
+    def build(self):
+        with zipfile.ZipFile(self.pak_path, "w") as zf:
+            for root, dirs, files in os.walk(self.res_dir):
+                dirs.sort(); files.sort()
+                for f in files:
+                    p = os.path.join(root, f)
+                    rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
+                    if f.endswith(".xml"):
+                        zf.writestr(rel, self._strip_xml(p), zipfile.ZIP_DEFLATED)
+                    elif f.endswith(".9.png"):               # MUST precede the .png branch
+                        arc = rel[:-6] + ".png"              # foo.9.png -> foo.png
+                        try:
+                            data = self._compile_9patch(p)
+                            zf.writestr(arc, data if data else open(p, "rb").read(),
+                                        zipfile.ZIP_STORED)
+                        except Exception as e:
+                            sys.stderr.write("9patch embed failed for %s: %s; storing as-is\n" % (p, e))
+                            zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_STORED)
+                    elif f.endswith(BIN_EXTS):
+                        zf.writestr(rel, open(p, "rb").read(), zipfile.ZIP_STORED)
+                    # other extensions skipped (matches prior behavior: only xml + listed bins)
+
 
 if __name__ == "__main__":
-    import sys
-    if len(sys.argv) != 4:
-        print("Usage: python remove_xml_comments.py <input_directory> <output_directory> <zip_file_path>")
-        sys.exit(1)
-    input_directory = sys.argv[1]
-    output_directory = sys.argv[2]
-    zip_file_path = sys.argv[3]
-    process_xml_files(input_directory, output_directory)
-    zip_xml_files(output_directory, zip_file_path)
-    embed_9patch_assets(input_directory, zip_file_path)
-    # remove temp directory
-    #shutil.rmtree(output_directory)
-
+    if len(sys.argv) < 5:
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath>")
+    pb = PakBuilder(*sys.argv[1:5])   # extra args (e.g. PIXMAN_INCLUDE_DIRS) ignored
+    pb.generate_ids()
+    pb.build()
