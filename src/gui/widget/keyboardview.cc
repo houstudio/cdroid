@@ -657,7 +657,7 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
         }
         if (mCurrentKey != NOT_A_KEY) {
             mInLongPress = true; // armed while the finger stays down on this key
-            Message msg = mHandler->obtainMessage(MSG_LONGPRESS);
+            Message* msg = mHandler->obtainMessage(MSG_LONGPRESS);
             mHandler->sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
         }
         showPreview(keyIndex);
@@ -690,7 +690,7 @@ bool KeyboardView::onModifiedTouchEvent(MotionEvent& me, bool possiblePoly){
             mHandler->removeMessages(MSG_LONGPRESS);
             mInLongPress = (keyIndex != NOT_A_KEY);
             if (mInLongPress) {
-                Message msg = mHandler->obtainMessage(MSG_LONGPRESS);
+                Message* msg = mHandler->obtainMessage(MSG_LONGPRESS);
                 mHandler->sendMessageDelayed(msg, LONGPRESS_TIMEOUT);
             }
         }

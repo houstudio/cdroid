@@ -21,6 +21,8 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <core/looper.h>
+#include <core/messagequeue.h>
+#include <core/handler.h>
 #include <core/systemclock.h>
 #include <core/epollwrapper.h>
 #include <porting/cdlog.h>
@@ -82,19 +84,26 @@ Looper::Looper(bool allowNonCallbacks) :
         mEpollRebuildRequired(false),
         mWakeEventFd(-1),mEpoll(nullptr),
         mNextRequestSeq(WAKE_EVENT_FD_SEQ+1),
-        mResponseIndex(0), mNextMessageUptime(LLONG_MAX) {
+        mResponseIndex(0), mNextMessageUptime(LLONG_MAX),
+        mQueue(nullptr) {
 #if defined(HAVE_EVENTFD)
     mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
     LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
 #endif
     std::lock_guard<std::recursive_mutex>_l(mLock);
     rebuildEpollLocked();
+    // 拥有 Java MessageQueue, native 层复用本 Looper 的 epoll/eventfd (CDROID 扩展)。
+    // eventfd/epoll 此时已就绪; 供改造后的 cdroid::Handler 投递/派发消息。
+    mQueue = new MessageQueue(true /*quitAllowed*/, this);
 }
 
 #define FLAG_OWNED 2
 #define FLAG_REMOVED 1
 Looper::~Looper() {
     LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
+    // 先释放 Java MessageQueue: 其 nativeDestroy 会 mLooper->removeFd, 依赖 mEpoll 仍存活。
+    delete mQueue;
+    mQueue = nullptr;
     close(mWakeEventFd);
     mWakeEventFd = -1;
     mHandlers.clear();
@@ -238,6 +247,21 @@ int Looper::pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outDa
             return result;
         }
         result = pollInner(timeoutMillis);
+    }
+}
+
+MessageQueue* Looper::getQueue(){
+    return mQueue;
+}
+
+// CDROID 扩展: 非阻塞排空 mQueue 中所有到期 Java 消息并派发。
+// 由 pollInner 每个 pump 周期调用一次 (与 doEventHandlers 同周期), 故 Handler 消息
+// (长按/计时/过滤等) 及时派发, 且帧驱动 (UIEventHandler::handleIdle) 不受影响。
+void Looper::drainMessageQueue(){
+    if (mQueue == nullptr) return;
+    while (auto* msg = mQueue->nextDue()) {
+        if (msg->target) msg->target->dispatchMessage(msg);
+        msg->recycleUnchecked();
     }
 }
 
@@ -390,6 +414,8 @@ Done:
     }
     //Release Lock.
     mLock.unlock();
+    //Drain Java MessageQueue (CDROID 扩展): 派发到期 Handler 消息。
+    drainMessageQueue();
     //EventHandlers;
     doEventHandlers();
     //Invoke all response callbacks.
@@ -758,12 +784,7 @@ bool Looper::isPolling() const {
 LooperCallback::~LooperCallback(){
 }
 
-Message::Message(int msg){
-    what= msg;
-    arg1 = arg2 =0;
-    obj = nullptr;
-    target= nullptr;
-}
+// (旧 struct cdroid::Message 的 Message(int) 构造已随统一类型删除; cdroid::Message 用默认构造 + 字段默认初始化)
 
 MessageHandler::MessageHandler(){
     mFlags = 0;

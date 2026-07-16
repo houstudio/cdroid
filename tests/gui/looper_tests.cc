@@ -55,30 +55,34 @@ TEST_F(LOOPER,pollonce){
 }
 
 TEST_F(LOOPER,sendMessage){
-   Message msg(100);
+   Message*msg=Message::obtain(); msg->what=100;
    int  processed=0;
    TestHandler ft;
-   mLooper->sendMessage(&ft,msg);
+   mLooper->sendMessage(&ft,*msg);
+   msg->recycle();
    mLooper->pollOnce(10);
    ASSERT_EQ(ft.getCount(),1);
 }
 
 TEST_F(LOOPER,sendMessageDelay){
-   Message msg(100);
+   Message*msg=Message::obtain(); msg->what=100;
    TestHandler ft;
    int64_t t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,msg);
+   mLooper->sendMessageDelayed(1000,&ft,*msg);
+   msg->recycle();
    while(!ft.getCount()) mLooper->pollOnce(10);
    int64_t t2=SystemClock::uptimeMillis();
    ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
 }
 
 TEST_F(LOOPER,removeMessage){
-   Message msg(100),msg2(200);
+   Message*msg=Message::obtain(); msg->what=100;
+   Message*msg2=Message::obtain(); msg2->what=200;
    TestHandler ft;
    int64_t t2,t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,msg);
-   mLooper->sendMessageDelayed(1000,&ft,msg2);
+   mLooper->sendMessageDelayed(1000,&ft,*msg);
+   mLooper->sendMessageDelayed(1000,&ft,*msg2);
+   msg->recycle(); msg2->recycle();
    t2=t1;
    mLooper->removeMessages(&ft,100);
    while(t2-t1<1100){
@@ -129,7 +133,7 @@ public:
 };
 int SelfDestroyEventHandler::Count=0;
 TEST_F(LOOPER,removeHandler){
-    Message msg(100);
+    Message*msg=Message::obtain(); msg->what=100;
     SelfDestroyHandler*sd = new SelfDestroyHandler(mLooper,true);
     SelfDestroyHandler*sd2= new SelfDestroyHandler(mLooper,false);
     SelfDestroyEventHandler*se= new SelfDestroyEventHandler(mLooper,true);
@@ -138,8 +142,9 @@ TEST_F(LOOPER,removeHandler){
     mLooper->addHandler(sd2);
     mLooper->addEventHandler(se);
     mLooper->addEventHandler(se2);
-    mLooper->sendMessageDelayed(10,sd,msg);
-    mLooper->sendMessageDelayed(10,sd2,msg);
+    mLooper->sendMessageDelayed(10,sd,*msg);
+    mLooper->sendMessageDelayed(10,sd2,*msg);
+    msg->recycle();
     printf("HANDLE:%p ,%p  EventHandler:%p ,%p\r\n",sd,sd2,se,se2);
     EXPECT_EQ(SelfDestroyHandler::Count,2);
     EXPECT_EQ(SelfDestroyEventHandler::Count,2);

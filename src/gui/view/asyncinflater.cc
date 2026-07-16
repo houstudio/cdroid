@@ -122,7 +122,7 @@ void AsyncLayoutInflater::InflateThread::runInner() {
     }
 
     Handler*h = request->inflater->mHandler;
-    Message msg = h->obtainMessage(0/*what*/,0,0,request);
+    Message* msg = h->obtainMessage(0/*what*/,0,0,request);
     h->sendMessage(msg);
     //Message::obtain(request->inflater->mHandler, 0, request).sendToTarget();
 }

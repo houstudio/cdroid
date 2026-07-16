@@ -31,14 +31,14 @@ void Filter::filter(const std::string& constraint,const Filter::FilterListener& 
 
         const long delay = (mDelayer == nullptr) ? 0 : mDelayer/*->getPostingDelay*/(constraint);
 
-        Message message = mThreadHandler->obtainMessage(FILTER_TOKEN);
+        Message* message = mThreadHandler->obtainMessage(FILTER_TOKEN);
 
         RequestArguments* args = new RequestArguments();
         // make sure we use an immutable copy of the constraint, so that
         // it doesn't change while the filter operation is in progress
         args->constraint =constraint;
         args->listener = listener;
-        message.obj = args;
+        message->obj = args;
 
         mThreadHandler->removeMessages(FILTER_TOKEN);
         mThreadHandler->removeMessages(FINISH_TOKEN);
@@ -53,7 +53,7 @@ Filter::RequestHandler::RequestHandler(Looper*looper){
 
 void Filter::RequestHandler::handleMessage(Message&msg){
     int32_t what = msg.what;
-    Message message;
+    Message* message = nullptr;
     RequestArguments* args;
     switch (what) {
     case Filter::FILTER_TOKEN:
@@ -64,13 +64,13 @@ void Filter::RequestHandler::handleMessage(Message&msg){
             LOGW"An exception occured during performFiltering()!", e);
         } finally */{
             message = mFilter->mResultHandler->obtainMessage(what);
-            message.obj = args;
+            message->obj = args;
             //message.sendToTarget();
         }
 
         /*synchronized (mLock)*/ {
             if (mFilter->mThreadHandler != nullptr) {
-                Message finishMessage = mFilter->mThreadHandler->obtainMessage(FINISH_TOKEN);
+                Message* finishMessage = mFilter->mThreadHandler->obtainMessage(FINISH_TOKEN);
                 mFilter->mThreadHandler->sendMessageDelayed(finishMessage, 3000);
             }
         }
