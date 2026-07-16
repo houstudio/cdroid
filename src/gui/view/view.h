@@ -37,6 +37,7 @@
 #include <view/dragevent.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
+#include <view/actionmode.h>
 #include <view/abssavedstate.h>
 #include <menu/menu.h>
 #include <menu/contextmenu.h>
@@ -1201,6 +1202,10 @@ public:
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;
+
+    /** 启动一个 ActionMode (浮窗/popup 式), 锚定本 View。返回的 mode 由调用方 finish()/管理。 */
+    ActionMode* startActionMode(const ActionMode::Callback& callback);
+    ActionMode* startActionMode(const ActionMode::Callback& callback, int type);
     virtual void scrollTo(int x,int y);
     virtual void scrollBy(int dx,int dy);
     void setScrollX(int x);

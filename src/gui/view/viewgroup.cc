@@ -2760,6 +2760,11 @@ bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool 
     return false;
 }
 
+ActionMode* ViewGroup::startActionModeForChild(View* child, const ActionMode::Callback& callback, int type){
+    // 默认: 不拦截, 继续上浮 (本 group 的 startActionMode → 其 mParent); 到根 (Window) 由 View::startActionMode 创建。
+    return startActionMode(callback, type);
+}
+
 bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
     if (mParent == nullptr) {
         return false;

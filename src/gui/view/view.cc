@@ -21,6 +21,7 @@
 #include <cmath>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <view/floatingactionmode.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
@@ -2718,14 +2719,16 @@ bool View::isInScrollingContainer()const{
 }
 
 View::ListenerInfo*View::getListenerInfo(){
-    if(mListenerInfo==nullptr)
+    if(mListenerInfo==nullptr){
         mListenerInfo = new ListenerInfo();
+    }
     return mListenerInfo;
 }
 
 void View::setOnClickListener(const OnClickListener& l){
-    if(!isClickable())
+    if(!isClickable()){
         setClickable(true);
+    }
     getListenerInfo()->mOnClickListener=l;
 }
 
@@ -2734,8 +2737,9 @@ bool View::hasOnClickListeners()const{
 }
 
 void View::setOnLongClickListener(const OnLongClickListener& l){
-    if(!isLongClickable())
+    if(!isLongClickable()){
         setLongClickable(true);
+    }
     getListenerInfo()->mOnLongClickListener=l;
 }
 
@@ -4137,6 +4141,24 @@ bool View::isRootNamespace()const {
 
 cdroid::Context*View::getContext()const{
     return mContext;
+}
+
+ActionMode* View::startActionMode(const ActionMode::Callback& callback){
+    return startActionMode(callback, ActionMode::TYPE_PRIMARY);
+}
+
+ActionMode* View::startActionMode(const ActionMode::Callback& callback, int type){
+    // Android 模型: 上浮到根 (Window) 创建, 而非叶子 View 直接建。
+    if(mParent != nullptr)
+        return mParent->startActionModeForChild(this, callback, type);
+    // 根 View (无父, 如 Window): 创建浮窗 ActionMode 并显示。onCreateActionMode 返回 false → 中止。
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), this, callback);
+    mode->setType(type);
+    if(!mode->show()){
+        delete mode;
+        return nullptr;
+    }
+    return mode;
 }
 
 int View::getWidth()const{

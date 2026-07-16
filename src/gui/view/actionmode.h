@@ -1,9 +1,16 @@
 #ifndef __ACTIONMODE_H__
 #define __ACTIONMODE_H__
-#include <view/view.h>
+#include <string>
+#include <functional>
+#include <core/rect.h>   // Rect (CRect<int> typedef, 不能前向声明)
 namespace cdroid{
+class View;          // view/view.h (前向声明; 避免与 view.h 互含成环)
+class Menu;          // menu/menu.h (Callback getMenu 用)
+class MenuItem;      // menu/menuitem.h
+class MenuInflater;  // menu/menuinflater.h
 class ActionMode {
 public:
+    virtual ~ActionMode()=default;
     static constexpr int TYPE_PRIMARY = 0;
     static constexpr int TYPE_FLOATING = 1;
     static constexpr int DEFAULT_HIDE_DURATION = -1;
@@ -40,7 +47,7 @@ public:
         return false;
     }
 
-    virtual void setCustomView(View* view);
+    virtual void setCustomView(View* view)=0;
 
     void setType(int type) {
         mType = type;
@@ -59,6 +66,7 @@ public:
     virtual void finish()=0;
 
     //virtual Menu getMenu()=0;
+    virtual Menu* getMenu()=0;   // ActionMode.java:240 (CDROID: Menu 抽象 → 返指针)
 
     virtual std::string getTitle()=0;
 
@@ -71,6 +79,7 @@ public:
     virtual View* getCustomView()=0;
 
     //abstract MenuInflater getMenuInflater();
+    virtual MenuInflater* getMenuInflater()=0;
 
     void onWindowFocusChanged(bool hasWindowFocus) {}
 
@@ -79,42 +88,13 @@ public:
     }
 
     struct Callback {
-        /**
-         * Called when action mode is first created. The menu supplied will be used to
-         * generate action buttons for the action mode.
-         *
-         * @param mode ActionMode being created
-         * @param menu Menu used to populate action buttons
-         * @return true if the action mode should be created, false if entering this
-         *              mode should be aborted.
-         */
-        bool onCreateActionMode(ActionMode& mode, Menu& menu);
+        std::function<bool(ActionMode&,Menu&)> onCreateActionMode;//(ActionMode& mode, Menu& menu);
 
-        /**
-         * Called to refresh an action mode's action menu whenever it is invalidated.
-         *
-         * @param mode ActionMode being prepared
-         * @param menu Menu used to populate action buttons
-         * @return true if the menu or action mode was updated, false otherwise.
-         */
-        bool onPrepareActionMode(ActionMode& mode, Menu& menu);
+        std::function<bool(ActionMode&,Menu&)>onPrepareActionMode;//(ActionMode& mode, Menu& menu);
 
-        /**
-         * Called to report a user click on an action button.
-         *
-         * @param mode The current ActionMode
-         * @param item The item that was clicked
-         * @return true if this callback handled the event, false if the standard MenuItem
-         *          invocation should continue.
-         */
-        bool onActionItemClicked(ActionMode& mode, MenuItem& item);
+        std::function<bool(ActionMode&,MenuItem&)> onActionItemClicked;//(ActionMode& mode, MenuItem& item);
 
-        /**
-         * Called when an action mode is about to be exited and destroyed.
-         *
-         * @param mode The current ActionMode being destroyed
-         */
-        void onDestroyActionMode(ActionMode& mode);
+        std::function<void(ActionMode&)> onDestroyActionMode;//(ActionMode& mode);
     };
 
     /**
@@ -136,13 +116,8 @@ public:
          *          where the content in your app lives within the given view. This will be used
          *          to avoid occluding the given content Rect with the created ActionMode.
          */
-        void onGetContentRect(ActionMode& mode, View* view, Rect& outRect) {
-            if (view != nullptr) {
-                outRect.set(0, 0, view->getWidth(), view->getHeight());
-            } else {
-                outRect.set(0, 0, 0, 0);
-            }
-        }
+        // 实现见 actionmode.cc (需 View/Rect 完整定义, 不能留头里——否则 actionmode.h 又得含 view.h 成环)
+        virtual void onGetContentRect(ActionMode& mode, View* view, Rect& outRect);
     };
 };
 }/*endof namespace*/

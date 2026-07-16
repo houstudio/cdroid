@@ -31,6 +31,7 @@ SET(VIEW_SOURCES
     view/scalegesturedetector.cc
     view/windowinsets.cc
     view/actionprovider.cc
+    view/floatingactionmode.cc
     #view/diffrentialmotionflingcontroller.cc
     view/hapticscrollfeedbackprovider.cc
     view/accessibility/accessibilityevent.cc
