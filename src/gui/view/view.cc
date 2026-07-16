@@ -41,6 +41,7 @@
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
 #include <core/color.h>
+#include <core/handler.h>
 #include <porting/cdlog.h>
 #define UNDEFINED_PADDING INT_MIN
 using namespace Cairo;
@@ -1639,7 +1640,7 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     }
     // Transfer all pending runnables.
     if (mRunQueue != nullptr) {
-        mRunQueue->executeActions(*info->mEventSource);
+        mRunQueue->executeActions(*info->mHandler);
         delete mRunQueue;
         mRunQueue = nullptr;
     }
@@ -8391,7 +8392,7 @@ bool View::hasPendingLongPressCallback() const{
     if (mAttachInfo == nullptr) {
         return false;
     }
-    return mAttachInfo->mEventSource->hasCallbacks(mPendingCheckForLongPress->mRunnable);
+    return mAttachInfo->mHandler->hasCallbacks(mPendingCheckForLongPress->mRunnable);
 }
 
 void View::removePerformClickCallback(){
@@ -8675,7 +8676,7 @@ bool View::post(const Runnable& what){
 
 bool View::postDelayed(const Runnable& what,long delay){
     if(mAttachInfo){
-        return mAttachInfo->mEventSource->postDelayed(what,delay);
+        return mAttachInfo->mHandler->postDelayed(what,delay);
     }
     getRunQueue()->postDelayed(what,delay);
     return true;
@@ -8684,7 +8685,7 @@ bool View::postDelayed(const Runnable& what,long delay){
 bool View::removeCallbacks(const Runnable& what){
     if(what!=nullptr){
         if(mAttachInfo){
-            mAttachInfo->mEventSource->removeCallbacks(what);
+            mAttachInfo->mHandler->removeCallbacks(what);
             Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what, nullptr);
         }
         getRunQueue()->removeCallbacks(what);
@@ -9904,6 +9905,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mCanvas       = nullptr;
     mTooltipHost  = nullptr;
     mEventSource  = nullptr;
+    mHandler      = new Handler(Looper::getMainLooper());
     mDragToken = nullptr;
     mViewRequestingLayout = nullptr;
     mAutofilledDrawable = nullptr;
@@ -9915,6 +9917,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
 }
 
 View::AttachInfo::~AttachInfo(){
+    delete mHandler;
     delete mTreeObserver;
     delete mAutofilledDrawable;
     delete mAccessibilityFocusDrawable;

@@ -78,11 +78,11 @@ public:
 
     // package-private removal/query (由 Handler 调用), 对标 MessageQueue.java Legacy 分支。
     // 只读查询 → const (mLock 为 mutable)。
-    bool hasMessages(Handler* h, int what, void* object)const;              // :1541
-    bool hasMessages(Handler* h, Runnable r, void* object)const;            // :1628 (hasCallbacks)
-    void removeMessages(Handler* h, int what, void* object);           // :1725
-    void removeMessages(Handler* h, Runnable r, void* object);         // :1845 (removeCallbacks)
-    void removeCallbacksAndMessages(Handler* h, void* token);          // :1993
+    bool hasMessages(const Handler* h, int what, void* object)const;              // :1541
+    bool hasMessages(const Handler* h, const Runnable& r, void* object)const;            // :1628 (hasCallbacks)
+    void removeMessages(const Handler* h, int what, void* object);           // :1725
+    void removeMessages(const Handler* h, const Runnable& r, void* object);         // :1845 (removeCallbacks)
+    void removeCallbacksAndMessages(const Handler* h, void* token);          // :1993
 
     // 非阻塞: 取出一条到期 (when<=now) 消息, barrier 时跳到 async; 无到期返回 nullptr。
     // 供 cdroid::Looper 的周期 pump 排空 Java 消息 (不阻塞/不算 timeout/不跑 IdleHandler)。

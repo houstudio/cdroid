@@ -1543,6 +1543,7 @@ public:
     static const FloatProperty*const SCALE_Y;
 };
 
+class Handler;  // core/handler.h (AttachInfo.mHandler)
 class View::AttachInfo{
 public:
     class InvalidateInfo{
@@ -1594,6 +1595,7 @@ public:
     bool mNextFocusLooped;
     bool mViewVelocityApi;
     UIEventSource*mEventSource;
+    Handler*mHandler;   // 主 looper 的 Handler: View::post/postDelayed 走它 (MQ), 使阻塞主循环 next() 能计时
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;
     Cairo::RefPtr<Canvas> mCanvas;

@@ -178,25 +178,31 @@ public:
    }
 };
 TEST_F(LOOPER,eventhandler){
-    UIEventSource*handler=new UIEventSource(nullptr,nullptr);
+    // View::post/postDelayed 的延迟 runnable 现经 AttachInfo::mHandler (主 looper MessageQueue) 派发;
+    // UIEventSource 已退回纯帧驱动, 不再持有 runnable 队列。本例改测 Handler 路径的身份比对语义。
+    Handler*handler=new Handler(Looper::getMainLooper());
     Runnable run([]{});
     handler->postDelayed(run,10);
-    bool rc=handler->removeCallbacks(run);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run));
+    handler->removeCallbacks(run);
+    ASSERT_FALSE(handler->hasCallbacks(run));
 
+    // Runnable 副本共享底层 functor (CallbackBase::operator== 比指针), 故可用任一副本删除
     Runnable run2(run);
     Runnable run3;
     run3=run;
     handler->postDelayed(run2,10);
-    rc=handler->removeCallbacks(run2);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run2));
+    handler->removeCallbacks(run2);
+    ASSERT_FALSE(handler->hasCallbacks(run2));
 
     handler->postDelayed(run,10);
-    rc=handler->removeCallbacks(run3);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run3));   // run3 与 run 同身份
+    handler->removeCallbacks(run3);
+    ASSERT_FALSE(handler->hasCallbacks(run3));
 
-    rc=handler->removeCallbacks(run3);
-    ASSERT_FALSE(rc);
+    ASSERT_FALSE(handler->hasCallbacks(run3));  // 已删, 再查为假
+    delete handler;
 }
 
 class MyHandler:public Handler{

@@ -20,6 +20,8 @@
 #include <view/view.h>
 namespace  cdroid{
 
+class Handler;  // core/handler.h: executeActions 把预挂 runnable 转投到主 looper 的 MessageQueue
+
 class HandlerActionQueue {
 private:
     class HandlerAction {
@@ -38,7 +40,7 @@ public:
     void post(const Runnable& action);
     void postDelayed(const Runnable& action, long delayMillis);
     void removeCallbacks(const Runnable& action);
-    void executeActions(UIEventSource& handler);
+    void executeActions(Handler& handler);
     int size()const;
     Runnable& getRunnable(int index);
     long getDelay(int index)const;

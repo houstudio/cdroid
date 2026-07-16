@@ -480,7 +480,7 @@ Message* MessageQueue::nextDue(){
 // CDROID 扩展: 维护 mLast 尾指针 (Java MessageQueue 无 mLast)。
 // ============================================================================
 
-bool MessageQueue::hasMessages(Handler* h, int what, void* object)const{  // :1541
+bool MessageQueue::hasMessages(const Handler* h, int what, void* object)const{  // :1541
     if (h == nullptr) return false;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
@@ -493,7 +493,7 @@ bool MessageQueue::hasMessages(Handler* h, int what, void* object)const{  // :15
     return false;
 }
 
-bool MessageQueue::hasMessages(Handler* h, Runnable r, void* object)const{  // :1628 (hasCallbacks)
+bool MessageQueue::hasMessages(const Handler* h,const Runnable& r, void* object)const{  // :1628 (hasCallbacks)
     if (h == nullptr) return false;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
@@ -506,7 +506,7 @@ bool MessageQueue::hasMessages(Handler* h, Runnable r, void* object)const{  // :
     return false;
 }
 
-void MessageQueue::removeMessages(Handler* h, int what, void* object){  // :1725 -> :1680
+void MessageQueue::removeMessages(const Handler* h, int what, void* object){  // :1725 -> :1680
     if (h == nullptr) return;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
@@ -534,7 +534,7 @@ void MessageQueue::removeMessages(Handler* h, int what, void* object){  // :1725
     }
 }
 
-void MessageQueue::removeMessages(Handler* h, Runnable r, void* object){  // :1845 -> :1800
+void MessageQueue::removeMessages(const Handler* h,const Runnable& r, void* object){  // :1845 -> :1800
     if (h == nullptr || r == nullptr) return;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
@@ -562,7 +562,7 @@ void MessageQueue::removeMessages(Handler* h, Runnable r, void* object){  // :18
     }
 }
 
-void MessageQueue::removeCallbacksAndMessages(Handler* h, void* token){  // :1993 -> :1949
+void MessageQueue::removeCallbacksAndMessages(const Handler* h, void* token){  // :1993 -> :1949
     if (h == nullptr) return;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
