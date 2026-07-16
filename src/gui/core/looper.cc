@@ -92,8 +92,6 @@ Looper::Looper(bool allowNonCallbacks) :
 #endif
     std::lock_guard<std::recursive_mutex>_l(mLock);
     rebuildEpollLocked();
-    // 拥有 Java MessageQueue, native 层复用本 Looper 的 epoll/eventfd (CDROID 扩展)。
-    // eventfd/epoll 此时已就绪; 供改造后的 cdroid::Handler 投递/派发消息。
     mQueue = new MessageQueue(true /*quitAllowed*/, this);
 }
 
@@ -101,7 +99,6 @@ Looper::Looper(bool allowNonCallbacks) :
 #define FLAG_REMOVED 1
 Looper::~Looper() {
     LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
-    // 先释放 Java MessageQueue: 其 nativeDestroy 会 mLooper->removeFd, 依赖 mEpoll 仍存活。
     delete mQueue;
     mQueue = nullptr;
     close(mWakeEventFd);
@@ -254,9 +251,19 @@ MessageQueue* Looper::getQueue(){
     return mQueue;
 }
 
-// CDROID 扩展: 非阻塞排空 mQueue 中所有到期 Java 消息并派发。
-// 由 pollInner 每个 pump 周期调用一次 (与 doEventHandlers 同周期), 故 Handler 消息
-// (长按/计时/过滤等) 及时派发, 且帧驱动 (UIEventHandler::handleIdle) 不受影响。
+bool Looper::loopOnce(){
+    if(mQueue == nullptr) return false;
+    Message* msg = mQueue->next();/*maybe blocked*/
+    if(msg == nullptr) return false;
+    if(msg->target) msg->target->dispatchMessage(msg);
+    msg->recycleUnchecked();
+    return true;
+}
+
+void Looper::loop(){
+    while(loopOnce()) {}
+}
+
 void Looper::drainMessageQueue(){
     if (mQueue == nullptr) return;
     while (auto* msg = mQueue->nextDue()) {
@@ -414,7 +421,6 @@ Done:
     }
     //Release Lock.
     mLock.unlock();
-    //Drain Java MessageQueue (CDROID 扩展): 派发到期 Handler 消息。
     drainMessageQueue();
     //EventHandlers;
     doEventHandlers();
@@ -783,8 +789,6 @@ bool Looper::isPolling() const {
 
 LooperCallback::~LooperCallback(){
 }
-
-// (旧 struct cdroid::Message 的 Message(int) 构造已随统一类型删除; cdroid::Message 用默认构造 + 字段默认初始化)
 
 MessageHandler::MessageHandler(){
     mFlags = 0;

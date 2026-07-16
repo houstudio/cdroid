@@ -70,6 +70,7 @@ void InputEventSource::doEventsConsume(){
             }
             it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
         }
+        if(count) Looper::getMainLooper()->wake();
     }
 }
 
@@ -254,7 +255,7 @@ void InputEventSource::sendEvent(InputEvent&event){
     WindowManager::getInstance().processEvent(event);
 }
 
-int32_t InputEventSource::getGlobalMetaState(){
+int32_t InputEventSource::getGlobalMetaState()const{
     std::lock_guard<std::recursive_mutex> lock(mtxEvents);
     int32_t global = 0;
     for(const auto&item:mDevices){

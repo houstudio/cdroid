@@ -15,6 +15,7 @@
  */
 //#include <cdroid.h>
 #include <core/app.h>
+#include <core/looper.h>
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
@@ -446,6 +447,7 @@ void Window::onVisibilityChanged(View& changedView,int visibility){
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
     FrameLayout::invalidateChildInParent(location,dirty);
     invalidate(dirty);
+    Looper::getMainLooper()->wake();
     return nullptr;
 }
 

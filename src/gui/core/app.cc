@@ -27,6 +27,8 @@
 #include <utils/atexit.h>
 #include <core/app.h>
 #include <core/build.h>
+#include <core/messagequeue.h>
+#include <gui_features.h>
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
@@ -251,13 +253,26 @@ void App::removeEventHandler(const EventHandler*handler){
 
 int App::exec(){
     Looper*looper = Looper::getMainLooper();
-    while(!mQuitFlag)looper->pollAll(1);
+#if defined(HAVE_EVENTFD)
+    looper->wake();
+    while(!mQuitFlag){ if(!looper->loopOnce()) break; }
+#else
+    while(!mQuitFlag){
+        looper->pollAll(1);
+    }
+#endif
     return mExitCode;
 }
 
 void App::exit(int code){
     mQuitFlag = true;
     mExitCode = code;
+#if defined(HAVE_EVENTFD)
+    MessageQueue* q = Looper::getMainLooper()->getQueue();
+    if(q){
+        q->quit(false);
+    }
+#endif
 }
 
 const std::string App::getName()const{

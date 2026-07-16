@@ -74,7 +74,7 @@ public:
       InputReader::getGlobalMetaState — the global modifier view attached to
       KeyEvents/MotionEvents from any device. Safe to call from putEvent
       (mtxEvents is recursive and already held on the input thread).*/
-    int32_t getGlobalMetaState();
+    int32_t getGlobalMetaState()const;
 };
 }
 #endif

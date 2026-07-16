@@ -23,13 +23,13 @@
 #include <list>
 #include <cstdint>
 #include <core/callbackbase.h>
-#include <core/message.h>   // cdroid::Message (池化, 统一类型; 原 struct Message 已合并至此)
+#include <core/message.h>
 
 namespace cdroid{
 typedef int64_t nsecs_t;
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
 class Handler;
-class MessageQueue;  // cdroid::MessageQueue (前向声明; 定义在 messagequeue.h, 避免头环)
+class MessageQueue;
 
 class LooperCallback{
 protected:
@@ -124,7 +124,7 @@ private:
 private:
     static Looper*sMainLooper;
     int doEventHandlers();
-    void drainMessageQueue();  // 非阻塞排空 mQueue 到期 Java 消息 (CDROID 扩展)
+    void drainMessageQueue();
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
     void awoken();
@@ -163,7 +163,7 @@ public:
     static void setForThread(Looper* looper);
     static Looper* getForThread();
     bool getAllowNonCallbacks() const;
-    MessageQueue* getQueue();  // CDROID 扩展: Looper 拥有的 Java MessageQueue
+    MessageQueue* getQueue();
     int  pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
         return pollOnce(timeoutMillis, NULL, NULL, NULL);
@@ -172,6 +172,8 @@ public:
     inline int pollAll(int timeoutMillis) {
         return pollAll(timeoutMillis, NULL, NULL, NULL);
     }
+    bool loopOnce();
+    void loop();
     void wake();
     int  addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
     int  addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);
