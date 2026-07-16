@@ -83,8 +83,8 @@ void Handler::dispatchMessage(Message& msg){
     }
 }
 
-Looper* Handler::getLooper(){ return mLooper; }
-MessageQueue* Handler::getQueue(){ return mQueue; }
+Looper* Handler::getLooper()const{ return mLooper; }
+MessageQueue* Handler::getQueue()const{ return mQueue; }
 
 // —— has/remove: 委托 MessageQueue (真实现, 替代原 LOGE("TODO")/硬编码) ——
 bool Handler::hasMessages(int what){

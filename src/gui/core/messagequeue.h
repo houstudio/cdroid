@@ -62,10 +62,10 @@ public:
     virtual ~MessageQueue();
 
     // public API, MessageQueue.java:322-1265
-    bool isIdle();                                                                    // :322
+    bool isIdle()const;                                                               // :322
     void addIdleHandler(IdleHandler* handler);                                        // :352
     void removeIdleHandler(IdleHandler* handler);                                     // :382
-    bool isPolling();                                                                 // :413
+    bool isPolling()const;                                                            // :413
     void addOnFileDescriptorEventListener(int fd, int events, OnFileDescriptorEventListener* listener);  // :466
     void removeOnFileDescriptorEventListener(int fd);                                 // :508
     int postSyncBarrier();                                                            // :1100
@@ -77,9 +77,9 @@ public:
     bool enqueueMessage(Message* msg, int64_t when);  // :1392
 
     // package-private removal/query (由 Handler 调用), 对标 MessageQueue.java Legacy 分支。
-    // Handler* 指向被改造后的 cdroid::Handler (os::Message.target)。
-    bool hasMessages(Handler* h, int what, void* object);              // :1541
-    bool hasMessages(Handler* h, Runnable r, void* object);            // :1628 (hasCallbacks)
+    // 只读查询 → const (mLock 为 mutable)。
+    bool hasMessages(Handler* h, int what, void* object)const;              // :1541
+    bool hasMessages(Handler* h, Runnable r, void* object)const;            // :1628 (hasCallbacks)
     void removeMessages(Handler* h, int what, void* object);           // :1725
     void removeMessages(Handler* h, Runnable r, void* object);         // :1845 (removeCallbacks)
     void removeCallbacksAndMessages(Handler* h, void* token);          // :1993
@@ -112,14 +112,14 @@ private:
     bool mBlocked = false;         // :92
     int mAsyncMessageCount = 0;    // :96
     int mNextBarrierToken = 0;     // :2740 (Legacy, 初值 0)
-    std::recursive_mutex mLock;    // synchronized(this)
+    mutable std::recursive_mutex mLock;    // synchronized(this); mutable: const 查询方法 (isIdle/isPolling/hasMessages) 须加锁
 
     // native 方法, 委托 cdroid::Looper (对应 android_os_MessageQueue.cpp)
     void nativeInit(cdroid::Looper* nativeLooper);
     void nativeDestroy();
     void nativePollOnce(int timeoutMillis);
     void nativeWake();
-    bool nativeIsPolling();
+    bool nativeIsPolling()const;
     void nativeSetFileDescriptorEvents(int fd, int events);
 
     int postSyncBarrier(int64_t when);   // :1108

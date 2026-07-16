@@ -58,7 +58,7 @@ void MessageQueue::nativeWake(){
 }
 
 // android_os_MessageQueue.cpp:199
-bool MessageQueue::nativeIsPolling(){
+bool MessageQueue::nativeIsPolling()const{
     return mLooper && mLooper->isPolling();
 }
 
@@ -84,7 +84,7 @@ int MessageQueue::toLooperEvents(int events){
 // 简单查询 / IdleHandler, MessageQueue.java:308-386
 // ============================================================================
 
-bool MessageQueue::isIdle(){  // isIdleLegacy :308
+bool MessageQueue::isIdle()const{  // isIdleLegacy :308
     std::lock_guard<std::recursive_mutex> lock(mLock);
     int64_t now = SystemClock::uptimeMillis();
     return mMessages == nullptr || now < mMessages->when;
@@ -101,7 +101,7 @@ void MessageQueue::removeIdleHandler(IdleHandler* handler){  // :382
                         mIdleHandlers.end());
 }
 
-bool MessageQueue::isPolling(){  // :413 -> isPollingLocked :421
+bool MessageQueue::isPolling()const{  // :413 -> isPollingLocked :421
     std::lock_guard<std::recursive_mutex> lock(mLock);
     return !mQuitting && nativeIsPolling();
 }
@@ -480,7 +480,7 @@ Message* MessageQueue::nextDue(){
 // CDROID 扩展: 维护 mLast 尾指针 (Java MessageQueue 无 mLast)。
 // ============================================================================
 
-bool MessageQueue::hasMessages(Handler* h, int what, void* object){  // :1541
+bool MessageQueue::hasMessages(Handler* h, int what, void* object)const{  // :1541
     if (h == nullptr) return false;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
@@ -493,7 +493,7 @@ bool MessageQueue::hasMessages(Handler* h, int what, void* object){  // :1541
     return false;
 }
 
-bool MessageQueue::hasMessages(Handler* h, Runnable r, void* object){  // :1628 (hasCallbacks)
+bool MessageQueue::hasMessages(Handler* h, Runnable r, void* object)const{  // :1628 (hasCallbacks)
     if (h == nullptr) return false;
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;

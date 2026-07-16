@@ -62,8 +62,8 @@ public:
     virtual void dispatchMessage(Message* msg);
 
     void handleIdle()override;
-    Looper* getLooper();
-    MessageQueue* getQueue();
+    Looper* getLooper()const;
+    MessageQueue* getQueue()const;
 
     bool hasMessages(int what);
     bool hasMessages(int what,void*object);

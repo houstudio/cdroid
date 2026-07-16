@@ -72,20 +72,20 @@ public:
 
     void copyFrom(Message* o);  // :379 (Android: copyFrom(Message o))
 
-    int64_t getWhen();                 // :399
+    int64_t getWhen()const;                 // :399
     void setTarget(Handler* target);   // :403
-    Handler* getTarget();              // :415
-    Runnable getCallback();            // :427
-    Message* setCallback(Runnable r);  // :433 (@hide)
-    Bundle* getData();                 // :449 (懒构造)
-    Bundle* peekData();                // :465
+    Handler* getTarget()const;         // :415
+    Runnable getCallback()const;            // :427
+    Message* setCallback(const Runnable& r);  // :433 (@hide)
+    Bundle* getData();                 // :449 (懒构造, 改自身 → 非 const)
+    Bundle* peekData()const;           // :465
     void setData(Bundle* data);        // :475
     Message* setWhat(int what);        // :484 (@hide)
-    void sendToTarget();               // :493
+    void sendToTarget();               // :493 (传 this 给 sendMessage(Message*) → 非 const)
 
-    bool isAsynchronous();        // :505
+    bool isAsynchronous()const;        // :505
     void setAsynchronous(bool async);  // :535
-    bool isInUse();               // :543
+    bool isInUse()const;          // :543
     void markInUse();             // :548
 
 private:

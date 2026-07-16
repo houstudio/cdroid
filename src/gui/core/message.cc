@@ -126,18 +126,18 @@ void Message::copyFrom(Message* o){
     data = o->data;
 }
 
-int64_t Message::getWhen(){ return when; }
+int64_t Message::getWhen()const{ return when; }
 void Message::setTarget(Handler* t){ target = t; }
-Handler* Message::getTarget(){ return target; }
-Runnable Message::getCallback(){ return callback; }
-Message* Message::setCallback(Runnable r){ callback = r; return this; }
+Handler* Message::getTarget()const{ return target; }
+Runnable Message::getCallback()const{ return callback; }
+Message* Message::setCallback(const Runnable& r){ callback = r; return this; }
 
 // Message.java:449-463 (懒构造)
 Bundle* Message::getData(){
     if (data == nullptr) data = new Bundle();
     return data;
 }
-Bundle* Message::peekData(){ return data; }
+Bundle* Message::peekData()const{ return data; }
 void Message::setData(Bundle* d){ data = d; }
 Message* Message::setWhat(int w){ what = w; return this; }
 
@@ -147,14 +147,14 @@ void Message::sendToTarget(){
 }
 
 // Message.java:505-540
-bool Message::isAsynchronous(){ return (flags & FLAG_ASYNCHRONOUS) != 0; }
+bool Message::isAsynchronous()const{ return (flags & FLAG_ASYNCHRONOUS) != 0; }
 void Message::setAsynchronous(bool async){
     if (async) flags |= FLAG_ASYNCHRONOUS;
     else flags &= ~FLAG_ASYNCHRONOUS;
 }
 
 // Message.java:543-552
-bool Message::isInUse(){ return (flags & FLAG_IN_USE) == FLAG_IN_USE; }
+bool Message::isInUse()const{ return (flags & FLAG_IN_USE) == FLAG_IN_USE; }
 void Message::markInUse(){ flags |= FLAG_IN_USE; }
 
 }//namespace cdroid
