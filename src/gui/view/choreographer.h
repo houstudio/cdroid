@@ -18,9 +18,19 @@
 #ifndef __CHOREO_GRAPHER_H__
 #define __CHOREO_GRAPHER_H__
 #include <core/looper.h>
+#include <core/handler.h>
 #include <drawable/drawable.h>
 namespace cdroid{
-class Choreographer:protected EventHandler{
+/**
+ * 移植自 android.view.Choreographer (蓝本: android-36 Choreographer.java)。
+ *
+ * CDROID 取舍: 无硬件 VSYNC/帧回调 (多数芯片无 DRM), 故帧调度为**消息驱动**:
+ * postCallback/postFrameCallback → scheduleFrameLocked → 投 MSG_DO_FRAME 到 MessageQueue,
+ * 由 Looper::drainMessageQueue 到点抽 → doFrame。已脱离 EventHandler 被动轮询
+ * (原 checkEvents 每 33ms 轮询的变通已移除), 动画回调改由消息准点触发 (AnimationHandler 调度更精准)。
+ * 实际画帧由 UIEventSource 独立完成, 与本类正交。
+ */
+class Choreographer{
 public:
     enum CallbackType{
         CALLBACK_INPUT = 0,
@@ -56,8 +66,14 @@ private:
         int removeCallbacksLocked(void* action, void* token);
         int hasCallbacksLocked(void* action, void* token)const;
     };
+    // 内部 FrameHandler 消息 (对标 Android Choreographer.FrameHandler)
+    enum {
+        MSG_DO_FRAME = 0,
+        MSG_DO_SCHEDULE_CALLBACK = 1,
+    };
 private:
     Looper *mLooper;
+    Handler* mHandler;                 // FrameHandler: 接收 MSG_DO_FRAME/MSG_DO_SCHEDULE_CALLBACK
     bool mFrameScheduled;
     bool mCallbacksRunning;
     nsecs_t mLastFrameTimeNanos;
@@ -68,14 +84,13 @@ private:
     Choreographer();
     ~Choreographer();
     static float getRefreshRate();
+    bool onFrameMessage(Message& msg);  // FrameHandler Callback: 派发 MSG_DO_* → doFrame/scheduleFrameLocked
     CallbackRecord* obtainCallbackLocked(int64_t dueTime,void* action,void* token);
     void recycleCallbackLocked(CallbackRecord* callback);
     int removeCallbacksInternal(int callbackType,void* action, void* token);
     void postCallbackDelayedInternal(int callbackType,void* action, void* token, int64_t delayMillis);
     void scheduleFrameLocked(int64_t);
 protected:
-    int checkEvents()override;
-    int handleEvents()override;
     void doFrame(nsecs_t frameTimeNanos,int frame);
     void doCallbacks(int callbackType, long frameTimeMillis);
 public:
