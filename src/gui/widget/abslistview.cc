@@ -1255,8 +1255,9 @@ void AbsListView::onLayout(bool changed, int l, int t, int w, int h) {
     mOverscrollMax = h / OVERSCROLL_LIMIT_DIVISOR;
 
     // TODO: Move somewhere sane. This doesn't belong in onLayout().
-    if (mFastScroll)
+    if (mFastScroll!=nullptr){
         mFastScroll->onItemCountChanged(getChildCount(), mItemCount);
+    }
     mInLayout = false;
 }
 

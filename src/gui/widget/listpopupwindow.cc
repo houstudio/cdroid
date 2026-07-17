@@ -283,6 +283,12 @@ void ListPopupWindow::postShow(){
 }
 
 void ListPopupWindow::show() {
+     // 必须先同步 overlap 给底层 PopupWindow: buildDropDown()->getMaxAvailableHeight() 会读
+     // mPopup.mOverlapAnchor 决定可用高度算法 (overlap 时从锚点顶部起算, 否则从底部), 否则
+     // 浮窗锚点过大 (如整屏 ListView) 会算出负/极小高度, popup 被夹到几像素。
+     if (mOverlapAnchor != 0xFF) {
+         mPopup->setOverlapAnchor(mOverlapAnchor);
+     }
      const int height = buildDropDown();
 
      const bool noInputMethod = isInputMethodNotNeeded();

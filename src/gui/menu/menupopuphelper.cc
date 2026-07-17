@@ -64,6 +64,13 @@ void MenuPopupHelper::setForceShowIcon(bool forceShowIcon) {
     }
 }
 
+void MenuPopupHelper::setOverlapAnchor(bool overlap) {
+    mOverlapAnchor = overlap;
+    if (mPopup != nullptr) {
+        mPopup->setOverlapAnchor(overlap);
+    }
+}
+
 void MenuPopupHelper::setGravity(int gravity) {
     mDropDownGravity = gravity;
 }
@@ -142,6 +149,7 @@ MenuPopup* MenuPopupHelper::createPopup() {
     popup->setAnchorView(mAnchorView);
     popup->setCallback(mPresenterCallback);
     popup->setForceShowIcon(mForceShowIcon);
+    popup->setOverlapAnchor(mOverlapAnchor);
     popup->setGravity(mDropDownGravity);
 
     return popup;

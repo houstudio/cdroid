@@ -29,6 +29,7 @@ private:
     MenuBuilder* mMenu;
     bool mOverflowOnly;
     bool mForceShowIcon;
+    bool mOverlapAnchor = false;
     int mDropDownGravity = Gravity::START;
     std::string mPopupStyleAttr;
     std::string mPopupStyleRes;
@@ -85,6 +86,9 @@ public:
      *                  {@code false} for icons to be optionally shown
      */
     void setForceShowIcon(bool forceShowIcon);
+
+    /** 浮窗是否覆盖锚点 (转给底层 MenuPopup; 下次 show 生效)。FloatingActionMode 需 true。*/
+    void setOverlapAnchor(bool overlap);
 
     /**
       * Sets the alignment of the popup window relative to the anchor view.
