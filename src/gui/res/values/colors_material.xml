@@ -151,4 +151,6 @@
 
     <!-- List divider opacity -->
     <color name="list_divider_opacity_material">#1f000000</color>
+    <color name="floating_popup_divider_dark">#2F2F2F</color>
+    <color name="floating_popup_divider_light">#E9E9E9</color>
 </resources>

@@ -380,7 +380,7 @@ void PopupWindow::setWidth(int width){
 }
 
 int PopupWindow::getWidth()const{
-    return mHeight;
+    return mWidth;
 }
 
 void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){

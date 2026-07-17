@@ -123,7 +123,8 @@ ActionMode* Window::startActionModeInternal(View* originatingView, const ActionM
         prev->finish();
     }
 
-    FloatingActionMode* mode = new FloatingActionMode(getContext(), originatingView, callback);
+    // DecorView analog: FloatingActionMode creates its own FloatingToolbar from the root view.
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), callback, originatingView);
     mode->setType(type);
     mode->setOnFinishedListener([this, mode]() {
         mActionMode = nullptr;

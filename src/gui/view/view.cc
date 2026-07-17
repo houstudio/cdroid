@@ -2770,7 +2770,7 @@ void View::removeOnLayoutChangeListener(const OnLayoutChangeListener& listener){
     if(mListenerInfo){
         std::vector<View::OnLayoutChangeListener>&ls= mListenerInfo->mOnLayoutChangeListeners;
         auto it= std::find(ls.begin(),ls.end(),listener);
-        ls.erase(it);
+        if (it != ls.end()) ls.erase(it);
     }
 }
 
@@ -4152,8 +4152,9 @@ ActionMode* View::startActionMode(const ActionMode::Callback& callback, int type
     // Android 模型: 上浮到根 (Window) 创建, 而非叶子 View 直接建。
     if(mParent != nullptr)
         return mParent->startActionModeForChild(this, callback, type);
-    // 根 View (无父, 如 Window): 创建浮窗 ActionMode 并显示。onCreateActionMode 返回 false → 中止。
-    FloatingActionMode* mode = new FloatingActionMode(getContext(), this, callback);
+    // Root view (no parent, e.g. Window): create a floating ActionMode and show it.
+    // onCreateActionMode returning false aborts. (Android bubbles to the Window/DecorView.)
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), callback, this);
     mode->setType(type);
     if(!mode->show()){
         delete mode;

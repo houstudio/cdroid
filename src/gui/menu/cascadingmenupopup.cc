@@ -323,8 +323,6 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
         if (mHasYOffset) {
             popupWindow->setVerticalOffset(mYOffset);
         }
-        // 顶层 popup: 是否覆盖锚点 (FloatingActionMode 等浮窗需覆盖内容, 以获得足够高度)。
-        popupWindow->setOverlapAnchor(mOverlapAnchor);
         Rect epicenterBounds = getEpicenterBounds();
         popupWindow->setEpicenterBounds(epicenterBounds);
     }

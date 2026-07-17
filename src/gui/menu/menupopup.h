@@ -42,10 +42,6 @@ public:
 
     virtual void setAnchorView(View* anchor)=0;
 
-    /** 浮窗是否覆盖锚点 (true=从锚点顶部起算可用高度, 对标 ListPopupWindow.setOverlapAnchor)。
-     *  浮窗 ActionMode (FloatingActionMode) 需覆盖内容, 故开启; 普通 dropdown 关闭。默认 no-op。*/
-    virtual void setOverlapAnchor(bool overlap) {}
-
     virtual void setHorizontalOffset(int x)=0;
     virtual void setVerticalOffset(int y)=0;
 

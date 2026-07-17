@@ -53,7 +53,6 @@ private:
     bool mHasXOffset;
     bool mHasYOffset;
     bool mForceShowIcon;
-    bool mOverlapAnchor = false;   // 顶层 popup 是否覆盖锚点 (FloatingActionMode 等浮窗设 true)
     bool mShowTitle;
     Callback mPresenterCallback;
     ViewTreeObserver* mTreeObserver;
@@ -79,7 +78,6 @@ public:
     CascadingMenuPopup(Context* context,View* anchor, const std::string& popupStyleAttr, const std::string& popupStyleRes, bool overflowOnly);
     ~CascadingMenuPopup()override;
     void setForceShowIcon(bool forceShow)override;
-    void setOverlapAnchor(bool overlap)override { mOverlapAnchor = overlap; }
 
     void show() override;
     void dismiss() override;

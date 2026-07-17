@@ -1,54 +1,65 @@
 /*********************************************************************************
  * Copyright (C) [2019] [houzh@msn.com]
  *
+ * Line-by-line port of AOSP android-36 com.android.internal.view.FloatingActionMode.
+ * Renders via FloatingToolbar (show/dismiss/updateLayout). Click handling routes the
+ * toolbar's menu-item click to ActionMode.Callback.onActionItemClicked.
  *********************************************************************************/
 #include <view/floatingactionmode.h>
+#include <widget/floatingtoolbar.h>
+#include <widget/cdwindow.h>
 #include <menu/menubuilder.h>
-#include <menu/menupopuphelper.h>
 #include <menu/menuinflater.h>
+#include <menu/menuitem.h>
+#include <core/rect.h>
 #include <porting/cdlog.h>
 namespace cdroid{
 
-FloatingActionMode::FloatingActionMode(Context* context, View* anchor, const ActionMode::Callback& callback)
-    :mContext(context), mAnchor(anchor), mCallback(callback)
-    ,mMenu(nullptr), mPopup(nullptr), mInflater(nullptr){
+FloatingActionMode::FloatingActionMode(Context* context, const ActionMode::Callback& callback,
+        View* originatingView)
+    : mContext(context)
+    , mOriginatingView(originatingView)
+    , mCallback(callback)
+    , mMenu(nullptr) {
     mMenu = new MenuBuilder(context);
 
-    MenuBuilder::Callback cbk;
-    cbk.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item){
-        if(mCallback.onActionItemClicked)
-            return mCallback.onActionItemClicked(*this, item);
-        return false;
-    };
-    cbk.onMenuModeChange = [](MenuBuilder&){};
-    mMenu->setCallback(cbk);
+    // The toolbar is created from the root view (which is the Window in CDROID's flat model).
+    // AOSP passes a FloatingToolbar in from DecorView; CDROID's DecorView analog is the Window.
+    Window* window = dynamic_cast<Window*>(originatingView->getRootView());
+    mFloatingToolbar = new FloatingToolbar(window);
 
-    mPopup = new MenuPopupHelper(context, mMenu, anchor);
-    mPopup->setForceShowIcon(true);
-    // 浮窗 ActionMode 覆盖内容 (对标 AOSP FloatingToolbar 浮于内容之上): 让 getMaxAvailableHeight
-    // 从锚点顶部起算, 否则大锚点 (如整屏 ListView) 会算出极小可用高度, 导致 popup 被夹到几像素高。
-    mPopup->setOverlapAnchor(true);
-    mPopup->setOnDismissListener([this]{ onDestroy(); });
+    // Route a menu-item click (from the toolbar) to ActionMode.Callback.onActionItemClicked.
+    mFloatingToolbar->setOnMenuItemClickListener(
+            [this](MenuItem& item) -> bool {
+                if (mCallback.onActionItemClicked)
+                    return mCallback.onActionItemClicked(*this, item);
+                return false;
+            });
 }
 
-FloatingActionMode::~FloatingActionMode(){
-    delete mPopup;
+FloatingActionMode::~FloatingActionMode() {
+    delete mFloatingToolbar;
     delete mMenu;
     delete mInflater;
 }
 
-bool FloatingActionMode::show(){
-    LOGD("FloatingActionMode::show menu=%p size=%d", mMenu, mMenu->size());
-    if(mCallback.onCreateActionMode && !mCallback.onCreateActionMode(*this, *mMenu)){
+bool FloatingActionMode::show() {
+    LOGD("FloatingActionMode::show menu=%p size=%d originatingView=%p",
+         mMenu, mMenu->size(), mOriginatingView);
+    if (mCallback.onCreateActionMode && !mCallback.onCreateActionMode(*this, *mMenu)) {
         LOGD("FloatingActionMode::show onCreateActionMode returned false, abort");
         return false;
     }
-    LOGD("FloatingActionMode::show after onCreate, menu size=%d", mMenu->size());
-    if(mCallback.onPrepareActionMode)
+    LOGD("FloatingActionMode::show after onCreate size=%d", mMenu->size());
+    mFloatingToolbar->setMenu(mMenu);
+    LOGD("FloatingActionMode::show setMenu done");
+    invalidateContentRect();   // sets the content rect from the originating view
+    LOGD("FloatingActionMode::show invalidateContentRect done");
+    if (mCallback.onPrepareActionMode)
         mCallback.onPrepareActionMode(*this, *mMenu);
-    LOGD("FloatingActionMode::show -> mPopup->show()");
-    mPopup->show();
-    LOGD("FloatingActionMode::show mPopup->show() done, showing=%d", mPopup->isShowing());
+    LOGD("FloatingActionMode::show onPrepareActionMode done");
+    mFloatingToolbar->show();
+    LOGD("FloatingActionMode::show toolbar->show done");
     return true;
 }
 
@@ -59,29 +70,42 @@ std::string FloatingActionMode::getTitle(){ return mTitle; }
 std::string FloatingActionMode::getSubtitle(){ return mSubtitle; }
 View* FloatingActionMode::getCustomView(){ return mCustomView; }
 
-void FloatingActionMode::invalidate(){
-    if(mCallback.onPrepareActionMode)
+void FloatingActionMode::invalidate() {
+    if (mCallback.onPrepareActionMode)
         mCallback.onPrepareActionMode(*this, *mMenu);
+    invalidateContentRect();
+    mFloatingToolbar->updateLayout();
 }
 
-void FloatingActionMode::finish(){
-    if(mFinished) return;
+void FloatingActionMode::finish() {
+    if (mFinished) return;
     mFinished = true;
-    mPopup->dismiss();
+    mFloatingToolbar->dismiss();
+    onDestroy();
 }
 
 Menu* FloatingActionMode::getMenu(){ return mMenu; }
 
 MenuInflater* FloatingActionMode::getMenuInflater(){
-    if(mInflater == nullptr) mInflater = new MenuInflater(mContext);
+    if (mInflater == nullptr) mInflater = new MenuInflater(mContext);
     return mInflater;
 }
 
+void FloatingActionMode::invalidateContentRect() {
+    // Content rect = the originating view's on-screen bounds (AOSP default for
+    // Callback2.onGetContentRect). The toolbar positions itself relative to it.
+    int pos[2] = {0, 0};
+    mOriginatingView->getLocationOnScreen(pos);
+    Rect contentRect;
+    contentRect.set(pos[0], pos[1], mOriginatingView->getWidth(), mOriginatingView->getHeight());
+    mFloatingToolbar->setContentRect(contentRect);
+}
+
 void FloatingActionMode::onDestroy(){
-    if(mCallback.onDestroyActionMode){
+    if (mCallback.onDestroyActionMode) {
         mCallback.onDestroyActionMode(*this);
     }
-    if(mOnFinished){
+    if (mOnFinished) {
         mOnFinished();
     }
 }

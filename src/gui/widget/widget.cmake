@@ -10,6 +10,8 @@ list(APPEND WIDGET_SOURCES
     widget/scrollbardrawable.cc
     widget/cdwindow.cc
     widget/cardview.cc
+    widget/floatingtoolbar.cc
+    widget/localfloatingtoolbarpopup.cc
 )
 
 list(APPEND WIDGET_SOURCES
