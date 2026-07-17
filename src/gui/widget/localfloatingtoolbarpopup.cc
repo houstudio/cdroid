@@ -125,12 +125,9 @@ LocalFloatingToolbarPopup::LocalFloatingToolbarPopup(Context* context, View* par
         if (menuItem == nullptr) return;
         mOnMenuItemClickListener(*menuItem);
     };
-    LOGD("LocalFloatingToolbarPopup ctor done %p mainPanel=%p overflowPanel=%p overflowBtn=%p",
-         this, mMainPanel, mOverflowPanel, mOverflowButton);
 }
 
 LocalFloatingToolbarPopup::~LocalFloatingToolbarPopup() {
-    LOGD("LocalFloatingToolbarPopup dtor %p popupWindow=%p", this, mPopupWindow);
     // AOSP relies on GC; CDROID's PopupWindow dtor frees only its background drawables, and
     // ViewGroup never deletes children. So this popup owns its whole content tree and must
     // free it. The popup window was dismissed (finish->dismiss) before destruction; its
@@ -193,8 +190,6 @@ void LocalFloatingToolbarPopup::setSuggestedWidth(int suggestedWidth) {
 
 void LocalFloatingToolbarPopup::show(const std::vector<MenuItem*>& menuItems,
         const MenuItem::OnMenuItemClickListener& menuItemClickListener, const Rect& contentRect) {
-    LOGD("LocalFloatingToolbarPopup::show items=%zu layoutRequired=%d widthChanged=%d",
-         menuItems.size(), isLayoutRequired(menuItems), mWidthChanged);
     if (isLayoutRequired(menuItems) || mWidthChanged) {
         dismiss();
         layoutMenuItems(menuItems, menuItemClickListener, mSuggestedWidth);
@@ -211,7 +206,6 @@ void LocalFloatingToolbarPopup::show(const std::vector<MenuItem*>& menuItems,
 }
 
 void LocalFloatingToolbarPopup::show(const Rect& contentRectOnScreen) {
-    LOGD("LocalFloatingToolbarPopup::show(rect) %p isShowing=%d", this, isShowing());
     if (isShowing()) {
         return;
     }
@@ -225,12 +219,18 @@ void LocalFloatingToolbarPopup::show(const Rect& contentRectOnScreen) {
     // The position is specified in window coordinates.
     mPopupWindow->showAtLocation(mParent, Gravity::NO_GRAVITY,
                                  mCoordsOnWindow[0], mCoordsOnWindow[1]);
+    // Force a layout + draw on the freshly-attached popup: addWindow/showAtLocation/moveWindow
+    // don't invalidate the new window itself (moveWindow only flips + dirties windows below it),
+    // so the first frame can be blank when the previous popup's teardown races this show.
+    if (View* root = mPopupWindow->getContentView()) {
+        root->requestLayout();
+        root->invalidate();
+    }
     setTouchableSurfaceInsetsComputer();
     runShowAnimation();
 }
 
 void LocalFloatingToolbarPopup::dismiss() {
-    LOGD("LocalFloatingToolbarPopup::dismiss %p mDismissed=%d", this, mDismissed);
     if (mDismissed) {
         return;
     }
@@ -415,13 +415,14 @@ void LocalFloatingToolbarPopup::updatePopupSize() {
     maybeComputeTransitionDurationScale();
 }
 
-int LocalFloatingToolbarPopup::getAdjustedToolbarWidth(int suggestedWidth) const {
+int LocalFloatingToolbarPopup::getAdjustedToolbarWidth(int suggestedWidth) {
     int width = suggestedWidth;
+    refreshViewPort();
+    int maxWidth = mViewPortOnScreen.width - 2 * mMarginHorizontal;
     if (width <= 0) {
         // No suggested width; use the preferred width dimen.
         width = mContext->getDimensionPixelSize("cdroid:dimen/floating_toolbar_preferred_width");
     }
-    int maxWidth = mViewPortOnScreen.width - 2 * mMarginHorizontal;
     return std::min(width, maxWidth);
 }
 

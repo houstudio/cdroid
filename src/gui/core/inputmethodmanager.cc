@@ -222,7 +222,10 @@ InputMethodManager::InputMethodManager(){
 InputMethodManager::~InputMethodManager(){
     mInst = nullptr;
     LOGD("InputMethodManager Destroied!");
-    if(imeWindow)WindowManager::getInstance().removeWindow(imeWindow);
+    if(imeWindow){
+        imeWindow->close();
+        imeWindow = nullptr;
+    }
     for(auto ime:imeMethods){
         delete ime.method;
     }

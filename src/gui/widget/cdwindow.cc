@@ -106,6 +106,8 @@ Window::~Window(){
         mode->finish();
     }
     delete mSendWindowContentChangedAccessibilityEvent;
+    // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
+    // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
     LOGD("%p:%d destroied!",this,mID);
 }
 
@@ -722,7 +724,7 @@ bool Window::onKeyUp(int keyCode,KeyEvent& evt){
 
 void Window::onBackPressed(){
     LOGD("recv BackPressed");
-    post([this](){WindowManager::getInstance().removeWindow(this);} );
+    close();
 }
 
 bool Window::isInLayout()const{
@@ -748,7 +750,18 @@ void Window::doLayout(){
 
 
 void Window::close(){
-    post([this](){WindowManager::getInstance().removeWindow(this);} );
+    // removeWindow detaches the view tree (which nulls mAttachInfo), so stash the AttachInfo
+    // pointer first and let the posted lambda free it together with the window. removeWindow
+    // itself runs IMMEDIATELY (the window leaves the compositor list at once -> a replacement
+    // window shown in the same tick doesn't race a still-listed one); the deletes are deferred
+    // via a post so the current call stack can still touch this window safely (apps often
+    // closeWindow() then operate on the window in the same callback).
+    auto* info = mAttachInfo;
+    Window* self = this;
+    post([self, info](){
+        delete info; delete self;
+    });
+    WindowManager::getInstance().removeWindow(this);
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){

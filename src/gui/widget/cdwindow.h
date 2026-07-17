@@ -65,7 +65,7 @@ protected:
     /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
      *is resized or moved*/
     Cairo::RefPtr<Cairo::Region>mPendingRgn;
-    int window_type;/*window type*/
+    int window_type = TYPE_APPLICATION;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;

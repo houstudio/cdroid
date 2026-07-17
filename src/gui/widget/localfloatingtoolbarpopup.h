@@ -89,7 +89,7 @@ private:
     int calculateOverflowHeight(int maxItemSize) const;
     void updateOverflowHeight(int suggestedHeight);
     void updatePopupSize();
-    int getAdjustedToolbarWidth(int suggestedWidth) const;
+    int getAdjustedToolbarWidth(int suggestedWidth);
     int getOverflowWidth() const;
 
     void layoutMenuItems(const std::vector<MenuItem*>& menuItems,

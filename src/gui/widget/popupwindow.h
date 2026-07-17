@@ -99,7 +99,7 @@ private:
     Transition* mExitTransition;
     Rect mEpicenterBounds;
 
-    int mWindowLayoutType ;//= WindowManager.LayoutParams.TYPE_APPLICATION_PANEL;
+    int mWindowLayoutType = 0;   // 0 => createDecorView uses TYPE_APPLICATION (matches normal windows)
 
     OnDismissListener mOnDismissListener;
 

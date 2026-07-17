@@ -35,8 +35,11 @@ FloatingToolbar::~FloatingToolbar() {
     // creates a fresh toolbar per ActionMode invocation, so this dtor must free the popup
     // (and its PopupWindow + view tree) on every finish() -- otherwise each invocation leaks
     // a PopupWindow + views, eventually corrupting state and crashing the next popup.
-    // The layout-change listener is already removed in dismiss(); not touched here (the root
-    // view may be tearing down at Window destruction).
+    // Defensive: ensure the orientation listener (which captures `this`) is detached from the
+    // root view even if this toolbar is destroyed without a dismiss() call. removeOnLayoutChange
+    // is a safe no-op (with the erase(end()) guard) when the listener was never added / already
+    // removed -- and removal is CallbackBase-based (operator== on the functor) so it matches.
+    unregisterOrientationHandler();
     delete mPopup;
     mPopup = nullptr;
 }

@@ -100,7 +100,6 @@ void WindowManager::addWindow(Window*win){
     for(int idx = 0 ;idx < mWindows.size();idx++){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
-        LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(mActiveWindow){
         Window*deactWin = mActiveWindow;
@@ -151,10 +150,13 @@ void WindowManager::removeWindow(Window*w){
 #else
     Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
 #endif
-    View::AttachInfo*info = w->mAttachInfo;
+    // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
+    // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
+    // ~Window -- Window::close() stashes it (before calling removeWindow) and hands it to the
+    // posted lambda that frees it. removeWindow itself does NOT free the window or AttachInfo;
+    // it only drops the window from the compositor list so a replacement shown in the same tick
+    // doesn't race a still-listed window.
     w->dispatchDetachedFromWindow();
-    delete info;
-    delete w;
     for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
@@ -283,8 +285,8 @@ void WindowManager::sendToBack(Window*win){
 }
 
 void WindowManager::bringToFront(Window*win){
-    win->mLayer = (win->window_type<<16)|0x7FFF;
     if(mActiveWindow==win) return;
+    win->mLayer = (win->window_type<<16)|0x7FFF;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });

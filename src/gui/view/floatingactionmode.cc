@@ -44,22 +44,16 @@ FloatingActionMode::~FloatingActionMode() {
 }
 
 bool FloatingActionMode::show() {
-    LOGD("FloatingActionMode::show menu=%p size=%d originatingView=%p",
-         mMenu, mMenu->size(), mOriginatingView);
+    LOGD("FloatingActionMode::show menu=%p size=%d", mMenu, mMenu->size());
     if (mCallback.onCreateActionMode && !mCallback.onCreateActionMode(*this, *mMenu)) {
         LOGD("FloatingActionMode::show onCreateActionMode returned false, abort");
         return false;
     }
-    LOGD("FloatingActionMode::show after onCreate size=%d", mMenu->size());
     mFloatingToolbar->setMenu(mMenu);
-    LOGD("FloatingActionMode::show setMenu done");
     invalidateContentRect();   // sets the content rect from the originating view
-    LOGD("FloatingActionMode::show invalidateContentRect done");
     if (mCallback.onPrepareActionMode)
         mCallback.onPrepareActionMode(*this, *mMenu);
-    LOGD("FloatingActionMode::show onPrepareActionMode done");
     mFloatingToolbar->show();
-    LOGD("FloatingActionMode::show toolbar->show done");
     return true;
 }
 

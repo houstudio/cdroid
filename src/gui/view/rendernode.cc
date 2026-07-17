@@ -8,7 +8,7 @@ RenderNode::RenderNode(){
     mAlpha  = 1.f;
     mScaleX = 1.f;
     mScaleY = 1.f;
-    mElevation =.0f;
+    mElevation =0.f;
     mTranslationX = 0.f;
     mTranslationY = 0.f;
     mTranslationZ = 0.f;

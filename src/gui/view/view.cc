@@ -5750,7 +5750,7 @@ void View::getWindowVisibleDisplayFrame(Rect& outRect){
         // we want the area behind or in front of the IME.
         const DisplayMetrics& metrics= mContext->getDisplayMetrics();
         outRect.set(0,0,metrics.widthPixels,metrics.heightPixels);
-        Rect insets = mAttachInfo->mVisibleInsets;
+        const Rect& insets = mAttachInfo->mVisibleInsets;
         outRect.left += insets.left;
         outRect.top += insets.top;
         outRect.width -= (insets.width+insets.left);
