@@ -5011,6 +5011,11 @@ void TextView::stopTextActionMode() {
     }
 }
 
+bool TextView::canCut()const{
+    // 对齐 Android TextView.canCut: 复制条件 + 文本可编辑 (可剪切)。
+    return canCopy() && (dynamic_cast<Editable*>(mText) != nullptr);
+}
+
 bool TextView::canCopy()const{
     if (hasPasswordTransformationMethod()) {
         return false;
@@ -5056,6 +5061,36 @@ bool TextView::selectAllText(){
     const int length = mText->length();
     if (mSpannable) Selection::setSelection(mSpannable, 0, length);
     return length > 0;
+}
+
+// 对齐 AOSP TextView.onTextContextMenuItem (TextView.java:15200)。clipboard 本轮留空:
+// copy/cut/paste 为桩 (LOG + 关 ActionMode), selectAll 调 selectAllText 实操。
+bool TextView::onTextContextMenuItem(int id) {
+    switch (id) {
+    case ID_SELECT_ALL:
+        selectAllText();
+        if (mEditor) mEditor->invalidateTextActionMode(); // 刷新位置 (canSelectAllText 变 false)
+        return true;
+    case ID_CUT:
+    case ID_COPY:
+    case ID_PASTE:
+        // TODO(clipboard): ClipboardManager 未移植, copy/cut/paste 暂为桩。
+        LOGD("TextView::onTextContextMenuItem: clipboard not ported (id=0x%x)", id);
+        if (mEditor) mEditor->stopTextActionMode(); // 对齐 Android: copy/paste 后关 ActionMode
+        return true;
+    default:
+        return false;
+    }
+}
+
+// 对齐 AOSP TextView.performLongClick: super(View.performLongClick) + 转发 Editor。
+// 文本选择的长按逻辑(选词/插入 ActionMode)归 Editor, 不放 TextView (AGENTS.md 分层)。
+bool TextView::performLongClick() {
+    bool handled = View::performLongClick();
+    if (mEditor != nullptr) {
+        mEditor->performLongClick(handled);
+    }
+    return handled;
 }
 
 // Android public API — delegate to Editor when editable. (Faithful A34 ports.)

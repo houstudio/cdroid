@@ -31,6 +31,7 @@
 #include <text/inputfilter.h>
 #include <text/method/transformationmethod.h>
 #include <text/method/keylistener.h>
+#include <widget/R.h>
 
 namespace cdroid {
 class Layout;
@@ -369,6 +370,7 @@ public:
     bool isSuggestionsEnabled()const;
     bool canSelectText()const;
     bool canSelectAllText()const;
+    bool canCut()const;
     bool canCopy()const;
     bool canReplace()const;
     bool canPaste()const;
@@ -379,6 +381,16 @@ public:
     int getSelectionEndTransformed() const;
     bool hasSelection()const;
     std::string getSelectedText()const;
+    // Text context menu (align android.R.id.*; Editor.java/TextView.java:15179).
+    // clipboard 本轮留空: copy/cut/paste 为桩, selectAll 实操。
+    bool onTextContextMenuItem(int id);
+    bool performLongClick()override;
+    static constexpr int ID_SELECT_ALL = R::id::selectAll; // android.R.id.selectAll
+    static constexpr int ID_CUT        = R::id::cut;
+    static constexpr int ID_COPY       = R::id::copy;
+    static constexpr int ID_PASTE      = R::id::paste;
+    static constexpr int ID_SHARE      = R::id::shareText;
+    static constexpr int ID_REPLACE    = R::id::replaceText;
     // Android public API — touch→offset, cursor visibility, IME-on-focus,
     // select-all-on-focus, batch editing (all delegate to Editor when editable).
     int  getOffsetForPosition(float x, float y);

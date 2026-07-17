@@ -86,12 +86,17 @@ MenuInflater* FloatingActionMode::getMenuInflater(){
 }
 
 void FloatingActionMode::invalidateContentRect() {
-    // Content rect = the originating view's on-screen bounds (AOSP default for
-    // Callback2.onGetContentRect). The toolbar positions itself relative to it.
-    int pos[2] = {0, 0};
-    mOriginatingView->getLocationOnScreen(pos);
     Rect contentRect;
-    contentRect.set(pos[0], pos[1], mOriginatingView->getWidth(), mOriginatingView->getHeight());
+    if (mCallback.onGetContentRect) {
+        // Caller (e.g. Editor) supplies the precise content rect (selection rect).
+        // Mirrors AOSP Callback2.onGetContentRect.
+        mCallback.onGetContentRect(*this,*mOriginatingView,contentRect);
+    } else {
+        // Fallback: the originating view's on-screen bounds (AOSP default).
+        int pos[2] = {0, 0};
+        mOriginatingView->getLocationOnScreen(pos);
+        contentRect.set(pos[0], pos[1], mOriginatingView->getWidth(), mOriginatingView->getHeight());
+    }
     mFloatingToolbar->setContentRect(contentRect);
 }
 

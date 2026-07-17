@@ -95,6 +95,10 @@ public:
         std::function<bool(ActionMode&,MenuItem&)> onActionItemClicked;//(ActionMode& mode, MenuItem& item);
 
         std::function<void(ActionMode&)> onDestroyActionMode;//(ActionMode& mode);
+
+        // 融合自 Callback2.onGetContentRect: FloatingActionMode 定位用(content rect,
+        // 如 Editor 文本选区 rect)。为空时 FloatingActionMode 用 originatingView 屏坐标兜底。
+        std::function<void(ActionMode&,View&, Rect&)> onGetContentRect;//(Rect& outRect)
     };
 
     /**

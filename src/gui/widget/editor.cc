@@ -36,12 +36,19 @@
 #include <core/canvas.h>
 #include <core/systemclock.h>
 #include <algorithm>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
 
 namespace cdroid {
 
 namespace {
 // Cursor blink period, in milliseconds (matches Android's Editor.BLINK).
 constexpr int BLINK = 500;
+// ActionMode menu item order (Editor.java:194)
+constexpr int ORDER_CUT = 4;
+constexpr int ORDER_COPY = 5;
+constexpr int ORDER_PASTE = 6;
+constexpr int ORDER_SELECT_ALL = 8;
 }  // namespace
 
 // =====================================================================================
@@ -147,10 +154,113 @@ Editor::~Editor() {
 
 void Editor::stopTextActionMode() {
     if (mTextActionMode != nullptr) {
-        // This will hide the mSelectionModifierCursorController
         mTextActionMode->finish();
+        mTextActionMode = nullptr;   // finish() 经 onDestroyActionMode 也会置空, 此处双保险
     }
-    //unregisterOnBackInvokedCallback();
+}
+
+// =====================================================================================
+//  TextActionModeCallback — port of AOSP Editor.TextActionModeCallback (Editor.java:4683).
+//  现代 Android 只有一个 callback 类, 用 mode 枚举(SELECTION/INSERTION)区分。
+//  CDROID 的 ActionMode::Callback 是含 std::function 的 struct, 故本类继承它、构造时
+//  把 5 个 function 填成 lambda。lambda **全部值捕获 Editor\*** (不捕 this): 本对象在
+//  startActionModeInternal 里栈构造、切片拷贝进 FloatingActionMode::mCallback 后即销毁,
+//  故不能捕 this; Editor 寿命长于 ActionMode。
+// =====================================================================================
+class Editor::TextActionModeCallback : public ActionMode::Callback {
+public:
+    enum { SELECTION = 0, INSERTION = 1 };
+    explicit TextActionModeCallback(Editor* editor, int mode) {
+        const bool hasSelection = (mode == SELECTION) && editor->mTextView->hasSelection();
+        onCreateActionMode = [editor, hasSelection](ActionMode& am, Menu& menu)->bool {
+            am.setTitle("");
+            am.setSubtitle("");
+            am.setTitleOptionalHint(true);
+            editor->populateTextActionModeMenu(menu, hasSelection);
+            return true;
+        };
+        onPrepareActionMode = [](ActionMode&, Menu&)->bool { return true; };
+        onActionItemClicked = [editor](ActionMode&, MenuItem& item)->bool {
+            return editor->mTextView->onTextContextMenuItem(item.getItemId());
+        };
+        onDestroyActionMode = [editor](ActionMode&) {
+            editor->mTextActionMode = nullptr;
+            // 收起选区为光标 (对齐 AOSP onDestroyActionMode 的 !mPreserveSelection 分支)
+            Spannable* e = editor->mTextView->getEditableText();
+            if (e) {
+                const int selEnd = Selection::getSelectionEnd(e);
+                Selection::setSelection(e, selEnd);
+            }
+        };
+        onGetContentRect = [editor, hasSelection](ActionMode&, View&, Rect& out) {
+            editor->getTextActionModeContentRect(out, hasSelection);
+        };
+    }
+};
+
+// 对齐 AOSP Editor.startActionModeInternal (Editor.java:2602)
+bool Editor::startActionModeInternal(int actionMode) {
+    if (mTextActionMode != nullptr) {
+        mTextActionMode->invalidate();
+        return false;
+    }
+    TextActionModeCallback callback(this, actionMode);
+    mTextActionMode = mTextView->startActionMode(callback, ActionMode::TYPE_FLOATING);
+    return mTextActionMode != nullptr;
+}
+
+bool Editor::startSelectionActionMode() {
+    return startActionModeInternal(TextActionModeCallback::SELECTION);
+}
+
+bool Editor::startInsertionActionMode() {
+    return startActionModeInternal(TextActionModeCallback::INSERTION);
+}
+
+void Editor::invalidateTextActionMode() {
+    if (mTextActionMode != nullptr) mTextActionMode->invalidate();
+}
+
+// 对齐 AOSP Editor.populateMenuWithItems (Editor.java:4751)。条件 add (不 setVisible)。
+void Editor::populateTextActionModeMenu(Menu& menu, bool /*hasSelection*/) {
+    if (mTextView->canCut())        menu.add(0, TextView::ID_CUT,        ORDER_CUT,        "Cut");
+    if (mTextView->canCopy())       menu.add(0, TextView::ID_COPY,       ORDER_COPY,       "Copy");
+    if (mTextView->canPaste())      menu.add(0, TextView::ID_PASTE,      ORDER_PASTE,      "Paste");
+    if (mTextView->canSelectAllText())
+        menu.add(0, TextView::ID_SELECT_ALL, ORDER_SELECT_ALL, "Select all");
+}
+
+// 对齐 AOSP Editor.onGetContentRect (Editor.java:4886)。简化: 用 selStart/selEnd 的行
+// top/bottom + primaryHorizontal 近似 selection rect (精确版用 getSelectionPath +
+// Path::computeBounds, CDROID Path 暂无 computeBounds)。返回屏坐标 (FloatingToolbar 期望)。
+void Editor::getTextActionModeContentRect(Rect& outRect, bool hasSelection) {
+    Layout* layout = mTextView->getLayout();
+    const int selStart = mTextView->getSelectionStart();
+    const int selEnd = mTextView->getSelectionEnd();
+    if (layout == nullptr || selStart < 0 || selEnd < 0) {
+        int pos[2] = {0, 0};
+        mTextView->getLocationOnScreen(pos);
+        outRect.set(pos[0], pos[1], mTextView->getWidth(), mTextView->getHeight());
+        return;
+    }
+    const int startLine = layout->getLineForOffset(selStart);
+    const int endLine = layout->getLineForOffset(selEnd);
+    int top = layout->getLineTop(startLine);
+    int bottom = layout->getLineBottom(endLine);
+    const float phStart = layout->getPrimaryHorizontal(selStart);
+    const float phEnd = layout->getPrimaryHorizontal(selEnd);
+    int left = (int)std::min(phStart, phEnd);
+    int right = (int)std::max(phStart, phEnd);
+    if (!hasSelection || right <= left) {
+        left = 0;
+        right = mTextView->getWidth();
+    }
+    const int hoff = mTextView->viewportToContentHorizontalOffset();
+    const int voff = mTextView->viewportToContentVerticalOffset();
+    left += hoff; right += hoff; top += voff; bottom += voff;
+    int pos[2] = {0, 0};
+    mTextView->getLocationOnScreen(pos);
+    outRect.set(pos[0] + left, pos[1] + top, right - left, bottom - top);
 }
 // =====================================================================================
 //  Helpers
@@ -335,7 +445,9 @@ void Editor::suspendBlink() {
 }
 
 void Editor::resumeBlink() {
-    // Android.resumeBlink: mBlink.uncancel() then makeBlink().
+    if(mTextView!=nullptr){
+        mTextView->removeCallbacks(mBlink);
+    }
     mBlinkCancelled = false;
     makeBlink();
 }
@@ -676,7 +788,23 @@ bool Editor::selectCurrentWord() {
     Selection::setSelection(e, selStart, selEnd);
     // Cursor update is driven by the Selection span change via spanChange.
     mTextView->invalidate(true);
+    // 选词后弹出文本选择 ActionMode (双击选词 → FloatingToolbar)。
+    startSelectionActionMode();
     return true;
+}
+
+// 对齐 AOSP Editor.performLongClick (Editor.java:1483)。简化: 无 accessibility 分支、
+// InsertionPointCursorController、选择手柄 drag、touchPositionIsInSelection, 取默认分支:
+// 长按文字 → selectCurrentWord (成功则由 selectCurrentWord 弹 selection ActionMode);
+// 选词失败(空白) → 插入 ActionMode。
+bool Editor::performLongClick(bool handled) {
+    if (handled) return handled;
+    if (mTextView->length() <= 0) return handled;
+    const bool selected = selectCurrentWord();
+    if (!selected) {
+        startInsertionActionMode();
+    }
+    return handled;
 }
 
 void Editor::stopTextActionModeWithPreservingSelection(){

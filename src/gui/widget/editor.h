@@ -34,6 +34,7 @@ class KeyEvent;
 class MotionEvent;
 class Canvas;
 class TransformationMethod;
+class Menu;
 /**
  * Helper class used by TextView to handle editable text views.
  *
@@ -61,6 +62,7 @@ protected:
     class TextViewPositionListener;
     class SpanController;
     class InputContentType;
+    class TextActionModeCallback;
 private:
     Drawable* mDrawableForCursor = nullptr;
     Drawable* mSelectHandleLeft = nullptr;
@@ -116,6 +118,15 @@ private:
 protected:
     ActionMode*getTextActionMode()const{return mTextActionMode;}
     void stopTextActionMode();
+    // Text selection ActionMode (对齐 AOSP Editor.startSelectionActionMode /
+    // startInsertionActionMode / startActionModeInternal)。本轮: 不含 Smart Selection、
+    // 选择手柄、custom callback。copy/cut/paste 因 clipboard 未移植而留桩。
+    bool startSelectionActionMode();
+    bool startInsertionActionMode();
+    bool startActionModeInternal(int actionMode);
+    void populateTextActionModeMenu(Menu& menu, bool hasSelection);
+    void getTextActionModeContentRect(Rect& out, bool hasSelection);
+    void invalidateTextActionMode();
 public:
     explicit Editor(TextView* textView);
     ~Editor();
@@ -158,6 +169,7 @@ public:
     void onTouchUpEvent(MotionEvent& event);
     int  commitText(const std::wstring& text);
     bool selectCurrentWord();
+    bool performLongClick(bool handled);
 
     bool ignoreActionUpEvent() const { return mIgnoreActionUpEvent; }
 
