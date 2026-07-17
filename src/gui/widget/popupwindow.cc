@@ -992,8 +992,11 @@ void PopupWindow::update(){
 
 void PopupWindow::update(View* anchor,WindowManager::LayoutParams* params) {
     setLayoutDirectionFromAnchor();
-    // mWindowManager.updateViewLayout(mDecorView, params);
-    LOGD("PopupWindow.pos=%d,%d,%d,%d",params->x,params->y,params->width,params->height);
+    if (mDecorView) {
+        // Use mWidth/mHeight (actual pixel size from setWidth/setHeight), NOT params->width/height
+        // (which is WRAP_CONTENT=-2 when mWidthMode<0). CDROID's layout() takes (l, t, W, H).
+        WindowManager::getInstance().moveWindow(mDecorView, params->x, params->y,mWidth,mHeight);
+    }
 }
 
 void PopupWindow::update(int width, int height){

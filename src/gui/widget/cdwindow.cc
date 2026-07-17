@@ -759,7 +759,8 @@ void Window::close(){
     auto* info = mAttachInfo;
     Window* self = this;
     post([self, info](){
-        delete info; delete self;
+        delete info;
+        delete self;
     });
     WindowManager::getInstance().removeWindow(this);
 }

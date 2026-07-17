@@ -60,6 +60,7 @@ public:
     void removeWindow(Window*w);
     void removeWindows(const std::vector<Window*>&);
     void moveWindow(Window*w,int x,int y);
+    void moveWindow(Window*w,int x,int y,int width,int height);
     /* Hide a window: set it INVISIBLE and dirty the screen area it covered on
      * every other window, so composeSurfaces repaints the uncovered region from
      * the windows below. This is the WindowManager-owned equivalent of the old

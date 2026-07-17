@@ -218,11 +218,17 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
+    moveWindow(w,x,y,-1,-1);
+}
+
+void WindowManager::moveWindow(Window*w,int x,int y,int width,int height){
     Rect rcw = w->getBound();
     Rect rcw2 =rcw;
     rcw2.left = x;
     rcw2.top = y;
-    w->setFrame(x,y,rcw.width,rcw.height);
+    rcw2.width = ((width<0||width==INT_MAX)?rcw.width:width);
+    rcw2.height= ((height<0||height==INT_MAX)?rcw.height:height);
+    w->setFrame(x, y, rcw2.width,rcw2.height);
     const auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
         for(auto it = mWindows.begin();it<itw;it++){

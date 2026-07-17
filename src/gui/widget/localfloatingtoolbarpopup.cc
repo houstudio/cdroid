@@ -404,14 +404,13 @@ void LocalFloatingToolbarPopup::updateOverflowHeight(int suggestedHeight) {
 }
 
 void LocalFloatingToolbarPopup::updatePopupSize() {
-    int width = 0;
-    int height = 0;
-    width = std::max(width, mMainPanelSize.width());
-    height = std::max(height, mMainPanelSize.height());
-    width = std::max(width, mOverflowPanelSize.width());
-    height = std::max(height, mOverflowPanelSize.height());
-    mPopupWindow->setWidth(width + mMarginHorizontal * 2);
-    mPopupWindow->setHeight(height + mMarginVertical * 2);
+    // Size the window to the CURRENT panel (main when closed, overflow when open) — NOT the max
+    // of both. CDROID's popup surface isn't auto-cleared, so AOSP's extra transparent space
+    // (used for the overflow to grow into) would show garbage. The window resizes when overflow
+    // opens/closes (openOverflow/closeOverflow call updatePopupSize + reposition).
+    const Size& panel = mIsOverflowOpen ? mOverflowPanelSize : mMainPanelSize;
+    mPopupWindow->setWidth(panel.width() + mMarginHorizontal * 2);
+    mPopupWindow->setHeight(panel.height() + mMarginVertical * 2);
     maybeComputeTransitionDurationScale();
 }
 
@@ -712,17 +711,21 @@ bool LocalFloatingToolbarPopup::isInRTLMode() const {
 
 void LocalFloatingToolbarPopup::openOverflow() {
     mIsOverflowOpen = true;
-    // TODO(3b-anim): tween container width/height + overflow-button X + panel alpha + AVD morph.
-    // 3b: snap to the open resting state immediately.
-    setPanelsStatesAtRestingPosition();
-    setContentAreaAsTouchableSurface();
+    // CDROID can't resize a window's surface in-place (it's fixed at GFXCreateSurface time).
+    // Dismiss + re-show creates a new window/surface sized for the overflow panel.
+    // TODO(3b-anim): animate the transition instead of dismiss + re-show.
+    updatePopupSize();
+    Rect savedRect = mPreviousContentRect;
+    dismiss();
+    show(savedRect);
 }
 
 void LocalFloatingToolbarPopup::closeOverflow() {
     mIsOverflowOpen = false;
-    // TODO(3b-anim): tween back + AVD morph.
-    setPanelsStatesAtRestingPosition();
-    setContentAreaAsTouchableSurface();
+    updatePopupSize();
+    Rect savedRect = mPreviousContentRect;
+    dismiss();
+    show(savedRect);
 }
 
 bool LocalFloatingToolbarPopup::isOverflowAnimating() const {
