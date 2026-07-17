@@ -364,18 +364,26 @@ int AttributeSet::getTintMode(const std::string&key,int def)const{
 }
 
 int AttributeSet::getDimension(const std::string&key,int def)const{
-    char*p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
+    // Resource reference: "@dimen/foo" or already-resolved "pkg:dimen/foo" (getString resolves
+    // the '@' prefix to the package form). Resolve via the context; otherwise parse a literal.
+    if (v[0] == '@' || v.find(':') != std::string::npos) {
+        return mContext->getDimension(v);
+    }
+    char*p;
     def = std::strtol(v.c_str(),&p,10);
     //p   = strpbrk(v.c_str(),"sdp");
     return def;
 }
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
-    char *p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
+    if (v[0] == '@' || v.find(':') != std::string::npos) {
+        return mContext->getDimensionPixelSize(v, def);
+    }
+    char *p;
     def = std::strtol(v.c_str(),&p,10);
     //p = strpbrk(v.c_str(),"sdp");
     if(*p){
@@ -395,12 +403,20 @@ int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{
 int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     const std::string v = getString(key);
     if(v.empty())return def;
+    int result;
     switch(v[0]){
     case 'f':
-    case 'm':return -1;//MATCH_PARENT
-    case 'w':return -2;//WRAP_CONTENT
-    default :return std::strtol(v.c_str(),nullptr,10);
+    case 'm':result = -1;break;//MATCH_PARENT
+    case 'w':result = -2;break;//WRAP_CONTENT
+    default:
+        // "48dp" literal, "@dimen/foo", or "pkg:dimen/foo" (resolved form). Resource references
+        // (contain ':') go through the context; literals through density-aware parsing.
+        result = (v.find(':') != std::string::npos || v[0] == '@')
+                 ? mContext->getDimensionPixelSize(v, def)
+                 : getDimensionPixelSize(key, def);
+        break;
     }
+    return result;
 }
 
 RefPtr<ColorStateList>AttributeSet::getColorStateList(const std::string&key)const{
