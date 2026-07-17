@@ -19,30 +19,19 @@
 #define __FLOATING_ACTION_MODE_H__
 #include <view/actionmode.h>
 namespace cdroid{
-class Context;       // core/context.h
-class View;          // view/view.h (actionmode.h 仅前向声明)
+class Context;
+class View;
 class MenuBuilder;
 class MenuPopupHelper;
 class MenuInflater;
 
-/**
- * 浮窗/popup 式 ActionMode (CDROID 无 toolbar/action-bar 时用), 对标 androidx FloatingActionMode。
- * 用 MenuBuilder + MenuPopupHelper 把 ActionMode.Callback 的 4 个事件函数真正接通:
- *   show() → onCreateActionMode/onPrepareActionMode → 弹菜单;
- *   点菜单项 → onActionItemClicked;
- *   finish()/popup 外部 dismiss → onDestroyActionMode。
- * Menu/MenuItem 由本类保证非空, 经引用传入回调 (对齐 Android @NonNull)。
- * 回调 std::function 未 set 时跳过 (空检查)。
- */
 class FloatingActionMode : public ActionMode {
 public:
     FloatingActionMode(Context* context, View* anchor, const ActionMode::Callback& callback);
     ~FloatingActionMode() override;
 
-    /** 调 onCreateActionMode/onPrepareActionMode 并弹出菜单; onCreateActionMode 返回 false → 中止, 返 false。 */
     bool show();
 
-    // —— ActionMode 纯虚实现 ——
     void setTitle(const std::string& title) override;
     void setSubtitle(const std::string& subtitle) override;
     void setCustomView(View* view) override;
@@ -53,8 +42,10 @@ public:
     View* getCustomView() override;
     Menu* getMenu() override;
     MenuInflater* getMenuInflater() override;
+
+    void setOnFinishedListener(std::function<void()> listener) { mOnFinished = std::move(listener); }
 private:
-    void onDestroy();   // popup dismiss 回调 → onDestroyActionMode
+    void onDestroy();
     Context* mContext;
     View* mAnchor;
     ActionMode::Callback mCallback;
@@ -65,6 +56,7 @@ private:
     std::string mSubtitle;
     View* mCustomView = nullptr;
     bool mFinished = false;
+    std::function<void()> mOnFinished;
 };
 }//namespace
 #endif/*__FLOATING_ACTION_MODE_H__*/

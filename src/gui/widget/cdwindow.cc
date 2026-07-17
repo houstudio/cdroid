@@ -19,6 +19,7 @@
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/floatingactionmode.h>
 #include <windowmanager.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
@@ -99,8 +100,41 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    if (mActionMode != nullptr) {
+        ActionMode* mode = mActionMode;
+        mActionMode = nullptr;
+        mode->finish();
+    }
     delete mSendWindowContentChangedAccessibilityEvent;
     LOGD("%p:%d destroied!",this,mID);
+}
+
+// =====================================================================================
+//  ActionMode (DecorView)
+// =====================================================================================
+ActionMode* Window::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
+    return startActionModeInternal(originalView, callback, type);
+}
+
+ActionMode* Window::startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type){
+    if (mActionMode != nullptr) {
+        ActionMode* prev = mActionMode;
+        mActionMode = nullptr;
+        prev->finish();
+    }
+
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), originatingView, callback);
+    mode->setType(type);
+    mode->setOnFinishedListener([this, mode]() {
+        mActionMode = nullptr;
+        post(Runnable([mode] { delete mode; }));
+    });
+    if (!mode->show()) {
+        delete mode;
+        return nullptr;
+    }
+    mActionMode = mode;
+    return mode;
 }
 
 void Window::playSoundImpl(int effectId){

@@ -2760,9 +2760,27 @@ bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool 
     return false;
 }
 
-ActionMode* ViewGroup::startActionModeForChild(View* child, const ActionMode::Callback& callback, int type){
-    // 默认: 不拦截, 继续上浮 (本 group 的 startActionMode → 其 mParent); 到根 (Window) 由 View::startActionMode 创建。
-    return startActionMode(callback, type);
+ActionMode* ViewGroup::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
+    if ((mGroupFlags & FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED) == 0
+            && type == ActionMode::TYPE_PRIMARY) {
+        ActionMode* mode = nullptr;
+        mGroupFlags |= FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
+        //TODO mode = startActionModeForChild(originalView, callback);
+        mGroupFlags &= ~FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
+        /*if (mode != SENTINEL_ACTION_MODE) {
+            return mode;
+        }*/
+    }
+    if (mParent != nullptr) {
+        try {
+            return mParent->startActionModeForChild(originalView, callback, type);
+        } catch (...) {
+            // Custom view parents might not implement this method.
+            //return mParent->startActionModeForChild(originalView, callback);
+        }
+    }
+    return nullptr;
+
 }
 
 bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event){

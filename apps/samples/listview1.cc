@@ -1,6 +1,9 @@
 #include <cdroid.h>
 #include <cdlog.h>
 #include <animation/animations.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
+#include <algorithm>
 class MyAdapter:public ArrayAdapter<std::string>{
 private:
     int itemType;
@@ -93,22 +96,58 @@ int main(int argc,const char*argv[]){
     lv2->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     lv2->setAdapter(adapter2);
     lv2->setSelector(new ColorDrawable(0x88FF0000));
-    lv2->setChoiceMode(ListView::CHOICE_MODE_SINGLE);//MULTIPLE);
     adapter2->notifyDataSetChanged();
     lv2->setOnItemClickListener([&](AdapterView&lv,View&v,int pos,long id){
         LOGD("clicked %d",pos);
-        lv2->setItemChecked(pos,((CheckBox&)v).isChecked());//lv2->isItemChecked(pos));
     });
-    lv2->setMultiChoiceModeListener([&](int position, long id, bool checked){
-        LOGD("multichoice %d checked=%d",position,checked);
-        //lv2->setItemChecked(position,checked);
-    });
-    toggle->setTextOn("SingleChoice");
-    toggle->setTextOff("MultiChoice");
+
+    // CHOICE_MODE_MULTIPLE_MODAL: 长按列表项进入多选 ActionMode (浮窗菜单),
+    // 验证 startActionMode 上浮到 Window 创建 + onCreate/onPrepare/onActionItemClicked/
+    // onItemCheckedStateChanged/onDestroyActionMode 回调链 + 选中数归 0 自动 finish。
+    AbsListView::MultiChoiceModeListener mc;
+    mc.onCreateActionMode = [](ActionMode& mode, Menu& menu) -> bool {
+        menu.add(0, 1, 0, "Delete");
+        menu.add(0, 2, 0, "Select All");
+        return true;
+    };
+    mc.onPrepareActionMode = [lv2](ActionMode& mode, Menu& menu) -> bool {
+        mode.setTitle(std::to_string(lv2->getCheckedItemCount()) + " selected");
+        return true;
+    };
+    mc.onActionItemClicked = [lv2, adapter2](ActionMode& mode, MenuItem& item) -> bool {
+        if (item.getItemId() == 1) {   // Delete: 删除所有选中项 (从大到小删, 避免索引移位)
+            SparseBooleanArray checked;
+            lv2->getCheckedItemPositions(checked);
+            std::vector<int> positions;
+            for (size_t i = 0; i < checked.size(); i++)
+                if (checked.valueAt(i)) positions.push_back(checked.keyAt(i));
+            std::sort(positions.rbegin(), positions.rend());
+            for (int pos : positions) adapter2->removeAt(pos);
+            adapter2->notifyDataSetChanged();
+            mode.finish();
+            return true;
+        }
+        if (item.getItemId() == 2) {   // Select All
+            const int n = adapter2->getCount();
+            for (int i = 0; i < n; i++) lv2->setItemChecked(i, true);
+            return true;
+        }
+        return false;
+    };
+    mc.onItemCheckedStateChanged = [lv2](ActionMode& mode, int position, long id, bool checked) {
+        mode.setTitle(std::to_string(lv2->getCheckedItemCount()) + " selected");
+        LOGD("multichoice %d checked=%d  total=%d", position, checked, lv2->getCheckedItemCount());
+    };
+    mc.onDestroyActionMode = [](ActionMode&) { LOGD("== multi-choice action mode destroyed =="); };
+    lv2->setMultiChoiceModeListener(mc);
+
+    toggle->setTextOn("Modal");
+    toggle->setTextOff("Single");
     toggle->setBackgroundResource("cdroid:drawable/btn_toggle_bg.xml");
     toggle->setOnCheckedChangeListener([&](CompoundButton&view,bool check){
-        lv2->setChoiceMode(check?ListView::CHOICE_MODE_SINGLE:ListView::CHOICE_MODE_MULTIPLE);
+        lv2->setChoiceMode(check ? ListView::CHOICE_MODE_MULTIPLE_MODAL : ListView::CHOICE_MODE_SINGLE);
     });
+    lv2->setChoiceMode(ListView::CHOICE_MODE_MULTIPLE_MODAL);
 
     Runnable rd;
     rd=[&rd,lv,w,adapter](){

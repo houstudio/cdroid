@@ -7,6 +7,7 @@
 #include <widget/edgeeffect.h>
 #include <widget/popupwindow.h>
 #include <widget/filterable.h>
+#include <view/actionmode.h>
 
 namespace cdroid{
 class ListPopupWindow;
@@ -69,7 +70,12 @@ public:
         //void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount,int totalItemCount);
         std::function<void(AbsListView&view,int,int,int)>onScroll;
     }; 
-    DECLARE_UIEVENT(void,MultiChoiceModeListener,/*ActionMode mode,*/int position, long id, bool checked);
+    // 对标 AOSP AbsListView.MultiChoiceModeListener extends ActionMode.Callback: 在 4 个
+    // ActionMode 回调之外, 多一个 onItemCheckedStateChanged (选中项增减时派发)。仅
+    // CHOICE_MODE_MULTIPLE_MODAL 且 mChoiceActionMode 活跃时派发 (与 Android 一致)。
+    struct MultiChoiceModeListener : public ActionMode::Callback {
+        std::function<void(ActionMode& mode, int position, long id, bool checked)> onItemCheckedStateChanged;
+    };
 protected:
     class ListItemAccessibilityDelegate:public AccessibilityDelegate{
     public:
@@ -274,8 +280,18 @@ protected:
     int mTouchMode;
     VelocityTracker* mVelocityTracker;
     HapticScrollFeedbackProvider*mHapticScrollFeedbackProvider;
-    class ActionMode*mChoiceActionMode;
-    MultiChoiceModeListener mMultiChoiceModeCallback;
+    ActionMode* mChoiceActionMode = nullptr;
+    class MultiChoiceModeWrapper : public ActionMode::Callback {
+    public:
+        void setHost(AbsListView* host) { mHost = host; }
+        void setWrapped(const MultiChoiceModeListener& wrapped);
+        bool hasWrappedCallback() const;
+        std::function<void(ActionMode&, int position, long id, bool checked)> onItemCheckedStateChanged;
+    private:
+        AbsListView* mHost = nullptr;
+        MultiChoiceModeListener mWrapped;
+    };
+    MultiChoiceModeWrapper mMultiChoiceModeCallback;
     virtual void resetList();
     int computeVerticalScrollExtent()override;
     int computeVerticalScrollOffset()override;

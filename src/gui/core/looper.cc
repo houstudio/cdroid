@@ -706,8 +706,16 @@ void Looper::addHandler(MessageHandler*handler){
 void Looper::removeHandler(MessageHandler*handler){
     for(auto it = mHandlers.begin();it != mHandlers.end();it++){
         if( (*it) == handler){
-            handler->mFlags |= FLAG_REMOVED;//set Erase Flags.removed in doEventHandlers
-            //else mHandlers.erase(it);
+            if(handler->mFlags & FLAG_OWNED){
+                // looper 拥有: 延迟到 doEventHandlers 再 delete+erase。
+                // 调用方可能正处在本 handler 自身的派发栈上 (如 SelfDestroyHandler::handleMessage
+                // -> removeHandler(this)), 现删会令返回后访问 this 变 UAF。
+                handler->mFlags |= FLAG_REMOVED;
+            }else{
+                // 外部拥有: 立即擦除指针。否则外部 delete 后 mHandlers 留下悬挂项,
+                // doEventHandlers 后续读到已释放内存 (mFlags) → UAF/double-free。
+                mHandlers.erase(it);
+            }
             break;
         }
     }
@@ -723,8 +731,13 @@ void Looper::addEventHandler(const EventHandler*handler){
 void Looper::removeEventHandler(const EventHandler*handler){
     for(auto it = mEventHandlers.begin();it != mEventHandlers.end();it++){
         if( (*it) ==handler){
-            (*it)->mFlags |=FLAG_REMOVED;//set removed flags,removed in doEventHandlers
-            //else  mEventHandlers.erase(it);
+            if((*it)->mFlags & FLAG_OWNED){
+                // looper 拥有: 延迟到 doEventHandlers 再 delete+erase (同 removeHandler 理由)。
+                (*it)->mFlags |=FLAG_REMOVED;
+            }else{
+                // 外部拥有: 立即擦除, 避免外部 delete 留悬挂项致 doEventHandlers UAF。
+                mEventHandlers.erase(it);
+            }
             break;
         }
     }
