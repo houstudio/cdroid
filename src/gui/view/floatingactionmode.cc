@@ -25,6 +25,9 @@ FloatingActionMode::FloatingActionMode(Context* context, View* anchor, const Act
 
     mPopup = new MenuPopupHelper(context, mMenu, anchor);
     mPopup->setForceShowIcon(true);
+    // 浮窗 ActionMode 覆盖内容 (对标 AOSP FloatingToolbar 浮于内容之上): 让 getMaxAvailableHeight
+    // 从锚点顶部起算, 否则大锚点 (如整屏 ListView) 会算出极小可用高度, 导致 popup 被夹到几像素高。
+    mPopup->setOverlapAnchor(true);
     mPopup->setOnDismissListener([this]{ onDestroy(); });
 }
 
