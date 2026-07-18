@@ -490,9 +490,9 @@ void TextView::initView(){
 }
 
 TextView::~TextView() {
-    // mHint may alias mText (e.g. setHint(getText())) or mCharWrapper; drop the
-    // alias so the shared object is freed exactly once below.
-    if (mHint == mText || mHint == mCharWrapper) mHint = nullptr;
+    // mHint is always a freshly-allocated stringOrSpannedString result (see
+    // setHintInternal), so it never aliases mText/mCharWrapper — no alias-drop
+    // is needed; delete mHint below frees exactly the one owned hint object.
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
@@ -1667,7 +1667,15 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
             delete original;
         }
     } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
-        //text = TextUtils::stringOrSpannedString(text);
+        // Flatten the char-array wrapper into an owned String* (CharWrapper is
+        // never Spanned, so stringOrSpannedString takes its toString() branch ->
+        // a caller-owned String*). That result folds into mText below, which
+        // TextView owns (freed on the next setText / dtor via the deferred
+        // prevText/prevTransformed path). The original `text` here is always the
+        // reused mCharWrapper member (the only CharWrapper instance), so — unlike
+        // the SPANNABLE/Precomputed branches above — no ownership guard / delete
+        // of the original is needed.
+        text = TextUtils::stringOrSpannedString(text);
     }
     if (mAutoLinkMask != 0) {
         // AOSP wraps non-Spannable buffers via mSpannableFactory.newSpannable;
@@ -1807,7 +1815,7 @@ void TextView::setHintInternal(CharSequence* hint) {
     // (removeSpan on the watcher). Freeing earlier crashes in ~DynamicLayout.
     // Mirrors setText()'s layout-safe free point; see the CharSequence ownership rule.
     CharSequence* prevHint = mHint;
-    mHint = hint;//TextUtils::stringOrSpannedString(hint);
+    mHint = TextUtils::stringOrSpannedString(hint);
 
     if (mLayout != nullptr) {
         checkForRelayout();
@@ -1816,15 +1824,22 @@ void TextView::setHintInternal(CharSequence* hint) {
     // checkForRelayout() has either rebuilt mHintLayout (now on the new mHint) or
     // null'd it via nullLayouts() (old mHintLayout destroyed); if there was no
     // layout, nothing referenced prevHint. In every case no DynamicLayout
-    // references prevHint now, so it is safe to free. Never free the incoming
-    // `hint` (re-adopted, e.g. setHint(getHint())), mCharWrapper (a reused member),
-    // or mText (prevHint may alias mText via setHint(getText())).
-    auto isKept = [&](CharSequence* p) {
-        return p == hint || p == mCharWrapper || p == mText;
-    };
-    if (prevHint != nullptr && !isKept(prevHint)) {
-        delete prevHint;
-    }
+    // references prevHint now, so it is safe to free.
+    //
+    // stringOrSpannedString(hint) allocated a NEW object (SpannedString copy or
+    // toString() String*); it did NOT consume `hint`. Since setHint(CharSequence*)
+    // transfers ownership of `hint`, both the replaced prevHint and the incoming
+    // hint must be freed here. Two aliasing guards:
+    //   - hint == mText: reachable via setHint(&getText()) — getText() returns
+    //     CharSequence& to mText's object, &getText() is that object's address,
+    //     i.e. the mText pointer. mText is owned by TextView (freed in dtor), so
+    //     never free it here. (Also covers mText==mCharWrapper, where &getText()
+    //     yields the CharWrapper address.)
+    //   - hint == prevHint: setHint(getHint()) — getHint() returns the mHint
+    //     pointer, so hint==prevHint; free that shared object once (as prevHint).
+    const bool hintIsPrevHint = (hint == prevHint);
+    if (prevHint != nullptr) delete prevHint;
+    if (hint != nullptr && hint != mText && !hintIsPrevHint) delete hint;
 
     if (mText->length() == 0) {
         invalidate();

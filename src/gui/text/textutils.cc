@@ -163,17 +163,23 @@ std::vector<std::string> TextUtils::split(const std::string& s,int delim){
 }
 
 CharSequence* TextUtils::stringOrSpannedString(CharSequence* source) {
+    // Mirrors AOSP TextUtils.stringOrSpannedString: a Spanned is wrapped in a
+    // fresh SpannedString, anything else is flattened via toString(). The result
+    // is ALWAYS a newly-allocated, CALLER-OWNED CharSequence* (delete it when
+    // done — e.g. TextView folds it into mText, which TextView owns). The former
+    // `if (SpannedString) return source;` shortcut returned a BORROWED pointer
+    // in that one branch but owned in the others — an ownership trap for any
+    // caller that deletes the result. Dropped so ownership is uniform, matching
+    // Android (which always allocates: new SpannedString or toString()).
     if (source == nullptr)
         return nullptr;
-    if (dynamic_cast<SpannedString*>(source))
-        return source;
     if (dynamic_cast<Spanned*>(source))
         return new SpannedString(source);
-    return nullptr;//source.toString();
+    return source->toString();
 }
 
 bool TextUtils::isEmpty(const CharSequence* str) {
-    return str == nullptr || str->length() == 0;
+    return (str == nullptr) || (str->length() == 0);
 }
 
 bool TextUtils::isEmpty(const std::string&str){
