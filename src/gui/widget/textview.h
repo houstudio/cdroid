@@ -305,6 +305,7 @@ protected:
     virtual void onDraw(Canvas& canvas) override;
     void stopTextActionMode();
     float convertToLocalHorizontalCoordinate(float x);
+    static void removeParcelableSpans(Spannable* spannable, int start, int end);
     // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
     // the caret appearance (the blink cadence and geometry are owned by Editor).
     virtual int getHorizontalOffsetForDrawables()const;

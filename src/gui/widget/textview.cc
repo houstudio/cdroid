@@ -134,6 +134,12 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 static BoringLayout::Metrics UNKNOWN_BORING;
+static constexpr int ELLIPSIZE_NOT_SET = -1;
+static constexpr int ELLIPSIZE_NONE = 0;
+static constexpr int ELLIPSIZE_START = 1;
+static constexpr int ELLIPSIZE_MIDDLE = 2;
+static constexpr int ELLIPSIZE_END = 3;
+static constexpr int ELLIPSIZE_MARQUEE = 4;
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
@@ -231,10 +237,11 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
-    setEllipsize(static_cast<TextUtils::TruncateAt>(attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
-        {"start",TextUtils::TruncateAt::START},{"middle",TextUtils::TruncateAt::MIDDLE},
-        {"end" ,TextUtils::TruncateAt::END},{"marquee",TextUtils::TruncateAt::MARQUEE}
-      },TextUtils::TruncateAt::NONE)));
+    auto ellipsize = attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
+        {"none", (int)ELLIPSIZE_NONE},
+        {"start",(int)ELLIPSIZE_START},{"middle",(int)ELLIPSIZE_MIDDLE},
+        {"end" ,(int)ELLIPSIZE_END},{"marquee",(int)ELLIPSIZE_MARQUEE}
+      },(int)ELLIPSIZE_NOT_SET);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
@@ -384,10 +391,28 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
                 numberPasswordInputType);
     }
 
-    if (singleLine != mSingleLine) {
-        setSingleLine(singleLine);
+    //setInputTypeSingleLine(singleLine);
+    //applySingleLine(singleLine, singleLine, singleLine,false);
+    if (singleLine &&(getKeyListener()==nullptr) && (ellipsize==ELLIPSIZE_NOT_SET)) {
+        //ellipsize = ELLIPSIZE_END;
     }
-
+    switch(ellipsize){
+    case ELLIPSIZE_START: setEllipsize(TextUtils::TruncateAt::START);break;
+    case ELLIPSIZE_MIDDLE:setEllipsize(TextUtils::TruncateAt::MIDDLE);break;
+    case ELLIPSIZE_END:   setEllipsize(TextUtils::TruncateAt::END);break;
+    case ELLIPSIZE_MARQUEE:
+        if(ellipsize==TextUtils::TruncateAt::MARQUEE){
+            if(ViewConfiguration::get(mContext).isFadingMarqueeEnabled()){
+                setHorizontalFadingEdgeEnabled(true);
+                mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+            }else{
+                setHorizontalFadingEdgeEnabled(false);
+                mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+            }
+        }
+        setEllipsize(TextUtils::TruncateAt::MARQUEE);
+        break;
+    }
     if (selectallonfocus) {
         createEditorIfNeeded();
         mEditor->mSelectAllOnFocus = true;
@@ -5223,6 +5248,15 @@ void TextView::setSelectAllOnFocus(bool selectAllOnFocus) {
     }
 }
 
+void TextView::removeParcelableSpans(Spannable* spannable, int start, int end){
+    auto spans = spannable->getSpans(start, end, make_span_filter<ParcelableSpan>());
+    int i = spans.size();
+    while (i > 0) {
+        i--;
+        spannable->removeSpan(spans[i]);
+    }
+}
+
 void TextView::beginBatchEdit() {
     if (mEditor) mEditor->beginBatchEdit();
 }
@@ -5333,9 +5367,9 @@ bool TextView::isAllCaps() const{
     return (method != nullptr) && dynamic_cast<AllCapsTransformationMethod*>(method);
 }
 
-void TextView::setSingleLine(bool single){
-    mSingleLine = single;
-    applySingleLine(single,true,true,true);
+void TextView::setSingleLine(bool singleLine){
+    setInputTypeSingleLine(singleLine);
+    applySingleLine(singleLine,true,true,true);
 }
 
 void TextView::setInputTypeSingleLine(bool singleLine) {
