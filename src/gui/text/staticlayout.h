@@ -206,9 +206,9 @@ private:
     float mSpacingAdd;
     bool mIncludePad;
     bool mCalculateBounds = false;
-    bool mFallbackLineSpacing;
+    bool mFallbackLineSpacing = false;
     bool mAddLastLineLineSpacing = false;
-    bool mUseBoundsForWidth;
+    bool mUseBoundsForWidth=false;
     bool mShiftDrawingOffsetForStartOverhang = false;
     LineBreakConfig mLineBreakConfig;
     int mEllipsizedWidth;

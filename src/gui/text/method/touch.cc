@@ -22,6 +22,17 @@ static Touch::DragState* asDrag(const ParcelableSpan* p) {
     return const_cast<Touch::DragState*>(dynamic_cast<const Touch::DragState*>(p));
 }
 
+// DragState is a NoCopySpan (borrowed): the Spannable neither frees nor clones it,
+// so detach + delete manually at every removal site (mirrors what Android's GC
+// reclaims when the span becomes unreachable). Forgetting this leaks one DragState
+// per touch down/up cycle.
+static void clearDragSpans(Spannable& buffer, const std::vector<const ParcelableSpan*>& spans) {
+    for (auto p : spans) {
+        buffer.removeSpan(p);
+        delete asDrag(p);
+    }
+}
+
 void Touch::scrollTo(TextView& widget, Layout& layout, int x, int y) {
     const int horizontalPadding = widget.getTotalPaddingLeft() + widget.getTotalPaddingRight();
     const int availableWidth = widget.getWidth() - horizontalPadding;
@@ -70,16 +81,18 @@ bool Touch::onTouchEvent(TextView& widget, Spannable& buffer, MotionEvent& event
 
     switch (action) {
     case MotionEvent::ACTION_DOWN: {
-        for (auto p : dragSpans) buffer.removeSpan(p);
+        clearDragSpans(buffer, dragSpans);
         buffer.setSpan(new DragState(event.getX(), event.getY(),
                                      widget.getScrollX(), widget.getScrollY()),
                        0, 0, Spanned::SPAN_MARK_MARK);
         return true;
     }
     case MotionEvent::ACTION_UP: {
-        for (auto p : dragSpans) buffer.removeSpan(p);
-        if (!dragSpans.empty() && asDrag(dragSpans[0])->mUsed) return true;
-        return false;
+        // Capture mUsed before clearing: clearDragSpans deletes the span, after
+        // which dragSpans[0] would dangle.
+        const bool used = !dragSpans.empty() && asDrag(dragSpans[0])->mUsed;
+        clearDragSpans(buffer, dragSpans);
+        return used;
     }
     case MotionEvent::ACTION_MOVE: {
         if (!dragSpans.empty()) {
