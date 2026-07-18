@@ -263,7 +263,11 @@ cdroid::RefPtr<ColorStateList>ColorStateList::inflate(Context*ctx,const std::str
     cdroid::RefPtr<ColorStateList> colorStateList = nullptr;
     const int depth = parser.getDepth();
     const AttributeSet& atts = parser;
-    if(resname.size()&&(resname[0]=='#'||(resname.find("/")!=std::string::npos))){
+    // Only a literal hex color (e.g. "#fff") is short-circuited here. Resource
+    // names like "cdroid:color/foo" contain '/' and must fall through to the
+    // XmlPullParser below -- treating them as colors made parseColor throw and
+    // every explicit getColorStateList("...:color/X") log "not found".
+    if(resname.size() && resname[0]=='#'){
         const int color = Color::parseColor(resname);
         return ColorStateList::valueOf(color);
     }
