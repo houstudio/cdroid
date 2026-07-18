@@ -39,6 +39,21 @@
   #include <unistd.h>
   #include <sys/eventfd.h>
 #endif
+
+// Wake channel backend, picked at compile time. eventfd is an epoll-ready fd on
+// Linux; wepoll (the Windows epoll used below) only polls sockets, so on Windows
+// we use a loopback socket pair; any other POSIX box falls back to a self-pipe,
+// which is the pre-eventfd AOSP Looper idiom. All three expose a read fd that
+// sits in the epoll set and a write fd that wake() pokes.
+#if (defined(_WIN32)||defined(_WIN64)||defined(_MSVC_VER))
+  #include <winsock2.h>
+  #include <ws2tcpip.h>
+  #define WAKE_USE_SOCKET 1
+#elif defined(HAVE_EVENTFD)
+  #define WAKE_USE_EVENTFD 1
+#else
+  #define WAKE_USE_PIPE 1
+#endif
 #include <limits.h>
 
 #define DEBUG_POLL_AND_WAKE 0
@@ -82,14 +97,13 @@ Looper::Looper(bool allowNonCallbacks) :
         mAllowNonCallbacks(allowNonCallbacks),
         mSendingMessage(false),mPolling(false),
         mEpollRebuildRequired(false),
-        mWakeEventFd(-1),mEpoll(nullptr),
+        mWakeEventFd(-1),mWakeWriteFd(-1),mEpoll(nullptr),
         mNextRequestSeq(WAKE_EVENT_FD_SEQ+1),
         mResponseIndex(0), mNextMessageUptime(LLONG_MAX),
         mQueue(nullptr) {
-#if defined(HAVE_EVENTFD)
-    mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-    LOGE_IF(mWakeEventFd < 0, "Could not make wake event fd: %s",strerror(errno));
-#endif
+    if (!openWakeFds()) {
+        LOGE("Looper: could not open wake fds; wake() will be ineffective");
+    }
     std::lock_guard<std::recursive_mutex>_l(mLock);
     rebuildEpollLocked();
     mQueue = new MessageQueue(true /*quitAllowed*/, this);
@@ -101,8 +115,7 @@ Looper::~Looper() {
     LOGD("~Looper %p sMainLooper=%p",this,sMainLooper);
     delete mQueue;
     mQueue = nullptr;
-    close(mWakeEventFd);
-    mWakeEventFd = -1;
+    closeWakeFds();
     mHandlers.clear();
     delete mEpoll;
     for(EventHandler*hdl:mEventHandlers){
@@ -191,11 +204,14 @@ void Looper::rebuildEpollLocked() {
     //mEpollFd = epoll_create(EPOLL_CLOEXEC);
     mEpoll = IOEventProcessor::create();
     LOGE_IF(mEpoll ==nullptr, "Could not create epoll instance: %s", strerror(errno));
-#if defined(HAVE_EVENTFD)
-    struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
-    int result = mEpoll->addFd(mWakeEventFd,wakeEvent);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
-    LOGE_IF(result != 0, "Could not add wake event fd to epoll instance: %s",strerror(errno));
-#endif
+    // Register the wake fd with the (fresh) epoll instance. It is always present
+    // after openWakeFds() (eventfd / pipe / socket pair); without it wake() could
+    // never break the epoll_wait in pollInner.
+    if (mWakeEventFd >= 0) {
+        struct epoll_event wakeEvent = createEpollEvent(EPOLLIN,WAKE_EVENT_FD_SEQ);
+        int result = mEpoll->addFd(mWakeEventFd,wakeEvent);//epoll_ctl(mEpollFd, EPOLL_CTL_ADD, mWakeEventFd, &wakeEvent);
+        LOGE_IF(result != 0, "Could not add wake fd to epoll instance: %s",strerror(errno));
+    }
     for (auto it=mRequests.begin();it!=mRequests.end(); it++) {
         const SequenceNumber& seq = it->first;
         const Request& request = it->second;
@@ -482,28 +498,162 @@ int Looper::pollAll(int timeoutMillis, int* outFd, int* outEvents, void** outDat
     }
 }
 
+bool Looper::openWakeFds() {
+#if defined(WAKE_USE_EVENTFD)
+    mWakeEventFd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+    if (mWakeEventFd < 0) {
+        LOGE("Could not make wake event fd: %s", strerror(errno));
+        return false;
+    }
+    mWakeWriteFd = mWakeEventFd; // eventfd: a single fd serves both ends
+    return true;
+#elif defined(WAKE_USE_SOCKET)
+    // wepoll only polls sockets, so the wake channel is a loopback TCP pair.
+    // WSAStartup is ref-counted; calling it here decouples us from whoever
+    // created the epoll instance (wepoll/IOEventProcessor also call it).
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+        LOGE("wake socket: WSAStartup failed %d", WSAGetLastError());
+        return false;
+    }
+    SOCKET listenFd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    SOCKET connFd   = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listenFd == INVALID_SOCKET || connFd == INVALID_SOCKET) {
+        LOGE("wake socket: socket() failed %d", WSAGetLastError());
+        if (listenFd != INVALID_SOCKET) closesocket(listenFd);
+        if (connFd   != INVALID_SOCKET) closesocket(connFd);
+        return false;
+    }
+    BOOL reuse = TRUE;
+    setsockopt(listenFd, SOL_SOCKET, SO_REUSEADDR, (char*)&reuse, sizeof(reuse));
+
+    struct sockaddr_in addr;
+    memset(&addr, 0, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+    addr.sin_port = 0; // let the stack pick a port
+    if (bind(listenFd, (struct sockaddr*)&addr, sizeof(addr)) == SOCKET_ERROR ||
+        listen(listenFd, 1) == SOCKET_ERROR) {
+        LOGE("wake socket: bind/listen failed %d", WSAGetLastError());
+        closesocket(listenFd); closesocket(connFd);
+        return false;
+    }
+    // Read back the assigned port, then connect the connector end. Loopback
+    // connect completes synchronously, so the accept() below cannot race.
+    int addrlen = sizeof(addr);
+    getsockname(listenFd, (struct sockaddr*)&addr, &addrlen);
+    if (connect(connFd, (struct sockaddr*)&addr, addrlen) == SOCKET_ERROR) {
+        LOGE("wake socket: connect failed %d", WSAGetLastError());
+        closesocket(listenFd); closesocket(connFd);
+        return false;
+    }
+    SOCKET acceptFd = accept(listenFd, nullptr, nullptr);
+    closesocket(listenFd);
+    if (acceptFd == INVALID_SOCKET) {
+        LOGE("wake socket: accept failed %d", WSAGetLastError());
+        closesocket(connFd);
+        return false;
+    }
+    // Non-blocking on both ends so wake()/awoken() can never stall the loop.
+    u_long nb = 1;
+    ioctlsocket(connFd,   FIONBIO, &nb);
+    ioctlsocket(acceptFd, FIONBIO, &nb);
+    BOOL nodelay = TRUE; // wake packets are 1 byte; disable Nagle coalescing
+    setsockopt(connFd, IPPROTO_TCP, TCP_NODELAY, (char*)&nodelay, sizeof(nodelay));
+
+    mWakeEventFd = (int)acceptFd; // read end
+    mWakeWriteFd = (int)connFd;   // write end
+    return true;
+#else // WAKE_USE_PIPE — pre-eventfd AOSP idiom, portable across POSIX
+    int pipefd[2];
+    if (pipe(pipefd) < 0) {
+        LOGE("Could not create wake pipe: %s", strerror(errno));
+        return false;
+    }
+    // Non-blocking + close-on-exec on both ends (pipe2() is not portable).
+    for (int i = 0; i < 2; i++) {
+        int fl = fcntl(pipefd[i], F_GETFL);
+        fcntl(pipefd[i], F_SETFL, fl | O_NONBLOCK);
+        fcntl(pipefd[i], F_SETFD, FD_CLOEXEC);
+    }
+    mWakeEventFd = pipefd[0]; // read end
+    mWakeWriteFd = pipefd[1]; // write end
+    return true;
+#endif
+}
+
+void Looper::closeWakeFds() {
+#if defined(WAKE_USE_SOCKET)
+    if (mWakeEventFd >= 0) closesocket((SOCKET)mWakeEventFd);
+    if (mWakeWriteFd >= 0 && mWakeWriteFd != mWakeEventFd) closesocket((SOCKET)mWakeWriteFd);
+#else
+    if (mWakeEventFd >= 0) close(mWakeEventFd);
+    if (mWakeWriteFd >= 0 && mWakeWriteFd != mWakeEventFd) close(mWakeWriteFd);
+#endif
+    mWakeEventFd = -1;
+    mWakeWriteFd = -1;
+}
+
 void Looper::wake() {
-#if defined(HAVE_EVENTFD)
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  wake", this);
+#if defined(WAKE_USE_EVENTFD)
     uint64_t inc = 1;
     long nWrite;
     do {
-        nWrite = write(mWakeEventFd, &inc, sizeof(uint64_t));
+        nWrite = write(mWakeWriteFd, &inc, sizeof(uint64_t));
     } while ((nWrite == -1) && (errno == EINTR));
     if (nWrite != sizeof(uint64_t)) {
         char buff[128];
-        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeEventFd, strerror_r(errno,buff,sizeof(buff)));
+        LOGE_IF(errno!=EAGAIN,"Could not write wake signal to fd %d: %s",mWakeWriteFd, strerror_r(errno,buff,sizeof(buff)));
+    }
+#elif defined(WAKE_USE_SOCKET)
+    // 1 byte is enough; WSAEWOULDBLOCK means a byte is already queued and the
+    // epoll will fire regardless, so it is not an error.
+    char c = 'W';
+    int nWrite;
+    do {
+        nWrite = send((SOCKET)mWakeWriteFd, &c, 1, 0);
+    } while (nWrite == SOCKET_ERROR && WSAGetLastError() == WSAEINTR);
+    if (nWrite == SOCKET_ERROR && WSAGetLastError() != WSAEWOULDBLOCK) {
+        LOGE("Could not write wake signal: WSA error %d", WSAGetLastError());
+    }
+#else // WAKE_USE_PIPE
+    char c = 'W';
+    ssize_t nWrite;
+    do {
+        nWrite = write(mWakeWriteFd, &c, 1);
+    } while ((nWrite == -1) && (errno == EINTR));
+    if (nWrite == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+        char buff[128];
+        LOGE("Could not write wake signal to fd %d: %s",mWakeWriteFd, strerror_r(errno,buff,sizeof(buff)));
     }
 #endif
 }
 
 void Looper::awoken() {
     LOGD_IF(DEBUG_POLL_AND_WAKE,"%p  awoken", this);
+#if defined(WAKE_USE_EVENTFD)
     uint64_t counter;
     long result;
     do {
         result = read(mWakeEventFd, &counter, sizeof(uint64_t));
     } while ((result == -1) && (errno == EINTR));
+#elif defined(WAKE_USE_SOCKET)
+    // Drain everything pending so the (level-triggered) socket stops readifying
+    // and epoll_wait can block again. recv must be used on Windows sockets, not
+    // the CRT _read() that `read` is macroed to elsewhere in this file.
+    char buf[16];
+    int result;
+    do {
+        result = recv((SOCKET)mWakeEventFd, buf, sizeof(buf), 0);
+    } while (result > 0);
+#else // WAKE_USE_PIPE — drain the self-pipe until it would block.
+    char buf[16];
+    ssize_t result;
+    do {
+        result = read(mWakeEventFd, buf, sizeof(buf));
+    } while (result > 0);
+#endif
 }
 
 void Looper::pushResponse(int events, const Request& request) {

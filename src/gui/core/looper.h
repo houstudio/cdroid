@@ -92,7 +92,8 @@ private:
         Message message;
     };
     
-    int  mWakeEventFd;// immutable
+    int  mWakeEventFd; // read end, immutable (eventfd: same as write end)
+    int  mWakeWriteFd; // write end, immutable (pipe/socket pair; ==mWakeEventFd for eventfd)
     std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
@@ -128,6 +129,11 @@ private:
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
     void awoken();
+    // Open/close the wake channel. Backend chosen at compile time: eventfd on
+    // Linux when available, else a POSIX self-pipe, else a loopback socket pair
+    // (Windows/wepoll only polls sockets).
+    bool openWakeFds();
+    void closeWakeFds();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();

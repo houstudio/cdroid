@@ -253,26 +253,28 @@ void App::removeEventHandler(const EventHandler*handler){
 
 int App::exec(){
     Looper*looper = Looper::getMainLooper();
-#if defined(HAVE_EVENTFD)
+    // Event-driven loop: loopOnce() -> MessageQueue::next() -> nativePollOnce()
+    // blocks until a message is due, an fd event fires, or wake() is called.
+    // next() internally lands in pollInner(), whose tail runs drainMessageQueue()
+    // + doEventHandlers() (handleIdle = the frame driver), so frames advance on
+    // every wake and the loop sleeps when idle. This needs a working wake()
+    // channel on every platform (eventfd / pipe / socket pair) -- the old 1ms
+    // pollAll(1) busy-spin was only the fallback for when wake() was a no-op.
     looper->wake();
     while(!mQuitFlag){ if(!looper->loopOnce()) break; }
-#else
-    while(!mQuitFlag){
-        looper->pollAll(1);
-    }
-#endif
     return mExitCode;
 }
 
 void App::exit(int code){
     mQuitFlag = true;
     mExitCode = code;
-#if defined(HAVE_EVENTFD)
+    // With the blocking loop above, exit() must wake the loop or it stays parked
+    // in next()/pollInner and never notices mQuitFlag. quit() clears the queue
+    // and calls nativeWake() -> Looper::wake(), unblocking next() to return null.
     MessageQueue* q = Looper::getMainLooper()->getQueue();
     if(q){
         q->quit(false);
     }
-#endif
 }
 
 const std::string App::getName()const{
