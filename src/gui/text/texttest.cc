@@ -3,28 +3,6 @@
 #include <widget/cdwindow.h>
 #include <text/boringlayout.h>
 #include <text/dynamiclayout.h>
-class MyString:public cdroid::CharSequence{
-private:
-    std::wstring mStr;
-public:
-    MyString(const std::string& str){
-        mStr=TextUtils::utf8tounicode(str);
-    }
-    MyString(const std::wstring& str):mStr(str){   
-    }
-    virtual ~MyString() = default;
-    virtual size_t length()const{return mStr.size();}
-    virtual int charAt(int idx)const{return mStr[idx];}
-    virtual CharSequence*subSequence(int,int)const{return nullptr;}
-    virtual std::string toString() const {
-        return TextUtils::unicode2utf8(mStr);
-    }
-    // Copies characters from [start, end) into dest starting at destPos.
-    // If dest is shorter than destPos, it will be resized.
-    virtual void getChars(int start, int end, std::vector<char16_t>& dest, int destPos) const {
-        dest.assign(mStr.begin()+start,mStr.begin()+end);
-    }
-};
 class MyWindow:public cdroid::Window {
 private:
 public:
