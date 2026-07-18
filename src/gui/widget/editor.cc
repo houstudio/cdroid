@@ -15,6 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <widget/R.h>
 #include <widget/editor.h>
 #include <widget/textview.h>
 #include <text/method/worditerator.h>
@@ -159,6 +160,15 @@ void Editor::stopTextActionMode() {
     }
 }
 
+void Editor::stopTextActionModeWithPreservingSelection() {
+    if (mTextActionMode != nullptr) {
+        mRestartActionModeOnNextRefresh = true;
+    }
+    mPreserveSelection = true;
+    stopTextActionMode();
+    mPreserveSelection = false;
+}
+
 // =====================================================================================
 //  TextActionModeCallback — port of AOSP Editor.TextActionModeCallback (Editor.java:4683).
 //  现代 Android 只有一个 callback 类, 用 mode 枚举(SELECTION/INSERTION)区分。
@@ -223,11 +233,11 @@ void Editor::invalidateTextActionMode() {
 
 // 对齐 AOSP Editor.populateMenuWithItems (Editor.java:4751)。条件 add (不 setVisible)。
 void Editor::populateTextActionModeMenu(Menu& menu, bool /*hasSelection*/) {
-    if (mTextView->canCut())        menu.add(0, TextView::ID_CUT,        ORDER_CUT,        "Cut");
-    if (mTextView->canCopy())       menu.add(0, TextView::ID_COPY,       ORDER_COPY,       "Copy");
-    if (mTextView->canPaste())      menu.add(0, TextView::ID_PASTE,      ORDER_PASTE,      "Paste");
+    if (mTextView->canCut()) menu.add(0, cdroid::R::id::cut,   ORDER_CUT,        "Cut");
+    if (mTextView->canCopy())  menu.add(0, cdroid::R::id::copy,  ORDER_COPY,       "Copy");
+    if (mTextView->canPaste()) menu.add(0, cdroid::R::id::paste, ORDER_PASTE,      "Paste");
     if (mTextView->canSelectAllText())
-        menu.add(0, TextView::ID_SELECT_ALL, ORDER_SELECT_ALL, "Select all");
+        menu.add(0, R::id::select_all, ORDER_SELECT_ALL, "Select all");
 }
 
 // 对齐 AOSP Editor.onGetContentRect (Editor.java:4886)。简化: 用 selStart/selEnd 的行
@@ -323,7 +333,7 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
     // Android.Editor.onFocusChanged preserves the last tap position, invokes
     // MovementMethod.onTakeFocus, and updates selection/highlight state.
     mShowCursor = SystemClock::uptimeMillis();
-
+    //ensureEndedBatchEdit();
     if (focused) {
         Spannable* e = editable();
         const int selStart = mTextView->getSelectionStart();
@@ -357,7 +367,7 @@ void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyF
         mCursorVisible = true;
         resumeBlink();
     } else {
-        mTextView->endBatchEdit();
+        mTextView->onEndBatchEdit();
         hideCursorControllers();
         suspendBlink();
         ensureNoSelectionIfNonSelectable();
@@ -763,9 +773,39 @@ int Editor::getLastTapPosition() const {
     return -1;
 }
 
+bool  Editor::needsToSelectAllToSelectWordOrParagraph() const{
+    if (mTextView->hasPasswordTransformationMethod()) {
+        // Always select all on a password field.
+        // Cut/copy menu entries are not available for passwords, but being able to select all
+        // is however useful to delete or paste to replace the entire content.
+        return true;
+    }
+
+    const int inputType = mTextView->getInputType();
+    const int klass = inputType & InputType::TYPE_MASK_CLASS;
+    const int variation = inputType & InputType::TYPE_MASK_VARIATION;
+
+    // Specific text field types: select the entire text for these
+    if (klass == InputType::TYPE_CLASS_NUMBER
+            || klass == InputType::TYPE_CLASS_PHONE
+            || klass == InputType::TYPE_CLASS_DATETIME
+            || variation == InputType::TYPE_TEXT_VARIATION_URI
+            || variation == InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+            || variation == InputType::TYPE_TEXT_VARIATION_WEB_EMAIL_ADDRESS
+            || variation == InputType::TYPE_TEXT_VARIATION_FILTER) {
+        return true;
+    }
+    return false;
+}
+
 bool Editor::selectCurrentWord() {
     Spannable* e = editable();
-    if (e == nullptr) return false;
+    if(!mTextView->canSelectText()||e==nullptr){
+        return false;
+    }
+    if(needsToSelectAllToSelectWordOrParagraph()){
+        return mTextView->selectAllText();
+    }
 
     const int offset = mLastTouchOffset;
     const int len = mTextView->length();
@@ -805,9 +845,6 @@ bool Editor::performLongClick(bool handled) {
         startInsertionActionMode();
     }
     return handled;
-}
-
-void Editor::stopTextActionModeWithPreservingSelection(){
 }
 
 void Editor::onDraw(Canvas& canvas, Layout* layout, Path* highlight, Paint& highlightPaint, int cursorOffsetVertical){

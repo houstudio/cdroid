@@ -25,16 +25,7 @@
 #include <widget/textview.h>
 #include <text/method/keylistener.h>
 namespace cdroid {
-class Layout;
 class Path;
-class TextView;
-class Spannable;
-class Drawable;
-class KeyEvent;
-class MotionEvent;
-class Canvas;
-class TransformationMethod;
-class Menu;
 /**
  * Helper class used by TextView to handle editable text views.
  *
@@ -87,6 +78,8 @@ private:
     bool mInsertionControllerEnabled = false;
     bool mSelectionControllerEnabled = false;
     bool mShowSoftInputOnFocus = true;
+    bool mPreserveSelection;
+    bool mRestartActionModeOnNextRefresh;
     int64_t mShowCursor = 0;
     Rect mTempRect;
     int  mBatchEditNesting = 0;
@@ -110,6 +103,7 @@ private:
     void beginBatchEdit();
     void endBatchEdit();
     bool shouldFilterOutTouchEvent(MotionEvent& event) const;
+    bool needsToSelectAllToSelectWordOrParagraph()const;
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
     void adjustInputType(bool password, bool passwordInputType,

@@ -16,8 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <set>
-#include <widget/textview.h>
+#include <widget/R.h>
 #include <widget/editor.h>
+#include <widget/textview.h>
 #include <text/method/movementmethod.h>
 #include <text/method/arrowkeymovementmethod.h>
 #include <text/method/linkmovementmethod.h>
@@ -51,6 +52,13 @@
 namespace cdroid{
 class SuggestionSpan;
 class SpellCheckSpan;
+
+static constexpr int ID_SELECT_ALL = cdroid::R::id::selectAll; // android.R.id.selectAll
+static constexpr int ID_CUT        = cdroid::R::id::cut;
+static constexpr int ID_COPY       = cdroid::R::id::copy;
+static constexpr int ID_PASTE      = cdroid::R::id::paste;
+static constexpr int ID_SHARE      = cdroid::R::id::shareText;
+static constexpr int ID_REPLACE    = cdroid::R::id::replaceText;
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
 
@@ -4428,8 +4436,8 @@ TransformationMethod* TextView::getTransformationMethod()const{
 // text (mTransformed) may implement OffsetMapping when a length-altering
 // TransformationMethod is active; otherwise offsets are identity.
 bool TextView::isOffsetMappingAvailable()const{
-    return mTransformation != nullptr
-        && dynamic_cast<const OffsetMapping*>(mTransformed) != nullptr;
+    return (mTransformation != nullptr)
+        && (dynamic_cast<const OffsetMapping*>(mTransformed) != nullptr);
 }
 
 int TextView::transformedToOriginal(int offset, int strategy)const{
@@ -5182,6 +5190,18 @@ void TextView::beginBatchEdit() {
 
 void TextView::endBatchEdit() {
     if (mEditor) mEditor->endBatchEdit();
+}
+
+void TextView::onBeginBatchEdit(){
+    // intentionally empty
+}
+
+void TextView::onEndBatchEdit(){
+    // intentionally empty
+}
+
+bool TextView::onPrivateIMECommand(const std::string,const Bundle*){
+    return false;
 }
 
 int TextView::getTotalPaddingLeft() {
