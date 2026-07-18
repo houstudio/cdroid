@@ -90,7 +90,12 @@ RippleDrawable::RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* con
 }
 
 RippleDrawable::~RippleDrawable(){
-    pruneRipples();
+    // mRipple (the active, not-yet-exited ripple) is not in mExitingRipples — free it.
+    delete mRipple;
+    mRipple = nullptr;
+    // Free every exiting ripple; pruneRipples() would skip unfinished ones and leak.
+    for (auto r : mExitingRipples) delete r;
+    mExitingRipples.clear();
 }
 
 void RippleDrawable::jumpToCurrentState(){
@@ -298,6 +303,7 @@ void RippleDrawable::tryRippleExit(){
 void RippleDrawable::clearHotspots(){
     if(mRipple){
         mRipple->end();
+        delete mRipple;
         mRipple =nullptr;
         mRippleActive =false;
     }
