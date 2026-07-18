@@ -940,20 +940,12 @@ int Typeface::loadFromFontConfig() {
             }
         }
     }
-    FcConfigSubstitute (0, pat, FcMatchPattern);
-    FcDefaultSubstitute (pat);
-    FcResult result;
-    FcChar8*s = NULL;
-    FcFontSet* fsdef = FcFontSetCreate ();
-    FcPattern*match = FcFontMatch (0, pat, &result);
-    FcPatternGetString(match, FC_FILE, 0, &s);
-    LOGD("match=%p:%d nfonts=%d %s",match,result,fsdef->nfont,s);
-    if(match){
-        setDefault(new Typeface(*match));
-        FcPatternDestroy(match);
-    }
+    // The default typeface is chosen by the caller — loadPreinstalledSystemFontMap()
+    // sets sDefaultTypeface = sSystemFontFaces[0] right after this returns. An earlier
+    // FcFontMatch()+setDefault(new Typeface(*match)) here was dead (overwritten before
+    // any reader) and leaked that orphan Typeface; `fsdef` below was an empty set logged
+    // for nothing. Just release the fontconfig resources we hold.
     FcPatternDestroy(pat);
-    FcFontSetDestroy(fsdef);
 
     if(fs)FcFontSetDestroy(fs);
     FcObjectSetDestroy(os);
