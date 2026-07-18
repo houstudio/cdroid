@@ -969,7 +969,9 @@ public:
     virtual void setMinimumWidth(int minWidth);
 
     Animation* getAnimation()const;
-    /*th animation is owned by caller*/
+    /*The View owns the animation it is currently running (one Animation per View:
+    it holds per-run state). Callers must hand over an animation not referenced
+    elsewhere — it is freed on clear/overwrite/detach/destroy.*/
     void setAnimation(Animation* animation);
     void startAnimation(Animation* animation);
     void clearAnimation();

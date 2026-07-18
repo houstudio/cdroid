@@ -489,7 +489,9 @@ View::~View(){
     delete mBackgroundTint;
     delete mLayoutParams;
     delete mRoundScrollbarRenderer;
-    //delete mCurrentAnimation;
+    // One Animation serves exactly one View (it holds per-run state), so the View
+    // owns its current animation and frees it here.
+    delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mStateListAnimator;
     delete mOverlay;
@@ -1131,15 +1133,19 @@ void View::startAnimation(Animation* animation) {
 void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
+        delete mCurrentAnimation;
     }
-    //delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
-    //delete mCurrentAnimation;
+    // The View owns its current animation (one Animation per View); free the previous
+    // one on overwrite. Guard against re-setting the same instance.
+    if (animation != mCurrentAnimation) {
+        delete mCurrentAnimation;
+    }
     mCurrentAnimation = animation;
     if (animation) {
         // If the screen is off assume the animation start time is now instead of
