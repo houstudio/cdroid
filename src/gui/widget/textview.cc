@@ -19,6 +19,7 @@
 #include <text/String.h>
 #include <widget/R.h>
 #include <widget/editor.h>
+#include <widget/editorinfo.h>
 #include <widget/textview.h>
 #include <text/method/movementmethod.h>
 #include <text/method/arrowkeymovementmethod.h>
@@ -208,7 +209,7 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
             {"date", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_DATE},
             {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},
             {"datetime", (int)InputType::TYPE_CLASS_DATETIME}
-        },InputType::TYPE_NULL);
+        },EditorInfo::TYPE_NULL);
     const int breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
         {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
         {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
@@ -267,13 +268,35 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     }, mJustificationMode));
     setTextIsSelectable(attrs.getBoolean("textIsSelectable", false));
     if (attrs.hasAttribute("imeOptions"))
-        setImeOptions(attrs.getInt("imeOptions", 0)); // Editor has no mInputContentType yet (DEFERRED)
+        // Decode android:imeOptions flag names (AOSP attrs.xml) — action*/flag*
+        // — to EditorInfo constants, OR-ing "|" combinations like inputType.
+        // getInt(map) returns IME_NULL when the attribute is absent, but we only
+        // call setImeOptions (which lazily creates the Editor) when present.
+        setImeOptions(attrs.getInt("imeOptions", std::unordered_map<std::string,int>{
+            {"normal",                     EditorInfo::IME_ACTION_UNSPECIFIED},
+            {"actionUnspecified",          EditorInfo::IME_ACTION_UNSPECIFIED},
+            {"actionNone",                 EditorInfo::IME_ACTION_NONE},
+            {"actionGo",                   EditorInfo::IME_ACTION_GO},
+            {"actionSearch",               EditorInfo::IME_ACTION_SEARCH},
+            {"actionSend",                 EditorInfo::IME_ACTION_SEND},
+            {"actionNext",                 EditorInfo::IME_ACTION_NEXT},
+            {"actionDone",                 EditorInfo::IME_ACTION_DONE},
+            {"actionPrevious",             EditorInfo::IME_ACTION_PREVIOUS},
+            {"flagNoPersonalizedLearning", EditorInfo::IME_FLAG_NO_PERSONALIZED_LEARNING},
+            {"flagNoFullscreen",           EditorInfo::IME_FLAG_NO_FULLSCREEN},
+            {"flagNavigatePrevious",       EditorInfo::IME_FLAG_NAVIGATE_PREVIOUS},
+            {"flagNavigateNext",           EditorInfo::IME_FLAG_NAVIGATE_NEXT},
+            {"flagNoExtractUi",            EditorInfo::IME_FLAG_NO_EXTRACT_UI},
+            {"flagNoAccessoryAction",      EditorInfo::IME_FLAG_NO_ACCESSORY_ACTION},
+            {"flagNoEnterAction",          EditorInfo::IME_FLAG_NO_ENTER_ACTION},
+            {"flagForceAscii",             EditorInfo::IME_FLAG_FORCE_ASCII},
+        }, EditorInfo::IME_NULL));
 
     BufferType bufferType = BufferType::EDITABLE;
-    const int variation = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
-    const bool passwordInputType = variation== (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_PASSWORD);
-    const bool webPasswordInputType = variation == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD);
-    const bool numberPasswordInputType = variation == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
+    const int variation = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    const bool passwordInputType = variation== (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD);
+    const bool webPasswordInputType = variation == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD);
+    const bool numberPasswordInputType = variation == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
     bool singleLine = mSingleLine;
     // Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
     // Android gathers these into locals first, then resolves a KeyListener below.
@@ -298,24 +321,24 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     // TODO(DEFERRED): port inputMethod KeyListener instantiation.
     if (!inputMethod.empty()) {
         createEditorIfNeeded();
-        mEditor->mInputType = (inputType != InputType::TYPE_NULL)
-                ? inputType : InputType::TYPE_CLASS_TEXT;
+        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
     } else if (!digits.empty()) {
         createEditorIfNeeded();
         mEditor->mKeyListener = DigitsKeyListener::getInstance(
                 std::u16string(digits.begin(), digits.end()));
         // If no input type was specified, we will default to generic
         // text, since we can't tell the IME about the set of digits that was selected.
-        mEditor->mInputType = (inputType != InputType::TYPE_NULL)
-                ? inputType : InputType::TYPE_CLASS_TEXT;
-    } else if (inputType != InputType::TYPE_NULL) {
+        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
+    } else if (inputType != EditorInfo::TYPE_NULL) {
         setInputType(inputType); // builds the per-class KeyListener (TEXT/NUMBER/DATE/PHONE)
         // If set, the input type overrides what was set using the deprecated singleLine flag.
         singleLine = !isMultilineInputType(inputType);
     } else if (phone) {
         createEditorIfNeeded();
         mEditor->mKeyListener = DialerKeyListener::getInstance();
-        mEditor->mInputType = inputType = InputType::TYPE_CLASS_PHONE;
+        mEditor->mInputType = inputType = EditorInfo::TYPE_CLASS_PHONE;
     } else if (numeric != 0) {
         createEditorIfNeeded();
         mEditor->mKeyListener = DigitsKeyListener::getInstance(
@@ -324,11 +347,11 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
         mEditor->mInputType = inputType;
     } else if (autotext || autocap != -1) {
         TextKeyListener::Capitalize cap;
-        inputType = InputType::TYPE_CLASS_TEXT;
+        inputType = EditorInfo::TYPE_CLASS_TEXT;
         switch (autocap) {
-        case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= InputType::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
-        case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= InputType::TYPE_TEXT_FLAG_CAP_WORDS;      break;
-        case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
+        case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
+        case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS;      break;
+        case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
         default: cap = TextKeyListener::Capitalize::NONE; break;
         }
         createEditorIfNeeded();
@@ -337,12 +360,12 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     } else if (editable) {
         createEditorIfNeeded();
         mEditor->mKeyListener = TextKeyListener::getInstance();
-        mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
+        mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
     } else if (isTextSelectable()) {
         // Prevent text changes from keyboard.
         if (mEditor != nullptr) {
             mEditor->mKeyListener = nullptr;
-            mEditor->mInputType = InputType::TYPE_NULL;
+            mEditor->mInputType = EditorInfo::TYPE_NULL;
         }
         bufferType = BufferType::SPANNABLE;
         // So that selection can be changed using arrow keys and touch is handled.
@@ -3639,14 +3662,14 @@ bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
 int TextView::getActionIdForEnterEvent() const{
     // If it's not single line, no action
     if (!isSingleLine()) {
-        return 0;//EditorInfo.IME_NULL;
+        return EditorInfo::IME_NULL;
     }
     // Return the action that was specified for Enter
-    return getImeOptions();// & EditorInfo.IME_MASK_ACTION;
+    return getImeOptions() & EditorInfo::IME_MASK_ACTION;
 }
 
 bool TextView::onCheckIsTextEditor() const{
-    return mEditor != nullptr && mEditor->mInputType != InputType::TYPE_NULL;
+    return mEditor != nullptr && mEditor->mInputType != EditorInfo::TYPE_NULL;
 }
 
 // Ported from Android TextView.onKeyDown (TextView.java:9635).
@@ -3668,11 +3691,11 @@ bool TextView::shouldAdvanceFocusOnEnter() const{
     }
 
     if (mEditor != nullptr
-            && (mEditor->mInputType & InputType::TYPE_MASK_CLASS)
-                    == InputType::TYPE_CLASS_TEXT) {
-        const int variation = mEditor->mInputType & InputType::TYPE_MASK_VARIATION;
-        if (variation == InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
-                || variation == InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT) {
+            && (mEditor->mInputType & EditorInfo::TYPE_MASK_CLASS)
+                    == EditorInfo::TYPE_CLASS_TEXT) {
+        const int variation = mEditor->mInputType & EditorInfo::TYPE_MASK_VARIATION;
+        if (variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                || variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_SUBJECT) {
             return true;
         }
     }
@@ -4873,20 +4896,20 @@ const TextPaint& TextView::getPaint() const{
 // Ported from Android TextView's package-private statics (TextView.java:7747/7867).
 // Pure InputType bitmask logic — no dependencies.
 bool TextView::isPasswordInputType(int inputType) {
-    const int v = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
-    return v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_PASSWORD)
-        || v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_WEB_PASSWORD)
-        || v == (InputType::TYPE_CLASS_NUMBER | InputType::TYPE_NUMBER_VARIATION_PASSWORD);
+    const int v = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    return v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD)
+        || v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD)
+        || v == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
 }
 
 bool TextView::isVisiblePasswordInputType(int inputType) {
-    const int v = inputType & (InputType::TYPE_MASK_CLASS | InputType::TYPE_MASK_VARIATION);
-    return v == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+    const int v = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    return v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
 }
 
 bool TextView::isMultilineInputType(int type) {
-    return (type & (InputType::TYPE_MASK_CLASS | InputType::TYPE_TEXT_FLAG_MULTI_LINE))
-        == (InputType::TYPE_CLASS_TEXT | InputType::TYPE_TEXT_FLAG_MULTI_LINE);
+    return (type & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE))
+        == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE);
 }
 
 // Ported from Android TextView.setInputType (TextView.java:7793). Feasible pieces
@@ -4903,30 +4926,30 @@ void TextView::setInputType(int inputType) {
     //     DATETIME/PHONE fall back to TextKeyListener until Date/Time/Dialer are
     //     ported (Phase 2). The cached getInstance singletons are stored without
     //     ownership (never deleted), matching Android.
-    const int cls = inputType & InputType::TYPE_MASK_CLASS;
+    const int cls = inputType & EditorInfo::TYPE_MASK_CLASS;
     KeyListener* input = nullptr;
-    if (cls == InputType::TYPE_CLASS_TEXT) {
-        const bool autoText = (inputType & InputType::TYPE_TEXT_FLAG_AUTO_CORRECT) != 0;
+    if (cls == EditorInfo::TYPE_CLASS_TEXT) {
+        const bool autoText = (inputType & EditorInfo::TYPE_TEXT_FLAG_AUTO_CORRECT) != 0;
         TextKeyListener::Capitalize cap = TextKeyListener::Capitalize::NONE;
-        if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0) {
+        if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0) {
             cap = TextKeyListener::Capitalize::CHARACTERS;
-        } else if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_WORDS) != 0) {
+        } else if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS) != 0) {
             cap = TextKeyListener::Capitalize::WORDS;
-        } else if ((inputType & InputType::TYPE_TEXT_FLAG_CAP_SENTENCES) != 0) {
+        } else if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES) != 0) {
             cap = TextKeyListener::Capitalize::SENTENCES;
         }
         input = TextKeyListener::getInstance(autoText, cap);
-    } else if (cls == InputType::TYPE_CLASS_NUMBER) {
+    } else if (cls == EditorInfo::TYPE_CLASS_NUMBER) {
         input = DigitsKeyListener::getInstance(
-                (inputType & InputType::TYPE_NUMBER_FLAG_SIGNED) != 0,
-                (inputType & InputType::TYPE_NUMBER_FLAG_DECIMAL) != 0);
-    } else if (cls == InputType::TYPE_CLASS_DATETIME) {
+                (inputType & EditorInfo::TYPE_NUMBER_FLAG_SIGNED) != 0,
+                (inputType & EditorInfo::TYPE_NUMBER_FLAG_DECIMAL) != 0);
+    } else if (cls == EditorInfo::TYPE_CLASS_DATETIME) {
         //final Locale locale = getCustomLocaleForKeyListenerOrNull();
-        switch (inputType & InputType::TYPE_MASK_VARIATION) {
-        case InputType::TYPE_DATETIME_VARIATION_DATE:
+        switch (inputType & EditorInfo::TYPE_MASK_VARIATION) {
+        case EditorInfo::TYPE_DATETIME_VARIATION_DATE:
             input = DateKeyListener::getInstance(/*locale*/);
             break;
-        case InputType::TYPE_DATETIME_VARIATION_TIME:
+        case EditorInfo::TYPE_DATETIME_VARIATION_TIME:
             input = TimeKeyListener::getInstance(/*locale*/);
             break;
         default:
@@ -4936,7 +4959,7 @@ void TextView::setInputType(int inputType) {
         if (1/*mUseInternationalizedInput*/) {
             inputType = input->getInputType(); // Override type, if necessary for i18n.
         }
-    } else if (cls == InputType::TYPE_CLASS_PHONE) {
+    } else if (cls == EditorInfo::TYPE_CLASS_PHONE) {
         input = DialerKeyListener::getInstance();
     } else {
         // TYPE_CLASS_DATETIME / TYPE_CLASS_PHONE / TYPE_NULL: DateKeyListener,
@@ -4995,12 +5018,12 @@ void TextView::setInputType(int inputType) {
 }
 
 int TextView::getInputType()const{
-    return mEditor ? mEditor->mInputType : InputType::TYPE_NULL;
+    return mEditor ? mEditor->mInputType : EditorInfo::TYPE_NULL;
 }
 
 int TextView::getImeOptions() const{
     return (mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
-            ? mEditor->mInputContentType->imeOptions : 0;//EditorInfo.IME_NULL;
+            ? mEditor->mInputContentType->imeOptions : EditorInfo::IME_NULL;
 }
 
 void TextView::setImeOptions(int imeOptions) {
@@ -5021,12 +5044,12 @@ bool TextView::isSuggestionsEnabled()const{
         return false;
     }
     if ((mEditor->mInputType & InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS) > 0) return false;
-    const int variation = mEditor->mInputType & InputType::TYPE_MASK_VARIATION;
-    return (variation == InputType::TYPE_TEXT_VARIATION_NORMAL
-          || variation == InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT
-          || variation == InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE
-          || variation == InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE
-          || variation == InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);;
+    const int variation = mEditor->mInputType & EditorInfo::TYPE_MASK_VARIATION;
+    return (variation == EditorInfo::TYPE_TEXT_VARIATION_NORMAL
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_SUBJECT
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_LONG_MESSAGE
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_SHORT_MESSAGE
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);;
 }
 
 void TextView::stopTextActionMode() {
@@ -5317,12 +5340,12 @@ void TextView::setSingleLine(bool single){
 
 void TextView::setInputTypeSingleLine(bool singleLine) {
     if ((mEditor != nullptr)
-            && ((mEditor->mInputType & InputType::TYPE_MASK_CLASS)
-                    == InputType::TYPE_CLASS_TEXT)) {
+            && ((mEditor->mInputType & EditorInfo::TYPE_MASK_CLASS)
+                    == EditorInfo::TYPE_CLASS_TEXT)) {
         if (singleLine) {
-            mEditor->mInputType &= ~InputType::TYPE_TEXT_FLAG_MULTI_LINE;
+            mEditor->mInputType &= ~EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE;
         } else {
-            mEditor->mInputType |= InputType::TYPE_TEXT_FLAG_MULTI_LINE;
+            mEditor->mInputType |= EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE;
         }
     }
 }
@@ -5383,7 +5406,7 @@ void TextView::setKeyListener(KeyListener* input) {
         createEditorIfNeeded();
         setInputTypeFromEditor();
     } else {
-        if (mEditor != nullptr) mEditor->mInputType = InputType::TYPE_NULL;
+        if (mEditor != nullptr) mEditor->mInputType = EditorInfo::TYPE_NULL;
     }
 
     InputMethodManager* imm = getInputMethodManager();
@@ -5398,7 +5421,7 @@ void TextView::setInputTypeFromEditor() {
     try {
         mEditor->mInputType = mEditor->mKeyListener->getInputType();
     } catch (std::exception& e) {
-        mEditor->mInputType = InputType::TYPE_CLASS_TEXT;
+        mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
     }
     // Change inputType, without affecting transformation.
     // No need to applySingleLine since mSingleLine is unchanged.

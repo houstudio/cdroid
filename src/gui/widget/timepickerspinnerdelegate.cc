@@ -1,5 +1,6 @@
 #if 0
 #include <widget/R.h>
+#include <widget/editorinfo.h>
 #include <widget/timepickerspinnerdelegate.h>
 namespace cdroid{
 
@@ -28,7 +29,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         onTimeChanged();
     });
     mHourSpinnerInput = (EditText*)mHourSpinner->findViewById(R::id::numberpicker_input);
-    //mHourSpinnerInput->setImeOptions(EditorInfo.IME_ACTION_NEXT);
+    mHourSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
 
     // divider (only for the new widget style)
     mDivider = mDelegator->findViewById(R::id::divider);
@@ -64,7 +65,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
         onTimeChanged();
     });
     mMinuteSpinnerInput = (EditText*)mMinuteSpinner->findViewById(R::id::numberpicker_input);
-    //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
+    mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
 
     // Get the localized am/pm strings and use them in the spinner.
     mAmPmStrings = TimePicker::getAmPmStrings(context);
@@ -95,7 +96,7 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
             onTimeChanged();
         });
         mAmPmSpinnerInput = (EditText*)mAmPmSpinner->findViewById(R::id::numberpicker_input);
-        //mAmPmSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
+        mAmPmSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
     }
 
     if (isAmPmAtStart()) {
@@ -426,9 +427,9 @@ void TimePickerSpinnerDelegate::updateHourControl() {
 
 void TimePickerSpinnerDelegate::updateMinuteControl() {
     if (is24Hour()) {
-        //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
+        mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_DONE);
     } else {
-        //mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
+        mMinuteSpinnerInput->setImeOptions(EditorInfo::IME_ACTION_NEXT);
     }
 }
 

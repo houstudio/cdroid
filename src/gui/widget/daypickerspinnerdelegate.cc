@@ -17,6 +17,7 @@
  *********************************************************************************/
 #if 0
 #include <widget/R.h>
+#include <widget/editorinfo.h>
 #include <utils/textutils.h>
 #include <widget/calendarview.h>
 #include <widget/daypickerspinnerdelegate.h>
@@ -448,14 +449,14 @@ void DatePickerSpinnerDelegate::notifyDateChanged() {
 }
 
 void DatePickerSpinnerDelegate::setImeOptions(NumberPicker* spinner, int spinnerCount, int spinnerIndex) {
-    /*int imeOptions;
+    int imeOptions;
     if (spinnerIndex < spinnerCount - 1) {
-        imeOptions = EditorInfo.IME_ACTION_NEXT;
+        imeOptions = EditorInfo::IME_ACTION_NEXT;
     } else {
-        imeOptions = EditorInfo.IME_ACTION_DONE;
+        imeOptions = EditorInfo::IME_ACTION_DONE;
     }
     TextView* input = (TextView*) spinner->findViewById(R::id::numberpicker_input);
-    input.setImeOptions(imeOptions);*/
+    input->setImeOptions(imeOptions);
 }
 
 void DatePickerSpinnerDelegate::setContentDescriptions() {

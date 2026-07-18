@@ -41,7 +41,6 @@ class MovementMethod;
 class InputFilter;
 class Editable;
 class InputConnection;
-class EditorInfo;
 class InputMethodManager;
 class TextView : public View{
     friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
