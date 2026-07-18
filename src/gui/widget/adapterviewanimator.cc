@@ -539,11 +539,17 @@ ObjectAnimator* AdapterViewAnimator::getOutAnimation() {
 }
 
 void AdapterViewAnimator::setInAnimation(ObjectAnimator* inAnimation) {
-    mInAnimation=inAnimation;
+    if (mInAnimation != inAnimation){
+        delete mInAnimation;
+    }
+    mInAnimation = inAnimation;
 }
 
 void AdapterViewAnimator::setOutAnimation(ObjectAnimator* outAnimation) {
-    mInAnimation=outAnimation;
+    if (mOutAnimation != outAnimation){
+        delete mOutAnimation;
+    }
+    mOutAnimation = outAnimation;
 }
 
 void AdapterViewAnimator::setInAnimation(Context* context, const std::string&resourceID) {

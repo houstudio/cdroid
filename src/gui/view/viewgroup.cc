@@ -3163,6 +3163,9 @@ void ViewGroup::scheduleLayoutAnimation() {
 }
 
 void ViewGroup::setLayoutAnimation(LayoutAnimationController* controller) {
+    if (mLayoutAnimationController != controller){
+        delete mLayoutAnimationController;
+    }
     mLayoutAnimationController = controller;
     if (mLayoutAnimationController) {
         mGroupFlags |= FLAG_RUN_ANIMATION;
