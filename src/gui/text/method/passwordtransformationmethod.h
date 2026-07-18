@@ -11,7 +11,7 @@
 #define __PASSWORD_TRANSFORMATION_METHOD_H__
 #include <text/method/transformationmethod.h>
 #include <text/textwatcher.h>
-#include <text/parcelablespan.h>   // CharSequence (for PasswordCharSequence)
+#include <text/charsequence.h>
 
 namespace cdroid{
 
@@ -37,8 +37,9 @@ public:
         size_t length() const override { return mSource ? mSource->length() : 0; }
         int charAt(int /*i*/) const override { return DOT; }
         void getChars(int start, int end, char16_t* dest, int destPos) const override;
-        std::string toString() const override;
-        std::u16string toU16String() const override;
+        String* toString() const override;
+        std::string toUTF8() const override;
+        std::u16string toUTF16() const override;
     private:
         CharSequence* mSource;
     };

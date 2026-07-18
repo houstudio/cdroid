@@ -5389,17 +5389,18 @@ Character* Character::valueOf(char16_t c) {
     return new Character(c);
 }
 
-/*String Character::toString() {
-    return String.valueOf(value);
-}
-
 String Character::toString(char16_t c) {
-    return String.valueOf(c);
+    return String::valueOf(c);
 }
 
 String Character::toString(int codePoint) {
-    return String.valueOfCodePoint(codePoint);
-}*/
+    if (isSupplementaryCodePoint(codePoint)) {
+        char16_t buf[2];
+        toChars(codePoint, buf, 0);
+        return String(std::u16string(buf, 2));
+    }
+    return String::valueOf((char16_t)codePoint);
+}
 
 bool Character::isValidCodePoint(int codePoint) {
     // Optimized form of:
@@ -6303,7 +6304,7 @@ std::string Character::getNameImpl(int codePoint) {
     return "";
 }
 
-int Character::codePointOfImpl(std::string name) {
+int Character::codePointOfImpl(const std::string& name) {
     return codePointOf(name);
 }
 

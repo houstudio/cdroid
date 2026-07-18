@@ -20,6 +20,7 @@ add_library(cdtext
     textline.cc
     packedintvector.cc
     character.cc
+    String.cc
     spannablestring.cc
     spannablestringbuilder.cc
     inputfilter.cc

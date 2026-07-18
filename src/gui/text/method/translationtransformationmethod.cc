@@ -19,7 +19,7 @@ CharSequence* TranslationTransformationMethod::getTransformation(CharSequence& s
     if (mOriginalTranslationMethod != nullptr) {
         return mOriginalTranslationMethod->getTransformation(source, view);
     }
-    return new SpannedString(source.toU16String());
+    return new SpannedString(source.toUTF16());
 }
 
 } // namespace cdroid

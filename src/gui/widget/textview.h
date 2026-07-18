@@ -699,8 +699,9 @@ public:
         return mLength;
     }
     int charAt(int off) const override;
-    std::string toString() const override;
-    std::u16string toU16String() const override;
+    String* toString() const override;
+    std::string toUTF8() const override;
+    std::u16string toUTF16() const override;
     CharSequence* subSequence(int start, int end) const override;
     void getChars(int start, int end, char16_t* buf, int off) const override;
     void drawText(Canvas& c, int start, int end, float x, float y, Paint& p);

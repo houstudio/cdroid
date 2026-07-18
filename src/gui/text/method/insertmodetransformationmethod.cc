@@ -20,7 +20,7 @@ CharSequence* InsertModeTransformationMethod::getTransformation(CharSequence& so
         return mOldTransformationMethod->getTransformation(source, view);
     }
     // Ownership-safe passthrough: materialize a copy so the host TextView can delete it.
-    return new SpannedString(source.toU16String());
+    return new SpannedString(source.toUTF16());
 }
 
 } // namespace cdroid

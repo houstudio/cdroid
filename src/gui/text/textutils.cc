@@ -617,7 +617,7 @@ CharSequence* TextUtils::toUpperCase(const CharSequence* source, bool copySpans)
     // Uppercase codepoint-wise, decoding/encoding UTF-16 so surrogate pairs and
     // length-changing case mappings (e.g. U+00DF SS -> "SS") are handled in the
     // text itself.
-    const std::u16string s = source->toU16String();
+    const std::u16string s = source->toUTF16();
     std::u16string out;
     out.reserve(s.size());
     for (size_t i = 0; i < s.size(); ) {

@@ -1,6 +1,7 @@
 #ifndef __TEXTWATCHER_H__
 #define __TEXTWATCHER_H__
 #include <text/parcelablespan.h>
+#include <text/charsequence.h>
 #include <memory>   // std::shared_ptr (mID)
 namespace cdroid{
 class Editable;

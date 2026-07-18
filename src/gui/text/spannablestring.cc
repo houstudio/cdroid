@@ -1,4 +1,5 @@
 #include <text/spannablestring.h>
+#include <text/String.h>
 #include <text/spanwatcher.h>
 #include <text/textutils.h>   // TextUtils::utf16_utf8
 
@@ -126,11 +127,15 @@ SpannableStringInternal::SpannableStringInternal(const CharSequence* source, int
 SpannableStringInternal::SpannableStringInternal(const CharSequence* source)
     : SpannableStringInternal(source, 0, source ? source->length() : 0, false) {}
 
-std::string SpannableStringInternal::toString() const {
+String* SpannableStringInternal::toString() const {
+    return new String(mText);
+}
+
+std::string SpannableStringInternal::toUTF8() const {
     return TextUtils::utf16_utf8(mText);   // proper UTF-8 (was lossy: char16-as-byte)
 }
 
-std::u16string SpannableStringInternal::toU16String() const {
+std::u16string SpannableStringInternal::toUTF16() const {
     return mText;   // fast path — mText IS the char16 buffer
 }
 

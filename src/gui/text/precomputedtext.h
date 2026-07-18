@@ -135,8 +135,9 @@ public:
     CharSequence* subSequence(int start, int end) const override{
         return PrecomputedText::create(mText->subSequence(start, end), mParams);
     }
-    std::string toString() const override;
-    std::u16string toU16String() const override { return mText->toU16String(); }
+    String* toString() const override;
+    std::string toUTF8() const override { return mText->toUTF8(); }
+    std::u16string toUTF16() const override { return mText->toUTF16(); }
 };
 }/*endof namespace*/
 #endif/*__PRE_COMPUTED_TEXT_H__*/

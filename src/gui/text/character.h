@@ -5,10 +5,9 @@
 #include <vector>
 #include <unordered_map>
 #include <initializer_list>
+#include <text/String.h>   // cdroid::String (CharSequence impl) — replaces former `using String=std::string`
 namespace cdroid{
-#define native 
-class CharSequence;
-using String=std::string;
+#define native
 class Character{
 public:
     static constexpr int MIN_RADIX = 2;
@@ -635,17 +634,8 @@ public:
         return (int)value;
     }
 
-    /*String toString() {
-        return String.valueOf(value);
-    }
-
-    static String toString(char16_t c) {
-        return String.valueOf(c);
-    }
-
-    static String toString(int codePoint) {
-        return String.valueOfCodePoint(codePoint);
-    }*/
+    static String toString(char16_t c);
+    static String toString(int codePoint);
 
     static bool isValidCodePoint(int codePoint);
     static bool isBmpCodePoint(int codePoint);
@@ -838,9 +828,10 @@ public:
     // END Android-removed: expose after CharacterName.getCodePoint() is imported.
 private:
     // Android-added: Use ICU.
-    // Implement getNameImpl() and codePointOfImpl() natively.
-    static native String getNameImpl(int codePoint);
-    static native int codePointOfImpl(String name);
+    // Implement getNameImpl() and codePointOfImpl() natively. These bridge to
+    // ICU at the byte level, so they use std::string (UTF-8), NOT cdroid::String.
+    static native std::string getNameImpl(int codePoint);
+    static native int codePointOfImpl(const std::string& name);
 };
 }/*endof namespace*/
 #endif/*__CHARACTER_H__*/

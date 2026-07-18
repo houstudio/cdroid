@@ -1,4 +1,5 @@
 #include <text/layout.h>
+#include <text/String.h>
 #include <text/precomputedtext.h>
 #include <text/measuredparagraph.h>
 #include <text/textdirectionheuristics.h>
@@ -200,7 +201,7 @@ void PrecomputedText::removeSpan(const ParcelableSpan* what) {
 void PrecomputedText::getChars(int start, int end, char16_t* dest, int destPos) const{
 }
 
-std::string PrecomputedText::toString() const {
-    return "";
+String* PrecomputedText::toString() const {
+    return new String(mText->toUTF16());
 }
 }/*endof namespace*/

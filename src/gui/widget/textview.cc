@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <set>
+#include <text/String.h>
 #include <widget/R.h>
 #include <widget/editor.h>
 #include <widget/textview.h>
@@ -5276,7 +5277,7 @@ std::string TextView::getSelectedText()const{
      const int hi = std::max(start, end);
      // Offsets are in char16 units; use subSequence (not UTF-8 substr) to stay correct.
      CharSequence* sub = mText->subSequence(lo, hi);
-     std::string result = sub ? sub->toString() : std::string();
+     std::string result = sub ? sub->toUTF8() : std::string();
      if (sub && sub != mText) delete sub;
      return result;
 }
@@ -6373,11 +6374,15 @@ int TextView::CharWrapper::charAt(int off) const{
     return mChars[off + mStart];
 }
 
-std::string TextView::CharWrapper::toString() const{
+String* TextView::CharWrapper::toString() const{
+    return new String(std::u16string(mChars.data() + mStart, mLength));
+}
+
+std::string TextView::CharWrapper::toUTF8() const{
     return TextUtils::utf16_utf8((uint16_t*)(mChars.data()+mStart), mLength);
 }
 
-std::u16string TextView::CharWrapper::toU16String() const{
+std::u16string TextView::CharWrapper::toUTF16() const{
     return std::u16string(mChars.data() + mStart, mLength);
 }
 

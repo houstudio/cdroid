@@ -1,11 +1,10 @@
 #include <text/linkify.h>
-#include <text/spannablestring.h>      // Spannable/Spanned/SPAN_EXCLUSIVE_EXCLUSIVE
+#include <text/spannablestring.h>
 #include <text/spannablestringbuilder.h>
-#include <text/style/clickablespan.h>  // URLSpan
+#include <text/style/clickablespan.h>
 #include <text/method/linkmovementmethod.h>
 #include <text/method/movementmethod.h>
 #include <widget/textview.h>
-#include <parcelablespan.h>            // ParcelableSpan, SpanFilter
 #include <algorithm>
 #include <cctype>
 
@@ -104,7 +103,7 @@ void Linkify::applyLink(const std::string& url, int start, int end, Spannable* t
 void Linkify::gatherLinks(std::vector<LinkSpec>& links, Spannable* s,
         const std::regex& pattern, const std::vector<std::string>& schemes,
         MatchFilter matchFilter, TransformFilter transformFilter) {
-    const std::string text = s->toString();
+    const std::string text = s->toUTF8();
     auto begin = std::sregex_iterator(text.begin(), text.end(), pattern);
     const auto end = std::sregex_iterator();
     for (auto it = begin; it != end; ++it) {
@@ -125,7 +124,7 @@ void Linkify::gatherTelLinks(std::vector<LinkSpec>& links, Spannable* s) {
     // Leniency.POSSIBLE + region code). CDROID has no libphonenumber, so fall
     // back to the pre-libphonenumber behaviour: Patterns.PHONE + the
     // digit-count match filter + digitsAndPlusOnly transform. Region-agnostic.
-    const std::string text = s->toString();
+    const std::string text = s->toUTF8();
     auto begin = std::sregex_iterator(text.begin(), text.end(), phoneRe());
     const auto end = std::sregex_iterator();
     for (auto it = begin; it != end; ++it) {
@@ -167,7 +166,7 @@ void Linkify::pruneOverlaps(std::vector<LinkSpec>& links) {
 
 bool Linkify::addLinks(Spannable* text, int mask) {
     if (text == nullptr || mask == 0) return false;
-    const std::string s = text->toString();
+    const std::string s = text->toUTF8();
     if (containsUnsupportedCharacters(s)) return false;
 
     // Wipe existing URLSpans so re-linking doesn't stack duplicates.

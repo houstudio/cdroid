@@ -4,6 +4,7 @@
  * (LGPL v2.1+) — minimal C++ port of Android's PasswordTransformationMethod.
  *********************************************************************************/
 #include <text/method/passwordtransformationmethod.h>
+#include <text/String.h>
 #include <text/textutils.h>
 
 namespace cdroid{
@@ -38,11 +39,15 @@ void PasswordTransformationMethod::PasswordCharSequence::getChars(int start, int
     }
 }
 
-std::string PasswordTransformationMethod::PasswordCharSequence::toString() const {
-    return TextUtils::utf16_utf8(toU16String());
+String* PasswordTransformationMethod::PasswordCharSequence::toString() const {
+    return new String(toUTF16());
 }
 
-std::u16string PasswordTransformationMethod::PasswordCharSequence::toU16String() const {
+std::string PasswordTransformationMethod::PasswordCharSequence::toUTF8() const {
+    return TextUtils::utf16_utf8(toUTF16());
+}
+
+std::u16string PasswordTransformationMethod::PasswordCharSequence::toUTF16() const {
     return std::u16string(length(), DOT);
 }
 

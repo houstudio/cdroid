@@ -3,7 +3,7 @@
 #include <core/predicate.h>
 #include <text/textutils.h>
 #include <text/textpaint.h>
-#include <text/parcelablespan.h>
+#include <text/charsequence.h>
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -106,8 +106,9 @@ public:
     // the spans this container owns; borrowed (NoCopySpan) spans are left alone.
     virtual ~SpannableStringInternal();
 
-    std::string toString() const override;
-    std::u16string toU16String() const override;   // fast path: return mText directly
+    String* toString() const override;
+    std::string toUTF8() const override;
+    std::u16string toUTF16() const override;   // fast path: return mText directly
     size_t length() const override;
     int charAt(int idx) const override;
     std::vector<const ParcelableSpan*> getSpans(int start, int end, const SpanFilter& filter) const override;

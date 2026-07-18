@@ -6,6 +6,7 @@
  * VIRTUALLY so SpannedReplacementCharSequence can add Spanned without a diamond.
  */
 #include <text/method/replacementtransformationmethod.h>
+#include <text/String.h>
 #include <text/spannablestring.h>   // Spanned, SpannedString
 #include <text/textutils.h>
 
@@ -43,11 +44,15 @@ public:
         }
     }
 
-    std::string toString() const override {
-        return TextUtils::utf16_utf8(toU16String());
+    String* toString() const override {
+        return new String(toUTF16());
     }
 
-    std::u16string toU16String() const override {
+    std::string toUTF8() const override {
+        return TextUtils::utf16_utf8(toUTF16());
+    }
+
+    std::u16string toUTF16() const override {
         std::u16string out;
         const int n = (int)length();
         out.reserve(n);

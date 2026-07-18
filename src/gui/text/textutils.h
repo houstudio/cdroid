@@ -4,8 +4,7 @@
 #include <vector>
 #include <stdio.h>
 #include <text/textpaint.h>
-#include <text/parcelablespan.h>
-//#include <core/spannablestring.h>
+#include <text/charsequence.h>
 #include <text/textdirectionheuristics.h>
 namespace cdroid{
 class CharSequence;

@@ -1,5 +1,6 @@
 #include <charconv>
 #include <cstdint>
+#include <text/String.h>
 #include <porting/cdlog.h>
 #include <text/layout.h>
 #include <text/boringlayout.h>
@@ -1739,14 +1740,15 @@ CharSequence* Layout::Ellipsizer::subSequence(int start, int end) const{
     return new SpannedString((const char16_t*)s.data());
 }
 
-std::string Layout::Ellipsizer::toString() const{
-    const int len = (int) length();
-    std::u16string s(len, u'\0');
-    getChars(0, len, &s[0], 0);
-    return TextUtils::utf16_utf8(s);
+String* Layout::Ellipsizer::toString() const{
+    return new String(toUTF16());
 }
 
-std::u16string Layout::Ellipsizer::toU16String() const{
+std::string Layout::Ellipsizer::toUTF8() const{
+    return TextUtils::utf16_utf8(toUTF16());
+}
+
+std::u16string Layout::Ellipsizer::toUTF16() const{
     const int len = (int) length();
     std::u16string s(len, u'\0');
     getChars(0, len, &s[0], 0);
