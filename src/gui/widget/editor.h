@@ -98,12 +98,15 @@ private:
     void updateCursorPosition(int top, int bottom, float horizontal);
     void loadCursorDrawable();
     int clampHorizontalPosition(Drawable* drawable, float horizontal);
+    int64_t getLastTouchOffsets()const;
 
     bool isCursorVisible() const;
     void beginBatchEdit();
     void endBatchEdit();
     bool shouldFilterOutTouchEvent(MotionEvent& event) const;
     bool needsToSelectAllToSelectWordOrParagraph()const;
+    bool selectCurrentParagraph();
+    int64_t getParagraphsRange(int startOffset, int endOffset);
     int getLastTapPosition() const;
     void ensureNoSelectionIfNonSelectable();
     void adjustInputType(bool password, bool passwordInputType,

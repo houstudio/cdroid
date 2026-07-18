@@ -329,6 +329,13 @@ void Editor::onDetachedFromWindow() {
     hideCursorControllers();
 }
 
+int64_t Editor::getLastTouchOffsets()const{
+    //SelectionModifierCursorController selectionController = getSelectionController();
+    const int minOffset = 0;//selectionController.getMinTouchOffset();
+    const int maxOffset = 0;//selectionController.getMaxTouchOffset();
+    return TextUtils::packRangeInLong(minOffset, maxOffset);
+}
+
 void Editor::onFocusChanged(bool focused, int /*direction*/, Rect* /*previouslyFocusedRect*/) {
     // Android.Editor.onFocusChanged preserves the last tap position, invokes
     // MovementMethod.onTakeFocus, and updates selection/highlight state.
@@ -798,6 +805,64 @@ bool  Editor::needsToSelectAllToSelectWordOrParagraph() const{
     return false;
 }
 
+bool Editor::selectCurrentParagraph(){
+    if (!mTextView->canSelectText()) {
+        return false;
+    }
+
+    if (needsToSelectAllToSelectWordOrParagraph()) {
+        return mTextView->selectAllText();
+    }
+
+    const int64_t lastTouchOffsets = getLastTouchOffsets();
+    const int minLastTouchOffset = TextUtils::unpackRangeStartFromLong(lastTouchOffsets);
+    const int maxLastTouchOffset = TextUtils::unpackRangeEndFromLong(lastTouchOffsets);
+
+    const long paragraphsRange = getParagraphsRange(minLastTouchOffset, maxLastTouchOffset);
+    const int start = TextUtils::unpackRangeStartFromLong(paragraphsRange);
+    const int end = TextUtils::unpackRangeEndFromLong(paragraphsRange);
+    if (start < end) {
+        Selection::setSelection(dynamic_cast<Spannable*>(&mTextView->getText()), start, end);
+        return true;
+    }
+    return false;
+}
+
+int64_t Editor::getParagraphsRange(int startOffset, int endOffset){
+    const int startOffsetTransformed = mTextView->originalToTransformed(startOffset,
+            OffsetMapping::MAP_STRATEGY_CURSOR);
+    const int endOffsetTransformed = mTextView->originalToTransformed(endOffset,
+            OffsetMapping::MAP_STRATEGY_CURSOR);
+    const Layout* layout = mTextView->getLayout();
+    if (layout == nullptr) {
+        return TextUtils::packRangeInLong(-1, -1);
+    }
+    const CharSequence* text = layout->getText();
+    int minLine = layout->getLineForOffset(startOffsetTransformed);
+    // Search paragraph start.
+    while (minLine > 0) {
+        const int prevLineEndOffset = layout->getLineEnd(minLine - 1);
+        if (text->charAt(prevLineEndOffset - 1) == '\n') {
+            break;
+        }
+        minLine--;
+    }
+    int maxLine = layout->getLineForOffset(endOffsetTransformed);
+    // Search paragraph end.
+    while (maxLine < layout->getLineCount() - 1) {
+        const int lineEndOffset = layout->getLineEnd(maxLine);
+        if (text->charAt(lineEndOffset - 1) == '\n') {
+            break;
+        }
+        maxLine++;
+    }
+    const int paragraphStart = mTextView->transformedToOriginal(layout->getLineStart(minLine),
+            OffsetMapping::MAP_STRATEGY_CURSOR);
+    const int paragraphEnd = mTextView->transformedToOriginal(layout->getLineEnd(maxLine),
+            OffsetMapping::MAP_STRATEGY_CURSOR);
+    return TextUtils::packRangeInLong(paragraphStart, paragraphEnd);
+
+}
 bool Editor::selectCurrentWord() {
     Spannable* e = editable();
     if(!mTextView->canSelectText()||e==nullptr){
