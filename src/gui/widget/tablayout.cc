@@ -51,7 +51,11 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     setSelectedTabIndicator(atts.getDrawable("tabIndicator"));
     setSelectedTabIndicatorColor(atts.getColor("tabIndicatorColor",0));
     mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",2));
-    setSelectedTabIndicatorGravity(atts.getGravity("tabIndicatorGravity",0));
+    const int tabIndicatorGravity=atts.getInt("tabIndicatorGravity",std::unordered_map<std::string,int>{
+            {"bottom",(int)INDICATOR_GRAVITY_BOTTOM},  {"center" ,(int)INDICATOR_GRAVITY_CENTER},
+            {"top",(int)INDICATOR_GRAVITY_TOP},        {"stretch",(int)INDICATOR_GRAVITY_STRETCH}
+            },INDICATOR_GRAVITY_BOTTOM);
+    setSelectedTabIndicatorGravity(tabIndicatorGravity);
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
 
     mTabPaddingStart = mTabPaddingTop = mTabPaddingEnd =
@@ -140,7 +144,7 @@ void TabLayout::initTabLayout(){
     mTabSelectedIndicatorColor =0;
     mTabIndicatorTimeInterpolator = nullptr;
     mTabIndicatorInterpolator = nullptr;
-    mTabIndicatorGravity  = Gravity::BOTTOM;
+    mTabIndicatorGravity  = INDICATOR_GRAVITY_BOTTOM;
     mPagerAdapterObserver = nullptr;
     mAdapterChangeListener= nullptr;
     mTabSelectedIndicator = nullptr;
@@ -1733,12 +1737,12 @@ void TabLayout::SlidingTabIndicator::draw(Canvas& canvas) {
     }
     int indicatorTop   = 0;
     int indicatorBottom= 0;
-    switch(mParent->getTabIndicatorGravity()&Gravity::VERTICAL_GRAVITY_MASK){
-    case Gravity::BOTTOM: 
+    switch(mParent->mTabIndicatorGravity){
+    case INDICATOR_GRAVITY_BOTTOM:
         indicatorTop   = getHeight()-indicatorHeight;
         indicatorBottom= getHeight();
         break;
-    case Gravity::CENTER_VERTICAL:
+    case INDICATOR_GRAVITY_CENTER:
         indicatorTop    = (getHeight()-indicatorHeight)/2;
         indicatorBottom = (getHeight()+indicatorHeight)/2; 
         break;
@@ -1749,6 +1753,11 @@ void TabLayout::SlidingTabIndicator::draw(Canvas& canvas) {
     case Gravity::FILL_VERTICAL:
         indicatorTop = 0;
         indicatorBottom = getHeight();
+        break;
+    case INDICATOR_GRAVITY_STRETCH:
+        // Default to BOTTOM if gravity doesn't match any known value
+        indicatorTop   = getHeight()-indicatorHeight;
+        indicatorBottom= getHeight();
         break;
     }
 
