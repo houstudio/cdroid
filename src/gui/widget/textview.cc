@@ -264,14 +264,14 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     }, mAutoLinkMask));
     setLinksClickable(attrs.getBoolean("linksClickable", true));
     setHyphenationFrequency(attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
-        {"none",   (int)Layout::HYPHENATION_FREQUENCY_NONE},
-        {"normal", (int)Layout::HYPHENATION_FREQUENCY_NORMAL},
-        {"full",   (int)Layout::HYPHENATION_FREQUENCY_FULL}
+        {"none",   Layout::HYPHENATION_FREQUENCY_NONE},
+        {"normal", Layout::HYPHENATION_FREQUENCY_NORMAL},
+        {"full",   Layout::HYPHENATION_FREQUENCY_FULL}
     }, mHyphenationFrequency));
     setJustificationMode(attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
-        {"none",            (int)Layout::JUSTIFICATION_MODE_NONE},
-        {"inter_word",      (int)Layout::JUSTIFICATION_MODE_INTER_WORD},
-        {"inter_character", (int)Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
+        {"none",            Layout::JUSTIFICATION_MODE_NONE},
+        {"inter_word",      Layout::JUSTIFICATION_MODE_INTER_WORD},
+        {"inter_character", Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
     }, mJustificationMode));
     setTextIsSelectable(attrs.getBoolean("textIsSelectable", false));
     if (attrs.hasAttribute("imeOptions"))
