@@ -810,7 +810,7 @@ Window::InvalidateOnAnimationRunnable::~InvalidateOnAnimationRunnable(){
 }
 
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
-    mOwner=w;
+    mOwner = w;
 }
 
 std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
@@ -822,14 +822,14 @@ std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAni
 }
 
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    auto it=find(view);
-    if(it==mInvalidateViews.end()){
+    auto it = find(view);
+    if(it == mInvalidateViews.end()){
         AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
         info->target = view;
         info->rect.set(0,0,0,0);
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info=(*it);
+        AttachInfo::InvalidateInfo* info = (*it);
         info->rect.set(0,0,0,0);
     }
     postIfNeededLocked();
@@ -843,7 +843,7 @@ void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&re
         info->rect = rect;
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info=(*it);
+        AttachInfo::InvalidateInfo* info = (*it);
         if(!info->rect.empty())
             info->rect.Union(rect);
     }
@@ -876,7 +876,6 @@ void Window::InvalidateOnAnimationRunnable::run(){
 
 void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
-        //Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,nullptr,this);
         Runnable run(std::bind(&InvalidateOnAnimationRunnable::run,this));
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;
