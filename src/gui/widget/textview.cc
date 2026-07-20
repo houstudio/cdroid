@@ -3197,7 +3197,7 @@ bool TextView::compressText(float width) {
     return false;
 }
 
-int TextView::desired(Layout*layout){
+int TextView::desired(Layout*layout,bool useBoundsForWidth){
     int max = 0;
     const int N = layout->getLineCount();
     CharSequence* text = layout->getText();
@@ -3209,9 +3209,9 @@ int TextView::desired(Layout*layout){
     for (int i = 0; i < N; i++) {
         max = std::max(max, (int)layout->getLineWidth(i));
     }
-    /*if (useBoundsForWidth) {
-        max = std::max(max, layout->computeDrawingBoundingBox().width);
-    }*/
+    if (useBoundsForWidth) {
+        max = std::max(max, (int)layout->computeDrawingBoundingBox().width);
+    }
     return (int) std::ceil(max);
 }
 
@@ -3237,7 +3237,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         width = widthSize;
     } else {
         if (mLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
-            des = desired(mLayout);
+            des = desired(mLayout,mUseBoundsForWidth);
         }
         if (des < 0) {
             boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
@@ -3270,7 +3270,7 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             int hintWidth;
 
             if (mHintLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
-                hintDes = desired(mHintLayout);
+                hintDes = desired(mHintLayout,mUseBoundsForWidth);
             }
 
             if (hintDes < 0) {

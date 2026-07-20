@@ -222,7 +222,7 @@ private:
     bool bringTextIntoView();
     void autoSizeText();
     bool compressText(float width);
-    static int desired(Layout*);
+    static int desired(Layout*,bool);
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
