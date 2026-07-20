@@ -814,7 +814,7 @@ void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
 }
 
 std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
-    for(auto it=mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
+    for(auto it = mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
         if((*it)->target == v)
             return it;
     }

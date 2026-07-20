@@ -124,6 +124,9 @@ private:
     bool mCursorVisible;
     bool mListenerChanged;
     bool mIsPrimePointerFromHandleView=false;
+    bool mPreventDefaultMovement = false;
+    bool mImeIsConsumingInput = false;
+    bool mCursorVisibleFromAttr = true;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
     int mLastInputSource=InputDevice::SOURCE_TOUCHSCREEN;
@@ -158,12 +161,7 @@ private:
     CharWrapper* mCharWrapper;
     mutable Drawable* mCursorDrawable;
     Editor* mEditor = nullptr;
-    MovementMethod* mMovement = nullptr;   // Android: mMovement — arrow/nav/scroll handling
-    // Android: mPreventDefaultMovement — once the movement method consumes an
-    // initial key down, swallow subsequent focus-traversal defaults until key up.
-    bool mPreventDefaultMovement = false;
-    bool mImeIsConsumingInput = false;
-    bool mCursorVisibleFromAttr = true;
+    MovementMethod* mMovement = nullptr;
     TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;

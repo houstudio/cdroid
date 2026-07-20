@@ -232,8 +232,14 @@ protected:
     bool mScrollingCacheEnabled;
     bool mFastScrollEnabled;
     bool mFastScrollAlwaysVisible;
-    std::string mFastScrollStyle;
     bool mGlobalLayoutListenerAddedFilter;
+    bool mCachingStarted;
+    bool mCachingActive;
+    bool mDrawSelectorOnTop;
+    bool mAdapterHasStableIds;
+    bool mIsDetaching;
+    bool mIsScrap[2]; 
+    std::string mFastScrollStyle;
     int mSelectorPosition;
     int mResurrectToPosition;
     int mMinimumVelocity;
@@ -243,22 +249,16 @@ protected:
     int mOverflingDistance;
     View * mScrollUp ;
     View * mScrollDown;
-    bool mCachingStarted;
-    bool mCachingActive;
     Runnable mPositionScrollAfterLayout;
     EdgeEffect* mEdgeGlowTop;
     EdgeEffect* mEdgeGlowBottom;
     AbsPositionScroller* mPositionScroller;
     int mLastHandledItemCount;
-    bool mDrawSelectorOnTop;
-    bool mAdapterHasStableIds;
     int mSelectionLeftPadding;
     int mSelectionTopPadding ;
     int mSelectionRightPadding;
     int mSelectionBottomPadding;
     int mOverscrollMax;
-    bool mIsScrap[2]; 
-    bool mIsDetaching;
     Rect mSelectorRect;
     Rect mListPadding;/*The view's padding*/
     int mWidthMeasureSpec;
