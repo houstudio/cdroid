@@ -106,9 +106,8 @@ private:
         bool operator()(const View* lhs, const View* rhs)const;
     };
 private:
-
-    /* Used to indicate left/right/top/bottom should be inferred from constraints*/
     static constexpr int VALUE_NOT_SET = INT_MIN;
+    static constexpr int DEFAULT_WIDTH = 0x00010000; 
 
     View* mBaselineView = nullptr;
 
@@ -119,25 +118,13 @@ private:
 
     std::set<View*,TopToBottomLeftToRightComparator> mTopToBottomLeftToRightSet;
 
-    bool mDirtyHierarchy;
     std::vector<View*> mSortedHorizontalChildren;
     std::vector<View*> mSortedVerticalChildren;
     DependencyGraph *mGraph;
 
-    // Compatibility hack. Old versions of the platform had problems
-    // with MeasureSpec value overflow and RelativeLayout was one source of them.
-    // Some apps came to rely on them. :(
+    bool mDirtyHierarchy;
     bool mAllowBrokenMeasureSpecs = false;
-    // Compatibility hack. Old versions of the platform would not take
-    // margins and padding into account when generating the height measure spec
-    // for children during the horizontal measure pass.
     bool mMeasureVerticalWithPaddingMargin = true;
-
-    // A default width used for RTL measure pass
-    /** Value reduced so as not to interfere with View's measurement spec. flags. See:
-     * {@link View#MEASURED_SIZE_MASK}.
-     * {@link View#MEASURED_STATE_TOO_SMALL}.*/
-    static constexpr int DEFAULT_WIDTH = 0x00010000; 
 
 private://function
     void sortChildren();

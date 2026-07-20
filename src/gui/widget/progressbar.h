@@ -30,24 +30,24 @@ private:
     static constexpr int TIMEOUT_SEND_ACCESSIBILITY_EVENT = 200;
     static constexpr int PROGRESS_ANIM_DURATION = 80;
     friend class VISUAL_PROGRESS;    
-    bool mAttached;
     float mVisualProgress;
     int mBehavior;
     int mDuration;
-    bool mOnlyIndeterminate;
     Transformation* mTransformation;
     AlphaAnimation* mAnimation;
     bool mHasAnimation;
+    bool mAttached;
     bool mInDrawing;
+    bool mNoInvalidate;
     bool mRefreshIsPosted;
+    bool mOnlyIndeterminate;
+    bool mShouldStartAnimationDrawable;
     SparseArray<class RefreshData*>mRefreshData;
     Runnable mRefreshProgressRunnable;
     Runnable mAccessibilityEventSender;
     Animator::AnimatorListener mAnimtorListener;
-    bool mShouldStartAnimationDrawable;
     class ProgressTintInfo*mProgressTintInfo;
     ObjectAnimator*mLastProgressAnimator;
-    bool mNoInvalidate;
     const Interpolator* mInterpolator;
 
     void initProgressBar();

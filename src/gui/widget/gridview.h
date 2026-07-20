@@ -6,11 +6,11 @@ namespace cdroid{
 class GridView:public AbsListView{
 public:
     enum {
-	AUTO_FIT        =-1,
-	NO_STRETCH      = 0,
-	STRETCH_SPACING = 1,
-	STRETCH_COLUMN_WIDTH =2,
-	STRETCH_SPACING_UNIFORM =3,
+        AUTO_FIT        =-1,
+        NO_STRETCH      = 0,
+        STRETCH_SPACING = 1,
+        STRETCH_COLUMN_WIDTH =2,
+        STRETCH_SPACING_UNIFORM =3,
     };
 private:
     int mNumColumns ;

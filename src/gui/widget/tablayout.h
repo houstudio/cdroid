@@ -285,11 +285,11 @@ protected:
     int  mTabIndicatorHeight;
     bool mSmoothScroll;/*used for viewpage item switch*/
     bool mInlineLabel;
+    bool inlineLabel;
+    bool unboundedRipple;
+    bool mTabIndicatorFullWidth;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;
-    bool inlineLabel;
-    bool mTabIndicatorFullWidth;
-    bool unboundedRipple;
     ViewPager* mViewPager;
     std::vector<Tab*>mTabs;
     PagerAdapter* mPagerAdapter;
