@@ -1,6 +1,6 @@
 /*
  * Ported from Android android.text.method.MetaKeyKeyListener (Apache 2.0).
- * See metakeylistener.h for the span/long dual API. CDROID runs on full
+ * See metakeylistener.h for the span/int64_t dual API. CDROID runs on full
  * (chorded) keyboards, so the KeyCharacterMap.MODIFIER_BEHAVIOR_CHORDED_OR_
  * TOGGLED branch (toggled keypads) never applies — the helper below always
  * reports chorded, which means span-stored meta is not combined into
@@ -25,18 +25,18 @@ const int MetaKeyKeyListener::META_SYM_LOCKED  = KeyEvent::META_SYM_LOCKED;
 const int MetaKeyKeyListener::META_SELECTING   = KeyEvent::META_SELECTING;
 
 // --- private long masks (outside int range, per Android) ---
-const long MetaKeyKeyListener::META_CAP_USED    = 1L << 32;
-const long MetaKeyKeyListener::META_ALT_USED    = 1L << 33;
-const long MetaKeyKeyListener::META_SYM_USED    = 1L << 34;
-const long MetaKeyKeyListener::META_CAP_PRESSED = 1L << 40;
-const long MetaKeyKeyListener::META_ALT_PRESSED = 1L << 41;
-const long MetaKeyKeyListener::META_SYM_PRESSED = 1L << 42;
-const long MetaKeyKeyListener::META_CAP_RELEASED= 1L << 48;
-const long MetaKeyKeyListener::META_ALT_RELEASED= 1L << 49;
-const long MetaKeyKeyListener::META_SYM_RELEASED= 1L << 50;
-const long MetaKeyKeyListener::META_SHIFT_MASK  = META_SHIFT_ON | META_CAP_LOCKED | META_CAP_USED | META_CAP_PRESSED | META_CAP_RELEASED;
-const long MetaKeyKeyListener::META_ALT_MASK    = META_ALT_ON | META_ALT_LOCKED | META_ALT_USED | META_ALT_PRESSED | META_ALT_RELEASED;
-const long MetaKeyKeyListener::META_SYM_MASK    = META_SYM_ON | META_SYM_LOCKED | META_SYM_USED | META_SYM_PRESSED | META_SYM_RELEASED;
+const int64_t MetaKeyKeyListener::META_CAP_USED    = 1LL << 32;
+const int64_t MetaKeyKeyListener::META_ALT_USED    = 1LL << 33;
+const int64_t MetaKeyKeyListener::META_SYM_USED    = 1LL << 34;
+const int64_t MetaKeyKeyListener::META_CAP_PRESSED = 1LL << 40;
+const int64_t MetaKeyKeyListener::META_ALT_PRESSED = 1LL << 41;
+const int64_t MetaKeyKeyListener::META_SYM_PRESSED = 1LL << 42;
+const int64_t MetaKeyKeyListener::META_CAP_RELEASED= 1LL << 48;
+const int64_t MetaKeyKeyListener::META_ALT_RELEASED= 1LL << 49;
+const int64_t MetaKeyKeyListener::META_SYM_RELEASED= 1LL << 50;
+const int64_t MetaKeyKeyListener::META_SHIFT_MASK  = META_SHIFT_ON | META_CAP_LOCKED | META_CAP_USED | META_CAP_PRESSED | META_CAP_RELEASED;
+const int64_t MetaKeyKeyListener::META_ALT_MASK    = META_ALT_ON | META_ALT_LOCKED | META_ALT_USED | META_ALT_PRESSED | META_ALT_RELEASED;
+const int64_t MetaKeyKeyListener::META_SYM_MASK    = META_SYM_ON | META_SYM_LOCKED | META_SYM_USED | META_SYM_PRESSED | META_SYM_RELEASED;
 
 // --- span markers (distinct objects; identity-compared) ---
 const NoCopySpan* MetaKeyKeyListener::CAP       = new NoCopySpan();
@@ -102,7 +102,7 @@ int MetaKeyKeyListener::getMetaState(CharSequence& text, int meta, const KeyEven
         if ((metaState & META_SELECTING) != 0) return 1;
         return 0;
     }
-    return getMetaState((long)metaState, meta);
+    return getMetaState((int64_t)metaState, meta);
 }
 
 void MetaKeyKeyListener::adjustMetaAfterKeypress(Spannable& content) {
@@ -235,7 +235,7 @@ void MetaKeyKeyListener::release(Editable& content, const ParcelableSpan* what, 
 //  Long-bitmask API
 // =====================================================================================
 
-int MetaKeyKeyListener::getMetaState(long state) {
+int MetaKeyKeyListener::getMetaState(int64_t state) {
     int result = 0;
     if ((state & META_CAP_LOCKED) != 0)      result |= META_CAP_LOCKED;
     else if ((state & META_SHIFT_ON) != 0)   result |= META_SHIFT_ON;
@@ -246,7 +246,7 @@ int MetaKeyKeyListener::getMetaState(long state) {
     return result;
 }
 
-int MetaKeyKeyListener::getMetaState(long state, int meta) {
+int MetaKeyKeyListener::getMetaState(int64_t state, int meta) {
     switch (meta) {
         case META_SHIFT_ON:
             if ((state & META_CAP_LOCKED) != 0) return LOCKED_RETURN_VALUE;
@@ -265,7 +265,7 @@ int MetaKeyKeyListener::getMetaState(long state, int meta) {
     }
 }
 
-long MetaKeyKeyListener::adjustMetaAfterKeypress(long state) {
+int64_t MetaKeyKeyListener::adjustMetaAfterKeypress(int64_t state) {
     if ((state & META_CAP_PRESSED) != 0)        state = (state & ~META_SHIFT_MASK) | META_SHIFT_ON | META_CAP_USED;
     else if ((state & META_CAP_RELEASED) != 0)  state &= ~META_SHIFT_MASK;
     if ((state & META_ALT_PRESSED) != 0)        state = (state & ~META_ALT_MASK) | META_ALT_ON | META_ALT_USED;
@@ -275,7 +275,7 @@ long MetaKeyKeyListener::adjustMetaAfterKeypress(long state) {
     return state;
 }
 
-long MetaKeyKeyListener::handleKeyDown(long state, int keyCode, const KeyEvent& /*event*/) {
+int64_t MetaKeyKeyListener::handleKeyDown(int64_t state, int keyCode, const KeyEvent& /*event*/) {
     if (keyCode == KeyEvent::KEYCODE_SHIFT_LEFT || keyCode == KeyEvent::KEYCODE_SHIFT_RIGHT) {
         return press(state, META_SHIFT_ON, META_SHIFT_MASK, META_CAP_LOCKED, META_CAP_PRESSED, META_CAP_RELEASED, META_CAP_USED);
     }
@@ -289,7 +289,7 @@ long MetaKeyKeyListener::handleKeyDown(long state, int keyCode, const KeyEvent& 
     return state;
 }
 
-long MetaKeyKeyListener::handleKeyUp(long state, int keyCode, const KeyEvent& event) {
+int64_t MetaKeyKeyListener::handleKeyUp(int64_t state, int keyCode, const KeyEvent& event) {
     if (keyCode == KeyEvent::KEYCODE_SHIFT_LEFT || keyCode == KeyEvent::KEYCODE_SHIFT_RIGHT) {
         return release(state, META_SHIFT_ON, META_SHIFT_MASK, META_CAP_PRESSED, META_CAP_RELEASED, META_CAP_USED, event);
     }
@@ -303,8 +303,8 @@ long MetaKeyKeyListener::handleKeyUp(long state, int keyCode, const KeyEvent& ev
     return state;
 }
 
-long MetaKeyKeyListener::press(long state, int what, long mask,
-        long locked, long pressed, long released, long used) {
+int64_t MetaKeyKeyListener::press(int64_t state, int what, int64_t mask,
+        int64_t locked, int64_t pressed, int64_t released, int64_t used) {
     if ((state & pressed) != 0) {
         ; // repeat before use
     } else if ((state & released) != 0) {
@@ -319,14 +319,14 @@ long MetaKeyKeyListener::press(long state, int what, long mask,
     return state;
 }
 
-long MetaKeyKeyListener::release(long state, int what, long mask,
-        long pressed, long released, long used, const KeyEvent& event) {
+int64_t MetaKeyKeyListener::release(int64_t state, int what, int64_t mask,
+        int64_t pressed, int64_t released, int64_t used, const KeyEvent& event) {
     switch (modifierBehavior(event)) {
         case MODIFIER_BEHAVIOR_CHORDED_OR_TOGGLED:
             if ((state & used) != 0) {
                 state &= ~mask;
             } else if ((state & pressed) != 0) {
-                state |= (long)what | released;
+                state |= (int64_t)what | released;
             }
             break;
         default:
@@ -336,14 +336,14 @@ long MetaKeyKeyListener::release(long state, int what, long mask,
     return state;
 }
 
-long MetaKeyKeyListener::resetLockedMeta(long state) {
+int64_t MetaKeyKeyListener::resetLockedMeta(int64_t state) {
     if ((state & META_CAP_LOCKED) != 0) state &= ~META_SHIFT_MASK;
     if ((state & META_ALT_LOCKED) != 0) state &= ~META_ALT_MASK;
     if ((state & META_SYM_LOCKED) != 0) state &= ~META_SYM_MASK;
     return state;
 }
 
-long MetaKeyKeyListener::clearMetaKeyState(long state, int which) {
+int64_t MetaKeyKeyListener::clearMetaKeyState(int64_t state, int which) {
     if ((which & META_SHIFT_ON) != 0 && (state & META_CAP_LOCKED) != 0) state &= ~META_SHIFT_MASK;
     if ((which & META_ALT_ON) != 0 && (state & META_ALT_LOCKED) != 0)   state &= ~META_ALT_MASK;
     if ((which & META_SYM_ON) != 0 && (state & META_SYM_LOCKED) != 0)   state &= ~META_SYM_MASK;

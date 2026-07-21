@@ -16,6 +16,12 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/simplemonthview.h>
+#include <cmath>
+#include <text/paint.h>
+#include <text/textutils.h>
+#include <drawable/colorstatelist.h>
+#include <drawable/stateset.h>
+#include <core/typeface.h>
 #include <utils/mathutils.h>
 #include <porting/cdtypes.h>
 #include <porting/cdlog.h>
@@ -80,16 +86,47 @@ void SimpleMonthView::initMonthView(){
     mDesiredDayHeight = 30;
     mDesiredDayOfWeekHeight = 30;
     mDesiredDaySelectorRadius= 15;
-    mDayTypeface = nullptr;
-    mMonthTypeface = nullptr;
-    mDayOfWeekTypeface = nullptr;
     mMonth = 0;
     mPaddedWidth = 0;
     mPaddedHeight= 0;
-    mDayTextSize = 18;
-    mMonthTextSize=24;
-    mDayOfWeekTextSize=18;
     mTouchHelper = new MonthViewTouchHelper(this);
+    initPaints();
+}
+
+/**
+ * Sets up the text and style properties for painting. Faithful port of Android
+ * SimpleMonthView.initPaints; the typeface names/sizes come from R.string/
+ * R.dimen in Android, but those string resources aren't present here, so the
+ * "sans-serif" defaults and the dimens defaults (date_picker_*_text_size) are
+ * baked in. setTextAppearance overrides them per-paint.
+ */
+void SimpleMonthView::initPaints(){
+    mMonthPaint.setAntiAlias(true);
+    mMonthPaint.setTextSize(14);
+    mMonthPaint.setTypeface(Typeface::create("sans-serif", Typeface::NORMAL));
+    mMonthPaint.setTextAlign(Paint::Align::CENTER);
+    mMonthPaint.setStyle(Paint::Style::FILL);
+
+    mDayOfWeekPaint.setAntiAlias(true);
+    mDayOfWeekPaint.setTextSize(12);
+    mDayOfWeekPaint.setTypeface(Typeface::create("sans-serif", Typeface::NORMAL));
+    mDayOfWeekPaint.setTextAlign(Paint::Align::CENTER);
+    mDayOfWeekPaint.setStyle(Paint::Style::FILL);
+
+    mDaySelectorPaint.setAntiAlias(true);
+    mDaySelectorPaint.setStyle(Paint::Style::FILL);
+
+    mDayHighlightPaint.setAntiAlias(true);
+    mDayHighlightPaint.setStyle(Paint::Style::FILL);
+
+    mDayHighlightSelectorPaint.setAntiAlias(true);
+    mDayHighlightSelectorPaint.setStyle(Paint::Style::FILL);
+
+    mDayPaint.setAntiAlias(true);
+    mDayPaint.setTextSize(12);
+    mDayPaint.setTypeface(Typeface::create("sans-serif", Typeface::NORMAL));
+    mDayPaint.setTextAlign(Paint::Align::CENTER);
+    mDayPaint.setStyle(Paint::Style::FILL);
 }
 
 void SimpleMonthView::updateMonthYearLabel(){
@@ -97,38 +134,46 @@ void SimpleMonthView::updateMonthYearLabel(){
 }
 
 void SimpleMonthView::updateDayOfWeekLabels(){
+    // TODO: ICU DateFormatSymbols.getWeekdays(NARROW) gives locale tiny names;
+    // cdroid has no ICU, so use a static English table. The column for index i
+    // is the weekday (mWeekStart + i) mapped to a 0-based table (SUNDAY=1 -> 0).
     const char*tinyWeekdayNames[]={"SUN","MON","TUE","WED","THU","FRI","SAT"};
     for (int i = 0; i < DAYS_IN_WEEK; i++) {
-        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart + i+Calendar::SUNDAY ) % DAYS_IN_WEEK ];
+        mDayOfWeekLabels[i] = tinyWeekdayNames[(mWeekStart - Calendar::SUNDAY + i) % DAYS_IN_WEEK];
     }
 }
 
-const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Typeface*&face,int& textSize,const std::string& resId){
+const cdroid::RefPtr<ColorStateList> SimpleMonthView::applyTextAppearance(Paint& p, const std::string& resId){
     AttributeSet attrs = mContext->obtainStyledAttributes(resId);
-    std::string fontFamily = attrs.getString("fontFamily");
-    textSize = attrs.getDimensionPixelSize("textSize",textSize);
-    auto textColor = attrs.getColorStateList("textColor");
-    if(!fontFamily.empty()) face = Typeface::create(fontFamily,0);
+    const std::string fontFamily = attrs.getString("fontFamily");
+    if (!fontFamily.empty()) {
+        p.setTypeface(Typeface::create(fontFamily, 0));
+    }
+    p.setTextSize(attrs.getDimensionPixelSize("textSize", (int) p.getTextSize()));
+    const auto textColor = attrs.getColorStateList("textColor");
+    if (textColor != nullptr) {
+        const int enabledColor = textColor->getColorForState(
+                StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);
+        p.setColor(enabledColor);
+    }
     return textColor;
 }
 
 void SimpleMonthView::setMonthTextAppearance(const std::string& resId) {
-    mMonthTextColor = applyTextAppearance(mMonthTypeface,mMonthTextSize,resId);
-
+    applyTextAppearance(mMonthPaint, resId);
     invalidate();
 }
 
 void SimpleMonthView::setDayOfWeekTextAppearance(const std::string& resId) {
-    mDayOfWeekTextColor = applyTextAppearance(mDayOfWeekTypeface,mDayOfWeekTextSize,resId);
+    applyTextAppearance(mDayOfWeekPaint, resId);
     invalidate();
 }
 
 void SimpleMonthView::setDayTextAppearance(const std::string& resId) {
-    auto textColor = applyTextAppearance(mDayTypeface,mDayTextSize,resId);
+    const auto textColor = applyTextAppearance(mDayPaint, resId);
     if (textColor != nullptr) {
         mDayTextColor = textColor;
     }
-
     invalidate();
 }
 
@@ -141,13 +186,16 @@ int SimpleMonthView::getCellWidth()const{
 }
 
 void SimpleMonthView::setMonthTextColor(const cdroid::RefPtr<ColorStateList>& monthTextColor){
-    mMonthTextColor = monthTextColor;
+    const int enabledColor = monthTextColor->getColorForState(
+            StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);
+    mMonthPaint.setColor(enabledColor);
     invalidate();
 }
 
 void SimpleMonthView::setDayOfWeekTextColor(const cdroid::RefPtr<ColorStateList>& dayOfWeekTextColor){
-    //const int enabledColor = dayOfWeekTextColor->getColorForState(ENABLED_STATE_SET, 0);
-    mDayOfWeekTextColor = dayOfWeekTextColor;
+    const int enabledColor = dayOfWeekTextColor->getColorForState(
+            StateSet::get(StateSet::VIEW_STATE_ENABLED), 0);
+    mDayOfWeekPaint.setColor(enabledColor);
     invalidate();
 }
 
@@ -157,12 +205,19 @@ void SimpleMonthView::setDayTextColor(const cdroid::RefPtr<ColorStateList>& dayT
 }
 
 void SimpleMonthView::setDaySelectorColor(const cdroid::RefPtr<ColorStateList>& dayBackgroundColor){
-    mDaySelectorColor = dayBackgroundColor;
+    const int activatedColor = dayBackgroundColor->getColorForState(
+            StateSet::get(StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_ACTIVATED), 0);
+    mDaySelectorPaint.setColor(activatedColor);
+    mDayHighlightSelectorPaint.setColor(activatedColor);
+    mDayHighlightSelectorPaint.setAlpha(SELECTED_HIGHLIGHT_ALPHA);
     invalidate();
 }
 
 void SimpleMonthView::setDayHighlightColor(const cdroid::RefPtr<ColorStateList>& dayHighlightColor){
-
+    const int pressedColor = dayHighlightColor->getColorForState(
+            StateSet::get(StateSet::VIEW_STATE_ENABLED | StateSet::VIEW_STATE_PRESSED), 0);
+    mDayHighlightPaint.setColor(pressedColor);
+    invalidate();
 }
 
 void SimpleMonthView::setOnDayClickListener(const OnDayClickListener& listener){
@@ -415,24 +470,27 @@ bool SimpleMonthView::isLastDayOfWeek(int day)const{
 }
 
 void SimpleMonthView::onDraw(Canvas& canvas){
-    int paddingLeft = getPaddingLeft();
-    int paddingTop = getPaddingTop();
-    LOGV("mMonthHeight=%d,mDayOfWeekHeight=%d mDayHeight=%d mCellWidth=%d mDaySelectorRadius=%d findDayOffset=%d",
-                  mMonthHeight,mDayOfWeekHeight,mDayHeight,mCellWidth,mDaySelectorRadius,findDayOffset());
+    const int paddingLeft = getPaddingLeft();
+    const int paddingTop = getPaddingTop();
     canvas.translate(paddingLeft, paddingTop);
-    canvas.set_font_size(20);
+
     drawMonth(canvas);
     drawDaysOfWeek(canvas);
     drawDays(canvas);
+
     canvas.translate(-paddingLeft, -paddingTop);
 }
 
 void SimpleMonthView::drawMonth(Canvas& canvas){
-    //float x = mPaddedWidth / 2.f;
+    const float x = mPaddedWidth / 2.f;
+
     // Vertically centered within the month header height.
-    canvas.set_color(0xFFFFFFFF);
-    Rect rctxt={0,0,mPaddedWidth,mMonthHeight};
-    canvas.draw_text(rctxt,mMonthYearLabel,Gravity::CENTER);
+    const float lineHeight = mMonthPaint.ascent() + mMonthPaint.descent();
+    const float y = (mMonthHeight - lineHeight) / 2.f;
+
+    const std::u16string u16 = TextUtils::utf8_utf16(mMonthYearLabel);
+    mMonthPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
+            0, u16.length(), 0, 0, x, y, false);
 }
 
 const std::string SimpleMonthView::getMonthYearLabel(){
@@ -440,107 +498,91 @@ const std::string SimpleMonthView::getMonthYearLabel(){
 }
 
 void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
+    const Paint& p = mDayOfWeekPaint;
     const int headerHeight = mMonthHeight;
     const int rowHeight = mDayOfWeekHeight;
     const int colWidth = mCellWidth;
 
     // Text is vertically centered within the day of week height.
-    //const int rowCenter = headerHeight + rowHeight / 2;
-    const int color = mDayTextColor==nullptr?0xFFFFFFFF:
-        mDayTextColor->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),0);
-    canvas.set_color(color);
-    canvas.move_to(0,headerHeight);
-    canvas.line_to(mRight-mLeft,headerHeight);
-    canvas.stroke();
-    canvas.set_font_size(mDayOfWeekTextSize);
-    if(mDayOfWeekTypeface)
-	canvas.set_font_face(mDayOfWeekTypeface->getFontFace());
-    Rect rctxt={0,headerHeight,mCellWidth,rowHeight};
+    const float halfLineHeight = (p.ascent() + p.descent()) / 2.f;
+    const int rowCenter = headerHeight + rowHeight / 2;
+
     for (int col = 0; col < DAYS_IN_WEEK; col++) {
-        int colCenter = colWidth * col + colWidth / 2;
-        int colCenterRtl;
-        if (isLayoutRtl()) {
-            colCenterRtl = mPaddedWidth - colCenter;
-        } else {
-            colCenterRtl = colCenter;
-        }
-        int stateMask =0;
-        std::string label = mDayOfWeekLabels[col];
-        canvas.draw_text(rctxt,label,Gravity::CENTER);
-        rctxt.offset(mCellWidth,0);
+        const int colCenter = colWidth * col + colWidth / 2;
+        const int colCenterRtl = isLayoutRtl() ? (mPaddedWidth - colCenter) : colCenter;
+
+        const std::u16string u16 = TextUtils::utf8_utf16(mDayOfWeekLabels[col]);
+        mDayOfWeekPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
+                0, u16.length(), 0, 0, colCenterRtl, rowCenter - halfLineHeight, false);
     }
-    canvas.move_to(0,headerHeight+rowHeight);
-    canvas.line_to(mRight-mLeft,headerHeight+rowHeight);
-    canvas.stroke();
 }
 
+/**
+ * Draws the month days.
+ */
 void SimpleMonthView::drawDays(Canvas& canvas){
-    int headerHeight = mMonthHeight + mDayOfWeekHeight;
-    int rowHeight = mDayHeight;
-    int colWidth = mCellWidth;
+    const Paint& p = mDayPaint;
+    const int headerHeight = mMonthHeight + mDayOfWeekHeight;
+    const int rowHeight = mDayHeight;
+    const int colWidth = mCellWidth;
 
     // Text is vertically centered within the row height.
+    const float halfLineHeight = (p.ascent() + p.descent()) / 2.f;
     int rowCenter = headerHeight + rowHeight / 2;
-    Rect rctxt={0,headerHeight,mCellWidth,mDayHeight};
-    canvas.set_color(0xFFFFFFFF);
+
     for (int day = 1, col = findDayOffset(); day <= mDaysInMonth; day++) {
-        int colCenter = colWidth * col + colWidth / 2;
-        int colCenterRtl;
-        if (isLayoutRtl()) {
-            colCenterRtl = mPaddedWidth - colCenter;
-        } else {
-            colCenterRtl = colCenter;
-        }
+        const int colCenter = colWidth * col + colWidth / 2;
+        const int colCenterRtl = isLayoutRtl() ? (mPaddedWidth - colCenter) : colCenter;
 
         int stateMask = 0;
 
-        const bool bDayEnabled = isDayEnabled(day);
-        if (bDayEnabled) {
+        const bool dayEnabled = isDayEnabled(day);
+        if (dayEnabled) {
             stateMask |= StateSet::VIEW_STATE_ENABLED;
         }
 
         const bool isDayActivated = (mActivatedDay == day);
         const bool isDayHighlighted = (mHighlightedDay == day);
-        canvas.set_color(0x8000FF00);
         if (isDayActivated) {
             stateMask |= StateSet::VIEW_STATE_ACTIVATED;
-            //ColorStateList* cls= isDayActivated?mDayHilight:mDaySelector;
+
             // Adjust the circle to be centered on the row.
-            canvas.arc(colCenterRtl, rowCenter, mDaySelectorRadius, 0,2*M_PI);
+            const Paint& paint = isDayHighlighted ? mDayHighlightSelectorPaint : mDaySelectorPaint;
+            canvas.set_color(paint.getColor());
+            canvas.arc(colCenterRtl, rowCenter, mDaySelectorRadius, 0, 2.0 * M_PI);
             canvas.fill();
         } else if (isDayHighlighted) {
             stateMask |= StateSet::VIEW_STATE_PRESSED;
 
-            if (bDayEnabled) {// Adjust the circle to be centered on the row.
-                canvas.arc(colCenterRtl, rowCenter,mDaySelectorRadius, 0,2*M_PI);
+            if (dayEnabled) {
+                // Adjust the circle to be centered on the row.
+                canvas.set_color(mDayHighlightPaint.getColor());
+                canvas.arc(colCenterRtl, rowCenter, mDaySelectorRadius, 0, 2.0 * M_PI);
                 canvas.fill();
             }
         }
 
-        bool isDayToday = mToday == day;
+        const bool isDayToday = (mToday == day);
         int dayTextColor;
         if (isDayToday && !isDayActivated) {
-            dayTextColor = 0xFF00FF00;//mDaySelectorPaint.getColor();
+            dayTextColor = mDaySelectorPaint.getColor();
+        } else if (mDayTextColor != nullptr) {
+            dayTextColor = mDayTextColor->getColorForState(StateSet::get(stateMask), 0);
         } else {
-            std::vector<int> stateSet = StateSet::get(stateMask);
-            dayTextColor = 0xFFFFFFFF;// mDayTextColor->getColorForState(stateSet, 0);
+            dayTextColor = 0xFFFFFFFF;
         }
-        canvas.set_color(dayTextColor);
-        rctxt.left=colWidth * col;
-        canvas.draw_text(rctxt,std::to_string(day),Gravity::CENTER);
+        mDayPaint.setColor(dayTextColor);
+
+        const std::u16string u16 = TextUtils::utf8_utf16(std::to_string(day));
+        mDayPaint.drawTextRun(canvas, (const char16_t*) u16.c_str(),
+                0, u16.length(), 0, 0, colCenterRtl, rowCenter - halfLineHeight, false);
+
         col++;
 
         if (col == DAYS_IN_WEEK) {
             col = 0;
             rowCenter += rowHeight;
-            rctxt.top += rowHeight;
         }
-    }
-    canvas.set_color(0xFF00FF00);
-    for(int i=0;i<5;i++){
-        canvas.move_to(0,headerHeight+i*rowHeight);
-        canvas.line_to(mRight-mLeft,headerHeight+i*rowHeight);
-        canvas.stroke();
     }
 }
 

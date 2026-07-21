@@ -52,7 +52,7 @@ public:
             Builder() : mSize(0), mBits(0) {}
 
             Builder& add(uint8_t x) {
-                if (mSize >= 7) [[unlikely]] {
+                if (mSize >= 7) /*[[unlikely]]*/ {
                         return *this;
                     }
                 mBits = mBits | (static_cast<uint64_t>(x) << (8 * mSize));

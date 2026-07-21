@@ -5936,11 +5936,11 @@ native static int getNumericValueImpl(int codePoint);
 
 bool Character::isSpace(char16_t ch) {
     return (ch <= 0x0020) &&
-        (((((1L << 0x0009) |
-        (1L << 0x000A) |
-        (1L << 0x000C) |
-        (1L << 0x000D) |
-        (1L << 0x0020)) >> ch) & 1L) != 0);
+        (((((1LL << 0x0009) |
+        (1LL << 0x000A) |
+        (1LL << 0x000C) |
+        (1LL << 0x000D) |
+        (1LL << 0x0020)) >> ch) & 1LL) != 0);
 }
 
 

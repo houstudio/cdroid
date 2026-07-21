@@ -81,32 +81,32 @@ private:
     // --- Long-bitmask API (caller-managed state) ---
 
 public:
-    static const long META_CAP_USED;
-    static const long META_ALT_USED;
-    static const long META_SYM_USED;
-    static const long META_CAP_PRESSED;
-    static const long META_ALT_PRESSED;
-    static const long META_SYM_PRESSED;
-    static const long META_CAP_RELEASED;
-    static const long META_ALT_RELEASED;
-    static const long META_SYM_RELEASED;
-    static const long META_SHIFT_MASK;
-    static const long META_ALT_MASK;
-    static const long META_SYM_MASK;
+    static const int64_t META_CAP_USED;
+    static const int64_t META_ALT_USED;
+    static const int64_t META_SYM_USED;
+    static const int64_t META_CAP_PRESSED;
+    static const int64_t META_ALT_PRESSED;
+    static const int64_t META_SYM_PRESSED;
+    static const int64_t META_CAP_RELEASED;
+    static const int64_t META_ALT_RELEASED;
+    static const int64_t META_SYM_RELEASED;
+    static const int64_t META_SHIFT_MASK;
+    static const int64_t META_ALT_MASK;
+    static const int64_t META_SYM_MASK;
 
-    static int getMetaState(long state);
-    static int getMetaState(long state, int meta);
-    static long adjustMetaAfterKeypress(long state);
-    static long handleKeyDown(long state, int keyCode, const KeyEvent& event);
-    static long handleKeyUp(long state, int keyCode, const KeyEvent& event);
-    long clearMetaKeyState(long state, int which);
-    static long resetLockedMeta(long state);
+    static int getMetaState(int64_t state);
+    static int getMetaState(int64_t state, int meta);
+    static int64_t adjustMetaAfterKeypress(int64_t state);
+    static int64_t handleKeyDown(int64_t state, int keyCode, const KeyEvent& event);
+    static int64_t handleKeyUp(int64_t state, int keyCode, const KeyEvent& event);
+    int64_t clearMetaKeyState(int64_t state, int which);
+    static int64_t resetLockedMeta(int64_t state);
 
 private:
-    static long press(long state, int what, long mask, long locked,
-                      long pressed, long released, long used);
-    static long release(long state, int what, long mask,
-                        long pressed, long released, long used, const KeyEvent& event);
+    static int64_t press(int64_t state, int what, int64_t mask, int64_t locked,
+                      int64_t pressed, int64_t released, int64_t used);
+    static int64_t release(int64_t state, int what, int64_t mask,
+                        int64_t pressed, int64_t released, int64_t used, const KeyEvent& event);
 };
 
 } // namespace cdroid
