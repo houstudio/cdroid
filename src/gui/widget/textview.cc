@@ -1571,7 +1571,8 @@ void TextView::setText(const std::vector<char16_t>&text, int start, int len){
         oldlen = mText->length();
         sendBeforeTextChanged(*mText, 0, oldlen, len);
     } else {
-        //sendBeforeTextChanged("", 0, 0, len);
+        String ss;
+        sendBeforeTextChanged(ss, 0, 0, len);
     }
     if (mCharWrapper == nullptr) {
         mCharWrapper = new CharWrapper(text, start, len);
@@ -1596,19 +1597,43 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
     // text earlier crashes in ~DynamicLayout). See the CharSequence ownership rule.
     CharSequence* prevText = mText;
     CharSequence* prevTransformed = mTransformed;
-#if 0
+    // Free a now-orphaned previous value of `text` after transforming it. A transform
+    // (removeSuggestionSpans / InputFilter) may return a fresh object that supersedes
+    // `text`, orphaning it. Free the orphan unless it is a pointer setText manages
+    // elsewhere: mCharWrapper (a reused member, freed once in the dtor), or prevText /
+    // prevTransformed (the old mText/mTransformed, freed by the layout-safe logic at the
+    // end of this function). Same guard the EDITABLE/SPANNABLE/Precomputed branches use.
+    auto freeOrphan = [&](CharSequence* p) {
+        if (p != nullptr && p != mCharWrapper && p != prevText && p != prevTransformed) {
+            delete p;
+        }
+    };
+
     mTextSetFromXmlOrResourceId = false;
     if (text == nullptr) {
         text = new SpannedString(u"");
     }
 
-    // If suggestions are not enabled, remove the suggestion spans from the text
-    /*if (!isSuggestionsEnabled()) {
+    // If suggestions are not enabled, remove the suggestion spans from the text.
+    // removeSuggestionSpans returns a fresh SpannableStringBuilder (a copy) when the
+    // source is a Spanned-but-not-Spannable, orphaning the original — free it.
+    if (!isSuggestionsEnabled()) {
+        CharSequence* original = text;
         text = removeSuggestionSpans(text);
-    }*/
+        if (text != original) freeOrphan(original);
+    }
 
     if (!mUserSetTextScaleX) mTextPaint.setTextScaleX(1.0f);
-    auto spannedText=dynamic_cast<Spanned*>(text);
+
+    // Marquee-via-span trigger (AOSP 7355-7365): if the text has a MARQUEE
+    // ellipsis span attached, configure fading edges + ellipsize. Disabled in
+    // CDROID: getSpanStart() takes a ParcelableSpan* (a span pointer), but AOSP
+    // passes the TruncateAt enum itself as the span tag — CDROID hasn't ported
+    // that tag-as-span mechanism, so there is no MARQUEE span object to look up.
+    // The XML/android:ellipsize=marquee path (handled in setEllipsize, ~line 405)
+    // already drives marquee setup, so this stays deferred.
+#if 0
+    Spanned* spannedText = dynamic_cast<Spanned*>(text);
     if (spannedText && spannedText->getSpanStart(TextUtils::TruncateAt::MARQUEE) >= 0) {
         if (ViewConfiguration::get(mContext).isFadingMarqueeEnabled()) {
             setHorizontalFadingEdgeEnabled(true);
@@ -1619,23 +1644,32 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
         }
         setEllipsize(TextUtils::TruncateAt::MARQUEE);
     }
-    /*int n = mFilters.length;
+#endif
+
+    // Each filter may return an owned replacement CharSequence (non-null) that
+    // supersedes `text`; nullptr means keep the current text. Free the superseded value
+    // each time it is replaced. `dest` is EMPTY_SPANNED (AOSP: a static empty Spanned)
+    // because at setText time the destination is being fully replaced; LengthFilter
+    // dereferences dest->length(), so it must be a real object, not nullptr.
+    static SpannedString EMPTY_SPANNED(u"");
+    const int n = mFilters.size();
     for (int i = 0; i < n; i++) {
-        CharSequence* out = mFilters[i]->filter(text, 0, text.length(), EMPTY_SPANNED, 0, 0);
+        CharSequence* out = mFilters[i]->filter(text, 0, text->length(), &EMPTY_SPANNED, 0, 0);
         if (out != nullptr) {
+            freeOrphan(text);
             text = out;
         }
-    }*/
+    }
 
     if (notifyBefore) {
         if (mText != nullptr) {
             oldlen = mText->length();
-            sendBeforeTextChanged(mText, 0, oldlen, text->length());
+            sendBeforeTextChanged(*mText, 0, oldlen, text->length());
         } else {
-            //sendBeforeTextChanged("", 0, 0, text->length());
+            String ss;
+            sendBeforeTextChanged(ss, 0, 0, text->length());
         }
     }
-#endif
     bool needEditableForNotification = false;
 
     if (/*mListeners != nullptr &&*/ mListeners.size() != 0) {
@@ -1826,7 +1860,7 @@ void TextView::setText(CharSequence* text, TextView::BufferType type, bool notif
 }
 
 CharSequence& TextView::getText(){
-    return *mText;//->toString();
+    return *mText;
 }
 
 int TextView::length()const{

@@ -5433,10 +5433,10 @@ void RecyclerView::LayoutManager::setMeasuredDimensionFromChildren(int widthSpec
         mRecyclerView->defaultOnMeasure(widthSpec, heightSpec);
         return;
     }
-    int minX = INT_MAX;//Integer.MAX_VALUE;
-    int minY = INT_MAX;//Integer.MAX_VALUE;
-    int maxX = INT_MIN;//Integer.MIN_VALUE;
-    int maxY = INT_MIN;//Integer.MIN_VALUE;
+    int minX = INT_MAX;
+    int minY = INT_MAX;
+    int maxX = INT_MIN;
+    int maxY = INT_MIN;
 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);

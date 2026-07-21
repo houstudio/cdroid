@@ -129,6 +129,10 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
 
     AtExit::registerCallback([this](){
         LOGD("Exit...");
+        // Reclaim input events still queued in device buffers now that the main
+        // loop has stopped consuming them; otherwise they leak (InputEventSource
+        // is a process-singleton that is never destroyed).
+        InputEventSource::getInstance().clearEvents();
         mQuitFlag = true;
     });
 
