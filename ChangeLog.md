@@ -1,4 +1,5 @@
-# **
+# **4.9.6
+  - some memleaks
   - add TouchDevice VirtualKeyMap support
   - fix NumberPicker::onTouchEvent's behavior(ACTION_CANCEL)
   - add AChartEngine(Kplot is removed)
