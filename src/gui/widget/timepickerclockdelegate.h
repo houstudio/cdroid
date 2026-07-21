@@ -4,7 +4,7 @@
 #include <widget/imagebutton.h>
 #include <widget/radiobutton.h>
 #include <widget/timepicker.h>
-#include <widget/numberictextview.h>
+#include <widget/numerictextview.h>
 #include <widget/radialtimepickerview.h>
 #include <widget/textinputtimepickerview.h>
 namespace cdroid{
@@ -139,17 +139,6 @@ public:
     View* getMinuteView() override;
     View* getAmView() override;
     View* getPmView() override;
-};
-
-// Ported from Java private static class NearestTouchDelegate implements View.OnTouchListener.
-// Routes a touch on a transparent container (e.g. the AM/PM layout) to the nearest child,
-// so tapping between two radio buttons hits the closer one.
-class TimePickerClockDelegateNearestTouchDelegate:public View::OnTouchListener {
-private:
-    View* mInitialTouchTarget = nullptr;
-    static View* findNearestChild(ViewGroup* v, int x, int y);
-public:
-    bool operator()(View& view, MotionEvent& motionEvent) override;
 };
 }/*endof namespace*/
 #endif/*__TIMEPICKER_CLOCK_DELEGATE_H__*/
