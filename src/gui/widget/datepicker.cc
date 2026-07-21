@@ -241,10 +241,11 @@ void DatePicker::AbstractDatePickerDelegate::setValidationCallback(const Validat
 AutofillValue DatePicker::AbstractDatePickerDelegate::getAutofillValue() {
     const int64_t time=(mAutofilledValue!=0)? mAutofilledValue:mCurrentDate.getTimeInMillis();
     return AutofillValue.forDate(time);
-}
+}*/
+
 void DatePicker::AbstractDatePickerDelegate::resetAutofilledValue() {
     mAutofilledValue = 0;
-}*/
+}
 
 void DatePicker::AbstractDatePickerDelegate::onValidationChanged(bool valid) {
     if (mValidationCallback != nullptr) {

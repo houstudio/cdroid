@@ -147,8 +147,8 @@ View* TimePicker::getPmView() {
 std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
     //Locale locale = context.getResources().getConfiguration().locale;
     //DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-    std::vector<std::string> amPm;// = dfs.getAmPmStrings();
-    std::vector<std::string> narrowAmPm;// = dfs.getAmpmNarrowStrings();
+    std::vector<std::string> amPm={"AM","PM"};// = dfs.getAmPmStrings();
+    std::vector<std::string> narrowAmPm{"AM","PM"};// = dfs.getAmpmNarrowStrings();
 
     std::vector<std::string> result;
     result.push_back(amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0]);

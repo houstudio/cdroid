@@ -25,6 +25,7 @@ namespace cdroid{
 CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDelegator = delegator;
+    mAdapter = nullptr;
     mScrollStateChangedRunnable = new ScrollStateRunnable(this);
     mShowWeekNumber= attrs.getBoolean("showWeekNumber",DEFAULT_SHOW_WEEK_NUMBER);
     Calendar cal;
@@ -414,14 +415,22 @@ void CalendarViewLegacyDelegate::setUpAdapter() {
 }
 
 void CalendarViewLegacyDelegate::setUpHeader() {
-    //mDayNamesShort = new String[mDaysPerWeek];
-    //mDayNamesLong = new String[mDaysPerWeek];
+    // TODO: replace with DateUtils::getDayOfWeekString(calendarDay, LENGTH_*) once
+    // DateUtils is ported. No locale weekday-name infrastructure exists in cdroid
+    // yet, so fall back to a static English table indexed by day-of-week
+    // (Calendar::SUNDAY=1 .. Calendar::SATURDAY=7).
+    static const char* kDayNamesShort[] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+    static const char* kDayNamesLong[]  = {"Sunday", "Monday", "Tuesday", "Wednesday",
+                                           "Thursday", "Friday", "Saturday"};
+
+    // Java allocated new String[mDaysPerWeek]; the vector members start empty, so
+    // size them before indexed assignment (otherwise this is out-of-bounds UB).
+    mDayNamesShort.assign(mDaysPerWeek, std::string());
+    mDayNamesLong.assign(mDaysPerWeek, std::string());
     for (int i = mFirstDayOfWeek, count = mFirstDayOfWeek + mDaysPerWeek; i < count; i++) {
-        int calendarDay = (i > Calendar::SATURDAY) ? i - Calendar::SATURDAY : i;
-        mDayNamesShort[i - mFirstDayOfWeek] = std::to_string(calendarDay);
-            //DateUtils::getDayOfWeekString(calendarDay,DateUtils::LENGTH_SHORTEST);
-        mDayNamesLong[i - mFirstDayOfWeek] = std::to_string(calendarDay);
-            //DateUtils::getDayOfWeekString(calendarDay,DateUtils::LENGTH_LONG);
+        const int calendarDay = (i > Calendar::SATURDAY) ? i - Calendar::SATURDAY : i;
+        mDayNamesShort[i - mFirstDayOfWeek] = kDayNamesShort[calendarDay - 1];
+        mDayNamesLong[i - mFirstDayOfWeek]  = kDayNamesLong[calendarDay - 1];
     }
 
     TextView* label = (TextView*) mDayNamesHeader->getChildAt(0);
@@ -766,9 +775,11 @@ void CalendarViewLegacyDelegate::WeekView::init(int weekNumber, int selectedWeek
     mTempDate.add(Calendar::WEEK_OF_YEAR, mWeek);
     mTempDate.setFirstDayOfWeek(mCV->mFirstDayOfWeek);
 
-    // Allocate space for caching the day numbers and focus values
-    //mDayNumbers = new String[mNumCells];
-    //mFocusDay = new boolean[mNumCells];
+    // Allocate space for caching the day numbers and focus values. Java did
+    // new String[mNumCells] / new boolean[mNumCells]; size the vectors before
+    // the indexed writes below (otherwise out-of-bounds UB).
+    mDayNumbers.assign(mNumCells, std::string());
+    mFocusDay.assign(mNumCells, false);
 
     // If we're showing the week number calculate it based on Monday
     int i = 0;
