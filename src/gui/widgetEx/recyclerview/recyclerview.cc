@@ -54,8 +54,7 @@ RecyclerView::RecyclerView(int w,int h):ViewGroup(w,h){
     initChildrenHelper();
     initAutofill();
     // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility()
-            == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
@@ -92,8 +91,7 @@ RecyclerView::RecyclerView(Context* context,const AttributeSet& attrs)
     initAutofill();
     mClipToPadding = attrs.getBoolean("clipToPadding", true);
     // If not explicitly specified this view is important for accessibility.
-    if (getImportantForAccessibility()
-            == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
+    if (getImportantForAccessibility() == View::IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(View::IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
     setAccessibilityDelegate(new RecyclerViewAccessibilityDelegate(this));
@@ -1317,6 +1315,7 @@ void RecyclerView::suppressLayout(bool frozen) {
             mLayoutSuppressed = true;
             mIgnoreMotionEventTillDown = true;
             stopScroll();
+            cancelEvent->recycle();
         }
     }
 }
@@ -1750,7 +1749,7 @@ View* RecyclerView::focusSearch(View* focused, int direction){
             needsFocusFailureLayout = (found == nullptr);
         }
         if (!needsFocusFailureLayout && mLayout->canScrollHorizontally()) {
-            bool rtl = mLayout->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
+            const bool rtl = mLayout->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
             const int absDir = (direction == View::FOCUS_FORWARD) ^ rtl
                     ? View::FOCUS_RIGHT : View::FOCUS_LEFT;
             const View* found = ff.findNextFocus(this, focused, absDir);
@@ -2250,6 +2249,7 @@ bool RecyclerView::onTouchEvent(MotionEvent& e) {
     case MotionEvent::ACTION_MOVE: {
             const int index = e.findPointerIndex(mScrollPointerId);
             if (index < 0) {
+                vtev->recycle();
                 LOGE("Error processing scroll; pointer index for id %d=%d"
                      " not found. Did any MotionEvents get skipped?",mScrollPointerId,index);
                 return false;
@@ -5433,10 +5433,10 @@ void RecyclerView::LayoutManager::setMeasuredDimensionFromChildren(int widthSpec
         mRecyclerView->defaultOnMeasure(widthSpec, heightSpec);
         return;
     }
-    int minX = INT_MAX;//Integer.MAX_VALUE;
-    int minY = INT_MAX;//Integer.MAX_VALUE;
-    int maxX = INT_MIN;//Integer.MIN_VALUE;
-    int maxY = INT_MIN;//Integer.MIN_VALUE;
+    int minX = INT_MAX;
+    int minY = INT_MAX;
+    int maxX = INT_MIN;
+    int maxY = INT_MIN;
 
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
