@@ -3,6 +3,9 @@
 #include <core/calendar.h>
 #include <core/buddhistcalendar.h>
 #include <core/taiwancalendar.h>
+#include <core/copticcalendar.h>
+#include <core/ethiopiccalendar.h>
+#include <core/hebrewcalendar.h>
 
 // Calendar alignment tests (android-36 java.util.Calendar). All instances are
 // obtained via getInstance()/GregorianCalendar; CDROID keeps Calendar concrete
@@ -334,4 +337,63 @@ TEST_F(CALENDAR, taiwan_minguo){
     ASSERT_EQ(tc.get(Calendar::YEAR), 113);
     ASSERT_EQ(tc.get(Calendar::ERA), 1); // MINGUO
     ASSERT_EQ(tc.get(Calendar::DAY_OF_WEEK), Calendar::MONDAY);
+}
+
+// ---- Coptic / Ethiopic (shared CECalendar, 13-month) ----
+
+TEST_F(CALENDAR, coptic_month_lengths){
+    CopticCalendar cc;
+    cc.setTimeZone(0);
+    cc.set(1739, 12, 1, 0, 0, 0); // 13th month, leap year (1739 % 4 == 3)
+    ASSERT_EQ(cc.getActualMaximum(Calendar::DAY_OF_MONTH), 6);
+    cc.set(1737, 12, 1, 0, 0, 0); // 13th month, non-leap
+    ASSERT_EQ(cc.getActualMaximum(Calendar::DAY_OF_MONTH), 5);
+    cc.set(1737, 0, 1, 0, 0, 0);  // regular month
+    ASSERT_EQ(cc.getActualMaximum(Calendar::DAY_OF_MONTH), 30);
+}
+
+TEST_F(CALENDAR, coptic_roundtrip){
+    CopticCalendar cc;
+    cc.setTimeZone(0);
+    cc.set(1737, 5, 15, 12, 30, 45);
+    ASSERT_EQ(cc.get(Calendar::YEAR), 1737);
+    ASSERT_EQ(cc.get(Calendar::MONTH), 5);
+    ASSERT_EQ(cc.get(Calendar::DAY_OF_MONTH), 15);
+    ASSERT_EQ(cc.get(Calendar::HOUR_OF_DAY), 12);
+    ASSERT_EQ(cc.get(Calendar::MINUTE), 30);
+}
+
+TEST_F(CALENDAR, ethiopic_roundtrip){
+    EthiopicCalendar ec;
+    ec.setTimeZone(0);
+    ec.set(2015, 5, 15, 9, 0, 0);
+    ASSERT_EQ(ec.get(Calendar::YEAR), 2015);
+    ASSERT_EQ(ec.get(Calendar::MONTH), 5);
+    ASSERT_EQ(ec.get(Calendar::DAY_OF_MONTH), 15);
+}
+
+// Coptic and Ethiopic differ only in epoch -> same nominal date gives different
+// instants (epoch offset 1825029 vs 1723856).
+TEST_F(CALENDAR, coptic_ethiopic_distinct_epoch){
+    CopticCalendar cc; cc.setTimeZone(0); cc.set(1, 0, 1, 0, 0, 0);
+    EthiopicCalendar ec; ec.setTimeZone(0); ec.set(1, 0, 1, 0, 0, 0);
+    ASSERT_NE(cc.getTime(), ec.getTime());
+}
+
+// ---- Hebrew (lunisolar; molad + dehiyyot) ----
+
+TEST_F(CALENDAR, hebrew_rosh_hashanah){
+    HebrewCalendar hc; hc.setTimeZone(0); hc.set(5784, 0, 1, 0, 0, 0); // Tishri 1, 5784
+    auto g = Calendar::getInstance(0); g->set(2023, 8, 16, 0, 0, 0);    // == 2023-09-16 (Saturday)
+    ASSERT_EQ(hc.getTime(), g->getTime());
+    ASSERT_EQ(hc.get(Calendar::YEAR), 5784);
+    ASSERT_EQ(hc.get(Calendar::DAY_OF_WEEK), Calendar::SATURDAY);
+}
+
+TEST_F(CALENDAR, hebrew_roundtrip){
+    HebrewCalendar hc; hc.setTimeZone(0); hc.set(5784, 5, 15, 10, 30, 0);
+    ASSERT_EQ(hc.get(Calendar::YEAR), 5784);
+    ASSERT_EQ(hc.get(Calendar::MONTH), 5);
+    ASSERT_EQ(hc.get(Calendar::DAY_OF_MONTH), 15);
+    ASSERT_EQ(hc.get(Calendar::HOUR_OF_DAY), 10);
 }

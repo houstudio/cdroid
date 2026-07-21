@@ -17,16 +17,22 @@
  *********************************************************************************/
 #ifndef __CE_CALENDAR_H__
 #define __CE_CALENDAR_H__
-
 #include <core/gregoriancalendar.h>
 
 namespace cdroid {
 
+// Shared base for CopticCalendar and EthiopicCalendar (ICU android.icu.util.
+// CECalendar). Both are 13-month calendars (12x30 days + intercalary 5/6);
+// they differ only in the Julian-day epoch offset returned by getJDEpochOffset().
 class CECalendar : public GregorianCalendar {
 public:
     CECalendar();
     CECalendar(int year, int month, int date);
     CECalendar(int year, int month, int date, int hourOfDay, int minute, int second);
+
+    // JD offset of this calendar's epoch from the Julian day epoch.
+    // Coptic == 1825029, Ethiopic == 1723856.
+    virtual int getJDEpochOffset() const = 0;
 
 protected:
     void computeTime() override;

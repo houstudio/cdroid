@@ -24,7 +24,7 @@ static const int ONE_SECOND = 1000;
 static const int ONE_MINUTE = 60 * ONE_SECOND;
 static const int ONE_HOUR = 60 * ONE_MINUTE;
 static const int ONE_DAY = 24 * ONE_HOUR;
-static const int64_t HEBREW_EPOCH = -1373429;
+static const int64_t HEBREW_EPOCH = -1373428;
 
 static int64_t floorDiv(int64_t a, int64_t b) {
     int64_t result = a / b;
@@ -88,7 +88,7 @@ static int64_t absoluteFromGregorian(int year, int month, int day) {
     int64_t y = year - 1;
     int64_t dayOfYear = day;
     static const int monthDays[] = {31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    for (int i = 0; i < month; ++i) {
+    for (int i = 0; i < month - 1; ++i) {
         dayOfYear += monthDays[i];
         if (i == 1 && ((year % 4 == 0 && year % 100 != 0) || (year % 400 == 0))) {
             dayOfYear += 1;
@@ -181,22 +181,13 @@ void HebrewCalendar::computeTime() {
 }
 
 void HebrewCalendar::computeFields() {
-    int64_t utcMillis = getTime();
-    int64_t localMillis = utcMillis + static_cast<int64_t>(getTimeZone()) * ONE_SECOND;
-    int64_t localSeconds = floorDiv(localMillis, ONE_SECOND);
-    int millisecond = static_cast<int>(localMillis - localSeconds * ONE_SECOND);
-    if (millisecond < 0) {
-        millisecond += ONE_SECOND;
-        localSeconds -= 1;
-    }
+    int64_t zoneMillis = static_cast<int64_t>(getTimeZone()) * ONE_SECOND;
+    int64_t localMillis = getTime() + zoneMillis;
+    int64_t days = floorDiv(localMillis, ONE_DAY);
+    int64_t millisInDay = localMillis - days * ONE_DAY;
 
-    time_t localTime = static_cast<time_t>(localSeconds);
-    struct tm tn;
-    gmtime_r(&localTime, &tn);
-
-    int64_t dayCount = floorDiv(localMillis, ONE_DAY);
     int64_t epochDay = absoluteFromGregorian(1970, 1, 1);
-    int64_t absoluteDay = dayCount + epochDay;
+    int64_t absoluteDay = days + epochDay;
     int year;
     int monthIndex;
     int day;
@@ -207,14 +198,21 @@ void HebrewCalendar::computeFields() {
     internalSet(DATE, day);
     internalSet(DAY_OF_MONTH, day);
     internalSet(DAY_OF_YEAR, getHebrewDayOfYear(year, monthIndex, day));
-    internalSet(DAY_OF_WEEK, tn.tm_wday + 1);
-    internalSet(AM_PM, tn.tm_hour / 12);
-    internalSet(HOUR_OF_DAY, tn.tm_hour);
-    internalSet(HOUR, tn.tm_hour % 12);
-    internalSet(MINUTE, tn.tm_min);
-    internalSet(SECOND, tn.tm_sec);
-    internalSet(MILLISECOND, millisecond);
-    internalSet(ZONE_OFFSET, getTimeZone());
+    // absoluteDay 1 == proleptic Gregorian 1-1-1 == Monday -> SUNDAY=1..SATURDAY=7.
+    int dow = static_cast<int>(((absoluteDay % 7) + 7) % 7 + 1);
+    internalSet(DAY_OF_WEEK, dow);
+
+    int64_t t = millisInDay;
+    internalSet(MILLISECOND, static_cast<int>(t % 1000));
+    t /= 1000;
+    internalSet(SECOND, static_cast<int>(t % 60));
+    t /= 60;
+    internalSet(MINUTE, static_cast<int>(t % 60));
+    t /= 60;
+    internalSet(HOUR_OF_DAY, static_cast<int>(t));
+    internalSet(AM_PM, static_cast<int>(t / 12));
+    internalSet(HOUR, static_cast<int>(t % 12));
+    internalSet(ZONE_OFFSET, static_cast<int>(zoneMillis));
     internalSet(DST_OFFSET, 0);
     internalSet(ERA, 1);
     computeWeekFields();

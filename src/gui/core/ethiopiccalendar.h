@@ -17,20 +17,16 @@
  *********************************************************************************/
 #ifndef __ETHIOPIC_CALENDAR_H__
 #define __ETHIOPIC_CALENDAR_H__
-
-#include <core/gregoriancalendar.h>
+#include <core/cecalendar.h>
 
 namespace cdroid {
 
-class EthiopicCalendar : public GregorianCalendar {
+class EthiopicCalendar : public CECalendar {
 public:
     EthiopicCalendar();
     EthiopicCalendar(int year, int month, int date);
     EthiopicCalendar(int year, int month, int date, int hourOfDay, int minute, int second);
-
-protected:
-    void computeTime() override;
-    void computeFields() override;
+    int getJDEpochOffset() const override { return 1723856; }
 };
 
 } // namespace cdroid

@@ -17,20 +17,16 @@
  *********************************************************************************/
 #ifndef __COPTIC_CALENDAR_H__
 #define __COPTIC_CALENDAR_H__
-
-#include <core/gregoriancalendar.h>
+#include <core/cecalendar.h>
 
 namespace cdroid {
 
-class CopticCalendar : public GregorianCalendar {
+class CopticCalendar : public CECalendar {
 public:
     CopticCalendar();
     CopticCalendar(int year, int month, int date);
     CopticCalendar(int year, int month, int date, int hourOfDay, int minute, int second);
-
-protected:
-    void computeTime() override;
-    void computeFields() override;
+    int getJDEpochOffset() const override { return 1825029; }
 };
 
 } // namespace cdroid
