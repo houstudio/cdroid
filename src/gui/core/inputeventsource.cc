@@ -251,6 +251,20 @@ int InputEventSource::handleEvents(){
     return ret;
 }
 
+void InputEventSource::clearEvents(){
+    // Signal the input thread to stop so it cannot keep filling queues while
+    // we drain them (mRunning is its loop condition; see doEventsConsume).
+    mRunning = false;
+    std::vector<InputEvent*> events;
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    for (auto& it : mDevices) {
+        it.second->drainEvents(events);
+    }
+    for (InputEvent* e : events) {
+        e->recycle();
+    }
+}
+
 void InputEventSource::sendEvent(InputEvent&event){
     WindowManager::getInstance().processEvent(event);
 }

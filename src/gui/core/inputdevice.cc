@@ -280,6 +280,12 @@ InputDevice::~InputDevice(){
         delete mKeyCharacterMap;
     }
     mKeyCharacterMap = nullptr;
+    // Return any events still queued (e.g. device removed mid-stream) to the
+    // event pool instead of leaking them when the device is destroyed.
+    for (InputEvent* e : mEvents) {
+        e->recycle();
+    }
+    mEvents.clear();
 }
 
 KeyCharacterMap* InputDevice::getKeyCharacterMap()const{

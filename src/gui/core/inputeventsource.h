@@ -63,6 +63,13 @@ public:
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;
+    /*Drain every device's pending event queue and return the events to the
+      pool. Called on shutdown to reclaim MotionEvent/KeyEvent still queued
+      after the main loop stopped consuming them: InputEventSource is a process
+      singleton that is never destroyed, so its device queues would otherwise
+      stay populated and leak on exit. Also stops the input thread so it cannot
+      keep refilling the queues while we drain.*/
+    void clearEvents();
     void sendEvent(InputEvent&);
     /*Lookup an input device by id (== fd) WITHOUT creating it — a pure registry
       query, the equivalent of Android InputManagerGlobal.getInputDevice(id).
