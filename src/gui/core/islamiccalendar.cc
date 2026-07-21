@@ -15,46 +15,22 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-
-#include <islamiccalendar.h>
+#include <core/islamiccalendar.h>
+#include <core/calendarutils.h>
 
 namespace {
-static constexpr int64_t ONE_SECOND = 1000;
-static constexpr int64_t ONE_MINUTE = 60 * ONE_SECOND;
-static constexpr int64_t ONE_HOUR = 60 * ONE_MINUTE;
-static constexpr int64_t ONE_DAY = 24 * ONE_HOUR;
-static constexpr int64_t ISLAMIC_EPOCH = 1948439LL;
-
-static int64_t gregorianToJdn(int year, int month, int day) {
-    int a = (14 - month) / 12;
-    int y = year + 4800 - a;
-    int m = month + 12 * a - 3;
-    return day + ((153 * m + 2) / 5) + 365LL * y + y / 4 - y / 100 + y / 400 - 32045;
-}
-
-static void jdnToGregorian(int64_t jdn, int& year, int& month, int& day) {
-    int64_t a = jdn + 32044;
-    int64_t b = (4 * a + 3) / 146097;
-    int64_t c = a - (146097 * b) / 4;
-    int64_t d = (4 * c + 3) / 1461;
-    int64_t e = c - (1461 * d) / 4;
-    int64_t m = (5 * e + 2) / 153;
-    day = static_cast<int>(e - (153 * m + 2) / 5 + 1);
-    month = static_cast<int>(m + 3 - 12 * (m / 10));
-    year = static_cast<int>(100 * b + d - 4800 + (m / 10));
-}
+static const int64_t ONE_SECOND = 1000;
+static const int64_t ONE_DAY    = 24 * 60 * 60 * ONE_SECOND;
+static const int EPOCH_JULIAN_DAY = 2440588;
+static const int64_t ISLAMIC_EPOCH = 1948439LL; // tabular (Thursday) epoch
 
 static bool isIslamicLeapYear(int year) {
     return ((11 * year + 14) % 30) < 11;
 }
 
 static int getIslamicMonthLength(int year, int month) {
-    if ((month % 2) == 1) {
-        return 30;
-    }
-    if (month != 12) {
-        return 29;
-    }
+    if ((month % 2) == 1) return 30;
+    if (month != 12) return 29;
     return isIslamicLeapYear(year) ? 30 : 29;
 }
 
@@ -62,25 +38,21 @@ static int getIslamicYearLength(int year) {
     return isIslamicLeapYear(year) ? 355 : 354;
 }
 
-static int64_t islamicToJdn(int year, int month, int day) {
-    int64_t monthDays = ((month - 1) * 59 + 1) / 2;
-    int64_t yearDays = 354LL * (year - 1) + (3 + 11LL * year) / 30;
-    return day + monthDays + yearDays + ISLAMIC_EPOCH - 1;
+// Tabular Islamic date (1-based month) -> Julian day.
+static int islamicToJdn(int year, int month, int day) {
+    int monthDays = ((month - 1) * 59 + 1) / 2;
+    int yearDays = 354 * (year - 1) + (3 + 11 * year) / 30;
+    return day + monthDays + yearDays + static_cast<int>(ISLAMIC_EPOCH) - 1;
 }
 
-static void jdnToIslamic(int64_t jdn, int& year, int& month, int& day) {
-    year = static_cast<int>((30 * (jdn - ISLAMIC_EPOCH) + 10646) / 10631);
-    while (jdn < islamicToJdn(year, 1, 1)) {
-        year--;
-    }
-    while (jdn >= islamicToJdn(year + 1, 1, 1)) {
-        year++;
-    }
+// Julian day -> tabular Islamic date (1-based month).
+static void jdnToIslamic(int jdn, int& year, int& month, int& day) {
+    year = (30 * (jdn - ISLAMIC_EPOCH) + 10646) / 10631;
+    while (jdn < islamicToJdn(year, 1, 1)) year--;
+    while (jdn >= islamicToJdn(year + 1, 1, 1)) year++;
     month = 1;
-    while (month < 12 && jdn >= islamicToJdn(year, month + 1, 1)) {
-        month++;
-    }
-    day = static_cast<int>(jdn - islamicToJdn(year, month, 1) + 1);
+    while (month < 12 && jdn >= islamicToJdn(year, month + 1, 1)) month++;
+    day = jdn - islamicToJdn(year, month, 1) + 1;
 }
 
 static int getIslamicDayOfYear(int year, int month, int day) {
@@ -91,6 +63,11 @@ static int getIslamicDayOfYear(int year, int month, int day) {
     return dayOfYear;
 }
 
+static int julianDayToDayOfWeek(int jd) {
+    int dow = (jd + cdroid::Calendar::MONDAY) % 7;
+    if (dow < cdroid::Calendar::SUNDAY) dow += 7;
+    return dow;
+}
 } // namespace
 
 namespace cdroid {
@@ -107,54 +84,54 @@ IslamicCalendar::IslamicCalendar(int year, int month, int date, int hourOfDay, i
 }
 
 void IslamicCalendar::computeTime() {
-    int year = internalGet(YEAR);
-    int month = internalGet(MONTH) + 1;
-    int day = internalGet(DAY_OF_MONTH);
-    if (month < 1 || month > 12 || day < 1 || day > getIslamicMonthLength(year, month)) {
-        GregorianCalendar::computeTime();
-        return;
+    int year = isSet(YEAR) ? internalGet(YEAR) : 1;
+    int month = internalGet(MONTH) + 1; // 1-based for islamicToJdn
+    int day = isSet(DAY_OF_MONTH) ? internalGet(DAY_OF_MONTH) : 1;
+    int jd = islamicToJdn(year, month, day);
+
+    int64_t timeOfDay = 0;
+    if (isSet(HOUR_OF_DAY)) {
+        timeOfDay += internalGet(HOUR_OF_DAY);
+    } else if (isSet(HOUR)) {
+        timeOfDay += internalGet(HOUR);
+        if (isSet(AM_PM)) timeOfDay += 12 * internalGet(AM_PM);
     }
-    int64_t jdn = islamicToJdn(year, month, day);
-    int gYear, gMonth, gDay;
-    jdnToGregorian(jdn, gYear, gMonth, gDay);
-    struct tm tn = {};
-    tn.tm_year = gYear - 1900;
-    tn.tm_mon = gMonth - 1;
-    tn.tm_mday = gDay;
-    tn.tm_hour = isSet(HOUR_OF_DAY) ? internalGet(HOUR_OF_DAY) : 0;
-    if (!isSet(HOUR_OF_DAY) && isSet(HOUR)) {
-        tn.tm_hour = (internalGet(AM_PM) == PM ? 12 : 0) + internalGet(HOUR);
-    }
-    tn.tm_min = isSet(MINUTE) ? internalGet(MINUTE) : 0;
-    tn.tm_sec = isSet(SECOND) ? internalGet(SECOND) : 0;
-    time_t seconds = timegm(&tn);
-    mTime = static_cast<int64_t>(seconds) * ONE_SECOND + (isSet(MILLISECOND) ? internalGet(MILLISECOND) : 0) - static_cast<int64_t>(getTimeZone()) * ONE_SECOND;
+    timeOfDay = (timeOfDay * 60 + (isSet(MINUTE) ? internalGet(MINUTE) : 0)) * 60
+              + (isSet(SECOND) ? internalGet(SECOND) : 0);
+    timeOfDay = timeOfDay * 1000 + (isSet(MILLISECOND) ? internalGet(MILLISECOND) : 0);
+
+    int64_t zoneMillis = static_cast<int64_t>(getTimeZone()) * ONE_SECOND;
+    mTime = (static_cast<int64_t>(jd) - EPOCH_JULIAN_DAY) * ONE_DAY + timeOfDay - zoneMillis;
     isTimeSet = true;
 }
 
 void IslamicCalendar::computeFields() {
-    int64_t utcMillis = getTime();
-    int64_t seconds = utcMillis / ONE_SECOND;
-    int64_t localSeconds = seconds + getTimeZone();
-    time_t localTime = static_cast<time_t>(localSeconds);
-    struct tm tn;
-    gmtime_r(&localTime, &tn);
-    int64_t jdn = gregorianToJdn(tn.tm_year + 1900, tn.tm_mon + 1, tn.tm_mday);
+    int64_t zoneMillis = static_cast<int64_t>(getTimeZone()) * ONE_SECOND;
+    int64_t localMillis = getTime() + zoneMillis;
+    int64_t days = cdroid::CalendarUtils::floorDivide(localMillis, ONE_DAY);
+    int jd = static_cast<int>(days) + EPOCH_JULIAN_DAY;
+
     int year, month, day;
-    jdnToIslamic(jdn, year, month, day);
+    jdnToIslamic(jd, year, month, day);
+
     internalSet(YEAR, year);
-    internalSet(MONTH, month - 1);
+    internalSet(MONTH, month - 1); // 0-based field
     internalSet(DATE, day);
     internalSet(DAY_OF_MONTH, day);
     internalSet(DAY_OF_YEAR, getIslamicDayOfYear(year, month, day));
-    internalSet(DAY_OF_WEEK, tn.tm_wday + 1);
-    internalSet(AM_PM, tn.tm_hour / 12);
-    internalSet(HOUR_OF_DAY, tn.tm_hour);
-    internalSet(HOUR, tn.tm_hour % 12);
-    internalSet(MINUTE, tn.tm_min);
-    internalSet(SECOND, tn.tm_sec);
-    internalSet(MILLISECOND, static_cast<int>(utcMillis % ONE_SECOND));
-    internalSet(ZONE_OFFSET, getTimeZone());
+    internalSet(DAY_OF_WEEK, julianDayToDayOfWeek(jd));
+
+    int64_t t = localMillis - days * ONE_DAY;
+    internalSet(MILLISECOND, static_cast<int>(t % 1000));
+    t /= 1000;
+    internalSet(SECOND, static_cast<int>(t % 60));
+    t /= 60;
+    internalSet(MINUTE, static_cast<int>(t % 60));
+    t /= 60;
+    internalSet(HOUR_OF_DAY, static_cast<int>(t));
+    internalSet(AM_PM, static_cast<int>(t / 12));
+    internalSet(HOUR, static_cast<int>(t % 12));
+    internalSet(ZONE_OFFSET, static_cast<int>(zoneMillis));
     internalSet(DST_OFFSET, 0);
     internalSet(ERA, 1);
     computeWeekFields();

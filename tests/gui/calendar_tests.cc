@@ -6,6 +6,10 @@
 #include <core/copticcalendar.h>
 #include <core/ethiopiccalendar.h>
 #include <core/hebrewcalendar.h>
+#include <core/persiancalendar.h>
+#include <core/islamiccalendar.h>
+#include <core/indiancalendar.h>
+#include <core/japanesecalendar.h>
 
 // Calendar alignment tests (android-36 java.util.Calendar). All instances are
 // obtained via getInstance()/GregorianCalendar; CDROID keeps Calendar concrete
@@ -396,4 +400,101 @@ TEST_F(CALENDAR, hebrew_roundtrip){
     ASSERT_EQ(hc.get(Calendar::MONTH), 5);
     ASSERT_EQ(hc.get(Calendar::DAY_OF_MONTH), 15);
     ASSERT_EQ(hc.get(Calendar::HOUR_OF_DAY), 10);
+}
+
+// ---- Persian (Solar Hijri / Birashk arithmetic) ----
+// Note: CDROID uses the Birashk 2820-cycle arithmetic algorithm, NOT the
+// astronomical Iranian calendar. They diverge by +/-1 day in some years
+// (e.g. 1403: Birashk Nowruz = 2024-03-19, astronomical = 2024-03-20).
+
+TEST_F(CALENDAR, persian_nowruz){
+    PersianCalendar pc; pc.setTimeZone(0); pc.set(1403, 0, 1, 0, 0, 0); // Farvardin 1, 1403
+    auto g = Calendar::getInstance(0); g->set(2024, 2, 19, 0, 0, 0);    // Birashk: 2024-03-19
+    ASSERT_EQ(pc.getTime(), g->getTime());
+    ASSERT_EQ(pc.get(Calendar::YEAR), 1403);
+    ASSERT_EQ(pc.get(Calendar::DAY_OF_WEEK), Calendar::TUESDAY);
+}
+
+TEST_F(CALENDAR, persian_roundtrip){
+    PersianCalendar pc; pc.setTimeZone(0); pc.set(1403, 5, 15, 14, 30, 0);
+    ASSERT_EQ(pc.get(Calendar::YEAR), 1403);
+    ASSERT_EQ(pc.get(Calendar::MONTH), 5);
+    ASSERT_EQ(pc.get(Calendar::DAY_OF_MONTH), 15);
+    ASSERT_EQ(pc.get(Calendar::HOUR_OF_DAY), 14);
+}
+
+// ---- Islamic (tabular) ----
+
+TEST_F(CALENDAR, islamic_roundtrip){
+    IslamicCalendar ic;
+    ic.setTimeZone(0);
+    ic.set(1446, 0, 1, 0, 0, 0); // Muharram 1, 1446
+    ASSERT_EQ(ic.get(Calendar::YEAR), 1446);
+    ASSERT_EQ(ic.get(Calendar::MONTH), 0);
+    ASSERT_EQ(ic.get(Calendar::DAY_OF_MONTH), 1);
+}
+
+TEST_F(CALENDAR, islamic_month_lengths){
+    IslamicCalendar ic;
+    ic.setTimeZone(0);
+    ic.set(1446, 0, 1, 0, 0, 0);
+    ASSERT_EQ(ic.getActualMaximum(Calendar::DAY_OF_MONTH), 30); // odd months 30
+    ic.set(1446, 1, 1, 0, 0, 0);
+    ASSERT_EQ(ic.getActualMaximum(Calendar::DAY_OF_MONTH), 29); // even months 29
+}
+
+// ---- Indian (Saka / Indian National Calendar) ----
+// Saka year = Gregorian - 78; Chaitra 1 falls on Mar 22 (or Mar 21 in a leap year).
+
+TEST_F(CALENDAR, indian_chaitra){
+    IndianCalendar ic; ic.setTimeZone(0); ic.set(1946, 0, 1, 0, 0, 0); // Chaitra 1, Saka 1946
+    auto g = Calendar::getInstance(0); g->set(2024, 2, 21, 0, 0, 0);    // 2024-03-21 (leap-year shift)
+    ASSERT_EQ(ic.getTime(), g->getTime());
+    ASSERT_EQ(ic.get(Calendar::YEAR), 1946);
+}
+
+TEST_F(CALENDAR, indian_roundtrip){
+    IndianCalendar ic; ic.setTimeZone(0); ic.set(1946, 5, 15, 10, 0, 0);
+    ASSERT_EQ(ic.get(Calendar::YEAR), 1946);
+    ASSERT_EQ(ic.get(Calendar::MONTH), 5);
+    ASSERT_EQ(ic.get(Calendar::DAY_OF_MONTH), 15);
+}
+
+// ---- Japanese (imperial eras: Meiji=232..Reiwa=236) ----
+
+TEST_F(CALENDAR, japanese_reiwa1){
+    JapaneseCalendar jc; jc.setTimeZone(0);
+    jc.set(Calendar::ERA, 236);       // Reiwa
+    jc.set(Calendar::YEAR, 1);
+    jc.set(Calendar::MONTH, 4);       // May
+    jc.set(Calendar::DAY_OF_MONTH, 1);
+    jc.set(Calendar::HOUR_OF_DAY, 0); jc.set(Calendar::MINUTE, 0);
+    jc.set(Calendar::SECOND, 0); jc.set(Calendar::MILLISECOND, 0);
+    auto g = Calendar::getInstance(0); g->set(2019, 4, 1, 0, 0, 0); // 2019-05-01
+    ASSERT_EQ(jc.getTime(), g->getTime());
+}
+
+TEST_F(CALENDAR, japanese_showa1){
+    JapaneseCalendar jc; jc.setTimeZone(0);
+    jc.set(Calendar::ERA, 234);       // Showa
+    jc.set(Calendar::YEAR, 1);
+    jc.set(Calendar::MONTH, 11);      // Dec
+    jc.set(Calendar::DAY_OF_MONTH, 25);
+    jc.set(Calendar::HOUR_OF_DAY, 0); jc.set(Calendar::MINUTE, 0);
+    jc.set(Calendar::SECOND, 0); jc.set(Calendar::MILLISECOND, 0);
+    auto g = Calendar::getInstance(0); g->set(1926, 11, 25, 0, 0, 0); // 1926-12-25
+    ASSERT_EQ(jc.getTime(), g->getTime());
+}
+
+TEST_F(CALENDAR, japanese_era_boundary){
+    JapaneseCalendar jc; jc.setTimeZone(0);
+    auto g = Calendar::getInstance(0);
+    g->set(2019, 4, 1, 0, 0, 0);      // Reiwa day 1
+    jc.setTime(g->getTime());
+    ASSERT_EQ(jc.get(Calendar::ERA), 236);   // Reiwa
+    ASSERT_EQ(jc.get(Calendar::YEAR), 1);
+    g->set(2019, 3, 30, 0, 0, 0);     // day before -> still Heisei
+    jc.setTime(g->getTime());
+    ASSERT_EQ(jc.get(Calendar::ERA), 235);   // Heisei
+    ASSERT_EQ(jc.get(Calendar::YEAR), 31);   // 2019 - 1989 + 1
 }
