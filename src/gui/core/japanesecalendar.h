@@ -18,7 +18,7 @@
 #ifndef __JAPANESE_CALENDAR_H__
 #define __JAPANESE_CALENDAR_H__
 
-#include <gregoriancalendar.h>
+#include <core/gregoriancalendar.h>
 
 namespace cdroid {
 

@@ -18,7 +18,7 @@
 #ifndef __COPTIC_CALENDAR_H__
 #define __COPTIC_CALENDAR_H__
 
-#include <gregoriancalendar.h>
+#include <core/gregoriancalendar.h>
 
 namespace cdroid {
 

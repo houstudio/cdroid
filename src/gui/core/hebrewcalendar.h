@@ -18,7 +18,7 @@
 #ifndef __HEBREW_CALENDAR_H__
 #define __HEBREW_CALENDAR_H__
 
-#include <calendar.h>
+#include <core/calendar.h>
 
 namespace cdroid {
 

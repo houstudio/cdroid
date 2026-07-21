@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <calendar.h>
 #include <gregoriancalendar.h>
+#include <calendarutils.h>
 #include <stdarg.h>
 #include <climits>
 #include <algorithm>
@@ -52,6 +53,55 @@ static int getLocalTimeZoneOffsetSeconds() {
 #define EPOCH_JULIAN_DAY   2440588
 #define STAMP_MAX  10000
 
+// Gregorian month table ported from ICU android.icu.util.Calendar.
+// Columns: [month length, leap-month length, days-before-month, days-before-month-leap].
+static const int GREGORIAN_MONTH_COUNT[12][4] = {
+    {  31,  31,   0,   0 }, // Jan
+    {  28,  29,  31,  31 }, // Feb
+    {  31,  31,  59,  60 }, // Mar
+    {  30,  30,  90,  91 }, // Apr
+    {  31,  31, 120, 121 }, // May
+    {  30,  30, 151, 152 }, // Jun
+    {  31,  31, 181, 182 }, // Jul
+    {  31,  31, 212, 213 }, // Aug
+    {  30,  30, 243, 244 }, // Sep
+    {  31,  31, 273, 274 }, // Oct
+    {  30,  30, 304, 305 }, // Nov
+    {  31,  31, 334, 335 }  // Dec
+};
+
+// Julian-day helpers ported from ICU android.icu.util.Calendar.
+static int millisToJulianDay(int64_t millis) {
+    return static_cast<int>(EPOCH_JULIAN_DAY + CalendarUtils::floorDivide(millis, static_cast<int64_t>(ONE_DAY)));
+}
+
+// Julian day 0 is Monday. Returns 1..7 (SUNDAY..SATURDAY).
+static int julianDayToDayOfWeek(int julian) {
+    int dayOfWeek = (julian + Calendar::MONDAY) % 7;
+    if (dayOfWeek < Calendar::SUNDAY) {
+        dayOfWeek += 7;
+    }
+    return dayOfWeek;
+}
+
+// Julian day of the day BEFORE the first day of the given extended Gregorian
+// year/month. Ported from ICU android.icu.util.Calendar.computeGregorianMonthStart.
+static int gregorianMonthStart(int year, int month) {
+    if (month < 0 || month > 11) {
+        int rem;
+        year += CalendarUtils::floorDivide(month, 12, rem);
+        month = rem;
+    }
+    int y = year - 1;
+    int julianDay = 365 * y + CalendarUtils::floorDivide(y, 4) - CalendarUtils::floorDivide(y, 100)
+                  + CalendarUtils::floorDivide(y, 400) + JAN_1_1_JULIAN_DAY - 1;
+    if (month != 0) {
+        bool isLeap = CalendarUtils::isGregorianLeapYear(year);
+        julianDay += GREGORIAN_MONTH_COUNT[month][isLeap ? 3 : 2];
+    }
+    return julianDay;
+}
+
 static bool isGregorianLeapYear(int year) {
     return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 }
@@ -68,22 +118,12 @@ static int getDaysInGregorianYear(int year) {
     return isGregorianLeapYear(year) ? 366 : 365;
 }
 
-static int getDayOfWeek(int year, int month, int day) {
-    struct tm tm = {};
-    tm.tm_year = year - 1900;
-    tm.tm_mon = month;
-    tm.tm_mday = day;
-    time_t result = timegm(&tm);
-    struct tm out = {};
-    gmtime_r(&result, &out);
-    return out.tm_wday;
-}
-
 static int getWeekCount(int year, int firstDayOfWeek, int minimalDaysInFirstWeek) {
-    int firstDayOfYear = getDayOfWeek(year, Calendar::JANUARY, 1);
+    int jan1 = gregorianMonthStart(year, 0) + 1;
+    int firstDayOfYear = julianDayToDayOfWeek(jan1);
     int offset = (firstDayOfYear - firstDayOfWeek + 7) % 7;
     int firstWeekDays = 7 - offset;
-    int yearDays = getDaysInGregorianYear(year);
+    int yearDays = isGregorianLeapYear(year) ? 366 : 365;
     if (firstWeekDays >= minimalDaysInFirstWeek) {
         return (yearDays + offset + 6) / 7;
     }
@@ -91,7 +131,6 @@ static int getWeekCount(int year, int firstDayOfWeek, int minimalDaysInFirstWeek
 }
 
 namespace cdroid{
-int Calendar::nextStamp=0;
 
 Calendar::Calendar(){
     zone  = 0;
@@ -147,14 +186,14 @@ int Calendar::getLeastMaximum(int field) const {
 }
 
 static const int LIMITS[Calendar::FIELD_COUNT][4] = {
-    { 0, 1, 0, 1 },
+    { 0, 0, 1, 1 },
     { 1, 292278994, 1, 292278994 },
     { 0, 11, 0, 11 },
     { 1, 1, 53, 53 },
     { 0, 0, 0, 0 },
     { 1, 1, 28, 31 },
     { 1, 1, 365, 366 },
-    { 0, 0, 6, 6 },
+    { 1, 1, 7, 7 },
     { -1, -1, 5, 5 },
     { 0, 0, 1, 1 },
     { 0, 0, 11, 11 },
@@ -164,7 +203,6 @@ static const int LIMITS[Calendar::FIELD_COUNT][4] = {
     { 0, 0, 999, 999 },
     { -24 * ONE_HOUR, -16 * ONE_HOUR, 12 * ONE_HOUR, 30 * ONE_HOUR },
     { 0, 0, 2 * ONE_HOUR, 2 * ONE_HOUR },
-    { 1, INT_MAX, 1, INT_MAX },
 };
 
 int Calendar::getLimit(int field, int limitType) const {
@@ -227,6 +265,9 @@ void Calendar::updateTime() {
 }
 
 Calendar& Calendar::set(int field, int value){
+    if (field < 0 || field >= FIELD_COUNT) {
+        return *this;  // reject out-of-range fields (WEEK_YEAR uses setWeekDate)
+    }
     if (areFieldsSet && !areAllFieldsSet) {
          computeFields();
     }
@@ -252,76 +293,73 @@ void Calendar::setTime(int64_t millis){
 
 void Calendar::add(int field, int amount){
     if (amount == 0) return;
-    int64_t millis = getTime();
-    int64_t millisPart = millis % ONE_SECOND;
-    if (millisPart < 0) {
-        millisPart += ONE_SECOND;
-        millis -= ONE_SECOND;
-    }
-    int64_t seconds = millis / ONE_SECOND;
-    int64_t localSeconds = seconds + zone;
-    time_t tmLocal = static_cast<time_t>(localSeconds);
-    struct tm tn;
-    gmtime_r(&tmLocal, &tn);
+
+    // Ported from ICU android.icu.util.Calendar.add. CDROID has no DST, so the
+    // wall-time-invariant dance is omitted; the path is pure-integer (no libc
+    // timegm), which avoids the 2038 overflow on 32-bit ARM time_t.
     switch (field) {
+        case ERA:
+            set(field, get(field) + amount);
+            pinField(ERA);
+            return;
         case YEAR: {
-            int year = tn.tm_year + amount + 1900;
-            int month = tn.tm_mon;
-            int day = tn.tm_mday;
-            int maxDay = getDaysInGregorianMonth(year, month);
-            if (day > maxDay) day = maxDay;
-            tn.tm_year = year - 1900;
-            tn.tm_mday = day;
-            break;
+            // Add Rule 2: clamp DAY_OF_MONTH to the target year/month length
+            // (e.g. Feb 29 + 1 year -> Feb 28 in a non-leap year).
+            int year = get(YEAR) + amount;
+            int month = get(MONTH);
+            int dom = get(DAY_OF_MONTH);
+            int monthLen = handleGetMonthLength(year, month);
+            if (dom > monthLen) dom = monthLen;
+            set(YEAR, year);
+            set(DAY_OF_MONTH, dom);
+            return;
         }
         case MONTH: {
-            int year = tn.tm_year + 1900;
-            int month = tn.tm_mon + amount;
-            int day = tn.tm_mday;
-            year += month / 12;
-            month %= 12;
-            if (month < 0) {
-                month += 12;
-                year -= 1;
-            }
-            int maxDay = getDaysInGregorianMonth(year, month);
-            if (day > maxDay) day = maxDay;
-            tn.tm_year = year - 1900;
-            tn.tm_mon = month;
-            tn.tm_mday = day;
-            break;
+            // Add Rule 2: normalize the month (with year carry), then clamp
+            // DAY_OF_MONTH to the target month's length (e.g. Jan 31 + 1 month
+            // -> Feb 28/29, not Mar 2/3).
+            int year = get(YEAR);
+            int month = get(MONTH) + amount;
+            int dom = get(DAY_OF_MONTH);
+            int rem;
+            year += CalendarUtils::floorDivide(month, 12, rem);
+            month = rem;
+            int monthLen = handleGetMonthLength(year, month);
+            if (dom > monthLen) dom = monthLen;
+            set(YEAR, year);
+            set(MONTH, month);
+            set(DAY_OF_MONTH, dom);
+            return;
         }
         case WEEK_OF_YEAR:
         case WEEK_OF_MONTH:
-        case DAY_OF_WEEK:
-            tn.tm_mday += amount * 7;
-            break;
-        case DAY_OF_YEAR:
+        case DAY_OF_WEEK_IN_MONTH:
+            setTime(getTime() + static_cast<int64_t>(amount) * ONE_WEEK);
+            return;
+        case AM_PM:
+            setTime(getTime() + static_cast<int64_t>(amount) * 12 * ONE_HOUR);
+            return;
         case DAY_OF_MONTH:
-            tn.tm_mday += amount;
-            break;
+        case DAY_OF_YEAR:
+        case DAY_OF_WEEK:
+            setTime(getTime() + static_cast<int64_t>(amount) * ONE_DAY);
+            return;
         case HOUR_OF_DAY:
         case HOUR:
-            tn.tm_hour += amount;
-            break;
-        case AM_PM:
-            tn.tm_hour += amount * 12;
-            break;
+            setTime(getTime() + static_cast<int64_t>(amount) * ONE_HOUR);
+            return;
         case MINUTE:
-            tn.tm_min += amount;
-            break;
+            setTime(getTime() + static_cast<int64_t>(amount) * ONE_MINUTE);
+            return;
         case SECOND:
-            tn.tm_sec += amount;
-            break;
+            setTime(getTime() + static_cast<int64_t>(amount) * ONE_SECOND);
+            return;
         case MILLISECOND:
             setTime(getTime() + amount);
             return;
         default:
             return;
     }
-    time_t result = timegm(&tn);
-    int64_t newMillis = static_cast<int64_t>(result) * ONE_SECOND + millisPart - static_cast<int64_t>(zone) * ONE_SECOND;
-    setTime(newMillis);
 }
 
 void Calendar::roll(int field, bool up){
@@ -373,13 +411,18 @@ void Calendar::roll(int field, int amount){
             if (mon < 0) {
                 mon += max + 1;
             }
+            // Clamp DAY_OF_MONTH to the target month length (not via pinField,
+            // which would normalize the overflowed date first).
+            int year = get(YEAR);
+            int dom = get(DAY_OF_MONTH);
+            int monthLen = handleGetMonthLength(year, mon);
+            if (dom > monthLen) dom = monthLen;
             set(MONTH, mon);
-            pinField(DAY_OF_MONTH);
+            set(DAY_OF_MONTH, dom);
             return;
         }
 
         case YEAR: {
-            int era = get(ERA);
             int newYear = get(YEAR) + amount;
             int maxYear = getActualMaximum(YEAR);
             if (maxYear < 32768) {
@@ -391,9 +434,12 @@ void Calendar::roll(int field, int amount){
             } else if (newYear < 1) {
                 newYear = 1;
             }
+            int month = get(MONTH);
+            int dom = get(DAY_OF_MONTH);
+            int monthLen = handleGetMonthLength(newYear, month);
+            if (dom > monthLen) dom = monthLen;
             set(YEAR, newYear);
-            pinField(MONTH);
-            pinField(DAY_OF_MONTH);
+            set(DAY_OF_MONTH, dom);
             return;
         }
 
@@ -508,7 +554,9 @@ void Calendar::roll(int field, int amount){
         }
 
         default:
-            add(field, amount);
+            // Only ZONE_OFFSET/DST_OFFSET reach here; rolling a zone offset is
+            // meaningless, and calling add() would wrongly shift larger fields
+            // (roll contract: larger fields must not change). No-op.
             return;
     }
 }
@@ -626,11 +674,13 @@ void Calendar::adjustStamp(){
 }
 
 int Calendar::get(int field){
+    if (field == WEEK_YEAR) { complete(); return mWeekYear; }
     complete();
     return fields[field];
 }
 
 int Calendar::get(int field) const {
+    if (field == WEEK_YEAR) { const_cast<Calendar*>(this)->complete(); return mWeekYear; }
     const_cast<Calendar*>(this)->complete();
     return fields[field];
 }
@@ -659,31 +709,68 @@ void Calendar::computeFields(){
         return;
     }
 
-    int64_t millis = mTime;
-    int64_t seconds = millis / ONE_SECOND;
-    int millisecond = static_cast<int>(millis % ONE_SECOND);
-    if (millisecond < 0) {
-        millisecond += ONE_SECOND;
-        seconds -= 1;
-    }
-    int64_t localSeconds = seconds + zone;
-    time_t tmLocal = static_cast<time_t>(localSeconds);
-    struct tm tn;
-    gmtime_r(&tmLocal, &tn);
+    // Local wall-clock millis = UTC millis + zone offset. DST is unsupported,
+    // so the DST component is always 0 (matches the legacy behavior).
+    int64_t zoneMillis = static_cast<int64_t>(zone) * ONE_SECOND;
+    int64_t localMillis = mTime + zoneMillis;
 
-    internalSet(YEAR, tn.tm_year + 1900);
-    internalSet(MONTH, tn.tm_mon);
-    internalSet(DATE, tn.tm_mday);
-    internalSet(DAY_OF_MONTH, tn.tm_mday);
-    internalSet(DAY_OF_YEAR, tn.tm_yday + 1);
-    internalSet(DAY_OF_WEEK, tn.tm_wday);
-    internalSet(AM_PM, tn.tm_hour / 12);
-    internalSet(HOUR_OF_DAY, tn.tm_hour);
-    internalSet(HOUR, tn.tm_hour % 12);
-    internalSet(MINUTE, tn.tm_min);
-    internalSet(SECOND, tn.tm_sec);
-    internalSet(MILLISECOND, millisecond);
-    internalSet(ZONE_OFFSET, zone);
+    int64_t days = CalendarUtils::floorDivide(localMillis, static_cast<int64_t>(ONE_DAY));
+    int julianDay = static_cast<int>(days) + EPOCH_JULIAN_DAY;
+
+    // Gregorian year/month/day-of-month/day-of-year from the julian day.
+    // Ported from ICU android.icu.util.Calendar.computeGregorianFields.
+    int64_t gregorianEpochDay = julianDay - JAN_1_1_JULIAN_DAY;
+    int rem;
+    int n400 = CalendarUtils::floorDivide(gregorianEpochDay, 146097, rem); // 400-yr cycle
+    int n100 = CalendarUtils::floorDivide(rem, 36524, rem);                // 100-yr cycle
+    int n4   = CalendarUtils::floorDivide(rem, 1461, rem);                 // 4-yr cycle
+    int n1   = CalendarUtils::floorDivide(rem, 365, rem);
+    int year = 400 * n400 + 100 * n100 + 4 * n4 + n1;
+    int dayOfYear = rem; // zero-based
+    if (n100 == 4 || n1 == 4) {
+        dayOfYear = 365; // Dec 31 at the end of a 4- or 400-year cycle.
+    } else {
+        ++year;
+    }
+
+    bool isLeap = CalendarUtils::isGregorianLeapYear(year);
+    int correction = 0;
+    int march1 = isLeap ? 60 : 59; // zero-based DOY for March 1
+    if (dayOfYear >= march1) correction = isLeap ? 1 : 2;
+    int month = (12 * (dayOfYear + correction) + 6) / 367; // zero-based month
+    int dayOfMonth = dayOfYear - GREGORIAN_MONTH_COUNT[month][isLeap ? 3 : 2] + 1;
+
+    internalSet(MONTH, month);
+    internalSet(DATE, dayOfMonth);
+    internalSet(DAY_OF_MONTH, dayOfMonth);
+    internalSet(DAY_OF_YEAR, dayOfYear + 1);
+
+    // year is the proleptic Gregorian (extended) year; map BC (year < 1) to
+    // the positive YEAR + ERA=BC representation, like GregorianCalendar.
+    int era = AD;
+    int eyear = year;
+    if (year < 1) {
+        era = BC;
+        eyear = 1 - year;
+    }
+    internalSet(ERA, era);
+    internalSet(YEAR, eyear);
+
+    // Julian day 0 is Monday; helper returns 1..7 (SUNDAY..SATURDAY).
+    internalSet(DAY_OF_WEEK, julianDayToDayOfWeek(julianDay));
+
+    // Time-of-day fields, derived from the wall millis in the day.
+    int millisInDay = static_cast<int>(localMillis - days * ONE_DAY);
+    internalSet(MILLISECOND, millisInDay % 1000);
+    millisInDay /= 1000;
+    internalSet(SECOND, millisInDay % 60);
+    millisInDay /= 60;
+    internalSet(MINUTE, millisInDay % 60);
+    millisInDay /= 60;
+    internalSet(HOUR_OF_DAY, millisInDay);
+    internalSet(AM_PM, millisInDay / 12);
+    internalSet(HOUR, millisInDay % 12);
+    internalSet(ZONE_OFFSET, zoneMillis);
     internalSet(DST_OFFSET, 0);
 
     computeWeekFields();
@@ -695,7 +782,13 @@ void Calendar::computeWeekFields() {
     int month = fields[MONTH];
     int dayOfMonth = fields[DAY_OF_MONTH];
     int dayOfYear = fields[DAY_OF_YEAR];
-    int firstDayOfYear = getDayOfWeek(year, JANUARY, 1);
+    int dow = fields[DAY_OF_WEEK]; // 1..7 (SUNDAY..SATURDAY)
+
+    // Day of week of Jan 1 of this year, derived from the current date's
+    // DAY_OF_WEEK and DAY_OF_YEAR (no libc; JD 0 = Monday convention).
+    int firstDayOfYear = dow - (dayOfYear - 1);
+    firstDayOfYear = ((firstDayOfYear - 1) % 7 + 7) % 7 + 1;
+
     int offset = (firstDayOfYear - firstDayOfWeek + 7) % 7;
     int firstWeekDays = 7 - offset;
     int yearWeeks = getWeekCount(year, firstDayOfWeek, minimalDaysInFirstWeek);
@@ -721,7 +814,8 @@ void Calendar::computeWeekFields() {
         }
     }
 
-    int firstDayOfMonth = getDayOfWeek(year, month, 1);
+    int firstDayOfMonth = dow - (dayOfMonth - 1);
+    firstDayOfMonth = ((firstDayOfMonth - 1) % 7 + 7) % 7 + 1;
     int monthOffset = (firstDayOfMonth - firstDayOfWeek + 7) % 7;
     int firstMonthWeekDays = 7 - monthOffset;
     int weekOfMonth;
@@ -737,7 +831,7 @@ void Calendar::computeWeekFields() {
     }
 
     internalSet(WEEK_OF_YEAR, weekOfYear);
-    internalSet(WEEK_YEAR, weekYear);
+    mWeekYear = weekYear;
     internalSet(WEEK_OF_MONTH, weekOfMonth);
     internalSet(DAY_OF_WEEK_IN_MONTH, (dayOfMonth - 1) / 7 + 1);
 }
@@ -979,14 +1073,14 @@ int Calendar::getActualMaximum(int field) const {
         case YEAR: return INT_MAX;
         case MONTH: return DECEMBER;
         case WEEK_OF_YEAR: {
-            int weekYear = get(WEEK_YEAR);
+            int weekYear = mWeekYear;
             return getWeekCount(weekYear, firstDayOfWeek, minimalDaysInFirstWeek);
         }
         case WEEK_OF_MONTH: {
             int year = get(YEAR);
             int month = get(MONTH);
             int daysInMonth = getDaysInGregorianMonth(year, month);
-            int firstDayOfMonth = getDayOfWeek(year, month, 1);
+            int firstDayOfMonth = julianDayToDayOfWeek(gregorianMonthStart(year, month) + 1);
             int monthOffset = (firstDayOfMonth - firstDayOfWeek + 7) % 7;
             int firstMonthWeekDays = 7 - monthOffset;
             if (firstMonthWeekDays >= minimalDaysInFirstWeek) {
@@ -999,7 +1093,7 @@ int Calendar::getActualMaximum(int field) const {
             int year = get(YEAR);
             int month = get(MONTH);
             int daysInMonth = getDaysInGregorianMonth(year, month);
-            int firstDayOfMonth = getDayOfWeek(year, month, 1);
+            int firstDayOfMonth = julianDayToDayOfWeek(gregorianMonthStart(year, month) + 1);
             int monthOffset = (firstDayOfMonth - firstDayOfWeek + 7) % 7;
             return (daysInMonth + monthOffset - 1) / 7 + 1;
         }
@@ -1027,51 +1121,92 @@ int Calendar::getDaysInYear(int year) {
 }
 
 /*Converts the current calendar field values in {@link #fields fields[]} to the millisecond time value*/
+/*Converts the current calendar field values in fields[] to the millisecond
+ time value. Ported from java.util.GregorianCalendar.computeTime (proleptic
+ Gregorian, no Julian cutover).*/
 void Calendar::computeTime(){
-    int year = internalGet(YEAR);
+    int fieldMask = selectFields();
+
+    // YEAR is mandatory to determine the date; default to the epoch year.
+    int year = isSet(YEAR) ? internalGet(YEAR) : 1970 /*EPOCH_YEAR*/;
+    int era = (stamp[ERA] != UNSET) ? internalGet(ERA) : AD;
+    if (era == BC) {
+        year = 1 - year; // fields[YEAR] holds the positive BC year; flip to extended.
+    }
+
+    // Time of day from the selected time fields (UNSET fields are 0).
+    int64_t timeOfDay = 0;
+    if (isFieldSet(fieldMask, HOUR_OF_DAY)) {
+        timeOfDay += internalGet(HOUR_OF_DAY);
+    } else {
+        timeOfDay += internalGet(HOUR);
+        if (isFieldSet(fieldMask, AM_PM)) {
+            timeOfDay += 12 * internalGet(AM_PM);
+        }
+    }
+    timeOfDay = (timeOfDay * 60 + internalGet(MINUTE)) * 60 + internalGet(SECOND);
+    timeOfDay = timeOfDay * 1000 + internalGet(MILLISECOND);
+
+    int64_t dayCarry = CalendarUtils::floorDivide(timeOfDay, static_cast<int64_t>(ONE_DAY));
+    int64_t tod = timeOfDay - dayCarry * ONE_DAY; // remainder in [0, ONE_DAY)
+
+    // Resolve the julian day at local midnight from the selected date-field
+    // combination. DAY_OF_MONTH is the default baseline.
     int month = internalGet(MONTH);
-    int dayOfMonth = internalGet(DAY_OF_MONTH);
-    if (dayOfMonth == 0) {
-        dayOfMonth = 1;
-    }
+    int dayOfMonth = isSet(DAY_OF_MONTH) ? internalGet(DAY_OF_MONTH) : 1;
+    int jd = gregorianMonthStart(year, month) + dayOfMonth;
 
-    int hourOfDay = internalGet(HOUR_OF_DAY);
-    if (stamp[HOUR_OF_DAY] == UNSET) {
-        int hour = internalGet(HOUR);
-        int ampm = internalGet(AM_PM);
-        if (stamp[HOUR] != UNSET) {
-            hourOfDay = (ampm == PM ? 12 : 0) + hour;
+    if (isFieldSet(fieldMask, DAY_OF_YEAR)) {
+        int jan1 = gregorianMonthStart(year, 0) + 1;
+        jd = jan1 + internalGet(DAY_OF_YEAR) - 1;
+    } else if (isFieldSet(fieldMask, DAY_OF_WEEK)) {
+        int dow = internalGet(DAY_OF_WEEK); // 1..7
+        int firstDow = firstDayOfWeek;
+        if (isFieldSet(fieldMask, WEEK_OF_YEAR)) {
+            int weekOfYear = internalGet(WEEK_OF_YEAR);
+            int jan1 = gregorianMonthStart(year, 0) + 1;
+            int first = (julianDayToDayOfWeek(jan1) - firstDow + 7) % 7;
+            int week1Start = jan1 - first;
+            if ((7 - first) < minimalDaysInFirstWeek) week1Start += 7;
+            jd = week1Start + (weekOfYear - 1) * 7 + (dow - firstDow);
         } else {
-            hourOfDay = 0;
+            int month1 = gregorianMonthStart(year, month) + 1;
+            int month1Dow = julianDayToDayOfWeek(month1);
+            if (isFieldSet(fieldMask, DAY_OF_WEEK_IN_MONTH)) {
+                int dowim = internalGet(DAY_OF_WEEK_IN_MONTH);
+                int firstOccur = 1 + (dow - month1Dow + 7) % 7;
+                int date;
+                if (dowim > 0) {
+                    date = firstOccur + 7 * (dowim - 1);
+                } else if (dowim < 0) {
+                    int monthLen = handleGetMonthLength(year, month);
+                    int count = (monthLen - firstOccur) / 7 + 1;
+                    date = firstOccur + 7 * (count + dowim);
+                } else {
+                    date = firstOccur;
+                }
+                jd = month1 + (date - 1);
+            } else { // WEEK_OF_MONTH
+                int weekOfMonth = internalGet(WEEK_OF_MONTH);
+                int first = (month1Dow - firstDow + 7) % 7;
+                int week1Start = month1 - first;
+                if ((7 - first) < minimalDaysInFirstWeek) week1Start += 7;
+                jd = week1Start + (weekOfMonth - 1) * 7 + (dow - firstDow);
+            }
         }
     }
 
-    int minute = stamp[MINUTE] != UNSET ? internalGet(MINUTE) : 0;
-    int second = stamp[SECOND] != UNSET ? internalGet(SECOND) : 0;
-    int millis = stamp[MILLISECOND] != UNSET ? internalGet(MILLISECOND) : 0;
+    int64_t fixedJd = static_cast<int64_t>(jd) + dayCarry;
+    int64_t millis = (fixedJd - EPOCH_JULIAN_DAY) * ONE_DAY + tod;
 
-    if (month < JANUARY || month > DECEMBER) {
-        int extraYears = month / 12;
-        month %= 12;
-        if (month < 0) {
-            month += 12;
-            extraYears--;
-        }
-        year += extraYears;
-    }
-    if (year <= 0) {
-        year = 1970;
-    }
+    // Zone offset: honor an explicitly set ZONE_OFFSET/DST_OFFSET, else the
+    // calendar's zone. DST data is unavailable, so DST_OFFSET defaults to 0.
+    int64_t zoneOffset = static_cast<int64_t>(zone) * ONE_SECOND;
+    if (stamp[ZONE_OFFSET] >= MINIMUM_USER_STAMP) zoneOffset = internalGet(ZONE_OFFSET);
+    if (stamp[DST_OFFSET] >= MINIMUM_USER_STAMP) zoneOffset += internalGet(DST_OFFSET);
+    millis -= zoneOffset;
 
-    struct tm tn = {};
-    tn.tm_year = year - 1900;
-    tn.tm_mon = month;
-    tn.tm_mday = dayOfMonth;
-    tn.tm_hour = hourOfDay;
-    tn.tm_min = minute;
-    tn.tm_sec = second;
-    time_t utcSeconds = timegm(&tn);
-    mTime = static_cast<int64_t>(utcSeconds) * ONE_SECOND + millis - static_cast<int64_t>(zone) * ONE_SECOND;
+    mTime = millis;
     isTimeSet = true;
 }
 
@@ -1085,8 +1220,8 @@ Calendar& Calendar::setTimeOfDay(int hourOfDay, int minute, int second,int milli
 }
 
 Calendar& Calendar::setWeekDate(int weekYear, int weekOfYear, int dayOfWeek){
-    return setFields({WEEK_YEAR, weekYear,WEEK_OF_YEAR, weekOfYear,
-                     DAY_OF_WEEK, dayOfWeek});
+    mWeekYear = weekYear;
+    return setFields({WEEK_OF_YEAR, weekOfYear, DAY_OF_WEEK, dayOfWeek});
 }
 
 Calendar& Calendar::setWeekDefinition(int firstDayOfWeek, int minimalDaysInFirstWeek){

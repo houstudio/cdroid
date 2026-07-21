@@ -207,7 +207,7 @@ void HebrewCalendar::computeFields() {
     internalSet(DATE, day);
     internalSet(DAY_OF_MONTH, day);
     internalSet(DAY_OF_YEAR, getHebrewDayOfYear(year, monthIndex, day));
-    internalSet(DAY_OF_WEEK, tn.tm_wday);
+    internalSet(DAY_OF_WEEK, tn.tm_wday + 1);
     internalSet(AM_PM, tn.tm_hour / 12);
     internalSet(HOUR_OF_DAY, tn.tm_hour);
     internalSet(HOUR, tn.tm_hour % 12);

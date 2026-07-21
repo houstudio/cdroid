@@ -31,17 +31,25 @@ BuddhistCalendar::BuddhistCalendar(int year, int month, int date, int hourOfDay,
         : GregorianCalendar(year - 543, month, date, hourOfDay, minute, second) {
 }
 
+// Buddhist era: BE year = Gregorian extended year - BUDDHIST_ERA_START
+// (= gregorian + 543). ICU android.icu.util.BuddhistCalendar.
+static const int BUDDHIST_ERA_START = -543;
+static const int BUDDHIST_ERA_BE = 0; // the only allowable era value
+
 void BuddhistCalendar::computeTime() {
-    int year = internalGet(YEAR) - 543;
-    internalSet(YEAR, year);
+    // Translate the BE year to a Gregorian extended year for the base math,
+    // run the base computation, then restore. internalSet touches only fields[],
+    // not stamp[], so the user-visible field is not polluted.
+    int bYear = isSet(YEAR) ? internalGet(YEAR) : (1970 - BUDDHIST_ERA_START); // 2513 BE
+    internalSet(YEAR, bYear + BUDDHIST_ERA_START); // -> Gregorian extended year
     GregorianCalendar::computeTime();
-    internalSet(YEAR, year + 543);
+    internalSet(YEAR, bYear); // restore BE year
 }
 
 void BuddhistCalendar::computeFields() {
     GregorianCalendar::computeFields();
-    internalSet(YEAR, internalGet(YEAR) + 543);
-    internalSet(ERA, 1);
+    internalSet(YEAR, internalGet(YEAR) - BUDDHIST_ERA_START); // Gregorian -> BE
+    internalSet(ERA, BUDDHIST_ERA_BE);
 }
 
 } // namespace cdroid

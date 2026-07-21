@@ -421,7 +421,7 @@ void ChineseCalendar::computeFields() {
     struct tm tn;
     gmtime_r(&localTime, &tn);
 
-    internalSet(DAY_OF_WEEK, tn.tm_wday);
+    internalSet(DAY_OF_WEEK, tn.tm_wday + 1);
     internalSet(HOUR_OF_DAY, tn.tm_hour);
     internalSet(AM_PM, tn.tm_hour / 12);
     internalSet(HOUR, tn.tm_hour % 12);

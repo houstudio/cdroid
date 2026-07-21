@@ -18,7 +18,7 @@
 #ifndef __CHINESE_CALENDAR_H__
 #define __CHINESE_CALENDAR_H__
 
-#include <gregoriancalendar.h>
+#include <core/gregoriancalendar.h>
 
 namespace cdroid {
 

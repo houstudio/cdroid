@@ -46,15 +46,15 @@ public:
         ZONE_OFFSET =15,
         DST_OFFSET =16,
         WEEK_YEAR =17,
-        FIELD_COUNT =18,
+        FIELD_COUNT =17,
 
-        SUNDAY  =0 ,
-        MONDAY  =1 ,
-        TUESDAY =2 ,
-        WEDNESDAY=3,
-        THURSDAY =4,
-        FRIDAY  =5 ,
-        SATURDAY=6 ,
+        SUNDAY  =1 ,
+        MONDAY  =2 ,
+        TUESDAY =3 ,
+        WEDNESDAY=4,
+        THURSDAY =5,
+        FRIDAY  =6 ,
+        SATURDAY=7 ,
 
         JANUARY  = 0,
         FEBRUARY = 1,
@@ -71,6 +71,9 @@ public:
         UNDECIMBER= 12,
         AM = 0,
         PM = 1,
+        /*ERA values (GregorianCalendar.BC/AD)*/
+        BC = 0,
+        AD = 1,
         ALL_STYLES = 0,
         STANDALONE_MASK =0x8000,
         SHORT= 1,
@@ -78,7 +81,7 @@ public:
         NARROW_FORMAT =4,
         NARROW_STANDALONE = NARROW_FORMAT | STANDALONE_MASK,
         SHORT_FORMAT = 1,
-        LONG_DORMAT  = 2,
+        LONG_FORMAT  = 2,
         SHORT_STANDALONE = SHORT | STANDALONE_MASK,
         LONG_STANDALONE = LONG | STANDALONE_MASK ,
 
@@ -106,7 +109,6 @@ public:
         MILLISECOND_MASK   = (1 << MILLISECOND),
         ZONE_OFFSET_MASK   = (1 << ZONE_OFFSET),
         DST_OFFSET_MASK    = (1 << DST_OFFSET),
-        WEEK_YEAR_MASK     = (1 << WEEK_YEAR),
         LIMIT_MINIMUM = 0,
         LIMIT_GREATEST_MINIMUM = 1,
         LIMIT_LEAST_MAXIMUM = 2,
@@ -124,8 +126,10 @@ private:
     bool sharedZone = false;
     int  firstDayOfWeek = SUNDAY;
     int  minimalDaysInFirstWeek = 1;
-    static int nextStamp;
-    int maxFieldIndex;
+    // WEEK_YEAR is held out-of-band (it equals FIELD_COUNT, see java.util
+    // Calendar where WEEK_YEAR is never part of the fields[] array).
+    int  mWeekYear = 1;
+    int nextStamp = MINIMUM_USER_STAMP;
     int internalSetMask;
     /* Cache to hold the firstDayOfWeek and minimalDaysInFirstWeek
      * of a Locale.*/

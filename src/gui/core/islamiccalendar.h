@@ -18,7 +18,7 @@
 #ifndef __ISLAMIC_CALENDAR_H__
 #define __ISLAMIC_CALENDAR_H__
 
-#include <gregoriancalendar.h>
+#include <core/gregoriancalendar.h>
 
 namespace cdroid {
 

@@ -18,7 +18,7 @@
 #ifndef __GREGORIAN_CALENDAR_H__
 #define __GREGORIAN_CALENDAR_H__
 
-#include <calendar.h>
+#include <core/calendar.h>
 
 namespace cdroid {
 
