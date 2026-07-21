@@ -103,6 +103,7 @@ bool CalendarViewMaterialDelegate::getBoundsForDate(int64_t date, Rect& outBound
         mDelegator->getLocationOnScreen(delegatorPositionOnScreen);
         const int extraVerticalOffset =  dayPickerPositionOnScreen[1] - delegatorPositionOnScreen[1];
         outBounds.top += extraVerticalOffset;
+        // CDROID Rect is width/height: top += offset already shifts bottom.
         //outBounds.bottom += extraVerticalOffset;
         return true;
     }

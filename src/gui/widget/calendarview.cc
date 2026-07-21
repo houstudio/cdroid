@@ -18,6 +18,7 @@
 #include <widget/calendarview.h>
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/calendarviewmaterialdelegate.h>
+#include <cstdio>
 namespace cdroid{
 
 CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
@@ -182,7 +183,15 @@ std::string CalendarView::getAccessibilityClassName() const{
 }
 
 bool CalendarView::parseDate(const std::string& date, Calendar& outDate){
-    return true;
+    // Parse "MM/dd/yyyy" (Android uses SimpleDateFormat; sscanf suffices here).
+    int month, day, year;
+    if (sscanf(date.c_str(), "%d/%d/%d", &month, &day, &year) == 3) {
+        outDate.set(year, month - 1, day); // Calendar month is 0-based
+        return true;
+    }
+    return false;
 }
+
+DECLARE_WIDGET(CalendarView);
 
 }//namespace

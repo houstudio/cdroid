@@ -341,6 +341,7 @@ bool CalendarViewLegacyDelegate::getBoundsForDate(int64_t date, Rect& outBounds)
             mDelegator->getLocationOnScreen(delegatorPositionOnScreen);
             const int extraVerticalOffset =  weekViewPositionOnScreen[1] - delegatorPositionOnScreen[1];
             outBounds.top += extraVerticalOffset;
+            // CDROID Rect is width/height: top += offset already shifts bottom (bottom = top+height).
             //outBounds.bottom += extraVerticalOffset;
             return true;
         }
@@ -737,6 +738,13 @@ bool CalendarViewLegacyDelegate::WeeksAdapter::onTouch(View& v, MotionEvent& eve
 void CalendarViewLegacyDelegate::WeeksAdapter::onDateTapped(Calendar& day) {
     setSelectedDay(day);
     mCV->setMonthDisplayed(day);
+    // Fire the date-change listener. Android wires this through a DataSetObserver
+    // onChanged(); CDROID fires it directly here on user selection.
+    if (mCV->mOnDateChangeListener) {
+        mCV->mOnDateChangeListener(*mCV->mDelegator,
+                day.get(Calendar::YEAR), day.get(Calendar::MONTH),
+                day.get(Calendar::DAY_OF_MONTH));
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1012,7 +1020,7 @@ void CalendarViewLegacyDelegate::WeekView::drawWeekSeparators(Canvas& canvas) {
 }
 
 void CalendarViewLegacyDelegate::WeekView::drawSelectedDateVerticalBars(Canvas& canvas) {
-    if (!mHasSelectedDay) {
+    if (!mHasSelectedDay || mCV->mSelectedDateVerticalBar == nullptr) {
         return;
     }
     mCV->mSelectedDateVerticalBar->setBounds(

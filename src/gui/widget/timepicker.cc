@@ -45,7 +45,7 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
         break;
     case MODE_SPINNER:
     default:
-        //mDelegate = new TimePickerSpinnerDelegate( this, context, attrs);
+        mDelegate = new TimePickerSpinnerDelegate(this, context, attrs);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {
@@ -271,5 +271,6 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
+DECLARE_WIDGET(TimePicker);
 }/*endof namespace*/
 

@@ -454,7 +454,7 @@ void SimpleMonthView::drawDaysOfWeek(Canvas& canvas){
     canvas.stroke();
     canvas.set_font_size(mDayOfWeekTextSize);
     if(mDayOfWeekTypeface)
-	canvas.set_font_face(mDayOfWeekTypeface->getFontFace()->get_font_face());
+	canvas.set_font_face(mDayOfWeekTypeface->getFontFace());
     Rect rctxt={0,headerHeight,mCellWidth,rowHeight};
     for (int col = 0; col < DAYS_IN_WEEK; col++) {
         int colCenter = colWidth * col + colWidth / 2;

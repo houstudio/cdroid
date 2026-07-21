@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/datepicker.h>
+#include <widget/daypickerspinnerdelegate.h>
 namespace cdroid{
 DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     :FrameLayout(context, attrs){
@@ -39,6 +40,11 @@ DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     switch (mMode) {
     case MODE_CALENDAR:
         mDelegate = createCalendarUIDelegate(context, attrs);
+        if (mDelegate == nullptr) {
+            // DEFERRED: calendar delegate not ported yet; fall back to spinner.
+            mMode = MODE_SPINNER;
+            mDelegate = createSpinnerUIDelegate(context, attrs);
+        }
         break;
     case MODE_SPINNER:
     default:
@@ -59,7 +65,7 @@ DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
 }
 
 DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,const AttributeSet& attrs) {
-    return nullptr;//new DatePickerSpinnerDelegate(this, context, attrs);
+    return new DatePickerSpinnerDelegate(this, context, attrs);
 }
 
 DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet& attrs) {
@@ -355,4 +361,5 @@ int DatePicker::getAutofillType() {
 AutofillValue DatePicker::getAutofillValue() {
     return isEnabled() ? mDelegate.getAutofillValue() : null;
 }*/
+DECLARE_WIDGET(DatePicker);
 }/*endof namespace*/
