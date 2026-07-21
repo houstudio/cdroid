@@ -104,11 +104,16 @@ void TextInputTimePickerView::setHourFormat(int maxCharLength) {
 }
 
 bool TextInputTimePickerView::validateInput() {
-    const std::string hourText = TextUtils::isEmpty(mHourEditText->getText())
-            ? mHourEditText->getHint() : mHourEditText->getText();
-    const std::string minuteText = TextUtils::isEmpty(mMinuteEditText->getText())
-            ? mMinuteEditText->getHint() : mMinuteEditText->getText();
-
+    auto hint = mHourEditText->getHint();
+    std::string hourText = mHourEditText->getText();
+    if(TextUtils::isEmpty(hourText)&&hint){
+        hourText = *hint;
+    }
+    std::string minuteText = mMinuteEditText->getText();
+    hint = mMinuteEditText->getHint();
+    if(TextUtils::isEmpty(minuteText)&&hint){
+        minuteText = *hint;
+    }
     const bool inputValid = parseAndSetHourInternal(hourText)&& parseAndSetMinuteInternal(minuteText);
     setError(!inputValid);
     return inputValid;

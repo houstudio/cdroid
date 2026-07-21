@@ -87,7 +87,7 @@ list(APPEND CDROID_SOURCES
 
 if(ENABLE_DAYTIME_WIDGETS)
     list(APPEND WIDGET_SOURCES
-        widget/numberictextview.cc
+        widget/numerictextview.cc
         widget/yearpickerview.cc
         widget/datepicker.cc
         widget/daypickerview.cc
@@ -96,7 +96,7 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/daypickerspinnerdelegate.cc
         widget/daypickercalendardelegate.cc
         widget/radialtimepickerview.cc
-        #widget/textinputtimepickerview.cc
+        widget/textinputtimepickerview.cc
         widget/timepicker.cc
         widget/timepickerclockdelegate.cc
         widget/timepickerspinnerdelegate.cc

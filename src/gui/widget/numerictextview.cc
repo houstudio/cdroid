@@ -1,5 +1,5 @@
 #include <iomanip>
-#include <widget/numberictextview.h>
+#include <widget/numerictextview.h>
 namespace cdroid{
 
 DECLARE_WIDGET(NumericTextView);

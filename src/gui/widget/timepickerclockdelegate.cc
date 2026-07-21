@@ -1,4 +1,5 @@
 #if 0
+#include <viewlayoutinflater.h>
 #include <widget/R.h>
 #include <widget/relativelayout.h>
 #include <widget/textinputtimepickerview.h>
@@ -18,8 +19,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mSelectHours = res.getString(R.string.select_hours);
     mSelectMinutes = res.getString(R.string.select_minutes);
 
-    std::string layoutResourceId = a.getResourceId(R.styleable.TimePicker_internalLayout,
-            R.layout.time_picker_material);
+    std::string layoutResourceId = a.getString("internalLayout","cdroid:layout/time_picker_material");
     View* mainView = inflater->inflate(layoutResourceId, delegator);
     mainView->setSaveFromParentEnabled(false);
     mRadialTimePickerHeader = mainView->findViewById(R::id::time_header);
@@ -766,40 +766,43 @@ void TimePickerClockDelegate::onViewClick(View& v) {
     tryVibrate();
 }
 
-class NearestTouchDelegate implements View.OnTouchListener {
-        private View mInitialTouchTarget;
+class NearestTouchDelegate implements View::OnTouchListener {
+private:
+    View* mInitialTouchTarget;
 
-        public bool onTouch(View& view, MotionEvent& motionEvent) {
-            const int actionMasked = motionEvent.getActionMasked();
-            if (actionMasked == MotionEvent::ACTION_DOWN) {
-                if (view instanceof ViewGroup) {
-                    mInitialTouchTarget = findNearestChild((ViewGroup*) view,
-                            (int) motionEvent.getX(), (int) motionEvent.getY());
-                } else {
-                    mInitialTouchTarget = null;
-                }
+public:
+    bool onTouch(View& view, MotionEvent& motionEvent) {
+        const int actionMasked = motionEvent.getActionMasked();
+        if (actionMasked == MotionEvent::ACTION_DOWN) {
+            if (dynamic_cast<ViewGroup*>(&view)){// instanceof ViewGroup) {
+                mInitialTouchTarget = findNearestChild((ViewGroup*)&view,
+                        (int) motionEvent.getX(), (int) motionEvent.getY());
+            } else {
+                mInitialTouchTarget = nullptr;
             }
-
-            View* child = mInitialTouchTarget;
-            if (child == nullptr) {
-                return false;
-            }
-
-            const float offsetX = view.getScrollX() - child.getLeft();
-            const float offsetY = view.getScrollY() - child.getTop();
-            motionEvent.offsetLocation(offsetX, offsetY);
-            const bool handled = child.dispatchTouchEvent(motionEvent);
-            motionEvent.offsetLocation(-offsetX, -offsetY);
-
-            if (actionMasked == MotionEvent::ACTION_UP
-                    || actionMasked == MotionEvent::ACTION_CANCEL) {
-                mInitialTouchTarget = null;
-            }
-
-            return handled;
         }
 
-    private View* findNearestChild(ViewGroup* v, int x, int y) {
+        View* child = mInitialTouchTarget;
+        if (child == nullptr) {
+            return false;
+        }
+
+        const float offsetX = view.getScrollX() - child.getLeft();
+        const float offsetY = view.getScrollY() - child.getTop();
+        motionEvent.offsetLocation(offsetX, offsetY);
+        const bool handled = child.dispatchTouchEvent(motionEvent);
+        motionEvent.offsetLocation(-offsetX, -offsetY);
+
+        if (actionMasked == MotionEvent::ACTION_UP
+                || actionMasked == MotionEvent::ACTION_CANCEL) {
+            mInitialTouchTarget = nullptr;
+        }
+
+        return handled;
+    }
+
+private:
+    View* findNearestChild(ViewGroup* v, int x, int y) {
         View* bestChild = null;
         int bestDist = INT_MAX;
 
