@@ -71,7 +71,8 @@ public:
 TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context* context,const AttributeSet& attrs)
     :AbstractTimePickerDelegate(delegator, context){
 
-    // DEFERRED: R.string.select_hours / select_minutes are not generated as resources.
+    // Accessibility contentDescription strings are not wired (deferred); the values are only
+    // used by onPopulateAccessibilityEvent / setContentDescription, which are accessibility-only.
     mSelectHours = "";
     mSelectMinutes = "";
 
@@ -222,7 +223,7 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     mRadialTimePickerModeButton->setOnClickListener([this](View& /*v*/) {
          toggleRadialPickerMode();
     });
-    // DEFERRED: R.string.time_picker_radial_mode_description / time_picker_text_input_mode_description.
+    // Accessibility contentDescription strings are not wired (deferred).
     mRadialTimePickerModeEnabledDescription = "";
     mTextInputPickerModeEnabledDescription = "";
 
