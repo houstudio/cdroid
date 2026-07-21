@@ -53,7 +53,7 @@ add_library(cdtext
     method/insertmodetransformationmethod.cc
     method/translationtransformationmethod.cc
     )
-target_link_libraries(cdtext minikin expat)
+target_link_libraries(cdtext minikin)
 
 target_include_directories(
     cdtext
@@ -90,6 +90,7 @@ target_link_libraries(texttest
     minikin
     cdtext
     cdroid
+    expat
     ${HARFBUZZ_LIBRARIES}
     ${FREETYPE_LIBRARIES}
     ${CAIRO_LIBRARIES}
