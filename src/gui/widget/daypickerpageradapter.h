@@ -41,7 +41,7 @@ private:
     std::string mLayoutResId;
     int mCalendarViewId;
     
-    Calendar* mSelectedDay;
+    Calendar* mSelectedDay = nullptr;
 
     std::string mMonthTextAppearance;
     std::string mDayOfWeekTextAppearance;

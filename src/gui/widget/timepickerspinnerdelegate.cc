@@ -129,6 +129,10 @@ TimePickerSpinnerDelegate::TimePickerSpinnerDelegate(TimePicker* delegator, Cont
     updateAmPmControl();
 
     // set to current time (mTempCalendar is default-constructed to now)
+    // AOSP uses Calendar.getInstance(locale) which carries the local time zone;
+    // CDROID has no locale dispatch, so mirror the local-TZ part here (the
+    // default ctor leaves zone=0/UTC, which would show the hour in UTC).
+    mTempCalendar.setTimeZone(Calendar::getInstance()->getTimeZone());
     setHour(mTempCalendar.get(Calendar::HOUR_OF_DAY));
     setMinute(mTempCalendar.get(Calendar::MINUTE));
 

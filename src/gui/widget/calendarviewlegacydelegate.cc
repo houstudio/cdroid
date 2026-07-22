@@ -606,9 +606,15 @@ void CalendarViewLegacyDelegate::onScroll(AbsListView& view, int firstVisibleIte
 void CalendarViewLegacyDelegate::setMonthDisplayed(Calendar& calendar) {
     mCurrentMonthDisplayed = calendar.get(Calendar::MONTH);
     mAdapter->setFocusMonth(mCurrentMonthDisplayed);
-    //const int flags = DateUtils.FORMAT_SHOW_DATE | DateUtils.FORMAT_NO_MONTH_DAY| DateUtils.FORMAT_SHOW_YEAR;
-    const long millis = calendar.getTimeInMillis();
-    std::string newMonthName = std::to_string(calendar.get(Calendar::MONTH));;//DateUtils.formatDateRange(mContext, millis, millis, flags);
+    // DateUtils.formatDateRange (FORMAT_SHOW_DATE|NO_MONTH_DAY|SHOW_YEAR) is not
+    // ported; approximate its en output "Month Year" via a name table. The bare
+    // std::to_string(MONTH) that was here rendered the month *index* ("0".."11").
+    static const char* const kMonths[] = {"January","February","March","April","May","June",
+        "July","August","September","October","November","December"};
+    const int month = calendar.get(Calendar::MONTH);
+    const int year = calendar.get(Calendar::YEAR);
+    const std::string newMonthName =
+        std::string(kMonths[(month >= 0 && month < 12) ? month : 0]) + " " + std::to_string(year);
     mMonthName->setText(newMonthName);
     mMonthName->invalidate();
 }
@@ -759,13 +765,8 @@ bool CalendarViewLegacyDelegate::WeeksAdapter::onTouch(View& v, MotionEvent& eve
 void CalendarViewLegacyDelegate::WeeksAdapter::onDateTapped(Calendar& day) {
     setSelectedDay(day);
     mCV->setMonthDisplayed(day);
-    // Fire the date-change listener. Android wires this through a DataSetObserver
-    // onChanged(); CDROID fires it directly here on user selection.
-    if (mCV->mOnDateChangeListener) {
-        mCV->mOnDateChangeListener(*mCV->mDelegator,
-                day.get(Calendar::YEAR), day.get(Calendar::MONTH),
-                day.get(Calendar::DAY_OF_MONTH));
-    }
+    // onSelectedDayChange is delivered via the DataSetObserver registered in
+    // setUpAdapter (setSelectedDay -> notifyDataSetChanged), matching AOSP.
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -915,6 +915,17 @@ void AbsListView::requestLayoutIfNecessary() {
     }
 }
 
+void AbsListView::requestLayout() {
+    // AOSP AbsListView.java:2097 -- suppress layout requests while a layout pass
+    // is running (mInLayout) or blocked, so requests issued inside layoutChildren
+    // (child measure / scrap re-attach / setSelectionFromTop) can't schedule a
+    // second pass that would reset scroll to the top via handleDataChanged's
+    // FORCE_TOP fallback.
+    if (!mBlockLayoutRequests && !mInLayout) {
+        ViewGroup::requestLayout();
+    }
+}
+
 bool AbsListView::acceptFilter() const {
     Filterable*filter = dynamic_cast<Filterable*>(mAdapter);
     return mTextFilterEnabled && filter && (filter->getFilter() != nullptr);

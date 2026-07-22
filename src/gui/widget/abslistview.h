@@ -329,6 +329,7 @@ protected:
     int  getBottomEdgeEffectColor()const;
     int  reconcileSelectedPosition();
     void requestLayoutIfNecessary();
+    void requestLayout()override;
     int getSelectionModeForAccessibility();
  
     bool resurrectSelection(); 
@@ -363,7 +364,7 @@ protected:
 public:
     AbsListView(int w,int h);
     AbsListView(Context*,const AttributeSet&atts);
-    ~AbsListView();
+    ~AbsListView()override;
     void setAdapter(Adapter*adapter)override;
     int getCheckedItemCount()const;
     int getCheckedItemPositions(SparseBooleanArray&array);

@@ -65,7 +65,7 @@ void DayPickerPagerAdapter::setFirstDayOfWeek(int weekStart) {
     // Update displayed views.
     int count = mItems.size();
     for (int i = 0; i < count; i++) {
-        SimpleMonthView* monthView = mItems.get(i)->calendar;
+        SimpleMonthView* monthView = mItems.valueAt(i)->calendar;
         monthView->setFirstDayOfWeek(weekStart);
     }
 }
@@ -205,7 +205,8 @@ void* DayPickerPagerAdapter::instantiateItem(ViewGroup* container, int position)
     int year = getYearForPosition(position);
 
     int selectedDay;
-    if (mSelectedDay != nullptr && mSelectedDay->get(Calendar::MONTH) == month) {
+    if (mSelectedDay != nullptr && mSelectedDay->get(Calendar::MONTH) == month
+            && mSelectedDay->get(Calendar::YEAR) == year) {
         selectedDay = mSelectedDay->get(Calendar::DAY_OF_MONTH);
     } else {
         selectedDay = -1;
@@ -248,11 +249,12 @@ int DayPickerPagerAdapter::getItemPosition(void* object) {
 }
 
 std::string DayPickerPagerAdapter::getPageTitle(int position) {
-    SimpleMonthView* v = mItems.get(position)->calendar;
+    ViewHolder* vh = mItems.get(position);
+    SimpleMonthView* v = (vh != nullptr) ? vh->calendar : nullptr;
     if (v != nullptr) {
         return v->getMonthYearLabel();
     }
-    return nullptr;
+    return std::string();
 }
 
 SimpleMonthView* DayPickerPagerAdapter::getView(void* object) {

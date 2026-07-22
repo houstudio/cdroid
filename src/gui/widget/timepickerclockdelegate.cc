@@ -232,6 +232,9 @@ TimePickerClockDelegate::TimePickerClockDelegate(TimePicker* delegator, Context*
     updateHourFormat();
 
     // Initialize with current time (mTempCalendar defaults to now).
+    // AOSP uses Calendar.getInstance(locale) (local TZ); mirror the local-TZ
+    // part here since the default ctor leaves zone=0/UTC.
+    mTempCalendar.setTimeZone(Calendar::getInstance()->getTimeZone());
     const int currentHour = mTempCalendar.get(Calendar::HOUR_OF_DAY);
     const int currentMinute = mTempCalendar.get(Calendar::MINUTE);
     initialize(currentHour, currentMinute, mIs24Hour, HOUR_INDEX);
