@@ -46,6 +46,10 @@ public:
 private:
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height,Cairo::Context*);
+    // Skia-faithful lattice render (SkLatticeIter::set_points): used when the
+    // destination is smaller than the sum of the fixed patches — the factor-based
+    // path cannot represent that and would overlap/garble. See ninepatchrenderer.cc.
+    void drawLattice(int width, int height, Cairo::Context& painter);
     int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
     Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap)const;
 public:

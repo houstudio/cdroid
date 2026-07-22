@@ -436,37 +436,7 @@ void NinePatchRenderer::draw(Canvas& painter, int  x, int  y,float alpha) {
 }
 
 void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
-    int resizeWidth = 0,resizeHeight = 0;
-    const int width = rect.width;
-    const int height= rect.height;
-    std::ostringstream oss;
-
-    painter.save();
-    painter.translate(rect.left,rect.top);
     mAlpha = alpha;
-    for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        resizeWidth += mResizeDistancesX[i].second;
-    }
-    for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        resizeHeight += mResizeDistancesY[i].second;
-    }
-
-    // Minimum drawable size = image content extent (image minus the 2*Bpx border) minus
-    // the stretchable portion. B=1 for a bordered image, 0 for borderless.
-    const int B = mBorderless ? 0 : 1;
-    const int minWidth  = mImage->get_width()  - 2*B - resizeWidth;
-    const int minHeight = mImage->get_height() - 2*B - resizeHeight;
-    if (width < minWidth && height < minHeight) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<minWidth<<" && incorrectHeight("<<height<<")>="<<minHeight;
-    }
-    if (width < minWidth) {
-        oss<<"IncorrectWidth("<<width<<" must>="<<minWidth;
-    }
-    if (height < minHeight) {
-        oss<<"IncorrectHeight("<<height<<" must>="<<minHeight;
-    }
-    const bool hasErrors = (oss.str().empty()==false);
-    LOGE_IF(hasErrors,"%s",oss.str().c_str());
     mWidth = rect.width;
     mHeight= rect.height;
 	painter.save();
@@ -476,31 +446,7 @@ void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
 }
 
 void NinePatchRenderer::setImageSize(int width, int height) {
-    int resizeWidth = 0;
-    int resizeHeight = 0;
-    std::ostringstream oss;
     if((mWidth == width) && (mHeight==height))return;
-    for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        resizeWidth += mResizeDistancesX[i].second;
-    }
-    for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        resizeHeight += mResizeDistancesY[i].second;
-    }
-    const int B = mBorderless ? 0 : 1;
-    const int minWidth  = mImage->get_width()  - 2*B - resizeWidth;
-    const int minHeight = mImage->get_height() - 2*B - resizeHeight;
-    if (width < minWidth && height < minHeight) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<minWidth<<" && incorrectHeight("<<height<<")>="<<minHeight;
-    }
-    if (width < minWidth) {
-		oss<<"IncorrectWidth("<<width<<" must>="<<minWidth;
-    }
-    if (height < minHeight) {
-        oss<<"IncorrectHeight("<<height<<" must>="<<minHeight;
-    }
-    if(oss.str().empty()==false){
-        LOG(ERROR)<<oss.str();
-    }
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
@@ -667,6 +613,82 @@ void NinePatchRenderer::getFactor(int width, int height, double& factorX, double
     factorY = (double)leftResize / factorY;
 }
 
+namespace {
+// One fixed or stretch band along a single axis: its source extent plus the
+// destination extent assigned by np_build_axis.
+struct np_band { int srcStart; int srcLen; int dstStart; int dstLen; bool stretch; };
+
+// Verbatim port of Skia's SkLatticeIter set_points for ONE axis. Given the stretch
+// regions {start,length} in content coordinates, the full content extent and the
+// destination length, build the alternating fixed/stretch band list and assign each
+// band a destination position/length.
+//
+//   srcFixed    = sum of fixed-band source lengths
+//   srcScalable = sum of stretch-band source lengths
+//
+// Two cases (exactly as in set_points):
+//   srcFixed <= dstLen  (normal): scale the stretch bands by (dstLen-srcFixed)/srcScalable,
+//                            keep the fixed bands at their natural size.
+//   srcFixed  > dstLen  (deficit): collapse the stretch bands to 0 and scale the FIXED
+//                            bands uniformly by dstLen/srcFixed. Skia does NOT overlap or
+//                            clip here — the whole axis shrinks proportionally.
+//
+// Float accumulation + round keeps the bands contiguous and summing to exactly dstLen
+// (the last band is clamped to dstLen), matching Skia's dst[] boundary layout.
+std::vector<np_band> np_build_axis(const std::vector<std::pair<int,int>>& stretch,
+                                   int srcContent, int dstLen) {
+    std::vector<np_band> bands;
+    int cursor = 0;
+    for (const auto& r : stretch) {
+        if (r.first > cursor) bands.push_back({cursor, r.first - cursor, 0, 0, false});
+        bands.push_back({r.first, r.second, 0, 0, true});
+        cursor = r.first + r.second;
+    }
+    if (cursor < srcContent) bands.push_back({cursor, srcContent - cursor, 0, 0, false});
+    if (bands.empty()) bands.push_back({0, srcContent, 0, 0, false});
+
+    int srcFixed = 0, srcScalable = 0;
+    for (const auto& b : bands) (b.stretch ? srcScalable : srcFixed) += b.srcLen;
+
+    const bool   deficit      = srcFixed > dstLen;
+    const double fixedScale   = (deficit && srcFixed)     ? (double)dstLen / srcFixed                          : 1.0;
+    const double stretchScale = (!deficit && srcScalable) ? ((double)dstLen - srcFixed) / (double)srcScalable  : 0.0;
+
+    double fpos = 0.0;
+    int prev = 0;
+    for (size_t i = 0; i < bands.size(); i++) {
+        bands[i].dstStart = prev;
+        const double flen = bands[i].stretch
+            ? (deficit ? 0.0 : bands[i].srcLen * stretchScale)
+            : (deficit ? bands[i].srcLen * fixedScale : (double)bands[i].srcLen);
+        fpos += flen;
+        const int next = (i + 1 == bands.size()) ? dstLen : (int)(fpos + 0.5);
+        bands[i].dstLen = next - prev;
+        prev = next;
+    }
+    return bands;
+}
+} // namespace
+
+void NinePatchRenderer::drawLattice(int width, int height, Cairo::Context& painter) {
+    const int B = mBorderless ? 0 : 1;
+    const int srcW = mImage->get_width()  - 2 * B;
+    const int srcH = mImage->get_height() - 2 * B;
+    const auto xBands = np_build_axis(mResizeDistancesX, srcW, width);
+    const auto yBands = np_build_axis(mResizeDistancesY, srcH, height);
+    for (const auto& yb : yBands) {
+        for (const auto& xb : xBands) {
+            if (xb.dstLen <= 0 || yb.dstLen <= 0) continue;   // collapsed stretch band
+            const Rect srcRect{xb.srcStart + B, yb.srcStart + B, xb.srcLen, yb.srcLen};
+            const Rect dstRect{xb.dstStart,    yb.dstStart,    xb.dstLen, yb.dstLen};
+            if (dstRect.width == srcRect.width && dstRect.height == srcRect.height)
+                drawConstPart(srcRect, dstRect, painter);     // natural size -> 1:1 blit
+            else
+                drawScaledPart(srcRect, dstRect, painter);    // stretched/shrunk patch
+        }
+    }
+}
+
 void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*painterIn) {
     double lostX  = 0.f, lostY  = 0.f;
     double factorX= 0.f, factorY= 0.f;
@@ -691,6 +713,24 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
         ppainter=imgPainter.get();
     }
     Cairo::Context&painter=*imgPainter.get();
+    // Deficit case: destination smaller than the sum of the fixed (non-stretch) patches
+    // on either axis. The factor-based loop below only scales the stretch patches, so its
+    // factor goes NEGATIVE here and the const patches overlap/garble (the old
+    // "IncorrectWidth(70 must>=76)" symptom). Hand the whole render to the Skia-faithful
+    // lattice path, which handles each axis independently (normal or deficit). The fully
+    // normal case (dst >= fixed-sum on both axes) still falls through to the loop below,
+    // byte-for-byte unchanged.
+    {
+        const int srcW = mImage->get_width()  - 2 * B;
+        const int srcH = mImage->get_height() - 2 * B;
+        int stretchTotalX = 0, stretchTotalY = 0;
+        for (const auto& r : mResizeDistancesX) stretchTotalX += r.second;
+        for (const auto& r : mResizeDistancesY) stretchTotalY += r.second;
+        if ((srcW - stretchTotalX) > width || (srcH - stretchTotalY) > height) {
+            drawLattice(width, height, painter);
+            return;
+        }
+    }
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {
         y1 = 0;
