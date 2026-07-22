@@ -1106,7 +1106,7 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     mDisplayedDrawableSize = 0;
     int drsize=0;
     for(auto s:mDisplayedValues){
-        Drawable*dr = mContext->getDrawable(s);
+        Drawable*dr = s.find("/")==std::string::npos?nullptr:mContext->getDrawable(s);
         mDisplayedDrawables.push_back(dr);
         if(dr){
             drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());

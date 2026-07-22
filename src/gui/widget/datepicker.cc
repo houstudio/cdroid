@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <widget/datepicker.h>
 #include <widget/daypickerspinnerdelegate.h>
+#include <widget/daypickercalendardelegate.h>
 namespace cdroid{
 DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     :FrameLayout(context, attrs){
@@ -69,7 +70,7 @@ DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* con
 }
 
 DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet& attrs) {
-    return nullptr;//new DatePickerCalendarDelegate(this, context, attrs);
+    return new DatePickerCalendarDelegate(this, context, attrs);
 }
 
 int DatePicker::getMode() {

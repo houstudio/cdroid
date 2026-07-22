@@ -27,7 +27,7 @@
 #include <porting/cdlog.h>
 
 namespace cdroid{
-
+DECLARE_WIDGET(SimpleMonthView);
 SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
     setFocusable(true);
     initMonthView();
@@ -46,7 +46,7 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
     mDayHeight = (int) (mDesiredDayHeight * scaleH);
     mCellWidth = cellWidth;
     mWeekStart = Calendar::SUNDAY;
-
+    LOGI("SimpleMonthView:%p",this);
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.
     const int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
@@ -57,6 +57,7 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
    :View(ctx,atts){
     initMonthView();
+    LOGI("SimpleMonthView:%p",this);
     mDesiredMonthHeight = atts.getDimensionPixelSize("month_height");
     mDesiredDayOfWeekHeight =atts.getDimensionPixelSize("day_of_week_height");
     mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
@@ -73,6 +74,8 @@ SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
     if(!res.empty())setDayOfWeekTextAppearance(res);
     res = atts.getString("dayTextAppearance");
     if(!res.empty())setDayTextAppearance(res);
+    updateMonthYearLabel();
+    updateDayOfWeekLabels();
 }
 
 SimpleMonthView::~SimpleMonthView(){
@@ -106,21 +109,25 @@ void SimpleMonthView::initPaints(){
     mMonthPaint.setTypeface(Typeface::create("sans-serif", Typeface::NORMAL));
     mMonthPaint.setTextAlign(Paint::Align::CENTER);
     mMonthPaint.setStyle(Paint::Style::FILL);
+    mMonthPaint.setColor(0xFFFFFFFF);
 
     mDayOfWeekPaint.setAntiAlias(true);
     mDayOfWeekPaint.setTextSize(12);
     mDayOfWeekPaint.setTypeface(Typeface::create("sans-serif", Typeface::NORMAL));
     mDayOfWeekPaint.setTextAlign(Paint::Align::CENTER);
     mDayOfWeekPaint.setStyle(Paint::Style::FILL);
+    mDayOfWeekPaint.setColor(0xFFFFFFFF);
 
     mDaySelectorPaint.setAntiAlias(true);
     mDaySelectorPaint.setStyle(Paint::Style::FILL);
 
     mDayHighlightPaint.setAntiAlias(true);
     mDayHighlightPaint.setStyle(Paint::Style::FILL);
+    mDayHighlightPaint.setColor(0xFF00FF00);
 
     mDayHighlightSelectorPaint.setAntiAlias(true);
     mDayHighlightSelectorPaint.setStyle(Paint::Style::FILL);
+    mDayHighlightSelectorPaint.setColor(0x8000ff00);
 
     mDayPaint.setAntiAlias(true);
     mDayPaint.setTextSize(12);
@@ -477,6 +484,7 @@ void SimpleMonthView::onDraw(Canvas& canvas){
     drawMonth(canvas);
     drawDaysOfWeek(canvas);
     drawDays(canvas);
+    LOGD("mMonthHeight=%d mDayOfWeekHeight=%d mDayHeight=%d mCellWidth=%d",mMonthHeight,mDayOfWeekHeight,mDayHeight,mCellWidth);
 
     canvas.translate(-paddingLeft, -paddingTop);
 }
@@ -725,6 +733,7 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
     mDayOfWeekHeight = (int) (mDesiredDayOfWeekHeight * scaleH);
     mDayHeight = (int) (mDesiredDayHeight * scaleH);
     mCellWidth = cellWidth;
+    LOGD("mMonthHeight=%d mDayOfWeekHeight=%d mDayHeight=%d mCellWidth=%d",mMonthHeight,mDayOfWeekHeight,mDayHeight,mCellWidth);
 
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.
