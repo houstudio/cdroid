@@ -84,8 +84,26 @@ GestureDetector::GestureDetector(Context* context,const OnGestureListener& liste
 }
 
 GestureDetector::~GestureDetector() {
+    // Tear down the handler first: its pending messages (LONG_PRESS / SHOW_PRESS)
+    // dereference mCurrentDownEvent / mCurrentMotionEvent, so those events must
+    // stay alive until the handler is gone.
     delete mHandler;
     delete mInputEventConsistencyVerifier;
+    // Android has no finalize() here and relies on GC for these pooled events;
+    // in C++ we must return them to the event pool explicitly or they leak
+    // (see valgrind reports at the obtain sites in onTouchEvent).
+    if (mCurrentMotionEvent) {
+        mCurrentMotionEvent->recycle();
+        mCurrentMotionEvent = nullptr;
+    }
+    if (mCurrentDownEvent) {
+        mCurrentDownEvent->recycle();
+        mCurrentDownEvent = nullptr;
+    }
+    if (mPreviousUpEvent) {
+        mPreviousUpEvent->recycle();
+        mPreviousUpEvent = nullptr;
+    }
 }
 
 void GestureDetector::init(Context* context) {
