@@ -46,7 +46,6 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
     mDayHeight = (int) (mDesiredDayHeight * scaleH);
     mCellWidth = cellWidth;
     mWeekStart = Calendar::SUNDAY;
-    LOGI("SimpleMonthView:%p",this);
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.
     const int maxSelectorWidth = cellWidth / 2 + 0;//std::min(paddingLeft, paddingRight);
@@ -57,7 +56,6 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
    :View(ctx,atts){
     initMonthView();
-    LOGI("SimpleMonthView:%p",this);
     mDesiredMonthHeight = atts.getDimensionPixelSize("month_height");
     mDesiredDayOfWeekHeight =atts.getDimensionPixelSize("day_of_week_height");
     mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
@@ -401,22 +399,22 @@ int SimpleMonthView::findClosestRow(const Rect* previouslyFocusedRect){
     } else if (mDayHeight == 0) {
         return 0; // There hasn't been a layout, so just choose the first row
     } else {
+        const TextPaint& p = mDayPaint;
         int centerY = previouslyFocusedRect->centerY();
 
-        int headerHeight = mMonthHeight + mDayOfWeekHeight;
-        int rowHeight = mDayHeight;
+        const int headerHeight = mMonthHeight + mDayOfWeekHeight;
+        const int rowHeight = mDayHeight;
 
         // Text is vertically centered within the row height.
-        float halfLineHeight = 10;//(p.ascent() + p.descent()) / 2.f;
-        int rowCenter = headerHeight + rowHeight / 2;
+        const float halfLineHeight = (p.ascent() + p.descent()) / 2.f;
+        const int rowCenter = headerHeight + rowHeight / 2;
 
         centerY -= rowCenter - halfLineHeight;
         int row = std::round(centerY / (float) rowHeight);
-        int maxDay = findDayOffset() + mDaysInMonth;
-        int maxRows = (maxDay / DAYS_IN_WEEK) - ((maxDay % DAYS_IN_WEEK == 0) ? 1 : 0);
+        const int maxDay = findDayOffset() + mDaysInMonth;
+        const int maxRows = (maxDay / DAYS_IN_WEEK) - ((maxDay % DAYS_IN_WEEK == 0) ? 1 : 0);
 
         row = MathUtils::constrain(row, 0, maxRows);
-        LOGD("(%d,%d %d,%d) row=%d",previouslyFocusedRect->left,previouslyFocusedRect->top,previouslyFocusedRect->width,previouslyFocusedRect->height,row);
         return row;
     }
 }
@@ -484,7 +482,6 @@ void SimpleMonthView::onDraw(Canvas& canvas){
     drawMonth(canvas);
     drawDaysOfWeek(canvas);
     drawDays(canvas);
-    LOGD("mMonthHeight=%d mDayOfWeekHeight=%d mDayHeight=%d mCellWidth=%d",mMonthHeight,mDayOfWeekHeight,mDayHeight,mCellWidth);
 
     canvas.translate(-paddingLeft, -paddingTop);
 }
@@ -733,7 +730,6 @@ void SimpleMonthView::onLayout(bool changed, int left, int top, int w, int h){
     mDayOfWeekHeight = (int) (mDesiredDayOfWeekHeight * scaleH);
     mDayHeight = (int) (mDesiredDayHeight * scaleH);
     mCellWidth = cellWidth;
-    LOGD("mMonthHeight=%d mDayOfWeekHeight=%d mDayHeight=%d mCellWidth=%d",mMonthHeight,mDayOfWeekHeight,mDayHeight,mCellWidth);
 
     // Compute the largest day selector radius that's still within the clip
     // bounds and desired selector radius.

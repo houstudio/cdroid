@@ -19,6 +19,8 @@
 #include <widget/daypickerspinnerdelegate.h>
 #include <widget/daypickercalendardelegate.h>
 namespace cdroid{
+
+DECLARE_WIDGET(DatePicker);
 DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     :FrameLayout(context, attrs){
 
@@ -363,5 +365,4 @@ int DatePicker::getAutofillType() {
 AutofillValue DatePicker::getAutofillValue() {
     return isEnabled() ? mDelegate.getAutofillValue() : null;
 }*/
-DECLARE_WIDGET(DatePicker);
 }/*endof namespace*/
