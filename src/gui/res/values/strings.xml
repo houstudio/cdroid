@@ -7,4 +7,10 @@
 	<string name="row4">row4</string>
 	<string name="floating_toolbar_open_overflow_description">更多</string>
 	<string name="floating_toolbar_close_overflow_description">收起</string>
+	<!-- TimePicker (material clock / text-input delegate) -->
+	<string name="select_hours">Select hours</string>
+	<string name="select_minutes">Select minutes</string>
+	<string name="time_picker_header_text">Set time</string>
+	<string name="time_picker_text_input_mode_description">Switch to text input mode for the time input.</string>
+	<string name="time_picker_radial_mode_description">Switch to clock mode for the time input.</string>
 </resources>
