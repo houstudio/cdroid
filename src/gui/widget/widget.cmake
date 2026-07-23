@@ -10,6 +10,8 @@ list(APPEND WIDGET_SOURCES
     widget/scrollbardrawable.cc
     widget/cdwindow.cc
     widget/cardview.cc
+    widget/floatingtoolbar.cc
+    widget/localfloatingtoolbarpopup.cc
 )
 
 list(APPEND WIDGET_SOURCES
@@ -23,6 +25,7 @@ list(APPEND WIDGET_SOURCES
     widget/ratingbar.cc
     widget/space.cc
     widget/textview.cc
+    widget/editor.cc
     widget/edittext.cc
     widget/textclock.cc
     #widget/datetimeview.cc
@@ -84,7 +87,7 @@ list(APPEND CDROID_SOURCES
 
 if(ENABLE_DAYTIME_WIDGETS)
     list(APPEND WIDGET_SOURCES
-        widget/numberictextview.cc
+        widget/numerictextview.cc
         widget/yearpickerview.cc
         widget/datepicker.cc
         widget/daypickerview.cc
@@ -93,7 +96,7 @@ if(ENABLE_DAYTIME_WIDGETS)
         widget/daypickerspinnerdelegate.cc
         widget/daypickercalendardelegate.cc
         widget/radialtimepickerview.cc
-        #widget/textinputtimepickerview.cc
+        widget/textinputtimepickerview.cc
         widget/timepicker.cc
         widget/timepickerclockdelegate.cc
         widget/timepickerspinnerdelegate.cc
@@ -119,6 +122,14 @@ list(APPEND WIDGET_SOURCES
     widget/plotpoint.cc
     widget/plotview.cc
 )
+if(ENABLE_KPLOT)
+list(APPEND WIDGET_SOURCES
+    widget/plotaxis.cc
+    widget/plotobject.cc
+    widget/plotpoint.cc
+    widget/plotview.cc
+)
+endif(ENABLE_KPLOT)
 
 list(APPEND WIDGET_SOURCES
     widget/viewanimator.cc
@@ -164,4 +175,4 @@ if(ENABLE_ACHART)
         widget/achart/chartfactory.cc
     )
 endif(ENABLE_ACHART)
-
+add_subdirectory(widget/achart)

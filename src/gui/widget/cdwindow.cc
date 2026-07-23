@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cdroid.h>
+//#include <cdroid.h>
+#include <core/app.h>
+#include <core/looper.h>
 #include <widget/cdwindow.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
+#include <view/floatingactionmode.h>
 #include <windowmanager.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <uieventsource.h>
 #include <systemclock.h>
 #include <fstream>
@@ -96,8 +100,44 @@ void Window::initWindow(){
 }
 
 Window::~Window(){
+    if (mActionMode != nullptr) {
+        ActionMode* mode = mActionMode;
+        mActionMode = nullptr;
+        mode->finish();
+    }
     delete mSendWindowContentChangedAccessibilityEvent;
+    // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
+    // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
     LOGD("%p:%d destroied!",this,mID);
+}
+
+// =====================================================================================
+//  ActionMode (DecorView)
+// =====================================================================================
+ActionMode* Window::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
+    return startActionModeInternal(originalView, callback, type);
+}
+
+ActionMode* Window::startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type){
+    if (mActionMode != nullptr) {
+        ActionMode* prev = mActionMode;
+        mActionMode = nullptr;
+        prev->finish();
+    }
+
+    // DecorView analog: FloatingActionMode creates its own FloatingToolbar from the root view.
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), callback, originatingView);
+    mode->setType(type);
+    mode->setOnFinishedListener([this, mode]() {
+        mActionMode = nullptr;
+        post(Runnable([mode] { delete mode; }));
+    });
+    if (!mode->show()) {
+        delete mode;
+        return nullptr;
+    }
+    mActionMode = mode;
+    return mode;
 }
 
 void Window::playSoundImpl(int effectId){
@@ -430,13 +470,21 @@ void Window::onSizeChanged(int w,int h,int oldw,int oldh){
 }
 
 void Window::onVisibilityChanged(View& changedView,int visibility){
-    //GraphDevice::getInstance().invalidate(getBound());
-    GraphDevice::getInstance().flip();
+    // When this window becomes hidden, the screen area it covered must be
+    // repainted from the windows below — hideWindow propagates that damage
+    // (and flips). It does NOT change visibility; the setVisibility that
+    // triggered us already did. On show we just schedule a compose.
+    if(visibility != View::VISIBLE){
+        WindowManager::getInstance().hideWindow(this);
+    }else{
+        GraphDevice::getInstance().flip();
+    }
 }
 
 ViewGroup*Window::invalidateChildInParent(int* location,Rect& dirty){
     FrameLayout::invalidateChildInParent(location,dirty);
     invalidate(dirty);
+    Looper::getMainLooper()->wake();
     return nullptr;
 }
 
@@ -676,7 +724,7 @@ bool Window::onKeyUp(int keyCode,KeyEvent& evt){
 
 void Window::onBackPressed(){
     LOGD("recv BackPressed");
-    post([this](){WindowManager::getInstance().removeWindow(this);} );
+    close();
 }
 
 bool Window::isInLayout()const{
@@ -684,27 +732,37 @@ bool Window::isInLayout()const{
 }
 
 void Window::doLayout(){
-    LOGV("requestLayout(%dx%d)child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
+    LOGV("doLayout(%dx%d) child.count=%d HAS_BOUNDS=%x",getWidth(),getHeight(),
                 getChildCount(),(mPrivateFlags&PFLAG_HAS_BOUNDS));
-    if(mChildren.size()==1){
-        View*view = mChildren[0];
-        const MarginLayoutParams*lp= (const MarginLayoutParams*)view->getLayoutParams();
-        const int horzMargin = lp->leftMargin+lp->rightMargin;
-        const int vertMargin = lp->topMargin+lp->bottomMargin;
-        const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth() - horzMargin,MeasureSpec::EXACTLY);
-        const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight()- vertMargin,MeasureSpec::EXACTLY);
-        FrameLayout::measure(widthSpec,heightSpec);
-        FrameLayout::layout(lp->leftMargin,lp->topMargin,view->getMeasuredWidth(),view->getMeasuredHeight());
-    }
+    // Measure the whole subtree and lay out every child — matches Android's
+    // ViewRootImpl.performTraversals (measure the root, then lay it out). The
+    // previous code only did this when mChildren.size()==1 and only positioned
+    // mChildren[0], which left any window whose direct child count wasn't exactly
+    // 1 (and that child's descendants) permanently unmeasured.
+    const int widthSpec  = MeasureSpec::makeMeasureSpec(getWidth(),MeasureSpec::EXACTLY);
+    const int heightSpec = MeasureSpec::makeMeasureSpec(getHeight(),MeasureSpec::EXACTLY);
+    FrameLayout::measure(widthSpec,heightSpec);
+    FrameLayout::layout(getLeft(),getTop(),getMeasuredWidth(),getMeasuredHeight());
     getViewTreeObserver()->dispatchOnGlobalLayout();
-    mAttachInfo->mTreeObserver->dispatchOnGlobalLayout();
     mPrivateFlags&=~PFLAG_FORCE_LAYOUT;
     mInLayout = false;
 }
 
 
 void Window::close(){
-    post([this](){WindowManager::getInstance().removeWindow(this);} );
+    // removeWindow detaches the view tree (which nulls mAttachInfo), so stash the AttachInfo
+    // pointer first and let the posted lambda free it together with the window. removeWindow
+    // itself runs IMMEDIATELY (the window leaves the compositor list at once -> a replacement
+    // window shown in the same tick doesn't race a still-listed one); the deletes are deferred
+    // via a post so the current call stack can still touch this window safely (apps often
+    // closeWindow() then operate on the window in the same callback).
+    auto* info = mAttachInfo;
+    Window* self = this;
+    post([self, info](){
+        delete info;
+        delete self;
+    });
+    WindowManager::getInstance().removeWindow(this);
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
@@ -752,11 +810,11 @@ Window::InvalidateOnAnimationRunnable::~InvalidateOnAnimationRunnable(){
 }
 
 void Window::InvalidateOnAnimationRunnable::setOwner(Window*w){
-    mOwner=w;
+    mOwner = w;
 }
 
 std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAnimationRunnable::find(View*v){
-    for(auto it=mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
+    for(auto it = mInvalidateViews.begin();it!=mInvalidateViews.end();it++){
         if((*it)->target == v)
             return it;
     }
@@ -764,14 +822,14 @@ std::vector<View::AttachInfo::InvalidateInfo*>::iterator Window::InvalidateOnAni
 }
 
 void Window::InvalidateOnAnimationRunnable::addView(View* view){
-    auto it=find(view);
-    if(it==mInvalidateViews.end()){
+    auto it = find(view);
+    if(it == mInvalidateViews.end()){
         AttachInfo::InvalidateInfo* info = AttachInfo::InvalidateInfo::obtain();
         info->target = view;
         info->rect.set(0,0,0,0);
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info=(*it);
+        AttachInfo::InvalidateInfo* info = (*it);
         info->rect.set(0,0,0,0);
     }
     postIfNeededLocked();
@@ -785,7 +843,7 @@ void Window::InvalidateOnAnimationRunnable::addViewRect(View* view,const Rect&re
         info->rect = rect;
         mInvalidateViews.push_back(info);
     }else{
-        AttachInfo::InvalidateInfo* info=(*it);
+        AttachInfo::InvalidateInfo* info = (*it);
         if(!info->rect.empty())
             info->rect.Union(rect);
     }
@@ -818,7 +876,6 @@ void Window::InvalidateOnAnimationRunnable::run(){
 
 void Window::InvalidateOnAnimationRunnable::postIfNeededLocked() {
     if (!mPosted) {
-        //Choreographer::getInstance().postCallback(Choreographer::CALLBACK_ANIMATION,nullptr,this);
         Runnable run(std::bind(&InvalidateOnAnimationRunnable::run,this));
         mOwner->postDelayed(run,AnimationHandler::getFrameDelay());
         mPosted = true;

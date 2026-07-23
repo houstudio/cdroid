@@ -101,7 +101,6 @@ void ViewPager::initViewPager(const AttributeSet*atts){
 
     mCurItem = 0;
     mPageMargin =0;
-    mOffscreenPageLimit =3;
     mFirstOffset=-FLT_MAX;//std::numeric_limits<float>::max();
     mLastOffset = FLT_MAX;//std::numeric_limits<float>::max();
 
@@ -299,6 +298,10 @@ void ViewPager::scrollToItem(int item, bool smoothScroll, int velocity, bool dis
     }
 }
 
+void ViewPager::setOnPageChangeListener(const OnPageChangeListener& listener){
+    mOnPageChangeListener = listener;
+}
+
 void ViewPager::addOnPageChangeListener(const OnPageChangeListener& listener){
     auto it = std::find(mOnPageChangeListeners.begin(),mOnPageChangeListeners.end(),listener);
     if(it == mOnPageChangeListeners.end())
@@ -316,6 +319,9 @@ void ViewPager::clearOnPageChangeListeners() {
 }
  
 void ViewPager::dispatchOnPageScrolled(int position, float offset, int offsetPixels) {
+    if (mOnPageChangeListener.onPageScrolled) {
+        mOnPageChangeListener.onPageScrolled(position, offset, offsetPixels);
+    }
     for (auto ls:mOnPageChangeListeners) {
         if (ls.onPageScrolled) {
             ls.onPageScrolled(position, offset, offsetPixels);
@@ -328,6 +334,9 @@ void ViewPager::dispatchOnPageScrolled(int position, float offset, int offsetPix
 }
 
 void ViewPager::dispatchOnPageSelected(int position) {
+    if (mOnPageChangeListener.onPageSelected) {
+        mOnPageChangeListener.onPageSelected(position);
+    }
     for (auto ls:mOnPageChangeListeners) {
         if (ls.onPageSelected) {
             ls.onPageSelected(position);
@@ -340,6 +349,9 @@ void ViewPager::dispatchOnPageSelected(int position) {
 }
 
 void ViewPager::dispatchOnScrollStateChanged(int state) {
+    if (mOnPageChangeListener.onPageScrollStateChanged) {
+        mOnPageChangeListener.onPageScrollStateChanged(state);
+    }
     for (auto ls:mOnPageChangeListeners) {
         if (ls.onPageScrollStateChanged) {
             ls.onPageScrollStateChanged(state);
@@ -351,12 +363,17 @@ void ViewPager::dispatchOnScrollStateChanged(int state) {
 }
 
 void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer) {
+    setPageTransformer(reverseDrawingOrder, transformer, View::LAYER_TYPE_HARDWARE);
+}
+
+void ViewPager::setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer, int pageLayerType) {
     const bool hasTransformer = transformer != nullptr;
     const bool needsPopulate = hasTransformer != (mPageTransformer != nullptr);
     mPageTransformer = transformer;
     setChildrenDrawingOrderEnabled(hasTransformer);
     if (hasTransformer) {
         mDrawingOrder = reverseDrawingOrder ? DRAW_ORDER_REVERSE : DRAW_ORDER_FORWARD;
+        mPageTransformerLayerType = pageLayerType;
     } else {
         mDrawingOrder = DRAW_ORDER_DEFAULT;
     }
@@ -485,13 +502,30 @@ void ViewPager::smoothScrollTo(int x, int y, int velocity){
     postInvalidateOnAnimation();
 }
 
+View* ViewPager::findViewFromObject(void* object){
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (mAdapter != nullptr && mAdapter->isViewFromObject(child, object)) {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
 ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
     ItemInfo* ii = new ItemInfo();
     ii->position = position;
     ii->object = mAdapter->instantiateItem(this, position);
-    View* view=(View*)ii->object;
-    LayoutParams*lp=(LayoutParams*)view->getLayoutParams();
-    lp->isDecor = false;
+    // AOSP keeps ii->object as an opaque adapter key; the page View is the child
+    // for which isViewFromObject() is true. Casting ii->object straight to View*
+    // only works for adapters that return the view itself and crashes adapters
+    // that return a key (e.g. DayPickerPagerAdapter -> ViewHolder).
+    View* view = findViewFromObject(ii->object);
+    if (view != nullptr) {
+        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+        if (lp != nullptr) lp->isDecor = false;
+    }
     ii->widthFactor = mAdapter->getPageWidth(position);
     ii->scrolling=false;
     if (index < 0 || index >= mItems.size()) {
@@ -579,12 +613,7 @@ void ViewPager::populate(int newCurrentItem){
         sortChildDrawingOrder();
         return;
     }
-    // Also, don't populate until we are attached to a window.  This is to
-    // avoid trying to populate before we have restored our view hierarchy
-    // state and conflicting with what is restored.
-    if(!isAttachedToWindow()){
-        return ;
-    }
+
     // Bail now if we are waiting to populate.  This is to hold off
     // on creating views from the time the user releases their finger to
     // fling to a new position until we have finished the scroll to
@@ -593,6 +622,13 @@ void ViewPager::populate(int newCurrentItem){
         LOGV("populate is pending, skipping for now...");
         sortChildDrawingOrder();
         return;
+    }
+
+    // Also, don't populate until we are attached to a window.  This is to
+    // avoid trying to populate before we have restored our view hierarchy
+    // state and conflicting with what is restored.
+    if(!isAttachedToWindow()){
+        return ;
     }
 
     mAdapter->startUpdate(this);
@@ -844,14 +880,6 @@ void ViewPager::addView(View* child, int index, ViewGroup::LayoutParams* params)
     } else {
         ViewGroup::addView(child, index, params);
     }
-
-    if (USE_CACHE) {
-        if (child->getVisibility() != GONE) {
-            child->setDrawingCacheEnabled(mScrollingCacheEnabled);
-        } else {
-            child->setDrawingCacheEnabled(false);
-        }
-    }    
 }
 
 
@@ -1093,16 +1121,10 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
             child->measure(widthSpec, heightSpec);
         }
 
-        int childMeasuredWidth = child->getMeasuredWidth();
         int startOffset = (int) (childWidth * ii->offset);
-        int childLeft;
-        if (isLayoutRtl()) {
-            childLeft = MAX_SCROLL_X - paddingRight - startOffset - childMeasuredWidth;
-        } else {
-            childLeft = paddingLeft + startOffset;
-        }
+        int childLeft = paddingLeft + startOffset;
 
-        int childTop = paddingTop;        
+        int childTop = paddingTop;
         LOGV("nonDecorChild[%d]%p setTo(%d,%d,%d,%d)",i,child,childLeft, childTop,
                child->getMeasuredWidth(), child->getMeasuredHeight());
         child->layout(childLeft, childTop, child->getMeasuredWidth(), child->getMeasuredHeight());
@@ -1119,6 +1141,7 @@ void ViewPager::onLayout(bool changed, int l, int t, int width, int height){
 }
 
 void ViewPager::computeScroll(){
+    mIsScrollStarted = true;
     if (!mScroller->isFinished() && mScroller->computeScrollOffset()) {
         int oldX = getScrollX();
         int oldY = getScrollY();
@@ -1227,7 +1250,8 @@ void ViewPager::completeScroll(bool postEvents){
     if (needPopulate) {
         // Done with scroll, no longer want to cache view drawing.
         setScrollingCacheEnabled(false);
-        if(!mScroller->isFinished()){
+        bool wasScrolling = !mScroller->isFinished();
+        if (wasScrolling) {
             mScroller->abortAnimation();
             int oldX = getScrollX();
             int oldY = getScrollY();
@@ -1256,7 +1280,18 @@ void ViewPager::completeScroll(bool postEvents){
 }
 
 bool ViewPager::isGutterDrag(float x, float dx){
+    if (mDragInGutterEnabled) {
+        return false;
+    }
     return (x < mGutterSize && dx > 0) || (x > getWidth() - mGutterSize && dx < 0);
+}
+
+bool ViewPager::isDragInGutterEnabled()const{
+    return mDragInGutterEnabled;
+}
+
+void ViewPager::setDragInGutterEnabled(bool enabled){
+    mDragInGutterEnabled = enabled;
 }
 
 void ViewPager::enableLayers(bool enable) {
@@ -1353,6 +1388,16 @@ bool ViewPager::onInterceptTouchEvent(MotionEvent& ev){
                 mIsBeingDragged = true;
                 requestParentDisallowInterceptTouchEvent(true);
                 setScrollState(SCROLL_STATE_DRAGGING);
+            } else if (mLeftEdge->getDistance() != 0 || mRightEdge->getDistance() != 0) {
+                // Caught the edge glow animation
+                mIsBeingDragged = true;
+                setScrollState(SCROLL_STATE_DRAGGING);
+                if (mLeftEdge->getDistance() != 0) {
+                    mLeftEdge->onPullDistance(0.f, 1.f - mLastMotionY / getHeight());
+                }
+                if (mRightEdge->getDistance() != 0) {
+                    mRightEdge->onPullDistance(0.f, mLastMotionY / getHeight());
+                }
             } else {
                 completeScroll(false);
                 mIsBeingDragged = false;
@@ -1518,11 +1563,33 @@ void ViewPager::requestParentDisallowInterceptTouchEvent(bool disallowIntercept)
      }
 }
 
+float ViewPager::releaseHorizontalGlow(float deltaX, float y){
+    // If either of the horizontal edge glows are currently active, this consumes
+    // part or all of deltaX on the edge glow.
+    float consumed = 0;
+    float displacement = y / getHeight();
+    float pullDistance = deltaX / getWidth();
+    if (mLeftEdge->getDistance() != 0) {
+        consumed = -mLeftEdge->onPullDistance(-pullDistance, 1.f - displacement);
+    } else if (mRightEdge->getDistance() != 0) {
+        consumed =  mRightEdge->onPullDistance( pullDistance, displacement);
+    }
+    return consumed * getWidth();
+}
+
 bool ViewPager::performDrag(float x,float y){
     bool needsInvalidate = false;
 
-    float deltaX = mLastMotionX - x;
+    const float dX = mLastMotionX - x;
     mLastMotionX = x;
+    const float releaseConsumed = releaseHorizontalGlow(dX, y);
+    const float deltaX = dX - releaseConsumed;
+    if (releaseConsumed != 0) {
+        needsInvalidate = true;
+    }
+    if (std::abs(deltaX) < 0.0001f) { // ignore rounding errors from releaseHorizontalGlow()
+        return needsInvalidate;
+    }
 
     float oldScrollX = getScrollX();
     float scrollX = oldScrollX + deltaX;
@@ -1547,14 +1614,14 @@ bool ViewPager::performDrag(float x,float y){
     if (scrollX < leftBound) {
         if (leftAbsolute) {
             const float over = leftBound - scrollX;
-            mLeftEdge->onPull(over / width,1.f - y/getHeight());
+            mLeftEdge->onPullDistance(over / width, 1.f - y / getHeight());
             needsInvalidate = true;
         }
         scrollX = leftBound;
     } else if (scrollX > rightBound) {
         if (rightAbsolute) {
             const float over = scrollX - rightBound;
-            mRightEdge->onPull(over / width,y /getHeight());
+            mRightEdge->onPullDistance(over / width, y / getHeight());
             needsInvalidate = true;
         }
         scrollX = rightBound;
@@ -1611,8 +1678,10 @@ ViewPager::ItemInfo* ViewPager::infoForCurrentScrollPosition() {
 
 int ViewPager::determineTargetPage(int currentPage, float pageOffset, int velocity, int deltaX){
     int targetPage;
-    if (std::abs(deltaX) > mFlingDistance && std::abs(velocity) > mMinimumVelocity) {
-        targetPage = currentPage - (velocity < 0 ? mLeftIncr : 0);
+    if (std::abs(deltaX) > mFlingDistance && std::abs(velocity) > mMinimumVelocity
+            && mLeftEdge->getDistance() == 0 // don't fling while stretched
+            && mRightEdge->getDistance() == 0) {
+        targetPage = velocity > 0 ? currentPage : currentPage + 1;
     } else {
         float truncator = currentPage >= mCurItem ? 0.4f : 0.6f;
         targetPage = currentPage + (int) (pageOffset + truncator);
@@ -1669,7 +1738,7 @@ void ViewPager::onDraw(Canvas& canvas) {
     ViewGroup::onDraw(canvas);
 
     // Draw the margin drawable between pages if needed.
-    if (mPageMargin > 0 && mMarginDrawable && mItems.size() > 0 && mAdapter) {
+    if (mPageMargin > 0 && mMarginDrawable != nullptr && mItems.size() > 0 && mAdapter != nullptr) {
         const int scrollX = getScrollX();
         const int width = getWidth();
 
@@ -1677,7 +1746,6 @@ void ViewPager::onDraw(Canvas& canvas) {
         int itemIndex = 0;
         ItemInfo* ii = mItems.at(0);
         float offset = ii->offset;
-
         const int itemCount = mItems.size();
         const int firstPos = ii->position;
         const int lastPos = mItems.at(itemCount - 1)->position;
@@ -1686,33 +1754,24 @@ void ViewPager::onDraw(Canvas& canvas) {
                 ii = mItems.at(++itemIndex);
             }
 
-            float itemOffset;
-            float widthFactor;
+            float drawAt;
             if (pos == ii->position) {
-                itemOffset = ii->offset;
-                widthFactor= ii->widthFactor;
+                drawAt = (ii->offset + ii->widthFactor) * width;
+                offset = ii->offset + ii->widthFactor + marginOffset;
             } else {
-                itemOffset = offset;
-                widthFactor = mAdapter->getPageWidth(pos);
+                float widthFactor = mAdapter->getPageWidth(pos);
+                drawAt = (offset + widthFactor) * width;
+                offset += widthFactor + marginOffset;
             }
 
-            float left;
-            float scaledOffset = itemOffset * width;
-            if (isLayoutRtl()) {
-                left = MAX_SCROLL_X - scaledOffset;
-            } else {
-                left = scaledOffset + widthFactor * width;
-            }
-
-            offset = itemOffset + widthFactor + marginOffset;
-
-            if (left + mPageMargin > scrollX) {
-                mMarginDrawable->setBounds((int) left, mTopPageBounds,
-                     (int) (mPageMargin + 0.5f), mBottomPageBounds);
+            if (drawAt + mPageMargin > scrollX) {
+                // CDROID Drawable::setBounds takes (x, y, width, height), not (l, t, r, b).
+                mMarginDrawable->setBounds((int) (drawAt + 0.5f), mTopPageBounds,
+                        mPageMargin, mBottomPageBounds - mTopPageBounds);
                 mMarginDrawable->draw(canvas);
             }
 
-            if (left > scrollX + width) {
+            if (drawAt > scrollX + width) {
                 break; // No more visible, no sense in continuing
             }
         }
@@ -1835,18 +1894,9 @@ void ViewPager::endDrag() {
     }
 }
 
-void ViewPager::setScrollingCacheEnabled(bool bEnabled){
-    if (mScrollingCacheEnabled != bEnabled) {
-        mScrollingCacheEnabled = bEnabled;
-        if (USE_CACHE) {
-            int size = getChildCount();
-            for (int i = 0; i < size; ++i) {
-                View* child = getChildAt(i);
-                if (child->getVisibility() != GONE) {
-                    child->setDrawingCacheEnabled(bEnabled);
-                }
-            }
-        }
+void ViewPager::setScrollingCacheEnabled(bool enabled){
+    if (mScrollingCacheEnabled != enabled) {
+        mScrollingCacheEnabled = enabled;
     }
 }
 
@@ -2009,7 +2059,7 @@ Rect ViewPager::getChildRectInPagerCoordinates(Rect& outRect, View* child){
 
 bool ViewPager::pageLeft() {
     if (mCurItem > 0) {
-        setCurrentItem(mCurItem + mLeftIncr, true);
+        setCurrentItem(mCurItem - 1, true);
         return true;
     }
     return false;
@@ -2017,15 +2067,10 @@ bool ViewPager::pageLeft() {
 
 bool ViewPager::pageRight() {
     if (mAdapter != nullptr && mCurItem < (mAdapter->getCount() - 1)) {
-        setCurrentItem(mCurItem - mLeftIncr, true);
+        setCurrentItem(mCurItem + 1, true);
         return true;
     }
     return false;
-}
-
-void ViewPager::onRtlPropertiesChanged(int layoutDirection){
-    ViewGroup::onRtlPropertiesChanged(layoutDirection);
-    mLeftIncr = (layoutDirection == LAYOUT_DIRECTION_LTR)?-1:1;
 }
 
 void ViewPager::addFocusables(std::vector<View*>& views, int direction, int focusableMode){

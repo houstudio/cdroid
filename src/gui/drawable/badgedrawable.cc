@@ -21,7 +21,8 @@
 #include <animation/animationutils.h>
 #include <widget/framelayout.h>
 #include <core/xmlpullparser.h>
-#include <core/layout.h>
+#include <core/typeface.h>
+#include <text/textutils.h>
 #include <widget/R.h>
 namespace cdroid{
 
@@ -37,7 +38,6 @@ BadgeDrawable* BadgeDrawable::createFromState(Context* context, BadgeState::Stat
 BadgeDrawable::~BadgeDrawable(){
     delete mShapeDrawable;
     delete mState;
-    delete mTextLayout;
 }
 
 BadgeDrawable* BadgeDrawable::create(Context* context) {
@@ -93,8 +93,6 @@ void BadgeDrawable::restoreState() {
 BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
             const std::string&defStyleAttr,const std::string&defStyleRes,BadgeState::State*savedState) {
     mContext = context;
-    mTextLayout = new Layout(14,INT_MAX);
-    mTextLayout->setMultiline(false);
     mAnchorView = nullptr;
     mCustomBadgeParent = nullptr;
     mBadgeRadius = 6;
@@ -114,6 +112,7 @@ BadgeDrawable::BadgeDrawable(Context* context,const std::string&badgeResId,
   
     mState = new BadgeState(context,badgeResId,defStyleAttr,defStyleRes,savedState);
     //setBackgroundColor(mState->mBackgroundColor);
+    //mTextPaint.setTextAlign(Paint::Align::CENTER);
     setTextAppearance("@cdroid:style/TextAppearance.MaterialComponents.Badge");
     restoreState();
 }
@@ -199,6 +198,7 @@ int BadgeDrawable::getBadgeTextColor() const{
 void BadgeDrawable::setBadgeTextColor(int badgeTextColor) {
     if (mState->getBadgeTextColor() != badgeTextColor){
         mState->setBadgeTextColor (badgeTextColor);
+        mTextPaint.setColor(badgeTextColor);
         onBadgeTextColorUpdated();
     }
 }
@@ -328,6 +328,7 @@ int BadgeDrawable::getAlpha()const {
 
 void BadgeDrawable::setAlpha(int alpha) {
     mState->setAlpha(alpha);
+    mTextPaint.setAlpha(alpha);
     invalidateSelf();
 }
 
@@ -480,8 +481,8 @@ void BadgeDrawable::setTextAppearance(const std::string& id) {
     const AttributeSet atts = mContext->obtainStyledAttributes(id);
     const int textSize = atts.getInt("textSize",12);
     Typeface*tf =Typeface::create(atts.getString("fontFamily"),0);
-    mTextLayout->setFontSize(textSize);
-    mTextLayout->setTypeface(tf);
+    mTextPaint.setTypeface(tf);
+    mTextPaint.setTextSize(textSize);
     atts.getColor("textColor");
 }
 
@@ -490,9 +491,8 @@ void BadgeDrawable::onBadgeTextAppearanceUpdated() {
         return;
     }
     const AttributeSet atts = mContext->obtainStyledAttributes(mState->getTextAppearanceResId());
-    const int fontSize = atts.getInt("textSize",mTextLayout->getFontSize());
-    mTextLayout->setFontSize(fontSize);
-    mTextLayout->relayout();
+    const int fontSize = atts.getInt("textSize",mTextPaint.getTextSize());
+    mTextPaint.setTextSize(fontSize);
     /*TextAppearance textAppearance = new TextAppearance(context, state.getTextAppearanceResId());
     if (textDrawableHelper.getTextAppearance() == textAppearance) {
         return;
@@ -614,16 +614,14 @@ void BadgeDrawable::calculateCenterAndBounds(const Rect& anchorRect, View* ancho
     // If the badge has a number, we want to make sure that the badge is at least tall/wide
     // enough to encompass the text with padding.
     if(hasBadgeContent()){
-        std::string badgeContent=getBadgeContent();
-        mTextLayout->setText(badgeContent);
-        mTextLayout->relayout(1);
+        std::string badgeContent = getBadgeContent();
+        const auto badgeTextWidth = mTextPaint.measureText(badgeContent);
+        const auto fm = mTextPaint.getFontMetricsInt();
         mHalfBadgeWidth = std::max(mHalfBadgeWidth,
-              mTextLayout->getMaxLineWidth() / 2.f
-                  + mState->getBadgeHorizontalPadding());
+              badgeTextWidth/2.f  + mState->getBadgeHorizontalPadding());
 
-        mHalfBadgeHeight =std::max(mHalfBadgeHeight,
-              mTextLayout->getLineHeight(0)/ 2.f
-                  + mState->getBadgeVerticalPadding());
+        mHalfBadgeHeight = std::max(mHalfBadgeHeight,
+              float(fm.bottom-fm.top)/2.f + mState->getBadgeVerticalPadding());
 
         // If the badge has text, it should at least have the same width as it does height
         mHalfBadgeWidth = std::max(mHalfBadgeWidth, mHalfBadgeHeight);
@@ -767,9 +765,15 @@ float BadgeDrawable::getRightCutoff(float ancestorWidth, float totalAnchorXOffse
 
 void BadgeDrawable::drawBadgeContent(Canvas& canvas) {
     const std::string badgeContent = getBadgeContent();
+    std::u16string u16s=TextUtils::utf8_utf16(badgeContent);
+    const auto fm = mTextPaint.getFontMetricsInt();
+    const auto badgeTextWidth = mTextPaint.measureText(badgeContent);
+    const auto badgeTextHeight= fm.bottom - fm.top;
     canvas.set_color(mState->getBadgeTextColor());
-    canvas.set_font_size(mTextLayout->getFontSize());
-    canvas.draw_text(mBadgeBounds,badgeContent,Gravity::CENTER);
+    mTextPaint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,u16s.length(),
+            mBadgeCenterX - badgeTextWidth/2.f,
+            (float)mBadgeBounds.top + (mBadgeBounds.height-badgeTextHeight)/2.f - fm.ascent,
+            getLayoutDirection()==LayoutDirection::RTL);
 }
 
 bool BadgeDrawable::hasBadgeContent() const{

@@ -41,6 +41,7 @@ struct PRIVATE {
     png_infop info_ptr;
     int transparency;
     std::istream*istream;
+    std::vector<uint8_t> ninePatchChunk;  // "cdNp" container (npTc+npLb+npOl) for 9-patch
 };
 
 static void istream_png_reader(png_structp png_ptr, png_bytep png_data, png_size_t data_size) {
@@ -67,6 +68,21 @@ static void PNGAPI pngComplete(png_structp png, png_infop){
     //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->pngComplete();
 }
 
+// libpng user-chunk callback: capture the CDROID 9-patch bundle chunk DATA (bytes after
+// the 8-byte PNG chunk header) into PRIVATE. Registered via png_set_read_user_chunk_fn
+// (user ptr = mPrivate); fires during png_read_info for unknown chunks. Returning 1 marks
+// the chunk handled. The "cdNp" bundle packs npTc (stretch/padding) + npLb (optical/layout
+// bounds) + npOl (outline) into one blob so the runtime reuses the single-chunk plumbing.
+static int PNGAPI png_read_user_chunk(png_structp png_ptr, png_unknown_chunkp chunk) {
+    if (chunk == nullptr || chunk->size == 0 || chunk->name == nullptr) return 0;
+    if (memcmp(chunk->name, "cdNp", 4) != 0) return 0;  // not our 9-patch bundle
+    PRIVATE* priv = static_cast<PRIVATE*>(png_get_user_chunk_ptr(png_ptr));
+    if (priv == nullptr) return 0;
+    if (priv->ninePatchChunk.empty())
+        priv->ninePatchChunk.assign(chunk->data, chunk->data + chunk->size);
+    return 1;
+}
+
 PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate = new PRIVATE();
     mPrivate->png_ptr = png_create_read_struct(PNG_LIBPNG_VER_STRING, nullptr, png_error_handler, png_warning_handler);
@@ -75,6 +91,13 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate->transparency = PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
+    // Must be set before png_read_info (which runs in decodeSize()); mPrivate is the
+    // user-chunk ptr the callback retrieves via png_get_user_chunk_ptr.
+    png_set_read_user_chunk_fn(mPrivate->png_ptr, mPrivate, png_read_user_chunk);
+}
+
+const std::vector<uint8_t>* PNGDecoder::getNinePatchChunk() const {
+    return mPrivate->ninePatchChunk.empty() ? nullptr : &mPrivate->ninePatchChunk;
 }
 
 PNGDecoder::~PNGDecoder() {

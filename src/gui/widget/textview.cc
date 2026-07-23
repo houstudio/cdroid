@@ -15,296 +15,54 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <set>
+#include <text/String.h>
+#include <widget/R.h>
+#include <widget/editor.h>
+#include <widget/editorinfo.h>
 #include <widget/textview.h>
+#include <text/method/movementmethod.h>
+#include <text/method/arrowkeymovementmethod.h>
+#include <text/method/linkmovementmethod.h>
+#include <text/method/offsetmapping.h>
 #include <cairomm/fontface.h>
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
-#include <core/layout.h>
+#include <text/layout.h>
+#include <text/selection.h>
+#include <text/spannablestringbuilder.h>
+#include <text/inputfilter.h>
+#include <text/linkify.h>
+#include <text/inputtype.h>
+#include <text/editable.h>
+#include <text/style/clickablespan.h>
+#include <text/method/passwordtransformationmethod.h>
+#include <text/method/allcapstransformationmethod.h>
+#include <text/method/singlelinetransformationmethod.h>
+#include <text/method/keylistener.h>
+#include <text/method/textkeylistener.h>
+#include <text/method/dialerkeylistener.h>
+#include <text/method/digitskeylistener.h>
+#include <text/method/datekeylistener.h>
+#include <text/method/timekeylistener.h>
+#include <text/method/datetimekeylistener.h>
+#include <text/precomputedtext.h>
 #include <core/textutils.h>
 #include <porting/cdlog.h>
 #include <float.h>
 
-#define VERY_WIDE 1024*1024
-#define KEY_EVENT_NOT_HANDLED 0
-#define KEY_EVENT_HANDLED -1
-
 namespace cdroid{
+class SuggestionSpan;
+class SpellCheckSpan;
+
+static constexpr int ID_SELECT_ALL = cdroid::R::id::selectAll; // android.R.id.selectAll
+static constexpr int ID_CUT        = cdroid::R::id::cut;
+static constexpr int ID_COPY       = cdroid::R::id::copy;
+static constexpr int ID_PASTE      = cdroid::R::id::paste;
+static constexpr int ID_SHARE      = cdroid::R::id::shareText;
+static constexpr int ID_REPLACE    = cdroid::R::id::replaceText;
 
 DECLARE_WIDGET2(TextView,"cdroid:attr/textViewStyle")
-
-TextView::Drawables::Drawables(Context*ctx){
-    mIsRtlCompatibilityMode= false;
-    mHasTintMode= mOverride = false;
-    mTintList= nullptr;
-    mShowing[0] = mShowing[1] = nullptr;
-    mShowing[2] = mShowing[3] = nullptr;
-    mDrawableStart = mDrawableEnd  = nullptr;
-    mDrawableError = mDrawableTemp = nullptr;
-    mDrawableLeftInitial= mDrawableRightInitial = nullptr;
-    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft = 0;
-    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd= 0;
-    mDrawableSizeError  = mDrawableSizeTemp  = 0;
-    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft= 0;
-    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd = 0;
-    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding   = 0;
-    mCompoundRect.set(0,0,0,0);
-}
-
-TextView::Drawables::~Drawables(){
-    for(int i=0;i<4;i++){
-        delete mShowing[i];
-    }
-}
-
-bool TextView::Drawables::hasMetadata()const{
-    return (mDrawablePadding != 0) || mHasTintMode || (mTintList!=nullptr);
-}
-
-bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
-    Drawable* previousLeft = mShowing[Drawables::LEFT];
-    Drawable* previousRight = mShowing[Drawables::RIGHT];
-
-    // First reset "left" and "right" drawables to their initial values
-    mShowing[Drawables::LEFT] = mDrawableLeftInitial;
-    mShowing[Drawables::RIGHT] = mDrawableRightInitial;
-
-    if (mIsRtlCompatibilityMode) {
-        // Use "start" drawable as "left" drawable if the "left" drawable was not defined
-        if (mDrawableStart && mShowing[Drawables::LEFT] == nullptr) {
-            mShowing[Drawables::LEFT] = mDrawableStart;
-            mDrawableSizeLeft = mDrawableSizeStart;
-            mDrawableHeightLeft = mDrawableHeightStart;
-        }
-        // Use "end" drawable as "right" drawable if the "right" drawable was not defined
-        if (mDrawableEnd  && mShowing[Drawables::RIGHT] == nullptr) {
-            mShowing[Drawables::RIGHT] = mDrawableEnd;
-            mDrawableSizeRight = mDrawableSizeEnd;
-            mDrawableHeightRight = mDrawableHeightEnd;
-        }
-    } else {
-        // JB-MR1+ normal case: "start" / "end" drawables are overriding "left" / "right"
-        // drawable if and only if they have been defined
-        switch(layoutDirection) {
-        case LAYOUT_DIRECTION_RTL:
-            if (mOverride) {
-                mShowing[Drawables::RIGHT] = mDrawableStart;
-                mDrawableSizeRight = mDrawableSizeStart;
-                mDrawableHeightRight = mDrawableHeightStart;
-
-                mShowing[Drawables::LEFT] = mDrawableEnd;
-                mDrawableSizeLeft = mDrawableSizeEnd;
-                mDrawableHeightLeft = mDrawableHeightEnd;
-            }
-            break;
-
-        case LAYOUT_DIRECTION_LTR:
-        default:
-            if (mOverride) {
-                mShowing[Drawables::LEFT] = mDrawableStart;
-                mDrawableSizeLeft = mDrawableSizeStart;
-                mDrawableHeightLeft = mDrawableHeightStart;
-
-                mShowing[Drawables::RIGHT] = mDrawableEnd;
-                mDrawableSizeRight = mDrawableSizeEnd;
-                mDrawableHeightRight = mDrawableHeightEnd;
-            }
-            break;
-        }
-    }
-
-    applyErrorDrawableIfNeeded(layoutDirection);
-
-    return (mShowing[Drawables::LEFT] != previousLeft)
-            || (mShowing[Drawables::RIGHT] != previousRight);
-}
-
-void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
-    if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
-        mDrawableError->setCallback(nullptr);
-    }
-    mDrawableError = dr;
-
-    if (mDrawableError != nullptr) {
-        Rect compoundRect = mCompoundRect;
-        const std::vector<int> state = tv->getDrawableState();
-
-        mDrawableError->setState(state);
-        compoundRect = mDrawableError->getBounds();
-        mDrawableError->setCallback(tv);
-        mDrawableSizeError = compoundRect.width;
-        mDrawableHeightError = compoundRect.height;
-    } else {
-        mDrawableSizeError = mDrawableHeightError = 0;
-    }
-}
-
-void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
-    // first restore the initial state if needed
-    switch (mDrawableSaved) {
-    case DRAWABLE_LEFT:
-        mShowing[Drawables::LEFT] = mDrawableTemp;
-        mDrawableSizeLeft = mDrawableSizeTemp;
-        mDrawableHeightLeft = mDrawableHeightTemp;
-        break;
-    case DRAWABLE_RIGHT:
-        mShowing[Drawables::RIGHT] = mDrawableTemp;
-        mDrawableSizeRight = mDrawableSizeTemp;
-        mDrawableHeightRight = mDrawableHeightTemp;
-        break;
-    case DRAWABLE_NONE:
-        default:break;
-    }
-    // then, if needed, assign the Error drawable to the correct location
-    if (mDrawableError != nullptr) {
-        switch(layoutDirection) {
-        case LAYOUT_DIRECTION_RTL:
-            mDrawableSaved = DRAWABLE_LEFT;
-
-            mDrawableTemp = mShowing[Drawables::LEFT];
-            mDrawableSizeTemp = mDrawableSizeLeft;
-            mDrawableHeightTemp = mDrawableHeightLeft;
-
-            mShowing[Drawables::LEFT] = mDrawableError;
-            mDrawableSizeLeft = mDrawableSizeError;
-            mDrawableHeightLeft = mDrawableHeightError;
-            break;
-        case LAYOUT_DIRECTION_LTR:
-        default:
-            mDrawableSaved = DRAWABLE_RIGHT;
-
-            mDrawableTemp = mShowing[Drawables::RIGHT];
-            mDrawableSizeTemp = mDrawableSizeRight;
-            mDrawableHeightTemp = mDrawableHeightRight;
-
-            mShowing[Drawables::RIGHT] = mDrawableError;
-            mDrawableSizeRight = mDrawableSizeError;
-            mDrawableHeightRight = mDrawableHeightError;
-            break;
-        }
-    }
-}
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////
-class Marquee {
-private:
-    static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
-    static constexpr  int MARQUEE_DELAY = 1200;
-    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
-
-    static constexpr  int MARQUEE_STOPPED = 0x0;
-    static constexpr  int MARQUEE_STARTING= 0x1;
-    static constexpr  int MARQUEE_RUNNING = 0x2;
-    friend TextView;
-    TextView* mView;
-    Layout*mLayout;
-    Choreographer*mChoreographer;
-    int mStatus ;//= MARQUEE_STOPPED;
-    float mPixelsPerMs;
-    float mMaxScroll;
-    float mMaxFadeScroll;
-    float mGhostStart;
-    float mGhostOffset;
-    float mFadeStop;
-    int mRepeatLimit;
-
-    float mScroll;
-    int64_t mLastAnimationMs;
-    Choreographer::FrameCallback mTickCallback;
-    Choreographer::FrameCallback mStartCallback;
-    Choreographer::FrameCallback mRestartCallback;
-
-private:
-    void resetScroll() {
-        mScroll = 0.0f;
-        if (mView ) mView->invalidate();
-    }
-public:
-    Marquee(TextView* v,Layout*lt) {
-        const float density = v->getContext()->getDisplayMetrics().density;
-        mStatus = MARQUEE_STOPPED;
-        mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
-        mView = v;
-        mLayout=lt;
-        mChoreographer=&Choreographer::getInstance();
-        mTickCallback = [this](int64_t) {tick();};
-        mStartCallback= [this](int64_t) {
-            mStatus = MARQUEE_RUNNING;
-            mLastAnimationMs = mChoreographer->getFrameTime();
-            tick();
-        };
-        mRestartCallback= [this](int64_t) {
-            if (mStatus == MARQUEE_RUNNING) {
-                if (mRepeatLimit >= 0) mRepeatLimit--;
-                start(mRepeatLimit);
-            }
-        };
-    }
-
-    ~Marquee(){
-        stop();
-    }
-
-    void tick() {
-        if (mStatus != MARQUEE_RUNNING) {
-            return;
-        }
-
-        mChoreographer->removeFrameCallback(mTickCallback);
-
-        if (mView  && (mView->isFocused() || mView->isSelected())) {
-            const int64_t currentMs = mChoreographer->getFrameTime();
-            const int64_t deltaMs = currentMs - mLastAnimationMs;
-            const float deltaPx = deltaMs * mPixelsPerMs;
-            mLastAnimationMs = currentMs;
-            mScroll += deltaPx;
-            if (mScroll > mMaxScroll) {
-                mScroll = mMaxScroll;
-                mChoreographer->postFrameCallbackDelayed(mRestartCallback,MARQUEE_DELAY);
-            } else {
-                mChoreographer->postFrameCallback(mTickCallback);
-            }
-            mView->invalidate();
-        }
-    }
-
-    void stop() {
-        mStatus = MARQUEE_STOPPED;
-        mChoreographer->removeFrameCallback(mStartCallback);
-        mChoreographer->removeFrameCallback(mRestartCallback);
-        mChoreographer->removeFrameCallback(mTickCallback);
-        resetScroll();
-    }
-
-    void start(int repeatLimit) {
-        if (repeatLimit == 0) {
-            stop();
-            return;
-        }
-        mRepeatLimit = repeatLimit;
-        if (mView && mLayout ) {
-            mStatus = MARQUEE_STARTING;
-            mScroll = 0.0f;
-            const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
-                    - mView->getCompoundPaddingRight();
-            const float lineWidth = mLayout->getLineWidth(0);
-            const float gap = textWidth / 3.0f;
-            mGhostStart = lineWidth - textWidth + gap;
-            mMaxScroll = mGhostStart + textWidth;
-            mGhostOffset = lineWidth + gap;
-            mFadeStop = lineWidth + textWidth / 6.0f;
-            mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
-	
-            mView->invalidate();
-            mChoreographer->postFrameCallback(mStartCallback);
-        }
-    }
-    float getGhostOffset()const { return mGhostOffset; }
-    float getScroll()const { return mScroll; }
-    float getMaxFadeScroll()const { return mMaxFadeScroll; }
-    bool shouldDrawLeftFade()const { return mScroll <= mFadeStop; }
-    bool shouldDrawGhost()const { return (mStatus == MARQUEE_RUNNING) && (mScroll > mGhostStart); }
-    bool isRunning()const{ return mStatus == MARQUEE_RUNNING; }
-    bool isStopped()const{ return mStatus == MARQUEE_STOPPED; }
-};
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 class TextAppearanceAttributes{
@@ -317,10 +75,11 @@ public:
     std::string mFontFamily;
     Typeface* mFontTypeface;
     int mTypefaceIndex = -1;
-    int mTextStyle=0;
+    int mTextStyle = 0;
     int mFontWeight = -1;
     int mShadowColor = 0;
     float mLetterSpacing = 0;
+    std::string mFontFeatureSettings;
     float mShadowDx = 0, mShadowDy = 0, mShadowRadius = 0;
     bool mFontFamilyExplicit = false;
     bool mAllCaps = false;
@@ -360,10 +119,27 @@ void TextAppearanceAttributes::readTextAppearance(Context*ctx,const AttributeSet
     mFontFamily   = atts.getString("fontFamily","");
     mFontTypeface = Typeface::create(mFontFamily,mTextStyle);
     mAllCaps   = atts.getBoolean("textAllCaps",false);
+
+    // The mHas* flags mirror Android's "explicitly set" semantics so applyTextAppearance
+    // only applies the value when the attribute was actually present.
+    mHasElegant          = atts.hasAttribute("elegantTextHeight");
+    mElegant             = atts.getBoolean("elegantTextHeight", false);
+    mHasFallbackLineSpacing = atts.hasAttribute("fallbackLineSpacing");
+    mFallbackLineSpacing    = atts.getBoolean("fallbackLineSpacing", false);
+    mHasLetterSpacing    = atts.hasAttribute("letterSpacing");
+    mLetterSpacing       = atts.getFloat("letterSpacing", 0.f);   // Android: plain float, not a dimension
+    mFontFeatureSettings = atts.getString("fontFeatureSettings", "");
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+static BoringLayout::Metrics UNKNOWN_BORING;
+static constexpr int ELLIPSIZE_NOT_SET = -1;
+static constexpr int ELLIPSIZE_NONE = 0;
+static constexpr int ELLIPSIZE_START = 1;
+static constexpr int ELLIPSIZE_MIDDLE = 2;
+static constexpr int ELLIPSIZE_END = 3;
+static constexpr int ELLIPSIZE_MARQUEE = 4;
 TextView::TextView(Context*ctx,const AttributeSet& attrs)
   :View(ctx,attrs){
     initView();
@@ -378,10 +154,12 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     Drawable*bottom= attrs.getDrawable("drawableBottom");
     Drawable*start = attrs.getDrawable("drawableStart");
     Drawable*  end = attrs.getDrawable("drawableEnd");
+    const bool selectallonfocus = attrs.getBoolean("selectAllOnFocus");
 
     setCompoundDrawablesWithIntrinsicBounds(left,top,right,bottom);
     if(mDrawables){
         mDrawables->mTintList = attrs.getColorStateList("drawableTint");
+        mDrawables->mTintMode = attrs.getTintMode("drawableTintMode",PorterDuff::NOOP);
     }
     applyCompoundDrawableTint();
     setRelativeDrawablesIfNeeded(start, end);
@@ -393,16 +171,51 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setHeight(attrs.getDimensionPixelSize("height",-1));
     setMinHeight(attrs.getDimensionPixelSize("minHeight", -1));
     setMaxHeight(attrs.getDimensionPixelSize("maxHeight", mMaximum));
-    setTextScaleX(attrs.getFloat("textScaleX",mTextScaleX));
+    setTextScaleX(attrs.getFloat("textScaleX",1.f));
 
     setMinWidth(attrs.getDimensionPixelSize("minWidth", INT_MIN));
     setMaxWidth(attrs.getDimensionPixelSize("maxWidth", INT_MAX));
     setSingleLine(attrs.getBoolean("singleLine",mSingleLine));
     setGravity(attrs.getGravity("gravity",Gravity::TOP|Gravity::START));
-    mMaxLength = attrs.getInt("maxLength",-1);
+    const int maxLength = attrs.getInt("maxLength",-1);
 
     setLineSpacing( attrs.getDimensionPixelSize("lineSpacingExtra",0),
              attrs.getFloat("lineSpacingMultiplier",1.f) );
+    int inputType =attrs.getInt("inputType",std::unordered_map<std::string,int>{
+            {"none", (int)InputType::TYPE_NULL},
+            {"text", (int)InputType::TYPE_CLASS_TEXT},
+            {"textCapCharacters", (int)InputType::TYPE_TEXT_FLAG_CAP_CHARACTERS},
+            {"textCapWords", (int)InputType::TYPE_TEXT_FLAG_CAP_WORDS},
+            {"textCapSentences", (int)InputType::TYPE_TEXT_FLAG_CAP_SENTENCES},
+            {"textAutoCorrect", (int)InputType::TYPE_TEXT_FLAG_AUTO_CORRECT},
+            {"textPassword", (int)InputType::TYPE_TEXT_VARIATION_PASSWORD},
+            {"textVisiblePassword", (int)InputType::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD},
+            {"textEmailAddress", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS},
+            {"textUri", (int)InputType::TYPE_TEXT_VARIATION_URI},
+            {"textPersonName", (int)InputType::TYPE_TEXT_VARIATION_PERSON_NAME},
+            {"textShortMessage", (int)InputType::TYPE_TEXT_VARIATION_SHORT_MESSAGE},
+            {"textLongMessage", (int)InputType::TYPE_TEXT_VARIATION_LONG_MESSAGE},
+            {"textMultiLine", (int)InputType::TYPE_TEXT_FLAG_MULTI_LINE},
+            {"textNoSuggestions", (int)InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS},
+            {"textWebEditText", (int)InputType::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT},
+            {"textFilter", (int)InputType::TYPE_TEXT_VARIATION_FILTER},
+            {"textPhonetic", (int)InputType::TYPE_TEXT_VARIATION_PHONETIC},
+            {"textEmailSubject", (int)InputType::TYPE_TEXT_VARIATION_EMAIL_SUBJECT},
+            {"textPostalAddress", (int)InputType::TYPE_TEXT_VARIATION_POSTAL_ADDRESS},
+            {"number", (int)InputType::TYPE_CLASS_NUMBER},
+
+            // Number variants carry the class bit too (Android's attr constants
+            // are pre-OR'd, e.g. numberDecimal = TYPE_CLASS_NUMBER|DECIMAL).
+            // Without the class the TYPE_MASK_CLASS decode in IMM would miss
+            // them and a numberDecimal field would show the text keyboard.
+            {"numberDecimal", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_DECIMAL},
+            {"numberSigned", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_FLAG_SIGNED},
+            {"numberPassword", (int)InputType::TYPE_CLASS_NUMBER | (int)InputType::TYPE_NUMBER_VARIATION_PASSWORD},
+            {"phone", (int)InputType::TYPE_CLASS_PHONE},
+            {"date", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_DATE},
+            {"time", (int)InputType::TYPE_CLASS_DATETIME | (int)InputType::TYPE_DATETIME_VARIATION_TIME},
+            {"datetime", (int)InputType::TYPE_CLASS_DATETIME}
+        },EditorInfo::TYPE_NULL);
     const int breakStrategy = attrs.getInt("breakStrategy",std::unordered_map<std::string,int>{
         {"simple"  ,(int)Layout::BREAK_STRATEGY_SIMPLE},
         {"balanced",(int)Layout::BREAK_STRATEGY_BALANCED},
@@ -424,21 +237,221 @@ TextView::TextView(Context*ctx,const AttributeSet& attrs)
     setMarqueeRepeatLimit(attrs.getInt("marqueeRepeatLimit",std::unordered_map<std::string,int>{
             {"marquee_forever",-1}
         },mMarqueeRepeatLimit));
-    setEllipsize(attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
-        {"start",Layout::ELLIPSIS_START},{"middle",Layout::ELLIPSIS_MIDDLE},
-        {"end" ,Layout::ELLIPSIS_END},{"marquee",Layout::ELLIPSIS_MARQUEE}
-      },Layout::ELLIPSIS_NONE));
+    auto ellipsize = attrs.getInt("ellipsize",std::unordered_map<std::string,int>{
+        {"none", (int)ELLIPSIZE_NONE},
+        {"start",(int)ELLIPSIZE_START},{"middle",(int)ELLIPSIZE_MIDDLE},
+        {"end" ,(int)ELLIPSIZE_END},{"marquee",(int)ELLIPSIZE_MARQUEE}
+      },(int)ELLIPSIZE_NOT_SET);
     // If not explicitly specified this view is important for accessibility.
     if (getImportantForAccessibility() == IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
         setImportantForAccessibility(IMPORTANT_FOR_ACCESSIBILITY_YES);
     }
 
+    // Attributes handled by Android's TextView styled-attr switch but not previously
+    // wired. ems/width setters don't guard -1, so only apply when the attribute is
+    // present (Android fires them only inside the switch case for a present attr).
+    if (attrs.hasAttribute("maxEms")) setMaxEms(attrs.getInt("maxEms", -1));
+    if (attrs.hasAttribute("ems"))   setEms(attrs.getInt("ems", -1));
+    if (attrs.hasAttribute("minEms"))setMinEms(attrs.getInt("minEms", -1));
+    if (attrs.hasAttribute("width")) setWidth(attrs.getDimensionPixelSize("width", -1));
+
+    if (!attrs.getBoolean("includeFontPadding", true)) setIncludeFontPadding(false);
+    if (!attrs.getBoolean("cursorVisible", true)) setCursorVisible(false);
+    setEnabled(attrs.getBoolean("enabled", isEnabled()));
+    setAutoLinkMask(attrs.getInt("autoLink", std::unordered_map<std::string,int>{
+        {"none", 0}, {"web", 0x01}, {"email", 0x02},
+        {"phone", 0x04}, {"map", 0x08}, {"all", 0x0f}
+    }, mAutoLinkMask));
+    setLinksClickable(attrs.getBoolean("linksClickable", true));
+    setHyphenationFrequency(attrs.getInt("hyphenationFrequency", std::unordered_map<std::string,int>{
+        {"none",   Layout::HYPHENATION_FREQUENCY_NONE},
+        {"normal", Layout::HYPHENATION_FREQUENCY_NORMAL},
+        {"full",   Layout::HYPHENATION_FREQUENCY_FULL}
+    }, mHyphenationFrequency));
+    setJustificationMode(attrs.getInt("justificationMode", std::unordered_map<std::string,int>{
+        {"none",            Layout::JUSTIFICATION_MODE_NONE},
+        {"inter_word",      Layout::JUSTIFICATION_MODE_INTER_WORD},
+        {"inter_character", Layout::JUSTIFICATION_MODE_INTER_CHARACTER}
+    }, mJustificationMode));
+    setTextIsSelectable(attrs.getBoolean("textIsSelectable", false));
+    if (attrs.hasAttribute("imeOptions"))
+        // Decode android:imeOptions flag names (AOSP attrs.xml) — action*/flag*
+        // — to EditorInfo constants, OR-ing "|" combinations like inputType.
+        // getInt(map) returns IME_NULL when the attribute is absent, but we only
+        // call setImeOptions (which lazily creates the Editor) when present.
+        setImeOptions(attrs.getInt("imeOptions", std::unordered_map<std::string,int>{
+            {"normal",                     (int)EditorInfo::IME_ACTION_UNSPECIFIED},
+            {"actionUnspecified",          (int)EditorInfo::IME_ACTION_UNSPECIFIED},
+            {"actionNone",                 (int)EditorInfo::IME_ACTION_NONE},
+            {"actionGo",                   (int)EditorInfo::IME_ACTION_GO},
+            {"actionSearch",               (int)EditorInfo::IME_ACTION_SEARCH},
+            {"actionSend",                 (int)EditorInfo::IME_ACTION_SEND},
+            {"actionNext",                 (int)EditorInfo::IME_ACTION_NEXT},
+            {"actionDone",                 (int)EditorInfo::IME_ACTION_DONE},
+            {"actionPrevious",             (int)EditorInfo::IME_ACTION_PREVIOUS},
+            {"flagNoPersonalizedLearning", (int)EditorInfo::IME_FLAG_NO_PERSONALIZED_LEARNING},
+            {"flagNoFullscreen",           (int)EditorInfo::IME_FLAG_NO_FULLSCREEN},
+            {"flagNavigatePrevious",       (int)EditorInfo::IME_FLAG_NAVIGATE_PREVIOUS},
+            {"flagNavigateNext",           (int)EditorInfo::IME_FLAG_NAVIGATE_NEXT},
+            {"flagNoExtractUi",            (int)EditorInfo::IME_FLAG_NO_EXTRACT_UI},
+            {"flagNoAccessoryAction",      (int)EditorInfo::IME_FLAG_NO_ACCESSORY_ACTION},
+            {"flagNoEnterAction",          (int)EditorInfo::IME_FLAG_NO_ENTER_ACTION},
+            {"flagForceAscii",             (int)EditorInfo::IME_FLAG_FORCE_ASCII},
+        }, EditorInfo::IME_NULL));
+
+    BufferType bufferType = BufferType::EDITABLE;
+    const int variation = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    const bool passwordInputType = variation== (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD);
+    const bool webPasswordInputType = variation == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD);
+    const bool numberPasswordInputType = variation == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
+    bool singleLine = mSingleLine;
+    // Editor / input-method configuration (Android TextView ctor ~1253-1269, 1685-1790).
+    // Android gathers these into locals first, then resolves a KeyListener below.
+    const std::string inputMethod = attrs.getString("inputMethod");
+    const std::string digits = attrs.getString("digits");
+    const bool phone = attrs.getBoolean("phoneNumber", false);
+    const int numeric = attrs.getInt("numeric", std::unordered_map<std::string,int>{
+        {"signed", (int)SIGNED}, {"decimal", (int)DECIMAL} }, 0);
+    const bool autotext = attrs.getBoolean("autoText", false);
+    const int autocap = attrs.getInt("capitalize", std::unordered_map<std::string,int>{
+        {"sentences", 1}, {"words", 2}, {"characters", 3} }, -1);
+    const bool editable = attrs.getBoolean("editable", getDefaultEditable());
+    const int buffertype = attrs.getInt("bufferType", std::unordered_map<std::string,int>{
+        {"normal", 0}, {"spannable", 1}, {"editable", 2} }, 0);
+    const bool password = attrs.getBoolean("password", false);
+    mUseFallbackLineSpacing = true; // Android: targetSdk >= P (BORINGLAYOUT_FALLBACK_LINESPACING)
+
+    // CDROID has no reflection, so Android's inputMethod branch —
+    //   c = Class.forName(inputMethod); mEditor.mKeyListener = c.newInstance();
+    // — cannot be honored. We still record the requested input type and DEFER the
+    //   KeyListener instantiation.
+    // TODO(DEFERRED): port inputMethod KeyListener instantiation.
+    if (!inputMethod.empty()) {
+        createEditorIfNeeded();
+        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
+    } else if (!digits.empty()) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(
+                std::u16string(digits.begin(), digits.end()));
+        // If no input type was specified, we will default to generic
+        // text, since we can't tell the IME about the set of digits that was selected.
+        mEditor->mInputType = (inputType != EditorInfo::TYPE_NULL)
+                ? inputType : EditorInfo::TYPE_CLASS_TEXT;
+    } else if (inputType != EditorInfo::TYPE_NULL) {
+        setInputType(inputType); // builds the per-class KeyListener (TEXT/NUMBER/DATE/PHONE)
+        // If set, the input type overrides what was set using the deprecated singleLine flag.
+        singleLine = !isMultilineInputType(inputType);
+    } else if (phone) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DialerKeyListener::getInstance();
+        mEditor->mInputType = inputType = EditorInfo::TYPE_CLASS_PHONE;
+    } else if (numeric != 0) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = DigitsKeyListener::getInstance(
+                (numeric & SIGNED) != 0, (numeric & DECIMAL) != 0);
+        inputType = mEditor->mKeyListener->getInputType();
+        mEditor->mInputType = inputType;
+    } else if (autotext || autocap != -1) {
+        TextKeyListener::Capitalize cap;
+        inputType = EditorInfo::TYPE_CLASS_TEXT;
+        switch (autocap) {
+        case 1: cap = TextKeyListener::Capitalize::SENTENCES;  inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES;  break;
+        case 2: cap = TextKeyListener::Capitalize::WORDS;      inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS;      break;
+        case 3: cap = TextKeyListener::Capitalize::CHARACTERS; inputType |= EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS; break;
+        default: cap = TextKeyListener::Capitalize::NONE; break;
+        }
+        createEditorIfNeeded();
+        mEditor->mKeyListener = TextKeyListener::getInstance(autotext, cap);
+        mEditor->mInputType = inputType;
+    } else if (editable) {
+        createEditorIfNeeded();
+        mEditor->mKeyListener = TextKeyListener::getInstance();
+        mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
+    } else if (isTextSelectable()) {
+        // Prevent text changes from keyboard.
+        if (mEditor != nullptr) {
+            mEditor->mKeyListener = nullptr;
+            mEditor->mInputType = EditorInfo::TYPE_NULL;
+        }
+        bufferType = BufferType::SPANNABLE;
+        // So that selection can be changed using arrow keys and touch is handled.
+        setMovementMethod(ArrowKeyMovementMethod::getInstance());
+    } else {
+        if (mEditor != nullptr) mEditor->mKeyListener = nullptr;
+        switch (buffertype) {
+        case 0: bufferType = BufferType::NORMAL;   break;
+        case 1: bufferType = BufferType::SPANNABLE; break;
+        case 2: bufferType = BufferType::EDITABLE;  break;
+        }
+    }
+
+    if(mEditor!=nullptr){
+        mEditor->adjustInputType(password, passwordInputType, webPasswordInputType,
+                numberPasswordInputType);
+    }
+
+    //setInputTypeSingleLine(singleLine);
+    //applySingleLine(singleLine, singleLine, singleLine,false);
+    if (singleLine &&(getKeyListener()==nullptr) && (ellipsize==ELLIPSIZE_NOT_SET)) {
+        //ellipsize = ELLIPSIZE_END;
+    }
+    switch(ellipsize){
+    case ELLIPSIZE_START: setEllipsize(TextUtils::TruncateAt::START);break;
+    case ELLIPSIZE_MIDDLE:setEllipsize(TextUtils::TruncateAt::MIDDLE);break;
+    case ELLIPSIZE_END:   setEllipsize(TextUtils::TruncateAt::END);break;
+    case ELLIPSIZE_MARQUEE:
+        if(ellipsize==TextUtils::TruncateAt::MARQUEE){
+            if(ViewConfiguration::get(mContext).isFadingMarqueeEnabled()){
+                setHorizontalFadingEdgeEnabled(true);
+                mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+            }else{
+                setHorizontalFadingEdgeEnabled(false);
+                mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+            }
+        }
+        setEllipsize(TextUtils::TruncateAt::MARQUEE);
+        break;
+    }
+    if (selectallonfocus) {
+        createEditorIfNeeded();
+        mEditor->mSelectAllOnFocus = true;
+        if (bufferType == BufferType::NORMAL) {
+            bufferType = BufferType::SPANNABLE;
+        }
+    }
+
+    // Android applies the resolved buffer type via setText(text, bufferType) at the end of
+    // the ctor. mText was already set above; record the type so later setText() upgrades
+    // the buffer correctly. (TODO: move the initial setText after this for full fidelity.)
+    mBufferType = bufferType;
+
+    // Apply android:maxLength as an InputFilter (Android ctor ~1883-1891). The single-line
+    // auto LengthFilter (MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT) is DEFERRED (needs the
+    // mSingleLineLengthFilter machinery; see applySingleLine). The initial text is filtered
+    // on the next edit, not retroactively (Android filters it inside setText — TODO).
+    if ((bufferType==BufferType::EDITABLE)&&singleLine&&maxLength ==-1) {
+        mSingleLineLengthFilter = new InputFilter::LengthFilter(MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
+    }
+    if (mSingleLineLengthFilter != nullptr) {
+        setFilters({ mSingleLineLengthFilter });
+    } else if (maxLength >= 0) {
+         setFilters({ new InputFilter::LengthFilter(maxLength) });
+    } else {
+        setFilters({}); // NO_FILTERS
+    }
     const int lineHeight = attrs.getDimensionPixelSize("lineHeight",-1);
     const int firstBaselineToTopHeight = attrs.getDimensionPixelSize("firstBaselineToTopHeight",-1);
     const int lastBaselineToBottomHeight = attrs.getDimensionPixelSize("lastBaselineToBottomHeight", -1);
-    if (firstBaselineToTopHeight >= 0) setFirstBaselineToTopHeight(firstBaselineToTopHeight);
-    if (lastBaselineToBottomHeight >= 0) setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
-    if(lineHeight>=0) setLineHeight(lineHeight);
+    if (firstBaselineToTopHeight >= 0){
+        setFirstBaselineToTopHeight(firstBaselineToTopHeight);
+    }
+    if (lastBaselineToBottomHeight >= 0){
+        setLastBaselineToBottomHeight(lastBaselineToBottomHeight);
+    }
+    if(lineHeight>=0){
+        setLineHeight(lineHeight);
+    }
 }
 
 TextView::TextView(int width, int height):TextView(std::string(),width,height){
@@ -447,49 +460,57 @@ TextView::TextView(int width, int height):TextView(std::string(),width,height){
 TextView::TextView(const std::string& text, int width, int height)
   : View( width, height) {
     initView();
-    mHintLayout->setWidth(width);
-    mLayout->setWidth(width);
-    mLayout->setText(text);
+    mText = new SpannedString(TextUtils::utf8_utf16(text));
+    mTransformed = mText;
 }
 
 void TextView::initView(){
     mDrawables= nullptr;
     mMarquee  = nullptr;
     mScroller = nullptr;
-    mSavedMarqueeModeLayout=nullptr;
-    mOriginalTypeface = nullptr;
+    mCharWrapper = nullptr;
+    mChangeWatcher= nullptr;
+    mCursorDrawable = nullptr;
     mMaxWidth = INT_MAX;
     mMinWidth = 0;
     mMaximum  = INT_MAX;
     mMinimum  = 0;
     mSpacingMult= 1.0;
     mSpacingAdd = 0.f;
-    mTextScaleX = 1.f;
     mRestartMarquee = true;
-    mCaretPos = 0;
-    mCaretRect.set(0,0,0,0);
     mMaxWidthMode = PIXELS;
     mMinWidthMode = PIXELS;
     mMaxMode = LINES;
     mMinMode = LINES;
     mDeferScroll = -1;
-    mMaxLength= -1;
-    mBlinkOn  = false;
     mIncludePad = true;
     mSingleLine = false;
     mMarqueeRepeatLimit =3;
+    mText = nullptr;
+    mHint = nullptr;
+    mTransformed = nullptr;
+    mTextDir= nullptr;
+    mLayout = nullptr;
+    mSpannable = nullptr;
+    mHintLayout= nullptr;
+    mSavedLayout = nullptr;
+    mTransformation = nullptr;
+    mSavedHintLayout = nullptr;
+    mSavedMarqueeModeLayout = nullptr;
+    mBoring = nullptr;//new BoringLayout::Metrics;
+    mHintBoring = nullptr;//new BoringLayout::Metrics;
     mLastLayoutDirection = -1;
     mFontWeightAdjustment= 16;//INT_MAX;
     mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
     mHorizontallyScrolling =false;
     mNeedsAutoSizeText = false;
     mUserSetTextScaleX = false;
-    mEllipsize = Layout::ELLIPSIS_NONE;
+    mPreDrawRegistered = false;
+    mHighlightPathBogus= true;
+    mPreDrawListenerDetached = false;
+    mAllowTransformationLengthChange = false;
+    mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
-    mLayout = new Layout(18,1);
-    mHintLayout = new Layout(mLayout->getFontSize(),1);
-    mLayout->setMultiline(!mSingleLine);
-    mHintLayout->setMultiline(!mSingleLine);
     mGravity = Gravity::START|Gravity::TOP;
     mTextColor = mHintTextColor = mLinkTextColor =nullptr;
     mHighlightColor= 0x6633B5E5;
@@ -498,49 +519,481 @@ void TextView::initView(){
     mShadowDy = 0.0f;
     mShadowColor = 0;
     mCurTextColor= mCurHintTextColor=0;
-    mEditMode   = READONLY;
+    // 新增的成员变量初始化
+    mAutoLinkMask = 0;
+    mLinksClickable = true;
+    mCursorVisible = true;
+    mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
+    mLineBreakStyle = LineBreakConfig::LINE_BREAK_STYLE_NONE;
+    mLineBreakWordStyle = LineBreakConfig::LINE_BREAK_WORD_STYLE_NONE;
     setTextColor(0xFFFFFFFF);
-    setHintTextColor(0xFFFFFFFF);
+    setHintTextColor(0xFF888888);
+    if(mOnPreDrawListener==nullptr){
+        mOnPreDrawListener=[this](){return onPreDraw();};
+    }
+    mSpannableFactory=[](CharSequence*txt){return new SpannableString(txt,false);};
+    mEditableFactory=[](CharSequence*txt){return new SpannableStringBuilder(txt);};
 }
 
 TextView::~TextView() {
+    // mHint is always a freshly-allocated stringOrSpannedString result (see
+    // setHintInternal), so it never aliases mText/mCharWrapper — no alias-drop
+    // is needed; delete mHint below frees exactly the one owned hint object.
     //delete mTextColor;
     //delete mHintTextColor;
     //delete mLinkTextColor;
+    delete mBoring;
+    delete mHintBoring;
+    // Free every owned layout, each distinct object exactly once. The mSavedLayout /
+    // mSavedHintLayout caches and mSavedMarqueeModeLayout (the second layout swapped
+    // with mLayout in marquee-fade-switch mode) may ALIAS mLayout/mHintLayout or each
+    // other (makeSingleLayout's useSaved path reuses the cache), so dedupe by pointer
+    // identity — a naive per-pointer delete would double-free. Layouts reference
+    // mText/mHint (DynamicLayout::mBase) and dereference that base in their own dtor,
+    // so they MUST be destroyed before the text objects below. (The three mSaved* were
+    // previously never freed → leaked.) delete nullptr is a safe no-op.
+    std::set<Layout*> layouts = { mLayout, mHintLayout, static_cast<Layout*>(mSavedLayout),
+                                  static_cast<Layout*>(mSavedHintLayout), mSavedMarqueeModeLayout };
+    for (Layout* l : layouts) delete l;
+    mLayout = mHintLayout = nullptr;
+    mSavedLayout = mSavedHintLayout = nullptr;
+    mSavedMarqueeModeLayout = nullptr;
+    if(mText == mTransformed){
+        mTransformed = nullptr;
+    }
+    if(mTransformed == mCharWrapper){
+        mTransformed = nullptr;
+    }
+    if(mText==mCharWrapper){
+        mText = nullptr;
+    }
+    delete mCharWrapper;
+    delete mChangeWatcher;
+    delete mText;
+    delete mTransformed;
+    delete mHint;
     delete mMarquee;
     delete mScroller;
-    delete mLayout;
-    delete mHintLayout;
     delete mDrawables;
+    delete mCursorDrawable;
+    delete mEditor;
+    // Free the owned InputFilters. mFilters borrows every installed filter
+    // (SpannableStringBuilder::m_filters never deletes them), and only
+    // LengthFilter entries are TextView-owned (allocated by the ctor / setFilters
+    // callers). Singleton filters are borrowed; the auto single-line LengthFilter
+    // is a member alias freed by the line just below -- skip it here to avoid a
+    // double-free.
+    for (InputFilter* f : mFilters) {
+        if (f == mSingleLineLengthFilter) continue;
+        if (dynamic_cast<InputFilter::LengthFilter*>(f)) delete f;
+    }
+    mFilters.clear();
+    delete mSingleLineLengthFilter;
+    // mTransformation is a NoCopySpan (TransformationMethod : public NoCopySpan),
+    // so mText's Spannable never frees it. Singleton TMs (SingleLine/Password/
+    // HideReturns via getInstance) are global; only AllCaps TM is TextView-owned.
+    if (dynamic_cast<AllCapsTransformationMethod*>(mTransformation)) {
+        delete mTransformation;
+        mTransformation = nullptr;
+    }
+    delete mGesturePreviewHighlightPaint;
 }
 
-#if 0
+void TextView::setTextInternal(CharSequence* text){
+    // NOTE: do NOT free the old mText/mTransformed here. DynamicLayout holds
+    // mBase = mText (and displays mTransformed) and dereferences mBase in its
+    // destructor (dynamic_cast + removeSpan). Freeing the text here would leave
+    // the still-alive mLayout with a dangling mBase, crashed in ~DynamicLayout
+    // when makeNewLayout() later destroys it. Text freeing must happen only AFTER
+    // the referencing layout has been torn down. See the ownership rule doc.
+    mText = text;
+    mSpannable = dynamic_cast<Spannable*>(text);
+    mPrecomputed = dynamic_cast<PrecomputedText*>(text);
+}
+
+void TextView::setAutoSizeTextTypeWithDefaults(int autoSizeTextType) {
+    const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+    float autoSizeMinTextSizeInPx,autoSizeMaxTextSizeInPx;
+    if (supportsAutoSizeText()) {
+         switch (autoSizeTextType) {
+         case AUTO_SIZE_TEXT_TYPE_NONE:
+             clearAutoSizeConfiguration();
+             break;
+         case AUTO_SIZE_TEXT_TYPE_UNIFORM:
+             autoSizeMinTextSizeInPx =DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP;
+                 //TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_SP,
+                 //    DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP, displayMetrics);
+             autoSizeMaxTextSizeInPx = DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP;
+                 //TypedValue.applyDimension( TypedValue.COMPLEX_UNIT_SP,
+                 //    DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP, displayMetrics);
+
+             validateAndSetAutoSizeTextTypeUniformConfiguration(
+                     autoSizeMinTextSizeInPx, autoSizeMaxTextSizeInPx,
+                     DEFAULT_AUTO_SIZE_GRANULARITY_IN_PX);
+             if (setupAutoSizeText()) {
+                 autoSizeText();
+                 invalidate();
+             }
+             break;
+         default:
+             LOGE("Unknown auto-size text type: %d",autoSizeTextType);
+         }
+    }
+}
+
+void TextView::setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,
+        int autoSizeMaxTextSize, int autoSizeStepGranularity, int unit) {
+    if (supportsAutoSizeText()) {
+        const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+        const float autoSizeMinTextSizeInPx = autoSizeMinTextSize;//TypedValue.applyDimension(unit, autoSizeMinTextSize, displayMetrics);
+        const float autoSizeMaxTextSizeInPx = autoSizeMaxTextSize;//TypedValue.applyDimension(unit, autoSizeMaxTextSize, displayMetrics);
+        const float autoSizeStepGranularityInPx = autoSizeStepGranularity;//TypedValue.applyDimension( unit, autoSizeStepGranularity, displayMetrics);
+
+        validateAndSetAutoSizeTextTypeUniformConfiguration(autoSizeMinTextSizeInPx,
+                autoSizeMaxTextSizeInPx, autoSizeStepGranularityInPx);
+
+        if (setupAutoSizeText()) {
+            autoSizeText();
+            invalidate();
+        }
+    }
+}
+
+void TextView::setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>& presetSizes, int unit){
+    if (supportsAutoSizeText()) {
+        const int presetSizesLength = presetSizes.size();
+        if (presetSizesLength > 0) {
+            std::vector<int> presetSizesInPx(presetSizesLength);
+
+            if (unit == TypedValue::COMPLEX_UNIT_PX) {
+                presetSizesInPx = presetSizes;
+            } else {
+                const DisplayMetrics displayMetrics = mContext->getDisplayMetrics();
+                // Convert all to sizes to pixels.
+                for (int i = 0; i < presetSizesLength; i++) {
+                    presetSizesInPx[i] = presetSizes[i];
+                    //std::round(TypedValue::applyDimension(unit,presetSizes[i], displayMetrics));
+                }
+            }
+
+            mAutoSizeTextSizesInPx = cleanupAutoSizePresetSizes(presetSizesInPx);
+            if (!setupAutoSizeUniformPresetSizesConfiguration()) {
+                FATAL("None of the preset sizes is valid: ");// + Arrays.toString(presetSizes));
+            }
+        } else {
+            mHasPresetAutoSizeValues = false;
+        }
+
+        if (setupAutoSizeText()) {
+            autoSizeText();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getAutoSizeTextType() const{
+    return mAutoSizeTextType;
+}
+
+int TextView::getAutoSizeStepGranularity() const{
+    return std::round(mAutoSizeStepGranularityInPx);
+}
+
+int TextView::getAutoSizeMinTextSize() const{
+    return std::round(mAutoSizeMinTextSizeInPx);
+}
+
+int TextView::getAutoSizeMaxTextSize() const{
+    return std::round(mAutoSizeMaxTextSizeInPx);
+}
+
+std::vector<int> TextView::getAutoSizeTextAvailableSizes() const{
+    return mAutoSizeTextSizesInPx;
+}
+
+bool TextView::setupAutoSizeUniformPresetSizesConfiguration() {
+    const int sizesLength = mAutoSizeTextSizesInPx.size();
+    mHasPresetAutoSizeValues = sizesLength > 0;
+    if (mHasPresetAutoSizeValues) {
+        mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_UNIFORM;
+        mAutoSizeMinTextSizeInPx = mAutoSizeTextSizesInPx[0];
+        mAutoSizeMaxTextSizeInPx = mAutoSizeTextSizesInPx[sizesLength - 1];
+        mAutoSizeStepGranularityInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    }
+    return mHasPresetAutoSizeValues;
+}
+
+void TextView::validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
+         float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx){
+    // First validate.
+    if (autoSizeMinTextSizeInPx <= 0) {
+        FATAL("Minimum auto-size text size (%dpx) is less or equal to (0px)",autoSizeMinTextSizeInPx);
+    }
+
+    if (autoSizeMaxTextSizeInPx <= autoSizeMinTextSizeInPx) {
+        FATAL("Maximum auto-size text size (%dpx) is less or equal to minimum auto-size text size (%dpx)",
+                autoSizeMaxTextSizeInPx,autoSizeMinTextSizeInPx);
+    }
+
+    if (autoSizeStepGranularityInPx <= 0) {
+        FATAL("The auto-size step granularity (%d px) is less or equal to (0px)",autoSizeStepGranularityInPx);
+    }
+
+    // All good, persist the configuration.
+    mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_UNIFORM;
+    mAutoSizeMinTextSizeInPx = autoSizeMinTextSizeInPx;
+    mAutoSizeMaxTextSizeInPx = autoSizeMaxTextSizeInPx;
+    mAutoSizeStepGranularityInPx = autoSizeStepGranularityInPx;
+    mHasPresetAutoSizeValues = false;
+}
+
+void TextView::setSelectGesturePreviewHighlight(int start, int end) {
+    // Selection preview highlight color is the same as selection highlight color.
+    setGesturePreviewHighlight(start, end, mHighlightColor);
+}
+
+void TextView::setDeleteGesturePreviewHighlight(int start, int end) {
+    // Deletion preview highlight color is 20% opacity of the default text color.
+    int color = mTextColor->getDefaultColor();
+    //color = ColorUtils::setAlphaComponent(color, (int) (0.2f * Color.alpha(color)));
+    setGesturePreviewHighlight(start, end, color);
+}
+
+void TextView::setGesturePreviewHighlight(int start, int end, int color) {
+    mGesturePreviewHighlightStart = start;
+    mGesturePreviewHighlightEnd = end;
+    if (mGesturePreviewHighlightPaint == nullptr) {
+        mGesturePreviewHighlightPaint = new Paint();
+        mGesturePreviewHighlightPaint->setStyle(Paint::Style::FILL);
+    }
+    mGesturePreviewHighlightPaint->setColor(color);
+
+    if (mEditor != nullptr) {
+        mEditor->hideCursorAndSpanControllers();
+        mEditor->stopTextActionModeWithPreservingSelection();
+    }
+
+    mHighlightPathsBogus = true;
+    invalidate();
+}
+
+void TextView::clearAutoSizeConfiguration() {
+    mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
+    mAutoSizeMinTextSizeInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeMaxTextSizeInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeStepGranularityInPx = UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE;
+    mAutoSizeTextSizesInPx.clear();// = EmptyArray.INT;
+    mNeedsAutoSizeText = false;
+}
+
+std::vector<int> TextView::cleanupAutoSizePresetSizes(std::vector<int>&presetValues){
+    const int presetValuesLength = presetValues.size();
+    if (presetValuesLength == 0) {
+        return presetValues;
+    }
+    std::sort(presetValues.begin(),presetValues.end());
+
+    std::vector<int>uniqueValidSizes;
+    for (int i = 0; i < presetValuesLength; i++) {
+        const int currentPresetValue = presetValues[i];
+
+        if (currentPresetValue > 0
+                && std::binary_search(uniqueValidSizes.begin(),uniqueValidSizes.end(),currentPresetValue)==false) {
+            uniqueValidSizes.push_back(currentPresetValue);
+        }
+    }
+
+    return presetValuesLength == uniqueValidSizes.size()
+        ? presetValues
+        : uniqueValidSizes;
+}
+
+bool TextView::setupAutoSizeText() {
+    if (supportsAutoSizeText() && mAutoSizeTextType == AUTO_SIZE_TEXT_TYPE_UNIFORM) {
+        // Calculate the sizes set based on minimum size, maximum size and step size if we do
+        // not have a predefined set of sizes or if the current sizes array is empty.
+        if (!mHasPresetAutoSizeValues || mAutoSizeTextSizesInPx.size() == 0) {
+            const int autoSizeValuesLength = ((int) std::floor((mAutoSizeMaxTextSizeInPx
+                    - mAutoSizeMinTextSizeInPx) / mAutoSizeStepGranularityInPx)) + 1;
+            std::vector<int> autoSizeTextSizesInPx(autoSizeValuesLength);
+            for (int i = 0; i < autoSizeValuesLength; i++) {
+                autoSizeTextSizesInPx[i] = std::round(
+                        mAutoSizeMinTextSizeInPx + (i * mAutoSizeStepGranularityInPx));
+            }
+            mAutoSizeTextSizesInPx = cleanupAutoSizePresetSizes(autoSizeTextSizesInPx);
+        }
+
+        mNeedsAutoSizeText = true;
+    } else {
+        mNeedsAutoSizeText = false;
+    }
+
+    return mNeedsAutoSizeText;
+}
+
+void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+       int typefaceIndex,int style,int weight){
+    if ((typeface == nullptr) && (familyName.empty()==false)) {
+         // Lookup normal Typeface from system font map.
+         Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
+         resolveStyleAndSetTypeface(normalTypeface, style, weight);
+     } else if (typeface != nullptr) {
+         resolveStyleAndSetTypeface(typeface, style, weight);
+     } else {// both typeface and familyName is null.
+         switch (typefaceIndex) {
+         case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
+         case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
+         case MONOSPACE:  resolveStyleAndSetTypeface(Typeface::MONOSPACE, style, weight);  break;
+         case DEFAULT_TYPEFACE:
+         default: resolveStyleAndSetTypeface(nullptr, style, weight);  break;
+        }
+    }
+}
+
+void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
+    if (weight >= 0) {
+        weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
+        const bool italic = (style & Typeface::ITALIC) != 0;
+        setTypeface(Typeface::create(typeface, weight, italic));
+    } else {
+        setTypeface(typeface, style);
+    }
+}
+
+void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
+    if (start||end) {
+        Drawables* dr = mDrawables;
+        if (dr == nullptr) {
+            mDrawables = dr = new Drawables(getContext());
+        }
+        mDrawables->mOverride = true;
+        Rect compoundRect = dr->mCompoundRect;
+        std::vector<int> state = getDrawableState();
+        if (start) {
+            start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
+            start->setState(state);
+            compoundRect = start->getBounds();
+            start->setCallback(this);
+
+            dr->mDrawableStart = start;
+            dr->mDrawableSizeStart = compoundRect.width;
+            dr->mDrawableHeightStart = compoundRect.height;
+        } else {
+            dr->mDrawableSizeStart = dr->mDrawableHeightStart = 0;
+        }
+        if (end){
+            end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
+            end->setState(state);
+            compoundRect = end->getBounds();
+            end->setCallback(this);
+
+            dr->mDrawableEnd = end;
+            dr->mDrawableSizeEnd = compoundRect.width;
+            dr->mDrawableHeightEnd = compoundRect.height;
+        } else {
+            dr->mDrawableSizeEnd = dr->mDrawableHeightEnd = 0;
+        }
+        resetResolvedDrawables();
+        resolveDrawables();
+        applyCompoundDrawableTint();
+    }
+}
+
+InputMethodManager*TextView::getInputMethodManager(){
+    return InputMethodManager::peekInstance();
+}
+
+bool TextView::isInputMethodTarget() const{
+    InputMethodManager* imm = InputMethodManager::peekInstance();
+    return imm != nullptr && imm->isActive(const_cast<TextView*>(this));
+}
+
+void TextView::setEnabled(bool _enabled) {
+    if (_enabled == isEnabled()) {
+        return;
+    }
+    if (!_enabled) {
+        // Hide the soft input if the currently active TextView is disabled.
+        InputMethodManager* imm = getInputMethodManager();
+        if (imm != nullptr && imm->isActive(this)) {
+            // CDROID has no window token; key the hide by this view instead.
+            imm->hideSoftInputFromView(this, 0);
+        }
+    }
+    View::setEnabled(_enabled);
+    if (mEditor) {
+        mEditor->invalidateTextDisplayList();
+        mEditor->prepareCursorControllers();
+        mEditor->makeBlink();
+    }
+    if (_enabled) {
+        // Make sure IME is updated with current editor info.
+        InputMethodManager* imm = getInputMethodManager();
+        if (imm != nullptr) imm->restartInput(this);
+    }
+
+    // Will change text color
+    if (mEditor != nullptr) {
+        mEditor->invalidateTextDisplayList();
+        mEditor->prepareCursorControllers();
+
+        // start or stop the cursor blinking as appropriate
+        mEditor->makeBlink();
+    }
+}
+
+void TextView::setTypeface(Typeface* tf,int style){
+    if (style > 0) {
+        if (tf == nullptr) {
+            tf = Typeface::defaultFromStyle(style);
+        } else {
+            tf = Typeface::create(tf, style);
+        }
+        setTypeface(tf);
+        // now compute what (if any) algorithmic styling is needed
+        const int typefaceStyle = tf ? tf->getStyle() : 0;
+        const int need = style & ~typefaceStyle;
+        mTextPaint.setFakeBoldText((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+        mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
+    } else {
+        mTextPaint.setFakeBoldText(false);
+        mTextPaint.setTextSkewX(0.0);
+        setTypeface(tf);
+    }
+}
+
+void TextView::registerForPreDraw() {
+    if (!mPreDrawRegistered) {
+        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawRegistered = true;
+    }
+}
+
+void TextView::unregisterForPreDraw() {
+    if(mPreDrawRegistered){
+       getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+       mPreDrawRegistered = false;
+       mPreDrawListenerDetached = false;
+    }
+}
+
 bool TextView::onPreDraw() {
     if (mLayout == nullptr) {
         assumeLayout();
     }
 
-    if (mMovement != null) {
-        /* This code also provides auto-scrolling when a cursor is moved using a
-         * CursorController (insertion point or selection limits).
-         * For selection, ensure start or end is visible depending on controller's state.
-         */
+    if (mMovement != nullptr) {
         int curs = getSelectionEnd();
         // Do not create the controller if it is not already created.
-        if (mEditor != null && mEditor.mSelectionModifierCursorController != null
-                && mEditor.mSelectionModifierCursorController.isSelectionStartDragged()) {
+        /*if (mEditor != nullptr && mEditor->mSelectionModifierCursorController != nullptr
+                && mEditor->mSelectionModifierCursorController->isSelectionStartDragged()) {
             curs = getSelectionStart();
-        }
-
-        /*
-         * TODO: This should really only keep the end in view if
-         * it already was before the text changed.  I'm not sure
-         * of a good way to tell from here if it was.
-         */
+        }*/
         if (curs < 0 && (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
-            curs = mText.length();
+            curs = mText->length();
         }
-
         if (curs >= 0) {
             bringPointIntoView(curs);
         }
@@ -551,29 +1004,40 @@ bool TextView::onPreDraw() {
     // This has to be checked here since:
     // - onFocusChanged cannot start it when focus is given to a view with selected text (after
     //   a screen rotation) since layout is not yet initialized at that point.
-    if (mEditor != null && mEditor.mCreatedWithASelection) {
-        mEditor.refreshTextActionMode();
-        mEditor.mCreatedWithASelection = false;
+    if (mEditor != nullptr && mEditor->mCreatedWithASelection) {
+        //mEditor->refreshTextActionMode();
+        mEditor->mCreatedWithASelection = false;
     }
-
     unregisterForPreDraw();
-
     return true;
 }
-#endif
+
+void TextView::onAttachedToWindow() {
+    View::onAttachedToWindow();
+    if (mEditor) mEditor->onAttachedToWindow();
+    if (mPreDrawListenerDetached) {
+        getViewTreeObserver()->addOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawListenerDetached = false;
+    }
+}
 
 void TextView::onDetachedFromWindowInternal(){
+    if (mPreDrawRegistered) {
+        getViewTreeObserver()->removeOnPreDrawListener(mOnPreDrawListener);
+        mPreDrawListenerDetached = true;
+    }
     stopMarquee();
     for(int i = 0; mDrawables && ( i<4 );i++){
         Drawable*d = mDrawables->mShowing[i];
         if( d == nullptr)continue;
         unscheduleDrawable(*d);
     }
+    if (mEditor!=nullptr) mEditor->onDetachedFromWindow();
     View::onDetachedFromWindowInternal();
 }
 
-int TextView::getLayoutAlignment()const{
-    int alignment;
+Layout::Alignment TextView::getLayoutAlignment()const{
+    Layout::Alignment alignment;
     switch (getTextAlignment()) {
     case TEXT_ALIGNMENT_GRAVITY:
         switch (mGravity & Gravity::RELATIVE_HORIZONTAL_GRAVITY_MASK) {
@@ -622,21 +1086,24 @@ void TextView::applyTextAppearance(class TextAppearanceAttributes *attr){
         setShadowLayer(attr->mShadowRadius, attr->mShadowDx, attr->mShadowDy, attr->mShadowColor);
     }
 
-    /*if (attr->mAllCaps) setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    if (attr->mAllCaps) {
+        setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    }
 
-    if (attr->mHasElegant) setElegantTextHeight(attr->mElegant);
+    if (attr->mHasElegant) {
+        setElegantTextHeight(attr->mElegant);
+    }
 
     if (attr->mHasFallbackLineSpacing) {
         setFallbackLineSpacing(attr->mFallbackLineSpacing);
     }
 
     if (attr->mHasLetterSpacing) {
-        setLetterSpacing(attr.mLetterSpacing);
+        setLetterSpacing(attr->mLetterSpacing);
     }
-
-    if (attr->mFontFeatureSettings != null) {
+    if (!attr->mFontFeatureSettings.empty()){
         setFontFeatureSettings(attr->mFontFeatureSettings);
-    }*/
+    }
 }
 
 void TextView::addTextChangedListener(const TextWatcher& watcher){
@@ -653,16 +1120,53 @@ void TextView::removeTextChangedListener(const TextWatcher& watcher){
     }
 }
 
-void TextView::sendBeforeTextChanged(const std::wstring& text, int start, int before, int after){
+void TextView::sendBeforeTextChanged(CharSequence& text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.beforeTextChanged) l.beforeTextChanged(text, start, before, after);
     }
+    if (mText != nullptr && dynamic_cast<Editable*>(mText) != nullptr) {
+        // Remove stale spellcheck / suggestion spans that overlap the removed range.
+        removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SpellCheckSpan>());
+        removeIntersectingNonAdjacentSpans(start, start + before, make_span_filter<SuggestionSpan>());
+    }
 }
 
-void TextView::sendAfterTextChanged(std::wstring& text){
+void TextView::removeIntersectingNonAdjacentSpans(int start, int end, const SpanFilter&type) {
+    Editable* text = dynamic_cast<Editable*>(mText);
+    if (text == nullptr) return;
+
+    auto spans = text->getSpans(start, end, type);
+    const int length = spans.size();
+    for (int i = 0; i < length; i++) {
+        const int spanStart = text->getSpanStart(spans[i]);
+        const int spanEnd = text->getSpanEnd(spans[i]);
+        if (spanEnd == start || spanStart == end) continue;
+        if (spanStart < end && spanEnd > start) {
+            text->removeSpan(spans[i]);
+        }
+    }
+}
+
+void TextView::removeAdjacentSuggestionSpans(int pos){
+    Editable* text = dynamic_cast<Editable*>(mText);
+    if (text == nullptr) return;
+
+    auto spans = text->getSpans(pos, pos, make_span_filter<SuggestionSpan>());
+    const int length = spans.size();
+    for (int i = 0; i < length; i++) {
+        const int spanStart = text->getSpanStart(spans[i]);
+        const int spanEnd = text->getSpanEnd(spans[i]);
+        if (spanEnd == pos || spanStart == pos) {
+            // Fall back to removing adjacent suggestion spans when boundaries are changed.
+            text->removeSpan(spans[i]);
+        }
+    }
+}
+
+void TextView::sendAfterTextChanged(Editable& text){
     for (auto l:mListeners) {
         if(l.afterTextChanged){
-            l.afterTextChanged(*this,text);
+            l.afterTextChanged(text);
         }
     }
 
@@ -670,28 +1174,105 @@ void TextView::sendAfterTextChanged(std::wstring& text){
     //notifyAutoFillManagerAfterTextChangedIfNeeded();
     //hideErrorIfUnchanged();
 }
-void TextView::sendOnTextChanged(const std::wstring& text, int start, int before, int after){
+
+void TextView::sendOnTextChanged(CharSequence& text, int start, int before, int after){
     for(auto l:mListeners){
         if(l.onTextChanged){
             l.onTextChanged(text, start, before, after);
         }
     }
-    //if (mEditor != null) mEditor.sendOnTextChanged(start, before, after);
+    if (mEditor!=nullptr) mEditor->sendOnTextChanged(start, before, after);
+}
+
+void TextView::spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd){
+    bool selChanged = false;
+    int newSelStart = -1, newSelEnd = -1;
+    mHighlightPathBogus = true;
+    if(what==Selection::SELECTION_END){
+        selChanged = true;
+        newSelEnd = newStart;
+
+        if (oldStart >= 0 || newStart >= 0) {
+            invalidateCursor(Selection::getSelectionStart(&buf), oldStart, newStart);
+            checkForResize();
+            registerForPreDraw();
+            if (mEditor != nullptr) mEditor->makeBlink();
+        }
+    }
+    if (what == Selection::SELECTION_START) {
+        selChanged = true;
+        newSelStart = newStart;
+
+        if (oldStart >= 0 || newStart >= 0) {
+            const int end = Selection::getSelectionEnd(&buf);
+            invalidateCursor(end, oldStart, newStart);
+        }
+    }
+
+    if (selChanged) {
+        mHighlightPathBogus = true;
+        if (mEditor != nullptr && !isFocused()) mEditor->mSelectionMoved = true;
+
+        if ((buf.getSpanFlags(what) & Spanned::SPAN_INTERMEDIATE) == 0) {
+            if (newSelStart < 0) {
+                newSelStart = Selection::getSelectionStart(&buf);
+            }
+            if (newSelEnd < 0) {
+                newSelEnd = Selection::getSelectionEnd(&buf);
+            }
+
+            if (mEditor != nullptr) {
+                /*mEditor->refreshTextActionMode();
+                if (!hasSelection()
+                        && mEditor->getTextActionMode() == nullptr && hasTransientState()) {
+                    // User generated selection has been removed.
+                    setHasTransientState(false);
+                }*/
+            }
+            onSelectionChanged(newSelStart, newSelEnd);
+        }
+    }
+
+    if (dynamic_cast<const UpdateAppearance*>(what) || dynamic_cast<const ParagraphStyle*>(what)
+            || dynamic_cast<const CharacterStyle*>(what)) {
+        if (true/*ims == nullptr || ims.mBatchEditNesting == 0*/) {
+            invalidate();
+            mHighlightPathBogus = true;
+            checkForResize();
+        } else {
+            //ims.mContentChanged = true;
+        }
+        if (mEditor != nullptr) {
+            //if (oldStart >= 0) mEditor->invalidateTextDisplayList(mLayout, oldStart, oldEnd);
+            //if (newStart >= 0) mEditor->invalidateTextDisplayList(mLayout, newStart, newEnd);
+            //mEditor->invalidateHandlesAndActionMode();
+        }
+    }
+
+    if (dynamic_cast<const SuggestionSpan*>(what) != nullptr) {
+        if (mEditor) {
+            mEditor->prepareCursorControllers();
+        }
+    }
 }
 
 void TextView::setRawTextSize(float size, bool shouldRequestLayout){
-    if((size!=mLayout->getFontSize())&&shouldRequestLayout){
-        mLayout->setFontSize(size);
-        mHintLayout->setFontSize(size);
-        requestLayout();
+    if(size != mTextPaint.getTextSize()){
+        mTextPaint.setTextSize(size);
+        if (shouldRequestLayout && mLayout != nullptr) {
+            // Do not auto-size right after setting the text size.
+            mNeedsAutoSizeText = false;
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
     }
 }
 
 void TextView::setPadding(int left, int top, int right, int bottom){
     if ((left != mPaddingLeft) || (right != mPaddingRight)
             || (top != mPaddingTop) ||(bottom != mPaddingBottom)) {
-        mLayout->relayout(true);
-        mHintLayout->relayout(true);
+        nullLayouts();
     }
     // the super call will requestLayout()
     View::setPadding(left, top, right, bottom);
@@ -701,8 +1282,7 @@ void TextView::setPadding(int left, int top, int right, int bottom){
 void TextView::setPaddingRelative(int start, int top, int end, int bottom){
     if ( (start != getPaddingStart()) || (end != getPaddingEnd())
             || (top != mPaddingTop) || (bottom != mPaddingBottom)) {
-        mLayout->relayout(true);//nullLayouts();
-        mHintLayout->relayout(true);
+        nullLayouts();
     }
 
     // the super call will requestLayout()
@@ -711,10 +1291,10 @@ void TextView::setPaddingRelative(int start, int top, int end, int bottom){
 }
 
 void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
-    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();//MetricsInt();
+    const Paint::FontMetricsInt fontMetrics = getPaint().getFontMetricsInt();
     int fontMetricsTop;
     if (getIncludeFontPadding()) {
-        fontMetricsTop = fontMetrics.max_y_advance;
+        fontMetricsTop = fontMetrics.top;
     } else {
         fontMetricsTop = fontMetrics.ascent;
     }
@@ -728,10 +1308,10 @@ void TextView::setFirstBaselineToTopHeight(int firstBaselineToTopHeight){
 }
 
 void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
-    const Cairo::FontExtents& fontMetrics = mLayout->getFontExtents();
+    const Paint::FontMetricsInt fontMetrics = getPaint().getFontMetricsInt();
     int fontMetricsBottom;
     if (getIncludeFontPadding()) {
-        fontMetricsBottom = fontMetrics.descent;//bottom;
+        fontMetricsBottom = fontMetrics.bottom;
     } else {
         fontMetricsBottom = fontMetrics.descent;
     }
@@ -746,13 +1326,24 @@ void TextView::setLastBaselineToBottomHeight(int lastBaselineToBottomHeight){
 }
 
 int TextView::getFirstBaselineToTopHeight(){
-    return getPaddingTop() - mLayout->getFontExtents().ascent;
+    return getPaddingTop() - getPaint().getFontMetricsInt().top;
 }
 
 int TextView::getLastBaselineToBottomHeight(){
-    return getPaddingBottom() - mLayout->getFontExtents().descent;
+    return getPaddingBottom() - getPaint().getFontMetricsInt().bottom;
 }
 
+void TextView::setTextCursorDrawable(Drawable*d){
+    delete mCursorDrawable;
+    mCursorDrawable = d;
+}
+
+Drawable* TextView::getTextCursorDrawable()const{
+    if(mCursorDrawable==nullptr){
+        mCursorDrawable=new ColorDrawable(0xFFFF0000);
+    }
+    return mCursorDrawable;
+}
 void TextView::setTextAppearance(Context*context,const std::string&appearance){
     TextAppearanceAttributes attributes;
     if(appearance.empty()==false){
@@ -781,96 +1372,603 @@ void TextView::setTextSize(float size){
 }
 
 float TextView::getTextSize()const{
-    return mLayout->getFontSize();
+    return mTextPaint.getTextSize();
+}
+
+float TextView::getScaledTextSize() const{
+    return mTextPaint.getTextSize()/mTextPaint.density;
 }
 
 float TextView::getTextScaleX()const{
-    return mTextScaleX;
+    return mTextPaint.getTextScaleX();
 }
 
 void TextView::setTextScaleX(float size){
-    if( (size!=mTextScaleX) && (size>FLT_EPSILON) ){
-        mTextScaleX = size;
+    if( size!=mTextPaint.getTextScaleX() ){
         mUserSetTextScaleX = true;
-        if(mLayout){
+        mTextPaint.setTextScaleX(size);
+        mUserSetTextScaleX = true;
+        if(mLayout!=nullptr){
+            LOGD("%p:%d",this,mID,"reset mLayout,textScaledX=%.3f",size);
+            nullLayouts();
             requestLayout();
             invalidate();
         }
     }
 }
 
+void TextView::setElegantTextHeight(bool elegant) {
+    if (elegant != mTextPaint.isElegantTextHeight()) {
+        mTextPaint.setElegantTextHeight(elegant);
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::isElegantTextHeight() const{
+    return mTextPaint.isElegantTextHeight();
+}
+
+void TextView::setFallbackLineSpacing(bool enabled) {
+    if (mUseFallbackLineSpacing != enabled) {
+        mUseFallbackLineSpacing = enabled;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::isFallbackLineSpacing() const{
+        return mUseFallbackLineSpacing;
+}
+
+float TextView::getLetterSpacing() const{
+    return mTextPaint.getLetterSpacing();
+}
+
+void TextView::setLetterSpacing(float letterSpacing) {
+    if (letterSpacing != mTextPaint.getLetterSpacing()) {
+        mTextPaint.setLetterSpacing(letterSpacing);
+
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+void TextView::setFontFeatureSettings(const std::string& fontFeatureSettings) {
+    // Mirrors AOSP TextView.setFontFeatureSettings: the value lives on mTextPaint
+    // (Paint.mFontFeatureSettings, propagated to MinikinPaint); TextView only
+    // forwards + re-layouts. Same shape as setLetterSpacing.
+    if (fontFeatureSettings != mTextPaint.getFontFeatureSettings()) {
+        mTextPaint.setFontFeatureSettings(fontFeatureSettings);
+
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+std::string TextView::getFontFeatureSettings() const {
+    return mTextPaint.getFontFeatureSettings();
+}
+
+void TextView::setJustificationMode(int justificationMode) {
+    mJustificationMode = justificationMode;
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+void TextView::setUseBoundsForWidth(bool useBoundsForWidth) {
+    if (mUseBoundsForWidth != useBoundsForWidth) {
+        mUseBoundsForWidth = useBoundsForWidth;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+int TextView::getJustificationMode() const{
+        return mJustificationMode;
+}
+
 int TextView::computeVerticalScrollRange(){
-    return mLayout->getHeight();
+    if (mLayout != nullptr) {
+        return mLayout->getHeight();
+    }
+    return View::computeVerticalScrollRange();
 }
 
 int TextView::computeHorizontalScrollRange(){
-    return mLayout->getMaxLineWidth();
+    if (mLayout != nullptr) {
+            return mSingleLine && (mGravity & Gravity::HORIZONTAL_GRAVITY_MASK) == Gravity::LEFT
+                    ? (int) mLayout->getLineWidth(0) : mLayout->getWidth();
+    }
+    return View::computeHorizontalScrollRange();
 }
 
 int TextView::getHorizontalOffsetForDrawables()const{
     return 0;
 }
 
+void TextView::setTextKeepState(CharSequence* text, BufferType type) {
+    const int start = getSelectionStart();
+    const int end = getSelectionEnd();
+    const int len = text->length();
+    setText(text, type);
+    if (start >= 0 || end >= 0) {
+        if (mSpannable != nullptr) {
+            Selection::setSelection(mSpannable,
+                                   std::max(0, std::min(start, len)),
+                                   std::max(0, std::min(end, len)));
+        }
+    }
+}
+
+void TextView::setText(CharSequence* txt) {
+    setText(txt,mBufferType);
+}
+
+void TextView::clearGesturePreviewHighlight() {
+    mGesturePreviewHighlightStart = -1;
+    mGesturePreviewHighlightEnd = -1;
+    mHighlightPathsBogus = true;
+    invalidate();
+}
+
+bool TextView::hasGesturePreviewHighlight() const{
+    return mGesturePreviewHighlightStart >= 0;
+}
+
+void TextView::append(const CharSequence& text){
+    append(text,0,text.length());
+}
+
+void TextView::append(const CharSequence& text, int start, int end){
+    if (dynamic_cast<Editable*>(mText)!=nullptr) {
+        setText(mText, BufferType::EDITABLE);
+    }
+    dynamic_cast<Editable*>(mText)->append(text, start, end);
+    if (mAutoLinkMask != 0) {
+        bool linksWereAdded = Linkify::addLinks(mSpannable, mAutoLinkMask);
+        if (linksWereAdded && mLinksClickable &&!textCanBeSelected()) {
+            setMovementMethod(LinkMovementMethod::getInstance());
+        }
+    }
+}
+
 void TextView::setText(const std::string&txt){
-    if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
+    std::u16string u16s=TextUtils::utf8_utf16(txt);
+    std::vector<char16_t>v16(u16s.data(),u16s.data()+u16s.length());
+    setText(v16,0,v16.size());
+    if(mTransformed == nullptr)
+        mTransformed = mText;
+    /*if(mLayout->setText(txt) && (getVisibility()==View::VISIBLE) ){
         std::wstring&ws=getEditable();
         if(mCaretPos<ws.length())
             mCaretPos = int(ws.length()-1);
-        mLayout->setCaretPos(mCaretPos);
         checkForRelayout();
         startStopMarquee(false);
         startStopMarquee(true);
-        mLayout->relayout();//use to fix getBaselineError for empty text
+    }*/
+}
+
+void TextView::setText(const std::vector<char16_t>&text, int start, int len){
+    int oldlen = 0;
+    if (mText != nullptr) {
+        oldlen = mText->length();
+        sendBeforeTextChanged(*mText, 0, oldlen, len);
+    } else {
+        String ss;
+        sendBeforeTextChanged(ss, 0, 0, len);
+    }
+    if (mCharWrapper == nullptr) {
+        mCharWrapper = new CharWrapper(text, start, len);
+    } else {
+        mCharWrapper->set(text, start, len);
+    }
+    setText(mCharWrapper, mBufferType, false, oldlen);
+}
+
+void TextView::setText(CharSequence* text, BufferType type) {
+    setText(text, type, true, 0);
+
+    if (mCharWrapper != nullptr) {
+        mCharWrapper->mChars.clear();// = null;
     }
 }
 
-const std::string TextView::getText()const{
-    return mLayout->getString();
+void TextView::setText(CharSequence* text, TextView::BufferType type, bool notifyBefore, int oldlen){
+    // Capture the text state being replaced. It is freed ONLY after
+    // checkForRelayout() below has torn down any DynamicLayout referencing it (a
+    // DynamicLayout dereferences its base text in its destructor, so freeing the
+    // text earlier crashes in ~DynamicLayout). See the CharSequence ownership rule.
+    CharSequence* prevText = mText;
+    CharSequence* prevTransformed = mTransformed;
+    // Free a now-orphaned previous value of `text` after transforming it. A transform
+    // (removeSuggestionSpans / InputFilter) may return a fresh object that supersedes
+    // `text`, orphaning it. Free the orphan unless it is a pointer setText manages
+    // elsewhere: mCharWrapper (a reused member, freed once in the dtor), or prevText /
+    // prevTransformed (the old mText/mTransformed, freed by the layout-safe logic at the
+    // end of this function). Same guard the EDITABLE/SPANNABLE/Precomputed branches use.
+    auto freeOrphan = [&](CharSequence* p) {
+        if (p != nullptr && p != mCharWrapper && p != prevText && p != prevTransformed) {
+            delete p;
+        }
+    };
+
+    mTextSetFromXmlOrResourceId = false;
+    if (text == nullptr) {
+        text = new SpannedString(u"");
+    }
+
+    // If suggestions are not enabled, remove the suggestion spans from the text.
+    // removeSuggestionSpans returns a fresh SpannableStringBuilder (a copy) when the
+    // source is a Spanned-but-not-Spannable, orphaning the original — free it.
+    if (!isSuggestionsEnabled()) {
+        CharSequence* original = text;
+        text = removeSuggestionSpans(text);
+        if (text != original) freeOrphan(original);
+    }
+
+    if (!mUserSetTextScaleX) mTextPaint.setTextScaleX(1.0f);
+
+    // Marquee-via-span trigger (AOSP 7355-7365): if the text has a MARQUEE
+    // ellipsis span attached, configure fading edges + ellipsize. Disabled in
+    // CDROID: getSpanStart() takes a ParcelableSpan* (a span pointer), but AOSP
+    // passes the TruncateAt enum itself as the span tag — CDROID hasn't ported
+    // that tag-as-span mechanism, so there is no MARQUEE span object to look up.
+    // The XML/android:ellipsize=marquee path (handled in setEllipsize, ~line 405)
+    // already drives marquee setup, so this stays deferred.
+#if 0
+    Spanned* spannedText = dynamic_cast<Spanned*>(text);
+    if (spannedText && spannedText->getSpanStart(TextUtils::TruncateAt::MARQUEE) >= 0) {
+        if (ViewConfiguration::get(mContext).isFadingMarqueeEnabled()) {
+            setHorizontalFadingEdgeEnabled(true);
+            mMarqueeFadeMode = MARQUEE_FADE_NORMAL;
+        } else {
+            setHorizontalFadingEdgeEnabled(false);
+            mMarqueeFadeMode = MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS;
+        }
+        setEllipsize(TextUtils::TruncateAt::MARQUEE);
+    }
+#endif
+
+    // Each filter may return an owned replacement CharSequence (non-null) that
+    // supersedes `text`; nullptr means keep the current text. Free the superseded value
+    // each time it is replaced. `dest` is EMPTY_SPANNED (AOSP: a static empty Spanned)
+    // because at setText time the destination is being fully replaced; LengthFilter
+    // dereferences dest->length(), so it must be a real object, not nullptr.
+    static SpannedString EMPTY_SPANNED(u"");
+    const int n = mFilters.size();
+    for (int i = 0; i < n; i++) {
+        CharSequence* out = mFilters[i]->filter(text, 0, text->length(), &EMPTY_SPANNED, 0, 0);
+        if (out != nullptr) {
+            freeOrphan(text);
+            text = out;
+        }
+    }
+
+    if (notifyBefore) {
+        if (mText != nullptr) {
+            oldlen = mText->length();
+            sendBeforeTextChanged(*mText, 0, oldlen, text->length());
+        } else {
+            String ss;
+            sendBeforeTextChanged(ss, 0, 0, text->length());
+        }
+    }
+    bool needEditableForNotification = false;
+
+    if (/*mListeners != nullptr &&*/ mListeners.size() != 0) {
+        needEditableForNotification = true;
+    }
+
+    PrecomputedText* precomputed =dynamic_cast<PrecomputedText*>(text);
+    if ( (type == BufferType::EDITABLE) || (getKeyListener() != nullptr)|| needEditableForNotification) {
+        createEditorIfNeeded();
+        // TODO(editor): mEditor->forgetUndoRedo(); -- deferred: needs undo/redo stack.
+        // Wrap the buffer in an Editable (Android's mEditableFactory.newEditable) so
+        // that Editor/Selection can operate on it. SpannableStringBuilder(CharSequence*)
+        // COPIES the source content + clones spans (spannablestring.cc), so wrapping
+        // orphans the original `text`. Free that original here unless it is a pointer
+        // setText manages elsewhere: mCharWrapper (reused member, freed once in dtor),
+        // or prevText/prevTransformed (old mText/mTransformed, freed by the layout-safe
+        // logic at the end of this function). A fresh caller object passed to the
+        // transfer-ownership setText(CharSequence*) would otherwise leak.
+        if (!dynamic_cast<Editable*>(text)) {
+            CharSequence* original = text;
+            // mEditableFactory (default: new SpannableStringBuilder) COPIES the source
+            // content + clones spans, orphaning `original` — freed below unless setText
+            // manages it elsewhere. Going through the factory (not a hardcoded new) lets
+            // setEditableFactory() customize buffer creation, like Android.
+            text = mEditableFactory(text);
+            if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+                delete original;
+            }
+        }
+        //setFilters(t, mFilters);
+        InputMethodManager* imm = getInputMethodManager();
+        if (imm != nullptr) imm->restartInput(this);
+    } else if (precomputed != nullptr) {
+        if (mTextDir == nullptr) {
+            mTextDir = getTextDirectionHeuristic();
+        }
+        const auto lbConfig=LineBreakConfig::getLineBreakConfig(mLineBreakStyle, mLineBreakWordStyle);
+        const int checkResult = precomputed->getParams().checkResultUsable(getPaint(), mTextDir, mBreakStrategy,
+                        mHyphenationFrequency,lbConfig);
+        const PrecomputedText::Params textMetricsParams(mTextPaint,lbConfig,getTextDirectionHeuristic(),mBreakStrategy, mHyphenationFrequency);
+        switch (checkResult) {
+        case PrecomputedText::Params::UNUSABLE:
+            LOGE("PrecomputedText's Parameters don't match the parameters of this TextView."
+                "Consider using setTextMetricsParams(precomputedText.getParams()) "
+                "to override the settings of this TextView: "
+                "PrecomputedText: "// + precomputed.getParams()
+                "TextView: ");// + getTextMetricsParams());
+            break;
+        case PrecomputedText::Params::NEED_RECOMPUTE:
+            // create() returns a NEW PrecomputedText owning its own content copy
+            // (PrecomputedText's ctor news a SpannableString from the source), so the
+            // original incoming `text` (a PrecomputedText) is superseded. AOSP follows
+            // this with `text = precomputed`; CDROID dropped the recompute result,
+            // leaking the new object AND discarding the recomputed metrics. Use the
+            // recomputed one and free the original unless setText frees it as prevText
+            // (setText(mText) case) or it's the reused mCharWrapper — same ownership
+            // guard as the EDITABLE-wrap branch above.
+            precomputed = PrecomputedText::create(precomputed, textMetricsParams);
+            {
+                CharSequence* original = text;
+                text = precomputed;
+                if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+                    delete original;
+                }
+            }
+            break;
+        case PrecomputedText::Params::USABLE:/*pass through*/break;
+        }
+    } else if (type == BufferType::SPANNABLE || mMovement != nullptr) {
+        // mSpannableFactory wraps `text` in a fresh Spannable (default: new
+        // SpannableString, which COPIES the source) — same copy-and-orphan hazard as
+        // the EDITABLE branch above. Free the original unless setText manages it
+        // elsewhere (mCharWrapper member, or prevText/prevTransformed freed at the end).
+        CharSequence* original = text;
+        text = mSpannableFactory(text);
+        if (original != mCharWrapper && original != prevText && original != prevTransformed) {
+            delete original;
+        }
+    } else if (dynamic_cast<CharWrapper*>(text)!=nullptr) {
+        // Flatten the char-array wrapper into an owned String* (CharWrapper is
+        // never Spanned, so stringOrSpannedString takes its toString() branch ->
+        // a caller-owned String*). That result folds into mText below, which
+        // TextView owns (freed on the next setText / dtor via the deferred
+        // prevText/prevTransformed path). The original `text` here is always the
+        // reused mCharWrapper member (the only CharWrapper instance), so — unlike
+        // the SPANNABLE/Precomputed branches above — no ownership guard / delete
+        // of the original is needed.
+        text = TextUtils::stringOrSpannedString(text);
+    }
+    if (mAutoLinkMask != 0) {
+        // AOSP wraps non-Spannable buffers via mSpannableFactory.newSpannable;
+        // CDROID hasn't ported that factory, so only already-Spannable buffers
+        // (the editable / Spannable cases) get auto-linked here.
+        Spannable* s2 = dynamic_cast<Spannable*>(text);
+        if (s2 != nullptr && Linkify::addLinks(s2, mAutoLinkMask)) {
+            setTextInternal(text);
+            // ported yet, so gate only on linksClickable.
+            if (mLinksClickable &&!textCanBeSelected()) {
+                setMovementMethod(LinkMovementMethod::getInstance());
+            }
+        }
+    }
+    mBufferType = type;
+    setTextInternal(text);
+
+    if (mTransformation == nullptr) {
+        mTransformed = text;
+    } else {
+        mTransformed = mTransformation->getTransformation(*text, *this);
+    }
+    if (mTransformed == nullptr) {
+        // Should not happen if the transformation method follows the non-null postcondition.
+        mTransformed = new SpannedString(u"");
+    }
+
+    const int textLength = text->length();
+    const bool isOffsetMapping = dynamic_cast<OffsetMapping*>(mTransformed);
+    if (dynamic_cast<Spannable*>(text) && !mAllowTransformationLengthChange) {
+        Spannable* sp = dynamic_cast<Spannable*>(text);
+        // Remove any ChangeWatchers that might have come from other TextViews.
+        auto watchers = sp->getSpans(0, sp->length(), make_span_filter<ChangeWatcher>());
+        const int count = watchers.size();
+        for (int i = 0; i < count; i++) {
+            sp->removeSpan(watchers[i]);
+        }
+
+        if (mChangeWatcher == nullptr) mChangeWatcher = new ChangeWatcher(this);
+
+        sp->setSpan(mChangeWatcher, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
+                | (CHANGE_WATCHER_PRIORITY << Spanned::SPAN_PRIORITY_SHIFT));
+
+        if (mEditor != nullptr) mEditor->addSpanWatchers(*sp);
+
+        if (mTransformation != nullptr) {
+            const int priority = isOffsetMapping ? OFFSET_MAPPING_SPAN_PRIORITY : 0;
+            sp->setSpan(mTransformation, 0, textLength, Spanned::SPAN_INCLUSIVE_INCLUSIVE
+                    | (priority << Spanned::SPAN_PRIORITY_SHIFT));
+        }
+
+        if (mMovement != nullptr) {
+            mMovement->initialize(*this, *sp);//(Spannable*) text);
+
+            /*
+             * Initializing the movement method will have set the
+             * selection, so reset mSelectionMoved to keep that from
+             * interfering with the normal on-focus selection-setting.
+             */
+            if (mEditor != nullptr) mEditor->mSelectionMoved = false;
+        }
+    }
+    if (mLayout != nullptr) {
+        checkForRelayout();
+    }
+
+    // checkForRelayout() has either rebuilt mLayout (now referencing the new
+    // mText/mTransformed) or null'd it via nullLayouts() (the old DynamicLayout is
+    // destroyed); if mLayout was already null, nothing referenced the old text. In
+    // every case no DynamicLayout references prevText/prevTransformed now, so they
+    // are safe to free. Never free the incoming `text` (re-adopted, e.g.
+    // setText(mText) from setTransformationMethod), mCharWrapper (a reused member),
+    // or the now-current mText/mTransformed. prevTransformed may have aliased
+    // prevText (no-transform case) — free each owned object at most once.
+    auto isKept = [&](CharSequence* p) {
+        return p == text || p == mCharWrapper || p == mText || p == mTransformed;
+    };
+    if (prevTransformed != nullptr && prevTransformed != prevText && !isKept(prevTransformed)) {
+        delete prevTransformed;
+    }
+    if (prevText != nullptr && !isKept(prevText)) {
+        delete prevText;
+    }
+
+    sendOnTextChanged(*text, 0, oldlen, textLength);
+    onTextChanged(*text, 0, oldlen, textLength);
+
+    mHideHint = false;
+    //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_TEXT);
+    if (needEditableForNotification) {
+        sendAfterTextChanged(*dynamic_cast<Editable*>(text));
+    } else {
+        //notifyListeningManagersAfterTextChanged();
+    }
+    if (mEditor != nullptr) {
+        //SelectionModifierCursorController depends on textCanBeSelected, which depends on text
+        mEditor->prepareCursorControllers();
+        //mEditor->maybeFireScheduledRestartInputForSetText();
+    }
+}
+
+CharSequence& TextView::getText(){
+    return *mText;
+}
+
+int TextView::length()const{
+    return mText->length();
+}
+
+CharSequence* TextView::getTransformed()const{
+    return mTransformed;
+}
+
+Editable* TextView::getEditableText()const{
+    return dynamic_cast<Editable*>(mText);
 }
 
 void TextView::setHint(const std::string& hint){
-    mHint = hint;
-    mHintLayout->setText(hint);
-    checkForRelayout();
+    // Android: mHint = TextUtils.stringOrSpannedString(hint) — wrap the plain string
+    // in a SpannedString and route through setHint(CharSequence*) → setHintInternal,
+    // which frees the previous mHint at a layout-safe point (capture→checkForRelayout→free).
+    setHint(new SpannedString(TextUtils::utf8_utf16(hint)));
 }
 
-std::string TextView::getHint()const{
+void TextView::setHint(CharSequence*hint){
+     setHintInternal(hint);
+     if (mEditor != nullptr && isInputMethodTarget()) {
+          //mEditor->reportExtractedText();
+     }
+}
+
+void TextView::setHintInternal(CharSequence* hint) {
+    mHideHint = false;
+    // Capture the hint being replaced. It is freed ONLY after checkForRelayout()
+    // below has torn down any DynamicLayout referencing it: mHintLayout may be a
+    // DynamicLayout whose mBase == mHint, and its destructor dereferences mBase
+    // (removeSpan on the watcher). Freeing earlier crashes in ~DynamicLayout.
+    // Mirrors setText()'s layout-safe free point; see the CharSequence ownership rule.
+    CharSequence* prevHint = mHint;
+    mHint = TextUtils::stringOrSpannedString(hint);
+
+    if (mLayout != nullptr) {
+        checkForRelayout();
+    }
+
+    // checkForRelayout() has either rebuilt mHintLayout (now on the new mHint) or
+    // null'd it via nullLayouts() (old mHintLayout destroyed); if there was no
+    // layout, nothing referenced prevHint. In every case no DynamicLayout
+    // references prevHint now, so it is safe to free.
+    //
+    // stringOrSpannedString(hint) allocated a NEW object (SpannedString copy or
+    // toString() String*); it did NOT consume `hint`. Since setHint(CharSequence*)
+    // transfers ownership of `hint`, both the replaced prevHint and the incoming
+    // hint must be freed here. Two aliasing guards:
+    //   - hint == mText: reachable via setHint(&getText()) — getText() returns
+    //     CharSequence& to mText's object, &getText() is that object's address,
+    //     i.e. the mText pointer. mText is owned by TextView (freed in dtor), so
+    //     never free it here. (Also covers mText==mCharWrapper, where &getText()
+    //     yields the CharWrapper address.)
+    //   - hint == prevHint: setHint(getHint()) — getHint() returns the mHint
+    //     pointer, so hint==prevHint; free that shared object once (as prevHint).
+    const bool hintIsPrevHint = (hint == prevHint);
+    if (prevHint != nullptr) delete prevHint;
+    if (hint != nullptr && hint != mText && !hintIsPrevHint) delete hint;
+
+    if (mText->length() == 0) {
+        invalidate();
+    }
+
+    // Invalidate display list if hint is currently used
+    if (mEditor != nullptr && mText->length() == 0 && mHint != nullptr) {
+        mEditor->invalidateTextDisplayList();
+    }
+}
+
+CharSequence* TextView::getHint()const{
     return mHint;
 }
 
-std::wstring& TextView::getEditable(){
-    return mLayout->getText();
-}
-
-void TextView::setEditable(bool b){
-    mLayout->setEditable(b);
-}
-
-int TextView::getFontSize()const{
-    return mLayout->getFontSize();
-}
-
-void TextView::setCaretPos(int pos){
-    mCaretPos=pos;
-    mBlinkOn=true;
-    mLayout->setCaretPos(pos);
-    invalidate(true);
-}
-
-int TextView::getCaretPos()const{
-    return mCaretPos;
-}
-
-bool TextView::moveCaret2Line(int line){
-    int curline = mLayout->getLineForOffset(mCaretPos);
-    int curcolumns = mCaretPos - mLayout->getLineStart(curline);
-    if( (line<getLineCount()) && (line>=0) ){
-        int newcolumns = mLayout->getLineEnd(line)-mLayout->getLineStart(line);
-        newcolumns=std::min(newcolumns,curcolumns);
-        setCaretPos(mLayout->getLineStart(line) + newcolumns);
-        return true;
-    }
+bool TextView::getDefaultEditable()const{
     return false;
+}
+
+void TextView::createEditorIfNeeded(){
+    if (mEditor == nullptr) {
+        mEditor = new Editor(this);
+    }
+}
+
+Editor* TextView::getEditor(){
+    return mEditor;
+}
+
+void TextView::setMovementMethod(MovementMethod* movement) {
+    // Android: stores, and (re)initializes if there's already a laid-out Spannable.
+    mMovement = movement;
+    if ((mMovement != nullptr) && (mLayout != nullptr) && (mSpannable != nullptr)) {
+        mMovement->initialize(*this, *mSpannable);
+    }
+}
+
+void TextView::fixFocusableAndClickableSettings() {
+    if ((mMovement != nullptr) || (mEditor != nullptr && mEditor->mKeyListener != nullptr)) {
+        setFocusable(FOCUSABLE);
+        setClickable(true);
+        setLongClickable(true);
+    } else {
+        setFocusable(FOCUSABLE_AUTO);
+        setClickable(false);
+        setLongClickable(false);
+    }
 }
 
 void TextView::setWidth(int pixels) {
@@ -885,8 +1983,8 @@ void TextView::setLineSpacing(float add, float mult) {
     if ((mSpacingAdd != add) || (mSpacingMult != mult)) {
         mSpacingAdd = add;
         mSpacingMult = mult;
-        if ( mLayout ) {
-            mLayout->setLineSpacing(add,mult);
+        if (mLayout != nullptr) {
+            nullLayouts();
             requestLayout();
             invalidate();
         }
@@ -901,30 +1999,59 @@ float TextView::getLineSpacingExtra()const{
     return mSpacingAdd;
 }
 
+
+void TextView::checkForResize() {
+    bool sizeChanged = false;
+    if (mLayout != nullptr) {
+        // Check if our width changed
+        if (mLayoutParams->width == LayoutParams::WRAP_CONTENT) {
+            sizeChanged = true;
+            invalidate();
+        }
+        // Check if our height changed
+        if (mLayoutParams->height == LayoutParams::WRAP_CONTENT) {
+            const int desiredHeight = getDesiredHeight();
+            if (desiredHeight != this->getHeight()) {
+                sizeChanged = true;
+            }
+        } else if (mLayoutParams->height == LayoutParams::MATCH_PARENT) {
+            if (mDesiredHeightAtMeasure >= 0) {
+                const int desiredHeight = getDesiredHeight();
+                if (desiredHeight != mDesiredHeightAtMeasure) {
+                    sizeChanged = true;
+                }
+            }
+        }
+    }
+    if (sizeChanged) {
+        requestLayout();
+        // caller will have already invalidated
+    }
+}
+
 void TextView::checkForRelayout() {
     // If we have a fixed width, we can just swap in a new text layout
     // if the text height stays the same or if the view height is fixed.
     if(mLayoutParams==nullptr) return;
     if (( (mLayoutParams->width != LayoutParams::WRAP_CONTENT)
             || (mMaxWidthMode == mMinWidthMode && mMaxWidth == mMinWidth))
-            && ((mHintLayout==nullptr) || mHintLayout->getText().empty())
+            && ((mHint==nullptr)||(mHintLayout==nullptr) )
             && (mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight() > 0)) {
         // Static width, so try making a new text layout.
 
         const int oldht = mLayout->getHeight();
-        const int want = mLayout->getMaxLineWidth();
-        const int hintWant = mHintLayout ?mHintLayout->getMaxLineWidth():0;
+        const int want = mLayout->getWidth();
+        const int hintWant = mHintLayout ?mHintLayout->getWidth():0;
 
         /*
          * No need to bring the text into view, since the size is not
          * changing (unless we do the requestLayout(), in which case it
          * will happen at measure).
          */
-        /*makeNewLayout(want, hintWant, UNKNOWN_BORING, UNKNOWN_BORING,
+        makeNewLayout(want, hintWant, &UNKNOWN_BORING, &UNKNOWN_BORING,
                       mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
-                      false);*/
-        mLayout->relayout();
-        if (mEllipsize != Layout::ELLIPSIS_MARQUEE){//TextUtils.TruncateAt.MARQUEE) {
+                      false);
+        if (mEllipsize != TextUtils::TruncateAt::MARQUEE) {
             // In a fixed-height view, so use our new text layout.
             if (mLayoutParams->height != LayoutParams::WRAP_CONTENT
                     && mLayoutParams->height != LayoutParams::MATCH_PARENT) {
@@ -935,7 +2062,7 @@ void TextView::checkForRelayout() {
 
             // Dynamic height, but height has stayed the same,
             // so use our new text layout.
-            if ( (mLayout->getHeight() == oldht) && (mHintLayout->getText().empty() || (mHintLayout->getHeight() == oldht))) {
+            if ( (mLayout->getHeight() == oldht) && ((mHintLayout==nullptr) || (mHintLayout->getHeight() == oldht))) {
                 autoSizeText();
                 invalidate();
                 return;
@@ -949,14 +2076,14 @@ void TextView::checkForRelayout() {
     } else {
         // Dynamic width, so we have no choice but to request a new
         // view layout with a new text layout.
-        //nullLayouts();
+        nullLayouts();
         requestLayout();
         invalidate();
     }
 }
 
 bool TextView::isShowingHint()const{
-    return mLayout->getText().empty()&&(mHintLayout->getText().empty()==false);
+    return TextUtils::isEmpty(mText) && !TextUtils::isEmpty(mHint) && !mHideHint;
 }
 
 bool TextView::bringTextIntoView(){
@@ -966,21 +2093,19 @@ bool TextView::bringTextIntoView(){
         line = layout->getLineCount() - 1;
     }
 
-    int dir = layout->getParagraphDirection(line);
-    int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
-    int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
-    int ht = layout->getHeight();
+    const int dir = layout->getParagraphDirection(line);
+    const int hspace = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    const int vspace = mBottom - mTop - getExtendedPaddingTop() - getExtendedPaddingBottom();
+    const int ht = layout->getHeight();
     int scrollx, scrolly;
-#if __TODO_
+
     Layout::Alignment a = layout->getParagraphAlignment(line);
 
     // Convert to left, center, or right alignment.
     if (a == Layout::Alignment::ALIGN_NORMAL) {
-        a = dir == Layout::DIR_LEFT_TO_RIGHT
-                ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
+        a = (dir == Layout::DIR_LEFT_TO_RIGHT) ? Layout::Alignment::ALIGN_LEFT : Layout::Alignment::ALIGN_RIGHT;
     } else if (a == Layout::Alignment::ALIGN_OPPOSITE) {
-        a = dir == Layout::DIR_LEFT_TO_RIGHT
-                ? Layout::Alignment::ALIGN_RIGHT : Layout::Alignment::ALIGN_LEFT;
+        a = (dir == Layout::DIR_LEFT_TO_RIGHT) ? Layout::Alignment::ALIGN_RIGHT : Layout::Alignment::ALIGN_LEFT;
     }
 
     if (a == Layout::Alignment::ALIGN_CENTER) {
@@ -991,7 +2116,11 @@ bool TextView::bringTextIntoView(){
 
         int left = (int) std::floor(layout->getLineLeft(line));
         int right = (int) std::ceil(layout->getLineRight(line));
-
+        if(mHorizontallyScrolling&&mLayout->getWidth()==VERY_WIDE){
+            mLayout->increaseWidthTo(right-left);//this case added by zhhou
+            left = (int) std::floor(layout->getLineLeft(line));
+            right= (int) std::ceil(layout->getLineRight(line));
+        }
         if (right - left < hspace) {
             scrollx = (right + left) / 2 - hspace / 2;
         } else {
@@ -1007,7 +2136,6 @@ bool TextView::bringTextIntoView(){
     } else { // a == Layout.Alignment.ALIGN_LEFT (will also be the default)
         scrollx = (int) std::floor(layout->getLineLeft(line));
     }
-#endif
     if (ht < vspace) {
         scrolly = 0;
     } else {
@@ -1037,25 +2165,21 @@ bool TextView::bringPointIntoView(int offset) {
 
     if (layout == nullptr) return changed;
 
-    int line = layout->getLineForOffset(offset);
+    const int line = layout->getLineForOffset(offset);
 
     int grav;
-#if __TODO_
     switch (layout->getParagraphAlignment(line)) {
-    case ALIGN_LEFT:
-        grav = 1;   break;
-    case ALIGN_RIGHT:
-        grav = -1;  break;
-    case ALIGN_NORMAL:
+    case Layout::ALIGN_LEFT :  grav = 1;   break;
+    case Layout::ALIGN_RIGHT:  grav = -1;  break;
+    case Layout::ALIGN_NORMAL:
         grav = layout->getParagraphDirection(line);
         break;
-    case ALIGN_OPPOSITE:
+    case Layout::ALIGN_OPPOSITE:
         grav = -layout->getParagraphDirection(line);
         break;
-    case ALIGN_CENTER:
+    case Layout::ALIGN_CENTER:
     default:   grav = 0;   break;
     }
-#endif
     // We only want to clamp the cursor to fit within the layout width
     // in left-to-right modes, because in a right to left alignment,
     // we want to scroll to keep the line-right on the screen, as other
@@ -1068,7 +2192,7 @@ bool TextView::bringPointIntoView(int offset) {
     // right where it is most likely to be annoying.
     const bool clamped = grav > 0;
     // FIXME: Is it okay to truncate this, or should we round?
-    const int x = 0;// (int) layout->getPrimaryHorizontal(offset, clamped);
+    const int x = (int) layout->getPrimaryHorizontal(offset, clamped);
     const int top = layout->getLineTop(line);
     const int bottom = layout->getLineTop(line + 1);
 
@@ -1221,12 +2345,11 @@ bool TextView::bringPointIntoView(int offset) {
 }
 
 bool TextView::moveCursorToVisibleOffset() {
-#if _TODO_
-    if (!(mText instanceof Spannable)) {
+    if (dynamic_cast<Spannable*>(mText)==nullptr){
         return false;
     }
-    int start = getSelectionStart();
-    int end = getSelectionEnd();
+    const int start = getSelectionStart();
+    const int end = getSelectionEnd();
     if (start != end) {
         return false;
     }
@@ -1269,10 +2392,9 @@ bool TextView::moveCursorToVisibleOffset() {
     }
 
     if (newStart != start) {
-        Selection.setSelection(mSpannable, newStart);
+        Selection::setSelection(mSpannable, newStart);
         return true;
     }
-#endif
     return false;
 }
 
@@ -1319,10 +2441,42 @@ void TextView::computeScroll() {
     }
 }
 
+void TextView::updateAfterEdit() {
+    invalidate();
+    const int curs = getSelectionStart();
+
+    if (curs >= 0 || (mGravity & Gravity::VERTICAL_GRAVITY_MASK) == Gravity::BOTTOM) {
+        registerForPreDraw();
+    }
+
+    checkForRelayout();//checkForResize();
+
+    if (curs >= 0) {
+        mHighlightPathBogus = true;
+        if (mEditor != nullptr) mEditor->makeBlink();
+        bringPointIntoView(curs);
+    }
+}
+
+void TextView::handleTextChanged(CharSequence& buffer, int start, int before, int after) {
+    // Android gates updateAfterEdit() on the Editor InputMethodState's batch-edit
+    // nesting, deferring the relayout until endBatchEdit. CDROID's endBatchEdit is
+    // a nesting-counter skeleton that does not flush, so gating would never fire —
+    // call unconditionally (per-edit relayout is correct, just not batched). This
+    // is the link that makes typing refresh: the ChangeWatcher (attached in
+    // setText/setEditable) fires here on every edit, and updateAfterEdit rebuilds
+    // the layout + invalidates.
+    updateAfterEdit();
+    sendOnTextChanged(buffer, start, before, after);
+    onTextChanged(buffer, start, before, after);
+    mHideHint = false;
+    clearGesturePreviewHighlight();
+}
+
 void TextView::onLayout(bool changed, int left, int top, int width, int height){
     View::onLayout(changed, left, top, width, height);
     if (mDeferScroll >= 0) {
-       int curs = mDeferScroll;
+       const int curs = mDeferScroll;
        mDeferScroll = -1;
        bringPointIntoView(std::min(curs, (int)getText().length()));
     }
@@ -1336,21 +2490,43 @@ void TextView::onFocusChanged(bool focused, int direction, Rect* previouslyFocus
         View::onFocusChanged(focused, direction, previouslyFocusedRect);
         return;
     }
+    mHideHint = false;
+    if (mEditor) mEditor->onFocusChanged(focused, direction, previouslyFocusedRect);
+
+    // Drive the in-process IME from focus — this is the trigger that actually
+    // fires for editors in CDROID (setEnabled/onTouchEvent are not reliable
+    // triggers here). On focus gain, show the keyboard for editable editors; on
+    // loss, hide it. getInstance() ensures the IMM singleton exists.
+    InputMethodManager& imm = InputMethodManager::getInstance();
+    if (focused && isTextEditable() && mEditor->mShowSoftInputOnFocus) {
+        imm.setInputType(getInputType());
+        imm.showSoftInput(this, 0);
+    } else if (!focused && imm.isActive(this)) {
+        imm.hideSoftInputFromView(this, 0);
+    }
+
     startStopMarquee(focused);
+    if (mTransformation != nullptr) {
+        CharSequence* sourceText = mText != nullptr ? mText : mTransformed;
+        if (sourceText != nullptr) {
+            mTransformation->onFocusChanged(*this, *sourceText, focused, direction,
+                previouslyFocusedRect != nullptr ? *previouslyFocusedRect : Rect());
+        }
+    }
     View::onFocusChanged(focused, direction, previouslyFocusedRect);
 }
 
 void TextView::onWindowFocusChanged(bool hasWindowFocus) {
     View::onWindowFocusChanged(hasWindowFocus);
-    //if (mEditor != null) mEditor.onWindowFocusChanged(hasWindowFocus);
+    if (mEditor) mEditor->onWindowFocusChanged(hasWindowFocus);
     startStopMarquee(hasWindowFocus);
 }
 
 void TextView::onVisibilityChanged(View& changedView, int visibility) {
     View::onVisibilityChanged(changedView, visibility);
-    if (/*mEditor != null &&*/ visibility != VISIBLE) {
-        //mEditor.hideCursorAndSpanControllers();
-        //stopTextActionMode();
+    if (mEditor && visibility != VISIBLE) {
+        mEditor->hideCursorAndSpanControllers();
+        mEditor->hideCursorControllers();
     }
 }
 
@@ -1373,7 +2549,7 @@ void TextView::setSelected(bool selected){
 
     View::setSelected(selected);
 
-    if ((selected != wasSelected) && (mEllipsize == Layout::ELLIPSIS_MARQUEE)) {
+    if ((selected != wasSelected) && (mEllipsize == TextUtils::TruncateAt::MARQUEE)) {
         if (selected) {
             startMarquee();
         } else {
@@ -1400,23 +2576,54 @@ void TextView::setGravity(int gravity){
     if (gravity != mGravity)  invalidate(true);
 
     mGravity = gravity;
-    mLayout->setAlignment(getLayoutAlignment());
-    mLayout->setWidth(mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight());
+    if((mLayout!=nullptr) && newLayout){
+        // XXX this is heavy-handed because no actual content changes.
+        const int want = mLayout->getWidth();
+        const int hintWant = mHintLayout == nullptr ? 0 : mHintLayout->getWidth();
+
+        makeNewLayout(want, hintWant, &UNKNOWN_BORING, &UNKNOWN_BORING,
+                 mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(), true);
+    }
 }
 
 int TextView::getGravity()const{
     return mGravity;
 }
 
-void TextView::setHorizontallyScrolling(bool whether) {
-    if (mHorizontallyScrolling != whether) {
-        mHorizontallyScrolling = whether;
+int TextView::getPaintFlags() const{
+    return mTextPaint.getFlags();
+}
+
+/**
+ * Sets flags on the Paint being used to display the text and
+ * reflows the text if they are different from the old flags.
+ * @see Paint#setFlags
+ */
+void TextView::setPaintFlags(int flags) {
+    if (mTextPaint.getFlags() != flags) {
+        mTextPaint.setFlags(flags);
+
         if (mLayout != nullptr) {
-            //nullLayouts();
+            nullLayouts();
             requestLayout();
             invalidate();
         }
     }
+}
+
+void TextView::setHorizontallyScrolling(bool whether) {
+    if (mHorizontallyScrolling != whether) {
+        mHorizontallyScrolling = whether;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+bool TextView::isHorizontallyScrollable() const{
+    return mHorizontallyScrolling;
 }
 
 bool TextView::getHorizontallyScrolling() const{
@@ -1450,20 +2657,23 @@ int TextView::getLineCount()const{
 }
 
 int TextView::getLineBounds(int line, Rect&bounds) {
-    int baseline = mLayout->getLineBounds(line, bounds);
-
-    int voffset = getExtendedPaddingTop();
-    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
-        voffset += getVerticalOffset(true);
+    if(mLayout==nullptr){
+        bounds.setEmpty();
+        return 0;
+    }else{
+        int baseline = mLayout->getLineBounds(line, &bounds);
+        int voffset = getExtendedPaddingTop();
+        if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
+            voffset += getVerticalOffset(true);
+        }
+        bounds.offset(getCompoundPaddingLeft(), voffset);
+        return baseline + voffset;
     }
-    bounds.offset(getCompoundPaddingLeft(), voffset);
-    return baseline + voffset;
 }
 
 int TextView::getBaseline(){
     if(mLayout == nullptr)
         return View::getBaseline();
-    mLayout->relayout(false);
     return getBaselineOffset() + mLayout->getLineBaseline(0);
 }
 
@@ -1477,12 +2687,11 @@ int TextView::getBaselineOffset(){
 }
 
 int TextView::getLineHeight()const{
-    return std::round(mLayout->getFontExtents().height * mSpacingMult + mSpacingAdd);
-    //return mLayout->getLineBottom(0)-mLayout->getLineTop(0);
+    return std::round(mTextPaint.getFontMetricsInt(nullptr) * mSpacingMult + mSpacingAdd);
 }
 
 void TextView::setLineHeight(int lineHeight){
-    const int fontHeight = mLayout->getFontExtents().height;
+    const int fontHeight = getPaint().getFontMetricsInt(nullptr);
     // Make sure we don't setLineSpacing if it's not needed to avoid unnecessary redraw.
     if(lineHeight!=fontHeight){
         // Set lineSpacingExtra by the difference of lineSpacing with lineHeight
@@ -1509,34 +2718,85 @@ void TextView::autoSizeText() {
         }
 
         const int availableWidth = mHorizontallyScrolling  ? VERY_WIDE
-                : getMeasuredWidth() //- getTotalPaddingLeft() - getTotalPaddingRight();
-				 - getCompoundPaddingLeft()-getCompoundPaddingRight();
+                : getMeasuredWidth() - getTotalPaddingLeft() - getTotalPaddingRight();
         const int availableHeight = getMeasuredHeight() - getExtendedPaddingBottom()
                     - getExtendedPaddingTop();
 
         if (availableWidth <= 0 || availableHeight <= 0) {
             return;
         }
-#if 0
-        synchronized (TEMP_RECTF) {
-            TEMP_RECTF.setEmpty();
-            TEMP_RECTF.right = availableWidth;
-            TEMP_RECTF.bottom = availableHeight;
-            final float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
-            if (optimalTextSize != getTextSize()) {
-                setTextSizeInternal(TypedValue.COMPLEX_UNIT_PX, optimalTextSize,
-                        false /* shouldRequestLayout */);
+        RectF TEMP_RECTF;
+        TEMP_RECTF.setEmpty();
+        TEMP_RECTF.width = availableWidth;
+        TEMP_RECTF.height = availableHeight;
+        const float optimalTextSize = findLargestTextSizeWhichFits(TEMP_RECTF);
+        if (optimalTextSize != getTextSize()) {
+            setTextSizeInternal(TypedValue::COMPLEX_UNIT_PX, optimalTextSize,
+                    false /* shouldRequestLayout */);
 
-                makeNewLayout(availableWidth, 0 /* hintWidth */, UNKNOWN_BORING, UNKNOWN_BORING,
-                        mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
-                        false /* bringIntoView */);
-            }
+            makeNewLayout(availableWidth, 0 /* hintWidth */, &UNKNOWN_BORING,&UNKNOWN_BORING,
+                    mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight(),
+                    false /* bringIntoView */);
         }
-#endif
     }
     // Always try to auto-size if enabled. Functions that do not want to trigger auto-sizing
     // after the next layout pass should set this to false.
     mNeedsAutoSizeText = true;
+}
+
+int TextView::findLargestTextSizeWhichFits(const RectF& availableSpace) {
+    int sizesCount = mAutoSizeTextSizesInPx.size();
+    if (sizesCount == 0) {
+        //throw new IllegalStateException("No available text sizes to choose from.");
+    }
+
+    int bestSizeIndex = 0;
+    int lowIndex = bestSizeIndex + 1;
+    int highIndex = sizesCount - 1;
+    int sizeToTryIndex;
+    while (lowIndex <= highIndex) {
+        sizeToTryIndex = (lowIndex + highIndex) / 2;
+        if (suggestedSizeFitsInSpace(mAutoSizeTextSizesInPx[sizeToTryIndex], availableSpace)) {
+            bestSizeIndex = lowIndex;
+            lowIndex = sizeToTryIndex + 1;
+        } else {
+            highIndex = sizeToTryIndex - 1;
+            bestSizeIndex = highIndex;
+        }
+    }
+    return mAutoSizeTextSizesInPx[bestSizeIndex];
+}
+
+bool TextView::suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& availableSpace) {
+    CharSequence* text = mTransformed != nullptr? mTransformed: mText;//getText();
+    const int maxLines = getMaxLines();
+    TextPaint mTempTextPaint;
+    mTempTextPaint.set(getPaint());
+    mTempTextPaint.setTextSize(suggestedSizeInPx);
+
+    StaticLayout::Builder* layoutBuilder = StaticLayout::Builder::obtain(
+            text, 0, text->length(), &mTempTextPaint, std::round(availableSpace.right()));
+
+    layoutBuilder->setAlignment(getLayoutAlignment())
+            .setLineSpacing(getLineSpacingExtra(), getLineSpacingMultiplier())
+            .setIncludePad(getIncludeFontPadding())
+            .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
+            .setBreakStrategy(getBreakStrategy())
+            .setHyphenationFrequency(mHyphenationFrequency)
+            .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+            .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX)
+            .setTextDirection(getTextDirectionHeuristic());
+
+    StaticLayout* layout = layoutBuilder->build();
+    // Lines overflow.
+    if (maxLines != -1 && layout->getLineCount() > maxLines) {
+        return false;
+    }
+    // Height overflow.
+    if (layout->getHeight() > availableSpace.bottom()) {
+        return false;
+    }
+    return true;
 }
 
 int TextView::getDesiredHeight(){
@@ -1548,7 +2808,6 @@ int TextView::getDesiredHeight(Layout* layout, bool cap){
         return 0;
     }
 
-    layout->relayout();
     /*
     * Don't cap the hint to a certain number of lines.
     * (Do cap it, though, if we have a maximum pixel height.)
@@ -1568,8 +2827,8 @@ int TextView::getDesiredHeight(Layout* layout, bool cap){
 
     if (mMaxMode != LINES) {
         desired = std::min(desired, mMaximum);
-    } else if (cap && linecount > mMaximum/* && (layout instanceof DynamicLayout
-            || layout instanceof BoringLayout)*/) {
+    } else if (cap && (linecount > mMaximum) && (dynamic_cast<DynamicLayout*>(layout)
+            || dynamic_cast<BoringLayout*>(layout))) {
         desired = layout->getLineTop(mMaximum);
 
         if (dr != nullptr) {
@@ -1656,15 +2915,312 @@ void TextView::setHeight(int pixels) {
     invalidate();
 }
 
+void TextView::setMinEms(int minEms) {
+    mMinWidth = minEms;
+    mMinWidthMode = EMS;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMinEms() const{
+    return mMinWidthMode == EMS ? mMinWidth : -1;
+}
+
+void TextView::setMaxEms(int maxEms) {
+    mMaxWidth = maxEms;
+    mMaxWidthMode = EMS;
+
+    requestLayout();
+    invalidate();
+}
+
+int TextView::getMaxEms() const{
+    return mMaxWidthMode == EMS ? mMaxWidth : -1;
+}
+
+void TextView::setEms(int ems) {
+    mMaxWidth = mMinWidth = ems;
+    mMaxWidthMode = mMinWidthMode = EMS;
+
+    requestLayout();
+    invalidate();
+}
+
+void TextView::nullLayouts() {
+    if (dynamic_cast<BoringLayout*>(mLayout) && mSavedLayout == nullptr) {
+        mSavedLayout = (BoringLayout*) mLayout;
+        mLayout = nullptr;
+    }
+    if (dynamic_cast<BoringLayout*>(mHintLayout) && mSavedHintLayout == nullptr) {
+        mSavedHintLayout = (BoringLayout*) mHintLayout;
+        mHintLayout = nullptr;
+    }
+    if( (mLayout!=nullptr) && (mSavedLayout!=mLayout) ){
+        delete mLayout;
+    }
+    if( (mHintLayout!=nullptr) && (mSavedHintLayout!=mHintLayout) ){
+        delete mHintLayout;
+    }
+    mSavedMarqueeModeLayout = mLayout = mHintLayout = nullptr;
+    delete mBoring;
+    delete mHintBoring;
+    mBoring = mHintBoring = nullptr;
+
+    // Since it depends on the value of mLayout
+    if (mEditor != nullptr) mEditor->prepareCursorControllers();
+}
+
+void TextView::assumeLayout() {
+    int width = mRight - mLeft - getCompoundPaddingLeft() - getCompoundPaddingRight();
+    if (width < 1) {
+        width = 0;
+    }
+    const int physicalWidth = width;
+    if (mHorizontallyScrolling) {
+        width = VERY_WIDE;
+    }
+    makeNewLayout(width, physicalWidth, &UNKNOWN_BORING, &UNKNOWN_BORING, physicalWidth, false);
+}
+
+void TextView::makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics* boring,
+            BoringLayout::Metrics* hintBoring,int ellipsisWidth, bool bringIntoView){
+    stopMarquee();
+
+    // Update "old" cached values
+    mOldMaximum = mMaximum;
+    mOldMaxMode = mMaxMode;
+
+    mHighlightPathBogus = true;
+
+    if (wantWidth < 0) {
+        wantWidth = 0;
+    }
+    if (hintWidth < 0) {
+        hintWidth = 0;
+    }
+
+    const Layout::Alignment alignment = getLayoutAlignment();
+    const bool testDirChange = mSingleLine && mLayout != nullptr
+            && (alignment == Layout::Alignment::ALIGN_NORMAL
+                    || alignment == Layout::Alignment::ALIGN_OPPOSITE);
+    int oldDir = 0;
+    if (testDirChange) oldDir = mLayout->getParagraphDirection(0);
+    bool shouldEllipsize = (mEllipsize != TextUtils::TruncateAt::NONE) && (getKeyListener() == nullptr);
+    const bool switchEllipsize = (mEllipsize == TextUtils::TruncateAt::MARQUEE)
+            && (mMarqueeFadeMode != MARQUEE_FADE_NORMAL);
+    TextUtils::TruncateAt effectiveEllipsize = mEllipsize;
+    if (mEllipsize == TextUtils::TruncateAt::MARQUEE
+            && mMarqueeFadeMode == MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS) {
+        effectiveEllipsize = TextUtils::TruncateAt::END_SMALL;
+    }
+
+    if (mTextDir == nullptr) {
+        mTextDir = getTextDirectionHeuristic();
+    }
+
+    if( (mSavedLayout!=mLayout) && (mLayout!=nullptr) ){
+        delete mLayout;
+    }
+    mLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment, shouldEllipsize,
+            effectiveEllipsize, effectiveEllipsize == mEllipsize);
+    if (switchEllipsize) {
+        TextUtils::TruncateAt oppositeEllipsize = effectiveEllipsize == TextUtils::TruncateAt::MARQUEE
+                ? TextUtils::TruncateAt::END : TextUtils::TruncateAt::MARQUEE;
+        // Free the previous mSavedMarqueeModeLayout before overwriting — makeNewLayout
+        // runs on every relayout while in marquee-fade-switch mode, so otherwise each
+        // relayout leaks the prior layout. It may ALIAS another live TEXT layout: the
+        // marquee start/stop swap trades it with mLayout, and makeSingleLayout's useSaved
+        // path may have made it == the mSavedLayout cache. It can never be a hint layout
+        // (mHintLayout/mSavedHintLayout) — makeSingleLayout builds only from mText/
+        // mTransformed, and the marquee swap only exchanges text layouts — so those are
+        // not checked. Free it only if distinct from the text layouts currently held
+        // (incl. the one just assigned below).
+        Layout* oldMarquee = mSavedMarqueeModeLayout;
+        mSavedMarqueeModeLayout = makeSingleLayout(wantWidth, boring, ellipsisWidth, alignment,
+                shouldEllipsize, oppositeEllipsize, effectiveEllipsize != mEllipsize);
+        if (oldMarquee != nullptr && oldMarquee != mLayout
+                && oldMarquee != static_cast<Layout*>(mSavedLayout)
+                && oldMarquee != mSavedMarqueeModeLayout) {
+            delete oldMarquee;
+        }
+    }
+
+    shouldEllipsize = mEllipsize != TextUtils::TruncateAt::NONE;
+    // Free the previous hint layout unless it is the cached BoringLayout we are
+    // about to reuse — mSavedHintLayout aliases that object and it is rebuilt in
+    // place via replaceOrMake below, so it must survive. Any other previous hint
+    // layout (a StaticLayout from a wrapping/multiline hint, or a non-saved
+    // BoringLayout from the ellipsize branch) is a distinct object that would leak
+    // if merely overwritten. makeNewLayout runs on every re-measure (onMeasure),
+    // so free it here, BEFORE nulling. The old code nulled first, which made the
+    // delete-guard inside the boring branch dead (mHintLayout was already null)
+    // and orphaned a StaticLayout hint layout on each re-measure.
+    if (mSavedHintLayout != mHintLayout && mHintLayout != nullptr) {
+        delete mHintLayout;
+    }
+    mHintLayout = nullptr;
+
+    if (mHint != nullptr) {
+        if (shouldEllipsize) hintWidth = wantWidth;
+
+        if (hintBoring == &UNKNOWN_BORING) {
+            hintBoring = BoringLayout::isBoring(mHint, &mTextPaint, mTextDir, mHintBoring);
+            if (hintBoring != nullptr) {
+                mHintBoring = hintBoring;
+            }
+        }
+
+        if (hintBoring != nullptr) {
+            if (hintBoring->width <= hintWidth
+                    && (!shouldEllipsize || hintBoring->width <= ellipsisWidth)) {
+                if (mSavedHintLayout != nullptr) {
+                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint, hintWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad);
+                } else {
+                    mHintLayout = BoringLayout::make(mHint, &mTextPaint, hintWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad);
+                }
+
+                mSavedHintLayout = (BoringLayout*) mHintLayout;
+            } else if (shouldEllipsize && hintBoring->width <= hintWidth) {
+                if (mSavedHintLayout != nullptr) {
+                    mHintLayout = mSavedHintLayout->replaceOrMake(mHint, &mTextPaint, hintWidth, alignment,
+                            mSpacingMult, mSpacingAdd,*hintBoring, mIncludePad, mEllipsize, ellipsisWidth);
+                } else {
+                    mHintLayout = BoringLayout::make(mHint, &mTextPaint, hintWidth, alignment,
+                            mSpacingMult, mSpacingAdd, *hintBoring, mIncludePad, mEllipsize, ellipsisWidth);
+                }
+            }
+        }
+        // TODO: code duplication with makeSingleLayout()
+        if (mHintLayout == nullptr) {
+            StaticLayout::Builder* builder = StaticLayout::Builder::obtain(mHint, 0,
+                       mHint->length(), &mTextPaint, hintWidth);
+                    builder->setAlignment(alignment)
+                    .setTextDirection(mTextDir)
+                    .setLineSpacing(mSpacingAdd, mSpacingMult)
+                    .setIncludePad(mIncludePad)
+                    .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
+                    .setBreakStrategy(mBreakStrategy)
+                    .setHyphenationFrequency(mHyphenationFrequency)
+                    .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+                    .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
+            if (shouldEllipsize) {
+                builder->setEllipsize(mEllipsize)
+                        .setEllipsizedWidth(ellipsisWidth);
+            }
+            mHintLayout = builder->build();
+        }
+    }
+
+    if (bringIntoView || (testDirChange && oldDir != mLayout->getParagraphDirection(0))) {
+        registerForPreDraw();
+    }
+
+    if (mEllipsize == TextUtils::TruncateAt::MARQUEE) {
+        if (!compressText(ellipsisWidth)) {
+            const int height = mLayoutParams->height;
+            // If the size of the view does not depend on the size of the text, try to
+            // start the marquee immediately
+            if (height != LayoutParams::WRAP_CONTENT && height != LayoutParams::MATCH_PARENT) {
+                startMarquee();
+            } else {
+                // Defer the start of the marquee until we know our width (see setFrame())
+                mRestartMarquee = true;
+            }
+        }
+    }
+
+    // CursorControllers need a non-null mLayout
+    if (mEditor != nullptr) mEditor->prepareCursorControllers();
+}
+
+bool TextView::useDynamicLayout() const{
+    return isTextSelectable() || (mSpannable != nullptr && mPrecomputed == nullptr);
+}
+
+Layout* TextView::makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
+        Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved) {
+    Layout* result = nullptr;
+    if (useDynamicLayout()) {
+        DynamicLayout::Builder* builder = DynamicLayout::Builder::obtain(mText, &mTextPaint,wantWidth);
+                builder->setDisplayText(mTransformed)
+                .setAlignment(alignment)
+                .setTextDirection(mTextDir)
+                .setLineSpacing(mSpacingAdd, mSpacingMult)
+                .setIncludePad(mIncludePad)
+                .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
+                .setBreakStrategy(mBreakStrategy)
+                .setHyphenationFrequency(mHyphenationFrequency)
+                .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+                .setEllipsize((getKeyListener()==nullptr)?effectiveEllipsize:TextUtils::TruncateAt::NONE)
+                .setEllipsizedWidth(ellipsisWidth);
+        result = builder->build();
+    } else {
+        if (boring == &UNKNOWN_BORING) {
+            boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
+            if (boring != nullptr) {
+                mBoring = boring;
+            }
+        }
+
+        if (boring != nullptr) {
+            if (boring->width <= wantWidth
+                    && (effectiveEllipsize == TextUtils::TruncateAt::NONE || boring->width <= ellipsisWidth)) {
+                if (useSaved && mSavedLayout != nullptr) {
+                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint, wantWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *boring, mIncludePad);
+                } else {
+                    result = BoringLayout::make(mTransformed, &mTextPaint, wantWidth,
+                            alignment, mSpacingMult, mSpacingAdd, *boring, mIncludePad);
+                }
+
+                if (useSaved) {
+                    mSavedLayout = (BoringLayout*) result;
+                }
+            } else if (shouldEllipsize && boring->width <= wantWidth) {
+                if (useSaved && mSavedLayout != nullptr) {
+                    result = mSavedLayout->replaceOrMake(mTransformed, &mTextPaint, wantWidth, alignment,
+                            mSpacingMult, mSpacingAdd, *boring, mIncludePad, effectiveEllipsize, ellipsisWidth);
+                } else {
+                    result = BoringLayout::make(mTransformed, &mTextPaint, wantWidth, alignment,mSpacingMult,
+                            mSpacingAdd, *boring, mIncludePad, effectiveEllipsize, ellipsisWidth);
+                }
+            }
+        }
+    }
+    if (result == nullptr) {
+        StaticLayout::Builder* builder = StaticLayout::Builder::obtain(mTransformed,
+                    0, mTransformed->length(), &mTextPaint, wantWidth);
+                builder->setAlignment(alignment)
+                .setTextDirection(mTextDir)
+                .setLineSpacing(mSpacingAdd, mSpacingMult)
+                .setIncludePad(mIncludePad)
+                .setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing)
+                .setBreakStrategy(mBreakStrategy)
+                .setHyphenationFrequency(mHyphenationFrequency)
+                .setJustificationMode(mJustificationMode).setUseBoundsForWidth(mUseBoundsForWidth)
+                .setMaxLines(mMaxMode == LINES ? mMaximum : INT_MAX);
+        if (shouldEllipsize) {
+            builder->setEllipsize(effectiveEllipsize)
+                    .setEllipsizedWidth(ellipsisWidth);
+        }
+        result = builder->build();
+    }
+    return result;
+}
+
 bool TextView::compressText(float width) {
-    if (isHardwareAccelerated()) return false;
+    if (isHardwareAccelerated()||1) return false;/*return true will crashed onMeasure */
 
     // Only compress the text if it hasn't been compressed by the previous pass
     if ((width > 0.0f) && mLayout && (getLineCount() == 1) && !mUserSetTextScaleX
-            && (mTextScaleX == 1.0f)) {
+            && (mTextPaint.getTextScaleX() == 1.0f)) {
         const float textWidth = mLayout->getLineWidth(0);
         const float overflow = (textWidth + 1.0f - width) / width;
         if (overflow > 0.0f && overflow <= Marquee::MARQUEE_DELTA_MAX) {
+            LOGD("%p:%d TextView::compressText textscaledX=%.3f",this,mID,getTextScaleX());
             setTextScaleX(1.0f - overflow - 0.005f);
             post([this]() {
                 requestLayout();
@@ -1675,21 +3231,22 @@ bool TextView::compressText(float width) {
     return false;
 }
 
-int TextView::desired(Layout*layout){
+int TextView::desired(Layout*layout,bool useBoundsForWidth){
     int max = 0;
     const int N = layout->getLineCount();
-    const std::wstring& text=layout->getText();
+    CharSequence* text = layout->getText();
     for (int i = 0; i < N - 1; i++) {
-        if (text[layout->getLineEnd(i) - 1]!= '\n') {
+        if (text->charAt(layout->getLineEnd(i) - 1)!= '\n') {
             return -1;
         }
     }
-
     for (int i = 0; i < N; i++) {
-        max = std::max(max, layout->getLineWidth(i));
+        max = std::max(max, (int)layout->getLineWidth(i));
     }
-
-    return max;
+    if (useBoundsForWidth) {
+        max = std::max(max, (int)layout->computeDrawingBoundingBox().width);
+    }
+    return (int) std::ceil(max);
 }
 
 void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
@@ -1701,39 +3258,98 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     int width;
     int height;
 
+    BoringLayout::Metrics* boring = &UNKNOWN_BORING;
+    BoringLayout::Metrics* hintBoring = &UNKNOWN_BORING;
+    if (mTextDir == nullptr) {
+        mTextDir = getTextDirectionHeuristic();
+    }
     int des = -1;
     bool fromexisting = false;
-    mLayout->setAlignment(getLayoutAlignment());
+    const float widthLimit = (widthMode == MeasureSpec::AT_MOST) ?  (float) widthSize : FLT_MAX;
     if (widthMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         width = widthSize;
-        //mLayout->setWidth(width- getCompoundPaddingLeft() - getCompoundPaddingRight());
     } else {
-        int txtWidth,txtHeight;
-        mLayout->setWidth(widthSize/*mRight - mLeft*/ - getCompoundPaddingLeft() - getCompoundPaddingRight());
-        mLayout->relayout();
-        mHintLayout->relayout();
-        txtWidth = mLayout->getMaxLineWidth();//desired(mLayout);
-        txtHeight= mLayout->getHeight();
-        width = txtWidth;
+        if (mLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
+            des = desired(mLayout,mUseBoundsForWidth);
+        }
+        if (des < 0) {
+            boring = BoringLayout::isBoring(mTransformed, &mTextPaint, mTextDir, mBoring);
+            if (boring != nullptr) {
+                mBoring = boring;
+            }
+        } else {
+            fromexisting = true;
+        }
+
+        if (boring == nullptr || boring == &UNKNOWN_BORING) {
+            if (des < 0) {
+                des = (int) std::ceil(Layout::getDesiredWidthWithLimit(mTransformed, 0,
+                        mTransformed->length(), mTextPaint, mTextDir, widthLimit,
+                        mUseBoundsForWidth));
+            }
+            width = des;
+        } else {
+            width = boring->width;
+        }
+
         Drawables* dr = mDrawables;
         if (dr != nullptr) {
             width = std::max(width, dr->mDrawableWidthTop);
             width = std::max(width, dr->mDrawableWidthBottom);
         }
 
+        if (mHint != nullptr) {
+            int hintDes = -1;
+            int hintWidth;
+
+            if (mHintLayout != nullptr && mEllipsize == TextUtils::TruncateAt::NONE) {
+                hintDes = desired(mHintLayout,mUseBoundsForWidth);
+            }
+
+            if (hintDes < 0) {
+                hintBoring = BoringLayout::isBoring(mHint, &mTextPaint, mTextDir, mHintBoring);
+                if (hintBoring != nullptr) {
+                    mHintBoring = hintBoring;
+                }
+            }
+
+            if (hintBoring == nullptr || hintBoring == &UNKNOWN_BORING) {
+                if (hintDes < 0) {
+                    hintDes = (int) std::ceil(Layout::getDesiredWidthWithLimit(mHint, 0,
+                            mHint->length(), mTextPaint, mTextDir, widthLimit,
+                            mUseBoundsForWidth));
+                }
+                hintWidth = hintDes;
+            } else {
+                hintWidth = hintBoring->width;
+            }
+
+            if (hintWidth > width) {
+                width = hintWidth;
+            }
+        }
+
         width += getCompoundPaddingLeft() + getCompoundPaddingRight();
 
-        if (mMaxWidthMode == EMS)width = std::min(width, mMaxWidth * getLineHeight());
-        else width = std::min(width, mMaxWidth);
+        if (mMaxWidthMode == EMS) {
+            width = std::min(width, mMaxWidth * getLineHeight());
+        } else {
+            width = std::min(width, mMaxWidth);
+        }
 
-        if (mMinWidthMode == EMS) width = std::max(width, mMinWidth * getLineHeight());
-        else width = std::max(width, mMinWidth);
+        if (mMinWidthMode == EMS) {
+            width = std::max(width, mMinWidth * getLineHeight());
+        } else {
+            width = std::max(width, mMinWidth);
+        }
 
         // Check against our minimum width
         width = std::max(width, getSuggestedMinimumWidth());
-        if (widthMode == MeasureSpec::AT_MOST)
+
+        if (widthMode == MeasureSpec::AT_MOST) {
             width = std::min(widthSize, width);
+        }
     }
 
     int want = width - getCompoundPaddingLeft() - getCompoundPaddingRight();
@@ -1742,15 +3358,41 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (mHorizontallyScrolling) want = VERY_WIDE;
 
     int hintWant = want;
-    int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getMaxLineWidth();
+    int hintWidth = (mHintLayout == nullptr) ? hintWant : mHintLayout->getWidth();
 
-    mLayout->setWidth(want);
+    if (mLayout == nullptr) {
+        makeNewLayout(want, hintWant, boring, hintBoring,
+                      width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
+    } else {
+        const bool layoutChanged = (mLayout->getWidth() != want) || (hintWidth != hintWant)
+                || (mLayout->getEllipsizedWidth()
+                        != width - getCompoundPaddingLeft() - getCompoundPaddingRight());
+
+        const bool widthChanged = (mHint == nullptr) && (mEllipsize == TextUtils::TruncateAt::NONE)
+                && (want > mLayout->getWidth())
+                && (dynamic_cast<BoringLayout*>(mLayout)
+                        || (fromexisting && des >= 0 && des <= want));
+
+        const bool maximumChanged = (mMaxMode != mOldMaxMode) || (mMaximum != mOldMaximum);
+
+        if (layoutChanged || maximumChanged) {
+            if (!maximumChanged && widthChanged) {
+                mLayout->increaseWidthTo(want);
+            } else {
+                makeNewLayout(want, hintWant, boring, hintBoring,
+                        width - getCompoundPaddingLeft() - getCompoundPaddingRight(), false);
+            }
+        } else {
+            // Nothing has changed
+        }
+    }
     if (heightMode == MeasureSpec::EXACTLY) {
         // Parent has told us how big to be. So be it.
         height = heightSize;
         mDesiredHeightAtMeasure = -1;
     } else {
-        const int desired = getDesiredHeight();
+        int desired = getDesiredHeight();
+
         height = desired;
         mDesiredHeightAtMeasure = desired;
 
@@ -1758,8 +3400,22 @@ void TextView::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
             height = std::min(desired, heightSize);
         }
     }
-
     int unpaddedHeight = height - getCompoundPaddingTop() - getCompoundPaddingBottom();
+    if (mMaxMode == LINES && mLayout->getLineCount() > mMaximum) {
+        unpaddedHeight = std::min(unpaddedHeight, mLayout->getLineTop(mMaximum));
+    }
+
+    /*
+     * We didn't let makeNewLayout() register to bring the cursor into view,
+     * so do it here if there is any possibility that it is needed.
+     */
+    if ((mMovement != nullptr) || mLayout->getWidth() > unpaddedWidth
+            || mLayout->getHeight() > unpaddedHeight) {
+        registerForPreDraw();
+    } else {
+        scrollTo(0, 0);
+    }
+
     setMeasuredDimension(width, height);
 }
 
@@ -1913,6 +3569,55 @@ std::vector<Drawable*> TextView::getCompoundDrawablesRelative() const{
     }
 }
 
+const TextDirectionHeuristic*TextView::getTextDirectionHeuristic()const{
+    if (hasPasswordTransformationMethod()) {
+        // passwords fields should be LTR
+        return TextDirectionHeuristics::LTR;
+    }
+
+    /*if (mEditor != nullptr && (mEditor->mInputType & InputType::TYPE_MASK_CLASS)  == InputType::TYPE_CLASS_PHONE) {
+        // Phone numbers must be in the direction of the locale's digits. Most locales have LTR
+        // digits, but some locales, such as those written in the Adlam or N'Ko scripts, have
+        // RTL digits.
+        final DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance(getTextLocale());
+         String zero = symbols.getDigitStrings()[0];
+        // In case the zero digit is multi-codepoint, just use the first codepoint to determine
+        // direction.
+        const int firstCodepoint = zero.codePointAt(0);
+        const uint8_t digitDirection = Character::getDirectionality(firstCodepoint);
+        if (digitDirection == Character::DIRECTIONALITY_RIGHT_TO_LEFT
+                || digitDirection == Character::DIRECTIONALITY_RIGHT_TO_LEFT_ARABIC) {
+            return TextDirectionHeuristics::RTL;
+        } else {
+            return TextDirectionHeuristics::LTR;
+        }
+    }*/
+
+    // Always need to resolve layout direction first
+    const bool defaultIsRtl = (getLayoutDirection() == View::LAYOUT_DIRECTION_RTL);
+
+    // Now, we can select the heuristic
+    switch (getTextDirection()) {
+    default:
+    case View::TEXT_DIRECTION_FIRST_STRONG:
+        return (defaultIsRtl ? TextDirectionHeuristics::FIRSTSTRONG_RTL :
+                TextDirectionHeuristics::FIRSTSTRONG_LTR);
+    case View::TEXT_DIRECTION_ANY_RTL:
+        return TextDirectionHeuristics::ANYRTL_LTR;
+    case View::TEXT_DIRECTION_LTR:
+        return TextDirectionHeuristics::LTR;
+    case View::TEXT_DIRECTION_RTL:
+        return TextDirectionHeuristics::RTL;
+    case View::TEXT_DIRECTION_LOCALE:
+        return TextDirectionHeuristics::LOCALE;
+    case View::TEXT_DIRECTION_FIRST_STRONG_LTR:
+        return TextDirectionHeuristics::FIRSTSTRONG_LTR;
+    case View::TEXT_DIRECTION_FIRST_STRONG_RTL:
+        return TextDirectionHeuristics::FIRSTSTRONG_RTL;
+    }
+    return TextDirectionHeuristics::FIRSTSTRONG_LTR;
+}
+
 void TextView::onResolveDrawables(int layoutDirection){
     if (mLastLayoutDirection == layoutDirection) {
         return;
@@ -1934,29 +3639,362 @@ void TextView::viewClicked(InputMethodManager*imm){
     LOGV("%p:%d",this,mID);
 }
 
+// Ported from Android TextView.onKeyUp (TextView.java:9952). Cursor-movement-
+// relevant parts: reset mPreventDefaultMovement, and delegate to the movement
+// method's onKeyUp. The DPAD_CENTER (show IME) and ENTER (onEditorActionListener
+// / advance-focus) branches depend on mInputContentType / shouldAdvanceFocusOnEnter
+// / IME show-path, none of which are ported yet — they are guarded out like in
+// doKeyDown and fall through to super.
+bool TextView::onKeyUp(int keyCode, KeyEvent& event) {
+    if (!isEnabled()) {
+        return View::onKeyUp(keyCode, event);
+    }
+
+    if (!KeyEvent::isModifierKey(keyCode)) {
+        mPreventDefaultMovement = false;
+    }
+
+    switch (keyCode) {
+        case KeyEvent::KEYCODE_DPAD_CENTER:
+            if (event.hasNoModifiers()) {
+                // Android: when there is no click listener and this is an editable
+                // text editor, treat DPAD-center as "show the IME". CDROID does not
+                // port hasOnClickListeners(), so gate on the editable-editor case
+                // (the meaningful condition) and push the editor's input type so the
+                // correct keyboard layout is shown.
+                if (mMovement != nullptr && isTextEditable() && mLayout != nullptr
+                        && onCheckIsTextEditor()){
+                    InputMethodManager* imm = getInputMethodManager();
+                    viewClicked(imm);
+                    if (imm != nullptr) {
+                        imm->setInputType(getInputType());
+                        imm->showSoftInput(this, 0);
+                    }
+                }
+            }
+            return View::onKeyUp(keyCode, event);
+
+        case KeyEvent::KEYCODE_ENTER:
+        case KeyEvent::KEYCODE_NUMPAD_ENTER:
+            if (event.hasNoModifiers()) {
+                if((mEditor!=nullptr) && (mEditor->mInputContentType != nullptr)
+                   &&(mEditor->mInputContentType->onEditorActionListener != nullptr)
+                   &&mEditor->mInputContentType->enterDown) {
+                       mEditor->mInputContentType->enterDown = false;
+                       if (mEditor->mInputContentType->onEditorActionListener(
+                            *this, getActionIdForEnterEvent(), event)) {
+                                 return true;
+                        }
+                
+                    }
+                    if((event.getFlags()&KeyEvent::FLAG_EDITOR_ACTION) != 0||shouldAdvanceFocusOnEnter()) {
+                        if(!hasOnClickListeners()){
+                            View*v = focusSearch(View::FOCUS_DOWN);
+                            if(v!=nullptr){
+                                if(!v->requestFocus(FOCUS_DOWN)) {
+                                    LOGE("focus search returned a view that wasn't able to take focus!");
+                                }
+                                View::onKeyUp(keyCode,event);
+                                return true;
+                            }else if(event.getFlags()&KeyEvent::FLAG_EDITOR_ACTION) {
+                                InputMethodManager* imm = getInputMethodManager();
+                                if(imm != nullptr) {
+                                    imm->hideSoftInputFromWindow(this, 0);
+                            }
+                        }
+                    }
+                }
+            }
+            return View::onKeyUp(keyCode, event);
+    }
+
+    // CDROID has no separate KeyListener; ArrowKeyMovementMethod handles nav keys.
+    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+        if (mMovement->onKeyUp(*this, *mSpannable, keyCode, event)) {
+            return true;
+        }
+    }
+
+    return View::onKeyUp(keyCode, event);
+}
+
+int TextView::getActionIdForEnterEvent() const{
+    // If it's not single line, no action
+    if (!isSingleLine()) {
+        return EditorInfo::IME_NULL;
+    }
+    // Return the action that was specified for Enter
+    return getImeOptions() & EditorInfo::IME_MASK_ACTION;
+}
+
+bool TextView::onCheckIsTextEditor() const{
+    return mEditor != nullptr && mEditor->mInputType != EditorInfo::TYPE_NULL;
+}
+
+// Ported from Android TextView.onKeyDown (TextView.java:9635).
+bool TextView::onKeyDown(int keyCode, KeyEvent& event) {
+    const int which = doKeyDown(keyCode, event, nullptr);
+    if (which == KEY_EVENT_NOT_HANDLED) {
+        return View::onKeyDown(keyCode, event);   // super
+    }
+    return true;
+}
+
+bool TextView::shouldAdvanceFocusOnEnter() const{
+    if (getKeyListener() == nullptr) {
+        return false;
+    }
+
+    if (mSingleLine) {
+        return true;
+    }
+
+    if (mEditor != nullptr
+            && (mEditor->mInputType & EditorInfo::TYPE_MASK_CLASS)
+                    == EditorInfo::TYPE_CLASS_TEXT) {
+        const int variation = mEditor->mInputType & EditorInfo::TYPE_MASK_VARIATION;
+        if (variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                || variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_SUBJECT) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool TextView::isDirectionalNavigationKey(int keyCode) const{
+    switch(keyCode) {
+        case KeyEvent::KEYCODE_DPAD_UP:
+        case KeyEvent::KEYCODE_DPAD_DOWN:
+        case KeyEvent::KEYCODE_DPAD_LEFT:
+        case KeyEvent::KEYCODE_DPAD_RIGHT:
+            return true;
+    }
+    return false;
+}
+
+// Ported from Android TextView.doKeyDown (TextView.java:9725).
+// The two delegation targets are adapted to CDROID's existing primitives:
+//  - the KeyListener path routes to Editor::onKeyDown, which in CDROID already
+//    subsumes the movement-method call for navigation keys (so a nav key handled
+//    there returns true and never reaches the movement block below — no double
+//    dispatch). It returns bool, matching Android's KeyListener.onKeyDown.
+//  - the movement path calls MovementMethod::onKeyDown directly.
+// Branches whose Android deps are not yet ported to CDROID (mInputContentType /
+// onEditorActionListener, getTextActionMode()/stopTextActionMode(),
+// onTextContextMenuItem(ID_*), shouldAdvanceFocusOnEnter(), canCut/Copy/Paste(),
+// InputDevice.SOURCE_KEYBOARD) are intentionally omitted, mirroring the gaps
+// already marked elsewhere in this file.
+int TextView::doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent) {
+    if (!isEnabled()) {
+        return KEY_EVENT_NOT_HANDLED;
+    }
+
+    // If this is the initial keydown, we don't want to prevent a movement away
+    // from this view.  While this shouldn't be necessary because any time we're
+    // preventing default movement we should be restricting the focus to remain
+    // within this view, thus we'll also receive the key up event, occasionally
+    // key up events will get dropped and we don't want to prevent the user from
+    // traversing out of this on the next key down.
+    if (event.getRepeatCount() == 0 && !KeyEvent::isModifierKey(keyCode)) {
+        mPreventDefaultMovement = false;
+    }
+
+    switch (keyCode) {
+    case KeyEvent::KEYCODE_ENTER:
+    case KeyEvent::KEYCODE_NUMPAD_ENTER:
+        if (event.hasNoModifiers()) {
+            // When mInputContentType is set, we know that we are
+            // running in a "modern" cupcake environment, so don't need
+            // to worry about the application trying to capture
+            // enter key events.
+            if (mEditor != nullptr && mEditor->mInputContentType != nullptr) {
+                // If there is an action listener, given them a
+                // chance to consume the event.
+                if (mEditor->mInputContentType->onEditorActionListener != nullptr
+                        && mEditor->mInputContentType->onEditorActionListener(
+                                *this, getActionIdForEnterEvent(), event)) {
+                    mEditor->mInputContentType->enterDown = true;
+                    // We are consuming the enter key for them.
+                    return KEY_EVENT_HANDLED;
+                }
+            }
+
+            // If our editor should move focus when enter is pressed, or
+            // this is a generated event from an IME action button, then
+            // don't let it be inserted into the text.
+            if ((event.getFlags() & KeyEvent::FLAG_EDITOR_ACTION) != 0
+                    || shouldAdvanceFocusOnEnter()) {
+                if (hasOnClickListeners()) {
+                    return KEY_EVENT_NOT_HANDLED;
+                }
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        break;
+    case KeyEvent::KEYCODE_DPAD_CENTER:
+        if (event.hasNoModifiers()) {
+            if (shouldAdvanceFocusOnEnter()) {
+                return KEY_EVENT_NOT_HANDLED;
+            }
+        }
+        break;
+    case KeyEvent::KEYCODE_TAB:
+        if (event.hasNoModifiers() || event.hasModifiers(KeyEvent::META_SHIFT_ON)) {
+            // Tab is used to move focus.
+            return KEY_EVENT_NOT_HANDLED;
+        }
+        break;
+    case KeyEvent::KEYCODE_BACK:
+        if (mEditor != nullptr && mEditor->getTextActionMode() != nullptr) {
+            stopTextActionMode();
+            return KEY_EVENT_HANDLED;
+        }
+        break;
+
+    case KeyEvent::KEYCODE_ESCAPE:
+        if (/*Flags.escapeClearsFocus() &&*/ event.hasNoModifiers()) {
+            if (mEditor != nullptr && mEditor->getTextActionMode() != nullptr) {
+                stopTextActionMode();
+                return KEY_EVENT_HANDLED;
+            }
+            if (hasFocus()) {
+                clearFocusInternal(nullptr, /* propagate */ true, /* refocus */ false);
+                InputMethodManager* imm = getInputMethodManager();
+                if (imm != nullptr) {
+                    imm->hideSoftInputFromView(this, 0);
+                }
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        break;
+    }
+
+    // --- key listener (CDROID: Editor::onKeyDown stands in for mKeyListener) ---
+    if (mEditor != nullptr) {
+        bool doDown = true;
+        // otherEvent (ACTION_MULTIPLE repeat) is only passed from onKeyMultiple;
+        // CDROID's Editor exposes no onKeyOther, so there is nothing to try here.
+        (void)otherEvent;
+
+        if (doDown) {
+            beginBatchEdit();
+            const bool handled = mEditor->onKeyDown(keyCode, event);
+            endBatchEdit();
+            // hideErrorIfUnchanged(); -- not ported
+            if (handled) return KEY_DOWN_HANDLED_BY_KEY_LISTENER;
+        }
+    }
+
+    // bug 650865: sometimes we get a key event before a layout.
+    // don't try to move around if we don't know the layout.
+    if (mMovement != nullptr && mLayout != nullptr && mSpannable != nullptr) {
+        bool doDown = true;
+        // otherEvent path (mMovement.onKeyOther) is only exercised by onKeyMultiple.
+        if (otherEvent != nullptr) {
+            const bool handled = mMovement->onKeyOther(*this, *mSpannable, *otherEvent);
+            doDown = false;
+            if (handled) {
+                return KEY_EVENT_HANDLED;
+            }
+        }
+        if (doDown) {
+            if (mMovement->onKeyDown(*this, *mSpannable, keyCode, event)) {
+                if (event.getRepeatCount() == 0 && !KeyEvent::isModifierKey(keyCode)) {
+                    mPreventDefaultMovement = true;
+                }
+                return KEY_DOWN_HANDLED_BY_MOVEMENT_METHOD;
+            }
+        }
+        // Consume arrows from keyboard devices to prevent focus leaving the editor.
+        // (Android gates this on InputDevice.SOURCE_KEYBOARD + isDirectionalNavigationKey;
+        //  CDROID's InputEvent has no device-class source, so this is skipped.)
+    }
+
+    return mPreventDefaultMovement && !KeyEvent::isModifierKey(keyCode)
+            ? KEY_EVENT_HANDLED : KEY_EVENT_NOT_HANDLED;
+}
+
+bool TextView::isFromPrimePointer(MotionEvent& event, bool fromHandleView) {
+    bool res = true;
+    if (mPrimePointerId == NO_POINTER_ID)  {
+        mPrimePointerId = event.getPointerId(0);
+        mIsPrimePointerFromHandleView = fromHandleView;
+    } else if (mPrimePointerId != event.getPointerId(0)) {
+        res = mIsPrimePointerFromHandleView && fromHandleView;
+    }
+    if (event.getActionMasked() == MotionEvent::ACTION_UP
+        || event.getActionMasked() == MotionEvent::ACTION_CANCEL) {
+        mPrimePointerId = -1;
+    }
+    return res;
+}
+
 bool TextView::onTouchEvent(MotionEvent& event){
     const int action = event.getActionMasked();
-    const bool superResult = View::onTouchEvent(event);
-    if(action == MotionEvent::ACTION_UP){
-        return superResult;
-    }
-    bool handled = false;
-    const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused();
-           //&& (mEditor == null || !mEditor.mIgnoreActionUpEvent);
-    if (touchIsFinished && isFocusable() && isEnabled()){//isTextEditable()){
-        InputMethodManager& imm = InputMethodManager::getInstance();
-        viewClicked(&imm);
-        /*if (isTextEditable() && mEditor.mShowSoftInputOnFocus && imm != null
-                && !showAutofillDialog()) {
-            imm.showSoftInput(this, 0);
+    mLastInputSource = event.getSource();
+    if (mEditor) {
+        if(!isFromPrimePointer(event, false)){
+            return true;
+        }
+        mEditor->onTouchEvent(event);
+        /*if (mEditor->mInsertionPointCursorController != nullptr
+                && mEditor->mInsertionPointCursorController->isCursorBeingModified()) {
+            return true;
+        }
+        if (mEditor->mSelectionModifierCursorController != nullptr
+                && mEditor->mSelectionModifierCursorController->isDragAcceleratorActive()) {
+            return true;
         }*/
-
-        // The above condition ensures that the mEditor is not null
-        //mEditor.onTouchUpEvent(event);
-
-        handled = true;
     }
-    if(handled)return true;
+    const bool superResult = View::onTouchEvent(event);
+    /*
+     * Don't handle the release after a long press, because it will move the selection away from
+     * whatever the menu action was trying to affect. If the long press should have triggered an
+     * insertion action mode, we can now actually show it.
+     */
+    /*if (mEditor != nullptr && mEditor->mDiscardNextActionUp && action == MotionEvent::ACTION_UP) {
+        mEditor->mDiscardNextActionUp = false;
+        if (mEditor->mIsInsertionActionModeStartPending) {
+            mEditor->startInsertionActionMode();
+            mEditor->mIsInsertionActionModeStartPending = false;
+        }
+        return superResult;
+    }*/
+        
+    const bool touchIsFinished = (action == MotionEvent::ACTION_UP) && isFocused()
+           && (mEditor == nullptr || !mEditor->ignoreActionUpEvent());
+    if((mMovement!=nullptr||onCheckIsTextEditor()) && isEnabled() && dynamic_cast<Spannable*>(mText) &&mLayout!=nullptr){
+        bool handled = false;
+        if(mMovement!=nullptr){
+            handled |= mMovement->onTouchEvent(*this, *mSpannable, event);
+        }
+        bool textIsSelectable = isTextSelectable();
+        if (touchIsFinished && mLinksClickable && mAutoLinkMask != 0 && textIsSelectable) {
+            // The LinkMovementMethod which should handle taps on links has not been installed
+            // on non editable text that support text selection.
+            // We reproduce its behavior here to open links for these.
+            auto links = mSpannable->getSpans(getSelectionStart(),
+                getSelectionEnd(), make_span_filter<ClickableSpan>());
+
+            if (links.size() > 0) {
+                dynamic_cast<const ClickableSpan*>(links[0])->onClick(*this);
+                handled = true;
+            }
+        }
+
+       if (touchIsFinished && isFocusable() && isEnabled() && mEditor != nullptr) {
+            // The IME is shown on focus gain (onFocusChanged), NOT on every touch-up.
+            // Repeatedly tapping the same already-focused editor — e.g. after
+            // dismissing the keyboard — is just cursor positioning and must not pop
+            // the keyboard again. Keep viewClicked so the IMM still tracks the target.
+            InputMethodManager* imm = InputMethodManager::peekInstance();
+            viewClicked(imm);
+            mEditor->onTouchUpEvent(event);
+            handled = true;
+        }
+        if (handled) return true;
+    }
     return superResult;
 }
 
@@ -1976,76 +4014,11 @@ void TextView::resetResolvedDrawables(){
     mLastLayoutDirection = -1;
 }
 
-void TextView::setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
-       int typefaceIndex,int style,int weight){
-    if ((typeface == nullptr) && (familyName.empty()==false)) {
-         // Lookup normal Typeface from system font map.
-         Typeface* normalTypeface = Typeface::create(familyName, Typeface::NORMAL);
-         resolveStyleAndSetTypeface(normalTypeface, style, weight);
-     } else if (typeface != nullptr) {
-         resolveStyleAndSetTypeface(typeface, style, weight);
-     } else {// both typeface and familyName is null.
-         switch (typefaceIndex) {
-         case SANS:  resolveStyleAndSetTypeface(Typeface::SANS_SERIF, style, weight); break;
-         case SERIF: resolveStyleAndSetTypeface(Typeface::SERIF, style, weight); break;
-         case MONOSPACE:  resolveStyleAndSetTypeface(Typeface::MONOSPACE, style, weight);  break;
-         case DEFAULT_TYPEFACE:
-         default: resolveStyleAndSetTypeface(nullptr, style, weight);  break;
-        }
-    }
-}
-
-void TextView::resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight){
-    if (weight >= 0) {
-        weight = std::min((int)FontStyle::FONT_WEIGHT_MAX, weight);
-        const bool italic = (style & Typeface::ITALIC) != 0;
-        setTypeface(Typeface::create(typeface, weight, italic));
-    } else {
-        setTypeface(typeface, style);
-    }
-}
-
-void TextView::setTypeface(Typeface* tf,int style){
-    if (style > 0) {
-        if (tf == nullptr) {
-            tf = Typeface::defaultFromStyle(style);
-        } else {
-            tf = Typeface::create(tf, style);
-        }
-        setTypeface(tf);
-        // now compute what (if any) algorithmic styling is needed
-        const int typefaceStyle = tf ? tf->getStyle() : 0;
-        const int need = style & ~typefaceStyle;
-        mLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        mHintLayout->setFakeTextSkew((need & Typeface::ITALIC) != 0 ? -0.25:0.0);
-        //mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
-    } else {
-        mLayout->setFakeTextSkew(0.0);
-        mHintLayout->setFakeTextSkew(0.0);
-        //mTextPaint.setFakeBoldText(false);
-        setTypeface(tf);
-    }
-}
-
 void TextView::setTypeface(Typeface* tf){
-    mOriginalTypeface = tf;
-    if ( (mFontWeightAdjustment != 0)
-            && (mFontWeightAdjustment != INT_MAX)/*Configuration::FONT_WEIGHT_ADJUSTMENT_UNDEFINED*/) {
-        if (tf == nullptr) {
-            tf = Typeface::DEFAULT;
-        } else {
-            const int newWeight = std::min(
-                    std::max(tf->getWeight() + mFontWeightAdjustment, (int)FontStyle::FONT_WEIGHT_MIN),
-                    (int)FontStyle::FONT_WEIGHT_MAX);
-            const int typefaceStyle = tf ? tf->getStyle() : 0;
-            const bool italic = (typefaceStyle & Typeface::ITALIC) != 0;
-            tf = Typeface::create(tf, newWeight, italic);
-        }
-    }
-    if ( tf && mLayout && (tf!=mLayout->getTypeface()) ){
+    if(mTextPaint.getTypeface()!=tf){
+        mTextPaint.setTypeface(tf);
         if (mLayout != nullptr) {
-            //nullLayouts();
-            mLayout->setTypeface(tf);
+            nullLayouts();
             requestLayout();
             invalidate();
         }
@@ -2053,50 +4026,12 @@ void TextView::setTypeface(Typeface* tf){
 }
 
 Typeface*TextView::getTypeface()const{
-    return mOriginalTypeface;
+    return mTextPaint.getTypeface();
 }
 
 int TextView::getTypefaceStyle() const{
-    return mOriginalTypeface?mOriginalTypeface->getStyle():Typeface::NORMAL;
-}
-
-void TextView::setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) {
-    if (start||end) {
-        Drawables* dr = mDrawables;
-        if (dr == nullptr) {
-            mDrawables = dr = new Drawables(getContext());
-        }
-        mDrawables->mOverride = true;
-        Rect compoundRect = dr->mCompoundRect;
-        std::vector<int> state = getDrawableState();
-        if (start) {
-            start->setBounds(0, 0, start->getIntrinsicWidth(), start->getIntrinsicHeight());
-            start->setState(state);
-            compoundRect = start->getBounds();
-            start->setCallback(this);
-
-            dr->mDrawableStart = start;
-            dr->mDrawableSizeStart = compoundRect.width;
-            dr->mDrawableHeightStart = compoundRect.height;
-        } else {
-            dr->mDrawableSizeStart = dr->mDrawableHeightStart = 0;
-        }
-        if (end){
-            end->setBounds(0, 0, end->getIntrinsicWidth(), end->getIntrinsicHeight());
-            end->setState(state);
-            compoundRect = end->getBounds();
-            end->setCallback(this);
-
-            dr->mDrawableEnd = end;
-            dr->mDrawableSizeEnd = compoundRect.width;
-            dr->mDrawableHeightEnd = compoundRect.height;
-        } else {
-            dr->mDrawableSizeEnd = dr->mDrawableHeightEnd = 0;
-        }
-        resetResolvedDrawables();
-        resolveDrawables();
-        applyCompoundDrawableTint();
-    }
+    Typeface* typeface = mTextPaint.getTypeface();
+    return typeface != nullptr ? typeface->getStyle() : Typeface::NORMAL;
 }
 
 void TextView::drawableStateChanged(){
@@ -2230,30 +4165,132 @@ void TextView::invalidateDrawable(Drawable& drawable){
     }
 }
 
+bool TextView::textCanBeSelected() const{
+    // prepareCursorController() relies on this method.
+    // If you change this condition, make sure prepareCursorController is called anywhere
+    // the value of this condition might be changed.
+    if (mMovement == nullptr || !mMovement->canSelectArbitrarily()) return false;
+    return isTextEditable()
+            || (isTextSelectable() && dynamic_cast<Spannable*>(mText) && isEnabled());
+}
+
+bool TextView::isTextSelectable()const{
+    return mEditor==nullptr?false:mEditor->mTextIsSelectable;
+}
+
+void TextView::setTextIsSelectable(bool selectable) {
+    if (!selectable && mEditor == nullptr) return; // false is default value with no edit data
+
+    createEditorIfNeeded();
+    if (mEditor->mTextIsSelectable == selectable) return;
+
+    mEditor->mTextIsSelectable = selectable;
+    setFocusableInTouchMode(selectable);
+    setFocusable(FOCUSABLE_AUTO);
+    setClickable(selectable);
+    setLongClickable(selectable);
+
+    // mInputType should already be EditorInfo.TYPE_NULL and mInput should be null
+
+    setMovementMethod(selectable ? ArrowKeyMovementMethod::getInstance() : nullptr);
+    setText(mText, selectable ? BufferType::SPANNABLE : BufferType::NORMAL);
+
+    // Called by setText above, but safer in case of future code changes
+    mEditor->prepareCursorControllers();
+}
+
+std::vector<int> TextView::onCreateDrawableState(int extraSpace) {
+    std::vector<int>drawableState;
+
+    if (mSingleLine) {
+        drawableState = View::onCreateDrawableState(extraSpace);
+    } else {
+        drawableState = View::onCreateDrawableState(extraSpace+1);
+        //mergeDrawableStates(drawableState, MULTILINE_STATE_SET);
+    }
+
+    if (isTextSelectable()) {
+        // Disable pressed state, which was introduced when TextView was made clickable.
+        // Prevents text color change.
+        // setClickable(false) would have a similar effect, but it also disables focus changes
+        // and long press actions, which are both needed by text selection.
+        const int length = drawableState.size();
+        for (int i = 0; i < length; i++) {
+            if (drawableState[i] == StateSet::VIEW_STATE_PRESSED){//R.attr.state_pressed) {
+                std::vector<int> nonPressedState(length - 1);
+                //System.arraycopy(drawableState, 0, nonPressedState, 0, i);
+                //System.arraycopy(drawableState, i + 1, nonPressedState, i, length - i - 1);
+                nonPressedState.insert(nonPressedState.end(), drawableState.begin(), drawableState.begin() + i);
+                nonPressedState.insert(nonPressedState.end(), drawableState.begin() + i + 1, drawableState.end());
+                return nonPressedState;
+            }
+        }
+    }
+    return drawableState;
+}
+
+
+bool TextView::isTextEditable()const {
+    return  dynamic_cast<Editable*>(mText) && onCheckIsTextEditor() && isEnabled();
+}
+
+bool TextView::isTextAutofillable() const{
+    return dynamic_cast<Editable*>(mText) && onCheckIsTextEditor();
+}
+
+bool TextView::didTouchFocusSelect() const{
+    return mEditor != nullptr && mEditor->mTouchFocusSelected;
+}
+
+void TextView::cancelLongPress() {
+    View::cancelLongPress();
+    if (mEditor != nullptr) mEditor->mIgnoreActionUpEvent = true;
+}
+
+bool TextView::onTrackballEvent(MotionEvent& event){
+    if (mMovement != nullptr && mSpannable != nullptr && mLayout != nullptr) {
+        if (mMovement->onTrackballEvent(*this, *mSpannable, event)) {
+            return true;
+        }
+    }
+    return View::onTrackballEvent(event);
+}
+
+void TextView::setScroller(Scroller* s){
+    if(s!=mScroller){
+        delete mScroller;
+    }
+    mScroller = s;
+}
+
 void TextView::updateTextColors(){
     bool inval = false;
-    int color;
     const std::vector<int>&drawableState = getDrawableState();
-    if (mTextColor) {
-        color = mTextColor->getColorForState(drawableState,0);
-        LOGV("%p:%d change color %x->%x",this,mID,mCurTextColor,color);
+    int color = mTextColor->getColorForState(drawableState, 0);;
+    if (color!=mCurTextColor) {
         mCurTextColor = color;
+        LOGV("%p:%d change color %x->%x",this,mID,mCurTextColor,color);
         inval = true;
     }
-    if (mLinkTextColor) {
+    if (mLinkTextColor!=nullptr) {
         color = mLinkTextColor->getColorForState(drawableState,0);
-        inval = true;
+        if(color!=mTextPaint.linkColor){
+            mTextPaint.linkColor = color;
+            inval = true;
+        }
     }
-    if (mHintTextColor) {
+    if (mHintTextColor!=nullptr) {
         color = mHintTextColor->getColorForState(drawableState,0);
         if (color != mCurHintTextColor) {
             mCurHintTextColor = color;
-            inval = !mLayout->getText().empty();
+            if((mText!=nullptr)&&(mText->length()==0)){
+                inval = true;
+            }
         }
     }
     if (inval) {
         // Text needs to be redrawn with the new color
-        //if (mEditor != null) mEditor.invalidateTextDisplayList();
+        if (mEditor != nullptr) mEditor->invalidateTextDisplayList();
         invalidate(true);
     }
 }
@@ -2274,39 +4311,111 @@ int TextView::getMarqueeRepeatLimit()const{
     return mMarqueeRepeatLimit;
 }
 
-int TextView::getEllipsize()const{
+TextUtils::TruncateAt TextView::getEllipsize()const{
     return mEllipsize;
 }
 
-void TextView::setEllipsize(int where){
+void TextView::setEllipsize(TextUtils::TruncateAt where){
     if (mEllipsize != where) {
         mEllipsize = where;
-        if (mLayout) {
-            mLayout->setEllipsis(where);
-            //nullLayouts();
+        if (mLayout!=nullptr) {
+            nullLayouts();
             requestLayout();
             invalidate();
         }
     }
 }
 
-void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines) {
-    mSingleLine = singleLine;
-    if (singleLine) {
-        setLines(1);
-        setHorizontallyScrolling(true);
-        /*if (applyTransformation) {
-            setTransformationMethod(SingleLineTransformationMethod.getInstance());
-        }*/
-    } else {
-        if (changeMaxLines) {
-            setMaxLines(INT_MAX);//Integer.MAX_VALUE);
-        }
-        setHorizontallyScrolling(false);
-        /*if (applyTransformation) {
-            setTransformationMethod(null);
-        }*/
-    }
+void TextView::applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines,bool changeMaxLength) {
+   mSingleLine = singleLine;
+
+   if (singleLine) {
+       setLines(1);
+       setHorizontallyScrolling(true);
+       if (applyTransformation) {
+           setTransformationMethod(SingleLineTransformationMethod::getInstance());
+       }
+
+       if (!changeMaxLength) return;
+       // Single line length filter is only applicable editable text.
+       if (mBufferType != BufferType::EDITABLE) return;
+
+       std::vector<InputFilter*> prevFilters = getFilters();
+       for (InputFilter* filter : prevFilters) {
+           // We don't add LengthFilter if already there.
+           if (dynamic_cast<InputFilter::LengthFilter*>(filter)) return;
+       }
+
+       if (mSingleLineLengthFilter == nullptr) {
+           mSingleLineLengthFilter = new InputFilter::LengthFilter(
+               MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT);
+       }
+
+       std::vector<InputFilter*> newFilters = prevFilters;
+       newFilters.push_back(mSingleLineLengthFilter);
+       setFilters(newFilters);
+
+       // Since filter doesn't apply to existing text, trigger filter by setting text.
+       // CDROID: setText() does not yet run InputFilters (the filter loop inside
+       // setText is still #if 0), so this only re-runs the setText pipeline for now;
+       // it will re-filter existing text once that loop is ported. setText(mText,...)
+       // is safe — TextView::setText's isKept guard skips freeing an incoming `text`
+       // that aliases mText.
+       setText(mText, mBufferType);
+   } else {
+       if (changeMaxLines) {
+           setMaxLines(INT_MAX);
+       }
+       setHorizontallyScrolling(false);
+       if (applyTransformation) {
+           setTransformationMethod(nullptr);
+       }
+
+       if (!changeMaxLength) return;
+
+       // Single line length filter is only applicable editable text.
+       if (mBufferType != BufferType::EDITABLE) return;
+
+       std::vector<InputFilter*> prevFilters = getFilters();
+       if (prevFilters.empty()) return;
+
+       // Short circuit: if mSingleLineLengthFilter is not allocated, nobody sets
+       // automated single line char limit filter.
+       if (mSingleLineLengthFilter == nullptr) return;
+
+       // If we need to remove mSingleLineLengthFilter, we need to build another
+       // vector. Since the filter list is expected to be small and we want to avoid
+       // unnecessary allocation, check if mSingleLineLengthFilter is present first.
+       int targetIndex = -1;
+       for (size_t i = 0; i < prevFilters.size(); ++i) {
+           if (prevFilters[i] == mSingleLineLengthFilter) {
+               targetIndex = (int)i;
+               break;
+           }
+       }
+       if (targetIndex == -1) return;  // not found, do nothing
+
+       if (prevFilters.size() == 1) {
+           setFilters({});
+           delete mSingleLineLengthFilter;
+           mSingleLineLengthFilter = nullptr;
+           return;
+       }
+
+       // Create new vector which doesn't include mSingleLineLengthFilter.
+       std::vector<InputFilter*> newFilters;
+       newFilters.reserve(prevFilters.size() - 1);
+       for (size_t i = 0; i < prevFilters.size(); ++i) {
+           if ((int)i != targetIndex) newFilters.push_back(prevFilters[i]);
+       }
+       setFilters(newFilters);
+       // C++ has no GC: AOSP just drops the reference (mSingleLineLengthFilter=null);
+       // we must free it. Safe here because setFilters above already re-installed the
+       // filter list (without this pointer) on the Editable, and ~TextView also
+       // null-guards the delete.
+       delete mSingleLineLengthFilter;
+       mSingleLineLengthFilter = nullptr;
+   }
 }
 
 void TextView::setTextColor(int color){
@@ -2350,8 +4459,8 @@ int TextView::getHighlightColor()const{
 }
 
 void TextView::setHintTextColor(int color){
-    mCurHintTextColor = color;
-    //setHintTextColor(ColorStateList::valueOf(color));
+    mHintTextColor = ColorStateList::valueOf(color);
+    updateTextColors();
 }
 
 void TextView::setHintTextColor(const cdroid::RefPtr<ColorStateList>& colors){
@@ -2387,12 +4496,12 @@ const cdroid::RefPtr<ColorStateList> TextView::getLinkTextColors()const{
 
 void TextView::applyCompoundDrawableTint(){
     if (mDrawables == nullptr) return;
-    if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mHasTintMode==false) )return ;
+    if ( (mDrawables->mTintList==nullptr)&&(mDrawables->mTintMode==PorterDuff::NOOP) )return ;
 
     const auto tintList = mDrawables->mTintList;
     const int tintMode = mDrawables->mTintMode;
     const bool hasTint = (mDrawables->mTintList!=nullptr);
-    const bool hasTintMode = mDrawables->mHasTintMode;
+    const bool hasTintMode = mDrawables->mTintMode != PorterDuff::NOOP;
     const std::vector<int>state = getDrawableState();
 
     for (int i=0;i<4;i++){
@@ -2414,6 +4523,85 @@ void TextView::applyCompoundDrawableTint(){
         // The drawable (or one of its children) may not have been
         // stateful before applying the tint, so let's try again.
         if (dr->isStateful())  dr->setState(state);
+    }
+}
+
+TransformationMethod* TextView::getTransformationMethod()const{
+    return mTransformation;
+}
+
+// Ported from Android TextView (TextView.java:10386/15827/15842). The transformed
+// text (mTransformed) may implement OffsetMapping when a length-altering
+// TransformationMethod is active; otherwise offsets are identity.
+bool TextView::isOffsetMappingAvailable()const{
+    return (mTransformation != nullptr)
+        && (dynamic_cast<const OffsetMapping*>(mTransformed) != nullptr);
+}
+
+int TextView::transformedToOriginal(int offset, int strategy)const{
+    if (getTransformationMethod() == nullptr) return offset;
+    if (OffsetMapping* om = dynamic_cast<OffsetMapping*>(mTransformed)) {
+        return om->transformedToOriginal(offset, strategy);
+    }
+    return offset;
+}
+
+int TextView::originalToTransformed(int offset, int strategy)const{
+    if (getTransformationMethod() == nullptr) return offset;
+    if (OffsetMapping* om = dynamic_cast<OffsetMapping*>(mTransformed)) {
+        return om->originalToTransformed(offset, strategy);
+    }
+    return offset;
+}
+
+void TextView::setTransformationMethod(TransformationMethod* method) {
+    if (mEditor != nullptr) {
+        mEditor->setTransformationMethod(method);
+    } else {
+        setTransformationMethodInternal(method, /* updateText */ true);
+    }
+}
+
+void TextView::setTransformationMethodInternal(TransformationMethod*method,bool updateText){
+    if (method == mTransformation) {
+        // Avoid the setText() below if the transformation is
+        // the same.
+        return;
+    }
+    TransformationMethod* old = mTransformation;
+    if (old != nullptr) {
+        if (mSpannable != nullptr) {
+            mSpannable->removeSpan(old);
+        }
+    }
+    mTransformation = method;
+    TransformationMethod2* method2 = dynamic_cast<TransformationMethod2*>(method);
+    if (method2) {
+        mAllowTransformationLengthChange = !isTextSelectable() && !(dynamic_cast<Editable*>(mText));
+        method2->setLengthChangesAllowed(mAllowTransformationLengthChange);
+    } else {
+        mAllowTransformationLengthChange = false;
+    }
+
+    if(updateText){
+        setText(mText);
+    }
+
+    if (hasPasswordTransformationMethod()) {
+        //notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent.CONTENT_CHANGE_TYPE_UNDEFINED);
+    }
+    // PasswordTransformationMethod always have LTR text direction heuristics returned by
+    // getTextDirectionHeuristic, needs reset
+    mTextDir = getTextDirectionHeuristic();
+
+    // TransformationMethod is a NoCopySpan (transformationmethod.h), so the
+    // Spannable never frees it (disposeSpan no-ops borrowed spans). Singleton
+    // TMs (SingleLine/Password/HideReturns via getInstance) are global; only
+    // AllCapsTransformationMethod is new'd per setAllCaps, so free that one.
+    // After setText() above, which re-applies the new transformation and no
+    // longer references `old`.
+    if (old != nullptr && dynamic_cast<AllCapsTransformationMethod*>(old)) {
+        delete old;
     }
 }
 
@@ -2487,12 +4675,14 @@ int TextView::getCompoundPaddingEnd(){
     }
 }
 
-int TextView::getExtendedPaddingTop()const{
+int TextView::getExtendedPaddingTop() {
     if (mMaxMode != LINES) {
         return getCompoundPaddingTop();
     }
 
-    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout == nullptr){
+        assumeLayout();
+    }
 
     if (mLayout->getLineCount() <= mMaximum) {
         return getCompoundPaddingTop();
@@ -2516,12 +4706,14 @@ int TextView::getExtendedPaddingTop()const{
     }
 }
 
-int TextView::getExtendedPaddingBottom()const{
+int TextView::getExtendedPaddingBottom() {
     if(mMaxMode !=LINES){
         return getCompoundPaddingBottom();
     }
 
-    //if (mLayout == nullptr)assumeLayout();
+    if (mLayout == nullptr) {
+        assumeLayout();
+    }
     if (mLayout->getLineCount() <= mMaximum) {
         return getCompoundPaddingBottom();
     }
@@ -2564,7 +4756,6 @@ void TextView::setCompoundDrawableTintMode(int tintMode){
         mDrawables = new Drawables(getContext());
     }
     mDrawables->mTintMode = tintMode;
-    mDrawables->mHasTintMode = true;
 
     applyCompoundDrawableTint();
 }
@@ -2573,7 +4764,7 @@ int TextView::getCompoundDrawableTintMode()const{
     return mDrawables ? mDrawables->mTintMode : -1;
 }
 
-int TextView::getBoxHeight(Layout* l){
+int TextView::getBoxHeight(Layout* l) {
     Insets opticalInsets = isLayoutModeOptical((View*)mParent) ? getOpticalInsets() : Insets::NONE;
     const int padding = (l ==mHintLayout)
 	    ?getCompoundPaddingTop() + getCompoundPaddingBottom()
@@ -2583,13 +4774,16 @@ int TextView::getBoxHeight(Layout* l){
     return measuedHeight - padding +opticalInsets.top + opticalInsets.bottom;
 }
 
-int TextView::getVerticalOffset(bool forceNormal){
+int TextView::getVerticalOffset(bool forceNormal) {
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     Layout* l = mLayout;
+    if (!forceNormal && mText->length() == 0 && mHintLayout != nullptr) {
+        l = mHintLayout;
+    }
     if (gravity != Gravity::TOP) {
         const int boxht = getBoxHeight(l);
-        const int textht = mLayout->getHeight();//LineHeight(true);
+        const int textht = l->getHeight();
         if (textht < boxht) {
             if (gravity == Gravity::BOTTOM) {
                 voffset = boxht - textht;
@@ -2605,7 +4799,9 @@ int TextView::getBottomVerticalOffset(bool forceNormal){
     int voffset = 0;
     const int gravity = mGravity & Gravity::VERTICAL_GRAVITY_MASK;
     Layout* l = mLayout;
-
+    if (!forceNormal && mText->length() == 0 && mHintLayout != nullptr) {
+        l = mHintLayout;
+    }
     if (gravity != Gravity::BOTTOM) {
         int boxht = getBoxHeight(l);
         int textht = l->getHeight();
@@ -2619,6 +4815,113 @@ int TextView::getBottomVerticalOffset(bool forceNormal){
         }
     }
     return voffset;
+}
+
+void TextView::invalidateCursorPath() {
+    if (mHighlightPathBogus) {
+        invalidateCursor();
+    } else {
+        const int horizontalPadding = getCompoundPaddingLeft();
+        const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
+        if (mEditor->mDrawableForCursor == nullptr) {
+            RectF TEMP_RECTF;
+            /*
+             * The reason for this concern about the thickness of the
+             * cursor and doing the floor/ceil on the coordinates is that
+             * some EditTexts (notably textfields in the Browser) have
+             * anti-aliased text where not all the characters are
+             * necessarily at integer-multiple locations.  This should
+             * make sure the entire cursor gets invalidated instead of
+             * sometimes missing half a pixel.
+             */
+            float thick = (float) std::ceil(mTextPaint.getStrokeWidth());
+            if (thick < 1.0f) {
+                thick = 1.0f;
+            }
+
+            thick /= 2.0f;
+
+            // mHighlightPath is guaranteed to be non null at that point.
+            mHighlightPath->compute_bounds(TEMP_RECTF, false);
+
+            invalidate((int) std::floor(horizontalPadding + TEMP_RECTF.left - thick),
+                    (int) std::floor(verticalPadding + TEMP_RECTF.top - thick),
+                    (int) std::ceil(TEMP_RECTF.width + 2.f*thick),
+                    (int) std::ceil(TEMP_RECTF.height + 2.f*thick));
+        } else {
+            Rect bounds = mEditor->mDrawableForCursor->getBounds();
+            invalidate(bounds.left + horizontalPadding, bounds.top + verticalPadding,
+                    bounds.width, bounds.height);
+        }
+    }
+}
+
+void TextView::invalidateCursor() {
+    int where = getSelectionEnd();
+
+    invalidateCursor(where, where, where);
+}
+
+void TextView::invalidateCursor(int a, int b, int c) {
+    if (a >= 0 || b >= 0 || c >= 0) {
+        const int start = std::min(std::min(a, b), c);
+        const int end = std::max(std::max(a, b), c);
+        invalidateRegion(start, end, true /* Also invalidates blinking cursor */);
+    }
+}
+
+void TextView::invalidateRegion(int start, int end, bool invalidateCursor){
+    if (mLayout == nullptr) {
+        invalidate();
+    } else {
+        int lineStart = mLayout->getLineForOffset(start);
+        int top = mLayout->getLineTop(lineStart);
+
+        // This is ridiculous, but the descent from the line above
+        // can hang down into the line we really want to redraw,
+        // so we have to invalidate part of the line above to make
+        // sure everything that needs to be redrawn really is.
+        // (But not the whole line above, because that would cause
+        // the same problem with the descenders on the line above it!)
+        if (lineStart > 0) {
+            top -= mLayout->getLineDescent(lineStart - 1);
+        }
+
+        int lineEnd;
+
+        if (start == end) {
+            lineEnd = lineStart;
+        } else {
+            lineEnd = mLayout->getLineForOffset(end);
+        }
+
+        int bottom = mLayout->getLineBottom(lineEnd);
+
+        // mEditor can be null in case selection is set programmatically.
+        if (invalidateCursor && mEditor != nullptr && mEditor->mDrawableForCursor != nullptr) {
+            Rect bounds = mEditor->mDrawableForCursor->getBounds();
+            top = std::min(top, bounds.top);
+            bottom = std::max(bottom, bounds.bottom());
+        }
+
+        const int compoundPaddingLeft = getCompoundPaddingLeft();
+        const int verticalPadding = getExtendedPaddingTop() + getVerticalOffset(true);
+
+        int left, right;
+        if (lineStart == lineEnd && !invalidateCursor) {
+            left = (int) mLayout->getPrimaryHorizontal(start);
+            right = (int) (mLayout->getPrimaryHorizontal(end) + 1.0);
+            left += compoundPaddingLeft;
+            right += compoundPaddingLeft;
+        } else {
+            // Rectangle bounding box when the region spans several lines
+            left = compoundPaddingLeft;
+            right = getWidth() - getCompoundPaddingRight();
+        }
+
+        invalidate(mScrollX + left, verticalPadding + top,
+                right-left, bottom-top);
+    }
 }
 
 void TextView::setShadowLayer(float radius, float dx, float dy, int color){
@@ -2645,31 +4948,423 @@ int TextView::getShadowColor()const{
     return mShadowColor;
 }
 
-bool TextView::canSelectAllText()const{
-    mLayout->setSelection(-1,-1);
+const TextPaint& TextView::getPaint() const{
+        return mTextPaint;
+}
+
+// Ported from Android TextView's package-private statics (TextView.java:7747/7867).
+// Pure InputType bitmask logic — no dependencies.
+bool TextView::isPasswordInputType(int inputType) {
+    const int v = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    return v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_PASSWORD)
+        || v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_WEB_PASSWORD)
+        || v == (EditorInfo::TYPE_CLASS_NUMBER | EditorInfo::TYPE_NUMBER_VARIATION_PASSWORD);
+}
+
+bool TextView::isVisiblePasswordInputType(int inputType) {
+    const int v = inputType & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_MASK_VARIATION);
+    return v == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+}
+
+bool TextView::isMultilineInputType(int type) {
+    return (type & (EditorInfo::TYPE_MASK_CLASS | EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE))
+        == (EditorInfo::TYPE_CLASS_TEXT | EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE);
+}
+
+// Ported from Android TextView.setInputType (TextView.java:7793). Feasible pieces
+// are wired in (password transformation + monospace typeface, single-line,
+// suggestion-span strip); the two pieces needing the not-yet-ported
+// inputmethod/KeyListener stack are left as comments for later.
+void TextView::setInputType(int inputType) {
+    createEditorIfNeeded();
+    const bool wasPassword = isPasswordInputType(getInputType());
+    const bool wasVisiblePassword = isVisiblePasswordInputType(getInputType());
+
+    // --- Android's private setInputType(type, false): build a per-class KeyListener
+    //     and store the type. TEXT→TextKeyListener, NUMBER→DigitsKeyListener;
+    //     DATETIME/PHONE fall back to TextKeyListener until Date/Time/Dialer are
+    //     ported (Phase 2). The cached getInstance singletons are stored without
+    //     ownership (never deleted), matching Android.
+    const int cls = inputType & EditorInfo::TYPE_MASK_CLASS;
+    KeyListener* input = nullptr;
+    if (cls == EditorInfo::TYPE_CLASS_TEXT) {
+        const bool autoText = (inputType & EditorInfo::TYPE_TEXT_FLAG_AUTO_CORRECT) != 0;
+        TextKeyListener::Capitalize cap = TextKeyListener::Capitalize::NONE;
+        if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_CHARACTERS) != 0) {
+            cap = TextKeyListener::Capitalize::CHARACTERS;
+        } else if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_WORDS) != 0) {
+            cap = TextKeyListener::Capitalize::WORDS;
+        } else if ((inputType & EditorInfo::TYPE_TEXT_FLAG_CAP_SENTENCES) != 0) {
+            cap = TextKeyListener::Capitalize::SENTENCES;
+        }
+        input = TextKeyListener::getInstance(autoText, cap);
+    } else if (cls == EditorInfo::TYPE_CLASS_NUMBER) {
+        input = DigitsKeyListener::getInstance(
+                (inputType & EditorInfo::TYPE_NUMBER_FLAG_SIGNED) != 0,
+                (inputType & EditorInfo::TYPE_NUMBER_FLAG_DECIMAL) != 0);
+    } else if (cls == EditorInfo::TYPE_CLASS_DATETIME) {
+        //final Locale locale = getCustomLocaleForKeyListenerOrNull();
+        switch (inputType & EditorInfo::TYPE_MASK_VARIATION) {
+        case EditorInfo::TYPE_DATETIME_VARIATION_DATE:
+            input = DateKeyListener::getInstance(/*locale*/);
+            break;
+        case EditorInfo::TYPE_DATETIME_VARIATION_TIME:
+            input = TimeKeyListener::getInstance(/*locale*/);
+            break;
+        default:
+            input = DateTimeKeyListener::getInstance(/*locale*/);
+            break;
+        }
+        if (1/*mUseInternationalizedInput*/) {
+            inputType = input->getInputType(); // Override type, if necessary for i18n.
+        }
+    } else if (cls == EditorInfo::TYPE_CLASS_PHONE) {
+        input = DialerKeyListener::getInstance();
+    } else {
+        // TYPE_CLASS_DATETIME / TYPE_CLASS_PHONE / TYPE_NULL: DateKeyListener,
+        // TimeKeyListener and DialerKeyListener are Phase 2; fall back to the
+        // plain TextKeyListener for now.
+        input = TextKeyListener::getInstance();
+    }
+    setKeyListener(input);
+    mEditor->mInputType = inputType;   // setRawInputType
+
+    const bool isPassword = isPasswordInputType(inputType);
+    const bool isVisiblePassword = isVisiblePasswordInputType(inputType);
+    if (isPassword) {
+        setTransformationMethod(PasswordTransformationMethod::getInstance());
+        setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
+    } else if (isVisiblePassword) {
+        setTypefaceFromAttrs(nullptr, std::string(), MONOSPACE, Typeface::NORMAL, -1);
+    } else if (wasPassword || wasVisiblePassword) {
+        // not in password mode any more — restore the default typeface + drop masking
+        setTypefaceFromAttrs(nullptr, std::string(), DEFAULT_TYPEFACE, Typeface::NORMAL, -1);
+        setTransformationMethod(nullptr);
+    }
+
+    const bool singleLine = !isMultilineInputType(inputType);
+    if (mSingleLine != singleLine) {
+        // Android: applySingleLine(singleLine, !isPassword, true, true). CDROID's
+        // overload is 3-arg (no maxLinesSpecified).
+        applySingleLine(singleLine, !isPassword, true,false);
+    }
+
+    if (!isSuggestionsEnabled()) {
+        // removeSuggestionSpans returns mText unchanged when it is already a
+        // Spannable (mutated in place) — the only case reachable here, since
+        // setKeyListener() above already wrapped mText into a SpannableStringBuilder.
+        // Its return ownership is otherwise ambiguous: for an immutable Spanned
+        // (SpannedString) it returns a NEW SpannableStringBuilder copy (owned). If
+        // that ever happens, re-adopt the copy through setText so the old mText is
+        // freed at a layout-safe point — a direct delete here would dangle mLayout,
+        // which still references the old text until the next layout pass.
+        // SpannableStringBuilder IS-A Editable, so setText's wrap branch won't copy.
+        CharSequence* cleaned = removeSuggestionSpans(mText);
+        if (cleaned != mText) {
+            setText(cleaned, mBufferType);
+        } else {
+            setTextInternal(cleaned);
+        }
+    }
+
+    // If this editor currently owns the IME, refresh the keyboard so its layout
+    // follows the new input type. (Android: imm.restartInput(this); CDROID pushes
+    // the type directly since there is no InputConnection for the IME to re-query.)
+    InputMethodManager* imm = getInputMethodManager();
+    if (imm != nullptr && imm->isActive(this)) {
+        imm->setInputType(inputType);
+    }
+}
+
+int TextView::getInputType()const{
+    return mEditor ? mEditor->mInputType : EditorInfo::TYPE_NULL;
+}
+
+int TextView::getImeOptions() const{
+    return (mEditor != nullptr) && (mEditor->mInputContentType != nullptr)
+            ? mEditor->mInputContentType->imeOptions : EditorInfo::IME_NULL;
+}
+
+void TextView::setImeOptions(int imeOptions) {
+    createEditorIfNeeded();
+    mEditor->createInputContentTypeIfNeeded();
+    mEditor->mInputContentType->imeOptions = imeOptions;
+}
+
+// Android TextView.isAnyPasswordInputType (TextView.java:7862).
+bool TextView::isAnyPasswordInputType() const{
+    const int t = getInputType();
+    return isPasswordInputType(t) || isVisiblePasswordInputType(t);
+}
+
+bool TextView::isSuggestionsEnabled()const{
+    if(mEditor ==nullptr)return false;
+    if ((mEditor->mInputType & InputType::TYPE_MASK_CLASS) != InputType::TYPE_CLASS_TEXT) {
+        return false;
+    }
+    if ((mEditor->mInputType & InputType::TYPE_TEXT_FLAG_NO_SUGGESTIONS) > 0) return false;
+    const int variation = mEditor->mInputType & EditorInfo::TYPE_MASK_VARIATION;
+    return (variation == EditorInfo::TYPE_TEXT_VARIATION_NORMAL
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_EMAIL_SUBJECT
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_LONG_MESSAGE
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_SHORT_MESSAGE
+          || variation == EditorInfo::TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);;
+}
+
+void TextView::stopTextActionMode() {
+    if (mEditor != nullptr) {
+        mEditor->stopTextActionMode();
+    }
+}
+
+bool TextView::canCut()const{
+    // 对齐 Android TextView.canCut: 复制条件 + 文本可编辑 (可剪切)。
+    return canCopy() && (dynamic_cast<Editable*>(mText) != nullptr);
+}
+
+bool TextView::canCopy()const{
+    if (hasPasswordTransformationMethod()) {
+        return false;
+    }
+
+    if (mText->length() > 0 && hasSelection() && mEditor != nullptr) {
+        return true;
+    }
+
     return false;
+}
+
+bool TextView::canReplace()const{
+    if (hasPasswordTransformationMethod()) {
+        return false;
+    }
+
+    return (mText->length() > 0) && dynamic_cast<Editable*>(mText) && (mEditor != nullptr)
+            && isSuggestionsEnabled() /*&& mEditor->shouldOfferToShowSuggestions()*/;
+}
+
+bool TextView::canPaste()const{
+    return (dynamic_cast<Editable*>(mText)
+         && (mEditor != nullptr) && (mEditor->mKeyListener != nullptr)
+         && (getSelectionStart() >= 0) && (getSelectionEnd() >= 0)
+         /*&& getClipboardManagerForUser().hasPrimaryClip()*/);
+}
+
+bool TextView::canSelectText() const{
+    return mText->length() != 0 && (mEditor != nullptr) && mEditor->hasSelectionController();
+}
+
+bool TextView::canSelectAllText()const{
+    return canSelectText() && !hasPasswordTransformationMethod()
+                && !(getSelectionStart() == 0 && getSelectionEnd() == mText->length());
 }
 
 bool TextView::selectAllText(){
-    const int length = (int)mLayout->getText().length();
-    mLayout->setSelection(0,length);
+    if (mEditor != nullptr) {
+        // Hide the toolbar before changing the selection to avoid flickering.
+        //hideFloatingToolbar(FLOATING_TOOLBAR_SELECT_ALL_REFRESH_DELAY);
+    }
+    const int length = mText->length();
+    if (mSpannable) Selection::setSelection(mSpannable, 0, length);
+    return length > 0;
+}
+
+// 对齐 AOSP TextView.onTextContextMenuItem (TextView.java:15200)。clipboard 本轮留空:
+// copy/cut/paste 为桩 (LOG + 关 ActionMode), selectAll 调 selectAllText 实操。
+bool TextView::onTextContextMenuItem(int id) {
+    switch (id) {
+    case ID_SELECT_ALL:
+        selectAllText();
+        if (mEditor) mEditor->invalidateTextActionMode(); // 刷新位置 (canSelectAllText 变 false)
+        return true;
+    case ID_CUT:
+    case ID_COPY:
+    case ID_PASTE:
+        // TODO(clipboard): ClipboardManager 未移植, copy/cut/paste 暂为桩。
+        LOGD("TextView::onTextContextMenuItem: clipboard not ported (id=0x%x)", id);
+        if (mEditor) mEditor->stopTextActionMode(); // 对齐 Android: copy/paste 后关 ActionMode
+        return true;
+    default:
+        return false;
+    }
+}
+
+// 对齐 AOSP TextView.performLongClick: super(View.performLongClick) + 转发 Editor。
+// 文本选择的长按逻辑(选词/插入 ActionMode)归 Editor, 不放 TextView (AGENTS.md 分层)。
+bool TextView::performLongClick() {
+    bool handled = View::performLongClick();
+    if (mEditor != nullptr) {
+        mEditor->performLongClick(handled);
+    }
+    return handled;
+}
+
+// Android public API — delegate to Editor when editable. (Faithful A34 ports.)
+int TextView::getOffsetForPosition(float x, float y) {
+    if (getLayout() == nullptr) return -1;
+    const int line = getLineAtCoordinate(y);
+    const int offset = getOffsetAtCoordinate(line, x);
+    return offset;
+}
+
+float TextView::convertToLocalHorizontalCoordinate(float x) {
+    x -= getTotalPaddingLeft();
+    // Clamp the position to inside of the view.
+    x = std::max(0.0f, x);
+    x = std::min((float)getWidth() - getTotalPaddingRight() - 1, x);
+    x += getScrollX();
+    return x;
+}
+
+int TextView::getLineAtCoordinate(float y) {
+    y -= getTotalPaddingTop();
+    // Clamp the position to inside of the view.
+    y = std::max(0.0f, y);
+    y = std::min((float)getHeight() - getTotalPaddingBottom() - 1, y);
+    y += getScrollY();
+    return getLayout()->getLineForVertical((int) y);
+}
+
+int TextView::getLineAtCoordinateUnclamped(float y) {
+    y -= getTotalPaddingTop();
+    y += getScrollY();
+    return getLayout()->getLineForVertical((int) y);
+}
+
+int TextView::getOffsetAtCoordinate(int line, float x) {
+    x = convertToLocalHorizontalCoordinate(x);
+    const int offset = getLayout()->getOffsetForHorizontal(line, x);
+    return transformedToOriginal(offset, OffsetMapping::MAP_STRATEGY_CURSOR);
+}
+
+void TextView::setCursorVisible(bool visible) {
+    mCursorVisibleFromAttr = visible;
+    updateCursorVisibleInternal();
+}
+
+void TextView::updateCursorVisibleInternal()  {
+    bool visible = mCursorVisibleFromAttr && !mImeIsConsumingInput;
+    if (visible && mEditor == nullptr) return; // visible is the default value with no edit data
+    createEditorIfNeeded();
+    if (mEditor->mCursorVisible != visible) {
+        mEditor->mCursorVisible = visible;
+        invalidate();
+
+        mEditor->makeBlink();
+
+        // InsertionPointCursorController depends on mCursorVisible
+        mEditor->prepareCursorControllers();
+    }
+}
+
+bool TextView::isCursorVisible()const {
+    return mEditor ? mEditor->isCursorVisible() : false;
+}
+
+bool TextView::isCursorVisibleFromAttr() const{
+    return mCursorVisibleFromAttr;
+}
+
+void TextView::setShowSoftInputOnFocus(bool show) {
+    createEditorIfNeeded();
+    mEditor->mShowSoftInputOnFocus = show;
+}
+
+bool TextView::getShowSoftInputOnFocus()const {
+    return mEditor==nullptr||mEditor->mShowSoftInputOnFocus;
+}
+
+void TextView::setSelectAllOnFocus(bool selectAllOnFocus) {
+    createEditorIfNeeded();
+    mEditor->mSelectAllOnFocus = selectAllOnFocus;
+    if(selectAllOnFocus && (dynamic_cast<Spannable*>(mText)==nullptr)){
+        setText(mText,BufferType::SPANNABLE);
+    }
+}
+
+void TextView::removeParcelableSpans(Spannable* spannable, int start, int end){
+    auto spans = spannable->getSpans(start, end, make_span_filter<ParcelableSpan>());
+    int i = spans.size();
+    while (i > 0) {
+        i--;
+        spannable->removeSpan(spans[i]);
+    }
+}
+
+void TextView::beginBatchEdit() {
+    if (mEditor) mEditor->beginBatchEdit();
+}
+
+void TextView::endBatchEdit() {
+    if (mEditor) mEditor->endBatchEdit();
+}
+
+void TextView::onBeginBatchEdit(){
+    // intentionally empty
+}
+
+void TextView::onEndBatchEdit(){
+    // intentionally empty
+}
+
+bool TextView::onPrivateIMECommand(const std::string,const Bundle*){
     return false;
 }
 
-int TextView::getTotalPaddingTop(){
+int TextView::getTotalPaddingLeft() {
+    return getCompoundPaddingLeft();
+}
+
+/**
+ * Returns the total right padding of the view, including the right
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingRight() {
+    return getCompoundPaddingRight();
+}
+
+/**
+ * Returns the total start padding of the view, including the start
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingStart() {
+    return getCompoundPaddingStart();
+}
+
+/**
+ * Returns the total end padding of the view, including the end
+ * Drawable if any.
+ */
+int TextView::getTotalPaddingEnd() {
+    return getCompoundPaddingEnd();
+}
+
+int TextView::getTotalPaddingTop() {
     return getExtendedPaddingTop() + getVerticalOffset(true);
 }
 
-int TextView::getTotalPaddingBottom(){
+int TextView::getTotalPaddingBottom() {
     return getExtendedPaddingBottom() + getBottomVerticalOffset(true);
 }
 
 int TextView::getSelectionStart()const{
-    return mLayout ? mLayout->getSelectionStart():-1;
+    return Selection::getSelectionStart(mText);
 }
 
 int TextView::getSelectionEnd()const{
-    return  mLayout ? mLayout->getSelectionEnd():-1;
+    return Selection::getSelectionEnd(mText);
+}
+
+int TextView::getSelectionStartTransformed() const{
+    const int start = getSelectionStart();
+    if (start < 0) return start;
+    return originalToTransformed(start, OffsetMapping::MAP_STRATEGY_CURSOR);
+}
+
+int TextView::getSelectionEndTransformed() const{
+    const int end = getSelectionEnd();
+    if (end < 0) return end;
+    return originalToTransformed(end, OffsetMapping::MAP_STRATEGY_CURSOR);
 }
 
 bool TextView::hasSelection()const{
@@ -2684,28 +5379,243 @@ std::string TextView::getSelectedText()const{
      }
      const int start = getSelectionStart();
      const int end = getSelectionEnd();
-     const std::wstring &text =mLayout->getText();
-     std::wstring ret = start<end?text.substr(start,end):text.substr(end,start);
-     return TextUtils::unicode2utf8(ret);
+     const int lo = std::min(start, end);
+     const int hi = std::max(start, end);
+     // Offsets are in char16 units; use subSequence (not UTF-8 substr) to stay correct.
+     CharSequence* sub = mText->subSequence(lo, hi);
+     std::string result = sub ? sub->toUTF8() : std::string();
+     if (sub && sub != mText) delete sub;
+     return result;
 }
 
-void TextView::setSingleLine(bool single){
-    mSingleLine = single;
-    mLayout->setMultiline(!single);
-    mLayout->relayout();
-    applySingleLine(single,true,true);
+void TextView::setAllCaps(bool allCaps) {
+    if (allCaps) {
+        setTransformationMethod(new AllCapsTransformationMethod(getContext()));
+    } else {
+        setTransformationMethod(nullptr);
+    }
+}
+
+bool TextView::isAllCaps() const{
+    TransformationMethod* method = getTransformationMethod();
+    return (method != nullptr) && dynamic_cast<AllCapsTransformationMethod*>(method);
+}
+
+void TextView::setSingleLine(bool singleLine){
+    setInputTypeSingleLine(singleLine);
+    applySingleLine(singleLine,true,true,true);
+}
+
+void TextView::setInputTypeSingleLine(bool singleLine) {
+    if ((mEditor != nullptr)
+            && ((mEditor->mInputType & EditorInfo::TYPE_MASK_CLASS)
+                    == EditorInfo::TYPE_CLASS_TEXT)) {
+        if (singleLine) {
+            mEditor->mInputType &= ~EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE;
+        } else {
+            mEditor->mInputType |= EditorInfo::TYPE_TEXT_FLAG_MULTI_LINE;
+        }
+    }
 }
 
 void TextView::setBreakStrategy(int breakStrategy){
-    mLayout->setBreakStrategy(breakStrategy);
+    mBreakStrategy = breakStrategy;
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
 }
 
 int TextView::getBreakStrategy()const{
-    return mLayout->getBreakStrategy();
+    return mBreakStrategy;
+}
+
+void TextView::setHyphenationFrequency(int hyphenationFrequency) {
+    mHyphenationFrequency = hyphenationFrequency;
+    if (mLayout != nullptr) {
+        nullLayouts();
+        requestLayout();
+        invalidate();
+    }
+}
+
+int TextView::getHyphenationFrequency() const{
+    return mHyphenationFrequency;
+}
+
+void TextView::setAutoLinkMask(int mask) {
+    mAutoLinkMask = mask;
+}
+
+int TextView::getAutoLinkMask() const {
+    return mAutoLinkMask;
+}
+
+void TextView::setLinksClickable(bool whether) {
+    mLinksClickable = whether;
+}
+
+bool TextView::getLinksClickable() const {
+    return mLinksClickable;
+}
+
+// Ported from Android TextView.setKeyListener. Stores the listener (no ownership:
+// cached getInstance singletons are never deleted, matching Android; a caller-
+// supplied listener is held by reference, also like Android). The focusable
+// fix-up (fixFocusableAndClickableSettings) and registering the listener as a
+// SpanWatcher are deferred — EditText is already focusable, and the SpanWatcher
+// behavior only matters for the (deferred) dead-key ACTIVE span.
+void TextView::setKeyListener(KeyListener* input) {
+    mListenerChanged= true;
+    setKeyListenerOnly(input);
+    fixFocusableAndClickableSettings();
+    if (input != nullptr) {
+        createEditorIfNeeded();
+        setInputTypeFromEditor();
+    } else {
+        if (mEditor != nullptr) mEditor->mInputType = EditorInfo::TYPE_NULL;
+    }
+
+    InputMethodManager* imm = getInputMethodManager();
+    if (imm != nullptr) imm->restartInput(this);
+}
+
+KeyListener* TextView::getKeyListener() const {
+    return mEditor==nullptr?nullptr:mEditor->mKeyListener;
+}
+
+void TextView::setInputTypeFromEditor() {
+    try {
+        mEditor->mInputType = mEditor->mKeyListener->getInputType();
+    } catch (std::exception& e) {
+        mEditor->mInputType = EditorInfo::TYPE_CLASS_TEXT;
+    }
+    // Change inputType, without affecting transformation.
+    // No need to applySingleLine since mSingleLine is unchanged.
+    setInputTypeSingleLine(mSingleLine);
+}
+
+void TextView::setKeyListenerOnly(KeyListener* input) {
+    if (mEditor == nullptr && input == nullptr) return; // null is the default value
+
+    createEditorIfNeeded();
+    if (mEditor->mKeyListener != input) {
+        mEditor->mKeyListener = input;
+        if (input != nullptr && (dynamic_cast<Editable*>(mText)==nullptr)) {
+            setText(mText);
+        }
+        setFilters(dynamic_cast<Editable*>(mText), mFilters);
+    }
+}
+
+void TextView::setFilters(const std::vector<InputFilter*>& filters) {
+    // Free the LengthFilter entries being replaced. The Editable only borrows
+    // mFilters (SpannableStringBuilder::m_filters is never deleted); TextView
+    // owns the LengthFilter instances it new'd (ctor / prior setFilters), so
+    // drop them before overwriting. Singleton filters and the
+    // mSingleLineLengthFilter member alias are skipped (the member is freed in
+    // ~TextView / applySingleLine's else branch).
+    for (InputFilter* f : mFilters) {
+        if (f == mSingleLineLengthFilter) continue;
+        if (dynamic_cast<InputFilter::LengthFilter*>(f)) delete f;
+    }
+    mFilters = filters;
+
+    Editable* editable = dynamic_cast<Editable*>(mText);
+    if (editable != nullptr) {
+        setFilters(editable, mFilters);
+    }
+}
+
+// Sets the filters on the Editable, prepending the key listener when it is itself an
+// InputFilter (Android TextView.setFilters(Editable, InputFilter[])). mEditor.mUndoInputFilter
+// is not ported yet → DEFERRED. The Editable borrows these pointers (never deletes them);
+// the key listener is a shared getInstance singleton, and mFilters is caller/this-owned.
+void TextView::setFilters(Editable* e, const std::vector<InputFilter*>& filters) {
+    if (mEditor != nullptr) {
+        InputFilter* keyFilter = dynamic_cast<InputFilter*>(mEditor->mKeyListener);
+        if (keyFilter != nullptr) {
+            std::vector<InputFilter*> combined = filters;
+            combined.push_back(keyFilter);
+            e->setFilters(combined.data(), (int)combined.size());
+            return;
+        }
+    }
+    e->setFilters(const_cast<InputFilter**>(filters.data()), (int)filters.size());
+}
+
+std::vector<InputFilter*> TextView::getFilters() {
+    return mFilters;
+}
+
+// Android TextView.setSpannableFactory / setEditableFactory: store a custom buffer
+// factory. The defaults (initView) are new SpannableString / new SpannableStringBuilder
+// (copy the source). A custom factory must likewise return a freshly-owned object;
+// setText adopts it and frees the source (copy-and-orphan handling in setText).
+void TextView::setSpannableFactory(const Spannable::Factory& factory) {
+    mSpannableFactory = factory;
+    setText(mText);
+}
+
+void TextView::setEditableFactory(const Editable::Factory& factory) {
+    mEditableFactory = factory;
+    setText(mText);
+}
+
+void TextView::setLineBreakStyle(int lineBreakStyle) {
+    if (mLineBreakStyle != lineBreakStyle) {
+        mLineBreakStyle = lineBreakStyle;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getLineBreakStyle() const {
+    return mLineBreakStyle;
+}
+
+void TextView::setLineBreakWordStyle(int lineBreakWordStyle) {
+    if (mLineBreakWordStyle != lineBreakWordStyle) {
+        mLineBreakWordStyle = lineBreakWordStyle;
+        if (mLayout != nullptr) {
+            nullLayouts();
+            requestLayout();
+            invalidate();
+        }
+    }
+}
+
+int TextView::getLineBreakWordStyle() const {
+    return mLineBreakWordStyle;
 }
 
 bool TextView::isSingleLine()const{
     return mSingleLine;
+}
+
+CharSequence* TextView::removeSuggestionSpans(CharSequence* text) {
+    Spannable* spannable = dynamic_cast<Spannable*>(text);
+    if (spannable == nullptr) {
+        Spanned* spanned = dynamic_cast<Spanned*>(text);
+        if (spanned == nullptr) return text;
+        spannable = new SpannableStringBuilder(text);
+        text = spannable;
+    }
+
+    auto spans = spannable->getSpans(0, text->length(), make_span_filter<SuggestionSpan>());
+    const int length = spans.size();
+    for (int i = 0; i < length; i++) {
+        spannable->removeSpan(spans[i]);
+    }
+    return text;
+}
+
+bool TextView::hasPasswordTransformationMethod()const{
+    return mTransformation;
 }
 
 float TextView::getLeftFadingEdgeStrength(){
@@ -2745,7 +5655,7 @@ float TextView::getHorizontalFadingEdgeStrength(float position1, float position2
 }
 
 bool TextView::isMarqueeFadeEnabled()const{
-    return (mEllipsize == Layout::ELLIPSIS_MARQUEE) && (mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS);
+    return (mEllipsize == TextUtils::TruncateAt::MARQUEE) && (mMarqueeFadeMode != MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS);
 }
 
 bool TextView::canMarquee()const{
@@ -2756,7 +5666,7 @@ bool TextView::canMarquee()const{
 }
 
 void TextView::startMarquee(){
-    //if (getKeyListener() != nullptr) return;
+    if (getKeyListener() != nullptr) return;
     if (compressText(getWidth() - getCompoundPaddingLeft() - getCompoundPaddingRight())) {
         return;
     }
@@ -2772,7 +5682,7 @@ void TextView::startMarquee(){
             invalidate();
         }
 
-        if (mMarquee == nullptr) mMarquee = new Marquee(this,mLayout);
+        if (mMarquee == nullptr) mMarquee = new Marquee(this);
         mMarquee->start(mMarqueeRepeatLimit);
     }
 }
@@ -2794,7 +5704,7 @@ void TextView::stopMarquee(){
 }
 
 void TextView::startStopMarquee(bool start){
-    if (mEllipsize == Layout::ELLIPSIS_MARQUEE) {
+    if (mEllipsize == TextUtils::TruncateAt::MARQUEE) {
         if (start) {
             startMarquee();
         } else {
@@ -2803,7 +5713,7 @@ void TextView::startStopMarquee(bool start){
     }
 }
 
-void TextView::onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter){
+void TextView::onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter){
 }
 
 void TextView::onSelectionChanged(int selStart, int selEnd){
@@ -2816,11 +5726,177 @@ bool TextView::setFrame(int l, int t, int w, int h) {
 }
 
 void TextView::restartMarqueeIfNeeded(){
-    if (mRestartMarquee && mEllipsize == Layout::ELLIPSIS_MARQUEE) {
-        mLayout->relayout();
+    if (mRestartMarquee && mEllipsize == TextUtils::TruncateAt::MARQUEE) {
         mRestartMarquee = false;
         startMarquee();
     }
+}
+#if 0
+void TextView::maybeUpdateHighlightPaths() {
+    if (!mHighlightPathsBogus) {
+        return;
+    }
+
+    if (mHighlightPaths != nullptr) {
+        mPathRecyclePool.addAll(mHighlightPaths);
+        mHighlightPaths.clear();
+        mHighlightPaints.clear();
+    } else {
+        mHighlightPaths = new ArrayList<>();
+        mHighlightPaints = new ArrayList<>();
+    }
+
+    if (mHighlights != null) {
+        for (int i = 0; i < mHighlights.getSize(); ++i) {
+            final int[] ranges = mHighlights->getRanges(i);
+            final Paint paint = mHighlights->getPaint(i);
+            final Path path;
+            if (mPathRecyclePool.isEmpty()) {
+                path = new Path();
+            } else {
+                path = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+                mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+                path.reset();
+            }
+
+            boolean atLeastOnePathAdded = false;
+            for (int j = 0; j < ranges.length / 2; ++j) {
+                final int start = ranges[2 * j];
+                final int end = ranges[2 * j + 1];
+                if (start < end) {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            path.addRect(left, top, right, bottom, Path.Direction.CW)
+                    );
+                    atLeastOnePathAdded = true;
+                }
+            }
+            if (atLeastOnePathAdded) {
+                mHighlightPaths.add(path);
+                mHighlightPaints.add(paint);
+            }
+        }
+    }
+
+    addSearchHighlightPaths();
+
+    if (hasGesturePreviewHighlight()) {
+        final Path path;
+        if (mPathRecyclePool.isEmpty()) {
+            path = new Path();
+        } else {
+            path = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            path.reset();
+        }
+        mLayout.getSelectionPath(
+                mGesturePreviewHighlightStart, mGesturePreviewHighlightEnd, path);
+        mHighlightPaths.add(path);
+        mHighlightPaints.add(mGesturePreviewHighlightPaint);
+    }
+
+    mHighlightPathsBogus = false;
+}
+
+void TextView::addSearchHighlightPaths() {
+    if (mSearchResultHighlights != nullptr) {
+        final Path searchResultPath;
+        if (mPathRecyclePool.isEmpty()) {
+            searchResultPath = new Path();
+        } else {
+            searchResultPath = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            searchResultPath.reset();
+        }
+        final Path focusedSearchResultPath;
+        if (mFocusedSearchResultIndex == FOCUSED_SEARCH_RESULT_INDEX_NONE) {
+            focusedSearchResultPath = null;
+        } else if (mPathRecyclePool.isEmpty()) {
+            focusedSearchResultPath = new Path();
+        } else {
+            focusedSearchResultPath = mPathRecyclePool.get(mPathRecyclePool.size() - 1);
+            mPathRecyclePool.remove(mPathRecyclePool.size() - 1);
+            focusedSearchResultPath.reset();
+        }
+
+        boolean atLeastOnePathAdded = false;
+        for (int j = 0; j < mSearchResultHighlights.length / 2; ++j) {
+            final int start = mSearchResultHighlights[2 * j];
+            final int end = mSearchResultHighlights[2 * j + 1];
+            if (start < end) {
+                if (j == mFocusedSearchResultIndex) {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            focusedSearchResultPath.addRect(left, top, right, bottom,
+                                    Path.Direction.CW)
+                    );
+                } else {
+                    mLayout.getSelection(start, end, (left, top, right, bottom, layout) ->
+                            searchResultPath.addRect(left, top, right, bottom,
+                                    Path.Direction.CW)
+                    );
+                    atLeastOnePathAdded = true;
+                }
+            }
+        }
+        if (atLeastOnePathAdded) {
+            if (mSearchResultHighlightPaint == null) {
+                mSearchResultHighlightPaint = new Paint();
+            }
+            mSearchResultHighlightPaint.setColor(mSearchResultHighlightColor);
+            mSearchResultHighlightPaint.setStyle(Paint.Style.FILL);
+            mHighlightPaths.add(searchResultPath);
+            mHighlightPaints.add(mSearchResultHighlightPaint);
+        }
+        if (focusedSearchResultPath != null) {
+            if (mFocusedSearchResultHighlightPaint == null) {
+                mFocusedSearchResultHighlightPaint = new Paint();
+            }
+            mFocusedSearchResultHighlightPaint.setColor(mFocusedSearchResultHighlightColor);
+            mFocusedSearchResultHighlightPaint.setStyle(Paint.Style.FILL);
+            mHighlightPaths.add(focusedSearchResultPath);
+            mHighlightPaints.add(mFocusedSearchResultHighlightPaint);
+        }
+    }
+}
+#endif
+
+Cairo::RefPtr<cdroid::Path> TextView::getUpdatedHighlightPath() {
+    Cairo::RefPtr<Path> highlight;
+    Paint& highlightPaint = mHighlightPaint;
+
+    const int selStart = getSelectionStart();
+    const int selEnd = getSelectionEnd();
+    if (mMovement != nullptr && (isFocused() || isPressed()) && selStart >= 0) {
+        if (selStart == selEnd) {
+            if (mEditor != nullptr && mEditor->shouldRenderCursor()) {
+                if (mHighlightPathBogus) {
+                    if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                    mHighlightPath->reset();
+                    mLayout->getCursorPath(selStart, *mHighlightPath, mText);
+                    mEditor->updateCursorPosition();
+                    mHighlightPathBogus = false;
+                }
+
+                // XXX should pass to skin instead of drawing directly
+                highlightPaint.setColor(mCurTextColor);
+                highlightPaint.setStyle(Paint::Style::STROKE);
+                highlight = mHighlightPath;
+            }
+        } else {
+            if (mHighlightPathBogus) {
+                if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                mHighlightPath->reset();
+                mLayout->getSelectionPath(selStart, selEnd, *mHighlightPath);
+                mHighlightPathBogus = false;
+            }
+
+            // XXX should pass to skin instead of drawing directly
+            highlightPaint.setColor(mHighlightColor);
+            highlightPaint.setStyle(Paint::Style::FILL);
+
+            highlight = mHighlightPath;
+        }
+    }
+    return highlight;
 }
 
 void TextView::onDraw(Canvas& canvas) {
@@ -2837,13 +5913,6 @@ void TextView::onDraw(Canvas& canvas) {
     const int vspace = getHeight()- compoundPaddingBottom - compoundPaddingTop;
     const int hspace = getWidth() - compoundPaddingRight - compoundPaddingLeft;
     Drawables* dr = mDrawables;
-    mLayout->setWidth(hspace);
-    mLayout->setTextDirection(getTextDirection());
-    mHintLayout->setWidth(hspace);
-    mHintLayout->setTextDirection(getTextDirection());
-    mHintLayout->setAlignment(getLayoutAlignment());
-    mLayout->setAlignment(getLayoutAlignment());
-    mLayout->relayout();
     if (dr != nullptr) {
         /* Compound, not extended, because the icon is not clipped if the text height is smaller. */
 
@@ -2886,7 +5955,19 @@ void TextView::onDraw(Canvas& canvas) {
             canvas.restore();
         }
     }
-    // Text
+    int color = mCurTextColor;
+    if(mLayout==nullptr){
+        assumeLayout();
+    }
+    Layout*layout = mLayout;
+    if(mHint!=nullptr && mText->length()==0){
+        color = mCurHintTextColor;
+        layout= mHintLayout;
+    }
+    mTextPaint.setColor(color);
+    mHighlightPaint.setColor(mHighlightColor);
+    mHighlightPaint.setStyle(Paint::Style::FILL);
+
     canvas.save();
     const int extendedPaddingTop = getExtendedPaddingTop();
     const int extendedPaddingBottom = getExtendedPaddingBottom();
@@ -2920,13 +6001,7 @@ void TextView::onDraw(Canvas& canvas) {
         voffsetText = getVerticalOffset(false);
         voffsetCursor = getVerticalOffset(true);
     }
-    int color=mCurTextColor;
-    Layout*layout=mLayout;
-    if(getText().empty()&&mHint.length()){
-        color = mCurHintTextColor;
-        layout= mHintLayout;
-        mHintLayout->relayout();
-    }
+
 
     canvas.translate(compoundPaddingLeft , extendedPaddingTop + voffsetText);
 
@@ -2949,25 +6024,87 @@ void TextView::onDraw(Canvas& canvas) {
     }
 
     const int cursorOffsetVertical = voffsetCursor - voffsetText;
-    if(mUserSetTextScaleX)
-        canvas.scale(mTextScaleX,1.f);
+
+    // Selection highlight — mirrors Android TextView.onDraw: build the highlight
+    // path for the current selection (Layout.getSelectionPath) and let Layout.draw
+    // fill it behind the text. drawBackground fills the path using the canvas's
+    // current color, so set it to the highlight color when there is a selection.
+
     if( (std::abs(mShadowDx)>0.05f)||(std::abs(mShadowDy)>0.05f)){
         canvas.set_color(mShadowColor);
         canvas.translate(mShadowDx,mShadowDy);
         layout->draw(canvas);
         canvas.translate(-mShadowDx,-mShadowDy);
     }
-    canvas.set_color(color);
-    layout->draw(canvas);
-    mLayout->getCaretRect(mCaretRect);
-    mCaretRect.offset(compoundPaddingLeft+offset, extendedPaddingTop + voffsetText);
+
+    auto highlight=getUpdatedHighlightPath();
+    if(mEditor != nullptr){
+        mEditor->onDraw(canvas, layout, highlight.get(), mHighlightPaint, cursorOffsetVertical);
+    }else{
+        layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
+    }
 
     if (mMarquee && mMarquee->shouldDrawGhost()) {
         const float dx = mMarquee->getGhostOffset();
         canvas.translate(layout->getParagraphDirection(0) * dx, 0.0f);
-        layout->draw(canvas);//, highlight, mHighlightPaint, cursorOffsetVertical);
+        layout->draw(canvas, highlight.get(), &mHighlightPaint, cursorOffsetVertical);
     }
+
     canvas.restore();
+}
+
+void TextView::getFocusedRect(Rect& r) {
+    if (mLayout == nullptr) {
+        View::getFocusedRect(r);
+        return;
+    }
+
+    int selEnd = getSelectionEndTransformed();
+    if (selEnd < 0) {
+        View::getFocusedRect(r);
+        return;
+    }
+
+    int selStart = getSelectionStartTransformed();
+    if (selStart < 0 || selStart >= selEnd) {
+        int line = mLayout->getLineForOffset(selEnd);
+        r.top = mLayout->getLineTop(line);
+        r.height = mLayout->getLineBottom(line)-r.top;
+        r.left = (int) mLayout->getPrimaryHorizontal(selEnd) - 2;
+        r.width = 4;
+    } else {
+        int lineStart = mLayout->getLineForOffset(selStart);
+        int lineEnd = mLayout->getLineForOffset(selEnd);
+        r.top = mLayout->getLineTop(lineStart);
+        r.height = mLayout->getLineBottom(lineEnd)-r.top;
+        if (lineStart == lineEnd) {
+            r.left = (int) mLayout->getPrimaryHorizontal(selStart);
+            r.width = (int) mLayout->getPrimaryHorizontal(selEnd)-r.left;
+        } else {
+            // Selection extends across multiple lines -- make the focused
+            // rect cover the entire width.
+            if (mHighlightPathBogus) {
+                if (mHighlightPath == nullptr) mHighlightPath = std::make_shared<Path>();
+                mHighlightPath->reset();
+                mLayout->getSelectionPath(selStart, selEnd, *mHighlightPath);
+                mHighlightPathBogus = false;
+            }
+            RectF TEMP_RECTF;
+            mHighlightPath->compute_bounds(TEMP_RECTF, true);
+            r.left = (int) TEMP_RECTF.left - 1;
+            r.width = (int) TEMP_RECTF.width + 2;
+        }
+    }
+
+    // Adjust for padding and gravity.
+    int paddingLeft = getCompoundPaddingLeft();
+    int paddingTop = getExtendedPaddingTop();
+    if ((mGravity & Gravity::VERTICAL_GRAVITY_MASK) != Gravity::TOP) {
+        paddingTop += getVerticalOffset(false);
+    }
+    r.offset(paddingLeft, paddingTop);
+    int paddingBottom = getExtendedPaddingBottom();
+    r.height += paddingBottom;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2978,25 +6115,25 @@ std::string TextView::getAccessibilityClassName()const{
 void TextView::onInitializeAccessibilityEventInternal(AccessibilityEvent& event){
     View::onInitializeAccessibilityEventInternal(event);
 
-    const bool isPassword =false;//hasPasswordTransformationMethod();
+    const bool isPassword = hasPasswordTransformationMethod();
     event.setPassword(isPassword);
 
     if (event.getEventType() == AccessibilityEvent::TYPE_VIEW_TEXT_SELECTION_CHANGED) {
         std::string text = getText();
-        event.setFromIndex(0);//Selection.getSelectionStart(mText));
-        event.setToIndex(text.length());//Selection.getSelectionEnd(mText));
+        event.setFromIndex(Selection::getSelectionStart(mText));
+        event.setToIndex(Selection::getSelectionEnd(mText));
         event.setItemCount(text.length());
     }
 }
 
 void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info){
     View::onInitializeAccessibilityNodeInfoInternal(info);
-    const bool isPassword =false;// hasPasswordTransformationMethod();
+    const bool isPassword =  hasPasswordTransformationMethod();
+#if 0
     info.setPassword(isPassword);
     info.setText(getText());//getTextForAccessibility());
     info.setHintText(mHint);
     info.setShowingHintText(isShowingHint());
-#if 0
     if (mBufferType == BufferType.EDITABLE) {
         info.setEditable(true);
         if (isEnabled()) {
@@ -3004,16 +6141,16 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         }
     }
 
-    if (mEditor != null) {
-        info.setInputType(mEditor.mInputType);
+    if (mEditor != nullptr) {
+        info.setInputType(mEditor->mInputType);
 
-        if (mEditor.mError != null) {
+        if (mEditor->mError != nullptr) {
             info.setContentInvalid(true);
-            info.setError(mEditor.mError);
+            info.setError(mEditor->mError);
         }
     }
 
-    if (!TextUtils.isEmpty(mText)) {
+    if (!TextUtils::isEmpty(mText)) {
         info.addAction(AccessibilityNodeInfo.ACTION_NEXT_AT_MOVEMENT_GRANULARITY);
         info.addAction(AccessibilityNodeInfo.ACTION_PREVIOUS_AT_MOVEMENT_GRANULARITY);
         info.setMovementGranularities(AccessibilityNodeInfo.MOVEMENT_GRANULARITY_CHARACTER
@@ -3042,7 +6179,7 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
                     getResources().getString(com.android.internal.R.string.share)));
         }
         if (canProcessText()) {  // also implies mEditor is not null.
-            mEditor.mProcessTextIntentActionsHandler.onInitializeAccessibilityNodeInfo(info);
+            mEditor->mProcessTextIntentActionsHandler.onInitializeAccessibilityNodeInfo(info);
         }
     }
 
@@ -3059,20 +6196,19 @@ void TextView::onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& 
         info.setMultiLine(true);
     }
 }
+
 bool TextView::performAccessibilityActionInternal(int action, Bundle* arguments){
-    LOGD("TODO");
     return true;
 }
 void TextView::sendAccessibilityEventInternal(int eventType){
     LOGD_IF(AccessibilityManager::getInstance(mContext).isEnabled(),"TODO");
-    /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != null) {
-        mEditor.mProcessTextIntentActionsHandler.initializeAccessibilityActions();
+    /*if (eventType == AccessibilityEvent.TYPE_VIEW_ACCESSIBILITY_FOCUSED && mEditor != nullptr) {
+        mEditor->mProcessTextIntentActionsHandler.initializeAccessibilityActions();
     }*/
     View::sendAccessibilityEventInternal(eventType);
 }
 
 void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
-    LOGD("TODO");
     // Do not send scroll events since first they are not interesting for
     // accessibility and second such events a generated too frequently.
     // For details see the implementation of bringTextIntoView().
@@ -3081,4 +6217,357 @@ void TextView::sendAccessibilityEventUnchecked(AccessibilityEvent& event){
     }
     View::sendAccessibilityEventUnchecked(event);
 }
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+TextView::Drawables::Drawables(Context*ctx){
+    mIsRtlCompatibilityMode= false;
+    mOverride = false;
+    mTintMode = PorterDuff::NOOP;
+    mTintList= nullptr;
+    mShowing[0] = mShowing[1] = nullptr;
+    mShowing[2] = mShowing[3] = nullptr;
+    mDrawableStart = mDrawableEnd  = nullptr;
+    mDrawableError = mDrawableTemp = nullptr;
+    mDrawableLeftInitial= mDrawableRightInitial = nullptr;
+    mDrawableSizeTop = mDrawableSizeBottom = mDrawableSizeLeft = 0;
+    mDrawableSizeRight  = mDrawableSizeStart = mDrawableSizeEnd= 0;
+    mDrawableSizeError  = mDrawableSizeTemp  = 0;
+    mDrawableWidthTop   = mDrawableWidthBottom = mDrawableHeightLeft= 0;
+    mDrawableHeightRight= mDrawableHeightStart = mDrawableHeightEnd = 0;
+    mDrawableHeightError= mDrawableHeightTemp  = mDrawablePadding   = 0;
+    mCompoundRect.set(0,0,0,0);
+}
+
+TextView::Drawables::~Drawables(){
+    for(int i=0;i<4;i++){
+        delete mShowing[i];
+    }
+}
+
+bool TextView::Drawables::hasMetadata()const{
+    return (mDrawablePadding != 0) || (mTintMode != PorterDuff::NOOP) || (mTintList!=nullptr);
+}
+
+bool TextView::Drawables::resolveWithLayoutDirection(int layoutDirection){
+    Drawable* previousLeft = mShowing[Drawables::LEFT];
+    Drawable* previousRight = mShowing[Drawables::RIGHT];
+
+    // First reset "left" and "right" drawables to their initial values
+    mShowing[Drawables::LEFT] = mDrawableLeftInitial;
+    mShowing[Drawables::RIGHT] = mDrawableRightInitial;
+
+    if (mIsRtlCompatibilityMode) {
+        // Use "start" drawable as "left" drawable if the "left" drawable was not defined
+        if (mDrawableStart && mShowing[Drawables::LEFT] == nullptr) {
+            mShowing[Drawables::LEFT] = mDrawableStart;
+            mDrawableSizeLeft = mDrawableSizeStart;
+            mDrawableHeightLeft = mDrawableHeightStart;
+        }
+        // Use "end" drawable as "right" drawable if the "right" drawable was not defined
+        if (mDrawableEnd  && mShowing[Drawables::RIGHT] == nullptr) {
+            mShowing[Drawables::RIGHT] = mDrawableEnd;
+            mDrawableSizeRight = mDrawableSizeEnd;
+            mDrawableHeightRight = mDrawableHeightEnd;
+        }
+    } else {
+        // JB-MR1+ normal case: "start" / "end" drawables are overriding "left" / "right"
+        // drawable if and only if they have been defined
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            if (mOverride) {
+                mShowing[Drawables::RIGHT] = mDrawableStart;
+                mDrawableSizeRight = mDrawableSizeStart;
+                mDrawableHeightRight = mDrawableHeightStart;
+
+                mShowing[Drawables::LEFT] = mDrawableEnd;
+                mDrawableSizeLeft = mDrawableSizeEnd;
+                mDrawableHeightLeft = mDrawableHeightEnd;
+            }
+            break;
+
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            if (mOverride) {
+                mShowing[Drawables::LEFT] = mDrawableStart;
+                mDrawableSizeLeft = mDrawableSizeStart;
+                mDrawableHeightLeft = mDrawableHeightStart;
+
+                mShowing[Drawables::RIGHT] = mDrawableEnd;
+                mDrawableSizeRight = mDrawableSizeEnd;
+                mDrawableHeightRight = mDrawableHeightEnd;
+            }
+            break;
+        }
+    }
+
+    applyErrorDrawableIfNeeded(layoutDirection);
+
+    return (mShowing[Drawables::LEFT] != previousLeft)
+            || (mShowing[Drawables::RIGHT] != previousRight);
+}
+
+void TextView::Drawables::setErrorDrawable(Drawable* dr, TextView* tv) {
+    if ((mDrawableError != dr) && (mDrawableError != nullptr)) {
+        mDrawableError->setCallback(nullptr);
+    }
+    mDrawableError = dr;
+
+    if (mDrawableError != nullptr) {
+        Rect compoundRect = mCompoundRect;
+        const std::vector<int> state = tv->getDrawableState();
+
+        mDrawableError->setState(state);
+        compoundRect = mDrawableError->getBounds();
+        mDrawableError->setCallback(tv);
+        mDrawableSizeError = compoundRect.width;
+        mDrawableHeightError = compoundRect.height;
+    } else {
+        mDrawableSizeError = mDrawableHeightError = 0;
+    }
+}
+
+void TextView::Drawables::applyErrorDrawableIfNeeded(int layoutDirection) {
+    // first restore the initial state if needed
+    switch (mDrawableSaved) {
+    case DRAWABLE_LEFT:
+        mShowing[Drawables::LEFT] = mDrawableTemp;
+        mDrawableSizeLeft = mDrawableSizeTemp;
+        mDrawableHeightLeft = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_RIGHT:
+        mShowing[Drawables::RIGHT] = mDrawableTemp;
+        mDrawableSizeRight = mDrawableSizeTemp;
+        mDrawableHeightRight = mDrawableHeightTemp;
+        break;
+    case DRAWABLE_NONE:
+        default:break;
+    }
+    // then, if needed, assign the Error drawable to the correct location
+    if (mDrawableError != nullptr) {
+        switch(layoutDirection) {
+        case LAYOUT_DIRECTION_RTL:
+            mDrawableSaved = DRAWABLE_LEFT;
+
+            mDrawableTemp = mShowing[Drawables::LEFT];
+            mDrawableSizeTemp = mDrawableSizeLeft;
+            mDrawableHeightTemp = mDrawableHeightLeft;
+
+            mShowing[Drawables::LEFT] = mDrawableError;
+            mDrawableSizeLeft = mDrawableSizeError;
+            mDrawableHeightLeft = mDrawableHeightError;
+            break;
+        case LAYOUT_DIRECTION_LTR:
+        default:
+            mDrawableSaved = DRAWABLE_RIGHT;
+
+            mDrawableTemp = mShowing[Drawables::RIGHT];
+            mDrawableSizeTemp = mDrawableSizeRight;
+            mDrawableHeightTemp = mDrawableHeightRight;
+
+            mShowing[Drawables::RIGHT] = mDrawableError;
+            mDrawableSizeRight = mDrawableSizeError;
+            mDrawableHeightRight = mDrawableHeightError;
+            break;
+        }
+    }
+}
+
+//////////////////////////////////class Marquee /////////////////////////////////
+
+void TextView::Marquee::resetScroll() {
+    mScroll = 0.0f;
+    if (mView ) mView->invalidate();
+}
+
+TextView::Marquee::Marquee(TextView* v) {
+    const float density = v->getContext()->getDisplayMetrics().density;
+    mStatus = MARQUEE_STOPPED;
+    mPixelsPerMs = (MARQUEE_DP_PER_SECOND * density) / 1000.f;
+    mView = v;
+    mChoreographer=&Choreographer::getInstance();
+    mTickCallback = [this](int64_t) {tick();};
+    mStartCallback= [this](int64_t) {
+        mStatus = MARQUEE_RUNNING;
+        mLastAnimationMs = mChoreographer->getFrameTime();
+        tick();
+    };
+    mRestartCallback= [this](int64_t) {
+        if (mStatus == MARQUEE_RUNNING) {
+            if (mRepeatLimit >= 0) mRepeatLimit--;
+            start(mRepeatLimit);
+        }
+    };
+}
+
+TextView::Marquee::~Marquee(){
+    stop();
+}
+
+void TextView::Marquee::tick() {
+    if (mStatus != MARQUEE_RUNNING) {
+        return;
+    }
+
+    mChoreographer->removeFrameCallback(mTickCallback);
+
+    if (mView  && (mView->isFocused() || mView->isSelected())) {
+        const int64_t currentMs = mChoreographer->getFrameTime();
+        const int64_t deltaMs = currentMs - mLastAnimationMs;
+        const float deltaPx = deltaMs * mPixelsPerMs;
+        mLastAnimationMs = currentMs;
+        mScroll += deltaPx;
+        if (mScroll > mMaxScroll) {
+            mScroll = mMaxScroll;
+            mChoreographer->postFrameCallbackDelayed(mRestartCallback,MARQUEE_DELAY);
+        } else {
+            mChoreographer->postFrameCallback(mTickCallback);
+        }
+        mView->invalidate();
+    }
+}
+
+void TextView::Marquee::stop() {
+    mStatus = MARQUEE_STOPPED;
+    mChoreographer->removeFrameCallback(mStartCallback);
+    mChoreographer->removeFrameCallback(mRestartCallback);
+    mChoreographer->removeFrameCallback(mTickCallback);
+    resetScroll();
+}
+
+void TextView::Marquee::start(int repeatLimit) {
+    if (repeatLimit == 0) {
+        stop();
+        return;
+    }
+    mRepeatLimit = repeatLimit;
+    if ((mView!=nullptr) && (mView->mLayout!=nullptr) ) {
+        mStatus = MARQUEE_STARTING;
+        mScroll = 0.0f;
+        const int textWidth = mView->getWidth() - mView->getCompoundPaddingLeft()
+                - mView->getCompoundPaddingRight();
+        const float lineWidth = mView->mLayout->getLineWidth(0);
+        const float gap = textWidth / 3.0f;
+        mGhostStart = lineWidth - textWidth + gap;
+        mMaxScroll = mGhostStart + textWidth;
+        mGhostOffset = lineWidth + gap;
+        mFadeStop = lineWidth + textWidth / 6.0f;
+        mMaxFadeScroll = mGhostStart + lineWidth + lineWidth;
+
+        mView->invalidate();
+        mChoreographer->postFrameCallback(mStartCallback);
+    }
+}
+
+//class CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
+TextView::CharWrapper::CharWrapper(const std::vector<char16_t>&chars, int start, int len) {
+    mChars = chars;
+    mStart = start;
+    mLength = len;
+}
+
+TextView::CharWrapper::~CharWrapper(){
+    //LOGD("destroy %p",this);
+}
+
+void TextView::CharWrapper::set(const std::vector<char16_t>& chars, int start, int len) {
+    mChars = chars;
+    mStart = start;
+    mLength = len;
+}
+
+int TextView::CharWrapper::charAt(int off) const{
+    return mChars[off + mStart];
+}
+
+String* TextView::CharWrapper::toString() const{
+    return new String(std::u16string(mChars.data() + mStart, mLength));
+}
+
+std::string TextView::CharWrapper::toUTF8() const{
+    return TextUtils::utf16_utf8((uint16_t*)(mChars.data()+mStart), mLength);
+}
+
+std::u16string TextView::CharWrapper::toUTF16() const{
+    return std::u16string(mChars.data() + mStart, mLength);
+}
+
+CharSequence* TextView::CharWrapper::subSequence(int start, int end) const{
+    if (start < 0 || end < 0 || start > mLength || end > mLength) {
+        //throw new IndexOutOfBoundsException(start + ", " + end);
+    }
+    return nullptr;//new SpannedString(mChars, start + mStart, end - start);
+}
+
+void TextView::CharWrapper::getChars(int start, int end, char16_t* buf, int off) const{
+    if (start < 0 || end < 0 || start > mLength || end > mLength) {
+        //throw new IndexOutOfBoundsException(start + ", " + end);
+    }
+    memcpy(buf+off,mChars.data()+(mStart+start),(end-start)*2);
+    //System.arraycopy(mChars, start + mStart, buf, off, end - start);
+}
+
+void TextView::CharWrapper::drawText(Canvas& c, int start, int end, float x, float y, Paint& p) {
+    p.drawTextRun(c,mChars.data(), start + mStart, end - start,0,0, x, y,false);
+}
+
+void TextView::CharWrapper::drawTextRun(Canvas& c, int start, int end,
+        int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p) {
+    const int count = end - start;
+    const int contextCount = contextEnd - contextStart;
+    p.drawTextRun(c,mChars.data(), start + mStart, count, contextStart + mStart,
+            contextCount, x, y, isRtl);
+}
+
+float TextView::CharWrapper::measureText(int start, int end, Paint& p) {
+    return p.measureText(mChars.data(), start + mStart, end - start);
+}
+
+int TextView::CharWrapper::getTextWidths(int start, int end, float* widths, Paint& p) {
+    return 0;//p.getTextWidths(mChars.data(), start + mStart, end - start, widths);
+}
+
+float TextView::CharWrapper::getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
+        bool isRtl, float* advances, int advancesIndex,Paint& p) {
+    const int count = end - start;
+    const int contextCount = contextEnd - contextStart;
+    return p.getTextRunAdvances(mChars.data(), start + mStart, count,
+            contextStart + mStart, contextCount, isRtl, advances,
+            advancesIndex);
+}
+
+int TextView::CharWrapper::getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
+        int offset, int cursorOpt, Paint& p) {
+    int contextCount = contextEnd - contextStart;
+    return p.getTextRunCursor(mChars.data(), contextStart + mStart,
+            contextCount, isRtl, offset + mStart, cursorOpt);
+}
+
+//class ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+TextView::ChangeWatcher::ChangeWatcher(TextView*tv):mTV(tv){
+    // Wire the inherited TextWatcher std::function members to forward into the
+    // host TextView. SpannableStringBuilder::replace() fires these on every edit.
+    beforeTextChanged = [this](CharSequence& buffer, int start, int before, int after) {
+        mTV->sendBeforeTextChanged(buffer, start, before, after);
+    };
+    onTextChanged = [this](CharSequence& buffer, int start, int before, int after) {
+        mTV->handleTextChanged(buffer, start, before, after);
+    };
+    afterTextChanged = [this](Editable& buffer) {
+        mTV->sendAfterTextChanged(buffer);
+    };
+}
+
+void TextView::ChangeWatcher::onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en) {
+    mTV->spanChange(buf, what, s, st, e, en);
+}
+
+void TextView::ChangeWatcher::onSpanAdded(Spannable& buf, const ParcelableSpan* what, int s, int e) {
+    mTV->spanChange(buf, what, -1, s, -1, e);
+}
+
+void TextView::ChangeWatcher::onSpanRemoved(Spannable& buf, const ParcelableSpan* what, int s, int e) {
+    mTV->spanChange(buf, what, s, -1, e, -1);
+}
+
 }/*endof namespace*/

@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/handleractionqueue.h>
-#include <core/uieventsource.h>
+#include <core/handler.h>
 namespace cdroid{
 
 HandlerActionQueue::HandlerActionQueue(){
@@ -64,7 +64,7 @@ void HandlerActionQueue::removeCallbacks(const Runnable& action) {
     mActions.resize(finalCount);
 }
 
-void HandlerActionQueue::executeActions(UIEventSource& handler) {
+void HandlerActionQueue::executeActions(Handler& handler) {
     for (size_t i = 0, count = mActions.size(); i < count; i++) {
         HandlerAction* handlerAction = mActions[i];
         handler.postDelayed(handlerAction->action, handlerAction->delay);

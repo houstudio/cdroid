@@ -5,36 +5,52 @@
 #include <sstream>
 #include <core/systemclock.h>
 #include <core/xmlpullparser.h>
+#include <core/graphdevice.h>
+#include <view/view.h>
+#include <view/viewgroup.h>
 #include <drawable/drawableinflater.h>
 #include <core/path.h>
 #include <image-decoders/imagedecoder.h>
+#include <guienvironment.h>
 #if defined(_WIN32)||defined(_WIN64)
 extern void sleep(uint32_t);
 extern void usleep(uint32_t);
 #endif
 #define SLEEP(x) usleep((x)*1000)
 using namespace Cairo;
+using namespace cdroid;
+
+/* Blits the offscreen drawing surface into the shared content area through the
+   unified View pipeline (the shared App's GraphDevice composes/flips) — replaces
+   the old GFXInit()/GFXCreateSurface()/GFXBlit()/GFXFlip() direct-surface path. */
+class SurfaceBlitView:public View{
+public:
+    cdroid::RefPtr<ImageSurface>mSrc;
+    SurfaceBlitView(int w,int h):View(w,h){}
+    void onDraw(Canvas&c){
+        View::onDraw(c);
+        if(mSrc){ c.set_source(mSrc,0,0); c.paint(); }
+    }
+};
+
 class DRAWABLE:public testing::Test{
 public:
     static Canvas*ctx;
     static Assets*rm;
     static int mScreenWidth,mScreenHeight;
     static cdroid::RefPtr<ImageSurface>sImage;
-    static GFXHANDLE mPrimarySurface,mDrawSurface;
+    SurfaceBlitView*mView=nullptr;
 public:
     static void SetUpTestCase(){
-        int mPitch,mFormat;
-        uint8_t*mBuffer;
-        GFXInit();
-        GFXGetDisplaySize(0,(uint32_t*)&mScreenWidth,(uint32_t*)&mScreenHeight);
-        GFXCreateSurface(0,&mPrimarySurface,mScreenWidth,mScreenHeight,mFormat,1);
-        GFXCreateSurface(0,&mDrawSurface,mScreenWidth,mScreenHeight,mFormat,0);
-        GFXLockSurface(mDrawSurface,(void**)&mBuffer,(uint32_t*)&mPitch);
-        auto surface=Cairo::ImageSurface::create(mBuffer,Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight,mPitch);
-        printf("mPrimarySurface=%p@%p size=%dx%dx%d\r\n",mPrimarySurface,&mBuffer,mScreenWidth,mScreenHeight,mPitch);
-
-        rm=new Assets("cdroid.pak");
-        ctx=new Canvas(surface);//GraphDevice::getInstance().createContext(800,600);
+        mScreenWidth=800; mScreenHeight=600;
+        /* Offscreen Cairo target only — no GFXInit()/GFXCreateSurface(). Display
+           happens via SurfaceBlitView in the shared content area. */
+        auto surface=Cairo::ImageSurface::create(Cairo::Surface::Format::ARGB32,mScreenWidth,mScreenHeight);
+        /* Reuse the global App (built by GUIEnvironment) as the resource Context —
+           App is-a Assets, so getDrawable()/XmlPullParser resolve against the same
+           .pak the rest of the harness uses. No private Assets, nothing to free. */
+        rm=&App::getInstance();
+        ctx=new Canvas(surface);
         sImage=ImageSurface::create(Surface::Format::ARGB32,400,400);
         cdroid::RefPtr<Gradient>pat=LinearGradient::create(0,0,400,400);
         cdroid::RefPtr<Gradient>rd=RadialGradient::create(20,20,30,200,200,100);
@@ -59,25 +75,30 @@ public:
         cr->show_text("Image");
         cr->stroke();
     }
-    static void TearDownCase(){
+    static void TearDownTestCase(){
         delete ctx;
-        GFXDestroySurface(mDrawSurface);
-        GFXDestroySurface(mPrimarySurface);
+        /* rm aliases the global App — never deleted here. */
     }
     virtual void SetUp(){
+        /* A fresh blit view per case — content() is cleared between cases by the
+           test listener (which deletes it). */
+        mView=new SurfaceBlitView(mScreenWidth,mScreenHeight);
+        mView->mSrc=std::dynamic_pointer_cast<ImageSurface>(ctx->get_target());
+        GUIEnvironment::content()->addView(mView);
         ctx->save();
         ctx->set_source_rgba(0,0,0,1);
         ctx->rectangle(0,0,mScreenWidth,mScreenHeight);
         ctx->fill();
     }
     void postCompose(){
-        GFXBlit(mPrimarySurface,0,0,mDrawSurface,nullptr);
-        GFXFlip(mPrimarySurface);
+        if(mView&&mView->mSrc) mView->mSrc->flush();
+        if(mView) mView->invalidate();
+        pumpFor(16);
     }
     virtual void TearDown(){
         ctx->restore();
         postCompose();
-        sleep(2);
+        pumpFor(400); // dwell on the final frame
     }
     Drawable*fromStream(const std::string&content){
         int type;
@@ -93,8 +114,6 @@ Canvas* DRAWABLE::ctx=nullptr;
 Assets* DRAWABLE::rm =nullptr;
 int DRAWABLE::mScreenWidth=0;
 int DRAWABLE::mScreenHeight=0;
-GFXHANDLE DRAWABLE::mPrimarySurface=nullptr;
-GFXHANDLE DRAWABLE::mDrawSurface=nullptr;
 cdroid::RefPtr<ImageSurface>DRAWABLE::sImage;
 
 TEST_F(DRAWABLE,parsexml){
@@ -106,7 +125,7 @@ TEST_F(DRAWABLE,color){
     ColorDrawable*d=(ColorDrawable*)fromStream(text);
     ASSERT_NE(d,(void*)nullptr);
     d->setBounds(50,50,600,400);
-    d->draw(*ctx);	
+    d->draw(*ctx);
     delete d;
 }
 
@@ -126,7 +145,7 @@ TEST_F(DRAWABLE,bitmapalpha){
 }
 
 TEST_F(DRAWABLE,ninepatch1){
-    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
+    NinePatchDrawable *d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
     Outline outline,outline2;
     d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     d->getOutline(outline);
@@ -137,7 +156,7 @@ TEST_F(DRAWABLE,ninepatch1){
 }
 
 TEST_F(DRAWABLE,ninepatch2){
-    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@mipmap/btn_default_transparent_normal.9.png");
+    NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
     ctx->set_source_rgb(.4,.4,.0);
     ctx->rectangle(0,0,700,300);
     ctx->fill();
@@ -160,10 +179,10 @@ TEST_F(DRAWABLE,picture){
     ctxpic->set_source_rgba(0,1,0,.5);
     ctxpic->arc(200,25,50,0,M_PI*2.f);
     ctxpic->fill();
-	
+
     PictureDrawable*pd=new PictureDrawable(picture);
     pd->setBounds(100,100,400,50);
-    
+
     pd->draw(*ctx);
     delete pd;
 }
@@ -238,7 +257,7 @@ TEST_F(DRAWABLE,roundrectshape){
     rs->resize(500,500);
     ctx->set_color(0xFF00FF00);
     ctx->translate(50,50);
-    
+
     for(int i=0;i<8;i++){
        ctx->rectangle(0,0,500,500);
        ctx->set_source_rgb(0,0,0);
@@ -404,13 +423,13 @@ TEST_F(DRAWABLE,levellist){
     ld->addLevel(10,11,new BitmapDrawable(sImage));
     ld->setBounds(100,100,400,400);
     for(int i=0;i<=10;i++){
-  	ctx->set_source_rgb(0,0,0);
+        ctx->set_source_rgb(0,0,0);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
         ld->setLevel(i%11);
         ld->draw(*ctx);
         postCompose();
-        usleep(500000);
+        usleep(10000);
     }
 }
 
@@ -428,17 +447,6 @@ TEST_F(DRAWABLE,arcshape){
     ctx->set_color(0xFFFF0000);
     arc->draw(*ctx);
     ctx->fill();
-}
-TEST_F(DRAWABLE,statelist){
-    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(DrawableInflater::loadDrawable(nullptr,
-			"/home/houzh/Miniwin/src/gui/res/drawable/btn_check.xml"));
-    sd->setBounds(100,100,64,64);
-    std::vector<int>states={StateSet::ENABLED,StateSet::FOCUSED,StateSet::CHECKED};
-    int idx=sd->getStateDrawableIndex(states);
-    sd->setState(states);
-    sd->draw(*ctx);
-    postCompose();
-    sleep(10);
 }
 
 TEST_F(DRAWABLE,inflateshape){
@@ -467,13 +475,13 @@ TEST_F(DRAWABLE,inflateclip){
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
     for(int i=0;i<10000;i+=100){
-	ctx->set_source_rgb(0,0,0);
-	ctx->rectangle(0,0,800,600);
-	ctx->fill();
+	    ctx->set_source_rgb(0,0,0);
+	    ctx->rectangle(0,0,800,600);
+	    ctx->fill();
         ((ClipDrawable*)d)->setLevel(i);
         d->draw(*ctx);
-	postCompose();
-        usleep(1000);
+	    postCompose();
+	    usleep(1000);
     }
     ASSERT_NE((void*)nullptr,dynamic_cast<ClipDrawable*>(d));
     printf("Usedtime=%ld  clip=%p child=%p\r\n",t2-t1,dynamic_cast<ClipDrawable*>(d),((ClipDrawable*)d)->getDrawable());
@@ -552,7 +560,7 @@ TEST_F(DRAWABLE,inflatetransition){
        d->setLevel(i);
        d->draw(*ctx);
        postCompose();
-       usleep(50000);
+       usleep(5000);
    }
 }
 
@@ -577,7 +585,7 @@ TEST_F(DRAWABLE,inflatelevellist){
        d->setLevel(i%5);
        d->draw(*ctx);
        postCompose();
-       usleep(500000);
+       usleep(5000);
    }
 }
 TEST_F(DRAWABLE,gradient_alpha){
@@ -618,10 +626,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->draw(*ctx);
             ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
             postCompose();
-            usleep(1000000);
+            usleep(10000);
         }
    }
 }
-
-
-

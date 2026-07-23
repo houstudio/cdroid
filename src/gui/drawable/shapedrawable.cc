@@ -214,19 +214,9 @@ void ShapeDrawable::draw(Canvas&canvas){
     const Rect&r = getBounds();
     if(mShapeState->mShape!=nullptr){
         canvas.translate(r.left,r.top);
-        if(mTintFilter){
-            canvas.save();
-            canvas.rectangle(0,0,r.width,r.height);
-            canvas.clip();
-            canvas.push_group();
-        }
+        ColorFilter* tintFilter = beginTintGroup(canvas, Rect{0,0,r.width,r.height}, mTintFilter.get());
         mShapeState->mShape->draw(canvas,r.left,r.top);
-        if(mTintFilter){
-            //canvas.set_source(canvas.pop_group());
-            canvas.pop_group_to_source();
-            mTintFilter->apply(canvas,r);
-            canvas.restore();
-        }
+        if(tintFilter) endTintGroup(canvas, r, tintFilter);
         canvas.translate(-r.left,-r.top);
     }
 }
@@ -284,9 +274,9 @@ void ShapeDrawable::updateStateFromTypedArray(const AttributeSet&a) {
     state->mIntrinsicWidth = (int) a.getDimension("width", state->mIntrinsicWidth);
     state->mIntrinsicHeight = (int) a.getDimension("height", state->mIntrinsicHeight);
 
-    const int tintMode = a.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
+    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = a.getColorStateList("tint");

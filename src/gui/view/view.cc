@@ -21,6 +21,7 @@
 #include <cmath>
 #include <view/view.h>
 #include <view/viewgroup.h>
+#include <view/floatingactionmode.h>
 #include <view/viewoverlay.h>
 #include <view/roundscrollbarrenderer.h>
 #include <view/handleractionqueue.h>
@@ -40,6 +41,7 @@
 #include <core/inputmethodmanager.h>
 #include <core/app.h>
 #include <core/color.h>
+#include <core/handler.h>
 #include <porting/cdlog.h>
 #define UNDEFINED_PADDING INT_MIN
 using namespace Cairo;
@@ -189,6 +191,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
+    setAllowClickWhenDisabled(attrs.getBoolean("allowClickWhenDisabled", false));
     if( !attrs.getBoolean("saveEnabled",true)){
          viewFlagValues |=SAVE_DISABLED;
          viewFlagMasks |=SAVE_DISABLED_MASK;
@@ -263,12 +266,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mTintList = csl;
         mBackgroundTint->mHasTintList = true;
     }
-    const std::unordered_map<std::string,int>tintModes={
-           {"add",PorterDuff::Mode::ADD},       {"multiply",PorterDuff::Mode::MULTIPLY},
-           {"screen",PorterDuff::Mode::SCREEN}, {"src_atop",PorterDuff::Mode::SRC_ATOP},
-           {"src_in",PorterDuff::Mode::SRC_IN}, {"src_over",PorterDuff::Mode::SRC_OVER} };
-
-    const int bgTintMode = Drawable::parseTintMode(attrs.getInt("backgroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    const int bgTintMode = attrs.getTintMode("backgroundTintMode",PorterDuff::Mode::NOOP);
     if( bgTintMode != PorterDuff::Mode::NOOP ){
         if(mBackgroundTint == nullptr) mBackgroundTint=new TintInfo;
         mBackgroundTint->mTintMode = bgTintMode;
@@ -282,7 +280,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setOutlineProviderFromAttribute(providerInt);
 
     setForeground(attrs.getDrawable("foreground"));
-    const int fgTintMode = Drawable::parseTintMode(attrs.getInt("foregroundTintMode",tintModes,PorterDuff::Mode::NOOP),PorterDuff::Mode::NOOP);
+    const int fgTintMode = attrs.getTintMode("foregroundTintMode",PorterDuff::Mode::NOOP);
     setForegroundTintMode(fgTintMode);
     mForegroundInfo->mInsidePadding = attrs.getBoolean("foregroundInsidePadding",mForegroundInfo->mInsidePadding);
 
@@ -492,7 +490,9 @@ View::~View(){
     delete mBackgroundTint;
     delete mLayoutParams;
     delete mRoundScrollbarRenderer;
-    //delete mCurrentAnimation;
+    // One Animation serves exactly one View (it holds per-run state), so the View
+    // owns its current animation and frees it here.
+    delete mCurrentAnimation;
     delete mTransformationInfo;
     delete mStateListAnimator;
     delete mOverlay;
@@ -522,8 +522,8 @@ int View::dipsToPixels(int dips)const{
 }
 
 View* View::findViewById(int id){
-    if( id == mID )return (View*)this;
-    return nullptr;
+    if (id == NO_ID) return nullptr;
+    return findViewTraversal(id);
 }
 
 View* View::findViewTraversal(int id){
@@ -584,6 +584,7 @@ View* View::findViewByPredicate(const Predicate<View*>&predicate){
 }
 
 View* View::findViewWithTagTraversal(void* tag){
+    if(tag && tag == mTag) return (View*)this;
     return nullptr;
 }
 
@@ -1134,15 +1135,19 @@ void View::startAnimation(Animation* animation) {
 void View::clearAnimation() {
     if (mCurrentAnimation ) {
         mCurrentAnimation->detach();
+        delete mCurrentAnimation;
     }
-    //delete mCurrentAnimation;
     mCurrentAnimation = nullptr;
     invalidateParentIfNeeded();
     invalidate();
 }
 
 void View::setAnimation(Animation* animation) {
-    //delete mCurrentAnimation;
+    // The View owns its current animation (one Animation per View); free the previous
+    // one on overwrite. Guard against re-setting the same instance.
+    if (animation != mCurrentAnimation) {
+        delete mCurrentAnimation;
+    }
     mCurrentAnimation = animation;
     if (animation) {
         // If the screen is off assume the animation start time is now instead of
@@ -1238,7 +1243,6 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
         mScrollCache->scrollBar = new ScrollBarDrawable();
         mScrollCache->scrollBar->setState(getDrawableState());
         mScrollCache->scrollBar->setCallback(this);
-        return true;
     }
     if (isHorizontalScrollBarEnabled() || isVerticalScrollBarEnabled()) {
 
@@ -1643,7 +1647,7 @@ void View::dispatchAttachedToWindow(AttachInfo*info,int visibility){
     }
     // Transfer all pending runnables.
     if (mRunQueue != nullptr) {
-        mRunQueue->executeActions(*info->mEventSource);
+        mRunQueue->executeActions(*info->mHandler);
         delete mRunQueue;
         mRunQueue = nullptr;
     }
@@ -1839,29 +1843,16 @@ void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
 }
 
 void View::onRestoreInstanceState(Parcelable& state){
-#if 0
     mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
-    if (state != null && !(state instanceof AbsSavedState)) {
-        throw new IllegalArgumentException("Wrong state class, expecting View State but "
-                + "received " + state.getClass().toString() + " instead. This usually happens "
-                + "when two views of different type have the same id in the same hierarchy. "
-                + "This view's id is " + ViewDebug.resolveId(mContext, getId()) + ". Make sure "
-                + "other views do not use the same id.");
+    BaseSavedState* baseState = dynamic_cast<BaseSavedState*>(&state);
+    if (baseState != nullptr) {
+        if ((baseState->mSavedData & BaseSavedState::START_ACTIVITY_REQUESTED_WHO_SAVED) != 0)
+            mStartActivityRequestWho = baseState->mStartActivityRequestWhoSaved;
+        if ((baseState->mSavedData & BaseSavedState::IS_AUTOFILLED) != 0)
+            setAutofilled(baseState->mIsAutofilled);
+        if ((baseState->mSavedData & BaseSavedState::AUTOFILL_ID) != 0)
+            mAutofillViewId = baseState->mAutofillViewId;
     }
-    if (state != null && state instanceof BaseSavedState) {
-        BaseSavedState baseState = (BaseSavedState) state;
-
-        if ((baseState.mSavedData & BaseSavedState.START_ACTIVITY_REQUESTED_WHO_SAVED) != 0) {
-            mStartActivityRequestWho = baseState.mStartActivityRequestWhoSaved;
-        }
-        if ((baseState.mSavedData & BaseSavedState.IS_AUTOFILLED) != 0) {
-            setAutofilled(baseState.mIsAutofilled);
-        }
-        if ((baseState.mSavedData & BaseSavedState.AUTOFILL_ID) != 0) {
-            mAutofillViewId = baseState.mAutofillViewId;
-        }
-    }
-#endif
 }
 
 void View::dispatchWindowVisibilityChanged(int visibility){
@@ -2723,24 +2714,27 @@ bool View::isInScrollingContainer()const{
 }
 
 View::ListenerInfo*View::getListenerInfo(){
-    if(mListenerInfo==nullptr)
+    if(mListenerInfo==nullptr){
         mListenerInfo = new ListenerInfo();
+    }
     return mListenerInfo;
 }
 
 void View::setOnClickListener(const OnClickListener& l){
-    if(!isClickable())
+    if(!isClickable()){
         setClickable(true);
+    }
     getListenerInfo()->mOnClickListener=l;
 }
 
-bool View::hasOnClickListener()const{
+bool View::hasOnClickListeners()const{
     return mListenerInfo&&(mListenerInfo->mOnClickListener!=nullptr);
 }
 
 void View::setOnLongClickListener(const OnLongClickListener& l){
-    if(!isLongClickable())
+    if(!isLongClickable()){
         setLongClickable(true);
+    }
     getListenerInfo()->mOnLongClickListener=l;
 }
 
@@ -2770,7 +2764,7 @@ void View::removeOnLayoutChangeListener(const OnLayoutChangeListener& listener){
     if(mListenerInfo){
         std::vector<View::OnLayoutChangeListener>&ls= mListenerInfo->mOnLayoutChangeListeners;
         auto it= std::find(ls.begin(),ls.end(),listener);
-        ls.erase(it);
+        if (it != ls.end()) ls.erase(it);
     }
 }
 
@@ -4144,6 +4138,25 @@ cdroid::Context*View::getContext()const{
     return mContext;
 }
 
+ActionMode* View::startActionMode(const ActionMode::Callback& callback){
+    return startActionMode(callback, ActionMode::TYPE_PRIMARY);
+}
+
+ActionMode* View::startActionMode(const ActionMode::Callback& callback, int type){
+    // Android 模型: 上浮到根 (Window) 创建, 而非叶子 View 直接建。
+    if(mParent != nullptr)
+        return mParent->startActionModeForChild(this, callback, type);
+    // Root view (no parent, e.g. Window): create a floating ActionMode and show it.
+    // onCreateActionMode returning false aborts. (Android bubbles to the Window/DecorView.)
+    FloatingActionMode* mode = new FloatingActionMode(getContext(), callback, this);
+    mode->setType(type);
+    if(!mode->show()){
+        delete mode;
+        return nullptr;
+    }
+    return mode;
+}
+
 int View::getWidth()const{
     return mRight - mLeft;
 }
@@ -4532,9 +4545,9 @@ void View::resolveDrawables(){
     const int layoutDirection = isLayoutDirectionResolved() ?
             getLayoutDirection() : getRawLayoutDirection();
 
-    if (mBackground)  mBackground->setLayoutDirection(layoutDirection);
+    if (mBackground) mBackground->setLayoutDirection(layoutDirection);
 
-    if (mForegroundInfo  && mForegroundInfo->mDrawable )
+    if (mForegroundInfo && mForegroundInfo->mDrawable )
         mForegroundInfo->mDrawable->setLayoutDirection(layoutDirection);
     if (mDefaultFocusHighlight ) mDefaultFocusHighlight->setLayoutDirection(layoutDirection);
     
@@ -4570,7 +4583,7 @@ std::vector<int>View::onCreateDrawableState(int extraSpace){
     int viewStateIndex = 0;
 
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
-    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex = StateSet::VIEW_STATE_PRESSED;
+    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex |= StateSet::VIEW_STATE_PRESSED;
     if(mPrivateFlags & PFLAG_SELECTED) viewStateIndex |= StateSet::VIEW_STATE_SELECTED;
     if(hasWindowFocus() ) viewStateIndex|=StateSet::VIEW_STATE_WINDOW_FOCUSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
@@ -4615,8 +4628,9 @@ void View::drawableStateChanged(){
     }
 
     d = mForegroundInfo ? mForegroundInfo->mDrawable:nullptr;
-    if((d!=nullptr) && d->isStateful())
+    if((d!=nullptr) && d->isStateful()){
         changed|= d->setState(state);
+    }
 
     if(mScrollCache){
         d = mScrollCache->scrollBar;
@@ -4631,6 +4645,7 @@ void View::drawableStateChanged(){
         // If we're not visible, skip any animated changes
         jumpDrawablesToCurrentState();
     }
+
     if(changed) invalidate(true);
 }
 
@@ -4680,12 +4695,11 @@ void View::setBackground(Drawable*background){
     if(background==mBackground)return;
 
     bool bRequestLayout = false;
-    if(mBackground!=nullptr){
-        if(isAttachedToWindow()) mBackground->setVisible(false,false);
-        mBackground->setCallback(this);
-        unscheduleDrawable(*mBackground);
-        delete mBackground;
-        mBackground = nullptr;
+    Drawable* oldBackground = mBackground;
+    if(oldBackground!=nullptr){
+        if(isAttachedToWindow()) oldBackground->setVisible(false,false);
+        oldBackground->setCallback(nullptr);
+        unscheduleDrawable(*oldBackground);
     }
     if(background){        
         Rect padding;
@@ -4709,10 +4723,9 @@ void View::setBackground(Drawable*background){
             mLeftPaddingDefined = false;
             mRightPaddingDefined = false;
         }
-        bRequestLayout= mBackground==nullptr||mBackground->getMinimumWidth()!=background->getMinimumWidth()||
-               mBackground->getMinimumHeight()!=background->getMinimumHeight();
+        bRequestLayout= oldBackground==nullptr||oldBackground->getMinimumWidth()!=background->getMinimumWidth()||
+               oldBackground->getMinimumHeight()!=background->getMinimumHeight();
 
-        delete mBackground;
         mBackground = background; 
         if(background->isStateful())
             background->setState(getDrawableState());
@@ -4722,10 +4735,9 @@ void View::setBackground(Drawable*background){
         background->setCallback(this);
         if( (mPrivateFlags & PFLAG_SKIP_DRAW)!=0 ){
             mPrivateFlags &= ~PFLAG_SKIP_DRAW;
-            bRequestLayout=true;
+            bRequestLayout = true;
         }
     }else{
-        delete mBackground;
         mBackground = nullptr;
         if ((mViewFlags & WILL_NOT_DRAW) != 0  && (mDefaultFocusHighlight == nullptr)
               && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
@@ -4741,6 +4753,7 @@ void View::setBackground(Drawable*background){
         // View's layout, so let's requestLayout
         bRequestLayout = true;
     }
+    if(oldBackground!=nullptr) delete oldBackground;
     computeOpaqueFlags();
     if(bRequestLayout) requestLayout();
     mBackgroundSizeChanged = true;
@@ -5644,6 +5657,18 @@ void View::setContextClickable(bool contextClickable) {
     setFlags(contextClickable ? CONTEXT_CLICKABLE : 0, CONTEXT_CLICKABLE);
 }
 
+void View::setAllowClickWhenDisabled(bool clickableWhenDisabled) {
+    if (clickableWhenDisabled) {
+        mPrivateFlags4 |= PFLAG4_ALLOW_CLICK_WHEN_DISABLED;
+    } else {
+        mPrivateFlags4 &= ~PFLAG4_ALLOW_CLICK_WHEN_DISABLED;
+    }
+}
+
+bool View::isAllowedClickWhenDisabled() const {
+    return (mPrivateFlags4 & PFLAG4_ALLOW_CLICK_WHEN_DISABLED) != 0;
+}
+
 void View::dispatchSetSelected(bool selected){
 }
 
@@ -5729,7 +5754,7 @@ void View::getWindowVisibleDisplayFrame(Rect& outRect){
         // we want the area behind or in front of the IME.
         const DisplayMetrics& metrics= mContext->getDisplayMetrics();
         outRect.set(0,0,metrics.widthPixels,metrics.heightPixels);
-        Rect insets = mAttachInfo->mVisibleInsets;
+        const Rect& insets = mAttachInfo->mVisibleInsets;
         outRect.left += insets.left;
         outRect.top += insets.top;
         outRect.width -= (insets.width+insets.left);
@@ -5815,7 +5840,7 @@ bool View::isDirty()const{
 
 bool View::skipInvalidate()const{
     return (mViewFlags & VISIBILITY_MASK) != VISIBLE && (mCurrentAnimation == nullptr)
-           && mParent && (!mParent->isViewTransitioning((View*)this));
+           && (mParent == nullptr || !mParent->isViewTransitioning((View*)this));
 }
 
 RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
@@ -6132,7 +6157,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate || (isOpaque() != mLastIsOpaque))) {
+              || (fullInvalidate && (isOpaque() != mLastIsOpaque))) {/*ZHHOU这里最后一个&&原来是||对齐安卓改为&&可能存在刷新问题*/
         if (fullInvalidate) {
             mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;
@@ -6824,7 +6849,7 @@ bool View::requestFocus(int direction){
 }
 
 void View::clearFocus(){
-    clearFocusInternal(nullptr, true,isInTouchMode());
+    clearFocusInternal(nullptr, true, !isInTouchMode());
 }
 
 bool View::restoreFocusInCluster(int direction){
@@ -7033,7 +7058,6 @@ void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
          }
 
          onFocusChanged(false, 0, nullptr);
-         invalidate(true);
          refreshDrawableState();
 
          if (propagate && (!refocus || !rootViewRequestFocus())) notifyGlobalFocusCleared(this);        
@@ -7259,8 +7283,9 @@ bool View::hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const{
         }
     }
 
-    // Invisible and gone views are never focusable.
-    if ((mViewFlags & VISIBILITY_MASK) != VISIBLE) {
+    // Invisible, gone, or disabled views are never focusable.
+    if ((mViewFlags & VISIBILITY_MASK) != VISIBLE
+            || (mViewFlags & ENABLED_MASK) != ENABLED) {
         return false;
     }
 
@@ -7474,8 +7499,6 @@ void View::layout(int l, int t, int w, int h){
     int oldT = mTop;
     int oldW = mRight-mLeft;
     int oldH = mBottom-mTop;
-    mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
-    mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
     bool changed = setFrame(l,t,w,h);
     if(changed|| ((mPrivateFlags & PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED)){
         onLayout(changed, l, t, w, h);
@@ -8372,7 +8395,7 @@ bool View::hasPendingLongPressCallback() const{
     if (mAttachInfo == nullptr) {
         return false;
     }
-    return mAttachInfo->mEventSource->hasCallbacks(mPendingCheckForLongPress->mRunnable);
+    return mAttachInfo->mHandler->hasCallbacks(mPendingCheckForLongPress->mRunnable);
 }
 
 void View::removePerformClickCallback(){
@@ -8494,11 +8517,13 @@ bool View::onTouchEvent(MotionEvent& event){
     const int x = event.getX();
     const int y = event.getY();
     const int action = event.getAction();
-    const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE));
+    const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE))
+                         || ((mViewFlags&CONTEXT_CLICKABLE) == CONTEXT_CLICKABLE);
     int touchSlop =0;
     bool prepressed;
 
-    if ((mViewFlags & ENABLED_MASK) == DISABLED) {
+    if ((mViewFlags & ENABLED_MASK) == DISABLED
+            && (mPrivateFlags4 & PFLAG4_ALLOW_CLICK_WHEN_DISABLED) == 0) {
         if ((action == MotionEvent::ACTION_UP) && ((mPrivateFlags & PFLAG_PRESSED) != 0)) {
             setPressed(false);
         }
@@ -8518,11 +8543,12 @@ bool View::onTouchEvent(MotionEvent& event){
     switch(action){
     case MotionEvent::ACTION_UP:
         mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
-        if(mPrivateFlags&PFLAG_PRESSED)
+        if((mViewFlags & TOOLTIP) == TOOLTIP)
             handleTooltipUp();
         if (!clickable){
             removeTapCallback();
             removeLongPressCallback();
+            mInContextButtonPress = false;
             mHasPerformedLongPress = false;
             mIgnoreNextUpEvent = false;
             break;
@@ -8536,7 +8562,7 @@ bool View::onTouchEvent(MotionEvent& event){
                 focusTaken = requestFocus();
             }
 
-            if (prepressed)setPressed(true);
+            if (prepressed) setPressed(true, x, y);
             if(!mHasPerformedLongPress && !mIgnoreNextUpEvent){
                 removeLongPressCallback();
                 if (!focusTaken){
@@ -8549,14 +8575,19 @@ bool View::onTouchEvent(MotionEvent& event){
             if(mUnsetPressedState == nullptr){
                 mUnsetPressedState =[this]{setPressed(false);};
             }
-            if(isAttachedToWindow()){
-                postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
-                removeTapCallback();
+            if (prepressed) {
+                postDelayed(mUnsetPressedState, ViewConfiguration::getPressedStateDuration());
+            } else if (!post(mUnsetPressedState)) {
+                mUnsetPressedState();
             }
+            removeTapCallback();
         }
         mIgnoreNextUpEvent=false;
         break; 
     case MotionEvent::ACTION_DOWN:
+        if (event.getSource() == InputDevice::SOURCE_TOUCHSCREEN) {
+            mPrivateFlags3 |= PFLAG3_FINGER_DOWN;
+        }
         mHasPerformedLongPress=false;
         if (!clickable) {
             checkForLongClick(ViewConfiguration::getLongPressTimeout(), x, y);
@@ -8656,7 +8687,7 @@ bool View::post(const Runnable& what){
 
 bool View::postDelayed(const Runnable& what,long delay){
     if(mAttachInfo){
-        return mAttachInfo->mEventSource->postDelayed(what,delay);
+        return mAttachInfo->mHandler->postDelayed(what,delay);
     }
     getRunQueue()->postDelayed(what,delay);
     return true;
@@ -8665,7 +8696,7 @@ bool View::postDelayed(const Runnable& what,long delay){
 bool View::removeCallbacks(const Runnable& what){
     if(what!=nullptr){
         if(mAttachInfo){
-            mAttachInfo->mEventSource->removeCallbacks(what);
+            mAttachInfo->mHandler->removeCallbacks(what);
             Choreographer::getInstance().removeCallbacks(Choreographer::CALLBACK_ANIMATION,&what, nullptr);
         }
         getRunQueue()->removeCallbacks(what);
@@ -9885,6 +9916,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mCanvas       = nullptr;
     mTooltipHost  = nullptr;
     mEventSource  = nullptr;
+    mHandler      = new Handler(Looper::getMainLooper());
     mDragToken = nullptr;
     mViewRequestingLayout = nullptr;
     mAutofilledDrawable = nullptr;
@@ -9896,6 +9928,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
 }
 
 View::AttachInfo::~AttachInfo(){
+    delete mHandler;
     delete mTreeObserver;
     delete mAutofilledDrawable;
     delete mAccessibilityFocusDrawable;
@@ -9941,9 +9974,9 @@ void View::CheckForTap::setAnchor(float x,float y){
 }
 
 void View::CheckForTap::run(){
-    mView->mPrivateFlags &= ~PFLAG_PRESSED;
+    mView->mPrivateFlags &= ~PFLAG_PREPRESSED;
     mView->setPressed(true,mX,mY);
-    mView->checkForLongClick(ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
+    mView->checkForLongClick(ViewConfiguration::getLongPressTimeout() - ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
 }
 
 void View::CheckForTap::postDelayed(long ms){

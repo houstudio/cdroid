@@ -48,6 +48,7 @@
     <color name="button_material_light">#ffd6d7d7</color>
     <color name="error_color_material">#F4511E</color>
 
+    <color name="ratingbar_background_material">#ff112233</color>
     <color name="switch_thumb_normal_material_dark">#ffbdbdbd</color>
     <color name="switch_thumb_normal_material_light">#fff1f1f1</color>
     <color name="switch_thumb_disabled_material_dark">#ff616161</color>
@@ -150,4 +151,6 @@
 
     <!-- List divider opacity -->
     <color name="list_divider_opacity_material">#1f000000</color>
+    <color name="floating_popup_divider_dark">#2F2F2F</color>
+    <color name="floating_popup_divider_light">#E9E9E9</color>
 </resources>

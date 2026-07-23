@@ -39,7 +39,8 @@ Choreographer::Choreographer(){
 }
 
 Choreographer::~Choreographer(){
-    mLooper->removeEventHandler(this);
+    // mHandler 不在此 delete: 本对象是 static 单例, 析构晚于 App::~App (销毁主 Looper),
+    // 若 delete mHandler 会触发 Handler 析构访问已销毁的 mLooper → UAF。单例 + 程序退出, 有意泄漏。
     for(int i = 0;i <= CALLBACK_LAST;i++){
         delete mCallbackQueues[i];
         mCallbackQueues[i]=nullptr;
@@ -63,12 +64,16 @@ Choreographer& Choreographer::getInstance(){
     static Choreographer mInst;
     if(mInst.mLooper==nullptr){
         mInst.mLooper = Looper::getMainLooper();
-        mInst.mLooper->addEventHandler(&mInst);
-        mInst.setOwned(false);
+        // FrameHandler: 消息驱动 doFrame (替代原 EventHandler 33ms 轮询)。
+        // 注: mInst 是 static, 不能被 lambda 捕获; 用局部指针 self 中转。
+        Choreographer* self = &mInst;
+        mInst.mHandler = new Handler(mInst.mLooper,[self](Message&msg)->bool{
+            return self->onFrameMessage(msg);
+        });
         mInst.mFrameIntervalNanos = static_cast<nsecs_t>(1E9/getRefreshRate());
     }
     return mInst;
-}   
+}
 
 long Choreographer::getFrameDelay(){
     return sFrameDelay;
@@ -140,14 +145,14 @@ void Choreographer::postCallbackDelayedInternal(int callbackType,void* action, v
     if(mCallbackQueues[callbackType]){
         mCallbackQueues[callbackType]->addCallbackLocked(dueTime, action, token);
     }
-    /*if (dueTime <= now) {
+    if (dueTime <= now) {
         scheduleFrameLocked(now);
     } else {
-        Message msg = mHandler.obtainMessage(MSG_DO_SCHEDULE_CALLBACK, action);
-        msg.arg1 = callbackType;
-        msg.setAsynchronous(true);
-        mHandler.sendMessageAtTime(msg, dueTime);
-    }*/
+        Message* msg = mHandler->obtainMessage(MSG_DO_SCHEDULE_CALLBACK);
+        msg->arg1 = callbackType;
+        msg->setAsynchronous(true);
+        mHandler->sendMessageAtTime(msg, dueTime);
+    }
 }
 
 int Choreographer::removeCallbacks(int callbackType,const Runnable* action, void* token){
@@ -194,22 +199,23 @@ void Choreographer::scheduleFrameLocked(int64_t now){
     if (!mFrameScheduled) {
         mFrameScheduled = true;
         nsecs_t nextFrameTime = std::max(mLastFrameTimeNanos /SystemClock::NANOS_PER_MS + sFrameDelay, nsecs_t(now));
-        LOG(DEBUG)<<"Scheduling next frame in " << (nextFrameTime - now) << " ms.";
-        //Message msg = mHandler.obtainMessage(MSG_DO_FRAME);
-        //msg.setAsynchronous(true);
-        //mHandler.sendMessageAtTime(msg, nextFrameTime);
+        Message* msg = mHandler->obtainMessage(MSG_DO_FRAME);
+        msg->setAsynchronous(true);
+        mHandler->sendMessageAtTime(msg, nextFrameTime);
     }
 }
 
-int Choreographer::checkEvents(){
-    const nsecs_t now = SystemClock::uptimeNanos();
-    return (now - mLastFrameTimeNanos)>=getFrameIntervalNanos();
-}
-
-int Choreographer::handleEvents(){
-    const nsecs_t now = SystemClock::uptimeNanos();
-    doFrame(now,0);
-    return 0;
+// FrameHandler Callback: 派发 MSG_DO_* (对标 Android Choreographer.FrameHandler.handleMessage)。
+bool Choreographer::onFrameMessage(Message& msg){
+    switch (msg.what) {
+    case MSG_DO_FRAME:
+        doFrame(SystemClock::uptimeNanos(), 0);
+        return true;
+    case MSG_DO_SCHEDULE_CALLBACK:
+        scheduleFrameLocked(SystemClock::uptimeMillis());
+        return true;
+    }
+    return false;
 }
 
 void Choreographer::doFrame(nsecs_t frameTimeNanos,int frame){

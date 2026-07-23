@@ -354,7 +354,7 @@ void GraphicalView::onDraw(Canvas& canvas) {
     const int bottom=getPaddingBottom();
     const int width = getWidth()-left-right;
     const int height = getHeight()-top-bottom;
-    AbstractChart::Paint mPaint;
+    cdroid::Paint mPaint;
     mChart->draw(canvas, left,top, width, height, mPaint);
     if (mRenderer != nullptr && mRenderer->isZoomEnabled() /*&& mRenderer->isZoomButtonsVisible()*/) {
     }

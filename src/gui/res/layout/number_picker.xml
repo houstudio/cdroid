@@ -6,7 +6,7 @@
         android:background="@drawable/numberpicker_up_btn"
         android:paddingTop="22dip"
         android:paddingBottom="22dip"
-        android:contentDescription="@string/number_picker_increment_button" />
+        android:contentDescription="@string/number_picker_increment_button"/>
     <EditText
         android:id="@+id/numberpicker_input"
         android:layout_width="fill_parent"
@@ -15,12 +15,12 @@
         android:gravity="center"
         android:singleLine="true"
         android:visibility="invisible"
-        android:background="@drawable/numberpicker_input" />
+        android:background="@drawable/numberpicker_input"/>
     <ImageButton android:id="@+id/decrement"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/numberpicker_down_btn"
         android:paddingTop="22dip"
         android:paddingBottom="22dip"
-        android:contentDescription="@string/number_picker_decrement_button" />
+        android:contentDescription="@string/number_picker_decrement_button"/>
 </merge>

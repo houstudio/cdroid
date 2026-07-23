@@ -42,9 +42,9 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     initTabLayout();
 
     const int animationMode = atts.getInt("tabIndicatorAnimationMode",std::unordered_map<std::string,int>{
-            {"linear",(int)INDICATOR_ANIMATION_MODE_LINEAR},
-            {"elastic",(int)INDICATOR_ANIMATION_MODE_ELASTIC},
-            {"fade",(int)INDICATOR_ANIMATION_MODE_FADE},
+            {"linear" ,INDICATOR_ANIMATION_MODE_LINEAR},
+            {"elastic",INDICATOR_ANIMATION_MODE_ELASTIC},
+            {"fade",INDICATOR_ANIMATION_MODE_FADE},
             },INDICATOR_ANIMATION_MODE_LINEAR);
     setTabIndicatorAnimationMode(animationMode);
 
@@ -52,8 +52,8 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     setSelectedTabIndicatorColor(atts.getColor("tabIndicatorColor",0));
     mSlidingTabIndicator->setSelectedIndicatorHeight(atts.getDimensionPixelSize("tabIndicatorHeight",2));
     const int tabIndicatorGravity=atts.getInt("tabIndicatorGravity",std::unordered_map<std::string,int>{
-            {"bottom",(int)INDICATOR_GRAVITY_BOTTOM},  {"center" ,(int)INDICATOR_GRAVITY_CENTER},
-            {"top",(int)INDICATOR_GRAVITY_TOP},        {"stretch",(int)INDICATOR_GRAVITY_STRETCH}
+            {"bottom",INDICATOR_GRAVITY_BOTTOM},  {"center" ,INDICATOR_GRAVITY_CENTER},
+            {"top",INDICATOR_GRAVITY_TOP},        {"stretch",INDICATOR_GRAVITY_STRETCH}
             },INDICATOR_GRAVITY_BOTTOM);
     setSelectedTabIndicatorGravity(tabIndicatorGravity);
     setTabIndicatorFullWidth(atts.getBoolean("tabIndicatorFullWidth",true));
@@ -103,14 +103,14 @@ TabLayout::TabLayout(Context*context,const AttributeSet&atts)
     mTabBackgroundResId= atts.getString("tabBackground");
     mContentInsetStart  = atts.getDimensionPixelSize("tabContentStart", 0);
     mMode = atts.getInt("tabMode",std::unordered_map<std::string,int>{
-            {"scrollable",(int)MODE_SCROLLABLE},
-            {"fixed",(int)MODE_FIXED},
-            {"auto",(int)MODE_AUTO}},mMode);
+            {"scrollable", MODE_SCROLLABLE},
+            {"fixed", MODE_FIXED},
+            {"auto", MODE_AUTO}},mMode);
     mSmoothScroll = atts.getBoolean("smoothScroll",true);
     mTabGravity = atts.getInt("tabGravity",std::unordered_map<std::string,int>{
-            {"fill",(int)GRAVITY_FILL},
-            {"center",(int)GRAVITY_CENTER},
-            {"start",(int)GRAVITY_START}},GRAVITY_FILL);
+            {"fill" ,GRAVITY_FILL},
+            {"center",GRAVITY_CENTER},
+            {"start",GRAVITY_START}},GRAVITY_FILL);
     mInlineLabel= atts.getBoolean("tabInlineLabel",false);
     applyModeAndGravity();
 }

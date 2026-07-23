@@ -1,5 +1,12 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
+#include <core/app.h>
+#include <drawable/colordrawable.h>
+#include <drawable/animationdrawable.h>
+#include <drawable/statelistdrawable.h>
+#include <drawable/animatedstatelistdrawable.h>
+#include <drawable/transitiondrawable.h>
+#include <drawable/ninepatchdrawable.h>
+#include <drawable/bitmapdrawable.h>
 #include <guienvironment.h>
 using namespace cdroid;
 
@@ -16,12 +23,12 @@ public:
 };
 
 TEST_F(ASSETS,string){
-   App app(0,NULL);
+   App&app=App::getInstance();
    std::string str=app.getString("cdroid:string/number_picker_decrement_button");
    printf("str=%s\n",str.c_str());
 }
 TEST_F(ASSETS,array){
-   App app(0,NULL);
+   App&app=App::getInstance();
    std::vector<std::string>array;
    app.getArray("cdroid:array/resolver_target_actions_unpin",array);
    for(auto a:array)printf("%s\r\n",a.c_str());
@@ -30,7 +37,7 @@ TEST_F(ASSETS,array){
 }
 
 TEST_F(ASSETS,array2){
-   App app(0,NULL);
+   App&app=App::getInstance();
    std::vector<std::string>array;
    app.getArray("@cdroid:array/preloaded_drawables",array);
    for(auto a:array)printf("%s\r\n",a.c_str());
@@ -38,7 +45,7 @@ TEST_F(ASSETS,array2){
    ASSERT_TRUE(array.size()>0);
 }
 TEST_F(ASSETS,color){
-    App app(0,NULL);
+    App&app=App::getInstance();
     auto cl = app.getColorStateList("cdroid:attr/editTextColor");
     ASSERT_TRUE(cl!=NULL);
     cl=app.getColorStateList("cdroid:color/textview");
@@ -46,7 +53,7 @@ TEST_F(ASSETS,color){
     cl->dump();
 }
 TEST_F(ASSETS,drawable){
-    App app(argc,argv);
+    App&app=App::getInstance();
     ColorDrawable* cl = (ColorDrawable*)app.getDrawable("@cdroid:color/black");
     ASSERT_TRUE(cl!=NULL);
     LOGD("COLOR=%x",(uint32_t)cl->getColor());
@@ -55,18 +62,18 @@ TEST_F(ASSETS,drawable){
     ASSERT_TRUE(cl!=NULL);
     LOGD("COLOR=%x",(uint32_t)cl->getColor());
     ASSERT_EQ((uint32_t)cl->getColor(),0);
-    app.exec();
+    pumpFor(100);
 }
 
 TEST_F(ASSETS,animation_list){
-    App app(argc,argv);
+    App&app=App::getInstance();
     AnimationDrawable*ad=(AnimationDrawable*)app.getDrawable("@cdroid:drawable/progress_indeterminate_horizontal");
     ASSERT_EQ(ad->getChildCount(),3);
     for(int i=0;i<ad->getChildCount();i++) ASSERT_NE(dynamic_cast<BitmapDrawable*>(ad->getChild(i)),nullptr);
 }
 
 TEST_F(ASSETS,state_layerlist){
-    App app(argc,argv);
+    App&app=App::getInstance();
     StateListDrawable* st = (StateListDrawable*)app.getDrawable("@cdroid:drawable/list_selector_background");
     ASSERT_NE(st,nullptr);
     ASSERT_EQ(st->getChildCount(),6);
@@ -86,11 +93,11 @@ TEST_F(ASSETS,state_layerlist){
        ASSERT_NE(dynamic_cast<NinePatchDrawable*>(td2->getDrawable(1)),nullptr);
     ASSERT_NE(dynamic_cast<TransitionDrawable*>(st->getStateDrawable(4)),nullptr);
     ASSERT_NE(dynamic_cast<NinePatchDrawable*>(st->getStateDrawable(5)),nullptr);
-    app.exec();
+    pumpFor(100);
 }
 
 TEST_F(ASSETS,animated_selector){
-    App app(argc,argv);
+    App&app=App::getInstance();
     AnimatedStateListDrawable* asd = (AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim");
     ASSERT_NE(asd,nullptr);
     ASSERT_EQ(asd->getChildCount(),5);
@@ -113,10 +120,10 @@ TEST_F(ASSETS,animated_selector){
        AnimationDrawable*ad2 = dynamic_cast<AnimationDrawable*>(td2->getDrawable(0));
        ASSERT_EQ(ad2->getChildCount(),12);
        for(int i=0;i<ad2->getChildCount();i++) ASSERT_NE(dynamic_cast<NinePatchDrawable*>(ad2->getChild(i)),nullptr);
-    app.exec();
+    pumpFor(100);
 }
 TEST_F(ASSETS,animatedselector){
-    App app(argc,argv);
+    App&app=App::getInstance();
     AnimatedStateListDrawable* asd = (AnimatedStateListDrawable*)app.getDrawable("@cdroid:drawable/switch_thumb_material_anim_test");
     ASSERT_NE(asd,nullptr);
     ASSERT_EQ(asd->getChildCount(),3);
@@ -153,6 +160,6 @@ TEST_F(ASSETS,animatedselector){
        AnimationDrawable*ad2 = dynamic_cast<AnimationDrawable*>(td2->getDrawable(0));
        ASSERT_EQ(ad2->getChildCount(),2);
        for(int i=0;i<ad2->getChildCount();i++) ASSERT_NE(dynamic_cast<NinePatchDrawable*>(ad2->getChild(i)),nullptr);
-    app.exec();
+    pumpFor(100);
 }
 

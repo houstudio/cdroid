@@ -42,7 +42,6 @@ protected:
     bool verifyDrawable(Drawable* who)const override;
     void onDetachedFromWindow()override;
     void onDraw(Canvas&canvas)override;
-    virtual void doSetChecked(bool);
     void setDefaultStateDescription();
 public:
     CompoundButton(const std::string&txt,int width,int height);
@@ -62,12 +61,12 @@ public:
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     int getCompoundPaddingLeft()const override;
     int getCompoundPaddingRight()const override;
+
     //inerited from Checkable
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
     void setChecked(bool checked)override;
     bool isChecked()const override;
     void toggle()override;
-#endif
+
     void setStateDescription(const std::string&stateDescription)override;
     virtual std::string getButtonStateDescription();
     void setOnCheckedChangeListener(const OnCheckedChangeListener& listener);

@@ -1,39 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<!--
+  IME layout: the 1/2-level candidate strip on TOP, the soft keyboard
+  (letter keys + function keys) full-width on the BOTTOM. The candidate strip
+  and the close button share the top row.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
-    <CandidateView
-        android:id="@+id/predict2"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <!-- Top row: candidate strip + close button -->
+    <RelativeLayout
         android:layout_width="match_parent"
-	android:layout_height="wrap_content"
-	android:layout_alignParentTop="true"
-	android:candidate_background="#112233"
-	android:candidate_normal="#FFFFFF"
-	android:candidate_recommand="#FF0000"/>
-    <Button
-	android:id="@+id/closekeyboard"
-	android:layout_width="wrap_content"
-	android:layout_height="wrap_content"
-	android:layout_alignParentTop="true"
-	android:layout_alignParentRight="true"
-	android:layout_alignEnd="@id/predict2"
-	android:layout_alignBottom="@id/predict2"
-	android:background="#ff2233"
-	android:text="+"/>
-    <ListView
-        android:id="@+id/predict1"
-        android:layout_width="200dp"
-        android:layout_height="match_parent"
-        android:layout_below="@id/predict2"
-        android:layout_alignParentStart="true"
-        android:background="#80223344"/>
-   <android.inputmethodservice.KeyboardView
-       android:id="@+id/keyboardview"
-       android:layout_width="match_parent"
-       android:layout_height="match_parent"
-       android:layout_toEndOf="@id/predict1"
-       android:layout_alignTop="@+id/predict1"
-       android:layout_alignBottom="@id/predict1"
-       android:keyBackground="#332211"
-       android:keyTextColor="black"/>
-</RelativeLayout>
+        android:layout_height="wrap_content">
+        <CandidateView
+            android:id="@+id/predict2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_toStartOf="@id/closekeyboard"
+            android:candidate_background="#112233"
+            android:candidate_normal="#FFFFFF"
+            android:candidate_recommand="#FF0000"/>
+        <Button
+            android:id="@+id/closekeyboard"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:background="#ff2233"
+            android:text="+"/>
+    </RelativeLayout>
+
+    <!-- Bottom: full-width keyboard (letters + function keys) -->
+    <android.inputmethodservice.KeyboardView
+        android:id="@+id/keyboardview"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:keyBackground="#223344"
+        android:keyTextColor="#ffffff"
+        android:popupLayout="@cdroid:layout/keyboard_popup_keyboard"/>
+</LinearLayout>

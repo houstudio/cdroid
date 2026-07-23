@@ -48,11 +48,11 @@ private:
     float mPhysicalCoeff;
     bool mIsLayoutDirty;
     bool mIsLaidOut;
-    View* mChildToScrollTo;
-    bool mIsBeingDragged;
-    VelocityTracker* mVelocityTracker;
     bool mFillViewport;
+    bool mIsBeingDragged;
     bool mSmoothScrollingEnabled;
+    View* mChildToScrollTo;
+    VelocityTracker* mVelocityTracker;
 	
     int mTouchSlop;
     int mMinimumVelocity;

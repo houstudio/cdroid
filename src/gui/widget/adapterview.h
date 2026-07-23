@@ -66,7 +66,6 @@ private:
     Parcelable mInstanceState;
     Runnable mSelectionNotifier;
     Runnable mPendingSelectionNotifier;
-    bool mDesiredFocusableInTouchModeState;
     void initAdapterView();
     void updateEmptyStatus(bool empty);
     void dispatchOnItemSelected();
@@ -80,6 +79,7 @@ protected:
     bool mIsVertical;
     bool mNeedSync;
     bool mBlockLayoutRequests;
+    bool mDesiredFocusableInTouchModeState;
     int mLayoutHeight;
     int mFirstPosition;
     int mSpecificTop;

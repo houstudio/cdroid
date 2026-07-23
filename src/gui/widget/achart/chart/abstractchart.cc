@@ -31,7 +31,7 @@ void AbstractChart::drawBackground(const std::shared_ptr<DefaultRenderer>& rende
         } else {
             canvas.set_color(renderer->getBackgroundColor());
         }
-        paint.setStyle(Style::FILL);
+        paint.setStyle(Paint::Style::FILL);
         canvas.rectangle(x, y, width, height);//, paint);
         canvas.fill();
     }
@@ -59,7 +59,7 @@ int AbstractChart::drawLegend(Canvas& canvas, const std::shared_ptr<DefaultRende
     if (renderer->isShowLegend()) {
         float currentX = left;
         float currentY = y + height - legendSize + size;
-        paint.setTextAlign(Align::LEFT);
+        paint.setTextAlign(Paint::Align::LEFT);
         canvas.set_font_size(renderer->getLegendTextSize());//paint.setTextSize(renderer.getLegendTextSize());
         const int sLength = std::min((int)titles.size(), renderer->getSeriesRendererCount());
         for (int i = 0; i < sLength; i++) {
@@ -113,10 +113,10 @@ void AbstractChart::drawString(Canvas& canvas,const std::string& text, float x, 
         for (int i = 0; i < lines.size(); ++i) {
             Cairo::TextExtents te; //canvas.drawText(lines[i], x, y + yOff, paint);
             canvas.get_text_extents(lines[i],te);
-            switch(paint.textAlign){
-            case Align::LEFT:canvas.move_to(x,y+yOff);break;
-            case Align::CENTER:canvas.move_to(x-te.width/2.0,y+yOff);break;
-            case Align::RIGHT:canvas.move_to(x-te.width,y+yOff);break;
+            switch(paint.getTextAlign()){
+            case Paint::Align::LEFT:canvas.move_to(x,y+yOff);break;
+            case Paint::Align::CENTER:canvas.move_to(x-te.width/2.0,y+yOff);break;
+            case Paint::Align::RIGHT:canvas.move_to(x-te.width,y+yOff);break;
             }
             canvas.show_text(lines[i]);
             yOff = yOff + te.height/*rect.height*/ + 5; // space between lines is 5
@@ -249,7 +249,7 @@ void AbstractChart::drawPath(Canvas& canvas,const std::vector<float>& points, Pa
         canvas.line_to/*path.lineTo*/(points[0], points[1]);
     }
     canvas.close_path();//canvas.drawPath(path, paint);
-    if(paint.style==Style::FILL)
+    if(paint.getStyle()&Paint::Style::FILL)
         canvas.fill();
     else
         canvas.stroke();
@@ -296,10 +296,10 @@ void AbstractChart::drawLabel(Canvas& canvas,const std::string& labelText, const
 
         float size = renderer->getLabelsTextSize();
         float extra = std::max(size / 2, 10.f);
-        paint.setTextAlign(Align::LEFT);
+        paint.setTextAlign(Paint::Align::LEFT);
         if (x1 > x2) {
             extra = -extra;
-            paint.setTextAlign(Align::RIGHT);
+            paint.setTextAlign(Paint::Align::RIGHT);
         }
         float xLabel = x2 + extra;
         float yLabel = y2;
@@ -332,13 +332,13 @@ void AbstractChart::drawLabel(Canvas& canvas,const std::string& labelText, const
             canvas.line_to(x2 + extra, y2);
             canvas.stroke();
         } else {
-            paint.setTextAlign(Align::CENTER);
+            paint.setTextAlign(Paint::Align::CENTER);
         }
         //canvas.drawText(labelText, xLabel, yLabel, paint);
-        switch(paint.textAlign){
-        case Align::LEFT  : canvas.move_to(xLabel, yLabel);break;
-        case Align::CENTER: canvas.move_to(xLabel-te.width/2.0,yLabel);break;
-        case Align::RIGHT : canvas.move_to(xLabel-te.width,yLabel);break;
+        switch(paint.getTextAlign()){
+        case Paint::Align::LEFT  : canvas.move_to(xLabel, yLabel);break;
+        case Paint::Align::CENTER: canvas.move_to(xLabel-te.width/2.0,yLabel);break;
+        case Paint::Align::RIGHT : canvas.move_to(xLabel-te.width,yLabel);break;
         }
         //canvas.move_to(xLabel, yLabel);
         canvas.show_text(labelText);

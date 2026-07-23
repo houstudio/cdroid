@@ -283,7 +283,10 @@ void VelocityTrackerImpl::addMovement(const MotionEvent& event) {
         break;
     case MotionEvent::ACTION_POINTER_UP:
     case MotionEvent::ACTION_UP: {
-        nsecs_t delaySinceLastEvent = (event.getEventTime() - mLastEventTime);
+        // getEventTime() is ms (CDROID base unit); mLastEventTime is ns (set
+        // from getHistoricalEventTime*NANOS_PER_MS). Convert ms->ns so the
+        // comparison vs ASSUME_POINTER_STOPPED_TIME works.
+        nsecs_t delaySinceLastEvent = (event.getEventTime()*NANOS_PER_MS - mLastEventTime);
         if (delaySinceLastEvent > ASSUME_POINTER_STOPPED_TIME) {
             LOGD_IF(DEBUG_VELOCITY,
                      "VelocityTracker: stopped for %lld, clearing state upon pointer liftoff.",

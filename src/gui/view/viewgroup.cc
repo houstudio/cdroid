@@ -851,6 +851,18 @@ bool ViewGroup::addViewInLayout(View* child, int index,LayoutParams* params,bool
     return true;
 }
 
+void ViewGroup::updateViewLayout(View* view, ViewGroup::LayoutParams* params){
+    if (!checkLayoutParams(params)) {
+        LOGE("Invalid LayoutParams supplied to ViewGroup %p", this);
+        return;
+    }
+    if (view->mParent != this) {
+        LOGE("Given view not a child of ViewGroup %p", this);
+        return;
+    }
+    view->setLayoutParams(params);
+}
+
 void ViewGroup::addTransientView(View*view,int index){
     if (index < 0) {
         return;
@@ -2143,7 +2155,7 @@ void ViewGroup::removeViewsInternal(int start, int count){
         cancelHoverTarget(view);
 
         if (view->getAnimation() ||(std::find(mTransitioningViews.begin(),
-                mTransitioningViews.end(),view)==mTransitioningViews.end())) {
+                mTransitioningViews.end(),view)!=mTransitioningViews.end())) {
             addDisappearingView(view);
         } else if (detach) {
             view->dispatchDetachedFromWindow();
@@ -2190,24 +2202,26 @@ std::string ViewGroup::getAccessibilityClassName()const{
     return "ViewGroup";
 }
 
-View* ViewGroup::findViewWithTagTraversal(void*tag){
-    //if (tag  && tag.equals(mTag)) return (View*)this;
+View* ViewGroup::findViewTraversal(int id){
+    if (id == mID) return (View*)this;
+    for (auto v : mChildren) {
+        if ((v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0) {
+            View* c = v->findViewById(id);
+            if (c != nullptr) return c;
+        }
+    }
+    return nullptr;
+}
 
-    for (View*v:mChildren){
+View* ViewGroup::findViewWithTagTraversal(void* tag){
+    if (tag && tag == mTag) return (View*)this;
+    for (View* v : mChildren) {
         if ((v->mPrivateFlags & PFLAG_IS_ROOT_NAMESPACE) == 0) {
             v = v->findViewWithTag(tag);
             if (v != nullptr) return v;
         }
     }
     return nullptr;
-}
-
-View*ViewGroup::findViewById(int id){
-    for(auto v:mChildren){
-        View*c=v->findViewById(id);
-        if(c)return c;
-    }
-    return View::findViewById(id);
 }
 
 View* ViewGroup::findViewByAccessibilityIdTraversal(int accessibilityId) {
@@ -2760,6 +2774,54 @@ bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool 
     return false;
 }
 
+namespace {
+class SentinelActionMode : public ActionMode {
+public:
+    void setTitle(const std::string&) override {}
+    void setSubtitle(const std::string&) override {}
+    void setCustomView(View*) override {}
+    void invalidate() override {}
+    void finish() override {}
+    Menu* getMenu() override { return nullptr; }
+    std::string getTitle() override { return {}; }
+    std::string getSubtitle() override { return {}; }
+    View* getCustomView() override { return nullptr; }
+    MenuInflater* getMenuInflater() override { return nullptr; }
+};
+SentinelActionMode gSentinelActionMode;
+}
+static ActionMode* const SENTINEL_ACTION_MODE = &gSentinelActionMode;
+
+ActionMode* ViewGroup::startActionModeForChild(View* originalView, const ActionMode::Callback& callback){
+    if ((mGroupFlags & FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED) == 0) {
+        mGroupFlags |= FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED;
+        ActionMode* mode = startActionModeForChild(originalView, callback, ActionMode::TYPE_PRIMARY);
+        mGroupFlags &= ~FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED;
+        return mode;
+    }
+    return SENTINEL_ACTION_MODE;
+}
+
+ActionMode* ViewGroup::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
+    if ((mGroupFlags & FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED) == 0
+            && type == ActionMode::TYPE_PRIMARY) {
+        mGroupFlags |= FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
+        ActionMode* mode = startActionModeForChild(originalView, callback);
+        mGroupFlags &= ~FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
+        if (mode != SENTINEL_ACTION_MODE) {
+            return mode;
+        }
+    }
+    if (mParent != nullptr) {
+        try {
+            return mParent->startActionModeForChild(originalView, callback, type);
+        } catch (...) {
+            return mParent->startActionModeForChild(originalView, callback);
+        }
+    }
+    return nullptr;
+}
+
 bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
     if (mParent == nullptr) {
         return false;
@@ -2848,13 +2910,29 @@ void ViewGroup::handlePointerCaptureChanged(bool hasCapture) {
 }
 
 void ViewGroup::clearChildFocus(View* child){
-    if (mFocused == nullptr) {
-         View::clearFocus();
-    } else {
-         View* focused = mFocused;
-         mFocused = nullptr;
-         focused->clearFocus();
+    mFocused = nullptr;
+    if (mParent != nullptr) {
+        mParent->clearChildFocus(this);
     }
+}
+
+void ViewGroup::clearFocus(){
+    if (mFocused == nullptr) {
+        View::clearFocus();
+    } else {
+        View* focused = mFocused;
+        mFocused = nullptr;
+        focused->clearFocus();
+    }
+}
+
+void ViewGroup::handleFocusGainInternal(int direction, Rect* previouslyFocusedRect){
+    if (mFocused != nullptr) {
+        mFocused->unFocus(this);
+        mFocused = nullptr;
+        mFocusedInCluster = nullptr;
+    }
+    View::handleFocusGainInternal(direction, previouslyFocusedRect);
 }
 
 void ViewGroup::focusableViewAvailable(View*v){
@@ -2920,12 +2998,12 @@ bool ViewGroup::dispatchActivityResult(const std::string& who, int requestCode, 
 }
 
 View* ViewGroup::focusSearch(View* focused, int direction){
-    if (nullptr==mParent){//isRootNamespace()) {
+    if (isRootNamespace()) {
         // root namespace means we should consider ourselves the top of the
         // tree for focus searching; otherwise we could be focus searching
         // into other tabs.  see LocalActivityManager and TabHost for more info.
         return FocusFinder::getInstance().findNextFocus((ViewGroup*)this, focused, direction);
-    } else {
+    } else if (mParent != nullptr) {
         return mParent->focusSearch(focused, direction);
     }
     return nullptr;
@@ -3140,6 +3218,9 @@ void ViewGroup::scheduleLayoutAnimation() {
 }
 
 void ViewGroup::setLayoutAnimation(LayoutAnimationController* controller) {
+    if (mLayoutAnimationController != controller){
+        delete mLayoutAnimationController;
+    }
     mLayoutAnimationController = controller;
     if (mLayoutAnimationController) {
         mGroupFlags |= FLAG_RUN_ANIMATION;
@@ -3488,7 +3569,7 @@ bool ViewGroup::isTransformedTouchPointInView(float x,float y, View& child,Point
     transformPointToViewLocal(point,child);
     const bool isInView=child.pointInView(point[0],point[1],0);
     if(isInView && outLocalPoint != nullptr) {
-        outLocalPoint->set(x, y);
+        outLocalPoint->set(point[0], point[1]);
     }
     return isInView;
 }
@@ -3654,7 +3735,7 @@ bool ViewGroup::dispatchKeyEvent(KeyEvent&event){
     }
     if (mInputEventConsistencyVerifier)
         mInputEventConsistencyVerifier->onUnhandledEvent(event, 1);
-    return View::dispatchKeyEvent(event);
+    return false;
 }
 
 bool ViewGroup::dispatchKeyShortcutEvent(KeyEvent&event){
@@ -3793,14 +3874,8 @@ bool ViewGroup::dispatchTouchEvent(MotionEvent&ev){
                                 continue;
                             }
                             childWithAccessibilityFocus = nullptr;
-                            i = childrenCount - 1;
+                            i = childrenCount;
                         }
-
-                        if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
-                            ev.setTargetAccessibilityFocus(false);
-                            continue;
-                        }
-
 
                         if (!canViewReceivePointerEvents(*child) || !isTransformedTouchPointInView(x, y,*child, nullptr)) {
                             ev.setTargetAccessibilityFocus(false);

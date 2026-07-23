@@ -119,7 +119,7 @@ void GridView::fillGap(bool down) {
         if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
             paddingTop = getListPaddingTop();
         }
-        int startOffset = count > 0 ? getChildAt(count - 1)->getBottom() + verticalSpacing : paddingTop;
+        const int startOffset = count > 0 ? getChildAt(count - 1)->getBottom() + verticalSpacing : paddingTop;
         int position = mFirstPosition + count;
         if (mStackFromBottom) {
             position += numColumns - 1;
@@ -131,7 +131,7 @@ void GridView::fillGap(bool down) {
         if ((mGroupFlags & CLIP_TO_PADDING_MASK) == CLIP_TO_PADDING_MASK) {
             paddingBottom = getListPaddingBottom();
         }
-        int startOffset = count > 0 ? getChildAt(0)->getTop() - verticalSpacing : getHeight() - paddingBottom;
+        const int startOffset = count > 0 ? getChildAt(0)->getTop() - verticalSpacing : getHeight() - paddingBottom;
         int position = mFirstPosition;
         if (!mStackFromBottom) {
             position -= numColumns;
@@ -264,16 +264,16 @@ View* GridView::fillFromBottom(int lastPosition, int nextBottom) {
     lastPosition = std::max(lastPosition, mSelectedPosition);
     lastPosition = std::min(lastPosition, mItemCount - 1);
 
-    int invertedPosition = mItemCount - 1 - lastPosition;
+    const int invertedPosition = mItemCount - 1 - lastPosition;
     lastPosition = mItemCount - 1 - (invertedPosition - (invertedPosition % mNumColumns));
 
     return fillUp(lastPosition, nextBottom);
 }
 
 View* GridView::fillSelection(int childrenTop, int childrenBottom) {
-    int selectedPosition = reconcileSelectedPosition();
-    int numColumns = mNumColumns;
-    int verticalSpacing = mVerticalSpacing;
+    const int selectedPosition = reconcileSelectedPosition();
+    const int numColumns = mNumColumns;
+    const int verticalSpacing = mVerticalSpacing;
 
     int rowStart;
     int rowEnd = -1;
@@ -281,14 +281,14 @@ View* GridView::fillSelection(int childrenTop, int childrenBottom) {
     if (!mStackFromBottom) {
         rowStart = selectedPosition - (selectedPosition % numColumns);
     } else {
-        int invertedSelection = mItemCount - 1 - selectedPosition;
+        const int invertedSelection = mItemCount - 1 - selectedPosition;
 
         rowEnd = mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
         rowStart = std::max(0, rowEnd - numColumns + 1);
     }
 
-    int fadingEdgeLength = getVerticalFadingEdgeLength();
-    int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
+    const int fadingEdgeLength = getVerticalFadingEdgeLength();
+    const int topSelectionPixel = getTopSelectionPixel(childrenTop, fadingEdgeLength, rowStart);
 
     View* sel = makeRow(mStackFromBottom ? rowEnd : rowStart, topSelectionPixel, true);
     mFirstPosition = rowStart;
@@ -301,9 +301,9 @@ View* GridView::fillSelection(int childrenTop, int childrenBottom) {
         fillUp(rowStart - numColumns, referenceView->getTop() - verticalSpacing);
         adjustViewsUpOrDown();
     } else {
-        int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom,
+        const int bottomSelectionPixel = getBottomSelectionPixel(childrenBottom,
                                    fadingEdgeLength, numColumns, rowStart);
-        int offset = bottomSelectionPixel - referenceView->getBottom();
+        const int offset = bottomSelectionPixel - referenceView->getBottom();
         offsetChildrenTopAndBottom(offset);
         fillUp(rowStart - 1, referenceView->getTop() - verticalSpacing);
         pinToTop(childrenTop);
@@ -315,8 +315,8 @@ View* GridView::fillSelection(int childrenTop, int childrenBottom) {
 
 void GridView::pinToTop(int childrenTop) {
     if (mFirstPosition == 0) {
-        int top = getChildAt(0)->getTop();
-        int offset = childrenTop - top;
+        const int top = getChildAt(0)->getTop();
+        const int offset = childrenTop - top;
         if (offset < 0) {
             offsetChildrenTopAndBottom(offset);
         }
@@ -326,8 +326,8 @@ void GridView::pinToTop(int childrenTop) {
 void GridView::pinToBottom(int childrenBottom) {
     int count = getChildCount();
     if (mFirstPosition + count == mItemCount) {
-        int bottom = getChildAt(count - 1)->getBottom();
-        int offset = childrenBottom - bottom;
+        const int bottom = getChildAt(count - 1)->getBottom();
+        const int offset = childrenBottom - bottom;
         if (offset > 0) {
             offsetChildrenTopAndBottom(offset);
         }
@@ -335,9 +335,9 @@ void GridView::pinToBottom(int childrenBottom) {
 }
 
 int GridView::findMotionRow(int y) {
-    int childCount = getChildCount();
+    const int childCount = getChildCount();
     if (childCount > 0) {
-        int numColumns = mNumColumns;
+        const int numColumns = mNumColumns;
         if (!mStackFromBottom) {
             for (int i = 0; i < childCount; i += numColumns) {
                 if (y <= getChildAt(i)->getBottom()) {
@@ -356,7 +356,7 @@ int GridView::findMotionRow(int y) {
 }
 
 View* GridView::fillSpecific(int position, int top) {
-    int numColumns = mNumColumns;
+    const int numColumns = mNumColumns;
 
     int motionRowStart;
     int motionRowEnd = -1;
@@ -364,7 +364,7 @@ View* GridView::fillSpecific(int position, int top) {
     if (!mStackFromBottom) {
         motionRowStart = position - (position % numColumns);
     } else {
-        int invertedSelection = mItemCount - 1 - position;
+        const int invertedSelection = mItemCount - 1 - position;
 
         motionRowEnd = mItemCount - 1 - (invertedSelection - (invertedSelection % numColumns));
         motionRowStart = std::max(0, motionRowEnd - numColumns + 1);
@@ -383,14 +383,15 @@ View* GridView::fillSpecific(int position, int top) {
 
     int verticalSpacing = mVerticalSpacing;
 
-    View* above,* below;
+    View* above;
+    View* below;
 
     if (!mStackFromBottom) {
         above = fillUp(motionRowStart - numColumns, referenceView->getTop() - verticalSpacing);
         adjustViewsUpOrDown();
         below = fillDown(motionRowStart + numColumns, referenceView->getBottom() + verticalSpacing);
         // Check if we have dragged the bottom of the grid too high
-        int childCount = getChildCount();
+        const int childCount = getChildCount();
         if (childCount > 0) {
             correctTooHigh(numColumns, verticalSpacing, childCount);
         }
@@ -399,7 +400,7 @@ View* GridView::fillSpecific(int position, int top) {
         adjustViewsUpOrDown();
         above = fillUp(motionRowStart - 1, referenceView->getTop() - verticalSpacing);
         // Check if we have dragged the bottom of the grid too high
-        int childCount = getChildCount();
+        const int childCount = getChildCount();
         if (childCount > 0) {
             correctTooLow(numColumns, verticalSpacing, childCount);
         }
@@ -415,15 +416,15 @@ View* GridView::fillSpecific(int position, int top) {
 }
 
 void GridView::correctTooHigh(int numColumns, int verticalSpacing, int childCount) {
-    int lastPosition = mFirstPosition + childCount - 1;
+    const int lastPosition = mFirstPosition + childCount - 1;
     if (lastPosition == mItemCount - 1 && childCount > 0) {
         // Get the last child ...
         View* lastChild = getChildAt(childCount - 1);
 
         // ... and its bottom edge
-        int lastBottom = lastChild->getBottom();
+        const int lastBottom = lastChild->getBottom();
         // This is bottom of our drawable area
-        int end = mBottom-mTop - mListPadding.height;
+        const int end = mBottom-mTop - mListPadding.height;
 
         // This is how far the bottom edge of the last view is from the bottom of the
         // drawable area
@@ -459,20 +460,20 @@ void GridView::correctTooLow(int numColumns, int verticalSpacing, int childCount
         View* firstChild = getChildAt(0);
 
         // ... and its top edge
-        int firstTop = firstChild->getTop();
+        const int firstTop = firstChild->getTop();
 
         // This is top of our drawable area
-        int start = mListPadding.top;
+        const int start = mListPadding.top;
 
         // This is bottom of our drawable area
-        int end = mBottom-mTop - mListPadding.height;
+        const int end = (mBottom - mTop) - mListPadding.height;
 
         // This is how far the top edge of the first view is from the top of the
         // drawable area
         int topOffset = firstTop - start;
         View* lastChild = getChildAt(childCount - 1);
-        int lastBottom = lastChild->getBottom();
-        int lastPosition = mFirstPosition + childCount - 1;
+        const int lastBottom = lastChild->getBottom();
+        const int lastPosition = mFirstPosition + childCount - 1;
 
         // Make sure we are 1) Too low, and 2) Either there are more rows below the
         // last row or the last row is scrolled off the bottom of the drawable area
@@ -497,10 +498,10 @@ void GridView::correctTooLow(int numColumns, int verticalSpacing, int childCount
 }
 
 View* GridView::fillFromSelection(int selectedTop, int childrenTop, int childrenBottom) {
-    int fadingEdgeLength = getVerticalFadingEdgeLength();
-    int selectedPosition = mSelectedPosition;
-    int numColumns = mNumColumns;
-    int verticalSpacing = mVerticalSpacing;
+    const int fadingEdgeLength = getVerticalFadingEdgeLength();
+    const int selectedPosition = mSelectedPosition;
+    const int numColumns = mNumColumns;
+    const int verticalSpacing = mVerticalSpacing;
 
     int rowStart;
     int rowEnd = -1;
@@ -592,10 +593,10 @@ void GridView::adjustForTopFadingEdge(View* childInSelectedRow,int topSelectionP
 }
 
 View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
-    int fadingEdgeLength = getVerticalFadingEdgeLength();
-    int selectedPosition = mSelectedPosition;
-    int numColumns = mNumColumns;
-    int verticalSpacing = mVerticalSpacing;
+    const int fadingEdgeLength = getVerticalFadingEdgeLength();
+    const int selectedPosition = mSelectedPosition;
+    const int numColumns = mNumColumns;
+    const int verticalSpacing = mVerticalSpacing;
 
     int oldRowStart;
     int rowStart;
@@ -666,9 +667,9 @@ View* GridView::moveSelection(int delta, int childrenTop, int childrenBottom) {
 }
 
 bool GridView::determineColumns(int availableSpace) {
-    int requestedHorizontalSpacing = mRequestedHorizontalSpacing;
-    int stretchMode = mStretchMode;
-    int requestedColumnWidth = mRequestedColumnWidth;
+    const int requestedHorizontalSpacing = mRequestedHorizontalSpacing;
+    const int stretchMode = mStretchMode;
+    const int requestedColumnWidth = mRequestedColumnWidth;
     bool didNotInitiallyFit = false;
 
     if (mRequestedNumColumns == AUTO_FIT) {
@@ -824,7 +825,7 @@ void GridView::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 }
 
 void GridView::layoutChildren() {
-    bool blockLayoutRequests = mBlockLayoutRequests;
+    const bool blockLayoutRequests = mBlockLayoutRequests;
     if (!blockLayoutRequests) {
         mBlockLayoutRequests = true;
     }
@@ -999,7 +1000,7 @@ void GridView::layoutChildren() {
         positionSelector(INVALID_POSITION, sel);
         mSelectedTop = sel->getTop();
     } else {
-        bool inTouchMode = mTouchMode > TOUCH_MODE_DOWN
+        const bool inTouchMode = mTouchMode > TOUCH_MODE_DOWN
                            && mTouchMode < TOUCH_MODE_SCROLL;
         if (inTouchMode) {
             // If the user's finger is down, select the motion position.
@@ -1119,10 +1120,12 @@ void GridView::setupChild(View* child, int position, int y, bool flowDown, int c
     }
 
     if ((mChoiceMode != CHOICE_MODE_NONE) && (mCheckStates!=nullptr)) {
-        if (dynamic_cast<Checkable*>(child)) {
-            ((Checkable*) child)->setChecked(mCheckStates->get(position));
+        const bool checked = mCheckStates->get(position);
+        Checkable* checkable = dynamic_cast<Checkable*>(child);
+        if (checkable) {
+            checkable->setChecked(checked);
         } else {
-            child->setActivated(mCheckStates->get(position));
+            child->setActivated(checked);
         }
     }
 
@@ -1383,8 +1386,8 @@ bool GridView::fullScroll(int direction) {
 }
 
 bool GridView::arrowScroll(int direction) {
-    int selectedPosition = mSelectedPosition;
-    int numColumns = mNumColumns;
+    const int selectedPosition = mSelectedPosition;
+    const int numColumns = mNumColumns;
 
     int startOfRowPos;
     int endOfRowPos;
@@ -1440,9 +1443,9 @@ bool GridView::arrowScroll(int direction) {
 }
 
 bool GridView::sequenceScroll(int direction) {
-    int selectedPosition = mSelectedPosition;
-    int numColumns = mNumColumns;
-    int count = mItemCount;
+    const int selectedPosition = mSelectedPosition;
+    const int numColumns = mNumColumns;
+    const int count = mItemCount;
 
     int startOfRow;
     int endOfRow;
@@ -1726,4 +1729,4 @@ void GridView::onInitializeAccessibilityNodeInfoForItem(View* view, int position
      info.setCollectionItemInfo(itemInfo);
 }
 
-}//namespace
+}//namespconst ace

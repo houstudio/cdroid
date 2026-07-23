@@ -291,7 +291,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             canvas.set_color(mRenderer->getXLabelsColor());
             canvas.set_font_size(mRenderer->getLabelsTextSize());
             paint.setTextAlign(mRenderer->getXLabelsAlign());
-            if (mRenderer->getXLabelsAlign() == Align::LEFT) {
+            if (mRenderer->getXLabelsAlign() == Paint::Align::LEFT) {
                 xLabelsLeft += mRenderer->getLabelsTextSize() / 4;
             }
         }
@@ -314,7 +314,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
                         canvas.set_color(mRenderer->getYLabelsColor(i));
                         paint.setTextAlign(mRenderer->getYLabelsAlign(i));
                         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
-                            if (axisAlign == Align::LEFT) {
+                            if (axisAlign == Paint::Align::LEFT) {
                                 if(showTickMarks){
                                     drawLine(canvas,left + getLabelLinePos(axisAlign),yLabel,left, yLabel);
                                     canvas.stroke();
@@ -354,14 +354,15 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
             canvas.set_color(mRenderer->getLabelsColor());
             const float size = mRenderer->getAxisTitleTextSize();
             canvas.set_font_size(size);
-            paint.setTextAlign(Align::CENTER);
+            paint.setTextSize(size);
+            paint.setTextAlign(Paint::Align::CENTER);
             if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
                 drawText(canvas, mRenderer->getXTitle(), x + width / 2,
                     bottom + mRenderer->getLabelsTextSize() * 4 / 3 + mRenderer->getXLabelsPadding() + size,
                     paint, 0);
                 for (int i = 0; i < maxScaleNumber; i++) {
                     const int axisAlign = mRenderer->getYAxisAlign(i);
-                    if (axisAlign == Align::LEFT) {
+                    if (axisAlign == Paint::Align::LEFT) {
                         drawText(canvas, mRenderer->getYTitle(i), x + size, y + height / 2, paint, -90);
                     } else {
                         drawText(canvas, mRenderer->getYTitle(i), x + width, y + height / 2, paint, -90);
@@ -393,7 +394,7 @@ void XYChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& 
         drawLine(canvas,left, bottom,right, bottom);
         bool rightAxis = false;
         for (int i = 0; i < maxScaleNumber && !rightAxis; i++) {
-            rightAxis = mRenderer->getYAxisAlign(i) == Align::RIGHT;
+            rightAxis = mRenderer->getYAxisAlign(i) == Paint::Align::RIGHT;
         }
         if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
             drawLine(canvas,left, top, left, bottom);
@@ -463,9 +464,9 @@ void XYChart::drawSeries(const std::shared_ptr<XYSeries>& series, Canvas& canvas
 
     canvas.set_font_size(seriesRenderer->getChartValuesTextSize());//paint.setTextSize(seriesRenderer.getChartValuesTextSize());
     if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
-        paint.setTextAlign(Align::CENTER);
+        paint.setTextAlign(Paint::Align::CENTER);
     } else {
-        paint.setTextAlign(Align::LEFT);
+        paint.setTextAlign(Paint::Align::LEFT);
     }
     if (seriesRenderer->isDisplayChartValues()) {
         paint.setTextAlign(seriesRenderer->getChartValuesTextAlign());
@@ -625,7 +626,7 @@ void XYChart::drawYLabels(const std::map<int,std::vector<double>>& allYLabels, C
             if (orientation == XYMultipleSeriesRenderer::Orientation::HORIZONTAL) {
                 if (showYLabels && !textLabel) {
                     canvas.set_color(mRenderer->getYLabelsColor(i));//paint.setColor(mRenderer->getYLabelsColor(i));
-                    if (axisAlign == Align::LEFT) {
+                    if (axisAlign == Paint::Align::LEFT) {
                         //canvas.drawLine(left + getLabelLinePos(axisAlign), yLabel, left, yLabel, paint);
                         if(showTickMarks){
                             drawLine(canvas,left + getLabelLinePos(axisAlign), yLabel,left, yLabel);
@@ -733,7 +734,7 @@ std::vector<double> XYChart::toScreenPoint(const std::vector<double>& realPoint)
 
 int XYChart::getLabelLinePos(int/*Align*/ align) const{
     int pos = 4;
-    if (align == Align::LEFT) {
+    if (align == Paint::Align::LEFT) {
         pos = -pos;
     }
     return pos;

@@ -6,18 +6,34 @@ SET(CORE_SOURCES
     #core/bundle.cc
     core/transform.cc
     core/calendar.cc
+    core/gregoriancalendar.cc
+    core/chinesecalendar.cc
+    core/ethiopiccalendar.cc
+    core/copticcalendar.cc
+    core/cecalendar.cc
+    core/buddhistcalendar.cc
+    core/dangicalendar.cc
+    core/persiancalendar.cc
+    core/islamiccalendar.cc
+    core/japanesecalendar.cc
+    core/taiwancalendar.cc
+    core/indiancalendar.cc
+    core/hebrewcalendar.cc
     core/canvas.cc
     core/color.cc
     core/numberformat.cc
     core/display.cc
     core/displaymetrics.cc
     core/epollwrapper.cc
+    core/englishinputmethod.cc
     core/graphdevice.cc
+    core/googlepinyin.cc
     core/handler.cc
     core/inputdevice.cc
     #core/virtualinputdevice.cc
     core/inputeventsource.cc
     core/inputmethod.cc
+    core/imeselectioncontroller.cc
     core/inputmethodmanager.cc
     core/insets.cc
     core/intent.cc
@@ -26,8 +42,10 @@ SET(CORE_SOURCES
     core/keyboard.cc
     core/keycharactermap.cc
     core/keylayoutmap.cc
-    core/layout.cc
+    #core/layout.cc
     core/looper.cc
+    core/message.cc
+    core/messagequeue.cc
     core/parcel.cc
     core/path.cc
     core/pathmeasure.cc
@@ -42,6 +60,7 @@ SET(CORE_SOURCES
     core/xmlpullparser.cc
     core/typedvalue.cc
     core/typeface.cc
+    core/fontlistparser.cc
     core/uieventsource.cc
     core/virtualkeymap.cc
     core/windowmanager.cc

@@ -16,6 +16,7 @@
 #ifndef __ACHART_PIE_MAPPER_H__
 #define __ACHART_PIE_MAPPER_H__
 #include <vector>
+#include <cmath>
 #include <widget/achart/chart/piesegment.h>
 #include <widget/achart/model/seriesselection.h>
 namespace cdroid{

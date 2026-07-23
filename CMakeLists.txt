@@ -9,6 +9,7 @@ if(COMMAND cmake_policy)
 endif(COMMAND cmake_policy)
 set(CMAKE_POSITION_INDEPENDENT_CODE TRUE)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake/modules)
 
 #LeakSanitizer does not work under ptrace (strace, gdb ,valgrind,...)
@@ -32,7 +33,7 @@ endif()
 add_subdirectory(src/porting)
 add_subdirectory(src/gui)
 add_subdirectory(src/modules)
-add_subdirectory(src/3rdparty/pinyin)
+add_subdirectory(src/3rdparty)
 
 add_subdirectory(apps)
 

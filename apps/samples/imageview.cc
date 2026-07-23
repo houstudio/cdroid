@@ -12,21 +12,33 @@ int main(int argc,const char*argv[]){
 
     Window*w = new Window(0,0,-1,-1);
     w->setId(1);
+
+    // Window::doLayout now always lays out direct children, so absolute layout() on
+    // multiple direct children piles them up at (0,0). Stack them in a LinearLayout.
+    LinearLayout*content=new LinearLayout(-1,-1);
+    content->setOrientation(LinearLayout::VERTICAL);
+    w->addView(content);
+    auto add=[&](View*v,int ww,int hh){
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(ww,hh);
+        lp->leftMargin=lp->topMargin=10;
+        content->addView(v,lp);
+    };
+
     ImageView *btn=new ImageView(200,200);
     if(result.count("url")){
         std::string url = result["url"].as<std::string>();
         btn->setImageResource(url);
     }
-    w->addView(btn);
-    btn->layout(220,100,200,200); 
+    add(btn,200,200);
+
     ImageView*img=new ImageView(200,200);
     Drawable*dr=app.getDrawable("cdroid:mipmap/bottom_bar");//drawable/btn_radio.xml");
     img->setImageDrawable(dr);
     img->setCornerRadii(20);
     img->setScaleType(ScaleType::FIT_XY);
     img->setBackgroundColor(0xFF112233);
-    w->addView(img);
-    img->layout(0,100,200,200);
-    w->requestLayout();	
+    add(img,200,200);
+
+    content->requestLayout();
     return app.exec();
 }

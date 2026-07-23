@@ -135,6 +135,13 @@ void AbsListView::initAbsListView(const AttributeSet&atts) {
 }
 
 AbsListView::~AbsListView() {
+    // 结束仍在活跃的多选 ActionMode: wrapper 的 lambda 捕获了 this, 且 ActionMode 由 Window
+    // 持有, 先 finish (经 wrapper.onDestroyActionMode 清 mChoiceActionMode + 让 Window 释放)。
+    if (mChoiceActionMode != nullptr) {
+        ActionMode* mode = mChoiceActionMode;
+        mChoiceActionMode = nullptr;
+        mode->finish();
+    }
     if(mVelocityTracker) {
         mVelocityTracker->recycle();
         mVelocityTracker = nullptr;
@@ -639,13 +646,14 @@ void AbsListView::setItemChecked(int position, bool value) {
     if (mChoiceMode == CHOICE_MODE_NONE)  return;
 
     // Start selection mode if needed. We don't need to if we're unchecking something.
-    if (value && mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL /*&& mChoiceActionMode == nullptr*/) {
-        if (mMultiChoiceModeCallback == nullptr /*|| !mMultiChoiceModeCallback.hasWrappedCallback()*/) {
+    if (value && mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL && mChoiceActionMode == nullptr) {
+        if (!mMultiChoiceModeCallback.hasWrappedCallback()) {
             LOGE("AbsListView: attempted to start selection mode "
                  "for CHOICE_MODE_MULTIPLE_MODAL but no choice mode callback was "
                  "supplied. Call setMultiChoiceModeListener to set a callback.");
+            return;   // AOSP 在此抛 IllegalStateException; CDROID 无异常 -> 中止本次设置
         }
-        //mChoiceActionMode = startActionMode(mMultiChoiceModeCallback);
+        mChoiceActionMode = startActionMode(mMultiChoiceModeCallback);
     }
 
     bool itemCheckChanged;
@@ -667,10 +675,9 @@ void AbsListView::setItemChecked(int position, bool value) {
                 mCheckedItemCount--;
             }
         }
-        if (mMultiChoiceModeCallback/*mChoiceActionMode != nullptr*/) {
-            const long id = mAdapter->getItemId(position);
-            mMultiChoiceModeCallback(/*mChoiceActionMode*/ position, id, value);
-            //mMultiChoiceModeCallback.onItemCheckedStateChanged
+        if (mChoiceActionMode != nullptr) {
+            mMultiChoiceModeCallback.onItemCheckedStateChanged(
+                *mChoiceActionMode, position, mAdapter->getItemId(position), value);
         }
     } else {
         const bool updateIds = (mCheckedIdStates!=nullptr) && mAdapter->hasStableIds();
@@ -717,10 +724,11 @@ int AbsListView::getChoiceMode()const {
 
 void AbsListView::setChoiceMode(int choiceMode) {
     mChoiceMode = choiceMode;
-    /*if (mChoiceActionMode != null) {
-        mChoiceActionMode.finish();
-        mChoiceActionMode = null;
-    }*/
+    if (mChoiceActionMode != nullptr) {
+        ActionMode* mode = mChoiceActionMode;
+        mChoiceActionMode = nullptr;
+        mode->finish();
+    }
     if (mChoiceMode != CHOICE_MODE_NONE) {
         if (mCheckStates == nullptr) {
             mCheckStates = new SparseBooleanArray;
@@ -737,7 +745,47 @@ void AbsListView::setChoiceMode(int choiceMode) {
 }
 
 void AbsListView::setMultiChoiceModeListener(const MultiChoiceModeListener& listener) {
-    mMultiChoiceModeCallback=listener;
+    mMultiChoiceModeCallback.setHost(this);
+    mMultiChoiceModeCallback.setWrapped(listener);
+}
+
+void AbsListView::MultiChoiceModeWrapper::setWrapped(const MultiChoiceModeListener& wrapped) {
+    mWrapped = wrapped;
+    AbsListView* host = mHost;
+    onCreateActionMode = [host, fn = mWrapped.onCreateActionMode](ActionMode& mode, Menu& menu) -> bool {
+        bool ok = true;
+        if (fn) ok = fn(mode, menu);
+        if (ok) host->setLongClickable(false);
+        return ok;
+    };
+    onPrepareActionMode = [fn = mWrapped.onPrepareActionMode](ActionMode& mode, Menu& menu) -> bool {
+        if (fn) return fn(mode, menu);
+        return true;
+    };
+    onActionItemClicked = [fn = mWrapped.onActionItemClicked](ActionMode& mode, MenuItem& item) -> bool {
+        if (fn) return fn(mode, item);
+        return false;
+    };
+    onDestroyActionMode = [host, fn = mWrapped.onDestroyActionMode](ActionMode& mode) {
+        if (fn) fn(mode);
+        host->mChoiceActionMode = nullptr;
+        host->clearChoices();
+        host->mDataChanged = true;
+        host->rememberSyncState();
+        host->requestLayout();
+        host->setLongClickable(true);
+    };
+    onItemCheckedStateChanged = [host, fn = mWrapped.onItemCheckedStateChanged](
+            ActionMode& mode, int position, long id, bool checked) {
+        if (fn) fn(mode, position, id, checked);
+        if (host->getCheckedItemCount() == 0) mode.finish();
+    };
+}
+
+bool AbsListView::MultiChoiceModeWrapper::hasWrappedCallback() const {
+    const auto& c = mWrapped;
+    return c.onCreateActionMode || c.onPrepareActionMode || c.onActionItemClicked
+        || c.onDestroyActionMode || c.onItemCheckedStateChanged;
 }
 
 void AbsListView::resetList() {
@@ -864,6 +912,17 @@ void AbsListView::requestLayoutIfNecessary() {
         resetList();
         requestLayout();
         invalidate();
+    }
+}
+
+void AbsListView::requestLayout() {
+    // AOSP AbsListView.java:2097 -- suppress layout requests while a layout pass
+    // is running (mInLayout) or blocked, so requests issued inside layoutChildren
+    // (child measure / scrap re-attach / setSelectionFromTop) can't schedule a
+    // second pass that would reset scroll to the top via handleDataChanged's
+    // FORCE_TOP fallback.
+    if (!mBlockLayoutRequests && !mInLayout) {
+        ViewGroup::requestLayout();
     }
 }
 
@@ -1207,8 +1266,9 @@ void AbsListView::onLayout(bool changed, int l, int t, int w, int h) {
     mOverscrollMax = h / OVERSCROLL_LIMIT_DIVISOR;
 
     // TODO: Move somewhere sane. This doesn't belong in onLayout().
-    if (mFastScroll)
+    if (mFastScroll!=nullptr){
         mFastScroll->onItemCountChanged(getChildCount(), mItemCount);
+    }
     mInLayout = false;
 }
 
@@ -1263,9 +1323,8 @@ void AbsListView::confirmCheckedPositionsById() {
                 checkedIndex--;
                 mCheckedItemCount--;
                 checkedCountChanged = true;
-                if (/*mChoiceActionMode  && */mMultiChoiceModeCallback ) {
-                    mMultiChoiceModeCallback(lastPos,id,false);
-                    //mMultiChoiceModeCallback.onItemCheckedStateChanged(mChoiceActionMode,lastPos, id, false);
+                if (mChoiceActionMode != nullptr) {
+                    mMultiChoiceModeCallback.onItemCheckedStateChanged(*mChoiceActionMode, lastPos, id, false);
                 }
             }
         } else {
@@ -1273,9 +1332,9 @@ void AbsListView::confirmCheckedPositionsById() {
         }
     }
 
-    /*if (checkedCountChanged && mChoiceActionMode != nullptr) {
-        mChoiceActionMode.invalidate();
-    }*/
+    if (checkedCountChanged && mChoiceActionMode != nullptr) {
+        mChoiceActionMode->invalidate();
+    }
 }
 
 bool AbsListView::resurrectSelectionIfNeeded() {
@@ -1409,8 +1468,8 @@ bool AbsListView::performLongPress(View* child,int longPressPosition,long longPr
 
 bool AbsListView::performLongPress(View* child,int longPressPosition,long longPressId,int x,int y) {
     if (mChoiceMode == CHOICE_MODE_MULTIPLE_MODAL) {
-        /*if (mChoiceActionMode == nullptr &&
-            (mChoiceActionMode = startActionMode(mMultiChoiceModeCallback)) != null)*/ {
+        if (mChoiceActionMode == nullptr &&
+                (mChoiceActionMode = startActionMode(mMultiChoiceModeCallback)) != nullptr) {
             setItemChecked(longPressPosition, true);
             performHapticFeedback(HapticFeedbackConstants::LONG_PRESS);
         }
@@ -2290,9 +2349,8 @@ bool AbsListView::performItemClick(View& view, int position, long id) {
             } else {
                 mCheckedItemCount--;
             }
-            if (mMultiChoiceModeCallback) { //mChoiceActionMode != null) {
-                mMultiChoiceModeCallback(position,id,checked);
-                //mMultiChoiceModeCallback.onItemCheckedStateChanged(mChoiceActionMode,position, id, checked);
+            if (mChoiceActionMode != nullptr) {
+                mMultiChoiceModeCallback.onItemCheckedStateChanged(*mChoiceActionMode, position, id, checked);
                 dispatchItemClick = false;
             }
             checkedStateChanged = true;

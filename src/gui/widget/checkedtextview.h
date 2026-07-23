@@ -11,7 +11,7 @@ private:
     std::string mCheckMarkResource;
     Drawable* mCheckMarkDrawable;
     cdroid::RefPtr<ColorStateList> mCheckMarkTintList;
-    //BlendMode mCheckMarkBlendMode = null;
+    int mCheckMarkBlendMode = -1; /* null == -1; otherwise a BlendMode value */
     bool mHasCheckMarkTint = false;
     bool mHasCheckMarkTintMode = false;
 
@@ -38,11 +38,11 @@ protected:
 public:
     CheckedTextView(Context* context,const AttributeSet& attrs);
     ~CheckedTextView()override;
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
-    void toggle();
-    bool isChecked()const;
-    void setChecked(bool checked);
-#endif
+
+    void toggle()override;
+    bool isChecked()const override;
+    void setChecked(bool checked)override;
+
     Drawable* getCheckMarkDrawable()const;
     void setCheckMarkDrawable(const std::string&resId);
     void setCheckMarkDrawable(Drawable* d);

@@ -35,7 +35,7 @@ static std::unordered_map<std::string,int>edgeFlagKVS={
 int getDimensionOrFraction(const AttributeSet&attrs,const std::string&key,int base,int def){
     const std::string value=attrs.getAttributeValue(key);
     if(value.find("%")!=std::string::npos){
-	LOGD("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
+        LOGV("%d %s[%.f]=%.2f",base,value.c_str(),std::stof(value),base*std::stof(value)/100);
         return base*std::stof(value)/100;
     }else if(value.find("px")!=std::string::npos){
         return std::stoi(value);
@@ -58,6 +58,8 @@ Keyboard::Key::Key(Row*parent,int x,int y,XmlPullParser&parser,const AttributeSe
     icon  = resicon.empty()?nullptr:attrs.getContext()->getDrawable(resicon);
     label = attrs.getString("keyLabel");
     text  = attrs.getString("keyOutputText");
+    popupCharacters = attrs.getString("popupCharacters");
+    popupResId      = attrs.getString("popupKeyboard");
     parseCSV(attrs.getString("codes"),codes);
     repeatable= attrs.getBoolean("isRepeatable",false);
     sticky    = attrs.getBoolean("isSticky",false);
@@ -179,12 +181,140 @@ Keyboard::Row::Row(Context*ctx,Keyboard*p,XmlPullParser&parseer,const AttributeS
     mode = attrs.getInt("keyboardMode",0);
 }
 
+/* AOSP-faithful Row(Keyboard) ctor: only records the parent. The mini-keyboard
+ * constructor sets defaultWidth/Height/etc. explicitly afterwards. */
+Keyboard::Row::Row(Keyboard*parent){
+    this->parent = parent;
+}
+
+/* No-XML base ctor: zero everything; createMiniKeyboard populates the keys. */
+Keyboard::Keyboard(){
+    mDisplayWidth = mDisplayHeight = 0;
+    mShifted = false;
+    mDefaultHorizontalGap = 0;
+    mDefaultVerticalGap = 0;
+    mDefaultWidth = 0;
+    mDefaultHeight = 0;
+    mKeyboardMode = 0;
+    mTotalWidth = mTotalHeight = 0;
+    mCellWidth = mCellHeight = 0;
+    mProximityThreshold = 0;
+    keyGap = rowGap = 0;
+}
+
+/* Build a one-row mini-keyboard with explicit key sizing (each key
+ * keyWidth x keyHeight), so the popup can match the main keyboard's actual
+ * geometry (which CDROID resizes) rather than display-metric %p. */
+Keyboard* Keyboard::createMiniKeyboard(Context* context,const std::string& characters,int keyWidth,int keyHeight,int columns){
+    Keyboard* k = new Keyboard();
+    const DisplayMetrics& dm = context->getDisplayMetrics();
+    k->mDisplayWidth  = dm.widthPixels;
+    k->mDisplayHeight = dm.heightPixels;
+    k->mDefaultWidth  = keyWidth;
+    k->mDefaultHeight = keyHeight;
+    /* computeNearestNeighbors (a Keyboard method) uses Keyboard::mProximityThreshold,
+     * which the no-XML ctor leaves 0 -- without this the grid ends up empty and no
+     * mini key is ever hit. Match the XML-load formula at line 545. */
+    k->mProximityThreshold = (int)(keyWidth * 0.6f);
+    k->mProximityThreshold *= k->mProximityThreshold;
+    /* Each visual row is its own Row object, so Keyboard::resize() lays each
+     * row out independently (keys start at x=0) instead of treating all keys
+     * as one long row and producing a staircase. */
+    auto newRow = [&]() -> Row* {
+        Row* r = new Row(k);
+        r->defaultWidth  = keyWidth;
+        r->defaultHeight = keyHeight;
+        r->defaultHorizontalGap = 0;
+        r->verticalGap  = 0;
+        r->rowEdgeFlags = 0;
+        r->mode = 0;
+        k->rows.push_back(r);
+        return r;
+    };
+    Row* row = newRow();
+    const std::wstring chars = TextUtils::utf8tounicode(characters);
+    /* Wrap into a compact multi-row grid (columns per row, like AOSP's mini
+     * Keyboard ctor) so 5-7 accents form 2-3 rows instead of one wide strip. */
+    const int maxColumns = (columns > 0) ? columns : INT_MAX;
+    int x = 0, y = 0, column = 0;
+    for(wchar_t ch : chars){
+        if(column >= maxColumns){
+            x = 0;
+            y += keyHeight;
+            column = 0;
+            row = newRow(); // start a fresh Row for the next visual row
+        }
+        Key* key = new Key(row);
+        key->x = x; key->y = y;
+        key->width = keyWidth; key->height = keyHeight; key->gap = 0;
+        key->codes.push_back((int)ch);
+        key->label = TextUtils::unicode2utf8(std::wstring(1,ch));
+        key->edgeFlags = 0;
+        k->mKeys.push_back(key);
+        row->mKeys.push_back(key);
+        x += keyWidth;
+        column++;
+        if(x > k->mTotalWidth) k->mTotalWidth = x;
+    }
+    k->mTotalHeight = y + keyHeight;
+    LOGV("mini keyboard %d keys (%dx%d)",(int)k->mKeys.size(),k->mTotalWidth,k->mTotalHeight);
+    return k;
+}
+
+/* AOSP Keyboard(Context, int xmlLayoutResId, int modeId): load from XML using
+ * the display dimensions. */
+Keyboard::Keyboard(Context* context,const std::string& xmlLayoutResId,int modeId)
+    : Keyboard(context, xmlLayoutResId,
+               context->getDisplayMetrics().widthPixels,
+               context->getDisplayMetrics().heightPixels, modeId){
+}
+
+/* AOSP Keyboard(Context, int layoutTemplateResId, CharSequence characters,
+ * int columns, int horizontalPadding): build a mini-keyboard (one row of the
+ * popup characters), sizing keys from the template's defaults. */
+Keyboard::Keyboard(Context* context,const std::string& layoutTemplateResId,
+                   const std::string& characters,int columns,int horizontalPadding)
+    : Keyboard(context, layoutTemplateResId, 0){
+    int x = 0, y = 0, column = 0;
+    mTotalWidth = 0;
+    Row* row = new Row(this);
+    row->defaultHeight = mDefaultHeight;
+    row->defaultWidth = mDefaultWidth;
+    row->defaultHorizontalGap = mDefaultHorizontalGap;
+    row->verticalGap = mDefaultVerticalGap;
+    row->rowEdgeFlags = EDGE_TOP | EDGE_BOTTOM;
+    const int maxColumns = columns == -1 ? INT_MAX : columns;
+    const std::wstring chars = TextUtils::utf8tounicode(characters);
+    for(wchar_t c : chars){
+        if(column >= maxColumns || x + mDefaultWidth + horizontalPadding > mDisplayWidth){
+            x = 0;
+            y += mDefaultVerticalGap + mDefaultHeight;
+            column = 0;
+        }
+        Key* key = new Key(row);
+        key->x = x;
+        key->y = y;
+        key->label = TextUtils::unicode2utf8(std::wstring(1,c));
+        key->codes.clear();
+        key->codes.push_back((int)c);
+        column++;
+        x += key->width + key->gap;
+        mKeys.push_back(key);
+        row->mKeys.push_back(key);
+        if(x > mTotalWidth) mTotalWidth = x;
+    }
+    mTotalHeight = y + mDefaultHeight;
+    rows.push_back(row);
+    LOGV("mini keyboard %d keys (%dx%d)",(int)mKeys.size(),mTotalWidth,mTotalHeight);
+}
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 Keyboard::Keyboard(Context*context,const std::string& xmlLayoutResId,int width,int height,int modeId){
     const DisplayMetrics& dm = context->getDisplayMetrics();
     mDisplayWidth = width;//dm.widthPixels;
     mDisplayHeight= height;//dm.heightPixels;
+    mTotalWidth = 0; // loadKeyboard only assigns when x > mTotalWidth
     mShifted =false;
     mDefaultHorizontalGap = 0;
     mDefaultWidth = mDisplayWidth / 10;
@@ -203,7 +333,6 @@ Keyboard::~Keyboard(){
 
 void Keyboard::resize(int newWidth,int newHeight){
     int numRows = rows.size();
-    LOGD("%dx%d",newWidth,newHeight);
     for (int rowIndex = 0; rowIndex < numRows; ++rowIndex) {
         Row* row = rows.at(rowIndex);
         int numKeys = row->mKeys.size();
@@ -227,7 +356,6 @@ void Keyboard::resize(int newWidth,int newHeight){
             }
         }
     }
-    LOGD("resizeTO(%dx%d)",newWidth,newHeight);
     mTotalWidth = newWidth;
 }
 
@@ -278,7 +406,9 @@ int Keyboard::getHeight()const{
 int Keyboard::getMinWidth()const{
     return mTotalWidth;
 }
-
+int Keyboard::getRows()const{
+    return rows.size();
+}
 bool Keyboard::setShifted(bool shiftState) {
     for (Key* shiftKey : mShiftKeys) {
         if (shiftKey != nullptr) {

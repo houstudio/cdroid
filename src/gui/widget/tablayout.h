@@ -35,24 +35,32 @@ private:
     static constexpr int ANIMATION_DURATION = 300;
 public:
     /*@see setTabMode(int) getTabMode*/
-    static constexpr int MODE_SCROLLABLE = 0;
-    static constexpr int MODE_FIXED = 1;
-    static constexpr int MODE_AUTO  = 2;
+    enum Mode{
+        MODE_SCROLLABLE = 0,
+        MODE_FIXED = 1,
+        MODE_AUTO  = 2
+    };
     /*@see Tab#setTabLabelVisibility(int) getTabLabelVisibility*/
     static constexpr int TAB_LABEL_VISIBILITY_UNLABELED =0;
     static constexpr int TAB_LABEL_VISIBILITY_LABELED = 1;
     /* @see #setTabGravity(int) getTabGravity*/
-    static constexpr int GRAVITY_FILL = 0;
-    static constexpr int GRAVITY_CENTER = 1;
-    static constexpr int GRAVITY_START = 2;
+    enum TabGravity{
+        GRAVITY_FILL = 0,
+        GRAVITY_CENTER = 1,
+        GRAVITY_START = 2,
+    };
     /*#setSelectedTabIndicatorGravity(int) getTabIndicatorGravity*/
-    static constexpr int INDICATOR_GRAVITY_BOTTOM = 0;
-    static constexpr int INDICATOR_GRAVITY_CENTER = 1;
-    static constexpr int INDICATOR_GRAVITY_TOP = 2;
-    static constexpr int INDICATOR_GRAVITY_STRETCH = 3;
-    static constexpr int INDICATOR_ANIMATION_MODE_LINEAR = 0;
-    static constexpr int INDICATOR_ANIMATION_MODE_ELASTIC = 1;
-    static constexpr int INDICATOR_ANIMATION_MODE_FADE = 2;
+    enum TabIndicatorGravity{
+        INDICATOR_GRAVITY_BOTTOM = 0,
+        INDICATOR_GRAVITY_CENTER = 1,
+        INDICATOR_GRAVITY_TOP = 2,
+        INDICATOR_GRAVITY_STRETCH = 3,
+    };
+    enum TabIndicatorAnimationMode{
+        INDICATOR_ANIMATION_MODE_LINEAR = 0,
+        INDICATOR_ANIMATION_MODE_ELASTIC = 1,
+        INDICATOR_ANIMATION_MODE_FADE = 2
+    };
     class TabView;
     class Tab{
     private:
@@ -277,11 +285,11 @@ protected:
     int  mTabIndicatorHeight;
     bool mSmoothScroll;/*used for viewpage item switch*/
     bool mInlineLabel;
+    bool inlineLabel;
+    bool unboundedRipple;
+    bool mTabIndicatorFullWidth;
     std::vector<OnTabSelectedListener> mSelectedListeners;
     OnTabSelectedListener mCurrentVpSelectedListener;
-    bool inlineLabel;
-    bool mTabIndicatorFullWidth;
-    bool unboundedRipple;
     ViewPager* mViewPager;
     std::vector<Tab*>mTabs;
     PagerAdapter* mPagerAdapter;

@@ -57,7 +57,7 @@ void  BarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
     const float halfDiffX = getHalfDiffX(points, length, seriesNr);
     paint.setColor(seriesRenderer->getColor());
     canvas.set_color(seriesRenderer->getColor());
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     for (int i = 0; i < length; i += 2) {
         float x = points.at(i);
         float y = points.at(i + 1);
@@ -143,7 +143,7 @@ void  BarChart::drawBar(Canvas& canvas, float xMin, float yMin, float xMax, floa
                 yMax = yMin - 1;
             }
         }
-        canvas.set_color(paint.color);
+        canvas.set_color(paint.getColor());
         canvas.rectangle(std::round(xMin), std::round(yMin), std::round(xMax-xMin), std::round(yMax-yMin));
         canvas.fill();
         if( (mSeriesIndex==seriesIndex) && (pointIndex==mDataIndex) ){
@@ -194,7 +194,7 @@ int  BarChart::getLegendShapeWidth(int seriesIndex) const{
 void  BarChart::drawLegendShape(Canvas& canvas, const std::shared_ptr<SimpleSeriesRenderer>& renderer,
         float x, float y, int seriesIndex,  Paint& paint) {
     canvas.rectangle(x, y - SHAPE_WIDTH/2, SHAPE_WIDTH, SHAPE_WIDTH);
-    if(paint.style==Style::FILL)canvas.fill();else canvas.stroke();
+    if(paint.getStyle()&Paint::Style::FILL)canvas.fill();else canvas.stroke();
 }
 
 float  BarChart::getHalfDiffX(const std::vector<float>& points, int length, int seriesNr) const{

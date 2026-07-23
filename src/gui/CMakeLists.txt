@@ -17,7 +17,41 @@ aux_source_directory(utils SRCS_UTILS)
 aux_source_directory(navigation SRCS_NAVIGATION)
 add_subdirectory(image-decoders)
 aux_source_directory(image-decoders SRCS_IMAGEDECODERS)
-include_directories(
+
+GetGitVersion(CDROID)
+message("VERSION=${CDROID_VERSION} ${CDROID_VERSION_MAJOR}.${CDROID_VERSION_MINOR}.${CDROID_VERSION_PATCH}
+CDROID_BUILD_NUMBER=${CDROID_BUILD_NUMBER} COMMIT_ID=${CDROID_COMMITID}")
+
+configure_file(core/build.h.cmake ${PROJECT_SOURCE_DIR}/core/build.h)
+configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
+
+set(SOURCES_GUI
+    ${SRCS_I18N}
+    ${SRCS_CAIROMM}
+    ${CDROID_SOURCES}
+    ${SRCS_UTILS}
+)
+
+add_subdirectory(text)
+add_library(cdroid SHARED ${SOURCES_GUI})
+
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_definitions(--include gui_features.h)
+    add_definitions(--include cdtypes.h)
+    add_definitions(--include cdlog.h)
+    add_definitions(--include stdpatch.h)
+else ()#(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    target_compile_options(cdroid PRIVATE
+        --include gui_features.h
+        --include cdtypes.h
+        --include cdlog.h
+        --include stdpatch.h
+        )
+endif()
+
+target_include_directories(
+    cdroid
+    PRIVATE
     ${PROJECT_SOURCE_DIR}/
     ${PROJECT_SOURCE_DIR}/i18n
     ${PROJECT_SOURCE_DIR}/private
@@ -26,6 +60,7 @@ include_directories(
     ${PROJECT_SOURCE_DIR}/cairomm
     ${PROJECT_SOURCE_DIR}/image-decoders
     ${PROJECT_SOURCE_DIR}/../porting/include
+    ${PROJECT_SOURCE_DIR}/text/minikin/include
     ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include
     ${CMAKE_BINARY_DIR}/include
     ${PROJECT_BINARY_DIR}
@@ -35,28 +70,7 @@ include_directories(
     ${CDROID_DEPINCLUDES}
     ${LIBUNIBREAK_INCLUDE_DIRS}
 )
-GetGitVersion(CDROID)
-message("VERSION=${CDROID_VERSION} ${CDROID_VERSION_MAJOR}.${CDROID_VERSION_MINOR}.${CDROID_VERSION_PATCH}
-CDROID_BUILD_NUMBER=${CDROID_BUILD_NUMBER} COMMIT_ID=${CDROID_COMMITID}")
 
-configure_file(core/build.h.cmake ${PROJECT_SOURCE_DIR}/core/build.h)
-configure_file(gui_features.h.cmake  ${PROJECT_BINARY_DIR}/gui_features.h)
-
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    add_definitions(--include gui_features.h)
-    add_definitions(--include cdtypes.h)
-    add_definitions(--include cdlog.h)
-    add_definitions(--include stdpatch.h)
-endif()
-
-set(SOURCES_GUI
-    ${SRCS_I18N}
-    ${SRCS_CAIROMM}
-    ${CDROID_SOURCES}
-    ${SRCS_UTILS}
-)
-
-add_library(cdroid SHARED ${SOURCES_GUI})
 CreatePAK(cdroid ${PROJECT_SOURCE_DIR}/res  ${PROJECT_BINARY_DIR}/cdroid.pak ${PROJECT_SOURCE_DIR}/widget/R.h)
 
 file(GLOB_RECURSE allfiles RELATIVE "${PROJECT_SOURCE_DIR}/" "*.h")
@@ -96,7 +110,7 @@ set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal image-decoders)
+target_link_libraries(cdroid tvhal image-decoders cdtext ${CDROID_DEPLIBS})
 
 if(MSVC)
    set_target_properties(cdroid PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)

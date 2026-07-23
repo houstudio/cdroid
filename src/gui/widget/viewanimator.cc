@@ -168,7 +168,10 @@ Animation* ViewAnimator::getInAnimation()const{
 }
 
 void ViewAnimator::setInAnimation(Animation* inAnimation){
-    mInAnimation=inAnimation;
+    if (mInAnimation != inAnimation){
+        delete mInAnimation;
+    }
+    mInAnimation = inAnimation;
 }
 
 Animation* ViewAnimator::getOutAnimation()const{
@@ -176,6 +179,9 @@ Animation* ViewAnimator::getOutAnimation()const{
 }
 
 void ViewAnimator::setOutAnimation(Animation* outAnimation){
+    if (mOutAnimation != outAnimation){
+        delete mOutAnimation;
+    }
     mOutAnimation = outAnimation;
 }
 

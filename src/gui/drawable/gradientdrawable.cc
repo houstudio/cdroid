@@ -1064,12 +1064,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     if( (mFillPaint==nullptr) && (st->mImagePattern==nullptr) && (haveStroke==false) )return;
     
     canvas.save();
-    if(mTintFilter){
-        const Rect&r =mBounds;
-        canvas.rectangle(r.left,r.top,r.width,r.height);
-        canvas.clip();
-        canvas.push_group();
-    }
+    ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
     if(mFillPaint)
         mFillPaint->set_dither(ditherMode);
     switch (st->mShape) {
@@ -1133,7 +1128,7 @@ void GradientDrawable::draw(Canvas&canvas) {
     if(st->mShape!=LINE){
         const bool needFill = (mFillPaint!=nullptr)||(st->mImagePattern!=nullptr);
         if(mFillPaint)canvas.set_source(mFillPaint);
-        else if(st->mImagePattern)canvas.set_source(st->mImagePattern,0,0);
+        if(st->mImagePattern)canvas.set_source(st->mImagePattern,0,0);
         if(needFill){
             if(haveStroke) canvas.fill_preserve();
             else canvas.fill();
@@ -1143,11 +1138,7 @@ void GradientDrawable::draw(Canvas&canvas) {
             canvas.stroke();
         }
     }
-    if(mTintFilter){
-        //canvas.set_source(canvas.pop_group());
-        canvas.pop_group_to_source();
-        mTintFilter->apply(canvas,mBounds);
-    }
+    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     canvas.restore();
 }
 
@@ -1188,9 +1179,9 @@ void GradientDrawable::updateStateFromTypedArray(const AttributeSet&atts) {
         state->mUseLevelForShape = atts.getBoolean("useLevel");// state->mUseLevelForShape);
     }
 
-    const int tintMode = atts.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mBlendMode = Drawable::parseBlendMode(tintMode, BlendMode::SRC_IN);
+    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = atts.getColorStateList("tint");
@@ -1254,9 +1245,12 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
     // TODO: Update these to be themeable.
     const int startColor = atts.getColor("startColor", 0);
     const bool hasCenterColor = atts.hasAttribute("centerColor");
+    const bool hasStartColor = atts.hasAttribute("startColor");
+    const bool hasEndColor = atts.hasAttribute("endColor");
     const int centerColor = atts.getColor("centerColor", 0);
     const int endColor = atts.getColor("endColor", 0);
     setImagePattern(atts.getContext(),atts.getString("bitmap"));
+    auto image = st->mImagePattern;
     if (hasCenterColor) {
         st->mGradientColors.resize(3);
         st->mGradientColors[0] = startColor;
@@ -1268,7 +1262,7 @@ void GradientDrawable::updateGradientDrawableGradient(const AttributeSet&atts){
         // Since 0.5f is default value, try to take the one that isn't 0.5f
         st->mPositions[1] = st->mCenterX != 0.5f ? st->mCenterX : st->mCenterY;
         st->mPositions[2] = 1.f;
-    } else {
+    } else if(hasStartColor||hasEndColor){
         st->mPositions.resize(2);
         st->mGradientColors.resize(2);
         st->mGradientColors[0] = startColor;

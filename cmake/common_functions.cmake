@@ -24,44 +24,24 @@ ENDMACRO()
 if(NOT Python_EXECUTABLE)
     #compiled error with vcpkg (for Android platform)
     find_package(Python3 COMPONENTS Interpreter REQUIRED)
+    # find_package(Python3) sets Python3_EXECUTABLE, not Python_EXECUTABLE — wire it up
+    # so the lxml/Pillow checks and the packaging scripts are invoked with a real interpreter
+    # (otherwise ${Python_EXECUTABLE} expands empty and every script silently falls back).
+    set(Python_EXECUTABLE ${Python3_EXECUTABLE})
 endif()
 
 function(CreatePAK project ResourceDIR PakPath rhpath)
-    set(CHECK_LXML_SCRIPT "
-import sys
-try:
-    import lxml
-    print('lxml is available')
-    sys.exit(0)
-except ImportError:
-    print('lxml is not available')
-    sys.exit(1)
-")
-    execute_process(
-        COMMAND ${Python_EXECUTABLE} -c "${CHECK_LXML_SCRIPT}"
-        RESULT_VARIABLE CHECK_LXML_RESULT
-        OUTPUT_VARIABLE CHECK_LXML_OUTPUT
-        ERROR_VARIABLE CHECK_LXML_ERROR
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-        ERROR_STRIP_TRAILING_WHITESPACE)
-
-    if(CHECK_LXML_RESULT EQUAL 0)
-        set(XMLPACKAGE ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/XmlOptimized2Zip.py ${ResourceDIR} ${CMAKE_CURRENT_BINARY_DIR}/temp_xml ${PakPath})
-    else()
-        set(XMLPACKAGE zip -q -r -D -1 ${PakPath} ./  -i "*.xml")
-    endif()
+    # One Python class (scripts/pakbuilder.py) does it all: generates R.h/ID.xml
+    # (reusing idgen.py) and builds the pak — stripped XML + aapt-compiled 9-patch
+    # (cdNp chunk, borderless) + verbatim binaries. lxml+Pillow are hard deps;
+    # pakbuilder.py fails loud if either is missing (no silent half-broken path).
     add_custom_target(${project}_assets
-        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/idgen.py ${project} ${ResourceDIR} ${rhpath}
-        COMMAND ${XMLPACKAGE}
-        COMMAND zip -q -r -D -0 ${PakPath} ./  -i "*.png" "*.jpg" "*.jpeg" "*.gif" "*.apng" "*.webp" "*.ttf" "*.otf" "*.ttc"
-        COMMAND cp  ${PakPath} ${CMAKE_BINARY_DIR}
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
+                ${project} ${ResourceDIR} ${PakPath} ${rhpath}
+        COMMAND cp ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
-        COMMENT "Pckage Assets from ${ResourceDIR} to:${PakPath}")
+        COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
     add_dependencies(${project} ${project}_assets)
-
-    if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/temp_xml)
-    endif()
     install(FILES ${PakPath} DESTINATION data)
 endfunction()
 

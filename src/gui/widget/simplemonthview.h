@@ -20,6 +20,7 @@
 #include <view/view.h>
 #include <core/calendar.h>
 #include <core/typeface.h>
+#include <text/paint.h>
 #include <widget/explorebytouchhelper.h>
 namespace cdroid{
 
@@ -36,18 +37,20 @@ private:
 
     Calendar mCalendar;
     std::string mDayOfWeekLabels[7];
-    Typeface*mDayTypeface;
-    Typeface*mMonthTypeface;
-    Typeface*mDayOfWeekTypeface;
     MonthViewTouchHelper*mTouchHelper;
-    int mDayTextSize;
-    int mMonthTextSize;
-    int mDayOfWeekTextSize;
+
+    // Text paints: rendered via Paint::drawTextRun, which honors Paint::Align
+    // and routes through minikin for font fallback (direct cairo font calls do
+    // not fall back). Selector/highlight paints carry only a color; their filled
+    // circles are drawn straight onto the cairo canvas.
+    Paint mMonthPaint;
+    Paint mDayOfWeekPaint;
+    Paint mDayPaint;
+    Paint mDaySelectorPaint;
+    Paint mDayHighlightPaint;
+    Paint mDayHighlightSelectorPaint;
 
     cdroid::RefPtr<ColorStateList> mDayTextColor;
-    cdroid::RefPtr<ColorStateList> mMonthTextColor;
-    cdroid::RefPtr<ColorStateList> mDayOfWeekTextColor;
-    cdroid::RefPtr<ColorStateList> mDaySelectorColor;
     int mDesiredMonthHeight;
     int mDesiredDayOfWeekHeight;
     int mDesiredDayHeight;
@@ -94,9 +97,10 @@ private:
     bool mIsTouchHighlighted = false;
 private:
     void initMonthView();
+    void initPaints();
     void updateMonthYearLabel();
     void updateDayOfWeekLabels();
-    const cdroid::RefPtr<ColorStateList>applyTextAppearance(Typeface*&face,int& txtSize,const std::string& resId);
+    const cdroid::RefPtr<ColorStateList> applyTextAppearance(Paint& p, const std::string& resId);
     bool moveOneDay(bool positive);
     int findClosestRow(const Rect* previouslyFocusedRect);
     int findClosestColumn(const Rect*previouslyFocusedRect);

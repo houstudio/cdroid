@@ -1,0 +1,123 @@
+{
+   XLIB_Global_Static_VARS
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:__libc_alloc_buffer_allocate
+   fun:alloc_buffer_allocate
+   fun:__resolv_conf_allocate
+   fun:__resolv_conf_load
+   fun:__resolv_conf_get_current
+   fun:__res_vinit
+   fun:maybe_init
+   fun:context_get
+   fun:context_get
+   fun:__resolv_context_get
+   fun:get_nss_addresses
+   fun:gaih_inet
+   fun:getaddrinfo
+   obj:/usr/lib/x86_64-linux-gnu/libxcb.so.1.1.0
+   fun:xcb_connect_to_display_with_auth_info
+   fun:_XConnectXCB
+   fun:XOpenDisplay
+}
+
+{
+   Typeface_Default_Global
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN6cdroid8Typeface18loadFromFontConfigEv
+   fun:_ZN6cdroid8Typeface29loadPreinstalledSystemFontMapEv
+   fun:_ZN6cdroid3AppC1EiPPKc
+   fun:main
+}
+
+{
+   TypeFace_FcPatterns
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:FcPatternObjectInsertElt
+   fun:FcPatternObjectAddWithBinding
+   fun:FcPatternDuplicate
+   fun:_cairo_ft_font_face_create_for_pattern
+   fun:_cairo_ft_font_face_create_for_toy
+   fun:_cairo_toy_font_face_create_impl_face
+   fun:_cairo_toy_font_face_init
+   fun:cairo_toy_font_face_create
+   fun:_cairo_gstate_ensure_font_face
+   fun:_cairo_gstate_ensure_scaled_font
+   fun:_cairo_gstate_get_scaled_font
+}
+
+{
+   UnicodeBlock_Name_Global_Static_Const
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEE9_M_assignERKS4_
+   fun:_ZNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEaSERKS4_
+   fun:_ZN6cdroid9Character6SubsetC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6cdroid9Character12UnicodeBlockC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6cdroid9Character12UnicodeBlockC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEERKSt16initializer_listIS8_E
+   fun:_Z41__static_initialization_and_destruction_0ii
+   fun:_GLOBAL__sub_I_character.cc
+   fun:call_init.part.0
+   fun:call_init
+   fun:_dl_init
+   obj:/usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+}
+
+{
+   UnicodeBlock_Global_Static_Const
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN9__gnu_cxx13new_allocatorIPNSt8__detail15_Hash_node_baseEE8allocateEmPKv
+   fun:_ZNSt16allocator_traitsISaIPNSt8__detail15_Hash_node_baseEEE8allocateERS3_m
+   fun:_ZNSt8__detail16_Hashtable_allocISaINS_10_Hash_nodeISt4pairIKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPKN6cdroid9Character12UnicodeBlockEELb1EEEEE19_M_allocate_bucketsEm
+   fun:_ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_PKN6cdroid9Character12UnicodeBlockEESaISD_ENSt8__detail10_Select1stESt8equal_toIS5_ESt4hashIS5_ENSF_18_Mod_range_hashingENSF_20_Default_ranged_hashENSF_20_Prime_rehash_policyENSF_17_Hashtable_traitsILb1ELb0ELb1EEEE19_M_allocate_bucketsEm
+   fun:_ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_PKN6cdroid9Character12UnicodeBlockEESaISD_ENSt8__detail10_Select1stESt8equal_toIS5_ESt4hashIS5_ENSF_18_Mod_range_hashingENSF_20_Default_ranged_hashENSF_20_Prime_rehash_policyENSF_17_Hashtable_traitsILb1ELb0ELb1EEEE13_M_rehash_auxEmSt17integral_constantIbLb1EE
+   fun:_ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_PKN6cdroid9Character12UnicodeBlockEESaISD_ENSt8__detail10_Select1stESt8equal_toIS5_ESt4hashIS5_ENSF_18_Mod_range_hashingENSF_20_Default_ranged_hashENSF_20_Prime_rehash_policyENSF_17_Hashtable_traitsILb1ELb0ELb1EEEE9_M_rehashEmRKm
+   fun:_ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_PKN6cdroid9Character12UnicodeBlockEESaISD_ENSt8__detail10_Select1stESt8equal_toIS5_ESt4hashIS5_ENSF_18_Mod_range_hashingENSF_20_Default_ranged_hashENSF_20_Prime_rehash_policyENSF_17_Hashtable_traitsILb1ELb0ELb1EEEE21_M_insert_unique_nodeEmmPNSF_10_Hash_nodeISD_Lb1EEEm
+   fun:_ZNSt10_HashtableINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS5_PKN6cdroid9Character12UnicodeBlockEESaISD_ENSt8__detail10_Select1stESt8equal_toIS5_ESt4hashIS5_ENSF_18_Mod_range_hashingENSF_20_Default_ranged_hashENSF_20_Prime_rehash_policyENSF_17_Hashtable_traitsILb1ELb0ELb1EEEE10_M_emplaceIJSD_EEES6_INSF_14_Node_iteratorISD_Lb0ELb1EEEbESt17integral_constantIbLb1EEDpOT_
+   fun:_ZNSt8__detail7_InsertINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESt4pairIKS6_PKN6cdroid9Character12UnicodeBlockEESaISE_ENS_10_Select1stESt8equal_toIS6_ESt4hashIS6_ENS_18_Mod_range_hashingENS_20_Default_ranged_hashENS_20_Prime_rehash_policyENS_17_Hashtable_traitsILb1ELb0ELb1EEELb0EE6insertISE_vEES7_INS_14_Node_iteratorISE_Lb0ELb1EEEbEOT_
+   fun:_ZNSt13unordered_mapINSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEEPKN6cdroid9Character12UnicodeBlockESt4hashIS5_ESt8equal_toIS5_ESaISt4pairIKS5_SA_EEE6insertEOSH_
+   fun:_ZN6cdroid9Character12UnicodeBlockC1ERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+}
+
+{
+   Layout_Directions_Static_Global
+   Memcheck:Free
+   fun:_ZdlPvm
+   fun:_ZN9__gnu_cxx13new_allocatorIiE10deallocateEPim
+   fun:_ZNSt16allocator_traitsISaIiEE10deallocateERS0_Pim
+   fun:_ZNSt12_Vector_baseIiSaIiEE13_M_deallocateEPim
+   fun:_ZNSt12_Vector_baseIiSaIiEED1Ev
+   fun:_ZNSt6vectorIiSaIiEED1Ev
+   fun:_ZN6cdroid10DirectionsD1Ev
+   fun:__cxa_finalize
+   obj:/home/houzh/cdroidMaster/outX64-Debug/src/gui/libcdroid.so
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
+
+{
+   MeasuredParagraph_SynchronizedPool_Static_GLobal
+   Memcheck:Free
+   fun:_ZdlPvm
+   fun:_ZN9__gnu_cxx13new_allocatorIPN6cdroid17MeasuredParagraphEE10deallocateEPS3_m
+   fun:_ZNSt16allocator_traitsISaIPN6cdroid17MeasuredParagraphEEE10deallocateERS3_PS2_m
+   fun:_ZNSt12_Vector_baseIPN6cdroid17MeasuredParagraphESaIS2_EE13_M_deallocateEPS2_m
+   fun:_ZNSt12_Vector_baseIPN6cdroid17MeasuredParagraphESaIS2_EED1Ev
+   fun:_ZNSt6vectorIPN6cdroid17MeasuredParagraphESaIS2_EED1Ev
+   fun:_ZN6cdroid5Pools10SimplePoolINS_17MeasuredParagraphEED1Ev
+   fun:_ZN6cdroid5Pools16SynchronizedPoolINS_17MeasuredParagraphEED1Ev
+   fun:__cxa_finalize
+   obj:/home/houzh/cdroidMaster/outX64-Debug/src/gui/libcdroid.so
+   fun:_dl_fini
+   fun:__run_exit_handlers
+}
+

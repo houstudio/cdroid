@@ -614,22 +614,22 @@ static RefPtr<Pattern> get_pattern_wrapper (cairo_pattern_t* pattern, bool has_r
   switch (pattern_type)
   {
     case CAIRO_PATTERN_TYPE_SOLID:
-      return make_refptr_for_instance<SolidPattern>(new SolidPattern(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<SolidPattern>(new SolidPattern(pattern, has_reference));
       break;
     case CAIRO_PATTERN_TYPE_SURFACE:
-      return make_refptr_for_instance<SurfacePattern>(new SurfacePattern(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<SurfacePattern>(new SurfacePattern(pattern, has_reference));
       break;
     case CAIRO_PATTERN_TYPE_LINEAR:
-      return make_refptr_for_instance<LinearGradient>(new LinearGradient(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<LinearGradient>(new LinearGradient(pattern, has_reference));
       break;
     case CAIRO_PATTERN_TYPE_RADIAL:
-      return make_refptr_for_instance<RadialGradient>(new RadialGradient(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<RadialGradient>(new RadialGradient(pattern, has_reference));
       break;
     case CAIRO_PATTERN_TYPE_MESH:
-      return make_refptr_for_instance<MeshPattern>(new MeshPattern(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<MeshPattern>(new MeshPattern(pattern, has_reference));
       break;
     default:
-      return make_refptr_for_instance<Pattern>(new Pattern(pattern, has_reference /* does not have reference */));
+      return make_refptr_for_instance<Pattern>(new Pattern(pattern, has_reference));
   }
 }
 

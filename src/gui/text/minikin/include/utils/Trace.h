@@ -1,0 +1,6 @@
+#ifndef MINIKIN_UTILS_TRACE_H
+#define MINIKIN_UTILS_TRACE_H
+
+#define ATRACE_CALL(...)
+
+#endif // MINIKIN_UTILS_TRACE_H

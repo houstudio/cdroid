@@ -18,6 +18,7 @@
 #include <core/attributeset.h>
 #include <widget/linearlayout.h>
 #include <core/windowmanager.h>
+#include <core/porterduff.h>
 #include <core/xmlpullparser.h>
 #include <core/color.h>
 #include <vector>
@@ -346,22 +347,43 @@ static std::unordered_map<std::string,int> tintModes={
 };
 
 int AttributeSet::getTintMode(const std::string&key,int def)const{
-    return def;
+    /* android:tintMode enum -> PorterDuff::Mode. multiply maps to MULTIPLY per
+     * Android b/73224934 (same as Drawable::parseTintMode). Matches the 6 enum
+     * values declared in attrs.xml (src_over/src_in/src_atop/multiply/screen/add).
+     * Delegates to getInt() so absent-value and flag-style ("a|b") handling stay
+     * consistent with every other enum attribute. */
+    static const std::unordered_map<std::string,int> kvs={
+        {"src_over",PorterDuff::Mode::SRC_OVER},
+        {"src_in",  PorterDuff::Mode::SRC_IN},
+        {"src_atop",PorterDuff::Mode::SRC_ATOP},
+        {"multiply",PorterDuff::Mode::MULTIPLY},
+        {"screen",  PorterDuff::Mode::SCREEN},
+        {"add",     PorterDuff::Mode::ADD},
+    };
+    return getInt(key,kvs,def);
 }
 
 int AttributeSet::getDimension(const std::string&key,int def)const{
-    char*p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
+    // Resource reference: "@dimen/foo" or already-resolved "pkg:dimen/foo" (getString resolves
+    // the '@' prefix to the package form). Resolve via the context; otherwise parse a literal.
+    if (v[0] == '@' || v.find(':') != std::string::npos) {
+        return mContext->getDimension(v);
+    }
+    char*p;
     def = std::strtol(v.c_str(),&p,10);
     //p   = strpbrk(v.c_str(),"sdp");
     return def;
 }
 
 int AttributeSet::getDimensionPixelSize(const std::string&key,int def)const{
-    char *p;
     const std::string v = getString(key);
     if( v.empty() ) return def;
+    if (v[0] == '@' || v.find(':') != std::string::npos) {
+        return mContext->getDimensionPixelSize(v, def);
+    }
+    char *p;
     def = std::strtol(v.c_str(),&p,10);
     //p = strpbrk(v.c_str(),"sdp");
     if(*p){
@@ -381,12 +403,20 @@ int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{
 int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     const std::string v = getString(key);
     if(v.empty())return def;
+    int result;
     switch(v[0]){
     case 'f':
-    case 'm':return -1;//MATCH_PARENT
-    case 'w':return -2;//WRAP_CONTENT
-    default :return std::strtol(v.c_str(),nullptr,10);
+    case 'm':result = -1;break;//MATCH_PARENT
+    case 'w':result = -2;break;//WRAP_CONTENT
+    default:
+        // "48dp" literal, "@dimen/foo", or "pkg:dimen/foo" (resolved form). Resource references
+        // (contain ':') go through the context; literals through density-aware parsing.
+        result = (v.find(':') != std::string::npos || v[0] == '@')
+                 ? mContext->getDimensionPixelSize(v, def)
+                 : getDimensionPixelSize(key, def);
+        break;
     }
+    return result;
 }
 
 RefPtr<ColorStateList>AttributeSet::getColorStateList(const std::string&key)const{

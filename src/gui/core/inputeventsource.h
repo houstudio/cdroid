@@ -32,7 +32,7 @@ class InputEventSource:public EventHandler{
 public:	
     typedef std::function<void(bool)>ScreenSaver;
 private:
-    std::recursive_mutex mtxEvents;
+    mutable std::recursive_mutex mtxEvents;
     ScreenSaver mScreenSaver;
     int mScreenSaveTimeOut;
     bool mInited;
@@ -63,7 +63,25 @@ public:
     void playback(const std::string&fname);
     int checkEvents()override;
     int handleEvents()override;
+    /*Drain every device's pending event queue and return the events to the
+      pool. Called on shutdown to reclaim MotionEvent/KeyEvent still queued
+      after the main loop stopped consuming them: InputEventSource is a process
+      singleton that is never destroyed, so its device queues would otherwise
+      stay populated and leak on exit. Also stops the input thread so it cannot
+      keep refilling the queues while we drain.*/
+    void clearEvents();
     void sendEvent(InputEvent&);
+    /*Lookup an input device by id (== fd) WITHOUT creating it — a pure registry
+      query, the equivalent of Android InputManagerGlobal.getInputDevice(id).
+      Returns nullptr if no device with that id is registered (e.g. a synthetic
+      KeyEvent with deviceId < 0, or a hot-removed device). Thread-safe: takes
+      mtxEvents (KeyEvent resolves chars from any thread, not just the input one).*/
+    InputDevice* getInputDevice(int id);
+    /*OR of every KeyDevice's local meta state. Mirrors Android
+      InputReader::getGlobalMetaState — the global modifier view attached to
+      KeyEvents/MotionEvents from any device. Safe to call from putEvent
+      (mtxEvents is recursive and already held on the input thread).*/
+    int32_t getGlobalMetaState()const;
 };
 }
 #endif

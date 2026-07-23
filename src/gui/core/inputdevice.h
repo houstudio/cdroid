@@ -358,7 +358,6 @@ protected:
     int32_t mKeyboardType;
     int32_t mScreenWidth;
     int32_t mScreenHeight;
-    int32_t mCorrectedDeviceClasses;
     int32_t mScreenRotation;
     int32_t mSeqID;
     int32_t mDisplayId;
@@ -367,9 +366,16 @@ protected:
     Point mLastEventPos;
     InputDeviceInfo mDeviceInfo;
     class KeyLayoutMap*mKeyMap;
+    // Per-device KeyCharacterMap (.kcm), loaded like mKeyMap (.kl): by device name,
+    // then Vendor_%04x_Productor_%04x.kcm, else the shared KeyCharacterMap::getDefault().
+    // Borrowed from the shared default (pointer-equal) is NOT freed in the dtor.
+    class KeyCharacterMap*mKeyCharacterMap=nullptr;
     static Preferences mPrefs;
     std::vector<InputEvent*>mEvents;
     virtual int32_t isValidEvent(int32_t type,int32_t code,int32_t value);
+    /*OR of every KeyDevice's meta state — the InputReader-level global view used by
+      all event producers (Android InputReader::getGlobalMetaState).*/
+    int32_t globalMetaState()const;
 public:
     InputDevice(int32_t fdev);
     virtual ~InputDevice();
@@ -382,6 +388,9 @@ public:
     bool supportsSource(int32_t source)const;
     int32_t getSources()const;
     int32_t getClasses()const;
+    /*This device's KeyCharacterMap (.kcm), or the shared default if it had no
+      device-specific map. KeyEvent resolves chars through this via deviceId.*/
+    KeyCharacterMap* getKeyCharacterMap()const;
     int32_t getEventCount()const;
     void pushEvent(InputEvent*);
     int32_t drainEvents(std::vector<InputEvent*>&out);
@@ -395,6 +404,7 @@ class KeyDevice:public InputDevice{
 private:
     int32_t mLastDownKey;
     int32_t mRepeatCount;
+    int32_t mMetaState;   // accumulated Shift/Alt/Ctrl/Meta/Sym/Lock state, attached to every KeyEvent
 protected:
     int32_t msckey;
     KeyEvent mEvent;
@@ -403,6 +413,9 @@ protected:
 public:
     KeyDevice(int32_t fd);
     int32_t putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value)override;
+    /*this keyboard device's own accumulated modifier state (KeyboardInputMapper::mMetaState).
+      InputEventSource::getGlobalMetaState ORs these across all keyboards.*/
+    int32_t getMetaState()const{return mMetaState;}
 };
 
 static constexpr int MAX_POINTERS=16;
@@ -413,8 +426,9 @@ protected:
     MotionEvent* mEvent;
     nsecs_t mDownTime;
     nsecs_t mMoveTime;
-    int32_t mSlotID;
-    int32_t mTrackID;
+    int32_t mSlotID;          // current slot (TypeB = ABS_MT_SLOT value; TypeA = virtual slot per SYN_MT_REPORT)
+    int32_t mTrackID;         // current ABS_MT_TRACKING_ID value
+    int32_t mCurrentIndex;    // = mSlot2Index[mSlotID]; target index for axis writes (-1 if none yet)
     int32_t mTPWidth;
     int32_t mTPHeight;
     int32_t mMinX,mMaxX;
@@ -429,16 +443,18 @@ protected:
     bool mInvertX;
     bool mInvertY;
     bool mTypeB;
-    BitSet32 mLastBits,mCurrBits;
-    SparseArray<int32_t>mTrack2Slot;
-    PointerCoords mCoord;
-    PointerProperties mProp;
-    std::vector<PointerCoords>mPointerCoords;
-    std::vector<PointerCoords>mPointerCoordsBak;
-    std::vector<PointerProperties>mPointerProps;
-    std::vector<PointerProperties>mPointerPropsBak;
+    bool mSawSynMtReport; // true once any SYN_MT_REPORT seen ⇒ device is TypeA (per-frame reset)
+    bool mIsMt;           // runtime: any ABS_MT_* axis seen ⇒ multi-touch (absBitMask is unreliable on many devices)
+    bool mBtnTouchDown;   // BTN_TOUCH=1 seen; markBit deferred to SYN_REPORT (after mIsMt is known)
+    bool mFingerLifted;   // BTN_TOUCH=0 seen; suppresses TRACKING_ID re-mark on non-standard MT up (XLIB fixed trackID)
+    int32_t mPendingToolType;                  // from BTN_TOOL_*/ABS_MT_TOOL_TYPE, applied when a new index is allocated
+    BitSet32 mLastBits,mCurrBits;              // bit index == internal pointer index (never repacked)
+    int32_t mSlot2Index[MAX_POINTERS];         // slot -> index, -1 if free (TypeB)
+    SparseArray<int32_t> mTrackId2Index;       // TRACKING_ID -> index (TypeA, stable cross-frame)
+    PointerCoords mRawCoords[MAX_POINTERS];    // per-index coords (slot-fixed, not erased/repacked)
+    PointerProperties mRawProps[MAX_POINTERS]; // per-index props
     std::vector<VirtualKeyDefinition>mVirtualKeyDefs;
-    int32_t getActionByBits(int32_t &pointIndex);
+    int32_t getActionByBits(int32_t &changedIndex);
     void setAxisValue(int32_t axis,int32_t value,bool isRelative);
     int32_t isValidEvent(int32_t type,int32_t code,int32_t value)override;
     int32_t ABS2AXIS(int32_t absaxis);

@@ -1,16 +1,23 @@
 #ifndef __RADIAL_TIMEPICKER_VIEW_H__
 #define __RADIAL_TIMEPICKER_VIEW_H__
+#include <array>
+#include <string>
+#include <vector>
 #include <view/view.h>
 #include <core/typeface.h>
+#include <core/attributeset.h>   // RefPtr
+#include <core/path.h>
+#include <text/paint.h>
 #include <widget/explorebytouchhelper.h>
 namespace cdroid{
+
+class ColorStateList;
 
 class RadialTimePickerView:public View {
 public:
     static constexpr int HOURS = 0;
     static constexpr int MINUTES = 1;
     DECLARE_UIEVENT(void,OnValueSelectedListener,int/*pickerType*/, int/*newValue*/, bool/*autoAdvance*/);
-    //void onValueSelected(int pickerType, int newValue, bool autoAdvance);
 private:
     static constexpr int HOURS_INNER = 2;
     static constexpr int SELECTOR_CIRCLE = 0;
@@ -27,28 +34,28 @@ private:
 
     static constexpr int ANIM_DURATION_NORMAL = 500;
     static constexpr int ANIM_DURATION_TOUCH = 60;
-    //static constexpr int SNAP_PREFER_30S_MAP[361];
     static constexpr int NUM_POSITIONS = 12;
 
     /** "Something is wrong" color used when a color attribute is missing. */
     static constexpr int MISSING_COLOR = Color::MAGENTA;
-private:
-    /*final String[] mHours12Texts = new String[12];
-    final String[] mOuterHours24Texts = new String[12];
-    final String[] mInnerHours24Texts = new String[12];
-    final String[] mMinutesTexts = new String[12];
 
-    final Paint[] mPaint = new Paint[2];
-    final Paint mPaintCenter = new Paint();
-    final Paint[] mPaintSelector = new Paint[3];
-    final Paint mPaintBackground = new Paint();*/
+    friend class Hours2Minutes;
+private:
+    // Source number tables (filled once in initHoursAndMinutesText).
+    std::vector<std::string> mHours12Texts;
+    std::vector<std::string> mOuterHours24Texts;
+    std::vector<std::string> mInnerHours24Texts;
+    std::vector<std::string> mMinutesTexts;
+
+    // Paint used only for text (shapes/colors are drawn straight to cairo).
+    Paint mPaint[2];
+
     int mCenterColor;
     int mBackgroundColor;
     class RadialPickerTouchHelper;
-    class Hours2Minutes;
     Typeface* mTypeface;
 
-    ColorStateList* mTextColor[3];
+    RefPtr<ColorStateList> mTextColor[3];
     int mTextSize[3];
     int mTextInset[3];
 
@@ -113,19 +120,19 @@ private:
     void animatePicker(bool hoursToMinutes, long duration);
     void drawCircleBackground(Canvas& canvas);
     void drawHours(Canvas& canvas, Path& selectorPath, float alphaMod);
-    void drawHoursClipped(Canvas& canvas, int hoursAlpha, bool showActivated);
+    void drawHoursClipped(Canvas& canvas, Paint& paint, int hoursAlpha, bool showActivated);
     void drawMinutes(Canvas& canvas, Path& selectorPath, float alphaMod);
-    void drawMinutesClipped(Canvas& canvas, int minutesAlpha, bool showActivated);
+    void drawMinutesClipped(Canvas& canvas, Paint& paint, int minutesAlpha, bool showActivated);
     void drawCenter(Canvas& canvas, float alphaMod);
     int getMultipliedAlpha(int argb, int alpha)const;
     void drawSelector(Canvas& canvas, Path* selectorPath);
     void calculatePositionsHours();
     void calculatePositionsMinutes();
-    static void calculatePositions(Paint paint, float radius, float xCenter, float yCenter,
+    static void calculatePositions(Paint& paint, float radius, float xCenter, float yCenter,
         float textSize, float* x, float* y);
     void drawTextElements(Canvas& canvas, float textSize, Typeface* typeface,
-        ColorStateList* textColor,const std::vector<std::string>& texts, float* textX, float* textY,// Paint paint,
-        int alpha, bool showActivated, int activatedDegrees, bool activatedOnly);
+        ColorStateList* textColor,const std::vector<std::string>& texts, float* textX, float* textY,
+        Paint& paint, int alpha, bool showActivated, int activatedDegrees, bool activatedOnly);
     int getDegreesFromXY(float x, float y, bool constrainOutside);
     bool getInnerCircleFromXY(float x, float y);
     bool handleTouchInput(float x, float y, bool forceSelection, bool autoAdvance);

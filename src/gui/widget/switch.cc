@@ -1,7 +1,8 @@
 #include <widget/switch.h>
 #include <utils/mathutils.h>
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <view/viewgroup.h>
+#include <text/method/allcapstransformationmethod.h>
 
 namespace cdroid{
 
@@ -35,11 +36,11 @@ Switch::Switch(Context* context,const AttributeSet& a)
     mThumbTintList = a.getColorStateList("thumbTint");
     mHasThumbTint = (mThumbTintList!=nullptr);
 
-    /*BlendMode thumbTintMode = Drawable.parseBlendMode( a.getInt(com.android.internal.R.styleable.Switch_thumbTintMode, -1),null);
+    const int thumbTintMode = a.getTintMode("thumbTintMode", -1);
     if (mThumbBlendMode != thumbTintMode) {
-        //mThumbBlendMode = thumbTintMode;
+        mThumbBlendMode = thumbTintMode;
         mHasThumbTintMode = true;
-    }*/
+    }
     if (mHasThumbTint || mHasThumbTintMode) {
         applyThumbTint();
     }
@@ -47,11 +48,11 @@ Switch::Switch(Context* context,const AttributeSet& a)
     mTrackTintList = a.getColorStateList("trackTint");
     mHasTrackTint = (mTrackTintList!=nullptr);
 
-    /*BlendMode trackTintMode = Drawable.parseBlendMode(a.getInt(com.android.internal.R.styleable.Switch_trackTintMode, -1), null);
+    const int trackTintMode = a.getTintMode("trackTintMode", -1);
     if (mTrackBlendMode != trackTintMode) {
         mTrackBlendMode = trackTintMode;
         mHasTrackTintMode = true;
-    }*/
+    }
     if (mHasTrackTint || mHasTrackTintMode) {
         applyTrackTint();
     }
@@ -101,10 +102,8 @@ void Switch::init(){
     mOffLayout = makeLayout("");
     mSwitchLeft= mSwitchRight  =0;
     mSwitchTop = mSwitchBottom =0;
+    mSwitchTransformationMethod = nullptr;
     mVelocityTracker  = VelocityTracker::obtain();
-    /*if(Property::fromName("thumbPos")==nullptr){
-        Property::reigsterProperty("thumbPos",new THUMB_POS());
-    }*/
 }
 
 Switch::~Switch(){
@@ -113,6 +112,7 @@ Switch::~Switch(){
     delete mPositionAnimator;
     delete mOnLayout;
     delete mOffLayout;
+    delete mSwitchTransformationMethod;
     mVelocityTracker->recycle();
 }
 
@@ -129,10 +129,8 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 
     int ts = atts.getDimensionPixelSize("textSize", 0);
     if (ts != 0) {
-        if (ts != mOnLayout->getFontSize()){//mTextPaint.getTextSize()) {
-            //mTextPaint.setTextSize(ts);
-            mOnLayout->setFontSize(ts);
-            mOffLayout->setFontSize(ts);
+        if (ts != mTextPaint.getTextSize()) {
+            mTextPaint.setTextSize(ts);
             requestLayout();
         }
     }
@@ -144,13 +142,13 @@ void Switch::setSwitchTextAppearance(Context* context,const std::string&resid){
 
     setSwitchTypefaceByIndex(typefaceIndex, styleIndex);
 
-    /*bool allCaps = appearance.getBoolean(com.android.internal.R.styleable.TextAppearance_textAllCaps, false);
+    const bool allCaps = atts.getBoolean("textAllCaps", false);
     if (allCaps) {
         mSwitchTransformationMethod = new AllCapsTransformationMethod(getContext());
-        mSwitchTransformationMethod.setLengthChangesAllowed(true);
+        mSwitchTransformationMethod->setLengthChangesAllowed(true);
     } else {
-        mSwitchTransformationMethod = null;
-    }*/
+        mSwitchTransformationMethod = nullptr;
+    }
 }
 
 void Switch::setSwitchTypefaceByIndex(int typefaceIndex, int styleIndex){
@@ -183,23 +181,21 @@ void Switch::setSwitchTypeface(Typeface* tf, int style){
         // now compute what (if any) algorithmic styling is needed
         int typefaceStyle = tf ? tf->getStyle() : 0;
         int need = style & ~typefaceStyle;
-        //mTextPaint.setFakeBoldText((need & Typeface.BOLD) != 0);
-        //mTextPaint.setTextSkewX((need & Typeface.ITALIC) != 0 ? -0.25f : 0);
+        mTextPaint.setFakeBoldText((need & Typeface::BOLD) != 0);
+        mTextPaint.setTextSkewX((need & Typeface::ITALIC) != 0 ? -0.25f : 0);
     } else {
         if (tf == nullptr) {
             tf = Typeface::defaultFromStyle(style);
         }
-        //mTextPaint.setFakeBoldText(false);
-        //mTextPaint.setTextSkewX(0);
+        mTextPaint.setFakeBoldText(false);
+        mTextPaint.setTextSkewX(0);
         setSwitchTypeface(tf);
     }
 }
 
 void Switch::setSwitchTypeface(Typeface* tf){
-    if (mOnLayout->getTypeface() != tf) {
-        //mTextPaint.setTypeface(tf);
-        mOnLayout->setTypeface(tf);
-        mOffLayout->setTypeface(tf);
+    if (mTextPaint.getTypeface() != tf) {
+        mTextPaint.setTypeface(tf);
         requestLayout();
         invalidate();
     }
@@ -262,7 +258,9 @@ const cdroid::RefPtr<ColorStateList> Switch::getTrackTintList() {
 }
 
 void Switch::setTrackTintMode(PorterDuffMode tintMode){
-
+    mTrackBlendMode = tintMode;
+    mHasTrackTintMode = true;
+    applyTrackTint();
 }
 
 void Switch::applyTrackTint(){
@@ -274,7 +272,7 @@ void Switch::applyTrackTint(){
         }
 
         if (mHasTrackTintMode) {
-            //mTrackDrawable->setTintBlendMode(mTrackBlendMode);
+            mTrackDrawable->setTintBlendMode(mTrackBlendMode);
         }
 
         // The drawable (or one of its children) may not have been
@@ -286,7 +284,7 @@ void Switch::applyTrackTint(){
 }
 
 PorterDuffMode Switch::getTrackTintMode()const{
-    return (PorterDuffMode)0;
+    return (PorterDuffMode)mTrackBlendMode;
 }
 
 void Switch::setThumbDrawable(Drawable* thumb){
@@ -321,10 +319,13 @@ const cdroid::RefPtr<ColorStateList> Switch::getThumbTintList()const{
 }
 
 void Switch::setThumbTintMode(PorterDuffMode tintMode){
+    mThumbBlendMode = tintMode;
+    mHasThumbTintMode = true;
+    applyThumbTint();
 }
 
 PorterDuffMode Switch::getThumbTintMode()const{
-    return (PorterDuffMode)0;
+    return (PorterDuffMode)mThumbBlendMode;
 }
 
 void Switch::applyThumbTint() {
@@ -335,7 +336,7 @@ void Switch::applyThumbTint() {
             mThumbDrawable->setTintList(mThumbTintList);
         }
 
-        //if (mHasThumbTintMode) mThumbDrawable->setTintBlendMode(mThumbBlendMode);
+        if (mHasThumbTintMode) mThumbDrawable->setTintBlendMode(mThumbBlendMode);
 
         // The drawable (or one of its children) may not have been
         // stateful before applying the tint, so let's try again.
@@ -434,7 +435,7 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
     int maxTextWidth;
     if (mShowText) {
-        maxTextWidth = std::max(mOnLayout->getMaxLineWidth(), mOffLayout->getMaxLineWidth())
+        maxTextWidth = std::max(mOnLayout->getWidth(), mOffLayout->getWidth())
                 + mThumbTextPadding * 2;
     } else {
         maxTextWidth = 0;
@@ -474,9 +475,16 @@ void Switch::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 }
 
 Layout* Switch::makeLayout(const std::string& text){
-    Layout*layout = new Layout(getTextSize(),getWidth());
-    layout->setText(text);
-    return layout;
+    //Layout*layout = new Layout(getTextSize(),getWidth());
+    //layout->setText(text);
+    mText = new SpannedString(TextUtils::utf8_utf16(text));
+    CharSequence* transformed = mText;
+        //(mSwitchTransformationMethod != null)? mSwitchTransformationMethod.getTransformation(text, this):text;
+
+    const int width = (int) std::ceil(Layout::getDesiredWidth(transformed, 0,
+                transformed->length(), mTextPaint, getTextDirectionHeuristic()));
+    auto builder= StaticLayout::Builder::obtain(transformed, 0, transformed->length(), &mTextPaint, width);
+    return builder->setUseLineSpacingFromFallbacks(mUseFallbackLineSpacing).build();
 }
 
 bool Switch::hitThumb(float x, float y) {
@@ -647,8 +655,12 @@ std::string Switch::getButtonStateDescription(){
     }
 }
 
-void Switch::doSetChecked(bool checked){
-    CompoundButton::doSetChecked(checked);
+void Switch::toggle(){
+    setChecked(!isChecked());
+}
+
+void Switch::setChecked(bool checked){
+    CompoundButton::setChecked(checked);
 
     // Calling the super method may result in setChecked() getting called
     // recursively with a different value, so load the REAL value...
@@ -781,8 +793,6 @@ void Switch::draw(Canvas& c) {
 
 void Switch::onDraw(Canvas& canvas) {
     CompoundButton::onDraw(canvas);
-    mOnLayout->relayout();
-    mOffLayout->relayout();
 
     Rect padding;
     if (mTrackDrawable) {
@@ -821,7 +831,9 @@ void Switch::onDraw(Canvas& canvas) {
     if (switchText) {
         std::vector<int> drawableState = getDrawableState();
         if (mTextColors) {
-            canvas.set_color(mTextColors->getColorForState(drawableState, 0));
+            const int stateColor = mTextColors->getColorForState(drawableState, 0);
+            mTextPaint.setColor(stateColor);
+            canvas.set_color(stateColor);
         }
         //mTextPaint.drawableState = drawableState;
         int cX;
@@ -831,7 +843,7 @@ void Switch::onDraw(Canvas& canvas) {
         } else {
             cX = getWidth();
         }
-        const int left = cX / 2 - switchText->getMaxLineWidth() / 2;
+        const int left = cX / 2 - switchText->getWidth() / 2;
         const int top = (switchInnerTop + switchInnerBottom) / 2 - switchText->getHeight() / 2;
         canvas.translate(left, 0);//top);
         switchText->draw(canvas);
@@ -844,7 +856,7 @@ int Switch::getCompoundPaddingLeft() const{
         return CompoundButton::getCompoundPaddingLeft();
     }
     int padding = CompoundButton::getCompoundPaddingLeft() + mSwitchWidth;
-    if (!getText().empty()){//!TextUtils.isEmpty(getText())) {
+    if (!TextUtils::isEmpty(this->mText)) {
         padding += mSwitchPadding;
     }
     return padding;
@@ -855,7 +867,7 @@ int Switch::getCompoundPaddingRight() const{
         return CompoundButton::getCompoundPaddingRight();
     }
     int padding = CompoundButton::getCompoundPaddingRight() + mSwitchWidth;
-    if (!getText().empty()){//!TextUtils.isEmpty(getText())) {
+    if(!TextUtils::isEmpty(this->mText)) {
         padding += mSwitchPadding;
     }
     return padding;

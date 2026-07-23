@@ -56,6 +56,10 @@ public:
     int getFrameCount()const;
     virtual bool decodeSize()=0;
     virtual Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)=0;
+    // npTc chunk DATA captured during PNG decode (PNGDecoder only); nullptr when the
+    // image carries no npTc chunk. Consumed to build a 9-patch NinePatch from the
+    // chunk instead of scanning the guide border.
+    virtual const std::vector<uint8_t>* getNinePatchChunk() const { return nullptr; }
 
     static int  registerFactory(const std::string&mime,uint32_t magicSize,Verifier,Factory factory);
     static int  computeTransparency(Cairo::RefPtr<Cairo::ImageSurface>bmp);
@@ -96,6 +100,7 @@ public:
     ~PNGDecoder()override;
     bool decodeSize()override;
     Cairo::RefPtr<Cairo::ImageSurface> decode(float scale=1.f,void*targetProfile=nullptr)override;
+    const std::vector<uint8_t>* getNinePatchChunk() const override;
     static bool isPNG(const uint8_t*,uint32_t);
 };
 

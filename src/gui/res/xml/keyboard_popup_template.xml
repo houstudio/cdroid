@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mini-keyboard sizing template (AOSP keyboard_popup_template.xml). The
+  long-press popup's Keyboard is built from this template (its Keyboard
+  keyWidth/keyHeight set the mini keys' default size) plus the pressed key's
+  popupCharacters, see Keyboard(Context, layoutTemplateResId, characters,
+  columns, horizontalPadding). It has no Row elements of its own. Sizing
+  matches qwerty.xml so the popup reads as a slice of the main keyboard.
+-->
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="9.%p"
+    android:keyHeight="21%p"
+    android:horizontalGap=".3%p"
+    android:verticalGap="5%p"/>

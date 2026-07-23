@@ -13,4 +13,6 @@ src/gui/gui_features.h
 src/gui/core/build.h
 deps
 appdevops*
+scripts/__pycache__
 src/tools/po2json.py
+docs/*worklog.*

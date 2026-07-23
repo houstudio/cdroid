@@ -115,6 +115,7 @@ DayPickerView::DayPickerView(Context* context, const AttributeSet& attrs)
             mOnDaySelectedListener(*this, day);
         }
     };
+    mAdapter->setOnDaySelectedListener(dsl);
 }
 
 DayPickerView::~DayPickerView(){

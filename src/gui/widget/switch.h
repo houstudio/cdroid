@@ -3,7 +3,7 @@
 #include <widget/compoundbutton.h>
 
 namespace cdroid{
-
+class AllCapsTransformationMethod;
 class Switch:public CompoundButton{
 private:
     static constexpr int THUMB_ANIMATION_DURATION = 250;
@@ -17,33 +17,35 @@ private:
     static constexpr int MONOSPACE = 3;
     Drawable* mThumbDrawable;
     cdroid::RefPtr<ColorStateList> mThumbTintList;
-    //BlendMode mThumbBlendMode = null;
-    bool mHasThumbTint = false;
-    bool mHasThumbTintMode = false;
+    int mThumbBlendMode = -1; /* null == -1; otherwise a BlendMode value */
 
     Drawable* mTrackDrawable;
     cdroid::RefPtr<ColorStateList> mTrackTintList;
-    //BlendMode* mTrackBlendMode = null;
+    int mTrackBlendMode = -1; /* null == -1; otherwise a BlendMode value */
+    bool mHasThumbTint = false;
+    bool mHasThumbTintMode = false;
     bool mHasTrackTint = false;
     bool mHasTrackTintMode = false;
+    bool mSplitTrack;
+    bool mShowText;
+    bool mUseFallbackLineSpacing;
 
     int mThumbTextPadding;
     int mSwitchMinWidth;
     int mSwitchPadding;
-    bool mSplitTrack;
     std::string mTextOn;
     std::string mTextOff;
-    bool mShowText;
-    bool mUseFallbackLineSpacing;
+    TextPaint mTextPaint;
 
     int mTouchMode;
     int mTouchSlop;
+    int mMinFlingVelocity;
     float mTouchX;
     float mTouchY;
-    VelocityTracker* mVelocityTracker;
-    int mMinFlingVelocity;
-
     float mThumbPosition;
+    VelocityTracker* mVelocityTracker;
+    AllCapsTransformationMethod* mSwitchTransformationMethod;
+
 
     /**
      * Width required to draw the switch track and thumb. Includes padding and
@@ -97,7 +99,6 @@ private:
     int getThumbOffset();
     int getThumbScrollRange();
 protected:
-    void doSetChecked(bool checked)override;
     void onDetachedFromWindow()override;
     void onLayout(bool changed, int left, int top, int width, int height)override;
     void onDraw(Canvas&)override;
@@ -147,6 +148,8 @@ public:
     void onInitializeAccessibilityNodeInfoInternal(AccessibilityNodeInfo& info)override;
     bool onTouchEvent(MotionEvent& ev)override;
     std::string getButtonStateDescription()override;
+    void toggle()override;
+    void setChecked(bool checked)override;
     void draw(Canvas&)override;
 
     int getCompoundPaddingLeft()const override;

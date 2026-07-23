@@ -38,8 +38,6 @@ public:
         std::function<void(int)>onPageScrollStateChanged;//void onPageScrollStateChanged(int state);
     };
 private:
-    static constexpr int MAX_SCROLL_X =2<<23;
-    static constexpr bool USE_CACHE = true;
     static constexpr int DEFAULT_OFFSCREEN_PAGES = 1;
     static constexpr int MAX_SETTLE_DURATION = 600; // ms
     static constexpr int MIN_DISTANCE_FOR_FLING =25; // dips
@@ -106,13 +104,13 @@ private:
     int mTopPageBounds;
     int mBottomPageBounds;
 
-    int mLeftIncr = -1;
     // Offsets of the first and last items, if known.
     // Set during population, used to determine if we are at the beginning
     // or end of the pager data set during touch scrolling.
     float mFirstOffset;//Float.MAX_VALUE;
     float mLastOffset ;//Float.MAX_VALUE;
     std::vector<OnPageChangeListener> mOnPageChangeListeners;
+    OnPageChangeListener mOnPageChangeListener; // deprecated single listener (setOnPageChangeListener)
     OnPageChangeListener mInternalPageChangeListener;
     PageTransformer* mPageTransformer;
 
@@ -130,6 +128,7 @@ private:
     int mDefaultGutterSize;
     int mGutterSize;
     int mTouchSlop;
+    bool mDragInGutterEnabled = true;
     int mChildWidthMeasureSpec;
     int mChildHeightMeasureSpec;
     int mPageTransformerLayerType;
@@ -174,6 +173,7 @@ private:
     void onSecondaryPointerUp(MotionEvent& ev);
     bool canScroll();
     bool canScroll(View* v, bool checkV, int dx, int x, int y);
+    float releaseHorizontalGlow(float deltaX, float y);
     bool performDrag(float x,float y);
     ItemInfo* infoForCurrentScrollPosition();
     void endDrag();
@@ -189,6 +189,11 @@ protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
     ItemInfo* infoForPosition(int position)const;
+    // AOSP ViewPager helper: resolve the page View for an opaque adapter key by
+    // scanning children with isViewFromObject(). Used instead of casting the key
+    // to View* (the key is not necessarily a View — e.g. DayPickerPagerAdapter
+    // returns a ViewHolder).
+    View* findViewFromObject(void* object);
     void initViewPager(const AttributeSet*);
     int getChildDrawingOrder(int childCount, int i)override;
     void onDetachedFromWindow()override;
@@ -226,13 +231,18 @@ public:
     void addOnPageChangeListener(const OnPageChangeListener& listener);
     void removeOnPageChangeListener(const OnPageChangeListener& listener);
     void clearOnPageChangeListeners();
+    // Deprecated: prefer addOnPageChangeListener/removeOnPageChangeListener.
+    void setOnPageChangeListener(const OnPageChangeListener& listener);
     OnPageChangeListener setInternalPageChangeListener(const OnPageChangeListener& listener);
     int getCurrentItem()const;
     void setCurrentItem(int item);
     void setCurrentItem(int item, bool smoothScroll);
     void setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer);
+    void setPageTransformer(bool reverseDrawingOrder, PageTransformer* transformer, int pageLayerType);
     int getOffscreenPageLimit()const;
     void setOffscreenPageLimit(int limit);
+    bool isDragInGutterEnabled()const;
+    void setDragInGutterEnabled(bool enabled);
     int getPageMargin()const;
     void setPageMargin(int marginPixels);
     void setPageMarginDrawable(Drawable* d);
@@ -252,7 +262,6 @@ public:
     void addFocusables(std::vector<View*>& views, int direction, int focusableMode)override;
     void addTouchables(std::vector<View*>& views)override;
     LayoutParams* generateLayoutParams(const AttributeSet& attrs);
-    void onRtlPropertiesChanged(int layoutDirection)override;
 
     bool beginFakeDrag();
     void endFakeDrag();

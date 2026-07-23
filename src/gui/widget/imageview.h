@@ -37,9 +37,7 @@ private:
     bool mColorMod;
     bool mHasColorFilter;
     bool mHasDrawableTint;
-    bool mHasDrawableTintMode;
     bool mBaselineAlignBottom;
-    int mDrawableBlendMode;
     int mBaseline;
     int mAlpha;
     int mViewAlphaScale;
@@ -119,6 +117,7 @@ public:
     void setImageTintList(const cdroid::RefPtr<ColorStateList>&tint);
     const cdroid::RefPtr<ColorStateList> getImageTintList()const;
     void setImageTintMode(int mode);
+    void setImageTintBlendMode(int blendMode); /* API29 stub: forwards to setImageTintMode */
     int getImageTintMode()const;
     void setColorFilter(int color,int mode);
     void setColorFilter(int color);

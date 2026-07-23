@@ -75,7 +75,7 @@ void ListMenuItemView::initialize(MenuItemImpl* itemData, int menuType) {
     setTitle(itemData->getTitleForItemView(this));
     setCheckable(itemData->isCheckable());
     setShortcut(itemData->shouldShowShortcut(), itemData->getShortcut());
-    setIcon(itemData->getIcon());
+    //setIcon(itemData->getIcon());
     setEnabled(itemData->isEnabled());
     setSubMenuArrowVisible(itemData->hasSubMenu());
     setContentDescription(itemData->getContentDescription());

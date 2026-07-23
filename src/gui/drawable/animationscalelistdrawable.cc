@@ -96,45 +96,26 @@ void AnimationScaleListDrawable::clearMutated(){
 
 void AnimationScaleListDrawable::start(){
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
-        ((Animatable*) dr)->start();
-        if(dynamic_cast<AnimatedImageDrawable*>(dr))
-            ((AnimatedImageDrawable*)dr)->start();
-        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
-            ((AnimatedRotateDrawable*)dr)->start();
-        else if(dynamic_cast<AnimationDrawable*>(dr))
-            ((AnimationDrawable*)dr)->start();
-        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
-            ((AnimatedVectorDrawable*)dr)->start();
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        animatable->start();
     }
 }
 
 void AnimationScaleListDrawable::stop(){
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
-        if(dynamic_cast<AnimationDrawable*>(dr))
-            ((AnimationDrawable*)dr)->stop();
-        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
-            ((AnimatedRotateDrawable*)dr)->stop();
-        else if(dynamic_cast<AnimatedImageDrawable*>(dr))
-            ((AnimatedImageDrawable*)dr)->stop();
-        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
-            ((AnimatedVectorDrawable*)dr)->stop();
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        animatable->stop();
     }
 }
 
 bool AnimationScaleListDrawable::isRunning(){
     bool result = false;
     Drawable* dr = getCurrent();
-    if ((dr != nullptr) && dynamic_cast<Animatable*>(dr)) {
-        if(dynamic_cast<AnimationDrawable*>(dr))
-            result = ((AnimationDrawable*)dr)->isRunning();
-        else if(dynamic_cast<AnimatedRotateDrawable*>(dr))
-            result = ((AnimatedRotateDrawable*)dr)->isRunning();
-        else if(dynamic_cast<AnimatedImageDrawable*>(dr))
-            result = ((AnimatedImageDrawable*)dr)->isRunning();
-        else if(dynamic_cast<AnimatedVectorDrawable*>(dr))
-            result = ((AnimatedVectorDrawable*)dr)->isRunning();
+    auto animatable = dynamic_cast<Animatable*>(dr);
+    if(animatable!=nullptr){
+        result = animatable->isRunning();
     }
     return result;
 }

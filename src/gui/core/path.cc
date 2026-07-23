@@ -426,7 +426,7 @@ void Path::compute_bounds(RectF&bounds, bool include_stroke){
     } else {
         mCTX->get_fill_extents(x1, y1, x2, y2);
     }
-    LOGD("%s extents: (%.f,%.d,%.f,%.d)",(include_stroke?"Stroke":"Fill"),x1,y1,x2,y2);
+    //LOGD("%s extents: (%.f,%.d,%.f,%.d)",(include_stroke?"Stroke":"Fill"),x1,y1,x2,y2);
     bounds={float(x1),float(y1),float(x2-x1),float(y2-y1)};
 }
 

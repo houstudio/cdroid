@@ -197,7 +197,7 @@ void IconMenuItemView::onLayout(bool changed, int left, int top, int width, int 
     positionIcon();
 }
 
-void IconMenuItemView::onTextChanged(const std::wstring& text, int start, int before, int after) {
+void IconMenuItemView::onTextChanged(CharSequence& text, int start, int before, int after) {
     TextView::onTextChanged(text, start, before, after);
 
     // our layout params depend on the length of the text

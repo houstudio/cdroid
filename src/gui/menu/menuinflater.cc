@@ -244,10 +244,9 @@ void MenuInflater::MenuState::readItem(const AttributeSet& attrs) {
     itemTitleCondensed = attrs.getString("titleCondensed");//getText
     itemIconResId = attrs.getString("icon");
     if (attrs.hasAttribute("iconTintMode")) {
-        //mItemIconBlendMode = Drawable::parseBlendMode(attrs.getInt("iconTintMode", -1), mItemIconBlendMode);
-    } else {
-        // Reset to null so that it's not carried over to the next item
-        mItemIconBlendMode = -1;
+        /* getTintMode decodes the 6-value tintMode enum straight to a mode value
+         * (valid as BlendMode — PorterDuff and BlendMode coincide for these 6). */
+        mItemIconBlendMode = attrs.getTintMode("iconTintMode", -1);
     }
     if (attrs.hasAttribute("iconTint")) {
         itemIconTintList = attrs.getColorStateList("iconTint");
@@ -320,7 +319,7 @@ void MenuInflater::MenuState::setItem(MenuItem* item) {
     }
 
     if (mItemIconBlendMode != -1) {
-        //item->setIconTintBlendMode(mItemIconBlendMode);
+        item->setIconTintMode(mItemIconBlendMode);
     }
 
     if (itemIconTintList != nullptr) {

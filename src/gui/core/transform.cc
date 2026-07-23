@@ -1,5 +1,6 @@
 #include <core/transform.h>
 #include <porting/cdlog.h>
+#include <cmath>
 #include <iomanip>
 namespace cdroid{
 namespace ui {
@@ -21,7 +22,7 @@ Transform::~Transform() = default;
 static const float EPSILON = 0.0f;
 
 bool Transform::isZero(float f) {
-    return fabs(f) <= EPSILON;
+    return std::fabs(f) <= EPSILON;
 }
 
 bool Transform::absIsOne(float f) {

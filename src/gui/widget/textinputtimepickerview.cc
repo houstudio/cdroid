@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <iomanip>
+#include <text/textwatcher.h>
+#include <text/editable.h>
 #include <widget/R.h>
 #include <utils/textutils.h>
 #include <utils/mathutils.h>
@@ -37,38 +39,24 @@ TextInputTimePickerView::TextInputTimePickerView(Context* context,const Attribut
     mHourLabel = (TextView*)findViewById(R::id::label_hour);
     mMinuteLabel = (TextView*)findViewById(R::id::label_minute);
 
-    /*mHourEditText->addTextChangedListener(new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-            if (parseAndSetHourInternal(editable.toString()) && editable.length() > 1) {
-                AccessibilityManager am = (AccessibilityManager) context.getSystemService(
-                        context.ACCESSIBILITY_SERVICE);
-                if (!am.isEnabled()) {
-                    mMinuteEditText.requestFocus();
-                }
-            }
+    // Wire text input -> parseAndSet*(Editable.toUTF8()), matching AOSP's two
+    // TextWatchers (TextInputTimePickerView.java). The hour watcher hands focus
+    // to the minute field once a valid >1-char hour is entered; AOSP gates that
+    // on AccessibilityManager.isEnabled() — CDROID has no AccessibilityManager
+    // wired, so the focus handoff is unconditional (a11y refinement deferred).
+    TextWatcher hourWatcher;
+    hourWatcher.afterTextChanged = [this](Editable& editable) {
+        if (parseAndSetHourInternal(editable.toUTF8()) && editable.length() > 1) {
+            mMinuteEditText->requestFocus();
         }
-    });
+    };
+    mHourEditText->addTextChangedListener(hourWatcher);
 
-    mMinuteEditText->addTextChangedListener(new TextWatcher() {
-        @Override
-        public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-        @Override
-        public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {}
-
-        @Override
-        public void afterTextChanged(Editable editable) {
-            parseAndSetMinuteInternal(editable.toString());
-        }
-    });
-    */
+    TextWatcher minuteWatcher;
+    minuteWatcher.afterTextChanged = [this](Editable& editable) {
+        parseAndSetMinuteInternal(editable.toUTF8());
+    };
+    mMinuteEditText->addTextChangedListener(minuteWatcher);
     mAmPmSpinner = (Spinner*)findViewById(R::id::am_pm_spinner);
     std::vector<std::string> amPmStrings = TimePicker::getAmPmStrings(context);
     ArrayAdapter<std::string>* adapter = new ArrayAdapter<std::string>(context, "@cdroid:layout/simple_spinner_dropdown_item",0);
@@ -96,19 +84,24 @@ void TextInputTimePickerView::setListener(const OnValueTypedListener& listener) 
 }
 
 void TextInputTimePickerView::setHourFormat(int maxCharLength) {
-    /*mHourEditText->setFilters(new InputFilter[] { new InputFilter.LengthFilter(maxCharLength)});
-    mMinuteEditText->setFilters(new InputFilter[] { new InputFilter.LengthFilter(maxCharLength)});
-    final LocaleList locales = mContext.getResources().getConfiguration().getLocales();
+    mHourEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
+    mMinuteEditText->setFilters({ new InputFilter::LengthFilter(maxCharLength)});
+    /*final LocaleList locales = mContext.getResources().getConfiguration().getLocales();
     mHourEditText->setImeHintLocales(locales);
     mMinuteEditText->setImeHintLocales(locales);*/
 }
 
 bool TextInputTimePickerView::validateInput() {
-    const std::string hourText = TextUtils::isEmpty(mHourEditText->getText())
-            ? mHourEditText->getHint() : mHourEditText->getText();
-    const std::string minuteText = TextUtils::isEmpty(mMinuteEditText->getText())
-            ? mMinuteEditText->getHint() : mMinuteEditText->getText();
-
+    auto hint = mHourEditText->getHint();
+    std::string hourText = mHourEditText->getText();
+    if(TextUtils::isEmpty(hourText)&&hint){
+        hourText = *hint;
+    }
+    std::string minuteText = mMinuteEditText->getText();
+    hint = mMinuteEditText->getHint();
+    if(TextUtils::isEmpty(minuteText)&&hint){
+        minuteText = *hint;
+    }
     const bool inputValid = parseAndSetHourInternal(hourText)&& parseAndSetMinuteInternal(minuteText);
     setError(!inputValid);
     return inputValid;
@@ -181,8 +174,9 @@ bool TextInputTimePickerView::parseAndSetHourInternal(const std::string& input) 
         mListener/*.onValueChanged*/(HOURS, getHourOfDayFromLocalizedHour(hour));
         setTimeSet(true);
         return true;
-    } catch (std::invalid_argument& e) {
-        // Do nothing since we cannot parse the input.
+    } catch (std::logic_error& e) {
+        // std::stoi throws invalid_argument (non-numeric) or out_of_range
+        // (overflow); both mean "unparseable input" — AOSP catches NumberFormatException.
         return false;
     }
 }
@@ -197,8 +191,9 @@ bool TextInputTimePickerView::parseAndSetMinuteInternal(const std::string& input
         mListener/*.onValueChanged*/(MINUTES, minutes);
         setTimeSet(true);
         return true;
-    } catch (std::invalid_argument& e) {
-        // Do nothing since we cannot parse the input.
+    } catch (std::logic_error& e) {
+        // std::stoi throws invalid_argument (non-numeric) or out_of_range
+        // (overflow); both mean "unparseable input" — AOSP catches NumberFormatException.
         return false;
     }
 }

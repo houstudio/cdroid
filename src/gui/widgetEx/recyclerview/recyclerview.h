@@ -250,13 +250,13 @@ private:/*private variables*/
     ViewInfoStore* mViewInfoStore;
     Runnable mItemAnimatorRunner;
     Runnable mUpdateChildViewsRunnable;
-    void*/*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
+    void* /*ViewInfoStore_ProcessCallback*/ mViewInfoProcessCallback;
 private:
     void initRecyclerView();
     void doItemAnimator();
     void doUpdateChildViews();
     void doAnimatorFinished(ViewHolder&holder);/*binding for ItemAnimatorRestoreListerner::onAnimationFinished*/
-    void dispatchUpdate(void*/*AdapterHelper::UpdateOp*/ op);
+    void dispatchUpdate(void* /*AdapterHelper::UpdateOp*/ op);
     void initAutofill();
     void createLayoutManager(Context* context,const std::string& className,
             const AttributeSet& attrs/*,int defStyleAttr, int defStyleRes*/);

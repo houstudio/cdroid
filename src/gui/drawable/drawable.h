@@ -94,6 +94,20 @@ protected:
     Callback*mCallback;
     std::vector<int>mStateSet;
     cdroid::RefPtr<PorterDuffColorFilter> updateTintFilter(const cdroid::RefPtr<PorterDuffColorFilter>& tintFilter,const cdroid::RefPtr<ColorStateList>& tint,int tintMode);
+    /* Cairo has no per-pixel source filter, so color filtering is emulated by
+     * isolating the drawable's content into an offscreen group, transforming the
+     * group pixels, then compositing the group back. beginTintGroup/endTintGroup
+     * own that lifecycle so every drawable shares one correct, allocation-light path
+     * (PorterDuff needs no extra surface beyond the group itself).
+     *
+     * beginTintGroup pushes a group (clipped to clipRect in the current user space)
+     * iff a filter is in effect, and returns that filter (or nullptr). mColorFilter
+     * overrides the passed-in tint filter (Android: setColorFilter beats tint), so
+     * ImageView/Drawable::setColorFilter takes effect here. endTintGroup applies the
+     * filter onto the live group, pops it and paints the result back; it MUST be
+     * called only when begin returned non-null, with the same filter. */
+    ColorFilter* beginTintGroup(Canvas& canvas, const Rect& clipRect, ColorFilter* filter);
+    void endTintGroup(Canvas& canvas, const Rect& filterRect, ColorFilter* filter);
     virtual bool onStateChange(const std::vector<int>&/*state*/) { return false; }
     virtual bool onLevelChange(int /*level*/) { return false; }
     virtual bool onLayoutDirectionChanged(int /*layoutDirection*/){return false; }
@@ -124,6 +138,11 @@ public:
      * */
     virtual void setTintList(const cdroid::RefPtr<ColorStateList>& tint);
     virtual void setTintMode(int);
+    /* API 29+ BlendMode tint API. Stub: forwards to setTintMode via
+     * BlendMode::toPorterDuffMode, so legacy-overlapping modes work today; modes
+     * with no PorterDuff equivalent stub to NOOP until the per-pixel path lands. */
+    virtual void setTintBlendMode(int blendMode);
+    static int parseBlendMode(int value,int defaultMode); /* XML attr enum -> BlendMode */
     bool setState(const std::vector<int>&state);
     const std::vector<int>& getState()const;
     bool setLevel(int level);

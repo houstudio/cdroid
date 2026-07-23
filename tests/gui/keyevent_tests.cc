@@ -1,6 +1,8 @@
 #include <gtest/gtest.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
+#include <private/keycharactermap.h>
+#include <fstream>
 
 using namespace cdroid;
 class KEYEVENT:public testing::Test{

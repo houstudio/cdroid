@@ -14,7 +14,6 @@ find_package(EXPAT REQUIRED)
 find_package(Cairo REQUIRED)
 find_package(Fontconfig REQUIRED)
 find_package(UniBreak REQUIRED)
-find_package(Fribidi)
 find_package(RTAUDIO)
 find_package(Pthread)
 find_package(GIF)
@@ -38,15 +37,16 @@ option(ENABLE_QRCODE "Enable QRCode(only support QRCode)" ON)
 option(ENABLE_PINYIN2HZ "Chinese Pinyin to HZ support" ON)
 option(ENABLE_DIALOGS "Enable AlertDialogs" ON)
 option(ENABLE_SPINNER "Enable Spinner" ON)
-option(ENABLE_DAYTIME_WIDGETS "Enable Daytime widgets(Experience)" OFF)
+option(ENABLE_DAYTIME_WIDGETS "Enable Daytime widgets(Experience)" ON)
 option(ENABLE_RECYCLERVIEW "Enable RecyclerView" ON)
 option(ENABLE_NAVIGATION "Enable Navigation" OFF)
 #option(ENABLE_TRANSITION "Enable Transition scene animation(TODO...)" OFF)
 option(ENABLE_FLEXBOXLAYOUT "Enable FlexboxLayout" OFF)
 option(ENABLE_COORDINATORLAYOUT "Enable CoordinatorLayout" OFF)
 option(ENABLE_I18N "Enable I18N" OFF)
-option(ENABLE_MENU "Enable MENU(Experience)" OFF)
+option(ENABLE_MENU "Enable MENU(Experience)" ON)
 option(ENABLE_WEARABLE_WIDGETS "Enable wearable Widgets(Experience)" ON)
+option(ENABLE_KPLOT "Enable QT KPlot " ON)
 option(ENABLE_ACHART "Enable AChartEngine " ON)
 
 cmake_dependent_option(ENABLE_GIF "enable gif encode and decoder" ON "GIF_FOUND" OFF)
@@ -57,7 +57,6 @@ cmake_dependent_option(ENABLE_AUDIO "Enabled Audio(Sound Effect)" ON "RTAUDIO_FO
 cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code93...)" OFF "zint_FOUND" OFF)
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)
 cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF "LCMS2_FOUND" OFF)
-cmake_dependent_option(ENABLE_FRIBIDI "Enable BiDi layout" ON "FRIBIDI_FOUND" OFF)
 
 list(APPEND CDROID_DEPLIBS
     ${ZLIB_LIBRARIES}
@@ -71,6 +70,7 @@ list(APPEND CDROID_DEPLIBS
     ${UNIBREAK_LIBRARIES}
     ${ZIP_LIBRARIES}
     ${Iconv_LIBRARIES}
+    ${HARFBUZZ_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)
@@ -100,11 +100,6 @@ if (ENABLE_BARCODE)
     list( APPEND CDROID_DEPLIBS zint::zint)
 endif()
 
-if(ENABLE_FRIBIDI)
-    list(APPEND CDROID_DEPINCLUDES ${FRIBIDI_INCLUDE_DIRS})
-    list(APPEND CDROID_DEPLIBS ${FRIBIDI_LIBRARIES})
-endif(ENABLE_FRIBIDI)
-
 if(ENABLE_MATHGL)
     list(APPEND CDROID_DEPINCLUDES ${MATHGL_INCLUDE_DIRS})
     list(APPEND CDROID_DEPLIBS ${MATHGL_LIBRADIES})
@@ -114,6 +109,7 @@ list(APPEND CDROID_DEPINCLUDES
     ${ZIP_INCLUDE_DIRS}
     ${EXPAT_INCLUDE_DIRS}
     ${CAIRO_INCLUDE_DIRS}
+    ${HARFBUZZ_INCLUDE_DIRS}
 )
 
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")

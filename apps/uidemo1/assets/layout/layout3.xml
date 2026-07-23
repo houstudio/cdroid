@@ -48,8 +48,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
 	    android:orientation="horizontal"
-	    android:id="@id/textcontainer"
-            >
+        android:id="@id/textcontainer"
+        android:background="#202020">
             <Button 
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -65,7 +65,9 @@
 		android:layout_height="wrap_content"
 		android:id="@+id/textview1"
 		android:background="#112233"
-  	        android:text="@string/teststring1"/>
+            android:text="@string/teststring1"/>
+        <RatingBar android:layout_width="200dp"
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 
 

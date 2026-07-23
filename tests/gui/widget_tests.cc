@@ -1,8 +1,21 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
+#include <core/app.h>
+#include <core/keyboard.h>
+#include <view/view.h>
+#include <widget/cdwindow.h>
+#include <widget/textview.h>
+#include <widget/button.h>
+#include <widget/imageview.h>
+#include <widget/progressbar.h>
+#include <widget/seekbar.h>
+#include <widget/linearlayout.h>
 #include <widget/keyboardview.h>
+#include <widget/toast.h>
+#include <drawable/drawable.h>
+#include <drawable/bitmapdrawable.h>
+#include <porting/cdlog.h>
 #include <guienvironment.h>
-#include <cdlog.h>
+using namespace cdroid;
 
 #define ID_OK 10
 #define ID_CANCEL 15
@@ -39,19 +52,17 @@ TEST_F(WIDGET,View){
     ASSERT_EQ(v.getTextAlignment(),(int)View::TEXT_ALIGNMENT_VIEW_END);
 }
 TEST_F(WIDGET,TextView){
-    App app(argc,argv);
-    Window*w=new Window(0,0,1280,720);
+    ViewGroup*w=GUIEnvironment::content();
     const char*strings[]={"LEFT","CENTER","RIGHT","LEFT|TOP","CENTER|TOP","RIGHT|TOP"};
     TextView*t1=new TextView("",400,200);
     TextView*t2=new TextView(std::string(),400,300);
     w->addView(t1);
-    w->addView(t2); 
-    app.exec();
+    w->addView(t2);
+    pumpFor(500);
 }
 
 TEST_F(WIDGET,Button){
-   App app(argc,argv);
-   Window*w=new Window(100,100,800,600);
+   ViewGroup*w=GUIEnvironment::content();
    LinearLayout*layout=new LinearLayout(800,600);
    Button*btn1=new Button("OK",100,30);
    Button*btn2=new Button("Cancel",100,30);
@@ -68,70 +79,32 @@ TEST_F(WIDGET,Button){
    layout->addView(btn2);
    w->addView(layout);
    btn2->setId(ID_CANCEL);
-   app.exec();
+   pumpFor(500);
 }
 
 TEST_F(WIDGET,ImageView){
-   App app(argc,argv);
-   Window*w=new Window(100,100,800,600);
+   ViewGroup*w=GUIEnvironment::content();
    ImageView*iv=new ImageView(400,400);
    Drawable*d=new BitmapDrawable(nullptr,"/home/houzh/Miniwin/apps/ntvplus/assets/drawable/light2.jpg");
    iv->setImageDrawable(d);
    w->addView(iv);
    iv->layout(100,100,400,400);
-   app.exec();
-}
-
-TEST_F(WIDGET,EditText){
-    const std::string sss[]={
-         "AfterInstallationEnableRequiredApacheModulesAndRestartApacheService","",
-         "AbcEFG","^[A-Za-z]+$",
-         "123","^[1-9]\\d*$",
-         "आज सुबह एक ट्रैफिक जैम था","""^[A-Za-z]+$",
-         "0.0.0.0","^((25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))\\.){3}(25[0-5]|2[0-4]\\d|((1\\d{2})|([1-9]?\\d)))$"//"\\d+\\.\\d+\\.\\d+\\.\\d+",
-    };
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
-    EditText *e;
-    e=new EditText("How to call customized WPF Window in VSTO ribbon?"
-"For example, I made customized WPF window by designing the styles. And then I would like to use it in my Presentation addin."
-" I can run the WPF window directly, but cannot call it from Ribbon. Thanks very much!",600,100);
-    w->addView(e);
-    e->layout(10,20,600,100);
-    e->setSingleLine(false);
-    e->setBreakStrategy(0);
-    e->setBackgroundColor(0xFF222222);
-    for(int i=0,y=160;i<4;i++,y){
-        EditText *e=new EditText(680,((i==0)?100:50)+i*5);
-        e->setBackgroundColor(0Xff444444);
-        e->setSingleLine(i>0);
-        e->setBreakStrategy(i==0);
-        e->setTextSize(30.f+i*5);
-        e->setText(sss[i*2]);
-        e->setInputType(EditText::TYPE_ANY);
-        e->setPattern(sss[i*2+1]);     
-        w->addView(e);
-        e->layout(10,y,680,((i==0)?100:50)+i*5);
-        y+=e->getHeight()+1;
-        e->setEditMode(i!=2?EditText::INSERT:EditText::REPLACE);
-    }
-    app.exec();
+   pumpFor(500);
 }
 
 TEST_F(WIDGET,ProgressBar){
-    App app(argc,argv);
-    int pos=0;
-    Window*w=new Window(100,100,800,600);
+    int pos=0,ticks=0;
+    ViewGroup*w=GUIEnvironment::content();
     ProgressBar*pb;
     LinearLayout*ll=new LinearLayout(800,600);
     pb=new ProgressBar(800,20);
     ll->addView(pb);pb->setId(100);
     pb->setProgress(30);
-    
+
     pb = new ProgressBar(30,200);
     ll->addView(pb);
     pb->setId(101);
-    
+
     pb=new ProgressBar(800,20);
     ll->addView(pb);
     pb->setIndeterminate(true);
@@ -143,25 +116,25 @@ TEST_F(WIDGET,ProgressBar){
     pb->setIndeterminate(true);
     w->addView(ll);
 
+    /* Bounded self-repost: stops after `ticks` reach the cap so the Runnable
+       never outlives this case (its &pos/&ticks captures would dangle). */
     Runnable run;
     run=[&](){
        ((ProgressBar*)w->findViewById(100))->setProgress(pos);
        ((ProgressBar*)w->findViewById(101))->setProgress(pos);
        ((ProgressBar*)w->findViewById(102))->setProgress(pos);
        pos=(pos+1)%100;
-       LOGD("pos=%d",pos);
-       w->postDelayed(run,50);
+       if(++ticks<100) w->postDelayed(run,50);
     };
     w->postDelayed(run,500);
-    app.exec();
+    pumpUntil([&]{ return ticks>=100; }, 6000);
 }
 
 TEST_F(WIDGET,SeekBar){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    ViewGroup*w=GUIEnvironment::content();
     SeekBar*sb=new SeekBar(400,40);
     w->addView(sb);
-    app.exec();
+    pumpFor(500);
 }
 
 static const char*texts[]={
@@ -172,26 +145,23 @@ static const char*texts[]={
 
 
 TEST_F(WIDGET,Selector){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,620);
-
-    app.exec();
+    ViewGroup*w=GUIEnvironment::content();
+    pumpFor(500);
 }
 
 TEST_F(WIDGET,ListView){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,620);
-    app.exec();
+    ViewGroup*w=GUIEnvironment::content();
+    pumpFor(500);
 }
 
 TEST_F(WIDGET,Keyboard){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,400);
+    App&app=App::getInstance();
+    ViewGroup*w=GUIEnvironment::content();
     KeyboardView*kbv=new KeyboardView(800,300);
     kbv->setBackgroundColor(0xFFEEEEEE);
     Keyboard*kbd=new Keyboard(&app,"cdroid:xml/qwerty.xml",800,200);
     kbv->setKeyboard(kbd);
     w->addView(kbv);
     kbv->layout(20,10,800,300);
-    app.exec();
+    pumpFor(500);
 }

@@ -55,30 +55,34 @@ TEST_F(LOOPER,pollonce){
 }
 
 TEST_F(LOOPER,sendMessage){
-   Message msg(100);
+   Message*msg=Message::obtain(); msg->what=100;
    int  processed=0;
    TestHandler ft;
-   mLooper->sendMessage(&ft,msg);
+   mLooper->sendMessage(&ft,*msg);
+   msg->recycle();
    mLooper->pollOnce(10);
    ASSERT_EQ(ft.getCount(),1);
 }
 
 TEST_F(LOOPER,sendMessageDelay){
-   Message msg(100);
+   Message*msg=Message::obtain(); msg->what=100;
    TestHandler ft;
    int64_t t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,msg);
+   mLooper->sendMessageDelayed(1000,&ft,*msg);
+   msg->recycle();
    while(!ft.getCount()) mLooper->pollOnce(10);
    int64_t t2=SystemClock::uptimeMillis();
    ASSERT_TRUE((t2-t1)>=1000&&(t2-t2)<1005);
 }
 
 TEST_F(LOOPER,removeMessage){
-   Message msg(100),msg2(200);
+   Message*msg=Message::obtain(); msg->what=100;
+   Message*msg2=Message::obtain(); msg2->what=200;
    TestHandler ft;
    int64_t t2,t1=SystemClock::uptimeMillis();
-   mLooper->sendMessageDelayed(1000,&ft,msg);
-   mLooper->sendMessageDelayed(1000,&ft,msg2);
+   mLooper->sendMessageDelayed(1000,&ft,*msg);
+   mLooper->sendMessageDelayed(1000,&ft,*msg2);
+   msg->recycle(); msg2->recycle();
    t2=t1;
    mLooper->removeMessages(&ft,100);
    while(t2-t1<1100){
@@ -129,7 +133,7 @@ public:
 };
 int SelfDestroyEventHandler::Count=0;
 TEST_F(LOOPER,removeHandler){
-    Message msg(100);
+    Message*msg=Message::obtain(); msg->what=100;
     SelfDestroyHandler*sd = new SelfDestroyHandler(mLooper,true);
     SelfDestroyHandler*sd2= new SelfDestroyHandler(mLooper,false);
     SelfDestroyEventHandler*se= new SelfDestroyEventHandler(mLooper,true);
@@ -138,8 +142,9 @@ TEST_F(LOOPER,removeHandler){
     mLooper->addHandler(sd2);
     mLooper->addEventHandler(se);
     mLooper->addEventHandler(se2);
-    mLooper->sendMessageDelayed(10,sd,msg);
-    mLooper->sendMessageDelayed(10,sd2,msg);
+    mLooper->sendMessageDelayed(10,sd,*msg);
+    mLooper->sendMessageDelayed(10,sd2,*msg);
+    msg->recycle();
     printf("HANDLE:%p ,%p  EventHandler:%p ,%p\r\n",sd,sd2,se,se2);
     EXPECT_EQ(SelfDestroyHandler::Count,2);
     EXPECT_EQ(SelfDestroyEventHandler::Count,2);
@@ -173,25 +178,31 @@ public:
    }
 };
 TEST_F(LOOPER,eventhandler){
-    UIEventSource*handler=new UIEventSource(nullptr,nullptr);
+    // View::post/postDelayed 的延迟 runnable 现经 AttachInfo::mHandler (主 looper MessageQueue) 派发;
+    // UIEventSource 已退回纯帧驱动, 不再持有 runnable 队列。本例改测 Handler 路径的身份比对语义。
+    Handler*handler=new Handler(Looper::getMainLooper());
     Runnable run([]{});
     handler->postDelayed(run,10);
-    bool rc=handler->removeCallbacks(run);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run));
+    handler->removeCallbacks(run);
+    ASSERT_FALSE(handler->hasCallbacks(run));
 
+    // Runnable 副本共享底层 functor (CallbackBase::operator== 比指针), 故可用任一副本删除
     Runnable run2(run);
     Runnable run3;
     run3=run;
     handler->postDelayed(run2,10);
-    rc=handler->removeCallbacks(run2);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run2));
+    handler->removeCallbacks(run2);
+    ASSERT_FALSE(handler->hasCallbacks(run2));
 
     handler->postDelayed(run,10);
-    rc=handler->removeCallbacks(run3);
-    ASSERT_TRUE(rc);
+    ASSERT_TRUE(handler->hasCallbacks(run3));   // run3 与 run 同身份
+    handler->removeCallbacks(run3);
+    ASSERT_FALSE(handler->hasCallbacks(run3));
 
-    rc=handler->removeCallbacks(run3);
-    ASSERT_FALSE(rc);
+    ASSERT_FALSE(handler->hasCallbacks(run3));  // 已删, 再查为假
+    delete handler;
 }
 
 class MyHandler:public Handler{
