@@ -224,7 +224,7 @@ protected:
     virtual bool onRequestFocusInDescendants(int direction,Rect* previouslyFocusedRect);
     virtual bool requestChildRectangleOnScreen(View* child,Rect& rectangle, bool immediate);
     virtual bool requestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
-    /** 子 View 请求 startActionMode 时上浮到本 group; 默认继续上浮 (本 group 的 startActionMode → 其父), 到根创建。 */
+    virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback);
     virtual ActionMode* startActionModeForChild(View* child, const ActionMode::Callback& callback, int type);
     virtual bool onRequestSendAccessibilityEvent(View* child, AccessibilityEvent& event);
     virtual bool onRequestSendAccessibilityEventInternal(View* child, AccessibilityEvent& event);

@@ -2774,27 +2774,52 @@ bool ViewGroup::requestChildRectangleOnScreen(View* child,Rect& rectangle, bool 
     return false;
 }
 
+namespace {
+class SentinelActionMode : public ActionMode {
+public:
+    void setTitle(const std::string&) override {}
+    void setSubtitle(const std::string&) override {}
+    void setCustomView(View*) override {}
+    void invalidate() override {}
+    void finish() override {}
+    Menu* getMenu() override { return nullptr; }
+    std::string getTitle() override { return {}; }
+    std::string getSubtitle() override { return {}; }
+    View* getCustomView() override { return nullptr; }
+    MenuInflater* getMenuInflater() override { return nullptr; }
+};
+SentinelActionMode gSentinelActionMode;
+}
+static ActionMode* const SENTINEL_ACTION_MODE = &gSentinelActionMode;
+
+ActionMode* ViewGroup::startActionModeForChild(View* originalView, const ActionMode::Callback& callback){
+    if ((mGroupFlags & FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED) == 0) {
+        mGroupFlags |= FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED;
+        ActionMode* mode = startActionModeForChild(originalView, callback, ActionMode::TYPE_PRIMARY);
+        mGroupFlags &= ~FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED;
+        return mode;
+    }
+    return SENTINEL_ACTION_MODE;
+}
+
 ActionMode* ViewGroup::startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type){
     if ((mGroupFlags & FLAG_START_ACTION_MODE_FOR_CHILD_IS_NOT_TYPED) == 0
             && type == ActionMode::TYPE_PRIMARY) {
-        ActionMode* mode = nullptr;
         mGroupFlags |= FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
-        //TODO mode = startActionModeForChild(originalView, callback);
+        ActionMode* mode = startActionModeForChild(originalView, callback);
         mGroupFlags &= ~FLAG_START_ACTION_MODE_FOR_CHILD_IS_TYPED;
-        /*if (mode != SENTINEL_ACTION_MODE) {
+        if (mode != SENTINEL_ACTION_MODE) {
             return mode;
-        }*/
+        }
     }
     if (mParent != nullptr) {
         try {
             return mParent->startActionModeForChild(originalView, callback, type);
         } catch (...) {
-            // Custom view parents might not implement this method.
-            //return mParent->startActionModeForChild(originalView, callback);
+            return mParent->startActionModeForChild(originalView, callback);
         }
     }
     return nullptr;
-
 }
 
 bool ViewGroup::requestSendAccessibilityEvent(View* child, AccessibilityEvent& event){
