@@ -4695,12 +4695,11 @@ void View::setBackground(Drawable*background){
     if(background==mBackground)return;
 
     bool bRequestLayout = false;
-    if(mBackground!=nullptr){
-        if(isAttachedToWindow()) mBackground->setVisible(false,false);
-        mBackground->setCallback(this);
-        unscheduleDrawable(*mBackground);
-        delete mBackground;
-        mBackground = nullptr;
+    Drawable* oldBackground = mBackground;
+    if(oldBackground!=nullptr){
+        if(isAttachedToWindow()) oldBackground->setVisible(false,false);
+        oldBackground->setCallback(nullptr);
+        unscheduleDrawable(*oldBackground);
     }
     if(background){        
         Rect padding;
@@ -4724,10 +4723,9 @@ void View::setBackground(Drawable*background){
             mLeftPaddingDefined = false;
             mRightPaddingDefined = false;
         }
-        bRequestLayout= mBackground==nullptr||mBackground->getMinimumWidth()!=background->getMinimumWidth()||
-               mBackground->getMinimumHeight()!=background->getMinimumHeight();
+        bRequestLayout= oldBackground==nullptr||oldBackground->getMinimumWidth()!=background->getMinimumWidth()||
+               oldBackground->getMinimumHeight()!=background->getMinimumHeight();
 
-        delete mBackground;
         mBackground = background; 
         if(background->isStateful())
             background->setState(getDrawableState());
@@ -4737,10 +4735,9 @@ void View::setBackground(Drawable*background){
         background->setCallback(this);
         if( (mPrivateFlags & PFLAG_SKIP_DRAW)!=0 ){
             mPrivateFlags &= ~PFLAG_SKIP_DRAW;
-            bRequestLayout=true;
+            bRequestLayout = true;
         }
     }else{
-        delete mBackground;
         mBackground = nullptr;
         if ((mViewFlags & WILL_NOT_DRAW) != 0  && (mDefaultFocusHighlight == nullptr)
               && (mForegroundInfo == nullptr || mForegroundInfo->mDrawable == nullptr)) {
@@ -4756,6 +4753,7 @@ void View::setBackground(Drawable*background){
         // View's layout, so let's requestLayout
         bRequestLayout = true;
     }
+    if(oldBackground!=nullptr) delete oldBackground;
     computeOpaqueFlags();
     if(bRequestLayout) requestLayout();
     mBackgroundSizeChanged = true;
@@ -5842,7 +5840,7 @@ bool View::isDirty()const{
 
 bool View::skipInvalidate()const{
     return (mViewFlags & VISIBILITY_MASK) != VISIBLE && (mCurrentAnimation == nullptr)
-           && mParent && (!mParent->isViewTransitioning((View*)this));
+           && (mParent == nullptr || !mParent->isViewTransitioning((View*)this));
 }
 
 RefPtr<ImageSurface>View::getDrawingCache(bool autoScale){
@@ -6159,7 +6157,7 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
     if ((mPrivateFlags & (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)) == (PFLAG_DRAWN | PFLAG_HAS_BOUNDS)
               || (invalidateCache && (mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == PFLAG_DRAWING_CACHE_VALID)
               || (mPrivateFlags & PFLAG_INVALIDATED) != PFLAG_INVALIDATED
-              || (fullInvalidate || (isOpaque() != mLastIsOpaque))) {
+              || (fullInvalidate && (isOpaque() != mLastIsOpaque))) {/*ZHHOU这里最后一个&&原来是||对齐安卓改为&&可能存在刷新问题*/
         if (fullInvalidate) {
             mLastIsOpaque = isOpaque();
             mPrivateFlags &= ~PFLAG_DRAWN;
@@ -7060,7 +7058,6 @@ void View::clearFocusInternal(View* focused, bool propagate, bool refocus){
          }
 
          onFocusChanged(false, 0, nullptr);
-         invalidate(true);
          refreshDrawableState();
 
          if (propagate && (!refocus || !rootViewRequestFocus())) notifyGlobalFocusCleared(this);        
