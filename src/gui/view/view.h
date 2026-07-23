@@ -235,6 +235,7 @@ protected:
     static constexpr int PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT = 0x400000;
     static constexpr int PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT = 0x800000;
     static constexpr int PFLAG4_CONTENT_SENSITIVITY_SHIFT = 24;
+    static constexpr int PFLAG4_ALLOW_CLICK_WHEN_DISABLED = 0x1000;
 public:
     static bool VIEW_DEBUG;
     static int mViewCount;
@@ -1344,6 +1345,8 @@ public:
     void setLongClickable(bool longClickable);
     bool isContextClickable()const;
     void setContextClickable(bool contextClickable);
+    void setAllowClickWhenDisabled(bool clickableWhenDisabled);
+    bool isAllowedClickWhenDisabled()const;
 
     bool isInScrollingContainer()const;
     virtual bool isInTouchMode()const;

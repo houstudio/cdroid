@@ -191,6 +191,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
+    setAllowClickWhenDisabled(attrs.getBoolean("allowClickWhenDisabled", false));
     if( !attrs.getBoolean("saveEnabled",true)){
          viewFlagValues |=SAVE_DISABLED;
          viewFlagMasks |=SAVE_DISABLED_MASK;
@@ -1242,7 +1243,6 @@ bool View::awakenScrollBars(int startDelay, bool invalidate){
         mScrollCache->scrollBar = new ScrollBarDrawable();
         mScrollCache->scrollBar->setState(getDrawableState());
         mScrollCache->scrollBar->setCallback(this);
-        return true;
     }
     if (isHorizontalScrollBarEnabled() || isVerticalScrollBarEnabled()) {
 
@@ -1843,29 +1843,16 @@ void View::dispatchRestoreInstanceState(SparseArray<Parcelable*>& container){
 }
 
 void View::onRestoreInstanceState(Parcelable& state){
-#if 0
     mPrivateFlags |= PFLAG_SAVE_STATE_CALLED;
-    if (state != null && !(state instanceof AbsSavedState)) {
-        throw new IllegalArgumentException("Wrong state class, expecting View State but "
-                + "received " + state.getClass().toString() + " instead. This usually happens "
-                + "when two views of different type have the same id in the same hierarchy. "
-                + "This view's id is " + ViewDebug.resolveId(mContext, getId()) + ". Make sure "
-                + "other views do not use the same id.");
+    BaseSavedState* baseState = dynamic_cast<BaseSavedState*>(&state);
+    if (baseState != nullptr) {
+        if ((baseState->mSavedData & BaseSavedState::START_ACTIVITY_REQUESTED_WHO_SAVED) != 0)
+            mStartActivityRequestWho = baseState->mStartActivityRequestWhoSaved;
+        if ((baseState->mSavedData & BaseSavedState::IS_AUTOFILLED) != 0)
+            setAutofilled(baseState->mIsAutofilled);
+        if ((baseState->mSavedData & BaseSavedState::AUTOFILL_ID) != 0)
+            mAutofillViewId = baseState->mAutofillViewId;
     }
-    if (state != null && state instanceof BaseSavedState) {
-        BaseSavedState baseState = (BaseSavedState) state;
-
-        if ((baseState.mSavedData & BaseSavedState.START_ACTIVITY_REQUESTED_WHO_SAVED) != 0) {
-            mStartActivityRequestWho = baseState.mStartActivityRequestWhoSaved;
-        }
-        if ((baseState.mSavedData & BaseSavedState.IS_AUTOFILLED) != 0) {
-            setAutofilled(baseState.mIsAutofilled);
-        }
-        if ((baseState.mSavedData & BaseSavedState.AUTOFILL_ID) != 0) {
-            mAutofillViewId = baseState.mAutofillViewId;
-        }
-    }
-#endif
 }
 
 void View::dispatchWindowVisibilityChanged(int visibility){
@@ -4596,7 +4583,7 @@ std::vector<int>View::onCreateDrawableState(int extraSpace){
     int viewStateIndex = 0;
 
     if(isFocused()) viewStateIndex |= StateSet::VIEW_STATE_FOCUSED;
-    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex = StateSet::VIEW_STATE_PRESSED;
+    if(mPrivateFlags & PFLAG_PRESSED)  viewStateIndex |= StateSet::VIEW_STATE_PRESSED;
     if(mPrivateFlags & PFLAG_SELECTED) viewStateIndex |= StateSet::VIEW_STATE_SELECTED;
     if(hasWindowFocus() ) viewStateIndex|=StateSet::VIEW_STATE_WINDOW_FOCUSED;
     if((mViewFlags & ENABLED_MASK) == ENABLED) viewStateIndex|=StateSet::VIEW_STATE_ENABLED;
@@ -5670,6 +5657,18 @@ bool View::isContextClickable()const{
 
 void View::setContextClickable(bool contextClickable) {
     setFlags(contextClickable ? CONTEXT_CLICKABLE : 0, CONTEXT_CLICKABLE);
+}
+
+void View::setAllowClickWhenDisabled(bool clickableWhenDisabled) {
+    if (clickableWhenDisabled) {
+        mPrivateFlags4 |= PFLAG4_ALLOW_CLICK_WHEN_DISABLED;
+    } else {
+        mPrivateFlags4 &= ~PFLAG4_ALLOW_CLICK_WHEN_DISABLED;
+    }
+}
+
+bool View::isAllowedClickWhenDisabled() const {
+    return (mPrivateFlags4 & PFLAG4_ALLOW_CLICK_WHEN_DISABLED) != 0;
 }
 
 void View::dispatchSetSelected(bool selected){
@@ -6852,7 +6851,7 @@ bool View::requestFocus(int direction){
 }
 
 void View::clearFocus(){
-    clearFocusInternal(nullptr, true,isInTouchMode());
+    clearFocusInternal(nullptr, true, !isInTouchMode());
 }
 
 bool View::restoreFocusInCluster(int direction){
@@ -7287,8 +7286,9 @@ bool View::hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const{
         }
     }
 
-    // Invisible and gone views are never focusable.
-    if ((mViewFlags & VISIBILITY_MASK) != VISIBLE) {
+    // Invisible, gone, or disabled views are never focusable.
+    if ((mViewFlags & VISIBILITY_MASK) != VISIBLE
+            || (mViewFlags & ENABLED_MASK) != ENABLED) {
         return false;
     }
 
@@ -7502,8 +7502,6 @@ void View::layout(int l, int t, int w, int h){
     int oldT = mTop;
     int oldW = mRight-mLeft;
     int oldH = mBottom-mTop;
-    mPrivateFlags &= ~PFLAG_FORCE_LAYOUT;
-    mPrivateFlags3 |= PFLAG3_IS_LAID_OUT;
     bool changed = setFrame(l,t,w,h);
     if(changed|| ((mPrivateFlags & PFLAG_LAYOUT_REQUIRED) == PFLAG_LAYOUT_REQUIRED)){
         onLayout(changed, l, t, w, h);
@@ -8522,11 +8520,13 @@ bool View::onTouchEvent(MotionEvent& event){
     const int x = event.getX();
     const int y = event.getY();
     const int action = event.getAction();
-    const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE));
+    const bool clickable = (((mViewFlags&CLICKABLE) == CLICKABLE)||((mViewFlags&LONG_CLICKABLE) == LONG_CLICKABLE))
+                         || ((mViewFlags&CONTEXT_CLICKABLE) == CONTEXT_CLICKABLE);
     int touchSlop =0;
     bool prepressed;
 
-    if ((mViewFlags & ENABLED_MASK) == DISABLED) {
+    if ((mViewFlags & ENABLED_MASK) == DISABLED
+            && (mPrivateFlags4 & PFLAG4_ALLOW_CLICK_WHEN_DISABLED) == 0) {
         if ((action == MotionEvent::ACTION_UP) && ((mPrivateFlags & PFLAG_PRESSED) != 0)) {
             setPressed(false);
         }
@@ -8546,11 +8546,12 @@ bool View::onTouchEvent(MotionEvent& event){
     switch(action){
     case MotionEvent::ACTION_UP:
         mPrivateFlags3 &= ~PFLAG3_FINGER_DOWN;
-        if(mPrivateFlags&PFLAG_PRESSED)
+        if((mViewFlags & TOOLTIP) == TOOLTIP)
             handleTooltipUp();
         if (!clickable){
             removeTapCallback();
             removeLongPressCallback();
+            mInContextButtonPress = false;
             mHasPerformedLongPress = false;
             mIgnoreNextUpEvent = false;
             break;
@@ -8564,7 +8565,7 @@ bool View::onTouchEvent(MotionEvent& event){
                 focusTaken = requestFocus();
             }
 
-            if (prepressed)setPressed(true);
+            if (prepressed) setPressed(true, x, y);
             if(!mHasPerformedLongPress && !mIgnoreNextUpEvent){
                 removeLongPressCallback();
                 if (!focusTaken){
@@ -8577,14 +8578,19 @@ bool View::onTouchEvent(MotionEvent& event){
             if(mUnsetPressedState == nullptr){
                 mUnsetPressedState =[this]{setPressed(false);};
             }
-            if(isAttachedToWindow()){
-                postDelayed(mUnsetPressedState,ViewConfiguration::getPressedStateDuration());
-                removeTapCallback();
+            if (prepressed) {
+                postDelayed(mUnsetPressedState, ViewConfiguration::getPressedStateDuration());
+            } else if (!post(mUnsetPressedState)) {
+                mUnsetPressedState();
             }
+            removeTapCallback();
         }
         mIgnoreNextUpEvent=false;
         break; 
     case MotionEvent::ACTION_DOWN:
+        if (event.getSource() == InputDevice::SOURCE_TOUCHSCREEN) {
+            mPrivateFlags3 |= PFLAG3_FINGER_DOWN;
+        }
         mHasPerformedLongPress=false;
         if (!clickable) {
             checkForLongClick(ViewConfiguration::getLongPressTimeout(), x, y);
@@ -9971,9 +9977,9 @@ void View::CheckForTap::setAnchor(float x,float y){
 }
 
 void View::CheckForTap::run(){
-    mView->mPrivateFlags &= ~PFLAG_PRESSED;
+    mView->mPrivateFlags &= ~PFLAG_PREPRESSED;
     mView->setPressed(true,mX,mY);
-    mView->checkForLongClick(ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
+    mView->checkForLongClick(ViewConfiguration::getLongPressTimeout() - ViewConfiguration::getTapTimeout(), static_cast<int>(mX), static_cast<int>(mY));
 }
 
 void View::CheckForTap::postDelayed(long ms){

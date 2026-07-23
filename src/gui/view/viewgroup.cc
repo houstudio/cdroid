@@ -2973,12 +2973,12 @@ bool ViewGroup::dispatchActivityResult(const std::string& who, int requestCode, 
 }
 
 View* ViewGroup::focusSearch(View* focused, int direction){
-    if (nullptr==mParent){//isRootNamespace()) {
+    if (isRootNamespace()) {
         // root namespace means we should consider ourselves the top of the
         // tree for focus searching; otherwise we could be focus searching
         // into other tabs.  see LocalActivityManager and TabHost for more info.
         return FocusFinder::getInstance().findNextFocus((ViewGroup*)this, focused, direction);
-    } else {
+    } else if (mParent != nullptr) {
         return mParent->focusSearch(focused, direction);
     }
     return nullptr;
