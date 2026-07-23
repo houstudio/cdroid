@@ -110,7 +110,7 @@ set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid ${CDROID_DEPLIBS} tvhal image-decoders cdtext)
+target_link_libraries(cdroid tvhal image-decoders cdtext ${CDROID_DEPLIBS})
 
 if(MSVC)
    set_target_properties(cdroid PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
