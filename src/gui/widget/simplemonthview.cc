@@ -56,11 +56,15 @@ SimpleMonthView::SimpleMonthView(int w,int h):View(w,h){
 SimpleMonthView::SimpleMonthView(Context*ctx,const AttributeSet&atts)
    :View(ctx,atts){
     initMonthView();
-    mDesiredMonthHeight = atts.getDimensionPixelSize("month_height");
-    mDesiredDayOfWeekHeight =atts.getDimensionPixelSize("day_of_week_height");
-    mDesiredDayHeight = atts.getDimensionPixelSize("day_height");
-    mDesiredCellWidth  = atts.getDimensionPixelSize("day_width");
-    mDesiredDaySelectorRadius=atts.getDimensionPixelSize("day_selector_radius");
+    // Faithful to AOSP SimpleMonthView: the desired dimensions come from
+    // R.dimen.date_picker_* resources, NOT from XML attributes (the month-item
+    // layout declares none). Reading the missing attrs returned 0, leaving
+    // mDayHeight==0 and dividing by zero in getDayAtLocation.
+    mDesiredMonthHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_month_height");
+    mDesiredDayOfWeekHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_of_week_height");
+    mDesiredDayHeight = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_height");
+    mDesiredCellWidth  = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_width");
+    mDesiredDaySelectorRadius = mContext->getDimensionPixelSize("cdroid:dimen/date_picker_day_selector_radius");
 
     // Set up accessibility components.
     setAccessibilityDelegate(mTouchHelper);
@@ -88,6 +92,7 @@ void SimpleMonthView::initMonthView(){
     mDesiredDayOfWeekHeight = 30;
     mDesiredDaySelectorRadius= 15;
     mMonth = 0;
+    mDayHeight=20;
     mPaddedWidth = 0;
     mPaddedHeight= 0;
     mTouchHelper = new MonthViewTouchHelper(this);

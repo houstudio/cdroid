@@ -86,7 +86,7 @@ bool DayPickerPagerAdapter::getBoundsForDate(Calendar& day, Rect& outBounds) {
 }
 
 void DayPickerPagerAdapter::setSelectedDay(Calendar* day) {
-    int oldPosition = getPositionForDay(mSelectedDay);
+    int oldPosition = getPositionForDay(mSelectedDayValid ? &mSelectedDay : nullptr);
     int newPosition = getPositionForDay(day);
 
     // Clear the old position if necessary.
@@ -105,7 +105,14 @@ void DayPickerPagerAdapter::setSelectedDay(Calendar* day) {
             newMonthView->calendar->setSelectedDay(dayOfMonth);
         }
     }
-    mSelectedDay = day;
+    // Snapshot by value (AOSP assigns the reference; C++ must copy, since the
+    // caller may pass a stack-local or a reused member Calendar).
+    if (day) {
+        mSelectedDay.setTimeInMillis(day->getTimeInMillis());
+        mSelectedDayValid = true;
+    } else {
+        mSelectedDayValid = false;
+    }
 }
 
 void DayPickerPagerAdapter::setOnDaySelectedListener(const OnDaySelectedListener& listener) {
@@ -205,9 +212,9 @@ void* DayPickerPagerAdapter::instantiateItem(ViewGroup* container, int position)
     int year = getYearForPosition(position);
 
     int selectedDay;
-    if (mSelectedDay != nullptr && mSelectedDay->get(Calendar::MONTH) == month
-            && mSelectedDay->get(Calendar::YEAR) == year) {
-        selectedDay = mSelectedDay->get(Calendar::DAY_OF_MONTH);
+    if (mSelectedDayValid && mSelectedDay.get(Calendar::MONTH) == month
+            && mSelectedDay.get(Calendar::YEAR) == year) {
+        selectedDay = mSelectedDay.get(Calendar::DAY_OF_MONTH);
     } else {
         selectedDay = -1;
     }

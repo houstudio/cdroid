@@ -22,6 +22,12 @@ namespace cdroid{
 CalendarViewMaterialDelegate::CalendarViewMaterialDelegate(CalendarView* delegator, Context* context,const AttributeSet& attrs)
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDayPickerView = new DayPickerView(context, attrs);
+    // attrs is the host CalendarView's set, which carries android:id — the View(Context,
+    // AttributeSet) ctor reads it and setId()s the child, so the DayPickerView would
+    // STEAL its parent's id. That creates a duplicate id in the tree and findViewById()
+    // may resolve to this child (cast back to CalendarView, reading garbage at the
+    // mDelegate offset -> crash). Reset it; the DayPickerView is an internal child.
+    mDayPickerView->setId(View::NO_ID);
 
     DayPickerView::OnDaySelectedListener dsl= [this](DayPickerView& view, Calendar& day){
         if (mOnDateChangeListener) {

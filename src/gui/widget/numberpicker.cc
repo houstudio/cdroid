@@ -401,6 +401,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
 void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (!mHasSelectorWheel) {
         LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
+        return;
     }
     // Try greedily to fit the max width and height.
     const int newWidthMeasureSpec = makeMeasureSpec(widthMeasureSpec, mMaxWidth);

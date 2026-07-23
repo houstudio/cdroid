@@ -485,13 +485,30 @@ void ViewPager::smoothScrollTo(int x, int y, int velocity){
     postInvalidateOnAnimation();
 }
 
+View* ViewPager::findViewFromObject(void* object){
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        if (mAdapter != nullptr && mAdapter->isViewFromObject(child, object)) {
+            return child;
+        }
+    }
+    return nullptr;
+}
+
 ViewPager::ItemInfo* ViewPager::addNewItem(int position, int index){
     ItemInfo* ii = new ItemInfo();
     ii->position = position;
     ii->object = mAdapter->instantiateItem(this, position);
-    View* view=(View*)ii->object;
-    LayoutParams*lp=(LayoutParams*)view->getLayoutParams();
-    lp->isDecor = false;
+    // AOSP keeps ii->object as an opaque adapter key; the page View is the child
+    // for which isViewFromObject() is true. Casting ii->object straight to View*
+    // only works for adapters that return the view itself and crashes adapters
+    // that return a key (e.g. DayPickerPagerAdapter -> ViewHolder).
+    View* view = findViewFromObject(ii->object);
+    if (view != nullptr) {
+        LayoutParams* lp = (LayoutParams*) view->getLayoutParams();
+        if (lp != nullptr) lp->isDecor = false;
+    }
     ii->widthFactor = mAdapter->getPageWidth(position);
     ii->scrolling=false;
     if (index < 0 || index >= mItems.size()) {

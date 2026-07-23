@@ -41,7 +41,11 @@ private:
     std::string mLayoutResId;
     int mCalendarViewId;
     
-    Calendar* mSelectedDay = nullptr;
+    // Stored by value: AOSP holds a reference, but the C++ click path passes a
+    // stack-local Calendar (SimpleMonthView::onDayClicked). Snap-shotting the
+    // millis avoids a dangling pointer (UAF on the next instantiateItem read).
+    Calendar mSelectedDay;
+    bool mSelectedDayValid = false;
 
     std::string mMonthTextAppearance;
     std::string mDayOfWeekTextAppearance;
@@ -54,8 +58,8 @@ private:
     SimpleMonthView::OnDayClickListener mOnDayClickListener;
     OnDaySelectedListener mOnDaySelectedListener;
 
-    int mCount;
-    int mFirstDayOfWeek;
+    int mCount = 0;
+    int mFirstDayOfWeek = Calendar::SUNDAY;
 private:
     int getMonthForPosition(int position);
     int getYearForPosition(int position);

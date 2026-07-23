@@ -48,7 +48,7 @@ long Adapter::getItemId(int position)const{
 }
 
 bool Adapter::hasStableIds()const{
-    return true;
+    return false;
 }
 
 View*Adapter::getDropDownView(int position, View* convertView, ViewGroup* parent){

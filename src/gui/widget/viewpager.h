@@ -189,6 +189,11 @@ protected:
     ItemInfo* infoForChild(View* child);
     ItemInfo* infoForAnyChild(View* child);
     ItemInfo* infoForPosition(int position)const;
+    // AOSP ViewPager helper: resolve the page View for an opaque adapter key by
+    // scanning children with isViewFromObject(). Used instead of casting the key
+    // to View* (the key is not necessarily a View — e.g. DayPickerPagerAdapter
+    // returns a ViewHolder).
+    View* findViewFromObject(void* object);
     void initViewPager(const AttributeSet*);
     int getChildDrawingOrder(int childCount, int i)override;
     void onDetachedFromWindow()override;
