@@ -81,8 +81,13 @@ DrawerLayout::DrawerLayout(Context*ctx,const AttributeSet&atts)
 }
 
 DrawerLayout::~DrawerLayout(){
-    delete mShadowLeftResolved;
-    delete mShadowRightResolved;
+    // mShadowLeftResolved/mShadowRightResolved are non-owning aliases into the
+    // mShadow* below (computed in resolveShadowDrawables) — never delete them.
+    // The six mShadow* are owned (setDrawerShadow does delete+reassign per edge).
+    delete mShadowStart;
+    delete mShadowEnd;
+    delete mShadowLeft;
+    delete mShadowRight;
     delete mShadowTop;
     delete mShadowBottom;
     delete mLeftDragger;
@@ -157,13 +162,31 @@ void DrawerLayout::setScrimColor(int color) {
 }
 
 void DrawerLayout::addDrawerListener(const DrawerListener& listener) {
-    mListeners.push_back(listener);
+    if(std::find(mListeners.begin(),mListeners.end(),listener)==mListeners.end()){
+        mListeners.push_back(listener);
+    }
 }
 
 void DrawerLayout::removeDrawerListener(const DrawerListener& listener){
     auto it = std::find(mListeners.begin(),mListeners.end(),listener);
     if(it != mListeners.end()){
         mListeners.erase(it);
+    }
+}
+
+void DrawerLayout::setDrawerListener(const DrawerListener& listener){
+    // Deprecated. Emulates the legacy single-listener API (before multiple-listener
+    // support). mListener is a value tracking the deprecated listener so we can remove
+    // it the next time this is called. While still default-constructed (empty) it is not
+    // in the list, so removeDrawerListener is a no-op — standing in for androidx's
+    // `if (mListener != null)` guard (no pointer / null state needed). Dispatch is solely
+    // via mListeners. (`listener` is a reference, so the `if (listener != null)` add is
+    // unconditional here.)
+    removeDrawerListener(mListener);
+    if( (listener.onDrawerSlide!=nullptr)||(listener.onDrawerOpened!=nullptr)
+            ||(listener.onDrawerClosed!=nullptr)||(listener.onDrawerStateChanged!=nullptr)){
+        addDrawerListener(listener);
+        mListener = listener;
     }
 }
 
@@ -352,7 +375,7 @@ MotionEvent* DrawerLayout::getTransformedMotionEvent(MotionEvent& event, View* c
     return transformedEvent;
 }
 
-void DrawerLayout::updateDrawerState(int forGravity,int activeState, View* activeDrawer) {
+void DrawerLayout::updateDrawerState(int activeState, View* activeDrawer) {
     const int leftState = mLeftDragger->getViewDragState();
     const int rightState = mRightDragger->getViewDragState();
     const int topState = mTopDragger->getViewDragState();
@@ -559,6 +582,13 @@ View* DrawerLayout::findDrawerWithGravity(int gravity) const{
 void DrawerLayout::onDetachedFromWindow() {
     ViewGroup::onDetachedFromWindow();
     mFirstLayout = true;
+
+    // Clear any pending peek runnables to prevent memory leaks or
+    // executions after the view has been detached.
+    mLeftCallback->removeCallbacks();
+    mRightCallback->removeCallbacks();
+    mTopCallback->removeCallbacks();
+    mBottomCallback->removeCallbacks();
 }
 
 void DrawerLayout::onAttachedToWindow() {
@@ -695,8 +725,8 @@ void DrawerLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 child->measure(drawerWidthSpec, drawerHeightSpec);
             }
         }else{
-            LOGE("Child %p at index %f does not have a valid layout_gravity - must be Gravity.LEFT, "
-                   "Gravity.RIGHT or Gravity.NO_GRAVITY",child,i);
+            LOGE("Child %p at index %d does not have a valid layout_gravity - must be Gravity.LEFT, "
+                   "Gravity.RIGHT, Gravity.TOP, Gravity.BOTTOM or Gravity.NO_GRAVITY",child,i);
         }
     }
 }
@@ -985,7 +1015,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
         const int drawerPeekDistance = mRightDragger->getEdgeSize();
         const float alpha =  std::max(0.0f, std::min((float) showing / drawerPeekDistance, 1.0f));
         mShadowRightResolved->setBounds(childLeft - shadowWidth, child->getTop(),
-                shadowWidth, child->getWidth());
+                shadowWidth, child->getHeight());
         mShadowRightResolved->setAlpha((int) (0xff * alpha));
         mShadowRightResolved->draw(canvas);
     } else if (mShadowTop != nullptr && checkDrawerViewAbsoluteGravity(child, Gravity::TOP)) {
@@ -997,7 +1027,7 @@ bool DrawerLayout::drawChild(Canvas& canvas, View* child, int64_t drawingTime) {
 		mShadowTop->setAlpha((int) (0xff * alpha));
 		mShadowTop->draw(canvas);
 	} else if (mShadowBottom != nullptr && checkDrawerViewAbsoluteGravity(child, Gravity::BOTTOM)) {
-		const int shadowHeight = mShadowBottom->getIntrinsicWidth();
+		const int shadowHeight = mShadowBottom->getIntrinsicHeight();
 		const int childTop = child->getTop();
 		const int showing = getHeight() - childTop;
 		const int drawerPeekDistance = mBottomDragger->getEdgeSize();
@@ -1236,7 +1266,7 @@ void DrawerLayout::openDrawer(View* drawerView, bool animate) {
         }
     } else {
         moveDrawerToOffset(drawerView, 1.f);
-        updateDrawerState(lp->gravity, STATE_IDLE, drawerView);
+        updateDrawerState(STATE_IDLE, drawerView);
         drawerView->setVisibility(VISIBLE);
     }
     invalidate();
@@ -1306,7 +1336,7 @@ void DrawerLayout::closeDrawer(View* drawerView, bool animate) {
         lp->isPeeking = false;
     } else {
         moveDrawerToOffset(drawerView, 0.f);
-        updateDrawerState(lp->gravity, STATE_IDLE, drawerView);
+        updateDrawerState(STATE_IDLE, drawerView);
         drawerView->setVisibility(INVISIBLE);
     }
     if(needsInvalidate){
@@ -1352,6 +1382,18 @@ bool DrawerLayout::isDrawerVisible(int drawerGravity) const{
         return isDrawerVisible(drawerView);
     }
     return false;
+}
+
+void DrawerLayout::open() {
+    openDrawer(Gravity::START);
+}
+
+void DrawerLayout::close() {
+    closeDrawer(Gravity::START);
+}
+
+bool DrawerLayout::isOpen() {
+    return isDrawerOpen(Gravity::START);
 }
     
 bool DrawerLayout::hasPeekingDrawer() const{
@@ -1514,7 +1556,7 @@ bool DrawerLayout::ViewDragCallback::tryCaptureView(View& child, int pointerId){
 }
 
 void DrawerLayout::ViewDragCallback::onViewDragStateChanged(int state){
-     mDL->updateDrawerState(mAbsGravity, state, mDragger->getCapturedView());
+     mDL->updateDrawerState(state, mDragger->getCapturedView());
 }
 
 void DrawerLayout::ViewDragCallback::onViewPositionChanged(View& changedView, int left, int top, int dx, int dy){
@@ -1688,7 +1730,12 @@ int DrawerLayout::ViewDragCallback::getViewHorizontalDragRange(View& child){
 }
 
 int DrawerLayout::ViewDragCallback::getViewVerticalDragRange(View& child) {
-	return child.getHeight();
+	// Horizontal drawers (LEFT/RIGHT) report no vertical drag range (match androidx,
+	// which returns child.getTop()); vertical drawers (TOP/BOTTOM) report full height.
+	if (mAbsGravity == Gravity::TOP || mAbsGravity == Gravity::BOTTOM) {
+		return child.getHeight();
+	}
+	return child.getTop();
 }
 int DrawerLayout::ViewDragCallback::clampViewPositionHorizontal(View& child, int left, int dx){
     const int width = mDL->getWidth();
