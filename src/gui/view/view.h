@@ -559,6 +559,7 @@ private:
     ViewGroup* mNestedScrollingParent;
     std::unordered_map<uint64_t,uint64_t>mMeasureCache;
     std::string mStartActivityRequestWho;
+    std::string mTransitionName; // android.view.View transitionName (shared-element / name matching)
     ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
@@ -1509,6 +1510,15 @@ public:
     bool setAlphaNoInvalidation(float);
     float getTransitionAlpha()const;
     void setTransitionAlpha(float);
+    const std::string& getTransitionName()const;
+    void setTransitionName(const std::string&);
+    // Whether this view may have overlapping content needing an offscreen layer
+    // when alpha-animated. Cairo is software 2D with no GPU layer, so the layer
+    // boost transitions rely on (e.g. Fade) is a no-op here; false is correct.
+    virtual bool hasOverlappingRendering()const{return false;}
+    // Stable per-window handle used by TransitionManager to group running
+    // transitions. Single-process: a window-level pointer suffices (no real WindowId type).
+    void* getWindowId()const;
 
     float getRotation()const;
     void  setRotation(float rotation);
@@ -1554,6 +1564,7 @@ public:
     static const FloatProperty*const ROTATION_Y;
     static const FloatProperty*const SCALE_X;
     static const FloatProperty*const SCALE_Y;
+    static const FloatProperty*const TRANSITION_ALPHA;
 };
 
 class Handler;  // core/handler.h (AttachInfo.mHandler)
