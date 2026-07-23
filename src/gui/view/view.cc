@@ -521,8 +521,8 @@ int View::dipsToPixels(int dips)const{
 }
 
 View* View::findViewById(int id){
-    if( id == mID )return (View*)this;
-    return nullptr;
+    if (id == NO_ID) return nullptr;
+    return findViewTraversal(id);
 }
 
 View* View::findViewTraversal(int id){
@@ -583,6 +583,7 @@ View* View::findViewByPredicate(const Predicate<View*>&predicate){
 }
 
 View* View::findViewWithTagTraversal(void* tag){
+    if(tag && tag == mTag) return (View*)this;
     return nullptr;
 }
 

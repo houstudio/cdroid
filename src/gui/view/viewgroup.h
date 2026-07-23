@@ -25,8 +25,6 @@
 
 namespace cdroid {
 
-#define ATTR_ANIMATE_FOCUS (0x2000) /*flag to open animate focus*/
-
 class ViewGroup : public View {
 private:
     static constexpr int FLAG_CLIP_CHILDREN   = 0x01;
@@ -192,6 +190,7 @@ protected:
     View*getDeepestFocusedChild();
     void clearDefaultFocus(View* child);
     bool hasDefaultFocus()const override;
+    void handleFocusGainInternal(int direction, Rect* previouslyFocusedRect)override;
     bool hasFocusable(bool allowAutoFocus, bool dispatchExplicit)const override;
     bool hasFocusableChild(bool dispatchExplicit)const;
     MotionEvent* getTransformedMotionEvent(MotionEvent& event, View* child)const;
@@ -337,6 +336,7 @@ public:
     virtual void requestChildFocus(View*child,View*focused);
     void unFocus(View* focused)override;
     void clearChildFocus(View* child);
+    void clearFocus()override;
     void focusableViewAvailable(View*);
     bool isShowingContextMenuWithCoords()const;
     virtual bool showContextMenuForChild(View* originalView);
@@ -377,6 +377,7 @@ public:
     void addView(View* child, int width, int height);
     bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params);
     bool addViewInLayout(View* child, int index,ViewGroup::LayoutParams* params,bool preventRequestLayout);
+    void updateViewLayout(View* view, ViewGroup::LayoutParams* params);
     void addTransientView(View*view,int index);
     void removeTransientView(View*);
     int getTransientViewCount() const;
@@ -424,7 +425,7 @@ public:
     virtual void removeViewInLayout(View* view);
     virtual void removeViewsInLayout(int start,int count);
     void removeAllViewsInLayout();
-    virtual View* findViewById(int id)override;
+    View* findViewTraversal(int)override;
     View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
     View* findViewByAccessibilityIdTraversal(int accessibilityId)override;

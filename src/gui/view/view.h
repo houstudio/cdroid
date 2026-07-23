@@ -1358,7 +1358,7 @@ public:
     virtual bool restoreFocusNotInCluster();
     virtual bool restoreDefaultFocus();
     bool requestRectangleOnScreen(Rect& rectangle, bool immediate=false);
-    void clearFocus();
+    virtual void clearFocus();
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
     bool requestFocusFromTouch();
