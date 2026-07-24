@@ -68,8 +68,17 @@ public:
     static ObjectAnimator* ofArgb(void*target,const Property*prop,const std::vector<int>&);
     // Generic ofObject for AnimateValue-typed properties (Rect/PointF) with a caller-supplied evaluator.
     static ObjectAnimator* ofObject(void*target,const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values);
+    // By-name variant: resolves the property via Property::fromName (used by ChangeClipBounds/
+    // ChangeBounds: ObjectAnimator.ofObject(view,"clipBounds",RectEvaluator,start,end)).
+    static ObjectAnimator* ofObject(void*target,const std::string&propertyName,TypeEvaluator evaluator,const std::vector<AnimateValue>&values);
+    // Path-based ofObject: drives a PointF-typed property along a Path (evaluator ignored —
+    // the Path supplies the interpolation points). Used by ChangeBounds POSITION/TOP_LEFT/...
+    static ObjectAnimator* ofObject(void*target,const Property*prop,TypeEvaluator evaluator,const cdroid::Path& path);
     // Drives two float properties (e.g. translationX/translationY) along a Path simultaneously.
     static ObjectAnimator* ofFloat(void*target,const Property*propX,const Property*propY,const Cairo::RefPtr<cdroid::Path>& path);
+    // Path-by-value variant (wraps to RefPtr); convenience for callers holding a Path value
+    // (e.g. TranslationAnimationCreator builds a straight-line Path then animates translationX/Y).
+    static ObjectAnimator* ofFloat(void*target,const Property*propX,const Property*propY,const cdroid::Path& path);
     std::string toString()const override;
 };
 

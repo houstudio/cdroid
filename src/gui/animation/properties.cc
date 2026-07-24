@@ -150,11 +150,30 @@ public:
 };
 static const __BACKGROUND_COLOR BACKGROUND_COLOR;
 
+// android.transition.ChangeClipBounds (and ChangeBounds resizeClip mode) animate
+// "clipBounds" (Rect) by name via ObjectAnimator.ofObject(view,"clipBounds",RectEvaluator,...).
+// Registered here so Property::fromName("clipBounds") resolves to it.
+class __CLIP_BOUNDS:public Property{
+public:
+    __CLIP_BOUNDS():Property("clipBounds"){}
+    AnimateValue get(void* object)const override{
+        Rect r;
+        ((View*)object)->getClipBounds(r);
+        return r;
+    }
+    void set(void* object,const AnimateValue& value)const override{
+        Rect r = GET_VARIANT(value, Rect);
+        ((View*)object)->setClipBounds(&r);
+    }
+};
+static const __CLIP_BOUNDS CLIP_BOUNDS;
+
 }
 static std::unordered_map<std::string,const Property*>props={
     {"alpha",View::ALPHA},
     {"bottom",&BOTTOM},
     {"backgroundColor",&BACKGROUND_COLOR},
+    {"clipBounds",&CLIP_BOUNDS},
     {"elevation",&ELEVATION},
     {"left",&LEFT},
     {"pivotX",&PIVOT_X},

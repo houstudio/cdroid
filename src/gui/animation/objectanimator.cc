@@ -299,6 +299,18 @@ ObjectAnimator* ObjectAnimator::ofObject(void*target,const Property*prop,TypeEva
     return ofPropertyValuesHolder(target,{pvh});
 }
 
+// By-name: resolve the property via the registry, then delegate to the by-property overload.
+ObjectAnimator* ObjectAnimator::ofObject(void*target,const std::string&propertyName,TypeEvaluator evaluator,const std::vector<AnimateValue>&values){
+    const Property*prop = Property::fromName(propertyName);
+    return ofObject(target,prop,evaluator,values);
+}
+
+// Path-based: sample the Path into a PointF holder (evaluator unused; the Path is the interpolation).
+ObjectAnimator* ObjectAnimator::ofObject(void*target,const Property*prop,TypeEvaluator /*evaluator*/,const cdroid::Path& path){
+    PropertyValuesHolder*pvh = PropertyValuesHolder::ofPointF(prop, Cairo::RefPtr<cdroid::Path>(new cdroid::Path(path)));
+    return ofPropertyValuesHolder(target,{pvh});
+}
+
 // Drives two float properties (e.g. translationX/translationY) along a Path simultaneously.
 // AOSP's degenerate PathKeyframes approach: sample the Path to N+1 (x,y) pairs and run two float holders.
 ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*propX,const Property*propY,const Cairo::RefPtr<cdroid::Path>& path){
@@ -315,6 +327,11 @@ ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*propX,const P
     PropertyValuesHolder*pvhX = PropertyValuesHolder::ofFloat(propX, xs);
     PropertyValuesHolder*pvhY = PropertyValuesHolder::ofFloat(propY, ys);
     return ofPropertyValuesHolder(target,{pvhX, pvhY});
+}
+
+// Path-by-value: wrap into a RefPtr and delegate to the RefPtr overload.
+ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*propX,const Property*propY,const cdroid::Path& path){
+    return ofFloat(target, propX, propY, Cairo::RefPtr<cdroid::Path>(new cdroid::Path(path)));
 }
 
 std::string ObjectAnimator::toString()const{

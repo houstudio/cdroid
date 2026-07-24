@@ -762,9 +762,13 @@ protected:
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
+public:
+    // android.view.View: getClipBounds/setClipBounds are public. CDROID keeps the rest
+    // of this section protected; these two are bumped to public for clients and the
+    // transition ChangeClipBounds property.
     void setClipBounds(const Rect*clipBounds);
     bool getClipBounds(Rect&outRect);
-
+protected:
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
@@ -772,7 +776,11 @@ protected:
     Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
+public:
+    // android.view.View exposes setLeftTopRightBottom to the transition framework
+    // (ChangeBounds position/bounds animation). Bumped to public; rest stays protected.
     void setLeftTopRightBottom(int left, int top, int right, int bottom);
+protected:
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
