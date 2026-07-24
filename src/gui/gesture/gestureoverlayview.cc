@@ -171,11 +171,11 @@ void GestureOverlayView::setGesture(Gesture* gesture) {
 
     Path* path = mCurrentGesture->toPath();
     RectF bounds;
-    path->compute_bounds(bounds,true);//computeBounds(bounds, true);
+    path->computeBounds(bounds,true);
 
     // TODO: The path should also be scaled to fit inside this view
     mPath.reset();//rewind();
-    mPath.append_path(*path, -bounds.left + (getWidth() - bounds.width) / 2.0f,
+    mPath.addPath(*path, -bounds.left + (getWidth() - bounds.width) / 2.0f,
             -bounds.top + (getHeight() - bounds.height) / 2.0f);
 
     mResetGesture = true;
@@ -189,7 +189,7 @@ Path GestureOverlayView::getGesturePath() {
 
 Path GestureOverlayView::getGesturePath(Path& path) {
     path.reset();//
-    path.append_path(mPath);
+    path.addPath(mPath);
     return path;
 }
 
@@ -467,7 +467,7 @@ void GestureOverlayView::touchDown(MotionEvent& event) {
     }
 
     mStrokeBuffer.push_back(GesturePoint(x, y, event.getEventTime()));
-    mPath.move_to(x, y);
+    mPath.moveTo(x, y);
 
     const int border = mInvalidateExtraBorder;
     mInvalidRect.set(int(x - border), int(y - border), int(x + border), int(y + border));
@@ -506,7 +506,7 @@ Rect GestureOverlayView::touchMove(MotionEvent& event) {
         float cX = mCurveEndX = (x + previousX) / 2;
         float cY = mCurveEndY = (y + previousY) / 2;
 
-        mPath.quad_to(previousX, previousY, cX, cY);
+        mPath.quadTo(previousX, previousY, cX, cY);
 
         // union with the control point of the new curve
         areaToRefresh.Union((int) previousX - border, (int) previousY - border,

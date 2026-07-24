@@ -42,11 +42,58 @@ Path::cobject* Path::copy_path()const{
     return cresult;
 }
 
+// android.graphics.Path#transform helpers.
+// Replays this path's geometry onto target, applying matrix to every point.
+void Path::transformInto(const Cairo::Matrix& matrix, Cairo::Context* target){
+    cairo_path_t* p = copy_path();
+    for (int i = 0; i < p->num_data; ) {
+        cairo_path_data_t* data = &p->data[i];
+        switch (data->header.type) {
+        case CAIRO_PATH_MOVE_TO: {
+            double x = data[1].point.x, y = data[1].point.y;
+            cairo_matrix_transform_point(&matrix, &x, &y);
+            target->move_to(x, y);
+            break;
+        }
+        case CAIRO_PATH_LINE_TO: {
+            double x = data[1].point.x, y = data[1].point.y;
+            cairo_matrix_transform_point(&matrix, &x, &y);
+            target->line_to(x, y);
+            break;
+        }
+        case CAIRO_PATH_CURVE_TO: {
+            double x1 = data[1].point.x, y1 = data[1].point.y;
+            double x2 = data[2].point.x, y2 = data[2].point.y;
+            double x3 = data[3].point.x, y3 = data[3].point.y;
+            cairo_matrix_transform_point(&matrix, &x1, &y1);
+            cairo_matrix_transform_point(&matrix, &x2, &y2);
+            cairo_matrix_transform_point(&matrix, &x3, &y3);
+            target->curve_to(x1, y1, x2, y2, x3, y3);
+            break;
+        }
+        case CAIRO_PATH_CLOSE_PATH:
+            target->close_path();
+            break;
+        }
+        i += data->header.length;
+    }
+    cairo_path_destroy(p);
+}
+
+void Path::transform(const Cairo::Matrix& matrix){
+    mCTX->begin_new_path();   // clear, then replay transformed geometry onto self
+    transformInto(matrix, mCTX.get());
+}
+
+void Path::transform(const Cairo::Matrix& matrix, Path& dst){
+    transformInto(matrix, dst.mCTX.get());   // append transformed geometry onto dst
+}
+
 void Path::reset(){
     mCTX->begin_new_path();
 }
 
-bool Path::is_convex()const{
+bool Path::isConvex()const{
     cairo_path_t *path = cairo_copy_path(mCTX->cobj());
     int i , j;
     int num_points = 0;
@@ -109,7 +156,7 @@ void Path::begin_new_sub_path(){
     mCTX->begin_new_sub_path();
 }
 
-void Path::close_path(){
+void Path::close(){
     mCTX->close_path();
 }
 
@@ -123,11 +170,11 @@ void Path::append_to_context(const Cairo::RefPtr<Cairo::Context>&to)const{
     to->append_path(*from);
 }
 
-void Path::set_fill_rule(Cairo::Context::FillRule fill_rule){
+void Path::setFillType(Cairo::Context::FillRule fill_rule){
     mCTX->set_fill_rule(fill_rule);
 }
 
-void Path::move_to(double x,double y){
+void Path::moveTo(double x,double y){
     mCTX->move_to(x,y);
 }
 
@@ -135,7 +182,7 @@ void Path::rel_move_to(double x,double y){
     mCTX->rel_move_to(x,y);
 }
 
-void Path::line_to(double x,double y){
+void Path::lineTo(double x,double y){
     if(!mCTX->has_current_point()){
         mCTX->move_to(0,0);
     }
@@ -149,7 +196,7 @@ void Path::rel_line_to(double x,double y){
     mCTX->rel_line_to(x,y);
 }
 
-void Path::curve_to(double x1, double y1, double x2, double y2, double x3, double y3){
+void Path::cubicTo(double x1, double y1, double x2, double y2, double x3, double y3){
     if(!mCTX->has_current_point())
         mCTX->move_to(0,0);
     mCTX->curve_to(x1,y1,x2,y2,x3,y3);
@@ -162,7 +209,7 @@ void Path::rel_curve_to(double x1, double y1, double x2, double y2, double x3, d
     mCTX->rel_curve_to(x1,y1,x2,y2,x3,y3);
 }
 
-void Path::quad_to(double x1, double y1, double x2, double y2){
+void Path::quadTo(double x1, double y1, double x2, double y2){
     double x0=0, y0=0;
     mCTX->get_current_point(x0,y0);
 
@@ -199,7 +246,7 @@ void Path::arc_negative(double xc, double yc, double radius, double angle1, doub
     mCTX->arc_negative(xc,yc,radius,angle1,angle2);
 }
 
-void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
+void Path::arcTo(double x1, double y1, double x2, double y2, double radius) {
     // Current point
     double x0=0, y0=0;
     mCTX->get_current_point(x0, y0);
@@ -216,11 +263,11 @@ void Path::arc_to(double x1, double y1, double x2, double y2, double radius) {
     mCTX->arc(centerX, centerY, radius, angle1, angle2);
 }
 
-void Path::arc_to(const RectF&r, double startAngle, double sweepAngle, bool forceMoveTo){
-    arc_to(r.left,r.top,r.width,r.height,startAngle,sweepAngle,forceMoveTo);
+void Path::arcTo(const RectF&r, double startAngle, double sweepAngle, bool forceMoveTo){
+    arcTo(r.left,r.top,r.width,r.height,startAngle,sweepAngle,forceMoveTo);
 }
 
-void Path::arc_to(double left, double top, double width, double height,
+void Path::arcTo(double left, double top, double width, double height,
            double startAngle, double sweepAngle, bool forceMoveTo) {
     double centerX = left + width / 2.0;
     double centerY = top + height / 2.0;
@@ -244,7 +291,7 @@ void Path::arc_to(double left, double top, double width, double height,
     }
 }
 
-void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y) {
+void Path::arcTo(double rx, double ry, double angle, bool largeArc, bool sweepFlag, double x, double y) {
     // Current point
     double x0, y0;
     mCTX->get_current_point(x0, y0);
@@ -319,11 +366,11 @@ void Path::arc_to(double rx, double ry, double angle, bool largeArc, bool sweepF
     mCTX->restore();
 }
 
-void Path::add_oval(const RectF&r,bool isClockWise){
-    add_oval(r.left,r.top,r.width,r.height,isClockWise);
+void Path::addOval(const RectF&r,bool isClockWise){
+    addOval(r.left,r.top,r.width,r.height,isClockWise);
 }
 
-void Path::add_oval(int left,int top,int width,int height,bool clockWise){
+void Path::addOval(int left,int top,int width,int height,bool clockWise){
     double center_x = left + width / 2;
     double center_y = top + height / 2;
     double radius_x = width / 2;
@@ -341,54 +388,54 @@ void Path::add_oval(int left,int top,int width,int height,bool clockWise){
     mCTX->restore();
 }
 
-void Path::rectangle(double x, double y, double width, double height){
+void Path::addRect(double x, double y, double width, double height){
     mCTX->rectangle(x,y,width,height);
 }
 
-void Path::round_rectangle(double x,double y,double width,double height,const std::vector<float>& radii){
+void Path::addRoundRect(double x,double y,double width,double height,const std::vector<float>& radii){
     //const RectF rect={x,y,width,height};
-    round_rectangle({float(x),float(y),float(width),float(height)},radii);
+    addRoundRect({float(x),float(y),float(width),float(height)},radii);
 }
 
-void Path::round_rectangle(const RectF&rect,const std::vector<float>& radii){
+void Path::addRoundRect(const RectF&rect,const std::vector<float>& radii){
     constexpr double circleControlPoint=0.447715;
-    move_to(rect.left+radii[0],rect.top);
-    line_to(rect.right()-radii[2],rect.top);
+    moveTo(rect.left+radii[0],rect.top);
+    lineTo(rect.right()-radii[2],rect.top);
     if((radii[2]>0||radii[3])){//topright
-         curve_to(rect.right()-radii[2]*circleControlPoint,rect.top,
+         cubicTo(rect.right()-radii[2]*circleControlPoint,rect.top,
              rect.right(),rect.top+radii[3]*circleControlPoint,
              rect.right(),rect.top+radii[3]); 
     }
-    line_to(rect.right(),rect.bottom()-radii[5]);
+    lineTo(rect.right(),rect.bottom()-radii[5]);
 
     if(radii[4]>0||radii[5]){//bottomright 
-         curve_to(rect.right(),rect.bottom()-radii[5]*circleControlPoint,
+         cubicTo(rect.right(),rect.bottom()-radii[5]*circleControlPoint,
              rect.right()-radii[4]*circleControlPoint, rect.bottom(),
              rect.right()-radii[4],rect.bottom());
     }
-    line_to(rect.left+radii[4],rect.bottom());
+    lineTo(rect.left+radii[4],rect.bottom());
 
     if(radii[6]>0||radii[7]>0){//bottomleft
-        curve_to(rect.left+radii[6]*circleControlPoint,rect.bottom(),
+        cubicTo(rect.left+radii[6]*circleControlPoint,rect.bottom(),
             rect.left,rect.bottom()-radii[7]*circleControlPoint,
             rect.left,rect.bottom()-radii[7]);
     }
-    line_to(rect.left,rect.top+radii[7]);
+    lineTo(rect.left,rect.top+radii[7]);
 
     if(radii[0]>0||radii[1]>0){//topleft
-        curve_to(rect.left,rect.top+radii[1]*circleControlPoint,
+        cubicTo(rect.left,rect.top+radii[1]*circleControlPoint,
            rect.left+radii[0]*circleControlPoint,rect.top,
            rect.left+radii[0],rect.top);
     }
     mCTX->close_path();//closeSubpath();
 }
 
-void Path::append_path(const Path&other){
+void Path::addPath(const Path&other){
     Cairo::RefPtr<Cairo::Path>path=Cairo::make_refptr_for_instance<Cairo::Path>(other.mCTX->copy_path());
     mCTX->append_path(*path);
 }
 
-void Path::append_path(const Path&path,double dx,double dy){
+void Path::addPath(const Path&path,double dx,double dy){
     mCTX->save();
     mCTX->translate(dx, dy);
     cairo_path_t *dtPath = cairo_copy_path(path.mCTX->cobj());
@@ -419,7 +466,7 @@ void Path::append_path(const Path&path,double dx,double dy){
     mCTX->restore();
 }
 
-void Path::compute_bounds(RectF&bounds, bool include_stroke){
+void Path::computeBounds(RectF&bounds, bool include_stroke){
     double x1, y1, x2, y2;
     if (include_stroke) {
         mCTX->get_stroke_extents(x1, y1, x2, y2);

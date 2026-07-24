@@ -120,6 +120,9 @@ ValueAnimator* ValueAnimator::ofInt(const std::vector<int>&values){
 ValueAnimator* ValueAnimator::ofArgb(const std::vector<int>&values){
     ValueAnimator*anim = new ValueAnimator();
     anim->setIntValues(values);
+    // Interpolate ARGB channels independently (ArgbEvaluator), NOT as a plain int —
+    // linear-int lerp walks through RGB and brightens the midpoint. (Fixes prior stub.)
+    anim->setEvaluator(PropertyValuesHolder::ArgbEvaluator);
     return anim;
 }
 

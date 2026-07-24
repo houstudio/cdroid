@@ -50,24 +50,24 @@ cdroid::Path OrientedBoundingBox::toPath() {
     matrix.translate(centerX, centerY);
 
     mapPoints(matrix,point);
-    path.move_to(point[0], point[1]);
+    path.moveTo(point[0], point[1]);
 
     point[0] = -width / 2;
     point[1] = -height / 2;
     mapPoints(matrix,point);
-    path.line_to(point[0], point[1]);
+    path.lineTo(point[0], point[1]);
 
     point[0] = width / 2;
     point[1] = -height / 2;
     mapPoints(matrix,point);
-    path.line_to(point[0], point[1]);
+    path.lineTo(point[0], point[1]);
 
     point[0] = width / 2;
     point[1] = height / 2;
     mapPoints(matrix,point);
-    path.line_to(point[0], point[1]);
+    path.lineTo(point[0], point[1]);
 
-    path.close_path();
+    path.close();
 
     return path;
 }

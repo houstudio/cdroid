@@ -1360,39 +1360,39 @@ void Layout::getCursorPath(int point, Path& dest, CharSequence* editingBuffer) {
     if (h1 < 0.5f)
         h1 = 0.5f;
 
-    dest.move_to(h1, top);
-    dest.line_to(h1, bottom);
+    dest.moveTo(h1, top);
+    dest.lineTo(h1, bottom);
 
     if (caps == 2) {
-        dest.move_to(h1, bottom);
-        dest.line_to(h1 - dist, bottom + dist);
-        dest.line_to(h1, bottom);
-        dest.line_to(h1 + dist, bottom + dist);
+        dest.moveTo(h1, bottom);
+        dest.lineTo(h1 - dist, bottom + dist);
+        dest.lineTo(h1, bottom);
+        dest.lineTo(h1 + dist, bottom + dist);
     } else if (caps == 1) {
-        dest.move_to(h1, bottom);
-        dest.line_to(h1 - dist, bottom + dist);
+        dest.moveTo(h1, bottom);
+        dest.lineTo(h1 - dist, bottom + dist);
 
-        dest.move_to(h1 - dist, bottom + dist - 0.5f);
-        dest.line_to(h1 + dist, bottom + dist - 0.5f);
+        dest.moveTo(h1 - dist, bottom + dist - 0.5f);
+        dest.lineTo(h1 + dist, bottom + dist - 0.5f);
 
-        dest.line_to(h1 + dist, bottom + dist);
-        dest.line_to(h1, bottom);
+        dest.lineTo(h1 + dist, bottom + dist);
+        dest.lineTo(h1, bottom);
     }
 
     if (fn == 2) {
-        dest.move_to(h1, top);
-        dest.line_to(h1 - dist, top - dist);
-        dest.line_to(h1, top);
-        dest.line_to(h1 + dist, top - dist);
+        dest.moveTo(h1, top);
+        dest.lineTo(h1 - dist, top - dist);
+        dest.lineTo(h1, top);
+        dest.lineTo(h1 + dist, top - dist);
     } else if (fn == 1) {
-        dest.move_to(h1, top);
-        dest.line_to(h1 - dist, top - dist);
+        dest.moveTo(h1, top);
+        dest.lineTo(h1 - dist, top - dist);
 
-        dest.move_to(h1 - dist, top - dist + 0.5f);
-        dest.line_to(h1 + dist, top - dist + 0.5f);
+        dest.moveTo(h1 - dist, top - dist + 0.5f);
+        dest.lineTo(h1 + dist, top - dist + 0.5f);
 
-        dest.line_to(h1 + dist, top - dist);
-        dest.line_to(h1, top);
+        dest.lineTo(h1 + dist, top - dist);
+        dest.lineTo(h1, top);
     }
 }
 
@@ -1439,7 +1439,7 @@ void Layout::getSelectionPath(int start, int end, Path& dest) {
     dest.reset();
     SelectionRectangleConsumer ff=[&dest](float left, float top, float right, float bottom, int textSelectionLayout) {
         //dest.addRect(left, top, right, bottom, Path.Direction.CW);
-        dest.rectangle(left,top,right-left,bottom-top);
+        dest.addRect(left,top,right-left,bottom-top);
     };
     getSelection(start, end, ff);
 }

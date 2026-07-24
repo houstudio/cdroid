@@ -103,17 +103,17 @@ void CurvingLayoutCallback::maybeSetUpCircularInitialLayout(int width, int heigh
         mCurveTop = 1.048f * height;
         mLineGradient = 0.5f / 0.048f;
         mCurvePath->reset();
-        mCurvePath->move_to(0.5f * width, mCurveBottom);
-        mCurvePath->line_to(0.34f * width, 0.075f * height);
-        mCurvePath->curve_to(//cubic_to(
+        mCurvePath->moveTo(0.5f * width, mCurveBottom);
+        mCurvePath->lineTo(0.34f * width, 0.075f * height);
+        mCurvePath->cubicTo(
             0.22f * width, 0.17f * height,
             0.13f * width, 0.32f * height,
             0.13f * width, height / 2);
-        mCurvePath->curve_to(//cubic_to(
+        mCurvePath->cubicTo(
             0.13f * width, 0.68f * height,
             0.22f * width, 0.83f * height,
             0.34f * width, 0.925f * height);
-        mCurvePath->line_to(width / 2, mCurveTop);
+        mCurvePath->lineTo(width / 2, mCurveTop);
         mPathMeasure->setPath(mCurvePath, false);
         mPathLength = mPathMeasure->getLength();
     }

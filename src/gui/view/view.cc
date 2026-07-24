@@ -9664,6 +9664,18 @@ void View::setTransitionAlpha(float alpha){
     }
 }
 
+const std::string& View::getTransitionName()const{
+    return mTransitionName;
+}
+
+void View::setTransitionName(const std::string& name){
+    mTransitionName = name;
+}
+
+void* View::getWindowId()const{
+    return mAttachInfo;
+}
+
 StateListAnimator* View::getStateListAnimator()const{
     return mStateListAnimator;
 }
@@ -10312,5 +10324,6 @@ VIEW_PROPERTY("x",X, X);
 VIEW_PROPERTY("y",Y, Y);
 VIEW_PROPERTY("z",Z, Z);
 VIEW_PROPERTY("alpha",Alpha, ALPHA);
+VIEW_PROPERTY("transitionAlpha",TransitionAlpha, TRANSITION_ALPHA);
 
 }//endof namespace

@@ -141,13 +141,13 @@ void GestureStroke::makePath() {
         float y = localPoints[i + 1];
         if (path == nullptr) {
             path = new Path;
-            path->move_to(x, y);
+            path->moveTo(x, y);
             mX = x;  mY = y;
         } else {
             float dx = std::abs(x - mX);
             float dy = std::abs(y - mY);
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                path->quad_to(mX, mY, (x + mX) / 2, (y + mY) / 2);
+                path->quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
                 mX = x;  mY = y;
             }
         }
@@ -188,14 +188,14 @@ cdroid::Path* GestureStroke::toPath(float width, float height, int numSample) {
         float y = pts[i + 1];
         if (path == nullptr) {
             path = new Path();
-            path->move_to(x, y);
+            path->moveTo(x, y);
             mX = x;
             mY = y;
         } else {
             float dx = std::abs(x - mX);
             float dy = std::abs(y - mY);
             if (dx >= TOUCH_TOLERANCE || dy >= TOUCH_TOLERANCE) {
-                path->quad_to(mX, mY, (x + mX) / 2, (y + mY) / 2);
+                path->quadTo(mX, mY, (x + mX) / 2, (y + mY) / 2);
                 mX = x;
                 mY = y;
             }

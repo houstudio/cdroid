@@ -26,6 +26,7 @@
 #include <core/color.h>
 #include <unordered_map>
 #include <animation/property.h>
+#include <core/path.h>
 #include <drawable/pathparser.h>
 //reference:
 //http://androidxref.com/9.0.0_r3/xref/frameworks/base/libs/hwui/PropertyValuesHolder.h
@@ -95,6 +96,10 @@ public:
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<void*>&);
     static PropertyValuesHolder*ofObject(const Property*prop,const std::vector<PathParser::PathData>&);
     static PropertyValuesHolder*ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&);
+    // Generic ofObject for AnimateValue-typed properties (Rect/PointF/...) with a caller-supplied evaluator.
+    static PropertyValuesHolder*ofObject(const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values);
+    // Drives a PointF-typed property along a Path (sampled to N points; PointFEvaluator in between).
+    static PropertyValuesHolder*ofPointF(const Property*prop,const Cairo::RefPtr<cdroid::Path>& path);
 };
 
 typedef PropertyValuesHolder  IntPropertyValuesHolder;
