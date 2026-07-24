@@ -26,5 +26,6 @@ SET(ANIMATION_SOURCES
     animation/timeanimator.cc
     animation/transformation.cc
     animation/translateanimation.cc
+    animation/typeevaluators.cc
     animation/valueanimator.cc
 )

@@ -17,6 +17,8 @@
  *********************************************************************************/
 #include <animation/propertyvaluesholder.h>
 #include <porting/cdlog.h>
+#include <animation/typeevaluators.h>   // PointFEvaluator
+#include <core/pathmeasure.h>           // Path sampling for ofPointF
 
 namespace cdroid{
 
@@ -322,6 +324,32 @@ PropertyValuesHolder*PropertyValuesHolder::ofObject(const Property*prop,const st
 PropertyValuesHolder*PropertyValuesHolder::ofObject(const std::string&propertyName,const std::vector<PathParser::PathData>&values){
     PropertyValuesHolder*pvh = new PropertyValuesHolder(propertyName);
     pvh->setValues(values);
+    return pvh;
+}
+
+// Generic ofObject: caller supplies the evaluator matching the AnimateValue type (Rect/PointF/...).
+PropertyValuesHolder*PropertyValuesHolder::ofObject(const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    pvh->mDataSource = values;
+    pvh->mEvaluator = evaluator;
+    pvh->mAnimateValue = values.front();
+    return pvh;
+}
+
+// Sample the Path into N+1 PointF keyframes; PointFEvaluator interpolates between neighbours.
+PropertyValuesHolder*PropertyValuesHolder::ofPointF(const Property*prop,const Cairo::RefPtr<cdroid::Path>& path){
+    PropertyValuesHolder*pvh = new PropertyValuesHolder(prop);
+    PathMeasure measure(path, false);
+    const double length = measure.getLength();
+    const int N = 32; // fine enough that linear segments approximate curved paths
+    for (int i = 0; i <= N; i++) {
+        double pos[2] = {0,0}, tan[2] = {0,0};
+        measure.getPosTan(length * i / N, pos, tan);
+        PointF p; p.x = (float)pos[0]; p.y = (float)pos[1];
+        pvh->mDataSource.push_back(p);
+    }
+    pvh->mEvaluator = PointFEvaluator;
+    pvh->mAnimateValue = pvh->mDataSource.front();
     return pvh;
 }
 

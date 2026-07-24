@@ -20,11 +20,16 @@
 #include <string>
 #include <core/any.h>
 #include <core/variant.h>
+#include <core/rect.h>
 #include <drawable/pathparser.h>
 #define VARIANT_AS_ANIMATEDVAUE 1
 namespace cdroid{
 #if VARIANT_AS_ANIMATEDVAUE
-  typedef nonstd::variant<int,float,PathParser::PathData>AnimateValue;
+  // Rect/RectF/PointF added for android.transition ofObject(Rect/PointF) animations (ChangeBounds etc.).
+  // Cairo::Matrix is intentionally NOT here: transitions animate matrices by driving a fraction
+  // and computing the matrix directly (see ChangeTransform/ChangeImageTransform), since cairo's
+  // matrix type is kept out of this variant.
+  typedef nonstd::variant<int,float,PathParser::PathData,Rect,RectF,PointF>AnimateValue;
   #if variant_CPP17_OR_GREATER
      #define GET_VARIANT(vt,type) std::get<type>(vt)
   #else

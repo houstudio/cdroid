@@ -4842,7 +4842,7 @@ void TextView::invalidateCursorPath() {
             thick /= 2.0f;
 
             // mHighlightPath is guaranteed to be non null at that point.
-            mHighlightPath->compute_bounds(TEMP_RECTF, false);
+            mHighlightPath->computeBounds(TEMP_RECTF, false);
 
             invalidate((int) std::floor(horizontalPadding + TEMP_RECTF.left - thick),
                     (int) std::floor(verticalPadding + TEMP_RECTF.top - thick),
@@ -6090,7 +6090,7 @@ void TextView::getFocusedRect(Rect& r) {
                 mHighlightPathBogus = false;
             }
             RectF TEMP_RECTF;
-            mHighlightPath->compute_bounds(TEMP_RECTF, true);
+            mHighlightPath->computeBounds(TEMP_RECTF, true);
             r.left = (int) TEMP_RECTF.left - 1;
             r.width = (int) TEMP_RECTF.width + 2;
         }

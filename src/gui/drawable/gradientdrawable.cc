@@ -615,7 +615,7 @@ void GradientDrawable::buildPathIfDirty() {
     if (mPathIsDirty) {
         ensureValidRect();
         mPath->reset();
-        mPath->round_rectangle(mRect,mGradientState->mRadiusArray);
+        mPath->addRoundRect(mRect,mGradientState->mRadiusArray);
         mPathIsDirty = false;
     }
 }
@@ -654,18 +654,18 @@ Cairo::RefPtr<cdroid::Path> GradientDrawable::buildRing(GradientState* st) {
     if (sweep < 360 && sweep > -360) {
         //mRingPath->setFillType(Path.FillType.EVEN_ODD);
         // inner top
-        mRingPath->move_to(x + radius, y);
+        mRingPath->moveTo(x + radius, y);
         // outer top
-        mRingPath->line_to(x + radius + thickness, y);
+        mRingPath->lineTo(x + radius + thickness, y);
         // outer arc
-        mRingPath->arc_to(bounds, 0.0f, sweep, false);
+        mRingPath->arcTo(bounds, 0.0f, sweep, false);
         // inner arc
-        mRingPath->arc_to(innerBounds, sweep, -sweep, false);
-        mRingPath->close_path();
+        mRingPath->arcTo(innerBounds, sweep, -sweep, false);
+        mRingPath->close();//_path();
     } else {
         // add the entire ovals
-        mRingPath->add_oval(bounds, true);//Path.Direction.CW);
-        mRingPath->add_oval(innerBounds, false);//Path.Direction.CCW);
+        mRingPath->addOval(bounds, true);//Path.Direction.CW);
+        mRingPath->addOval(innerBounds, false);//Path.Direction.CCW);
     }
 
     return mRingPath;

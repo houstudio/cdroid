@@ -99,7 +99,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
     switch (cmd) {
     case 'z':
     case 'Z':
-        outPath->close_path();
+        outPath->close();
         // Path is closed here, but we need to move the pen to the
         // closed position. So we cache the segment's starting position,
         // and restore it here.
@@ -107,7 +107,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
         currentY = currentSegmentStartY;
         ctrlPointX = currentSegmentStartX;
         ctrlPointY = currentSegmentStartY;
-        outPath->move_to(currentX, currentY);
+        outPath->moveTo(currentX, currentY);
         break;
     case 'm':
     case 'M':
@@ -162,9 +162,9 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 // According to the spec, if a moveto is followed by multiple
                 // pairs of coordinates, the subsequent pairs are treated as
                 // implicit lineto commands.
-                outPath->line_to(points->at(k + 0), points->at(k + 1));
+                outPath->lineTo(points->at(k + 0), points->at(k + 1));
             } else {
-                outPath->move_to(points->at(k + 0), points->at(k + 1));
+                outPath->moveTo(points->at(k + 0), points->at(k + 1));
                 currentSegmentStartX = currentX;
                 currentSegmentStartY = currentY;
             }
@@ -175,7 +175,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             currentY += points->at(k + 1);
             break;
         case 'L':// lineto - Draw a line from the current point
-            outPath->line_to(points->at(k + 0), points->at(k + 1));
+            outPath->lineTo(points->at(k + 0), points->at(k + 1));
             currentX = points->at(k + 0);
             currentY = points->at(k + 1);
             break;
@@ -184,7 +184,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             currentX += points->at(k + 0);
             break;
         case 'H':// horizontal lineto - Draws a horizontal line
-            outPath->line_to(points->at(k + 0), currentY);
+            outPath->lineTo(points->at(k + 0), currentY);
             currentX = points->at(k + 0);
             break;
         case 'v':// vertical lineto - Draws a vertical line from the current point (r)
@@ -192,7 +192,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             currentY += points->at(k + 0);
             break;
         case 'V':// vertical lineto - Draws a vertical line from the current point
-            outPath->line_to(currentX, points->at(k + 0));
+            outPath->lineTo(currentX, points->at(k + 0));
             currentY = points->at(k + 0);
             break;
         case 'c':// curveto - Draws a cubic Bézier curve (relative)
@@ -206,7 +206,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
 
             break;
         case 'C':// curveto - Draws a cubic Bézier curve
-            outPath->curve_to/*cubicTo*/(points->at(k + 0), points->at(k + 1), points->at(k + 2),
+            outPath->cubicTo(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                              points->at(k + 3), points->at(k + 4), points->at(k + 5));
             currentX = points->at(k + 4);
             currentY = points->at(k + 5);
@@ -236,7 +236,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 reflectiveCtrlPointX = 2 * currentX - ctrlPointX;
                 reflectiveCtrlPointY = 2 * currentY - ctrlPointY;
             }
-            outPath->curve_to/*cubicTo*/(reflectiveCtrlPointX, reflectiveCtrlPointY, points->at(k + 0),
+            outPath->cubicTo(reflectiveCtrlPointX, reflectiveCtrlPointY, points->at(k + 0),
                              points->at(k + 1), points->at(k + 2), points->at(k + 3));
             ctrlPointX = points->at(k + 0);
             ctrlPointY = points->at(k + 1);
@@ -251,7 +251,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             currentY += points->at(k + 3);
             break;
         case 'Q':// Draws a quadratic Bézier
-            outPath->quad_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),points->at(k + 3));
+            outPath->quadTo(points->at(k + 0), points->at(k + 1), points->at(k + 2),points->at(k + 3));
             ctrlPointX = points->at(k + 0);
             ctrlPointY = points->at(k + 1);
             currentX = points->at(k + 2);
@@ -279,7 +279,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
                 reflectiveCtrlPointX = 2 * currentX - ctrlPointX;
                 reflectiveCtrlPointY = 2 * currentY - ctrlPointY;
             }
-            outPath->quad_to(reflectiveCtrlPointX, reflectiveCtrlPointY, points->at(k + 0), points->at(k + 1));
+            outPath->quadTo(reflectiveCtrlPointX, reflectiveCtrlPointY, points->at(k + 0), points->at(k + 1));
             ctrlPointX = reflectiveCtrlPointX;
             ctrlPointY = reflectiveCtrlPointY;
             currentX = points->at(k + 0);
@@ -287,7 +287,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             break;
         case 'a':// Draws an elliptical arc
             // (rx ry x-axis-rotation large-arc-flag sweep-flag x y)
-            outPath->arc_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),
+            outPath->arcTo(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                            /*(SkPath::ArcSize)*/ (points->at(k + 3) != 0),
                            /*(SkPathDirection)*/ (points->at(k + 4) == 0),
                            points->at(k + 5) + currentX, points->at(k + 6) + currentY);
@@ -297,7 +297,7 @@ void PathResolver::addCommand(Cairo::RefPtr<cdroid::Path>& outPath, char previou
             ctrlPointY = currentY;
             break;
         case 'A':// Draws an elliptical arc
-            outPath->arc_to(points->at(k + 0), points->at(k + 1), points->at(k + 2),
+            outPath->arcTo(points->at(k + 0), points->at(k + 1), points->at(k + 2),
                            /*(SkPath::ArcSize)*/ (points->at(k + 3) != 0),
                            /*(SkPathDirection)*/ (points->at(k + 4) == 0),
                            points->at(k + 5), points->at(k + 6));

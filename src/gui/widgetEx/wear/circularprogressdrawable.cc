@@ -439,11 +439,11 @@ void CircularProgressDrawable::Ring::drawTriangle(Canvas& c, float startAngle, f
         // where concatenating a rotation matrix to a scale matrix
         // ignored a starting negative rotation. This appears to have
         // been fixed as of API 21.
-        mArrow->move_to(0, 0);
-        mArrow->line_to(mArrowWidth * mArrowScale, 0);
-        mArrow->line_to((mArrowWidth * mArrowScale / 2), (mArrowHeight * mArrowScale));
+        mArrow->moveTo(0, 0);
+        mArrow->lineTo(mArrowWidth * mArrowScale, 0);
+        mArrow->lineTo((mArrowWidth * mArrowScale / 2), (mArrowHeight * mArrowScale));
         //mArrow->offset(centerRadius + bounds.centerX() - inset, bounds.centerY() + mStrokeWidth / 2.0f);
-        mArrow->close_path();
+        mArrow->close();//_path();
         // draw a triangle
         //mArrowPaint.setColor(mCurrentColor);mArrowPaint.setAlpha(mAlpha);
         c.set_color(mCurrentColor);
