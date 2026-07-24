@@ -21,5 +21,9 @@ if(ENABLE_TRANSITION)
         transition/translationanimationcreator.cc
         transition/slide.cc
         transition/explode.cc
+        transition/recolor.cc
+        transition/patternpathmotion.cc
+        transition/changeimagetransform.cc
+        transition/crossfade.cc
         )
 endif()
