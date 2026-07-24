@@ -74,6 +74,7 @@ namespace cdroid{
 class DragEvent;
 class ViewGroup;
 class ViewOverlay;
+class GhostView;
 class Window;
 class FocusFinder;
 class UIEventSource;
@@ -516,6 +517,7 @@ private:
     friend LayoutInflater;
     friend TouchDelegate;
     friend ViewPropertyAnimator;
+    friend GhostView;
     class TooltipInfo;
     class CheckForTap;
     class CheckForLongPress;
@@ -560,6 +562,7 @@ private:
     std::unordered_map<uint64_t,uint64_t>mMeasureCache;
     std::string mStartActivityRequestWho;
     std::string mTransitionName; // android.view.View transitionName (shared-element / name matching)
+    GhostView* mGhostView = nullptr; // android.view.View#mGhostView — set by GhostView::addGhost
     ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
@@ -1487,6 +1490,12 @@ public:
     Matrix& getMatrix();
     Matrix& getInverseMatrix();
     bool hasIdentityMatrix()const;
+    // android.view.View#setAnimationMatrix — drives a combined transform matrix during
+    // transitions (ChangeTransform). CDROID's cairo 2D substrate renders transforms via the
+    // property getters (translation/scale/rotation → getMatrix → canvas.transform), not via
+    // a separate animation matrix; this is therefore a no-op stub so ChangeTransform compiles
+    // and captures/restores correctly (the per-frame matrix is not applied mid-animation).
+    void setAnimationMatrix(const Cairo::Matrix* /*matrix*/){}
 
     void setX(float);
     void setY(float);
