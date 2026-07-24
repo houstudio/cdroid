@@ -3344,8 +3344,9 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
 
     float alpha = drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());//getAlpha()
     if ((transformToApply != nullptr) || (alpha < 1.f) || !hasIdentityMatrix()
-            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)) {
-        if (transformToApply != nullptr || !childHasIdentityMatrix) {
+            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)
+            || mHasAnimationMatrix) {
+        if (transformToApply != nullptr || !childHasIdentityMatrix || mHasAnimationMatrix) {
             int transX = 0 , transY = 0;
 
             if (offsetForScroll) {
@@ -9390,12 +9391,14 @@ Matrix& View::getInverseMatrix() {
 }
 
 void View::setAnimationMatrix(const Cairo::Matrix* matrix){
+    invalidateViewProperty(true, false); // invalidate old bounds
     if (matrix != nullptr){
         mAnimationMatrix = *matrix;
         mHasAnimationMatrix = true;
     } else {
         mHasAnimationMatrix = false;
     }
+    invalidateViewProperty(false, true); // invalidate new bounds
 }
 
 bool View::hasAnimationMatrix() const {
