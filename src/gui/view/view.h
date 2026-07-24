@@ -37,6 +37,7 @@
 #include <view/dragevent.h>
 #include <view/keyevent.h>
 #include <view/motionevent.h>
+#include <view/actionmode.h>
 #include <view/abssavedstate.h>
 #include <menu/menu.h>
 #include <menu/contextmenu.h>
@@ -123,107 +124,110 @@ protected:
 
     static constexpr int TOOLTIP = 0x40000000;
 
-    /*PFLAGS in mPrivateFlags*/
-    static constexpr int PFLAG_WANTS_FOCUS      = 0x00000001;
-    static constexpr int PFLAG_FOCUSED          = 0x00000002;
-    static constexpr int PFLAG_SELECTED         = 0x00000004;
-    static constexpr int PFLAG_IS_ROOT_NAMESPACE= 0x00000008;
-    static constexpr int PFLAG_HAS_BOUNDS       = 0x00000010;
-    static constexpr int PFLAG_DRAWN            = 0x00000020;
-    static constexpr int PFLAG_DRAW_ANIMATION   = 0x00000040;
-    static constexpr int PFLAG_SKIP_DRAW        = 0x00000080;
-    static constexpr int PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200;
-    static constexpr int PFLAG_DRAWABLE_STATE_DIRTY  =0x400;
-    static constexpr int PFLAG_MEASURED_DIMENSION_SET=0x800;
-    static constexpr int PFLAG_FORCE_LAYOUT     =0x00001000;
-    static constexpr int PFLAG_LAYOUT_REQUIRED  =0x00002000;
+    enum PrivateFlags{
+        PFLAG_WANTS_FOCUS      = 0x00000001,
+        PFLAG_FOCUSED          = 0x00000002,
+        PFLAG_SELECTED         = 0x00000004,
+        PFLAG_IS_ROOT_NAMESPACE= 0x00000008,
+        PFLAG_HAS_BOUNDS       = 0x00000010,
+        PFLAG_DRAWN            = 0x00000020,
+        PFLAG_DRAW_ANIMATION   = 0x00000040,
+        PFLAG_SKIP_DRAW        = 0x00000080,
+        PFLAG_REQUEST_TRANSPARENT_REGIONS=0x200,
+        PFLAG_DRAWABLE_STATE_DIRTY  =0x400,
+        PFLAG_MEASURED_DIMENSION_SET=0x800,
+        PFLAG_FORCE_LAYOUT     =0x00001000,
+        PFLAG_LAYOUT_REQUIRED  =0x00002000,
 
-    static constexpr int PFLAG_PRESSED          = 0x00004000;
-    static constexpr int PFLAG_DRAWING_CACHE_VALID= 0x00008000;
-    static constexpr int PFLAG_ANIMATION_STARTED= 0x00010000;
-    static constexpr int PFLAG_SAVE_STATE_CALLED= 0x00020000;
-    static constexpr int PFLAG_ALPHA_SET        = 0x00040000;
-    static constexpr int PFLAG_SCROLL_CONTAINER = 0x00080000;
-    static constexpr int PFLAG_SCROLL_CONTAINER_ADDED= 0x00100000;
-    static constexpr int PFLAG_DIRTY            = 0x00200000;
-    static constexpr int PFLAG_DIRTY_OPAQUE     = 0x00400000;
-    static constexpr int PFLAG_DIRTY_MASK       = 0x00600000;
-    static constexpr int PFLAG_OPAQUE_BACKGROUND= 0x00800000;
-    static constexpr int PFLAG_OPAQUE_SCROLLBARS= 0x01000000;
-    static constexpr int PFLAG_OPAQUE_MASK      = 0x01800000;
-    static constexpr int PFLAG_PREPRESSED       = 0x02000000;
-    static constexpr int PFLAG_CANCEL_NEXT_UP_EVENT=0x04000000;
-    static constexpr int PFLAG_HOVERED    = 0x10000000;
-    static constexpr int PFLAG_ACTIVATED  = 0x40000000;
-    static constexpr int PFLAG_INVALIDATED= 0x80000000;
+        PFLAG_PRESSED          = 0x00004000,
+        PFLAG_DRAWING_CACHE_VALID= 0x00008000,
+        PFLAG_ANIMATION_STARTED= 0x00010000,
+        PFLAG_SAVE_STATE_CALLED= 0x00020000,
+        PFLAG_ALPHA_SET        = 0x00040000,
+        PFLAG_SCROLL_CONTAINER = 0x00080000,
+        PFLAG_SCROLL_CONTAINER_ADDED= 0x00100000,
+        PFLAG_DIRTY            = 0x00200000,
+        PFLAG_DIRTY_OPAQUE     = 0x00400000,
+        PFLAG_DIRTY_MASK       = 0x00600000,
+        PFLAG_OPAQUE_BACKGROUND= 0x00800000,
+        PFLAG_OPAQUE_SCROLLBARS= 0x01000000,
+        PFLAG_OPAQUE_MASK      = 0x01800000,
+        PFLAG_PREPRESSED       = 0x02000000,
+        PFLAG_CANCEL_NEXT_UP_EVENT=0x04000000,
+        PFLAG_HOVERED    = 0x10000000,
+        PFLAG_ACTIVATED  = 0x40000000,
+        PFLAG_INVALIDATED= 0x80000000
+    };
 
-    /*PFLAGS2*/
-    static constexpr int PFLAG2_DRAG_CAN_ACCEPT = 0x00000001;
-    static constexpr int PFLAG2_DRAG_HOVERED    = 0x00000002;
-    static constexpr int PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT   = 0x02;
-    static constexpr int PFLAG2_LAYOUT_DIRECTION_MASK         = 0x00000003 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
-    static constexpr int PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL = 4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
-    static constexpr int PFLAG2_LAYOUT_DIRECTION_RESOLVED     = 8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
-    static constexpr int PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT;
+    enum PrivateFlags2{
+        PFLAG2_DRAG_CAN_ACCEPT = 0x00000001,
+        PFLAG2_DRAG_HOVERED    = 0x00000002,
+        PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT   = 0x02,
+        PFLAG2_LAYOUT_DIRECTION_MASK         = 0x00000003 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
+        PFLAG2_LAYOUT_DIRECTION_RESOLVED_RTL = 4 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
+        PFLAG2_LAYOUT_DIRECTION_RESOLVED     = 8 << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
+        PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK= 0x0000000C<< PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT,
+       
+        PFLAG2_TEXT_DIRECTION_MASK_SHIFT=6,
+        PFLAG2_TEXT_DIRECTION_MASK      = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10,
+        PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
+        PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT = /*TEXT_DIRECTION_RESOLVED_DEFAULT*/1 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT,
+       
+        PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT = 13,
+        PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17,
+        PFLAG2_TEXT_ALIGNMENT_MASK          = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+        PFLAG2_TEXT_ALIGNMENT_RESOLVED      = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT,
+        PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
+        PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = /*TEXT_ALIGNMENT_RESOLVED_DEFAULT*/1 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT,
+       
+        PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT =20,
+        PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT = 23,
+       
+        PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000,
+        PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED =0x8000000,
+        PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000,
+        PFLAG2_PADDING_RESOLVED        = 0x20000000,
+        PFLAG2_DRAWABLE_RESOLVED       = 0x40000000,
+        PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000
+    };
         
-    static constexpr int PFLAG2_TEXT_DIRECTION_MASK_SHIFT=6;
-    static constexpr int PFLAG2_TEXT_DIRECTION_MASK      = 0x00000007<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_DIRECTION_RESOLVED  = 0x00000008 << PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT=10;
-    static constexpr int PFLAG2_TEXT_DIRECTION_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_DIRECTION_RESOLVED_DEFAULT = /*TEXT_DIRECTION_RESOLVED_DEFAULT*/1 << PFLAG2_TEXT_DIRECTION_RESOLVED_MASK_SHIFT;
-        
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT = 13;
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT = 17;
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_MASK          = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_RESOLVED      = 0x00000008 << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK = 0x00000007 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT;
-    static constexpr int PFLAG2_TEXT_ALIGNMENT_RESOLVED_DEFAULT = /*TEXT_ALIGNMENT_RESOLVED_DEFAULT*/1 << PFLAG2_TEXT_ALIGNMENT_RESOLVED_MASK_SHIFT;
-    
-    static constexpr int PFLAG2_IMPORTANT_FOR_ACCESSIBILITY_SHIFT =20;
-    static constexpr int PFLAG2_ACCESSIBILITY_LIVE_REGION_SHIFT = 23;
-        
-    static constexpr int PFLAG2_ACCESSIBILITY_FOCUSED   = 0x04000000;
-    static constexpr int PFLAG2_SUBTREE_ACCESSIBILITY_STATE_CHANGED =0x8000000;
-    static constexpr int PFLAG2_VIEW_QUICK_REJECTED     = 0x10000000;
-    static constexpr int PFLAG2_PADDING_RESOLVED        = 0x20000000;
-    static constexpr int PFLAG2_DRAWABLE_RESOLVED       = 0x40000000;
-    static constexpr int PFLAG2_HAS_TRANSIENT_STATE     = 0x80000000;
-        
-    //FLAGS in mPrivateFlags3
-    static constexpr int PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x0001;
-    static constexpr int PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x0002;
-    static constexpr int PFLAG3_IS_LAID_OUT                 = 0x0004;
-    static constexpr int PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x0008;
-    static constexpr int PFLAG3_CALLED_SUPER                = 0x0010;
-    static constexpr int PFLAG3_APPLYING_INSETS             = 0x0020;
-    static constexpr int PFLAG3_FITTING_SYSTEM_WINDOWS      = 0x0040;
-    static constexpr int PFLAG3_NESTED_SCROLLING_ENABLED    = 0x0080;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_TOP        = 0x0100;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_BOTTOM     = 0x0200;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_LEFT       = 0x0400;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_RIGHT      = 0x0800;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_START      = 0x1000;
-    static constexpr int PFLAG3_SCROLL_INDICATOR_END        = 0x2000;
-    static constexpr int DRAG_MASK = PFLAG2_DRAG_CAN_ACCEPT | PFLAG2_DRAG_HOVERED;
-        
-    static constexpr int PFLAG3_ASSIST_BLOCKED          = 0x04000;
-    static constexpr int PFLAG3_CLUSTER                 = 0x08000;
-    static constexpr int PFLAG3_IS_AUTOFILLED           = 0x10000;
-    static constexpr int PFLAG3_FINGER_DOWN             = 0x20000;
-    static constexpr int PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000;
-    static constexpr int PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT = 19;
-    
-    static constexpr int PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE = 0x800000;
-    static constexpr int PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED = 0x1000000;
-        
-    static constexpr int PFLAG3_TEMPORARY_DETACH        = 0x2000000;
-    static constexpr int PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000;
-    static constexpr int PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT = 0x8000000;
-    static constexpr int PFLAG3_SCREEN_READER_FOCUSABLE = 0x10000000;
-    static constexpr int PFLAG3_AGGREGATED_VISIBLE      = 0x20000000;
-    static constexpr int PFLAG3_AUTOFILLID_EXPLICITLY_SET = 0x40000000;
-    static constexpr int PFLAG3_ACCESSIBILITY_HEADING   = 0x80000000;
+    enum mPrivateFlags3{
+        PFLAG3_VIEW_IS_ANIMATING_TRANSFORM = 0x0001,
+        PFLAG3_VIEW_IS_ANIMATING_ALPHA     = 0x0002,
+        PFLAG3_IS_LAID_OUT                 = 0x0004,
+        PFLAG3_MEASURE_NEEDED_BEFORE_LAYOUT= 0x0008,
+        PFLAG3_CALLED_SUPER                = 0x0010,
+        PFLAG3_APPLYING_INSETS             = 0x0020,
+        PFLAG3_FITTING_SYSTEM_WINDOWS      = 0x0040,
+        PFLAG3_NESTED_SCROLLING_ENABLED    = 0x0080,
+        PFLAG3_SCROLL_INDICATOR_TOP        = 0x0100,
+        PFLAG3_SCROLL_INDICATOR_BOTTOM     = 0x0200,
+        PFLAG3_SCROLL_INDICATOR_LEFT       = 0x0400,
+        PFLAG3_SCROLL_INDICATOR_RIGHT      = 0x0800,
+        PFLAG3_SCROLL_INDICATOR_START      = 0x1000,
+        PFLAG3_SCROLL_INDICATOR_END        = 0x2000,
+        DRAG_MASK = PFLAG2_DRAG_CAN_ACCEPT | PFLAG2_DRAG_HOVERED,
+       
+        PFLAG3_ASSIST_BLOCKED          = 0x04000,
+        PFLAG3_CLUSTER                 = 0x08000,
+        PFLAG3_IS_AUTOFILLED           = 0x10000,
+        PFLAG3_FINGER_DOWN             = 0x20000,
+        PFLAG3_FOCUSED_BY_DEFAULT      = 0x40000,
+        PFLAG3_IMPORTANT_FOR_AUTOFILL_SHIFT = 19,
+       
+        PFLAG3_OVERLAPPING_RENDERING_FORCED_VALUE = 0x800000,
+        PFLAG3_HAS_OVERLAPPING_RENDERING_FORCED = 0x1000000,
+       
+        PFLAG3_TEMPORARY_DETACH        = 0x2000000,
+        PFLAG3_NO_REVEAL_ON_FOCUS      = 0x4000000,
+        PFLAG3_NOTIFY_AUTOFILL_ENTER_ON_LAYOUT = 0x8000000,
+        PFLAG3_SCREEN_READER_FOCUSABLE = 0x10000000,
+        PFLAG3_AGGREGATED_VISIBLE      = 0x20000000,
+        PFLAG3_AUTOFILLID_EXPLICITLY_SET = 0x40000000,
+        PFLAG3_ACCESSIBILITY_HEADING   = 0x80000000,
+    };
 
     /** Indicates if rotary scroll haptics support for the view has been determined. */
     static constexpr int PFLAG4_ROTARY_HAPTICS_DETERMINED = 0x100000;
@@ -231,6 +235,7 @@ protected:
     static constexpr int PFLAG4_ROTARY_HAPTICS_SCROLL_SINCE_LAST_ROTARY_INPUT = 0x400000;
     static constexpr int PFLAG4_ROTARY_HAPTICS_WAITING_FOR_SCROLL_EVENT = 0x800000;
     static constexpr int PFLAG4_CONTENT_SENSITIVITY_SHIFT = 24;
+    static constexpr int PFLAG4_ALLOW_CLICK_WHEN_DISABLED = 0x1000;
 public:
     static bool VIEW_DEBUG;
     static int mViewCount;
@@ -242,32 +247,33 @@ public:
     static constexpr int NO_ID =-1;
     static constexpr int LAST_APP_AUTOFILL_ID = INT_MAX/2;
 
-    /* ResolvedLayoutDir*/
-    static constexpr int LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED;
-    static constexpr int LAYOUT_DIRECTION_LTR = LayoutDirection::LTR;
-    static constexpr int LAYOUT_DIRECTION_RTL = LayoutDirection::RTL;
-    static constexpr int LAYOUT_DIRECTION_INHERIT = LayoutDirection::INHERIT;
-    static constexpr int LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL;
-    static constexpr int LAYOUT_DIRECTION_DEFAULT = LAYOUT_DIRECTION_INHERIT;
-    static constexpr int LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR;
+    enum LayoutDir{
+        LAYOUT_DIRECTION_UNDEFINED = LayoutDirection::UNDEFINED,
+        LAYOUT_DIRECTION_LTR = LayoutDirection::LTR,
+        LAYOUT_DIRECTION_RTL = LayoutDirection::RTL,
+        LAYOUT_DIRECTION_INHERIT = LayoutDirection::INHERIT,
+        LAYOUT_DIRECTION_LOCALE = LayoutDirection::LOCAL,
+        LAYOUT_DIRECTION_DEFAULT = LAYOUT_DIRECTION_INHERIT,
+        LAYOUT_DIRECTION_RESOLVED_DEFAULT = LAYOUT_DIRECTION_LTR
+    };
+    enum Focusable{
+        NOT_FOCUSABLE = 0x00,
+        FOCUSABLE = 0x01,
+        FOCUSABLE_AUTO = 0x10
+    };
+    enum Visibility{
+        VISIBLE   = 0x00000000,
+        INVISIBLE = 0x00000004,
+        GONE      = 0x00000008
+    };
 
-    /*Focusable*/
-    static constexpr int NOT_FOCUSABLE = 0x00;
-    static constexpr int FOCUSABLE = 0x01;
-    static constexpr int FOCUSABLE_AUTO = 0x10;
-
-    /*Visibility*/
-    static constexpr int VISIBLE   = 0x00000000;
-    static constexpr int INVISIBLE = 0x00000004;
-    static constexpr int GONE      = 0x00000008;
-
-    /*AutofillTye*/
-    static constexpr int AUTOFILL_TYPE_NONE = 0;
-    static constexpr int AUTOFILL_TYPE_TEXT = 1;
-    static constexpr int AUTOFILL_TYPE_TOGGLE = 2;
-    static constexpr int AUTOFILL_TYPE_LIST = 3;
-    static constexpr int AUTOFILL_TYPE_DATE = 4;
-
+    enum AutofillTye{
+        AUTOFILL_TYPE_NONE = 0,
+        AUTOFILL_TYPE_TEXT = 1,
+        AUTOFILL_TYPE_TOGGLE = 2,
+        AUTOFILL_TYPE_LIST = 3,
+        AUTOFILL_TYPE_DATE = 4
+    };
     static constexpr int ENABLED  = 0x00000000;
     static constexpr int DISABLED = 0x00000020;
     static constexpr int WILL_NOT_DRAW = 0x00000080;
@@ -278,39 +284,42 @@ public:
     static constexpr int SCROLLBARS_VERTICAL = 0x00000200;
     static constexpr int SCROLLBARS_MASK = 0x00000300;
 
-    static constexpr int IMPORTANT_FOR_AUTOFILL_AUTO= 0x0;
-    static constexpr int IMPORTANT_FOR_AUTOFILL_YES = 0x1;
-    static constexpr int IMPORTANT_FOR_AUTOFILL_NO  = 0x2;
-    static constexpr int IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS= 0x4;
-    static constexpr int IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS = 0x8;
-
-    /*TextAlignment*/
-    static constexpr int TEXT_ALIGNMENT_INHERIT   = 0;
-    static constexpr int TEXT_ALIGNMENT_GRAVITY   = 1;
-    static constexpr int TEXT_ALIGNMENT_TEXT_START= 2;
-    static constexpr int TEXT_ALIGNMENT_TEXT_END  = 3;
-    static constexpr int TEXT_ALIGNMENT_CENTER    = 4;
-    static constexpr int TEXT_ALIGNMENT_VIEW_START= 5;
-    static constexpr int TEXT_ALIGNMENT_VIEW_END  = 6;
-    static constexpr int TEXT_ALIGNMENT_DEFAULT   = TEXT_ALIGNMENT_GRAVITY;
-    static constexpr int TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_GRAVITY;
-
-    /*TextDirection*/
-    static constexpr int TEXT_DIRECTION_INHERIT = 0;
-    static constexpr int TEXT_DIRECTION_FIRST_STRONG=1;
-    static constexpr int TEXT_DIRECTION_ANY_RTL = 2;
-    static constexpr int TEXT_DIRECTION_LTR     = 3;
-    static constexpr int TEXT_DIRECTION_RTL     = 4;
-    static constexpr int TEXT_DIRECTION_LOCALE  = 5;
-    static constexpr int TEXT_DIRECTION_FIRST_STRONG_LTR = 6;
-    static constexpr int TEXT_DIRECTION_FIRST_STRONG_RTL = 7;
-    static constexpr int TEXT_DIRECTION_DEFAULT = TEXT_DIRECTION_INHERIT;
-    static constexpr int TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG;
-
-    static constexpr int DRAWING_CACHE_QUALITY_LOW  = 0x00080000;
-    static constexpr int DRAWING_CACHE_QUALITY_HIGH = 0x00100000;
-    static constexpr int DRAWING_CACHE_QUALITY_AUTO = 0x00000000;
-    static constexpr int DRAWING_CACHE_QUALITY_MASK = 0x00180000;
+    enum AutofillImportance{
+        IMPORTANT_FOR_AUTOFILL_AUTO= 0x0,
+        IMPORTANT_FOR_AUTOFILL_YES = 0x1,
+        IMPORTANT_FOR_AUTOFILL_NO  = 0x2,
+        IMPORTANT_FOR_AUTOFILL_YES_EXCLUDE_DESCENDANTS= 0x4,
+        IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS = 0x8
+    };
+    enum TextAlignment{
+        TEXT_ALIGNMENT_INHERIT   = 0,
+        TEXT_ALIGNMENT_GRAVITY   = 1,
+        TEXT_ALIGNMENT_TEXT_START= 2,
+        TEXT_ALIGNMENT_TEXT_END  = 3,
+        TEXT_ALIGNMENT_CENTER    = 4,
+        TEXT_ALIGNMENT_VIEW_START= 5,
+        TEXT_ALIGNMENT_VIEW_END  = 6,
+        TEXT_ALIGNMENT_DEFAULT   = TEXT_ALIGNMENT_GRAVITY,
+        TEXT_ALIGNMENT_RESOLVED_DEFAULT = TEXT_ALIGNMENT_GRAVITY
+    };
+    enum TextDirection{
+        TEXT_DIRECTION_INHERIT = 0,
+        TEXT_DIRECTION_FIRST_STRONG=1,
+        TEXT_DIRECTION_ANY_RTL = 2,
+        TEXT_DIRECTION_LTR     = 3,
+        TEXT_DIRECTION_RTL     = 4,
+        TEXT_DIRECTION_LOCALE  = 5,
+        TEXT_DIRECTION_FIRST_STRONG_LTR = 6,
+        TEXT_DIRECTION_FIRST_STRONG_RTL = 7,
+        TEXT_DIRECTION_DEFAULT = TEXT_DIRECTION_INHERIT,
+        TEXT_DIRECTION_RESOLVED_DEFAULT = TEXT_DIRECTION_FIRST_STRONG
+    };
+    enum DrawingCacheQuality{
+        DRAWING_CACHE_QUALITY_LOW  = 0x00080000,
+        DRAWING_CACHE_QUALITY_HIGH = 0x00100000,
+        DRAWING_CACHE_QUALITY_AUTO = 0x00000000,
+        DRAWING_CACHE_QUALITY_MASK = 0x00180000
+    };
         
     static constexpr int LONG_CLICKABLE = 0x200000;
     static constexpr int DUPLICATE_PARENT_STATE = 0x400000;
@@ -319,13 +328,15 @@ public:
     /*The scrollbar style to display the scrollbars at the edge of the view,
      * increasing the padding of the view. The scrollbars will only overlap the
      * background, if any*/
-    static constexpr int SCROLLBARS_INSIDE_OVERLAY = 0x00000000;
-    static constexpr int SCROLLBARS_INSIDE_INSET   = 0x01000000;
-    static constexpr int SCROLLBARS_OUTSIDE_OVERLAY= 0x02000000;
-    static constexpr int SCROLLBARS_OUTSIDE_INSET  = 0x03000000;
-    static constexpr int SCROLLBARS_INSET_MASK     = 0x01000000;
-    static constexpr int SCROLLBARS_OUTSIDE_MASK   = 0x02000000;
-    static constexpr int SCROLLBARS_STYLE_MASK     = 0x03000000;
+    enum ScrollBarStyle{
+         SCROLLBARS_INSIDE_OVERLAY = 0x00000000,
+         SCROLLBARS_INSIDE_INSET   = 0x01000000,
+         SCROLLBARS_OUTSIDE_OVERLAY= 0x02000000,
+         SCROLLBARS_OUTSIDE_INSET  = 0x03000000,
+         SCROLLBARS_INSET_MASK     = 0x01000000,
+         SCROLLBARS_OUTSIDE_MASK   = 0x02000000,
+         SCROLLBARS_STYLE_MASK     = 0x03000000
+    };
     /**
      * View flag indicating that the screen should remain on while the
      * window containing this view is visible to the user.  This effectively
@@ -337,22 +348,22 @@ public:
     static constexpr int HAPTIC_FEEDBACK_ENABLED= 0x10000000;
     static constexpr int PARENT_SAVE_DISABLED   = 0x20000000;
     static constexpr int PARENT_SAVE_DISABLED_MASK = 0x20000000;
-    /*FocusableMode*/
-    static constexpr int FOCUSABLES_ALL = 0x00000000;
-    static constexpr int FOCUSABLES_TOUCH_MODE = 0x00000001;
-
+    enum FocusableMode{
+        FOCUSABLES_ALL = 0x00000000,
+        FOCUSABLES_TOUCH_MODE = 0x00000001
+    };
     /*Indicates that the input type for the gesture is from a user touching the screen.*/
     static constexpr int TYPE_TOUCH = 0;
     static constexpr int TYPE_NON_TOUCH = 1;
 
-    //FocusDirection*/
-    static constexpr int FOCUS_BACKWARD = 0x01;
-    static constexpr int FOCUS_FORWARD  = 0x02;
-    static constexpr int FOCUS_LEFT = 0x11;
-    static constexpr int FOCUS_UP   = 0x21;
-    static constexpr int FOCUS_RIGHT= 0x42;
-    static constexpr int FOCUS_DOWN = 0x82;
-        
+    enum FocusDirection{
+        FOCUS_BACKWARD = 0x01,
+        FOCUS_FORWARD  = 0x02,
+        FOCUS_LEFT = 0x11,
+        FOCUS_UP   = 0x21,
+        FOCUS_RIGHT= 0x42,
+        FOCUS_DOWN = 0x82
+    };    
     static constexpr int MEASURED_SIZE_MASK  = 0x00ffffff;
     static constexpr int MEASURED_STATE_MASK = 0xff000000;
     static constexpr int MEASURED_STATE_TOO_SMALL = 0x1000000;
@@ -369,64 +380,62 @@ public:
     static constexpr int ACCESSIBILITY_LIVE_REGION_POLITE = 0x00000001;
     static constexpr int ACCESSIBILITY_LIVE_REGION_ASSERTIVE = 0x00000002;
     static constexpr int ACCESSIBILITY_LIVE_REGION_DEFAULT = ACCESSIBILITY_LIVE_REGION_NONE;
-    
-    /*ScrollIndicators*/
-    static constexpr int SCROLL_INDICATORS_NONE = 0x0000;
     static constexpr int SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT =8;/*protected*/
-    static constexpr int SCROLL_INDICATOR_TOP = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-    static constexpr int SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-    static constexpr int SCROLL_INDICATOR_LEFT  = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-    static constexpr int SCROLL_INDICATOR_RIGHT = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-    static constexpr int SCROLL_INDICATOR_START = PFLAG3_SCROLL_INDICATOR_START >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-    static constexpr int SCROLL_INDICATOR_END   = PFLAG3_SCROLL_INDICATOR_END >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT;
-
-    //OverScrollMode of view
-    static constexpr int OVER_SCROLL_ALWAYS = 0;
-    static constexpr int OVER_SCROLL_IF_CONTENT_SCROLLS = 1;
-    static constexpr int OVER_SCROLL_NEVER = 2;
+    
+    enum ScrollIndicators{
+        SCROLL_INDICATORS_NONE = 0x0000,
+        SCROLL_INDICATOR_TOP = PFLAG3_SCROLL_INDICATOR_TOP >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_BOTTOM = PFLAG3_SCROLL_INDICATOR_BOTTOM >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_LEFT  = PFLAG3_SCROLL_INDICATOR_LEFT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_RIGHT = PFLAG3_SCROLL_INDICATOR_RIGHT >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_START = PFLAG3_SCROLL_INDICATOR_START >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT,
+        SCROLL_INDICATOR_END   = PFLAG3_SCROLL_INDICATOR_END >> SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT
+    };
+    enum OverScrollMode{
+        OVER_SCROLL_ALWAYS = 0,
+        OVER_SCROLL_IF_CONTENT_SCROLLS = 1,
+        OVER_SCROLL_NEVER = 2
+    };
         
-    //SystemUI FLAGS
-    static constexpr int SYSTEM_UI_FLAG_VISIBLE = 0;
-    static constexpr int SYSTEM_UI_FLAG_LOW_PROFILE = 0x00000001;
-    static constexpr int SYSTEM_UI_FLAG_HIDE_NAVIGATION = 0x00000002;
-    static constexpr int SYSTEM_UI_FLAG_FULLSCREEN = 0x00000004;
-    static constexpr int SYSTEM_UI_FLAG_LAYOUT_STABLE = 0x00000100;
-    static constexpr int SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = 0x00000200;
-    static constexpr int SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = 0x00000400;
-    static constexpr int SYSTEM_UI_FLAG_IMMERSIVE = 0x00000800;
-    static constexpr int SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 0x00001000;
-    static constexpr int SYSTEM_UI_FLAG_LIGHT_STATUS_BAR = 0x00002000;
-    static constexpr int SYSTEM_UI_RESERVED_LEGACY1 = 0x00004000;
-    static constexpr int SYSTEM_UI_RESERVED_LEGACY2 = 0x00010000;
-    static constexpr int SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR = 0x00000010;
-    static constexpr int STATUS_BAR_HIDDEN = SYSTEM_UI_FLAG_LOW_PROFILE;
-    static constexpr int STATUS_BAR_VISIBLE = SYSTEM_UI_FLAG_VISIBLE;
-    static constexpr int STATUS_BAR_DISABLE_EXPAND = 0x00010000;
-    static constexpr int STATUS_BAR_DISABLE_NOTIFICATION_ICONS  = 0x00020000;
-    static constexpr int STATUS_BAR_DISABLE_NOTIFICATION_ALERTS = 0x00040000;
-    static constexpr int STATUS_BAR_DISABLE_NOTIFICATION_TICKER = 0x00080000;
-    static constexpr int STATUS_BAR_DISABLE_SYSTEM_INFO = 0x00100000;
-    static constexpr int STATUS_BAR_DISABLE_HOME  = 0x00200000;
-    static constexpr int STATUS_BAR_DISABLE_BACK  = 0x00400000;
-    static constexpr int STATUS_BAR_DISABLE_CLOCK = 0x00800000;
-    static constexpr int STATUS_BAR_DISABLE_RECENT= 0x01000000;
-    static constexpr int STATUS_BAR_DISABLE_SEARCH= 0x02000000;
-    static constexpr int PUBLIC_STATUS_BAR_VISIBILITY_MASK = 0x00003FF7;
-    static constexpr int SYSTEM_UI_CLEARABLE_FLAGS = SYSTEM_UI_FLAG_LOW_PROFILE |
-              SYSTEM_UI_FLAG_HIDE_NAVIGATION | SYSTEM_UI_FLAG_FULLSCREEN;
-    static constexpr int SYSTEM_UI_LAYOUT_FLAGS = SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-            | SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN;
-
-    /*FindViewFlags*/
+    enum SystemUiVisibility{
+        SYSTEM_UI_FLAG_VISIBLE = 0,
+        SYSTEM_UI_FLAG_LOW_PROFILE = 0x00000001,
+        SYSTEM_UI_FLAG_HIDE_NAVIGATION = 0x00000002,
+        SYSTEM_UI_FLAG_FULLSCREEN = 0x00000004,
+        SYSTEM_UI_FLAG_LAYOUT_STABLE = 0x00000100,
+        SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION = 0x00000200,
+        SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN = 0x00000400,
+        SYSTEM_UI_FLAG_IMMERSIVE = 0x00000800,
+        SYSTEM_UI_FLAG_IMMERSIVE_STICKY = 0x00001000,
+        SYSTEM_UI_FLAG_LIGHT_STATUS_BAR = 0x00002000,
+        SYSTEM_UI_RESERVED_LEGACY1 = 0x00004000,
+        SYSTEM_UI_RESERVED_LEGACY2 = 0x00010000,
+        SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR = 0x00000010,
+        STATUS_BAR_HIDDEN = SYSTEM_UI_FLAG_LOW_PROFILE,
+        STATUS_BAR_VISIBLE = SYSTEM_UI_FLAG_VISIBLE,
+        STATUS_BAR_DISABLE_EXPAND = 0x00010000,
+        STATUS_BAR_DISABLE_NOTIFICATION_ICONS  = 0x00020000,
+        STATUS_BAR_DISABLE_NOTIFICATION_ALERTS = 0x00040000,
+        STATUS_BAR_DISABLE_NOTIFICATION_TICKER = 0x00080000,
+        STATUS_BAR_DISABLE_SYSTEM_INFO = 0x00100000,
+        STATUS_BAR_DISABLE_HOME  = 0x00200000,
+        STATUS_BAR_DISABLE_BACK  = 0x00400000,
+        STATUS_BAR_DISABLE_CLOCK = 0x00800000,
+        STATUS_BAR_DISABLE_RECENT= 0x01000000,
+        STATUS_BAR_DISABLE_SEARCH= 0x02000000,
+        PUBLIC_STATUS_BAR_VISIBILITY_MASK = 0x00003FF7,
+        SYSTEM_UI_CLEARABLE_FLAGS = SYSTEM_UI_FLAG_LOW_PROFILE | SYSTEM_UI_FLAG_HIDE_NAVIGATION | SYSTEM_UI_FLAG_FULLSCREEN,
+        SYSTEM_UI_LAYOUT_FLAGS = SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION | SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+    };
     /**
      * Find views that render the specified text.
      *
-     * @see #findViewsWithText(ArrayList, CharSequence, int)
-     */
-    static constexpr int FIND_VIEWS_WITH_TEXT =0x00000001;
-    static constexpr int FIND_VIEWS_WITH_CONTENT_DESCRIPTION = 0x00000002;
-    static constexpr int FIND_VIEWS_WITH_ACCESSIBILITY_NODE_PROVIDERS = 0x00000004;
-    
+     * @see #findViewsWithText(ArrayList, CharSequence, int)*/
+    enum FindViewFlags{
+        FIND_VIEWS_WITH_TEXT =0x00000001,
+        FIND_VIEWS_WITH_CONTENT_DESCRIPTION = 0x00000002,
+        FIND_VIEWS_WITH_ACCESSIBILITY_NODE_PROVIDERS = 0x00000004
+    };
     /*The undefined cursor position*/
     static constexpr int ACCESSIBILITY_CURSOR_POSITION_UNDEFINED = -1;
     static constexpr int SCREEN_STATE_OFF = 0x0;
@@ -447,10 +456,11 @@ public:
     static constexpr int SCROLLBAR_POSITION_LEFT = 1;
     static constexpr int SCROLLBAR_POSITION_RIGHT = 2;
 
-    /*enum LayerType*/
-    static constexpr int LAYER_TYPE_NONE    =0;
-    static constexpr int LAYER_TYPE_SOFTWARE=1;
-    static constexpr int LAYER_TYPE_HARDWARE=2;
+    enum LayerType{
+        LAYER_TYPE_NONE    =0,
+        LAYER_TYPE_SOFTWARE=1,
+        LAYER_TYPE_HARDWARE=2
+    };
 protected:
     /**
      * Mask for obtaining the bits which specify how to determine
@@ -968,7 +978,9 @@ public:
     virtual void setMinimumWidth(int minWidth);
 
     Animation* getAnimation()const;
-    /*th animation is owned by caller*/
+    /*The View owns the animation it is currently running (one Animation per View:
+    it holds per-run state). Callers must hand over an animation not referenced
+    elsewhere — it is freed on clear/overwrite/detach/destroy.*/
     void setAnimation(Animation* animation);
     void startAnimation(Animation* animation);
     void clearAnimation();
@@ -1094,7 +1106,7 @@ public:
     bool  willNotDraw()const;
     void  setWillNotDraw(bool willNotDraw);
     const Rect getClientRect()const;
-    bool  hasOnClickListener()const;
+    bool  hasOnClickListeners()const;
     virtual void setOnClickListener(const OnClickListener& l);
     virtual void setOnLongClickListener(const OnLongClickListener& l);
     void setOnContextClickListener(const OnContextClickListener& l);
@@ -1112,7 +1124,7 @@ public:
     void getHotspotBounds(Rect& outRect);
     void getBoundsOnScreen(Rect& outRect, bool clipToParent=false);
     void cancelPendingInputEvents();
-    void cancelLongPress();
+    virtual void cancelLongPress();
     void setTouchDelegate(TouchDelegate* delegate);
     TouchDelegate* getTouchDelegate()const;
     bool  performContextClick(float x, float y);
@@ -1201,6 +1213,10 @@ public:
     void setIsRootNamespace(bool);
     bool isRootNamespace()const;
     cdroid::Context*getContext()const;
+
+    /** 启动一个 ActionMode (浮窗/popup 式), 锚定本 View。返回的 mode 由调用方 finish()/管理。 */
+    ActionMode* startActionMode(const ActionMode::Callback& callback);
+    ActionMode* startActionMode(const ActionMode::Callback& callback, int type);
     virtual void scrollTo(int x,int y);
     virtual void scrollBy(int dx,int dy);
     void setScrollX(int x);
@@ -1329,6 +1345,8 @@ public:
     void setLongClickable(bool longClickable);
     bool isContextClickable()const;
     void setContextClickable(bool contextClickable);
+    void setAllowClickWhenDisabled(bool clickableWhenDisabled);
+    bool isAllowedClickWhenDisabled()const;
 
     bool isInScrollingContainer()const;
     virtual bool isInTouchMode()const;
@@ -1343,7 +1361,7 @@ public:
     virtual bool restoreFocusNotInCluster();
     virtual bool restoreDefaultFocus();
     bool requestRectangleOnScreen(Rect& rectangle, bool immediate=false);
-    void clearFocus();
+    virtual void clearFocus();
     virtual View*findFocus();
     bool requestFocus(int direction=FOCUS_DOWN);
     bool requestFocusFromTouch();
@@ -1538,6 +1556,7 @@ public:
     static const FloatProperty*const SCALE_Y;
 };
 
+class Handler;  // core/handler.h (AttachInfo.mHandler)
 class View::AttachInfo{
 public:
     class InvalidateInfo{
@@ -1589,6 +1608,7 @@ public:
     bool mNextFocusLooped;
     bool mViewVelocityApi;
     UIEventSource*mEventSource;
+    Handler*mHandler;   // 主 looper 的 Handler: View::post/postDelayed 走它 (MQ), 使阻塞主循环 next() 能计时
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;
     Cairo::RefPtr<Canvas> mCanvas;

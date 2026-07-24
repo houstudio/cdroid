@@ -19,7 +19,8 @@
 #ifndef __CANDIDATE_VIEW_H__
 #define __CANDIDATE_VIEW_H__
 #include <view/view.h>
-
+#include <text/paint.h>
+#include <view/gesturedetector.h>
 namespace cdroid{
 
 class CandidateView:public View{
@@ -36,7 +37,6 @@ private:
     int mColorNormal;
     int mColorRecommended;
     int mColorOther;
-    int mTextSize;
     int mVerticalPadding;
     int mTargetScrollX;
     int mTotalWidth;
@@ -44,11 +44,14 @@ private:
     bool mTypedWordValid;
     std::vector<std::string>mSuggestions;
     Drawable*mSelectionHighlight;
+    GestureDetector* mGestureDetector;
+    Paint mPaint;
     OnPredictChange mOnPredict;
     Rect mBgPadding;
     std::vector<int>mWordWidth;
     std::vector<int>mWordX;
 private:
+    void initView();
     void scrollToTarget();
     void removeHighlight();
 protected:
@@ -58,6 +61,7 @@ protected:
 public:
     CandidateView(int,int);
     CandidateView(Context*ctx,const AttributeSet&atts);
+    ~CandidateView()override;
     int computeHorizontalScrollRange()override;
     void setMaxSuggestion(int max);
     void setSuggestions(const std::vector<std::string>&suggestions, 

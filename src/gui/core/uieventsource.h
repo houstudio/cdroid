@@ -18,21 +18,16 @@
 #ifndef __UIEVENT_SOURCE_H__
 #define __UIEVENT_SOURCE_H__
 #include <core/looper.h>
-#include <list>
-#include <unordered_set>
 #include <view/view.h>
 namespace cdroid{
 
+// UIEventSource 现为纯帧驱动 EventHandler: 仅负责 layout/draw/compose (checkEvents/handleEvents)。
+// View::post/postDelayed 的延迟 runnable 不再经此对象, 改由 AttachInfo::mHandler 直接投到主 looper 的
+// MessageQueue, 使阻塞主循环 (Looper::loopOnce -> MessageQueue::next) 能按 msg.when 计时唤醒并派发。
 class UIEventSource:public EventHandler{
 private:
-    typedef struct{
-        nsecs_t  time;
-        Runnable run;
-    }RUNNER;
-    std::list<RUNNER>mRunnables;
     Runnable mLayoutRunner;
     ViewGroup*mAttachedView;
-    bool hasDelayedRunners()const;
     void handleCompose();
     int handleRunnables();
 public:
@@ -42,9 +37,6 @@ public:
     bool processEvents();
     int checkEvents()override;
     int handleEvents()override;
-    bool postDelayed(const Runnable& run,long delay=0);
-    int removeCallbacks(const Runnable& what);
-    bool hasCallbacks(const Runnable& what)const;
 };
 
 }//end namespace

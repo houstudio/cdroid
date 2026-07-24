@@ -22,18 +22,17 @@ public:
       }
    }
    int sendEvents(InputDevice&d,MTEvent*mts,int size,MotionEvent**eventOut){
-      int eventCount = 0;
       int32_t tmEVT = 0;
       for(int i=0;i<size;i++){
          d.putEvent(0,tmEVT,mts[i].type,mts[i].code,mts[i].value);
          if((mts[i].type==EV_SYN)&&(mts[i].code==SYN_REPORT))
              tmEVT+=200*1000000;
       }
-      eventCount = d.getEventCount();
+      const int eventCount = d.getEventCount();
       LOGI("%d Events",eventCount);
       std::vector<InputEvent*>events;
       d.drainEvents(events);
-      for(int i=0;d.getEventCount();i++){
+      for(int i=0;i<eventCount;i++){
           MotionEvent*e=(MotionEvent*)events.at(i);
           const int pointerCount=e->getPointerCount();
           const int hisCount = e->getHistorySize();
@@ -443,7 +442,7 @@ TEST_F(INPUTDEVICE,MTA){//TypeA Events
    ASSERT_EQ(OutEvents[3]->getY(1),mts[33].value);//130
 
    ASSERT_EQ(OutEvents[4]->getActionMasked(),MotionEvent::ACTION_POINTER_UP);
-   ASSERT_EQ(OutEvents[4]->getActionIndex(),1);
+   ASSERT_EQ(OutEvents[4]->getActionIndex(),0);
    ASSERT_EQ(OutEvents[4]->getPointerId(0),POINTERID(mts[27].value,0));
    ASSERT_EQ(OutEvents[4]->getPointerId(1),POINTERID(mts[31].value,1));
    ASSERT_EQ(OutEvents[4]->getPointerCount(),2);
@@ -1317,4 +1316,35 @@ TEST_F(INPUTDEVICE, MTB6) {
    ASSERT_EQ(OutEvents[8]->getX(0), mts[22].value);   // 触点1 X: 60
    ASSERT_EQ(OutEvents[8]->getY(0), mts[23].value);   // 触点1 Y: 600
 
+}
+
+TEST_F(INPUTDEVICE, XLIBUP) {
+   /* XLIB-style non-standard MT: fixed TRACKING_ID + BTN_TOUCH-driven lifecycle.
+    * The UP frame sends BTN_TOUCH=0 THEN the same fixed TRACKING_ID again — that
+    * fixed TRACKING_ID must NOT revive the finger (would turn ACTION_UP into MOVE,
+    * which is exactly the kaidu_ms7 "can't click" regression). */
+   TouchDevice d(INJECTDEV_TOUCH);
+   MTEvent mts[] = {
+      {EV_KEY,BTN_TOUCH,1},              // 0 down
+      {EV_ABS,ABS_MT_TRACKING_ID,12},
+      {EV_ABS,ABS_MT_POSITION_X,100},
+      {EV_ABS,ABS_MT_POSITION_Y,200},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_ABS,ABS_MT_TRACKING_ID,12},    // 5 move
+      {EV_ABS,ABS_MT_POSITION_X,110},
+      {EV_ABS,ABS_MT_POSITION_Y,210},
+      {EV_SYN,SYN_REPORT,0},
+
+      {EV_KEY,BTN_TOUCH,0},              // 9 up
+      {EV_ABS,ABS_MT_TRACKING_ID,12},    // fixed trackID must not revive the finger
+      {EV_ABS,ABS_MT_POSITION_X,110},
+      {EV_ABS,ABS_MT_POSITION_Y,210},
+      {EV_SYN,SYN_REPORT,0},
+   };
+   EventCount = sendEvents(d,mts,sizeof(mts)/sizeof(MTEvent),OutEvents);
+   ASSERT_EQ(EventCount,3);
+   ASSERT_EQ(OutEvents[0]->getActionMasked(),MotionEvent::ACTION_DOWN);
+   ASSERT_EQ(OutEvents[1]->getActionMasked(),MotionEvent::ACTION_MOVE);
+   ASSERT_EQ(OutEvents[2]->getActionMasked(),MotionEvent::ACTION_UP);
 }

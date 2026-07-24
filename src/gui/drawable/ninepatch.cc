@@ -16,6 +16,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <sstream>
+#include <cstring>
+#include <memory>
+#include <porting/cdlog.h>
 #include <drawable/ninepatch.h>
 namespace cdroid {
 
@@ -393,14 +396,20 @@ static uint32_t FindMaxAlpha(const ImageLine* image_line) {
 
 // Pack the pixels in as 0xAARRGGBB (as 9-patch expects it).
 uint32_t NinePatch::PackRGBA(const uint8_t* pixel) {
-    return (pixel[3] << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
+    //return (pixel[3] << 24) | (pixel[0] << 16) | (pixel[1] << 8) | pixel[2];
+    return (uint32_t(pixel[3]) << 24) | (uint32_t(pixel[2]) << 16) | (uint32_t(pixel[1]) << 8) | pixel[0];
 }
 
 std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width,
         const int32_t height, std::string* out_err) {
+    // Callers may pass nullptr when they don't care about the error text; sink
+    // it locally so every "*out_err = ..." below (and in FillRanges/PopulateBounds)
+    // is always a valid write instead of a null deref.
+    std::string err_sink;
+    if (!out_err) out_err = &err_sink;
     if (width < 3 || height < 3) {
         *out_err = "image must be at least 3x3 (1x1 image with 1 pixel border)";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     std::vector<Range> horizontal_padding;
@@ -416,7 +425,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         color_validator = std::make_unique<WhiteNeutralColorValidator>();
     } else {
         *out_err = "top-left corner pixel must be either opaque white or transparent";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     // Private constructor, can't use make_unique.
@@ -425,7 +434,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     HorizontalImageLine top_row(rows, 0, 0, width);
     if (!FillRanges(&top_row, color_validator.get(), &nine_patch->horizontal_stretch_regions,
                     &unexpected_ranges, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!unexpected_ranges.empty()) {
@@ -434,13 +443,13 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         err_stream << "found unexpected optical bounds (red pixel) on top border "
                    << "at x=" << range.start + 1;
         *out_err = err_stream.str();
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     VerticalImageLine left_col(rows, 0, 0, height);
     if (!FillRanges(&left_col, color_validator.get(), &nine_patch->vertical_stretch_regions,
                     &unexpected_ranges, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!unexpected_ranges.empty()) {
@@ -448,30 +457,30 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
         std::stringstream err_stream;
         err_stream << "found unexpected optical bounds (red pixel) on left border "
                    << "at y=" << range.start + 1;
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     HorizontalImageLine bottom_row(rows, 0, height - 1, width);
     if (!FillRanges(&bottom_row, color_validator.get(), &horizontal_padding,
                     &horizontal_layout_bounds, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!PopulateBounds(horizontal_padding, horizontal_layout_bounds, nine_patch->horizontal_stretch_regions,
                 width - 2, &nine_patch->padding.left, &nine_patch->padding.right,
                 &nine_patch->layout_bounds.left, &nine_patch->layout_bounds.right, "bottom", out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     VerticalImageLine right_col(rows, width - 1, 0, height);
     if (!FillRanges(&right_col, color_validator.get(), &vertical_padding, &vertical_layout_bounds, out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     if (!PopulateBounds(vertical_padding, vertical_layout_bounds,
                 nine_patch->vertical_stretch_regions, height - 2, &nine_patch->padding.top, &nine_patch->padding.bottom,
                 &nine_patch->layout_bounds.top, &nine_patch->layout_bounds.bottom, "right", out_err)) {
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     // Fill the region colors of the 9-patch.
@@ -479,7 +488,7 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
     const int32_t num_cols = CalculateSegmentCount(nine_patch->vertical_stretch_regions, height - 2);
     if ((int64_t)num_rows * (int64_t)num_cols > 0x7f) {
         *out_err = "too many regions in 9-patch";
-        return {};
+        return std::unique_ptr<NinePatch>(new NinePatch());
     }
 
     nine_patch->region_colors.reserve(num_rows * num_cols);
@@ -522,6 +531,130 @@ std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width
      */
     nine_patch->outline_radius = 3.4142f * top_left;
     return nine_patch;
+}
+
+std::unique_ptr<NinePatch> NinePatch::Create(uint8_t** rows, const int32_t width,
+        const int32_t height, const void* npTc_chunk, size_t chunkLen,
+        std::string* out_err) {
+    std::string err_sink;
+    if (!out_err) out_err = &err_sink;
+
+    const uint8_t* data = static_cast<const uint8_t*>(npTc_chunk);
+
+    // Locate the npTc/npLb/npOl sub-blobs. A cdNp bundle starts with version byte 1
+    // ([u8 ver=1] then 3 x [u16 BE len][bytes]); a legacy raw npTc is the whole chunk.
+    const uint8_t* nptc = nullptr; size_t nptcLen = 0;
+    const uint8_t* nplb = nullptr; size_t nplbLen = 0;
+    const uint8_t* npol = nullptr; size_t npolLen = 0;
+    bool isCd9p = false;
+    if (data != nullptr && chunkLen >= 1 && data[0] == 1) {
+        size_t off = 1;
+        const uint8_t* subs[3] = {nullptr, nullptr, nullptr};
+        size_t lens[3] = {0, 0, 0};
+        bool ok = true;
+        for (int i = 0; i < 3 && ok; i++) {
+            if (off + 2 > chunkLen) { ok = false; break; }
+            size_t l = (size_t(data[off]) << 8) | data[off + 1];
+            off += 2;
+            if (off + l > chunkLen) { ok = false; break; }
+            subs[i] = data + off; lens[i] = l; off += l;
+        }
+        if (ok && off == chunkLen) {
+            isCd9p = true;
+            nptc = subs[0]; nptcLen = lens[0];
+            nplb = subs[1]; nplbLen = lens[1];
+            npol = subs[2]; npolLen = lens[2];
+        } else {
+            LOGW("cdNp bundle malformed; falling back to border scan");
+        }
+    } else if (data != nullptr && chunkLen >= 32) {
+        nptc = data; nptcLen = chunkLen;  // legacy raw npTc
+    }
+
+    if (nptc != nullptr) {
+        // npTc serialized size = 32-byte header + the xDivs/yDivs/colors arrays. The
+        // counts are single bytes at [1],[2],[3] (endian-independent), so read them
+        // directly — nptc may point into the middle of a cdNp blob (unaligned).
+        const size_t need = (nptcLen >= 32)
+            ? (32 + size_t(nptc[1]) * 4 + size_t(nptc[2]) * 4 + size_t(nptc[3]) * 4)
+            : 0;
+        if (need >= 32 && nptcLen >= need) {
+            // deserialize() rewrites the buffer in place (recomputes offsets, byte-swaps
+            // the big-endian arrays). The decoder hands us const bytes, so copy into a
+            // writable, max_align_t-aligned buffer first.
+            auto buf = std::make_unique<uint8_t[]>(need);
+            std::memcpy(buf.get(), nptc, need);
+            Res_png_9patch* patch = Res_png_9patch::deserialize(buf.get());
+
+            auto nine_patch = std::unique_ptr<NinePatch>(new NinePatch());
+            // Dividers are content-relative (start,end) pairs. For a bordered image (raw
+            // npTc / scan fallback) content width = width-2; for a borderless cdNp image
+            // the decoded image IS the content (the 1px guide border was stripped at build
+            // time), so content width = full width. Clamp into bounds; drop empty spans.
+            const int32_t cw = isCd9p ? width  : (width  > 2 ? width  - 2 : width);
+            const int32_t ch = isCd9p ? height : (height > 2 ? height - 2 : height);
+            const int32_t* xd = patch->getXDivs();
+            for (int i = 0; i + 1 < patch->numXDivs; i += 2) {
+                int32_t s = xd[i], e = xd[i + 1];
+                if (s < 0) s = 0;  if (s > cw) s = cw;
+                if (e < 0) e = 0;  if (e > cw) e = cw;
+                if (s < e) nine_patch->horizontal_stretch_regions.emplace_back(s, e);
+            }
+            const int32_t* yd = patch->getYDivs();
+            for (int i = 0; i + 1 < patch->numYDivs; i += 2) {
+                int32_t s = yd[i], e = yd[i + 1];
+                if (s < 0) s = 0;  if (s > ch) s = ch;
+                if (e < 0) e = 0;  if (e > ch) e = ch;
+                if (s < e) nine_patch->vertical_stretch_regions.emplace_back(s, e);
+            }
+            nine_patch->padding.left   = patch->paddingLeft;
+            nine_patch->padding.right  = patch->paddingRight;
+            nine_patch->padding.top    = patch->paddingTop;
+            nine_patch->padding.bottom = patch->paddingBottom;
+            if (patch->numColors > 0) {
+                const uint32_t* colors = patch->getColors();
+                nine_patch->region_colors.assign(colors, colors + patch->numColors);
+            }
+
+            // npLb = optical / layout-bounds insets (4 x int32, native little-endian —
+            // matches SerializeLayoutBounds, which memcpy's without swapping).
+            if (isCd9p && nplb != nullptr && nplbLen >= 16) {
+                std::memcpy(&nine_patch->layout_bounds.left,   nplb + 0,  4);
+                std::memcpy(&nine_patch->layout_bounds.top,    nplb + 4,  4);
+                std::memcpy(&nine_patch->layout_bounds.right,  nplb + 8,  4);
+                std::memcpy(&nine_patch->layout_bounds.bottom, nplb + 12, 4);
+            }
+            // npOl = rounded-rect outline (4 x int32 rect + float radius + uint32 alpha,
+            // native little-endian — matches SerializeRoundedRectOutline).
+            if (isCd9p && npol != nullptr && npolLen >= 24) {
+                std::memcpy(&nine_patch->outline.left,   npol + 0,  4);
+                std::memcpy(&nine_patch->outline.top,    npol + 4,  4);
+                std::memcpy(&nine_patch->outline.right,  npol + 8,  4);
+                std::memcpy(&nine_patch->outline.bottom, npol + 12, 4);
+                std::memcpy(&nine_patch->outline_radius, npol + 16, 4);
+                std::memcpy(&nine_patch->outline_alpha,  npol + 20, 4);
+                nine_patch->outlineFromChunk = true;
+            }
+            // A cdNp bundle only ever lives in a border-stripped (aapt-style) image, so
+            // its presence means the renderer must draw on a borderless basis.
+            if (isCd9p) nine_patch->borderless = true;
+            // buf freed here (NinePatch copies the data out, doesn't retain it).
+
+            // A chunk that yields no stretch regions isn't a usable 9-patch — fall through
+            // to the border scan rather than rendering as a non-stretching flat bitmap.
+            if (!nine_patch->horizontal_stretch_regions.empty()
+                    || !nine_patch->vertical_stretch_regions.empty()) {
+                return nine_patch;
+            }
+            LOGW("9-patch chunk parsed but yielded no stretch regions; falling back to border scan");
+        } else if (need > 0) {
+            LOGW("npTc sub-blob truncated (have %zu, need %zu); falling back to border scan",
+                 nptcLen, need);
+        }
+    }
+
+    // No chunk (or unusable chunk) — scan the 1px guide border as before.
+    return Create(rows, width, height, out_err);
 }
 
 std::unique_ptr<uint8_t[]> NinePatch::SerializeBase(size_t* outLen) const {
@@ -704,6 +837,21 @@ void Res_png_9patch::fileToDevice(){
     for (int i=0; i<numColors; i++) {
         colors[i] = ntohl(colors[i]);
     }
+}
+
+Res_png_9patch* Res_png_9patch::deserialize(void* data) {
+    // The npTc chunk DATA is a serialized Res_png_9patch in big-endian "file" order
+    // (as written by Android aapt / our own Res_png_9patch::serialize + deviceToFile).
+    // Operate IN PLACE on the caller-owned buffer: recompute the in-object offsets to
+    // the trailing arrays (defensive against struct-layout drift between writer/reader),
+    // byte-swap the arrays into host order via fileToDevice, then mark deserialized.
+    // The caller must pass a writable, sufficiently-aligned copy — deserialize does NOT
+    // copy (the chunk bytes from the decoder are const).
+    Res_png_9patch* patch = reinterpret_cast<Res_png_9patch*>(data);
+    fill9patchOffsets(patch);
+    patch->fileToDevice();
+    patch->wasDeserialized = true;
+    return patch;
 }
 
 size_t Res_png_9patch::serializedSize() const{

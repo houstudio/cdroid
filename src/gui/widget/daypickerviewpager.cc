@@ -19,6 +19,7 @@
 #include <widget/daypickerpageradapter.h>
 namespace cdroid{
 
+DECLARE_WIDGET(DayPickerViewPager);
 DayPickerViewPager::DayPickerViewPager(Context* context, const AttributeSet& attrs)
     :ViewPager(context,attrs){
 }

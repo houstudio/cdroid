@@ -195,5 +195,27 @@ public:
 
 typedef PorterDuff::Mode PorterDuffMode;
 
+/* API 29+ BlendMode — values match android.graphics.BlendMode exactly. Uses W3C
+ * Compositing & Blending semantics (== cairo operators), which differ from the
+ * older PorterDuff::Mode Skia semantics for the 5 blends (e.g. BlendMode.MULTIPLY
+ * is W3C; PorterDuff.Mode.MULTIPLY is Skia modulate). Modes beyond the PorterDuff
+ * overlap (DODGE/BURN/HARD/SOFT_LIGHT/DIFFERENCE/EXCLUSION + 4 HSL) have no
+ * PorterDuff equivalent and currently stub to NOOP until the per-pixel path lands. */
+class BlendMode{
+public:
+    enum Mode{
+        CLEAR=0, SRC=1, DST=2, SRC_OVER=3, DST_OVER=4, SRC_IN=5, DST_IN=6,
+        SRC_OUT=7, DST_OUT=8, SRC_ATOP=9, DST_ATOP=10, XOR=11, PLUS=12,
+        MODULATE=13, SCREEN=14, OVERLAY=15, DARKEN=16, LIGHTEN=17,
+        COLOR_DODGE=18, COLOR_BURN=19, HARD_LIGHT=20, SOFT_LIGHT=21,
+        DIFFERENCE=22, EXCLUSION=23, MULTIPLY=24, HUE=25, SATURATION=26,
+        COLOR=27, LUMINOSITY=28
+    };
+    static int fromValue(int value);                    /* 0..28 valid, else -1 */
+    static PorterDuff::Mode toPorterDuffMode(int mode); /* Android blendModeToPorterDuffMode */
+    static int toOperator(int mode);                    /* BlendMode -> cairo operator (W3C, 1:1 except MODULATE) */
+};
+typedef BlendMode::Mode BlendModeMode;
+
 }/*endof namespace*/
 #endif

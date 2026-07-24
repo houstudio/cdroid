@@ -64,7 +64,7 @@ void RangeBarChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>&
     const int length = points.size();
     paint.setColor(seriesRenderer->getColor());
     canvas.set_color(seriesRenderer->getColor());
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     const float halfDiffX = getHalfDiffX(points, length, seriesNr);
     int start = 0;
     if (startIndex > 0) {

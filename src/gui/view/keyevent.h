@@ -22,6 +22,8 @@
 #include <core/sparsearray.h>
 namespace cdroid{
 
+class KeyCharacterMap;
+
 class KeyEvent:public InputEvent{
 private:
     int32_t mFlags;
@@ -156,6 +158,37 @@ public:
         return normalizeMetaState(mMetaState) & META_MODIFIER_MASK;
     }
     int getRepeatCount()const {return mRepeatCount;}
+    // Ported from Android KeyEvent.getUnicodeChar. Maps this key + modifier state
+    // to a Unicode char via the device KeyCharacterMap. CDROID routes through the
+    // InputMethodManager's loaded key map (equivalent to Android's per-device
+    // KeyCharacterMap.load). Returns 0 if the key produces no character.
+    int getUnicodeChar(int metaState) const;
+    int getUnicodeChar() const;
+    // Ported from Android KeyEvent.getMatch: the first char in `chars` producible
+    // by this key under `metaState`, else 0. Used by NumberKeyListener.lookup.
+    char16_t getMatch(const char16_t* chars, int len, int metaState) const;
+    // Ported from Android KeyEvent.getKeyCharacterMap: this key's device map, or
+    // the shared default (VIRTUAL_KEYBOARD) if deviceId is unknown / < 0. All
+    // char-producing methods below route through it.
+    KeyCharacterMap* getKeyCharacterMap() const;
+    // Ported from Android KeyEvent.getNumber/getDisplayLabel: the number/symbol
+    // and the printed glyph label of this key (independent of pressed modifiers),
+    // via the loaded device KeyCharacterMap. 0 if the key has none. DialerKeyListener
+    // prefers getNumber() so a phone/dialer key yields its digit even on an alpha key.
+    char16_t getNumber() const;
+    char16_t getDisplayLabel() const;
+    // Ported from Android KeyCharacterMap.KeyData (a deprecated introp struct still
+    // used by DialerKeyListener.lookup): the display label, number, and the char
+    // produced under [none, shift, alt, shift+alt]. Filled by getKeyData().
+    struct KeyData {
+        static constexpr int META_LENGTH = 4;
+        char16_t displayLabel = 0;
+        char16_t number = 0;
+        char16_t meta[META_LENGTH] = {0, 0, 0, 0};
+    };
+    // Ported from Android KeyEvent.getKeyData: fills `results` from the loaded key
+    // map. Returns false if the key has no display label (unmapped key).
+    bool getKeyData(KeyData& results) const;
     inline nsecs_t getDownTime() const { return mDownTime; }
     bool hasNoModifiers()const;
     bool hasModifiers(int modifiers)const;
@@ -296,7 +329,6 @@ enum{
     KEYCODE_BUTTON_SELECT   = 109,
     KEYCODE_BUTTON_MODE     = 110,
     KEYCODE_ESCAPE          = 111,
-    KEYCODE_BACKSPACE       = 112,
     KEYCODE_FORWARD_DEL     = 112,
     KEYCODE_CTRL_LEFT       = 113,
     KEYCODE_CTRL_RIGHT      = 114,

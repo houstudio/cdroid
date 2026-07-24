@@ -1132,6 +1132,16 @@
              to framework controls (via colorControlActivated). -->
         <attr name="colorAccent" format="color" />
 
+        <!-- Color used for elements displayed on top of the primary branding color
+             (e.g. text/icons on a primary-colored surface). Material Components attribute. -->
+        <attr name="colorOnPrimary" format="color" />
+
+        <!-- Color used for elements displayed on top of surfaces (e.g. default text/icons). -->
+        <attr name="colorOnSurface" format="color" />
+
+        <!-- A more subdued alternative to colorOnSurface for less prominent content. -->
+        <attr name="colorOnSurfaceVariant" format="color" />
+
         <!-- Light accent color used on Material NEXT buttons. @hide -->
         <attr name="colorAccentPrimary" format="color" />
 

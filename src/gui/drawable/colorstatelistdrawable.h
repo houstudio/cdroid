@@ -34,7 +34,7 @@ public:
     void clearAlpha();
 
     void setTintList(ColorStateList* tint) override;
-    void setTintBlendMode(@NonNull BlendMode blendMode) override;
+    void setTintBlendMode(int blendMode) override;
     cdroid::RefPtr<ColorFilter> getColorFilter()const override;
     void setColorFilter(ColorFilter colorFilter) override;
 

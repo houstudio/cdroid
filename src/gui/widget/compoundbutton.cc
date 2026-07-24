@@ -18,7 +18,7 @@
 #include <widget/compoundbutton.h>
 #include <widget/checkbox.h>
 #include <widget/radiobutton.h>
-#include <cdlog.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 DECLARE_WIDGET(CompoundButton)
@@ -46,22 +46,25 @@ void CompoundButton::initCompoundButton(){
     mOnCheckedChangeWidgetListener = nullptr;
     mButtonTintMode = PorterDuff::Mode::NOOP;
     mButtonTintList = nullptr;
-#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
-    isChecked = [this]()->bool{
-        return mChecked;
-    };
-    toggle = [this](){
-        doSetChecked(!mChecked);
-    };
-    setChecked = [this](bool checked){
-        doSetChecked(checked);
-    };
-#endif
 }
 
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void CompoundButton::setChecked(bool checked){
-    doSetChecked(checked);
+    if (mChecked != checked) {
+        mCheckedFromResource = false;
+        mChecked = checked;
+        refreshDrawableState();
+        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
+        // Avoid infinite recursions if setChecked() is called from a listener
+        if (mBroadcasting)return;
+
+        mBroadcasting = true;
+        if (mOnCheckedChangeListener) mOnCheckedChangeListener(*this, mChecked);
+        if (mOnCheckedChangeWidgetListener ) mOnCheckedChangeWidgetListener(*this, mChecked);
+        //final AutofillManager afm = mContext.getSystemService(AutofillManager.class);
+        //if (afm != null)  afm.notifyValueChanged(this);
+        mBroadcasting = false;
+    }
+    setDefaultStateDescription();
 }
 
 bool CompoundButton::isChecked()const{
@@ -69,9 +72,8 @@ bool CompoundButton::isChecked()const{
 }
 
 void CompoundButton::toggle(){
-    doSetChecked(!mChecked); 
+    setChecked(!mChecked); 
 }
-#endif
 
 CompoundButton::~CompoundButton(){
     delete mButtonDrawable;
@@ -123,7 +125,7 @@ void CompoundButton::drawableHotspotChanged(float x,float y){
 }
 
 bool CompoundButton::performClick(){
-    doSetChecked(!mChecked);//toggle();
+    toggle();
     const bool handled = Button::performClick();
     if (!handled) {
         // View only makes a sound effect if the onClickListener was
@@ -239,25 +241,6 @@ void CompoundButton::onInitializeAccessibilityNodeInfoInternal(AccessibilityNode
     info.setChecked(mChecked);
 }
 
-void CompoundButton::doSetChecked(bool checked){
-    if (mChecked != checked) {
-        mCheckedFromResource = false;
-        mChecked = checked;
-        refreshDrawableState();
-        notifyViewAccessibilityStateChangedIfNeeded(AccessibilityEvent::CONTENT_CHANGE_TYPE_UNDEFINED);
-        // Avoid infinite recursions if setChecked() is called from a listener
-        if (mBroadcasting)return;
-
-        mBroadcasting = true;
-        if (mOnCheckedChangeListener) mOnCheckedChangeListener(*this, mChecked);
-        if (mOnCheckedChangeWidgetListener ) mOnCheckedChangeWidgetListener(*this, mChecked);
-        //final AutofillManager afm = mContext.getSystemService(AutofillManager.class);
-        //if (afm != null)  afm.notifyValueChanged(this);
-        mBroadcasting = false;
-    }
-    setDefaultStateDescription();
-}
-
 void CompoundButton::setOnCheckedChangeListener(const OnCheckedChangeListener& listener) {
     mOnCheckedChangeListener = listener;
 }
@@ -339,27 +322,16 @@ std::string CheckBox::getAccessibilityClassName()const{
 DECLARE_WIDGET2(RadioButton,"cdroid:attr/radioButtonStyle")
 RadioButton::RadioButton(const std::string&txt,int w,int h)
   :CompoundButton(txt,w,h){
-#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
-    toggle = [this](){
-        if(!isChecked())doSetChecked(true);
-    };
-#endif
 }
 
 RadioButton::RadioButton(Context*ctx,const AttributeSet& attrs)
    :CompoundButton(ctx,attrs){
-#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
-    toggle = [this](){
-        if(!isChecked())doSetChecked(true);
-    };
-#endif
 }
 
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void RadioButton::toggle(){
     if(!isChecked())CompoundButton::toggle();
 }
-#endif
+
 std::string RadioButton::getAccessibilityClassName()const{
     return "RadioButton";
 }

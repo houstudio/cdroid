@@ -18,9 +18,9 @@
 #include <canvas.h>
 #include <graphdevice.h>
 #include <cairo.h>
-#include <cdtypes.h>
-#include <cdgraph.h>
-#include <cdlog.h>
+#include <porting/cdtypes.h>
+#include <porting/cdgraph.h>
+#include <porting/cdlog.h>
 #include <vector>
 #include <cairomm/context.h>
 #include <cairomm/region.h>

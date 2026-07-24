@@ -32,41 +32,45 @@
 
 include(FindPkgConfig)
 
-pkg_check_modules(PC_HARFBUZZ harfbuzz>=0.9.7)
+pkg_check_modules(PC_HARFBUZZ harfbuzz)
 
 find_path(HARFBUZZ_INCLUDE_DIRS NAMES hb.h
     HINTS ${PC_HARFBUZZ_INCLUDE_DIRS} ${PC_HARFBUZZ_INCLUDEDIR}
+    #    NO_DEFAULT_PATH
 )
 
 find_library(HARFBUZZ_LIBRARIES NAMES harfbuzz
     HINTS ${PC_HARFBUZZ_LIBRARY_DIRS} ${PC_HARFBUZZ_LIBDIR}
+    #    NO_DEFAULT_PATH
 )
-
 if (HARFBUZZ_INCLUDE_DIRS)
-    if (EXISTS "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h")
-        file(READ "${HARFBUZZ_INCLUDE_DIRS}/hb-version.h" HB_VERSION_CONTENT)
+    foreach(dir ${CAIRO_INCLUDE_DIRS})
+      if (EXISTS "${dir}/hb-version.h")
+         file(READ "${dir}/hb-version.h" HB_VERSION_CONTENT)
 
-	string(REGEX MATCH "#define +HB_VERSION_MAJOR +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
-	set(HB_VERSION_MAJOR "${CMAKE_MATCH_1}")
+	    string(REGEX MATCH "#define +HB_VERSION_MAJOR +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
+	    set(HB_VERSION_MAJOR "${CMAKE_MATCH_1}")
 
-	string(REGEX MATCH "#define +HB_VERSION_MINOR +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
-	set(HB_VERSION_MINOR "${CMAKE_MATCH_1}")
+	    string(REGEX MATCH "#define +HB_VERSION_MINOR +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
+	    set(HB_VERSION_MINOR "${CMAKE_MATCH_1}")
 
-	string(REGEX MATCH "#define +HB_VERSION_MICRO +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
-	set(HB_VERSION_MICRO "${CMAKE_MATCH_1}")
+	    string(REGEX MATCH "#define +HB_VERSION_MICRO +([0-9]+)" _dummy "${HB_VERSION_CONTENT}")
+	    set(HB_VERSION_MICRO "${CMAKE_MATCH_1}")
 
-	set(HARFBUZZ_VERSION "${HB_VERSION_MAJOR}.${HB_VERSION_MINOR}.${HB_VERSION_MICRO}")
-    endif ()
+	    set(HARFBUZZ_VERSION "${HB_VERSION_MAJOR}.${HB_VERSION_MINOR}.${HB_VERSION_MICRO}")
+      endif ()
+    endforeach()
 endif ()
 
 message("HARFBUZZ_LIBRARIES=${HARFBUZZ_LIBRARIES} HARFBUZZ_INCLUDE_DIRS=${HARFBUZZ_INCLUDE_DIRS} HARFBUZZ_VERSION=${HARFBUZZ_VERSION}")
 # HarfBuzz 0.9.18 split ICU support into a separate harfbuzz-icu library.
 if ("${PC_HARFBUZZ_VERSION}" VERSION_GREATER "0.9.17")
-    pkg_check_modules(PC_HARFBUZZ_ICU harfbuzz-icu>=0.9.18)# REQUIRED)
     find_library(HARFBUZZ_ICU_LIBRARIES NAMES harfbuzz-icu
         HINTS ${PC_HARFBUZZ_ICU_LIBRARY_DIRS} ${PC_HARFBUZZ_ICU_LIBDIR}
     )
-    list(APPEND HARFBUZZ_LIBRARIES "${HARFBUZZ_ICU_LIBRARIES}")
+    if(HARFBUZZ_ICU_LIBRARIES)
+        list(APPEND HARFBUZZ_LIBRARIES "${HARFBUZZ_ICU_LIBRARIES}")
+    endif()
 endif ()
 
 include(FindPackageHandleStandardArgs)

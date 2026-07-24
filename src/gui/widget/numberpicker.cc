@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/numberpicker.h>
+#include <text/inputtype.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <widget/R.h>
 #include <core/color.h>
@@ -46,13 +47,13 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     mInputText =(EditText*)findViewById(R::id::numberpicker_input);
     if(mInputText){
         mInputText->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
-        mInputTextSize = mInputText->getTextSize();
-        mTextSize = mInputTextSize;
-        mSelectorElementSize = mInputTextSize;
+        mTextSize2 = mInputText->getTextSize();
+        mTextSize  = mTextSize2;
+        mSelectorElementSize = mTextSize2;
     }
     mIncrementButton =(ImageButton*)findViewById(cdroid::R::id::increment);
     mDecrementButton =(ImageButton*)findViewById(cdroid::R::id::decrement);
-    View::OnClickListener onClick= [this](View& v) {
+    const View::OnClickListener onClick= [this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
         if (v.getId() == R::id::increment) {
@@ -61,7 +62,7 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
             changeValueByOne(false);
         }
     };
-    View::OnLongClickListener onLongClick=[this](View& v) {
+    const View::OnLongClickListener onLongClick=[this](View& v) {
         hideSoftInput();
         mInputText->clearFocus();
         if (v.getId() == R::id::increment) {
@@ -85,6 +86,8 @@ NumberPicker::NumberPicker(int w,int h):LinearLayout(w,h){
     mComputeMaxWidth = (mMaxWidth == SIZE_UNSPECIFIED);
     measure(MeasureSpec::makeMeasureSpec(w,MeasureSpec::EXACTLY),MeasureSpec::makeMeasureSpec(h,MeasureSpec::EXACTLY));
     layout(0,0,getMeasuredWidth(),getMeasuredHeight());
+    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
+    mSelectorWheelPaint.setTextSize(mTextSize);
     updateInputTextView();
     setFocusable(int(View::FOCUSABLE));
     setFocusableInTouchMode(true);
@@ -96,15 +99,13 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mHideWheelUntilFocused = atts.getBoolean("hideWheelUntilFocused",false);
     mWrapSelectorWheelPreferred= atts.getBoolean("wrapSelectorWheel",mWrapSelectorWheelPreferred);
     mDividerDrawable = atts.getDrawable("selectionDivider");
-    mInputTextSize = atts.getDimensionPixelSize("selectedTextSize",mInputTextSize);
+    mTextSize2 = atts.getDimensionPixelSize("selectedTextSize",mTextSize2);
     if (mDividerDrawable) {
         mDividerDrawable->setCallback(this);
         mDividerDrawable->setLayoutDirection(getLayoutDirection());
         if (mDividerDrawable->isStateful()) {
             mDividerDrawable->setState(getDrawableState());
         }
-    }else{
-        setDividerColor(atts.getColor("dividerColor",mDividerColor));
     }
     mItemBackground =  atts.getDrawable("itemBackground");
     if(mItemBackground){
@@ -179,17 +180,20 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     mInputText->setFocusable(false);
     mUpdateInputTextInFling = atts.getBoolean("updateInputTextInFling",mUpdateInputTextInFling);
     mTextAlign = mInputText->getGravity();
-    mInputTextSize = mInputText->getTextSize();
+    mTextSize2 = mInputText->getTextSize();
     mTypeface = Typeface::create(atts.getString("fontFamily"),Typeface::NORMAL);
-    mSelectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
+    auto selectedTypeface = Typeface::create(atts.getString("selectedfontFamily"),Typeface::NORMAL);
+    if(selectedTypeface!=nullptr){
+        setSelectedTypeface(selectedTypeface);
+    }
     //ViewConfiguration configuration = ViewConfiguration::get(context);
     setTextSize(atts.getDimensionPixelSize("textSize",mTextSize));
     mTextSize2 = atts.getDimensionPixelSize("textSize2",mTextSize);
     if(atts.hasAttribute("selectedTextSize"))
-        mInputTextSize = atts.getDimensionPixelSize("selectedTextSize");
+        mTextSize2 = atts.getDimensionPixelSize("selectedTextSize");
     else if(!atts.hasAttribute("internalLayout"))
-        mInputTextSize =std::max(mInputTextSize,mTextSize);
-    setSelectedTextSize(mInputTextSize);
+        mTextSize2 =std::max(mTextSize2,mTextSize);
+    setSelectedTextSize(mTextSize2);
     setTextColor(atts.getColor("textColor"));
     setTextColor(mTextColor,atts.getColor("textColor2",mTextColor));
     setSelectedTextColor(atts.getColor("selectedTextColor"));
@@ -198,6 +202,10 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
         setSelectedTextColor(colors->getColorForState(StateSet::get(StateSet::VIEW_STATE_ENABLED),mInputTextColor));
     else
         setSelectedTextColor(mInputText->getCurrentTextColor());
+    
+    mSelectorWheelPaint.setTypeface(mInputText->getTypeface());
+    mSelectorWheelPaint.setTextSize(mTextSize);
+    
     updateInputTextView();
 
     //setWheelItemCount(atts.getInt("wheelItemCount",mWheelItemCount));
@@ -215,7 +223,7 @@ NumberPicker::NumberPicker(Context* context,const AttributeSet& atts)
     }
 
     updateWrapSelectorWheel();
-    LOGV("%p:%d textSize=%d,%d",this,mID,mInputTextSize,mTextSize);
+    LOGV("%p:%d textSize=%d,%d",this,mID,mTextSize,mTextSize2);
     if(getFocusable()==View::FOCUSABLE_AUTO){
         setFocusable(int(View::FOCUSABLE));
         setFocusableInTouchMode(true);
@@ -291,19 +299,17 @@ void NumberPicker::initView(){
     mScrollState = OnScrollListener::SCROLL_STATE_IDLE;
     mTextSize   = 24;
     mItemSpacing= 0;
-    mInputTextSize = 24;
+    mTextSize2 = 24;
     mEndDividerEnd = 0;
     mStartDividerStart= 0;
     mInputTextColor = 0xFFFFFFFF;
-    mSelectedTypeface = nullptr;
+    mTypeface = nullptr;
     mComputeMaxWidth  = false;
     mHasSelectorWheel = false;
-    mTypeface = nullptr;
     mItemBackground = nullptr;
     mVirtualButtonPressedDrawable = nullptr;
     mBeginSoftInputOnLongPressCommand = nullptr;
     mChangeCurrentByOneFromLongPressCommand = nullptr;
-    mDividerColor = DEFAULT_DIVIDER_COLOR;
     mWheelMiddleItemIndex = 0;
     mDividerDrawable  = nullptr;
     mDividerThickness =2;
@@ -395,6 +401,7 @@ void NumberPicker::onLayout(bool changed, int left, int top, int width, int heig
 void NumberPicker::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (!mHasSelectorWheel) {
         LinearLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
+        return;
     }
     // Try greedily to fit the max width and height.
     const int newWidthMeasureSpec = makeMeasureSpec(widthMeasureSpec, mMaxWidth);
@@ -889,7 +896,7 @@ void NumberPicker::setValue(int value) {
 }
 
 float NumberPicker::getMaxTextSize()const {
-    return std::max(std::max(mTextSize,mDisplayedDrawableSize), mInputTextSize);
+    return std::max(std::max(mTextSize,mDisplayedDrawableSize), mTextSize2);
 }
 
 bool NumberPicker::performClick() {
@@ -917,7 +924,7 @@ void NumberPicker::showSoftInput(){
 }
 
 void NumberPicker::hideSoftInput(){
-    if (mInputText->getInputType() != EditText::TYPE_NONE) {
+    if (mInputText->getInputType() != InputType::TYPE_NULL) {
         if(mHasSelectorWheel){
             mInputText->setVisibility(View::INVISIBLE);
         }
@@ -929,14 +936,11 @@ void NumberPicker::tryComputeMaxWidth(){
         return;
     }
     int maxTextWidth = 0;
-    Layout l(mTextSize,-1);
-    l.setTypeface(mInputText->getTypeface());
     if (mDisplayedValues.size() == 0) {
         float maxDigitWidth = 0;
         for (int i = 0; i <= 9; i++) {
-            l.setText(std::to_string(i));
-            l.relayout();
-            const float digitWidth = l.getMaxLineWidth();
+            char16_t num='0'+i;
+            const float digitWidth = mSelectorWheelPaint.measureText(&num,0,1);
             if (digitWidth > maxDigitWidth) {
                 maxDigitWidth = digitWidth;
             }
@@ -951,9 +955,8 @@ void NumberPicker::tryComputeMaxWidth(){
     } else {
         const int valueCount = mDisplayedValues.size();
         for (int i = 0; i < valueCount; i++) {
-            l.setText(mDisplayedValues[i]);
-            l.relayout();
-            const float textWidth = l.getMaxLineWidth();
+            auto u16=TextUtils::utf8_utf16(mDisplayedValues[i]);
+            const float textWidth = mSelectorWheelPaint.measureText(u16.c_str(),0,u16.size());
             if (textWidth > maxTextWidth) {
                 maxTextWidth = (int) textWidth;
             }
@@ -1011,15 +1014,6 @@ void NumberPicker::setSelectionDivider(Drawable*d){
 
 Drawable*NumberPicker::getSelectionDivider()const{
     return mDividerDrawable;
-}
-
-int  NumberPicker::getDividerColor()const{
-    return mDividerColor;
-}
-
-void NumberPicker::setDividerColor(int color){
-    mDividerColor = color;
-    mDividerDrawable = new ColorDrawable(color);
 }
 
 int NumberPicker::getDividerType()const{
@@ -1113,7 +1107,7 @@ void  NumberPicker::setDisplayedValues(const std::vector<std::string>&displayedV
     mDisplayedDrawableSize = 0;
     int drsize=0;
     for(auto s:mDisplayedValues){
-        Drawable*dr = mContext->getDrawable(s);
+        Drawable*dr = s.find("/")==std::string::npos?nullptr:mContext->getDrawable(s);
         mDisplayedDrawables.push_back(dr);
         if(dr){
             drsize += (isHorizontalMode()?dr->getIntrinsicWidth():dr->getIntrinsicHeight());
@@ -1154,12 +1148,12 @@ float NumberPicker::getBottomFadingEdgeStrength(){
 void NumberPicker::drawableStateChanged() {
     ViewGroup::drawableStateChanged();
 
-    if (mDividerDrawable  && mDividerDrawable->isStateful()
+    if (mDividerDrawable && mDividerDrawable->isStateful()
         && mDividerDrawable->setState(getDrawableState())) {
         invalidateDrawable(*mDividerDrawable);
     }
 
-    if (mItemBackground  && mItemBackground->isStateful()
+    if (mItemBackground && mItemBackground->isStateful()
         && mItemBackground->setState(getDrawableState())) {
         invalidateDrawable(*mItemBackground);
     }
@@ -1227,24 +1221,23 @@ void NumberPicker::setSelectedTextColor(int textColor){
 }
 
 int  NumberPicker::getSelectedTextSize()const{
-    return mInputTextSize;
+    return mTextSize2;
 }
 
 void NumberPicker::setSelectedTextSize(int textSize) {
-    mInputTextSize = textSize;
+    mTextSize2 = textSize;
     mInputText->setTextSize(textSize);
     requestLayout();
     invalidate();
 }
 
 void NumberPicker::setSelectedTypeface(Typeface* typeface){
-    mSelectedTypeface = typeface;
-    if (mSelectedTypeface != nullptr) {
-        //do nothing mSelectorWheelPaint.setTypeface(mSelectedTypeface);
+    if (typeface != nullptr) {
+        mSelectorWheelPaint.setTypeface(typeface);
     } else if (mTypeface != nullptr) {
-        mSelectedTypeface = mTypeface;
+        mSelectorWheelPaint.setTypeface(mTypeface);
     } else {
-        mSelectedTypeface = Typeface::MONOSPACE;
+        mSelectorWheelPaint.setTypeface(Typeface::MONOSPACE);
     }
 }
 
@@ -1253,14 +1246,13 @@ void NumberPicker::setSelectedTypeface(const std::string& string, int style){
 }
 
 Typeface* NumberPicker::getSelectedTypeface()const{
-    return mSelectedTypeface;
+    return mSelectorWheelPaint.getTypeface();
 }
 
 void NumberPicker::setTypeface(Typeface* typeface){
     mTypeface = typeface;
     if (mTypeface != nullptr) {
         mInputText->setTypeface(mTypeface);
-        setSelectedTypeface(mSelectedTypeface);
     } else {
         mInputText->setTypeface(Typeface::MONOSPACE);
     }
@@ -1329,11 +1321,13 @@ void NumberPicker::onDraw(Canvas&canvas){
                                  MathUtils::lerp(c2.blue(),c1.blue(),fraction), std::abs(MathUtils::lerp(c2.alpha(),c1.alpha(),fraction)));
             }
         }
-        canvas.set_source(mPat);
+        mSelectorWheelPaint.setShader(mPat);
+        mSelectorWheelPaint.setColor(mTextColor);
     }else{
-        canvas.set_color(mTextColor);
+        mSelectorWheelPaint.setShader(nullptr);
+        mSelectorWheelPaint.setColor(mTextColor);
     }
-    canvas.set_font_face(mInputText->getTypeface()->getFontFace()->get_font_face());
+    canvas.set_font_face(mInputText->getTypeface()->getFontFace());
     canvas.set_font_size(mTextSize);
     // draw the selector wheel
     for (int i = 0; i < mSelectorIndices.size(); i++) {
@@ -1344,6 +1338,7 @@ void NumberPicker::onDraw(Canvas&canvas){
         if(mTextSize != mTextSize2){
             font_size = MathUtils::lerp(float(mTextSize),float(mTextSize2),fraction);
             canvas.set_font_size(font_size);
+            mSelectorWheelPaint.setTextSize(font_size);
         }
 
         const int selectorIndex = mSelectorIndices[isAscendingOrder() ? i : mSelectorIndices.size() - i - 1];
@@ -1398,7 +1393,8 @@ void NumberPicker::onDraw(Canvas&canvas){
                     }
                     mItemBackground->draw(canvas);
                 }
-                canvas.draw_text(recText,scrollSelectorValue,textGravity);
+                mSelectorWheelPaint.setColor(mTextColor);
+                drawText(scrollSelectorValue,recText,textGravity,canvas);
             }
         }
         if (isHorizontalMode()) {
@@ -1472,29 +1468,41 @@ void NumberPicker::drawVerticalDividers(Canvas& canvas) {
     }
 }
 
-void NumberPicker::drawText(const std::string& text, float x, float y,Canvas& canvas) {
-    /*if (text.contains("\n")) {
-        std::string[] lines = text.split("\n");
-        float height = Math.abs(paint.descent() + paint.ascent())
-                * mLineSpacingMultiplier;
-        float diff = (lines.length - 1) * height / 2;
-        y -= diff;
-        for (String line : lines) {
-            canvas.drawText(line, x, y, paint);
-            y += height;
-        }
-    } else */{
-        canvas.move_to(x,y);
-        canvas.show_text(text);
+void NumberPicker::drawText(const std::string& text,const Rect&r,int gravity,Canvas& canvas) {
+    std::u16string u16s=TextUtils::utf8_utf16(text);
+    auto fm = mSelectorWheelPaint.getFontMetricsInt();
+    auto textHeight = (fm.bottom-fm.top);
+    auto textWidth = mSelectorWheelPaint.measureText(text,0,text.length());
+    int x,y;
+    switch(gravity&Gravity::HORIZONTAL_GRAVITY_MASK){
+    case Gravity::LEFT: x = r.left; break;
+    case Gravity::CENTER_HORIZONTAL:
+        x = r.left + (r.width - textWidth)/2;
+        break;
+    case Gravity::RIGHT:
+        x = r.left + r.width-textWidth;
+        break;
     }
+    switch(gravity&Gravity::VERTICAL_GRAVITY_MASK){
+    case Gravity::TOP: y = r.top; break;
+    case Gravity::CENTER_VERTICAL:
+        y = r.top + (r.height - textHeight)/2;
+        break;
+    case Gravity::BOTTOM:
+        y = r.top + r.height - textHeight;
+        break;
+    }
+    y-=fm.ascent;
+    //mSelectorWheelPaint.setTextAlign(Paint::Align::LEFT);
+    mSelectorWheelPaint.drawTextRun(canvas,u16s.c_str(),0,u16s.length(),0,0,x,y,false);
 }
 
 int NumberPicker::makeMeasureSpec(int measureSpec, int maxSize){
     if (maxSize == SIZE_UNSPECIFIED) {
         return measureSpec;
     }
-    int size = MeasureSpec::getSize(measureSpec);
-    int mode = MeasureSpec::getMode(measureSpec);
+    const int size = MeasureSpec::getSize(measureSpec);
+    const int mode = MeasureSpec::getMode(measureSpec);
     switch (mode) {
     case MeasureSpec::EXACTLY:     return measureSpec;
     case MeasureSpec::AT_MOST:     return MeasureSpec::makeMeasureSpec(std::min(size, maxSize), MeasureSpec::EXACTLY);
@@ -1587,7 +1595,7 @@ void NumberPicker::initializeSelectorWheel(){
     const float textGapCount = selectorIndices.size();
     const int inputEdit_Size = isHorizontalMode()?mInputText->getWidth():mInputText->getHeight();
     if (isHorizontalMode()) {
-        int selectedWidth= (mInputText->getVisibility()==View::VISIBLE)?std::max(mInputTextSize,inputEdit_Size):inputEdit_Size;//mInputTextSize;
+        int selectedWidth= (mInputText->getVisibility()==View::VISIBLE)?std::max(mTextSize2,inputEdit_Size):inputEdit_Size;
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedWidth);
         const float totalTextGapWidth = getWidth() - totalTextSize;
         mInputTextGapWidth = (int) (totalTextGapWidth / (textGapCount-1));
@@ -1596,7 +1604,7 @@ void NumberPicker::initializeSelectorWheel(){
             selectedWidth = mSelectorElementSize;
         mInitialScrollOffset = (int) (mInputTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedWidth-mSelectorElementSize)/2);
     } else {
-        int selectedHeight= std::max(mSelectorElementSize,inputEdit_Size);//:mInputTextSize;
+        int selectedHeight= std::max(mSelectorElementSize,inputEdit_Size);
         const int totalTextSize = int ((selectorIndices.size() - 1) * mTextSize + selectedHeight);
         const float totalTextGapHeight= getHeight() - totalTextSize;
         mInputTextGapHeight = (int) (totalTextGapHeight / (textGapCount-1));
@@ -1605,7 +1613,7 @@ void NumberPicker::initializeSelectorWheel(){
             selectedHeight = mSelectorElementSize;
         mInitialScrollOffset = (int) (mInputTextCenter - mSelectorElementSize * mWheelMiddleItemIndex-(selectedHeight-mSelectorElementSize)/2);
     }
-    LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mInputText->getHeight(),mInputTextSize,mTextSize);
+    LOGV("mInitialScrollOffset=%d %d/%d textsize=%d,%d",mInitialScrollOffset,mSelectorElementSize,mInputText->getHeight(),mTextSize2,mTextSize);
     mCurrentScrollOffset = mInitialScrollOffset;
     updateInputTextView();
 }

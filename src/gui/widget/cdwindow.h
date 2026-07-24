@@ -1,9 +1,9 @@
 #ifndef __CDROID_WINDOW_H__
 #define __CDROID_WINDOW_H__
-#include <cdtypes.h>
 #include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/uieventsource.h>
+#include <view/actionmode.h>
 
 #define USE_UIEVENTHANDLER 0
 
@@ -38,6 +38,7 @@ private:
     bool mHandingLayoutInLayoutRequest;
     Rect mRectOfFocusedView;
     AccessibilityManager*mAccessibilityManager;
+    ActionMode* mActionMode = nullptr;
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
@@ -57,13 +58,14 @@ private:
     bool getAccessibilityFocusedRect(Rect& bounds);
     Drawable* getAccessibilityFocusedDrawable();
     void handleWindowContentChangedEvent(AccessibilityEvent& event);
+    ActionMode* startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type);
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
     /*mPendingRgn init by mInvalidRgn,and also can be modified by windowmanager,if the window above the window 
      *is resized or moved*/
     Cairo::RefPtr<Cairo::Region>mPendingRgn;
-    int window_type;/*window type*/
+    int window_type = TYPE_APPLICATION;/*window type*/
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
@@ -119,6 +121,7 @@ public:
     void dispatchInvalidateDelayed(View*, long delayMilliseconds)override;
     void dispatchInvalidateRectDelayed(const AttachInfo::InvalidateInfo*,long delayMilliseconds)override;
     bool dispatchTouchEvent(MotionEvent& event)override;
+    ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;
     void close();

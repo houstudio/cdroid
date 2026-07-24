@@ -51,15 +51,15 @@ private:
     static constexpr int INDEX_BOTTOM = 2;
     static constexpr int INDEX_FILL = 3;
 private:
-    bool mAllowInconsistentMeasurement;
     bool mBaselineAligned;
+    bool mUseLargestChild;
+    bool mAllowInconsistentMeasurement;
     int mBaselineAlignedChildIndex;
     int mBaselineChildTop;
     int mOrientation;
     int mGravity;
     int mTotalLength;
     float mWeightSum;
-    bool mUseLargestChild;
     std::vector<int>mMaxAscent;
     std::vector<int>mMaxDescent;
     int mDividerWidth;

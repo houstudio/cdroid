@@ -117,7 +117,7 @@ public:
 
     void setTintList(const cdroid::RefPtr<ColorStateList>& tint) override;
 
-    //void setTintBlendMode(BlendMode blendMode)override;
+    void setTintBlendMode(int blendMode)override;
 
     void setOpacity(int opacity);
     int getOpacity()const override;

@@ -12,8 +12,9 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     if (d)setCheckMarkDrawable(d);
 
     if (a.hasAttribute("checkMarkTintMode")) {
-        //mCheckMarkBlendMode = Drawable.parseBlendMode(a.getInt(
-        //   R.styleable.CheckedTextView_checkMarkTintMode, -1), mCheckMarkBlendMode);
+        /* getTintMode decodes the 6-value tintMode enum; the value is valid as a
+         * BlendMode (PorterDuff and BlendMode coincide for these 6). */
+        mCheckMarkBlendMode = a.getTintMode("checkMarkTintMode", -1);
         mHasCheckMarkTintMode = true;
     }
 
@@ -27,24 +28,12 @@ CheckedTextView::CheckedTextView(Context* context,const AttributeSet& a):TextVie
     const bool checked = a.getBoolean("checked", false);
     setChecked(checked);
     applyCheckMarkTint();
-#if defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE
-    isChecked = [this]()->bool{
-        return mChecked;
-    };
-    toggle = [this](){
-        doSetChecked(!mChecked);
-    };
-    setChecked = [this](bool checked){
-        doSetChecked(checked);
-   };
-#endif
 }
 
 CheckedTextView::~CheckedTextView(){
     delete mCheckMarkDrawable;
 }
 
-#if !(defined(FUNCTION_AS_CHECKABLE)&&FUNCTION_AS_CHECKABLE)
 void CheckedTextView::toggle() {
     setChecked(!mChecked);
 }
@@ -56,7 +45,7 @@ bool CheckedTextView::isChecked()const{
 void CheckedTextView::setChecked(bool checked) {
     doSetChecked(checked);
 }
-#endif
+
 void CheckedTextView::doSetChecked(bool checked) {
     if (mChecked != checked) {
         mChecked = checked;
@@ -130,7 +119,7 @@ void CheckedTextView::applyCheckMarkTint() {
             mCheckMarkDrawable->setTintList(mCheckMarkTintList);
         }
 
-        //if (mHasCheckMarkTintMode) mCheckMarkDrawable->setTintBlendMode(mCheckMarkBlendMode);
+        if (mHasCheckMarkTintMode) mCheckMarkDrawable->setTintBlendMode(mCheckMarkBlendMode);
 
         // The drawable (or one of its children) may not have been
         // stateful before applying the tint, so let's try again.

@@ -79,6 +79,12 @@ public:
     /* Returns an empty key character map. */
     static KeyCharacterMap* empty();
 
+    /* Returns the shared default map used when a device has no map of its own
+     * and as the VIRTUAL_KEYBOARD fallback for synthetic KeyEvents. Lazily loads
+     * "Generic.kcm" (falling back to "qwerty.kcm") using the same resolution as
+     * the former InputMethodManager path. Process-lifetime, never freed. */
+    static KeyCharacterMap* getDefault();
+
     /* Gets the keyboard type. */
     int32_t getKeyboardType() const;
 

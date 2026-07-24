@@ -135,15 +135,12 @@ public:
     static const std::string toString(int gravity);
 };
 
-class LayoutDirection{
-public:
-    enum{
-        UNDEFINED=-1,
-        LTR      =0,
-        RTL      =1,
-        INHERIT  =2,
-        LOCAL    =3
-    };
+enum LayoutDirection{
+    UNDEFINED=-1,
+    LTR      =0,
+    RTL      =1,
+    INHERIT  =2,
+    LOCAL    =3
 };
-}
+}/*endof namespace*/
 #endif

@@ -27,6 +27,8 @@
 #include <utils/atexit.h>
 #include <core/app.h>
 #include <core/build.h>
+#include <core/messagequeue.h>
+#include <gui_features.h>
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
 #include <core/windowmanager.h>
@@ -127,6 +129,10 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
 
     AtExit::registerCallback([this](){
         LOGD("Exit...");
+        // Reclaim input events still queued in device buffers now that the main
+        // loop has stopped consuming them; otherwise they leak (InputEventSource
+        // is a process-singleton that is never destroyed).
+        InputEventSource::getInstance().clearEvents();
         mQuitFlag = true;
     });
 
@@ -136,6 +142,12 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
         inputsource->playback(monkey);
     }
     AnimationHandler::getInstance();
+    // IMM is a process-wide service (Android: created early, peekInstance() then
+    // returns non-null once the app is up). Create it here so the View focus path
+    // (View::onFocusChanged uses peekInstance -> focusIn/focusOut) and TextView's
+    // editor show/hide actually engage, instead of silently no-oping on a null
+    // singleton.
+    InputMethodManager::getInstance();
 }
 
 std::atomic<App*>App::mInst;
@@ -245,13 +257,28 @@ void App::removeEventHandler(const EventHandler*handler){
 
 int App::exec(){
     Looper*looper = Looper::getMainLooper();
-    while(!mQuitFlag)looper->pollAll(1);
+    // Event-driven loop: loopOnce() -> MessageQueue::next() -> nativePollOnce()
+    // blocks until a message is due, an fd event fires, or wake() is called.
+    // next() internally lands in pollInner(), whose tail runs drainMessageQueue()
+    // + doEventHandlers() (handleIdle = the frame driver), so frames advance on
+    // every wake and the loop sleeps when idle. This needs a working wake()
+    // channel on every platform (eventfd / pipe / socket pair) -- the old 1ms
+    // pollAll(1) busy-spin was only the fallback for when wake() was a no-op.
+    looper->wake();
+    while(!mQuitFlag){ if(!looper->loopOnce()) break; }
     return mExitCode;
 }
 
 void App::exit(int code){
     mQuitFlag = true;
     mExitCode = code;
+    // With the blocking loop above, exit() must wake the loop or it stays parked
+    // in next()/pollInner and never notices mQuitFlag. quit() clears the queue
+    // and calls nativeWake() -> Looper::wake(), unblocking next() to return null.
+    MessageQueue* q = Looper::getMainLooper()->getQueue();
+    if(q){
+        q->quit(false);
+    }
 }
 
 const std::string App::getName()const{

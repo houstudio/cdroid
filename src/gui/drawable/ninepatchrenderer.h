@@ -29,21 +29,32 @@ private:
     int mRadius;
     Rect mContentArea;
     Rect mPadding;
+    Rect mOutlineRect;       // scanner outline insets {left,top,right→width,bottom→height}
+    int mOutlineAlpha = 0xff; // scanner outline alpha (0..255); default opaque
     Insets mOutlineInsets;
     Insets mOpticalInsets;
     float mAlpha;
     std::vector<std::pair< int, int >>mResizeDistancesY;
     std::vector<std::pair< int, int >>mResizeDistancesX;
     Cairo::RefPtr<Cairo::ImageSurface> mCachedImage;
+    // True when the source image is border-stripped (cdNp/aapt-style): the renderer
+    // then draws on a borderless basis — source origin offset B=0 (vs 1 for a
+    // bordered image) and no 2px border subtracted from content extent.
+    bool mBorderless = false;
 public:
     Cairo::RefPtr<Cairo::ImageSurface> mImage;
 private:
     void getFactor(int width, int height, double& factorX, double& factorY);
     void updateCachedImage(int width, int height,Cairo::Context*);
+    // Skia-faithful lattice render (SkLatticeIter::set_points): used when the
+    // destination is smaller than the sum of the fixed patches — the factor-based
+    // path cannot represent that and would overlap/garble. See ninepatchrenderer.cc.
+    void drawLattice(int width, int height, Cairo::Context& painter);
     int getCornerRadius(Cairo::RefPtr<Cairo::ImageSurface> bitmap,int start,int step);
     Insets getOpticalInsets(Cairo::RefPtr<Cairo::ImageSurface>bitmap)const;
 public:
-    NinePatchRenderer(Cairo::RefPtr<Cairo::ImageSurface> image);
+    NinePatchRenderer(Cairo::RefPtr<Cairo::ImageSurface> image,
+                      const std::vector<uint8_t>*ninePatchChunk=nullptr);
     NinePatchRenderer(cdroid::Context*ctx,const std::string&resid);
     ~NinePatchRenderer();
     void draw(Canvas& painter, int x, int y,float alpha=1.f);
@@ -57,6 +68,7 @@ public:
     int getRadius()const;
     Rect getOutlineRect() const;
     int getOutlineRadius() const;
+    int getOutlineAlpha() const { return mOutlineAlpha; }
 };
 }/*endof namespace*/
 #endif

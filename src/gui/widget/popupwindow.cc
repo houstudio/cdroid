@@ -380,7 +380,7 @@ void PopupWindow::setWidth(int width){
 }
 
 int PopupWindow::getWidth()const{
-    return mHeight;
+    return mWidth;
 }
 
 void PopupWindow::showAtLocation(View* parent, int gravity, int x, int y){
@@ -489,7 +489,13 @@ PopupWindow::PopupDecorView* PopupWindow::createDecorView(View* contentView){
         height = LayoutParams::MATCH_PARENT;
     }
 
-    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight);
+    /* WindowManager sorts windows for compositing by window_type
+     * (mLayer = window_type<<16|idx). PopupDecorView defaults to
+     * TYPE_APPLICATION, which sorts BELOW an IMEWindow (TYPE_SYSTEM_WINDOW),
+     * hiding the popup behind the keyboard. Pass mWindowLayoutType so callers
+     * can raise the popup (e.g. KeyboardView sets TYPE_SYSTEM_ALERT). */
+    const int wtype = mWindowLayoutType ? mWindowLayoutType : Window::TYPE_APPLICATION;
+    PopupDecorView* decorView = new PopupDecorView(mWidth,mHeight,wtype);
     decorView->addView(contentView, LayoutParams::MATCH_PARENT, height);
     //decorView->setClipChildren(false);
     //decorView->setClipToPadding(false);
@@ -928,7 +934,9 @@ void PopupWindow::dismissImmediate(View* decorView, ViewGroup* contentHolder, Vi
         //mWindowManager.removeViewImmediate(decorView);
     }
 
-    if (contentHolder != nullptr) {
+    // When we own the content view, leave it in the decor tree so the window
+    // teardown cascade (~ViewGroup) frees it; otherwise detach it for reuse.
+    if (!mOwnsContentView && (contentHolder != nullptr)) {
         ViewGroup*vg=dynamic_cast<ViewGroup*>(contentView);
         contentHolder->removeView(contentView);
     }
@@ -984,8 +992,11 @@ void PopupWindow::update(){
 
 void PopupWindow::update(View* anchor,WindowManager::LayoutParams* params) {
     setLayoutDirectionFromAnchor();
-    // mWindowManager.updateViewLayout(mDecorView, params);
-    LOGD("PopupWindow.pos=%d,%d,%d,%d",params->x,params->y,params->width,params->height);
+    if (mDecorView) {
+        // Use mWidth/mHeight (actual pixel size from setWidth/setHeight), NOT params->width/height
+        // (which is WRAP_CONTENT=-2 when mWidthMode<0). CDROID's layout() takes (l, t, W, H).
+        WindowManager::getInstance().moveWindow(mDecorView, params->x, params->y,mWidth,mHeight);
+    }
 }
 
 void PopupWindow::update(int width, int height){
@@ -1186,8 +1197,8 @@ void PopupWindow::alignToAnchor() {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
-PopupWindow::PopupDecorView::PopupDecorView(int w,int h)
-   :Window(0,0,w,h){
+PopupWindow::PopupDecorView::PopupDecorView(int w,int h,int type)
+   :Window(0,0,w,h,type){
     mPop = nullptr;
 }
 

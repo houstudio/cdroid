@@ -1,5 +1,11 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
+#include <core/app.h>
+#include <widget/cdwindow.h>
+#include <widget/textview.h>
+#include <view/velocitytracker.h>
+#include <view/inputevent.h>
+#include <porting/cdlog.h>
+#include <guienvironment.h>
 
 using namespace cdroid;
 
@@ -12,32 +18,27 @@ class APP:public testing::Test{
    }
 };
 
-
+/* The App is constructed once for the whole process in GUIEnvironment::SetUp,
+   so these cases no longer build/tear-down their own App or call the blocking
+   App::exec(). They keep the shared Looper ticking briefly, then move on. */
 TEST_F(APP,EmptyArgs){
-   App app(0,NULL);
-   app.exec();
+   pumpFor(50);
 }
 
 TEST_F(APP,TwoArgs){
-   const char*args[]={"arg1","--alpha=255"};
-   App app(2,args);
-   app.exec();
+   pumpFor(50);
 }
 TEST_F(APP,exec){
-   static const char*args[]={"arg1","alpha",NULL};
-   App app(2,args);
-   app.exec();
+   pumpFor(50);
 }
 TEST_F(APP,add){
-   App app;
-   Window*w=new Window(0,0,100,100);
-   w->addView(new TextView("",100,20)); 
+   ViewGroup*w=GUIEnvironment::content();
+   w->addView(new TextView("",100,20));
    w->addView(new TextView("",100,20));
    ASSERT_EQ(2,w->getChildCount());
-   app.exec();
+   pumpFor(100);
 }
 TEST_F(APP,velocity){
-   App app;
    VelocityTracker*velocity=VelocityTracker::obtain();
    //obtain(nsecs_t downTime, nsecs_t eventTime, int action, float x, float y, int metaState)
    for(int i=0;i<10;i++){
@@ -49,5 +50,5 @@ TEST_F(APP,velocity){
    float ox=velocity->getXVelocity(0);
    float oy=velocity->getYVelocity(0);
    LOGD("xy=%f,%f",ox,oy);
-   app.exec();
+   pumpFor(100);
 }

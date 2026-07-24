@@ -47,12 +47,14 @@ private:
     
     int mIntrinsicWidth;
     int mIntrinsicHeight;
-    bool mStarting;
+    bool mRunning;/*animation is actively playing (advancing frames)*/
+    bool mStarting;/*one-shot: fire onAnimationStart on the next draw, mirroring Android*/
     bool mFrameScheduled;
     bool mMutated;
     int mCurrentFrame;
     int mNextFrame;
-    int mFrameDelay;
+    int mFrameDelay = 0;
+    int mDecodedFrameDelay;/*frame delay reported by the decode thread*/
     int mRepeatCount;
     int mRepeated;/*repeated played rounds*/
     float mAlpha;
@@ -69,14 +71,16 @@ private:
     std::shared_ptr<Cairo::ImageSurface> mDecodeImage;
     std::atomic<bool> mDecodeInProgress;
     std::mutex mFrameSequenceMutex;
-    static std::queue<std::pair<AnimatedImageDrawable*, int>> sDecodeQueue;
+    struct DecodeTask{ AnimatedImageDrawable* instance; int frameIndex; int prevFrame; };
+    static std::queue<DecodeTask> sDecodeQueue;
     static std::thread sDecodeThread;
+    static std::once_flag sDecodeOnce;
     static std::mutex sDecodeMutex;
     static std::condition_variable sDecodeCV;
     void postOnAnimationStart();
     void postOnAnimationEnd();
     void updateStateFromTypedArray(const AttributeSet&atts,int srcDensityOverride);
-    void submitDecodeTask(int frameIndex);
+    void submitDecodeTask(int frameIndex, int prevFrame);
     static void decodeWorker();
     AnimatedImageDrawable(std::shared_ptr<AnimatedImageState> state);
 protected:

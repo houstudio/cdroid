@@ -128,13 +128,13 @@ void LineChart::drawSeries(Canvas& canvas,  Paint& paint,std::vector<float>& poi
                         fillPoints[i + 1]= 0.f;
                     }
                 }
-                paint.setStyle(Style::FILL);
+                paint.setStyle(Paint::Style::FILL);
                 drawPath(canvas, fillPoints, paint, true);
             }
         }
     }
     canvas.set_color(renderer->getColor());
-    paint.setStyle(Style::STROKE);
+    paint.setStyle(Paint::Style::STROKE);
     drawPath(canvas, points, paint, false);
     canvas.set_line_width(lineWidth);
 }

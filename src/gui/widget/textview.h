@@ -19,72 +19,70 @@
 #define __TEXTVIEW_H__
 
 #include <view/view.h>
-#include <core/layout.h>
 #include <core/typeface.h>
 #include <widget/scroller.h>
-#include <widget/textwatcher.h>
+#include <text/spanwatcher.h>
+#include <text/textwatcher.h>
+#include <text/textutils.h>
+#include <text/spannablestring.h>
+#include <text/boringlayout.h>
+#include <text/dynamiclayout.h>
+#include <text/editable.h>
+#include <text/inputfilter.h>
+#include <text/method/transformationmethod.h>
+#include <text/method/keylistener.h>
 
 namespace cdroid {
-
+class Layout;
 class CompletionInfo;
-
+class PrecomputesText;
+class Editor;
+class MovementMethod;
+class InputFilter;
+class Editable;
+class InputConnection;
+class InputMethodManager;
 class TextView : public View{
+    friend class Editor;   // Editor drives TextView's editing UX and reaches its internals
 private:
+    static constexpr int NO_POINTER_ID = -1;
     static constexpr int DEFAULT_TYPEFACE = -1;
     static constexpr int SANS = 1;
     static constexpr int SERIF= 2;
     static constexpr int MONOSPACE = 3;
+    static constexpr int VERY_WIDE = 1024 * 1024;
+    static constexpr int CHANGE_WATCHER_PRIORITY = 100;
+    static constexpr int OFFSET_MAPPING_SPAN_PRIORITY = 200;
     static constexpr int ANIMATED_SCROLL_GAP = 250;
+    static constexpr int KEY_EVENT_NOT_HANDLED = 0;
+    static constexpr int KEY_EVENT_HANDLED = -1;
+    static constexpr int KEY_DOWN_HANDLED_BY_KEY_LISTENER = 1;
+    static constexpr int KEY_DOWN_HANDLED_BY_MOVEMENT_METHOD = 2;
+    class Marquee;
+    class CharWrapper;
+    class ChangeWatcher;
 public:
     static constexpr int AUTO_SIZE_TEXT_TYPE_NONE = 0;
     static constexpr int AUTO_SIZE_TEXT_TYPE_UNIFORM = 1;
-    class Drawables {
-    public:
-        enum{
-            LEFT  = 0,
-            TOP   = 1,
-            RIGHT = 2,
-            BOTTOM= 3
-        };
-        enum{
-            DRAWABLE_NONE = -1,
-            DRAWABLE_RIGHT= 0,
-            DRAWABLE_LEFT = 1
-        };
-    private:
-        friend class TextView;
-        Drawable* mShowing[4];
-        Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
-        Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
-        bool mIsRtlCompatibilityMode;
-        bool mOverride;
-        bool mHasTint, mHasTintMode;
-        cdroid::RefPtr<ColorStateList> mTintList;
-        int mTintMode;
-        int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
-        int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
-
-        int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
-        int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
-        int mDrawablePadding;
-        int mDrawableSaved = DRAWABLE_NONE;
-        Rect mCompoundRect;
-    private:
-	void applyErrorDrawableIfNeeded(int layoutDirection);
-    public:
-        Drawables(Context*ctx);
-        ~Drawables();
-        bool hasMetadata()const;
-	bool resolveWithLayoutDirection(int layoutDirection);
-	void setErrorDrawable(Drawable* dr, TextView* tv);
+    class Drawables;
+    enum BufferType {
+        NORMAL, SPANNABLE, EDITABLE
     };
+    DECLARE_UIEVENT(bool, OnEditorActionListener, TextView&, int, KeyEvent&);
 private:
     static constexpr int LINES = 1;
     static constexpr int EMS = LINES;
     static constexpr int PIXELS = 2;
+    static constexpr int SIGNED = 2;
+    static constexpr int DECIMAL = 4;
+    static constexpr int MAX_LENGTH_FOR_SINGLE_LINE_EDIT_TEXT = 5000;
     static constexpr int MARQUEE_FADE_NORMAL=0;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_ELLIPSIS =1;
     static constexpr int MARQUEE_FADE_SWITCH_SHOW_FADE =2;
+    static constexpr int DEFAULT_AUTO_SIZE_MIN_TEXT_SIZE_IN_SP=12;
+    static constexpr int DEFAULT_AUTO_SIZE_MAX_TEXT_SIZE_IN_SP = 112;
+    static constexpr int DEFAULT_AUTO_SIZE_GRANULARITY_IN_PX = 1;
+    static constexpr float UNSET_AUTO_SIZE_UNIFORM_CONFIGURATION_VALUE = -1.f;
     int mGravity;
     int mMaximum;
     int mMinimum;
@@ -92,6 +90,8 @@ private:
     int mMinMode;
     int mMaxWidth;
     int mMinWidth;
+    int mOldMaximum;
+    int mOldMaxMode;
     int mMaxWidthMode;
     int mMinWidthMode;
     int mDesiredHeightAtMeasure;
@@ -101,17 +101,47 @@ private:
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
-    float mTextScaleX;
+    int mBreakStrategy;
+    int mHyphenationFrequency;
+    int mJustificationMode;
+    bool mUseBoundsForWidth = false;
+    bool mHideHint;
     bool mSingleLine;
     bool mIncludePad;
     bool mHorizontallyScrolling;
     bool mNeedsAutoSizeText;
     bool mRestartMarquee;
     bool mUserSetTextScaleX;
+    bool mHighlightPathBogus;
+    bool mHighlightPathsBogus;
+    bool mUseFallbackLineSpacing;
+    bool mHasPresetAutoSizeValues;
+    bool mPreDrawRegistered;
+    bool mPreDrawListenerDetached;
+    bool mTextSetFromXmlOrResourceId;
+    bool mAllowTransformationLengthChange;
+    bool mLinksClickable;
+    bool mCursorVisible;
+    bool mListenerChanged;
+    bool mIsPrimePointerFromHandleView=false;
+    bool mPreventDefaultMovement = false;
+    bool mImeIsConsumingInput = false;
+    bool mCursorVisibleFromAttr = true;
     // This is used to reflect the current user preference for changing font weight and making text
     // more bold.
+    int mLastInputSource=InputDevice::SOURCE_TOUCHSCREEN;
+    int mPrimePointerId=NO_POINTER_ID;
     int mFontWeightAdjustment;
-    Typeface* mOriginalTypeface;
+    int mAutoLinkMask;
+    int mGesturePreviewHighlightStart=-1;
+    int mGesturePreviewHighlightEnd=-1;
+    int mLineBreakStyle;
+    int mLineBreakWordStyle;
+    TextPaint mTextPaint;
+    Paint *mGesturePreviewHighlightPaint = nullptr;
+    Spannable::Factory mSpannableFactory;
+    Editable::Factory mEditableFactory;
+    ViewTreeObserver::OnPreDrawListener mOnPreDrawListener;
 
     cdroid::RefPtr<ColorStateList> mTextColor;
     cdroid::RefPtr<ColorStateList> mHintTextColor;
@@ -119,69 +149,136 @@ private:
     int mCurTextColor;
     int mCurHintTextColor;
     int mHighlightColor;
+    int mAutoSizeMinTextSizeInPx;
+    int mAutoSizeMaxTextSizeInPx;
+    int mAutoSizeStepGranularityInPx;
+    std::vector<int>mAutoSizeTextSizesInPx;
     std::vector<TextWatcher>mListeners;
-
-    class Drawables*mDrawables;
-    class Marquee*mMarquee;
-    int  mEllipsize;
+    std::vector<InputFilter*> mFilters;
+    InputFilter::LengthFilter* mSingleLineLengthFilter = nullptr;
+    Drawables* mDrawables;
+    Marquee* mMarquee;
+    CharWrapper* mCharWrapper;
+    mutable Drawable* mCursorDrawable;
+    Editor* mEditor = nullptr;
+    MovementMethod* mMovement = nullptr;
+    TextUtils::TruncateAt mEllipsize;
     int  mMarqueeFadeMode;
     int  mMarqueeRepeatLimit;
     int  mLastLayoutDirection;
     int64_t mLastScroll;
+    Cairo::RefPtr<Path> mHighlightPath;
+    Paint mHighlightPaint;
+    BoringLayout* mSavedLayout;
+    BoringLayout* mSavedHintLayout;
     Layout* mSavedMarqueeModeLayout;
+    const TextDirectionHeuristic* mTextDir;
     Scroller*mScroller;
+    BoringLayout::Metrics* mBoring;
+    BoringLayout::Metrics* mHintBoring;
 private:
+    int getActionIdForEnterEvent()const;
+    bool shouldAdvanceFocusOnEnter()const;
+    bool isDirectionalNavigationKey(int keyCode)const;
+    // Android: doKeyDown — shared key-down logic for onKeyDown/onKeyMultiple.
+    int doKeyDown(int keyCode, KeyEvent& event, KeyEvent* otherEvent);
+
+    // Android TextView statics (TextView.java:7747/7867) — InputType classification.
+    static bool isPasswordInputType(int inputType);
+    static bool isVisiblePasswordInputType(int inputType);
+    static bool isMultilineInputType(int type);
+
     void initView();
-    int  getLayoutAlignment()const;
+    InputMethodManager* getInputMethodManager();
+    void setTextInternal(CharSequence* text);
+    void setHintInternal(CharSequence* hint);
+    bool setupAutoSizeUniformPresetSizesConfiguration();
+    void validateAndSetAutoSizeTextTypeUniformConfiguration(float autoSizeMinTextSizeInPx,
+            float autoSizeMaxTextSizeInPx, float autoSizeStepGranularityInPx);
+    void clearAutoSizeConfiguration();
+    std::vector<int> cleanupAutoSizePresetSizes(std::vector<int>&presetValues);
+    bool setupAutoSizeText();
+    void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
+           int typefaceIndex,int style,int weight);
+    void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
+    void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end);///
+    Layout::Alignment getLayoutAlignment()const;
     void applyCompoundDrawableTint();
+    void registerForPreDraw();
+    void unregisterForPreDraw();
     int  getVerticalOffset(bool forceNormal);
     int  getBottomVerticalOffset(bool forceNormal);
     void updateTextColors();
+    int findLargestTextSizeWhichFits(const RectF& availableSpace);
+    bool suggestedSizeFitsInSpace(int suggestedSizeInPx,const RectF& availableSpace);
     int  getDesiredHeight();
-    int  getDesiredHeight( Layout* layout, bool cap);
+    int  getDesiredHeight(Layout* layout, bool cap);
     void getInterestingRect(Rect& r, int line);
     void convertFromViewportToContentCoordinates(Rect&);
 
+    void checkForResize();
     void checkForRelayout();
     bool isShowingHint()const;
     bool bringTextIntoView();
     void autoSizeText();
     bool compressText(float width);
-    static int desired(Layout*);
+    static int desired(Layout*,bool);
     int  getBoxHeight(Layout* l);
     void prepareDrawableForDisplay(Drawable*d);
 
+    void setSelectGesturePreviewHighlight(int start, int end);
+    void setDeleteGesturePreviewHighlight(int start, int end);
+    void setGesturePreviewHighlight(int start, int end, int color);
+    void clearGesturePreviewHighlight();
+    bool hasGesturePreviewHighlight()const;
+
+    void setInputTypeFromEditor();
+    void setKeyListenerOnly(KeyListener* input);
+    // Android TextView.setFilters(Editable, InputFilter[]) — installs the filters on the
+    // Editable, prepending the key listener when it is itself an InputFilter. mEditor
+    // mUndoInputFilter is not ported yet → DEFERRED.
+    void setFilters(Editable* e, const std::vector<InputFilter*>& filters);
+    void fixFocusableAndClickableSettings();
+    void createEditorIfNeeded();
+    void assumeLayout();
     bool isAutoSizeEnabled()const;
     bool isMarqueeFadeEnabled()const;
     void startStopMarquee(bool start);
+    void updateCursorVisibleInternal();
     float getHorizontalFadingEdgeStrength(float position1, float position2);
-    void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines);
-    void setTypefaceFromAttrs(Typeface* typeface,const std::string& familyName,
-           int typefaceIndex,int style,int weight);
-    void resolveStyleAndSetTypeface(Typeface* typeface,int style,int weight);
+    void setInputTypeSingleLine(bool singleLine);
+    void applySingleLine(bool singleLine, bool applyTransformation, bool changeMaxLines,bool changeMaxLength);
     void restartMarqueeIfNeeded();
+    void invalidateCursor(int a, int b, int c);
     void setRawTextSize(float size, bool shouldRequestLayout);
     void setTextSizeInternal(int unit, float size, bool shouldRequestLayout);
     void applyTextAppearance(class TextAppearanceAttributes *atts);
-    void setRelativeDrawablesIfNeeded(Drawable* start, Drawable* end) ;
-    void sendBeforeTextChanged(const std::wstring& text, int start, int before, int after);
-    void sendAfterTextChanged(std::wstring& text);
-    void sendOnTextChanged(const std::wstring& text, int start, int before, int after);
+    void setText(CharSequence* text, BufferType type, bool notifyBefore, int oldlen);
+    void sendBeforeTextChanged(CharSequence& text, int start, int before, int after);
+    void removeIntersectingNonAdjacentSpans(int,int,const SpanFilter&type);
+    void removeAdjacentSuggestionSpans(int pos);
+    void sendAfterTextChanged(Editable& text);
+    void spanChange(Spanned& buf,const ParcelableSpan* what, int oldStart, int newStart, int oldEnd, int newEnd);
+    void sendOnTextChanged(CharSequence& text, int start, int before, int after);
 protected:
-    int mEditMode;//0--readonly 1--insert 2--replace
-    int mCaretPos;
-    int mMaxLength;
-    bool mBlinkOn;
-    Rect mCaretRect;
     Cairo::RefPtr<Cairo::FontFace>mTypeFace;
     Layout* mLayout;
     Layout* mHintLayout;
-    std::string mHint;
-    std::wstring& getEditable();
-    void setEditable(bool b);
-    int getFontSize()const;
+    TransformationMethod* mTransformation;
+    CharSequence*mText;
+    CharSequence*mHint;
+    Spannable*mSpannable;
+    PrecomputedText* mPrecomputed;
+    CharSequence*mTransformed;
+    ChangeWatcher* mChangeWatcher;
+    BufferType mBufferType = BufferType::NORMAL;
+    virtual bool getDefaultEditable()const;
+    bool textCanBeSelected()const;
+    void invalidateCursorPath();
+    void invalidateCursor();
+    void invalidateRegion(int start, int end, bool invalidateCursor);
+    Cairo::RefPtr<cdroid::Path>getUpdatedHighlightPath();
     void drawableStateChanged()override;
-    void onDetachedFromWindowInternal()override;
     bool verifyDrawable(Drawable* who)const override;
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec)override;
     bool supportsAutoSizeText()const;
@@ -194,9 +291,21 @@ protected:
     bool canMarquee()const;
     void startMarquee();
     void stopMarquee();
-    virtual void onTextChanged(const std::wstring& text, int start, int lengthBefore, int lengthAfter);
+    virtual void onTextChanged(CharSequence& text, int start, int lengthBefore, int lengthAfter);
     virtual void onSelectionChanged(int selStart, int selEnd);
+    void updateAfterEdit();
+    CharSequence* removeSuggestionSpans(CharSequence* text);
+    void handleTextChanged(CharSequence& buffer, int start, int before, int after);
+    void onAttachedToWindow()override;
+    void onDetachedFromWindowInternal()override;
+    std::vector<int> onCreateDrawableState(int)override;
+    bool onPreDraw();
     virtual void onDraw(Canvas& canvas) override;
+    void stopTextActionMode();
+    float convertToLocalHorizontalCoordinate(float x);
+    static void removeParcelableSpans(Spannable* spannable, int start, int end);
+    // Hook invoked by Editor::drawCursor to paint the caret. Override to customize
+    // the caret appearance (the blink cadence and geometry are owned by Editor).
     virtual int getHorizontalOffsetForDrawables()const;
     void onLayout(bool changed, int left, int top, int w, int h)override;
     void onFocusChanged(bool focused, int direction, Rect* previouslyFocusedRect)override;
@@ -208,46 +317,150 @@ protected:
     int viewportToContentVerticalOffset();
     float getLeftFadingEdgeStrength()override;
     float getRightFadingEdgeStrength()override;
+    void setTransformationMethodInternal(TransformationMethod*method,bool updateText);
+    Layout* makeSingleLayout(int wantWidth, BoringLayout::Metrics* boring, int ellipsisWidth,
+        Layout::Alignment alignment, bool shouldEllipsize, TextUtils::TruncateAt effectiveEllipsize, bool useSaved);
 public:
-    enum EDITMODE{
-       READONLY,
-       INSERT,
-       REPLACE
-    };
     TextView(Context*ctx,const AttributeSet&attrs);
     TextView(int width, int height);
     TextView(const std::string& text, int width, int height);
     ~TextView()override;
+    void setAutoSizeTextTypeWithDefaults(int autoSizeTextType);
+    void setAutoSizeTextTypeUniformWithConfiguration(int autoSizeMinTextSize,
+        int autoSizeMaxTextSize, int autoSizeStepGranularity, int unit);
+    void setAutoSizeTextTypeUniformWithPresetSizes(const std::vector<int>& presetSizes, int unit);
+    int getAutoSizeTextType()const;
+    int getAutoSizeStepGranularity()const;
+    int getAutoSizeMinTextSize()const;
+    int getAutoSizeMaxTextSize()const;
+    std::vector<int> getAutoSizeTextAvailableSizes()const;
+    void setEnabled(bool);
     void setTypeface(Typeface* tf);
-    void setTypeface(Typeface* tf,int style);
+    void setTypeface(Typeface* tf,int style);///
     Typeface* getTypeface()const;
     int getTypefaceStyle() const;
     virtual void setText(const std::string&txt);
-    const std::string getText()const;
-    void  setTextAppearance(const std::string&);
-    void  setTextAppearance(Context*,const std::string&);
+    virtual void setText(CharSequence* txt);
+    virtual void setText(CharSequence* text, BufferType type);
+    void setText(const std::vector<char16_t>&text, int start, int len);
+    void setTextKeepState(CharSequence* text, BufferType type);
+    void append(const CharSequence& text);
+    void append(const CharSequence& text, int start, int end);
+    virtual CharSequence& getText();
+    int length()const;
+    CharSequence* getTransformed()const;
+    Editable* getEditableText()const;
+    Editor* getEditor();
+    // Android: movement method — arrow/nav/scroll handling delegated here.
+    void setMovementMethod(MovementMethod* movement);
+    MovementMethod* getMovementMethod() const { return mMovement; }
+    void setTextCursorDrawable(Drawable*);
+    Drawable* getTextCursorDrawable()const;
+    void setTextAppearance(const std::string&);
+    void setTextAppearance(Context*,const std::string&);
     virtual void setHint(const std::string&txt);
-    std::string getHint()const;
+    virtual void setHint(CharSequence*);
+    CharSequence* getHint()const;
     bool bringPointIntoView(int offset);
     bool moveCursorToVisibleOffset();
     void computeScroll()override;
+    bool isSuggestionsEnabled()const;
+    bool canSelectText()const;
     bool canSelectAllText()const;
+    bool canCut()const;
+    bool canCopy()const;
+    bool canReplace()const;
+    bool canPaste()const;
     bool selectAllText();
     int getSelectionStart()const;
     int getSelectionEnd()const;
+    int getSelectionStartTransformed() const;
+    int getSelectionEndTransformed() const;
     bool hasSelection()const;
     std::string getSelectedText()const;
+    // Text context menu (align android.R.id.*; Editor.java/TextView.java:15179).
+    // clipboard 本轮留空: copy/cut/paste 为桩, selectAll 实操。
+    bool onTextContextMenuItem(int id);
+    bool performLongClick()override;
+    // Android public API — touch→offset, cursor visibility, IME-on-focus,
+    // select-all-on-focus, batch editing (all delegate to Editor when editable).
+    int  getOffsetForPosition(float x, float y);
+    int getLineAtCoordinate(float y);
+    int getLineAtCoordinateUnclamped(float y);
+    int getOffsetAtCoordinate(int line, float x);
+    void setCursorVisible(bool visible);
+    bool isCursorVisible()const;
+    bool isCursorVisibleFromAttr()const;
+    void setShowSoftInputOnFocus(bool show);
+    bool getShowSoftInputOnFocus()const;
+    void setSelectAllOnFocus(bool selectAll);
+    bool isTextSelectable()const;
+    void setTextIsSelectable(bool selectable);
+    bool isTextEditable()const;
+    bool isTextAutofillable() const;
+    bool didTouchFocusSelect() const;
+    void cancelLongPress()override;
+    bool onTrackballEvent(MotionEvent& event)override;
+    void setScroller(Scroller* s);
+    void beginBatchEdit();
+    void endBatchEdit();
+    void onBeginBatchEdit();
+    void onEndBatchEdit();
+    bool onPrivateIMECommand(const std::string,const Bundle*);
+    void setAllCaps(bool allCaps);
+    bool isAllCaps() const;
     virtual void setSingleLine(bool single);
     bool isSingleLine()const;
+    bool hasPasswordTransformationMethod()const;
     void setBreakStrategy(int breakStrategy);
     int getBreakStrategy()const;
+    void setHyphenationFrequency(int hyphenationFrequency);
+    int getHyphenationFrequency()const;
+    void setAutoLinkMask(int mask);
+    int getAutoLinkMask()const;
+    void setLinksClickable(bool whether);
+    bool getLinksClickable()const;
+    void setKeyListener(KeyListener* input);
+    KeyListener* getKeyListener()const;
+    void setInputType(int inputType);
+    int  getInputType()const;
+    int getImeOptions()const;
+    bool isInputMethodTarget()const;
+    void setImeOptions(int imeOptions);
+    bool isAnyPasswordInputType()const;   // Android TextView (TextView.java:7862)
+    void setFilters(const std::vector<InputFilter*>& filters);
+    std::vector<InputFilter*> getFilters();
+    // Android TextView.setSpannableFactory / setEditableFactory: replace the factory
+    // used to wrap a buffer into a Spannable / Editable inside setText (BufferType
+    // SPANNABLE / EDITABLE). The factory MUST return a freshly-owned object (default:
+    // new SpannableString / new SpannableStringBuilder, which copy the source); setText
+    // adopts the result and frees the source — see the copy-and-orphan handling there.
+    void setSpannableFactory(const Spannable::Factory& factory);
+    void setEditableFactory(const Editable::Factory& factory);
     int getLineHeight()const;
     void setLineHeight(int height);
+    void setLineBreakStyle(int lineBreakStyle);
+    int getLineBreakStyle()const;
+    void setLineBreakWordStyle(int lineBreakWordStyle);
+    int getLineBreakWordStyle()const;
     void setTextSize(float size);
     void setTextSize(int unit, float size);
     float getTextSize()const;
+    float getScaledTextSize() const;
     float getTextScaleX()const;
     void setTextScaleX(float);
+    void setElegantTextHeight(bool elegant);
+    bool isElegantTextHeight()const;
+    void setFallbackLineSpacing(bool);
+    bool isFallbackLineSpacing()const;
+    float getLetterSpacing() const;
+    void setLetterSpacing(float letterSpacing);
+    void setFontFeatureSettings(const std::string& fontFeatureSettings);
+    std::string getFontFeatureSettings() const;
+    void setJustificationMode(int justificationMode);
+    int getJustificationMode() const;
+    void setUseBoundsForWidth(bool useBoundsForWidth);
+    bool getUseBoundsForWidth() const { return mUseBoundsForWidth; }
     void setTextColor(int color);
     void setTextColor(const cdroid::RefPtr<ColorStateList>& colors);
     Layout* getLayout()const;
@@ -257,6 +470,9 @@ public:
     float getShadowDx()const;
     float getShadowDy()const;
     int getShadowColor()const;
+    const TextPaint& getPaint()const;
+    int getPaintFlags() const;
+    void setPaintFlags(int);
     void setLineSpacing(float add, float mult);
     float getLineSpacingMultiplier()const;
     float getLineSpacingExtra()const;
@@ -272,8 +488,8 @@ public:
     bool getIncludeFontPadding()const;
     void setMarqueeRepeatLimit(int marqueeLimit);
     int  getMarqueeRepeatLimit() const;
-    int  getEllipsize() const;
-    void setEllipsize(int ellipsize);
+    TextUtils::TruncateAt getEllipsize() const;
+    virtual void setEllipsize(TextUtils::TruncateAt ellipsize);
 
     const cdroid::RefPtr<ColorStateList> getTextColors()const;
     int getCurrentTextColor()const;
@@ -302,26 +518,42 @@ public:
     void setMaxHeight(int maxPixels);
     void setHeight(int pixels);
     void setLines(int lines);
+    void setMinEms(int minEms);
+    int getMinEms()const;
+    void setMaxEms(int maxEms);
+    int getMaxEms()const;
+    void setEms(int ems);
     int getLineCount()const;
+    void getFocusedRect(Rect& r)override;
     int getLineBounds(int line, Rect&bounds);
     int getBaseline()override;
     int getBaselineOffset();
-    void setCaretPos(int pos);
-    bool moveCaret2Line(int line);
-    int getCaretPos()const;
     int getGravity()const;
     void setGravity(int gravity);
     void setHorizontallyScrolling(bool whether);
+    bool isHorizontallyScrollable()const;
     bool getHorizontallyScrolling()const;
     void setSelected(bool selected)override;
+    TransformationMethod* getTransformationMethod()const;
+    void setTransformationMethod(TransformationMethod*);
+    // Android TextView offset-mapping helpers (TextView.java:10386/15827/15842).
+    // True when the transformed text implements OffsetMapping (length-altering
+    // TransformationMethod such as password). Used by movement/Editor.
+    bool isOffsetMappingAvailable()const;
+    int transformedToOriginal(int offset, int strategy)const;
+    int originalToTransformed(int offset, int strategy)const;
     virtual int getCompoundPaddingLeft()const;
     virtual int getCompoundPaddingRight()const;
     virtual int getCompoundPaddingTop()const;
     virtual int getCompoundPaddingBottom()const;
-    int getExtendedPaddingTop()const;
-    int getExtendedPaddingBottom()const;
+    int getExtendedPaddingTop();
+    int getExtendedPaddingBottom();
     virtual int getCompoundPaddingStart();
     virtual int getCompoundPaddingEnd();
+    int getTotalPaddingLeft();
+    int getTotalPaddingRight();
+    int getTotalPaddingStart();
+    int getTotalPaddingEnd();
     int getTotalPaddingTop();
     int getTotalPaddingBottom();
 
@@ -345,9 +577,18 @@ public:
 
     void addTextChangedListener(const TextWatcher& watcher);
     void removeTextChangedListener(const TextWatcher& watcher);
+    const TextDirectionHeuristic*getTextDirectionHeuristic()const;
     void onResolveDrawables(int layoutDirection)override;
+    bool isFromPrimePointer(MotionEvent& event, bool fromHandleView);
     bool onTouchEvent(MotionEvent& event)override;
+    bool onKeyDown(int keyCode, KeyEvent& event)override;
+    bool onKeyUp(int keyCode, KeyEvent& event)override;
+    bool onCheckIsTextEditor() const;
     virtual void onCommitCompletion(CompletionInfo* completion);
+    bool useDynamicLayout() const;
+    void nullLayouts();
+    void makeNewLayout(int wantWidth, int hintWidth, BoringLayout::Metrics* boring,
+                    BoringLayout::Metrics* hintBoring,int ellipsisWidth, bool bringIntoView);
 
     std::string getAccessibilityClassName()const override;
     void onInitializeAccessibilityEventInternal(AccessibilityEvent& event)override;
@@ -355,6 +596,135 @@ public:
     bool performAccessibilityActionInternal(int action, Bundle* arguments)override;
     void sendAccessibilityEventInternal(int eventType)override;
     void sendAccessibilityEventUnchecked(AccessibilityEvent& event)override;
+};
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+class TextView::Drawables {
+public:
+    enum{
+        LEFT  = 0,
+        TOP   = 1,
+        RIGHT = 2,
+        BOTTOM= 3
+    };
+    enum{
+        DRAWABLE_NONE = -1,
+        DRAWABLE_RIGHT= 0,
+        DRAWABLE_LEFT = 1
+    };
+private:
+    friend class TextView;
+    Drawable* mShowing[4];
+    Drawable* mDrawableStart, *mDrawableEnd, *mDrawableError, *mDrawableTemp;
+    Drawable* mDrawableLeftInitial, *mDrawableRightInitial;
+    bool mIsRtlCompatibilityMode;
+    bool mOverride;
+    bool mHasTint;
+    cdroid::RefPtr<ColorStateList> mTintList;
+    int mTintMode;
+    int mDrawableSizeTop, mDrawableSizeBottom, mDrawableSizeLeft, mDrawableSizeRight;
+    int mDrawableSizeStart, mDrawableSizeEnd, mDrawableSizeError, mDrawableSizeTemp;
+
+    int mDrawableWidthTop, mDrawableWidthBottom, mDrawableHeightLeft, mDrawableHeightRight;
+    int mDrawableHeightStart, mDrawableHeightEnd, mDrawableHeightError, mDrawableHeightTemp;
+    int mDrawablePadding;
+    int mDrawableSaved = DRAWABLE_NONE;
+    Rect mCompoundRect;
+private:
+    void applyErrorDrawableIfNeeded(int layoutDirection);
+public:
+    Drawables(Context*ctx);
+    ~Drawables();
+    bool hasMetadata()const;
+    bool resolveWithLayoutDirection(int layoutDirection);
+    void setErrorDrawable(Drawable* dr, TextView* tv);
+};
+class TextView::Marquee {
+private:
+    static constexpr  float MARQUEE_DELTA_MAX = 0.07f;
+    static constexpr  int MARQUEE_DELAY = 1200;
+    static constexpr  int MARQUEE_DP_PER_SECOND = 30;
+
+    static constexpr  int MARQUEE_STOPPED = 0x0;
+    static constexpr  int MARQUEE_STARTING= 0x1;
+    static constexpr  int MARQUEE_RUNNING = 0x2;
+    friend TextView;
+    TextView* mView;
+    Choreographer*mChoreographer;
+    int mStatus ;//= MARQUEE_STOPPED;
+    float mPixelsPerMs;
+    float mMaxScroll;
+    float mMaxFadeScroll;
+    float mGhostStart;
+    float mGhostOffset;
+    float mFadeStop;
+    int mRepeatLimit;
+
+    float mScroll;
+    int64_t mLastAnimationMs;
+    Choreographer::FrameCallback mTickCallback;
+    Choreographer::FrameCallback mStartCallback;
+    Choreographer::FrameCallback mRestartCallback;
+
+private:
+    void resetScroll();
+public:
+    Marquee(TextView* v);
+    ~Marquee();
+    void tick();
+    void stop();
+    void start(int repeatLimit);
+    float getGhostOffset()const { return mGhostOffset; }
+    float getScroll()const { return mScroll; }
+    float getMaxFadeScroll()const { return mMaxFadeScroll; }
+    bool shouldDrawLeftFade()const { return mScroll <= mFadeStop; }
+    bool shouldDrawGhost()const { return (mStatus == MARQUEE_RUNNING) && (mScroll > mGhostStart); }
+    bool isRunning()const{ return mStatus == MARQUEE_RUNNING; }
+    bool isStopped()const{ return mStatus == MARQUEE_STOPPED; }
+};
+
+class TextView::CharWrapper:public CharSequence{//, GetChars, GraphicsOperations {
+private:
+    std::vector<char16_t> mChars;
+    int mStart, mLength;
+    friend TextView;
+public:
+    CharWrapper(const std::vector<char16_t>&chars, int start, int len);
+    ~CharWrapper()override;
+    void set(const std::vector<char16_t>& chars, int start, int len);
+    size_t length() const override{
+        return mLength;
+    }
+    int charAt(int off) const override;
+    String* toString() const override;
+    std::string toUTF8() const override;
+    std::u16string toUTF16() const override;
+    CharSequence* subSequence(int start, int end) const override;
+    void getChars(int start, int end, char16_t* buf, int off) const override;
+    void drawText(Canvas& c, int start, int end, float x, float y, Paint& p);
+    void drawTextRun(Canvas& c, int start, int end,
+            int contextStart, int contextEnd, float x, float y, bool isRtl, Paint& p);
+    float measureText(int start, int end, Paint& p);
+    int getTextWidths(int start, int end, float* widths, Paint& p);
+    float getTextRunAdvances(int start, int end, int contextStart, int contextEnd,
+            bool isRtl, float* advances, int advancesIndex,Paint& p);
+    int getTextRunCursor(int contextStart, int contextEnd, bool isRtl,
+            int offset, int cursorOpt, Paint& p);
+};
+
+class TextView::ChangeWatcher:virtual public TextWatcher,virtual public SpanWatcher {
+private:
+    CharSequence* mBeforeText;
+    TextView*mTV;
+public:
+    ChangeWatcher(TextView*tv);
+    // TextWatcher callbacks are wired by assigning the inherited std::function
+    // members (beforeTextChanged/onTextChanged/afterTextChanged) in the ctor —
+    // see textview.cc. (Defining same-named methods here would hide them.)
+    void onSpanChanged(Spannable& buf,const ParcelableSpan* what, int s, int e, int st, int en)override;
+    void onSpanAdded(Spannable& buf, const ParcelableSpan* what, int s, int e)override;
+    void onSpanRemoved(Spannable& buf, const ParcelableSpan* what, int s, int e)override;
 };
 
 }  // namespace cdroid

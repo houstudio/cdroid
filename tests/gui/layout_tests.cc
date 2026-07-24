@@ -1,12 +1,26 @@
 #include <gtest/gtest.h>
-#include <cdroid.h>
+#include <core/app.h>
+#include <core/attributeset.h>
+#include <view/view.h>
+#include <view/viewgroup.h>
+#include <view/gravity.h>
+#include <widget/cdwindow.h>
+#include <widget/textview.h>
+#include <widget/button.h>
+#include <widget/progressbar.h>
+#include <widget/linearlayout.h>
 #include <widget/tablelayout.h>
 #include <widget/framelayout.h>
 #include <widget/absolutelayout.h>
 #include <widget/gridlayout.h>
 #include <widget/radiogroup.h>
+#include <drawable/drawable.h>
 #include <drawable/drawableinflater.h>
+#include <drawable/colordrawable.h>
+#include <drawable/shapedrawable.h>
+#include <drawable/shape.h>
 #include <guienvironment.h>
+using namespace cdroid;
 class LAYOUT:public testing::Test{
 public:
     int argc;
@@ -20,8 +34,8 @@ public:
 };
 
 TEST_F(LAYOUT,linear){
-    App app(argc,argv);
-    Window*w=new Window(0,0,800,600);
+    App&app=App::getInstance();
+    ViewGroup*w=GUIEnvironment::content();
     LinearLayout*ll=new LinearLayout(800,80);
     ShapeDrawable*sd=new ShapeDrawable();
     Shape*shape=new RectShape();
@@ -67,12 +81,12 @@ TEST_F(LAYOUT,linear){
     w->addView(ll,lp);
     ll->measure(800,80);
     ll->layout(0,0,800,80);
-    app.exec();
+    pumpFor(500);
 }
 TEST_F(LAYOUT,radiogroup){
-    App app(argc,argv);
+    App&app=App::getInstance();
     const char*captions[]={"News","Sport","Reading","Walking","I saw A brown fox jump over a lazy dog!"};
-    Window*w=new Window(0,0,800,600);
+    ViewGroup*w=GUIEnvironment::content();
     AttributeSet attrs;
     RadioGroup *rg=new RadioGroup(500,300);//&app,attrs);
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
@@ -89,11 +103,11 @@ TEST_F(LAYOUT,radiogroup){
     rg->measure(500,300);
     rg->layout(0,0,500,300);
     w->addView(rg);
-    app.exec();
+    pumpFor(500);
 }
 TEST_F(LAYOUT,frame){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    App&app=App::getInstance();
+    ViewGroup*w=GUIEnvironment::content();
     FrameLayout*frame=new FrameLayout(800,600);
     FrameLayout::LayoutParams*lp=new FrameLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT,Gravity::CENTER);
 
@@ -113,12 +127,12 @@ TEST_F(LAYOUT,frame){
     frame->layout(0,0,800,600);
     frame->setBackground(new ColorDrawable(0xFF222222));
     w->addView(frame);
-    app.exec();
+    pumpFor(500);
 }
 
 TEST_F(LAYOUT,absolute){
-    App app(argc,argv);
-    Window*w=new Window(100,100,800,600);
+    App&app=App::getInstance();
+    ViewGroup*w=GUIEnvironment::content();
     AbsoluteLayout*ll=new AbsoluteLayout(800,600);
     AbsoluteLayout::LayoutParams*lp=new AbsoluteLayout::LayoutParams(300,50,100,100);
     TextView*tv=new TextView("A crown fox jump over the lazy dog!",0,0);
@@ -134,13 +148,13 @@ TEST_F(LAYOUT,absolute){
     ll->measure(800,600);
     ll->layout(0,0,800,600);
     w->addView(ll);
-    app.exec();
+    pumpFor(500);
 }
 
 TEST_F(LAYOUT,tablerow){
-    App app(argc,argv);
+    App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
-    Window*w=new Window(0,0,800,600);
+    ViewGroup*w=GUIEnvironment::content();
     TableRow*row=new TableRow(800,80);
     row->setBackground(new ColorDrawable(0xFF444444));
     for(int i=0;i<sizeof(captions)/sizeof(captions[0]);i++){
@@ -154,13 +168,13 @@ TEST_F(LAYOUT,tablerow){
     row->measure(800,80);
     row->layout(0,0,800,80);
     w->addView(row);
-    app.exec();
+    pumpFor(500);
 }
 
 TEST_F(LAYOUT,table){
-    App app(argc,argv);
+    App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore"};
-    Window*w=new Window(0,0,800,600);
+    ViewGroup*w=GUIEnvironment::content();
     TableLayout*tbl=new TableLayout(800,320);
     TableRow* row[4];
     for(int j=0;j<4;j++){
@@ -182,13 +196,13 @@ TEST_F(LAYOUT,table){
     tbl->measure(800,320);
     tbl->layout(0,0,800,320);
     w->addView(tbl);
-    app.exec();
+    pumpFor(500);
 }
 
 TEST_F(LAYOUT,grid){
-    App app(argc,argv);
+    App&app=App::getInstance();
     const char*captions[]={"OK","Cancel","Ignore","Hello world!","Sina News"};
-    Window*w=new Window(0,0,800,600);
+    ViewGroup*w=GUIEnvironment::content();
     GridLayout*grd=new GridLayout(800,400);
     const int N=sizeof(captions)/sizeof(captions[0]);
     for(int i=0;i<9;i++){
@@ -202,6 +216,6 @@ TEST_F(LAYOUT,grid){
     grd->measure(800,400);
     grd->layout(0,0,800,400);
     w->addView(grd);
-    app.exec();
+    pumpFor(500);
  
 }

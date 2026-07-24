@@ -33,7 +33,7 @@ class CDROIDHandler( xml.sax.ContentHandler ):
         ns= ns.replace("+","")
         #print(idname+"==>"+ns)
         if ns.strip():#not empty
-            return (ns==namespace) or (ns=="android" and namespace=="cdroid") or (ns=="cdroid" and namespace=="android")
+            return (ns==self.namespace) or (ns=="android" and self.namespace=="cdroid") or (ns=="cdroid" and self.namespace=="android")
         return  True
     def startElement(self, tag, attributes):
         for attr in attributes.getNames():

@@ -16,7 +16,11 @@ extern void gettimeofday(struct timeval* t1, struct timezone* zone);
 #undef INFINITE
 #undef ABSOLUTE
 #endif
-#include <cdroid.h>
+#include <core/inputdevice.h>
+#include <view/inputevent.h>
+#include <core/systemclock.h>
+#include <guienvironment.h>
+using namespace cdroid;
 
 struct MTEvent{int type,code,value;};
 class MOTIONEVENT:public testing::Test{
@@ -168,7 +172,6 @@ TEST_F(MOTIONEVENT,Benchmark){
 }
 
 TEST_F(MOTIONEVENT,exec){
-   static const char*args[]={"arg1","alpha",NULL};
-   App app(2,args);
-   app.exec();
+   /* App is shared/created by GUIEnvironment; just exercise the Looper. */
+   pumpFor(100);
 }

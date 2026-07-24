@@ -53,7 +53,7 @@ void CubicLineChart::drawPath(Canvas& canvas, const std::vector<float>& points, 
                  canvas.move_to(points[0], points[1]);
                  canvas.line_to(points[2], points[3]);
                  canvas.line_to(points[0], points[1]);
-                 if(paint.style==Style::FILL) canvas.fill(); else canvas.stroke();
+                 if(paint.getStyle()&Paint::Style::FILL) canvas.fill(); else canvas.stroke();
                  return;
              }
              return;
@@ -80,7 +80,7 @@ void CubicLineChart::drawPath(Canvas& canvas, const std::vector<float>& points, 
     if (circular) {
         canvas.line_to(points[0], points[1]);
     }
-    if(paint.style==Style::FILL)
+    if(paint.getStyle()&Paint::Style::FILL)
         canvas.fill();
     else
         canvas.stroke();

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include <porting/cdlog.h>
 #include <widget/achart/chart/dialchart.h>
 namespace cdroid{
 
@@ -25,7 +25,7 @@ DialChart::DialChart(const std::shared_ptr<CategorySeries>& dataset,
 
 void DialChart::draw(Canvas& canvas, int x, int y, int width, int height,  Paint& paint) {
     //paint.setAntiAlias(mRenderer->isAntialiasing());
-    paint.setStyle(Style::FILL);
+    paint.setStyle(Paint::Style::FILL);
     canvas.set_font_size(mRenderer->getLabelsTextSize());
     int legendSize = getLegendSize(mRenderer, height / 5, 0);
     const int left = x;
@@ -126,9 +126,9 @@ void DialChart::drawTicks(Canvas& canvas, double min, double max, double minAngl
         drawLine(canvas,x1, y1,x2, y2);
         canvas.stroke();
         if (labels) {
-            paint.setTextAlign(Align::LEFT);
+            paint.setTextAlign(Paint::Align::LEFT);
             if (x1 <= x2) {
-                paint.setTextAlign(Align::RIGHT);
+                paint.setTextAlign(Paint::Align::RIGHT);
             }
             std::string text = std::to_string(i);
             if (std::round(i) == (long) i) {

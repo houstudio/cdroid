@@ -23,22 +23,13 @@
 #include <list>
 #include <cstdint>
 #include <core/callbackbase.h>
+#include <core/message.h>
 
 namespace cdroid{
 typedef int64_t nsecs_t;
 typedef int (*Looper_callbackFunc)(int fd, int events, void* data);
 class Handler;
-struct Message{
-    int what;
-    int arg1;
-    int arg2;
-    int flags;
-    void*obj;
-    Runnable callback;
-    Handler*target;
-public:
-    Message(int what=0);
-};
+class MessageQueue;
 
 class LooperCallback{
 protected:
@@ -101,12 +92,15 @@ private:
         Message message;
     };
     
-    int  mWakeEventFd;// immutable
+    int  mWakeEventFd; // read end, immutable (eventfd: same as write end)
+    int  mWakeWriteFd; // write end, immutable (pipe/socket pair; ==mWakeEventFd for eventfd)
     std::recursive_mutex mLock;
 
     std::list<MessageEnvelope> mMessageEnvelopes; // guarded by mLock
     std::list<MessageHandler*>mHandlers;
     std::list<EventHandler*> mEventHandlers;
+
+    MessageQueue* mQueue;  // Java MessageQueue (CDROID 扩展), 由本 Looper 拥有
 
     // Whether we are currently waiting for work.  Not protected by a lock,
     // any use of it is racy anyway.
@@ -131,9 +125,15 @@ private:
 private:
     static Looper*sMainLooper;
     int doEventHandlers();
+    void drainMessageQueue();
     int pollInner(int timeoutMillis);
     int removeSequenceNumberLocked(SequenceNumber seq);
     void awoken();
+    // Open/close the wake channel. Backend chosen at compile time: eventfd on
+    // Linux when available, else a POSIX self-pipe, else a loopback socket pair
+    // (Windows/wepoll only polls sockets).
+    bool openWakeFds();
+    void closeWakeFds();
     void pushResponse(int events, const Request& request);
     void rebuildEpollLocked();
     void scheduleEpollRebuildLocked();
@@ -169,6 +169,7 @@ public:
     static void setForThread(Looper* looper);
     static Looper* getForThread();
     bool getAllowNonCallbacks() const;
+    MessageQueue* getQueue();
     int  pollOnce(int timeoutMillis, int* outFd, int* outEvents, void** outData);
     inline int pollOnce(int timeoutMillis) {
         return pollOnce(timeoutMillis, NULL, NULL, NULL);
@@ -177,6 +178,8 @@ public:
     inline int pollAll(int timeoutMillis) {
         return pollAll(timeoutMillis, NULL, NULL, NULL);
     }
+    bool loopOnce();
+    void loop();
     void wake();
     int  addFd(int fd, int ident, int events, Looper_callbackFunc callback, void* data);
     int  addFd(int fd, int ident, int events, const LooperCallback* callback, void* data);

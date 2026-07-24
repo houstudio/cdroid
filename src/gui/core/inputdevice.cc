@@ -29,11 +29,13 @@
 #include <core/tokenizer.h>
 #include <core/transform.h>
 #include <core/inputdevice.h>
+#include <core/inputeventsource.h>
 #include <core/systemclock.h>
 #include <core/virtualkeymap.h>
 #include <core/windowmanager.h>
 #include <utils/textutils.h>
 #include <private/keylayoutmap.h>
+#include <private/keycharactermap.h>
 
 #if defined(__linux__)||defined(__unix__)
   #include <linux/input.h>
@@ -98,7 +100,6 @@ InputDevice::InputDevice(int32_t fdev){
     mSeqID = 0;
     mDisplayId = 0;
     mDeviceClasses= 0;
-    //mAxisFlags =0;
     mScreenRotation =0;
     mLastAction=-1;
     mLastEventTime = 0;
@@ -233,7 +234,6 @@ InputDevice::InputDevice(int32_t fdev){
             mDeviceClasses |= INPUT_DEVICE_CLASS_KEYBOARD;
         }
     }
-    mCorrectedDeviceClasses = mDeviceClasses;
     mKeyMap = nullptr;
     std::string fname=App::getInstance().getDataPath()+getName()+".kl";
     if(0==access(fname.c_str(),F_OK)){
@@ -243,6 +243,24 @@ InputDevice::InputDevice(int32_t fdev){
                 App::getInstance().getDataPath().c_str(),
                 mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
          KeyLayoutMap::load(fname,mKeyMap);
+    }
+    // Per-device .kcm, same 3-step lookup as .kl above (name → vendor/product →
+    // shared default). Touch/mouse devices have no device-specific .kcm and fall
+    // through to getDefault(); only keyboards typically resolve a real map.
+    mKeyCharacterMap = nullptr;
+    fname = App::getInstance().getDataPath()+getName()+".kcm";
+    if(0==access(fname.c_str(),F_OK)){
+        KeyCharacterMap::load(fname,KeyCharacterMap::FORMAT_ANY,mKeyCharacterMap);
+    }else{
+        fname = TextUtils::stringPrintf("%s/Vendor_%04x_Productor_%04x.kcm",
+                App::getInstance().getDataPath().c_str(),
+                mDeviceInfo.getIdentifier().vendor,mDeviceInfo.getIdentifier().product);
+        if(0==access(fname.c_str(),F_OK)){
+            KeyCharacterMap::load(fname,KeyCharacterMap::FORMAT_ANY,mKeyCharacterMap);
+        }
+    }
+    if(mKeyCharacterMap==nullptr){
+        mKeyCharacterMap = KeyCharacterMap::getDefault();   // shared, never freed
     }
     LOGI("%d:[%s] Props=%02x%02x%02x%02x[%s]",fdev,devInfos.name,devInfos.propBitMask[0],
           devInfos.propBitMask[1],devInfos.propBitMask[2],devInfos.propBitMask[3],oss.str().c_str());
@@ -256,6 +274,22 @@ InputDevice::InputDevice(int32_t fdev){
 
 InputDevice::~InputDevice(){
     delete mKeyMap;
+    // Only free a device-specific map we loaded; never the shared default
+    // (pointer-equal to KeyCharacterMap::getDefault()), which is process-lifetime.
+    if(mKeyCharacterMap!=nullptr && mKeyCharacterMap!=KeyCharacterMap::getDefault()){
+        delete mKeyCharacterMap;
+    }
+    mKeyCharacterMap = nullptr;
+    // Return any events still queued (e.g. device removed mid-stream) to the
+    // event pool instead of leaking them when the device is destroyed.
+    for (InputEvent* e : mEvents) {
+        e->recycle();
+    }
+    mEvents.clear();
+}
+
+KeyCharacterMap* InputDevice::getKeyCharacterMap()const{
+    return mKeyCharacterMap;
 }
 
 void InputDevice::bindDisplay(int32_t id){
@@ -372,11 +406,45 @@ void InputDevice::getLastEvent(int&action,nsecs_t&etime,Point*pos)const{
     *pos = mLastEventPos;
 }
 
+int32_t InputDevice::globalMetaState()const{
+    return InputEventSource::getInstance().getGlobalMetaState();
+}
+
+// keyCode → modifier meta bits contributed while the key is held (0 if not a
+// chord modifier). Mirrors Android InputReader: pressing Shift_Left sets both
+// META_SHIFT_ON and META_SHIFT_LEFT_ON, etc.
+static int32_t modifierMetaMask(int keyCode){
+    switch(keyCode){
+    case KeyEvent::KEYCODE_SHIFT_LEFT:  return KeyEvent::META_SHIFT_ON |KeyEvent::META_SHIFT_LEFT_ON;
+    case KeyEvent::KEYCODE_SHIFT_RIGHT: return KeyEvent::META_SHIFT_ON |KeyEvent::META_SHIFT_RIGHT_ON;
+    case KeyEvent::KEYCODE_ALT_LEFT:    return KeyEvent::META_ALT_ON   |KeyEvent::META_ALT_LEFT_ON;
+    case KeyEvent::KEYCODE_ALT_RIGHT:   return KeyEvent::META_ALT_ON   |KeyEvent::META_ALT_RIGHT_ON;
+    case KeyEvent::KEYCODE_CTRL_LEFT:   return KeyEvent::META_CTRL_ON  |KeyEvent::META_CTRL_LEFT_ON;
+    case KeyEvent::KEYCODE_CTRL_RIGHT:  return KeyEvent::META_CTRL_ON  |KeyEvent::META_CTRL_RIGHT_ON;
+    case KeyEvent::KEYCODE_META_LEFT:   return KeyEvent::META_META_ON  |KeyEvent::META_META_LEFT_ON;
+    case KeyEvent::KEYCODE_META_RIGHT:  return KeyEvent::META_META_ON  |KeyEvent::META_META_RIGHT_ON;
+    case KeyEvent::KEYCODE_SYM:         return KeyEvent::META_SYM_ON;
+    case KeyEvent::KEYCODE_FUNCTION:    return KeyEvent::META_FUNCTION_ON;
+    default: return 0;
+    }
+}
+
+// Lock-key meta bit (0 if not a lock key). Caps/Num/Scroll toggle on the down edge.
+static int32_t lockMetaMask(int keyCode){
+    switch(keyCode){
+    case KeyEvent::KEYCODE_CAPS_LOCK:   return KeyEvent::META_CAPS_LOCK_ON;
+    case KeyEvent::KEYCODE_NUM_LOCK:    return KeyEvent::META_NUM_LOCK_ON;
+    case KeyEvent::KEYCODE_SCROLL_LOCK: return KeyEvent::META_SCROLL_LOCK_ON;
+    default: return 0;
+    }
+}
+
 KeyDevice::KeyDevice(int32_t fd)
    :InputDevice(fd){
    msckey = 0;
    mLastDownKey = -1;
    mRepeatCount = 0;
+   mMetaState = 0;
    mDeviceInfo.addSource(SOURCE_KEYBOARD);
 }
 
@@ -411,8 +479,30 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
             break;
         }
 
+        // Maintain this device's accumulated modifier state, then attach the
+        // GLOBAL view (all keyboards OR'd together) to the KeyEvent — matching
+        // Android, where KeyboardInputMapper updates its own state and the
+        // InputReader re-aggregates before the event is emitted.
+        // Chorded-keyboard model (MetaKeyKeyListener): a modifier's down and up
+        // events both report the key as active — down sets then reads, up reads
+        // then clears. Caps/Num/Scroll lock toggle on the down edge only.
+        int32_t meta;
+        {
+            const int32_t modMask  = modifierMetaMask(keyCode);
+            const int32_t lockMask = lockMetaMask(keyCode);
+            if (modMask && value != 0) {
+                mMetaState |= modMask;            // down/repeat: set local before reading
+            } else if (lockMask && value == 1) {
+                mMetaState ^= lockMask;           // down edge: toggle
+            }
+            meta = mMetaState | globalMetaState(); // global view; |self keeps chorded read-before-clear pre-aggregation
+            if (modMask && value == 0) {
+                mMetaState &= ~modMask;           // up: clear local after reading
+            }
+        }
+
         mEvent.initialize(getId(),getSources(),mDisplayId,(value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/,flags,
-              keyCode,code/*scancode*/,0/*metaState*/,mRepeatCount, mDownTime,SystemClock::uptimeMicros()/*eventtime*/);
+              keyCode,code/*scancode*/,meta,mRepeatCount, mDownTime,SystemClock::uptimeMillis()/*eventtime*/);
         LOGV("fd[%d] keycode:%08x->%04x[%s] action=%d flags=%d",getId(),code,keyCode, KeyEvent::keyCodeToString(keyCode).c_str(),value,flags);
         mEvents.push_back(KeyEvent::obtain(mEvent));
         break;
@@ -429,11 +519,15 @@ int32_t KeyDevice::putEvent(long sec,long nsec,int32_t type,int32_t code,int32_t
 
 TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
     mTypeB = false;
+    mSawSynMtReport = false;
+    mIsMt = false;
+    mBtnTouchDown = false;
+    mFingerLifted = false;
     mTrackID = mSlotID = -1;
-    mProp.id = 0;
+    mCurrentIndex = -1;
+    mPendingToolType = MotionEvent::TOOL_TYPE_UNKNOWN;
     mVirtualKeyCode=0;
     mVirtualScanCode=0;
-    mCorrectedDeviceClasses = mDeviceClasses;
     #define ISRANGEVALID(range) (range&&(range->max-range->min))
     std::vector<InputDeviceInfo::MotionRange>&axesRange = mDeviceInfo.getMotionRanges();
     for(int i=0;i<axesRange.size();i++){
@@ -470,17 +564,19 @@ TouchDevice::TouchDevice(int32_t fd):InputDevice(fd){
         mInvertY = mPrefs.getBool(section,"invertY",false);
         mSwitchXY= mPrefs.getBool(section,"switchXY",false);
     }
-    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX + 1):mScreenWidth;
-    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY + 1):mScreenHeight;
+    mTPWidth = (mMaxX!=mMinX)?std::abs(mMaxX - mMinX):mScreenWidth;
+    mTPHeight= (mMaxY!=mMinY)?std::abs(mMaxY - mMinY):mScreenHeight;
     mLastBits.clear();
     mCurrBits.clear();
+    for(int i=0;i<MAX_POINTERS;i++){
+        mSlot2Index[i]=-1;
+        mRawCoords[i].clear();
+        mRawProps[i].clear();
+    }
+    mTrackId2Index.clear();
     mEvent = nullptr;
     mActionButton = 0;
     mButtonState  = 0;
-    mPointerCoords.reserve(16);
-    mPointerProps.reserve(16);
-    mCoord.clear();
-    mProp.clear();
     mDeviceInfo.addSource(SOURCE_CLASS_POINTER);
     std::string name = std::string("virtualkeys.")+mDeviceInfo.getIdentifier().getCanonicalName();
     std::ifstream vkf(name);
@@ -553,8 +649,22 @@ static int toMotionToolType(int value){
 
 void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     const int rotation = WindowManager::getInstance().getDefaultDisplay().getRotation();
-    int slot, axis = ABS2AXIS(raw_axis);
+    /* Runtime MT detection: absBitMask is unreliable on many real devices, so
+     * tag the device as MT the moment it sends any ABS_MT_* axis. */
+    if (raw_axis >= ABS_MT_SLOT && raw_axis <= ABS_MT_TOOL_Y) mIsMt = true;
+    int axis = ABS2AXIS(raw_axis);
     int tmp;
+    // Single-touch axes (ABS_X/Y/Z) force index 0 and disable MT, ahead of the
+    // rotation/scale write below so it targets mRawCoords[0]. Don't markBit here
+    // — single-touch bit0 is owned by BTN_TOUCH (set on down, cleared on up).
+    if (raw_axis == ABS_X || raw_axis == ABS_Y || raw_axis == ABS_Z) {
+        mSlotID = mTrackID = 0;
+        mCurrentIndex = 0;
+        if (mSlot2Index[0] == -1) mSlot2Index[0] = 0;
+        mIsMt = false; // single-touch axes ⇒ not MT
+        mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
+    }
+    if (mCurrentIndex < 0) mCurrentIndex = 0; // defensive: axis event before any slot/tracking
     switch(axis){
     case MotionEvent::AXIS_X:
         switch(rotation){
@@ -571,7 +681,7 @@ void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
         }else if(mScreenWidth != mTPWidth){
             value = (value * mScreenWidth)/mTPWidth;
         }
-        mCoord.setAxisValue(axis,value);
+        mRawCoords[mCurrentIndex].setAxisValue(axis,value);
         break;
     case MotionEvent::AXIS_Y:
         switch(rotation){
@@ -587,14 +697,14 @@ void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
             axis= (rotation==Display::ROTATION_90 ||rotation==Display::ROTATION_270)?MotionEvent::AXIS_Y:MotionEvent::AXIS_X;
         }else{
             value = (value * mScreenHeight)/mTPHeight;
-        }mCoord.setAxisValue(axis,value);
+        }mRawCoords[mCurrentIndex].setAxisValue(axis,value);
         break;
     case MotionEvent::AXIS_PRESSURE:
         tmp = std::max(mPressureMax - mPressureMin,1);
-        mCoord.setAxisValue(axis,float(value - mPressureMin)/tmp);
+        mRawCoords[mCurrentIndex].setAxisValue(axis,float(value - mPressureMin)/tmp);
         break;
     default:
-        mCoord.setAxisValue(axis,value);break;
+        mRawCoords[mCurrentIndex].setAxisValue(axis,value);break;
     }/*endof switch(axis)*/
 #if 0
     ui::Transform t;
@@ -616,46 +726,98 @@ void TouchDevice::setAxisValue(int32_t raw_axis,int32_t value,bool isRelative){
     mv->applyTransform(rowMajor);
     LOGD("xy=%.f,%.f",mv->getX(),mv->getY());
 #endif
-    //if( (raw_axis>=ABS_MT_SLOT) && (raw_axis<=ABS_CNT) )
-    //    mAxisFlags |= 1 << (raw_axis - ABS_MT_SLOT);
     switch(raw_axis){
-    case ABS_X:
-    case ABS_Y:
-    case ABS_Z:
-        mSlotID = mTrackID= 0;mProp.clear();
-        /*Single Touch has only one finger,so slotid trackid always be zero*/
-        mDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-        break;
     case ABS_MT_POSITION_X:
     case ABS_MT_POSITION_Y:
-        //mDeviceClasses |= INPUT_DEVICE_CLASS_TOUCH_MT;
         break;
     case ABS_MT_SLOT:
+        /* Type-B: select current slot. The active index is resolved when the
+         * matching TRACKING_ID arrives, or reused if the slot is already active. */
         mTypeB = true;
-        mSlotID= value;
-        slot = mTrack2Slot.indexOfValue(value);
-        if(slot>=0){
-            mProp.id = slot;
-        }
+        mSlotID = value;
+        mCurrentIndex = (mSlotID >= 0 && mSlotID < MAX_POINTERS) ? mSlot2Index[mSlotID] : -1;
         break;
-    case ABS_MT_TRACKING_ID:/*For TypeB ABS_MT_TRACKING_ID must reported after ABS_MT_SLOT*/
-        slot = mTrack2Slot.indexOfKey(mTrackID = value);
-        if( (slot ==-1) && (value!=-1) ){
-            const int index = mTrack2Slot.size();
-            mCurrBits.markBit(index);
-            mTrack2Slot.put(mTrackID,(mTypeB?mSlotID:index));
-            if( mTypeB==false ) mSlotID = index;
-            slot = index;
-            LOGV("Slot=%d TRACKID=%d %08x,%08x",mSlotID,value,mLastBits.value,mCurrBits.value);
-        }else if( value==-1 /*&& mTypeB*/){//for TypeB
-            const uint32_t pointerIndex = mTrack2Slot.indexOfValue(mSlotID);
-            LOGV("clearbits %d %08x,%08x",pointerIndex,mLastBits.value,mCurrBits.value);
-            mCurrBits.clearBit(pointerIndex);
+    case ABS_MT_TRACKING_ID:
+        /* TRACKING_ID is only a mapping key — unique within one touch lifecycle,
+         * no encoding rule (not 0-based, not small, not monotonic). TypeA maps it
+         * directly to a stable compact index; TypeB maps slot→index (TRACKING_ID
+         * just marks the slot active/inactive). */
+        mTrackID = value;
+        if (!mTypeB) {
+            /* TypeA: TRACKING_ID → stable index, kept across frames (not reset).
+             * Same finger always lands on the same index, so POINTER_UP carries
+             * the right coords. */
+            if (value != -1) {
+                int index = mTrackId2Index.get(value, -1);
+                if (index < 0) {
+                    index = BitSet32::firstUnmarkedBit(mCurrBits.value | mLastBits.value);
+                    if (index >= MAX_POINTERS) {
+                        LOGE("TRACKING_ID %d: no free pointer slot (>= %d) — letting it crash",
+                             value, MAX_POINTERS);
+                        index = 0;
+                    }
+                    mTrackId2Index.put(value, index);
+                    mRawProps[index].clear();
+                    mRawCoords[index].clear();
+                    mRawProps[index].id = index;
+                    mRawProps[index].toolType = mPendingToolType;
+                }
+                if (mFingerLifted) {
+                    /* Non-standard MT up (XLIB): BTN_TOUCH=0 already lifted the
+                     * finger, but a fixed TRACKING_ID follows — don't let it
+                     * revive the finger (would turn ACTION_UP into ACTION_MOVE). */
+                    mFingerLifted = false;
+                    mCurrentIndex = -1;
+                } else {
+                    mCurrentIndex = index;
+                    mCurrBits.markBit(index);
+                }
+            } else {
+                /* TypeA -1: some non-standard drivers (no ABS_MT_SLOT) still use
+                 * TRACKING_ID=-1 to signal release. Lift the finger currently in
+                 * mCurrentIndex. Standard TypeA lift (finger absent next frame)
+                 * is detected by mLastBits vs mCurrBits at SYN_REPORT. */
+                if (mCurrentIndex >= 0) mCurrBits.clearBit(mCurrentIndex);
+                mCurrentIndex = -1;
+            }
+            break;
         }
-        mProp.id = slot;
+        /* TypeB: TRACKING_ID follows ABS_MT_SLOT; index resolved via slot. */
+        if (value != -1) {
+            const int slot = mSlotID;
+            if (slot >= 0 && slot < MAX_POINTERS && mSlot2Index[slot] == -1) {
+                int index = BitSet32::firstUnmarkedBit(mCurrBits.value);
+                if (index >= MAX_POINTERS) {
+                    LOGE("TRACKING_ID %d: no free pointer slot (>= %d) — letting it crash",
+                         value, MAX_POINTERS);
+                    index = 0;
+                }
+                mSlot2Index[slot] = index;
+                mCurrBits.markBit(index);
+                mRawProps[index].clear();
+                mRawCoords[index].clear();
+                mRawProps[index].id = index;
+                mRawProps[index].toolType = mPendingToolType;
+                mCurrentIndex = index;
+            } else if (slot >= 0 && slot < MAX_POINTERS) {
+                mCurrentIndex = mSlot2Index[slot]; // already active
+            }
+        } else { /* pointer up */
+            const int slot = mSlotID;
+            if (slot >= 0 && slot < MAX_POINTERS) {
+                int index = mSlot2Index[slot];
+                if (index >= 0) {
+                    mCurrBits.clearBit(index);
+                    mSlot2Index[slot] = -1;
+                }
+            }
+            mCurrentIndex = -1;
+        }
         break;
     case ABS_MT_TOOL_TYPE:
-        mProp.toolType = toMotionToolType(value);
+        mPendingToolType = toMotionToolType(value);
+        if (mCurrentIndex >= 0) mRawProps[mCurrentIndex].toolType = mPendingToolType;
+        break;
     default:break;
     }
 }
@@ -664,15 +826,12 @@ int32_t TouchDevice::isValidEvent(int32_t type,int32_t code,int32_t value){
     return (type==EV_ABS)||(type==EV_SYN)||(type==EV_KEY)||(type==EV_MSC);
 }
 
-int32_t TouchDevice::getActionByBits(int& pointerIndex){
+int32_t TouchDevice::getActionByBits(int& changedIndex){
     const uint32_t diffBits = mLastBits.value^mCurrBits.value;
-    pointerIndex = diffBits?BitSet32::firstMarkedBit(diffBits):mTrack2Slot.indexOfValue(mSlotID);
-    if(((mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)||(mSlotID==-1))
-        pointerIndex = 0;
-    /*if(((mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)==0)&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)){
-        if(mLastAction==MotionEvent::ACTION_UP)
-            return MotionEvent::ACTION_DOWN;
-    }*/
+    changedIndex = diffBits?BitSet32::firstMarkedBit(diffBits):-1;
+    /* No override: single-touch naturally yields changedIndex=0 because
+     * firstMarkedBit({bit0})==0; the (!TOUCH_MT) override wrongly zeroed
+     * multi-pointer's index when the device wasn't tagged TOUCH_MT. */
     if(mLastBits.count()==mCurrBits.count()){
         return MotionEvent::ACTION_MOVE;
     }else if(mLastBits.count()<mCurrBits.count()){
@@ -692,7 +851,7 @@ static std::string printEvent(MotionEvent*e){
 }
 
 int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32_t value){
-    int slot,pointerCount,pointerIndex,action;
+    int pointerCount,pointerIndex,changedIndex,action;
     MotionEvent*lastEvent = nullptr;
     if(!isValidEvent(type,code,value))return -1;
     //LOGV("%lu:%04u %d,%d,%d",sec,usec,type,code,value);
@@ -701,15 +860,24 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         switch(code){
         case BTN_TOUCH ://case BTN_STYLUS:
             mActionButton = MotionEvent::BUTTON_PRIMARY;
+            mMoveTime = sec * 1000 + usec/1000;
             if(value){
-                LOGW_IF(mCurrBits.count(),"Wrong BTN_TOUCH STATE %X should be 0 (Fingers was already TOUCHED DOWN)",mCurrBits.value);
-                mCurrBits.markBit(0);
-                mMoveTime = mDownTime = sec * 1000 + usec/1000;
                 mButtonState = MotionEvent::BUTTON_PRIMARY;
+                /* Defer markBit to SYN_REPORT: BTN_TOUCH often arrives BEFORE
+                 * any ABS_MT_* axis, so mIsMt isn't known yet. Marking now
+                 * would steal index0 on MT devices where the real finger is
+                 * identified later by TRACKING_ID. */
+                mBtnTouchDown = true;
+                mFingerLifted = false;
+                mDownTime = mMoveTime;
+                mCurrentIndex = 0;
             }else {
-                mCurrBits.clearBit(0);
-                mMoveTime = sec * 1000 + usec/1000;
                 mButtonState &= ~MotionEvent::BUTTON_PRIMARY;
+                /* Lift the finger. KEEP mSlot2Index[0]: non-standard MT sends a
+                 * fixed TRACKING_ID again on up, which must NOT re-allocate. */
+                mCurrBits.clearBit(0);
+                mFingerLifted = true;  // suppress TRACKING_ID re-mark until next BTN_TOUCH down
+                mCurrentIndex = 0;
             }
             break;
         case BTN_LEFT:/*MouseLeft*/
@@ -743,9 +911,10 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             mActionButton = MotionEvent::BUTTON_SECONDARY;
             if(value) mButtonState|=MotionEvent::BUTTON_SECONDARY;
             else mButtonState &= ~MotionEvent::BUTTON_SECONDARY;
+            break;
         case BTN_STYLUS2:
             mActionButton = MotionEvent::BUTTON_TERTIARY;
-            if(value) mButtonState = MotionEvent::BUTTON_TERTIARY;
+            if(value) mButtonState|=MotionEvent::BUTTON_TERTIARY;
             else mButtonState &= ~MotionEvent::BUTTON_TERTIARY;
             break;
 #ifdef BTN_STYLUS3
@@ -760,13 +929,14 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         case BTN_TOOL_RUBBER:
         case BTN_TOOL_BRUSH:
         case BTN_TOOL_PENCIL:
-            mProp.toolType = toMotionToolType(code);
+            mPendingToolType = toMotionToolType(code);
+            if(mCurrentIndex>=0) mRawProps[mCurrentIndex].toolType = mPendingToolType;
             break;
         default:
             if((code<BTN_MOUSE)||(code>BTN_GEAR_UP)){
                 KeyEvent*keyEvent = KeyEvent::obtain(mDownTime,(1000LL*sec+usec/1000),
                     (value?KeyEvent::ACTION_DOWN:KeyEvent::ACTION_UP)/*action*/, code/*KeyCode*/,0/*repeat*/,
-                    0/*metaState*/,getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
+                    globalMetaState(),getId()/*deviceId*/,code/*scancode*/,0/*flags*/,getSources(),0/*displayid*/);
                 LOGD("RECV KEY %d %s",code,(value?"down":"up"));
                 mEvents.push_back(keyEvent);
             }
@@ -781,124 +951,141 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
         }break;
     case EV_SYN:
         if((code != SYN_REPORT) && (code != SYN_MT_REPORT))break;
-#define DISABLE_MTASST
-#ifndef DISABLE_MTASST
-    #define HASMTFLAG(f) (mAxisFlags&(1<<((f)-ABS_MT_SLOT)))
-    #define HASTRACKORSLOT (HASMTFLAG(ABS_MT_TRACKING_ID)||HASMTFLAG(ABS_MT_SLOT))
-    #define TRACKING_FLAG ((1<<(ABS_MT_TRACKING_ID-ABS_MT_SLOT))|(1<<(ABS_MT_SLOT-ABS_MT_SLOT)))
-        if( (mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && ((HASMTFLAG(ABS_MT_POSITION_X)||HASMTFLAG(ABS_MT_POSITION_Y))&&(HASTRACKORSLOT==0)) ){
-            mCorrectedDeviceClasses &= ~INPUT_DEVICE_CLASS_TOUCH_MT;
-            LOGI("mCurrBits=%x last=%x mAxisFlags=%x/%x pos=%.f,%.f code=%d",mCurrBits.value,mLastBits.value,mAxisFlags,TRACKING_FLAG,mCoord.getX(),mCoord.getY(),code);
-            if((mAxisFlags&0x80000000)==0) {mCurrBits.markBit(0); mLastBits.markBit(0);mTrack2Slot.clear();}
-            if( mAxisFlags&TRACKING_FLAG ) mCurrBits.clear();
-            mTrack2Slot.put(0,0); mProp.id = 0;
-        }
-        if(code == SYN_REPORT) mAxisFlags = 0;
-#endif
 
-        slot = mProp.id;
-        if( (mProp.id==-1)||((mTrackID==-1)&&(mSlotID==-1)))
-            slot = mProp.id = 0;
-        mPointerProps [slot] = mProp;
-        mPointerCoords[slot] = mCoord;
-        if( code == SYN_MT_REPORT ) break;
-        action = getActionByBits(pointerIndex);
-        mMoveTime = (sec * 1000LL + usec/1000);
-        lastEvent = (mEvents.size() > 1) ? (MotionEvent*)mEvents.back() : nullptr;
-        pointerCount = (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) ? std::max(mLastBits.count(),mCurrBits.count()) : 1;
-        if(pointerCount==0)break;/*pointerCount==0 is KeyEvent!*/
-        if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
-            auto lastTime = lastEvent->getDownTime();
-            lastEvent->addSample(mMoveTime,mPointerCoords.data());
-            LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
-        }else {
-            const bool useBackupProps = ((action==MotionEvent::ACTION_UP)||(action==MotionEvent::ACTION_POINTER_UP))&&(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT);
-            const PointerCoords  *coords = useBackupProps ? mPointerCoordsBak.data(): mPointerCoords.data();
-            const PointerProperties*props= useBackupProps ? mPointerPropsBak.data() : mPointerProps.data();
-            if(action==MotionEvent::ACTION_DOWN){
-                int keyFlags;
-                if(mVirtualScanCode){
-                    KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
-                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+        /* TypeA: SYN_MT_REPORT ends one pointer segment; advance the virtual
+         * slot so the next TRACKING_ID/axes allocate a fresh index. TypeB (slot
+         * protocol) never sends SYN_MT_REPORT; single-touch (TOUCH_MT cleared)
+         * never reaches an MT report either. */
+        if(code == SYN_MT_REPORT) {
+            mSawSynMtReport = true; // any SYN_MT_REPORT ⇒ TypeA device
+            if(!mTypeB) mSlotID++; // TypeA virtual slot for the next segment
+            break; // don't emit until SYN_REPORT
+        }
+
+        /* SYN_REPORT: collect active pointers into a compact 0-based array and
+         * emit. activeBits = last|curr so UP/POINTER_UP events still carry the
+         * lifted pointer's last-known coords — mRawCoords[index] is slot-fixed
+         * and never erased/repacked (S3/S4 root fix; replaces the old backup). */
+        {
+            /* Deferred BTN_TOUCH finger: only mark bit0 if NO finger was built
+             * this frame (mCurrBits empty). On real MT devices TRACKING_ID
+             * builds the finger; on non-standard "MT" drivers that emit
+             * ABS_MT_POSITION/PRESSURE but no usable TRACKING_ID (XLIB,
+             * MTASST, MTASST3), mCurrBits stays empty so BTN_TOUCH owns bit0. */
+            if(mBtnTouchDown && mCurrBits.count()==0){
+                mSlotID = 0;
+                mSlot2Index[0] = 0;
+                mCurrBits.markBit(0);
+                mRawProps[0].clear();
+                mRawProps[0].id = 0;
+                mRawProps[0].toolType = mPendingToolType;
+                /* Don't clear mRawCoords[0]: POSITION/PRESSURE axes for this finger
+                 * may already be written (they arrive before BTN_TOUCH in non-standard
+                 * sequences). mRawCoords is ctor-cleared and filled per-axis. */
+            }
+            mBtnTouchDown = false;
+            const uint32_t activeBits = mLastBits.value | mCurrBits.value;
+            PointerCoords outCoords[MAX_POINTERS];
+            PointerProperties outProps[MAX_POINTERS];
+            int index2pointer[MAX_POINTERS];
+            for(int i=0;i<MAX_POINTERS;i++) index2pointer[i]=-1;
+            pointerCount = 0;
+            for(uint32_t bits = activeBits; bits; ) {
+                const int idx = BitSet32::clearFirstMarkedBit(bits); // ascending index
+                outCoords[pointerCount] = mRawCoords[idx];
+                outProps[pointerCount]  = mRawProps[idx];
+                outProps[pointerCount].id = pointerCount; // pointerId = compact position (CDROID convention), not internal index
+                index2pointer[idx] = pointerCount;
+                pointerCount++;
+            }
+
+            action = getActionByBits(changedIndex);
+            /* For MOVE (changedIndex<0, no bit change) the action index follows
+             * the last-active pointer (mCurrentIndex), matching the old
+             * mTrack2Slot.indexOfValue(mSlotID) behaviour. */
+            const int actIdx = (changedIndex>=0) ? changedIndex : mCurrentIndex;
+            pointerIndex = (actIdx>=0 && actIdx<MAX_POINTERS && index2pointer[actIdx]>=0)
+                           ? index2pointer[actIdx] : 0;
+
+            mMoveTime = (sec * 1000LL + usec/1000);
+            // mEvents holds both MotionEvent* and KeyEvent*; guard the downcast.
+            InputEvent* back = (mEvents.size() > 1) ? mEvents.back() : nullptr;
+            lastEvent = (back && back->getType() == InputEvent::INPUT_EVENT_TYPE_MOTION)
+                        ? static_cast<MotionEvent*>(back) : nullptr;
+
+            if(pointerCount==0) {
+                /* No active pointers (key-only / post-release frame). Still
+                 * advance bit state so stale mLastBits doesn't bleed forward. */
+                mLastBits.value = mCurrBits.value;
+                if(!mTypeB && mSawSynMtReport) {
+                    mCurrBits.clear();
+                    for(int i=0;i<MAX_POINTERS;i++) mSlot2Index[i]=-1;
+                    mSlotID = 0;
+                }
+                mFingerLifted = false;  // mFingerLifted is per-frame (BTN_TOUCH=0 only)
+                break;
+            }
+
+            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (action == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getEventTime()<100)){
+                auto lastTime = lastEvent->getDownTime();
+                lastEvent->addSample(mMoveTime, outCoords);
+                LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
+            }else {
+                if(action==MotionEvent::ACTION_DOWN){
+                    int keyFlags;
+                    if(mVirtualScanCode){
+                        KeyEvent*k = KeyEvent::obtain(mMoveTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,globalMetaState(),
+                            getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+                        mEvents.push_back(k);
+                        k->recycle();
+                        LOGD("mVirtualKey=%d/%d ACTION_UP",mVirtualScanCode,mVirtualKeyCode);
+                    }
+                    mVirtualScanCode = findVirtualKeyHit(outCoords[0].getX(),outCoords[0].getY());
+                    if(mVirtualScanCode){
+                        if((mKeyMap==nullptr)||mKeyMap->mapKey(mVirtualScanCode/*scancode*/,0,&mVirtualKeyCode/*keycode*/,(uint32_t*)&keyFlags)){
+                            mVirtualKeyCode = mVirtualScanCode;/*mapKey failed or no map specified*/
+                        }
+                        KeyEvent*k = KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,globalMetaState(),
+                            getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
+                        mEvents.push_back(k);
+                        k->recycle();
+                        LOGD("mVirtualKey=%d/%d ACTION_DOWN %p",mVirtualScanCode,mVirtualKeyCode,k);
+                    }
+                }
+                if(mVirtualScanCode==0){
+                    mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount, outProps, outCoords, globalMetaState(),mButtonState,
+                         0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
+                    LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
+                         outCoords[0].getX(),outCoords[0].getY(),printEvent(mEvent).c_str());
+                    mEvent->setActionButton(mActionButton);
+                    mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
+
+                    MotionEvent*e = MotionEvent::obtain(*mEvent);
+                    mEvents.push_back(e);
+                    mEvent->recycle();
+                }
+                if((action==MotionEvent::ACTION_UP)&&mVirtualScanCode){
+                    KeyEvent*k=KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,globalMetaState(),
+                            getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
                     mEvents.push_back(k);
                     k->recycle();
-                    LOGD("mVirtualKey=%d/%d ACTION_UP",mVirtualScanCode,mVirtualKeyCode);
-                }
-                mVirtualScanCode = findVirtualKeyHit(mPointerCoords[0].getX(),mPointerCoords[0].getY());
-                if(mVirtualScanCode){
-                    if((mKeyMap==nullptr)||mKeyMap->mapKey(mVirtualScanCode/*scancode*/,0,&mVirtualKeyCode/*keycode*/,(uint32_t*)&keyFlags)){
-                        mVirtualKeyCode = mVirtualScanCode;/*mapKey failed or no map specified*/
-                    }
-                    KeyEvent*k = KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_DOWN,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
-                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
-                    mEvents.push_back(k);
-                    k->recycle();
-                    LOGD("mVirtualKey=%d/%d ACTION_DOWN %p",mVirtualScanCode,mVirtualKeyCode,k);
+                    LOGD("mVirtualKey=%d/%d ACTION_UP %p",mVirtualKeyCode,mVirtualKeyCode,k);
+                    mVirtualKeyCode=mVirtualScanCode=0;
                 }
             }
-            if(mVirtualScanCode==0){
-                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , action , pointerCount,props,coords, 0/*metaState*/,mButtonState,
-                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
-                LOGV_IF(action != MotionEvent::ACTION_MOVE,"mask = %08x,%08x (%.f,%.f)\n%s",mLastBits.value,mCurrBits.value,
-                     mCoord.getX(),mCoord.getY(),printEvent(mEvent).c_str());
-                mEvent->setActionButton(mActionButton);
-                mEvent->setAction(action|(pointerIndex<<MotionEvent::ACTION_POINTER_INDEX_SHIFT));
-
-                MotionEvent*e = MotionEvent::obtain(*mEvent);
-                mEvents.push_back(e);
-                mEvent->recycle();
+            mLastAction = action;
+            mLastEventTime = SystemClock::uptimeMillis();
+            mLastEventPos.set(outCoords[0].getX(),outCoords[0].getY());
+            mLastBits.value = mCurrBits.value;
+            /* TypeA only: every SYN_REPORT rebuilds pointers from scratch (no
+             * slot persistence). TypeB keeps slot state across frames;
+             * single-touch (TOUCH_MT cleared) keeps bit 0 across the MOVE seq. */
+            if(!mTypeB && mSawSynMtReport) {
+                mCurrBits.clear();
+                for(int i=0;i<MAX_POINTERS;i++) mSlot2Index[i]=-1;
+                mSlotID = 0;
             }
-            if((action==MotionEvent::ACTION_UP)&&mVirtualScanCode){
-                KeyEvent*k=KeyEvent::obtain(mDownTime,mMoveTime,KeyEvent::ACTION_UP,mVirtualKeyCode,0/*repeat*/,0/*metaState*/,
-                        getId()/*deviceId*/,mVirtualScanCode,0/*flags*/,getSources(),mDisplayId);
-                mEvents.push_back(k);
-                k->recycle();
-                LOGD("mVirtualKey=%d/%d ACTION_UP %p",mVirtualKeyCode,mVirtualKeyCode,k);
-                mVirtualKeyCode=mVirtualScanCode=0;
-            }
-        }
-        mLastAction = action;
-        mLastEventTime = SystemClock::uptimeMillis();
-        mLastEventPos.set(mCoord.getX(),mCoord.getY());
-        if( mLastBits.count() > mCurrBits.count() ){
-            // Find bits that were present in last but are gone in current
-            uint32_t disappeared = mLastBits.value & (~mCurrBits.value);
-            if (disappeared) {
-                const int removedCount = BitSet32::count(disappeared);
-                for (;disappeared;) {
-                    const int idx = BitSet32::clearLastMarkedBit(disappeared);
-                    LOGV("clearbits %d %08x,%08x trackslot.size = %d", idx, mLastBits.value, mCurrBits.value, mTrack2Slot.size());
-                    if (mDeviceClasses & INPUT_DEVICE_CLASS_TOUCH_MT) mCurrBits.clearBit(idx);
-                    if (idx < mTrack2Slot.size()) mTrack2Slot.removeAt(idx);
-                    if (idx < (int)mPointerProps.size()) {
-                        mPointerProps.erase(mPointerProps.begin() + idx);
-                        mPointerCoords.erase(mPointerCoords.begin() + idx);
-                    }
-                }
-                // Maintain previous container sizes by appending empty slots equal to removed count
-                if(removedCount){
-                    mPointerProps.resize(mPointerProps.size() + removedCount);
-                    mPointerCoords.resize(mPointerCoords.size() + removedCount);
-                }
-            }
-        } else {
-            mPointerCoordsBak.clear();
-            mPointerCoordsBak.assign(mPointerCoords.begin(),mPointerCoords.begin() + pointerCount);
-            mPointerPropsBak.clear();
-            mPointerPropsBak.assign(mPointerProps.begin(),mPointerProps.begin() + pointerCount);
-        }
-
-        mLastBits.value = mCurrBits.value;
-        //mProp.clear();
-        if(/*(mDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT) && (mCorrectedDeviceClasses&INPUT_DEVICE_CLASS_TOUCH_MT)
-                &&*/ (mCurrBits.count()>1) && (mTypeB==false)){
-            mCoord.clear();
-            mCurrBits.clear();//only typeA
-            mTrack2Slot.clear();
-            for(int i = 0;i < pointerCount;i++){
-                mPointerProps[i].clear();
-                mPointerCoords[i].clear();
-            };
+            mFingerLifted = false;  // mFingerLifted is per-frame (BTN_TOUCH=0 only)
         }
         break;/*caseof EV_SYN*/
     }
@@ -1134,12 +1321,12 @@ int32_t MouseDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
             if(mPointerCoord.getAxisValue(MotionEvent::AXIS_VSCROLL)!=0||mPointerCoord.getAxisValue(MotionEvent::AXIS_HSCROLL)!=0){
                 mPendingAction = MotionEvent::ACTION_SCROLL;
             }
-            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (mPendingAction == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getDownTime()<100)){
+            if(lastEvent && (lastEvent->getActionMasked() == MotionEvent::ACTION_MOVE) && (mPendingAction == MotionEvent::ACTION_MOVE) && (mMoveTime - lastEvent->getEventTime()<100)){
                 auto lastTime = lastEvent->getDownTime();
                 lastEvent->addSample(mMoveTime,&mPointerCoord);
                 LOGV("eventdur=%d %s",int(mMoveTime-lastTime),printEvent(lastEvent).c_str());
             }else {
-                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , mPendingAction , 1,&mPointerProp,&mPointerCoord, 0/*metaState*/,mButtonState,
+                mEvent = MotionEvent::obtain(mDownTime , mMoveTime , mPendingAction , 1,&mPointerProp,&mPointerCoord, globalMetaState(),mButtonState,
                     0,0/*x/yPrecision*/,getId()/*deviceId*/, 0/*edgeFlags*/, getSources(),mDisplayId, 0/*flags*/,0/*classification*/);
                 LOGV_IF(mPendingAction != MotionEvent::ACTION_MOVE,"(%.f,%.f)\n%s", mPointerCoord.getX(),mPointerCoord.getY(),printEvent(mEvent).c_str());
                 mEvent->setActionButton(mActionButton);

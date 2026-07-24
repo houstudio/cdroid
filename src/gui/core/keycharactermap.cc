@@ -8,6 +8,8 @@
 #include <cdlog.h>
 #include <fstream>
 #include <chrono>
+#include <mutex>
+#include <core/app.h>
 // Enables debug output for the parser.
 #define DEBUG_PARSER 0
 
@@ -183,6 +185,34 @@ KeyCharacterMap* KeyCharacterMap::combine(const KeyCharacterMap* base,const KeyC
 
 KeyCharacterMap* KeyCharacterMap::empty() {
     return sEmpty;
+}
+
+KeyCharacterMap* KeyCharacterMap::getDefault() {
+    // Shared, lazily-loaded default map: the per-device fallback and the
+    // VIRTUAL_KEYBOARD map for synthetic KeyEvents. Replicates the former
+    // InputMethodManager::getInstance() load (bare "Generic.kcm", then
+    // "qwerty.kcm"), with the same CWD-relative ifstream → App::getInputStream
+    // resolution. Thread-safe one-shot init (called from InputDevice ctor on the
+    // input thread and from KeyEvent resolution on the UI thread).
+    static KeyCharacterMap* sDefault = nullptr;
+    static std::once_flag once;
+    std::call_once(once, [] {
+        auto tryLoad = [](const std::string& filename) -> KeyCharacterMap* {
+            KeyCharacterMap* map = nullptr;
+            std::ifstream fs(filename);
+            if (fs.good()) {
+                KeyCharacterMap::load(filename, fs, FORMAT_ANY, map);
+            } else {
+                std::shared_ptr<std::istream> in = App::getInstance().getInputStream(filename);
+                if (in) KeyCharacterMap::load(filename, *in, FORMAT_ANY, map);
+            }
+            return map;
+        };
+        sDefault = tryLoad("Generic.kcm");
+        if (sDefault == nullptr) sDefault = tryLoad("qwerty.kcm");
+        if (sDefault == nullptr) sDefault = KeyCharacterMap::empty();   // last resort
+    });
+    return sDefault;
 }
 
 int32_t KeyCharacterMap::getKeyboardType() const {

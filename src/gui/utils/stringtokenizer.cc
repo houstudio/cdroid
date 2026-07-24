@@ -23,7 +23,7 @@ namespace Character{
 static constexpr int MIN_HIGH_SURROGATE=0xD800;
 static constexpr int MAX_LOW_SURROGATE =0xDBFF;
 
-int charCount(int unicodeValue) {
+static int charCount(int unicodeValue) {
     // 单字节字符
     if (unicodeValue >= 0 && unicodeValue <= 0x7F) {
         return 1;

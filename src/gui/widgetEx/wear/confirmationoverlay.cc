@@ -69,8 +69,8 @@ void ConfirmationOverlay::showOn(Window* activity) {
 }
 
 void ConfirmationOverlay::animateAndHideAfterDelay() {
-    if (dynamic_cast<Animatable*>(mOverlayDrawable)) {
-        Animatable* animatable = (Animatable*) mOverlayDrawable;
+    auto animatable = dynamic_cast<Animatable*>(mOverlayDrawable);
+    if (animatable!=nullptr) {
         animatable->start();
         LOGD("animatable=%p",animatable);
     }

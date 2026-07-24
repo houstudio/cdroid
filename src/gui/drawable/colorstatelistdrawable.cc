@@ -70,7 +70,7 @@ void ColorStateListDrawable::setTintList(ColorStateList* tint) {
     onStateChange(getState());
 }
 
-void ColorStateListDrawable::setTintBlendMode(@NonNull BlendMode blendMode) {
+void ColorStateListDrawable::setTintBlendMode(int blendMode) {
     mState->mBlendMode = blendMode;
     mColorDrawable->setTintBlendMode(blendMode);
     onStateChange(getState());

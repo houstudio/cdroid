@@ -148,7 +148,7 @@ private:
     int mLockModeTop   = LOCK_MODE_UNDEFINED;
     int mLockModeBottom= LOCK_MODE_UNDEFINED;
 
-    //DrawerListener mListener;
+    DrawerListener mListener; // deprecated single listener (setDrawerListener); default-constructed = empty
     std::vector<DrawerListener> mListeners;
 
     Drawable* mStatusBarBackground;
@@ -187,7 +187,7 @@ private:
     bool hasPeekingDrawer()const;
     bool hasVisibleDrawer()const;
 protected:
-    void updateDrawerState(int forGravity,int activeState, View* activeDrawer);
+    void updateDrawerState(int activeState, View* activeDrawer);
     void dispatchOnDrawerClosed(View* drawerView);
     void dispatchOnDrawerOpened(View* drawerView);
     void dispatchOnDrawerSlide(View* drawerView, float slideOffset);
@@ -224,6 +224,8 @@ public:
     void setScrimColor(int color);
     void addDrawerListener(const DrawerListener& listener);
     void removeDrawerListener(const DrawerListener& listener);
+    // Deprecated: prefer addDrawerListener/removeDrawerListener.
+    void setDrawerListener(const DrawerListener& listener);
     void setDrawerLockMode(int lockMode);
     void setDrawerLockMode(int lockMode,int edgeGravity);
     void setDrawerLockMode(int lockMode,View* drawerView);
@@ -257,6 +259,10 @@ public:
     bool isDrawerOpen(int drawerGravity)const;
     bool isDrawerVisible(View* drawer)const;
     bool isDrawerVisible(int drawerGravity)const;
+    // Openable contract: open()/close() act on the start drawer; isOpen() queries it.
+    void open();
+    void close();
+    bool isOpen();
     void addFocusables(std::vector<View*>&views, int direction, int focusableMode)override;
     bool onKeyDown(int keyCode, KeyEvent& event)override;
     bool onKeyUp(int keyCode, KeyEvent& event)override;

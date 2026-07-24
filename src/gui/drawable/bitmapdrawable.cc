@@ -365,11 +365,7 @@ void BitmapDrawable::draw(Canvas&canvas){
     if(mBounds.empty())return;
 
     canvas.save();
-    if(mTintFilter){
-        canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-        canvas.clip();
-        canvas.push_group();
-    }
+    ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
     const int angle_degrees = getRotateAngle(canvas);
     const SurfacePattern::Filter filterMode = (mBitmapState->mFilterBitmap)||(angle_degrees%90)
                     ? SurfacePattern::Filter::BILINEAR : SurfacePattern::Filter::NEAREST;
@@ -454,11 +450,7 @@ void BitmapDrawable::draw(Canvas&canvas){
         canvas.paint_with_alpha(alpha);
     }
 
-    if(mTintFilter){
-        //canvas.set_source(canvas.pop_group());
-        canvas.pop_group_to_source();
-        mTintFilter->apply(canvas,mBounds);
-    }
+    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     canvas.restore();
 }
 
@@ -492,6 +484,10 @@ void BitmapDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
     const int tileMode=atts.getInt("tileMode",kvs,-1);
     mBitmapState->mDither =atts.getBoolean("dither",true);
     mBitmapState->mTint = atts.getColorStateList("tint");
+    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        mBitmapState->mTintMode = tintMode;
+    }
     mBitmapState->mTileModeX =atts.getInt("tileModeX",kvs,tileMode);
     mBitmapState->mTileModeY =atts.getInt("tileModeY",kvs,tileMode);
     mBitmapState->mGravity = atts.getGravity("gravity",Gravity::CENTER);

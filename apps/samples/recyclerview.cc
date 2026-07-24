@@ -119,14 +119,21 @@ int main(int argc,const char*argv[]){
     ItemTouchHelper*touchhelper=new ItemTouchHelper(cbk);
     touchhelper->attachToRecyclerView(rv);
     rv->getRecycledViewPool().setMaxRecycledViews(0,64);
-    rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
     rv->setAdapter(adapter);
     DividerItemDecoration* decoration = new DividerItemDecoration(&app, LinearLayout::VERTICAL);
 
     for(int i=0;i<100;i++){
         adapter->add(std::string("string ")+std::to_string(i));
     }
-
+    rv->setVerticalScrollbarThumbDrawable(new InsetDrawable(new ColorDrawable(0xFF00FF00),8,50,0,0));
+    rv->setVerticalScrollbarTrackDrawable(new ColorDrawable(0xFF112233));
+    rv->setVerticalScrollBarEnabled(true);
+    rv->setScrollbarFadingEnabled(false);
+    rv->setScrollBarSize(16);
+    rv->setOverScrollMode(View::OVER_SCROLL_ALWAYS);
+    rv->setScrollBarStyle(View::SCROLLBARS_INSIDE_INSET);
+    //rv->setScrollBarStyle(View::SCROLLBARS_OUTSIDE_OVERLAY);
+    rv->setScrollBarStyle(View::SCROLLBARS_OUTSIDE_OVERLAY);
     decoration->setDrawable(new ColorDrawable(0xFFFF0000));
     rv->addItemDecoration(decoration);
     w->addView(rv);

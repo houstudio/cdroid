@@ -130,6 +130,8 @@ public:
 YearPickerView::YearPickerView(Context*ctx,const AttributeSet&attrs):ListView(ctx,attrs){
     mViewSize = attrs.getDimensionPixelOffset("animator_height");
     mChildSize= attrs.getDimensionPixelOffset("year_label_height");
+    mAdapter = new YearAdapter(ctx);
+    setAdapter(mAdapter);
     setOnItemClickListener([this](AdapterView& parent,View& view, int position, long id){
         const int year = mAdapter->getYearForPosition(position);
         mAdapter->setSelection(year);

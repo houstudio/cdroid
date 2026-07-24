@@ -44,8 +44,8 @@ NinePatchDrawable::NinePatchDrawable(Context*ctx,const std::string&resid):NinePa
     computeBitmapSize();
 }
 
-NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp):NinePatchDrawable(){
-    mNinePatchState->setBitmap(bmp);
+NinePatchDrawable::NinePatchDrawable(RefPtr<ImageSurface>bmp,const std::vector<uint8_t>*ninePatchChunk):NinePatchDrawable(){
+    mNinePatchState->setBitmap(bmp,nullptr,ninePatchChunk);
     computeBitmapSize();
 }
 
@@ -83,15 +83,9 @@ void NinePatchDrawable::computeBitmapSize(){
     mBitmapWidth = Drawable::scaleFromDensity( ninePatch->get_width() , sourceDensity, targetDensity, true);
 
     mOutlineRadius = mNinePatchState->mNinePatch->getRadius();
-    /*const NinePatch.InsetStruct insets = ninePatch.getBitmap().getNinePatchInsets();
-    if (insets != null) {
-        Rect outlineRect = insets.outlineRect;
-        mOutlineInsets = NinePatch.InsetStruct.scaleInsets(outlineRect.left, outlineRect.top,
-                    outlineRect.right, outlineRect.bottom, targetDensity / (float) sourceDensity);
-        mOutlineRadius = Drawable::scaleFromDensity(insets.outlineRadius, sourceDensity, targetDensity);
-    } else {
-        mOutlineInsets = null;
-    }*/
+    // Outline rect/radius/alpha come from the NinePatchRenderer (scanner-faithful on the
+    // border-scan path; chunk path falls back). CDROID's npTc chunk carries no outline
+    // fields, so the Android Bitmap.getNinePatchInsets()/InsetStruct path can't apply.
 }
 
 void NinePatchDrawable::setTargetDensity(int density){
@@ -159,7 +153,7 @@ void NinePatchDrawable::getOutline(Outline& outline) {
                 bounds.height-scaledOutlineRect.top-scaledOutlineRect.height,
                 scaledRadius
             );
-            outline.setAlpha(getAlpha() / 255.0f);
+            outline.setAlpha(mNinePatchState->mNinePatch->getOutlineAlpha() / 255.0f);
             return;
         }
     }
@@ -180,18 +174,17 @@ void NinePatchDrawable::getOutline(Outline& outline) {
         }
     }
 
-    // 3. If neither is available, fallback to Drawable::getOutline
+    // 3. If neither is available, fallback to Drawable::getOutline + opticalInsets.
     Drawable::getOutline(outline);
-    if (mNinePatchState != nullptr/*&& mOutlineInsets != nullptr*/) {
-        //NinePatch.InsetStruct insets =mNinePatchState.mNinePatch.getBitmap().getNinePatchInsets();
-        Insets insets = mNinePatchState->mOpticalInsets;
+    if (mNinePatchState != nullptr) {
+        const Insets insets = mNinePatchState->mOpticalInsets;
         if (insets!=Insets::NONE) {
-            outline.setRoundRect(bounds.left + insets.left,//mOutlineInsets.left,
-                    bounds.top + insets.top,//mOutlineInsets.top,
-                    bounds.width - insets.right,//mOutlineInsets.right,
-                    bounds.height - insets.bottom,//mOutlineInsets.bottom,
+            outline.setRoundRect(bounds.left + insets.left,
+                    bounds.top + insets.top,
+                    bounds.width - insets.right,
+                    bounds.height - insets.bottom,
                     mOutlineRadius);
-            outline.setAlpha(/*insets.outlineAlpha */ (getAlpha() / 255.0f));
+            outline.setAlpha(getAlpha() / 255.0f);
             return;
         }
     }
@@ -274,11 +267,7 @@ std::shared_ptr<Drawable::ConstantState>NinePatchDrawable::getConstantState(){
 void NinePatchDrawable::draw(Canvas&canvas){
     if(mNinePatchState->mNinePatch){
         canvas.save();
-        if(mTintFilter){
-            canvas.rectangle(mBounds.left,mBounds.top,mBounds.width,mBounds.height);
-            canvas.clip();
-            canvas.push_group();
-        }
+        ColorFilter* tintFilter = beginTintGroup(canvas, mBounds, mTintFilter.get());
         if(needsMirroring()){
             const float cx=mBounds.left+mBounds.width/2.f;
             const float cy=mBounds.left+mBounds.height/2.f;
@@ -286,11 +275,7 @@ void NinePatchDrawable::draw(Canvas&canvas){
             canvas.translate(cx,cy);
         }
         mNinePatchState->draw(canvas,mBounds,mAlpha);
-        if(mTintFilter){
-            //canvas.set_source(canvas.pop_group());
-            canvas.pop_group_to_source();
-            mTintFilter->apply(canvas,mBounds);
-        }
+        if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
         canvas.restore();
     }
 }
@@ -336,9 +321,9 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
     state->mAutoMirrored = a.getBoolean("autoMirrored", state->mAutoMirrored);
     state->mBaseAlpha = a.getFloat("alpha", state->mBaseAlpha);
 
-    const int tintMode = a.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode.SRC_IN);
+    const int tintMode = a.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = a.getColorStateList("tint");
@@ -365,9 +350,10 @@ void NinePatchDrawable::NinePatchState::setBitmap(Context*ctx,const std::string&
     setBitmap(bitmap,padding);
 }
 
-void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding){
+void NinePatchDrawable::NinePatchState::setBitmap(RefPtr<ImageSurface>bitmap,const Rect*padding,
+        const std::vector<uint8_t>*ninePatchChunk){
     if(bitmap){
-        mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap));
+        mNinePatch = RefPtr<NinePatchRenderer>(new NinePatchRenderer(bitmap,ninePatchChunk));
         mPadding   = mNinePatch->getPadding();
         mOpticalInsets = mNinePatch->getOpticalInsets();
     }

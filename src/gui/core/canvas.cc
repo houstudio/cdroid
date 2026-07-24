@@ -15,18 +15,17 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <cdtypes.h>
+#include <porting/cdtypes.h>
+#include <porting/cdlog.h>
+#include <porting/cdgraph.h>
 #include <canvas.h>
 #include <cairo.h>
-#include <cdlog.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <utils/textutils.h>
 #include <view/gravity.h>
 #include <windowmanager.h>
-#include <cdgraph.h>
-#include <cdlog.h>
 using namespace std;
 using namespace Cairo;
 namespace cdroid{

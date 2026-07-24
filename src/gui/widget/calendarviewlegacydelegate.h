@@ -22,6 +22,7 @@
 #include <widget/textview.h>
 #include <widget/abslistview.h>
 #include <widget/calendarview.h>
+#include <text/paint.h>
 
 namespace cdroid{
 class TextView;
@@ -81,6 +82,7 @@ private:
 private:
     class WeeksAdapter;
     class WeekView;
+    class SelectedDayObserver;
     class ScrollStateRunnable{
     private:
         CalendarViewLegacyDelegate*mDelegate;
@@ -93,6 +95,7 @@ private:
         void run();
     };
     friend ScrollStateRunnable;
+    friend class SelectedDayObserver;
     CalendarView*mDelegator;
     int mWeekSeparatorLineWidth;
     int mDateTextSize;
@@ -299,6 +302,9 @@ private:
     int mNumCells;
     int mSelectedLeft = -1;
     int mSelectedRight = -1;
+
+    Paint mDrawPaint;
+    Paint mMonthNumDrawPaint;
 private:
     void initializePaints();
     void drawBackground(Canvas& canvas);

@@ -20,8 +20,8 @@ private:
     //static final int[] ATTRS_TEXT_COLOR = new int[] {com.android.internal.R.attr.textColor};
     //static final int[] ATTRS_DISABLED_ALPHA = new int[] {com.android.internal.R.attr.disabledAlpha};
 
-    DateFormat mYearFormat;
-    DateFormat mMonthDayFormat;
+    //DateFormat mYearFormat;       // DEFERRED: CDROID has no DateFormat; header formatted manually.
+    //DateFormat mMonthDayFormat;
 
     // Top-level container.
     ViewGroup* mContainer;
@@ -41,17 +41,17 @@ private:
     Calendar mMinDate;
     Calendar mMaxDate;
 private:
-    ColorStateList* applyLegacyColorFixes(ColorStateList* color);
-    int multiplyAlphaComponent(int color, float alphaMod);
+    //ColorStateList* applyLegacyColorFixes(ColorStateList* color); // DEFERRED: color theming stubbed.
+    //int multiplyAlphaComponent(int color, float alphaMod);
     void onYearChanged(YearPickerView& view, int year);
-    void onCurrentDateChanged()override;
+    //void onCurrentDateChanged()override; // DEFERRED: no such virtual in base; header update is inlined.
     void setCurrentView(int viewIndex);
     void setDate(int year, int month, int dayOfMonth);
     void onDateChanged(bool fromUser, bool callbackToClient);
     static int getDaysInMonth(int month, int year);
     void tryVibrate();
 protected:
-    void onLocaleChanged(Locale locale)override;
+    //void onLocaleChanged(Locale locale)override; // DEFERRED: Locale/DateFormat not ported.
 public:
     DatePickerCalendarDelegate(DatePicker* delegator, Context* context,const AttributeSet& attrs);
 
@@ -85,7 +85,7 @@ public:
 
     bool dispatchPopulateAccessibilityEvent(AccessibilityEvent& event) override;
 
-    std::string getAccessibilityClassName()const override;
+    //std::string getAccessibilityClassName()const override; // DEFERRED: DatePicker owns this.
 };
 }/*endof namespace*/
 #endif/*__DATEPICKER_CALENDAR_DELEGATE_H__*/

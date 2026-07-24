@@ -11,6 +11,7 @@ class View;
 class Canvas;
 class LayoutParams{
 public:
+    static constexpr int FILL_PARENT = -1;
     static constexpr int MATCH_PARENT = -1;
     static constexpr int WRAP_CONTENT = -2;
 protected:

@@ -53,7 +53,6 @@ private:
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDER_HEIGHT =2;
     static constexpr int UNSCALED_DEFAULT_SELECTION_DIVIDERS_DISTANCE =48;
     static constexpr int SIZE_UNSPECIFIED =-1;
-    static constexpr int DEFAULT_DIVIDER_COLOR = 0x0;
     static constexpr int DEFAULT_MAX_HEIGHT= 180;
     static constexpr int DEFAULT_MIN_WIDTH = 64;
     static constexpr float DEFAULT_FADING_EDGE_STRENGTH = .9f;
@@ -72,14 +71,12 @@ private:
     int mMinWidth;
     int mMaxWidth;
     int mTextSize,mTextSize2;
-    int mInputTextSize;
     int mTextColor,mTextColor2;
     int mInputTextColor;
     int mInputTextGapWidth;
     int mInputTextGapHeight;
     int mTextAlign;
     Typeface *mTypeface;
-    Typeface *mSelectedTypeface; 
     std::vector<std::string> mDisplayedValues;
     std::vector<Drawable*> mDisplayedDrawables;
     int mDisplayedDrawableCount;
@@ -87,6 +84,7 @@ private:
     int mMinValue;
     int mMaxValue;
     int mValue;
+    Paint mSelectorWheelPaint;
     OnClickListener mOnClickListener;
     OnValueChangeListener mOnValueChangeListener;
     Formatter mFormatter;
@@ -128,7 +126,6 @@ private:
     Drawable* mItemBackground;
     Drawable* mVirtualButtonPressedDrawable;
     AccessibilityNodeProviderImpl* mAccessibilityNodeProvider;
-    int mDividerColor;
     int mDividerType;
     int mDividerDistance;
     int mDividerThickness;
@@ -148,7 +145,7 @@ private:
     bool isHorizontalMode()const;
     void drawHorizontalDividers(Canvas& canvas);
     void drawVerticalDividers(Canvas& canvas);
-    void drawText(const std::string& text, float x, float y,Canvas& canvas);
+    void drawText(const std::string& text,const Rect&,int gravity,Canvas& canvas);
     int makeMeasureSpec(int measureSpec, int maxSize);
     int resolveSizeAndStateRespectingMinSize(int minSize, int measuredSize, int measureSpec);
     void initializeSelectorWheelIndices();
@@ -224,8 +221,6 @@ public:
     void setSelectionDivider(Drawable*d);
     Drawable* getSelectionDivider()const;
 
-    int  getDividerColor()const;
-    void setDividerColor(int);
     int  getDividerType()const;
     void setDividerType(int);
     int  getDividerThickness()const;

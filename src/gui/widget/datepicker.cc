@@ -16,7 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <widget/datepicker.h>
+#include <widget/daypickerspinnerdelegate.h>
+#include <widget/daypickercalendardelegate.h>
 namespace cdroid{
+
+DECLARE_WIDGET(DatePicker);
 DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     :FrameLayout(context, attrs){
 
@@ -39,6 +43,11 @@ DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
     switch (mMode) {
     case MODE_CALENDAR:
         mDelegate = createCalendarUIDelegate(context, attrs);
+        if (mDelegate == nullptr) {
+            // DEFERRED: calendar delegate not ported yet; fall back to spinner.
+            mMode = MODE_SPINNER;
+            mDelegate = createSpinnerUIDelegate(context, attrs);
+        }
         break;
     case MODE_SPINNER:
     default:
@@ -59,11 +68,11 @@ DatePicker::DatePicker(Context* context,const AttributeSet& attrs)
 }
 
 DatePicker::DatePickerDelegate* DatePicker::createSpinnerUIDelegate(Context* context,const AttributeSet& attrs) {
-    return nullptr;//new DatePickerSpinnerDelegate(this, context, attrs);
+    return new DatePickerSpinnerDelegate(this, context, attrs);
 }
 
 DatePicker::DatePickerDelegate* DatePicker::createCalendarUIDelegate(Context* context,const AttributeSet& attrs) {
-    return nullptr;//new DatePickerCalendarDelegate(this, context, attrs);
+    return new DatePickerCalendarDelegate(this, context, attrs);
 }
 
 int DatePicker::getMode() {
@@ -235,10 +244,11 @@ void DatePicker::AbstractDatePickerDelegate::setValidationCallback(const Validat
 AutofillValue DatePicker::AbstractDatePickerDelegate::getAutofillValue() {
     const int64_t time=(mAutofilledValue!=0)? mAutofilledValue:mCurrentDate.getTimeInMillis();
     return AutofillValue.forDate(time);
-}
+}*/
+
 void DatePicker::AbstractDatePickerDelegate::resetAutofilledValue() {
     mAutofilledValue = 0;
-}*/
+}
 
 void DatePicker::AbstractDatePickerDelegate::onValidationChanged(bool valid) {
     if (mValidationCallback != nullptr) {

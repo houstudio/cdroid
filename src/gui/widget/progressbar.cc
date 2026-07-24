@@ -27,26 +27,28 @@ namespace cdroid{
 class ProgressTintInfo{
 public:
     cdroid::RefPtr<ColorStateList> mIndeterminateTintList;
-    PorterDuffMode mIndeterminateTintMode;
+    int mIndeterminateTintMode;
     bool mHasIndeterminateTint;
     bool mHasIndeterminateTintMode;
 
     cdroid::RefPtr<ColorStateList> mProgressTintList;
-    PorterDuffMode mProgressTintMode;
+    int mProgressTintMode;
     bool mHasProgressTint;
     bool mHasProgressTintMode;
 
     cdroid::RefPtr<ColorStateList> mProgressBackgroundTintList;
-    PorterDuffMode mProgressBackgroundTintMode;
+    int mProgressBackgroundTintMode;
     bool mHasProgressBackgroundTint;
     bool mHasProgressBackgroundTintMode;
 
     cdroid::RefPtr<ColorStateList> mSecondaryProgressTintList;
-    PorterDuffMode mSecondaryProgressTintMode;
+    int mSecondaryProgressTintMode;
     bool mHasSecondaryProgressTint;
     bool mHasSecondaryProgressTintMode;
 public:
     ProgressTintInfo(){
+        mIndeterminateTintMode = mProgressTintMode
+            = mProgressBackgroundTintMode = mSecondaryProgressTintMode = PorterDuff::Mode::NOOP;
     }
 };
 
@@ -108,6 +110,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressTintMode = attrs.getTintMode("progressTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasProgressTintMode=true;
     }
 
@@ -119,6 +122,8 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("progressBackgroundTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mProgressBackgroundTintMode = attrs.getTintMode("progressBackgroundTintMode", PorterDuff::Mode::NOOP);
+        mProgressTintInfo->mHasProgressBackgroundTintMode = true;
     }
 
     if(attrs.hasAttribute("progressBackgroundTint")){
@@ -129,6 +134,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if(attrs.hasAttribute("secondaryProgressTintMode")){
         if(mProgressTintInfo==nullptr)mProgressTintInfo=new ProgressTintInfo();
+        mProgressTintInfo->mSecondaryProgressTintMode = attrs.getTintMode("secondaryProgressTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasSecondaryProgressTintMode = true;
     }
 
@@ -140,8 +146,7 @@ ProgressBar::ProgressBar(Context*ctx,const AttributeSet& attrs)
 
     if (attrs.hasAttribute("indeterminateTintMode")) {
         if (mProgressTintInfo == nullptr) mProgressTintInfo = new ProgressTintInfo();
-        //mProgressTintInfo.mIndeterminateBlendMode = Drawable.parseBlendMode(a.getInt(
-        //        R.styleable.ProgressBar_indeterminateTintMode, -1), null);
+        mProgressTintInfo->mIndeterminateTintMode = attrs.getTintMode("indeterminateTintMode", PorterDuff::Mode::NOOP);
         mProgressTintInfo->mHasIndeterminateTintMode = true;
     }
 
@@ -845,20 +850,11 @@ void ProgressBar::startAnimation() {
 
 void ProgressBar::stopAnimation() {
     mHasAnimation = false;
-    if (dynamic_cast<AnimatedRotateDrawable*>(mIndeterminateDrawable)) {
-        ((AnimatedRotateDrawable*) mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedImageDrawable*)mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedImageDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedImageDrawable*) mIndeterminateDrawable)->stop();
-        mShouldStartAnimationDrawable = false;
-    }else if(dynamic_cast<AnimatedVectorDrawable*>(mIndeterminateDrawable)){
-        ((AnimatedVectorDrawable*)mIndeterminateDrawable)->stop();
+    auto animatable = dynamic_cast<Animatable*>(mIndeterminateDrawable);
+    if(animatable!=nullptr){
+        animatable->stop();
         mShouldStartAnimationDrawable = false;
     }
-
     postInvalidate();
 }
 
@@ -887,19 +883,11 @@ void ProgressBar::drawTrack(Canvas&canvas){
     }
     d->draw(canvas);
     canvas.restore();
-
-    if (mShouldStartAnimationDrawable && dynamic_cast<Animatable*>(d)){
-        if(dynamic_cast<AnimatedRotateDrawable*>(d)) 
-            ((AnimatedRotateDrawable*) d)->start();
-        else if(dynamic_cast<AnimatedImageDrawable*>(d))
-            ((AnimatedImageDrawable*)d)->start();
-        else if(dynamic_cast<AnimationDrawable*>(d))
-            ((AnimationDrawable*) d)->start();
-        else if(dynamic_cast<AnimatedVectorDrawable*>(d))
-            ((AnimatedVectorDrawable*)d)->start();
+    auto animatable = dynamic_cast<Animatable*>(d);
+    if(mShouldStartAnimationDrawable && (animatable!=nullptr)){
+        animatable->start();
         mShouldStartAnimationDrawable = false;
     }
-    
 }
 
 void ProgressBar::onVisibilityAggregated(bool isVisible){
@@ -940,7 +928,7 @@ void ProgressBar::updateDrawableBounds(int w,int h){
     int top = 0;
     int left = 0;
 
-    LOGV("mIndeterminateDrawable=%p,mOnlyIndeterminate=%d",mIndeterminateDrawable,mOnlyIndeterminate);
+    LOGD_IF((w*h==0)&&(w+h),"%p:%d size(%d,%d) Padding(%d,%d,%d,%d) error check yout drawable and theme",this,mID,w,h,mPaddingLeft,mPaddingRight,mPaddingTop,mPaddingBottom);
     if (mIndeterminateDrawable) {
         // Aspect ratio logic does not apply to AnimationDrawables
         if (mOnlyIndeterminate && !(dynamic_cast<AnimationDrawable*>(mIndeterminateDrawable))) {
@@ -963,24 +951,21 @@ void ProgressBar::updateDrawableBounds(int w,int h){
                     bottom = top + height;
                 }
             }
-            LOGD_IF(intrinsicWidth*intrinsicHeight==0,"intrinsicsize=%dx%d",intrinsicWidth,intrinsicHeight);
         }
         if (isLayoutRtl() && mMirrorForRtl) {
             int tempLeft = left;
             left = w - right;
             right = w - tempLeft;
         }
-        LOGV("%p setBounds(%d,%d-%d,%d) wh=%dx%d",this,left, top, right, bottom,w,h);
-        mIndeterminateDrawable->setBounds(left, top, right-left, bottom-top);
+        mIndeterminateDrawable->setBounds(left, top, w, h);//right-left, bottom-top);
     }
 
     if (mProgressDrawable != nullptr) {
-        mProgressDrawable->setBounds(0, 0, right, bottom);
+        mProgressDrawable->setBounds(0, 0, w, h);//right, bottom);
     }
 }
 
 void ProgressBar::onSizeChanged(int w,int h,int ow,int oh){
-    LOGV("%p:%d sizechanged->(%d,%d)",this,mID,w,h);
     updateDrawableBounds(w,h);
 }
 

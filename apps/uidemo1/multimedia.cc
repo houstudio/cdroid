@@ -133,7 +133,7 @@ protected:
     TextView*mFilePath;
     FileTypeAdapter*mAdapter;
     std::string media_path;
-    HANDLE player;
+    void* player;
     Runnable run;
 public:
     MediaWindow(int x,int y,int w,int h);
@@ -153,7 +153,7 @@ MediaWindow::MediaWindow(int x,int y,int w,int h):Window(x,y,w,h){
     mTabLayout->setSelectedTabIndicatorHeight(5);
     mTabLayout->setTabTextColors(0xFFFF0000,0xFF00FF00);
     mTabLayout->setTabIndicatorAnimationMode(TabLayout::INDICATOR_ANIMATION_MODE_ELASTIC);
-    mTabLayout->setSelectedTabIndicatorGravity(Gravity::BOTTOM);//TOP/BOTTOM/CENTER_VERTICAL/FILL_VERTICAL
+    mTabLayout->setSelectedTabIndicatorGravity(TabLayout::INDICATOR_GRAVITY_BOTTOM);
     //LOGD("pager=%p tab=%p this=%p:%p",mPager,mTabLayout,this,vg);
     mPager->setAdapter(mAdapter);
     mPager->setOffscreenPageLimit(1);//mAdapter->getCount());

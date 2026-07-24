@@ -29,7 +29,7 @@ PorterDuff::Mode PorterDuff::intToMode(int val) {
 
 int PorterDuff::toOperator(int tintMode){
     switch(tintMode){
-    case PorterDuff::NOOP    :/*=-1*/ return CAIRO_OPERATOR_CLEAR;
+    case PorterDuff::NOOP    :/*=-1*/ return CAIRO_OPERATOR_OVER; /* no-op: draw normally, do not clear */
     case PorterDuff::CLEAR   :/*= 0*/ return CAIRO_OPERATOR_CLEAR;    /*0*/
     case PorterDuff::SRC     :/*= 1*/ return CAIRO_OPERATOR_SOURCE;   /*1*/
     case PorterDuff::DST     :/*= 2*/ return CAIRO_OPERATOR_DEST;     /*6*/
@@ -51,5 +51,73 @@ int PorterDuff::toOperator(int tintMode){
     }
     LOGD("TintMode %d is not support",tintMode);
     return CAIRO_OPERATOR_SOURCE;
+}
+
+int BlendMode::fromValue(int value){
+    return (value>=CLEAR && value<=LUMINOSITY) ? value : -1;
+}
+
+PorterDuff::Mode BlendMode::toPorterDuffMode(int mode){
+    switch(mode){
+    case BlendMode::CLEAR    : return PorterDuff::CLEAR;
+    case BlendMode::SRC      : return PorterDuff::SRC;
+    case BlendMode::DST      : return PorterDuff::DST;
+    case BlendMode::SRC_OVER : return PorterDuff::SRC_OVER;
+    case BlendMode::DST_OVER : return PorterDuff::DST_OVER;
+    case BlendMode::SRC_IN   : return PorterDuff::SRC_IN;
+    case BlendMode::DST_IN   : return PorterDuff::DST_IN;
+    case BlendMode::SRC_OUT  : return PorterDuff::SRC_OUT;
+    case BlendMode::DST_OUT  : return PorterDuff::DST_OUT;
+    case BlendMode::SRC_ATOP : return PorterDuff::SRC_ATOP;
+    case BlendMode::DST_ATOP : return PorterDuff::DST_ATOP;
+    case BlendMode::XOR      : return PorterDuff::XOR;
+    case BlendMode::PLUS     : return PorterDuff::ADD;
+    case BlendMode::MODULATE : return PorterDuff::MULTIPLY;
+    case BlendMode::SCREEN   : return PorterDuff::SCREEN;
+    case BlendMode::OVERLAY  : return PorterDuff::OVERLAY;
+    case BlendMode::DARKEN   : return PorterDuff::DARKEN;
+    case BlendMode::LIGHTEN  : return PorterDuff::LIGHTEN;
+    default: return PorterDuff::NOOP; /* MULTIPLY + DODGE/BURN/HARD/SOFT_LIGHT/DIFF/EXCL + HSL */
+    }
+}
+
+int BlendMode::toOperator(int mode){
+    /* cairo blend operators are W3C == Android BlendMode semantics, so this is a
+     * near-1:1 mapping (the whole point of BlendMode). Only MODULATE has no cairo
+     * equivalent (it's Skia's premul element-wise multiply, a.k.a. PorterDuff.Mode
+     * .MULTIPLY) — approximated as cairo MULTIPLY. */
+    switch(mode){
+    case BlendMode::CLEAR      : return CAIRO_OPERATOR_CLEAR;
+    case BlendMode::SRC        : return CAIRO_OPERATOR_SOURCE;
+    case BlendMode::DST        : return CAIRO_OPERATOR_DEST;
+    case BlendMode::SRC_OVER   : return CAIRO_OPERATOR_OVER;
+    case BlendMode::DST_OVER   : return CAIRO_OPERATOR_DEST_OVER;
+    case BlendMode::SRC_IN     : return CAIRO_OPERATOR_IN;
+    case BlendMode::DST_IN     : return CAIRO_OPERATOR_DEST_IN;
+    case BlendMode::SRC_OUT    : return CAIRO_OPERATOR_OUT;
+    case BlendMode::DST_OUT    : return CAIRO_OPERATOR_DEST_OUT;
+    case BlendMode::SRC_ATOP   : return CAIRO_OPERATOR_ATOP;
+    case BlendMode::DST_ATOP   : return CAIRO_OPERATOR_DEST_ATOP;
+    case BlendMode::XOR        : return CAIRO_OPERATOR_XOR;
+    case BlendMode::PLUS       : return CAIRO_OPERATOR_ADD;
+    case BlendMode::MODULATE   : return CAIRO_OPERATOR_MULTIPLY; /* approx: cairo has no Skia-modulate */
+    case BlendMode::SCREEN     : return CAIRO_OPERATOR_SCREEN;
+    case BlendMode::OVERLAY    : return CAIRO_OPERATOR_OVERLAY;
+    case BlendMode::DARKEN     : return CAIRO_OPERATOR_DARKEN;
+    case BlendMode::LIGHTEN    : return CAIRO_OPERATOR_LIGHTEN;
+    case BlendMode::COLOR_DODGE: return CAIRO_OPERATOR_COLOR_DODGE;
+    case BlendMode::COLOR_BURN : return CAIRO_OPERATOR_COLOR_BURN;
+    case BlendMode::HARD_LIGHT : return CAIRO_OPERATOR_HARD_LIGHT;
+    case BlendMode::SOFT_LIGHT : return CAIRO_OPERATOR_SOFT_LIGHT;
+    case BlendMode::DIFFERENCE : return CAIRO_OPERATOR_DIFFERENCE;
+    case BlendMode::EXCLUSION  : return CAIRO_OPERATOR_EXCLUSION;
+    case BlendMode::MULTIPLY   : return CAIRO_OPERATOR_MULTIPLY;
+    case BlendMode::HUE        : return CAIRO_OPERATOR_HSL_HUE;
+    case BlendMode::SATURATION : return CAIRO_OPERATOR_HSL_SATURATION;
+    case BlendMode::COLOR      : return CAIRO_OPERATOR_HSL_COLOR;
+    case BlendMode::LUMINOSITY : return CAIRO_OPERATOR_HSL_LUMINOSITY;
+    }
+    LOGD("BlendMode %d is not support",mode);
+    return CAIRO_OPERATOR_OVER;
 }
 }/*endof namespace*/

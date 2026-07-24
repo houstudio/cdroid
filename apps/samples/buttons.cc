@@ -9,6 +9,24 @@ int main(int argc,const char*argv[]){
     Window*w=new Window(0,0,-1,-1);
     w->setId(1);
     w->setBackgroundColor(0xFF223344);
+
+    // Window::doLayout now always measures+lays out its (FrameLayout) children, so
+    // views added directly to the Window pile up at (0,0). Wrap the widget zoo in a
+    // vertical LinearLayout inside a ScrollView, so any number of widgets stack and
+    // scroll instead of piling up.
+    ScrollView*scroller=new ScrollView(-1,-1);
+    scroller->setSmoothScrollingEnabled(true);
+    scroller->setVerticalScrollBarEnabled(true);
+    w->addView(scroller);
+    LinearLayout*content=new LinearLayout(-1,-2); // MATCH_PARENT width, WRAP_CONTENT height
+    content->setOrientation(LinearLayout::VERTICAL);
+    scroller->addView(content);
+    auto row=[&](View*v,int width,int height){
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(width,height);
+        lp->topMargin=lp->leftMargin=8;
+        content->addView(v,lp);
+    };
+
     Drawable*d=nullptr;
     StateListDrawable*sld=nullptr;
     CompoundButton*chk;
@@ -27,10 +45,9 @@ int main(int argc,const char*argv[]){
     btn->setTextAlignment(View::TEXT_ALIGNMENT_CENTER);
     btn->setOnClickListener([](View&v){LOGD(" Button Clicked ");});
     btn->setOnLongClickListener([](View&v)->bool{LOGD(" Button LongClicked ");return true;});
-    w->addView(btn);
     btn->setId(100);
     btn->setTextSize(50);
-    btn->layout(10,40,350,200);
+    row(btn,350,200);
     bd->setBounds(0,0,350,200);
     BadgeUtils::attachBadgeDrawable(bd,btn);
 
@@ -42,20 +59,18 @@ int main(int argc,const char*argv[]){
     btn->setMinimumHeight(64);
     btn->setBackground(rp);
     btn->setClickable(true);
-    w->addView(btn);
     btn->setId(101);
-    btn->layout(400,60,300,64);
+    row(btn,300,64);
 
     btn=new ToggleButton(120,40);
     d=ctx->getDrawable("cdroid:drawable/btn_toggle_bg.xml");
     btn->setBackground(d);
-    btn->setTextColor(ctx->getColorStateList("cdroid:color/textview"));
+    //btn->setTextColor(ctx->getColorStateList("cdroid:color/textview"));
     ((ToggleButton*)btn)->setTextOn("ON");
     ((ToggleButton*)btn)->setTextOff("Off");
-    w->addView(btn);
     btn->setId(101);
-    btn->layout(400,150,120,40);
     btn->setClickable(true);
+    row(btn,120,40);
 
     chk=new CheckBox("CheckME",200,60);
     chk->setId(1000);
@@ -63,29 +78,26 @@ int main(int argc,const char*argv[]){
     d = ctx->getDrawable("cdroid:drawable/btn_check.xml");
     chk->setButtonDrawable(d);
     chk->setClickable(true);
-    w->addView(chk);
     chk->setOnCheckedChangeListener([](CompoundButton&btn,bool checked){
             LOGD("btn %p checked=%d",&btn,checked);
             });
-    chk->layout(450,360,200,60);
-	
-#if 1 
+    row(chk,200,60);
+
+#if 1
     chk=new RadioButton("Radio",120,60);
     Drawable*dr=ctx->getDrawable("cdroid:drawable/btn_radio.xml");
     chk->setButtonDrawable(dr);
     chk->setId(1001);
     dynamic_cast<Checkable*>(chk)->setChecked(true);
     //chk->setChecked(true);
-    w->addView(chk);
-    chk->layout(700,360,120,60);
-	
+    row(chk,120,60);
+
     EditText*edt=new EditText("Edit Me!",200,60);
     d=ctx->getDrawable("cdroid:drawable/edit_text.xml");//editbox_background.xml");
     edt->setBackground(d);
-    edt->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
-    w->addView(edt);
+    //edt->setTextColor(ctx->getColorStateList("cdroid:color/textview.xml"));
     edt->setId(102);
-    edt->layout(800,60,200,60);
+    row(edt,200,60);
 #endif
 ///////////////////////////////////////////////////////////
 #if 1
@@ -95,19 +107,17 @@ int main(int argc,const char*argv[]){
     pb->setProgressDrawable(d);
     pb->setProgress(34);
     pb->setSecondaryProgress(15);
-    w->addView(pb);
-    pb->layout(400,150,500,40);
+    row(pb,500,40);
 #endif
 #if 1
-    //////////////////////////////////////////////////////////    
+    //////////////////////////////////////////////////////////
     ProgressBar*pb2=new ProgressBar(72,72);
     d=ctx->getDrawable("cdroid:drawable/progress_large.xml");
     pb2->setIndeterminateDrawable(d);
     LOGD("Indeterminate drawable=%p",d);
-    w->addView(pb2);
-    pb2->layout(50,450,72,72);
     pb2->setProgressDrawable(new ColorDrawable(0xFF112233));
     pb2->setIndeterminate(true);
+    row(pb2,72,72);
 #endif
 #endif
 #if 1
@@ -124,10 +134,9 @@ int main(int argc,const char*argv[]){
     d=ctx->getDrawable("cdroid:drawable/seekbar_tick_mark.xml");
     sb->setTickMark(d);
     sb2->setTickMark(d->getConstantState()->newDrawable());
-    w->addView(sb);
-    sb->layout(150,250,800,30);
-    w->addView(sb2);
-    sb2->layout(150,300,800,30);
+    row(sb,800,30);
+    row(sb2,800,60);
 #endif
+    content->requestLayout();
     return app.exec();
 }

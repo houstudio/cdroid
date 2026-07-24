@@ -28,7 +28,6 @@ private:
     void syncTextState();
     void updateReferenceToIndicatorDrawable(Drawable* backgroundDrawable);
 protected:
-    void doSetChecked(bool checked)override;
     void drawableStateChanged()override;
 public:
     ToggleButton(int w,int h);
@@ -38,6 +37,7 @@ public:
     const std::string getTextOff()const;
     void setTextOff(const std::string& textOff);
     float getDisabledAlpha() const;
+    void setChecked(bool checked)override;
     void setBackground(Drawable* d)override;
     std::string getAccessibilityName()const;
     std::string getButtonStateDescription()override;

@@ -1,0 +1,97 @@
+project(cdtext)
+add_subdirectory(minikin)
+add_library(cdtext
+    androidbidi.cc
+    textdirectionheuristics.cc
+    measuredparagraph.cc
+    measuredtext.cc
+    html.cc
+    linebreaker.cc
+    selection.cc
+    segmentfinder.cc
+    layout.cc
+    staticlayout.cc
+    boringlayout.cc
+    dynamiclayout.cc
+    precomputedtext.cc
+    paint.cc
+    textpaint.cc
+    textutils.cc
+    textline.cc
+    packedintvector.cc
+    character.cc
+    String.cc
+    spannablestring.cc
+    spannablestringbuilder.cc
+    inputfilter.cc
+    linkify.cc
+    style/metricaffectingspan.cc
+    style/replacementspan.cc
+    method/basemovementmethod.cc
+    method/arrowkeymovementmethod.cc
+    method/scrollingmovementmethod.cc
+    method/passwordtransformationmethod.cc
+    method/allcapstransformationmethod.cc
+    method/touch.cc
+    method/worditerator.cc
+    method/metakeylistener.cc
+    method/basekeylistener.cc
+    method/numberkeylistener.cc
+    method/digitskeylistener.cc
+    method/dialerkeylistener.cc
+    method/datekeylistener.cc
+    method/datetimekeylistener.cc
+    method/timekeylistener.cc
+    method/qwertykeylistener.cc
+    method/textkeylistener.cc
+    method/linkmovementmethod.cc
+    method/textlinkspan.cc
+    method/multitapkeylistener.cc
+    method/replacementtransformationmethod.cc
+    method/hidereturnstransformationmethod.cc
+    method/singlelinetransformationmethod.cc
+    method/insertmodetransformationmethod.cc
+    method/translationtransformationmethod.cc
+    )
+target_link_libraries(cdtext minikin)
+
+target_include_directories(
+    cdtext
+    PRIVATE
+    BEFORE
+    ${PROJECT_SOURCE_DIR}/minikin/include/myicu
+    ${PROJECT_SOURCE_DIR}/minikin/include
+    ${PROJECT_SOURCE_DIR}/minikin/libs
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/..
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/gui
+    ${HARFBUZZ_INCLUDE_DIRS}
+    ${FREETYPE_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+    )
+add_executable(texttest texttest.cc)
+target_include_directories(texttest
+    PRIVATE
+    BEFORE
+    ${PROJECT_SOURCE_DIR}/minikin/include/myicu
+    ${PROJECT_SOURCE_DIR}/minikin/include
+    ${PROJECT_SOURCE_DIR}/minikin/libs
+    ./
+    ${PROJECT_SOURCE_DIR}
+    ${PROJECT_SOURCE_DIR}/..
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/include/gui
+    ${HARFBUZZ_INCLUDE_DIRS}
+    ${FREETYPE_INCLUDE_DIRS}
+    ${CAIRO_INCLUDE_DIRS}
+    )
+target_link_libraries(texttest
+    minikin
+    cdtext
+    cdroid
+    expat
+    ${HARFBUZZ_LIBRARIES}
+    ${FREETYPE_LIBRARIES}
+    ${CAIRO_LIBRARIES}
+)

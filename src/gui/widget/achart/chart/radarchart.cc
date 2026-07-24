@@ -89,7 +89,7 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
     const double startAngle = mRenderer->getStartAngle() * M_PI / 180.0;
     canvas.set_color(withAlpha(mRenderer->getLabelsColor(), 0x55));
     canvas.set_line_width(1.0);
-    paint.setStyle(STROKE);
+    paint.setStyle(Paint::Style::STROKE);
     for (int level = 1; level <= kGridLevelCount; ++level) {
         std::vector<float> gridPoints;
         const double ratio = static_cast<double>(level) / kGridLevelCount;
@@ -105,9 +105,9 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
 
     auto resolveTextAlign=[](float x, int centerX){
         if (std::fabs(x - centerX) < 4.0f) {
-            return Align::CENTER;
+            return Paint::Align::CENTER;
         }
-        return x < centerX ? Align::RIGHT : Align::LEFT;
+        return x < centerX ? Paint::Align::RIGHT : Paint::Align::LEFT;
     };
 
     for (int axis = 0; axis < axisCount; ++axis) {
@@ -123,7 +123,7 @@ void RadarChart::draw(Canvas& canvas, int x, int y, int width, int height, Paint
         paint.setTextAlign(resolveTextAlign(labelPoint.x, mCenterX));
         drawString(canvas, axisLabel, labelPoint.x, labelPoint.y, paint);
     }
-    paint.setStyle(FILL);
+    paint.setStyle(Paint::Style::FILL);
     for (int category = 0; category < categoryCount; ++category) {
         const std::vector<double> values = mDataset->getValues(category);
         std::vector<float> polygon;

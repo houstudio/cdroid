@@ -18,8 +18,62 @@
 #include <view/keyevent.h>
 #include <private/inputeventlabels.h>
 #include <porting/cdlog.h>
+#include <core/inputeventsource.h>
+#include <private/keycharactermap.h>
 #include <sstream>
 namespace cdroid{
+
+// Ported from Android KeyEvent.getKeyCharacterMap: the map for this event's
+// device (looked up by mDeviceId), or the shared default (VIRTUAL_KEYBOARD) when
+// the device is unknown / synthetic (mDeviceId < 0) or has been hot-removed.
+KeyCharacterMap* KeyEvent::getKeyCharacterMap() const {
+    if (mDeviceId >= 0) {
+        InputDevice* dev = InputEventSource::getInstance().getInputDevice(mDeviceId);
+        if (dev != nullptr) {
+            if (KeyCharacterMap* kcm = dev->getKeyCharacterMap()) return kcm;
+        }
+    }
+    return KeyCharacterMap::getDefault();
+}
+
+// Ported from Android KeyEvent.getUnicodeChar(int): resolved via this key's
+// device KeyCharacterMap (KeyEvent → KeyCharacterMap, as in Android — no IMM).
+int KeyEvent::getUnicodeChar(int metaState) const {
+    return getKeyCharacterMap()->getCharacter(mKeyCode, metaState);
+}
+
+int KeyEvent::getUnicodeChar() const {
+    return getUnicodeChar(mMetaState);
+}
+
+char16_t KeyEvent::getMatch(const char16_t* chars, int len, int metaState) const {
+    if (chars == nullptr || len <= 0) return 0;
+    return getKeyCharacterMap()->getMatch(mKeyCode, chars, (size_t)len, metaState);
+}
+
+// Ported from Android KeyEvent.getNumber/getDisplayLabel via the device KCM.
+char16_t KeyEvent::getNumber() const {
+    return getKeyCharacterMap()->getNumber(mKeyCode);
+}
+
+char16_t KeyEvent::getDisplayLabel() const {
+    return getKeyCharacterMap()->getDisplayLabel(mKeyCode);
+}
+
+// Ported from Android KeyCharacterMap.getKeyData (Android's KeyEvent.getKeyData
+// delegates to it). meta[0..3] = char under [none, shift, alt, shift+alt]; the
+// char source (getUnicodeChar) is the same nativeGetCharacter the Java path uses.
+bool KeyEvent::getKeyData(KeyData& results) const {
+    const char16_t displayLabel = getDisplayLabel();
+    if (displayLabel == 0) return false;
+    results.displayLabel = displayLabel;
+    results.number = getNumber();
+    results.meta[0] = (char16_t)getUnicodeChar(0);
+    results.meta[1] = (char16_t)getUnicodeChar(META_SHIFT_ON);
+    results.meta[2] = (char16_t)getUnicodeChar(META_ALT_ON);
+    results.meta[3] = (char16_t)getUnicodeChar(META_ALT_ON | META_SHIFT_ON);
+    return true;
+}
 
 KeyEvent* KeyEvent::obtain(){
     KeyEvent*ev = PooledInputEventFactory::getInstance().createKeyEvent();

@@ -30,7 +30,7 @@ public:
     class AbstractCalendarViewDelegate;
     DECLARE_UIEVENT(void,OnDateChangeListener,CalendarView& view, int year, int month, int dayOfMonth);
 private:
-    CalendarViewDelegate* mDelegate;;
+    CalendarViewDelegate* mDelegate = nullptr;
 public:
     CalendarView(int w,int h);
     CalendarView(Context*,const AttributeSet&atts);

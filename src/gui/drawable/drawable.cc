@@ -155,7 +155,7 @@ void Drawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&cf) {
 }
 
 const cdroid::RefPtr<ColorFilter>Drawable::getColorFilter()const{
-    return nullptr;
+    return mColorFilter;
 }
 
 void Drawable::clearColorFilter(){
@@ -182,10 +182,50 @@ cdroid::RefPtr<PorterDuffColorFilter>Drawable::updateTintFilter(const cdroid::Re
     return tintFilter;
 }
 
+ColorFilter* Drawable::beginTintGroup(Canvas& canvas, const Rect& clipRect, ColorFilter* filter) {
+    /* mColorFilter overrides the passed-in tint filter (Android: setColorFilter beats
+     * tint). This single line is what makes ImageView/Drawable::setColorFilter work. */
+    if (mColorFilter) filter = mColorFilter.get();
+    if (!filter) return nullptr;
+    canvas.save();
+    canvas.rectangle(clipRect.left, clipRect.top, clipRect.width, clipRect.height);
+    canvas.clip();
+    canvas.push_group();
+    return filter;
+}
+
+void Drawable::endTintGroup(Canvas& canvas, const Rect& filterRect, ColorFilter* filter) {
+    /* Precondition: a group pushed by beginTintGroup is the active target holding the
+     * drawable's content. The filter transforms that content in place (PorterDuff just
+     * paints the tint color with a cairo operator — zero extra surfaces), then we pop
+     * the group and composite the result back onto the real surface. */
+    filter->apply(canvas, filterRect);
+    canvas.pop_group_to_source();
+    canvas.set_operator(Cairo::Context::Operator::OVER);
+    canvas.paint();
+    canvas.restore();
+}
+
 void Drawable::setTintList(const RefPtr<ColorStateList>& tint) {
 }
 
 void Drawable::setTintMode(int mode) {
+}
+
+void Drawable::setTintBlendMode(int blendMode) {
+    setTintMode(BlendMode::toPorterDuffMode(blendMode));
+}
+
+int Drawable::parseBlendMode(int value,int defaultMode){
+    switch(value){
+    case  3: return BlendMode::SRC_OVER; /* XML: src_over  */
+    case  5: return BlendMode::SRC_IN;   /* XML: src_in    */
+    case  9: return BlendMode::SRC_ATOP; /* XML: src_atop  */
+    case 14: return BlendMode::MODULATE; /* XML: multiply  (b/73224934 -> MODULATE) */
+    case 15: return BlendMode::SCREEN;   /* XML: screen    */
+    case 16: return BlendMode::PLUS;     /* XML: add       */
+    default: return defaultMode;
+    }
 }
 
 void Drawable::setSrcDensityOverride(int density){

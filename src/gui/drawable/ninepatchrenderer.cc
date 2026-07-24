@@ -268,7 +268,8 @@ static uint8_t maxAlphaOverCol(uint8_t** rows, int offsetX, int startY, int endY
     return maxAlpha;
 }
 
-NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
+NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image,
+        const std::vector<uint8_t>*ninePatchChunk)
     : mImage(image){
     const uint32_t numRows = image->get_height();
     auto rows = std::unique_ptr<uint8_t*[]>(new uint8_t*[numRows]);
@@ -277,7 +278,13 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         rows[i] = pd;
         pd += image->get_stride();
     }
-    auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,nullptr);
+    // Prefer the cdNp/npTc chunk when present (Android-aapt-processed / self-chunked
+    // 9-patch); NinePatch::Create falls back to scanning the 1px guide border when the
+    // chunk is null or malformed. A cdNp chunk means the image is border-stripped.
+    auto anp = NinePatch::Create(rows.get(),image->get_width(),numRows,
+            ninePatchChunk ? ninePatchChunk->data() : nullptr,
+            ninePatchChunk ? ninePatchChunk->size() : 0, nullptr);
+    mBorderless = anp->borderless;
     for(auto&r:anp->horizontal_stretch_regions){
         mResizeDistancesX.push_back({r.start,r.end-r.start});
     }
@@ -285,79 +292,118 @@ NinePatchRenderer::NinePatchRenderer(Cairo::RefPtr<ImageSurface> image)
         mResizeDistancesY.push_back({r.start,r.end-r.start});
     }
 
-    const int midX = image->get_width() / 2;
-    const int midY = image->get_height() / 2;
-    const int endX = image->get_width() - 2;
-    const int endY = image->get_height() - 2;
-
-   // find left and right extent of nine patch content on center row
-    if (image->get_width() > 4) {
-        findMaxOpacity(rows.get(), 1, midY, midX, -1, 1, 0, &mOutlineInsets.left);
-        findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.bottom);
+    if (anp->outlineFromChunk) {
+        // cd9p chunk provided optical (npLb) + outline (npOl) computed at build time;
+        // trust it and skip the border pixel scan. The 1px guide border is still present
+        // in the image, but the chunk already encodes what the scan would compute.
+        mOpticalInsets.left   = anp->layout_bounds.left;
+        mOpticalInsets.top    = anp->layout_bounds.top;
+        mOpticalInsets.right  = anp->layout_bounds.right;
+        mOpticalInsets.bottom = anp->layout_bounds.bottom;
     } else {
-        mOutlineInsets.left = 0;
-        mOutlineInsets.right = 0;
-    }
- 
-    // find top and bottom extent of nine patch content on center column
-    if (image->get_height() > 4) {
-        findMaxOpacity(rows.get(), midX, 1, -1, midY, 0, 1, &mOutlineInsets.top);
-        findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
-    } else {
-        mOutlineInsets.top = 0;
-        mOutlineInsets.bottom = 0;
-    }
+        // Scan path: the chunk carried no npOl outline, so derive outline insets,
+        // radius and alpha from pixels. Generalized over the border model via
+        // B = source border thickness to skip: B=1 for a bordered image (1px guide
+        // border surrounds the content), B=0 for a borderless cdNp image whose npOl
+        // was missing/truncated (the decoded image IS the content). B=1 reproduces
+        // the original bordered behavior exactly.
+        const int B = mBorderless ? 0 : 1;
+        const int midX = image->get_width() / 2;
+        const int midY = image->get_height() / 2;
+        const int endX = image->get_width() - 1 - B;
+        const int endY = image->get_height() - 1 - B;
 
-    
-    // Find left and right of layout padding...(maybe its is android's OpticalInsets)
-    const bool transparent = rows[0][3]==0;
-    const char* errorMsg=nullptr;
-    getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
-                                   &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
-  
-    getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
-                                 &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
-  
-    const bool haveLayoutBounds = (mOpticalInsets.left != 0) || (mOpticalInsets.right != 0)
-        ||(mOpticalInsets.top != 0) || (mOpticalInsets.bottom != 0);
+        // find left and right extent of nine patch content on center row
+        if (image->get_width() > 4) {
+            findMaxOpacity(rows.get(), B, midY, midX, -1, 1, 0, &mOutlineInsets.left);
+            findMaxOpacity(rows.get(), endX, midY, midX, -1, -1, 0, &mOutlineInsets.right);
+        } else {
+            mOutlineInsets.left = 0;
+            mOutlineInsets.right = 0;
+        }
 
-    const int innerStartX = 1 + mOutlineInsets.left;
-    const int innerStartY = 1 + mOutlineInsets.top;
-    const int innerEndX = endX - mOutlineInsets.right;
-    const int innerEndY = endY - mOutlineInsets.bottom;
-    const int innerMidX = (innerEndX + innerStartX) / 2;
-    const int innerMidY = (innerEndY + innerStartY) / 2;
-  
-    // assuming the image is a round rect, compute the radius by marching
-    // diagonally from the top left corner towards the center
-    mAlpha = std::max(maxAlphaOverRow(rows[innerMidY], innerStartX, innerEndX),
-                 maxAlphaOverCol(rows.get(), innerMidX, innerStartY, innerStartY));
-  
-    int diagonalInset = 0;
-    findMaxOpacity(rows.get(), innerStartX, innerStartY, innerMidX, innerMidY, 1, 1, &diagonalInset);
-  
-    /* Determine source radius based upon inset:
-     *     sqrt(r^2 + r^2) = sqrt(i^2 + i^2) + r
-     *     sqrt(2) * r = sqrt(2) * i + r
-     *     (sqrt(2) - 1) * r = sqrt(2) * i
-     *     r = sqrt(2) / (sqrt(2) - 1) * i
-     */
-    mRadius = int32_t(3.4142f * diagonalInset);
+        // find top and bottom extent of nine patch content on center column
+        if (image->get_height() > 4) {
+            findMaxOpacity(rows.get(), midX, B, -1, midY, 0, 1, &mOutlineInsets.top);
+            findMaxOpacity(rows.get(), midX, endY, -1, midY, 0, -1, &mOutlineInsets.bottom);
+        } else {
+            mOutlineInsets.top = 0;
+            mOutlineInsets.bottom = 0;
+        }
+
+        // Optical / layout-bounds insets. A bordered image encodes them as ticks on
+        // the 1px guide border (bottom row / right column); scan those. A borderless
+        // image has no guide border to scan — use the npLb insets the chunk already
+        // parsed into anp->layout_bounds (which are 0 if the bundle lacked npLb).
+        if (mBorderless) {
+            mOpticalInsets.left   = anp->layout_bounds.left;
+            mOpticalInsets.top    = anp->layout_bounds.top;
+            mOpticalInsets.right  = anp->layout_bounds.right;
+            mOpticalInsets.bottom = anp->layout_bounds.bottom;
+        } else {
+            const bool transparent = rows[0][3]==0;
+            const char* errorMsg=nullptr;
+            getHorizontalLayoutBoundsTicks(rows[image->get_height() - 1], image->get_width(), transparent, false,
+                                           &mOpticalInsets.left, &mOpticalInsets.right, &errorMsg);
+
+            getVerticalLayoutBoundsTicks(rows.get(), (image->get_width() - 1) * 4, image->get_height(), transparent, false,
+                                         &mOpticalInsets.top, &mOpticalInsets.bottom, &errorMsg);
+        }
+
+        const int innerStartX = B + mOutlineInsets.left;
+        const int innerStartY = B + mOutlineInsets.top;
+        const int innerEndX = endX - mOutlineInsets.right;
+        const int innerEndY = endY - mOutlineInsets.bottom;
+        const int innerMidX = (innerEndX + innerStartX) / 2;
+        const int innerMidY = (innerEndY + innerStartY) / 2;
+
+        // assuming the image is a round rect, compute the radius by marching
+        // diagonally from the top left corner towards the center
+        mAlpha = std::max(maxAlphaOverRow(rows[innerMidY], innerStartX, innerEndX),
+                     maxAlphaOverCol(rows.get(), innerMidX, innerStartY, innerStartY));
+
+        int diagonalInset = 0;
+        findMaxOpacity(rows.get(), innerStartX, innerStartY, innerMidX, innerMidY, 1, 1, &diagonalInset);
+
+        /* Determine source radius based upon inset:
+         *     sqrt(r^2 + r^2) = sqrt(i^2 + i^2) + r
+         *     sqrt(2) * r = sqrt(2) * i + r
+         *     (sqrt(2) - 1) * r = sqrt(2) * i
+         *     r = sqrt(2) / (sqrt(2) - 1) * i
+         */
+        mRadius = int32_t(3.4142f * diagonalInset);
+        // The scanner's NinePatch (built from the same border scan) recomputes
+        // outline_radius the same way; let it override when it actually provided one.
+        if (anp->outline_radius > 0.f) mRadius = static_cast<int>(anp->outline_radius);
+    }
 
     mPadding.left = anp->padding.left;
     mPadding.top  = anp->padding.top;
     mPadding.width = anp->padding.right;
     mPadding.height= anp->padding.bottom;
-    mRadius = static_cast<int>(anp->outline_radius);
+    // anp->outline is edge insets {left,top,right,bottom} (right/bottom map to Rect's
+    // .width/.height per the Rect-as-insets convention); outline_alpha is the content's
+    // max alpha (0..255). On the cd9p path these come from npOl; on the scan path from
+    // NinePatch::Create's pixel scan. Stored for getOutlineRect()/getOutlineAlpha().
+    mOutlineRect.set(anp->outline.left, anp->outline.top, anp->outline.right, anp->outline.bottom);
+    mOutlineAlpha = anp->outline_alpha;
+    if (anp->outlineFromChunk) {
+        // npOl radius is authoritative even when 0 (sharp corner) — the pixel diagonal
+        // march above was skipped on this path.
+        mRadius = static_cast<int>(anp->outline_radius);
+    }
     mOpacity = ImageDecoder::getTransparency(mImage);
+    // B = source border thickness to skip (1 for a bordered image, 0 for borderless).
+    const int B = mBorderless ? 0 : 1;
     mContentArea.set(mPadding.left,mPadding.top,
-        image->get_width()-mPadding.left-2,
-        image->get_height()-mPadding.top-2);
+        image->get_width()-mPadding.left-2*B,
+        image->get_height()-mPadding.top-2*B);
     mAlpha =1.f;
     if (!mResizeDistancesX.size() || !mResizeDistancesY.size()) {
         //throw new ExceptionNot9Patch;
         throw "Not ninepatch image!";
     }
+    const bool haveLayoutBounds = (mOpticalInsets.left|mOpticalInsets.top|mOpticalInsets.right|mOpticalInsets.bottom)!=0;
     LOGD_IF(haveLayoutBounds,"OutlineInsets=(%d,%d,%d,%d) OpticalInsets=(%d,%d,%d,%d) padding=(%d,%d,%d,%d)",
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
             mOpticalInsets.left,mOpticalInsets.top,mOpticalInsets.right,mOpticalInsets.bottom,
@@ -390,33 +436,7 @@ void NinePatchRenderer::draw(Canvas& painter, int  x, int  y,float alpha) {
 }
 
 void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
-    int resizeWidth = 0,resizeHeight = 0;
-    const int width = rect.width;
-    const int height= rect.height;
-    std::ostringstream oss;
-
-    painter.save();
-    painter.translate(rect.left,rect.top);
     mAlpha = alpha;
-    for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        resizeWidth += mResizeDistancesX[i].second;
-    }
-    for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        resizeHeight += mResizeDistancesY[i].second;
-    }
-
-    if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
-                <<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
-    }
-    if (width < (mImage->get_width() - 2 - resizeWidth)) {
-        oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
-    }
-    if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
-    }
-    const bool hasErrors = (oss.str().empty()==false);
-    LOGE_IF(hasErrors,"%s",oss.str().c_str());
     mWidth = rect.width;
     mHeight= rect.height;
 	painter.save();
@@ -426,29 +446,7 @@ void NinePatchRenderer::draw(Canvas& painter, const Rect&rect,float alpha){
 }
 
 void NinePatchRenderer::setImageSize(int width, int height) {
-    int resizeWidth = 0;
-    int resizeHeight = 0;
-    std::ostringstream oss;
     if((mWidth == width) && (mHeight==height))return;
-    for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        resizeWidth += mResizeDistancesX[i].second;
-    }
-    for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        resizeHeight += mResizeDistancesY[i].second;
-    }
-    if (width < (mImage->get_width() - 2 - resizeWidth) && height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectWidth("<<width<<") must>="<<mImage->get_width()<<"(image.width)-2-"<<resizeWidth<<"(resizeWidth) && incorrectHeight("
-		<<height<<")>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight))";
-    }
-    if (width < (mImage->get_width() - 2 - resizeWidth)) {
-		oss<<"IncorrectWidth("<<width<<"must>="<<mImage->get_width()<<"image.width)-2-"<<resizeWidth<<"(resizeWidth)";
-    }
-    if (height < (mImage->get_height() - 2 - resizeHeight)) {
-        oss<<"IncorrectHeight("<<height<<"must>="<<mImage->get_height()<<"(image.height)-2-"<<resizeHeight<<"(resizeHeight)";
-    }
-    if(oss.str().empty()==false){
-        LOG(ERROR)<<oss.str();
-    }
     if (width != mWidth || height != mHeight) {
         mWidth = width;
         mHeight = height;
@@ -600,8 +598,9 @@ Insets NinePatchRenderer::getOpticalInsets(Cairo::RefPtr<ImageSurface>bitmap) co
 }
 
 void NinePatchRenderer::getFactor(int width, int height, double& factorX, double& factorY) {
-    int topResize = width - (mImage->get_width() - 2);
-    int leftResize = height - (mImage->get_height() - 2);
+    const int B = mBorderless ? 0 : 1;
+    int topResize = width - (mImage->get_width() - 2*B);
+    int leftResize = height - (mImage->get_height() - 2*B);
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
         topResize += mResizeDistancesX[i].second;
         factorX += mResizeDistancesX[i].second;
@@ -614,6 +613,82 @@ void NinePatchRenderer::getFactor(int width, int height, double& factorX, double
     factorY = (double)leftResize / factorY;
 }
 
+namespace {
+// One fixed or stretch band along a single axis: its source extent plus the
+// destination extent assigned by np_build_axis.
+struct np_band { int srcStart; int srcLen; int dstStart; int dstLen; bool stretch; };
+
+// Verbatim port of Skia's SkLatticeIter set_points for ONE axis. Given the stretch
+// regions {start,length} in content coordinates, the full content extent and the
+// destination length, build the alternating fixed/stretch band list and assign each
+// band a destination position/length.
+//
+//   srcFixed    = sum of fixed-band source lengths
+//   srcScalable = sum of stretch-band source lengths
+//
+// Two cases (exactly as in set_points):
+//   srcFixed <= dstLen  (normal): scale the stretch bands by (dstLen-srcFixed)/srcScalable,
+//                            keep the fixed bands at their natural size.
+//   srcFixed  > dstLen  (deficit): collapse the stretch bands to 0 and scale the FIXED
+//                            bands uniformly by dstLen/srcFixed. Skia does NOT overlap or
+//                            clip here — the whole axis shrinks proportionally.
+//
+// Float accumulation + round keeps the bands contiguous and summing to exactly dstLen
+// (the last band is clamped to dstLen), matching Skia's dst[] boundary layout.
+std::vector<np_band> np_build_axis(const std::vector<std::pair<int,int>>& stretch,
+                                   int srcContent, int dstLen) {
+    std::vector<np_band> bands;
+    int cursor = 0;
+    for (const auto& r : stretch) {
+        if (r.first > cursor) bands.push_back({cursor, r.first - cursor, 0, 0, false});
+        bands.push_back({r.first, r.second, 0, 0, true});
+        cursor = r.first + r.second;
+    }
+    if (cursor < srcContent) bands.push_back({cursor, srcContent - cursor, 0, 0, false});
+    if (bands.empty()) bands.push_back({0, srcContent, 0, 0, false});
+
+    int srcFixed = 0, srcScalable = 0;
+    for (const auto& b : bands) (b.stretch ? srcScalable : srcFixed) += b.srcLen;
+
+    const bool   deficit      = srcFixed > dstLen;
+    const double fixedScale   = (deficit && srcFixed)     ? (double)dstLen / srcFixed                          : 1.0;
+    const double stretchScale = (!deficit && srcScalable) ? ((double)dstLen - srcFixed) / (double)srcScalable  : 0.0;
+
+    double fpos = 0.0;
+    int prev = 0;
+    for (size_t i = 0; i < bands.size(); i++) {
+        bands[i].dstStart = prev;
+        const double flen = bands[i].stretch
+            ? (deficit ? 0.0 : bands[i].srcLen * stretchScale)
+            : (deficit ? bands[i].srcLen * fixedScale : (double)bands[i].srcLen);
+        fpos += flen;
+        const int next = (i + 1 == bands.size()) ? dstLen : (int)(fpos + 0.5);
+        bands[i].dstLen = next - prev;
+        prev = next;
+    }
+    return bands;
+}
+} // namespace
+
+void NinePatchRenderer::drawLattice(int width, int height, Cairo::Context& painter) {
+    const int B = mBorderless ? 0 : 1;
+    const int srcW = mImage->get_width()  - 2 * B;
+    const int srcH = mImage->get_height() - 2 * B;
+    const auto xBands = np_build_axis(mResizeDistancesX, srcW, width);
+    const auto yBands = np_build_axis(mResizeDistancesY, srcH, height);
+    for (const auto& yb : yBands) {
+        for (const auto& xb : xBands) {
+            if (xb.dstLen <= 0 || yb.dstLen <= 0) continue;   // collapsed stretch band
+            const Rect srcRect{xb.srcStart + B, yb.srcStart + B, xb.srcLen, yb.srcLen};
+            const Rect dstRect{xb.dstStart,    yb.dstStart,    xb.dstLen, yb.dstLen};
+            if (dstRect.width == srcRect.width && dstRect.height == srcRect.height)
+                drawConstPart(srcRect, dstRect, painter);     // natural size -> 1:1 blit
+            else
+                drawScaledPart(srcRect, dstRect, painter);    // stretched/shrunk patch
+        }
+    }
+}
+
 void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*painterIn) {
     double lostX  = 0.f, lostY  = 0.f;
     double factorX= 0.f, factorY= 0.f;
@@ -621,7 +696,10 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
     int widthResize,heightResize; //width/height for image parts
     int resizeX = 0 , resizeY ;
     int offsetX = 0 , offsetY = 0;
-    
+    // Source border thickness: skip Bpx into the source for each content coordinate
+    // (1 for a bordered image, 0 for borderless) and subtract 2*B from content extent.
+    const int B = mBorderless ? 0 : 1;
+
     RefPtr<Cairo::Context> imgPainter;
     Cairo::Context*ppainter = painterIn;
     if(painterIn==nullptr){
@@ -635,6 +713,24 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
         ppainter=imgPainter.get();
     }
     Cairo::Context&painter=*imgPainter.get();
+    // Deficit case: destination smaller than the sum of the fixed (non-stretch) patches
+    // on either axis. The factor-based loop below only scales the stretch patches, so its
+    // factor goes NEGATIVE here and the const patches overlap/garble (the old
+    // "IncorrectWidth(70 must>=76)" symptom). Hand the whole render to the Skia-faithful
+    // lattice path, which handles each axis independently (normal or deficit). The fully
+    // normal case (dst >= fixed-sum on both axes) still falls through to the loop below,
+    // byte-for-byte unchanged.
+    {
+        const int srcW = mImage->get_width()  - 2 * B;
+        const int srcH = mImage->get_height() - 2 * B;
+        int stretchTotalX = 0, stretchTotalY = 0;
+        for (const auto& r : mResizeDistancesX) stretchTotalX += r.second;
+        for (const auto& r : mResizeDistancesY) stretchTotalY += r.second;
+        if ((srcW - stretchTotalX) > width || (srcH - stretchTotalY) > height) {
+            drawLattice(width, height, painter);
+            return;
+        }
+    }
     getFactor(width, height, factorX, factorY);
     for (int  i = 0; i < mResizeDistancesX.size(); i++) {
         y1 = 0;
@@ -644,7 +740,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             widthResize = mResizeDistancesX[i].first - x1;
             heightResize = mResizeDistancesY[j].first - y1;
 
-            drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+            drawConstPart(Rect{x1 + B, y1 + B, widthResize, heightResize},
                  Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 
             int  y2 = mResizeDistancesY[j].first;
@@ -655,7 +751,7 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
                 if (lostY < 0) {  resizeY += 1;   lostY += 1.0; }
                 else { resizeY -= 1;  lostY -= 1.0; }
             }
-            drawScaledPart(Rect{x1 + 1, y2 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x1 + B, y2 + B, widthResize, heightResize},
                 Rect{x1 + offsetX, y2 + offsetY, widthResize, resizeY}, painter);
 
             int  x2 = mResizeDistancesX[i].first;
@@ -667,11 +763,11 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
                 if (lostX < 0) { resizeX += 1; lostX += 1.0;}
                 else { resizeX -= 1; lostX -= 1.0; }
             }
-            drawScaledPart(Rect{x2 + 1, y1 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x2 + B, y1 + B, widthResize, heightResize},
                 Rect{x2 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
 
             heightResize = mResizeDistancesY[j].second;
-            drawScaledPart(Rect{x2 + 1, y2 + 1, widthResize, heightResize},
+            drawScaledPart(Rect{x2 + B, y2 + B, widthResize, heightResize},
                 Rect{x2 + offsetX, y2 + offsetY, resizeX, resizeY}, painter);
 
             y1 = mResizeDistancesY[j].first + mResizeDistancesY[j].second;
@@ -681,13 +777,13 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
         offsetX += resizeX - mResizeDistancesX[i].second;
     }
     x1 = mResizeDistancesX[mResizeDistancesX.size() - 1].first + mResizeDistancesX[mResizeDistancesX.size() - 1].second;
-    widthResize = mImage->get_width() - x1 - 2;
+    widthResize = mImage->get_width() - x1 - 2*B;
     y1 = 0;
     lostX = 0.0;
     lostY = 0.0;
     offsetY = 0;
     for (int i = 0; i < mResizeDistancesY.size(); i++) {
-        drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].first - y1},
+        drawConstPart(Rect{x1 + B, y1 + B, widthResize, mResizeDistancesY[i].first - y1},
             Rect{x1 + offsetX, y1 + offsetY, widthResize, mResizeDistancesY[i].first - y1}, painter);
         y1 = mResizeDistancesY[i].first;
         resizeY = round((double)mResizeDistancesY[i].second * factorY);
@@ -696,17 +792,17 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             if (lostY < 0) { resizeY += 1;  lostY += 1.0; }
             else { resizeY -= 1;  lostY -= 1.0; }
         }
-        drawScaledPart(Rect{x1 + 1, y1 + 1, widthResize, mResizeDistancesY[i].second},
+        drawScaledPart(Rect{x1 + B, y1 + B, widthResize, mResizeDistancesY[i].second},
             Rect{x1 + offsetX, y1 + offsetY, widthResize, resizeY}, painter);
         y1 = mResizeDistancesY[i].first + mResizeDistancesY[i].second;
         offsetY += resizeY - mResizeDistancesY[i].second;
     }
     y1 = mResizeDistancesY[mResizeDistancesY.size() - 1].first + mResizeDistancesY[mResizeDistancesY.size() - 1].second;
-    heightResize = mImage->get_height() - y1 - 2;
+    heightResize = mImage->get_height() - y1 - 2*B;
     x1 = 0;
     offsetX = 0;
     for (int i = 0; i < mResizeDistancesX.size(); i++) {
-        drawConstPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].first - x1, heightResize},
+        drawConstPart(Rect{x1 + B, y1 + B, mResizeDistancesX[i].first - x1, heightResize},
             Rect{x1 + offsetX, y1 + offsetY, mResizeDistancesX[i].first - x1, heightResize}, painter);
         x1 = mResizeDistancesX[i].first;
         resizeX = round((double)mResizeDistancesX[i].second * factorX);
@@ -715,27 +811,28 @@ void NinePatchRenderer::updateCachedImage(int width, int height,Cairo::Context*p
             if (lostX < 0) {  resizeX += 1;  lostX += 1.0; }
             else { resizeX -= 1;  lostX += 1.0; }
         }
-        drawScaledPart(Rect{x1 + 1, y1 + 1, mResizeDistancesX[i].second, heightResize},
+        drawScaledPart(Rect{x1 + B, y1 + B, mResizeDistancesX[i].second, heightResize},
             Rect{x1 + offsetX, y1 + offsetY, resizeX, heightResize}, painter);
         x1 = mResizeDistancesX[i].first + mResizeDistancesX[i].second;
         offsetX += resizeX - mResizeDistancesX[i].second;
     }
     x1 = mResizeDistancesX[mResizeDistancesX.size() - 1].first + mResizeDistancesX[mResizeDistancesX.size() - 1].second;
-    widthResize = mImage->get_width() - x1 - 2;
+    widthResize = mImage->get_width() - x1 - 2*B;
     y1 = mResizeDistancesY[mResizeDistancesY.size() - 1].first + mResizeDistancesY[mResizeDistancesY.size() - 1].second;
-    heightResize = mImage->get_height() - y1 - 2;
-    drawConstPart(Rect{x1 + 1, y1 + 1, widthResize, heightResize},
+    heightResize = mImage->get_height() - y1 - 2*B;
+    drawConstPart(Rect{x1 + B, y1 + B, widthResize, heightResize},
          Rect{x1 + offsetX, y1 + offsetY, widthResize, heightResize}, painter);
 }
 
 Rect NinePatchRenderer::getOutlineRect() const {
-    // 如果有专用的 mOutlineRect，优先返回
-    // return mOutlineRect;
-    // 否则用内容区或 padding 作为 fallback
+    // Prefer the scanner's faithful outline (anp->outline) when it has real insets.
+    // When it's all-zero (chunk-built NinePatch has no outline in npTc, or no opaque
+    // content), fall back to the content area.
+    if (mOutlineRect.left | mOutlineRect.top | mOutlineRect.width | mOutlineRect.height)
+        return mOutlineRect;
     if (!mContentArea.empty())
         return mContentArea;
-    else
-        return getPadding();
+    return getPadding();
 }
 
 int NinePatchRenderer::getOutlineRadius() const {

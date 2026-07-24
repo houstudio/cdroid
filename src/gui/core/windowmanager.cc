@@ -100,7 +100,6 @@ void WindowManager::addWindow(Window*win){
     for(int idx = 0 ;idx < mWindows.size();idx++){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
-        LOGV("%p window %p[%s] type=%d layer=%d",win,w,w->getText().c_str(),w->window_type,w->mLayer);
     }
     if(mActiveWindow){
         Window*deactWin = mActiveWindow;
@@ -119,7 +118,7 @@ void WindowManager::addWindow(Window*win){
     Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post([win](){win->onCreate();});
-    //the first create only call onCreate,no onActive 
+    //the first create only call onCreate,no onActive
     win->post([info](){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
@@ -151,10 +150,13 @@ void WindowManager::removeWindow(Window*w){
 #else
     Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
 #endif
-    View::AttachInfo*info = w->mAttachInfo;
+    // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
+    // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
+    // ~Window -- Window::close() stashes it (before calling removeWindow) and hands it to the
+    // posted lambda that frees it. removeWindow itself does NOT free the window or AttachInfo;
+    // it only drops the window from the compositor list so a replacement shown in the same tick
+    // doesn't race a still-listed window.
     w->dispatchDetachedFromWindow();
-    delete info;
-    delete w;
     for(auto it=mWindows.rbegin();it!=mWindows.rend();it++){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
@@ -163,9 +165,8 @@ void WindowManager::removeWindow(Window*w){
             }
             mActiveWindow = (*it);
             break;
-        } 
+        }
     }
-    //GraphDevice::getInstance().invalidate(wrect);
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
 }
@@ -213,21 +214,23 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             break;
         }
     }
-    //const Cairo::RectangleInt re = rgn->get_extents();
-    //GraphDevice::getInstance().invalidate({re.x,re.y,re.width,re.height});
     GraphDevice::getInstance().flip();
 }
 
 void WindowManager::moveWindow(Window*w,int x,int y){
+    moveWindow(w,x,y,-1,-1);
+}
+
+void WindowManager::moveWindow(Window*w,int x,int y,int width,int height){
     Rect rcw = w->getBound();
     Rect rcw2 =rcw;
     rcw2.left = x;
     rcw2.top = y;
-    w->setFrame(x,y,rcw.width,rcw.height);
+    rcw2.width = ((width<0||width==INT_MAX)?rcw.width:width);
+    rcw2.height= ((height<0||height==INT_MAX)?rcw.height:height);
+    w->setFrame(x, y, rcw2.width,rcw2.height);
     const auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     if( w->isAttachedToWindow() && (w->getVisibility()==View::VISIBLE)){
-        //GraphDevice::getInstance().invalidate(rcw);
-        //GraphDevice::getInstance().invalidate(rcw2);
         for(auto it = mWindows.begin();it<itw;it++){
            Rect rc = w->getBound();
            Cairo::RefPtr<Cairo::Region>newrgn = Cairo::Region::create((Cairo::RectangleInt&)rc);
@@ -241,6 +244,26 @@ void WindowManager::moveWindow(Window*w,int x,int y){
         }
         GraphDevice::getInstance().flip();
     }
+}
+
+void WindowManager::hideWindow(Window*w){
+    if(w==nullptr) return;
+    const Rect wrect = w->getBound();
+    // w has just been hidden (INVISIBLE/GONE) by its caller's setVisibility,
+    // which is what triggered the onVisibilityChanged that calls us. Propagate
+    // the now-exposed screen area as dirty (in each window's local coords) to
+    // every other window so composeSurfaces repaints it from the windows below.
+    // We do NOT set visibility here (the caller already did) — same damage-
+    // propagation pattern as removeWindow/moveWindow.
+    for(auto itr=mWindows.begin(); itr!=mWindows.end(); itr++){
+        Window* w1 = (*itr);
+        if(w1==w) continue;
+        Rect rc = w1->getBound();
+        if(!rc.intersect(wrect)) continue;
+        rc.offset(-w1->getLeft(),-w1->getTop());
+        w1->mPendingRgn->do_union((const Cairo::RectangleInt&)rc);
+    }
+    GraphDevice::getInstance().flip();
 }
 
 Window*WindowManager::getActiveWindow()const{
@@ -268,8 +291,8 @@ void WindowManager::sendToBack(Window*win){
 }
 
 void WindowManager::bringToFront(Window*win){
-    win->mLayer = (win->window_type<<16)|0x7FFF;
     if(mActiveWindow==win) return;
+    win->mLayer = (win->window_type<<16)|0x7FFF;
     std::sort(mWindows.begin(),mWindows.end(),[](Window*w1,Window*w2){
         return (w2->mLayer - w1->mLayer)>0;
     });
@@ -402,8 +425,10 @@ void WindowManager::onMotion(MotionEvent&event) {
 }
 
 void WindowManager::onKeyEvent(KeyEvent&event) {
-    // Notify the focused child
-    if(mActiveWindow){
+    // Notify the focused child. Skip an active window that is not visible (e.g.
+    // a dismissed IME window hidden via setVisibility(INVISIBLE)) so it does not
+    // keep consuming key events; fall through to the next visible focusable window.
+    if(mActiveWindow && mActiveWindow->getVisibility()==View::VISIBLE){
         mActiveWindow->processKeyEvent(event);
         return ;
     }

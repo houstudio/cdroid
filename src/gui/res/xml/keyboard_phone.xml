@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 12-key phone dialer pad for InputType class TYPE_CLASS_PHONE
+     (android:inputType="phone"). Geometry copied from AOSP's
+     password_kbd_numeric: 3 columns, 4 rows. The bottom row is the phone
+     cluster star / 0 / hash (a real phone pad has no delete key on the pad).
+     Keys commit directly to the editor. -->
+<Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
+    android:keyWidth="32%p"
+    android:horizontalGap="1%p"
+    android:verticalGap="2%p"
+    android:keyHeight="21%p">
+    <Row>
+        <Key android:codes="49" android:keyLabel="1" android:keyEdgeFlags="left"/>
+        <Key android:codes="50" android:keyLabel="2"/>
+        <Key android:codes="51" android:keyLabel="3" android:keyEdgeFlags="right"/>
+    </Row>
+    <Row>
+        <Key android:codes="52" android:keyLabel="4" android:keyEdgeFlags="left"/>
+        <Key android:codes="53" android:keyLabel="5"/>
+        <Key android:codes="54" android:keyLabel="6" android:keyEdgeFlags="right"/>
+    </Row>
+    <Row>
+        <Key android:codes="55" android:keyLabel="7" android:keyEdgeFlags="left"/>
+        <Key android:codes="56" android:keyLabel="8"/>
+        <Key android:codes="57" android:keyLabel="9" android:keyEdgeFlags="right"/>
+    </Row>
+    <Row android:rowEdgeFlags="bottom">
+        <Key android:codes="42" android:keyLabel="*" android:keyEdgeFlags="left"/>
+        <Key android:codes="48" android:keyLabel="0"/>
+        <Key android:codes="35" android:keyLabel="#" android:keyEdgeFlags="right"/>
+    </Row>
+</Keyboard>

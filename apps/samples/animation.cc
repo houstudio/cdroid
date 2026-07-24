@@ -28,12 +28,22 @@ int main(int argc,const char*argv[]){
 
     App app(argc,argv);
     Window*w=new Window(0,0,1280,720);
-  
-    MyAdapter*adapter=new MyAdapter();
     w->setBackgroundColor(0xFF111111);
+
+    // Window::doLayout now always lays out direct children, so absolute layout() on
+    // multiple direct children piles them up at (0,0). Stack them in a LinearLayout.
+    LinearLayout*content=new LinearLayout(-1,-1);
+    content->setOrientation(LinearLayout::VERTICAL);
+    w->addView(content);
+    auto add=[&](View*v,int ww,int hh){
+        LinearLayout::LayoutParams*lp=new LinearLayout::LayoutParams(ww,hh);
+        lp->leftMargin=lp->topMargin=10;
+        content->addView(v,lp);
+    };
+
+    MyAdapter*adapter=new MyAdapter();
     ListView*lv=new ListView(320,480);
-    w->addView(lv);
-    lv->layout(150,100,320,480);
+    add(lv,320,480);
     lv->setId(1000);
     for(int i=0;i<56;i++){
         adapter->add("");
@@ -50,8 +60,7 @@ int main(int argc,const char*argv[]){
     //lv->setRotation(30);
 
     TextView*tv=new TextView("HelloWorld",200,40);
-    w->addView(tv);
-    tv->layout(600,400,200,40);
+    add(tv,200,40);
     tv->setBackgroundColor(0xFF00FF00);
     float rotation=.0f;
     Runnable r;
@@ -62,7 +71,6 @@ int main(int argc,const char*argv[]){
         w->postDelayed(r,80);
     });
     w->postDelayed(r,1000);
+    content->requestLayout();
     return app.exec();
 }
-
-

@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/systemclock.h>
+#include <porting/cdgraph.h>
 #include <image-decoders/imagedecoder.h>
 using namespace Cairo;
 using namespace cdroid;

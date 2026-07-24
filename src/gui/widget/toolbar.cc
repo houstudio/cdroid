@@ -15,7 +15,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
-#include <utils/textutils.h>
+#include <text/textutils.h>
 #include <widget/toolbar.h>
 #include <menu/actionmenupresenter.h>
 #include <gui_features.h>
@@ -385,7 +385,7 @@ void Toolbar::setTitle(const std::string&title){
             Context* context = getContext();
             mTitleTextView = new TextView(context,AttributeSet(mContext,"cdroid"));
             mTitleTextView->setSingleLine(true);
-            mTitleTextView->setEllipsize(Layout::ELLIPSIS_END);
+            mTitleTextView->setEllipsize(TextUtils::TruncateAt::END);
             if (!mTitleTextAppearance.empty()) {
                 mTitleTextView->setTextAppearance(mTitleTextAppearance);
             }
@@ -416,7 +416,7 @@ void Toolbar::setSubtitle(const std::string&subtitle){
         if (mSubtitleTextView == nullptr) {
             mSubtitleTextView = new TextView(mContext,AttributeSet(mContext,"cdroid"));
             mSubtitleTextView->setSingleLine(true);
-            mSubtitleTextView->setEllipsize(Layout::ELLIPSIS_END);
+            mSubtitleTextView->setEllipsize(TextUtils::TruncateAt::END);
             if (!mSubtitleTextAppearance.empty()) {
                 mSubtitleTextView->setTextAppearance(mSubtitleTextAppearance);
             }

@@ -17,8 +17,8 @@
  *********************************************************************************/
 #ifndef __GRAPH_CONTEXT_H__
 #define __GRAPH_CONTEXT_H__
-#include <cdtypes.h>
-#include <cdgraph.h>
+//#include <cdtypes.h>
+//#include <cdgraph.h>
 #include <cmath>
 #include <cairomm/region.h>
 #include <cairomm/context.h>

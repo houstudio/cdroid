@@ -378,9 +378,8 @@ void ListPopupWindow::dismiss() {
     mPopup->dismiss();
     removePromptView();
     mPopup->setContentView(nullptr);
-    //mDropDownList->setAdapter(nullptr);
-    LOGD("TODO:delete mDropDownList %p;delete will caused crash; not delete will cause memleak",mDropDownList);
-    //delete mDropDownList;/*this seems owned by PopupWindow::PopupDecorView::mBackgroundView*/
+    // mDropDownList is owned by mPopup (setOwnsContentView): it is freed when the
+    // popup window is torn down, so just drop our pointer here.
     mDropDownList = nullptr;
     mHandler->removeCallbacks(mResizePopupRunnable);
 }
@@ -686,6 +685,9 @@ int ListPopupWindow::buildDropDown() {
         }
 
         mPopup->setContentView(dropDownView);
+        // The drop down list is created solely for this popup, so let the popup
+        // own and free it via its teardown cascade (see PopupWindow::dismissImmediate).
+        mPopup->setOwnsContentView(true);
     } else {
         dropDownView = (ViewGroup*) mPopup->getContentView();
         View* view = mPromptView;

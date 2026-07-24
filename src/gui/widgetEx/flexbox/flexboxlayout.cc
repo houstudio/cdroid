@@ -1,8 +1,29 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <widgetEx/flexbox/flexboxlayout.h>
 //REF:https://github.com/google/flexbox-layout/tree/main
 namespace cdroid{
 
 DECLARE_WIDGET(FlexboxLayout)
+
+FlexboxLayout::FlexboxLayout(int w,int h):ViewGroup(w,h){
+    init();
+}
 
 FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGroup(context,attrs){
     init();
@@ -18,12 +39,12 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
             {"wrap_reverse" , FlexWrap::WRAP_REVERSE}
         }, (int)FlexWrap::NOWRAP);
     mJustifyContent = attrs.getInt("justifyContent",std::unordered_map<std::string,int>{
-            {"flex_start",JustifyContent::FLEX_START},
-            {"flex_end", JustifyContent::FLEX_END},
-            {"center"  , JustifyContent::CENTER},
-            {"space_between", JustifyContent::SPACE_BETWEEN},
-            {"space_around" , JustifyContent::SPACE_AROUND},
-            {"space_evenly" , JustifyContent::SPACE_EVENLY}
+            {"flex_start",(int)JustifyContent::FLEX_START},
+            {"flex_end", (int)JustifyContent::FLEX_END},
+            {"center"  , (int)JustifyContent::CENTER},
+            {"space_between", (int)JustifyContent::SPACE_BETWEEN},
+            {"space_around" , (int)JustifyContent::SPACE_AROUND},
+            {"space_evenly" , (int)JustifyContent::SPACE_EVENLY}
         }, (int)JustifyContent::FLEX_START);
     mAlignItems = attrs.getInt("alignItems",std::unordered_map<std::string,int>{
             {"flex_start",(int)AlignItems::FLEX_START},
@@ -56,7 +77,7 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
     }
     std::unordered_map<std::string,int>divs={
             {"beginning",(int)SHOW_DIVIDER_BEGINNING},
-            {"midle",(int)SHOW_DIVIDER_MIDDLE},
+            {"middle",(int)SHOW_DIVIDER_MIDDLE},
             {"end",(int)SHOW_DIVIDER_END},
             {"none",(int)SHOW_DIVIDER_NONE}
         };
@@ -78,7 +99,6 @@ FlexboxLayout::FlexboxLayout(Context* context,const AttributeSet& attrs):ViewGro
 FlexboxLayout::~FlexboxLayout(){
     delete mFlexLinesResult;
     delete mFlexboxHelper;
-    delete mFlexContainer;
     if(mDividerDrawableHorizontal==mDividerDrawableVertical){
         delete mDividerDrawableHorizontal;
     }else{
@@ -87,77 +107,10 @@ FlexboxLayout::~FlexboxLayout(){
     }
 }
 
-namespace{
-class FLContainer:public FlexContainer{
-private:
-    FlexboxLayout*mFBL;
-public:
-    FLContainer(FlexboxLayout*fbl){mFBL=fbl;}
-    int getFlexItemCount()override{ return mFBL->getFlexItemCount();}
-    View* getFlexItemAt(int index)override{return mFBL->getFlexItemAt(index);}
-    View* getReorderedFlexItemAt(int index)override{return mFBL->getReorderedFlexItemAt(index);}
-
-    void addView(View* view)override{addView(view,-1);}
-    void addView(View* view, int index)override{((ViewGroup*)mFBL)->addView(view,index);}
-    void removeAllViews()override{mFBL->removeAllViews();}
-    void removeViewAt(int index)override{mFBL->removeViewAt(index);}
-    int getFlexDirection()override{return mFBL->getFlexDirection();}
-    void setFlexDirection(int flexDirection)override{mFBL->setFlexDirection(flexDirection);}
-    int getFlexWrap()override{return mFBL->getFlexWrap();}
-    void setFlexWrap(int flexWrap)override{ mFBL->setFlexWrap(flexWrap);}
-    int getJustifyContent()override{return mFBL->getJustifyContent();}
-    void setJustifyContent(int justifyContent)override{mFBL->setJustifyContent(justifyContent);}
-
-    int getAlignContent()override{return mFBL->getAlignContent();}
-    void setAlignContent(int alignContent)override{mFBL->setAlignContent(alignContent);}
-
-    int getAlignItems()override{return mFBL->getAlignItems();}
-    void setAlignItems(int alignItems)override{mFBL->setAlignItems(alignItems);}
-    std::vector<FlexLine> getFlexLines()override{return mFBL->getFlexLines();}
-
-    bool isMainAxisDirectionHorizontal()override{return mFBL->isMainAxisDirectionHorizontal();}
-
-    int getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine)override{
-        return mFBL->getDecorationLengthMainAxis(view,index,indexInFlexLine);
-    }
-    int getDecorationLengthCrossAxis(View* view)override{
-        return mFBL->getDecorationLengthCrossAxis(view);
-    }
-
-    int getPaddingTop()override{return mFBL->getPaddingTop();}
-    int getPaddingLeft()override{return mFBL->getPaddingLeft();}
-    int getPaddingRight()override{return mFBL->getPaddingRight();}
-    int getPaddingBottom()override{return mFBL->getPaddingBottom();}
-    int getPaddingStart()override{return mFBL->getPaddingStart();}
-    int getPaddingEnd()override{return mFBL->getPaddingEnd();}
-
-    int getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension){
-        return mFBL->getChildWidthMeasureSpec(widthSpec,padding,childDimension);
-    }
-    int getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension)override{
-        return mFBL->getChildHeightMeasureSpec(heightSpec,padding,childDimension);
-    }
-
-    int getLargestMainSize()override{return mFBL->getLargestMainSize();}
-    int getSumOfCrossSize()override{return mFBL->getSumOfCrossSize();}
-
-    void onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine& flexLine)override{
-        mFBL->onNewFlexItemAdded(view,index,indexInFlexLine,flexLine);
-    }
-    void onNewFlexLineAdded(FlexLine& flexLine)override{mFBL->onNewFlexLineAdded(flexLine);}
-    void setFlexLines(const std::vector<FlexLine>& flexLines)override{mFBL->setFlexLines(flexLines);}
-
-    int getMaxLine()override{return mFBL->getMaxLine();}
-    void setMaxLine(int maxLine)override{mFBL->setMaxLine(maxLine);}
-
-    std::vector<FlexLine> getFlexLinesInternal()override{return mFBL->getFlexLinesInternal();}
-    void updateViewCache(int position, View* view)override{mFBL->updateViewCache(position,view);}
-};
-}
 void FlexboxLayout::init(){
     mFlexDirection= FlexDirection::ROW;
     mFlexWrap = FlexWrap::NOWRAP;
-    mJustifyContent = JustifyContent::FLEX_START;
+    mJustifyContent = (int)JustifyContent::FLEX_START;
     mAlignItems  = (int)AlignItems::FLEX_START;
     mAlignContent= (int)AlignContent::FLEX_START;
     mMaxLine = NOT_SET;
@@ -167,8 +120,8 @@ void FlexboxLayout::init(){
     mDividerVerticalWidth = 0;
     mDividerHorizontalHeight = 0;
     mFlexLinesResult = new FlexboxHelper::FlexLinesResult;
-    mFlexContainer = new FLContainer(this);
-    mFlexboxHelper = new FlexboxHelper(mFlexContainer);
+    // Pass this directly since FlexboxLayout now implements FlexContainer
+    mFlexboxHelper = new FlexboxHelper(this);
     mDividerDrawableHorizontal = nullptr;
     mDividerDrawableVertical = nullptr;
 }
@@ -194,22 +147,22 @@ void FlexboxLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     }
 }
 
-int FlexboxLayout::getFlexItemCount() {
+int FlexboxLayout::getFlexItemCount() const{
     return getChildCount();
 }
 
-View* FlexboxLayout::getFlexItemAt(int index) {
+View* FlexboxLayout::getFlexItemAt(int index) const {
     return getChildAt(index);
 }
 
-View* FlexboxLayout::getReorderedChildAt(int index) {
+View* FlexboxLayout::getReorderedChildAt(int index) const {
     if ((index < 0) || (index >= mReorderedIndices.size())) {
         return nullptr;
     }
     return getChildAt(mReorderedIndices[index]);
 }
 
-View* FlexboxLayout::getReorderedFlexItemAt(int index) {
+View* FlexboxLayout::getReorderedFlexItemAt(int index) const {
     return getReorderedChildAt(index);
 }
 
@@ -357,18 +310,18 @@ void FlexboxLayout::setMeasuredDimensionForFlex(int flexDirection, int widthMeas
     setMeasuredDimension(widthSizeAndState, heightSizeAndState);
 }
 
-int FlexboxLayout::getLargestMainSize() {
+int FlexboxLayout::getLargestMainSize()const {
     int largestSize = INT_MIN;
-    for (FlexLine& flexLine : mFlexLines) {
+    for (const FlexLine& flexLine : mFlexLines) {
         largestSize = std::max(largestSize, flexLine.mMainSize);
     }
     return largestSize;
 }
 
-int FlexboxLayout::getSumOfCrossSize() {
+int FlexboxLayout::getSumOfCrossSize()const {
     int sum = 0;
     for (int i = 0, size = mFlexLines.size(); i < size; i++) {
-        FlexLine& flexLine = mFlexLines.at(i);
+        const FlexLine& flexLine = mFlexLines.at(i);
 
         // Judge if the beginning or middle dividers are required
         if (hasDividerBeforeFlexLine(i)) {
@@ -392,7 +345,7 @@ int FlexboxLayout::getSumOfCrossSize() {
     return sum;
 }
 
-bool FlexboxLayout::isMainAxisDirectionHorizontal() {
+bool FlexboxLayout::isMainAxisDirectionHorizontal() const {
     return (mFlexDirection == FlexDirection::ROW) || (mFlexDirection == FlexDirection::ROW_REVERSE);
 }
 
@@ -450,7 +403,7 @@ void FlexboxLayout::layoutHorizontal(bool isRtl, int left, int top, int width, i
             childTop += mDividerHorizontalHeight;
         }
         float spaceBetweenItem = 0.f;
-        switch (mJustifyContent) {
+        switch ((JustifyContent)mJustifyContent) {
         case JustifyContent::FLEX_START:
             childLeft = paddingLeft;
             childRight = width - paddingRight;
@@ -579,7 +532,7 @@ void FlexboxLayout::layoutVertical(bool isRtl, bool fromBottomToTop, int left, i
             childRight -= mDividerVerticalWidth;
         }
         float spaceBetweenItem = 0.f;
-        switch (mJustifyContent) {
+        switch ((JustifyContent)mJustifyContent) {
         case JustifyContent::FLEX_START:
             childTop = paddingTop;
             childBottom = height - paddingBottom;
@@ -890,7 +843,7 @@ ViewGroup::LayoutParams* FlexboxLayout::generateLayoutParams(const ViewGroup::La
     return new LayoutParams(*lp);
 }
 
-int FlexboxLayout::getFlexDirection() {
+int FlexboxLayout::getFlexDirection() const {
     return mFlexDirection;
 }
 
@@ -901,7 +854,7 @@ void FlexboxLayout::setFlexDirection(int flexDirection) {
     }
 }
 
-int FlexboxLayout::getFlexWrap() {
+int FlexboxLayout::getFlexWrap() const {
     return mFlexWrap;
 }
 
@@ -912,7 +865,7 @@ void FlexboxLayout::setFlexWrap(int flexWrap) {
     }
 }
 
-int FlexboxLayout::getJustifyContent() {
+int FlexboxLayout::getJustifyContent() const {
     return mJustifyContent;
 }
 
@@ -923,7 +876,7 @@ void FlexboxLayout::setJustifyContent(int justifyContent) {
     }
 }
 
-int FlexboxLayout::getAlignItems() {
+int FlexboxLayout::getAlignItems() const {
     return mAlignItems;
 }
 
@@ -934,7 +887,7 @@ void FlexboxLayout::setAlignItems(int alignItems) {
     }
 }
 
-int FlexboxLayout::getAlignContent() {
+int FlexboxLayout::getAlignContent() const {
     return mAlignContent;
 }
 
@@ -945,7 +898,7 @@ void FlexboxLayout::setAlignContent(int alignContent) {
     }
 }
 
-int FlexboxLayout::getMaxLine() {
+int FlexboxLayout::getMaxLine() const {
     return mMaxLine;
 }
 
@@ -956,9 +909,9 @@ void FlexboxLayout::setMaxLine(int maxLine) {
     }
 }
 
-std::vector<FlexLine> FlexboxLayout::getFlexLines() {
+std::vector<FlexLine> FlexboxLayout::getFlexLines() const {
     std::vector<FlexLine> result;
-    for (FlexLine& flexLine : mFlexLines) {
+    for (const FlexLine& flexLine : mFlexLines) {
         if (flexLine.getItemCountNotGone() == 0) {
             continue;
         }
@@ -967,7 +920,7 @@ std::vector<FlexLine> FlexboxLayout::getFlexLines() {
     return result;
 }
 
-int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) {
+int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexInFlexLine) const {
     int decorationLength = 0;
     if (isMainAxisDirectionHorizontal()) {
         if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
@@ -987,13 +940,13 @@ int FlexboxLayout::getDecorationLengthMainAxis(View* view, int index, int indexI
     return decorationLength;
 }
 
-int FlexboxLayout::getDecorationLengthCrossAxis(View* view) {
+int FlexboxLayout::getDecorationLengthCrossAxis(View* view) const{
     // Decoration along the cross axis for an individual view is not supported in the
     // FlexboxLayout.
     return 0;
 }
 
-void FlexboxLayout::onNewFlexLineAdded(FlexLine flexLine) {
+void FlexboxLayout::onNewFlexLineAdded(FlexLine& flexLine) {
     // The size of the end divider isn't added until the flexLine is added to the flex container
     // take the divider width (or height) into account when adding the flex line.
     if (isMainAxisDirectionHorizontal()) {
@@ -1009,15 +962,15 @@ void FlexboxLayout::onNewFlexLineAdded(FlexLine flexLine) {
     }
 }
 
-int FlexboxLayout::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) {
+int FlexboxLayout::getChildWidthMeasureSpec(int widthSpec, int padding, int childDimension) const{
     return getChildMeasureSpec(widthSpec, padding, childDimension);
 }
 
-int FlexboxLayout::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) {
+int FlexboxLayout::getChildHeightMeasureSpec(int heightSpec, int padding, int childDimension) const{
     return getChildMeasureSpec(heightSpec, padding, childDimension);
 }
 
-void FlexboxLayout::onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine flexLine) {
+void FlexboxLayout::onNewFlexItemAdded(View* view, int index, int indexInFlexLine, FlexLine& flexLine) {
     // Check if the beginning or middle divider is required for the flex item
     if (hasDividerBeforeChildAtAlongMainAxis(index, indexInFlexLine)) {
         if (isMainAxisDirectionHorizontal()) {
@@ -1034,7 +987,7 @@ void FlexboxLayout::setFlexLines(const std::vector<FlexLine>& flexLines) {
     mFlexLines = flexLines;
 }
 
-std::vector<FlexLine> FlexboxLayout::getFlexLinesInternal() {
+std::vector<FlexLine>& FlexboxLayout::getFlexLinesInternal() {
     return mFlexLines;
 }
 
@@ -1042,11 +995,11 @@ void FlexboxLayout::updateViewCache(int position, View* view) {
     // No op
 }
 
-Drawable* FlexboxLayout::getDividerDrawableHorizontal() {
+Drawable* FlexboxLayout::getDividerDrawableHorizontal() const{
     return mDividerDrawableHorizontal;
 }
 
-Drawable* FlexboxLayout::getDividerDrawableVertical() {
+Drawable* FlexboxLayout::getDividerDrawableVertical() const{
     return mDividerDrawableVertical;
 }
 
@@ -1125,7 +1078,7 @@ void FlexboxLayout::setWillNotDrawFlag() {
     }
 }
 
-bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine) {
+bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInFlexLine) const{
     if (allViewsAreGoneBefore(index, indexInFlexLine)) {
         if (isMainAxisDirectionHorizontal()) {
             return (mShowDividerVertical & SHOW_DIVIDER_BEGINNING) != 0;
@@ -1141,7 +1094,7 @@ bool FlexboxLayout::hasDividerBeforeChildAtAlongMainAxis(int index, int indexInF
     }
 }
 
-bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) {
+bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) const{
     for (int i = 1; i <= indexInFlexLine; i++) {
         View* view = getReorderedChildAt(index - i);
         if (view != nullptr && view->getVisibility() != View::GONE) {
@@ -1151,7 +1104,7 @@ bool FlexboxLayout::allViewsAreGoneBefore(int index, int indexInFlexLine) {
     return true;
 }
 
-bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex) {
+bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex)const {
     if (flexLineIndex < 0 || flexLineIndex >= mFlexLines.size()) {
         return false;
     }
@@ -1170,7 +1123,7 @@ bool FlexboxLayout::hasDividerBeforeFlexLine(int flexLineIndex) {
     }
 }
 
-bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex) {
+bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex)const {
     for (int i = 0; i < flexLineIndex; i++) {
         if (mFlexLines.at(i).getItemCountNotGone() > 0) {
             return false;
@@ -1179,7 +1132,7 @@ bool FlexboxLayout::allFlexLinesAreDummyBefore(int flexLineIndex) {
     return true;
 }
 
-bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex) {
+bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex)const {
     if (flexLineIndex < 0 || flexLineIndex >= mFlexLines.size()) {
         return false;
     }
@@ -1195,6 +1148,47 @@ bool FlexboxLayout::hasEndDividerAfterFlexLine(int flexLineIndex) {
         return (mShowDividerVertical & SHOW_DIVIDER_END) != 0;
     }
 
+}
+
+// FlexContainer interface implementation methods
+void FlexboxLayout::addView(View* view) {
+    ViewGroup::addView(view);
+}
+
+void FlexboxLayout::addView(View* view, int index) {
+    ViewGroup::addView(view, index);
+}
+
+void FlexboxLayout::removeAllViews() {
+    ViewGroup::removeAllViews();
+}
+
+void FlexboxLayout::removeViewAt(int index) {
+    ViewGroup::removeViewAt(index);
+}
+
+int FlexboxLayout::getPaddingTop() {
+    return ViewGroup::getPaddingTop();
+}
+
+int FlexboxLayout::getPaddingLeft() {
+    return ViewGroup::getPaddingLeft();
+}
+
+int FlexboxLayout::getPaddingRight() {
+    return ViewGroup::getPaddingRight();
+}
+
+int FlexboxLayout::getPaddingBottom() {
+    return ViewGroup::getPaddingBottom();
+}
+
+int FlexboxLayout::getPaddingStart() {
+    return ViewGroup::getPaddingStart();
+}
+
+int FlexboxLayout::getPaddingEnd() {
+    return ViewGroup::getPaddingEnd();
 }
 
 /*public static class LayoutParams extends ViewGroup.MarginLayoutParams implements FlexItem*/
@@ -1354,6 +1348,14 @@ int FlexboxLayout::LayoutParams::getMarginRight() {
 
 int FlexboxLayout::LayoutParams::getMarginBottom() {
     return bottomMargin;
+}
+
+int FlexboxLayout::LayoutParams::getMarginStart() {
+    return startMargin;
+}
+
+int FlexboxLayout::LayoutParams::getMarginEnd() {
+    return endMargin;
 }
 
 }

@@ -20,9 +20,9 @@
 
 <Keyboard xmlns:android="http://schemas.android.com/apk/res/android"
     android:keyWidth="10%p"
-    android:horizontalGap="0px"
-    android:verticalGap="0px"
-    android:keyHeight="@dimen/key_height">
+    android:horizontalGap=".3%p"
+    android:verticalGap="5%p"
+    android:keyHeight="21%p">
 
     <Row>
         <Key android:codes="49" android:keyLabel="1" android:keyEdgeFlags="left"/>
@@ -69,7 +69,7 @@
     <Row  android:rowEdgeFlags="bottom">
         <Key android:codes="-3" android:keyIcon="@mipmap/sym_keyboard_done"
                 android:keyWidth="15%p" android:keyEdgeFlags="left" />
-        <Key android:codes="-2" android:keyLabel="ABC" android:keyWidth="10%p" />
+        <Key android:codes="-7" android:keyLabel="ABC" android:keyWidth="10%p" />
         <!--
             android:codes: -101 is not a framework-defined key code but a key code that is
             privately defined in com.example.android.softkeyboard.LatinKeyboardView.

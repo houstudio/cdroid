@@ -41,11 +41,11 @@ TimePicker::TimePicker(Context* context,const AttributeSet& attrs)
 
     switch (mMode) {
     case MODE_CLOCK:
-        //mDelegate = new TimePickerClockDelegate(this, context, attrs);
+        mDelegate = new TimePickerClockDelegate(this, context, attrs);
         break;
     case MODE_SPINNER:
     default:
-        //mDelegate = new TimePickerSpinnerDelegate( this, context, attrs);
+        mDelegate = new TimePickerSpinnerDelegate(this, context, attrs);
         break;
     }
     /*mDelegate->setAutoFillChangeListener((v, h, m) -> {
@@ -147,8 +147,8 @@ View* TimePicker::getPmView() {
 std::vector<std::string> TimePicker::getAmPmStrings(Context* context) {
     //Locale locale = context.getResources().getConfiguration().locale;
     //DateFormatSymbols dfs = DateFormat.getIcuDateFormatSymbols(locale);
-    std::vector<std::string> amPm;// = dfs.getAmPmStrings();
-    std::vector<std::string> narrowAmPm;// = dfs.getAmpmNarrowStrings();
+    std::vector<std::string> amPm={"AM","PM"};// = dfs.getAmPmStrings();
+    std::vector<std::string> narrowAmPm{"AM","PM"};// = dfs.getAmpmNarrowStrings();
 
     std::vector<std::string> result;
     result.push_back(amPm[0].length() > 4 ? narrowAmPm[0] : amPm[0]);
@@ -271,5 +271,6 @@ AutofillValue TimePicker::getAutofillValue() {
     return isEnabled() ? mDelegate->getAutofillValue() : null;
 }
 #endif
+DECLARE_WIDGET(TimePicker);
 }/*endof namespace*/
 

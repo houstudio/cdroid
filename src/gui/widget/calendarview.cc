@@ -18,15 +18,18 @@
 #include <widget/calendarview.h>
 #include <widget/calendarviewlegacydelegate.h>
 #include <widget/calendarviewmaterialdelegate.h>
+#include <cstdio>
 namespace cdroid{
 
+DECLARE_WIDGET(CalendarView);
 CalendarView::CalendarView(int w,int h):FrameLayout(w,h){
+    LOGD("%p",this);
 }
 
 CalendarView::CalendarView(Context*context,const AttributeSet&attrs)
   :FrameLayout(context,attrs){
     const int mode = attrs.getInt("calendarViewMode",std::unordered_map<std::string,int>{
-
+            {"holo",(int)MODE_HOLO},{"material",(int)MODE_MATERIAL}
             }, MODE_HOLO);
     switch (mode) {
     case MODE_HOLO:
@@ -36,8 +39,10 @@ CalendarView::CalendarView(Context*context,const AttributeSet&attrs)
         mDelegate = new CalendarViewMaterialDelegate(this, context, attrs);
         break;
     default:
+        mDelegate = nullptr;
         throw std::invalid_argument("invalid calendarViewMode attribute");
     }
+    LOGD("%p mode=%d mDelegate=%p",this,mode,mDelegate);
 }
 
 CalendarView::~CalendarView(){
@@ -182,7 +187,13 @@ std::string CalendarView::getAccessibilityClassName() const{
 }
 
 bool CalendarView::parseDate(const std::string& date, Calendar& outDate){
-    return true;
+    // Parse "MM/dd/yyyy" (Android uses SimpleDateFormat; sscanf suffices here).
+    int month, day, year;
+    if (sscanf(date.c_str(), "%d/%d/%d", &month, &day, &year) == 3) {
+        outDate.set(year, month - 1, day); // Calendar month is 0-based
+        return true;
+    }
+    return false;
 }
 
 }//namespace

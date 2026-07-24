@@ -70,6 +70,7 @@ void InputEventSource::doEventsConsume(){
             }
             it->second->putEvent(e->tv_sec,e->tv_usec,e->type,e->code,e->value);
         }
+        if(count) Looper::getMainLooper()->wake();
     }
 }
 
@@ -137,6 +138,14 @@ std::shared_ptr<InputDevice>InputEventSource::getDevice(int fd){
         return dev;
     }
     return itr->second;
+}
+
+InputDevice* InputEventSource::getInputDevice(int id) {
+    // Pure lookup (no auto-create, unlike getDevice) — KeyEvent resolves chars
+    // from any thread, so take the recursive mutex ourselves.
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    auto it = mDevices.find(id);
+    return (it != mDevices.end()) ? it->second.get() : nullptr;
 }
 
 bool InputEventSource::needCancel(InputDevice*dev){
@@ -242,8 +251,32 @@ int InputEventSource::handleEvents(){
     return ret;
 }
 
+void InputEventSource::clearEvents(){
+    // Signal the input thread to stop so it cannot keep filling queues while
+    // we drain them (mRunning is its loop condition; see doEventsConsume).
+    mRunning = false;
+    std::vector<InputEvent*> events;
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    for (auto& it : mDevices) {
+        it.second->drainEvents(events);
+    }
+    for (InputEvent* e : events) {
+        e->recycle();
+    }
+}
+
 void InputEventSource::sendEvent(InputEvent&event){
     WindowManager::getInstance().processEvent(event);
+}
+
+int32_t InputEventSource::getGlobalMetaState()const{
+    std::lock_guard<std::recursive_mutex> lock(mtxEvents);
+    int32_t global = 0;
+    for(const auto&item:mDevices){
+        const KeyDevice*kd = dynamic_cast<const KeyDevice*>(item.second.get());
+        if(kd) global |= kd->getMetaState();
+    }
+    return global;
 }
 
 void InputEventSource::recordEvent(InputEvent&inputEvent){

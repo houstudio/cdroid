@@ -1,72 +1,55 @@
 #include<cdroid.h>
 #include<cdlog.h>
+#include <text/inputtype.h>
 struct TestString{
     const char*text;
     bool singleline;
-    int ellipsis;
+    TextUtils::TruncateAt ellipsis;
     int txtalignment;
     int gravity;
+    int intputType;
 };
 
 TestString testStrings[]={
-   { 
-      "Single line textView (setted by setSingleLine(true) ",
-      true, 
-      Layout::ELLIPSIS_NONE/*0*/,
+   {
+      "Text",
+      true,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_TEXT
    },
    {
-      "single line aliment start",
+      "Password",
       true,
-      Layout::ELLIPSIS_NONE,
-      View::TEXT_ALIGNMENT_GRAVITY,
-      Gravity::START
-   },
-   {
-      "single line aliment center",
-      true,
-      Layout::ELLIPSIS_NONE,
-      View::TEXT_ALIGNMENT_CENTER,
-      Gravity::CENTER
-   },
-   {
-      "single line aliment end",
-      true,
-      Layout::ELLIPSIS_NONE,
-      View::TEXT_ALIGNMENT_TEXT_END,
-      Gravity::END,
-   },
-   { 
-     "Multiple lines (setted by setSingleLine(false),word break is supported by default",
-      false, 
-      Layout::ELLIPSIS_NONE/*0*/,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_TEXT|InputType::TYPE_TEXT_VARIATION_PASSWORD
    },
-
-   { 
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
-      true,
-      Layout::ELLIPSIS_START,
-      View::TEXT_ALIGNMENT_INHERIT/*0*/,
-      Gravity::NO_GRAVITY/*0*/,
-   },
-
    {
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "666",
       true,
-      Layout::ELLIPSIS_MIDDLE,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_NUMBER
    },
-
    {
-      "Ellipsis test ,Text with ellipsis at line start/middle/end,line must be very long,otherwise ellipsis cant be showd",
+      "666",
       true,
-      Layout::ELLIPSIS_END,
+      TextUtils::TruncateAt::NONE/*0*/,
       View::TEXT_ALIGNMENT_INHERIT/*0*/,
       Gravity::NO_GRAVITY/*0*/,
+      InputType::TYPE_CLASS_PHONE
+   },
+   {
+       "zhhou@sanboen.com",
+       true,
+       TextUtils::TruncateAt::NONE/*0*/,
+       View::TEXT_ALIGNMENT_INHERIT/*0*/,
+       Gravity::NO_GRAVITY/*0*/,
+       InputType::TYPE_TEXT_VARIATION_EMAIL_ADDRESS
    }
 };
 
@@ -76,45 +59,91 @@ int main(int argc,const char*argv[]){
 
     LinearLayout*layout=new LinearLayout(LayoutParams::MATCH_PARENT,LayoutParams::MATCH_PARENT);
     layout->setOrientation(LinearLayout::VERTICAL);
-    layout->setBackgroundColor(0xFF111111);
+    layout->setBackgroundColor(0xFF334455);
     w->addView(layout);
 
     for(int i=0;i<sizeof(testStrings)/sizeof(testStrings[0]);i++){
         TestString*ts=testStrings+i;
         LinearLayout::LayoutParams*layoutParams=new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT,LayoutParams::WRAP_CONTENT);
-        layoutParams->setMargins(0,1,0,1); 
-        TextView*tv=new EditText(ts->text,0,0);
-        tv->setTextColor(0xFFFFFFFF);
-        tv->setSingleLine(ts->singleline);
-        tv->setEllipsize(ts->ellipsis);
-        tv->setTextAlignment(ts->txtalignment);
-        tv->setGravity(ts->gravity);
-        if(ts->ellipsis==Layout::ELLIPSIS_MARQUEE)
-            tv->setSelected(true);//onle focused or selected ot checked state can be marqueed
-        tv->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
+        layoutParams->setMargins(0,8,0,8);
+        EditText*edt=new EditText(ts->text,0,0);
+        edt->setTextColor(i?0xffff0000:0xFF44FFaa);
+        edt->setFocusable(true);
+        edt->setClickable(true);
+        edt->setSingleLine(ts->singleline);
+        edt->setTextAlignment(ts->txtalignment);
+        edt->setGravity(ts->gravity);
+        edt->setBackgroundColor(i?0xffaabbcc:0xff112233);
+        edt->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         int cc=i*10+8;
-        tv->setBackgroundColor(0xFF000000|(cc<<16)|(cc<<8)|cc);
-        tv->setTextSize(22+i);
-        layout->addView(tv,layoutParams);
+        edt->setTextSize(22+i);
+        edt->setInputType(ts->intputType);
+        layout->addView(edt,layoutParams);
     }
 
-    TextView*tv=new EditText("textview with background drawable",0,0);
-    tv->setBackgroundResource("cdroid:drawable/btn_default.xml");
-    layout->addView(tv);
-
-    tv=new EditText("textview with leftdrawable",0,0);
+    auto tv=new EditText("textview with leftdrawable",0,0);
     tv->setBackgroundResource("cdroid:drawable/progress_horizontal.xml");
     tv->setCompoundDrawablesWithIntrinsicBounds("cdroid:drawable/progress_large.xml","","cdroid:drawable/progress_small.xml","");
     layout->addView(tv);
-    int level=0;
-    Runnable run;
-    run=[tv,&level,&w,&run](){
-       Drawable*dr=tv->getBackground();
-       dr->setLevel(level);
-       level=(level+1000)%10000;
-       w->postDelayed(run,200);
+    tv->setFocusable(true);
+
+    // ---- RTL/LTR interleaved bidi cursor-movement tests ----
+    // Place the caret at the LTR<->RTL boundary and arrow left/right: Android
+    // moves the caret one LOGICAL char per step (which may be visually right in
+    // an RTL run), so the caret should walk the text in logical order, not jump.
+    // Numbers are weak-LTR even inside RTL. These cases stress that.
+    static struct { const char* label; const char* text; } bidiCases[] = {
+        { "pure RTL (Arabic)",       "مرحبا بالعالم" },
+        { "LTR / RTL / LTR",         "Hello مرحبا World" },
+        { "RTL / LTR / RTL",         "مرحبا Hello مرحبا" },
+        { "LTR digits inside RTL",   "abc123مرحبة" },
+        { "RTL + digits + LTR",      "مرحبا 1234 hello" },
+        { "Hebrew RTL",              "שלום עולם" },
     };
-    w->postDelayed(run,500);
+    for (int i = 0; i < (int)(sizeof(bidiCases) / sizeof(bidiCases[0])); i++) {
+        auto* lbl = new TextView(bidiCases[i].label, 0, 0);
+        lbl->setTextSize(14);
+        lbl->setTextColor(0xFFAABBCC);
+        layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+
+        EditText* edt = new EditText(bidiCases[i].text, 0, 0);
+        edt->setTextSize(24);
+        edt->setFocusable(true);
+        edt->setClickable(true);
+        edt->setSingleLine(true);
+        edt->setGravity(Gravity::LEFT | Gravity::CENTER_VERTICAL);
+        edt->setBackgroundColor(0xFF223344);
+        edt->setId(200000+i);
+        edt->setInputType(InputType::TYPE_CLASS_TEXT);
+        layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+    }
+
+    // ---- same bidi cases under RTL LAYOUT_DIRECTION (paragraph base direction RTL) ----
+    static struct { const char* label; const char* text; } bidiRtlCases[] = {
+        { "RTL layout: pure LTR text", "Hello World" },
+        { "RTL layout: LTR/RTL/LTR",   "Hello مرحبا World" },
+        { "RTL layout: RTL/LTR/RTL",   "مرحبا Hello مرحبا" },
+        { "RTL layout: pure RTL (Arabic)", "مرحبا بالعالم" },
+    };
+    for (int i = 0; i < (int)(sizeof(bidiRtlCases) / sizeof(bidiRtlCases[0])); i++) {
+        auto* lbl = new TextView(bidiRtlCases[i].label, 0, 0);
+        lbl->setTextSize(14);
+        lbl->setTextColor(0xFFCCBBAA);
+        lbl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+        layout->addView(lbl, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+
+        EditText* edt = new EditText(bidiRtlCases[i].text, 0, 0);
+        edt->setTextSize(24);
+        edt->setFocusable(true);
+        edt->setClickable(true);
+        edt->setSingleLine(true);
+        edt->setTextDirection(View::TEXT_DIRECTION_RTL);
+        edt->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+        edt->setBackgroundColor(0xFF332211);
+        edt->setId(210000+i);
+        edt->setInputType(InputType::TYPE_CLASS_TEXT);
+        layout->addView(edt, new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, LayoutParams::WRAP_CONTENT));
+    }
 
     w->requestLayout();//addView by code must call requestLayout ,auto call only used by Window::inflate.
     return app.exec();

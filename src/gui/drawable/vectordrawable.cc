@@ -85,23 +85,11 @@ void VectorDrawable::draw(Canvas& canvas) {
         return;
     }
 
-    // Color filters always override tint filters.
-    auto colorFilter = (mColorFilter == nullptr ? mTintFilter : mColorFilter);
-    //long colorFilterNativeInstance = colorFilter == nullptr ? 0 :colorFilter.getNativeInstance();
+    // mColorFilter is dormant (precedence vs tint TBD); tint path uses mTintFilter via begin/endTintGroup.
     const bool canReuseCache = mVectorState->canReuseCache();
-    /*int pixelCount = nDraw(mVectorState->getNativeRenderer(), canvas.getNativeCanvasWrapper(),
-            colorFilterNativeInstance, mTmpBounds, needMirroring(), canReuseCache)*/;
-    if(colorFilter){
-        canvas.rectangle(mTmpBounds.left,mTmpBounds.top,mTmpBounds.width,mTmpBounds.height);
-        canvas.clip();
-        canvas.push_group();
-    }
+    ColorFilter* tintFilter = beginTintGroup(canvas, mTmpBounds, mTintFilter.get());
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);
-    if(colorFilter){
-        //canvas.set_source(canvas.pop_group());
-        canvas.pop_group_to_source();
-        mTintFilter->apply(canvas,mBounds);
-    }
+    if(tintFilter) endTintGroup(canvas, mBounds, tintFilter);
     if (pixelCount == 0) {
         // Invalid canvas matrix or drawable bounds. This would not affect existing bitmap
         // cache, if any.
@@ -356,9 +344,9 @@ void VectorDrawable::updateStateFromTypedArray(const AttributeSet&atts){
     // Extract the theme attributes, if any.
     //state->mThemeAttrs = atts.extractThemeAttrs();
 
-    const int tintMode = atts.getInt("tintMode", -1);
-    if (tintMode != -1) {
-        //state->mTintMode = Drawable::parseTintMode(tintMode, Mode::SRC_IN);
+    const int tintMode = atts.getTintMode("tintMode", PorterDuff::NOOP);
+    if (tintMode != PorterDuff::NOOP) {
+        state->mTintMode = tintMode;
     }
 
     auto tint = atts.getColorStateList("tint");

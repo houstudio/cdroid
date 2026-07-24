@@ -25,7 +25,7 @@ class Predicate {
 private:
     std::function<bool(const T&)> func_;
 public:
-    Predicate(std::function<bool(const T&)> func) : func_(std::move(func)) {}
+    Predicate(std::function<bool(const T&)> func) : func_(func) {}
 
     Predicate() = default;
 
@@ -34,6 +34,10 @@ public:
             return func_(t);
         }
         return true;
+    }
+
+    explicit operator bool() const {
+        return bool(func_);
     }
 
     Predicate<T> operator&&(const Predicate<T>& other) const {
