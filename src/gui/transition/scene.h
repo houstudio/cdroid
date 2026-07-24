@@ -20,6 +20,7 @@
 
 #include <core/callbackbase.h> // Runnable = CallbackBase<void>
 #include <core/sparsearray.h>  // SparseArray (SparseArrayImpl<int,T>)
+#include <string>
 
 namespace cdroid{
 
@@ -31,11 +32,12 @@ class ViewGroup;
  * A scene represents the collection of values that various properties in the View
  * hierarchy will have when the scene is applied. Ported from android-36 android.transition.Scene.
  *
- * Deviation: android's layoutId-based scenes inflate by int resource id. CDROID's resource
- * system is string-reference based ("@layout/...") with no full int→resource table, so the
- * layoutId inflation path is deferred (TODO until a resource-id table exists). The View-based
- * and enter-action constructors — the ones used by TransitionManager.beginDelayedTransition —
- * work fully.
+ * Deviation: android's getSceneForLayout takes an int R.layout.* id. CDROID's resource system
+ * is string-reference based ("@layout/..." / "cdroid:layout/...") with no runtime int→resource
+ * table, so the int overload cannot inflate (left as a LOGW no-op for API fidelity). Use the
+ * string-resource overload getSceneForLayout(sceneRoot, const std::string&, context) instead —
+ * it inflates via LayoutInflater on enter(). The View-based and enter-action constructors — the
+ * ones used by TransitionManager.beginDelayedTransition — work fully.
  */
 class Scene{
 public:
@@ -43,6 +45,8 @@ public:
     Scene(ViewGroup* sceneRoot, View* layout);
     Scene(ViewGroup* sceneRoot, ViewGroup* layout); // deprecated alias of (sceneRoot, View*)
     static Scene* getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* context);
+    /** CDROID-idiomatic: inflate a layout by string resource on enter() (e.g. "cdroid:layout/foo"). */
+    static Scene* getSceneForLayout(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context);
 
     ViewGroup* getSceneRoot();
     void exit();
@@ -54,14 +58,16 @@ public:
     void setEnterAction(const Runnable& action);
     void setExitAction(const Runnable& action);
 
-    bool isCreatedFromLayoutResource() const{ return mLayoutId > 0; }
+    bool isCreatedFromLayoutResource() const{ return mLayoutId > 0 || !mLayoutResource.empty(); }
 
 private:
     // Private; layoutId-based scenes are created by the getSceneForLayout cache factory.
     Scene(ViewGroup* sceneRoot, int layoutId, Context* context);
+    Scene(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context);
 
     Context*   mContext = nullptr;
     int        mLayoutId = -1;
+    std::string mLayoutResource;   // string layout resource (CDROID); inflated on enter()
     ViewGroup* mSceneRoot;
     View*      mLayout = nullptr;
     Runnable   mEnterAction;
