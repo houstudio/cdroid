@@ -11,7 +11,7 @@
 #ifndef __CDROID_TRANSITION_CROSSFADE_H__
 #define __CDROID_TRANSITION_CROSSFADE_H__
 
-#include <cairomm/imagesurface.h>
+#include <cairomm/surface.h>
 
 #include <transition/transition.h>
 

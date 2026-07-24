@@ -545,6 +545,7 @@ private:
     bool mIgnoreNextUpEvent;
     bool mHoveringTouchDelegate;
 
+    bool mHasAnimationMatrix = false;
     bool mBackgroundSizeChanged;
     bool mDefaultFocusHighlightSizeChanged;
     bool mDefaultFocusHighlightEnabled;
@@ -563,6 +564,7 @@ private:
     std::string mStartActivityRequestWho;
     std::string mTransitionName; // android.view.View transitionName (shared-element / name matching)
     GhostView* mGhostView = nullptr; // android.view.View#mGhostView — set by GhostView::addGhost
+    Cairo::Matrix mAnimationMatrix;   // set by setAnimationMatrix; applied AFTER getMatrix in draw
     ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
@@ -1490,12 +1492,9 @@ public:
     Matrix& getMatrix();
     Matrix& getInverseMatrix();
     bool hasIdentityMatrix()const;
-    // android.view.View#setAnimationMatrix — drives a combined transform matrix during
-    // transitions (ChangeTransform). CDROID's cairo 2D substrate renders transforms via the
-    // property getters (translation/scale/rotation → getMatrix → canvas.transform), not via
-    // a separate animation matrix; this is therefore a no-op stub so ChangeTransform compiles
-    // and captures/restores correctly (the per-frame matrix is not applied mid-animation).
-    void setAnimationMatrix(const Cairo::Matrix* /*matrix*/){}
+    void setAnimationMatrix(const Cairo::Matrix* matrix);
+    bool hasAnimationMatrix() const;
+    const Cairo::Matrix& getAnimationMatrix() const;
 
     void setX(float);
     void setY(float);

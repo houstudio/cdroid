@@ -25,5 +25,7 @@ if(ENABLE_TRANSITION)
         transition/patternpathmotion.cc
         transition/changeimagetransform.cc
         transition/crossfade.cc
+        transition/transitioninflater.cc
+        transition/changetransform.cc
         )
 endif()

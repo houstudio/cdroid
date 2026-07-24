@@ -13,7 +13,7 @@
 namespace cdroid{
 
 GhostView::GhostView(View* view)
-    : View(view->getContext()), mView(view){
+    : View(0, 0), mView(view){
     mView->mGhostView = this;
     mView->setTransitionVisibility(View::INVISIBLE);
     if (ViewGroup* parent = mView->getParent()){
@@ -86,7 +86,7 @@ GhostView* GhostView::addGhost(View* view, ViewGroup* viewGroup, const Cairo::Ma
             ghostView = new GhostView(view);
             ghostView->setMatrix(matrix);
         }
-        FrameLayout* wrapper = new FrameLayout(view->getContext());
+        FrameLayout* wrapper = new FrameLayout(0, 0);
         wrapper->setClipChildren(false);
         copySize(viewGroup, wrapper);
         copySize(viewGroup, ghostView);

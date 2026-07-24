@@ -3378,6 +3378,13 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
                 canvas.transform(getMatrix());//concat(getMatrix());
                 canvas.translate(transX, transY);
             }
+            // Animation matrix (ChangeTransform): composited AFTER the property matrix,
+            // same two-layer model as android RenderNode (final = property × animation).
+            if (mHasAnimationMatrix && !drawingWithRenderNode) {
+                canvas.translate(-transX, -transY);
+                canvas.transform(mAnimationMatrix);
+                canvas.translate(transX, transY);
+            }
         }
 
         // Deal with alpha if it is or used to be <1
@@ -9380,6 +9387,23 @@ Matrix& View::getInverseMatrix() {
     Matrix& matrix=mTransformationInfo->mInverseMatrix;
     mRenderNode->getInverseMatrix(matrix);
     return matrix;
+}
+
+void View::setAnimationMatrix(const Cairo::Matrix* matrix){
+    if (matrix != nullptr){
+        mAnimationMatrix = *matrix;
+        mHasAnimationMatrix = true;
+    } else {
+        mHasAnimationMatrix = false;
+    }
+}
+
+bool View::hasAnimationMatrix() const {
+    return mHasAnimationMatrix;
+}
+
+const Cairo::Matrix& View::getAnimationMatrix() const {
+    return mAnimationMatrix;
 }
 
 float View::getX()const{
