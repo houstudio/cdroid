@@ -821,8 +821,12 @@ bool Transition::isValueChanged(const TransitionValues& oldValues,
         const TransitionValues& newValues, const std::string& key){
     bool oldHas = oldValues.values.count(key) > 0;
     bool newHas = newValues.values.count(key) > 0;
-    if (oldHas != newHas){
-        // The transition didn't care about this value, so we don't care, either.
+    // Android: compare ONLY when BOTH old and new captured the key. If either side is
+    // missing it the transition didn't track it there, so treat as no change. The former
+    // `if (oldHas != newHas) return false` only covered the exactly-one-has case, so the
+    // BOTH-missing case fell through to values.at(key) and threw std::out_of_range
+    // (hit by ChangeBounds whose property set includes keys a given view didn't capture).
+    if (!(oldHas && newHas)){
         return false;
     }
     const nonstd::any& oldValue = oldValues.values.at(key);

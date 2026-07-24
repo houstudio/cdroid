@@ -3280,12 +3280,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
     }
     mPrivateFlags2 &= ~PFLAG2_VIEW_QUICK_REJECTED;
 
-    if (hardwareAcceleratedCanvas) {
-        // Clear INVALIDATED flag to allow invalidation to occur during rendering, but
-        // retain the flag's value temporarily in the mRecreateDisplayList flag
-        //mRecreateDisplayList = (mPrivateFlags & PFLAG_INVALIDATED) != 0;
-        mPrivateFlags &= ~PFLAG_INVALIDATED;
-    }
+    // Clear INVALIDATED flag to allow invalidation to occur during/after rendering.
+    // Android does this in the HW (RenderNode) draw path which is always taken, so the
+    // flag is cleared every time the view is drawn. CDROID has no HW path — the original
+    // clear was gated by `hardwareAcceleratedCanvas` which is always false, so the flag was
+    // NEVER cleared. That deadlocks invalidateInternal()'s propagation gate: once
+    // PFLAG_INVALIDATED is set it stays set, so condition `(PFLAG_INVALIDATED)!=PFLAG_INVALIDATED`
+    // is perpetually false and propagation falls back to requiring PFLAG_DRAWN — which any
+    // invalidate(true) clears. A view that stops being redrawn (e.g. a disappearing view kept
+    // visible only via setTransitionVisibility) then can no longer get its invalidates to reach
+    // the window, so it is never redrawn again. Clear it here unconditionally, matching Android.
+    mPrivateFlags &= ~PFLAG_INVALIDATED;
 
     RefPtr<ImageSurface> cache = nullptr;
     RenderNode* renderNode = nullptr;
@@ -3460,7 +3465,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
         cache->flush();
         canvas.save();
         canvas.reset_clip();
-        canvas.set_source(cache,0,0);
+        // set_source(cache,0,0) == cairo_set_source_surface, which device-aligns the
+        // surface (it bakes CTM^-1 into the pattern matrix) and therefore cancels any
+        // rotation/scale applied to the canvas above. A view that is both fading AND
+        // rotating (Fade+Rotate in a TransitionSet) goes through this software-cache
+        // path — Fade sets LAYER_TYPE_HARDWARE, which has no HW backing here and is
+        // downgraded to a software cache — so the box would fade but never rotate.
+        // Use a SurfacePattern with an identity matrix instead: pattern space then
+        // equals user space and the live CTM (incl. rotation) is honoured, matching
+        // Android's software drawBitmap() path which respects the canvas matrix.
+        Cairo::RefPtr<Cairo::SurfacePattern> cachePattern = Cairo::SurfacePattern::create(cache);
+        canvas.set_source(cachePattern);
         canvas.paint_with_alpha(alpha);
         canvas.restore();
     }
@@ -6135,16 +6150,20 @@ void View::damageInParent() {
 }
 
 void View::transformRect(Rect&rect){
-    if(hasIdentityMatrix()){
+    if(!hasIdentityMatrix()){
         getMatrix().transform_rectangle((Cairo::RectangleInt&)rect);
     }
 }
 void View::invalidateParentCaches(){
-    if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+    if(mParent){
+        mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+    }
 }
 
 void View::invalidateParentIfNeeded(){
-    if(isHardwareAccelerated()&&mParent)mParent->invalidate(true);
+    if(isHardwareAccelerated()&&mParent){
+        mParent->invalidate(true);
+    }
 }
 
 void View::invalidateInheritedLayoutMode(int layoutModeOfRoot){

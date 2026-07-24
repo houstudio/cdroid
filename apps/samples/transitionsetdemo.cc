@@ -30,7 +30,12 @@ int main(int argc, const char* argv[]){
     root->addView(toggle);
 
     // Bounded-height sceneRoot so the button stays visible above the box.
+    // IMPORTANT: the height must be fixed (here via LinearLayout weight), NOT wrapped
+    // from content. A WRAP sceneRoot collapses to 0 when the box goes GONE during the
+    // disappear transition (the box is measured 0 before setTransitionVisibility runs),
+    // which quick-rejects sceneRoot and hides the rotating box. Android behaves the same.
     FrameLayout* sceneRoot = new FrameLayout(-1, 800);
+    sceneRoot->setLayoutParams(new LinearLayout::LayoutParams(LayoutParams::MATCH_PARENT, 0, 1.0f));
     root->addView(sceneRoot);
 
     View* box = new View(500, 500);
