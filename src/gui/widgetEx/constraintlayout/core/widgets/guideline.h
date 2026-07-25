@@ -25,7 +25,7 @@
 #include <string>
 #include <unordered_map>
 
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {
 

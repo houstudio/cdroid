@@ -16,7 +16,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.core.widgets.Optimizer.
  */
 #include <widgetEx/constraintlayout/core/widgets/optimizer.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {
 

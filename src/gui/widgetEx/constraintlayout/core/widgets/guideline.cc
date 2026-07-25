@@ -16,8 +16,8 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.core.widgets.Guideline.
  */
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
-#include <widgetEx/constraintlayout/core/linear_system.h>
-#include <widgetEx/constraintlayout/core/solver_variable.h>
+#include <widgetEx/constraintlayout/core/linearsystem.h>
+#include <widgetEx/constraintlayout/core/solvervariable.h>
 
 namespace cdroid {
 namespace clcore {

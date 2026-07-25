@@ -32,8 +32,8 @@
 
 #include <utility>
 
-#include <widgetEx/constraintlayout/core/linear_system.h>
-#include <widgetEx/constraintlayout/core/solver_variable.h>
+#include <widgetEx/constraintlayout/core/linearsystem.h>
+#include <widgetEx/constraintlayout/core/solvervariable.h>
 
 using namespace cdroid;
 

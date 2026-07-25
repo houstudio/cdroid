@@ -19,13 +19,13 @@
 
 #include <algorithm>
 
-#include <widgetEx/constraintlayout/core/array_row.h>
-#include <widgetEx/constraintlayout/core/linear_system.h>
-#include <widgetEx/constraintlayout/core/solver_variable.h>
-#include <widgetEx/constraintlayout/core/widgets/chain_head.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_anchor.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget_container.h>
+#include <widgetEx/constraintlayout/core/arrayrow.h>
+#include <widgetEx/constraintlayout/core/linearsystem.h>
+#include <widgetEx/constraintlayout/core/solvervariable.h>
+#include <widgetEx/constraintlayout/core/widgets/chainhead.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintanchor.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 
 namespace cdroid {
 

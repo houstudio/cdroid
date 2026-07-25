@@ -26,10 +26,10 @@
 
 #include <gtest/gtest.h>
 
-#include <widgetEx/constraintlayout/core/linear_system.h>
-#include <widgetEx/constraintlayout/core/solver_variable.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget.h>
-#include <widgetEx/constraintlayout/core/widgets/constraint_widget_container.h>
+#include <widgetEx/constraintlayout/core/linearsystem.h>
+#include <widgetEx/constraintlayout/core/solvervariable.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 
 using namespace cdroid;
 
