@@ -116,6 +116,22 @@ TEST(ConstraintWidget, FillParent) {
     EXPECT_EQ(child.getWidth(), 600);
 }
 
+// CORE PROBE: a MATCH_CONSTRAINT (0dp) child with both anchors to parent → spread-fill to 600.
+// Isolates whether the 0dp issue is in the solver (applyConstraints) or the widget-layer measure.
+TEST(ConstraintWidget, MatchConstraintSpreadFillsCore) {
+    ConstraintWidgetContainer parent(600, 400);
+    ConstraintWidget child(0, 50);
+    child.setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    parent.add(&child);
+    child.mLeft.connect(&parent.mLeft, 0);
+    child.mRight.connect(&parent.mRight, 0);
+
+    parent.layout(); // core driver: addToSolver + Chain + minimize + updateFromSolver
+
+    fprintf(stderr, "[DBG-core] match_constraint child: x=%d w=%d\n", child.getX(), child.getWidth());
+    EXPECT_EQ(child.getWidth(), 600);
+}
+
 // A child offset from both edges (left margin 30, right margin 50) in a 600-wide parent.
 TEST(ConstraintWidget, MarginsBothSides) {
     ConstraintWidgetContainer parent(600, 400);

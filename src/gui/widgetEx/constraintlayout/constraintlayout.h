@@ -24,6 +24,7 @@
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_H
 
 #include <climits>
+#include <memory>
 #include <unordered_map>
 
 #include <core/attributeset.h>
@@ -33,6 +34,8 @@
 #include <view/viewgroup.h>
 
 namespace cdroid {
+
+class ConstraintHelper;
 
 class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 public:
@@ -55,11 +58,37 @@ public:
         bool mHorizontalDimensionFixed = true;
         bool mVerticalDimensionFixed = true;
 
-        ConstraintWidget mWidget; // per-child solver model (anchors own this widget)
+        // Guideline support (when guideBegin/End/Percent is set, mWidget becomes a Guideline)
+        bool mIsGuideline = false;
+        // Set for ConstraintHelper children (Barrier/Group/...) — flagged in onViewAdded.
+        bool mIsHelper = false;
+        // Set on a view that has been pulled into a Placeholder (treated as GONE at its origin).
+        bool mIsInPlaceholder = false;
+        int guideBegin = UNSET, guideEnd = UNSET;
+        float guidePercent = UNSET_FLOAT;
+        int orientation = -1;
+
+        // ratio ("layout_constraintDimensionRatio")
+        float dimensionRatio = 0;
+        int dimensionRatioSide = -1;  // -1=UNKNOWN, 0=HORIZONTAL, 1=VERTICAL
+
+        // baseline ("layout_constraintBaseline_toBaselineOf")
+        int baselineToBaseline = UNSET;
+
+        // chain styles (layout_constraintHorizontal/Vertical_chainStyle: spread/spread_inside/packed)
+        int horizontalChainStyle = ConstraintWidget::CHAIN_SPREAD;
+        int verticalChainStyle = ConstraintWidget::CHAIN_SPREAD;
+
+        // The per-child solver model (owned; a Guideline for guideline children). Pointer so the
+        // concrete type can be swapped to clcore::Guideline in validate().
+        std::unique_ptr<ConstraintWidget> mWidget = std::make_unique<ConstraintWidget>();
 
         LayoutParams(Context* c, const AttributeSet& attrs);
         LayoutParams(int width, int height);
         void validate();
+
+    private:
+        static constexpr float UNSET_FLOAT = -1.0f;
     };
 
     ConstraintLayout(Context* ctx, const AttributeSet& attrs);
@@ -74,9 +103,18 @@ public:
     // View::measure(int,int)); this exposes the Measurer subobject for the solver bridge.
     BasicMeasure::Measurer* asMeasurer() { return this; }
 
+    // Resolve a child View to its solver model widget. Helper children (Barrier, ...) return their
+    // owned core helper widget; Guideline children return their Guideline; others their LayoutParams
+    // widget. Exposed so ConstraintHelper.updatePreLayout can map referenced views to widgets.
+    ConstraintWidget* getViewWidget(View* view);
+    // The container's own solver model (the root ConstraintWidgetContainer).
+    ConstraintWidgetContainer& getLayoutWidget() { return mLayoutWidget; }
+
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int r, int b) override;
+    void onViewAdded(View* child) override;
+    void onViewRemoved(View* child) override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs) const override;
     ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;
@@ -89,6 +127,7 @@ public:
 private:
     ConstraintWidgetContainer mLayoutWidget;
     std::unordered_map<int, ConstraintWidget*> mIdToWidget; // id -> widget (PARENT_ID/own id -> mLayoutWidget)
+    std::vector<ConstraintHelper*> mConstraintHelpers; // Barrier/Group/... children
     int mMinWidth = 0;
     int mMaxWidth = INT_MAX;
     int mMinHeight = 0;
@@ -100,7 +139,6 @@ private:
     int mPaddingWidth = 0;
     int mPaddingHeight = 0;
 
-    ConstraintWidget* getViewWidget(View* view);
     void setChildrenConstraints();
     void applyConstraintsFromLayoutParams(View* child, ConstraintWidget* widget, LayoutParams* lp);
     void resolveSystem(int widthSpec, int heightSpec);

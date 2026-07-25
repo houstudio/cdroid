@@ -15,6 +15,9 @@
 #include <view/view.h>
 #include <widget/textview.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/constraintlayout/barrier.h>
+#include <widgetEx/constraintlayout/group.h>
+#include <widgetEx/constraintlayout/placeholder.h>
 
 using namespace cdroid;
 
@@ -74,5 +77,256 @@ TEST(ConstraintLayout, BiasChild) {
     EXPECT_EQ(tv->getLeft(), 150);
     EXPECT_EQ(tv->getRight(), 250);
 }
+
+// ---- feature probe: chains (already work via the driver's Chain.applyChainConstraints) ----
+
+// Two children chained: A.right→B.left, B.left→A.right, A.left→parent, B.right→parent.
+// CHAIN_SPREAD (default) distributes equal gaps on ALL sides: (600-200)/3 = 133 → A[133,233], B[367,467].
+TEST(ConstraintLayout, ChainSpreadTwo) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50);
+    TextView* b = new TextView("B", 100, 50);
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->rightToLeft = 2;   // B's id
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50);
+    lpb->leftToRight = 1;   // A's id
+    lpb->rightToRight = ConstraintLayout::PARENT_ID;
+    a->setId(1);
+    b->setId(2);
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // CHAIN_SPREAD: equal gaps before/inside/after → (600-200)/3=133
+    EXPECT_EQ(a->getLeft(), 133);
+    EXPECT_EQ(a->getRight(), 233);
+    EXPECT_EQ(b->getLeft(), 367);
+    EXPECT_EQ(b->getRight(), 467);
+}
+
+// A 0dp (MATCH_CONSTRAINT) child with left+right to parent → spread-fills width 600.
+TEST(ConstraintLayout, MatchConstraintFills) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 0, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(tv->getLeft(), 0);
+    EXPECT_EQ(tv->getWidth(), 600);
+}
+
+// A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.
+// The child should fill from 300 to 600 → x=300, width=300.
+TEST(ConstraintLayout, GuidelinePositionsChild) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+
+    // Guideline child
+    View* gl = new View(0, 0);
+    gl->setId(10);
+    auto* glp = new ConstraintLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    glp->orientation = ConstraintWidget::VERTICAL;
+    glp->guidePercent = 0.5f;
+    glp->validate();
+    cl->addView(gl, glp);
+
+    // Child: 0dp, left=guideline, right=parent
+    TextView* tv = new TextView("X", 0, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = 10;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 300);
+    EXPECT_EQ(tv->getWidth(), 300);
+}
+
+// Ratio: width=200 FIXED, height=0dp MATCH_CONSTRAINT, ratio "2:1" → height=100.
+TEST(ConstraintLayout, RatioChild) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 200, 0);
+    auto* lp = new ConstraintLayout::LayoutParams(200, 0);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    lp->dimensionRatio = 2.0f;     // "2:1" → W/H = 2 → H = 200/2 = 100
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getWidth(), 200);
+    EXPECT_EQ(tv->getHeight(), 100);
+}
+
+// Two children in a PACKED chain (adjacent, centered by default bias 0.5).
+// Group size 200 centered in 600 → A[200,300], B[300,400].
+TEST(ConstraintLayout, ChainPackedTwo) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50);
+    TextView* b = new TextView("B", 100, 50);
+    a->setId(1); b->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->rightToLeft = 2;
+    lpa->horizontalChainStyle = ConstraintWidget::CHAIN_PACKED;
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50);
+    lpb->leftToRight = 1;
+    lpb->rightToRight = ConstraintLayout::PARENT_ID;
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getLeft(), 200);
+    EXPECT_EQ(a->getRight(), 300);
+    EXPECT_EQ(b->getLeft(), 300);
+    EXPECT_EQ(b->getRight(), 400);
+}
+
+// ---- Barrier ----
+
+// A RIGHT barrier referencing A and B sits at max(A.right, B.right).
+// A:[0,100], B:[100,200] (B chained to A's right) -> barrier at 200. C pinned to the barrier -> x=200.
+TEST(ConstraintLayout, BarrierRightAtMaxEdge) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(4);
+
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50);
+    lpb->leftToRight = 1;
+    auto* lpc = new ConstraintLayout::LayoutParams(100, 50);
+    lpc->leftToLeft = 3; // barrier id
+
+    Barrier* barrier = new Barrier(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    barrier->setId(3);
+    barrier->setType(Barrier::RIGHT);
+    barrier->setReferencedIds({1, 2});
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+    cl->addView(c, lpc);
+    cl->addView(barrier, new ConstraintLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getLeft(), 0);
+    EXPECT_EQ(b->getLeft(), 100);
+    EXPECT_EQ(c->getLeft(), 200); // pinned to the RIGHT barrier at max(100, 200)
+}
+
+// A LEFT barrier referencing A and B sits at min(A.left, B.left).
+// A:[50,150], B:[200,400] -> left barrier at min(50, 200) = 50. C pinned to it -> x=50.
+TEST(ConstraintLayout, BarrierLeftAtMinEdge) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 200, 50); b->setId(2);
+    TextView* c = new TextView("C", 80, 50);  c->setId(4);
+
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->leftMargin = 50;
+    auto* lpb = new ConstraintLayout::LayoutParams(200, 50);
+    lpb->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpb->leftMargin = 200;
+    auto* lpc = new ConstraintLayout::LayoutParams(80, 50);
+    lpc->leftToLeft = 3; // barrier id
+
+    Barrier* barrier = new Barrier(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    barrier->setId(3);
+    barrier->setType(Barrier::LEFT);
+    barrier->setReferencedIds({1, 2});
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+    cl->addView(c, lpc);
+    cl->addView(barrier, new ConstraintLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getLeft(), 50);
+    EXPECT_EQ(b->getLeft(), 200);
+    EXPECT_EQ(c->getLeft(), 50); // pinned to the LEFT barrier at min(50, 200)
+}
+
+// ---- Group ----
+
+// Setting a Group's visibility to GONE propagates GONE to every referenced view.
+TEST(ConstraintLayout, GroupHidesReferenced) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+
+    Group* group = new Group(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    group->setId(10);
+    group->setReferencedIds({1, 2});
+    cl->addView(group, new ConstraintLayout::LayoutParams(
+            LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT));
+    group->setVisibility(View::GONE);
+
+    EXPECT_EQ(a->getVisibility(), View::GONE);
+    EXPECT_EQ(b->getVisibility(), View::GONE);
+}
+
+// ---- Placeholder ----
+
+// A Placeholder (centered, 120x60) carrying a content view X (120x60). After layout the content
+// is drawn at the placeholder's frame: x=(600-120)/2=240, y=(400-60)/2=170.
+TEST(ConstraintLayout, PlaceholderPositionsContent) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+
+    TextView* x = new TextView("X", 120, 60); x->setId(1);
+    auto* lpx = new ConstraintLayout::LayoutParams(120, 60);
+    lpx->leftToLeft = ConstraintLayout::PARENT_ID; // X's own (ignored) origin
+    lpx->topToTop = ConstraintLayout::PARENT_ID;
+
+    Placeholder* placeholder = new Placeholder(120, 60); placeholder->setId(2);
+    auto* lpp = new ConstraintLayout::LayoutParams(120, 60);
+    lpp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpp->rightToRight = ConstraintLayout::PARENT_ID;
+    lpp->topToTop = ConstraintLayout::PARENT_ID;
+    lpp->bottomToBottom = ConstraintLayout::PARENT_ID;
+
+    cl->addView(x, lpx);
+    cl->addView(placeholder, lpp);
+    placeholder->setContentId(1);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(x->getLeft(), 240);
+    EXPECT_EQ(x->getTop(), 170);
+    EXPECT_EQ(x->getWidth(), 120);
+    EXPECT_EQ(x->getHeight(), 60);
+}
+
+// NOTE: match_constraint (0dp) — spread-fill works; the match-constraint re-measure loop
+// (BasicMeasure size-dependent iteration) is still deferred, so 0dp+content-dependent sizing
+// (wrap/percent) isn't yet converged.
+// re-measure loop (deferred). A 0dp child currently fills ~576 of 600 instead of exactly 600.
 
 #endif // ENABLE_CONSTRAINTLAYOUT

@@ -6,11 +6,17 @@
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
 
+#include <algorithm>
 #include <climits>
+
+#include <widgetEx/constraintlayout/core/widgets/guideline.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>
+#include <view/viewgroup.h>
 #include <widget/textview.h>
+#include <widgetEx/constraintlayout/constrainthelper.h>
+#include <widgetEx/constraintlayout/placeholder.h>
 
 DECLARE_WIDGET(ConstraintLayout)
 
@@ -18,6 +24,27 @@ namespace cdroid {
 
 // out-of-line definition (PARENT_ID is odr-used as a map key)
 constexpr int ConstraintLayout::PARENT_ID;
+
+namespace {
+// Parse a ratio string like "16:9", "1.5", "W,16:9", "H,3:2" into (ratio, side).
+void parseDimensionRatio(const std::string& str, float& ratio, int& side) {
+    side = -1; // UNKNOWN
+    std::string s = str;
+    if (s.size() > 2 && s[1] == ',') {
+        if (s[0] == 'W' || s[0] == 'w') side = ConstraintWidget::HORIZONTAL;
+        else if (s[0] == 'H' || s[0] == 'h') side = ConstraintWidget::VERTICAL;
+        s = s.substr(2);
+    }
+    size_t colon = s.find(':');
+    if (colon != std::string::npos) {
+        float num = std::stof(s.substr(0, colon));
+        float den = std::stof(s.substr(colon + 1));
+        ratio = (den != 0) ? num / den : 0;
+    } else {
+        ratio = std::stof(s);
+    }
+}
+} // anonymous namespace
 
 // ===========================================================================
 // ConstraintLayout::LayoutParams
@@ -42,6 +69,30 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     goneRightMargin  = attrs.getDimensionPixelSize("layout_goneMarginRight",  GONE_UNSET);
     goneBottomMargin = attrs.getDimensionPixelSize("layout_goneMarginBottom", GONE_UNSET);
 
+    // Guideline
+    guideBegin   = attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
+    guideEnd     = attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
+    guidePercent = attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
+    orientation  = attrs.getInt("android:orientation", -1);
+
+    // Ratio (parse "16:9", "1.5", "W,16:9", "H,3:2")
+    std::string ratioStr = attrs.getString("layout_constraintDimensionRatio", "");
+    if (!ratioStr.empty()) {
+        parseDimensionRatio(ratioStr, dimensionRatio, dimensionRatioSide);
+    }
+
+    // Baseline
+    baselineToBaseline = attrs.getResourceId("layout_constraintBaseline_toBaselineOf", UNSET);
+
+    // Chain styles
+    static const std::unordered_map<std::string,int> chainStyles = {
+        {"spread", ConstraintWidget::CHAIN_SPREAD},
+        {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
+        {"packed", ConstraintWidget::CHAIN_PACKED}
+    };
+    horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
+    verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
+
     validate();
 }
 
@@ -51,9 +102,23 @@ ConstraintLayout::LayoutParams::LayoutParams(int width, int height)
 }
 
 // FIXED/WRAP_CONTENT -> dimension fixed; MATCH_CONSTRAINT(0dp)/MATCH_PARENT -> variable.
+// Guideline: if guideBegin/End/Percent set, replace mWidget with a Guideline.
 void ConstraintLayout::LayoutParams::validate() {
     mHorizontalDimensionFixed = (width != 0 && width != LayoutParams::MATCH_PARENT);
     mVerticalDimensionFixed   = (height != 0 && height != LayoutParams::MATCH_PARENT);
+    if (guideBegin != UNSET || guideEnd != UNSET || guidePercent != UNSET_FLOAT) {
+        mIsGuideline = true;
+        mHorizontalDimensionFixed = true;
+        mVerticalDimensionFixed = true;
+        auto g = std::make_unique<clcore::Guideline>();
+        int orient = (orientation == ConstraintWidget::VERTICAL) ? ConstraintWidget::VERTICAL
+                                                                 : ConstraintWidget::HORIZONTAL;
+        g->setOrientation(orient);
+        if (guidePercent != UNSET_FLOAT)      g->setGuidePercent(guidePercent);
+        else if (guideBegin != UNSET)         g->setGuideBegin(guideBegin);
+        else if (guideEnd != UNSET)           g->setGuideEnd(guideEnd);
+        mWidget = std::move(g);
+    }
 }
 
 // ===========================================================================
@@ -89,8 +154,34 @@ bool ConstraintLayout::checkLayoutParams(const ViewGroup::LayoutParams* p) const
 
 ConstraintWidget* ConstraintLayout::getViewWidget(View* view) {
     if (view == this) return &mLayoutWidget;
+    // Helper children (Barrier, ...) use their owned core helper widget; Group owns none and
+    // falls through to its LayoutParams widget.
+    if (auto* helper = dynamic_cast<ConstraintHelper*>(view)) {
+        if (HelperWidget* hw = helper->getHelperWidget()) return hw;
+    }
     auto* lp = dynamic_cast<LayoutParams*>(view->getLayoutParams());
-    return lp ? &lp->mWidget : nullptr;
+    return lp ? lp->mWidget.get() : nullptr;
+}
+
+void ConstraintLayout::onViewAdded(View* child) {
+    if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
+        helper->validateParams();
+        if (auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams())) {
+            lp->mIsHelper = true;
+        }
+        // avoid dupes (addView can be called more than once in edge cases)
+        if (std::find(mConstraintHelpers.begin(), mConstraintHelpers.end(), helper)
+                == mConstraintHelpers.end()) {
+            mConstraintHelpers.push_back(helper);
+        }
+    }
+}
+
+void ConstraintLayout::onViewRemoved(View* child) {
+    if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
+        auto it = std::find(mConstraintHelpers.begin(), mConstraintHelpers.end(), helper);
+        if (it != mConstraintHelpers.end()) mConstraintHelpers.erase(it);
+    }
 }
 
 void ConstraintLayout::setChildrenConstraints() {
@@ -111,6 +202,18 @@ void ConstraintLayout::setChildrenConstraints() {
         if (widget) mIdToWidget[child->getId()] = widget;
     }
 
+    // Helpers: resolve referenced ids -> ConstraintWidgets and populate their core helper widget
+    // before the solver pass (Barrier.addToSolver reads its referenced widgets).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePreLayout(this);
+    }
+    // Placeholders: resolve their content view (marks its widget as in-placeholder / GONE at origin).
+    for (int i = 0; i < count; i++) {
+        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
+            placeholder->updatePreLayout(this);
+        }
+    }
+
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         ConstraintWidget* widget = getViewWidget(child);
@@ -123,8 +226,23 @@ void ConstraintLayout::setChildrenConstraints() {
 
 void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintWidget* widget,
                                                          LayoutParams* lp) {
+    if (lp->mIsGuideline) {
+        // Guideline: orientation + begin/end/percent set in validate(). Guideline::addToSolver
+        // (virtual override) handles positioning; skip normal anchor/dimension logic.
+        return;
+    }
     widget->setVisibility(child->getVisibility());
     widget->setCompanionWidget(child);
+    if (lp->mIsInPlaceholder) {
+        // A content view pulled into a Placeholder: its widget is gone at its origin.
+        widget->setInPlaceholder(true);
+        widget->setVisibility(View::GONE);
+    }
+
+    // ConstraintHelper children resolve their RTL-dependent type (Barrier START/END -> LEFT/RIGHT).
+    if (auto* helper = dynamic_cast<ConstraintHelper*>(child)) {
+        helper->resolveRtl(widget, mLayoutWidget.isRtl());
+    }
 
     auto resolveTarget = [&](int id) -> ConstraintWidget* {
         auto it = mIdToWidget.find(id);
@@ -179,9 +297,15 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
             widget->setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
         }
     } else {
-        // MATCH_CONSTRAINT (0dp) / MATCH_PARENT — MVP: treat as MATCH_CONSTRAINT
+        // MATCH_CONSTRAINT (0dp) / MATCH_PARENT — MVP: treat as MATCH_CONSTRAINT.
+        // Apply the match-style (Android: setHorizontalMatchStyle). reset() left mMatchConstraintMaxWidth
+        // at INT_MAX; the LP default is 0 (no max) — must override so spread-fill resolves correctly.
         widget->setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
         widget->setWidth(0);
+        widget->mMatchConstraintDefaultWidth  = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+        widget->mMatchConstraintMinWidth      = 0;
+        widget->mMatchConstraintMaxWidth      = 0;
+        widget->mMatchConstraintPercentWidth  = 1;
     }
     if (lp->mVerticalDimensionFixed) {
         widget->setVerticalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::FIXED);
@@ -192,6 +316,31 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
     } else {
         widget->setVerticalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
         widget->setHeight(0);
+        widget->mMatchConstraintDefaultHeight = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+        widget->mMatchConstraintMinHeight     = 0;
+        widget->mMatchConstraintMaxHeight     = 0;
+        widget->mMatchConstraintPercentHeight = 1;
+    }
+
+    // Ratio
+    if (lp->dimensionRatio > 0) {
+        widget->mDimensionRatio = lp->dimensionRatio;
+        widget->mDimensionRatioSide = lp->dimensionRatioSide;
+    }
+
+    // Chain styles
+    widget->mHorizontalChainStyle = lp->horizontalChainStyle;
+    widget->mVerticalChainStyle = lp->verticalChainStyle;
+
+    // Baseline constraint (overrides top/bottom)
+    if (lp->baselineToBaseline != LayoutParams::UNSET) {
+        if (ConstraintWidget* t = resolveTarget(lp->baselineToBaseline)) {
+            widget->mBaseline.connect(&t->mBaseline, 0, LayoutParams::GONE_UNSET, true);
+            widget->setHasBaseline(true);
+            t->setHasBaseline(true);
+            widget->mTop.reset();
+            widget->mBottom.reset();
+        }
     }
 }
 
@@ -240,6 +389,14 @@ void ConstraintLayout::didMeasures() {
 void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     setChildrenConstraints();
     resolveSystem(widthMeasureSpec, heightMeasureSpec);
+    // Placeholders adopt their content's resolved size post-solve (single pass; the Java re-measure
+    // loop is deferred, so this runs once after the linear solve).
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
+            placeholder->updatePostMeasure(this);
+        }
+    }
     resolveMeasuredDimension(widthMeasureSpec, heightMeasureSpec,
             mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
 }
@@ -318,11 +475,29 @@ void ConstraintLayout::onLayout(bool /*changed*/, int /*l*/, int /*t*/, int /*r*
     const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
+        auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
+        if (!lp || lp->mIsGuideline) continue; // guidelines don't render
+        if (lp->mIsInPlaceholder) continue;    // positioned by its Placeholder, not here
+        ConstraintWidget* w = getViewWidget(child);
+        if (w == nullptr) continue;
+        int x = w->getX(), y = w->getY(), wWidth = w->getWidth(), wHeight = w->getHeight();
+
+        if (auto* placeholder = dynamic_cast<Placeholder*>(child)) {
+            // The placeholder's content view is drawn at the placeholder's frame.
+            View* content = placeholder->getContent();
+            if (content != nullptr) {
+                content->setVisibility(View::VISIBLE);
+                content->layout(x, y, wWidth, wHeight);
+            }
+            continue;
+        }
         if (child->getVisibility() == View::GONE) continue;
-        auto* lp = static_cast<LayoutParams*>(child->getLayoutParams());
-        ConstraintWidget* w = &lp->mWidget;
         // CDROID View::layout(l, t, w, h) takes width/height (not right/bottom).
-        child->layout(w->getX(), w->getY(), w->getWidth(), w->getHeight());
+        child->layout(x, y, wWidth, wHeight);
+    }
+    // Helpers post-layout hook (Group zeroes its own widget here; Placeholder swaps content).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        helper->updatePostLayout(this);
     }
 }
 

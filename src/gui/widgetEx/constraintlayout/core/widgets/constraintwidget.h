@@ -140,6 +140,7 @@ public:
     float mHorizontalBiasPercent = DEFAULT_BIAS;
     float mVerticalBiasPercent   = DEFAULT_BIAS;
     bool  mIsInBarrier[2]        = {false, false};
+    bool  mInPlaceholder         = false;
 
     // --- solver-population state (read/written by addToSolver / applyConstraints) ---
     bool  mAnimated                = false;
@@ -211,6 +212,10 @@ public:
     virtual bool isBarrier() const; // Barrier (Stage 5) overrides to true
     bool isInBarrier(int orientation) const;
     void setIsInBarrier(int orientation, bool value);
+    // Pulled into a Placeholder (the content view's widget is flagged so it is treated as gone at
+    // its origin while the placeholder carries its size/position).
+    bool isInPlaceholder() const;
+    void setInPlaceholder(bool inPlaceholder);
 
     // --- chain membership / dependency queries (used by addToSolver) ---
     bool hasDependencies() const;
@@ -218,6 +223,16 @@ public:
     bool isInVerticalChain() const;
     virtual bool isResolvedHorizontally() const;
     virtual bool isResolvedVertically() const;
+
+    // --- final-resolution fast-path (Barrier/Guideline pre-resolution) ---
+    // Set the widget's horizontal anchors to their final values (skipped if already resolved).
+    // Java: setFinalHorizontal(int x1, int x2). Used by Barrier.allSolved() once referenced
+    // widgets are all resolved, so the barrier pins itself without going through the solver.
+    void setFinalHorizontal(int x1, int x2);
+    void setFinalVertical(int y1, int y2);
+    void setFinalBaseline(int baselineValue);
+    // Clear final-resolution state on every anchor (Java: resetFinalResolution).
+    void resetFinalResolution();
 
     // --- solver lifecycle (called by ConstraintWidgetContainer driver) ---
     // Base implementations are stubbed; Guideline overrides with real bodies. The full base

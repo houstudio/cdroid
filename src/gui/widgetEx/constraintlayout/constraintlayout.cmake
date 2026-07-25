@@ -6,6 +6,11 @@ if(ENABLE_CONSTRAINTLAYOUT)
     set(CONSTRAINTLAYOUT_SOURCES
         # --- widget: ConstraintLayout (Stage 4) ---
         widgetEx/constraintlayout/constraintlayout.cc
+        # --- widget: virtual helpers (Stage 5) ---
+        widgetEx/constraintlayout/constrainthelper.cc
+        widgetEx/constraintlayout/barrier.cc
+        widgetEx/constraintlayout/group.cc
+        widgetEx/constraintlayout/placeholder.cc
 
         # --- core: solver math kernel + LinearSystem ---
         widgetEx/constraintlayout/core/arraylinkedvariables.cc
@@ -26,6 +31,9 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/widgets/guideline.cc
         widgetEx/constraintlayout/core/widgets/optimizer.cc
         widgetEx/constraintlayout/core/widgets/widgetcontainer.cc
+        # --- core/widgets: virtual helpers (Stage 5) ---
+        widgetEx/constraintlayout/core/widgets/helperwidget.cc
+        widgetEx/constraintlayout/core/widgets/barrier.cc
 
         # --- core/widgets/analyzer: graph solver (Stage 3) ---
         widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.cc
@@ -33,6 +41,15 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/widgets/analyzer/dimensiondependency.cc
         widgetEx/constraintlayout/core/widgets/analyzer/baselinedimensiondependency.cc
         widgetEx/constraintlayout/core/widgets/analyzer/widgetrun.cc
+
+        # --- core/motion: interpolation + curve-fit bedrock (Stage 6) ---
+        widgetEx/constraintlayout/core/motion/curvefit.cc
+        widgetEx/constraintlayout/core/motion/monotoniccurvefit.cc
+        widgetEx/constraintlayout/core/motion/linearcurvefit.cc
+        widgetEx/constraintlayout/core/motion/hyperspline.cc
+        widgetEx/constraintlayout/core/motion/easing.cc
+        widgetEx/constraintlayout/core/motion/schlick.cc
+        widgetEx/constraintlayout/core/motion/stepcurve.cc
     )
     list(APPEND WIDGETEX_SOURCES ${CONSTRAINTLAYOUT_SOURCES})
 endif()

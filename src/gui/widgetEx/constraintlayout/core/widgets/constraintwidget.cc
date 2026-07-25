@@ -30,6 +30,11 @@
 
 namespace cdroid {
 
+// odr-use definitions for static const ints referenced by address (e.g. in unordered_map)
+const int ConstraintWidget::CHAIN_SPREAD;
+const int ConstraintWidget::CHAIN_SPREAD_INSIDE;
+const int ConstraintWidget::CHAIN_PACKED;
+
 ConstraintWidget::ConstraintWidget() {
     addAnchors();
 }
@@ -298,6 +303,14 @@ void ConstraintWidget::setIsInBarrier(int orientation, bool value) {
     mIsInBarrier[orientation] = value;
 }
 
+bool ConstraintWidget::isInPlaceholder() const {
+    return mInPlaceholder;
+}
+
+void ConstraintWidget::setInPlaceholder(bool inPlaceholder) {
+    mInPlaceholder = inPlaceholder;
+}
+
 bool ConstraintWidget::hasDependencies() const {
     for (ConstraintAnchor* anchor : mAnchors) {
         if (anchor->hasDependents()) {
@@ -387,6 +400,52 @@ bool ConstraintWidget::isResolvedHorizontally() const {
 
 bool ConstraintWidget::isResolvedVertically() const {
     return mResolvedVertical || (mTop.hasFinalValue() && mBottom.hasFinalValue());
+}
+
+void ConstraintWidget::setFinalHorizontal(int x1, int x2) {
+    if (mResolvedHorizontal) {
+        return;
+    }
+    mLeft.setFinalValue(x1);
+    mRight.setFinalValue(x2);
+    mX = x1;
+    mWidth = x2 - x1;
+    mResolvedHorizontal = true;
+}
+
+void ConstraintWidget::setFinalVertical(int y1, int y2) {
+    if (mResolvedVertical) {
+        return;
+    }
+    mTop.setFinalValue(y1);
+    mBottom.setFinalValue(y2);
+    mY = y1;
+    mHeight = y2 - y1;
+    if (mHasBaseline) {
+        mBaseline.setFinalValue(y1 + mBaselineDistance);
+    }
+    mResolvedVertical = true;
+}
+
+void ConstraintWidget::setFinalBaseline(int baselineValue) {
+    if (!mHasBaseline) {
+        return;
+    }
+    int y1 = baselineValue - mBaselineDistance;
+    int y2 = y1 + mHeight;
+    mY = y1;
+    mTop.setFinalValue(y1);
+    mBottom.setFinalValue(y2);
+    mBaseline.setFinalValue(baselineValue);
+    mResolvedVertical = true;
+}
+
+void ConstraintWidget::resetFinalResolution() {
+    mResolvedHorizontal = false;
+    mResolvedVertical = false;
+    for (ConstraintAnchor* anchor : mAnchors) {
+        anchor->resetFinalResolution();
+    }
 }
 
 void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
