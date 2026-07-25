@@ -34,6 +34,9 @@ namespace cdroid {
 const int ConstraintWidget::CHAIN_SPREAD;
 const int ConstraintWidget::CHAIN_SPREAD_INSIDE;
 const int ConstraintWidget::CHAIN_PACKED;
+const int ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+const int ConstraintWidget::MATCH_CONSTRAINT_WRAP;
+const int ConstraintWidget::MATCH_CONSTRAINT_PERCENT;
 
 ConstraintWidget::ConstraintWidget() {
     addAnchors();
@@ -167,7 +170,25 @@ void ConstraintWidget::setMaxWidth(int maxWidth) { mMaxDimension[DIMENSION_HORIZ
 void ConstraintWidget::setMaxHeight(int maxHeight) { mMaxDimension[DIMENSION_VERTICAL] = maxHeight; }
 void ConstraintWidget::setBaselineDistance(int baselineDistance) { mBaselineDistance = baselineDistance; }
 float ConstraintWidget::getDimensionRatio() const { return mDimensionRatio; }
-bool ConstraintWidget::isInVirtualLayout() const { return false; }
+bool ConstraintWidget::isInVirtualLayout() const { return mIsInVirtualLayout; }
+void ConstraintWidget::setInVirtualLayout(bool inVirtualLayout) { mIsInVirtualLayout = inVirtualLayout; }
+
+void ConstraintWidget::connect(ConstraintAnchor& from, ConstraintAnchor* to, int margin) {
+    if (from.getOwner() == this && to != nullptr) {
+        from.connect(to, margin);
+    }
+}
+
+void ConstraintWidget::resetAnchors() {
+    // The Java original short-circuits when the parent container handles internal constraints;
+    // CDROID containers never do, so always reset every anchor.
+    for (ConstraintAnchor* anchor : mAnchors) {
+        anchor->reset();
+    }
+}
+
+void ConstraintWidget::setMeasureRequested(bool measureRequested) { mMeasureRequested = measureRequested; }
+bool ConstraintWidget::isMeasureRequested() const { return mMeasureRequested && mVisibility != GONE; }
 
 void ConstraintWidget::setX(int x) {
     mX = x;
@@ -287,6 +308,7 @@ void ConstraintWidget::setType(const std::string& type) {
     mType = type;
 }
 
+bool ConstraintWidget::isVirtualLayout() const { return false; }
 bool ConstraintWidget::allowedInBarrier() const {
     return mVisibility != GONE;
 }

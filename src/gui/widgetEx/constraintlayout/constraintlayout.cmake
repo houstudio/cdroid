@@ -11,6 +11,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/barrier.cc
         widgetEx/constraintlayout/group.cc
         widgetEx/constraintlayout/placeholder.cc
+        widgetEx/constraintlayout/flow.cc
 
         # --- core: solver math kernel + LinearSystem ---
         widgetEx/constraintlayout/core/arraylinkedvariables.cc
@@ -34,6 +35,8 @@ if(ENABLE_CONSTRAINTLAYOUT)
         # --- core/widgets: virtual helpers (Stage 5) ---
         widgetEx/constraintlayout/core/widgets/helperwidget.cc
         widgetEx/constraintlayout/core/widgets/barrier.cc
+        widgetEx/constraintlayout/core/widgets/virtuallayout.cc
+        widgetEx/constraintlayout/core/widgets/flow.cc
 
         # --- core/widgets/analyzer: graph solver (Stage 3) ---
         widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.cc

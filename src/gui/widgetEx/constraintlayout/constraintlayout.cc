@@ -93,6 +93,25 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
     verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
 
+    // chain weights (layout_constraintHorizontal/Vertical_weight).
+    horizontalWeight = attrs.getFloat("layout_constraintHorizontal_weight", ConstraintWidget::UNKNOWN);
+    verticalWeight   = attrs.getFloat("layout_constraintVertical_weight",   ConstraintWidget::UNKNOWN);
+
+    // match_constraint (0dp) sizing: default spread/wrap/percent + percent value + min/max.
+    static const std::unordered_map<std::string,int> matchDefault = {
+        {"spread",  ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
+        {"wrap",    ConstraintWidget::MATCH_CONSTRAINT_WRAP},
+        {"percent", ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
+    };
+    matchConstraintDefaultWidth  = attrs.getInt("layout_constraintWidth_default",  matchDefault, ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintDefaultHeight = attrs.getInt("layout_constraintHeight_default", matchDefault, ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintPercentWidth  = attrs.getFloat("layout_constraintWidth_percent",  1.0f);
+    matchConstraintPercentHeight = attrs.getFloat("layout_constraintHeight_percent", 1.0f);
+    matchConstraintMinWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_min",  0);
+    matchConstraintMaxWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_max",  0);
+    matchConstraintMinHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_min", 0);
+    matchConstraintMaxHeight  = attrs.getDimensionPixelSize("layout_constraintHeight_max", 0);
+
     validate();
 }
 
@@ -297,15 +316,14 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
             widget->setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
         }
     } else {
-        // MATCH_CONSTRAINT (0dp) / MATCH_PARENT — MVP: treat as MATCH_CONSTRAINT.
-        // Apply the match-style (Android: setHorizontalMatchStyle). reset() left mMatchConstraintMaxWidth
-        // at INT_MAX; the LP default is 0 (no max) — must override so spread-fill resolves correctly.
+        // MATCH_CONSTRAINT (0dp) / MATCH_PARENT. Apply the match-style from LayoutParams
+        // (Android: setHorizontalMatchStyle). The solver's applyConstraints handles SPREAD/WRAP/PERCENT.
         widget->setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
         widget->setWidth(0);
-        widget->mMatchConstraintDefaultWidth  = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
-        widget->mMatchConstraintMinWidth      = 0;
-        widget->mMatchConstraintMaxWidth      = 0;
-        widget->mMatchConstraintPercentWidth  = 1;
+        widget->mMatchConstraintDefaultWidth  = lp->matchConstraintDefaultWidth;
+        widget->mMatchConstraintMinWidth      = lp->matchConstraintMinWidth;
+        widget->mMatchConstraintMaxWidth      = lp->matchConstraintMaxWidth;
+        widget->mMatchConstraintPercentWidth  = lp->matchConstraintPercentWidth;
     }
     if (lp->mVerticalDimensionFixed) {
         widget->setVerticalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::FIXED);
@@ -316,10 +334,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
     } else {
         widget->setVerticalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
         widget->setHeight(0);
-        widget->mMatchConstraintDefaultHeight = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
-        widget->mMatchConstraintMinHeight     = 0;
-        widget->mMatchConstraintMaxHeight     = 0;
-        widget->mMatchConstraintPercentHeight = 1;
+        widget->mMatchConstraintDefaultHeight = lp->matchConstraintDefaultHeight;
+        widget->mMatchConstraintMinHeight     = lp->matchConstraintMinHeight;
+        widget->mMatchConstraintMaxHeight     = lp->matchConstraintMaxHeight;
+        widget->mMatchConstraintPercentHeight = lp->matchConstraintPercentHeight;
     }
 
     // Ratio
@@ -331,6 +349,9 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
     // Chain styles
     widget->mHorizontalChainStyle = lp->horizontalChainStyle;
     widget->mVerticalChainStyle = lp->verticalChainStyle;
+    // Chain weights (distribute free space among 0dp chain elements).
+    widget->mWeight[ConstraintWidget::HORIZONTAL] = lp->horizontalWeight;
+    widget->mWeight[ConstraintWidget::VERTICAL]   = lp->verticalWeight;
 
     // Baseline constraint (overrides top/bottom)
     if (lp->baselineToBaseline != LayoutParams::UNSET) {

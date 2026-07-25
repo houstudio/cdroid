@@ -18,6 +18,7 @@
  */
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/chain.h>
+#include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
 
 namespace cdroid {
 
@@ -165,9 +166,17 @@ void ConstraintWidgetContainer::layout() {
         mSystem.addEquality(mSystem.createObjectVariable(&mTop), 0);
         mSystem.addEquality(mSystem.createObjectVariable(&mBottom), mHeight);
 
-        // Add every child to the solver (auto-populates its anchor constraints).
+        // Add every child to the solver. HelperWidget children (Flow/Barrier/...) run FIRST so they
+        // can wire their referenced children's anchor targets before those children solve.
         for (int i = 0; i < count; i++) {
-            mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
+            if (dynamic_cast<HelperWidget*>(mChildren[i]) != nullptr) {
+                mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
+            }
+        }
+        for (int i = 0; i < count; i++) {
+            if (dynamic_cast<HelperWidget*>(mChildren[i]) == nullptr) {
+                mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
+            }
         }
 
         // Apply chain constraints (built above via addChain).

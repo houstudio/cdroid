@@ -141,6 +141,8 @@ public:
     float mVerticalBiasPercent   = DEFAULT_BIAS;
     bool  mIsInBarrier[2]        = {false, false};
     bool  mInPlaceholder         = false;
+    bool  mIsInVirtualLayout     = false;
+    bool  mMeasureRequested      = true;
 
     // --- solver-population state (read/written by addToSolver / applyConstraints) ---
     bool  mAnimated                = false;
@@ -210,6 +212,7 @@ public:
     // --- barrier / resolution hooks (overridden by Guideline/Barrier/...) ---
     virtual bool allowedInBarrier() const;
     virtual bool isBarrier() const; // Barrier (Stage 5) overrides to true
+    virtual bool isVirtualLayout() const; // VirtualLayout (Flow/Layer) overrides to true
     bool isInBarrier(int orientation) const;
     void setIsInBarrier(int orientation, bool value);
     // Pulled into a Placeholder (the content view's widget is flagged so it is treated as gone at
@@ -260,7 +263,15 @@ public:
     void setMaxHeight(int maxHeight);
     void setBaselineDistance(int baselineDistance);
     float getDimensionRatio() const;
-    bool isInVirtualLayout() const; // MVP stub (VirtualLayout not yet ported)
+    bool isInVirtualLayout() const;
+    void setInVirtualLayout(bool inVirtualLayout);
+    // Connect one of this widget's anchors to a target anchor (Java: connect(from, to, margin)).
+    void connect(ConstraintAnchor& from, ConstraintAnchor* to, int margin);
+    // Reset every anchor's connection (Java: resetAnchors).
+    void resetAnchors();
+    // Re-measure request flag (Flow uses it for percent/match-constraint children).
+    void setMeasureRequested(bool measureRequested);
+    bool isMeasureRequested() const;
     void setX(int x);
     void setY(int y);
     void setWidth(int width);

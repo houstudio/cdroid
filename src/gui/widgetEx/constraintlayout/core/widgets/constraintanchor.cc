@@ -115,6 +115,10 @@ bool ConstraintAnchor::connect(ConstraintAnchor* toAnchor, int margin) {
     return connect(toAnchor, margin, UNSET_GONE_MARGIN, false);
 }
 
+bool ConstraintAnchor::connect(ConstraintAnchor& toAnchor, int margin) {
+    return connect(&toAnchor, margin);
+}
+
 bool ConstraintAnchor::isConnected() const {
     return mTarget != nullptr;
 }

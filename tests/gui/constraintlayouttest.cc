@@ -18,6 +18,7 @@
 #include <widgetEx/constraintlayout/barrier.h>
 #include <widgetEx/constraintlayout/group.h>
 #include <widgetEx/constraintlayout/placeholder.h>
+#include <widgetEx/constraintlayout/flow.h>
 
 using namespace cdroid;
 
@@ -322,6 +323,146 @@ TEST(ConstraintLayout, PlaceholderPositionsContent) {
     EXPECT_EQ(x->getTop(), 170);
     EXPECT_EQ(x->getWidth(), 120);
     EXPECT_EQ(x->getHeight(), 60);
+}
+
+// ---- match_constraint (0dp) sizing modes ----
+
+// 0dp width with default=percent, percent=0.5, both sides to parent(600) -> width = 300.
+// (Position centers by default bias 0.5; we assert the percent-computed size.)
+TEST(ConstraintLayout, MatchConstraintPercent) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 0, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    lp->matchConstraintDefaultWidth = ConstraintWidget::MATCH_CONSTRAINT_PERCENT;
+    lp->matchConstraintPercentWidth = 0.5f;
+    cl->addView(tv, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(tv->getWidth(), 300);
+}
+
+// 0dp width spread-fill would be 600, but max=200 caps it -> width 200.
+TEST(ConstraintLayout, MatchConstraintMaxCaps) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 0, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    lp->matchConstraintDefaultWidth = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+    lp->matchConstraintMaxWidth = 200;
+    cl->addView(tv, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(tv->getWidth(), 200);
+}
+
+// 0dp width with default=wrap should size to the view's content, NOT spread-fill 600.
+// (The solver's WRAP branch uses the content size measured by BasicMeasure.measureChildren.)
+TEST(ConstraintLayout, MatchConstraintWrap) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 0, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    lp->matchConstraintDefaultWidth = ConstraintWidget::MATCH_CONSTRAINT_WRAP;
+    cl->addView(tv, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_NE(tv->getWidth(), 600); // wrap must not spread-fill
+    EXPECT_GT(tv->getWidth(), 0);
+}
+
+// Two 0dp widgets in a packed chain with weights 1:2 in a 600-wide container.
+// Free space (600) splits by weight -> A=200, B=400.
+TEST(ConstraintLayout, ChainWeightsDistribute) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 0, 50); a->setId(1);
+    TextView* b = new TextView("B", 0, 50); b->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(0, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->rightToLeft = 2;
+    lpa->horizontalWeight = 1.0f;
+    auto* lpb = new ConstraintLayout::LayoutParams(0, 50);
+    lpb->leftToRight = 1;
+    lpb->rightToRight = ConstraintLayout::PARENT_ID;
+    lpb->horizontalWeight = 2.0f;
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(a->getWidth(), 200);
+    EXPECT_EQ(b->getWidth(), 400);
+}
+
+// ---- Flow ----
+
+// A 200x100 Flow (WRAP_CHAIN, horizontal) referencing four 100-wide widgets: two per row.
+// Row0: A(0,0) B(100,0); Row1: C(0,50) D(100,50).
+TEST(ConstraintLayout, FlowWrapsToSecondRow) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    TextView* d = new TextView("D", 100, 50); d->setId(4);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(d, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(200, 100);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_CHAIN);
+    auto* lp = new ConstraintLayout::LayoutParams(200, 100);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getLeft(), 0);   EXPECT_EQ(a->getTop(), 0);
+    EXPECT_EQ(b->getLeft(), 100); EXPECT_EQ(b->getTop(), 0);
+    EXPECT_EQ(c->getLeft(), 0);   EXPECT_EQ(c->getTop(), 50);  // wrapped to row 2
+    EXPECT_EQ(d->getLeft(), 100); EXPECT_EQ(d->getTop(), 50);
+}
+
+// A 100x200 Flow (WRAP_CHAIN, VERTICAL) referencing four 50x50 widgets: they stack in a column.
+// w0(0,0) w1(0,50) w2(0,100) w3(0,150).
+TEST(ConstraintLayout, FlowVerticalStacksColumn) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* views[4];
+    for (int i = 0; i < 4; i++) {
+        views[i] = new TextView("X", 50, 50);
+        views[i]->setId(i + 1);
+        cl->addView(views[i], new ConstraintLayout::LayoutParams(50, 50));
+    }
+    Flow* flow = new Flow(100, 200);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_CHAIN);
+    flow->setOrientation(ConstraintWidget::VERTICAL);
+    flow->setHorizontalAlign(Flow::HORIZONTAL_ALIGN_START);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 200);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    for (int i = 0; i < 4; i++) {
+        EXPECT_EQ(views[i]->getLeft(), 0) << "view " << i;
+        EXPECT_EQ(views[i]->getTop(), i * 50) << "view " << i;
+    }
 }
 
 // NOTE: match_constraint (0dp) — spread-fill works; the match-constraint re-measure loop

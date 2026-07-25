@@ -76,6 +76,9 @@ public:
     void reset();
     bool connect(ConstraintAnchor* toAnchor, int margin, int goneMargin, bool forceConnection);
     bool connect(ConstraintAnchor* toAnchor, int margin);
+    // Convenience overload taking the target by reference (Java anchors are reference types;
+    // lets callers write `a.connect(b, m)` without `&b`).
+    bool connect(ConstraintAnchor& toAnchor, int margin);
     bool isConnected() const;
     bool isValidConnection(ConstraintAnchor* anchor) const;
     bool isSideAnchor() const;

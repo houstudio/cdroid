@@ -44,6 +44,9 @@ void BasicMeasure::measureChildren(ConstraintWidgetContainer* layout) {
         if (child->isBarrier()) {
             continue;
         }
+        if (child->isVirtualLayout()) {
+            continue; // VirtualLayout (Flow/Layer) sizes itself via its own measure()
+        }
         if (child->isInVirtualLayout()) {
             continue;
         }

@@ -78,6 +78,21 @@ public:
         // chain styles (layout_constraintHorizontal/Vertical_chainStyle: spread/spread_inside/packed)
         int horizontalChainStyle = ConstraintWidget::CHAIN_SPREAD;
         int verticalChainStyle = ConstraintWidget::CHAIN_SPREAD;
+        // chain weights (layout_constraintHorizontal/Vertical_weight) — distribute free space among
+        // 0dp (match_constraint) chain elements proportionally. UNKNOWN = unweighted.
+        float horizontalWeight = ConstraintWidget::UNKNOWN;
+        float verticalWeight = ConstraintWidget::UNKNOWN;
+
+        // match_constraint (0dp) sizing: layout_constraintWidth_default (spread=0/wrap=1/percent=2)
+        // + percent + min/max. Wired into the widget's mMatchConstraint* fields.
+        int matchConstraintDefaultWidth  = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+        int matchConstraintDefaultHeight = ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+        float matchConstraintPercentWidth  = 1.0f;
+        float matchConstraintPercentHeight = 1.0f;
+        int matchConstraintMinWidth   = 0;
+        int matchConstraintMaxWidth   = 0;
+        int matchConstraintMinHeight  = 0;
+        int matchConstraintMaxHeight  = 0;
 
         // The per-child solver model (owned; a Guideline for guideline children). Pointer so the
         // concrete type can be swapped to clcore::Guideline in validate().
