@@ -171,6 +171,7 @@ static std::unordered_map<std::string,const Property*>props={
     {"translationX",View::TRANSLATION_X},
     {"translationY",View::TRANSLATION_Y},
     {"translationZ",View::TRANSLATION_Z},
+    {"transitionAlpha",View::TRANSITION_ALPHA},
     {"x",View::X},
     {"y",View::Y},
     {"z",View::Z},

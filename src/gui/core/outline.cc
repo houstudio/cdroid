@@ -95,7 +95,7 @@ void Outline::set(const Outline& src) {
         if (mPath == nullptr) {
             mPath = new Path();
         }
-        mPath->append_path(*src.mPath);
+        mPath->addPath(*src.mPath);
     }
     mRect = src.mRect;//.set(src.mRect);
     mRadius = src.mRadius;
@@ -194,7 +194,7 @@ void Outline::setOval(int left, int top, int width, int height) {
     }
 
     mMode = MODE_CONVEX_PATH;
-    mPath->add_oval(left, top, width, height,true);//, Path.Direction.CW);
+    mPath->addOval(left, top, width, height,true);//, Path.Direction.CW);
     mRect.setEmpty();
     mRadius = RADIUS_UNDEFINED;
 }
@@ -216,7 +216,7 @@ void Outline::setConvexPath(const Path& convexPath) {
         return;
     }*/
 
-    if (!convexPath.is_convex()) {
+    if (!convexPath.isConvex()) {
         LOGE("path must be convex");
     }
 
@@ -225,7 +225,7 @@ void Outline::setConvexPath(const Path& convexPath) {
     }
 
     mMode = MODE_CONVEX_PATH;
-    mPath->append_path(convexPath);
+    mPath->addPath(convexPath);
     mRect.setEmpty();
     mRadius = RADIUS_UNDEFINED;
 }

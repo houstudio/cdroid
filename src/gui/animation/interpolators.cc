@@ -198,15 +198,15 @@ PathInterpolator::PathInterpolator(Context*ctx,const AttributeSet&a){
 
 void PathInterpolator::initQuad(float controlX, float controlY) {
     Path path;
-    path.move_to(0, 0);
-    path.quad_to(controlX, controlY, 1.f, 1.f);
+    path.moveTo(0, 0);
+    path.quadTo(controlX, controlY, 1.f, 1.f);
     initPath(path);
 }
 
 void PathInterpolator::initCubic(float x1, float y1, float x2, float y2) {
     Path path;
-    path.move_to(0, 0);
-    path.curve_to(x1, y1, x2, y2, 1.f, 1.f);
+    path.moveTo(0, 0);
+    path.cubicTo(x1, y1, x2, y2, 1.f, 1.f);
     initPath(path);
 }
 

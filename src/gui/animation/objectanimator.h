@@ -20,6 +20,7 @@
 
 #include <animation/valueanimator.h>
 #include <animation/animationhandler.h>
+#include <core/path.h>   // cdroid::Path + Cairo::RefPtr for ofFloat(target, propX, propY, Path)
 namespace cdroid{
 
 class ObjectAnimator:public ValueAnimator{
@@ -63,6 +64,12 @@ public:
 
     static ObjectAnimator* ofInt(void*target,const Property*prop,const std::vector<int>&);
     static ObjectAnimator* ofFloat(void*target,const Property*prop,const std::vector<float>&);
+    static ObjectAnimator* ofArgb(void* target,const std::string& propertyName, const std::vector<int>&);
+    static ObjectAnimator* ofArgb(void*target,const Property*prop,const std::vector<int>&);
+    // Generic ofObject for AnimateValue-typed properties (Rect/PointF) with a caller-supplied evaluator.
+    static ObjectAnimator* ofObject(void*target,const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values);
+    // Drives two float properties (e.g. translationX/translationY) along a Path simultaneously.
+    static ObjectAnimator* ofFloat(void*target,const Property*propX,const Property*propY,const Cairo::RefPtr<cdroid::Path>& path);
     std::string toString()const override;
 };
 

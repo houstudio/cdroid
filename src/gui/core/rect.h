@@ -90,9 +90,15 @@ struct CRect{
 
     void setEmpty(){set(0,0,0,0);}
 
-    void offset(int dx,int dy){
+    void offset(T dx,T dy){
         left+= dx;
         top += dy;
+    }
+
+    // android.graphics.Rect.offsetTo — move to absolute (left,top); used by Explode/transition
+    void offsetTo(T l,T t){
+        left = l;
+        top  = t;
     }
  
     bool intersect(const CRect&a,const CRect&b){

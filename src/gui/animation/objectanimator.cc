@@ -18,6 +18,7 @@
 #include <stdarg.h>
 #include <porting/cdlog.h>
 #include <animation/objectanimator.h>
+#include <core/pathmeasure.h>   // Path sampling for ofFloat(target, propX, propY, Path)
 
 namespace cdroid{
 
@@ -273,6 +274,47 @@ ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*prop,const st
     anim->setProperty(prop);
     anim->setFloatValues(values);
     return anim;
+}
+
+// ARGB must interpolate channels independently (ArgbEvaluator), not as a plain int.
+ObjectAnimator* ObjectAnimator::ofArgb(void* target,const std::string& propertyName,const std::vector<int>&values){
+    ObjectAnimator*anim = new ObjectAnimator(target,propertyName);
+    anim->setIntValues(values);
+    anim->setEvaluator(PropertyValuesHolder::ArgbEvaluator);
+    return anim;
+}
+
+ObjectAnimator* ObjectAnimator::ofArgb(void*target,const Property*prop,const std::vector<int>&values){
+    ObjectAnimator*anim = new ObjectAnimator();
+    anim->setTarget(target);
+    anim->setProperty(prop);
+    anim->setIntValues(values);
+    anim->setEvaluator(PropertyValuesHolder::ArgbEvaluator);
+    return anim;
+}
+
+// Generic ofObject for AnimateValue-typed properties (Rect/PointF) with a caller-supplied evaluator.
+ObjectAnimator* ObjectAnimator::ofObject(void*target,const Property*prop,TypeEvaluator evaluator,const std::vector<AnimateValue>&values){
+    PropertyValuesHolder*pvh = PropertyValuesHolder::ofObject(prop,evaluator,values);
+    return ofPropertyValuesHolder(target,{pvh});
+}
+
+// Drives two float properties (e.g. translationX/translationY) along a Path simultaneously.
+// AOSP's degenerate PathKeyframes approach: sample the Path to N+1 (x,y) pairs and run two float holders.
+ObjectAnimator* ObjectAnimator::ofFloat(void*target,const Property*propX,const Property*propY,const Cairo::RefPtr<cdroid::Path>& path){
+    PathMeasure measure(path, false);
+    const double length = measure.getLength();
+    const int N = 32;
+    std::vector<float> xs, ys;
+    for (int i = 0; i <= N; i++) {
+        double pos[2] = {0,0}, tan[2] = {0,0};
+        measure.getPosTan(length * i / N, pos, tan);
+        xs.push_back((float)pos[0]);
+        ys.push_back((float)pos[1]);
+    }
+    PropertyValuesHolder*pvhX = PropertyValuesHolder::ofFloat(propX, xs);
+    PropertyValuesHolder*pvhY = PropertyValuesHolder::ofFloat(propY, ys);
+    return ofPropertyValuesHolder(target,{pvhX, pvhY});
 }
 
 std::string ObjectAnimator::toString()const{

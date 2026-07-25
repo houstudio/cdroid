@@ -247,14 +247,14 @@ void RoundRectDrawableWithShadow::buildShadowCorners() {
     } else {
         mCornerShadowPath->reset();
     }
-    mCornerShadowPath->set_fill_rule(Cairo::Context::FillRule::EVEN_ODD);//setFillType(Path.FillType.EVEN_ODD);
-    mCornerShadowPath->move_to(-mCornerRadius, 0);
+    mCornerShadowPath->setFillType(Cairo::Context::FillRule::EVEN_ODD);//setFillType(Path.FillType.EVEN_ODD);
+    mCornerShadowPath->moveTo(-mCornerRadius, 0);
     mCornerShadowPath->rel_line_to(-mShadowSize, 0);/*rLineTo*/
     // outer arc
-    mCornerShadowPath->arc_to(outerBounds, 180.f, 90.f, false);
+    mCornerShadowPath->arcTo(outerBounds, 180.f, 90.f, false);
     // inner arc
-    mCornerShadowPath->arc_to(innerBounds, 270.f, -90.f, false);
-    mCornerShadowPath->close_path();
+    mCornerShadowPath->arcTo(innerBounds, 270.f, -90.f, false);
+    mCornerShadowPath->close();
     const float startRatio = mCornerRadius / (mCornerRadius + mShadowSize);
     const Color cs(mShadowStartColor);
     const Color ce(mShadowEndColor);

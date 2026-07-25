@@ -95,7 +95,7 @@ cdroid::Path* Gesture::toPath(Path* path) {
     const int count = (int)strokes.size();
 
     for (int i = 0; i < count; i++) {
-        path->append_path(*strokes.at(i)->getPath());
+        path->addPath(*strokes.at(i)->getPath());
     }
 
     return path;
@@ -111,7 +111,7 @@ cdroid::Path* Gesture::toPath(Path* path, int width, int height, int edge, int n
     const std::vector<GestureStroke*>& strokes = mStrokes;
     const int count = (int)strokes.size();
     for (int i = 0; i < count; i++) {
-        path->append_path(*strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
+        path->addPath(*strokes.at(i)->toPath(width - 2 * edge, height - 2 * edge, numSample));
     }
 
     return path;
@@ -149,8 +149,8 @@ Bitmap Gesture::toBitmap(int width, int height, int inset, int color) {
     canvas.set_color(color);
 
     Path* path = toPath();
-    RectF bounds = mBoundingBox;
-    //path->compute_bounds(bounds, true);
+    RectF& bounds = mBoundingBox;
+    path->computeBounds(bounds, true);
 
     const float sx = float(width - 2 * inset) / bounds.width;
     const float sy = float(height - 2 * inset) / bounds.height;

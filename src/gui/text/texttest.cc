@@ -142,10 +142,10 @@ public:
         float startX = 100, startY = 200;
         float w = 300, h = 100;
         
-        path.move_to(startX, startY);
-        path.curve_to(startX + w/3, startY - h, startX + w*2/3, startY + h, startX + w, startY);
-        path.curve_to(startX + w + w/3, startY - h, startX + w + w*2/3, startY + h, startX + w*2, startY);
-        path.curve_to(startX + w*2 + w/3, startY - h, startX + w*2 + w*2/3, startY + h, startX + w*3, startY);
+        path.moveTo(startX, startY);
+        path.cubicTo(startX + w/3, startY - h, startX + w*2/3, startY + h, startX + w, startY);
+        path.cubicTo(startX + w + w/3, startY - h, startX + w + w*2/3, startY + h, startX + w*2, startY);
+        path.cubicTo(startX + w*2 + w/3, startY - h, startX + w*2 + w*2/3, startY + h, startX + w*3, startY);
         path.append_to_context(&canvas);
         canvas.stroke();
         canvas.set_color(0xFFFF0000);
