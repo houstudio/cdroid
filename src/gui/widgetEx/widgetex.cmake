@@ -45,6 +45,8 @@ if(ENABLE_FLEXBOXLAYOUT)
     )
 endif(ENABLE_FLEXBOXLAYOUT)
 
+include(widgetEx/constraintlayout/constraintlayout.cmake)
+
 list(APPEND WIDGETEX_SOURCES
     widgetEx/viewpager2.cc
     widgetEx/tablayoutmediator.cc
