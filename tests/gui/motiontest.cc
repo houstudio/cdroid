@@ -16,6 +16,7 @@
 #include <widgetEx/constraintlayout/core/motion/hyperspline.h>
 #include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/monotoniccurvefit.h>
+#include <widgetEx/constraintlayout/core/motion/oscillator.h>
 
 using namespace cdroid;
 
@@ -117,6 +118,45 @@ TEST(MotionMath, HyperSplineEndpoints) {
     HyperSpline hs(points);
     EXPECT_NEAR(hs.getPos(0.0, 0), 0.0, 1e-6);
     EXPECT_NEAR(hs.getPos(1.0, 0), 100.0, 1e-6);
+}
+
+// ---- Oscillator ----
+
+// A sine oscillator at zero phase starts at sin(0) = 0; cosine starts at cos(0) = 1.
+TEST(MotionMath, OscillatorStartValue) {
+    Oscillator osc;
+    osc.setType(Oscillator::SIN_WAVE, "");
+    osc.addPoint(0.0, 1.0f);
+    osc.addPoint(1.0, 1.0f);
+    osc.normalize();
+    EXPECT_NEAR(osc.getValue(0.0, 0.0), 0.0, 1e-6);
+
+    Oscillator cosc;
+    cosc.setType(Oscillator::COS_WAVE, "");
+    cosc.addPoint(0.0, 1.0f);
+    cosc.addPoint(1.0, 1.0f);
+    cosc.normalize();
+    EXPECT_NEAR(cosc.getValue(0.0, 0.0), 1.0, 1e-6);
+}
+
+// All wave types stay bounded in [-1, 1] across the progress axis.
+TEST(MotionMath, OscillatorBounded) {
+    Oscillator osc;
+    osc.addPoint(0.0, 1.0f);
+    osc.addPoint(0.5f, 2.0f);
+    osc.addPoint(1.0, 1.0f);
+    osc.normalize();
+    const int types[] = {Oscillator::SIN_WAVE, Oscillator::SQUARE_WAVE, Oscillator::TRIANGLE_WAVE,
+                         Oscillator::SAW_WAVE, Oscillator::REVERSE_SAW_WAVE, Oscillator::COS_WAVE,
+                         Oscillator::BOUNCE};
+    for (int type : types) {
+        osc.setType(type, "");
+        for (int i = 0; i <= 20; i++) {
+            double v = osc.getValue(i / 20.0, 0.0);
+            EXPECT_GE(v, -1.0 - 1e-6) << "type=" << type << " i=" << i;
+            EXPECT_LE(v, 1.0 + 1e-6) << "type=" << type << " i=" << i;
+        }
+    }
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT
