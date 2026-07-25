@@ -304,6 +304,13 @@ bool PNGDecoder::decodeSize() {
     if (bit_depth < 8)
         png_set_packing (png_ptr);
 
+    /* The UI pipeline is uniformly ARGB32 (8-bit/channel) for render speed.
+       Strip 16-bit/channel PNGs down to 8-bit so they share the same
+       premultiply -> ARGB32 path. cairo 1.16 has no higher-precision format
+       (RGBA128F is 1.18+), and 8-bit display is the intended target anyway. */
+    if (bit_depth == 16)
+        png_set_strip_16 (png_ptr);
+
     /* convert grayscale to RGB */
     if ( (color_type==PNG_COLOR_TYPE_GRAY) || (color_type==PNG_COLOR_TYPE_GRAY_ALPHA) ) {
         png_set_gray_to_rgb(png_ptr);
@@ -331,12 +338,8 @@ bool PNGDecoder::decodeSize() {
 #endif
 
     if(color_type==PNG_COLOR_TYPE_RGB_ALPHA) {
-        if(bit_depth == 8){
-            png_set_read_user_transform_fn (png_ptr, premultiply_data);
-        }else {
-            //png_set_read_user_transform_fn (png_ptr, premultiply_floatdata);
-            LOGD("TODO:CAIRO_FORMAT_RGBA128F bit_depth=%d",bit_depth);
-        }
+        /* bit_depth is always 8 here: 16-bit images were stripped to 8 above. */
+        png_set_read_user_transform_fn (png_ptr, premultiply_data);
     }
     return true;
 }
