@@ -445,13 +445,12 @@ TEST(ConstraintLayout, FlowVerticalStacksColumn) {
         views[i]->setId(i + 1);
         cl->addView(views[i], new ConstraintLayout::LayoutParams(50, 50));
     }
-    Flow* flow = new Flow(100, 200);
+    Flow* flow = new Flow(50, 200);
     flow->setId(10);
     flow->setReferencedIds({1, 2, 3, 4});
     flow->setWrapMode(Flow::WRAP_CHAIN);
     flow->setOrientation(ConstraintWidget::VERTICAL);
-    flow->setHorizontalAlign(Flow::HORIZONTAL_ALIGN_START);
-    auto* lp = new ConstraintLayout::LayoutParams(100, 200);
+    auto* lp = new ConstraintLayout::LayoutParams(50, 200);
     lp->leftToLeft = ConstraintLayout::PARENT_ID;
     lp->topToTop = ConstraintLayout::PARENT_ID;
     cl->addView(flow, lp);
