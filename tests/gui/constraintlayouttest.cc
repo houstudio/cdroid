@@ -10,12 +10,20 @@
 
 #include <gtest/gtest.h>
 
+#include <sstream>
+
 #include <core/app.h>
 #include <core/attributeset.h>
+#include <core/xmlpullparser.h>
 #include <view/view.h>
 #include <widget/textview.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/constraintlayout/keyframes.h>
+#include <widgetEx/constraintlayout/motionscene.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/barrier.h>
@@ -511,6 +519,141 @@ TEST(ConstraintLayout, ConstraintSetCloneAndModify) {
     cl->layout(0, 0, 600, 400);
     EXPECT_EQ(a->getLeft(), 0); // now pinned left
     EXPECT_EQ(a->getWidth(), 100);
+}
+
+// ConstraintSet.load(Context, XmlPullParser) parses a <ConstraintSet> XML resource into the
+// Constraint model. "parent"/literal ids resolve via Context::getId (strtol fallback). Verifies the
+// name-keyed attribute dispatch (populateConstraint) for dimensions, anchors, bias, margins,
+// visibility/alpha (PropertySet), transforms, chain style, and ratio.
+TEST(ConstraintLayout, ConstraintSetXmlLoad) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<ConstraintSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Constraint android:id=\"42\""
+        "              android:layout_width=\"100dp\""
+        "              android:layout_height=\"60dp\""
+        "              layout_constraintLeft_toLeftOf=\"parent\""
+        "              layout_constraintRight_toRightOf=\"parent\""
+        "              layout_constraintHorizontal_bias=\"0.25\""
+        "              android:layout_marginLeft=\"8dp\""
+        "              layout_constraintHorizontal_chainStyle=\"packed\""
+        "              layout_constraintDimensionRatio=\"2:1\""
+        "              android:visibility=\"invisible\""
+        "              android:alpha=\"0.5\""
+        "              android:rotation=\"45\""
+        "              android:scaleX=\"2\" />"
+        "</ConstraintSet>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    // Advance to the <ConstraintSet> START_TAG, then let load() consume through its END_TAG.
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+
+    ConstraintSet cs;
+    cs.load(&app, parser);
+
+    ASSERT_TRUE(cs.contains(42));
+    const auto& c = cs.get(42);
+    EXPECT_EQ(c.layout.mWidth, 100);
+    EXPECT_EQ(c.layout.mHeight, 60);
+    EXPECT_EQ(c.layout.leftToLeft, 0);     // "parent" -> PARENT_ID=0
+    EXPECT_EQ(c.layout.rightToRight, 0);
+    EXPECT_FLOAT_EQ(c.layout.horizontalBias, 0.25f);
+    EXPECT_EQ(c.layout.leftMargin, 8);
+    EXPECT_EQ(c.layout.horizontalChainStyle, ConstraintWidget::CHAIN_PACKED);
+    EXPECT_EQ(c.layout.dimensionRatio, "2:1");
+    EXPECT_EQ(c.propertySet.visibility, 4); // invisible -> View::INVISIBLE=4
+    EXPECT_FLOAT_EQ(c.propertySet.alpha, 0.5f);
+    EXPECT_FLOAT_EQ(c.transform.rotation, 45.0f);
+    EXPECT_FLOAT_EQ(c.transform.scaleX, 2.0f);
+}
+
+// KeyFrames parses a <KeyFrameSet> into core MotionKey subclasses (KeyAttribute + KeyPosition),
+// filed under the target view id. Attribute names are bare localnames (XmlPullParser strips the
+// namespace); motionTarget resolves to a view id via Context::getId (strtol fallback: "42" -> 42).
+TEST(ConstraintLayout, KeyFramesXmlParse) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<KeyFrameSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <KeyAttribute motionTarget=\"42\" framePosition=\"50\" alpha=\"0\" rotation=\"90\" />"
+        "  <KeyPosition motionTarget=\"42\" framePosition=\"50\" percentX=\"0.5\" percentY=\"0.5\""
+        "              keyPositionType=\"pathRelative\" />"
+        "</KeyFrameSet>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+
+    KeyFrames kf(&app, parser);
+    auto keys = kf.getKeysForView(42);
+    ASSERT_EQ(keys.size(), 2u);
+
+    MotionKeyAttributes* attr = nullptr;
+    MotionKeyPosition* pos = nullptr;
+    for (MotionKey* k : keys) {
+        if (k->mType == MotionKeyAttributes::KEY_TYPE) attr = static_cast<MotionKeyAttributes*>(k);
+        else if (k->mType == MotionKeyPosition::KEY_TYPE) pos = static_cast<MotionKeyPosition*>(k);
+    }
+    ASSERT_NE(attr, nullptr);
+    ASSERT_NE(pos, nullptr);
+    EXPECT_EQ(attr->mFramePosition, 50);
+    EXPECT_FLOAT_EQ(attr->mAlpha, 0.0f);
+    EXPECT_FLOAT_EQ(attr->mRotation, 90.0f);
+    EXPECT_EQ(pos->mFramePosition, 50);
+    EXPECT_FLOAT_EQ(pos->mPercentX, 0.5f);
+    EXPECT_FLOAT_EQ(pos->mPercentY, 0.5f);
+    EXPECT_EQ(pos->mPositionType, MotionKeyPosition::TYPE_PATH);
+}
+
+// MotionScene parses a full scene: <Transition> referencing two inline <ConstraintSet>s, with a
+// <KeyFrameSet> and an <OnClick> child. The ConstraintSet ids ("@+id/start") resolve scene-locally
+// by name, so the Transition's start/end refs agree with the parsed sets.
+TEST(ConstraintLayout, MotionSceneXmlParse) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\" defaultDuration=\"300\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" duration=\"500\">"
+        "    <OnClick targetId=\"1\" clickAction=\"toggle\" />"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
+        "    </KeyFrameSet>"
+        "  </Transition>"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+
+    MotionScene scene(nullptr);
+    scene.load(&app, parser);
+
+    auto* t = scene.getCurrentTransition();
+    ASSERT_NE(t, nullptr);
+    EXPECT_EQ(t->getDuration(), 500);
+    EXPECT_FALSE(t->isAbstract());
+
+    auto* startSet = scene.getConstraintSet(t->getStartId());
+    auto* endSet = scene.getConstraintSet(t->getEndId());
+    ASSERT_NE(startSet, nullptr);
+    ASSERT_NE(endSet, nullptr);
+    EXPECT_EQ(startSet->get(1).layout.leftToLeft, 0);  // parent
+    EXPECT_EQ(endSet->get(1).layout.rightToRight, 0);  // parent
+
+    ASSERT_NE(t->getKeyFrames(), nullptr);
+    EXPECT_EQ(t->getKeyFrames()->getKeysForView(1).size(), 1u);
+    ASSERT_EQ(t->getOnClicks().size(), 1u);
+    EXPECT_EQ(t->getOnClicks()[0].targetId, 1);
+    EXPECT_EQ(t->getOnClicks()[0].clickAction, MotionScene::Transition::FLAG_TOGGLE);
 }
 
 // A container with padding insets its children: leftToLeft=parent with paddingLeft=50 -> x=50.

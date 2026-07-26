@@ -15,10 +15,13 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_LAYOUT_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_LAYOUT_H
 
+#include <memory>
+#include <string>
 #include <unordered_map>
 
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/core/motion/motion.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 
@@ -27,6 +30,7 @@ namespace cdroid {
 class ValueAnimator;
 class MotionKeyAttributes;
 class MotionKeyPosition;
+class KeyFrames;
 
 class MotionLayout : public ConstraintLayout {
 public:
@@ -73,6 +77,16 @@ private:
     // Apply the interpolated state at mProgress to every child view.
     void applyMotion();
 
+    // --- MotionScene (pure-XML) path ---
+    // Parse mSceneResource into a MotionScene and wire its current transition: setTransition with
+    // the scene's start/end ConstraintSets, capture the KeyFrames for post-capture application, and
+    // install OnClick handlers. Idempotent (guarded by mSceneBuilt).
+    void buildScene();
+    // Feed the scene's KeyFrames into the freshly-built per-child Motion controllers (borrowed).
+    void applyKeyFramesToMotions(KeyFrames* kf);
+    // Wire a transition's <OnClick> targets to toggle/transition-to-end/start the layout.
+    void wireOnClicks(MotionScene::Transition* t);
+
     ConstraintSet* mStartSet = nullptr;
     ConstraintSet* mEndSet = nullptr;
     std::shared_ptr<ConstraintSet> mOwnedStart;
@@ -88,6 +102,12 @@ private:
     bool mInCapture = false; // guard against re-entrant measure/layout during capture
     int mWidthSpec = 0;
     int mHeightSpec = 0;
+
+    // Pure-XML MotionScene path (app:layoutDescription="@xml/...").
+    std::unique_ptr<MotionScene> mScene;
+    std::string mSceneResource;       // resource path of the <MotionScene> XML
+    KeyFrames* mKeyFramesToApply = nullptr; // borrowed from mScene's current transition; applied post-capture
+    bool mSceneBuilt = false;
 };
 
 } // namespace cdroid

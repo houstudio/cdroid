@@ -8,7 +8,9 @@
 #include <porting/cdlog.h>
 #include <animation/valueanimator.h>
 #include <view/view.h>
+#include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 
@@ -56,7 +58,11 @@ void applyFrom(View* v, MotionWidget& mw) {
 } // namespace
 
 MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
-    : ConstraintLayout(ctx, attrs) {}
+    : ConstraintLayout(ctx, attrs) {
+    // app:layoutDescription="@xml/..." points at a <MotionScene> resource (bare localname after the
+    // XmlPullParser namespace strip). Resolved into a MotionScene on first measure (buildScene).
+    mSceneResource = attrs.getString("layoutDescription", "");
+}
 
 MotionLayout::MotionLayout(int width, int height)
     : ConstraintLayout(width, height) {}
@@ -100,6 +106,9 @@ void MotionLayout::captureAndBuild() {
     captureState(mStartSet, mStartWidgets);
     captureState(mEndSet, mEndWidgets);
     buildMotions();
+    // The scene's KeyFrames go onto the freshly-built Motion controllers (borrowed pointers; the
+    // MotionScene/KeyFrames outlive the controllers — both owned by this MotionLayout).
+    if (mKeyFramesToApply) applyKeyFramesToMotions(mKeyFramesToApply);
     mCaptured = !mMotions.empty();
     if (mCaptured) applyMotion();
 }
@@ -183,6 +192,9 @@ void MotionLayout::applyMotion() {
 void MotionLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mWidthSpec = widthMeasureSpec;
     mHeightSpec = heightMeasureSpec;
+    // Build the MotionScene from layoutDescription on the first measure (idempotent). setTransition
+    // then defers the capture to after ConstraintLayout::onMeasure gives us a measured size.
+    if (!mSceneBuilt && !mSceneResource.empty()) buildScene();
     ConstraintLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
     // If setTransition was called before we had a size, run the capture now that we do.
     // Use getMeasuredWidth (set by measure) — getWidth() is 0 until onLayout runs.
@@ -199,6 +211,71 @@ void MotionLayout::onLayout(bool changed, int l, int t, int r, int b) {
     // the motion positions.
     if (mCaptured && !mInCapture) {
         applyMotion();
+    }
+}
+
+// ===========================================================================
+// MotionScene (pure-XML) path
+// ===========================================================================
+void MotionLayout::buildScene() {
+    if (mSceneBuilt || mSceneResource.empty()) return;
+    mSceneBuilt = true; // set first so a parse failure doesn't retry every measure
+    LOGD("MotionLayout::buildScene loading '%s'", mSceneResource.c_str());
+    mScene = std::make_unique<MotionScene>(getContext(), this, mSceneResource);
+    auto* t = mScene->getCurrentTransition();
+    if (t == nullptr) { LOGW("MotionLayout: scene has no transition"); return; }
+
+    ConstraintSet* start = mScene->getConstraintSet(t->getStartId());
+    ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
+    LOGD("MotionLayout: transition start=%d end=%d duration=%d keys=%d onclicks=%zu",
+         t->getStartId(), t->getEndId(), t->getDuration(),
+         t->getKeyFrames() ? 1 : 0, t->getOnClicks().size());
+    if (start != nullptr && end != nullptr) {
+        setTransitionDuration(t->getDuration());
+        if (!t->getInterpolatorString().empty()) {
+            setTransitionEasing(t->getInterpolatorString());
+        }
+        mKeyFramesToApply = t->getKeyFrames();
+        setTransition(start, end); // captures now if we have a size, else defers to onMeasure
+    }
+    wireOnClicks(t);
+}
+
+void MotionLayout::applyKeyFramesToMotions(KeyFrames* kf) {
+    if (kf == nullptr) return;
+    for (auto& kv : mMotions) {
+        Motion* m = kv.second;
+        for (MotionKey* key : kf->getKeysForView(kv.first)) {
+            switch (key->mType) {
+                case MotionKeyAttributes::KEY_TYPE:
+                    m->addKey(static_cast<MotionKeyAttributes*>(key)); break;
+                case MotionKeyPosition::KEY_TYPE:
+                    m->addKey(static_cast<MotionKeyPosition*>(key)); break;
+                case MotionKeyCycle::KEY_TYPE:
+                    m->addKey(static_cast<MotionKeyCycle*>(key)); break;
+                default: break; // KeyTimeCycle/KeyTrigger: no Motion addKey yet (deferred)
+            }
+        }
+    }
+}
+
+void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
+    for (const auto& oc : t->getOnClicks()) {
+        View* target = findViewById(oc.targetId);
+        if (target == nullptr) continue;
+        const int action = oc.clickAction;
+        MotionLayout* self = this;
+        target->setOnClickListener([self, action](View&) {
+            switch (action) {
+                case MotionScene::Transition::FLAG_TRANSITION_TO_END:   self->transitionToEnd();   break;
+                case MotionScene::Transition::FLAG_TRANSITION_TO_START: self->transitionToStart(); break;
+                case MotionScene::Transition::FLAG_JUMP_TO_END:         self->setProgress(1.0f);   break;
+                case MotionScene::Transition::FLAG_JUMP_TO_START:       self->setProgress(0.0f);   break;
+                default: // toggle
+                    self->getProgress() < 0.5f ? self->transitionToEnd() : self->transitionToStart();
+                    break;
+            }
+        });
     }
 }
 

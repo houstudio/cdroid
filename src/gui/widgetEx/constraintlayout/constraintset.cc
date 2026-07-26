@@ -6,9 +6,12 @@
 #include <widgetEx/constraintlayout/constraintset.h>
 
 #include <climits>
+#include <cctype>
 
+#include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {
 
@@ -79,7 +82,7 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
     if (!l.dimensionRatio.empty()) {
         param.dimensionRatio = parseRatio(l.dimensionRatio);
     }
-    if (l.visibility == (int)View::GONE) {
+    if (propertySet.visibility == (int)View::GONE) {
         param.width = 0; param.height = 0;
     }
     param.validate();
@@ -102,8 +105,8 @@ void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
         if (param == nullptr) continue;
         Constraint& c = mConstraints[id];
         c.fillFrom(id, *param);
-        c.layout.visibility = view->getVisibility();
-        c.layout.alpha = view->getAlpha();
+        c.propertySet.visibility = view->getVisibility();
+        c.propertySet.alpha = view->getAlpha();
         c.transform.rotation = view->getRotation();
         c.transform.rotationX = view->getRotationX();
         c.transform.rotationY = view->getRotationY();
@@ -126,10 +129,10 @@ void ConstraintSet::applyTo(ConstraintLayout* constraintLayout) {
         it->second.applyTo(*param);
         view->setLayoutParams(param);
         const Constraint& c = it->second;
-        view->setVisibility(c.layout.visibility);
+        view->setVisibility(c.propertySet.visibility);
         // Apply view transforms only when non-identity — the render-node invalidation path used by
         // the setters is unsafe on unattached views, and re-applying identity is a no-op anyway.
-        if (c.layout.alpha != 1.0f) view->setAlpha(c.layout.alpha);
+        if (c.propertySet.alpha != 1.0f) view->setAlpha(c.propertySet.alpha);
         if (c.transform.rotation != 0)      view->setRotation(c.transform.rotation);
         if (c.transform.rotationX != 0)     view->setRotationX(c.transform.rotationX);
         if (c.transform.rotationY != 0)     view->setRotationY(c.transform.rotationY);
@@ -188,7 +191,7 @@ void ConstraintSet::connect(int startID, int startSide, int endID, int endSide) 
 
 void ConstraintSet::constrainWidth(int viewId, int width)  { get(viewId).layout.mWidth = width; }
 void ConstraintSet::constrainHeight(int viewId, int height){ get(viewId).layout.mHeight = height; }
-void ConstraintSet::setVisibility(int viewId, int visibility) { get(viewId).layout.visibility = visibility; }
+void ConstraintSet::setVisibility(int viewId, int visibility) { get(viewId).propertySet.visibility = visibility; }
 
 void ConstraintSet::setMargin(int viewId, int anchor, int value) {
     Layout& l = get(viewId).layout;
@@ -205,7 +208,7 @@ void ConstraintSet::setDimensionRatio(int viewId, const std::string& ratio) {
     get(viewId).layout.dimensionRatio = ratio;
 }
 
-void ConstraintSet::setAlpha(int viewId, float alpha) { get(viewId).layout.alpha = alpha; }
+void ConstraintSet::setAlpha(int viewId, float alpha) { get(viewId).propertySet.alpha = alpha; }
 void ConstraintSet::setRotation(int viewId, float rotation) { get(viewId).transform.rotation = rotation; }
 void ConstraintSet::setRotationX(int viewId, float rotationX) { get(viewId).transform.rotationX = rotationX; }
 void ConstraintSet::setRotationY(int viewId, float rotationY) { get(viewId).transform.rotationY = rotationY; }
@@ -213,5 +216,202 @@ void ConstraintSet::setScaleX(int viewId, float scaleX) { get(viewId).transform.
 void ConstraintSet::setScaleY(int viewId, float scaleY) { get(viewId).transform.scaleY = scaleY; }
 void ConstraintSet::setTranslationX(int viewId, float translationX) { get(viewId).transform.translationX = translationX; }
 void ConstraintSet::setTranslationY(int viewId, float translationY) { get(viewId).transform.translationY = translationY; }
+
+// ===========================================================================
+// XML loading — Constraint::fillFromAttributeList (Java populateConstraint) +
+// ConstraintSet::load(Context, XmlPullParser).
+//
+// CDROID uses a name-keyed AttributeSet (the XmlPullParser IS-A AttributeSet), so the Java
+// TypedArray + styleable-int switch becomes a sequence of name lookups: each attribute is read by
+// name with the field's current value as default, so unset attributes are no-ops (equivalent to
+// Java iterating only the present attrs).
+// ===========================================================================
+
+// Enum-name -> int maps for the enum-valued attributes (mirrors attrs.xml enum values).
+static const std::unordered_map<std::string,int> kChainStyles = {
+    {"spread", ConstraintWidget::CHAIN_SPREAD},
+    {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
+    {"packed", ConstraintWidget::CHAIN_PACKED}
+};
+static const std::unordered_map<std::string,int> kMatchDefault = {
+    {"spread",  ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
+    {"wrap",    ConstraintWidget::MATCH_CONSTRAINT_WRAP},
+    {"percent", ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
+};
+static const std::unordered_map<std::string,int> kVisibility = {
+    {"visible",   0}, {"invisible", 4}, {"gone", 8}
+};
+static const std::unordered_map<std::string,int> kPathMotionArc = {
+    {"none", 0}, {"startVertical", 1}, {"startHorizontal", 2},
+    {"flip", 3}, {"below", 4}, {"above", 5}
+};
+static const std::unordered_map<std::string,int> kBarrierDirection = {
+    {"left", 0}, {"right", 1}, {"top", 2}, {"bottom", 3}, {"start", 5}, {"end", 6}
+};
+static const std::unordered_map<std::string,int> kWrapBehavior = {
+    {"included", 0}, {"horizontal_only", 1}, {"vertical_only", 2}, {"skipped", 3}
+};
+static const std::unordered_map<std::string,int> kVisibilityMode = {
+    {"normal", 0}, {"ignore", 1}
+};
+
+void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
+    // Any parsed attribute marks these sub-structs as authored (Java sets mApply on each present attr).
+    layout.mApply = transform.mApply = propertySet.mApply = motion.mApply = true;
+
+    Layout& l = layout;
+    Transform& t = transform;
+    PropertySet& p = propertySet;
+    Motion& m = motion;
+
+    // --- id + anchor targets (resolve "parent"/"@id/x" -> int via Context) ---
+    mViewId      = a.getResourceId("id", mViewId);
+    l.leftToLeft   = a.getResourceId("layout_constraintLeft_toLeftOf",   l.leftToLeft);
+    l.leftToRight  = a.getResourceId("layout_constraintLeft_toRightOf",  l.leftToRight);
+    l.rightToLeft  = a.getResourceId("layout_constraintRight_toLeftOf",  l.rightToLeft);
+    l.rightToRight = a.getResourceId("layout_constraintRight_toRightOf", l.rightToRight);
+    l.topToTop     = a.getResourceId("layout_constraintTop_toTopOf",     l.topToTop);
+    l.topToBottom  = a.getResourceId("layout_constraintTop_toBottomOf",  l.topToBottom);
+    l.bottomToTop  = a.getResourceId("layout_constraintBottom_toTopOf",  l.bottomToTop);
+    l.bottomToBottom = a.getResourceId("layout_constraintBottom_toBottomOf", l.bottomToBottom);
+    l.baselineToBaseline = a.getResourceId("layout_constraintBaseline_toBaselineOf", l.baselineToBaseline);
+    l.baselineToTop    = a.getResourceId("layout_constraintBaseline_toTopOf",    l.baselineToTop);
+    l.baselineToBottom = a.getResourceId("layout_constraintBaseline_toBottomOf", l.baselineToBottom);
+    l.startToStart = a.getResourceId("layout_constraintStart_toStartOf", l.startToStart);
+    l.startToEnd   = a.getResourceId("layout_constraintStart_toEndOf",   l.startToEnd);
+    l.endToStart   = a.getResourceId("layout_constraintEnd_toStartOf",   l.endToStart);
+    l.endToEnd     = a.getResourceId("layout_constraintEnd_toEndOf",     l.endToEnd);
+    l.circleConstraint = a.getResourceId("layout_constraintCircle", l.circleConstraint);
+
+    // --- guideline / editor absolute ---
+    l.guideBegin   = a.getDimensionPixelOffset("layout_constraintGuide_begin", l.guideBegin);
+    l.guideEnd     = a.getDimensionPixelOffset("layout_constraintGuide_end",   l.guideEnd);
+    l.guidePercent = a.getFloat("layout_constraintGuide_percent", l.guidePercent);
+    l.editorAbsoluteX = a.getDimensionPixelOffset("layout_editor_absoluteX", l.editorAbsoluteX);
+    l.editorAbsoluteY = a.getDimensionPixelOffset("layout_editor_absoluteY", l.editorAbsoluteY);
+    l.orientation     = a.getInt("orientation", l.orientation);
+
+    // --- margins ---
+    l.leftMargin   = a.getDimensionPixelSize("layout_marginLeft",  l.leftMargin);
+    l.rightMargin  = a.getDimensionPixelSize("layout_marginRight", l.rightMargin);
+    l.topMargin    = a.getDimensionPixelSize("layout_marginTop",   l.topMargin);
+    l.bottomMargin = a.getDimensionPixelSize("layout_marginBottom",l.bottomMargin);
+    l.startMargin  = a.getDimensionPixelSize("layout_marginStart", l.startMargin);
+    l.endMargin    = a.getDimensionPixelSize("layout_marginEnd",   l.endMargin);
+    l.goneLeftMargin   = a.getDimensionPixelSize("layout_goneMarginLeft",   l.goneLeftMargin);
+    l.goneTopMargin    = a.getDimensionPixelSize("layout_goneMarginTop",    l.goneTopMargin);
+    l.goneRightMargin  = a.getDimensionPixelSize("layout_goneMarginRight",  l.goneRightMargin);
+    l.goneBottomMargin = a.getDimensionPixelSize("layout_goneMarginBottom", l.goneBottomMargin);
+    l.goneStartMargin  = a.getDimensionPixelSize("layout_goneMarginStart",  l.goneStartMargin);
+    l.goneEndMargin    = a.getDimensionPixelSize("layout_goneMarginEnd",    l.goneEndMargin);
+
+    // --- bias / chain / weight / ratio ---
+    l.horizontalBias = a.getFloat("layout_constraintHorizontal_bias", l.horizontalBias);
+    l.verticalBias   = a.getFloat("layout_constraintVertical_bias",   l.verticalBias);
+    l.horizontalWeight = a.getFloat("layout_constraintHorizontal_weight", l.horizontalWeight);
+    l.verticalWeight   = a.getFloat("layout_constraintVertical_weight",   l.verticalWeight);
+    l.horizontalChainStyle = a.getInt("layout_constraintHorizontal_chainStyle", kChainStyles, l.horizontalChainStyle);
+    l.verticalChainStyle   = a.getInt("layout_constraintVertical_chainStyle",   kChainStyles, l.verticalChainStyle);
+    l.dimensionRatio = a.getString("layout_constraintDimensionRatio", l.dimensionRatio);
+
+    // --- dimensions / match_constraint ---
+    l.mWidth  = a.getLayoutDimension("layout_width",  l.mWidth);
+    l.mHeight = a.getLayoutDimension("layout_height", l.mHeight);
+    l.widthDefault  = a.getInt("layout_constraintWidth_default",  kMatchDefault, l.widthDefault);
+    l.heightDefault = a.getInt("layout_constraintHeight_default", kMatchDefault, l.heightDefault);
+    l.widthPercent  = a.getFloat("layout_constraintWidth_percent",  l.widthPercent);
+    l.heightPercent = a.getFloat("layout_constraintHeight_percent", l.heightPercent);
+    l.widthMin  = a.getDimensionPixelSize("layout_constraintWidth_min",  l.widthMin);
+    l.widthMax  = a.getDimensionPixelSize("layout_constraintWidth_max",  l.widthMax);
+    l.heightMin = a.getDimensionPixelSize("layout_constraintHeight_min", l.heightMin);
+    l.heightMax = a.getDimensionPixelSize("layout_constraintHeight_max", l.heightMax);
+    l.constrainedWidth  = a.getBoolean("layout_constrainedWidth",  l.constrainedWidth);
+    l.constrainedHeight = a.getBoolean("layout_constrainedHeight", l.constrainedHeight);
+    l.mWrapBehavior = a.getInt("layout_wrapBehaviorInParent", kWrapBehavior, l.mWrapBehavior);
+
+    // --- circle / barrier / helper ---
+    l.circleRadius = a.getDimensionPixelSize("layout_constraintCircleRadius", l.circleRadius);
+    l.circleAngle  = a.getFloat("layout_constraintCircleAngle", l.circleAngle);
+    l.mBarrierDirection    = a.getInt("barrierDirection", kBarrierDirection, l.mBarrierDirection);
+    l.mBarrierMargin       = a.getDimensionPixelSize("barrierMargin", l.mBarrierMargin);
+    l.mBarrierAllowsGoneWidgets = a.getBoolean("barrierAllowsGoneWidgets", l.mBarrierAllowsGoneWidgets);
+    l.mReferenceIdString   = a.getString("constraint_referenced_ids", l.mReferenceIdString);
+    l.constraintTag        = a.getString("layout_constraintTag", l.constraintTag);
+
+    // --- property set (visibility / alpha / progress) ---
+    p.visibility = a.getInt("visibility", kVisibility, p.visibility);
+    p.alpha      = a.getFloat("alpha", p.alpha);
+    p.mProgress  = a.getFloat("motionProgress", p.mProgress);
+    p.mVisibilityMode = a.getInt("visibilityMode", kVisibilityMode, p.mVisibilityMode);
+
+    // --- transforms ---
+    t.rotation    = a.getFloat("rotation",    t.rotation);
+    t.rotationX   = a.getFloat("rotationX",   t.rotationX);
+    t.rotationY   = a.getFloat("rotationY",   t.rotationY);
+    t.scaleX      = a.getFloat("scaleX",      t.scaleX);
+    t.scaleY      = a.getFloat("scaleY",      t.scaleY);
+    t.translationX = a.getDimension("translationX", t.translationX);
+    t.translationY = a.getDimension("translationY", t.translationY);
+    t.translationZ = a.getDimension("translationZ", t.translationZ);
+    t.transformPivotX = a.getDimension("transformPivotX", t.transformPivotX);
+    t.transformPivotY = a.getDimension("transformPivotY", t.transformPivotY);
+    t.transformPivotTarget = a.getResourceId("transformPivotTarget", t.transformPivotTarget);
+    {
+        float elev = a.getDimension("elevation", t.elevation);
+        if (a.hasAttribute("elevation")) { t.applyElevation = true; t.elevation = elev; }
+    }
+
+    // --- motion ---
+    m.mAnimateRelativeTo = a.getResourceId("animateRelativeTo", m.mAnimateRelativeTo);
+    m.mTransitionEasing  = a.getString("transitionEasing", m.mTransitionEasing);
+    m.mPathMotionArc     = a.getInt("pathMotionArc", kPathMotionArc, m.mPathMotionArc);
+    m.mPathRotate        = a.getFloat("transitionPathRotate", m.mPathRotate);
+    m.mMotionStagger     = a.getFloat("motionStagger", m.mMotionStagger);
+    m.mDrawPath          = a.getInt("drawPath", m.mDrawPath);
+    m.mQuantizeMotionSteps = a.getInt("quantizeMotionSteps", m.mQuantizeMotionSteps);
+    m.mQuantizeMotionPhase = a.getFloat("quantizeMotionPhase", m.mQuantizeMotionPhase);
+}
+
+void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
+    // Caller positions `parser` at the <ConstraintSet> START_TAG. We consume through its END_TAG.
+    Constraint current;
+    bool hasCurrent = false;
+    auto toLower = [](std::string s) { for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+
+    // Terminate on END_DOCUMENT (clean) or BAD_DOCUMENT (expat parse error) — otherwise a malformed
+    // resource would spin forever, since next() short-circuits on BAD_DOCUMENT.
+    while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
+           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+        const int eventType = parser.getEventType();
+        if (eventType == XmlPullParser::START_TAG) {
+            const std::string tag = parser.getName();
+            if (tag == "Constraint" || tag == "ConstraintOverride" ||
+                tag == "Guideline"   || tag == "Barrier") {
+                current = Constraint{};
+                hasCurrent = true;
+                current.fillFromAttributeList(parser); // parser IS-A AttributeSet
+                if (tag == "Guideline") { current.layout.mIsGuideline = true; current.layout.mApply = true; }
+                if (tag == "Barrier")   { current.layout.mHelperType = BARRIER_TYPE; }
+            } else if (hasCurrent && (tag == "PropertySet" || tag == "Transform" ||
+                                      tag == "Layout" || tag == "Motion")) {
+                // Nested sub-element: same attribute names dispatch into the same sub-structs.
+                current.fillFromAttributeList(parser);
+            } else if (hasCurrent && (tag == "CustomAttribute" || tag == "CustomMethod")) {
+                // ConstraintAttribute XML parse — custom view attributes. Deferred (TODO).
+            }
+        } else if (eventType == XmlPullParser::END_TAG) {
+            const std::string low = toLower(parser.getName());
+            if (low == "constraintset") {
+                return; // consumed the whole ConstraintSet; leave parser at this END_TAG
+            }
+            if (hasCurrent && (low == "constraint" || low == "constraintoverride" ||
+                               low == "guideline"   || low == "barrier")) {
+                mConstraints[current.mViewId] = current;
+                hasCurrent = false;
+            }
+        }
+        parser.next();
+    }
+}
 
 } // namespace cdroid
