@@ -21,6 +21,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         # --- core: solver math kernel + LinearSystem ---
         widgetEx/constraintlayout/core/arraylinkedvariables.cc
         widgetEx/constraintlayout/core/arrayrow.cc
+        widgetEx/constraintlayout/core/cache.cc
         widgetEx/constraintlayout/core/goalrow.cc
         widgetEx/constraintlayout/core/linearsystem.cc
         widgetEx/constraintlayout/core/metrics.cc

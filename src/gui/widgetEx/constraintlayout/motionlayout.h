@@ -38,6 +38,7 @@ class MotionLayout : public ConstraintLayout {
 public:
     MotionLayout(Context* ctx, const AttributeSet& attrs);
     explicit MotionLayout(int width, int height);
+    ~MotionLayout() override;
 
     // Capture each child's frame in the start/end ConstraintSets and build per-child Motion.
     void setTransition(ConstraintSet* start, ConstraintSet* end);

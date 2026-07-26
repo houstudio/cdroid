@@ -58,12 +58,19 @@ LinearSystem::LinearSystem() {
 }
 
 LinearSystem::~LinearSystem() {
+    // Return the last solve's rows/variables to the (owning) pools so the Cache destructor frees
+    // them. mPoolVariables holds only the acquireSolverVariable() vars (NOT the anchor-owned ones
+    // createObjectVariable() creates — those are freed by ConstraintAnchor, so they must NOT be
+    // pooled here, or their dtor would double-free).
     releaseRows();
-    delete mCache;
+    for (int i = 0; i < mPoolVariablesCount; i++) {
+        if (mPoolVariables[i] != nullptr) mCache->mSolverVariablePool.release(mPoolVariables[i]);
+    }
+    mPoolVariablesCount = 0;
+    delete mCache;   // owning pools (Cache dtor) delete every pooled ArrayRow / SolverVariable
     delete mGoal;
     delete mTempGoal;
     delete[] mAlreadyTestedCandidates;
-    // Note: pooled ArrayRows/SolverVariables are not freed here (Java relies on GC).
 }
 
 void LinearSystem::fillMetrics(Metrics* metrics) {
@@ -623,7 +630,9 @@ void LinearSystem::reset() {
         SolverVariable* variable = mCache->mIndexedVariables[i];
         if (variable != nullptr) variable->reset();
     }
-    mCache->mSolverVariablePool.releaseAll(mPoolVariables.data(), mPoolVariablesCount);
+    for (int i = 0; i < mPoolVariablesCount; i++) {
+        if (mPoolVariables[i] != nullptr) mCache->mSolverVariablePool.release(mPoolVariables[i]);
+    }
     mPoolVariablesCount = 0;
     for (int i = 0; i < (int)mCache->mIndexedVariables.size(); i++) {
         mCache->mIndexedVariables[i] = nullptr;

@@ -18,20 +18,22 @@
 #ifndef __CONSTRAINTLAYOUT_CORE_CACHE_H__
 #define __CONSTRAINTLAYOUT_CORE_CACHE_H__
 
-#include <widgetEx/constraintlayout/core/pools.h>
+#include <core/pools.h>
 #include <vector>
 
-namespace cdroid {
+#include <widgetEx/constraintlayout/core/arrayrow.h>
+#include <widgetEx/constraintlayout/core/solvervariable.h>
 
-class ArrayRow;        // forward (SimplePool<ArrayRow> only needs ArrayRow*)
-class SolverVariable;  // forward
+namespace cdroid {
 
 /**
  * Cache for common objects. Ported verbatim from
  * androidx.constraintlayout.core.Cache.
  *
- * The pools store raw pointers; ownership/lifetime is managed by LinearSystem
- * (which creates and resets the pool each solve).
+ * Uses CDROID's shared cdroid::Pools::SimplePool (gui/core/pools.h) — an owning pool whose
+ * destructor frees its contents — rather than a constraintlayout-local duplicate. ArrayRow and
+ * SolverVariable are included in full (no forward decl) so the owning pool destructors can delete
+ * them; the include chain is acyclic (linear_system.h forward-declares Cache, never includes it).
  */
 class Cache {
 public:
@@ -46,6 +48,7 @@ public:
         , mSolverVariablePool(256)
         , mIndexedVariables(32, nullptr) {
     }
+    ~Cache(); // out-of-line (cache.cc) so the owning pool destructors see complete types
 };
 
 } // namespace cdroid

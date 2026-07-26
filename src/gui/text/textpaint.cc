@@ -17,12 +17,15 @@
 namespace cdroid{
 
 TextPaint::TextPaint():Paint(){
+    linkColor = 0xFF0000FF;
 }
 
 TextPaint::TextPaint(int flags):Paint(flags){
+    linkColor = 0xFF0000FF;
 }
 
 TextPaint::TextPaint(const Paint& p):Paint(p){
+    linkColor = 0xFF0000FF;
 }
 
 void TextPaint::set(const Paint& tp) {

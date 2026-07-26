@@ -67,6 +67,14 @@ MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
 MotionLayout::MotionLayout(int width, int height)
     : ConstraintLayout(width, height) {}
 
+MotionLayout::~MotionLayout() {
+    // Owns the per-child Motion controllers and the transition animator (buildMotions/animator reuse
+    // raw pointers; nothing else frees the last set at destruction).
+    for (auto& kv : mMotions) delete kv.second;
+    mMotions.clear();
+    delete mAnimator;
+}
+
 void MotionLayout::captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out) {
     if (cs == nullptr) return;
     cs->applyTo(this);
