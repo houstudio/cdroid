@@ -97,12 +97,10 @@ void MotionLayout::buildMotions() {
 }
 
 void MotionLayout::captureAndBuild() {
-            (void*)mStartSet, (void*)mEndSet, getMeasuredWidth(), getMeasuredHeight());
     captureState(mStartSet, mStartWidgets);
     captureState(mEndSet, mEndWidgets);
     buildMotions();
     mCaptured = !mMotions.empty();
-            (int)mMotions.size(), (int)mCaptured);
     if (mCaptured) applyMotion();
 }
 
