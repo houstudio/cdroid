@@ -75,6 +75,8 @@ private:
 
     ConstraintSet* mStartSet = nullptr;
     ConstraintSet* mEndSet = nullptr;
+    std::shared_ptr<ConstraintSet> mOwnedStart;
+    std::shared_ptr<ConstraintSet> mOwnedEnd;
     std::unordered_map<int, Motion*> mMotions;
     std::unordered_map<int, MotionWidget> mStartWidgets;
     std::unordered_map<int, MotionWidget> mEndWidgets;

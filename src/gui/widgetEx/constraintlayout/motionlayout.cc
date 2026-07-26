@@ -105,8 +105,12 @@ void MotionLayout::captureAndBuild() {
 }
 
 void MotionLayout::setTransition(ConstraintSet* start, ConstraintSet* end) {
-    mStartSet = start;
-    mEndSet = end;
+    // Deep-copy the ConstraintSets — callers often pass stack-local objects that won't survive
+    // the deferred capture (onMeasure runs long after setTransition returns).
+    mOwnedStart = std::make_shared<ConstraintSet>(*start);
+    mOwnedEnd   = std::make_shared<ConstraintSet>(*end);
+    mStartSet = mOwnedStart.get();
+    mEndSet   = mOwnedEnd.get();
     // The capture needs a real measure spec; if we haven't been laid out yet, defer to onMeasure.
     if (mWidthSpec != 0 && getWidth() > 0) {
         mCapturePending = false;
