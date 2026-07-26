@@ -9,6 +9,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/constraintset.cc
         widgetEx/constraintlayout/keyframes.cc
         widgetEx/constraintlayout/motionscene.cc
+        widgetEx/constraintlayout/touchresponse.cc
         widgetEx/constraintlayout/motionlayout.cc
         # --- widget: virtual helpers (Stage 5) ---
         widgetEx/constraintlayout/constrainthelper.cc

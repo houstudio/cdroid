@@ -42,6 +42,7 @@ void Motion::setStart(MotionWidget* mw) {
     mStartMotionPath.setBounds((float) mw->getX(), (float) mw->getY(),
                                (float) mw->getWidth(), (float) mw->getHeight());
     mStartPoint.setState(mw);
+    mPathDirty = true;
 }
 
 void Motion::setEnd(MotionWidget* mw) {
@@ -50,6 +51,7 @@ void Motion::setEnd(MotionWidget* mw) {
     mEndMotionPath.setBounds((float) mw->getLeft(), (float) mw->getTop(),
                              (float) mw->getWidth(), (float) mw->getHeight());
     mEndPoint.setState(mw);
+    mPathDirty = true;
 }
 
 void Motion::setStartState(MotionWidget* mw) { setStart(mw); }
@@ -72,6 +74,61 @@ float Motion::eased(float progress) const {
     return (float) mEasing->get(progress);
 }
 
+void Motion::buildPath() {
+    if (!mPathDirty) return;
+    mPathDirty = false;
+    mPositionCurveFit.reset();
+    mArcCurveFit.reset();
+    const float sX = mStartMotionPath.mX, sY = mStartMotionPath.mY;
+    const float sW = mStartMotionPath.mWidth, sH = mStartMotionPath.mHeight;
+    const float eX = mEndMotionPath.mX, eY = mEndMotionPath.mY;
+    const float eW = mEndMotionPath.mWidth, eH = mEndMotionPath.mHeight;
+
+    // pathMotionArc: the widget travels a quarter-ellipse arc from start to end (no keyframes).
+    // x,y come from the arc; w,h interpolate linearly (ArcCurveFit is 2-D).
+    if (mPathMotionArc >= 0 && mPositionKeys.empty()) {
+        std::vector<int> arcModes = { mPathMotionArc };
+        std::vector<double> time = { 0.0, 1.0 };
+        std::vector<std::vector<double>> y = { { (double) sX, (double) sY },
+                                               { (double) eX, (double) eY } };
+        mArcCurveFit = CurveFit::getArc(arcModes, time, y);
+        return;
+    }
+
+    // Otherwise: monotonic spline through start + KeyPosition control points + end (x,y,w,h).
+    const float sCx = sX + sW / 2.0f, sCy = sY + sH / 2.0f;
+    const float eCx = eX + eW / 2.0f, eCy = eY + eH / 2.0f;
+    const float pvx = eCx - sCx, pvy = eCy - sCy;
+    const float dW = eW - sW, dH = eH - sH;
+
+    std::vector<double> time;
+    std::vector<std::vector<double>> y;
+    auto addPt = [&](double p, float x, float yy, float w, float h) {
+        time.push_back(p);
+        y.push_back({(double) x, (double) yy, (double) w, (double) h});
+    };
+    addPt(0.0, sX, sY, sW, sH);
+    for (auto* k : mPositionKeys) {
+        const float pos = k->mFramePosition / 100.0f;
+        if (pos <= 0.0f || pos >= 1.0f) continue;
+        const float sw   = std::isnan(k->mPercentWidth)  ? pos : k->mPercentWidth;
+        const float sh   = std::isnan(k->mPercentHeight) ? pos : k->mPercentHeight;
+        const float dxdx = std::isnan(k->mPercentX)      ? pos : k->mPercentX;
+        const float dydx = std::isnan(k->mAltPercentY)   ? 0.0f : k->mAltPercentY;
+        const float dydy = std::isnan(k->mPercentY)      ? pos : k->mPercentY;
+        const float dxdy = std::isnan(k->mAltPercentX)   ? 0.0f : k->mAltPercentX;
+        const float pw = sW + dW * sw;
+        const float ph = sH + dH * sh;
+        const float cx = sCx + pvx * dxdx + pvy * dxdy;
+        const float cy = sCy + pvy * dydy + pvx * dydx;
+        addPt(pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph);
+    }
+    addPt(1.0, eX, eY, eW, eH);
+    if (time.size() >= 2) {
+        mPositionCurveFit = CurveFit::get(CurveFit::SPLINE, time, y);
+    }
+}
+
 void Motion::addKey(MotionKeyAttributes* key) {
     mAttributeKeys.push_back(key);
     std::sort(mAttributeKeys.begin(), mAttributeKeys.end(),
@@ -86,6 +143,7 @@ void Motion::addKey(MotionKeyPosition* key) {
               [](MotionKeyPosition* a, MotionKeyPosition* b) {
                   return a->mFramePosition < b->mFramePosition;
               });
+    mPathDirty = true; // position keyframes changed -> rebuild the path CurveFit
 }
 
 void Motion::addKey(MotionKeyCycle* key) {
@@ -136,49 +194,21 @@ void Motion::interpolate(MotionWidget* child, float progress) {
     buildEasing();
     progress = eased(progress);
 
-    // Position + size: piecewise-linear through KeyPosition control points, or plain lerp.
+    // Position + size: quarter-ellipse arc (pathMotionArc), spline through KeyPositions, or lerp.
+    buildPath();
     float x, y, w, h;
-    if (!mPositionKeys.empty()) {
-        struct Pt { float pos, x, y, w, h; };
-        std::vector<Pt> pts;
-        pts.push_back({0, mStartMotionPath.mX, mStartMotionPath.mY,
-                       mStartMotionPath.mWidth, mStartMotionPath.mHeight});
-        float sCx = mStartMotionPath.mX + mStartMotionPath.mWidth / 2.0f;
-        float sCy = mStartMotionPath.mY + mStartMotionPath.mHeight / 2.0f;
-        float eCx = mEndMotionPath.mX + mEndMotionPath.mWidth / 2.0f;
-        float eCy = mEndMotionPath.mY + mEndMotionPath.mHeight / 2.0f;
-        float pvx = eCx - sCx, pvy = eCy - sCy;
-        float dW = mEndMotionPath.mWidth - mStartMotionPath.mWidth;
-        float dH = mEndMotionPath.mHeight - mStartMotionPath.mHeight;
-        for (auto* k : mPositionKeys) {
-            float pos = k->mFramePosition / 100.0f;
-            if (pos <= 0.0f || pos >= 1.0f) continue;
-            float sw = std::isnan(k->mPercentWidth) ? pos : k->mPercentWidth;
-            float sh = std::isnan(k->mPercentHeight) ? pos : k->mPercentHeight;
-            float dxdx = std::isnan(k->mPercentX) ? pos : k->mPercentX;
-            float dydx = std::isnan(k->mAltPercentY) ? 0.0f : k->mAltPercentY;
-            float dydy = std::isnan(k->mPercentY) ? pos : k->mPercentY;
-            float dxdy = std::isnan(k->mAltPercentX) ? 0.0f : k->mAltPercentX;
-            float pw = mStartMotionPath.mWidth + dW * sw;
-            float ph = mStartMotionPath.mHeight + dH * sh;
-            float cx = sCx + pvx * dxdx + pvy * dxdy;
-            float cy = sCy + pvy * dydy + pvx * dydx;
-            pts.push_back({pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph});
-        }
-        pts.push_back({1, mEndMotionPath.mX, mEndMotionPath.mY,
-                       mEndMotionPath.mWidth, mEndMotionPath.mHeight});
-        x = pts.back().x; y = pts.back().y; w = pts.back().w; h = pts.back().h;
-        for (size_t i = 0; i + 1 < pts.size(); i++) {
-            if (progress >= pts[i].pos && progress <= pts[i + 1].pos) {
-                float span = pts[i + 1].pos - pts[i].pos;
-                float f = (span > 0) ? (progress - pts[i].pos) / span : 0.0f;
-                x = pts[i].x + f * (pts[i + 1].x - pts[i].x);
-                y = pts[i].y + f * (pts[i + 1].y - pts[i].y);
-                w = pts[i].w + f * (pts[i + 1].w - pts[i].w);
-                h = pts[i].h + f * (pts[i + 1].h - pts[i].h);
-                break;
-            }
-        }
+    if (mArcCurveFit) {
+        x = (float) mArcCurveFit->getPos(progress, 0);
+        y = (float) mArcCurveFit->getPos(progress, 1);
+        w = lerp(mStartMotionPath.mWidth, mEndMotionPath.mWidth, mStartMotionPath.mWidth, progress);
+        h = lerp(mStartMotionPath.mHeight, mEndMotionPath.mHeight, mStartMotionPath.mHeight, progress);
+        if (std::isnan(w)) w = mStartMotionPath.mWidth;
+        if (std::isnan(h)) h = mStartMotionPath.mHeight;
+    } else if (mPositionCurveFit) {
+        x = (float) mPositionCurveFit->getPos(progress, 0);
+        y = (float) mPositionCurveFit->getPos(progress, 1);
+        w = (float) mPositionCurveFit->getPos(progress, 2);
+        h = (float) mPositionCurveFit->getPos(progress, 3);
     } else {
         x = lerp(mStartMotionPath.mX, mEndMotionPath.mX, 0, progress);
         y = lerp(mStartMotionPath.mY, mEndMotionPath.mY, 0, progress);
@@ -225,6 +255,25 @@ void Motion::interpolate(MotionWidget* child, float progress) {
         [](const MotionKeyAttributes* k) { return k->mTranslationY; }));
     child->setTranslationZ(keyframed(progress, mStartPoint.mTranslationZ, mEndPoint.mTranslationZ, 0,
         [](const MotionKeyAttributes* k) { return k->mTranslationZ; }));
+}
+
+void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) {
+    // Slope of the anchor point (locationX,locationY on the widget) w.r.t. progress:
+    // dAnchor = dPosition + loc * dSize (anchor = top-left + loc*size).
+    buildPath();
+    if (mArcCurveFit) {
+        out[0] = (float)(mArcCurveFit->getSlope(pos, 0)
+                         + locationX * (mEndMotionPath.mWidth - mStartMotionPath.mWidth));
+        out[1] = (float)(mArcCurveFit->getSlope(pos, 1)
+                         + locationY * (mEndMotionPath.mHeight - mStartMotionPath.mHeight));
+    } else if (mPositionCurveFit) {
+        out[0] = (float)(mPositionCurveFit->getSlope(pos, 0)
+                         + locationX * mPositionCurveFit->getSlope(pos, 2));
+        out[1] = (float)(mPositionCurveFit->getSlope(pos, 1)
+                         + locationY * mPositionCurveFit->getSlope(pos, 3));
+    } else {
+        out[0] = out[1] = 0;
+    }
 }
 
 // TypedValues motion-property dispatch — store on this controller for the deferred engine.

@@ -22,12 +22,14 @@
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/motionscene.h>
+#include <widgetEx/constraintlayout/touchresponse.h>
 #include <widgetEx/constraintlayout/core/motion/motion.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 
 namespace cdroid {
 
 class ValueAnimator;
+class MotionEvent;
 class MotionKeyAttributes;
 class MotionKeyPosition;
 class KeyFrames;
@@ -60,9 +62,17 @@ public:
     void setTransitionEasing(const std::string& easing);
     void setTransitionEasing(int viewId, const std::string& easing);
 
+    // Pixels-per-progress of the anchor point (locationX,locationY) on view `anchorId` at `pos`.
+    // Used by TouchResponse to map drag deltas to progress (the anchor's travel is the drag range).
+    void getAnchorDpDt(int anchorId, float pos, float locationX, float locationY, float out[2]);
+
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int r, int b) override;
+    // Drag-to-progress when the scene's current transition has an <OnSwipe>. Intercepted once the
+    // drag exceeds touch slop (so taps still reach <OnClick> children); auto-completes on release.
+    bool onInterceptTouchEvent(MotionEvent& evt) override;
+    bool onTouchEvent(MotionEvent& evt) override;
 
 private:
     // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.
@@ -108,6 +118,9 @@ private:
     std::string mSceneResource;       // resource path of the <MotionScene> XML
     KeyFrames* mKeyFramesToApply = nullptr; // borrowed from mScene's current transition; applied post-capture
     bool mSceneBuilt = false;
+
+    // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
+    std::unique_ptr<TouchResponse> mTouchResponse;
 };
 
 } // namespace cdroid

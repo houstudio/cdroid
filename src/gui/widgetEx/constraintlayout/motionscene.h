@@ -43,6 +43,26 @@ public:
         int clickAction = 0; // flag: toggle / transitionToEnd / transitionToStart / jumpToEnd / jumpToStart
     };
 
+    // A swipe handler (<OnSwipe>): dragging in `dragDirection` drives the transition progress, with
+    // auto-complete (snap to an end) on release. (Java: motion.widget.OnSwipe + TouchResponse.)
+    // MVP: linear drag-to-progress over the layout's own dimension + snap-to-nearest on touch-up.
+    // Deferred: anchor geometry, spring physics, velocity-based completion, nested scroll.
+    struct OnSwipe {
+        static constexpr int DRAG_UP = 0, DRAG_DOWN = 1, DRAG_LEFT = 2, DRAG_RIGHT = 3,
+                             DRAG_START = 4, DRAG_END = 5;
+        static constexpr int SIDE_TOP = 0, SIDE_LEFT = 1, SIDE_RIGHT = 2, SIDE_BOTTOM = 3,
+                             SIDE_MIDDLE = 4, SIDE_START = 5, SIDE_END = 6;
+        static constexpr int ON_UP_AUTOCOMPLETE = 0, ON_UP_AUTOCOMPLETE_TO_START = 1,
+                             ON_UP_AUTOCOMPLETE_TO_END = 2, ON_UP_STOP = 3, ON_UP_DECELERATE = 4;
+
+        int   dragDirection  = DRAG_RIGHT;   // dragging this way increases progress
+        float dragScale      = 1.0f;         // progress-per-pixel multiplier
+        int   touchAnchorSide= SIDE_MIDDLE;  // which point on the anchor is the drag reference
+        int   touchAnchorId  = UNSET;        // view whose start->end travel is the drag range
+        int   onTouchUp      = ON_UP_AUTOCOMPLETE;
+        float maxVelocity    = 4.0f;         // (MVP: unused — snap is progress-based, not velocity)
+    };
+
     // One transition between two ConstraintSets. (Java: MotionScene.Transition.)
     class Transition {
     public:
@@ -67,9 +87,11 @@ public:
         bool isAbstract() const { return mIsAbstract; }
         KeyFrames* getKeyFrames() const { return mKeyFrames.get(); }
         const std::vector<OnClick>& getOnClicks() const { return mOnClicks; }
+        const OnSwipe* getOnSwipe() const { return mOnSwipe.get(); }
 
         void setKeyFrames(std::unique_ptr<KeyFrames> kf) { mKeyFrames = std::move(kf); }
         void addOnClick(OnClick oc) { mOnClicks.push_back(oc); }
+        void setOnSwipe(std::unique_ptr<OnSwipe> os) { mOnSwipe = std::move(os); }
 
     private:
         int mConstraintSetStart = UNSET;
@@ -81,6 +103,7 @@ public:
         bool mIsAbstract = false;
         std::unique_ptr<KeyFrames> mKeyFrames;
         std::vector<OnClick> mOnClicks;
+        std::unique_ptr<OnSwipe> mOnSwipe;
     };
 
     MotionScene(MotionLayout* layout);

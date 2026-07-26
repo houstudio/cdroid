@@ -618,6 +618,7 @@ TEST(ConstraintLayout, MotionSceneXmlParse) {
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\" defaultDuration=\"300\">"
         "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" duration=\"500\">"
         "    <OnClick targetId=\"1\" clickAction=\"toggle\" />"
+        "    <OnSwipe dragDirection=\"dragRight\" dragScale=\"2.0\" onTouchUp=\"autoCompleteToStart\" />"
         "    <KeyFrameSet>"
         "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
         "    </KeyFrameSet>"
@@ -654,6 +655,11 @@ TEST(ConstraintLayout, MotionSceneXmlParse) {
     ASSERT_EQ(t->getOnClicks().size(), 1u);
     EXPECT_EQ(t->getOnClicks()[0].targetId, 1);
     EXPECT_EQ(t->getOnClicks()[0].clickAction, MotionScene::Transition::FLAG_TOGGLE);
+
+    ASSERT_NE(t->getOnSwipe(), nullptr);
+    EXPECT_EQ(t->getOnSwipe()->dragDirection, MotionScene::OnSwipe::DRAG_RIGHT);
+    EXPECT_FLOAT_EQ(t->getOnSwipe()->dragScale, 2.0f);
+    EXPECT_EQ(t->getOnSwipe()->onTouchUp, MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_START);
 }
 
 // A container with padding insets its children: leftToLeft=parent with paddingLeft=50 -> x=50.

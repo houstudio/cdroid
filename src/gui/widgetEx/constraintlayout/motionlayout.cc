@@ -7,6 +7,7 @@
 
 #include <porting/cdlog.h>
 #include <animation/valueanimator.h>
+#include <view/motionevent.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
@@ -235,6 +236,18 @@ void MotionLayout::buildScene() {
         setTransition(start, end); // captures now if we have a size, else defers to onMeasure
     }
     wireOnClicks(t);
+    if (t->getOnSwipe() != nullptr) {
+        mTouchResponse = std::make_unique<TouchResponse>(this, *t->getOnSwipe());
+    }
+}
+
+void MotionLayout::getAnchorDpDt(int anchorId, float pos, float locationX, float locationY,
+                                 float out[2]) {
+    out[0] = out[1] = 0.0f;
+    auto it = mMotions.find(anchorId);
+    if (it != mMotions.end()) {
+        it->second->getDpDt(pos, locationX, locationY, out);
+    }
 }
 
 void MotionLayout::applyKeyFramesToMotions(KeyFrames* kf) {
@@ -273,6 +286,37 @@ void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
             }
         });
     }
+}
+
+// OnSwipe drag-to-progress is delegated to TouchResponse (anchor geometry + auto-complete). We
+// intercept only once the drag exceeds touch slop, so taps still reach <OnClick> children.
+bool MotionLayout::onInterceptTouchEvent(MotionEvent& evt) {
+    if (mTouchResponse == nullptr) return ConstraintLayout::onInterceptTouchEvent(evt);
+    const int action = evt.getActionMasked();
+    if (action == MotionEvent::ACTION_DOWN) {
+        mTouchResponse->onDown(evt.getX(), evt.getY());
+    } else if (action == MotionEvent::ACTION_MOVE) {
+        if (mTouchResponse->dragSlopExceeded(evt.getX(), evt.getY())) return true;
+    }
+    return false;
+}
+
+bool MotionLayout::onTouchEvent(MotionEvent& evt) {
+    if (mTouchResponse == nullptr) return ConstraintLayout::onTouchEvent(evt);
+    const int action = evt.getActionMasked();
+    if (action == MotionEvent::ACTION_DOWN) {
+        mTouchResponse->onDown(evt.getX(), evt.getY());
+        return true;
+    }
+    if (action == MotionEvent::ACTION_MOVE) {
+        mTouchResponse->onMove(evt.getX(), evt.getY());
+        return true;
+    }
+    if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
+        mTouchResponse->onUp(evt.getX(), evt.getY());
+        return true;
+    }
+    return true;
 }
 
 } // namespace cdroid

@@ -20,6 +20,30 @@ const std::unordered_map<std::string, int> kClickAction = {
     {"jumpToEnd",         (int)MotionScene::Transition::FLAG_JUMP_TO_END},
     {"jumpToStart",       (int)MotionScene::Transition::FLAG_JUMP_TO_START}
 };
+const std::unordered_map<std::string, int> kDragDirection = {
+    {"dragUp",         (int)MotionScene::OnSwipe::DRAG_UP},
+    {"dragDown",       (int)MotionScene::OnSwipe::DRAG_DOWN},
+    {"dragLeft",       (int)MotionScene::OnSwipe::DRAG_LEFT},
+    {"dragRight",      (int)MotionScene::OnSwipe::DRAG_RIGHT},
+    {"dragStart",      (int)MotionScene::OnSwipe::DRAG_START},
+    {"dragEnd",        (int)MotionScene::OnSwipe::DRAG_END}
+};
+const std::unordered_map<std::string, int> kTouchUp = {
+    {"autoComplete",         (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE},
+    {"autoCompleteToStart",  (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_START},
+    {"autoCompleteToEnd",    (int)MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_END},
+    {"stop",                 (int)MotionScene::OnSwipe::ON_UP_STOP},
+    {"decelerate",           (int)MotionScene::OnSwipe::ON_UP_DECELERATE}
+};
+const std::unordered_map<std::string, int> kAnchorSide = {
+    {"top",    (int)MotionScene::OnSwipe::SIDE_TOP},
+    {"left",   (int)MotionScene::OnSwipe::SIDE_LEFT},
+    {"right",  (int)MotionScene::OnSwipe::SIDE_RIGHT},
+    {"bottom", (int)MotionScene::OnSwipe::SIDE_BOTTOM},
+    {"middle", (int)MotionScene::OnSwipe::SIDE_MIDDLE},
+    {"start",  (int)MotionScene::OnSwipe::SIDE_START},
+    {"end",    (int)MotionScene::OnSwipe::SIDE_END}
+};
 } // namespace
 
 // ===========================================================================
@@ -118,6 +142,15 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 oc.targetId = parser.getResourceId("targetId", UNSET);
                 oc.clickAction = parser.getInt("clickAction", kClickAction, Transition::FLAG_TOGGLE);
                 currentTransition->addOnClick(oc);
+            } else if (tag == "OnSwipe" && currentTransition != nullptr) {
+                auto os = std::make_unique<OnSwipe>();
+                os->dragDirection = parser.getInt("dragDirection", kDragDirection, os->dragDirection);
+                os->dragScale     = parser.getFloat("dragScale", os->dragScale);
+                os->touchAnchorSide = parser.getInt("touchAnchorSide", kAnchorSide, os->touchAnchorSide);
+                os->touchAnchorId  = parser.getResourceId("touchAnchorId", os->touchAnchorId);
+                os->onTouchUp     = parser.getInt("onTouchUp", kTouchUp, os->onTouchUp);
+                os->maxVelocity   = parser.getFloat("maxVelocity", os->maxVelocity);
+                currentTransition->setOnSwipe(std::move(os));
             }
             // OnSwipe / TouchResponse / StateSet / ViewTransition: deferred (swipe-driven / per-view).
         } else if (eventType == XmlPullParser::END_TAG) {

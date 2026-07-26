@@ -19,6 +19,7 @@
 #include <memory>
 #include <vector>
 
+#include <widgetEx/constraintlayout/core/motion/curvefit.h>
 #include <widgetEx/constraintlayout/core/motion/easing.h>
 #include <widgetEx/constraintlayout/core/motion/motionconstrainedpoint.h>
 #include <widgetEx/constraintlayout/core/motion/motionpaths.h>
@@ -53,6 +54,11 @@ public:
     // Apply the interpolated position + transforms at `progress` to `child`.
     void interpolate(MotionWidget* child, float progress);
 
+    // Rate of change (pixels per unit progress) of the anchor point at (locationX,locationY) on the
+    // widget, at `pos`. Out = (dAnchorX/dProgress, dAnchorY/dProgress). Used by TouchResponse to map
+    // a drag delta to a progress delta (the anchor's travel distance is the real drag range).
+    void getDpDt(float pos, float locationX, float locationY, float out[2]);
+
     // TypedValues motion-property dispatch (easing / arc / stagger stored on the start path).
     bool setValue(int id, int value) override;
     bool setValue(int id, float value) override;
@@ -70,6 +76,9 @@ private:
     void buildEasing();
     // Map a raw [0,1] progress through the easing curve (identity if no easing set).
     float eased(float progress) const;
+    // Lazily build the position CurveFit (spline through start + KeyPosition control points + end)
+    // from the current start/end/keyframes. Called by interpolate/getDpDt when mPathDirty.
+    void buildPath();
     // Piecewise-linear interpolation of an attribute across [start, keyframes..., end]. NAN
     // start/end are replaced by `defaultValue` (matching lerp's semantics); `get` extracts the
     // keyframe's value (NAN = that keyframe doesn't set this attribute). With no keyframes this
@@ -80,6 +89,9 @@ private:
     MotionWidget* mView = nullptr;
     std::unique_ptr<Easing> mEasing;
     bool mEasingDirty = false;
+    std::unique_ptr<CurveFit> mPositionCurveFit; // spline through the position keyframes (start..end)
+    std::unique_ptr<CurveFit> mArcCurveFit;      // quarter-ellipse arc (x,y) when mPathMotionArc set
+    bool mPathDirty = true;                       // start/end/keyframes changed -> rebuild
     std::vector<class MotionKeyAttributes*> mAttributeKeys;
     std::vector<class MotionKeyPosition*> mPositionKeys;
     std::vector<class MotionKeyCycle*> mCycleKeys;

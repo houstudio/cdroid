@@ -5,6 +5,7 @@
  */
 #include <widgetEx/constraintlayout/core/motion/curvefit.h>
 
+#include <widgetEx/constraintlayout/core/motion/arccurvefit.h>
 #include <porting/cdlog.h>
 #include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/monotoniccurvefit.h>
@@ -27,12 +28,10 @@ std::unique_ptr<CurveFit> CurveFit::get(int type, const std::vector<double>& tim
     }
 }
 
-std::unique_ptr<CurveFit> CurveFit::getArc(const std::vector<int>& /*arcModes*/,
-                                           const std::vector<double>& /*time*/,
-                                           const std::vector<std::vector<double>>& /*y*/) {
-    // ArcCurveFit (arc-path motion) is deferred — ported with the Motion arc system.
-    LOGE("CurveFit::getArc not yet implemented (ArcCurveFit deferred)");
-    return nullptr;
+std::unique_ptr<CurveFit> CurveFit::getArc(const std::vector<int>& arcModes,
+                                           const std::vector<double>& time,
+                                           const std::vector<std::vector<double>>& y) {
+    return std::make_unique<ArcCurveFit>(arcModes, time, y);
 }
 
 // ---------------------------------------------------------------------------

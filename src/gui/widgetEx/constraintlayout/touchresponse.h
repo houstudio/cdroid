@@ -1,0 +1,58 @@
+/*
+ * Copyright (C) 2018 The Android Open Source Project
+ *
+ * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.TouchResponse.
+ *
+ * Drives a MotionLayout transition from a touch drag (the <OnSwipe> of a MotionScene). The drag is
+ * mapped to progress via the anchor's travel distance: as progress goes 0->1 the anchor point (on
+ * the touchAnchorId view) moves from its start to end position, and a drag delta projects onto that
+ * travel to yield a progress delta (Motion.getDpDt gives pixels-per-progress). On release the
+ * transition auto-completes to the nearest end (or the velocity-favoured one).
+ *
+ * Falls back to the layout's own dimension as the drag range when no anchor is set. On drag start it
+ * calls requestDisallowInterceptTouchEvent(true) so an outer scroller/pager does not steal the
+ * gesture (e.g. horizontal OnSwipe inside a ViewPager2).
+ *
+ * Deferred (faithful): spring physics (SpringStopEngine), velocity-tracked fling completion,
+ * nestedScrollFlags, touchRegion, rotation mode.
+ */
+#ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
+#define CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
+
+#include <widgetEx/constraintlayout/motionscene.h>
+
+namespace cdroid {
+
+class MotionLayout;
+
+class TouchResponse {
+public:
+    // Build from the scene's <OnSwipe> config. `layout` must outlive this TouchResponse.
+    TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& cfg);
+
+    // MotionEvent stages. onMove returns true once a drag is in progress.
+    void onDown(float x, float y);
+    // True once the finger has moved past touch slop in the drag direction (MotionLayout uses this
+    // to decide whether to intercept — so a tap still reaches <OnClick> children).
+    bool dragSlopExceeded(float x, float y) const;
+    bool onMove(float x, float y);
+    void onUp(float x, float y);
+
+    bool dragStarted() const { return mDragStarted; }
+
+private:
+    MotionLayout* mLayout;
+    int   mTouchAnchorId;          // MotionScene::UNSET if none -> layout-dimension fallback
+    float mAnchorLocX, mAnchorLocY; // anchor point on the widget (fraction), from touchAnchorSide
+    float mTouchDirX, mTouchDirY;   // unit vector of the drag direction (TOUCH_DIRECTION table)
+    int   mOnTouchUp;
+    float mDragScale;
+
+    float mLastX = 0, mLastY = 0;
+    float mDragVx = 0, mDragVy = 0; // recent drag delta (for release-direction)
+    bool  mDragStarted = false;
+};
+
+} // namespace cdroid
+
+#endif // CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
