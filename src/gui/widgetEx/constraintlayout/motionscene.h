@@ -99,8 +99,9 @@ public:
 
 private:
     // Resolve a "@id/name" / "@+id/name" / "name" reference to a stable scene-local int, assigning
-    // one lazily per name (so <ConstraintSet id> and <Transition constraintSet*> agree).
-    int getId(const std::string& idString);
+    // one lazily per name (so <ConstraintSet id> and <Transition constraintSet*> agree). Logically a
+    // query; the name->id cache is mutable so this can be const.
+    int getId(const std::string& idString) const;
     static std::string stripId(const std::string& idString); // "@+id/start" -> "start"
     // Parse a <ConstraintSet> element (id + ConstraintSet.load). `parser` at the START_TAG.
     int parseConstraintSet(Context* ctx, XmlPullParser& parser);
@@ -110,8 +111,8 @@ private:
     std::vector<std::unique_ptr<Transition>> mTransitionList;
     Transition* mCurrentTransition = nullptr;
     std::unordered_map<int, std::unique_ptr<ConstraintSet>> mConstraintSetMap; // id -> set
-    std::unordered_map<std::string, int> mConstraintSetIdMap;                  // name -> id
-    int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)
+    mutable std::unordered_map<std::string, int> mConstraintSetIdMap;          // name -> id (lazy cache)
+    mutable int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)
 };
 
 } // namespace cdroid

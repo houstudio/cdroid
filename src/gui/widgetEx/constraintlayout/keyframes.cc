@@ -16,19 +16,17 @@
 namespace cdroid {
 
 namespace {
-// Enum-name -> int maps for the enum-valued keyframe attributes. The static constexpr position-type
-// constants are cast to int once (a prvalue) to avoid odr-using them.
-const int CARTESIAN = (int)MotionKeyPosition::TYPE_CARTESIAN;
-const int PATH      = (int)MotionKeyPosition::TYPE_PATH;
-const int SCREEN    = (int)MotionKeyPosition::TYPE_SCREEN;
-const int AXIS      = (int)MotionKeyPosition::TYPE_AXIS;
-const int KEY_UNSET = (int)MotionKey::UNSET;
-
+// Enum-name -> int map for keyPositionType. The static constexpr position-type constants are cast
+// to int inline at the use site (a prvalue) to avoid odr-using them.
 const std::unordered_map<std::string, int> kPositionType = {
-    {"deltaRelative", CARTESIAN}, {"cartesian", CARTESIAN},
-    {"pathRelative",  PATH},      {"path",      PATH},
-    {"parentRelative",SCREEN},    {"screen",    SCREEN},
-    {"axisRelative",  AXIS},      {"axis",      AXIS}
+    {"deltaRelative",  (int)MotionKeyPosition::TYPE_CARTESIAN},
+    {"cartesian",      (int)MotionKeyPosition::TYPE_CARTESIAN},
+    {"pathRelative",   (int)MotionKeyPosition::TYPE_PATH},
+    {"path",           (int)MotionKeyPosition::TYPE_PATH},
+    {"parentRelative", (int)MotionKeyPosition::TYPE_SCREEN},
+    {"screen",         (int)MotionKeyPosition::TYPE_SCREEN},
+    {"axisRelative",   (int)MotionKeyPosition::TYPE_AXIS},
+    {"axis",           (int)MotionKeyPosition::TYPE_AXIS}
 };
 
 // Read the attributes common to every keyframe type: motionTarget (view id) + framePosition (0..100).
@@ -143,7 +141,7 @@ std::vector<MotionKey*> KeyFrames::getKeysForView(int viewId) const {
         for (auto& k : it->second) out.push_back(k.get());
     }
     // Apply-to-all keys (target = UNSET) also apply to every view.
-    auto all = mFramesMap.find(KEY_UNSET);
+    auto all = mFramesMap.find((int)MotionKey::UNSET);
     if (all != mFramesMap.end()) {
         for (auto& k : all->second) out.push_back(k.get());
     }

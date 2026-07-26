@@ -11,19 +11,14 @@
 namespace cdroid {
 
 namespace {
-// The static constexpr click-action flags are cast to int once (a prvalue) to avoid odr-using them.
-const int FLAG_TOGGLE_             = (int)MotionScene::Transition::FLAG_TOGGLE;
-const int FLAG_TRANSITION_TO_END_  = (int)MotionScene::Transition::FLAG_TRANSITION_TO_END;
-const int FLAG_TRANSITION_TO_START_= (int)MotionScene::Transition::FLAG_TRANSITION_TO_START;
-const int FLAG_JUMP_TO_END_        = (int)MotionScene::Transition::FLAG_JUMP_TO_END;
-const int FLAG_JUMP_TO_START_      = (int)MotionScene::Transition::FLAG_JUMP_TO_START;
-
+// clickAction flag-name -> value map. The static constexpr flags are cast to int inline at the use
+// site (a prvalue) to avoid odr-using them.
 const std::unordered_map<std::string, int> kClickAction = {
-    {"toggle",            FLAG_TOGGLE_},
-    {"transitionToEnd",   FLAG_TRANSITION_TO_END_},
-    {"transitionToStart", FLAG_TRANSITION_TO_START_},
-    {"jumpToEnd",         FLAG_JUMP_TO_END_},
-    {"jumpToStart",       FLAG_JUMP_TO_START_}
+    {"toggle",            (int)MotionScene::Transition::FLAG_TOGGLE},
+    {"transitionToEnd",   (int)MotionScene::Transition::FLAG_TRANSITION_TO_END},
+    {"transitionToStart", (int)MotionScene::Transition::FLAG_TRANSITION_TO_START},
+    {"jumpToEnd",         (int)MotionScene::Transition::FLAG_JUMP_TO_END},
+    {"jumpToStart",       (int)MotionScene::Transition::FLAG_JUMP_TO_START}
 };
 } // namespace
 
@@ -65,7 +60,7 @@ std::string MotionScene::stripId(const std::string& idString) {
     return s;
 }
 
-int MotionScene::getId(const std::string& idString) {
+int MotionScene::getId(const std::string& idString) const {
     if (idString.empty()) return UNSET;
     const std::string name = stripId(idString);
     auto it = mConstraintSetIdMap.find(name);

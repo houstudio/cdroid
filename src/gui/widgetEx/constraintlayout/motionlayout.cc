@@ -220,16 +220,12 @@ void MotionLayout::onLayout(bool changed, int l, int t, int r, int b) {
 void MotionLayout::buildScene() {
     if (mSceneBuilt || mSceneResource.empty()) return;
     mSceneBuilt = true; // set first so a parse failure doesn't retry every measure
-    LOGD("MotionLayout::buildScene loading '%s'", mSceneResource.c_str());
     mScene = std::make_unique<MotionScene>(getContext(), this, mSceneResource);
     auto* t = mScene->getCurrentTransition();
-    if (t == nullptr) { LOGW("MotionLayout: scene has no transition"); return; }
+    if (t == nullptr) return;
 
     ConstraintSet* start = mScene->getConstraintSet(t->getStartId());
     ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
-    LOGD("MotionLayout: transition start=%d end=%d duration=%d keys=%d onclicks=%zu",
-         t->getStartId(), t->getEndId(), t->getDuration(),
-         t->getKeyFrames() ? 1 : 0, t->getOnClicks().size());
     if (start != nullptr && end != nullptr) {
         setTransitionDuration(t->getDuration());
         if (!t->getInterpolatorString().empty()) {
