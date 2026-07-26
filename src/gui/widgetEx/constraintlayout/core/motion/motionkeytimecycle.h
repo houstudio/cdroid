@@ -7,6 +7,7 @@
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_TIME_CYCLE_H
 #include <string>
 #include <widgetEx/constraintlayout/core/motion/motionkey.h>
+#include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 namespace cdroid {
 class MotionKeyTimeCycle : public MotionKey {
 public:

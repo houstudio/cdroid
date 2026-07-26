@@ -67,7 +67,9 @@ void MotionLayout::captureState(ConstraintSet* cs, std::unordered_map<int, Motio
     mInCapture = true;
     if (mWidthSpec != 0 && mHeightSpec != 0) {
         measure(mWidthSpec, mHeightSpec);
-        layout(getLeft(), getTop(), getRight(), getBottom());
+        // CDROID View::layout(l, t, w, h) takes width/height — use the measured size, not
+        // getRight()/getBottom() (which are 0 before the parent lays us out).
+        layout(0, 0, getMeasuredWidth(), getMeasuredHeight());
     }
     mInCapture = false;
     out.clear();

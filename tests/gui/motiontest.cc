@@ -22,6 +22,7 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
+#include <widgetEx/constraintlayout/core/motion/splineset.h>
 
 using namespace cdroid;
 
@@ -283,6 +284,24 @@ TEST(MotionMath, MotionKeyCycleAlpha) {
 
     MotionWidget atStart; m.interpolate(&atStart, 0.0f);
     EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
+}
+
+// ---- SplineSet (spline-based keyframe interpolation) ----
+
+// SplineSet builds a CurveFit from (framePosition, value) pairs and interpolates smoothly.
+// Points: (0, 0) → (50, 100) → (100, 0). At t=0.5 the spline passes through the keyframe (100).
+TEST(MotionMath, SplineSetInterpolates) {
+    SplineSet ss;
+    ss.setPoint(0, 0.0f);
+    ss.setPoint(50, 100.0f);
+    ss.setPoint(100, 0.0f);
+    ss.setup(CurveFit::SPLINE);
+    EXPECT_NEAR(ss.get(0.0f), 0.0f, 0.5);
+    EXPECT_NEAR(ss.get(0.5f), 100.0f, 0.5); // passes through keyframe
+    EXPECT_NEAR(ss.get(1.0f), 0.0f, 0.5);
+    float mid = ss.get(0.25f);
+    EXPECT_GT(mid, 0.0f);
+    EXPECT_LT(mid, 100.0f); // between endpoints
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

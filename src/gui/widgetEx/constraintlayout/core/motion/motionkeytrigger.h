@@ -7,6 +7,7 @@
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_TRIGGER_H
 #include <string>
 #include <widgetEx/constraintlayout/core/motion/motionkey.h>
+#include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 namespace cdroid {
 class MotionKeyTrigger : public MotionKey {
 public:
