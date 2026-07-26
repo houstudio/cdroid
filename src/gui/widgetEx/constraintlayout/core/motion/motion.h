@@ -31,7 +31,7 @@ namespace cdroid {
 class Motion : public TypedValues {
 public:
     Motion();
-    ~Motion();
+    ~Motion()override;
 
     void setView(MotionWidget* view);
     void setStart(MotionWidget* mw);

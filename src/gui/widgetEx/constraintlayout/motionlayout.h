@@ -117,6 +117,7 @@ private:
     std::unique_ptr<MotionScene> mScene;
     std::string mSceneResource;       // resource path of the <MotionScene> XML
     KeyFrames* mKeyFramesToApply = nullptr; // borrowed from mScene's current transition; applied post-capture
+    int mSceneArcMode = -1;            // Transition-level pathMotionArc, propagated to each Motion
     bool mSceneBuilt = false;
 
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).

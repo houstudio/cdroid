@@ -54,8 +54,13 @@ void Motion::setEnd(MotionWidget* mw) {
     mPathDirty = true;
 }
 
-void Motion::setStartState(MotionWidget* mw) { setStart(mw); }
-void Motion::setEndState(MotionWidget* mw)   { setEnd(mw); }
+void Motion::setStartState(MotionWidget* mw) {
+    setStart(mw);
+}
+
+void Motion::setEndState(MotionWidget* mw){
+    setEnd(mw);
+}
 
 void Motion::setup(int /*parentWidth*/, int /*parentHeight*/, float /*transitionDuration*/) {
     // MVP: linear interpolation needs no precomputed tables. The CurveFit[]/keyframe engine is
@@ -278,21 +283,49 @@ void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) 
 
 // TypedValues motion-property dispatch — store on this controller for the deferred engine.
 bool Motion::setValue(int id, int value) {
-    if (id == MotionType::TYPE_PATHMOTION_ARC)       { mPathMotionArc = value; return true; }
-    if (id == MotionType::TYPE_DRAW_PATH)            { mDrawPath = value; return true; }
+    if (id == MotionType::TYPE_PATHMOTION_ARC) {
+        mPathMotionArc = value;
+        mPathDirty = true;
+        return true;
+    }
+    if (id == MotionType::TYPE_DRAW_PATH) {
+        mDrawPath = value;
+        return true;
+    }
     return false;
 }
+
 bool Motion::setValue(int id, float value) {
-    if (id == MotionType::TYPE_STAGGER)     { mStagger = value; return true; }
-    if (id == MotionType::TYPE_PATH_ROTATE) { mPathRotate = value; return true; }
+    if (id == MotionType::TYPE_STAGGER) {
+        mStagger = value;
+        return true;
+    }
+    if (id == MotionType::TYPE_PATH_ROTATE) {
+        mPathRotate = value;
+        return true;
+    }
     return false;
 }
+
 bool Motion::setValue(int id, const std::string& value) {
-    if (id == MotionType::TYPE_EASING)              { mTransitionEasing = value; mEasingDirty = true; return true; }
-    if (id == MotionType::TYPE_ANIMATE_RELATIVE_TO) { mAnimateRelativeTo = value; return true; }
+    if (id == MotionType::TYPE_EASING) {
+        mTransitionEasing = value;
+        mEasingDirty = true;
+        return true;
+    }
+    if (id == MotionType::TYPE_ANIMATE_RELATIVE_TO) {
+        mAnimateRelativeTo = value;
+        return true;
+    }
     return false;
 }
-bool Motion::setValue(int /*id*/, bool /*value*/) { return false; }
-int  Motion::getId(const std::string& name) { return MotionType::getId(name); }
+
+bool Motion::setValue(int /*id*/, bool /*value*/) {
+    return false;
+}
+
+int  Motion::getId(const std::string& name) {
+    return MotionType::getId(name);
+}
 
 } // namespace cdroid

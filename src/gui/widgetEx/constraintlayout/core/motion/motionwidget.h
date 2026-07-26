@@ -58,7 +58,7 @@ public:
 
     MotionWidget();
     explicit MotionWidget(WidgetFrame* f);
-
+    ~MotionWidget()override;
     WidgetFrame* getWidgetFrame() const { return mWidgetFrame; }
 
     // --- geometry ---

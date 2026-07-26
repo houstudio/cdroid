@@ -99,6 +99,9 @@ void MotionLayout::buildMotions() {
         Motion* m = new Motion();
         m->setStart(&sw.second);
         m->setEnd(&ew->second);
+        if (mSceneArcMode >= 0) {
+            m->setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, mSceneArcMode);
+        }
         mMotions[id] = m;
     }
 }
@@ -233,6 +236,7 @@ void MotionLayout::buildScene() {
             setTransitionEasing(t->getInterpolatorString());
         }
         mKeyFramesToApply = t->getKeyFrames();
+        mSceneArcMode = t->getPathMotionArc();
         setTransition(start, end); // captures now if we have a size, else defers to onMeasure
     }
     wireOnClicks(t);

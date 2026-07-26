@@ -58,6 +58,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/motion/motionwidget.cc
         widgetEx/constraintlayout/core/motion/motionconstrainedpoint.cc
         widgetEx/constraintlayout/core/motion/motionpaths.cc
+        widgetEx/constraintlayout/core/motion/arccurvefit.cc
         widgetEx/constraintlayout/core/motion/motion.cc
         widgetEx/constraintlayout/core/motion/motionkey.cc
         widgetEx/constraintlayout/core/motion/motionkeyattributes.cc
