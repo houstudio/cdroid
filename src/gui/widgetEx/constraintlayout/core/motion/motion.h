@@ -16,8 +16,10 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
 
+#include <memory>
 #include <vector>
 
+#include <widgetEx/constraintlayout/core/motion/easing.h>
 #include <widgetEx/constraintlayout/core/motion/motionconstrainedpoint.h>
 #include <widgetEx/constraintlayout/core/motion/motionpaths.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
@@ -28,12 +30,19 @@ namespace cdroid {
 class Motion : public TypedValues {
 public:
     Motion();
+    ~Motion();
 
     void setView(MotionWidget* view);
     void setStart(MotionWidget* mw);
     void setEnd(MotionWidget* mw);
     void setStartState(MotionWidget* mw);
     void setEndState(MotionWidget* mw);
+
+    // Add an attribute keyframe (e.g. alpha=0 at frame 50). Stored sorted by frame position.
+    void addKey(class MotionKeyAttributes* key);
+    // Add a position keyframe (control point the widget passes through).
+    void addKey(class MotionKeyPosition* key);
+    void addKey(class MotionKeyCycle* key);
 
     // Build the interpolation tables. The MVP uses linear lerp (no tables); kept for API parity.
     void setup(int parentWidth, int parentHeight, float transitionDuration);
@@ -57,8 +66,23 @@ public:
 
 private:
     static float lerp(float start, float end, float defaultValue, float progress);
+    // Parse mTransitionEasing into mEasing (called before interpolation if pending).
+    void buildEasing();
+    // Map a raw [0,1] progress through the easing curve (identity if no easing set).
+    float eased(float progress) const;
+    // Piecewise-linear interpolation of an attribute across [start, keyframes..., end]. NAN
+    // start/end are replaced by `defaultValue` (matching lerp's semantics); `get` extracts the
+    // keyframe's value (NAN = that keyframe doesn't set this attribute). With no keyframes this
+    // degenerates to the plain lerp.
+    float keyframed(float progress, float startVal, float endVal, float defaultValue,
+                    float (*get)(const class MotionKeyAttributes*)) const;
 
     MotionWidget* mView = nullptr;
+    std::unique_ptr<Easing> mEasing;
+    bool mEasingDirty = false;
+    std::vector<class MotionKeyAttributes*> mAttributeKeys;
+    std::vector<class MotionKeyPosition*> mPositionKeys;
+    std::vector<class MotionKeyCycle*> mCycleKeys;
     MotionPaths mStartMotionPath;
     MotionPaths mEndMotionPath;
     MotionConstrainedPoint mStartPoint;

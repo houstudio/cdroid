@@ -24,6 +24,10 @@
 
 namespace cdroid {
 
+class ValueAnimator;
+class MotionKeyAttributes;
+class MotionKeyPosition;
+
 class MotionLayout : public ConstraintLayout {
 public:
     MotionLayout(Context* ctx, const AttributeSet& attrs);
@@ -36,13 +40,31 @@ public:
     void setProgress(float progress);
     float getProgress() const { return mProgress; }
 
-    void transitionToStart() { setProgress(0.0f); }
-    void transitionToEnd()   { setProgress(1.0f); }
+    // Animate to the start/end state over the transition duration (driven by a ValueAnimator).
+    void transitionToStart();
+    void transitionToEnd();
+    // Instant jump (no animation).
+    void setProgressInstant(float progress) { setProgress(progress); }
+    void setTransitionDuration(int64_t durationMs) { mTransitionDuration = durationMs; }
+    int64_t getTransitionDuration() const { return mTransitionDuration; }
+
+    // Per-child keyframes (must be called after setTransition). The MotionLayout stores the key
+    // and forwards it to the child's Motion controller.
+    void addKeyAttributes(int viewId, MotionKeyAttributes* key);
+    void addKeyPosition(int viewId, MotionKeyPosition* key);
+    // Set the easing curve on all (or one) child Motion.
+    void setTransitionEasing(const std::string& easing);
+    void setTransitionEasing(int viewId, const std::string& easing);
 
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
 
 private:
+    // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.
+    void animateTo(float target);
+    // Actually run the start/end capture + build motions (called once we have a real size).
+    void captureAndBuild();
+
     // Apply `cs`, force a measure+layout pass, then read each child's frame into `out`.
     void captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out);
     // Build (or rebuild) the per-child Motion controllers from the captured start/end widgets.
@@ -56,7 +78,10 @@ private:
     std::unordered_map<int, MotionWidget> mStartWidgets;
     std::unordered_map<int, MotionWidget> mEndWidgets;
     float mProgress = 0.0f;
+    int64_t mTransitionDuration = 400;
+    ValueAnimator* mAnimator = nullptr;
     bool mCaptured = false;
+    bool mCapturePending = false; // setTransition called before the layout had a size
     bool mInCapture = false; // guard against re-entrant measure/layout during capture
     int mWidthSpec = 0;
     int mHeightSpec = 0;

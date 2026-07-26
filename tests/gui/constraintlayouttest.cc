@@ -17,6 +17,7 @@
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/barrier.h>
 #include <widgetEx/constraintlayout/group.h>
 #include <widgetEx/constraintlayout/placeholder.h>
@@ -558,6 +559,40 @@ TEST(ConstraintLayout, MotionLayoutAnimatesChild) {
 
     ml->setProgress(0.5f);
     EXPECT_EQ(tv->getLeft(), 250); // midpoint
+}
+
+// A MotionLayout with a position keyframe arcs the child off the linear path at progress 0.5.
+// start: child pinned left (x=0). end: child pinned right (x=500). KeyPosition frame50 percentX=0.5
+// altPercentY=0.5 → at progress 0.5 the child arcs down to y≈250 (linear would be y=0).
+TEST(ConstraintLayout, MotionLayoutKeyPositionArc) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    ConstraintSet start, end;
+    start.constrainWidth(1, 100); start.constrainHeight(1, 50);
+    start.connect(1, ConstraintSet::LEFT, ConstraintSet::PARENT, ConstraintSet::LEFT);
+    start.connect(1, ConstraintSet::TOP, ConstraintSet::PARENT, ConstraintSet::TOP);
+    end.constrainWidth(1, 100); end.constrainHeight(1, 50);
+    end.connect(1, ConstraintSet::RIGHT, ConstraintSet::PARENT, ConstraintSet::RIGHT);
+    end.connect(1, ConstraintSet::TOP, ConstraintSet::PARENT, ConstraintSet::TOP);
+
+    ml->setTransition(&start, &end);
+
+    // Position keyframe: arc the child downward at the midpoint.
+    MotionKeyPosition arc;
+    arc.mFramePosition = 50;
+    arc.mPercentX = 0.5f;
+    arc.mAltPercentY = 0.5f;
+    ml->addKeyPosition(1, &arc);
+
+    ml->setProgress(0.5f);
+    // Without the keyframe the child would be at (250, 0). With the arc it's offset downward.
+    EXPECT_NE(tv->getTop(), 0);    // arced off the linear path
+    EXPECT_GT(tv->getTop(), 100);  // significantly below y=0
 }
 
 // NOTE: match_constraint (0dp) — spread-fill works; the match-constraint re-measure loop

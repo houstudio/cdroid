@@ -7,8 +7,14 @@
 
 namespace cdroid {
 
-MotionWidget::MotionWidget() : mWidgetFrame(new WidgetFrame()) {}
-MotionWidget::MotionWidget(WidgetFrame* f) : mWidgetFrame(f ? f : new WidgetFrame()) {}
+MotionWidget::MotionWidget() : mWidgetFrame(new WidgetFrame()) {
+    // WidgetFrame.visibility defaults to ConstraintWidget.VISIBLE (0); the Motion system reads it
+    // against MotionWidget.VISIBLE (4), so initialize a fresh frame as Motion-visible.
+    mWidgetFrame->visibility = VISIBLE;
+}
+MotionWidget::MotionWidget(WidgetFrame* f) : mWidgetFrame(f ? f : new WidgetFrame()) {
+    if (f == nullptr) mWidgetFrame->visibility = VISIBLE;
+}
 
 // --- geometry ---
 int MotionWidget::getTop() const    { return mWidgetFrame->top; }

@@ -17,6 +17,9 @@
 #include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/monotoniccurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/motion.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
 
@@ -198,6 +201,88 @@ TEST(MotionMath, MotionEndpoints) {
     EXPECT_EQ(c1.getLeft(), 200);
     EXPECT_EQ(c1.getTop(), 400);
     EXPECT_EQ(c1.getWidth(), 200);
+}
+
+// An "accelerate" easing curve makes the midpoint position lag the linear midpoint.
+// start(0,0,100,50) -> end(1000,0,1100,50): linear midpoint = 500; accelerated < 500.
+TEST(MotionMath, MotionEasingAccelerate) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(1000, 0, 1100, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.setValue(TypedValues::MotionType::TYPE_EASING, std::string("accelerate"));
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_GT(mid.getLeft(), 0);
+    EXPECT_LT(mid.getLeft(), 500); // ease-in: behind the linear midpoint
+    EXPECT_EQ(mid.getTop(), 0);    // y unchanged
+}
+
+// A KeyAttributes keyframe sets alpha=0 at frame 50; the alpha dips to 0 at progress 0.5
+// and interpolates linearly back to the endpoints (alpha=1) at 0.25/0.75.
+TEST(MotionMath, MotionKeyframeAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyAttributes kf;
+    kf.setFramePosition(50);
+    kf.setValue(TypedValues::AttributesType::TYPE_ALPHA, 0.0f);
+    m.addKey(&kf);
+
+    MotionWidget atMid; m.interpolate(&atMid, 0.5f);
+    EXPECT_NEAR(atMid.getAlpha(), 0.0f, 1e-3); // keyframe: alpha 0 at midpoint
+
+    MotionWidget atQuarter; m.interpolate(&atQuarter, 0.25f);
+    EXPECT_NEAR(atQuarter.getAlpha(), 0.5f, 1e-3); // halfway between start(1) and keyframe(0)
+}
+
+// A KeyPosition at frame 50 with a perpendicular offset makes the widget deviate from the
+// straight-line path. start(0,0,100,50) -> end(500,0,600,50) (horizontal). At progress 0.5
+// without keyframe the midpoint is (250,0); with altPercentY=0.5 it arcs down to (250,250).
+TEST(MotionMath, MotionKeyPositionOffset) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPercentX = 0.5f;      // halfway along the path
+    kp.mAltPercentY = 0.5f;   // perpendicular offset (downward)
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 250); // keyframe x
+    EXPECT_EQ(mid.getTop(), 250);  // arced below the linear path (y=0)
+}
+
+// A KeyCycle superimposes a sine-wave oscillation on the base alpha.
+// base alpha=1, cycle amplitude=0.3, period=2 (2 full sine cycles over [0,1]).
+// At progress 0.125: overlay = sin(2π·0.125·2)·0.3 = sin(π/2)·0.3 = 0.3 → alpha=1.3.
+TEST(MotionMath, MotionKeyCycleAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyCycle cyc;
+    cyc.mFramePosition = 50;
+    cyc.mAlpha = 0.3f;       // oscillation amplitude
+    cyc.mWavePeriod = 2.0f;  // 2 full cycles over the transition
+    cyc.mWaveShape = Oscillator::SIN_WAVE;
+    m.addKey(&cyc);
+
+    MotionWidget atEighth; m.interpolate(&atEighth, 0.125f);
+    EXPECT_NEAR(atEighth.getAlpha(), 1.3f, 0.01); // base(1) + sin(π/2)·0.3
+
+    MotionWidget atStart; m.interpolate(&atStart, 0.0f);
+    EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

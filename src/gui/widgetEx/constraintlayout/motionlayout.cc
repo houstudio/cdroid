@@ -6,7 +6,11 @@
 #include <widgetEx/constraintlayout/motionlayout.h>
 
 #include <porting/cdlog.h>
+#include <animation/valueanimator.h>
 #include <view/view.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
+#include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 
 DECLARE_WIDGET(MotionLayout)
 
@@ -90,24 +94,70 @@ void MotionLayout::buildMotions() {
     }
 }
 
-void MotionLayout::setTransition(ConstraintSet* start, ConstraintSet* end) {
-    mStartSet = start;
-    mEndSet = end;
-    // Need measure specs to capture; if not yet measured, derive exactly from our size.
-    if (mWidthSpec == 0) {
-        mWidthSpec = View::MeasureSpec::makeMeasureSpec(getWidth(), View::MeasureSpec::EXACTLY);
-        mHeightSpec = View::MeasureSpec::makeMeasureSpec(getHeight(), View::MeasureSpec::EXACTLY);
-    }
-    captureState(start, mStartWidgets);
-    captureState(end, mEndWidgets);
+void MotionLayout::captureAndBuild() {
+    captureState(mStartSet, mStartWidgets);
+    captureState(mEndSet, mEndWidgets);
     buildMotions();
     mCaptured = !mMotions.empty();
     if (mCaptured) applyMotion();
 }
 
+void MotionLayout::setTransition(ConstraintSet* start, ConstraintSet* end) {
+    mStartSet = start;
+    mEndSet = end;
+    // The capture needs a real measure spec; if we haven't been laid out yet, defer to onMeasure.
+    if (mWidthSpec != 0 && getWidth() > 0) {
+        mCapturePending = false;
+        captureAndBuild();
+    } else {
+        mCapturePending = true;
+    }
+}
+
 void MotionLayout::setProgress(float progress) {
     mProgress = progress;
     if (mCaptured) applyMotion();
+}
+
+void MotionLayout::animateTo(float target) {
+    if (!mCaptured) { setProgress(target); return; }
+    const float start = mProgress;
+    if (mAnimator != nullptr) {
+        mAnimator->cancel();
+        delete mAnimator;
+    }
+    mAnimator = ValueAnimator::ofFloat({start, target});
+    mAnimator->setDuration(mTransitionDuration);
+    mAnimator->addUpdateListener([this, start, target](ValueAnimator& a) {
+        float f = a.getAnimatedFraction();
+        mProgress = start + (target - start) * f;
+        applyMotion();
+    });
+    mAnimator->start();
+}
+
+void MotionLayout::transitionToStart() { animateTo(0.0f); }
+void MotionLayout::transitionToEnd()   { animateTo(1.0f); }
+
+void MotionLayout::addKeyAttributes(int viewId, MotionKeyAttributes* key) {
+    auto it = mMotions.find(viewId);
+    if (it != mMotions.end()) it->second->addKey(key);
+}
+
+void MotionLayout::addKeyPosition(int viewId, MotionKeyPosition* key) {
+    auto it = mMotions.find(viewId);
+    if (it != mMotions.end()) it->second->addKey(key);
+}
+
+void MotionLayout::setTransitionEasing(const std::string& easing) {
+    for (auto& kv : mMotions) {
+        kv.second->setValue(TypedValues::MotionType::TYPE_EASING, easing);
+    }
+}
+
+void MotionLayout::setTransitionEasing(int viewId, const std::string& easing) {
+    auto it = mMotions.find(viewId);
+    if (it != mMotions.end()) it->second->setValue(TypedValues::MotionType::TYPE_EASING, easing);
 }
 
 void MotionLayout::applyMotion() {
@@ -128,6 +178,11 @@ void MotionLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mWidthSpec = widthMeasureSpec;
     mHeightSpec = heightMeasureSpec;
     ConstraintLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
+    // If setTransition was called before we had a size, run the capture now that we do.
+    if (mCapturePending && !mInCapture && getWidth() > 0) {
+        mCapturePending = false;
+        captureAndBuild();
+    }
     // During normal (non-capture) measure, if a transition is captured, apply the current progress
     // so the laid-out children reflect the interpolated state.
     if (!mInCapture && mCaptured) {

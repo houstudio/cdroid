@@ -56,6 +56,13 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/motion/motionconstrainedpoint.cc
         widgetEx/constraintlayout/core/motion/motionpaths.cc
         widgetEx/constraintlayout/core/motion/motion.cc
+        widgetEx/constraintlayout/core/motion/motionkey.cc
+        widgetEx/constraintlayout/core/motion/motionkeyattributes.cc
+        widgetEx/constraintlayout/core/motion/motionkeyposition.cc
+        widgetEx/constraintlayout/core/motion/motionkeycycle.cc
+        widgetEx/constraintlayout/core/motion/motionkeytimecycle.cc
+        widgetEx/constraintlayout/core/motion/motionkeytrigger.cc
+        widgetEx/constraintlayout/core/motion/splineset.cc
         widgetEx/constraintlayout/core/motion/curvefit.cc
 
         # --- core/state: frame data (Stage 7 motion support) ---
