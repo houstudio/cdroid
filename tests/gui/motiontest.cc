@@ -16,6 +16,8 @@
 #include <widgetEx/constraintlayout/core/motion/hyperspline.h>
 #include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/monotoniccurvefit.h>
+#include <widgetEx/constraintlayout/core/motion/motion.h>
+#include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
 
 using namespace cdroid;
@@ -157,6 +159,45 @@ TEST(MotionMath, OscillatorBounded) {
             EXPECT_LE(v, 1.0 + 1e-6) << "type=" << type << " i=" << i;
         }
     }
+}
+
+// ---- Motion engine (linear MVP) ----
+
+// A Motion interpolates a child linearly between a start and end frame at progress 0.5.
+// start (0,0,100,50) -> end (500,300,200,100): midpoint (250,150,150,75).
+TEST(MotionMath, MotionInterpolatesLinearly) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 300, 700, 400); // w=200, h=100
+
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionWidget child;
+    m.interpolate(&child, 0.5f);
+    EXPECT_EQ(child.getLeft(), 250);
+    EXPECT_EQ(child.getTop(), 150);
+    EXPECT_EQ(child.getWidth(), 150); // (100+200)/2
+    EXPECT_EQ(child.getHeight(), 75); // (50+100)/2
+}
+
+// At progress 0 the child matches the start; at 1 it matches the end.
+TEST(MotionMath, MotionEndpoints) {
+    MotionWidget start; start.setBounds(10, 20, 110, 70);   // w=100, h=50
+    MotionWidget end;   end.setBounds(200, 400, 400, 450);  // w=200, h=50
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionWidget c0; m.interpolate(&c0, 0.0f);
+    EXPECT_EQ(c0.getLeft(), 10);
+    EXPECT_EQ(c0.getTop(), 20);
+    EXPECT_EQ(c0.getWidth(), 100);
+
+    MotionWidget c1; m.interpolate(&c1, 1.0f);
+    EXPECT_EQ(c1.getLeft(), 200);
+    EXPECT_EQ(c1.getTop(), 400);
+    EXPECT_EQ(c1.getWidth(), 200);
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

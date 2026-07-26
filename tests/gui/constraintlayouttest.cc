@@ -15,6 +15,8 @@
 #include <view/view.h>
 #include <widget/textview.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/constraintlayout/motionlayout.h>
 #include <widgetEx/constraintlayout/barrier.h>
 #include <widgetEx/constraintlayout/group.h>
 #include <widgetEx/constraintlayout/placeholder.h>
@@ -462,6 +464,100 @@ TEST(ConstraintLayout, FlowVerticalStacksColumn) {
         EXPECT_EQ(views[i]->getLeft(), 0) << "view " << i;
         EXPECT_EQ(views[i]->getTop(), i * 50) << "view " << i;
     }
+}
+
+// ---- ConstraintSet ----
+
+// Build constraints programmatically and apply: connect both sides to parent -> centered.
+TEST(ConstraintLayout, ConstraintSetCentersChild) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+
+    ConstraintSet cs;
+    cs.constrainWidth(1, 100);
+    cs.constrainHeight(1, 50);
+    cs.connect(1, ConstraintSet::LEFT, ConstraintSet::PARENT, ConstraintSet::LEFT);
+    cs.connect(1, ConstraintSet::RIGHT, ConstraintSet::PARENT, ConstraintSet::RIGHT);
+    cs.applyTo(cl);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(a->getLeft(), 250);
+    EXPECT_EQ(a->getRight(), 350);
+}
+
+// clone() snapshots a layout; modify + applyTo repositions a previously-centered child to the left.
+TEST(ConstraintLayout, ConstraintSetCloneAndModify) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID; // centered
+    cl->addView(a, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    ASSERT_EQ(a->getLeft(), 250); // initially centered
+
+    ConstraintSet cs;
+    cs.clone(cl);
+    cs.clear(1, ConstraintSet::RIGHT);                        // drop the right anchor
+    cs.connect(1, ConstraintSet::LEFT, ConstraintSet::PARENT, ConstraintSet::LEFT);
+    cs.applyTo(cl);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(a->getLeft(), 0); // now pinned left
+    EXPECT_EQ(a->getWidth(), 100);
+}
+
+// A container with padding insets its children: leftToLeft=parent with paddingLeft=50 -> x=50.
+TEST(ConstraintLayout, PaddingInsetsChildren) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setPadding(50, 20, 0, 0);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(a, lp);
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+    EXPECT_EQ(a->getLeft(), 50); // paddingLeft offset
+    EXPECT_EQ(a->getTop(), 20);  // paddingTop offset
+}
+
+// ---- MotionLayout ----
+
+// A child pinned left in the start set and right in the end set animates across the width.
+// setProgress(0)=left(0), (1)=right(500), (0.5)=mid(250).
+TEST(ConstraintLayout, MotionLayoutAnimatesChild) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    ConstraintSet start, end;
+    start.constrainWidth(1, 100); start.constrainHeight(1, 50);
+    start.connect(1, ConstraintSet::LEFT, ConstraintSet::PARENT, ConstraintSet::LEFT);
+    end.constrainWidth(1, 100); end.constrainHeight(1, 50);
+    end.connect(1, ConstraintSet::RIGHT, ConstraintSet::PARENT, ConstraintSet::RIGHT);
+
+    ml->setTransition(&start, &end);
+
+    ml->setProgress(0.0f);
+    EXPECT_EQ(tv->getLeft(), 0);
+    EXPECT_EQ(tv->getWidth(), 100);
+
+    ml->setProgress(1.0f);
+    EXPECT_EQ(tv->getLeft(), 500); // pinned right: 600 - 100
+    EXPECT_EQ(tv->getWidth(), 100);
+
+    ml->setProgress(0.5f);
+    EXPECT_EQ(tv->getLeft(), 250); // midpoint
 }
 
 // NOTE: match_constraint (0dp) — spread-fill works; the match-constraint re-measure loop

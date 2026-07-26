@@ -6,6 +6,8 @@ if(ENABLE_CONSTRAINTLAYOUT)
     set(CONSTRAINTLAYOUT_SOURCES
         # --- widget: ConstraintLayout (Stage 4) ---
         widgetEx/constraintlayout/constraintlayout.cc
+        widgetEx/constraintlayout/constraintset.cc
+        widgetEx/constraintlayout/motionlayout.cc
         # --- widget: virtual helpers (Stage 5) ---
         widgetEx/constraintlayout/constrainthelper.cc
         widgetEx/constraintlayout/barrier.cc
@@ -46,7 +48,18 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/widgets/analyzer/widgetrun.cc
 
         # --- core/motion: interpolation + curve-fit bedrock (Stage 6) ---
+        widgetEx/constraintlayout/core/motion/typedvalues.cc
+        widgetEx/constraintlayout/core/motion/typedbundle.cc
+        widgetEx/constraintlayout/core/motion/customattribute.cc
+        widgetEx/constraintlayout/core/motion/customvariable.cc
+        widgetEx/constraintlayout/core/motion/motionwidget.cc
+        widgetEx/constraintlayout/core/motion/motionconstrainedpoint.cc
+        widgetEx/constraintlayout/core/motion/motionpaths.cc
+        widgetEx/constraintlayout/core/motion/motion.cc
         widgetEx/constraintlayout/core/motion/curvefit.cc
+
+        # --- core/state: frame data (Stage 7 motion support) ---
+        widgetEx/constraintlayout/core/state/widgetframe.cc
         widgetEx/constraintlayout/core/motion/monotoniccurvefit.cc
         widgetEx/constraintlayout/core/motion/linearcurvefit.cc
         widgetEx/constraintlayout/core/motion/hyperspline.cc

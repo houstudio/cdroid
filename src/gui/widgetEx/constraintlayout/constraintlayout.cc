@@ -501,7 +501,11 @@ void ConstraintLayout::onLayout(bool /*changed*/, int /*l*/, int /*t*/, int /*r*
         if (lp->mIsInPlaceholder) continue;    // positioned by its Placeholder, not here
         ConstraintWidget* w = getViewWidget(child);
         if (w == nullptr) continue;
-        int x = w->getX(), y = w->getY(), wWidth = w->getWidth(), wHeight = w->getHeight();
+        // The solver works in content coordinates (the container is sized to width-padding); offset
+        // child positions by the padding so they land inside the padded frame.
+        int x = w->getX() + getPaddingLeft();
+        int y = w->getY() + getPaddingTop();
+        int wWidth = w->getWidth(), wHeight = w->getHeight();
 
         if (auto* placeholder = dynamic_cast<Placeholder*>(child)) {
             // The placeholder's content view is drawn at the placeholder's frame.
