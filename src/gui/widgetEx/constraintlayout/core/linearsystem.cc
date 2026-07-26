@@ -66,8 +66,13 @@ LinearSystem::~LinearSystem() {
     // Note: pooled ArrayRows/SolverVariables are not freed here (Java relies on GC).
 }
 
-void LinearSystem::fillMetrics(Metrics* metrics) { sMetrics = metrics; }
-Metrics* LinearSystem::getMetrics() { return sMetrics; }
+void LinearSystem::fillMetrics(Metrics* metrics) {
+    sMetrics = metrics;
+}
+
+Metrics* LinearSystem::getMetrics() {
+    return sMetrics;
+}
 
 //-------------------------------- creation of rows/variables/errors --------------------------------
 
@@ -228,8 +233,13 @@ void LinearSystem::addCenterPoint(ConstraintWidget* widget, ConstraintWidget* ta
 
 //--------------------------------------- accessors -----------------------------------------
 
-LinearSystem::Row* LinearSystem::getGoal() { return mGoal; }
-ArrayRow* LinearSystem::getRow(int n) { return mRows[n]; }
+LinearSystem::Row* LinearSystem::getGoal() {
+    return mGoal;
+}
+
+ArrayRow* LinearSystem::getRow(int n) {
+    return mRows[n];
+}
 
 float LinearSystem::getValueFor(const std::string& name) {
     SolverVariable* v = getVariable(name, SolverVariable::Type::UNRESTRICTED);
@@ -246,7 +256,10 @@ SolverVariable* LinearSystem::getVariable(const std::string& name, SolverVariabl
     return variable;
 }
 
-Cache* LinearSystem::getCache() { return mCache; }
+Cache* LinearSystem::getCache() {
+    return mCache;
+}
+
 int LinearSystem::getMemoryUsed() {
     int actualRowSize = 0;
     for (int i = 0; i < mNumRows; i++) {
@@ -254,8 +267,14 @@ int LinearSystem::getMemoryUsed() {
     }
     return actualRowSize;
 }
-int LinearSystem::getNumEquations() { return mNumRows; }
-int LinearSystem::getNumVariables() { return mVariablesID; }
+
+int LinearSystem::getNumEquations() {
+    return mNumRows;
+}
+
+int LinearSystem::getNumVariables() {
+    return mVariablesID;
+}
 
 //------------------------------------- system resolution -----------------------------------
 

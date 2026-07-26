@@ -35,26 +35,25 @@ void captureInto(MotionWidget& mw, View* v) {
     mw.setTranslationY(v->getTranslationY());
 }
 
-// Write a MotionWidget's interpolated frame back onto a view. Transforms are applied only when
-// non-identity — the render-node setters are unsafe on unattached views and identity is a no-op.
+// Write a MotionWidget's interpolated frame back onto a view. Attached views always get the
+// transform applied (so reaching an endpoint resets it to identity — fixes rotation/scale not
+// "snapping back" at progress 0/1). Unattached views (test harness) skip identity values, since the
+// render-node invalidation path used by the setters is unsafe without an AttachInfo.
 void applyFrom(View* v, MotionWidget& mw) {
     v->layout(mw.getLeft(), mw.getTop(), mw.getWidth(), mw.getHeight());
-    float a = mw.getAlpha();
-    if (!std::isnan(a) && a != 1.0f) v->setAlpha(a);
-    float rz = mw.getRotationZ();
-    if (!std::isnan(rz) && rz != 0.0f) v->setRotation(rz);
-    float rx = mw.getRotationX();
-    if (!std::isnan(rx) && rx != 0.0f) v->setRotationX(rx);
-    float ry = mw.getRotationY();
-    if (!std::isnan(ry) && ry != 0.0f) v->setRotationY(ry);
-    float sx = mw.getScaleX();
-    if (!std::isnan(sx) && sx != 1.0f) v->setScaleX(sx);
-    float sy = mw.getScaleY();
-    if (!std::isnan(sy) && sy != 1.0f) v->setScaleY(sy);
-    float tx = mw.getTranslationX();
-    if (!std::isnan(tx) && tx != 0.0f) v->setTranslationX(tx);
-    float ty = mw.getTranslationY();
-    if (!std::isnan(ty) && ty != 0.0f) v->setTranslationY(ty);
+    const bool attached = v->isAttachedToWindow();
+    auto apply = [&](float val, float identity, void (View::*setter)(float)) {
+        if (std::isnan(val)) return;
+        if (attached || val != identity) (v->*setter)(val);
+    };
+    apply(mw.getAlpha(),        1.0f, &View::setAlpha);
+    apply(mw.getRotationZ(),    0.0f, &View::setRotation);
+    apply(mw.getRotationX(),    0.0f, &View::setRotationX);
+    apply(mw.getRotationY(),    0.0f, &View::setRotationY);
+    apply(mw.getScaleX(),       1.0f, &View::setScaleX);
+    apply(mw.getScaleY(),       1.0f, &View::setScaleY);
+    apply(mw.getTranslationX(), 0.0f, &View::setTranslationX);
+    apply(mw.getTranslationY(), 0.0f, &View::setTranslationY);
 }
 } // namespace
 

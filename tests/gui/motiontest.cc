@@ -12,6 +12,7 @@
 #include <vector>
 
 #include <widgetEx/constraintlayout/core/motion/curvefit.h>
+#include <widgetEx/constraintlayout/core/motion/arccurvefit.h>
 #include <widgetEx/constraintlayout/core/motion/easing.h>
 #include <widgetEx/constraintlayout/core/motion/hyperspline.h>
 #include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
@@ -302,6 +303,28 @@ TEST(MotionMath, SplineSetInterpolates) {
     float mid = ss.get(0.25f);
     EXPECT_GT(mid, 0.0f);
     EXPECT_LT(mid, 100.0f); // between endpoints
+}
+
+// ArcCurveFit (ported oracle from Android MotionArcCurveTest.arcTest1). Three points stitched with
+// two quarter-ellipse arcs (vertical start, then horizontal). The curve passes through each point;
+// the first arc starts vertical (dx≈0); at the first arc's midpoint x = 1-sqrt(0.5), y = sqrt(0.5).
+TEST(MotionMath, ArcCurveFitStitchesQuarterEllipses) {
+    std::vector<double> time = {0, 5, 10};
+    std::vector<std::vector<double>> points = {{0, 0}, {1, 1}, {2, 0}};
+    std::vector<int> mode = {ArcCurveFit::ARC_START_VERTICAL, ArcCurveFit::ARC_START_HORIZONTAL};
+    auto spline = CurveFit::getArc(mode, time, points);
+
+    ASSERT_NE(spline, nullptr);
+    for (size_t i = 0; i < time.size(); i++) {
+        EXPECT_NEAR(points[i][0], spline->getPos(time[i], 0), 0.001);
+        EXPECT_NEAR(points[i][1], spline->getPos(time[i], 1), 0.001);
+    }
+    EXPECT_NEAR(0, spline->getSlope(time[0] + 0.01, 0), 0.001); // first arc starts vertical -> dx=0
+    EXPECT_NEAR(0, spline->getSlope(time[1] - 0.01, 1), 0.001);
+    EXPECT_NEAR(0, spline->getSlope(time[1] + 0.01, 1), 0.001);
+    const double mid = (time[0] + time[1]) / 2.0;
+    EXPECT_NEAR(1.0 - std::sqrt(0.5), spline->getPos(mid, 0), 0.001);
+    EXPECT_NEAR(std::sqrt(0.5), spline->getPos(mid, 1), 0.001);
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

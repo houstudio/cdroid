@@ -3,7 +3,6 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintSet.
  */
-#include <widgetEx/constraintlayout/constraintset.h>
 
 #include <climits>
 #include <cctype>
@@ -11,6 +10,7 @@
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
+#include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 
 namespace cdroid {
@@ -37,53 +37,90 @@ float parseRatio(const std::string& s) {
 void ConstraintSet::Constraint::fillFrom(int viewId, const ConstraintLayout::LayoutParams& param) {
     mViewId = viewId;
     Layout& l = layout;
-    l.leftToLeft = param.leftToLeft;     l.leftToRight = param.leftToRight;
-    l.rightToLeft = param.rightToLeft;   l.rightToRight = param.rightToRight;
-    l.topToTop = param.topToTop;         l.topToBottom = param.topToBottom;
-    l.bottomToTop = param.bottomToTop;   l.bottomToBottom = param.bottomToBottom;
+    l.leftToLeft = param.leftToLeft;
+    l.leftToRight = param.leftToRight;
+    l.rightToLeft = param.rightToLeft;
+    l.rightToRight = param.rightToRight;
+    l.topToTop = param.topToTop;
+    l.topToBottom = param.topToBottom;
+    l.bottomToTop = param.bottomToTop;
+    l.bottomToBottom = param.bottomToBottom;
     l.baselineToBaseline = param.baselineToBaseline;
-    l.horizontalBias = param.horizontalBias; l.verticalBias = param.verticalBias;
+    l.horizontalBias = param.horizontalBias;
+    l.verticalBias = param.verticalBias;
     l.orientation = param.orientation;
-    l.guideBegin = param.guideBegin; l.guideEnd = param.guideEnd; l.guidePercent = param.guidePercent;
-    l.mWidth = param.width; l.mHeight = param.height;
-    l.leftMargin = param.leftMargin; l.rightMargin = param.rightMargin;
-    l.topMargin = param.topMargin;   l.bottomMargin = param.bottomMargin;
-    l.goneLeftMargin = param.goneLeftMargin; l.goneTopMargin = param.goneTopMargin;
-    l.goneRightMargin = param.goneRightMargin; l.goneBottomMargin = param.goneBottomMargin;
-    l.verticalWeight = param.verticalWeight; l.horizontalWeight = param.horizontalWeight;
-    l.verticalChainStyle = param.verticalChainStyle; l.horizontalChainStyle = param.horizontalChainStyle;
-    l.widthDefault = param.matchConstraintDefaultWidth; l.heightDefault = param.matchConstraintDefaultHeight;
-    l.widthMax = param.matchConstraintMaxWidth; l.heightMax = param.matchConstraintMaxHeight;
-    l.widthMin = param.matchConstraintMinWidth; l.heightMin = param.matchConstraintMinHeight;
-    l.widthPercent = param.matchConstraintPercentWidth; l.heightPercent = param.matchConstraintPercentHeight;
+    l.guideBegin = param.guideBegin;
+    l.guideEnd = param.guideEnd;
+    l.guidePercent = param.guidePercent;
+    l.mWidth = param.width;
+    l.mHeight = param.height;
+    l.leftMargin = param.leftMargin;
+    l.rightMargin = param.rightMargin;
+    l.topMargin = param.topMargin;
+    l.bottomMargin = param.bottomMargin;
+    l.goneLeftMargin = param.goneLeftMargin;
+    l.goneTopMargin = param.goneTopMargin;
+    l.goneRightMargin = param.goneRightMargin;
+    l.goneBottomMargin = param.goneBottomMargin;
+    l.verticalWeight = param.verticalWeight;
+    l.horizontalWeight = param.horizontalWeight;
+    l.verticalChainStyle = param.verticalChainStyle;
+    l.horizontalChainStyle = param.horizontalChainStyle;
+    l.widthDefault = param.matchConstraintDefaultWidth;
+    l.heightDefault = param.matchConstraintDefaultHeight;
+    l.widthMax = param.matchConstraintMaxWidth;
+    l.heightMax = param.matchConstraintMaxHeight;
+    l.widthMin = param.matchConstraintMinWidth;
+    l.heightMin = param.matchConstraintMinHeight;
+    l.widthPercent = param.matchConstraintPercentWidth;
+    l.heightPercent = param.matchConstraintPercentHeight;
 }
 
 void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) const {
     const Layout& l = layout;
-    param.leftToLeft = l.leftToLeft;     param.leftToRight = l.leftToRight;
-    param.rightToLeft = l.rightToLeft;   param.rightToRight = l.rightToRight;
-    param.topToTop = l.topToTop;         param.topToBottom = l.topToBottom;
-    param.bottomToTop = l.bottomToTop;   param.bottomToBottom = l.bottomToBottom;
+    param.leftToLeft = l.leftToLeft;
+    param.leftToRight = l.leftToRight;
+    param.rightToLeft = l.rightToLeft;
+    param.rightToRight = l.rightToRight;
+    param.topToTop = l.topToTop;
+    param.topToBottom = l.topToBottom;
+    param.bottomToTop = l.bottomToTop;
+    param.bottomToBottom = l.bottomToBottom;
     param.baselineToBaseline = l.baselineToBaseline;
-    param.horizontalBias = l.horizontalBias; param.verticalBias = l.verticalBias;
+    param.horizontalBias = l.horizontalBias;
+    param.verticalBias = l.verticalBias;
     param.orientation = l.orientation;
-    param.guideBegin = l.guideBegin; param.guideEnd = l.guideEnd; param.guidePercent = l.guidePercent;
-    param.width = l.mWidth; param.height = l.mHeight;
-    param.leftMargin = l.leftMargin; param.rightMargin = l.rightMargin;
-    param.topMargin = l.topMargin;   param.bottomMargin = l.bottomMargin;
-    param.goneLeftMargin = l.goneLeftMargin; param.goneTopMargin = l.goneTopMargin;
-    param.goneRightMargin = l.goneRightMargin; param.goneBottomMargin = l.goneBottomMargin;
-    param.verticalWeight = l.verticalWeight; param.horizontalWeight = l.horizontalWeight;
-    param.verticalChainStyle = l.verticalChainStyle; param.horizontalChainStyle = l.horizontalChainStyle;
-    param.matchConstraintDefaultWidth = l.widthDefault; param.matchConstraintDefaultHeight = l.heightDefault;
-    param.matchConstraintMaxWidth = l.widthMax; param.matchConstraintMaxHeight = l.heightMax;
-    param.matchConstraintMinWidth = l.widthMin; param.matchConstraintMinHeight = l.heightMin;
-    param.matchConstraintPercentWidth = l.widthPercent; param.matchConstraintPercentHeight = l.heightPercent;
+    param.guideBegin = l.guideBegin;
+    param.guideEnd = l.guideEnd;
+    param.guidePercent = l.guidePercent;
+    param.width = l.mWidth;
+    param.height = l.mHeight;
+    param.leftMargin = l.leftMargin;
+    param.rightMargin = l.rightMargin;
+    param.topMargin = l.topMargin;
+    param.bottomMargin = l.bottomMargin;
+    param.goneLeftMargin = l.goneLeftMargin;
+    param.goneTopMargin = l.goneTopMargin;
+    param.goneRightMargin = l.goneRightMargin;
+    param.goneBottomMargin = l.goneBottomMargin;
+    param.verticalWeight = l.verticalWeight;
+    param.horizontalWeight = l.horizontalWeight;
+    param.verticalChainStyle = l.verticalChainStyle;
+    param.horizontalChainStyle = l.horizontalChainStyle;
+    param.matchConstraintDefaultWidth = l.widthDefault;
+    param.matchConstraintDefaultHeight = l.heightDefault;
+    param.matchConstraintMaxWidth = l.widthMax;
+    param.matchConstraintMaxHeight = l.heightMax;
+    param.matchConstraintMinWidth = l.widthMin;
+    param.matchConstraintMinHeight = l.heightMin;
+    param.matchConstraintPercentWidth = l.widthPercent;
+    param.matchConstraintPercentHeight = l.heightPercent;
     if (!l.dimensionRatio.empty()) {
         param.dimensionRatio = parseRatio(l.dimensionRatio);
     }
     if (propertySet.visibility == (int)View::GONE) {
-        param.width = 0; param.height = 0;
+        param.width = 0;
+        param.height = 0;
     }
     param.validate();
 }
@@ -130,16 +167,21 @@ void ConstraintSet::applyTo(ConstraintLayout* constraintLayout) {
         view->setLayoutParams(param);
         const Constraint& c = it->second;
         view->setVisibility(c.propertySet.visibility);
-        // Apply view transforms only when non-identity — the render-node invalidation path used by
-        // the setters is unsafe on unattached views, and re-applying identity is a no-op anyway.
-        if (c.propertySet.alpha != 1.0f) view->setAlpha(c.propertySet.alpha);
-        if (c.transform.rotation != 0)      view->setRotation(c.transform.rotation);
-        if (c.transform.rotationX != 0)     view->setRotationX(c.transform.rotationX);
-        if (c.transform.rotationY != 0)     view->setRotationY(c.transform.rotationY);
-        if (c.transform.scaleX != 1)        view->setScaleX(c.transform.scaleX);
-        if (c.transform.scaleY != 1)        view->setScaleY(c.transform.scaleY);
-        if (c.transform.translationX != 0)  view->setTranslationX(c.transform.translationX);
-        if (c.transform.translationY != 0)  view->setTranslationY(c.transform.translationY);
+        // Attached views always get the transform (so identity resets it — e.g. a Motion run that
+        // left the view rotated is cleared when the start/end ConstraintSet is re-applied on
+        // capture). Unattached views (tests) skip identity: the setter invalidation is unsafe.
+        const bool attached = view->isAttachedToWindow();
+        auto apply = [&](float val, float identity, void (View::*setter)(float)) {
+            if (attached || val != identity) (view->*setter)(val);
+        };
+        apply(c.propertySet.alpha,      1.0f, &View::setAlpha);
+        apply(c.transform.rotation,     0.0f, &View::setRotation);
+        apply(c.transform.rotationX,    0.0f, &View::setRotationX);
+        apply(c.transform.rotationY,    0.0f, &View::setRotationY);
+        apply(c.transform.scaleX,       1.0f, &View::setScaleX);
+        apply(c.transform.scaleY,       1.0f, &View::setScaleY);
+        apply(c.transform.translationX, 0.0f, &View::setTranslationX);
+        apply(c.transform.translationY, 0.0f, &View::setTranslationY);
     }
     constraintLayout->requestLayout();
 }
@@ -154,34 +196,59 @@ void ConstraintSet::clear(int viewId, int anchor) {
     Layout& l = it->second.layout;
     const int UNSET = -1;
     switch (anchor) {
-        case LEFT:   l.leftToLeft = UNSET; l.leftToRight = UNSET; break;
-        case RIGHT:  l.rightToLeft = UNSET; l.rightToRight = UNSET; break;
-        case TOP:    l.topToTop = UNSET; l.topToBottom = UNSET; break;
-        case BOTTOM: l.bottomToTop = UNSET; l.bottomToBottom = UNSET; break;
-        case BASELINE: l.baselineToBaseline = UNSET; break;
-        default: break;
+    case LEFT:
+        l.leftToLeft = UNSET;
+        l.leftToRight = UNSET;
+        break;
+    case RIGHT:
+        l.rightToLeft = UNSET;
+        l.rightToRight = UNSET;
+        break;
+    case TOP:
+        l.topToTop = UNSET;
+        l.topToBottom = UNSET;
+        break;
+    case BOTTOM:
+        l.bottomToTop = UNSET;
+        l.bottomToBottom = UNSET;
+        break;
+    case BASELINE:
+        l.baselineToBaseline = UNSET;
+        break;
+    default:
+        break;
     }
 }
 
 void ConstraintSet::connect(int startID, int startSide, int endID, int endSide, int margin) {
     Layout& l = get(startID).layout;
     switch (startSide) {
-        case LEFT:
-            if (endSide == RIGHT) l.leftToRight = endID; else l.leftToLeft = endID;
-            l.leftMargin = margin; break;
-        case RIGHT:
-            if (endSide == LEFT) l.rightToLeft = endID; else l.rightToRight = endID;
-            l.rightMargin = margin; break;
-        case TOP:
-            if (endSide == BOTTOM) l.topToBottom = endID; else l.topToTop = endID;
-            l.topMargin = margin; break;
-        case BOTTOM:
-            if (endSide == TOP) l.bottomToTop = endID; else l.bottomToBottom = endID;
-            l.bottomMargin = margin; break;
-        case BASELINE: l.baselineToBaseline = endID; break;
-        default:
-            LOGW("ConstraintSet.connect: unsupported side %d", startSide);
-            break;
+    case LEFT:
+        if (endSide == RIGHT) l.leftToRight = endID;
+        else l.leftToLeft = endID;
+        l.leftMargin = margin;
+        break;
+    case RIGHT:
+        if (endSide == LEFT) l.rightToLeft = endID;
+        else l.rightToRight = endID;
+        l.rightMargin = margin;
+        break;
+    case TOP:
+        if (endSide == BOTTOM) l.topToBottom = endID;
+        else l.topToTop = endID;
+        l.topMargin = margin;
+        break;
+    case BOTTOM:
+        if (endSide == TOP) l.bottomToTop = endID;
+        else l.bottomToBottom = endID;
+        l.bottomMargin = margin;
+        break;
+    case BASELINE:
+        l.baselineToBaseline = endID;
+        break;
+    default:
+        LOGW("ConstraintSet.connect: unsupported side %d", startSide);
+        break;
     }
 }
 
@@ -189,18 +256,35 @@ void ConstraintSet::connect(int startID, int startSide, int endID, int endSide) 
     connect(startID, startSide, endID, endSide, 0);
 }
 
-void ConstraintSet::constrainWidth(int viewId, int width)  { get(viewId).layout.mWidth = width; }
-void ConstraintSet::constrainHeight(int viewId, int height){ get(viewId).layout.mHeight = height; }
-void ConstraintSet::setVisibility(int viewId, int visibility) { get(viewId).propertySet.visibility = visibility; }
+void ConstraintSet::constrainWidth(int viewId, int width)  {
+    get(viewId).layout.mWidth = width;
+}
+
+void ConstraintSet::constrainHeight(int viewId, int height) {
+    get(viewId).layout.mHeight = height;
+}
+
+void ConstraintSet::setVisibility(int viewId, int visibility) {
+    get(viewId).propertySet.visibility = visibility;
+}
 
 void ConstraintSet::setMargin(int viewId, int anchor, int value) {
     Layout& l = get(viewId).layout;
     switch (anchor) {
-        case LEFT:   l.leftMargin = value; break;
-        case RIGHT:  l.rightMargin = value; break;
-        case TOP:    l.topMargin = value; break;
-        case BOTTOM: l.bottomMargin = value; break;
-        default: break;
+    case LEFT:
+        l.leftMargin = value;
+        break;
+    case RIGHT:
+        l.rightMargin = value;
+        break;
+    case TOP:
+        l.topMargin = value;
+        break;
+    case BOTTOM:
+        l.bottomMargin = value;
+        break;
+    default:
+        break;
     }
 }
 
@@ -208,14 +292,37 @@ void ConstraintSet::setDimensionRatio(int viewId, const std::string& ratio) {
     get(viewId).layout.dimensionRatio = ratio;
 }
 
-void ConstraintSet::setAlpha(int viewId, float alpha) { get(viewId).propertySet.alpha = alpha; }
-void ConstraintSet::setRotation(int viewId, float rotation) { get(viewId).transform.rotation = rotation; }
-void ConstraintSet::setRotationX(int viewId, float rotationX) { get(viewId).transform.rotationX = rotationX; }
-void ConstraintSet::setRotationY(int viewId, float rotationY) { get(viewId).transform.rotationY = rotationY; }
-void ConstraintSet::setScaleX(int viewId, float scaleX) { get(viewId).transform.scaleX = scaleX; }
-void ConstraintSet::setScaleY(int viewId, float scaleY) { get(viewId).transform.scaleY = scaleY; }
-void ConstraintSet::setTranslationX(int viewId, float translationX) { get(viewId).transform.translationX = translationX; }
-void ConstraintSet::setTranslationY(int viewId, float translationY) { get(viewId).transform.translationY = translationY; }
+void ConstraintSet::setAlpha(int viewId, float alpha) {
+    get(viewId).propertySet.alpha = alpha;
+}
+
+void ConstraintSet::setRotation(int viewId, float rotation) {
+    get(viewId).transform.rotation = rotation;
+}
+
+void ConstraintSet::setRotationX(int viewId, float rotationX) {
+    get(viewId).transform.rotationX = rotationX;
+}
+
+void ConstraintSet::setRotationY(int viewId, float rotationY) {
+    get(viewId).transform.rotationY = rotationY;
+}
+
+void ConstraintSet::setScaleX(int viewId, float scaleX) {
+    get(viewId).transform.scaleX = scaleX;
+}
+
+void ConstraintSet::setScaleY(int viewId, float scaleY) {
+    get(viewId).transform.scaleY = scaleY;
+}
+
+void ConstraintSet::setTranslationX(int viewId, float translationX) {
+    get(viewId).transform.translationX = translationX;
+}
+
+void ConstraintSet::setTranslationY(int viewId, float translationY) {
+    get(viewId).transform.translationY = translationY;
+}
 
 // ===========================================================================
 // XML loading — Constraint::fillFromAttributeList (Java populateConstraint) +
@@ -358,7 +465,10 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     t.transformPivotTarget = a.getResourceId("transformPivotTarget", t.transformPivotTarget);
     {
         float elev = a.getDimension("elevation", t.elevation);
-        if (a.hasAttribute("elevation")) { t.applyElevation = true; t.elevation = elev; }
+        if (a.hasAttribute("elevation")) {
+            t.applyElevation = true;
+            t.elevation = elev;
+        }
     }
 
     // --- motion ---
@@ -376,22 +486,30 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
     // Caller positions `parser` at the <ConstraintSet> START_TAG. We consume through its END_TAG.
     Constraint current;
     bool hasCurrent = false;
-    auto toLower = [](std::string s) { for (auto& c : s) c = (char)std::tolower((unsigned char)c); return s; };
+    auto toLower = [](std::string s) {
+        for (auto& c : s) c = (char)std::tolower((unsigned char)c);
+        return s;
+    };
 
     // Terminate on END_DOCUMENT (clean) or BAD_DOCUMENT (expat parse error) — otherwise a malformed
     // resource would spin forever, since next() short-circuits on BAD_DOCUMENT.
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
         const int eventType = parser.getEventType();
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
             if (tag == "Constraint" || tag == "ConstraintOverride" ||
-                tag == "Guideline"   || tag == "Barrier") {
+                    tag == "Guideline"   || tag == "Barrier") {
                 current = Constraint{};
                 hasCurrent = true;
                 current.fillFromAttributeList(parser); // parser IS-A AttributeSet
-                if (tag == "Guideline") { current.layout.mIsGuideline = true; current.layout.mApply = true; }
-                if (tag == "Barrier")   { current.layout.mHelperType = BARRIER_TYPE; }
+                if (tag == "Guideline") {
+                    current.layout.mIsGuideline = true;
+                    current.layout.mApply = true;
+                }
+                if (tag == "Barrier")   {
+                    current.layout.mHelperType = BARRIER_TYPE;
+                }
             } else if (hasCurrent && (tag == "PropertySet" || tag == "Transform" ||
                                       tag == "Layout" || tag == "Motion")) {
                 // Nested sub-element: same attribute names dispatch into the same sub-structs.
