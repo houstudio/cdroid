@@ -58,6 +58,7 @@ public:
 
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
+    void onLayout(bool changed, int l, int t, int r, int b) override;
 
 private:
     // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.

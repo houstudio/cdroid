@@ -97,10 +97,12 @@ void MotionLayout::buildMotions() {
 }
 
 void MotionLayout::captureAndBuild() {
+            (void*)mStartSet, (void*)mEndSet, getMeasuredWidth(), getMeasuredHeight());
     captureState(mStartSet, mStartWidgets);
     captureState(mEndSet, mEndWidgets);
     buildMotions();
     mCaptured = !mMotions.empty();
+            (int)mMotions.size(), (int)mCaptured);
     if (mCaptured) applyMotion();
 }
 
@@ -181,13 +183,19 @@ void MotionLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mHeightSpec = heightMeasureSpec;
     ConstraintLayout::onMeasure(widthMeasureSpec, heightMeasureSpec);
     // If setTransition was called before we had a size, run the capture now that we do.
-    if (mCapturePending && !mInCapture && getWidth() > 0) {
+    // Use getMeasuredWidth (set by measure) — getWidth() is 0 until onLayout runs.
+    if (mCapturePending && !mInCapture && getMeasuredWidth() > 0) {
         mCapturePending = false;
         captureAndBuild();
     }
-    // During normal (non-capture) measure, if a transition is captured, apply the current progress
-    // so the laid-out children reflect the interpolated state.
-    if (!mInCapture && mCaptured) {
+}
+
+void MotionLayout::onLayout(bool changed, int l, int t, int r, int b) {
+    ConstraintLayout::onLayout(changed, l, t, r, b);
+    // After the solver lays out children, override their positions with the interpolated motion
+    // state. Without this the solver's layout (from the last-applied ConstraintSet) would clobber
+    // the motion positions.
+    if (mCaptured && !mInCapture) {
         applyMotion();
     }
 }
