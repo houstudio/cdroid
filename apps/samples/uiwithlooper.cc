@@ -1,7 +1,7 @@
 #include <cdroid.h>
 #include <porting/cdlog.h>
 #include <widget/candidateview.h>
-include <gui/text/inputtype.h>
+#include <gui/text/inputtype.h>
 #include <core/countdowntimer.h>
 #include <thread>
 
