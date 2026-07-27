@@ -16,7 +16,7 @@
 namespace cdroid {
 
 class Flow : public ConstraintHelper {
-public:
+  public:
     // wrap mode (mirrors clcore::Flow)
     static constexpr int WRAP_NONE      = clcore::Flow::WRAP_NONE;
     static constexpr int WRAP_CHAIN     = clcore::Flow::WRAP_CHAIN;

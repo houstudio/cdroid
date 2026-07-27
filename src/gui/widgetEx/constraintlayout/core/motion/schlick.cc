@@ -28,7 +28,7 @@ double Schlick::dfunc(double x) const {
         return (mS * mT * mT) / ((mS * (mT - x) + x) * (mS * (mT - x) + x));
     }
     return (mS * (mT - 1) * (mT - 1))
-         / ((-mS * (mT - x) - x + 1) * (-mS * (mT - x) - x + 1));
+           / ((-mS * (mT - x) - x + 1) * (-mS * (mT - x) - x + 1));
 }
 
 double Schlick::getDiff(double x) const {

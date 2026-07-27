@@ -10,20 +10,34 @@
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 namespace cdroid {
 class MotionKeyTimeCycle : public MotionKey {
-public:
+  public:
     static constexpr int KEY_TYPE = 3;
-    MotionKeyTimeCycle() { mType = KEY_TYPE; }
+    MotionKeyTimeCycle() {
+        mType = KEY_TYPE;
+    }
     void getAttributeNames(std::unordered_set<std::string>& a) const override {}
     void addValues(std::unordered_map<std::string, SplineSet*>&) override {}
-    MotionKey* clone() const override { return new MotionKeyTimeCycle(*this); }
+    MotionKey* clone() const override {
+        return new MotionKeyTimeCycle(*this);
+    }
     bool setValue(int type, int value) override {
-        if (type == TypedValues::CycleType::TYPE_WAVE_SHAPE) { mWaveShape = value; return true; }
-        if (type == TypedValues::TYPE_FRAME_POSITION) { mFramePosition = value; return true; }
+        if (type == TypedValues::CycleType::TYPE_WAVE_SHAPE) {
+            mWaveShape = value;
+            return true;
+        }
+        if (type == TypedValues::TYPE_FRAME_POSITION) {
+            mFramePosition = value;
+            return true;
+        }
         return false;
     }
     bool setValue(int type, float value) override;
-    bool setValue(int, const std::string&) override { return false; }
-    bool setValue(int, bool) override { return false; }
+    bool setValue(int, const std::string&) override {
+        return false;
+    }
+    bool setValue(int, bool) override {
+        return false;
+    }
     std::string mTransitionEasing;
     int mCurveFit = -1, mWaveShape = 0;
     float mWavePeriod = NAN, mWaveOffset = 0;

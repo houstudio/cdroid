@@ -187,7 +187,7 @@ void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
     }
 }
 
-void ConstraintSet::clone(Context* context, const std::string& resource){
+void ConstraintSet::clone(Context* context, const std::string& resource) {
     // Inflate the layout offscreen (no parent) and clone its children's LayoutParams, then discard
     // the inflated tree (we only needed its constraints). Supports StateSet `constraints="@layout/.."`.
     View* root = LayoutInflater::from(context)->inflate(resource, nullptr, false);

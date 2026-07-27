@@ -25,7 +25,7 @@ class ConstraintWidgetContainer;
 class LinearSystem;
 
 class Optimizer {
-public:
+  public:
     static const int OPTIMIZATION_NONE               = 0;
     static const int OPTIMIZATION_DIRECT             = 1;
     static const int OPTIMIZATION_BARRIER            = 1 << 1;

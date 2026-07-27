@@ -23,7 +23,7 @@ namespace cdroid {
 class SplineSet; // forward — addValues populates SplineSets (spline-set system ported later)
 
 class MotionKey {
-public:
+  public:
     static constexpr int UNSET = -1;
 
     // Attribute name constants (match TypedValues.AttributesType.S_*).
@@ -61,9 +61,15 @@ public:
     virtual bool setValue(int type, bool value);
 
     MotionKey& copy(const MotionKey& src);
-    void setViewId(int id) { mViewId = id; }
-    void setFramePosition(int pos) { mFramePosition = pos; }
-    int  getFramePosition() const { return mFramePosition; }
+    void setViewId(int id) {
+        mViewId = id;
+    }
+    void setFramePosition(int pos) {
+        mFramePosition = pos;
+    }
+    int  getFramePosition() const {
+        return mFramePosition;
+    }
 
     void setCustomAttribute(const std::string& name, int type, float value);
     void setCustomAttribute(const std::string& name, int type, int value);

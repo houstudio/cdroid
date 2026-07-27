@@ -296,7 +296,10 @@ void LinearSystem::minimize() {
         bool fullySolved = true;
         for (int i = 0; i < mNumRows; i++) {
             ArrayRow* r = mRows[i];
-            if (!r->mIsSimpleDefinition) { fullySolved = false; break; }
+            if (!r->mIsSimpleDefinition) {
+                fullySolved = false;
+                break;
+            }
         }
         if (!fullySolved) {
             minimizeGoal(mGoal);
@@ -524,7 +527,10 @@ int LinearSystem::enforceBFS(Row* /*goal*/) {
     for (int i = 0; i < mNumRows; i++) {
         SolverVariable* variable = mRows[i]->mVariable;
         if (variable->mType == SolverVariable::Type::UNRESTRICTED) continue;
-        if (mRows[i]->mConstantValue < 0) { infeasibleSystem = true; break; }
+        if (mRows[i]->mConstantValue < 0) {
+            infeasibleSystem = true;
+            break;
+        }
     }
     if (infeasibleSystem) {
         bool done = false;
@@ -766,7 +772,7 @@ void LinearSystem::addSynonym(SolverVariable* a, SolverVariable* b, int margin) 
 ArrayRow* LinearSystem::addEquality(SolverVariable* a, SolverVariable* b, int margin, int strength) {
     if (sMetrics != nullptr) sMetrics->mSimpleEquations++;
     if (USE_BASIC_SYNONYMS && strength == SolverVariable::STRENGTH_FIXED
-        && b->isFinalValue && a->mDefinitionId == -1) {
+            && b->isFinalValue && a->mDefinitionId == -1) {
         a->setFinalValue(this, b->computedValue + margin);
         return nullptr;
     }
@@ -814,8 +820,8 @@ void LinearSystem::addEquality(SolverVariable* a, int value) {
 }
 
 ArrayRow* LinearSystem::createRowDimensionPercent(LinearSystem* linearSystem,
-                                                  SolverVariable* variableA,
-                                                  SolverVariable* variableC, float percent) {
+        SolverVariable* variableA,
+        SolverVariable* variableC, float percent) {
     ArrayRow* row = linearSystem->createRow();
     return row->createRowDimensionPercent(variableA, variableC, percent);
 }

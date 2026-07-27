@@ -42,7 +42,9 @@ void ConstraintHelper::addID(const std::string& idString) {
     }
     std::string s = idString;
     // trim
-    auto notspace = [](unsigned char c) { return !std::isspace(c); };
+    auto notspace = [](unsigned char c) {
+        return !std::isspace(c);
+    };
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
     s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
 

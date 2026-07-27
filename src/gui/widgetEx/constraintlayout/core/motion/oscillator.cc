@@ -104,10 +104,10 @@ double Oscillator::getP(double time) const {
         index = -index - 1;
         double t = time;
         double m = (mPeriod[index] - mPeriod[index - 1])
-                 / (mPosition[index] - mPosition[index - 1]);
+                   / (mPosition[index] - mPosition[index - 1]);
         p = mArea[index - 1]
-          + (mPeriod[index - 1] - m * mPosition[index - 1]) * (t - mPosition[index - 1])
-          + m * (t * t - mPosition[index - 1] * mPosition[index - 1]) / 2;
+            + (mPeriod[index - 1] - m * mPosition[index - 1]) * (t - mPosition[index - 1])
+            + m * (t * t - mPosition[index - 1] * mPosition[index - 1]) / 2;
     }
     return p;
 }
@@ -115,25 +115,25 @@ double Oscillator::getP(double time) const {
 double Oscillator::getValue(double time, double phase) const {
     double angle = phase + getP(time);
     switch (mType) {
-        default:
-        case SIN_WAVE:
-            return std::sin(mPI2 * angle);
-        case SQUARE_WAVE:
-            return signum(0.5 - std::fmod(angle, 1.0)); // signum(0.5 - angle%1)
-        case TRIANGLE_WAVE:
-            return 1 - std::fabs(std::fmod(angle * 4 + 1, 4) - 2);
-        case SAW_WAVE:
-            return std::fmod(angle * 2 + 1, 2) - 1;
-        case REVERSE_SAW_WAVE:
-            return (1 - std::fmod(angle * 2 + 1, 2));
-        case COS_WAVE:
-            return std::cos(mPI2 * (phase + angle));
-        case BOUNCE: {
-            double x = 1 - std::fabs(std::fmod(angle * 4, 4) - 2);
-            return 1 - x * x;
-        }
-        case CUSTOM:
-            return mCustomCurve->getPos(std::fmod(angle, 1.0), 0);
+    default:
+    case SIN_WAVE:
+        return std::sin(mPI2 * angle);
+    case SQUARE_WAVE:
+        return signum(0.5 - std::fmod(angle, 1.0)); // signum(0.5 - angle%1)
+    case TRIANGLE_WAVE:
+        return 1 - std::fabs(std::fmod(angle * 4 + 1, 4) - 2);
+    case SAW_WAVE:
+        return std::fmod(angle * 2 + 1, 2) - 1;
+    case REVERSE_SAW_WAVE:
+        return (1 - std::fmod(angle * 2 + 1, 2));
+    case COS_WAVE:
+        return std::cos(mPI2 * (phase + angle));
+    case BOUNCE: {
+        double x = 1 - std::fabs(std::fmod(angle * 4, 4) - 2);
+        return 1 - x * x;
+    }
+    case CUSTOM:
+        return mCustomCurve->getPos(std::fmod(angle, 1.0), 0);
     }
 }
 
@@ -152,7 +152,7 @@ double Oscillator::getDP(double time) const {
         index = -index - 1;
         double t = time;
         double m = (mPeriod[index] - mPeriod[index - 1])
-                 / (mPosition[index] - mPosition[index - 1]);
+                   / (mPosition[index] - mPosition[index - 1]);
         p = m * t + (mPeriod[index - 1] - m * mPosition[index - 1]);
     }
     return p;
@@ -162,23 +162,23 @@ double Oscillator::getSlope(double time, double phase, double dphase) const {
     double angle = phase + getP(time);
     double dangle_dtime = getDP(time) + dphase;
     switch (mType) {
-        default:
-        case SIN_WAVE:
-            return mPI2 * dangle_dtime * std::cos(mPI2 * angle);
-        case SQUARE_WAVE:
-            return 0;
-        case TRIANGLE_WAVE:
-            return 4 * dangle_dtime * signum(std::fmod(angle * 4 + 3, 4) - 2);
-        case SAW_WAVE:
-            return dangle_dtime * 2;
-        case REVERSE_SAW_WAVE:
-            return -dangle_dtime * 2;
-        case COS_WAVE:
-            return -mPI2 * dangle_dtime * std::sin(mPI2 * angle);
-        case BOUNCE:
-            return 4 * dangle_dtime * (std::fmod(angle * 4 + 2, 4) - 2);
-        case CUSTOM:
-            return mCustomCurve->getSlope(std::fmod(angle, 1.0), 0);
+    default:
+    case SIN_WAVE:
+        return mPI2 * dangle_dtime * std::cos(mPI2 * angle);
+    case SQUARE_WAVE:
+        return 0;
+    case TRIANGLE_WAVE:
+        return 4 * dangle_dtime * signum(std::fmod(angle * 4 + 3, 4) - 2);
+    case SAW_WAVE:
+        return dangle_dtime * 2;
+    case REVERSE_SAW_WAVE:
+        return -dangle_dtime * 2;
+    case COS_WAVE:
+        return -mPI2 * dangle_dtime * std::sin(mPI2 * angle);
+    case BOUNCE:
+        return 4 * dangle_dtime * (std::fmod(angle * 4 + 2, 4) - 2);
+    case CUSTOM:
+        return mCustomCurve->getSlope(std::fmod(angle, 1.0), 0);
     }
 }
 

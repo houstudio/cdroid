@@ -37,7 +37,7 @@ Barrier::Barrier(Context* ctx, const AttributeSet& attrs)
     int dir = attrs.getInt("barrierDirection", kBarrierDirection, LEFT);
     setType(dir);
     static_cast<clcore::Barrier*>(mHelperWidget.get())
-            ->setAllowsGoneWidget(attrs.getBoolean("barrierAllowsGoneWidgets", true));
+    ->setAllowsGoneWidget(attrs.getBoolean("barrierAllowsGoneWidgets", true));
     int margin = attrs.getDimensionPixelSize("barrierMargin", 0);
     static_cast<clcore::Barrier*>(mHelperWidget.get())->setMargin(margin);
 

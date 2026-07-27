@@ -29,7 +29,7 @@ namespace cdroid {
 class ConstraintWidgetContainer;
 
 class WidgetContainer : public ConstraintWidget {
-public:
+  public:
     std::vector<ConstraintWidget*> mChildren;
 
     WidgetContainer();

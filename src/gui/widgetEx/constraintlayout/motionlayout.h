@@ -37,7 +37,7 @@ class MotionKeyPosition;
 class KeyFrames;
 
 class MotionLayout : public ConstraintLayout {
-public:
+  public:
     MotionLayout(Context* ctx, const AttributeSet& attrs);
     explicit MotionLayout(int width, int height);
     ~MotionLayout() override;
@@ -51,11 +51,15 @@ public:
     void transitionToState(int stateId);
     // Used by MotionScene::autoTransition: switch to `t` and animate/jump to its end (or start).
     void applyTransitionForAuto(MotionScene::Transition* t, bool toEnd, bool jump);
-    int getCurrentState() const { return mCurrentState; }
+    int getCurrentState() const {
+        return mCurrentState;
+    }
 
     // Drive every child's Motion to `progress` in [0,1] and apply the interpolated state.
     void setProgress(float progress);
-    float getProgress() const { return mProgress; }
+    float getProgress() const {
+        return mProgress;
+    }
 
     // Animate to the start/end state over the transition duration (driven by a ValueAnimator).
     void transitionToStart();
@@ -71,9 +75,15 @@ public:
     void animateToWithStopLogic(float target, float startVelocity,
                                 float maxAcceleration, float maxVelocity);
     // Instant jump (no animation).
-    void setProgressInstant(float progress) { setProgress(progress); }
-    void setTransitionDuration(int64_t durationMs) { mTransitionDuration = durationMs; }
-    int64_t getTransitionDuration() const { return mTransitionDuration; }
+    void setProgressInstant(float progress) {
+        setProgress(progress);
+    }
+    void setTransitionDuration(int64_t durationMs) {
+        mTransitionDuration = durationMs;
+    }
+    int64_t getTransitionDuration() const {
+        return mTransitionDuration;
+    }
 
     // Per-child keyframes (must be called after setTransition). The MotionLayout stores the key
     // and forwards it to the child's Motion controller.
@@ -87,7 +97,7 @@ public:
     // Used by TouchResponse to map drag deltas to progress (the anchor's travel is the drag range).
     void getAnchorDpDt(int anchorId, float pos, float locationX, float locationY, float out[2]);
 
-protected:
+  protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int r, int b) override;
     // Drag-to-progress when the scene's current transition has an <OnSwipe>. Intercepted once the
@@ -95,7 +105,7 @@ protected:
     bool onInterceptTouchEvent(MotionEvent& evt) override;
     bool onTouchEvent(MotionEvent& evt) override;
 
-private:
+  private:
     // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.
     void animateTo(float target);
     // Actually run the start/end capture + build motions (called once we have a real size).

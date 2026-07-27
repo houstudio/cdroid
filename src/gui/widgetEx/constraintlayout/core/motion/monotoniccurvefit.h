@@ -16,7 +16,7 @@
 namespace cdroid {
 
 class MonotonicCurveFit : public CurveFit {
-public:
+  public:
     MonotonicCurveFit(const std::vector<double>& time, const std::vector<std::vector<double>>& y);
 
     void   getPos(double t, std::vector<double>& v) override;
@@ -29,7 +29,7 @@ public:
     // Build a periodic wave spline from a "spline(v0,v1,...)" config string (values 0..1).
     static MonotonicCurveFit buildWave(const std::string& configString);
 
-private:
+  private:
     static double interpolate(double h, double x, double y1, double y2, double t1, double t2);
     static double diff(double h, double x, double y1, double y2, double t1, double t2);
     static MonotonicCurveFit buildWave(const std::vector<double>& values);

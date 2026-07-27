@@ -178,13 +178,13 @@ bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {
         const int mode = t->getAutoTransition();
         if (mode == Transition::AUTO_NONE) continue;
         if (currentState == t->getStartId()
-            && (mode == Transition::AUTO_ANIMATE_TO_END || mode == Transition::AUTO_JUMP_TO_END)) {
+                && (mode == Transition::AUTO_ANIMATE_TO_END || mode == Transition::AUTO_JUMP_TO_END)) {
             layout->applyTransitionForAuto(t.get(), /*toEnd=*/true,
                                            /*jump=*/(mode == Transition::AUTO_JUMP_TO_END));
             return true;
         }
         if (currentState == t->getEndId()
-            && (mode == Transition::AUTO_ANIMATE_TO_START || mode == Transition::AUTO_JUMP_TO_START)) {
+                && (mode == Transition::AUTO_ANIMATE_TO_START || mode == Transition::AUTO_JUMP_TO_START)) {
             layout->applyTransitionForAuto(t.get(), /*toEnd=*/false,
                                            /*jump=*/(mode == Transition::AUTO_JUMP_TO_START));
             return true;
@@ -202,7 +202,7 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
     Transition* currentTransition = nullptr;
 
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
         const int eventType = parser.getEventType();
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();

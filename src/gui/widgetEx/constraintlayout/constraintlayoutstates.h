@@ -38,7 +38,7 @@ class Context;
 class XmlPullParser;
 
 class ConstraintLayoutStates {
-public:
+  public:
     // A size-banded entry: applies when the layout's dimensions fall in [min,max] (NaN = unbounded).
     struct Variant {
         float mMinWidth  = NAN;
@@ -76,8 +76,12 @@ public:
     ConstraintSet* convertToConstraintSet(int currentConstraintSetId, int stateId,
                                           float width, float height) const;
 
-    int getDefaultState() const { return mDefaultState; }
-    int getCurrentStateId() const { return mCurrentStateId; }
+    int getDefaultState() const {
+        return mDefaultState;
+    }
+    int getCurrentStateId() const {
+        return mCurrentStateId;
+    }
 
     // Select the ConstraintSet for (id, width, height) and apply it to the bound layout. Tracks the
     // current state/constraint so a no-op (same state, dimensions still matching) skips applyTo.
@@ -87,7 +91,7 @@ public:
     int getId(const std::string& idString) const;
     static std::string stripId(const std::string& idString);
 
-private:
+  private:
     void parse(Context* ctx, XmlPullParser& parser);
     int parseConstraintSet(Context* ctx, XmlPullParser& parser); // inline <ConstraintSet> -> map
     // Resolve a `constraints` attr value to a ConstraintSet: an inline <ConstraintSet> ref

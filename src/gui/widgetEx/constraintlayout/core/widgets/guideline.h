@@ -34,7 +34,7 @@ class LinearSystem;
 namespace clcore {
 
 class Guideline : public ConstraintWidget {
-public:
+  public:
     static const int HORIZONTAL = 0;
     static const int VERTICAL   = 1;
 
@@ -79,13 +79,13 @@ public:
     void cyclePosition();
     bool isPercent() const;
 
-protected:
+  protected:
     float mRelativePercent = -1;
     int   mRelativeBegin   = -1;
     int   mRelativeEnd     = -1;
     bool  mGuidelineUseRtl = true;
 
-private:
+  private:
     ConstraintAnchor* mAnchor = nullptr; // points at mTop (horizontal) or mLeft (vertical)
     int   mOrientation    = HORIZONTAL;
     int   mMinimumPosition = 0;

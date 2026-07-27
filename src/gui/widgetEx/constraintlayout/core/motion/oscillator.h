@@ -19,7 +19,7 @@
 namespace cdroid {
 
 class Oscillator {
-public:
+  public:
     // Wave types (the int values line up with attribute enums).
     static const int SIN_WAVE         = 0;
     static const int SQUARE_WAVE      = 1;
@@ -45,7 +45,7 @@ public:
 
     std::string toString() const;
 
-private:
+  private:
     double getP(double time) const;
     double getDP(double time) const;
 

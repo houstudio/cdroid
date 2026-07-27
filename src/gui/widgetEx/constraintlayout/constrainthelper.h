@@ -35,12 +35,14 @@ namespace cdroid {
 class ConstraintLayout;
 
 class ConstraintHelper : public View {
-public:
+  public:
     ConstraintHelper(Context* ctx, const AttributeSet& attrs);
     explicit ConstraintHelper(int width, int height);
 
     // The owned core helper widget (Barrier/...). getViewWidget() returns this for helper children.
-    HelperWidget* getHelperWidget() const { return mHelperWidget.get(); }
+    HelperWidget* getHelperWidget() const {
+        return mHelperWidget.get();
+    }
 
     // --- referenced ids (programmatic API; XML uses constraint_referenced_ids) ---
     std::vector<int> getReferencedIds() const;
@@ -67,7 +69,7 @@ public:
     void applyLayoutFeatures();
     void applyLayoutFeatures(ConstraintLayout* container);
 
-protected:
+  protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void init(const AttributeSet& attrs);
 
@@ -76,7 +78,7 @@ protected:
     bool mUseViewMeasure = false;
     std::string mReferenceIds;
 
-private:
+  private:
     void addRscID(int id);
     void addID(const std::string& idString);
     void setIds(const std::string& idList);

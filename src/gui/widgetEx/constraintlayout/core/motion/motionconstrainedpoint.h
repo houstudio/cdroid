@@ -27,7 +27,7 @@ class MotionWidget;
 class SplineSet; // forward — addValues is stubbed until the spline-set system is ported
 
 class MotionConstrainedPoint {
-public:
+  public:
     static constexpr int PERPENDICULAR = 1;
     static constexpr int CARTESIAN = 2;
 
@@ -66,9 +66,11 @@ public:
     void setState(MotionWidget* view);
     void addValues(std::unordered_map<std::string, SplineSet*>& splines, int mFramePosition);
 
-    bool operator<(const MotionConstrainedPoint& o) const { return mPosition < o.mPosition; }
+    bool operator<(const MotionConstrainedPoint& o) const {
+        return mPosition < o.mPosition;
+    }
 
-private:
+  private:
     static bool diff(float a, float b);
 };
 

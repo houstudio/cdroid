@@ -28,7 +28,7 @@
 namespace cdroid {
 
 class Barrier : public ConstraintHelper {
-public:
+  public:
     // Direction constants (mirrors clcore::Barrier + START/END for RTL resolution).
     static constexpr int LEFT   = clcore::Barrier::LEFT;
     static constexpr int TOP    = clcore::Barrier::TOP;
@@ -51,7 +51,7 @@ public:
 
     void resolveRtl(ConstraintWidget* widget, bool isRtl) override;
 
-private:
+  private:
     void updateType(ConstraintWidget* widget, int type, bool isRtl);
 
     int mIndicatedType = LEFT;

@@ -15,7 +15,7 @@
 namespace cdroid {
 
 class LinearCurveFit : public CurveFit {
-public:
+  public:
     LinearCurveFit(const std::vector<double>& time, const std::vector<std::vector<double>>& y);
 
     void   getPos(double t, std::vector<double>& v) override;
@@ -25,7 +25,7 @@ public:
     double getSlope(double t, int j) override;
     std::vector<double> getTimePoints() override;
 
-private:
+  private:
     // Length traveled by the first two dims assuming x,y. Added for future work; unused upstream.
     double getLength2D(double t);
 

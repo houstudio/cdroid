@@ -10,19 +10,30 @@
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 namespace cdroid {
 class MotionKeyTrigger : public MotionKey {
-public:
+  public:
     static constexpr int KEY_TYPE = 5;
-    MotionKeyTrigger() { mType = KEY_TYPE; }
+    MotionKeyTrigger() {
+        mType = KEY_TYPE;
+    }
     void getAttributeNames(std::unordered_set<std::string>&) const override {}
     void addValues(std::unordered_map<std::string, SplineSet*>&) override {}
-    MotionKey* clone() const override { return new MotionKeyTrigger(*this); }
+    MotionKey* clone() const override {
+        return new MotionKeyTrigger(*this);
+    }
     bool setValue(int type, int value) override {
-        if (type == TypedValues::TYPE_FRAME_POSITION) { mFramePosition = value; return true; }
+        if (type == TypedValues::TYPE_FRAME_POSITION) {
+            mFramePosition = value;
+            return true;
+        }
         return false;
     }
-    bool setValue(int, float) override { return false; }
+    bool setValue(int, float) override {
+        return false;
+    }
     bool setValue(int type, const std::string& value) override;
-    bool setValue(int, bool) override { return false; }
+    bool setValue(int, bool) override {
+        return false;
+    }
     std::string mCross, mPositiveCross, mNegativeCross;
     int mTriggerID = UNSET, mTriggerReceiver = UNSET, mTriggerCollisionId = UNSET;
     int mCurveFit = -1;

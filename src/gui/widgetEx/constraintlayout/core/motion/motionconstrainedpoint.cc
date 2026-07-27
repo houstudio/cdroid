@@ -23,7 +23,10 @@ bool MotionConstrainedPoint::diff(float a, float b) {
 }
 
 void MotionConstrainedPoint::setBounds(float x, float y, float w, float h) {
-    mX = x; mY = y; mWidth = w; mHeight = h;
+    mX = x;
+    mY = y;
+    mWidth = w;
+    mHeight = h;
 }
 
 void MotionConstrainedPoint::different(const MotionConstrainedPoint& points,
@@ -56,17 +59,23 @@ void MotionConstrainedPoint::different(const MotionConstrainedPoint& points,
                                        std::vector<std::string>& /*custom*/) const {
     // std::vector<bool> is a proxy; assign the combined bool rather than |= on the reference.
     int c = 0;
-    mask[c] = mask[c] | diff(mPosition, points.mPosition); c++;
-    mask[c] = mask[c] | diff(mX, points.mX); c++;
-    mask[c] = mask[c] | diff(mY, points.mY); c++;
-    mask[c] = mask[c] | diff(mWidth, points.mWidth); c++;
-    mask[c] = mask[c] | diff(mHeight, points.mHeight); c++;
+    mask[c] = mask[c] | diff(mPosition, points.mPosition);
+    c++;
+    mask[c] = mask[c] | diff(mX, points.mX);
+    c++;
+    mask[c] = mask[c] | diff(mY, points.mY);
+    c++;
+    mask[c] = mask[c] | diff(mWidth, points.mWidth);
+    c++;
+    mask[c] = mask[c] | diff(mHeight, points.mHeight);
+    c++;
 }
 
 void MotionConstrainedPoint::fillStandard(std::vector<double>& data, const std::vector<int>& toUse) const {
     const float set[] = {mPosition, mX, mY, mWidth, mHeight, mAlpha, mElevation,
                          mRotation, mRotationX, rotationY, mScaleX, mScaleY, mPivotX,
-                         mPivotY, mTranslationX, mTranslationY, mTranslationZ, mPathRotate};
+                         mPivotY, mTranslationX, mTranslationY, mTranslationZ, mPathRotate
+                        };
     int c = 0;
     for (int i : toUse) {
         if (i < (int)(sizeof(set) / sizeof(set[0]))) {

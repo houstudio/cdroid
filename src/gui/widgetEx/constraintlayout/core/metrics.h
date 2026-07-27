@@ -29,7 +29,7 @@ namespace cdroid {
  * Ported verbatim from androidx.constraintlayout.core.Metrics.
  */
 class Metrics {
-public:
+  public:
     int64_t measuresWidgetsDuration = 0;  // time spent in child measures (ns)
     int64_t measuresLayoutDuration  = 0;  // time spent in child measures (ns)
     int64_t measuredWidgets         = 0;

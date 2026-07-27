@@ -29,7 +29,7 @@
 namespace cdroid {
 
 class Motion : public TypedValues {
-public:
+  public:
     Motion();
     ~Motion()override;
 
@@ -66,11 +66,17 @@ public:
     bool setValue(int id, bool value) override;
     int  getId(const std::string& name) override;
 
-    MotionWidget* getView() const { return mView; }
-    MotionPaths& getStartMotionPath() { return mStartMotionPath; }
-    MotionPaths& getEndMotionPath() { return mEndMotionPath; }
+    MotionWidget* getView() const {
+        return mView;
+    }
+    MotionPaths& getStartMotionPath() {
+        return mStartMotionPath;
+    }
+    MotionPaths& getEndMotionPath() {
+        return mEndMotionPath;
+    }
 
-private:
+  private:
     static float lerp(float start, float end, float defaultValue, float progress);
     // Parse mTransitionEasing into mEasing (called before interpolation if pending).
     void buildEasing();

@@ -19,28 +19,48 @@ Barrier::Barrier(const std::string& debugName) {
     setDebugName(debugName);
 }
 
-bool Barrier::allowedInBarrier() const { return true; }
-bool Barrier::isBarrier() const { return true; }
-bool Barrier::isResolvedHorizontally() const { return mResolved; }
-bool Barrier::isResolvedVertically() const { return mResolved; }
+bool Barrier::allowedInBarrier() const {
+    return true;
+}
+bool Barrier::isBarrier() const {
+    return true;
+}
+bool Barrier::isResolvedHorizontally() const {
+    return mResolved;
+}
+bool Barrier::isResolvedVertically() const {
+    return mResolved;
+}
 
-int  Barrier::getBarrierType() const { return mBarrierType; }
-void Barrier::setBarrierType(int barrierType) { mBarrierType = barrierType; }
-bool Barrier::getAllowsGoneWidget() const { return mAllowsGoneWidget; }
-void Barrier::setAllowsGoneWidget(bool allowsGoneWidget) { mAllowsGoneWidget = allowsGoneWidget; }
-int  Barrier::getMargin() const { return mMargin; }
-void Barrier::setMargin(int margin) { mMargin = margin; }
+int  Barrier::getBarrierType() const {
+    return mBarrierType;
+}
+void Barrier::setBarrierType(int barrierType) {
+    mBarrierType = barrierType;
+}
+bool Barrier::getAllowsGoneWidget() const {
+    return mAllowsGoneWidget;
+}
+void Barrier::setAllowsGoneWidget(bool allowsGoneWidget) {
+    mAllowsGoneWidget = allowsGoneWidget;
+}
+int  Barrier::getMargin() const {
+    return mMargin;
+}
+void Barrier::setMargin(int margin) {
+    mMargin = margin;
+}
 
 int Barrier::getOrientation() const {
     switch (mBarrierType) {
-        case LEFT:
-        case RIGHT:
-            return HORIZONTAL;
-        case TOP:
-        case BOTTOM:
-            return VERTICAL;
-        default:
-            return UNKNOWN;
+    case LEFT:
+    case RIGHT:
+        return HORIZONTAL;
+    case TOP:
+    case BOTTOM:
+        return VERTICAL;
+    default:
+        return UNKNOWN;
     }
 }
 
@@ -53,7 +73,9 @@ void Barrier::copy(ConstraintWidget* src,
     mMargin = srcBarrier->mMargin;
 }
 
-std::string Barrier::getType() const { return "Barrier"; }
+std::string Barrier::getType() const {
+    return "Barrier";
+}
 
 void Barrier::markWidgets() {
     for (ConstraintWidget* widget : mWidgets) {
@@ -113,30 +135,30 @@ void Barrier::addToSolver(LinearSystem* system, bool /*optimize*/) {
         }
         if ((mBarrierType == LEFT || mBarrierType == RIGHT)
                 && widget->getHorizontalDimensionBehaviour()
-                   == DimensionBehaviour::MATCH_CONSTRAINT
+                == DimensionBehaviour::MATCH_CONSTRAINT
                 && widget->mLeft.getTarget() != nullptr
                 && widget->mRight.getTarget() != nullptr) {
             hasMatchConstraintWidgets = true;
             break;
         } else if ((mBarrierType == TOP || mBarrierType == BOTTOM)
-                && widget->getVerticalDimensionBehaviour()
+                   && widget->getVerticalDimensionBehaviour()
                    == DimensionBehaviour::MATCH_CONSTRAINT
-                && widget->mTop.getTarget() != nullptr
-                && widget->mBottom.getTarget() != nullptr) {
+                   && widget->mTop.getTarget() != nullptr
+                   && widget->mBottom.getTarget() != nullptr) {
             hasMatchConstraintWidgets = true;
             break;
         }
     }
 
     bool mHasHorizontalCenteredDependents =
-            mLeft.hasCenteredDependents() || mRight.hasCenteredDependents();
+        mLeft.hasCenteredDependents() || mRight.hasCenteredDependents();
     bool mHasVerticalCenteredDependents =
-            mTop.hasCenteredDependents() || mBottom.hasCenteredDependents();
+        mTop.hasCenteredDependents() || mBottom.hasCenteredDependents();
     bool applyEqualityOnReferences = !hasMatchConstraintWidgets
-            && ((mBarrierType == LEFT   && mHasHorizontalCenteredDependents)
-             || (mBarrierType == TOP    && mHasVerticalCenteredDependents)
-             || (mBarrierType == RIGHT  && mHasHorizontalCenteredDependents)
-             || (mBarrierType == BOTTOM && mHasVerticalCenteredDependents));
+                                     && ((mBarrierType == LEFT   && mHasHorizontalCenteredDependents)
+                                         || (mBarrierType == TOP    && mHasVerticalCenteredDependents)
+                                         || (mBarrierType == RIGHT  && mHasHorizontalCenteredDependents)
+                                         || (mBarrierType == BOTTOM && mHasVerticalCenteredDependents));
 
     int equalityOnReferencesStrength = SolverVariable::STRENGTH_EQUALITY;
     if (!applyEqualityOnReferences) {
@@ -213,7 +235,7 @@ bool Barrier::allSolved() {
                 && !widget->isResolvedHorizontally()) {
             hasAllWidgetsResolved = false;
         } else if ((mBarrierType == TOP || mBarrierType == BOTTOM)
-                && !widget->isResolvedVertically()) {
+                   && !widget->isResolvedVertically()) {
             hasAllWidgetsResolved = false;
         }
     }
@@ -240,16 +262,16 @@ bool Barrier::allSolved() {
             }
             if (mBarrierType == LEFT) {
                 barrierPosition = std::min(barrierPosition,
-                        widget->getAnchor(ConstraintAnchor::Type::LEFT)->getFinalValue());
+                                           widget->getAnchor(ConstraintAnchor::Type::LEFT)->getFinalValue());
             } else if (mBarrierType == RIGHT) {
                 barrierPosition = std::max(barrierPosition,
-                        widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getFinalValue());
+                                           widget->getAnchor(ConstraintAnchor::Type::RIGHT)->getFinalValue());
             } else if (mBarrierType == TOP) {
                 barrierPosition = std::min(barrierPosition,
-                        widget->getAnchor(ConstraintAnchor::Type::TOP)->getFinalValue());
+                                           widget->getAnchor(ConstraintAnchor::Type::TOP)->getFinalValue());
             } else if (mBarrierType == BOTTOM) {
                 barrierPosition = std::max(barrierPosition,
-                        widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getFinalValue());
+                                           widget->getAnchor(ConstraintAnchor::Type::BOTTOM)->getFinalValue());
             }
         }
         barrierPosition += mMargin;

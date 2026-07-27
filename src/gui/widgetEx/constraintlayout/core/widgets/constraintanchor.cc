@@ -136,54 +136,54 @@ bool ConstraintAnchor::isValidConnection(ConstraintAnchor* anchor) const {
         return true;
     }
     switch (mType) {
-        case Type::CENTER: {
-            // allow everything but baseline and center_x/center_y
-            return target != Type::BASELINE && target != Type::CENTER_X
-                    && target != Type::CENTER_Y;
+    case Type::CENTER: {
+        // allow everything but baseline and center_x/center_y
+        return target != Type::BASELINE && target != Type::CENTER_X
+               && target != Type::CENTER_Y;
+    }
+    case Type::LEFT:
+    case Type::RIGHT: {
+        bool isCompatible = target == Type::LEFT || target == Type::RIGHT;
+        if (dynamic_cast<clcore::Guideline*>(anchor->getOwner()) != nullptr) {
+            isCompatible = isCompatible || target == Type::CENTER_X;
         }
-        case Type::LEFT:
-        case Type::RIGHT: {
-            bool isCompatible = target == Type::LEFT || target == Type::RIGHT;
-            if (dynamic_cast<clcore::Guideline*>(anchor->getOwner()) != nullptr) {
-                isCompatible = isCompatible || target == Type::CENTER_X;
-            }
-            return isCompatible;
+        return isCompatible;
+    }
+    case Type::TOP:
+    case Type::BOTTOM: {
+        bool isCompatible = target == Type::TOP || target == Type::BOTTOM;
+        if (dynamic_cast<clcore::Guideline*>(anchor->getOwner()) != nullptr) {
+            isCompatible = isCompatible || target == Type::CENTER_Y;
         }
-        case Type::TOP:
-        case Type::BOTTOM: {
-            bool isCompatible = target == Type::TOP || target == Type::BOTTOM;
-            if (dynamic_cast<clcore::Guideline*>(anchor->getOwner()) != nullptr) {
-                isCompatible = isCompatible || target == Type::CENTER_Y;
-            }
-            return isCompatible;
-        }
-        case Type::BASELINE: {
-            if (target == Type::LEFT || target == Type::RIGHT) {
-                return false;
-            }
-            return true;
-        }
-        case Type::CENTER_X:
-        case Type::CENTER_Y:
-        case Type::NONE:
+        return isCompatible;
+    }
+    case Type::BASELINE: {
+        if (target == Type::LEFT || target == Type::RIGHT) {
             return false;
+        }
+        return true;
+    }
+    case Type::CENTER_X:
+    case Type::CENTER_Y:
+    case Type::NONE:
+        return false;
     }
     return false; // unreachable (Java throws AssertionError(mType.name()))
 }
 
 bool ConstraintAnchor::isSideAnchor() const {
     switch (mType) {
-        case Type::LEFT:
-        case Type::RIGHT:
-        case Type::TOP:
-        case Type::BOTTOM:
-            return true;
-        case Type::BASELINE:
-        case Type::CENTER:
-        case Type::CENTER_X:
-        case Type::CENTER_Y:
-        case Type::NONE:
-            return false;
+    case Type::LEFT:
+    case Type::RIGHT:
+    case Type::TOP:
+    case Type::BOTTOM:
+        return true;
+    case Type::BASELINE:
+    case Type::CENTER:
+    case Type::CENTER_X:
+    case Type::CENTER_Y:
+    case Type::NONE:
+        return false;
     }
     return false; // unreachable
 }
@@ -194,23 +194,23 @@ bool ConstraintAnchor::isSimilarDimensionConnection(const ConstraintAnchor* anch
         return true;
     }
     switch (mType) {
-        case Type::CENTER: {
-            return target != Type::BASELINE;
-        }
-        case Type::LEFT:
-        case Type::RIGHT:
-        case Type::CENTER_X: {
-            return target == Type::LEFT || target == Type::RIGHT || target == Type::CENTER_X;
-        }
-        case Type::TOP:
-        case Type::BOTTOM:
-        case Type::CENTER_Y:
-        case Type::BASELINE: {
-            return target == Type::TOP || target == Type::BOTTOM
-                    || target == Type::CENTER_Y || target == Type::BASELINE;
-        }
-        case Type::NONE:
-            return false;
+    case Type::CENTER: {
+        return target != Type::BASELINE;
+    }
+    case Type::LEFT:
+    case Type::RIGHT:
+    case Type::CENTER_X: {
+        return target == Type::LEFT || target == Type::RIGHT || target == Type::CENTER_X;
+    }
+    case Type::TOP:
+    case Type::BOTTOM:
+    case Type::CENTER_Y:
+    case Type::BASELINE: {
+        return target == Type::TOP || target == Type::BOTTOM
+               || target == Type::CENTER_Y || target == Type::BASELINE;
+    }
+    case Type::NONE:
+        return false;
     }
     return false; // unreachable
 }
@@ -229,17 +229,17 @@ void ConstraintAnchor::setGoneMargin(int margin) {
 
 bool ConstraintAnchor::isVerticalAnchor() const {
     switch (mType) {
-        case Type::LEFT:
-        case Type::RIGHT:
-        case Type::CENTER:
-        case Type::CENTER_X:
-            return false;
-        case Type::CENTER_Y:
-        case Type::TOP:
-        case Type::BOTTOM:
-        case Type::BASELINE:
-        case Type::NONE:
-            return true;
+    case Type::LEFT:
+    case Type::RIGHT:
+    case Type::CENTER:
+    case Type::CENTER_X:
+        return false;
+    case Type::CENTER_Y:
+    case Type::TOP:
+    case Type::BOTTOM:
+    case Type::BASELINE:
+    case Type::NONE:
+        return true;
     }
     return false; // unreachable
 }
@@ -296,24 +296,24 @@ bool ConstraintAnchor::isConnectionToMe(ConstraintWidget* target,
 
 ConstraintAnchor* ConstraintAnchor::getOpposite() const {
     switch (mType) {
-        case Type::LEFT: {
-            return &mOwner->mRight;
-        }
-        case Type::RIGHT: {
-            return &mOwner->mLeft;
-        }
-        case Type::TOP: {
-            return &mOwner->mBottom;
-        }
-        case Type::BOTTOM: {
-            return &mOwner->mTop;
-        }
-        case Type::BASELINE:
-        case Type::CENTER:
-        case Type::CENTER_X:
-        case Type::CENTER_Y:
-        case Type::NONE:
-            return nullptr;
+    case Type::LEFT: {
+        return &mOwner->mRight;
+    }
+    case Type::RIGHT: {
+        return &mOwner->mLeft;
+    }
+    case Type::TOP: {
+        return &mOwner->mBottom;
+    }
+    case Type::BOTTOM: {
+        return &mOwner->mTop;
+    }
+    case Type::BASELINE:
+    case Type::CENTER:
+    case Type::CENTER_X:
+    case Type::CENTER_Y:
+    case Type::NONE:
+        return nullptr;
     }
     return nullptr; // unreachable
 }
@@ -376,7 +376,7 @@ bool ConstraintAnchor::hasFinalValue() const {
 }
 
 void ConstraintAnchor::copyFrom(ConstraintAnchor* source,
-                               std::unordered_map<ConstraintWidget*, ConstraintWidget*>& map) {
+                                std::unordered_map<ConstraintWidget*, ConstraintWidget*>& map) {
     if (mTarget != nullptr) {
         if (mTarget->mDependents != nullptr) {
             mTarget->mDependents->erase(this);

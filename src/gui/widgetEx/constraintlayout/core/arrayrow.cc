@@ -39,10 +39,10 @@ ArrayRow::~ArrayRow() {
 
 bool ArrayRow::hasKeyVariable() {
     return !(
-        (mVariable == nullptr)
-        || (mVariable->mType != SolverVariable::Type::UNRESTRICTED
-            && mConstantValue < 0)
-    );
+               (mVariable == nullptr)
+               || (mVariable->mType != SolverVariable::Type::UNRESTRICTED
+                   && mConstantValue < 0)
+           );
 }
 
 std::string ArrayRow::toString() {
@@ -156,7 +156,7 @@ ArrayRow* ArrayRow::addSingleError(SolverVariable* error, int sign) {
 }
 
 ArrayRow* ArrayRow::createRowGreaterThan(SolverVariable* variableA, SolverVariable* variableB,
-                                         SolverVariable* slack, int margin) {
+        SolverVariable* slack, int margin) {
     bool inverse = false;
     if (margin != 0) {
         int m = margin;
@@ -209,8 +209,8 @@ ArrayRow* ArrayRow::createRowLowerThan(SolverVariable* variableA, SolverVariable
 }
 
 ArrayRow* ArrayRow::createRowEqualMatchDimensions(float currentWeight, float totalWeights, float nextWeight,
-                                                  SolverVariable* variableStartA, SolverVariable* variableEndA,
-                                                  SolverVariable* variableStartB, SolverVariable* variableEndB) {
+        SolverVariable* variableStartA, SolverVariable* variableEndA,
+        SolverVariable* variableStartB, SolverVariable* variableEndB) {
     mConstantValue = 0;
     if (totalWeights == 0 || (currentWeight == nextWeight)) {
         variables->put(variableStartA, 1);
@@ -238,10 +238,10 @@ ArrayRow* ArrayRow::createRowEqualMatchDimensions(float currentWeight, float tot
 }
 
 ArrayRow* ArrayRow::createRowEqualDimension(float currentWeight, float totalWeights, float nextWeight,
-                                            SolverVariable* variableStartA, int marginStartA,
-                                            SolverVariable* variableEndA, int marginEndA,
-                                            SolverVariable* variableStartB, int marginStartB,
-                                            SolverVariable* variableEndB, int marginEndB) {
+        SolverVariable* variableStartA, int marginStartA,
+        SolverVariable* variableEndA, int marginEndA,
+        SolverVariable* variableStartB, int marginStartB,
+        SolverVariable* variableEndB, int marginEndB) {
     if (totalWeights == 0 || (currentWeight == nextWeight)) {
         mConstantValue = -marginStartA - marginEndA + marginStartB + marginEndB;
         variables->put(variableStartA, 1);
@@ -311,7 +311,7 @@ ArrayRow* ArrayRow::createRowDimensionPercent(SolverVariable* variableA, SolverV
 }
 
 ArrayRow* ArrayRow::createRowDimensionRatio(SolverVariable* variableA, SolverVariable* variableB,
-                                            SolverVariable* variableC, SolverVariable* variableD, float ratio) {
+        SolverVariable* variableC, SolverVariable* variableD, float ratio) {
     variables->put(variableA, -1);
     variables->put(variableB, 1);
     variables->put(variableC, ratio);
@@ -442,7 +442,7 @@ void ArrayRow::updateFromRow(LinearSystem* system, ArrayRow* definition, bool re
         definition->mVariable->removeFromRow(this);
     }
     if (LinearSystem::SIMPLIFY_SYNONYMS
-        && mVariable != nullptr && variables->getCurrentSize() == 0) {
+            && mVariable != nullptr && variables->getCurrentSize() == 0) {
         mIsSimpleDefinition = true;
         system->hasSimpleDefinition = true;
     }
@@ -460,14 +460,14 @@ void ArrayRow::updateFromFinalVariable(LinearSystem* system, SolverVariable* var
         variable->removeFromRow(this);
     }
     if (LinearSystem::SIMPLIFY_SYNONYMS
-        && variables->getCurrentSize() == 0) {
+            && variables->getCurrentSize() == 0) {
         mIsSimpleDefinition = true;
         system->hasSimpleDefinition = true;
     }
 }
 
 void ArrayRow::updateFromSynonymVariable(LinearSystem* system, SolverVariable* variable,
-                                         bool removeFromDefinition) {
+        bool removeFromDefinition) {
     if (variable == nullptr || !variable->mIsSynonym) {
         return;
     }
@@ -480,7 +480,7 @@ void ArrayRow::updateFromSynonymVariable(LinearSystem* system, SolverVariable* v
     variables->add(system->mCache->mIndexedVariables[variable->mSynonym],
                    value, removeFromDefinition);
     if (LinearSystem::SIMPLIFY_SYNONYMS
-        && variables->getCurrentSize() == 0) {
+            && variables->getCurrentSize() == 0) {
         mIsSimpleDefinition = true;
         system->hasSimpleDefinition = true;
     }
@@ -501,7 +501,7 @@ SolverVariable* ArrayRow::pickPivotInVariables(bool* avoid, SolverVariable* excl
             if (!((avoid != nullptr && avoid[v->id]) || (v == exclude))) {
                 if (all) {
                     if (v->mType == SolverVariable::Type::SLACK
-                        || v->mType == SolverVariable::Type::ERROR) {
+                            || v->mType == SolverVariable::Type::ERROR) {
                         if (currentValue < value) {
                             value = currentValue;
                             pivot = v;
@@ -608,7 +608,7 @@ void ArrayRow::updateFromSystem(LinearSystem* system) {
         }
     }
     if (LinearSystem::SIMPLIFY_SYNONYMS
-        && mVariable != nullptr && variables->getCurrentSize() == 0) {
+            && mVariable != nullptr && variables->getCurrentSize() == 0) {
         mIsSimpleDefinition = true;
         system->hasSimpleDefinition = true;
     }

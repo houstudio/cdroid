@@ -13,7 +13,8 @@ void SplineSet::setup(int curveType) {
     for (size_t i = 0; i < mTimePoints.size(); i++) pairs.emplace_back(mTimePoints[i], mValues[i]);
     std::sort(pairs.begin(), pairs.end());
     // dedup by time.
-    std::vector<double> time; std::vector<std::vector<double>> y;
+    std::vector<double> time;
+    std::vector<std::vector<double>> y;
     for (size_t i = 0; i < pairs.size(); i++) {
         if (i > 0 && pairs[i].first == pairs[i-1].first) continue;
         time.push_back(pairs[i].first * 1e-2);

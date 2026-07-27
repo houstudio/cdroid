@@ -29,7 +29,7 @@
 namespace cdroid {
 
 class ChainHead {
-public:
+  public:
     ChainHead(ConstraintWidget* first, int orientation, bool isRtl);
 
     ConstraintWidget* getFirst() const;
@@ -65,7 +65,7 @@ public:
     bool  mHasComplexMatchWeights = false;
     bool  mHasRatio = false;
 
-private:
+  private:
     static bool isMatchConstraintEqualityCandidate(ConstraintWidget* widget, int orientation);
     void defineChainProperties();
 

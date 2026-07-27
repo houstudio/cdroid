@@ -15,11 +15,11 @@
 namespace cdroid {
 
 class Schlick : public Easing {
-public:
+  public:
     explicit Schlick(const std::string& configString);
     double get(double x) const override;
     double getDiff(double x) const override;
-private:
+  private:
     double func(double x) const;
     double dfunc(double x) const;
     double mS = 0, mT = 0;

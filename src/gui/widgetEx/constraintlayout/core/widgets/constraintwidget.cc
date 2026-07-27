@@ -73,15 +73,24 @@ ConstraintWidget::~ConstraintWidget() = default;
 
 ConstraintAnchor* ConstraintWidget::getAnchor(ConstraintAnchor::Type anchorType) {
     switch (anchorType) {
-        case ConstraintAnchor::Type::LEFT:    return &mLeft;
-        case ConstraintAnchor::Type::TOP:     return &mTop;
-        case ConstraintAnchor::Type::RIGHT:   return &mRight;
-        case ConstraintAnchor::Type::BOTTOM:  return &mBottom;
-        case ConstraintAnchor::Type::BASELINE:return &mBaseline;
-        case ConstraintAnchor::Type::CENTER_X:return &mCenterX;
-        case ConstraintAnchor::Type::CENTER_Y:return &mCenterY;
-        case ConstraintAnchor::Type::CENTER:  return &mCenter;
-        case ConstraintAnchor::Type::NONE:    return nullptr;
+    case ConstraintAnchor::Type::LEFT:
+        return &mLeft;
+    case ConstraintAnchor::Type::TOP:
+        return &mTop;
+    case ConstraintAnchor::Type::RIGHT:
+        return &mRight;
+    case ConstraintAnchor::Type::BOTTOM:
+        return &mBottom;
+    case ConstraintAnchor::Type::BASELINE:
+        return &mBaseline;
+    case ConstraintAnchor::Type::CENTER_X:
+        return &mCenterX;
+    case ConstraintAnchor::Type::CENTER_Y:
+        return &mCenterY;
+    case ConstraintAnchor::Type::CENTER:
+        return &mCenter;
+    case ConstraintAnchor::Type::NONE:
+        return nullptr;
     }
     return nullptr; // unreachable (Java throws AssertionError)
 }
@@ -162,16 +171,36 @@ int ConstraintWidget::getLength(int orientation) const {
     return 0;
 }
 
-int ConstraintWidget::getMinWidth() const { return mMinWidth; }
-int ConstraintWidget::getMinHeight() const { return mMinHeight; }
-void ConstraintWidget::setMinWidth(int minWidth) { mMinWidth = minWidth; }
-void ConstraintWidget::setMinHeight(int minHeight) { mMinHeight = minHeight; }
-void ConstraintWidget::setMaxWidth(int maxWidth) { mMaxDimension[DIMENSION_HORIZONTAL] = maxWidth; }
-void ConstraintWidget::setMaxHeight(int maxHeight) { mMaxDimension[DIMENSION_VERTICAL] = maxHeight; }
-void ConstraintWidget::setBaselineDistance(int baselineDistance) { mBaselineDistance = baselineDistance; }
-float ConstraintWidget::getDimensionRatio() const { return mDimensionRatio; }
-bool ConstraintWidget::isInVirtualLayout() const { return mIsInVirtualLayout; }
-void ConstraintWidget::setInVirtualLayout(bool inVirtualLayout) { mIsInVirtualLayout = inVirtualLayout; }
+int ConstraintWidget::getMinWidth() const {
+    return mMinWidth;
+}
+int ConstraintWidget::getMinHeight() const {
+    return mMinHeight;
+}
+void ConstraintWidget::setMinWidth(int minWidth) {
+    mMinWidth = minWidth;
+}
+void ConstraintWidget::setMinHeight(int minHeight) {
+    mMinHeight = minHeight;
+}
+void ConstraintWidget::setMaxWidth(int maxWidth) {
+    mMaxDimension[DIMENSION_HORIZONTAL] = maxWidth;
+}
+void ConstraintWidget::setMaxHeight(int maxHeight) {
+    mMaxDimension[DIMENSION_VERTICAL] = maxHeight;
+}
+void ConstraintWidget::setBaselineDistance(int baselineDistance) {
+    mBaselineDistance = baselineDistance;
+}
+float ConstraintWidget::getDimensionRatio() const {
+    return mDimensionRatio;
+}
+bool ConstraintWidget::isInVirtualLayout() const {
+    return mIsInVirtualLayout;
+}
+void ConstraintWidget::setInVirtualLayout(bool inVirtualLayout) {
+    mIsInVirtualLayout = inVirtualLayout;
+}
 
 void ConstraintWidget::connect(ConstraintAnchor& from, ConstraintAnchor* to, int margin) {
     if (from.getOwner() == this && to != nullptr) {
@@ -187,8 +216,12 @@ void ConstraintWidget::resetAnchors() {
     }
 }
 
-void ConstraintWidget::setMeasureRequested(bool measureRequested) { mMeasureRequested = measureRequested; }
-bool ConstraintWidget::isMeasureRequested() const { return mMeasureRequested && mVisibility != GONE; }
+void ConstraintWidget::setMeasureRequested(bool measureRequested) {
+    mMeasureRequested = measureRequested;
+}
+bool ConstraintWidget::isMeasureRequested() const {
+    return mMeasureRequested && mVisibility != GONE;
+}
 
 void ConstraintWidget::setX(int x) {
     mX = x;
@@ -308,7 +341,9 @@ void ConstraintWidget::setType(const std::string& type) {
     mType = type;
 }
 
-bool ConstraintWidget::isVirtualLayout() const { return false; }
+bool ConstraintWidget::isVirtualLayout() const {
+    return false;
+}
 bool ConstraintWidget::allowedInBarrier() const {
     return mVisibility != GONE;
 }
@@ -362,14 +397,14 @@ bool ConstraintWidget::isChainHead(int orientation) const {
     int offset = orientation * 2;
     return (mListAnchors[offset]->mTarget != nullptr
             && mListAnchors[offset]->mTarget->mTarget != mListAnchors[offset])
-            && (mListAnchors[offset + 1]->mTarget != nullptr
-            && mListAnchors[offset + 1]->mTarget->mTarget == mListAnchors[offset + 1]);
+           && (mListAnchors[offset + 1]->mTarget != nullptr
+               && mListAnchors[offset + 1]->mTarget->mTarget == mListAnchors[offset + 1]);
 }
 
 void ConstraintWidget::setupDimensionRatio(bool /*hParentWrapContent*/,
-                                           bool /*vParentWrapContent*/,
-                                           bool horizontalDimensionFixed,
-                                           bool verticalDimensionFixed) {
+        bool /*vParentWrapContent*/,
+        bool horizontalDimensionFixed,
+        bool verticalDimensionFixed) {
     if (mResolvedDimensionRatioSide == UNKNOWN) {
         if (horizontalDimensionFixed && !verticalDimensionFixed) {
             mResolvedDimensionRatioSide = HORIZONTAL;
@@ -386,7 +421,7 @@ void ConstraintWidget::setupDimensionRatio(bool /*hParentWrapContent*/,
             && !(mTop.isConnected() && mBottom.isConnected())) {
         mResolvedDimensionRatioSide = VERTICAL;
     } else if (mResolvedDimensionRatioSide == VERTICAL
-            && !(mLeft.isConnected() && mRight.isConnected())) {
+               && !(mLeft.isConnected() && mRight.isConnected())) {
         mResolvedDimensionRatioSide = HORIZONTAL;
     }
 
@@ -481,20 +516,20 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     bool verticalParentWrapContent = false;
     if (mParent != nullptr) {
         horizontalParentWrapContent = mParent->mListDimensionBehaviors[DIMENSION_HORIZONTAL]
-                == DimensionBehaviour::WRAP_CONTENT;
+                                      == DimensionBehaviour::WRAP_CONTENT;
         verticalParentWrapContent = mParent->mListDimensionBehaviors[DIMENSION_VERTICAL]
-                == DimensionBehaviour::WRAP_CONTENT;
+                                    == DimensionBehaviour::WRAP_CONTENT;
         switch (mWrapBehaviorInParent) {
-            case WRAP_BEHAVIOR_SKIPPED:
-                horizontalParentWrapContent = false;
-                verticalParentWrapContent = false;
-                break;
-            case WRAP_BEHAVIOR_HORIZONTAL_ONLY:
-                verticalParentWrapContent = false;
-                break;
-            case WRAP_BEHAVIOR_VERTICAL_ONLY:
-                horizontalParentWrapContent = false;
-                break;
+        case WRAP_BEHAVIOR_SKIPPED:
+            horizontalParentWrapContent = false;
+            verticalParentWrapContent = false;
+            break;
+        case WRAP_BEHAVIOR_HORIZONTAL_ONLY:
+            verticalParentWrapContent = false;
+            break;
+        case WRAP_BEHAVIOR_VERTICAL_ONLY:
+            horizontalParentWrapContent = false;
+            break;
         }
     }
 
@@ -517,7 +552,7 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
                     }
                 } else {
                     system->addGreaterThan(system->createObjectVariable(&mParent->mRight),
-                            right, 0, SolverVariable::STRENGTH_EQUALITY);
+                                           right, 0, SolverVariable::STRENGTH_EQUALITY);
                 }
             }
         }
@@ -536,7 +571,7 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
                     }
                 } else {
                     system->addGreaterThan(system->createObjectVariable(&mParent->mBottom),
-                            bottom, 0, SolverVariable::STRENGTH_EQUALITY);
+                                           bottom, 0, SolverVariable::STRENGTH_EQUALITY);
                 }
             }
         }
@@ -600,9 +635,9 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
 
     // Dimensions can be either fixed (a given value) or dependent on the solver (MATCH_CONSTRAINT).
     bool horizontalDimensionFixed =
-            mListDimensionBehaviors[DIMENSION_HORIZONTAL] != DimensionBehaviour::MATCH_CONSTRAINT;
+        mListDimensionBehaviors[DIMENSION_HORIZONTAL] != DimensionBehaviour::MATCH_CONSTRAINT;
     bool verticalDimensionFixed =
-            mListDimensionBehaviors[DIMENSION_VERTICAL] != DimensionBehaviour::MATCH_CONSTRAINT;
+        mListDimensionBehaviors[DIMENSION_VERTICAL] != DimensionBehaviour::MATCH_CONSTRAINT;
 
     // Evaluate the dimension ratio here as the connections can change.
     bool useRatio = false;
@@ -628,9 +663,9 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
                 && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO
                 && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
             setupDimensionRatio(horizontalParentWrapContent, verticalParentWrapContent,
-                    horizontalDimensionFixed, verticalDimensionFixed);
+                                horizontalDimensionFixed, verticalDimensionFixed);
         } else if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = HORIZONTAL;
             width = (int) (mResolvedDimensionRatio * mHeight);
             if (mListDimensionBehaviors[DIMENSION_VERTICAL] != DimensionBehaviour::MATCH_CONSTRAINT) {
@@ -638,7 +673,7 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
                 useRatio = false;
             }
         } else if (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = VERTICAL;
             if (mDimensionRatioSide == UNKNOWN) {
                 mResolvedDimensionRatio = 1 / mResolvedDimensionRatio;
@@ -656,13 +691,13 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     mResolvedHasRatio = useRatio;
 
     bool useHorizontalRatio = useRatio && (mResolvedDimensionRatioSide == HORIZONTAL
-            || mResolvedDimensionRatioSide == UNKNOWN);
+                                           || mResolvedDimensionRatioSide == UNKNOWN);
     bool useVerticalRatio = useRatio && (mResolvedDimensionRatioSide == VERTICAL
-            || mResolvedDimensionRatioSide == UNKNOWN);
+                                         || mResolvedDimensionRatioSide == UNKNOWN);
 
     // Horizontal resolution
     bool wrapContent = (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::WRAP_CONTENT)
-            && (dynamic_cast<ConstraintWidgetContainer*>(this) != nullptr);
+                       && (dynamic_cast<ConstraintWidgetContainer*>(this) != nullptr);
     if (wrapContent) {
         width = 0;
     }
@@ -678,20 +713,20 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     if (mHorizontalResolution != DIRECT && !mResolvedHorizontal) {
         // analyzer-run branch omitted (no mHorizontalRun) — always applyConstraints.
         SolverVariable* parentMax = mParent != nullptr
-                ? system->createObjectVariable(&mParent->mRight) : nullptr;
+                                    ? system->createObjectVariable(&mParent->mRight) : nullptr;
         SolverVariable* parentMin = mParent != nullptr
-                ? system->createObjectVariable(&mParent->mLeft) : nullptr;
+                                    ? system->createObjectVariable(&mParent->mLeft) : nullptr;
         applyConstraints(system, true, horizontalParentWrapContent,
-                verticalParentWrapContent, isTerminalWidget[HORIZONTAL], parentMin,
-                parentMax, mListDimensionBehaviors[DIMENSION_HORIZONTAL], wrapContent,
-                &mLeft, &mRight, mX, width,
-                mMinWidth, mMaxDimension[HORIZONTAL],
-                mHorizontalBiasPercent, useHorizontalRatio,
-                mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT,
-                inHorizontalChain, inVerticalChain, isInHorizontalBarrier,
-                matchConstraintDefaultWidth, matchConstraintDefaultHeight,
-                mMatchConstraintMinWidth, mMatchConstraintMaxWidth,
-                mMatchConstraintPercentWidth, applyPosition);
+                         verticalParentWrapContent, isTerminalWidget[HORIZONTAL], parentMin,
+                         parentMax, mListDimensionBehaviors[DIMENSION_HORIZONTAL], wrapContent,
+                         &mLeft, &mRight, mX, width,
+                         mMinWidth, mMaxDimension[HORIZONTAL],
+                         mHorizontalBiasPercent, useHorizontalRatio,
+                         mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT,
+                         inHorizontalChain, inVerticalChain, isInHorizontalBarrier,
+                         matchConstraintDefaultWidth, matchConstraintDefaultHeight,
+                         mMatchConstraintMinWidth, mMatchConstraintMaxWidth,
+                         mMatchConstraintPercentWidth, applyPosition);
     }
 
     bool applyVerticalConstraints = true;
@@ -702,24 +737,24 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     if (applyVerticalConstraints && !mResolvedVertical) {
         // Vertical Resolution
         wrapContent = (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::WRAP_CONTENT)
-                && (dynamic_cast<ConstraintWidgetContainer*>(this) != nullptr);
+                      && (dynamic_cast<ConstraintWidgetContainer*>(this) != nullptr);
         if (wrapContent) {
             height = 0;
         }
 
         SolverVariable* parentMax = mParent != nullptr
-                ? system->createObjectVariable(&mParent->mBottom) : nullptr;
+                                    ? system->createObjectVariable(&mParent->mBottom) : nullptr;
         SolverVariable* parentMin = mParent != nullptr
-                ? system->createObjectVariable(&mParent->mTop) : nullptr;
+                                    ? system->createObjectVariable(&mParent->mTop) : nullptr;
 
         if (mBaselineDistance > 0 || mVisibility == GONE) {
             if (mBaseline.mTarget != nullptr) {
                 system->addEquality(baseline, top, mBaselineDistance,
-                        SolverVariable::STRENGTH_FIXED);
+                                    SolverVariable::STRENGTH_FIXED);
                 SolverVariable* baselineTarget = system->createObjectVariable(mBaseline.mTarget);
                 int baselineMargin = mBaseline.getMargin();
                 system->addEquality(baseline, baselineTarget, baselineMargin,
-                        SolverVariable::STRENGTH_FIXED);
+                                    SolverVariable::STRENGTH_FIXED);
                 applyPosition = false;
                 if (verticalParentWrapContent) {
                     SolverVariable* end = system->createObjectVariable(&mBottom);
@@ -727,23 +762,23 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
                 }
             } else if (mVisibility == GONE) {
                 system->addEquality(baseline, top, mBaseline.getMargin(),
-                        SolverVariable::STRENGTH_FIXED);
+                                    SolverVariable::STRENGTH_FIXED);
             } else {
                 system->addEquality(baseline, top, mBaselineDistance,
-                        SolverVariable::STRENGTH_FIXED);
+                                    SolverVariable::STRENGTH_FIXED);
             }
         }
 
         applyConstraints(system, false, verticalParentWrapContent,
-                horizontalParentWrapContent, isTerminalWidget[VERTICAL], parentMin,
-                parentMax, mListDimensionBehaviors[DIMENSION_VERTICAL],
-                wrapContent, &mTop, &mBottom, mY, height,
-                mMinHeight, mMaxDimension[VERTICAL], mVerticalBiasPercent, useVerticalRatio,
-                mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT,
-                inVerticalChain, inHorizontalChain, isInVerticalBarrier,
-                matchConstraintDefaultHeight, matchConstraintDefaultWidth,
-                mMatchConstraintMinHeight, mMatchConstraintMaxHeight,
-                mMatchConstraintPercentHeight, applyPosition);
+                         horizontalParentWrapContent, isTerminalWidget[VERTICAL], parentMin,
+                         parentMax, mListDimensionBehaviors[DIMENSION_VERTICAL],
+                         wrapContent, &mTop, &mBottom, mY, height,
+                         mMinHeight, mMaxDimension[VERTICAL], mVerticalBiasPercent, useVerticalRatio,
+                         mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT,
+                         inVerticalChain, inHorizontalChain, isInVerticalBarrier,
+                         matchConstraintDefaultHeight, matchConstraintDefaultWidth,
+                         mMatchConstraintMinHeight, mMatchConstraintMaxHeight,
+                         mMatchConstraintPercentHeight, applyPosition);
     }
 
     if (useRatio) {
@@ -757,8 +792,8 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
 
     if (mCenter.isConnected()) {
         system->addCenterPoint(this, mCenter.mTarget->mOwner,
-                (mCircleConstraintAngle + 90.0f) * (3.14159265358979323846f / 180.0f),
-                mCenter.getMargin());
+                               (mCircleConstraintAngle + 90.0f) * (3.14159265358979323846f / 180.0f),
+                               mCenter.getMargin());
     }
 
     mResolvedHorizontal = false;
@@ -798,17 +833,17 @@ void ConstraintWidget::updateFromSolver(LinearSystem* system, bool optimize) {
 }
 
 void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
-        bool parentWrapContent, bool oppositeParentWrapContent,
-        bool isTerminal, SolverVariable* parentMin, SolverVariable* parentMax,
-        DimensionBehaviour dimensionBehaviour, bool wrapContent,
-        ConstraintAnchor* beginAnchor, ConstraintAnchor* endAnchor,
-        int beginPosition, int dimension, int minDimension,
-        int maxDimension, float bias, bool useRatio,
-        bool oppositeVariable, bool inChain,
-        bool oppositeInChain, bool inBarrier,
-        int matchConstraintDefault, int oppositeMatchConstraintDefault,
-        int matchMinDimension, int matchMaxDimension,
-        float matchPercentDimension, bool applyPosition) {
+                                        bool parentWrapContent, bool oppositeParentWrapContent,
+                                        bool isTerminal, SolverVariable* parentMin, SolverVariable* parentMax,
+                                        DimensionBehaviour dimensionBehaviour, bool wrapContent,
+                                        ConstraintAnchor* beginAnchor, ConstraintAnchor* endAnchor,
+                                        int beginPosition, int dimension, int minDimension,
+                                        int maxDimension, float bias, bool useRatio,
+                                        bool oppositeVariable, bool inChain,
+                                        bool oppositeInChain, bool inBarrier,
+                                        int matchConstraintDefault, int oppositeMatchConstraintDefault,
+                                        int matchMinDimension, int matchMaxDimension,
+                                        float matchPercentDimension, bool applyPosition) {
     SolverVariable* begin = system->createObjectVariable(beginAnchor);
     SolverVariable* end = system->createObjectVariable(endAnchor);
     SolverVariable* beginTarget = system->createObjectVariable(beginAnchor->getTarget());
@@ -833,14 +868,14 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
         matchConstraintDefault = MATCH_CONSTRAINT_RATIO;
     }
     switch (dimensionBehaviour) {
-        case DimensionBehaviour::FIXED:
-        case DimensionBehaviour::WRAP_CONTENT:
-        case DimensionBehaviour::MATCH_PARENT:
-            variableSize = false;
-            break;
-        case DimensionBehaviour::MATCH_CONSTRAINT:
-            variableSize = matchConstraintDefault != MATCH_CONSTRAINT_RATIO_RESOLVED;
-            break;
+    case DimensionBehaviour::FIXED:
+    case DimensionBehaviour::WRAP_CONTENT:
+    case DimensionBehaviour::MATCH_PARENT:
+        variableSize = false;
+        break;
+    case DimensionBehaviour::MATCH_CONSTRAINT:
+        variableSize = matchConstraintDefault != MATCH_CONSTRAINT_RATIO_RESOLVED;
+        break;
     }
 
     if (mWidthOverride != -1 && isHorizontal) {
@@ -865,7 +900,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
             system->addEquality(begin, beginPosition);
         } else if (isBeginConnected && !isEndConnected) {
             system->addEquality(begin, beginTarget,
-                    beginAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
+                                beginAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
         }
     }
 
@@ -885,7 +920,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
     } else {
         if (numConnections != 2 && !useRatio
                 && ((matchConstraintDefault == MATCH_CONSTRAINT_WRAP)
-                || (matchConstraintDefault == MATCH_CONSTRAINT_SPREAD))) {
+                    || (matchConstraintDefault == MATCH_CONSTRAINT_SPREAD))) {
             variableSize = false;
             int d = std::max(matchMinDimension, dimension);
             if (matchMaxDimension > 0) {
@@ -940,7 +975,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     percentEnd = system->createObjectVariable(mParent->getAnchor(ConstraintAnchor::Type::RIGHT));
                 }
                 system->addConstraint(system->createRow()->createRowDimensionRatio(
-                        end, begin, percentEnd, percentBegin, matchPercentDimension));
+                                          end, begin, percentEnd, percentBegin, matchPercentDimension));
                 if (parentWrapContent) {
                     variableSize = false;
                 }
@@ -1012,9 +1047,9 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     boundsCheckStrength = SolverVariable::STRENGTH_FIXED;
                     if (beginTarget->isFinalValue && endTarget->isFinalValue) {
                         system->addEquality(begin, beginTarget,
-                                beginAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
+                                            beginAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
                         system->addEquality(end, endTarget,
-                                -endAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
+                                            -endAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
                         return;
                     }
                 } else {
@@ -1062,8 +1097,8 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     applyStrongChecks = true;
                     if (useRatio) {
                         bool otherSideInvariable =
-                                oppositeMatchConstraintDefault == MATCH_CONSTRAINT_PERCENT
-                                || oppositeMatchConstraintDefault == MATCH_CONSTRAINT_WRAP;
+                            oppositeMatchConstraintDefault == MATCH_CONSTRAINT_PERCENT
+                            || oppositeMatchConstraintDefault == MATCH_CONSTRAINT_WRAP;
                         if (!otherSideInvariable) {
                             rangeCheckStrength = SolverVariable::STRENGTH_FIXED;
                             boundsCheckStrength = SolverVariable::STRENGTH_EQUALITY;
@@ -1092,7 +1127,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
             applyRangeCheck = true;
             if (beginTarget->isFinalValue && endTarget->isFinalValue) {
                 system->addCentering(begin, beginTarget, beginAnchor->getMargin(),
-                        bias, endTarget, end, endAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
+                                     bias, endTarget, end, endAnchor->getMargin(), SolverVariable::STRENGTH_FIXED);
                 if (parentWrapContent && isTerminal) {
                     int margin = 0;
                     if (endAnchor->mTarget != nullptr) {
@@ -1120,7 +1155,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                 parentWrapContent = false;
             }
             system->addCentering(begin, beginTarget, beginAnchor->getMargin(),
-                    bias, endTarget, end, endAnchor->getMargin(), centeringStrength);
+                                 bias, endTarget, end, endAnchor->getMargin(), centeringStrength);
         }
 
         if (mVisibility == GONE && !endAnchor->hasDependents()) {
@@ -1134,7 +1169,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                 }
             }
             system->addGreaterThan(begin, beginTarget,
-                    beginAnchor->getMargin(), rangeCheckStrength);
+                                   beginAnchor->getMargin(), rangeCheckStrength);
             system->addLowerThan(end, endTarget, -endAnchor->getMargin(), rangeCheckStrength);
         }
 
@@ -1173,7 +1208,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                 }
             }
             system->addEquality(begin, beginTarget,
-                    beginAnchor->getMargin(), boundsCheckStrength);
+                                beginAnchor->getMargin(), boundsCheckStrength);
             system->addEquality(end, endTarget, -endAnchor->getMargin(), boundsCheckStrength);
         }
 

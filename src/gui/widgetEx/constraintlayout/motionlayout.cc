@@ -159,7 +159,10 @@ void MotionLayout::setProgress(float progress) {
 }
 
 void MotionLayout::animateTo(float target) {
-    if (!mCaptured) { setProgress(target); return; }
+    if (!mCaptured) {
+        setProgress(target);
+        return;
+    }
     const float start = mProgress;
     if (mAnimator != nullptr) {
         mAnimator->cancel();
@@ -179,9 +182,15 @@ void MotionLayout::animateTo(float target) {
 }
 
 void MotionLayout::animateToWithSpring(float target, float startVelocity,
-        float mass, float stiffness, float damping, float stopThreshold, int boundary) {
-    if (!mCaptured) { setProgress(target); return; }
-    if (mAnimator != nullptr) { mAnimator->cancel(); delete mAnimator; }
+                                       float mass, float stiffness, float damping, float stopThreshold, int boundary) {
+    if (!mCaptured) {
+        setProgress(target);
+        return;
+    }
+    if (mAnimator != nullptr) {
+        mAnimator->cancel();
+        delete mAnimator;
+    }
     mSpringEngine = std::make_unique<SpringStopEngine>();
     mSpringEngine->springConfig(mProgress, target, startVelocity, mass, stiffness, damping,
                                 stopThreshold, boundary);
@@ -214,8 +223,14 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
 
 void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
         float maxAcceleration, float maxVelocity) {
-    if (!mCaptured) { setProgress(target); return; }
-    if (mAnimator != nullptr) { mAnimator->cancel(); delete mAnimator; }
+    if (!mCaptured) {
+        setProgress(target);
+        return;
+    }
+    if (mAnimator != nullptr) {
+        mAnimator->cancel();
+        delete mAnimator;
+    }
     mStopEngine = std::make_unique<StopLogicEngine>();
     // The transition duration (seconds) bounds the profile's max time.
     const float maxTimeSec = mTransitionDuration / 1000.0f;
@@ -246,8 +261,12 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
     mAnimator->start();
 }
 
-void MotionLayout::transitionToStart() { animateTo(0.0f); }
-void MotionLayout::transitionToEnd()   { animateTo(1.0f); }
+void MotionLayout::transitionToStart() {
+    animateTo(0.0f);
+}
+void MotionLayout::transitionToEnd()   {
+    animateTo(1.0f);
+}
 
 void MotionLayout::setTransition(int transitionId) {
     if (mScene == nullptr) return;
@@ -272,8 +291,14 @@ void MotionLayout::setTransition(int startId, int endId) {
 void MotionLayout::transitionToState(int stateId) {
     if (mScene == nullptr) return;
     if (mCurrentState == stateId) return;        // already there
-    if (mBeginState == stateId) { animateTo(0.0f); return; } // back along the current transition
-    if (mEndState == stateId)   { animateTo(1.0f); return; } // forward along the current transition
+    if (mBeginState == stateId) {
+        animateTo(0.0f);    // back along the current transition
+        return;
+    }
+    if (mEndState == stateId)   {
+        animateTo(1.0f);    // forward along the current transition
+        return;
+    }
     auto* t = mScene->findTransition(mCurrentState, stateId);
     if (t == nullptr) return;                    // MVP: no fallback transition construction
     mScene->setCurrentTransition(t);
@@ -369,7 +394,7 @@ void MotionLayout::applyTransition(MotionScene::Transition* t) {
     setTransition(start, end); // the ConstraintSet* overload: captures + builds the per-child Motion
     wireOnClicks(t);
     mTouchResponse = (t->getOnSwipe() != nullptr)
-        ? std::make_unique<TouchResponse>(this, *t->getOnSwipe()) : nullptr;
+                     ? std::make_unique<TouchResponse>(this, *t->getOnSwipe()) : nullptr;
 }
 
 void MotionLayout::buildScene() {
@@ -394,13 +419,17 @@ void MotionLayout::applyKeyFramesToMotions(KeyFrames* kf) {
         Motion* m = kv.second;
         for (MotionKey* key : kf->getKeysForView(kv.first)) {
             switch (key->mType) {
-                case MotionKeyAttributes::KEY_TYPE:
-                    m->addKey(static_cast<MotionKeyAttributes*>(key)); break;
-                case MotionKeyPosition::KEY_TYPE:
-                    m->addKey(static_cast<MotionKeyPosition*>(key)); break;
-                case MotionKeyCycle::KEY_TYPE:
-                    m->addKey(static_cast<MotionKeyCycle*>(key)); break;
-                default: break; // KeyTimeCycle/KeyTrigger: no Motion addKey yet (deferred)
+            case MotionKeyAttributes::KEY_TYPE:
+                m->addKey(static_cast<MotionKeyAttributes*>(key));
+                break;
+            case MotionKeyPosition::KEY_TYPE:
+                m->addKey(static_cast<MotionKeyPosition*>(key));
+                break;
+            case MotionKeyCycle::KEY_TYPE:
+                m->addKey(static_cast<MotionKeyCycle*>(key));
+                break;
+            default:
+                break; // KeyTimeCycle/KeyTrigger: no Motion addKey yet (deferred)
             }
         }
     }
@@ -414,16 +443,24 @@ void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
         MotionLayout* self = this;
         target->setOnClickListener([self, action](View&) {
             switch (action) {
-                case MotionScene::Transition::FLAG_TRANSITION_TO_END:   self->transitionToEnd();   break;
-                case MotionScene::Transition::FLAG_TRANSITION_TO_START: self->transitionToStart(); break;
-                case MotionScene::Transition::FLAG_JUMP_TO_END:         self->setProgress(1.0f);   break;
-                case MotionScene::Transition::FLAG_JUMP_TO_START:       self->setProgress(0.0f);   break;
-                default: { // toggle: at the end state (or past halfway) -> start, else -> end
-                    const bool back = self->getCurrentState() == self->mEndState
-                                   || self->getProgress() >= 0.5f;
-                    back ? self->transitionToStart() : self->transitionToEnd();
-                    break;
-                }
+            case MotionScene::Transition::FLAG_TRANSITION_TO_END:
+                self->transitionToEnd();
+                break;
+            case MotionScene::Transition::FLAG_TRANSITION_TO_START:
+                self->transitionToStart();
+                break;
+            case MotionScene::Transition::FLAG_JUMP_TO_END:
+                self->setProgress(1.0f);
+                break;
+            case MotionScene::Transition::FLAG_JUMP_TO_START:
+                self->setProgress(0.0f);
+                break;
+            default: { // toggle: at the end state (or past halfway) -> start, else -> end
+                const bool back = self->getCurrentState() == self->mEndState
+                                  || self->getProgress() >= 0.5f;
+                back ? self->transitionToStart() : self->transitionToEnd();
+                break;
+            }
             }
         });
     }

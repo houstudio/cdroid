@@ -28,7 +28,7 @@
 namespace cdroid {
 
 class StopLogicEngine {
-public:
+  public:
     // Configure the profile: animate from currentPos to destination starting at currentVelocity
     // (progress/sec), taking at most maxTime seconds, bounded by maxAcceleration and maxVelocity.
     void config(float currentPos, float destination, float currentVelocity,
@@ -43,7 +43,7 @@ public:
     // True once the profile is exhausted (time past the last stage).
     bool isStopped() const;
 
-private:
+  private:
     float calcY(float time);
     void setup(float velocity, float distance, float maxAcceleration, float maxVelocity, float maxTime);
 

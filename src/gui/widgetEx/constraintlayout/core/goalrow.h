@@ -30,7 +30,7 @@ class Cache;
  * in the system rows), so addError decrements usageInRowCount after delegating.
  */
 class GoalRow : public ArrayRow {
-public:
+  public:
     explicit GoalRow(Cache* cache);
     void addError(SolverVariable* error) override;
 };

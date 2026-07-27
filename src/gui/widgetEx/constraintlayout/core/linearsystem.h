@@ -42,7 +42,7 @@ class ConstraintWidget;  // forward (widget bridge)
  * Ported verbatim from androidx.constraintlayout.core.LinearSystem.
  */
 class LinearSystem {
-public:
+  public:
     // --- public static toggles (Java public static boolean; DEBUG field name
     //     avoided — it clashes with a system DEBUG macro) ---
     static const bool FULL_DEBUG;
@@ -77,7 +77,7 @@ public:
      * Nested Row interface (Java: interface LinearSystem.Row). ArrayRow implements it.
      */
     class Row {
-    public:
+      public:
         virtual ~Row() = default;
         virtual SolverVariable* getPivotCandidate(LinearSystem* system, bool* avoid) = 0;
         virtual void clear() = 0;
@@ -140,8 +140,8 @@ public:
     ArrayRow* addEquality(SolverVariable* a, SolverVariable* b, int margin, int strength);
     void addEquality(SolverVariable* a, int value);
     static ArrayRow* createRowDimensionPercent(LinearSystem* linearSystem,
-                                               SolverVariable* variableA,
-                                               SolverVariable* variableC, float percent);
+            SolverVariable* variableA,
+            SolverVariable* variableC, float percent);
 
     // --- display (debug; best-effort, may be no-op) ---
     void displayReadableRows();
@@ -151,7 +151,7 @@ public:
 
     void reset();
 
-private:
+  private:
     Row*  mGoal = nullptr;
     Row*  mTempGoal = nullptr;
     bool* mAlreadyTestedCandidates = nullptr;     // Java: boolean[mTableSize] (raw bool* to match Row::getPivotCandidate)

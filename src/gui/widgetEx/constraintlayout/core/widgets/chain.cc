@@ -75,7 +75,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
     (void)chainHead->mLastMatchConstraintWidget;      // previousMatchConstraintsWidget (unused)
 
     bool isWrapContent = container->mListDimensionBehaviors[orientation]
-            == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+                         == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
     bool isChainSpread = false;
     bool isChainSpreadInside = false;
     bool isChainPacked = false;
@@ -83,7 +83,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
     if (orientation == ConstraintWidget::HORIZONTAL) {
         isChainSpread = head->mHorizontalChainStyle == ConstraintWidget::CHAIN_SPREAD;
         isChainSpreadInside =
-                head->mHorizontalChainStyle == ConstraintWidget::CHAIN_SPREAD_INSIDE;
+            head->mHorizontalChainStyle == ConstraintWidget::CHAIN_SPREAD_INSIDE;
         isChainPacked = head->mHorizontalChainStyle == ConstraintWidget::CHAIN_PACKED;
     } else {
         isChainSpread = head->mVerticalChainStyle == ConstraintWidget::CHAIN_SPREAD;
@@ -103,9 +103,9 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         }
         int margin = begin->getMargin();
         bool isSpreadOnly = widget->mListDimensionBehaviors[orientation]
-                == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
-                && widget->mResolvedMatchConstraintDefault[orientation]
-                        == ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+                            == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
+                            && widget->mResolvedMatchConstraintDefault[orientation]
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
 
         if (begin->mTarget != nullptr && widget != first) {
             margin += begin->mTarget->getMargin();
@@ -118,10 +118,10 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         if (begin->mTarget != nullptr) {
             if (widget == firstVisibleWidget) {
                 system->addGreaterThan(begin->mSolverVariable, begin->mTarget->mSolverVariable,
-                        margin, SolverVariable::STRENGTH_BARRIER);
+                                       margin, SolverVariable::STRENGTH_BARRIER);
             } else {
                 system->addGreaterThan(begin->mSolverVariable, begin->mTarget->mSolverVariable,
-                        margin, SolverVariable::STRENGTH_FIXED);
+                                       margin, SolverVariable::STRENGTH_FIXED);
             }
             if (isSpreadOnly && !isChainPacked) {
                 strength = SolverVariable::STRENGTH_EQUALITY;
@@ -131,7 +131,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                 strength = SolverVariable::STRENGTH_EQUALITY;
             }
             system->addEquality(begin->mSolverVariable, begin->mTarget->mSolverVariable, margin,
-                    strength);
+                                strength);
         }
 
         if (isWrapContent) {
@@ -139,12 +139,12 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                     && widget->mListDimensionBehaviors[orientation]
                     == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT) {
                 system->addGreaterThan(widget->mListAnchors[offset + 1]->mSolverVariable,
-                        widget->mListAnchors[offset]->mSolverVariable, 0,
-                        SolverVariable::STRENGTH_EQUALITY);
+                                       widget->mListAnchors[offset]->mSolverVariable, 0,
+                                       SolverVariable::STRENGTH_EQUALITY);
             }
             system->addGreaterThan(widget->mListAnchors[offset]->mSolverVariable,
-                    container->mListAnchors[offset]->mSolverVariable,
-                    0, SolverVariable::STRENGTH_FIXED);
+                                   container->mListAnchors[offset]->mSolverVariable,
+                                   0, SolverVariable::STRENGTH_FIXED);
         }
 
         // go to the next widget
@@ -169,26 +169,26 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
     if (lastVisibleWidget != nullptr && last->mListAnchors[offset + 1]->mTarget != nullptr) {
         ConstraintAnchor* end = lastVisibleWidget->mListAnchors[offset + 1];
         bool isSpreadOnly = lastVisibleWidget->mListDimensionBehaviors[orientation]
-                == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
-                && lastVisibleWidget->mResolvedMatchConstraintDefault[orientation]
-                        == ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
+                            == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
+                            && lastVisibleWidget->mResolvedMatchConstraintDefault[orientation]
+                            == ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
         if (isSpreadOnly && !isChainPacked && end->mTarget->mOwner == container) {
             system->addEquality(end->mSolverVariable, end->mTarget->mSolverVariable,
-                    -end->getMargin(), SolverVariable::STRENGTH_EQUALITY);
+                                -end->getMargin(), SolverVariable::STRENGTH_EQUALITY);
         } else if (isChainPacked && end->mTarget->mOwner == container) {
             system->addEquality(end->mSolverVariable, end->mTarget->mSolverVariable,
-                    -end->getMargin(), SolverVariable::STRENGTH_HIGHEST);
+                                -end->getMargin(), SolverVariable::STRENGTH_HIGHEST);
         }
         system->addLowerThan(end->mSolverVariable,
-                last->mListAnchors[offset + 1]->mTarget->mSolverVariable, -end->getMargin(),
-                SolverVariable::STRENGTH_BARRIER);
+                             last->mListAnchors[offset + 1]->mTarget->mSolverVariable, -end->getMargin(),
+                             SolverVariable::STRENGTH_BARRIER);
     }
 
     // ... and make sure the root end is constrained in wrap content.
     if (isWrapContent) {
         system->addGreaterThan(container->mListAnchors[offset + 1]->mSolverVariable,
-                last->mListAnchors[offset + 1]->mSolverVariable,
-                last->mListAnchors[offset + 1]->getMargin(), SolverVariable::STRENGTH_FIXED);
+                               last->mListAnchors[offset + 1]->mSolverVariable,
+                               last->mListAnchors[offset + 1]->getMargin(), SolverVariable::STRENGTH_FIXED);
     }
 
     // Now apply the centering / spreading for matched-constraint widgets
@@ -209,16 +209,16 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
             if (currentWeight < 0) {
                 if (chainHead->mHasComplexMatchWeights) {
                     system->addEquality(match->mListAnchors[offset + 1]->mSolverVariable,
-                            match->mListAnchors[offset]->mSolverVariable,
-                            0, SolverVariable::STRENGTH_HIGHEST);
+                                        match->mListAnchors[offset]->mSolverVariable,
+                                        0, SolverVariable::STRENGTH_HIGHEST);
                     continue;
                 }
                 currentWeight = 1;
             }
             if (currentWeight == 0) {
                 system->addEquality(match->mListAnchors[offset + 1]->mSolverVariable,
-                        match->mListAnchors[offset]->mSolverVariable,
-                        0, SolverVariable::STRENGTH_FIXED);
+                                    match->mListAnchors[offset]->mSolverVariable,
+                                    0, SolverVariable::STRENGTH_FIXED);
                 continue;
             }
 
@@ -229,7 +229,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                 SolverVariable* nextEnd = match->mListAnchors[offset + 1]->mSolverVariable;
                 ArrayRow* row = system->createRow();
                 row->createRowEqualMatchDimensions(lastWeight, totalWeights, currentWeight,
-                        begin, end, nextBegin, nextEnd);
+                                                   begin, end, nextBegin, nextEnd);
                 system->addConstraint(row);
             }
 
@@ -246,7 +246,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         ConstraintAnchor* begin = first->mListAnchors[offset];
         ConstraintAnchor* end = last->mListAnchors[offset + 1];
         SolverVariable* beginTarget = begin->mTarget != nullptr
-                ? begin->mTarget->mSolverVariable : nullptr;
+                                      ? begin->mTarget->mSolverVariable : nullptr;
         SolverVariable* endTarget = end->mTarget != nullptr ? end->mTarget->mSolverVariable : nullptr;
         begin = firstVisibleWidget->mListAnchors[offset];
         if (lastVisibleWidget != nullptr) {
@@ -262,15 +262,15 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
             int beginMargin = begin->getMargin();
             int endMargin = end->getMargin();
             system->addCentering(begin->mSolverVariable, beginTarget,
-                    beginMargin, bias, endTarget, end->mSolverVariable,
-                    endMargin, SolverVariable::STRENGTH_CENTERING);
+                                 beginMargin, bias, endTarget, end->mSolverVariable,
+                                 endMargin, SolverVariable::STRENGTH_CENTERING);
         }
     } else if (isChainSpread && firstVisibleWidget != nullptr) {
         // for chain spread, add equal dimensions in between *visible* widgets
         widget = firstVisibleWidget;
         ConstraintWidget* previousVisibleWidget = firstVisibleWidget;
         bool applyFixedEquality = chainHead->mWidgetsMatchCount > 0
-                && (chainHead->mWidgetsCount == chainHead->mWidgetsMatchCount);
+                                  && (chainHead->mWidgetsCount == chainHead->mWidgetsMatchCount);
         while (widget != nullptr) {
             next = widget->mNextChainWidget[orientation];
             while (next != nullptr && next->getVisibility() == ConstraintWidget::GONE) {
@@ -280,13 +280,13 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                 ConstraintAnchor* beginAnchor = widget->mListAnchors[offset];
                 SolverVariable* begin = beginAnchor->mSolverVariable;
                 SolverVariable* beginTarget = beginAnchor->mTarget != nullptr
-                        ? beginAnchor->mTarget->mSolverVariable : nullptr;
+                                              ? beginAnchor->mTarget->mSolverVariable : nullptr;
                 if (previousVisibleWidget != widget) {
                     beginTarget =
-                            previousVisibleWidget->mListAnchors[offset + 1]->mSolverVariable;
+                        previousVisibleWidget->mListAnchors[offset + 1]->mSolverVariable;
                 } else if (widget == firstVisibleWidget) {
                     beginTarget = first->mListAnchors[offset]->mTarget != nullptr
-                            ? first->mListAnchors[offset]->mTarget->mSolverVariable : nullptr;
+                                  ? first->mListAnchors[offset]->mTarget->mSolverVariable : nullptr;
                 }
 
                 ConstraintAnchor* beginNextAnchor = nullptr;
@@ -324,8 +324,8 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                         strength = SolverVariable::STRENGTH_FIXED;
                     }
                     system->addCentering(begin, beginTarget, margin1, 0.5f,
-                            beginNext, beginNextTarget, margin2,
-                            strength);
+                                         beginNext, beginNextTarget, margin2,
+                                         strength);
                 }
             }
             if (widget->getVisibility() != ConstraintWidget::GONE) {
@@ -338,7 +338,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         widget = firstVisibleWidget;
         ConstraintWidget* previousVisibleWidget = firstVisibleWidget;
         bool applyFixedEquality = chainHead->mWidgetsMatchCount > 0
-                && (chainHead->mWidgetsCount == chainHead->mWidgetsMatchCount);
+                                  && (chainHead->mWidgetsCount == chainHead->mWidgetsMatchCount);
         while (widget != nullptr) {
             next = widget->mNextChainWidget[orientation];
             while (next != nullptr && next->getVisibility() == ConstraintWidget::GONE) {
@@ -351,7 +351,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                 ConstraintAnchor* beginAnchor = widget->mListAnchors[offset];
                 SolverVariable* begin = beginAnchor->mSolverVariable;
                 SolverVariable* beginTarget = beginAnchor->mTarget != nullptr
-                        ? beginAnchor->mTarget->mSolverVariable : nullptr;
+                                              ? beginAnchor->mTarget->mSolverVariable : nullptr;
                 beginTarget = previousVisibleWidget->mListAnchors[offset + 1]->mSolverVariable;
                 ConstraintAnchor* beginNextAnchor = nullptr;
                 SolverVariable* beginNext = nullptr;
@@ -363,7 +363,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                     beginNextAnchor = next->mListAnchors[offset];
                     beginNext = beginNextAnchor->mSolverVariable;
                     beginNextTarget = beginNextAnchor->mTarget != nullptr
-                            ? beginNextAnchor->mTarget->mSolverVariable : nullptr;
+                                      ? beginNextAnchor->mTarget->mSolverVariable : nullptr;
                 } else {
                     beginNextAnchor = lastVisibleWidget->mListAnchors[offset];
                     if (beginNextAnchor != nullptr) {
@@ -383,8 +383,8 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
                 if (begin != nullptr && beginTarget != nullptr
                         && beginNext != nullptr && beginNextTarget != nullptr) {
                     system->addCentering(begin, beginTarget, beginMargin, 0.5f,
-                            beginNext, beginNextTarget, nextMargin,
-                            strength);
+                                         beginNext, beginNextTarget, nextMargin,
+                                         strength);
                 }
             }
             if (widget->getVisibility() != ConstraintWidget::GONE) {
@@ -400,16 +400,16 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         if (beginTarget != nullptr) {
             if (firstVisibleWidget != lastVisibleWidget) {
                 system->addEquality(begin->mSolverVariable, beginTarget->mSolverVariable,
-                        begin->getMargin(), endPointsStrength);
+                                    begin->getMargin(), endPointsStrength);
             } else if (endTarget != nullptr) {
                 system->addCentering(begin->mSolverVariable, beginTarget->mSolverVariable,
-                        begin->getMargin(), 0.5f, end->mSolverVariable, endTarget->mSolverVariable,
-                        end->getMargin(), endPointsStrength);
+                                     begin->getMargin(), 0.5f, end->mSolverVariable, endTarget->mSolverVariable,
+                                     end->getMargin(), endPointsStrength);
             }
         }
         if (endTarget != nullptr && (firstVisibleWidget != lastVisibleWidget)) {
             system->addEquality(end->mSolverVariable,
-                    endTarget->mSolverVariable, -end->getMargin(), endPointsStrength);
+                                endTarget->mSolverVariable, -end->getMargin(), endPointsStrength);
         }
     }
 
@@ -422,7 +422,7 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         }
         ConstraintAnchor* end = lastVisibleWidget->mListAnchors[offset + 1];
         SolverVariable* beginTarget =
-                begin->mTarget != nullptr ? begin->mTarget->mSolverVariable : nullptr;
+            begin->mTarget != nullptr ? begin->mTarget->mSolverVariable : nullptr;
         SolverVariable* endTarget = end->mTarget != nullptr ? end->mTarget->mSolverVariable : nullptr;
         if (last != lastVisibleWidget) {
             ConstraintAnchor* realEnd = last->mListAnchors[offset + 1];
@@ -437,8 +437,8 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
             int beginMargin = begin->getMargin();
             int endMargin = lastVisibleWidget->mListAnchors[offset + 1]->getMargin();
             system->addCentering(begin->mSolverVariable, beginTarget, beginMargin,
-                    bias, endTarget, end->mSolverVariable, endMargin,
-                    SolverVariable::STRENGTH_EQUALITY);
+                                 bias, endTarget, end->mSolverVariable, endMargin,
+                                 SolverVariable::STRENGTH_EQUALITY);
         }
     }
 }

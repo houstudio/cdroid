@@ -18,11 +18,11 @@
 namespace cdroid {
 
 class StepCurve : public Easing {
-public:
+  public:
     explicit StepCurve(const std::string& configString);
     double get(double x) const override;
     double getDiff(double x) const override;
-private:
+  private:
     static MonotonicCurveFit genSpline(const std::vector<double>& values);
     std::unique_ptr<MonotonicCurveFit> mCurveFit;
 };

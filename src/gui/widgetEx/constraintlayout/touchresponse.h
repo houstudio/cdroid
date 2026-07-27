@@ -28,7 +28,7 @@ class MotionLayout;
 class VelocityTracker;
 
 class TouchResponse {
-public:
+  public:
     // Build from the scene's <OnSwipe> config. `layout` must outlive this TouchResponse.
     TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& cfg);
     ~TouchResponse();
@@ -41,9 +41,11 @@ public:
     bool onMove(const MotionEvent& evt);
     void onUp(const MotionEvent& evt);
 
-    bool dragStarted() const { return mDragStarted; }
+    bool dragStarted() const {
+        return mDragStarted;
+    }
 
-private:
+  private:
     MotionLayout* mLayout;
     int   mTouchAnchorId;          // MotionScene::UNSET if none -> layout-dimension fallback
     float mAnchorLocX, mAnchorLocY; // anchor point on the widget (fraction), from touchAnchorSide

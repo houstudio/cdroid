@@ -17,7 +17,7 @@
 namespace cdroid {
 
 class CustomAttribute {
-public:
+  public:
     enum class AttributeType {
         INT_TYPE,
         FLOAT_TYPE,
@@ -35,13 +35,21 @@ public:
     // static type passed must match mType (the Java original makes the same assumption).
     template <typename T>
     CustomAttribute(const std::string& name, AttributeType attributeType, const T& value, bool method)
-        : mName(name), mType(attributeType), mMethod(method) { setValue(value); }
+        : mName(name), mType(attributeType), mMethod(method) {
+        setValue(value);
+    }
     template <typename T>
     CustomAttribute(const CustomAttribute& source, const T& value)
-        : mName(source.mName), mType(source.mType) { setValue(value); }
+        : mName(source.mName), mType(source.mType) {
+        setValue(value);
+    }
 
-    AttributeType getType() const { return mType; }
-    const std::string& getName() const { return mName; }
+    AttributeType getType() const {
+        return mType;
+    }
+    const std::string& getName() const {
+        return mName;
+    }
 
     bool isContinuous() const;
     int  numberOfInterpolatedValues() const;
@@ -67,7 +75,7 @@ public:
     std::string mName;
     bool mBooleanValue = false;
 
-private:
+  private:
     static int clamp(int c);
 
     AttributeType mType;

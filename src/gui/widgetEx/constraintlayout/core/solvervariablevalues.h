@@ -31,7 +31,7 @@ class SolverVariable;
 class Cache;
 
 class SolverVariableValues : public ArrayRow::ArrayRowVariables {
-private:
+  private:
     static float sEpsilon;
     const int mNone = -1;
     int mSize = 16;
@@ -49,7 +49,7 @@ private:
     ArrayRow* mRow;  // owner (not owned)
     Cache*    mCache;
 
-public:
+  public:
     SolverVariableValues(ArrayRow* row, Cache* cache);
 
     int getCurrentSize() override;
@@ -69,7 +69,7 @@ public:
     void invert() override;
     void divideByAmount(float amount) override;
 
-private:
+  private:
     void increaseSize();
     void addToHashMap(SolverVariable* variable, int index);
     void removeFromHashMap(SolverVariable* variable);

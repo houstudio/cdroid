@@ -39,7 +39,7 @@ class XmlPullParser;
 class View;
 
 class ViewTransition {
-public:
+  public:
     // What triggers the ViewTransition (onStateTransition attr).
     static constexpr int ONSTATE_ACTION_DOWN        = 1;
     static constexpr int ONSTATE_ACTION_UP          = 2;
@@ -58,18 +58,40 @@ public:
     // consumes through </ViewTransition> (parsing nested <KeyFrameSet>).
     ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& parser);
 
-    int getId() const { return mId; }
-    int getStateTransition() const { return mOnStateTransition; }
-    void setStateTransition(int s) { mOnStateTransition = s; }
-    int getDuration() const { return mDuration; }
-    int getUpDuration() const { return mUpDuration; }
-    int getViewTransitionMode() const { return mViewTransitionMode; }
-    int getPathMotionArc() const { return mPathMotionArc; }
-    const std::string& getInterpolatorString() const { return mDefaultInterpolatorString; }
-    KeyFrames* getKeyFrames() const { return mKeyFrames.get(); }
+    int getId() const {
+        return mId;
+    }
+    int getStateTransition() const {
+        return mOnStateTransition;
+    }
+    void setStateTransition(int s) {
+        mOnStateTransition = s;
+    }
+    int getDuration() const {
+        return mDuration;
+    }
+    int getUpDuration() const {
+        return mUpDuration;
+    }
+    int getViewTransitionMode() const {
+        return mViewTransitionMode;
+    }
+    int getPathMotionArc() const {
+        return mPathMotionArc;
+    }
+    const std::string& getInterpolatorString() const {
+        return mDefaultInterpolatorString;
+    }
+    KeyFrames* getKeyFrames() const {
+        return mKeyFrames.get();
+    }
 
-    bool isEnabled() const { return !mDisabled; }
-    void setEnabled(bool enable) { mDisabled = !enable; }
+    bool isEnabled() const {
+        return !mDisabled;
+    }
+    void setEnabled(bool enable) {
+        mDisabled = !enable;
+    }
 
     // True if this ViewTransition applies to `view` (by target id; constraintTag string match is a
     // deferred fidelity).
@@ -77,7 +99,7 @@ public:
     // True if this ViewTransition should fire for the given MotionEvent action.
     bool supports(int action) const;
 
-private:
+  private:
     MotionScene& mScene;
     int mId = UNSET;
     int mTargetId = UNSET;

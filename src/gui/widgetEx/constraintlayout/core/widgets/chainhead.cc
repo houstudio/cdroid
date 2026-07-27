@@ -27,10 +27,10 @@ ChainHead::ChainHead(ConstraintWidget* first, int orientation, bool isRtl)
 
 bool ChainHead::isMatchConstraintEqualityCandidate(ConstraintWidget* widget, int orientation) {
     return widget->getVisibility() != ConstraintWidget::GONE
-            && widget->mListDimensionBehaviors[orientation]
-                    == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
-            && (widget->mResolvedMatchConstraintDefault[orientation] == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
-                    || widget->mResolvedMatchConstraintDefault[orientation] == ConstraintWidget::MATCH_CONSTRAINT_RATIO);
+           && widget->mListDimensionBehaviors[orientation]
+           == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
+           && (widget->mResolvedMatchConstraintDefault[orientation] == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
+               || widget->mResolvedMatchConstraintDefault[orientation] == ConstraintWidget::MATCH_CONSTRAINT_RATIO);
 }
 
 void ChainHead::defineChainProperties() {
@@ -68,9 +68,9 @@ void ChainHead::defineChainProperties() {
                 if (widget->mResolvedMatchConstraintDefault[mOrientation]
                         == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
                         || widget->mResolvedMatchConstraintDefault[mOrientation]
-                                == ConstraintWidget::MATCH_CONSTRAINT_RATIO
+                        == ConstraintWidget::MATCH_CONSTRAINT_RATIO
                         || widget->mResolvedMatchConstraintDefault[mOrientation]
-                                == ConstraintWidget::MATCH_CONSTRAINT_PERCENT) {
+                        == ConstraintWidget::MATCH_CONSTRAINT_PERCENT) {
                     mWidgetsMatchCount++;
                     float weight = widget->mWeight[mOrientation];
                     if (weight > 0) {
@@ -91,7 +91,7 @@ void ChainHead::defineChainProperties() {
                     }
                     if (mLastMatchConstraintWidget != nullptr) {
                         mLastMatchConstraintWidget
-                                ->mListNextMatchConstraintsWidget[mOrientation] = widget;
+                        ->mListNextMatchConstraintsWidget[mOrientation] = widget;
                     }
                     mLastMatchConstraintWidget = widget;
                 }
@@ -100,7 +100,7 @@ void ChainHead::defineChainProperties() {
                             != ConstraintWidget::MATCH_CONSTRAINT_SPREAD) {
                         mOptimizable = false;
                     } else if (widget->mMatchConstraintMinWidth != 0
-                            || widget->mMatchConstraintMaxWidth != 0) {
+                               || widget->mMatchConstraintMaxWidth != 0) {
                         mOptimizable = false;
                     }
                 } else {
@@ -108,7 +108,7 @@ void ChainHead::defineChainProperties() {
                             != ConstraintWidget::MATCH_CONSTRAINT_SPREAD) {
                         mOptimizable = false;
                     } else if (widget->mMatchConstraintMinHeight != 0
-                            || widget->mMatchConstraintMaxHeight != 0) {
+                               || widget->mMatchConstraintMaxHeight != 0) {
                         mOptimizable = false;
                     }
                 }
@@ -157,14 +157,30 @@ void ChainHead::defineChainProperties() {
     mHasComplexMatchWeights = mHasDefinedWeights && mHasUndefinedWeights;
 }
 
-ConstraintWidget* ChainHead::getFirst() const { return mFirst; }
-ConstraintWidget* ChainHead::getFirstVisibleWidget() const { return mFirstVisibleWidget; }
-ConstraintWidget* ChainHead::getLast() const { return mLast; }
-ConstraintWidget* ChainHead::getLastVisibleWidget() const { return mLastVisibleWidget; }
-ConstraintWidget* ChainHead::getHead() const { return mHead; }
-ConstraintWidget* ChainHead::getFirstMatchConstraintWidget() const { return mFirstMatchConstraintWidget; }
-ConstraintWidget* ChainHead::getLastMatchConstraintWidget() const { return mLastMatchConstraintWidget; }
-float ChainHead::getTotalWeight() const { return mTotalWeight; }
+ConstraintWidget* ChainHead::getFirst() const {
+    return mFirst;
+}
+ConstraintWidget* ChainHead::getFirstVisibleWidget() const {
+    return mFirstVisibleWidget;
+}
+ConstraintWidget* ChainHead::getLast() const {
+    return mLast;
+}
+ConstraintWidget* ChainHead::getLastVisibleWidget() const {
+    return mLastVisibleWidget;
+}
+ConstraintWidget* ChainHead::getHead() const {
+    return mHead;
+}
+ConstraintWidget* ChainHead::getFirstMatchConstraintWidget() const {
+    return mFirstMatchConstraintWidget;
+}
+ConstraintWidget* ChainHead::getLastMatchConstraintWidget() const {
+    return mLastMatchConstraintWidget;
+}
+float ChainHead::getTotalWeight() const {
+    return mTotalWeight;
+}
 
 void ChainHead::define() {
     if (!mDefined) {

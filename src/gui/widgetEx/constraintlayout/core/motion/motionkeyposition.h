@@ -16,23 +16,29 @@
 namespace cdroid {
 
 class MotionKeyPosition : public MotionKey {
-public:
+  public:
     static constexpr int KEY_TYPE = 2;
     static constexpr int TYPE_CARTESIAN = 0;
     static constexpr int TYPE_PATH = 1;
     static constexpr int TYPE_SCREEN = 2;
     static constexpr int TYPE_AXIS = 3;
 
-    MotionKeyPosition() : mPositionType(TYPE_CARTESIAN) { mType = KEY_TYPE; }
+    MotionKeyPosition() : mPositionType(TYPE_CARTESIAN) {
+        mType = KEY_TYPE;
+    }
 
     void getAttributeNames(std::unordered_set<std::string>& attributes) const override {}
     void addValues(std::unordered_map<std::string, SplineSet*>& splines) override {}
-    MotionKey* clone() const override { return new MotionKeyPosition(*this); }
+    MotionKey* clone() const override {
+        return new MotionKeyPosition(*this);
+    }
 
     bool setValue(int type, int value) override;
     bool setValue(int type, float value) override;
     bool setValue(int type, const std::string& value) override;
-    bool setValue(int type, bool value) override { return false; }
+    bool setValue(int type, bool value) override {
+        return false;
+    }
 
     std::string mTransitionEasing;
     int mPathMotionArc = UNSET;

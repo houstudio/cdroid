@@ -53,11 +53,16 @@ std::string SolverVariable::getUniqueName(Type type, const std::string& prefix) 
         return prefix + std::to_string(sUniqueErrorId);
     }
     switch (type) {
-        case Type::UNRESTRICTED: return "U" + std::to_string(++sUniqueUnrestrictedId);
-        case Type::CONSTANT:     return "C" + std::to_string(++sUniqueConstantId);
-        case Type::SLACK:        return "S" + std::to_string(++sUniqueSlackId);
-        case Type::ERROR:        return "e" + std::to_string(++sUniqueErrorId);
-        case Type::UNKNOWN:      return "V" + std::to_string(++sUniqueId);
+    case Type::UNRESTRICTED:
+        return "U" + std::to_string(++sUniqueUnrestrictedId);
+    case Type::CONSTANT:
+        return "C" + std::to_string(++sUniqueConstantId);
+    case Type::SLACK:
+        return "S" + std::to_string(++sUniqueSlackId);
+    case Type::ERROR:
+        return "e" + std::to_string(++sUniqueErrorId);
+    case Type::UNKNOWN:
+        return "V" + std::to_string(++sUniqueId);
     }
     return "V" + std::to_string(++sUniqueId); // unreachable (Java throws AssertionError)
 }

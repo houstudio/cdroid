@@ -133,7 +133,7 @@ void ConstraintLayout::LayoutParams::validate() {
         mVerticalDimensionFixed = true;
         auto g = std::make_unique<clcore::Guideline>();
         int orient = (orientation == ConstraintWidget::VERTICAL) ? ConstraintWidget::VERTICAL
-                                                                 : ConstraintWidget::HORIZONTAL;
+                     : ConstraintWidget::HORIZONTAL;
         g->setOrientation(orient);
         if (guidePercent != UNSET_FLOAT)      g->setGuidePercent(guidePercent);
         else if (guideBegin != UNSET)         g->setGuideBegin(guideBegin);
@@ -161,8 +161,8 @@ ConstraintLayout::ConstraintLayout(Context* ctx, const AttributeSet& attrs)
     if (!layoutDesc.empty()) {
         XmlPullParser parser(ctx, layoutDesc);
         while (parser.getEventType() != XmlPullParser::START_TAG &&
-               parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-               parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+                parser.getEventType() != XmlPullParser::END_DOCUMENT &&
+                parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
             parser.next();
         }
         if (parser.getEventType() == XmlPullParser::START_TAG && parser.getName() != "MotionScene") {
@@ -276,7 +276,7 @@ void ConstraintLayout::setChildrenConstraints() {
 }
 
 void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintWidget* widget,
-                                                         LayoutParams* lp) {
+        LayoutParams* lp) {
     if (lp->mIsGuideline) {
         // Guideline: orientation + begin/end/percent set in validate(). Guideline::addToSolver
         // (virtual override) handles positioning; skip normal anchor/dimension logic.
@@ -400,8 +400,11 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
 // --- BasicMeasure::Measurer ---
 void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* m) {
     if (widget->getVisibility() == ConstraintWidget::GONE) {
-        m->measuredWidth = 0; m->measuredHeight = 0; m->measuredBaseline = 0;
-        m->measuredHasBaseline = false; m->measuredNeedsSolverPass = false;
+        m->measuredWidth = 0;
+        m->measuredHeight = 0;
+        m->measuredBaseline = 0;
+        m->measuredHasBaseline = false;
+        m->measuredNeedsSolverPass = false;
         return;
     }
     View* child = static_cast<View*>(widget->getCompanionWidget());
@@ -451,7 +454,7 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         }
     }
     resolveMeasuredDimension(widthMeasureSpec, heightMeasureSpec,
-            mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
+                             mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
 }
 
 void ConstraintLayout::resolveSystem(int widthSpec, int heightSpec) {
@@ -473,13 +476,13 @@ void ConstraintLayout::resolveSystem(int widthSpec, int heightSpec) {
     // forwarded to the solver here — the MVP driver sites the container at (0,0); samples use no
     // padding. TODO: pass padding so children come out parent-relative.
     mLayoutWidget.measure(Optimizer::OPTIMIZATION_NONE,
-            paddingLeft, paddingTop,
-            widthMode, widthSize, heightMode, heightSize,
-            mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
+                          paddingLeft, paddingTop,
+                          widthMode, widthSize, heightMode, heightSize,
+                          mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
 }
 
 void ConstraintLayout::setSelfDimensionBehaviour(int widthMode, int widthSize,
-                                                 int heightMode, int heightSize) {
+        int heightMode, int heightSize) {
     auto behaviour = [](int mode, int size, int& desired, int minDim, int maxDim, int pad) {
         ConstraintWidget::DimensionBehaviour b = ConstraintWidget::DimensionBehaviour::FIXED;
         desired = 0;
@@ -514,7 +517,7 @@ void ConstraintLayout::setSelfDimensionBehaviour(int widthMode, int widthSize,
 }
 
 void ConstraintLayout::resolveMeasuredDimension(int widthSpec, int heightSpec,
-                                                int measuredWidth, int measuredHeight) {
+        int measuredWidth, int measuredHeight) {
     int androidW = measuredWidth + mPaddingWidth;
     int androidH = measuredHeight + mPaddingHeight;
     int resolvedW = View::resolveSize(androidW, widthSpec);

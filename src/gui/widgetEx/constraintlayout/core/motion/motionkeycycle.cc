@@ -29,8 +29,14 @@ void MotionKeyCycle::addValues(std::unordered_map<std::string, SplineSet*>& /*sp
 }
 
 bool MotionKeyCycle::setValue(int type, int value) {
-    if (type == TypedValues::CycleType::TYPE_WAVE_SHAPE) { mWaveShape = value; return true; }
-    if (type == TypedValues::TYPE_FRAME_POSITION)        { mFramePosition = value; return true; }
+    if (type == TypedValues::CycleType::TYPE_WAVE_SHAPE) {
+        mWaveShape = value;
+        return true;
+    }
+    if (type == TypedValues::TYPE_FRAME_POSITION)        {
+        mFramePosition = value;
+        return true;
+    }
     return false;
 }
 
@@ -38,24 +44,53 @@ bool MotionKeyCycle::setValue(int type, float value) {
     using C = TypedValues::CycleType;
     using A = TypedValues::AttributesType;
     switch (type) {
-        case C::TYPE_WAVE_PERIOD: mWavePeriod = value; break;
-        case C::TYPE_WAVE_OFFSET: mWaveOffset = value; break;
-        case C::TYPE_WAVE_PHASE:  mWavePhase = value; break;
-        case A::TYPE_ALPHA:         mAlpha = value; break;
-        case A::TYPE_ROTATION_Z:    mRotation = value; break;
-        case A::TYPE_ROTATION_X:    mRotationX = value; break;
-        case A::TYPE_ROTATION_Y:    mRotationY = value; break;
-        case A::TYPE_SCALE_X:       mScaleX = value; break;
-        case A::TYPE_SCALE_Y:       mScaleY = value; break;
-        case A::TYPE_TRANSLATION_X: mTranslationX = value; break;
-        case A::TYPE_TRANSLATION_Y: mTranslationY = value; break;
-        case A::TYPE_PATH_ROTATE:   mTransitionPathRotate = value; break;
-        case A::TYPE_PROGRESS:      mProgress = value; break;
-        default: return false;
+    case C::TYPE_WAVE_PERIOD:
+        mWavePeriod = value;
+        break;
+    case C::TYPE_WAVE_OFFSET:
+        mWaveOffset = value;
+        break;
+    case C::TYPE_WAVE_PHASE:
+        mWavePhase = value;
+        break;
+    case A::TYPE_ALPHA:
+        mAlpha = value;
+        break;
+    case A::TYPE_ROTATION_Z:
+        mRotation = value;
+        break;
+    case A::TYPE_ROTATION_X:
+        mRotationX = value;
+        break;
+    case A::TYPE_ROTATION_Y:
+        mRotationY = value;
+        break;
+    case A::TYPE_SCALE_X:
+        mScaleX = value;
+        break;
+    case A::TYPE_SCALE_Y:
+        mScaleY = value;
+        break;
+    case A::TYPE_TRANSLATION_X:
+        mTranslationX = value;
+        break;
+    case A::TYPE_TRANSLATION_Y:
+        mTranslationY = value;
+        break;
+    case A::TYPE_PATH_ROTATE:
+        mTransitionPathRotate = value;
+        break;
+    case A::TYPE_PROGRESS:
+        mProgress = value;
+        break;
+    default:
+        return false;
     }
     return true;
 }
 
-bool MotionKeyCycle::setValue(int /*type*/, const std::string& /*value*/) { return false; }
+bool MotionKeyCycle::setValue(int /*type*/, const std::string& /*value*/) {
+    return false;
+}
 
 } // namespace cdroid

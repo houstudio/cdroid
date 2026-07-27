@@ -24,7 +24,7 @@ namespace cdroid {
 class XmlPullParser; // expat-backed pull parser (src/gui/core/xmlpullparser.h); IS-A AttributeSet
 
 class ConstraintSet {
-public:
+  public:
     // Anchor/side constants used by connect()/setMargin() (Android ConstraintSet values).
     static const int LEFT    = 3;
     static const int RIGHT   = 4;
@@ -161,7 +161,9 @@ public:
     void load(Context* context, XmlPullParser& parser);
     void applyTo(ConstraintLayout* constraintLayout);
     Constraint& get(int id);          // creates an entry if absent
-    bool contains(int id) const { return mConstraints.find(id) != mConstraints.end(); }
+    bool contains(int id) const {
+        return mConstraints.find(id) != mConstraints.end();
+    }
     // Copy base's per-view constraints into this set; entries already present here are kept
     // (derived overrides base). Used by MotionScene for <ConstraintSet deriveConstraintsFrom=...>.
     void mergeFrom(const ConstraintSet& base);
@@ -186,7 +188,7 @@ public:
     void setTranslationX(int viewId, float translationX);
     void setTranslationY(int viewId, float translationY);
 
-private:
+  private:
     std::unordered_map<int, Constraint> mConstraints;
 };
 

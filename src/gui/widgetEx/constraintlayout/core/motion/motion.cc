@@ -34,7 +34,9 @@ float Motion::lerp(float start, float end, float defaultValue, float progress) {
     return start + progress * (end - start);
 }
 
-void Motion::setView(MotionWidget* view) { mView = view; }
+void Motion::setView(MotionWidget* view) {
+    mView = view;
+}
 
 void Motion::setStart(MotionWidget* mw) {
     mStartMotionPath.mTime = 0;
@@ -58,7 +60,7 @@ void Motion::setStartState(MotionWidget* mw) {
     setStart(mw);
 }
 
-void Motion::setEndState(MotionWidget* mw){
+void Motion::setEndState(MotionWidget* mw) {
     setEnd(mw);
 }
 
@@ -121,44 +123,44 @@ void Motion::buildPath() {
         // only the start→end geometry; SCREEN additionally uses the parent dimensions (via setup).
         float cx, cy;
         switch (k->mPositionType) {
-            case MotionKeyPosition::TYPE_PATH: {
-                // Along the path vector plus a perpendicular offset (percentY is the perpendicular).
-                const float path = std::isnan(k->mPercentX) ? pos : k->mPercentX;
-                const float perp = std::isnan(k->mPercentY) ? 0.0f : k->mPercentY;
-                cx = sCx + pvx * path - pvy * perp; // perpendicularX = -pathVectorY
-                cy = sCy + pvy * path + pvx * perp; // perpendicularY =  pathVectorX
-                break;
-            }
-            case MotionKeyPosition::TYPE_AXIS: {
-                // Independent X/Y fractions along each axis (no cross/altPercent terms).
-                const float dxdx = std::isnan(k->mPercentX) ? pos : k->mPercentX;
-                const float dydy = std::isnan(k->mPercentY) ? pos : k->mPercentY;
-                cx = sCx + pvx * dxdx;
-                cy = sCy + pvy * dydy;
-                break;
-            }
-            case MotionKeyPosition::TYPE_SCREEN: {
-                // Relative to the parent: fraction of (parentSize - widgetSize); falls back to the
-                // path placement when the fraction is unset.
-                cx = std::isnan(k->mPercentX)
-                    ? (sCx + pvx * pos)
-                    : (k->mPercentX * (mParentWidth  - pw) + pw / 2.0f);
-                cy = std::isnan(k->mPercentY)
-                    ? (sCy + pvy * pos)
-                    : (k->mPercentY * (mParentHeight - ph) + ph / 2.0f);
-                break;
-            }
-            case MotionKeyPosition::TYPE_CARTESIAN:
-            default: {
-                // Delta-relative along the path vector, with altPercent cross terms.
-                const float dxdx = std::isnan(k->mPercentX)    ? pos : k->mPercentX;
-                const float dydx = std::isnan(k->mAltPercentY) ? 0.0f : k->mAltPercentY;
-                const float dydy = std::isnan(k->mPercentY)    ? pos : k->mPercentY;
-                const float dxdy = std::isnan(k->mAltPercentX) ? 0.0f : k->mAltPercentX;
-                cx = sCx + pvx * dxdx + pvy * dxdy;
-                cy = sCy + pvy * dydy + pvx * dydx;
-                break;
-            }
+        case MotionKeyPosition::TYPE_PATH: {
+            // Along the path vector plus a perpendicular offset (percentY is the perpendicular).
+            const float path = std::isnan(k->mPercentX) ? pos : k->mPercentX;
+            const float perp = std::isnan(k->mPercentY) ? 0.0f : k->mPercentY;
+            cx = sCx + pvx * path - pvy * perp; // perpendicularX = -pathVectorY
+            cy = sCy + pvy * path + pvx * perp; // perpendicularY =  pathVectorX
+            break;
+        }
+        case MotionKeyPosition::TYPE_AXIS: {
+            // Independent X/Y fractions along each axis (no cross/altPercent terms).
+            const float dxdx = std::isnan(k->mPercentX) ? pos : k->mPercentX;
+            const float dydy = std::isnan(k->mPercentY) ? pos : k->mPercentY;
+            cx = sCx + pvx * dxdx;
+            cy = sCy + pvy * dydy;
+            break;
+        }
+        case MotionKeyPosition::TYPE_SCREEN: {
+            // Relative to the parent: fraction of (parentSize - widgetSize); falls back to the
+            // path placement when the fraction is unset.
+            cx = std::isnan(k->mPercentX)
+                 ? (sCx + pvx * pos)
+                 : (k->mPercentX * (mParentWidth  - pw) + pw / 2.0f);
+            cy = std::isnan(k->mPercentY)
+                 ? (sCy + pvy * pos)
+                 : (k->mPercentY * (mParentHeight - ph) + ph / 2.0f);
+            break;
+        }
+        case MotionKeyPosition::TYPE_CARTESIAN:
+        default: {
+            // Delta-relative along the path vector, with altPercent cross terms.
+            const float dxdx = std::isnan(k->mPercentX)    ? pos : k->mPercentX;
+            const float dydx = std::isnan(k->mAltPercentY) ? 0.0f : k->mAltPercentY;
+            const float dydy = std::isnan(k->mPercentY)    ? pos : k->mPercentY;
+            const float dxdy = std::isnan(k->mAltPercentX) ? 0.0f : k->mAltPercentX;
+            cx = sCx + pvx * dxdx + pvy * dxdy;
+            cy = sCy + pvy * dydy + pvx * dydx;
+            break;
+        }
         }
         // A KeyPosition may override its segment's arc mode (pathMotionArc); otherwise inherit.
         addPt(pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph,
@@ -179,17 +181,17 @@ void Motion::buildPath() {
 void Motion::addKey(MotionKeyAttributes* key) {
     mAttributeKeys.push_back(key);
     std::sort(mAttributeKeys.begin(), mAttributeKeys.end(),
-              [](MotionKeyAttributes* a, MotionKeyAttributes* b) {
-                  return a->mFramePosition < b->mFramePosition;
-              });
+    [](MotionKeyAttributes* a, MotionKeyAttributes* b) {
+        return a->mFramePosition < b->mFramePosition;
+    });
 }
 
 void Motion::addKey(MotionKeyPosition* key) {
     mPositionKeys.push_back(key);
     std::sort(mPositionKeys.begin(), mPositionKeys.end(),
-              [](MotionKeyPosition* a, MotionKeyPosition* b) {
-                  return a->mFramePosition < b->mFramePosition;
-              });
+    [](MotionKeyPosition* a, MotionKeyPosition* b) {
+        return a->mFramePosition < b->mFramePosition;
+    });
     mPathDirty = true; // position keyframes changed -> rebuild the path CurveFit
 }
 
@@ -231,10 +233,14 @@ void Motion::buildRect(float p, std::vector<float>& path, int offset) {
     if (std::isnan(w)) w = mStartMotionPath.mWidth;
     if (std::isnan(h)) h = mStartMotionPath.mHeight;
     // 4 corners (8 floats): (x,y)-(x+w,y)-(x+w,y+h)-(x,y+h)
-    path[offset + 0] = x;       path[offset + 1] = y;
-    path[offset + 2] = x + w;   path[offset + 3] = y;
-    path[offset + 4] = x + w;   path[offset + 5] = y + h;
-    path[offset + 6] = x;       path[offset + 7] = y + h;
+    path[offset + 0] = x;
+    path[offset + 1] = y;
+    path[offset + 2] = x + w;
+    path[offset + 3] = y;
+    path[offset + 4] = x + w;
+    path[offset + 5] = y + h;
+    path[offset + 6] = x;
+    path[offset + 7] = y + h;
 }
 
 void Motion::interpolate(MotionWidget* child, float progress) {
@@ -278,7 +284,9 @@ void Motion::interpolate(MotionWidget* child, float progress) {
     if (std::isnan(startAlpha) && !std::isnan(endAlpha)) startAlpha = 1;
     if (!std::isnan(startAlpha) && std::isnan(endAlpha)) endAlpha = 1;
     float alpha = keyframed(progress, startAlpha, endAlpha, 1,
-                            [](const MotionKeyAttributes* k) { return k->mAlpha; });
+    [](const MotionKeyAttributes* k) {
+        return k->mAlpha;
+    });
     // Cycle overlay: superimpose wave oscillations on the base alpha.
     for (auto* c : mCycleKeys) {
         if (!std::isnan(c->mAlpha) && !std::isnan(c->mWavePeriod)) {
@@ -289,25 +297,45 @@ void Motion::interpolate(MotionWidget* child, float progress) {
     if (!std::isnan(alpha)) child->setAlpha(alpha);
 
     child->setRotationX(keyframed(progress, mStartPoint.mRotationX, mEndPoint.mRotationX, 0,
-        [](const MotionKeyAttributes* k) { return k->mRotationX; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mRotationX;
+    }));
     child->setRotationY(keyframed(progress, mStartPoint.rotationY, mEndPoint.rotationY, 0,
-        [](const MotionKeyAttributes* k) { return k->mRotationY; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mRotationY;
+    }));
     child->setRotationZ(keyframed(progress, mStartPoint.mRotation, mEndPoint.mRotation, 0,
-        [](const MotionKeyAttributes* k) { return k->mRotation; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mRotation;
+    }));
     child->setScaleX(keyframed(progress, mStartPoint.mScaleX, mEndPoint.mScaleX, 1,
-        [](const MotionKeyAttributes* k) { return k->mScaleX; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mScaleX;
+    }));
     child->setScaleY(keyframed(progress, mStartPoint.mScaleY, mEndPoint.mScaleY, 1,
-        [](const MotionKeyAttributes* k) { return k->mScaleY; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mScaleY;
+    }));
     child->setPivotX(keyframed(progress, mStartPoint.mPivotX, mEndPoint.mPivotX, 0.5f,
-        [](const MotionKeyAttributes* k) { return k->mPivotX; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mPivotX;
+    }));
     child->setPivotY(keyframed(progress, mStartPoint.mPivotY, mEndPoint.mPivotY, 0.5f,
-        [](const MotionKeyAttributes* k) { return k->mPivotY; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mPivotY;
+    }));
     child->setTranslationX(keyframed(progress, mStartPoint.mTranslationX, mEndPoint.mTranslationX, 0,
-        [](const MotionKeyAttributes* k) { return k->mTranslationX; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mTranslationX;
+    }));
     child->setTranslationY(keyframed(progress, mStartPoint.mTranslationY, mEndPoint.mTranslationY, 0,
-        [](const MotionKeyAttributes* k) { return k->mTranslationY; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mTranslationY;
+    }));
     child->setTranslationZ(keyframed(progress, mStartPoint.mTranslationZ, mEndPoint.mTranslationZ, 0,
-        [](const MotionKeyAttributes* k) { return k->mTranslationZ; }));
+    [](const MotionKeyAttributes* k) {
+        return k->mTranslationZ;
+    }));
 }
 
 void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) {
@@ -326,9 +354,9 @@ void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) 
         dx = dy = 0;
     }
     float dw = mPositionCurveFit ? (float) mPositionCurveFit->getSlope(pos, 2)
-                                 : (mEndMotionPath.mWidth - mStartMotionPath.mWidth);
+               : (mEndMotionPath.mWidth - mStartMotionPath.mWidth);
     float dh = mPositionCurveFit ? (float) mPositionCurveFit->getSlope(pos, 3)
-                                 : (mEndMotionPath.mHeight - mStartMotionPath.mHeight);
+               : (mEndMotionPath.mHeight - mStartMotionPath.mHeight);
     out[0] = dx + locationX * dw;
     out[1] = dy + locationY * dh;
 }

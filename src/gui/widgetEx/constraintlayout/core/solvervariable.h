@@ -37,7 +37,7 @@ class LinearSystem;  // forward
  * Implements Comparable<SolverVariable> via operator< / compareTo (by id).
  */
 class SolverVariable {
-public:
+  public:
     enum class Type {
         UNRESTRICTED, // can take negative or positive values
         CONSTANT,     // actually a constant number, not a variable
@@ -101,14 +101,18 @@ public:
     void setType(Type type, const std::string& prefix);
 
     // Comparable<SolverVariable>
-    int compareTo(const SolverVariable& v) const { return id - v.id; }
-    bool operator<(const SolverVariable& v) const { return id < v.id; }
+    int compareTo(const SolverVariable& v) const {
+        return id - v.id;
+    }
+    bool operator<(const SolverVariable& v) const {
+        return id < v.id;
+    }
 
     std::string toString();
 
     static void increaseErrorId();
 
-private:
+  private:
     static bool kInternalDebug; // == LinearSystem::FULL_DEBUG (false)
     static bool kVarUseHash;    // Java VAR_USE_HASH (false)
     static bool kDoNotUse;      // Java DO_NOT_USE (false)

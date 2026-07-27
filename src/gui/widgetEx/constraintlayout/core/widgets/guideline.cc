@@ -99,24 +99,26 @@ int Guideline::getMinimumPosition() const {
 
 ConstraintAnchor* Guideline::getAnchor(ConstraintAnchor::Type anchorType) {
     switch (anchorType) {
-        case ConstraintAnchor::Type::LEFT:
-        case ConstraintAnchor::Type::RIGHT: {
-            if (mOrientation == VERTICAL) {
-                return mAnchor;
-            }
-        } break;
-        case ConstraintAnchor::Type::TOP:
-        case ConstraintAnchor::Type::BOTTOM: {
-            if (mOrientation == HORIZONTAL) {
-                return mAnchor;
-            }
-        } break;
-        case ConstraintAnchor::Type::BASELINE:
-        case ConstraintAnchor::Type::CENTER:
-        case ConstraintAnchor::Type::CENTER_X:
-        case ConstraintAnchor::Type::CENTER_Y:
-        case ConstraintAnchor::Type::NONE:
-            return nullptr;
+    case ConstraintAnchor::Type::LEFT:
+    case ConstraintAnchor::Type::RIGHT: {
+        if (mOrientation == VERTICAL) {
+            return mAnchor;
+        }
+    }
+    break;
+    case ConstraintAnchor::Type::TOP:
+    case ConstraintAnchor::Type::BOTTOM: {
+        if (mOrientation == HORIZONTAL) {
+            return mAnchor;
+        }
+    }
+    break;
+    case ConstraintAnchor::Type::BASELINE:
+    case ConstraintAnchor::Type::CENTER:
+    case ConstraintAnchor::Type::CENTER_X:
+    case ConstraintAnchor::Type::CENTER_Y:
+    case ConstraintAnchor::Type::NONE:
+        return nullptr;
     }
     return nullptr;
 }
@@ -184,16 +186,16 @@ void Guideline::addToSolver(LinearSystem* system, bool /*optimize*/) {
     ConstraintAnchor* begin = parent->getAnchor(ConstraintAnchor::Type::LEFT);
     ConstraintAnchor* end   = parent->getAnchor(ConstraintAnchor::Type::RIGHT);
     bool parentWrapContent = mParent != nullptr
-            ? mParent->mListDimensionBehaviors[DIMENSION_HORIZONTAL]
-                    == DimensionBehaviour::WRAP_CONTENT
-            : false;
+                             ? mParent->mListDimensionBehaviors[DIMENSION_HORIZONTAL]
+                             == DimensionBehaviour::WRAP_CONTENT
+                             : false;
     if (mOrientation == HORIZONTAL) {
         begin = parent->getAnchor(ConstraintAnchor::Type::TOP);
         end   = parent->getAnchor(ConstraintAnchor::Type::BOTTOM);
         parentWrapContent = mParent != nullptr
-                ? mParent->mListDimensionBehaviors[DIMENSION_VERTICAL]
-                        == DimensionBehaviour::WRAP_CONTENT
-                : false;
+                            ? mParent->mListDimensionBehaviors[DIMENSION_VERTICAL]
+                            == DimensionBehaviour::WRAP_CONTENT
+                            : false;
     }
     if (mResolved && mAnchor->hasFinalValue()) {
         SolverVariable* guide = system->createObjectVariable(mAnchor);
@@ -201,13 +203,13 @@ void Guideline::addToSolver(LinearSystem* system, bool /*optimize*/) {
         if (mRelativeBegin != -1) {
             if (parentWrapContent) {
                 system->addGreaterThan(system->createObjectVariable(end), guide,
-                        0, SolverVariable::STRENGTH_EQUALITY);
+                                       0, SolverVariable::STRENGTH_EQUALITY);
             }
         } else if (mRelativeEnd != -1) {
             if (parentWrapContent) {
                 SolverVariable* parentRight = system->createObjectVariable(end);
                 system->addGreaterThan(guide, system->createObjectVariable(begin),
-                        0, SolverVariable::STRENGTH_EQUALITY);
+                                       0, SolverVariable::STRENGTH_EQUALITY);
                 system->addGreaterThan(parentRight, guide, 0, SolverVariable::STRENGTH_EQUALITY);
             }
         }
@@ -220,7 +222,7 @@ void Guideline::addToSolver(LinearSystem* system, bool /*optimize*/) {
         system->addEquality(guide, parentLeft, mRelativeBegin, SolverVariable::STRENGTH_FIXED);
         if (parentWrapContent) {
             system->addGreaterThan(system->createObjectVariable(end),
-                    guide, 0, SolverVariable::STRENGTH_EQUALITY);
+                                   guide, 0, SolverVariable::STRENGTH_EQUALITY);
         }
     } else if (mRelativeEnd != -1) {
         SolverVariable* guide = system->createObjectVariable(mAnchor);
@@ -228,14 +230,14 @@ void Guideline::addToSolver(LinearSystem* system, bool /*optimize*/) {
         system->addEquality(guide, parentRight, -mRelativeEnd, SolverVariable::STRENGTH_FIXED);
         if (parentWrapContent) {
             system->addGreaterThan(guide, system->createObjectVariable(begin),
-                    0, SolverVariable::STRENGTH_EQUALITY);
+                                   0, SolverVariable::STRENGTH_EQUALITY);
             system->addGreaterThan(parentRight, guide, 0, SolverVariable::STRENGTH_EQUALITY);
         }
     } else if (mRelativePercent != -1) {
         SolverVariable* guide = system->createObjectVariable(mAnchor);
         SolverVariable* parentRight = system->createObjectVariable(end);
         system->addConstraint(LinearSystem::
-                createRowDimensionPercent(system, guide, parentRight, mRelativePercent));
+                              createRowDimensionPercent(system, guide, parentRight, mRelativePercent));
     }
 }
 

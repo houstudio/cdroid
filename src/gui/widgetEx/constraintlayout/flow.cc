@@ -46,7 +46,7 @@ Flow::Flow(Context* ctx, const AttributeSet& attrs)
     f->setWrapMode(attrs.getInt("wrapMode", kWrapMode, clcore::Flow::WRAP_NONE));
     int orient = attrs.getInt("android:orientation", ConstraintWidget::HORIZONTAL);
     f->setOrientation(orient == ConstraintWidget::VERTICAL ? ConstraintWidget::VERTICAL
-                                                           : ConstraintWidget::HORIZONTAL);
+                      : ConstraintWidget::HORIZONTAL);
     f->setHorizontalAlign(attrs.getInt("horizontalAlign", kHorizontalAlign, clcore::Flow::HORIZONTAL_ALIGN_START));
     f->setVerticalAlign(attrs.getInt("verticalAlign", kVerticalAlign, clcore::Flow::VERTICAL_ALIGN_CENTER));
     f->setHorizontalGap(attrs.getDimensionPixelSize("horizontalGap", 0));
@@ -74,15 +74,35 @@ Flow::Flow(int width, int height)
     validateParams();
 }
 
-void Flow::setWrapMode(int wrapMode)       { asFlow(mHelperWidget.get())->setWrapMode(wrapMode); }
-void Flow::setOrientation(int orientation) { asFlow(mHelperWidget.get())->setOrientation(orientation); }
-void Flow::setHorizontalAlign(int align)   { asFlow(mHelperWidget.get())->setHorizontalAlign(align); }
-void Flow::setVerticalAlign(int align)     { asFlow(mHelperWidget.get())->setVerticalAlign(align); }
-void Flow::setHorizontalGap(int gap)       { asFlow(mHelperWidget.get())->setHorizontalGap(gap); }
-void Flow::setVerticalGap(int gap)         { asFlow(mHelperWidget.get())->setVerticalGap(gap); }
-void Flow::setHorizontalStyle(int style)   { asFlow(mHelperWidget.get())->setHorizontalStyle(style); }
-void Flow::setVerticalStyle(int style)     { asFlow(mHelperWidget.get())->setVerticalStyle(style); }
-void Flow::setHorizontalBias(float bias)   { asFlow(mHelperWidget.get())->setHorizontalBias(bias); }
-void Flow::setVerticalBias(float bias)     { asFlow(mHelperWidget.get())->setVerticalBias(bias); }
+void Flow::setWrapMode(int wrapMode)       {
+    asFlow(mHelperWidget.get())->setWrapMode(wrapMode);
+}
+void Flow::setOrientation(int orientation) {
+    asFlow(mHelperWidget.get())->setOrientation(orientation);
+}
+void Flow::setHorizontalAlign(int align)   {
+    asFlow(mHelperWidget.get())->setHorizontalAlign(align);
+}
+void Flow::setVerticalAlign(int align)     {
+    asFlow(mHelperWidget.get())->setVerticalAlign(align);
+}
+void Flow::setHorizontalGap(int gap)       {
+    asFlow(mHelperWidget.get())->setHorizontalGap(gap);
+}
+void Flow::setVerticalGap(int gap)         {
+    asFlow(mHelperWidget.get())->setVerticalGap(gap);
+}
+void Flow::setHorizontalStyle(int style)   {
+    asFlow(mHelperWidget.get())->setHorizontalStyle(style);
+}
+void Flow::setVerticalStyle(int style)     {
+    asFlow(mHelperWidget.get())->setVerticalStyle(style);
+}
+void Flow::setHorizontalBias(float bias)   {
+    asFlow(mHelperWidget.get())->setHorizontalBias(bias);
+}
+void Flow::setVerticalBias(float bias)     {
+    asFlow(mHelperWidget.get())->setVerticalBias(bias);
+}
 
 } // namespace cdroid

@@ -126,7 +126,7 @@ void TouchResponse::onUp(const MotionEvent& evt) {
 
     bool towardEnd = (pos >= 0.5f);
     if (mAutoCompleteMode != MotionScene::OnSwipe::COMPLETE_SPRING
-        && std::abs(velocityProgress) > 0.5f) {
+            && std::abs(velocityProgress) > 0.5f) {
         towardEnd = (velocityProgress > 0);
     }
     if (!wasDragging) return;

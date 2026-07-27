@@ -8,10 +8,18 @@
 namespace cdroid {
 
 // Base defaults: keyframes accept no typed values here (subclasses override).
-bool MotionKey::setValue(int /*type*/, int /*value*/)             { return false; }
-bool MotionKey::setValue(int /*type*/, float /*value*/)           { return false; }
-bool MotionKey::setValue(int /*type*/, const std::string& /*value*/) { return false; }
-bool MotionKey::setValue(int /*type*/, bool /*value*/)            { return false; }
+bool MotionKey::setValue(int /*type*/, int /*value*/)             {
+    return false;
+}
+bool MotionKey::setValue(int /*type*/, float /*value*/)           {
+    return false;
+}
+bool MotionKey::setValue(int /*type*/, const std::string& /*value*/) {
+    return false;
+}
+bool MotionKey::setValue(int /*type*/, bool /*value*/)            {
+    return false;
+}
 
 MotionKey& MotionKey::copy(const MotionKey& src) {
     mFramePosition = src.mFramePosition;

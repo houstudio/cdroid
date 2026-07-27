@@ -26,7 +26,7 @@ class ConstraintWidgetContainer;
 
 /** Interface to virtual objects */
 class Helper {
-public:
+  public:
     virtual ~Helper() = default;
     virtual void updateConstraints(ConstraintWidgetContainer* container) = 0;
     virtual void add(ConstraintWidget* widget) = 0;

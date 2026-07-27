@@ -8,11 +8,21 @@
 namespace cdroid {
 
 // Base defaults: accept nothing, unknown name.
-bool TypedValues::setValue(int /*id*/, int /*value*/)             { return false; }
-bool TypedValues::setValue(int /*id*/, float /*value*/)           { return false; }
-bool TypedValues::setValue(int /*id*/, const std::string& /*value*/) { return false; }
-bool TypedValues::setValue(int /*id*/, bool /*value*/)            { return false; }
-int  TypedValues::getId(const std::string& /*name*/)              { return -1; }
+bool TypedValues::setValue(int /*id*/, int /*value*/)             {
+    return false;
+}
+bool TypedValues::setValue(int /*id*/, float /*value*/)           {
+    return false;
+}
+bool TypedValues::setValue(int /*id*/, const std::string& /*value*/) {
+    return false;
+}
+bool TypedValues::setValue(int /*id*/, bool /*value*/)            {
+    return false;
+}
+int  TypedValues::getId(const std::string& /*name*/)              {
+    return -1;
+}
 
 int TypedValues::AttributesType::getId(const std::string& name) {
     if (name == S_CURVE_FIT)     return TYPE_CURVE_FIT;
@@ -40,13 +50,31 @@ int TypedValues::AttributesType::getId(const std::string& name) {
 
 int TypedValues::AttributesType::getType(int name) {
     switch (name) {
-        case TYPE_CURVE_FIT: case TYPE_VISIBILITY: case TYPE_FRAME_POSITION: return INT_MASK;
-        case TYPE_ALPHA: case TYPE_TRANSLATION_X: case TYPE_TRANSLATION_Y: case TYPE_TRANSLATION_Z:
-        case TYPE_ELEVATION: case TYPE_ROTATION_X: case TYPE_ROTATION_Y: case TYPE_ROTATION_Z:
-        case TYPE_SCALE_X: case TYPE_SCALE_Y: case TYPE_PIVOT_X: case TYPE_PIVOT_Y:
-        case TYPE_PROGRESS: case TYPE_PATH_ROTATE: return FLOAT_MASK;
-        case TYPE_EASING: case TYPE_TARGET: case TYPE_PIVOT_TARGET: return STRING_MASK;
-        default: return -1;
+    case TYPE_CURVE_FIT:
+    case TYPE_VISIBILITY:
+    case TYPE_FRAME_POSITION:
+        return INT_MASK;
+    case TYPE_ALPHA:
+    case TYPE_TRANSLATION_X:
+    case TYPE_TRANSLATION_Y:
+    case TYPE_TRANSLATION_Z:
+    case TYPE_ELEVATION:
+    case TYPE_ROTATION_X:
+    case TYPE_ROTATION_Y:
+    case TYPE_ROTATION_Z:
+    case TYPE_SCALE_X:
+    case TYPE_SCALE_Y:
+    case TYPE_PIVOT_X:
+    case TYPE_PIVOT_Y:
+    case TYPE_PROGRESS:
+    case TYPE_PATH_ROTATE:
+        return FLOAT_MASK;
+    case TYPE_EASING:
+    case TYPE_TARGET:
+    case TYPE_PIVOT_TARGET:
+        return STRING_MASK;
+    default:
+        return -1;
     }
 }
 
@@ -110,11 +138,21 @@ int TypedValues::PositionType::getId(const std::string& name) {
 
 int TypedValues::PositionType::getType(int name) {
     switch (name) {
-        case TYPE_CURVE_FIT: case TYPE_FRAME_POSITION: return INT_MASK;
-        case TYPE_PERCENT_WIDTH: case TYPE_PERCENT_HEIGHT: case TYPE_SIZE_PERCENT:
-        case TYPE_PERCENT_X: case TYPE_PERCENT_Y: return FLOAT_MASK;
-        case TYPE_TRANSITION_EASING: case TYPE_TARGET: case TYPE_DRAWPATH: return STRING_MASK;
-        default: return -1;
+    case TYPE_CURVE_FIT:
+    case TYPE_FRAME_POSITION:
+        return INT_MASK;
+    case TYPE_PERCENT_WIDTH:
+    case TYPE_PERCENT_HEIGHT:
+    case TYPE_SIZE_PERCENT:
+    case TYPE_PERCENT_X:
+    case TYPE_PERCENT_Y:
+        return FLOAT_MASK;
+    case TYPE_TRANSITION_EASING:
+    case TYPE_TARGET:
+    case TYPE_DRAWPATH:
+        return STRING_MASK;
+    default:
+        return -1;
     }
 }
 

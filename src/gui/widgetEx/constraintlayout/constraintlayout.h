@@ -39,9 +39,9 @@ class ConstraintHelper;
 class ConstraintLayoutStates;
 
 class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
-public:
+  public:
     class LayoutParams : public ViewGroup::MarginLayoutParams {
-    public:
+      public:
         static constexpr int UNSET      = -1;
         static constexpr int GONE_UNSET = INT_MIN;
 
@@ -103,7 +103,7 @@ public:
         LayoutParams(int width, int height);
         void validate();
 
-    private:
+      private:
         static constexpr float UNSET_FLOAT = -1.0f;
     };
 
@@ -118,14 +118,18 @@ public:
 
     // Measurer is privately inherited (its measure(Widget*,Measure*) would clash with
     // View::measure(int,int)); this exposes the Measurer subobject for the solver bridge.
-    BasicMeasure::Measurer* asMeasurer() { return this; }
+    BasicMeasure::Measurer* asMeasurer() {
+        return this;
+    }
 
     // Resolve a child View to its solver model widget. Helper children (Barrier, ...) return their
     // owned core helper widget; Guideline children return their Guideline; others their LayoutParams
     // widget. Exposed so ConstraintHelper.updatePreLayout can map referenced views to widgets.
     ConstraintWidget* getViewWidget(View* view);
     // The container's own solver model (the root ConstraintWidgetContainer).
-    ConstraintWidgetContainer& getLayoutWidget() { return mLayoutWidget; }
+    ConstraintWidgetContainer& getLayoutWidget() {
+        return mLayoutWidget;
+    }
 
     // Adaptive layouts (<StateSet>): load a state-set resource so setState can swap ConstraintSets
     // when the layout's size or a logical state changes. (MotionLayout overrides layoutDescription
@@ -134,7 +138,7 @@ public:
     // Apply the ConstraintSet selected by (id, screenWidth, screenHeight) from the loaded StateSet.
     void setState(int id, int screenWidth, int screenHeight);
 
-protected:
+  protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
     void onLayout(bool changed, int l, int t, int r, int b) override;
     void onViewAdded(View* child) override;
@@ -143,12 +147,12 @@ protected:
     ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;
 
-public:
+  public:
     // --- BasicMeasure::Measurer (bridge to View measurement) ---
     void measure(ConstraintWidget* widget, BasicMeasure::Measure* measure) override;
     void didMeasures() override;
 
-private:
+  private:
     ConstraintWidgetContainer mLayoutWidget;
     std::unordered_map<int, ConstraintWidget*> mIdToWidget; // id -> widget (PARENT_ID/own id -> mLayoutWidget)
     std::vector<ConstraintHelper*> mConstraintHelpers; // Barrier/Group/... children

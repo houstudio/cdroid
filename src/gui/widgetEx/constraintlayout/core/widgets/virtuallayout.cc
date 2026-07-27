@@ -18,17 +18,35 @@ VirtualLayout::~VirtualLayout() = default;
 
 // --- padding ---
 void VirtualLayout::setPadding(int value) {
-    mPaddingLeft = value; mPaddingTop = value; mPaddingRight = value; mPaddingBottom = value;
-    mPaddingStart = value; mPaddingEnd = value;
+    mPaddingLeft = value;
+    mPaddingTop = value;
+    mPaddingRight = value;
+    mPaddingBottom = value;
+    mPaddingStart = value;
+    mPaddingEnd = value;
 }
 void VirtualLayout::setPaddingStart(int value) {
-    mPaddingStart = value; mResolvedPaddingLeft = value; mResolvedPaddingRight = value;
+    mPaddingStart = value;
+    mResolvedPaddingLeft = value;
+    mResolvedPaddingRight = value;
 }
-void VirtualLayout::setPaddingEnd(int value) { mPaddingEnd = value; }
-void VirtualLayout::setPaddingLeft(int value) { mPaddingLeft = value; mResolvedPaddingLeft = value; }
-void VirtualLayout::setPaddingRight(int value) { mPaddingRight = value; mResolvedPaddingRight = value; }
-void VirtualLayout::setPaddingTop(int value) { mPaddingTop = value; }
-void VirtualLayout::setPaddingBottom(int value) { mPaddingBottom = value; }
+void VirtualLayout::setPaddingEnd(int value) {
+    mPaddingEnd = value;
+}
+void VirtualLayout::setPaddingLeft(int value) {
+    mPaddingLeft = value;
+    mResolvedPaddingLeft = value;
+}
+void VirtualLayout::setPaddingRight(int value) {
+    mPaddingRight = value;
+    mResolvedPaddingRight = value;
+}
+void VirtualLayout::setPaddingTop(int value) {
+    mPaddingTop = value;
+}
+void VirtualLayout::setPaddingBottom(int value) {
+    mPaddingBottom = value;
+}
 
 void VirtualLayout::applyRtl(bool isRtl) {
     if (mPaddingStart > 0 || mPaddingEnd > 0) {
@@ -42,14 +60,26 @@ void VirtualLayout::applyRtl(bool isRtl) {
     }
 }
 
-int VirtualLayout::getPaddingTop() const { return mPaddingTop; }
-int VirtualLayout::getPaddingBottom() const { return mPaddingBottom; }
-int VirtualLayout::getPaddingLeft() const { return mResolvedPaddingLeft; }
-int VirtualLayout::getPaddingRight() const { return mResolvedPaddingRight; }
+int VirtualLayout::getPaddingTop() const {
+    return mPaddingTop;
+}
+int VirtualLayout::getPaddingBottom() const {
+    return mPaddingBottom;
+}
+int VirtualLayout::getPaddingLeft() const {
+    return mResolvedPaddingLeft;
+}
+int VirtualLayout::getPaddingRight() const {
+    return mResolvedPaddingRight;
+}
 
 // --- solver callback ---
-void VirtualLayout::needsCallbackFromSolver(bool value) { mNeedsCallFromSolver = value; }
-bool VirtualLayout::needSolverPass() const { return mNeedsCallFromSolver; }
+void VirtualLayout::needsCallbackFromSolver(bool value) {
+    mNeedsCallFromSolver = value;
+}
+bool VirtualLayout::needSolverPass() const {
+    return mNeedsCallFromSolver;
+}
 
 // --- measure ---
 void VirtualLayout::measure(int /*widthMode*/, int /*widthSize*/, int /*heightMode*/, int /*heightSize*/) {
@@ -68,8 +98,12 @@ void VirtualLayout::captureWidgets() {
     }
 }
 
-int VirtualLayout::getMeasuredWidth() const { return mMeasuredWidth; }
-int VirtualLayout::getMeasuredHeight() const { return mMeasuredHeight; }
+int VirtualLayout::getMeasuredWidth() const {
+    return mMeasuredWidth;
+}
+int VirtualLayout::getMeasuredHeight() const {
+    return mMeasuredHeight;
+}
 void VirtualLayout::setMeasure(int width, int height) {
     mMeasuredWidth = width;
     mMeasuredHeight = height;
@@ -94,9 +128,9 @@ bool VirtualLayout::measureChildren() {
         ConstraintWidget::DimensionBehaviour heightBehavior = widget->getDimensionBehaviour(VERTICAL);
 
         bool skip = widthBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
-                && widget->mMatchConstraintDefaultWidth != MATCH_CONSTRAINT_WRAP
-                && heightBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
-                && widget->mMatchConstraintDefaultHeight != MATCH_CONSTRAINT_WRAP;
+                    && widget->mMatchConstraintDefaultWidth != MATCH_CONSTRAINT_WRAP
+                    && heightBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT
+                    && widget->mMatchConstraintDefaultHeight != MATCH_CONSTRAINT_WRAP;
         if (skip) {
             continue; // dimension fully computed by the solver
         }
@@ -140,6 +174,8 @@ void VirtualLayout::measure(ConstraintWidget* widget,
     widget->setBaselineDistance(mMeasure.measuredBaseline);
 }
 
-std::string VirtualLayout::getType() const { return "VirtualLayout"; }
+std::string VirtualLayout::getType() const {
+    return "VirtualLayout";
+}
 
 } // namespace cdroid

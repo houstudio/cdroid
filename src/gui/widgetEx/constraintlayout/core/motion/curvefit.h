@@ -29,7 +29,7 @@
 namespace cdroid {
 
 class CurveFit {
-public:
+  public:
     static const int SPLINE    = 0;
     static const int LINEAR    = 1;
     static const int CONSTANT  = 2;
@@ -59,7 +59,7 @@ public:
 
 // A curve that is constant everywhere (used when only one sample point is given).
 class CurveFit::Constant : public CurveFit {
-public:
+  public:
     Constant(double time, const std::vector<double>& value);
     void   getPos(double t, std::vector<double>& v) override;
     void   getPos(double t, std::vector<float>& v) override;
@@ -67,7 +67,7 @@ public:
     void   getSlope(double t, std::vector<double>& v) override;
     double getSlope(double t, int j) override;
     std::vector<double> getTimePoints() override;
-private:
+  private:
     double mTime;
     std::vector<double> mValue;
 };

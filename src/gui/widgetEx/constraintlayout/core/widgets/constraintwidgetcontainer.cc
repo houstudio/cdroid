@@ -37,7 +37,7 @@ ConstraintWidgetContainer::ConstraintWidgetContainer(int width, int height)
 }
 
 ConstraintWidgetContainer::ConstraintWidgetContainer(const std::string& debugName,
-                                                     int width, int height)
+        int width, int height)
     : WidgetContainer(width, height)
     , mBasicMeasureSolver(this) {
     setDebugName(debugName);
@@ -73,8 +73,12 @@ void ConstraintWidgetContainer::setPass(int /*pass*/) {
 }
 
 void ConstraintWidgetContainer::clearChains() {
-    for (ChainHead* head : mHorizontalChainsArray) { delete head; }
-    for (ChainHead* head : mVerticalChainsArray) { delete head; }
+    for (ChainHead* head : mHorizontalChainsArray) {
+        delete head;
+    }
+    for (ChainHead* head : mVerticalChainsArray) {
+        delete head;
+    }
     mHorizontalChainsArray.clear();
     mVerticalChainsArray.clear();
     mHorizontalChainsSize = 0;

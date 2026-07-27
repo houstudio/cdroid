@@ -34,7 +34,7 @@ class SolverVariable;
  * Implements ArrayRow::ArrayRowVariables.
  */
 class ArrayLinkedVariables : public ArrayRow::ArrayRowVariables {
-private:
+  private:
     static const int NONE = -1;
     static float sEpsilon;
 
@@ -50,7 +50,7 @@ private:
     int     mLast = NONE;
     bool    mDidFillOnce = false;
 
-public:
+  public:
     ArrayLinkedVariables(ArrayRow* arrayRow, Cache* cache);
 
     void put(SolverVariable* variable, float value) override;

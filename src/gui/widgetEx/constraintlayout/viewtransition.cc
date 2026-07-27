@@ -43,7 +43,7 @@ const std::unordered_map<std::string, int> kViewTransitionMode = {
 ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& parser)
     : mScene(scene) {
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
         const int eventType = parser.getEventType();
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();

@@ -19,7 +19,7 @@ class Schlick;
 class StepCurve;
 
 class Easing {
-public:
+  public:
     virtual ~Easing() = default;
 
     // Parse a config string into an easing. Empty string -> nullptr (use caller default).
@@ -36,7 +36,7 @@ public:
     // still-incomplete enclosing class inside the class body).
     class CubicEasing;
 
-private:
+  private:
     // Named-easing cubic definitions (matched in getInterpolator).
     static const std::string STANDARD;
     static const std::string ACCELERATE;
@@ -48,12 +48,12 @@ private:
 
 // Cubic-bezier easing solved by binary search on the parametric x(t).
 class Easing::CubicEasing : public Easing {
-public:
+  public:
     explicit CubicEasing(const std::string& configString);
     CubicEasing(double x1, double y1, double x2, double y2);
     double get(double x) const override;
     double getDiff(double x) const override;
-private:
+  private:
     void setup(double x1, double y1, double x2, double y2);
     double getX(double t) const;
     double getY(double t) const;

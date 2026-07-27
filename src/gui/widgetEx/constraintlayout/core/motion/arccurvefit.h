@@ -19,7 +19,7 @@
 namespace cdroid {
 
 class ArcCurveFit : public CurveFit {
-public:
+  public:
     static const int ARC_START_LINEAR     = 0;
     static const int ARC_START_VERTICAL   = 1;
     static const int ARC_START_HORIZONTAL = 2;
@@ -36,9 +36,11 @@ public:
     double getPos(double t, int j) override;
     void   getSlope(double t, std::vector<double>& v) override;
     double getSlope(double t, int j) override;
-    std::vector<double> getTimePoints() override { return mTime; }
+    std::vector<double> getTimePoints() override {
+        return mTime;
+    }
 
-private:
+  private:
     class Arc; // one quarter-ellipse segment (defined in the .cc)
     std::vector<double> mTime;
     std::vector<std::unique_ptr<Arc>> mArcs;

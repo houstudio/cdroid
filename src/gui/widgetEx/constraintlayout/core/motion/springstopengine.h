@@ -26,7 +26,7 @@
 namespace cdroid {
 
 class SpringStopEngine {
-public:
+  public:
     // Configure the spring: start at currentPos with currentVelocity, animating to target.
     //   mass/stiffness/damping — the ODE parameters (k = stiffness, c = damping, m = mass)
     //   stopThreshold — the max residual deflection (energy-based) at which the spring is settled
@@ -39,11 +39,14 @@ public:
     // cumulative seconds since the spring started (monotonic). On settle the position snaps to target.
     float getInterpolation(float time);
     // Current velocity (progress/sec). The time arg is unused (kept for StopEngine interface parity).
-    float getVelocity(float time) const { (void)time; return mV; }
+    float getVelocity(float time) const {
+        (void)time;
+        return mV;
+    }
     // True once the spring's residual energy can't deflect it past stopThreshold from the target.
     bool isStopped() const;
 
-private:
+  private:
     void compute(double dt);
 
     double mDamping = 0.5;

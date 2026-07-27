@@ -30,7 +30,7 @@ class MotionKeyPosition;
 class MotionWidget;
 
 class MotionPaths {
-public:
+  public:
     static constexpr int OFF_POSITION   = 0;
     static constexpr int OFF_X          = 1;
     static constexpr int OFF_Y          = 2;
@@ -77,7 +77,7 @@ public:
                  std::vector<float>& path, int offset);
     void setView(float position, Motion* motion, MotionWidget* childView);
 
-private:
+  private:
     static bool diff(float a, float b);
 };
 

@@ -16,11 +16,25 @@ int TypedBundle::getInteger(int type) const {
     return -1;
 }
 
-void TypedBundle::add(int type, int value)          { mTypeInt.push_back(type);     mValueInt.push_back(value); }
-void TypedBundle::add(int type, float value)        { mTypeFloat.push_back(type);   mValueFloat.push_back(value); }
-void TypedBundle::add(int type, const std::string& value) { mTypeString.push_back(type); mValueString.push_back(value); }
-void TypedBundle::addIfNotNull(int type, const std::string& value) { if (!value.empty()) add(type, value); }
-void TypedBundle::add(int type, bool value)         { mTypeBoolean.push_back(type); mValueBoolean.push_back(value); }
+void TypedBundle::add(int type, int value)          {
+    mTypeInt.push_back(type);
+    mValueInt.push_back(value);
+}
+void TypedBundle::add(int type, float value)        {
+    mTypeFloat.push_back(type);
+    mValueFloat.push_back(value);
+}
+void TypedBundle::add(int type, const std::string& value) {
+    mTypeString.push_back(type);
+    mValueString.push_back(value);
+}
+void TypedBundle::addIfNotNull(int type, const std::string& value) {
+    if (!value.empty()) add(type, value);
+}
+void TypedBundle::add(int type, bool value)         {
+    mTypeBoolean.push_back(type);
+    mValueBoolean.push_back(value);
+}
 
 void TypedBundle::applyDelta(TypedValues& values) const {
     for (size_t i = 0; i < mTypeInt.size(); i++)     values.setValue(mTypeInt[i], mValueInt[i]);
@@ -37,10 +51,14 @@ void TypedBundle::applyDelta(TypedBundle& values) const {
 }
 
 void TypedBundle::clear() {
-    mTypeInt.clear(); mValueInt.clear();
-    mTypeFloat.clear(); mValueFloat.clear();
-    mTypeString.clear(); mValueString.clear();
-    mTypeBoolean.clear(); mValueBoolean.clear();
+    mTypeInt.clear();
+    mValueInt.clear();
+    mTypeFloat.clear();
+    mValueFloat.clear();
+    mTypeString.clear();
+    mValueString.clear();
+    mTypeBoolean.clear();
+    mValueBoolean.clear();
 }
 
 } // namespace cdroid

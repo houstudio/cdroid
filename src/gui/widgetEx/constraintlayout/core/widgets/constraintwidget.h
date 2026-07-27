@@ -38,7 +38,7 @@ class HorizontalWidgetRun; // analyzer (Stage 3) — graph-solver run, set by De
 class VerticalWidgetRun;
 
 class ConstraintWidget {
-public:
+  public:
     // --- match constraint modes ---
     static const int MATCH_CONSTRAINT_SPREAD         = 0;
     static const int MATCH_CONSTRAINT_WRAP           = 1;
@@ -165,8 +165,12 @@ public:
     // back-pointer to the host View (set by the widget layer, e.g. ConstraintLayout) — stored as
     // void* to avoid a header cycle; cast to View* at the call site.
     void* mCompanionWidget = nullptr;
-    void setCompanionWidget(void* companion) { mCompanionWidget = companion; }
-    void* getCompanionWidget() { return mCompanionWidget; }
+    void setCompanionWidget(void* companion) {
+        mCompanionWidget = companion;
+    }
+    void* getCompanionWidget() {
+        return mCompanionWidget;
+    }
 
     // --- offset (relative to the root container) ---
     int mOffsetX = 0;
@@ -294,10 +298,10 @@ public:
     // --- reset (full; called between solving passes) ---
     virtual void reset();
 
-protected:
+  protected:
     std::vector<ConstraintAnchor*> mAnchors;
 
-private:
+  private:
     int          mVisibility = VISIBLE;
     bool         mHasBaseline = false;
     bool         mResolvedHorizontal = false;

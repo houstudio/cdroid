@@ -19,18 +19,18 @@ std::unique_ptr<CurveFit> CurveFit::get(int type, const std::vector<double>& tim
         resolvedType = CONSTANT;
     }
     switch (resolvedType) {
-        case SPLINE:
-            return std::make_unique<MonotonicCurveFit>(time, y);
-        case CONSTANT:
-            return std::make_unique<Constant>(time[0], y[0]);
-        default:
-            return std::make_unique<LinearCurveFit>(time, y);
+    case SPLINE:
+        return std::make_unique<MonotonicCurveFit>(time, y);
+    case CONSTANT:
+        return std::make_unique<Constant>(time[0], y[0]);
+    default:
+        return std::make_unique<LinearCurveFit>(time, y);
     }
 }
 
 std::unique_ptr<CurveFit> CurveFit::getArc(const std::vector<int>& arcModes,
-                                           const std::vector<double>& time,
-                                           const std::vector<std::vector<double>>& y) {
+        const std::vector<double>& time,
+        const std::vector<std::vector<double>>& y) {
     return std::make_unique<ArcCurveFit>(arcModes, time, y);
 }
 

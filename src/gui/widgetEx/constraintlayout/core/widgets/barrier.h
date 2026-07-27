@@ -28,7 +28,7 @@
 namespace cdroid::clcore {
 
 class Barrier : public HelperWidget {
-public:
+  public:
     // Barrier direction constants (also index into mListAnchors, whose order is
     // {LEFT, RIGHT, TOP, BOTTOM, BASELINE, CENTER}).
     static const int LEFT   = 0;
@@ -63,7 +63,7 @@ public:
 
     std::string getType() const override; // "Barrier"
 
-private:
+  private:
     void markWidgets();
 
     int  mBarrierType = LEFT;

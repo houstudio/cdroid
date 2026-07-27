@@ -186,7 +186,9 @@ void PriorityGoalRow::addToGoal(SolverVariable* variable) {
             mSortArray[i] = mArrayGoals[i];
         }
         std::sort(mSortArray.begin(), mSortArray.begin() + mNumGoals,
-                  [](SolverVariable* a, SolverVariable* b) { return a->id < b->id; });
+        [](SolverVariable* a, SolverVariable* b) {
+            return a->id < b->id;
+        });
         for (int i = 0; i < mNumGoals; i++) {
             mArrayGoals[i] = mSortArray[i];
         }

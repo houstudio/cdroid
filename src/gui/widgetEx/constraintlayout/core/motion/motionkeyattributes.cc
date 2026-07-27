@@ -39,35 +39,77 @@ MotionKey* MotionKeyAttributes::clone() const {
 }
 
 bool MotionKeyAttributes::setValue(int type, int value) {
-    if (type == TypedValues::AttributesType::TYPE_VISIBILITY) { mVisibility = value; return true; }
-    if (type == TypedValues::AttributesType::TYPE_CURVE_FIT)  { mCurveFit = value; return true; }
-    if (type == TypedValues::TYPE_FRAME_POSITION)             { mFramePosition = value; return true; }
+    if (type == TypedValues::AttributesType::TYPE_VISIBILITY) {
+        mVisibility = value;
+        return true;
+    }
+    if (type == TypedValues::AttributesType::TYPE_CURVE_FIT)  {
+        mCurveFit = value;
+        return true;
+    }
+    if (type == TypedValues::TYPE_FRAME_POSITION)             {
+        mFramePosition = value;
+        return true;
+    }
     return false;
 }
 
 bool MotionKeyAttributes::setValue(int type, float value) {
     using A = TypedValues::AttributesType;
     switch (type) {
-        case A::TYPE_ALPHA:         mAlpha = value; break;
-        case A::TYPE_ELEVATION:     mElevation = value; break;
-        case A::TYPE_ROTATION_Z:    mRotation = value; break;
-        case A::TYPE_ROTATION_X:    mRotationX = value; break;
-        case A::TYPE_ROTATION_Y:    mRotationY = value; break;
-        case A::TYPE_PIVOT_X:       mPivotX = value; break;
-        case A::TYPE_PIVOT_Y:       mPivotY = value; break;
-        case A::TYPE_SCALE_X:       mScaleX = value; break;
-        case A::TYPE_SCALE_Y:       mScaleY = value; break;
-        case A::TYPE_TRANSLATION_X: mTranslationX = value; break;
-        case A::TYPE_TRANSLATION_Y: mTranslationY = value; break;
-        case A::TYPE_TRANSLATION_Z: mTranslationZ = value; break;
-        case A::TYPE_PATH_ROTATE:   mTransitionPathRotate = value; break;
-        case A::TYPE_PROGRESS:      mProgress = value; break;
-        default: return false;
+    case A::TYPE_ALPHA:
+        mAlpha = value;
+        break;
+    case A::TYPE_ELEVATION:
+        mElevation = value;
+        break;
+    case A::TYPE_ROTATION_Z:
+        mRotation = value;
+        break;
+    case A::TYPE_ROTATION_X:
+        mRotationX = value;
+        break;
+    case A::TYPE_ROTATION_Y:
+        mRotationY = value;
+        break;
+    case A::TYPE_PIVOT_X:
+        mPivotX = value;
+        break;
+    case A::TYPE_PIVOT_Y:
+        mPivotY = value;
+        break;
+    case A::TYPE_SCALE_X:
+        mScaleX = value;
+        break;
+    case A::TYPE_SCALE_Y:
+        mScaleY = value;
+        break;
+    case A::TYPE_TRANSLATION_X:
+        mTranslationX = value;
+        break;
+    case A::TYPE_TRANSLATION_Y:
+        mTranslationY = value;
+        break;
+    case A::TYPE_TRANSLATION_Z:
+        mTranslationZ = value;
+        break;
+    case A::TYPE_PATH_ROTATE:
+        mTransitionPathRotate = value;
+        break;
+    case A::TYPE_PROGRESS:
+        mProgress = value;
+        break;
+    default:
+        return false;
     }
     return true;
 }
 
-bool MotionKeyAttributes::setValue(int /*type*/, const std::string& /*value*/) { return false; }
-bool MotionKeyAttributes::setValue(int /*type*/, bool /*value*/) { return false; }
+bool MotionKeyAttributes::setValue(int /*type*/, const std::string& /*value*/) {
+    return false;
+}
+bool MotionKeyAttributes::setValue(int /*type*/, bool /*value*/) {
+    return false;
+}
 
 } // namespace cdroid

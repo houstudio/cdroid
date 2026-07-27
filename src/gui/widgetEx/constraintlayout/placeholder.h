@@ -30,23 +30,27 @@ namespace cdroid {
 class ConstraintLayout;
 
 class Placeholder : public View {
-public:
+  public:
     Placeholder(Context* ctx, const AttributeSet& attrs);
     explicit Placeholder(int width, int height);
 
     int  getEmptyVisibility() const;
     void setEmptyVisibility(int visibility);
-    View* getContent() const { return mContent; }
+    View* getContent() const {
+        return mContent;
+    }
 
     // Set the content view by id (the content is looked up among the placeholder's siblings).
     void setContentId(int id);
-    int  getContentId() const { return mContentId; }
+    int  getContentId() const {
+        return mContentId;
+    }
 
     // --- lifecycle hooks (invoked by ConstraintLayout) ---
     void updatePreLayout(ConstraintLayout* container);
     void updatePostMeasure(ConstraintLayout* container);
 
-private:
+  private:
     void init(const AttributeSet& attrs);
 
     int   mContentId = -1;

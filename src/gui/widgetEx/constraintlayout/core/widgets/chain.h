@@ -31,7 +31,7 @@ class LinearSystem;
 class ChainHead;
 
 class Chain {
-public:
+  public:
     static const bool USE_CHAIN_OPTIMIZATION = false;
 
     // Iterate every chain head recorded on the container and apply chain constraints.

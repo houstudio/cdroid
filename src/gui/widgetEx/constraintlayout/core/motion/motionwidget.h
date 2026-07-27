@@ -22,7 +22,7 @@
 namespace cdroid {
 
 class MotionWidget : public TypedValues {
-public:
+  public:
     static constexpr int VISIBILITY_MODE_NORMAL = 0;
     static constexpr int VISIBILITY_MODE_IGNORE = 1;
     static constexpr int INVISIBLE = 0;
@@ -59,7 +59,9 @@ public:
     MotionWidget();
     explicit MotionWidget(WidgetFrame* f);
     ~MotionWidget()override;
-    WidgetFrame* getWidgetFrame() const { return mWidgetFrame; }
+    WidgetFrame* getWidgetFrame() const {
+        return mWidgetFrame;
+    }
 
     // --- geometry ---
     int getTop() const;
@@ -75,17 +77,28 @@ public:
     void setBounds(int left, int top, int right, int bottom);
 
     // --- transforms (read/write the WidgetFrame) ---
-    float getRotationX() const; void setRotationX(float v);
-    float getRotationY() const; void setRotationY(float v);
-    float getRotationZ() const; void setRotationZ(float v);
-    float getTranslationX() const; void setTranslationX(float v);
-    float getTranslationY() const; void setTranslationY(float v);
-    float getTranslationZ() const; void setTranslationZ(float v);
-    float getScaleX() const; void setScaleX(float v);
-    float getScaleY() const; void setScaleY(float v);
-    float getPivotX() const; void setPivotX(float v);
-    float getPivotY() const; void setPivotY(float v);
-    float getAlpha() const; void setAlpha(float v);
+    float getRotationX() const;
+    void setRotationX(float v);
+    float getRotationY() const;
+    void setRotationY(float v);
+    float getRotationZ() const;
+    void setRotationZ(float v);
+    float getTranslationX() const;
+    void setTranslationX(float v);
+    float getTranslationY() const;
+    void setTranslationY(float v);
+    float getTranslationZ() const;
+    void setTranslationZ(float v);
+    float getScaleX() const;
+    void setScaleX(float v);
+    float getScaleY() const;
+    void setScaleY(float v);
+    float getPivotX() const;
+    void setPivotX(float v);
+    float getPivotY() const;
+    void setPivotY(float v);
+    float getAlpha() const;
+    void setAlpha(float v);
 
     // --- TypedValues dispatch ---
     bool setValue(int id, int value) override;
@@ -115,7 +128,7 @@ public:
     float mProgress = NAN;
     float mTransitionPathRotate = NAN;
 
-private:
+  private:
     WidgetFrame* mWidgetFrame;
 };
 

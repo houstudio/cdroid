@@ -18,10 +18,12 @@
 namespace cdroid {
 
 class MotionKeyAttributes : public MotionKey {
-public:
+  public:
     static constexpr int KEY_TYPE = 1;
 
-    MotionKeyAttributes() { mType = KEY_TYPE; }
+    MotionKeyAttributes() {
+        mType = KEY_TYPE;
+    }
 
     void getAttributeNames(std::unordered_set<std::string>& attributes) const override;
     void addValues(std::unordered_map<std::string, SplineSet*>& splines) override;

@@ -36,7 +36,7 @@
 namespace cdroid {
 
 class ConstraintWidgetContainer : public WidgetContainer {
-public:
+  public:
     ConstraintWidgetContainer();
     ConstraintWidgetContainer(int x, int y, int width, int height);
     ConstraintWidgetContainer(int width, int height);
@@ -91,7 +91,7 @@ public:
 
     bool mSkipSolver = false;
 
-private:
+  private:
     void clearChains(); // delete owned ChainHead* + reset arrays/sizes
 
     LinearSystem mSystem;

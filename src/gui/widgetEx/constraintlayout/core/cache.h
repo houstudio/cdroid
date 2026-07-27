@@ -36,7 +36,7 @@ namespace cdroid {
  * them; the include chain is acyclic (linear_system.h forward-declares Cache, never includes it).
  */
 class Cache {
-public:
+  public:
     Pools::SimplePool<ArrayRow>      mOptimizedArrayRowPool;
     Pools::SimplePool<ArrayRow>      mArrayRowPool;
     Pools::SimplePool<SolverVariable> mSolverVariablePool;

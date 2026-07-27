@@ -17,7 +17,7 @@ MotionWidget::MotionWidget(WidgetFrame* f) : mWidgetFrame(f ? f : new WidgetFram
     if (f == nullptr) mWidgetFrame->visibility = VISIBLE;
 }
 
-MotionWidget::~MotionWidget(){
+MotionWidget::~MotionWidget() {
     delete mWidgetFrame;
 }
 

@@ -27,7 +27,7 @@ class Context;
 class XmlPullParser;
 
 class KeyFrames {
-public:
+  public:
     KeyFrames() = default;
     // Parse <KeyFrameSet>; `parser` is at the <KeyFrameSet> START_TAG and is consumed through its
     // matching END_TAG.
@@ -40,7 +40,7 @@ public:
     std::vector<MotionKey*> getKeysForView(int viewId) const;
     std::vector<int> getTargets() const;
 
-private:
+  private:
     // targetId -> keys. MotionKey::UNSET (-1) means "apply to all views".
     std::unordered_map<int, std::vector<std::unique_ptr<MotionKey>>> mFramesMap;
 };

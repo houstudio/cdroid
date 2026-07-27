@@ -13,18 +13,24 @@
 namespace cdroid {
 class TypedValues;
 class SplineSet {
-public:
+  public:
     virtual ~SplineSet() = default;
     void setPoint(int position, float value);
     virtual void setup(int curveType);
     float get(float t) const;
     float getSlope(float t) const;
-    void setType(const std::string& type) { mType = type; }
-    const std::string& getType() const { return mType; }
-    CurveFit* getCurveFit() const { return mCurveFit.get(); }
+    void setType(const std::string& type) {
+        mType = type;
+    }
+    const std::string& getType() const {
+        return mType;
+    }
+    CurveFit* getCurveFit() const {
+        return mCurveFit.get();
+    }
     // Apply the interpolated value to a TypedValues target (widget.setValue).
     virtual void setProperty(TypedValues* widget, float t);
-protected:
+  protected:
     std::vector<int> mTimePoints;
     std::vector<float> mValues;
     std::string mType;

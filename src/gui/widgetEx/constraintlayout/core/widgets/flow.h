@@ -23,7 +23,7 @@
 namespace cdroid::clcore {
 
 class Flow : public VirtualLayout {
-public:
+  public:
     // horizontalAlign
     static const int HORIZONTAL_ALIGN_START  = 0;
     static const int HORIZONTAL_ALIGN_END    = 1;
@@ -74,7 +74,7 @@ public:
     // A single chain row. Java's non-static inner class; holds a Flow back-pointer to reach the
     // owning Flow's gap/padding/displayed-widgets helpers (mirrors Flow.this access).
     class WidgetsList {
-    public:
+      public:
         WidgetsList(Flow* flow, int orientation,
                     ConstraintAnchor* left, ConstraintAnchor* top,
                     ConstraintAnchor* right, ConstraintAnchor* bottom, int max);
@@ -103,14 +103,14 @@ public:
         void measureMatchConstraints(int availableSpace);
         void recomputeDimensions();
 
-    private:
+      private:
         Flow* mFlow;
         int mOrientation = HORIZONTAL;
     };
 
     std::vector<WidgetsList> mChainList;
 
-private:
+  private:
     // Bring VirtualLayout's protected measure(Widget*,...) helper into scope (the public 4-int
     // measure override would otherwise hide it).
     using VirtualLayout::measure;

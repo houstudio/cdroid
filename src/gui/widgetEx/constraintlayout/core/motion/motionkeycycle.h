@@ -17,19 +17,25 @@
 namespace cdroid {
 
 class MotionKeyCycle : public MotionKey {
-public:
+  public:
     static constexpr int KEY_TYPE = 4;
 
-    MotionKeyCycle() { mType = KEY_TYPE; }
+    MotionKeyCycle() {
+        mType = KEY_TYPE;
+    }
 
     void getAttributeNames(std::unordered_set<std::string>& attributes) const override;
     void addValues(std::unordered_map<std::string, SplineSet*>& splines) override;
-    MotionKey* clone() const override { return new MotionKeyCycle(*this); }
+    MotionKey* clone() const override {
+        return new MotionKeyCycle(*this);
+    }
 
     bool setValue(int type, int value) override;
     bool setValue(int type, float value) override;
     bool setValue(int type, const std::string& value) override;
-    bool setValue(int type, bool value) override { return false; }
+    bool setValue(int type, bool value) override {
+        return false;
+    }
 
     // Wave parameters.
     int mWaveShape = -1;

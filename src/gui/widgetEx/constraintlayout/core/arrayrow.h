@@ -33,13 +33,13 @@ class Cache;
  * (ArrayLinkedVariables by default, created in the Cache constructor overload).
  */
 class ArrayRow : public LinearSystem::Row {
-public:
+  public:
     /**
      * Interface for the variable store of a row (Java: ArrayRow.ArrayRowVariables).
      * Implemented by ArrayLinkedVariables (and SolverVariableValues).
      */
     class ArrayRowVariables {
-    public:
+      public:
         virtual ~ArrayRowVariables() = default;
         virtual int getCurrentSize() = 0;
         virtual SolverVariable* getVariable(int index) = 0;
@@ -125,7 +125,7 @@ public:
     SolverVariable* getKey() override;
     void updateFromSystem(LinearSystem* system) override;
 
-private:
+  private:
     SolverVariable* pickPivotInVariables(bool* avoid, SolverVariable* exclude);
     bool isNew(SolverVariable* variable, LinearSystem* system);
 };

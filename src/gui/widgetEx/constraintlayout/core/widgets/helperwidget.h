@@ -33,7 +33,7 @@ namespace cdroid {
 class ConstraintWidgetContainer;
 
 class HelperWidget : public ConstraintWidget, public Helper {
-public:
+  public:
     HelperWidget();
     ~HelperWidget() override;
 

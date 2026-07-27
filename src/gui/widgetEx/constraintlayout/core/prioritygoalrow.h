@@ -32,14 +32,14 @@ class Cache;
  * Implements a row containing goals taking into account priorities.
  */
 class PriorityGoalRow : public ArrayRow {
-public:
+  public:
     /**
      * Accessor that manipulates a SolverVariable's goal strength vector.
      * (Java inner class GoalVariableAccessor; nested here, friended so it can
      * call the outer removeGoal().)
      */
     class GoalVariableAccessor {
-    public:
+      public:
         SolverVariable* mVariable = nullptr;
         PriorityGoalRow* mRow;
 
@@ -57,7 +57,7 @@ public:
 
     friend class GoalVariableAccessor;
 
-private:
+  private:
     static constexpr float EPSILON = 0.0001f;
     static const int NOT_FOUND = -1;
 
@@ -68,7 +68,7 @@ private:
     GoalVariableAccessor mAccessor;
     Cache* mCache;
 
-public:
+  public:
     explicit PriorityGoalRow(Cache* cache);
 
     void clear() override;
@@ -78,7 +78,7 @@ public:
     void updateFromRow(LinearSystem* system, ArrayRow* definition, bool removeFromDefinition) override;
     std::string toString() override;
 
-private:
+  private:
     void addToGoal(SolverVariable* variable);
     void removeGoal(SolverVariable* variable);
 };

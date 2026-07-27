@@ -26,7 +26,7 @@
 namespace cdroid {
 
 class Group : public ConstraintHelper {
-public:
+  public:
     Group(Context* ctx, const AttributeSet& attrs);
     explicit Group(int width, int height);
 

@@ -111,7 +111,7 @@ std::unique_ptr<MotionKey> makeKeyTrigger(const AttributeSet& a) {
 KeyFrames::KeyFrames(Context* /*ctx*/, XmlPullParser& parser) {
     // `parser` is at the <KeyFrameSet> START_TAG. Walk children until the matching END_TAG.
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
         const int eventType = parser.getEventType();
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();

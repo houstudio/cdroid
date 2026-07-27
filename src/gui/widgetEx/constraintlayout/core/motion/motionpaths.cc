@@ -19,7 +19,10 @@ bool MotionPaths::diff(float a, float b) {
 }
 
 void MotionPaths::setBounds(float x, float y, float w, float h) {
-    mX = x; mY = y; mWidth = w; mHeight = h;
+    mX = x;
+    mY = y;
+    mWidth = w;
+    mHeight = h;
 }
 
 void MotionPaths::fillStandard(std::vector<double>& data, const std::vector<int>& toUse) const {
@@ -38,11 +41,16 @@ void MotionPaths::different(const MotionPaths& points, std::vector<bool>& mask,
     bool diffx = diff(mX, points.mX);
     bool diffy = diff(mY, points.mY);
     int c = 0;
-    mask[c] = mask[c] | diff(mPosition, points.mPosition); c++;
-    mask[c] = mask[c] | (diffx || diffy || arcMode); c++;
-    mask[c] = mask[c] | (diffx || diffy || arcMode); c++;
-    mask[c] = mask[c] | diff(mWidth, points.mWidth); c++;
-    mask[c] = mask[c] | diff(mHeight, points.mHeight); c++;
+    mask[c] = mask[c] | diff(mPosition, points.mPosition);
+    c++;
+    mask[c] = mask[c] | (diffx || diffy || arcMode);
+    c++;
+    mask[c] = mask[c] | (diffx || diffy || arcMode);
+    c++;
+    mask[c] = mask[c] | diff(mWidth, points.mWidth);
+    c++;
+    mask[c] = mask[c] | diff(mHeight, points.mHeight);
+    c++;
 }
 
 bool MotionPaths::hasCustomData(const std::string& name) const {

@@ -42,7 +42,7 @@ class Grouping;
  * the .cc includes constraintwidget.h to access the owner's members (e.g. getOpposite/getMargin).
  */
 class ConstraintAnchor {
-public:
+  public:
     /** Define the type of anchor */
     enum class Type { NONE, LEFT, TOP, RIGHT, BOTTOM, BASELINE, CENTER, CENTER_X, CENTER_Y };
 
@@ -106,7 +106,7 @@ public:
 
     void copyFrom(ConstraintAnchor* source, std::unordered_map<ConstraintWidget*, ConstraintWidget*>& map);
 
-private:
+  private:
     static constexpr bool ALLOW_BINARY = false;
 
     std::unordered_set<ConstraintAnchor*>* mDependents = nullptr;

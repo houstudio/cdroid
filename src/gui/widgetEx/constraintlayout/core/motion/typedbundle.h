@@ -18,7 +18,7 @@ namespace cdroid {
 class TypedValues;
 
 class TypedBundle {
-public:
+  public:
     int getInteger(int type) const;
 
     void add(int type, int value);
@@ -32,11 +32,15 @@ public:
 
     void clear();
 
-private:
-    std::vector<int>         mTypeInt;     std::vector<int>         mValueInt;
-    std::vector<int>         mTypeFloat;   std::vector<float>       mValueFloat;
-    std::vector<int>         mTypeString;  std::vector<std::string> mValueString;
-    std::vector<int>         mTypeBoolean; std::vector<bool>        mValueBoolean;
+  private:
+    std::vector<int>         mTypeInt;
+    std::vector<int>         mValueInt;
+    std::vector<int>         mTypeFloat;
+    std::vector<float>       mValueFloat;
+    std::vector<int>         mTypeString;
+    std::vector<std::string> mValueString;
+    std::vector<int>         mTypeBoolean;
+    std::vector<bool>        mValueBoolean;
 };
 
 } // namespace cdroid

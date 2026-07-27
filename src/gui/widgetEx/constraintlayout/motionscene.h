@@ -35,7 +35,7 @@ class ViewTransition;
 class XmlPullParser;
 
 class MotionScene {
-public:
+  public:
     static constexpr int UNSET = -1;
 
     // A click handler: when `targetId` is clicked, perform `clickAction` on the transition.
@@ -79,7 +79,7 @@ public:
 
     // One transition between two ConstraintSets. (Java: MotionScene.Transition.)
     class Transition {
-    public:
+      public:
         // clickAction flag values (match attrs.xml OnClick clickAction flags).
         static constexpr int FLAG_TOGGLE             = 0x0011;
         static constexpr int FLAG_TRANSITION_TO_END  = 0x0001;
@@ -96,24 +96,54 @@ public:
         // via setKeyFrames()/addOnClick().
         Transition(MotionScene& scene, const AttributeSet& attrs);
 
-        int getDuration() const { return mDuration; }
-        float getStagger() const { return mStagger; }
-        int getId() const { return mId; }
-        int getStartId() const { return mConstraintSetStart; }
-        int getEndId() const { return mConstraintSetEnd; }
-        const std::string& getInterpolatorString() const { return mDefaultInterpolatorString; }
-        int getPathMotionArc() const { return mPathMotionArc; }
-        int getAutoTransition() const { return mAutoTransition; }
-        bool isAbstract() const { return mIsAbstract; }
-        KeyFrames* getKeyFrames() const { return mKeyFrames.get(); }
-        const std::vector<OnClick>& getOnClicks() const { return mOnClicks; }
-        const OnSwipe* getOnSwipe() const { return mOnSwipe.get(); }
+        int getDuration() const {
+            return mDuration;
+        }
+        float getStagger() const {
+            return mStagger;
+        }
+        int getId() const {
+            return mId;
+        }
+        int getStartId() const {
+            return mConstraintSetStart;
+        }
+        int getEndId() const {
+            return mConstraintSetEnd;
+        }
+        const std::string& getInterpolatorString() const {
+            return mDefaultInterpolatorString;
+        }
+        int getPathMotionArc() const {
+            return mPathMotionArc;
+        }
+        int getAutoTransition() const {
+            return mAutoTransition;
+        }
+        bool isAbstract() const {
+            return mIsAbstract;
+        }
+        KeyFrames* getKeyFrames() const {
+            return mKeyFrames.get();
+        }
+        const std::vector<OnClick>& getOnClicks() const {
+            return mOnClicks;
+        }
+        const OnSwipe* getOnSwipe() const {
+            return mOnSwipe.get();
+        }
 
-        void setKeyFrames(std::unique_ptr<KeyFrames> kf) { mKeyFrames = std::move(kf); }
-        void addOnClick(OnClick oc) { mOnClicks.push_back(oc); }
-        void setOnSwipe(std::unique_ptr<OnSwipe> os) { mOnSwipe = std::move(os); }
+        void setKeyFrames(std::unique_ptr<KeyFrames> kf) {
+            mKeyFrames = std::move(kf);
+        }
+        void addOnClick(OnClick oc) {
+            mOnClicks.push_back(oc);
+        }
+        void setOnSwipe(std::unique_ptr<OnSwipe> os) {
+            mOnSwipe = std::move(os);
+        }
 
-    private:
+      private:
         int mId = UNSET;
         int mConstraintSetStart = UNSET;
         int mConstraintSetEnd = UNSET;
@@ -138,22 +168,30 @@ public:
     void load(Context* ctx, XmlPullParser& parser);
 
     // The first non-abstract transition (the active one), or nullptr.
-    Transition* getCurrentTransition() const { return mCurrentTransition; }
+    Transition* getCurrentTransition() const {
+        return mCurrentTransition;
+    }
     // Fire any transition whose autoTransition mode matches the layout resting at `currentState`.
     bool autoTransition(class MotionLayout* layout, int currentState);
     Transition* getTransitionById(int id) const;              // by <Transition android:id>
     Transition* findTransition(int startId, int endId) const;  // matching both endpoints
-    void setCurrentTransition(Transition* t) { mCurrentTransition = t; }
+    void setCurrentTransition(Transition* t) {
+        mCurrentTransition = t;
+    }
     // ConstraintSet registered under `id` (from a <ConstraintSet>), or nullptr.
     ConstraintSet* getConstraintSet(int id) const;
 
     ~MotionScene();
     // Parsed <ViewTransition> elements.
-    size_t getViewTransitionCount() const { return mViewTransitions.size(); }
+    size_t getViewTransitionCount() const {
+        return mViewTransitions.size();
+    }
     ViewTransition* getViewTransitionById(int id) const;
-    ViewTransition* getViewTransitionAt(size_t i) const { return mViewTransitions.at(i).get(); }
+    ViewTransition* getViewTransitionAt(size_t i) const {
+        return mViewTransitions.at(i).get();
+    }
 
-private:
+  private:
     friend class ViewTransition; // so it can resolve ids via getId()
     // Resolve a "@id/name" / "@+id/name" / "name" reference to a stable scene-local int, assigning
     // one lazily per name (so <ConstraintSet id> and <Transition constraintSet*> agree). Logically a

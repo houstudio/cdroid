@@ -67,7 +67,7 @@ bool StopLogicEngine::isStopped() const {
 float StopLogicEngine::calcY(float time) {
     if (time <= mStage1Duration) {
         return mStage1Velocity * time
-             + (mStage2Velocity - mStage1Velocity) * time * time / (2 * mStage1Duration);
+               + (mStage2Velocity - mStage1Velocity) * time * time / (2 * mStage1Duration);
     }
     if (mNumberOfStages == 1) {
         return mStage1EndPosition;
@@ -75,7 +75,7 @@ float StopLogicEngine::calcY(float time) {
     time -= mStage1Duration;
     if (time < mStage2Duration) {
         return mStage1EndPosition + mStage2Velocity * time
-             + (mStage3Velocity - mStage2Velocity) * time * time / (2 * mStage2Duration);
+               + (mStage3Velocity - mStage2Velocity) * time * time / (2 * mStage2Duration);
     }
     if (mNumberOfStages == 2) {
         return mStage2EndPosition;
@@ -83,7 +83,7 @@ float StopLogicEngine::calcY(float time) {
     time -= mStage2Duration;
     if (time <= mStage3Duration) {
         return mStage2EndPosition + mStage3Velocity * time
-             - mStage3Velocity * time * time / (2 * mStage3Duration);
+               - mStage3Velocity * time * time / (2 * mStage3Duration);
     }
     return mStage3EndPosition;
 }

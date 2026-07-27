@@ -32,23 +32,31 @@ int binarySearch(const std::vector<double>& a, double key) {
 // ArcCurveFit::Arc — one quarter-ellipse (or linear) segment
 // ===========================================================================
 class ArcCurveFit::Arc {
-public:
+  public:
     Arc(int mode, double t1, double t2, double x1, double y1, double x2, double y2);
 
     void   setPoint(double time);
-    double getX() const { return mEllipseCenterX + mEllipseA * mTmpSinAngle; }
-    double getY() const { return mEllipseCenterY + mEllipseB * mTmpCosAngle; }
+    double getX() const {
+        return mEllipseCenterX + mEllipseA * mTmpSinAngle;
+    }
+    double getY() const {
+        return mEllipseCenterY + mEllipseB * mTmpCosAngle;
+    }
     double getDX() const;
     double getDY() const;
     double getLinearX(double t) const;
     double getLinearY(double t) const;
-    double getLinearDX() const { return mEllipseCenterX; } // slope cached here in linear mode
-    double getLinearDY() const { return mEllipseCenterY; }
+    double getLinearDX() const {
+        return mEllipseCenterX;    // slope cached here in linear mode
+    }
+    double getLinearDY() const {
+        return mEllipseCenterY;
+    }
 
     double mTime1 = 0, mTime2 = 0;
     bool   mLinear = false;
 
-private:
+  private:
     double lookup(double v) const;
     void   buildTable(double x1, double y1, double x2, double y2);
 
@@ -67,10 +75,18 @@ ArcCurveFit::Arc::Arc(int mode, double t1, double t2, double x1, double y1, doub
     const double dx = x2 - x1;
     const double dy = y2 - y1;
     switch (mode) {
-        case kStartVertical: mVertical = true; break;
-        case kUpArc:         mVertical = dy < 0; break;
-        case kDownArc:       mVertical = dy > 0; break;
-        default:             mVertical = false; break;
+    case kStartVertical:
+        mVertical = true;
+        break;
+    case kUpArc:
+        mVertical = dy < 0;
+        break;
+    case kDownArc:
+        mVertical = dy > 0;
+        break;
+    default:
+        mVertical = false;
+        break;
     }
     mTime1 = t1;
     mTime2 = t2;
@@ -79,7 +95,10 @@ ArcCurveFit::Arc::Arc(int mode, double t1, double t2, double x1, double y1, doub
 
     if (mLinear || std::abs(dx) < kEpsilon || std::abs(dy) < kEpsilon) {
         mLinear = true;
-        mX1 = x1; mX2 = x2; mY1 = y1; mY2 = y2;
+        mX1 = x1;
+        mX2 = x2;
+        mY1 = y1;
+        mY2 = y2;
         mArcDistance = std::hypot(dy, dx);
         mArcVelocity = mArcDistance * mOneOverDeltaTime;
         mEllipseCenterX = dx / (mTime2 - mTime1); // cache the slope in the unused center
@@ -181,13 +200,27 @@ ArcCurveFit::ArcCurveFit(const std::vector<int>& arcModes, const std::vector<dou
     int last = kStartVertical;
     for (size_t i = 0; i < mArcs.size(); i++) {
         switch (arcModes[i]) {
-            case ARC_START_VERTICAL:   last = mode = kStartVertical; break;
-            case ARC_START_HORIZONTAL: last = mode = kStartHorizontal; break;
-            case ARC_START_FLIP:       mode = (last == kStartVertical) ? kStartHorizontal : kStartVertical; last = mode; break;
-            case ARC_START_LINEAR:     mode = kStartLinear; break;
-            case ARC_ABOVE:            mode = kUpArc; break;
-            case ARC_BELOW:            mode = kDownArc; break;
-            default: break;
+        case ARC_START_VERTICAL:
+            last = mode = kStartVertical;
+            break;
+        case ARC_START_HORIZONTAL:
+            last = mode = kStartHorizontal;
+            break;
+        case ARC_START_FLIP:
+            mode = (last == kStartVertical) ? kStartHorizontal : kStartVertical;
+            last = mode;
+            break;
+        case ARC_START_LINEAR:
+            mode = kStartLinear;
+            break;
+        case ARC_ABOVE:
+            mode = kUpArc;
+            break;
+        case ARC_BELOW:
+            mode = kDownArc;
+            break;
+        default:
+            break;
         }
         mArcs[i] = std::make_unique<Arc>(mode, time[i], time[i + 1],
                                          y[i][0], y[i][1], y[i + 1][0], y[i + 1][1]);
@@ -261,11 +294,11 @@ double ArcCurveFit::getPos(double t, int j) {
             const int p = 0;
             if (mArcs[p]->mLinear) {
                 return (j == 0) ? mArcs[p]->getLinearX(t0) + dt * mArcs[p]->getLinearDX()
-                                : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
+                       : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
             }
             mArcs[p]->setPoint(t0);
             return (j == 0) ? mArcs[p]->getX() + dt * mArcs[p]->getDX()
-                            : mArcs[p]->getY() + dt * mArcs[p]->getDY();
+                   : mArcs[p]->getY() + dt * mArcs[p]->getDY();
         }
         if (t > mArcs.back()->mTime2) {
             const double t0 = mArcs.back()->mTime2;
@@ -273,10 +306,10 @@ double ArcCurveFit::getPos(double t, int j) {
             const int p = static_cast<int>(mArcs.size() - 1);
             if (mArcs[p]->mLinear) {
                 return (j == 0) ? mArcs[p]->getLinearX(t0) + dt * mArcs[p]->getLinearDX()
-                                : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
+                       : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
             }
             return (j == 0) ? mArcs[p]->getLinearX(t0) + dt * mArcs[p]->getLinearDX()
-                            : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
+                   : mArcs[p]->getLinearY(t0) + dt * mArcs[p]->getLinearDY();
         }
     } else {
         if (t < mArcs[0]->mTime1) t = mArcs[0]->mTime1;

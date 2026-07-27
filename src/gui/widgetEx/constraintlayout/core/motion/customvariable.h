@@ -21,7 +21,7 @@ namespace cdroid {
 class MotionWidget; // forward — the apply/interpolate hooks are filled in once MotionWidget lands
 
 class CustomVariable {
-public:
+  public:
     CustomVariable() = default; // required as a value type in std::unordered_map
     CustomVariable(const std::string& name, int attributeType);
     CustomVariable(const CustomVariable& c);
@@ -31,20 +31,38 @@ public:
     CustomVariable(const std::string& name, int type, bool value);
     template <typename T>
     CustomVariable(const std::string& name, int attributeType, const T& value)
-        : mName(name), mType(attributeType) { setValue(value); }
+        : mName(name), mType(attributeType) {
+        setValue(value);
+    }
     template <typename T>
     CustomVariable(const CustomVariable& source, const T& value)
-        : mName(source.mName), mType(source.mType) { setValue(value); }
+        : mName(source.mName), mType(source.mType) {
+        setValue(value);
+    }
 
     CustomVariable copy() const;
 
-    int  getType() const { return mType; }
-    const std::string& getName() const { return mName; }
-    bool getBooleanValue() const { return mBooleanValue; }
-    float getFloatValue() const { return mFloatValue; }
-    int   getColorValue() const { return mIntegerValue; }
-    int   getIntegerValue() const { return mIntegerValue; }
-    const std::string& getStringValue() const { return mStringValue; }
+    int  getType() const {
+        return mType;
+    }
+    const std::string& getName() const {
+        return mName;
+    }
+    bool getBooleanValue() const {
+        return mBooleanValue;
+    }
+    float getFloatValue() const {
+        return mFloatValue;
+    }
+    int   getColorValue() const {
+        return mIntegerValue;
+    }
+    int   getIntegerValue() const {
+        return mIntegerValue;
+    }
+    const std::string& getStringValue() const {
+        return mStringValue;
+    }
 
     bool isContinuous() const;
     int  numberOfInterpolatedValues() const;
@@ -77,7 +95,7 @@ public:
     std::string mName;
     bool mBooleanValue = false;
 
-private:
+  private:
     static int clamp(int c);
 
     int mType = 0;

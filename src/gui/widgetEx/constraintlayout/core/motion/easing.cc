@@ -81,7 +81,10 @@ Easing::CubicEasing::CubicEasing(double x1, double y1, double x2, double y2) {
 }
 
 void Easing::CubicEasing::setup(double x1, double y1, double x2, double y2) {
-    mX1 = x1; mY1 = y1; mX2 = x2; mY2 = y2;
+    mX1 = x1;
+    mY1 = y1;
+    mX2 = x2;
+    mY2 = y2;
 }
 
 double Easing::CubicEasing::getX(double t) const {

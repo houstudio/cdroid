@@ -34,28 +34,68 @@ void Flow::copy(ConstraintWidget* src,
     // Flow's config fields are not exercised by the copy path in the MVP; faithful TODO.
 }
 
-std::string Flow::getType() const { return "Flow"; }
+std::string Flow::getType() const {
+    return "Flow";
+}
 
 // --- setters ---
-void Flow::setOrientation(int value) { mOrientation = value; }
-void Flow::setHorizontalStyle(int value) { mHorizontalStyle = value; }
-void Flow::setVerticalStyle(int value) { mVerticalStyle = value; }
-void Flow::setFirstHorizontalStyle(int value) { mFirstHorizontalStyle = value; }
-void Flow::setFirstVerticalStyle(int value) { mFirstVerticalStyle = value; }
-void Flow::setLastHorizontalStyle(int value) { mLastHorizontalStyle = value; }
-void Flow::setLastVerticalStyle(int value) { mLastVerticalStyle = value; }
-void Flow::setHorizontalBias(float value) { mHorizontalBias = value; }
-void Flow::setVerticalBias(float value) { mVerticalBias = value; }
-void Flow::setFirstHorizontalBias(float value) { mFirstHorizontalBias = value; }
-void Flow::setFirstVerticalBias(float value) { mFirstVerticalBias = value; }
-void Flow::setLastHorizontalBias(float value) { mLastHorizontalBias = value; }
-void Flow::setLastVerticalBias(float value) { mLastVerticalBias = value; }
-void Flow::setHorizontalAlign(int value) { mHorizontalAlign = value; }
-void Flow::setVerticalAlign(int value) { mVerticalAlign = value; }
-void Flow::setWrapMode(int value) { mWrapMode = value; }
-void Flow::setHorizontalGap(int value) { mHorizontalGap = value; }
-void Flow::setVerticalGap(int value) { mVerticalGap = value; }
-void Flow::setMaxElementsWrap(int value) { mMaxElementsWrap = value; }
+void Flow::setOrientation(int value) {
+    mOrientation = value;
+}
+void Flow::setHorizontalStyle(int value) {
+    mHorizontalStyle = value;
+}
+void Flow::setVerticalStyle(int value) {
+    mVerticalStyle = value;
+}
+void Flow::setFirstHorizontalStyle(int value) {
+    mFirstHorizontalStyle = value;
+}
+void Flow::setFirstVerticalStyle(int value) {
+    mFirstVerticalStyle = value;
+}
+void Flow::setLastHorizontalStyle(int value) {
+    mLastHorizontalStyle = value;
+}
+void Flow::setLastVerticalStyle(int value) {
+    mLastVerticalStyle = value;
+}
+void Flow::setHorizontalBias(float value) {
+    mHorizontalBias = value;
+}
+void Flow::setVerticalBias(float value) {
+    mVerticalBias = value;
+}
+void Flow::setFirstHorizontalBias(float value) {
+    mFirstHorizontalBias = value;
+}
+void Flow::setFirstVerticalBias(float value) {
+    mFirstVerticalBias = value;
+}
+void Flow::setLastHorizontalBias(float value) {
+    mLastHorizontalBias = value;
+}
+void Flow::setLastVerticalBias(float value) {
+    mLastVerticalBias = value;
+}
+void Flow::setHorizontalAlign(int value) {
+    mHorizontalAlign = value;
+}
+void Flow::setVerticalAlign(int value) {
+    mVerticalAlign = value;
+}
+void Flow::setWrapMode(int value) {
+    mWrapMode = value;
+}
+void Flow::setHorizontalGap(int value) {
+    mHorizontalGap = value;
+}
+void Flow::setVerticalGap(int value) {
+    mVerticalGap = value;
+}
+void Flow::setMaxElementsWrap(int value) {
+    mMaxElementsWrap = value;
+}
 
 int Flow::getWidgetWidth(ConstraintWidget* widget, int max) {
     if (widget == nullptr) return 0;
@@ -139,11 +179,21 @@ void Flow::measure(int widthMode, int widthSize, int heightMode, int heightSize)
     mDisplayedWidgetsCount = count;
 
     switch (mWrapMode) {
-        case WRAP_ALIGNED:   measureAligned(mDisplayedWidgets, count, mOrientation, max, measured); break;
-        case WRAP_CHAIN:     measureChainWrap(mDisplayedWidgets, count, mOrientation, max, measured); break;
-        case WRAP_NONE:      measureNoWrap(mDisplayedWidgets, count, mOrientation, max, measured); break;
-        case WRAP_CHAIN_NEW: measureChainWrap_new(mDisplayedWidgets, count, mOrientation, max, measured); break;
-        default:             measureChainWrap(mDisplayedWidgets, count, mOrientation, max, measured); break;
+    case WRAP_ALIGNED:
+        measureAligned(mDisplayedWidgets, count, mOrientation, max, measured);
+        break;
+    case WRAP_CHAIN:
+        measureChainWrap(mDisplayedWidgets, count, mOrientation, max, measured);
+        break;
+    case WRAP_NONE:
+        measureNoWrap(mDisplayedWidgets, count, mOrientation, max, measured);
+        break;
+    case WRAP_CHAIN_NEW:
+        measureChainWrap_new(mDisplayedWidgets, count, mOrientation, max, measured);
+        break;
+    default:
+        measureChainWrap(mDisplayedWidgets, count, mOrientation, max, measured);
+        break;
     }
 
     int width = measured[HORIZONTAL] + paddingLeft + paddingRight;
@@ -223,7 +273,7 @@ void Flow::measureChainWrap(std::vector<ConstraintWidget*>& widgets, int count, 
     int maxWidth = 0, maxHeight = 0;
 
     bool needInternalMeasure = getHorizontalDimensionBehaviour() == DimensionBehaviour::WRAP_CONTENT
-                            || getVerticalDimensionBehaviour() == DimensionBehaviour::WRAP_CONTENT;
+                               || getVerticalDimensionBehaviour() == DimensionBehaviour::WRAP_CONTENT;
     if (nbMatchConstraintsWidgets > 0 && needInternalMeasure) {
         for (int i = 0; i < listCount; i++) {
             if (orientation == HORIZONTAL) {
@@ -304,28 +354,28 @@ void Flow::addToSolver(LinearSystem* system, bool optimize) {
         isInRtl = container->isRtl();
     }
     switch (mWrapMode) {
-        case WRAP_CHAIN:
-        case WRAP_CHAIN_NEW: {
-            const int count = (int) mChainList.size();
-            for (int i = 0; i < count; i++) {
-                mChainList[i].createConstraints(isInRtl, i, i == count - 1);
-            }
-            break;
+    case WRAP_CHAIN:
+    case WRAP_CHAIN_NEW: {
+        const int count = (int) mChainList.size();
+        for (int i = 0; i < count; i++) {
+            mChainList[i].createConstraints(isInRtl, i, i == count - 1);
         }
-        case WRAP_NONE: {
-            if (!mChainList.empty()) {
-                mChainList[0].createConstraints(isInRtl, 0, true);
-            }
-            break;
+        break;
+    }
+    case WRAP_NONE: {
+        if (!mChainList.empty()) {
+            mChainList[0].createConstraints(isInRtl, 0, true);
         }
-        case WRAP_ALIGNED: {
-            // TODO: createAlignedConstraints (grid-aligned layout).
-            const int count = (int) mChainList.size();
-            for (int i = 0; i < count; i++) {
-                mChainList[i].createConstraints(isInRtl, i, i == count - 1);
-            }
-            break;
+        break;
+    }
+    case WRAP_ALIGNED: {
+        // TODO: createAlignedConstraints (grid-aligned layout).
+        const int count = (int) mChainList.size();
+        for (int i = 0; i < count; i++) {
+            mChainList[i].createConstraints(isInRtl, i, i == count - 1);
         }
+        break;
+    }
     }
     needsCallbackFromSolver(false);
 }
@@ -344,18 +394,36 @@ Flow::WidgetsList::WidgetsList(Flow* flow, int orientation,
 void Flow::WidgetsList::setup(int orientation, ConstraintAnchor* left, ConstraintAnchor* top,
                               ConstraintAnchor* right, ConstraintAnchor* bottom,
                               int paddingLeft, int paddingTop, int paddingRight, int paddingBottom, int max) {
-    mOrientation = orientation; mLeft = left; mTop = top; mRight = right; mBottom = bottom;
-    mPaddingLeft = paddingLeft; mPaddingTop = paddingTop; mPaddingRight = paddingRight; mPaddingBottom = paddingBottom;
+    mOrientation = orientation;
+    mLeft = left;
+    mTop = top;
+    mRight = right;
+    mBottom = bottom;
+    mPaddingLeft = paddingLeft;
+    mPaddingTop = paddingTop;
+    mPaddingRight = paddingRight;
+    mPaddingBottom = paddingBottom;
     mMax = max;
 }
 
 void Flow::WidgetsList::clear() {
-    mBiggestDimension = 0; mBiggest = nullptr;
-    mWidth = 0; mHeight = 0; mStartIndex = 0; mCount = 0; mNbMatchConstraintsWidgets = 0;
+    mBiggestDimension = 0;
+    mBiggest = nullptr;
+    mWidth = 0;
+    mHeight = 0;
+    mStartIndex = 0;
+    mCount = 0;
+    mNbMatchConstraintsWidgets = 0;
 }
-void Flow::WidgetsList::setStartIndex(int value) { mStartIndex = value; }
-int  Flow::WidgetsList::getWidth() const { return (mOrientation == HORIZONTAL) ? (mWidth - mFlow->mHorizontalGap) : mWidth; }
-int  Flow::WidgetsList::getHeight() const { return (mOrientation == VERTICAL) ? (mHeight - mFlow->mVerticalGap) : mHeight; }
+void Flow::WidgetsList::setStartIndex(int value) {
+    mStartIndex = value;
+}
+int  Flow::WidgetsList::getWidth() const {
+    return (mOrientation == HORIZONTAL) ? (mWidth - mFlow->mHorizontalGap) : mWidth;
+}
+int  Flow::WidgetsList::getHeight() const {
+    return (mOrientation == VERTICAL) ? (mHeight - mFlow->mVerticalGap) : mHeight;
+}
 
 void Flow::WidgetsList::add(ConstraintWidget* widget) {
     if (mOrientation == HORIZONTAL) {
@@ -368,7 +436,9 @@ void Flow::WidgetsList::add(ConstraintWidget* widget) {
         mWidth += width + gap;
         int height = mFlow->getWidgetHeight(widget, mMax);
         if (mBiggest == nullptr || mBiggestDimension < height) {
-            mBiggest = widget; mBiggestDimension = height; mHeight = height;
+            mBiggest = widget;
+            mBiggestDimension = height;
+            mHeight = height;
         }
     } else {
         int width = mFlow->getWidgetWidth(widget, mMax);
@@ -380,7 +450,9 @@ void Flow::WidgetsList::add(ConstraintWidget* widget) {
         int gap = (widget->getVisibility() == GONE) ? 0 : mFlow->mVerticalGap;
         mHeight += height + gap;
         if (mBiggest == nullptr || mBiggestDimension < width) {
-            mBiggest = widget; mBiggestDimension = width; mWidth = width;
+            mBiggest = widget;
+            mBiggestDimension = width;
+            mWidth = width;
         }
     }
     mCount++;
@@ -425,7 +497,10 @@ void Flow::WidgetsList::createConstraints(bool isInRtl, int chainIndex, bool isL
                 int index = isInRtl ? (count - 1 - i) : i;
                 if (mStartIndex + index >= mFlow->mDisplayedWidgetsCount) break;
                 ConstraintWidget* widget = mFlow->mDisplayedWidgets[mStartIndex + index];
-                if (widget->hasBaseline()) { baselineVerticalWidget = widget; break; }
+                if (widget->hasBaseline()) {
+                    baselineVerticalWidget = widget;
+                    break;
+                }
             }
         }
         for (int i = 0; i < count; i++) {
@@ -461,20 +536,22 @@ void Flow::WidgetsList::createConstraints(bool isInRtl, int chainIndex, bool isL
                     widget->mBaseline.connect(baselineVerticalWidget->mBaseline, 0);
                 } else {
                     switch (mFlow->mVerticalAlign) {
-                        case VERTICAL_ALIGN_TOP:
-                            widget->mTop.connect(verticalWidget->mTop, 0); break;
-                        case VERTICAL_ALIGN_BOTTOM:
-                            widget->mBottom.connect(verticalWidget->mBottom, 0); break;
-                        case VERTICAL_ALIGN_CENTER:
-                        default:
-                            if (singleChain) {
-                                widget->mTop.connect(mTop, mPaddingTop);
-                                widget->mBottom.connect(mBottom, mPaddingBottom);
-                            } else {
-                                widget->mTop.connect(verticalWidget->mTop, 0);
-                                widget->mBottom.connect(verticalWidget->mBottom, 0);
-                            }
-                            break;
+                    case VERTICAL_ALIGN_TOP:
+                        widget->mTop.connect(verticalWidget->mTop, 0);
+                        break;
+                    case VERTICAL_ALIGN_BOTTOM:
+                        widget->mBottom.connect(verticalWidget->mBottom, 0);
+                        break;
+                    case VERTICAL_ALIGN_CENTER:
+                    default:
+                        if (singleChain) {
+                            widget->mTop.connect(mTop, mPaddingTop);
+                            widget->mBottom.connect(mBottom, mPaddingBottom);
+                        } else {
+                            widget->mTop.connect(verticalWidget->mTop, 0);
+                            widget->mBottom.connect(verticalWidget->mBottom, 0);
+                        }
+                        break;
                     }
                 }
             }
@@ -509,9 +586,11 @@ void Flow::WidgetsList::createConstraints(bool isInRtl, int chainIndex, bool isL
                 int style = mFlow->mVerticalStyle;
                 float bias = mFlow->mVerticalBias;
                 if (mStartIndex == 0 && mFlow->mFirstVerticalStyle != UNKNOWN) {
-                    style = mFlow->mFirstVerticalStyle; bias = mFlow->mFirstVerticalBias;
+                    style = mFlow->mFirstVerticalStyle;
+                    bias = mFlow->mFirstVerticalBias;
                 } else if (isLastChain && mFlow->mLastVerticalStyle != UNKNOWN) {
-                    style = mFlow->mLastVerticalStyle; bias = mFlow->mLastVerticalBias;
+                    style = mFlow->mLastVerticalStyle;
+                    bias = mFlow->mLastVerticalBias;
                 }
                 widget->mVerticalChainStyle = style;
                 widget->mVerticalBiasPercent = bias;
@@ -527,18 +606,34 @@ void Flow::WidgetsList::createConstraints(bool isInRtl, int chainIndex, bool isL
                 int align = mFlow->mHorizontalAlign;
                 if (isInRtl) {
                     switch (align) {
-                        case HORIZONTAL_ALIGN_START:  widget->mRight.connect(horizontalWidget->mRight, 0); break;
-                        case HORIZONTAL_ALIGN_CENTER: widget->mLeft.connect(horizontalWidget->mLeft, 0); widget->mRight.connect(horizontalWidget->mRight, 0); break;
-                        case HORIZONTAL_ALIGN_END:    widget->mLeft.connect(horizontalWidget->mLeft, 0); break;
+                    case HORIZONTAL_ALIGN_START:
+                        widget->mRight.connect(horizontalWidget->mRight, 0);
+                        break;
+                    case HORIZONTAL_ALIGN_CENTER:
+                        widget->mLeft.connect(horizontalWidget->mLeft, 0);
+                        widget->mRight.connect(horizontalWidget->mRight, 0);
+                        break;
+                    case HORIZONTAL_ALIGN_END:
+                        widget->mLeft.connect(horizontalWidget->mLeft, 0);
+                        break;
                     }
                 } else {
                     switch (align) {
-                        case HORIZONTAL_ALIGN_START:  widget->mLeft.connect(horizontalWidget->mLeft, 0); break;
-                        case HORIZONTAL_ALIGN_CENTER:
-                            if (singleChain) { widget->mLeft.connect(mLeft, mPaddingLeft); widget->mRight.connect(mRight, mPaddingRight); }
-                            else { widget->mLeft.connect(horizontalWidget->mLeft, 0); widget->mRight.connect(horizontalWidget->mRight, 0); }
-                            break;
-                        case HORIZONTAL_ALIGN_END:    widget->mRight.connect(horizontalWidget->mRight, 0); break;
+                    case HORIZONTAL_ALIGN_START:
+                        widget->mLeft.connect(horizontalWidget->mLeft, 0);
+                        break;
+                    case HORIZONTAL_ALIGN_CENTER:
+                        if (singleChain) {
+                            widget->mLeft.connect(mLeft, mPaddingLeft);
+                            widget->mRight.connect(mRight, mPaddingRight);
+                        } else {
+                            widget->mLeft.connect(horizontalWidget->mLeft, 0);
+                            widget->mRight.connect(horizontalWidget->mRight, 0);
+                        }
+                        break;
+                    case HORIZONTAL_ALIGN_END:
+                        widget->mRight.connect(horizontalWidget->mRight, 0);
+                        break;
                     }
                 }
             }

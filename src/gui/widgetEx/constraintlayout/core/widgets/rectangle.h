@@ -23,7 +23,7 @@ namespace cdroid {
 
 /** Simple rect class */
 class Rectangle {
-public:
+  public:
     int x = 0;
     int y = 0;
     int width = 0;
@@ -45,16 +45,20 @@ public:
 
     bool intersects(const Rectangle& bounds) const {
         return x >= bounds.x && x < bounds.x + bounds.width
-            && y >= bounds.y && y < bounds.y + bounds.height;
+               && y >= bounds.y && y < bounds.y + bounds.height;
     }
 
     bool contains(int px, int py) const {
         return px >= x && px < x + width
-            && py >= y && py < y + height;
+               && py >= y && py < y + height;
     }
 
-    int getCenterX() const { return (x + width) / 2; }
-    int getCenterY() const { return (y + height) / 2; }
+    int getCenterX() const {
+        return (x + width) / 2;
+    }
+    int getCenterY() const {
+        return (y + height) / 2;
+    }
 };
 
 } // namespace cdroid

@@ -80,14 +80,14 @@ const ConstraintLayoutStates::State* ConstraintLayoutStates::findState(int id) c
 // construction / parse
 // ===========================================================================
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
-                                               const std::string& resourceId)
+        const std::string& resourceId)
     : mLayout(layout), mContext(ctx) {
     XmlPullParser parser(ctx, resourceId);
     parse(ctx, parser);
 }
 
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
-                                               XmlPullParser& parser)
+        XmlPullParser& parser)
     : mLayout(layout), mContext(ctx) {
     parse(ctx, parser);
 }
@@ -106,7 +106,7 @@ int ConstraintLayoutStates::parseConstraintSet(Context* ctx, XmlPullParser& pars
 void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
     State* currentState = nullptr;
     while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
-           parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
         const int eventType = parser.getEventType();
         if (eventType == XmlPullParser::START_TAG) {
             const std::string tag = parser.getName();
@@ -180,10 +180,10 @@ void ConstraintLayoutStates::resolveConstraintRefs() {
 bool ConstraintLayoutStates::needsToChange(int id, float width, float height) const {
     if (mCurrentStateId != id) return true;
     const State* state = (id == -1) ? (mStates.empty() ? nullptr : &mStates[0])
-                                    : findState(mCurrentStateId);
+                         : findState(mCurrentStateId);
     if (state == nullptr) return false;
     if (mCurrentConstraintNumber != -1 &&
-        mCurrentConstraintNumber < (int) state->mVariants.size()) {
+            mCurrentConstraintNumber < (int) state->mVariants.size()) {
         if (state->mVariants[mCurrentConstraintNumber].match(width, height)) return false;
     }
     if (mCurrentConstraintNumber == state->findMatch(width, height)) return false;
@@ -221,16 +221,16 @@ ConstraintSet* ConstraintLayoutStates::convertToConstraintSet(int currentConstra
 void ConstraintLayoutStates::updateConstraints(int id, float width, float height) {
     if (mCurrentStateId == id) {
         const State* state = (id == -1) ? (mStates.empty() ? nullptr : &mStates[0])
-                                        : findState(mCurrentStateId);
+                             : findState(mCurrentStateId);
         if (state == nullptr) return;
         if (mCurrentConstraintNumber != -1 &&
-            mCurrentConstraintNumber < (int) state->mVariants.size()) {
+                mCurrentConstraintNumber < (int) state->mVariants.size()) {
             if (state->mVariants[mCurrentConstraintNumber].match(width, height)) return; // still fits
         }
         const int match = state->findMatch(width, height);
         if (mCurrentConstraintNumber == match) return;
         ConstraintSet* cs = (match == -1) ? state->mConstraintSet
-                                          : state->mVariants[match].mConstraintSet;
+                            : state->mVariants[match].mConstraintSet;
         if (cs == nullptr) return;
         mCurrentConstraintNumber = match;
         cs->applyTo(mLayout);
@@ -239,7 +239,7 @@ void ConstraintLayoutStates::updateConstraints(int id, float width, float height
         const State* state = findState(mCurrentStateId);
         const int match = (state == nullptr) ? -1 : state->findMatch(width, height);
         ConstraintSet* cs = (state == nullptr) ? nullptr
-            : ((match == -1) ? state->mConstraintSet : state->mVariants[match].mConstraintSet);
+                            : ((match == -1) ? state->mConstraintSet : state->mVariants[match].mConstraintSet);
         if (cs == nullptr) return;
         mCurrentConstraintNumber = match;
         cs->applyTo(mLayout);

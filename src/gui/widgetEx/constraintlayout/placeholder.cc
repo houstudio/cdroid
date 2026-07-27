@@ -92,11 +92,11 @@ void Placeholder::updatePostMeasure(ConstraintLayout* /*container*/) {
     lpContent->mWidget->setVisibility(View::VISIBLE);
     // Adopt the content's resolved size unless the placeholder is FIXED on that axis.
     if (lp->mWidget->getHorizontalDimensionBehaviour()
-        != ConstraintWidget::DimensionBehaviour::FIXED) {
+            != ConstraintWidget::DimensionBehaviour::FIXED) {
         lp->mWidget->setWidth(lpContent->mWidget->getWidth());
     }
     if (lp->mWidget->getVerticalDimensionBehaviour()
-        != ConstraintWidget::DimensionBehaviour::FIXED) {
+            != ConstraintWidget::DimensionBehaviour::FIXED) {
         lp->mWidget->setHeight(lpContent->mWidget->getHeight());
     }
     lpContent->mWidget->setVisibility(View::GONE);

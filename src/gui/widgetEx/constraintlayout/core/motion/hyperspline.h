@@ -13,14 +13,18 @@
 namespace cdroid {
 
 class HyperSpline {
-public:
+  public:
     // A natural cubic polynomial a + b*u + c*u^2 + d*u^3.
     class Cubic {
-    public:
+      public:
         Cubic(double a, double b, double c, double d) : mA(a), mB(b), mC(c), mD(d) {}
-        double eval(double u) const { return (((mD * u) + mC) * u + mB) * u + mA; }
-        double vel(double v) const { return (mD * 3 * v + mC * 2) * v + mB; }
-    private:
+        double eval(double u) const {
+            return (((mD * u) + mC) * u + mB) * u + mA;
+        }
+        double vel(double v) const {
+            return (mD * 3 * v + mC * 2) * v + mB;
+        }
+      private:
         double mA, mB, mC, mD;
     };
 
@@ -38,7 +42,7 @@ public:
 
     static std::vector<Cubic> calcNaturalCubic(int n, const std::vector<double>& x);
 
-private:
+  private:
     int mPoints = 0;
     int mDimensionality = 0;
     std::vector<std::vector<Cubic>> mCurve; // [dim][segment]

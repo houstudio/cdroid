@@ -17,11 +17,13 @@
 namespace cdroid {
 
 class VirtualLayout : public HelperWidget {
-public:
+  public:
     VirtualLayout();
     ~VirtualLayout() override;
 
-    bool isVirtualLayout() const override { return true; }
+    bool isVirtualLayout() const override {
+        return true;
+    }
 
     // --- padding ---
     void setPadding(int value);
@@ -51,7 +53,7 @@ public:
 
     std::string getType() const override; // "VirtualLayout"
 
-protected:
+  protected:
     // Measure every referenced child via the container's Measurer (skip Guideline; treat
     // match_constraint as wrap unless it is fully solver-determined). Returns false if no measurer.
     bool measureChildren();
@@ -64,7 +66,7 @@ protected:
 
     BasicMeasure::Measure mMeasure;
 
-private:
+  private:
     int mPaddingTop = 0;
     int mPaddingBottom = 0;
     int mPaddingLeft = 0;
