@@ -4,6 +4,7 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
  */
 #include <widgetEx/constraintlayout/motionscene.h>
+#include <widgetEx/constraintlayout/motionlayout.h>
 
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
@@ -54,6 +55,13 @@ const std::unordered_map<std::string, int> kSpringBoundary = {
     {"bounceEnd",   (int)MotionScene::OnSwipe::SPRING_BOUNCE_END},
     {"bounceBoth",  (int)MotionScene::OnSwipe::SPRING_BOUNCE_BOTH}
 };
+const std::unordered_map<std::string, int> kAutoTransition = {
+    {"none",           (int)MotionScene::Transition::AUTO_NONE},
+    {"jumpToStart",    (int)MotionScene::Transition::AUTO_JUMP_TO_START},
+    {"jumpToEnd",      (int)MotionScene::Transition::AUTO_JUMP_TO_END},
+    {"animateToStart", (int)MotionScene::Transition::AUTO_ANIMATE_TO_START},
+    {"animateToEnd",   (int)MotionScene::Transition::AUTO_ANIMATE_TO_END}
+};
 } // namespace
 
 // ===========================================================================
@@ -69,6 +77,7 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     mStagger = a.getFloat("staggered", mStagger);
     mDefaultInterpolatorString = a.getString("motionInterpolator", mDefaultInterpolatorString);
     mPathMotionArc = a.getInt("pathMotionArc", mPathMotionArc);
+    mAutoTransition = a.getInt("autoTransition", kAutoTransition, mAutoTransition);
     if (mConstraintSetStart == UNSET) mIsAbstract = true;
 }
 
@@ -150,6 +159,27 @@ MotionScene::Transition* MotionScene::findTransition(int startId, int endId) con
         if (t->getStartId() == startId && t->getEndId() == endId) return t.get();
     }
     return nullptr;
+}
+
+bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {
+    if (layout == nullptr) return false;
+    for (const auto& t : mTransitionList) {
+        const int mode = t->getAutoTransition();
+        if (mode == Transition::AUTO_NONE) continue;
+        if (currentState == t->getStartId()
+            && (mode == Transition::AUTO_ANIMATE_TO_END || mode == Transition::AUTO_JUMP_TO_END)) {
+            layout->applyTransitionForAuto(t.get(), /*toEnd=*/true,
+                                           /*jump=*/(mode == Transition::AUTO_JUMP_TO_END));
+            return true;
+        }
+        if (currentState == t->getEndId()
+            && (mode == Transition::AUTO_ANIMATE_TO_START || mode == Transition::AUTO_JUMP_TO_START)) {
+            layout->applyTransitionForAuto(t.get(), /*toEnd=*/false,
+                                           /*jump=*/(mode == Transition::AUTO_JUMP_TO_START));
+            return true;
+        }
+    }
+    return false;
 }
 
 void MotionScene::load(Context* ctx, const std::string& resourceId) {

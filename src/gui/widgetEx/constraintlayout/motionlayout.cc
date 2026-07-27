@@ -147,6 +147,12 @@ void MotionLayout::setProgress(float progress) {
     else if (progress >= 1.0f) mCurrentState = mEndState;
     else mCurrentState = -1; // in motion
     if (mCaptured) applyMotion();
+    // On reaching an endpoint, fire any autoTransition whose mode matches this state.
+    if (mCurrentState != -1 && mScene && !mInAutoTransition) {
+        mInAutoTransition = true;
+        mScene->autoTransition(this, mCurrentState);
+        mInAutoTransition = false;
+    }
 }
 
 void MotionLayout::animateTo(float target) {
@@ -189,8 +195,15 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
         applyMotion();
         if (engine->isStopped()) {
             mProgress = target;
+            if (target <= 0.0f) mCurrentState = mBeginState;
+            else if (target >= 1.0f) mCurrentState = mEndState;
             if (mCaptured) applyMotion();
             a.cancel();
+            if (mCurrentState != -1 && mScene && !mInAutoTransition) {
+                mInAutoTransition = true;
+                mScene->autoTransition(this, mCurrentState);
+                mInAutoTransition = false;
+            }
         }
     });
     mAnimator->start();
@@ -230,6 +243,16 @@ void MotionLayout::transitionToState(int stateId) {
     if (mAnimator != nullptr) mAnimator->cancel();
     applyTransition(t);
     animateTo(1.0f); // animate from the new start (=currentState) to the target end
+}
+
+void MotionLayout::applyTransitionForAuto(MotionScene::Transition* t, bool toEnd, bool jump) {
+    if (mScene == nullptr || t == nullptr) return;
+    mScene->setCurrentTransition(t);
+    if (mAnimator != nullptr) mAnimator->cancel();
+    applyTransition(t);
+    if (jump) setProgress(toEnd ? 1.0f : 0.0f);
+    else if (toEnd) animateTo(1.0f);
+    else            animateTo(0.0f);
 }
 
 void MotionLayout::addKeyAttributes(int viewId, MotionKeyAttributes* key) {

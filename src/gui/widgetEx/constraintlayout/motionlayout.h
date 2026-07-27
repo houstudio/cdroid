@@ -48,6 +48,8 @@ public:
     void setTransition(int transitionId);
     void setTransition(int startId, int endId);
     void transitionToState(int stateId);
+    // Used by MotionScene::autoTransition: switch to `t` and animate/jump to its end (or start).
+    void applyTransitionForAuto(MotionScene::Transition* t, bool toEnd, bool jump);
     int getCurrentState() const { return mCurrentState; }
 
     // Drive every child's Motion to `progress` in [0,1] and apply the interpolated state.
@@ -126,6 +128,7 @@ private:
     ValueAnimator* mAnimator = nullptr;
     std::unique_ptr<SpringStopEngine> mSpringEngine;
     bool mCaptured = false;
+    bool mInAutoTransition = false; // guards autoTransition re-entry
     bool mCapturePending = false; // setTransition called before the layout had a size
     bool mInCapture = false; // guard against re-entrant measure/layout during capture
     int mWidthSpec = 0;

@@ -736,6 +736,26 @@ TEST(ConstraintLayout, MotionSceneTransitionLookup) {
     EXPECT_EQ(scene.getCurrentTransition(), t1);
 }
 
+// autoTransition: a <Transition autoTransition="..."> is parsed; when the layout rests at the
+// matching endpoint MotionScene::autoTransition fires it (animate/jump to the other end).
+TEST(ConstraintLayout, MotionSceneAutoTransitionParse) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/A\" constraintSetEnd=\"@+id/B\" autoTransition=\"animateToEnd\" />"
+        "  <ConstraintSet android:id=\"@+id/A\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\"/></ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/B\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\"/></ConstraintSet>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    MotionScene scene(nullptr);
+    scene.load(&app, parser);
+
+    auto* t = scene.getCurrentTransition();
+    ASSERT_NE(t, nullptr);
+    EXPECT_EQ(t->getAutoTransition(), MotionScene::Transition::AUTO_ANIMATE_TO_END);
+}
+
 // <CustomAttribute> is parsed into the Constraint model and dispatched, at applyTo(), to an
 // externally-registered handler. The framework binds no attribute itself — the test registers a
 // "textColor" -> TextView::setTextColor handler (an app/widget-layer concern) and checks dispatch.

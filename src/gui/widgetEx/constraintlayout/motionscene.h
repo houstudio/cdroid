@@ -85,6 +85,10 @@ public:
         static constexpr int FLAG_JUMP_TO_END        = 0x0100;
         static constexpr int FLAG_JUMP_TO_START      = 0x1000;
 
+        // autoTransition: fire this transition automatically once the layout rests at an endpoint.
+        static constexpr int AUTO_NONE = 0, AUTO_JUMP_TO_START = 1, AUTO_JUMP_TO_END = 2,
+                             AUTO_ANIMATE_TO_START = 3, AUTO_ANIMATE_TO_END = 4;
+
         // Read the <Transition> element's own attributes from `attrs` (the parser is at the
         // START_TAG). Child elements (<KeyFrameSet>/<OnClick>) are handled by MotionScene::load
         // via setKeyFrames()/addOnClick().
@@ -97,6 +101,7 @@ public:
         int getEndId() const { return mConstraintSetEnd; }
         const std::string& getInterpolatorString() const { return mDefaultInterpolatorString; }
         int getPathMotionArc() const { return mPathMotionArc; }
+        int getAutoTransition() const { return mAutoTransition; }
         bool isAbstract() const { return mIsAbstract; }
         KeyFrames* getKeyFrames() const { return mKeyFrames.get(); }
         const std::vector<OnClick>& getOnClicks() const { return mOnClicks; }
@@ -114,6 +119,7 @@ public:
         float mStagger = 0;
         std::string mDefaultInterpolatorString;
         int mPathMotionArc = UNSET;
+        int mAutoTransition = AUTO_NONE;
         bool mIsAbstract = false;
         std::unique_ptr<KeyFrames> mKeyFrames;
         std::vector<OnClick> mOnClicks;
@@ -131,6 +137,8 @@ public:
 
     // The first non-abstract transition (the active one), or nullptr.
     Transition* getCurrentTransition() const { return mCurrentTransition; }
+    // Fire any transition whose autoTransition mode matches the layout resting at `currentState`.
+    bool autoTransition(class MotionLayout* layout, int currentState);
     Transition* getTransitionById(int id) const;              // by <Transition android:id>
     Transition* findTransition(int startId, int endId) const;  // matching both endpoints
     void setCurrentTransition(Transition* t) { mCurrentTransition = t; }
