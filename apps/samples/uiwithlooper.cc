@@ -1,6 +1,7 @@
 #include <cdroid.h>
 #include <porting/cdlog.h>
 #include <widget/candidateview.h>
+include <gui/text/inputtype.h>
 #include <core/countdowntimer.h>
 #include <thread>
 
@@ -14,7 +15,7 @@ int main(int argc,const char*argv[]){
     edit->setTextColor(0xFFFFFFFF);
     edit->setSingleLine(false);
     edit->setClickable(true);
-    edit->setInputType(EditText::TYPE_ANY);
+    edit->setInputType(InputType::TYPE_CLASS_TEXT);
     edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
     edit->setBackgroundColor(0xFFFF0000);
     w->addView(edit);

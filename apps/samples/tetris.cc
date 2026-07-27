@@ -108,7 +108,7 @@ private:
     Spinner*mLevelSelector;
     Button*mStartButton;
 protected:
-    bool onMessage(DWORD msgid,DWORD wp,ULONG lp);
+    bool onMessage(uin32_t msgid,uin32_t wp,uint64_t lp);
     void onDraw(Canvas&canvas)override;
     bool onKeyUp(int keyCode,KeyEvent&event)override;
 public:
@@ -276,7 +276,7 @@ bool TetrisWindow::onKeyUp(int keyCode,KeyEvent&event){
     return true;
 }
 
-bool TetrisWindow::onMessage(DWORD msgid,DWORD wp,ULONG lp){
+bool TetrisWindow::onMessage(uin32_t msgid,uin32_t wp,uint64_t lp){
     if((msgid==WM_REFRESH)&&(!mGameIsOver)){
          BlockMove(DOWN);
          invalidate(true);

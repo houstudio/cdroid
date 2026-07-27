@@ -1,6 +1,7 @@
-#include<cdroid.h>
-#include<cdlog.h>
-#include<widget/nestedscrollview.h>
+#include <cdroid.h>
+#include <porting/cdlog.h>
+#include <gui/text/inputtype.h>
+#include <widget/nestedscrollview.h>
 
 class MyAdapter:public ArrayAdapter<std::string>{
    private:
@@ -49,7 +50,7 @@ int main(int argc,const char*argv[]){
         edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
         //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
         edit->setSingleLine(true);
-        edit->setInputType(EditText::TYPE_ANY);
+        edit->setInputType(InputType::TYPE_CLASS_TEXT);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         edit->setBackgroundColor(0xFF000000|((i*8)<<16)|((i*8)<<8)|(i*8));
         edit->setTextSize(40);

@@ -14,15 +14,9 @@ public:
         canvas.rectangle(0,0,getWidth(),getHeight());
         canvas.fill();
         canvas.set_color(0xFFFFFFFF);
-#if 1
-        Layout ll(28,getWidth());
-        ll.setText(mText);
-        ll.draw(canvas); 
-#else
         canvas.set_font_size(28);
         canvas.move_to(0,getHeight()/4);
         canvas.show_text(mText);
-#endif
     }
 };
 class MyGroup:public ViewGroup{

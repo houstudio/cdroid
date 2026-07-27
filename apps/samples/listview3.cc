@@ -54,7 +54,7 @@ public:
     }
     void startMarqueeIfNeed(bool enableMarquee){
         name->setSingleLine(enableMarquee);
-        name->setEllipsize(enableMarquee?Layout::ELLIPSIS_MARQUEE:Layout::ELLIPSIS_NONE);
+        name->setEllipsize(enableMarquee?TextUtils::TruncateAt::MARQUEE:TextUtils::TruncateAt::NONE);
         name->setSelected(enableMarquee);
         requestLayout();
     }
