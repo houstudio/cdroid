@@ -81,14 +81,14 @@ const ConstraintLayoutStates::State* ConstraintLayoutStates::findState(int id) c
 // ===========================================================================
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
                                                const std::string& resourceId)
-    : mLayout(layout) {
+    : mLayout(layout), mContext(ctx) {
     XmlPullParser parser(ctx, resourceId);
     parse(ctx, parser);
 }
 
 ConstraintLayoutStates::ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout,
                                                XmlPullParser& parser)
-    : mLayout(layout) {
+    : mLayout(layout), mContext(ctx) {
     parse(ctx, parser);
 }
 
@@ -115,13 +115,15 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
             } else if (tag == "State") {
                 State s;
                 s.mId = getId(parser.getAttributeValue("id"));
-                s.mConstraintID = getId(parser.getAttributeValue("constraints"));
+                s.mConstraintsAttr = parser.getAttributeValue("constraints");
+                s.mConstraintID = getId(s.mConstraintsAttr);
                 mStates.push_back(s);
                 currentState = &mStates.back();
             } else if (tag == "Variant") {
                 if (currentState != nullptr) {
                     Variant v;
-                    v.mConstraintID = getId(parser.getAttributeValue("constraints"));
+                    v.mConstraintsAttr = parser.getAttributeValue("constraints");
+                    v.mConstraintID = getId(v.mConstraintsAttr);
                     v.mMinWidth  = parser.getFloat("region_widthMoreThan",  v.mMinWidth);
                     v.mMaxWidth  = parser.getFloat("region_widthLessThan",  v.mMaxWidth);
                     v.mMinHeight = parser.getFloat("region_heightMoreThan", v.mMinHeight);
@@ -143,19 +145,31 @@ void ConstraintLayoutStates::parse(Context* ctx, XmlPullParser& parser) {
     resolveConstraintRefs();
 }
 
+ConstraintSet* ConstraintLayoutStates::resolveConstraintRef(const std::string& attr) {
+    if (attr.empty()) return nullptr;
+    // A layout-resource ref ("@layout/foo" / ":layout/foo") -> clone the layout offscreen.
+    // An inline <ConstraintSet> ref ("@+id/x") -> look up the parsed map by scene-local id.
+    std::string body = attr;
+    if (!body.empty() && (body[0] == '@' || body[0] == ':')) body = body.substr(1); // "layout/foo" | "+id/x"
+    if (body.rfind("layout/", 0) == 0 && mContext != nullptr) {
+        auto set = std::make_shared<ConstraintSet>();
+        set->clone(mContext, body); // body == "layout/foo"
+        ConstraintSet* raw = set.get();
+        mClonedSets.push_back(std::move(set));
+        return raw;
+    }
+    const int id = getId(attr);
+    auto it = mConstraintSetMap.find(id);
+    return (it != mConstraintSetMap.end()) ? it->second.get() : nullptr;
+}
+
 void ConstraintLayoutStates::resolveConstraintRefs() {
-    // Wire each State/Variant `constraints` ref to its inline <ConstraintSet> (defined anywhere in
-    // the file, so resolved after the full parse). Layout-resource refs stay nullptr (clone deferred).
+    // Wire each State/Variant `constraints` ref to its ConstraintSet (inline ref or layout-resource
+    // clone). Done after the full parse so inline sets defined later in the file resolve too.
     for (auto& s : mStates) {
-        if (s.mConstraintID != -1) {
-            auto it = mConstraintSetMap.find(s.mConstraintID);
-            if (it != mConstraintSetMap.end()) s.mConstraintSet = it->second.get();
-        }
+        s.mConstraintSet = resolveConstraintRef(s.mConstraintsAttr);
         for (auto& v : s.mVariants) {
-            if (v.mConstraintID != -1) {
-                auto it = mConstraintSetMap.find(v.mConstraintID);
-                if (it != mConstraintSetMap.end()) v.mConstraintSet = it->second.get();
-            }
+            v.mConstraintSet = resolveConstraintRef(v.mConstraintsAttr);
         }
     }
 }

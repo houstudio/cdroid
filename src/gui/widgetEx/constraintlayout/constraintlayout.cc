@@ -5,6 +5,7 @@
  * MVP cut — see header.
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
 
 #include <algorithm>
@@ -152,6 +153,22 @@ ConstraintLayout::ConstraintLayout(Context* ctx, const AttributeSet& attrs)
     mMinHeight = attrs.getDimensionPixelSize("android_minHeight", 0);
     mMaxWidth  = attrs.getDimensionPixelSize("android_maxWidth", INT_MAX);
     mMaxHeight = attrs.getDimensionPixelSize("android_maxHeight", INT_MAX);
+
+    // app:layoutDescription may point at a <StateSet> (adaptive layout) for a ConstraintLayout, or a
+    // <MotionScene> for the MotionLayout subclass. Peek the root: build a StateSet only for non-
+    // MotionScene roots (MotionLayout builds its own scene from the same attr).
+    const std::string layoutDesc = attrs.getString("layoutDescription", "");
+    if (!layoutDesc.empty()) {
+        XmlPullParser parser(ctx, layoutDesc);
+        while (parser.getEventType() != XmlPullParser::START_TAG &&
+               parser.getEventType() != XmlPullParser::END_DOCUMENT &&
+               parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+            parser.next();
+        }
+        if (parser.getEventType() == XmlPullParser::START_TAG && parser.getName() != "MotionScene") {
+            mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(ctx, this, parser);
+        }
+    }
 }
 
 ConstraintLayout::ConstraintLayout(int width, int height)
