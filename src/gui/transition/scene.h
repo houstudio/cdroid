@@ -22,7 +22,7 @@
 #include <core/sparsearray.h>  // SparseArray (SparseArrayImpl<int,T>)
 #include <string>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class View;
@@ -39,8 +39,8 @@ class ViewGroup;
  * it inflates via LayoutInflater on enter(). The View-based and enter-action constructors — the
  * ones used by TransitionManager.beginDelayedTransition — work fully.
  */
-class Scene{
-public:
+class Scene {
+  public:
     explicit Scene(ViewGroup* sceneRoot);
     Scene(ViewGroup* sceneRoot, View* layout);
     Scene(ViewGroup* sceneRoot, ViewGroup* layout); // deprecated alias of (sceneRoot, View*)
@@ -58,9 +58,11 @@ public:
     void setEnterAction(const Runnable& action);
     void setExitAction(const Runnable& action);
 
-    bool isCreatedFromLayoutResource() const{ return mLayoutId > 0 || !mLayoutResource.empty(); }
+    bool isCreatedFromLayoutResource() const {
+        return mLayoutId > 0 || !mLayoutResource.empty();
+    }
 
-private:
+  private:
     // Private; layoutId-based scenes are created by the getSceneForLayout cache factory.
     Scene(ViewGroup* sceneRoot, int layoutId, Context* context);
     Scene(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context);

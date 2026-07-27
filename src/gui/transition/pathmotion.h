@@ -20,7 +20,7 @@
 
 #include <core/path.h> // cdroid::Path (android.graphics.Path naming)
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -33,10 +33,13 @@ class AttributeSet;
  * between the start and end positions. Applications that desire curved motion
  * extend PathMotion and implement #getPath to control two-dimensional interpolation.
  */
-class PathMotion{
-public:
+class PathMotion {
+  public:
     PathMotion() = default;
-    PathMotion(Context* context, AttributeSet* attrs){ (void)context; (void)attrs; }
+    PathMotion(Context* context, AttributeSet* attrs) {
+        (void)context;
+        (void)attrs;
+    }
     virtual ~PathMotion() = default;
 
     /**

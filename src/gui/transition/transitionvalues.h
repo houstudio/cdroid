@@ -24,7 +24,7 @@
 #include <vector>
 #include <core/any.h> // nonstd::any (any-lite, third-party — do not modify)
 
-namespace cdroid{
+namespace cdroid {
 
 class View;
 class Transition;
@@ -44,8 +44,8 @@ class Transition;
  * the start values and again for the end values. They are then passed into the
  * transitions via Transition#createAnimator.
  */
-class TransitionValues{
-public:
+class TransitionValues {
+  public:
     /** @deprecated Use TransitionValues(View) instead */
     TransitionValues() = default;
     explicit TransitionValues(View* view);
@@ -64,7 +64,7 @@ public:
     int  hashCode() const;
     std::string toString() const;
 
-private:
+  private:
     friend class Transition;
     friend class TransitionSet; // captureStart/EndValues adds child transitions
     // The Transitions that targeted this view (package-private in android).

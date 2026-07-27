@@ -25,21 +25,21 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 
-namespace cdroid{
+namespace cdroid {
 
 const std::vector<std::string> ChangeClipBounds::sTransitionProperties = {PROPNAME_CLIP};
 
-std::vector<std::string> ChangeClipBounds::getTransitionProperties(){
+std::vector<std::string> ChangeClipBounds::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void ChangeClipBounds::captureValues(TransitionValues& values){
+void ChangeClipBounds::captureValues(TransitionValues& values) {
     View* view = values.view;
-    if (view->getVisibility() == View::GONE){
+    if (view->getVisibility() == View::GONE) {
         return;
     }
     Rect clip;
-    if (view->getClipBounds(clip)){
+    if (view->getClipBounds(clip)) {
         values.values[PROPNAME_CLIP] = clip;          // clip present
     } else {
         values.values[PROPNAME_CLIP] = nonstd::any(); // null clip (empty any)
@@ -47,26 +47,26 @@ void ChangeClipBounds::captureValues(TransitionValues& values){
     }
 }
 
-void ChangeClipBounds::captureStartValues(TransitionValues& transitionValues){
+void ChangeClipBounds::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeClipBounds::captureEndValues(TransitionValues& transitionValues){
+void ChangeClipBounds::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
 Animator* ChangeClipBounds::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
+        TransitionValues* startValues, TransitionValues* endValues) {
     if (startValues == nullptr || endValues == nullptr
             || startValues->values.count(PROPNAME_CLIP) == 0
-            || endValues->values.count(PROPNAME_CLIP) == 0){
+            || endValues->values.count(PROPNAME_CLIP) == 0) {
         return nullptr;
     }
 
     // Resolve the (possibly null) clip Rect, falling back to PROPNAME_BOUNDS when null.
     auto resolve = [](TransitionValues* tv, bool& isNull) -> Rect{
         const nonstd::any& a = tv->values.at(PROPNAME_CLIP);
-        if (!a.has_value()){
+        if (!a.has_value()) {
             isNull = true;
             return nonstd::any_cast<Rect>(tv->values.at(PROPNAME_BOUNDS));
         }
@@ -77,20 +77,20 @@ Animator* ChangeClipBounds::createAnimator(ViewGroup* /*sceneRoot*/,
     bool endIsNull;
     Rect start = resolve(startValues, startNull);
     Rect end   = resolve(endValues, endIsNull);
-    if (startNull && endIsNull){
+    if (startNull && endIsNull) {
         return nullptr; // No animation required since there is no clip.
     }
-    if (start == end){
+    if (start == end) {
         return nullptr;
     }
 
     endValues->view->setClipBounds(&start);
     ObjectAnimator* animator = ObjectAnimator::ofObject(endValues->view, "clipBounds",
-            RectEvaluator, {start, end});
-    if (endIsNull){
+                               RectEvaluator, {start, end});
+    if (endIsNull) {
         View* endView = endValues->view;
         Animator::AnimatorListener listener;
-        listener.onAnimationEnd = [endView](Animator&, bool){
+        listener.onAnimationEnd = [endView](Animator&, bool) {
             endView->setClipBounds(nullptr);
         };
         animator->addListener(listener);

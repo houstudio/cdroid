@@ -11,7 +11,7 @@
 #include <transition/visibility.h>
 #include <view/gravity.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -20,30 +20,34 @@ class AttributeSet;
  * Tracks visibility changes and moves views in/out from one edge of the scene.
  * Ported from android-36 android.transition.Slide.
  */
-class Slide: public Visibility{
-public:
+class Slide: public Visibility {
+  public:
     Slide();
     explicit Slide(int slideEdge);
     Slide(Context* context, AttributeSet* attrs);
 
     void setSlideEdge(int slideEdge);
-    int getSlideEdge() const{ return mSlideEdge; }
+    int getSlideEdge() const {
+        return mSlideEdge;
+    }
 
     Animator* onAppear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                       TransitionValues* startValues, TransitionValues* endValues) override;
     Animator* onDisappear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                          TransitionValues* startValues, TransitionValues* endValues) override;
 
-    void setSlideFraction(float slideFraction){ mSlideFraction = slideFraction; }
+    void setSlideFraction(float slideFraction) {
+        mSlideFraction = slideFraction;
+    }
 
-protected:
+  protected:
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
 
-private:
+  private:
     // android: CalculateSlide interface + Horizontal/Vertical abstract bases + 6 impls.
     // C++: a struct of two callables (getGoneX/getGoneY); the 6 instances are static.
-    struct CalculateSlide{
+    struct CalculateSlide {
         std::function<float(ViewGroup*, View*, float)> getGoneX;
         std::function<float(ViewGroup*, View*, float)> getGoneY;
     };

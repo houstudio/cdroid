@@ -21,7 +21,7 @@
 #include <vector>
 #include <utility>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * Lightweight ordered associative container backed by a std::vector of pairs.
@@ -37,15 +37,21 @@ namespace cdroid{
  * per-transition maps it backs).
  */
 template<typename K, typename V>
-class ArrayMap{
-public:
+class ArrayMap {
+  public:
     using value_type = std::pair<K, V>;
 
     ArrayMap() = default;
 
-    bool isEmpty() const { return mEntries.empty(); }
-    int  size() const { return (int)mEntries.size(); }
-    bool containsKey(const K& key) const { return indexOfKey(key) >= 0; }
+    bool isEmpty() const {
+        return mEntries.empty();
+    }
+    int  size() const {
+        return (int)mEntries.size();
+    }
+    bool containsKey(const K& key) const {
+        return indexOfKey(key) >= 0;
+    }
 
     int indexOfKey(const K& key) const {
         for (size_t i = 0; i < mEntries.size(); ++i) {
@@ -86,27 +92,49 @@ public:
         return true;
     }
 
-    const K& keyAt(int index) const { return mEntries.at(index).first; }
-    V&       valueAt(int index)     { return mEntries.at(index).second; }
-    const V& valueAt(int index) const { return mEntries.at(index).second; }
+    const K& keyAt(int index) const {
+        return mEntries.at(index).first;
+    }
+    V&       valueAt(int index)     {
+        return mEntries.at(index).second;
+    }
+    const V& valueAt(int index) const {
+        return mEntries.at(index).second;
+    }
 
     // Pointer access (nullptr if out of range). Convenient for the "may be absent"
     // patterns in Transition (e.g. fetching AnimationInfo from the running-animators map).
-    V*       valueAtPtr(int index)       { return (index >= 0 && index < (int)mEntries.size()) ? &mEntries[index].second : nullptr; }
-    const V* valueAtPtr(int index) const { return (index >= 0 && index < (int)mEntries.size()) ? &mEntries[index].second : nullptr; }
+    V*       valueAtPtr(int index)       {
+        return (index >= 0 && index < (int)mEntries.size()) ? &mEntries[index].second : nullptr;
+    }
+    const V* valueAtPtr(int index) const {
+        return (index >= 0 && index < (int)mEntries.size()) ? &mEntries[index].second : nullptr;
+    }
 
     // Removes the entry at index, shifting later entries down (android ArrayMap#removeAt).
-    void removeAt(int index) { mEntries.erase(mEntries.begin() + index); }
+    void removeAt(int index) {
+        mEntries.erase(mEntries.begin() + index);
+    }
 
-    void clear() { mEntries.clear(); }
+    void clear() {
+        mEntries.clear();
+    }
 
     // Range-for over (key,value) pairs.
-    typename std::vector<value_type>::iterator begin() { return mEntries.begin(); }
-    typename std::vector<value_type>::iterator end()   { return mEntries.end(); }
-    typename std::vector<value_type>::const_iterator begin() const { return mEntries.begin(); }
-    typename std::vector<value_type>::const_iterator end()   const { return mEntries.end(); }
+    typename std::vector<value_type>::iterator begin() {
+        return mEntries.begin();
+    }
+    typename std::vector<value_type>::iterator end()   {
+        return mEntries.end();
+    }
+    typename std::vector<value_type>::const_iterator begin() const {
+        return mEntries.begin();
+    }
+    typename std::vector<value_type>::const_iterator end()   const {
+        return mEntries.end();
+    }
 
-private:
+  private:
     std::vector<value_type> mEntries;
 };
 

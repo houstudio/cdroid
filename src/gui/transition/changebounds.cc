@@ -35,68 +35,78 @@
 #include <transition/transitionlisteneradapter.h>
 #include <transition/transitionutils.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
 // ---- PointF properties driving View bounds along a Path ----
 // android: anonymous Property<View,PointF> subclasses. Named here.
 
-class PositionProperty: public Property{
-public:
-    PositionProperty():Property("position"){}
-    void set(void* object, const AnimateValue& value) const override{
+class PositionProperty: public Property {
+  public:
+    PositionProperty():Property("position") {}
+    void set(void* object, const AnimateValue& value) const override {
         View* view = (View*)object;
         PointF p = GET_VARIANT(value, PointF);
         int left = (int)lround(p.x);
         int top  = (int)lround(p.y);
         view->setLeftTopRightBottom(left, top, left + view->getWidth(), top + view->getHeight());
     }
-    AnimateValue get(void*) const override{ return PointF{}; }
+    AnimateValue get(void*) const override {
+        return PointF{};
+    }
 };
 
-class TopLeftOnlyProperty: public Property{
-public:
-    TopLeftOnlyProperty():Property("topLeft"){}
-    void set(void* object, const AnimateValue& value) const override{
+class TopLeftOnlyProperty: public Property {
+  public:
+    TopLeftOnlyProperty():Property("topLeft") {}
+    void set(void* object, const AnimateValue& value) const override {
         View* view = (View*)object;
         PointF p = GET_VARIANT(value, PointF);
         view->setLeftTopRightBottom((int)lround(p.x), (int)lround(p.y), view->getRight(), view->getBottom());
     }
-    AnimateValue get(void*) const override{ return PointF{}; }
+    AnimateValue get(void*) const override {
+        return PointF{};
+    }
 };
 
-class BottomRightOnlyProperty: public Property{
-public:
-    BottomRightOnlyProperty():Property("bottomRight"){}
-    void set(void* object, const AnimateValue& value) const override{
+class BottomRightOnlyProperty: public Property {
+  public:
+    BottomRightOnlyProperty():Property("bottomRight") {}
+    void set(void* object, const AnimateValue& value) const override {
         View* view = (View*)object;
         PointF p = GET_VARIANT(value, PointF);
         view->setLeftTopRightBottom(view->getLeft(), view->getTop(), (int)lround(p.x), (int)lround(p.y));
     }
-    AnimateValue get(void*) const override{ return PointF{}; }
+    AnimateValue get(void*) const override {
+        return PointF{};
+    }
 };
 
 // android: private static nested ViewBounds. File-local here (pure impl helper); receives
 // the two PointF animators (top-left + bottom-right) and applies both to the view once each
 // pair arrives, avoiding intermediate layout glitches.
-class ViewBounds{
-public:
-    explicit ViewBounds(View* view): mView(view){}
-    void setTopLeft(const PointF& topLeft){
+class ViewBounds {
+  public:
+    explicit ViewBounds(View* view): mView(view) {}
+    void setTopLeft(const PointF& topLeft) {
         mLeft = (int)lround(topLeft.x);
         mTop  = (int)lround(topLeft.y);
         mTopLeftCalls++;
-        if (mTopLeftCalls == mBottomRightCalls){ apply(); }
+        if (mTopLeftCalls == mBottomRightCalls) {
+            apply();
+        }
     }
-    void setBottomRight(const PointF& bottomRight){
+    void setBottomRight(const PointF& bottomRight) {
         mRight  = (int)lround(bottomRight.x);
         mBottom = (int)lround(bottomRight.y);
         mBottomRightCalls++;
-        if (mTopLeftCalls == mBottomRightCalls){ apply(); }
+        if (mTopLeftCalls == mBottomRightCalls) {
+            apply();
+        }
     }
-private:
-    void apply(){
+  private:
+    void apply() {
         mView->setLeftTopRightBottom(mLeft, mTop, mRight, mBottom);
         mTopLeftCalls = 0;
         mBottomRightCalls = 0;
@@ -106,22 +116,26 @@ private:
     int mTopLeftCalls = 0, mBottomRightCalls = 0;
 };
 
-class TopLeftProperty: public Property{
-public:
-    TopLeftProperty():Property("topLeft"){}
-    void set(void* object, const AnimateValue& value) const override{
+class TopLeftProperty: public Property {
+  public:
+    TopLeftProperty():Property("topLeft") {}
+    void set(void* object, const AnimateValue& value) const override {
         ((ViewBounds*)object)->setTopLeft(GET_VARIANT(value, PointF));
     }
-    AnimateValue get(void*) const override{ return PointF{}; }
+    AnimateValue get(void*) const override {
+        return PointF{};
+    }
 };
 
-class BottomRightProperty: public Property{
-public:
-    BottomRightProperty():Property("bottomRight"){}
-    void set(void* object, const AnimateValue& value) const override{
+class BottomRightProperty: public Property {
+  public:
+    BottomRightProperty():Property("bottomRight") {}
+    void set(void* object, const AnimateValue& value) const override {
         ((ViewBounds*)object)->setBottomRight(GET_VARIANT(value, PointF));
     }
-    AnimateValue get(void*) const override{ return PointF{}; }
+    AnimateValue get(void*) const override {
+        return PointF{};
+    }
 };
 
 PositionProperty       POSITION_PROPERTY;
@@ -132,66 +146,79 @@ BottomRightProperty    BOTTOM_RIGHT_PROPERTY;
 
 // android: anonymous TransitionListenerAdapter that suppresses layout on the parent during
 // the bounds animation. Named here.
-struct SuppressLayoutListener: public TransitionListenerAdapter{
+struct SuppressLayoutListener: public TransitionListenerAdapter {
     ViewGroup* parent;
     bool mCanceled = false;
-    void onTransitionCancel(Transition&) override{ parent->suppressLayout(false); mCanceled = true; }
-    void onTransitionEnd(Transition& t) override{ if (!mCanceled){ parent->suppressLayout(false); } t.removeListener(this); }
-    void onTransitionPause(Transition&) override{ parent->suppressLayout(false); }
-    void onTransitionResume(Transition&) override{ parent->suppressLayout(true); }
+    void onTransitionCancel(Transition&) override {
+        parent->suppressLayout(false);
+        mCanceled = true;
+    }
+    void onTransitionEnd(Transition& t) override {
+        if (!mCanceled) {
+            parent->suppressLayout(false);
+        }
+        t.removeListener(this);
+    }
+    void onTransitionPause(Transition&) override {
+        parent->suppressLayout(false);
+    }
+    void onTransitionResume(Transition&) override {
+        parent->suppressLayout(true);
+    }
 };
 
 } // anonymous namespace
 
 const std::vector<std::string> ChangeBounds::sTransitionProperties = {
-    PROPNAME_BOUNDS, PROPNAME_CLIP, PROPNAME_PARENT, PROPNAME_WINDOW_X, PROPNAME_WINDOW_Y};
+    PROPNAME_BOUNDS, PROPNAME_CLIP, PROPNAME_PARENT, PROPNAME_WINDOW_X, PROPNAME_WINDOW_Y
+};
 
 ChangeBounds::ChangeBounds() = default;
 
 ChangeBounds::ChangeBounds(Context* context, AttributeSet* attrs)
-    : Transition(context, attrs){
+    : Transition(context, attrs) {
     // android: obtainStyledAttributes(attrs, R.styleable.ChangeBounds) → resizeClip.
-    if (attrs != nullptr){
+    if (attrs != nullptr) {
         std::string v = attrs->getAttributeValue("resizeClip");
         setResizeClip(v == "true" || v == "1");
     }
 }
 
-std::vector<std::string> ChangeBounds::getTransitionProperties(){
+std::vector<std::string> ChangeBounds::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void ChangeBounds::captureValues(TransitionValues& values){
+void ChangeBounds::captureValues(TransitionValues& values) {
     View* view = values.view;
-    if (view->isLaidOut() || view->getWidth() != 0 || view->getHeight() != 0){
+    if (view->isLaidOut() || view->getWidth() != 0 || view->getHeight() != 0) {
         values.values[PROPNAME_BOUNDS] = Rect::MakeLTRB(view->getLeft(), view->getTop(),
-                view->getRight(), view->getBottom());
+                                         view->getRight(), view->getBottom());
         values.values[PROPNAME_PARENT] = view->getParent(); // ViewGroup*
-        if (mReparent){
+        if (mReparent) {
             // CDROID: getLocationInWindow not wired for the reparent bitmap path; values stay
             // absent and the reparent branch in createAnimator is a no-op.
         }
-        if (mResizeClip){
+        if (mResizeClip) {
             Rect clip;
-            if (view->getClipBounds(clip)){
+            if (view->getClipBounds(clip)) {
                 values.values[PROPNAME_CLIP] = clip;
             }
         }
     }
 }
 
-void ChangeBounds::captureStartValues(TransitionValues& transitionValues){
+void ChangeBounds::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeBounds::captureEndValues(TransitionValues& transitionValues){
+void ChangeBounds::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-bool ChangeBounds::parentMatches(ViewGroup* startParent, ViewGroup* endParent){
-    if (mReparent){
+bool ChangeBounds::parentMatches(ViewGroup* startParent, ViewGroup* endParent) {
+    if (mReparent) {
         TransitionValues* endValues = getMatchedTransitionValues(startParent, true);
-        if (endValues == nullptr){
+        if (endValues == nullptr) {
             return startParent == endParent;
         }
         return endParent == endValues->view;
@@ -200,17 +227,17 @@ bool ChangeBounds::parentMatches(ViewGroup* startParent, ViewGroup* endParent){
 }
 
 Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
-    if (startValues == nullptr || endValues == nullptr){
+                                       TransitionValues* startValues, TransitionValues* endValues) {
+    if (startValues == nullptr || endValues == nullptr) {
         return nullptr;
     }
     ViewGroup* startParent = nonstd::any_cast<ViewGroup*>(startValues->values.at(PROPNAME_PARENT));
     ViewGroup* endParent   = nonstd::any_cast<ViewGroup*>(endValues->values.at(PROPNAME_PARENT));
-    if (startParent == nullptr || endParent == nullptr){
+    if (startParent == nullptr || endParent == nullptr) {
         return nullptr;
     }
     View* view = endValues->view;
-    if (parentMatches(startParent, endParent)){
+    if (parentMatches(startParent, endParent)) {
         Rect startBounds = nonstd::any_cast<Rect>(startValues->values.at(PROPNAME_BOUNDS));
         Rect endBounds   = nonstd::any_cast<Rect>(endValues->values.at(PROPNAME_BOUNDS));
         const int startLeft = startBounds.left,    endLeft = endBounds.left;
@@ -223,24 +250,32 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
         bool startClipPresent = startValues->values.count(PROPNAME_CLIP) != 0;
         bool endClipPresent   = endValues->values.count(PROPNAME_CLIP) != 0;
         Rect startClip, endClip;
-        if (startClipPresent){ startClip = nonstd::any_cast<Rect>(startValues->values.at(PROPNAME_CLIP)); }
-        if (endClipPresent){ endClip = nonstd::any_cast<Rect>(endValues->values.at(PROPNAME_CLIP)); }
+        if (startClipPresent) {
+            startClip = nonstd::any_cast<Rect>(startValues->values.at(PROPNAME_CLIP));
+        }
+        if (endClipPresent) {
+            endClip = nonstd::any_cast<Rect>(endValues->values.at(PROPNAME_CLIP));
+        }
 
         int numChanges = 0;
-        if ((startWidth != 0 && startHeight != 0) || (endWidth != 0 && endHeight != 0)){
-            if (startLeft != endLeft || startTop != endTop){ ++numChanges; }
-            if (startRight != endRight || startBottom != endBottom){ ++numChanges; }
+        if ((startWidth != 0 && startHeight != 0) || (endWidth != 0 && endHeight != 0)) {
+            if (startLeft != endLeft || startTop != endTop) {
+                ++numChanges;
+            }
+            if (startRight != endRight || startBottom != endBottom) {
+                ++numChanges;
+            }
         }
         if ((startClipPresent && !endClipPresent) ||
                 (startClipPresent && endClipPresent && !(startClip == endClip)) ||
-                (!startClipPresent && endClipPresent)){
+                (!startClipPresent && endClipPresent)) {
             ++numChanges;
         }
-        if (numChanges == 0){
+        if (numChanges == 0) {
             return nullptr;
         }
 
-        if (dynamic_cast<ViewGroup*>(view->getParent()) != nullptr){
+        if (dynamic_cast<ViewGroup*>(view->getParent()) != nullptr) {
             ViewGroup* parent = static_cast<ViewGroup*>(view->getParent());
             parent->suppressLayout(true);
             SuppressLayoutListener* l = new SuppressLayoutListener();
@@ -249,10 +284,10 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
         }
 
         Animator* anim = nullptr;
-        if (!mResizeClip){
+        if (!mResizeClip) {
             view->setLeftTopRightBottom(startLeft, startTop, startRight, startBottom);
-            if (numChanges == 2){
-                if (startWidth == endWidth && startHeight == endHeight){
+            if (numChanges == 2) {
+                if (startWidth == endWidth && startHeight == endHeight) {
                     Path topLeftPath = getPathMotion()->getPath(startLeft, startTop, endLeft, endTop);
                     anim = ObjectAnimator::ofObject(view, &POSITION_PROPERTY, nullptr, topLeftPath);
                 } else {
@@ -265,7 +300,7 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
                     set->playTogether({topLeftAnimator, bottomRightAnimator});
                     anim = set;
                 }
-            } else if (startLeft != endLeft || startTop != endTop){
+            } else if (startLeft != endLeft || startTop != endTop) {
                 Path topLeftPath = getPathMotion()->getPath(startLeft, startTop, endLeft, endTop);
                 anim = ObjectAnimator::ofObject(view, &TOP_LEFT_ONLY_PROPERTY, nullptr, topLeftPath);
             } else {
@@ -278,7 +313,7 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
             view->setLeftTopRightBottom(startLeft, startTop, startLeft + maxWidth, startTop + maxHeight);
 
             ObjectAnimator* positionAnimator = nullptr;
-            if (startLeft != endLeft || startTop != endTop){
+            if (startLeft != endLeft || startTop != endTop) {
                 Path topLeftPath = getPathMotion()->getPath(startLeft, startTop, endLeft, endTop);
                 positionAnimator = ObjectAnimator::ofObject(view, &POSITION_PROPERTY, nullptr, topLeftPath);
             }
@@ -286,14 +321,14 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
             Rect startClipLocal = startClipPresent ? startClip : Rect{0, 0, startWidth, startHeight};
             Rect endClipLocal   = endClipPresent   ? endClip   : Rect{0, 0, endWidth, endHeight};
             ObjectAnimator* clipAnimator = nullptr;
-            if (!(startClipLocal == endClipLocal)){
+            if (!(startClipLocal == endClipLocal)) {
                 view->setClipBounds(&startClipLocal);
                 clipAnimator = ObjectAnimator::ofObject(view, "clipBounds", RectEvaluator,
-                        {startClipLocal, endClipLocal});
+                {startClipLocal, endClipLocal});
                 Animator::AnimatorListener clipListener;
                 Rect finalClip = endClip;
-                clipListener.onAnimationEnd = [view, finalClip, endClipPresent, endLeft, endTop, endRight, endBottom](Animator&, bool){
-                    if (view){
+                clipListener.onAnimationEnd = [view, finalClip, endClipPresent, endLeft, endTop, endRight, endBottom](Animator&, bool) {
+                    if (view) {
                         view->setClipBounds(endClipPresent ? &finalClip : nullptr);
                         view->setLeftTopRightBottom(endLeft, endTop, endRight, endBottom);
                     }

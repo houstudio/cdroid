@@ -15,7 +15,7 @@
 
 #include <transition/pathmotion.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -24,18 +24,20 @@ class AttributeSet;
  * A PathMotion that takes a Path pattern and translates/rotates/scales it to fit between two
  * points. Ported from android-36 android.transition.PatternPathMotion.
  */
-class PatternPathMotion: public PathMotion{
-public:
+class PatternPathMotion: public PathMotion {
+  public:
     PatternPathMotion();
     PatternPathMotion(Context* context, AttributeSet* attrs);
     explicit PatternPathMotion(const Path& patternPath);
 
-    Path getPatternPath() const{ return mOriginalPatternPath; }
+    Path getPatternPath() const {
+        return mOriginalPatternPath;
+    }
     void setPatternPath(const Path& patternPath);
 
     Path getPath(float startX, float startY, float endX, float endY) override;
 
-private:
+  private:
     Path mOriginalPatternPath;
     Path mPatternPath;
     Cairo::Matrix mTempMatrix;

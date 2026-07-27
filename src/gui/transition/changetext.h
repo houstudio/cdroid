@@ -23,7 +23,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -43,27 +43,33 @@ class EditText;
  * UTF-8 std::string at capture time and restores via setText(string). Spans are not
  * preserved across the transition (acceptable for a text-swap animation).
  */
-class ChangeText: public Transition{
-public:
+class ChangeText: public Transition {
+  public:
     static constexpr int CHANGE_BEHAVIOR_KEEP  = 0;
     static constexpr int CHANGE_BEHAVIOR_OUT   = 1;
     static constexpr int CHANGE_BEHAVIOR_IN    = 2;
     static constexpr int CHANGE_BEHAVIOR_OUT_IN = 3;
 
     ChangeText() = default;
-    ChangeText(Context* context, AttributeSet* attrs): Transition(context, attrs){}
+    ChangeText(Context* context, AttributeSet* attrs): Transition(context, attrs) {}
 
     ChangeText& setChangeBehavior(int changeBehavior);
-    int getChangeBehavior() const{ return mChangeBehavior; }
+    int getChangeBehavior() const {
+        return mChangeBehavior;
+    }
     std::vector<std::string> getTransitionProperties() override;
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeText* clone() const override{ ChangeText* c = new ChangeText(*this); copyCloneFields(c); return c; }
+    ChangeText* clone() const override {
+        ChangeText* c = new ChangeText(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& transitionValues);
 
     int mChangeBehavior = CHANGE_BEHAVIOR_KEEP;

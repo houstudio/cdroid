@@ -18,23 +18,23 @@
 #include <transition/circularpropagation.h>
 #include <transition/translationanimationcreator.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 DecelerateInterpolator sDecelerate;
 AccelerateInterpolator sAccelerate;
 } // anonymous namespace
 
-Explode::Explode(){
+Explode::Explode() {
     setPropagation(new CircularPropagation());
 }
 
 Explode::Explode(Context* context, AttributeSet* attrs)
-    : Visibility(context, attrs){
+    : Visibility(context, attrs) {
     setPropagation(new CircularPropagation());
 }
 
-void Explode::captureValues(TransitionValues& transitionValues){
+void Explode::captureValues(TransitionValues& transitionValues) {
     View* view = transitionValues.view;
     view->getLocationOnScreen(mTempLoc);
     int left = mTempLoc[0];
@@ -44,19 +44,19 @@ void Explode::captureValues(TransitionValues& transitionValues){
     transitionValues.values[PROPNAME_SCREEN_BOUNDS] = Rect::MakeLTRB(left, top, right, bottom);
 }
 
-void Explode::captureStartValues(TransitionValues& transitionValues){
+void Explode::captureStartValues(TransitionValues& transitionValues) {
     Visibility::captureStartValues(transitionValues);
     captureValues(transitionValues);
 }
 
-void Explode::captureEndValues(TransitionValues& transitionValues){
+void Explode::captureEndValues(TransitionValues& transitionValues) {
     Visibility::captureEndValues(transitionValues);
     captureValues(transitionValues);
 }
 
 Animator* Explode::onAppear(ViewGroup* sceneRoot, View* view,
-        TransitionValues* /*startValues*/, TransitionValues* endValues){
-    if (endValues == nullptr){
+                            TransitionValues* /*startValues*/, TransitionValues* endValues) {
+    if (endValues == nullptr) {
         return nullptr;
     }
     Rect bounds = nonstd::any_cast<Rect>(endValues->values.at(PROPNAME_SCREEN_BOUNDS));
@@ -70,8 +70,8 @@ Animator* Explode::onAppear(ViewGroup* sceneRoot, View* view,
 }
 
 Animator* Explode::onDisappear(ViewGroup* sceneRoot, View* view,
-        TransitionValues* startValues, TransitionValues* /*endValues*/){
-    if (startValues == nullptr){
+                               TransitionValues* startValues, TransitionValues* /*endValues*/) {
+    if (startValues == nullptr) {
         return nullptr;
     }
     Rect bounds = nonstd::any_cast<Rect>(startValues->values.at(PROPNAME_SCREEN_BOUNDS));
@@ -82,7 +82,7 @@ Animator* Explode::onDisappear(ViewGroup* sceneRoot, View* view,
     float endX = startX;
     float endY = startY;
     int* interruptedPosition = static_cast<int*>(startValues->view->getTag(R::id::transitionPosition));
-    if (interruptedPosition != nullptr){
+    if (interruptedPosition != nullptr) {
         // End position relative to the interrupted position, not the original start.
         endX += interruptedPosition[0] - bounds.left;
         endY += interruptedPosition[1] - bounds.top;
@@ -95,13 +95,13 @@ Animator* Explode::onDisappear(ViewGroup* sceneRoot, View* view,
             startX, startY, endX, endY, &sAccelerate, this);
 }
 
-void Explode::calculateOut(View* sceneRoot, Rect& bounds, int* outVector){
+void Explode::calculateOut(View* sceneRoot, Rect& bounds, int* outVector) {
     sceneRoot->getLocationOnScreen(mTempLoc);
     int sceneRootX = mTempLoc[0];
     int sceneRootY = mTempLoc[1];
     int focalX;
     int focalY;
-    if (getEpicenterCallback() == nullptr){
+    if (getEpicenterCallback() == nullptr) {
         focalX = sceneRootX + (sceneRoot->getWidth() / 2) + (int)lround(sceneRoot->getTranslationX());
         focalY = sceneRootY + (sceneRoot->getHeight() / 2) + (int)lround(sceneRoot->getTranslationY());
     } else {
@@ -114,7 +114,7 @@ void Explode::calculateOut(View* sceneRoot, Rect& bounds, int* outVector){
     int centerY = bounds.centerY();
     double xVector = centerX - focalX;
     double yVector = centerY - focalY;
-    if (xVector == 0 && yVector == 0){
+    if (xVector == 0 && yVector == 0) {
         // Random direction when View is centered on focal View.
         xVector = ((double)std::rand() / RAND_MAX) * 2 - 1;
         yVector = ((double)std::rand() / RAND_MAX) * 2 - 1;
@@ -127,7 +127,7 @@ void Explode::calculateOut(View* sceneRoot, Rect& bounds, int* outVector){
     outVector[1] = (int)lround(maxDistance * yVector);
 }
 
-double Explode::calculateMaxDistance(View* sceneRoot, int focalX, int focalY){
+double Explode::calculateMaxDistance(View* sceneRoot, int focalX, int focalY) {
     int maxX = std::max(focalX, sceneRoot->getWidth() - focalX);
     int maxY = std::max(focalY, sceneRoot->getHeight() - focalY);
     return std::hypot(maxX, maxY);

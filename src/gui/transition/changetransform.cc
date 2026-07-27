@@ -16,15 +16,15 @@
 
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
-bool matrixEquals(const Cairo::Matrix& a, const Cairo::Matrix& b){
+bool matrixEquals(const Cairo::Matrix& a, const Cairo::Matrix& b) {
     return a.xx == b.xx && a.yx == b.yx && a.xy == b.xy && a.yy == b.yy && a.x0 == b.x0 && a.y0 == b.y0;
 }
 
-Cairo::Matrix lerpMatrix(const Cairo::Matrix& s, const Cairo::Matrix& e, float f){
+Cairo::Matrix lerpMatrix(const Cairo::Matrix& s, const Cairo::Matrix& e, float f) {
     Cairo::Matrix m;
     m.xx = s.xx + (e.xx - s.xx) * f;
     m.yx = s.yx + (e.yx - s.yx) * f;
@@ -36,28 +36,33 @@ Cairo::Matrix lerpMatrix(const Cairo::Matrix& s, const Cairo::Matrix& e, float f
 }
 
 // android: GhostListener — removes the ghost on transition end, toggles visibility on pause/resume.
-struct GhostListener: public TransitionListenerAdapter{
+struct GhostListener: public TransitionListenerAdapter {
     View* mView;
     View* mStartView;
     GhostView* mGhostView;
     GhostListener(View* view, View* startView, GhostView* ghostView)
-        : mView(view), mStartView(startView), mGhostView(ghostView){}
-    void onTransitionEnd(Transition& t) override{
+        : mView(view), mStartView(startView), mGhostView(ghostView) {}
+    void onTransitionEnd(Transition& t) override {
         GhostView::removeGhost(mView);
         mStartView->setTransitionAlpha(1);
         t.removeListener(this);
     }
-    void onTransitionPause(Transition&) override{ mGhostView->setVisibility(View::INVISIBLE); }
-    void onTransitionResume(Transition&) override{ mGhostView->setVisibility(View::VISIBLE); }
+    void onTransitionPause(Transition&) override {
+        mGhostView->setVisibility(View::INVISIBLE);
+    }
+    void onTransitionResume(Transition&) override {
+        mGhostView->setVisibility(View::VISIBLE);
+    }
 };
 
 } // anonymous namespace
 
 const std::vector<std::string> ChangeTransform::sTransitionProperties = {
-    PROPNAME_MATRIX, PROPNAME_TRANSFORMS, PROPNAME_PARENT_MATRIX};
+    PROPNAME_MATRIX, PROPNAME_TRANSFORMS, PROPNAME_PARENT_MATRIX
+};
 
 // ---- Transforms ----
-ChangeTransform::Transforms::Transforms(View* view){
+ChangeTransform::Transforms::Transforms(View* view) {
     translationX = view->getTranslationX();
     translationY = view->getTranslationY();
     translationZ = view->getTranslationZ();
@@ -68,12 +73,12 @@ ChangeTransform::Transforms::Transforms(View* view){
     rotationZ = view->getRotation();
 }
 
-void ChangeTransform::Transforms::restore(View* view) const{
+void ChangeTransform::Transforms::restore(View* view) const {
     setTransforms(view, translationX, translationY, translationZ, scaleX, scaleY, rotationX, rotationY, rotationZ);
 }
 
 void ChangeTransform::setTransforms(View* view, float tx, float ty, float tz,
-        float sx, float sy, float rx, float ry, float rz){
+                                    float sx, float sy, float rx, float ry, float rz) {
     view->setTranslationX(tx);
     view->setTranslationY(ty);
     view->setTranslationZ(tz);
@@ -84,23 +89,23 @@ void ChangeTransform::setTransforms(View* view, float tx, float ty, float tz,
     view->setRotation(rz);
 }
 
-void ChangeTransform::setIdentityTransforms(View* view){
+void ChangeTransform::setIdentityTransforms(View* view) {
     setTransforms(view, 0, 0, 0, 1, 1, 0, 0, 0);
 }
 
-std::vector<std::string> ChangeTransform::getTransitionProperties(){
+std::vector<std::string> ChangeTransform::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void ChangeTransform::captureValues(TransitionValues& transitionValues){
+void ChangeTransform::captureValues(TransitionValues& transitionValues) {
     View* view = transitionValues.view;
-    if (view->getVisibility() == View::GONE){
+    if (view->getVisibility() == View::GONE) {
         return;
     }
     transitionValues.values[PROPNAME_PARENT] = view->getParent(); // ViewGroup*
     transitionValues.values[PROPNAME_TRANSFORMS] = Transforms(view);
     transitionValues.values[PROPNAME_MATRIX] = view->getMatrix(); // Cairo::Matrix copy
-    if (mReparent){
+    if (mReparent) {
         ViewGroup* parent = view->getParent();
         Cairo::Matrix parentMatrix;
         parent->transformMatrixToGlobal(parentMatrix);
@@ -110,30 +115,30 @@ void ChangeTransform::captureValues(TransitionValues& transitionValues){
     }
 }
 
-void ChangeTransform::captureStartValues(TransitionValues& transitionValues){
+void ChangeTransform::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeTransform::captureEndValues(TransitionValues& transitionValues){
+void ChangeTransform::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-bool ChangeTransform_parentsMatch(Transition* self, ViewGroup* startParent, ViewGroup* endParent){
-    if (!self->isValidTarget(startParent) || !self->isValidTarget(endParent)){
+bool ChangeTransform_parentsMatch(Transition* self, ViewGroup* startParent, ViewGroup* endParent) {
+    if (!self->isValidTarget(startParent) || !self->isValidTarget(endParent)) {
         return startParent == endParent;
     }
     TransitionValues* endValues = self->getMatchedTransitionValues(startParent, true);
-    if (endValues != nullptr){
+    if (endValues != nullptr) {
         return endParent == endValues->view;
     }
     return false;
 }
 
 Animator* ChangeTransform::createAnimator(ViewGroup* sceneRoot,
-        TransitionValues* startValues, TransitionValues* endValues){
+        TransitionValues* startValues, TransitionValues* endValues) {
     if (startValues == nullptr || endValues == nullptr
             || startValues->values.count(PROPNAME_PARENT) == 0
-            || endValues->values.count(PROPNAME_PARENT) == 0){
+            || endValues->values.count(PROPNAME_PARENT) == 0) {
         return nullptr;
     }
     ViewGroup* startParent = nonstd::any_cast<ViewGroup*>(startValues->values.at(PROPNAME_PARENT));
@@ -147,7 +152,7 @@ Animator* ChangeTransform::createAnimator(ViewGroup* sceneRoot,
 
     Cairo::Matrix startMatrix = nonstd::any_cast<Cairo::Matrix>(startValues->values.at(PROPNAME_MATRIX));
     Cairo::Matrix endMatrix   = nonstd::any_cast<Cairo::Matrix>(endValues->values.at(PROPNAME_MATRIX));
-    if (matrixEquals(startMatrix, endMatrix)){
+    if (matrixEquals(startMatrix, endMatrix)) {
         return nullptr;
     }
 
@@ -156,23 +161,23 @@ Animator* ChangeTransform::createAnimator(ViewGroup* sceneRoot,
     setIdentityTransforms(view);
 
     ValueAnimator* anim = ValueAnimator::ofFloat({0.0f, 1.0f});
-    anim->addUpdateListener([view, startMatrix, endMatrix](ValueAnimator& a){
+    anim->addUpdateListener([view, startMatrix, endMatrix](ValueAnimator& a) {
         float f = a.getAnimatedFraction();
         Cairo::Matrix m = lerpMatrix(startMatrix, endMatrix, f);
         view->setAnimationMatrix(&m); // no-op on cairo (property transforms are the render path)
     });
     Animator::AnimatorListener listener;
     bool useOverlay = mUseOverlay;
-    listener.onAnimationEnd = [view, transforms, useOverlay, sceneRoot, startValues, endValues, handleParentChange, this](Animator&, bool){
+    listener.onAnimationEnd = [view, transforms, useOverlay, sceneRoot, startValues, endValues, handleParentChange, this](Animator&, bool) {
         view->setAnimationMatrix(nullptr);
         transforms.restore(view);
-        if (handleParentChange && useOverlay){
+        if (handleParentChange && useOverlay) {
             // GhostView overlay for parent change: add ghost, listen for end to remove.
             Cairo::Matrix endParentMatrix = nonstd::any_cast<Cairo::Matrix>(endValues->values.at(PROPNAME_PARENT_MATRIX));
             Cairo::Matrix localEnd = endParentMatrix;
             sceneRoot->transformMatrixToLocal(localEnd);
             GhostView* ghost = GhostView::addGhost(view, sceneRoot, &localEnd);
-            if (ghost != nullptr){
+            if (ghost != nullptr) {
                 GhostListener* gl = new GhostListener(view, startValues->view, ghost);
                 this->addListener(gl);
                 view->setTransitionAlpha(1);

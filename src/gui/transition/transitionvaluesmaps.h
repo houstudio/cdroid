@@ -26,7 +26,7 @@
 #include <transition/arraymap.h>
 #include <transition/transitionvalues.h>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * Holds captured start/end values indexed four ways. Ported (package-private
@@ -40,7 +40,7 @@ namespace cdroid{
  * viewValues stores shared_ptr<TransitionValues> so the same object is shared
  * with Transition's mStartValuesList/mEndValuesList (java reference identity).
  */
-struct TransitionValuesMaps{
+struct TransitionValuesMaps {
     ArrayMap<View*, TransitionValuesPtr> viewValues;
     SparseArray<View*>    idValues;
     LongSparseArray<View*> itemIdValues;

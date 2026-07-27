@@ -24,37 +24,37 @@
 #include <view/layoutinflater.h>
 #include <widget/R.h>
 
-namespace cdroid{
+namespace cdroid {
 
 Scene::Scene(ViewGroup* sceneRoot)
-    : mSceneRoot(sceneRoot){
+    : mSceneRoot(sceneRoot) {
 }
 
 Scene::Scene(ViewGroup* sceneRoot, View* layout)
-    : mSceneRoot(sceneRoot), mLayout(layout){
+    : mSceneRoot(sceneRoot), mLayout(layout) {
 }
 
 Scene::Scene(ViewGroup* sceneRoot, ViewGroup* layout) // deprecated
-    : mSceneRoot(sceneRoot), mLayout(layout){
+    : mSceneRoot(sceneRoot), mLayout(layout) {
 }
 
 Scene::Scene(ViewGroup* sceneRoot, int layoutId, Context* context)
-    : mContext(context), mLayoutId(layoutId), mSceneRoot(sceneRoot){
+    : mContext(context), mLayoutId(layoutId), mSceneRoot(sceneRoot) {
 }
 
 Scene::Scene(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context)
-    : mContext(context), mLayoutResource(layoutResource), mSceneRoot(sceneRoot){
+    : mContext(context), mLayoutResource(layoutResource), mSceneRoot(sceneRoot) {
 }
 
-Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* context){
+Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* context) {
     SparseArray<Scene*>* scenes = static_cast<SparseArray<Scene*>*>(
-            sceneRoot->getTag(R::id::scene_layoutid_cache));
-    if (scenes == nullptr){
+                                      sceneRoot->getTag(R::id::scene_layoutid_cache));
+    if (scenes == nullptr) {
         scenes = new SparseArray<Scene*>();
         sceneRoot->setTag(R::id::scene_layoutid_cache, scenes);
     }
     Scene* scene = scenes->get(layoutId);
-    if (scene != nullptr){
+    if (scene != nullptr) {
         return scene;
     }
     scene = new Scene(sceneRoot, layoutId, context);
@@ -62,7 +62,7 @@ Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* con
     return scene;
 }
 
-Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context){
+Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, const std::string& layoutResource, Context* context) {
     // CDROID resources are string-reference based, so this is the working overload.
     // Android caches getSceneForLayout results (keyed by int id on the sceneRoot); caching a
     // string-keyed map would need an extra tag id, so for now we return a fresh Scene per call
@@ -71,27 +71,27 @@ Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, const std::string& layoutR
     return new Scene(sceneRoot, layoutResource, context);
 }
 
-ViewGroup* Scene::getSceneRoot(){
+ViewGroup* Scene::getSceneRoot() {
     return mSceneRoot;
 }
 
-void Scene::exit(){
-    if (getCurrentScene(mSceneRoot) == this){
-        if (mExitAction){
+void Scene::exit() {
+    if (getCurrentScene(mSceneRoot) == this) {
+        if (mExitAction) {
             mExitAction();
         }
     }
 }
 
-void Scene::enter(){
+void Scene::enter() {
     // Apply layout change, if any
-    if (mLayoutId > 0 || mLayout != nullptr || !mLayoutResource.empty()){
+    if (mLayoutId > 0 || mLayout != nullptr || !mLayoutResource.empty()) {
         // empty out parent container before adding to it
         getSceneRoot()->removeAllViews();
-        if (!mLayoutResource.empty()){
+        if (!mLayoutResource.empty()) {
             // CDROID-idiomatic path: inflate by string resource ("cdroid:layout/..." / "@layout/...").
             LayoutInflater::from(mContext)->inflate(mLayoutResource, mSceneRoot, true);
-        } else if (mLayoutId > 0){
+        } else if (mLayoutId > 0) {
             // Android int layoutId: CDROID has no runtime int→resource table, so this cannot
             // resolve. Use the string-resource overload of getSceneForLayout instead.
             LOGW("Scene::enter: int layoutId inflation not supported (mLayoutId=%d); use the "
@@ -101,25 +101,25 @@ void Scene::enter(){
         }
     }
     // Notify next scene that it is entering. Subclasses may override to configure scene.
-    if (mEnterAction){
+    if (mEnterAction) {
         mEnterAction();
     }
     setCurrentScene(mSceneRoot, this);
 }
 
-void Scene::setCurrentScene(ViewGroup* sceneRoot, Scene* scene){
+void Scene::setCurrentScene(ViewGroup* sceneRoot, Scene* scene) {
     sceneRoot->setTag(R::id::current_scene, scene);
 }
 
-Scene* Scene::getCurrentScene(ViewGroup* sceneRoot){
+Scene* Scene::getCurrentScene(ViewGroup* sceneRoot) {
     return static_cast<Scene*>(sceneRoot->getTag(R::id::current_scene));
 }
 
-void Scene::setEnterAction(const Runnable& action){
+void Scene::setEnterAction(const Runnable& action) {
     mEnterAction = action;
 }
 
-void Scene::setExitAction(const Runnable& action){
+void Scene::setExitAction(const Runnable& action) {
     mExitAction = action;
 }
 

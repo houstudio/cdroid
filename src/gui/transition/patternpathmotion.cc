@@ -13,32 +13,32 @@
 #include <core/pathmeasure.h>
 #include <drawable/pathparser.h>
 
-namespace cdroid{
+namespace cdroid {
 
-PatternPathMotion::PatternPathMotion(){
+PatternPathMotion::PatternPathMotion() {
     mPatternPath.lineTo(1, 0);
     mOriginalPatternPath = mPatternPath;
 }
 
 PatternPathMotion::PatternPathMotion(Context* context, AttributeSet* attrs)
-    : PathMotion(context, attrs){
-    if (attrs != nullptr){
+    : PathMotion(context, attrs) {
+    if (attrs != nullptr) {
         std::string pathData = attrs->getAttributeValue("patternPathData");
-        if (pathData.empty()){
+        if (pathData.empty()) {
             throw std::runtime_error("pathData must be supplied for patternPathMotion");
         }
         auto parsed = PathParser::createPathFromPathData(pathData); // shared_ptr<Path>
-        if (parsed){
+        if (parsed) {
             setPatternPath(*parsed);
         }
     }
 }
 
-PatternPathMotion::PatternPathMotion(const Path& patternPath){
+PatternPathMotion::PatternPathMotion(const Path& patternPath) {
     setPatternPath(patternPath);
 }
 
-void PatternPathMotion::setPatternPath(const Path& patternPath){
+void PatternPathMotion::setPatternPath(const Path& patternPath) {
     Cairo::RefPtr<Path> ref(new Path(patternPath));
     PathMeasure pathMeasure(ref, false);
     double length = pathMeasure.getLength();
@@ -50,7 +50,7 @@ void PatternPathMotion::setPatternPath(const Path& patternPath){
     float startX = (float)pos[0];
     float startY = (float)pos[1];
 
-    if (startX == endX && startY == endY){
+    if (startX == endX && startY == endY) {
         throw std::invalid_argument("pattern must not end at the starting point");
     }
 
@@ -70,7 +70,7 @@ void PatternPathMotion::setPatternPath(const Path& patternPath){
     mOriginalPatternPath = patternPath;
 }
 
-Path PatternPathMotion::getPath(float startX, float startY, float endX, float endY){
+Path PatternPathMotion::getPath(float startX, float startY, float endX, float endY) {
     double dx = endX - startX;
     double dy = endY - startY;
     float length = (float)std::hypot(dx, dy);

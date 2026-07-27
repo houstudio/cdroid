@@ -22,7 +22,7 @@
 
 #include <vector>
 
-namespace cdroid{
+namespace cdroid {
 
 class Transition;
 class AnimatorSet;
@@ -35,8 +35,8 @@ class ViewGroup;
  * methods (Bitmap/drawable/View copying, color utils, etc.) are deferred to the
  * ChangeBounds/Crossfade batch.
  */
-class TransitionUtils{
-public:
+class TransitionUtils {
+  public:
     /** Combine two animators into an AnimatorSet that plays them together (null-safe). */
     static Animator* mergeAnimators(Animator* animator1, Animator* animator2);
 

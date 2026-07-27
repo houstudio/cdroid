@@ -12,7 +12,7 @@
 #include <transition/transition.h>
 #include <transition/transitionvalues.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class View;
 
@@ -21,12 +21,12 @@ class View;
  * canceled (interrupted) position into account so the view does not blink or jump.
  * Ported from android-36 android.transition.TranslationAnimationCreator (package-private).
  */
-class TranslationAnimationCreator{
-public:
+class TranslationAnimationCreator {
+  public:
     static Animator* createAnimation(View* view, TransitionValues* values,
-            int viewPosX, int viewPosY,
-            float startX, float startY, float endX, float endY,
-            const TimeInterpolator* interpolator, Transition* transition);
+                                     int viewPosX, int viewPosY,
+                                     float startX, float startY, float endX, float endY,
+                                     const TimeInterpolator* interpolator, Transition* transition);
 };
 
 } // namespace cdroid

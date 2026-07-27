@@ -23,7 +23,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -36,20 +36,24 @@ class AttributeSet;
  * CDROID's nonstd::any has no null, so a default-constructed (empty) any represents null;
  * has_value() distinguishes clip-present from clip-absent.
  */
-class ChangeClipBounds: public Transition{
-public:
+class ChangeClipBounds: public Transition {
+  public:
     ChangeClipBounds() = default;
-    ChangeClipBounds(Context* context, AttributeSet* attrs): Transition(context, attrs){}
+    ChangeClipBounds(Context* context, AttributeSet* attrs): Transition(context, attrs) {}
 
     std::vector<std::string> getTransitionProperties() override;
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeClipBounds* clone() const override{ ChangeClipBounds* c = new ChangeClipBounds(*this); copyCloneFields(c); return c; }
+    ChangeClipBounds* clone() const override {
+        ChangeClipBounds* c = new ChangeClipBounds(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& values);
 
     static constexpr const char* PROPNAME_CLIP   = "android:clipBounds:clip";

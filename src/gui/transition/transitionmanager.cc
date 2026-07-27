@@ -29,20 +29,20 @@
 #include <transition/autotransition.h>
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
 // ---- file-local statics (android: static fields; single UI thread → process-local) ----
-ArrayMap<ViewGroup*, std::vector<Transition*>>& sRunningTransitionsRef(){
+ArrayMap<ViewGroup*, std::vector<Transition*>>& sRunningTransitionsRef() {
     static ArrayMap<ViewGroup*, std::vector<Transition*>> sRunningTransitions;
     return sRunningTransitions;
 }
-std::vector<ViewGroup*>& sPendingTransitionsRef(){
+std::vector<ViewGroup*>& sPendingTransitionsRef() {
     static std::vector<ViewGroup*> sPendingTransitions;
     return sPendingTransitions;
 }
-Transition*& sDefaultTransitionRef(){
+Transition*& sDefaultTransitionRef() {
     static Transition* sDefaultTransition = nullptr;
     return sDefaultTransition;
 }
@@ -60,50 +60,50 @@ Transition*& sDefaultTransitionRef(){
 // android: anonymous TransitionListenerAdapter inside onPreDraw that removes the
 // transition from the running list when it ends. Named here. Defined before
 // MultiListener (MultiListener::onPreDraw news one up).
-struct RunningEndListener: public TransitionListenerAdapter{
+struct RunningEndListener: public TransitionListenerAdapter {
     ArrayMap<ViewGroup*, std::vector<Transition*>>* running;
     ViewGroup* sceneRoot;
 
-    void onTransitionEnd(Transition& transition) override{
+    void onTransitionEnd(Transition& transition) override {
         std::vector<Transition*>* currentTransitions = running->get(sceneRoot);
-        if (currentTransitions != nullptr){
+        if (currentTransitions != nullptr) {
             currentTransitions->erase(
-                    std::remove(currentTransitions->begin(), currentTransitions->end(), &transition),
-                    currentTransitions->end());
+                std::remove(currentTransitions->begin(), currentTransitions->end(), &transition),
+                currentTransitions->end());
         }
         transition.removeListener(this);
     }
 };
 
-class MultiListener: public std::enable_shared_from_this<MultiListener>{
-public:
+class MultiListener: public std::enable_shared_from_this<MultiListener> {
+  public:
     Transition* mTransition;
     ViewGroup* mSceneRoot;
     ViewTreeObserver* mViewTreeObserver;
     ViewTreeObserver::OnPreDrawListener mPreDraw;
     View::OnAttachStateChangeListener mAttach;
 
-    static std::vector<std::shared_ptr<MultiListener>>& activeListeners(){
+    static std::vector<std::shared_ptr<MultiListener>>& activeListeners() {
         static std::vector<std::shared_ptr<MultiListener>> sActiveListeners;
         return sActiveListeners;
     }
 
     MultiListener(Transition* transition, ViewGroup* sceneRoot)
         : mTransition(transition), mSceneRoot(sceneRoot),
-          mViewTreeObserver(sceneRoot->getViewTreeObserver()){
+          mViewTreeObserver(sceneRoot->getViewTreeObserver()) {
     }
 
-    void start(){
+    void start() {
         std::weak_ptr<MultiListener> w = shared_from_this();
         mPreDraw = [w]()->bool{
-            if (auto s = w.lock()){
+            if (auto s = w.lock()) {
                 return s->onPreDraw();
             }
             return true;
         };
-        mAttach.onViewAttachedToWindow = [](View&){};
-        mAttach.onViewDetachedFromWindow = [w](View& v){
-            if (auto s = w.lock()){
+        mAttach.onViewAttachedToWindow = [](View&) {};
+        mAttach.onViewDetachedFromWindow = [w](View& v) {
+            if (auto s = w.lock()) {
                 s->onViewDetachedFromWindow(v);
             }
         };
@@ -111,8 +111,8 @@ public:
         mViewTreeObserver->addOnPreDrawListener(mPreDraw);
     }
 
-    void removeListeners(){
-        if (mViewTreeObserver->isAlive()){
+    void removeListeners() {
+        if (mViewTreeObserver->isAlive()) {
             mViewTreeObserver->removeOnPreDrawListener(mPreDraw);
         } else {
             mSceneRoot->getViewTreeObserver()->removeOnPreDrawListener(mPreDraw);
@@ -123,26 +123,26 @@ public:
         active.erase(std::remove(active.begin(), active.end(), self), active.end());
     }
 
-    bool onPreDraw(){
+    bool onPreDraw() {
         removeListeners();
 
         // Don't start the transition if it's no longer pending.
         auto& pending = TransitionManager::getPendingTransitions();
         auto pit = std::find(pending.begin(), pending.end(), mSceneRoot);
-        if (pit == pending.end()){
+        if (pit == pending.end()) {
             return true;
         }
         pending.erase(pit);
 
         // Add to running list, handle end to remove it
         ArrayMap<ViewGroup*, std::vector<Transition*>>& runningTransitions =
-                TransitionManager::getRunningTransitions();
+                    TransitionManager::getRunningTransitions();
         std::vector<Transition*>* currentTransitions = runningTransitions.get(mSceneRoot);
         std::vector<Transition*> previousRunningTransitions;
-        if (currentTransitions == nullptr){
+        if (currentTransitions == nullptr) {
             runningTransitions.put(mSceneRoot, std::vector<Transition*>());
             currentTransitions = runningTransitions.get(mSceneRoot);
-        } else if (!currentTransitions->empty()){
+        } else if (!currentTransitions->empty()) {
             previousRunningTransitions = *currentTransitions;
         }
         currentTransitions->push_back(mTransition);
@@ -151,8 +151,8 @@ public:
         endListener->sceneRoot = mSceneRoot;
         mTransition->addListener(endListener);
         mTransition->captureValues(mSceneRoot, false);
-        if (!previousRunningTransitions.empty()){
-            for (Transition* runningTransition : previousRunningTransitions){
+        if (!previousRunningTransitions.empty()) {
+            for (Transition* runningTransition : previousRunningTransitions) {
                 runningTransition->resume(mSceneRoot);
             }
         }
@@ -160,20 +160,20 @@ public:
         return true;
     }
 
-    void onViewDetachedFromWindow(View& /*v*/){
+    void onViewDetachedFromWindow(View& /*v*/) {
         removeListeners();
 
         auto& pending = TransitionManager::getPendingTransitions();
         auto pit = std::find(pending.begin(), pending.end(), mSceneRoot);
-        if (pit != pending.end()){
+        if (pit != pending.end()) {
             pending.erase(pit);
         }
 
         std::vector<Transition*>* runningTransitions =
-                TransitionManager::getRunningTransitions().get(mSceneRoot);
-        if (runningTransitions != nullptr && !runningTransitions->empty()){
+            TransitionManager::getRunningTransitions().get(mSceneRoot);
+        if (runningTransitions != nullptr && !runningTransitions->empty()) {
             std::vector<Transition*> copy = *runningTransitions;
-            for (Transition* runningTransition : copy){
+            for (Transition* runningTransition : copy) {
                 runningTransition->resume(mSceneRoot);
             }
         }
@@ -184,13 +184,13 @@ public:
 } // anonymous namespace
 
 // ---- default transition ----
-void TransitionManager::setDefaultTransition(Transition* transition){
+void TransitionManager::setDefaultTransition(Transition* transition) {
     sDefaultTransitionRef() = transition;
 }
 
-Transition* TransitionManager::getDefaultTransition(){
+Transition* TransitionManager::getDefaultTransition() {
     Transition*& t = sDefaultTransitionRef();
-    if (t == nullptr){
+    if (t == nullptr) {
         // android default: AutoTransition (sequential Fade OUT → ChangeBounds → Fade IN).
         t = new AutoTransition();
     }
@@ -198,29 +198,29 @@ Transition* TransitionManager::getDefaultTransition(){
 }
 
 // ---- transition registration ----
-void TransitionManager::setTransition(Scene* scene, Transition* transition){
+void TransitionManager::setTransition(Scene* scene, Transition* transition) {
     mSceneTransitions.put(scene, transition);
 }
 
-void TransitionManager::setTransition(Scene* fromScene, Scene* toScene, Transition* transition){
+void TransitionManager::setTransition(Scene* fromScene, Scene* toScene, Transition* transition) {
     ArrayMap<Scene*, Transition*>* sceneTransitionMap = mScenePairTransitions.get(toScene);
-    if (sceneTransitionMap == nullptr){
+    if (sceneTransitionMap == nullptr) {
         mScenePairTransitions.put(toScene, ArrayMap<Scene*, Transition*>());
         sceneTransitionMap = mScenePairTransitions.get(toScene);
     }
     sceneTransitionMap->put(fromScene, transition);
 }
 
-Transition* TransitionManager::getTransition(Scene* scene){
+Transition* TransitionManager::getTransition(Scene* scene) {
     Transition* transition = nullptr;
     ViewGroup* sceneRoot = scene->getSceneRoot();
-    if (sceneRoot != nullptr){
+    if (sceneRoot != nullptr) {
         Scene* currScene = Scene::getCurrentScene(sceneRoot);
-        if (currScene != nullptr){
+        if (currScene != nullptr) {
             ArrayMap<Scene*, Transition*>* sceneTransitionMap = mScenePairTransitions.get(scene);
-            if (sceneTransitionMap != nullptr){
+            if (sceneTransitionMap != nullptr) {
                 Transition** tp = sceneTransitionMap->get(currScene);
-                if (tp != nullptr && *tp != nullptr){
+                if (tp != nullptr && *tp != nullptr) {
                     return *tp;
                 }
             }
@@ -232,15 +232,15 @@ Transition* TransitionManager::getTransition(Scene* scene){
 }
 
 // ---- scene change machinery ----
-void TransitionManager::changeScene(Scene* scene, Transition* transition){
+void TransitionManager::changeScene(Scene* scene, Transition* transition) {
     ViewGroup* sceneRoot = scene->getSceneRoot();
     auto& pending = getPendingTransitions();
-    if (std::find(pending.begin(), pending.end(), sceneRoot) != pending.end()){
+    if (std::find(pending.begin(), pending.end(), sceneRoot) != pending.end()) {
         return;
     }
     Scene* oldScene = Scene::getCurrentScene(sceneRoot);
-    if (transition == nullptr){
-        if (oldScene != nullptr){
+    if (transition == nullptr) {
+        if (oldScene != nullptr) {
             oldScene->exit();
         }
         scene->enter();
@@ -248,7 +248,7 @@ void TransitionManager::changeScene(Scene* scene, Transition* transition){
         pending.push_back(sceneRoot);
         Transition* transitionClone = transition->clone();
         transitionClone->setSceneRoot(sceneRoot);
-        if (oldScene != nullptr && oldScene->isCreatedFromLayoutResource()){
+        if (oldScene != nullptr && oldScene->isCreatedFromLayoutResource()) {
             transitionClone->setCanRemoveViews(true);
         }
         sceneChangeSetup(sceneRoot, transitionClone);
@@ -257,56 +257,56 @@ void TransitionManager::changeScene(Scene* scene, Transition* transition){
     }
 }
 
-void TransitionManager::sceneChangeSetup(ViewGroup* sceneRoot, Transition* transition){
+void TransitionManager::sceneChangeSetup(ViewGroup* sceneRoot, Transition* transition) {
     // Capture current values
     std::vector<Transition*>* runningTransitions = getRunningTransitions().get(sceneRoot);
-    if (runningTransitions != nullptr && !runningTransitions->empty()){
-        for (Transition* runningTransition : *runningTransitions){
+    if (runningTransitions != nullptr && !runningTransitions->empty()) {
+        for (Transition* runningTransition : *runningTransitions) {
             runningTransition->pause(sceneRoot);
         }
     }
-    if (transition != nullptr){
+    if (transition != nullptr) {
         transition->captureValues(sceneRoot, true);
     }
     // Notify previous scene that it is being exited
     Scene* previousScene = Scene::getCurrentScene(sceneRoot);
-    if (previousScene != nullptr){
+    if (previousScene != nullptr) {
         previousScene->exit();
     }
 }
 
-void TransitionManager::sceneChangeRunTransition(ViewGroup* sceneRoot, Transition* transition){
-    if (transition != nullptr && sceneRoot != nullptr){
+void TransitionManager::sceneChangeRunTransition(ViewGroup* sceneRoot, Transition* transition) {
+    if (transition != nullptr && sceneRoot != nullptr) {
         std::shared_ptr<MultiListener> listener = std::make_shared<MultiListener>(transition, sceneRoot);
         MultiListener::activeListeners().push_back(listener);
         listener->start();
     }
 }
 
-void TransitionManager::transitionTo(Scene* scene){
+void TransitionManager::transitionTo(Scene* scene) {
     changeScene(scene, getTransition(scene));
 }
 
-void TransitionManager::go(Scene* scene){
+void TransitionManager::go(Scene* scene) {
     changeScene(scene, getDefaultTransition());
 }
 
-void TransitionManager::go(Scene* scene, Transition* transition){
+void TransitionManager::go(Scene* scene, Transition* transition) {
     changeScene(scene, transition);
 }
 
-void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot){
+void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot) {
     beginDelayedTransition(sceneRoot, nullptr);
 }
 
-void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition){
+void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition) {
     auto& pending = getPendingTransitions();
-    if (std::find(pending.begin(), pending.end(), sceneRoot) == pending.end() && sceneRoot->isLaidOut()){
-        if (Transition::DBG){
+    if (std::find(pending.begin(), pending.end(), sceneRoot) == pending.end() && sceneRoot->isLaidOut()) {
+        if (Transition::DBG) {
             LOGD("beginDelayedTransition: root=%p transition=%p", (void*)sceneRoot, (void*)transition);
         }
         pending.push_back(sceneRoot);
-        if (transition == nullptr){
+        if (transition == nullptr) {
             transition = getDefaultTransition();
         }
         Transition* transitionClone = transition->clone();
@@ -316,25 +316,25 @@ void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition*
     }
 }
 
-void TransitionManager::endTransitions(ViewGroup* sceneRoot){
+void TransitionManager::endTransitions(ViewGroup* sceneRoot) {
     auto& pending = getPendingTransitions();
     pending.erase(std::remove(pending.begin(), pending.end(), sceneRoot), pending.end());
 
     std::vector<Transition*>* runningTransitions = getRunningTransitions().get(sceneRoot);
-    if (runningTransitions != nullptr && !runningTransitions->empty()){
+    if (runningTransitions != nullptr && !runningTransitions->empty()) {
         // Copy in case this is called by an onTransitionEnd listener
         std::vector<Transition*> copy = *runningTransitions;
-        for (int i = (int)copy.size() - 1; i >= 0; i--){
+        for (int i = (int)copy.size() - 1; i >= 0; i--) {
             copy[i]->forceToEnd(sceneRoot);
         }
     }
 }
 
-ArrayMap<ViewGroup*, std::vector<Transition*>>& TransitionManager::getRunningTransitions(){
+ArrayMap<ViewGroup*, std::vector<Transition*>>& TransitionManager::getRunningTransitions() {
     return sRunningTransitionsRef();
 }
 
-std::vector<ViewGroup*>& TransitionManager::getPendingTransitions(){
+std::vector<ViewGroup*>& TransitionManager::getPendingTransitions() {
     return sPendingTransitionsRef();
 }
 

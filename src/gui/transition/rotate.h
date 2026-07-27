@@ -20,25 +20,29 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * This transition captures the rotation property of targets before and after the
  * scene change and animates any changes. Ported from android-36 android.transition.Rotate.
  * (@hide in android — code-created, no XML ctor.)
  */
-class Rotate: public Transition{
-public:
+class Rotate: public Transition {
+  public:
     Rotate() = default;
 
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    Rotate* clone() const override{ Rotate* c = new Rotate(*this); copyCloneFields(c); return c; }
+    Rotate* clone() const override {
+        Rotate* c = new Rotate(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     static constexpr const char* PROPNAME_ROTATION = "android:rotate:rotation";
 };
 

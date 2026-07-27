@@ -11,7 +11,7 @@
 
 #include <transition/transitionpropagation.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class View;
 
@@ -19,19 +19,23 @@ class View;
  * Base class for TransitionPropagations that care about View visibility and the center
  * position of the View. Ported from android-36 android.transition.VisibilityPropagation.
  */
-class VisibilityPropagation: public TransitionPropagation{
-public:
+class VisibilityPropagation: public TransitionPropagation {
+  public:
     void captureValues(TransitionValues* values) override;
     std::vector<std::string> getPropagationProperties() override;
 
     int getViewVisibility(TransitionValues* values);
-    int getViewX(TransitionValues* values){ return getViewCoordinate(values, 0); }
-    int getViewY(TransitionValues* values){ return getViewCoordinate(values, 1); }
+    int getViewX(TransitionValues* values) {
+        return getViewCoordinate(values, 0);
+    }
+    int getViewY(TransitionValues* values) {
+        return getViewCoordinate(values, 1);
+    }
 
     static constexpr const char* PROPNAME_VISIBILITY  = "android:visibilityPropagation:visibility";
     static constexpr const char* PROPNAME_VIEW_CENTER = "android:visibilityPropagation:center";
 
-private:
+  private:
     static int getViewCoordinate(TransitionValues* values, int coordinateIndex);
 };
 

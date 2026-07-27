@@ -28,29 +28,29 @@
 
 #include <transition/transitionutils.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
 // android: anonymous TransitionListenerAdapter inside onDisappear that removes the
 // overlay view on pause/end and re-adds it on resume. Named here (no anon classes).
-class OverlayListener: public TransitionListenerAdapter{
-public:
+class OverlayListener: public TransitionListenerAdapter {
+  public:
     ViewGroupOverlay* overlay;
     View* finalOverlayView;
     View* startView;
 
-    void onTransitionPause(Transition& /*transition*/) override{
+    void onTransitionPause(Transition& /*transition*/) override {
         overlay->remove(finalOverlayView);
     }
-    void onTransitionResume(Transition& transition) override{
-        if (finalOverlayView->getParent() == nullptr){
+    void onTransitionResume(Transition& transition) override {
+        if (finalOverlayView->getParent() == nullptr) {
             overlay->add(finalOverlayView);
         } else {
             transition.cancel();
         }
     }
-    void onTransitionEnd(Transition& transition) override{
+    void onTransitionEnd(Transition& transition) override {
         startView->setTag(R::id::transition_overlay_view_tag, nullptr);
         overlay->remove(finalOverlayView);
         transition.removeListener(this);
@@ -61,40 +61,40 @@ public:
 
 const std::vector<std::string> Visibility::sTransitionProperties = {PROPNAME_VISIBILITY, PROPNAME_PARENT};
 
-void Visibility::setSuppressLayout(bool suppress){
+void Visibility::setSuppressLayout(bool suppress) {
     mSuppressLayout = suppress;
 }
 
-void Visibility::setMode(int mode){
-    if ((mode & ~(MODE_IN | MODE_OUT)) != 0){
+void Visibility::setMode(int mode) {
+    if ((mode & ~(MODE_IN | MODE_OUT)) != 0) {
         throw std::invalid_argument("Only MODE_IN and MODE_OUT flags are allowed");
     }
     mMode = mode;
 }
 
-std::vector<std::string> Visibility::getTransitionProperties(){
+std::vector<std::string> Visibility::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void Visibility::captureValues(TransitionValues& transitionValues){
+void Visibility::captureValues(TransitionValues& transitionValues) {
     int visibility = transitionValues.view->getVisibility();
     transitionValues.values[PROPNAME_VISIBILITY] = visibility;
     transitionValues.values[PROPNAME_PARENT] = transitionValues.view->getParent(); // ViewGroup*
     int loc[2] = {0, 0};
     transitionValues.view->getLocationOnScreen(loc);
-    transitionValues.values[PROPNAME_SCREEN_LOCATION] = std::vector<int>{loc[0], loc[1]};
+    transitionValues.values[PROPNAME_SCREEN_LOCATION] = std::vector<int> {loc[0], loc[1]};
 }
 
-void Visibility::captureStartValues(TransitionValues& transitionValues){
+void Visibility::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void Visibility::captureEndValues(TransitionValues& transitionValues){
+void Visibility::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-bool Visibility::isVisible(TransitionValues* values){
-    if (values == nullptr){
+bool Visibility::isVisible(TransitionValues* values) {
+    if (values == nullptr) {
         return false;
     }
     int visibility = nonstd::any_cast<int>(values->values.at(PROPNAME_VISIBILITY));
@@ -103,50 +103,50 @@ bool Visibility::isVisible(TransitionValues* values){
 }
 
 Visibility::VisibilityInfo Visibility::getVisibilityChangeInfo(TransitionValues* startValues,
-        TransitionValues* endValues){
+        TransitionValues* endValues) {
     VisibilityInfo visInfo;
-    if (startValues != nullptr && startValues->values.count(PROPNAME_VISIBILITY)){
+    if (startValues != nullptr && startValues->values.count(PROPNAME_VISIBILITY)) {
         visInfo.startVisibility = nonstd::any_cast<int>(startValues->values.at(PROPNAME_VISIBILITY));
         visInfo.startParent = nonstd::any_cast<ViewGroup*>(startValues->values.at(PROPNAME_PARENT));
     } else {
         visInfo.startVisibility = -1;
         visInfo.startParent = nullptr;
     }
-    if (endValues != nullptr && endValues->values.count(PROPNAME_VISIBILITY)){
+    if (endValues != nullptr && endValues->values.count(PROPNAME_VISIBILITY)) {
         visInfo.endVisibility = nonstd::any_cast<int>(endValues->values.at(PROPNAME_VISIBILITY));
         visInfo.endParent = nonstd::any_cast<ViewGroup*>(endValues->values.at(PROPNAME_PARENT));
     } else {
         visInfo.endVisibility = -1;
         visInfo.endParent = nullptr;
     }
-    if (startValues != nullptr && endValues != nullptr){
+    if (startValues != nullptr && endValues != nullptr) {
         if (visInfo.startVisibility == visInfo.endVisibility &&
-                visInfo.startParent == visInfo.endParent){
+                visInfo.startParent == visInfo.endParent) {
             return visInfo;
         } else {
-            if (visInfo.startVisibility != visInfo.endVisibility){
-                if (visInfo.startVisibility == View::VISIBLE){
+            if (visInfo.startVisibility != visInfo.endVisibility) {
+                if (visInfo.startVisibility == View::VISIBLE) {
                     visInfo.fadeIn = false;
                     visInfo.visibilityChange = true;
-                } else if (visInfo.endVisibility == View::VISIBLE){
+                } else if (visInfo.endVisibility == View::VISIBLE) {
                     visInfo.fadeIn = true;
                     visInfo.visibilityChange = true;
                 }
                 // no visibilityChange if going between INVISIBLE and GONE
-            } else if (visInfo.startParent != visInfo.endParent){
-                if (visInfo.endParent == nullptr){
+            } else if (visInfo.startParent != visInfo.endParent) {
+                if (visInfo.endParent == nullptr) {
                     visInfo.fadeIn = false;
                     visInfo.visibilityChange = true;
-                } else if (visInfo.startParent == nullptr){
+                } else if (visInfo.startParent == nullptr) {
                     visInfo.fadeIn = true;
                     visInfo.visibilityChange = true;
                 }
             }
         }
-    } else if (startValues == nullptr && visInfo.endVisibility == View::VISIBLE){
+    } else if (startValues == nullptr && visInfo.endVisibility == View::VISIBLE) {
         visInfo.fadeIn = true;
         visInfo.visibilityChange = true;
-    } else if (endValues == nullptr && visInfo.startVisibility == View::VISIBLE){
+    } else if (endValues == nullptr && visInfo.startVisibility == View::VISIBLE) {
         visInfo.fadeIn = false;
         visInfo.visibilityChange = true;
     }
@@ -154,10 +154,10 @@ Visibility::VisibilityInfo Visibility::getVisibilityChangeInfo(TransitionValues*
 }
 
 Animator* Visibility::createAnimator(ViewGroup* sceneRoot,
-        TransitionValues* startValues, TransitionValues* endValues){
+                                     TransitionValues* startValues, TransitionValues* endValues) {
     VisibilityInfo visInfo = getVisibilityChangeInfo(startValues, endValues);
-    if (visInfo.visibilityChange && (visInfo.startParent != nullptr || visInfo.endParent != nullptr)){
-        if (visInfo.fadeIn){
+    if (visInfo.visibilityChange && (visInfo.startParent != nullptr || visInfo.endParent != nullptr)) {
+        if (visInfo.fadeIn) {
             return onAppear(sceneRoot, startValues, visInfo.startVisibility, endValues, visInfo.endVisibility);
         } else {
             return onDisappear(sceneRoot, startValues, visInfo.startVisibility, endValues, visInfo.endVisibility);
@@ -167,17 +167,17 @@ Animator* Visibility::createAnimator(ViewGroup* sceneRoot,
 }
 
 Animator* Visibility::onAppear(ViewGroup* sceneRoot,
-        TransitionValues* startValues, int /*startVisibility*/,
-        TransitionValues* endValues, int /*endVisibility*/){
-    if ((mMode & MODE_IN) != MODE_IN || endValues == nullptr){
+                               TransitionValues* startValues, int /*startVisibility*/,
+                               TransitionValues* endValues, int /*endVisibility*/) {
+    if ((mMode & MODE_IN) != MODE_IN || endValues == nullptr) {
         return nullptr;
     }
-    if (startValues == nullptr){
+    if (startValues == nullptr) {
         View* endParent = endValues->view->getParent(); // ViewGroup*
         TransitionValues* startParentValues = getMatchedTransitionValues(endParent, false);
         TransitionValues* endParentValues = getTransitionValues(endParent, false);
         VisibilityInfo parentVisibilityInfo = getVisibilityChangeInfo(startParentValues, endParentValues);
-        if (parentVisibilityInfo.visibilityChange){
+        if (parentVisibilityInfo.visibilityChange) {
             return nullptr;
         }
     }
@@ -185,17 +185,17 @@ Animator* Visibility::onAppear(ViewGroup* sceneRoot,
 }
 
 Animator* Visibility::onAppear(ViewGroup* /*sceneRoot*/, View* /*view*/,
-        TransitionValues* /*startValues*/, TransitionValues* /*endValues*/){
+                               TransitionValues* /*startValues*/, TransitionValues* /*endValues*/) {
     return nullptr;
 }
 
 Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
-        TransitionValues* startValues, int /*startVisibility*/,
-        TransitionValues* endValues, int endVisibility){
-    if ((mMode & MODE_OUT) != MODE_OUT){
+                                  TransitionValues* startValues, int /*startVisibility*/,
+                                  TransitionValues* endValues, int endVisibility) {
+    if ((mMode & MODE_OUT) != MODE_OUT) {
         return nullptr;
     }
-    if (startValues == nullptr){
+    if (startValues == nullptr) {
         // startValues(and startView) will never be null for disappear transition.
         return nullptr;
     }
@@ -207,15 +207,15 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
     bool reusingOverlayView = false;
 
     View* savedOverlayView = static_cast<View*>(startView->getTag(R::id::transition_overlay_view_tag));
-    if (savedOverlayView != nullptr){
+    if (savedOverlayView != nullptr) {
         // We've already created overlay for the start view — applying two visibility
         // transitions for the same view.
         overlayView = savedOverlayView;
         reusingOverlayView = true;
     } else {
         bool needOverlayForStartView = false;
-        if (endView == nullptr || endView->getParent() == nullptr){
-            if (endView != nullptr){
+        if (endView == nullptr || endView->getParent() == nullptr) {
+            if (endView != nullptr) {
                 // endView was removed from its parent - add it to the overlay
                 overlayView = endView;
             } else {
@@ -223,11 +223,11 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             }
         } else {
             // visibility change
-            if (endVisibility == View::INVISIBLE){
+            if (endVisibility == View::INVISIBLE) {
                 viewToKeep = endView;
             } else {
                 // Becoming GONE
-                if (startView == endView){
+                if (startView == endView) {
                     viewToKeep = endView;
                 } else {
                     needOverlayForStartView = true;
@@ -235,20 +235,20 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             }
         }
 
-        if (needOverlayForStartView){
-            if (startView->getParent() == nullptr){
+        if (needOverlayForStartView) {
+            if (startView->getParent() == nullptr) {
                 overlayView = startView; // no parent - safe to use
-            } else if (startView->getParent() != nullptr){
+            } else if (startView->getParent() != nullptr) {
                 View* startParent = startView->getParent(); // ViewGroup* (a View)
                 TransitionValues* startParentValues = getTransitionValues(startParent, true);
                 TransitionValues* endParentValues = getMatchedTransitionValues(startParent, true);
                 VisibilityInfo parentVisibilityInfo = getVisibilityChangeInfo(startParentValues, endParentValues);
-                if (!parentVisibilityInfo.visibilityChange){
+                if (!parentVisibilityInfo.visibilityChange) {
                     overlayView = TransitionUtils::copyViewImage(sceneRoot, startView, static_cast<ViewGroup*>(startParent));
                 } else {
                     int id = startParent->getId();
                     if (startParent->getParent() == nullptr && id != View::NO_ID
-                            && sceneRoot->findViewById(id) != nullptr && mCanRemoveViews){
+                            && sceneRoot->findViewById(id) != nullptr && mCanRemoveViews) {
                         overlayView = startView;
                     } else {
                         // TODO: Handle this case as well
@@ -258,9 +258,9 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
         }
     }
 
-    if (overlayView != nullptr){
+    if (overlayView != nullptr) {
         ViewGroupOverlay* overlay = nullptr;
-        if (!reusingOverlayView){
+        if (!reusingOverlayView) {
             overlay = static_cast<ViewGroupOverlay*>(sceneRoot->getOverlay());
             std::vector<int>* screenLoc = nonstd::any_cast<std::vector<int>>(&startValues->values.at(PROPNAME_SCREEN_LOCATION));
             int screenX = (screenLoc && screenLoc->size() > 0) ? (*screenLoc)[0] : 0;
@@ -272,8 +272,8 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
             overlay->add(overlayView);
         }
         Animator* animator = onDisappear(sceneRoot, overlayView, startValues, endValues);
-        if (!reusingOverlayView){
-            if (animator == nullptr){
+        if (!reusingOverlayView) {
+            if (animator == nullptr) {
                 overlay->remove(overlayView);
             } else {
                 startView->setTag(R::id::transition_overlay_view_tag, overlayView);
@@ -287,20 +287,28 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
         return animator;
     }
 
-    if (viewToKeep != nullptr){
+    if (viewToKeep != nullptr) {
         int originalVisibility = viewToKeep->getVisibility();
         viewToKeep->setTransitionVisibility(View::VISIBLE);
         Animator* animator = onDisappear(sceneRoot, viewToKeep, startValues, endValues);
-        if (animator != nullptr){
+        if (animator != nullptr) {
             DisappearListener* disappearListener = new DisappearListener(viewToKeep, endVisibility, mSuppressLayout);
             // Wire the animator side via callback members (DisappearListener is one object
             // in android; CDROID's Animator listeners are EventSet values with callbacks).
             Animator::AnimatorListener al;
-            al.onAnimationCancel = [disappearListener](Animator& a){ disappearListener->onAnimationCancel(a); };
-            al.onAnimationEnd    = [disappearListener](Animator& a, bool){ disappearListener->onAnimationEnd(a); };
+            al.onAnimationCancel = [disappearListener](Animator& a) {
+                disappearListener->onAnimationCancel(a);
+            };
+            al.onAnimationEnd    = [disappearListener](Animator& a, bool) {
+                disappearListener->onAnimationEnd(a);
+            };
             Animator::AnimatorPauseListener apl;
-            apl.onAnimationPause  = [disappearListener](Animator& a){ disappearListener->onAnimationPause(a); };
-            apl.onAnimationResume = [disappearListener](Animator& a){ disappearListener->onAnimationResume(a); };
+            apl.onAnimationPause  = [disappearListener](Animator& a) {
+                disappearListener->onAnimationPause(a);
+            };
+            apl.onAnimationResume = [disappearListener](Animator& a) {
+                disappearListener->onAnimationResume(a);
+            };
             animator->addListener(al);
             animator->addPauseListener(apl);
             addListener(disappearListener); // Transition takes ownership (transition side)
@@ -313,56 +321,56 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
 }
 
 Animator* Visibility::onDisappear(ViewGroup* /*sceneRoot*/, View* /*view*/,
-        TransitionValues* /*startValues*/, TransitionValues* /*endValues*/){
+                                  TransitionValues* /*startValues*/, TransitionValues* /*endValues*/) {
     return nullptr;
 }
 
-bool Visibility::isTransitionRequired(TransitionValues* startValues, TransitionValues* newValues){
-    if (startValues == nullptr && newValues == nullptr){
+bool Visibility::isTransitionRequired(TransitionValues* startValues, TransitionValues* newValues) {
+    if (startValues == nullptr && newValues == nullptr) {
         return false;
     }
     if (startValues != nullptr && newValues != nullptr &&
             (newValues->values.count(PROPNAME_VISIBILITY) != 0) !=
-                    (startValues->values.count(PROPNAME_VISIBILITY) != 0)){
+            (startValues->values.count(PROPNAME_VISIBILITY) != 0)) {
         // The transition wasn't targeted in either the start or end, so it couldn't have changed.
         return false;
     }
     VisibilityInfo changeInfo = getVisibilityChangeInfo(startValues, newValues);
     return changeInfo.visibilityChange && (changeInfo.startVisibility == View::VISIBLE ||
-            changeInfo.endVisibility == View::VISIBLE);
+                                           changeInfo.endVisibility == View::VISIBLE);
 }
 
 // ---- DisappearListener ----
 Visibility::DisappearListener::DisappearListener(View* view, int finalVisibility, bool suppress)
     : mView(view), mFinalVisibility(finalVisibility),
       mParent(view ? view->getParent() : nullptr), // ViewGroup*
-      mSuppressLayout(suppress){
+      mSuppressLayout(suppress) {
     // Prevent a layout from including mView in its calculation.
     suppressLayout(true);
 }
 
-void Visibility::DisappearListener::onAnimationPause(Animator& /*animation*/){
-    if (!mCanceled){
+void Visibility::DisappearListener::onAnimationPause(Animator& /*animation*/) {
+    if (!mCanceled) {
         mView->setTransitionVisibility(mFinalVisibility);
     }
 }
 
-void Visibility::DisappearListener::onAnimationResume(Animator& /*animation*/){
-    if (!mCanceled){
+void Visibility::DisappearListener::onAnimationResume(Animator& /*animation*/) {
+    if (!mCanceled) {
         mView->setTransitionVisibility(View::VISIBLE);
     }
 }
 
-void Visibility::DisappearListener::onTransitionEnd(Transition& transition){
+void Visibility::DisappearListener::onTransitionEnd(Transition& transition) {
     hideViewWhenNotCanceled();
     transition.removeListener(this);
 }
 
-void Visibility::DisappearListener::hideViewWhenNotCanceled(){
-    if (!mCanceled){
+void Visibility::DisappearListener::hideViewWhenNotCanceled() {
+    if (!mCanceled) {
         // Recreate the parent's display list in case it includes mView.
         mView->setTransitionVisibility(mFinalVisibility);
-        if (mParent != nullptr){
+        if (mParent != nullptr) {
             mParent->invalidate();
         }
     }
@@ -370,8 +378,8 @@ void Visibility::DisappearListener::hideViewWhenNotCanceled(){
     suppressLayout(false);
 }
 
-void Visibility::DisappearListener::suppressLayout(bool suppress){
-    if (mSuppressLayout && mLayoutSuppressed != suppress && mParent != nullptr){
+void Visibility::DisappearListener::suppressLayout(bool suppress) {
+    if (mSuppressLayout && mLayoutSuppressed != suppress && mParent != nullptr) {
         mLayoutSuppressed = suppress;
         mParent->suppressLayout(suppress);
     }

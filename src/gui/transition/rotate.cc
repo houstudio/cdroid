@@ -21,25 +21,25 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 
-namespace cdroid{
+namespace cdroid {
 
-void Rotate::captureStartValues(TransitionValues& transitionValues){
+void Rotate::captureStartValues(TransitionValues& transitionValues) {
     transitionValues.values[PROPNAME_ROTATION] = transitionValues.view->getRotation();
 }
 
-void Rotate::captureEndValues(TransitionValues& transitionValues){
+void Rotate::captureEndValues(TransitionValues& transitionValues) {
     transitionValues.values[PROPNAME_ROTATION] = transitionValues.view->getRotation();
 }
 
 Animator* Rotate::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
-    if (startValues == nullptr || endValues == nullptr){
+                                 TransitionValues* startValues, TransitionValues* endValues) {
+    if (startValues == nullptr || endValues == nullptr) {
         return nullptr;
     }
     View* view = endValues->view;
     float startRotation = nonstd::any_cast<float>(startValues->values.at(PROPNAME_ROTATION));
     float endRotation   = nonstd::any_cast<float>(endValues->values.at(PROPNAME_ROTATION));
-    if (startRotation != endRotation){
+    if (startRotation != endRotation) {
         view->setRotation(startRotation);
         return ObjectAnimator::ofFloat(view, View::ROTATION, {startRotation, endRotation});
     }

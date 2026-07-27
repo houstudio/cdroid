@@ -19,7 +19,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -28,29 +28,41 @@ class AttributeSet;
  * Captures scale and rotation (the transform matrix) for Views before and after the scene
  * change and animates those changes. Ported from android-36 android.transition.ChangeTransform.
  */
-class ChangeTransform: public Transition{
-public:
+class ChangeTransform: public Transition {
+  public:
     ChangeTransform() = default;
-    ChangeTransform(Context* context, AttributeSet* attrs): Transition(context, attrs){}
+    ChangeTransform(Context* context, AttributeSet* attrs): Transition(context, attrs) {}
 
     std::vector<std::string> getTransitionProperties() override;
-    bool getReparentWithOverlay() const{ return mUseOverlay; }
-    void setReparentWithOverlay(bool v){ mUseOverlay = v; }
-    bool getReparent() const{ return mReparent; }
-    void setReparent(bool v){ mReparent = v; }
+    bool getReparentWithOverlay() const {
+        return mUseOverlay;
+    }
+    void setReparentWithOverlay(bool v) {
+        mUseOverlay = v;
+    }
+    bool getReparent() const {
+        return mReparent;
+    }
+    void setReparent(bool v) {
+        mReparent = v;
+    }
 
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeTransform* clone() const override{ ChangeTransform* c = new ChangeTransform(*this); copyCloneFields(c); return c; }
+    ChangeTransform* clone() const override {
+        ChangeTransform* c = new ChangeTransform(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& transitionValues);
 
     // android: private static nested Transforms — the 8 view transform properties.
-    struct Transforms{
+    struct Transforms {
         float translationX, translationY, translationZ;
         float scaleX, scaleY;
         float rotationX, rotationY, rotationZ;
@@ -60,7 +72,7 @@ private:
     };
     static void setIdentityTransforms(View* view);
     static void setTransforms(View* view, float translationX, float translationY, float translationZ,
-            float scaleX, float scaleY, float rotationX, float rotationY, float rotationZ);
+                              float scaleX, float scaleY, float rotationX, float rotationY, float rotationZ);
 
     static constexpr const char* PROPNAME_MATRIX    = "android:changeTransform:matrix";
     static constexpr const char* PROPNAME_TRANSFORMS = "android:changeTransform:transforms";

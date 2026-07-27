@@ -25,7 +25,7 @@
 #include <transition/fade.h>
 #include <transition/transitionset.h>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * Utility class for a default transition that automatically fades, moves, and resizes
@@ -35,13 +35,17 @@ namespace cdroid{
  * clone() is inherited from TransitionSet (AutoTransition adds no fields; the sliced copy
  * preserves the children + ordering, behaving identically).
  */
-class AutoTransition: public TransitionSet{
-public:
-    AutoTransition(){ init(); }
-    AutoTransition(Context* context, AttributeSet* attrs): TransitionSet(context, attrs){ init(); }
+class AutoTransition: public TransitionSet {
+  public:
+    AutoTransition() {
+        init();
+    }
+    AutoTransition(Context* context, AttributeSet* attrs): TransitionSet(context, attrs) {
+        init();
+    }
 
-private:
-    void init(){
+  private:
+    void init() {
         setOrdering(ORDERING_SEQUENTIAL);
         addTransition(new Fade(Fade::OUT));
         addTransition(new ChangeBounds());

@@ -15,7 +15,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class ViewGroup;
@@ -29,15 +29,15 @@ class Scene;
  * Inflates scenes and transitions from XML resource files.
  * Ported from android-36 android.transition.TransitionInflater.
  */
-class TransitionInflater{
-public:
+class TransitionInflater {
+  public:
     static TransitionInflater* from(Context* context);
 
     Transition* inflateTransition(const std::string& resource);
     TransitionManager* inflateTransitionManager(const std::string& resource, ViewGroup* sceneRoot);
 
-private:
-    explicit TransitionInflater(Context* context): mContext(context){}
+  private:
+    explicit TransitionInflater(Context* context): mContext(context) {}
     Transition* createTransitionFromXml(XmlPullParser& parser, Transition* parent);
     void getTargetIds(XmlPullParser& parser, Transition* transition);
     TransitionManager* createTransitionManagerFromXml(XmlPullParser& parser, ViewGroup* sceneRoot);

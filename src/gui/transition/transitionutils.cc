@@ -22,12 +22,12 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 
-namespace cdroid{
+namespace cdroid {
 
-Animator* TransitionUtils::mergeAnimators(Animator* animator1, Animator* animator2){
-    if (animator1 == nullptr){
+Animator* TransitionUtils::mergeAnimators(Animator* animator1, Animator* animator2) {
+    if (animator1 == nullptr) {
         return animator2;
-    } else if (animator2 == nullptr){
+    } else if (animator2 == nullptr) {
         return animator1;
     } else {
         AnimatorSet* animatorSet = new AnimatorSet();
@@ -36,7 +36,7 @@ Animator* TransitionUtils::mergeAnimators(Animator* animator1, Animator* animato
     }
 }
 
-View* TransitionUtils::copyViewImage(ViewGroup* /*sceneRoot*/, View* /*view*/, ViewGroup* /*parent*/){
+View* TransitionUtils::copyViewImage(ViewGroup* /*sceneRoot*/, View* /*view*/, ViewGroup* /*parent*/) {
     // TODO: snapshot the view into an overlay image (deferred — cairo 2D has no DisplayList).
     LOGW("TransitionUtils::copyViewImage not yet implemented; overlay snapshot skipped");
     return nullptr;

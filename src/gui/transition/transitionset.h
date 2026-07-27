@@ -23,7 +23,7 @@
 #include <transition/transition.h>
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -37,8 +37,8 @@ class AttributeSet;
  * destruction, deep-cloned by clone()). This mirrors the java GC reference the set
  * holds and lets `set.addTransition(new Fade())` be leak-free.
  */
-class TransitionSet: public Transition{
-public:
+class TransitionSet: public Transition {
+  public:
     static constexpr int ORDERING_TOGETHER  = 0;
     static constexpr int ORDERING_SEQUENTIAL = 1;
 
@@ -47,15 +47,21 @@ public:
     ~TransitionSet() override;
 
     TransitionSet& setOrdering(int ordering);
-    int getOrdering() const{ return mPlayTogether ? ORDERING_TOGETHER : ORDERING_SEQUENTIAL; }
+    int getOrdering() const {
+        return mPlayTogether ? ORDERING_TOGETHER : ORDERING_SEQUENTIAL;
+    }
 
     TransitionSet& addTransition(Transition* transition);
     TransitionSet& removeTransition(Transition* transition);
-    int getTransitionCount() const{ return (int)mTransitions.size(); }
+    int getTransitionCount() const {
+        return (int)mTransitions.size();
+    }
     Transition* getTransitionAt(int index);
 
     TransitionSet& setDuration(int64_t duration) override;
-    TransitionSet& setStartDelay(int64_t startDelay) override{ return (TransitionSet&)Transition::setStartDelay(startDelay); }
+    TransitionSet& setStartDelay(int64_t startDelay) override {
+        return (TransitionSet&)Transition::setStartDelay(startDelay);
+    }
     TransitionSet& setInterpolator(const TimeInterpolator* interpolator) override;
     void setPathMotion(PathMotion* pathMotion) override;
     void setPropagation(TransitionPropagation* transitionPropagation) override;
@@ -87,16 +93,21 @@ public:
     Transition* setSceneRoot(ViewGroup* sceneRoot) override;
     void setCanRemoveViews(bool canRemoveViews) override;
 
-    TransitionSet* clone() const override{ TransitionSet* c = new TransitionSet(*this); copyCloneFields(c); cloneChildrenInto(*c); return c; }
+    TransitionSet* clone() const override {
+        TransitionSet* c = new TransitionSet(*this);
+        copyCloneFields(c);
+        cloneChildrenInto(*c);
+        return c;
+    }
 
-protected:
+  protected:
     void createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& startValues,
-            TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
-            std::vector<TransitionValuesPtr>& endValuesList) override;
+                         TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
+                         std::vector<TransitionValuesPtr>& endValuesList) override;
     void runAnimators() override;
     std::string toString(const std::string& indent) override;
 
-private:
+  private:
     static constexpr int FLAG_CHANGE_INTERPOLATOR = 0x01;
     static constexpr int FLAG_CHANGE_PROPAGATION = 0x02;
     static constexpr int FLAG_CHANGE_PATH_MOTION  = 0x04;
@@ -109,10 +120,10 @@ private:
     // android: static nested TransitionSetListener. Owned by the set (recreated each
     // runAnimators); added to every child (children do NOT own it — see Transition
     // listener note), so a single shared listener tracks "all children done".
-    class TransitionSetListener: public TransitionListenerAdapter{
-    public:
+    class TransitionSetListener: public TransitionListenerAdapter {
+      public:
         TransitionSet* mTransitionSet;
-        explicit TransitionSetListener(TransitionSet* transitionSet): mTransitionSet(transitionSet){}
+        explicit TransitionSetListener(TransitionSet* transitionSet): mTransitionSet(transitionSet) {}
         void onTransitionStart(Transition& transition) override;
         void onTransitionEnd(Transition& transition) override;
     };

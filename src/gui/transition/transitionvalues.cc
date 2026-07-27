@@ -27,7 +27,7 @@
 #include <typeinfo>
 #include <vector>
 
-namespace cdroid{
+namespace cdroid {
 
 // Type-dispatched equality for the nonstd::any values stored in
 // TransitionValues#values. android stores Object and compares with Object#equals;
@@ -36,7 +36,7 @@ namespace cdroid{
 // Rect/RectF/PointF, View*, int[]/float[]). Types are checked with any_cast<T>
 // only after a.type()==b.type()==typeid(T), so the casts cannot throw. Exposed
 // (not file-local) so Transition::isValueChanged can reuse it.
-bool anyValuesEqual(const nonstd::any& a, const nonstd::any& b){
+bool anyValuesEqual(const nonstd::any& a, const nonstd::any& b) {
     if (a.has_value() != b.has_value()) return false;
     if (!a.has_value()) return true;
     if (a.type() != b.type()) return false;
@@ -52,14 +52,14 @@ bool anyValuesEqual(const nonstd::any& a, const nonstd::any& b){
     if (t == typeid(RectF))       return nonstd::any_cast<RectF>(a) == nonstd::any_cast<RectF>(b);
     if (t == typeid(PointF))      return nonstd::any_cast<PointF>(a) == nonstd::any_cast<PointF>(b);
     if (t == typeid(View*))       return nonstd::any_cast<View*>(a) == nonstd::any_cast<View*>(b);
-    if (t == typeid(std::vector<int>)){
+    if (t == typeid(std::vector<int>)) {
         // Pointer form: value-form any_cast cannot take a reference ValueType,
         // and the pointer form avoids copying the vector.
         const std::vector<int>* x = nonstd::any_cast<std::vector<int>>(&a);
         const std::vector<int>* y = nonstd::any_cast<std::vector<int>>(&b);
         return x->size() == y->size() && std::equal(x->begin(), x->end(), y->begin());
     }
-    if (t == typeid(std::vector<float>)){
+    if (t == typeid(std::vector<float>)) {
         const std::vector<float>* x = nonstd::any_cast<std::vector<float>>(&a);
         const std::vector<float>* y = nonstd::any_cast<std::vector<float>>(&b);
         return x->size() == y->size() && std::equal(x->begin(), x->end(), y->begin());
@@ -72,7 +72,7 @@ bool anyValuesEqual(const nonstd::any& a, const nonstd::any& b){
 namespace {
 
 // Best-effort stringification of a captured value for toString() (debug only).
-std::string anyToString(const nonstd::any& a){
+std::string anyToString(const nonstd::any& a) {
     if (!a.has_value()) return "null";
     const std::type_info& t = a.type();
     std::ostringstream oss;
@@ -89,14 +89,14 @@ std::string anyToString(const nonstd::any& a){
 
 } // anonymous namespace
 
-TransitionValues::TransitionValues(View* v) : view(v){
+TransitionValues::TransitionValues(View* v) : view(v) {
 }
 
-bool TransitionValues::equals(const TransitionValues& other) const{
+bool TransitionValues::equals(const TransitionValues& other) const {
     // android: other instanceof TransitionValues && view == other.view && values.equals(other.values)
     if (view != other.view) return false;
     if (values.size() != other.values.size()) return false;
-    for (const auto& kv : values){
+    for (const auto& kv : values) {
         auto it = other.values.find(kv.first);
         if (it == other.values.end()) return false;
         if (!anyValuesEqual(kv.second, it->second)) return false;
@@ -104,26 +104,26 @@ bool TransitionValues::equals(const TransitionValues& other) const{
     return true;
 }
 
-int TransitionValues::hashCode() const{
+int TransitionValues::hashCode() const {
     // android: 31 * view.hashCode() + values.hashCode(). view#hashCode is Java's
     // identity hash; CDROID hashes the pointer value. values#hashCode combines
     // entry hashes — here key hash XOR held-type hash (consistent with equals).
     std::hash<std::string> hashString;
     std::intptr_t viewHash = reinterpret_cast<std::intptr_t>(view);
     int valuesHash = 0;
-    for (const auto& kv : values){
+    for (const auto& kv : values) {
         const size_t typeHash = kv.second.has_value() ? kv.second.type().hash_code() : 0;
         valuesHash = 31 * valuesHash + (int)(hashString(kv.first) ^ typeHash);
     }
     return 31 * (int)viewHash + valuesHash;
 }
 
-std::string TransitionValues::toString() const{
+std::string TransitionValues::toString() const {
     std::ostringstream oss;
     oss << "TransitionValues@" << std::hex << hashCode() << ":\n";
     oss << "    view = " << view << "\n";
     oss << "    values:";
-    for (const auto& kv : values){
+    for (const auto& kv : values) {
         oss << "    " << kv.first << ": " << anyToString(kv.second) << "\n";
     }
     return oss.str();

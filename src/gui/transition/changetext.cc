@@ -28,22 +28,22 @@
 
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
 constexpr const char* LOG_TAG = "TextChange";
 constexpr bool DBG = false;
 
-void setSelection(EditText* editText, int start, int end){
-    if (start >= 0 && end >= 0){
+void setSelection(EditText* editText, int start, int end) {
+    if (start >= 0 && end >= 0) {
         editText->setSelection(start, end);
     }
 }
 
 // android: anonymous TransitionListenerAdapter inside createAnimator. Named here
 // (C++ has no anonymous classes) — restores text/selection/color on pause/resume/end.
-struct ChangeTextListener: public TransitionListenerAdapter{
+struct ChangeTextListener: public TransitionListenerAdapter {
     TextView* view;
     std::string startText;
     std::string endText;
@@ -56,32 +56,32 @@ struct ChangeTextListener: public TransitionListenerAdapter{
     int changeBehavior;
     int mPausedColor = 0;
 
-    void onTransitionPause(Transition& /*transition*/) override{
-        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN){
+    void onTransitionPause(Transition& /*transition*/) override {
+        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
             view->setText(endText);   // setText(string) — see deviation note in header
-            if (EditText* et = dynamic_cast<EditText*>(view)){
+            if (EditText* et = dynamic_cast<EditText*>(view)) {
                 setSelection(et, endSelectionStart, endSelectionEnd);
             }
         }
-        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP){
+        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
             mPausedColor = view->getCurrentTextColor();
             view->setTextColor(endColor);
         }
     }
 
-    void onTransitionResume(Transition& /*transition*/) override{
-        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN){
+    void onTransitionResume(Transition& /*transition*/) override {
+        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
             view->setText(startText);
-            if (EditText* et = dynamic_cast<EditText*>(view)){
+            if (EditText* et = dynamic_cast<EditText*>(view)) {
                 setSelection(et, startSelectionStart, startSelectionEnd);
             }
         }
-        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP){
+        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
             view->setTextColor(mPausedColor);
         }
     }
 
-    void onTransitionEnd(Transition& transition) override{
+    void onTransitionEnd(Transition& transition) override {
         transition.removeListener(this); // Transition frees it at destruction
     }
 };
@@ -89,45 +89,46 @@ struct ChangeTextListener: public TransitionListenerAdapter{
 } // anonymous namespace
 
 const std::vector<std::string> ChangeText::sTransitionProperties = {
-    PROPNAME_TEXT, PROPNAME_TEXT_SELECTION_START, PROPNAME_TEXT_SELECTION_END};
+    PROPNAME_TEXT, PROPNAME_TEXT_SELECTION_START, PROPNAME_TEXT_SELECTION_END
+};
 
-ChangeText& ChangeText::setChangeBehavior(int changeBehavior){
-    if (changeBehavior >= CHANGE_BEHAVIOR_KEEP && changeBehavior <= CHANGE_BEHAVIOR_OUT_IN){
+ChangeText& ChangeText::setChangeBehavior(int changeBehavior) {
+    if (changeBehavior >= CHANGE_BEHAVIOR_KEEP && changeBehavior <= CHANGE_BEHAVIOR_OUT_IN) {
         mChangeBehavior = changeBehavior;
     }
     return *this;
 }
 
-std::vector<std::string> ChangeText::getTransitionProperties(){
+std::vector<std::string> ChangeText::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void ChangeText::captureValues(TransitionValues& transitionValues){
-    if (TextView* textview = dynamic_cast<TextView*>(transitionValues.view)){
+void ChangeText::captureValues(TransitionValues& transitionValues) {
+    if (TextView* textview = dynamic_cast<TextView*>(transitionValues.view)) {
         transitionValues.values[PROPNAME_TEXT] = textview->getText().toUTF8(); // snapshot
-        if (dynamic_cast<EditText*>(transitionValues.view)){
+        if (dynamic_cast<EditText*>(transitionValues.view)) {
             transitionValues.values[PROPNAME_TEXT_SELECTION_START] = textview->getSelectionStart();
             transitionValues.values[PROPNAME_TEXT_SELECTION_END]   = textview->getSelectionEnd();
         }
-        if (mChangeBehavior > CHANGE_BEHAVIOR_KEEP){
+        if (mChangeBehavior > CHANGE_BEHAVIOR_KEEP) {
             transitionValues.values[PROPNAME_TEXT_COLOR] = textview->getCurrentTextColor();
         }
     }
 }
 
-void ChangeText::captureStartValues(TransitionValues& transitionValues){
+void ChangeText::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeText::captureEndValues(TransitionValues& transitionValues){
+void ChangeText::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
 Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
+                                     TransitionValues* startValues, TransitionValues* endValues) {
     if (startValues == nullptr || endValues == nullptr ||
             dynamic_cast<TextView*>(startValues->view) == nullptr ||
-            dynamic_cast<TextView*>(endValues->view) == nullptr){
+            dynamic_cast<TextView*>(endValues->view) == nullptr) {
         return nullptr;
     }
     TextView* view = dynamic_cast<TextView*>(endValues->view);
@@ -147,7 +148,7 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
     const std::string endText   = getString(endVals, PROPNAME_TEXT);
 
     int startSelectionStart, startSelectionEnd, endSelectionStart, endSelectionEnd;
-    if (dynamic_cast<EditText*>(view)){
+    if (dynamic_cast<EditText*>(view)) {
         startSelectionStart = getInt(startVals, PROPNAME_TEXT_SELECTION_START, -1);
         startSelectionEnd   = getInt(startVals, PROPNAME_TEXT_SELECTION_END, startSelectionStart);
         endSelectionStart   = getInt(endVals, PROPNAME_TEXT_SELECTION_START, -1);
@@ -156,25 +157,25 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
         startSelectionStart = startSelectionEnd = endSelectionStart = endSelectionEnd = -1;
     }
 
-    if (startText != endText){
+    if (startText != endText) {
         int startColor;
         int endColor;
-        if (mChangeBehavior != CHANGE_BEHAVIOR_IN){
+        if (mChangeBehavior != CHANGE_BEHAVIOR_IN) {
             view->setText(startText);
-            if (EditText* et = dynamic_cast<EditText*>(view)){
+            if (EditText* et = dynamic_cast<EditText*>(view)) {
                 setSelection(et, startSelectionStart, startSelectionEnd);
             }
         }
         Animator* anim;
-        if (mChangeBehavior == CHANGE_BEHAVIOR_KEEP){
+        if (mChangeBehavior == CHANGE_BEHAVIOR_KEEP) {
             startColor = endColor = 0;
             anim = ValueAnimator::ofFloat({0.0f, 1.0f});
             Animator::AnimatorListener listener;
-            listener.onAnimationEnd = [view, endText, endSelectionStart, endSelectionEnd, startText](Animator&, bool){
-                if (startText == view->getText().toUTF8()){
+            listener.onAnimationEnd = [view, endText, endSelectionStart, endSelectionEnd, startText](Animator&, bool) {
+                if (startText == view->getText().toUTF8()) {
                     // Only set if it hasn't been changed since anim started
                     view->setText(endText);
-                    if (EditText* et = dynamic_cast<EditText*>(view)){
+                    if (EditText* et = dynamic_cast<EditText*>(view)) {
                         setSelection(et, endSelectionStart, endSelectionEnd);
                     }
                 }
@@ -186,17 +187,17 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
             // Fade out start text
             ValueAnimator* outAnim = nullptr;
             ValueAnimator* inAnim  = nullptr;
-            if (mChangeBehavior == CHANGE_BEHAVIOR_OUT_IN || mChangeBehavior == CHANGE_BEHAVIOR_OUT){
+            if (mChangeBehavior == CHANGE_BEHAVIOR_OUT_IN || mChangeBehavior == CHANGE_BEHAVIOR_OUT) {
                 outAnim = ValueAnimator::ofInt({(startColor >> 24) & 0xff, 0}); // Color.alpha(startColor)
-                outAnim->addUpdateListener([view, startColor](ValueAnimator& animation){
+                outAnim->addUpdateListener([view, startColor](ValueAnimator& animation) {
                     int currAlpha = nonstd::any_cast<int>(animation.getAnimatedValue());
                     view->setTextColor((currAlpha << 24) | (startColor & 0xffffff));
                 });
                 Animator::AnimatorListener outListener;
-                outListener.onAnimationEnd = [view, endText, endSelectionStart, endSelectionEnd, startText, endColor](Animator&, bool){
-                    if (startText == view->getText().toUTF8()){
+                outListener.onAnimationEnd = [view, endText, endSelectionStart, endSelectionEnd, startText, endColor](Animator&, bool) {
+                    if (startText == view->getText().toUTF8()) {
                         view->setText(endText);
-                        if (EditText* et = dynamic_cast<EditText*>(view)){
+                        if (EditText* et = dynamic_cast<EditText*>(view)) {
                             setSelection(et, endSelectionStart, endSelectionEnd);
                         }
                     }
@@ -205,24 +206,24 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
                 };
                 outAnim->addListener(outListener);
             }
-            if (mChangeBehavior == CHANGE_BEHAVIOR_OUT_IN || mChangeBehavior == CHANGE_BEHAVIOR_IN){
+            if (mChangeBehavior == CHANGE_BEHAVIOR_OUT_IN || mChangeBehavior == CHANGE_BEHAVIOR_IN) {
                 inAnim = ValueAnimator::ofInt({0, (endColor >> 24) & 0xff}); // Color.alpha(endColor)
-                inAnim->addUpdateListener([view, endColor](ValueAnimator& animation){
+                inAnim->addUpdateListener([view, endColor](ValueAnimator& animation) {
                     int currAlpha = nonstd::any_cast<int>(animation.getAnimatedValue());
                     view->setTextColor((currAlpha << 24) | (endColor & 0xffffff));
                 });
                 Animator::AnimatorListener inListener;
-                inListener.onAnimationCancel = [view, endColor](Animator&){
+                inListener.onAnimationCancel = [view, endColor](Animator&) {
                     // restore opaque alpha and correct end color
                     view->setTextColor(endColor);
                 };
                 inAnim->addListener(inListener);
             }
-            if (outAnim != nullptr && inAnim != nullptr){
+            if (outAnim != nullptr && inAnim != nullptr) {
                 AnimatorSet* set = new AnimatorSet();
                 set->playSequentially({outAnim, inAnim});
                 anim = set;
-            } else if (outAnim != nullptr){
+            } else if (outAnim != nullptr) {
                 anim = outAnim;
             } else {
                 // Must be an in-only animation
@@ -241,7 +242,7 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
         transitionListener->endColor = endColor;
         transitionListener->changeBehavior = mChangeBehavior;
         addListener(transitionListener); // Transition takes ownership
-        if (DBG){
+        if (DBG) {
             LOGD("%s: createAnimator returning %p", LOG_TAG, (void*)anim);
         }
         return anim;

@@ -33,7 +33,7 @@
 #include <transition/transitionvalues.h>         // TransitionValues, TransitionValuesPtr
 #include <transition/transitionvaluesmaps.h>     // TransitionValuesMaps
 
-namespace cdroid{
+namespace cdroid {
 
 class Animator;
 class Context;
@@ -63,8 +63,8 @@ class ListView;
  *  - Nullable java ArrayLists that exist only as an allocation optimization are
  *    represented by empty std::vectors (empty == null behaviorally).
  */
-class Transition{
-public:
+class Transition {
+  public:
     /** With setMatchOrder, match by View instance. */
     static constexpr int MATCH_INSTANCE = 0x1;
     static constexpr int MATCH_FIRST    = MATCH_INSTANCE;
@@ -81,22 +81,32 @@ public:
      * Ported from android.transition.Transition.TransitionListener. Implementations
      * are registered by pointer; the caller owns the lifetime (java reference/GC).
      */
-    class TransitionListener{
-    public:
+    class TransitionListener {
+      public:
         virtual ~TransitionListener() = default;
-        virtual void onTransitionStart(Transition& transition){ (void)transition; }
-        virtual void onTransitionEnd(Transition& transition){ (void)transition; }
-        virtual void onTransitionCancel(Transition& transition){ (void)transition; }
-        virtual void onTransitionPause(Transition& transition){ (void)transition; }
-        virtual void onTransitionResume(Transition& transition){ (void)transition; }
+        virtual void onTransitionStart(Transition& transition) {
+            (void)transition;
+        }
+        virtual void onTransitionEnd(Transition& transition) {
+            (void)transition;
+        }
+        virtual void onTransitionCancel(Transition& transition) {
+            (void)transition;
+        }
+        virtual void onTransitionPause(Transition& transition) {
+            (void)transition;
+        }
+        virtual void onTransitionResume(Transition& transition) {
+            (void)transition;
+        }
     };
 
     /**
      * Class to get the epicenter of a Transition. Ported from
      * android.transition.Transition.EpicenterCallback.
      */
-    class EpicenterCallback{
-    public:
+    class EpicenterCallback {
+      public:
         virtual ~EpicenterCallback() = default;
         virtual Rect onGetEpicenter(Transition& transition) = 0;
     };
@@ -106,7 +116,7 @@ public:
      * other transitions are still running, to decide whether a running animation
      * should be canceled or a new animation noop'd. @hide-equivalent internal struct.
      */
-    struct AnimationInfo{
+    struct AnimationInfo {
         View* view = nullptr;
         std::string name;
         TransitionValuesPtr values; // nullable: empty shared_ptr == null
@@ -114,7 +124,7 @@ public:
         Transition* transition = nullptr;
         AnimationInfo() = default;
         AnimationInfo(View* view, const std::string& name, Transition* transition,
-                void* windowId, const TransitionValuesPtr& values);
+                      void* windowId, const TransitionValuesPtr& values);
     };
 
     Transition();
@@ -134,7 +144,7 @@ public:
 
     /** Create the animation for one target's start/end values. Default returns null. */
     virtual Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues);
+                                     TransitionValues* startValues, TransitionValues* endValues);
 
     // ---- match order ----
     void setMatchOrder(const std::vector<int>& matches);
@@ -172,7 +182,7 @@ public:
     // ---- capture / matching (package-private in android; public here for the engine) ----
     void captureValues(ViewGroup* sceneRoot, bool start);
     static void addViewValues(TransitionValuesMaps& transitionValuesMaps,
-            View* view, const TransitionValuesPtr& transitionValues);
+                              View* view, const TransitionValuesPtr& transitionValues);
     void clearValues(bool start);
     TransitionValues* getTransitionValues(View* view, bool start);
     TransitionValues* getMatchedTransitionValues(View* view, bool viewInStart);
@@ -221,11 +231,11 @@ public:
 
     virtual Transition* clone() const;
 
-protected:
+  protected:
     // Engine entry points called by TransitionManager / TransitionSet.
     virtual void createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& startValues,
-            TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
-            std::vector<TransitionValuesPtr>& endValuesList);
+                                 TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
+                                 std::vector<TransitionValuesPtr>& endValuesList);
     void animate(Animator* animator);
     void start();
     void end();
@@ -273,25 +283,25 @@ protected:
     ArrayMap<std::string, std::string> mNameOverrides; // empty == null (value semantics; copy-safe)
     PathMotion* mPathMotion; // set in ctor to STRAIGHT_PATH_MOTION instance
 
-private:
+  private:
     friend class TransitionSet; // addTransition sets child->mParent
 
     // The straight-line default PathMotion (android: STRAIGHT_PATH_MOTION anonymous subclass).
     static PathMotion* straightPathMotion();
 
     void matchInstances(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd);
+                        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd);
     void matchItemIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-            LongSparseArray<View*>& startItemIds, LongSparseArray<View*>& endItemIds);
+                      ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                      LongSparseArray<View*>& startItemIds, LongSparseArray<View*>& endItemIds);
     void matchIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-            SparseArray<View*>& startIds, SparseArray<View*>& endIds);
+                  ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                  SparseArray<View*>& startIds, SparseArray<View*>& endIds);
     void matchNames(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-            ArrayMap<std::string, View*>& startNames, ArrayMap<std::string, View*>& endNames);
+                    ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                    ArrayMap<std::string, View*>& startNames, ArrayMap<std::string, View*>& endNames);
     void addUnmatched(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd);
+                      ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd);
     void matchStartAndEnd(TransitionValuesMaps& startValues, TransitionValuesMaps& endValues);
     void captureHierarchy(View* view, bool start);
     void runAnimator(Animator* animator);
@@ -300,7 +310,7 @@ private:
     static bool alreadyContains(const std::vector<int>& array, int searchIndex);
     static std::vector<int> parseMatchOrder(const std::string& matchOrderString);
     static bool isValueChanged(const TransitionValues& oldValues,
-            const TransitionValues& newValues, const std::string& key);
+                               const TransitionValues& newValues, const std::string& key);
 
     // Returns the per-process map of currently running animators (ThreadLocal in android).
     static ArrayMap<Animator*, AnimationInfo>& getRunningAnimators();
@@ -310,32 +320,32 @@ private:
      * .ArrayListManager). Kept as a nested class to mirror the java source. The lists
      * it manages are non-null std::vectors where empty == android's null.
      */
-    class ArrayListManager{
-    public:
+    class ArrayListManager {
+      public:
         template<typename T>
-        static std::vector<T>& add(std::vector<T>& list, const T& item){
-            if (!Transition::contains(list, item)){
+        static std::vector<T>& add(std::vector<T>& list, const T& item) {
+            if (!Transition::contains(list, item)) {
                 list.push_back(item);
             }
             return list;
         }
         template<typename T>
-        static std::vector<T>& remove(std::vector<T>& list, const T& item){
+        static std::vector<T>& remove(std::vector<T>& list, const T& item) {
             list.erase(std::remove(list.begin(), list.end(), item), list.end());
             return list;
         }
     };
 
     template<typename T>
-    static void excludeObject(std::vector<T>& list, const T& target, bool exclude){
-        if (exclude){
+    static void excludeObject(std::vector<T>& list, const T& target, bool exclude) {
+        if (exclude) {
             ArrayListManager::add(list, target);
         } else {
             ArrayListManager::remove(list, target);
         }
     }
     template<typename T>
-    static bool contains(const std::vector<T>& list, const T& item){
+    static bool contains(const std::vector<T>& list, const T& item) {
         return std::find(list.begin(), list.end(), item) != list.end();
     }
 };

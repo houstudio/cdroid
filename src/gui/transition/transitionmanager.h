@@ -24,7 +24,7 @@
 #include <transition/scene.h>
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * Manages the set of transitions that fire on a change of Scene. Ported from
@@ -38,8 +38,8 @@ namespace cdroid{
  * Fade+ChangeBounds). TransitionSet is not yet ported, so the default is currently Fade;
  * it will switch to AutoTransition once TransitionSet lands.
  */
-class TransitionManager{
-public:
+class TransitionManager {
+  public:
     void setDefaultTransition(Transition* transition);
     static Transition* getDefaultTransition();
 
@@ -64,7 +64,7 @@ public:
     static ArrayMap<ViewGroup*, std::vector<Transition*>>& getRunningTransitions();
     static std::vector<ViewGroup*>& getPendingTransitions();
 
-private:
+  private:
     static void changeScene(Scene* scene, Transition* transition);
     static void sceneChangeSetup(ViewGroup* sceneRoot, Transition* transition);
     static void sceneChangeRunTransition(ViewGroup* sceneRoot, Transition* transition);

@@ -22,7 +22,7 @@
 
 #include <transition/visibility.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -32,24 +32,30 @@ class Animator;
  * This transition tracks changes to the visibility of target views and fades views in
  * or out when they become visible or non-visible. Ported from android-36 android.transition.Fade.
  */
-class Fade: public Visibility{
-public:
+class Fade: public Visibility {
+  public:
     static constexpr int IN  = Visibility::MODE_IN;
     static constexpr int OUT = Visibility::MODE_OUT;
 
     Fade() = default;
-    explicit Fade(int fadingMode){ setMode(fadingMode); }
+    explicit Fade(int fadingMode) {
+        setMode(fadingMode);
+    }
     Fade(Context* context, AttributeSet* attrs);
 
     void captureStartValues(TransitionValues& transitionValues) override;
     Animator* onAppear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                       TransitionValues* startValues, TransitionValues* endValues) override;
     Animator* onDisappear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                          TransitionValues* startValues, TransitionValues* endValues) override;
 
-    Fade* clone() const override{ Fade* c = new Fade(*this); copyCloneFields(c); return c; }
+    Fade* clone() const override {
+        Fade* c = new Fade(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     Animator* createAnimation(View* view, float startAlpha, float endAlpha);
     static float getStartAlpha(TransitionValues* startValues, float fallbackValue);
 
@@ -62,10 +68,10 @@ private:
      * the Animator side is callback-member driven, so this is a plain nested struct whose
      * methods are invoked from Animator::AnimatorListener lambdas.)
      */
-    struct FadeAnimatorListener{
+    struct FadeAnimatorListener {
         View* mView;
         bool mLayerTypeChanged = false;
-        explicit FadeAnimatorListener(View* v): mView(v){}
+        explicit FadeAnimatorListener(View* v): mView(v) {}
         void onAnimationStart(Animator& animation);
         void onAnimationEnd(Animator& animation);
     };

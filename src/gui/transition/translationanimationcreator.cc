@@ -14,7 +14,7 @@
 
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
@@ -22,8 +22,8 @@ namespace {
 // TransitionListener. C++: a TransitionListenerAdapter subclass (transition side) whose
 // animator-side methods (onAnimationCancel/Pause/Resume/End) are invoked from Animator
 // listener lambdas wired in createAnimation.
-class TransitionPositionListener: public TransitionListenerAdapter{
-public:
+class TransitionPositionListener: public TransitionListenerAdapter {
+  public:
     View* mViewInHierarchy;  // holds the transitionPosition tag
     View* mMovingView;       // the view being translated (may be an overlay copy)
     int mStartX;
@@ -35,7 +35,7 @@ public:
     float mTerminalY;
 
     TransitionPositionListener(View* movingView, View* viewInHierarchy,
-            int startX, int startY, float terminalX, float terminalY){
+                               int startX, int startY, float terminalX, float terminalY) {
         mMovingView = movingView;
         mViewInHierarchy = viewInHierarchy;
         mStartX = startX - (int)lround(mMovingView->getTranslationX());
@@ -43,33 +43,33 @@ public:
         mTerminalX = terminalX;
         mTerminalY = terminalY;
         mTransitionPosition = static_cast<int*>(mViewInHierarchy->getTag(R::id::transitionPosition));
-        if (mTransitionPosition != nullptr){
+        if (mTransitionPosition != nullptr) {
             mViewInHierarchy->setTag(R::id::transitionPosition, nullptr);
         }
     }
 
-    void onAnimationCancel(){
-        if (mTransitionPosition == nullptr){
+    void onAnimationCancel() {
+        if (mTransitionPosition == nullptr) {
             mTransitionPosition = new int[2];
         }
         mTransitionPosition[0] = (int)lround(mStartX + mMovingView->getTranslationX());
         mTransitionPosition[1] = (int)lround(mStartY + mMovingView->getTranslationY());
         mViewInHierarchy->setTag(R::id::transitionPosition, mTransitionPosition);
     }
-    void onAnimationEnd(){}
+    void onAnimationEnd() {}
 
-    void onAnimationPause(){
+    void onAnimationPause() {
         mPausedX = mMovingView->getTranslationX();
         mPausedY = mMovingView->getTranslationY();
         mMovingView->setTranslationX(mTerminalX);
         mMovingView->setTranslationY(mTerminalY);
     }
-    void onAnimationResume(){
+    void onAnimationResume() {
         mMovingView->setTranslationX(mPausedX);
         mMovingView->setTranslationY(mPausedY);
     }
 
-    void onTransitionEnd(Transition& transition) override{
+    void onTransitionEnd(Transition& transition) override {
         mMovingView->setTranslationX(mTerminalX);
         mMovingView->setTranslationY(mTerminalY);
         transition.removeListener(this);
@@ -80,11 +80,11 @@ public:
 
 Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionValues* values,
         int viewPosX, int viewPosY, float startX, float startY, float endX, float endY,
-        const TimeInterpolator* interpolator, Transition* transition){
+        const TimeInterpolator* interpolator, Transition* transition) {
     float terminalX = view->getTranslationX();
     float terminalY = view->getTranslationY();
     int* startPosition = static_cast<int*>(values->view->getTag(R::id::transitionPosition));
-    if (startPosition != nullptr){
+    if (startPosition != nullptr) {
         startX = startPosition[0] - viewPosX + terminalX;
         startY = startPosition[1] - viewPosY + terminalY;
     }
@@ -93,7 +93,7 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
 
     view->setTranslationX(startX);
     view->setTranslationY(startY);
-    if (startX == endX && startY == endY){
+    if (startX == endX && startY == endY) {
         return nullptr;
     }
     Path path;
@@ -106,11 +106,19 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
     transition->addListener(listener);
 
     Animator::AnimatorListener al;
-    al.onAnimationCancel = [listener](Animator&){ listener->onAnimationCancel(); };
-    al.onAnimationEnd    = [listener](Animator&, bool){ listener->onAnimationEnd(); };
+    al.onAnimationCancel = [listener](Animator&) {
+        listener->onAnimationCancel();
+    };
+    al.onAnimationEnd    = [listener](Animator&, bool) {
+        listener->onAnimationEnd();
+    };
     Animator::AnimatorPauseListener apl;
-    apl.onAnimationPause  = [listener](Animator&){ listener->onAnimationPause(); };
-    apl.onAnimationResume = [listener](Animator&){ listener->onAnimationResume(); };
+    apl.onAnimationPause  = [listener](Animator&) {
+        listener->onAnimationPause();
+    };
+    apl.onAnimationResume = [listener](Animator&) {
+        listener->onAnimationResume();
+    };
     anim->addListener(al);
     anim->addPauseListener(apl);
     anim->setInterpolator(interpolator);

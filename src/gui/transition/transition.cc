@@ -34,16 +34,16 @@
 #include <widget/adapter.h>
 #include <widget/listview.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 constexpr const char* LOG_TAG = "Transition";
 
 // android: anonymous PathMotion subclass STRAIGHT_PATH_MOTION. Kept as a named
 // concrete subclass (C++ has no anonymous classes).
-class StraightPathMotion: public PathMotion{
-public:
-    Path getPath(float startX, float startY, float endX, float endY) override{
+class StraightPathMotion: public PathMotion {
+  public:
+    Path getPath(float startX, float startY, float endX, float endY) override {
         Path path;
         path.moveTo(startX, startY);
         path.lineTo(endX, endY);
@@ -53,7 +53,7 @@ public:
 } // anonymous namespace
 
 // android: STRAIGHT_PATH_MOTION = new PathMotion(){...}. Singleton accessor.
-PathMotion* Transition::straightPathMotion(){
+PathMotion* Transition::straightPathMotion() {
     static StraightPathMotion instance;
     return &instance;
 }
@@ -71,44 +71,44 @@ constexpr int Transition::DEFAULT_MATCH_ORDER_ARRAY[4];
 // ---- AnimationInfo ----
 Transition::AnimationInfo::AnimationInfo(View* v, const std::string& n, Transition* t,
         void* wid, const TransitionValuesPtr& vals)
-    : view(v), name(n), values(vals), windowId(wid), transition(t){
+    : view(v), name(n), values(vals), windowId(wid), transition(t) {
 }
 
 // ---- construction ----
-Transition::Transition(){
+Transition::Transition() {
     mPathMotion = straightPathMotion();
 }
 
-Transition::Transition(Context* /*context*/, AttributeSet* attrs){
+Transition::Transition(Context* /*context*/, AttributeSet* attrs) {
     mPathMotion = straightPathMotion();
     // android uses context.obtainStyledAttributes(attrs, R.styleable.Transition).
     // CDROID reads attributes directly from AttributeSet (TypedArray is rarely used).
-    if (attrs == nullptr){
+    if (attrs == nullptr) {
         return;
     }
     std::string d = attrs->getAttributeValue("duration");
-    if (!d.empty()){
+    if (!d.empty()) {
         long long duration = atoll(d.c_str());
-        if (duration >= 0){
+        if (duration >= 0) {
             setDuration(duration);
         }
     }
     std::string sd = attrs->getAttributeValue("startDelay");
-    if (!sd.empty()){
+    if (!sd.empty()) {
         long long startDelay = atoll(sd.c_str());
-        if (startDelay > 0){
+        if (startDelay > 0) {
             setStartDelay(startDelay);
         }
     }
     // interpolator: android loads via AnimationUtils.loadInterpolator(context, resID).
     // CDROID resource->interpolator wiring is deferred (TODO: wire when needed).
     std::string matchOrder = attrs->getAttributeValue("matchOrder");
-    if (!matchOrder.empty()){
+    if (!matchOrder.empty()) {
         setMatchOrder(parseMatchOrder(matchOrder));
     }
 }
 
-Transition::~Transition(){
+Transition::~Transition() {
     delete mStartValuesList;
     delete mEndValuesList;
     // Listeners are NOT owned by the Transition (java reference/GC semantics): the same
@@ -119,12 +119,12 @@ Transition::~Transition(){
     // mirroring the GC'd API. (A proper ownership pass can switch to shared_ptr later.)
 }
 
-std::vector<int> Transition::parseMatchOrder(const std::string& matchOrderString){
+std::vector<int> Transition::parseMatchOrder(const std::string& matchOrderString) {
     // android: StringTokenizer(matchOrderString, ","). C++: manual split on ','.
     std::vector<int> matches;
     std::string token;
     std::istringstream iss(matchOrderString);
-    while (std::getline(iss, token, ',')){
+    while (std::getline(iss, token, ',')) {
         // trim
         size_t b = token.find_first_not_of(" \t");
         size_t e = token.find_last_not_of(" \t");
@@ -141,48 +141,63 @@ std::vector<int> Transition::parseMatchOrder(const std::string& matchOrderString
 }
 
 // ---- duration / delay / interpolator ----
-Transition& Transition::setDuration(int64_t duration){ mDuration = duration; return *this; }
-int64_t Transition::getDuration() const{ return mDuration; }
-Transition& Transition::setStartDelay(int64_t startDelay){ mStartDelay = startDelay; return *this; }
-int64_t Transition::getStartDelay() const{ return mStartDelay; }
-Transition& Transition::setInterpolator(const TimeInterpolator* interpolator){ mInterpolator = interpolator; return *this; }
-const TimeInterpolator* Transition::getInterpolator() const{ return mInterpolator; }
+Transition& Transition::setDuration(int64_t duration) {
+    mDuration = duration;
+    return *this;
+}
+int64_t Transition::getDuration() const {
+    return mDuration;
+}
+Transition& Transition::setStartDelay(int64_t startDelay) {
+    mStartDelay = startDelay;
+    return *this;
+}
+int64_t Transition::getStartDelay() const {
+    return mStartDelay;
+}
+Transition& Transition::setInterpolator(const TimeInterpolator* interpolator) {
+    mInterpolator = interpolator;
+    return *this;
+}
+const TimeInterpolator* Transition::getInterpolator() const {
+    return mInterpolator;
+}
 
-std::vector<std::string> Transition::getTransitionProperties(){
+std::vector<std::string> Transition::getTransitionProperties() {
     return {}; // android: null
 }
 
 Animator* Transition::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* /*startValues*/, TransitionValues* /*endValues*/){
+                                     TransitionValues* /*startValues*/, TransitionValues* /*endValues*/) {
     return nullptr;
 }
 
 // ---- match order ----
-void Transition::setMatchOrder(const std::vector<int>& matches){
-    if (matches.empty()){
+void Transition::setMatchOrder(const std::vector<int>& matches) {
+    if (matches.empty()) {
         mMatchOrder.assign(DEFAULT_MATCH_ORDER_ARRAY, DEFAULT_MATCH_ORDER_ARRAY + 4);
         return;
     }
-    for (size_t i = 0; i < matches.size(); i++){
+    for (size_t i = 0; i < matches.size(); i++) {
         int match = matches[i];
-        if (!isValidMatch(match)){
+        if (!isValidMatch(match)) {
             throw std::invalid_argument("matches contains invalid value");
         }
-        if (alreadyContains(matches, (int)i)){
+        if (alreadyContains(matches, (int)i)) {
             throw std::invalid_argument("matches contains a duplicate value");
         }
     }
     mMatchOrder = matches;
 }
 
-bool Transition::isValidMatch(int match){
+bool Transition::isValidMatch(int match) {
     return (match >= MATCH_FIRST && match <= MATCH_LAST);
 }
 
-bool Transition::alreadyContains(const std::vector<int>& array, int searchIndex){
+bool Transition::alreadyContains(const std::vector<int>& array, int searchIndex) {
     int value = array[searchIndex];
-    for (int i = 0; i < searchIndex; i++){
-        if (array[i] == value){
+    for (int i = 0; i < searchIndex; i++) {
+        if (array[i] == value) {
             return true;
         }
     }
@@ -191,15 +206,15 @@ bool Transition::alreadyContains(const std::vector<int>& array, int searchIndex)
 
 // ---- matching (private) ----
 void Transition::matchInstances(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd){
+                                ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd) {
     // Walk in reverse and mutate via removeAt (android does the same).
-    for (int i = unmatchedStart.size() - 1; i >= 0; i--){
+    for (int i = unmatchedStart.size() - 1; i >= 0; i--) {
         View* view = unmatchedStart.keyAt(i);
-        if (view != nullptr && isValidTarget(view)){
+        if (view != nullptr && isValidTarget(view)) {
             int endIdx = unmatchedEnd.indexOfKey(view);
-            if (endIdx >= 0){
+            if (endIdx >= 0) {
                 TransitionValuesPtr end = unmatchedEnd.valueAt(endIdx);
-                if (end && isValidTarget(end->view)){
+                if (end && isValidTarget(end->view)) {
                     TransitionValuesPtr start = unmatchedStart.valueAt(i);
                     unmatchedStart.removeAt(i);
                     unmatchedEnd.removeAt(endIdx);
@@ -212,17 +227,17 @@ void Transition::matchInstances(ArrayMap<View*, TransitionValuesPtr>& unmatchedS
 }
 
 void Transition::matchItemIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-        LongSparseArray<View*>& startItemIds, LongSparseArray<View*>& endItemIds){
+                              ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                              LongSparseArray<View*>& startItemIds, LongSparseArray<View*>& endItemIds) {
     int numStartIds = (int)startItemIds.size();
-    for (int i = 0; i < numStartIds; i++){
+    for (int i = 0; i < numStartIds; i++) {
         View* startView = startItemIds.valueAt(i);
-        if (startView != nullptr && isValidTarget(startView)){
+        if (startView != nullptr && isValidTarget(startView)) {
             View* endView = endItemIds.get(startItemIds.keyAt(i));
-            if (endView != nullptr && isValidTarget(endView)){
+            if (endView != nullptr && isValidTarget(endView)) {
                 TransitionValuesPtr* startValues = unmatchedStart.get(startView);
                 TransitionValuesPtr* endValues = unmatchedEnd.get(endView);
-                if (startValues && *startValues && endValues && *endValues){
+                if (startValues && *startValues && endValues && *endValues) {
                     mStartValuesList->push_back(*startValues);
                     mEndValuesList->push_back(*endValues);
                     unmatchedStart.remove(startView);
@@ -234,17 +249,17 @@ void Transition::matchItemIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedSta
 }
 
 void Transition::matchIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-        SparseArray<View*>& startIds, SparseArray<View*>& endIds){
+                          ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                          SparseArray<View*>& startIds, SparseArray<View*>& endIds) {
     int numStartIds = (int)startIds.size();
-    for (int i = 0; i < numStartIds; i++){
+    for (int i = 0; i < numStartIds; i++) {
         View* startView = startIds.valueAt(i);
-        if (startView != nullptr && isValidTarget(startView)){
+        if (startView != nullptr && isValidTarget(startView)) {
             View* endView = endIds.get(startIds.keyAt(i));
-            if (endView != nullptr && isValidTarget(endView)){
+            if (endView != nullptr && isValidTarget(endView)) {
                 TransitionValuesPtr* startValues = unmatchedStart.get(startView);
                 TransitionValuesPtr* endValues = unmatchedEnd.get(endView);
-                if (startValues && *startValues && endValues && *endValues){
+                if (startValues && *startValues && endValues && *endValues) {
                     mStartValuesList->push_back(*startValues);
                     mEndValuesList->push_back(*endValues);
                     unmatchedStart.remove(startView);
@@ -256,18 +271,18 @@ void Transition::matchIds(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
 }
 
 void Transition::matchNames(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
-        ArrayMap<std::string, View*>& startNames, ArrayMap<std::string, View*>& endNames){
+                            ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd,
+                            ArrayMap<std::string, View*>& startNames, ArrayMap<std::string, View*>& endNames) {
     int numStartNames = (int)startNames.size();
-    for (int i = 0; i < numStartNames; i++){
+    for (int i = 0; i < numStartNames; i++) {
         View* startView = startNames.valueAt(i);
-        if (startView != nullptr && isValidTarget(startView)){
+        if (startView != nullptr && isValidTarget(startView)) {
             View** endViewPtr = endNames.get(startNames.keyAt(i));
             View* endView = endViewPtr ? *endViewPtr : nullptr;
-            if (endView != nullptr && isValidTarget(endView)){
+            if (endView != nullptr && isValidTarget(endView)) {
                 TransitionValuesPtr* startValues = unmatchedStart.get(startView);
                 TransitionValuesPtr* endValues = unmatchedEnd.get(endView);
-                if (startValues && *startValues && endValues && *endValues){
+                if (startValues && *startValues && endValues && *endValues) {
                     mStartValuesList->push_back(*startValues);
                     mEndValuesList->push_back(*endValues);
                     unmatchedStart.remove(startView);
@@ -279,44 +294,45 @@ void Transition::matchNames(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart
 }
 
 void Transition::addUnmatched(ArrayMap<View*, TransitionValuesPtr>& unmatchedStart,
-        ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd){
+                              ArrayMap<View*, TransitionValuesPtr>& unmatchedEnd) {
     // Views that only exist in the start Scene
-    for (int i = 0; i < unmatchedStart.size(); i++){
+    for (int i = 0; i < unmatchedStart.size(); i++) {
         const TransitionValuesPtr& start = unmatchedStart.valueAt(i);
-        if (start && isValidTarget(start->view)){
+        if (start && isValidTarget(start->view)) {
             mStartValuesList->push_back(start);
             mEndValuesList->push_back(TransitionValuesPtr()); // null
         }
     }
     // Views that only exist in the end Scene
-    for (int i = 0; i < unmatchedEnd.size(); i++){
+    for (int i = 0; i < unmatchedEnd.size(); i++) {
         const TransitionValuesPtr& end = unmatchedEnd.valueAt(i);
-        if (end && isValidTarget(end->view)){
+        if (end && isValidTarget(end->view)) {
             mEndValuesList->push_back(end);
             mStartValuesList->push_back(TransitionValuesPtr()); // null
         }
     }
 }
 
-void Transition::matchStartAndEnd(TransitionValuesMaps& startValues, TransitionValuesMaps& endValues){
+void Transition::matchStartAndEnd(TransitionValuesMaps& startValues, TransitionValuesMaps& endValues) {
     ArrayMap<View*, TransitionValuesPtr> unmatchedStart(startValues.viewValues);
     ArrayMap<View*, TransitionValuesPtr> unmatchedEnd(endValues.viewValues);
 
-    for (int match : mMatchOrder){
-        switch (match){
-            case MATCH_INSTANCE:
-                matchInstances(unmatchedStart, unmatchedEnd);
-                break;
-            case MATCH_NAME:
-                matchNames(unmatchedStart, unmatchedEnd, startValues.nameValues, endValues.nameValues);
-                break;
-            case MATCH_ID:
-                matchIds(unmatchedStart, unmatchedEnd, startValues.idValues, endValues.idValues);
-                break;
-            case MATCH_ITEM_ID:
-                matchItemIds(unmatchedStart, unmatchedEnd, startValues.itemIdValues, endValues.itemIdValues);
-                break;
-            default: break;
+    for (int match : mMatchOrder) {
+        switch (match) {
+        case MATCH_INSTANCE:
+            matchInstances(unmatchedStart, unmatchedEnd);
+            break;
+        case MATCH_NAME:
+            matchNames(unmatchedStart, unmatchedEnd, startValues.nameValues, endValues.nameValues);
+            break;
+        case MATCH_ID:
+            matchIds(unmatchedStart, unmatchedEnd, startValues.idValues, endValues.idValues);
+            break;
+        case MATCH_ITEM_ID:
+            matchItemIds(unmatchedStart, unmatchedEnd, startValues.itemIdValues, endValues.itemIdValues);
+            break;
+        default:
+            break;
         }
     }
     addUnmatched(unmatchedStart, unmatchedEnd);
@@ -324,57 +340,59 @@ void Transition::matchStartAndEnd(TransitionValuesMaps& startValues, TransitionV
 
 // ---- createAnimators ----
 void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& startValues,
-        TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
-        std::vector<TransitionValuesPtr>& endValuesList){
-    if (DBG){ LOGD("createAnimators() for %s", toString().c_str()); }
+                                 TransitionValuesMaps& endValues, std::vector<TransitionValuesPtr>& startValuesList,
+                                 std::vector<TransitionValuesPtr>& endValuesList) {
+    if (DBG) {
+        LOGD("createAnimators() for %s", toString().c_str());
+    }
     ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
     int64_t minStartDelay = std::numeric_limits<int64_t>::max();
     SparseLongArray startDelays;
     int startValuesListCount = (int)startValuesList.size();
-    for (int i = 0; i < startValuesListCount; ++i){
+    for (int i = 0; i < startValuesListCount; ++i) {
         TransitionValuesPtr start = startValuesList[i];
         TransitionValuesPtr end = endValuesList[i];
-        if (start && !contains(start->targetedTransitions, this)){
+        if (start && !contains(start->targetedTransitions, this)) {
             start.reset();
         }
-        if (end && !contains(end->targetedTransitions, this)){
+        if (end && !contains(end->targetedTransitions, this)) {
             end.reset();
         }
-        if (!start && !end){
+        if (!start && !end) {
             continue;
         }
         // Only bother trying to animate with values that differ between start/end
         bool isChanged = !start || !end || isTransitionRequired(start.get(), end.get());
-        if (isChanged){
-            if (DBG){
+        if (isChanged) {
+            if (DBG) {
                 View* view = end ? end->view : (start ? start->view : nullptr);
                 LOGD("  differing start/end values for view %p", (void*)view);
             }
             Animator* animator = createAnimator(sceneRoot, start.get(), end.get());
-            if (animator != nullptr){
+            if (animator != nullptr) {
                 View* view = nullptr;
                 TransitionValuesPtr infoValues;
-                if (end){
+                if (end) {
                     view = end->view;
                     std::vector<std::string> properties = getTransitionProperties();
-                    if (!properties.empty()){
+                    if (!properties.empty()) {
                         infoValues = std::make_shared<TransitionValues>(view);
                         TransitionValuesPtr* newValues = endValues.viewValues.get(view);
-                        if (newValues && *newValues){
-                            for (const std::string& prop : properties){
+                        if (newValues && *newValues) {
+                            for (const std::string& prop : properties) {
                                 auto vit = (*newValues)->values.find(prop);
-                                if (vit != (*newValues)->values.end()){
+                                if (vit != (*newValues)->values.end()) {
                                     infoValues->values[prop] = vit->second; // copy the any
                                 }
                             }
                         }
                         int numExistingAnims = runningAnimators.size();
-                        for (int j = 0; j < numExistingAnims; ++j){
+                        for (int j = 0; j < numExistingAnims; ++j) {
                             Animator* anim = runningAnimators.keyAt(j);
                             AnimationInfo* info = runningAnimators.get(anim);
                             if (info && info->values && info->view == view &&
-                                    ((info->name.empty() && getName().empty()) || info->name == getName())){
-                                if (info->values->equals(*infoValues)){
+                                    ((info->name.empty() && getName().empty()) || info->name == getName())) {
+                                if (info->values->equals(*infoValues)) {
                                     // Favor the old animator
                                     animator = nullptr;
                                     break;
@@ -385,10 +403,10 @@ void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& sta
                 } else {
                     view = start ? start->view : nullptr;
                 }
-                if (animator != nullptr){
-                    if (mPropagation != nullptr){
+                if (animator != nullptr) {
+                    if (mPropagation != nullptr) {
                         int64_t delay = mPropagation->getStartDelay(sceneRoot, this,
-                                start.get(), end.get());
+                                        start.get(), end.get());
                         startDelays.put((int)mAnimators.size(), delay);
                         minStartDelay = std::min(delay, minStartDelay);
                     }
@@ -399,8 +417,8 @@ void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& sta
             }
         }
     }
-    if (startDelays.size() != 0){
-        for (size_t i = 0; i < startDelays.size(); i++){
+    if (startDelays.size() != 0) {
+        for (size_t i = 0; i < startDelays.size(); i++) {
             int index = (int)startDelays.keyAt(i);
             Animator* animator = mAnimators[index];
             int64_t delay = startDelays.valueAt(i) - minStartDelay + animator->getStartDelay();
@@ -409,47 +427,47 @@ void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& sta
     }
 }
 
-bool Transition::isValidTarget(View* target) const{
-    if (target == nullptr){
+bool Transition::isValidTarget(View* target) const {
+    if (target == nullptr) {
         return false;
     }
     int targetId = target->getId();
-    if (!mTargetIdExcludes.empty() && contains(mTargetIdExcludes, targetId)){
+    if (!mTargetIdExcludes.empty() && contains(mTargetIdExcludes, targetId)) {
         return false;
     }
-    if (!mTargetExcludes.empty() && contains(mTargetExcludes, target)){
+    if (!mTargetExcludes.empty() && contains(mTargetExcludes, target)) {
         return false;
     }
-    if (!mTargetTypeExcludes.empty()){
+    if (!mTargetTypeExcludes.empty()) {
         const std::type_index tid = std::type_index(typeid(*target));
-        for (const std::type_index& type : mTargetTypeExcludes){
-            if (type == tid){ // android: type.isInstance(target) — exact match (subclass limitation)
+        for (const std::type_index& type : mTargetTypeExcludes) {
+            if (type == tid) { // android: type.isInstance(target) — exact match (subclass limitation)
                 return false;
             }
         }
     }
-    if (!mTargetNameExcludes.empty()){
+    if (!mTargetNameExcludes.empty()) {
         const std::string& tn = target->getTransitionName();
-        if (!tn.empty() && contains(mTargetNameExcludes, tn)){
+        if (!tn.empty() && contains(mTargetNameExcludes, tn)) {
             return false;
         }
     }
-    if (mTargetIds.empty() && mTargets.empty() && mTargetTypes.empty() && mTargetNames.empty()){
+    if (mTargetIds.empty() && mTargets.empty() && mTargetTypes.empty() && mTargetNames.empty()) {
         return true;
     }
-    if (contains(mTargetIds, targetId) || contains(mTargets, target)){
+    if (contains(mTargetIds, targetId) || contains(mTargets, target)) {
         return true;
     }
-    if (!mTargetNames.empty()){
+    if (!mTargetNames.empty()) {
         const std::string& tn = target->getTransitionName();
-        if (!tn.empty() && contains(mTargetNames, tn)){
+        if (!tn.empty() && contains(mTargetNames, tn)) {
             return true;
         }
     }
-    if (!mTargetTypes.empty()){
+    if (!mTargetTypes.empty()) {
         const std::type_index tid = std::type_index(typeid(*target));
-        for (const std::type_index& type : mTargetTypes){
-            if (type == tid){ // android: type.isInstance(target) — exact match (subclass limitation)
+        for (const std::type_index& type : mTargetTypes) {
+            if (type == tid) { // android: type.isInstance(target) — exact match (subclass limitation)
                 return true;
             }
         }
@@ -457,21 +475,25 @@ bool Transition::isValidTarget(View* target) const{
     return false;
 }
 
-ArrayMap<Animator*, Transition::AnimationInfo>& Transition::getRunningAnimators(){
+ArrayMap<Animator*, Transition::AnimationInfo>& Transition::getRunningAnimators() {
     // android: ThreadLocal<ArrayMap>. CDROID runs transitions on the UI thread, so a
     // process-local static is equivalent.
     static ArrayMap<Animator*, AnimationInfo> runningAnimators;
     return runningAnimators;
 }
 
-void Transition::runAnimators(){
-    if (DBG){ LOGD("runAnimators() on %s", toString().c_str()); }
+void Transition::runAnimators() {
+    if (DBG) {
+        LOGD("runAnimators() on %s", toString().c_str());
+    }
     start();
     ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
     // Now start every Animator previously created for this transition
-    for (Animator* anim : mAnimators){
-        if (DBG){ LOGD("  anim: %p", (void*)anim); }
-        if (runningAnimators.containsKey(anim)){
+    for (Animator* anim : mAnimators) {
+        if (DBG) {
+            LOGD("  anim: %p", (void*)anim);
+        }
+        if (runningAnimators.containsKey(anim)) {
             start();
             runAnimator(anim);
         }
@@ -480,16 +502,16 @@ void Transition::runAnimators(){
     end();
 }
 
-void Transition::runAnimator(Animator* animator){
-    if (animator != nullptr){
+void Transition::runAnimator(Animator* animator) {
+    if (animator != nullptr) {
         Animator::AnimatorListener listener;
-        listener.onAnimationStart = [this](Animator& animation, bool){
+        listener.onAnimationStart = [this](Animator& animation, bool) {
             mCurrentAnimators.push_back(&animation);
         };
-        listener.onAnimationEnd = [this](Animator& animation, bool){
+        listener.onAnimationEnd = [this](Animator& animation, bool) {
             getRunningAnimators().remove(&animation);
             auto it = std::find(mCurrentAnimators.begin(), mCurrentAnimators.end(), &animation);
-            if (it != mCurrentAnimators.end()){
+            if (it != mCurrentAnimators.end()) {
                 mCurrentAnimators.erase(it);
             }
         };
@@ -499,15 +521,15 @@ void Transition::runAnimator(Animator* animator){
 }
 
 // ---- capture ----
-void Transition::captureValues(ViewGroup* sceneRoot, bool start){
+void Transition::captureValues(ViewGroup* sceneRoot, bool start) {
     clearValues(start);
     if ((!mTargetIds.empty() || !mTargets.empty())
-            && mTargetNames.empty() && mTargetTypes.empty()){
-        for (int id : mTargetIds){
+            && mTargetNames.empty() && mTargetTypes.empty()) {
+        for (int id : mTargetIds) {
             View* view = sceneRoot->findViewById(id);
-            if (view != nullptr){
+            if (view != nullptr) {
                 TransitionValuesPtr values = std::make_shared<TransitionValues>(view);
-                if (start){
+                if (start) {
                     captureStartValues(*values);
                 } else {
                     captureEndValues(*values);
@@ -517,9 +539,9 @@ void Transition::captureValues(ViewGroup* sceneRoot, bool start){
                 addViewValues(start ? mStartValues : mEndValues, view, values);
             }
         }
-        for (View* view : mTargets){
+        for (View* view : mTargets) {
             TransitionValuesPtr values = std::make_shared<TransitionValues>(view);
-            if (start){
+            if (start) {
                 captureStartValues(*values);
             } else {
                 captureEndValues(*values);
@@ -531,22 +553,22 @@ void Transition::captureValues(ViewGroup* sceneRoot, bool start){
     } else {
         captureHierarchy(sceneRoot, start);
     }
-    if (!start && !mNameOverrides.isEmpty()){
+    if (!start && !mNameOverrides.isEmpty()) {
         int numOverrides = mNameOverrides.size();
         std::vector<View*> overriddenViews;
         overriddenViews.reserve(numOverrides);
-        for (int i = 0; i < numOverrides; i++){
+        for (int i = 0; i < numOverrides; i++) {
             const std::string& fromName = mNameOverrides.keyAt(i);
             int idx = mStartValues.nameValues.indexOfKey(fromName);
             View* v = (idx >= 0) ? mStartValues.nameValues.valueAt(idx) : nullptr;
             overriddenViews.push_back(v);
-            if (idx >= 0){
+            if (idx >= 0) {
                 mStartValues.nameValues.removeAt(idx);
             }
         }
-        for (int i = 0; i < numOverrides; i++){
+        for (int i = 0; i < numOverrides; i++) {
             View* view = overriddenViews[i];
-            if (view != nullptr){
+            if (view != nullptr) {
                 mStartValues.nameValues.put(mNameOverrides.valueAt(i), view);
             }
         }
@@ -554,11 +576,11 @@ void Transition::captureValues(ViewGroup* sceneRoot, bool start){
 }
 
 void Transition::addViewValues(TransitionValuesMaps& transitionValuesMaps,
-        View* view, const TransitionValuesPtr& transitionValues){
+                               View* view, const TransitionValuesPtr& transitionValues) {
     transitionValuesMaps.viewValues.put(view, transitionValues);
     int id = view->getId();
-    if (id >= 0){
-        if (transitionValuesMaps.idValues.indexOfKey(id) >= 0){
+    if (id >= 0) {
+        if (transitionValuesMaps.idValues.indexOfKey(id) >= 0) {
             // Duplicate IDs cannot match by ID.
             transitionValuesMaps.idValues.put(id, nullptr);
         } else {
@@ -566,8 +588,8 @@ void Transition::addViewValues(TransitionValuesMaps& transitionValuesMaps,
         }
     }
     const std::string& name = view->getTransitionName();
-    if (!name.empty()){
-        if (transitionValuesMaps.nameValues.containsKey(name)){
+    if (!name.empty()) {
+        if (transitionValuesMaps.nameValues.containsKey(name)) {
             // Duplicate transitionNames: cannot match by transitionName.
             transitionValuesMaps.nameValues.put(name, nullptr);
         } else {
@@ -575,15 +597,15 @@ void Transition::addViewValues(TransitionValuesMaps& transitionValuesMaps,
         }
     }
     ListView* listview = dynamic_cast<ListView*>(view->getParent());
-    if (listview != nullptr){
+    if (listview != nullptr) {
         Adapter* adapter = listview->getAdapter();
-        if (adapter != nullptr && adapter->hasStableIds()){
+        if (adapter != nullptr && adapter->hasStableIds()) {
             int position = listview->getPositionForView(view);
             int64_t itemId = listview->getItemIdAtPosition(position);
-            if (transitionValuesMaps.itemIdValues.indexOfKey(itemId) >= 0){
+            if (transitionValuesMaps.itemIdValues.indexOfKey(itemId) >= 0) {
                 // Duplicate item IDs: cannot match by item ID.
                 View* alreadyMatched = transitionValuesMaps.itemIdValues.get(itemId);
-                if (alreadyMatched != nullptr){
+                if (alreadyMatched != nullptr) {
                     alreadyMatched->setHasTransientState(false);
                     transitionValuesMaps.itemIdValues.put(itemId, nullptr);
                 }
@@ -595,8 +617,8 @@ void Transition::addViewValues(TransitionValuesMaps& transitionValuesMaps,
     }
 }
 
-void Transition::clearValues(bool start){
-    if (start){
+void Transition::clearValues(bool start) {
+    if (start) {
         mStartValues.viewValues.clear();
         mStartValues.idValues.clear();
         mStartValues.itemIdValues.clear();
@@ -613,28 +635,28 @@ void Transition::clearValues(bool start){
     }
 }
 
-void Transition::captureHierarchy(View* view, bool start){
-    if (view == nullptr){
+void Transition::captureHierarchy(View* view, bool start) {
+    if (view == nullptr) {
         return;
     }
     int id = view->getId();
-    if (!mTargetIdExcludes.empty() && contains(mTargetIdExcludes, id)){
+    if (!mTargetIdExcludes.empty() && contains(mTargetIdExcludes, id)) {
         return;
     }
-    if (!mTargetExcludes.empty() && contains(mTargetExcludes, view)){
+    if (!mTargetExcludes.empty() && contains(mTargetExcludes, view)) {
         return;
     }
-    if (!mTargetTypeExcludes.empty()){
+    if (!mTargetTypeExcludes.empty()) {
         const std::type_index tid = std::type_index(typeid(*view));
-        for (const std::type_index& type : mTargetTypeExcludes){
-            if (type == tid){ // android: isInstance — exact match
+        for (const std::type_index& type : mTargetTypeExcludes) {
+            if (type == tid) { // android: isInstance — exact match
                 return;
             }
         }
     }
-    if (dynamic_cast<ViewGroup*>(view->getParent()) != nullptr){
+    if (dynamic_cast<ViewGroup*>(view->getParent()) != nullptr) {
         TransitionValuesPtr values = std::make_shared<TransitionValues>(view);
-        if (start){
+        if (start) {
             captureStartValues(*values);
         } else {
             captureEndValues(*values);
@@ -644,30 +666,30 @@ void Transition::captureHierarchy(View* view, bool start){
         addViewValues(start ? mStartValues : mEndValues, view, values);
     }
     ViewGroup* parent = dynamic_cast<ViewGroup*>(view);
-    if (parent != nullptr){
+    if (parent != nullptr) {
         // Don't traverse child hierarchy if there are any child-excludes on this view
-        if (!mTargetIdChildExcludes.empty() && contains(mTargetIdChildExcludes, id)){
+        if (!mTargetIdChildExcludes.empty() && contains(mTargetIdChildExcludes, id)) {
             return;
         }
-        if (!mTargetChildExcludes.empty() && contains(mTargetChildExcludes, view)){
+        if (!mTargetChildExcludes.empty() && contains(mTargetChildExcludes, view)) {
             return;
         }
-        if (!mTargetTypeChildExcludes.empty()){
+        if (!mTargetTypeChildExcludes.empty()) {
             const std::type_index tid = std::type_index(typeid(*view));
-            for (const std::type_index& type : mTargetTypeChildExcludes){
-                if (type == tid){ // android: isInstance — exact match
+            for (const std::type_index& type : mTargetTypeChildExcludes) {
+                if (type == tid) { // android: isInstance — exact match
                     return;
                 }
             }
         }
-        for (int i = 0; i < parent->getChildCount(); ++i){
+        for (int i = 0; i < parent->getChildCount(); ++i) {
             captureHierarchy(parent->getChildAt(i), start);
         }
     }
 }
 
-TransitionValues* Transition::getTransitionValues(View* view, bool start){
-    if (mParent != nullptr){
+TransitionValues* Transition::getTransitionValues(View* view, bool start) {
+    if (mParent != nullptr) {
         return mParent->getTransitionValues(view, start);
     }
     TransitionValuesMaps& valuesMaps = start ? mStartValues : mEndValues;
@@ -675,8 +697,8 @@ TransitionValues* Transition::getTransitionValues(View* view, bool start){
     return (p && *p) ? p->get() : nullptr;
 }
 
-TransitionValues* Transition::getMatchedTransitionValues(View* view, bool viewInStart){
-    if (mParent != nullptr){
+TransitionValues* Transition::getMatchedTransitionValues(View* view, bool viewInStart) {
+    if (mParent != nullptr) {
         return mParent->getMatchedTransitionValues(view, viewInStart);
     }
     std::vector<TransitionValuesPtr>& lookIn = viewInStart ? *mStartValuesList : *mEndValuesList;
@@ -684,42 +706,42 @@ TransitionValues* Transition::getMatchedTransitionValues(View* view, bool viewIn
     // only allocated by playTransition; callers must not invoke before that.
     int count = (int)lookIn.size();
     int index = -1;
-    for (int i = 0; i < count; i++){
+    for (int i = 0; i < count; i++) {
         const TransitionValuesPtr& values = lookIn[i];
-        if (!values){
+        if (!values) {
             // Null values are always added to the end of the list, so stop now.
             break;
         }
-        if (values->view == view){
+        if (values->view == view) {
             index = i;
             break;
         }
     }
-    if (index >= 0){
+    if (index >= 0) {
         std::vector<TransitionValuesPtr>& matchIn = viewInStart ? *mEndValuesList : *mStartValuesList;
         return matchIn[index].get();
     }
     return nullptr;
 }
 
-void Transition::pause(View* sceneRoot){
-    if (!mEnded){
+void Transition::pause(View* sceneRoot) {
+    if (!mEnded) {
         ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
         int numOldAnims = runningAnimators.size();
-        if (sceneRoot != nullptr){
+        if (sceneRoot != nullptr) {
             void* windowId = sceneRoot->getWindowId();
-            for (int i = numOldAnims - 1; i >= 0; i--){
+            for (int i = numOldAnims - 1; i >= 0; i--) {
                 AnimationInfo* info = runningAnimators.valueAtPtr(i);
-                if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId){
+                if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId) {
                     Animator* anim = runningAnimators.keyAt(i);
                     anim->pause();
                 }
             }
         }
-        if (!mListeners.empty()){
+        if (!mListeners.empty()) {
             std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
-            for (int i = 0; i < numListeners; ++i){
+            for (int i = 0; i < numListeners; ++i) {
                 tmpListeners[i]->onTransitionPause(*this);
             }
         }
@@ -727,23 +749,23 @@ void Transition::pause(View* sceneRoot){
     }
 }
 
-void Transition::resume(View* sceneRoot){
-    if (mPaused){
-        if (!mEnded){
+void Transition::resume(View* sceneRoot) {
+    if (mPaused) {
+        if (!mEnded) {
             ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
             int numOldAnims = runningAnimators.size();
             void* windowId = sceneRoot->getWindowId();
-            for (int i = numOldAnims - 1; i >= 0; i--){
+            for (int i = numOldAnims - 1; i >= 0; i--) {
                 AnimationInfo* info = runningAnimators.valueAtPtr(i);
-                if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId){
+                if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId) {
                     Animator* anim = runningAnimators.keyAt(i);
                     anim->resume();
                 }
             }
-            if (!mListeners.empty()){
+            if (!mListeners.empty()) {
                 std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
                 int numListeners = (int)tmpListeners.size();
-                for (int i = 0; i < numListeners; ++i){
+                for (int i = 0; i < numListeners; ++i) {
                     tmpListeners[i]->onTransitionResume(*this);
                 }
             }
@@ -752,7 +774,7 @@ void Transition::resume(View* sceneRoot){
     }
 }
 
-void Transition::playTransition(ViewGroup* sceneRoot){
+void Transition::playTransition(ViewGroup* sceneRoot) {
     mStartValuesList = new std::vector<TransitionValuesPtr>();
     mEndValuesList = new std::vector<TransitionValuesPtr>();
     matchStartAndEnd(mStartValues, mEndValues);
@@ -760,27 +782,31 @@ void Transition::playTransition(ViewGroup* sceneRoot){
     ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
     int numOldAnims = runningAnimators.size();
     void* windowId = sceneRoot->getWindowId();
-    for (int i = numOldAnims - 1; i >= 0; i--){
+    for (int i = numOldAnims - 1; i >= 0; i--) {
         Animator* anim = runningAnimators.keyAt(i);
-        if (anim != nullptr){
+        if (anim != nullptr) {
             AnimationInfo* oldInfo = runningAnimators.valueAtPtr(i);
-            if (oldInfo && oldInfo->view != nullptr && oldInfo->windowId == windowId){
+            if (oldInfo && oldInfo->view != nullptr && oldInfo->windowId == windowId) {
                 TransitionValuesPtr oldValues = oldInfo->values;
                 View* oldView = oldInfo->view;
                 TransitionValues* startValues = getTransitionValues(oldView, true);
                 TransitionValues* endValues = getMatchedTransitionValues(oldView, true);
-                if (startValues == nullptr && endValues == nullptr){
+                if (startValues == nullptr && endValues == nullptr) {
                     TransitionValuesPtr* ev = mEndValues.viewValues.get(oldView);
                     endValues = (ev && *ev) ? ev->get() : nullptr;
                 }
                 bool cancel = (startValues != nullptr || endValues != nullptr) &&
-                        oldInfo->transition->isTransitionRequired(oldValues.get(), endValues);
-                if (cancel){
-                    if (anim->isRunning() || anim->isStarted()){
-                        if (DBG){ LOGD("Canceling anim %p", (void*)anim); }
+                              oldInfo->transition->isTransitionRequired(oldValues.get(), endValues);
+                if (cancel) {
+                    if (anim->isRunning() || anim->isStarted()) {
+                        if (DBG) {
+                            LOGD("Canceling anim %p", (void*)anim);
+                        }
                         anim->cancel();
                     } else {
-                        if (DBG){ LOGD("removing anim from info list: %p", (void*)anim); }
+                        if (DBG) {
+                            LOGD("removing anim from info list: %p", (void*)anim);
+                        }
                         runningAnimators.remove(anim);
                     }
                 }
@@ -792,22 +818,22 @@ void Transition::playTransition(ViewGroup* sceneRoot){
     runAnimators();
 }
 
-bool Transition::isTransitionRequired(TransitionValues* startValues, TransitionValues* endValues){
+bool Transition::isTransitionRequired(TransitionValues* startValues, TransitionValues* endValues) {
     bool valuesChanged = false;
     // if startValues null, transition didn't care to stash values, won't get canceled
-    if (startValues != nullptr && endValues != nullptr){
+    if (startValues != nullptr && endValues != nullptr) {
         std::vector<std::string> properties = getTransitionProperties();
-        if (!properties.empty()){
+        if (!properties.empty()) {
             int count = (int)properties.size();
-            for (int i = 0; i < count; i++){
-                if (isValueChanged(*startValues, *endValues, properties[i])){
+            for (int i = 0; i < count; i++) {
+                if (isValueChanged(*startValues, *endValues, properties[i])) {
                     valuesChanged = true;
                     break;
                 }
             }
         } else {
-            for (const auto& kv : startValues->values){
-                if (isValueChanged(*startValues, *endValues, kv.first)){
+            for (const auto& kv : startValues->values) {
+                if (isValueChanged(*startValues, *endValues, kv.first)) {
                     valuesChanged = true;
                     break;
                 }
@@ -818,7 +844,7 @@ bool Transition::isTransitionRequired(TransitionValues* startValues, TransitionV
 }
 
 bool Transition::isValueChanged(const TransitionValues& oldValues,
-        const TransitionValues& newValues, const std::string& key){
+                                const TransitionValues& newValues, const std::string& key) {
     bool oldHas = oldValues.values.count(key) > 0;
     bool newHas = newValues.values.count(key) > 0;
     // Android: compare ONLY when BOTH old and new captured the key. If either side is
@@ -826,15 +852,15 @@ bool Transition::isValueChanged(const TransitionValues& oldValues,
     // `if (oldHas != newHas) return false` only covered the exactly-one-has case, so the
     // BOTH-missing case fell through to values.at(key) and threw std::out_of_range
     // (hit by ChangeBounds whose property set includes keys a given view didn't capture).
-    if (!(oldHas && newHas)){
+    if (!(oldHas && newHas)) {
         return false;
     }
     const nonstd::any& oldValue = oldValues.values.at(key);
     const nonstd::any& newValue = newValues.values.at(key);
     bool changed;
-    if (!oldValue.has_value() && !newValue.has_value()){
+    if (!oldValue.has_value() && !newValue.has_value()) {
         changed = false;
-    } else if (!oldValue.has_value() || !newValue.has_value()){
+    } else if (!oldValue.has_value() || !newValue.has_value()) {
         changed = true;
     } else {
         // neither empty — compare via TransitionValues::anyEquals semantics
@@ -843,21 +869,21 @@ bool Transition::isValueChanged(const TransitionValues& oldValues,
     return changed;
 }
 
-void Transition::animate(Animator* animator){
-    if (animator == nullptr){
+void Transition::animate(Animator* animator) {
+    if (animator == nullptr) {
         end();
     } else {
-        if (getDuration() >= 0){
+        if (getDuration() >= 0) {
             animator->setDuration(getDuration());
         }
-        if (getStartDelay() >= 0){
+        if (getStartDelay() >= 0) {
             animator->setStartDelay(getStartDelay() + animator->getStartDelay());
         }
-        if (getInterpolator() != nullptr){
+        if (getInterpolator() != nullptr) {
             animator->setInterpolator(getInterpolator());
         }
         Animator::AnimatorListener listener;
-        listener.onAnimationEnd = [this](Animator&, bool){
+        listener.onAnimationEnd = [this](Animator&, bool) {
             end();
             // android: animation.removeListener(this). CDROID copies the listener into
             // the Animator, so self-removal by identity is not possible; the animation
@@ -868,12 +894,12 @@ void Transition::animate(Animator* animator){
     }
 }
 
-void Transition::start(){
-    if (mNumInstances == 0){
-        if (!mListeners.empty()){
+void Transition::start() {
+    if (mNumInstances == 0) {
+        if (!mListeners.empty()) {
             std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
-            for (int i = 0; i < numListeners; ++i){
+            for (int i = 0; i < numListeners; ++i) {
                 tmpListeners[i]->onTransitionStart(*this);
             }
         }
@@ -882,25 +908,25 @@ void Transition::start(){
     mNumInstances++;
 }
 
-void Transition::end(){
+void Transition::end() {
     --mNumInstances;
-    if (mNumInstances == 0){
-        if (!mListeners.empty()){
+    if (mNumInstances == 0) {
+        if (!mListeners.empty()) {
             std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
-            for (int i = 0; i < numListeners; ++i){
+            for (int i = 0; i < numListeners; ++i) {
                 tmpListeners[i]->onTransitionEnd(*this);
             }
         }
-        for (size_t i = 0; i < mStartValues.itemIdValues.size(); ++i){
+        for (size_t i = 0; i < mStartValues.itemIdValues.size(); ++i) {
             View* view = mStartValues.itemIdValues.valueAt(i);
-            if (view != nullptr){
+            if (view != nullptr) {
                 view->setHasTransientState(false);
             }
         }
-        for (size_t i = 0; i < mEndValues.itemIdValues.size(); ++i){
+        for (size_t i = 0; i < mEndValues.itemIdValues.size(); ++i) {
             View* view = mEndValues.itemIdValues.valueAt(i);
-            if (view != nullptr){
+            if (view != nullptr) {
                 view->setHasTransientState(false);
             }
         }
@@ -908,232 +934,242 @@ void Transition::end(){
     }
 }
 
-void Transition::forceToEnd(ViewGroup* sceneRoot){
+void Transition::forceToEnd(ViewGroup* sceneRoot) {
     ArrayMap<Animator*, AnimationInfo>& runningAnimators = getRunningAnimators();
     int numOldAnims = runningAnimators.size();
-    if (sceneRoot == nullptr || numOldAnims == 0){
+    if (sceneRoot == nullptr || numOldAnims == 0) {
         return;
     }
     void* windowId = sceneRoot->getWindowId();
     ArrayMap<Animator*, AnimationInfo> oldAnimators(runningAnimators);
     runningAnimators.clear();
-    for (int i = numOldAnims - 1; i >= 0; i--){
+    for (int i = numOldAnims - 1; i >= 0; i--) {
         AnimationInfo* info = oldAnimators.valueAtPtr(i);
-        if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId){
+        if (info && info->view != nullptr && windowId != nullptr && windowId == info->windowId) {
             Animator* anim = oldAnimators.keyAt(i);
             anim->end();
         }
     }
 }
 
-void Transition::cancel(){
+void Transition::cancel() {
     int numAnimators = (int)mCurrentAnimators.size();
-    for (int i = numAnimators - 1; i >= 0; i--){
+    for (int i = numAnimators - 1; i >= 0; i--) {
         Animator* animator = mCurrentAnimators[i];
         animator->cancel();
     }
-    if (!mListeners.empty()){
+    if (!mListeners.empty()) {
         std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
         int numListeners = (int)tmpListeners.size();
-        for (int i = 0; i < numListeners; ++i){
+        for (int i = 0; i < numListeners; ++i) {
             tmpListeners[i]->onTransitionCancel(*this);
         }
     }
 }
 
-Transition& Transition::addListener(TransitionListener* listener){
+Transition& Transition::addListener(TransitionListener* listener) {
     mListeners.push_back(listener);
     return *this;
 }
 
-Transition& Transition::removeListener(TransitionListener* listener){
+Transition& Transition::removeListener(TransitionListener* listener) {
     auto it = std::find(mListeners.begin(), mListeners.end(), listener);
-    if (it != mListeners.end()){
+    if (it != mListeners.end()) {
         mListeners.erase(it);
     }
     return *this;
 }
 
 // ---- epicenter / path motion / propagation ----
-void Transition::setEpicenterCallback(EpicenterCallback* epicenterCallback){
+void Transition::setEpicenterCallback(EpicenterCallback* epicenterCallback) {
     mEpicenterCallback = epicenterCallback;
 }
-Transition::EpicenterCallback* Transition::getEpicenterCallback() const{
+Transition::EpicenterCallback* Transition::getEpicenterCallback() const {
     return mEpicenterCallback;
 }
-Rect Transition::getEpicenter() const{
+Rect Transition::getEpicenter() const {
     // android returns null when no callback. C++ Rect has no null; callers wanting the
     // null semantics should check getEpicenterCallback() == nullptr first.
-    if (mEpicenterCallback == nullptr){
+    if (mEpicenterCallback == nullptr) {
         return Rect();
     }
     return mEpicenterCallback->onGetEpicenter(*const_cast<Transition*>(this));
 }
-void Transition::setPathMotion(PathMotion* pathMotion){
+void Transition::setPathMotion(PathMotion* pathMotion) {
     mPathMotion = (pathMotion == nullptr) ? straightPathMotion() : pathMotion;
 }
-PathMotion* Transition::getPathMotion() const{
+PathMotion* Transition::getPathMotion() const {
     return mPathMotion;
 }
-void Transition::setPropagation(TransitionPropagation* transitionPropagation){
+void Transition::setPropagation(TransitionPropagation* transitionPropagation) {
     mPropagation = transitionPropagation;
 }
-TransitionPropagation* Transition::getPropagation() const{
+TransitionPropagation* Transition::getPropagation() const {
     return mPropagation;
 }
 
-void Transition::capturePropagationValues(TransitionValues& transitionValues){
-    if (mPropagation != nullptr && !transitionValues.values.empty()){
+void Transition::capturePropagationValues(TransitionValues& transitionValues) {
+    if (mPropagation != nullptr && !transitionValues.values.empty()) {
         std::vector<std::string> propertyNames = mPropagation->getPropagationProperties();
-        if (propertyNames.empty()){
+        if (propertyNames.empty()) {
             return;
         }
         bool containsAll = true;
-        for (const std::string& name : propertyNames){
-            if (transitionValues.values.count(name) == 0){
+        for (const std::string& name : propertyNames) {
+            if (transitionValues.values.count(name) == 0) {
                 containsAll = false;
                 break;
             }
         }
-        if (!containsAll){
+        if (!containsAll) {
             mPropagation->captureValues(&transitionValues);
         }
     }
 }
 
 // ---- engine hooks ----
-Transition* Transition::setSceneRoot(ViewGroup* sceneRoot){
+Transition* Transition::setSceneRoot(ViewGroup* sceneRoot) {
     mSceneRoot = sceneRoot;
     return this;
 }
-void Transition::setCanRemoveViews(bool canRemoveViews){
+void Transition::setCanRemoveViews(bool canRemoveViews) {
     mCanRemoveViews = canRemoveViews;
 }
-bool Transition::canRemoveViews() const{
+bool Transition::canRemoveViews() const {
     return mCanRemoveViews;
 }
-void Transition::setNameOverrides(const ArrayMap<std::string, std::string>& overrides){
+void Transition::setNameOverrides(const ArrayMap<std::string, std::string>& overrides) {
     mNameOverrides = overrides;
 }
-ArrayMap<std::string, std::string>& Transition::getNameOverrides(){
+ArrayMap<std::string, std::string>& Transition::getNameOverrides() {
     return mNameOverrides;
 }
 
 // ---- targets ----
-Transition& Transition::addTarget(int targetId){
-    if (targetId > 0){
+Transition& Transition::addTarget(int targetId) {
+    if (targetId > 0) {
         mTargetIds.push_back(targetId);
     }
     return *this;
 }
-Transition& Transition::addTarget(const std::string& targetName){
-    if (!targetName.empty()){
+Transition& Transition::addTarget(const std::string& targetName) {
+    if (!targetName.empty()) {
         mTargetNames.push_back(targetName);
     }
     return *this;
 }
-Transition& Transition::addTarget(const std::type_index& targetType){
+Transition& Transition::addTarget(const std::type_index& targetType) {
     mTargetTypes.push_back(targetType);
     return *this;
 }
-Transition& Transition::addTarget(View* target){
+Transition& Transition::addTarget(View* target) {
     mTargets.push_back(target);
     return *this;
 }
-Transition& Transition::removeTarget(int targetId){
-    if (targetId > 0){
+Transition& Transition::removeTarget(int targetId) {
+    if (targetId > 0) {
         auto it = std::find(mTargetIds.begin(), mTargetIds.end(), targetId);
         if (it != mTargetIds.end()) mTargetIds.erase(it);
     }
     return *this;
 }
-Transition& Transition::removeTarget(const std::string& targetName){
-    if (!targetName.empty()){
+Transition& Transition::removeTarget(const std::string& targetName) {
+    if (!targetName.empty()) {
         auto it = std::find(mTargetNames.begin(), mTargetNames.end(), targetName);
         if (it != mTargetNames.end()) mTargetNames.erase(it);
     }
     return *this;
 }
-Transition& Transition::removeTarget(const std::type_index& targetType){
+Transition& Transition::removeTarget(const std::type_index& targetType) {
     auto it = std::find(mTargetTypes.begin(), mTargetTypes.end(), targetType);
     if (it != mTargetTypes.end()) mTargetTypes.erase(it);
     return *this;
 }
-Transition& Transition::removeTarget(View* target){
-    if (target != nullptr){
+Transition& Transition::removeTarget(View* target) {
+    if (target != nullptr) {
         auto it = std::find(mTargets.begin(), mTargets.end(), target);
         if (it != mTargets.end()) mTargets.erase(it);
     }
     return *this;
 }
 
-Transition& Transition::excludeTarget(int targetId, bool exclude){
-    if (targetId >= 0){
+Transition& Transition::excludeTarget(int targetId, bool exclude) {
+    if (targetId >= 0) {
         excludeObject(mTargetIdExcludes, targetId, exclude);
     }
     return *this;
 }
-Transition& Transition::excludeTarget(const std::string& targetName, bool exclude){
+Transition& Transition::excludeTarget(const std::string& targetName, bool exclude) {
     excludeObject(mTargetNameExcludes, targetName, exclude);
     return *this;
 }
-Transition& Transition::excludeTarget(const std::type_index& targetType, bool exclude){
+Transition& Transition::excludeTarget(const std::type_index& targetType, bool exclude) {
     excludeObject(mTargetTypeExcludes, targetType, exclude);
     return *this;
 }
-Transition& Transition::excludeTarget(View* target, bool exclude){
+Transition& Transition::excludeTarget(View* target, bool exclude) {
     excludeObject(mTargetExcludes, target, exclude);
     return *this;
 }
-Transition& Transition::excludeChildren(int targetId, bool exclude){
-    if (targetId >= 0){
+Transition& Transition::excludeChildren(int targetId, bool exclude) {
+    if (targetId >= 0) {
         excludeObject(mTargetIdChildExcludes, targetId, exclude);
     }
     return *this;
 }
-Transition& Transition::excludeChildren(const std::type_index& targetType, bool exclude){
+Transition& Transition::excludeChildren(const std::type_index& targetType, bool exclude) {
     excludeObject(mTargetTypeChildExcludes, targetType, exclude);
     return *this;
 }
-Transition& Transition::excludeChildren(View* target, bool exclude){
+Transition& Transition::excludeChildren(View* target, bool exclude) {
     excludeObject(mTargetChildExcludes, target, exclude);
     return *this;
 }
 
-const std::vector<int>& Transition::getTargetIds() const{ return mTargetIds; }
-const std::vector<View*>& Transition::getTargets() const{ return mTargets; }
-const std::vector<std::string>& Transition::getTargetNames() const{ return mTargetNames; }
-const std::vector<std::type_index>& Transition::getTargetTypes() const{ return mTargetTypes; }
-const std::vector<std::string>& Transition::getTargetViewNames() const{ return mTargetNames; }
+const std::vector<int>& Transition::getTargetIds() const {
+    return mTargetIds;
+}
+const std::vector<View*>& Transition::getTargets() const {
+    return mTargets;
+}
+const std::vector<std::string>& Transition::getTargetNames() const {
+    return mTargetNames;
+}
+const std::vector<std::type_index>& Transition::getTargetTypes() const {
+    return mTargetTypes;
+}
+const std::vector<std::string>& Transition::getTargetViewNames() const {
+    return mTargetNames;
+}
 
 // ---- name / toString / clone ----
-std::string Transition::getName() const{
+std::string Transition::getName() const {
     return mName;
 }
 
-std::string Transition::toString(){
+std::string Transition::toString() {
     return toString("");
 }
 
-std::string Transition::toString(const std::string& indent){
+std::string Transition::toString(const std::string& indent) {
     std::ostringstream oss;
     oss << indent << mName << "@" << std::hex << reinterpret_cast<std::intptr_t>(this) << ": ";
-    if (mDuration != -1){
+    if (mDuration != -1) {
         oss << "dur(" << std::dec << mDuration << ") ";
     }
-    if (mStartDelay != -1){
+    if (mStartDelay != -1) {
         oss << "dly(" << mStartDelay << ") ";
     }
-    if (mInterpolator != nullptr){
+    if (mInterpolator != nullptr) {
         oss << "interp(" << (void*)mInterpolator << ") ";
     }
-    if (!mTargetIds.empty() || !mTargets.empty()){
+    if (!mTargetIds.empty() || !mTargets.empty()) {
         oss << "tgts(";
-        for (size_t i = 0; i < mTargetIds.size(); ++i){
+        for (size_t i = 0; i < mTargetIds.size(); ++i) {
             if (i > 0) oss << ", ";
             oss << mTargetIds[i];
         }
-        for (size_t i = 0; i < mTargets.size(); ++i){
+        for (size_t i = 0; i < mTargets.size(); ++i) {
             if (i > 0) oss << ", ";
             oss << (void*)mTargets[i];
         }
@@ -1142,7 +1178,7 @@ std::string Transition::toString(const std::string& indent){
     return oss.str();
 }
 
-void Transition::copyCloneFields(Transition* clone) const{
+void Transition::copyCloneFields(Transition* clone) const {
     // android super.clone() is a shallow copy; then these fields are reset so the clone
     // does not share the original's animator/values state. (Does NOT delete the copied
     // mStartValuesList/mEndValuesList pointers — the original still owns them.)
@@ -1153,7 +1189,7 @@ void Transition::copyCloneFields(Transition* clone) const{
     clone->mEndValuesList = nullptr;
 }
 
-Transition* Transition::clone() const{
+Transition* Transition::clone() const {
     // Transition is abstract; concrete subclasses override clone() as
     //   Derived* c = new Derived(*this); copyCloneFields(c); return c;
     // This base implementation cannot instantiate the runtime type.

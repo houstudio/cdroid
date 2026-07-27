@@ -14,7 +14,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -23,24 +23,28 @@ class AttributeSet;
  * Captures an ImageView's matrix before and after the scene change and animates it.
  * Ported from android-36 android.transition.ChangeImageTransform.
  */
-class ChangeImageTransform: public Transition{
-public:
+class ChangeImageTransform: public Transition {
+  public:
     ChangeImageTransform() = default;
-    ChangeImageTransform(Context* context, AttributeSet* attrs): Transition(context, attrs){}
+    ChangeImageTransform(Context* context, AttributeSet* attrs): Transition(context, attrs) {}
 
     std::vector<std::string> getTransitionProperties() override;
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeImageTransform* clone() const override{ ChangeImageTransform* c = new ChangeImageTransform(*this); copyCloneFields(c); return c; }
+    ChangeImageTransform* clone() const override {
+        ChangeImageTransform* c = new ChangeImageTransform(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& transitionValues);
     static Animator* createNullAnimator(View* imageView);
     static Animator* createMatrixAnimator(View* imageView,
-            const Cairo::Matrix& startMatrix, const Cairo::Matrix& endMatrix);
+                                          const Cairo::Matrix& startMatrix, const Cairo::Matrix& endMatrix);
 
     static constexpr const char* PROPNAME_MATRIX = "android:changeImageTransform:matrix";
     static constexpr const char* PROPNAME_BOUNDS = "android:changeImageTransform:bounds";

@@ -23,7 +23,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -32,8 +32,8 @@ class AttributeSet;
  * This transition captures the scroll properties of targets before and after the
  * scene change and animates any changes. Ported from android-36 android.transition.ChangeScroll.
  */
-class ChangeScroll: public Transition{
-public:
+class ChangeScroll: public Transition {
+  public:
     ChangeScroll() = default;
     ChangeScroll(Context* context, AttributeSet* attrs);
 
@@ -41,11 +41,15 @@ public:
     void captureEndValues(TransitionValues& transitionValues) override;
     std::vector<std::string> getTransitionProperties() override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeScroll* clone() const override{ ChangeScroll* c = new ChangeScroll(*this); copyCloneFields(c); return c; }
+    ChangeScroll* clone() const override {
+        ChangeScroll* c = new ChangeScroll(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& transitionValues);
 
     static constexpr const char* PROPNAME_SCROLL_X = "android:changeScroll:x";

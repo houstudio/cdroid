@@ -25,34 +25,34 @@
 
 #include <transition/transitionutils.h>
 
-namespace cdroid{
+namespace cdroid {
 
 const std::vector<std::string> ChangeScroll::PROPERTIES = {PROPNAME_SCROLL_X, PROPNAME_SCROLL_Y};
 
 ChangeScroll::ChangeScroll(Context* context, AttributeSet* attrs)
-    : Transition(context, attrs){
+    : Transition(context, attrs) {
 }
 
-void ChangeScroll::captureStartValues(TransitionValues& transitionValues){
+void ChangeScroll::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeScroll::captureEndValues(TransitionValues& transitionValues){
+void ChangeScroll::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-std::vector<std::string> ChangeScroll::getTransitionProperties(){
+std::vector<std::string> ChangeScroll::getTransitionProperties() {
     return PROPERTIES;
 }
 
-void ChangeScroll::captureValues(TransitionValues& transitionValues){
+void ChangeScroll::captureValues(TransitionValues& transitionValues) {
     transitionValues.values[PROPNAME_SCROLL_X] = transitionValues.view->getScrollX();
     transitionValues.values[PROPNAME_SCROLL_Y] = transitionValues.view->getScrollY();
 }
 
 Animator* ChangeScroll::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
-    if (startValues == nullptr || endValues == nullptr){
+                                       TransitionValues* startValues, TransitionValues* endValues) {
+    if (startValues == nullptr || endValues == nullptr) {
         return nullptr;
     }
     View* view = endValues->view;
@@ -62,11 +62,11 @@ Animator* ChangeScroll::createAnimator(ViewGroup* /*sceneRoot*/,
     int endY   = nonstd::any_cast<int>(endValues->values.at(PROPNAME_SCROLL_Y));
     Animator* scrollXAnimator = nullptr;
     Animator* scrollYAnimator = nullptr;
-    if (startX != endX){
+    if (startX != endX) {
         view->setScrollX(startX);
         scrollXAnimator = ObjectAnimator::ofInt(view, "scrollX", {startX, endX});
     }
-    if (startY != endY){
+    if (startY != endY) {
         view->setScrollY(startY);
         scrollYAnimator = ObjectAnimator::ofInt(view, "scrollY", {startY, endY});
     }

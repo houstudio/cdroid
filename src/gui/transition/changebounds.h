@@ -23,7 +23,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -39,25 +39,35 @@ class AttributeSet;
  * Rect semantics: CDROID CRect<int> is {left, top, width, height}; bounds are stored via
  * Rect::MakeLTRB and read with .left/.top fields and .right()/.bottom() methods.
  */
-class ChangeBounds: public Transition{
-public:
+class ChangeBounds: public Transition {
+  public:
     ChangeBounds();
     ChangeBounds(Context* context, AttributeSet* attrs);
 
     std::vector<std::string> getTransitionProperties() override;
-    void setResizeClip(bool resizeClip){ mResizeClip = resizeClip; }
-    bool getResizeClip() const{ return mResizeClip; }
+    void setResizeClip(bool resizeClip) {
+        mResizeClip = resizeClip;
+    }
+    bool getResizeClip() const {
+        return mResizeClip;
+    }
     /** @deprecated use ChangeTransform. CDROID stubs the reparent bitmap-overlay path. */
-    void setReparent(bool reparent){ mReparent = reparent; }
+    void setReparent(bool reparent) {
+        mReparent = reparent;
+    }
 
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
-    ChangeBounds* clone() const override{ ChangeBounds* c = new ChangeBounds(*this); copyCloneFields(c); return c; }
+    ChangeBounds* clone() const override {
+        ChangeBounds* c = new ChangeBounds(*this);
+        copyCloneFields(c);
+        return c;
+    }
 
-private:
+  private:
     void captureValues(TransitionValues& values);
     bool parentMatches(ViewGroup* startParent, ViewGroup* endParent);
 

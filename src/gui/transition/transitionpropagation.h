@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-namespace cdroid{
+namespace cdroid {
 
 class ViewGroup;
 class Transition;
@@ -36,8 +36,8 @@ class TransitionValues;
  *
  * Ported from android-36 android.transition.TransitionPropagation.
  */
-class TransitionPropagation{
-public:
+class TransitionPropagation {
+  public:
     virtual ~TransitionPropagation() = default;
 
     /**
@@ -46,7 +46,7 @@ public:
      * negative.
      */
     virtual long getStartDelay(ViewGroup* sceneRoot, Transition* transition,
-            TransitionValues* startValues, TransitionValues* endValues) = 0;
+                               TransitionValues* startValues, TransitionValues* endValues) = 0;
 
     /** Captures the values this propagation monitors in the start/end scene. */
     virtual void captureValues(TransitionValues* transitionValues) = 0;

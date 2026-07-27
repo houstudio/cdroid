@@ -8,7 +8,7 @@
 
 #include <transition/pathmotion.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -17,21 +17,27 @@ class AttributeSet;
  * A PathMotion that generates a curved path along an arc on an imaginary circle containing
  * the two points. Ported from android-36 android.transition.ArcMotion.
  */
-class ArcMotion: public PathMotion{
-public:
+class ArcMotion: public PathMotion {
+  public:
     ArcMotion();
     ArcMotion(Context* context, AttributeSet* attrs);
 
     void setMinimumHorizontalAngle(float angleInDegrees);
-    float getMinimumHorizontalAngle() const{ return mMinimumHorizontalAngle; }
+    float getMinimumHorizontalAngle() const {
+        return mMinimumHorizontalAngle;
+    }
     void setMinimumVerticalAngle(float angleInDegrees);
-    float getMinimumVerticalAngle() const{ return mMinimumVerticalAngle; }
+    float getMinimumVerticalAngle() const {
+        return mMinimumVerticalAngle;
+    }
     void setMaximumAngle(float angleInDegrees);
-    float getMaximumAngle() const{ return mMaximumAngle; }
+    float getMaximumAngle() const {
+        return mMaximumAngle;
+    }
 
     Path getPath(float startX, float startY, float endX, float endY) override;
 
-private:
+  private:
     static float toTangent(float arcInDegrees);
 
     static constexpr float DEFAULT_MIN_ANGLE_DEGREES = 0;

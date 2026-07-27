@@ -24,7 +24,7 @@
 #include <transition/transition.h>
 #include <transition/transitionlisteneradapter.h>
 
-namespace cdroid{
+namespace cdroid {
 
 class Context;
 class AttributeSet;
@@ -37,35 +37,37 @@ class Animator;
  * end scenes. Ported from android-36 android.transition.Visibility. Intended as a base
  * for subclasses (Fade, Slide, Explode) which override onAppear/onDisappear.
  */
-class Visibility: public Transition{
-public:
+class Visibility: public Transition {
+  public:
     static constexpr int MODE_IN  = 0x1;
     static constexpr int MODE_OUT = 0x2;
 
     Visibility() = default;
-    Visibility(Context* context, AttributeSet* attrs): Transition(context, attrs){}
+    Visibility(Context* context, AttributeSet* attrs): Transition(context, attrs) {}
 
     void setSuppressLayout(bool suppress);
     void setMode(int mode);
-    int getMode() const{ return mMode; }
+    int getMode() const {
+        return mMode;
+    }
     std::vector<std::string> getTransitionProperties() override;
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;
     bool isVisible(TransitionValues* values);
 
     Animator* createAnimator(ViewGroup* sceneRoot,
-            TransitionValues* startValues, TransitionValues* endValues) override;
+                             TransitionValues* startValues, TransitionValues* endValues) override;
 
     virtual Animator* onAppear(ViewGroup* sceneRoot,
-            TransitionValues* startValues, int startVisibility,
-            TransitionValues* endValues, int endVisibility);
+                               TransitionValues* startValues, int startVisibility,
+                               TransitionValues* endValues, int endVisibility);
     virtual Animator* onAppear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues);
+                               TransitionValues* startValues, TransitionValues* endValues);
     virtual Animator* onDisappear(ViewGroup* sceneRoot,
-            TransitionValues* startValues, int startVisibility,
-            TransitionValues* endValues, int endVisibility);
+                                  TransitionValues* startValues, int startVisibility,
+                                  TransitionValues* endValues, int endVisibility);
     virtual Animator* onDisappear(ViewGroup* sceneRoot, View* view,
-            TransitionValues* startValues, TransitionValues* endValues);
+                                  TransitionValues* startValues, TransitionValues* endValues);
 
     bool isTransitionRequired(TransitionValues* startValues, TransitionValues* newValues) override;
 
@@ -73,7 +75,7 @@ public:
      * Information about the visibility change between start and end values.
      * (android: private static nested class — kept nested.)
      */
-    struct VisibilityInfo{
+    struct VisibilityInfo {
         bool visibilityChange = false;
         bool fadeIn = false;
         int startVisibility = -1;
@@ -90,20 +92,28 @@ public:
      * (lambdas capturing this listener), while the transition side uses this Transition-
      * ListenerAdapter base (owned by the Transition). (android: private static nested.)
      */
-    class DisappearListener: public TransitionListenerAdapter{
-    public:
+    class DisappearListener: public TransitionListenerAdapter {
+      public:
         DisappearListener(View* view, int finalVisibility, bool suppressLayout);
 
         // Animator-side hooks (invoked from animator listener lambdas wired in onDisappear)
-        void onAnimationCancel(Animator& /*animation*/){ mCanceled = true; }
-        void onAnimationEnd(Animator& /*animation*/){ hideViewWhenNotCanceled(); }
+        void onAnimationCancel(Animator& /*animation*/) {
+            mCanceled = true;
+        }
+        void onAnimationEnd(Animator& /*animation*/) {
+            hideViewWhenNotCanceled();
+        }
         void onAnimationPause(Animator& /*animation*/);
         void onAnimationResume(Animator& /*animation*/);
 
         // Transition-side
         void onTransitionEnd(Transition& transition) override;
-        void onTransitionPause(Transition& /*transition*/) override{ suppressLayout(false); }
-        void onTransitionResume(Transition& /*transition*/) override{ suppressLayout(true); }
+        void onTransitionPause(Transition& /*transition*/) override {
+            suppressLayout(false);
+        }
+        void onTransitionResume(Transition& /*transition*/) override {
+            suppressLayout(true);
+        }
 
         void hideViewWhenNotCanceled();
         void suppressLayout(bool suppress);
@@ -116,7 +126,7 @@ public:
         bool mCanceled = false;
     };
 
-private:
+  private:
     void captureValues(TransitionValues& transitionValues);
     static VisibilityInfo getVisibilityChangeInfo(TransitionValues* startValues, TransitionValues* endValues);
 

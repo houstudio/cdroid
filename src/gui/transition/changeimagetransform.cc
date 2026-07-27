@@ -15,17 +15,17 @@
 
 #include <animation/valueanimator.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 
-bool matrixEquals(const Cairo::Matrix& a, const Cairo::Matrix& b){
+bool matrixEquals(const Cairo::Matrix& a, const Cairo::Matrix& b) {
     return a.xx == b.xx && a.yx == b.yx && a.xy == b.xy && a.yy == b.yy && a.x0 == b.x0 && a.y0 == b.y0;
 }
 
 // android: TransitionUtils.MatrixEvaluator — lerp the 6 affine fields. (Cairo uses 6 values;
 // android's Matrix is 9 with a constant [0,0,1] bottom row — the lerp of the 6 is equivalent.)
-Cairo::Matrix lerpMatrix(const Cairo::Matrix& start, const Cairo::Matrix& end, float fraction){
+Cairo::Matrix lerpMatrix(const Cairo::Matrix& start, const Cairo::Matrix& end, float fraction) {
     Cairo::Matrix m;
     m.xx = start.xx + (end.xx - start.xx) * fraction;
     m.yx = start.yx + (end.yx - start.yx) * fraction;
@@ -36,24 +36,26 @@ Cairo::Matrix lerpMatrix(const Cairo::Matrix& start, const Cairo::Matrix& end, f
     return m;
 }
 
-ImageView* asImageView(View* v){ return dynamic_cast<ImageView*>(v); }
+ImageView* asImageView(View* v) {
+    return dynamic_cast<ImageView*>(v);
+}
 
 } // anonymous namespace
 
 const std::vector<std::string> ChangeImageTransform::sTransitionProperties = {PROPNAME_MATRIX, PROPNAME_BOUNDS};
 
-std::vector<std::string> ChangeImageTransform::getTransitionProperties(){
+std::vector<std::string> ChangeImageTransform::getTransitionProperties() {
     return sTransitionProperties;
 }
 
-void ChangeImageTransform::captureValues(TransitionValues& transitionValues){
+void ChangeImageTransform::captureValues(TransitionValues& transitionValues) {
     View* view = transitionValues.view;
     ImageView* imageView = asImageView(view);
-    if (imageView == nullptr || view->getVisibility() != View::VISIBLE){
+    if (imageView == nullptr || view->getVisibility() != View::VISIBLE) {
         return;
     }
     Drawable* drawable = imageView->getDrawable();
-    if (drawable == nullptr){
+    if (drawable == nullptr) {
         return;
     }
     Rect bounds = Rect::MakeLTRB(view->getLeft(), view->getTop(), view->getRight(), view->getBottom());
@@ -63,7 +65,7 @@ void ChangeImageTransform::captureValues(TransitionValues& transitionValues){
     int scaleType = imageView->getScaleType();
     int drawableWidth = drawable->getIntrinsicWidth();
     int drawableHeight = drawable->getIntrinsicHeight();
-    if (scaleType == ScaleType::FIT_XY && drawableWidth > 0 && drawableHeight > 0){
+    if (scaleType == ScaleType::FIT_XY && drawableWidth > 0 && drawableHeight > 0) {
         float scaleX = (float)bounds.width / drawableWidth;
         float scaleY = (float)bounds.height / drawableHeight;
         matrix = Cairo::Matrix(); // identity
@@ -74,20 +76,20 @@ void ChangeImageTransform::captureValues(TransitionValues& transitionValues){
     transitionValues.values[PROPNAME_MATRIX] = matrix;
 }
 
-void ChangeImageTransform::captureStartValues(TransitionValues& transitionValues){
+void ChangeImageTransform::captureStartValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
-void ChangeImageTransform::captureEndValues(TransitionValues& transitionValues){
+void ChangeImageTransform::captureEndValues(TransitionValues& transitionValues) {
     captureValues(transitionValues);
 }
 
 Animator* ChangeImageTransform::createAnimator(ViewGroup* /*sceneRoot*/,
-        TransitionValues* startValues, TransitionValues* endValues){
-    if (startValues == nullptr || endValues == nullptr){
+        TransitionValues* startValues, TransitionValues* endValues) {
+    if (startValues == nullptr || endValues == nullptr) {
         return nullptr;
     }
-    if (startValues->values.count(PROPNAME_BOUNDS) == 0 || endValues->values.count(PROPNAME_BOUNDS) == 0){
+    if (startValues->values.count(PROPNAME_BOUNDS) == 0 || endValues->values.count(PROPNAME_BOUNDS) == 0) {
         return nullptr;
     }
     Rect startBounds = nonstd::any_cast<Rect>(startValues->values.at(PROPNAME_BOUNDS));
@@ -95,7 +97,7 @@ Animator* ChangeImageTransform::createAnimator(ViewGroup* /*sceneRoot*/,
     Cairo::Matrix startMatrix = nonstd::any_cast<Cairo::Matrix>(startValues->values.at(PROPNAME_MATRIX));
     Cairo::Matrix endMatrix   = nonstd::any_cast<Cairo::Matrix>(endValues->values.at(PROPNAME_MATRIX));
 
-    if (startBounds == endBounds && matrixEquals(startMatrix, endMatrix)){
+    if (startBounds == endBounds && matrixEquals(startMatrix, endMatrix)) {
         return nullptr;
     }
 
@@ -104,26 +106,26 @@ Animator* ChangeImageTransform::createAnimator(ViewGroup* /*sceneRoot*/,
     int drawableWidth = drawable->getIntrinsicWidth();
     int drawableHeight = drawable->getIntrinsicHeight();
 
-    if (drawableWidth <= 0 || drawableHeight <= 0){
+    if (drawableWidth <= 0 || drawableHeight <= 0) {
         return createNullAnimator(endValues->view);
     }
     imageView->animateTransform(&startMatrix); // ANIMATED_TRANSFORM_PROPERTY.set(start)
     return createMatrixAnimator(endValues->view, startMatrix, endMatrix);
 }
 
-Animator* ChangeImageTransform::createNullAnimator(View* imageView){
+Animator* ChangeImageTransform::createNullAnimator(View* imageView) {
     // android: NULL_MATRIX_EVALUATOR returns null → animateTransform(null) each frame.
     ValueAnimator* anim = ValueAnimator::ofFloat({0.0f, 1.0f});
-    anim->addUpdateListener([imageView](ValueAnimator&){
+    anim->addUpdateListener([imageView](ValueAnimator&) {
         ((ImageView*)imageView)->animateTransform(nullptr);
     });
     return anim;
 }
 
 Animator* ChangeImageTransform::createMatrixAnimator(View* imageView,
-        const Cairo::Matrix& startMatrix, const Cairo::Matrix& endMatrix){
+        const Cairo::Matrix& startMatrix, const Cairo::Matrix& endMatrix) {
     ValueAnimator* anim = ValueAnimator::ofFloat({0.0f, 1.0f});
-    anim->addUpdateListener([imageView, startMatrix, endMatrix](ValueAnimator& a){
+    anim->addUpdateListener([imageView, startMatrix, endMatrix](ValueAnimator& a) {
         float fraction = a.getAnimatedFraction();
         Cairo::Matrix m = lerpMatrix(startMatrix, endMatrix, fraction);
         ((ImageView*)imageView)->animateTransform(&m);

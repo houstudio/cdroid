@@ -20,7 +20,7 @@
 
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
 /**
  * This adapter class provides empty implementations of the methods from
@@ -29,13 +29,23 @@ namespace cdroid{
  *
  * Ported from android-36 android.transition.TransitionListenerAdapter.
  */
-class TransitionListenerAdapter: public Transition::TransitionListener{
-public:
-    void onTransitionStart(Transition& transition) override{ (void)transition; }
-    void onTransitionEnd(Transition& transition) override{ (void)transition; }
-    void onTransitionCancel(Transition& transition) override{ (void)transition; }
-    void onTransitionPause(Transition& transition) override{ (void)transition; }
-    void onTransitionResume(Transition& transition) override{ (void)transition; }
+class TransitionListenerAdapter: public Transition::TransitionListener {
+  public:
+    void onTransitionStart(Transition& transition) override {
+        (void)transition;
+    }
+    void onTransitionEnd(Transition& transition) override {
+        (void)transition;
+    }
+    void onTransitionCancel(Transition& transition) override {
+        (void)transition;
+    }
+    void onTransitionPause(Transition& transition) override {
+        (void)transition;
+    }
+    void onTransitionResume(Transition& transition) override {
+        (void)transition;
+    }
 };
 
 } // namespace cdroid

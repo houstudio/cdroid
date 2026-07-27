@@ -18,7 +18,7 @@
 #include <transition/sidepropagation.h>
 #include <transition/translationanimationcreator.h>
 
-namespace cdroid{
+namespace cdroid {
 
 namespace {
 DecelerateInterpolator sDecelerate;
@@ -30,70 +30,94 @@ AccelerateInterpolator sAccelerate;
 
 const Slide::CalculateSlide Slide::sCalculateLeft = {
     [](ViewGroup* sr, View* v, float f){ return v->getTranslationX() - sr->getWidth() * f; },
-    [](ViewGroup*, View* v, float){ return v->getTranslationY(); }
+    [](ViewGroup*, View* v, float) {
+        return v->getTranslationY();
+    }
 };
 
 const Slide::CalculateSlide Slide::sCalculateStart = {
-    [](ViewGroup* sr, View* v, float f){
+    [](ViewGroup* sr, View* v, float f) {
         const bool isRtl = sr->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
         return isRtl ? (v->getTranslationX() + sr->getWidth() * f)
-                     : (v->getTranslationX() - sr->getWidth() * f);
+        : (v->getTranslationX() - sr->getWidth() * f);
     },
-    [](ViewGroup*, View* v, float){ return v->getTranslationY(); }
+    [](ViewGroup*, View* v, float) {
+        return v->getTranslationY();
+    }
 };
 
 const Slide::CalculateSlide Slide::sCalculateTop = {
     [](ViewGroup*, View* v, float){ return v->getTranslationX(); },
-    [](ViewGroup* sr, View* v, float f){ return v->getTranslationY() - sr->getHeight() * f; }
+    [](ViewGroup* sr, View* v, float f) {
+        return v->getTranslationY() - sr->getHeight() * f;
+    }
 };
 
 const Slide::CalculateSlide Slide::sCalculateRight = {
     [](ViewGroup* sr, View* v, float f){ return v->getTranslationX() + sr->getWidth() * f; },
-    [](ViewGroup*, View* v, float){ return v->getTranslationY(); }
+    [](ViewGroup*, View* v, float) {
+        return v->getTranslationY();
+    }
 };
 
 const Slide::CalculateSlide Slide::sCalculateEnd = {
-    [](ViewGroup* sr, View* v, float f){
+    [](ViewGroup* sr, View* v, float f) {
         const bool isRtl = sr->getLayoutDirection() == View::LAYOUT_DIRECTION_RTL;
         return isRtl ? (v->getTranslationX() - sr->getWidth() * f)
-                     : (v->getTranslationX() + sr->getWidth() * f);
+        : (v->getTranslationX() + sr->getWidth() * f);
     },
-    [](ViewGroup*, View* v, float){ return v->getTranslationY(); }
+    [](ViewGroup*, View* v, float) {
+        return v->getTranslationY();
+    }
 };
 
 const Slide::CalculateSlide Slide::sCalculateBottom = {
     [](ViewGroup*, View* v, float){ return v->getTranslationX(); },
-    [](ViewGroup* sr, View* v, float f){ return v->getTranslationY() + sr->getHeight() * f; }
+    [](ViewGroup* sr, View* v, float f) {
+        return v->getTranslationY() + sr->getHeight() * f;
+    }
 };
 
-Slide::Slide(){
+Slide::Slide() {
     setSlideEdge(Gravity::BOTTOM);
 }
 
-Slide::Slide(int slideEdge){
+Slide::Slide(int slideEdge) {
     setSlideEdge(slideEdge);
 }
 
 Slide::Slide(Context* context, AttributeSet* attrs)
-    : Visibility(context, attrs){
+    : Visibility(context, attrs) {
     int edge = Gravity::BOTTOM;
-    if (attrs != nullptr){
+    if (attrs != nullptr) {
         std::string e = attrs->getAttributeValue("slideEdge");
         if (!e.empty()) edge = atoi(e.c_str());
     }
     setSlideEdge(edge);
 }
 
-void Slide::setSlideEdge(int slideEdge){
-    switch (slideEdge){
-        case Gravity::LEFT:   mSlideCalculator = &sCalculateLeft; break;
-        case Gravity::TOP:    mSlideCalculator = &sCalculateTop; break;
-        case Gravity::RIGHT:  mSlideCalculator = &sCalculateRight; break;
-        case Gravity::BOTTOM: mSlideCalculator = &sCalculateBottom; break;
-        case Gravity::START:  mSlideCalculator = &sCalculateStart; break;
-        case Gravity::END:    mSlideCalculator = &sCalculateEnd; break;
-        default:
-            throw std::invalid_argument("Invalid slide direction");
+void Slide::setSlideEdge(int slideEdge) {
+    switch (slideEdge) {
+    case Gravity::LEFT:
+        mSlideCalculator = &sCalculateLeft;
+        break;
+    case Gravity::TOP:
+        mSlideCalculator = &sCalculateTop;
+        break;
+    case Gravity::RIGHT:
+        mSlideCalculator = &sCalculateRight;
+        break;
+    case Gravity::BOTTOM:
+        mSlideCalculator = &sCalculateBottom;
+        break;
+    case Gravity::START:
+        mSlideCalculator = &sCalculateStart;
+        break;
+    case Gravity::END:
+        mSlideCalculator = &sCalculateEnd;
+        break;
+    default:
+        throw std::invalid_argument("Invalid slide direction");
     }
     mSlideEdge = slideEdge;
     SidePropagation* propagation = new SidePropagation();
@@ -101,26 +125,26 @@ void Slide::setSlideEdge(int slideEdge){
     setPropagation(propagation);
 }
 
-void Slide::captureValues(TransitionValues& transitionValues){
+void Slide::captureValues(TransitionValues& transitionValues) {
     View* view = transitionValues.view;
     int position[2] = {0, 0};
     view->getLocationOnScreen(position);
-    transitionValues.values[PROPNAME_SCREEN_POSITION] = std::vector<int>{position[0], position[1]};
+    transitionValues.values[PROPNAME_SCREEN_POSITION] = std::vector<int> {position[0], position[1]};
 }
 
-void Slide::captureStartValues(TransitionValues& transitionValues){
+void Slide::captureStartValues(TransitionValues& transitionValues) {
     Visibility::captureStartValues(transitionValues);
     captureValues(transitionValues);
 }
 
-void Slide::captureEndValues(TransitionValues& transitionValues){
+void Slide::captureEndValues(TransitionValues& transitionValues) {
     Visibility::captureEndValues(transitionValues);
     captureValues(transitionValues);
 }
 
 Animator* Slide::onAppear(ViewGroup* sceneRoot, View* view,
-        TransitionValues* /*startValues*/, TransitionValues* endValues){
-    if (endValues == nullptr){
+                          TransitionValues* /*startValues*/, TransitionValues* endValues) {
+    if (endValues == nullptr) {
         return nullptr;
     }
     const std::vector<int>* position = nonstd::any_cast<std::vector<int>>(&endValues->values.at(PROPNAME_SCREEN_POSITION));
@@ -133,8 +157,8 @@ Animator* Slide::onAppear(ViewGroup* sceneRoot, View* view,
 }
 
 Animator* Slide::onDisappear(ViewGroup* sceneRoot, View* view,
-        TransitionValues* startValues, TransitionValues* /*endValues*/){
-    if (startValues == nullptr){
+                             TransitionValues* startValues, TransitionValues* /*endValues*/) {
+    if (startValues == nullptr) {
         return nullptr;
     }
     const std::vector<int>* position = nonstd::any_cast<std::vector<int>>(&startValues->values.at(PROPNAME_SCREEN_POSITION));

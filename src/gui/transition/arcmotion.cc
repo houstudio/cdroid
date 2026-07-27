@@ -12,16 +12,16 @@
 #include <core/context.h>
 #include <core/path.h>
 
-namespace cdroid{
+namespace cdroid {
 
-ArcMotion::ArcMotion(){
+ArcMotion::ArcMotion() {
     mMaximumTangent = toTangent(DEFAULT_MAX_ANGLE_DEGREES);
 }
 
 ArcMotion::ArcMotion(Context* context, AttributeSet* attrs)
-    : PathMotion(context, attrs){
+    : PathMotion(context, attrs) {
     // android reads ArcMotion_minimumVerticalAngle/minimumHorizontalAngle/maximumAngle.
-    if (attrs != nullptr){
+    if (attrs != nullptr) {
         std::string v;
         v = attrs->getAttributeValue("minimumVerticalAngle");
         if (!v.empty()) setMinimumVerticalAngle((float)atof(v.c_str()));
@@ -32,30 +32,30 @@ ArcMotion::ArcMotion(Context* context, AttributeSet* attrs)
     }
 }
 
-void ArcMotion::setMinimumHorizontalAngle(float angleInDegrees){
+void ArcMotion::setMinimumHorizontalAngle(float angleInDegrees) {
     mMinimumHorizontalAngle = angleInDegrees;
     mMinimumHorizontalTangent = toTangent(angleInDegrees);
 }
 
-void ArcMotion::setMinimumVerticalAngle(float angleInDegrees){
+void ArcMotion::setMinimumVerticalAngle(float angleInDegrees) {
     mMinimumVerticalAngle = angleInDegrees;
     mMinimumVerticalTangent = toTangent(angleInDegrees);
 }
 
-void ArcMotion::setMaximumAngle(float angleInDegrees){
+void ArcMotion::setMaximumAngle(float angleInDegrees) {
     mMaximumAngle = angleInDegrees;
     mMaximumTangent = toTangent(angleInDegrees);
 }
 
-float ArcMotion::toTangent(float arcInDegrees){
-    if (arcInDegrees < 0 || arcInDegrees > 90){
+float ArcMotion::toTangent(float arcInDegrees) {
+    if (arcInDegrees < 0 || arcInDegrees > 90) {
         throw std::invalid_argument("Arc must be between 0 and 90 degrees");
     }
     const float PI = 4.0f * std::atan(1.0f);
     return (float)std::tan((arcInDegrees / 2.0f) * PI / 180.0f); // tan(toRadians(arc/2))
 }
 
-Path ArcMotion::getPath(float startX, float startY, float endX, float endY){
+Path ArcMotion::getPath(float startX, float startY, float endX, float endY) {
     Path path;
     path.moveTo(startX, startY);
 
@@ -69,15 +69,15 @@ Path ArcMotion::getPath(float startX, float startY, float endX, float endY){
     float minimumArcDist2 = 0;
     bool isMovingUpwards = startY > endY;
 
-    if (deltaY == 0){
+    if (deltaY == 0) {
         ex = dx;
         ey = dy + (std::abs(deltaX) * 0.5f * mMinimumHorizontalTangent);
-    } else if (deltaX == 0){
+    } else if (deltaX == 0) {
         ex = dx + (std::abs(deltaY) * 0.5f * mMinimumVerticalTangent);
         ey = dy;
-    } else if (std::abs(deltaX) < std::abs(deltaY)){
+    } else if (std::abs(deltaX) < std::abs(deltaY)) {
         float eDistY = std::abs(h2 / (2 * deltaY));
-        if (isMovingUpwards){
+        if (isMovingUpwards) {
             ey = endY + eDistY;
             ex = endX;
         } else {
@@ -87,7 +87,7 @@ Path ArcMotion::getPath(float startX, float startY, float endX, float endY){
         minimumArcDist2 = midDist2 * mMinimumVerticalTangent * mMinimumVerticalTangent;
     } else {
         float eDistX = h2 / (2 * deltaX);
-        if (isMovingUpwards){
+        if (isMovingUpwards) {
             ex = startX + eDistX;
             ey = startY;
         } else {
@@ -102,12 +102,12 @@ Path ArcMotion::getPath(float startX, float startY, float endX, float endY){
     float maximumArcDist2 = midDist2 * mMaximumTangent * mMaximumTangent;
 
     float newArcDistance2 = 0;
-    if (arcDist2 != 0 && arcDist2 < minimumArcDist2){
+    if (arcDist2 != 0 && arcDist2 < minimumArcDist2) {
         newArcDistance2 = minimumArcDist2;
-    } else if (arcDist2 > maximumArcDist2){
+    } else if (arcDist2 > maximumArcDist2) {
         newArcDistance2 = maximumArcDist2;
     }
-    if (newArcDistance2 != 0){
+    if (newArcDistance2 != 0) {
         float ratio2 = newArcDistance2 / arcDist2;
         float ratio = (float)std::sqrt(ratio2);
         ex = dx + (ratio * (ex - dx));

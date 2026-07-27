@@ -13,23 +13,23 @@
 #include <view/viewgroup.h>
 #include <transition/transition.h>
 
-namespace cdroid{
+namespace cdroid {
 
-void CircularPropagation::setPropagationSpeed(float propagationSpeed){
-    if (propagationSpeed == 0){
+void CircularPropagation::setPropagationSpeed(float propagationSpeed) {
+    if (propagationSpeed == 0) {
         throw std::invalid_argument("propagationSpeed may not be 0");
     }
     mPropagationSpeed = propagationSpeed;
 }
 
 long CircularPropagation::getStartDelay(ViewGroup* sceneRoot, Transition* transition,
-        TransitionValues* startValues, TransitionValues* endValues){
-    if (startValues == nullptr && endValues == nullptr){
+                                        TransitionValues* startValues, TransitionValues* endValues) {
+    if (startValues == nullptr && endValues == nullptr) {
         return 0;
     }
     int directionMultiplier = 1;
     TransitionValues* positionValues;
-    if (endValues == nullptr || getViewVisibility(startValues) == View::VISIBLE){
+    if (endValues == nullptr || getViewVisibility(startValues) == View::VISIBLE) {
         positionValues = startValues;
         directionMultiplier = -1;
     } else {
@@ -43,7 +43,7 @@ long CircularPropagation::getStartDelay(ViewGroup* sceneRoot, Transition* transi
     int epicenterY;
     // android: epicenter = transition.getEpicenter() (nullable Rect). CDROID Rect has no
     // null, so gate on the callback instead.
-    if (transition->getEpicenterCallback() != nullptr){
+    if (transition->getEpicenterCallback() != nullptr) {
         Rect epicenter = transition->getEpicenter();
         epicenterX = epicenter.centerX();
         epicenterY = epicenter.centerY();
@@ -58,13 +58,13 @@ long CircularPropagation::getStartDelay(ViewGroup* sceneRoot, Transition* transi
     double distanceFraction = (maxDistance != 0) ? dist / maxDistance : 0;
 
     int64_t duration = transition->getDuration();
-    if (duration < 0){
+    if (duration < 0) {
         duration = 300;
     }
     return (long)lround(duration * directionMultiplier / mPropagationSpeed * distanceFraction);
 }
 
-double CircularPropagation::distance(float x1, float y1, float x2, float y2){
+double CircularPropagation::distance(float x1, float y1, float x2, float y2) {
     double x = x2 - x1;
     double y = y2 - y1;
     return std::hypot(x, y);
