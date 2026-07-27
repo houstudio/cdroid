@@ -23,6 +23,7 @@
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
 #include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/motionscene.h>
+#include <widgetEx/constraintlayout/viewtransition.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
@@ -972,6 +973,39 @@ TEST(ConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
     cl->measure(exactly(800), exactly(400));
     cl->layout(0, 0, 800, 400);
     EXPECT_EQ(tv->getWidth(), 200);
+}
+
+// ViewTransition parses a <ViewTransition> (a per-view animation) out of a MotionScene. Verifies the
+// attribute dispatch (onStateTransition, duration, viewTransitionMode, motionInterpolator), the
+// nested <KeyFrameSet>, and the getViewTransitionById lookup.
+TEST(ConstraintLayout, ViewTransitionParse) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt1\" motionTarget=\"1\""
+        "                  onStateTransition=\"actionDown\" duration=\"300\""
+        "                  viewTransitionMode=\"noState\" motionInterpolator=\"standard\" >"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
+        "    </KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+
+    MotionScene scene(nullptr);
+    scene.load(&app, parser);
+
+    EXPECT_EQ(scene.getViewTransitionCount(), 1u);
+    auto* vt = scene.getViewTransitionAt(0);
+    ASSERT_NE(vt, nullptr);
+    EXPECT_EQ(vt->getStateTransition(), ViewTransition::ONSTATE_ACTION_DOWN);
+    EXPECT_EQ(vt->getDuration(), 300);
+    EXPECT_EQ(vt->getViewTransitionMode(), ViewTransition::VIEWTRANSITIONMODE_NOSTATE);
+    EXPECT_EQ(vt->getInterpolatorString(), "standard");
+    ASSERT_NE(vt->getKeyFrames(), nullptr);
+    // getViewTransitionById round-trips the parsed id.
+    EXPECT_EQ(scene.getViewTransitionById(vt->getId()), vt);
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

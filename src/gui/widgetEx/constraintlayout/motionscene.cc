@@ -5,6 +5,7 @@
  */
 #include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/viewtransition.h>
 
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
@@ -90,6 +91,16 @@ MotionScene::MotionScene(MotionLayout* layout)
 MotionScene::MotionScene(Context* ctx, MotionLayout* layout, const std::string& resourceId)
     : mMotionLayout(layout) {
     load(ctx, resourceId);
+}
+
+// Defined here so the unique_ptr<ViewTransition> member destroys with a complete type.
+MotionScene::~MotionScene() = default;
+
+ViewTransition* MotionScene::getViewTransitionById(int id) const {
+    for (const auto& vt : mViewTransitions) {
+        if (vt->getId() == id) return vt.get();
+    }
+    return nullptr;
 }
 
 std::string MotionScene::stripId(const std::string& idString) {
@@ -230,8 +241,10 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 os->springStopThreshold = parser.getFloat("springStopThreshold", os->springStopThreshold);
                 os->springBoundary      = parser.getInt("springBoundary", kSpringBoundary, os->springBoundary);
                 currentTransition->setOnSwipe(std::move(os));
+            } else if (tag == "ViewTransition") {
+                mViewTransitions.push_back(std::make_unique<ViewTransition>(*this, ctx, parser));
             }
-            // OnSwipe / TouchResponse / StateSet / ViewTransition: deferred (swipe-driven / per-view).
+            // TouchResponse / StateSet: deferred (swipe-driven / per-view).
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "Transition") {
                 currentTransition = nullptr;

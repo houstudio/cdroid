@@ -31,6 +31,7 @@ namespace cdroid {
 
 class Context;
 class MotionLayout;
+class ViewTransition;
 class XmlPullParser;
 
 class MotionScene {
@@ -146,7 +147,14 @@ public:
     // ConstraintSet registered under `id` (from a <ConstraintSet>), or nullptr.
     ConstraintSet* getConstraintSet(int id) const;
 
+    ~MotionScene();
+    // Parsed <ViewTransition> elements.
+    size_t getViewTransitionCount() const { return mViewTransitions.size(); }
+    ViewTransition* getViewTransitionById(int id) const;
+    ViewTransition* getViewTransitionAt(size_t i) const { return mViewTransitions.at(i).get(); }
+
 private:
+    friend class ViewTransition; // so it can resolve ids via getId()
     // Resolve a "@id/name" / "@+id/name" / "name" reference to a stable scene-local int, assigning
     // one lazily per name (so <ConstraintSet id> and <Transition constraintSet*> agree). Logically a
     // query; the name->id cache is mutable so this can be const.
@@ -159,6 +167,7 @@ private:
     int mDefaultDuration = 400;
     std::vector<std::unique_ptr<Transition>> mTransitionList;
     Transition* mCurrentTransition = nullptr;
+    std::vector<std::unique_ptr<ViewTransition>> mViewTransitions; // <ViewTransition> elements
     std::unordered_map<int, std::unique_ptr<ConstraintSet>> mConstraintSetMap; // id -> set
     mutable std::unordered_map<std::string, int> mConstraintSetIdMap;          // name -> id (lazy cache)
     mutable int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)
