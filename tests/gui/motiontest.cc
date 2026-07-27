@@ -25,6 +25,7 @@
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
 #include <widgetEx/constraintlayout/core/motion/splineset.h>
 #include <widgetEx/constraintlayout/core/motion/springstopengine.h>
+#include <widgetEx/constraintlayout/core/motion/stoplogicengine.h>
 
 using namespace cdroid;
 
@@ -264,6 +265,75 @@ TEST(MotionMath, MotionKeyPositionOffset) {
     EXPECT_EQ(mid.getTop(), 250);  // arced below the linear path (y=0)
 }
 
+// The four KeyPosition types (CARTESIAN above; PATH/AXIS/SCREEN below) define the coordinate frame
+// in which percentX/percentY are interpreted. All use a diagonal start(0,0,100,100)->end(400,400,500,
+// 500) so the frames are distinguishable (pvx=pvy=400, centers at (50,50)->(450,450)).
+
+// TYPE_PATH: percentX is along the path vector, percentY is the perpendicular offset.
+// path=0.5, perp=0.3 -> center (50+400*.5-400*.3, 50+400*.5+400*.3) = (130,370) -> topLeft (80,320).
+TEST(MotionMath, MotionKeyPositionPath) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_PATH;
+    kp.mPercentX = 0.5f; // along the path
+    kp.mPercentY = 0.3f; // perpendicular offset
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 80);
+    EXPECT_EQ(mid.getTop(), 320);
+}
+
+// TYPE_AXIS: independent X/Y fractions along each axis (no cross terms).
+// dxdx=0.25, dydy=0.75 -> center (50+400*.25, 50+400*.75) = (150,350) -> topLeft (100,300).
+TEST(MotionMath, MotionKeyPositionAxis) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_AXIS;
+    kp.mPercentX = 0.25f;
+    kp.mPercentY = 0.75f;
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 100);
+    EXPECT_EQ(mid.getTop(), 300);
+}
+
+// TYPE_SCREEN: percentX/percentY are fractions of (parentSize - widgetSize). Needs the parent
+// dimensions (passed via setup). parent 1000x800, widget 100x100, x=0.5 y=0.25 ->
+// center (0.5*900+50, 0.25*700+50) = (500,225) -> topLeft (450,175).
+TEST(MotionMath, MotionKeyPositionScreen) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.setup(1000, 800, 0.0f); // parent dimensions for TYPE_SCREEN
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_SCREEN;
+    kp.mPercentX = 0.5f;
+    kp.mPercentY = 0.25f;
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 450);
+    EXPECT_EQ(mid.getTop(), 175);
+}
+
 // A KeyCycle superimposes a sine-wave oscillation on the base alpha.
 // base alpha=1, cycle amplitude=0.3, period=2 (2 full sine cycles over [0,1]).
 // At progress 0.125: overlay = sin(2π·0.125·2)·0.3 = sin(π/2)·0.3 = 0.3 → alpha=1.3.
@@ -444,6 +514,37 @@ TEST(MotionMath, SpringStopEngineBouncesOffEnd) {
         if (e.isStopped()) break;
     }
     EXPECT_LE(maxPos, 1.0f + 1e-3f); // bounced off 1, did not overshoot
+}
+
+// ---- StopLogicEngine (continuous-velocity settle) ----
+
+// Cruise-then-decelerate: currentPos 0.9 -> destination 1.0 at velocity 0.2, maxAccel 3.2, maxVel 3.2.
+// The engine cruises at 0.2 for cruseTime=0.46875s (covering 0.09375), then brakes over 0.0625s.
+// Hand-computed: start 0.9, end-of-cruise 0.99375, destination 1.0 at t=0.53125, monotonic up.
+TEST(MotionMath, StopLogicEngineCruiseDecelerate) {
+    StopLogicEngine e;
+    e.config(0.9f, 1.0f, 0.2f, 0.9f, 3.2f, 3.2f);
+    EXPECT_NEAR(e.getInterpolation(0.0f), 0.9f, 1e-4f);     // start
+    EXPECT_NEAR(e.getInterpolation(0.46875f), 0.99375f, 1e-4f); // end of cruise (0.2 * 0.46875)
+    EXPECT_NEAR(e.getInterpolation(0.53125f), 1.0f, 1e-4f); // destination reached
+    EXPECT_NEAR(e.getInterpolation(1.0f), 1.0f, 1e-4f);     // past end -> clamps to destination
+    EXPECT_TRUE(e.isStopped());                             // profile exhausted
+    // Monotonic increasing (cruise then decelerate).
+    EXPECT_LT(e.getInterpolation(0.0f), e.getInterpolation(0.25f));
+    EXPECT_LT(e.getInterpolation(0.25f), e.getInterpolation(0.5f));
+}
+
+// Negative initial velocity (moving away from destination): the engine first reverses (dips below
+// start) then accelerates to the destination. currentPos 0.9 -> 1.0 at velocity -0.2.
+// At t=0.0625 (velocity reaches 0) the position dips to 0.89375 (< start 0.9); it then climbs to 1.0.
+TEST(MotionMath, StopLogicEngineBackwardReverses) {
+    StopLogicEngine e;
+    e.config(0.9f, 1.0f, -0.2f, 0.9f, 3.2f, 3.2f);
+    EXPECT_NEAR(e.getInterpolation(0.0f), 0.9f, 1e-4f);
+    EXPECT_NEAR(e.getInterpolation(0.0625f), 0.89375f, 1e-3f); // dipped below start (backward)
+    EXPECT_GT(0.9f, e.getInterpolation(0.0625f));              // below the start position
+    EXPECT_NEAR(e.getInterpolation(0.5f), 1.0f, 1e-3f);        // climbed to destination
+    EXPECT_TRUE(e.isStopped());
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

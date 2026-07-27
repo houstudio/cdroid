@@ -69,7 +69,10 @@ int MotionPaths::getCustomData(const std::string& name, std::vector<double>& val
     return n;
 }
 
-// --- deferred (chunk 5c, ported with Motion + MotionKeyPosition) ---
+// Android's initCartesian/initPath/initAxis/initScreen build a KeyPosition's absolute frame in the
+// MotionPaths ctor; CDROID inlines the equivalent math in Motion::buildPath (switch on
+// mPositionType), so these per-point initializers are unused stubs kept for API parity. getRect/
+// setView (CurveFit readback) are likewise handled in Motion (spline/arc + interpolate).
 void MotionPaths::initCartesian(MotionKeyPosition* /*c*/, MotionPaths* /*start*/, MotionPaths* /*end*/) {}
 void MotionPaths::initAxis(MotionKeyPosition* /*c*/, MotionPaths* /*start*/, MotionPaths* /*end*/) {}
 void MotionPaths::initPath(MotionKeyPosition* /*c*/, MotionPaths* /*start*/, MotionPaths* /*end*/) {}

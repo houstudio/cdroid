@@ -62,9 +62,11 @@ void Motion::setEndState(MotionWidget* mw){
     setEnd(mw);
 }
 
-void Motion::setup(int /*parentWidth*/, int /*parentHeight*/, float /*transitionDuration*/) {
-    // MVP: linear interpolation needs no precomputed tables. The CurveFit[]/keyframe engine is
-    // deferred (fidelity TODO).
+void Motion::setup(int parentWidth, int parentHeight, float /*transitionDuration*/) {
+    // Parent dimensions feed TYPE_SCREEN KeyPositions (which place a frame relative to the parent
+    // rather than the start→end path). The CurveFit[] precompute tables are deferred (fidelity TODO).
+    mParentWidth = parentWidth;
+    mParentHeight = parentHeight;
     buildEasing();
 }
 
@@ -110,16 +112,54 @@ void Motion::buildPath() {
     for (auto* k : mPositionKeys) {
         const float pos = k->mFramePosition / 100.0f;
         if (pos <= 0.0f || pos >= 1.0f) continue;
-        const float sw   = std::isnan(k->mPercentWidth)  ? pos : k->mPercentWidth;
-        const float sh   = std::isnan(k->mPercentHeight) ? pos : k->mPercentHeight;
-        const float dxdx = std::isnan(k->mPercentX)      ? pos : k->mPercentX;
-        const float dydx = std::isnan(k->mAltPercentY)   ? 0.0f : k->mAltPercentY;
-        const float dydy = std::isnan(k->mPercentY)      ? pos : k->mPercentY;
-        const float dxdy = std::isnan(k->mAltPercentX)   ? 0.0f : k->mAltPercentX;
+        const float sw = std::isnan(k->mPercentWidth)  ? pos : k->mPercentWidth;
+        const float sh = std::isnan(k->mPercentHeight) ? pos : k->mPercentHeight;
         const float pw = sW + dW * sw;
         const float ph = sH + dH * sh;
-        const float cx = sCx + pvx * dxdx + pvy * dxdy;
-        const float cy = sCy + pvy * dydy + pvx * dydx;
+        // Control-point center, by KeyPosition type (faithful to MotionPaths.init*, derived as
+        // center = topLeft + size/2 since the spline stores top-left x,y). CARTESIAN/PATH/AXIS use
+        // only the start→end geometry; SCREEN additionally uses the parent dimensions (via setup).
+        float cx, cy;
+        switch (k->mPositionType) {
+            case MotionKeyPosition::TYPE_PATH: {
+                // Along the path vector plus a perpendicular offset (percentY is the perpendicular).
+                const float path = std::isnan(k->mPercentX) ? pos : k->mPercentX;
+                const float perp = std::isnan(k->mPercentY) ? 0.0f : k->mPercentY;
+                cx = sCx + pvx * path - pvy * perp; // perpendicularX = -pathVectorY
+                cy = sCy + pvy * path + pvx * perp; // perpendicularY =  pathVectorX
+                break;
+            }
+            case MotionKeyPosition::TYPE_AXIS: {
+                // Independent X/Y fractions along each axis (no cross/altPercent terms).
+                const float dxdx = std::isnan(k->mPercentX) ? pos : k->mPercentX;
+                const float dydy = std::isnan(k->mPercentY) ? pos : k->mPercentY;
+                cx = sCx + pvx * dxdx;
+                cy = sCy + pvy * dydy;
+                break;
+            }
+            case MotionKeyPosition::TYPE_SCREEN: {
+                // Relative to the parent: fraction of (parentSize - widgetSize); falls back to the
+                // path placement when the fraction is unset.
+                cx = std::isnan(k->mPercentX)
+                    ? (sCx + pvx * pos)
+                    : (k->mPercentX * (mParentWidth  - pw) + pw / 2.0f);
+                cy = std::isnan(k->mPercentY)
+                    ? (sCy + pvy * pos)
+                    : (k->mPercentY * (mParentHeight - ph) + ph / 2.0f);
+                break;
+            }
+            case MotionKeyPosition::TYPE_CARTESIAN:
+            default: {
+                // Delta-relative along the path vector, with altPercent cross terms.
+                const float dxdx = std::isnan(k->mPercentX)    ? pos : k->mPercentX;
+                const float dydx = std::isnan(k->mAltPercentY) ? 0.0f : k->mAltPercentY;
+                const float dydy = std::isnan(k->mPercentY)    ? pos : k->mPercentY;
+                const float dxdy = std::isnan(k->mAltPercentX) ? 0.0f : k->mAltPercentX;
+                cx = sCx + pvx * dxdx + pvy * dxdy;
+                cy = sCy + pvy * dydy + pvx * dydx;
+                break;
+            }
+        }
         // A KeyPosition may override its segment's arc mode (pathMotionArc); otherwise inherit.
         addPt(pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph,
               (k->mPathMotionArc >= 0) ? k->mPathMotionArc : ARC_INHERIT);

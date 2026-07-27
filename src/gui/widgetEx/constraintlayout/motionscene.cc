@@ -222,6 +222,7 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 os->touchAnchorId  = parser.getResourceId("touchAnchorId", os->touchAnchorId);
                 os->onTouchUp     = parser.getInt("onTouchUp", kTouchUp, os->onTouchUp);
                 os->maxVelocity   = parser.getFloat("maxVelocity", os->maxVelocity);
+                os->maxAcceleration = parser.getFloat("maxAcceleration", os->maxAcceleration);
                 os->autoCompleteMode    = parser.getInt("autoCompleteMode", kAutoComplete, os->autoCompleteMode);
                 os->springMass          = parser.getFloat("springMass", os->springMass);
                 os->springStiffness     = parser.getFloat("springStiffness", os->springStiffness);

@@ -60,7 +60,8 @@ public:
         int   touchAnchorSide= SIDE_MIDDLE;  // which point on the anchor is the drag reference
         int   touchAnchorId  = UNSET;        // view whose start->end travel is the drag range
         int   onTouchUp      = ON_UP_AUTOCOMPLETE;
-        float maxVelocity    = 4.0f;         // (MVP: unused — snap is progress-based, not velocity)
+        float maxVelocity    = 4.0f;         // progress/sec cap (continuous-velocity auto-completion)
+        float maxAcceleration= 1.2f;         // progress/sec^2 cap (continuous-velocity auto-completion)
 
         // Spring auto-completion (autoCompleteMode=COMPLETE_SPRING): a damped spring drives the
         // settle, carrying the drag's release velocity as its initial velocity.

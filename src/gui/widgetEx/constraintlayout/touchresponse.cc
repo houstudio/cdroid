@@ -30,6 +30,8 @@ TouchResponse::TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& c
     , mOnTouchUp(cfg.onTouchUp)
     , mDragScale(cfg.dragScale)
     , mAutoCompleteMode(cfg.autoCompleteMode)
+    , mMaxVelocity(cfg.maxVelocity)
+    , mMaxAcceleration(cfg.maxAcceleration)
     , mSpringMass(cfg.springMass)
     , mSpringStiffness(cfg.springStiffness)
     , mSpringDamping(cfg.springDamping)
@@ -136,8 +138,13 @@ void TouchResponse::onUp(const MotionEvent& evt) {
         mLayout->animateToWithSpring(endTarget ? 1.0f : 0.0f, velocityProgress,
                                      mSpringMass, mSpringStiffness, mSpringDamping,
                                      mSpringStopThreshold, mSpringBoundary);
-    } else if (towardEnd) mLayout->transitionToEnd();
-    else                  mLayout->transitionToStart();
+    } else {
+        // Continuous-velocity auto-completion (the Android default): a velocity-profile engine
+        // carries the release momentum and decelerates to rest at the chosen endpoint.
+        const bool endTarget = towardEnd;
+        mLayout->animateToWithStopLogic(endTarget ? 1.0f : 0.0f, velocityProgress,
+                                        mMaxAcceleration, mMaxVelocity);
+    }
 }
 
 } // namespace cdroid

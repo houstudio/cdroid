@@ -92,6 +92,8 @@ private:
     std::unique_ptr<CurveFit> mPositionCurveFit; // spline through the position keyframes (start..end)
     std::unique_ptr<CurveFit> mArcCurveFit;      // quarter-ellipse arc (x,y) when mPathMotionArc set
     bool mPathDirty = true;                       // start/end/keyframes changed -> rebuild
+    int mParentWidth = 0;   // parent dimensions, needed by TYPE_SCREEN KeyPositions (set via setup)
+    int mParentHeight = 0;
     std::vector<class MotionKeyAttributes*> mAttributeKeys;
     std::vector<class MotionKeyPosition*> mPositionKeys;
     std::vector<class MotionKeyCycle*> mCycleKeys;

@@ -31,6 +31,7 @@ namespace cdroid {
 class ValueAnimator;
 class MotionEvent;
 class SpringStopEngine;
+class StopLogicEngine;
 class MotionKeyAttributes;
 class MotionKeyPosition;
 class KeyFrames;
@@ -64,6 +65,11 @@ public:
     void animateToWithSpring(float target, float startVelocity,
                              float mass, float stiffness, float damping,
                              float stopThreshold, int boundary);
+    // Continuous-velocity settle (OnSwipe autoCompleteMode=continuousVelocity): a velocity-profile
+    // engine carries the release momentum and decelerates to rest at `target` within the transition
+    // duration, bounded by maxAcceleration/maxVelocity (progress units).
+    void animateToWithStopLogic(float target, float startVelocity,
+                                float maxAcceleration, float maxVelocity);
     // Instant jump (no animation).
     void setProgressInstant(float progress) { setProgress(progress); }
     void setTransitionDuration(int64_t durationMs) { mTransitionDuration = durationMs; }
@@ -127,6 +133,7 @@ private:
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;
     std::unique_ptr<SpringStopEngine> mSpringEngine;
+    std::unique_ptr<StopLogicEngine> mStopEngine;
     bool mCaptured = false;
     bool mInAutoTransition = false; // guards autoTransition re-entry
     bool mCapturePending = false; // setTransition called before the layout had a size

@@ -15,6 +15,7 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 #include <widgetEx/constraintlayout/core/motion/springstopengine.h>
+#include <widgetEx/constraintlayout/core/motion/stoplogicengine.h>
 
 DECLARE_WIDGET(MotionLayout)
 
@@ -107,6 +108,8 @@ void MotionLayout::buildMotions() {
         Motion* m = new Motion();
         m->setStart(&sw.second);
         m->setEnd(&ew->second);
+        // Parent dimensions feed TYPE_SCREEN KeyPositions (frames placed relative to the parent).
+        m->setup(getWidth(), getHeight(), (float) mTransitionDuration);
         if (mSceneArcMode >= 0) {
             m->setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, mSceneArcMode);
         }
@@ -188,6 +191,40 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
     SpringStopEngine* engine = mSpringEngine.get();
     mAnimator->addUpdateListener([this, engine, target, kDurationSec](ValueAnimator& a) {
         const float time = a.getAnimatedFraction() * kDurationSec;
+        mProgress = engine->getInterpolation(time);
+        if (mProgress <= 0.0f) mCurrentState = mBeginState;
+        else if (mProgress >= 1.0f) mCurrentState = mEndState;
+        else mCurrentState = -1;
+        applyMotion();
+        if (engine->isStopped()) {
+            mProgress = target;
+            if (target <= 0.0f) mCurrentState = mBeginState;
+            else if (target >= 1.0f) mCurrentState = mEndState;
+            if (mCaptured) applyMotion();
+            a.cancel();
+            if (mCurrentState != -1 && mScene && !mInAutoTransition) {
+                mInAutoTransition = true;
+                mScene->autoTransition(this, mCurrentState);
+                mInAutoTransition = false;
+            }
+        }
+    });
+    mAnimator->start();
+}
+
+void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
+        float maxAcceleration, float maxVelocity) {
+    if (!mCaptured) { setProgress(target); return; }
+    if (mAnimator != nullptr) { mAnimator->cancel(); delete mAnimator; }
+    mStopEngine = std::make_unique<StopLogicEngine>();
+    // The transition duration (seconds) bounds the profile's max time.
+    const float maxTimeSec = mTransitionDuration / 1000.0f;
+    mStopEngine->config(mProgress, target, startVelocity, maxTimeSec, maxAcceleration, maxVelocity);
+    mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
+    mAnimator->setDuration(mTransitionDuration); // upper bound; the engine ends itself via isStopped
+    StopLogicEngine* engine = mStopEngine.get();
+    mAnimator->addUpdateListener([this, engine, target, maxTimeSec](ValueAnimator& a) {
+        const float time = a.getAnimatedFraction() * maxTimeSec;
         mProgress = engine->getInterpolation(time);
         if (mProgress <= 0.0f) mCurrentState = mBeginState;
         else if (mProgress >= 1.0f) mCurrentState = mEndState;

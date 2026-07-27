@@ -51,6 +51,8 @@ private:
     int   mOnTouchUp;
     float mDragScale;
     int   mAutoCompleteMode = MotionScene::OnSwipe::COMPLETE_CONTINUOUS_VELOCITY;
+    float mMaxVelocity = 4.0f;       // progress/sec cap (continuous-velocity auto-completion)
+    float mMaxAcceleration = 1.2f;   // progress/sec^2 cap (continuous-velocity auto-completion)
     float mSpringMass = 1.0f, mSpringStiffness = 400.0f, mSpringDamping = 10.0f;
     float mSpringStopThreshold = 0.01f;
     int   mSpringBoundary = 0;
