@@ -79,6 +79,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/core/motion/schlick.cc
         widgetEx/constraintlayout/core/motion/stepcurve.cc
         widgetEx/constraintlayout/core/motion/oscillator.cc
+        widgetEx/constraintlayout/core/motion/springstopengine.cc
     )
     list(APPEND WIDGETEX_SOURCES ${CONSTRAINTLAYOUT_SOURCES})
 endif()

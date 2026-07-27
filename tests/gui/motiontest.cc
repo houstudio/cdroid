@@ -24,6 +24,7 @@
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
 #include <widgetEx/constraintlayout/core/motion/splineset.h>
+#include <widgetEx/constraintlayout/core/motion/springstopengine.h>
 
 using namespace cdroid;
 
@@ -399,6 +400,50 @@ TEST(MotionMath, MotionArcPerKeyFrame) {
     EXPECT_NEAR(p1.getTop(), 250, 1);
     EXPECT_NEAR(p2.getLeft(), 330, 1);
     EXPECT_NEAR(p2.getTop(), 250, 1);
+}
+
+// ---- SpringStopEngine (OnSwipe spring auto-completion) ----
+
+// A damped spring settles to its target. start 0.3 -> target 1 with release velocity 2; within ~2s
+// it should be stopped and resting at the target.
+TEST(MotionMath, SpringStopEngineSettles) {
+    SpringStopEngine e;
+    e.springConfig(0.3f, 1.0f, 2.0f, 1.0f, 400.0f, 10.0f, 0.01f, 0);
+    float pos = 0.3f;
+    bool settled = false;
+    for (int i = 1; i <= 2000; i++) { // 2s in 1ms steps
+        pos = e.getInterpolation(i * 0.001f);
+        if (e.isStopped()) { settled = true; break; }
+    }
+    EXPECT_TRUE(settled);
+    EXPECT_NEAR(pos, 1.0f, 0.02f);
+}
+
+// An under-damped spring overshoots its target before settling (boundaryMode=0 = free overshoot).
+TEST(MotionMath, SpringStopEngineOvershoots) {
+    SpringStopEngine e;
+    e.springConfig(0.0f, 1.0f, 0.0f, 1.0f, 200.0f, 4.0f, 0.001f, 0);
+    float maxPos = 0;
+    for (int i = 1; i <= 3000; i++) {
+        float pos = e.getInterpolation(i * 0.001f);
+        if (pos > maxPos) maxPos = pos;
+        if (e.isStopped()) break;
+    }
+    EXPECT_GT(maxPos, 1.0f); // overshot the target
+}
+
+// The bounceEnd boundary (bit1) reflects the spring off 1 instead of overshooting — same params as
+// the overshoot case but boundaryMode=2, so maxPos stays at/below 1.
+TEST(MotionMath, SpringStopEngineBouncesOffEnd) {
+    SpringStopEngine e;
+    e.springConfig(0.0f, 1.0f, 0.0f, 1.0f, 200.0f, 4.0f, 0.001f, 2);
+    float maxPos = 0;
+    for (int i = 1; i <= 3000; i++) {
+        float pos = e.getInterpolation(i * 0.001f);
+        if (pos > maxPos) maxPos = pos;
+        if (e.isStopped()) break;
+    }
+    EXPECT_LE(maxPos, 1.0f + 1e-3f); // bounced off 1, did not overshoot
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT
