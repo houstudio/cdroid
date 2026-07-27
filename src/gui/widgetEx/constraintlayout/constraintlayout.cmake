@@ -7,6 +7,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         # --- widget: ConstraintLayout (Stage 4) ---
         widgetEx/constraintlayout/constraintlayout.cc
         widgetEx/constraintlayout/constraintset.cc
+        widgetEx/constraintlayout/constraintlayoutstates.cc
         widgetEx/constraintlayout/keyframes.cc
         widgetEx/constraintlayout/motionscene.cc
         widgetEx/constraintlayout/touchresponse.cc

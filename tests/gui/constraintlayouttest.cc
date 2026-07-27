@@ -20,6 +20,7 @@
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/constraintlayout/constraintlayoutstates.h>
 #include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
@@ -876,5 +877,55 @@ TEST(ConstraintLayout, MotionLayoutKeyPositionArc) {
 // (BasicMeasure size-dependent iteration) is still deferred, so 0dp+content-dependent sizing
 // (wrap/percent) isn't yet converged.
 // re-measure loop (deferred). A 0dp child currently fills ~576 of 600 instead of exactly 600.
+
+// ConstraintLayoutStates parses a <StateSet> into State/Variants and selects a ConstraintSet by
+// the layout's dimensions. State "base" has a default set (100x50) plus a Variant for width>600
+// (200x50). At width 400 the default wins; at width 800 the Variant wins. Inline <ConstraintSet>
+// refs resolve by name (the `constraints` attr). Anti-flap: passing the current set's id with
+// matching dims returns the same set.
+TEST(ConstraintLayout, ConstraintLayoutStatesMatch) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<StateSet xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        "          defaultState=\"@+id/base\">"
+        "  <State android:id=\"@+id/base\" constraints=\"@+id/default\">"
+        "    <Variant region_widthMoreThan=\"600\" constraints=\"@+id/wide\"/>"
+        "  </State>"
+        "  <ConstraintSet android:id=\"@+id/default\">"
+        "    <Constraint android:id=\"42\" android:layout_width=\"100dp\" android:layout_height=\"50dp\"/>"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/wide\">"
+        "    <Constraint android:id=\"42\" android:layout_width=\"200dp\" android:layout_height=\"50dp\"/>"
+        "  </ConstraintSet>"
+        "</StateSet>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+
+    ConstraintLayoutStates states(&app, nullptr, parser);
+
+    const int baseId = states.getId("@+id/base");
+    const int defaultId = states.getId("@+id/default");
+    const int wideId   = states.getId("@+id/wide");
+    EXPECT_NE(baseId, -1);
+    EXPECT_EQ(states.getId("base"), baseId);      // stable across calls
+    EXPECT_EQ(states.getDefaultState(), baseId);  // defaultState attr resolved
+
+    // Narrow width -> default set (width 100); wide width -> Variant set (width 200).
+    ConstraintSet* narrow = states.convertToConstraintSet(-1, baseId, 400.0f, 300.0f);
+    ConstraintSet* wide   = states.convertToConstraintSet(-1, baseId, 800.0f, 300.0f);
+    ASSERT_NE(narrow, nullptr);
+    ASSERT_NE(wide, nullptr);
+    EXPECT_NE(narrow, wide);                       // different sets selected by dimension
+    EXPECT_EQ(narrow->get(42).layout.mWidth, 100);
+    EXPECT_EQ(wide->get(42).layout.mWidth, 200);
+
+    // Anti-flap: with the wide set currently applied and wide dims, it is kept (returns the same set).
+    EXPECT_EQ(states.convertToConstraintSet(wideId, baseId, 800.0f, 300.0f), wide);
+    EXPECT_EQ(states.convertToConstraintSet(defaultId, baseId, 800.0f, 300.0f), wide);
+}
 
 #endif // ENABLE_CONSTRAINTLAYOUT
