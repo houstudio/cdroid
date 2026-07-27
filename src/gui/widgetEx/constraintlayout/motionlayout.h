@@ -18,6 +18,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
@@ -96,6 +97,24 @@ class MotionLayout : public ConstraintLayout {
     // Pixels-per-progress of the anchor point (locationX,locationY) on view `anchorId` at `pos`.
     // Used by TouchResponse to map drag deltas to progress (the anchor's travel is the drag range).
     void getAnchorDpDt(int anchorId, float pos, float locationX, float locationY, float out[2]);
+
+    // ---- ViewTransition (per-view independent animations) ----
+    // Programmatic fire (Android MotionLayout.viewTransition): animate `views` per the ViewTransition
+    // registered under `viewTransitionId` in the scene.
+    void viewTransition(int viewTransitionId, const std::vector<View*>& views);
+    void enableViewTransition(int viewTransitionId, bool enable);
+    bool isViewTransitionEnabled(int viewTransitionId) const;
+    // ConstraintSet registered under `stateId` in the scene (used by the ViewTransition delta modes).
+    ConstraintSet* getConstraintSet(int stateId) const;
+    ViewTransitionController* getViewTransitionController() const;
+
+    // Inject a MotionScene programmatically (instead of via app:layoutDescription). Marks the scene
+    // built so the onMeasure path does not rebuild it; the caller wires the current transition.
+    void setScene(std::unique_ptr<MotionScene> scene);
+
+    // View <-> MotionWidget frame bridge (shared with ViewTransition's noState driver).
+    static void captureWidgetFrame(MotionWidget& out, View* v);
+    static void applyWidgetFrame(View* v, MotionWidget& mw);
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;

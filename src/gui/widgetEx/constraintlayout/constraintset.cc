@@ -433,7 +433,9 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     Motion& m = motion;
 
     // --- id + anchor targets (resolve "parent"/"@id/x" -> int via Context) ---
+    // <Constraint> uses android:id; <ConstraintOverride> (ViewTransition delta) uses motionTarget.
     mViewId      = a.getResourceId("id", mViewId);
+    if (mViewId == View::NO_ID) mViewId = a.getResourceId("motionTarget", mViewId);
     l.leftToLeft   = a.getResourceId("layout_constraintLeft_toLeftOf",   l.leftToLeft);
     l.leftToRight  = a.getResourceId("layout_constraintLeft_toRightOf",  l.leftToRight);
     l.rightToLeft  = a.getResourceId("layout_constraintRight_toLeftOf",  l.rightToLeft);
@@ -545,8 +547,6 @@ void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
 
 void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
     // Caller positions `parser` at the <ConstraintSet> START_TAG. We consume through its END_TAG.
-    Constraint current;
-    bool hasCurrent = false;
     auto toLower = [](std::string s) {
         for (auto& c : s) c = (char)std::tolower((unsigned char)c);
         return s;
@@ -561,36 +561,88 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
             const std::string tag = parser.getName();
             if (tag == "Constraint" || tag == "ConstraintOverride" ||
                     tag == "Guideline"   || tag == "Barrier") {
-                current = Constraint{};
-                hasCurrent = true;
-                current.fillFromAttributeList(parser); // parser IS-A AttributeSet
-                if (tag == "Guideline") {
-                    current.layout.mIsGuideline = true;
-                    current.layout.mApply = true;
-                }
-                if (tag == "Barrier")   {
-                    current.layout.mHelperType = BARRIER_TYPE;
-                }
-            } else if (hasCurrent && (tag == "PropertySet" || tag == "Transform" ||
-                                      tag == "Layout" || tag == "Motion")) {
-                // Nested sub-element: same attribute names dispatch into the same sub-structs.
-                current.fillFromAttributeList(parser);
-            } else if (hasCurrent && (tag == "CustomAttribute" || tag == "CustomMethod")) {
-                current.mCustomAttributes.push_back(parseCustomAttribute(parser));
+                loadConstraint(parser); // consumes through the element's END_TAG
             }
         } else if (eventType == XmlPullParser::END_TAG) {
-            const std::string low = toLower(parser.getName());
-            if (low == "constraintset") {
+            if (toLower(parser.getName()) == "constraintset") {
                 return; // consumed the whole ConstraintSet; leave parser at this END_TAG
-            }
-            if (hasCurrent && (low == "constraint" || low == "constraintoverride" ||
-                               low == "guideline"   || low == "barrier")) {
-                mConstraints[current.mViewId] = current;
-                hasCurrent = false;
             }
         }
         parser.next();
     }
+}
+
+void ConstraintSet::loadConstraint(XmlPullParser& parser) {
+    // `parser` is at the <Constraint>/<ConstraintOverride>/<Guideline>/<Barrier> START_TAG. Read its
+    // own attributes, then its nested sub-elements, and consume through the matching END_TAG.
+    Constraint current;
+    const std::string openTag = parser.getName();
+    current.fillFromAttributeList(parser); // parser IS-A AttributeSet
+    fprintf(stderr, "DBG loadConstraint openTag=%s mViewId=%d\n", openTag.c_str(), current.mViewId);
+    if (openTag == "Guideline") {
+        current.layout.mIsGuideline = true;
+        current.layout.mApply = true;
+    } else if (openTag == "Barrier") {
+        current.layout.mHelperType = BARRIER_TYPE;
+    }
+    auto toLower = [](std::string s) {
+        for (auto& c : s) c = (char)std::tolower((unsigned char)c);
+        return s;
+    };
+    const std::string openLower = toLower(openTag);
+
+    while (parser.getEventType() != XmlPullParser::END_DOCUMENT &&
+            parser.getEventType() != XmlPullParser::BAD_DOCUMENT) {
+        parser.next();
+        const int eventType = parser.getEventType();
+        if (eventType == XmlPullParser::START_TAG) {
+            const std::string tag = parser.getName();
+            if (tag == "PropertySet" || tag == "Transform" ||
+                    tag == "Layout" || tag == "Motion") {
+                current.fillFromAttributeList(parser); // nested sub-element dispatches into sub-structs
+            } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
+                current.mCustomAttributes.push_back(parseCustomAttribute(parser));
+            }
+        } else if (eventType == XmlPullParser::END_TAG) {
+            if (toLower(parser.getName()) == openLower) break; // matching close of this constraint
+        }
+    }
+    mConstraints[current.mViewId] = current;
+}
+
+void ConstraintSet::applyDelta(Constraint& target) const {
+    // Android stores a ViewTransition's <ConstraintOverride> as a sparse per-attribute Delta and
+    // applies it field-by-field (ConstraintSet.Delta + setDeltaValue, ~600 lines). CDROID's sub-struct
+    // mApply flags are unreliable for that (fillFromAttributeList marks all four true on any parse),
+    // so we approximate with a field-level "differs from default" overlay on the commonly-delta'd
+    // sub-structs (Transform/PropertySet): each delta field the author set to a non-default value
+    // replaces the target's; authored-default fields are skipped (so an unrelated rotation isn't
+    // clobbered by a scale-only delta). A delta that intentionally sets a field to its default is not
+    // applied (rare). Layout/Motion field deltas are deferred. Custom attributes are appended.
+    auto it = mConstraints.find(target.mViewId);
+    if (it == mConstraints.end()) return;
+    const Constraint& d = it->second;
+
+    const Transform& t = d.transform;
+    Transform& dt = target.transform;
+    if (t.rotation        != 0.0f) dt.rotation        = t.rotation;
+    if (t.rotationX       != 0.0f) dt.rotationX       = t.rotationX;
+    if (t.rotationY       != 0.0f) dt.rotationY       = t.rotationY;
+    if (t.scaleX          != 1.0f) dt.scaleX          = t.scaleX;
+    if (t.scaleY          != 1.0f) dt.scaleY          = t.scaleY;
+    if (t.translationX    != 0.0f) dt.translationX    = t.translationX;
+    if (t.translationY    != 0.0f) dt.translationY    = t.translationY;
+    if (t.translationZ    != 0.0f) dt.translationZ    = t.translationZ;
+    if (t.transformPivotX != 0.0f) dt.transformPivotX = t.transformPivotX;
+    if (t.transformPivotY != 0.0f) dt.transformPivotY = t.transformPivotY;
+
+    const PropertySet& p = d.propertySet;
+    PropertySet& dp = target.propertySet;
+    if (p.visibility != 0 /*VISIBLE*/) dp.visibility = p.visibility;
+    if (p.alpha != 1.0f)               dp.alpha       = p.alpha;
+    if (!std::isnan(p.mProgress))      dp.mProgress   = p.mProgress;
+
+    for (const auto& ca : d.mCustomAttributes) target.mCustomAttributes.push_back(ca);
 }
 
 } // namespace cdroid

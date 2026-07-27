@@ -11,6 +11,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/keyframes.cc
         widgetEx/constraintlayout/motionscene.cc
         widgetEx/constraintlayout/viewtransition.cc
+        widgetEx/constraintlayout/viewtransitioncontroller.cc
         widgetEx/constraintlayout/touchresponse.cc
         widgetEx/constraintlayout/motionlayout.cc
         # --- widget: virtual helpers (Stage 5) ---

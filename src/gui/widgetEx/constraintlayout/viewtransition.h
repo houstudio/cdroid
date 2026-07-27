@@ -27,8 +27,12 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_VIEW_TRANSITION_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_VIEW_TRANSITION_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
+
+#include <widgetEx/constraintlayout/constraintset.h>
 
 namespace cdroid {
 
@@ -37,6 +41,12 @@ class KeyFrames;
 class Context;
 class XmlPullParser;
 class View;
+class ViewTransitionController;
+class MotionLayout;
+class Motion;
+class Easing;
+class MotionEvent;
+class ConstraintSet;
 
 class ViewTransition {
   public:
@@ -85,6 +95,11 @@ class ViewTransition {
     KeyFrames* getKeyFrames() const {
         return mKeyFrames.get();
     }
+    // The <Constraint> overrides nested in this <ViewTransition>, as a delta applied to the current
+    // (or all) ConstraintSet(s) for the currentState/allStates modes. Empty for noState.
+    const ConstraintSet& getConstraintDelta() const {
+        return mConstraintDelta;
+    }
 
     bool isEnabled() const {
         return !mDisabled;
@@ -99,7 +114,62 @@ class ViewTransition {
     // True if this ViewTransition should fire for the given MotionEvent action.
     bool supports(int action) const;
 
+    // Dispatch entry (Android ViewTransition.applyTransition). For noState it drives a standalone
+    // per-view animation; currentState/allStates (apply a ConstraintSet delta) are deferred.
+    void applyTransition(ViewTransitionController* controller, MotionLayout* layout,
+                         int fromId, ConstraintSet* current, const std::vector<View*>& views);
+
+    // The noState animation driver (Android ViewTransition.Animate). A standalone per-view animation
+    // advanced by wall-clock time: mutate() steps it forward (or in reverse once the finger lifts),
+    // writing each interpolated frame onto the target view. Self-registers with the controller and
+    // self-removes when it reaches its end (or, for actionDownUp, holds at 100% until released).
+    class Animate {
+      public:
+        Animate(ViewTransitionController* controller, Motion* mc, View* view,
+                int duration, int upDuration, int mode,
+                std::unique_ptr<Easing> interpolator, int setTag, int clearTag);
+        ~Animate();
+
+        // Advance one frame using the elapsed wall-clock since the last render.
+        void mutate();
+        // Advance one frame by a forced elapsed time (ms). Used by the controller's frame tick and
+        // by tests; mutate() just reads the clock and delegates here.
+        void stepMutate(long elapsedMs);
+        // React to a touch event: ACTION_UP (or leaving the view's hit rect) reverses a forward
+        // animation (the actionDownUp press-release effect).
+        void reactTo(int action, float x, float y);
+
+        bool mRemove = false; // flagged by removeAnimation; the controller erases flagged entries
+
+        // Fields mirror Android ViewTransition.Animate (package-private there); public so the
+        // controller can drive/animate them.
+        ViewTransitionController* mVtController;
+        Motion* mMC;                 // owned (built in applyIndependentTransition); freed in ~Animate
+        View* mView;                 // the animated view; each frame is written onto it
+        int mDuration;
+        int mUpDuration;
+        std::unique_ptr<Easing> mInterpolator;
+        int mSetsTag;
+        int mClearsTag;
+        bool mReverse = false;
+        float mPosition = 0.0f;
+        float mDpositionDt;
+        int64_t mStart = 0;        // wall-clock (ms) at construction
+        int64_t mLastRender = 0;   // wall-clock (ms) at the last mutate
+        bool mHoldAt100 = false;
+
+      private:
+        void mutateForward(long elapsedMs);
+        void mutateReverse(long elapsedMs);
+        void reverse(bool dir);
+    };
+
   private:
+    friend class ViewTransitionController;
+    // noState: build a standalone per-view Motion (start==end==current frame, keyframes drive it)
+    // and start an Animate on the controller.
+    void applyIndependentTransition(ViewTransitionController* controller, MotionLayout* layout,
+                                    View* view);
     MotionScene& mScene;
     int mId = UNSET;
     int mTargetId = UNSET;
@@ -119,6 +189,7 @@ class ViewTransition {
     int mSharedValueTarget = UNSET;
     int mSharedValueCurrent = UNSET;
     std::unique_ptr<KeyFrames> mKeyFrames;
+    ConstraintSet mConstraintDelta; // <Constraint> overrides (currentState/allStates delta mode)
 };
 
 } // namespace cdroid

@@ -159,10 +159,26 @@ class ConstraintSet {
     // Parse a <ConstraintSet> XML resource. `parser` is positioned at the <ConstraintSet> START_TAG;
     // returns after consuming the matching END_TAG. (Java: ConstraintSet.load(Context, XmlPullParser).)
     void load(Context* context, XmlPullParser& parser);
+    // Parse a single <Constraint>/<ConstraintOverride>/<Guideline>/<Barrier> block: `parser` is at the
+    // element's START_TAG; this reads its attributes + nested <PropertySet>/<Transform>/<Layout>/
+    // <Motion>/<CustomAttribute> children and consumes through the matching END_TAG. Shared by load()
+    // and ViewTransition (which builds its mConstraintDelta from <Constraint> children).
+    void loadConstraint(XmlPullParser& parser);
+    // Overlay this set's constraint for target.mViewId onto `target` — each authored sub-struct
+    // (Layout/Transform/PropertySet/Motion, gated by mApply) replaces the target's; custom attributes
+    // are appended. (Java: ConstraintSet.applyDelta(Constraint).)
+    void applyDelta(Constraint& target) const;
     void applyTo(ConstraintLayout* constraintLayout);
     Constraint& get(int id);          // creates an entry if absent
+    const Constraint* find(int id) const { // nullptr if absent (read-only lookup, no insert)
+        auto it = mConstraints.find(id);
+        return it == mConstraints.end() ? nullptr : &it->second;
+    }
     bool contains(int id) const {
         return mConstraints.find(id) != mConstraints.end();
+    }
+    bool empty() const {
+        return mConstraints.empty();
     }
     // Copy base's per-view constraints into this set; entries already present here are kept
     // (derived overrides base). Used by MotionScene for <ConstraintSet deriveConstraintsFrom=...>.

@@ -6,6 +6,7 @@
 #include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
 #include <widgetEx/constraintlayout/viewtransition.h>
+#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
@@ -86,10 +87,12 @@ MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
 // MotionScene
 // ===========================================================================
 MotionScene::MotionScene(MotionLayout* layout)
-    : mMotionLayout(layout) {}
+    : mMotionLayout(layout)
+    , mViewTransitionController(std::make_unique<ViewTransitionController>(layout)) {}
 
 MotionScene::MotionScene(Context* ctx, MotionLayout* layout, const std::string& resourceId)
-    : mMotionLayout(layout) {
+    : mMotionLayout(layout)
+    , mViewTransitionController(std::make_unique<ViewTransitionController>(layout)) {
     load(ctx, resourceId);
 }
 
@@ -101,6 +104,18 @@ ViewTransition* MotionScene::getViewTransitionById(int id) const {
         if (vt->getId() == id) return vt.get();
     }
     return nullptr;
+}
+
+void MotionScene::viewTransition(int id, const std::vector<View*>& views) {
+    if (mViewTransitionController) mViewTransitionController->viewTransition(id, views);
+}
+
+void MotionScene::enableViewTransition(int id, bool enable) {
+    if (mViewTransitionController) mViewTransitionController->enableViewTransition(id, enable);
+}
+
+bool MotionScene::isViewTransitionEnabled(int id) const {
+    return mViewTransitionController && mViewTransitionController->isViewTransitionEnabled(id);
 }
 
 std::string MotionScene::stripId(const std::string& idString) {
@@ -242,7 +257,10 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 os->springBoundary      = parser.getInt("springBoundary", kSpringBoundary, os->springBoundary);
                 currentTransition->setOnSwipe(std::move(os));
             } else if (tag == "ViewTransition") {
-                mViewTransitions.push_back(std::make_unique<ViewTransition>(*this, ctx, parser));
+                auto vt = std::make_unique<ViewTransition>(*this, ctx, parser);
+                ViewTransition* raw = vt.get();
+                mViewTransitions.push_back(std::move(vt));
+                if (mViewTransitionController) mViewTransitionController->add(raw);
             }
             // TouchResponse / StateSet: deferred (swipe-driven / per-view).
         } else if (eventType == XmlPullParser::END_TAG) {

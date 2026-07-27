@@ -10,6 +10,7 @@
 #include <view/motionevent.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/keyframes.h>
+#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
@@ -20,44 +21,6 @@
 DECLARE_WIDGET(MotionLayout)
 
 namespace cdroid {
-
-namespace {
-// Read a view's current frame + transforms into a MotionWidget (View -> MotionWidget bridge).
-void captureInto(MotionWidget& mw, View* v) {
-    mw.setBounds(v->getLeft(), v->getTop(), v->getRight(), v->getBottom());
-    mw.setAlpha(v->getAlpha());
-    mw.setRotationZ(v->getRotation());
-    mw.setRotationX(v->getRotationX());
-    mw.setRotationY(v->getRotationY());
-    mw.setScaleX(v->getScaleX());
-    mw.setScaleY(v->getScaleY());
-    mw.setPivotX(v->getPivotX());
-    mw.setPivotY(v->getPivotY());
-    mw.setTranslationX(v->getTranslationX());
-    mw.setTranslationY(v->getTranslationY());
-}
-
-// Write a MotionWidget's interpolated frame back onto a view. Attached views always get the
-// transform applied (so reaching an endpoint resets it to identity — fixes rotation/scale not
-// "snapping back" at progress 0/1). Unattached views (test harness) skip identity values, since the
-// render-node invalidation path used by the setters is unsafe without an AttachInfo.
-void applyFrom(View* v, MotionWidget& mw) {
-    v->layout(mw.getLeft(), mw.getTop(), mw.getWidth(), mw.getHeight());
-    const bool attached = v->isAttachedToWindow();
-    auto apply = [&](float val, float identity, void (View::*setter)(float)) {
-        if (std::isnan(val)) return;
-        if (attached || val != identity) (v->*setter)(val);
-    };
-    apply(mw.getAlpha(),        1.0f, &View::setAlpha);
-    apply(mw.getRotationZ(),    0.0f, &View::setRotation);
-    apply(mw.getRotationX(),    0.0f, &View::setRotationX);
-    apply(mw.getRotationY(),    0.0f, &View::setRotationY);
-    apply(mw.getScaleX(),       1.0f, &View::setScaleX);
-    apply(mw.getScaleY(),       1.0f, &View::setScaleY);
-    apply(mw.getTranslationX(), 0.0f, &View::setTranslationX);
-    apply(mw.getTranslationY(), 0.0f, &View::setTranslationY);
-}
-} // namespace
 
 MotionLayout::MotionLayout(Context* ctx, const AttributeSet& attrs)
     : ConstraintLayout(ctx, attrs) {
@@ -77,6 +40,42 @@ MotionLayout::~MotionLayout() {
     delete mAnimator;
 }
 
+// Read a view's current frame + transforms into a MotionWidget (View -> MotionWidget bridge).
+void MotionLayout::captureWidgetFrame(MotionWidget& mw, View* v) {
+    mw.setBounds(v->getLeft(), v->getTop(), v->getRight(), v->getBottom());
+    mw.setAlpha(v->getAlpha());
+    mw.setRotationZ(v->getRotation());
+    mw.setRotationX(v->getRotationX());
+    mw.setRotationY(v->getRotationY());
+    mw.setScaleX(v->getScaleX());
+    mw.setScaleY(v->getScaleY());
+    mw.setPivotX(v->getPivotX());
+    mw.setPivotY(v->getPivotY());
+    mw.setTranslationX(v->getTranslationX());
+    mw.setTranslationY(v->getTranslationY());
+}
+
+// Write a MotionWidget's interpolated frame back onto a view. Attached views always get the
+// transform applied (so reaching an endpoint resets it to identity — fixes rotation/scale not
+// "snapping back" at progress 0/1). Unattached views (test harness) skip identity values, since the
+// render-node invalidation path used by the setters is unsafe without an AttachInfo.
+void MotionLayout::applyWidgetFrame(View* v, MotionWidget& mw) {
+    v->layout(mw.getLeft(), mw.getTop(), mw.getWidth(), mw.getHeight());
+    const bool attached = v->isAttachedToWindow();
+    auto apply = [&](float val, float identity, void (View::*setter)(float)) {
+        if (std::isnan(val)) return;
+        if (attached || val != identity) (v->*setter)(val);
+    };
+    apply(mw.getAlpha(),        1.0f, &View::setAlpha);
+    apply(mw.getRotationZ(),    0.0f, &View::setRotation);
+    apply(mw.getRotationX(),    0.0f, &View::setRotationX);
+    apply(mw.getRotationY(),    0.0f, &View::setRotationY);
+    apply(mw.getScaleX(),       1.0f, &View::setScaleX);
+    apply(mw.getScaleY(),       1.0f, &View::setScaleY);
+    apply(mw.getTranslationX(), 0.0f, &View::setTranslationX);
+    apply(mw.getTranslationY(), 0.0f, &View::setTranslationY);
+}
+
 void MotionLayout::captureState(ConstraintSet* cs, std::unordered_map<int, MotionWidget>& out) {
     if (cs == nullptr) return;
     cs->applyTo(this);
@@ -94,7 +93,7 @@ void MotionLayout::captureState(ConstraintSet* cs, std::unordered_map<int, Motio
         View* child = getChildAt(i);
         int id = child->getId();
         if (id == View::NO_ID) continue;
-        captureInto(out[id], child);
+        captureWidgetFrame(out[id], child);
     }
 }
 
@@ -347,7 +346,7 @@ void MotionLayout::applyMotion() {
         if (it == mMotions.end()) continue;
         MotionWidget temp;
         it->second->interpolate(&temp, mProgress);
-        applyFrom(child, temp);
+        applyWidgetFrame(child, temp);
     }
     invalidate();
 }
@@ -395,6 +394,10 @@ void MotionLayout::applyTransition(MotionScene::Transition* t) {
     wireOnClicks(t);
     mTouchResponse = (t->getOnSwipe() != nullptr)
                      ? std::make_unique<TouchResponse>(this, *t->getOnSwipe()) : nullptr;
+    // The layout rests at the start (mProgress 0) after a fresh transition; reflect that in
+    // mCurrentState so ViewTransition touch dispatch (which bails while currentState == -1) works.
+    if (mProgress <= 0.0f) mCurrentState = mBeginState;
+    else if (mProgress >= 1.0f) mCurrentState = mEndState;
 }
 
 void MotionLayout::buildScene() {
@@ -411,6 +414,32 @@ void MotionLayout::getAnchorDpDt(int anchorId, float pos, float locationX, float
     if (it != mMotions.end()) {
         it->second->getDpDt(pos, locationX, locationY, out);
     }
+}
+
+// ---- ViewTransition delegators (forward to the scene, which owns the controller) ----
+void MotionLayout::viewTransition(int viewTransitionId, const std::vector<View*>& views) {
+    if (mScene) mScene->viewTransition(viewTransitionId, views);
+}
+
+void MotionLayout::enableViewTransition(int viewTransitionId, bool enable) {
+    if (mScene) mScene->enableViewTransition(viewTransitionId, enable);
+}
+
+bool MotionLayout::isViewTransitionEnabled(int viewTransitionId) const {
+    return mScene && mScene->isViewTransitionEnabled(viewTransitionId);
+}
+
+ConstraintSet* MotionLayout::getConstraintSet(int stateId) const {
+    return mScene ? mScene->getConstraintSet(stateId) : nullptr;
+}
+
+ViewTransitionController* MotionLayout::getViewTransitionController() const {
+    return mScene ? mScene->getViewTransitionController() : nullptr;
+}
+
+void MotionLayout::setScene(std::unique_ptr<MotionScene> scene) {
+    mScene = std::move(scene);
+    mSceneBuilt = true; // do not rebuild from layoutDescription on the next measure
 }
 
 void MotionLayout::applyKeyFramesToMotions(KeyFrames* kf) {
@@ -467,8 +496,12 @@ void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
 }
 
 // OnSwipe drag-to-progress is delegated to TouchResponse (anchor geometry + auto-complete). We
-// intercept only once the drag exceeds touch slop, so taps still reach <OnClick> children.
+// intercept only once the drag exceeds touch slop, so taps still reach <OnClick> children. Touches
+// are also forwarded to the ViewTransitionController (fires <ViewTransition> press/release effects).
 bool MotionLayout::onInterceptTouchEvent(MotionEvent& evt) {
+    if (mScene) {
+        if (auto* c = mScene->getViewTransitionController()) c->touchEvent(evt);
+    }
     if (mTouchResponse == nullptr) return ConstraintLayout::onInterceptTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {

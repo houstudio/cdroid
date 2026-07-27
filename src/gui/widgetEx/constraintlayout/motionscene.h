@@ -31,7 +31,9 @@ namespace cdroid {
 
 class Context;
 class MotionLayout;
+class View;
 class ViewTransition;
+class ViewTransitionController;
 class XmlPullParser;
 
 class MotionScene {
@@ -190,6 +192,14 @@ class MotionScene {
     ViewTransition* getViewTransitionAt(size_t i) const {
         return mViewTransitions.at(i).get();
     }
+    // The controller that drives the <ViewTransition> animations (touch/fire/frame tick).
+    ViewTransitionController* getViewTransitionController() const {
+        return mViewTransitionController.get();
+    }
+    // Delegators to the ViewTransitionController (MotionLayout forwards here).
+    void viewTransition(int id, const std::vector<View*>& views);
+    void enableViewTransition(int id, bool enable);
+    bool isViewTransitionEnabled(int id) const;
 
   private:
     friend class ViewTransition; // so it can resolve ids via getId()
@@ -206,6 +216,7 @@ class MotionScene {
     std::vector<std::unique_ptr<Transition>> mTransitionList;
     Transition* mCurrentTransition = nullptr;
     std::vector<std::unique_ptr<ViewTransition>> mViewTransitions; // <ViewTransition> elements
+    std::unique_ptr<ViewTransitionController> mViewTransitionController; // drives <ViewTransition>s
     std::unordered_map<int, std::unique_ptr<ConstraintSet>> mConstraintSetMap; // id -> set
     mutable std::unordered_map<std::string, int> mConstraintSetIdMap;          // name -> id (lazy cache)
     mutable int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)

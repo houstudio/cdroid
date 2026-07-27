@@ -24,6 +24,7 @@
 #include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/viewtransition.h>
+#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
@@ -1006,6 +1007,118 @@ TEST(ConstraintLayout, ViewTransitionParse) {
     ASSERT_NE(vt->getKeyFrames(), nullptr);
     // getViewTransitionById round-trips the parsed id.
     EXPECT_EQ(scene.getViewTransitionById(vt->getId()), vt);
+}
+
+// A noState <ViewTransition> animates a single view independently of the main transition. Firing it
+// builds a standalone per-view Motion (start==end==current frame; the KeyFrameSet drives the
+// deviation) and starts an Animate on the controller. Stepping the controller advances the Animate:
+// at the midpoint the KeyAttribute (alpha=0 @frame50) takes the view's alpha to 0; reaching the end
+// (actionDown, no hold) removes the animation.
+TEST(ConstraintLayout, ViewTransitionNoStateAnimates) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
+        "                  onStateTransition=\"actionDown\" duration=\"400\""
+        "                  viewTransitionMode=\"noState\">"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
+        "    </KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId(); // capture before moving the scene
+    ml->setScene(std::move(scene));
+
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+
+    std::vector<View*> views = { tv };
+    ml->viewTransition(vtId, views);
+    EXPECT_EQ(controller->animationCount(), 1u); // an Animate registered + first frame ran
+
+    controller->stepAnimations(200); // 200ms of a 400ms animation → progress 0.5 → alpha 0
+    EXPECT_NEAR(tv->getAlpha(), 0.0f, 0.05f);
+
+    controller->stepAnimations(400); // past the end → the Animate removes itself
+    EXPECT_EQ(controller->animationCount(), 0u);
+}
+
+// onStateTransition=actionDownUp sets mHoldAt100, so reaching progress 1.0 HOLDS the animation
+// (it stays registered, awaiting a release that reverses it) — unlike actionDown which removes on
+// completion. This pins the DownUp-specific branch; mutateReverse itself mirrors mutateForward.
+TEST(ConstraintLayout, ViewTransitionNoStateDownUpHolds) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
+        "                  onStateTransition=\"actionDownUp\" duration=\"400\" upDuration=\"200\""
+        "                  viewTransitionMode=\"noState\">"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" scaleX=\"1.5\" scaleY=\"1.5\" />"
+        "    </KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    ml->setScene(std::move(scene));
+
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+    std::vector<View*> views = { tv };
+    ml->viewTransition(vtId, views);
+    EXPECT_EQ(controller->animationCount(), 1u);
+
+    controller->stepAnimations(400); // reach progress 1.0 — actionDownUp HOLDS (not removed)
+    EXPECT_EQ(controller->animationCount(), 1u);
+}
+
+// currentState/allStates delta mode: a <ConstraintOverride> is applied as a FIELD-LEVEL overlay onto
+// the target ConstraintSet's constraint, not a wholesale sub-struct replace. A scale-only delta
+// (scaleX=1.5) must take effect WITHOUT clobbering an unrelated field (rotation=30) the delta never
+// touched. (Android's sparse Delta does this precisely; CDROID approximates via default-difference.)
+TEST(ConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
+    App& app = App::getInstance();
+    // The "current state" constraint for view 1 already has rotation=30 (e.g. a rotated button).
+    ConstraintSet target;
+    target.get(1).transform.rotation = 30.0f;
+    EXPECT_EQ(target.get(1).transform.scaleX, 1.0f); // scale untouched so far
+
+    // Parse the delta: <ConstraintOverride motionTarget="1" scaleX="1.5"/>.
+    const std::string xml =
+        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        " motionTarget=\"1\" scaleX=\"1.5\" />";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+    ConstraintSet delta;
+    delta.loadConstraint(parser);
+
+    ASSERT_TRUE(delta.contains(1));           // motionTarget resolved to view id 1
+    delta.applyDelta(target.get(1));
+    EXPECT_FLOAT_EQ(target.get(1).transform.scaleX, 1.5f); // delta applied
+    EXPECT_FLOAT_EQ(target.get(1).transform.rotation, 30.0f); // preserved — not clobbered to 0
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT
