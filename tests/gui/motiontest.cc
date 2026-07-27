@@ -327,4 +327,78 @@ TEST(MotionMath, ArcCurveFitStitchesQuarterEllipses) {
     EXPECT_NEAR(std::sqrt(0.5), spline->getPos(mid, 1), 0.001);
 }
 
+// pathMotionArc + KeyPosition coexist. Previously the arc was disabled as soon as any KeyPosition
+// was present (the mPositionKeys.empty() guard in buildPath); now the widget follows per-segment
+// quarter-ellipse arcs through [start, keyframe, end] (x,y from the arc) while w,h come from the
+// spline. Same setup as MotionKeyPositionOffset: start(0,0,100,50)->end(500,0,600,50), KeyPosition
+// @50 offset down -> keypoint (250,250).
+TEST(MotionMath, MotionArcMultiKeyPosition) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPercentX = 0.5f;
+    kp.mAltPercentY = 0.5f; // keypoint at (250, 250)
+
+    Motion splineM; splineM.setStart(&start); splineM.setEnd(&end); splineM.addKey(&kp);
+    Motion arcM;    arcM.setStart(&start);    arcM.setEnd(&end);    arcM.addKey(&kp);
+    arcM.setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, ArcCurveFit::ARC_START_VERTICAL);
+
+    MotionWidget a0, a1;
+    arcM.interpolate(&a0, 0.0f);
+    arcM.interpolate(&a1, 1.0f);
+    EXPECT_EQ(a0.getLeft(), 0);
+    EXPECT_EQ(a1.getLeft(), 500);
+
+    // The arc still passes through the keyframe control point at progress 0.5.
+    MotionWidget aMid;
+    arcM.interpolate(&aMid, 0.5f);
+    EXPECT_EQ(aMid.getLeft(), 250);
+    EXPECT_EQ(aMid.getTop(), 250);
+
+    // Vertical-start arc leaves the start along y, so x lags the pure spline early on — proof the
+    // arc is actually in effect alongside the KeyPosition (previously mutually exclusive).
+    MotionWidget sEarly, aEarly;
+    splineM.interpolate(&sEarly, 0.05f);
+    arcM.interpolate(&aEarly, 0.05f);
+    EXPECT_LT(aEarly.getLeft(), sEarly.getLeft());
+    EXPECT_GT(aEarly.getTop(), 0);
+}
+
+// KeyPosition.pathMotionArc overrides the per-segment arc mode. Two KeyPositions each carry a
+// different mode (vertical then horizontal); the multi-segment arc path stays continuous and
+// passes through both keypoints.
+TEST(MotionMath, MotionArcPerKeyFrame) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+
+    MotionKeyPosition kp1, kp2;
+    kp1.mFramePosition = 33; kp1.mPercentX = 0.33f; kp1.mAltPercentY = 0.5f;
+    kp1.mPathMotionArc = ArcCurveFit::ARC_START_VERTICAL;   // keypoint (165, 250)
+    kp2.mFramePosition = 66; kp2.mPercentX = 0.66f; kp2.mAltPercentY = 0.5f;
+    kp2.mPathMotionArc = ArcCurveFit::ARC_START_HORIZONTAL; // keypoint (330, 250)
+
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.addKey(&kp1);
+    m.addKey(&kp2);
+    m.setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, ArcCurveFit::ARC_START_VERTICAL);
+
+    MotionWidget at0, at1;
+    m.interpolate(&at0, 0.0f);
+    m.interpolate(&at1, 1.0f);
+    EXPECT_EQ(at0.getLeft(), 0);
+    EXPECT_EQ(at1.getLeft(), 500);
+
+    MotionWidget p1, p2;
+    m.interpolate(&p1, 0.33f);
+    m.interpolate(&p2, 0.66f);
+    EXPECT_NEAR(p1.getLeft(), 165, 1);
+    EXPECT_NEAR(p1.getTop(), 250, 1);
+    EXPECT_NEAR(p2.getLeft(), 330, 1);
+    EXPECT_NEAR(p2.getTop(), 250, 1);
+}
+
 #endif // ENABLE_CONSTRAINTLAYOUT

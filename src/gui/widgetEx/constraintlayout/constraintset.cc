@@ -16,6 +16,38 @@
 namespace cdroid {
 
 namespace {
+// Parse a <CustomAttribute> element into a typed CustomAttribute: attributeName + one of
+// customColorValue/customIntegerValue/customFloatValue/customStringValue/customBooleanValue.
+ConstraintSet::CustomAttribute parseCustomAttribute(const AttributeSet& parser) {
+    using CustomAttribute = ConstraintSet::CustomAttribute; // alias: a using-declaration can't import a nested type into block scope
+    ConstraintSet::CustomAttribute ca;
+    ca.name = parser.getAttributeValue("attributeName");
+    std::string v;
+    if (!(v = parser.getAttributeValue("customColorValue")).empty()) {
+        ca.type = CustomAttribute::COLOR;
+        ca.intValue = parser.getColor("customColorValue", 0);
+    } else if (!(v = parser.getAttributeValue("customIntegerValue")).empty()) {
+        ca.type = CustomAttribute::INTEGER;
+        ca.intValue = std::stoi(v);
+    } else if (!(v = parser.getAttributeValue("customFloatValue")).empty()) {
+        ca.type = CustomAttribute::FLOAT;
+        ca.floatValue = std::stof(v);
+    } else if (!(v = parser.getAttributeValue("customStringValue")).empty()) {
+        ca.type = CustomAttribute::STRING;
+        ca.stringValue = v;
+    } else if (!(v = parser.getAttributeValue("customBooleanValue")).empty()) {
+        ca.type = CustomAttribute::BOOLEAN;
+        ca.boolValue = (v == "true" || v == "1");
+    }
+    return ca;
+}
+
+// Registry of named custom-attribute handlers (function-local static avoids init-order issues).
+std::unordered_map<std::string, ConstraintSet::CustomAttributeHandler>& customHandlers() {
+    static std::unordered_map<std::string, ConstraintSet::CustomAttributeHandler> handlers;
+    return handlers;
+}
+
 // Parse a ratio string ("16:9", "1.5", "W,16:9") into a float ratio (0 if unparseable).
 float parseRatio(const std::string& s) {
     if (s.empty()) return 0;
@@ -182,8 +214,25 @@ void ConstraintSet::applyTo(ConstraintLayout* constraintLayout) {
         apply(c.transform.scaleY,       1.0f, &View::setScaleY);
         apply(c.transform.translationX, 0.0f, &View::setTranslationX);
         apply(c.transform.translationY, 0.0f, &View::setTranslationY);
+        // Dispatch parsed <CustomAttribute>s to externally-registered handlers (extension point;
+        // the framework binds nothing — no hardcoded attributes, no View modification).
+        for (const auto& ca : c.mCustomAttributes) {
+            auto it = customHandlers().find(ca.name);
+            if (it != customHandlers().end()) it->second(view, ca);
+        }
     }
     constraintLayout->requestLayout();
+}
+
+void ConstraintSet::mergeFrom(const ConstraintSet& base) {
+    // Copy base's per-view constraints; emplace keeps this set's own entries (derived wins).
+    for (const auto& kv : base.mConstraints) {
+        mConstraints.emplace(kv.first, kv.second);
+    }
+}
+
+void ConstraintSet::registerCustomAttributeHandler(const std::string& name, CustomAttributeHandler handler) {
+    customHandlers()[name] = std::move(handler);
 }
 
 void ConstraintSet::clear(int viewId) {
@@ -515,7 +564,7 @@ void ConstraintSet::load(Context* /*context*/, XmlPullParser& parser) {
                 // Nested sub-element: same attribute names dispatch into the same sub-structs.
                 current.fillFromAttributeList(parser);
             } else if (hasCurrent && (tag == "CustomAttribute" || tag == "CustomMethod")) {
-                // ConstraintAttribute XML parse — custom view attributes. Deferred (TODO).
+                current.mCustomAttributes.push_back(parseCustomAttribute(parser));
             }
         } else if (eventType == XmlPullParser::END_TAG) {
             const std::string low = toLower(parser.getName());

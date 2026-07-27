@@ -96,18 +96,35 @@ int MotionScene::getId(const std::string& idString) const {
 
 int MotionScene::parseConstraintSet(Context* ctx, XmlPullParser& parser) {
     // <ConstraintSet android:id="@+id/start" deriveConstraintsFrom="@id/..."> ...children... </ConstraintSet>
+    // Read the element's own attributes before load() consumes the tag through its END_TAG.
     const std::string idStr = parser.getAttributeValue("id");
+    const std::string deriveStr = parser.getAttributeValue("deriveConstraintsFrom");
     const int id = getId(idStr);
     if (id == UNSET) return UNSET;
     auto set = std::make_unique<ConstraintSet>();
     set->load(ctx, parser); // consumes through </ConstraintSet>
     mConstraintSetMap[id] = std::move(set);
+    if (!deriveStr.empty()) {
+        mDeriveFrom[id] = getId(deriveStr); // base merged lazily in getConstraintSet (order-independent)
+    }
     return id;
 }
 
 ConstraintSet* MotionScene::getConstraintSet(int id) const {
     auto it = mConstraintSetMap.find(id);
-    return (it != mConstraintSetMap.end()) ? it->second.get() : nullptr;
+    if (it == mConstraintSetMap.end()) return nullptr;
+    // Lazy merge of deriveConstraintsFrom: base's constraints are copied in (derived wins). Done on
+    // first access so the base may be defined after the derived set in the XML. Erase before the
+    // recursive call so a cycle (A derives B, B derives A) terminates.
+    auto dit = mDeriveFrom.find(id);
+    if (dit != mDeriveFrom.end()) {
+        const int baseId = dit->second;
+        mDeriveFrom.erase(dit);
+        if (ConstraintSet* base = getConstraintSet(baseId)) {
+            it->second->mergeFrom(*base);
+        }
+    }
+    return it->second.get();
 }
 
 void MotionScene::load(Context* ctx, const std::string& resourceId) {

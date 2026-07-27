@@ -136,6 +136,7 @@ private:
     std::unordered_map<int, std::unique_ptr<ConstraintSet>> mConstraintSetMap; // id -> set
     mutable std::unordered_map<std::string, int> mConstraintSetIdMap;          // name -> id (lazy cache)
     mutable int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)
+    mutable std::unordered_map<int,int> mDeriveFrom; // deriveConstraintsFrom: id -> baseId (lazy merge)
 };
 
 } // namespace cdroid

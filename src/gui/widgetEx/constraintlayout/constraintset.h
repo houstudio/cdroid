@@ -12,6 +12,7 @@
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_SET_H
 
 #include <cmath>
+#include <functional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -115,12 +116,32 @@ public:
         bool mApply = false;
     };
 
+    // A parsed <CustomAttribute> (Java: ConstraintSet + ConstraintAttribute). CDROID has no
+    // reflection, so applyTo handles only a whitelisted set of common attributes (textColor,
+    // progress — direct-int setters); others are stored but not applied (TODO).
+    struct CustomAttribute {
+        enum Type { INTEGER, COLOR, FLOAT, STRING, BOOLEAN };
+        std::string name;
+        Type type = INTEGER;
+        int intValue = 0;       // INTEGER or COLOR (ARGB)
+        float floatValue = 0;
+        std::string stringValue;
+        bool boolValue = false;
+    };
+
+    // External extension point: handlers for named <CustomAttribute>s, registered by app/widget
+    // code. applyTo() dispatches each parsed <CustomAttribute> to a registered handler — the
+    // framework binds nothing itself (no hardcoded attribute, no View modification, no reflection).
+    using CustomAttributeHandler = std::function<void(View*, const CustomAttribute&)>;
+    static void registerCustomAttributeHandler(const std::string& name, CustomAttributeHandler handler);
+
     // Java: ConstraintSet.Constraint — one per referenced view id.
     struct Constraint {
         Layout layout;
         Transform transform;
         PropertySet propertySet;
         Motion motion;
+        std::vector<CustomAttribute> mCustomAttributes;
         int mViewId = -1;
 
         void fillFrom(int viewId, const ConstraintLayout::LayoutParams& param);
@@ -138,6 +159,9 @@ public:
     void applyTo(ConstraintLayout* constraintLayout);
     Constraint& get(int id);          // creates an entry if absent
     bool contains(int id) const { return mConstraints.find(id) != mConstraints.end(); }
+    // Copy base's per-view constraints into this set; entries already present here are kept
+    // (derived overrides base). Used by MotionScene for <ConstraintSet deriveConstraintsFrom=...>.
+    void mergeFrom(const ConstraintSet& base);
     void clear(int viewId);
     void clear(int viewId, int anchor);
 

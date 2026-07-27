@@ -88,31 +88,25 @@ void Motion::buildPath() {
     const float sW = mStartMotionPath.mWidth, sH = mStartMotionPath.mHeight;
     const float eX = mEndMotionPath.mX, eY = mEndMotionPath.mY;
     const float eW = mEndMotionPath.mWidth, eH = mEndMotionPath.mHeight;
-
-    // pathMotionArc: the widget travels a quarter-ellipse arc from start to end (no keyframes).
-    // x,y come from the arc; w,h interpolate linearly (ArcCurveFit is 2-D).
-    if (mPathMotionArc >= 0 && mPositionKeys.empty()) {
-        std::vector<int> arcModes = { mPathMotionArc };
-        std::vector<double> time = { 0.0, 1.0 };
-        std::vector<std::vector<double>> y = { { (double) sX, (double) sY },
-                                               { (double) eX, (double) eY } };
-        mArcCurveFit = CurveFit::getArc(arcModes, time, y);
-        return;
-    }
-
-    // Otherwise: monotonic spline through start + KeyPosition control points + end (x,y,w,h).
     const float sCx = sX + sW / 2.0f, sCy = sY + sH / 2.0f;
     const float eCx = eX + eW / 2.0f, eCy = eY + eH / 2.0f;
     const float pvx = eCx - sCx, pvy = eCy - sCy;
     const float dW = eW - sW, dH = eH - sH;
 
+    // Build the point list: start + KeyPosition control points + end. The spline (x,y,w,h) is
+    // always built through every point (matches Android's mSpline[0]); when pathMotionArc is set,
+    // an arc curve is additionally built for x,y (per-segment quarter-ellipses). The two coexist:
+    // x,y come from the arc, w,h from the spline.
+    constexpr int ARC_INHERIT = -1; // ArcCurveFit sticky: a non-ARC mode inherits the previous segment
     std::vector<double> time;
     std::vector<std::vector<double>> y;
-    auto addPt = [&](double p, float x, float yy, float w, float h) {
+    std::vector<int> arcMode; // per-point arc mode (the start point carries the global pathMotionArc)
+    auto addPt = [&](double p, float xx, float yy, float w, float h, int mode) {
         time.push_back(p);
-        y.push_back({(double) x, (double) yy, (double) w, (double) h});
+        y.push_back({(double) xx, (double) yy, (double) w, (double) h});
+        arcMode.push_back(mode);
     };
-    addPt(0.0, sX, sY, sW, sH);
+    addPt(0.0, sX, sY, sW, sH, (mPathMotionArc >= 0) ? mPathMotionArc : ARC_INHERIT);
     for (auto* k : mPositionKeys) {
         const float pos = k->mFramePosition / 100.0f;
         if (pos <= 0.0f || pos >= 1.0f) continue;
@@ -126,11 +120,19 @@ void Motion::buildPath() {
         const float ph = sH + dH * sh;
         const float cx = sCx + pvx * dxdx + pvy * dxdy;
         const float cy = sCy + pvy * dydy + pvx * dydx;
-        addPt(pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph);
+        // A KeyPosition may override its segment's arc mode (pathMotionArc); otherwise inherit.
+        addPt(pos, cx - pw / 2.0f, cy - ph / 2.0f, pw, ph,
+              (k->mPathMotionArc >= 0) ? k->mPathMotionArc : ARC_INHERIT);
     }
-    addPt(1.0, eX, eY, eW, eH);
+    addPt(1.0, eX, eY, eW, eH, ARC_INHERIT);
+
     if (time.size() >= 2) {
         mPositionCurveFit = CurveFit::get(CurveFit::SPLINE, time, y);
+        if (mPathMotionArc >= 0) {
+            std::vector<std::vector<double>> arcY;
+            for (const auto& row : y) arcY.push_back({row[0], row[1]});
+            mArcCurveFit = CurveFit::getArc(arcMode, time, arcY);
+        }
     }
 }
 
@@ -202,18 +204,24 @@ void Motion::interpolate(MotionWidget* child, float progress) {
     // Position + size: quarter-ellipse arc (pathMotionArc), spline through KeyPositions, or lerp.
     buildPath();
     float x, y, w, h;
-    if (mArcCurveFit) {
+    if (mPositionCurveFit) {
+        // x,y from the arc when pathMotionArc is set, otherwise from the spline; w,h always spline.
+        if (mArcCurveFit) {
+            x = (float) mArcCurveFit->getPos(progress, 0);
+            y = (float) mArcCurveFit->getPos(progress, 1);
+        } else {
+            x = (float) mPositionCurveFit->getPos(progress, 0);
+            y = (float) mPositionCurveFit->getPos(progress, 1);
+        }
+        w = (float) mPositionCurveFit->getPos(progress, 2);
+        h = (float) mPositionCurveFit->getPos(progress, 3);
+    } else if (mArcCurveFit) {
         x = (float) mArcCurveFit->getPos(progress, 0);
         y = (float) mArcCurveFit->getPos(progress, 1);
         w = lerp(mStartMotionPath.mWidth, mEndMotionPath.mWidth, mStartMotionPath.mWidth, progress);
         h = lerp(mStartMotionPath.mHeight, mEndMotionPath.mHeight, mStartMotionPath.mHeight, progress);
         if (std::isnan(w)) w = mStartMotionPath.mWidth;
         if (std::isnan(h)) h = mStartMotionPath.mHeight;
-    } else if (mPositionCurveFit) {
-        x = (float) mPositionCurveFit->getPos(progress, 0);
-        y = (float) mPositionCurveFit->getPos(progress, 1);
-        w = (float) mPositionCurveFit->getPos(progress, 2);
-        h = (float) mPositionCurveFit->getPos(progress, 3);
     } else {
         x = lerp(mStartMotionPath.mX, mEndMotionPath.mX, 0, progress);
         y = lerp(mStartMotionPath.mY, mEndMotionPath.mY, 0, progress);
@@ -264,21 +272,25 @@ void Motion::interpolate(MotionWidget* child, float progress) {
 
 void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) {
     // Slope of the anchor point (locationX,locationY on the widget) w.r.t. progress:
-    // dAnchor = dPosition + loc * dSize (anchor = top-left + loc*size).
+    // dAnchor = dPosition + loc * dSize (anchor = top-left + loc*size). When pathMotionArc is set,
+    // x,y slope comes from the arc and w,h slope from the spline (the two curves coexist).
     buildPath();
+    float dx, dy;
     if (mArcCurveFit) {
-        out[0] = (float)(mArcCurveFit->getSlope(pos, 0)
-                         + locationX * (mEndMotionPath.mWidth - mStartMotionPath.mWidth));
-        out[1] = (float)(mArcCurveFit->getSlope(pos, 1)
-                         + locationY * (mEndMotionPath.mHeight - mStartMotionPath.mHeight));
+        dx = (float) mArcCurveFit->getSlope(pos, 0);
+        dy = (float) mArcCurveFit->getSlope(pos, 1);
     } else if (mPositionCurveFit) {
-        out[0] = (float)(mPositionCurveFit->getSlope(pos, 0)
-                         + locationX * mPositionCurveFit->getSlope(pos, 2));
-        out[1] = (float)(mPositionCurveFit->getSlope(pos, 1)
-                         + locationY * mPositionCurveFit->getSlope(pos, 3));
+        dx = (float) mPositionCurveFit->getSlope(pos, 0);
+        dy = (float) mPositionCurveFit->getSlope(pos, 1);
     } else {
-        out[0] = out[1] = 0;
+        dx = dy = 0;
     }
+    float dw = mPositionCurveFit ? (float) mPositionCurveFit->getSlope(pos, 2)
+                                 : (mEndMotionPath.mWidth - mStartMotionPath.mWidth);
+    float dh = mPositionCurveFit ? (float) mPositionCurveFit->getSlope(pos, 3)
+                                 : (mEndMotionPath.mHeight - mStartMotionPath.mHeight);
+    out[0] = dx + locationX * dw;
+    out[1] = dy + locationY * dh;
 }
 
 // TypedValues motion-property dispatch — store on this controller for the deferred engine.

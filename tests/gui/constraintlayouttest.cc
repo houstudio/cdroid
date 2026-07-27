@@ -662,6 +662,83 @@ TEST(ConstraintLayout, MotionSceneXmlParse) {
     EXPECT_EQ(t->getOnSwipe()->onTouchUp, MotionScene::OnSwipe::ON_UP_AUTOCOMPLETE_TO_START);
 }
 
+// deriveConstraintsFrom: a derived <ConstraintSet> inherits the base set's constraints, with its
+// own same-id entries overriding the base's (derived wins). The base may be defined after the
+// derived set in the XML — the merge is lazy on the first getConstraintSet() call.
+TEST(ConstraintLayout, MotionSceneDeriveConstraints) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/derived\" constraintSetEnd=\"@+id/base\" />"
+        "  <ConstraintSet android:id=\"@+id/derived\" deriveConstraintsFrom=\"@+id/base\">"
+        "    <Constraint android:id=\"1\" layout_width=\"200\" layout_height=\"50\" />"
+        "    <Constraint android:id=\"2\" layout_width=\"80\"  layout_height=\"40\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/base\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" />"
+        "    <Constraint android:id=\"3\" layout_width=\"60\"  layout_height=\"30\" />"
+        "  </ConstraintSet>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    MotionScene scene(nullptr);
+    scene.load(&app, parser);
+
+    auto* t = scene.getCurrentTransition();
+    ASSERT_NE(t, nullptr);
+    auto* derived = scene.getConstraintSet(t->getStartId());
+    auto* base = scene.getConstraintSet(t->getEndId());
+    ASSERT_NE(derived, nullptr);
+    ASSERT_NE(base, nullptr);
+
+    EXPECT_TRUE(base->contains(1));
+    EXPECT_TRUE(base->contains(3));
+    EXPECT_FALSE(base->contains(2));
+    EXPECT_EQ(base->get(1).layout.mWidth, 100);
+
+    // derived inherits base's id=3, keeps its own id=2, and its id=1 overrides base's (200 vs 100).
+    EXPECT_TRUE(derived->contains(1));
+    EXPECT_TRUE(derived->contains(2));
+    EXPECT_TRUE(derived->contains(3));            // inherited from base
+    EXPECT_EQ(derived->get(1).layout.mWidth, 200); // derived wins over base
+    EXPECT_EQ(derived->get(2).layout.mWidth, 80);  // own
+    EXPECT_EQ(derived->get(3).layout.mWidth, 60);  // inherited
+}
+
+// <CustomAttribute> is parsed into the Constraint model and dispatched, at applyTo(), to an
+// externally-registered handler. The framework binds no attribute itself — the test registers a
+// "textColor" -> TextView::setTextColor handler (an app/widget-layer concern) and checks dispatch.
+TEST(ConstraintLayout, ConstraintSetCustomAttribute) {
+    ConstraintSet::registerCustomAttributeHandler("textColor",
+        [](View* v, const ConstraintSet::CustomAttribute& ca) {
+            if (auto* tv = dynamic_cast<TextView*>(v)) tv->setTextColor(ca.intValue);
+        });
+
+    App& app = App::getInstance();
+    const std::string xml =
+        "<ConstraintSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\">"
+        "    <CustomAttribute attributeName=\"textColor\" customColorValue=\"#FFFF0000\" />"
+        "  </Constraint>"
+        "</ConstraintSet>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    ConstraintSet set;
+    set.load(&app, parser);
+
+    ASSERT_EQ(set.get(1).mCustomAttributes.size(), 1u);
+    const auto& ca = set.get(1).mCustomAttributes[0];
+    EXPECT_EQ(ca.name, "textColor");
+    EXPECT_EQ(ca.type, ConstraintSet::CustomAttribute::COLOR);
+    ASSERT_NE(ca.intValue, 0); // a real color was parsed
+
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("T", 100, 50); tv->setId(1);
+    cl->addView(tv);
+    set.applyTo(cl);
+    EXPECT_EQ(tv->getCurrentTextColor(), ca.intValue); // handler dispatched the parsed color
+}
+
 // A container with padding insets its children: leftToLeft=parent with paddingLeft=50 -> x=50.
 TEST(ConstraintLayout, PaddingInsetsChildren) {
     App& app = App::getInstance();

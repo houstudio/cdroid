@@ -39,7 +39,7 @@ public:
     // Factory: SPLINE -> MonotonicCurveFit, CONSTANT -> Constant, default -> LinearCurveFit.
     static std::unique_ptr<CurveFit> get(int type, const std::vector<double>& time,
                                          const std::vector<std::vector<double>>& y);
-    // Arc path curve fit (ArcCurveFit) — deferred; returns nullptr for now.
+    // Arc path curve fit: per-segment quarter-ellipses (ArcCurveFit), used for pathMotionArc.
     static std::unique_ptr<CurveFit> getArc(const std::vector<int>& arcModes,
                                             const std::vector<double>& time,
                                             const std::vector<std::vector<double>>& y);
