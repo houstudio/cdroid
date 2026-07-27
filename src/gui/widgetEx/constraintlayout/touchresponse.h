@@ -23,20 +23,23 @@
 
 namespace cdroid {
 
+class MotionEvent;
 class MotionLayout;
+class VelocityTracker;
 
 class TouchResponse {
 public:
     // Build from the scene's <OnSwipe> config. `layout` must outlive this TouchResponse.
     TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& cfg);
+    ~TouchResponse();
 
     // MotionEvent stages. onMove returns true once a drag is in progress.
-    void onDown(float x, float y);
+    void onDown(const MotionEvent& evt);
     // True once the finger has moved past touch slop in the drag direction (MotionLayout uses this
     // to decide whether to intercept — so a tap still reaches <OnClick> children).
-    bool dragSlopExceeded(float x, float y) const;
-    bool onMove(float x, float y);
-    void onUp(float x, float y);
+    bool dragSlopExceeded(const MotionEvent& evt) const;
+    bool onMove(const MotionEvent& evt);
+    void onUp(const MotionEvent& evt);
 
     bool dragStarted() const { return mDragStarted; }
 
@@ -47,9 +50,14 @@ private:
     float mTouchDirX, mTouchDirY;   // unit vector of the drag direction (TOUCH_DIRECTION table)
     int   mOnTouchUp;
     float mDragScale;
+    int   mAutoCompleteMode = MotionScene::OnSwipe::COMPLETE_CONTINUOUS_VELOCITY;
+    float mSpringMass = 1.0f, mSpringStiffness = 400.0f, mSpringDamping = 10.0f;
+    float mSpringStopThreshold = 0.01f;
+    int   mSpringBoundary = 0;
 
+    VelocityTracker* mVelocityTracker = nullptr; // px/s tracking for the spring release velocity
     float mLastX = 0, mLastY = 0;
-    float mDragVx = 0, mDragVy = 0; // recent drag delta (for release-direction)
+    float mDragVx = 0, mDragVy = 0; // recent drag delta (fallback if no tracker)
     bool  mDragStarted = false;
 };
 

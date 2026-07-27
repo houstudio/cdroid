@@ -44,6 +44,16 @@ const std::unordered_map<std::string, int> kAnchorSide = {
     {"start",  (int)MotionScene::OnSwipe::SIDE_START},
     {"end",    (int)MotionScene::OnSwipe::SIDE_END}
 };
+const std::unordered_map<std::string, int> kAutoComplete = {
+    {"continuousVelocity", (int)MotionScene::OnSwipe::COMPLETE_CONTINUOUS_VELOCITY},
+    {"spring",             (int)MotionScene::OnSwipe::COMPLETE_SPRING}
+};
+const std::unordered_map<std::string, int> kSpringBoundary = {
+    {"overshoot",   (int)MotionScene::OnSwipe::SPRING_OVERSHOOT},
+    {"bounceStart", (int)MotionScene::OnSwipe::SPRING_BOUNCE_START},
+    {"bounceEnd",   (int)MotionScene::OnSwipe::SPRING_BOUNCE_END},
+    {"bounceBoth",  (int)MotionScene::OnSwipe::SPRING_BOUNCE_BOTH}
+};
 } // namespace
 
 // ===========================================================================
@@ -182,6 +192,12 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 os->touchAnchorId  = parser.getResourceId("touchAnchorId", os->touchAnchorId);
                 os->onTouchUp     = parser.getInt("onTouchUp", kTouchUp, os->onTouchUp);
                 os->maxVelocity   = parser.getFloat("maxVelocity", os->maxVelocity);
+                os->autoCompleteMode    = parser.getInt("autoCompleteMode", kAutoComplete, os->autoCompleteMode);
+                os->springMass          = parser.getFloat("springMass", os->springMass);
+                os->springStiffness     = parser.getFloat("springStiffness", os->springStiffness);
+                os->springDamping       = parser.getFloat("springDamping", os->springDamping);
+                os->springStopThreshold = parser.getFloat("springStopThreshold", os->springStopThreshold);
+                os->springBoundary      = parser.getInt("springBoundary", kSpringBoundary, os->springBoundary);
                 currentTransition->setOnSwipe(std::move(os));
             }
             // OnSwipe / TouchResponse / StateSet / ViewTransition: deferred (swipe-driven / per-view).

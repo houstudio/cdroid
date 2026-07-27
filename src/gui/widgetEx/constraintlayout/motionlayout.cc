@@ -14,6 +14,7 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
+#include <widgetEx/constraintlayout/core/motion/springstopengine.h>
 
 DECLARE_WIDGET(MotionLayout)
 
@@ -164,6 +165,33 @@ void MotionLayout::animateTo(float target) {
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+    });
+    mAnimator->start();
+}
+
+void MotionLayout::animateToWithSpring(float target, float startVelocity,
+        float mass, float stiffness, float damping, float stopThreshold, int boundary) {
+    if (!mCaptured) { setProgress(target); return; }
+    if (mAnimator != nullptr) { mAnimator->cancel(); delete mAnimator; }
+    mSpringEngine = std::make_unique<SpringStopEngine>();
+    mSpringEngine->springConfig(mProgress, target, startVelocity, mass, stiffness, damping,
+                                stopThreshold, boundary);
+    constexpr float kDurationSec = 2.0f; // generous upper bound; the spring ends itself via isStopped
+    mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
+    mAnimator->setDuration((int64_t)(kDurationSec * 1000));
+    SpringStopEngine* engine = mSpringEngine.get();
+    mAnimator->addUpdateListener([this, engine, target, kDurationSec](ValueAnimator& a) {
+        const float time = a.getAnimatedFraction() * kDurationSec;
+        mProgress = engine->getInterpolation(time);
+        if (mProgress <= 0.0f) mCurrentState = mBeginState;
+        else if (mProgress >= 1.0f) mCurrentState = mEndState;
+        else mCurrentState = -1;
+        applyMotion();
+        if (engine->isStopped()) {
+            mProgress = target;
+            if (mCaptured) applyMotion();
+            a.cancel();
+        }
     });
     mAnimator->start();
 }
@@ -347,9 +375,9 @@ bool MotionLayout::onInterceptTouchEvent(MotionEvent& evt) {
     if (mTouchResponse == nullptr) return ConstraintLayout::onInterceptTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
-        mTouchResponse->onDown(evt.getX(), evt.getY());
+        mTouchResponse->onDown(evt);
     } else if (action == MotionEvent::ACTION_MOVE) {
-        if (mTouchResponse->dragSlopExceeded(evt.getX(), evt.getY())) return true;
+        if (mTouchResponse->dragSlopExceeded(evt)) return true;
     }
     return false;
 }
@@ -358,15 +386,15 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
     if (mTouchResponse == nullptr) return ConstraintLayout::onTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
-        mTouchResponse->onDown(evt.getX(), evt.getY());
+        mTouchResponse->onDown(evt);
         return true;
     }
     if (action == MotionEvent::ACTION_MOVE) {
-        mTouchResponse->onMove(evt.getX(), evt.getY());
+        mTouchResponse->onMove(evt);
         return true;
     }
     if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
-        mTouchResponse->onUp(evt.getX(), evt.getY());
+        mTouchResponse->onUp(evt);
         return true;
     }
     return true;

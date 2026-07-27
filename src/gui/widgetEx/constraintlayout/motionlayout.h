@@ -30,6 +30,7 @@ namespace cdroid {
 
 class ValueAnimator;
 class MotionEvent;
+class SpringStopEngine;
 class MotionKeyAttributes;
 class MotionKeyPosition;
 class KeyFrames;
@@ -56,6 +57,11 @@ public:
     // Animate to the start/end state over the transition duration (driven by a ValueAnimator).
     void transitionToStart();
     void transitionToEnd();
+    // Spring-settle to `target` (0 or 1) carrying `startVelocity` (progress/sec). Uses the OnSwipe
+    // spring parameters; the spring stops itself via its energy threshold.
+    void animateToWithSpring(float target, float startVelocity,
+                             float mass, float stiffness, float damping,
+                             float stopThreshold, int boundary);
     // Instant jump (no animation).
     void setProgressInstant(float progress) { setProgress(progress); }
     void setTransitionDuration(int64_t durationMs) { mTransitionDuration = durationMs; }
@@ -118,6 +124,7 @@ private:
     float mProgress = 0.0f;
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;
+    std::unique_ptr<SpringStopEngine> mSpringEngine;
     bool mCaptured = false;
     bool mCapturePending = false; // setTransition called before the layout had a size
     bool mInCapture = false; // guard against re-entrant measure/layout during capture

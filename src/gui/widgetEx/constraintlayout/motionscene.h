@@ -61,6 +61,18 @@ public:
         int   touchAnchorId  = UNSET;        // view whose start->end travel is the drag range
         int   onTouchUp      = ON_UP_AUTOCOMPLETE;
         float maxVelocity    = 4.0f;         // (MVP: unused — snap is progress-based, not velocity)
+
+        // Spring auto-completion (autoCompleteMode=COMPLETE_SPRING): a damped spring drives the
+        // settle, carrying the drag's release velocity as its initial velocity.
+        static constexpr int COMPLETE_CONTINUOUS_VELOCITY = 0, COMPLETE_SPRING = 1;
+        static constexpr int SPRING_OVERSHOOT = 0, SPRING_BOUNCE_START = 1,
+                             SPRING_BOUNCE_END = 2, SPRING_BOUNCE_BOTH = 3;
+        int   autoCompleteMode    = COMPLETE_CONTINUOUS_VELOCITY;
+        float springMass          = 1.0f;
+        float springStiffness     = 400.0f;
+        float springDamping       = 10.0f;
+        float springStopThreshold = 0.01f;
+        int   springBoundary      = SPRING_OVERSHOOT;
     };
 
     // One transition between two ConstraintSets. (Java: MotionScene.Transition.)
