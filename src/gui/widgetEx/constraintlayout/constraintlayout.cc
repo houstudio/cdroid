@@ -5,6 +5,7 @@
  * MVP cut — see header.
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
+#include <widgetEx/constraintlayout/constraintlayoutstates.h>
 
 #include <algorithm>
 #include <climits>
@@ -157,6 +158,20 @@ ConstraintLayout::ConstraintLayout(int width, int height)
     : ViewGroup(width, height) {
     mLayoutWidget.setMeasurer(asMeasurer());
     mLayoutWidget.setCompanionWidget(this);
+}
+
+// Defined here (not defaulted in the header) so the unique_ptr<ConstraintLayoutStates> member
+// destroys with a complete type.
+ConstraintLayout::~ConstraintLayout() = default;
+
+void ConstraintLayout::loadLayoutDescription(const std::string& resource) {
+    mConstraintLayoutStates = std::make_unique<ConstraintLayoutStates>(getContext(), this, resource);
+}
+
+void ConstraintLayout::setState(int id, int screenWidth, int screenHeight) {
+    if (mConstraintLayoutStates != nullptr) {
+        mConstraintLayoutStates->updateConstraints(id, (float) screenWidth, (float) screenHeight);
+    }
 }
 
 ViewGroup::LayoutParams* ConstraintLayout::generateLayoutParams(const AttributeSet& attrs) const {

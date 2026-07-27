@@ -77,6 +77,10 @@ public:
     int getDefaultState() const { return mDefaultState; }
     int getCurrentStateId() const { return mCurrentStateId; }
 
+    // Select the ConstraintSet for (id, width, height) and apply it to the bound layout. Tracks the
+    // current state/constraint so a no-op (same state, dimensions still matching) skips applyTo.
+    void updateConstraints(int id, float width, float height);
+
     // Stable scene-local id for a name (e.g. "@+id/s1" / "s1" -> int). Mirrors MotionScene.
     int getId(const std::string& idString) const;
     static std::string stripId(const std::string& idString);

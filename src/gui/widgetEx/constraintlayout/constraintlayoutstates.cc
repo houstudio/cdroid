@@ -204,4 +204,32 @@ ConstraintSet* ConstraintLayoutStates::convertToConstraintSet(int currentConstra
     return state->mConstraintSet; // state default
 }
 
+void ConstraintLayoutStates::updateConstraints(int id, float width, float height) {
+    if (mCurrentStateId == id) {
+        const State* state = (id == -1) ? (mStates.empty() ? nullptr : &mStates[0])
+                                        : findState(mCurrentStateId);
+        if (state == nullptr) return;
+        if (mCurrentConstraintNumber != -1 &&
+            mCurrentConstraintNumber < (int) state->mVariants.size()) {
+            if (state->mVariants[mCurrentConstraintNumber].match(width, height)) return; // still fits
+        }
+        const int match = state->findMatch(width, height);
+        if (mCurrentConstraintNumber == match) return;
+        ConstraintSet* cs = (match == -1) ? state->mConstraintSet
+                                          : state->mVariants[match].mConstraintSet;
+        if (cs == nullptr) return;
+        mCurrentConstraintNumber = match;
+        cs->applyTo(mLayout);
+    } else {
+        mCurrentStateId = id;
+        const State* state = findState(mCurrentStateId);
+        const int match = (state == nullptr) ? -1 : state->findMatch(width, height);
+        ConstraintSet* cs = (state == nullptr) ? nullptr
+            : ((match == -1) ? state->mConstraintSet : state->mVariants[match].mConstraintSet);
+        if (cs == nullptr) return;
+        mCurrentConstraintNumber = match;
+        cs->applyTo(mLayout);
+    }
+}
+
 } // namespace cdroid

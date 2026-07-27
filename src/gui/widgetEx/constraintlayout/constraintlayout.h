@@ -36,6 +36,7 @@
 namespace cdroid {
 
 class ConstraintHelper;
+class ConstraintLayoutStates;
 
 class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 public:
@@ -108,6 +109,7 @@ public:
 
     ConstraintLayout(Context* ctx, const AttributeSet& attrs);
     ConstraintLayout(int width, int height);
+    ~ConstraintLayout() override;
     static constexpr int PARENT_ID = 0;
 
     // The Measurer::measure(Widget*,Measure*) override would hide View::measure(int,int);
@@ -124,6 +126,13 @@ public:
     ConstraintWidget* getViewWidget(View* view);
     // The container's own solver model (the root ConstraintWidgetContainer).
     ConstraintWidgetContainer& getLayoutWidget() { return mLayoutWidget; }
+
+    // Adaptive layouts (<StateSet>): load a state-set resource so setState can swap ConstraintSets
+    // when the layout's size or a logical state changes. (MotionLayout overrides layoutDescription
+    // for <MotionScene> and does not use this.)
+    void loadLayoutDescription(const std::string& resource);
+    // Apply the ConstraintSet selected by (id, screenWidth, screenHeight) from the loaded StateSet.
+    void setState(int id, int screenWidth, int screenHeight);
 
 protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
@@ -143,6 +152,7 @@ private:
     ConstraintWidgetContainer mLayoutWidget;
     std::unordered_map<int, ConstraintWidget*> mIdToWidget; // id -> widget (PARENT_ID/own id -> mLayoutWidget)
     std::vector<ConstraintHelper*> mConstraintHelpers; // Barrier/Group/... children
+    std::unique_ptr<ConstraintLayoutStates> mConstraintLayoutStates; // <StateSet> adaptive layout
     int mMinWidth = 0;
     int mMaxWidth = INT_MAX;
     int mMinHeight = 0;

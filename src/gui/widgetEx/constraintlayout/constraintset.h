@@ -153,6 +153,9 @@ public:
 
     // --- core API ---
     void clone(ConstraintLayout* constraintLayout);
+    // Inflate a layout resource (offscreen) and clone its constraints — supports a StateSet's
+    // `constraints="@layout/foo"` reference. `resource` is the resource path (e.g. "layout/foo").
+    void clone(Context* context, const std::string& resource);
     // Parse a <ConstraintSet> XML resource. `parser` is positioned at the <ConstraintSet> START_TAG;
     // returns after consuming the matching END_TAG. (Java: ConstraintSet.load(Context, XmlPullParser).)
     void load(Context* context, XmlPullParser& parser);

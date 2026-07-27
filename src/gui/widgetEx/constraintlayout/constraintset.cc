@@ -9,6 +9,7 @@
 
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
+#include <view/layoutinflater.h>
 #include <view/view.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
@@ -184,6 +185,10 @@ void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
         c.transform.translationX = view->getTranslationX();
         c.transform.translationY = view->getTranslationY();
     }
+}
+
+void ConstraintSet::clone(Context* context, const std::string& resource){
+    LOGD("TODO");
 }
 
 void ConstraintSet::applyTo(ConstraintLayout* constraintLayout) {

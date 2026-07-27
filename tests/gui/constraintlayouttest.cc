@@ -928,4 +928,50 @@ TEST(ConstraintLayout, ConstraintLayoutStatesMatch) {
     EXPECT_EQ(states.convertToConstraintSet(defaultId, baseId, 800.0f, 300.0f), wide);
 }
 
+// ConstraintLayoutStates.updateConstraints applies the dimension-selected ConstraintSet to the
+// bound layout. State "base": default set sizes id=42 to 100px, a Variant for width>600 sizes it to
+// 200px. At width 400 the child measures 100; at width 900 it measures 200 (re-applied + re-measured).
+TEST(ConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(800, 400);
+    TextView* tv = new TextView("X", 100, 50);
+    tv->setId(42);
+    cl->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+
+    const std::string xml =
+        "<StateSet xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        "          defaultState=\"@+id/base\">"
+        "  <State android:id=\"@+id/base\" constraints=\"@+id/small\">"
+        "    <Variant region_widthMoreThan=\"600\" constraints=\"@+id/large\"/>"
+        "  </State>"
+        "  <ConstraintSet android:id=\"@+id/small\">"
+        "    <Constraint android:id=\"42\" android:layout_width=\"100dp\" android:layout_height=\"50dp\"/>"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/large\">"
+        "    <Constraint android:id=\"42\" android:layout_width=\"200dp\" android:layout_height=\"50dp\"/>"
+        "  </ConstraintSet>"
+        "</StateSet>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+
+    ConstraintLayoutStates states(&app, cl, parser);
+    const int baseId = states.getId("@+id/base");
+
+    // Narrow (400 wide) -> default "small" set -> child width 100.
+    states.updateConstraints(baseId, 400.0f, 400.0f);
+    cl->measure(exactly(800), exactly(400));
+    cl->layout(0, 0, 800, 400);
+    EXPECT_EQ(tv->getWidth(), 100);
+
+    // Wide (900 wide) -> Variant "large" set -> child width 200.
+    states.updateConstraints(baseId, 900.0f, 400.0f);
+    cl->measure(exactly(800), exactly(400));
+    cl->layout(0, 0, 800, 400);
+    EXPECT_EQ(tv->getWidth(), 200);
+}
+
 #endif // ENABLE_CONSTRAINTLAYOUT
