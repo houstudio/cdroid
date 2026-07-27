@@ -1,4 +1,7 @@
-# **
+# **5
+  - add Transition
+  - add ConstrainLayout and MOtionLayout
+# **4.9.6
   - add TouchDevice VirtualKeyMap support
   - fix NumberPicker::onTouchEvent's behavior(ACTION_CANCEL)
   - add AChartEngine(Kplot is removed)
