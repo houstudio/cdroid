@@ -357,6 +357,8 @@ void LinearSystem::addConstraint(ArrayRow* row) {
     if (!row->mIsSimpleDefinition) {
         row->updateFromSystem(this);
         if (row->isEmpty()) {
+            if (OPTIMIZED_ENGINE) mCache->mOptimizedArrayRowPool.release(row);
+            else mCache->mArrayRowPool.release(row);
             return;
         }
         row->ensurePositiveConstant();
@@ -384,11 +386,14 @@ void LinearSystem::addConstraint(ArrayRow* row) {
                     if (OPTIMIZED_ENGINE) mCache->mOptimizedArrayRowPool.release(row);
                     else mCache->mArrayRowPool.release(row);
                     mNumRows--;
+                    return; // row already released above; bail before the !hasKeyVariable() re-release
                 }
             }
         }
 
         if (!row->hasKeyVariable()) {
+            if (OPTIMIZED_ENGINE) mCache->mOptimizedArrayRowPool.release(row);
+            else mCache->mArrayRowPool.release(row);
             return;
         }
     }
@@ -400,6 +405,8 @@ void LinearSystem::addConstraint(ArrayRow* row) {
 void LinearSystem::addRow(ArrayRow* row) {
     if (SIMPLIFY_SYNONYMS && row->mIsSimpleDefinition) {
         row->mVariable->setFinalValue(this, row->mConstantValue);
+        if (OPTIMIZED_ENGINE) mCache->mOptimizedArrayRowPool.release(row);
+        else mCache->mArrayRowPool.release(row);
     } else {
         mRows[mNumRows] = row;
         row->mVariable->mDefinitionId = mNumRows;
