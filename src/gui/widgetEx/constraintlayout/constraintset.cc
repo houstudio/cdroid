@@ -162,7 +162,9 @@ void ConstraintSet::Constraint::applyTo(ConstraintLayout::LayoutParams& param) c
 // ConstraintSet
 // ===========================================================================
 ConstraintSet::Constraint& ConstraintSet::get(int id) {
-    return mConstraints[id]; // default-constructs a Constraint if absent
+    Constraint& c = mConstraints[id]; // default-constructs a Constraint if absent
+    c.mViewId = id; // a constraint retrieved by id knows its id (applyDelta/mergeFrom rely on this)
+    return c;
 }
 
 void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
@@ -578,7 +580,6 @@ void ConstraintSet::loadConstraint(XmlPullParser& parser) {
     Constraint current;
     const std::string openTag = parser.getName();
     current.fillFromAttributeList(parser); // parser IS-A AttributeSet
-    fprintf(stderr, "DBG loadConstraint openTag=%s mViewId=%d\n", openTag.c_str(), current.mViewId);
     if (openTag == "Guideline") {
         current.layout.mIsGuideline = true;
         current.layout.mApply = true;
