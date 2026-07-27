@@ -142,6 +142,9 @@ void MotionLayout::setTransition(ConstraintSet* start, ConstraintSet* end) {
 
 void MotionLayout::setProgress(float progress) {
     mProgress = progress;
+    if (progress <= 0.0f) mCurrentState = mBeginState;
+    else if (progress >= 1.0f) mCurrentState = mEndState;
+    else mCurrentState = -1; // in motion
     if (mCaptured) applyMotion();
 }
 
@@ -157,6 +160,9 @@ void MotionLayout::animateTo(float target) {
     mAnimator->addUpdateListener([this, start, target](ValueAnimator& a) {
         float f = a.getAnimatedFraction();
         mProgress = start + (target - start) * f;
+        if (mProgress <= 0.0f) mCurrentState = mBeginState;
+        else if (mProgress >= 1.0f) mCurrentState = mEndState;
+        else mCurrentState = -1;
         applyMotion();
     });
     mAnimator->start();
@@ -164,6 +170,39 @@ void MotionLayout::animateTo(float target) {
 
 void MotionLayout::transitionToStart() { animateTo(0.0f); }
 void MotionLayout::transitionToEnd()   { animateTo(1.0f); }
+
+void MotionLayout::setTransition(int transitionId) {
+    if (mScene == nullptr) return;
+    auto* t = mScene->getTransitionById(transitionId);
+    if (t == nullptr) return;
+    mScene->setCurrentTransition(t);
+    if (mAnimator != nullptr) mAnimator->cancel();
+    applyTransition(t);
+    setProgress(0.0f); // MVP: rest at the new transition's start
+}
+
+void MotionLayout::setTransition(int startId, int endId) {
+    if (mScene == nullptr) return;
+    auto* t = mScene->findTransition(startId, endId);
+    if (t == nullptr) return;
+    mScene->setCurrentTransition(t);
+    if (mAnimator != nullptr) mAnimator->cancel();
+    applyTransition(t);
+    setProgress(0.0f);
+}
+
+void MotionLayout::transitionToState(int stateId) {
+    if (mScene == nullptr) return;
+    if (mCurrentState == stateId) return;        // already there
+    if (mBeginState == stateId) { animateTo(0.0f); return; } // back along the current transition
+    if (mEndState == stateId)   { animateTo(1.0f); return; } // forward along the current transition
+    auto* t = mScene->findTransition(mCurrentState, stateId);
+    if (t == nullptr) return;                    // MVP: no fallback transition construction
+    mScene->setCurrentTransition(t);
+    if (mAnimator != nullptr) mAnimator->cancel();
+    applyTransition(t);
+    animateTo(1.0f); // animate from the new start (=currentState) to the target end
+}
 
 void MotionLayout::addKeyAttributes(int viewId, MotionKeyAttributes* key) {
     auto it = mMotions.find(viewId);
@@ -228,28 +267,28 @@ void MotionLayout::onLayout(bool changed, int l, int t, int r, int b) {
 // ===========================================================================
 // MotionScene (pure-XML) path
 // ===========================================================================
+void MotionLayout::applyTransition(MotionScene::Transition* t) {
+    if (t == nullptr) return;
+    ConstraintSet* start = mScene->getConstraintSet(t->getStartId());
+    ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
+    if (start == nullptr || end == nullptr) return;
+    setTransitionDuration(t->getDuration());
+    if (!t->getInterpolatorString().empty()) setTransitionEasing(t->getInterpolatorString());
+    mKeyFramesToApply = t->getKeyFrames();
+    mSceneArcMode = t->getPathMotionArc();
+    mBeginState = t->getStartId();
+    mEndState = t->getEndId();
+    setTransition(start, end); // the ConstraintSet* overload: captures + builds the per-child Motion
+    wireOnClicks(t);
+    mTouchResponse = (t->getOnSwipe() != nullptr)
+        ? std::make_unique<TouchResponse>(this, *t->getOnSwipe()) : nullptr;
+}
+
 void MotionLayout::buildScene() {
     if (mSceneBuilt || mSceneResource.empty()) return;
     mSceneBuilt = true; // set first so a parse failure doesn't retry every measure
     mScene = std::make_unique<MotionScene>(getContext(), this, mSceneResource);
-    auto* t = mScene->getCurrentTransition();
-    if (t == nullptr) return;
-
-    ConstraintSet* start = mScene->getConstraintSet(t->getStartId());
-    ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
-    if (start != nullptr && end != nullptr) {
-        setTransitionDuration(t->getDuration());
-        if (!t->getInterpolatorString().empty()) {
-            setTransitionEasing(t->getInterpolatorString());
-        }
-        mKeyFramesToApply = t->getKeyFrames();
-        mSceneArcMode = t->getPathMotionArc();
-        setTransition(start, end); // captures now if we have a size, else defers to onMeasure
-    }
-    wireOnClicks(t);
-    if (t->getOnSwipe() != nullptr) {
-        mTouchResponse = std::make_unique<TouchResponse>(this, *t->getOnSwipe());
-    }
+    applyTransition(mScene->getCurrentTransition());
 }
 
 void MotionLayout::getAnchorDpDt(int anchorId, float pos, float locationX, float locationY,
@@ -291,9 +330,12 @@ void MotionLayout::wireOnClicks(MotionScene::Transition* t) {
                 case MotionScene::Transition::FLAG_TRANSITION_TO_START: self->transitionToStart(); break;
                 case MotionScene::Transition::FLAG_JUMP_TO_END:         self->setProgress(1.0f);   break;
                 case MotionScene::Transition::FLAG_JUMP_TO_START:       self->setProgress(0.0f);   break;
-                default: // toggle
-                    self->getProgress() < 0.5f ? self->transitionToEnd() : self->transitionToStart();
+                default: { // toggle: at the end state (or past halfway) -> start, else -> end
+                    const bool back = self->getCurrentState() == self->mEndState
+                                   || self->getProgress() >= 0.5f;
+                    back ? self->transitionToStart() : self->transitionToEnd();
                     break;
+                }
             }
         });
     }

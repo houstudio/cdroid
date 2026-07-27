@@ -705,6 +705,37 @@ TEST(ConstraintLayout, MotionSceneDeriveConstraints) {
     EXPECT_EQ(derived->get(3).layout.mWidth, 60);  // inherited
 }
 
+// Multi-transition state machine: <Transition android:id> is parsed, and MotionScene can look up a
+// transition by id or by its start/end ConstraintSet endpoints (used by MotionLayout::setTransition
+// (id) / transitionToState). The first non-abstract transition remains the current one.
+TEST(ConstraintLayout, MotionSceneTransitionLookup) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition android:id=\"@+id/t1\" constraintSetStart=\"@+id/A\" constraintSetEnd=\"@+id/B\" />"
+        "  <Transition android:id=\"@+id/t2\" constraintSetStart=\"@+id/B\" constraintSetEnd=\"@+id/C\" />"
+        "  <ConstraintSet android:id=\"@+id/A\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintLeft_toLeftOf=\"parent\"/></ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/B\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintRight_toRightOf=\"parent\"/></ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/C\"><Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\" layout_constraintTop_toTopOf=\"parent\"/></ConstraintSet>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    MotionScene scene(nullptr);
+    scene.load(&app, parser);
+
+    auto* t1 = scene.getCurrentTransition(); // first non-abstract
+    ASSERT_NE(t1, nullptr);
+    ASSERT_NE(t1->getId(), MotionScene::UNSET); // <Transition android:id> parsed
+    const int t1Id = t1->getId();
+    const int A = t1->getStartId(), B = t1->getEndId();
+
+    EXPECT_EQ(scene.getTransitionById(t1Id), t1);   // lookup by id
+    EXPECT_EQ(scene.findTransition(A, B), t1);      // lookup by endpoints
+    EXPECT_EQ(scene.findTransition(B, A), nullptr); // reverse direction not defined
+    scene.setCurrentTransition(t1);
+    EXPECT_EQ(scene.getCurrentTransition(), t1);
+}
+
 // <CustomAttribute> is parsed into the Constraint model and dispatched, at applyTo(), to an
 // externally-registered handler. The framework binds no attribute itself — the test registers a
 // "textColor" -> TextView::setTextColor handler (an app/widget-layer concern) and checks dispatch.

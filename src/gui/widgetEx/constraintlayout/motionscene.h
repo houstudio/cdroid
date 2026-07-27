@@ -80,6 +80,7 @@ public:
 
         int getDuration() const { return mDuration; }
         float getStagger() const { return mStagger; }
+        int getId() const { return mId; }
         int getStartId() const { return mConstraintSetStart; }
         int getEndId() const { return mConstraintSetEnd; }
         const std::string& getInterpolatorString() const { return mDefaultInterpolatorString; }
@@ -94,6 +95,7 @@ public:
         void setOnSwipe(std::unique_ptr<OnSwipe> os) { mOnSwipe = std::move(os); }
 
     private:
+        int mId = UNSET;
         int mConstraintSetStart = UNSET;
         int mConstraintSetEnd = UNSET;
         int mDuration = 400;
@@ -117,6 +119,9 @@ public:
 
     // The first non-abstract transition (the active one), or nullptr.
     Transition* getCurrentTransition() const { return mCurrentTransition; }
+    Transition* getTransitionById(int id) const;              // by <Transition android:id>
+    Transition* findTransition(int startId, int endId) const;  // matching both endpoints
+    void setCurrentTransition(Transition* t) { mCurrentTransition = t; }
     // ConstraintSet registered under `id` (from a <ConstraintSet>), or nullptr.
     ConstraintSet* getConstraintSet(int id) const;
 

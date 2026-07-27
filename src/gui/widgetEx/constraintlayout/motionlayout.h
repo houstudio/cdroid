@@ -42,6 +42,12 @@ public:
 
     // Capture each child's frame in the start/end ConstraintSets and build per-child Motion.
     void setTransition(ConstraintSet* start, ConstraintSet* end);
+    // Multi-transition state machine: switch by <Transition android:id> or by endpoint ConstraintSet
+    // ids, or animate from the current state to a target state.
+    void setTransition(int transitionId);
+    void setTransition(int startId, int endId);
+    void transitionToState(int stateId);
+    int getCurrentState() const { return mCurrentState; }
 
     // Drive every child's Motion to `progress` in [0,1] and apply the interpolated state.
     void setProgress(float progress);
@@ -92,6 +98,7 @@ private:
     // Parse mSceneResource into a MotionScene and wire its current transition: setTransition with
     // the scene's start/end ConstraintSets, capture the KeyFrames for post-capture application, and
     // install OnClick handlers. Idempotent (guarded by mSceneBuilt).
+    void applyTransition(MotionScene::Transition* t); // shared by buildScene + setTransition(id)
     void buildScene();
     // Feed the scene's KeyFrames into the freshly-built per-child Motion controllers (borrowed).
     void applyKeyFramesToMotions(KeyFrames* kf);
@@ -105,6 +112,9 @@ private:
     std::unordered_map<int, Motion*> mMotions;
     std::unordered_map<int, MotionWidget> mStartWidgets;
     std::unordered_map<int, MotionWidget> mEndWidgets;
+    int mCurrentState = -1; // ConstraintSet id at rest (-1 = UNSET / in motion)
+    int mBeginState = -1;   // current transition's start ConstraintSet id
+    int mEndState = -1;     // current transition's end ConstraintSet id
     float mProgress = 0.0f;
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;

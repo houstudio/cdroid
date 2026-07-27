@@ -51,6 +51,7 @@ const std::unordered_map<std::string, int> kAnchorSide = {
 // ===========================================================================
 MotionScene::Transition::Transition(MotionScene& scene, const AttributeSet& a)
     : mDuration(scene.mDefaultDuration) {
+    mId = scene.getId(a.getString("id", "")); // <Transition android:id="@+id/...">
     mConstraintSetStart = scene.getId(a.getString("constraintSetStart", ""));
     mConstraintSetEnd   = scene.getId(a.getString("constraintSetEnd", ""));
     mDuration = a.getInt("duration", mDuration);
@@ -125,6 +126,20 @@ ConstraintSet* MotionScene::getConstraintSet(int id) const {
         }
     }
     return it->second.get();
+}
+
+MotionScene::Transition* MotionScene::getTransitionById(int id) const {
+    for (const auto& t : mTransitionList) {
+        if (t->getId() == id) return t.get();
+    }
+    return nullptr;
+}
+
+MotionScene::Transition* MotionScene::findTransition(int startId, int endId) const {
+    for (const auto& t : mTransitionList) {
+        if (t->getStartId() == startId && t->getEndId() == endId) return t.get();
+    }
+    return nullptr;
 }
 
 void MotionScene::load(Context* ctx, const std::string& resourceId) {
