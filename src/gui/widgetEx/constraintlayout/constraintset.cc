@@ -146,22 +146,24 @@ ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const Attribu
     using CustomAttribute = ConstraintSet::CustomAttribute;
     CustomAttribute ca;
     ca.name = parser.getAttributeValue("attributeName");
-    std::string v;
-    if (!(v = parser.getAttributeValue("customColorValue")).empty()) {
+    // Presence is detected via getAttributeValue (the hasValue equivalent); the
+    // value is then read with the matching typed getter, which resolves @dimen/
+    // @color/@string refs and handles numeric formats instead of parsing inline.
+    if (!parser.getAttributeValue("customColorValue").empty()) {
         ca.type = CustomAttribute::COLOR;
         ca.intValue = parser.getColor("customColorValue", 0);
-    } else if (!(v = parser.getAttributeValue("customIntegerValue")).empty()) {
+    } else if (!parser.getAttributeValue("customIntegerValue").empty()) {
         ca.type = CustomAttribute::INTEGER;
-        ca.intValue = std::stoi(v);
-    } else if (!(v = parser.getAttributeValue("customFloatValue")).empty()) {
+        ca.intValue = parser.getInt("customIntegerValue", 0);
+    } else if (!parser.getAttributeValue("customFloatValue").empty()) {
         ca.type = CustomAttribute::FLOAT;
-        ca.floatValue = std::stof(v);
-    } else if (!(v = parser.getAttributeValue("customStringValue")).empty()) {
+        ca.floatValue = parser.getFloat("customFloatValue", 0.f);
+    } else if (!parser.getAttributeValue("customStringValue").empty()) {
         ca.type = CustomAttribute::STRING;
-        ca.stringValue = v;
-    } else if (!(v = parser.getAttributeValue("customBooleanValue")).empty()) {
+        ca.stringValue = parser.getString("customStringValue");
+    } else if (!parser.getAttributeValue("customBooleanValue").empty()) {
         ca.type = CustomAttribute::BOOLEAN;
-        ca.boolValue = (v == "true" || v == "1");
+        ca.boolValue = parser.getBoolean("customBooleanValue", false);
     }
     return ca;
 }
