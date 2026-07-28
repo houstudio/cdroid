@@ -3661,13 +3661,13 @@ bool ViewGroup::isMotionEventSplittingEnabled()const{
    return (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) == FLAG_SPLIT_MOTION_EVENTS;
 }
 
-bool ViewGroup::isTransitionGroup() {
+bool ViewGroup::isTransitionGroup() const{
     if ((mGroupFlags & FLAG_IS_TRANSITION_GROUP_SET) != 0) {
         return ((mGroupFlags & FLAG_IS_TRANSITION_GROUP) != 0);
     } else {
         ViewOutlineProvider outlineProvider = getOutlineProvider();
         return (getBackground() != nullptr) || !getTransitionName().empty() ||
-                (outlineProvider != nullptr /*&& outlineProvider != OutlineProvider::BACKGROUND*/);
+                (outlineProvider != nullptr && outlineProvider != OutlineProvider::BACKGROUND);
     }
 }
 

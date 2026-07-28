@@ -465,7 +465,7 @@ public:
     void dispatchWindowFocusChanged(bool hasFocus)override;
     void addTouchables(std::vector<View*>&)override;
     void dispatchDisplayHint(int hint)override;
-    bool isTransitionGroup();
+    bool isTransitionGroup()const;
     void setTransitionGroup(bool isTransitionGroup);
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;
