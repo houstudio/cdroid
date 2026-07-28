@@ -78,7 +78,12 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     guideBegin   = attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
     guideEnd     = attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
     guidePercent = attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
-    orientation  = attrs.getInt("android:orientation", -1);
+    // Orientation: bare key (namespace stripped) + map so "vertical"/"horizontal"
+    // resolve (plain getInt treats a leading letter as non-numeric → def).
+    // Mirrors LinearLayout; -1 (absent) falls back to HORIZONTAL in validate().
+    orientation  = attrs.getInt("orientation", std::unordered_map<std::string,int>{
+        {"horizontal", (int)ConstraintWidget::HORIZONTAL},
+        {"vertical",   (int)ConstraintWidget::VERTICAL}}, -1);
 
     // Ratio (parse "16:9", "1.5", "W,16:9", "H,3:2")
     std::string ratioStr = attrs.getString("layout_constraintDimensionRatio", "");
