@@ -62,6 +62,9 @@ View::View(int w,int h){
     mRight  = w;
     mBottom = h;
     mLeft = mTop =0;
+    if((w > 0) && (h>0) ){
+        mPrivateFlags |= PFLAG_HAS_BOUNDS;
+    }
     setBackgroundColor(0xFF000000);
     if(ViewConfiguration::isScreenRound())
         mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
