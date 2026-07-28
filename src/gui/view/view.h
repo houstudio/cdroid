@@ -1406,6 +1406,7 @@ public:
     virtual View* findViewById(int id);
     virtual View* findViewWithTag(void*);
     virtual View* findViewTraversal(int);
+    virtual void findNamedViews(std::unordered_map<std::string, View*>& namedElements)const;
     virtual View* findViewByAccessibilityId(int accessibilityId);
     virtual View* findViewByAccessibilityIdTraversal(int accessibilityId);
     virtual View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip);

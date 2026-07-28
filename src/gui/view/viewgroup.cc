@@ -2224,6 +2224,18 @@ View* ViewGroup::findViewWithTagTraversal(void* tag){
     return nullptr;
 }
 
+void ViewGroup::findNamedViews(std::unordered_map<std::string, View*>& namedElements)const{
+    if (getVisibility() != VISIBLE && (mGhostView == nullptr)) {
+        return;
+    }
+    View::findNamedViews(namedElements);
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        child->findNamedViews(namedElements);
+    }
+}
+
 View* ViewGroup::findViewByAccessibilityIdTraversal(int accessibilityId) {
     View* foundView = View::findViewByAccessibilityIdTraversal(accessibilityId);
     if (foundView != nullptr) {

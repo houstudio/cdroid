@@ -20,6 +20,7 @@
 #include <cfloat>
 #include <cmath>
 #include <view/view.h>
+#include <view/ghostview.h>
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
 #include <view/viewoverlay.h>
@@ -251,6 +252,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setTransitionName(attrs.getString("transitionName"));
     std::string animatorResId = attrs.getString("stateListAnimator");
     if(!animatorResId.empty()){
         setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,animatorResId));
@@ -529,6 +531,15 @@ View* View::findViewById(int id){
 View* View::findViewTraversal(int id){
     if( id == mID )return (View*)this;
     return nullptr;
+}
+
+void View::findNamedViews(std::unordered_map<std::string, View*>& namedElements)const{
+    if (getVisibility() == VISIBLE || mGhostView != nullptr) {
+        std::string transitionName = getTransitionName();
+        if (!transitionName.empty()) {
+            namedElements.insert({transitionName, (View*)this});
+        }
+    }
 }
 
 View* View::findViewByAccessibilityId(int accessibilityId){
@@ -4504,7 +4515,7 @@ bool View::setFrame(int left,int top,int width,int height){
         if (sizeChanged)
             sizeChange(newWidth, newHeight, oldWidth, oldHeight);
 
-        if ((mViewFlags & VISIBILITY_MASK) == VISIBLE/*|| mGhostView != null*/) {
+        if ((mViewFlags & VISIBILITY_MASK) == VISIBLE || (mGhostView != nullptr)) {
             // If we are visible, force the DRAWN bit to on so that
             // this invalidate will go through (at least to our parent).
             // This is because someone may have invalidated this view
@@ -6179,6 +6190,10 @@ void View::invalidateParentIfNeededAndWasQuickRejected() {
 }
 
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
+    if (mGhostView != nullptr) {
+        mGhostView->invalidate(true);
+        return;
+    }
 
     if (skipInvalidate())   return;
 
