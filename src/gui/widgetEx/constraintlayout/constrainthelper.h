@@ -80,8 +80,8 @@ class ConstraintHelper : public View {
 
   private:
     void addRscID(int id);
-    void addID(const std::string& idString);
-    void setIds(const std::string& idList);
+    void addID(int id);
+    void setIds(const AttributeSet&atts, const std::string& idList);
 };
 
 } // namespace cdroid

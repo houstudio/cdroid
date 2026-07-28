@@ -27,7 +27,11 @@ Placeholder::Placeholder(int width, int height)
 void Placeholder::init(const AttributeSet& attrs) {
     setVisibility(mEmptyVisibility);
     mContentId = attrs.getResourceId("content", -1);
-    int emptyVis = attrs.getInt("placeholder_emptyVisibility", mEmptyVisibility);
+    int emptyVis = attrs.getInt("placeholder_emptyVisibility",std::unordered_map<std::string,int>{
+        {"visible", View::VISIBLE},
+        { "invisible",View::INVISIBLE },
+        {"gone", View::GONE}
+    }, mEmptyVisibility);
     if (emptyVis == View::VISIBLE || emptyVis == View::INVISIBLE || emptyVis == View::GONE) {
         mEmptyVisibility = emptyVis;
         setVisibility(mEmptyVisibility);

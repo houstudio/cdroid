@@ -24,7 +24,7 @@ ConstraintHelper::ConstraintHelper(int width, int height)
 void ConstraintHelper::init(const AttributeSet& attrs) {
     mReferenceIds = attrs.getString("constraint_referenced_ids", "");
     if (!mReferenceIds.empty()) {
-        setIds(mReferenceIds);
+        setIds(attrs,mReferenceIds);
     }
     // constraint_referenced_tags is deferred (CDROID LayoutParams has no constraintTag field yet).
 }
@@ -36,52 +36,47 @@ void ConstraintHelper::addRscID(int id) {
     mIds.push_back(id);
 }
 
-void ConstraintHelper::addID(const std::string& idString) {
-    if (idString.empty()) {
-        return;
-    }
-    std::string s = idString;
-    // trim
-    auto notspace = [](unsigned char c) {
-        return !std::isspace(c);
-    };
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
-    s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
-
-    // CDROID has no Java-style R.id table at runtime; resolve numeric ids directly. Named refs are
-    // resolved against the parent's children in updatePreLayout (best-effort).
-    int rscId = 0;
-    if (!s.empty() && (std::all_of(s.begin(), s.end(), ::isdigit) || s[0] == '-')) {
-        try {
-            rscId = std::stoi(s);
-        } catch (...) {
-            rscId = 0;
-        }
-    }
-    if (rscId != 0) {
-        addRscID(rscId);
-    } else if (!s.empty()) {
-        // store the name encoded as a negative placeholder for updatePreLayout name resolution
-        // (kept simple: we remember the raw token list instead — see setIds).
-        LOGW("ConstraintHelper: could not resolve referenced id \"%s\" (named refs need a parent)",
-             s.c_str());
+void ConstraintHelper::addID(int id) {
+    if (id != View::NO_ID) {
+        addRscID(id);
     }
 }
 
-void ConstraintHelper::setIds(const std::string& idList) {
+void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idList) {
     mReferenceIds = idList;
     if (idList.empty()) {
         return;
     }
     mIds.clear();
+    auto trim = [](std::string s) -> std::string {
+        auto notspace = [](unsigned char c) {
+            return !std::isspace(c);
+        };
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
+        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
+        return s;
+    };
     size_t begin = 0;
     while (true) {
         size_t end = idList.find(',', begin);
+        std::string token = trim((end == std::string::npos)
+                                 ? idList.substr(begin)
+                                 : idList.substr(begin, end - begin));
+        if (!token.empty()) {
+            // Android's constraint_referenced_ids holds bare names ("btn1, btn2"), resolved via
+            // Resources.getIdentifier(name, "id", pkg). Context::getId is the CDROID equivalent;
+            // the "id/" type prefix plays the role of the "id" type argument so a bare name
+            // resolves (returns NO_ID/-1 on miss).
+            std::string idname = std::string("id/") + token;
+            int id = atts.getContext()->getId(idname);
+            if (id == View::NO_ID) {
+                LOGW("ConstraintHelper: could not resolve referenced id \"%s\"", token.c_str());
+            }
+            addID(id);
+        }
         if (end == std::string::npos) {
-            addID(idList.substr(begin));
             break;
         }
-        addID(idList.substr(begin, end - begin));
         begin = end + 1;
     }
 }
