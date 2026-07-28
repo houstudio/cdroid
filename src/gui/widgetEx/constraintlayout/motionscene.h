@@ -182,6 +182,8 @@ class MotionScene {
     }
     // ConstraintSet registered under `id` (from a <ConstraintSet>), or nullptr.
     ConstraintSet* getConstraintSet(int id) const;
+    // All registered ConstraintSet ids (for ViewTransition allStates persistence).
+    std::vector<int> getConstraintSetIds() const;
 
     ~MotionScene();
     // Parsed <ViewTransition> elements.

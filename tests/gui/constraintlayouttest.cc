@@ -24,6 +24,7 @@
 #include <widgetEx/constraintlayout/keyframes.h>
 #include <widgetEx/constraintlayout/motionscene.h>
 #include <widgetEx/constraintlayout/viewtransition.h>
+#include <view/motionevent.h>
 #include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
@@ -1091,6 +1092,67 @@ TEST(ConstraintLayout, ViewTransitionNoStateDownUpHolds) {
     EXPECT_EQ(controller->animationCount(), 1u);
 }
 
+// The actionDownUp press-release effect: after holding at 100%, an ACTION_UP reverses the animation
+// (Animate.reactTo -> reverse), which then steps back to 0 over upDuration and removes itself. This
+// pins the mutateReverse path that DownUpHolds leaves untested. A main <Transition> is set up first
+// so the MotionLayout has a current state (touchEvent bails while currentState == -1, faithfully).
+TEST(ConstraintLayout, ViewTransitionNoStateDownUpReverses) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
+        "                  onStateTransition=\"actionDownUp\" duration=\"400\" upDuration=\"200\""
+        "                  viewTransitionMode=\"noState\">"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" scaleX=\"1.5\" scaleY=\"1.5\" />"
+        "    </KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    auto* t = scene->getCurrentTransition();
+    const int startId = t->getStartId();
+    const int endId = t->getEndId();
+    ml->setScene(std::move(scene));
+    ml->setTransition(startId, endId); // establishes mCurrentState so touchEvent does not bail
+    ASSERT_NE(ml->getCurrentState(), -1);
+
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+    std::vector<View*> views = { tv };
+    ml->viewTransition(vtId, views);          // forward -> holds at 100%
+    controller->stepAnimations(400);
+    ASSERT_EQ(controller->animationCount(), 1u);
+
+    MotionEvent up;                            // ACTION_UP reverses the held animation
+    up.setAction(MotionEvent::ACTION_UP);
+    controller->touchEvent(up);
+    EXPECT_EQ(controller->animationCount(), 1u); // reversing, still registered
+
+    controller->stepAnimations(100);           // half of upDuration(200) -> still mid-reverse
+    EXPECT_EQ(controller->animationCount(), 1u);
+    controller->stepAnimations(100);           // upDuration elapsed -> reaches 0 -> removes
+    EXPECT_EQ(controller->animationCount(), 0u);
+}
+
 // currentState/allStates delta mode: a <ConstraintOverride> is applied as a FIELD-LEVEL overlay onto
 // the target ConstraintSet's constraint, not a wholesale sub-struct replace. A scale-only delta
 // (scaleX=1.5) must take effect WITHOUT clobbering an unrelated field (rotation=30) the delta never
@@ -1119,6 +1181,310 @@ TEST(ConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
     delta.applyDelta(target.get(1));
     EXPECT_FLOAT_EQ(target.get(1).transform.scaleX, 1.5f); // delta applied
     EXPECT_FLOAT_EQ(target.get(1).transform.rotation, 30.0f); // preserved — not clobbered to 0
+}
+
+// A Layout-field delta (anchor + margin) overlays the same way as Transform: setting leftToLeft +
+// leftMargin takes effect WITHOUT clobbering an unrelated anchor (topToTop) the delta never touched.
+TEST(ConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
+    App& app = App::getInstance();
+    ConstraintSet target;
+    target.get(1).layout.topToTop = 0;    // already anchored top->parent
+    target.get(1).layout.leftToLeft = -1; // not yet anchored horizontally
+
+    const std::string xml =
+        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        " motionTarget=\"1\" layout_constraintLeft_toLeftOf=\"parent\""
+        " layout_marginLeft=\"20\" />";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+    ConstraintSet delta;
+    delta.loadConstraint(parser);
+
+    ASSERT_TRUE(delta.contains(1));
+    delta.applyDelta(target.get(1));
+    EXPECT_EQ(target.get(1).layout.leftToLeft, 0);  // parent — delta applied
+    EXPECT_EQ(target.get(1).layout.leftMargin, 20); // delta applied
+    EXPECT_EQ(target.get(1).layout.topToTop, 0);    // preserved — not clobbered
+}
+
+// viewTransitionMode=allStates persists the delta into every ConstraintSet except the current state,
+// so the change survives a later state switch. Firing an allStates VT (scaleX=1.5) from the start
+// state writes the delta into the END set (the from-state is the animation source, not persisted).
+TEST(ConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" viewTransitionMode=\"allStates\">"
+        "    <ConstraintOverride motionTarget=\"1\" scaleX=\"1.5\" />"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    const int endId = scene->getCurrentTransition()->getEndId();
+    const int startId = scene->getCurrentTransition()->getStartId();
+    ml->setScene(std::move(scene));
+    ml->setTransition(startId, endId);
+
+    ASSERT_NE(ml->getConstraintSet(endId), nullptr);
+    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(1).transform.scaleX, 1.0f); // before
+    std::vector<View*> views = { tv };
+    ml->viewTransition(vtId, views); // allStates persists the delta into every set != current
+    EXPECT_FLOAT_EQ(ml->getConstraintSet(endId)->get(1).transform.scaleX, 1.5f); // persisted
+}
+
+// currentState delta integration: firing the VT sets up a transition (current -> current+delta) and
+// animates the target. Jumping to progress 1.0 lands the view at the delta'd state. Uses a WIDTH
+// delta (a Layout field applied via layout(), not a transform setter) so an unattached test view
+// reliably reflects it (transform setters are gated on attach).
+TEST(ConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" viewTransitionMode=\"currentState\">"
+        "    <ConstraintOverride motionTarget=\"1\" layout_width=\"200\" />"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    const int startId = scene->getCurrentTransition()->getStartId();
+    const int endId = scene->getCurrentTransition()->getEndId();
+    ml->setScene(std::move(scene));
+    ml->setTransition(startId, endId);
+    ml->setProgress(0.0f);
+    EXPECT_EQ(tv->getWidth(), 100); // at the start state
+
+    std::vector<View*> views = { tv };
+    ml->viewTransition(vtId, views);    // currentState: transition = start -> (start + width=200 delta)
+    ml->setProgress(1.0f);              // jump to the delta'd end state
+    EXPECT_EQ(tv->getWidth(), 200);     // the delta drove the view via the main transition
+}
+
+// setsTag: a noState ViewTransition that completes sets a keyed tag on its target (numeric setsTag
+// resolves via getResourceId to that int key). After firing + stepping to completion the tag is set.
+TEST(ConstraintLayout, ViewTransitionSetsTagOnCompletion) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const int tagKey = 4242;
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" onStateTransition=\"actionDown\""
+        "                  duration=\"400\" viewTransitionMode=\"noState\" setsTag=\"4242\">"
+        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    ml->setScene(std::move(scene));
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+
+    EXPECT_EQ(tv->getTag(tagKey), nullptr); // before
+    ml->viewTransition(vtId, { tv });
+    controller->stepAnimations(400);        // complete -> applyTags
+    EXPECT_NE(tv->getTag(tagKey), nullptr); // setsTag applied
+}
+
+// ifTagSet gating (checkTags): an actionDown ViewTransition with ifTagSet=4242 fires only while the
+// target carries that tag. The controller caches the targeted-view set on the first touch (built via
+// matchesView, so the tag must be present then), and the firing loop re-checks matchesView each touch
+// — so removing the tag gates the next fire. A main <Transition> is set up so touchEvent does not
+// bail on currentState == -1.
+TEST(ConstraintLayout, ViewTransitionIfTagSetGates) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\" onStateTransition=\"actionDown\""
+        "                  duration=\"400\" viewTransitionMode=\"noState\" ifTagSet=\"4242\">"
+        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int startId = scene->getCurrentTransition()->getStartId();
+    const int endId = scene->getCurrentTransition()->getEndId();
+    ml->setScene(std::move(scene));
+    ml->setTransition(startId, endId);
+
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+    MotionEvent down;
+    down.setAction(MotionEvent::ACTION_DOWN);
+    down.setLocation(0, 0); // over the top-left target
+
+    tv->setTag(4242, (void*) tv);              // tag present -> view enters the targeted set + fires
+    controller->touchEvent(down);
+    EXPECT_EQ(controller->animationCount(), 1u);
+    controller->stepAnimations(400);           // let it finish so the count resets
+    ASSERT_EQ(controller->animationCount(), 0u);
+
+    tv->setTag(4242, nullptr);                 // remove the tag -> checkTags now gates the fire
+    controller->touchEvent(down);
+    EXPECT_EQ(controller->animationCount(), 0u); // did NOT fire (ifTagSet no longer satisfied)
+}
+
+// sharedValueSet trigger: the ViewTransitionController listens on the SharedValues registry for the
+// VT's SharedValueId; when MotionLayout.setSharedValue reaches the target value, the VT fires.
+// (Process-wide registry; a unique key avoids interference with other tests' leaked listeners.)
+TEST(ConstraintLayout, ViewTransitionSharedValueSetFires) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const int key = 778899;
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <Transition constraintSetStart=\"@+id/start\" constraintSetEnd=\"@+id/end\" />"
+        "  <ConstraintSet android:id=\"@+id/start\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintLeft_toLeftOf=\"parent\" layout_constraintTop_toTopOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ConstraintSet android:id=\"@+id/end\">"
+        "    <Constraint android:id=\"1\" layout_width=\"100\" layout_height=\"50\""
+        "                layout_constraintRight_toRightOf=\"parent\" layout_constraintBottom_toBottomOf=\"parent\" />"
+        "  </ConstraintSet>"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
+        "                  onStateTransition=\"sharedValueSet\" SharedValueId=\"778899\" SharedValue=\"42\""
+        "                  duration=\"400\" viewTransitionMode=\"noState\">"
+        "    <KeyFrameSet><KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" /></KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int startId = scene->getCurrentTransition()->getStartId();
+    const int endId = scene->getCurrentTransition()->getEndId();
+    ml->setScene(std::move(scene));
+    ml->setTransition(startId, endId); // currentState valid so onNewValue does not bail
+
+    auto* controller = ml->getViewTransitionController();
+    ASSERT_NE(controller, nullptr);
+    ml->setSharedValue(key, 42); // target value reached -> VT fires
+    EXPECT_EQ(controller->animationCount(), 1u);
+}
+
+// String motionTarget: a ViewTransition whose motionTarget is a regex matches views whose
+// LayoutParams.constraintTag matches it (not by view id). "btn_.*" matches "btn_save" but not "label".
+TEST(ConstraintLayout, ViewTransitionMatchesConstraintTag) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50); lpa->constraintTag = "btn_save";
+    ml->addView(a, lpa);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50); lpb->constraintTag = "label";
+    ml->addView(b, lpb);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"btn_.*\" onStateTransition=\"actionDown\""
+        "                  duration=\"400\" viewTransitionMode=\"noState\" />"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    auto* vt = scene->getViewTransitionAt(0);
+    ASSERT_NE(vt, nullptr);
+    ml->setScene(std::move(scene));
+
+    EXPECT_TRUE(vt->matchesView(a));  // "btn_save" matches "btn_.*"
+    EXPECT_FALSE(vt->matchesView(b)); // "label" does not match
+}
+
+// A ViewTransition-level (set-level) <CustomAttribute> is stored on the delta and applied to every
+// target via applyDelta. (loadCustomAttribute + the set-level carry; the ViewTransition parse wires
+// <CustomAttribute> children to loadCustomAttribute.)
+TEST(ConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
+    App& app = App::getInstance();
+    const std::string xml =
+        "<CustomAttribute xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        " attributeName=\"textColor\" customColorValue=\"#FFFF0000\" />";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+
+    ConstraintSet delta;
+    delta.loadCustomAttribute(parser);
+    ConstraintSet target;
+    ConstraintSet::Constraint& c = target.get(1);
+    EXPECT_TRUE(c.mCustomAttributes.empty());
+
+    delta.applyDelta(c); // set-level customs carry onto the target
+    ASSERT_EQ(c.mCustomAttributes.size(), 1u);
+    EXPECT_EQ(c.mCustomAttributes[0].name, "textColor");
+    EXPECT_EQ(c.mCustomAttributes[0].type, ConstraintSet::CustomAttribute::COLOR);
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

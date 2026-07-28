@@ -37,6 +37,7 @@ namespace cdroid {
 
 class ConstraintHelper;
 class ConstraintLayoutStates;
+class SharedValues;
 
 class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
   public:
@@ -52,6 +53,8 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
         float horizontalBias = 0.5f;
         float verticalBias   = 0.5f;
+
+        std::string constraintTag; // matches a ViewTransition's string motionTarget (regex)
 
         int goneLeftMargin = GONE_UNSET, goneTopMargin = GONE_UNSET;
         int goneRightMargin = GONE_UNSET, goneBottomMargin = GONE_UNSET;
@@ -137,6 +140,9 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     void loadLayoutDescription(const std::string& resource);
     // Apply the ConstraintSet selected by (id, screenWidth, screenHeight) from the loaded StateSet.
     void setState(int id, int screenWidth, int screenHeight);
+
+    // Process-wide registry of shared integer values (for ViewTransition sharedValue triggers).
+    static SharedValues& getSharedValues();
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;

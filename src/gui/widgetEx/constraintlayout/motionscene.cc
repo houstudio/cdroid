@@ -106,6 +106,13 @@ ViewTransition* MotionScene::getViewTransitionById(int id) const {
     return nullptr;
 }
 
+std::vector<int> MotionScene::getConstraintSetIds() const {
+    std::vector<int> ids;
+    ids.reserve(mConstraintSetMap.size());
+    for (const auto& kv : mConstraintSetMap) ids.push_back(kv.first);
+    return ids;
+}
+
 void MotionScene::viewTransition(int id, const std::vector<View*>& views) {
     if (mViewTransitionController) mViewTransitionController->viewTransition(id, views);
 }

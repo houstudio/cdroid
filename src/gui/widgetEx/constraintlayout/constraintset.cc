@@ -17,31 +17,6 @@
 namespace cdroid {
 
 namespace {
-// Parse a <CustomAttribute> element into a typed CustomAttribute: attributeName + one of
-// customColorValue/customIntegerValue/customFloatValue/customStringValue/customBooleanValue.
-ConstraintSet::CustomAttribute parseCustomAttribute(const AttributeSet& parser) {
-    using CustomAttribute = ConstraintSet::CustomAttribute; // alias: a using-declaration can't import a nested type into block scope
-    ConstraintSet::CustomAttribute ca;
-    ca.name = parser.getAttributeValue("attributeName");
-    std::string v;
-    if (!(v = parser.getAttributeValue("customColorValue")).empty()) {
-        ca.type = CustomAttribute::COLOR;
-        ca.intValue = parser.getColor("customColorValue", 0);
-    } else if (!(v = parser.getAttributeValue("customIntegerValue")).empty()) {
-        ca.type = CustomAttribute::INTEGER;
-        ca.intValue = std::stoi(v);
-    } else if (!(v = parser.getAttributeValue("customFloatValue")).empty()) {
-        ca.type = CustomAttribute::FLOAT;
-        ca.floatValue = std::stof(v);
-    } else if (!(v = parser.getAttributeValue("customStringValue")).empty()) {
-        ca.type = CustomAttribute::STRING;
-        ca.stringValue = v;
-    } else if (!(v = parser.getAttributeValue("customBooleanValue")).empty()) {
-        ca.type = CustomAttribute::BOOLEAN;
-        ca.boolValue = (v == "true" || v == "1");
-    }
-    return ca;
-}
 
 // Registry of named custom-attribute handlers (function-local static avoids init-order issues).
 std::unordered_map<std::string, ConstraintSet::CustomAttributeHandler>& customHandlers() {
@@ -165,6 +140,34 @@ ConstraintSet::Constraint& ConstraintSet::get(int id) {
     Constraint& c = mConstraints[id]; // default-constructs a Constraint if absent
     c.mViewId = id; // a constraint retrieved by id knows its id (applyDelta/mergeFrom rely on this)
     return c;
+}
+
+ConstraintSet::CustomAttribute ConstraintSet::parseCustomAttribute(const AttributeSet& parser) {
+    using CustomAttribute = ConstraintSet::CustomAttribute;
+    CustomAttribute ca;
+    ca.name = parser.getAttributeValue("attributeName");
+    std::string v;
+    if (!(v = parser.getAttributeValue("customColorValue")).empty()) {
+        ca.type = CustomAttribute::COLOR;
+        ca.intValue = parser.getColor("customColorValue", 0);
+    } else if (!(v = parser.getAttributeValue("customIntegerValue")).empty()) {
+        ca.type = CustomAttribute::INTEGER;
+        ca.intValue = std::stoi(v);
+    } else if (!(v = parser.getAttributeValue("customFloatValue")).empty()) {
+        ca.type = CustomAttribute::FLOAT;
+        ca.floatValue = std::stof(v);
+    } else if (!(v = parser.getAttributeValue("customStringValue")).empty()) {
+        ca.type = CustomAttribute::STRING;
+        ca.stringValue = v;
+    } else if (!(v = parser.getAttributeValue("customBooleanValue")).empty()) {
+        ca.type = CustomAttribute::BOOLEAN;
+        ca.boolValue = (v == "true" || v == "1");
+    }
+    return ca;
+}
+
+void ConstraintSet::loadCustomAttribute(const AttributeSet& parser) {
+    mCustomAttributes.push_back(parseCustomAttribute(parser));
 }
 
 void ConstraintSet::clone(ConstraintLayout* constraintLayout) {
@@ -621,7 +624,11 @@ void ConstraintSet::applyDelta(Constraint& target) const {
     // clobbered by a scale-only delta). A delta that intentionally sets a field to its default is not
     // applied (rare). Layout/Motion field deltas are deferred. Custom attributes are appended.
     auto it = mConstraints.find(target.mViewId);
-    if (it == mConstraints.end()) return;
+    if (it == mConstraints.end()) {
+        // No per-view delta — but set-level customs still apply to the target.
+        for (const auto& ca : mCustomAttributes) target.mCustomAttributes.push_back(ca);
+        return;
+    }
     const Constraint& d = it->second;
 
     const Transform& t = d.transform;
@@ -643,7 +650,55 @@ void ConstraintSet::applyDelta(Constraint& target) const {
     if (p.alpha != 1.0f)               dp.alpha       = p.alpha;
     if (!std::isnan(p.mProgress))      dp.mProgress   = p.mProgress;
 
+    // Layout fields (anchors default UNSET=-1, margins 0, bias 0.5, weights -1, chainStyle 0,
+    // dimensions 0). A delta setting a field to its default is not applied (rare edge case); the
+    // common reposition/resize delta sets non-default values.
+    const Layout& l = d.layout;
+    Layout& dl = target.layout;
+    if (l.mWidth != 0)              dl.mWidth = l.mWidth;
+    if (l.mHeight != 0)             dl.mHeight = l.mHeight;
+    if (l.leftToLeft != -1)         dl.leftToLeft = l.leftToLeft;
+    if (l.leftToRight != -1)        dl.leftToRight = l.leftToRight;
+    if (l.rightToLeft != -1)        dl.rightToLeft = l.rightToLeft;
+    if (l.rightToRight != -1)       dl.rightToRight = l.rightToRight;
+    if (l.topToTop != -1)           dl.topToTop = l.topToTop;
+    if (l.topToBottom != -1)        dl.topToBottom = l.topToBottom;
+    if (l.bottomToTop != -1)        dl.bottomToTop = l.bottomToTop;
+    if (l.bottomToBottom != -1)     dl.bottomToBottom = l.bottomToBottom;
+    if (l.baselineToBaseline != -1) dl.baselineToBaseline = l.baselineToBaseline;
+    if (l.startToStart != -1)       dl.startToStart = l.startToStart;
+    if (l.startToEnd != -1)         dl.startToEnd = l.startToEnd;
+    if (l.endToStart != -1)         dl.endToStart = l.endToStart;
+    if (l.endToEnd != -1)           dl.endToEnd = l.endToEnd;
+    if (l.horizontalBias != 0.5f)   dl.horizontalBias = l.horizontalBias;
+    if (l.verticalBias != 0.5f)     dl.verticalBias = l.verticalBias;
+    if (l.leftMargin != 0)          dl.leftMargin = l.leftMargin;
+    if (l.rightMargin != 0)         dl.rightMargin = l.rightMargin;
+    if (l.topMargin != 0)           dl.topMargin = l.topMargin;
+    if (l.bottomMargin != 0)        dl.bottomMargin = l.bottomMargin;
+    if (!l.dimensionRatio.empty())  dl.dimensionRatio = l.dimensionRatio;
+    if (l.verticalWeight != -1)     dl.verticalWeight = l.verticalWeight;
+    if (l.horizontalWeight != -1)   dl.horizontalWeight = l.horizontalWeight;
+    if (l.horizontalChainStyle != 0) dl.horizontalChainStyle = l.horizontalChainStyle;
+    if (l.verticalChainStyle != 0)  dl.verticalChainStyle = l.verticalChainStyle;
+    if (l.orientation != -1)        dl.orientation = l.orientation;
+    if (l.guideBegin != -1)         dl.guideBegin = l.guideBegin;
+    if (l.guideEnd != -1)           dl.guideEnd = l.guideEnd;
+    if (l.guidePercent != -1.0f)    dl.guidePercent = l.guidePercent;
+
+    // Motion fields (easing empty, arc -1, pathRotate 0, drawPath 0, stagger NAN).
+    const Motion& m = d.motion;
+    Motion& dm = target.motion;
+    if (!m.mTransitionEasing.empty())   dm.mTransitionEasing = m.mTransitionEasing;
+    if (m.mPathMotionArc != -1)         dm.mPathMotionArc = m.mPathMotionArc;
+    if (m.mPathRotate != 0.0f)          dm.mPathRotate = m.mPathRotate;
+    if (m.mDrawPath != 0)               dm.mDrawPath = m.mDrawPath;
+    if (m.mAnimateRelativeTo != -1)     dm.mAnimateRelativeTo = m.mAnimateRelativeTo;
+    if (!std::isnan(m.mMotionStagger))  dm.mMotionStagger = m.mMotionStagger;
+
     for (const auto& ca : d.mCustomAttributes) target.mCustomAttributes.push_back(ca);
+    // Set-level customs (a ViewTransition's direct <CustomAttribute> children) apply to every target.
+    for (const auto& ca : mCustomAttributes) target.mCustomAttributes.push_back(ca);
 }
 
 } // namespace cdroid

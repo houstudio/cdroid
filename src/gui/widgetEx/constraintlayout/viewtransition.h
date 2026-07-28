@@ -101,6 +101,21 @@ class ViewTransition {
         return mConstraintDelta;
     }
 
+    // Shared-value trigger (onStateTransition = sharedValueSet/Unset): the VT fires when the shared
+    // value registered under mSharedValueID reaches (set) or leaves (unset) mSharedValueTarget.
+    int getSharedValueID() const {
+        return mSharedValueID;
+    }
+    int getSharedValue() const {
+        return mSharedValueTarget;
+    }
+    int getSharedValueCurrent() const {
+        return mSharedValueCurrent;
+    }
+    void setSharedValueCurrent(int v) {
+        mSharedValueCurrent = v;
+    }
+
     bool isEnabled() const {
         return !mDisabled;
     }
@@ -162,6 +177,7 @@ class ViewTransition {
         void mutateForward(long elapsedMs);
         void mutateReverse(long elapsedMs);
         void reverse(bool dir);
+        void applyTags(); // set/clear the setsTag/clearsTag keyed tags on the target view
     };
 
   private:
@@ -170,6 +186,10 @@ class ViewTransition {
     // and start an Animate on the controller.
     void applyIndependentTransition(ViewTransitionController* controller, MotionLayout* layout,
                                     View* view);
+    // ifTagSet/ifTagNotSet gating: true unless a required tag is missing / a forbidden tag is present.
+    bool checkTags(View* view) const;
+    // Set/clear the setsTag/clearsTag keyed tags on each view (delta-mode completion callback).
+    void applyTagsToViews(const std::vector<View*>& views);
     MotionScene& mScene;
     int mId = UNSET;
     int mTargetId = UNSET;

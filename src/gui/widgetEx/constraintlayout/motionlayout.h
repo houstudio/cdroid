@@ -17,6 +17,7 @@
 
 #include <memory>
 #include <string>
+#include <functional>
 #include <unordered_map>
 #include <vector>
 
@@ -65,6 +66,9 @@ class MotionLayout : public ConstraintLayout {
     // Animate to the start/end state over the transition duration (driven by a ValueAnimator).
     void transitionToStart();
     void transitionToEnd();
+    // transitionToEnd with a callback invoked once the animation reaches the end (used by
+    // ViewTransition delta modes to set/clear tags on completion).
+    void transitionToEnd(const std::function<void()>& onEnd);
     // Spring-settle to `target` (0 or 1) carrying `startVelocity` (progress/sec). Uses the OnSwipe
     // spring parameters; the spring stops itself via its energy threshold.
     void animateToWithSpring(float target, float startVelocity,
@@ -104,8 +108,12 @@ class MotionLayout : public ConstraintLayout {
     void viewTransition(int viewTransitionId, const std::vector<View*>& views);
     void enableViewTransition(int viewTransitionId, bool enable);
     bool isViewTransitionEnabled(int viewTransitionId) const;
+    // Fire a shared value (key, value) — notifies SharedValues listeners (e.g. sharedValueSet/Unset
+    // ViewTransitions). (Java: MotionLayout.setSharedValue.)
+    void setSharedValue(int key, int value);
     // ConstraintSet registered under `stateId` in the scene (used by the ViewTransition delta modes).
     ConstraintSet* getConstraintSet(int stateId) const;
+    std::vector<int> getConstraintSetIds() const; // all ConstraintSet ids (ViewTransition allStates)
     ViewTransitionController* getViewTransitionController() const;
 
     // Inject a MotionScene programmatically (instead of via app:layoutDescription). Marks the scene

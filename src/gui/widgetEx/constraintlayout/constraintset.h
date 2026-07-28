@@ -135,6 +135,12 @@ class ConstraintSet {
     using CustomAttributeHandler = std::function<void(View*, const CustomAttribute&)>;
     static void registerCustomAttributeHandler(const std::string& name, CustomAttributeHandler handler);
 
+    // Parse a <CustomAttribute> element (attributeName + one of customColorValue/customIntegerValue/
+    // customFloatValue/customStringValue/customBooleanValue) at `parser`'s current START_TAG.
+    static CustomAttribute parseCustomAttribute(const AttributeSet& parser);
+    // Parse a <CustomAttribute> at `parser` and append it to this set's set-level custom collection.
+    void loadCustomAttribute(const AttributeSet& parser);
+
     // Java: ConstraintSet.Constraint — one per referenced view id.
     struct Constraint {
         Layout layout;
@@ -206,6 +212,9 @@ class ConstraintSet {
 
   private:
     std::unordered_map<int, Constraint> mConstraints;
+    // Set-level <CustomAttribute>s (a ViewTransition's direct <CustomAttribute> children) — applied
+    // to every target via applyDelta, mirroring Android's ConstraintSet.mCustomConstraints.
+    std::vector<CustomAttribute> mCustomAttributes;
 };
 
 } // namespace cdroid

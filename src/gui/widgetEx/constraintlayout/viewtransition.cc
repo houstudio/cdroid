@@ -21,6 +21,8 @@
 #include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/motionlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
+
+#include <regex>
 #include <widgetEx/constraintlayout/core/motion/motion.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/motionkey.h>
@@ -89,8 +91,11 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
             } else if (tag == "Constraint" || tag == "ConstraintOverride") {
                 // A per-view override that becomes the delta applied in currentState/allStates mode.
                 mConstraintDelta.loadConstraint(parser); // consumes through </Constraint>
+            } else if (tag == "CustomAttribute" || tag == "CustomMethod") {
+                // A ViewTransition-level custom attribute: stored on the delta's set-level collection
+                // and applied to every target via applyDelta.
+                mConstraintDelta.loadCustomAttribute(parser);
             }
-            // CustomAttribute/CustomMethod at the ViewTransition level: deferred.
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "ViewTransition") return;
         }
@@ -101,8 +106,23 @@ ViewTransition::ViewTransition(MotionScene& scene, Context* ctx, XmlPullParser& 
 bool ViewTransition::matchesView(View* view) const {
     if (view == nullptr) return false;
     if (mTargetId == UNSET && mTargetString.empty()) return false;
-    // TODO: ifTagSet/ifTagNotSet gating + constraintTag regex match against mTargetString.
-    return view->getId() == mTargetId;
+    if (!checkTags(view)) return false; // ifTagSet / ifTagNotSet gating
+    if (view->getId() == mTargetId) return true;
+    if (mTargetString.empty()) return false;
+    // String motionTarget: match the view's LayoutParams.constraintTag against the regex.
+    auto* lp = dynamic_cast<ConstraintLayout::LayoutParams*>(view->getLayoutParams());
+    if (lp == nullptr || lp->constraintTag.empty()) return false;
+    try {
+        return std::regex_match(lp->constraintTag, std::regex(mTargetString));
+    } catch (const std::regex_error&) {
+        return lp->constraintTag == mTargetString; // invalid pattern -> fall back to exact match
+    }
+}
+
+bool ViewTransition::checkTags(View* view) const {
+    const bool set    = (mIfTagSet == UNSET)    ? true : (view->getTag(mIfTagSet) != nullptr);
+    const bool notSet = (mIfTagNotSet == UNSET) ? true : (view->getTag(mIfTagNotSet) == nullptr);
+    return set && notSet;
 }
 
 bool ViewTransition::supports(int action) const {
@@ -117,7 +137,7 @@ bool ViewTransition::supports(int action) const {
 // ===========================================================================
 
 void ViewTransition::applyTransition(ViewTransitionController* controller, MotionLayout* layout,
-                                     int /*fromId*/, ConstraintSet* current,
+                                     int fromId, ConstraintSet* current,
                                      const std::vector<View*>& views) {
     if (mDisabled) return;
     if (mViewTransitionMode == VIEWTRANSITIONMODE_NOSTATE) {
@@ -127,18 +147,41 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
     // currentState / allStates: apply mConstraintDelta to the current ConstraintSet and animate the
     // target views to the resulting state. Android clones the current set, applies the delta, then
     // drives a temporary Transition (start = current, end = delta'd) via transitionToEnd — which is
-    // exactly CDROID's setTransition(start, end) + transitionToEnd(). (allStates additionally writes
-    // the delta into every ConstraintSet for persistence; that is deferred — both modes animate the
-    // current state here.)
+    // exactly CDROID's setTransition(start, end) + transitionToEnd().
     if (current == nullptr || layout == nullptr) return;
     if (mConstraintDelta.empty()) return; // nothing to apply
+
+    // allStates additionally persists the delta into EVERY ConstraintSet (except the from-state) so
+    // the change survives a later state switch (Android applyTransition 491-506).
+    if (mViewTransitionMode == VIEWTRANSITIONMODE_ALLSTATES) {
+        for (int id : layout->getConstraintSetIds()) {
+            if (id == fromId) continue;
+            ConstraintSet* cSet = layout->getConstraintSet(id);
+            if (cSet == nullptr) continue;
+            for (View* v : views) {
+                if (v == nullptr) continue;
+                mConstraintDelta.applyDelta(cSet->get(v->getId()));
+            }
+        }
+    }
+
     ConstraintSet transformed = *current;               // deep copy (map of Constraint)
     for (View* v : views) {
         if (v == nullptr) continue;
         mConstraintDelta.applyDelta(transformed.get(v->getId()));
     }
     layout->setTransition(current, &transformed);
-    layout->transitionToEnd();
+    // On completion, set/clear the tags (mirrors Android's transitionToEnd Runnable).
+    layout->transitionToEnd([this, views] { applyTagsToViews(views); });
+}
+
+void ViewTransition::applyTagsToViews(const std::vector<View*>& views) {
+    if (mSetsTag == UNSET && mClearsTag == UNSET) return;
+    for (View* v : views) {
+        if (v == nullptr) continue;
+        if (mSetsTag != UNSET)   v->setTag(mSetsTag, (void*) v);
+        if (mClearsTag != UNSET) v->setTag(mClearsTag, nullptr);
+    }
 }
 
 void ViewTransition::applyIndependentTransition(ViewTransitionController* controller,
@@ -217,7 +260,7 @@ void ViewTransition::Animate::mutateForward(long elapsedMs) {
     MotionLayout::applyWidgetFrame(mView, temp);
 
     if (mPosition >= 1.0f) {
-        // TODO: apply setsTag/clearsTag onto mView once wired (most ViewTransitions leave them UNSET).
+        applyTags();
         if (!mHoldAt100) mVtController->removeAnimation(this);
     }
     if (mPosition < 1.0f) mVtController->invalidate();
@@ -233,9 +276,17 @@ void ViewTransition::Animate::mutateReverse(long elapsedMs) {
     MotionLayout::applyWidgetFrame(mView, temp);
 
     if (mPosition <= 0.0f) {
+        applyTags();
         mVtController->removeAnimation(this);
     }
     if (mPosition > 0.0f) mVtController->invalidate();
+}
+
+void ViewTransition::Animate::applyTags() {
+    // Mark the ViewTransition as fired: setTag stores a non-null sentinel (the view itself); clearTag
+    // removes a tag. Enables ViewTransition chaining via ifTagSet/ifTagNotSet.
+    if (mSetsTag != UNSET)   mView->setTag(mSetsTag, (void*) mView);
+    if (mClearsTag != UNSET) mView->setTag(mClearsTag, nullptr);
 }
 
 void ViewTransition::Animate::reverse(bool dir) {

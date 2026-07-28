@@ -4539,11 +4539,12 @@ void View::getHitRect(Rect& outRect){
     if(hasIdentityMatrix()||(mAttachInfo==nullptr)){
         outRect.set(mLeft,mTop,getWidth(),getHeight());
     }else{
-        RectF tmpRect;
-        tmpRect.set(0,0,getWidth(),getHeight());
-        getMatrix().transform_rectangle((Rectangle&)tmpRect);
-        outRect.set(int(tmpRect.left+mLeft),int(tmpRect.top+mTop),
-                int(tmpRect.width),int(tmpRect.height));
+        // transform_rectangle writes a cairo_rectangle_t (4 doubles, 32B); casting a RectF (4 floats,
+        // 16B) to Rectangle& would overflow tmpRect's storage. Use a real Rectangle instead.
+        Rectangle tmp;
+        tmp.x = 0; tmp.y = 0; tmp.width = getWidth(); tmp.height = getHeight();
+        getMatrix().transform_rectangle(tmp);
+        outRect.set((int)(tmp.x + mLeft), (int)(tmp.y + mTop), (int)tmp.width, (int)tmp.height);
     }
 }
 

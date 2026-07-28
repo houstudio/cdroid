@@ -35,6 +35,7 @@
 #include <memory>
 #include <vector>
 
+#include <widgetEx/constraintlayout/sharedvalues.h>
 #include <widgetEx/constraintlayout/viewtransition.h>
 
 namespace cdroid {
@@ -44,10 +45,14 @@ class MotionLayout;
 class ValueAnimator;
 class View;
 
-class ViewTransitionController {
+class ViewTransitionController : public SharedValues::SharedValuesListener {
   public:
     explicit ViewTransitionController(MotionLayout* layout);
     ~ViewTransitionController();
+
+    // SharedValues::SharedValuesListener — fires sharedValueSet/Unset ViewTransitions whose target
+    // value was reached/left.
+    void onNewValue(int key, int newValue, int oldValue) override;
 
     // Register a parsed <ViewTransition>. Borrowed — the MotionScene owns the ViewTransition.
     void add(ViewTransition* vt);
@@ -88,6 +93,9 @@ class ViewTransitionController {
     bool mRelatedDirty = true;
     std::vector<std::unique_ptr<ViewTransition::Animate>> mAnimations;
     ValueAnimator* mAnimator = nullptr;                         // repeating frame-tick source
+    // For a sharedValueSet/Unset ViewTransition, register this controller as a SharedValues listener
+    // for the VT's shared-value id.
+    void listenForSharedVariable(ViewTransition* vt);
 };
 
 } // namespace cdroid

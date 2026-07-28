@@ -267,6 +267,15 @@ void MotionLayout::transitionToEnd()   {
     animateTo(1.0f);
 }
 
+void MotionLayout::transitionToEnd(const std::function<void()>& onEnd) {
+    transitionToEnd();
+    if (onEnd && mAnimator != nullptr) {
+        Animator::AnimatorListener listener;
+        listener.onAnimationEnd = [onEnd](Animator&, bool) { onEnd(); };
+        mAnimator->addListener(listener);
+    }
+}
+
 void MotionLayout::setTransition(int transitionId) {
     if (mScene == nullptr) return;
     auto* t = mScene->getTransitionById(transitionId);
@@ -429,8 +438,16 @@ bool MotionLayout::isViewTransitionEnabled(int viewTransitionId) const {
     return mScene && mScene->isViewTransitionEnabled(viewTransitionId);
 }
 
+void MotionLayout::setSharedValue(int key, int value) {
+    ConstraintLayout::getSharedValues().fireNewValue(key, value);
+}
+
 ConstraintSet* MotionLayout::getConstraintSet(int stateId) const {
     return mScene ? mScene->getConstraintSet(stateId) : nullptr;
+}
+
+std::vector<int> MotionLayout::getConstraintSetIds() const {
+    return mScene ? mScene->getConstraintSetIds() : std::vector<int>{};
 }
 
 ViewTransitionController* MotionLayout::getViewTransitionController() const {

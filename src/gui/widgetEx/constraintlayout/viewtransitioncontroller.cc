@@ -38,20 +38,59 @@ ViewTransitionController::~ViewTransitionController() {
         mAnimator->cancel();
         delete mAnimator;
     }
+    ConstraintLayout::getSharedValues().removeListener(this);
 }
 
 void ViewTransitionController::add(ViewTransition* vt) {
     mViewTransitions.push_back(vt);
     mRelatedDirty = true;
-    // listenForSharedVariable (onStateTransition = sharedValueSet/Unset): deferred.
+    if (vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_SET ||
+        vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_UNSET) {
+        listenForSharedVariable(vt);
+    }
 }
 
 void ViewTransitionController::remove(int id) {
     auto it = std::find_if(mViewTransitions.begin(), mViewTransitions.end(),
                            [id](ViewTransition* vt) { return vt->getId() == id; });
     if (it != mViewTransitions.end()) {
+        ViewTransition* vt = *it;
+        if (vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_SET ||
+            vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_UNSET) {
+            ConstraintLayout::getSharedValues().removeListener(vt->getSharedValueID(), this);
+        }
         mRelatedDirty = true;
         mViewTransitions.erase(it);
+    }
+}
+
+void ViewTransitionController::listenForSharedVariable(ViewTransition* vt) {
+    ConstraintLayout::getSharedValues().addListener(vt->getSharedValueID(), this);
+}
+
+void ViewTransitionController::onNewValue(int key, int newValue, int /*oldValue*/) {
+    // A shared value changed: fire each sharedValueSet/Unset ViewTransition watching this key whose
+    // target value was reached (set) or left (unset). Mirrors Android listenForSharedVariable.
+    const int currentId = mMotionLayout->getCurrentState();
+    if (currentId == -1) return; // no firing while a transition is mid-flight
+    ConstraintSet* current = mMotionLayout->getConstraintSet(currentId);
+    const int count = mMotionLayout->getChildCount();
+    for (ViewTransition* vt : mViewTransitions) {
+        if (vt->getSharedValueID() != key) continue;
+        const int mode = vt->getStateTransition();
+        if (mode != ViewTransition::ONSTATE_SHARED_VALUE_SET &&
+            mode != ViewTransition::ONSTATE_SHARED_VALUE_UNSET) continue;
+        vt->setSharedValueCurrent(newValue);
+        const bool reached = (newValue == vt->getSharedValue());
+        const bool fire = (mode == ViewTransition::ONSTATE_SHARED_VALUE_SET) ? reached : !reached;
+        if (!fire) continue;
+        for (int i = 0; i < count; i++) {
+            View* view = mMotionLayout->getChildAt(i);
+            if (vt->matchesView(view)) {
+                std::vector<View*> views = { view };
+                vt->applyTransition(this, mMotionLayout, currentId, current, views);
+            }
+        }
     }
 }
 

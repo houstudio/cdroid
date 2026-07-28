@@ -7,6 +7,7 @@
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <core/xmlpullparser.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
+#include <widgetEx/constraintlayout/sharedvalues.h>
 
 #include <algorithm>
 #include <climits>
@@ -65,6 +66,8 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
 
     horizontalBias = attrs.getFloat("layout_constraintHorizontal_bias", 0.5f);
     verticalBias   = attrs.getFloat("layout_constraintVertical_bias",   0.5f);
+
+    constraintTag = attrs.getString("constraintTag", "");
 
     goneLeftMargin   = attrs.getDimensionPixelSize("layout_goneMarginLeft",   GONE_UNSET);
     goneTopMargin    = attrs.getDimensionPixelSize("layout_goneMarginTop",    GONE_UNSET);
@@ -189,6 +192,11 @@ void ConstraintLayout::setState(int id, int screenWidth, int screenHeight) {
     if (mConstraintLayoutStates != nullptr) {
         mConstraintLayoutStates->updateConstraints(id, (float) screenWidth, (float) screenHeight);
     }
+}
+
+SharedValues& ConstraintLayout::getSharedValues() {
+    static SharedValues sSharedValues; // process-wide singleton (Meyers)
+    return sSharedValues;
 }
 
 ViewGroup::LayoutParams* ConstraintLayout::generateLayoutParams(const AttributeSet& attrs) const {
