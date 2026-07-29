@@ -133,6 +133,10 @@ class ViewTransition {
     // per-view animation; currentState/allStates (apply a ConstraintSet delta) are deferred.
     void applyTransition(ViewTransitionController* controller, MotionLayout* layout,
                          int fromId, ConstraintSet* current, const std::vector<View*>& views);
+    // Add every keyframe of this ViewTransition's KeyFrameSet into `mc` (Android
+    // ViewTransition.mKeyFrames.addAllFrames). Used by applyViewTransition to merge a VT's keyframes
+    // into a main-transition Motion. Returns false if there is no KeyFrameSet.
+    bool addAllFrames(class Motion* mc) const;
 
     // The noState animation driver (Android ViewTransition.Animate). A standalone per-view animation
     // advanced by wall-clock time: mutate() steps it forward (or in reverse once the finger lifts),

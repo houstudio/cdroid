@@ -148,6 +148,14 @@ std::vector<MotionKey*> KeyFrames::getKeysForView(int viewId) const {
     return out;
 }
 
+std::vector<MotionKey*> KeyFrames::getAllKeys() const {
+    std::vector<MotionKey*> out;
+    for (auto& kv : mFramesMap) {
+        for (auto& k : kv.second) out.push_back(k.get());
+    }
+    return out;
+}
+
 std::vector<int> KeyFrames::getTargets() const {
     std::vector<int> targets;
     targets.reserve(mFramesMap.size());

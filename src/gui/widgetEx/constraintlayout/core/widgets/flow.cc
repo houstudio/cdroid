@@ -6,6 +6,7 @@
 #include <widgetEx/constraintlayout/core/widgets/flow.h>
 
 #include <algorithm>
+#include <climits>
 #include <porting/cdlog.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 
@@ -151,9 +152,15 @@ void Flow::measure(int widthMode, int widthSize, int heightMode, int heightSize)
     int paddingTop = getPaddingTop(), paddingBottom = getPaddingBottom();
 
     std::vector<int> measured = {0, 0};
-    int max = widthSize - paddingLeft - paddingRight;
+    int max;
     if (mOrientation == VERTICAL) {
-        max = heightSize - paddingTop - paddingBottom;
+        // Wrap direction is height; WRAP_CONTENT (UNSPECIFIED) → unbounded, single column.
+        max = (heightMode == BasicMeasure::UNSPECIFIED) ? INT_MAX
+              : heightSize - paddingTop - paddingBottom;
+    } else {
+        // Wrap direction is width; WRAP_CONTENT (UNSPECIFIED) → unbounded, single row.
+        max = (widthMode == BasicMeasure::UNSPECIFIED) ? INT_MAX
+              : widthSize - paddingLeft - paddingRight;
     }
 
     if (mHorizontalStyle == UNKNOWN) mHorizontalStyle = CHAIN_SPREAD;
@@ -342,11 +349,10 @@ void Flow::measureChainWrap_new(std::vector<ConstraintWidget*>& /*widgets*/, int
 }
 
 void Flow::addToSolver(LinearSystem* system, bool optimize) {
-    // Lazily build the row layout (mChainList). Ideally the container's size-dependent measure
-    // loop calls measure() (as in Android's BasicMeasure); until that loop is ported we build the
-    // rows here from the already-measured referenced widgets, using the Flow's current size.
-    measure(BasicMeasure::EXACTLY, getWidth(), BasicMeasure::EXACTLY, getHeight());
-
+    // The row layout (mChainList) is built by Flow.measure(), which the container's BasicMeasure
+    // VirtualLayout block calls AFTER the solver resolved this Flow's 0dp size (see
+    // BasicMeasure::solverMeasure). Here we only emit the row constraints for the already-built
+    // mChainList — matching Android's core Flow.addToSolver (constraint emission, not measure).
     VirtualLayout::addToSolver(system, optimize);
 
     bool isInRtl = false;

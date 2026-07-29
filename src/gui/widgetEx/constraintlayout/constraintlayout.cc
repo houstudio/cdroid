@@ -433,7 +433,14 @@ void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* 
         } else if (b == ConstraintWidget::DimensionBehaviour::MATCH_PARENT) {
             return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::MATCH_PARENT);
         }
-        // MATCH_CONSTRAINT (0dp) — MVP: measure as wrap to get a base size.
+        // MATCH_CONSTRAINT (0dp). `dim` is widget->getWidth()/Height() — after a solve it is the
+        // resolved size; honor the measure strategy so the child's content-dependent dimension
+        // (e.g. text height under the resolved width) can adapt, then re-solve if it changed.
+        if (m->measureStrategy == BasicMeasure::Measure::TRY_GIVEN_DIMENSIONS
+                || m->measureStrategy == BasicMeasure::Measure::USE_GIVEN_DIMENSIONS) {
+            return View::MeasureSpec::makeMeasureSpec(dim, View::MeasureSpec::EXACTLY);
+        }
+        // SELF_DIMENSIONS: not solved yet — measure wrap to seed the solver.
         return ViewGroup::getChildMeasureSpec(parentSpec, padding, LayoutParams::WRAP_CONTENT);
     };
 
@@ -466,8 +473,30 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
             placeholder->updatePostMeasure(this);
         }
     }
-    resolveMeasuredDimension(widthMeasureSpec, heightMeasureSpec,
-                             mLayoutWidget.getWidth(), mLayoutWidget.getHeight());
+    // For a WRAP_CONTENT dimension (AT_MOST/UNSPECIFIED spec) the solver pins the container to its
+    // desired (AT_MOST max) size; shrink it to the actual content extent of the solved children so a
+    // WRAP container sizes to its content. EXACTLY dimensions keep the solver's size. Virtual helpers
+    // (Guideline/Barrier/VirtualLayout) carry no visual extent and are skipped — a Flow's referenced
+    // children are regular widgets and are included. (Faithful container-level wrap for the common
+    // fixed-children case; a WRAP container filled by a 0dp child stays at the AT_MOST max — the full
+    // BasicMeasure outer iteration is still deferred.)
+    int measuredW = mLayoutWidget.getWidth();
+    int measuredH = mLayoutWidget.getHeight();
+    int wMode = View::MeasureSpec::getMode(widthMeasureSpec);
+    int hMode = View::MeasureSpec::getMode(heightMeasureSpec);
+    if (wMode != View::MeasureSpec::EXACTLY || hMode != View::MeasureSpec::EXACTLY) {
+        int maxRight = 0, maxBottom = 0;
+        for (ConstraintWidget* w : mLayoutWidget.mChildren) {
+            if (w->getVisibility() == ConstraintWidget::GONE) continue;
+            if (dynamic_cast<clcore::Guideline*>(w) != nullptr) continue;
+            if (w->isBarrier() || w->isVirtualLayout()) continue;
+            maxRight  = std::max(maxRight,  w->getX() + w->getWidth());
+            maxBottom = std::max(maxBottom, w->getY() + w->getHeight());
+        }
+        if (wMode != View::MeasureSpec::EXACTLY) measuredW = maxRight;
+        if (hMode != View::MeasureSpec::EXACTLY) measuredH = maxBottom;
+    }
+    resolveMeasuredDimension(widthMeasureSpec, heightMeasureSpec, measuredW, measuredH);
 }
 
 void ConstraintLayout::resolveSystem(int widthSpec, int heightSpec) {

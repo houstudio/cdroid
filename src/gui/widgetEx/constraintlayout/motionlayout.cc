@@ -13,6 +13,8 @@
 #include <widgetEx/constraintlayout/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 #include <widgetEx/constraintlayout/core/motion/springstopengine.h>
@@ -111,6 +113,11 @@ void MotionLayout::buildMotions() {
         m->setup(getWidth(), getHeight(), (float) mTransitionDuration);
         if (mSceneArcMode >= 0) {
             m->setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, mSceneArcMode);
+        }
+        if (mTriggerListener) {
+            m->setTriggerListener([this, id](const std::string& name, float pos) {
+                mTriggerListener(id, name, pos);
+            });
         }
         mMotions[id] = m;
     }
@@ -438,6 +445,23 @@ bool MotionLayout::isViewTransitionEnabled(int viewTransitionId) const {
     return mScene && mScene->isViewTransitionEnabled(viewTransitionId);
 }
 
+bool MotionLayout::applyViewTransition(int viewTransitionId, Motion* mc) {
+    return mScene && mScene->applyViewTransition(viewTransitionId, mc);
+}
+
+void MotionLayout::setTriggerListener(const TriggerListener& listener) {
+    mTriggerListener = listener;
+    for (auto& kv : mMotions) {
+        const int viewId = kv.first;
+        if (listener) {
+            kv.second->setTriggerListener(
+                [listener, viewId](const std::string& name, float pos) { listener(viewId, name, pos); });
+        } else {
+            kv.second->setTriggerListener(nullptr);
+        }
+    }
+}
+
 void MotionLayout::setSharedValue(int key, int value) {
     ConstraintLayout::getSharedValues().fireNewValue(key, value);
 }
@@ -474,8 +498,14 @@ void MotionLayout::applyKeyFramesToMotions(KeyFrames* kf) {
             case MotionKeyCycle::KEY_TYPE:
                 m->addKey(static_cast<MotionKeyCycle*>(key));
                 break;
+            case MotionKeyTimeCycle::KEY_TYPE:
+                m->addKey(static_cast<MotionKeyTimeCycle*>(key)); // MVP: overlaid like a Cycle wave
+                break;
+            case MotionKeyTrigger::KEY_TYPE:
+                m->addKey(static_cast<MotionKeyTrigger*>(key)); // fires via Motion::setTriggerListener
+                break;
             default:
-                break; // KeyTimeCycle/KeyTrigger: no Motion addKey yet (deferred)
+                break;
             }
         }
     }

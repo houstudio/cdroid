@@ -6,6 +6,7 @@
 #include <widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
+#include <widgetEx/constraintlayout/core/widgets/virtuallayout.h>
 
 namespace cdroid {
 
@@ -173,6 +174,63 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
 
     if (childCount > 0) {
         solveLinearSystem(layout, "First pass", 0, startingWidth, startingHeight);
+    }
+
+    // VirtualLayout measure (Android BasicMeasure.java 319-352): the first solve above resolved
+    // every 0dp dimension, including a MATCH_CONSTRAINT helper's (Flow). Now build each helper's
+    // rows with its size (resolved for 0dp, fixed otherwise), then re-solve so its addToSolver can
+    // emit the row constraints it could not emit in the first pass (mChainList was empty then).
+    // measureChildren() skips all VirtualLayouts, so we measure every VirtualLayout here — this is
+    // the faithful fix for the Flow "max=0" bug (previously Flow measured itself from addToSolver
+    // with an unresolved size and fell back to the parent's width).
+    bool needSolverPass = false;
+    // Measure each VirtualLayout with a mode matching its dimension behaviour: EXACTLY for a
+    // resolved/fixed dimension, UNSPECIFIED for WRAP_CONTENT so the helper computes that dimension
+    // from its content (e.g. a WRAP-height Flow derives its height from the wrapped rows instead of
+    // being forced to the unresolved getHeight()==0).
+    auto modeFor = [](ConstraintWidget::DimensionBehaviour b) {
+        return (b == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT)
+               ? BasicMeasure::UNSPECIFIED : BasicMeasure::EXACTLY;
+    };
+    for (ConstraintWidget* widget : layout->mChildren) {
+        auto* vl = dynamic_cast<VirtualLayout*>(widget);
+        if (vl == nullptr) {
+            continue;
+        }
+        vl->measure(modeFor(widget->getHorizontalDimensionBehaviour()), widget->getWidth(),
+                    modeFor(widget->getVerticalDimensionBehaviour()), widget->getHeight());
+        if (vl->needSolverPass()) {
+            needSolverPass = true;
+        }
+    }
+    if (needSolverPass) {
+        solveLinearSystem(layout, "VirtualLayout pass", 1, startingWidth, startingHeight);
+    }
+
+    // Generic match-constraint convergence loop (Android BasicMeasure.java 355-445): re-measure
+    // non-helper 0dp widgets with their solver-resolved size so a content-dependent dimension
+    // (e.g. text height under the resolved width) can adapt, then re-solve. Bounded to
+    // maxIterations=2; exits early on convergence. Additive over the single pass above — typical
+    // widgets (height independent of width) converge in one iteration.
+    Measurer* measurer = layout->getMeasurer();
+    const int maxIterations = 2;
+    for (int j = 0; j < maxIterations && measurer != nullptr; j++) {
+        bool isLast = (j == maxIterations - 1);
+        int strategy = isLast ? Measure::USE_GIVEN_DIMENSIONS : Measure::TRY_GIVEN_DIMENSIONS;
+        bool needPass = false;
+        for (ConstraintWidget* widget : mVariableDimensionsWidgets) {
+            if (dynamic_cast<VirtualLayout*>(widget) != nullptr) continue;  // VL block owns these
+            if (dynamic_cast<HelperWidget*>(widget) != nullptr)   continue;  // Barrier/Group/Guideline
+            if (widget->isInVirtualLayout())                      continue;  // Flow measures its own
+            if (measure(measurer, widget, strategy)) {
+                needPass = true;
+            }
+        }
+        if (needPass) {
+            solveLinearSystem(layout, "match-constraint pass", 2 + j, startingWidth, startingHeight);
+        } else {
+            break;  // converged
+        }
     }
     return 0;
 }

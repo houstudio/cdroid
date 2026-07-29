@@ -108,6 +108,13 @@ class MotionLayout : public ConstraintLayout {
     void viewTransition(int viewTransitionId, const std::vector<View*>& views);
     void enableViewTransition(int viewTransitionId, bool enable);
     bool isViewTransitionEnabled(int viewTransitionId) const;
+    // Merge a ViewTransition's keyframes into a main-transition Motion (Android applyViewTransition).
+    bool applyViewTransition(int viewTransitionId, Motion* mc);
+    // Receiver for <KeyTrigger> fires during the main transition: (viewId, triggerName, progress).
+    // The host interprets `triggerName` (Android calls the named method on the receiver view via
+    // reflection; CDROID delivers the name here). Applied to every per-child Motion (current + rebuilt).
+    using TriggerListener = std::function<void(int viewId, const std::string& triggerName, float position)>;
+    void setTriggerListener(const TriggerListener& listener);
     // Fire a shared value (key, value) — notifies SharedValues listeners (e.g. sharedValueSet/Unset
     // ViewTransitions). (Java: MotionLayout.setSharedValue.)
     void setSharedValue(int key, int value);
@@ -187,6 +194,7 @@ class MotionLayout : public ConstraintLayout {
 
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
     std::unique_ptr<TouchResponse> mTouchResponse;
+    TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
 };
 
 } // namespace cdroid

@@ -202,6 +202,8 @@ class MotionScene {
     void viewTransition(int id, const std::vector<View*>& views);
     void enableViewTransition(int id, bool enable);
     bool isViewTransitionEnabled(int id) const;
+    // Merge a ViewTransition's keyframes into a main-transition Motion (Android applyViewTransition).
+    bool applyViewTransition(int id, class Motion* mc);
 
   private:
     friend class ViewTransition; // so it can resolve ids via getId()

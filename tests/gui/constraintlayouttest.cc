@@ -41,6 +41,10 @@ static int exactly(int size) {
     return View::MeasureSpec::makeMeasureSpec(size, View::MeasureSpec::EXACTLY);
 }
 
+static int atMost(int size) {
+    return View::MeasureSpec::makeMeasureSpec(size, View::MeasureSpec::AT_MOST);
+}
+
 // A fixed 100x50 child whose left+right both connect to the parent → horizontally centered
 // in a 600-wide container: x = (600 - 100) / 2 = 250.
 TEST(ConstraintLayout, CentersChildHorizontally) {
@@ -477,6 +481,82 @@ TEST(ConstraintLayout, FlowVerticalStacksColumn) {
         EXPECT_EQ(views[i]->getLeft(), 0) << "view " << i;
         EXPECT_EQ(views[i]->getTop(), i * 50) << "view " << i;
     }
+}
+
+// A Flow with WRAP_CONTENT height: height is driven by the wrapped rows (2 rows of 50 = 100).
+TEST(ConstraintLayout, FlowWrapContentHeight) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    TextView* d = new TextView("D", 100, 50); d->setId(4);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(d, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(200, 100);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_CHAIN);
+    auto* lp = new ConstraintLayout::LayoutParams(200, ConstraintLayout::LayoutParams::WRAP_CONTENT);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getTop(), 0);          // row 1
+    EXPECT_EQ(c->getTop(), 50);         // wrapped to row 2
+    EXPECT_EQ(flow->getHeight(), 100);  // WRAP height reflects 2 rows of 50
+}
+
+// A horizontal Flow with WRAP_CONTENT width: no width to wrap against → single row, width = sum.
+TEST(ConstraintLayout, FlowWrapWidthSingleRow) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(0, 50);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3});
+    flow->setWrapMode(Flow::WRAP_CHAIN);
+    auto* lp = new ConstraintLayout::LayoutParams(
+        ConstraintLayout::LayoutParams::WRAP_CONTENT, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(a->getTop(), 0);   // single row — no wrapping
+    EXPECT_EQ(b->getTop(), 0);
+    EXPECT_EQ(c->getTop(), 0);
+    EXPECT_EQ(flow->getWidth(), 300);  // WRAP width = 3 * 100
+}
+
+// A WRAP_CONTENT container (AT_MOST spec) should size itself to its fixed child.
+TEST(ConstraintLayout, WrapContainerSizesToChild) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(atMost(600), atMost(400));
+
+    EXPECT_EQ(cl->getMeasuredWidth(), 100);   // WRAP container shrinks to the child
+    EXPECT_EQ(cl->getMeasuredHeight(), 50);
 }
 
 // ---- ConstraintSet ----
@@ -1211,6 +1291,33 @@ TEST(ConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
     EXPECT_EQ(target.get(1).layout.topToTop, 0);    // preserved — not clobbered
 }
 
+// Precise delta: a delta that sets a field to its DEFAULT value (rotation="0") RESETS the target's
+// rotation. The old default-difference approximation skipped default values and would have left the
+// target's rotation=30 untouched. Authored-field overlay applies it.
+TEST(ConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
+    App& app = App::getInstance();
+    ConstraintSet target;
+    target.get(1).transform.rotation = 30.0f;   // target currently rotated
+    target.get(1).transform.scaleX = 2.0f;       // and scaled
+
+    // delta explicitly sets rotation="0" (its default) — should reset rotation, leave scaleX.
+    const std::string xml =
+        "<ConstraintOverride xmlns:android=\"http://schemas.android.com/apk/res/android\""
+        " motionTarget=\"1\" rotation=\"0\" />";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    while (parser.getEventType() != XmlPullParser::START_TAG &&
+           parser.getEventType() != XmlPullParser::END_DOCUMENT) {
+        parser.next();
+    }
+    ConstraintSet delta;
+    delta.loadConstraint(parser);
+
+    delta.applyDelta(target.get(1));
+    EXPECT_FLOAT_EQ(target.get(1).transform.rotation, 0.0f); // RESET to 0 (precise)
+    EXPECT_FLOAT_EQ(target.get(1).transform.scaleX, 2.0f);    // untouched (not authored by delta)
+}
+
 // viewTransitionMode=allStates persists the delta into every ConstraintSet except the current state,
 // so the change survives a later state switch. Firing an allStates VT (scaleX=1.5) from the start
 // state writes the delta into the END set (the from-state is the animation source, not persisted).
@@ -1485,6 +1592,49 @@ TEST(ConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
     ASSERT_EQ(c.mCustomAttributes.size(), 1u);
     EXPECT_EQ(c.mCustomAttributes[0].name, "textColor");
     EXPECT_EQ(c.mCustomAttributes[0].type, ConstraintSet::CustomAttribute::COLOR);
+}
+
+// applyViewTransition(id, Motion*) merges a ViewTransition's KeyFrameSet into a standalone Motion
+// (Android applyViewTransition). A Motion with start==end==current frame is otherwise inert; after
+// merging a KeyAttribute (alpha=0 @frame50), interpolating at progress 0.5 yields alpha 0.
+TEST(ConstraintLayout, ViewTransitionApplyViewTransitionMergesKeyframes) {
+    App& app = App::getInstance();
+    MotionLayout* ml = new MotionLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    ml->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+    ml->measure(exactly(600), exactly(400));
+    ml->layout(0, 0, 600, 400);
+
+    const std::string xml =
+        "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
+        "  <ViewTransition android:id=\"@+id/vt\" motionTarget=\"1\""
+        "                  viewTransitionMode=\"noState\">"
+        "    <KeyFrameSet>"
+        "      <KeyAttribute motionTarget=\"1\" framePosition=\"50\" alpha=\"0\" />"
+        "    </KeyFrameSet>"
+        "  </ViewTransition>"
+        "</MotionScene>";
+    auto stream = std::make_unique<std::stringstream>(xml);
+    XmlPullParser parser(&app, std::move(stream));
+    auto scene = std::make_unique<MotionScene>(ml);
+    scene->load(&app, parser);
+    const int vtId = scene->getViewTransitionAt(0)->getId();
+    ml->setScene(std::move(scene));
+
+    // A standalone Motion whose start == end == the view's current frame (so without keyframes it
+    // would not deviate).
+    MotionWidget mw;
+    MotionLayout::captureWidgetFrame(mw, tv);
+    Motion m;
+    m.setStart(&mw);
+    m.setEnd(&mw);
+    m.setup(600, 400, 400.0f);
+
+    EXPECT_TRUE(ml->applyViewTransition(vtId, &m)); // found the VT and merged its keyframes
+
+    MotionWidget temp;
+    m.interpolate(&temp, 0.5f);
+    EXPECT_NEAR(temp.getAlpha(), 0.0f, 0.05f); // merged KeyAttribute applied at the midpoint
 }
 
 #endif // ENABLE_CONSTRAINTLAYOUT

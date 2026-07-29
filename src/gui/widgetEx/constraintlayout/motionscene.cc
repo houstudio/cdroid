@@ -125,6 +125,10 @@ bool MotionScene::isViewTransitionEnabled(int id) const {
     return mViewTransitionController && mViewTransitionController->isViewTransitionEnabled(id);
 }
 
+bool MotionScene::applyViewTransition(int id, Motion* mc) {
+    return mViewTransitionController && mViewTransitionController->applyViewTransition(id, mc);
+}
+
 std::string MotionScene::stripId(const std::string& idString) {
     // "@+id/start", "@id/start", "start" -> "start".
     std::string s = idString;

@@ -12,6 +12,8 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
 
 namespace cdroid {
 
@@ -199,6 +201,14 @@ void Motion::addKey(MotionKeyCycle* key) {
     mCycleKeys.push_back(key);
 }
 
+void Motion::addKey(MotionKeyTimeCycle* key) {
+    mTimeCycleKeys.push_back(key);
+}
+
+void Motion::addKey(MotionKeyTrigger* key) {
+    mTriggerKeys.push_back(key);
+}
+
 float Motion::keyframed(float progress, float startVal, float endVal, float defaultValue,
                         float (*get)(const MotionKeyAttributes*)) const {
     float s = std::isnan(startVal) ? defaultValue : startVal;
@@ -294,6 +304,13 @@ void Motion::interpolate(MotionWidget* child, float progress) {
             alpha += wave * c->mAlpha + c->mWaveOffset;
         }
     }
+    // TimeCycle overlay: MVP — same progress-keyed wave (no phase field; Android keys off time).
+    for (auto* t : mTimeCycleKeys) {
+        if (!std::isnan(t->mAlpha) && !std::isnan(t->mWavePeriod)) {
+            float wave = std::sin(2.0 * M_PI * progress * t->mWavePeriod);
+            alpha += wave * t->mAlpha + t->mWaveOffset;
+        }
+    }
     if (!std::isnan(alpha)) child->setAlpha(alpha);
 
     child->setRotationX(keyframed(progress, mStartPoint.mRotationX, mEndPoint.mRotationX, 0,
@@ -336,6 +353,40 @@ void Motion::interpolate(MotionWidget* child, float progress) {
     [](const MotionKeyAttributes* k) {
         return k->mTranslationZ;
     }));
+
+    // Fire Trigger keyframes. mCross fires once while progress is within slack of the frame position;
+    // mPositiveCross / mNegativeCross fire once when progress is past / before the frame (each resets
+    // when progress leaves its region). Android calls the named method on the receiver view via
+    // reflection; CDROID delivers the name to mTriggerListener (the host interprets it).
+    if (mTriggerListener) {
+        for (auto* t : mTriggerKeys) {
+            const float frame = t->mFramePosition / 100.0f;
+            if (std::abs(progress - frame) < t->mTriggerSlack) {
+                if (t->mFireCrossReset && !t->mCross.empty()) {
+                    t->mFireCrossReset = false;
+                    mTriggerListener(t->mCross, progress);
+                }
+            } else {
+                t->mFireCrossReset = true;
+            }
+            if (progress > frame) {
+                if (t->mFirePositiveReset && !t->mPositiveCross.empty()) {
+                    t->mFirePositiveReset = false;
+                    mTriggerListener(t->mPositiveCross, progress);
+                }
+            } else {
+                t->mFirePositiveReset = true;
+            }
+            if (progress < frame) {
+                if (t->mFireNegativeReset && !t->mNegativeCross.empty()) {
+                    t->mFireNegativeReset = false;
+                    mTriggerListener(t->mNegativeCross, progress);
+                }
+            } else {
+                t->mFireNegativeReset = true;
+            }
+        }
+    }
 }
 
 void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) {

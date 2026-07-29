@@ -433,6 +433,13 @@ static const std::unordered_map<std::string,int> kVisibilityMode = {
 void ConstraintSet::Constraint::fillFromAttributeList(const AttributeSet& a) {
     // Any parsed attribute marks these sub-structs as authored (Java sets mApply on each present attr).
     layout.mApply = transform.mApply = propertySet.mApply = motion.mApply = true;
+    // Record every attribute this element actually authored by iterating AttributeSet directly, so
+    // applyDelta overlays precisely (only the authored fields) instead of guessing by default-difference.
+    // copyAuthoredField maps the known field names; structural attrs (id/motionTarget) are recorded
+    // too but ignored by copyAuthoredField's no-op default.
+    a.forEachAttribute([&](const std::string& name, const std::string&) {
+        mAuthored.insert(name);
+    });
 
     Layout& l = layout;
     Transform& t = transform;
@@ -616,89 +623,116 @@ void ConstraintSet::loadConstraint(XmlPullParser& parser) {
     mConstraints[current.mViewId] = current;
 }
 
+// Copy the single field named `name` (a bare XML attribute name) from `src` onto `dst`. This is the
+// precise per-attribute overlay (Android ConstraintSet.Delta + setDeltaValue): only authored fields
+// are touched, so a delta that sets a field to its default value IS applied (the old default-difference
+// guess skipped those).
+static void copyAuthoredField(const std::string& name,
+                              const ConstraintSet::Constraint& src,
+                              ConstraintSet::Constraint& dst) {
+    // --- Layout ---
+    if (name == "layout_constraintLeft_toLeftOf")        dst.layout.leftToLeft = src.layout.leftToLeft;
+    else if (name == "layout_constraintLeft_toRightOf")  dst.layout.leftToRight = src.layout.leftToRight;
+    else if (name == "layout_constraintRight_toLeftOf")  dst.layout.rightToLeft = src.layout.rightToLeft;
+    else if (name == "layout_constraintRight_toRightOf") dst.layout.rightToRight = src.layout.rightToRight;
+    else if (name == "layout_constraintTop_toTopOf")     dst.layout.topToTop = src.layout.topToTop;
+    else if (name == "layout_constraintTop_toBottomOf")  dst.layout.topToBottom = src.layout.topToBottom;
+    else if (name == "layout_constraintBottom_toTopOf")  dst.layout.bottomToTop = src.layout.bottomToTop;
+    else if (name == "layout_constraintBottom_toBottomOf") dst.layout.bottomToBottom = src.layout.bottomToBottom;
+    else if (name == "layout_constraintBaseline_toBaselineOf") dst.layout.baselineToBaseline = src.layout.baselineToBaseline;
+    else if (name == "layout_constraintBaseline_toTopOf") dst.layout.baselineToTop = src.layout.baselineToTop;
+    else if (name == "layout_constraintBaseline_toBottomOf") dst.layout.baselineToBottom = src.layout.baselineToBottom;
+    else if (name == "layout_constraintStart_toStartOf") dst.layout.startToStart = src.layout.startToStart;
+    else if (name == "layout_constraintStart_toEndOf")   dst.layout.startToEnd = src.layout.startToEnd;
+    else if (name == "layout_constraintEnd_toStartOf")   dst.layout.endToStart = src.layout.endToStart;
+    else if (name == "layout_constraintEnd_toEndOf")     dst.layout.endToEnd = src.layout.endToEnd;
+    else if (name == "layout_constraintCircle")          dst.layout.circleConstraint = src.layout.circleConstraint;
+    else if (name == "layout_constraintGuide_begin")     dst.layout.guideBegin = src.layout.guideBegin;
+    else if (name == "layout_constraintGuide_end")       dst.layout.guideEnd = src.layout.guideEnd;
+    else if (name == "layout_constraintGuide_percent")   dst.layout.guidePercent = src.layout.guidePercent;
+    else if (name == "layout_editor_absoluteX")          dst.layout.editorAbsoluteX = src.layout.editorAbsoluteX;
+    else if (name == "layout_editor_absoluteY")          dst.layout.editorAbsoluteY = src.layout.editorAbsoluteY;
+    else if (name == "orientation")                      dst.layout.orientation = src.layout.orientation;
+    else if (name == "layout_marginLeft")                dst.layout.leftMargin = src.layout.leftMargin;
+    else if (name == "layout_marginRight")               dst.layout.rightMargin = src.layout.rightMargin;
+    else if (name == "layout_marginTop")                 dst.layout.topMargin = src.layout.topMargin;
+    else if (name == "layout_marginBottom")              dst.layout.bottomMargin = src.layout.bottomMargin;
+    else if (name == "layout_marginStart")               dst.layout.startMargin = src.layout.startMargin;
+    else if (name == "layout_marginEnd")                 dst.layout.endMargin = src.layout.endMargin;
+    else if (name == "layout_goneMarginLeft")            dst.layout.goneLeftMargin = src.layout.goneLeftMargin;
+    else if (name == "layout_goneMarginTop")             dst.layout.goneTopMargin = src.layout.goneTopMargin;
+    else if (name == "layout_goneMarginRight")           dst.layout.goneRightMargin = src.layout.goneRightMargin;
+    else if (name == "layout_goneMarginBottom")          dst.layout.goneBottomMargin = src.layout.goneBottomMargin;
+    else if (name == "layout_goneMarginStart")           dst.layout.goneStartMargin = src.layout.goneStartMargin;
+    else if (name == "layout_goneMarginEnd")             dst.layout.goneEndMargin = src.layout.goneEndMargin;
+    else if (name == "layout_constraintHorizontal_bias") dst.layout.horizontalBias = src.layout.horizontalBias;
+    else if (name == "layout_constraintVertical_bias")   dst.layout.verticalBias = src.layout.verticalBias;
+    else if (name == "layout_constraintHorizontal_weight") dst.layout.horizontalWeight = src.layout.horizontalWeight;
+    else if (name == "layout_constraintVertical_weight") dst.layout.verticalWeight = src.layout.verticalWeight;
+    else if (name == "layout_constraintHorizontal_chainStyle") dst.layout.horizontalChainStyle = src.layout.horizontalChainStyle;
+    else if (name == "layout_constraintVertical_chainStyle") dst.layout.verticalChainStyle = src.layout.verticalChainStyle;
+    else if (name == "layout_constraintDimensionRatio")  dst.layout.dimensionRatio = src.layout.dimensionRatio;
+    else if (name == "layout_width")                     dst.layout.mWidth = src.layout.mWidth;
+    else if (name == "layout_height")                    dst.layout.mHeight = src.layout.mHeight;
+    else if (name == "layout_constraintWidth_default")   dst.layout.widthDefault = src.layout.widthDefault;
+    else if (name == "layout_constraintHeight_default")  dst.layout.heightDefault = src.layout.heightDefault;
+    else if (name == "layout_constraintWidth_percent")   dst.layout.widthPercent = src.layout.widthPercent;
+    else if (name == "layout_constraintHeight_percent")  dst.layout.heightPercent = src.layout.heightPercent;
+    else if (name == "layout_constraintWidth_min")       dst.layout.widthMin = src.layout.widthMin;
+    else if (name == "layout_constraintWidth_max")       dst.layout.widthMax = src.layout.widthMax;
+    else if (name == "layout_constraintHeight_min")      dst.layout.heightMin = src.layout.heightMin;
+    else if (name == "layout_constraintHeight_max")      dst.layout.heightMax = src.layout.heightMax;
+    else if (name == "layout_constrainedWidth")          dst.layout.constrainedWidth = src.layout.constrainedWidth;
+    else if (name == "layout_constrainedHeight")         dst.layout.constrainedHeight = src.layout.constrainedHeight;
+    else if (name == "layout_wrapBehaviorInParent")      dst.layout.mWrapBehavior = src.layout.mWrapBehavior;
+    else if (name == "layout_constraintCircleRadius")    dst.layout.circleRadius = src.layout.circleRadius;
+    else if (name == "layout_constraintCircleAngle")     dst.layout.circleAngle = src.layout.circleAngle;
+    else if (name == "barrierDirection")                 dst.layout.mBarrierDirection = src.layout.mBarrierDirection;
+    else if (name == "barrierMargin")                    dst.layout.mBarrierMargin = src.layout.mBarrierMargin;
+    else if (name == "barrierAllowsGoneWidgets")         dst.layout.mBarrierAllowsGoneWidgets = src.layout.mBarrierAllowsGoneWidgets;
+    else if (name == "constraint_referenced_ids")        dst.layout.mReferenceIdString = src.layout.mReferenceIdString;
+    else if (name == "layout_constraintTag")             dst.layout.constraintTag = src.layout.constraintTag;
+    // --- PropertySet ---
+    else if (name == "visibility")      dst.propertySet.visibility = src.propertySet.visibility;
+    else if (name == "alpha")           dst.propertySet.alpha = src.propertySet.alpha;
+    else if (name == "motionProgress")  dst.propertySet.mProgress = src.propertySet.mProgress;
+    else if (name == "visibilityMode")  dst.propertySet.mVisibilityMode = src.propertySet.mVisibilityMode;
+    // --- Transform ---
+    else if (name == "rotation")          dst.transform.rotation = src.transform.rotation;
+    else if (name == "rotationX")         dst.transform.rotationX = src.transform.rotationX;
+    else if (name == "rotationY")         dst.transform.rotationY = src.transform.rotationY;
+    else if (name == "scaleX")            dst.transform.scaleX = src.transform.scaleX;
+    else if (name == "scaleY")            dst.transform.scaleY = src.transform.scaleY;
+    else if (name == "translationX")      dst.transform.translationX = src.transform.translationX;
+    else if (name == "translationY")      dst.transform.translationY = src.transform.translationY;
+    else if (name == "translationZ")      dst.transform.translationZ = src.transform.translationZ;
+    else if (name == "transformPivotX")   dst.transform.transformPivotX = src.transform.transformPivotX;
+    else if (name == "transformPivotY")   dst.transform.transformPivotY = src.transform.transformPivotY;
+    else if (name == "transformPivotTarget") dst.transform.transformPivotTarget = src.transform.transformPivotTarget;
+    else if (name == "elevation") { dst.transform.elevation = src.transform.elevation; dst.transform.applyElevation = true; }
+    // --- Motion ---
+    else if (name == "animateRelativeTo")   dst.motion.mAnimateRelativeTo = src.motion.mAnimateRelativeTo;
+    else if (name == "transitionEasing")    dst.motion.mTransitionEasing = src.motion.mTransitionEasing;
+    else if (name == "pathMotionArc")       dst.motion.mPathMotionArc = src.motion.mPathMotionArc;
+    else if (name == "transitionPathRotate") dst.motion.mPathRotate = src.motion.mPathRotate;
+    else if (name == "motionStagger")       dst.motion.mMotionStagger = src.motion.mMotionStagger;
+    else if (name == "drawPath")            dst.motion.mDrawPath = src.motion.mDrawPath;
+    else if (name == "quantizeMotionSteps") dst.motion.mQuantizeMotionSteps = src.motion.mQuantizeMotionSteps;
+    else if (name == "quantizeMotionPhase") dst.motion.mQuantizeMotionPhase = src.motion.mQuantizeMotionPhase;
+    // Unknown/structural names (id, motionTarget, xmlns) are intentionally ignored.
+}
+
 void ConstraintSet::applyDelta(Constraint& target) const {
-    // Android stores a ViewTransition's <ConstraintOverride> as a sparse per-attribute Delta and
-    // applies it field-by-field (ConstraintSet.Delta + setDeltaValue, ~600 lines). CDROID's sub-struct
-    // mApply flags are unreliable for that (fillFromAttributeList marks all four true on any parse),
-    // so we approximate with a field-level "differs from default" overlay on the commonly-delta'd
-    // sub-structs (Transform/PropertySet): each delta field the author set to a non-default value
-    // replaces the target's; authored-default fields are skipped (so an unrelated rotation isn't
-    // clobbered by a scale-only delta). A delta that intentionally sets a field to its default is not
-    // applied (rare). Layout/Motion field deltas are deferred. Custom attributes are appended.
+    // Precise per-attribute overlay: copy only the fields the delta's <ConstraintOverride> actually
+    // authored (recorded in mAuthored during fillFromAttributeList). This matches Android's sparse
+    // Delta (ConstraintSet.Delta + setDeltaValue) — a delta setting a field to its default value IS
+    // applied, and an unrelated field is never clobbered. Custom attributes are appended.
     auto it = mConstraints.find(target.mViewId);
-    if (it == mConstraints.end()) {
-        // No per-view delta — but set-level customs still apply to the target.
-        for (const auto& ca : mCustomAttributes) target.mCustomAttributes.push_back(ca);
-        return;
+    if (it != mConstraints.end()) {
+        const Constraint& d = it->second;
+        for (const auto& name : d.mAuthored) copyAuthoredField(name, d, target);
+        for (const auto& ca : d.mCustomAttributes) target.mCustomAttributes.push_back(ca);
     }
-    const Constraint& d = it->second;
-
-    const Transform& t = d.transform;
-    Transform& dt = target.transform;
-    if (t.rotation        != 0.0f) dt.rotation        = t.rotation;
-    if (t.rotationX       != 0.0f) dt.rotationX       = t.rotationX;
-    if (t.rotationY       != 0.0f) dt.rotationY       = t.rotationY;
-    if (t.scaleX          != 1.0f) dt.scaleX          = t.scaleX;
-    if (t.scaleY          != 1.0f) dt.scaleY          = t.scaleY;
-    if (t.translationX    != 0.0f) dt.translationX    = t.translationX;
-    if (t.translationY    != 0.0f) dt.translationY    = t.translationY;
-    if (t.translationZ    != 0.0f) dt.translationZ    = t.translationZ;
-    if (t.transformPivotX != 0.0f) dt.transformPivotX = t.transformPivotX;
-    if (t.transformPivotY != 0.0f) dt.transformPivotY = t.transformPivotY;
-
-    const PropertySet& p = d.propertySet;
-    PropertySet& dp = target.propertySet;
-    if (p.visibility != 0 /*VISIBLE*/) dp.visibility = p.visibility;
-    if (p.alpha != 1.0f)               dp.alpha       = p.alpha;
-    if (!std::isnan(p.mProgress))      dp.mProgress   = p.mProgress;
-
-    // Layout fields (anchors default UNSET=-1, margins 0, bias 0.5, weights -1, chainStyle 0,
-    // dimensions 0). A delta setting a field to its default is not applied (rare edge case); the
-    // common reposition/resize delta sets non-default values.
-    const Layout& l = d.layout;
-    Layout& dl = target.layout;
-    if (l.mWidth != 0)              dl.mWidth = l.mWidth;
-    if (l.mHeight != 0)             dl.mHeight = l.mHeight;
-    if (l.leftToLeft != -1)         dl.leftToLeft = l.leftToLeft;
-    if (l.leftToRight != -1)        dl.leftToRight = l.leftToRight;
-    if (l.rightToLeft != -1)        dl.rightToLeft = l.rightToLeft;
-    if (l.rightToRight != -1)       dl.rightToRight = l.rightToRight;
-    if (l.topToTop != -1)           dl.topToTop = l.topToTop;
-    if (l.topToBottom != -1)        dl.topToBottom = l.topToBottom;
-    if (l.bottomToTop != -1)        dl.bottomToTop = l.bottomToTop;
-    if (l.bottomToBottom != -1)     dl.bottomToBottom = l.bottomToBottom;
-    if (l.baselineToBaseline != -1) dl.baselineToBaseline = l.baselineToBaseline;
-    if (l.startToStart != -1)       dl.startToStart = l.startToStart;
-    if (l.startToEnd != -1)         dl.startToEnd = l.startToEnd;
-    if (l.endToStart != -1)         dl.endToStart = l.endToStart;
-    if (l.endToEnd != -1)           dl.endToEnd = l.endToEnd;
-    if (l.horizontalBias != 0.5f)   dl.horizontalBias = l.horizontalBias;
-    if (l.verticalBias != 0.5f)     dl.verticalBias = l.verticalBias;
-    if (l.leftMargin != 0)          dl.leftMargin = l.leftMargin;
-    if (l.rightMargin != 0)         dl.rightMargin = l.rightMargin;
-    if (l.topMargin != 0)           dl.topMargin = l.topMargin;
-    if (l.bottomMargin != 0)        dl.bottomMargin = l.bottomMargin;
-    if (!l.dimensionRatio.empty())  dl.dimensionRatio = l.dimensionRatio;
-    if (l.verticalWeight != -1)     dl.verticalWeight = l.verticalWeight;
-    if (l.horizontalWeight != -1)   dl.horizontalWeight = l.horizontalWeight;
-    if (l.horizontalChainStyle != 0) dl.horizontalChainStyle = l.horizontalChainStyle;
-    if (l.verticalChainStyle != 0)  dl.verticalChainStyle = l.verticalChainStyle;
-    if (l.orientation != -1)        dl.orientation = l.orientation;
-    if (l.guideBegin != -1)         dl.guideBegin = l.guideBegin;
-    if (l.guideEnd != -1)           dl.guideEnd = l.guideEnd;
-    if (l.guidePercent != -1.0f)    dl.guidePercent = l.guidePercent;
-
-    // Motion fields (easing empty, arc -1, pathRotate 0, drawPath 0, stagger NAN).
-    const Motion& m = d.motion;
-    Motion& dm = target.motion;
-    if (!m.mTransitionEasing.empty())   dm.mTransitionEasing = m.mTransitionEasing;
-    if (m.mPathMotionArc != -1)         dm.mPathMotionArc = m.mPathMotionArc;
-    if (m.mPathRotate != 0.0f)          dm.mPathRotate = m.mPathRotate;
-    if (m.mDrawPath != 0)               dm.mDrawPath = m.mDrawPath;
-    if (m.mAnimateRelativeTo != -1)     dm.mAnimateRelativeTo = m.mAnimateRelativeTo;
-    if (!std::isnan(m.mMotionStagger))  dm.mMotionStagger = m.mMotionStagger;
-
-    for (const auto& ca : d.mCustomAttributes) target.mCustomAttributes.push_back(ca);
     // Set-level customs (a ViewTransition's direct <CustomAttribute> children) apply to every target.
     for (const auto& ca : mCustomAttributes) target.mCustomAttributes.push_back(ca);
 }

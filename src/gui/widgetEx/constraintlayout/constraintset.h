@@ -15,6 +15,7 @@
 #include <functional>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include <widgetEx/constraintlayout/constraintlayout.h>
@@ -149,6 +150,10 @@ class ConstraintSet {
         Motion motion;
         std::vector<CustomAttribute> mCustomAttributes;
         int mViewId = -1;
+        // The XML attribute names this Constraint actually authored (populated by
+        // fillFromAttributeList). applyDelta copies only these fields onto a target, so a delta
+        // setting a field to its default value IS applied (precise), unlike a default-difference guess.
+        std::unordered_set<std::string> mAuthored;
 
         void fillFrom(int viewId, const ConstraintLayout::LayoutParams& param);
         void applyTo(ConstraintLayout::LayoutParams& param) const;

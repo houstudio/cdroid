@@ -21,6 +21,8 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 #include <widgetEx/constraintlayout/core/motion/oscillator.h>
 #include <widgetEx/constraintlayout/core/motion/splineset.h>
@@ -356,6 +358,60 @@ TEST(MotionMath, MotionKeyCycleAlpha) {
 
     MotionWidget atStart; m.interpolate(&atStart, 0.0f);
     EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
+}
+
+// A KeyTimeCycle keyframe is overlaid as a progress-keyed wave (MVP: same as Cycle, no phase field).
+// amplitude 0.3, period 2 → at progress 0.125 the wave is sin(π/2)=1, so alpha = base(1) + 0.3.
+TEST(MotionMath, MotionKeyTimeCycleAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyTimeCycle cyc;
+    cyc.mFramePosition = 50;
+    cyc.mAlpha = 0.3f;
+    cyc.mWavePeriod = 2.0f;
+    m.addKey(&cyc);
+
+    MotionWidget atEighth; m.interpolate(&atEighth, 0.125f);
+    EXPECT_NEAR(atEighth.getAlpha(), 1.3f, 0.01); // base(1) + sin(2π·0.125·2)·0.3 = 1 + sin(π/2)·0.3
+
+    MotionWidget atStart; m.interpolate(&atStart, 0.0f);
+    EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
+}
+
+// A KeyTrigger fires its mCross callback once while progress is within slack of the frame position,
+// then resets when progress leaves the slack band (so re-entering fires again).
+TEST(MotionMath, MotionKeyTriggerFiresOnCross) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyTrigger trig;
+    trig.mFramePosition = 50;       // frame at progress 0.5
+    trig.mCross = "onCross";
+    trig.mTriggerSlack = 0.1f;
+    m.addKey(&trig);
+
+    std::string fired;
+    int count = 0;
+    m.setTriggerListener([&](const std::string& name, float) { fired = name; count++; });
+
+    MotionWidget w;
+    m.interpolate(&w, 0.5f);             // within slack → fires
+    EXPECT_EQ(count, 1);
+    EXPECT_EQ(fired, "onCross");
+
+    m.interpolate(&w, 0.5f);             // still in slack, already fired → no re-fire
+    EXPECT_EQ(count, 1);
+
+    m.interpolate(&w, 0.0f);             // leave the slack band → reset
+    m.interpolate(&w, 0.5f);             // re-enter → fires again
+    EXPECT_EQ(count, 2);
 }
 
 // ---- SplineSet (spline-based keyframe interpolation) ----

@@ -33,6 +33,7 @@
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_VIEW_TRANSITION_CONTROLLER_H
 
 #include <memory>
+#include <unordered_set>
 #include <vector>
 
 #include <widgetEx/constraintlayout/sharedvalues.h>
@@ -64,6 +65,9 @@ class ViewTransitionController : public SharedValues::SharedValuesListener {
     // Programmatic fire (Android viewTransition(int, View...)): animate `views` per the ViewTransition
     // registered under `id`.
     void viewTransition(int id, const std::vector<View*>& views);
+    // Merge the keyframes of the ViewTransition registered under `id` into `mc` (Android
+    // applyViewTransition). Returns true if the ViewTransition was found.
+    bool applyViewTransition(int id, class Motion* mc);
 
     // Touch dispatch from MotionLayout::onInterceptTouchEvent.
     void touchEvent(const MotionEvent& evt);
@@ -93,6 +97,9 @@ class ViewTransitionController : public SharedValues::SharedValuesListener {
     bool mRelatedDirty = true;
     std::vector<std::unique_ptr<ViewTransition::Animate>> mAnimations;
     ValueAnimator* mAnimator = nullptr;                         // repeating frame-tick source
+    std::unordered_set<int> mListenedKeys; // shared-value keys this controller already listens on
+                                           // (dedup: the controller is a single SharedValuesListener,
+                                           // so two VTs sharing a key must register `this` only once)
     // For a sharedValueSet/Unset ViewTransition, register this controller as a SharedValues listener
     // for the VT's shared-value id.
     void listenForSharedVariable(ViewTransition* vt);

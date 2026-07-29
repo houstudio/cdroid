@@ -29,6 +29,8 @@
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
 #include <widgetEx/constraintlayout/core/motion/easing.h>
 #include <widgetEx/constraintlayout/core/motion/typedvalues.h>
 
@@ -175,6 +177,21 @@ void ViewTransition::applyTransition(ViewTransitionController* controller, Motio
     layout->transitionToEnd([this, views] { applyTagsToViews(views); });
 }
 
+bool ViewTransition::addAllFrames(Motion* mc) const {
+    if (mc == nullptr || mKeyFrames == nullptr) return false;
+    for (MotionKey* key : mKeyFrames->getAllKeys()) {
+        switch (key->mType) {
+        case MotionKeyAttributes::KEY_TYPE: mc->addKey(static_cast<MotionKeyAttributes*>(key)); break;
+        case MotionKeyPosition::KEY_TYPE:   mc->addKey(static_cast<MotionKeyPosition*>(key)); break;
+        case MotionKeyCycle::KEY_TYPE:      mc->addKey(static_cast<MotionKeyCycle*>(key)); break;
+        case MotionKeyTimeCycle::KEY_TYPE: mc->addKey(static_cast<MotionKeyTimeCycle*>(key)); break;
+        case MotionKeyTrigger::KEY_TYPE:  mc->addKey(static_cast<MotionKeyTrigger*>(key)); break;
+        default: break;
+        }
+    }
+    return true;
+}
+
 void ViewTransition::applyTagsToViews(const std::vector<View*>& views) {
     if (mSetsTag == UNSET && mClearsTag == UNSET) return;
     for (View* v : views) {
@@ -200,7 +217,9 @@ void ViewTransition::applyIndependentTransition(ViewTransitionController* contro
             case MotionKeyAttributes::KEY_TYPE: m->addKey(static_cast<MotionKeyAttributes*>(key)); break;
             case MotionKeyPosition::KEY_TYPE:   m->addKey(static_cast<MotionKeyPosition*>(key)); break;
             case MotionKeyCycle::KEY_TYPE:      m->addKey(static_cast<MotionKeyCycle*>(key)); break;
-            default: break; // KeyTimeCycle/KeyTrigger: deferred
+            case MotionKeyTimeCycle::KEY_TYPE: m->addKey(static_cast<MotionKeyTimeCycle*>(key)); break;
+            case MotionKeyTrigger::KEY_TYPE:  m->addKey(static_cast<MotionKeyTrigger*>(key)); break;
+            default: break;
             }
         }
     }

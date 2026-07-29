@@ -38,6 +38,9 @@ class KeyFrames {
     // Borrowed pointers to the keys targeting `viewId` (plus the apply-to-all UNSET keys). Caller
     // must not delete; KeyFrames retains ownership.
     std::vector<MotionKey*> getKeysForView(int viewId) const;
+    // Borrowed pointers to every key (all targets, flattened). Used by ViewTransition.addAllFrames
+    // to inject the whole KeyFrameSet into a single Motion (Android KeyFrames.addAllFrames).
+    std::vector<MotionKey*> getAllKeys() const;
     std::vector<int> getTargets() const;
 
   private:

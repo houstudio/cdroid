@@ -54,18 +54,22 @@ void ViewTransitionController::remove(int id) {
     auto it = std::find_if(mViewTransitions.begin(), mViewTransitions.end(),
                            [id](ViewTransition* vt) { return vt->getId() == id; });
     if (it != mViewTransitions.end()) {
-        ViewTransition* vt = *it;
-        if (vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_SET ||
-            vt->getStateTransition() == ViewTransition::ONSTATE_SHARED_VALUE_UNSET) {
-            ConstraintLayout::getSharedValues().removeListener(vt->getSharedValueID(), this);
-        }
+        // Note: we do NOT removeListener here. The controller is a single SharedValuesListener shared
+        // across every VT watching a given key; removing one VT must not silence the others on that
+        // key. The listener is left registered (harmless — onNewValue filters by mViewTransitions,
+        // which no longer contains `vt`), and ~ViewTransitionController removes `this` from all keys.
         mRelatedDirty = true;
         mViewTransitions.erase(it);
     }
 }
 
 void ViewTransitionController::listenForSharedVariable(ViewTransition* vt) {
-    ConstraintLayout::getSharedValues().addListener(vt->getSharedValueID(), this);
+    // Dedup: register `this` only once per key (the controller is a single listener; two VTs sharing
+    // a key would otherwise register it twice and onNewValue would fire each matching VT twice).
+    const int key = vt->getSharedValueID();
+    if (mListenedKeys.insert(key).second) {
+        ConstraintLayout::getSharedValues().addListener(key, this);
+    }
 }
 
 void ViewTransitionController::onNewValue(int key, int newValue, int /*oldValue*/) {
@@ -123,6 +127,13 @@ void ViewTransitionController::viewTransition(int id, const std::vector<View*>& 
         vt->applyTransition(this, mMotionLayout, currentId, current, views);
         return;
     }
+}
+
+bool ViewTransitionController::applyViewTransition(int id, Motion* mc) {
+    for (ViewTransition* vt : mViewTransitions) {
+        if (vt->getId() == id) return vt->addAllFrames(mc);
+    }
+    return false;
 }
 
 void ViewTransitionController::touchEvent(const MotionEvent& evt) {

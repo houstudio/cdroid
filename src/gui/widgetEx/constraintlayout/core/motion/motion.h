@@ -16,7 +16,9 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
 
+#include <functional>
 #include <memory>
+#include <string>
 #include <vector>
 
 #include <widgetEx/constraintlayout/core/motion/curvefit.h>
@@ -44,6 +46,21 @@ class Motion : public TypedValues {
     // Add a position keyframe (control point the widget passes through).
     void addKey(class MotionKeyPosition* key);
     void addKey(class MotionKeyCycle* key);
+    // MVP: a TimeCycle keyframe is overlaid as a Cycle-style wave (it has no phase field, so phase=0;
+    // Android keys the wave off absolute time, approximated here by progress).
+    void addKey(class MotionKeyTimeCycle* key);
+    // A Trigger keyframe fires a named callback when progress enters its slack band around the frame
+    // position (mCross) and on crossing it forward/backward (mPositiveCross / mNegativeCross). Android
+    // invokes the named method on the receiver view via reflection; CDROID has none, so the name is
+    // delivered to a TriggerListener the host wires up.
+    void addKey(class MotionKeyTrigger* key);
+
+    // Receiver for Trigger keyframe fires: (triggerName, progress). The host (MotionLayout/app)
+    // interprets the name — Motion itself does nothing but detect the crossing.
+    using TriggerListener = std::function<void(const std::string& triggerName, float position)>;
+    void setTriggerListener(TriggerListener listener) {
+        mTriggerListener = std::move(listener);
+    }
 
     // Build the interpolation tables. The MVP uses linear lerp (no tables); kept for API parity.
     void setup(int parentWidth, int parentHeight, float transitionDuration);
@@ -103,6 +120,9 @@ class Motion : public TypedValues {
     std::vector<class MotionKeyAttributes*> mAttributeKeys;
     std::vector<class MotionKeyPosition*> mPositionKeys;
     std::vector<class MotionKeyCycle*> mCycleKeys;
+    std::vector<class MotionKeyTimeCycle*> mTimeCycleKeys;
+    std::vector<class MotionKeyTrigger*> mTriggerKeys;
+    TriggerListener mTriggerListener;
     MotionPaths mStartMotionPath;
     MotionPaths mEndMotionPath;
     MotionConstrainedPoint mStartPoint;
