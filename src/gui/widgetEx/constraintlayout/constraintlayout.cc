@@ -339,22 +339,30 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         return (it != mIdToWidget.end()) ? it->second : nullptr;
     };
 
-    // Resolve effective Left/Right anchors. Explicit Left/Right wins; otherwise Start/End maps by
-    // the child's resolved layout direction (LTR: Start→Left, End→Right; RTL: Start→Right, End→Left).
-    // Faithful to AndroidX LayoutParams.resolveLayoutDirection (ConstraintLayout.java:3834-3922).
+    // Resolve effective Left/Right anchors. Per AndroidX LayoutParams.resolveLayoutDirection
+    // (ConstraintLayout.java:3834-3922): Start/End take precedence over Left/Right — if ANY Start/End
+    // anchor is set, Left/Right is ignored entirely; only when NO Start/End is present do Left/Right
+    // apply (the "all-or-nothing" fallback at 3898-3922). Start/End map by the child's resolved
+    // layout direction (LTR: Start→Left, End→Right; RTL: Start→Right, End→Left).
     const bool rtl = child->isLayoutRtl();
     const bool startEndDefined = (lp->startToStart != LayoutParams::UNSET)
             || (lp->startToEnd != LayoutParams::UNSET)
             || (lp->endToStart != LayoutParams::UNSET)
             || (lp->endToEnd != LayoutParams::UNSET);
-    int leftToLeftE  = rtl ? lp->endToEnd     : lp->startToStart;
-    int leftToRightE = rtl ? lp->endToStart   : lp->startToEnd;
-    int rightToLeftE = rtl ? lp->startToEnd   : lp->endToStart;
-    int rightToRightE= rtl ? lp->startToStart : lp->endToEnd;
-    if (lp->leftToLeft   != LayoutParams::UNSET) leftToLeftE  = lp->leftToLeft;
-    if (lp->leftToRight  != LayoutParams::UNSET) leftToRightE = lp->leftToRight;
-    if (lp->rightToLeft  != LayoutParams::UNSET) rightToLeftE = lp->rightToLeft;
-    if (lp->rightToRight != LayoutParams::UNSET) rightToRightE= lp->rightToRight;
+    int leftToLeftE, leftToRightE, rightToLeftE, rightToRightE;
+    if (startEndDefined) {
+        // Start/End precedence (per direction).
+        leftToLeftE  = rtl ? lp->endToEnd     : lp->startToStart;
+        leftToRightE = rtl ? lp->endToStart   : lp->startToEnd;
+        rightToLeftE = rtl ? lp->startToEnd   : lp->endToStart;
+        rightToRightE= rtl ? lp->startToStart : lp->endToEnd;
+    } else {
+        // No Start/End → fall back to explicit Left/Right.
+        leftToLeftE  = lp->leftToLeft;
+        leftToRightE = lp->leftToRight;
+        rightToLeftE = lp->rightToLeft;
+        rightToRightE= lp->rightToRight;
+    }
     // Effective gone margins: a Start/End gone margin resolves into Left/Right by direction, falling
     // back to the explicit goneLeft/goneRight when absent (AndroidX lines 3851-3856, 3890-3895).
     int goneLeftE  = lp->goneLeftMargin;

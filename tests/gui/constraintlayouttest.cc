@@ -308,6 +308,30 @@ TEST(ConstraintLayout, RtlBarrierStartBehavesAsRight) {
     EXPECT_EQ(tv->getWidth(), 500);
 }
 
+// Precedence (AndroidX ConstraintLayout.java:3898-3922): when BOTH a Start/End and a Left/Right
+// constraint target the same edge, Start/End wins and Left/Right is ignored. Anchor A spans 0..200;
+// W sets leftToLeft=A (→A.left=0) and startToEnd=A (LTR: Start→left = leftToRight=A → A.right=200).
+// Start/End wins → W.left = 200, not 0.
+TEST(ConstraintLayout, StartEndTakesPrecedenceOverLeftRight) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+
+    TextView* a = new TextView("A", 200, 50); a->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(200, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;  // A at 0..200
+    cl->addView(a, lpa);
+
+    TextView* w = new TextView("W", 100, 50); w->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->leftToLeft = 2;   // explicit Left/Right: left → A.left = 0
+    lp->startToEnd = 2;   // Start/End (wins): LTR Start→left = leftToRight=A → A.right = 200
+    cl->addView(w, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(w->getLeft(), 200);  // start/end precedence, not left/right (would be 0)
+}
+
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.
 // The child should fill from 300 to 600 → x=300, width=300.
 TEST(ConstraintLayout, GuidelinePositionsChild) {
