@@ -26,8 +26,8 @@
 #include <string>
 #include <vector>
 
-#include <core/attributeset.h>
 #include <view/view.h>
+#include <core/attributeset.h>
 #include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
 
 namespace cdroid {
@@ -71,13 +71,12 @@ class ConstraintHelper : public View {
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
-    void init(const AttributeSet& attrs);
+    virtual void init(const AttributeSet& attrs);
 
     std::vector<int> mIds;
     std::unique_ptr<HelperWidget> mHelperWidget;
     bool mUseViewMeasure = false;
     std::string mReferenceIds;
-
   private:
     void addRscID(int id);
     void addID(int id);

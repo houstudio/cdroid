@@ -1508,18 +1508,18 @@ public:
     float getTranslationX()const;
     float getTranslationY()const;
     float getTranslationZ()const;
-    void setTranslationX(float x);
-    void setTranslationY(float y);
-    void setTranslationZ(float z);
+    virtual void setTranslationX(float x);
+    virtual void setTranslationY(float y);
+    virtual void setTranslationZ(float z);
 
     float getScaleX()const;
-    void  setScaleX(float);
+    virtual void  setScaleX(float);
     float getScaleY()const;
-    void  setScaleY(float);
+    virtual void  setScaleY(float);
     float getPivotX()const;
-    void  setPivotX(float);
+    virtual void  setPivotX(float);
     float getPivotY()const;
-    void  setPivotY(float);
+    virtual void  setPivotY(float);
     bool  isPivotSet()const;
     void  resetPivot();
     float getAlpha()const;
@@ -1538,11 +1538,11 @@ public:
     void* getWindowId()const;
 
     float getRotation()const;
-    void  setRotation(float rotation);
+    virtual void  setRotation(float rotation);
     float getRotationX()const;
-    void  setRotationX(float);
+    virtual void  setRotationX(float);
     float getRotationY()const;
-    void  setRotationY(float);
+    virtual void  setRotationY(float);
     StateListAnimator* getStateListAnimator()const;
     void setStateListAnimator(StateListAnimator*);
     bool getClipToOutline()const;
