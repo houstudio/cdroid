@@ -1069,6 +1069,27 @@ TEST(ConstraintLayout, WrapContainerSizesToChild) {
 // ---- ConstraintSet ----
 
 // Build constraints programmatically and apply: connect both sides to parent -> centered.
+// ConstraintSet typed setters: centerHorizontally/Vertically + constrainWidth/Height build a set
+// programmatically; applyTo writes it onto the layout → the view centers in a 600×400 container.
+TEST(ConstraintLayout, ConstraintSetCenterHelpers) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    cl->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
+
+    ConstraintSet cs;
+    cs.constrainWidth(1, 100);
+    cs.constrainHeight(1, 50);
+    cs.centerHorizontally(1, ConstraintSet::PARENT);
+    cs.centerVertically(1, ConstraintSet::PARENT);
+    cs.applyTo(cl);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 250);  // (600 - 100) / 2
+    EXPECT_EQ(tv->getTop(), 175);   // (400 - 50) / 2
+}
+
 TEST(ConstraintLayout, ConstraintSetCentersChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);

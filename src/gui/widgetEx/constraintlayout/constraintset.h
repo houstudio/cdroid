@@ -21,8 +21,10 @@
  *
  * Programmatic capture + application of a ConstraintLayout's constraints. clone() snapshots a
  * layout's LayoutParams into a per-id Constraint model; applyTo() writes a Constraint set back onto
- * a layout's LayoutParams (then requestLayout). This is the core programmatic API; the XML
- * load(Context, int) parser and the long tail of typed setters are deferred.
+ * a layout's LayoutParams (then requestLayout). The full typed setter API (connect incl. START/END,
+ * center/centerHorizontally/Vertically, constrain* sizing/bias/weight/chain, setGuideline*,
+ * create/createBarrier, create*Chain, transform/property setters) mirrors AndroidX; XML load via an
+ * expat XmlPullParser and clone(Context, resource) round out the surface.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_SET_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_SET_H
@@ -230,6 +232,71 @@ class ConstraintSet {
     void setScaleY(int viewId, float scaleY);
     void setTranslationX(int viewId, float translationX);
     void setTranslationY(int viewId, float translationY);
+
+    // --- centering (built on connect + bias) ---
+    void center(int centerID, int firstID, int firstSide, int firstMargin,
+                int secondId, int secondSide, int secondMargin, float bias);
+    void centerHorizontally(int centerID, int leftId, int leftSide, int leftMargin,
+                            int rightId, int rightSide, int rightMargin, float bias);
+    void centerHorizontally(int viewId, int toView);  // simple: both sides to toView, bias 0.5
+    void centerHorizontallyRtl(int centerID, int startId, int startSide, int startMargin,
+                               int endId, int endSide, int endMargin, float bias);
+    void centerVertically(int centerID, int topId, int topSide, int topMargin,
+                          int bottomId, int bottomSide, int bottomMargin, float bias);
+    void centerVertically(int viewId, int toView);
+
+    // --- match-constraint sizing / bias / weight / chain style ---
+    void constrainDefaultWidth(int viewId, int width);
+    void constrainDefaultHeight(int viewId, int height);
+    void constrainMaxWidth(int viewId, int width);
+    void constrainMaxHeight(int viewId, int height);
+    void constrainMinWidth(int viewId, int width);
+    void constrainMinHeight(int viewId, int height);
+    void constrainPercentWidth(int viewId, float percent);
+    void constrainPercentHeight(int viewId, float percent);
+    void constrainedWidth(int viewId, bool constrained);
+    void constrainedHeight(int viewId, bool constrained);
+    void setHorizontalBias(int viewId, float bias);
+    void setVerticalBias(int viewId, float bias);
+    void setHorizontalWeight(int viewId, float weight);
+    void setVerticalWeight(int viewId, float weight);
+    void setHorizontalChainStyle(int viewId, int style);
+    void setVerticalChainStyle(int viewId, int style);
+    void setGoneMargin(int viewId, int anchor, int value);
+    void constrainCircle(int viewId, int id, int radius, float angle);
+
+    // --- guideline / barrier / helper ---
+    void setGuidelineBegin(int guidelineID, int margin);
+    void setGuidelineEnd(int guidelineID, int margin);
+    void setGuidelinePercent(int guidelineID, float percent);
+    void create(int guidelineID, int orientation);
+    void createBarrier(int id, int direction, int margin, const std::vector<int>& referenced);
+    void setReferencedIds(int viewId, const std::vector<int>& ids);
+    void setBarrierType(int viewId, int type);
+
+    // --- transform / property extras ---
+    void setTranslationZ(int viewId, float translationZ);
+    void setTransformPivotX(int viewId, float pivotX);
+    void setTransformPivotY(int viewId, float pivotY);
+    void setTransformPivot(int viewId, int target);
+    void setElevation(int viewId, float elevation);
+    void setApplyElevation(int viewId, bool apply);
+    void setVisibilityMode(int viewId, int mode);
+    void setProgress(int viewId, float progress);
+    void setEditorAbsoluteX(int viewId, int value);
+    void setEditorAbsoluteY(int viewId, int value);
+    void setLayoutWrapBehavior(int viewId, int value);
+
+    // --- chain creation (built on connect + weight/style) ---
+    void createVerticalChain(int topId, int topSide, int bottomId, int bottomSide,
+                             const std::vector<int>& chainIds,
+                             const std::vector<float>& weights, int style);
+    void createHorizontalChain(int leftId, int leftSide, int rightId, int rightSide,
+                               const std::vector<int>& chainIds,
+                               const std::vector<float>& weights, int style);
+    void createHorizontalChainRtl(int startId, int startSide, int endId, int endSide,
+                                  const std::vector<int>& chainIds,
+                                  const std::vector<float>& weights, int style);
 
   private:
     std::unordered_map<int, Constraint> mConstraints;

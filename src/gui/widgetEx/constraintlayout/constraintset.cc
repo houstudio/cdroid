@@ -329,6 +329,16 @@ void ConstraintSet::connect(int startID, int startSide, int endID, int endSide, 
     case BASELINE:
         l.baselineToBaseline = endID;
         break;
+    case START:
+        if (endSide == END) l.startToEnd = endID;
+        else l.startToStart = endID;
+        l.startMargin = margin;
+        break;
+    case END:
+        if (endSide == START) l.endToStart = endID;
+        else l.endToEnd = endID;
+        l.endMargin = margin;
+        break;
     default:
         LOGW("ConstraintSet.connect: unsupported side %d", startSide);
         break;
@@ -365,6 +375,15 @@ void ConstraintSet::setMargin(int viewId, int anchor, int value) {
         break;
     case BOTTOM:
         l.bottomMargin = value;
+        break;
+    case START:
+        l.startMargin = value;
+        break;
+    case END:
+        l.endMargin = value;
+        break;
+    case BASELINE:
+        l.baselineMargin = value;
         break;
     default:
         break;
@@ -405,6 +424,198 @@ void ConstraintSet::setTranslationX(int viewId, float translationX) {
 
 void ConstraintSet::setTranslationY(int viewId, float translationY) {
     get(viewId).transform.translationY = translationY;
+}
+
+// --- centering (built on connect + bias; faithful to AndroidX ConstraintSet) ---
+void ConstraintSet::center(int centerID, int firstID, int firstSide, int firstMargin,
+                           int secondId, int secondSide, int secondMargin, float bias) {
+    if (firstSide == LEFT || firstSide == RIGHT) {
+        connect(centerID, LEFT, firstID, firstSide, firstMargin);
+        connect(centerID, RIGHT, secondId, secondSide, secondMargin);
+        get(centerID).layout.horizontalBias = bias;
+    } else if (firstSide == START || firstSide == END) {
+        connect(centerID, START, firstID, firstSide, firstMargin);
+        connect(centerID, END, secondId, secondSide, secondMargin);
+        get(centerID).layout.horizontalBias = bias;
+    } else {
+        connect(centerID, TOP, firstID, firstSide, firstMargin);
+        connect(centerID, BOTTOM, secondId, secondSide, secondMargin);
+        get(centerID).layout.verticalBias = bias;
+    }
+}
+
+void ConstraintSet::centerHorizontally(int centerID, int leftId, int leftSide, int leftMargin,
+                                       int rightId, int rightSide, int rightMargin, float bias) {
+    connect(centerID, LEFT, leftId, leftSide, leftMargin);
+    connect(centerID, RIGHT, rightId, rightSide, rightMargin);
+    get(centerID).layout.horizontalBias = bias;
+}
+
+void ConstraintSet::centerHorizontally(int viewId, int toView) {
+    connect(viewId, LEFT, toView, LEFT, 0);
+    connect(viewId, RIGHT, toView, RIGHT, 0);
+    get(viewId).layout.horizontalBias = 0.5f;
+}
+
+void ConstraintSet::centerHorizontallyRtl(int centerID, int startId, int startSide, int startMargin,
+                                          int endId, int endSide, int endMargin, float bias) {
+    connect(centerID, START, startId, startSide, startMargin);
+    connect(centerID, END, endId, endSide, endMargin);
+    get(centerID).layout.horizontalBias = bias;
+}
+
+void ConstraintSet::centerVertically(int centerID, int topId, int topSide, int topMargin,
+                                     int bottomId, int bottomSide, int bottomMargin, float bias) {
+    connect(centerID, TOP, topId, topSide, topMargin);
+    connect(centerID, BOTTOM, bottomId, bottomSide, bottomMargin);
+    get(centerID).layout.verticalBias = bias;
+}
+
+void ConstraintSet::centerVertically(int viewId, int toView) {
+    connect(viewId, TOP, toView, TOP, 0);
+    connect(viewId, BOTTOM, toView, BOTTOM, 0);
+    get(viewId).layout.verticalBias = 0.5f;
+}
+
+// --- match-constraint sizing / bias / weight / chain style ---
+void ConstraintSet::constrainDefaultWidth(int viewId, int width)  { get(viewId).layout.widthDefault = width; }
+void ConstraintSet::constrainDefaultHeight(int viewId, int height){ get(viewId).layout.heightDefault = height; }
+void ConstraintSet::constrainMaxWidth(int viewId, int width)      { get(viewId).layout.widthMax = width; }
+void ConstraintSet::constrainMaxHeight(int viewId, int height)    { get(viewId).layout.heightMax = height; }
+void ConstraintSet::constrainMinWidth(int viewId, int width)      { get(viewId).layout.widthMin = width; }
+void ConstraintSet::constrainMinHeight(int viewId, int height)    { get(viewId).layout.heightMin = height; }
+void ConstraintSet::constrainPercentWidth(int viewId, float percent)  { get(viewId).layout.widthPercent = percent; }
+void ConstraintSet::constrainPercentHeight(int viewId, float percent){ get(viewId).layout.heightPercent = percent; }
+void ConstraintSet::constrainedWidth(int viewId, bool constrained)   { get(viewId).layout.constrainedWidth = constrained; }
+void ConstraintSet::constrainedHeight(int viewId, bool constrained)  { get(viewId).layout.constrainedHeight = constrained; }
+void ConstraintSet::setHorizontalBias(int viewId, float bias)     { get(viewId).layout.horizontalBias = bias; }
+void ConstraintSet::setVerticalBias(int viewId, float bias)       { get(viewId).layout.verticalBias = bias; }
+void ConstraintSet::setHorizontalWeight(int viewId, float weight) { get(viewId).layout.horizontalWeight = weight; }
+void ConstraintSet::setVerticalWeight(int viewId, float weight)   { get(viewId).layout.verticalWeight = weight; }
+void ConstraintSet::setHorizontalChainStyle(int viewId, int style){ get(viewId).layout.horizontalChainStyle = style; }
+void ConstraintSet::setVerticalChainStyle(int viewId, int style)  { get(viewId).layout.verticalChainStyle = style; }
+
+void ConstraintSet::setGoneMargin(int viewId, int anchor, int value) {
+    Layout& l = get(viewId).layout;
+    switch (anchor) {
+    case LEFT:    l.goneLeftMargin = value; break;
+    case RIGHT:   l.goneRightMargin = value; break;
+    case TOP:     l.goneTopMargin = value; break;
+    case BOTTOM:  l.goneBottomMargin = value; break;
+    case START:   l.goneStartMargin = value; break;
+    case END:     l.goneEndMargin = value; break;
+    case BASELINE:l.goneBaselineMargin = value; break;
+    default: break;
+    }
+}
+
+void ConstraintSet::constrainCircle(int viewId, int id, int radius, float angle) {
+    Layout& l = get(viewId).layout;
+    l.circleConstraint = id;
+    l.circleRadius = radius;
+    l.circleAngle = angle;
+}
+
+// --- guideline / barrier / helper ---
+void ConstraintSet::setGuidelineBegin(int guidelineID, int margin) {
+    Layout& l = get(guidelineID).layout;
+    l.guideBegin = margin;
+    l.guideEnd = -1;
+    l.guidePercent = -1.0f;
+}
+void ConstraintSet::setGuidelineEnd(int guidelineID, int margin) {
+    Layout& l = get(guidelineID).layout;
+    l.guideEnd = margin;
+    l.guideBegin = -1;
+    l.guidePercent = -1.0f;
+}
+void ConstraintSet::setGuidelinePercent(int guidelineID, float percent) {
+    Layout& l = get(guidelineID).layout;
+    l.guidePercent = percent;
+    l.guideBegin = -1;
+    l.guideEnd = -1;
+}
+void ConstraintSet::create(int guidelineID, int orientation) {
+    Layout& l = get(guidelineID).layout;
+    l.mIsGuideline = true;
+    l.orientation = orientation;
+}
+void ConstraintSet::createBarrier(int id, int direction, int margin, const std::vector<int>& referenced) {
+    Layout& l = get(id).layout;
+    l.mHelperType = BARRIER_TYPE;
+    l.mBarrierDirection = direction;
+    l.mBarrierMargin = margin;
+    l.mIsGuideline = false;
+    l.mReferenceIds = referenced;
+}
+void ConstraintSet::setReferencedIds(int viewId, const std::vector<int>& ids) {
+    get(viewId).layout.mReferenceIds = ids;
+}
+void ConstraintSet::setBarrierType(int viewId, int type) {
+    get(viewId).layout.mBarrierDirection = type;
+}
+
+// --- transform / property extras ---
+void ConstraintSet::setTranslationZ(int viewId, float translationZ) { get(viewId).transform.translationZ = translationZ; }
+void ConstraintSet::setTransformPivotX(int viewId, float pivotX)    { get(viewId).transform.transformPivotX = pivotX; }
+void ConstraintSet::setTransformPivotY(int viewId, float pivotY)    { get(viewId).transform.transformPivotY = pivotY; }
+void ConstraintSet::setTransformPivot(int viewId, int target)       { get(viewId).transform.transformPivotTarget = target; }
+void ConstraintSet::setElevation(int viewId, float elevation) {
+    Transform& t = get(viewId).transform;
+    t.elevation = elevation;
+    t.applyElevation = true;
+}
+void ConstraintSet::setApplyElevation(int viewId, bool apply) { get(viewId).transform.applyElevation = apply; }
+void ConstraintSet::setVisibilityMode(int viewId, int mode)   { get(viewId).propertySet.mVisibilityMode = mode; }
+void ConstraintSet::setProgress(int viewId, float progress)   { get(viewId).propertySet.mProgress = progress; }
+void ConstraintSet::setEditorAbsoluteX(int viewId, int value) { get(viewId).layout.editorAbsoluteX = value; }
+void ConstraintSet::setEditorAbsoluteY(int viewId, int value) { get(viewId).layout.editorAbsoluteY = value; }
+void ConstraintSet::setLayoutWrapBehavior(int viewId, int value) { get(viewId).layout.mWrapBehavior = value; }
+
+// --- chain creation (built on connect + weight/style; faithful to AndroidX) ---
+void ConstraintSet::createVerticalChain(int topId, int topSide, int bottomId, int bottomSide,
+                                        const std::vector<int>& chainIds,
+                                        const std::vector<float>& weights, int style) {
+    if (chainIds.size() < 2) return;
+    if (!weights.empty()) get(chainIds[0]).layout.verticalWeight = weights[0];
+    get(chainIds[0]).layout.verticalChainStyle = style;
+    connect(chainIds[0], TOP, topId, topSide, 0);
+    for (size_t i = 1; i < chainIds.size(); i++) {
+        connect(chainIds[i], TOP, chainIds[i - 1], BOTTOM, 0);
+        connect(chainIds[i - 1], BOTTOM, chainIds[i], TOP, 0);
+        if (!weights.empty()) get(chainIds[i]).layout.verticalWeight = weights[i];
+    }
+    connect(chainIds.back(), BOTTOM, bottomId, bottomSide, 0);
+}
+
+void ConstraintSet::createHorizontalChain(int leftId, int leftSide, int rightId, int rightSide,
+                                          const std::vector<int>& chainIds,
+                                          const std::vector<float>& weights, int style) {
+    if (chainIds.size() < 2) return;
+    if (!weights.empty()) get(chainIds[0]).layout.horizontalWeight = weights[0];
+    get(chainIds[0]).layout.horizontalChainStyle = style;
+    connect(chainIds[0], LEFT, leftId, leftSide, -1);
+    for (size_t i = 1; i < chainIds.size(); i++) {
+        connect(chainIds[i], LEFT, chainIds[i - 1], RIGHT, -1);
+        connect(chainIds[i - 1], RIGHT, chainIds[i], LEFT, -1);
+        if (!weights.empty()) get(chainIds[i]).layout.horizontalWeight = weights[i];
+    }
+    connect(chainIds.back(), RIGHT, rightId, rightSide, -1);
+}
+
+void ConstraintSet::createHorizontalChainRtl(int startId, int startSide, int endId, int endSide,
+                                             const std::vector<int>& chainIds,
+                                             const std::vector<float>& weights, int style) {
+    if (chainIds.size() < 2) return;
+    if (!weights.empty()) get(chainIds[0]).layout.horizontalWeight = weights[0];
+    get(chainIds[0]).layout.horizontalChainStyle = style;
+    connect(chainIds[0], START, startId, startSide, -1);
+    for (size_t i = 1; i < chainIds.size(); i++) {
+        connect(chainIds[i], START, chainIds[i - 1], END, -1);
+        connect(chainIds[i - 1], END, chainIds[i], START, -1);
+        if (!weights.empty()) get(chainIds[i]).layout.horizontalWeight = weights[i];
+    }
+    connect(chainIds.back(), END, endId, endSide, -1);
 }
 
 // ===========================================================================
