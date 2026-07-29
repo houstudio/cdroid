@@ -36,6 +36,7 @@
 #include <widgetEx/constraintlayout/helpers/flow.h>
 #include <widgetEx/constraintlayout/helpers/layer.h>
 #include <widgetEx/constraintlayout/helpers/circularflow.h>
+#include <widgetEx/constraintlayout/helpers/grid.h>
 #include <widgetEx/constraintlayout/motion/motioneffect.h>
 
 using namespace cdroid;
@@ -451,6 +452,49 @@ TEST(ConstraintLayout, MotionEffectVotesDirection) {
     EXPECT_EQ(MotionEffect::computeFadeDirection({D{0, -100}}), (int) MotionEffect::SOUTH);
     // Dominant direction across several views: two east-movers outweigh one south-mover → west.
     EXPECT_EQ(MotionEffect::computeFadeDirection({D{100, 0}, D{120, 0}, D{0, 50}}), (int) MotionEffect::WEST);
+}
+
+// Grid: arranges 4 referenced views into a 2×2 grid filling a 400×400 container. Grid creates
+// invisible box Views (columns chained horizontally, rows chained vertically, anchored to itself) and
+// constrains each view's 4 edges to box[col]/box[row], so each cell is 200×200. Box Views are added
+// during the first measure pass and solved on the second (faithful AndroidX box-View approach), so
+// the container is measured twice.
+TEST(ConstraintLayout, GridArrangesTwoByTwo) {
+    ConstraintLayout* cl = new ConstraintLayout(400, 400);
+    // Four 0dp (match_constraint) views that will fill their cells.
+    int ids[4] = {1, 2, 3, 4};
+    for (int i = 0; i < 4; i++) {
+        TextView* v = new TextView("X", 0, 0); v->setId(ids[i]);
+        cl->addView(v, new ConstraintLayout::LayoutParams(0, 0));
+    }
+    // Grid fills the container and references the four views in a 2×2 layout.
+    auto* grid = new Grid(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    grid->setId(10);
+    grid->setReferencedIds({1, 2, 3, 4});
+    grid->setColumns(2);  // rows auto-computed = 2 from 4 referenced views
+    auto* glp = new ConstraintLayout::LayoutParams(0, 0);
+    glp->leftToLeft = ConstraintLayout::PARENT_ID;
+    glp->rightToRight = ConstraintLayout::PARENT_ID;
+    glp->topToTop = ConstraintLayout::PARENT_ID;
+    glp->bottomToBottom = ConstraintLayout::PARENT_ID;
+    cl->addView(grid, glp);
+
+    // Pass 1 creates the box Views; pass 2 solves them and positions the referenced views.
+    cl->measure(exactly(400), exactly(400));
+    cl->measure(exactly(400), exactly(400));
+    cl->layout(0, 0, 400, 400);
+
+    TextView* v0 = (TextView*) cl->findViewById(1);
+    TextView* v1 = (TextView*) cl->findViewById(2);
+    TextView* v2 = (TextView*) cl->findViewById(3);
+    TextView* v3 = (TextView*) cl->findViewById(4);
+    ASSERT_NE(v0, nullptr);
+    // Cell (row,col): (0,0)=0..200, (0,1)=200..400, (1,0)=0..200y, (1,1)=200..400y.
+    EXPECT_NEAR(v0->getLeft(), 0,   2);   EXPECT_NEAR(v0->getTop(), 0,   2);
+    EXPECT_NEAR(v0->getWidth(), 200, 2);
+    EXPECT_NEAR(v1->getLeft(), 200, 2);   // col 1
+    EXPECT_NEAR(v2->getTop(), 200, 2);    // row 1
+    EXPECT_NEAR(v3->getLeft(), 200, 2);   EXPECT_NEAR(v3->getTop(), 200, 2);
 }
 
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.

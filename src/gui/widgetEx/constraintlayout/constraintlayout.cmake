@@ -23,6 +23,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/helpers/flow.cc
         widgetEx/constraintlayout/helpers/layer.cc
         widgetEx/constraintlayout/helpers/circularflow.cc
+        widgetEx/constraintlayout/helpers/grid.cc
         widgetEx/constraintlayout/motion/motioneffect.cc
 
         # --- core: solver math kernel + LinearSystem ---
