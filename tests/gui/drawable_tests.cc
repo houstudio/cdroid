@@ -141,12 +141,12 @@ TEST_F(DRAWABLE,bitmapalpha){
     d->setBounds(100,100,300,300);
     for(int alpha=255;alpha>0;alpha-=5){
         ctx->set_source_rgb(0,0,.5);
-        ctx->rectangle(0,0,500,500);
+        ctx->rectangle(10,100,500,500);
         ctx->fill();
         d->setAlpha(alpha);
         d->draw(*ctx);
         postCompose();
-        usleep(100*1000);
+        usleep(5000);
     }
 }
 
@@ -155,19 +155,30 @@ TEST_F(DRAWABLE,ninepatch1){
     Outline outline,outline2;
     d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     d->getOutline(outline);
-    d->setBounds(50,50,600,200);
-    d->getOutline(outline2);
-    d->draw(*ctx);
+    for(int i=0, w=d->getIntrinsicWidth(),h=d->getIntrinsicHeight();w<800;w+=20,i+=2){
+        ctx->set_source_rgb(.4,.4,.0);
+        ctx->rectangle(200,200,w,h+i);
+        ctx->fill();
+        d->setBounds(200,200,w,h+i);
+        d->getOutline(outline2);
+        d->draw(*ctx);
+        postCompose();
+        usleep(5000);
+    }
     delete d;
 }
 
 TEST_F(DRAWABLE,ninepatch2){
     NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
-    ctx->set_source_rgb(.4,.4,.0);
-    ctx->rectangle(0,0,700,300);
-    ctx->fill();
-    d->setBounds(50,50,600,200);
-    d->draw(*ctx);
+    for(int i=0, w=d->getIntrinsicWidth(),h=d->getIntrinsicHeight();w<800;w+=20,i+=2){
+        ctx->set_source_rgb(.4,.4,.0);
+        ctx->rectangle(200,200,w,h+i);
+        ctx->fill();
+        d->setBounds(200,200,w,h+i);
+        d->draw(*ctx);
+        postCompose();
+        usleep(5000);
+    }
     delete d;
 }
 
@@ -201,7 +212,7 @@ TEST_F(DRAWABLE,transition){
     td->setBounds(100,100,400,400);
     td->startTransition(5000);
     td->setCrossFadeEnabled(true);
-    for(int i=0;i<=500;i++){
+    for(int i=0;i<100;i++){
         ctx->set_source_rgb(1,1,1);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
@@ -223,7 +234,7 @@ TEST_F(DRAWABLE,rectshape){
         rs->draw(*ctx);
         ctx->fill();
         postCompose();
-        usleep(10000);
+        usleep(5000);
     }
 }
 
@@ -280,7 +291,7 @@ TEST_F(DRAWABLE,roundrectshape){
        ctx->stroke();
        ctx->restore();
        postCompose();
-       sleep(1);
+       usleep(20000);
     }
 }
 
@@ -314,7 +325,7 @@ TEST_F(DRAWABLE,ringshape){
        ctx->stroke();
        ctx->restore();
        postCompose();
-       sleep(1);
+       usleep(20000);
     }
 }
 
@@ -343,7 +354,7 @@ TEST_F(DRAWABLE,clipdrawable){
     sp->setStrokeSize(5);
     cd2->setBounds(500,50,300,300);
 
-    for(int i=0;i<=10000;i+=100){
+    for(int i=0;i<=10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
@@ -368,7 +379,7 @@ TEST_F(DRAWABLE,rotatedrawable){
     rt2->setBounds(360,100,300,300);
     rt2->setPivotX(.5);
     rt2->setPivotY(.5);
-    for(int i=0;i<=10000;i+=100){
+    for(int i=0;i<=10000;i+=200){
         ctx->set_source_rgb(0,0,0);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
@@ -482,7 +493,7 @@ TEST_F(DRAWABLE,inflateclip){
     Drawable*d=fromStream(text);
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
-    for(int i=0;i<10000;i+=100){
+    for(int i=0;i<10000;i+=200){
 	    ctx->set_source_rgb(0,0,0);
 	    ctx->rectangle(0,0,800,600);
 	    ctx->fill();
@@ -517,7 +528,7 @@ TEST_F(DRAWABLE,inflatelayer){
    ASSERT_EQ(2,ld->getNumberOfLayers());
    ClipDrawable*cd=dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(456));
    //cd->setGravity(Gravity::CENTER);
-   for(int i=0;i<10000;i+=100){
+   for(int i=0;i<10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
@@ -564,7 +575,7 @@ TEST_F(DRAWABLE,inflatetransition){
    ASSERT_EQ(0xFF00FF00,(unsigned int)cd->getColor());
    td->startTransition(5000);
    td->setCrossFadeEnabled(true);
-   for(int i=0;i<10000;i+=100){
+   for(int i=0;i<10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
@@ -604,7 +615,7 @@ TEST_F(DRAWABLE,gradient_alpha){
     GradientDrawable*gd=new GradientDrawable();
     gd->setBounds(50,50,500,500);
     gd->setShape(1);
-    for(int i=0;i<100;i++){
+    for(int i=0;i<100;i+=5){
         gd->setStroke(i*2+8,0xFFFFFFFF,i*2,i);
 
         ctx->set_source_rgb(0,0,0);
@@ -625,7 +636,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
     gd->setBounds(50,50,500,500);
     for(int shape=0;shape<4;shape++){
         gd->setShape(shape);
-        for(int i=0;i<100;i++){
+        for(int i=0;i<100;i+=5){
             gd->setStroke(i*2+8,0xFFFFFFFF,i*2,float(shape*2));
 
             ctx->set_source_rgb(0,0,0);
@@ -639,7 +650,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->draw(*ctx);
             ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
             postCompose();
-            usleep(10000);
+            usleep(5000);
         }
    }
 }

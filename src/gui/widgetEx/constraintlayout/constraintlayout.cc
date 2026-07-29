@@ -59,6 +59,13 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     leftToRight  = attrs.getResourceId("layout_constraintLeft_toRightOf",  UNSET);
     rightToLeft  = attrs.getResourceId("layout_constraintRight_toLeftOf",  UNSET);
     rightToRight = attrs.getResourceId("layout_constraintRight_toRightOf", UNSET);
+    // Start/End (RTL-aware) fallback when Left/Right isn't set — LTR resolution: Start→Left,
+    // End→Right. Modern layouts (and Android Studio's default) emit Start/End, so without this a
+    // 0dp view constrained only via Start/End gets no horizontal anchor → collapses to 0 width.
+    if (leftToLeft   == UNSET) leftToLeft   = attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
+    if (leftToRight  == UNSET) leftToRight  = attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
+    if (rightToLeft  == UNSET) rightToLeft  = attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
+    if (rightToRight == UNSET) rightToRight = attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
     topToTop     = attrs.getResourceId("layout_constraintTop_toTopOf",     UNSET);
     topToBottom  = attrs.getResourceId("layout_constraintTop_toBottomOf",  UNSET);
     bottomToTop  = attrs.getResourceId("layout_constraintBottom_toTopOf",  UNSET);
@@ -569,7 +576,7 @@ void ConstraintLayout::resolveMeasuredDimension(int widthSpec, int heightSpec,
     setMeasuredDimension(resolvedW, resolvedH);
 }
 
-void ConstraintLayout::onLayout(bool /*changed*/, int /*l*/, int /*t*/, int /*w*/, int /*h*/) {
+void ConstraintLayout::onLayout(bool /*changed*/, int l, int t, int width, int height) {
     const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
