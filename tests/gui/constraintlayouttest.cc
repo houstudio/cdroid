@@ -143,6 +143,171 @@ TEST(ConstraintLayout, MatchConstraintFills) {
     EXPECT_EQ(tv->getWidth(), 600);
 }
 
+// RTL: start_toStartOf=parent pins the widget's Start edge to the parent's Start edge. In RTL
+// Start = Right, so a 100-wide widget lands at x = 600 - 100 = 500 (mirrored vs LTR's x=0).
+TEST(ConstraintLayout, RtlStartToStartPinsRight) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->startToStart = ConstraintLayout::PARENT_ID;  // Start→Right under RTL
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 500);  // mirrored: right-aligned instead of left
+}
+
+// RTL: start_toStartOf + end_toEndOf = parent pins both horizontal edges. With horizontalBias=0.3
+// the bias mirrors to 1 - 0.3 = 0.7, so a 100-wide widget in a 600-wide RTL container lands at
+// left = 0.7 * (600 - 100) = 350 (vs 150 in LTR). Faithful to AndroidX validate() line 3858.
+TEST(ConstraintLayout, RtlBiasMirrors) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->startToStart = ConstraintLayout::PARENT_ID;
+    lp->endToEnd = ConstraintLayout::PARENT_ID;
+    lp->horizontalBias = 0.3f;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 350);  // mirrored bias 0.7 → 0.7*500
+}
+
+// RTL: end_toEndOf=parent → End maps to Left under RTL, so a 100-wide widget lands at x=0.
+TEST(ConstraintLayout, RtlEndToEndPinsLeft) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    TextView* tv = new TextView("X", 100, 50); tv->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(100, 50);
+    lp->endToEnd = ConstraintLayout::PARENT_ID;  // End→Left under RTL
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 0);  // mirrored: left-aligned
+}
+
+// RTL: a vertical Guideline with guide_begin=100 mirrors to guide_end=100, i.e. positioned 100 from
+// the right edge → x = 600 - 100 = 500. A 0dp child constrained left=guideline, right=parent fills
+// 500..600 → x=500, width=100.
+TEST(ConstraintLayout, RtlGuidelineBeginMirrorsToEnd) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+
+    View* gl = new View(0, 0); gl->setId(10);
+    auto* glp = new ConstraintLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    glp->orientation = ConstraintWidget::VERTICAL;
+    glp->guideBegin = 100;
+    glp->validate();
+    cl->addView(gl, glp);
+
+    TextView* tv = new TextView("X", 0, 50); tv->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = 10;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 500);
+    EXPECT_EQ(tv->getWidth(), 100);
+}
+
+// RTL: a packed horizontal chain defined with Start/End anchors reverses element order. In LTR the
+// head sits on the left (a left of b); under RTL the head moves to the right (a right of b).
+TEST(ConstraintLayout, RtlHorizontalChainReverses) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50);
+    lpa->startToStart = ConstraintLayout::PARENT_ID;
+    lpa->endToStart = 2;
+    lpa->horizontalChainStyle = ConstraintWidget::CHAIN_PACKED;
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50);
+    lpb->startToEnd = 1;
+    lpb->endToEnd = ConstraintLayout::PARENT_ID;
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // Reversed: a (the chain head in LTR) is now to the right of b.
+    EXPECT_GT(a->getLeft(), b->getLeft());
+}
+
+// RTL: layout_goneMarginStart resolves to the right-side gone margin. Target T is GONE; child C is
+// constrained start-to-end-of T. With goneMarginStart=60, in RTL C sits to T's left with that gap.
+TEST(ConstraintLayout, RtlGoneStartMarginResolves) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+
+    // T: 100 wide, pinned to parent start (= right under RTL), made GONE.
+    TextView* t = new TextView("T", 100, 50); t->setId(2);
+    auto* lpt = new ConstraintLayout::LayoutParams(100, 50);
+    lpt->startToStart = ConstraintLayout::PARENT_ID;
+    t->setVisibility(View::GONE);
+    cl->addView(t, lpt);
+
+    // C: 100 wide, start-to-end-of T, with goneMarginStart=60 (→ right-side gone under RTL).
+    TextView* c = new TextView("C", 100, 50); c->setId(1);
+    auto* lpc = new ConstraintLayout::LayoutParams(100, 50);
+    lpc->startToEnd = 2;
+    lpc->goneStartMargin = 60;
+    cl->addView(c, lpc);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // T is GONE at the start (right): gone margin (60) sits between C and the parent's right edge.
+    // C's right edge lands at 600 - 60 = 540 → C at x=440.
+    EXPECT_EQ(c->getLeft(), 440);
+}
+
+// RTL: a Barrier of type START resolves to RIGHT, so it sits at the rightmost right edge of its
+// referenced widgets (here the left-pinned set spans 0..100, so the RIGHT barrier is at x=100). A
+// 0dp child constrained left-of-barrier, right-of-parent fills 100..600.
+TEST(ConstraintLayout, RtlBarrierStartBehavesAsRight) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
+
+    // Referenced widget pinned to the LEFT (explicit left/right are not mirrored): 0..100.
+    TextView* w1 = new TextView("1", 100, 50); w1->setId(1);
+    auto* lp1 = new ConstraintLayout::LayoutParams(100, 50);
+    lp1->leftToLeft = ConstraintLayout::PARENT_ID;
+    cl->addView(w1, lp1);
+
+    // Barrier START → under RTL behaves as RIGHT → at the rightmost right edge = x=100.
+    Barrier* barrier = new Barrier(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    barrier->setId(10);
+    barrier->setType(Barrier::START);
+    barrier->setReferencedIds({1});
+    cl->addView(barrier);
+
+    // Child: left-to-right-of barrier, 0dp, right=parent → fills barrier(100)..parent-right(600).
+    TextView* tv = new TextView("X", 0, 50); tv->setId(3);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToRight = 10;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // Barrier at x=100; child fills 100..600 → x=100, width=500.
+    EXPECT_EQ(tv->getLeft(), 100);
+    EXPECT_EQ(tv->getWidth(), 500);
+}
+
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.
 // The child should fill from 300 to 600 → x=300, width=300.
 TEST(ConstraintLayout, GuidelinePositionsChild) {

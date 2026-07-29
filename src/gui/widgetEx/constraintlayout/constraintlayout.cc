@@ -59,13 +59,14 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     leftToRight  = attrs.getResourceId("layout_constraintLeft_toRightOf",  UNSET);
     rightToLeft  = attrs.getResourceId("layout_constraintRight_toLeftOf",  UNSET);
     rightToRight = attrs.getResourceId("layout_constraintRight_toRightOf", UNSET);
-    // Start/End (RTL-aware) fallback when Left/Right isn't set — LTR resolution: Start→Left,
-    // End→Right. Modern layouts (and Android Studio's default) emit Start/End, so without this a
-    // 0dp view constrained only via Start/End gets no horizontal anchor → collapses to 0 width.
-    if (leftToLeft   == UNSET) leftToLeft   = attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
-    if (leftToRight  == UNSET) leftToRight  = attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
-    if (rightToLeft  == UNSET) rightToLeft  = attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
-    if (rightToRight == UNSET) rightToRight = attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
+    // Start/End (RTL-aware) — stored raw; resolved to Left/Right at measure time in
+    // applyConstraintsFromLayoutParams based on the container's isRtl(). Explicit Left/Right
+    // overrides these. Modern layouts emit Start/End, so without reading them a 0dp view
+    // constrained only via Start/End gets no horizontal anchor → collapses to 0 width.
+    startToStart = attrs.getResourceId("layout_constraintStart_toStartOf", UNSET);
+    startToEnd   = attrs.getResourceId("layout_constraintStart_toEndOf",   UNSET);
+    endToStart   = attrs.getResourceId("layout_constraintEnd_toStartOf",   UNSET);
+    endToEnd     = attrs.getResourceId("layout_constraintEnd_toEndOf",     UNSET);
     topToTop     = attrs.getResourceId("layout_constraintTop_toTopOf",     UNSET);
     topToBottom  = attrs.getResourceId("layout_constraintTop_toBottomOf",  UNSET);
     bottomToTop  = attrs.getResourceId("layout_constraintBottom_toTopOf",  UNSET);
@@ -80,11 +81,15 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
     goneTopMargin    = attrs.getDimensionPixelSize("layout_goneMarginTop",    GONE_UNSET);
     goneRightMargin  = attrs.getDimensionPixelSize("layout_goneMarginRight",  GONE_UNSET);
     goneBottomMargin = attrs.getDimensionPixelSize("layout_goneMarginBottom", GONE_UNSET);
+    // RTL-aware gone margins (resolved to goneLeft/goneRight at measure time per layout direction).
+    goneStartMargin  = attrs.getDimensionPixelSize("layout_goneMarginStart", GONE_UNSET);
+    goneEndMargin    = attrs.getDimensionPixelSize("layout_goneMarginEnd",   GONE_UNSET);
 
     // Guideline
     guideBegin   = attrs.getDimensionPixelSize("layout_constraintGuide_begin", UNSET);
     guideEnd     = attrs.getDimensionPixelSize("layout_constraintGuide_end",   UNSET);
     guidePercent = attrs.getFloat("layout_constraintGuide_percent", UNSET_FLOAT);
+    guidelineUseRtl = attrs.getBoolean("layout_guidelineUseRtl", true);
     // Orientation: bare key (namespace stripped) + map so "vertical"/"horizontal"
     // resolve (plain getInt treats a leading letter as non-numeric → def).
     // Mirrors LinearLayout; -1 (absent) falls back to HORIZONTAL in validate().
@@ -298,8 +303,22 @@ void ConstraintLayout::setChildrenConstraints() {
 void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintWidget* widget,
         LayoutParams* lp) {
     if (lp->mIsGuideline) {
-        // Guideline: orientation + begin/end/percent set in validate(). Guideline::addToSolver
-        // (virtual override) handles positioning; skip normal anchor/dimension logic.
+        // Guideline: orientation + begin/end/percent set in validate(). Override the positioning
+        // values here with the layout-direction-resolved ones so a vertical Guideline mirrors under
+        // RTL when guidelineUseRtl is set (AndroidX lines 1376-1390 read mResolvedGuide*):
+        //   percent → 1 - percent, begin ↔ end swap. Horizontal guidelines are unaffected.
+        if (auto* g = dynamic_cast<clcore::Guideline*>(widget)) {
+            const bool rtlGuide = child->isLayoutRtl() && lp->guidelineUseRtl
+                    && lp->orientation == ConstraintWidget::VERTICAL;
+            if (lp->guidePercent != LayoutParams::UNSET_FLOAT) {
+                g->setGuidePercent(rtlGuide ? 1.0f - lp->guidePercent : lp->guidePercent);
+            } else if (lp->guideBegin != LayoutParams::UNSET) {
+                if (rtlGuide) g->setGuideEnd(lp->guideBegin);   else g->setGuideBegin(lp->guideBegin);
+            } else if (lp->guideEnd != LayoutParams::UNSET) {
+                if (rtlGuide) g->setGuideBegin(lp->guideEnd);   else g->setGuideEnd(lp->guideEnd);
+            }
+        }
+        // Guideline::addToSolver (virtual override) handles positioning; skip anchor/dimension logic.
         return;
     }
     widget->setVisibility(child->getVisibility());
@@ -320,22 +339,50 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         return (it != mIdToWidget.end()) ? it->second : nullptr;
     };
 
+    // Resolve effective Left/Right anchors. Explicit Left/Right wins; otherwise Start/End maps by
+    // the child's resolved layout direction (LTR: Start→Left, End→Right; RTL: Start→Right, End→Left).
+    // Faithful to AndroidX LayoutParams.resolveLayoutDirection (ConstraintLayout.java:3834-3922).
+    const bool rtl = child->isLayoutRtl();
+    const bool startEndDefined = (lp->startToStart != LayoutParams::UNSET)
+            || (lp->startToEnd != LayoutParams::UNSET)
+            || (lp->endToStart != LayoutParams::UNSET)
+            || (lp->endToEnd != LayoutParams::UNSET);
+    int leftToLeftE  = rtl ? lp->endToEnd     : lp->startToStart;
+    int leftToRightE = rtl ? lp->endToStart   : lp->startToEnd;
+    int rightToLeftE = rtl ? lp->startToEnd   : lp->endToStart;
+    int rightToRightE= rtl ? lp->startToStart : lp->endToEnd;
+    if (lp->leftToLeft   != LayoutParams::UNSET) leftToLeftE  = lp->leftToLeft;
+    if (lp->leftToRight  != LayoutParams::UNSET) leftToRightE = lp->leftToRight;
+    if (lp->rightToLeft  != LayoutParams::UNSET) rightToLeftE = lp->rightToLeft;
+    if (lp->rightToRight != LayoutParams::UNSET) rightToRightE= lp->rightToRight;
+    // Effective gone margins: a Start/End gone margin resolves into Left/Right by direction, falling
+    // back to the explicit goneLeft/goneRight when absent (AndroidX lines 3851-3856, 3890-3895).
+    int goneLeftE  = lp->goneLeftMargin;
+    int goneRightE = lp->goneRightMargin;
+    if (rtl) {
+        if (lp->goneEndMargin   != LayoutParams::GONE_UNSET) goneLeftE  = lp->goneEndMargin;
+        if (lp->goneStartMargin != LayoutParams::GONE_UNSET) goneRightE = lp->goneStartMargin;
+    } else {
+        if (lp->goneStartMargin != LayoutParams::GONE_UNSET) goneLeftE  = lp->goneStartMargin;
+        if (lp->goneEndMargin   != LayoutParams::GONE_UNSET) goneRightE = lp->goneEndMargin;
+    }
+
     // Left (leftToLeft preferred over leftToRight)
-    if (lp->leftToLeft != LayoutParams::UNSET || lp->leftToRight != LayoutParams::UNSET) {
-        bool toLeft = (lp->leftToLeft != LayoutParams::UNSET);
-        int tid = toLeft ? lp->leftToLeft : lp->leftToRight;
+    if (leftToLeftE != LayoutParams::UNSET || leftToRightE != LayoutParams::UNSET) {
+        bool toLeft = (leftToLeftE != LayoutParams::UNSET);
+        int tid = toLeft ? leftToLeftE : leftToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
             widget->mLeft.connect(toLeft ? &t->mLeft : &t->mRight,
-                                  lp->leftMargin, lp->goneLeftMargin, true);
+                                  lp->leftMargin, goneLeftE, true);
         }
     }
     // Right
-    if (lp->rightToLeft != LayoutParams::UNSET || lp->rightToRight != LayoutParams::UNSET) {
-        bool toLeft = (lp->rightToLeft != LayoutParams::UNSET);
-        int tid = toLeft ? lp->rightToLeft : lp->rightToRight;
+    if (rightToLeftE != LayoutParams::UNSET || rightToRightE != LayoutParams::UNSET) {
+        bool toLeft = (rightToLeftE != LayoutParams::UNSET);
+        int tid = toLeft ? rightToLeftE : rightToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
             widget->mRight.connect(toLeft ? &t->mLeft : &t->mRight,
-                                   lp->rightMargin, lp->goneRightMargin, true);
+                                   lp->rightMargin, goneRightE, true);
         }
     }
     // Top
@@ -357,7 +404,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         }
     }
 
-    widget->mHorizontalBiasPercent = lp->horizontalBias;
+    // Horizontal bias mirrors under RTL when the constraint came from Start/End anchors, since bias
+    // is measured from the left anchor and the anchor pair itself is mirrored (AndroidX line 3858).
+    widget->mHorizontalBiasPercent = (startEndDefined && rtl) ? 1.0f - lp->horizontalBias
+                                                              : lp->horizontalBias;
     widget->mVerticalBiasPercent = lp->verticalBias;
 
     // Dimension behaviour
@@ -470,6 +520,11 @@ void ConstraintLayout::didMeasures() {
 }
 
 void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+    // Propagate this view's resolved layout direction to the core container BEFORE building child
+    // constraints. AndroidX sets container RTL at the top of onMeasure (ConstraintLayout.java:1852),
+    // ahead of updateHierarchy — Start/End anchor resolution, chains (ChainHead) and helpers
+    // (Barrier.resolveRtl) all read mLayoutWidget.isRtl() during setChildrenConstraints().
+    mLayoutWidget.setRtl(isLayoutRtl());
     setChildrenConstraints();
     resolveSystem(widthMeasureSpec, heightMeasureSpec);
     // Placeholders adopt their content's resolved size post-solve (single pass; the Java re-measure

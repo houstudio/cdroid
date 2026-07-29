@@ -48,6 +48,9 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
         int leftToLeft = UNSET, leftToRight = UNSET;
         int rightToLeft = UNSET, rightToRight = UNSET;
+        // RTL-aware Start/End anchors (resolved to Left/Right at measure time via isRtl()).
+        int startToStart = UNSET, startToEnd = UNSET;
+        int endToStart = UNSET, endToEnd = UNSET;
         int topToTop = UNSET, topToBottom = UNSET;
         int bottomToTop = UNSET, bottomToBottom = UNSET;
 
@@ -58,6 +61,8 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
         int goneLeftMargin = GONE_UNSET, goneTopMargin = GONE_UNSET;
         int goneRightMargin = GONE_UNSET, goneBottomMargin = GONE_UNSET;
+        // RTL-aware gone margins (resolved to goneLeft/goneRight at measure time via layout direction).
+        int goneStartMargin = GONE_UNSET, goneEndMargin = GONE_UNSET;
 
         bool mHorizontalDimensionFixed = true;
         bool mVerticalDimensionFixed = true;
@@ -71,6 +76,8 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
         int guideBegin = UNSET, guideEnd = UNSET;
         float guidePercent = UNSET_FLOAT;
         int orientation = -1;
+        // Whether a vertical Guideline mirrors begin/end + percent under RTL (AndroidX default true).
+        bool guidelineUseRtl = true;
 
         // ratio ("layout_constraintDimensionRatio")
         float dimensionRatio = 0;
@@ -106,7 +113,6 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
         LayoutParams(int width, int height);
         void validate();
 
-      private:
         static constexpr float UNSET_FLOAT = -1.0f;
     };
 

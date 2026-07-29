@@ -64,13 +64,14 @@ void Barrier::setType(int type) {
     updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
 }
 
-void Barrier::updateType(ConstraintWidget* widget, int type, bool /*isRtl*/) {
+void Barrier::updateType(ConstraintWidget* widget, int type, bool isRtl) {
     mResolvedType = type;
-    // CDROID is LTR-only for now (no JB-MR1 RTL resolution). START -> LEFT, END -> RIGHT.
+    // RTL resolution: START/END are direction-relative. LTR: START→LEFT, END→RIGHT; under RTL they
+    // swap (faithful to AndroidX Barrier, gated on the container's resolved layout direction).
     if (mIndicatedType == START) {
-        mResolvedType = LEFT;
+        mResolvedType = isRtl ? RIGHT : LEFT;
     } else if (mIndicatedType == END) {
-        mResolvedType = RIGHT;
+        mResolvedType = isRtl ? LEFT : RIGHT;
     }
     if (auto* barrier = dynamic_cast<clcore::Barrier*>(widget)) {
         barrier->setBarrierType(mResolvedType);
