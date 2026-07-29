@@ -18,7 +18,7 @@
 
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintLayout.
- * MVP cut — see header.
+ * Faithful port — see header for the supported feature surface.
  */
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <core/xmlpullparser.h>
@@ -553,7 +553,8 @@ void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* 
 }
 
 void ConstraintLayout::didMeasures() {
-    // MVP: no Placeholder/ConstraintHelper post-measure hooks.
+    // No-op: Placeholder/helper post-measure work is driven directly from onMeasure
+    // (Placeholder::updatePostMeasure loop + the helper updatePostLayout pass in onLayout).
 }
 
 void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
@@ -564,8 +565,8 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     mLayoutWidget.setRtl(isLayoutRtl());
     setChildrenConstraints();
     resolveSystem(widthMeasureSpec, heightMeasureSpec);
-    // Placeholders adopt their content's resolved size post-solve (single pass; the Java re-measure
-    // loop is deferred, so this runs once after the linear solve).
+    // Placeholders adopt their content's resolved size post-solve (BasicMeasure's match-constraint
+    // convergence loop runs before this; Placeholder itself needs a single post-solve adoption).
     const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         if (auto* placeholder = dynamic_cast<Placeholder*>(getChildAt(i))) {
@@ -613,9 +614,9 @@ void ConstraintLayout::resolveSystem(int widthSpec, int heightSpec) {
 
     setSelfDimensionBehaviour(widthMode, widthSize, heightMode, heightSize);
 
-    // MVP: optimization off (linear solve only). padding offset (paddingLeft/paddingTop) is not
-    // forwarded to the solver here — the MVP driver sites the container at (0,0); samples use no
-    // padding. TODO: pass padding so children come out parent-relative.
+    // OPTIMIZATION_GRAPH off (linear solve only). Known gap: padding offset (paddingLeft/paddingTop)
+    // is not forwarded to the solver here — the driver sites the container at (0,0); layouts with
+    // CL padding don't offset children correctly. TODO: pass padding so children come out parent-relative.
     mLayoutWidget.measure(Optimizer::OPTIMIZATION_NONE,
                           paddingLeft, paddingTop,
                           widthMode, widthSize, heightMode, heightSize,

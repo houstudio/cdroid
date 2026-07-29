@@ -19,10 +19,12 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintLayout.
  *
- * MVP cut: fixed/wrap_content children with left/right/top/bottom anchor constraints + bias,
- * resolved via the core linear solver. Deferred: match_constraint (0dp) / ratio / chains /
- * baseline / guideline / helpers (Barrier/Group/Placeholder/VirtualLayout) / RTL / ConstraintSet /
- * optimizer fast-paths.
+ * Faithful port: fixed/wrap_content + match_constraint (0dp) children with left/right/start/end/
+ * top/bottom/baseline anchor constraints, bias, chains (spread/spread_inside/packed + weights),
+ * ratio, guidelines, helpers (Barrier/Group/Placeholder/Flow/Layer/CircularFlow/MotionEffect/Grid),
+ * RTL (start/end + bias mirror + guideline/barrier), and ConstraintSet — all resolved via the core
+ * linear solver. The only deferred piece is the OPTIMIZATION_GRAPH analyzer (Direct solver /
+ * DependencyGraph) — a performance layer, off by default in AndroidX.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_H

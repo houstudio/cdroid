@@ -24,8 +24,8 @@
  * Motion engine interpolates between two points; different()/fillStandard() feed the curve-fit
  * solver array. applyParameters()/setState() read the state from a MotionWidget.
  *
- * Deferred: addValues(HashMap<String,SplineSet>) — the spline-set build path (SplineSet ported
- * later); setState(Rect, ...) — screen-rotation variant.
+ * addValues(HashMap<String,SplineSet>) is unused — Motion interpolates via its CurveFit path, not
+ * per-point SplineSet population (SplineSet is ported for the cycle path).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_CONSTRAINED_POINT_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_CONSTRAINED_POINT_H
@@ -40,7 +40,7 @@
 namespace cdroid {
 
 class MotionWidget;
-class SplineSet; // forward — addValues is stubbed until the spline-set system is ported
+class SplineSet; // forward — addValues() is unused (Motion interpolates via CurveFit; SplineSet itself is ported)
 
 class MotionConstrainedPoint {
   public:

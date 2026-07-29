@@ -57,7 +57,8 @@ Barrier::Barrier(Context* ctx, const AttributeSet& attrs)
     int margin = attrs.getDimensionPixelSize("barrierMargin", 0);
     static_cast<clcore::Barrier*>(mHelperWidget.get())->setMargin(margin);
 
-    // Resolve the indicated type against the (deferred) RTL flag. LTR: START->LEFT, END->RIGHT.
+    // Default to LTR here (START->LEFT, END->RIGHT); the bridge re-resolves via resolveRtl() with
+    // the container's real direction at measure time (START->RIGHT/END->LEFT under RTL).
     updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
     validateParams();
 }

@@ -52,8 +52,10 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* constraintWidgetCon
 
     for (int i = 0; i < chainsSize; i++) {
         ChainHead* first = (*chainsArray)[i];
-        // define() here: values may not be correctly initialized otherwise (they are set in
-        // ConstraintWidget.addToSolver(), which is still stubbed).
+        // define() ensures chain-head values are initialized (on the Java side some are populated
+        // during addToSolver; the CDROID bridge wires regular widgets' anchors directly, so the
+        // base ConstraintWidget::addToSolver is an intentional no-op — only Guideline/VirtualLayout/
+        // Barrier override it).
         first->define();
         if (widgets == nullptr
                 || std::find(widgets->begin(), widgets->end(), first->mFirst) != widgets->end()) {

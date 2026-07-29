@@ -20,9 +20,9 @@
  * Ported to C++ for CDROID from androidx.constraintlayout.core.motion.key.MotionKeyPosition.
  *
  * A position keyframe: defines an intermediate control point the widget passes through during the
- * transition. percentX/percentY are in the start→end path's coordinate frame (cartesian mode);
- * Motion converts them to absolute (x,y) and interpolates piecewise-linearly through
- * [start, control points, end]. Other modes (path/screen/axis) deferred.
+ * transition. All four modes are supported — CARTESIAN (percent in the start→end frame), PATH,
+ * AXIS, and SCREEN (relative to the parent) — converted to absolute (x,y) in Motion::buildPath
+ * and interpolated (spline/arc) through [start, control points, end].
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_POSITION_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_POSITION_H

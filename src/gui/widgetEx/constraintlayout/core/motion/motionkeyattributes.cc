@@ -45,8 +45,8 @@ void MotionKeyAttributes::getAttributeNames(std::unordered_set<std::string>& att
 }
 
 void MotionKeyAttributes::addValues(std::unordered_map<std::string, SplineSet*>& /*splines*/) {
-    // TODO: populate SplineSets (port with the spline-set system). Motion's MVP applies these
-    // keyframes via piecewise-linear interpolation in Motion::interpolate instead.
+    // Unused: Motion applies attribute keyframes via its CurveFit (spline) interpolation path in
+    // Motion::interpolate, not via per-key SplineSet population. SplineSet is ported for cycles.
 }
 
 MotionKey* MotionKeyAttributes::clone() const {

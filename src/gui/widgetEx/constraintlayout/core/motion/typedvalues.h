@@ -25,8 +25,8 @@
  * getType() reports the value's type mask. The base TypedValues is the setValue interface
  * implemented by TypedBundle / MotionWidget / Motion.
  *
- * MVP: only the AttributesType (KeyAttributes) constants are exercised by the initial Motion
- * engine; the other categories are ported for completeness but not yet wired.
+ * All categories are wired: AttributesType (KeyAttributes), PositionType (KeyPosition), and the
+ * Cycle/TimeCycle/Trigger types are consumed by the Motion interpolation path.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_TYPED_VALUES_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_TYPED_VALUES_H

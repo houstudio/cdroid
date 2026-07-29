@@ -24,9 +24,11 @@
  * read), building a per-child Motion controller; setProgress(p) then drives every Motion and
  * writes the interpolated position + transforms back onto the views.
  *
- * MVP: programmatic start/end ConstraintSets + linear interpolation (the Motion engine's MVP).
- * Deferred: MotionScene/Transition JSON loading (core.state), keyframes, arc/eased paths, and the
- * animation/touch decoupling (transitionTo* with duration + Choreographer pacing).
+ * Ported: programmatic setTransition(start,end) + XML MotionScene, per-child keyframes
+ * (KeyAttributes/Position/Cycle/TimeCycle/Trigger), spline + arc path interpolation, OnSwipe/
+ * TouchResponse (spring/velocity), transitionToState with duration + Choreographer pacing, and the
+ * multi-transition state machine. (Only the JSON/Compose core.state loading path is absent — CDROID
+ * has no Compose/JSON layouts.)
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_LAYOUT_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_LAYOUT_H

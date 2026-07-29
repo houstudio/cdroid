@@ -19,9 +19,10 @@
 /*
  * Ported to C++ for CDROID from androidx.constraintlayout.core.widgets.ConstraintWidget.
  *
- * SKELETON (Stage 2): anchors + geometry + visibility + accessors needed by the solver
- * widget-bridge and ConstraintAnchor. Measure/layout/analyzer/draw methods (the bulk of the
- * 3840-line Java original) are deferred to Stage 3/4.
+ * Ported: anchors, geometry, dimensions/behaviours, visibility, connections, ratio, circle
+ * constraint, baseline — everything the solver widget-bridge and ConstraintAnchor need. Only the
+ * OPTIMIZATION_GRAPH analyzer methods (measure-run/layout-run/draw-run via WidgetRun) remain
+ * deferred — a performance layer, off by default in AndroidX.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_CONSTRAINT_WIDGET_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_CONSTRAINT_WIDGET_H

@@ -155,8 +155,8 @@ void MotionConstrainedPoint::setState(MotionWidget* view) {
 
 void MotionConstrainedPoint::addValues(std::unordered_map<std::string, SplineSet*>& /*splines*/,
                                        int /*mFramePosition*/) {
-    // TODO: populate the per-property SplineSets with this point's values. Ported with the
-    // spline-set system (SplineSet/KeyCycleOscillator) — the Motion MVP uses a simpler path.
+    // Unused: Motion interpolates position/attributes via its CurveFit path (spline/arc), not via
+    // per-point SplineSet population. SplineSet/KeyCycleOscillator are ported for the cycle path.
 }
 
 } // namespace cdroid

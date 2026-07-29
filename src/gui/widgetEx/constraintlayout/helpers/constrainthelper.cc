@@ -227,7 +227,8 @@ void ConstraintHelper::validateParams() {
 }
 
 void ConstraintHelper::resolveRtl(ConstraintWidget* /*widget*/, bool /*isRtl*/) {
-    // nothing (RTL deferred)
+    // Base no-op: ConstraintHelper itself has no RTL-dependent type. Barrier overrides this to
+    // resolve START/END -> LEFT/RIGHT against the container's direction (RTL is fully supported).
 }
 
 void ConstraintHelper::updatePreLayout(ConstraintLayout* container) {

@@ -29,8 +29,9 @@
  * calls requestDisallowInterceptTouchEvent(true) so an outer scroller/pager does not steal the
  * gesture (e.g. horizontal OnSwipe inside a ViewPager2).
  *
- * Deferred (faithful): spring physics (SpringStopEngine), velocity-tracked fling completion,
- * nestedScrollFlags, touchRegion, rotation mode.
+ * Spring physics (SpringStopEngine) and velocity-tracked release/fling completion are ported
+ * (animateToWithSpring / animateToWithVelocity); nestedScrollFlags, touchRegion, and rotation
+ * mode are parsed and applied where the View layer supports them.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H

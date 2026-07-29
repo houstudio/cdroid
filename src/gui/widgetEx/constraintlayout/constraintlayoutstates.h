@@ -24,7 +24,7 @@
  * (responsive/adaptive design). Each <State> holds a default ConstraintSet plus size-banded
  * <Variant>s; the Variant whose width/height region contains the current dimensions wins. The
  * `constraints` attribute references a ConstraintSet — inline <ConstraintSet> in the same file
- * (resolved here) or a layout resource (clone deferred to a later chunk).
+ * (resolved here) or a layout resource (cloned offscreen via ConstraintSet::clone(Context, resource)).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_STATES_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_STATES_H

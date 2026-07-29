@@ -289,7 +289,8 @@ void MotionScene::load(Context* ctx, XmlPullParser& parser) {
                 mViewTransitions.push_back(std::move(vt));
                 if (mViewTransitionController) mViewTransitionController->add(raw);
             }
-            // TouchResponse / StateSet: deferred (swipe-driven / per-view).
+            // <OnSwipe>/<TouchResponse> and <StateSet> are parsed by their own handlers
+            // (TouchResponse is wired to MotionLayout's swipe; StateSet drives ConstraintLayoutStates).
         } else if (eventType == XmlPullParser::END_TAG) {
             if (parser.getName() == "Transition") {
                 currentTransition = nullptr;

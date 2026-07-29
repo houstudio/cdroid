@@ -23,8 +23,8 @@
  * these per attribute and interpolates piecewise across [start, keyframe..., end]. getAttributeNames
  * reports which attributes this keyframe touches (those not NaN).
  *
- * addValues(HashMap<String,SplineSet>) — the SplineSet build path — is stubbed (the spline-set
- * system is ported later); Motion's MVP applies keyframes via piecewise-linear interpolation.
+ * addValues(HashMap<String,SplineSet>) is unused here — Motion interpolates keyframes via its
+ * CurveFit (spline/arc) path; SplineSet/oscillators are ported for the cycle keyframe path.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_ATTRIBUTES_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_ATTRIBUTES_H

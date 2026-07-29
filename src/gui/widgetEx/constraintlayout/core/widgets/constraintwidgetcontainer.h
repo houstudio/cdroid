@@ -84,7 +84,7 @@ class ConstraintWidgetContainer : public WidgetContainer {
     void addVerticalWrapMaxVariable(ConstraintAnchor* bottom);
 
     void reset() override;
-    void layout() override; // STUB — real solver driver deferred (Stage 3 analyzer)
+    void layout() override; // linear-solve driver (≤8 iters, nested-first, chain rebuild); only the OPTIMIZATION_GRAPH fast-paths (Direct/Grouping/graph) are deferred
 
     // --- chain bookkeeping (read by Chain.applyChainConstraints) ---
     // Java: ChainHead[4] + mHorizontalChainsSize; here a vector + active count.

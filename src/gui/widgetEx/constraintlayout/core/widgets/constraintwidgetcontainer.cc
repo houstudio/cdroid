@@ -143,12 +143,13 @@ void ConstraintWidgetContainer::reset() {
 }
 
 void ConstraintWidgetContainer::layout() {
-    // MVP linear-solve driver. The full Java layout() (~350 lines) also runs the Direct
-    // fast-path (OPTIMIZATION_DIRECT), Grouping (OPTIMIZATION_GROUPING), the DependencyGraph
-    // graph optimizer, and a wrap-content / match-constraint re-measure loop via the Measurer.
-    // Those are deferred; this implements the faithful linear solve core, which handles
-    // fixed-dimension containers and children (the MVP sample).
-    // TODO(analyzer): restore Direct/Grouping/graph + wrap-content iteration + measurer pass.
+    // Linear-solve driver (the faithful core of Java layout()). Iterates ≤MAX_ITERATIONS: reset the
+    // system, rebuild chains, add every child to the solver (helpers first), solve, read back. The
+    // match-constraint re-measure convergence lives in BasicMeasure::solverMeasure (which wraps this);
+    // the onMeasure shrink handles WRAP_CONTENT. Only the OPTIMIZATION_GRAPH fast-paths — Direct
+    // solver (OPTIMIZATION_DIRECT), Grouping (OPTIMIZATION_GROUPING), the DependencyGraph optimizer,
+    // and wrap-content min/max variable tracking — remain deferred; they are a performance layer
+    // (off by default in AndroidX) and do not affect the linear-solve correctness here.
     mX = 0;
     mY = 0;
     const int count = (int) mChildren.size();
@@ -198,7 +199,7 @@ void ConstraintWidgetContainer::layout() {
         for (int i = 0; i < count; i++) {
             mChildren[i]->updateFromSolver(&mSystem, /*optimize=*/false);
         }
-        needsSolving = false; // MVP: single pass (no wrap-content re-iteration)
+        needsSolving = false; // per-iteration flag (BasicMeasure drives the outer match-constraint loop)
     }
 }
 

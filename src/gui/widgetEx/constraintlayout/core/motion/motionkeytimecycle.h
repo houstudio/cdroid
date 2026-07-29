@@ -18,8 +18,9 @@
 
 /*
  * Ported from androidx.constraintlayout.core.motion.key.MotionKeyTimeCycle.
- * Like MotionKeyCycle but the oscillation evolves over time (for looping animations). MVP treats
- * it identically to MotionKeyCycle (same sin-wave overlay).
+ * Like MotionKeyCycle but the oscillation evolves over time (for looping animations). CDROID
+ * overlays it as a Cycle-style sin wave keyed off transition progress (a fidelity simplification —
+ * Android keys the wave off absolute time).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_TIME_CYCLE_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_KEY_TIME_CYCLE_H

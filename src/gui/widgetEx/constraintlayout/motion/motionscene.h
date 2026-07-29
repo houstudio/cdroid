@@ -25,8 +25,9 @@
  * MotionLayout builds a MotionScene from XML, then drives its current transition: captures the
  * start/end ConstraintSets, applies the KeyFrames to each child Motion, and wires OnClick targets.
  *
- * MVP scope: <MotionScene>/<Transition>/<ConstraintSet>(inline or id-ref)/<KeyFrameSet>/<OnClick>.
- * Deferred (faithful stubs): <OnSwipe>/<TouchResponse> (swipe-driven), <StateSet>, <ViewTransition>.
+ * Supported: <MotionScene>/<Transition>/<ConstraintSet>(inline or id-ref)/<KeyFrameSet>/<OnClick>/
+ * <OnSwipe>/<TouchResponse> (swipe-driven, spring/velocity), <StateSet>, <ViewTransition> (the
+ * latter three parsed here and dispatched to their owning components).
  *
  * ConstraintSet ids declared in the scene (e.g. "@+id/start") are resolved scene-locally by name
  * (getId assigns a stable int per name) — they are not R.id constants, so resolution does not
@@ -63,9 +64,9 @@ class MotionScene {
     };
 
     // A swipe handler (<OnSwipe>): dragging in `dragDirection` drives the transition progress, with
-    // auto-complete (snap to an end) on release. (Java: motion.widget.OnSwipe + TouchResponse.)
-    // MVP: linear drag-to-progress over the layout's own dimension + snap-to-nearest on touch-up.
-    // Deferred: anchor geometry, spring physics, velocity-based completion, nested scroll.
+    // auto-complete on release. Drag drives progress linearly over the layout's (or anchor's)
+    // dimension; release settles via spring (SpringStopEngine) or continuous-velocity fling
+    // (StopLogicEngine) carrying the gesture velocity, with nestedScrollFlags honored.
     struct OnSwipe {
         static constexpr int DRAG_UP = 0, DRAG_DOWN = 1, DRAG_LEFT = 2, DRAG_RIGHT = 3,
                              DRAG_START = 4, DRAG_END = 5;

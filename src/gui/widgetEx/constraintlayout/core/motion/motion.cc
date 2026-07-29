@@ -84,7 +84,8 @@ void Motion::setEndState(MotionWidget* mw) {
 
 void Motion::setup(int parentWidth, int parentHeight, float /*transitionDuration*/) {
     // Parent dimensions feed TYPE_SCREEN KeyPositions (which place a frame relative to the parent
-    // rather than the start→end path). The CurveFit[] precompute tables are deferred (fidelity TODO).
+    // rather than the start→end path). The CurveFit precompute-table optimization is not applied
+    // (the engine evaluates curves on demand; correct, just without the table cache).
     mParentWidth = parentWidth;
     mParentHeight = parentHeight;
     buildEasing();
@@ -320,7 +321,7 @@ void Motion::interpolate(MotionWidget* child, float progress) {
             alpha += wave * c->mAlpha + c->mWaveOffset;
         }
     }
-    // TimeCycle overlay: MVP — same progress-keyed wave (no phase field; Android keys off time).
+    // TimeCycle overlay: progress-keyed wave (fidelity simplification — Android keys off absolute time).
     for (auto* t : mTimeCycleKeys) {
         if (!std::isnan(t->mAlpha) && !std::isnan(t->mWavePeriod)) {
             float wave = std::sin(2.0 * M_PI * progress * t->mWavePeriod);
@@ -428,7 +429,7 @@ void Motion::getDpDt(float pos, float locationX, float locationY, float out[2]) 
     out[1] = dy + locationY * dh;
 }
 
-// TypedValues motion-property dispatch — store on this controller for the deferred engine.
+// TypedValues motion-property dispatch — store on this controller for the CurveFit interpolation path.
 bool Motion::setValue(int id, int value) {
     if (id == MotionType::TYPE_PATHMOTION_ARC) {
         mPathMotionArc = value;

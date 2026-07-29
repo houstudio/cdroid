@@ -23,11 +23,11 @@
  * progress in [0,1], produces the interpolated position + transforms (interpolate). The MotionLayout
  * widget owns one Motion per child and drives them each frame.
  *
- * MVP: linear interpolation between start and end (rect + all transforms), with NaN-unset handling
- * matching WidgetFrame.interpolate. Deferred (fidelity): the CurveFit[]/arc path engine, keyframe
- * (MotionKey*) position/attribute/cycle keyframes, and the SplineSet/KeyCycleOscillator attribute
- * oscillators — those make multi-keyframe eased/arc/cyclic motion. The linear MVP already produces
- * correct straight-line transitions, which covers the common case.
+ * Ported: linear + spline (MonotonicCurveFit/HyperSpline) + arc (ArcCurveFit) path interpolation,
+ * MotionKey* position/attribute/cycle/timecycle/trigger keyframes, and the SplineSet/oscillator
+ * attribute system — so multi-keyframe eased/arc/cyclic motion works. (Earlier "MVP/deferred"
+ * notes here were stale.) See motion.cc setup() (builds mPositionCurveFit/mArcCurveFit) + the
+ * CurveFit/KeyCycleOscillator ports.
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_MOTION_MOTION_H
@@ -62,8 +62,8 @@ class Motion : public TypedValues {
     // Add a position keyframe (control point the widget passes through).
     void addKey(class MotionKeyPosition* key);
     void addKey(class MotionKeyCycle* key);
-    // MVP: a TimeCycle keyframe is overlaid as a Cycle-style wave (it has no phase field, so phase=0;
-    // Android keys the wave off absolute time, approximated here by progress).
+    // Fidelity note: a TimeCycle keyframe is overlaid as a Cycle-style wave keyed off transition
+    // progress (Android keys the wave off absolute time; approximated here by progress).
     void addKey(class MotionKeyTimeCycle* key);
     // A Trigger keyframe fires a named callback when progress enters its slack band around the frame
     // position (mCross) and on crossing it forward/backward (mPositiveCross / mNegativeCross). Android
@@ -78,7 +78,7 @@ class Motion : public TypedValues {
         mTriggerListener = std::move(listener);
     }
 
-    // Build the interpolation tables. The MVP uses linear lerp (no tables); kept for API parity.
+    // Build the interpolation tables (spline position curve + optional per-segment arc curve).
     void setup(int parentWidth, int parentHeight, float transitionDuration);
 
     // Write the interpolated rect's 4 corners (8 floats) at progress p into path[offset..].
@@ -144,7 +144,7 @@ class Motion : public TypedValues {
     MotionConstrainedPoint mStartPoint;
     MotionConstrainedPoint mEndPoint;
 
-    // Motion properties (TypedValues). Used by the deferred CurveFit/keyframe engine; stored now
+    // Motion properties (TypedValues). Used by the CurveFit/keyframe interpolation path.
     // so setValue works before that lands.
     int   mPathMotionArc = -1;
     int   mDrawPath = 0;

@@ -26,7 +26,8 @@
  *   noState        — a standalone per-view animation driven by its own Motion + KeyFrameSet;
  *   currentState   — apply a constraint delta to the target within the current transition;
  *   allStates      — apply the delta to every ConstraintSet.
- * (currentState/allStates need ConstraintSet delta APIs and are deferred; noState is the MVP.)
+ * All three modes are implemented: noState drives a standalone per-view animation;
+ * currentState/allStates apply a constraint delta via applyDelta (allStates persists it across sets).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_VIEW_TRANSITION_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_VIEW_TRANSITION_H
@@ -127,14 +128,13 @@ class ViewTransition {
         mDisabled = !enable;
     }
 
-    // True if this ViewTransition applies to `view` (by target id; constraintTag string match is a
-    // deferred fidelity).
+    // True if this ViewTransition applies to `view` (by target id, or by constraintTag when set).
     bool matchesView(View* view) const;
     // True if this ViewTransition should fire for the given MotionEvent action.
     bool supports(int action) const;
 
-    // Dispatch entry (Android ViewTransition.applyTransition). For noState it drives a standalone
-    // per-view animation; currentState/allStates (apply a ConstraintSet delta) are deferred.
+    // Dispatch entry (Android ViewTransition.applyTransition). noState drives a standalone per-view
+    // animation; currentState/allStates apply a constraint delta (allStates persists it).
     void applyTransition(ViewTransitionController* controller, MotionLayout* layout,
                          int fromId, ConstraintSet* current, const std::vector<View*>& views);
     // Add every keyframe of this ViewTransition's KeyFrameSet into `mc` (Android
