@@ -38,7 +38,7 @@ TEST_F(ANIMATORINFLATOR,test2){
 
 TEST_F(ANIMATORINFLATOR,fade_in){
     App&app=App::getInstance();
-    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:anim/fad_in");
+    Animator*sl=AnimatorInflater::loadAnimator(&app,"cdroid:animator/fade_in.xml");
     ASSERT_NE(sl,(void*)nullptr);
     pumpFor(300);
 }
