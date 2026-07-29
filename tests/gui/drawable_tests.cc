@@ -532,14 +532,14 @@ TEST_F(DRAWABLE,inflateselector){
    const char*text=R"(<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
 	<item cdroid:drawable="#ffff0000" cdroid:state_selected="true"/>
     <item cdroid:drawable="#ff00ff00" cdroid:state_focused="true"/>
-    <item cdroid:state_selected="false"><color android:color="#112233"/></item>
+    <item cdroid:state_selected="false"><color cdroid:color="#112233"/></item>
 	<item cdroid:drawable="#ff0000ff"/></selector>)";
    Drawable*d =fromStream(text);
    d->setBounds(100,100,400,400);
    ASSERT_NE((void*)nullptr,(void*)d);
    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(d);
    ASSERT_NE((void*)nullptr,(void*)sd);
-   ASSERT_EQ(3,sd->getStateCount());
+   ASSERT_EQ(4,sd->getStateCount());
    ASSERT_NE((void*)nullptr,sd->getStateDrawable(0));
    ColorDrawable*cd=dynamic_cast<ColorDrawable*>(sd->getStateDrawable(0));
    ASSERT_EQ(0xFFFF0000,(unsigned int)cd->getColor());
@@ -577,11 +577,11 @@ TEST_F(DRAWABLE,inflatetransition){
 
 TEST_F(DRAWABLE,inflatelevellist){
    const char*text=R"(<level-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
-	<item cdroid:minLevel="0" cdroid:maxLevel="1"><color android:color="#ffff0000"/></item>
-	<item cdroid:minLevel="1" cdroid:maxLevel="2"><color android:color="#ff00ff00"/></item>
-	<item cdroid:minLevel="2" cdroid:maxLevel="3"><color android:color="#ff0000ff"/></item>
+	<item cdroid:minLevel="0" cdroid:maxLevel="1"><color cdroid:color="#ffff0000"/></item>
+	<item cdroid:minLevel="1" cdroid:maxLevel="2"><color cdroid:color="#ff00ff00"/></item>
+	<item cdroid:minLevel="2" cdroid:maxLevel="3"><color cdroid:color="#ff0000ff"/></item>
 	<item cdroid:minLevel="3" cdroid:maxLevel="4">
-	  <shape cdroid:shape="oval"><solid cdroid:color="#ffff00ff"/>
+	  <shape cdroid:shape="oval"><solid cdroid:color="#ffff00ff"/></shape>
 	</item>	</level-list>)";
    Drawable*d = fromStream(text);
    d->setBounds(100,100,500,500);
