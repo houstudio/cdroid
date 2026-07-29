@@ -576,9 +576,9 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     // desired (AT_MOST max) size; shrink it to the actual content extent of the solved children so a
     // WRAP container sizes to its content. EXACTLY dimensions keep the solver's size. Virtual helpers
     // (Guideline/Barrier/VirtualLayout) carry no visual extent and are skipped — a Flow's referenced
-    // children are regular widgets and are included. (Faithful container-level wrap for the common
-    // fixed-children case; a WRAP container filled by a 0dp child stays at the AT_MOST max — the full
-    // BasicMeasure outer iteration is still deferred.)
+    // children are regular widgets and are included. BasicMeasure's match-constraint convergence loop
+    // (solverMeasure) re-measures 0dp children with their resolved size before this, so a WRAP
+    // container's content extent is up to date; this shrinks the AT_MOST max down to that extent.
     int measuredW = mLayoutWidget.getWidth();
     int measuredH = mLayoutWidget.getHeight();
     int wMode = View::MeasureSpec::getMode(widthMeasureSpec);

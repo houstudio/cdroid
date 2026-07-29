@@ -270,6 +270,7 @@ class ConstraintWidget {
     void setMaxWidth(int maxWidth);
     void setMaxHeight(int maxHeight);
     void setBaselineDistance(int baselineDistance);
+    int getBaselineDistance() const { return mBaselineDistance; }
     float getDimensionRatio() const;
     bool isInVirtualLayout() const;
     void setInVirtualLayout(bool inVirtualLayout);

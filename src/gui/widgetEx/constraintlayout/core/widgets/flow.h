@@ -25,8 +25,10 @@
  * row's per-widget constraints. Lives in clcore:: to avoid clashing with the widget-layer
  * cdroid::Flow View subclass.
  *
- * MVP: HORIZONTAL orientation + WRAP_CHAIN + WRAP_NONE are fully ported. VERTICAL rows,
- * WRAP_ALIGNED and WRAP_CHAIN_NEW are stubbed (faithful TODO).
+ * All four wrap modes ported: WRAP_NONE, WRAP_CHAIN, WRAP_CHAIN_NEW, WRAP_ALIGNED; both HORIZONTAL
+ * and VERTICAL orientations (column-packing mirrors row-packing). WidgetsList holds a chain row;
+ * measure() computes the wrapped/grid size + builds rows, addToSolver() emits each row's constraints
+ * (WRAP_ALIGNED emits a grid via createAlignedConstraints).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_FLOW_H
 #define CDROID_CONSTRAINTLAYOUT_CORE_WIDGETS_FLOW_H
@@ -139,8 +141,12 @@ class Flow : public VirtualLayout {
                        int max, std::vector<int>& measured);
     void measureAligned(std::vector<ConstraintWidget*>& widgets, int count, int orientation,
                         int max, std::vector<int>& measured);
+    void createAlignedConstraints(bool isInRtl);  // WRAP_ALIGNED constraint emission
     void measureChainWrap_new(std::vector<ConstraintWidget*>& widgets, int count, int orientation,
                               int max, std::vector<int>& measured);
+    // Shared tail of measureChainWrap/_new: distribute match_constraint space + accumulate dims.
+    void measureChainWrapFinalize(int orientation, int max, std::vector<int>& measured,
+                                  int nbMatchConstraintsWidgets);
 
     int mHorizontalStyle = UNKNOWN;
     int mVerticalStyle = UNKNOWN;
@@ -164,6 +170,11 @@ class Flow : public VirtualLayout {
 
     std::vector<ConstraintWidget*> mDisplayedWidgets;
     int mDisplayedWidgetsCount = 0;
+
+    // WRAP_ALIGNED persistent state (computed in measureAligned, consumed in createAlignedConstraints).
+    std::vector<ConstraintWidget*> mAlignedBiggestElementsInCols;
+    std::vector<ConstraintWidget*> mAlignedBiggestElementsInRows;
+    std::vector<int> mAlignedDimensions;  // [cols, rows]
 };
 
 } // namespace cdroid::clcore

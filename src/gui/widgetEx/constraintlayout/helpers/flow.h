@@ -53,6 +53,7 @@ class Flow : public ConstraintHelper {
 
     // configuration (delegate to the core Flow)
     void setWrapMode(int wrapMode);
+    void setMaxElementsWrap(int max);
     void setOrientation(int orientation);
     void setHorizontalAlign(int align);
     void setVerticalAlign(int align);

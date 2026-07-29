@@ -48,7 +48,27 @@ Flow::Flow() {
 void Flow::copy(ConstraintWidget* src,
                 std::unordered_map<ConstraintWidget*, ConstraintWidget*>& map) {
     VirtualLayout::copy(src, map);
-    // Flow's config fields are not exercised by the copy path in the MVP; faithful TODO.
+    auto* srcFlow = dynamic_cast<Flow*>(src);
+    if (srcFlow == nullptr) return;
+    mHorizontalStyle     = srcFlow->mHorizontalStyle;
+    mVerticalStyle       = srcFlow->mVerticalStyle;
+    mFirstHorizontalStyle = srcFlow->mFirstHorizontalStyle;
+    mFirstVerticalStyle  = srcFlow->mFirstVerticalStyle;
+    mLastHorizontalStyle = srcFlow->mLastHorizontalStyle;
+    mLastVerticalStyle   = srcFlow->mLastVerticalStyle;
+    mHorizontalBias      = srcFlow->mHorizontalBias;
+    mVerticalBias        = srcFlow->mVerticalBias;
+    mFirstHorizontalBias = srcFlow->mFirstHorizontalBias;
+    mFirstVerticalBias   = srcFlow->mFirstVerticalBias;
+    mLastHorizontalBias  = srcFlow->mLastHorizontalBias;
+    mLastVerticalBias    = srcFlow->mLastVerticalBias;
+    mHorizontalGap       = srcFlow->mHorizontalGap;
+    mVerticalGap         = srcFlow->mVerticalGap;
+    mHorizontalAlign     = srcFlow->mHorizontalAlign;
+    mVerticalAlign       = srcFlow->mVerticalAlign;
+    mWrapMode            = srcFlow->mWrapMode;
+    mMaxElementsWrap     = srcFlow->mMaxElementsWrap;
+    mOrientation         = srcFlow->mOrientation;
 }
 
 std::string Flow::getType() const {
@@ -286,6 +306,14 @@ void Flow::measureChainWrap(std::vector<ConstraintWidget*>& widgets, int count, 
         }
     }
 
+    measureChainWrapFinalize(orientation, max, measured, nbMatchConstraintsWidgets);
+}
+
+// Shared tail of measureChainWrap / measureChainWrap_new: distribute free space across each row's
+// match_constraint widgets (WRAP_CONTENT only), then walk the chains accumulating the Flow's
+// overall width/height and wiring each row's anchor setup. (AndroidX Flow 899-970.)
+void Flow::measureChainWrapFinalize(int orientation, int max, std::vector<int>& measured,
+                                    int nbMatchConstraintsWidgets) {
     const int listCount = (int) mChainList.size();
     ConstraintAnchor* left = &mLeft;
     ConstraintAnchor* top = &mTop;
@@ -347,21 +375,252 @@ void Flow::measureChainWrap(std::vector<ConstraintWidget*>& widgets, int count, 
     measured[VERTICAL] = maxHeight;
 }
 
-void Flow::measureNoWrap(std::vector<ConstraintWidget*>& /*widgets*/, int /*count*/, int /*orientation*/,
-                         int /*max*/, std::vector<int>& /*measured*/) {
-    // TODO: faithful single-row (no-wrap) measure. Falls back to chain-wrap behavior is incorrect
-    // for WRAP_NONE; deferred until the exotic wrap modes are ported.
-    LOGW("Flow: WRAP_NONE measure not yet implemented");
+void Flow::measureNoWrap(std::vector<ConstraintWidget*>& widgets, int count, int orientation,
+                         int max, std::vector<int>& measured) {
+    // WRAP_NONE: a single chain holding every widget (no wrapping). (AndroidX Flow 1152-1178.)
+    if (count == 0) return;
+    mChainList.clear();
+    mChainList.push_back(WidgetsList(this, orientation, &mLeft, &mTop, &mRight, &mBottom, max));
+    WidgetsList* list = &mChainList.back();
+    for (int i = 0; i < count; i++) {
+        list->add(widgets[i]);
+    }
+    measured[HORIZONTAL] = list->getWidth();
+    measured[VERTICAL]   = list->getHeight();
 }
 
-void Flow::measureAligned(std::vector<ConstraintWidget*>& /*widgets*/, int /*count*/, int /*orientation*/,
-                          int /*max*/, std::vector<int>& /*measured*/) {
-    LOGW("Flow: WRAP_ALIGNED measure not yet implemented");
+void Flow::measureAligned(std::vector<ConstraintWidget*>& widgets, int count, int orientation,
+                          int max, std::vector<int>& measured) {
+    // WRAP_ALIGNED: arrange widgets in a regular grid (rows×cols). Pick cols (rows for VERTICAL),
+    // find the biggest widget per col/row, sum their extents; if the total exceeds `max`, shrink
+    // cols/rows and retry. (AndroidX Flow 1192-1350.)
+    bool done = false;
+    int rows = 0, cols = 0;
+    if (orientation == HORIZONTAL) {
+        cols = mMaxElementsWrap;
+        if (cols <= 0) {
+            int w = 0; cols = 0;
+            for (int i = 0; i < count; i++) {
+                if (i > 0) w += mHorizontalGap;
+                ConstraintWidget* widget = widgets[i];
+                if (widget == nullptr) continue;
+                w += getWidgetWidth(widget, max);
+                if (w > max) break;
+                cols++;
+            }
+        }
+    } else {
+        rows = mMaxElementsWrap;
+        if (rows <= 0) {
+            int h = 0; rows = 0;
+            for (int i = 0; i < count; i++) {
+                if (i > 0) h += mVerticalGap;
+                ConstraintWidget* widget = widgets[i];
+                if (widget == nullptr) continue;
+                h += getWidgetHeight(widget, max);
+                if (h > max) break;
+                rows++;
+            }
+        }
+    }
+    mAlignedDimensions = {0, 0};
+    if ((rows == 0 && orientation == VERTICAL) || (cols == 0 && orientation == HORIZONTAL)) {
+        done = true;
+    }
+    while (!done) {
+        if (orientation == HORIZONTAL) {
+            rows = (int) std::ceil(count / (float) cols);
+        } else {
+            cols = (int) std::ceil(count / (float) rows);
+        }
+        if ((int) mAlignedBiggestElementsInCols.size() < cols) mAlignedBiggestElementsInCols.assign(cols, nullptr);
+        else std::fill(mAlignedBiggestElementsInCols.begin(), mAlignedBiggestElementsInCols.end(), nullptr);
+        if ((int) mAlignedBiggestElementsInRows.size() < rows) mAlignedBiggestElementsInRows.assign(rows, nullptr);
+        else std::fill(mAlignedBiggestElementsInRows.begin(), mAlignedBiggestElementsInRows.end(), nullptr);
+
+        for (int i = 0; i < cols; i++) {
+            for (int j = 0; j < rows; j++) {
+                int index = j * cols + i;
+                if (orientation == VERTICAL) index = i * rows + j;
+                if (index >= count) continue;
+                ConstraintWidget* widget = widgets[index];
+                if (widget == nullptr) continue;
+                int w = getWidgetWidth(widget, max);
+                if (mAlignedBiggestElementsInCols[i] == nullptr
+                        || mAlignedBiggestElementsInCols[i]->getWidth() < w) {
+                    mAlignedBiggestElementsInCols[i] = widget;
+                }
+                int h = getWidgetHeight(widget, max);
+                if (mAlignedBiggestElementsInRows[j] == nullptr
+                        || mAlignedBiggestElementsInRows[j]->getHeight() < h) {
+                    mAlignedBiggestElementsInRows[j] = widget;
+                }
+            }
+        }
+        int w = 0;
+        for (int i = 0; i < cols; i++) {
+            ConstraintWidget* widget = mAlignedBiggestElementsInCols[i];
+            if (widget != nullptr) {
+                if (i > 0) w += mHorizontalGap;
+                w += getWidgetWidth(widget, max);
+            }
+        }
+        int h = 0;
+        for (int j = 0; j < rows; j++) {
+            ConstraintWidget* widget = mAlignedBiggestElementsInRows[j];
+            if (widget != nullptr) {
+                if (j > 0) h += mVerticalGap;
+                h += getWidgetHeight(widget, max);
+            }
+        }
+        measured[HORIZONTAL] = w;
+        measured[VERTICAL]   = h;
+        if (orientation == HORIZONTAL) {
+            if (w > max) { if (cols > 1) cols--; else done = true; }
+            else done = true;
+        } else {
+            if (h > max) { if (rows > 1) rows--; else done = true; }
+            else done = true;
+        }
+    }
+    mAlignedDimensions[HORIZONTAL] = cols;
+    mAlignedDimensions[VERTICAL]   = rows;
 }
 
-void Flow::measureChainWrap_new(std::vector<ConstraintWidget*>& /*widgets*/, int /*count*/, int /*orientation*/,
-                                int /*max*/, std::vector<int>& /*measured*/) {
-    LOGW("Flow: WRAP_CHAIN_NEW measure not yet implemented");
+void Flow::createAlignedConstraints(bool isInRtl) {
+    // Emit the WRAP_ALIGNED grid: biggest-per-col widgets form a horizontal chain (anchored to the
+    // Flow's left/right), biggest-per-row a vertical chain (top/bottom); every other widget is
+    // aligned to its column's and row's biggest. (AndroidX Flow 1352-1438.)
+    if (mAlignedDimensions.size() < 2) return;
+
+    for (int i = 0; i < mDisplayedWidgetsCount; i++) {
+        mDisplayedWidgets[i]->resetAnchors();
+    }
+    int cols = mAlignedDimensions[HORIZONTAL];
+    int rows = mAlignedDimensions[VERTICAL];
+
+    ConstraintWidget* previous = nullptr;
+    float horizontalBias = mHorizontalBias;
+    for (int i = 0; i < cols; i++) {
+        int index = i;
+        if (isInRtl) {
+            index = cols - i - 1;
+            horizontalBias = 1 - mHorizontalBias;
+        }
+        ConstraintWidget* widget = mAlignedBiggestElementsInCols[index];
+        if (widget == nullptr || widget->getVisibility() == GONE) continue;
+        if (i == 0) {
+            widget->connect(widget->mLeft, &mLeft, getPaddingLeft());
+            widget->mHorizontalChainStyle = mHorizontalStyle;
+            widget->mHorizontalBiasPercent = horizontalBias;
+        }
+        if (i == cols - 1) {
+            widget->connect(widget->mRight, &mRight, getPaddingRight());
+        }
+        if (i > 0 && previous != nullptr) {
+            widget->connect(widget->mLeft, &previous->mRight, mHorizontalGap);
+            previous->connect(previous->mRight, &widget->mLeft, 0);
+        }
+        previous = widget;
+    }
+    for (int j = 0; j < rows; j++) {
+        ConstraintWidget* widget = mAlignedBiggestElementsInRows[j];
+        if (widget == nullptr || widget->getVisibility() == GONE) continue;
+        if (j == 0) {
+            widget->connect(widget->mTop, &mTop, getPaddingTop());
+            widget->mVerticalChainStyle = mVerticalStyle;
+            widget->mVerticalBiasPercent = mVerticalBias;
+        }
+        if (j == rows - 1) {
+            widget->connect(widget->mBottom, &mBottom, getPaddingBottom());
+        }
+        if (j > 0 && previous != nullptr) {
+            widget->connect(widget->mTop, &previous->mBottom, mVerticalGap);
+            previous->connect(previous->mBottom, &widget->mTop, 0);
+        }
+        previous = widget;
+    }
+    for (int i = 0; i < cols; i++) {
+        for (int j = 0; j < rows; j++) {
+            int index = j * cols + i;
+            if (mOrientation == VERTICAL) index = i * rows + j;
+            if (index >= mDisplayedWidgetsCount) continue;
+            ConstraintWidget* widget = mDisplayedWidgets[index];
+            if (widget == nullptr || widget->getVisibility() == GONE) continue;
+            ConstraintWidget* biggestInCol = mAlignedBiggestElementsInCols[i];
+            ConstraintWidget* biggestInRow = mAlignedBiggestElementsInRows[j];
+            if (widget != biggestInCol) {
+                widget->connect(widget->mLeft, &biggestInCol->mLeft, 0);
+                widget->connect(widget->mRight, &biggestInCol->mRight, 0);
+            }
+            if (widget != biggestInRow) {
+                widget->connect(widget->mTop, &biggestInRow->mTop, 0);
+                widget->connect(widget->mBottom, &biggestInRow->mBottom, 0);
+            }
+        }
+    }
+}
+
+void Flow::measureChainWrap_new(std::vector<ConstraintWidget*>& widgets, int count, int orientation,
+                                int max, std::vector<int>& measured) {
+    // WRAP_CHAIN_NEW: like measureChainWrap, but the maxElementsWrap test uses a running col/row
+    // counter with a strict `> mMaxElementsWrap` (reset to 1 on wrap) instead of `i % == 0`.
+    // (AndroidX Flow 986-1138; identical otherwise.) Shared tail via measureChainWrapFinalize.
+    if (count == 0) return;
+    mChainList.clear();
+    mChainList.push_back(WidgetsList(this, orientation, &mLeft, &mTop, &mRight, &mBottom, max));
+    WidgetsList* currentList = &mChainList.back();
+
+    int nbMatchConstraintsWidgets = 0;
+    if (orientation == HORIZONTAL) {
+        int width = 0;
+        int col = 0;
+        for (int i = 0; i < count; i++) {
+            col++;
+            ConstraintWidget* widget = widgets[i];
+            int w = getWidgetWidth(widget, max);
+            if (widget->getHorizontalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT) {
+                nbMatchConstraintsWidgets++;
+            }
+            bool doWrap = (width == max || (width + mHorizontalGap + w) > max) && currentList->mBiggest != nullptr;
+            if (!doWrap && i > 0 && mMaxElementsWrap > 0 && (col > mMaxElementsWrap)) doWrap = true;
+            if (doWrap) {
+                col = 1;
+                width = w;
+                mChainList.push_back(WidgetsList(this, orientation, &mLeft, &mTop, &mRight, &mBottom, max));
+                mChainList.back().setStartIndex(i);
+                currentList = &mChainList.back();
+            } else {
+                width = (i > 0) ? (width + mHorizontalGap + w) : w;
+            }
+            currentList->add(widget);
+        }
+    } else {
+        int height = 0;
+        int row = 0;
+        for (int i = 0; i < count; i++) {
+            row++;
+            ConstraintWidget* widget = widgets[i];
+            int h = getWidgetHeight(widget, max);
+            if (widget->getVerticalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT) {
+                nbMatchConstraintsWidgets++;
+            }
+            bool doWrap = (height == max || (height + mVerticalGap + h) > max) && currentList->mBiggest != nullptr;
+            if (!doWrap && i > 0 && mMaxElementsWrap > 0 && (row > mMaxElementsWrap)) doWrap = true;
+            if (doWrap) {
+                row = 1;
+                height = h;
+                mChainList.push_back(WidgetsList(this, orientation, &mLeft, &mTop, &mRight, &mBottom, max));
+                mChainList.back().setStartIndex(i);
+                currentList = &mChainList.back();
+            } else {
+                height = (i > 0) ? (height + mVerticalGap + h) : h;
+            }
+            currentList->add(widget);
+        }
+    }
+
+    measureChainWrapFinalize(orientation, max, measured, nbMatchConstraintsWidgets);
 }
 
 void Flow::addToSolver(LinearSystem* system, bool optimize) {
@@ -391,11 +650,7 @@ void Flow::addToSolver(LinearSystem* system, bool optimize) {
         break;
     }
     case WRAP_ALIGNED: {
-        // TODO: createAlignedConstraints (grid-aligned layout).
-        const int count = (int) mChainList.size();
-        for (int i = 0; i < count; i++) {
-            mChainList[i].createConstraints(isInRtl, i, i == count - 1);
-        }
+        createAlignedConstraints(isInRtl);
         break;
     }
     }
@@ -664,12 +919,66 @@ void Flow::WidgetsList::createConstraints(bool isInRtl, int chainIndex, bool isL
     }
 }
 
-void Flow::WidgetsList::measureMatchConstraints(int /*availableSpace*/) {
-    // TODO: distribute available space across this row's match_constraint widgets.
+void Flow::WidgetsList::measureMatchConstraints(int availableSpace) {
+    if (mNbMatchConstraintsWidgets == 0) {
+        return;
+    }
+    const int count = mCount;
+    // Even split of the row's free space across the match_constraint widgets (spread, no weights).
+    int widgetSize = availableSpace / mNbMatchConstraintsWidgets;
+    for (int i = 0; i < count; i++) {
+        if (mStartIndex + i >= mFlow->mDisplayedWidgetsCount) break;
+        ConstraintWidget* widget = mFlow->mDisplayedWidgets[mStartIndex + i];
+        if (widget == nullptr) continue;
+        if (mOrientation == HORIZONTAL) {
+            if (widget->getHorizontalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT
+                    && widget->mMatchConstraintDefaultWidth == MATCH_CONSTRAINT_SPREAD) {
+                mFlow->measure(widget, DimensionBehaviour::FIXED, widgetSize,
+                               widget->getVerticalDimensionBehaviour(), widget->getHeight());
+            }
+        } else {
+            if (widget->getVerticalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT
+                    && widget->mMatchConstraintDefaultHeight == MATCH_CONSTRAINT_SPREAD) {
+                mFlow->measure(widget, widget->getHorizontalDimensionBehaviour(), widget->getWidth(),
+                               DimensionBehaviour::FIXED, widgetSize);
+            }
+        }
+    }
+    recomputeDimensions();
 }
 
 void Flow::WidgetsList::recomputeDimensions() {
-    // TODO: recompute row width/height after match-constraint distribution (wrap-content Flow).
+    mWidth = 0;
+    mHeight = 0;
+    mBiggest = nullptr;
+    mBiggestDimension = 0;
+    const int count = mCount;
+    for (int i = 0; i < count; i++) {
+        if (mStartIndex + i >= mFlow->mDisplayedWidgetsCount) break;
+        ConstraintWidget* widget = mFlow->mDisplayedWidgets[mStartIndex + i];
+        if (widget == nullptr) continue;
+        if (mOrientation == HORIZONTAL) {
+            int width = widget->getWidth();
+            int gap = (widget->getVisibility() == GONE) ? 0 : mFlow->mHorizontalGap;
+            mWidth += width + gap;
+            int height = mFlow->getWidgetHeight(widget, mMax);
+            if (mBiggest == nullptr || mBiggestDimension < height) {
+                mBiggest = widget;
+                mBiggestDimension = height;
+                mHeight = height;
+            }
+        } else {
+            int width = mFlow->getWidgetWidth(widget, mMax);
+            int height = mFlow->getWidgetHeight(widget, mMax);
+            int gap = (widget->getVisibility() == GONE) ? 0 : mFlow->mVerticalGap;
+            mHeight += height + gap;
+            if (mBiggest == nullptr || mBiggestDimension < width) {
+                mBiggest = widget;
+                mBiggestDimension = width;
+                mWidth = width;
+            }
+        }
+    }
 }
 
 } // namespace cdroid::clcore

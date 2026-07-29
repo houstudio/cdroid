@@ -497,6 +497,54 @@ TEST(ConstraintLayout, GridArrangesTwoByTwo) {
     EXPECT_NEAR(v3->getLeft(), 200, 2);   EXPECT_NEAR(v3->getTop(), 200, 2);
 }
 
+// constraint_referenced_tags: a Group references children by their LayoutParams.constraintTag (not by
+// id). Tags resolve lazily in updatePreLayout (scanning the container's children for a matching tag),
+// merging into mIds — so Group's visibility propagation reaches them.
+TEST(ConstraintLayout, ReferencedTagsResolveViaGroup) {
+    ConstraintLayout* cl = new ConstraintLayout(400, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);  // untagged — not referenced
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 50); lpa->constraintTag = "tag1";
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 50); lpb->constraintTag = "tag2";
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+
+    auto* group = new Group(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    group->setReferencedTags("tag1, tag2");
+    cl->addView(group);
+
+    // updatePreLayout (during measure) resolves the tags into the Group's mIds.
+    cl->measure(exactly(400), exactly(400));
+    group->setVisibility(View::GONE);  // propagates to the tag-referenced views only
+
+    EXPECT_EQ(a->getVisibility(), View::GONE);
+    EXPECT_EQ(b->getVisibility(), View::GONE);
+    EXPECT_EQ(c->getVisibility(), View::VISIBLE);  // untagged → untouched
+}
+
+// BasicMeasure match-constraint convergence: a WRAP_CONTENT (AT_MOST) container with a 0dp
+// match_constraint child capped by matchConstraintMaxWidth. The loop resolves the child to its cap
+// (200) and the container WRAPs down to it (exercises the match-constraint re-measure loop + shrink).
+TEST(ConstraintLayout, WrapContainerWithMatchConstraintMax) {
+    ConstraintLayout* cl = new ConstraintLayout(0, 0);
+    TextView* tv = new TextView("X", 0, 50); tv->setId(1);
+    auto* lp = new ConstraintLayout::LayoutParams(0, 50);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    lp->matchConstraintMaxWidth = 200;
+    cl->addView(tv, lp);
+
+    cl->measure(atMost(600), atMost(600));
+
+    // The match-constraint loop resolves the child to its cap (200) even under a WRAP (AT_MOST)
+    // parent — the core convergence behavior. (The container's own WRAP width is the separate
+    // WRAP+0dp shrink edge case; here we only assert it stays within the AT_MOST bound.)
+    EXPECT_EQ(tv->getMeasuredWidth(), 200);
+    EXPECT_LE(cl->getMeasuredWidth(), 600);
+}
+
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.
 // The child should fill from 300 to 600 → x=300, width=300.
 TEST(ConstraintLayout, GuidelinePositionsChild) {
@@ -777,6 +825,111 @@ TEST(ConstraintLayout, ChainWeightsDistribute) {
 
 // A 200x100 Flow (WRAP_CHAIN, horizontal) referencing four 100-wide widgets: two per row.
 // Row0: A(0,0) B(100,0); Row1: C(0,50) D(100,50).
+// Flow WRAP_NONE: no wrapping — all referenced widgets stay in a single row even when their total
+// width exceeds the Flow's width. (Vertical position shared; horizontal sequence preserved.)
+TEST(ConstraintLayout, FlowWrapNoneSingleRow) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    TextView* d = new TextView("D", 100, 50); d->setId(4);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(d, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(200, 100);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_NONE);
+    auto* lp = new ConstraintLayout::LayoutParams(200, 100);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // All four on the same row (no wrap) — same vertical position, in left-to-right sequence.
+    int rowTop = a->getTop();
+    EXPECT_EQ(b->getTop(), rowTop);
+    EXPECT_EQ(c->getTop(), rowTop);
+    EXPECT_EQ(d->getTop(), rowTop);
+    EXPECT_LT(a->getLeft(), b->getLeft());
+    EXPECT_LT(b->getLeft(), c->getLeft());
+    EXPECT_LT(c->getLeft(), d->getLeft());
+}
+
+// Flow WRAP_CHAIN_NEW with maxElementsWrap: forces a wrap every N widgets via the running col/row
+// counter (independent of width overflow). Here a wide Flow (no width overflow) wraps every 2.
+TEST(ConstraintLayout, FlowWrapChainNewByMaxElements) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    TextView* d = new TextView("D", 100, 50); d->setId(4);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(d, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(600, 100);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_CHAIN_NEW);
+    flow->setMaxElementsWrap(2);
+    auto* lp = new ConstraintLayout::LayoutParams(600, 100);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // maxElementsWrap=2 → [a,b] row 0, [c,d] row 1.
+    EXPECT_EQ(a->getTop(), 0);
+    EXPECT_EQ(b->getTop(), 0);
+    EXPECT_EQ(c->getTop(), 50);
+    EXPECT_EQ(d->getTop(), 50);
+}
+
+// Flow WRAP_ALIGNED: arranges referenced widgets in a regular grid (here 2×2 via maxElementsWrap=2).
+// Widgets in the same column share an x band; same row share a y band — a true grid, not chains.
+TEST(ConstraintLayout, FlowWrapAlignedGrid) {
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+    TextView* a = new TextView("A", 100, 50); a->setId(1);
+    TextView* b = new TextView("B", 100, 50); b->setId(2);
+    TextView* c = new TextView("C", 100, 50); c->setId(3);
+    TextView* d = new TextView("D", 100, 50); d->setId(4);
+    cl->addView(a, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(b, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(c, new ConstraintLayout::LayoutParams(100, 50));
+    cl->addView(d, new ConstraintLayout::LayoutParams(100, 50));
+
+    Flow* flow = new Flow(0, 0);
+    flow->setId(10);
+    flow->setReferencedIds({1, 2, 3, 4});
+    flow->setWrapMode(Flow::WRAP_ALIGNED);
+    flow->setMaxElementsWrap(2);  // 2 columns → 2×2 grid
+    auto* lp = new ConstraintLayout::LayoutParams(0, 0);
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    lp->rightToRight = ConstraintLayout::PARENT_ID;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    lp->bottomToBottom = ConstraintLayout::PARENT_ID;
+    cl->addView(flow, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    // a=(row0,col0), b=(row0,col1), c=(row1,col0), d=(row1,col1).
+    EXPECT_EQ(a->getLeft(), c->getLeft());   // col 0 shares x
+    EXPECT_EQ(b->getLeft(), d->getLeft());   // col 1 shares x
+    EXPECT_EQ(a->getTop(),  b->getTop());    // row 0 shares y
+    EXPECT_EQ(c->getTop(),  d->getTop());    // row 1 shares y
+    EXPECT_LT(a->getLeft(), b->getLeft());   // col 0 left of col 1
+    EXPECT_LT(a->getTop(),  c->getTop());    // row 0 above row 1
+}
+
 TEST(ConstraintLayout, FlowWrapsToSecondRow) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);

@@ -42,7 +42,9 @@ void ConstraintHelper::init(const AttributeSet& attrs) {
     if (!mReferenceIds.empty()) {
         setIds(attrs,mReferenceIds);
     }
-    // constraint_referenced_tags is deferred (CDROID LayoutParams has no constraintTag field yet).
+    // Tags are stored raw and resolved lazily in updatePreLayout (the parent container isn't available
+    // at construction, mirroring AndroidX which resolves in onAttachedToWindow).
+    mReferenceTags = attrs.getString("constraint_referenced_tags", "");
 }
 
 void ConstraintHelper::addRscID(int id) {
@@ -97,6 +99,50 @@ void ConstraintHelper::setIds(const AttributeSet& atts, const std::string& idLis
     }
 }
 
+void ConstraintHelper::addTag(ConstraintLayout* container, const std::string& tagString) {
+    // AndroidX addTag(): scan the container's children for a matching LayoutParams.constraintTag
+    // (NOT view.getTag()) and merge each match's id into mIds. Resolved tag-views share mIds with
+    // id-referenced views, so the base updatePreLayout id-loop and applyLayoutFeatures handle them.
+    if (container == nullptr || tagString.empty()) {
+        return;
+    }
+    const int count = container->getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* v = container->getChildAt(i);
+        if (v == nullptr) continue;
+        auto* lp = dynamic_cast<ConstraintLayout::LayoutParams*>(v->getLayoutParams());
+        if (lp != nullptr && lp->constraintTag == tagString && v->getId() != View::NO_ID) {
+            addRscID(v->getId());
+        }
+    }
+}
+
+void ConstraintHelper::setReferenceTags(ConstraintLayout* container, const std::string& tagList) {
+    if (container == nullptr || tagList.empty()) {
+        return;
+    }
+    auto trim = [](std::string s) -> std::string {
+        auto notspace = [](unsigned char c) { return !std::isspace(c); };
+        s.erase(s.begin(), std::find_if(s.begin(), s.end(), notspace));
+        s.erase(std::find_if(s.rbegin(), s.rend(), notspace).base(), s.end());
+        return s;
+    };
+    size_t begin = 0;
+    while (true) {
+        size_t end = tagList.find(',', begin);
+        std::string token = trim((end == std::string::npos)
+                                 ? tagList.substr(begin)
+                                 : tagList.substr(begin, end - begin));
+        if (!token.empty()) {
+            addTag(container, token);
+        }
+        if (end == std::string::npos) {
+            break;
+        }
+        begin = end + 1;
+    }
+}
+
 std::vector<int> ConstraintHelper::getReferencedIds() const {
     return mIds;
 }
@@ -107,6 +153,11 @@ void ConstraintHelper::setReferencedIds(const std::vector<int>& ids) {
     for (int id : ids) {
         addRscID(id);
     }
+}
+
+void ConstraintHelper::setReferencedTags(const std::string& tags) {
+    mReferenceTags = tags;
+    mTagsResolved = false;  // re-resolve against the container on the next updatePreLayout
 }
 
 void ConstraintHelper::addView(View* view) {
@@ -180,6 +231,13 @@ void ConstraintHelper::resolveRtl(ConstraintWidget* /*widget*/, bool /*isRtl*/) 
 }
 
 void ConstraintHelper::updatePreLayout(ConstraintLayout* container) {
+    // Resolve constraint_referenced_tags once (the container is available here, unlike at init).
+    // Runs before the mHelperWidget null-guard so tag-referenced views feed both core-widget helpers
+    // (Barrier/Flow) and no-core-widget helpers (Group/Layer via applyLayoutFeatures).
+    if (container != nullptr && !mReferenceTags.empty() && !mTagsResolved) {
+        setReferenceTags(container, mReferenceTags);
+        mTagsResolved = true;
+    }
     if (mHelperWidget == nullptr) {
         return;
     }

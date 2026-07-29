@@ -93,6 +93,9 @@ Flow::Flow(int width, int height)
 void Flow::setWrapMode(int wrapMode)       {
     asFlow(mHelperWidget.get())->setWrapMode(wrapMode);
 }
+void Flow::setMaxElementsWrap(int max)     {
+    asFlow(mHelperWidget.get())->setMaxElementsWrap(max);
+}
 void Flow::setOrientation(int orientation) {
     asFlow(mHelperWidget.get())->setOrientation(orientation);
 }

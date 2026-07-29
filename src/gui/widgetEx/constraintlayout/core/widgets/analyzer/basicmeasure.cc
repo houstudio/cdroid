@@ -171,11 +171,12 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
                                  int /*widthMode*/, int /*widthSize*/,
                                  int /*heightMode*/, int /*heightSize*/,
                                  int /*lastMeasureWidth*/, int /*lastMeasureHeight*/) {
-    // MVP path: OPTIMIZATION_GRAPH optimize-path (directMeasure / DependencyGraph) and the
-    // match-constraint re-measure loop (BasicMeasure 305-446) are deferred. This implements
-    // measureChildren -> updateHierarchy -> solveLinearSystem, which handles fixed-dimension
-    // children (the MVP sample). match_constraint children measure with their default size.
-    // TODO(analyzer): restore optimize path + size-dependent iteration.
+    // measureChildren -> updateHierarchy -> solveLinearSystem (first pass), then a VirtualLayout
+    // pass (Flow/etc. derive their content size), then the match-constraint convergence loop below
+    // (maxIterations=2, TRY→USE_GIVEN_DIMENSIONS, early-exit on convergence). Only the
+    // OPTIMIZATION_GRAPH optimize-path (directMeasure / DependencyGraph run-system) remains
+    // deferred — it is a performance path (off by default in AndroidX) and does not affect the
+    // standard linear-solve correctness exercised here.
     const int childCount = (int) layout->mChildren.size();
     int startingWidth = layout->getWidth();
     int startingHeight = layout->getHeight();
@@ -238,7 +239,19 @@ long BasicMeasure::solverMeasure(ConstraintWidgetContainer* layout, int /*optimi
             if (dynamic_cast<VirtualLayout*>(widget) != nullptr) continue;  // VL block owns these
             if (dynamic_cast<HelperWidget*>(widget) != nullptr)   continue;  // Barrier/Group/Guideline
             if (widget->isInVirtualLayout())                      continue;  // Flow measures its own
+            if (widget->getVisibility() == ConstraintWidget::GONE) continue;  // GONE: skip (AndroidX 360)
+
+            int preWidth    = widget->getWidth();
+            int preHeight   = widget->getHeight();
+            int preBaseline = widget->getBaselineDistance();
             if (measure(measurer, widget, strategy)) {
+                needPass = true;
+            }
+            // Independent size/baseline-change checks (AndroidX 398-436): robustness if a measurer
+            // forgets measuredNeedsSolverPass — a changed dimension or baseline still forces a re-solve.
+            if (widget->getWidth()  != preWidth
+                    || widget->getHeight() != preHeight
+                    || (widget->hasBaseline() && preBaseline != widget->getBaselineDistance())) {
                 needPass = true;
             }
         }
