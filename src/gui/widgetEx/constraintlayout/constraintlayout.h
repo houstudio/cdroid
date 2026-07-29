@@ -146,7 +146,7 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
-    void onLayout(bool changed, int l, int t, int r, int b) override;
+    void onLayout(bool changed, int l, int t, int w, int h) override;
     void onViewAdded(View* child) override;
     void onViewRemoved(View* child) override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs) const override;

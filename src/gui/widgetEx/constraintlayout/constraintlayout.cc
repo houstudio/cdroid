@@ -500,10 +500,10 @@ void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
 }
 
 void ConstraintLayout::resolveSystem(int widthSpec, int heightSpec) {
-    mWidthSpec = widthSpec;
-    mHeightSpec = heightSpec;
     int paddingLeft = getPaddingLeft(), paddingRight = getPaddingRight();
     int paddingTop = getPaddingTop(), paddingBottom = getPaddingBottom();
+    mWidthSpec = widthSpec;
+    mHeightSpec = heightSpec;
     mPaddingWidth = paddingLeft + paddingRight;
     mPaddingHeight = paddingTop + paddingBottom;
 
@@ -569,7 +569,7 @@ void ConstraintLayout::resolveMeasuredDimension(int widthSpec, int heightSpec,
     setMeasuredDimension(resolvedW, resolvedH);
 }
 
-void ConstraintLayout::onLayout(bool /*changed*/, int /*l*/, int /*t*/, int /*r*/, int /*b*/) {
+void ConstraintLayout::onLayout(bool /*changed*/, int /*l*/, int /*t*/, int /*w*/, int /*h*/) {
     const int count = getChildCount();
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);

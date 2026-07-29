@@ -382,8 +382,8 @@ void MotionLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
     }
 }
 
-void MotionLayout::onLayout(bool changed, int l, int t, int r, int b) {
-    ConstraintLayout::onLayout(changed, l, t, r, b);
+void MotionLayout::onLayout(bool changed, int l, int t, int w, int h) {
+    ConstraintLayout::onLayout(changed, l, t, w, h);
     // After the solver lays out children, override their positions with the interpolated motion
     // state. Without this the solver's layout (from the last-applied ConstraintSet) would clobber
     // the motion positions.

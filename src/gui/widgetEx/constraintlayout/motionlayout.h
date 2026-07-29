@@ -133,7 +133,7 @@ class MotionLayout : public ConstraintLayout {
 
   protected:
     void onMeasure(int widthMeasureSpec, int heightMeasureSpec) override;
-    void onLayout(bool changed, int l, int t, int r, int b) override;
+    void onLayout(bool changed, int l, int t, int w, int h) override;
     // Drag-to-progress when the scene's current transition has an <OnSwipe>. Intercepted once the
     // drag exceeds touch slop (so taps still reach <OnClick> children); auto-completes on release.
     bool onInterceptTouchEvent(MotionEvent& evt) override;
