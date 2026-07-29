@@ -3,14 +3,15 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionLayout.
  */
-#include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/motionlayout.h>
 
 #include <porting/cdlog.h>
 #include <animation/valueanimator.h>
 #include <view/motionevent.h>
 #include <view/view.h>
-#include <widgetEx/constraintlayout/keyframes.h>
-#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
+#include <widgetEx/constraintlayout/motion/keyframes.h>
+#include <widgetEx/constraintlayout/motion/motionhelper.h>
+#include <widgetEx/constraintlayout/motion/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
@@ -127,6 +128,19 @@ void MotionLayout::captureAndBuild() {
     captureState(mStartSet, mStartWidgets);
     captureState(mEndSet, mEndWidgets);
     buildMotions();
+    // MotionHelper decorators (e.g. MotionEffect) insert keyframes into the freshly-built Motion
+    // controllers now that their start/end positions are known (AndroidX MotionLayout calls each
+    // decorator's onPreSetup during the controller-build path).
+    if (!mMotions.empty()) {
+        const int n = getChildCount();
+        for (int i = 0; i < n; i++) {
+            View* child = getChildAt(i);
+            auto* decorator = dynamic_cast<MotionHelper*>(child);
+            if (decorator != nullptr && decorator->isDecorator()) {
+                decorator->onPreSetup(this, mMotions);
+            }
+        }
+    }
     // The scene's KeyFrames go onto the freshly-built Motion controllers (borrowed pointers; the
     // MotionScene/KeyFrames outlive the controllers — both owned by this MotionLayout).
     if (mKeyFramesToApply) applyKeyFramesToMotions(mKeyFramesToApply);

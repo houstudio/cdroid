@@ -271,6 +271,10 @@ class ConstraintWidget {
     void setInVirtualLayout(bool inVirtualLayout);
     // Connect one of this widget's anchors to a target anchor (Java: connect(from, to, margin)).
     void connect(ConstraintAnchor& from, ConstraintAnchor* to, int margin);
+    // Position this widget on a circle of `radius` around `target` at `angle` degrees (Java:
+    // connectCircularConstraint). Connects CENTER→CENTER with radius as margin and stores the angle,
+    // which LinearSystem::addCenterPoint consumes (constraintwidget.cc) to emit the center constraint.
+    void connectCircularConstraint(ConstraintWidget* target, float angle, int radius);
     // Reset every anchor's connection (Java: resetAnchors).
     void resetAnchors();
     // Re-measure request flag (Flow uses it for percent/match-constraint children).

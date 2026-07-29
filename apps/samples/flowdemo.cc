@@ -4,7 +4,7 @@
  */
 #include <cdroid.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
-#include <widgetEx/constraintlayout/flow.h>
+#include <widgetEx/constraintlayout/helpers/flow.h>
 
 using namespace cdroid;
 

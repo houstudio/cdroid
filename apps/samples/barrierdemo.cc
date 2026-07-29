@@ -6,7 +6,7 @@
  */
 #include <cdroid.h>
 #include <widgetEx/constraintlayout/constraintlayout.h>
-#include <widgetEx/constraintlayout/barrier.h>
+#include <widgetEx/constraintlayout/helpers/barrier.h>
 
 using namespace cdroid;
 

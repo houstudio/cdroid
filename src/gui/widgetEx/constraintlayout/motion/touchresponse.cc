@@ -3,11 +3,11 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.TouchResponse.
  */
-#include <widgetEx/constraintlayout/touchresponse.h>
+#include <widgetEx/constraintlayout/motion/touchresponse.h>
 
 #include <cmath>
 
-#include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <view/motionevent.h>
 #include <view/velocitytracker.h>
 

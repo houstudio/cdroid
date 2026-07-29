@@ -10,7 +10,7 @@
  */
 #include <cdroid.h>
 #include <widgetEx/constraintlayout/constraintset.h>
-#include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
 
 using namespace cdroid;

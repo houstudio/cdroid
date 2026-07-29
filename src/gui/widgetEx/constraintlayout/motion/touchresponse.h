@@ -19,7 +19,7 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_TOUCH_RESPONSE_H
 
-#include <widgetEx/constraintlayout/motionscene.h>
+#include <widgetEx/constraintlayout/motion/motionscene.h>
 
 namespace cdroid {
 

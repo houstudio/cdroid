@@ -3,7 +3,7 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.Flow.
  */
-#include <widgetEx/constraintlayout/flow.h>
+#include <widgetEx/constraintlayout/helpers/flow.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>

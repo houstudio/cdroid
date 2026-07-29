@@ -3,7 +3,7 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.Group.
  */
-#include <widgetEx/constraintlayout/group.h>
+#include <widgetEx/constraintlayout/helpers/group.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>

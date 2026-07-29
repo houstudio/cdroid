@@ -8,19 +8,22 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/constraintlayout.cc
         widgetEx/constraintlayout/constraintset.cc
         widgetEx/constraintlayout/constraintlayoutstates.cc
-        widgetEx/constraintlayout/keyframes.cc
-        widgetEx/constraintlayout/motionscene.cc
-        widgetEx/constraintlayout/viewtransition.cc
-        widgetEx/constraintlayout/viewtransitioncontroller.cc
+        widgetEx/constraintlayout/motion/keyframes.cc
+        widgetEx/constraintlayout/motion/motionscene.cc
+        widgetEx/constraintlayout/motion/viewtransition.cc
+        widgetEx/constraintlayout/motion/viewtransitioncontroller.cc
         widgetEx/constraintlayout/sharedvalues.cc
-        widgetEx/constraintlayout/touchresponse.cc
-        widgetEx/constraintlayout/motionlayout.cc
+        widgetEx/constraintlayout/motion/touchresponse.cc
+        widgetEx/constraintlayout/motion/motionlayout.cc
         # --- widget: virtual helpers (Stage 5) ---
-        widgetEx/constraintlayout/constrainthelper.cc
-        widgetEx/constraintlayout/barrier.cc
-        widgetEx/constraintlayout/group.cc
-        widgetEx/constraintlayout/placeholder.cc
-        widgetEx/constraintlayout/flow.cc
+        widgetEx/constraintlayout/helpers/constrainthelper.cc
+        widgetEx/constraintlayout/helpers/barrier.cc
+        widgetEx/constraintlayout/helpers/group.cc
+        widgetEx/constraintlayout/helpers/placeholder.cc
+        widgetEx/constraintlayout/helpers/flow.cc
+        widgetEx/constraintlayout/helpers/layer.cc
+        widgetEx/constraintlayout/helpers/circularflow.cc
+        widgetEx/constraintlayout/motion/motioneffect.cc
 
         # --- core: solver math kernel + LinearSystem ---
         widgetEx/constraintlayout/core/arraylinkedvariables.cc

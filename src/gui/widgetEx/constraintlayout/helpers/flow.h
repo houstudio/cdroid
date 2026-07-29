@@ -10,7 +10,7 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_FLOW_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_FLOW_H
 
-#include <widgetEx/constraintlayout/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/constrainthelper.h>
 #include <widgetEx/constraintlayout/core/widgets/flow.h>
 
 namespace cdroid {

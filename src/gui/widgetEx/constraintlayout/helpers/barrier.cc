@@ -3,7 +3,7 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.Barrier.
  */
-#include <widgetEx/constraintlayout/barrier.h>
+#include <widgetEx/constraintlayout/helpers/barrier.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>

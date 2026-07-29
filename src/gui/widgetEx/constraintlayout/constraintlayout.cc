@@ -18,8 +18,8 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/textview.h>
-#include <widgetEx/constraintlayout/constrainthelper.h>
-#include <widgetEx/constraintlayout/placeholder.h>
+#include <widgetEx/constraintlayout/helpers/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/placeholder.h>
 
 DECLARE_WIDGET(ConstraintLayout)
 
@@ -105,6 +105,11 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
 
     // Baseline
     baselineToBaseline = attrs.getResourceId("layout_constraintBaseline_toBaselineOf", UNSET);
+
+    // Circular constraint
+    circleConstraint = attrs.getResourceId("layout_constraintCircle", UNSET);
+    circleAngle      = attrs.getFloat("layout_constraintCircleAngle", 0);
+    circleRadius     = attrs.getDimensionPixelSize("layout_constraintCircleRadius", 0);
 
     // Chain styles
     static const std::unordered_map<std::string,int> chainStyles = {
@@ -471,6 +476,14 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
             t->setHasBaseline(true);
             widget->mTop.reset();
             widget->mBottom.reset();
+        }
+    }
+
+    // Circular constraint: position this view on a circle around the target (Java: ConstraintLayout
+    // lines 1429-1433 translate params.circle* into widget.connectCircularConstraint).
+    if (lp->circleConstraint != LayoutParams::UNSET) {
+        if (ConstraintWidget* t = resolveTarget(lp->circleConstraint)) {
+            widget->connectCircularConstraint(t, lp->circleAngle, lp->circleRadius);
         }
     }
 }

@@ -21,19 +21,22 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/constraintlayoutstates.h>
-#include <widgetEx/constraintlayout/keyframes.h>
-#include <widgetEx/constraintlayout/motionscene.h>
-#include <widgetEx/constraintlayout/viewtransition.h>
+#include <widgetEx/constraintlayout/motion/keyframes.h>
+#include <widgetEx/constraintlayout/motion/motionscene.h>
+#include <widgetEx/constraintlayout/motion/viewtransition.h>
 #include <view/motionevent.h>
-#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
+#include <widgetEx/constraintlayout/motion/viewtransitioncontroller.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
-#include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
-#include <widgetEx/constraintlayout/barrier.h>
-#include <widgetEx/constraintlayout/group.h>
-#include <widgetEx/constraintlayout/placeholder.h>
-#include <widgetEx/constraintlayout/flow.h>
+#include <widgetEx/constraintlayout/helpers/barrier.h>
+#include <widgetEx/constraintlayout/helpers/group.h>
+#include <widgetEx/constraintlayout/helpers/placeholder.h>
+#include <widgetEx/constraintlayout/helpers/flow.h>
+#include <widgetEx/constraintlayout/helpers/layer.h>
+#include <widgetEx/constraintlayout/helpers/circularflow.h>
+#include <widgetEx/constraintlayout/motion/motioneffect.h>
 
 using namespace cdroid;
 
@@ -330,6 +333,124 @@ TEST(ConstraintLayout, StartEndTakesPrecedenceOverLeftRight) {
     cl->layout(0, 0, 600, 400);
 
     EXPECT_EQ(w->getLeft(), 200);  // start/end precedence, not left/right (would be 0)
+}
+
+// Layer: a pure group translation (no rotation/scale) shifts every referenced view by the same
+// amount. transform() with scale=1, rotation=0 reduces shiftx = mShiftX for all views.
+TEST(ConstraintLayout, LayerAppliesGroupTranslation) {
+    ConstraintLayout* cl = new ConstraintLayout(200, 200);
+    TextView* a = new TextView("A", 50, 50); a->setId(1);
+    TextView* b = new TextView("B", 50, 50); b->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(50, 50);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->topToTop = ConstraintLayout::PARENT_ID;
+    auto* lpb = new ConstraintLayout::LayoutParams(50, 50);
+    lpb->rightToRight = ConstraintLayout::PARENT_ID;
+    lpb->bottomToBottom = ConstraintLayout::PARENT_ID;
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+
+    auto* layer = new Layer(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    layer->setReferencedIds({1, 2});
+    cl->addView(layer);
+
+    cl->measure(exactly(200), exactly(200));
+    cl->layout(0, 0, 200, 200);
+    layer->setTranslationX(30);  // post-layout group shift
+
+    EXPECT_EQ(a->getTranslationX(), 30);
+    EXPECT_EQ(b->getTranslationX(), 30);
+}
+
+// Layer: rotating 90° about the bbox center applies the affine rotation transform to each view and
+// propagates the rotation. bbox center = (200,200); view A center (50,50) → dx=dy=-150; with the
+// 90° matrix {0,-1,1,0} shiftx = (-1)(-150)-(-150) = 300, shifty = (1)(-150)-(-150) = 0.
+TEST(ConstraintLayout, LayerRotatesGroupAboutCenter) {
+    ConstraintLayout* cl = new ConstraintLayout(400, 400);
+    TextView* a = new TextView("A", 100, 100); a->setId(1);
+    TextView* b = new TextView("B", 100, 100); b->setId(2);
+    auto* lpa = new ConstraintLayout::LayoutParams(100, 100);
+    lpa->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpa->topToTop = ConstraintLayout::PARENT_ID;
+    auto* lpb = new ConstraintLayout::LayoutParams(100, 100);
+    lpb->rightToRight = ConstraintLayout::PARENT_ID;
+    lpb->bottomToBottom = ConstraintLayout::PARENT_ID;
+    cl->addView(a, lpa);
+    cl->addView(b, lpb);
+
+    auto* layer = new Layer(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    layer->setReferencedIds({1, 2});
+    cl->addView(layer);
+
+    cl->measure(exactly(400), exactly(400));
+    cl->layout(0, 0, 400, 400);
+    layer->setRotation(90);
+
+    EXPECT_FLOAT_EQ(a->getRotation(), 90.0f);
+    EXPECT_FLOAT_EQ(a->getTranslationX(), 300.0f);
+    EXPECT_FLOAT_EQ(a->getTranslationY(), 0.0f);
+}
+
+// CircularFlow: positions a referenced view on a circle around a center view. Center view c is
+// centered at (200,200); referenced v at angle 0°, radius 100. With the solver's addCenterPoint
+// convention (effective angle = circleAngle+90°), angle 0 places v directly below the center at
+// distance 100 → v center (200,300) → for a 50×50 view, left=175, top=275.
+TEST(ConstraintLayout, CircularFlowPlacesViewOnCircle) {
+    ConstraintLayout* cl = new ConstraintLayout(400, 400);
+
+    // Center view: 100×100, centered in parent → center (200,200).
+    TextView* c = new TextView("C", 100, 100); c->setId(1);
+    auto* lpc = new ConstraintLayout::LayoutParams(100, 100);
+    lpc->leftToLeft = ConstraintLayout::PARENT_ID;
+    lpc->rightToRight = ConstraintLayout::PARENT_ID;
+    lpc->topToTop = ConstraintLayout::PARENT_ID;
+    lpc->bottomToBottom = ConstraintLayout::PARENT_ID;
+    cl->addView(c, lpc);
+
+    // Referenced view: 50×50, placed on the circle.
+    TextView* v = new TextView("V", 50, 50); v->setId(2);
+    cl->addView(v, new ConstraintLayout::LayoutParams(50, 50));
+
+    auto* cf = new CircularFlow(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    cf->setReferencedIds({2});
+    cf->setAngles(std::vector<float>{0.0f});
+    cf->setRadius(std::vector<int>{100});
+    cf->setViewCenter(1);  // circle around the center view c
+    cl->addView(cf);
+
+    cl->measure(exactly(400), exactly(400));
+    cl->layout(0, 0, 400, 400);
+
+    // The view sits on the circle of radius 100 around c's center (200,200). Angle 0 places it
+    // directly above the center (the solver's effective angle = circleAngle+90°).
+    int vcx = v->getLeft() + v->getWidth() / 2;
+    int vcy = v->getTop() + v->getHeight() / 2;
+    int dx = vcx - 200;
+    int dy = vcy - 200;
+    EXPECT_NEAR(std::hypot(dx, dy), 100, 2);  // on the circle at the given radius
+    EXPECT_NEAR(dx, 0, 2);
+    EXPECT_NEAR(dy, -100, 2);  // angle 0 → above the center
+}
+
+// MotionEffect: a decorator that picks the opposite-of-dominant motion direction for the fade. A view
+// moving east (Δx>0) votes WEST; moving south (Δy>0) votes NORTH. Verified via the factored vote.
+TEST(ConstraintLayout, MotionEffectVotesDirection) {
+    MotionEffect* me = new MotionEffect(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    EXPECT_TRUE(me->isDecorator());
+
+    using D = std::pair<float, float>;
+    // A view moving east (+x) → fade applies to the west side. (int) cast: the static constexpr
+    // direction constants are ODR-used only when bound to a reference (gtest's EXPECT_EQ takes
+    // const T&); the cast yields a prvalue, avoiding the C++14 out-of-line definition.
+    EXPECT_EQ(MotionEffect::computeFadeDirection({D{100, 0}}), (int) MotionEffect::WEST);
+    // Moving south (+y) → north.
+    EXPECT_EQ(MotionEffect::computeFadeDirection({D{0, 100}}), (int) MotionEffect::NORTH);
+    // Moving west (-x) → east.
+    EXPECT_EQ(MotionEffect::computeFadeDirection({D{-100, 0}}), (int) MotionEffect::EAST);
+    // Moving north (-y) → south.
+    EXPECT_EQ(MotionEffect::computeFadeDirection({D{0, -100}}), (int) MotionEffect::SOUTH);
+    // Dominant direction across several views: two east-movers outweigh one south-mover → west.
+    EXPECT_EQ(MotionEffect::computeFadeDirection({D{100, 0}, D{120, 0}, D{0, 50}}), (int) MotionEffect::WEST);
 }
 
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.

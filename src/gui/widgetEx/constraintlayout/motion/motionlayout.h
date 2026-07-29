@@ -23,8 +23,8 @@
 
 #include <widgetEx/constraintlayout/constraintlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
-#include <widgetEx/constraintlayout/motionscene.h>
-#include <widgetEx/constraintlayout/touchresponse.h>
+#include <widgetEx/constraintlayout/motion/motionscene.h>
+#include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <widgetEx/constraintlayout/core/motion/motion.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 

@@ -3,7 +3,7 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintHelper.
  */
-#include <widgetEx/constraintlayout/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/constrainthelper.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>

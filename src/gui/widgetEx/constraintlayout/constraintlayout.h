@@ -86,6 +86,12 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
         // baseline ("layout_constraintBaseline_toBaselineOf")
         int baselineToBaseline = UNSET;
 
+        // Circular constraint ("layout_constraintCircle[_angle|_radius]") — positions this view on a
+        // circle around the target. Wired to ConstraintWidget::connectCircularConstraint by the bridge.
+        int circleConstraint = UNSET;
+        float circleAngle = 0;
+        int circleRadius = 0;
+
         // chain styles (layout_constraintHorizontal/Vertical_chainStyle: spread/spread_inside/packed)
         int horizontalChainStyle = ConstraintWidget::CHAIN_SPREAD;
         int verticalChainStyle = ConstraintWidget::CHAIN_SPREAD;

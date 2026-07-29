@@ -22,7 +22,7 @@
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_BARRIER_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_BARRIER_H
 
-#include <widgetEx/constraintlayout/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/constrainthelper.h>
 #include <widgetEx/constraintlayout/core/widgets/barrier.h>
 
 namespace cdroid {

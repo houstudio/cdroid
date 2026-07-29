@@ -10,6 +10,10 @@
 #include <widget/linearlayout.h>
 #include <view/gravity.h>
 #include <porting/cdlog.h>
+#include <unistd.h>
+#include <limits.h>
+#include <string>
+#include <vector>
 
 class GUIEnvironment: public testing::Environment{
 private:
@@ -25,9 +29,26 @@ public:
         mInst=this;
     }
     void SetUp()override{
-        /* The single App that backs every GUI test. Intentionally never
-           deleted: App registers an AtExit callback capturing `this`, so it
-           must outlive AtExit teardown. */
+        /* Ensure cdroid.pak is loaded from the test output root when the
+           binary is run from a different working directory. */
+        if(argc > 0 && argv[0]){
+            char binaryPath[PATH_MAX];
+            if(realpath(argv[0], binaryPath)){
+                std::string path(binaryPath);
+                auto pos = path.find_last_of('/');
+                if(pos != std::string::npos) path = path.substr(0, pos);
+                while(!path.empty()){
+                    std::string candidate = path + "/cdroid.pak";
+                    if(access(candidate.c_str(), F_OK) == 0){
+                        chdir(path.c_str());
+                        break;
+                    }
+                    pos = path.find_last_of('/');
+                    if(pos == std::string::npos) break;
+                    path = path.substr(0, pos);
+                }
+            }
+        }
         new cdroid::App(argc, argv);
         /* The single shared Window ("stage"). Tests add their views to its
            content area (see content()), not to the Window directly. -1/-1 =

@@ -208,6 +208,13 @@ void ConstraintWidget::connect(ConstraintAnchor& from, ConstraintAnchor* to, int
     }
 }
 
+void ConstraintWidget::connectCircularConstraint(ConstraintWidget* target, float angle, int radius) {
+    if (target != nullptr) {
+        mCenter.connect(&target->mCenter, radius, 0, true);
+        mCircleConstraintAngle = angle;
+    }
+}
+
 void ConstraintWidget::resetAnchors() {
     // The Java original short-circuits when the parent container handles internal constraints;
     // CDROID containers never do, so always reset every anchor.

@@ -37,7 +37,7 @@
 #include <vector>
 
 #include <widgetEx/constraintlayout/sharedvalues.h>
-#include <widgetEx/constraintlayout/viewtransition.h>
+#include <widgetEx/constraintlayout/motion/viewtransition.h>
 
 namespace cdroid {
 

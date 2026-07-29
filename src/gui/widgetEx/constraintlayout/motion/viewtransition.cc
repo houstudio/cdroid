@@ -15,11 +15,11 @@
  *
  * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.ViewTransition.
  */
-#include <widgetEx/constraintlayout/viewtransition.h>
-#include <widgetEx/constraintlayout/keyframes.h>
-#include <widgetEx/constraintlayout/motionscene.h>
-#include <widgetEx/constraintlayout/viewtransitioncontroller.h>
-#include <widgetEx/constraintlayout/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/viewtransition.h>
+#include <widgetEx/constraintlayout/motion/keyframes.h>
+#include <widgetEx/constraintlayout/motion/motionscene.h>
+#include <widgetEx/constraintlayout/motion/viewtransitioncontroller.h>
+#include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/constraintset.h>
 
 #include <regex>
