@@ -3,19 +3,28 @@
 #include <navigation/navgraph.h>
 #include <navigation/navigator.h>
 #include <navigation/navdeeplink.h>
+#include <navigation/navargument.h>
 namespace cdroid{
 
 std::string NavDestination::getDisplayName(Context* context, int id) {
-    /*try {
-        return context.getResources().getResourceName(id);
-    } catch (Resources.NotFoundException e) {
-        return Integer.toString(id);
-    }*/
     return "";
 }
 
-NavDestination::NavDestination(/*@NonNull Navigator<? extends NavDestination>*/Navigator* navigator) {
+NavDestination::NavDestination(Navigator* navigator) {
     mNavigator = navigator;
+}
+
+NavDestination::NavDestination(const std::string& navigatorName) {
+    mNavigator = nullptr;
+    mNavigatorName = navigatorName;
+}
+
+void NavDestination::addArgument(const std::string& name, NavArgument* argument) {
+    mArguments[name] = argument;
+}
+
+void NavDestination::removeArgument(const std::string& name) {
+    mArguments.erase(name);
 }
 
 void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {

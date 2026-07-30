@@ -1,6 +1,7 @@
 #ifndef __NAV_OPTIONS_H__
 #define __NAV_OPTIONS_H__
 #include <core/bundle.h>
+#include <string>
 namespace cdroid{
 class Window;
 class Intent;
@@ -21,47 +22,58 @@ public:
 private:
     int mLaunchMode;
     bool mPopUpToInclusive;
-    std::string mPopUpTo;
+    std::string mPopUpTo;            // also serves as popUpToRoute (modern)
     std::string mEnterAnim;
     std::string mExitAnim;
     std::string mPopEnterAnim;
     std::string mPopExitAnim;
-private:
+    bool mShouldRestoreState = false;
+    bool mShouldPopUpToSaveState = false;
     Bundle* toBundle();
     static NavOptions* fromBundle(const Bundle& b);
 public:
     class Builder;
-    static void addPopAnimationsToIntent(Intent& intent,NavOptions* navOptions);
+    static void addPopAnimationsToIntent(Intent& intent, NavOptions* navOptions);
     static void applyPopAnimationsToPendingTransition(Activity& activity);
-    NavOptions(int launchMode,const std::string& popUpTo, bool popUpToInclusive, const std::string& enterAnim,
-         const std::string& exitAnim, const std::string& popEnterAnim, const std::string& popExitAnim);
+    NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
+        const std::string& enterAnim, const std::string& exitAnim,
+        const std::string& popEnterAnim, const std::string& popExitAnim);
+    NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
+        const std::string& enterAnim, const std::string& exitAnim,
+        const std::string& popEnterAnim, const std::string& popExitAnim,
+        bool shouldRestoreState, bool shouldPopUpToSaveState);
     bool shouldLaunchSingleTop() const;
     bool shouldLaunchDocument() const;
     bool shouldClearTask() const;
-    const std::string  getPopUpTo() const;
+    const std::string getPopUpTo() const;
     bool isPopUpToInclusive() const;
     const std::string getEnterAnim() const;
     const std::string getExitAnim() const;
     const std::string getPopEnterAnim() const;
     const std::string getPopExitAnim() const;
+    bool shouldRestoreState() const { return mShouldRestoreState; }
+    bool shouldPopUpToSaveState() const { return mShouldPopUpToSaveState; }
+    const std::string& getPopUpToRoute() const { return mPopUpTo; }
 };
 
 class NavOptions::Builder {
-    int mLaunchMode;
+    int mLaunchMode = 0;
     std::string mPopUpTo;
-    bool mPopUpToInclusive;
+    bool mPopUpToInclusive = false;
     std::string mEnterAnim;
     std::string mExitAnim;
     std::string mPopEnterAnim;
     std::string mPopExitAnim;
+    bool mShouldRestoreState = false;
+    bool mShouldPopUpToSaveState = false;
 public:
     Builder();
-
     Builder& setLaunchSingleTop(bool singleTop);
     Builder& setLaunchDocument(bool launchDocument);
-
     Builder& setClearTask(bool clearTask);
     Builder& setPopUpTo(const std::string& destinationId, bool inclusive);
+    Builder& setPopUpTo(const std::string& route, bool inclusive, bool saveState);
+    Builder& setRestoreState(bool restoreState);
     Builder& setEnterAnim(const std::string& enterAnim);
     Builder& setExitAnim(const std::string& exitAnim);
     Builder& setPopEnterAnim(const std::string& popEnterAnim);

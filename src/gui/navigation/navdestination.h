@@ -7,6 +7,7 @@
 #include <core/context.h>
 #include <core/sparsearray.h>
 #include <core/bundle.h>
+#include <navigation/navargument.h>
 namespace cdroid{
 class NavAction;
 class Navigator;
@@ -19,34 +20,43 @@ public:
     static std::string getDisplayName(Context* context, int id);
 private:
     Navigator* mNavigator;
-    NavGraph* mParent;
-    int mId;
+    NavGraph* mParent = nullptr;
+    int mId = 0;
     std::string mLabel;
+    std::string mRoute;            // modern route identifier
+    std::string mNavigatorName;    // navigator name (e.g. "fragment"/"navigation")
     Bundle mDefaultArgs;
     std::vector<NavDeepLink*> mDeepLinks;
     SparseArray<NavAction*> mActions;
+    std::map<std::string, NavArgument*> mArguments;
 public:
-    NavDestination(Navigator*navigator);
+    NavDestination(Navigator* navigator);
+    NavDestination(const std::string& navigatorName);
 
     virtual void onInflate(Context* context, const AttributeSet& attrs);
     void setParent(NavGraph* parent);
-
     NavGraph* getParent();
     int getId() const;
     void setId(int id);
-    void setLabel(const std::string&label);
-
+    void setLabel(const std::string& label);
     const std::string getLabel() const;
-
     Navigator& getNavigator();
+
+    // Modern route API.
+    const std::string& getRoute() const { return mRoute; }
+    void setRoute(const std::string& route) { mRoute = route; }
+    const std::string& getNavigatorName() const { return mNavigatorName; }
+    void setNavigatorName(const std::string& name) { mNavigatorName = name; }
+    bool hasRoute(const std::string& route) const { return !mRoute.empty() && mRoute == route; }
+    void addArgument(const std::string& name, NavArgument* argument);
+    void removeArgument(const std::string& name);
+    const std::map<std::string, NavArgument*>& getArguments() const { return mArguments; }
 
     Bundle getDefaultArguments();
     void setDefaultArguments(Bundle& args);
-
     void addDefaultArguments(Bundle& args);
-
-    void addDeepLink(/*@NonNull*/const std::string& uriPattern);
-    virtual std::pair<NavDestination*, Bundle*>* matchDeepLink(/*Uri*/const std::string& uri);
+    void addDeepLink(const std::string& uriPattern);
+    virtual std::pair<NavDestination*, Bundle*>* matchDeepLink(const std::string& uri);
     std::vector<int> buildDeepLinkIds();
     NavAction* getAction(int id);
     void putAction(int actionId, int destId);
