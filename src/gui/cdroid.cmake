@@ -6,8 +6,11 @@ include(drawable/drawables.cmake)
 include(widget/widget.cmake)
 include(menu/menu.cmake)
 include(transition/transition.cmake)
-#include(fragment/fragment.cmake)
+include(lifecycle/lifecycle.cmake)
+include(savedstate/savedstate.cmake)
+include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
+include(navigation/navigation.cmake)
 
 list(APPEND CDROID_SOURCES
     private/inputeventlabels.cc
@@ -18,9 +21,12 @@ list(APPEND CDROID_SOURCES
     ${WIDGET_SOURCES}
     ${MENU_SOURCES}
     ${TRANSITION_SOURCES}
-    #${FRAGMENT_SOURCES}
+    ${LIFECYCLE_SOURCES}
+    ${SAVEDSTATE_SOURCES}
+    ${FRAGMENT_SOURCES}
     ${WIDGETEX_SOURCES}
     ${WEAR_SOURCES}
+    ${NAVIGATION_SOURCES}
 )
 
 if(ENABLE_AUDIO)
@@ -54,21 +60,4 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
         app/progressdialog.cc
     )
 endif(ENABLE_DIALOGS)
-
-if(ENABLE_NAVIGATION)
-    list(APPEND CDROID_SOURCES
-        navigation/navaction.cc
-        navigation/navcontroller.cc
-        navigation/navdeeplink.cc
-        navigation/navdeeplinkbuilder.cc
-        navigation/navdestination.cc
-        navigation/navgraph.cc
-        navigation/navgraphnavigator.cc
-        navigation/navigation.cc
-        navigation/navigator.cc
-        navigation/navinflater.cc
-        navigation/navoptions.cc
-        navigation/simplenavigatorprovider.cc
-    )
-endif(ENABLE_NAVIGATION)
 
