@@ -15,11 +15,18 @@ FragmentViewLifecycleOwner::~FragmentViewLifecycleOwner(){
     delete mSavedStateRegistryController;
 }
 
-lifecycle::Lifecycle& FragmentViewLifecycleOwner::getLifecycle(){ return *mLifecycleRegistry; }
-lifecycle::ViewModelStore& FragmentViewLifecycleOwner::getViewModelStore(){ return *mViewModelStore; }
+lifecycle::Lifecycle& FragmentViewLifecycleOwner::getLifecycle(){
+    return *mLifecycleRegistry;
+}
+
+lifecycle::ViewModelStore& FragmentViewLifecycleOwner::getViewModelStore(){
+    return *mViewModelStore;
+}
+
 savedstate::SavedStateRegistry& FragmentViewLifecycleOwner::getSavedStateRegistry(){
     return mSavedStateRegistryController->getSavedStateRegistry();
 }
+
 lifecycle::ViewModelProvider::Factory& FragmentViewLifecycleOwner::getDefaultViewModelProviderFactory(){
     return lifecycle::HasDefaultViewModelProviderFactory::getDefaultViewModelProviderFactory();
 }

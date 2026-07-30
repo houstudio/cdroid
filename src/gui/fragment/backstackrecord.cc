@@ -6,12 +6,24 @@
 namespace cdroid{
 namespace fragment{
 
-BackStackRecord::BackStackRecord(FragmentManager* manager) : mManager(manager){}
+BackStackRecord::BackStackRecord(FragmentManager* manager) : mManager(manager){
+}
 
-int BackStackRecord::commit(){ return commitInternal(); }
-int BackStackRecord::commitAllowingStateLoss(){ return commitInternal(); }
-void BackStackRecord::commitNow(){ commitInternal(); }
-void BackStackRecord::commitNowAllowingStateLoss(){ commitInternal(); }
+int BackStackRecord::commit(){
+    return commitInternal();
+}
+
+int BackStackRecord::commitAllowingStateLoss(){
+    return commitInternal();
+}
+
+void BackStackRecord::commitNow(){
+    commitInternal();
+}
+
+void BackStackRecord::commitNowAllowingStateLoss(){
+    commitInternal();
+}
 
 int BackStackRecord::commitInternal(){
     executeOps();
@@ -42,7 +54,14 @@ void BackStackRecord::executeOps(){
                 std::vector<Fragment*> existing = mManager->getFragments();
                 Fragment* oldFrag = nullptr;
                 for(Fragment* e : existing){
-                    if(e && e != f && e->mContainerId == cid){ oldFrag = e; mManager->removeFragment(e); }
+                    if(e && e != f && e->mContainerId == cid){
+                        oldFrag = e;
+                        // A reversible transaction must keep the displaced fragment alive
+                        // (retained at CREATED) so popBackStack can restore it; otherwise
+                        // removeFragment would fully destroy it and pop would throw.
+                        if(mAddToBackStack) mManager->retainFragment(e);
+                        else                 mManager->removeFragment(e);
+                    }
                 }
                 op.mOldFragment = oldFrag; // remembered so pop can restore it
                 mManager->addFragment(f, false);
@@ -67,9 +86,9 @@ void BackStackRecord::executePopOps(){
             case OP_ADD:    mManager->removeFragment(f); break;
             case OP_REMOVE: mManager->addFragment(f, false); break;
             case OP_REPLACE: {
-                // Reverse of executeOps REPLACE: remove the new fragment, restore the old one.
+                // Reverse of executeOps REPLACE: destroy the new fragment, restore the old one.
                 if(f) mManager->removeFragment(f);
-                if(it->mOldFragment) mManager->addFragment(it->mOldFragment, false);
+                if(it->mOldFragment) mManager->unretainFragment(it->mOldFragment);
                 break;
             }
             case OP_HIDE:   mManager->showFragment(f); break;

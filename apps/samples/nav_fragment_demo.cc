@@ -50,12 +50,18 @@ class NavDemoWindow : public FragmentWindow{
     bool mGraphBuilt = false;
 public:
     NavDemoWindow() : FragmentWindow(0, 0, -1, -1){
+        LOGD("[nav_frag_demo] NavDemoWindow ctor start");
+        setFocusable(true);
+        setClickable(true);
         mNavHost = new cdroid::NavHostFragment();
+        LOGD("[nav_frag_demo] NavHostFragment created");
         getSupportFragmentManager()->beginTransaction()
             ->replace(getFragmentContainerId(), mNavHost)
             .commit();
+        LOGD("[nav_frag_demo] NavDemoWindow ctor done (commit returned)");
     }
     void onActive() override{
+        LOGD("[nav_frag_demo] onActive ENTER");
         FragmentWindow::onActive();
         if(mGraphBuilt) return;
         mGraphBuilt = true;
@@ -81,8 +87,20 @@ public:
         mNavHost->getNavController()->popBackStack();
         LOGD("[nav_frag_demo] navigate/pop sequence done");
     }
-    bool onKeyDown(int /*keyCode*/, cdroid::KeyEvent& /*evt*/) override{
+    bool onTouchEvent(MotionEvent&e)override{
+        LOGD("%.f,%.f",e.getX(),e.getY());
+        return FragmentWindow::onTouchEvent(e);
+    }
+    bool performClick()override{
         cdroid::NavController* nc = mNavHost->getNavController();
+        if(nc){
+            LOGD("[nav_frag_demo] navigate('b') (expect BFrag)");
+            nc->navigate("b");
+        }
+    }
+    bool onKeyDown(int keyCode, cdroid::KeyEvent& /*evt*/) override{
+        cdroid::NavController* nc = mNavHost->getNavController();
+        LOGD("recv keycode %d",keyCode);
         if(nc){
             LOGD("[nav_frag_demo] navigate('b') (expect BFrag)");
             nc->navigate("b");
@@ -92,7 +110,12 @@ public:
 };
 
 int main(int argc, const char* argv[]){
+    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stderr, nullptr, _IONBF, 0);
+    LOGD("[nav_frag_demo] main ENTER (before App)");
     cdroid::App app(argc, argv);
+    LOGD("[nav_frag_demo] main: App constructed, before NavDemoWindow");
     new NavDemoWindow();
+    LOGD("[nav_frag_demo] main: NavDemoWindow created, calling exec");
     return app.exec();
 }

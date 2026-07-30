@@ -65,6 +65,9 @@ public:
     // --- internal fragment ops (used by BackStackRecord.executeOps) ---
     void addFragment(Fragment* fragment, bool hidden);
     void removeFragment(Fragment* fragment);
+    // Retain/restore a fragment across a reversible (back-stack) transaction — see .cc.
+    void retainFragment(Fragment* fragment);
+    void unretainFragment(Fragment* fragment);
     void showFragment(Fragment* fragment);
     void hideFragment(Fragment* fragment);
     void attachFragment(Fragment* fragment);
