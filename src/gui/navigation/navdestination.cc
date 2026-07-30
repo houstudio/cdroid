@@ -30,6 +30,8 @@ void NavDestination::removeArgument(const std::string& name) {
 void NavDestination::onInflate(Context* context, const AttributeSet& attrs) {
     setId(attrs.getResourceId("id", 0));
     setLabel(attrs.getString("label"));
+    const std::string route = attrs.getString("route");
+    if(!route.empty()) setRoute(route);
 }
 
 void NavDestination::setParent(NavGraph* parent) {

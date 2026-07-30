@@ -23,7 +23,9 @@ NavGraph::NavGraph(/*@NonNull*/ NavGraphNavigator* navGraphNavigator)
 
 void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    setStartDestination(attrs.getResourceId("startDestination", 0));
+    const std::string startRoute = attrs.getString("startDestination");
+    if(!startRoute.empty()) setStartDestination(startRoute);
+    else setStartDestination(attrs.getResourceId("startDestination", 0));
 }
 
 std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/const std::string& uri) {
