@@ -63,6 +63,13 @@ void NavController::navigate(int resId, Bundle* args, NavOptions* options){
 
 void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* options){
     LOGD("NavController.navigate route='%s'", node ? node->getRoute().c_str() : "(null)");
+    // launchSingleTop: if this destination is already on top of the back stack, skip
+    // navigation so we don't push a duplicate entry (androidx NavOptions singleTop).
+    if(options && options->shouldLaunchSingleTop() && !mBackStack.empty()
+       && mBackStack.back()->getDestination() == node){
+        LOGD("NavController.navigate singleTop: '%s' already on top, skip", node->getRoute().c_str());
+        return;
+    }
     NavBackStackEntry* entry = new NavBackStackEntry(node, args);
     mBackStack.push_back(entry);
     // Drive the entry's lifecycle up to RESUMED (MVP: no per-position maxLifecycle).
