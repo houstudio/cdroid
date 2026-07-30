@@ -70,6 +70,22 @@ void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* opt
         LOGD("NavController.navigate singleTop: '%s' already on top, skip", node->getRoute().c_str());
         return;
     }
+    // popUpTo: pop the back stack up to (optionally including) the given route before
+    // navigating (androidx NavOptions popUpTo). saveState/restoreState are deferred
+    // (need SavedState serialization).
+    if(options && !options->getPopUpToRoute().empty()){
+        LOGD("NavController.navigate popUpTo '%s' inclusive=%d",
+             options->getPopUpToRoute().c_str(), options->isPopUpToInclusive());
+        popBackStack(options->getPopUpToRoute(), options->isPopUpToInclusive(), false);
+    }
+    // Demote the current top entry to STARTED so only one entry is RESUMED at a time
+    // (androidx updateBackStackLifecycle: top = RESUMED, the rest = STARTED).
+    if(!mBackStack.empty()){
+        NavBackStackEntry* prev = mBackStack.back();
+        LOGD("NavController: demote '%s' RESUMED->STARTED",
+             prev->getDestination() ? prev->getDestination()->getRoute().c_str() : "?");
+        prev->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_PAUSE);
+    }
     NavBackStackEntry* entry = new NavBackStackEntry(node, args);
     mBackStack.push_back(entry);
     // Drive the entry's lifecycle up to RESUMED (MVP: no per-position maxLifecycle).
@@ -97,6 +113,10 @@ bool NavController::popBackStack(){
     delete entry;
     if(!mBackStack.empty()){
         NavBackStackEntry* top = mBackStack.back();
+        // Re-promote the new top to RESUMED (it was demoted to STARTED when pushed over).
+        LOGD("NavController: promote '%s' STARTED->RESUMED",
+             top->getDestination() ? top->getDestination()->getRoute().c_str() : "?");
+        top->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
         dispatchOnDestinationChanged(top->getDestination(), top->getArguments());
     }
     return true;
