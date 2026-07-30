@@ -5,6 +5,8 @@
 #include <fragment/fragmentfactory.h>
 #include <fragment/fragmenttransaction.h>
 #include <fragment/backstackrecord.h>
+#include <fragment/fragmentanim.h>
+#include <animation/animation.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -119,6 +121,12 @@ void FragmentManager::moveToState(Fragment* f, int newState){
                 cdroid::LayoutInflater* inflater = mHost ? mHost->onGetLayoutInflater() : nullptr;
                 f->performCreateView(inflater, f->mContainer, nullptr);
                 if(f->mView && f->mContainer) f->mContainer->addView(f->mView);
+                // Enter transition: fade the view in.
+                if(f->mView){
+                    Animation* enter = FragmentAnim::loadEnterAnimation(f);
+                    enter->setDuration(300);
+                    f->mView->startAnimation(enter);
+                }
                 f->performViewCreated(nullptr);
                 f->mState = Fragment::VIEW_CREATED;
                 break;
@@ -147,7 +155,17 @@ void FragmentManager::moveToState(Fragment* f, int newState){
             case Fragment::ACTIVITY_CREATED:
                 f->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
             case Fragment::VIEW_CREATED:
-                if(f->mView && f->mContainer) f->mContainer->removeView(f->mView);
+                if(f->mView && f->mContainer){
+                    // Exit transition: fade out, then remove the view on animation end.
+                    Animation* exit = FragmentAnim::loadExitAnimation(f);
+                    exit->setDuration(200);
+                    cdroid::View* view = f->mView;
+                    cdroid::ViewGroup* container = f->mContainer;
+                    Animation::AnimationListener listener;
+                    listener.onAnimationEnd = [view, container](Animation&){ container->removeView(view); };
+                    exit->setAnimationListener(listener);
+                    f->mView->startAnimation(exit);
+                }
                 f->performDestroyView();
                 f->mView = nullptr;
                 f->mState = Fragment::CREATED;
