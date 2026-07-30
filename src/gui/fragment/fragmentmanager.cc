@@ -35,7 +35,7 @@ void FragmentManager::attachController(FragmentHostCallback* host, FragmentConta
     mParent = parent;
     // androidx instanceof probes for ViewModelStoreOwner / SavedStateRegistryOwner /
     // OnBackPressedDispatcherOwner / FragmentOnAttachListener are deferred until the
-    // corresponding host interfaces are wired on FragmentWindow (stage 2b-5).
+    // corresponding host interfaces are wired on FragmentActivity (stage 2b-5).
 }
 
 // --- lifecycle dispatch (host -> FM -> each added fragment) ---

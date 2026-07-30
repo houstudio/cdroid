@@ -3,7 +3,7 @@
 /*********************************************************************************
  * Port of androidx.fragment.app.FragmentHostCallback<H>. CDROID host type is
  * fixed to Window (typedef Window Activity), so this is non-template: onGetHost()
- * returns cdroid::Window*. Subclassed by the host (FragmentWindow::HostCallbacks).
+ * returns cdroid::Window*. Subclassed by the host (FragmentActivity::HostCallbacks).
  *********************************************************************************/
 #include <fragment/fragmentcontainer.h>
 namespace cdroid{

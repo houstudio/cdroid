@@ -1,4 +1,4 @@
-# androidx.fragment.app port + CDROID host bridge (FragmentWindow).
+# androidx.fragment.app port + CDROID host bridge (FragmentActivity).
 if(ENABLE_FRAGMENT)
 SET(FRAGMENT_SOURCES
     fragment/fragmentfactory.cc
@@ -7,7 +7,7 @@ SET(FRAGMENT_SOURCES
     fragment/fragmentmanager.cc
     fragment/fragmenttransaction.cc
     fragment/backstackrecord.cc
-    fragment/fragmentwindow.cc
+    fragment/fragmentactivity.cc
     fragment/listfragment.cc
     fragment/dialogfragment.cc
     fragment/fragmentanim.cc

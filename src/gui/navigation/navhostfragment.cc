@@ -8,7 +8,7 @@
 
 namespace cdroid{
 
-NavHostFragment::NavHostFragment(){}
+NavHostFragment::NavHostFragment(const std::string& graphRef) : mGraphRef(graphRef){}
 
 NavHostFragment::~NavHostFragment(){
     delete mNavController;
@@ -22,6 +22,19 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
         // Register the FragmentNavigator bound to this host's child FragmentManager.
         FragmentNavigator* fragNav = new FragmentNavigator(getChildFragmentManager(), getId());
         mNavController->getNavigatorProvider()->addNavigator(fragNav);
+    }
+}
+
+void NavHostFragment::onResume(){
+    fragment::Fragment::onResume();
+    // Auto-apply the graph captured at construction, auto-navigating to its startDestination
+    // (androidx reads app:navGraph in onInflate and calls setGraph in onCreate). CDROID attaches
+    // a child Fragment's View eagerly, so the host container must already exist — resume is the
+    // earliest guaranteed point (performResume runs after the View is created). performResume then
+    // dispatches the child FragmentManager, catching the start Fragment up to RESUMED.
+    if(!mGraphRef.empty() && !mGraphLoaded && mNavController){
+        mGraphLoaded = true;
+        mNavController->setGraph(mGraphRef);
     }
 }
 
