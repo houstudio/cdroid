@@ -61,11 +61,18 @@ Fragment::~Fragment(){
 }
 
 // --- owner interface ---
-lifecycle::Lifecycle& Fragment::getLifecycle(){ return *mLifecycleRegistry; }
-lifecycle::ViewModelStore& Fragment::getViewModelStore(){ return *mViewModelStore; }
+lifecycle::Lifecycle& Fragment::getLifecycle(){
+    return *mLifecycleRegistry;
+}
+
+lifecycle::ViewModelStore& Fragment::getViewModelStore(){
+    return *mViewModelStore;
+}
+
 savedstate::SavedStateRegistry& Fragment::getSavedStateRegistry(){
     return mSavedStateRegistryController->getSavedStateRegistry();
 }
+
 lifecycle::ViewModelProvider::Factory& Fragment::getDefaultViewModelProviderFactory(){
     if(mDefaultFactory) return *mDefaultFactory;
     return lifecycle::HasDefaultViewModelProviderFactory::getDefaultViewModelProviderFactory();
@@ -97,7 +104,10 @@ FragmentManager* Fragment::getParentFragmentManager(){
     }
     return mFragmentManager;
 }
-FragmentManager* Fragment::getChildFragmentManager(){ return mChildFragmentManager.get(); }
+
+FragmentManager* Fragment::getChildFragmentManager(){
+    return mChildFragmentManager.get();
+}
 
 bool Fragment::isVisible() const{
     return mHost != nullptr && !mHidden && mView != nullptr && mUserVisibleHint;
@@ -107,6 +117,7 @@ bool Fragment::isVisible() const{
 void Fragment::performAttach(){
     onAttach(getContext());
 }
+
 void Fragment::performCreate(cdroid::Bundle* savedInstanceState){
     onCreate(savedInstanceState);
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_CREATE);
@@ -119,6 +130,7 @@ void Fragment::performCreate(cdroid::Bundle* savedInstanceState){
         mChildFragmentManager->dispatchCreate();
     }
 }
+
 void Fragment::performCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
                                  cdroid::Bundle* savedInstanceState){
     mView = onCreateView(inflater, container, savedInstanceState);
@@ -126,37 +138,44 @@ void Fragment::performCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewG
     if(!mViewLifecycleOwner) mViewLifecycleOwner = new FragmentViewLifecycleOwner(this);
     mViewLifecycleOwner->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_CREATE);
 }
+
 void Fragment::performViewCreated(cdroid::Bundle* savedInstanceState){
     onViewCreated(mView, savedInstanceState);
 }
+
 void Fragment::performActivityCreated(cdroid::Bundle* savedInstanceState){
     onActivityCreated(savedInstanceState);
     if(mChildFragmentManager) mChildFragmentManager->dispatchActivityCreated();
 }
+
 void Fragment::performStart(){
     onStart();
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_START);
     if(mViewLifecycleOwner) mViewLifecycleOwner->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_START);
     if(mChildFragmentManager) mChildFragmentManager->dispatchStart();
 }
+
 void Fragment::performResume(){
     onResume();
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
     if(mViewLifecycleOwner) mViewLifecycleOwner->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
     if(mChildFragmentManager) mChildFragmentManager->dispatchResume();
 }
+
 void Fragment::performPause(){
     if(mChildFragmentManager) mChildFragmentManager->dispatchPause();
     if(mViewLifecycleOwner) mViewLifecycleOwner->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_PAUSE);
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_PAUSE);
     onPause();
 }
+
 void Fragment::performStop(){
     if(mChildFragmentManager) mChildFragmentManager->dispatchStop();
     if(mViewLifecycleOwner) mViewLifecycleOwner->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_STOP);
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_STOP);
     onStop();
 }
+
 void Fragment::performDestroyView(){
     if(mChildFragmentManager) mChildFragmentManager->dispatchDestroyView();
     onDestroyView();
@@ -166,12 +185,14 @@ void Fragment::performDestroyView(){
         mViewLifecycleOwner = nullptr;
     }
 }
+
 void Fragment::performDestroy(){
     if(mChildFragmentManager) mChildFragmentManager->dispatchDestroy();
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_DESTROY);
     onDestroy();
     mIsCreated = false;
 }
+
 void Fragment::performDetach(){
     onDetach();
 }

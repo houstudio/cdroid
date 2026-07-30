@@ -17,7 +17,8 @@ NavTypeKind inferFromAny(const nonstd::any& v){
 }//anonymous
 
 NavArgument::NavArgument(NavTypeKind type, bool isNullable, bool hasDefault, const nonstd::any& defaultValue)
-    : mType(type), mIsNullable(isNullable), mHasDefault(hasDefault), mDefaultValue(defaultValue){}
+    : mType(type), mIsNullable(isNullable), mHasDefault(hasDefault), mDefaultValue(defaultValue){
+}
 
 void NavArgument::putDefaultValue(const std::string& name, Bundle& bundle) const{
     if(!mHasDefault) return;

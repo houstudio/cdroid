@@ -54,8 +54,13 @@ FragmentWindow::~FragmentWindow(){
     delete mLifecycleRegistry;
 }
 
-lifecycle::Lifecycle& FragmentWindow::getLifecycle(){ return *mLifecycleRegistry; }
-lifecycle::ViewModelStore& FragmentWindow::getViewModelStore(){ return *mViewModelStore; }
+lifecycle::Lifecycle& FragmentWindow::getLifecycle(){
+    return *mLifecycleRegistry;
+}
+
+lifecycle::ViewModelStore& FragmentWindow::getViewModelStore(){
+    return *mViewModelStore;
+}
 savedstate::SavedStateRegistry& FragmentWindow::getSavedStateRegistry(){
     return mSavedStateRegistryController->getSavedStateRegistry();
 }
@@ -89,7 +94,9 @@ void FragmentWindow::onBackPressed(){
     Window::onBackPressed();
 }
 
-FragmentManager* FragmentWindow::getSupportFragmentManager(){ return mFragmentManager; }
+FragmentManager* FragmentWindow::getSupportFragmentManager(){
+    return mFragmentManager;
+}
 
 }//namespace fragment
 }//namespace cdroid

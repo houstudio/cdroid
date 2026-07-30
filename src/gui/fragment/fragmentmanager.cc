@@ -46,15 +46,44 @@ void FragmentManager::dispatchStateChange(int state){
     }
 }
 
-void FragmentManager::dispatchAttach(){ dispatchStateChange(Fragment::ATTACHED); }
-void FragmentManager::dispatchCreate(){ dispatchStateChange(Fragment::CREATED); }
-void FragmentManager::dispatchViewCreated(){ dispatchStateChange(Fragment::VIEW_CREATED); }
-void FragmentManager::dispatchActivityCreated(){ dispatchStateChange(Fragment::ACTIVITY_CREATED); }
-void FragmentManager::dispatchStart(){ mStopped = false; dispatchStateChange(Fragment::STARTED); }
-void FragmentManager::dispatchResume(){ dispatchStateChange(Fragment::RESUMED); }
-void FragmentManager::dispatchPause(){ dispatchStateChange(Fragment::STARTED); }
-void FragmentManager::dispatchStop(){ mStopped = true; dispatchStateChange(Fragment::ACTIVITY_CREATED); }
-void FragmentManager::dispatchDestroyView(){ dispatchStateChange(Fragment::CREATED); }
+void FragmentManager::dispatchAttach(){
+    dispatchStateChange(Fragment::ATTACHED);
+}
+
+void FragmentManager::dispatchCreate(){
+    dispatchStateChange(Fragment::CREATED);
+}
+
+void FragmentManager::dispatchViewCreated(){
+    dispatchStateChange(Fragment::VIEW_CREATED);
+}
+
+void FragmentManager::dispatchActivityCreated(){
+    dispatchStateChange(Fragment::ACTIVITY_CREATED);
+}
+
+void FragmentManager::dispatchStart(){
+    mStopped = false;
+    dispatchStateChange(Fragment::STARTED);
+}
+
+void FragmentManager::dispatchResume(){
+    dispatchStateChange(Fragment::RESUMED);
+}
+
+void FragmentManager::dispatchPause(){
+    dispatchStateChange(Fragment::STARTED);
+}
+
+void FragmentManager::dispatchStop(){
+    mStopped = true; 
+    dispatchStateChange(Fragment::ACTIVITY_CREATED);
+}
+
+void FragmentManager::dispatchDestroyView(){
+    dispatchStateChange(Fragment::CREATED);
+}
+
 void FragmentManager::dispatchDestroy(){
     mDestroyed = true;
     dispatchStateChange(Fragment::INITIALIZING);
@@ -84,6 +113,35 @@ void FragmentManager::removeFragment(Fragment* f){
     mActive.erase(f->mWho);
     f->mFragmentManager = nullptr;
     f->mHost = nullptr;
+}
+
+// Retain a fragment removed by a *reversible* (added-to-back-stack) transaction. androidx
+// does NOT destroy such a fragment: it tears down the view but keeps the instance (and its
+// LifecycleRegistry, held at CREATED) in mActive so popBackStack can restore it. Destroying
+// it would drive the registry to DESTROYED, which can never be advanced again — the exact
+// crash "State is DESTROYED and cannot be moved to a new state" on pop.
+void FragmentManager::retainFragment(Fragment* f){
+    if(!f) return;
+    f->mRemoving = true;
+    f->mAdded = false;
+    moveToState(f, Fragment::CREATED); // onPause/onStop/onDestroyView; lifecycle stops at CREATED (not DESTROYED)
+    mAdded.erase(std::remove(mAdded.begin(), mAdded.end(), f), mAdded.end());
+    // deliberately kept in mActive with mFragmentManager/mHost intact so pop can restore it
+}
+
+// Re-add a fragment retained by retainFragment when its back-stack record is popped.
+// It is already in mActive (never dropped); just re-insert into mAdded and walk it back up
+// to the FragmentManager's current state (onCreateView rebuilds the view; onCreate is NOT
+// re-invoked — the fragment stayed at CREATED).
+void FragmentManager::unretainFragment(Fragment* f){
+    if(!f) return;
+    f->mRemoving = false;
+    f->mAdded = true;
+    f->mFragmentManager = this;
+    f->mHost = mHost;
+    f->mContainer = mContainer ? dynamic_cast<cdroid::ViewGroup*>(mContainer->onFindViewById(f->mContainerId)) : nullptr;
+    mAdded.push_back(f);
+    moveToState(f, mCurState);
 }
 
 void FragmentManager::showFragment(Fragment* f){
@@ -202,8 +260,13 @@ Fragment* FragmentManager::getPrimaryNavigationFragment() const{
     return nullptr;
 }
 
-void FragmentManager::setFragmentFactory(FragmentFactory* factory){ mFragmentFactory = factory; }
-FragmentFactory* FragmentManager::getFragmentFactory() const{ return mFragmentFactory; }
+void FragmentManager::setFragmentFactory(FragmentFactory* factory){
+    mFragmentFactory = factory;
+}
+
+FragmentFactory* FragmentManager::getFragmentFactory() const{
+    return mFragmentFactory;
+}
 
 // --- transactions (BackStackRecord-backed; stage 2b-4) ---
 FragmentTransaction* FragmentManager::beginTransaction(){

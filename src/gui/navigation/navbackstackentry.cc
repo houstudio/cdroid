@@ -24,11 +24,18 @@ NavBackStackEntry::~NavBackStackEntry(){
     delete mSavedStateRegistryController;
 }
 
-lifecycle::Lifecycle& NavBackStackEntry::getLifecycle(){ return *mLifecycleRegistry; }
-lifecycle::ViewModelStore& NavBackStackEntry::getViewModelStore(){ return *mViewModelStore; }
+lifecycle::Lifecycle& NavBackStackEntry::getLifecycle(){
+    return *mLifecycleRegistry;
+}
+
+lifecycle::ViewModelStore& NavBackStackEntry::getViewModelStore(){
+    return *mViewModelStore;
+}
+
 savedstate::SavedStateRegistry& NavBackStackEntry::getSavedStateRegistry(){
     return mSavedStateRegistryController->getSavedStateRegistry();
 }
+
 lifecycle::ViewModelProvider::Factory& NavBackStackEntry::getDefaultViewModelProviderFactory(){
     return lifecycle::HasDefaultViewModelProviderFactory::getDefaultViewModelProviderFactory();
 }

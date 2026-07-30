@@ -45,17 +45,51 @@ FragmentTransaction& FragmentTransaction::replace(int containerViewId, Fragment*
     return addOp(op);
 }
 
-FragmentTransaction& FragmentTransaction::remove(Fragment* fragment){ Op op; op.mCmd = OP_REMOVE; op.mFragment = fragment; return addOp(op); }
-FragmentTransaction& FragmentTransaction::hide(Fragment* fragment){ Op op; op.mCmd = OP_HIDE; op.mFragment = fragment; return addOp(op); }
-FragmentTransaction& FragmentTransaction::show(Fragment* fragment){ Op op; op.mCmd = OP_SHOW; op.mFragment = fragment; return addOp(op); }
-FragmentTransaction& FragmentTransaction::detach(Fragment* fragment){ Op op; op.mCmd = OP_DETACH; op.mFragment = fragment; return addOp(op); }
-FragmentTransaction& FragmentTransaction::attach(Fragment* fragment){ Op op; op.mCmd = OP_ATTACH; op.mFragment = fragment; return addOp(op); }
+FragmentTransaction& FragmentTransaction::remove(Fragment* fragment){
+    Op op;
+    op.mCmd = OP_REMOVE;
+    op.mFragment = fragment;
+    return addOp(op);
+}
+
+FragmentTransaction& FragmentTransaction::hide(Fragment* fragment){
+    Op op;
+    op.mCmd = OP_HIDE;
+    op.mFragment = fragment;
+    return addOp(op);
+}
+
+FragmentTransaction& FragmentTransaction::show(Fragment* fragment){
+    Op op;
+    op.mCmd = OP_SHOW;
+    op.mFragment = fragment;
+    return addOp(op);
+}
+
+FragmentTransaction& FragmentTransaction::detach(Fragment* fragment){
+    Op op; op.mCmd = OP_DETACH;
+    op.mFragment = fragment;
+    return addOp(op);
+}
+
+FragmentTransaction& FragmentTransaction::attach(Fragment* fragment){
+    Op op;
+    op.mCmd = OP_ATTACH;
+    op.mFragment = fragment;
+    return addOp(op);
+}
 
 FragmentTransaction& FragmentTransaction::setPrimaryNavigationFragment(Fragment* fragment){
-    Op op; op.mCmd = OP_SET_PRIMARY_NAV; op.mFragment = fragment; return addOp(op);
+    Op op;
+    op.mCmd = OP_SET_PRIMARY_NAV;
+    op.mFragment = fragment;
+    return addOp(op);
 }
 FragmentTransaction& FragmentTransaction::setMaxLifecycle(Fragment* fragment, lifecycle::Lifecycle::State /*state*/){
-    Op op; op.mCmd = OP_SET_MAX_LIFECYCLE; op.mFragment = fragment; return addOp(op);
+    Op op;
+    op.mCmd = OP_SET_MAX_LIFECYCLE;
+    op.mFragment = fragment;
+    return addOp(op);
 }
 
 FragmentTransaction& FragmentTransaction::addToBackStack(const std::string& name){
@@ -63,15 +97,28 @@ FragmentTransaction& FragmentTransaction::addToBackStack(const std::string& name
     mName = name;
     return *this;
 }
-FragmentTransaction& FragmentTransaction::disallowAddToBackStack(){ mAddToBackStack = false; return *this; }
-FragmentTransaction& FragmentTransaction::setReorderingAllowed(bool reorderingAllowed){ mReorderingAllowed = reorderingAllowed; return *this; }
+
+FragmentTransaction& FragmentTransaction::disallowAddToBackStack(){
+    mAddToBackStack = false;
+    return *this;
+}
+
+FragmentTransaction& FragmentTransaction::setReorderingAllowed(bool reorderingAllowed){
+    mReorderingAllowed = reorderingAllowed;
+    return *this;
+}
+
 FragmentTransaction& FragmentTransaction::setCustomAnimations(int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim){
-    mEnterAnim = enterAnim; mExitAnim = exitAnim; mPopEnterAnim = popEnterAnim; mPopExitAnim = popExitAnim;
+    mEnterAnim = enterAnim;
+    mExitAnim = exitAnim;
+    mPopEnterAnim = popEnterAnim; mPopExitAnim = popExitAnim;
     return *this;
 }
 
 FragmentTransaction& FragmentTransaction::addSharedElement(cdroid::View* sharedElement, const std::string& name){
-    if(sharedElement) mSharedElements.push_back({sharedElement, name});
+    if(sharedElement){
+        mSharedElements.push_back({sharedElement, name});
+    }
     return *this;
 }
 

@@ -5,7 +5,9 @@
 namespace cdroid{
 namespace fragment{
 
-DialogFragment::DialogFragment(){}
+DialogFragment::DialogFragment(){
+}
+
 DialogFragment::~DialogFragment(){
     // Dialog is owned by this fragment (created in onCreateDialog via show()).
 }

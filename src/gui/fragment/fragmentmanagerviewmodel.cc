@@ -17,7 +17,8 @@ public:
 }//anonymous
 
 FragmentManagerViewModel::FragmentManagerViewModel(bool stateAutomaticallySaved)
-    : mStateAutomaticallySaved(stateAutomaticallySaved){}
+    : mStateAutomaticallySaved(stateAutomaticallySaved){
+}
 
 FragmentManagerViewModel::~FragmentManagerViewModel(){
     for(auto& kv : mChildNonConfigs){ kv.second->onCleared(); delete kv.second; }
