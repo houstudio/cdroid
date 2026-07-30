@@ -1,0 +1,31 @@
+if(ENABLE_TRANSITION)
+
+    SET(TRANSITION_SOURCES
+        transition/transitionvalues.cc
+        transition/transition.cc
+        transition/rotate.cc
+        transition/transitionutils.cc
+        transition/changescroll.cc
+        transition/changetext.cc
+        transition/visibility.cc
+        transition/fade.cc
+        transition/scene.cc
+        transition/transitionmanager.cc
+        transition/transitionset.cc
+        transition/changeclipbounds.cc
+        transition/changebounds.cc
+        transition/arcmotion.cc
+        transition/visibilitypropagation.cc
+        transition/circularpropagation.cc
+        transition/sidepropagation.cc
+        transition/translationanimationcreator.cc
+        transition/slide.cc
+        transition/explode.cc
+        transition/recolor.cc
+        transition/patternpathmotion.cc
+        transition/changeimagetransform.cc
+        transition/crossfade.cc
+        transition/transitioninflater.cc
+        transition/changetransform.cc
+        )
+endif()

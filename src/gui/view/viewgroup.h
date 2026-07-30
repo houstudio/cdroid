@@ -428,6 +428,7 @@ public:
     View* findViewTraversal(int)override;
     View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip)override;
     View* findViewWithTagTraversal(void*tag)override;
+    void findNamedViews(std::unordered_map<std::string, View*>& namedElements)const override;
     View* findViewByAccessibilityIdTraversal(int accessibilityId)override;
     std::string getAccessibilityClassName()const override;
     virtual void resetResolvedPadding()override;
@@ -464,7 +465,7 @@ public:
     void dispatchWindowFocusChanged(bool hasFocus)override;
     void addTouchables(std::vector<View*>&)override;
     void dispatchDisplayHint(int hint)override;
-    bool isTransitionGroup();
+    bool isTransitionGroup()const;
     void setTransitionGroup(bool isTransitionGroup);
     virtual void requestDisallowInterceptTouchEvent(bool disallowIntercept);
     bool onInterceptTouchEvent(MotionEvent& evt)override;

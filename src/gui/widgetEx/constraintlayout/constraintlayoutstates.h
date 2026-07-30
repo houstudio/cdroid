@@ -1,0 +1,124 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+
+/*
+ * Ported to C++ for CDROID from androidx.constraintlayout.widget.ConstraintLayoutStates.
+ *
+ * Adaptive layouts for ConstraintLayout: a <StateSet> maps (state id, layout dimensions) to a
+ * ConstraintSet, so the layout can swap its constraints when its size or a logical state changes
+ * (responsive/adaptive design). Each <State> holds a default ConstraintSet plus size-banded
+ * <Variant>s; the Variant whose width/height region contains the current dimensions wins. The
+ * `constraints` attribute references a ConstraintSet — inline <ConstraintSet> in the same file
+ * (resolved here) or a layout resource (cloned offscreen via ConstraintSet::clone(Context, resource)).
+ */
+#ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_STATES_H
+#define CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_STATES_H
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+namespace cdroid {
+
+class ConstraintLayout;
+class ConstraintSet;
+class Context;
+class XmlPullParser;
+
+class ConstraintLayoutStates {
+  public:
+    // A size-banded entry: applies when the layout's dimensions fall in [min,max] (NaN = unbounded).
+    struct Variant {
+        float mMinWidth  = NAN;
+        float mMinHeight = NAN;
+        float mMaxWidth  = NAN;
+        float mMaxHeight = NAN;
+        int mConstraintID = -1;
+        std::string mConstraintsAttr;            // raw `constraints` attr (for @layout/ detection)
+        ConstraintSet* mConstraintSet = nullptr; // borrowed (owned by mConstraintSetMap/mClonedSets)
+        bool match(float widthDp, float heightDp) const;
+    };
+
+    // One logical state: a default ConstraintSet plus ordered Variants (first match wins).
+    struct State {
+        int mId = -1;
+        std::vector<Variant> mVariants;
+        int mConstraintID = -1;
+        std::string mConstraintsAttr;            // raw `constraints` attr (for @layout/ detection)
+        ConstraintSet* mConstraintSet = nullptr; // default (borrowed)
+        // Index of the first matching Variant, or -1 if none.
+        int findMatch(float widthDp, float heightDp) const;
+    };
+
+    // Load from a resource path (e.g. "xml/states" or "@xml/states").
+    ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout, const std::string& resourceId);
+    // Load directly from a parser (for tests / pre-opened streams).
+    ConstraintLayoutStates(Context* ctx, ConstraintLayout* layout, XmlPullParser& parser);
+
+    // True if the layout should switch ConstraintSets for (id, width, height).
+    bool needsToChange(int id, float width, float height) const;
+
+    // Select the ConstraintSet for (stateId, width, height). If the currently-applied set
+    // (currentConstraintSetId) still matches the dimensions, it is kept (avoids flapping). Returns
+    // nullptr if the state is unknown. Pass width/height < 0 to skip dimension matching.
+    ConstraintSet* convertToConstraintSet(int currentConstraintSetId, int stateId,
+                                          float width, float height) const;
+
+    int getDefaultState() const {
+        return mDefaultState;
+    }
+    int getCurrentStateId() const {
+        return mCurrentStateId;
+    }
+
+    // Select the ConstraintSet for (id, width, height) and apply it to the bound layout. Tracks the
+    // current state/constraint so a no-op (same state, dimensions still matching) skips applyTo.
+    void updateConstraints(int id, float width, float height);
+
+    // Stable scene-local id for a name (e.g. "@+id/s1" / "s1" -> int). Mirrors MotionScene.
+    int getId(const std::string& idString) const;
+    static std::string stripId(const std::string& idString);
+
+  private:
+    void parse(Context* ctx, XmlPullParser& parser);
+    int parseConstraintSet(Context* ctx, XmlPullParser& parser); // inline <ConstraintSet> -> map
+    // Resolve a `constraints` attr value to a ConstraintSet: an inline <ConstraintSet> ref
+    // ("@+id/x") looks up mConstraintSetMap; a layout resource ("@layout/x") clones it. Nullptr if none.
+    ConstraintSet* resolveConstraintRef(const std::string& attr);
+    // After all elements are parsed, wire each State/Variant `constraints` ref to its ConstraintSet.
+    void resolveConstraintRefs();
+
+    State* findState(int id);
+    const State* findState(int id) const;
+
+    ConstraintLayout* mLayout = nullptr;
+    Context* mContext = nullptr;
+    int mDefaultState = -1;
+    int mCurrentStateId = -1;
+    int mCurrentConstraintNumber = -1;
+    std::vector<State> mStates;
+    std::unordered_map<int, std::shared_ptr<ConstraintSet>> mConstraintSetMap; // inline sets (owned)
+    std::vector<std::shared_ptr<ConstraintSet>> mClonedSets; // layout-resource clones (owned)
+    mutable std::unordered_map<std::string, int> mIdMap;
+    mutable int mNextLocalId = 0x10000; // base for scene-local ids (avoids R.id collision)
+};
+
+} // namespace cdroid
+
+#endif // CDROID_CONSTRAINTLAYOUT_WIDGET_CONSTRAINT_LAYOUT_STATES_H

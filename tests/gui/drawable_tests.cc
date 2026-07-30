@@ -105,7 +105,13 @@ public:
         auto txtis=std::make_unique<std::istringstream>(content);
         XmlPullParser parser(rm,std::move(txtis));
         AttributeSet& attrs=parser;
-        while((type=parser.next()!=XmlPullParser::START_TAG)){}
+        while((type=parser.next())!=XmlPullParser::START_TAG){}
+        printf("fromStream START_TAG=%s drawable=%s android:drawable=%s cdroid:drawable=%s\n",
+               parser.getName().c_str(),
+               attrs.getString("drawable").c_str(),
+               attrs.getString("android:drawable").c_str(),
+               attrs.getString("cdroid:drawable").c_str());
+        parser.dump();
         return DrawableInflater::inflateFromXml(parser.getName(),parser,attrs);
     }
 };
@@ -135,12 +141,12 @@ TEST_F(DRAWABLE,bitmapalpha){
     d->setBounds(100,100,300,300);
     for(int alpha=255;alpha>0;alpha-=5){
         ctx->set_source_rgb(0,0,.5);
-        ctx->rectangle(0,0,500,500);
+        ctx->rectangle(10,100,500,500);
         ctx->fill();
         d->setAlpha(alpha);
         d->draw(*ctx);
         postCompose();
-        usleep(100*1000);
+        usleep(5000);
     }
 }
 
@@ -149,19 +155,30 @@ TEST_F(DRAWABLE,ninepatch1){
     Outline outline,outline2;
     d->setBounds(0,0,d->getIntrinsicWidth(),d->getIntrinsicHeight());
     d->getOutline(outline);
-    d->setBounds(50,50,600,200);
-    d->getOutline(outline2);
-    d->draw(*ctx);
+    for(int i=0, w=d->getIntrinsicWidth(),h=d->getIntrinsicHeight();w<800;w+=20,i+=2){
+        ctx->set_source_rgb(.4,.4,.0);
+        ctx->rectangle(200,200,w,h+i);
+        ctx->fill();
+        d->setBounds(200,200,w,h+i);
+        d->getOutline(outline2);
+        d->draw(*ctx);
+        postCompose();
+        usleep(5000);
+    }
     delete d;
 }
 
 TEST_F(DRAWABLE,ninepatch2){
     NinePatchDrawable*d = (NinePatchDrawable*)rm->getDrawable("@cdroid:mipmap/btn_default_transparent_normal");
-    ctx->set_source_rgb(.4,.4,.0);
-    ctx->rectangle(0,0,700,300);
-    ctx->fill();
-    d->setBounds(50,50,600,200);
-    d->draw(*ctx);
+    for(int i=0, w=d->getIntrinsicWidth(),h=d->getIntrinsicHeight();w<800;w+=20,i+=2){
+        ctx->set_source_rgb(.4,.4,.0);
+        ctx->rectangle(200,200,w,h+i);
+        ctx->fill();
+        d->setBounds(200,200,w,h+i);
+        d->draw(*ctx);
+        postCompose();
+        usleep(5000);
+    }
     delete d;
 }
 
@@ -195,7 +212,7 @@ TEST_F(DRAWABLE,transition){
     td->setBounds(100,100,400,400);
     td->startTransition(5000);
     td->setCrossFadeEnabled(true);
-    for(int i=0;i<=500;i++){
+    for(int i=0;i<100;i++){
         ctx->set_source_rgb(1,1,1);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
@@ -217,7 +234,7 @@ TEST_F(DRAWABLE,rectshape){
         rs->draw(*ctx);
         ctx->fill();
         postCompose();
-        usleep(10000);
+        usleep(5000);
     }
 }
 
@@ -274,7 +291,7 @@ TEST_F(DRAWABLE,roundrectshape){
        ctx->stroke();
        ctx->restore();
        postCompose();
-       sleep(1);
+       usleep(20000);
     }
 }
 
@@ -308,7 +325,7 @@ TEST_F(DRAWABLE,ringshape){
        ctx->stroke();
        ctx->restore();
        postCompose();
-       sleep(1);
+       usleep(20000);
     }
 }
 
@@ -337,14 +354,14 @@ TEST_F(DRAWABLE,clipdrawable){
     sp->setStrokeSize(5);
     cd2->setBounds(500,50,300,300);
 
-    for(int i=0;i<=10000;i+=100){
+    for(int i=0;i<=10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
        cd->setLevel(i);cd2->setLevel(i);
        cd->draw(*ctx);cd2->draw(*ctx);
        postCompose();
-       usleep(2000);
+       usleep(1000);
     }
 }
 
@@ -362,7 +379,7 @@ TEST_F(DRAWABLE,rotatedrawable){
     rt2->setBounds(360,100,300,300);
     rt2->setPivotX(.5);
     rt2->setPivotY(.5);
-    for(int i=0;i<=10000;i+=50){
+    for(int i=0;i<=10000;i+=200){
         ctx->set_source_rgb(0,0,0);
         ctx->rectangle(0,0,800,600);
         ctx->fill();
@@ -409,7 +426,7 @@ TEST_F(DRAWABLE,animaterotate){
         ad->draw(*ctx);
         ad->nextFrame();
         postCompose();
-        usleep(50000);
+        usleep(10000);
     }
 }
 
@@ -429,7 +446,7 @@ TEST_F(DRAWABLE,levellist){
         ld->setLevel(i%11);
         ld->draw(*ctx);
         postCompose();
-        usleep(10000);
+        usleep(5000);
     }
 }
 
@@ -450,31 +467,33 @@ TEST_F(DRAWABLE,arcshape){
 }
 
 TEST_F(DRAWABLE,inflateshape){
-    const char*text="<shape xmlns:cdroid=\"http://schemas.android.com/apk/res/android\" shape=\"oval\" useLevel=\"true\">\
-      <size cdroid:width=\"80dp\" cdroid:height=\"80dp\" /> <stroke  cdroid:width=\"20dp\" cdroid:color=\"#ffff0000\"/>\
-      <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
-        cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
-        cdroid:type=\"radial\"/></shape>";
+    const char*text=R"(<shape xmlns:cdroid="http://schemas.android.com/apk/res/android" shape="oval" useLevel="true">
+      <size cdroid:width="80dp" cdroid:height="80dp" /> <stroke  cdroid:width="20dp" cdroid:color="#ffff0000"/>
+      <gradient cdroid:angle="180"  cdroid:centerX="0.5" cdroid:centerY="0.5" cdroid:startColor="#ffff0000"
+        cdroid:centerColor="#ff00ff00"  cdroid:endColor="#ff0000ff"  cdroid:gradientRadius="200dp"
+        cdroid:type="radial"/></shape>)";
     int64_t t1=SystemClock::uptimeMillis();
     Drawable*d = fromStream(text);
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
     d->draw(*ctx);
-    ASSERT_NE((void*)nullptr,dynamic_cast<ShapeDrawable*>(d));
+    ASSERT_NE((void*)nullptr,dynamic_cast<GradientDrawable*>(d));
     printf("Usedtime=%ld\r\n",t2-t1);
 }
+
 TEST_F(DRAWABLE,inflateclip){
-    const char*text="<clip><shape xmlns:cdroid=\"http://schemas.android.com/apk/res/android\" \
-      cdroid:shape=\"oval\" cdroid:useLevel=\"true\">\
-      <size cdroid:width=\"80dp\" cdroid:height=\"80dp\" /> <stroke  cdroid:width=\"20dp\" cdroid:color=\"#ffff0000\"/>\
-      <gradient cdroid:angle=\"180\"  cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:startColor=\"#ffff0000\"\
-        cdroid:centerColor=\"#ff00ff00\"  cdroid:endColor=\"#ff0000ff\"  cdroid:gradientRadius=\"200dp\" \
-        cdroid:type=\"radial\"/></shape></clip>";
+    const char*text=R"(<clip>
+     <shape xmlns:cdroid="http://schemas.android.com/apk/res/android" cdroid:shape="oval" cdroid:useLevel="true">
+       <size cdroid:width="80dp" cdroid:height="80dp"/> <stroke  cdroid:width="20dp" cdroid:color="#ffff0000"/>
+       <gradient cdroid:angle="180"  cdroid:centerX="0.5" cdroid:centerY="0.5" cdroid:startColor="#ffff0000"
+        cdroid:centerColor="#ff00ff00"  cdroid:endColor="#ff0000ff"  cdroid:gradientRadius="200dp"
+        cdroid:type="radial"/>
+     </shape> </clip>)";
     int64_t t1=SystemClock::uptimeMillis();
     Drawable*d=fromStream(text);
     d->setBounds(100,100,400,400);
     int64_t t2=SystemClock::uptimeMillis();
-    for(int i=0;i<10000;i+=100){
+    for(int i=0;i<10000;i+=200){
 	    ctx->set_source_rgb(0,0,0);
 	    ctx->rectangle(0,0,800,600);
 	    ctx->fill();
@@ -486,15 +505,16 @@ TEST_F(DRAWABLE,inflateclip){
     ASSERT_NE((void*)nullptr,dynamic_cast<ClipDrawable*>(d));
     printf("Usedtime=%ld  clip=%p child=%p\r\n",t2-t1,dynamic_cast<ClipDrawable*>(d),((ClipDrawable*)d)->getDrawable());
 }
+
 TEST_F(DRAWABLE,inflatelayer){
-   const char*text="<layer-list xmlns:cdroid=\"http://schemas.android.com/apk/res/android\"> \
-        <item cdroid:id=\"123\"> <shape cdroid:shape=\"rectangle\"> <corners cdroid:radius=\"5dip\" />\
-            <gradient cdroid:type=\"linear\" cdroid:startColor=\"#ff9d9e9d\" cdroid:centerColor=\"#ff5a5d5a\"\
-                cdroid:centerY=\"0.75\" cdroid:endColor=\"#ff747674\" cdroid:angle=\"45\"/> </shape></item>\
-        <item cdroid:id=\"456\"> <clip> <shape cdroid:shape=\"rectangle\"> <corners cdroid:radius=\"100dip\" />\
-        <gradient cdroid:type=\"linear\" cdroid:startColor=\"#80ffd300\" cdroid:centerColor=\"#8000ffb6\"\
-              cdroid:centerX=\"0.5\" cdroid:centerY=\"0.5\" cdroid:endColor=\"#a0ff00ff\" cdroid:angle=\"90\"/>\
-            </shape> </clip> </item></layer-list>";
+   const char*text=R"(<layer-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
+        <item cdroid:id="123"> <shape cdroid:shape="rectangle"> <corners cdroid:radius="5dip" />
+            <gradient cdroid:type="linear" cdroid:startColor="#ff9d9e9d" cdroid:centerColor="#ff5a5d5a"
+                cdroid:centerY="0.75" cdroid:endColor="#ff747674" cdroid:angle="45"/> </shape></item>
+        <item cdroid:id="456"> <clip> <shape cdroid:shape="rectangle"> <corners cdroid:radius="100dip" />
+        <gradient cdroid:type="linear" cdroid:startColor="#80ffd300" cdroid:centerColor="#8000ffb6"
+              cdroid:centerX="0.5" cdroid:centerY="0.5" cdroid:endColor="#a0ff00ff" cdroid:angle="90"/>
+            </shape> </clip> </item></layer-list>)";
 
    Drawable*d=fromStream(text);
    d->setBounds(100,100,400,400);
@@ -508,7 +528,7 @@ TEST_F(DRAWABLE,inflatelayer){
    ASSERT_EQ(2,ld->getNumberOfLayers());
    ClipDrawable*cd=dynamic_cast<ClipDrawable*>(ld->findDrawableByLayerId(456));
    //cd->setGravity(Gravity::CENTER);
-   for(int i=0;i<10000;i+=100){
+   for(int i=0;i<10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
@@ -520,25 +540,27 @@ TEST_F(DRAWABLE,inflatelayer){
 }
 
 TEST_F(DRAWABLE,inflateselector){
-   const char*text="<selector xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
-	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
-        <item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
-	<item cdroid:color=\"#ff0000ff\" /></selector>";
+   const char*text=R"(<selector xmlns:cdroid="http://schemas.android.com/apk/res/android">
+	<item cdroid:drawable="#ffff0000" cdroid:state_selected="true"/>
+    <item cdroid:drawable="#ff00ff00" cdroid:state_focused="true"/>
+    <item cdroid:state_selected="false"><color cdroid:color="#112233"/></item>
+	<item cdroid:drawable="#ff0000ff"/></selector>)";
    Drawable*d =fromStream(text);
    d->setBounds(100,100,400,400);
    ASSERT_NE((void*)nullptr,(void*)d);
    StateListDrawable*sd=dynamic_cast<StateListDrawable*>(d);
    ASSERT_NE((void*)nullptr,(void*)sd);
-   ASSERT_EQ(3,sd->getStateCount());
+   ASSERT_EQ(4,sd->getStateCount());
    ASSERT_NE((void*)nullptr,sd->getStateDrawable(0));
    ColorDrawable*cd=dynamic_cast<ColorDrawable*>(sd->getStateDrawable(0));
    ASSERT_EQ(0xFFFF0000,(unsigned int)cd->getColor());
 }
+
 TEST_F(DRAWABLE,inflatetransition){
-   const char*text="<transition xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
-	<item cdroid:color=\"#ffff0000\" cdroid:state_selected=\"true\"/>\
-	<item cdroid:color=\"#ff00ff00\" cdroid:state_focused=\"true\"/>\
-	</transition>";
+   const char*text=R"(<transition xmlns:cdroid="http://schemas.android.com/apk/res/android">
+	<item cdroid:drawable="#ffff0000" cdroid:state_selected="true"/>
+	<item cdroid:drawable="#ff00ff00" cdroid:state_focused="true"/>
+	</transition>)";
    Drawable*d = fromStream(text);
    d->setBounds(100,100,400,400);
    ASSERT_NE((void*)nullptr,(void*)d);
@@ -553,7 +575,7 @@ TEST_F(DRAWABLE,inflatetransition){
    ASSERT_EQ(0xFF00FF00,(unsigned int)cd->getColor());
    td->startTransition(5000);
    td->setCrossFadeEnabled(true);
-   for(int i=0;i<10000;i+=100){
+   for(int i=0;i<10000;i+=200){
        ctx->set_source_rgba(0,0,0,1);
        ctx->rectangle(0,0,800,600);
        ctx->fill();
@@ -565,13 +587,13 @@ TEST_F(DRAWABLE,inflatetransition){
 }
 
 TEST_F(DRAWABLE,inflatelevellist){
-   const char*text="<level-list xmlns:cdroid=\"http://schemas.android.com/apk/res/android\">\
-	<item cdroid:color=\"#ffff0000\" cdroid:minLevel=\"0\" cdroid:maxLevel=\"1\"/>\
-	<item cdroid:color=\"#ff00ff00\" cdroid:minLevel=\"1\" cdroid:maxLevel=\"2\"/>\
-	<item cdroid:color=\"#ff0000ff\" cdroid:minLevel=\"2\" cdroid:maxLevel=\"3\"/>\
-	<item cdroid:minLevel=\"3\" cdroid:maxLevel=\"4\">\
-	<shape cdroid:shape=\"oval\"><solid cdroid:color=\"#ffff00ff\"/></shape>\
-	</item>	</level-list>";
+   const char*text=R"(<level-list xmlns:cdroid="http://schemas.android.com/apk/res/android">
+	<item cdroid:minLevel="0" cdroid:maxLevel="1"><color cdroid:color="#ffff0000"/></item>
+	<item cdroid:minLevel="1" cdroid:maxLevel="2"><color cdroid:color="#ff00ff00"/></item>
+	<item cdroid:minLevel="2" cdroid:maxLevel="3"><color cdroid:color="#ff0000ff"/></item>
+	<item cdroid:minLevel="3" cdroid:maxLevel="4">
+	  <shape cdroid:shape="oval"><solid cdroid:color="#ffff00ff"/></shape>
+	</item>	</level-list>)";
    Drawable*d = fromStream(text);
    d->setBounds(100,100,500,500);
    LevelListDrawable*ld=dynamic_cast<LevelListDrawable*>(d);
@@ -588,11 +610,12 @@ TEST_F(DRAWABLE,inflatelevellist){
        usleep(5000);
    }
 }
+
 TEST_F(DRAWABLE,gradient_alpha){
     GradientDrawable*gd=new GradientDrawable();
     gd->setBounds(50,50,500,500);
     gd->setShape(1);
-    for(int i=0;i<100;i++){
+    for(int i=0;i<100;i+=5){
         gd->setStroke(i*2+8,0xFFFFFFFF,i*2,i);
 
         ctx->set_source_rgb(0,0,0);
@@ -607,12 +630,13 @@ TEST_F(DRAWABLE,gradient_alpha){
         usleep(1000);
     }
 }
+
 TEST_F(DRAWABLE,gradient_rectangle){
     GradientDrawable*gd=new GradientDrawable();
     gd->setBounds(50,50,500,500);
     for(int shape=0;shape<4;shape++){
         gd->setShape(shape);
-        for(int i=0;i<100;i++){
+        for(int i=0;i<100;i+=5){
             gd->setStroke(i*2+8,0xFFFFFFFF,i*2,float(shape*2));
 
             ctx->set_source_rgb(0,0,0);
@@ -626,7 +650,7 @@ TEST_F(DRAWABLE,gradient_rectangle){
             gd->draw(*ctx);
             ctx->get_target()->write_to_png(std::string("gradient")+std::to_string(i)+".png");
             postCompose();
-            usleep(10000);
+            usleep(5000);
         }
    }
 }

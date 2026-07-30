@@ -64,7 +64,6 @@ int main(int argc,const char*argv[]){
         if(pos==60)
             ((AbsListView&)lv).smoothScrollToPosition(0);
     });
-    lv->requestLayout();
     Button*add=new Button("Add Header",200,60);
     add->setOnClickListener([lv,adapter](View&){
         lv->addHeaderView(createHeader(888888),nullptr,false);

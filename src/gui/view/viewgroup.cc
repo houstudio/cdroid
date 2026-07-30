@@ -2224,6 +2224,18 @@ View* ViewGroup::findViewWithTagTraversal(void* tag){
     return nullptr;
 }
 
+void ViewGroup::findNamedViews(std::unordered_map<std::string, View*>& namedElements)const{
+    if (getVisibility() != VISIBLE && (mGhostView == nullptr)) {
+        return;
+    }
+    View::findNamedViews(namedElements);
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        child->findNamedViews(namedElements);
+    }
+}
+
 View* ViewGroup::findViewByAccessibilityIdTraversal(int accessibilityId) {
     View* foundView = View::findViewByAccessibilityIdTraversal(accessibilityId);
     if (foundView != nullptr) {
@@ -3649,14 +3661,13 @@ bool ViewGroup::isMotionEventSplittingEnabled()const{
    return (mGroupFlags & FLAG_SPLIT_MOTION_EVENTS) == FLAG_SPLIT_MOTION_EVENTS;
 }
 
-bool ViewGroup::isTransitionGroup() {
+bool ViewGroup::isTransitionGroup() const{
     if ((mGroupFlags & FLAG_IS_TRANSITION_GROUP_SET) != 0) {
         return ((mGroupFlags & FLAG_IS_TRANSITION_GROUP) != 0);
     } else {
-        /*ViewOutlineProvider outlineProvider = getOutlineProvider();
-        return getBackground() != null || getTransitionName() != null ||
-                (outlineProvider != null && outlineProvider != ViewOutlineProvider.BACKGROUND);*/
-        return (getBackground()!=nullptr);
+        ViewOutlineProvider outlineProvider = getOutlineProvider();
+        return (getBackground() != nullptr) || !getTransitionName().empty() ||
+                (outlineProvider != nullptr && outlineProvider != OutlineProvider::BACKGROUND);
     }
 }
 

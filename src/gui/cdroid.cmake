@@ -5,6 +5,7 @@ include(animation/animations.cmake)
 include(drawable/drawables.cmake)
 include(widget/widget.cmake)
 include(menu/menu.cmake)
+include(transition/transition.cmake)
 #include(fragment/fragment.cmake)
 include(widgetEx/widgetex.cmake)
 
@@ -16,6 +17,7 @@ list(APPEND CDROID_SOURCES
     ${DRAWABLE_SOURCES}
     ${WIDGET_SOURCES}
     ${MENU_SOURCES}
+    ${TRANSITION_SOURCES}
     #${FRAGMENT_SOURCES}
     ${WIDGETEX_SOURCES}
     ${WEAR_SOURCES}
@@ -52,13 +54,6 @@ if(ENABLE_DIALOGS OR ENABLE_SPINNER)
         app/progressdialog.cc
     )
 endif(ENABLE_DIALOGS)
-
-
-if(ENABLE_TRANSITION)
-    list(APPEND CDROID_SOURCES
-        transition/scene.cc
-    )
-endif()
 
 if(ENABLE_NAVIGATION)
     list(APPEND CDROID_SOURCES

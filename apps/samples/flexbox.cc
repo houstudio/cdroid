@@ -10,13 +10,15 @@
 #include <widget/linearlayout.h>
 #include <widget/textview.h>
 #include <widgetEx/recyclerview/recyclerview.h>
+#include <gui_features.h>
+
+#if ENABLE(FLEXBOXLAYOUT)
 #include <widgetEx/flexbox/flexboxlayout.h>
 #include <widgetEx/flexbox/flexboxlayoutmanager.h>
 #include <widgetEx/flexbox/aligndefs.h>
 #include <memory>
 #include <vector>
 #include <string>
-
 static const int PALETTE[] = {
     (int) 0xFFE57373, (int) 0xFFBA68C8, (int) 0xFF64B5F6,
     (int) 0xFF4DB6AC, (int) 0xFFFFB74D, (int) 0xFFAED581
@@ -83,12 +85,13 @@ static LinearLayout* titledColumn(const std::string& title, int titleBg) {
     col->addView(t, new LinearLayout::LayoutParams(-1, 40));
     return col;
 }
-
+#endif
 int main(int argc, const char* argv[]) {
     App app(argc, argv);
     Window* w = new Window(0, 0, 1280, 720);
     w->setBackgroundColor(0xFF202028);
     w->setId(0);
+#if ENABLE(FLEXBOXLAYOUT)
 
     /* ---- shared data ---- */
     std::vector<std::string> items;
@@ -103,7 +106,6 @@ int main(int argc, const char* argv[]) {
     /* ---- root: two equal columns ---- */
     LinearLayout* root = new LinearLayout(-1, -1);
     root->setOrientation(LinearLayout::HORIZONTAL);
-
     /* ===== left: FlexboxLayout ===== */
     LinearLayout* left = titledColumn("FlexboxLayout", 0xFF3949AB);
     left->setBackgroundColor(0xFF181820);
@@ -137,5 +139,6 @@ int main(int argc, const char* argv[]) {
     root->addView(left, new LinearLayout::LayoutParams(640, -1));
     root->addView(right, new LinearLayout::LayoutParams(640, -1));
     w->addView(root);
+#endif
     app.exec();
 }

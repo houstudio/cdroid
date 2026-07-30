@@ -20,6 +20,7 @@
 #include <cfloat>
 #include <cmath>
 #include <view/view.h>
+#include <view/ghostview.h>
 #include <view/viewgroup.h>
 #include <view/floatingactionmode.h>
 #include <view/viewoverlay.h>
@@ -61,6 +62,9 @@ View::View(int w,int h){
     mRight  = w;
     mBottom = h;
     mLeft = mTop =0;
+    if((w > 0) && (h>0) ){
+        mPrivateFlags |= PFLAG_HAS_BOUNDS;
+    }
     setBackgroundColor(0xFF000000);
     if(ViewConfiguration::isScreenRound())
         mRoundScrollbarRenderer = new RoundScrollbarRenderer(this);
@@ -251,6 +255,7 @@ View::View(Context*ctx,const AttributeSet&attrs){
     setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
     setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setTransitionName(attrs.getString("transitionName"));
     std::string animatorResId = attrs.getString("stateListAnimator");
     if(!animatorResId.empty()){
         setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,animatorResId));
@@ -529,6 +534,15 @@ View* View::findViewById(int id){
 View* View::findViewTraversal(int id){
     if( id == mID )return (View*)this;
     return nullptr;
+}
+
+void View::findNamedViews(std::unordered_map<std::string, View*>& namedElements)const{
+    if (getVisibility() == VISIBLE || mGhostView != nullptr) {
+        std::string transitionName = getTransitionName();
+        if (!transitionName.empty()) {
+            namedElements.insert({transitionName, (View*)this});
+        }
+    }
 }
 
 View* View::findViewByAccessibilityId(int accessibilityId){
@@ -3280,12 +3294,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
     }
     mPrivateFlags2 &= ~PFLAG2_VIEW_QUICK_REJECTED;
 
-    if (hardwareAcceleratedCanvas) {
-        // Clear INVALIDATED flag to allow invalidation to occur during rendering, but
-        // retain the flag's value temporarily in the mRecreateDisplayList flag
-        //mRecreateDisplayList = (mPrivateFlags & PFLAG_INVALIDATED) != 0;
-        mPrivateFlags &= ~PFLAG_INVALIDATED;
-    }
+    // Clear INVALIDATED flag to allow invalidation to occur during/after rendering.
+    // Android does this in the HW (RenderNode) draw path which is always taken, so the
+    // flag is cleared every time the view is drawn. CDROID has no HW path — the original
+    // clear was gated by `hardwareAcceleratedCanvas` which is always false, so the flag was
+    // NEVER cleared. That deadlocks invalidateInternal()'s propagation gate: once
+    // PFLAG_INVALIDATED is set it stays set, so condition `(PFLAG_INVALIDATED)!=PFLAG_INVALIDATED`
+    // is perpetually false and propagation falls back to requiring PFLAG_DRAWN — which any
+    // invalidate(true) clears. A view that stops being redrawn (e.g. a disappearing view kept
+    // visible only via setTransitionVisibility) then can no longer get its invalidates to reach
+    // the window, so it is never redrawn again. Clear it here unconditionally, matching Android.
+    mPrivateFlags &= ~PFLAG_INVALIDATED;
 
     RefPtr<ImageSurface> cache = nullptr;
     RenderNode* renderNode = nullptr;
@@ -3344,8 +3363,9 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
 
     float alpha = drawingWithRenderNode ? 1 : (getAlpha() * getTransitionAlpha());//getAlpha()
     if ((transformToApply != nullptr) || (alpha < 1.f) || !hasIdentityMatrix()
-            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)) {
-        if (transformToApply != nullptr || !childHasIdentityMatrix) {
+            || (mPrivateFlags3 & PFLAG3_VIEW_IS_ANIMATING_ALPHA)
+            || mHasAnimationMatrix) {
+        if (transformToApply != nullptr || !childHasIdentityMatrix || mHasAnimationMatrix) {
             int transX = 0 , transY = 0;
 
             if (offsetForScroll) {
@@ -3376,6 +3396,13 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
             if (!childHasIdentityMatrix && !drawingWithRenderNode) {
                 canvas.translate(-transX, -transY);
                 canvas.transform(getMatrix());//concat(getMatrix());
+                canvas.translate(transX, transY);
+            }
+            // Animation matrix (ChangeTransform): composited AFTER the property matrix,
+            // same two-layer model as android RenderNode (final = property × animation).
+            if (mHasAnimationMatrix && !drawingWithRenderNode) {
+                canvas.translate(-transX, -transY);
+                canvas.transform(mAnimationMatrix);
                 canvas.translate(transX, transY);
             }
         }
@@ -3452,7 +3479,17 @@ bool View::draw(Canvas&canvas,ViewGroup*parent,int64_t drawingTime){
         cache->flush();
         canvas.save();
         canvas.reset_clip();
-        canvas.set_source(cache,0,0);
+        // set_source(cache,0,0) == cairo_set_source_surface, which device-aligns the
+        // surface (it bakes CTM^-1 into the pattern matrix) and therefore cancels any
+        // rotation/scale applied to the canvas above. A view that is both fading AND
+        // rotating (Fade+Rotate in a TransitionSet) goes through this software-cache
+        // path — Fade sets LAYER_TYPE_HARDWARE, which has no HW backing here and is
+        // downgraded to a software cache — so the box would fade but never rotate.
+        // Use a SurfacePattern with an identity matrix instead: pattern space then
+        // equals user space and the live CTM (incl. rotation) is honoured, matching
+        // Android's software drawBitmap() path which respects the canvas matrix.
+        Cairo::RefPtr<Cairo::SurfacePattern> cachePattern = Cairo::SurfacePattern::create(cache);
+        canvas.set_source(cachePattern);
         canvas.paint_with_alpha(alpha);
         canvas.restore();
     }
@@ -4481,7 +4518,7 @@ bool View::setFrame(int left,int top,int width,int height){
         if (sizeChanged)
             sizeChange(newWidth, newHeight, oldWidth, oldHeight);
 
-        if ((mViewFlags & VISIBILITY_MASK) == VISIBLE/*|| mGhostView != null*/) {
+        if ((mViewFlags & VISIBILITY_MASK) == VISIBLE || (mGhostView != nullptr)) {
             // If we are visible, force the DRAWN bit to on so that
             // this invalidate will go through (at least to our parent).
             // This is because someone may have invalidated this view
@@ -4516,11 +4553,12 @@ void View::getHitRect(Rect& outRect){
     if(hasIdentityMatrix()||(mAttachInfo==nullptr)){
         outRect.set(mLeft,mTop,getWidth(),getHeight());
     }else{
-        RectF tmpRect;
-        tmpRect.set(0,0,getWidth(),getHeight());
-        getMatrix().transform_rectangle((Rectangle&)tmpRect);
-        outRect.set(int(tmpRect.left+mLeft),int(tmpRect.top+mTop),
-                int(tmpRect.width),int(tmpRect.height));
+        // transform_rectangle writes a cairo_rectangle_t (4 doubles, 32B); casting a RectF (4 floats,
+        // 16B) to Rectangle& would overflow tmpRect's storage. Use a real Rectangle instead.
+        Rectangle tmp;
+        tmp.x = 0; tmp.y = 0; tmp.width = getWidth(); tmp.height = getHeight();
+        getMatrix().transform_rectangle(tmp);
+        outRect.set((int)(tmp.x + mLeft), (int)(tmp.y + mTop), (int)tmp.width, (int)tmp.height);
     }
 }
 
@@ -6127,16 +6165,20 @@ void View::damageInParent() {
 }
 
 void View::transformRect(Rect&rect){
-    if(hasIdentityMatrix()){
+    if(!hasIdentityMatrix()){
         getMatrix().transform_rectangle((Cairo::RectangleInt&)rect);
     }
 }
 void View::invalidateParentCaches(){
-    if(mParent)mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+    if(mParent){
+        mParent->mPrivateFlags |= PFLAG_INVALIDATED;
+    }
 }
 
 void View::invalidateParentIfNeeded(){
-    if(isHardwareAccelerated()&&mParent)mParent->invalidate(true);
+    if(isHardwareAccelerated()&&mParent){
+        mParent->invalidate(true);
+    }
 }
 
 void View::invalidateInheritedLayoutMode(int layoutModeOfRoot){
@@ -6151,6 +6193,10 @@ void View::invalidateParentIfNeededAndWasQuickRejected() {
 }
 
 void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,bool fullInvalidate){
+    if (mGhostView != nullptr) {
+        mGhostView->invalidate(true);
+        return;
+    }
 
     if (skipInvalidate())   return;
 
@@ -9380,6 +9426,25 @@ Matrix& View::getInverseMatrix() {
     Matrix& matrix=mTransformationInfo->mInverseMatrix;
     mRenderNode->getInverseMatrix(matrix);
     return matrix;
+}
+
+void View::setAnimationMatrix(const Cairo::Matrix* matrix){
+    invalidateViewProperty(true, false); // invalidate old bounds
+    if (matrix != nullptr){
+        mAnimationMatrix = *matrix;
+        mHasAnimationMatrix = true;
+    } else {
+        mHasAnimationMatrix = false;
+    }
+    invalidateViewProperty(false, true); // invalidate new bounds
+}
+
+bool View::hasAnimationMatrix() const {
+    return mHasAnimationMatrix;
+}
+
+const Cairo::Matrix& View::getAnimationMatrix() const {
+    return mAnimationMatrix;
 }
 
 float View::getX()const{

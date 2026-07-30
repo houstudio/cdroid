@@ -50,7 +50,6 @@ int main(int argc,const char*argv[]){
         edit->setTextColor(0xFFFFFFFF);//app.getColorStateList("cdroid:color/textview.xml"));
         //edit->setTextColor(app.getColorStateList("cdroid:color/textview.xml"));
         edit->setSingleLine(true);
-        edit->setInputType(EditText::TYPE_ANY);
         edit->setGravity(Gravity::LEFT|Gravity::CENTER_VERTICAL);
         edit->setBackgroundColor(0xFF000000|((i*8)<<16)|((i*8)<<8)|(i*8));
         edit->setTextSize(40);

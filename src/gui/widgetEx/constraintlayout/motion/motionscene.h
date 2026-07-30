@@ -1,0 +1,249 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+
+/*
+ * Ported to C++ for CDROID from androidx.constraintlayout.motion.widget.MotionScene.
+ *
+ * Parses a <MotionScene> XML resource (referenced by MotionLayout's layoutDescription). A scene
+ * holds one or more <Transition>s (each naming a start/end ConstraintSet, a duration, optional
+ * <KeyFrameSet> and <OnClick> handlers) plus the <ConstraintSet> definitions they reference.
+ * MotionLayout builds a MotionScene from XML, then drives its current transition: captures the
+ * start/end ConstraintSets, applies the KeyFrames to each child Motion, and wires OnClick targets.
+ *
+ * Supported: <MotionScene>/<Transition>/<ConstraintSet>(inline or id-ref)/<KeyFrameSet>/<OnClick>/
+ * <OnSwipe>/<TouchResponse> (swipe-driven, spring/velocity), <StateSet>, <ViewTransition> (the
+ * latter three parsed here and dispatched to their owning components).
+ *
+ * ConstraintSet ids declared in the scene (e.g. "@+id/start") are resolved scene-locally by name
+ * (getId assigns a stable int per name) — they are not R.id constants, so resolution does not
+ * depend on idgen.py scanning the xml/ folder.
+ */
+#ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_SCENE_H
+#define CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_SCENE_H
+
+#include <memory>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include <widgetEx/constraintlayout/constraintset.h>
+#include <widgetEx/constraintlayout/motion/keyframes.h>
+
+namespace cdroid {
+
+class Context;
+class MotionLayout;
+class View;
+class ViewTransition;
+class ViewTransitionController;
+class XmlPullParser;
+
+class MotionScene {
+  public:
+    static constexpr int UNSET = -1;
+
+    // A click handler: when `targetId` is clicked, perform `clickAction` on the transition.
+    struct OnClick {
+        int targetId = UNSET;
+        int clickAction = 0; // flag: toggle / transitionToEnd / transitionToStart / jumpToEnd / jumpToStart
+    };
+
+    // A swipe handler (<OnSwipe>): dragging in `dragDirection` drives the transition progress, with
+    // auto-complete on release. Drag drives progress linearly over the layout's (or anchor's)
+    // dimension; release settles via spring (SpringStopEngine) or continuous-velocity fling
+    // (StopLogicEngine) carrying the gesture velocity, with nestedScrollFlags honored.
+    struct OnSwipe {
+        static constexpr int DRAG_UP = 0, DRAG_DOWN = 1, DRAG_LEFT = 2, DRAG_RIGHT = 3,
+                             DRAG_START = 4, DRAG_END = 5;
+        static constexpr int SIDE_TOP = 0, SIDE_LEFT = 1, SIDE_RIGHT = 2, SIDE_BOTTOM = 3,
+                             SIDE_MIDDLE = 4, SIDE_START = 5, SIDE_END = 6;
+        static constexpr int ON_UP_AUTOCOMPLETE = 0, ON_UP_AUTOCOMPLETE_TO_START = 1,
+                             ON_UP_AUTOCOMPLETE_TO_END = 2, ON_UP_STOP = 3, ON_UP_DECELERATE = 4;
+
+        int   dragDirection  = DRAG_RIGHT;   // dragging this way increases progress
+        float dragScale      = 1.0f;         // progress-per-pixel multiplier
+        int   touchAnchorSide= SIDE_MIDDLE;  // which point on the anchor is the drag reference
+        int   touchAnchorId  = UNSET;        // view whose start->end travel is the drag range
+        int   onTouchUp      = ON_UP_AUTOCOMPLETE;
+        float maxVelocity    = 4.0f;         // progress/sec cap (continuous-velocity auto-completion)
+        float maxAcceleration= 1.2f;         // progress/sec^2 cap (continuous-velocity auto-completion)
+
+        // Spring auto-completion (autoCompleteMode=COMPLETE_SPRING): a damped spring drives the
+        // settle, carrying the drag's release velocity as its initial velocity.
+        static constexpr int COMPLETE_CONTINUOUS_VELOCITY = 0, COMPLETE_SPRING = 1;
+        static constexpr int SPRING_OVERSHOOT = 0, SPRING_BOUNCE_START = 1,
+                             SPRING_BOUNCE_END = 2, SPRING_BOUNCE_BOTH = 3;
+        int   autoCompleteMode    = COMPLETE_CONTINUOUS_VELOCITY;
+        float springMass          = 1.0f;
+        float springStiffness     = 400.0f;
+        float springDamping       = 10.0f;
+        float springStopThreshold = 0.01f;
+        int   springBoundary      = SPRING_OVERSHOOT;
+    };
+
+    // One transition between two ConstraintSets. (Java: MotionScene.Transition.)
+    class Transition {
+      public:
+        // clickAction flag values (match attrs.xml OnClick clickAction flags).
+        static constexpr int FLAG_TOGGLE             = 0x0011;
+        static constexpr int FLAG_TRANSITION_TO_END  = 0x0001;
+        static constexpr int FLAG_TRANSITION_TO_START= 0x0010;
+        static constexpr int FLAG_JUMP_TO_END        = 0x0100;
+        static constexpr int FLAG_JUMP_TO_START      = 0x1000;
+
+        // autoTransition: fire this transition automatically once the layout rests at an endpoint.
+        static constexpr int AUTO_NONE = 0, AUTO_JUMP_TO_START = 1, AUTO_JUMP_TO_END = 2,
+                             AUTO_ANIMATE_TO_START = 3, AUTO_ANIMATE_TO_END = 4;
+
+        // Read the <Transition> element's own attributes from `attrs` (the parser is at the
+        // START_TAG). Child elements (<KeyFrameSet>/<OnClick>) are handled by MotionScene::load
+        // via setKeyFrames()/addOnClick().
+        Transition(MotionScene& scene, const AttributeSet& attrs);
+
+        int getDuration() const {
+            return mDuration;
+        }
+        float getStagger() const {
+            return mStagger;
+        }
+        int getId() const {
+            return mId;
+        }
+        int getStartId() const {
+            return mConstraintSetStart;
+        }
+        int getEndId() const {
+            return mConstraintSetEnd;
+        }
+        const std::string& getInterpolatorString() const {
+            return mDefaultInterpolatorString;
+        }
+        int getPathMotionArc() const {
+            return mPathMotionArc;
+        }
+        int getAutoTransition() const {
+            return mAutoTransition;
+        }
+        bool isAbstract() const {
+            return mIsAbstract;
+        }
+        KeyFrames* getKeyFrames() const {
+            return mKeyFrames.get();
+        }
+        const std::vector<OnClick>& getOnClicks() const {
+            return mOnClicks;
+        }
+        const OnSwipe* getOnSwipe() const {
+            return mOnSwipe.get();
+        }
+
+        void setKeyFrames(std::unique_ptr<KeyFrames> kf) {
+            mKeyFrames = std::move(kf);
+        }
+        void addOnClick(OnClick oc) {
+            mOnClicks.push_back(oc);
+        }
+        void setOnSwipe(std::unique_ptr<OnSwipe> os) {
+            mOnSwipe = std::move(os);
+        }
+
+      private:
+        int mId = UNSET;
+        int mConstraintSetStart = UNSET;
+        int mConstraintSetEnd = UNSET;
+        int mDuration = 400;
+        float mStagger = 0;
+        std::string mDefaultInterpolatorString;
+        int mPathMotionArc = UNSET;
+        int mAutoTransition = AUTO_NONE;
+        bool mIsAbstract = false;
+        std::unique_ptr<KeyFrames> mKeyFrames;
+        std::vector<OnClick> mOnClicks;
+        std::unique_ptr<OnSwipe> mOnSwipe;
+    };
+
+    MotionScene(MotionLayout* layout);
+    // Load and parse the <MotionScene> at resource `resourceId` (e.g. "xml/my_scene" or "@xml/...").
+    MotionScene(Context* ctx, MotionLayout* layout, const std::string& resourceId);
+
+    void load(Context* ctx, const std::string& resourceId);
+    // Parse a <MotionScene> from an already-constructed pull parser (positioned anywhere before the
+    // <MotionScene> START_TAG). Test-friendly: lets a unit test feed a stringstream-backed parser.
+    void load(Context* ctx, XmlPullParser& parser);
+
+    // The first non-abstract transition (the active one), or nullptr.
+    Transition* getCurrentTransition() const {
+        return mCurrentTransition;
+    }
+    // Fire any transition whose autoTransition mode matches the layout resting at `currentState`.
+    bool autoTransition(class MotionLayout* layout, int currentState);
+    Transition* getTransitionById(int id) const;              // by <Transition android:id>
+    Transition* findTransition(int startId, int endId) const;  // matching both endpoints
+    void setCurrentTransition(Transition* t) {
+        mCurrentTransition = t;
+    }
+    // ConstraintSet registered under `id` (from a <ConstraintSet>), or nullptr.
+    ConstraintSet* getConstraintSet(int id) const;
+    // All registered ConstraintSet ids (for ViewTransition allStates persistence).
+    std::vector<int> getConstraintSetIds() const;
+
+    ~MotionScene();
+    // Parsed <ViewTransition> elements.
+    size_t getViewTransitionCount() const {
+        return mViewTransitions.size();
+    }
+    ViewTransition* getViewTransitionById(int id) const;
+    ViewTransition* getViewTransitionAt(size_t i) const {
+        return mViewTransitions.at(i).get();
+    }
+    // The controller that drives the <ViewTransition> animations (touch/fire/frame tick).
+    ViewTransitionController* getViewTransitionController() const {
+        return mViewTransitionController.get();
+    }
+    // Delegators to the ViewTransitionController (MotionLayout forwards here).
+    void viewTransition(int id, const std::vector<View*>& views);
+    void enableViewTransition(int id, bool enable);
+    bool isViewTransitionEnabled(int id) const;
+    // Merge a ViewTransition's keyframes into a main-transition Motion (Android applyViewTransition).
+    bool applyViewTransition(int id, class Motion* mc);
+
+  private:
+    friend class ViewTransition; // so it can resolve ids via getId()
+    // Resolve a "@id/name" / "@+id/name" / "name" reference to a stable scene-local int, assigning
+    // one lazily per name (so <ConstraintSet id> and <Transition constraintSet*> agree). Logically a
+    // query; the name->id cache is mutable so this can be const.
+    int getId(const std::string& idString) const;
+    static std::string stripId(const std::string& idString); // "@+id/start" -> "start"
+    // Parse a <ConstraintSet> element (id + ConstraintSet.load). `parser` at the START_TAG.
+    int parseConstraintSet(Context* ctx, XmlPullParser& parser);
+
+    MotionLayout* mMotionLayout;
+    int mDefaultDuration = 400;
+    std::vector<std::unique_ptr<Transition>> mTransitionList;
+    Transition* mCurrentTransition = nullptr;
+    std::vector<std::unique_ptr<ViewTransition>> mViewTransitions; // <ViewTransition> elements
+    std::unique_ptr<ViewTransitionController> mViewTransitionController; // drives <ViewTransition>s
+    std::unordered_map<int, std::unique_ptr<ConstraintSet>> mConstraintSetMap; // id -> set
+    mutable std::unordered_map<std::string, int> mConstraintSetIdMap;          // name -> id (lazy cache)
+    mutable int mNextLocalId = 0x10000; // base for scene-local ConstraintSet ids (avoids R.id collision)
+    mutable std::unordered_map<int,int> mDeriveFrom; // deriveConstraintsFrom: id -> baseId (lazy merge)
+};
+
+} // namespace cdroid
+
+#endif // CDROID_CONSTRAINTLAYOUT_WIDGET_MOTION_SCENE_H

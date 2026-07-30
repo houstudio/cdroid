@@ -1,0 +1,19 @@
+prefix=/home/houzh/cdroidMaster/outX64-Debug
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+sharedlibdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: cdroid
+Description: C++ style Android UI component library
+Version: 4.8.6
+
+#Requires Requires.private libs that supported by pkgconfig
+Requires: 
+Requires.private: 
+
+#Libs& Libs.private libs that pkg-config cant support
+Libs: -L"${libdir}" 
+Libs.private:-L"${sharedlibdir}" 
+
+Cflags: -I"${includedir}/gui" -I"${includedir}/porting"

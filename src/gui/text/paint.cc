@@ -32,6 +32,7 @@ Paint::Paint(){
     mLetterSpacing=0;
     mTextScaleX=1.f;
     mTextSize=12;
+    mAlpha=0xff;
     mTextAlign=Align::LEFT;
     mFakeBoldText=false;
     mStrikeThruText=false;
@@ -60,6 +61,7 @@ void Paint::set(const Paint&o){
     mTypeface=o.mTypeface;
     mColor = o.mColor;
     mShader = o.mShader;
+    mAlpha = o.mAlpha;
     mTextSize=o.mTextSize;
     mTextAlign= o.mTextAlign;
     mTextSkewX=o.mTextSkewX;

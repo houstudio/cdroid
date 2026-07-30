@@ -45,6 +45,15 @@ public:
     bool add(const std::string&,const std::string&value);
     bool hasAttribute(const std::string&key)const;
     size_t getAttributeCount()const;
+    // Single-pass KV iteration over the present attributes (map order). Templated and header-only so
+    // the callback inlines — O(n) with no std::function overhead (index-probing an unordered_map
+    // would be O(n) per call → O(n²) for a full sweep).
+    template<typename F>
+    void forEachAttribute(F&& fn) const {
+        for (const auto& kv : *mAttrs) {
+            fn(kv.first, kv.second);
+        }
+    }
     int set(const char*atts[],int size=0);
     static std::string normalize(const std::string&pkg,const std::string&property);
     int inherit(const AttributeSet&other);

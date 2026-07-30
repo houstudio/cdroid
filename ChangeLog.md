@@ -1,3 +1,6 @@
+# **5
+  - add Transition
+  - add ConstrainLayout and MOtionLayout
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support

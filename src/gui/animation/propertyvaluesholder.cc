@@ -274,12 +274,14 @@ void PropertyValuesHolder::setupValue(void*target,int position){
 }
 
 void PropertyValuesHolder::setupStartValue(void*target){
+    if(mPathBased) return; // Path defines every keyframe; do not overwrite with property.get()
     if(!mDataSource.empty()){
         setupValue(target,0);
     }
 }
 
 void PropertyValuesHolder::setupEndValue(void*target){
+    if(mPathBased) return; // Path defines every keyframe; do not overwrite with property.get()
     if(!mDataSource.empty()){
         setupValue(target,mDataSource.size()-1);
     }
@@ -350,6 +352,7 @@ PropertyValuesHolder*PropertyValuesHolder::ofPointF(const Property*prop,const Ca
     }
     pvh->mEvaluator = PointFEvaluator;
     pvh->mAnimateValue = pvh->mDataSource.front();
+    pvh->mPathBased = true;
     return pvh;
 }
 

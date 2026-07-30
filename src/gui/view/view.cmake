@@ -3,6 +3,7 @@ SET(VIEW_SOURCES
     view/choreographer.cc
     #view/configuration.cc
     view/focusfinder.cc
+    view/ghostview.cc
     view/gravity.cc
     view/touchdelegate.cc
     view/handleractionqueue.cc

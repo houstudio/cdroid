@@ -60,6 +60,12 @@ protected:
     TypeEvaluator mEvaluator;
     std::vector<AnimateValue>mDataSource;
     AnimateValue mAnimateValue;
+    // True when the values come from a Path (ofPointF / ofFloat along a Path). Such holders
+    // already define every keyframe; setupStartValue/setupEndValue must NOT overwrite them with
+    // property.get() (which for pseudo-targets like ChangeBounds.ViewBounds returns a default
+    // PointF{0,0} and corrupts the Path-sampled start point). Matches AOSP, whose setupValue
+    // only fills keyframes that have no value.
+    bool mPathBased = false;
     void setupValue(void*target,int);
     void init();
     static AnimateValue& evaluator(float fraction,AnimateValue&out,const AnimateValue& from, const AnimateValue& to);
