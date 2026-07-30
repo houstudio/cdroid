@@ -146,14 +146,11 @@ bool MotionScene::applyViewTransition(int id, Motion* mc) {
 }
 
 std::string MotionScene::stripId(const std::string& idString) {
-    // "@+id/start", "@id/start", "start" -> "start".
+    // "@+id/start", "@id/start" is error, "start" -> "start".
     std::string s = idString;
     if (s.empty()) return s;
-    if (s[0] == '@') {
-        const size_t slash = s.find('/');
-        if (slash != std::string::npos) return s.substr(slash + 1);
-        return s.substr(1);
-    }
+    const size_t slash = s.find('/');
+    if (slash != std::string::npos) return s.substr(slash + 1);
     return s;
 }
 
