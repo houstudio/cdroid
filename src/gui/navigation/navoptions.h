@@ -23,6 +23,7 @@ private:
     int mLaunchMode;
     bool mPopUpToInclusive;
     std::string mPopUpTo;            // also serves as popUpToRoute (modern)
+    int mPopUpToId = -1;             // popUpTo by destination id (-1 = none); mutually exclusive with mPopUpTo
     std::string mEnterAnim;
     std::string mExitAnim;
     std::string mPopEnterAnim;
@@ -37,11 +38,12 @@ public:
     static void applyPopAnimationsToPendingTransition(Activity& activity);
     NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
         const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim);
+        const std::string& popEnterAnim, const std::string& popExitAnim,
+        int popUpToId = -1);
     NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
         const std::string& enterAnim, const std::string& exitAnim,
         const std::string& popEnterAnim, const std::string& popExitAnim,
-        bool shouldRestoreState, bool shouldPopUpToSaveState);
+        bool shouldRestoreState, bool shouldPopUpToSaveState, int popUpToId = -1);
     bool shouldLaunchSingleTop() const;
     bool shouldLaunchDocument() const;
     bool shouldClearTask() const;
@@ -54,11 +56,13 @@ public:
     bool shouldRestoreState() const { return mShouldRestoreState; }
     bool shouldPopUpToSaveState() const { return mShouldPopUpToSaveState; }
     const std::string& getPopUpToRoute() const { return mPopUpTo; }
+    int getPopUpToId() const { return mPopUpToId; }
 };
 
 class NavOptions::Builder {
     int mLaunchMode = 0;
     std::string mPopUpTo;
+    int mPopUpToId = -1;
     bool mPopUpToInclusive = false;
     std::string mEnterAnim;
     std::string mExitAnim;
@@ -73,6 +77,8 @@ public:
     Builder& setClearTask(bool clearTask);
     Builder& setPopUpTo(const std::string& destinationId, bool inclusive);
     Builder& setPopUpTo(const std::string& route, bool inclusive, bool saveState);
+    Builder& setPopUpTo(int destinationId, bool inclusive);
+    Builder& setPopUpTo(int destinationId, bool inclusive, bool saveState);
     Builder& setRestoreState(bool restoreState);
     Builder& setEnterAnim(const std::string& enterAnim);
     Builder& setExitAnim(const std::string& exitAnim);

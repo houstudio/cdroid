@@ -56,6 +56,7 @@ public:
 
     bool popBackStack();
     bool popBackStack(const std::string& route, bool inclusive, bool saveState);
+    bool popBackStack(int destinationId, bool inclusive, bool saveState);
     bool navigateUp();
 
     NavDestination* findDestination(const std::string& route);
