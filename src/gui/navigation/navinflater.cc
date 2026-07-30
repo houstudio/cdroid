@@ -2,6 +2,8 @@
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
+#include <navigation/navargument.h>
+#include <navigation/navtype.h>
 namespace cdroid{
 //frameworks/support/navigation/runtime/src/main/java/androidx/navigation/NavInflater.java
 //private static final String APPLICATION_ID_PLACEHOLDER = "${applicationId}";
@@ -81,25 +83,27 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
 
 void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs){
     const std::string name = attrs.getString("name");
-    const int argType = attrs.getInt("argType",std::unordered_map<std::string,int>{
-            {"string",0},{"integer",1},{"dimension",2},{"float",3}
-        },0);
-    const std::string defValue= attrs.getString("defaultValue");
-    switch(argType){
-    case 0:
-        dest.getDefaultArguments().putString(name, defValue);
-        break;
-    case 1:
-        dest.getDefaultArguments().putInt(name,std::stoi(defValue));
-        break;
-    case 2:
-    case 3:
-        if(defValue.find("p")!=std::string::npos)
-            dest.getDefaultArguments().putInt(name,std::stoi(defValue));
-        else
-            dest.getDefaultArguments().putFloat(name, std::stof(defValue));
-        break;
+    const std::string argType = attrs.getString("argType");
+    const std::string defValue = attrs.getString("defaultValue");
+    const bool nullable = (attrs.getString("nullable") == "true");
+    NavTypeKind kind = argType.empty() ? NavTypeKind::STRING : navTypeKindFromName(argType);
+    NavArgument::Builder builder;
+    builder.setType(kind);
+    builder.setIsNullable(nullable);
+    if(!defValue.empty()){
+        try{
+            switch(kind){
+                case NavTypeKind::INT:    builder.setDefaultValue(std::stoi(defValue)); break;
+                case NavTypeKind::LONG:   builder.setDefaultValue(std::stol(defValue)); break;
+                case NavTypeKind::FLOAT:  builder.setDefaultValue(std::stof(defValue)); break;
+                case NavTypeKind::BOOL:   builder.setDefaultValue(defValue == "true"); break;
+                default:                  builder.setDefaultValue(defValue); break;
+            }
+        }catch(...){
+            builder.setDefaultValue(defValue);
+        }
     }
+    dest.addArgument(name, builder.build());
 }
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {
