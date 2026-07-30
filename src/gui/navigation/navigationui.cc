@@ -1,6 +1,8 @@
 #include <navigation/navigationui.h>
 #include <navigation/appbarconfiguration.h>
 #include <navigation/navdestination.h>
+#include <widget/toolbar.h>
+#include <view/view.h>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -28,11 +30,28 @@ void NavigationUI::setupActionBarWithNavController(ActionBar* /*actionBar*/,
     LOGD("NavigationUI.setupActionBarWithNavController: ActionBar shell, no-op for now");
 }
 
-void NavigationUI::setupWithNavController(Toolbar* /*toolbar*/, NavController* /*navController*/,
-                                          AppBarConfiguration* /*configuration*/){
-    // TODO: wire Toolbar title + navigation icon via OnDestinationChangedListener once
-    // Toolbar exposes setTitle/setNavigationIcon/setNavigationOnClickListener.
-    LOGD("NavigationUI.setupWithNavController: Toolbar setters incomplete, no-op for now");
+void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navController,
+                                          AppBarConfiguration* configuration){
+    if(!toolbar || !navController) return;
+    // OnDestinationChangedListener: update the Toolbar title + wire the navigation icon to
+    // navigateUp() unless the destination is a top-level one.
+    class ToolbarListener : public NavController::OnDestinationChangedListener{
+        Toolbar* mToolbar;
+        NavController* mController;
+        AppBarConfiguration* mConfig;
+    public:
+        ToolbarListener(Toolbar* t, NavController* c, AppBarConfiguration* cfg)
+            : mToolbar(t), mController(c), mConfig(cfg){}
+        void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override{
+            if(!destination) return;
+            mToolbar->setTitle(destination->getLabel());
+            bool isTopLevel = mConfig && mConfig->isTopLevelDestination(destination->getRoute());
+            if(!isTopLevel){
+                mToolbar->setNavigationOnClickListener([this](View&){ mController->navigateUp(); });
+            }
+        }
+    };
+    navController->addOnDestinationChangedListener(new ToolbarListener(toolbar, navController, configuration));
 }
 
 bool NavigationUI::onNavDestinationSelected(MenuItem* /*item*/, NavController* /*navController*/){
