@@ -4,6 +4,7 @@
 #include <navigation/navigator.h>
 #include <navigation/navdeeplink.h>
 #include <navigation/navargument.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 
 std::string NavDestination::getDisplayName(Context* context, int id) {
@@ -136,6 +137,8 @@ void NavDestination::removeAction(int actionId) {
 }
 
 void NavDestination::navigate(/*@Nullable*/ Bundle* args, /*@Nullable*/ NavOptions* navOptions) {
+    LOGD("NavDestination.navigate route='%s' mNavigator=%p navigatorName='%s'",
+         getRoute().c_str(), mNavigator, getNavigatorName().c_str());
     Bundle defaultArgs = getDefaultArguments();
     Bundle *finalArgs = new Bundle();
     /*finalArgs.putAll(defaultArgs);

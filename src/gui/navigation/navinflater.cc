@@ -4,6 +4,7 @@
 #include <navigation/navinflater.h>
 #include <navigation/navargument.h>
 #include <navigation/navtype.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 //frameworks/support/navigation/runtime/src/main/java/androidx/navigation/NavInflater.java
 //private static final String APPLICATION_ID_PLACEHOLDER = "${applicationId}";
@@ -45,7 +46,9 @@ NavGraph* NavInflater::inflate(const std::string& graphResId) {
 }
 
 NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& attrs){
+    LOGD("NavInflater.inflate: tag='%s'", parser.getName().c_str());
     Navigator* navigator = mNavigatorProvider->getNavigator(parser.getName());
+    if(!navigator){ LOGD("NavInflater: no navigator for tag '%s'", parser.getName().c_str()); return nullptr; }
     NavDestination* dest = navigator->createDestination();
 
     dest->onInflate(mContext, attrs);
@@ -64,6 +67,7 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
         }
 
         const std::string name = parser.getName();
+        LOGD("NavInflater.inflate: child tag='%s'", name.c_str());
         if (name.compare("argument")==0) {
             inflateArgument(*dest, attrs);
         } else if (name.compare("deepLink")==0) {
