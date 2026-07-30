@@ -70,5 +70,10 @@ FragmentTransaction& FragmentTransaction::setCustomAnimations(int enterAnim, int
     return *this;
 }
 
+FragmentTransaction& FragmentTransaction::addSharedElement(cdroid::View* sharedElement, const std::string& name){
+    if(sharedElement) mSharedElements.push_back({sharedElement, name});
+    return *this;
+}
+
 }//namespace fragment
 }//namespace cdroid

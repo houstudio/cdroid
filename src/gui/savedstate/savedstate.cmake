@@ -4,6 +4,7 @@ if(ENABLE_SAVEDSTATE)
 SET(SAVEDSTATE_SOURCES
     savedstate/savedstateregistry.cc
     savedstate/savedstateregistrycontroller.cc
+    savedstate/savedstatehandle.cc
     # savedstatehandle / viewmodel-savedstate family added when Fragment wires VMs
 )
 endif()

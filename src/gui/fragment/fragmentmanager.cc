@@ -6,7 +6,11 @@
 #include <fragment/fragmenttransaction.h>
 #include <fragment/backstackrecord.h>
 #include <fragment/fragmentanim.h>
+#include <fragment/fragmenttransitionimpl.h>
 #include <animation/animation.h>
+#include <transition/transitionmanager.h>
+#include <transition/fade.h>
+#include <transition/changebounds.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -120,12 +124,19 @@ void FragmentManager::moveToState(Fragment* f, int newState){
             case Fragment::CREATED: {
                 cdroid::LayoutInflater* inflater = mHost ? mHost->onGetLayoutInflater() : nullptr;
                 f->performCreateView(inflater, f->mContainer, nullptr);
-                if(f->mView && f->mContainer) f->mContainer->addView(f->mView);
-                // Enter transition: fade the view in.
-                if(f->mView){
-                    Animation* enter = FragmentAnim::loadEnterAnimation(f);
-                    enter->setDuration(300);
-                    f->mView->startAnimation(enter);
+                if(f->mView && f->mContainer){
+                    // Resolve shared-element targets (by transitionName) in this entering fragment.
+                    SharedElementMapping shared;
+                    if(!mPendingSharedNames.empty()){
+                        for(const std::string& name : mPendingSharedNames){
+                            cdroid::View* target = findViewByTransitionName(f->mView, name);
+                            if(target) shared[name] = target;
+                        }
+                        mPendingSharedNames.clear();
+                    }
+                    TransitionManager::beginDelayedTransition(f->mContainer,
+                        FragmentTransitionImpl::makeEnterTransition(shared));
+                    f->mContainer->addView(f->mView);
                 }
                 f->performViewCreated(nullptr);
                 f->mState = Fragment::VIEW_CREATED;
@@ -156,15 +167,9 @@ void FragmentManager::moveToState(Fragment* f, int newState){
                 f->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
             case Fragment::VIEW_CREATED:
                 if(f->mView && f->mContainer){
-                    // Exit transition: fade out, then remove the view on animation end.
-                    Animation* exit = FragmentAnim::loadExitAnimation(f);
-                    exit->setDuration(200);
-                    cdroid::View* view = f->mView;
-                    cdroid::ViewGroup* container = f->mContainer;
-                    Animation::AnimationListener listener;
-                    listener.onAnimationEnd = [view, container](Animation&){ container->removeView(view); };
-                    exit->setAnimationListener(listener);
-                    f->mView->startAnimation(exit);
+                    TransitionManager::beginDelayedTransition(f->mContainer,
+                        FragmentTransitionImpl::makeExitTransition());
+                    f->mContainer->removeView(f->mView);
                 }
                 f->performDestroyView();
                 f->mView = nullptr;
@@ -224,6 +229,19 @@ bool FragmentManager::popBackStackImmediate(const std::string& /*name*/, int /*f
 
 void FragmentManager::enqueueAction(BackStackRecord* action){
     if(action) mBackStack.push_back(action); // stage 2b-4 wires execution
+}
+
+cdroid::View* FragmentManager::findViewByTransitionName(cdroid::View* root, const std::string& name){
+    if(!root) return nullptr;
+    if(root->getTransitionName() == name) return root;
+    cdroid::ViewGroup* vg = dynamic_cast<cdroid::ViewGroup*>(root);
+    if(vg){
+        for(int i = 0; i < vg->getChildCount(); i++){
+            cdroid::View* found = findViewByTransitionName(vg->getChildAt(i), name);
+            if(found) return found;
+        }
+    }
+    return nullptr;
 }
 
 }//namespace fragment
