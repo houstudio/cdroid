@@ -14,16 +14,17 @@ void NavOptions::applyPopAnimationsToPendingTransition(Activity& activity) {
 
 NavOptions::NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
         const std::string& enterAnim, const std::string& exitAnim,
-        const std::string& popEnterAnim, const std::string& popExitAnim)
+        const std::string& popEnterAnim, const std::string& popExitAnim, int popUpToId)
     : NavOptions(launchMode, popUpTo, popUpToInclusive, enterAnim, exitAnim,
-                 popEnterAnim, popExitAnim, false, false){}
+                 popEnterAnim, popExitAnim, false, false, popUpToId){}
 
 NavOptions::NavOptions(int launchMode, const std::string& popUpTo, bool popUpToInclusive,
         const std::string& enterAnim, const std::string& exitAnim,
         const std::string& popEnterAnim, const std::string& popExitAnim,
-        bool shouldRestoreState, bool shouldPopUpToSaveState) {
+        bool shouldRestoreState, bool shouldPopUpToSaveState, int popUpToId) {
     mLaunchMode = launchMode;
     mPopUpTo = popUpTo;
+    mPopUpToId = popUpToId;
     mPopUpToInclusive = popUpToInclusive;
     mEnterAnim = enterAnim;
     mExitAnim = exitAnim;
@@ -75,11 +76,26 @@ NavOptions::Builder& NavOptions::Builder::setClearTask(bool clearTask) {
 }
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(const std::string& destinationId, bool inclusive) {
     mPopUpTo = destinationId;
+    mPopUpToId = -1; // mutually exclusive with the id form
     mPopUpToInclusive = inclusive;
     return *this;
 }
 NavOptions::Builder& NavOptions::Builder::setPopUpTo(const std::string& route, bool inclusive, bool saveState) {
     mPopUpTo = route;
+    mPopUpToId = -1; // mutually exclusive with the id form
+    mPopUpToInclusive = inclusive;
+    mShouldPopUpToSaveState = saveState;
+    return *this;
+}
+NavOptions::Builder& NavOptions::Builder::setPopUpTo(int destinationId, bool inclusive) {
+    mPopUpToId = destinationId;
+    mPopUpTo.clear(); // mutually exclusive with the route form
+    mPopUpToInclusive = inclusive;
+    return *this;
+}
+NavOptions::Builder& NavOptions::Builder::setPopUpTo(int destinationId, bool inclusive, bool saveState) {
+    mPopUpToId = destinationId;
+    mPopUpTo.clear(); // mutually exclusive with the route form
     mPopUpToInclusive = inclusive;
     mShouldPopUpToSaveState = saveState;
     return *this;
@@ -96,7 +112,7 @@ NavOptions::Builder& NavOptions::Builder::setPopExitAnim(const std::string& popE
 NavOptions* NavOptions::Builder::build() {
     return new NavOptions(mLaunchMode, mPopUpTo, mPopUpToInclusive,
         mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim,
-        mShouldRestoreState, mShouldPopUpToSaveState);
+        mShouldRestoreState, mShouldPopUpToSaveState, mPopUpToId);
 }
 
 }/*endof namespace*/

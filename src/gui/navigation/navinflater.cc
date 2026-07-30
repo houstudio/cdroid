@@ -3,6 +3,7 @@
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
 #include <navigation/navargument.h>
+#include <navigation/navoptions.h>
 #include <navigation/navtype.h>
 #include <porting/cdlog.h>
 namespace cdroid{
@@ -121,23 +122,25 @@ void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attr
 }
 
 void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) {
-    //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavAction);
-    const int id = attrs.getResourceId("id");//R.styleable.NavAction_android_id, 0);
-    const int destId = attrs.getResourceId("destination");//R.styleable.NavAction_destination, 0);
+    // Mirrors androidx NavInflater.inflateAction: action + destination are int ids; popUpTo is
+    // an int destination id (-1 = none). Anim is kept as a resource name here (androidx uses an
+    // int res id) because CDROID's animation pipeline resolves by name.
+    const int id = attrs.getResourceId("id", 0);
+    const int destId = attrs.getResourceId("destination", 0);
     NavAction* action = new NavAction(destId);
-#if 0
-    NavOptions::Builder builder;// = new NavOptions.Builder();
-    builder.setLaunchSingleTop(a.getBoolean(R.styleable.NavAction_launchSingleTop, false));
-    builder.setLaunchDocument(a.getBoolean(R.styleable.NavAction_launchDocument, false));
-    builder.setClearTask(a.getBoolean(R.styleable.NavAction_clearTask, false));
-    builder.setPopUpTo(a.getResourceId(R.styleable.NavAction_popUpTo, 0),
-            a.getBoolean(R.styleable.NavAction_popUpToInclusive, false));
-    builder.setEnterAnim(a.getResourceId(R.styleable.NavAction_enterAnim, -1));
-    builder.setExitAnim(a.getResourceId(R.styleable.NavAction_exitAnim, -1));
-    builder.setPopEnterAnim(a.getResourceId(R.styleable.NavAction_popEnterAnim, -1));
-    builder.setPopExitAnim(a.getResourceId(R.styleable.NavAction_popExitAnim, -1));
+    NavOptions::Builder builder;
+    builder.setLaunchSingleTop(attrs.getBoolean("launchSingleTop", false));
+    builder.setRestoreState(attrs.getBoolean("restoreState", false));
+    builder.setPopUpTo(attrs.getResourceId("popUpTo", -1),
+            attrs.getBoolean("popUpToInclusive", false),
+            attrs.getBoolean("popUpToSaveState", false));
+    builder.setEnterAnim(attrs.getString("enterAnim"));
+    builder.setExitAnim(attrs.getString("exitAnim"));
+    builder.setPopEnterAnim(attrs.getString("popEnterAnim"));
+    builder.setPopExitAnim(attrs.getString("popExitAnim"));
     action->setNavOptions(builder.build());
-#endif
+    // TODO: nested <argument> children should populate action defaultArguments (needs SavedState
+    // merge); not required for popUpTo/singleTop, deferred.
     dest.putAction(id, action);
 }
 }/*endof namespace*/

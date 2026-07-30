@@ -1,4 +1,5 @@
 #include <navigation/navcontroller.h>
+#include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
 #include <navigation/navbackstackentry.h>
@@ -56,7 +57,17 @@ void NavController::navigate(const std::string& route, NavOptions* options){
 
 void NavController::navigate(int resId, Bundle* args, NavOptions* options){
     if(!mGraph) return;
-    NavDestination* node = mGraph->findNode(resId);
+    // resId may name an action declared on the current destination: resolve it first so the
+    // action's destination id + NavOptions (e.g. popUpTo, singleTop) take effect (androidx).
+    NavDestination* currentDest = getCurrentDestination();
+    int destId = resId;
+    NavAction* action = currentDest ? currentDest->getAction(resId) : nullptr;
+    if(action){
+        destId = action->getDestinationId();
+        if(options == nullptr) options = action->getNavOptions();
+        LOGD("NavController.navigate action 0x%x -> destId=0x%x", resId, destId);
+    }
+    NavDestination* node = mGraph->findNode(destId);
     if(!node) return;
     navigate(node, args, options);
 }
@@ -70,13 +81,19 @@ void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* opt
         LOGD("NavController.navigate singleTop: '%s' already on top, skip", node->getRoute().c_str());
         return;
     }
-    // popUpTo: pop the back stack up to (optionally including) the given route before
-    // navigating (androidx NavOptions popUpTo). saveState/restoreState are deferred
-    // (need SavedState serialization).
-    if(options && !options->getPopUpToRoute().empty()){
-        LOGD("NavController.navigate popUpTo '%s' inclusive=%d",
-             options->getPopUpToRoute().c_str(), options->isPopUpToInclusive());
-        popBackStack(options->getPopUpToRoute(), options->isPopUpToInclusive(), false);
+    // popUpTo: pop the back stack up to (optionally including) the given destination before
+    // navigating (androidx NavOptions popUpTo). The id form is set by <action> inflation; the
+    // route form is the programmatic API. saveState/restoreState are deferred (SavedState ser).
+    if(options){
+        if(options->getPopUpToId() != -1){
+            LOGD("NavController.navigate popUpTo id=0x%x inclusive=%d",
+                 options->getPopUpToId(), options->isPopUpToInclusive());
+            popBackStack(options->getPopUpToId(), options->isPopUpToInclusive(), false);
+        } else if(!options->getPopUpToRoute().empty()){
+            LOGD("NavController.navigate popUpTo route='%s' inclusive=%d",
+                 options->getPopUpToRoute().c_str(), options->isPopUpToInclusive());
+            popBackStack(options->getPopUpToRoute(), options->isPopUpToInclusive(), false);
+        }
     }
     // Demote the current top entry to STARTED so only one entry is RESUMED at a time
     // (androidx updateBackStackLifecycle: top = RESUMED, the rest = STARTED).
@@ -127,6 +144,18 @@ bool NavController::popBackStack(const std::string& route, bool inclusive, bool 
     for(int i = (int)mBackStack.size() - 1; i >= 0; i--){
         NavDestination* d = mBackStack[i]->getDestination();
         if(d && d->hasRoute(route)){ targetIndex = i; break; }
+    }
+    if(targetIndex < 0) return false;
+    int end = inclusive ? targetIndex : targetIndex + 1;
+    while((int)mBackStack.size() > end){ popBackStack(); }
+    return true;
+}
+
+bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveState*/){
+    int targetIndex = -1;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; i--){
+        NavDestination* d = mBackStack[i]->getDestination();
+        if(d && d->getId() == destinationId){ targetIndex = i; break; }
     }
     if(targetIndex < 0) return false;
     int end = inclusive ? targetIndex : targetIndex + 1;
