@@ -1,5 +1,5 @@
 /*********************************************************************************
- * navigation-fragment MVP demo: NavHostFragment (hosted in a FragmentWindow) +
+ * navigation-fragment MVP demo: NavHostFragment (hosted in a FragmentActivity) +
  * a NavGraph whose destinations are FragmentNavigator.Destination entries mapping
  * route -> Fragment class. setGraph navigates to "a" (AFrag); any key navigates to
  * "b" (BFrag) via FragmentNavigator -> FragmentTransaction.replace. Verifies that
@@ -14,14 +14,14 @@
 #include <fragment/fragment.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenttransaction.h>
-#include <fragment/fragmentwindow.h>
+#include <fragment/fragmentactivity.h>
 #include <fragment/fragmentfactory.h>
 #include <widget/textview.h>
 #include <view/keyevent.h>
 #include <porting/cdlog.h>
 
 using cdroid::fragment::Fragment;
-using cdroid::fragment::FragmentWindow;
+using cdroid::fragment::FragmentActivity;
 
 class AFrag : public Fragment{
 public:
@@ -45,11 +45,11 @@ public:
 };
 REGISTER_FRAGMENT(BFrag);
 
-class NavDemoWindow : public FragmentWindow{
+class NavDemoWindow : public FragmentActivity{
     cdroid::NavHostFragment* mNavHost;
     bool mGraphBuilt = false;
 public:
-    NavDemoWindow() : FragmentWindow(0, 0, -1, -1){
+    NavDemoWindow() : FragmentActivity(0, 0, -1, -1){
         LOGD("[nav_frag_demo] NavDemoWindow ctor start");
         setFocusable(true);
         setClickable(true);
@@ -60,9 +60,9 @@ public:
             .commit();
         LOGD("[nav_frag_demo] NavDemoWindow ctor done (commit returned)");
     }
-    void onActive() override{
-        LOGD("[nav_frag_demo] onActive ENTER");
-        FragmentWindow::onActive();
+    void onResume() override{
+        LOGD("[nav_frag_demo] onResume ENTER");
+        FragmentActivity::onResume();
         if(mGraphBuilt) return;
         mGraphBuilt = true;
         cdroid::NavController* nc = mNavHost->getNavController();
@@ -89,7 +89,7 @@ public:
     }
     bool onTouchEvent(MotionEvent&e)override{
         LOGD("%.f,%.f",e.getX(),e.getY());
-        return FragmentWindow::onTouchEvent(e);
+        return FragmentActivity::onTouchEvent(e);
     }
     bool performClick()override{
         cdroid::NavController* nc = mNavHost->getNavController();
