@@ -95,6 +95,7 @@ void FragmentManager::addFragment(Fragment* f, bool hidden){
     if(mActive.count(f->mWho)) return;
     f->mFragmentManager = this;
     f->mHost = mHost;
+    f->mParentFragment = mParent; // nested: set when this FM is a childFragmentManager (parent = NavHostFragment)
     f->mAdded = true;
     f->mHidden = hidden;
     // Resolve the container ViewGroup fragments inflate into / are added to.
@@ -182,6 +183,7 @@ void FragmentManager::moveToState(Fragment* f, int newState){
             case Fragment::CREATED: {
                 cdroid::LayoutInflater* inflater = mHost ? mHost->onGetLayoutInflater() : nullptr;
                 f->performCreateView(inflater, f->mContainer, nullptr);
+                LOGD("FM.moveToState CREATED: who=%s mView=%p mContainer=%p", f->mWho.c_str(), f->mView, f->mContainer);
                 if(f->mView && f->mContainer){
                     // Resolve shared-element targets (by transitionName) in this entering fragment.
                     SharedElementMapping shared;
@@ -191,6 +193,13 @@ void FragmentManager::moveToState(Fragment* f, int newState){
                             if(target) shared[name] = target;
                         }
                         mPendingSharedNames.clear();
+                    }
+                    // A fragment view must fill its host container. A programmatically created
+                    // view (e.g. NavHostFragment's FrameLayout) carries no LayoutParams, so it
+                    // would measure to 0 and render nothing — default to MATCH_PARENT like androidx.
+                    if(f->mView->getLayoutParams() == nullptr){
+                        f->mView->setLayoutParams(new cdroid::LayoutParams(
+                            cdroid::LayoutParams::MATCH_PARENT, cdroid::LayoutParams::MATCH_PARENT));
                     }
                     TransitionManager::beginDelayedTransition(f->mContainer,
                         FragmentTransitionImpl::makeEnterTransition(shared));

@@ -16,6 +16,9 @@ NavController::NavController(Context* context) : mContext(context){
 }
 
 void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
+    LOGD("NavController.setGraph graph=%p startRoute='%s' startDestId=%d",
+         graph, graph ? graph->getStartDestinationRoute().c_str() : "(null)",
+         graph ? graph->getStartDestination() : 0);
     mGraph = graph;
     if(!mGraph) return;
     if(!mGraph->getStartDestinationRoute().empty()){
@@ -52,6 +55,7 @@ void NavController::navigate(int resId, Bundle* args, NavOptions* options){
 }
 
 void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* options){
+    LOGD("NavController.navigate route='%s'", node ? node->getRoute().c_str() : "(null)");
     NavBackStackEntry* entry = new NavBackStackEntry(node, args);
     mBackStack.push_back(entry);
     // Drive the entry's lifecycle up to RESUMED (MVP: no per-position maxLifecycle).

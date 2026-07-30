@@ -17,9 +17,12 @@ NavDestination* FragmentNavigator::createDestination(){
 
 void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* /*navOptions*/){
     Destination* d = dynamic_cast<Destination*>(destination);
-    if(!d || !mFragmentManager) return;
+    LOGD("FragmentNavigator.navigate className='%s' fm=%p containerId=%d",
+         d ? d->getClassName().c_str() : "(null)", mFragmentManager, mContainerId);
+    if(!d || !mFragmentManager){ LOGD("FragmentNavigator.navigate: bail (d=%p fm=%p)", d, mFragmentManager); return; }
     fragment::FragmentFactory factory;
     fragment::Fragment* fragment = factory.instantiate(d->getClassName());
+    LOGD("FragmentNavigator.navigate instantiate=%p", fragment);
     if(!fragment) return;
     fragment->setArguments(args ? new Bundle(*args) : nullptr);
     fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
