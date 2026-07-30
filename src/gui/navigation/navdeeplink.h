@@ -1,21 +1,37 @@
 #ifndef __NAV_DEEPLINK_H__
 #define __NAV_DEEPLINK_H__
+/*********************************************************************************
+ * Port of androidx.navigation.NavDeepLink (rewritten). Compiles a uriPattern
+ * with {arg} placeholders into a regex; matches() tests a uri, getMatchingArguments()
+ * extracts placeholder values (typed via NavArgument when provided).
+ * Keeps the legacy (string)-only overloads so existing navdestination.cc compiles.
+ *********************************************************************************/
 #include <string>
 #include <vector>
-#include <navigation/navdestination.h>
-
+#include <map>
+#include <regex>
+#include <core/bundle.h>
 namespace cdroid{
-class NavDeepLink {
-private:
-    std::vector<std::string> mArguments;
-    //Pattern mPattern;
+
+class NavArgument;
+
+class NavDeepLink{
 public:
-    /**
-     * NavDestinations should be created via {@link Navigator#createDestination}.
-     */
-    NavDeepLink(const std::string& uri);
-    bool matches(/*@NonNull Uri*/const std::string& deepLink)const;
-    Bundle* getMatchingArguments(/*@NonNull Uri*/const std::string& deepLink);
+    explicit NavDeepLink(const std::string& uriPattern);
+    const std::string& getUriPattern() const { return mUriPattern; }
+    bool isExactDeepLink() const;
+    bool matches(const std::string& deepLink) const;
+    // Legacy: no type map; placeholders returned as strings.
+    Bundle* getMatchingArguments(const std::string& deepLink);
+    // Modern: typed extraction via the destination's arguments map.
+    Bundle* getMatchingArguments(const std::string& deepLink,
+                                 const std::map<std::string, NavArgument*>& arguments) const;
+private:
+    void buildRegex(const std::string& pattern);
+    std::string mUriPattern;
+    std::regex mRegex;
+    std::vector<std::string> mArgNames;
 };
-}/*endof namespace*/
+
+}//namespace cdroid
 #endif/*__NAV_DEEPLINK_H__*/

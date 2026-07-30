@@ -11,9 +11,7 @@ Navigator*SimpleNavigatorProvider::getNavigator(const std::string& name) {
 }
 
 Navigator*SimpleNavigatorProvider::addNavigator(Navigator*navigator) {
-    std::string name = "";//getNavigator("");//getNameForNavigator(navigator->getClass());
-    FATAL("do not call this function");
-    return addNavigator(name, navigator);
+    return addNavigator(navigator->getName(), navigator);
 }
 
 Navigator*SimpleNavigatorProvider::addNavigator(const std::string& name,Navigator*navigator) {

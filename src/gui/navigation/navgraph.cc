@@ -4,7 +4,7 @@
 namespace cdroid{
 
 NavGraph::NavGraph(/*@NonNull*/ NavigatorProvider* navigatorProvider)
-    :NavGraph((NavGraphNavigator*)navigatorProvider->getNavigator("")) {
+    :NavGraph((NavGraphNavigator*)navigatorProvider->getNavigator("navigation")) {
 }
 
 /**
@@ -62,9 +62,9 @@ std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/con
  * @param node destination to add
  */
 void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
-    if (node->getId() == 0) {
-        throw std::runtime_error("Destinations must have an id."
-                " Call setId() or include an android:id in your navigation XML.");
+    if (node->getId() == 0 && node->getRoute().empty()) {
+        throw std::runtime_error("Destinations must have an id or a route."
+                " Call setId()/setRoute() or include android:id/app:route in your navigation XML.");
     }
     NavDestination* existingDestination = mNodes.get(node->getId());
     if (existingDestination == node) {
@@ -79,6 +79,7 @@ void NavGraph::addDestination(/*@NonNull*/ NavDestination* node) {
     }
     node->setParent(this);
     mNodes.put(node->getId(), node);
+    if(!node->getRoute().empty()) mNodesByRoute[node->getRoute()] = node;
 }
 
 /**
@@ -184,6 +185,17 @@ int NavGraph::getStartDestination() const{
  */
 void NavGraph::setStartDestination(int startDestId) {
     mStartDestId = startDestId;
+}
+
+NavDestination* NavGraph::findNode(const std::string& route) {
+    return findNode(route, true);
+}
+
+NavDestination* NavGraph::findNode(const std::string& route, bool searchParents) {
+    auto it = mNodesByRoute.find(route);
+    NavDestination* destination = (it != mNodesByRoute.end()) ? it->second : nullptr;
+    return destination ? destination
+        : (searchParents && getParent() ? getParent()->findNode(route) : nullptr);
 }
 
 NavGraph::Iterator::Iterator(NavGraph*g,int iter):mGraph(g){

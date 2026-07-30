@@ -1,64 +1,75 @@
 #ifndef __NAV_CONTROLLER_H__
 #define __NAV_CONTROLLER_H__
+/*********************************************************************************
+ * Port of androidx.navigation.NavController (rewritten, modern route model).
+ * Holds a NavGraph + a back stack of NavBackStackEntry; navigate(route) resolves a
+ * destination, pushes an entry, drives its Lifecycle, and delegates execution to the
+ * destination's Navigator. Keeps navigate(int) legacy overload for Navigation helper.
+ *********************************************************************************/
 #include <vector>
-#include <deque>
+#include <string>
+#include <lifecycle/lifecycle.h>
+#include <lifecycle/lifecycleowner.h>
+#include <lifecycle/viewmodelstore.h>
 #include <core/bundle.h>
-#include <core/callbackbase.h>
-#include <navigation/navinflater.h>
 #include <navigation/navdestination.h>
-#include <navigation/navdirections.h>
-#include <navigation/navdeeplinkbuilder.h>
-#include <navigation/simplenavigatorprovider.h>
-
 namespace cdroid{
+class Context;
+class NavGraph;
+class NavInflater;
+class NavigatorProvider;
+class NavBackStackEntry;
+class NavOptions;
+class NavDeepLinkRequest;
 
 class NavController{
 public:
-    typedef CallbackBase<void,NavController&,NavDestination&>OnNavigatedListener;
+    class OnDestinationChangedListener{
+    public:
+        virtual ~OnDestinationChangedListener() = default;
+        virtual void onDestinationChanged(NavController* controller, NavDestination* destination, Bundle* arguments){}
+    };
+
+    NavController(Context* context);
+    Context* getContext() const { return mContext; }
+    NavigatorProvider* getNavigatorProvider() const { return mNavigatorProvider; }
+
+    NavGraph* getGraph() const { return mGraph; }
+    void setGraph(NavGraph* graph, Bundle* startDestinationArgs = nullptr);
+
+    NavDestination* getCurrentDestination();
+    NavBackStackEntry* getCurrentBackStackEntry() const;
+
+    void setLifecycleOwner(lifecycle::LifecycleOwner* owner){ mLifecycleOwner = owner; }
+    void setViewModelStore(lifecycle::ViewModelStore* store){ mViewModelStore = store; }
+
+    // Modern route navigation.
+    void navigate(const std::string& route, NavOptions* options = nullptr);
+    // Legacy int-id navigation (kept for Navigation.createNavigateOnClickListener).
+    void navigate(int resId, Bundle* args = nullptr, NavOptions* options = nullptr);
+    void navigate(NavDeepLinkRequest* request, NavOptions* options = nullptr);
+
+    bool popBackStack();
+    bool popBackStack(const std::string& route, bool inclusive, bool saveState);
+    bool navigateUp();
+
+    NavDestination* findDestination(const std::string& route);
+
+    void addOnDestinationChangedListener(OnDestinationChangedListener* listener);
+    void removeOnDestinationChangedListener(OnDestinationChangedListener* listener);
+
 private:
     Context* mContext;
-    Activity* mActivity;
-    NavInflater* mInflater;
-    NavGraph* mGraph;
-    int mGraphId;
-    Bundle mNavigatorStateToRestore;
-    std::vector<int> mBackStackToRestore;
-    std::deque<NavDestination*> mBackStack;
-    SimpleNavigatorProvider* mNavigatorProvider;
-    Navigator::OnNavigatorNavigatedListener mOnNavigatedListener;
-    std::vector<OnNavigatedListener> mOnNavigatedListeners;
-private:
-    void onNavigatorNavigated(Navigator& navigator,/*IdRes*/int destId,
-                  /*Navigator.BackStackEffect*/int backStackEffect);
-    void dispatchOnNavigated(NavDestination* destination);
-    void onGraphCreated();
-    NavDestination* findDestination(/*@IdRes*/int destinationId);
+    NavigatorProvider* mNavigatorProvider = nullptr;
+    NavGraph* mGraph = nullptr;
+    std::vector<NavBackStackEntry*> mBackStack;
+    lifecycle::LifecycleOwner* mLifecycleOwner = nullptr;
+    lifecycle::ViewModelStore* mViewModelStore = nullptr;
+    std::vector<OnDestinationChangedListener*> mOnDestinationChangedListeners;
 
-public:
-    NavController(Context* context);
-    Context* getContext() const;
-    NavigatorProvider* getNavigatorProvider() const;
-    void addOnNavigatedListener(OnNavigatedListener listener);
-    void removeOnNavigatedListener(OnNavigatedListener listener);
-    bool popBackStack();
-    bool popBackStack(/*@IdRes*/int destinationId, bool inclusive);
-    bool navigateUp();
-    void setMetadataGraph();
-    NavInflater& getNavInflater();
-    void setGraph(const std::string& graphResId);
-    void setGraph(NavGraph* graph);
-    bool onHandleDeepLink(/*Nullable*/ Intent intent);
-    NavGraph* getGraph() const;
-    NavDestination* getCurrentDestination();
-    void navigate(/*@IdRes*/ int resId);
-    void navigate(/*@IdRes*/ int resId, Bundle* args);
-    void navigate(/*@IdRes*/ int resId, Bundle* args, NavOptions* navOptions);
-    void navigate(NavDirections& directions);
-    void navigate(NavDirections& directions, NavOptions* navOptions);
-    NavDeepLinkBuilder* createDeepLink();
-    Bundle* saveState();
-    void restoreState(Bundle* navState);
+    void navigate(NavDestination* node, Bundle* args, NavOptions* navOptions);
+    void dispatchOnDestinationChanged(NavDestination* destination, Bundle* args);
 };
 
-}
+}//namespace cdroid
 #endif/*__NAV_CONTROLLER_H__*/

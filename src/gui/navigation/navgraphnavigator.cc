@@ -12,6 +12,7 @@ namespace cdroid{
  */
 NavGraphNavigator::NavGraphNavigator(Context* context):Navigator() {
     mContext = context;
+    mName = "navigation";
 }
 
 /**
@@ -37,7 +38,6 @@ void NavGraphNavigator::navigate(/*@NonNull NavGraph*/NavDestination* destinatio
         const std::string dest = NavDestination::getDisplayName(mContext, startId);
         /*throw std::logic_error("navigation destination %s is not a direct child of this NavGraph",dest.c_str());*/
     }
-    dispatchOnNavigatorNavigated(destination->getId(), BACK_STACK_DESTINATION_ADDED);
     startDestination->navigate(args, navOptions);
 }
 
