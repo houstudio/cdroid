@@ -13,6 +13,7 @@
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
 class LayoutInflater;
+class View;
 namespace fragment{
 
 class Fragment;
@@ -74,6 +75,10 @@ public:
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }
 
+    // Shared-element transition: the active BackStackRecord declares shared element names;
+    // FragmentManager resolves them to target views (by transitionName) in the entering fragment.
+    void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
+
 private:
     FragmentHostCallback* mHost = nullptr;
     FragmentContainer* mContainer = nullptr;
@@ -83,9 +88,11 @@ private:
     std::vector<Fragment*> mAdded;
     std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
     std::vector<BackStackRecord*> mBackStack;
+    std::vector<std::string> mPendingSharedNames;
     bool mDestroyed = false;
     bool mStateSaved = false;
     bool mStopped = true;
+    static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
 };
 
 }//namespace fragment

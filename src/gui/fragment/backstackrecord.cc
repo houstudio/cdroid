@@ -23,6 +23,13 @@ int BackStackRecord::commitInternal(){
 
 void BackStackRecord::executeOps(){
     if(!mManager) return;
+    // Declare shared element names so FragmentManager can resolve target views in the
+    // entering fragment (by transitionName) when it builds the enter transition.
+    if(!mSharedElements.empty()){
+        std::vector<std::string> names;
+        for(const SharedElement& se : mSharedElements) names.push_back(se.name);
+        mManager->setPendingSharedElementNames(names);
+    }
     for(Op& op : mOps){
         Fragment* f = op.mFragment;
         if(!f) continue;

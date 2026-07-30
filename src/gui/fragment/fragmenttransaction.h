@@ -9,6 +9,7 @@
 #include <string>
 #include <lifecycle/lifecycle.h>
 namespace cdroid{
+class View;
 namespace fragment{
 
 class Fragment;
@@ -58,6 +59,11 @@ public:
     FragmentTransaction& setReorderingAllowed(bool reorderingAllowed);
     FragmentTransaction& setCustomAnimations(int enterAnim, int exitAnim,
                                              int popEnterAnim = 0, int popExitAnim = 0);
+    // Declare a shared element (used by shared-element transitions via FragmentTransitionImpl).
+    FragmentTransaction& addSharedElement(cdroid::View* sharedElement, const std::string& name);
+
+    struct SharedElement{ cdroid::View* view = nullptr; std::string name; };
+    const std::vector<SharedElement>& getSharedElements() const { return mSharedElements; }
 
     bool isEmpty() const { return mOps.empty(); }
 
@@ -73,6 +79,7 @@ protected:
     bool mAddToBackStack = false;
     std::string mName;
     bool mReorderingAllowed = false;
+    std::vector<SharedElement> mSharedElements;
     int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
 };
 
