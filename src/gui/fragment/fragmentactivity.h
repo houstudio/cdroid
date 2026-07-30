@@ -1,11 +1,12 @@
-#ifndef __FRAGMENTWINDOW_H__
-#define __FRAGMENTWINDOW_H__
+#ifndef __FRAGMENTACTIVITY_H__
+#define __FRAGMENTACTIVITY_H__
 /*********************************************************************************
- * CDROID Fragment host (the FragmentActivity analogue). Subclasses Window and
- * implements the owner interfaces FragmentManager probes for via dynamic_cast:
- * LifecycleOwner (via SavedStateRegistryOwner), ViewModelStoreOwner,
- * SavedStateRegistryOwner. Drives FragmentManager dispatch from Window lifecycle
- * hooks (onCreate/onActive/onDeactive/onBackPressed).
+ * CDROID port of androidx.fragment.app.FragmentActivity. Subclasses Activity
+ * (= Window) and implements the owner interfaces FragmentManager probes for via
+ * dynamic_cast: LifecycleOwner (via SavedStateRegistryOwner), ViewModelStoreOwner,
+ * SavedStateRegistryOwner. Drives FragmentManager dispatch from the Activity
+ * lifecycle hooks
+ * (onCreate/onStart/onResume/onPause/onStop/onDestroy/onBackPressed).
  *********************************************************************************/
 #include <widget/cdwindow.h>
 #include <lifecycle/lifecycleregistry.h>
@@ -18,22 +19,25 @@ namespace fragment{
 
 class FragmentManager;
 
-class FragmentWindow : public Window,
-                       public savedstate::SavedStateRegistryOwner,
-                       public lifecycle::ViewModelStoreOwner{
+class FragmentActivity : public Activity,
+                         public savedstate::SavedStateRegistryOwner,
+                         public lifecycle::ViewModelStoreOwner{
 public:
-    FragmentWindow(int x, int y, int w, int h);
-    ~FragmentWindow() override;
+    FragmentActivity(int x, int y, int w, int h);
+    ~FragmentActivity() override;
 
     // --- owner interfaces ---
     lifecycle::Lifecycle& getLifecycle() override;
     lifecycle::ViewModelStore& getViewModelStore() override;
     savedstate::SavedStateRegistry& getSavedStateRegistry() override;
 
-    // --- Window lifecycle hooks drive the FragmentManager ---
-    void onCreate() override;
-    void onActive() override;
-    void onDeactive() override;
+    // --- Activity lifecycle hooks drive the FragmentManager ---
+    void onCreate(Bundle* savedInstanceState) override;
+    void onStart() override;
+    void onResume() override;
+    void onPause() override;
+    void onStop() override;
+    void onDestroy() override;
     void onBackPressed() override;
 
     FragmentManager* getSupportFragmentManager();

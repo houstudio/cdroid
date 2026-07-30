@@ -1,5 +1,6 @@
 #include <navigation/navcontroller.h>
 #include <navigation/navgraph.h>
+#include <navigation/navinflater.h>
 #include <navigation/navbackstackentry.h>
 #include <navigation/navoptions.h>
 #include <navigation/navdeeplinkrequest.h>
@@ -26,6 +27,12 @@ void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
     }else if(mGraph->getStartDestination() != 0){
         navigate(mGraph->getStartDestination(), startDestinationArgs, nullptr);
     }
+}
+
+void NavController::setGraph(const std::string& graphRef, Bundle* startDestinationArgs){
+    NavInflater inflater(mContext, mNavigatorProvider);
+    NavGraph* graph = inflater.inflate(graphRef);
+    setGraph(graph, startDestinationArgs);
 }
 
 NavDestination* NavController::findDestination(const std::string& route){

@@ -1,4 +1,4 @@
-#include <fragment/fragmentwindow.h>
+#include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <view/layoutinflater.h>
@@ -9,30 +9,30 @@
 namespace cdroid{
 namespace fragment{
 
-// FragmentHostCallback implementation bound to the FragmentWindow.
-class FragmentWindow::HostCallbacks : public FragmentHostCallback{
-    FragmentWindow* mWindow;
+// FragmentHostCallback implementation bound to the FragmentActivity.
+class FragmentActivity::HostCallbacks : public FragmentHostCallback{
+    FragmentActivity* mActivity;
 public:
-    explicit HostCallbacks(FragmentWindow* w) : mWindow(w){}
-    cdroid::Context* getContext() override { return mWindow->getContext(); }
+    explicit HostCallbacks(FragmentActivity* a) : mActivity(a){}
+    cdroid::Context* getContext() override { return mActivity->getContext(); }
     cdroid::Handler* getHandler() override {
-        // MVP: FragmentManager dispatch is synchronous (no Handler.post scheduling),
+        // FragmentManager dispatch is synchronous (no Handler.post scheduling),
         // so no real Handler is needed yet. Wired up with OnBackPressedDispatcher later.
         return nullptr;
     }
     cdroid::LayoutInflater* onGetLayoutInflater() override {
         return cdroid::LayoutInflater::from(getContext());
     }
-    cdroid::Window* onGetHost() override { return mWindow; }
+    cdroid::Window* onGetHost() override { return mActivity; }
     cdroid::View* onFindViewById(int id) override {
-        if(id == mWindow->getFragmentContainerId()) return mWindow;
-        return mWindow->findViewById(id);
+        if(id == mActivity->getFragmentContainerId()) return mActivity;
+        return mActivity->findViewById(id);
     }
     bool onHasView() override { return true; }
 };
 
-FragmentWindow::FragmentWindow(int x, int y, int w, int h)
-    : Window(x, y, w, h){
+FragmentActivity::FragmentActivity(int x, int y, int w, int h)
+    : Activity(x, y, w, h){
     // android.R.id.content analogue: the id fragments are added into.
     mContainerId = 0x01020002;
     setId(mContainerId);
@@ -44,9 +44,7 @@ FragmentWindow::FragmentWindow(int x, int y, int w, int h)
     mFragmentManager->attachController(mHost, mHost, nullptr);
 }
 
-FragmentWindow::~FragmentWindow(){
-    mFragmentManager->dispatchDestroyView();
-    mFragmentManager->dispatchDestroy();
+FragmentActivity::~FragmentActivity(){
     delete mFragmentManager;
     delete mHost;
     delete mSavedStateRegistryController;
@@ -54,19 +52,19 @@ FragmentWindow::~FragmentWindow(){
     delete mLifecycleRegistry;
 }
 
-lifecycle::Lifecycle& FragmentWindow::getLifecycle(){
+lifecycle::Lifecycle& FragmentActivity::getLifecycle(){
     return *mLifecycleRegistry;
 }
 
-lifecycle::ViewModelStore& FragmentWindow::getViewModelStore(){
+lifecycle::ViewModelStore& FragmentActivity::getViewModelStore(){
     return *mViewModelStore;
 }
-savedstate::SavedStateRegistry& FragmentWindow::getSavedStateRegistry(){
+savedstate::SavedStateRegistry& FragmentActivity::getSavedStateRegistry(){
     return mSavedStateRegistryController->getSavedStateRegistry();
 }
 
-void FragmentWindow::onCreate(){
-    Window::onCreate();
+void FragmentActivity::onCreate(Bundle* savedInstanceState){
+    Activity::onCreate(savedInstanceState);
     mFragmentManager->dispatchAttach();
     mFragmentManager->dispatchCreate();
     mFragmentManager->dispatchViewCreated();
@@ -74,27 +72,42 @@ void FragmentWindow::onCreate(){
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_CREATE);
 }
 
-void FragmentWindow::onActive(){
-    Window::onActive();
+void FragmentActivity::onStart(){
+    Activity::onStart();
     mFragmentManager->dispatchStart();
+    mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_START);
+}
+
+void FragmentActivity::onResume(){
+    Activity::onResume();
     mFragmentManager->dispatchResume();
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
 }
 
-void FragmentWindow::onDeactive(){
+void FragmentActivity::onPause(){
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_PAUSE);
     mFragmentManager->dispatchPause();
+    Activity::onPause();
+}
+
+void FragmentActivity::onStop(){
     mFragmentManager->dispatchStop();
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_STOP);
-    Window::onDeactive();
+    Activity::onStop();
 }
 
-void FragmentWindow::onBackPressed(){
+void FragmentActivity::onDestroy(){
+    mFragmentManager->dispatchDestroyView();
+    mFragmentManager->dispatchDestroy();
+    Activity::onDestroy();
+}
+
+void FragmentActivity::onBackPressed(){
     if(mFragmentManager->popBackStackImmediate()) return;
-    Window::onBackPressed();
+    Activity::onBackPressed();
 }
 
-FragmentManager* FragmentWindow::getSupportFragmentManager(){
+FragmentManager* FragmentActivity::getSupportFragmentManager(){
     return mFragmentManager;
 }
 

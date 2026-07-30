@@ -103,7 +103,7 @@ void WindowManager::addWindow(Window*win){
     }
     if(mActiveWindow){
         Window*deactWin = mActiveWindow;
-        mActiveWindow->post([deactWin](){deactWin->onDeactive();});
+        mActiveWindow->post([deactWin](){deactWin->onPause();deactWin->onStop();});
         mActiveWindow->mAttachInfo->mTreeObserver->dispatchOnWindowFocusChange(false);
     }
 
@@ -118,8 +118,9 @@ void WindowManager::addWindow(Window*win){
     Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post([win](){
-        win->onCreate();
-        win->onActive();
+        win->onCreate(nullptr);
+        win->onStart();
+        win->onResume();
     });
     win->post([info](){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
@@ -135,7 +136,8 @@ void WindowManager::removeWindow(Window*w){
     }
     if(w->hasFlag(View::FOCUSABLE)){
         w->dispatchWindowFocusChanged(false);
-        w->onDeactive();
+        w->onPause();
+        w->onStop();
     }
     auto itw = std::find(mWindows.begin(),mWindows.end(),w);
     const Rect wrect = w->getBound();
@@ -163,7 +165,8 @@ void WindowManager::removeWindow(Window*w){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
                  (*it)->dispatchWindowFocusChanged(true);
-                 (*it)->onActive();
+                 (*it)->onStart();
+                 (*it)->onResume();
             }
             mActiveWindow = (*it);
             break;
@@ -182,7 +185,8 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
         }
         if(w->hasFlag(View::FOCUSABLE)){
             w->dispatchWindowFocusChanged(false);
-            w->onDeactive();
+            w->onPause();
+            w->onStop();
         }
         auto itw = std::find(mWindows.begin(),mWindows.end(),w);
         const Rect rw = w->getBound();
@@ -202,6 +206,7 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
         Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
     #endif
         View::AttachInfo*info = w->mAttachInfo;
+        w->onDestroy();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
@@ -210,7 +215,8 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
         if((*it)->hasFlag(View::FOCUSABLE)&&(*it)->getVisibility()==View::VISIBLE){
             if((*it)!=mActiveWindow){
                 (*it)->dispatchWindowFocusChanged(true);
-                (*it)->onActive();
+                (*it)->onStart();
+                (*it)->onResume();
             }
             mActiveWindow = (*it);
             break;
@@ -284,10 +290,11 @@ void WindowManager::sendToBack(Window*win){
     }
     mActiveWindow = mWindows.back();
     mActiveWindow->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
-    win->post([win](){win->onDeactive();});
+    win->post([win](){win->onPause();win->onStop();});
     Window*newActWin = mActiveWindow;
     mActiveWindow->post([newActWin](){
-        newActWin->onActive();
+        newActWin->onStart();
+        newActWin->onResume();
     });
     GraphDevice::getInstance().flip();
 }
@@ -303,11 +310,12 @@ void WindowManager::bringToFront(Window*win){
         Window *w = mWindows.at(idx);
         w->mLayer = (w->window_type<<16)|(idx+1);
     }
-    win->post([win](){win->onActive();});
+    win->post([win](){win->onStart();win->onResume();});
 
     Window*deactWin= mActiveWindow;
     mActiveWindow->post([deactWin](){
-        deactWin->onDeactive();
+        deactWin->onPause();
+        deactWin->onStop();
     });
     mActiveWindow = win;
     win->mPendingRgn->do_union({0,0,win->getWidth(),win->getHeight()});
@@ -411,7 +419,8 @@ void WindowManager::onMotion(MotionEvent&event) {
                bringToFront(target);
                if (target->hasFlag(View::FOCUSABLE)) {
                    target->dispatchWindowFocusChanged(true);
-                   target->onActive();
+                   target->onStart();
+                   target->onResume();
                }
                mActiveWindow = target;
            }
