@@ -302,7 +302,11 @@ void NavController::addEntryToBackStack(NavDestination* /*node*/, Bundle* args, 
     linkIfHasParent(leafEntry);
     LOGD("NavController.addEntryToBackStack: stack size=%d", (int)mBackStack.size());
     std::string routes;
-    for(NavBackStackEntry* e : mBackStack){ if(!routes.empty()) routes += ","; routes += (e->getDestination() ? e->getDestination()->getRoute() : "?"); }
+    for(NavBackStackEntry* e : mBackStack){
+        if(!routes.empty())
+            routes += ",";
+        routes += (e->getDestination() ? e->getDestination()->getRoute() : "?");
+    }
     LOGD("NavController.backStack: [%s]", routes.c_str());
 }
 
