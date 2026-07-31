@@ -623,16 +623,14 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
             snprintf(label, sizeof(label), "G");
         }
 
-        // Android Studio: a guideline is a dashed line with a circular handle at the edge
-        // (the handle toggles percent/begin/end in the editor), rendered olive-green.
+        // Olive-green dashed full-span line (Android Studio renders helpers as dotted lines).
+        // The editor's edge handle is an interaction affordance — not drawn at runtime.
         canvas.set_color(0x99, 0xCC, 0x33, 0xD0);
         if (vertical) {
             const int x = g->getX();
             canvas.move_to(x + 0.5, 0);
             canvas.line_to(x + 0.5, H);
             canvas.stroke();
-            canvas.arc(x, 0, 4, 0, 2 * M_PI); // edge handle (fill ignores dash)
-            canvas.fill();
             canvas.set_color(0x99, 0xCC, 0x33, 0xFF);
             canvas.move_to(x + 6, 12);
             canvas.show_text(label);
@@ -641,8 +639,6 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
             canvas.move_to(0, y + 0.5);
             canvas.line_to(W, y + 0.5);
             canvas.stroke();
-            canvas.arc(0, y, 4, 0, 2 * M_PI);
-            canvas.fill();
             canvas.set_color(0x99, 0xCC, 0x33, 0xFF);
             canvas.move_to(8, y - 4);
             canvas.show_text(label);
@@ -662,15 +658,13 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
                                      : (type == clcore::Barrier::TOP  ? '^' : 'v');
         snprintf(label, sizeof(label), "B %c", marker);
 
-        // Android Studio: a barrier is a dashed helper line with an edge handle, like a guideline.
+        // Purple dashed helper line, like a guideline; the direction is drawn as a text marker.
         canvas.set_color(0xAB, 0x47, 0xBC, 0xE0); // purple (AS helper accent)
         if (vertical) {
             const int x = w->getX();
             canvas.move_to(x + 0.5, 0);
             canvas.line_to(x + 0.5, H);
             canvas.stroke();
-            canvas.arc(x, 0, 4, 0, 2 * M_PI);
-            canvas.fill();
             canvas.set_color(0xAB, 0x47, 0xBC, 0xFF);
             canvas.move_to(x + 6, H - 4);
             canvas.show_text(label);
@@ -679,19 +673,36 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
             canvas.move_to(0, y + 0.5);
             canvas.line_to(W, y + 0.5);
             canvas.stroke();
-            canvas.arc(0, y, 4, 0, 2 * M_PI);
-            canvas.fill();
             canvas.set_color(0xAB, 0x47, 0xBC, 0xFF);
             canvas.move_to(W - 24, y - 3);
             canvas.show_text(label);
         }
     }
 
-    // --- Constraint connection lines (child anchor -> target anchor) ---
-    // Android Studio: solid blue lines with circular handles at each end; the margin value is
-    // printed on the line. Switch back to solid strokes for these.
+    // --- Baseline guides: a green line across each child at its text-baseline height ---
+    // Pure layout aid (where this view baseline-aligns to others); no editor handles. Solid here.
     canvas.set_dash(std::vector<double>{}, 0);
-    auto drawConnection = [&](ConstraintAnchor& a) {
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
+        if (!lp || lp->mIsGuideline || lp->mIsHelper) continue;
+        if (child->getVisibility() == View::GONE) continue;
+        ConstraintWidget* widget = getViewWidget(child);
+        if (widget == nullptr) continue;
+        if (!widget->hasBaseline() || widget->getBaselineDistance() <= 0) continue;
+        const int ox = widget->getX(), oy = widget->getY();
+        const int ow = widget->getWidth();
+        const int by = oy + widget->getBaselineDistance();
+        canvas.set_color(0x4C, 0xAF, 0x50, 0xC0); // green baseline
+        canvas.move_to(ox + 0.5, by + 0.5);
+        canvas.line_to(ox + ow - 0.5, by + 0.5);
+        canvas.stroke();
+    }
+
+    // --- Constraint connection lines (child anchor -> target anchor) ---
+    // Solid blue with a margin readout; opposing constraints (both sides of an axis connected on a
+    // non-stretch dimension) render as a zigzag spring, like the editor.
+    auto drawConnection = [&](ConstraintAnchor& a, bool spring) {
         if (!a.isConnected() || a.mTarget == nullptr || a.mOwner == nullptr) return;
         ConstraintWidget* widget = a.mOwner;
         ConstraintWidget* target = a.mTarget->mOwner;
@@ -713,35 +724,56 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
             x1 = (a.mType == ConstraintAnchor::Type::RIGHT) ? ox + ow : ox;
             x2 = (a.mTarget->mType == ConstraintAnchor::Type::LEFT) ? tx : tx + tw;
         }
-        canvas.move_to(x1 + 0.5, y1 + 0.5);
-        canvas.line_to(x2 + 0.5, y2 + 0.5);
+        if (spring) {
+            // Zigzag "spring" — Android Studio coils opposing constraints.
+            const double dx = x2 - x1, dy = y2 - y1;
+            const double len = std::sqrt(dx * dx + dy * dy);
+            const int teeth = std::max(4, static_cast<int>(len / 8));
+            const double ux = dx / len, uy = dy / len, px = -uy, py = ux;
+            canvas.move_to(x1 + 0.5, y1 + 0.5);
+            for (int k = 1; k < teeth; k++) {
+                const double t = static_cast<double>(k) / teeth;
+                const double off = (k % 2 == 1) ? 3.0 : -3.0;
+                canvas.line_to(x1 + dx * t + px * off, y1 + dy * t + py * off);
+            }
+            canvas.line_to(x2 + 0.5, y2 + 0.5);
+        } else {
+            canvas.move_to(x1 + 0.5, y1 + 0.5);
+            canvas.line_to(x2 + 0.5, y2 + 0.5);
+        }
         canvas.stroke();
-        // Circular constraint handles at both ends (Android Studio draws these on every anchor).
-        canvas.arc(x1 + 0.5, y1 + 0.5, 2.5, 0, 2 * M_PI);
-        canvas.arc(x2 + 0.5, y2 + 0.5, 2.5, 0, 2 * M_PI);
-        canvas.fill();
-        // Margin value printed on the line (Android Studio prints the margin atop each constraint).
+        // Margin readout on a white label (Android Studio prints the margin atop each constraint).
         const int margin = a.getMargin();
         if (margin > 0) {
             snprintf(label, sizeof(label), "%d", margin);
-            canvas.set_color(0xFF, 0xFF, 0xFF, 0xFF);
-            canvas.move_to((x1 + x2) / 2.0f + 2, (y1 + y2) / 2.0f);
+            int tw2 = 0, th2 = 0;
+            canvas.get_text_size(label, &tw2, &th2);
+            const float mx = (x1 + x2) / 2.0f, my = (y1 + y2) / 2.0f;
+            canvas.set_color(0xFF, 0xFF, 0xFF, 0xE0);
+            canvas.rectangle(mx - tw2 / 2 - 3, my - th2 / 2, tw2 + 6, th2);
+            canvas.fill();
+            canvas.set_color(0x33, 0x33, 0x33, 0xFF);
+            canvas.move_to(mx - tw2 / 2, my + th2 / 2 - 1);
             canvas.show_text(label);
         }
     };
+    using DB = ConstraintWidget::DimensionBehaviour;
     for (int i = 0; i < count; i++) {
         View* child = getChildAt(i);
         auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
         if (!lp || lp->mIsGuideline || lp->mIsHelper) continue;
         ConstraintWidget* widget = getViewWidget(child);
         if (widget == nullptr) continue;
+        const bool vOpp = widget->getVerticalDimensionBehaviour() != DB::MATCH_CONSTRAINT
+                && widget->mTop.isConnected() && widget->mBottom.isConnected();
+        const bool hOpp = widget->getHorizontalDimensionBehaviour() != DB::MATCH_CONSTRAINT
+                && widget->mLeft.isConnected() && widget->mRight.isConnected();
         canvas.set_color(0x42, 0x85, 0xF4, 0xD0); // Android Studio constraint blue
-        drawConnection(widget->mTop);
-        drawConnection(widget->mBottom);
-        drawConnection(widget->mLeft);
-        drawConnection(widget->mRight);
+        drawConnection(widget->mTop, vOpp);
+        drawConnection(widget->mBottom, vOpp);
+        drawConnection(widget->mLeft, hOpp);
+        drawConnection(widget->mRight, hOpp);
     }
-    canvas.set_dash(std::vector<double>{}, 0); // restore solid strokes
 }
 
 void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
