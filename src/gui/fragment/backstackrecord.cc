@@ -45,6 +45,12 @@ void BackStackRecord::executeOps(){
     for(Op& op : mOps){
         Fragment* f = op.mFragment;
         if(!f) continue;
+        // Push this op's custom animations onto the fragment before executing it (androidx
+        // executeOps: f.setAnimations(op.mEnterAnim,...)). Structural ops only (ADD..ATTACH);
+        // setMaxLifecycle/setPrimaryNav carry no animations.
+        if(op.mCmd >= OP_ADD && op.mCmd <= OP_ATTACH){
+            f->setAnimations(op.mEnterAnim, op.mExitAnim, op.mPopEnterAnim, op.mPopExitAnim);
+        }
         switch(op.mCmd){
             case OP_ADD:
                 mManager->addFragment(f, false);
@@ -56,6 +62,11 @@ void BackStackRecord::executeOps(){
                 for(Fragment* e : existing){
                     if(e && e != f && e->mContainerId == cid){
                         oldFrag = e;
+                        // Push the op's animations onto the displaced fragment too so its exit
+                        // uses the custom anim; otherwise it falls back to the default Fade
+                        // transition, whose beginDelayedTransition would also fade the entering
+                        // fragment and mask its custom enter animation.
+                        e->setAnimations(op.mEnterAnim, op.mExitAnim, op.mPopEnterAnim, op.mPopExitAnim);
                         // A reversible transaction must keep the displaced fragment alive
                         // (retained at CREATED) so popBackStack can restore it; otherwise
                         // removeFragment would fully destroy it and pop would throw.

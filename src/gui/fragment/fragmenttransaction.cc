@@ -5,11 +5,11 @@ namespace fragment{
 
 FragmentTransaction& FragmentTransaction::addOp(const Op& op){
     Op o = op;
-    if(mEnterAnim || mExitAnim || mPopEnterAnim || mPopExitAnim){
-        if(!o.mEnterAnim) o.mEnterAnim = mEnterAnim;
-        if(!o.mExitAnim) o.mExitAnim = mExitAnim;
-        if(!o.mPopEnterAnim) o.mPopEnterAnim = mPopEnterAnim;
-        if(!o.mPopExitAnim) o.mPopExitAnim = mPopExitAnim;
+    if(!mEnterAnim.empty() || !mExitAnim.empty() || !mPopEnterAnim.empty() || !mPopExitAnim.empty()){
+        if(o.mEnterAnim.empty())     o.mEnterAnim = mEnterAnim;
+        if(o.mExitAnim.empty())      o.mExitAnim = mExitAnim;
+        if(o.mPopEnterAnim.empty())  o.mPopEnterAnim = mPopEnterAnim;
+        if(o.mPopExitAnim.empty())   o.mPopExitAnim = mPopExitAnim;
     }
     mOps.push_back(o);
     return *this;
@@ -109,7 +109,7 @@ FragmentTransaction& FragmentTransaction::setReorderingAllowed(bool reorderingAl
     return *this;
 }
 
-FragmentTransaction& FragmentTransaction::setCustomAnimations(int enterAnim, int exitAnim, int popEnterAnim, int popExitAnim){
+FragmentTransaction& FragmentTransaction::setCustomAnimations(const std::string& enterAnim, const std::string& exitAnim, const std::string& popEnterAnim, const std::string& popExitAnim){
     mEnterAnim = enterAnim;
     mExitAnim = exitAnim;
     mPopEnterAnim = popEnterAnim; mPopExitAnim = popExitAnim;

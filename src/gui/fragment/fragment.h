@@ -80,6 +80,13 @@ public:
     bool mIsCreated = false;
     bool mUserVisibleHint = true;
     lifecycle::Lifecycle::State mMaxState = lifecycle::Lifecycle::State::RESUMED;
+    // Custom transition animations pushed by FragmentTransaction.executeOps (androidx
+    // Fragment.setAnimations -> AnimationInfo). Empty = use the default Fade transition.
+    std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
+    void setAnimations(const std::string& enter, const std::string& exit,
+                       const std::string& popEnter, const std::string& popExit){
+        mEnterAnim = enter; mExitAnim = exit; mPopEnterAnim = popEnter; mPopExitAnim = popExit;
+    }
 
     // links (set by FragmentManager)
     FragmentManager* mFragmentManager = nullptr;
