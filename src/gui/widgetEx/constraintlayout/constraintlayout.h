@@ -167,6 +167,10 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
     void onLayout(bool changed, int l, int t, int w, int h) override;
     void onViewAdded(View* child) override;
     void onViewRemoved(View* child) override;
+    // After children, when View::debugDraw() (VIEW_DEBUG / "show layout bounds") is on, paint
+    // guideline/barrier/constraint debug overlays — CDROID-only visual aid (AndroidX hides helpers
+    // on device; see Guideline.draw == empty / "Helper objects are not displayed on device").
+    void dispatchDraw(Canvas& canvas) override;
     ViewGroup::LayoutParams* generateLayoutParams(const AttributeSet& attrs) const override;
     ViewGroup::LayoutParams* generateDefaultLayoutParams() const override;
     bool checkLayoutParams(const ViewGroup::LayoutParams* p) const override;
@@ -188,6 +192,9 @@ class ConstraintLayout : public ViewGroup, private BasicMeasure::Measurer {
 
     // captured during resolveSystem for the Measurer
     int mWidthSpec = 0;
+
+    // Debug overlay (guideline / barrier / constraint connection lines). CDROID-only.
+    void drawDebugOverlays(Canvas& canvas);
     int mHeightSpec = 0;
     int mPaddingWidth = 0;
     int mPaddingHeight = 0;
