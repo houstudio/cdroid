@@ -68,6 +68,121 @@ long ConstraintWidgetContainer::measure(int optimizationLevel, int paddingX, int
             lastMeasureWidth, lastMeasureHeight);
 }
 
+// Static per-widget measure used by the Direct fast-path. Ported verbatim from
+// androidx ConstraintWidgetContainer.measure (Java:522); DEBUG prints omitted.
+bool ConstraintWidgetContainer::measure(int /*level*/, ConstraintWidget* widget,
+        BasicMeasure::Measurer* measurer, BasicMeasure::Measure* measure, int measureStrategy) {
+    if (measurer == nullptr) {
+        return false;
+    }
+    if (widget->getVisibility() == ConstraintWidget::GONE
+            || widget->isGuideline() || widget->isBarrier()) {
+        measure->measuredWidth = 0;
+        measure->measuredHeight = 0;
+        return false;
+    }
+
+    measure->horizontalBehavior = widget->getHorizontalDimensionBehaviour();
+    measure->verticalBehavior = widget->getVerticalDimensionBehaviour();
+    measure->horizontalDimension = widget->getWidth();
+    measure->verticalDimension = widget->getHeight();
+    measure->measuredNeedsSolverPass = false;
+    measure->measureStrategy = measureStrategy;
+
+    bool horizontalMatchConstraints =
+            (measure->horizontalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+    bool verticalMatchConstraints =
+            (measure->verticalBehavior == ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
+
+    bool horizontalUseRatio = horizontalMatchConstraints && widget->mDimensionRatio > 0;
+    bool verticalUseRatio = verticalMatchConstraints && widget->mDimensionRatio > 0;
+
+    if (horizontalMatchConstraints && widget->hasDanglingDimension(ConstraintWidget::HORIZONTAL)
+            && widget->mMatchConstraintDefaultWidth == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
+            && !horizontalUseRatio) {
+        horizontalMatchConstraints = false;
+        measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+        if (verticalMatchConstraints
+                && widget->mMatchConstraintDefaultHeight == ConstraintWidget::MATCH_CONSTRAINT_SPREAD) {
+            // if match x match, size would be zero.
+            measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+        }
+    }
+
+    if (verticalMatchConstraints && widget->hasDanglingDimension(ConstraintWidget::VERTICAL)
+            && widget->mMatchConstraintDefaultHeight == ConstraintWidget::MATCH_CONSTRAINT_SPREAD
+            && !verticalUseRatio) {
+        verticalMatchConstraints = false;
+        measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+        if (horizontalMatchConstraints
+                && widget->mMatchConstraintDefaultWidth == ConstraintWidget::MATCH_CONSTRAINT_SPREAD) {
+            // if match x match, size would be zero.
+            measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+        }
+    }
+
+    if (widget->isResolvedHorizontally()) {
+        horizontalMatchConstraints = false;
+        measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+    }
+    if (widget->isResolvedVertically()) {
+        verticalMatchConstraints = false;
+        measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+    }
+
+    if (horizontalUseRatio) {
+        if (widget->mResolvedMatchConstraintDefault[ConstraintWidget::HORIZONTAL]
+                == ConstraintWidget::MATCH_CONSTRAINT_RATIO_RESOLVED) {
+            measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+        } else if (!verticalMatchConstraints) {
+            // let's measure here
+            int measuredHeight;
+            if (measure->verticalBehavior == ConstraintWidget::DimensionBehaviour::FIXED) {
+                measuredHeight = measure->verticalDimension;
+            } else {
+                measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+                measurer->measure(widget, measure);
+                measuredHeight = measure->measuredHeight;
+            }
+            measure->horizontalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+            // getDimensionRatio() is expressed in WxH format, so multiply.
+            measure->horizontalDimension = (int) (widget->getDimensionRatio() * measuredHeight);
+        }
+    }
+    if (verticalUseRatio) {
+        if (widget->mResolvedMatchConstraintDefault[ConstraintWidget::VERTICAL]
+                == ConstraintWidget::MATCH_CONSTRAINT_RATIO_RESOLVED) {
+            measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+        } else if (!horizontalMatchConstraints) {
+            // let's measure here
+            int measuredWidth;
+            if (measure->horizontalBehavior == ConstraintWidget::DimensionBehaviour::FIXED) {
+                measuredWidth = measure->horizontalDimension;
+            } else {
+                measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::WRAP_CONTENT;
+                measurer->measure(widget, measure);
+                measuredWidth = measure->measuredWidth;
+            }
+            measure->verticalBehavior = ConstraintWidget::DimensionBehaviour::FIXED;
+            if (widget->mDimensionRatioSide == -1) {
+                // getDimensionRatio() is WxH, so divide.
+                measure->verticalDimension = (int) (measuredWidth / widget->getDimensionRatio());
+            } else {
+                // ratio was reverted, so multiply.
+                measure->verticalDimension = (int) (widget->getDimensionRatio() * measuredWidth);
+            }
+        }
+    }
+
+    measurer->measure(widget, measure);
+    widget->setWidth(measure->measuredWidth);
+    widget->setHeight(measure->measuredHeight);
+    widget->setHasBaseline(measure->measuredHasBaseline);
+    widget->setBaselineDistance(measure->measuredBaseline);
+    measure->measureStrategy = BasicMeasure::Measure::SELF_DIMENSIONS;
+    return measure->measuredNeedsSolverPass;
+}
+
 void ConstraintWidgetContainer::invalidateGraph() {
     // MVP no-op — the DependencyGraph (run-system) is deferred.
 }

@@ -55,6 +55,10 @@ class ConstraintWidgetContainer : public WidgetContainer {
     long measure(int optimizationLevel, int paddingX, int paddingY,
                  int widthMode, int widthSize, int heightMode, int heightSize,
                  int lastMeasureWidth, int lastMeasureHeight);
+    // Static per-widget measure used by the Direct fast-path (Java ConstraintWidgetContainer:522).
+    // Distinct from the instance measure() above (different params, static).
+    static bool measure(int level, ConstraintWidget* widget, BasicMeasure::Measurer* measurer,
+                        BasicMeasure::Measure* measure, int measureStrategy);
     void invalidateGraph();  // MVP: no-op (DependencyGraph deferred)
     void setPass(int pass);  // MVP: no-op
 
