@@ -156,11 +156,12 @@ std::string MotionScene::stripId(const std::string& idString) {
 
 int MotionScene::getId(const std::string& idString) const {
     if (idString.empty()) return UNSET;
+    // stripId yields the bare name only ("@+id/cs_prev" -> "cs_prev"); per Android convention the
+    // "@id/" reference prefix is never retained. The bare name resolves through the host Context's
+    // R.id pool (Assets::getId resolves bare names against the id table — same pool
+    // AttributeSet::getResourceId uses), so a Transition's constraintSetStart="@id/cs_prev" agrees
+    // with the <ConstraintSet android:id="@+id/cs_prev">. Scene-local fallback for unregistered names.
     const std::string name = stripId(idString);
-    // AndroidX: MotionScene ids are R.id, shared with layout XML. Resolve via the host Context's
-    // R.id pool first (the same pool AttributeSet::getResourceId uses), so ids referenced here agree
-    // with ids referenced from layout XML — e.g. Carousel's carousel_nextState. Fall back to a
-    // scene-local id only for names not registered in the R.id pool.
     if (mMotionLayout != nullptr) {
         Context* ctx = mMotionLayout->getContext();
         if (ctx != nullptr) {

@@ -33,6 +33,14 @@ namespace cdroid {
 
 Carousel::Carousel(Context* ctx, const AttributeSet& attrs)
     : MotionHelper(ctx, attrs) {
+    // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
+    // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
+    // and every carousel_* attribute stays at its default (-1): mFirstViewReference missed (mStartIndex
+    // stuck at 0), mForwardTransition/mBackwardTransition -1 (updateItems bails before wiring the
+    // transitions -> drag never advances the index). Re-invoke init now that *this is fully
+    // constructed so it dispatches to Carousel::init — same pattern as MotionEffect/Placeholder.
+    // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
+    init(attrs);
 }
 
 Carousel::Carousel(int width, int height)
