@@ -13,6 +13,7 @@
 #include <memory>
 #include <lifecycle/lifecycle.h>
 #include <lifecycle/lifecycleowner.h>
+#include <transition/transition.h>
 #include <lifecycle/viewmodelstoreowner.h>
 #include <lifecycle/hasdefaultviewmodelproviderfactory.h>
 #include <lifecycle/viewmodelprovider.h>
@@ -87,6 +88,22 @@ public:
                        const std::string& popEnter, const std::string& popExit){
         mEnterAnim = enter; mExitAnim = exit; mPopEnterAnim = popEnter; mPopExitAnim = popExit;
     }
+    // Fragment Transition API (androidx Fragment.enterTransition etc.). nullptr = not set.
+    // SEC collectEffects checks these FIRST (Transition > Animation > default Fade).
+    Transition* mEnterTransition = nullptr;
+    Transition* mExitTransition = nullptr;
+    Transition* mReenterTransition = nullptr;      // pop enter
+    Transition* mReturnTransition = nullptr;       // pop exit
+    Transition* mSharedElementEnterTransition = nullptr;
+    Transition* mSharedElementReturnTransition = nullptr;
+    void setEnterTransition(Transition* t){ mEnterTransition = t; }
+    void setExitTransition(Transition* t){ mExitTransition = t; }
+    void setReenterTransition(Transition* t){ mReenterTransition = t; }
+    void setReturnTransition(Transition* t){ mReturnTransition = t; }
+    Transition* getEnterTransition() const { return mEnterTransition; }
+    Transition* getExitTransition() const { return mExitTransition; }
+    Transition* getReenterTransition() const { return mReenterTransition; }
+    Transition* getReturnTransition() const { return mReturnTransition; }
 
     // links (set by FragmentManager)
     FragmentManager* mFragmentManager = nullptr;
