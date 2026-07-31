@@ -85,10 +85,11 @@ FragmentTransaction& FragmentTransaction::setPrimaryNavigationFragment(Fragment*
     op.mFragment = fragment;
     return addOp(op);
 }
-FragmentTransaction& FragmentTransaction::setMaxLifecycle(Fragment* fragment, lifecycle::Lifecycle::State /*state*/){
+FragmentTransaction& FragmentTransaction::setMaxLifecycle(Fragment* fragment, lifecycle::Lifecycle::State state){
     Op op;
     op.mCmd = OP_SET_MAX_LIFECYCLE;
     op.mFragment = fragment;
+    op.mCurrentMaxState = state;
     return addOp(op);
 }
 

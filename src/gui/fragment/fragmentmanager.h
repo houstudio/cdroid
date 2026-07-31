@@ -74,6 +74,9 @@ public:
     void detachFragment(Fragment* fragment);
     // Drives a single fragment to newState (simplified state machine for MVP).
     void moveToState(Fragment* f, int newState);
+    // Cap a fragment's lifecycle at `state` (androidx FragmentManager.setMaxLifecycle): sets
+    // mMaxState and re-drives so moveToState's clamp takes effect.
+    void setMaxLifecycle(Fragment* f, lifecycle::Lifecycle::State state);
 
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }

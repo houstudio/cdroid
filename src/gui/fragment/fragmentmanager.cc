@@ -170,9 +170,27 @@ void FragmentManager::detachFragment(Fragment* f){
     if(f->mView && f->mContainer) f->mContainer->removeView(f->mView);
 }
 
+// Map a Lifecycle::State ceiling to the Fragment int-state it permits (androidx
+// FragmentStateManager.computeExpectedState clamps managerState by mFragment.mMaxState).
+static int maxStateToInt(lifecycle::Lifecycle::State s){
+    using L = lifecycle::Lifecycle::State;
+    switch(s){
+        case L::RESUMED:     return Fragment::RESUMED;      // 7
+        case L::STARTED:     return Fragment::STARTED;      // 5
+        case L::CREATED:     return Fragment::CREATED;      // 1
+        case L::INITIALIZED: return Fragment::ATTACHED;     // 0
+        case L::DESTROYED:   return Fragment::INITIALIZING; // -1
+    }
+    return Fragment::RESUMED;
+}
+
 // --- simplified per-fragment state machine (no special-effects intermediate states) ---
 void FragmentManager::moveToState(Fragment* f, int newState){
     if(!f) return;
+    // Clamp by the fragment's max lifecycle so setMaxLifecycle can cap it (e.g. STARTED) even
+    // when the host is RESUMED (androidx computeExpectedState).
+    const int maxInt = maxStateToInt(f->mMaxState);
+    if(newState > maxInt) newState = maxInt;
     // step up
     while(f->mState < newState){
         switch(f->mState){
@@ -249,6 +267,12 @@ void FragmentManager::moveToState(Fragment* f, int newState){
             default: break;
         }
     }
+}
+
+void FragmentManager::setMaxLifecycle(Fragment* f, lifecycle::Lifecycle::State state){
+    if(!f) return;
+    f->mMaxState = state;
+    moveToState(f, mCurState); // re-drive; the clamp in moveToState applies the new ceiling
 }
 
 // --- lookups ---

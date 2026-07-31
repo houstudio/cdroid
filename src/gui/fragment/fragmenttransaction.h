@@ -38,6 +38,9 @@ public:
         int mExitAnim = 0;
         int mPopEnterAnim = 0;
         int mPopExitAnim = 0;
+        // OP_SET_MAX_LIFECYCLE: the new ceiling (and the prior one, restored on pop).
+        lifecycle::Lifecycle::State mCurrentMaxState = lifecycle::Lifecycle::State::RESUMED;
+        lifecycle::Lifecycle::State mOldMaxState     = lifecycle::Lifecycle::State::RESUMED;
     };
 
     virtual ~FragmentTransaction() = default;
