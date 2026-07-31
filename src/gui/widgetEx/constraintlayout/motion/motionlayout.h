@@ -43,6 +43,7 @@
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
+#include <core/callbackbase.h> // Runnable (for the post() wrapper)
 #include <widgetEx/constraintlayout/core/motion/motion.h>
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 
@@ -141,6 +142,40 @@ class MotionLayout : public ConstraintLayout {
     std::vector<int> getConstraintSetIds() const; // all ConstraintSet ids (ViewTransition allStates)
     ViewTransitionController* getViewTransitionController() const;
 
+    // ---- TransitionListener (AndroidX MotionLayout.TransitionListener, nested) ----
+    // Nested under MotionLayout (faithful to AndroidX) but expressed as an EventSet + CallbackBase
+    // callback object (CDROID style, like Animator::AnimatorListener): assign lambdas to the events
+    // you need, then addTransitionListener(it). A helper like Carousel holds one and registers it.
+    class TransitionListener : public EventSet {
+      public:
+        CallbackBase<void, MotionLayout*, int, int, float> onTransitionChange;
+        CallbackBase<void, MotionLayout*, int>             onTransitionCompleted;
+    };
+    // Subscribe to transition lifecycle events. Notified from every completion path (animateTo /
+    // spring / stopLogic / setProgress) so a helper like Carousel can advance its state on completion.
+    void addTransitionListener(const TransitionListener& listener) {
+        mTransitionListeners.push_back(listener);
+    }
+    // Expose View::postUpdate (protected) publicly — AndroidX View.post is public, and helpers
+    // (e.g. Carousel) need to post runnables onto the layout's UI thread from outside.
+    void post(const Runnable& r) { postUpdate(r); }
+    // Touch-up settle modes (AndroidX MotionLayout.TOUCH_UP_*).
+    static constexpr int TOUCH_UP_STOP = 0;
+    static constexpr int TOUCH_UP_AUTOCOMPLETE_TO_START = 1;
+    static constexpr int TOUCH_UP_AUTOCOMPLETE_TO_END = 2;
+    static constexpr int TOUCH_UP_DECELERATE_AND_COMPLETE = 3;
+    // Drive the transition to `progress` (0 or 1) carrying `velocity` (progress/sec), per mode.
+    void touchAnimateTo(int touchUpMode, float progress, float velocity);
+    // Current transition velocity (progress/sec) from the active engine, else 0.
+    float getVelocity() const;
+    // Re-capture start/end states and rebuild every per-child Motion controller.
+    void rebuildScene();
+    // MotionScene forwarders (defined-transition scan / lookup by id).
+    std::vector<MotionScene::Transition*> getDefinedTransitions() const;
+    MotionScene::Transition* getTransition(int transitionId) const;
+    // transitionToState with an explicit per-transition duration override (Carousel uses it).
+    void transitionToState(int stateId, int64_t durationMs);
+
     // Inject a MotionScene programmatically (instead of via app:layoutDescription). Marks the scene
     // built so the onMeasure path does not rebuild it; the caller wires the current transition.
     void setScene(std::unique_ptr<MotionScene> scene);
@@ -158,6 +193,10 @@ class MotionLayout : public ConstraintLayout {
     bool onTouchEvent(MotionEvent& evt) override;
 
   private:
+    // Fire TransitionListener callbacks. change() every frame/setProgress; completed() when an
+    // animation reaches an endpoint (caller guards on mCurrentState != -1).
+    void fireTransitionChange(int startId, int endId, float progress);
+    void fireTransitionCompleted(int currentId);
     // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.
     void animateTo(float target);
     // Actually run the start/end capture + build motions (called once we have a real size).
@@ -213,6 +252,7 @@ class MotionLayout : public ConstraintLayout {
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
     std::unique_ptr<TouchResponse> mTouchResponse;
     TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
+    std::vector<TransitionListener> mTransitionListeners; // Carousel etc. (AndroidX TransitionListener)
 };
 
 } // namespace cdroid

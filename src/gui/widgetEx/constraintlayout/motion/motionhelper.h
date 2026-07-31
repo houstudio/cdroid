@@ -43,6 +43,9 @@ class MotionHelper : public ConstraintHelper {
     MotionHelper(Context* ctx, const AttributeSet& attrs) : ConstraintHelper(ctx, attrs) {}
     explicit MotionHelper(int width, int height) : ConstraintHelper(width, height) {}
 
+    // (TransitionListener is an EventSet callback object nested on MotionLayout; a helper that needs
+    //  transition events owns one and calls MotionLayout::addTransitionListener — see Carousel.)
+
     // Decorators are invoked via onPreSetup during transition setup; plain MotionHelpers are not.
     virtual bool isDecorator() const { return false; }
 

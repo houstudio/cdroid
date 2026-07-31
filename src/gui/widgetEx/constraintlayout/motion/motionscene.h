@@ -161,6 +161,12 @@ class MotionScene {
         void setOnSwipe(std::unique_ptr<OnSwipe> os) {
             mOnSwipe = std::move(os);
         }
+        // Enabled flag (Carousel enableTransition). Disabled transitions are skipped by the scene.
+        bool isEnabled() const { return mEnabled; }
+        void setEnabled(bool enabled) { mEnabled = enabled; }
+        // Touch-up mode override (Carousel CARRY_ON): one of MotionLayout::TOUCH_UP_* (-1 = unset).
+        int getOnTouchUp() const { return mTouchUp; }
+        void setOnTouchUp(int mode) { mTouchUp = mode; }
 
       private:
         int mId = UNSET;
@@ -175,6 +181,8 @@ class MotionScene {
         std::unique_ptr<KeyFrames> mKeyFrames;
         std::vector<OnClick> mOnClicks;
         std::unique_ptr<OnSwipe> mOnSwipe;
+        bool mEnabled = true;   // Carousel enableTransition (disabled transitions are skipped)
+        int mTouchUp = -1;      // Carousel setOnTouchUp (-1 = unset; else MotionLayout::TOUCH_UP_*)
     };
 
     MotionScene(MotionLayout* layout);
@@ -194,6 +202,7 @@ class MotionScene {
     bool autoTransition(class MotionLayout* layout, int currentState);
     Transition* getTransitionById(int id) const;              // by <Transition android:id>
     Transition* findTransition(int startId, int endId) const;  // matching both endpoints
+    std::vector<Transition*> getDefinedTransitions() const;    // all transitions (Carousel)
     void setCurrentTransition(Transition* t) {
         mCurrentTransition = t;
     }
