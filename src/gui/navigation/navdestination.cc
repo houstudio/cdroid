@@ -100,6 +100,16 @@ bool NavDestination::matchRoute(const std::string& route) const {
     return dl.matches(route);
 }
 
+std::vector<NavDestination*> NavDestination::hierarchy(){
+    std::vector<NavDestination*> chain;
+    NavDestination* current = this;
+    while(current){
+        chain.push_back(current);
+        current = current->getParent(); // NavGraph* -> NavDestination*
+    }
+    return chain; // { this, parent, ..., root }
+}
+
 std::vector<int> NavDestination::buildDeepLinkIds() {
     std::vector<NavDestination*> hierarchy;
     NavDestination* current = this;

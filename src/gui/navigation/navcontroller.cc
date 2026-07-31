@@ -36,8 +36,23 @@ void NavController::setGraph(const std::string& graphRef, Bundle* startDestinati
     setGraph(graph, startDestinationArgs);
 }
 
+// Search a graph and recurse into nested child <navigation> graphs for a route (androidx
+// resolveDest traverses the hierarchy; NavGraph::findNode only walks searchParents upward).
+static NavDestination* searchGraphForRoute(NavGraph* g, const std::string& route){
+    NavDestination* d = g->findNode(route, false);
+    if(d) return d;
+    for(auto it = g->begin(); it != g->end(); ++it){
+        NavGraph* child = dynamic_cast<NavGraph*>((*it).second);
+        if(child){
+            NavDestination* found = searchGraphForRoute(child, route);
+            if(found) return found;
+        }
+    }
+    return nullptr;
+}
+
 NavDestination* NavController::findDestination(const std::string& route){
-    return mGraph ? mGraph->findNode(route) : nullptr;
+    return mGraph ? searchGraphForRoute(mGraph, route) : nullptr;
 }
 
 NavDestination* NavController::getCurrentDestination(){
@@ -95,23 +110,13 @@ void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* opt
             popBackStack(options->getPopUpToRoute(), options->isPopUpToInclusive(), false);
         }
     }
-    // Demote the current top entry to STARTED so only one entry is RESUMED at a time
-    // (androidx updateBackStackLifecycle: top = RESUMED, the rest = STARTED).
-    if(!mBackStack.empty()){
-        NavBackStackEntry* prev = mBackStack.back();
-        LOGD("NavController: demote '%s' RESUMED->STARTED",
-             prev->getDestination() ? prev->getDestination()->getRoute().c_str() : "?");
-        prev->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_PAUSE);
-    }
-    NavBackStackEntry* entry = new NavBackStackEntry(node, args);
-    mBackStack.push_back(entry);
-    // Drive the entry's lifecycle up to RESUMED (MVP: no per-position maxLifecycle).
-    entry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_CREATE);
-    entry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_START);
-    entry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
-    // Execute via the destination's navigator (legacy 3-arg form).
+    // V2: push the leaf + any parent-graph entries not already on the stack, link them, then
+    // let updateBackStackLifecycle drive per-entry lifecycle (top RESUMED / graph STARTED / off CREATED).
+    NavBackStackEntry* leafEntry = new NavBackStackEntry(node, args);
+    addEntryToBackStack(node, args, leafEntry);
     node->navigate(args, options);
     dispatchOnDestinationChanged(node, args);
+    updateBackStackLifecycle();
     (void)options;
 }
 
@@ -123,19 +128,13 @@ bool NavController::popBackStack(){
     if(mBackStack.empty()) return false;
     NavBackStackEntry* entry = mBackStack.back();
     NavDestination* dest = entry->getDestination();
-    // Drive the destination's navigator (e.g. FragmentNavigator -> FM pop, restoring prior Fragment)
     if(dest) dest->getNavigator().popBackStack();
-    mBackStack.pop_back();
-    entry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_DESTROY);
-    delete entry;
+    popEntryFromBackStack(entry);
     if(!mBackStack.empty()){
         NavBackStackEntry* top = mBackStack.back();
-        // Re-promote the new top to RESUMED (it was demoted to STARTED when pushed over).
-        LOGD("NavController: promote '%s' STARTED->RESUMED",
-             top->getDestination() ? top->getDestination()->getRoute().c_str() : "?");
-        top->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_RESUME);
         dispatchOnDestinationChanged(top->getDestination(), top->getArguments());
     }
+    updateBackStackLifecycle();
     return true;
 }
 
@@ -182,8 +181,120 @@ void NavController::removeOnDestinationChangedListener(OnDestinationChangedListe
     if(it != mOnDestinationChangedListeners.end()) mOnDestinationChangedListeners.erase(it);
 }
 void NavController::dispatchOnDestinationChanged(NavDestination* destination, Bundle* args){
+    // Never leave a bare NavGraph on top of the back stack (androidx :677-681): when a leaf is
+    // popped and its parent graph becomes top, pop the graph too.
+    while(!mBackStack.empty() && dynamic_cast<NavGraph*>(mBackStack.back()->getDestination())
+          && mBackStack.back()->getDestination() != mGraph){
+        // Pop bare child graphs, but keep the root graph at the bottom of the stack even when
+        // bare (androidx never pops the root graph entry here).
+        popEntryFromBackStack(mBackStack.back());
+    }
+    // After popping bare graphs, dispatch the actual top destination (the passed `destination`
+    // may itself be a graph that we just popped — use the final top, like androidx backQueue.last).
+    if(!mBackStack.empty()){
+        destination = mBackStack.back()->getDestination();
+        args = mBackStack.back()->getArguments();
+    }
     for(OnDestinationChangedListener* l : mOnDestinationChangedListeners){
         l->onDestinationChanged(this, destination, args);
+    }
+}
+
+// --- V2 nested-graph back stack helpers (androidx NavControllerImpl) ---
+
+void NavController::linkChildToParent(NavBackStackEntry* child, NavBackStackEntry* parent){
+    if(!child || !parent) return;
+    mChildToParent[child] = parent;
+    mParentToChildCount[parent]++;
+}
+
+NavBackStackEntry* NavController::unlinkChildFromParent(NavBackStackEntry* child){
+    auto it = mChildToParent.find(child);
+    if(it == mChildToParent.end()) return nullptr;
+    NavBackStackEntry* parent = it->second;
+    mChildToParent.erase(it);
+    auto cit = mParentToChildCount.find(parent);
+    if(cit != mParentToChildCount.end()){
+        cit->second--;
+        if(cit->second <= 0) mParentToChildCount.erase(cit);
+    }
+    return parent;
+}
+
+NavBackStackEntry* NavController::findBackStackEntry(int destinationId){
+    for(NavBackStackEntry* e : mBackStack){
+        if(e && e->getDestination() && e->getDestination()->getId() == destinationId) return e;
+    }
+    return nullptr;
+}
+
+void NavController::addEntryToBackStack(NavDestination* /*node*/, Bundle* args, NavBackStackEntry* leafEntry){
+    // Collect parent graph entries that need to be on the stack (root -> ... -> immediate parent).
+    std::vector<NavBackStackEntry*> hierarchyEntries;
+    NavDestination* dest = leafEntry->getDestination();
+    while(dest){
+        NavGraph* parent = dest->getParent();
+        if(!parent) break;
+        bool onStack = false;
+        for(NavBackStackEntry* e : mBackStack){
+            if(e->getDestination() == parent){ onStack = true; break; }
+        }
+        if(!onStack){
+            hierarchyEntries.insert(hierarchyEntries.begin(), new NavBackStackEntry(parent, args));
+        }
+        dest = parent;
+    }
+    // Root graph guarantee: the root graph must be the bottom of the stack — but only if the
+    // walk above didn't already collect it (a leaf directly under root => root is in hierarchy).
+    bool rootInHierarchy = !hierarchyEntries.empty() && hierarchyEntries.front()->getDestination() == mGraph;
+    bool rootOnStack = !mBackStack.empty() && mBackStack.front()->getDestination() == mGraph;
+    if(mGraph && !rootInHierarchy && !rootOnStack){
+        hierarchyEntries.insert(hierarchyEntries.begin(), new NavBackStackEntry(mGraph, args));
+    }
+    // Push hierarchy (parent graphs first), then the leaf on top.
+    for(NavBackStackEntry* ge : hierarchyEntries) mBackStack.push_back(ge);
+    mBackStack.push_back(leafEntry);
+    // Link each newly-added entry to its parent graph's entry (increments parentToChildCount).
+    auto linkIfHasParent = [this](NavBackStackEntry* e){
+        NavGraph* p = e->getDestination()->getParent();
+        if(p){
+            NavBackStackEntry* pe = findBackStackEntry(p->getId());
+            if(pe) linkChildToParent(e, pe);
+        }
+    };
+    for(NavBackStackEntry* e : hierarchyEntries) linkIfHasParent(e);
+    linkIfHasParent(leafEntry);
+    LOGD("NavController.addEntryToBackStack: stack size=%d", (int)mBackStack.size());
+    std::string routes;
+    for(NavBackStackEntry* e : mBackStack){ if(!routes.empty()) routes += ","; routes += (e->getDestination() ? e->getDestination()->getRoute() : "?"); }
+    LOGD("NavController.backStack: [%s]", routes.c_str());
+}
+
+void NavController::popEntryFromBackStack(NavBackStackEntry* entry){
+    if(mBackStack.empty() || mBackStack.back() != entry) return;
+    mBackStack.pop_back();
+    unlinkChildFromParent(entry);
+    entry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_DESTROY);
+    delete entry;
+}
+
+void NavController::updateBackStackLifecycle(){
+    if(mBackStack.empty()) return;
+    using S = lifecycle::Lifecycle::State;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
+        NavBackStackEntry* e = mBackStack[i];
+        NavDestination* d = e->getDestination();
+        bool isGraph = dynamic_cast<NavGraph*>(d) != nullptr;
+        S target;
+        if(i == (int)mBackStack.size() - 1){
+            target = S::RESUMED;                              // top leaf
+        } else if(isGraph && mParentToChildCount.count(e) > 0){
+            target = S::STARTED;                              // graph with live children
+        } else {
+            target = S::CREATED;                              // off-path
+        }
+        e->setMaxLifecycle(target);
+        e->setCurrentState(target);
     }
 }
 

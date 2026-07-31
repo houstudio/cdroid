@@ -396,10 +396,10 @@ void Toolbar::setTitle(const std::string&title){
         if (!isChildOrHidden(mTitleTextView)) {
             addSystemView(mTitleTextView, true);
         }
-    } else if (mTitleTextView  && isChildOrHidden(mTitleTextView)) {
+    } else if (mTitleTextView && isChildOrHidden(mTitleTextView)) {
         removeView(mTitleTextView);
-        auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mTitleTextView);
-        mHiddenViews.erase(it);
+        auto it = std::find(mHiddenViews.begin(), mHiddenViews.end(), mTitleTextView);
+        if(it != mHiddenViews.end()) mHiddenViews.erase(it);
     }
     if (mTitleTextView) {
         mTitleTextView->setText(title);
