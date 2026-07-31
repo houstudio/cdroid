@@ -38,6 +38,10 @@
 #include <view/viewgroup.h>
 #include <widget/textview.h>
 #include <widgetEx/constraintlayout/helpers/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/circularflow.h>
+#include <widgetEx/constraintlayout/helpers/flow.h>
+#include <widgetEx/constraintlayout/helpers/grid.h>
+#include <widgetEx/constraintlayout/helpers/layer.h>
 #include <widgetEx/constraintlayout/helpers/placeholder.h>
 
 DECLARE_WIDGET(ConstraintLayout)
@@ -677,6 +681,31 @@ void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
             canvas.move_to(W - 24, y - 3);
             canvas.show_text(label);
         }
+    }
+
+    // --- Other ConstraintHelpers (Grid/Flow/Layer/CircularFlow): range box + type label ---
+    // These are virtual too (AndroidX ConstraintHelper.onDraw is literally "// Nothing"); AS Layout
+    // Inspector outlines the helper's solved frame, so we do the same to make its reach visible.
+    // Barrier is already drawn as a line above; Group owns no widget (0x0 frame) and is skipped by
+    // the extent check. Still in the dashed section (helpers render dotted, like AS).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        ConstraintWidget* w = getViewWidget(helper);
+        if (w == nullptr) continue;
+        if (dynamic_cast<clcore::Barrier*>(w)) continue;      // already drawn as a line
+        const int x = w->getX(), y = w->getY();
+        const int ww = w->getWidth(), hh = w->getHeight();
+        if (ww <= 0 && hh <= 0) continue;                     // no extent (e.g. Group)
+        canvas.set_color(0xE8, 0xA8, 0x2E, 0xD0);             // amber, distinct from guideline/barrier
+        canvas.rectangle(x + 0.5, y + 0.5, ww - 1, hh - 1);
+        canvas.stroke();
+        const char* name = "Helper";
+        if (dynamic_cast<Grid*>(helper)) name = "Grid";
+        else if (dynamic_cast<Flow*>(helper)) name = "Flow";
+        else if (dynamic_cast<Layer*>(helper)) name = "Layer";
+        else if (dynamic_cast<CircularFlow*>(helper)) name = "CircularFlow";
+        canvas.set_color(0xE8, 0xA8, 0x2E, 0xFF);
+        canvas.move_to(x + 4, y - 4);
+        canvas.show_text(name);
     }
 
     // --- Baseline guides: a green line across each child at its text-baseline height ---
