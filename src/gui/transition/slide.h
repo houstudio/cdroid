@@ -36,6 +36,14 @@ class Slide: public Visibility {
     Animator* onDisappear(ViewGroup* sceneRoot, View* view,
                           TransitionValues* startValues, TransitionValues* endValues) override;
 
+    // TransitionManager clones the transition before running it; without this override the clone
+    // is a non-Slide base and the slide never plays (mirrors Fade::clone).
+    Slide* clone() const override {
+        Slide* c = new Slide(*this);
+        copyCloneFields(c);
+        return c;
+    }
+
     void setSlideFraction(float slideFraction) {
         mSlideFraction = slideFraction;
     }
