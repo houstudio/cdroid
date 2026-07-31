@@ -303,6 +303,18 @@ void ConstraintWidgetContainer::layout() {
             }
         }
 
+        // The Direct chain fast-path needs the container's anchors finalized to satisfy
+        // isResolvedHorizontally/Vertically (Direct.solveChain returns false otherwise). The
+        // container is FIXED at [0,mWidth]x[0,mHeight] (pinned by the equalities above), so mark
+        // its anchors final before chain resolution. Gated by the flag; only sets the anchor
+        // final values (not mResolvedHorizontal) so addToSolver is unaffected.
+        if (Chain::USE_CHAIN_OPTIMIZATION) {
+            mLeft.setFinalValue(0);
+            mRight.setFinalValue(mWidth);
+            mTop.setFinalValue(0);
+            mBottom.setFinalValue(mHeight);
+        }
+
         // Apply chain constraints (built above via addChain).
         Chain::applyChainConstraints(this, &mSystem, nullptr, ConstraintWidget::HORIZONTAL);
         Chain::applyChainConstraints(this, &mSystem, nullptr, ConstraintWidget::VERTICAL);
