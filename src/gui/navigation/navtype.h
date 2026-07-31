@@ -14,6 +14,7 @@ namespace cdroid{
 // Type tag (used by NavArgument to avoid a type-erased NavType<T>* in C++).
 enum class NavTypeKind{
     INT, LONG, FLOAT, BOOL, STRING,
+    REFERENCE,
     INT_ARRAY, LONG_ARRAY, FLOAT_ARRAY, BOOL_ARRAY, STRING_ARRAY,
     UNKNOWN
 };
@@ -42,6 +43,8 @@ class LongNavType   : public NavType<long>{ public: void put(Bundle&,const std::
 class FloatNavType  : public NavType<float>{ public: void put(Bundle&,const std::string&,const float&)override; float get(const Bundle&,const std::string&)override; float parseValue(const std::string&)override; std::string serializeAsValue(const float&)override; const char* name()const override{return "float";} };
 class BoolNavType   : public NavType<bool>{ public: void put(Bundle&,const std::string&,const bool&)override; bool get(const Bundle&,const std::string&)override; bool parseValue(const std::string&)override; std::string serializeAsValue(const bool&)override; const char* name()const override{return "boolean";} };
 class StringNavType : public NavType<std::string>{ public: void put(Bundle&,const std::string&,const std::string&)override; std::string get(const Bundle&,const std::string&)override; std::string parseValue(const std::string&)override; std::string serializeAsValue(const std::string&)override; const char* name()const override{return "string";} };
+// Reference type: NavType<int> for resource ids (androidx NavType.ReferenceType). name="reference".
+class ReferenceNavType: public NavType<int>{ public: void put(Bundle&,const std::string&,const int&)override; int get(const Bundle&,const std::string&)override; int parseValue(const std::string&)override; std::string serializeAsValue(const int&)override; const char* name()const override{return "reference";} };
 
 // Singleton accessors (androidx NavType.IntType etc.).
 inline NavType<int>&         IntType(){    static IntNavType s;    return s; }
@@ -49,6 +52,7 @@ inline NavType<long>&        LongType(){   static LongNavType s;   return s; }
 inline NavType<float>&       FloatType(){  static FloatNavType s;  return s; }
 inline NavType<bool>&        BoolType(){   static BoolNavType s;   return s; }
 inline NavType<std::string>& StringType(){ static StringNavType s; return s; }
+inline NavType<int>&         ReferenceType(){ static ReferenceNavType s; return s; }
 
 // androidx NavType.fromArgType(type, packageName) -> resolved as a kind tag.
 NavTypeKind navTypeKindFromName(const std::string& type);

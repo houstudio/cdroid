@@ -25,6 +25,7 @@ void NavArgument::putDefaultValue(const std::string& name, Bundle& bundle) const
     try{
         switch(mType){
             case NavTypeKind::INT:    bundle.putInt(name,    nonstd::any_cast<int>(mDefaultValue)); break;
+            case NavTypeKind::REFERENCE: bundle.putInt(name, nonstd::any_cast<int>(mDefaultValue)); break;
             case NavTypeKind::LONG:   bundle.putLong(name,   nonstd::any_cast<long>(mDefaultValue)); break;
             case NavTypeKind::FLOAT:  bundle.putFloat(name,  nonstd::any_cast<float>(mDefaultValue)); break;
             case NavTypeKind::BOOL:   bundle.putBoolean(name,nonstd::any_cast<bool>(mDefaultValue)); break;

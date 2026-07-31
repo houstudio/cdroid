@@ -143,7 +143,7 @@ bool NavController::popBackStack(const std::string& route, bool inclusive, bool 
     int targetIndex = -1;
     for(int i = (int)mBackStack.size() - 1; i >= 0; i--){
         NavDestination* d = mBackStack[i]->getDestination();
-        if(d && d->hasRoute(route)){ targetIndex = i; break; }
+        if(d && (d->hasRoute(route) || d->matchRoute(route))){ targetIndex = i; break; }
     }
     if(targetIndex < 0) return false;
     int end = inclusive ? targetIndex : targetIndex + 1;
@@ -168,7 +168,14 @@ bool NavController::navigateUp(){
 }
 
 void NavController::addOnDestinationChangedListener(OnDestinationChangedListener* listener){
-    if(listener) mOnDestinationChangedListeners.push_back(listener);
+    if(!listener) return;
+    mOnDestinationChangedListeners.push_back(listener);
+    // Inform the new listener of the current destination, if any (androidx NavControllerImpl:
+    // on add, dispatch the current top entry to just this listener).
+    if(!mBackStack.empty()){
+        NavBackStackEntry* top = mBackStack.back();
+        listener->onDestinationChanged(this, top->getDestination(), top->getArguments());
+    }
 }
 void NavController::removeOnDestinationChangedListener(OnDestinationChangedListener* listener){
     auto it = std::find(mOnDestinationChangedListeners.begin(), mOnDestinationChangedListeners.end(), listener);

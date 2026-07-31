@@ -92,6 +92,14 @@ std::pair<NavDestination*, Bundle*>* NavDestination::matchDeepLink(/*@NonNull Ur
     return nullptr;
 }
 
+bool NavDestination::matchRoute(const std::string& route) const {
+    if(mRoute.empty()) return false;
+    if(mRoute == route) return true; // exact match covers no-argument routes
+    if(mRoute.find('{') == std::string::npos) return false; // no placeholder -> cannot match
+    NavDeepLink dl(mRoute); // reuse the {arg} -> regex machinery from NavDeepLink
+    return dl.matches(route);
+}
+
 std::vector<int> NavDestination::buildDeepLinkIds() {
     std::vector<NavDestination*> hierarchy;
     NavDestination* current = this;
