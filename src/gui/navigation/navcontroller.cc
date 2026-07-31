@@ -89,12 +89,31 @@ void NavController::navigate(int resId, Bundle* args, NavOptions* options){
 
 void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* options){
     LOGD("NavController.navigate route='%s'", node ? node->getRoute().c_str() : "(null)");
-    // launchSingleTop: if this destination is already on top of the back stack, skip
-    // navigation so we don't push a duplicate entry (androidx NavOptions singleTop).
-    if(options && options->shouldLaunchSingleTop() && !mBackStack.empty()
-       && mBackStack.back()->getDestination() == node){
-        LOGD("NavController.navigate singleTop: '%s' already on top, skip", node->getRoute().c_str());
-        return;
+    // launchSingleTop: skip if the destination is already on top (androidx NavOptions singleTop).
+    // For a NavGraph target, singleTop only when backStack[nodeIndex..top] exactly matches the
+    // graph's childHierarchy ids (androidx launchSingleTopInternal:1234).
+    if(options && options->shouldLaunchSingleTop() && !mBackStack.empty()){
+        NavGraph* graphTarget = dynamic_cast<NavGraph*>(node);
+        if(graphTarget){
+            int nodeIndex = -1;
+            for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
+                if(mBackStack[i]->getDestination() == node){ nodeIndex = i; break; }
+            }
+            if(nodeIndex >= 0){
+                std::vector<NavDestination*> children = graphTarget->childHierarchy();
+                bool match = ((int)mBackStack.size() - nodeIndex == (int)children.size());
+                for(size_t k = 0; match && k < children.size(); ++k){
+                    if(mBackStack[nodeIndex + k]->getDestination() != children[k]) match = false;
+                }
+                if(match){
+                    LOGD("NavController.navigate singleTop: graph '%s' childHierarchy on top, skip", node->getRoute().c_str());
+                    return;
+                }
+            }
+        } else if(mBackStack.back()->getDestination() == node){
+            LOGD("NavController.navigate singleTop: '%s' already on top, skip", node->getRoute().c_str());
+            return;
+        }
     }
     // popUpTo: pop the back stack up to (optionally including) the given destination before
     // navigating (androidx NavOptions popUpTo). The id form is set by <action> inflation; the
