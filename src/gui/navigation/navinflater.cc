@@ -98,10 +98,15 @@ void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs
     if(!defValue.empty()){
         try{
             switch(kind){
-                case NavTypeKind::INT:    builder.setDefaultValue(std::stoi(defValue)); break;
-                case NavTypeKind::LONG:   builder.setDefaultValue(std::stol(defValue)); break;
+                case NavTypeKind::INT:    builder.setDefaultValue(IntType().parseValue(defValue)); break;
+                case NavTypeKind::LONG:   builder.setDefaultValue(LongType().parseValue(defValue)); break;
                 case NavTypeKind::FLOAT:  builder.setDefaultValue(std::stof(defValue)); break;
                 case NavTypeKind::BOOL:   builder.setDefaultValue(defValue == "true"); break;
+                // reference default is an @-resource ref / 0x / literal -> int. attrs.getInt uses
+                // the raw attribute value and resolves @-refs (via Context) + 0x + decimals, which
+                // is the closest CDROID analogue to androidx resolving @ refs in inflate (CDROID
+                // has no unified int-resId system, so @string resId is a known limitation).
+                case NavTypeKind::REFERENCE: builder.setDefaultValue(attrs.getInt("defaultValue", 0)); break;
                 default:                  builder.setDefaultValue(defValue); break;
             }
         }catch(...){

@@ -196,6 +196,14 @@ NavDestination* NavGraph::findNode(const std::string& route) {
 NavDestination* NavGraph::findNode(const std::string& route, bool searchParents) {
     auto it = mNodesByRoute.find(route);
     NavDestination* destination = (it != mNodesByRoute.end()) ? it->second : nullptr;
+    if(!destination){
+        // An argument-filled route (e.g. "home/42") is not a key in mNodesByRoute (keyed by the
+        // "home/{id}" pattern); fall back to pattern matching across children (androidx).
+        for(auto i = begin(); i != end(); ++i){
+            NavDestination* d = (*i).second;
+            if(d && d->matchRoute(route)){ destination = d; break; }
+        }
+    }
     return destination ? destination
         : (searchParents && getParent() ? getParent()->findNode(route) : nullptr);
 }

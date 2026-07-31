@@ -48,6 +48,10 @@ public:
     const std::string& getNavigatorName() const { return mNavigatorName; }
     void setNavigatorName(const std::string& name) { mNavigatorName = name; }
     bool hasRoute(const std::string& route) const { return !mRoute.empty() && mRoute == route; }
+    // Matches a (possibly argument-filled) route against this destination's route pattern, e.g.
+    // "home/42" matches the "home/{id}" pattern. Exact match short-circuits; otherwise the {arg}
+    // placeholder machinery from NavDeepLink is reused (androidx NavDestination.matchRoute).
+    bool matchRoute(const std::string& route) const;
     void addArgument(const std::string& name, NavArgument* argument);
     void removeArgument(const std::string& name);
     const std::map<std::string, NavArgument*>& getArguments() const { return mArguments; }
