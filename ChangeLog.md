@@ -1,11 +1,14 @@
+# **5.
+  - add Transition
+  - add ConstrainLayout and MotionLayout
+  - new TextView(full compatible with andoird) Span support for full feature richtext
+  - add new text Layout StatlicLayout and BoringLayout baseon minikin
+  - add FlexBoxLayut and FlexboxLayoutManager
 # **4.9.6
   - some memleaks
   - add TouchDevice VirtualKeyMap support
   - fix NumberPicker::onTouchEvent's behavior(ACTION_CANCEL)
   - add AChartEngine(Kplot is removed)
-  - new TextView(full compatible with andoird) Span support for full feature richtext
-  - add new text Layout StatlicLayout and BoringLayout baseon minikin
-  - add FlexBoxLayut and FlexboxLayoutManager
 # **V4.8.6
   - AnimatedImageDrawable add decodeWorker thread.
   - Fix ColorStateLists's defaultColor

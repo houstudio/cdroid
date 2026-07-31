@@ -36,10 +36,10 @@
 |YearPickerView |WearableRecyclerView|      Toolbar       |  QRCodeView   |   CardView    |
 
 # **Supported Layouts:**
-| FrameLayout |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
-|-------------|----------------|----------------|------------------|-------------------|
-| TableLayout | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
-
+|   FrameLayout   |  LinearLayout  | RelativeLayout |     TableRow     |   DrawerLayout    |
+|-----------------|----------------|----------------|------------------|-------------------|
+|   TableLayout   | AbsoluteLayout |  GridLayout    |GestureOverlayView| CoordinatorLayout |
+| ConstrainLayout |  MotionLayout  |  FlexboxLayout |                  |                   |
 # **Supported Drawables:**
 |   ColorDrawable   |  BitmapDrawable  |    NinepatchDrawable     |  InsetDrawable  |
 |-------------------|------------------|--------------------------|-----------------|

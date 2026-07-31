@@ -105,7 +105,7 @@ TEST_F(ANIMATOR,startDelay){
 
 class MyProperty: public Property{
 public:
-   MyProperty(const std::string&name):Property(name){
+   MyProperty(const std::string&name):Property(name,FLOAT_TYPE){
    }
    void set(void* object,const AnimateValue& value)const override{
        LOGD("value=%f",GET_VARIANT(value,float));
@@ -113,7 +113,7 @@ public:
 };
 TEST_F(ANIMATOR,ofProperty){
     MyProperty*myprop=new MyProperty("test");
-    ObjectAnimator*anim=ObjectAnimator::ofInt(nullptr,myprop,{0,100});
+    ObjectAnimator*anim=ObjectAnimator::ofFloat(nullptr,myprop,{0.f,100.f});
     for(int i=0;i<=10;i++){
         anim->setCurrentFraction((float)i/10.f);
     }

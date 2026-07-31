@@ -1,0 +1,123 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
+
+/*
+ * Ported to C++ for CDROID from androidx.constraintlayout.widget.Barrier.
+ */
+#include <widgetEx/constraintlayout/helpers/barrier.h>
+
+#include <porting/cdlog.h>
+#include <view/view.h>
+
+DECLARE_WIDGET(Barrier)
+
+namespace cdroid {
+
+// out-of-line definitions (odr-used as map values / runtime args)
+constexpr int Barrier::LEFT;
+constexpr int Barrier::TOP;
+constexpr int Barrier::RIGHT;
+constexpr int Barrier::BOTTOM;
+constexpr int Barrier::START;
+constexpr int Barrier::END;
+
+namespace {
+// barrierDirection enum (XML string) -> int. Matches Android's enum order plus start/end.
+const std::unordered_map<std::string, int> kBarrierDirection = {
+    {"left", Barrier::LEFT}, {"top", Barrier::TOP},
+    {"right", Barrier::RIGHT}, {"bottom", Barrier::BOTTOM},
+    {"start", Barrier::START}, {"end", Barrier::END}
+};
+} // namespace
+
+Barrier::Barrier(Context* ctx, const AttributeSet& attrs)
+    : ConstraintHelper(ctx, attrs) {
+    setVisibility(View::GONE);
+    mHelperWidget = std::make_unique<clcore::Barrier>();
+
+    int dir = attrs.getInt("barrierDirection", kBarrierDirection, LEFT);
+    setType(dir);
+    static_cast<clcore::Barrier*>(mHelperWidget.get())
+    ->setAllowsGoneWidget(attrs.getBoolean("barrierAllowsGoneWidgets", true));
+    int margin = attrs.getDimensionPixelSize("barrierMargin", 0);
+    static_cast<clcore::Barrier*>(mHelperWidget.get())->setMargin(margin);
+
+    // Default to LTR here (START->LEFT, END->RIGHT); the bridge re-resolves via resolveRtl() with
+    // the container's real direction at measure time (START->RIGHT/END->LEFT under RTL).
+    updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
+    validateParams();
+}
+
+Barrier::Barrier(int width, int height)
+    : ConstraintHelper(width, height) {
+    setVisibility(View::GONE);
+    mHelperWidget = std::make_unique<clcore::Barrier>();
+    setType(LEFT);
+    updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
+    validateParams();
+}
+
+int Barrier::getType() const {
+    return mIndicatedType;
+}
+
+void Barrier::setType(int type) {
+    mIndicatedType = type;
+    updateType(mHelperWidget.get(), mIndicatedType, /*isRtl=*/false);
+}
+
+void Barrier::updateType(ConstraintWidget* widget, int type, bool isRtl) {
+    mResolvedType = type;
+    // RTL resolution: START/END are direction-relative. LTR: START→LEFT, END→RIGHT; under RTL they
+    // swap (faithful to AndroidX Barrier, gated on the container's resolved layout direction).
+    if (mIndicatedType == START) {
+        mResolvedType = isRtl ? RIGHT : LEFT;
+    } else if (mIndicatedType == END) {
+        mResolvedType = isRtl ? LEFT : RIGHT;
+    }
+    if (auto* barrier = dynamic_cast<clcore::Barrier*>(widget)) {
+        barrier->setBarrierType(mResolvedType);
+    }
+}
+
+void Barrier::resolveRtl(ConstraintWidget* widget, bool isRtl) {
+    updateType(widget, mIndicatedType, isRtl);
+}
+
+bool Barrier::getAllowsGoneWidget() const {
+    return static_cast<clcore::Barrier*>(mHelperWidget.get())->getAllowsGoneWidget();
+}
+
+void Barrier::setAllowsGoneWidget(bool supportGone) {
+    static_cast<clcore::Barrier*>(mHelperWidget.get())->setAllowsGoneWidget(supportGone);
+}
+
+int Barrier::getMargin() const {
+    return static_cast<clcore::Barrier*>(mHelperWidget.get())->getMargin();
+}
+
+void Barrier::setMargin(int margin) {
+    static_cast<clcore::Barrier*>(mHelperWidget.get())->setMargin(margin);
+}
+
+void Barrier::setDpMargin(int margin) {
+    // TODO: multiply by display density. CDROID embedded targets are often px-oriented; treat as px.
+    setMargin(margin);
+}
+
+} // namespace cdroid

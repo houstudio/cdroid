@@ -74,6 +74,7 @@ namespace cdroid{
 class DragEvent;
 class ViewGroup;
 class ViewOverlay;
+class GhostView;
 class Window;
 class FocusFinder;
 class UIEventSource;
@@ -516,6 +517,7 @@ private:
     friend LayoutInflater;
     friend TouchDelegate;
     friend ViewPropertyAnimator;
+    friend GhostView;
     class TooltipInfo;
     class CheckForTap;
     class CheckForLongPress;
@@ -543,6 +545,7 @@ private:
     bool mIgnoreNextUpEvent;
     bool mHoveringTouchDelegate;
 
+    bool mHasAnimationMatrix = false;
     bool mBackgroundSizeChanged;
     bool mDefaultFocusHighlightSizeChanged;
     bool mDefaultFocusHighlightEnabled;
@@ -560,6 +563,8 @@ private:
     std::unordered_map<uint64_t,uint64_t>mMeasureCache;
     std::string mStartActivityRequestWho;
     std::string mTransitionName; // android.view.View transitionName (shared-element / name matching)
+    GhostView* mGhostView = nullptr; // android.view.View#mGhostView — set by GhostView::addGhost
+    Cairo::Matrix mAnimationMatrix;   // set by setAnimationMatrix; applied AFTER getMatrix in draw
     ScrollabilityCache*mScrollCache;
 
     Drawable* mBackground;
@@ -762,9 +767,13 @@ protected:
     int getFadeTop(bool offsetRequired);
     int getFadeHeight(bool offsetRequired);
     bool isHardwareAccelerated()const;
+public:
+    // android.view.View: getClipBounds/setClipBounds are public. CDROID keeps the rest
+    // of this section protected; these two are bumped to public for clients and the
+    // transition ChangeClipBounds property.
     void setClipBounds(const Rect*clipBounds);
     bool getClipBounds(Rect&outRect);
-
+protected:
     void invalidateParentIfNeededAndWasQuickRejected();
     virtual void invalidateInheritedLayoutMode(int);
     void destroyDrawingCache();
@@ -772,7 +781,11 @@ protected:
     Cairo::RefPtr<Cairo::ImageSurface>getDrawingCache(bool autoScale);
     virtual bool hasWindowFocus()const;
 
+public:
+    // android.view.View exposes setLeftTopRightBottom to the transition framework
+    // (ChangeBounds position/bounds animation). Bumped to public; rest stays protected.
     void setLeftTopRightBottom(int left, int top, int right, int bottom);
+protected:
     virtual bool setFrame(int x,int y,int w,int h);
     virtual void resetResolvedDrawables();
     virtual bool verifyDrawable(Drawable*)const;
@@ -1393,6 +1406,7 @@ public:
     virtual View* findViewById(int id);
     virtual View* findViewWithTag(void*);
     virtual View* findViewTraversal(int);
+    virtual void findNamedViews(std::unordered_map<std::string, View*>& namedElements)const;
     virtual View* findViewByAccessibilityId(int accessibilityId);
     virtual View* findViewByAccessibilityIdTraversal(int accessibilityId);
     virtual View* findViewByPredicateTraversal(const Predicate<View*>&predicate,View* childToSkip);
@@ -1479,6 +1493,9 @@ public:
     Matrix& getMatrix();
     Matrix& getInverseMatrix();
     bool hasIdentityMatrix()const;
+    void setAnimationMatrix(const Cairo::Matrix* matrix);
+    bool hasAnimationMatrix() const;
+    const Cairo::Matrix& getAnimationMatrix() const;
 
     void setX(float);
     void setY(float);
@@ -1491,18 +1508,18 @@ public:
     float getTranslationX()const;
     float getTranslationY()const;
     float getTranslationZ()const;
-    void setTranslationX(float x);
-    void setTranslationY(float y);
-    void setTranslationZ(float z);
+    virtual void setTranslationX(float x);
+    virtual void setTranslationY(float y);
+    virtual void setTranslationZ(float z);
 
     float getScaleX()const;
-    void  setScaleX(float);
+    virtual void  setScaleX(float);
     float getScaleY()const;
-    void  setScaleY(float);
+    virtual void  setScaleY(float);
     float getPivotX()const;
-    void  setPivotX(float);
+    virtual void  setPivotX(float);
     float getPivotY()const;
-    void  setPivotY(float);
+    virtual void  setPivotY(float);
     bool  isPivotSet()const;
     void  resetPivot();
     float getAlpha()const;
@@ -1521,11 +1538,11 @@ public:
     void* getWindowId()const;
 
     float getRotation()const;
-    void  setRotation(float rotation);
+    virtual void  setRotation(float rotation);
     float getRotationX()const;
-    void  setRotationX(float);
+    virtual void  setRotationX(float);
     float getRotationY()const;
-    void  setRotationY(float);
+    virtual void  setRotationY(float);
     StateListAnimator* getStateListAnimator()const;
     void setStateListAnimator(StateListAnimator*);
     bool getClipToOutline()const;

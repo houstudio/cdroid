@@ -17,11 +17,11 @@
  *********************************************************************************/
 #ifndef __VIEW_OUTLINE_PROVIDER_H__
 #define __VIEW_OUTLINE_PROVIDER_H__
-#include <functional>
+#include <core/callbackbase.h>
 namespace cdroid{
     class View;
     class Outline;
-    using ViewOutlineProvider = std::function<void(View& view, Outline& outline)>;
+    using ViewOutlineProvider = CallbackBase<void,View&/*view*/, Outline&/*outline*/>;
     namespace OutlineProvider{
     extern const ViewOutlineProvider BACKGROUND;
 

@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <exception>
+#include <stdexcept>
 namespace cdroid{
 class Pools final{
 private:
@@ -23,6 +24,9 @@ public:
         std::vector<T*> mPool;
     public:
         SimplePool(int maxPoolSize):mPoolSize(0){
+            if(maxPoolSize<=0){
+                throw std::invalid_argument("The max pool size must be > 0");
+            }
             mPool.resize(maxPoolSize,nullptr);
         }
         ~SimplePool() override{
@@ -40,7 +44,7 @@ public:
         }
         bool release(T* instance) override{
             if (isInPool(instance)) {
-                throw std::runtime_error("Already in the pool!");
+                throw std::logic_error("Already in the pool!");
             }
             if (mPoolSize < mPool.size()) {
                 mPool[mPoolSize++] = instance;

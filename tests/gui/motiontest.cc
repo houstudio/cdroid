@@ -1,0 +1,606 @@
+/*
+ * Pure-math oracle tests for the Stage 6 motion bedrock (Easing + CurveFit + HyperSpline).
+ * No Views / no App display — these exercise the interpolation math directly, mirroring the
+ * LinearSystem oracle tests. Gated on ENABLE_CONSTRAINTLAYOUT.
+ */
+#include <gui_features.h>
+#ifdef ENABLE_CONSTRAINTLAYOUT
+
+#include <gtest/gtest.h>
+
+#include <memory>
+#include <vector>
+
+#include <widgetEx/constraintlayout/core/motion/curvefit.h>
+#include <widgetEx/constraintlayout/core/motion/arccurvefit.h>
+#include <widgetEx/constraintlayout/core/motion/easing.h>
+#include <widgetEx/constraintlayout/core/motion/hyperspline.h>
+#include <widgetEx/constraintlayout/core/motion/linearcurvefit.h>
+#include <widgetEx/constraintlayout/core/motion/monotoniccurvefit.h>
+#include <widgetEx/constraintlayout/core/motion/motion.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyattributes.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeyposition.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeycycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytimecycle.h>
+#include <widgetEx/constraintlayout/core/motion/motionkeytrigger.h>
+#include <widgetEx/constraintlayout/core/motion/motionwidget.h>
+#include <widgetEx/constraintlayout/core/motion/oscillator.h>
+#include <widgetEx/constraintlayout/core/motion/splineset.h>
+#include <widgetEx/constraintlayout/core/motion/springstopengine.h>
+#include <widgetEx/constraintlayout/core/motion/stoplogicengine.h>
+
+using namespace cdroid;
+
+// ---- CurveFit ----
+
+// Linear interpolation between (0)->0 and (1)->10: midpoint 0.5 -> 5, slope 10.
+TEST(MotionMath, LinearCurveFitInterpolates) {
+    std::vector<double> time = {0.0, 1.0};
+    std::vector<std::vector<double>> y = {{0.0}, {10.0}};
+    LinearCurveFit cf(time, y);
+    EXPECT_NEAR(cf.getPos(0.5, 0), 5.0, 1e-9);
+    EXPECT_NEAR(cf.getSlope(0.5, 0), 10.0, 1e-9);
+    EXPECT_NEAR(cf.getPos(0.0, 0), 0.0, 1e-9);
+    EXPECT_NEAR(cf.getPos(1.0, 0), 10.0, 1e-9);
+}
+
+// The monotone Hermite spline must pass exactly through every sample point.
+TEST(MotionMath, MonotonicPassesThroughPoints) {
+    std::vector<double> time = {0.0, 0.5, 1.0};
+    std::vector<std::vector<double>> y = {{0.0}, {50.0}, {100.0}};
+    MonotonicCurveFit cf(time, y);
+    EXPECT_NEAR(cf.getPos(0.0, 0), 0.0, 1e-9);
+    EXPECT_NEAR(cf.getPos(0.5, 0), 50.0, 1e-9);
+    EXPECT_NEAR(cf.getPos(1.0, 0), 100.0, 1e-9);
+    // monotonic in [0,1]
+    EXPECT_LE(cf.getPos(0.25, 0), cf.getPos(0.75, 0));
+}
+
+// Factory: a single sample point collapses to CONSTANT.
+TEST(MotionMath, CurveFitConstantFactory) {
+    std::vector<double> time = {7.0};
+    std::vector<std::vector<double>> y = {{42.0, 99.0}};
+    auto cf = CurveFit::get(CurveFit::SPLINE, time, y); // single point -> CONSTANT
+    ASSERT_NE(cf, nullptr);
+    std::vector<double> v(2);
+    cf->getPos(0.123, v);
+    EXPECT_NEAR(v[0], 42.0, 1e-9);
+    EXPECT_NEAR(v[1], 99.0, 1e-9);
+}
+
+// ---- Easing ----
+
+// The base Easing is the identity: get(x) = x, getDiff = 1.
+TEST(MotionMath, EasingIdentity) {
+    Easing e;
+    EXPECT_NEAR(e.get(0.3), 0.3, 1e-9);
+    EXPECT_NEAR(e.getDiff(0.7), 1.0, 1e-9);
+}
+
+// A cubic-bezier easing maps endpoints 0->0, 1->1, stays in range, and is NOT the identity
+// (the ease-in region at x=0.25 sits below the diagonal). The last check catches a silent
+// fallback to the identity Easing.
+TEST(MotionMath, EasingCubicEndpoints) {
+    auto e = Easing::getInterpolator("cubic(0.4, 0.0, 0.2, 1)");
+    ASSERT_NE(e, nullptr);
+    EXPECT_NEAR(e->get(0.0), 0.0, 1e-3);
+    EXPECT_NEAR(e->get(1.0), 1.0, 1e-3);
+    double mid = e->get(0.5);
+    EXPECT_GE(mid, 0.0);
+    EXPECT_LE(mid, 1.0);
+    double q = e->get(0.25);
+    EXPECT_LT(q, 0.25 - 0.01); // ease-in: y(0.25) < 0.25, distinct from identity
+}
+
+// The named "linear" easing (cubic(1,1,0,0)) is ~identity at the endpoints.
+TEST(MotionMath, EasingNamedLinear) {
+    auto e = Easing::getInterpolator("linear");
+    ASSERT_NE(e, nullptr);
+    EXPECT_NEAR(e->get(0.0), 0.0, 1e-3);
+    EXPECT_NEAR(e->get(1.0), 1.0, 1e-3);
+    EXPECT_NEAR(e->get(0.5), 0.5, 1e-2); // linear bezier -> y == x
+}
+
+// Empty config string -> nullptr (caller applies its own default).
+TEST(MotionMath, EasingFactoryNullOnEmpty) {
+    EXPECT_EQ(Easing::getInterpolator(""), nullptr);
+}
+
+// Schlick easing parses and maps 0 -> 0.
+TEST(MotionMath, SchlickParses) {
+    auto e = Easing::getInterpolator("Schlick(0.5, 0.5)");
+    ASSERT_NE(e, nullptr);
+    EXPECT_NEAR(e->get(0.0), 0.0, 1e-9);
+}
+
+// "spline(...)" parses into a StepCurve backed by a monotonic spline (0->0, 1->1).
+TEST(MotionMath, StepCurveParses) {
+    auto e = Easing::getInterpolator("spline(0.0, 0.3, 0.5, 0.7, 1.0)");
+    ASSERT_NE(e, nullptr);
+    EXPECT_NEAR(e->get(0.0), 0.0, 1e-3);
+    EXPECT_NEAR(e->get(1.0), 1.0, 1e-3);
+}
+
+// ---- HyperSpline ----
+
+// The N-d natural-cubic spline passes through its first and last sample points.
+TEST(MotionMath, HyperSplineEndpoints) {
+    std::vector<std::vector<double>> points = {{0.0, 0.0}, {50.0, 100.0}, {100.0, 0.0}};
+    HyperSpline hs(points);
+    EXPECT_NEAR(hs.getPos(0.0, 0), 0.0, 1e-6);
+    EXPECT_NEAR(hs.getPos(1.0, 0), 100.0, 1e-6);
+}
+
+// ---- Oscillator ----
+
+// A sine oscillator at zero phase starts at sin(0) = 0; cosine starts at cos(0) = 1.
+TEST(MotionMath, OscillatorStartValue) {
+    Oscillator osc;
+    osc.setType(Oscillator::SIN_WAVE, "");
+    osc.addPoint(0.0, 1.0f);
+    osc.addPoint(1.0, 1.0f);
+    osc.normalize();
+    EXPECT_NEAR(osc.getValue(0.0, 0.0), 0.0, 1e-6);
+
+    Oscillator cosc;
+    cosc.setType(Oscillator::COS_WAVE, "");
+    cosc.addPoint(0.0, 1.0f);
+    cosc.addPoint(1.0, 1.0f);
+    cosc.normalize();
+    EXPECT_NEAR(cosc.getValue(0.0, 0.0), 1.0, 1e-6);
+}
+
+// All wave types stay bounded in [-1, 1] across the progress axis.
+TEST(MotionMath, OscillatorBounded) {
+    Oscillator osc;
+    osc.addPoint(0.0, 1.0f);
+    osc.addPoint(0.5f, 2.0f);
+    osc.addPoint(1.0, 1.0f);
+    osc.normalize();
+    const int types[] = {Oscillator::SIN_WAVE, Oscillator::SQUARE_WAVE, Oscillator::TRIANGLE_WAVE,
+                         Oscillator::SAW_WAVE, Oscillator::REVERSE_SAW_WAVE, Oscillator::COS_WAVE,
+                         Oscillator::BOUNCE};
+    for (int type : types) {
+        osc.setType(type, "");
+        for (int i = 0; i <= 20; i++) {
+            double v = osc.getValue(i / 20.0, 0.0);
+            EXPECT_GE(v, -1.0 - 1e-6) << "type=" << type << " i=" << i;
+            EXPECT_LE(v, 1.0 + 1e-6) << "type=" << type << " i=" << i;
+        }
+    }
+}
+
+// ---- Motion engine (linear MVP) ----
+
+// A Motion interpolates a child linearly between a start and end frame at progress 0.5.
+// start (0,0,100,50) -> end (500,300,200,100): midpoint (250,150,150,75).
+TEST(MotionMath, MotionInterpolatesLinearly) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 300, 700, 400); // w=200, h=100
+
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionWidget child;
+    m.interpolate(&child, 0.5f);
+    EXPECT_EQ(child.getLeft(), 250);
+    EXPECT_EQ(child.getTop(), 150);
+    EXPECT_EQ(child.getWidth(), 150); // (100+200)/2
+    EXPECT_EQ(child.getHeight(), 75); // (50+100)/2
+}
+
+// At progress 0 the child matches the start; at 1 it matches the end.
+TEST(MotionMath, MotionEndpoints) {
+    MotionWidget start; start.setBounds(10, 20, 110, 70);   // w=100, h=50
+    MotionWidget end;   end.setBounds(200, 400, 400, 450);  // w=200, h=50
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionWidget c0; m.interpolate(&c0, 0.0f);
+    EXPECT_EQ(c0.getLeft(), 10);
+    EXPECT_EQ(c0.getTop(), 20);
+    EXPECT_EQ(c0.getWidth(), 100);
+
+    MotionWidget c1; m.interpolate(&c1, 1.0f);
+    EXPECT_EQ(c1.getLeft(), 200);
+    EXPECT_EQ(c1.getTop(), 400);
+    EXPECT_EQ(c1.getWidth(), 200);
+}
+
+// An "accelerate" easing curve makes the midpoint position lag the linear midpoint.
+// start(0,0,100,50) -> end(1000,0,1100,50): linear midpoint = 500; accelerated < 500.
+TEST(MotionMath, MotionEasingAccelerate) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(1000, 0, 1100, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.setValue(TypedValues::MotionType::TYPE_EASING, std::string("accelerate"));
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_GT(mid.getLeft(), 0);
+    EXPECT_LT(mid.getLeft(), 500); // ease-in: behind the linear midpoint
+    EXPECT_EQ(mid.getTop(), 0);    // y unchanged
+}
+
+// A KeyAttributes keyframe sets alpha=0 at frame 50; the alpha dips to 0 at progress 0.5
+// and interpolates linearly back to the endpoints (alpha=1) at 0.25/0.75.
+TEST(MotionMath, MotionKeyframeAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyAttributes kf;
+    kf.setFramePosition(50);
+    kf.setValue(TypedValues::AttributesType::TYPE_ALPHA, 0.0f);
+    m.addKey(&kf);
+
+    MotionWidget atMid; m.interpolate(&atMid, 0.5f);
+    EXPECT_NEAR(atMid.getAlpha(), 0.0f, 1e-3); // keyframe: alpha 0 at midpoint
+
+    MotionWidget atQuarter; m.interpolate(&atQuarter, 0.25f);
+    EXPECT_NEAR(atQuarter.getAlpha(), 0.5f, 1e-3); // halfway between start(1) and keyframe(0)
+}
+
+// A KeyPosition at frame 50 with a perpendicular offset makes the widget deviate from the
+// straight-line path. start(0,0,100,50) -> end(500,0,600,50) (horizontal). At progress 0.5
+// without keyframe the midpoint is (250,0); with altPercentY=0.5 it arcs down to (250,250).
+TEST(MotionMath, MotionKeyPositionOffset) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPercentX = 0.5f;      // halfway along the path
+    kp.mAltPercentY = 0.5f;   // perpendicular offset (downward)
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 250); // keyframe x
+    EXPECT_EQ(mid.getTop(), 250);  // arced below the linear path (y=0)
+}
+
+// The four KeyPosition types (CARTESIAN above; PATH/AXIS/SCREEN below) define the coordinate frame
+// in which percentX/percentY are interpreted. All use a diagonal start(0,0,100,100)->end(400,400,500,
+// 500) so the frames are distinguishable (pvx=pvy=400, centers at (50,50)->(450,450)).
+
+// TYPE_PATH: percentX is along the path vector, percentY is the perpendicular offset.
+// path=0.5, perp=0.3 -> center (50+400*.5-400*.3, 50+400*.5+400*.3) = (130,370) -> topLeft (80,320).
+TEST(MotionMath, MotionKeyPositionPath) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_PATH;
+    kp.mPercentX = 0.5f; // along the path
+    kp.mPercentY = 0.3f; // perpendicular offset
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 80);
+    EXPECT_EQ(mid.getTop(), 320);
+}
+
+// TYPE_AXIS: independent X/Y fractions along each axis (no cross terms).
+// dxdx=0.25, dydy=0.75 -> center (50+400*.25, 50+400*.75) = (150,350) -> topLeft (100,300).
+TEST(MotionMath, MotionKeyPositionAxis) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_AXIS;
+    kp.mPercentX = 0.25f;
+    kp.mPercentY = 0.75f;
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 100);
+    EXPECT_EQ(mid.getTop(), 300);
+}
+
+// TYPE_SCREEN: percentX/percentY are fractions of (parentSize - widgetSize). Needs the parent
+// dimensions (passed via setup). parent 1000x800, widget 100x100, x=0.5 y=0.25 ->
+// center (0.5*900+50, 0.25*700+50) = (500,225) -> topLeft (450,175).
+TEST(MotionMath, MotionKeyPositionScreen) {
+    MotionWidget start; start.setBounds(0, 0, 100, 100);
+    MotionWidget end;   end.setBounds(400, 400, 500, 500);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.setup(1000, 800, 0.0f); // parent dimensions for TYPE_SCREEN
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPositionType = MotionKeyPosition::TYPE_SCREEN;
+    kp.mPercentX = 0.5f;
+    kp.mPercentY = 0.25f;
+    m.addKey(&kp);
+
+    MotionWidget mid; m.interpolate(&mid, 0.5f);
+    EXPECT_EQ(mid.getLeft(), 450);
+    EXPECT_EQ(mid.getTop(), 175);
+}
+
+// A KeyCycle superimposes a sine-wave oscillation on the base alpha.
+// base alpha=1, cycle amplitude=0.3, period=2 (2 full sine cycles over [0,1]).
+// At progress 0.125: overlay = sin(2π·0.125·2)·0.3 = sin(π/2)·0.3 = 0.3 → alpha=1.3.
+TEST(MotionMath, MotionKeyCycleAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyCycle cyc;
+    cyc.mFramePosition = 50;
+    cyc.mAlpha = 0.3f;       // oscillation amplitude
+    cyc.mWavePeriod = 2.0f;  // 2 full cycles over the transition
+    cyc.mWaveShape = Oscillator::SIN_WAVE;
+    m.addKey(&cyc);
+
+    MotionWidget atEighth; m.interpolate(&atEighth, 0.125f);
+    EXPECT_NEAR(atEighth.getAlpha(), 1.3f, 0.01); // base(1) + sin(π/2)·0.3
+
+    MotionWidget atStart; m.interpolate(&atStart, 0.0f);
+    EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
+}
+
+// A KeyTimeCycle keyframe is overlaid as a progress-keyed wave (MVP: same as Cycle, no phase field).
+// amplitude 0.3, period 2 → at progress 0.125 the wave is sin(π/2)=1, so alpha = base(1) + 0.3.
+TEST(MotionMath, MotionKeyTimeCycleAlpha) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50); start.setAlpha(1.0f);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50); end.setAlpha(1.0f);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyTimeCycle cyc;
+    cyc.mFramePosition = 50;
+    cyc.mAlpha = 0.3f;
+    cyc.mWavePeriod = 2.0f;
+    m.addKey(&cyc);
+
+    MotionWidget atEighth; m.interpolate(&atEighth, 0.125f);
+    EXPECT_NEAR(atEighth.getAlpha(), 1.3f, 0.01); // base(1) + sin(2π·0.125·2)·0.3 = 1 + sin(π/2)·0.3
+
+    MotionWidget atStart; m.interpolate(&atStart, 0.0f);
+    EXPECT_NEAR(atStart.getAlpha(), 1.0f, 0.01);  // base(1) + sin(0)·0.3
+}
+
+// A KeyTrigger fires its mCross callback once while progress is within slack of the frame position,
+// then resets when progress leaves the slack band (so re-entering fires again).
+TEST(MotionMath, MotionKeyTriggerFiresOnCross) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(100, 0, 200, 50);
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+
+    MotionKeyTrigger trig;
+    trig.mFramePosition = 50;       // frame at progress 0.5
+    trig.mCross = "onCross";
+    trig.mTriggerSlack = 0.1f;
+    m.addKey(&trig);
+
+    std::string fired;
+    int count = 0;
+    m.setTriggerListener([&](const std::string& name, float) { fired = name; count++; });
+
+    MotionWidget w;
+    m.interpolate(&w, 0.5f);             // within slack → fires
+    EXPECT_EQ(count, 1);
+    EXPECT_EQ(fired, "onCross");
+
+    m.interpolate(&w, 0.5f);             // still in slack, already fired → no re-fire
+    EXPECT_EQ(count, 1);
+
+    m.interpolate(&w, 0.0f);             // leave the slack band → reset
+    m.interpolate(&w, 0.5f);             // re-enter → fires again
+    EXPECT_EQ(count, 2);
+}
+
+// ---- SplineSet (spline-based keyframe interpolation) ----
+
+// SplineSet builds a CurveFit from (framePosition, value) pairs and interpolates smoothly.
+// Points: (0, 0) → (50, 100) → (100, 0). At t=0.5 the spline passes through the keyframe (100).
+TEST(MotionMath, SplineSetInterpolates) {
+    SplineSet ss;
+    ss.setPoint(0, 0.0f);
+    ss.setPoint(50, 100.0f);
+    ss.setPoint(100, 0.0f);
+    ss.setup(CurveFit::SPLINE);
+    EXPECT_NEAR(ss.get(0.0f), 0.0f, 0.5);
+    EXPECT_NEAR(ss.get(0.5f), 100.0f, 0.5); // passes through keyframe
+    EXPECT_NEAR(ss.get(1.0f), 0.0f, 0.5);
+    float mid = ss.get(0.25f);
+    EXPECT_GT(mid, 0.0f);
+    EXPECT_LT(mid, 100.0f); // between endpoints
+}
+
+// ArcCurveFit (ported oracle from Android MotionArcCurveTest.arcTest1). Three points stitched with
+// two quarter-ellipse arcs (vertical start, then horizontal). The curve passes through each point;
+// the first arc starts vertical (dx≈0); at the first arc's midpoint x = 1-sqrt(0.5), y = sqrt(0.5).
+TEST(MotionMath, ArcCurveFitStitchesQuarterEllipses) {
+    std::vector<double> time = {0, 5, 10};
+    std::vector<std::vector<double>> points = {{0, 0}, {1, 1}, {2, 0}};
+    std::vector<int> mode = {ArcCurveFit::ARC_START_VERTICAL, ArcCurveFit::ARC_START_HORIZONTAL};
+    auto spline = CurveFit::getArc(mode, time, points);
+
+    ASSERT_NE(spline, nullptr);
+    for (size_t i = 0; i < time.size(); i++) {
+        EXPECT_NEAR(points[i][0], spline->getPos(time[i], 0), 0.001);
+        EXPECT_NEAR(points[i][1], spline->getPos(time[i], 1), 0.001);
+    }
+    EXPECT_NEAR(0, spline->getSlope(time[0] + 0.01, 0), 0.001); // first arc starts vertical -> dx=0
+    EXPECT_NEAR(0, spline->getSlope(time[1] - 0.01, 1), 0.001);
+    EXPECT_NEAR(0, spline->getSlope(time[1] + 0.01, 1), 0.001);
+    const double mid = (time[0] + time[1]) / 2.0;
+    EXPECT_NEAR(1.0 - std::sqrt(0.5), spline->getPos(mid, 0), 0.001);
+    EXPECT_NEAR(std::sqrt(0.5), spline->getPos(mid, 1), 0.001);
+}
+
+// pathMotionArc + KeyPosition coexist. Previously the arc was disabled as soon as any KeyPosition
+// was present (the mPositionKeys.empty() guard in buildPath); now the widget follows per-segment
+// quarter-ellipse arcs through [start, keyframe, end] (x,y from the arc) while w,h come from the
+// spline. Same setup as MotionKeyPositionOffset: start(0,0,100,50)->end(500,0,600,50), KeyPosition
+// @50 offset down -> keypoint (250,250).
+TEST(MotionMath, MotionArcMultiKeyPosition) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+
+    MotionKeyPosition kp;
+    kp.mFramePosition = 50;
+    kp.mPercentX = 0.5f;
+    kp.mAltPercentY = 0.5f; // keypoint at (250, 250)
+
+    Motion splineM; splineM.setStart(&start); splineM.setEnd(&end); splineM.addKey(&kp);
+    Motion arcM;    arcM.setStart(&start);    arcM.setEnd(&end);    arcM.addKey(&kp);
+    arcM.setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, ArcCurveFit::ARC_START_VERTICAL);
+
+    MotionWidget a0, a1;
+    arcM.interpolate(&a0, 0.0f);
+    arcM.interpolate(&a1, 1.0f);
+    EXPECT_EQ(a0.getLeft(), 0);
+    EXPECT_EQ(a1.getLeft(), 500);
+
+    // The arc still passes through the keyframe control point at progress 0.5.
+    MotionWidget aMid;
+    arcM.interpolate(&aMid, 0.5f);
+    EXPECT_EQ(aMid.getLeft(), 250);
+    EXPECT_EQ(aMid.getTop(), 250);
+
+    // Vertical-start arc leaves the start along y, so x lags the pure spline early on — proof the
+    // arc is actually in effect alongside the KeyPosition (previously mutually exclusive).
+    MotionWidget sEarly, aEarly;
+    splineM.interpolate(&sEarly, 0.05f);
+    arcM.interpolate(&aEarly, 0.05f);
+    EXPECT_LT(aEarly.getLeft(), sEarly.getLeft());
+    EXPECT_GT(aEarly.getTop(), 0);
+}
+
+// KeyPosition.pathMotionArc overrides the per-segment arc mode. Two KeyPositions each carry a
+// different mode (vertical then horizontal); the multi-segment arc path stays continuous and
+// passes through both keypoints.
+TEST(MotionMath, MotionArcPerKeyFrame) {
+    MotionWidget start; start.setBounds(0, 0, 100, 50);
+    MotionWidget end;   end.setBounds(500, 0, 600, 50);
+
+    MotionKeyPosition kp1, kp2;
+    kp1.mFramePosition = 33; kp1.mPercentX = 0.33f; kp1.mAltPercentY = 0.5f;
+    kp1.mPathMotionArc = ArcCurveFit::ARC_START_VERTICAL;   // keypoint (165, 250)
+    kp2.mFramePosition = 66; kp2.mPercentX = 0.66f; kp2.mAltPercentY = 0.5f;
+    kp2.mPathMotionArc = ArcCurveFit::ARC_START_HORIZONTAL; // keypoint (330, 250)
+
+    Motion m;
+    m.setStart(&start);
+    m.setEnd(&end);
+    m.addKey(&kp1);
+    m.addKey(&kp2);
+    m.setValue(TypedValues::MotionType::TYPE_PATHMOTION_ARC, ArcCurveFit::ARC_START_VERTICAL);
+
+    MotionWidget at0, at1;
+    m.interpolate(&at0, 0.0f);
+    m.interpolate(&at1, 1.0f);
+    EXPECT_EQ(at0.getLeft(), 0);
+    EXPECT_EQ(at1.getLeft(), 500);
+
+    MotionWidget p1, p2;
+    m.interpolate(&p1, 0.33f);
+    m.interpolate(&p2, 0.66f);
+    EXPECT_NEAR(p1.getLeft(), 165, 1);
+    EXPECT_NEAR(p1.getTop(), 250, 1);
+    EXPECT_NEAR(p2.getLeft(), 330, 1);
+    EXPECT_NEAR(p2.getTop(), 250, 1);
+}
+
+// ---- SpringStopEngine (OnSwipe spring auto-completion) ----
+
+// A damped spring settles to its target. start 0.3 -> target 1 with release velocity 2; within ~2s
+// it should be stopped and resting at the target.
+TEST(MotionMath, SpringStopEngineSettles) {
+    SpringStopEngine e;
+    e.springConfig(0.3f, 1.0f, 2.0f, 1.0f, 400.0f, 10.0f, 0.01f, 0);
+    float pos = 0.3f;
+    bool settled = false;
+    for (int i = 1; i <= 2000; i++) { // 2s in 1ms steps
+        pos = e.getInterpolation(i * 0.001f);
+        if (e.isStopped()) { settled = true; break; }
+    }
+    EXPECT_TRUE(settled);
+    EXPECT_NEAR(pos, 1.0f, 0.02f);
+}
+
+// An under-damped spring overshoots its target before settling (boundaryMode=0 = free overshoot).
+TEST(MotionMath, SpringStopEngineOvershoots) {
+    SpringStopEngine e;
+    e.springConfig(0.0f, 1.0f, 0.0f, 1.0f, 200.0f, 4.0f, 0.001f, 0);
+    float maxPos = 0;
+    for (int i = 1; i <= 3000; i++) {
+        float pos = e.getInterpolation(i * 0.001f);
+        if (pos > maxPos) maxPos = pos;
+        if (e.isStopped()) break;
+    }
+    EXPECT_GT(maxPos, 1.0f); // overshot the target
+}
+
+// The bounceEnd boundary (bit1) reflects the spring off 1 instead of overshooting — same params as
+// the overshoot case but boundaryMode=2, so maxPos stays at/below 1.
+TEST(MotionMath, SpringStopEngineBouncesOffEnd) {
+    SpringStopEngine e;
+    e.springConfig(0.0f, 1.0f, 0.0f, 1.0f, 200.0f, 4.0f, 0.001f, 2);
+    float maxPos = 0;
+    for (int i = 1; i <= 3000; i++) {
+        float pos = e.getInterpolation(i * 0.001f);
+        if (pos > maxPos) maxPos = pos;
+        if (e.isStopped()) break;
+    }
+    EXPECT_LE(maxPos, 1.0f + 1e-3f); // bounced off 1, did not overshoot
+}
+
+// ---- StopLogicEngine (continuous-velocity settle) ----
+
+// Cruise-then-decelerate: currentPos 0.9 -> destination 1.0 at velocity 0.2, maxAccel 3.2, maxVel 3.2.
+// The engine cruises at 0.2 for cruseTime=0.46875s (covering 0.09375), then brakes over 0.0625s.
+// Hand-computed: start 0.9, end-of-cruise 0.99375, destination 1.0 at t=0.53125, monotonic up.
+TEST(MotionMath, StopLogicEngineCruiseDecelerate) {
+    StopLogicEngine e;
+    e.config(0.9f, 1.0f, 0.2f, 0.9f, 3.2f, 3.2f);
+    EXPECT_NEAR(e.getInterpolation(0.0f), 0.9f, 1e-4f);     // start
+    EXPECT_NEAR(e.getInterpolation(0.46875f), 0.99375f, 1e-4f); // end of cruise (0.2 * 0.46875)
+    EXPECT_NEAR(e.getInterpolation(0.53125f), 1.0f, 1e-4f); // destination reached
+    EXPECT_NEAR(e.getInterpolation(1.0f), 1.0f, 1e-4f);     // past end -> clamps to destination
+    EXPECT_TRUE(e.isStopped());                             // profile exhausted
+    // Monotonic increasing (cruise then decelerate).
+    EXPECT_LT(e.getInterpolation(0.0f), e.getInterpolation(0.25f));
+    EXPECT_LT(e.getInterpolation(0.25f), e.getInterpolation(0.5f));
+}
+
+// Negative initial velocity (moving away from destination): the engine first reverses (dips below
+// start) then accelerates to the destination. currentPos 0.9 -> 1.0 at velocity -0.2.
+// At t=0.0625 (velocity reaches 0) the position dips to 0.89375 (< start 0.9); it then climbs to 1.0.
+TEST(MotionMath, StopLogicEngineBackwardReverses) {
+    StopLogicEngine e;
+    e.config(0.9f, 1.0f, -0.2f, 0.9f, 3.2f, 3.2f);
+    EXPECT_NEAR(e.getInterpolation(0.0f), 0.9f, 1e-4f);
+    EXPECT_NEAR(e.getInterpolation(0.0625f), 0.89375f, 1e-3f); // dipped below start (backward)
+    EXPECT_GT(0.9f, e.getInterpolation(0.0625f));              // below the start position
+    EXPECT_NEAR(e.getInterpolation(0.5f), 1.0f, 1e-3f);        // climbed to destination
+    EXPECT_TRUE(e.isStopped());
+}
+
+#endif // ENABLE_CONSTRAINTLAYOUT
