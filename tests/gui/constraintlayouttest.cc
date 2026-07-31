@@ -574,6 +574,59 @@ TEST(ConstraintLayout, GuidelinePositionsChild) {
     EXPECT_EQ(tv->getWidth(), 300);
 }
 
+// Horizontal Guideline at 50% (y=200) + a child whose TOP anchors below it (topToBottom). This is
+// the "to-Bottom" variant: before the getAnchor() fix the child connected to the guideline's orphan
+// mBottom anchor (never positioned, ==0) and collapsed to the top instead of sitting at y=200.
+TEST(ConstraintLayout, GuidelineChildBelowHorizontal) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+
+    View* gl = new View(0, 0);
+    gl->setId(10);
+    auto* glp = new ConstraintLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    glp->orientation = ConstraintWidget::HORIZONTAL;
+    glp->guidePercent = 0.5f;
+    glp->validate();
+    cl->addView(gl, glp);
+
+    TextView* tv = new TextView("X", 50, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(50, 50);
+    lp->topToBottom = 10;
+    lp->leftToLeft = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getTop(), 200);
+}
+
+// Vertical Guideline at 50% (x=300) + a child whose LEFT anchors right of it (leftToRight). The
+// "to-Right" variant: previously connected to the guideline's orphan mRight (==0) → child at x=0.
+TEST(ConstraintLayout, GuidelineChildRightOfVertical) {
+    App& app = App::getInstance();
+    ConstraintLayout* cl = new ConstraintLayout(600, 400);
+
+    View* gl = new View(0, 0);
+    gl->setId(10);
+    auto* glp = new ConstraintLayout::LayoutParams(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
+    glp->orientation = ConstraintWidget::VERTICAL;
+    glp->guidePercent = 0.5f;
+    glp->validate();
+    cl->addView(gl, glp);
+
+    TextView* tv = new TextView("X", 50, 50);
+    auto* lp = new ConstraintLayout::LayoutParams(50, 50);
+    lp->leftToRight = 10;
+    lp->topToTop = ConstraintLayout::PARENT_ID;
+    cl->addView(tv, lp);
+
+    cl->measure(exactly(600), exactly(400));
+    cl->layout(0, 0, 600, 400);
+
+    EXPECT_EQ(tv->getLeft(), 300);
+}
+
 // Ratio: width=200 FIXED, height=0dp MATCH_CONSTRAINT, ratio "2:1" → height=100.
 TEST(ConstraintLayout, RatioChild) {
     App& app = App::getInstance();

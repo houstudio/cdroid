@@ -396,13 +396,22 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         if (lp->goneEndMargin   != LayoutParams::GONE_UNSET) goneRightE = lp->goneEndMargin;
     }
 
+    // Target anchors are resolved through getAnchor(Type) rather than via the &t->mLeft/mRight/mTop/
+    // mBottom members. For an ordinary widget the two are identical, but a Guideline only exposes a
+    // single active anchor: getAnchor() redirects TOP/BOTTOM (horizontal guideline) and LEFT/RIGHT
+    // (vertical guideline) to that active anchor, and returns null for the off-axis sides. Reaching
+    // for the member directly would connect to a Guideline's never-positioned orphan anchor (mBottom/
+    // mRight stay 0), so the "to-Bottom"/"to-Right" variants would collapse to the origin. This
+    // mirrors AndroidX, which resolves the end anchor with endWidget.getAnchor(endType).
     // Left (leftToLeft preferred over leftToRight)
     if (leftToLeftE != LayoutParams::UNSET || leftToRightE != LayoutParams::UNSET) {
         bool toLeft = (leftToLeftE != LayoutParams::UNSET);
         int tid = toLeft ? leftToLeftE : leftToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mLeft.connect(toLeft ? &t->mLeft : &t->mRight,
-                                  lp->leftMargin, goneLeftE, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toLeft ? ConstraintAnchor::Type::LEFT
+                                                           : ConstraintAnchor::Type::RIGHT)) {
+                widget->mLeft.connect(ta, lp->leftMargin, goneLeftE, true);
+            }
         }
     }
     // Right
@@ -410,8 +419,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toLeft = (rightToLeftE != LayoutParams::UNSET);
         int tid = toLeft ? rightToLeftE : rightToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mRight.connect(toLeft ? &t->mLeft : &t->mRight,
-                                   lp->rightMargin, goneRightE, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toLeft ? ConstraintAnchor::Type::LEFT
+                                                           : ConstraintAnchor::Type::RIGHT)) {
+                widget->mRight.connect(ta, lp->rightMargin, goneRightE, true);
+            }
         }
     }
     // Top
@@ -419,8 +430,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toTop = (lp->topToTop != LayoutParams::UNSET);
         int tid = toTop ? lp->topToTop : lp->topToBottom;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mTop.connect(toTop ? &t->mTop : &t->mBottom,
-                                 lp->topMargin, lp->goneTopMargin, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toTop ? ConstraintAnchor::Type::TOP
+                                                          : ConstraintAnchor::Type::BOTTOM)) {
+                widget->mTop.connect(ta, lp->topMargin, lp->goneTopMargin, true);
+            }
         }
     }
     // Bottom
@@ -428,8 +441,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toTop = (lp->bottomToTop != LayoutParams::UNSET);
         int tid = toTop ? lp->bottomToTop : lp->bottomToBottom;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mBottom.connect(toTop ? &t->mTop : &t->mBottom,
-                                    lp->bottomMargin, lp->goneBottomMargin, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toTop ? ConstraintAnchor::Type::TOP
+                                                          : ConstraintAnchor::Type::BOTTOM)) {
+                widget->mBottom.connect(ta, lp->bottomMargin, lp->goneBottomMargin, true);
+            }
         }
     }
 
@@ -484,14 +499,17 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
     widget->mWeight[ConstraintWidget::HORIZONTAL] = lp->horizontalWeight;
     widget->mWeight[ConstraintWidget::VERTICAL]   = lp->verticalWeight;
 
-    // Baseline constraint (overrides top/bottom)
+    // Baseline constraint (overrides top/bottom). Resolve the target anchor via getAnchor() so a
+    // Guideline target (which has no baseline) yields null and the connection is skipped.
     if (lp->baselineToBaseline != LayoutParams::UNSET) {
         if (ConstraintWidget* t = resolveTarget(lp->baselineToBaseline)) {
-            widget->mBaseline.connect(&t->mBaseline, 0, LayoutParams::GONE_UNSET, true);
-            widget->setHasBaseline(true);
-            t->setHasBaseline(true);
-            widget->mTop.reset();
-            widget->mBottom.reset();
+            if (ConstraintAnchor* ta = t->getAnchor(ConstraintAnchor::Type::BASELINE)) {
+                widget->mBaseline.connect(ta, 0, LayoutParams::GONE_UNSET, true);
+                widget->setHasBaseline(true);
+                t->setHasBaseline(true);
+                widget->mTop.reset();
+                widget->mBottom.reset();
+            }
         }
     }
 
