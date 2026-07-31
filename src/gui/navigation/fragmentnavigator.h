@@ -19,12 +19,7 @@ public:
     public:
         explicit Destination(FragmentNavigator* owner) : NavDestination((Navigator*)owner){}
         // Reads the Fragment class name from XML android:name.
-        void onInflate(cdroid::Context* context, const AttributeSet& attrs) override{
-            NavDestination::onInflate(context, attrs);
-            setClassName(attrs.getString("name"));
-            LOGD("FragmentNavigator.Destination.onInflate route='%s' className='%s'",
-                 getRoute().c_str(), getClassName().c_str());
-        }
+        void onInflate(cdroid::Context* context, const AttributeSet& attrs) override;
         void setClassName(const std::string& cls){ mClassName = cls; }
         const std::string& getClassName() const { return mClassName; }
     private:

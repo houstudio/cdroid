@@ -15,6 +15,13 @@ NavDestination* FragmentNavigator::createDestination(){
     return new Destination(this);
 }
 
+void FragmentNavigator::Destination::onInflate(cdroid::Context* context, const AttributeSet& attrs){
+    NavDestination::onInflate(context, attrs);
+    setClassName(attrs.getString("name"));
+    LOGD("FragmentNavigator.Destination.onInflate route='%s' className='%s'",
+         getRoute().c_str(), getClassName().c_str());
+}
+
 void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* navOptions){
     Destination* d = dynamic_cast<Destination*>(destination);
     LOGD("FragmentNavigator.navigate className='%s' fm=%p containerId=%d",

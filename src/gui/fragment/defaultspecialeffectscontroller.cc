@@ -5,6 +5,7 @@
 #include <animation/animation.h>
 #include <transition/transition.h>
 #include <transition/transitionmanager.h>
+#include <transition/transitioninflater.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <core/context.h>
@@ -28,20 +29,35 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
             }
         }
     }
-    // Per op: custom anim -> AnimationEffect; otherwise -> TransitionEffect (default Fade/shared).
+    // Per op: Fragment Transition API (highest) > custom anim (R.anim) > default Fade/shared.
     for(Operation* op : operations){
         Fragment* f = op->mFragment;
         if(!f || !f->mView) continue;
         bool enter = (op->mFinalState == Operation::State::VISIBLE);
-        Context* ctx = f->getContext();
-        Animation* anim = ctx ? FragmentAnim::loadAnimation(ctx, f, enter, isPop) : nullptr;
-        if(anim){
-            op->addEffect(new AnimationEffect(op, anim));
+        // Priority 1: Fragment Transition (enterTransition/exitTransition/reenter/return).
+        Transition* fragTrans = nullptr;
+        if(enter){
+            fragTrans = isPop ? (f->mReenterTransition ? f->mReenterTransition : f->mEnterTransition)
+                              : f->mEnterTransition;
         } else {
-            Transition* t = (op->mFinalState == Operation::State::REMOVED)
-                ? FragmentTransitionImpl::makeExitTransition()
-                : FragmentTransitionImpl::makeEnterTransition({});
-            op->addEffect(new TransitionEffect(op, t));
+            fragTrans = isPop ? (f->mReturnTransition ? f->mReturnTransition : f->mExitTransition)
+                              : f->mExitTransition;
+        }
+        if(fragTrans){
+            op->addEffect(new TransitionEffect(op, fragTrans->clone()));
+        } else {
+            // Priority 2: custom anim (R.anim) — legacy Animation.
+            Context* ctx = f->getContext();
+            Animation* anim = ctx ? FragmentAnim::loadAnimation(ctx, f, enter, isPop) : nullptr;
+            if(anim){
+                op->addEffect(new AnimationEffect(op, anim));
+            } else {
+                // Priority 3: default Fade / shared element Transition.
+                Transition* t = (op->mFinalState == Operation::State::REMOVED)
+                    ? FragmentTransitionImpl::makeExitTransition()
+                    : FragmentTransitionImpl::makeEnterTransition({});
+                op->addEffect(new TransitionEffect(op, t));
+            }
         }
         // Ensure the container change (addView/removeView) applies via applyState on completion.
         op->addCompletionListener([this, op](){ applyContainerChangesToOperation(op); });
@@ -61,8 +77,10 @@ void AnimationEffect::onCommit(ViewGroup* container){
         view->startAnimation(animClone);
         mOperation->completeEffect(this);
     } else {
-        // remove: complete on animation end; defer completeEffect via post so we don't delete the
-        // Effect while still inside its own onAnimationEnd callback.
+        // remove: let the animation play while the view is still attached (don't removeView in
+        // commitEffects — set isAwaitingContainerChanges=false). onAnimationEnd removes the view
+        // + completes. This mirrors androidx EndViewTransitionAnimation (view stays until anim ends).
+        mOperation->mIsAwaitingContainerChanges = false;
         Animation::AnimationListener lst;
         ViewGroup* cont = container;
         auto* op = mOperation;
