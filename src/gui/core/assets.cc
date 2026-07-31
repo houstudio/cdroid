@@ -442,8 +442,18 @@ int Assets::getId(const std::string&resname)const {
     std::string resid,pkg;
     std::string key = resname;
     if(key.empty())return -1;
-    if(key.length()&&(key.find('/')==std::string::npos))
-        return TextUtils::strtol(key);
+    if(key.length()&&(key.find('/')==std::string::npos)) {
+        // Bare value (no '/'): a pure numeric id ("42") or a bare name ("cs_prev", "parent").
+        // strtol resolves numerics; a bare name is resolved as an id reference against the id table
+        // (Android Resources.getIdentifier(name,"id",pkg)). Falling back to strtol (==0) when the
+        // name is unregistered preserves the legacy "parent" -> PARENT_ID(0) convention — otherwise
+        // a bare name strtol()d to 0 and every MotionScene ConstraintSet id collided at 0.
+        char* endP = nullptr;
+        const long v = std::strtol(key.c_str(), &endP, 10);
+        if (*endP == '\0') return (int)v;            // whole string consumed → pure numeric
+        const int rid = getId("@id/" + key);         // bare name → id table via the prefixed path
+        return (rid != -1) ? rid : (int)v;           // unregistered → strtol fallback (parent -> 0)
+    }
     auto pos = key.find('+');
     if(pos != std::string::npos)
         key.erase(pos,1);

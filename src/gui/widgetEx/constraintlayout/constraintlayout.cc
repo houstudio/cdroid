@@ -367,6 +367,29 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         return (it != mIdToWidget.end()) ? it->second : nullptr;
     };
 
+    // MATCH_PARENT fills the parent: a match_parent dimension with NO explicit constraint on that
+    // axis is implicitly pinned to the parent's opposite sides. AndroidX ConstraintLayout does the
+    // same (a match_parent child is wired to the parent edges — see androidx/constraintlayout#231),
+    // modelling it as MATCH_CONSTRAINT plus parent anchors. Without this a 0dp helper such as Flow
+    // that omits left/right collapses to width 0, so Flow.measure() sees max=0 and scatters its
+    // referenced views into one-per-row chains off-screen.
+    const bool noHorizontalAnchor = lp->leftToLeft == LayoutParams::UNSET
+            && lp->leftToRight == LayoutParams::UNSET && lp->rightToLeft == LayoutParams::UNSET
+            && lp->rightToRight == LayoutParams::UNSET && lp->startToStart == LayoutParams::UNSET
+            && lp->startToEnd == LayoutParams::UNSET && lp->endToStart == LayoutParams::UNSET
+            && lp->endToEnd == LayoutParams::UNSET;
+    if (lp->width == LayoutParams::MATCH_PARENT && noHorizontalAnchor) {
+        widget->mLeft.connect(&mLayoutWidget.mLeft, 0);
+        widget->mRight.connect(&mLayoutWidget.mRight, 0);
+    }
+    const bool noVerticalAnchor = lp->topToTop == LayoutParams::UNSET
+            && lp->topToBottom == LayoutParams::UNSET && lp->bottomToTop == LayoutParams::UNSET
+            && lp->bottomToBottom == LayoutParams::UNSET;
+    if (lp->height == LayoutParams::MATCH_PARENT && noVerticalAnchor) {
+        widget->mTop.connect(&mLayoutWidget.mTop, 0);
+        widget->mBottom.connect(&mLayoutWidget.mBottom, 0);
+    }
+
     // Resolve effective Left/Right anchors. Per AndroidX LayoutParams.resolveLayoutDirection
     // (ConstraintLayout.java:3834-3922): Start/End take precedence over Left/Right — if ANY Start/End
     // anchor is set, Left/Right is ignored entirely; only when NO Start/End is present do Left/Right
