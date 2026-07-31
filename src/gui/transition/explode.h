@@ -27,6 +27,14 @@ class Explode: public Visibility {
     Animator* onDisappear(ViewGroup* sceneRoot, View* view,
                           TransitionValues* startValues, TransitionValues* endValues) override;
 
+    // TransitionManager clones the transition before running it; without this override the clone
+    // loses the Explode type and onAppear/onDisappear never run (same issue Slide/Fade had).
+    Explode* clone() const override {
+        Explode* c = new Explode(*this);
+        copyCloneFields(c);
+        return c;
+    }
+
   protected:
     void captureStartValues(TransitionValues& transitionValues) override;
     void captureEndValues(TransitionValues& transitionValues) override;

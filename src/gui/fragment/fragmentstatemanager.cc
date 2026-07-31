@@ -3,9 +3,9 @@
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmenttransitionimpl.h>
-#include <animation/animation.h>
-#include <animation/animationutils.h>
 #include <transition/transitionmanager.h>
+#include <transition/slide.h>
+#include <view/gravity.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -27,6 +27,16 @@ static int maxStateToInt(lifecycle::Lifecycle::State s){
         case L::DESTROYED:   return Fragment::INITIALIZING; // -1
     }
     return Fragment::RESUMED;
+}
+
+// Infer a Slide edge from a custom anim name (e.g. "slide_in_right" -> RIGHT). Falls back to
+// defEdge so callers can pick a sensible default (enter=RIGHT, exit=LEFT).
+static int animEdge(const std::string& anim, int defEdge){
+    if(anim.find("_right") != std::string::npos) return Gravity::RIGHT;
+    if(anim.find("_left")  != std::string::npos) return Gravity::LEFT;
+    if(anim.find("_up")    != std::string::npos) return Gravity::TOP;
+    if(anim.find("_down")  != std::string::npos) return Gravity::BOTTOM;
+    return defEdge;
 }
 
 FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
@@ -84,10 +94,13 @@ void FragmentStateManager::stepUp(){
                         cdroid::LayoutParams::MATCH_PARENT, cdroid::LayoutParams::MATCH_PARENT));
                 }
                 if(!mFragment->mEnterAnim.empty()){
-                    // Custom enter animation (setCustomAnimations): load + View.startAnimation.
+                    // Custom enter anim: drive via a Slide transition so beginDelayedTransition
+                    // captures the addView as a state change (the new view slides in from the
+                    // edge) — avoids the one-frame flash of the view at its final position that
+                    // View.startAnimation would show. Edge direction is inferred from the anim name.
+                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
+                        new Slide(animEdge(mFragment->mEnterAnim, Gravity::RIGHT)));
                     mFragment->mContainer->addView(mFragment->mView);
-                    Animation* a = AnimationUtils::loadAnimation(mFragment->getContext(), mFragment->mEnterAnim);
-                    if(a) mFragment->mView->startAnimation(a);
                 } else {
                     // Default / shared-element Transition path.
                     SharedElementMapping shared;
@@ -133,18 +146,11 @@ void FragmentStateManager::stepDown(){
         case Fragment::VIEW_CREATED:
             if(mFragment->mView && mFragment->mContainer){
                 if(!mFragment->mExitAnim.empty()){
-                    // Custom exit animation: play it, then remove the view on completion.
-                    Animation* a = AnimationUtils::loadAnimation(mFragment->getContext(), mFragment->mExitAnim);
-                    if(a){
-                        cdroid::ViewGroup* cont = mFragment->mContainer;
-                        cdroid::View* view = mFragment->mView;
-                        Animation::AnimationListener lst;
-                        lst.onAnimationEnd = [cont, view](Animation&){ cont->removeView(view); };
-                        a->setAnimationListener(lst);
-                        mFragment->mView->startAnimation(a);
-                    } else {
-                        mFragment->mContainer->removeView(mFragment->mView);
-                    }
+                    // Custom exit anim: Slide transition captures the removeView (slides out
+                    // toward the edge), no flash.
+                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
+                        new Slide(animEdge(mFragment->mExitAnim, Gravity::LEFT)));
+                    mFragment->mContainer->removeView(mFragment->mView);
                 } else {
                     TransitionManager::beginDelayedTransition(mFragment->mContainer,
                         FragmentTransitionImpl::makeExitTransition());
