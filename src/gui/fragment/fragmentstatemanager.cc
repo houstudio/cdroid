@@ -3,9 +3,8 @@
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <fragment/defaultspecialeffectscontroller.h>
 #include <transition/transitionmanager.h>
-#include <transition/slide.h>
-#include <view/gravity.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <view/layoutinflater.h>
@@ -29,18 +28,21 @@ static int maxStateToInt(lifecycle::Lifecycle::State s){
     return Fragment::RESUMED;
 }
 
-// Infer a Slide edge from a custom anim name (e.g. "slide_in_right" -> RIGHT). Falls back to
-// defEdge so callers can pick a sensible default (enter=RIGHT, exit=LEFT).
-static int animEdge(const std::string& anim, int defEdge){
-    if(anim.find("_right") != std::string::npos) return Gravity::RIGHT;
-    if(anim.find("_left")  != std::string::npos) return Gravity::LEFT;
-    if(anim.find("_up")    != std::string::npos) return Gravity::TOP;
-    if(anim.find("_down")  != std::string::npos) return Gravity::BOTTOM;
-    return defEdge;
-}
-
 FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
     : mFragmentManager(fm), mFragment(f){
+}
+
+SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
+    if(!mFragment || !mFragment->mContainer) return nullptr;
+    // One DefaultSpecialEffectsController per container, cached on the container's tag.
+    static const int SEC_TAG = 0x7F0D0001; // arbitrary unique tag key
+    cdroid::View* tagView = mFragment->mContainer;
+    SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG));
+    if(!sec){
+        sec = new DefaultSpecialEffectsController(mFragment->mContainer);
+        tagView->setTag(SEC_TAG, sec);
+    }
+    return sec;
 }
 
 int FragmentStateManager::computeExpectedState(){
@@ -49,9 +51,22 @@ int FragmentStateManager::computeExpectedState(){
     int maxState = mFragmentManagerState;
     // Cap by the fragment's max lifecycle (setMaxLifecycle).
     maxState = std::min(maxState, maxStateToInt(mFragment->mMaxState));
-    // Fragments not currently added sit at no higher than CREATED. (int) cast avoids
-    // ODR-using the static const int (passed by reference to std::min).
+    // Fragments not currently added sit at no higher than CREATED.
     if(!mFragment->mAdded) maxState = std::min(maxState, (int)Fragment::CREATED);
+    // SpecialEffectsController awaiting-effect clamp (androidx :220-240):
+    // A fragment mid-add-effect can't pass AWAITING_ENTER_EFFECTS; mid-remove can't drop below
+    // AWAITING_EXIT_EFFECTS. This is what freezes the fragment while its Animation/Transition runs.
+    if(mFragment->mContainer){
+        SpecialEffectsController* sec = getSpecialEffectsController();
+        if(sec){
+            int impact = sec->getAwaitingCompletionLifecycleImpact(this);
+            if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::ADDING){
+                maxState = std::min(maxState, (int)Fragment::AWAITING_ENTER_EFFECTS);
+            } else if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::REMOVING){
+                maxState = std::max(maxState, (int)Fragment::AWAITING_EXIT_EFFECTS);
+            }
+        }
+    }
     return maxState;
 }
 
@@ -93,24 +108,24 @@ void FragmentStateManager::stepUp(){
                     mFragment->mView->setLayoutParams(new cdroid::LayoutParams(
                         cdroid::LayoutParams::MATCH_PARENT, cdroid::LayoutParams::MATCH_PARENT));
                 }
-                if(!mFragment->mEnterAnim.empty()){
-                    // Custom enter anim: drive via a Slide transition so beginDelayedTransition
-                    // captures the addView as a state change (the new view slides in from the
-                    // edge) — avoids the one-frame flash of the view at its final position that
-                    // View.startAnimation would show. Edge direction is inferred from the anim name.
-                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                        new Slide(animEdge(mFragment->mEnterAnim, Gravity::RIGHT)));
-                    mFragment->mContainer->addView(mFragment->mView);
-                } else {
-                    // Default / shared-element Transition path.
-                    SharedElementMapping shared;
-                    if(!mFragmentManager->mPendingSharedNames.empty()){
-                        for(const std::string& name : mFragmentManager->mPendingSharedNames){
-                            cdroid::View* target = FragmentManager::findViewByTransitionName(mFragment->mView, name);
-                            if(target) shared[name] = target;
-                        }
-                        mFragmentManager->mPendingSharedNames.clear();
+                // Resolve shared-element targets for the entering fragment (by transitionName).
+                SharedElementMapping shared;
+                if(!mFragmentManager->mPendingSharedNames.empty()){
+                    for(const std::string& name : mFragmentManager->mPendingSharedNames){
+                        cdroid::View* target = FragmentManager::findViewByTransitionName(mFragment->mView, name);
+                        if(target) shared[name] = target;
                     }
+                    mFragmentManager->mPendingSharedNames.clear();
+                }
+                // SEC: enqueue add + execute. The controller's collectEffects picks Animation
+                // (custom anim) or Transition (default/shared); commit applies the addView via
+                // Operation.applyState (delayed → no flash).
+                SpecialEffectsController* sec = getSpecialEffectsController();
+                if(sec){
+                    sec->enqueueAdd((int)cdroid::View::VISIBLE, this);
+                    sec->executePendingOperations();
+                } else {
+                    // Fallback (no container tag): direct addView + default transition.
                     TransitionManager::beginDelayedTransition(mFragment->mContainer,
                         FragmentTransitionImpl::makeEnterTransition(shared));
                     mFragment->mContainer->addView(mFragment->mView);
@@ -145,12 +160,13 @@ void FragmentStateManager::stepDown(){
             mFragment->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
         case Fragment::VIEW_CREATED:
             if(mFragment->mView && mFragment->mContainer){
-                if(!mFragment->mExitAnim.empty()){
-                    // Custom exit anim: Slide transition captures the removeView (slides out
-                    // toward the edge), no flash.
-                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                        new Slide(animEdge(mFragment->mExitAnim, Gravity::LEFT)));
-                    mFragment->mContainer->removeView(mFragment->mView);
+                // SEC: enqueue remove + execute. collectEffects picks Animation (custom exit
+                // anim) or Transition (default Fade); commit applies the removeView via
+                // Operation.applyState (deferred → no flash).
+                SpecialEffectsController* sec = getSpecialEffectsController();
+                if(sec){
+                    sec->enqueueRemove(this);
+                    sec->executePendingOperations();
                 } else {
                     TransitionManager::beginDelayedTransition(mFragment->mContainer,
                         FragmentTransitionImpl::makeExitTransition());

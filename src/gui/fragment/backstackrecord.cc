@@ -97,22 +97,14 @@ void BackStackRecord::executePopOps(){
     for(auto it = mOps.rbegin(); it != mOps.rend(); ++it){
         Fragment* f = it->mFragment;
         if(!f) continue;
-        // Pop direction: swap popEnter/popExit into the mEnterAnim/mExitAnim slots so the FSM
-        // (which reads those two) plays the pop animations (androidx executePopOps semantics).
-        if(it->mCmd >= OP_ADD && it->mCmd <= OP_ATTACH){
-            f->setAnimations(it->mPopEnterAnim, it->mPopExitAnim, it->mEnterAnim, it->mExitAnim);
-        }
+        // Pop direction: SEC FragmentAnim.getNextAnim(isPop=true) reads mPopEnterAnim/mPopExitAnim
+        // directly (set by executeOps above), so no anim swap needed here anymore.
         switch(it->mCmd){
             case OP_ADD:    mManager->removeFragment(f); break;
             case OP_REMOVE: mManager->addFragment(f, false); break;
             case OP_REPLACE: {
-                // Reverse of executeOps REPLACE: destroy the new fragment (popExit), restore the
-                // old one (popEnter). oldFragment isn't op.mFragment, so swap it explicitly.
                 if(f) mManager->removeFragment(f);
-                if(it->mOldFragment){
-                    it->mOldFragment->setAnimations(it->mPopEnterAnim, it->mPopExitAnim, it->mEnterAnim, it->mExitAnim);
-                    mManager->unretainFragment(it->mOldFragment);
-                }
+                if(it->mOldFragment) mManager->unretainFragment(it->mOldFragment);
                 break;
             }
             case OP_HIDE:   mManager->showFragment(f); break;

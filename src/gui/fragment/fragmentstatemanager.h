@@ -16,6 +16,7 @@ namespace fragment{
 
 class Fragment;
 class FragmentManager;
+class SpecialEffectsController;
 
 class FragmentStateManager{
 public:
@@ -43,6 +44,7 @@ private:
     bool mMovingToState = false;    // re-entrancy guard (androidx FragmentStateManager.mMovingToState)
     void stepUp();
     void stepDown();
+    SpecialEffectsController* getSpecialEffectsController();
 };
 
 }}//namespace fragment::cdroid
