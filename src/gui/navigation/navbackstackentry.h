@@ -36,6 +36,8 @@ public:
     Bundle* getArguments() const { return mArguments; }
 
     void handleLifecycleEvent(lifecycle::Lifecycle::Event event);
+    // Drive the LifecycleRegistry straight to `s` (state-based; used by updateBackStackLifecycle).
+    void setCurrentState(lifecycle::Lifecycle::State s);
     lifecycle::Lifecycle::State getMaxLifecycle() const { return mMaxLifecycle; }
     void setMaxLifecycle(lifecycle::Lifecycle::State s){ mMaxLifecycle = s; }
 

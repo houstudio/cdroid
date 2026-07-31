@@ -43,6 +43,9 @@ public:
     void setStartDestination(int startDestId);
     const std::string& getStartDestinationRoute() const { return mStartDestinationRoute; }
     void setStartDestination(const std::string& route) { mStartDestinationRoute = route; }
+    // graph -> graph.startDest -> startDest.startDest -> ... until non-graph (androidx childHierarchy,
+    // used by singleTop when the target is itself a NavGraph).
+    std::vector<NavDestination*> childHierarchy();
 };
 
 class NavGraph::Iterator {

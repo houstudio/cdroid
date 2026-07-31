@@ -208,6 +208,21 @@ NavDestination* NavGraph::findNode(const std::string& route, bool searchParents)
         : (searchParents && getParent() ? getParent()->findNode(route) : nullptr);
 }
 
+std::vector<NavDestination*> NavGraph::childHierarchy(){
+    // graph -> graph.startDest -> startDest.startDest -> ... until a non-graph leaf.
+    std::vector<NavDestination*> chain;
+    NavGraph* g = this;
+    chain.push_back(g);
+    while(g){
+        const std::string& route = g->getStartDestinationRoute();
+        NavDestination* start = route.empty() ? nullptr : g->findNode(route);
+        if(!start) break;
+        chain.push_back(start);
+        g = dynamic_cast<NavGraph*>(start);
+    }
+    return chain;
+}
+
 NavGraph::Iterator::Iterator(NavGraph*g,int iter):mGraph(g){
     mIter=iter;
 }
@@ -224,7 +239,8 @@ NavGraph::Iterator NavGraph::Iterator::operator++(int) {
 }
 
 std::pair<int, NavDestination*> NavGraph::Iterator::operator*() const {
-    return {mIter,mGraph->mNodes.get(mIter)};
+    // mIter is a positional index (0..size), NOT a key — use valueAt/keyAt, not get(key).
+    return {mGraph->mNodes.keyAt(mIter), mGraph->mNodes.valueAt(mIter)};
 }
 
 bool NavGraph::Iterator::operator!=(const Iterator& other) const {

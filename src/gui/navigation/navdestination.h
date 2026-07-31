@@ -36,6 +36,8 @@ public:
     virtual void onInflate(Context* context, const AttributeSet& attrs);
     void setParent(NavGraph* parent);
     NavGraph* getParent();
+    // Ancestor chain self -> root (androidx NavDestination.hierarchy).
+    std::vector<NavDestination*> hierarchy();
     int getId() const;
     void setId(int id);
     void setLabel(const std::string& label);

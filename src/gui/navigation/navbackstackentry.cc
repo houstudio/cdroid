@@ -44,4 +44,8 @@ void NavBackStackEntry::handleLifecycleEvent(lifecycle::Lifecycle::Event event){
     mLifecycleRegistry->handleLifecycleEvent(event);
 }
 
+void NavBackStackEntry::setCurrentState(lifecycle::Lifecycle::State s){
+    mLifecycleRegistry->setCurrentState(s);
+}
+
 }//namespace cdroid

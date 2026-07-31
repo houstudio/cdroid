@@ -8,6 +8,7 @@
  *********************************************************************************/
 #include <vector>
 #include <string>
+#include <unordered_map>
 #include <lifecycle/lifecycle.h>
 #include <lifecycle/lifecycleowner.h>
 #include <lifecycle/viewmodelstore.h>
@@ -75,6 +76,15 @@ private:
 
     void navigate(NavDestination* node, Bundle* args, NavOptions* navOptions);
     void dispatchOnDestinationChanged(NavDestination* destination, Bundle* args);
+    // V2 nested-graph back stack (androidx NavControllerImpl.addEntryToBackStack etc.).
+    void addEntryToBackStack(NavDestination* node, Bundle* args, NavBackStackEntry* leafEntry);
+    void popEntryFromBackStack(NavBackStackEntry* entry);
+    void updateBackStackLifecycle();
+    void linkChildToParent(NavBackStackEntry* child, NavBackStackEntry* parent);
+    NavBackStackEntry* unlinkChildFromParent(NavBackStackEntry* child);
+    NavBackStackEntry* findBackStackEntry(int destinationId);
+    std::unordered_map<NavBackStackEntry*, NavBackStackEntry*> mChildToParent;
+    std::unordered_map<NavBackStackEntry*, int> mParentToChildCount;
 };
 
 }//namespace cdroid
