@@ -6,6 +6,8 @@ SET(FRAGMENT_SOURCES
     fragment/fragment.cc
     fragment/fragmentmanager.cc
     fragment/fragmentstatemanager.cc
+    fragment/specialeffectscontroller.cc
+    fragment/defaultspecialeffectscontroller.cc
     fragment/fragmenttransaction.cc
     fragment/backstackrecord.cc
     fragment/fragmentactivity.cc
