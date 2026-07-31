@@ -72,6 +72,10 @@ void BackStackRecord::executeOps(){
             case OP_SHOW:   mManager->showFragment(f); break;
             case OP_DETACH: mManager->detachFragment(f); break;
             case OP_ATTACH: mManager->attachFragment(f); break;
+            case OP_SET_MAX_LIFECYCLE:
+                op.mOldMaxState = f->mMaxState;              // save for pop restore (androidx)
+                mManager->setMaxLifecycle(f, op.mCurrentMaxState);
+                break;
             default: break;
         }
     }
@@ -95,6 +99,9 @@ void BackStackRecord::executePopOps(){
             case OP_SHOW:   mManager->hideFragment(f); break;
             case OP_DETACH: mManager->attachFragment(f); break;
             case OP_ATTACH: mManager->detachFragment(f); break;
+            case OP_SET_MAX_LIFECYCLE:
+                mManager->setMaxLifecycle(f, it->mOldMaxState); // restore prior ceiling on pop
+                break;
             default: break;
         }
     }
