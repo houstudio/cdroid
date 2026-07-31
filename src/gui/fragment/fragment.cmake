@@ -5,6 +5,7 @@ SET(FRAGMENT_SOURCES
     fragment/fragmentmanagerviewmodel.cc
     fragment/fragment.cc
     fragment/fragmentmanager.cc
+    fragment/fragmentstatemanager.cc
     fragment/fragmenttransaction.cc
     fragment/backstackrecord.cc
     fragment/fragmentactivity.cc

@@ -22,6 +22,7 @@ class FragmentContainer;
 class FragmentFactory;
 class FragmentTransaction;
 class BackStackRecord;
+class FragmentStateManager;
 
 class FragmentManager{
 public:
@@ -86,6 +87,9 @@ public:
     void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
 
 private:
+    friend class FragmentStateManager; // FSM drives the per-fragment state machine
+    std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
+    FragmentStateManager* getOrCreateStateManager(Fragment* f);
     FragmentHostCallback* mHost = nullptr;
     FragmentContainer* mContainer = nullptr;
     Fragment* mParent = nullptr;
