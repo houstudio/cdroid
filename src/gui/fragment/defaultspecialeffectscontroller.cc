@@ -52,25 +52,28 @@ void AnimationEffect::onCommit(ViewGroup* container){
     Fragment* f = mOperation->mFragment;
     if(!f || !f->mView || !mAnimation){ mOperation->completeEffect(this); return; }
     cdroid::View* view = f->mView;
+    // Clone for the View: View::setAnimation deletes the previous animation, so we must hand it
+    // its own copy; the original mAnimation is owned by this Effect (deleted in dtor).
+    Animation* animClone = mAnimation->clone();
     if(mOperation->mFinalState != SpecialEffectsController::Operation::State::REMOVED){
         // add/show: complete immediately (cannot attach an end listener without clobbering the
         // fragment's own; per androidx AnimationEffect.onCommit).
-        view->startAnimation(mAnimation);
+        view->startAnimation(animClone);
         mOperation->completeEffect(this);
     } else {
         // remove: complete on animation end; defer completeEffect via post so we don't delete the
-        // Animation while still inside its own onAnimationEnd callback.
+        // Effect while still inside its own onAnimationEnd callback.
         Animation::AnimationListener lst;
         ViewGroup* cont = container;
-        auto* op = mOperation;   // SpecialEffectsController::Operation*
-        auto* self = this;       // AnimationEffect* (= SpecialEffectsController::Effect*)
+        auto* op = mOperation;
+        auto* self = this;
         cdroid::View* v = view;
         lst.onAnimationEnd = [cont, v, op, self](Animation&){
             if(v->getParent()) cont->removeView(v);
             cont->post([op, self](){ op->completeEffect(self); });
         };
-        mAnimation->setAnimationListener(lst);
-        view->startAnimation(mAnimation);
+        animClone->setAnimationListener(lst);
+        view->startAnimation(animClone);
     }
 }
 
