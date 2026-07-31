@@ -470,6 +470,35 @@ bool ConstraintWidget::isResolvedVertically() const {
     return mResolvedVertical || (mTop.hasFinalValue() && mBottom.hasFinalValue());
 }
 
+bool ConstraintWidget::hasDanglingDimension(int orientation) const {
+    if (orientation == HORIZONTAL) {
+        int horizontalTargets =
+                (mLeft.mTarget != nullptr ? 1 : 0) + (mRight.mTarget != nullptr ? 1 : 0);
+        return horizontalTargets < 2;
+    } else {
+        int verticalTargets = (mTop.mTarget != nullptr ? 1 : 0)
+                + (mBottom.mTarget != nullptr ? 1 : 0) + (mBaseline.mTarget != nullptr ? 1 : 0);
+        return verticalTargets < 2;
+    }
+}
+
+bool ConstraintWidget::hasResolvedTargets(int orientation, int size) const {
+    if (orientation == HORIZONTAL) {
+        if (mLeft.mTarget != nullptr && mLeft.mTarget->hasFinalValue()
+                && mRight.mTarget != nullptr && mRight.mTarget->hasFinalValue()) {
+            return ((mRight.mTarget->getFinalValue() - mRight.getMargin())
+                    - (mLeft.mTarget->getFinalValue() + mLeft.getMargin())) >= size;
+        }
+    } else {
+        if (mTop.mTarget != nullptr && mTop.mTarget->hasFinalValue()
+                && mBottom.mTarget != nullptr && mBottom.mTarget->hasFinalValue()) {
+            return ((mBottom.mTarget->getFinalValue() - mBottom.getMargin())
+                    - (mTop.mTarget->getFinalValue() + mTop.getMargin())) >= size;
+        }
+    }
+    return false;
+}
+
 void ConstraintWidget::setFinalHorizontal(int x1, int x2) {
     if (mResolvedHorizontal) {
         return;

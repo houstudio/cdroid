@@ -52,6 +52,7 @@ class Guideline : public ConstraintWidget {
     void copy(ConstraintWidget* src,
               std::unordered_map<ConstraintWidget*, ConstraintWidget*>& map) override;
     bool allowedInBarrier() const override;
+    bool isGuideline() const override { return true; }
 
     int getRelativeBehaviour() const;
     void setOrientation(int orientation);

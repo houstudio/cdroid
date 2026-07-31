@@ -222,6 +222,7 @@ class ConstraintWidget {
     virtual bool allowedInBarrier() const;
     virtual bool isBarrier() const; // Barrier (Stage 5) overrides to true
     virtual bool isVirtualLayout() const; // VirtualLayout (Flow/Layer) overrides to true
+    virtual bool isGuideline() const { return false; } // Guideline overrides to true (Java: instanceof Guideline)
     bool isInBarrier(int orientation) const;
     void setIsInBarrier(int orientation, bool value);
     // Pulled into a Placeholder (the content view's widget is flagged so it is treated as gone at
@@ -245,6 +246,21 @@ class ConstraintWidget {
     void setFinalBaseline(int baselineValue);
     // Clear final-resolution state on every anchor (Java: resetFinalResolution).
     void resetFinalResolution();
+
+    // --- Direct fast-path support (read by Direct.solveChain) ---
+    // Bias percent getters (members mHorizontalBiasPercent/mVerticalBiasPercent declared below).
+    float getHorizontalBiasPercent() const { return mHorizontalBiasPercent; }
+    float getVerticalBiasPercent() const { return mVerticalBiasPercent; }
+    // Solving-pass done flags: prevent re-resolving a widget Direct already placed.
+    bool isHorizontalSolvingPassDone() const { return mHorizontalSolvingPass; }
+    bool isVerticalSolvingPassDone() const { return mVerticalSolvingPass; }
+    void markHorizontalSolvingPassDone() { mHorizontalSolvingPass = true; }
+    void markVerticalSolvingPassDone() { mVerticalSolvingPass = true; }
+    void resetSolvingPassFlag() { mHorizontalSolvingPass = false; mVerticalSolvingPass = false; }
+    // Fewer than two connected targets on the axis? (Java ConstraintWidget:251)
+    bool hasDanglingDimension(int orientation) const;
+    // Both opposite targets final with room >= size? (Java ConstraintWidget:264)
+    bool hasResolvedTargets(int orientation, int size) const;
 
     // --- solver lifecycle (called by ConstraintWidgetContainer driver) ---
     // Base implementations are stubbed; Guideline overrides with real bodies. The full base
@@ -316,6 +332,8 @@ class ConstraintWidget {
     bool         mHasBaseline = false;
     bool         mResolvedHorizontal = false;
     bool         mResolvedVertical = false;
+    bool         mHorizontalSolvingPass = false; // Direct.solveChain re-entrancy guard
+    bool         mVerticalSolvingPass   = false;
     std::string  mDebugName;
     std::string  mType;
     int          mWidthOverride  = -1; // one-shot dimension override consumed in applyConstraints
