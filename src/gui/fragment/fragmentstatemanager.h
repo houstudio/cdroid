@@ -24,6 +24,7 @@ public:
     // computeExpectedState can clamp against it.
     void setFragmentManagerState(int s){ mFragmentManagerState = s; }
     int  getFragmentManagerState() const { return mFragmentManagerState; }
+    Fragment* getFragment() const { return mFragment; }
 
     // androidx FragmentStateManager.computeExpectedState (CDROID subset).
     int  computeExpectedState();
