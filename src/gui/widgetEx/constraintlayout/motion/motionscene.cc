@@ -157,6 +157,17 @@ std::string MotionScene::stripId(const std::string& idString) {
 int MotionScene::getId(const std::string& idString) const {
     if (idString.empty()) return UNSET;
     const std::string name = stripId(idString);
+    // AndroidX: MotionScene ids are R.id, shared with layout XML. Resolve via the host Context's
+    // R.id pool first (the same pool AttributeSet::getResourceId uses), so ids referenced here agree
+    // with ids referenced from layout XML — e.g. Carousel's carousel_nextState. Fall back to a
+    // scene-local id only for names not registered in the R.id pool.
+    if (mMotionLayout != nullptr) {
+        Context* ctx = mMotionLayout->getContext();
+        if (ctx != nullptr) {
+            const int rid = ctx->getId(name);
+            if (rid != -1) return rid;
+        }
+    }
     auto it = mConstraintSetIdMap.find(name);
     if (it != mConstraintSetIdMap.end()) return it->second;
     const int id = mNextLocalId++;
@@ -209,6 +220,13 @@ MotionScene::Transition* MotionScene::findTransition(int startId, int endId) con
         if (t->getStartId() == startId && t->getEndId() == endId) return t.get();
     }
     return nullptr;
+}
+
+std::vector<MotionScene::Transition*> MotionScene::getDefinedTransitions() const {
+    std::vector<Transition*> out;
+    out.reserve(mTransitionList.size());
+    for (const auto& t : mTransitionList) out.push_back(t.get());
+    return out;
 }
 
 bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {

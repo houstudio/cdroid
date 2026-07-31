@@ -192,6 +192,7 @@ void MotionLayout::setProgress(float progress) {
         mScene->autoTransition(this, mCurrentState);
         mInAutoTransition = false;
     }
+    fireTransitionChange(mBeginState, mEndState, mProgress);
 }
 
 void MotionLayout::animateTo(float target) {
@@ -213,8 +214,69 @@ void MotionLayout::animateTo(float target) {
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
     });
+    // Notify listeners once on natural completion (animator reaches its end).
+    Animator::AnimatorListener al;
+    al.onAnimationEnd = [this, target](Animator&, bool) {
+        mProgress = target;
+        if (target <= 0.0f) mCurrentState = mBeginState;
+        else if (target >= 1.0f) mCurrentState = mEndState;
+        if (mCaptured) applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
+        if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
+    };
+    mAnimator->addListener(al);
     mAnimator->start();
+}
+
+void MotionLayout::fireTransitionChange(int startId, int endId, float progress) {
+    for (auto& l : mTransitionListeners) {
+        if (l.onTransitionChange) l.onTransitionChange(this, startId, endId, progress);
+    }
+}
+
+void MotionLayout::fireTransitionCompleted(int currentId) {
+    for (auto& l : mTransitionListeners) {
+        if (l.onTransitionCompleted) l.onTransitionCompleted(this, currentId);
+    }
+}
+
+float MotionLayout::getVelocity() const {
+    if (mStopEngine) return mStopEngine->getVelocity();
+    if (mSpringEngine) return mSpringEngine->getVelocity(0.0f);
+    return 0;
+}
+
+void MotionLayout::rebuildScene() {
+    mCaptured = false;
+    captureAndBuild();
+}
+
+void MotionLayout::touchAnimateTo(int touchUpMode, float progress, float velocity) {
+    if (touchUpMode == TOUCH_UP_DECELERATE_AND_COMPLETE) {
+        // Carry the release momentum, decelerate to rest at the endpoint (Android default on touch-up).
+        animateToWithStopLogic(progress, velocity, /*maxAcceleration*/1.2f, /*maxVelocity*/4.0f);
+    } else {
+        animateTo(progress);
+    }
+}
+
+std::vector<MotionScene::Transition*> MotionLayout::getDefinedTransitions() const {
+    std::vector<MotionScene::Transition*> out;
+    if (mScene) out = mScene->getDefinedTransitions();
+    return out;
+}
+
+MotionScene::Transition* MotionLayout::getTransition(int transitionId) const {
+    return mScene ? mScene->getTransitionById(transitionId) : nullptr;
+}
+
+void MotionLayout::transitionToState(int stateId, int64_t durationMs) {
+    const int64_t saved = mTransitionDuration;
+    mTransitionDuration = durationMs;
+    transitionToState(stateId);
+    mTransitionDuration = saved;
 }
 
 void MotionLayout::animateToWithSpring(float target, float startVelocity,
@@ -241,6 +303,7 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
         if (engine->isStopped()) {
             mProgress = target;
             if (target <= 0.0f) mCurrentState = mBeginState;
@@ -252,6 +315,7 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
                 mScene->autoTransition(this, mCurrentState);
                 mInAutoTransition = false;
             }
+            if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
         }
     });
     mAnimator->start();
@@ -281,6 +345,7 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
         if (engine->isStopped()) {
             mProgress = target;
             if (target <= 0.0f) mCurrentState = mBeginState;
@@ -292,6 +357,7 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
                 mScene->autoTransition(this, mCurrentState);
                 mInAutoTransition = false;
             }
+            if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
         }
     });
     mAnimator->start();
