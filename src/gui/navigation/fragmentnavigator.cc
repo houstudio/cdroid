@@ -15,7 +15,7 @@ NavDestination* FragmentNavigator::createDestination(){
     return new Destination(this);
 }
 
-void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* /*navOptions*/){
+void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* navOptions){
     Destination* d = dynamic_cast<Destination*>(destination);
     LOGD("FragmentNavigator.navigate className='%s' fm=%p containerId=%d",
          d ? d->getClassName().c_str() : "(null)", mFragmentManager, mContainerId);
@@ -26,6 +26,16 @@ void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavO
     if(!fragment) return;
     fragment->setArguments(args ? new Bundle(*args) : nullptr);
     fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
+    // Apply custom animations from NavOptions (androidx FragmentNavigator.kt:534-539).
+    if(navOptions){
+        std::string enter = navOptions->getEnterAnim();
+        std::string exit = navOptions->getExitAnim();
+        std::string popEnter = navOptions->getPopEnterAnim();
+        std::string popExit = navOptions->getPopExitAnim();
+        if(!enter.empty() || !exit.empty() || !popEnter.empty() || !popExit.empty()){
+            t->setCustomAnimations(enter, exit, popEnter, popExit);
+        }
+    }
     t->replace(mContainerId, fragment);
     t->addToBackStack(d->getRoute());
     t->commit();

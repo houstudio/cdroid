@@ -3,6 +3,8 @@
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <animation/animation.h>
+#include <animation/animationutils.h>
 #include <transition/transitionmanager.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
@@ -75,24 +77,31 @@ void FragmentStateManager::stepUp(){
             LOGD("FSM.stepUp CREATED: who=%s mView=%p mContainer=%p",
                  mFragment->mWho.c_str(), mFragment->mView, mFragment->mContainer);
             if(mFragment->mView && mFragment->mContainer){
-                // Resolve shared-element targets (by transitionName) in this entering fragment.
-                SharedElementMapping shared;
-                if(!mFragmentManager->mPendingSharedNames.empty()){
-                    for(const std::string& name : mFragmentManager->mPendingSharedNames){
-                        cdroid::View* target = FragmentManager::findViewByTransitionName(mFragment->mView, name);
-                        if(target) shared[name] = target;
-                    }
-                    mFragmentManager->mPendingSharedNames.clear();
-                }
                 // A fragment view must fill its host container. A programmatically created view
                 // (e.g. NavHostFragment's FrameLayout) carries no LayoutParams — default MATCH_PARENT.
                 if(mFragment->mView->getLayoutParams() == nullptr){
                     mFragment->mView->setLayoutParams(new cdroid::LayoutParams(
                         cdroid::LayoutParams::MATCH_PARENT, cdroid::LayoutParams::MATCH_PARENT));
                 }
-                TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                    FragmentTransitionImpl::makeEnterTransition(shared));
-                mFragment->mContainer->addView(mFragment->mView);
+                if(!mFragment->mEnterAnim.empty()){
+                    // Custom enter animation (setCustomAnimations): load + View.startAnimation.
+                    mFragment->mContainer->addView(mFragment->mView);
+                    Animation* a = AnimationUtils::loadAnimation(mFragment->getContext(), mFragment->mEnterAnim);
+                    if(a) mFragment->mView->startAnimation(a);
+                } else {
+                    // Default / shared-element Transition path.
+                    SharedElementMapping shared;
+                    if(!mFragmentManager->mPendingSharedNames.empty()){
+                        for(const std::string& name : mFragmentManager->mPendingSharedNames){
+                            cdroid::View* target = FragmentManager::findViewByTransitionName(mFragment->mView, name);
+                            if(target) shared[name] = target;
+                        }
+                        mFragmentManager->mPendingSharedNames.clear();
+                    }
+                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
+                        FragmentTransitionImpl::makeEnterTransition(shared));
+                    mFragment->mContainer->addView(mFragment->mView);
+                }
             }
             mFragment->performViewCreated(nullptr);
             mFragment->mState = Fragment::VIEW_CREATED;
@@ -123,9 +132,24 @@ void FragmentStateManager::stepDown(){
             mFragment->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
         case Fragment::VIEW_CREATED:
             if(mFragment->mView && mFragment->mContainer){
-                TransitionManager::beginDelayedTransition(mFragment->mContainer,
-                    FragmentTransitionImpl::makeExitTransition());
-                mFragment->mContainer->removeView(mFragment->mView);
+                if(!mFragment->mExitAnim.empty()){
+                    // Custom exit animation: play it, then remove the view on completion.
+                    Animation* a = AnimationUtils::loadAnimation(mFragment->getContext(), mFragment->mExitAnim);
+                    if(a){
+                        cdroid::ViewGroup* cont = mFragment->mContainer;
+                        cdroid::View* view = mFragment->mView;
+                        Animation::AnimationListener lst;
+                        lst.onAnimationEnd = [cont, view](Animation&){ cont->removeView(view); };
+                        a->setAnimationListener(lst);
+                        mFragment->mView->startAnimation(a);
+                    } else {
+                        mFragment->mContainer->removeView(mFragment->mView);
+                    }
+                } else {
+                    TransitionManager::beginDelayedTransition(mFragment->mContainer,
+                        FragmentTransitionImpl::makeExitTransition());
+                    mFragment->mContainer->removeView(mFragment->mView);
+                }
             }
             mFragment->performDestroyView();
             mFragment->mView = nullptr;

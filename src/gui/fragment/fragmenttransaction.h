@@ -34,10 +34,10 @@ public:
         int mCmd = OP_NULL;
         Fragment* mFragment = nullptr;
         Fragment* mOldFragment = nullptr; // OP_REPLACE: the fragment removed, restored on pop
-        int mEnterAnim = 0;
-        int mExitAnim = 0;
-        int mPopEnterAnim = 0;
-        int mPopExitAnim = 0;
+        std::string mEnterAnim;
+        std::string mExitAnim;
+        std::string mPopEnterAnim;
+        std::string mPopExitAnim;
         // OP_SET_MAX_LIFECYCLE: the new ceiling (and the prior one, restored on pop).
         lifecycle::Lifecycle::State mCurrentMaxState = lifecycle::Lifecycle::State::RESUMED;
         lifecycle::Lifecycle::State mOldMaxState     = lifecycle::Lifecycle::State::RESUMED;
@@ -60,8 +60,9 @@ public:
     FragmentTransaction& addToBackStack(const std::string& name);
     FragmentTransaction& disallowAddToBackStack();
     FragmentTransaction& setReorderingAllowed(bool reorderingAllowed);
-    FragmentTransaction& setCustomAnimations(int enterAnim, int exitAnim,
-                                             int popEnterAnim = 0, int popExitAnim = 0);
+    FragmentTransaction& setCustomAnimations(const std::string& enterAnim, const std::string& exitAnim,
+                                             const std::string& popEnterAnim = std::string(),
+                                             const std::string& popExitAnim = std::string());
     // Declare a shared element (used by shared-element transitions via FragmentTransitionImpl).
     FragmentTransaction& addSharedElement(cdroid::View* sharedElement, const std::string& name);
 
@@ -83,7 +84,7 @@ protected:
     std::string mName;
     bool mReorderingAllowed = false;
     std::vector<SharedElement> mSharedElements;
-    int mEnterAnim = 0, mExitAnim = 0, mPopEnterAnim = 0, mPopExitAnim = 0;
+    std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
 };
 
 }//namespace fragment
