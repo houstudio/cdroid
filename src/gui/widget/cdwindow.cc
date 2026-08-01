@@ -135,26 +135,34 @@ ActionBar* Window::getActionBar(){
     return mActionBar;
 }
 
-bool Window::onCreateOptionsMenu(Menu* /*menu*/){
+bool Window::onCreateOptionsMenu(Menu& /*menu*/){
     return true;
 }
 
-bool Window::onPrepareOptionsMenu(Menu* /*menu*/){
+bool Window::onPrepareOptionsMenu(Menu& /*menu*/){
     return true;
 }
 
-bool Window::onOptionsItemSelected(MenuItem* item){
+bool Window::onOptionsItemSelected(MenuItem& item){
     // Central home -> up dispatch. AOSP does this in Activity.onMenuItemSelected for
     // FEATURE_OPTIONS_PANEL; here it is folded into the options-item handler.
-    if(item && item->getItemId() == R::id::home && mActionBar &&
+    if(item.getItemId() == R::id::home && mActionBar &&
        (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
         return onNavigateUp();
     }
     return false;
 }
 
-bool Window::onNavigateUp(){
+bool Window::onContextItemSelected(MenuItem& /*item*/){
     return false;
+}
+
+bool Window::onNavigateUp(){
+    // CDROID has no manifest parentActivityIntent; the default Up behavior finishes the
+    // activity (mirrors androidx Activity.onNavigateUp -> finish when no parent). Override
+    // in subclasses (e.g. NavController-driven hosts) for custom Up handling.
+    close();
+    return true;
 }
 
 void Window::invalidateOptionsMenu(){

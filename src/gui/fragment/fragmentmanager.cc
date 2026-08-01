@@ -295,6 +295,67 @@ Fragment* FragmentManager::findFragmentByTag(const std::string& tag){
 
 std::vector<Fragment*> FragmentManager::getFragments() const{ return mAdded; }
 
+// --- options-menu dispatch (androidx FragmentManager.dispatch*OptionsMenu) ---
+bool FragmentManager::isParentMenuVisible(Fragment* parent) const{
+    // androidx: parent == null (host Activity) -> true; else parent.isMenuVisible().
+    if(parent == nullptr) return true;
+    return parent->isMenuVisible();
+}
+
+bool FragmentManager::dispatchCreateOptionsMenu(Menu& menu, MenuInflater& inflater){
+    if(mCurState < Fragment::CREATED) return false;
+    bool show = false;
+    std::vector<Fragment*> newMenus;
+    for(Fragment* f : getFragments()){
+        if(f && isParentMenuVisible(f->getParentFragment()) && f->performCreateOptionsMenu(menu, inflater)){
+            show = true;
+            newMenus.push_back(f);
+        }
+    }
+    // Notify fragments that contributed last time but no longer do.
+    for(Fragment* f : mCreatedMenus){
+        bool still = false;
+        for(Fragment* n : newMenus){ if(n == f){ still = true; break; } }
+        if(!still) f->onDestroyOptionsMenu();
+    }
+    mCreatedMenus = newMenus;
+    return show;
+}
+
+bool FragmentManager::dispatchPrepareOptionsMenu(Menu& menu){
+    if(mCurState < Fragment::CREATED) return false;
+    bool show = false;
+    for(Fragment* f : getFragments()){
+        if(f && isParentMenuVisible(f->getParentFragment()) && f->performPrepareOptionsMenu(menu)){
+            show = true;
+        }
+    }
+    return show;
+}
+
+bool FragmentManager::dispatchOptionsItemSelected(MenuItem& item){
+    if(mCurState < Fragment::CREATED) return false;
+    for(Fragment* f : getFragments()){
+        if(f && f->performOptionsItemSelected(item)) return true;
+    }
+    return false;
+}
+
+bool FragmentManager::dispatchContextItemSelected(MenuItem& item){
+    if(mCurState < Fragment::CREATED) return false;
+    for(Fragment* f : getFragments()){
+        if(f && f->performContextItemSelected(item)) return true;
+    }
+    return false;
+}
+
+void FragmentManager::dispatchOptionsMenuClosed(Menu& menu){
+    if(mCurState < Fragment::CREATED) return;
+    for(Fragment* f : getFragments()){
+        if(f) f->performOptionsMenuClosed(menu);
+    }
+}
+
 Fragment* FragmentManager::getPrimaryNavigationFragment() const{
     // MVP: not tracked yet.
     return nullptr;

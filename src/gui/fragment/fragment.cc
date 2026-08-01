@@ -225,5 +225,77 @@ void Fragment::performDetach(){
     onDetach();
 }
 
+// --- options-menu participation (androidx Fragment) ---
+bool Fragment::isMenuVisible() const {
+    return mMenuVisible && (mFragmentManager == nullptr
+           || mFragmentManager->isParentMenuVisible(mParentFragment));
+}
+
+void Fragment::setHasOptionsMenu(bool hasMenu){
+    if(mHasMenu != hasMenu){
+        mHasMenu = hasMenu;
+        // androidx: if(isAdded() && !isHidden()) mHost.onSupportInvalidateOptionsMenu();
+        if(mHost && !mHidden) mHost->onSupportInvalidateOptionsMenu();
+    }
+}
+
+void Fragment::setMenuVisibility(bool menuVisible){
+    if(mMenuVisible != menuVisible){
+        mMenuVisible = menuVisible;
+        if(mHasMenu && mHost && !mHidden) mHost->onSupportInvalidateOptionsMenu();
+    }
+}
+
+bool Fragment::performCreateOptionsMenu(Menu& menu, MenuInflater& inflater){
+    bool show = false;
+    if(!mHidden){
+        if(mHasMenu && mMenuVisible){
+            show = true;
+            onCreateOptionsMenu(menu, inflater);
+        }
+        if(mChildFragmentManager) show |= mChildFragmentManager->dispatchCreateOptionsMenu(menu, inflater);
+    }
+    return show;
+}
+
+bool Fragment::performPrepareOptionsMenu(Menu& menu){
+    bool show = false;
+    if(!mHidden){
+        if(mHasMenu && mMenuVisible){
+            show = true;
+            onPrepareOptionsMenu(menu);
+        }
+        if(mChildFragmentManager) show |= mChildFragmentManager->dispatchPrepareOptionsMenu(menu);
+    }
+    return show;
+}
+
+bool Fragment::performOptionsItemSelected(MenuItem& item){
+    if(!mHidden){
+        if(mHasMenu && mMenuVisible){
+            if(onOptionsItemSelected(item)) return true;
+        }
+        if(mChildFragmentManager) return mChildFragmentManager->dispatchOptionsItemSelected(item);
+    }
+    return false;
+}
+
+bool Fragment::performContextItemSelected(MenuItem& item){
+    if(!mHidden){
+        if(onContextItemSelected(item)) return true;
+        if(mChildFragmentManager) return mChildFragmentManager->dispatchContextItemSelected(item);
+    }
+    return false;
+}
+
+void Fragment::performOptionsMenuClosed(Menu& menu){
+    if(!mHidden){
+        if(mHasMenu && mMenuVisible){
+            onOptionsMenuClosed(menu);
+        }
+        if(mChildFragmentManager) mChildFragmentManager->dispatchOptionsMenuClosed(menu);
+    }
+}
+
 }//namespace fragment
 }//namespace cdroid

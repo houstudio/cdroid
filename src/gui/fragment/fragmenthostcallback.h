@@ -38,6 +38,8 @@ public:
     virtual cdroid::LayoutInflater* onGetLayoutInflater() = 0;
     virtual cdroid::Window* onGetHost() = 0;
     virtual int onGetWindowAnimations() { return 0; }
+    // Host refreshes the options menu (Fragment.setHasOptionsMenu/setMenuVisibility hook here).
+    virtual void onSupportInvalidateOptionsMenu() {}
     // FragmentContainer
     cdroid::View* onFindViewById(int id) override = 0;
     bool onHasView() override = 0;

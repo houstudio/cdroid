@@ -18,6 +18,7 @@
 #include <navigation/navigationui.h>
 #include <navigation/appbarconfiguration.h>
 #include <navigation/navdestination.h>
+#include <widget/actionbar.h>
 #include <widget/toolbar.h>
 #include <view/view.h>
 #include <porting/cdlog.h>
@@ -38,13 +39,27 @@ bool NavigationUI::navigateUp(NavController* navController, AppBarConfiguration*
     return navController->navigateUp();
 }
 
-void NavigationUI::setupActionBarWithNavController(ActionBar* /*actionBar*/,
-                                                   NavController* /*navController*/,
-                                                   AppBarConfiguration* /*configuration*/){
-    // CDROID ActionBar is a shell (no setTitle/setDisplayHomeAsUpEnabled yet). The
-    // destination-changed listener that updates title/Up-arrow is implemented once
-    // ActionBar gains those APIs.
-    LOGD("NavigationUI.setupActionBarWithNavController: ActionBar shell, no-op for now");
+void NavigationUI::setupActionBarWithNavController(ActionBar* actionBar,
+                                                   NavController* navController,
+                                                   AppBarConfiguration* configuration){
+    if(!actionBar || !navController) return;
+    // OnDestinationChangedListener: update the ActionBar title and Up affordance. The Up
+    // button click flows home -> Activity.onOptionsItemSelected -> onNavigateUp; the host
+    // Activity should override onNavigateUp() to call NavigationUI::navigateUp(navController).
+    class ActionBarListener : public NavController::OnDestinationChangedListener{
+        ActionBar* mActionBar;
+        AppBarConfiguration* mConfig;
+    public:
+        ActionBarListener(ActionBar* a, AppBarConfiguration* cfg)
+            : mActionBar(a), mConfig(cfg){}
+        void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override{
+            if(!destination) return;
+            mActionBar->setTitle(destination->getLabel());
+            bool isTopLevel = mConfig && mConfig->isTopLevelDestination(destination->getRoute());
+            mActionBar->setDisplayHomeAsUpEnabled(!isTopLevel);
+        }
+    };
+    navController->addOnDestinationChangedListener(new ActionBarListener(actionBar, configuration));
 }
 
 void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navController,
