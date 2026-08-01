@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Typed argument defaults — port of androidx nav_default_arguments.xml (subset CDROID
+     implements: int/long/float/bool/string/reference; no enum/parcelable/array). -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/nav_args"
+            app:startDestination="@+id/args_test">
+
+    <test android:id="@+id/args_test">
+        <argument android:name="test_int"  app:argType="integer"  android:defaultValue="12" />
+        <argument android:name="test_long" app:argType="long"     android:defaultValue="100L" />
+        <argument android:name="test_float" app:argType="float"    android:defaultValue="3.14" />
+        <argument android:name="test_bool" app:argType="boolean" android:defaultValue="true" />
+        <argument android:name="test_string" app:argType="string" android:defaultValue="abc" />
+        <argument android:name="test_ref"  app:argType="reference" android:defaultValue="0x1" />
+        <argument android:name="test_no_default" app:argType="string" app:nullable="true" />
+    </test>
+
+</navigation>
