@@ -164,7 +164,13 @@ bool NavController::popBackStack(){
     if(mBackStack.empty()) return false;
     NavBackStackEntry* entry = mBackStack.back();
     NavDestination* dest = entry->getDestination();
-    if(dest) dest->getNavigator().popBackStack();
+    // androidx NavControllerImpl.executePopOperations: popEntryFromBackStack() runs only inside the
+    // pop handler — i.e. only when the navigator actually popped (receivedPop). A navigator that
+    // cannot pop (e.g. FragmentNavigator at the root, whose initial fragment is not on the FM back
+    // stack) returns false here; we must NOT remove our own entry, or this back stack and the
+    // navigator's stack desync (and the root gets popped to a blank screen).
+    bool receivedPop = dest ? dest->getNavigator().popBackStack() : false;
+    if(!receivedPop) return false;
     popEntryFromBackStack(entry);
     if(!mBackStack.empty()){
         NavBackStackEntry* top = mBackStack.back();
@@ -182,8 +188,15 @@ bool NavController::popBackStack(const std::string& route, bool inclusive, bool 
     }
     if(targetIndex < 0) return false;
     int end = inclusive ? targetIndex : targetIndex + 1;
-    while((int)mBackStack.size() > end){ popBackStack(); }
-    return true;
+    // androidx executePopOperations: pop each entry via its own navigator and break on the first
+    // one that refuses (!receivedPop). This keeps this back stack and each navigator's stack in
+    // lock-step (no desync) and stops the loop from spinning when a pop cannot advance.
+    bool popped = false;
+    while((int)mBackStack.size() > end){
+        if(!popBackStack()) break;
+        popped = true;
+    }
+    return popped;
 }
 
 bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveState*/){
@@ -194,8 +207,14 @@ bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveS
     }
     if(targetIndex < 0) return false;
     int end = inclusive ? targetIndex : targetIndex + 1;
-    while((int)mBackStack.size() > end){ popBackStack(); }
-    return true;
+    // See popBackStack(route,...): break on the first navigator that refuses so the two stacks
+    // stay in sync and the loop always advances or terminates.
+    bool popped = false;
+    while((int)mBackStack.size() > end){
+        if(!popBackStack()) break;
+        popped = true;
+    }
+    return popped;
 }
 
 bool NavController::navigateUp(){
