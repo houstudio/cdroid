@@ -65,4 +65,12 @@ void NavBackStackEntry::setCurrentState(lifecycle::Lifecycle::State s){
     mLifecycleRegistry->setCurrentState(s);
 }
 
+void NavBackStackEntry::saveState(savedstate::SavedState& out){
+    if(mSavedStateRegistryController) mSavedStateRegistryController->performSave(out);
+}
+
+void NavBackStackEntry::restoreState(const savedstate::SavedState& in){
+    if(mSavedStateRegistryController) mSavedStateRegistryController->performRestore(const_cast<savedstate::SavedState*>(&in));
+}
+
 }//namespace cdroid

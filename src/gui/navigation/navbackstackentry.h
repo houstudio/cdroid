@@ -52,6 +52,9 @@ public:
     NavDestination* getDestination() const { return mDestination; }
     const std::string& getId() const { return mId; }
     Bundle* getArguments() const { return mArguments; }
+    // Save/restore this entry's SavedStateRegistry state (androidx NavBackStackEntryState.savedState).
+    void saveState(savedstate::SavedState& out);
+    void restoreState(const savedstate::SavedState& in);
 
     void handleLifecycleEvent(lifecycle::Lifecycle::Event event);
     // Drive the LifecycleRegistry straight to `s` (state-based; used by updateBackStackLifecycle).
@@ -78,6 +81,7 @@ struct NavBackStackEntryState{
     std::string id;            // the NavBackStackEntry mId (preserved across save/restore)
     int destinationId = 0;     // NavDestination id
     Bundle* arguments = nullptr; // owned copy
+    savedstate::SavedState savedState; // SavedStateRegistry contents (androidx NavBackStackEntryState.savedState)
     NavBackStackEntryState() = default;
     NavBackStackEntryState(const std::string& i, int destId, Bundle* args)
         : id(i), destinationId(destId), arguments(args ? new Bundle(*args) : nullptr){}
