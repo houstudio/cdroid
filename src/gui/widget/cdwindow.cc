@@ -17,6 +17,12 @@
 #include <core/app.h>
 #include <core/looper.h>
 #include <widget/cdwindow.h>
+#include <widget/toolbar.h>
+#include <widget/toolbaractionbar.h>
+#include <widget/R.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
+#include <menu/menuinflater.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
@@ -105,10 +111,59 @@ Window::~Window(){
         mActionMode = nullptr;
         mode->finish();
     }
+    delete mActionBar;
+    delete mMenuInflater;
     delete mSendWindowContentChangedAccessibilityEvent;
     // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
     // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
     LOGD("%p:%d destroied!",this,mID);
+}
+
+// =====================================================================================
+//  ActionBar / Options menu
+// =====================================================================================
+void Window::setActionBar(Toolbar* toolbar){
+    delete mActionBar;
+    // CDROID's Activity plays the AppCompatActivity role: adopting a Toolbar builds a
+    // ToolbarActionBar that bridges it (mirrors androidx AppCompatDelegateImpl +
+    // framework Activity.setActionBar).
+    mActionBar = toolbar ? new ToolbarActionBar(toolbar, getText(), this) : nullptr;
+    if(mActionBar) mActionBar->invalidateOptionsMenu();
+}
+
+ActionBar* Window::getActionBar(){
+    return mActionBar;
+}
+
+bool Window::onCreateOptionsMenu(Menu* /*menu*/){
+    return true;
+}
+
+bool Window::onPrepareOptionsMenu(Menu* /*menu*/){
+    return true;
+}
+
+bool Window::onOptionsItemSelected(MenuItem* item){
+    // Central home -> up dispatch. AOSP does this in Activity.onMenuItemSelected for
+    // FEATURE_OPTIONS_PANEL; here it is folded into the options-item handler.
+    if(item && item->getItemId() == R::id::home && mActionBar &&
+       (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
+        return onNavigateUp();
+    }
+    return false;
+}
+
+bool Window::onNavigateUp(){
+    return false;
+}
+
+void Window::invalidateOptionsMenu(){
+    if(mActionBar) mActionBar->invalidateOptionsMenu();
+}
+
+MenuInflater* Window::getMenuInflater(){
+    if(!mMenuInflater) mMenuInflater = new MenuInflater(getContext());
+    return mMenuInflater;
 }
 
 // =====================================================================================

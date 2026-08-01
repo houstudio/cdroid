@@ -115,6 +115,7 @@ list(APPEND WIDGET_SOURCES
 
     widget/actionbar.cc
     widget/toolbar.cc
+    widget/toolbaractionbar.cc
     widget/toast.cc
 
     widget/plotaxis.cc

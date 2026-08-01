@@ -9,6 +9,11 @@
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
+class ActionBar;
+class Toolbar;
+class Menu;
+class MenuItem;
+class MenuInflater;
 class Window : public FrameLayout {
 protected:
     friend class WindowManager;
@@ -40,6 +45,8 @@ private:
     Rect mRectOfFocusedView;
     AccessibilityManager*mAccessibilityManager;
     ActionMode* mActionMode = nullptr;
+    ActionBar*  mActionBar    = nullptr; // owned; created by setActionBar(Toolbar*)
+    MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
@@ -130,6 +137,27 @@ public:
     virtual void onActive();
     [[deprecated("Use onPause() instead")]]
     virtual void onDeactive();
+
+    // Panel feature id used as an options-menu dispatch sentinel. CDROID does not
+    // model the full requestWindowFeature()/FEATURE_ACTION_BAR theme machinery
+    // (no DecorView); only this id is referenced internally.
+    static constexpr int FEATURE_OPTIONS_PANEL = 0;
+
+    // Adopts toolbar as this Activity's ActionBar (mirrors framework
+    // Activity.setActionBar / androidx AppCompatActivity.setSupportActionBar — CDROID's
+    // Activity plays the AppCompatActivity role). The created ToolbarActionBar is owned
+    // by this Window and freed in ~Window(). Pass nullptr to clear.
+    void setActionBar(Toolbar* toolbar);
+    ActionBar* getActionBar();
+
+    // Options-menu dispatch chain. Override in subclasses to populate / handle items.
+    virtual bool onCreateOptionsMenu(Menu* menu);
+    virtual bool onPrepareOptionsMenu(Menu* menu);
+    virtual bool onOptionsItemSelected(MenuItem* item);
+    virtual bool onNavigateUp();
+    virtual void invalidateOptionsMenu();
+    virtual MenuInflater* getMenuInflater();
+
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;
     void dispatchInvalidateOnAnimation(View* view)override;
