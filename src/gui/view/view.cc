@@ -1538,10 +1538,10 @@ bool View::isNestedScrollingEnabled()const{
 
 void View::postUpdate(const Runnable& r) {
     // Potentially racey from a background thread. It's ok if it's not perfect.
-    /*final Handler h = getHandler();
-    if (h != null) {
-        h.postAtFrontOfQueue(r);
-    }*/
+    Handler* h = getHandler();
+    if (h != nullptr) {
+        h->postAtFrontOfQueue(r);
+    }
 }
 
 void View::updateSystemGestureExclusionRects() {
@@ -8720,6 +8720,13 @@ void View::postOnAnimationDelayed(const Runnable& action, long delayMillis){
     }
 }
 
+Handler* View::getHandler() const{
+    if (mAttachInfo != nullptr) {
+        return mAttachInfo->mHandler;
+    }
+    return nullptr;
+}
+
 HandlerActionQueue* View::getRunQueue() {
     if (mRunQueue == nullptr) {
         mRunQueue = new HandlerActionQueue();
@@ -8728,7 +8735,11 @@ HandlerActionQueue* View::getRunQueue() {
 }
 
 bool View::post(const Runnable& what){
-    return postDelayed(what,0);
+    if(mAttachInfo){
+        return mAttachInfo->mHandler->post(what);
+    }
+    getRunQueue()->post(what);
+    return true;
 }
 
 bool View::postDelayed(const Runnable& what,long delay){
