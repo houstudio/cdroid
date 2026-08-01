@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Port of androidx nav_simple.xml (deepLinks dropped — CDROID's deep-link subsystem is a
+     simplified path-only port). Destinations use the "test" navigator (TestNavigator). -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/nav_root"
+            app:startDestination="@+id/start_test">
+
+    <test android:id="@+id/start_test">
+        <action android:id="@+id/second" app:destination="@+id/second_test" />
+    </test>
+
+    <test android:id="@+id/second_test">
+        <argument android:name="arg2" app:argType="string" app:nullable="true" />
+        <argument android:name="defaultArg" app:argType="string"
+            android:defaultValue="defaultValue" />
+        <action android:id="@+id/self" app:destination="@+id/second_test"
+            app:launchSingleTop="true" />
+        <action android:id="@+id/finish" app:popUpTo="@id/start_test" />
+        <action android:id="@+id/finish_self" app:popUpTo="@+id/second_test"
+            app:popUpToInclusive="true" />
+    </test>
+
+</navigation>

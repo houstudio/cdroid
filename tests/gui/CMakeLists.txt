@@ -16,6 +16,9 @@ include_directories(
 )
 link_directories(${CMAKE_BINARY_DIR}/lib)
 add_executable(gui_test ${SRCS_GUI_TESTS})
+# Pack the test assets (navigation graphs, etc.) into gui_test.pak. App auto-loads
+# <exe-name>.pak (src/gui/core/app.cc), so @navigation/* and idgen IDs become reachable.
+CreatePAK(gui_test ${PROJECT_SOURCE_DIR}/assets ${PROJECT_BINARY_DIR}/gui_test.pak ${PROJECT_SOURCE_DIR}/R.h)
 target_link_libraries(gui_test PRIVATE ${PIXMAN_LIBRAIRES} ${CDROID_DEPLIBS} ${GTEST_LIBRARIES} cdroid tvhal)
 
 install(TARGETS gui_test DESTINATION bin/tests)
