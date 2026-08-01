@@ -41,6 +41,11 @@ public:
     void onResume() override;
     cdroid::View* onCreateView(cdroid::LayoutInflater* inflater, cdroid::ViewGroup* container,
                                cdroid::Bundle* savedInstanceState) override;
+    // Publish/clear this host's NavController on its View (and any id-matching ancestor) so
+    // Navigation::findNavController(view) resolves from any child/sibling (androidx
+    // NavHostFragment.onViewCreated / onDestroyView).
+    void onViewCreated(cdroid::View* view, cdroid::Bundle* savedInstanceState) override;
+    void onDestroyView() override;
     // NavHost
     NavController* getNavController() override { return mNavController; }
 
