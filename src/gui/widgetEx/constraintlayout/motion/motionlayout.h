@@ -45,6 +45,7 @@
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <core/callbackbase.h> // Runnable (for the post() wrapper)
 #include <widgetEx/constraintlayout/core/motion/motion.h>
+#include <view/choreographer.h> // FrameCallback — drives the spring by real frame time
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 
 namespace cdroid {
@@ -221,10 +222,16 @@ class MotionLayout : public ConstraintLayout {
     // Wire a transition's <OnClick> targets to toggle/transition-to-end/start the layout.
     void wireOnClicks(MotionScene::Transition* t);
 
-    // Direction-based transition selection (androidx MotionScene.bestTransitionFor): when a drag
-    // starts while resting at a state shared by several transitions (e.g. a bidirectional Carousel's
-    // rest state), switch to the one whose <OnSwipe> dragDirection best matches the gesture, and
-    // seed its fresh TouchResponse at the current touch point. No-op for single-transition layouts.
+    // Cancel the spring frame-callback loop (remove the posted callback + drop the engine). Called
+    // whenever a new animation or transition supersedes a running spring, and from the dtor.
+    void stopSpringAnimation();
+
+    // Direction-based transition selection (androidx MotionScene.bestTransitionFor /
+    // processTouchEvent): while the layout RESTS at a state (currentState != -1) shared by several
+    // transitions (e.g. a bidirectional Carousel's rest state), switch to the one whose <OnSwipe>
+    // dragDirection best matches the gesture, and seed its fresh TouchResponse at the touch point.
+    // Like Android, picking stops once the drag leaves the endpoint (currentState becomes -1).
+    // No-op for single-transition layouts (best == current, no switch).
     void pickTransitionForDrag(const MotionEvent& evt);
 
     ConstraintSet* mStartSet = nullptr;
@@ -241,6 +248,11 @@ class MotionLayout : public ConstraintLayout {
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;
     std::unique_ptr<SpringStopEngine> mSpringEngine;
+    // The spring is driven by a Choreographer frame callback (real frame time), not a ValueAnimator.
+    // mSpringFrameCallback re-posts itself each frame until isStopped(); mSpringStartNanos is seeded
+    // on the first frame. Mirrors androidx MotionLayout sampling mInterpolator at (frameTime - start).
+    Choreographer::FrameCallback mSpringFrameCallback;
+    int64_t mSpringStartNanos = -1;
     std::unique_ptr<StopLogicEngine> mStopEngine;
     bool mCaptured = false;
     bool mInAutoTransition = false; // guards autoTransition re-entry
@@ -258,10 +270,9 @@ class MotionLayout : public ConstraintLayout {
 
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
     std::unique_ptr<TouchResponse> mTouchResponse;
-    // Touch-down position + "already picked the transition this gesture" flag, for
-    // pickTransitionForDrag (direction-based selection at drag start).
-    float mDownX = 0, mDownY = 0;
-    bool  mDragTransitionPicked = true;
+    // Last touch position (set on DOWN, updated each MOVE) — the per-move drag delta for
+    // pickTransitionForDrag, mirroring MotionScene.mLastTouchX/Y in processTouchEvent.
+    float mLastTouchX = 0, mLastTouchY = 0;
     TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
     std::vector<TransitionListener> mTransitionListeners; // Carousel etc. (AndroidX TransitionListener)
 };
