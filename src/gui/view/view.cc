@@ -1806,7 +1806,7 @@ void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
             throw std::runtime_error("Derived class did not call super.onSaveInstanceState()");
         }
         if (state!=nullptr){
-            LOGI("Freezing %d %p",mID,state);
+            LOGV("Freezing %d %p",mID,state);
             container.put(mID, state);
         }
     }
