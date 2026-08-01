@@ -23,6 +23,9 @@
 #include <menu/menu.h>
 #include <menu/menuitem.h>
 #include <menu/menuinflater.h>
+#include <menu/contextmenubuilder.h>
+#include <menu/contextmenu.h>
+#include <menu/menudialoghelper.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
@@ -172,6 +175,51 @@ void Window::invalidateOptionsMenu(){
 MenuInflater* Window::getMenuInflater(){
     if(!mMenuInflater) mMenuInflater = new MenuInflater(getContext());
     return mMenuInflater;
+}
+
+// =====================================================================================
+//  Context menu
+// =====================================================================================
+bool Window::showContextMenuForChild(View* originalView){
+    if(originalView == nullptr) return false;
+    ContextMenuBuilder* builder = new ContextMenuBuilder(getContext());
+    MenuBuilder::Callback cb;
+    cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
+        return onContextItemSelected(item);
+    };
+    builder->setCallback(cb);
+    // showDialog builds the menu via originalView.createContextMenu (which invokes the
+    // OnCreateContextMenuListener registered by registerForContextMenu -> onCreateContextMenu)
+    // and presents it as a dialog; item selection routes back through the callback above.
+    MenuDialogHelper* helper = builder->showDialog(originalView);
+    return helper != nullptr;
+}
+
+bool Window::showContextMenuForChild(View* originalView, float /*x*/, float /*y*/){
+    // Anchored variant: CDROID shows the context menu as a centered AlertDialog, so the
+    // touch coordinates are not used (no floating popup anchored to (x,y) here).
+    return showContextMenuForChild(originalView);
+}
+
+void Window::registerForContextMenu(View* view){
+    if(!view) return;
+    view->setOnCreateContextMenuListener(
+        [this](ContextMenu& menu, View& v, ContextMenuInfo* info){ onCreateContextMenu(menu, v, info); });
+}
+
+void Window::unregisterForContextMenu(View* view){
+    if(view) view->setOnCreateContextMenuListener(View::OnCreateContextMenuListener{});
+}
+
+void Window::openContextMenu(View* view){
+    if(view) view->showContextMenu();
+}
+
+void Window::onCreateContextMenu(ContextMenu&, View&, ContextMenuInfo*){}
+
+void Window::closeContextMenu(){
+    // CDROID shows the context menu as a self-dismissing AlertDialog via MenuDialogHelper;
+    // there is no window panel to close programmatically (no FEATURE_CONTEXT_MENU).
 }
 
 // =====================================================================================

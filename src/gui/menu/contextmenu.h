@@ -19,7 +19,7 @@
 #define __CONTEXT_MENU_H__
 #include <menu/menu.h>
 namespace cdroid{
-class ContextMenu:public Menu {
+class ContextMenu:virtual public Menu {
 public:
 
     /**
