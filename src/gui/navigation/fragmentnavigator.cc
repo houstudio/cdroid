@@ -60,6 +60,15 @@ void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavO
         }
     }
     t->replace(mContainerId, fragment);
+    // NOTE: androidx FragmentNavigator.kt:433,447-457 skips addToBackStack on the *initial*
+    // navigation (initialNavigation = state.backStack.isEmpty()). CDROID cannot do that yet: its
+    // popBackStack pops via FragmentManager.popBackStackImmediate() (an FM-driven model), NOT via
+    // the navigator's own entry-state stack like AndroidX. If the start fragment is not on the FM
+    // back stack, popUpTo(start, inclusive) cannot FM-pop it, the start fragment stays in the
+    // container, and the following navigate()'s replace() then removes a just-restored fragment —
+    // a restore→replace cycle that crashes the special-effects transition. So every navigated
+    // fragment (including the start) is pushed onto the FM back stack. Porting initialNavigation
+    // faithfully requires first porting AndroidX's navigator-state-based pop model.
     t->addToBackStack(d->getRoute());
     t->commit();
 }
