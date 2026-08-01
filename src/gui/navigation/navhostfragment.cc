@@ -18,6 +18,7 @@
 #include <navigation/navhostfragment.h>
 #include <navigation/navigation.h>
 #include <navigation/fragmentnavigator.h>
+#include <navigation/dialogfragmentnavigator.h>
 #include <navigation/navigatorprovider.h>
 #include <navigation/navgraph.h>
 #include <fragment/fragmentmanager.h>
@@ -40,6 +41,10 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
         // Register the FragmentNavigator bound to this host's child FragmentManager.
         FragmentNavigator* fragNav = new FragmentNavigator(getChildFragmentManager(), getId());
         mNavController->getNavigatorProvider()->addNavigator(fragNav);
+        // Register the DialogFragmentNavigator for <dialog> destinations (androidx NavHostFragment
+        // registers both "fragment" and "dialog" navigators).
+        DialogFragmentNavigator* dialogNav = new DialogFragmentNavigator(getContext(), getChildFragmentManager());
+        mNavController->getNavigatorProvider()->addNavigator(dialogNav);
     }
     // Apply the graph captured at construction, auto-navigating to its startDestination (androidx
     // reads app:navGraph in onInflate and calls setGraph in onCreate). setGraph -> navigate ->

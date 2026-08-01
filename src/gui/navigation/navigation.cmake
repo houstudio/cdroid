@@ -13,6 +13,7 @@ SET(NAVIGATION_SOURCES
     navigation/noopnavigator.cc
     navigation/navcontroller.cc         # rewritten (modern route model) in stage 3-5
     navigation/fragmentnavigator.cc     # stage 4: navigation-fragment
+    navigation/dialogfragmentnavigator.cc  # dialog destinations
     navigation/navhostfragment.cc       # stage 4: navigation-fragment
     navigation/navigationui.cc          # stage 5: navigation-ui
     navigation/navdeeplink.cc              # stub body, rewritten in stage 3-2

@@ -90,7 +90,11 @@ void Dialog::dismissDialog(){
     mShowing = false;
     if(mOnDismissListener)
         mOnDismissListener(*this);
-    mWindow->setVisibility(View::INVISIBLE);
+    if(mWindow){
+        mWindow->setVisibility(View::INVISIBLE);
+        mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
+        mWindow = nullptr;         // idempotent: prevent double-close crash on re-entry
+    }
 }
 
 void Dialog::dispatchOnCreate(void*buddle){
