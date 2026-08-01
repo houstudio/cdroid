@@ -86,6 +86,13 @@ public:
     void putAction(int actionId, NavAction* action);
     void removeAction(int actionId);
     void navigate(Bundle* args, NavOptions* navOptions);
+    // androidx NavDestination.addInDefaultArgs: merge caller args over this destination's default
+    // arguments (from <argument android:defaultValue>). Returns a new Bundle, or `args` as-is if
+    // there are no defaults.
+    Bundle* addInDefaultArgs(Bundle* args);
+    // Extract path-param arguments from a filled route (e.g. "detail/42" against pattern
+    // "detail/{id}" → {id:"42"}) via NavDeepLink. Returns nullptr if the route has no params.
+    Bundle* matchRouteArgs(const std::string& route) const;
 };
 }/*endof namespace */
 #endif /*__NAV_DESTINATION_H__*/

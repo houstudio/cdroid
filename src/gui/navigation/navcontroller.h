@@ -76,8 +76,9 @@ public:
     void setLifecycleOwner(lifecycle::LifecycleOwner* owner){ mLifecycleOwner = owner; }
     void setViewModelStore(lifecycle::ViewModelStore* store){ mViewModelStore = store; }
 
-    // Modern route navigation.
-    void navigate(const std::string& route, NavOptions* options = nullptr);
+    // Modern route navigation. args (optional) carries programmatic arguments; route params (e.g.
+    // "detail/42" against "detail/{id}") are auto-extracted and merged. (androidx navigate(route).)
+    void navigate(const std::string& route, Bundle* args = nullptr, NavOptions* options = nullptr);
     // Legacy int-id navigation (kept for Navigation.createNavigateOnClickListener).
     void navigate(int resId, Bundle* args = nullptr, NavOptions* options = nullptr);
     void navigate(NavDeepLinkRequest* request, NavOptions* options = nullptr);

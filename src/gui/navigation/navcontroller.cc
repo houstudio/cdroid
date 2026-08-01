@@ -131,10 +131,14 @@ NavBackStackEntry* NavController::getCurrentBackStackEntry() const{
     return mBackStack.empty() ? nullptr : mBackStack.back();
 }
 
-void NavController::navigate(const std::string& route, NavOptions* options){
+void NavController::navigate(const std::string& route, Bundle* args, NavOptions* options){
     NavDestination* node = findDestination(route);
     if(!node) return;
-    navigate(node, nullptr, options);
+    // androidx: extract route params (e.g. "detail/42" → {id:42}) and merge with caller args.
+    Bundle* routeArgs = node->matchRouteArgs(route);
+    if(routeArgs && args) routeArgs->putAll(*args);  // caller overrides route params
+    Bundle* merged = routeArgs ? routeArgs : args;
+    navigate(node, merged, options);
 }
 
 void NavController::navigate(int resId, Bundle* args, NavOptions* options){
@@ -204,6 +208,8 @@ void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* opt
     }
     // V2: push the leaf + any parent-graph entries not already on the stack, link them, then
     // let updateBackStackLifecycle drive per-entry lifecycle (top RESUMED / graph STARTED / off CREATED).
+    // androidx: merge this destination's default arguments (from <argument android:defaultValue>).
+    args = node->addInDefaultArgs(args);
     NavBackStackEntry* leafEntry = new NavBackStackEntry(node, args);
     // androidx navigateInternal: install the push handler, dispatch through the destination's
     // Navigator (its navigate(entries) commits the fragment and calls state.push(leafEntry), which
