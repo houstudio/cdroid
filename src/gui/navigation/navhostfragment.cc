@@ -41,19 +41,20 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
         FragmentNavigator* fragNav = new FragmentNavigator(getChildFragmentManager(), getId());
         mNavController->getNavigatorProvider()->addNavigator(fragNav);
     }
-}
-
-void NavHostFragment::onResume(){
-    fragment::Fragment::onResume();
-    // Auto-apply the graph captured at construction, auto-navigating to its startDestination
-    // (androidx reads app:navGraph in onInflate and calls setGraph in onCreate). CDROID attaches
-    // a child Fragment's View eagerly, so the host container must already exist — resume is the
-    // earliest guaranteed point (performResume runs after the View is created). performResume then
-    // dispatches the child FragmentManager, catching the start Fragment up to RESUMED.
+    // Apply the graph captured at construction, auto-navigating to its startDestination (androidx
+    // reads app:navGraph in onInflate and calls setGraph in onCreate). setGraph -> navigate ->
+    // FragmentNavigator.navigate -> child-FM commit is now DEFERRED: it posts to the host Handler
+    // and runs on the next main-loop iteration, by which time onCreateView has built the child
+    // container (the parent drives this fragment CREATED -> VIEW_CREATED -> ... synchronously
+    // inside its moveToExpectedState, before the looper runs the posted commit).
     if(!mGraphRef.empty() && !mGraphLoaded && mNavController){
         mGraphLoaded = true;
         mNavController->setGraph(mGraphRef);
     }
+}
+
+void NavHostFragment::onResume(){
+    fragment::Fragment::onResume();
 }
 
 NavController* NavHostFragment::onCreateNavController(){

@@ -29,14 +29,14 @@ namespace fragment{
 // FragmentHostCallback implementation bound to the FragmentActivity.
 class FragmentActivity::HostCallbacks : public FragmentHostCallback{
     FragmentActivity* mActivity;
+    // Main-looper Handler (default-constructed binds Looper::getMainLooper()). FragmentManager
+    // uses it to schedule deferred execution of committed transactions (androidx
+    // scheduleCommit: mHost.getHandler().post(mExecCommit)).
+    cdroid::Handler mHandler;
 public:
     explicit HostCallbacks(FragmentActivity* a) : mActivity(a){}
     cdroid::Context* getContext() override { return mActivity->getContext(); }
-    cdroid::Handler* getHandler() override {
-        // FragmentManager dispatch is synchronous (no Handler.post scheduling),
-        // so no real Handler is needed yet. Wired up with OnBackPressedDispatcher later.
-        return nullptr;
-    }
+    cdroid::Handler* getHandler() override { return &mHandler; }
     cdroid::LayoutInflater* onGetLayoutInflater() override {
         return cdroid::LayoutInflater::from(getContext());
     }

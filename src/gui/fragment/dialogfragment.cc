@@ -34,6 +34,9 @@ void DialogFragment::show(FragmentManager* manager, const std::string& tag){
     FragmentTransaction* t = manager->beginTransaction();
     t->add(this, tag);
     t->commit();
+    // onCreateDialog/show run right after commit and need this fragment attached, so drain the
+    // deferred commit synchronously (androidx executePendingTransactions safety valve).
+    manager->executePendingTransactions();
     if(mShowsDialog){
         mDialog = onCreateDialog(nullptr);
         if(mDialog) mDialog->show();
@@ -48,6 +51,7 @@ void DialogFragment::dismiss(){
         FragmentTransaction* t = mFragmentManager->beginTransaction();
         t->remove(this);
         t->commit();
+        mFragmentManager->executePendingTransactions();
     }
 }
 

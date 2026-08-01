@@ -38,11 +38,20 @@
 namespace cdroid{
 namespace fragment{
 
-FragmentManager::FragmentManager() = default;
+FragmentManager::FragmentManager(){
+    // mExecCommit is assigned exactly once and never rebound. Runnable identity is its shared
+    // Functor pointer (CallbackBase::operator==), and Handler::removeCallbacks matches posted
+    // runnables by that pointer — a stable identity is required for dedup (R4).
+    mExecCommit = [this]{ execPendingActions(true); };
+}
 
 FragmentManager::~FragmentManager(){
     for(BackStackRecord* r : mBackStack) delete r;
     mBackStack.clear();
+    // Pending records are owned by this FM (commit transferred ownership); free any that never
+    // executed.
+    for(BackStackRecord* r : mPendingActions) delete r;
+    mPendingActions.clear();
     mAdded.clear();
     mActive.clear();
     for(auto& kv : mStateManagers) delete kv.second;
@@ -69,6 +78,12 @@ FragmentStateManager* FragmentManager::getOrCreateStateManager(Fragment* f){
 
 // --- lifecycle dispatch (host -> FM -> each added fragment) ---
 void FragmentManager::dispatchStateChange(int state){
+    // androidx FragmentManager.dispatchStateChange: guard the sweep so commits issued inside
+    // lifecycle callbacks enqueue rather than re-enter, then drain pending at the end (at the new
+    // state). Draining in dispatch also makes deferred constructor-time commits converge: the
+    // first dispatch drains them instead of depending on the posted mExecCommit firing at the
+    // right mCurState (which would otherwise add fragments at INITIALIZING).
+    mExecutingActions = true;
     mCurState = state;
     for(Fragment* f : mAdded){
         if(!f) continue;
@@ -76,6 +91,8 @@ void FragmentManager::dispatchStateChange(int state){
         fsm->setFragmentManagerState(state);
         fsm->moveToExpectedState();
     }
+    mExecutingActions = false;
+    execPendingActions(true);
 }
 
 void FragmentManager::dispatchAttach(){
@@ -248,16 +265,19 @@ FragmentFactory* FragmentManager::getFragmentFactory() const{
     return mFragmentFactory;
 }
 
-// --- transactions (BackStackRecord-backed; stage 2b-4) ---
+// --- transactions (BackStackRecord-backed) ---
 FragmentTransaction* FragmentManager::beginTransaction(){
     return new BackStackRecord(this);
 }
 
 bool FragmentManager::executePendingTransactions(){
-    return false; // stage 2b-4
+    return execPendingActions(true);
 }
 
 bool FragmentManager::popBackStackImmediate(){
+    // Drain pending forward commits first so records added via addToBackStack have landed in
+    // mBackStack before we pop the top (androidx popBackStackImmediate: execPendingActions first).
+    execPendingActions(false);
     if(mBackStack.empty()) return false;
     BackStackRecord* record = mBackStack.back();
     mBackStack.pop_back();
@@ -267,11 +287,125 @@ bool FragmentManager::popBackStackImmediate(){
 }
 
 bool FragmentManager::popBackStackImmediate(const std::string& /*name*/, int /*flags*/){
-    return false; // stage 2b-4
+    return false; // TODO: name/flags pop (androidx popBackStackState)
 }
 
-void FragmentManager::enqueueAction(BackStackRecord* action){
-    if(action) mBackStack.push_back(action); // stage 2b-4 wires execution
+// Enqueue a record for deferred execution (androidx enqueueAction). Ownership of `action`
+// transfers to this FragmentManager.
+void FragmentManager::enqueueAction(BackStackRecord* action, bool /*allowStateLoss*/){
+    if(!action) return;
+    mPendingActions.push_back(action);
+    scheduleCommit();
+}
+
+// androidx scheduleCommit: on the first pending action post mExecCommit to the host Handler so the
+// queue is flushed on the next main-loop iteration. removeCallbacks dedups repeat posts.
+void FragmentManager::scheduleCommit(){
+    if(mPendingActions.size() != 1) return;   // already scheduled, or empty
+    cdroid::Handler* h = mHost ? mHost->getHandler() : nullptr;
+    if(h){
+        h->removeCallbacks(mExecCommit);
+        h->post(mExecCommit);
+    } else {
+        // No host handler: fall back to a synchronous drain so the commit is not lost.
+        execPendingActions(true);
+    }
+}
+
+void FragmentManager::ensureExecReady(bool /*allowStateLoss*/){
+    // androidx checks host/destroyed/main-thread here and throws. CDROID is single-threaded and
+    // tolerant; the mExecutingActions re-entrancy guard is handled at execPendingActions entry.
+}
+
+void FragmentManager::cleanupExec(){
+    mExecutingActions = false;
+    mTmpRecords.clear();
+    mTmpIsPop.clear();
+}
+
+// Drain all pending commits synchronously (androidx execPendingActions). Re-entrancy guarded by
+// mExecutingActions; a while-loop keeps draining records enqueued during execution (commits issued
+// inside lifecycle callbacks), the androidx non-recursive drain.
+bool FragmentManager::execPendingActions(bool allowStateLoss){
+    if(mExecutingActions) return false;
+    ensureExecReady(allowStateLoss);
+    bool didSomething = false;
+    mExecutingActions = true;
+    while(generateOpsForPendingActions(mTmpRecords, mTmpIsPop)){
+        removeRedundantOperationsAndExecute(mTmpRecords, mTmpIsPop);
+        didSomething = true;
+    }
+    cleanupExec();
+    return didSomething;
+}
+
+// Execute a single record synchronously without enqueueing (androidx execSingleAction, the
+// commitNow path): drain pending first, then run this record's ops + state convergence.
+void FragmentManager::execSingleAction(BackStackRecord* action, bool allowStateLoss){
+    if(!action) return;
+    execPendingActions(allowStateLoss);
+    mExecutingActions = true;
+    mTmpRecords.clear();
+    mTmpIsPop.clear();
+    action->generateOps(mTmpRecords, mTmpIsPop);
+    removeRedundantOperationsAndExecute(mTmpRecords, mTmpIsPop);
+    cleanupExec();
+}
+
+// Move all pending actions into the scratch buffers (androidx generateOpsForPendingActions).
+bool FragmentManager::generateOpsForPendingActions(std::vector<BackStackRecord*>& records,
+                                                   std::vector<bool>& isRecordPop){
+    if(mPendingActions.empty()) return false;
+    records.clear();
+    isRecordPop.clear();
+    for(BackStackRecord* r : mPendingActions) r->generateOps(records, isRecordPop);
+    mPendingActions.clear();
+    if(cdroid::Handler* h = mHost ? mHost->getHandler() : nullptr) h->removeCallbacks(mExecCommit);
+    return !records.empty();
+}
+
+// androidx removeRedundantOperationsAndExecute merges reordering-allowed records. CDROID never
+// enables reordering (mReorderingAllowed is unused), so the merge collapses to one pass.
+void FragmentManager::removeRedundantOperationsAndExecute(std::vector<BackStackRecord*>& records,
+                                                          std::vector<bool>& isRecordPop){
+    if(records.empty()) return;
+    executeOpsTogether(records, isRecordPop, 0, (int)records.size());
+}
+
+void FragmentManager::executeOpsTogether(std::vector<BackStackRecord*>& records,
+                                         std::vector<bool>& isRecordPop, int startIndex, int endIndex){
+    // 1) Run each record's ops. Forward: executeOps + push to back stack if addToBackStack.
+    //    Pop: executePopOps (reverses). The deferred path only carries forward records today (pop
+    //    is synchronous via popBackStackImmediate), but the isPop branch is kept for parity.
+    for(int i = startIndex; i < endIndex; i++){
+        BackStackRecord* record = records[i];
+        if(isRecordPop[i]){
+            record->executePopOps();
+        } else {
+            record->executeOps();
+            if(record->isAddedToBackStack()) addBackStackState(record);
+        }
+    }
+    // 2) Drive every fragment touched by these ops to its expected state (androidx per-op
+    //    moveToExpectedState), then sweep all added fragments to mCurState (androidx
+    //    moveToState(mCurState, true)) so deferred-added fragments catch up to the host lifecycle.
+    for(int i = startIndex; i < endIndex; i++){
+        for(const FragmentTransaction::Op& op : records[i]->getOps()){
+            if(op.mFragment) getOrCreateStateManager(op.mFragment)->moveToExpectedState();
+        }
+    }
+    for(Fragment* f : mAdded){
+        if(!f) continue;
+        FragmentStateManager* fsm = getOrCreateStateManager(f);
+        fsm->setFragmentManagerState(mCurState);
+        fsm->moveToExpectedState();
+    }
+    // 3) Ownership: forward non-back-stack records are owned by the FM and freed now. Back-stack
+    //    records are retained in mBackStack (freed on pop). (Pop records are owned/freed by the
+    //    pop path.) Must happen before the scratch buffers are reused next round.
+    for(int i = startIndex; i < endIndex; i++){
+        if(!isRecordPop[i] && !records[i]->isAddedToBackStack()) delete records[i];
+    }
 }
 
 cdroid::View* FragmentManager::findViewByTransitionName(cdroid::View* root, const std::string& name){
