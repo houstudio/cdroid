@@ -351,6 +351,81 @@ bool FragmentManager::popBackStackImmediate(const std::string& name, int flags){
     return true;
 }
 
+bool FragmentManager::saveBackStack(const std::string& name){
+    // androidx FragmentManager.saveBackStackState: find the records named `name`, capture each one's
+    // ops + fragment whos, mark them mBeingSaved, then pop them (top-down). Popping runs executePopOps
+    // → FragmentStateManager tears the fragments down → since mBeingSaved, saveState() writes each
+    // fragment's state into mSavedState[who]. The BackStackState is stored in mBackStackStates[name].
+    execPendingActions(false);
+    int index = -1;
+    for(int i = 0; i < (int)mBackStack.size(); ++i){
+        if(mBackStack[i]->getName() == name){ index = i; break; }   // lowest match (inclusive)
+    }
+    if(index < 0) return false;
+    BackStackState bs;
+    for(int i = index; i < (int)mBackStack.size(); ++i){
+        BackStackRecord* record = mBackStack[i];
+        record->mBeingSaved = true;
+        bs.transactions.push_back(record->captureState());
+        for(const auto& op : record->getOps()){
+            if(op.mFragment && !op.mFragment->mWho.empty()) bs.fragmentWhos.push_back(op.mFragment->mWho);
+        }
+    }
+    for(int i = (int)mBackStack.size() - 1; i >= index; --i){
+        BackStackRecord* record = mBackStack[i];
+        mBackStack.erase(mBackStack.begin() + i);
+        record->executePopOps();   // fragments torn down; FSM.saveState (mBeingSaved) → mSavedState
+        delete record;
+    }
+    mBackStackStates[name] = std::move(bs);
+    return true;
+}
+
+bool FragmentManager::restoreBackStack(const std::string& name){
+    // androidx FragmentManager.restoreBackStackState: take the BackStackState, re-instantiate each
+    // fragment from its saved state, rebuild the BackStackRecords, and re-run them forward.
+    execPendingActions(false);
+    auto it = mBackStackStates.find(name);
+    if(it == mBackStackStates.end()) return false;
+    BackStackState bs = std::move(it->second);
+    mBackStackStates.erase(it);
+    // Phase A — re-create the Fragment objects from their saved state.
+    std::unordered_map<std::string, Fragment*> fragments;
+    for(const std::string& who : bs.fragmentWhos){
+        if(fragments.count(who)) continue;
+        FragmentState* fs = setSavedState(who, nullptr);   // retrieve-and-clear
+        if(!fs || fs->className.empty()){ delete fs; continue; }
+        FragmentFactory factory;                            // uses the global REGISTER_FRAGMENT registry
+        Fragment* f = factory.instantiate(fs->className);
+        if(!f){ delete fs; continue; }
+        // Restore FragmentState meta (androidx FragmentState.instantiate copies these back).
+        f->mWho = fs->who;
+        f->mFragmentId = fs->fragmentId;
+        f->mContainerId = fs->containerId;
+        f->mTag = fs->tag;
+        f->mHidden = fs->hidden;
+        f->mMaxState = fs->maxLifecycleState;
+        if(FragmentStateManager* fsm = getOrCreateStateManager(f)) fsm->restoreState(*fs); // args + view state
+        f->mSavedFragmentState = fs;                        // lifecycle consumes savedInstanceState/registry
+        fragments[who] = f;
+    }
+    // Phase B — rebuild + re-run the transactions forward (adds the fragments, moves them up).
+    for(BackStackRecordState& brs : bs.transactions){
+        BackStackRecord* record = new BackStackRecord(this);
+        record->restoreFromState(brs, fragments);
+        record->executeOps();
+        record->mBeingSaved = false;
+        mBackStack.push_back(record);
+    }
+    return true;
+}
+
+bool FragmentManager::clearBackStack(const std::string& name){
+    // androidx FragmentManager.clearBackStackState = restore then pop (discard).
+    if(!restoreBackStack(name)) return false;
+    return popBackStackImmediate(name, POP_BACK_STACK_INCLUSIVE);
+}
+
 // Enqueue a record for deferred execution (androidx enqueueAction). Ownership of `action`
 // transfers to this FragmentManager.
 void FragmentManager::enqueueAction(BackStackRecord* action, bool /*allowStateLoss*/){

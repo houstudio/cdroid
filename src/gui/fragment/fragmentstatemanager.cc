@@ -245,6 +245,12 @@ void FragmentStateManager::stepUp(){
                     mFragment->mContainer->addView(mFragment->mView);
                 }
             }
+            // androidx FragmentStateManager.createView: restore the saved view-hierarchy state
+            // (scroll position, text, focus…) into the freshly created view — for fragments
+            // re-created by restoreBackStack (mSavedViewState set by restoreState).
+            if(mFragment->mSavedViewState && mFragment->mView){
+                mFragment->mView->restoreHierarchyState(*mFragment->mSavedViewState);
+            }
             mFragment->performViewCreated(nullptr);
             mFragment->mState = Fragment::VIEW_CREATED;
             break;
@@ -273,6 +279,13 @@ void FragmentStateManager::stepDown(){
         case Fragment::ACTIVITY_CREATED:
             mFragment->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
         case Fragment::VIEW_CREATED:
+            // androidx FragmentStateManager.moveToExpectedState: when a saveBackStack pop is tearing
+            // this fragment down (mBeingSaved), capture its state ONCE into FragmentManager.mSavedState
+            // before the view is destroyed — so restoreBackStack can rehydrate it. Normal pops have
+            // mBeingSaved=false and skip this (state discarded, as before).
+            if(mFragment->mBeingSaved && mFragmentManager && !mFragmentManager->getSavedState(mFragment->mWho)){
+                mFragmentManager->setSavedState(mFragment->mWho, saveState());
+            }
             if(mFragment->mView && mFragment->mContainer){
                 // SEC: enqueue remove + execute. collectEffects picks Animation (custom exit
                 // anim) or Transition (default Fade); commit applies the removeView via
