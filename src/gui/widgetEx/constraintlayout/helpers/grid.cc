@@ -33,6 +33,13 @@ namespace cdroid {
 
 Grid::Grid(Context* ctx, const AttributeSet& attrs)
     : ConstraintHelper(ctx, attrs) {
+    // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
+    // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
+    // and every grid_* attribute stays at its default (rows/columns 0, spans/skips empty, ...).
+    // Re-invoke init now that *this is fully constructed so it dispatches to Grid::init — same
+    // pattern as Carousel/MotionEffect/Placeholder/CircularFlow. ConstraintHelper::init is
+    // idempotent on re-run (mIds cleared then refilled).
+    init(attrs);
 }
 
 Grid::Grid(int width, int height)
