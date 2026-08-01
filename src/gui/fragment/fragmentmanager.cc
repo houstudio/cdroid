@@ -286,8 +286,26 @@ bool FragmentManager::popBackStackImmediate(){
     return true;
 }
 
-bool FragmentManager::popBackStackImmediate(const std::string& /*name*/, int /*flags*/){
-    return false; // TODO: name/flags pop (androidx popBackStackState)
+bool FragmentManager::popBackStackImmediate(const std::string& name, int flags){
+    // androidx FragmentManager.popBackStackState(name, id, flags): pop every record above the
+    // topmost record whose name matches `name`; if POP_BACK_STACK_INCLUSIVE, pop that record too.
+    // A name that was never addToBackStack'd (e.g. the FragmentNavigator initial fragment) is not
+    // found → return false (no-op), which is exactly what lets the initial fragment linger.
+    execPendingActions(false);
+    if(mBackStack.empty()) return false;
+    int index = -1;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
+        if(mBackStack[i]->getName() == name){ index = i; break; }
+    }
+    if(index < 0) return false;  // name not on this FragmentManager's back stack
+    int stop = (flags & POP_BACK_STACK_INCLUSIVE) ? index - 1 : index;
+    while((int)mBackStack.size() > stop + 1){
+        BackStackRecord* record = mBackStack.back();
+        mBackStack.pop_back();
+        record->executePopOps();
+        delete record;
+    }
+    return true;
 }
 
 // Enqueue a record for deferred execution (androidx enqueueAction). Ownership of `action`

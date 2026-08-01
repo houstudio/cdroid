@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/fragmentnavigator.h>
+#include <navigation/navigatorstate.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
 #include <fragment/fragmenttransaction.h>
@@ -39,17 +40,31 @@ void FragmentNavigator::Destination::onInflate(cdroid::Context* context, const A
          getRoute().c_str(), getClassName().c_str());
 }
 
-void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* navOptions){
-    Destination* d = dynamic_cast<Destination*>(destination);
-    LOGD("FragmentNavigator.navigate className='%s' fm=%p containerId=%d",
-         d ? d->getClassName().c_str() : "(null)", mFragmentManager, mContainerId);
-    if(!d || !mFragmentManager){ LOGD("FragmentNavigator.navigate: bail (d=%p fm=%p)", d, mFragmentManager); return; }
+void FragmentNavigator::navigate(std::vector<NavBackStackEntry*>& entries, NavOptions* navOptions, Extras* /*navigatorExtras*/){
+    // androidx FragmentNavigator.kt:414-426
+    if(!mFragmentManager){ LOGD("FragmentNavigator.navigate: bail (fm null)"); return; }
+    for(NavBackStackEntry* entry : entries){
+        if(entry) navigate(entry, navOptions);
+    }
+}
+
+void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOptions){
+    // androidx FragmentNavigator.kt:428-470
+    Destination* d = dynamic_cast<Destination*>(entry->getDestination());
+    LOGD("FragmentNavigator.navigate className='%s' initial=%d",
+         d ? d->getClassName().c_str() : "(null)", getState() ? (int)getState()->getBackStack().empty() : -1);
+    if(!d || !mFragmentManager) return;
+    // androidx :433 — initial navigation is when this navigator's back stack is empty (the start
+    // fragment). It is committed directly, NOT addToBackStack, so it can never be popped by the
+    // FragmentManager to a blank screen; its NavBackStackEntry still leaves the logical back stack
+    // through state.pop (its fragment lingers until the next navigate()'s replace evicts it).
+    const bool initialNavigation = !isAttached() || getState()->getBackStack().empty();
     fragment::FragmentFactory factory;
     fragment::Fragment* fragment = factory.instantiate(d->getClassName());
     if(!fragment) return;
-    fragment->setArguments(args ? new Bundle(*args) : nullptr);
+    fragment->setArguments(entry->getArguments() ? new Bundle(*entry->getArguments()) : nullptr);
     fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
-    // Apply custom animations from NavOptions (androidx FragmentNavigator.kt:534-539).
+    // Apply custom animations from NavOptions (androidx createFragmentTransaction :530-539).
     if(navOptions){
         std::string enter = navOptions->getEnterAnim();
         std::string exit = navOptions->getExitAnim();
@@ -59,21 +74,30 @@ void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavO
             t->setCustomAnimations(enter, exit, popEnter, popExit);
         }
     }
-    t->replace(mContainerId, fragment);
-    // NOTE: androidx FragmentNavigator.kt:433,447-457 skips addToBackStack on the *initial*
-    // navigation (initialNavigation = state.backStack.isEmpty()). CDROID cannot do that yet: its
-    // popBackStack pops via FragmentManager.popBackStackImmediate() (an FM-driven model), NOT via
-    // the navigator's own entry-state stack like AndroidX. If the start fragment is not on the FM
-    // back stack, popUpTo(start, inclusive) cannot FM-pop it, the start fragment stays in the
-    // container, and the following navigate()'s replace() then removes a just-restored fragment —
-    // a restore→replace cycle that crashes the special-effects transition. So every navigated
-    // fragment (including the start) is pushed onto the FM back stack. Porting initialNavigation
-    // faithfully requires first porting AndroidX's navigator-state-based pop model.
-    t->addToBackStack(d->getRoute());
+    t->replace(mContainerId, fragment, entry->getId());   // androidx :541 — tag = entry.id
+    if(!initialNavigation){
+        // androidx :447-457 — only non-initial navigations go on the FragmentManager back stack,
+        // named with the entry id so popBackStack(entry.id, INCLUSIVE) can target them.
+        t->addToBackStack(entry->getId());
+    }
     t->commit();
+    // androidx :469 — push the entry onto this navigator's state (drives the NavController back
+    // queue via the push handler, then this state's own back stack).
+    if(getState()) getState()->push(entry);
+}
+
+void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState){
+    // androidx FragmentNavigator.kt:317-369. Best-effort FragmentManager pop to (inclusive) the
+    // entry: the initial fragment was never addToBackStack, so popBackStackImmediate(name) is a
+    // no-op for it (returns false) — that's correct; its fragment is evicted by the next replace.
+    if(mFragmentManager){
+        mFragmentManager->popBackStackImmediate(popUpTo->getId(), fragment::FragmentManager::POP_BACK_STACK_INCLUSIVE);
+    }
+    if(getState()) getState()->pop(popUpTo, savedState);
 }
 
 bool FragmentNavigator::popBackStack(){
+    // Legacy no-arg pop: pop the top of the FragmentManager back stack (false at the initial).
     return mFragmentManager ? mFragmentManager->popBackStackImmediate() : false;
 }
 
