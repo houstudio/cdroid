@@ -27,8 +27,6 @@
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 
-#include <porting/cdlog.h> // TEMP diagnostic
-
 DECLARE_WIDGET(Carousel)
 
 namespace cdroid {
@@ -88,9 +86,6 @@ void Carousel::onAttachedToWindow() {
     mListener.onTransitionCompleted = [this](MotionLayout*, int currentId) {
         onTransitionCompleted(currentId);
     };
-    LOGI("Carousel@%p attached: mList=%zu startIndex=%d fwd=%d bwd=%d prevState=%d nextState=%d count=%d",
-         this, mList.size(), mStartIndex, mForwardTransition, mBackwardTransition,
-         mPreviousState, mNextState, mAdapter ? mAdapter->count() : -1);
     mMotionLayout->addTransitionListener(mListener);
 
     // In CARRY_ON mode, hand the release momentum to the forward/backward transitions.
@@ -144,8 +139,6 @@ void Carousel::onTransitionChange(int /*startId*/, int /*endId*/, float /*progre
 }
 
 void Carousel::onTransitionCompleted(int currentId) {
-    LOGI("Carousel@%p onTransitionCompleted currentId=%d (next=%d prev=%d) mIndex=%d",
-         this, currentId, mNextState, mPreviousState, mIndex);
     if (mAdapter == nullptr) return;
     mPreviousIndex = mIndex;
     if (currentId == mNextState)          mIndex++;
@@ -165,7 +158,6 @@ void Carousel::onTransitionCompleted(int currentId) {
 
 void Carousel::runUpdate() {
     if (mAdapter == nullptr || mMotionLayout == nullptr) return;
-    LOGI("Carousel@%p runUpdate mIndex=%d prev=%d", this, mIndex, mPreviousIndex);
     mMotionLayout->setProgress(0);
     updateItems();
     mAdapter->onNewItem(mIndex);
@@ -184,14 +176,11 @@ void Carousel::runUpdate() {
 void Carousel::updateItems() {
     if (mAdapter == nullptr || mMotionLayout == nullptr || mAdapter->count() == 0) return;
     const int viewCount = (int) mList.size();
-    LOGI("Carousel@%p updateItems mIndex=%d viewCount=%d startIndex=%d",
-         this, mIndex, viewCount, mStartIndex);
     for (int i = 0; i < viewCount; i++) {
         View* view = mList[i];
         if (view == nullptr) continue;
         // mIndex maps to i == mStartIndex; other pool slots show mIndex ± offset.
         int index = mIndex + i - mStartIndex;
-        LOGI("  view[%d]=%p index=%d count=%d", i, (void*)view, index, mAdapter->count());
         if (mInfiniteCarousel) {
             if (index < 0) {
                 updateViewVisibility(view, mEmptyViewBehavior != View::INVISIBLE ? mEmptyViewBehavior

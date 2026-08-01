@@ -292,8 +292,6 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
     mSpringEngine = std::make_unique<SpringStopEngine>();
     mSpringEngine->springConfig(mProgress, target, startVelocity, mass, stiffness, damping,
                                 stopThreshold, boundary);
-    LOGI("animateToWithSpring target=%.3f startV=%.3f mProgress=%.3f begin=%d end=%d captured=%d",
-         target, startVelocity, mProgress, mBeginState, mEndState, (int)mCaptured);
     constexpr float kDurationSec = 2.0f; // generous upper bound; the spring ends itself via isStopped
     mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
     mAnimator->setDuration((int64_t)(kDurationSec * 1000));
@@ -319,7 +317,6 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
             if (mCaptured) applyMotion();
             *completed = true; // a.cancel() below re-enters onAnimationEnd synchronously
             a.cancel();
-            LOGI("spring completed via isStopped state=%d", mCurrentState);
             if (mCurrentState != -1 && mScene && !mInAutoTransition) {
                 mInAutoTransition = true;
                 mScene->autoTransition(this, mCurrentState);
@@ -332,7 +329,6 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
     Animator::AnimatorListener al;
     al.onAnimationEnd = [this, target, completed](Animator&, bool) {
         if (*completed) return;
-        LOGI("spring completed via onAnimationEnd fallback state=%d", mCurrentState);
         *completed = true;
         mProgress = target;
         if (target <= 0.0f) mCurrentState = mBeginState;
@@ -716,9 +712,6 @@ void MotionLayout::pickTransitionForDrag(const MotionEvent& evt) {
     const float dx = evt.getX() - mDownX;
     const float dy = evt.getY() - mDownY;
     MotionScene::Transition* best = mScene->bestTransitionFor(mCurrentState, dx, dy);
-    LOGI("pickTransitionForDrag state=%d dx=%.0f dy=%.0f best=%d cur=%d",
-         mCurrentState, dx, dy, best ? best->getId() : -1,
-         mScene->getCurrentTransition() ? mScene->getCurrentTransition()->getId() : -1);
     if (best != nullptr && best != mScene->getCurrentTransition()) {
         setTransition(best->getId());                  // switches current transition + mTouchResponse
         if (mTouchResponse != nullptr) mTouchResponse->onDown(evt); // seed the fresh TouchResponse here
