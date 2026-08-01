@@ -82,6 +82,10 @@ void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
          graph ? graph->getStartDestination() : 0);
     mGraph = graph;
     if(!mGraph) return;
+    // androidx NavControllerImpl.setGraph: clear saved back-stack chains from a previous graph
+    // so stale state doesn't leak into the new graph's navigation.
+    mBackStackMap.clear();
+    mBackStackStates.clear();
     // onGraphCreated (androidx NavControllerImpl.kt:964-973): attach a NavigatorState to every
     // registered navigator so its navigate()/popBackStack() can drive this controller's back queue
     // through the push/pop handlers.
@@ -288,8 +292,9 @@ bool NavController::executePopOperations(std::vector<Navigator*>& popOperations,
         mPopFromBackStackHandler = [this, &receivedPop, saveState, &savedChain](NavBackStackEntry* e){
             if(saveState){
                 NavDestination* d = e->getDestination();
-                savedChain.insert(savedChain.begin(),
-                    NavBackStackEntryState(e->getId(), d ? d->getId() : 0, e->getArguments()));
+                NavBackStackEntryState st(e->getId(), d ? d->getId() : 0, e->getArguments());
+                e->saveState(st.savedState); // capture SavedStateRegistry contents (androidx)
+                savedChain.insert(savedChain.begin(), std::move(st));
             }
             popEntryFromBackStack(e);
             receivedPop = true;
@@ -342,6 +347,7 @@ bool NavController::restoreStateInternal(int destinationId, Bundle* /*args*/, Na
         if(!dest) continue;
         NavBackStackEntry* entry = new NavBackStackEntry(dest, st.arguments);
         entry->mId = st.id; // preserve original id (friend access) — navigator savedIds match
+        entry->restoreState(st.savedState); // restore SavedStateRegistry contents (androidx)
         Navigator& navigator = dest->getNavigator();
         getOrCreateNavigatorState(&navigator);
         std::vector<NavBackStackEntry*> entries = { entry };
