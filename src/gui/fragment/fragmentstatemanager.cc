@@ -62,6 +62,15 @@ SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
     return sec;
 }
 
+void FragmentStateManager::forceCompleteSpecialEffects(){
+    // androidx SpecialEffectsController.forceCompleteAll: retire every pending/running op for this
+    // fragment's container so getAwaitingCompletionLifecycleImpact() returns NONE and the
+    // awaiting-effect clamp in computeExpectedState stops holding the fragment above its target.
+    if(SpecialEffectsController* sec = getSpecialEffectsController()){
+        sec->forceCompleteAll();
+    }
+}
+
 int FragmentStateManager::computeExpectedState(){
     // Detached fragments freeze at their current state.
     if(!mFragment->mFragmentManager) return mFragment->mState;

@@ -158,6 +158,10 @@ private:
                             std::vector<bool>& isRecordPop, int startIndex, int endIndex);
     void ensureExecReady(bool allowStateLoss);
     void cleanupExec();
+    // androidx SpecialEffectsController.forceCompleteAll across this FM's containers: retire every
+    // pending/running effect op so awaiting clamps lift. Called on the teardown paths so a fragment
+    // mid-effect is not left stranded in mRunningOperations.
+    void forceCompleteAllSpecialEffects();
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
 };
 
