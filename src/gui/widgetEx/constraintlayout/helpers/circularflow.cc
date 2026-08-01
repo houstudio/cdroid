@@ -33,6 +33,14 @@ namespace cdroid {
 
 CircularFlow::CircularFlow(Context* ctx, const AttributeSet& attrs)
     : ConstraintHelper(ctx, attrs) {
+    // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
+    // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
+    // and every circularflow_* attribute stays at its default: mAngles/mRadius empty, mDefaultRadius
+    // 0. anchorReferences then assigns every referenced view angle=0 radius=0, so all of them collapse
+    // onto the center point (only the topmost is visible). Re-invoke init now that *this is fully
+    // constructed so it dispatches to CircularFlow::init — same pattern as Carousel/MotionEffect/Placeholder.
+    // ConstraintHelper::init is idempotent on re-run (mIds cleared then refilled).
+    init(attrs);
 }
 
 CircularFlow::CircularFlow(int width, int height)
