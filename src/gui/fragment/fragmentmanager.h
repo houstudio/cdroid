@@ -28,6 +28,8 @@
 #include <vector>
 #include <unordered_map>
 #include <lifecycle/lifecycle.h>
+#include <core/handler.h>
+#include <core/callbackbase.h>
 namespace cdroid{
 class LayoutInflater;
 class View;
@@ -63,12 +65,33 @@ public:
     void dispatchDestroy();
     int getCurState() const { return mCurState; }
 
-    // --- transactions (BackStackRecord-backed; next batch) ---
+    // --- transactions (BackStackRecord-backed) ---
+    // A deferred commit, mirroring androidx FragmentManager: commit() enqueues a record and
+    // scheduleCommit() posts mExecCommit to the host Handler; the real executeOps()+state
+    // sweep runs on the next main-loop iteration (execPendingActions).
+    class OpGenerator{
+    public:
+        virtual ~OpGenerator() = default;
+        // Append this generator's BackStackRecord(s) to records and whether each is a pop.
+        virtual bool generateOps(std::vector<BackStackRecord*>& records,
+                                 std::vector<bool>& isRecordPop) = 0;
+    };
+
     FragmentTransaction* beginTransaction();
     bool executePendingTransactions();
     bool popBackStackImmediate();
     bool popBackStackImmediate(const std::string& name, int flags);
-    void enqueueAction(BackStackRecord* action);
+    // Enqueue a record for deferred execution (androidx enqueueAction). Transfers ownership of
+    // `action` to this FragmentManager (freed after execution, or held in mBackStack if added
+    // to the back stack).
+    void enqueueAction(BackStackRecord* action, bool allowStateLoss);
+    // Run all pending commits synchronously now (androidx execPendingActions). Returns whether
+    // anything ran. Also used as the safety valve at call sites that need a commit's effect
+    // immediately (executePendingTransactions / commitNow drains).
+    bool execPendingActions(bool allowStateLoss);
+    // Execute a single record synchronously (androidx execSingleAction, the commitNow path):
+    // drains pending first, then runs this record's ops + state sweep without enqueueing.
+    void execSingleAction(BackStackRecord* action, bool allowStateLoss);
     void addBackStackState(BackStackRecord* state){ mBackStack.push_back(state); }
 
     // --- lookups ---
@@ -105,6 +128,7 @@ public:
 
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine
+    friend class BackStackRecord;      // records call enqueueAction/execSingleAction/generateOps
     std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
     FragmentStateManager* getOrCreateStateManager(Fragment* f);
     FragmentHostCallback* mHost = nullptr;
@@ -119,6 +143,21 @@ private:
     bool mDestroyed = false;
     bool mStateSaved = false;
     bool mStopped = true;
+    // --- deferred-commit machinery (androidx FragmentManager) ---
+    std::vector<BackStackRecord*> mPendingActions; // records enqueued by commit(), awaiting exec
+    bool mExecutingActions = false;                // re-entrancy guard for execPendingActions
+    cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
+    std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
+    std::vector<bool> mTmpIsPop;
+    void scheduleCommit();
+    bool generateOpsForPendingActions(std::vector<BackStackRecord*>& records,
+                                      std::vector<bool>& isRecordPop);
+    void removeRedundantOperationsAndExecute(std::vector<BackStackRecord*>& records,
+                                             std::vector<bool>& isRecordPop);
+    void executeOpsTogether(std::vector<BackStackRecord*>& records,
+                            std::vector<bool>& isRecordPop, int startIndex, int endIndex);
+    void ensureExecReady(bool allowStateLoss);
+    void cleanupExec();
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
 };
 

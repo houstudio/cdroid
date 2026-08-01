@@ -113,6 +113,15 @@ void FragmentStateManager::stepUp(){
         case Fragment::ATTACHED:
             mFragment->performCreate(nullptr); mFragment->mState = Fragment::CREATED; break;
         case Fragment::CREATED: {
+            // Resolve the container ViewGroup at view-creation time, by id (androidx
+            // FragmentManager.getFragmentContainer): a fragment added before its host's view
+            // exists — e.g. a deferred commit drained during the host's onCreate, when the host
+            // has no mView yet — had mContainer resolved to null at addFragment() time. Re-resolve
+            // now so the view can be added; by then the host's view tree is built.
+            if(mFragmentManager->mContainer){
+                mFragment->mContainer = dynamic_cast<cdroid::ViewGroup*>(
+                    mFragmentManager->mContainer->onFindViewById(mFragment->mContainerId));
+            }
             cdroid::LayoutInflater* inflater = mFragmentManager->mHost
                 ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
             mFragment->performCreateView(inflater, mFragment->mContainer, nullptr);

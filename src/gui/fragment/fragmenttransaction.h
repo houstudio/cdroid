@@ -87,6 +87,9 @@ public:
     const std::vector<SharedElement>& getSharedElements() const { return mSharedElements; }
 
     bool isEmpty() const { return mOps.empty(); }
+    // Read-only access for FragmentManager's batched execution / ownership handling.
+    bool isAddedToBackStack() const { return mAddToBackStack; }
+    const std::vector<Op>& getOps() const { return mOps; }
 
     // Concrete subclasses (BackStackRecord) implement commit semantics.
     virtual int commit() = 0;

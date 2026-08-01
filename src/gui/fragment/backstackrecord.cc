@@ -26,28 +26,35 @@ namespace fragment{
 BackStackRecord::BackStackRecord(FragmentManager* manager) : mManager(manager){
 }
 
+// Deferred: hand ownership of this record to the FragmentManager's pending queue; execution
+// (executeOps + state sweep) happens on the next main-loop iteration via execPendingActions, or
+// immediately if a caller drains with executePendingTransactions.
 int BackStackRecord::commit(){
-    return commitInternal();
+    if(mManager) mManager->enqueueAction(this, false);
+    return mIndex;
 }
 
 int BackStackRecord::commitAllowingStateLoss(){
-    return commitInternal();
+    if(mManager) mManager->enqueueAction(this, true);
+    return mIndex;
 }
 
+// Synchronous: drain pending first, then execute this record inline without enqueueing
+// (androidx FragmentManager.commitNow -> execPendingActions + execSingleAction).
 void BackStackRecord::commitNow(){
-    commitInternal();
+    if(mManager) mManager->execSingleAction(this, false);
 }
 
 void BackStackRecord::commitNowAllowingStateLoss(){
-    commitInternal();
+    if(mManager) mManager->execSingleAction(this, true);
 }
 
-int BackStackRecord::commitInternal(){
-    executeOps();
-    if(mAddToBackStack && mManager){
-        mManager->addBackStackState(this);
-    }
-    return mIndex;
+// OpGenerator: this record contributes itself as a single forward op batch.
+bool BackStackRecord::generateOps(std::vector<BackStackRecord*>& records,
+                                  std::vector<bool>& isRecordPop){
+    records.push_back(this);
+    isRecordPop.push_back(false);
+    return true;
 }
 
 void BackStackRecord::executeOps(){

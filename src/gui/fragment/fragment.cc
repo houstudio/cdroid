@@ -44,7 +44,13 @@ class FragmentChildHost : public FragmentHostCallback{
 public:
     explicit FragmentChildHost(Fragment* f) : mFragment(f){}
     cdroid::Context* getContext() override { return mFragment->getContext(); }
-    cdroid::Handler* getHandler() override { return nullptr; }
+    // Reuse the host chain's Handler (the activity's) rather than minting one. A nested child
+    // FragmentManager resolves the same host Handler up to the activity, matching androidx.
+    // Needed so a deferred child-FM commit (NavHostFragment.onCreate -> setGraph -> navigate)
+    // can reach the looper via mHost->getHandler().
+    cdroid::Handler* getHandler() override {
+        return mFragment->mHost ? mFragment->mHost->getHandler() : nullptr;
+    }
     cdroid::LayoutInflater* onGetLayoutInflater() override { return cdroid::LayoutInflater::from(getContext()); }
     cdroid::Window* onGetHost() override { return mFragment->mHost ? mFragment->mHost->onGetHost() : nullptr; }
     cdroid::View* onFindViewById(int id) override {
@@ -133,6 +139,15 @@ bool Fragment::isVisible() const{
 // --- perform* (lifecycle dispatch + nested childFragmentManager) ---
 void Fragment::performAttach(){
     onAttach(getContext());
+    // Attach the child FragmentManager here (androidx attaches it during onAttach) so it has a
+    // live host — and thus a resolvable Handler — before onCreate. NavHostFragment::onCreate
+    // commits on the child FM (setGraph -> navigate); with a deferred commit that commit must be
+    // able to reach the host Handler. Attaching in performCreate (the old site, after onCreate)
+    // left the child FM's mHost null during onCreate.
+    if(mChildFragmentManager && !mChildHost){
+        mChildHost = new FragmentChildHost(this);
+        mChildFragmentManager->attachController(mChildHost, mChildHost, this);
+    }
 }
 
 void Fragment::performCreate(cdroid::Bundle* savedInstanceState){
@@ -140,10 +155,6 @@ void Fragment::performCreate(cdroid::Bundle* savedInstanceState){
     mLifecycleRegistry->handleLifecycleEvent(lifecycle::Lifecycle::Event::ON_CREATE);
     mIsCreated = true;
     if(mChildFragmentManager){
-        if(!mChildHost){
-            mChildHost = new FragmentChildHost(this);
-            mChildFragmentManager->attachController(mChildHost, mChildHost, this);
-        }
         mChildFragmentManager->dispatchCreate();
     }
 }

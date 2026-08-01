@@ -23,19 +23,25 @@
  * MVP: commit() executes ops synchronously (no Handler-deferred execPendingActions).
  *********************************************************************************/
 #include <fragment/fragmenttransaction.h>
+#include <fragment/fragmentmanager.h>
 namespace cdroid{
 namespace fragment{
 
-class FragmentManager;
-
-class BackStackRecord : public FragmentTransaction{
+class BackStackRecord : public FragmentTransaction, public FragmentManager::OpGenerator{
 public:
     explicit BackStackRecord(FragmentManager* manager);
 
+    // commit()/commitAllowingStateLoss(): DEFERRED — enqueue for the next main-loop iteration
+    // (androidx commitInternal -> enqueueAction). commitNow()/commitNowAllowingStateLoss():
+    // SYNCHRONOUS — drain pending then execute this record inline (androidx execSingleAction).
     int commit() override;
     int commitAllowingStateLoss() override;
     void commitNow() override;
     void commitNowAllowingStateLoss() override;
+
+    // OpGenerator: append this record as a forward (non-pop) batch entry.
+    bool generateOps(std::vector<BackStackRecord*>& records,
+                     std::vector<bool>& isRecordPop) override;
 
     // Apply all recorded ops (add/remove/hide/...).
     void executeOps();
@@ -47,7 +53,6 @@ public:
     const std::string& getName() const { return mName; }
 
 private:
-    int commitInternal();
     FragmentManager* mManager;
     int mIndex = -1;
 };
