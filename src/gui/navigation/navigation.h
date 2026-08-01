@@ -92,12 +92,20 @@ public:
     static void setViewNavController(View* view,/*@Nullable*/ NavController* controller);
 
     /**
+     * Retrieve the {@link NavController} associated with the given View, if any. Mirrors the
+     * androidx {@code @RestrictTo(LIBRARY_GROUP)} accessor used by NavHostFragment to read back
+     * (and clear) the controller tag it publishes on view create/destroy.
+     * @param view the view previously associated via setViewNavController
+     * @return the NavController stored on the view, or nullptr
+     */
+    static NavController* getViewNavController(View* view);
+
+private:
+    /**
      * Recurse up the view hierarchy, looking for the NavController
      * @param view the view to search from
      * @return the locally scoped {@link NavController} to the given view, if found
      */
-private:
     static NavController* findViewNavController(View* view);
-    static NavController* getViewNavController(View* view);
 };
 }/*endof namespace*/
