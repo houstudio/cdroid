@@ -30,6 +30,7 @@
 #include <lifecycle/lifecycle.h>
 #include <core/handler.h>
 #include <core/callbackbase.h>
+#include <fragment/fragmentstate.h>
 namespace cdroid{
 class LayoutInflater;
 class View;
@@ -82,6 +83,14 @@ public:
     bool executePendingTransactions();
     bool popBackStackImmediate();
     bool popBackStackImmediate(const std::string& name, int flags);
+    // androidx FragmentManager.saveBackStack/restoreBackStack/clearBackStack (in-memory, no Parcel):
+    // save = pop the records named `name`, capturing each fragment's state into mSavedState, and
+    // store a BackStackState in mBackStackStates[name]; restore = re-instantiate the fragments and
+    // re-run the transactions forward; clear = restore then pop (discard). All synchronous (CDROID
+    // single-threaded; androidx batches these as OpGenerators — same logical effect).
+    bool saveBackStack(const std::string& name);
+    bool restoreBackStack(const std::string& name);
+    bool clearBackStack(const std::string& name);
     // Enqueue a record for deferred execution (androidx enqueueAction). Transfers ownership of
     // `action` to this FragmentManager (freed after execution, or held in mBackStack if added
     // to the back stack).
@@ -140,6 +149,7 @@ private:
     std::vector<Fragment*> mAdded;
     std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
     std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
+    std::unordered_map<std::string, BackStackState> mBackStackStates; // name -> saved back stack (androidx FragmentManager.mBackStackStates)
     std::vector<BackStackRecord*> mBackStack;
     std::vector<std::string> mPendingSharedNames;
     bool mDestroyed = false;

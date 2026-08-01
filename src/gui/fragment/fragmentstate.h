@@ -73,6 +73,28 @@ struct FragmentState{
     FragmentState& operator=(const FragmentState&) = delete;
 };
 
+// Port of androidx.fragment.app.BackStackRecordState — one saved transaction's ops. CDROID stores
+// the op list directly (no Parcel). Built from a BackStackRecord at save time; used to rebuild a
+// BackStackRecord at restore time (the per-op fragment resolved by mWho against re-created fragments).
+struct BackStackRecordState{
+    struct OpState{
+        int cmd = 0;                                       // FragmentTransaction OP_* code
+        std::string fragmentWho;                           // mWho of the op's fragment ("" if none)
+        std::string enterAnim, exitAnim, popEnterAnim, popExitAnim;
+        lifecycle::Lifecycle::State currentMaxState = lifecycle::Lifecycle::State::RESUMED;
+        lifecycle::Lifecycle::State oldMaxState     = lifecycle::Lifecycle::State::RESUMED;
+    };
+    std::vector<OpState> ops;
+    std::string name;                                       // addToBackStack name
+};
+
+// Port of androidx.fragment.app.BackStackState — a saved back-stack chain: the mWho of every
+// fragment touched + the ordered transactions. Held in FragmentManager.mBackStackStates[name].
+struct BackStackState{
+    std::vector<std::string> fragmentWhos;
+    std::vector<BackStackRecordState> transactions;
+};
+
 }//namespace fragment
 }//namespace cdroid
 #endif/*__FRAGMENTSTATE_H__*/

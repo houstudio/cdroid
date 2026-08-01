@@ -23,6 +23,8 @@
  * MVP: commit() executes ops synchronously (no Handler-deferred execPendingActions).
  *********************************************************************************/
 #include <fragment/fragmenttransaction.h>
+#include <fragment/fragmentstate.h>
+#include <unordered_map>
 #include <fragment/fragmentmanager.h>
 namespace cdroid{
 namespace fragment{
@@ -51,6 +53,12 @@ public:
     int getIndex() const { return mIndex; }
     void setIndex(int index){ mIndex = index; }
     const std::string& getName() const { return mName; }
+    // Capture this record's ops into a BackStackRecordState (androidx BackStackRecordState(BackStackRecord)).
+    BackStackRecordState captureState() const;
+    // Rebuild this record's ops from a BackStackRecordState, resolving each op's fragment by mWho
+    // from `fragments` (androidx BackStackRecordState.fillInBackStackRecord).
+    void restoreFromState(const BackStackRecordState& state,
+                          const std::unordered_map<std::string, Fragment*>& fragments);
     // Set while saveBackStack pops this record: FragmentStateManager saves its fragments' state
     // into FragmentManager.mSavedState instead of discarding it (androidx BackStackRecord.mBeingSaved).
     bool mBeingSaved = false;

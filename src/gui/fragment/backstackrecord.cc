@@ -143,5 +143,50 @@ void BackStackRecord::executePopOps(){
     }
 }
 
+BackStackRecordState BackStackRecord::captureState() const{
+    // androidx BackStackRecordState(BackStackRecord): snapshot each op (cmd + fragment mWho + anims
+    // + lifecycle) and the record name. The fragment is captured by mWho (not pointer) so the record
+    // can be rebuilt after the fragment is destroyed and re-instantiated.
+    BackStackRecordState s;
+    s.name = mName;
+    for(const Op& op : mOps){
+        BackStackRecordState::OpState os;
+        os.cmd = op.mCmd;
+        os.fragmentWho = (op.mFragment && !op.mFragment->mWho.empty()) ? op.mFragment->mWho : "";
+        os.enterAnim = op.mEnterAnim;
+        os.exitAnim = op.mExitAnim;
+        os.popEnterAnim = op.mPopEnterAnim;
+        os.popExitAnim = op.mPopExitAnim;
+        os.currentMaxState = op.mCurrentMaxState;
+        os.oldMaxState = op.mOldMaxState;
+        s.ops.push_back(os);
+    }
+    return s;
+}
+
+void BackStackRecord::restoreFromState(const BackStackRecordState& state,
+                                       const std::unordered_map<std::string, Fragment*>& fragments){
+    // androidx BackStackRecordState.fillInBackStackRecord: rebuild the ops from the snapshot,
+    // resolving each fragment by mWho against the re-created fragments.
+    mOps.clear();
+    mName = state.name;
+    for(const BackStackRecordState::OpState& os : state.ops){
+        Op op;
+        op.mCmd = os.cmd;
+        if(!os.fragmentWho.empty()){
+            auto it = fragments.find(os.fragmentWho);
+            op.mFragment = (it != fragments.end()) ? it->second : nullptr;
+        }
+        op.mEnterAnim = os.enterAnim;
+        op.mExitAnim = os.exitAnim;
+        op.mPopEnterAnim = os.popEnterAnim;
+        op.mPopExitAnim = os.popExitAnim;
+        op.mCurrentMaxState = os.currentMaxState;
+        op.mOldMaxState = os.oldMaxState;
+        addOp(op);
+    }
+    mAddToBackStack = true;
+}
+
 }//namespace fragment
 }//namespace cdroid
