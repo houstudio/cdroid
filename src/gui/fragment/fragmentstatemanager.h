@@ -29,6 +29,7 @@
  * mInDynamicContainer, mDeferStart, mTransitioning, saved-state plumbing.
  *********************************************************************************/
 namespace cdroid{
+class Bundle; // cdroid::Bundle forward decl (NOT cdroid::fragment::Bundle)
 namespace fragment{
 
 class Fragment;
@@ -77,6 +78,10 @@ private:
     void stepUp();
     void stepDown();
     SpecialEffectsController* getSpecialEffectsController();
+    // The saved instance-state Bundle sliced out of mFragment->mSavedFragmentState (set on restore),
+    // passed to onCreate/onCreateView/onActivityCreated (androidx FragmentStateManager). Null for a
+    // freshly created fragment (no saved state).
+    Bundle* savedInstanceState() const;
 };
 
 }}//namespace fragment::cdroid

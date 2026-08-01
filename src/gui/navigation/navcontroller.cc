@@ -156,6 +156,12 @@ void NavController::navigate(int resId, Bundle* args, NavOptions* options){
 
 void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* options){
     LOGD("NavController.navigate route='%s'", node ? node->getRoute().c_str() : "(null)");
+    // androidx NavControllerImpl.navigate restoreState path (:1201-1202): if NavOptions asks to
+    // restore AND a saved chain is keyed by this destination, restore it (re-runs the saved
+    // transactions with original entry ids → FragmentNavigator.restoreBackStack) instead of pushing.
+    if(options && options->shouldRestoreState() && mBackStackMap.count(node->getId())){
+        if(restoreStateInternal(node->getId(), args, options)) return;
+    }
     // launchSingleTop: skip if the destination is already on top (androidx NavOptions singleTop).
     // For a NavGraph target, singleTop only when backStack[nodeIndex..top] exactly matches the
     // graph's childHierarchy ids (androidx launchSingleTopInternal:1234).
@@ -219,15 +225,15 @@ void NavController::navigate(NavDeepLinkRequest* /*request*/, NavOptions* /*opti
 
 bool NavController::popBackStack(){
     // androidx popBackStack() = popBackStack(currentDestination.id, inclusive = true): pop the
-    // single top entry via its navigator's entry-based popBackStack.
+    // single top entry via its navigator's entry-based popBackStack (user back — no save).
     if(mBackStack.empty()) return false;
     NavDestination* dest = mBackStack.back()->getDestination();
     if(!dest) return false;
     std::vector<Navigator*> popOperations = { &dest->getNavigator() };
-    return executePopOperations(popOperations);
+    return executePopOperations(popOperations, false);
 }
 
-bool NavController::popBackStack(const std::string& route, bool inclusive, bool /*saveState*/){
+bool NavController::popBackStack(const std::string& route, bool inclusive, bool saveState){
     // androidx popBackStackInternal(route, inclusive, saveState): build popOperations walking the
     // back stack top-down to the topmost entry whose destination has the route.
     std::vector<Navigator*> popOperations;
@@ -242,10 +248,10 @@ bool NavController::popBackStack(const std::string& route, bool inclusive, bool 
         if(d) popOperations.push_back(&d->getNavigator());
     }
     if(!found) return false;
-    return executePopOperations(popOperations);
+    return executePopOperations(popOperations, saveState);
 }
 
-bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveState*/){
+bool NavController::popBackStack(int destinationId, bool inclusive, bool saveState){
     // androidx popBackStackInternal(destinationId, inclusive, saveState).
     std::vector<Navigator*> popOperations;
     bool found = false;
@@ -259,26 +265,41 @@ bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveS
         if(d) popOperations.push_back(&d->getNavigator());
     }
     if(!found) return false;
-    return executePopOperations(popOperations);
+    return executePopOperations(popOperations, saveState);
 }
 
-bool NavController::executePopOperations(std::vector<Navigator*>& popOperations){
+bool NavController::executePopOperations(std::vector<Navigator*>& popOperations, bool saveState){
     // androidx NavControllerImpl.executePopOperations (:478-546): for each navigator, pop the
     // current top entry via its entry-based popBackStack. The pop handler (popEntryFromBackStack)
     // runs only if the navigator actually popped (receivedPop); stop on the first that doesn't.
+    // With saveState, each popped entry is captured into a NavBackStackEntryState chain (Level A).
     bool popped = false;
+    std::vector<NavBackStackEntryState> savedChain; // built bottom-to-top (prepend as we pop top-down)
     for(Navigator* navigator : popOperations){
         if(!navigator || mBackStack.empty()) break;
         NavBackStackEntry* topEntry = mBackStack.back();
         bool receivedPop = false;
-        mPopFromBackStackHandler = [this, &receivedPop](NavBackStackEntry* e){
+        mPopFromBackStackHandler = [this, &receivedPop, saveState, &savedChain](NavBackStackEntry* e){
+            if(saveState){
+                NavDestination* d = e->getDestination();
+                savedChain.insert(savedChain.begin(),
+                    NavBackStackEntryState(e->getId(), d ? d->getId() : 0, e->getArguments()));
+            }
             popEntryFromBackStack(e);
             receivedPop = true;
         };
-        navigator->popBackStack(topEntry, false);
+        navigator->popBackStack(topEntry, saveState);
         mPopFromBackStackHandler = nullptr;
         if(!receivedPop) break;   // navigator refused (did not call state.pop) — stop, no desync
         popped = true;
+    }
+    if(saveState && !savedChain.empty()){
+        // androidx :518-541: index the saved chain by its bottom entry's id and map that entry's
+        // destination id to it (so navigate(destId, restoreState) can find + restore the chain).
+        const std::string chainId = savedChain.front().id;
+        int chainDestId = savedChain.front().destinationId;
+        mBackStackStates[chainId] = std::move(savedChain);
+        mBackStackMap[chainDestId] = chainId;
     }
     if(popped){
         if(!mBackStack.empty()){
@@ -288,6 +309,43 @@ bool NavController::executePopOperations(std::vector<Navigator*>& popOperations)
         updateBackStackLifecycle();
     }
     return popped;
+}
+
+bool NavController::restoreStateInternal(int destinationId, Bundle* /*args*/, NavOptions* options){
+    // androidx NavControllerImpl.restoreStateInternal (:1282-1298) + instantiateBackStack +
+    // executeRestoreState: consume the saved chain keyed by destinationId, rebuild each
+    // NavBackStackEntry preserving its original id (so the navigator-side savedIds matches and
+    // FragmentNavigator.restoreBackStack fires), then dispatch each rebuilt entry through its
+    // navigator's navigate (Level B restore).
+    auto mit = mBackStackMap.find(destinationId);
+    if(mit == mBackStackMap.end()) return false;
+    const std::string chainId = mit->second;
+    // Consume-once: strip every map entry pointing at this chain, then take the chain.
+    for(auto it = mBackStackMap.begin(); it != mBackStackMap.end(); ){
+        if(it->second == chainId) it = mBackStackMap.erase(it); else ++it;
+    }
+    auto sit = mBackStackStates.find(chainId);
+    if(sit == mBackStackStates.end()) return false;
+    std::vector<NavBackStackEntryState> chain = std::move(sit->second);
+    mBackStackStates.erase(sit);
+    if(!mGraph) return false;
+    // Rebuild entries (preserving ids), group by navigator, and dispatch each group forward — the
+    // FragmentNavigator.navigate restoreState gate matches the saved id → restoreBackStack (Level B).
+    for(NavBackStackEntryState& st : chain){
+        NavDestination* dest = mGraph->findNode(st.destinationId);
+        if(!dest) continue;
+        NavBackStackEntry* entry = new NavBackStackEntry(dest, st.arguments);
+        entry->mId = st.id; // preserve original id (friend access) — navigator savedIds match
+        Navigator& navigator = dest->getNavigator();
+        getOrCreateNavigatorState(&navigator);
+        std::vector<NavBackStackEntry*> entries = { entry };
+        mAddToBackStackHandler = [this, dest, &st](NavBackStackEntry* e){ addEntryToBackStack(dest, st.arguments, e); };
+        navigator.navigate(entries, options, nullptr); // options has shouldRestoreState → FragmentNavigator restoreState gate fires
+        mAddToBackStackHandler = nullptr;
+        dispatchOnDestinationChanged(dest, st.arguments);
+    }
+    updateBackStackLifecycle();
+    return true;
 }
 
 bool NavController::navigateUp(){

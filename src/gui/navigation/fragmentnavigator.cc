@@ -59,6 +59,16 @@ void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOption
     // FragmentManager to a blank screen; its NavBackStackEntry still leaves the logical back stack
     // through state.pop (its fragment lingers until the next navigate()'s replace evicts it).
     const bool initialNavigation = !isAttached() || getState()->getBackStack().empty();
+    // androidx FragmentNavigator.kt:433-444 — restore gate: if NavOptions asks to restore AND this
+    // entry id was previously saved (consume it), re-run the saved transactions instead of building
+    // a fresh FragmentTransaction. restoreBackStack re-creates the fragment + its view state.
+    const bool restoreState = navOptions && !initialNavigation && navOptions->shouldRestoreState()
+                              && (mSavedIds.erase(entry->getId()) > 0);
+    if(restoreState){
+        if(mFragmentManager) mFragmentManager->restoreBackStack(entry->getId());
+        if(getState()) getState()->push(entry);
+        return;
+    }
     fragment::FragmentFactory factory;
     fragment::Fragment* fragment = factory.instantiate(d->getClassName());
     if(!fragment) return;
@@ -87,10 +97,15 @@ void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOption
 }
 
 void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState){
-    // androidx FragmentNavigator.kt:317-369. Best-effort FragmentManager pop to (inclusive) the
-    // entry: the initial fragment was never addToBackStack, so popBackStackImmediate(name) is a
-    // no-op for it (returns false) — that's correct; its fragment is evicted by the next replace.
-    if(mFragmentManager){
+    // androidx FragmentNavigator.kt:317-369. With savedState=true, save the entry's back stack
+    // (its fragment state) so it can be restored; the initial entry was never addToBackStack, so
+    // saveBackStack returns false for it (can't save) and it is skipped. With savedState=false,
+    // pop the FragmentManager back stack to (inclusive) the entry (destructive).
+    if(savedState){
+        if(mFragmentManager && mFragmentManager->saveBackStack(popUpTo->getId())){
+            mSavedIds.insert(popUpTo->getId());
+        }
+    } else if(mFragmentManager){
         mFragmentManager->popBackStackImmediate(popUpTo->getId(), fragment::FragmentManager::POP_BACK_STACK_INCLUSIVE);
     }
     if(getState()) getState()->pop(popUpTo, savedState);
@@ -99,6 +114,22 @@ void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState
 bool FragmentNavigator::popBackStack(){
     // Legacy no-arg pop: pop the top of the FragmentManager back stack (false at the initial).
     return mFragmentManager ? mFragmentManager->popBackStackImmediate() : false;
+}
+
+Bundle FragmentNavigator::onSaveState(){
+    // androidx FragmentNavigator.onSaveState: persist savedIds so restore-eligibility survives a
+    // NavController state save/restore.
+    Bundle b;
+    std::vector<std::string> ids(mSavedIds.begin(), mSavedIds.end());
+    b.putStringArray("androidx-nav-fragment:navigator:savedIds", ids);
+    return b;
+}
+
+void FragmentNavigator::onRestoreState(const Bundle& savedState){
+    mSavedIds.clear();
+    for(const std::string& id : savedState.getStringArray("androidx-nav-fragment:navigator:savedIds")){
+        mSavedIds.insert(id);
+    }
 }
 
 }//namespace cdroid

@@ -23,6 +23,7 @@
  *********************************************************************************/
 #include <string>
 #include <vector>
+#include <set>
 #include <navigation/navigator.h>
 #include <navigation/navdestination.h>
 #include <navigation/navoptions.h>
@@ -57,9 +58,16 @@ public:
     // Legacy no-arg pop (kept until NavController switches fully to the entry-based pop): pop the
     // top of the FragmentManager back stack. Returns false at the start fragment (initial).
     bool popBackStack() override;
+    // androidx FragmentNavigator.onSaveState/onRestoreState: persist the savedIds set (which entry
+    // ids are eligible for restoreBackStack).
+    Bundle onSaveState() override;
+    void onRestoreState(const Bundle& savedState) override;
 private:
     fragment::FragmentManager* mFragmentManager;
     int mContainerId;
+    // androidx FragmentNavigator.savedIds: entry ids saved via saveBackStack and thus eligible for
+    // restoreBackStack (gates the navigate restoreState path).
+    std::set<std::string> mSavedIds;
     // androidx FragmentNavigator.kt:428-470 — per-entry navigate core.
     void navigate(NavBackStackEntry* entry, NavOptions* navOptions);
 };

@@ -118,6 +118,14 @@ void BackStackRecord::executeOps(){
 
 void BackStackRecord::executePopOps(){
     if(!mManager) return;
+    // androidx BackStackRecord: when this record is being saved (mBeingSaved), propagate the flag
+    // to each fragment so FragmentStateManager.saveState (gated on Fragment.mBeingSaved) captures
+    // their state into FragmentManager.mSavedState instead of discarding it during the teardown.
+    if(mBeingSaved){
+        for(const Op& op : mOps){
+            if(op.mFragment) op.mFragment->mBeingSaved = true;
+        }
+    }
     for(auto it = mOps.rbegin(); it != mOps.rend(); ++it){
         Fragment* f = it->mFragment;
         if(!f) continue;

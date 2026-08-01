@@ -72,6 +72,10 @@ void FragmentStateManager::forceCompleteSpecialEffects(){
     }
 }
 
+Bundle* FragmentStateManager::savedInstanceState() const{
+    return mFragment->mSavedFragmentState ? mFragment->mSavedFragmentState->savedInstanceState : nullptr;
+}
+
 FragmentState* FragmentStateManager::saveState(){
     // androidx FragmentStateManager.saveState (FragmentStateManager.java:703-754): pack FragmentState
     // meta + onSaveInstanceState + SavedStateRegistry + view-hierarchy state + arguments into one
@@ -199,7 +203,7 @@ void FragmentStateManager::stepUp(){
         case Fragment::INITIALIZING:
             mFragment->performAttach(); mFragment->mState = Fragment::ATTACHED; break;
         case Fragment::ATTACHED:
-            mFragment->performCreate(nullptr); mFragment->mState = Fragment::CREATED; break;
+            mFragment->performCreate(savedInstanceState()); mFragment->mState = Fragment::CREATED; break;
         case Fragment::CREATED: {
             // Resolve the container ViewGroup at view-creation time, by id (androidx
             // FragmentManager.getFragmentContainer): a fragment added before its host's view
@@ -212,7 +216,7 @@ void FragmentStateManager::stepUp(){
             }
             cdroid::LayoutInflater* inflater = mFragmentManager->mHost
                 ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
-            mFragment->performCreateView(inflater, mFragment->mContainer, nullptr);
+            mFragment->performCreateView(inflater, mFragment->mContainer, savedInstanceState());
             LOGD("FSM.stepUp CREATED: who=%s mView=%p mContainer=%p",
                  mFragment->mWho.c_str(), mFragment->mView, mFragment->mContainer);
             if(mFragment->mView && mFragment->mContainer){
@@ -251,12 +255,12 @@ void FragmentStateManager::stepUp(){
             if(mFragment->mSavedViewState && mFragment->mView){
                 mFragment->mView->restoreHierarchyState(*mFragment->mSavedViewState);
             }
-            mFragment->performViewCreated(nullptr);
+            mFragment->performViewCreated(savedInstanceState());
             mFragment->mState = Fragment::VIEW_CREATED;
             break;
         }
         case Fragment::VIEW_CREATED:
-            mFragment->performActivityCreated(nullptr); mFragment->mState = Fragment::ACTIVITY_CREATED; break;
+            mFragment->performActivityCreated(savedInstanceState()); mFragment->mState = Fragment::ACTIVITY_CREATED; break;
         case Fragment::ACTIVITY_CREATED:
             mFragment->performStart(); mFragment->mState = Fragment::STARTED; break;
         case Fragment::AWAITING_EXIT_EFFECTS:
