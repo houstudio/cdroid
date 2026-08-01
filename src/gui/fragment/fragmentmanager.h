@@ -42,6 +42,7 @@ class FragmentFactory;
 class FragmentTransaction;
 class BackStackRecord;
 class FragmentStateManager;
+struct FragmentState;
 
 class FragmentManager{
 public:
@@ -138,6 +139,7 @@ private:
     FragmentFactory* mFragmentFactory = nullptr;
     std::vector<Fragment*> mAdded;
     std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
+    std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
     std::vector<BackStackRecord*> mBackStack;
     std::vector<std::string> mPendingSharedNames;
     bool mDestroyed = false;
@@ -162,6 +164,11 @@ private:
     // pending/running effect op so awaiting clamps lift. Called on the teardown paths so a fragment
     // mid-effect is not left stranded in mRunningOperations.
     void forceCompleteAllSpecialEffects();
+    // androidx FragmentStore.mSavedState + setSavedState/getSavedState: per-fragment saved state
+    // keyed by mWho. setSavedState(who, nullptr) retrieves-and-clears (returns the previous value);
+    // setSavedState(who, s) stores s (returns the previous value). CDROID inlines FragmentStore here.
+    FragmentState* setSavedState(const std::string& who, FragmentState* s);
+    FragmentState* getSavedState(const std::string& who) const;
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
 };
 

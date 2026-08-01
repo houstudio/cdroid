@@ -38,8 +38,11 @@
 #include <lifecycle/lifecycleregistry.h>
 #include <savedstate/savedstateregistryowner.h>
 #include <savedstate/savedstateregistrycontroller.h>
+#include <core/parcelable.h>
+#include <core/sparsearray.h>
 
 namespace cdroid{
+namespace fragment{ struct FragmentState; }
 class Context;
 class Bundle;
 class View;
@@ -56,6 +59,7 @@ class FragmentViewLifecycleOwner;
 class Fragment : public savedstate::SavedStateRegistryOwner,
                  public lifecycle::ViewModelStoreOwner,
                  public lifecycle::HasDefaultViewModelProviderFactory{
+    friend class FragmentStateManager; // androidx same-package access to Fragment internals
 public:
     // Fragment state constants (verbatim from androidx).
     static const int INITIALIZING        = -1;
@@ -75,6 +79,7 @@ public:
     // --- identity / state (public for same-package access, as in androidx) ---
     int mState = INITIALIZING;
     std::string mWho;                 // unique id (assigned in ctor)
+    std::string mClassName;           // class name (stamped by FragmentFactory.instantiate; androidx uses Fragment.getClass())
     cdroid::Bundle* mArguments = nullptr;
     std::string mTag;
     std::string mTargetWho;
@@ -98,6 +103,14 @@ public:
     bool mIsCreated = false;
     bool mUserVisibleHint = true;
     lifecycle::Lifecycle::State mMaxState = lifecycle::Lifecycle::State::RESUMED;
+    // --- saved state (androidx Fragment.mSavedViewState / mSavedFragmentState / mBeingSaved) ---
+    // View hierarchy state captured by FragmentStateManager.saveViewState (owned).
+    SparseArray<Parcelable*>* mSavedViewState = nullptr;
+    // The full per-fragment saved state, set on restore so lifecycle callbacks get it; owned.
+    FragmentState* mSavedFragmentState = nullptr;
+    // Set while a saveBackStack pop tears this fragment down: FragmentStateManager saves its state
+    // into FragmentManager.mSavedState instead of discarding it (androidx Fragment.mBeingSaved).
+    bool mBeingSaved = false;
     // Custom transition animations pushed by FragmentTransaction.executeOps (androidx
     // Fragment.setAnimations -> AnimationInfo). Empty = use the default Fade transition.
     std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;

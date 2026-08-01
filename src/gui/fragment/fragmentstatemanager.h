@@ -34,6 +34,7 @@ namespace fragment{
 class Fragment;
 class FragmentManager;
 class SpecialEffectsController;
+struct FragmentState;
 
 class FragmentStateManager{
 public:
@@ -58,6 +59,16 @@ public:
     // for this fragment's container so awaiting-effect clamps lift and the ops retire. Used by the
     // FragmentManager teardown paths so a fragment mid-effect is not left stranded.
     void forceCompleteSpecialEffects();
+    // androidx FragmentStateManager.saveState(): gather this fragment's saved state (FragmentState
+    // meta + onSaveInstanceState + SavedStateRegistry + view-hierarchy state + arguments) into one
+    // FragmentState. Caller owns the result. Used by the saveBackStack teardown.
+    FragmentState* saveState();
+    // androidx FragmentStateManager.saveViewState(): capture mView's hierarchy state into
+    // mFragment->mSavedViewState.
+    void saveViewState();
+    // androidx FragmentStateManager.restoreState(): re-apply a saved state onto this fragment
+    // (arguments + view state; the lifecycle callbacks consume the rest when re-created).
+    void restoreState(const FragmentState& state);
 private:
     FragmentManager* mFragmentManager;
     Fragment* mFragment;
