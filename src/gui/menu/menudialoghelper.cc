@@ -127,8 +127,13 @@ void MenuDialogHelper::onDismiss(DialogInterface& dialog) {
 }
 
 void MenuDialogHelper::onCloseMenu(MenuBuilder& menu, bool allMenusAreClosing) {
-    if (allMenusAreClosing || &menu == mMenu) {
-        dismiss();
+    if ((allMenusAreClosing || &menu == mMenu) && mDialog != nullptr) {
+        // Clear mDialog before dismissing so the dismiss -> onDismiss -> presenter.onCloseMenu
+        // -> (callback) -> onCloseMenu -> dismiss cycle stops here. (Dialog.dismiss also guards
+        // on mShowing; this is belt-and-braces for CDROID's menu callback wiring.)
+        Dialog* d = mDialog;
+        mDialog = nullptr;
+        d->dismiss();
     }
     if (mPresenterCallback.onCloseMenu != nullptr) {
         mPresenterCallback.onCloseMenu(menu, allMenusAreClosing);

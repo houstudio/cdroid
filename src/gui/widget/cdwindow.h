@@ -14,6 +14,8 @@ class Toolbar;
 class Menu;
 class MenuItem;
 class MenuInflater;
+class ContextMenu;
+class ContextMenuInfo;
 class Window : public FrameLayout {
 protected:
     friend class WindowManager;
@@ -158,6 +160,17 @@ public:
     virtual bool onNavigateUp();
     virtual void invalidateOptionsMenu();
     virtual MenuInflater* getMenuInflater();
+
+    // Context menu (android.app.Activity context menu dispatch). The long-press ->
+    // showContextMenu -> showContextMenuForChild chain terminates here; Window builds and
+    // shows the menu (MenuDialogHelper) and routes item selection to onContextItemSelected.
+    bool showContextMenuForChild(View* originalView) override;
+    bool showContextMenuForChild(View* originalView, float x, float y) override;
+    void registerForContextMenu(View* view);
+    void unregisterForContextMenu(View* view);
+    void openContextMenu(View* view);
+    void closeContextMenu();
+    virtual void onCreateContextMenu(ContextMenu& menu, View& v, ContextMenuInfo* menuInfo);
 
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;

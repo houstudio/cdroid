@@ -29,6 +29,10 @@ ContextMenu& ContextMenuBuilder::setHeaderIcon(Drawable* icon) {
     return (ContextMenu&) MenuBuilder::setHeaderIconInt(icon);
 }
 
+ContextMenu& ContextMenuBuilder::setHeaderIcon(const std::string& iconRes) {
+    return (ContextMenu&) MenuBuilder::setHeaderIconInt(iconRes);
+}
+
 /*ContextMenu& ContextMenuBuilder::setHeaderIcon(int iconRes) {
     return (ContextMenu&) MenuBuilder::setHeaderIconInt(iconRes);
 }*/
@@ -43,6 +47,10 @@ ContextMenu& ContextMenuBuilder::setHeaderTitle(const std::string& title) {
 
 ContextMenu& ContextMenuBuilder::setHeaderView(View* view) {
     return (ContextMenu&) MenuBuilder::setHeaderViewInt(view);
+}
+
+void ContextMenuBuilder::clearHeader() {
+    MenuBuilder::clearHeader();
 }
 
 MenuDialogHelper* ContextMenuBuilder::showDialog(View* originalView/*, IBinder token*/) {

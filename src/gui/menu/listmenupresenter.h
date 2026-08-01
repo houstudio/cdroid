@@ -28,17 +28,17 @@ protected:
     class MenuAdapter;
     friend MenuAdapter;
     friend class MenuPopupWindow;
-    Context* mContext;
-    LayoutInflater* mInflater;
-    MenuBuilder* mMenu;
-    ExpandedMenuView* mMenuView;
-    int mThemeRes;
+    Context* mContext = nullptr;
+    LayoutInflater* mInflater = nullptr;
+    MenuBuilder* mMenu = nullptr;
+    ExpandedMenuView* mMenuView = nullptr;
+    int mThemeRes = 0;
     std::string mItemLayoutRes;
-    MenuAdapter* mAdapter;
+    MenuAdapter* mAdapter = nullptr;
 private:
-    int mItemIndexOffset;
+    int mItemIndexOffset = 0;
     Callback mCallback;
-    int mId;
+    int mId = 0;
 public:
     static constexpr const char* VIEWS_TAG = "android:menu:list";
 
