@@ -17,13 +17,19 @@ ToolbarActionBar::ToolbarActionBar(Toolbar* toolbar, const std::string& title, W
     mTitleSet = !mTitle.empty();
     mSubtitle = mToolbar->getSubtitle();
     mNavIcon = mToolbar->getNavigationIcon();
+    // Default Up indicator. androidx resolves the theme's homeAsUpIndicator via
+    // TintTypedArray; CDROID's theme-attr resolution for homeAsUpIndicator is not wired
+    // (and the Material asset ic_ab_back_material is absent from the res tree — only the
+    // Holo one ships), so fall back to that built-in asset. detectDisplayOptions() below
+    // overrides this when the Toolbar already carries a navigation icon.
+    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark");
     mDisplayOpts = detectDisplayOptions();
 
     // Navigation icon click -> synthesize an R::id::home item -> host dispatch.
     mToolbar->setNavigationOnClickListener([this](View&){ fireHomePressed(); });
     // Action-menu item click -> host onOptionsItemSelected.
     mToolbar->setOnMenuItemClickListener(
-        [this](MenuItem& item)->bool{ return mHost->onOptionsItemSelected(&item); });
+        [this](MenuItem& item)->bool{ return mHost->onOptionsItemSelected(item); });
 
     // Apply the default display options so the seeded title shows.
     applyDisplayOptions(mDisplayOpts);
@@ -200,9 +206,9 @@ void ToolbarActionBar::populateOptionsMenu(){
     Menu* menu = getMenu();
     menu->clear();
     // Mirrors androidx: if onCreatePanelMenu or onPreparePanel declines, drop the menu.
-    if(!mHost->onCreateOptionsMenu(menu)){
+    if(!mHost->onCreateOptionsMenu(*menu)){
         menu->clear();
-    }else if(!mHost->onPrepareOptionsMenu(menu)){
+    }else if(!mHost->onPrepareOptionsMenu(*menu)){
         menu->clear();
     }
     mMenuPrepared = true;
@@ -220,7 +226,7 @@ void ToolbarActionBar::fireHomePressed(){
     // DISPLAY_HOME_AS_UP is set.
     if(!mMenuPrepared) return;
     ActionMenuItem home(mToolbar->getContext(), 0, R::id::home, 0, 0, mTitle);
-    mHost->onOptionsItemSelected(&home);
+    mHost->onOptionsItemSelected(home);
 }
 
 int ToolbarActionBar::getNavigationMode() const{

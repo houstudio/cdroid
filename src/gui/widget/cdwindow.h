@@ -151,9 +151,10 @@ public:
     ActionBar* getActionBar();
 
     // Options-menu dispatch chain. Override in subclasses to populate / handle items.
-    virtual bool onCreateOptionsMenu(Menu* menu);
-    virtual bool onPrepareOptionsMenu(Menu* menu);
-    virtual bool onOptionsItemSelected(MenuItem* item);
+    virtual bool onCreateOptionsMenu(Menu& menu);
+    virtual bool onPrepareOptionsMenu(Menu& menu);
+    virtual bool onOptionsItemSelected(MenuItem& item);
+    virtual bool onContextItemSelected(MenuItem& item);
     virtual bool onNavigateUp();
     virtual void invalidateOptionsMenu();
     virtual MenuInflater* getMenuInflater();

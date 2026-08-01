@@ -40,6 +40,9 @@
 #include <savedstate/savedstateregistrycontroller.h>
 #include <core/parcelable.h>
 #include <core/sparsearray.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
+#include <menu/menuinflater.h>
 
 namespace cdroid{
 namespace fragment{ struct FragmentState; }
@@ -162,6 +165,14 @@ public:
     virtual void onLowMemory(){}
     virtual void onConfigurationChanged(){}
 
+    // --- options-menu callbacks (override in subclasses that call setHasOptionsMenu(true)) ---
+    virtual void onCreateOptionsMenu(Menu& menu, MenuInflater& inflater){}
+    virtual void onPrepareOptionsMenu(Menu& menu){}
+    virtual bool onOptionsItemSelected(MenuItem& item){ return false; }
+    virtual bool onContextItemSelected(MenuItem& item){ return false; }
+    virtual void onDestroyOptionsMenu(){}
+    virtual void onOptionsMenuClosed(Menu& menu){}
+
     // --- owner interface implementations ---
     lifecycle::Lifecycle& getLifecycle() override; // returns mLifecycleRegistry
     lifecycle::ViewModelStore& getViewModelStore() override;
@@ -181,6 +192,12 @@ public:
     FragmentManager* getChildFragmentManager();
     Fragment* getParentFragment() const { return mParentFragment; }
     bool isAdded() const { return mHost != nullptr; }
+
+    // --- options-menu participation (mirrors androidx Fragment) ---
+    bool hasOptionsMenu() const { return mHasMenu; }
+    bool isMenuVisible() const;
+    void setHasOptionsMenu(bool hasMenu);
+    void setMenuVisibility(bool menuVisible);
     bool isDetached() const { return mDetached; }
     bool isRemoving() const { return mRemoving; }
     bool isResumed() const { return mState == RESUMED; }
@@ -203,6 +220,13 @@ public:
     void performDestroyView();
     void performDestroy();
     void performDetach();
+
+    // --- options-menu perform (driven by FragmentManager.dispatch*OptionsMenu) ---
+    bool performCreateOptionsMenu(Menu& menu, MenuInflater& inflater);
+    bool performPrepareOptionsMenu(Menu& menu);
+    bool performOptionsItemSelected(MenuItem& item);
+    bool performContextItemSelected(MenuItem& item);
+    void performOptionsMenuClosed(Menu& menu);
 
 protected:
     lifecycle::LifecycleRegistry* mLifecycleRegistry = nullptr; // owned

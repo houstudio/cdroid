@@ -34,6 +34,9 @@
 namespace cdroid{
 class LayoutInflater;
 class View;
+class Menu;
+class MenuInflater;
+class MenuItem;
 namespace fragment{
 
 class Fragment;
@@ -66,6 +69,14 @@ public:
     void dispatchDestroyView();
     void dispatchDestroy();
     int getCurState() const { return mCurState; }
+
+    // --- options-menu dispatch (androidx FragmentManager.dispatch*OptionsMenu) ---
+    bool isParentMenuVisible(Fragment* parent) const; // parent is @Nullable (host Activity)
+    bool dispatchCreateOptionsMenu(Menu& menu, MenuInflater& inflater);
+    bool dispatchPrepareOptionsMenu(Menu& menu);
+    bool dispatchOptionsItemSelected(MenuItem& item);
+    bool dispatchContextItemSelected(MenuItem& item);
+    void dispatchOptionsMenuClosed(Menu& menu);
 
     // --- transactions (BackStackRecord-backed) ---
     // A deferred commit, mirroring androidx FragmentManager: commit() enqueues a record and
@@ -147,6 +158,7 @@ private:
     int mCurState = -1; // Fragment::INITIALIZING
     FragmentFactory* mFragmentFactory = nullptr;
     std::vector<Fragment*> mAdded;
+    std::vector<Fragment*> mCreatedMenus; // fragments that contributed to the last options menu
     std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
     std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
     std::unordered_map<std::string, BackStackState> mBackStackStates; // name -> saved back stack (androidx FragmentManager.mBackStackStates)

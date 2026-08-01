@@ -48,6 +48,7 @@ public:
         return mActivity->findViewById(id);
     }
     bool onHasView() override { return true; }
+    void onSupportInvalidateOptionsMenu() override { mActivity->invalidateOptionsMenu(); }
 };
 
 FragmentActivity::FragmentActivity(int x, int y, int w, int h)
@@ -137,6 +138,28 @@ void FragmentActivity::onBackPressed(){
     }
     if(mFragmentManager->popBackStackImmediate()) return;
     Activity::onBackPressed();
+}
+
+bool FragmentActivity::onCreateOptionsMenu(Menu& menu){
+    bool show = Activity::onCreateOptionsMenu(menu);
+    show |= mFragmentManager->dispatchCreateOptionsMenu(menu, *getMenuInflater());
+    return show;
+}
+
+bool FragmentActivity::onPrepareOptionsMenu(Menu& menu){
+    bool show = Activity::onPrepareOptionsMenu(menu);
+    show |= mFragmentManager->dispatchPrepareOptionsMenu(menu);
+    return show;
+}
+
+bool FragmentActivity::onOptionsItemSelected(MenuItem& item){
+    // Let the Activity handle it first (e.g. home -> onNavigateUp), then fragments.
+    if(Activity::onOptionsItemSelected(item)) return true;
+    return mFragmentManager->dispatchOptionsItemSelected(item);
+}
+
+bool FragmentActivity::onContextItemSelected(MenuItem& item){
+    return mFragmentManager->dispatchContextItemSelected(item);
 }
 
 FragmentManager* FragmentActivity::getSupportFragmentManager(){
