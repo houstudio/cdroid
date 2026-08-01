@@ -32,6 +32,7 @@
 #include <lifecycle/viewmodelstore.h>
 #include <core/bundle.h>
 #include <navigation/navdestination.h>
+#include <navigation/navbackstackentry.h>
 namespace cdroid{
 class Context;
 class Navigator;
@@ -124,13 +125,21 @@ private:
     void pop(NavigatorState* state, NavBackStackEntry* popUpTo, bool saveState);
     // androidx NavControllerImpl.executePopOperations: pop each entry (top-first) via its own
     // Navigator's entry-based popBackStack, breaking on the first that doesn't fire the pop handler
-    // (!receivedPop). Returns whether anything was popped.
-    bool executePopOperations(std::vector<Navigator*>& popOperations);
+    // (!receivedPop). Returns whether anything was popped. saveState captures each popped entry's
+    // NavBackStackEntryState into mBackStackStates (Level A).
+    bool executePopOperations(std::vector<Navigator*>& popOperations, bool saveState);
+    // androidx NavControllerImpl.restoreStateInternal: rebuild + re-run a saved back-stack chain
+    // (keyed by destination id in mBackStackMap) with its original entry ids, so the navigator-side
+    // restore (FragmentNavigator.restoreBackStack via savedIds) fires. Returns false if none saved.
+    bool restoreStateInternal(int destinationId, Bundle* args, NavOptions* options);
     std::unordered_map<Navigator*, NavigatorState*> mNavigatorStates;
     // Transient handler slots installed around a single Navigator.navigate / popBackStack call
     // (androidx addToBackStackHandler / popFromBackStackHandler). Null outside that scope.
     std::function<void(NavBackStackEntry*)> mAddToBackStackHandler;
     std::function<void(NavBackStackEntry*)> mPopFromBackStackHandler;
+    // --- Level A saveState bookkeeping (androidx NavControllerImpl backStackMap / backStackStates) ---
+    std::unordered_map<int, std::string> mBackStackMap;   // destinationId -> saved chain id (bottom entry id)
+    std::unordered_map<std::string, std::vector<NavBackStackEntryState>> mBackStackStates; // chain id -> saved entry chain
 };
 
 }//namespace cdroid
