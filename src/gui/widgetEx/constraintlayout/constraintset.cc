@@ -232,7 +232,11 @@ void ConstraintSet::applyTo(ConstraintLayout* constraintLayout) {
         it->second.applyTo(*param);
         view->setLayoutParams(param);
         const Constraint& c = it->second;
-        view->setVisibility(c.propertySet.visibility);
+        // VISIBILITY_MODE_IGNORE: do not touch the view's visibility — a helper (Carousel) is
+        // driving it directly and applyTo must not reset it (e.g. a pool view it hid would pop back).
+        if (c.propertySet.mVisibilityMode != VISIBILITY_MODE_IGNORE) {
+            view->setVisibility(c.propertySet.visibility);
+        }
         // Attached views always get the transform (so identity resets it — e.g. a Motion run that
         // left the view rotated is cleared when the start/end ConstraintSet is re-applied on
         // capture). Unattached views (tests) skip identity: the setter invalidation is unsafe.

@@ -156,9 +156,10 @@ class MotionLayout : public ConstraintLayout {
     void addTransitionListener(const TransitionListener& listener) {
         mTransitionListeners.push_back(listener);
     }
-    // Expose View::postUpdate (protected) publicly — AndroidX View.post is public, and helpers
-    // (e.g. Carousel) need to post runnables onto the layout's UI thread from outside.
-    void post(const Runnable& r) { postUpdate(r); }
+    // mMotionLayout->post(r) resolves to the public View::post (handler-backed, regular queue) —
+    // the same View.post the AndroidX Carousel posts its update runnable through. We intentionally
+    // do NOT override post() here. (View::postUpdate is postAtFrontOfQueue — a different semantic
+    // Android's Carousel does not use.)
     // Touch-up settle modes (AndroidX MotionLayout.TOUCH_UP_*).
     static constexpr int TOUCH_UP_STOP = 0;
     static constexpr int TOUCH_UP_AUTOCOMPLETE_TO_START = 1;
@@ -220,6 +221,12 @@ class MotionLayout : public ConstraintLayout {
     // Wire a transition's <OnClick> targets to toggle/transition-to-end/start the layout.
     void wireOnClicks(MotionScene::Transition* t);
 
+    // Direction-based transition selection (androidx MotionScene.bestTransitionFor): when a drag
+    // starts while resting at a state shared by several transitions (e.g. a bidirectional Carousel's
+    // rest state), switch to the one whose <OnSwipe> dragDirection best matches the gesture, and
+    // seed its fresh TouchResponse at the current touch point. No-op for single-transition layouts.
+    void pickTransitionForDrag(const MotionEvent& evt);
+
     ConstraintSet* mStartSet = nullptr;
     ConstraintSet* mEndSet = nullptr;
     std::shared_ptr<ConstraintSet> mOwnedStart;
@@ -251,6 +258,10 @@ class MotionLayout : public ConstraintLayout {
 
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
     std::unique_ptr<TouchResponse> mTouchResponse;
+    // Touch-down position + "already picked the transition this gesture" flag, for
+    // pickTransitionForDrag (direction-based selection at drag start).
+    float mDownX = 0, mDownY = 0;
+    bool  mDragTransitionPicked = true;
     TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
     std::vector<TransitionListener> mTransitionListeners; // Carousel etc. (AndroidX TransitionListener)
 };

@@ -31,10 +31,14 @@ void SpringStopEngine::springConfig(float currentPos, float target, float curren
     mTargetPos = target;
     mDamping = damping;
     mPos = currentPos;
-    // Android stores currentVelocity in an @SuppressWarnings("unused") mLastVelocity (never read),
-    // so the release velocity never actually drove the spring. CDROID seeds mV with it so a fling's
-    // momentum carries into the settle animation.
-    mV = currentVelocity;
+    // Match Android: the integrator starts at REST. Android stores currentVelocity in an unused
+    // mLastVelocity and never reads it, so the release velocity does not drive the spring. Seeding mV
+    // with it diverges here: TouchResponse computes the release velocity as (px/s)/(anchor px-per-
+    // progress), and getAnchorDpDt can be tiny, yielding a huge velocity that blows the damped-spring
+    // integration up (progress into the millions) — isStopped() then never holds, the transition never
+    // completes, and a Carousel driven by onTransitionCompleted never advances its index (stuck). The
+    // fresh SpringStopEngine instance gives mV its default 0, identical to Android's new instance.
+    (void) currentVelocity;
     mStiffness = stiffness;
     mMass = mass;
     mStopThreshold = stopThreshold;

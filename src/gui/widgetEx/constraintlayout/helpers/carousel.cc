@@ -27,6 +27,8 @@
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 
+#include <porting/cdlog.h> // TEMP diagnostic
+
 DECLARE_WIDGET(Carousel)
 
 namespace cdroid {
@@ -86,6 +88,9 @@ void Carousel::onAttachedToWindow() {
     mListener.onTransitionCompleted = [this](MotionLayout*, int currentId) {
         onTransitionCompleted(currentId);
     };
+    LOGI("Carousel@%p attached: mList=%zu startIndex=%d fwd=%d bwd=%d prevState=%d nextState=%d count=%d",
+         this, mList.size(), mStartIndex, mForwardTransition, mBackwardTransition,
+         mPreviousState, mNextState, mAdapter ? mAdapter->count() : -1);
     mMotionLayout->addTransitionListener(mListener);
 
     // In CARRY_ON mode, hand the release momentum to the forward/backward transitions.
@@ -139,6 +144,8 @@ void Carousel::onTransitionChange(int /*startId*/, int /*endId*/, float /*progre
 }
 
 void Carousel::onTransitionCompleted(int currentId) {
+    LOGI("Carousel@%p onTransitionCompleted currentId=%d (next=%d prev=%d) mIndex=%d",
+         this, currentId, mNextState, mPreviousState, mIndex);
     if (mAdapter == nullptr) return;
     mPreviousIndex = mIndex;
     if (currentId == mNextState)          mIndex++;
@@ -158,6 +165,7 @@ void Carousel::onTransitionCompleted(int currentId) {
 
 void Carousel::runUpdate() {
     if (mAdapter == nullptr || mMotionLayout == nullptr) return;
+    LOGI("Carousel@%p runUpdate mIndex=%d prev=%d", this, mIndex, mPreviousIndex);
     mMotionLayout->setProgress(0);
     updateItems();
     mAdapter->onNewItem(mIndex);
@@ -176,11 +184,14 @@ void Carousel::runUpdate() {
 void Carousel::updateItems() {
     if (mAdapter == nullptr || mMotionLayout == nullptr || mAdapter->count() == 0) return;
     const int viewCount = (int) mList.size();
+    LOGI("Carousel@%p updateItems mIndex=%d viewCount=%d startIndex=%d",
+         this, mIndex, viewCount, mStartIndex);
     for (int i = 0; i < viewCount; i++) {
         View* view = mList[i];
         if (view == nullptr) continue;
         // mIndex maps to i == mStartIndex; other pool slots show mIndex ± offset.
         int index = mIndex + i - mStartIndex;
+        LOGI("  view[%d]=%p index=%d count=%d", i, (void*)view, index, mAdapter->count());
         if (mInfiniteCarousel) {
             if (index < 0) {
                 updateViewVisibility(view, mEmptyViewBehavior != View::INVISIBLE ? mEmptyViewBehavior
@@ -238,9 +249,16 @@ void Carousel::updateItems() {
 
 bool Carousel::updateViewVisibility(View* view, int visibility) {
     if (mMotionLayout == nullptr || view == nullptr) return false;
-    // AndroidX also sets constraint.propertySet.mVisibilityMode = VISIBILITY_MODE_IGNORE on every
-    // ConstraintSet so the Motion controller does not override this visibility on apply. CDROID's
-    // ConstraintSet exposes no getConstraint(viewId) yet, so we set the view visibility directly.
+    // Mark this view's constraint VISIBILITY_MODE_IGNORE in every ConstraintSet, so the Motion
+    // controller's capture/applyTo (run on each setTransition) does not reset the visibility we set
+    // here. Without this, a pool view we hid (index out of range) pops back VISIBLE with stale
+    // content — the "two 0 / two 9" edge defect. Then set the visibility directly. Mirrors AndroidX,
+    // which sets constraint.propertySet.mVisibilityMode = IGNORE on every ConstraintSet for the view.
+    const int viewId = view->getId();
+    for (int csId : mMotionLayout->getConstraintSetIds()) {
+        ConstraintSet* cs = mMotionLayout->getConstraintSet(csId);
+        if (cs != nullptr) cs->setVisibilityMode(viewId, ConstraintSet::VISIBILITY_MODE_IGNORE);
+    }
     const bool changed = view->getVisibility() != visibility;
     view->setVisibility(visibility);
     return changed;
