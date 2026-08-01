@@ -203,6 +203,13 @@ class MotionScene {
     Transition* getTransitionById(int id) const;              // by <Transition android:id>
     Transition* findTransition(int startId, int endId) const;  // matching both endpoints
     std::vector<Transition*> getDefinedTransitions() const;    // all transitions (Carousel)
+    // Transitions touching `stateId` as either endpoint (MotionScene.getTransitionsWithState).
+    std::vector<Transition*> getTransitionsWithState(int stateId) const;
+    // Pick the enabled transition (among those touching `currentState`) whose <OnSwipe>
+    // dragDirection best aligns with the (dx,dy) gesture — MotionScene.bestTransitionFor. Enables a
+    // bidirectional layout (e.g. Carousel): at a shared rest state, a left drag selects the forward
+    // transition, a right drag the backward one. Returns nullptr if no candidate has an OnSwipe.
+    Transition* bestTransitionFor(int currentState, float dx, float dy) const;
     void setCurrentTransition(Transition* t) {
         mCurrentTransition = t;
     }

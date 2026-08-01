@@ -53,6 +53,11 @@ class ConstraintSet {
     static const int START   = 6;
     static const int END     = 7;
     static const int PARENT  = 0;
+    // visibilityMode values (Java: ConstraintSet.VISIBILITY_MODE_*). IGNORE makes applyTo() leave
+    // the view's visibility untouched — used by helpers (e.g. Carousel) that drive pool-view
+    // visibility directly, so capture/apply does not clobber it.
+    static constexpr int VISIBILITY_MODE_NORMAL = 0;
+    static constexpr int VISIBILITY_MODE_IGNORE = 1;
 
     // Layout.mHelperType value marking a Barrier (Java: ConstraintSet.BARRIER_TYPE / Helper type).
     static const int BARRIER_TYPE = 1;

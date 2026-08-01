@@ -27,6 +27,8 @@
 #include <view/motionevent.h>
 #include <view/velocitytracker.h>
 
+#include <porting/cdlog.h> // TEMP diagnostic
+
 namespace cdroid {
 
 namespace {
@@ -54,12 +56,15 @@ TouchResponse::TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& c
     , mSpringStopThreshold(cfg.springStopThreshold)
     , mSpringBoundary(cfg.springBoundary)
     , mVelocityTracker(VelocityTracker::obtain()) {
-    const int d = cfg.dragDirection;
-    mTouchDirX = (d >= 0 && d <= 5) ? kDir[d][0] : 1.0f;
-    mTouchDirY = (d >= 0 && d <= 5) ? kDir[d][1] : 0.0f;
+    directionVector(cfg.dragDirection, mTouchDirX, mTouchDirY);
     const int s = cfg.touchAnchorSide;
     mAnchorLocX = (s >= 0 && s <= 6) ? kSide[s][0] : 0.5f;
     mAnchorLocY = (s >= 0 && s <= 6) ? kSide[s][1] : 0.5f;
+}
+
+void TouchResponse::directionVector(int dragDirection, float& outX, float& outY) {
+    outX = (dragDirection >= 0 && dragDirection <= 5) ? kDir[dragDirection][0] : 1.0f;
+    outY = (dragDirection >= 0 && dragDirection <= 5) ? kDir[dragDirection][1] : 0.0f;
 }
 
 TouchResponse::~TouchResponse() {
@@ -102,6 +107,8 @@ bool TouchResponse::onMove(const MotionEvent& evt) {
     float dpdt[2] = {0, 0};
     mLayout->getAnchorDpDt(mTouchAnchorId, pos, mAnchorLocX, mAnchorLocY, dpdt);
     const float movementInDir = mTouchDirX * dpdt[0] + mTouchDirY * dpdt[1];
+    LOGI("onMove dx=%.1f dy=%.1f dpdt=[%.2f,%.2f] moveInDir=%.4f pos=%.3f",
+         dx, dy, dpdt[0], dpdt[1], movementInDir, pos);
     float change;
     if (std::abs(movementInDir) > 0.01f) {
         change = (dx * mTouchDirX + dy * mTouchDirY) / movementInDir;
@@ -151,6 +158,8 @@ void TouchResponse::onUp(const MotionEvent& evt) {
     if (mAutoCompleteMode == MotionScene::OnSwipe::COMPLETE_SPRING) {
         // The spring carries the release velocity; pick the nearer endpoint with a 1/3-s look-ahead.
         const bool endTarget = (pos + velocityProgress / 3.0f) >= 0.5f;
+        LOGI("onUp SPRING pos=%.3f velProg=%.3f endTarget=%d captured=%d",
+             pos, velocityProgress, (int)endTarget, 0);
         mLayout->animateToWithSpring(endTarget ? 1.0f : 0.0f, velocityProgress,
                                      mSpringMass, mSpringStiffness, mSpringDamping,
                                      mSpringStopThreshold, mSpringBoundary);

@@ -21,6 +21,7 @@
  */
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>
 #include <widgetEx/constraintlayout/motion/viewtransitioncontroller.h>
 
@@ -228,6 +229,38 @@ std::vector<MotionScene::Transition*> MotionScene::getDefinedTransitions() const
     out.reserve(mTransitionList.size());
     for (const auto& t : mTransitionList) out.push_back(t.get());
     return out;
+}
+
+std::vector<MotionScene::Transition*> MotionScene::getTransitionsWithState(int stateId) const {
+    std::vector<Transition*> out;
+    for (const auto& t : mTransitionList) {
+        if (t->getStartId() == stateId || t->getEndId() == stateId) out.push_back(t.get());
+    }
+    return out;
+}
+
+MotionScene::Transition* MotionScene::bestTransitionFor(int currentState, float dx, float dy) const {
+    // Mirror androidx MotionScene.bestTransitionFor: among enabled transitions touching the current
+    // state, score each by how much its <OnSwipe> drag direction aligns with the gesture (dot product),
+    // flip the score for transitions we'd run backwards (their end == current state), and slightly
+    // bias toward start-over-end. The max wins.
+    Transition* best = nullptr;
+    float max = 0;
+    for (Transition* t : getTransitionsWithState(currentState)) {
+        if (!t->isEnabled()) continue;
+        const OnSwipe* sw = t->getOnSwipe();
+        if (sw == nullptr) continue;
+        float dirX, dirY;
+        TouchResponse::directionVector(sw->dragDirection, dirX, dirY);
+        float val = dirX * dx + dirY * dy;
+        if (t->getEndId() == currentState) val *= -1;   // running this transition backwards
+        else                               val *= 1.1f;  // prefer the transition whose start == state
+        if (val > max) {
+            max = val;
+            best = t;
+        }
+    }
+    return best;
 }
 
 bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {

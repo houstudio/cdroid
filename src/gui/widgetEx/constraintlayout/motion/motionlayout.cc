@@ -292,11 +292,19 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
     mSpringEngine = std::make_unique<SpringStopEngine>();
     mSpringEngine->springConfig(mProgress, target, startVelocity, mass, stiffness, damping,
                                 stopThreshold, boundary);
+    LOGI("animateToWithSpring target=%.3f startV=%.3f mProgress=%.3f begin=%d end=%d captured=%d",
+         target, startVelocity, mProgress, mBeginState, mEndState, (int)mCaptured);
     constexpr float kDurationSec = 2.0f; // generous upper bound; the spring ends itself via isStopped
     mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
     mAnimator->setDuration((int64_t)(kDurationSec * 1000));
     SpringStopEngine* engine = mSpringEngine.get();
-    mAnimator->addUpdateListener([this, engine, target, kDurationSec](ValueAnimator& a) {
+    // The spring normally ends itself via isStopped(); cancel() also fires onAnimationEnd, and a
+    // slow-settling (or once-divergent) spring can reach the 2 s cap without ever reporting isStopped.
+    // Guard the one-shot completion so it fires exactly once, and add an onAnimationEnd fallback that
+    // snaps to the target and completes the transition — otherwise listeners never run and a Carousel
+    // (driven by onTransitionCompleted) never advances its index / never recycles the next item in.
+    auto completed = std::make_shared<bool>(false);
+    mAnimator->addUpdateListener([this, engine, target, kDurationSec, completed](ValueAnimator& a) {
         const float time = a.getAnimatedFraction() * kDurationSec;
         mProgress = engine->getInterpolation(time);
         if (mProgress <= 0.0f) mCurrentState = mBeginState;
@@ -309,7 +317,9 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
             if (target <= 0.0f) mCurrentState = mBeginState;
             else if (target >= 1.0f) mCurrentState = mEndState;
             if (mCaptured) applyMotion();
+            *completed = true; // a.cancel() below re-enters onAnimationEnd synchronously
             a.cancel();
+            LOGI("spring completed via isStopped state=%d", mCurrentState);
             if (mCurrentState != -1 && mScene && !mInAutoTransition) {
                 mInAutoTransition = true;
                 mScene->autoTransition(this, mCurrentState);
@@ -318,6 +328,24 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
             if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
         }
     });
+    // Safety net: spring never reported isStopped() within the 2 s cap — complete at the target.
+    Animator::AnimatorListener al;
+    al.onAnimationEnd = [this, target, completed](Animator&, bool) {
+        if (*completed) return;
+        LOGI("spring completed via onAnimationEnd fallback state=%d", mCurrentState);
+        *completed = true;
+        mProgress = target;
+        if (target <= 0.0f) mCurrentState = mBeginState;
+        else if (target >= 1.0f) mCurrentState = mEndState;
+        if (mCaptured) applyMotion();
+        if (mCurrentState != -1 && mScene && !mInAutoTransition) {
+            mInAutoTransition = true;
+            mScene->autoTransition(this, mCurrentState);
+            mInAutoTransition = false;
+        }
+        if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
+    };
+    mAnimator->addListener(al);
     mAnimator->start();
 }
 
@@ -659,10 +687,20 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
     if (mTouchResponse == nullptr) return ConstraintLayout::onTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
+        mDownX = evt.getX();
+        mDownY = evt.getY();
+        mDragTransitionPicked = false;
         mTouchResponse->onDown(evt);
         return true;
     }
     if (action == MotionEvent::ACTION_MOVE) {
+        // At drag start, switch to the transition whose <OnSwipe> dragDirection matches this gesture
+        // (forward on dragLeft, backward on dragRight for a bidirectional Carousel). Done once per
+        // gesture; single-transition layouts are unaffected (best == current, no switch).
+        if (!mDragTransitionPicked && mCurrentState != -1) {
+            pickTransitionForDrag(evt);
+            mDragTransitionPicked = true;
+        }
         mTouchResponse->onMove(evt);
         return true;
     }
@@ -671,6 +709,20 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
         return true;
     }
     return true;
+}
+
+void MotionLayout::pickTransitionForDrag(const MotionEvent& evt) {
+    if (mScene == nullptr) return;
+    const float dx = evt.getX() - mDownX;
+    const float dy = evt.getY() - mDownY;
+    MotionScene::Transition* best = mScene->bestTransitionFor(mCurrentState, dx, dy);
+    LOGI("pickTransitionForDrag state=%d dx=%.0f dy=%.0f best=%d cur=%d",
+         mCurrentState, dx, dy, best ? best->getId() : -1,
+         mScene->getCurrentTransition() ? mScene->getCurrentTransition()->getId() : -1);
+    if (best != nullptr && best != mScene->getCurrentTransition()) {
+        setTransition(best->getId());                  // switches current transition + mTouchResponse
+        if (mTouchResponse != nullptr) mTouchResponse->onDown(evt); // seed the fresh TouchResponse here
+    }
 }
 
 } // namespace cdroid
