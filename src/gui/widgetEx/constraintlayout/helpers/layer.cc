@@ -33,6 +33,12 @@ namespace cdroid {
 
 Layer::Layer(Context* ctx, const AttributeSet& attrs)
     : ConstraintHelper(ctx, attrs) {
+    // The ConstraintHelper base ctor calls init(attrs), but during base construction that virtual
+    // call statically binds to ConstraintHelper::init — so only constraint_referenced_ids is parsed
+    // and the visibility/elevation XML attributes are never scanned. Re-invoke init now that *this
+    // is fully constructed so it dispatches to Layer::init — same pattern as
+    // Carousel/MotionEffect/Placeholder/CircularFlow/Grid. ConstraintHelper::init is idempotent.
+    init(attrs);
 }
 
 Layer::Layer(int width, int height)
