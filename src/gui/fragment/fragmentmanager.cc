@@ -130,12 +130,29 @@ void FragmentManager::dispatchStop(){
 }
 
 void FragmentManager::dispatchDestroyView(){
+    // Retire any in-flight special-effects ops before tearing views down, so a fragment mid-effect
+    // does not strand its op in mRunningOperations and hold the awaiting clamp (androidx
+    // SpecialEffectsController.forceCompleteAll on destroy).
+    forceCompleteAllSpecialEffects();
     dispatchStateChange(Fragment::CREATED);
 }
 
 void FragmentManager::dispatchDestroy(){
     mDestroyed = true;
+    forceCompleteAllSpecialEffects();
     dispatchStateChange(Fragment::INITIALIZING);
+}
+
+void FragmentManager::forceCompleteAllSpecialEffects(){
+    // One SEC per container; forceCompleteAll is idempotent, so dedup is optional — call it for
+    // every active fragment's container (redundant calls on a shared SEC are no-ops).
+    for(auto& kv : mActive){
+        Fragment* f = kv.second;
+        if(!f) continue;
+        if(FragmentStateManager* fsm = getOrCreateStateManager(f)){
+            fsm->forceCompleteSpecialEffects();
+        }
+    }
 }
 
 // --- internal fragment ops ---

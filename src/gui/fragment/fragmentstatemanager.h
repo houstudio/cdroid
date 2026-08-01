@@ -54,6 +54,10 @@ public:
     // Drive to an explicit target state (used by remove/retain which want INITIALIZING/CREATED
     // regardless of computeExpectedState). Also re-entrancy-guarded.
     void moveToState(int explicitTarget);
+    // androidx SpecialEffectsController.forceCompleteAll: complete every pending/running effect op
+    // for this fragment's container so awaiting-effect clamps lift and the ops retire. Used by the
+    // FragmentManager teardown paths so a fragment mid-effect is not left stranded.
+    void forceCompleteSpecialEffects();
 private:
     FragmentManager* mFragmentManager;
     Fragment* mFragment;
