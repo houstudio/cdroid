@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <fragment/fragmentfactory.h>
+#include <fragment/fragment.h>
 #include <porting/cdlog.h>
 #include <unordered_map>
 
@@ -45,7 +46,9 @@ Fragment* FragmentFactory::instantiate(const std::string& className){
              "(use REGISTER_FRAGMENT or FragmentFactory::registerFragment)", className.c_str());
         return nullptr;
     }
-    return it->second();
+    Fragment* f = it->second();
+    if(f) f->mClassName = className; // stamp for FragmentState (androidx Fragment.getClass().getName())
+    return f;
 }
 
 }//namespace fragment

@@ -23,6 +23,7 @@
 #include <fragment/fragmenttransaction.h>
 #include <fragment/backstackrecord.h>
 #include <fragment/fragmentstatemanager.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/fragmentanim.h>
 #include <fragment/fragmenttransitionimpl.h>
 #include <animation/animation.h>
@@ -56,6 +57,9 @@ FragmentManager::~FragmentManager(){
     mActive.clear();
     for(auto& kv : mStateManagers) delete kv.second;
     mStateManagers.clear();
+    // Per-fragment saved state (androidx FragmentStore.mSavedState) — owned by this FM.
+    for(auto& kv : mSavedState) delete kv.second;
+    mSavedState.clear();
 }
 
 void FragmentManager::attachController(FragmentHostCallback* host, FragmentContainer* container, Fragment* parent){
@@ -153,6 +157,28 @@ void FragmentManager::forceCompleteAllSpecialEffects(){
             fsm->forceCompleteSpecialEffects();
         }
     }
+}
+
+// androidx FragmentStore.setSavedState: store-or-remove-and-return. setSavedState(who, nullptr) is
+// the retrieve-and-clear used by BackStackState.instantiate on restore; setSavedState(who, s) stores
+// s and returns the previous value (nullptr if none). FM takes ownership of stored FragmentState.
+FragmentState* FragmentManager::setSavedState(const std::string& who, FragmentState* s){
+    if(s != nullptr){
+        FragmentState* prev = nullptr;
+        auto it = mSavedState.find(who);
+        if(it != mSavedState.end()) prev = it->second;
+        mSavedState[who] = s;
+        return prev;
+    }
+    FragmentState* prev = nullptr;
+    auto it = mSavedState.find(who);
+    if(it != mSavedState.end()){ prev = it->second; mSavedState.erase(it); }
+    return prev;
+}
+
+FragmentState* FragmentManager::getSavedState(const std::string& who) const{
+    auto it = mSavedState.find(who);
+    return it != mSavedState.end() ? it->second : nullptr;
 }
 
 // --- internal fragment ops ---

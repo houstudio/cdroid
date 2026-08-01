@@ -857,6 +857,9 @@ protected:
     virtual bool hasHoveredChild()const;
     virtual bool pointInHoveredChild(MotionEvent& event);
 
+public:
+    // androidx View save/restore instance state (public on View). CDROID kept these protected
+    // historically; made public so FragmentStateManager.saveViewState can drive them.
     virtual void saveHierarchyState(SparseArray<Parcelable*>& container);
     virtual void dispatchSaveInstanceState(SparseArray<Parcelable*>& container);
     virtual Parcelable* onSaveInstanceState();
@@ -864,6 +867,7 @@ protected:
     virtual void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container);
     virtual void onRestoreInstanceState(Parcelable& state);
 
+protected:
     static int combineMeasuredStates(int curState, int newState);
     static std::vector<int>& mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState);
     static int resolveSize(int size, int measureSpec);

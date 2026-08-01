@@ -51,6 +51,9 @@ public:
     int getIndex() const { return mIndex; }
     void setIndex(int index){ mIndex = index; }
     const std::string& getName() const { return mName; }
+    // Set while saveBackStack pops this record: FragmentStateManager saves its fragments' state
+    // into FragmentManager.mSavedState instead of discarding it (androidx BackStackRecord.mBeingSaved).
+    bool mBeingSaved = false;
 
 private:
     FragmentManager* mManager;

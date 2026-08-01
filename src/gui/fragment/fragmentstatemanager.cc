@@ -20,6 +20,7 @@
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/defaultspecialeffectscontroller.h>
 #include <transition/transitionmanager.h>
 #include <view/view.h>
@@ -69,6 +70,72 @@ void FragmentStateManager::forceCompleteSpecialEffects(){
     if(SpecialEffectsController* sec = getSpecialEffectsController()){
         sec->forceCompleteAll();
     }
+}
+
+FragmentState* FragmentStateManager::saveState(){
+    // androidx FragmentStateManager.saveState (FragmentStateManager.java:703-754): pack FragmentState
+    // meta + onSaveInstanceState + SavedStateRegistry + view-hierarchy state + arguments into one
+    // per-fragment saved state (CDROID holds the pieces directly instead of a nested Bundle).
+    FragmentState* s = new FragmentState();
+    // androidx FragmentState(Fragment) — exact field copy.
+    s->className       = mFragment->mClassName;
+    s->who             = mFragment->mWho;
+    s->fromLayout      = mFragment->mFromLayout;
+    s->inDynamicContainer = mFragment->mInDynamicContainer;
+    s->fragmentId      = mFragment->mFragmentId;
+    s->containerId     = mFragment->mContainerId;
+    s->tag             = mFragment->mTag;
+    s->retainInstance  = mFragment->mRetainInstance;
+    s->removing        = mFragment->mRemoving;
+    s->detached        = mFragment->mDetached;
+    s->hidden          = mFragment->mHidden;
+    s->maxLifecycleState = mFragment->mMaxState;
+    s->targetWho       = mFragment->mTargetWho;
+    s->targetRequestCode = mFragment->mTargetRequestCode;
+    s->userVisibleHint = mFragment->mUserVisibleHint;
+    // User + view state only once the fragment has run past ATTACHED.
+    if(mFragment->mState > Fragment::ATTACHED){
+        Bundle* instanceState = new Bundle();
+        mFragment->onSaveInstanceState(instanceState);
+        s->savedInstanceState = instanceState;
+        if(mFragment->mSavedStateRegistryController){
+            mFragment->mSavedStateRegistryController->performSave(s->registryState);
+        }
+        if(mFragment->mView){
+            saveViewState();  // populates mFragment->mSavedViewState
+            s->viewState = mFragment->mSavedViewState;  // transfer ownership to the saved state
+            mFragment->mSavedViewState = nullptr;
+        }
+    }
+    if(mFragment->mArguments){
+        s->arguments = new Bundle(*mFragment->mArguments);
+    }
+    return s;
+}
+
+void FragmentStateManager::saveViewState(){
+    // androidx FragmentStateManager.saveViewState (FragmentStateManager.java:763-782): capture the
+    // view's hierarchy state into mFragment->mSavedViewState. (The view-lifecycle SavedStateRegistry
+    // piece — mSavedViewRegistryState — is omitted for now; CDROID FragmentViewLifecycleOwner
+    // SavedStateRegistry can be wired later.)
+    if(!mFragment->mView) return;
+    SparseArray<Parcelable*>* stateArray = new SparseArray<Parcelable*>();
+    mFragment->mView->saveHierarchyState(*stateArray);
+    delete mFragment->mSavedViewState;
+    mFragment->mSavedViewState = stateArray;
+}
+
+void FragmentStateManager::restoreState(const FragmentState& state){
+    // androidx FragmentStateManager.restoreState: re-apply the saved slices. arguments + view state
+    // are re-applied directly; savedInstanceState/registryState are consumed by the fragment's
+    // lifecycle callbacks once it is re-created (the full slice wiring lands with the Phase 2
+    // restore path that sets mSavedFragmentState before re-running lifecycle).
+    if(state.arguments){
+        delete mFragment->mArguments;
+        mFragment->mArguments = new Bundle(*state.arguments);
+    }
+    delete mFragment->mSavedViewState;
+    mFragment->mSavedViewState = state.viewState ? new SparseArray<Parcelable*>(*state.viewState) : nullptr;
 }
 
 int FragmentStateManager::computeExpectedState(){
