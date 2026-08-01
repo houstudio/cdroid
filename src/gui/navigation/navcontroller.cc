@@ -20,6 +20,8 @@
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
 #include <navigation/navbackstackentry.h>
+#include <navigation/navigatorstate.h>
+#include <navigation/navigator.h>
 #include <navigation/navoptions.h>
 #include <navigation/navdeeplinkrequest.h>
 #include <navigation/simplenavigatorprovider.h>
@@ -34,12 +36,60 @@ NavController::NavController(Context* context) : mContext(context){
     mNavigatorProvider->addNavigator(new NavGraphNavigator(context));
 }
 
+NavController::~NavController(){
+    for(auto& kv : mNavigatorStates) delete kv.second;
+    mNavigatorStates.clear();
+}
+
+// --- navigator-state pop model (androidx NavControllerImpl navigatorState + handlers) ---
+
+NavigatorState* NavController::getOrCreateNavigatorState(Navigator* navigator){
+    if(!navigator) return nullptr;
+    auto it = mNavigatorStates.find(navigator);
+    if(it != mNavigatorStates.end()) return it->second;
+    NavigatorState* state = new NavigatorState(this, navigator);
+    mNavigatorStates[navigator] = state;
+    navigator->onAttach(state);
+    return state;
+}
+
+void NavController::push(NavigatorState* state, NavBackStackEntry* entry){
+    // androidx NavControllerImpl.push: the handler mutates the merged back queue first
+    // (addEntryToBackStack), then the navigator's own state is appended (addInternal). The handler
+    // is installed only during navigate(); a push outside that scope is ignored.
+    if(mAddToBackStackHandler){
+        mAddToBackStackHandler(entry);
+        state->addInternal(entry);
+    } else {
+        LOGD("NavController.push: ignoring push of entry %p outside navigate()", (void*)entry);
+    }
+}
+
+void NavController::pop(NavigatorState* state, NavBackStackEntry* popUpTo, bool saveState){
+    // androidx NavControllerImpl.pop: the handler mutates the merged back queue first
+    // (popEntryFromBackStack), then the navigator's own state is trimmed (popInternal). The handler
+    // is installed only during popBackStack().
+    if(mPopFromBackStackHandler){
+        mPopFromBackStackHandler(popUpTo);
+        state->popInternal(popUpTo);
+    }
+    (void)saveState;
+}
+
 void NavController::setGraph(NavGraph* graph, Bundle* startDestinationArgs){
     LOGD("NavController.setGraph graph=%p startRoute='%s' startDestId=%d",
          graph, graph ? graph->getStartDestinationRoute().c_str() : "(null)",
          graph ? graph->getStartDestination() : 0);
     mGraph = graph;
     if(!mGraph) return;
+    // onGraphCreated (androidx NavControllerImpl.kt:964-973): attach a NavigatorState to every
+    // registered navigator so its navigate()/popBackStack() can drive this controller's back queue
+    // through the push/pop handlers.
+    if(auto* provider = dynamic_cast<SimpleNavigatorProvider*>(mNavigatorProvider)){
+        for(auto& kv : provider->getNavigators()){
+            getOrCreateNavigatorState(kv.second);
+        }
+    }
     if(!mGraph->getStartDestinationRoute().empty()){
         navigate(mGraph->getStartDestinationRoute(), nullptr);
     }else if(mGraph->getStartDestination() != 0){
@@ -149,8 +199,15 @@ void NavController::navigate(NavDestination* node, Bundle* args, NavOptions* opt
     // V2: push the leaf + any parent-graph entries not already on the stack, link them, then
     // let updateBackStackLifecycle drive per-entry lifecycle (top RESUMED / graph STARTED / off CREATED).
     NavBackStackEntry* leafEntry = new NavBackStackEntry(node, args);
-    addEntryToBackStack(node, args, leafEntry);
-    node->navigate(args, options);
+    // androidx navigateInternal: install the push handler, dispatch through the destination's
+    // Navigator (its navigate(entries) commits the fragment and calls state.push(leafEntry), which
+    // fires the handler = addEntryToBackStack, then appends to the navigator's own state), clear it.
+    Navigator& navigator = node->getNavigator();
+    getOrCreateNavigatorState(&navigator);
+    std::vector<NavBackStackEntry*> entries = { leafEntry };
+    mAddToBackStackHandler = [this, node, args](NavBackStackEntry* e){ addEntryToBackStack(node, args, e); };
+    navigator.navigate(entries, options, nullptr);
+    mAddToBackStackHandler = nullptr;
     dispatchOnDestinationChanged(node, args);
     updateBackStackLifecycle();
     (void)options;
@@ -161,58 +218,74 @@ void NavController::navigate(NavDeepLinkRequest* /*request*/, NavOptions* /*opti
 }
 
 bool NavController::popBackStack(){
+    // androidx popBackStack() = popBackStack(currentDestination.id, inclusive = true): pop the
+    // single top entry via its navigator's entry-based popBackStack.
     if(mBackStack.empty()) return false;
-    NavBackStackEntry* entry = mBackStack.back();
-    NavDestination* dest = entry->getDestination();
-    // androidx NavControllerImpl.executePopOperations: popEntryFromBackStack() runs only inside the
-    // pop handler — i.e. only when the navigator actually popped (receivedPop). A navigator that
-    // cannot pop (e.g. FragmentNavigator at the root, whose initial fragment is not on the FM back
-    // stack) returns false here; we must NOT remove our own entry, or this back stack and the
-    // navigator's stack desync (and the root gets popped to a blank screen).
-    bool receivedPop = dest ? dest->getNavigator().popBackStack() : false;
-    if(!receivedPop) return false;
-    popEntryFromBackStack(entry);
-    if(!mBackStack.empty()){
-        NavBackStackEntry* top = mBackStack.back();
-        dispatchOnDestinationChanged(top->getDestination(), top->getArguments());
-    }
-    updateBackStackLifecycle();
-    return true;
+    NavDestination* dest = mBackStack.back()->getDestination();
+    if(!dest) return false;
+    std::vector<Navigator*> popOperations = { &dest->getNavigator() };
+    return executePopOperations(popOperations);
 }
 
 bool NavController::popBackStack(const std::string& route, bool inclusive, bool /*saveState*/){
-    int targetIndex = -1;
-    for(int i = (int)mBackStack.size() - 1; i >= 0; i--){
+    // androidx popBackStackInternal(route, inclusive, saveState): build popOperations walking the
+    // back stack top-down to the topmost entry whose destination has the route.
+    std::vector<Navigator*> popOperations;
+    bool found = false;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
         NavDestination* d = mBackStack[i]->getDestination();
-        if(d && (d->hasRoute(route) || d->matchRoute(route))){ targetIndex = i; break; }
+        if(d && (d->hasRoute(route) || d->matchRoute(route))){
+            if(inclusive) popOperations.push_back(&d->getNavigator());
+            found = true;
+            break;
+        }
+        if(d) popOperations.push_back(&d->getNavigator());
     }
-    if(targetIndex < 0) return false;
-    int end = inclusive ? targetIndex : targetIndex + 1;
-    // androidx executePopOperations: pop each entry via its own navigator and break on the first
-    // one that refuses (!receivedPop). This keeps this back stack and each navigator's stack in
-    // lock-step (no desync) and stops the loop from spinning when a pop cannot advance.
-    bool popped = false;
-    while((int)mBackStack.size() > end){
-        if(!popBackStack()) break;
-        popped = true;
-    }
-    return popped;
+    if(!found) return false;
+    return executePopOperations(popOperations);
 }
 
 bool NavController::popBackStack(int destinationId, bool inclusive, bool /*saveState*/){
-    int targetIndex = -1;
-    for(int i = (int)mBackStack.size() - 1; i >= 0; i--){
+    // androidx popBackStackInternal(destinationId, inclusive, saveState).
+    std::vector<Navigator*> popOperations;
+    bool found = false;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
         NavDestination* d = mBackStack[i]->getDestination();
-        if(d && d->getId() == destinationId){ targetIndex = i; break; }
+        if(d && d->getId() == destinationId){
+            if(inclusive) popOperations.push_back(&d->getNavigator());
+            found = true;
+            break;
+        }
+        if(d) popOperations.push_back(&d->getNavigator());
     }
-    if(targetIndex < 0) return false;
-    int end = inclusive ? targetIndex : targetIndex + 1;
-    // See popBackStack(route,...): break on the first navigator that refuses so the two stacks
-    // stay in sync and the loop always advances or terminates.
+    if(!found) return false;
+    return executePopOperations(popOperations);
+}
+
+bool NavController::executePopOperations(std::vector<Navigator*>& popOperations){
+    // androidx NavControllerImpl.executePopOperations (:478-546): for each navigator, pop the
+    // current top entry via its entry-based popBackStack. The pop handler (popEntryFromBackStack)
+    // runs only if the navigator actually popped (receivedPop); stop on the first that doesn't.
     bool popped = false;
-    while((int)mBackStack.size() > end){
-        if(!popBackStack()) break;
+    for(Navigator* navigator : popOperations){
+        if(!navigator || mBackStack.empty()) break;
+        NavBackStackEntry* topEntry = mBackStack.back();
+        bool receivedPop = false;
+        mPopFromBackStackHandler = [this, &receivedPop](NavBackStackEntry* e){
+            popEntryFromBackStack(e);
+            receivedPop = true;
+        };
+        navigator->popBackStack(topEntry, false);
+        mPopFromBackStackHandler = nullptr;
+        if(!receivedPop) break;   // navigator refused (did not call state.pop) — stop, no desync
         popped = true;
+    }
+    if(popped){
+        if(!mBackStack.empty()){
+            NavBackStackEntry* top = mBackStack.back();
+            dispatchOnDestinationChanged(top->getDestination(), top->getArguments());
+        }
+        updateBackStackLifecycle();
     }
     return popped;
 }

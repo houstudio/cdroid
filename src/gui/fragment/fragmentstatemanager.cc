@@ -80,7 +80,19 @@ int FragmentStateManager::computeExpectedState(){
             if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::ADDING){
                 maxState = std::min(maxState, (int)Fragment::AWAITING_ENTER_EFFECTS);
             } else if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::REMOVING){
-                maxState = std::max(maxState, (int)Fragment::AWAITING_EXIT_EFFECTS);
+                // A fragment mid-exit-effect can't drop below AWAITING_EXIT_EFFECTS while its exit
+                // transition runs — UNLESS the FragmentManager itself is tearing down (state below
+                // the floor), in which case the fragment must follow the FM down. Without this
+                // guard, the destroy path's moveToExpectedState() re-entry sees the floor raise the
+                // expected state ABOVE the FM state and resurrects the view; stepUp/stepDown skip
+                // the AWAITING states, so the fragment can never settle and loops forever re-creating
+                // its view in an orphaned container (seen when popping a parent whose nested host is
+                // mid-destruction). androidx completes awaiting effects via forceCompleteAll on
+                // destroy; CDROID's FSM skips AWAITING states, so the floor must yield to the FM.
+                int exitFloor = (int)Fragment::AWAITING_EXIT_EFFECTS;
+                if(mFragmentManagerState >= exitFloor){
+                    maxState = std::max(maxState, exitFloor);
+                }
             }
         }
     }

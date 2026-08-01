@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <unordered_map>
+#include <functional>
 #include <lifecycle/lifecycle.h>
 #include <lifecycle/lifecycleowner.h>
 #include <lifecycle/viewmodelstore.h>
@@ -33,6 +34,8 @@
 #include <navigation/navdestination.h>
 namespace cdroid{
 class Context;
+class Navigator;
+class NavigatorState;
 class NavGraph;
 class NavInflater;
 class NavigatorProvider;
@@ -41,6 +44,8 @@ class NavOptions;
 class NavDeepLinkRequest;
 
 class NavController{
+    friend class NavigatorState; // androidx NavControllerNavigatorState is an inner class with
+                                 // access to push()/pop(); in C++ it calls back via these privates.
 public:
     class OnDestinationChangedListener{
     public:
@@ -49,6 +54,7 @@ public:
     };
 
     NavController(Context* context);
+    ~NavController();
     Context* getContext() const { return mContext; }
     NavigatorProvider* getNavigatorProvider() const { return mNavigatorProvider; }
 
@@ -62,6 +68,9 @@ public:
 
     NavDestination* getCurrentDestination();
     NavBackStackEntry* getCurrentBackStackEntry() const;
+    // Read-only access to the back stack (androidx exposes NavController.currentBackStack /
+    // getBackStackEntryAt). Used by tests to assert size and per-entry lifecycle.
+    const std::vector<NavBackStackEntry*>& getBackStack() const { return mBackStack; }
 
     void setLifecycleOwner(lifecycle::LifecycleOwner* owner){ mLifecycleOwner = owner; }
     void setViewModelStore(lifecycle::ViewModelStore* store){ mViewModelStore = store; }
@@ -102,6 +111,26 @@ private:
     NavBackStackEntry* findBackStackEntry(int destinationId);
     std::unordered_map<NavBackStackEntry*, NavBackStackEntry*> mChildToParent;
     std::unordered_map<NavBackStackEntry*, int> mParentToChildCount;
+
+    // --- navigator-state pop model (androidx NavControllerImpl navigatorState + handlers) ---
+    // One NavigatorState per registered Navigator, created/attached in onGraphCreated (setGraph).
+    NavigatorState* getOrCreateNavigatorState(Navigator* navigator);
+    // androidx NavControllerImpl.push(state, entry): the installed push handler mutates the merged
+    // back queue (addEntryToBackStack), then the navigator's own state is appended (addInternal).
+    void push(NavigatorState* state, NavBackStackEntry* entry);
+    // androidx NavControllerImpl.pop(state, popUpTo, saveState, superCallback): the installed pop
+    // handler mutates the merged back queue (popEntryFromBackStack), then the navigator's own state
+    // is trimmed (popInternal).
+    void pop(NavigatorState* state, NavBackStackEntry* popUpTo, bool saveState);
+    // androidx NavControllerImpl.executePopOperations: pop each entry (top-first) via its own
+    // Navigator's entry-based popBackStack, breaking on the first that doesn't fire the pop handler
+    // (!receivedPop). Returns whether anything was popped.
+    bool executePopOperations(std::vector<Navigator*>& popOperations);
+    std::unordered_map<Navigator*, NavigatorState*> mNavigatorStates;
+    // Transient handler slots installed around a single Navigator.navigate / popBackStack call
+    // (androidx addToBackStackHandler / popFromBackStackHandler). Null outside that scope.
+    std::function<void(NavBackStackEntry*)> mAddToBackStackHandler;
+    std::function<void(NavBackStackEntry*)> mPopFromBackStackHandler;
 };
 
 }//namespace cdroid
