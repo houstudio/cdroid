@@ -124,16 +124,6 @@ public:
     void setFragmentFactory(FragmentFactory* factory);
     FragmentFactory* getFragmentFactory() const;
 
-    // --- internal fragment ops (used by BackStackRecord.executeOps) ---
-    void addFragment(Fragment* fragment, bool hidden);
-    void removeFragment(Fragment* fragment);
-    // Retain/restore a fragment across a reversible (back-stack) transaction — see .cc.
-    void retainFragment(Fragment* fragment);
-    void unretainFragment(Fragment* fragment);
-    void showFragment(Fragment* fragment);
-    void hideFragment(Fragment* fragment);
-    void attachFragment(Fragment* fragment);
-    void detachFragment(Fragment* fragment);
     // Drives a single fragment to newState (simplified state machine for MVP).
     void moveToState(Fragment* f, int newState);
     // Cap a fragment's lifecycle at `state` (androidx FragmentManager.setMaxLifecycle): sets
@@ -150,6 +140,18 @@ public:
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine
     friend class BackStackRecord;      // records call enqueueAction/execSingleAction/generateOps
+    // Internal fragment ops (used only by BackStackRecord.executeOps — friend). android keeps these
+    // package-private; C++ has no package visibility, so private + friend BackStackRecord. External
+    // code must go through FragmentTransaction, never these directly.
+    void addFragment(Fragment* fragment, bool hidden);
+    void removeFragment(Fragment* fragment);
+    // Retain/restore a fragment across a reversible (back-stack) transaction — see .cc.
+    void retainFragment(Fragment* fragment);
+    void unretainFragment(Fragment* fragment);
+    void showFragment(Fragment* fragment);
+    void hideFragment(Fragment* fragment);
+    void attachFragment(Fragment* fragment);
+    void detachFragment(Fragment* fragment);
     std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
     FragmentStateManager* getOrCreateStateManager(Fragment* f);
     FragmentHostCallback* mHost = nullptr;
