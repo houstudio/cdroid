@@ -22,8 +22,8 @@
  * A registry of named integer values that notifies listeners when a value changes. Used by
  * ViewTransition's sharedValueSet/sharedValueUnset triggers (and any cross-component coordination):
  * MotionLayout.setSharedValue(key, value) fires the value, and any registered listener for that key
- * is told the new + old value. The registry holds raw listener pointers (borrowed); a listener must
- * remove itself before it is destroyed.
+ * is told the new + old value. Listeners are CallbackBase values owned by the registry; a caller
+ * that wants to unregister keeps its handle and calls removeListener (identity by shared functor).
  */
 #ifndef CDROID_CONSTRAINTLAYOUT_WIDGET_SHARED_VALUES_H
 #define CDROID_CONSTRAINTLAYOUT_WIDGET_SHARED_VALUES_H
@@ -31,25 +31,28 @@
 #include <unordered_map>
 #include <vector>
 
+#include <core/callbackbase.h> // CallbackBase (SharedValuesListener value type)
+
 namespace cdroid {
 
 class SharedValues {
 public:
     static constexpr int UNSET = -1;
 
-    class SharedValuesListener {
-    public:
-        virtual ~SharedValuesListener() = default;
-        // Called when the value for a listened key changes.
-        virtual void onNewValue(int key, int newValue, int oldValue) = 0;
-    };
+    // SharedValuesListener: a single-callback listener (androidx
+    // SharedValues.SharedValuesListener#onNewValue). Expressed as a CallbackBase value (CDROID
+    // style): addListener/removeListener take it by const ref and the registry owns its listeners
+    // (stored by value), so no caller new/delete and no "must removeListener before dying" contract.
+    // Identity for removeListener is the CallbackBase shared-functor pointer — a copy compares equal
+    // to its original, so a caller that kept its handle can remove exactly its registration.
+    using SharedValuesListener = CallbackBase<void, int /*key*/, int /*newValue*/, int /*oldValue*/>;
 
-    // Register `listener` for changes to `key` (borrowed; caller must removeListener before dying).
-    void addListener(int key, SharedValuesListener* listener);
+    // Register `listener` for changes to `key`.
+    void addListener(int key, const SharedValuesListener& listener);
     // Remove `listener` from a single key.
-    void removeListener(int key, SharedValuesListener* listener);
+    void removeListener(int key, const SharedValuesListener& listener);
     // Remove `listener` from every key.
-    void removeListener(SharedValuesListener* listener);
+    void removeListener(const SharedValuesListener& listener);
     void clearListeners();
 
     int getValue(int key) const;
@@ -60,7 +63,7 @@ public:
 
 private:
     std::unordered_map<int, int> mValues;
-    std::unordered_map<int, std::vector<SharedValuesListener*>> mListeners;
+    std::unordered_map<int, std::vector<SharedValuesListener>> mListeners;
 };
 
 } // namespace cdroid

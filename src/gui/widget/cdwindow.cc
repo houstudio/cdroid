@@ -34,6 +34,7 @@
 #include <porting/cdgraph.h>
 #include <uieventsource.h>
 #include <systemclock.h>
+#include <transition/transition.h>
 #include <fstream>
 
 using namespace Cairo;
@@ -535,6 +536,10 @@ bool Window::leaveTouchMode() {
 }
 
 void Window::draw(){
+    // Drain throwaway transition clones whose end() fired this frame (Choreographer ANIMATION
+    // phase). Safe here in the TRAVERSAL phase: all transition end() calls have unwound, so no
+    // clone is deleted from under its own end() stack frame.
+    Transition::drainPendingDeletions();
     if( mVisibleRgn && (mVisibleRgn->get_num_rectangles()==0) ){
         return;
     }

@@ -364,17 +364,17 @@ bool NavController::navigateUp(){
     return popBackStack();
 }
 
-void NavController::addOnDestinationChangedListener(OnDestinationChangedListener* listener){
-    if(!listener) return;
+void NavController::addOnDestinationChangedListener(const OnDestinationChangedListener& listener){
     mOnDestinationChangedListeners.push_back(listener);
     // Inform the new listener of the current destination, if any (androidx NavControllerImpl:
-    // on add, dispatch the current top entry to just this listener).
+    // on add, dispatch the current top entry to just this listener). Dispatch via the just-stored
+    // copy: CallbackBase::operator() is non-const, and the stored element is a mutable value.
     if(!mBackStack.empty()){
         NavBackStackEntry* top = mBackStack.back();
-        listener->onDestinationChanged(this, top->getDestination(), top->getArguments());
+        mOnDestinationChangedListeners.back()(this, top->getDestination(), top->getArguments());
     }
 }
-void NavController::removeOnDestinationChangedListener(OnDestinationChangedListener* listener){
+void NavController::removeOnDestinationChangedListener(const OnDestinationChangedListener& listener){
     auto it = std::find(mOnDestinationChangedListeners.begin(), mOnDestinationChangedListeners.end(), listener);
     if(it != mOnDestinationChangedListeners.end()) mOnDestinationChangedListeners.erase(it);
 }
@@ -393,8 +393,8 @@ void NavController::dispatchOnDestinationChanged(NavDestination* destination, Bu
         destination = mBackStack.back()->getDestination();
         args = mBackStack.back()->getArguments();
     }
-    for(OnDestinationChangedListener* l : mOnDestinationChangedListeners){
-        l->onDestinationChanged(this, destination, args);
+    for(auto& l : mOnDestinationChangedListeners){
+        l(this, destination, args);
     }
 }
 

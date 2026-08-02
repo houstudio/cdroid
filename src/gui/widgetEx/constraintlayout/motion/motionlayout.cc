@@ -21,6 +21,7 @@
  */
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
 
+#include <algorithm> // std::find (removeTransitionListener)
 #include <porting/cdlog.h>
 #include <animation/valueanimator.h>
 #include <view/motionevent.h>
@@ -242,6 +243,11 @@ void MotionLayout::fireTransitionCompleted(int currentId) {
     for (auto& l : mTransitionListeners) {
         if (l.onTransitionCompleted) l.onTransitionCompleted(this, currentId);
     }
+}
+
+void MotionLayout::removeTransitionListener(const TransitionListener& listener) {
+    auto it = std::find(mTransitionListeners.begin(), mTransitionListeners.end(), listener);
+    if (it != mTransitionListeners.end()) mTransitionListeners.erase(it);
 }
 
 float MotionLayout::getVelocity() const {

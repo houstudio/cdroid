@@ -117,25 +117,17 @@ class TransitionSet: public Transition {
     void setupStartEndListeners();
     void cloneChildrenInto(TransitionSet& clone) const;
 
-    // android: static nested TransitionSetListener. Owned by the set (recreated each
-    // runAnimators); added to every child (children do NOT own it — see Transition
-    // listener note), so a single shared listener tracks "all children done".
-    class TransitionSetListener: public TransitionListenerAdapter {
-      public:
-        TransitionSet* mTransitionSet;
-        explicit TransitionSetListener(TransitionSet* transitionSet): mTransitionSet(transitionSet) {}
-        void onTransitionStart(Transition& transition) override;
-        void onTransitionEnd(Transition& transition) override;
-    };
+    // android: static nested TransitionSetListener tracks "all children done" by being
+    // added to every child. Now an EventSet TransitionListener VALUE member (mSetListener)
+    // whose onTransitionStart/End lambdas are wired in setupStartEndListeners and copied
+    // onto each child (copies share EventSet mID). No subclass / no new.
 
     std::vector<Transition*> mTransitions; // owned children
     bool mPlayTogether = true;
     int  mCurrentListeners = 0;
     bool mStarted = false;
     int  mChangeFlags = 0;
-    TransitionSetListener* mSetListener = nullptr; // owned; recreated per runAnimators
-
-    friend class TransitionSetListener;
+    Transition::TransitionListener mSetListener; // value; callbacks wired per runAnimators, copied onto each child
 };
 
 } // namespace cdroid

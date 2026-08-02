@@ -26,6 +26,7 @@
 #include <vector>
 #include <string>
 #include <functional>
+#include <core/callbackbase.h> // CallbackBase<void> == Runnable (completion-listener value type)
 namespace cdroid{
 class ViewGroup;
 class View;
@@ -43,7 +44,10 @@ public:
         Operation(State finalState, LifecycleImpact impact, Fragment* fragment, SpecialEffectsController* controller);
         virtual ~Operation();
         void addEffect(Effect* e);
-        void addCompletionListener(std::function<void()> l);
+        // add-only single-callback event (androidx Operation.addCompletionListener(Runnable)).
+        // CallbackBase<void> (== Runnable): value-stored so the vector owns them, and identity
+        // (shared functor pointer) would let a future removeCompletionListener match by handle.
+        void addCompletionListener(const CallbackBase<void>& l);
         void completeEffect(Effect* e);
         virtual void complete();
         virtual void onStart(){}
@@ -52,7 +56,7 @@ public:
         LifecycleImpact mLifecycleImpact;
         Fragment* mFragment;
         std::vector<Effect*> mEffects;
-        std::vector<std::function<void()>> mCompletionListeners;
+        std::vector<CallbackBase<void>> mCompletionListeners;
         bool mIsComplete = false;
         bool mIsStarted = false;
         bool mIsAwaitingContainerChanges = true;

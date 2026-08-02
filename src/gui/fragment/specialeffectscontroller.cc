@@ -123,7 +123,7 @@ SpecialEffectsController::Operation::~Operation(){
 }
 
 void SpecialEffectsController::Operation::addEffect(Effect* e){ if(e) mEffects.push_back(e); }
-void SpecialEffectsController::Operation::addCompletionListener(std::function<void()> l){ mCompletionListeners.push_back(l); }
+void SpecialEffectsController::Operation::addCompletionListener(const CallbackBase<void>& l){ mCompletionListeners.push_back(l); }
 
 void SpecialEffectsController::Operation::completeEffect(Effect* e){
     auto it = std::find(mEffects.begin(), mEffects.end(), e);
