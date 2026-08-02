@@ -27,6 +27,7 @@
 #include <animation/interpolators.h>
 #include <core/attributeset.h>
 #include <core/context.h>
+#include <core/handler.h>
 #include <porting/cdlog.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
@@ -913,15 +914,6 @@ void Transition::start() {
     mNumInstances++;
 }
 
-// Throwaway clones queued for deletion by Transition::end(); drained per-frame by
-// drainPendingDeletions() at a safe sync point (Window::draw), after all end() stack frames
-// have unwound (a synchronous delete-this in end() would free a TransitionSet child from
-// under the child's own end() frame).
-static std::vector<Transition*>& transitionPendingDeletions() {
-    static std::vector<Transition*> v;
-    return v;
-}
-
 void Transition::end() {
     --mNumInstances;
     if (mNumInstances == 0) {
@@ -945,9 +937,14 @@ void Transition::end() {
             }
         }
         mEnded = true;
-        // Throwaway clone (java GC): queue for deferred deletion instead of delete-this.
+        // Throwaway clone (java GC reclaims it): defer delete-this to the next UI-thread looper
+        // iteration (heap Handler that self-deletes). A synchronous delete-this here is unsafe —
+        // a TransitionSet clone's end() is reached via a child's end() (mSetListener), so deleting
+        // the set mid-child-end() would free that child from under its own stack frame. The posted
+        // delete runs after all end() frames unwind.
         if (mDeleteWhenEnded) {
-            transitionPendingDeletions().push_back(this);
+            Handler* h = new Handler();
+            h->post([h, this](){ delete this; delete h; });
         }
     }
 }
@@ -1000,14 +997,6 @@ Transition& Transition::removeListener(const TransitionListener& listener) {
 
 void Transition::setDeleteWhenEnded(bool b) {
     mDeleteWhenEnded = b;
-}
-
-void Transition::drainPendingDeletions() {
-    std::vector<Transition*>& pending = transitionPendingDeletions();
-    for (Transition* t : pending) {
-        delete t;
-    }
-    pending.clear();
 }
 
 // ---- epicenter / path motion / propagation ----

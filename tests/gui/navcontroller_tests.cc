@@ -99,7 +99,7 @@ TEST(NavController, NavigateWithPopUpTo) {
     // popUpTo(start){inclusive=true} collapses the stack, then navigate to c -> single c on top.
     NavOptions* opts = NavOptions::Builder()
         .setPopUpTo(std::string("start"), true).build();
-    nc->navigate("c", opts);
+    nc->navigate("c", nullptr, opts);
     delete opts;
     EXPECT_EQ(nc->getCurrentDestination()->getRoute(), "c");
     // The start/b entries were popped; popping c should leave an empty/stack-without-leaf.
@@ -112,7 +112,7 @@ TEST(NavController, SingleTop) {
     size_t sizeBefore = nc->getBackStack().size();
     // singleTop navigating to the current destination must not grow the stack.
     NavOptions* opts = NavOptions::Builder().setLaunchSingleTop(true).build();
-    nc->navigate("b", opts);
+    nc->navigate("b", nullptr, opts);
     delete opts;
     EXPECT_EQ(nc->getCurrentDestination()->getRoute(), "b");
     EXPECT_EQ(nc->getBackStack().size(), sizeBefore);

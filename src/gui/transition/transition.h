@@ -201,13 +201,10 @@ class Transition {
     Transition& removeListener(const TransitionListener& listener);
 
     // CDROID ownership: clones created per transition run (beginDelayedTransition/go -> clone)
-    // are throwaway (java reclaims via GC). Mark a clone so end() queues it for deletion; only
-    // the top-level clone is marked — children of a TransitionSet clone are owned by the set.
+    // are throwaway (java reclaims via GC). Mark a clone so end() defers delete-this to the next
+    // UI-thread looper iteration via a heap Handler (self-deleting); only the top-level clone is
+    // marked — children of a TransitionSet clone are owned by the set.
     void setDeleteWhenEnded(bool b);
-    // Delete clones queued by ended transitions. Called at a safe sync point (per-frame, after
-    // all transition end() calls have unwound) — currently Window::draw — because a synchronous
-    // delete-this in end() is unsafe for a TransitionSet clone (reached via a child's end()).
-    static void drainPendingDeletions();
 
     // ---- propagation / epicenter / path motion ----
     virtual void setEpicenterCallback(EpicenterCallback* epicenterCallback);
