@@ -18,6 +18,7 @@
 #include <fragment/specialeffectscontroller.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentstatemanager.h>
+#include <core/handler.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <algorithm>
@@ -145,6 +146,15 @@ void SpecialEffectsController::Operation::applyState(){
     switch(mFinalState){
         case State::REMOVED:
             if(view->getParent()) container->removeView(view);
+            // Defer the view's reclamation until the exit effect completes, then one more looper
+            // iteration so the FSM's onDestroyView/mView=nullptr has run. Capture by value in a
+            // completion listener (no member needed): complete() fires it once all effects end; the
+            // listener posts delete on a self-deleting heap Handler. (java GC: CDROID's removeView
+            // is detach-only; without this the orphaned fragment view leaks.)
+            addCompletionListener([view](){
+                Handler* h = new Handler();
+                h->post([h, view](){ delete view; delete h; });
+            });
             break;
         case State::VISIBLE:
             if(!view->getParent()) container->addView(view);
@@ -163,7 +173,7 @@ FragmentStateManagerOperation::FragmentStateManagerOperation(State finalState, L
 
 void FragmentStateManagerOperation::complete(){
     FragmentStateManager* fsm = mFSM; // copy: super() listeners retire this op
-    Operation::complete();            // listeners (running -> completed)
+    Operation::complete();            // listeners (running -> completed) incl. view-reclaim listener
     if(fsm) fsm->moveToExpectedState(); // re-enter the FSM; awaiting-effect clamp lifts
 }
 
