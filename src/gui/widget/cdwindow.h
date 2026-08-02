@@ -47,7 +47,7 @@ private:
     Rect mRectOfFocusedView;
     AccessibilityManager*mAccessibilityManager;
     ActionMode* mActionMode = nullptr;
-    ActionBar*  mActionBar    = nullptr; // owned; created by setActionBar(Toolbar*)
+    ActionBar*  mActionBar  = nullptr; // owned; created by setActionBar(Toolbar*)
     MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;

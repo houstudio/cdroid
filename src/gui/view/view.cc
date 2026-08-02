@@ -7811,7 +7811,12 @@ void View::createContextMenu(ContextMenu& menu) {
 #if ENABLE(MENU)
     // Sets the current menu info so all items added to menu will have
     // my extra info set.
-    ((MenuBuilder&)menu).setCurrentMenuInfo(menuInfo);
+    // menu is a ContextMenu&; ContextMenu and MenuBuilder are sibling bases (both
+    // virtual-derive Menu) of ContextMenuBuilder, so this is a cross-cast. A C-style
+    // (MenuBuilder&) cast degrades to reinterpret_cast (no subobject adjustment) and
+    // yields a wrong 'this' -> out-of-bounds write. dynamic_cast adjusts correctly
+    // (mirrors AOSP's runtime (MenuBuilder) menu downcast). Same below.
+    dynamic_cast<MenuBuilder&>(menu).setCurrentMenuInfo(menuInfo);
 #endif
     onCreateContextMenu(menu);
     if (mListenerInfo && mListenerInfo->mOnCreateContextMenuListener) {
@@ -7820,7 +7825,7 @@ void View::createContextMenu(ContextMenu& menu) {
 #if ENABLE(MENU)
     // Clear the extra information so subsequent items that aren't mine don't
     // have my extra info.
-    ((MenuBuilder&)menu).setCurrentMenuInfo(nullptr);
+    dynamic_cast<MenuBuilder&>(menu).setCurrentMenuInfo(nullptr);
 #endif
     if (mParent != nullptr) {
         mParent->createContextMenu(menu);

@@ -73,6 +73,9 @@ void Window::initWindow(){
     mAccessibilityManager =&AccessibilityManager::getInstance(mContext);
     mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
+    mActionBar = nullptr;
+    mActionMode = nullptr;
+    mMenuInflater = nullptr;
     setBackground(nullptr);
     setLayoutDirection(View::LAYOUT_DIRECTION_LTR);
     setTextDirection(View::TEXT_DIRECTION_LTR);
