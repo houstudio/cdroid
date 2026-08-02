@@ -140,6 +140,8 @@ public:
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine
     friend class BackStackRecord;      // records call enqueueAction/execSingleAction/generateOps
+
+    // --- private methods ---
     // Internal fragment ops (used only by BackStackRecord.executeOps — friend). android keeps these
     // package-private; C++ has no package visibility, so private + friend BackStackRecord. External
     // code must go through FragmentTransaction, never these directly.
@@ -152,29 +154,8 @@ private:
     void hideFragment(Fragment* fragment);
     void attachFragment(Fragment* fragment);
     void detachFragment(Fragment* fragment);
-    std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
     FragmentStateManager* getOrCreateStateManager(Fragment* f);
-    FragmentHostCallback* mHost = nullptr;
-    FragmentContainer* mContainer = nullptr;
-    Fragment* mParent = nullptr;
-    int mCurState = -1; // Fragment::INITIALIZING
-    FragmentFactory* mFragmentFactory = nullptr;
-    std::vector<Fragment*> mAdded;
-    std::vector<Fragment*> mCreatedMenus; // fragments that contributed to the last options menu
-    std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
-    std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
-    std::unordered_map<std::string, BackStackState> mBackStackStates; // name -> saved back stack (androidx FragmentManager.mBackStackStates)
-    std::vector<BackStackRecord*> mBackStack;
-    std::vector<std::string> mPendingSharedNames;
-    bool mDestroyed = false;
-    bool mStateSaved = false;
-    bool mStopped = true;
     // --- deferred-commit machinery (androidx FragmentManager) ---
-    std::vector<BackStackRecord*> mPendingActions; // records enqueued by commit(), awaiting exec
-    bool mExecutingActions = false;                // re-entrancy guard for execPendingActions
-    cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
-    std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
-    std::vector<bool> mTmpIsPop;
     void scheduleCommit();
     bool generateOpsForPendingActions(std::vector<BackStackRecord*>& records,
                                       std::vector<bool>& isRecordPop);
@@ -194,6 +175,29 @@ private:
     FragmentState* setSavedState(const std::string& who, FragmentState* s);
     FragmentState* getSavedState(const std::string& who) const;
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
+
+    // --- private data ---
+    std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
+    FragmentHostCallback* mHost = nullptr;
+    FragmentContainer* mContainer = nullptr;
+    Fragment* mParent = nullptr;
+    int mCurState = -1; // Fragment::INITIALIZING
+    FragmentFactory* mFragmentFactory = nullptr;
+    std::vector<Fragment*> mAdded;
+    std::vector<Fragment*> mCreatedMenus; // fragments that contributed to the last options menu
+    std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
+    std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
+    std::unordered_map<std::string, BackStackState> mBackStackStates; // name -> saved back stack (androidx FragmentManager.mBackStackStates)
+    std::vector<BackStackRecord*> mBackStack;
+    std::vector<std::string> mPendingSharedNames;
+    bool mDestroyed = false;
+    bool mStateSaved = false;
+    bool mStopped = true;
+    bool mExecutingActions = false;                // re-entrancy guard for execPendingActions
+    std::vector<BackStackRecord*> mPendingActions; // records enqueued by commit(), awaiting exec
+    cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
+    std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
+    std::vector<bool> mTmpIsPop;
 };
 
 }//namespace fragment

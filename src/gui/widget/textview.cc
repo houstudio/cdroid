@@ -508,6 +508,7 @@ void TextView::initView(){
     mPreDrawRegistered = false;
     mHighlightPathBogus= true;
     mPreDrawListenerDetached = false;
+    mUseFallbackLineSpacing = false;
     mAllowTransformationLengthChange = false;
     mEllipsize = TextUtils::TruncateAt::NONE;
     mAutoSizeTextType = AUTO_SIZE_TEXT_TYPE_NONE;
