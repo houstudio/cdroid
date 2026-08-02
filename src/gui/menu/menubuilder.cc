@@ -309,8 +309,12 @@ void MenuBuilder::removeGroup(int group) {
 }
 
 void MenuBuilder::removeItemAtInt(int index, bool updateChildrenOnMenuViews) {
-    if ((index < 0) || (index >= mItems.size())) return;
+    if ((index < 0) || (index >= (int) mItems.size())) return;
+    MenuItemImpl* item = mItems.at(index);
     mItems.erase(mItems.begin()+index);
+    // MenuBuilder owns its MenuItemImpls (see ~MenuBuilder); free on removal so removeItem /
+    // removeGroup don't leak (AOSP leans on GC here).
+    delete item;
     if (updateChildrenOnMenuViews) onItemsChanged(true);
 }
 
@@ -331,6 +335,14 @@ void MenuBuilder::clearAll() {
 void MenuBuilder::clear() {
     if (mExpandedItem != nullptr) {
         collapseItemActionView(mExpandedItem);
+    }
+    // MenuBuilder owns its MenuItemImpls (see ~MenuBuilder). AOSP relies on GC to reclaim
+    // them here; in C++ dropping them from mItems must free them, otherwise every
+    // invalidateOptionsMenu() rebuild (clear + re-add) leaks the previous items. Safe to do
+    // before onItemsChanged(): presenters re-read getVisibleItems() (now empty) and detach the
+    // stale item views via removeViewAt, which never dereferences the item pointer.
+    for (auto item : mItems) {
+        delete item;
     }
     mItems.clear();
     onItemsChanged(true);
