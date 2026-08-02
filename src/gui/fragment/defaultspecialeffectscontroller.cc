@@ -118,38 +118,39 @@ void AnimationEffect::onCommit(ViewGroup* container){
 
 void TransitionEffect::onCommit(ViewGroup* container){
     if(!mTransition || !container){ mOperation->completeEffect(this); return; }
-    // Reclaim the fragment view when the RUNNING CLONE transition truly ends — NOT on op-completion.
-    // complete() fires synchronously below, but the clone runs async (next onPreDraw) and holds the
-    // view via TransitionValues for ~300ms; deleting on complete() would UAF. So we attach a delete
-    // listener to mTransition: beginDelayedTransition clones mTransition (new Derived(*this) +
-    // copyCloneFields, which does NOT clear mListeners), so the running clone inherits this listener
-    // and fires it at its end()/cancel(). The delete is POSTED one looper iteration past
-    // onTransitionEnd so Transition::end()'s overlay/GhostView teardown finishes first. CRUCIALLY the
-    // reclaim listener never calls completeEffect/moveToExpectedState: completeEffect stays
-    // synchronous below so the op retires during commitEffects and the FSM's awaiting-effect clamp
-    // (which floors expected at the un-landable AWAITING_EXIT_EFFECTS=3) is never observed — no
-    // busy-loop. Sole-deleter is safe: Fragment::~Fragment does not delete mView; removeView is
-    // detach-only. A shared fired-flag makes end/cancel/fallback mutually exclusive.
+    // beginDelayedTransition clones mTransition and returns the RUNNING clone (the one that actually
+    // animates). clone() no longer inherits the original's listeners (copyCloneFields clears them),
+    // so to reclaim the fragment view when the clone truly ends we addListener() on the returned
+    // clone directly — not on mTransition, not on op-completion.
+    Transition* clone = TransitionManager::beginDelayedTransition(container, mTransition);
     if(mOperation->mFinalState == SpecialEffectsController::Operation::State::REMOVED){
         Fragment* f = mOperation->mFragment;
         cdroid::View* view = f ? f->mView : nullptr;
         if(view){
+            // Reclaim on the clone's true end, NOT on op-completion: complete() is synchronous below,
+            // before the async clone plays, so a delete-on-complete would UAF the clone's
+            // startValues->view. completeEffect stays synchronous so the op retires during
+            // commitEffects and the FSM's awaiting-effect clamp (floors expected at the un-landable
+            // AWAITING_EXIT_EFFECTS=3) is never observed — no busy-loop. The delete is POSTED past
+            // onTransitionEnd so end()'s overlay teardown finishes first. Reclaim never calls
+            // completeEffect/moveToExpectedState. Sole-deleter: ~Fragment doesn't delete mView.
             auto fired = std::make_shared<bool>(false);
             ViewGroup* cont = container;
             auto scheduleDelete = [cont, view, fired](){
                 if(*fired) return; *fired = true;
                 cont->post([view]{ delete view; });
             };
-            Transition::TransitionListener lst;
-            lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
-            lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
-            mTransition->addListener(lst);
-            // beginDelayedTransition is a no-op when !isLaidOut() (no clone created, so the listener
-            // would never fire) — but then no animator references the view either, so reclaim now.
-            if(!container->isLaidOut()) scheduleDelete();
+            if(clone){
+                Transition::TransitionListener lst;
+                lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
+                lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
+                clone->addListener(lst);
+            } else {
+                // no-op (not laid out / already pending): no clone, no animator referencing the view.
+                scheduleDelete();
+            }
         }
     }
-    TransitionManager::beginDelayedTransition(container, mTransition);
     mOperation->completeEffect(this);  // synchronous: retire op now (running->completed), dodge the clamp
 }
 

@@ -1207,6 +1207,12 @@ void Transition::copyCloneFields(Transition* clone) const {
     clone->mEndValues = TransitionValuesMaps();
     clone->mStartValuesList = nullptr;
     clone->mEndValuesList = nullptr;
+    // Clone must NOT inherit the original's listeners. mListeners was copied by the copy-ctor
+    // (new Derived(*this)) — android's super.clone() shallow-copies it too, but that's a side
+    // effect, not intent: a caller of clone() cannot know what listeners the original accumulated,
+    // and inheriting them makes clone.end()/cancel() fire callbacks the caller never asked for.
+    // Clear what the copy-ctor copied.
+    clone->mListeners.clear();
 }
 
 Transition* Transition::clone() const {

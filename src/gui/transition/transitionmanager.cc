@@ -296,11 +296,11 @@ void TransitionManager::go(Scene* scene, Transition* transition) {
     changeScene(scene, transition);
 }
 
-void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot) {
-    beginDelayedTransition(sceneRoot, nullptr);
+Transition* TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot) {
+    return beginDelayedTransition(sceneRoot, nullptr);
 }
 
-void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition) {
+Transition* TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition) {
     auto& pending = getPendingTransitions();
     if (std::find(pending.begin(), pending.end(), sceneRoot) == pending.end() && sceneRoot->isLaidOut()) {
         if (Transition::DBG) {
@@ -315,7 +315,9 @@ void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition*
         sceneChangeSetup(sceneRoot, transitionClone);
         Scene::setCurrentScene(sceneRoot, nullptr);
         sceneChangeRunTransition(sceneRoot, transitionClone);
+        return transitionClone; // the running clone; a caller may addListener() on it
     }
+    return nullptr; // no-op (not laid out / already pending): no clone created
 }
 
 void TransitionManager::endTransitions(ViewGroup* sceneRoot) {

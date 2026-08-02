@@ -52,8 +52,12 @@ class TransitionManager {
     static void go(Scene* scene);
     static void go(Scene* scene, Transition* transition);
 
-    static void beginDelayedTransition(ViewGroup* sceneRoot);
-    static void beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition);
+    // Returns the running clone (the throwaway transition that actually animates), or nullptr when
+    // the transition was a no-op (sceneRoot not laid out / already pending). Callers that need to
+    // hook the clone's lifecycle must addListener() on this returned clone — clone() no longer
+    // inherits the original's listeners (Transition::copyCloneFields clears them).
+    static Transition* beginDelayedTransition(ViewGroup* sceneRoot);
+    static Transition* beginDelayedTransition(ViewGroup* sceneRoot, Transition* transition);
 
     static void endTransitions(ViewGroup* sceneRoot);
 
