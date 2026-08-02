@@ -46,6 +46,10 @@ static int maxStateToInt(lifecycle::Lifecycle::State s){
     return Fragment::RESUMED;
 }
 
+// Key under which the per-container SpecialEffectsController is cached on the container View's tag
+// (androidx stores it the same way). CDROID must reclaim it explicitly — see destroySpecialEffectsController.
+static constexpr int SEC_TAG = 0x7F0D0001;
+
 FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
     : mFragmentManager(fm), mFragment(f){
 }
@@ -53,7 +57,6 @@ FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
 SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
     if(!mFragment || !mFragment->mContainer) return nullptr;
     // One DefaultSpecialEffectsController per container, cached on the container's tag.
-    static const int SEC_TAG = 0x7F0D0001; // arbitrary unique tag key
     cdroid::View* tagView = mFragment->mContainer;
     SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG));
     if(!sec){
@@ -61,6 +64,19 @@ SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
         tagView->setTag(SEC_TAG, sec);
     }
     return sec;
+}
+
+void FragmentStateManager::destroySpecialEffectsController(){
+    // androidx caches the SEC on the container tag and lets GC reclaim it; CDROID must delete.
+    // Called from FragmentManager::dispatchDestroy once all effects are force-completed. Per-
+    // container: several FSMs share one container, so clearing the tag makes this idempotent —
+    // the first caller deletes, the rest see null and skip (no double-free).
+    if(!mFragment || !mFragment->mContainer) return;
+    cdroid::View* tagView = mFragment->mContainer;
+    if(SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG))){
+        tagView->setTag(SEC_TAG, nullptr);
+        delete sec;
+    }
 }
 
 void FragmentStateManager::forceCompleteSpecialEffects(){
