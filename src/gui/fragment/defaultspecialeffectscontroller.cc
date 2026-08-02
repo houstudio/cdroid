@@ -26,6 +26,7 @@
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <core/context.h>
+#include <memory>
 
 namespace cdroid{
 namespace fragment{
@@ -105,7 +106,10 @@ void AnimationEffect::onCommit(ViewGroup* container){
         cdroid::View* v = view;
         lst.onAnimationEnd = [cont, v, op, self](Animation&){
             if(v->getParent()) cont->removeView(v);
-            cont->post([op, self](){ op->completeEffect(self); });
+            // The animClone has ended and the view is detached — reclaim it (CDROID's removeView is
+            // detach-only; java GC would reclaim it). completeEffect retires the op; mView is null by
+            // then so the FSM re-entry touches a different (null) pointer, not this view.
+            cont->post([op, self, v](){ op->completeEffect(self); delete v; });
         };
         animClone->setAnimationListener(lst);
         view->startAnimation(animClone);
@@ -114,10 +118,39 @@ void AnimationEffect::onCommit(ViewGroup* container){
 
 void TransitionEffect::onCommit(ViewGroup* container){
     if(!mTransition || !container){ mOperation->completeEffect(this); return; }
-    // beginDelayedTransition captures the container state; the subsequent applyState (addView/
-    // removeView) is what it animates. Complete synchronously — the transition runs async.
+    // Reclaim the fragment view when the RUNNING CLONE transition truly ends — NOT on op-completion.
+    // complete() fires synchronously below, but the clone runs async (next onPreDraw) and holds the
+    // view via TransitionValues for ~300ms; deleting on complete() would UAF. So we attach a delete
+    // listener to mTransition: beginDelayedTransition clones mTransition (new Derived(*this) +
+    // copyCloneFields, which does NOT clear mListeners), so the running clone inherits this listener
+    // and fires it at its end()/cancel(). The delete is POSTED one looper iteration past
+    // onTransitionEnd so Transition::end()'s overlay/GhostView teardown finishes first. CRUCIALLY the
+    // reclaim listener never calls completeEffect/moveToExpectedState: completeEffect stays
+    // synchronous below so the op retires during commitEffects and the FSM's awaiting-effect clamp
+    // (which floors expected at the un-landable AWAITING_EXIT_EFFECTS=3) is never observed — no
+    // busy-loop. Sole-deleter is safe: Fragment::~Fragment does not delete mView; removeView is
+    // detach-only. A shared fired-flag makes end/cancel/fallback mutually exclusive.
+    if(mOperation->mFinalState == SpecialEffectsController::Operation::State::REMOVED){
+        Fragment* f = mOperation->mFragment;
+        cdroid::View* view = f ? f->mView : nullptr;
+        if(view){
+            auto fired = std::make_shared<bool>(false);
+            ViewGroup* cont = container;
+            auto scheduleDelete = [cont, view, fired](){
+                if(*fired) return; *fired = true;
+                cont->post([view]{ delete view; });
+            };
+            Transition::TransitionListener lst;
+            lst.onTransitionEnd = [scheduleDelete](Transition&){ scheduleDelete(); };
+            lst.onTransitionCancel = [scheduleDelete](Transition&){ scheduleDelete(); };
+            mTransition->addListener(lst);
+            // beginDelayedTransition is a no-op when !isLaidOut() (no clone created, so the listener
+            // would never fire) — but then no animator references the view either, so reclaim now.
+            if(!container->isLaidOut()) scheduleDelete();
+        }
+    }
     TransitionManager::beginDelayedTransition(container, mTransition);
-    mOperation->completeEffect(this);
+    mOperation->completeEffect(this);  // synchronous: retire op now (running->completed), dodge the clamp
 }
 
 }}//namespace fragment::cdroid

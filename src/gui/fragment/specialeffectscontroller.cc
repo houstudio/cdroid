@@ -18,7 +18,6 @@
 #include <fragment/specialeffectscontroller.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentstatemanager.h>
-#include <core/handler.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <algorithm>
@@ -63,6 +62,12 @@ void SpecialEffectsController::enqueue(Operation::State finalState, Operation::L
         running.erase(std::remove(running.begin(), running.end(), op), running.end());
         mCompletedOperations.push_back(op);
     });
+    // NOTE: REMOVED view reclamation is NOT done here (on op-completion). For the Transition path
+    // complete() fires synchronously inside onCommit, before the async clone transition plays, so a
+    // delete-on-complete() would UAF; and deferring completeEffect to transition-end busy-loops
+    // (the op staying in mRunningOperations floors the FSM clamp at the un-landable
+    // AWAITING_EXIT_EFFECTS=3). Instead each Effect reclaims the view on its OWN true end — see
+    // TransitionEffect::onCommit (clone onTransitionEnd) and AnimationEffect::onCommit (onAnimationEnd).
     mPendingOperations.push_back(op);
 }
 
@@ -124,7 +129,7 @@ SpecialEffectsController::Operation::~Operation(){
 }
 
 void SpecialEffectsController::Operation::addEffect(Effect* e){ if(e) mEffects.push_back(e); }
-void SpecialEffectsController::Operation::addCompletionListener(const CallbackBase<void>& l){ mCompletionListeners.push_back(l); }
+void SpecialEffectsController::Operation::addCompletionListener(std::function<void()> l){ mCompletionListeners.push_back(l); }
 
 void SpecialEffectsController::Operation::completeEffect(Effect* e){
     auto it = std::find(mEffects.begin(), mEffects.end(), e);
@@ -145,16 +150,10 @@ void SpecialEffectsController::Operation::applyState(){
     ViewGroup* container = mController->getContainer();
     switch(mFinalState){
         case State::REMOVED:
+            // Container change only; the orphaned view's reclamation is attached as a completion
+            // listener back in enqueue() (this also covers the Animation path, which sets
+            // isAwaitingContainerChanges=false and therefore never calls applyState).
             if(view->getParent()) container->removeView(view);
-            // Defer the view's reclamation until the exit effect completes, then one more looper
-            // iteration so the FSM's onDestroyView/mView=nullptr has run. Capture by value in a
-            // completion listener (no member needed): complete() fires it once all effects end; the
-            // listener posts delete on a self-deleting heap Handler. (java GC: CDROID's removeView
-            // is detach-only; without this the orphaned fragment view leaks.)
-            addCompletionListener([view](){
-                Handler* h = new Handler();
-                h->post([h, view](){ delete view; delete h; });
-            });
             break;
         case State::VISIBLE:
             if(!view->getParent()) container->addView(view);
@@ -173,7 +172,7 @@ FragmentStateManagerOperation::FragmentStateManagerOperation(State finalState, L
 
 void FragmentStateManagerOperation::complete(){
     FragmentStateManager* fsm = mFSM; // copy: super() listeners retire this op
-    Operation::complete();            // listeners (running -> completed) incl. view-reclaim listener
+    Operation::complete();            // listeners (running -> completed)
     if(fsm) fsm->moveToExpectedState(); // re-enter the FSM; awaiting-effect clamp lifts
 }
 

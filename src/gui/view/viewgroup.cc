@@ -971,6 +971,12 @@ void ViewGroup::endViewTransition(View* view){
 }
 
 void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
+    // CDROID (unlike android, which relies on GC) frees mCurrentAnimation inside
+    // dispatchDetachedFromWindow()->onDetachedFromWindowInternal() and inside clearAnimation().
+    // The android-original getFillAfter() check below would therefore dereference an Animation
+    // already freed by the detach above, so cache the result before the detach runs.
+    const bool clearForFillAfter = (animation && !animation->getFillAfter());
+
     auto it = std::find(mDisappearingChildren.begin(),mDisappearingChildren.end(),view);
     if (it != mDisappearingChildren.end()) {
         mDisappearingChildren.erase(it);
@@ -981,7 +987,7 @@ void ViewGroup::finishAnimatingView(View* view, Animation* animation) {
         mGroupFlags |= FLAG_INVALIDATE_REQUIRED;
     }
 
-    if (animation && !animation->getFillAfter()) {
+    if (clearForFillAfter) {
         view->clearAnimation();
     }
 

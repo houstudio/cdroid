@@ -144,6 +144,12 @@ void FragmentManager::dispatchDestroyView(){
 void FragmentManager::dispatchDestroy(){
     mDestroyed = true;
     forceCompleteAllSpecialEffects();
+    // Reclaim the per-container SpecialEffectsControllers cached on container tags (androidx relies
+    // on GC). Done here while fragments still reference their containers — INITIALIZING below
+    // detaches them; the SEC_TAG delete is idempotent across FSMs sharing one container.
+    for(auto& kv : mStateManagers){
+        if(kv.second) kv.second->destroySpecialEffectsController();
+    }
     dispatchStateChange(Fragment::INITIALIZING);
 }
 
