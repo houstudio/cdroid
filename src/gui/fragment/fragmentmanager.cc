@@ -26,6 +26,7 @@
 #include <fragment/fragmentstate.h>
 #include <fragment/fragmentanim.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <transition/transitionmanager.h>
 #include <animation/animation.h>
 #include <transition/transitionmanager.h>
 #include <transition/fade.h>
@@ -158,7 +159,13 @@ void FragmentManager::forceCompleteAllSpecialEffects(){
     // every active fragment's container (redundant calls on a shared SEC are no-ops).
     for(auto& kv : mActive){
         Fragment* f = kv.second;
-        if(!f) continue;
+        if(!f || !f->mContainer) continue;
+        // Force any running Transition clone (and its animators) on this container to end BEFORE the
+        // SEC completes. Without this, a clone's animators (e.g. the Fade's transitionAlpha Object-
+        // Animator) keep running during Activity destroy; the overlay/container teardown then frees
+        // the animating view while the animator still dereferences it -> UAF. endTransitions runs
+        // forceToEnd on every running transition on this sceneRoot.
+        TransitionManager::endTransitions(f->mContainer);
         if(FragmentStateManager* fsm = getOrCreateStateManager(f)){
             fsm->forceCompleteSpecialEffects();
         }
