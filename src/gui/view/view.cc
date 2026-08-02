@@ -478,6 +478,13 @@ View::~View(){
     if(mBackground)mBackground->setCallback(nullptr);
 
     delete mTouchDelegate;
+    if(mKeyedTags){
+        // CDROID has no GC: invoke each owned payload's destructor before freeing the SparseArray.
+        for(int i = 0; i < mKeyedTags->size(); i++){
+            const KeyedTagEntry& e = mKeyedTags->valueAt(i);
+            if(e.ptr && e.dtor) e.dtor(e.ptr);
+        }
+    }
     delete mKeyedTags;
     delete mForegroundInfo;
     delete mPendingCheckForTap;
@@ -3727,9 +3734,17 @@ void View::setTag(int key,void*tag){
     setKeyedTag(key,tag);
 }
 
+void View::setTag(int key, void* tag, std::function<void(void*)> dtor){
+    setKeyedTag(key, tag, std::move(dtor));
+}
+
 void* View::getTag(int key)const{
-    if (mKeyedTags != nullptr)
-        return mKeyedTags->get(key);
+    if (mKeyedTags != nullptr){
+        // SparseArray::get(key) defaults via static_cast<T>(0), which KeyedTagEntry can't take;
+        // use indexOfKey + valueAt instead.
+        int i = mKeyedTags->indexOfKey(key);
+        if(i >= 0) return mKeyedTags->valueAt(i).ptr;
+    }
     return nullptr;
 }
 
@@ -3738,10 +3753,10 @@ void View::setTagInternal(int key, void* tag) {
     setKeyedTag(key, tag);
 }
 
-void View::setKeyedTag(int key,void* tag){
+void View::setKeyedTag(int key,void* tag, std::function<void(void*)> dtor){
     if(mKeyedTags ==nullptr)
-        mKeyedTags = new SparseArray<void*>();
-    mKeyedTags->put(key,tag);
+        mKeyedTags = new SparseArray<KeyedTagEntry>();
+    mKeyedTags->put(key, KeyedTagEntry{ tag, std::move(dtor) });
 }
 
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{

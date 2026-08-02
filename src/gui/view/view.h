@@ -587,7 +587,7 @@ private:
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-    void setKeyedTag(int key,void* tag);
+    void setKeyedTag(int key,void* tag, std::function<void(void*)> dtor = {});
     bool hasPendingLongPressCallback()const;
     void removeTapCallback();
     void removeLongPressCallback();
@@ -732,7 +732,11 @@ protected:
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    SparseArray<void*>* mKeyedTags;
+    // A key-tag entry carries an optional destructor. CDROID has no GC: ~View invokes dtor(ptr)
+    // to reclaim owned payloads (SEC / Scene caches / int[2]) that java would GC. Tags set without
+    // a dtor (the default) keep the old detach-only behaviour.
+    struct KeyedTagEntry { void* ptr = nullptr; std::function<void(void*)> dtor; };
+    SparseArray<KeyedTagEntry>* mKeyedTags;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
     ViewOutlineProvider mOutlineProvider;
@@ -1223,6 +1227,9 @@ public:
     void setTag(void*);
     void* getTag()const;
     void setTag(int key,void*tag);
+    // Set a key tag whose payload this View owns: ~View invokes dtor(tag). Use for heap payloads
+    // (SEC cache / SparseArray<Scene*> / int[2]) that java would GC.
+    void setTag(int key,void*tag, std::function<void(void*)> dtor);
     void* getTag(int key)const;
     void setTagInternal(int key,void* tag);
     void setContentDescription(const std::string&);

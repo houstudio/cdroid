@@ -51,7 +51,13 @@ Scene* Scene::getSceneForLayout(ViewGroup* sceneRoot, int layoutId, Context* con
                                       sceneRoot->getTag(R::id::scene_layoutid_cache));
     if (scenes == nullptr) {
         scenes = new SparseArray<Scene*>();
-        sceneRoot->setTag(R::id::scene_layoutid_cache, scenes);
+        // Own the cache: ~View reclaims it (java would GC). Delete every cached Scene then the
+        // SparseArray itself.
+        sceneRoot->setTag(R::id::scene_layoutid_cache, scenes, [](void* p){
+            auto* sa = static_cast<SparseArray<Scene*>*>(p);
+            for(int i = 0; i < sa->size(); i++) delete sa->valueAt(i);
+            delete sa;
+        });
     }
     Scene* scene = scenes->get(layoutId);
     if (scene != nullptr) {
