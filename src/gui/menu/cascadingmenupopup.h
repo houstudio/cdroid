@@ -38,6 +38,12 @@ private:
     Handler* mSubMenuHoverHandler;
     std::vector<MenuBuilder*> mPendingMenus;
     std::vector<CascadingMenuInfo*> mShowingMenus;
+    // Infos whose window has been dismissed but not yet freed. They cannot be
+    // deleted synchronously inside onCloseMenu because that call may run from
+    // within the window's own dismiss() listener (ListPopupWindow::dismiss
+    // touches its members after firing the listener); they are reclaimed when
+    // the popup itself is destroyed.
+    std::vector<CascadingMenuInfo*> mRecycledMenus;
     ViewTreeObserver::OnGlobalLayoutListener mGlobalLayoutListener;
     View::OnAttachStateChangeListener mAttachStateChangeListener;
     MenuItemHoverListener mMenuItemHoverListener;
@@ -111,10 +117,11 @@ public:
 class CascadingMenuPopup::CascadingMenuInfo {
 public:
     MenuPopupWindow* window;
+    MenuAdapter* adapter;
     MenuBuilder* menu;
     int position;
 public:
-    CascadingMenuInfo(MenuPopupWindow* window,MenuBuilder* menu,int position);
+    CascadingMenuInfo(MenuPopupWindow* window,MenuAdapter* adapter,MenuBuilder* menu,int position);
     ~CascadingMenuInfo();
     ListView* getListView();
 };

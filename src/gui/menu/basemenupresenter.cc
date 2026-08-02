@@ -17,6 +17,7 @@
  *********************************************************************************/
 #include <menu/menubuilder.h>
 #include <menu/basemenupresenter.h>
+#include <menu/submenubuilder.h> // complete type for SubMenuBuilder* -> MenuBuilder& upcast
 namespace cdroid{ 
 BaseMenuPresenter::BaseMenuPresenter(Context* context,const std::string& menuLayoutRes,const std::string& itemLayoutRes){
     mSystemContext = context;
@@ -131,7 +132,10 @@ void BaseMenuPresenter::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing) 
 
 bool BaseMenuPresenter::onSubMenuSelected(SubMenuBuilder* menu) {
     if (mCallback.onOpenSubMenu != nullptr) {
-        return mCallback.onOpenSubMenu((MenuBuilder&)menu);
+        // menu is a SubMenuBuilder* whose pointee IS-A MenuBuilder (direct, non-virtual
+        // base); dereference for an implicit upcast to MenuBuilder&. The old (MenuBuilder&)menu
+        // cast the *pointer* (not the pointee) and bound the reference to the pointer's storage.
+        return mCallback.onOpenSubMenu(*menu);
     }
     return false;
 }

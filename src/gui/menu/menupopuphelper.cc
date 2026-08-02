@@ -85,6 +85,13 @@ void MenuPopupHelper::show(int x, int y) {
 }
 
 MenuPopup* MenuPopupHelper::getPopup() {
+    if (mPopup != nullptr && !mPopup->isShowing()) {
+        // The previous popup was dismissed; reclaim it before building a fresh
+        // one. This is a safe point (no dismiss() on the call stack), so the
+        // destructor may free the popup windows without re-entering a listener.
+        delete mPopup;
+        mPopup = nullptr;
+    }
     if (mPopup == nullptr) {
         mPopup = createPopup();
     }
@@ -182,8 +189,14 @@ void MenuPopupHelper::dismiss() {
 }
 
 void MenuPopupHelper::onDismiss() {
-    mPopup = nullptr;
-
+    // NOTE: do not null out mPopup here. AOSP drops the reference so the GC
+    // can reclaim it; in C++ the helper owns mPopup, and freeing it now would
+    // run ~CascadingMenuPopup (which releases the popup windows) from inside
+    // the window's own dismiss() listener -- a use-after-free, since
+    // ListPopupWindow::dismiss touches its members after firing the listener.
+    // The dismissed popup is reclaimed lazily by getPopup() before the next
+    // show, or by ~MenuPopupHelper. isShowing() still returns false because
+    // CascadingMenuPopup::isShowing() checks its (now empty) shown-menu list.
     if (mOnDismissListener != nullptr) {
         mOnDismissListener();//.onDismiss();
     }

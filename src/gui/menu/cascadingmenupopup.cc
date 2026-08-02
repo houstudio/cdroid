@@ -137,7 +137,15 @@ CascadingMenuPopup::CascadingMenuPopup(Context* context, View* anchor,
 }
 
 CascadingMenuPopup::~CascadingMenuPopup(){
+    // The info dtor frees the popup window without dismissing it, so neither
+    // loop fires the dismiss listener and the vectors are not mutated while
+    // being iterated. mRecycledMenus holds windows already dismissed via
+    // onCloseMenu; mShowingMenus holds windows that may still be showing
+    // (force close) -- their decor Window is reclaimed by ~WindowManager.
     for (CascadingMenuInfo* info : mShowingMenus){
+        delete info;
+    }
+    for (CascadingMenuInfo* info : mRecycledMenus){
         delete info;
     }
     delete mSubMenuHoverHandler;
@@ -328,7 +336,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
     }
 
 
-    CascadingMenuInfo* menuInfo = new CascadingMenuInfo(popupWindow, menu, mLastPosition);
+    CascadingMenuInfo* menuInfo = new CascadingMenuInfo(popupWindow, adapter, menu, mLastPosition);
     mShowingMenus.push_back(menuInfo);
 
     popupWindow->show();
@@ -355,7 +363,7 @@ void CascadingMenuPopup::showMenu(MenuBuilder* menu) {
 MenuItem* CascadingMenuPopup::findMenuItemForSubmenu(MenuBuilder* parent, MenuBuilder* submenu) {
     for (int i = 0, count = parent->size(); i < count; i++) {
         MenuItem* item = parent->getItem(i);
-        if (item->hasSubMenu() && submenu == (MenuBuilder*)item->getSubMenu()) {
+        if (item->hasSubMenu() && submenu == dynamic_cast<MenuBuilder*>(item->getSubMenu())) {
             return item;
         }
     }
@@ -499,6 +507,12 @@ void CascadingMenuPopup::onCloseMenu(MenuBuilder* menu, bool allMenusAreClosing)
     }
     info->window->dismiss();
 
+    // Transfer ownership to the recycled list instead of deleting here. This
+    // method may be reached synchronously from the window's own dismiss()
+    // listener (see ~CascadingMenuInfo), so the window cannot be freed now;
+    // it is reclaimed when the popup is destroyed.
+    mRecycledMenus.push_back(info);
+
     const int count = mShowingMenus.size();
     if (count > 0) {
         mLastPosition = mShowingMenus.at(count - 1)->position;
@@ -586,9 +600,10 @@ void CascadingMenuPopup::setShowTitle(bool showTitle) {
 }
 
 ///private static class CascadingMenuInfo {
-CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(MenuPopupWindow* window, MenuBuilder* menu,
-        int position) {
+CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(MenuPopupWindow* window, MenuAdapter* adapter,
+        MenuBuilder* menu, int position) {
     this->window = window;
+    this->adapter = adapter;
     this->menu = menu;
     this->position = position;
     LOGD("%p window=%p",this,window);
@@ -596,6 +611,20 @@ CascadingMenuPopup::CascadingMenuInfo::CascadingMenuInfo(MenuPopupWindow* window
 
 CascadingMenuPopup::CascadingMenuInfo::~CascadingMenuInfo(){
     LOGD("%p window=%p",this,window);
+    // CascadingMenuInfo owns its popup window and the menu adapter created for
+    // it. The window is dismissed by onCloseMenu before being moved to the
+    // recycled list, so by the time the info is freed the dismiss listener has
+    // already returned; just delete the objects. Do NOT dismiss() here: this
+    // dtor also runs from ~CascadingMenuPopup, and dismissing would re-enter
+    // onCloseMenu and mutate the vectors being iterated.
+    // Order matters: delete the window first -- its ListView borrows (but does
+    // not own) the adapter and unregisters its observer in its own destructor;
+    // freeing the adapter before the window would leave the ListView touching
+    // freed memory.
+    delete window;
+    window = nullptr;
+    delete adapter;
+    adapter = nullptr;
 }
 
 ListView* CascadingMenuPopup::CascadingMenuInfo::getListView() {
