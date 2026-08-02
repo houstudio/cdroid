@@ -1322,7 +1322,7 @@ void Toolbar::ensureContentInsets() {
     }
 }
 
-ActionMenuPresenter* Toolbar::getOuterActionMenuPresenter() {
+ActionMenuPresenter* Toolbar::getOuterActionMenuPresenter() const{
      return mOuterActionMenuPresenter;
 }
 

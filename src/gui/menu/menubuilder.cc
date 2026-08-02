@@ -548,7 +548,9 @@ void MenuBuilder::findItemsWithShortcutForKey(std::vector<MenuItemImpl*>& items,
     for (int i = 0; i < N; i++) {
         MenuItemImpl* item = mItems.at(i);
         if (item->hasSubMenu()) {
-            ((MenuBuilder*)item->getSubMenu())->findItemsWithShortcutForKey(items, keyCode, event);
+            // getSubMenu() returns SubMenu* (sibling interface of MenuBuilder in
+            // SubMenuBuilder) -> cross-cast; use dynamic_cast for subobject adjustment.
+            dynamic_cast<MenuBuilder*>(item->getSubMenu())->findItemsWithShortcutForKey(items, keyCode, event);
         }
         const int shortcutChar =  qwerty ? item->getAlphabeticShortcut() : item->getNumericShortcut();
         const int shortcutModifiers = qwerty ? item->getAlphabeticModifiers() : item->getNumericModifiers();

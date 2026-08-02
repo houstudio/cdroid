@@ -142,7 +142,7 @@ protected:
     void removeChildrenForExpandedActionView();
     void addChildrenForExpandedActionView();
     bool isChildOrHidden(View* child)const;
-    ActionMenuPresenter* getOuterActionMenuPresenter();
+    ActionMenuPresenter* getOuterActionMenuPresenter()const;
     Context*getPopupContext();
 public:
     Toolbar(Context*,const AttributeSet&);

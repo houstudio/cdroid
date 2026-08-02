@@ -23,6 +23,8 @@
 #include <menu/actionmenuview.h>
 #include <menu/actionmenuitemview.h>
 #include <menu/actionmenupresenter.h>
+#include <core/handler.h>
+#include <core/looper.h>
 namespace cdroid{
 
 ActionMenuPresenter::ActionMenuPresenter(Context* context)
@@ -822,6 +824,19 @@ void ActionMenuPresenter::OverflowPopup::onDismiss() {
     }
     mPresenter->mOverflowPopup = nullptr;
     MenuPopupHelper::onDismiss();
+    // We are inside the popup window's dismiss() listener chain. Freeing this
+    // helper now would run ~MenuPopupHelper -> delete mPopup -> free the popup
+    // windows from within the very window's own dismiss() (use-after-free:
+    // ListPopupWindow::dismiss touches its members after firing the listener).
+    // The presenter has already dropped its reference above, so this object is
+    // owned only by the pending message. Defer self-deletion to the main
+    // looper's MessageQueue (Window::close-style); it runs after the call stack
+    // unwinds. CDROID's looper supports deleting the transient Handler at the
+    // end of its own callback: after dispatch it only recycles the Message
+    // (clears target, no deref) and ~Handler removes itself from the looper.
+    OverflowPopup* self = this;
+    Handler* h = new Handler(Looper::getMainLooper());
+    h->post([self, h](){ delete self; delete h; });
 }
 
 ActionMenuPresenter::ActionButtonSubmenu::ActionButtonSubmenu(Context* context, SubMenuBuilder* subMenu, View* anchorView,ActionMenuPresenter*p)
@@ -840,6 +855,12 @@ void ActionMenuPresenter::ActionButtonSubmenu::onDismiss() {
     mPresenter->mOpenSubMenuId = 0;
 
     MenuPopupHelper::onDismiss();
+    // Same deferred self-deletion as OverflowPopup::onDismiss (see note there):
+    // we are inside the window's dismiss() listener chain, so the helper -- and
+    // the popup windows it transitively owns -- cannot be freed synchronously.
+    ActionButtonSubmenu* self = this;
+    Handler* h = new Handler(Looper::getMainLooper());
+    h->post([self, h](){ delete self; delete h; });
 }
 #if 0
 class PopupPresenterCallback implements Callback {
