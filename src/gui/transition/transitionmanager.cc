@@ -57,23 +57,12 @@ Transition*& sDefaultTransitionRef() {
 // removeListeners() drops the strong ref; the executing callback's local w.lock() keeps
 // the object alive until the call returns, and the member callbacks (which own the
 // executing Functor) are destroyed only when MultiListener is — after the call returns.
-// android: anonymous TransitionListenerAdapter inside onPreDraw that removes the
-// transition from the running list when it ends. Named here. Defined before
-// MultiListener (MultiListener::onPreDraw news one up).
-struct RunningEndListener: public TransitionListenerAdapter {
-    ArrayMap<ViewGroup*, std::vector<Transition*>>* running;
-    ViewGroup* sceneRoot;
-
-    void onTransitionEnd(Transition& transition) override {
-        std::vector<Transition*>* currentTransitions = running->get(sceneRoot);
-        if (currentTransitions != nullptr) {
-            currentTransitions->erase(
-                std::remove(currentTransitions->begin(), currentTransitions->end(), &transition),
-                currentTransitions->end());
-        }
-        transition.removeListener(this);
-    }
-};
+// android: anonymous TransitionListener inside onPreDraw that removes the transition
+// from the running list when it ends. Now built inline in MultiListener::onPreDraw as
+// an EventSet TransitionListener value (no subclass / no new). Note the onTransitionEnd
+// lambda fires after onPreDraw returns (MultiListener is gone by then), so it must NOT
+// capture this/mSceneRoot or the local runningTransitions ref — sceneRoot is captured by
+// value and the running map is fetched via the stable TransitionManager::getRunningTransitions().
 
 class MultiListener: public std::enable_shared_from_this<MultiListener> {
   public:
@@ -146,9 +135,20 @@ class MultiListener: public std::enable_shared_from_this<MultiListener> {
             previousRunningTransitions = *currentTransitions;
         }
         currentTransitions->push_back(mTransition);
-        RunningEndListener* endListener = new RunningEndListener();
-        endListener->running = &runningTransitions;
-        endListener->sceneRoot = mSceneRoot;
+        // android: new RunningEndListener() added to mTransition. EventSet value: capture
+        // sceneRoot by value (MultiListener is destroyed before this fires) and fetch the
+        // running map via the stable static getter.
+        ViewGroup* sceneRoot = mSceneRoot;
+        Transition::TransitionListener endListener;
+        endListener.onTransitionEnd = [sceneRoot](Transition& transition) {
+            std::vector<Transition*>* currentTransitions =
+                TransitionManager::getRunningTransitions().get(sceneRoot);
+            if (currentTransitions != nullptr) {
+                currentTransitions->erase(
+                    std::remove(currentTransitions->begin(), currentTransitions->end(), &transition),
+                    currentTransitions->end());
+            }
+        };
         mTransition->addListener(endListener);
         mTransition->captureValues(mSceneRoot, false);
         if (!previousRunningTransitions.empty()) {
@@ -247,6 +247,7 @@ void TransitionManager::changeScene(Scene* scene, Transition* transition) {
     } else {
         pending.push_back(sceneRoot);
         Transition* transitionClone = transition->clone();
+        transitionClone->setDeleteWhenEnded(true); // throwaway clone; freed after end()
         transitionClone->setSceneRoot(sceneRoot);
         if (oldScene != nullptr && oldScene->isCreatedFromLayoutResource()) {
             transitionClone->setCanRemoveViews(true);
@@ -310,6 +311,7 @@ void TransitionManager::beginDelayedTransition(ViewGroup* sceneRoot, Transition*
             transition = getDefaultTransition();
         }
         Transition* transitionClone = transition->clone();
+        transitionClone->setDeleteWhenEnded(true); // throwaway clone; freed after end()
         sceneChangeSetup(sceneRoot, transitionClone);
         Scene::setCurrentScene(sceneRoot, nullptr);
         sceneChangeRunTransition(sceneRoot, transitionClone);

@@ -31,6 +31,7 @@
 #include <lifecycle/lifecycleowner.h>
 #include <lifecycle/viewmodelstore.h>
 #include <core/bundle.h>
+#include <core/callbackbase.h> // CallbackBase (OnDestinationChangedListener value type)
 #include <navigation/navdestination.h>
 #include <navigation/navbackstackentry.h>
 namespace cdroid{
@@ -48,11 +49,13 @@ class NavController{
     friend class NavigatorState; // androidx NavControllerNavigatorState is an inner class with
                                  // access to push()/pop(); in C++ it calls back via these privates.
 public:
-    class OnDestinationChangedListener{
-    public:
-        virtual ~OnDestinationChangedListener() = default;
-        virtual void onDestinationChanged(NavController* controller, NavDestination* destination, Bundle* arguments){}
-    };
+    // OnDestinationChangedListener: a single-callback listener (androidx
+    // NavController.OnDestinationChangedListener#onDestinationChanged). Expressed as a CallbackBase
+    // value (CDROID style, like Animator::AnimatorListener): addOn/removeOn take it by const ref and
+    // the NavController owns its listeners (stored by value in mOnDestinationChangedListeners), so no
+    // caller new/delete. Identity for removeOnDestinationChangedListener is the CallbackBase shared-
+    // functor pointer — a copy compares equal to its original.
+    using OnDestinationChangedListener = CallbackBase<void, NavController*, NavDestination*, Bundle*>;
 
     NavController(Context* context);
     ~NavController();
@@ -90,8 +93,8 @@ public:
 
     NavDestination* findDestination(const std::string& route);
 
-    void addOnDestinationChangedListener(OnDestinationChangedListener* listener);
-    void removeOnDestinationChangedListener(OnDestinationChangedListener* listener);
+    void addOnDestinationChangedListener(const OnDestinationChangedListener& listener);
+    void removeOnDestinationChangedListener(const OnDestinationChangedListener& listener);
 
 private:
     Context* mContext;
@@ -100,7 +103,7 @@ private:
     std::vector<NavBackStackEntry*> mBackStack;
     lifecycle::LifecycleOwner* mLifecycleOwner = nullptr;
     lifecycle::ViewModelStore* mViewModelStore = nullptr;
-    std::vector<OnDestinationChangedListener*> mOnDestinationChangedListeners;
+    std::vector<OnDestinationChangedListener> mOnDestinationChangedListeners;
 
     void navigate(NavDestination* node, Bundle* args, NavOptions* navOptions);
     void dispatchOnDestinationChanged(NavDestination* destination, Bundle* args);

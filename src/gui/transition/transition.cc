@@ -111,12 +111,14 @@ Transition::Transition(Context* /*context*/, AttributeSet* attrs) {
 Transition::~Transition() {
     delete mStartValuesList;
     delete mEndValuesList;
-    // Listeners are NOT owned by the Transition (java reference/GC semantics): the same
-    // listener may be registered on several transitions (e.g. TransitionSet's shared
-    // TransitionSetListener), so deleting here would double-free. Listeners are caller-
-    // managed; in practice they are transient (self-removing on end) and leak per
-    // transition run like java objects awaiting GC — a known, bounded consequence of
-    // mirroring the GC'd API. (A proper ownership pass can switch to shared_ptr later.)
+    // Own the animators created in createAnimators (java GC reclaims them; CDROID must not).
+    // By ~Transition all of them have ended (the clone is drained only after end()), so they
+    // are no longer in runningAnimators/mCurrentAnimators — safe to delete here.
+    for (Animator* a : mOwnedAnimators) {
+        delete a;
+    }
+    // mListeners holds TransitionListener by value (EventSet + CallbackBase), so the
+    // vector destructor frees them — no manual listener cleanup.
 }
 
 std::vector<int> Transition::parseMatchOrder(const std::string& matchOrderString) {
@@ -393,7 +395,9 @@ void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& sta
                             if (info && info->values && info->view == view &&
                                     ((info->name.empty() && getName().empty()) || info->name == getName())) {
                                 if (info->values->equals(*infoValues)) {
-                                    // Favor the old animator
+                                    // Favor the old animator; delete the freshly-created one
+                                    // (createAnimator just news it — without this it leaks).
+                                    delete animator;
                                     animator = nullptr;
                                     break;
                                 }
@@ -413,6 +417,7 @@ void Transition::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& sta
                     AnimationInfo info(view, getName(), this, sceneRoot->getWindowId(), infoValues);
                     runningAnimators.put(animator, info);
                     mAnimators.push_back(animator);
+                    mOwnedAnimators.push_back(animator); // Transition owns; freed in ~Transition
                 }
             }
         }
@@ -739,10 +744,10 @@ void Transition::pause(View* sceneRoot) {
             }
         }
         if (!mListeners.empty()) {
-            std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
+            std::vector<TransitionListener> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
             for (int i = 0; i < numListeners; ++i) {
-                tmpListeners[i]->onTransitionPause(*this);
+                tmpListeners[i].onTransitionPause(*this);
             }
         }
         mPaused = true;
@@ -763,10 +768,10 @@ void Transition::resume(View* sceneRoot) {
                 }
             }
             if (!mListeners.empty()) {
-                std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
+                std::vector<TransitionListener> tmpListeners = mListeners; // snapshot
                 int numListeners = (int)tmpListeners.size();
                 for (int i = 0; i < numListeners; ++i) {
-                    tmpListeners[i]->onTransitionResume(*this);
+                    tmpListeners[i].onTransitionResume(*this);
                 }
             }
         }
@@ -897,10 +902,10 @@ void Transition::animate(Animator* animator) {
 void Transition::start() {
     if (mNumInstances == 0) {
         if (!mListeners.empty()) {
-            std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
+            std::vector<TransitionListener> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
             for (int i = 0; i < numListeners; ++i) {
-                tmpListeners[i]->onTransitionStart(*this);
+                tmpListeners[i].onTransitionStart(*this);
             }
         }
         mEnded = false;
@@ -908,14 +913,23 @@ void Transition::start() {
     mNumInstances++;
 }
 
+// Throwaway clones queued for deletion by Transition::end(); drained per-frame by
+// drainPendingDeletions() at a safe sync point (Window::draw), after all end() stack frames
+// have unwound (a synchronous delete-this in end() would free a TransitionSet child from
+// under the child's own end() frame).
+static std::vector<Transition*>& transitionPendingDeletions() {
+    static std::vector<Transition*> v;
+    return v;
+}
+
 void Transition::end() {
     --mNumInstances;
     if (mNumInstances == 0) {
         if (!mListeners.empty()) {
-            std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
+            std::vector<TransitionListener> tmpListeners = mListeners; // snapshot
             int numListeners = (int)tmpListeners.size();
             for (int i = 0; i < numListeners; ++i) {
-                tmpListeners[i]->onTransitionEnd(*this);
+                tmpListeners[i].onTransitionEnd(*this);
             }
         }
         for (size_t i = 0; i < mStartValues.itemIdValues.size(); ++i) {
@@ -931,6 +945,10 @@ void Transition::end() {
             }
         }
         mEnded = true;
+        // Throwaway clone (java GC): queue for deferred deletion instead of delete-this.
+        if (mDeleteWhenEnded) {
+            transitionPendingDeletions().push_back(this);
+        }
     }
 }
 
@@ -959,25 +977,37 @@ void Transition::cancel() {
         animator->cancel();
     }
     if (!mListeners.empty()) {
-        std::vector<TransitionListener*> tmpListeners = mListeners; // snapshot
+        std::vector<TransitionListener> tmpListeners = mListeners; // snapshot
         int numListeners = (int)tmpListeners.size();
         for (int i = 0; i < numListeners; ++i) {
-            tmpListeners[i]->onTransitionCancel(*this);
+            tmpListeners[i].onTransitionCancel(*this);
         }
     }
 }
 
-Transition& Transition::addListener(TransitionListener* listener) {
+Transition& Transition::addListener(const TransitionListener& listener) {
     mListeners.push_back(listener);
     return *this;
 }
 
-Transition& Transition::removeListener(TransitionListener* listener) {
+Transition& Transition::removeListener(const TransitionListener& listener) {
     auto it = std::find(mListeners.begin(), mListeners.end(), listener);
     if (it != mListeners.end()) {
         mListeners.erase(it);
     }
     return *this;
+}
+
+void Transition::setDeleteWhenEnded(bool b) {
+    mDeleteWhenEnded = b;
+}
+
+void Transition::drainPendingDeletions() {
+    std::vector<Transition*>& pending = transitionPendingDeletions();
+    for (Transition* t : pending) {
+        delete t;
+    }
+    pending.clear();
 }
 
 // ---- epicenter / path motion / propagation ----
@@ -1183,6 +1213,7 @@ void Transition::copyCloneFields(Transition* clone) const {
     // does not share the original's animator/values state. (Does NOT delete the copied
     // mStartValuesList/mEndValuesList pointers — the original still owns them.)
     clone->mAnimators.clear();
+    clone->mOwnedAnimators.clear(); // a fresh clone owns no animators yet (createAnimators fills)
     clone->mStartValues = TransitionValuesMaps();
     clone->mEndValues = TransitionValuesMaps();
     clone->mStartValuesList = nullptr;

@@ -157,6 +157,9 @@ class MotionLayout : public ConstraintLayout {
     void addTransitionListener(const TransitionListener& listener) {
         mTransitionListeners.push_back(listener);
     }
+    // Unsubscribe (identity by EventSet shared mID: the listener passed here compares equal to the
+    // copy stored by addTransitionListener, so a helper that kept its handle removes exactly itself).
+    void removeTransitionListener(const TransitionListener& listener);
     // mMotionLayout->post(r) resolves to the public View::post (handler-backed, regular queue) —
     // the same View.post the AndroidX Carousel posts its update runnable through. We intentionally
     // do NOT override post() here. (View::postUpdate is postAtFrontOfQueue — a different semantic

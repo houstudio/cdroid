@@ -46,44 +46,32 @@ void NavigationUI::setupActionBarWithNavController(ActionBar* actionBar,
     // OnDestinationChangedListener: update the ActionBar title and Up affordance. The Up
     // button click flows home -> Activity.onOptionsItemSelected -> onNavigateUp; the host
     // Activity should override onNavigateUp() to call NavigationUI::navigateUp(navController).
-    class ActionBarListener : public NavController::OnDestinationChangedListener{
-        ActionBar* mActionBar;
-        AppBarConfiguration* mConfig;
-    public:
-        ActionBarListener(ActionBar* a, AppBarConfiguration* cfg)
-            : mActionBar(a), mConfig(cfg){}
-        void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override{
+    // The listener is a CallbackBase value owned by NavController (no new/delete); pointers are
+    // captured by value, matching the prior subclass's borrowed-field lifetime.
+    navController->addOnDestinationChangedListener(
+        [actionBar, configuration](NavController*, NavDestination* destination, Bundle*){
             if(!destination) return;
-            mActionBar->setTitle(destination->getLabel());
-            bool isTopLevel = mConfig && mConfig->isTopLevelDestination(destination->getRoute());
-            mActionBar->setDisplayHomeAsUpEnabled(!isTopLevel);
-        }
-    };
-    navController->addOnDestinationChangedListener(new ActionBarListener(actionBar, configuration));
+            actionBar->setTitle(destination->getLabel());
+            bool isTopLevel = configuration && configuration->isTopLevelDestination(destination->getRoute());
+            actionBar->setDisplayHomeAsUpEnabled(!isTopLevel);
+        });
 }
 
 void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navController,
                                           AppBarConfiguration* configuration){
     if(!toolbar || !navController) return;
     // OnDestinationChangedListener: update the Toolbar title + wire the navigation icon to
-    // navigateUp() unless the destination is a top-level one.
-    class ToolbarListener : public NavController::OnDestinationChangedListener{
-        Toolbar* mToolbar;
-        NavController* mController;
-        AppBarConfiguration* mConfig;
-    public:
-        ToolbarListener(Toolbar* t, NavController* c, AppBarConfiguration* cfg)
-            : mToolbar(t), mController(c), mConfig(cfg){}
-        void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override{
+    // navigateUp() unless the destination is a top-level one. The listener is a CallbackBase value
+    // owned by NavController (no new/delete); pointers captured by value.
+    navController->addOnDestinationChangedListener(
+        [toolbar, navController, configuration](NavController*, NavDestination* destination, Bundle*){
             if(!destination) return;
-            mToolbar->setTitle(destination->getLabel());
-            bool isTopLevel = mConfig && mConfig->isTopLevelDestination(destination->getRoute());
+            toolbar->setTitle(destination->getLabel());
+            bool isTopLevel = configuration && configuration->isTopLevelDestination(destination->getRoute());
             if(!isTopLevel){
-                mToolbar->setNavigationOnClickListener([this](View&){ mController->navigateUp(); });
+                toolbar->setNavigationOnClickListener([navController](View&){ navController->navigateUp(); });
             }
-        }
-    };
-    navController->addOnDestinationChangedListener(new ToolbarListener(toolbar, navController, configuration));
+        });
 }
 
 bool NavigationUI::onNavDestinationSelected(MenuItem* /*item*/, NavController* /*navController*/){

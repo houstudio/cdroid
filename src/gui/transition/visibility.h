@@ -85,43 +85,20 @@ class Visibility: public Transition {
     };
 
     /**
-     * Listener that restores a view's final visibility after a disappear animation and
-     * suppresses layout during it. In android it implements AnimatorListener +
-     * AnimatorPauseListener + TransitionListener (one object); in CDROID the animator
-     * side is wired via Animator::AnimatorListener/AnimatorPauseListener callback members
-     * (lambdas capturing this listener), while the transition side uses this Transition-
-     * ListenerAdapter base (owned by the Transition). (android: private static nested.)
+     * State for the disappear listener that restores a view's final visibility after a
+     * disappear animation and suppresses layout during it. In android one object implements
+     * AnimatorListener + AnimatorPauseListener + TransitionListener; in CDROID the animator
+     * side (Animator::AnimatorListener/AnimatorPauseListener) and the transition side (a
+     * Transition::TransitionListener value) are EventSet lambdas wired in onDisappear that
+     * share this state via shared_ptr (mCanceled/mLayoutSuppressed are read+written by both
+     * sides). Logic lives in the disappearHideWhenNotCanceled/disappearSuppressLayout helpers
+     * in visibility.cc. (android: private static nested.)
      */
-    class DisappearListener: public TransitionListenerAdapter {
-      public:
-        DisappearListener(View* view, int finalVisibility, bool suppressLayout);
-
-        // Animator-side hooks (invoked from animator listener lambdas wired in onDisappear)
-        void onAnimationCancel(Animator& /*animation*/) {
-            mCanceled = true;
-        }
-        void onAnimationEnd(Animator& /*animation*/) {
-            hideViewWhenNotCanceled();
-        }
-        void onAnimationPause(Animator& /*animation*/);
-        void onAnimationResume(Animator& /*animation*/);
-
-        // Transition-side
-        void onTransitionEnd(Transition& transition) override;
-        void onTransitionPause(Transition& /*transition*/) override {
-            suppressLayout(false);
-        }
-        void onTransitionResume(Transition& /*transition*/) override {
-            suppressLayout(true);
-        }
-
-        void hideViewWhenNotCanceled();
-        void suppressLayout(bool suppress);
-
-        View* mView;
-        int mFinalVisibility;
-        ViewGroup* mParent;
-        bool mSuppressLayout;
+    struct DisappearState {
+        View* mView = nullptr;
+        int mFinalVisibility = View::VISIBLE;
+        ViewGroup* mParent = nullptr;
+        bool mSuppressLayout = false;
         bool mLayoutSuppressed = false;
         bool mCanceled = false;
     };

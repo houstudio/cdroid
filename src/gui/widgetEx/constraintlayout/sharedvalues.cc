@@ -25,19 +25,18 @@
 
 namespace cdroid {
 
-void SharedValues::addListener(int key, SharedValuesListener* listener) {
-    if (listener == nullptr) return;
+void SharedValues::addListener(int key, const SharedValuesListener& listener) {
     mListeners[key].push_back(listener);
 }
 
-void SharedValues::removeListener(int key, SharedValuesListener* listener) {
+void SharedValues::removeListener(int key, const SharedValuesListener& listener) {
     auto it = mListeners.find(key);
     if (it == mListeners.end()) return;
     auto& vec = it->second;
     vec.erase(std::remove(vec.begin(), vec.end(), listener), vec.end());
 }
 
-void SharedValues::removeListener(SharedValuesListener* listener) {
+void SharedValues::removeListener(const SharedValuesListener& listener) {
     for (auto& kv : mListeners) {
         auto& vec = kv.second;
         vec.erase(std::remove(vec.begin(), vec.end(), listener), vec.end());
@@ -59,8 +58,8 @@ void SharedValues::fireNewValue(int key, int value) {
     mValues[key] = value;
     auto it = mListeners.find(key);
     if (it == mListeners.end()) return;
-    for (auto* listener : it->second) {
-        if (listener != nullptr) listener->onNewValue(key, value, previous);
+    for (auto& listener : it->second) {
+        listener(key, value, previous);
     }
 }
 

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA.
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #ifndef __CDROID_TRANSITION_TRANSITIONLISTENERADAPTER_H__
 #define __CDROID_TRANSITION_TRANSITIONLISTENERADAPTER_H__
@@ -23,30 +23,14 @@
 namespace cdroid {
 
 /**
- * This adapter class provides empty implementations of the methods from
- * Transition::TransitionListener. A custom listener that cares only about a subset
- * of the methods can subclass this adapter instead of implementing the interface.
+ * Transition::TransitionListener is now an EventSet value type whose callback
+ * members (onTransitionStart/End/...) default to no-ops, so there is nothing to
+ * adapt — a listener is filled in directly. This alias is kept for source
+ * compatibility with any code still naming TransitionListenerAdapter.
  *
  * Ported from android-36 android.transition.TransitionListenerAdapter.
  */
-class TransitionListenerAdapter: public Transition::TransitionListener {
-  public:
-    void onTransitionStart(Transition& transition) override {
-        (void)transition;
-    }
-    void onTransitionEnd(Transition& transition) override {
-        (void)transition;
-    }
-    void onTransitionCancel(Transition& transition) override {
-        (void)transition;
-    }
-    void onTransitionPause(Transition& transition) override {
-        (void)transition;
-    }
-    void onTransitionResume(Transition& transition) override {
-        (void)transition;
-    }
-};
+using TransitionListenerAdapter = Transition::TransitionListener;
 
 } // namespace cdroid
 #endif // __CDROID_TRANSITION_TRANSITIONLISTENERADAPTER_H__

@@ -50,14 +50,15 @@ class MotionLayout;
 class ValueAnimator;
 class View;
 
-class ViewTransitionController : public SharedValues::SharedValuesListener {
+class ViewTransitionController {
   public:
     explicit ViewTransitionController(MotionLayout* layout);
     ~ViewTransitionController();
 
-    // SharedValues::SharedValuesListener — fires sharedValueSet/Unset ViewTransitions whose target
-    // value was reached/left.
-    void onNewValue(int key, int newValue, int oldValue) override;
+    // Fires sharedValueSet/Unset ViewTransitions whose target value was reached/left. Invoked from
+    // the mSharedValueListener callback (a SharedValues::SharedValuesListener) registered on
+    // SharedValues for each watched key.
+    void onNewValue(int key, int newValue, int oldValue);
 
     // Register a parsed <ViewTransition>. Borrowed — the MotionScene owns the ViewTransition.
     void add(ViewTransition* vt);
@@ -101,9 +102,11 @@ class ViewTransitionController : public SharedValues::SharedValuesListener {
     bool mRelatedDirty = true;
     std::vector<std::unique_ptr<ViewTransition::Animate>> mAnimations;
     ValueAnimator* mAnimator = nullptr;                         // repeating frame-tick source
+    // The SharedValues callback: forwards to onNewValue. Held as a member so the same identity is
+    // registered once per key (dedup) and removed cleanly in the dtor.
+    SharedValues::SharedValuesListener mSharedValueListener;
     std::unordered_set<int> mListenedKeys; // shared-value keys this controller already listens on
-                                           // (dedup: the controller is a single SharedValuesListener,
-                                           // so two VTs sharing a key must register `this` only once)
+                                           // (dedup: two VTs sharing a key register the member only once)
     // For a sharedValueSet/Unset ViewTransition, register this controller as a SharedValues listener
     // for the VT's shared-value id.
     void listenForSharedVariable(ViewTransition* vt);

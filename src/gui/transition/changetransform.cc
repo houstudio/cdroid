@@ -35,25 +35,8 @@ Cairo::Matrix lerpMatrix(const Cairo::Matrix& s, const Cairo::Matrix& e, float f
     return m;
 }
 
-// android: GhostListener — removes the ghost on transition end, toggles visibility on pause/resume.
-struct GhostListener: public TransitionListenerAdapter {
-    View* mView;
-    View* mStartView;
-    GhostView* mGhostView;
-    GhostListener(View* view, View* startView, GhostView* ghostView)
-        : mView(view), mStartView(startView), mGhostView(ghostView) {}
-    void onTransitionEnd(Transition& t) override {
-        GhostView::removeGhost(mView);
-        mStartView->setTransitionAlpha(1);
-        t.removeListener(this);
-    }
-    void onTransitionPause(Transition&) override {
-        mGhostView->setVisibility(View::INVISIBLE);
-    }
-    void onTransitionResume(Transition&) override {
-        mGhostView->setVisibility(View::VISIBLE);
-    }
-};
+// android: GhostListener — removes the ghost on transition end, toggles visibility on
+// pause/resume. Now wired inline in createAnimator as an EventSet TransitionListener value.
 
 } // anonymous namespace
 
@@ -178,7 +161,18 @@ Animator* ChangeTransform::createAnimator(ViewGroup* sceneRoot,
             sceneRoot->transformMatrixToLocal(localEnd);
             GhostView* ghost = GhostView::addGhost(view, sceneRoot, &localEnd);
             if (ghost != nullptr) {
-                GhostListener* gl = new GhostListener(view, startValues->view, ghost);
+                View* startView = startValues->view;
+                Transition::TransitionListener gl;
+                gl.onTransitionEnd = [view, startView](Transition&) {
+                    GhostView::removeGhost(view);
+                    startView->setTransitionAlpha(1);
+                };
+                gl.onTransitionPause = [ghost](Transition&) {
+                    ghost->setVisibility(View::INVISIBLE);
+                };
+                gl.onTransitionResume = [ghost](Transition&) {
+                    ghost->setVisibility(View::VISIBLE);
+                };
                 this->addListener(gl);
                 view->setTransitionAlpha(1);
             }

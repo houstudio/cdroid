@@ -144,27 +144,12 @@ BottomRightOnlyProperty BOTTOM_RIGHT_ONLY_PROPERTY;
 TopLeftProperty        TOP_LEFT_PROPERTY;
 BottomRightProperty    BOTTOM_RIGHT_PROPERTY;
 
-// android: anonymous TransitionListenerAdapter that suppresses layout on the parent during
-// the bounds animation. Named here.
-struct SuppressLayoutListener: public TransitionListenerAdapter {
+// android: anonymous TransitionListener that suppresses layout on the parent during the
+// bounds animation. State held via shared_ptr so the EventSet TransitionListener lambdas
+// (cancel/end/pause/resume) share one mutable mCanceled flag. Wired in createAnimator.
+struct SuppressLayoutState {
     ViewGroup* parent;
     bool mCanceled = false;
-    void onTransitionCancel(Transition&) override {
-        parent->suppressLayout(false);
-        mCanceled = true;
-    }
-    void onTransitionEnd(Transition& t) override {
-        if (!mCanceled) {
-            parent->suppressLayout(false);
-        }
-        t.removeListener(this);
-    }
-    void onTransitionPause(Transition&) override {
-        parent->suppressLayout(false);
-    }
-    void onTransitionResume(Transition&) override {
-        parent->suppressLayout(true);
-    }
 };
 
 } // anonymous namespace
@@ -278,8 +263,24 @@ Animator* ChangeBounds::createAnimator(ViewGroup* /*sceneRoot*/,
         if (dynamic_cast<ViewGroup*>(view->getParent()) != nullptr) {
             ViewGroup* parent = static_cast<ViewGroup*>(view->getParent());
             parent->suppressLayout(true);
-            SuppressLayoutListener* l = new SuppressLayoutListener();
-            l->parent = parent;
+            auto st = std::make_shared<SuppressLayoutState>();
+            st->parent = parent;
+            Transition::TransitionListener l;
+            l.onTransitionCancel = [st](Transition&) {
+                st->parent->suppressLayout(false);
+                st->mCanceled = true;
+            };
+            l.onTransitionEnd = [st](Transition&) {
+                if (!st->mCanceled) {
+                    st->parent->suppressLayout(false);
+                }
+            };
+            l.onTransitionPause = [st](Transition&) {
+                st->parent->suppressLayout(false);
+            };
+            l.onTransitionResume = [st](Transition&) {
+                st->parent->suppressLayout(true);
+            };
             addListener(l);
         }
 

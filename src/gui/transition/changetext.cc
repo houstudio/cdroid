@@ -41,9 +41,10 @@ void setSelection(EditText* editText, int start, int end) {
     }
 }
 
-// android: anonymous TransitionListenerAdapter inside createAnimator. Named here
-// (C++ has no anonymous classes) — restores text/selection/color on pause/resume/end.
-struct ChangeTextListener: public TransitionListenerAdapter {
+// android: anonymous TransitionListener inside createAnimator — restores text/selection/color
+// on pause/resume. State held via shared_ptr so the EventSet TransitionListener lambdas share
+// one mutable mPausedColor. (onTransitionEnd was removeListener-only; dropped — value semantics.)
+struct ChangeTextState {
     TextView* view;
     std::string startText;
     std::string endText;
@@ -55,35 +56,6 @@ struct ChangeTextListener: public TransitionListenerAdapter {
     int endColor;
     int changeBehavior;
     int mPausedColor = 0;
-
-    void onTransitionPause(Transition& /*transition*/) override {
-        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
-            view->setText(endText);   // setText(string) — see deviation note in header
-            if (EditText* et = dynamic_cast<EditText*>(view)) {
-                setSelection(et, endSelectionStart, endSelectionEnd);
-            }
-        }
-        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
-            mPausedColor = view->getCurrentTextColor();
-            view->setTextColor(endColor);
-        }
-    }
-
-    void onTransitionResume(Transition& /*transition*/) override {
-        if (changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
-            view->setText(startText);
-            if (EditText* et = dynamic_cast<EditText*>(view)) {
-                setSelection(et, startSelectionStart, startSelectionEnd);
-            }
-        }
-        if (changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
-            view->setTextColor(mPausedColor);
-        }
-    }
-
-    void onTransitionEnd(Transition& transition) override {
-        transition.removeListener(this); // Transition frees it at destruction
-    }
 };
 
 } // anonymous namespace
@@ -230,18 +202,42 @@ Animator* ChangeText::createAnimator(ViewGroup* /*sceneRoot*/,
                 anim = inAnim;
             }
         }
-        ChangeTextListener* transitionListener = new ChangeTextListener();
-        transitionListener->view = view;
-        transitionListener->startText = startText;
-        transitionListener->endText = endText;
-        transitionListener->startSelectionStart = startSelectionStart;
-        transitionListener->startSelectionEnd = startSelectionEnd;
-        transitionListener->endSelectionStart = endSelectionStart;
-        transitionListener->endSelectionEnd = endSelectionEnd;
-        transitionListener->startColor = startColor;
-        transitionListener->endColor = endColor;
-        transitionListener->changeBehavior = mChangeBehavior;
-        addListener(transitionListener); // Transition takes ownership
+        auto st = std::make_shared<ChangeTextState>();
+        st->view = view;
+        st->startText = startText;
+        st->endText = endText;
+        st->startSelectionStart = startSelectionStart;
+        st->startSelectionEnd = startSelectionEnd;
+        st->endSelectionStart = endSelectionStart;
+        st->endSelectionEnd = endSelectionEnd;
+        st->startColor = startColor;
+        st->endColor = endColor;
+        st->changeBehavior = mChangeBehavior;
+        Transition::TransitionListener transitionListener;
+        transitionListener.onTransitionPause = [st](Transition&) {
+            if (st->changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
+                st->view->setText(st->endText);
+                if (EditText* et = dynamic_cast<EditText*>(st->view)) {
+                    setSelection(et, st->endSelectionStart, st->endSelectionEnd);
+                }
+            }
+            if (st->changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
+                st->mPausedColor = st->view->getCurrentTextColor();
+                st->view->setTextColor(st->endColor);
+            }
+        };
+        transitionListener.onTransitionResume = [st](Transition&) {
+            if (st->changeBehavior != ChangeText::CHANGE_BEHAVIOR_IN) {
+                st->view->setText(st->startText);
+                if (EditText* et = dynamic_cast<EditText*>(st->view)) {
+                    setSelection(et, st->startSelectionStart, st->startSelectionEnd);
+                }
+            }
+            if (st->changeBehavior > ChangeText::CHANGE_BEHAVIOR_KEEP) {
+                st->view->setTextColor(st->mPausedColor);
+            }
+        };
+        addListener(transitionListener);
         if (DBG) {
             LOGD("%s: createAnimator returning %p", LOG_TAG, (void*)anim);
         }

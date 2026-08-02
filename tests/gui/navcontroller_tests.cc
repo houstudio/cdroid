@@ -43,12 +43,9 @@ NavController* makeController() {
     return nc;
 }
 
-// OnDestinationChangedListener that records visited routes.
-struct DestRecorder : public NavController::OnDestinationChangedListener {
+// Records routes visited via an OnDestinationChangedListener callback.
+struct DestRecorder {
     std::vector<std::string> routes;
-    void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override {
-        if(destination) routes.push_back(destination->getRoute());
-    }
 };
 
 } // namespace
@@ -124,10 +121,14 @@ TEST(NavController, SingleTop) {
 TEST(NavController, DestinationChangedListener) {
     NavController* nc = makeController();
     DestRecorder rec;
-    nc->addOnDestinationChangedListener(&rec);
+    NavController::OnDestinationChangedListener listener =
+        [&rec](NavController*, NavDestination* destination, Bundle*) {
+            if(destination) rec.routes.push_back(destination->getRoute());
+        };
+    nc->addOnDestinationChangedListener(listener);
     // Registering dispatches the current destination (androidx V7: immediate dispatch).
     nc->navigate("b");
-    nc->removeOnDestinationChangedListener(&rec);
+    nc->removeOnDestinationChangedListener(listener);
     // Should have seen at least start (on register) and b (on navigate), in order.
     ASSERT_GE(rec.routes.size(), 2u);
     EXPECT_EQ(rec.routes.back(), "b");
