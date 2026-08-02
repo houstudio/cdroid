@@ -214,6 +214,14 @@ void FragmentManager::removeFragment(Fragment* f){
     mActive.erase(f->mWho);
     f->mFragmentManager = nullptr;
     f->mHost = nullptr;
+    // NOTE: the fragment instance is intentionally NOT deleted here. android reclaims it via GC once
+    // unreachable (after DESTROYED); CDROID has no GC, but deleting synchronously in removeFragment
+    // UAFs: SEC Operations (FragmentStateManagerOperation) hold a copy of the FSM, and an exit
+    // AnimationEffect's onAnimationEnd (posted async) calls completeEffect->complete->fsm->
+    // moveToExpectedState after this returns — if we deleted the fragment/FSM now that callback
+    // would dereference freed memory (observed: getSpecialEffectsController->mContainer dangling).
+    // Real fix needs the reclamation to wait until the SEC op's effects truly end (like the view
+    // reclaim in TransitionEffect/AnimationEffect), or fragment ref-counting — a separate effort.
 }
 
 // Retain a fragment removed by a *reversible* (added-to-back-stack) transaction. androidx
