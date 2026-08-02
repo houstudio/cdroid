@@ -87,7 +87,8 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
         }
         st->mTransitionPosition[0] = (int)lround(st->mStartX + st->mMovingView->getTranslationX());
         st->mTransitionPosition[1] = (int)lround(st->mStartY + st->mMovingView->getTranslationY());
-        st->mViewInHierarchy->setTag(R::id::transitionPosition, st->mTransitionPosition);
+        st->mViewInHierarchy->setTag(R::id::transitionPosition, st->mTransitionPosition,
+            [](void* p){ delete[] static_cast<int*>(p); });
     };
     al.onAnimationEnd = [st](Animator&, bool) {};
     Animator::AnimatorPauseListener apl;
