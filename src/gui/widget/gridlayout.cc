@@ -135,7 +135,10 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     setRowCount(attrs.getInt("rowCount", DEFAULT_COUNT));
     setColumnCount(attrs.getInt("columnCount", DEFAULT_COUNT));
     setUseDefaultMargins(attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
-    setAlignmentMode(attrs.getInt("alignmentMode", DEFAULT_ALIGNMENT_MODE));
+    setAlignmentMode(attrs.getInt("alignmentMode",std::unordered_map<std::string,int>{
+        {"alignBounds",(int)ALIGN_BOUNDS},
+        {"alignMargins",(int)ALIGN_MARGINS}//
+    },DEFAULT_ALIGNMENT_MODE));
     setRowOrderPreserved(attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
     setColumnOrderPreserved(attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
 }
@@ -146,7 +149,7 @@ GridLayout::~GridLayout(){
 }
 
 void GridLayout::initGridLayout(){
-    mDefaultGap = 0;
+    mDefaultGap = getContext()->getDimensionPixelSize("default_gap", 0);
     mOrientation    = DEFAULT_ORIENTATION;//HORIZONTAL
     mAlignmentMode  = DEFAULT_ALIGNMENT_MODE;
     mHorizontalAxis = new Axis(this,true);
