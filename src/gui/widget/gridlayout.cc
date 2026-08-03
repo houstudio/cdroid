@@ -134,7 +134,7 @@ GridLayout::GridLayout(Context*ctx,const AttributeSet&attrs)
     },DEFAULT_ORIENTATION));
     setRowCount(attrs.getInt("rowCount", DEFAULT_COUNT));
     setColumnCount(attrs.getInt("columnCount", DEFAULT_COUNT));
-    setUseDefaultMargins(attrs.getBoolean("useDefaultMargin", DEFAULT_USE_DEFAULT_MARGINS));
+    setUseDefaultMargins(attrs.getBoolean("useDefaultMargins", DEFAULT_USE_DEFAULT_MARGINS));
     setAlignmentMode(attrs.getInt("alignmentMode", DEFAULT_ALIGNMENT_MODE));
     setRowOrderPreserved(attrs.getBoolean("rowOrderPreserved", DEFAULT_ORDER_PRESERVED));
     setColumnOrderPreserved(attrs.getBoolean("columnOrderPreserved", DEFAULT_ORDER_PRESERVED));
@@ -772,8 +772,9 @@ bool GridLayout::Interval::operator<(const Interval &other) const{
 //--------------------------------------------------------------------------
 GridLayout::Arc::Arc(){
     valid = true;
+    value = nullptr;
 }
-GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableInt& value):Arc(){
+GridLayout::Arc::Arc(const GridLayout::Interval& span,const GridLayout::MutableInt* value):Arc(){
     this->span = span;
     this->value= value;
 }
@@ -1141,7 +1142,7 @@ void GridLayout::Axis::computeGroupBounds(){
     }
 }
 
-int  GridLayout::Axis::size(const std::vector<int>&locations){
+int GridLayout::Axis::size(const std::vector<int>&locations){
     return locations[getCount()];
 }
 
@@ -1153,7 +1154,6 @@ void GridLayout::Axis::setParentConstraints(int min, int max) {
 
 int GridLayout::Axis::getMeasure(int min,int max){
     setParentConstraints(min,max);
-    parentMax = max;
     const std::vector<int>& ls = getLocations();
     return size(ls);
 }
@@ -1261,7 +1261,7 @@ std::string GridLayout::Axis::arcsToString(bool horizontal,const std::vector<Gri
         }
         const int src = arc.span.min;
         const int dst = arc.span.max;
-        const int value =arc.value.value;
+        const int value =arc.value->value;
         if(src < dst)
             result<<var<<dst<<"-"<<var<<src<<">="<<value;
         else
@@ -1293,7 +1293,7 @@ bool GridLayout::Axis::relax(std::vector<int>&locations,const GridLayout::Arc& e
     const Interval& span = entry.span;
     const int u = span.min;
     const int v = span.max;
-    const int candidate = locations[u] + entry.value.value;
+    const int candidate = locations[u] + entry.value->value;
     if (candidate > locations[v]) {
         locations[v] = candidate;
         return true;
@@ -1565,7 +1565,7 @@ void GridLayout::Axis::include(std::vector<GridLayout::Arc>& arcs,
             }
         }
     }
-    arcs.emplace_back(Arc(key, size));
+    arcs.emplace_back(Arc(key, &size));
 }
 
 void GridLayout::Axis::solveAndDistributeSpace(std::vector<int>&a){
