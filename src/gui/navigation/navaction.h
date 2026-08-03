@@ -39,6 +39,9 @@ public:
      * @param navOptions special options for this action that should be used by default
      */
     NavAction(int destinationId, NavOptions* navOptions);
+    // Owns mNavOptions (set via ctor or setNavOptions from NavInflater.inflateAction's
+    // NavOptions::Builder::build()). CDROID has no GC: delete on destruction.
+    ~NavAction();
 
     /**
      * Gets the ID of the destination that should be navigated to when this action is used

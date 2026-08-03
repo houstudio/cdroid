@@ -120,8 +120,14 @@ void AnimationEffect::onCommit(ViewGroup* container){
                 v->setAnimation(nullptr);              // delete the ended animClone; clear mCurrentAnimation
                 if(v->getParent()) cont->removeView(v); // no anim now -> dispatchDetachedFromWindow, not addDisappearingView
                 op->completeEffect(self);
-                delete v;
-                if(hook) hook();
+                if(hook) hook();                       // reclaim fragment now (independent of the view)
+                // Defer the view delete to the NEXT looper iteration. A sibling TransitionEffect's
+                // clone (beginDelayedTransition on the same container) captured this view in its
+                // startValues, and its playTransition runs on THIS iteration's onPreDraw
+                // (doEventHandlers, which runs AFTER drainMessageQueue in pollInner). Deleting here
+                // (drainMessageQueue) would free the view before the clone's isValidTarget runs ->
+                // UAF. Posting again pushes the delete past this iteration's doEventHandlers.
+                cont->post([v]{ delete v; });
             });
         };
         animClone->setAnimationListener(lst);
