@@ -51,7 +51,8 @@ public:
      * by this Parcelable object instance.
      */
 public:
-    int describeContents();
+    virtual ~Parcelable() = default;
+    virtual int describeContents(){return 0;}
 
     /**
      * Flatten this object in to a Parcel.
