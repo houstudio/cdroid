@@ -48,16 +48,28 @@ FragmentManager::FragmentManager(){
 }
 
 FragmentManager::~FragmentManager(){
+    LOGD("FragmentManager %p Destroied",this);
     for(BackStackRecord* r : mBackStack) delete r;
     mBackStack.clear();
     // Pending records are owned by this FM (commit transferred ownership); free any that never
     // executed.
     for(BackStackRecord* r : mPendingActions) delete r;
     mPendingActions.clear();
+    // CDROID has no GC: FM owns every Fragment it added (mActive/mAdded/mStateManagers). The
+    // BackStackRecords (which may hold Fragment* in op.mFragment for pop) are deleted above, so
+    // those pointers are defunct. mStateManagers keys are exactly the not-yet-reclaimed fragments
+    // (added / retained / removed-but-effect-pending); reclaimFragment already erased+freed the
+    // rest, so deleting each key here is sole-owner — no double-free. ~Fragment does NOT delete
+    // mView (reclaimed by the effect-end path / the host window's view-tree teardown). Deleting
+    // NavHostFragment runs ~NavHostFragment -> deletes NavController -> ~NavController deletes
+    // mGraph, releasing the whole nav chain at exit.
+    for(auto& kv : mStateManagers){
+        delete kv.second;  // FragmentStateManager
+        delete kv.first;   // Fragment
+    }
+    mStateManagers.clear();
     mAdded.clear();
     mActive.clear();
-    for(auto& kv : mStateManagers) delete kv.second;
-    mStateManagers.clear();
     // Per-fragment saved state (androidx FragmentStore.mSavedState) — owned by this FM.
     for(auto& kv : mSavedState) delete kv.second;
     mSavedState.clear();
