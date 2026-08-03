@@ -55,6 +55,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 Window::Window(int x,int y,int width,int height,int type)
   : FrameLayout(width,height),window_type(type){
     initWindow();
+    LOGD("Window::Window(%p)",this);
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
     mContext = &App::getInstance();
@@ -780,11 +781,13 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
         handled = performFocusNavigation(event);
     }
     if(!handled){
-        switch(action){
-        case KeyEvent::ACTION_UP  :
-        case KeyEvent::ACTION_DOWN: handled = FrameLayout::dispatchKeyEvent(event); break;
-        default:break;
-        }
+        // Focus view didn't consume it; route to the WINDOW's own onKeyDown/onKeyUp — not
+        // ViewGroup::dispatchKeyEvent (FrameLayout::), which re-walks children and never reaches
+        // the window's callback when the window itself isn't PFLAG_FOCUSED (root windows rarely are;
+        // focus lives in a child like EditText). Mirrors androidx: an unhandled key falls back to
+        // the window/Activity callback. View::dispatchKeyEvent -> event.dispatch -> onKeyDown/onKeyUp
+        // (Window::onKeyDown ESC startTracking; Window::onKeyUp ESC isTracking -> onBackPressed).
+        handled = View::dispatchKeyEvent(event);
     }
     return handled;
 }
@@ -891,18 +894,23 @@ void Window::doLayout(){
 
 
 void Window::close(){
-    // removeWindow detaches the view tree (which nulls mAttachInfo), so stash the AttachInfo
-    // pointer first and let the posted lambda free it together with the window. removeWindow
-    // itself runs IMMEDIATELY (the window leaves the compositor list at once -> a replacement
-    // window shown in the same tick doesn't race a still-listed one); the deletes are deferred
-    // via a post so the current call stack can still touch this window safely (apps often
-    // closeWindow() then operate on the window in the same callback).
+    // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
+    // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
+    // compositor at once). The deletes are deferred so the current call stack can still touch this
+    // window safely. BUT the post must use a standalone heap Handler, NOT View::post (mAttachInfo's
+    // handler = mUIEventHandler): removeWindow below calls removeEventHandler(mUIEventHandler),
+    // which purges that handler's queued messages — including this delete-window post — so the
+    // window would never be deleted (NavController chain + view tree + Transition clone all leak).
+    // A heap Handler that self-deletes keeps the post alive past removeWindow (same pattern as the
+    // Transition clone self-delete in Transition::end()).
     auto* info = mAttachInfo;
     Window* self = this;
-    post([self, info](){
+    Handler* h = new Handler();
+    h->post([h, self, info](){
         self->onDestroy();
         delete info;
         delete self;
+        delete h;
     });
     WindowManager::getInstance().removeWindow(this);
 }
