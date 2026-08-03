@@ -36,6 +36,9 @@ public:
 public:
     NavGraph(NavigatorProvider* navigatorProvider);
     NavGraph(NavGraphNavigator* navGraphNavigator);
+    // Owns every NavDestination in mNodes (added via addDestination); nested NavGraph children
+    // recurse through NavDestination's virtual dtor.
+    ~NavGraph() override;
 
     void onInflate(Context* context,const AttributeSet& attrs) override;
     std::pair<NavDestination*, Bundle*>* matchDeepLink(const std::string& uri) override;

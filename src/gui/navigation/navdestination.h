@@ -49,6 +49,10 @@ private:
 public:
     NavDestination(Navigator* navigator);
     NavDestination(const std::string& navigatorName);
+    // CDROID has no GC: NavDestination owns its NavDeepLinks / NavActions / NavArguments. Virtual so
+    // that deleting a NavDestination* which actually points at a NavGraph recurses into ~NavGraph
+    // (which owns its child destinations) — nested <navigation> graphs are common.
+    virtual ~NavDestination();
 
     virtual void onInflate(Context* context, const AttributeSet& attrs);
     void setParent(NavGraph* parent);

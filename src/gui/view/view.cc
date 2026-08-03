@@ -3756,6 +3756,14 @@ void View::setTagInternal(int key, void* tag) {
 void View::setKeyedTag(int key,void* tag, std::function<void(void*)> dtor){
     if(mKeyedTags ==nullptr)
         mKeyedTags = new SparseArray<KeyedTagEntry>();
+    // An owned payload (entry whose dtor is set) being overwritten must be reclaimed first — CDROID
+    // has no GC, so "setTag(key, x)" replacing a previously-owned value would otherwise leak the old
+    // one. Tags set without a dtor keep detach-only behaviour: old.dtor is empty -> no reclaim.
+    int idx = mKeyedTags->indexOfKey(key);
+    if(idx >= 0){
+        const KeyedTagEntry& old = mKeyedTags->valueAt(idx);
+        if(old.ptr && old.dtor) old.dtor(old.ptr);
+    }
     mKeyedTags->put(key, KeyedTagEntry{ tag, std::move(dtor) });
 }
 

@@ -104,12 +104,25 @@ void AnimationEffect::onCommit(ViewGroup* container){
         auto* op = mOperation;
         auto* self = this;
         cdroid::View* v = view;
-        lst.onAnimationEnd = [cont, v, op, self](Animation&){
-            if(v->getParent()) cont->removeView(v);
-            // The animClone has ended and the view is detached — reclaim it (CDROID's removeView is
-            // detach-only; java GC would reclaim it). completeEffect retires the op; mView is null by
-            // then so the FSM re-entry touches a different (null) pointer, not this view.
-            cont->post([op, self, v](){ op->completeEffect(self); delete v; });
+        // Copy the reclaim hook BY VALUE (see TransitionEffect): completeEffect runs INSIDE this post
+        // (async), so the hook fires after it — that ordering is what makes mState==INITIALIZING
+        // observable for reclaimFragment's guard.
+        auto hook = mOperation->mReclaimHook;
+        lst.onAnimationEnd = [cont, v, op, self, hook](Animation&){
+            // Defer to a post: inside this listener the animClone is still on the call stack (it
+            // invoked us), so we cannot setAnimation(nullptr) (which deletes it) yet. In the post the
+            // listener has returned; clearing mCurrentAnimation first makes removeView take the
+            // dispatchDetachedFromWindow branch instead of addDisappearingView — otherwise the view
+            // stays in mDisappearingChildren and keeps being drawn, and the delete below would free a
+            // view still referenced there (UAF on the next draw: RenderNode/applyLegacyAnimation on a
+            // freed view whose mParent is null — the navdemo crash).
+            cont->post([cont, v, op, self, hook](){
+                v->setAnimation(nullptr);              // delete the ended animClone; clear mCurrentAnimation
+                if(v->getParent()) cont->removeView(v); // no anim now -> dispatchDetachedFromWindow, not addDisappearingView
+                op->completeEffect(self);
+                delete v;
+                if(hook) hook();
+            });
         };
         animClone->setAnimationListener(lst);
         view->startAnimation(animClone);
@@ -136,9 +149,23 @@ void TransitionEffect::onCommit(ViewGroup* container){
             // completeEffect/moveToExpectedState. Sole-deleter: ~Fragment doesn't delete mView.
             auto fired = std::make_shared<bool>(false);
             ViewGroup* cont = container;
-            auto scheduleDelete = [cont, view, fired](){
+            // Copy the reclaim hook BY VALUE into the posted lambda (don't read op->mReclaimHook
+            // inside it): trim may delete this op before the post fires. Invoked after `delete view`
+            // — by then completeEffect has run synchronously and the FSM has walked the fragment to
+            // its final state (INITIALIZING for a hard remove), so reclaimFragment's mState guard is
+            // observable.
+            auto hook = mOperation->mReclaimHook;
+            auto scheduleDelete = [cont, view, fired, hook](){
                 if(*fired) return; *fired = true;
-                cont->post([view]{ delete view; });
+                cont->post([cont, view, hook]{
+                    // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
+                    // (mChildren), and an addDisappearingView'd view has mParent==null while still
+                    // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
+                    // parent drawing a freed view. Remove explicitly so neither list retains it.
+                    if(view->getParent()) view->getParent()->removeView(view);
+                    delete view;
+                    if(hook) hook();
+                });
             };
             if(clone){
                 Transition::TransitionListener lst;

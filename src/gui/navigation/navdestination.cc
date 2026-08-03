@@ -37,6 +37,13 @@ NavDestination::NavDestination(const std::string& navigatorName) {
     mNavigatorName = navigatorName;
 }
 
+NavDestination::~NavDestination(){
+    // Owns its deep links, actions and arguments (added via addDeepLink / putAction / addArgument).
+    for(NavDeepLink* dl : mDeepLinks) delete dl;
+    for(int i = 0; i < mActions.size(); i++) delete mActions.valueAt(i);
+    for(auto& kv : mArguments) delete kv.second;
+}
+
 void NavDestination::addArgument(const std::string& name, NavArgument* argument) {
     mArguments[name] = argument;
 }

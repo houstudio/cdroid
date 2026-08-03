@@ -59,6 +59,12 @@ public:
         bool mIsStarted = false;
         bool mIsAwaitingContainerChanges = true;
         SpecialEffectsController* mController;
+        // Effect-end-gated fragment reclamation hook. Set in enqueue() to capture the owning FM, the
+        // fragment, and a weak alive-guard — invoked by TransitionEffect/AnimationEffect's posted
+        // end-lambda (after `delete view`) to reclaim the Fragment instance once its exit effect has
+        // truly ended. Captures fm+f (NEVER the FSM: destroy-sweep may delete the FSM before a late
+        // posted hook fires). Copied BY VALUE into the posted lambda so trimming the op later is safe.
+        std::function<void()> mReclaimHook;
     };
 
     class Effect{
@@ -84,6 +90,14 @@ public:
     void forceCompleteAll();
     virtual void collectEffects(std::vector<Operation*>& operations, bool isPop) = 0;
     ViewGroup* getContainer() const { return mContainer; }
+
+private:
+    // Delete every completed op in mCompletedOperations whose effects are already drained, then clear
+    // the list. Called at executePendingOperations() entry so the completed list never grows unbounded
+    // across navigations. NOT called from forceCompleteAll — see .cc (forceCompleteAll's complete()
+    // does not drain mEffects, so an Animation REMOVED op whose onAnimationEnd post is still pending
+    // would be freed while that post still references it).
+    void trimCompletedOperations();
 
 protected:
     void processStart(std::vector<Operation*>& ops);

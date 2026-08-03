@@ -61,21 +61,21 @@ SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
     SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG));
     if(!sec){
         sec = new DefaultSpecialEffectsController(mFragment->mContainer);
-        tagView->setTag(SEC_TAG, sec);
+        tagView->setTag(SEC_TAG, sec,[](void*p){delete (DefaultSpecialEffectsController*)p;});
     }
     return sec;
 }
 
 void FragmentStateManager::destroySpecialEffectsController(){
     // androidx caches the SEC on the container tag and lets GC reclaim it; CDROID must delete.
-    // Called from FragmentManager::dispatchDestroy once all effects are force-completed. Per-
-    // container: several FSMs share one container, so clearing the tag makes this idempotent —
-    // the first caller deletes, the rest see null and skip (no double-free).
+    // The SEC was registered as an OWNED tag (a delete-dtor) in getSpecialEffectsController, and
+    // setKeyedTag invokes the previous entry's dtor on overwrite — so clearing the tag reclaims
+    // the SEC itself (no manual delete here). Idempotent across FSMs sharing one container: the
+    // first clear leaves the tag at {nullptr,{}}, the rest see a null tag and skip.
     if(!mFragment || !mFragment->mContainer) return;
     cdroid::View* tagView = mFragment->mContainer;
-    if(SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG))){
-        tagView->setTag(SEC_TAG, nullptr);
-        delete sec;
+    if(tagView->getTag(SEC_TAG)){
+        tagView->setTag(SEC_TAG, nullptr);  // overwrites the owned entry -> dtor deletes the SEC
     }
 }
 

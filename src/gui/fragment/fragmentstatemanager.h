@@ -45,6 +45,10 @@ public:
     void setFragmentManagerState(int s){ mFragmentManagerState = s; }
     int  getFragmentManagerState() const { return mFragmentManagerState; }
     Fragment* getFragment() const { return mFragment; }
+    // The owning FragmentManager. Used by the SEC reclaim hook (built in SpecialEffectsController::
+    // enqueue) to route fragment reclamation through FragmentManager::reclaimFragment without the
+    // hook capturing this FSM (which destroy-sweep may delete → UAF on a late posted hook).
+    FragmentManager* getFragmentManager() const { return mFragmentManager; }
 
     // androidx FragmentStateManager.computeExpectedState (CDROID subset).
     int  computeExpectedState();
