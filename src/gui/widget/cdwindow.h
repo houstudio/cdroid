@@ -3,6 +3,7 @@
 #include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/uieventsource.h>
+#include <view/choreographer.h>
 #include <view/actionmode.h>
 
 #define USE_UIEVENTHANDLER 0
@@ -19,6 +20,7 @@ class ContextMenuInfo;
 class Window : public FrameLayout {
 protected:
     friend class WindowManager;
+    friend class View;  // View::invalidateInternal/requestLayout → Window::scheduleTraversals
     friend class GraphDevice;
     friend class UIEventSource;
     class InvalidateOnAnimationRunnable:public Runnable{
@@ -53,6 +55,13 @@ private:
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
     void doLayout();
+    // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
+    // Moves draw from the doEventHandlers phase (UIEventSource poll) into drainMessageQueue (the
+    // Choreographer posts MSG_DO_FRAME as a Handler message), so draw and effect-end posts share the
+    // same FIFO queue — clone playTransition runs before any posted view delete. Re-entrancy guard
+    // via mTraversalScheduled (multiple invalidate/requestLayout coalesce into one traversal).
+    void scheduleTraversals();
+    void doTraversal();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
     static ViewGroup*findAncestorToTakeFocusInTouchMode(View* focused);
@@ -79,6 +88,7 @@ protected:
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
+    bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
 #if USE_UIEVENTHANDLER	
     UIEventHandler* mUIEventHandler;
 #else

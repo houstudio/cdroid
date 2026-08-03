@@ -34,6 +34,7 @@
 #include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
+#include <widget/cdwindow.h>
 #include <widget/scrollbarutils.h>
 #include <animation/animationutils.h>
 #include <utils/textutils.h>
@@ -6251,6 +6252,10 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
             ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
         }
     }
+    if(mAttachInfo && mAttachInfo->mRootView){
+        Window* win = dynamic_cast<Window*>(mAttachInfo->mRootView);
+        if(win) win->scheduleTraversals();
+    }
 }
 
 /*param:rect is views logical area,maybe it is large than views'bounds,function invalidate must convert it to bound area*/
@@ -8815,6 +8820,10 @@ void View::requestLayout(){
     }
     if ( mAttachInfo && (mAttachInfo->mViewRequestingLayout == this) ) {
          mAttachInfo->mViewRequestingLayout = nullptr;
+    }
+    if(mAttachInfo && mAttachInfo->mRootView){
+        Window* win = dynamic_cast<Window*>(mAttachInfo->mRootView);
+        if(win) win->scheduleTraversals();
     }
 }
 
