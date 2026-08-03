@@ -152,6 +152,16 @@ void FragmentManager::dispatchDestroy(){
         if(kv.second) kv.second->destroySpecialEffectsController();
     }
     dispatchStateChange(Fragment::INITIALIZING);
+    // Destroy-sweep: reclaim every irreversibly-destroyed fragment (INITIALIZING + not held by a
+    // back-stack record). endTransitions (inside forceCompleteAllSpecialEffects) synchronously ended
+    // the running clones and POSTED the view-delete + reclaim hooks; those posts fire later and are
+    // made no-op by the mStateManagers sentinel (reclaimFragment's find(f)==end after this sweep) and
+    // the mAlive weak guard (if the FM is destroyed first). Snapshot the keys first — reclaimFragment
+    // erases the very map being iterated.
+    std::vector<Fragment*> snapshot;
+    snapshot.reserve(mStateManagers.size());
+    for(auto& kv : mStateManagers) snapshot.push_back(kv.first);
+    for(Fragment* f : snapshot) reclaimFragment(f);
 }
 
 void FragmentManager::forceCompleteAllSpecialEffects(){
@@ -229,6 +239,50 @@ void FragmentManager::removeFragment(Fragment* f){
     // would dereference freed memory (observed: getSpecialEffectsController->mContainer dangling).
     // Real fix needs the reclamation to wait until the SEC op's effects truly end (like the view
     // reclaim in TransitionEffect/AnimationEffect), or fragment ref-counting — a separate effort.
+}
+
+// Effect-end-gated reclamation of a hard-removed Fragment instance (CDROID has no GC). Called from
+// the SEC reclaim hook (TransitionEffect clone-end / AnimationEffect anim-end) once the exit effect
+// has truly finished, and from the dispatchDestroy destroy-sweep. Idempotent and UAF-safe:
+void FragmentManager::reclaimFragment(Fragment* f){
+    if(!f) return;
+    // Sentinel: no FragmentStateManager ⇒ already reclaimed (e.g. by the destroy-sweep) or never
+    // added. unordered_map::find compares pointer VALUES only (no deref of a possibly-freed f), so a
+    // late posted hook reaching us after the sweep is a safe no-op.
+    auto it = mStateManagers.find(f);
+    if(it == mStateManagers.end()) return;
+    // Only irreversibly-destroyed fragments (driven to INITIALIZING, performDetach done) qualify.
+    // Retained fragments sit at CREATED and must survive — a future pop reuses the instance.
+    if(f->mState != Fragment::INITIALIZING) return;
+    // LOAD-BEARING: a back-stack record may still hold this exact pointer. OP_REMOVE+addToBackStack
+    // reaches INITIALIZING while its record lives, and executePopOps reuses the pointer via addFragment
+    // — deleting would UAF on the next pop.
+    if(isFragmentReferencedByBackStack(f)) return;
+    FragmentStateManager* fsm = it->second;
+    mStateManagers.erase(it);
+    delete fsm;  // ~FragmentStateManager is compiler-generated; it does NOT delete mFragment.
+    mActive.erase(f->mWho);  // defensive (removeFragment already erased for the hard-remove path)
+    mAdded.erase(std::remove(mAdded.begin(), mAdded.end(), f), mAdded.end());
+    // NOTE: deliberately does NOT touch f->mView. ~Fragment doesn't either, and by now mView is
+    // already null (stepDown VIEW_CREATED clears it) or reclaimed by the same effect-end path that
+    // invoked this hook. Never calls back into the FSM — no busy-loop, no synchronous-completeEffect
+    // invariant violation.
+    delete f;
+}
+
+bool FragmentManager::isFragmentReferencedByBackStack(Fragment* f) const {
+    if(!f) return false;
+    auto recordHolds = [f](const BackStackRecord* r) -> bool {
+        for(const auto& op : r->getOps()){
+            if(op.mFragment == f || op.mOldFragment == f) return true;
+        }
+        return false;
+    };
+    for(const BackStackRecord* r : mBackStack) if(recordHolds(r)) return true;
+    // mPendingActions: records enqueued by commit() but not yet executed — a future pop could reuse
+    // the pointer once they run. Small window, but scanning it keeps the guard sound.
+    for(const BackStackRecord* r : mPendingActions) if(recordHolds(r)) return true;
+    return false;
 }
 
 // Retain a fragment removed by a *reversible* (added-to-back-stack) transaction. androidx

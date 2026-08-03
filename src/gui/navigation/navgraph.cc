@@ -38,6 +38,15 @@ NavGraph::NavGraph(/*@NonNull*/ NavGraphNavigator* navGraphNavigator)
    :NavDestination(navGraphNavigator){
 }
 
+NavGraph::~NavGraph(){
+    // Owns every NavDestination in mNodes (added via addDestination). Delete each; a child that is
+    // itself a NavGraph recurses through its own ~NavGraph via NavDestination's virtual dtor.
+    // mNodesByRoute holds the SAME pointers (a route index) — clear it without deleting.
+    for(int i = 0; i < mNodes.size(); i++) delete mNodes.valueAt(i);
+    mNodes.clear();
+    mNodesByRoute.clear();
+}
+
 void NavGraph::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
     const std::string startRoute = attrs.getString("startDestination");
@@ -51,22 +60,12 @@ std::pair<NavDestination*, Bundle*>* NavGraph::matchDeepLink(/*@NonNull Uri*/con
     if (result != nullptr) {
         return result;
     }
-    // Then search through all child destinations for a matching deep link
-#if 0
-    for (NavDestination* child : this) {
-        std::pair<NavDestination*, Bundle*>* childResult = child->matchDeepLink(uri);
-        if (childResult != nullptr) {
-            return childResult;
-        }
-    }
-#else
     const size_t  size = mNodes.size();
     for(int i=0;i<size;i++){
         NavDestination*child = mNodes.valueAt(i);
-	std::pair<NavDestination*, Bundle*>* childResult = child->matchDeepLink(uri);
-	if(childResult)return childResult;
+        std::pair<NavDestination*, Bundle*>* childResult = child->matchDeepLink(uri);
+        if(childResult!=nullptr)return childResult;
     }
-#endif
     return nullptr;
 }
 
@@ -156,11 +155,20 @@ NavGraph::Iterator NavGraph::end() const {
  * graph after being added to this graph.
  */
 void NavGraph::addAll(NavGraph* other) {
-    const size_t size = other->mNodes.size();
-    for(int i=0;i<size;i++){
-        NavDestination* destination = other->mNodes.valueAt(i);
-        addDestination(destination);
+    // androidx: "each destination has at most one parent, the destinations will be removed from the
+    // given NavGraph." Transfer ownership from `other` to this. addDestination() throws if a node
+    // still carries a parent, so detach every node from `other` first, then re-add here. The
+    // destinations are NOT deleted during the detach — they move to this. (Previously this left both
+    // graphs pointing at the same NavDestination*, so freeing either would double-free.)
+    std::vector<NavDestination*> moved;
+    moved.reserve(other->mNodes.size());
+    for(int i = 0; i < other->mNodes.size(); i++) moved.push_back(other->mNodes.valueAt(i));
+    for(NavDestination* d : moved){
+        if(d->getParent() == other) d->setParent(nullptr);
     }
+    other->mNodes.clear();
+    other->mNodesByRoute.clear();
+    for(NavDestination* d : moved) addDestination(d);  // setParent(this) + insert into this
 }
 
 /**
@@ -180,12 +188,15 @@ void NavGraph::remove(NavDestination* node) {
  * Clear all destinations from this navigation graph.
  */
 void NavGraph::clear() {
-    Iterator iterator = begin();
-    while (iterator!=end()) {
-        //iterator.next();
-        //iterator.remove();
-	iterator++;
+    // Detach every child WITHOUT deleting — this is the ownership-transfer / generic-remove path
+    // (used by addAll). ~NavGraph is what deletes the destinations this graph still owns. The old
+    // body was a no-op stub (iterated but never removed), which is why clear() leaked.
+    for(int i = 0; i < mNodes.size(); i++){
+        NavDestination* d = mNodes.valueAt(i);
+        if(d->getParent() == this) d->setParent(nullptr);
     }
+    mNodes.clear();
+    mNodesByRoute.clear();
 }
 
 /**

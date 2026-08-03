@@ -39,6 +39,10 @@ NavController::NavController(Context* context) : mContext(context){
 NavController::~NavController(){
     for(auto& kv : mNavigatorStates) delete kv.second;
     mNavigatorStates.clear();
+    // Owns the inflated NavGraph (set via setGraph) and, transitively, every NavDestination in it
+    // (~NavGraph frees its nodes; NavDestination's virtual dtor frees deep links/actions/arguments
+    // and recurses into nested NavGraph children). NavHostFragment owns this NavController.
+    delete mGraph;
 }
 
 // --- navigator-state pop model (androidx NavControllerImpl navigatorState + handlers) ---

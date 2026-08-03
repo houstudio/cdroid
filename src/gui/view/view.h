@@ -732,9 +732,6 @@ protected:
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    // A key-tag entry carries an optional destructor. CDROID has no GC: ~View invokes dtor(ptr)
-    // to reclaim owned payloads (SEC / Scene caches / int[2]) that java would GC. Tags set without
-    // a dtor (the default) keep the old detach-only behaviour.
     struct KeyedTagEntry { void* ptr = nullptr; std::function<void(void*)> dtor; };
     SparseArray<KeyedTagEntry>* mKeyedTags;
     Animation* mCurrentAnimation;

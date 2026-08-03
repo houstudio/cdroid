@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include <lifecycle/lifecycle.h>
 #include <core/handler.h>
 #include <core/callbackbase.h>
@@ -133,6 +134,17 @@ public:
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }
 
+    // Alive-guard for posted fragment-reclaim hooks: a shared_ptr<bool> whose weak alias is captured
+    // into each SEC reclaim hook. ~FragmentManager releases the shared_ptr, expiring the weak, so a
+    // hook posted during navigation but fired after Activity/host teardown (FM already destroyed) is
+    // a safe no-op rather than a use-after-free on this FragmentManager.
+    std::shared_ptr<bool> getAlive() const { return mAlive; }
+    // Reclaim a hard-removed fragment (driven to INITIALIZING, not referenced by any back-stack
+    // record) once its SEC exit effect has truly ended. Idempotent via the mStateManagers sentinel.
+    // Called from the SEC reclaim hook (effect-end) and the destroy-sweep; never calls back into the
+    // FSM, so it cannot busy-loop.
+    void reclaimFragment(Fragment* f);
+
     // Shared-element transition: the active BackStackRecord declares shared element names;
     // FragmentManager resolves them to target views (by transitionName) in the entering fragment.
     void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
@@ -175,6 +187,11 @@ private:
     FragmentState* setSavedState(const std::string& who, FragmentState* s);
     FragmentState* getSavedState(const std::string& who) const;
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
+    // True if any record in mBackStack or mPendingActions still holds `f` in an Op (mFragment or
+    // mOldFragment) — i.e. a future popBackStack will reuse this exact instance. LOAD-BEARING guard
+    // for reclaimFragment: OP_REMOVE+addToBackStack drives a fragment to INITIALIZING while its record
+    // still points at it, and executePopOps reuses that pointer; deleting it would UAF on pop.
+    bool isFragmentReferencedByBackStack(Fragment* f) const;
 
     // --- private data ---
     std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
@@ -198,6 +215,7 @@ private:
     cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
     std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
     std::vector<bool> mTmpIsPop;
+    std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);  // see getAlive()
 };
 
 }//namespace fragment

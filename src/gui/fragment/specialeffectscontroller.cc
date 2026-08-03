@@ -17,10 +17,12 @@
  *********************************************************************************/
 #include <fragment/specialeffectscontroller.h>
 #include <fragment/fragment.h>
+#include <fragment/fragmentmanager.h>
 #include <fragment/fragmentstatemanager.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <algorithm>
+#include <memory>
 #include <porting/cdlog.h>
 
 namespace cdroid{
@@ -62,6 +64,15 @@ void SpecialEffectsController::enqueue(Operation::State finalState, Operation::L
         running.erase(std::remove(running.begin(), running.end(), op), running.end());
         mCompletedOperations.push_back(op);
     });
+    // Effect-end-gated fragment reclaim hook. The exit effect (TransitionEffect/AnimationEffect)
+    // copies this hook BY VALUE into its posted end-lambda and invokes it after `delete view`. It
+    // routes through the FM (never the FSM) so the destroy-sweep deleting the FSM can't UAF a late
+    // posted hook; the weak alive-guard makes it a no-op if the FM is already destroyed.
+    FragmentManager* fm = fsm->getFragmentManager();
+    std::weak_ptr<bool> aliveGuard = fm ? fm->getAlive() : std::weak_ptr<bool>();
+    op->mReclaimHook = [fm, f, aliveGuard](){
+        if(aliveGuard.lock() && fm) fm->reclaimFragment(f);
+    };
     // NOTE: REMOVED view reclamation is NOT done here (on op-completion). For the Transition path
     // complete() fires synchronously inside onCommit, before the async clone transition plays, so a
     // delete-on-complete() would UAF; and deferring completeEffect to transition-end busy-loops
@@ -79,7 +90,27 @@ int SpecialEffectsController::getAwaitingCompletionLifecycleImpact(FragmentState
     return 0; // NONE
 }
 
+void SpecialEffectsController::trimCompletedOperations(){
+    // Delete every completed op whose Effects are already drained, keep the rest. A completed op has
+    // been through completeEffect() (which erases+deletes each Effect, emptying mEffects) and
+    // complete() (which fired its copied listeners); the async clone/animation reference the VIEW,
+    // not the op — so deleting is safe. The mEffects.empty() guard is defense-in-depth: this trim is
+    // only called from executePendingOperations() entry (never forceCompleteAll, whose complete()
+    // skips the drain), so every op here should already be empty, but a non-empty one is left in the
+    // list rather than freed-while-referenced.
+    mCompletedOperations.erase(
+        std::remove_if(mCompletedOperations.begin(), mCompletedOperations.end(),
+            [](Operation* op){
+                if(!op) return true; // drop nulls
+                if(op->mEffects.empty()){ delete op; return true; }
+                return false; // keep: effects still referenced (should not happen at this call site)
+            }),
+        mCompletedOperations.end());
+}
+
 void SpecialEffectsController::executePendingOperations(){
+    // Reclaim ops retired by a prior navigation round so mCompletedOperations never grows unbounded.
+    trimCompletedOperations();
     if(mPendingOperations.empty()) return;
     std::vector<Operation*> ops = mPendingOperations;
     mPendingOperations.clear();
@@ -153,6 +184,14 @@ void SpecialEffectsController::Operation::applyState(){
             // Container change only; the orphaned view's reclamation is attached as a completion
             // listener back in enqueue() (this also covers the Animation path, which sets
             // isAwaitingContainerChanges=false and therefore never calls applyState).
+            // Clear any legacy Animation first: if the view still carries mCurrentAnimation (a prior
+            // custom enter/exit Animation that was never cleared), ViewGroup::removeViewInternal
+            // routes it through addDisappearingView — the view then stays in mDisappearingChildren and
+            // keeps being drawn, while TransitionEffect's clone-end post (or AnimationEffect's anim-end
+            // post) frees the view shortly after -> a still-drawn freed view UAFs in applyLegacyAnimation
+            // (mParent=null / RenderNode crash — the navdemo segfault, ~View of the view tree logged
+            // right before the crash).
+            if(view->getAnimation()) view->setAnimation(nullptr);
             if(view->getParent()) container->removeView(view);
             break;
         case State::VISIBLE:
