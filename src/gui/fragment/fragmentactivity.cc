@@ -128,7 +128,6 @@ void FragmentActivity::onBackPressed(){
     // before the host FragmentManager. CDROID: iterate host-FM fragments for NavHostFragments and
     // pop their NavController first. If no NavController handles it, fall back to host FM, then
     // the activity.
-    LOGD("FragmentActivity::onBackPressed: checking NavHostFragment(s) for NavController pop");
     for(Fragment* f : mFragmentManager->getFragments()){
         NavHostFragment* host = dynamic_cast<NavHostFragment*>(f);
         if(host){

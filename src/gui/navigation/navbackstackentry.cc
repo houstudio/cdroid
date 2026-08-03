@@ -39,6 +39,8 @@ NavBackStackEntry::~NavBackStackEntry(){
     if(mViewModelStore) mViewModelStore->clear();
     delete mViewModelStore;
     delete mSavedStateRegistryController;
+    // Owns the args Bundle (ctor takes ownership: mArguments(arguments)). CDROID has no GC.
+    delete mArguments;
 }
 
 lifecycle::Lifecycle& NavBackStackEntry::getLifecycle(){

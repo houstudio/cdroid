@@ -21,6 +21,10 @@
 namespace cdroid{
 class NavigatorProvider {
 public:
+    // Virtual so that `delete mNavigatorProvider` (NavController owns a SimpleNavigatorProvider via
+    // a NavigatorProvider*) runs the derived dtor — otherwise SimpleNavigatorProvider's mNavigators
+    // (the owned Navigator* map) would leak.
+    virtual ~NavigatorProvider() = default;
     /**
      * Retrieves a registered {@link Navigator} by name.
      *

@@ -43,6 +43,14 @@ NavController::~NavController(){
     // (~NavGraph frees its nodes; NavDestination's virtual dtor frees deep links/actions/arguments
     // and recurses into nested NavGraph children). NavHostFragment owns this NavController.
     delete mGraph;
+    // Owns the SimpleNavigatorProvider (new in ctor) and, transitively, the Navigators it holds
+    // (NavGraphNavigator/FragmentNavigator/DialogFragmentNavigator — added via addNavigator, owned
+    // by SimpleNavigatorProvider::mNavigators). ~SimpleNavigatorProvider deletes each Navigator*.
+    delete mNavigatorProvider;
+    // Owns every NavBackStackEntry in mBackStack (navigate push). Each entry owns its args Bundle
+    // (~NavBackStackEntry deletes mArguments) + LifecycleRegistry/ViewModelStore/SavedStateRegistry.
+    for(NavBackStackEntry* entry : mBackStack) delete entry;
+    mBackStack.clear();
 }
 
 // --- navigator-state pop model (androidx NavControllerImpl navigatorState + handlers) ---
@@ -240,7 +248,12 @@ void NavController::navigate(NavDeepLinkRequest* /*request*/, NavOptions* /*opti
 bool NavController::popBackStack(){
     // androidx popBackStack() = popBackStack(currentDestination.id, inclusive = true): pop the
     // single top entry via its navigator's entry-based popBackStack (user back — no save).
-    if(mBackStack.empty()) return false;
+    // The root entry (startDestination) is NEVER popped — androidx guarantees the back stack
+    // always keeps the root. Without this guard, popping the root empties mBackStack and returns
+    // true, so FragmentActivity::onBackPressed's `nc->popBackStack()` short-circuits and never
+    // falls through to Activity::onBackPressed (close) — the window is never destroyed on ESC/back
+    // at the root page.
+    if(mBackStack.size() <= 1) return false;
     NavDestination* dest = mBackStack.back()->getDestination();
     if(!dest) return false;
     std::vector<Navigator*> popOperations = { &dest->getNavigator() };
