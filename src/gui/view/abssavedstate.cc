@@ -42,10 +42,6 @@ namespace cdroid{
     Parcelable* AbsSavedState::getSuperState() {
         return mSuperState;
     }
-
-    int AbsSavedState::describeContents() {
-        return 0;
-    }
     void AbsSavedState::writeToParcel(Parcel& dest, int flags) {
         //dest.writeParcelable(mSuperState, flags);
     }
