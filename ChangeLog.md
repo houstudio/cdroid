@@ -1,6 +1,8 @@
 # **5.
-  - add Transition
-  - add ConstrainLayout and MotionLayout
+  - add Transition 
+  - add Navigation
+  - add Fragment FragmentManger
+  - add ConstrainLayout and MotionLayout(full features)
   - new TextView(full compatible with andoird) Span support for full feature richtext
   - add new text Layout StatlicLayout and BoringLayout baseon minikin
   - add FlexBoxLayut and FlexboxLayoutManager
