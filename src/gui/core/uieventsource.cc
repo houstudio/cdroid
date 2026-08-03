@@ -35,9 +35,11 @@ void UIEventSource::cleanUp(){
 }
 
 int UIEventSource::checkEvents(){
-    return (mAttachedView&&mAttachedView->isDirty())
-           ||mAttachedView->isLayoutRequested()
-           ||GraphDevice::getInstance().needCompose();
+    // draw/layout/compose moved to Window::doTraversal (Choreographer CALLBACK_TRAVERSAL via
+    // View::scheduleTraversal → Window::scheduleTraversals). Return 0 so doEventHandlers never
+    // calls handleEvents — draw must run in drainMessageQueue (same FIFO as effect-end posts),
+    // not in doEventHandlers.
+    return 0;
 }
 
 void UIEventSource::handleCompose(){
@@ -69,8 +71,9 @@ int UIEventSource::handleRunnables(){
 }
 
 int UIEventSource::handleEvents(){
-    handleRunnables();
-    handleCompose();
+    // draw/layout/compose moved to Window::doTraversal (Choreographer CALLBACK_TRAVERSAL via
+    // View::invalidateInternal/requestLayout → Window::scheduleTraversals). checkEvents returns 0,
+    // so this is never reached; kept as a no-op for the EventHandler interface.
     return 0;
 }
 

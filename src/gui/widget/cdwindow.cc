@@ -915,6 +915,29 @@ void Window::close(){
     WindowManager::getInstance().removeWindow(this);
 }
 
+void Window::scheduleTraversals(){
+    if(mTraversalScheduled) return;
+    mTraversalScheduled = true;
+    Choreographer::getInstance().postCallback(
+        Choreographer::CALLBACK_TRAVERSAL,
+        [this](){ doTraversal(); },
+        nullptr);
+}
+
+void Window::doTraversal(){
+    mTraversalScheduled = false;
+    GraphDevice::getInstance().lock();
+    if(isAttachedToWindow()){
+        if(isLayoutRequested()) doLayout();
+        if(isDirty() && getVisibility() == View::VISIBLE){
+            draw();
+            GraphDevice::getInstance().flip();
+        }
+    }
+    GraphDevice::getInstance().unlock();
+    GraphDevice::getInstance().composeSurfaces();
+}
+
 bool Window::dispatchTouchEvent(MotionEvent& event){
     return FrameLayout::dispatchTouchEvent(event);
 }
