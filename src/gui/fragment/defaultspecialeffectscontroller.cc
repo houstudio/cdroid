@@ -48,6 +48,7 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
         }
     }
     // Per op: Fragment Transition API (highest) > custom anim (R.anim) > default Fade/shared.
+    mHasTransitionEffect = false; // recompute per round; set true when any op takes a Transition clone
     for(Operation* op : operations){
         Fragment* f = op->mFragment;
         if(!f || !f->mView) continue;
@@ -63,6 +64,7 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
         }
         if(fragTrans){
             op->addEffect(new TransitionEffect(op, fragTrans->clone()));
+            mHasTransitionEffect = true;
         } else {
             // Priority 2: custom anim (R.anim) — legacy Animation.
             Context* ctx = f->getContext();
@@ -75,6 +77,7 @@ void DefaultSpecialEffectsController::collectEffects(std::vector<Operation*>& op
                     ? FragmentTransitionImpl::makeExitTransition()
                     : FragmentTransitionImpl::makeEnterTransition({});
                 op->addEffect(new TransitionEffect(op, t));
+                mHasTransitionEffect = true;
             }
         }
         // Ensure the container change (addView/removeView) applies via applyState on completion.
@@ -118,16 +121,25 @@ void AnimationEffect::onCommit(ViewGroup* container){
             // freed view whose mParent is null — the navdemo crash).
             cont->post([cont, v, op, self, hook](){
                 v->setAnimation(nullptr);              // delete the ended animClone; clear mCurrentAnimation
-                if(v->getParent()) cont->removeView(v); // no anim now -> dispatchDetachedFromWindow, not addDisappearingView
                 op->completeEffect(self);
                 if(hook) hook();                       // reclaim fragment now (independent of the view)
-                // Defer the view delete to the NEXT looper iteration. A sibling TransitionEffect's
-                // clone (beginDelayedTransition on the same container) captured this view in its
-                // startValues, and its playTransition runs on THIS iteration's onPreDraw
-                // (doEventHandlers, which runs AFTER drainMessageQueue in pollInner). Deleting here
-                // (drainMessageQueue) would free the view before the clone's isValidTarget runs ->
-                // UAF. Posting again pushes the delete past this iteration's doEventHandlers.
-                cont->post([v]{ delete v; });
+                if(op->mController && op->mController->hasTransitionEffect()){
+                    // A sibling TransitionEffect's clone (beginDelayedTransition on this container)
+                    // captured v in its startValues, and its ObjectAnimator keeps advancing in
+                    // Choreographer CALLBACK_ANIMATION for frames after this legacy anim ends. Freeing
+                    // v now (drainMessageQueue) would leave the clone dereferencing freed memory next
+                    // CALLBACK_ANIMATION -> UAF. Keep v alive (GONE, still parented) and hand it to the
+                    // controller; the clone's true end (TransitionEffect listener) reclaims it once
+                    // nothing references it anymore.
+                    v->setVisibility(cdroid::View::GONE);
+                    op->mController->deferExitViewDelete(v);
+                } else {
+                    // No Transition clone on this container -> nothing references v post-anim. Safe to
+                    // detach + free now (mCurrentAnimation already cleared above so removeView takes
+                    // the plain detach branch instead of addDisappearingView).
+                    if(v->getParent()) cont->removeView(v);
+                    delete v;
+                }
             });
         };
         animClone->setAnimationListener(lst);
@@ -142,6 +154,17 @@ void TransitionEffect::onCommit(ViewGroup* container){
     // so to reclaim the fragment view when the clone truly ends we addListener() on the returned
     // clone directly — not on mTransition, not on op-completion.
     Transition* clone = TransitionManager::beginDelayedTransition(container, mTransition);
+    // Reclaim legacy-Animation exit views (deferred by a sibling AnimationEffect) when this clone
+    // truly ends — by then its ObjectAnimator no longer dereferences them, so freeing is safe.
+    // The alive-guard makes the callback a no-op if the controller is already destroyed.
+    SpecialEffectsController* ctrl = mOperation->mController;
+    if(clone && ctrl){
+        std::weak_ptr<bool> alive = ctrl->getAlive();
+        Transition::TransitionListener reclaimLst;
+        reclaimLst.onTransitionEnd    = [ctrl, alive](Transition&){ if(alive.lock()) ctrl->reclaimDeferredExitViews(); };
+        reclaimLst.onTransitionCancel = [ctrl, alive](Transition&){ if(alive.lock()) ctrl->reclaimDeferredExitViews(); };
+        clone->addListener(reclaimLst);
+    }
     if(mOperation->mFinalState == SpecialEffectsController::Operation::State::REMOVED){
         Fragment* f = mOperation->mFragment;
         cdroid::View* view = f ? f->mView : nullptr;
