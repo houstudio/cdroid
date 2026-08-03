@@ -186,10 +186,10 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         myWidth = DEFAULT_WIDTH;
     }
 
-    std::vector<View*>&views = mSortedHorizontalChildren;
-    int count = views.size();
+    std::vector<View*>*views = &mSortedHorizontalChildren;
+    int count = views->size();
     for (int i = 0; i < count; i++) {
-        View* child = views[i];
+        View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
             LayoutParams* params = (LayoutParams*) child->getLayoutParams();
             const int*rules = params->getRules(layoutDirection);
@@ -203,11 +203,11 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         }
     }
 
-    views = mSortedVerticalChildren;
-    count = views.size();
+    views = &mSortedVerticalChildren;
+    count = views->size();
 
     for (int i = 0; i < count; i++) {
-        View* child = views[i];
+        View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
             LayoutParams* params = (LayoutParams*) child->getLayoutParams();
 
@@ -247,7 +247,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     View* baselineView = nullptr;
     LayoutParams* baselineParams = nullptr;
     for (int i = 0; i < count; i++) {
-        View* child = views[i];
+        View* child = (*views)[i];
         if (child->getVisibility() != GONE) {
             LayoutParams* childParams = (LayoutParams*) child->getLayoutParams();
             if ((baselineView == nullptr) || (baselineParams == nullptr)
@@ -271,7 +271,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         if (offsetHorizontalAxis) {
             for (int i = 0; i < count; i++) {
-                View* child = views[i];
+                View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     const int* rules = params->getRules(layoutDirection);
@@ -301,7 +301,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
 
         if (offsetVerticalAxis) {
             for (int i = 0; i < count; i++) {
-                View* child = views[i];
+                View* child = (*views)[i];
                 if (child->getVisibility() != GONE) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     const int* rules = params->getRules(layoutDirection);
@@ -330,7 +330,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
         const int verticalOffset = contentBounds.top - top;
         if (horizontalOffset != 0 || verticalOffset != 0) {
             for (int i = 0; i < count; i++) {
-                View* child = views[i];
+                View* child = (*views)[i];
                 if ((child->getVisibility() != GONE) && (child != ignore)) {
                     LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                     if (horizontalGravity) {
@@ -349,7 +349,7 @@ void RelativeLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec){
     if (isLayoutRtl()) {
         const int offsetWidth = myWidth - width;
         for (int i = 0; i < count; i++) {
-            View* child = views[i];
+            View* child = (*views)[i];
             if (child->getVisibility() != GONE) {
                 LayoutParams* params = (LayoutParams*) child->getLayoutParams();
                 params->mLeft -= offsetWidth;
@@ -812,24 +812,24 @@ std::string RelativeLayout::getAccessibilityClassName()const {
 bool RelativeLayout::TopToBottomLeftToRightComparator::operator()(const View* first, const View* second)const{
     const int topDifference = first->getTop() - second->getTop();
     if (topDifference != 0) {
-        return topDifference;
+        return topDifference < 0;
     }
     // left - right
     const int leftDifference = first->getLeft() - second->getLeft();
     if (leftDifference != 0) {
-        return leftDifference;
+        return leftDifference < 0;
     }
     // break tie by height
     const int heightDiference = first->getHeight() - second->getHeight();
     if (heightDiference != 0) {
-        return heightDiference;
+        return heightDiference < 0;
     }
     // break tie by width
     const int widthDiference = first->getWidth() - second->getWidth();
     if (widthDiference != 0) {
-        return widthDiference;
+        return widthDiference < 0;
     }
-    return 0;
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////

@@ -109,6 +109,13 @@ foreach( each_file ${filtered_files} )
   install(FILES  ${PROJECT_SOURCE_DIR}/${each_file} DESTINATION "${CMAKE_BINARY_DIR}/include/gui/${FILE_PATH}")
 endforeach(each_file)
 
+# --- pkg-config (cdroid.pc) public/private link split ---
+# cairo/cairomm is PUBLIC: cdroid public headers expose Cairo::Context / ImageSurface / RefPtr
+# (Canvas is-a cairo_t). Everything else is PRIVATE (internal impl: minikin, image codecs, XML,
+# compression, font, system libs). Keep in sync with the find_package() list in cmake/options.cmake.
+set(PKGCONFIG_LIBS          "cairo")
+set(PKGCONFIG_LIBS_PRIVATE  "pixman-1 freetype2 fontconfig harfbuzz libpng zlib bzip2 expat")
+set(NONPKG_LIBS_PRIVATE     "-lm -pthread -ldl")
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 file(COPY ${PROJECT_BINARY_DIR}/gui_features.h DESTINATION "${CMAKE_BINARY_DIR}/include/gui/")
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/cdroid.pc" DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkgconfig")

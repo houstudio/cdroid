@@ -1,19 +1,23 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}
-libdir=${prefix}/lib
-sharedlibdir=${prefix}/lib
+libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: cdroid
-Description: C++ style Android UI component library
+Description: C++ style Android UI component library (Cairo vector graphics backend)
 Version: @CDROID_VERSION@
 
-#Requires Requires.private libs that supported by pkgconfig
+# PUBLIC deps — exposed in cdroid's public headers, so consumers compile against them too.
+# cairo/cairomm: Canvas is-a cairo_t; View/Drawable public headers expose Cairo::Context /
+# ImageSurface / RefPtr, so anyone using cdroid is using cairo directly.
 Requires: @PKGCONFIG_LIBS@
+
+# PRIVATE deps — link-time only. cdroid is a shared library, so these do NOT appear in consumer
+# Cflags (kept out via Requires.private / Libs.private). Internal: minikin, image codecs, XML,
+# compression, font, system libs.
 Requires.private: @PKGCONFIG_LIBS_PRIVATE@
 
-#Libs& Libs.private libs that pkg-config cant support
-Libs: -L"${libdir}" @NONPKG_LIBS@
-Libs.private:-L"${sharedlibdir}" @NONPKG_LIBS_PRIVATE@
+Libs: -L${libdir} -lcdroid
+Libs.private: @NONPKG_LIBS_PRIVATE@
 
-Cflags: -I"${includedir}/gui" -I"${includedir}/porting"
+Cflags: -I${includedir}/gui -I${includedir}/porting
