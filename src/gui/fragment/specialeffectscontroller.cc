@@ -108,6 +108,21 @@ void SpecialEffectsController::trimCompletedOperations(){
         mCompletedOperations.end());
 }
 
+void SpecialEffectsController::deferExitViewDelete(View* v){
+    if(v) mLingeryExitViews.push_back(v);
+}
+
+void SpecialEffectsController::reclaimDeferredExitViews(){
+    // Detach + free every parked exit view. Called from a Transition clone's true end (addListener
+    // in TransitionEffect::onCommit, guarded by the controller's alive-handle) — by then no clone
+    // ObjectAnimator derefs these views anymore, so freeing is safe.
+    for(View* v : mLingeryExitViews){
+        if(v->getParent()) v->getParent()->removeView(v);
+        delete v;
+    }
+    mLingeryExitViews.clear();
+}
+
 void SpecialEffectsController::executePendingOperations(){
     // Reclaim ops retired by a prior navigation round so mCompletedOperations never grows unbounded.
     trimCompletedOperations();
