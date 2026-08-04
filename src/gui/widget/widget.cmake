@@ -118,11 +118,6 @@ list(APPEND WIDGET_SOURCES
     widget/toolbar.cc
     widget/toolbaractionbar.cc
     widget/toast.cc
-
-    widget/plotaxis.cc
-    widget/plotobject.cc
-    widget/plotpoint.cc
-    widget/plotview.cc
 )
 if(ENABLE_KPLOT)
 list(APPEND WIDGET_SOURCES
