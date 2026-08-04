@@ -37,7 +37,6 @@ HorizontalScrollView::HorizontalScrollView(Context*ctx,const AttributeSet&atts)
 
 HorizontalScrollView::~HorizontalScrollView(){
     recycleVelocityTracker();
-    delete mSavedState;
     delete mScroller;
     delete mEdgeGlowLeft;
     delete mEdgeGlowRight;
@@ -920,13 +919,13 @@ void HorizontalScrollView::computeScroll(){
         const int x = mScroller->getCurrX();
         const int y = mScroller->getCurrY();
         const int deltaX = consumeFlingInStretch(x-oldX);
-        if ((oldX != x) || (oldY != y)) {
+        if ((deltaX != 0) || (oldY != y)) {
             const int range = getScrollRange();
             const int overscrollMode = getOverScrollMode();
             const bool canOverscroll = overscrollMode == OVER_SCROLL_ALWAYS ||
                         (overscrollMode == OVER_SCROLL_IF_CONTENT_SCROLLS && range > 0);
 
-            overScrollBy(x - oldX, y - oldY, oldX, oldY, range, 0, mOverflingDistance, 0, false);
+            overScrollBy(deltaX, y - oldY, oldX, oldY, range, 0, mOverflingDistance, 0, false);
             onScrollChanged(mScrollX, mScrollY, oldX, oldY);
 
             if (canOverscroll && (deltaX !=0)) {
@@ -1190,7 +1189,7 @@ bool HorizontalScrollView::isViewDescendantOf(View* child, View* parent){
 void HorizontalScrollView::fling(int velocityX){
     if (getChildCount() > 0) {
         const int width = getWidth() - mPaddingRight - mPaddingLeft;
-        const int right = getChildAt(0)->getWidth() - mPaddingLeft;
+        const int right = getChildAt(0)->getRight() - mPaddingLeft;
         const int maxScroll =std::max(0,right-width);
         bool shouldFling = false;
         if(mScrollX==0 && !mEdgeGlowLeft->isFinished()){
@@ -1205,8 +1204,6 @@ void HorizontalScrollView::fling(int velocityX){
             } else {
                 shouldFling = true;
             }
-            if(shouldDisplayEdgeEffects())
-            mEdgeGlowRight->onAbsorb(velocityX);
         }else{
             shouldFling = true;
         }
