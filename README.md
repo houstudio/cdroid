@@ -7,6 +7,8 @@
 * Integrated with 50+ UI Components and 20+ Drawables(compatible with android)
 * All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
 * Vector Graph supported via **Cairo**
+* FragmentManager+Navigation
+* Fragment + Transition
 # **Quick Start**
 * VM(Ware):https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA fetchcode：spux (VM Ubuntu User:cdroid password:123456）
 * After login pls run git pull to get new version of cdroid
