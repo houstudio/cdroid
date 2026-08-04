@@ -127,6 +127,14 @@ void ToolbarActionBar::setCustomView(View* view){
 }
 
 void ToolbarActionBar::setIcon(Drawable* icon){ mIcon = icon; updateToolbarLogo(); }
+void ToolbarActionBar::setHomeAsUpIndicator(Drawable* indicator){
+    // androidx ToolbarActionBar.setHomeAsUpIndicator -> DecorToolbar.setNavigationIcon ->
+    // ToolbarWidgetWrapper.setNavigationIcon { mNavIcon = icon; updateNavigationIcon(); }.
+    // mNavIcon is the app-supplied Up indicator that takes priority over mDefaultNavigationIcon;
+    // borrowed (not freed here), matching the other borrowed Drawable fields.
+    mNavIcon = indicator;
+    updateNavigationIcon();
+}
 void ToolbarActionBar::setLogo(Drawable* logo){ mLogo = logo; updateToolbarLogo(); }
 
 void ToolbarActionBar::setHomeButtonEnabled(bool /*enabled*/){

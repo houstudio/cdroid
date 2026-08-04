@@ -36,6 +36,7 @@ public:
     void setCustomView(View* view) override;
     void setIcon(Drawable* icon) override;
     void setLogo(Drawable* logo) override;
+    void setHomeAsUpIndicator(Drawable* indicator) override;
     void setHomeButtonEnabled(bool enabled) override; // no-op, matches androidx
     void addOnMenuVisibilityListener(const OnMenuVisibilityListener& listener) override;
     void removeOnMenuVisibilityListener(const OnMenuVisibilityListener& listener) override;
