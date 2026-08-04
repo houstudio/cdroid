@@ -43,7 +43,12 @@ if(ENABLE_GIF)
 endif()
 
 if(ENABLE_WEBP)
-   list(APPEND IMAGE_DEPLIBS ${WEBP_LIBRARIES})
+   # cdroid directly uses WebP* (libwebp) and WebPDemux* (libwebpdemux). The other webp sub-libs
+   # (webpdecoder/sharpyuv/webpmux) are transitive — webp.so NEEDED them — so the old
+   # ${WEBP_LIBRARIES} (which flattened all of them) leaked them onto cdroid's link line and tripped
+   # link-what-you-use "unused direct dependencies" (image-decoders is STATIC, so its libs land on
+   # cdroid's link line).
+   list(APPEND IMAGE_DEPLIBS ${WEBP_LIBRARY} ${WEBP_DEMUX_LIBRARY})
 endif()
 
 if(ENABLE_OPENJPEG)

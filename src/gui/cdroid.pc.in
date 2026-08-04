@@ -17,7 +17,9 @@ Requires: @PKGCONFIG_LIBS@
 # compression, font, system libs.
 Requires.private: @PKGCONFIG_LIBS_PRIVATE@
 
-Libs: -L${libdir} -lcdroid
+# -ltvhal: tvhal is PUBLIC — cdroid's public headers use LOGD/LOGE (cdlog::LogMessage lives in
+# libtvhal), so consumers must link it too.
+Libs: -L${libdir} -lcdroid -ltvhal
 Libs.private: @NONPKG_LIBS_PRIVATE@
 
 Cflags: -I${includedir}/gui -I${includedir}/porting

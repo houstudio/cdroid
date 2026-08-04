@@ -1,7 +1,7 @@
 project(cdroid C CXX)
 
 include(cdroid.cmake)
-
+set(CMAKE_LINK_WHAT_YOU_USE TRUE)
 option( GUI_STATIC "UI is static link" ON)
 if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
@@ -114,7 +114,7 @@ endforeach(each_file)
 # (Canvas is-a cairo_t). Everything else is PRIVATE (internal impl: minikin, image codecs, XML,
 # compression, font, system libs). Keep in sync with the find_package() list in cmake/options.cmake.
 set(PKGCONFIG_LIBS          "cairo")
-set(PKGCONFIG_LIBS_PRIVATE  "pixman-1 freetype2 fontconfig harfbuzz libpng zlib bzip2 expat")
+set(PKGCONFIG_LIBS_PRIVATE  "freetype2 fontconfig harfbuzz libpng expat")
 set(NONPKG_LIBS_PRIVATE     "-lm -pthread -ldl")
 configure_file("cdroid.pc.in"  "cdroid.pc"  @ONLY)
 file(COPY ${PROJECT_BINARY_DIR}/gui_features.h DESTINATION "${CMAKE_BINARY_DIR}/include/gui/")
@@ -125,9 +125,19 @@ set(PKGCONFIG_LIBS_PRIVATE "expat libzip")
 set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
-target_link_libraries(cdroid tvhal image-decoders cdtext ${CDROID_DEPLIBS})
-
-if(MSVC)
+target_link_libraries(cdroid
+    PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal                   # cairo + tvhal (cdlog/LogMessage — cdroid public headers use LOGD/LOGE)
+    PRIVATE image-decoders cdtext ${CDROID_PRIVATE_DEPLIBS})
+# Prune libcdroid.so's DT_NEEDED to only the libs it actually references. The Find*.cmake modules
+# are old-style (return flat ${LIBS}, not imported targets with INTERFACE_LINK_LIBRARIES), so
+# transitive sub-deps land on the link line: pixman (via cairo), z/bz2 (via zip),
+# webpdecoder/sharpyuv/webpmux (via webp), harfbuzz-icu (via harfbuzz). --as-needed drops those
+# from NEEDED at link time; they stay reachable transitively (e.g. cairo.so NEEDED pixman).
+# This is also what makes the CMAKE_LINK_WHAT_YOU_USE "unused direct dependencies" warnings
+# harmless for genuinely-transitive libs.
+if(UNIX AND NOT APPLE)
+    target_link_options(cdroid PRIVATE -Wl,--as-needed)
+elseif(MSVC)
    set_target_properties(cdroid PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
