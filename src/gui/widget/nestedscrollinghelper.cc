@@ -20,7 +20,8 @@
 namespace cdroid{
 
 NestedScrollingParentHelper::NestedScrollingParentHelper(ViewGroup* viewGroup) {
-    mNestedScrollAxes=0;
+    mNestedScrollAxesTouch = 0;
+    mNestedScrollAxesNonTouch = 0;
     mViewGroup = viewGroup;
 }
  
@@ -31,11 +32,15 @@ void NestedScrollingParentHelper::onNestedScrollAccepted(View* child,View* targe
  
 void NestedScrollingParentHelper::onNestedScrollAccepted(View* child,View* target,
          int axes,int type) {
-    mNestedScrollAxes = axes;
+    if (type == View::TYPE_NON_TOUCH) {
+        mNestedScrollAxesNonTouch = axes;
+    } else {
+        mNestedScrollAxesTouch = axes;
+    }
 }
- 
+
 int NestedScrollingParentHelper::getNestedScrollAxes()const{
-    return mNestedScrollAxes;
+    return mNestedScrollAxesTouch | mNestedScrollAxesNonTouch;
 }
  
 void NestedScrollingParentHelper::onStopNestedScroll(View* target) {
@@ -43,7 +48,11 @@ void NestedScrollingParentHelper::onStopNestedScroll(View* target) {
 }
 	
 void NestedScrollingParentHelper::onStopNestedScroll(View* target,int type) {
-    mNestedScrollAxes = 0;
+    if (type == View::TYPE_NON_TOUCH) {
+        mNestedScrollAxesNonTouch = 0;
+    } else {
+        mNestedScrollAxesTouch = 0;
+    }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////
@@ -87,9 +96,9 @@ bool NestedScrollingChildHelper::startNestedScroll( int axes, int type) {
         ViewGroup* p = mView->getParent();
         View* child = mView;
         while (p != nullptr) {
-            if (p->onStartNestedScroll(child, mView, axes/*, type*/)) {
+            if (p->onStartNestedScroll(child, mView, axes, type)) {
                 setNestedScrollingParentForType(type, p);
-                p->onNestedScrollAccepted(child, mView, axes/*, type*/);
+                p->onNestedScrollAccepted(child, mView, axes, type);
                 return true;
             }
             if (1/*p instanceof View*/) {
@@ -108,7 +117,7 @@ void NestedScrollingChildHelper::stopNestedScroll() {
 void NestedScrollingChildHelper::stopNestedScroll( int type) {
     ViewGroup* parent = getNestedScrollingParentForType(type);
     if (parent != nullptr) {
-        parent->onStopNestedScroll(mView/*, type*/);
+        parent->onStopNestedScroll(mView, type);
         setNestedScrollingParentForType(type, nullptr);
     }
 }
@@ -121,8 +130,7 @@ bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyCons
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
         int dxUnconsumed, int dyUnconsumed,int* offsetInWindow, int type){
-    int consumed[2];
-    return dispatchNestedScrollInternal(dxConsumed,dyConsumed,dxUnconsumed,dyUnconsumed,offsetInWindow,type,consumed);
+    return dispatchNestedScrollInternal(dxConsumed,dyConsumed,dxUnconsumed,dyUnconsumed,offsetInWindow,type,nullptr);
 }
 
 bool NestedScrollingChildHelper::dispatchNestedScroll(int dxConsumed, int dyConsumed,
@@ -194,7 +202,7 @@ bool NestedScrollingChildHelper::dispatchNestedPreScroll(int dx, int dy,
             }
             consumed[0] = 0;
             consumed[1] = 0;
-            parent->onNestedPreScroll(mView, dx, dy, consumed/*, type*/);
+            parent->onNestedPreScroll(mView, dx, dy, consumed, type);
 
             if (offsetInWindow != nullptr) {
                 mView->getLocationInWindow(offsetInWindow);
