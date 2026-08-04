@@ -63,14 +63,14 @@ if (HARFBUZZ_INCLUDE_DIRS)
 endif ()
 
 message("HARFBUZZ_LIBRARIES=${HARFBUZZ_LIBRARIES} HARFBUZZ_INCLUDE_DIRS=${HARFBUZZ_INCLUDE_DIRS} HARFBUZZ_VERSION=${HARFBUZZ_VERSION}")
-# HarfBuzz 0.9.18 split ICU support into a separate harfbuzz-icu library.
+# HarfBuzz 0.9.18 split ICU support into a separate harfbuzz-icu library. It is a *transitive*
+# dep of harfbuzz (libharfbuzz.so NEEDED libharfbuzz-icu.so), so consumers link only harfbuzz and
+# get icu at runtime. Flattening it into HARFBUZZ_LIBRARIES puts it on every consumer's link line
+# and trips link-what-you-use "unused direct dependencies". Keep it in its own variable instead.
 if ("${PC_HARFBUZZ_VERSION}" VERSION_GREATER "0.9.17")
     find_library(HARFBUZZ_ICU_LIBRARIES NAMES harfbuzz-icu
         HINTS ${PC_HARFBUZZ_ICU_LIBRARY_DIRS} ${PC_HARFBUZZ_ICU_LIBDIR}
     )
-    if(HARFBUZZ_ICU_LIBRARIES)
-        list(APPEND HARFBUZZ_LIBRARIES "${HARFBUZZ_ICU_LIBRARIES}")
-    endif()
 endif ()
 
 include(FindPackageHandleStandardArgs)
