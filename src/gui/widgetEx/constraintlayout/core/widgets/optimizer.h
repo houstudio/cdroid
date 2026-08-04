@@ -45,9 +45,8 @@ class Optimizer {
     static const int OPTIMIZATION_STANDARD           = OPTIMIZATION_DIRECT
             | OPTIMIZATION_CACHE_MEASURES;
 
-    // Looks at optimizing match_parent. Implemented in optimizer.cc; currently a stub
-    // pending ConstraintWidgetContainer (it dereferences the container and is only invoked
-    // from the Stage-3 solver driver).
+    // Pins a MATCH_PARENT widget to the container edges via solver equalities and marks it
+    // DIRECT. Called per-child from ConstraintWidgetContainer::layout() before addToSolver.
     static void checkMatchParent(ConstraintWidgetContainer* container, LinearSystem* system,
                                  ConstraintWidget* widget);
 

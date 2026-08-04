@@ -19,10 +19,10 @@
 #define __NAVIGATIONUI_H__
 /*********************************************************************************
  * Port of androidx.navigation.ui.NavigationUI. Wires AppBar/Toolbar title + Up button
- * to a NavController. NOTE: CDROID's ActionBar is currently a shell and Toolbar lacks
- * some setters, so setupActionBarWithNavController/setupWithNavController register the
- * destination-changed logic but the ActionBar/Toolbar mutations are no-ops (TODO until
- * those widgets are fleshed out). navigateUp works fully.
+ * to a NavController. setupWithNavController(Toolbar) updates the title and the Up
+ * indicator per destination (Up arrow on sub-pages, none on the start/top-level
+ * destination) and routes the navigation click to navigateUp; setupActionBarWithNavController
+ * drives an ActionBar's title + DISPLAY_HOME_AS_UP the same way. navigateUp works fully.
  *********************************************************************************/
 #include <navigation/navcontroller.h>
 namespace cdroid{

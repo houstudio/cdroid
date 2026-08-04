@@ -5,6 +5,7 @@
 #include <core/uieventsource.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
+#include <widget/windowcallback.h>
 
 #define USE_UIEVENTHANDLER 0
 
@@ -17,7 +18,7 @@ class MenuItem;
 class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
-class Window : public FrameLayout {
+class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
     friend class View;  // View::invalidateInternal/requestLayout → Window::scheduleTraversals
@@ -154,6 +155,9 @@ public:
     // model the full requestWindowFeature()/FEATURE_ACTION_BAR theme machinery
     // (no DecorView); only this id is referenced internally.
     static constexpr int FEATURE_OPTIONS_PANEL = 0;
+    // androidx AppCompatDelegate panel id used by ToolbarActionBar's menu callbacks
+    // (onMenuOpened/onPanelClosed). CDROID has only the one options panel, so this aliases it.
+    static constexpr int FEATURE_SUPPORT_ACTION_BAR = 0;
 
     // Adopts toolbar as this Activity's ActionBar (mirrors framework
     // Activity.setActionBar / androidx AppCompatActivity.setSupportActionBar — CDROID's
@@ -165,11 +169,27 @@ public:
     // Options-menu dispatch chain. Override in subclasses to populate / handle items.
     virtual bool onCreateOptionsMenu(Menu& menu);
     virtual bool onPrepareOptionsMenu(Menu& menu);
+    // Non-home options items. (Home/up is folded to onNavigateUp() upstream, in
+    // onMenuItemSelected — mirrors AOSP Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL.)
     virtual bool onOptionsItemSelected(MenuItem& item);
     virtual bool onContextItemSelected(MenuItem& item);
     virtual bool onNavigateUp();
     virtual void invalidateOptionsMenu();
     virtual MenuInflater* getMenuInflater();
+    // Programmatic options-menu open/close — delegate to the ActionBar (ToolbarActionBar).
+    virtual void openOptionsMenu();
+    virtual void closeOptionsMenu();
+
+    // --- WindowCallback (android.view.Window.Callback, panel/options subset) ---
+    // These wrap the options-menu methods above with the featureId dimension that androidx
+    // ToolbarActionBar dispatches through. CDROID has a single options panel, so only
+    // FEATURE_OPTIONS_PANEL is honored; other feature ids are no-ops.
+    View* onCreatePanelView(int featureId) override;
+    bool onCreatePanelMenu(int featureId, Menu& menu) override;
+    bool onPreparePanel(int featureId, View* view, Menu& menu) override;
+    bool onMenuOpened(int featureId, Menu& menu) override;
+    bool onMenuItemSelected(int featureId, MenuItem& item) override;
+    void onPanelClosed(int featureId, Menu& menu) override;
 
     // Context menu (android.app.Activity context menu dispatch). The long-press ->
     // showContextMenu -> showContextMenuForChild chain terminates here; Window builds and

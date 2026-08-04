@@ -1,156 +1,79 @@
 #include <widget/toolbaractionbar.h>
+#include <widget/toolbarwidgetwrapper.h>
 #include <widget/toolbar.h>
 #include <widget/cdwindow.h>
+#include <widget/actionbar.h>
 #include <widget/R.h>
 #include <menu/menu.h>
-#include <menu/menuitem.h>
 #include <menu/menubuilder.h>
 #include <menu/menupresenter.h>
-#include <menu/actionmenuitem.h>
+#include <menu/menuitem.h>
 #include <view/view.h>
 #include <stdexcept>
+
 namespace cdroid{
 
-ToolbarActionBar::ToolbarActionBar(Toolbar* toolbar, const std::string& title, Window* host)
-  : mToolbar(toolbar), mHost(host), mTitle(title){
-    // Seed remembered title/subtitle and current navigation icon (ToolbarWidgetWrapper ctor).
-    mTitleSet = !mTitle.empty();
-    mSubtitle = mToolbar->getSubtitle();
-    mNavIcon = mToolbar->getNavigationIcon();
-    // Default Up indicator. androidx resolves the theme's homeAsUpIndicator via
-    // TintTypedArray; CDROID's theme-attr resolution for homeAsUpIndicator is not wired
-    // (and the Material asset ic_ab_back_material is absent from the res tree — only the
-    // Holo one ships), so fall back to that built-in asset. detectDisplayOptions() below
-    // overrides this when the Toolbar already carries a navigation icon.
-    mDefaultNavigationIcon = mToolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark");
-    mDisplayOpts = detectDisplayOptions();
-
-    // Navigation icon click -> synthesize an R::id::home item -> host dispatch.
-    mToolbar->setNavigationOnClickListener([this](View&){ fireHomePressed(); });
-    // Action-menu item click -> host onOptionsItemSelected.
-    mToolbar->setOnMenuItemClickListener(
-        [this](MenuItem& item)->bool{ return mHost->onOptionsItemSelected(item); });
-
-    // Apply the default display options so the seeded title shows.
-    applyDisplayOptions(mDisplayOpts);
+ToolbarActionBar::ToolbarActionBar(Toolbar* toolbar, const std::string& title,
+                                   WindowCallback* windowCallback)
+  : mWindowCallback(windowCallback){
+    // Mirrors androidx ToolbarActionBar ctor: wrap the toolbar, install the window callback, wire the
+    // action-menu item click -> host onMenuItemSelected, and seed the window title.
+    mDecorToolbar = new ToolbarWidgetWrapper(toolbar, false);
+    mDecorToolbar->setWindowCallback(windowCallback);
+    toolbar->setOnMenuItemClickListener([this](MenuItem& item)->bool{
+        return mWindowCallback->onMenuItemSelected(Window::FEATURE_OPTIONS_PANEL, item);
+    });
+    mDecorToolbar->setWindowTitle(title);
 }
 
-ToolbarActionBar::~ToolbarActionBar() = default;
+ToolbarActionBar::~ToolbarActionBar(){ delete mDecorToolbar; }
 
-int ToolbarActionBar::detectDisplayOptions(){
-    int opts = DISPLAY_SHOW_TITLE | DISPLAY_SHOW_HOME | DISPLAY_USE_LOGO;
-    if(mToolbar->getNavigationIcon() != nullptr){
-        opts |= DISPLAY_HOME_AS_UP;
-        mDefaultNavigationIcon = mToolbar->getNavigationIcon();
-    }
-    return opts;
-}
-
-void ToolbarActionBar::setDisplayOptions(int options){
-    setDisplayOptions(options, 0xffffffff);
-}
+void ToolbarActionBar::setDisplayOptions(int options){ setDisplayOptions(options, 0xffffffff); }
 
 void ToolbarActionBar::setDisplayOptions(int options, int mask){
-    const int current = mDisplayOpts;
-    applyDisplayOptions((options & mask) | (current & ~mask));
+    const int current = mDecorToolbar->getDisplayOptions();
+    mDecorToolbar->setDisplayOptions((options & mask) | (current & ~mask));
 }
 
-void ToolbarActionBar::applyDisplayOptions(int newOpts){
-    const int oldOpts = mDisplayOpts;
-    const int changed = oldOpts ^ newOpts;
-    mDisplayOpts = newOpts;
-    if(changed == 0) return;
+int ToolbarActionBar::getDisplayOptions() const{ return mDecorToolbar->getDisplayOptions(); }
 
-    if((changed & DISPLAY_HOME_AS_UP) != 0){
-        updateNavigationIcon();
+void ToolbarActionBar::setTitle(const std::string& title){ mDecorToolbar->setTitle(title); }
+void ToolbarActionBar::setSubtitle(const std::string& subtitle){ mDecorToolbar->setSubtitle(subtitle); }
+
+void ToolbarActionBar::show(){ mDecorToolbar->setVisibility(View::VISIBLE); }
+void ToolbarActionBar::hide(){ mDecorToolbar->setVisibility(View::GONE); }
+bool ToolbarActionBar::isShowing() const{ return mDecorToolbar->getVisibility() == View::VISIBLE; }
+int  ToolbarActionBar::getHeight() const{ return mDecorToolbar->getHeight(); }
+Context* ToolbarActionBar::getThemedContext(){ return mDecorToolbar->getContext(); }
+
+void ToolbarActionBar::setCustomView(View* view){ mDecorToolbar->setCustomView(view); }
+void ToolbarActionBar::setIcon(Drawable* icon){ mDecorToolbar->setIcon(icon); }
+void ToolbarActionBar::setLogo(Drawable* logo){ mDecorToolbar->setLogo(logo); }
+void ToolbarActionBar::setHomeAsUpIndicator(Drawable* indicator){
+    // androidx setHomeAsUpIndicator -> DecorToolbar.setNavigationIcon.
+    mDecorToolbar->setNavigationIcon(indicator);
+}
+void ToolbarActionBar::setHomeActionContentDescription(const std::string& description){
+    // androidx setHomeActionContentDescription -> DecorToolbar.setNavigationContentDescription.
+    mDecorToolbar->setNavigationContentDescription(description);
+}
+void ToolbarActionBar::setHomeButtonEnabled(bool enabled){
+    // If the nav button on a Toolbar is present, it's enabled. No-op (matches androidx).
+    mDecorToolbar->setHomeButtonEnabled(enabled);
+}
+
+bool ToolbarActionBar::openOptionsMenu(){ return mDecorToolbar->showOverflowMenu(); }
+bool ToolbarActionBar::closeOptionsMenu(){ return mDecorToolbar->hideOverflowMenu(); }
+
+int  ToolbarActionBar::getNavigationMode() const{ return mDecorToolbar->getNavigationMode(); }
+void ToolbarActionBar::setNavigationMode(int mode){
+    if(mode == ActionBar::NAVIGATION_MODE_TABS){
+        throw std::runtime_error("Tabs are not supported in toolbar action bars");
     }
-    if((changed & AFFECTS_LOGO_MASK) != 0){
-        updateToolbarLogo();
-    }
-    if((changed & DISPLAY_SHOW_TITLE) != 0){
-        if((newOpts & DISPLAY_SHOW_TITLE) != 0){
-            mToolbar->setTitle(mTitle);
-            mToolbar->setSubtitle(mSubtitle);
-        }else{
-            mToolbar->setTitle(std::string());
-            mToolbar->setSubtitle(std::string());
-        }
-    }
-    if((changed & DISPLAY_SHOW_CUSTOM) != 0 && mCustomView != nullptr){
-        if((newOpts & DISPLAY_SHOW_CUSTOM) != 0) mToolbar->addView(mCustomView);
-        else mToolbar->removeView(mCustomView);
-    }
+    mDecorToolbar->setNavigationMode(mode);
 }
-
-int ToolbarActionBar::getDisplayOptions() const{
-    return mDisplayOpts;
-}
-
-void ToolbarActionBar::updateNavigationIcon(){
-    if((mDisplayOpts & DISPLAY_HOME_AS_UP) != 0){
-        mToolbar->setNavigationIcon(mNavIcon != nullptr ? mNavIcon : mDefaultNavigationIcon);
-    }else{
-        mToolbar->setNavigationIcon(nullptr);
-    }
-}
-
-void ToolbarActionBar::updateToolbarLogo(){
-    Drawable* logo = nullptr;
-    if((mDisplayOpts & DISPLAY_SHOW_HOME) != 0){
-        if((mDisplayOpts & DISPLAY_USE_LOGO) != 0) logo = mLogo != nullptr ? mLogo : mIcon;
-        else logo = mIcon;
-    }
-    mToolbar->setLogo(logo);
-}
-
-void ToolbarActionBar::setTitle(const std::string& title){
-    mTitleSet = true;
-    mTitle = title;
-    if((mDisplayOpts & DISPLAY_SHOW_TITLE) != 0) mToolbar->setTitle(mTitle);
-}
-
-void ToolbarActionBar::setSubtitle(const std::string& subtitle){
-    mSubtitle = subtitle;
-    if((mDisplayOpts & DISPLAY_SHOW_TITLE) != 0) mToolbar->setSubtitle(mSubtitle);
-}
-
-void ToolbarActionBar::setCustomView(View* view){
-    // Visibility of the custom view is governed by DISPLAY_SHOW_CUSTOM, applied when that
-    // bit toggles; here we just swap the remembered view (adding/removing as appropriate).
-    if(mCustomView != nullptr && (mDisplayOpts & DISPLAY_SHOW_CUSTOM) != 0){
-        mToolbar->removeView(mCustomView);
-    }
-    mCustomView = view;
-    if(view != nullptr && (mDisplayOpts & DISPLAY_SHOW_CUSTOM) != 0){
-        mToolbar->addView(view);
-    }
-}
-
-void ToolbarActionBar::setIcon(Drawable* icon){ mIcon = icon; updateToolbarLogo(); }
-void ToolbarActionBar::setLogo(Drawable* logo){ mLogo = logo; updateToolbarLogo(); }
-
-void ToolbarActionBar::setHomeButtonEnabled(bool /*enabled*/){
-    // If the nav button on a Toolbar is present, it's enabled. No-op.
-}
-
-void ToolbarActionBar::show(){
-    mToolbar->setVisibility(View::VISIBLE);
-}
-
-void ToolbarActionBar::hide(){
-    mToolbar->setVisibility(View::GONE);
-}
-
-bool ToolbarActionBar::isShowing() const{
-    return mToolbar->getVisibility() == View::VISIBLE;
-}
-
-int  ToolbarActionBar::getHeight() const{
-    return mToolbar->getHeight();
-}
-
-Context* ToolbarActionBar::getThemedContext(){
-    return mToolbar->getContext();
+void* ToolbarActionBar::newTab(){
+    throw std::runtime_error("Tabs are not supported in toolbar action bars");
 }
 
 void ToolbarActionBar::addOnMenuVisibilityListener(const OnMenuVisibilityListener& listener){
@@ -158,10 +81,9 @@ void ToolbarActionBar::addOnMenuVisibilityListener(const OnMenuVisibilityListene
 }
 
 void ToolbarActionBar::removeOnMenuVisibilityListener(const OnMenuVisibilityListener& listener){
-    // CDROID listeners are structs holding a std::function; compare by callable target
-    // (works for function pointers / stateful targets; stateless lambdas share a null
-    // target, so removal among several identical lambdas is best-effort — a known limit
-    // of the std::function callback model).
+    // CDROID listeners are structs holding a std::function; compare by callable target (works for
+    // function pointers / stateful targets; stateless lambdas share a null target, so removal among
+    // several identical lambdas is best-effort — a known limit of the std::function callback model).
     auto target = listener.onMenuVisibilityChanged.target<void(bool)>();
     for(auto it = mMenuVisibilityListeners.begin(); it != mMenuVisibilityListeners.end(); ++it){
         if(it->onMenuVisibilityChanged.target<void(bool)>() == target){
@@ -179,68 +101,61 @@ void ToolbarActionBar::dispatchMenuVisibilityChanged(bool isVisible){
     }
 }
 
-Menu* ToolbarActionBar::getMenu(){
-    if(!mMenuCallbackSet){
-        MenuPresenter::Callback pcb;
-        pcb.onCloseMenu = [this](MenuBuilder&, bool){
-            mToolbar->dismisssPopupMenus();
-            dispatchMenuVisibilityChanged(false);
-        };
-        pcb.onOpenSubMenu = [](MenuBuilder&)->bool{ return false; };
-        MenuBuilder::Callback mcb;
-        mcb.onMenuItemSelected = [](MenuBuilder&, MenuItem&)->bool{ return false; };
-        mcb.onMenuModeChange = [this](MenuBuilder&){
-            if(mToolbar->isOverflowMenuShowing()){
-                dispatchMenuVisibilityChanged(false);
-            }else{
-                dispatchMenuVisibilityChanged(true);
-            }
-        };
-        mToolbar->setMenuCallbacks(pcb, mcb);
-        mMenuCallbackSet = true;
-    }
-    return mToolbar->getMenu();
-}
-
-void ToolbarActionBar::populateOptionsMenu(){
-    Menu* menu = getMenu();
-    menu->clear();
-    // Mirrors androidx: if onCreatePanelMenu or onPreparePanel declines, drop the menu.
-    if(!mHost->onCreateOptionsMenu(*menu)){
-        menu->clear();
-    }else if(!mHost->onPrepareOptionsMenu(*menu)){
-        menu->clear();
-    }
-    mMenuPrepared = true;
-}
-
 void ToolbarActionBar::invalidateOptionsMenu(){
-    // androidx posts a coalescing mMenuInvalidator; CDROID simplifies to a synchronous
-    // rebuild (no PhoneWindow panel race to guard against).
+    // androidx posts a coalescing mMenuInvalidator; CDROID rebuilds synchronously (plan 接缝4) — there
+    // is no PhoneWindow panel race to guard against.
     populateOptionsMenu();
 }
 
-void ToolbarActionBar::fireHomePressed(){
-    // Mirror androidx ToolbarWidgetWrapper: synthesize an R::id::home ActionMenuItem and
-    // dispatch it. Activity::onOptionsItemSelected folds home -> onNavigateUp when
-    // DISPLAY_HOME_AS_UP is set.
-    if(!mMenuPrepared) return;
-    ActionMenuItem home(mToolbar->getContext(), 0, R::id::home, 0, 0, mTitle);
-    mHost->onOptionsItemSelected(home);
-}
-
-int ToolbarActionBar::getNavigationMode() const{
-    return NAVIGATION_MODE_STANDARD;
-}
-
-void ToolbarActionBar::setNavigationMode(int mode){
-    if(mode == NAVIGATION_MODE_TABS){
-        throw std::runtime_error("Tabs are not supported in toolbar action bars");
+void ToolbarActionBar::populateOptionsMenu(){
+    // Mirrors androidx ToolbarActionBar.populateOptionsMenu: freeze item-change dispatching, rebuild
+    // the menu via the host's panel callbacks, then resume dispatching.
+    Menu* menu = getMenu();
+    MenuBuilder* mb = dynamic_cast<MenuBuilder*>(menu);
+    if(mb) mb->stopDispatchingItemsChanged();
+    menu->clear();
+    if(!mWindowCallback->onCreatePanelMenu(Window::FEATURE_OPTIONS_PANEL, *menu) ||
+       !mWindowCallback->onPreparePanel(Window::FEATURE_OPTIONS_PANEL, nullptr, *menu)){
+        menu->clear();
+    }
+    if(mb) mb->startDispatchingItemsChanged();
+    // CDROID seam (接缝5): no PhoneWindow/AppCompatDelegate panel driver to call ToolbarMenuCallback
+    // .onPreparePanel -> setMenuPrepared(); drive it here so the home-gate flips after the first menu
+    // build (Window::setActionBar calls invalidateOptionsMenu -> this).
+    if(!mToolbarMenuPrepared){
+        mDecorToolbar->setMenuPrepared();
+        mToolbarMenuPrepared = true;
     }
 }
 
-void* ToolbarActionBar::newTab(){
-    throw std::runtime_error("Tabs are not supported in toolbar action bars");
+Menu* ToolbarActionBar::getMenu(){
+    if(!mMenuCallbackSet){
+        // androidx ActionMenuPresenterCallback / MenuBuilderCallback, ported as struct lambdas.
+        MenuPresenter::Callback pcb;
+        pcb.onCloseMenu = [this](MenuBuilder& menu, bool){
+            if(mClosingActionMenu) return;
+            mClosingActionMenu = true;
+            mDecorToolbar->dismissPopupMenus();
+            mWindowCallback->onPanelClosed(Window::FEATURE_SUPPORT_ACTION_BAR, menu);
+            mClosingActionMenu = false;
+        };
+        pcb.onOpenSubMenu = [this](MenuBuilder& subMenu)->bool{
+            mWindowCallback->onMenuOpened(Window::FEATURE_SUPPORT_ACTION_BAR, subMenu);
+            return true;
+        };
+        MenuBuilder::Callback mcb;
+        mcb.onMenuItemSelected = [](MenuBuilder&, MenuItem&)->bool{ return false; };
+        mcb.onMenuModeChange = [this](MenuBuilder& menu){
+            if(mDecorToolbar->isOverflowMenuShowing()){
+                mWindowCallback->onPanelClosed(Window::FEATURE_SUPPORT_ACTION_BAR, menu);
+            }else if(mWindowCallback->onPreparePanel(Window::FEATURE_OPTIONS_PANEL, nullptr, menu)){
+                mWindowCallback->onMenuOpened(Window::FEATURE_SUPPORT_ACTION_BAR, menu);
+            }
+        };
+        mDecorToolbar->setMenuCallbacks(pcb, mcb);
+        mMenuCallbackSet = true;
+    }
+    return mDecorToolbar->getMenu();
 }
 
 }//namespace

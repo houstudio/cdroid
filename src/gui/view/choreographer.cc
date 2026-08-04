@@ -234,14 +234,15 @@ void Choreographer::doFrame(nsecs_t frameTimeNanos,int frame){
 }
 
 void Choreographer::doCallbacks(int callbackType, long frameTimeNanos){
-    CallbackRecord* callbacks;
+    CallbackRecord* callbacks = nullptr;
     /*synchronized (mLock)*/
     {
         // We use "now" to determine when callbacks become due because it's possible
         // for earlier processing phases in a frame to post callbacks that should run
         // in a following phase, such as an input event that causes an animation to start.
         const nsecs_t now = SystemClock::uptimeNanos();
-        callbacks = mCallbackQueues[callbackType]->extractDueCallbacksLocked(now/SystemClock::NANOS_PER_MS);
+        auto cbtQueue = mCallbackQueues[callbackType];
+        callbacks = cbtQueue ? cbtQueue->extractDueCallbacksLocked(now/SystemClock::NANOS_PER_MS):nullptr;
         if (callbacks == nullptr) {
             return;
         }

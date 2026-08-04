@@ -72,6 +72,18 @@ public:
     virtual void setDisplayShowCustomEnabled(bool showCustom);
     virtual void setDefaultDisplayHomeAsUpEnabled(bool enabled); // default no-op
 
+    // android.app.ActionBar.setHomeAsUpIndicator: the Up indicator drawable. Default no-op;
+    // ToolbarActionBar overrides it to drive the Toolbar navigation icon.
+    virtual void setHomeAsUpIndicator(Drawable* indicator) {}
+
+    // android.app.ActionBar.setHomeActionContentDescription. Default no-op; ToolbarActionBar overrides.
+    virtual void setHomeActionContentDescription(const std::string& description) {}
+
+    // Programmatic options-menu open/close (android.app.Activity.open/closeOptionsMenu).
+    // Default no-op; ToolbarActionBar overrides to drive the toolbar overflow menu.
+    virtual bool openOptionsMenu() { return false; }
+    virtual bool closeOptionsMenu() { return false; }
+
     // --- deprecated Tab/List navigation (stubbed) ---
     virtual int  getNavigationMode() const { return NAVIGATION_MODE_STANDARD; }
     virtual void setNavigationMode(int mode); // deprecated; throws on TABS/LIST
