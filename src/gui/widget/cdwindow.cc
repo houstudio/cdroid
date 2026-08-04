@@ -150,13 +150,10 @@ bool Window::onPrepareOptionsMenu(Menu& /*menu*/){
     return true;
 }
 
-bool Window::onOptionsItemSelected(MenuItem& item){
-    // Central home -> up dispatch. AOSP does this in Activity.onMenuItemSelected for
-    // FEATURE_OPTIONS_PANEL; here it is folded into the options-item handler.
-    if(item.getItemId() == R::id::home && mActionBar &&
-       (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
-        return onNavigateUp();
-    }
+bool Window::onOptionsItemSelected(MenuItem& /*item*/){
+    // Non-home options items reach FragmentActivity's override (which dispatches to Fragments).
+    // Home/up is folded to onNavigateUp() upstream in onMenuItemSelected (mirrors AOSP
+    // Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL), so it never arrives here.
     return false;
 }
 
@@ -179,6 +176,46 @@ void Window::invalidateOptionsMenu(){
 MenuInflater* Window::getMenuInflater(){
     if(!mMenuInflater) mMenuInflater = new MenuInflater(getContext());
     return mMenuInflater;
+}
+
+void Window::openOptionsMenu(){
+    if(mActionBar) mActionBar->openOptionsMenu();
+}
+
+void Window::closeOptionsMenu(){
+    if(mActionBar) mActionBar->closeOptionsMenu();
+}
+
+// --- WindowCallback (android.view.Window.Callback, panel/options subset) ---
+// CDROID honours a single options panel (FEATURE_OPTIONS_PANEL); other feature ids are no-ops.
+View* Window::onCreatePanelView(int /*featureId*/){
+    return nullptr; // no custom panel view -> standard options menu
+}
+
+bool Window::onCreatePanelMenu(int featureId, Menu& menu){
+    return (featureId == FEATURE_OPTIONS_PANEL) ? onCreateOptionsMenu(menu) : false;
+}
+
+bool Window::onPreparePanel(int featureId, View* /*view*/, Menu& menu){
+    return (featureId == FEATURE_OPTIONS_PANEL) ? onPrepareOptionsMenu(menu) : true;
+}
+
+bool Window::onMenuOpened(int /*featureId*/, Menu& /*menu*/){
+    return true;
+}
+
+bool Window::onMenuItemSelected(int featureId, MenuItem& item){
+    // Home -> Up fold. AOSP does this in Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL;
+    // CDROID folds it here (the Window.Callback entry point ToolbarActionBar dispatches through).
+    if(featureId == FEATURE_OPTIONS_PANEL && item.getItemId() == R::id::home && mActionBar &&
+       (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
+        return onNavigateUp();
+    }
+    return onOptionsItemSelected(item);
+}
+
+void Window::onPanelClosed(int /*featureId*/, Menu& /*menu*/){
+    // No PhoneWindow panel state machine beyond the toolbar popup; nothing to do here.
 }
 
 // =====================================================================================

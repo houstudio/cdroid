@@ -8,19 +8,19 @@ namespace cdroid{
 
 class Menu;
 class MenuItem;
-class Window;
+class MenuBuilder;
+class WindowCallback;
+class DecorToolbar;
 
-// Bridges a Toolbar so it behaves as its host Activity's ActionBar. Single-layer CDROID
-// port that folds androidx ToolbarActionBar + ToolbarWidgetWrapper into one class:
-// CDROID has no Window.Callback abstraction and ships no WindowDecorActionBar, so the
-// DecorToolbar indirection (a single implementation) is inlined here. The host Activity
-// plays the Window.Callback role — menu dispatch routes directly to its
-// onCreateOptionsMenu / onPrepareOptionsMenu / onOptionsItemSelected.
+// Port of androidx.appcompat.app.ToolbarActionBar — bridges a Toolbar so it behaves as its host
+// Activity's ActionBar. Holds a DecorToolbar (a ToolbarWidgetWrapper) and delegates every setter to
+// it, exactly as upstream holds `DecorToolbar mDecorToolbar`. Menu/home dispatch routes through the
+// host (a WindowCallback = the Window/Activity) via the panel methods onCreatePanelMenu /
+// onPreparePanel / onMenuItemSelected / onMenuOpened / onPanelClosed.
 class ToolbarActionBar : public ActionBar{
 public:
-    // host is the owning Activity; title seeds the toolbar title (mirrors androidx
-    // passing Activity.getTitle() into the ToolbarActionBar ctor).
-    ToolbarActionBar(Toolbar* toolbar, const std::string& title, Window* host);
+    // windowCallback is the owning Activity (CDROID's Window plays androidx's Window.Callback role).
+    ToolbarActionBar(Toolbar* toolbar, const std::string& title, WindowCallback* windowCallback);
     ~ToolbarActionBar() override;
 
     void setDisplayOptions(int options) override;
@@ -37,9 +37,12 @@ public:
     void setIcon(Drawable* icon) override;
     void setLogo(Drawable* logo) override;
     void setHomeAsUpIndicator(Drawable* indicator) override;
+    void setHomeActionContentDescription(const std::string& description) override;
     void setHomeButtonEnabled(bool enabled) override; // no-op, matches androidx
     void addOnMenuVisibilityListener(const OnMenuVisibilityListener& listener) override;
     void removeOnMenuVisibilityListener(const OnMenuVisibilityListener& listener) override;
+    bool openOptionsMenu() override;
+    bool closeOptionsMenu() override;
     void invalidateOptionsMenu() override;
 
     // deprecated Tab/List — throw, matching androidx ToolbarActionBar.
@@ -47,34 +50,18 @@ public:
     void setNavigationMode(int mode) override;
     void* newTab() override;
 
-    // Rebuilds the toolbar menu from the host's onCreateOptionsMenu/onPrepareOptionsMenu.
+    // Rebuilds the toolbar menu from the host's onCreatePanelMenu/onPreparePanel.
     void populateOptionsMenu();
 private:
-    // AFFECTS_LOGO_MASK from androidx ToolbarWidgetWrapper.
-    static constexpr int AFFECTS_LOGO_MASK = DISPLAY_USE_LOGO | DISPLAY_SHOW_HOME;
-
-    Menu* getMenu();                       // installs menu callbacks once, returns toolbar menu
-    void applyDisplayOptions(int newOpts); // bit -> visual translation (inlined wrapper logic)
-    void updateNavigationIcon();
-    void updateToolbarLogo();
-    void fireHomePressed();                // synthesize R::id::home item -> host onOptionsItemSelected
+    Menu* getMenu();                       // installs menu callbacks once, returns the menu
     void dispatchMenuVisibilityChanged(bool isVisible);
-    int  detectDisplayOptions();
 
-    Toolbar* mToolbar;
-    Window* mHost;                         // owning Activity (Activity == typedef Window); not owned
-    std::string mTitle;
-    std::string mSubtitle;
-    bool mTitleSet = false;
-    int mDisplayOpts = 0;
-    bool mMenuPrepared = false;
+    DecorToolbar* mDecorToolbar;           // owned (a ToolbarWidgetWrapper)
+    WindowCallback* mWindowCallback;       // the host Activity; not owned
     bool mMenuCallbackSet = false;
     bool mLastMenuVisibility = false;
-    Drawable* mNavIcon = nullptr;            // setHomeAsUpIndicator; borrowed
-    Drawable* mDefaultNavigationIcon = nullptr; // theme homeAsUpIndicator; borrowed
-    Drawable* mIcon = nullptr;               // borrowed
-    Drawable* mLogo = nullptr;               // borrowed
-    View* mCustomView = nullptr;             // borrowed
+    bool mToolbarMenuPrepared = false;
+    bool mClosingActionMenu = false;
     std::vector<OnMenuVisibilityListener> mMenuVisibilityListeners;
 };
 

@@ -22,8 +22,8 @@
 namespace cdroid{
 class Chronometer:public TextView{
 public:
-    DECLARE_UIEVENT(void,OnChronometerTickListener,Chronometer&);
-    DECLARE_UIEVENT(const std::string,Formatter,int64_t);
+    DECLARE_UIEVENT(void,OnChronometerTickListener,Chronometer& chronometer);
+    DECLARE_UIEVENT(const std::string,Formatter,int64_t millis);
 private:
     int64_t mBase;
     int64_t mNow; // the currently displayed time
