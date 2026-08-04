@@ -908,6 +908,19 @@ void Window::close(){
     Handler* h = new Handler();
     h->post([h, self, info](){
         self->onDestroy();
+        // Purge any Choreographer traversal callback that survived teardown. The Choreographer holds
+        // a CALLBACK_TRAVERSAL lambda capturing `self`; if it fired after `delete self` it would call
+        // doTraversal() on a freed Window — the virtual isAttachedToWindow() then reads a zeroed
+        // vtable and jumps to a garbage address (0x0). removeWindow() below detaches the view tree,
+        // and dispatchDetachedFromWindow -> onWindowVisibilityChanged(GONE) can re-trigger
+        // scheduleTraversals(), re-posting that lambda AFTER any removal done at the start of close()
+        // — so the removal must happen here, at the last safe point before `delete self`, by which
+        // time removeWindow has fully run. removeWindow purges the UIEventHandler's messages but NOT
+        // Choreographer callbacks (separate queue). std::function== can't match a capturing lambda,
+        // so removal is by token=self (only this window's CALLBACK_TRAVERSAL record(s)).
+        Choreographer::getInstance().removeCallbacks(
+            Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
+        self->mTraversalScheduled = false;
         delete info;
         delete self;
         delete h;
@@ -921,7 +934,7 @@ void Window::scheduleTraversals(){
     Choreographer::getInstance().postCallback(
         Choreographer::CALLBACK_TRAVERSAL,
         [this](){ doTraversal(); },
-        nullptr);
+        this);  // token=this so close() can purge the pending callback by window identity
 }
 
 void Window::doTraversal(){
