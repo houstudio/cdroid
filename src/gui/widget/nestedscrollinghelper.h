@@ -24,7 +24,8 @@ namespace cdroid{
 class NestedScrollingParentHelper {
 private:
     ViewGroup* mViewGroup;
-    int mNestedScrollAxes;
+    int mNestedScrollAxesTouch;
+    int mNestedScrollAxesNonTouch;
 public:
     NestedScrollingParentHelper(ViewGroup* viewGroup); 
     void onNestedScrollAccepted(View* child,View* target,int axes);
@@ -60,7 +61,7 @@ public:
     void stopNestedScroll(int type);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow);
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow,int type);
-    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow,int type,int*cvomsumed);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed,int dxUnconsumed, int dyUnconsumed, int* offsetInWindow,int type,int*consumed);
 
     bool dispatchNestedPreScroll(int dx, int dy, int* consumed ,int* offsetInWindow);
     bool dispatchNestedPreScroll(int dx, int dy, int* consumed ,int* offsetInWindow,int type);

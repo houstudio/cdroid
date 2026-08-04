@@ -17,6 +17,7 @@ list(APPEND WIDGET_SOURCES
 list(APPEND WIDGET_SOURCES
     #widget/autocompletetextview.cc
     widget/nestedscrollview.cc
+    widget/differentialmotionflingcontroller.cc
     widget/scrollview.cc
     widget/horizontalscrollview.cc
     widget/progressbar.cc

@@ -20,10 +20,12 @@
 #include <widget/framelayout.h>
 #include <widget/edgeeffect.h>
 #include <widget/overscroller.h>
+#include <widget/differentialmotionflingcontroller.h>
 
 namespace cdroid{
 class NestedScrollingParentHelper;
 class NestedScrollingChildHelper;
+class HapticScrollFeedbackProvider;
 
 class NestedScrollView:public FrameLayout{
 public:	
@@ -36,7 +38,9 @@ private:
     static constexpr float INFLEXION = 0.35f;
     static constexpr float DECELERATION_RATE = 2.3582018154259448f;//(float) (Math.log(0.78) / Math.log(0.9));
     static constexpr float FLING_DESTRENTCH_FACTOR = 4.f;
+    static constexpr int DEFAULT_SMOOTH_SCROLL_DURATION = 250;
 private:
+    class SavedState;
     int64_t mLastScroll;
  
     Rect mTempRect;
@@ -66,6 +70,12 @@ private:
     NestedScrollingChildHelper* mChildHelper;
     float mVerticalScrollFactor;
     OnScrollChangeListener mOnScrollChangeListener;
+    SavedState* mSavedState = nullptr;
+    class DifferentialMotionFlingTargetImpl;
+    friend class DifferentialMotionFlingTargetImpl;
+    DifferentialMotionFlingTargetImpl* mDifferentialMotionFlingTarget;
+    DifferentialMotionFlingController* mDifferentialMotionFlingController;
+    HapticScrollFeedbackProvider* mScrollFeedbackProvider;
 private:
     void initScrollView(const AttributeSet*attrs);
     bool canScroll();
@@ -92,6 +102,19 @@ private:
     void endDrag();
     void ensureGlows();
     static int clamp(int n, int my, int child);
+    using View::scrollBy;
+    int scrollBy(int verticalScrollDistance, int x, int touchType,
+            bool isSourceMouseOrKeyboard);
+    int scrollBy(int verticalScrollDistance, int verticalScrollAxis, MotionEvent* ev,
+            int x, int touchType, bool isSourceMouseOrKeyboard);
+    int releaseVerticalGlow(int deltaY, float x);
+    void runAnimatedScroll(bool participateInNestedScrolling);
+    void initializeTouchDrag(int lastMotionY, int activePointerId);
+    void endTouchDrag();
+    bool canOverScroll();
+    HapticScrollFeedbackProvider* getScrollFeedbackProvider();
+    void smoothScrollBy(int dx, int dy, int scrollDurationMs, bool withNestedScrolling);
+    void smoothScrollTo(int x, int y, int scrollDurationMs, bool withNestedScrolling);
 protected:
     float getTopFadingEdgeStrength()override;
     float getBottomFadingEdgeStrength()override;
@@ -105,8 +128,13 @@ protected:
     void measureChildWithMargins(View* child, int parentWidthMeasureSpec, int widthUsed,
             int parentHeightMeasureSpec, int heightUsed)override;
     int computeScrollDeltaToGetChildRectOnScreen(Rect rect);
+    void onNestedScrollInternal(int dyUnconsumed, int type, int* consumed);
+    int consumeFlingInVerticalStretch(int unconsumedY);
+    void abortAnimatedScroll();
     void onLayout(bool changed, int l, int t, int w, int h)override;
     void onSizeChanged(int w, int h, int oldw, int oldh)override;
+    Parcelable* onSaveInstanceState()override;
+    void onRestoreInstanceState(Parcelable& state)override;
 public:
     NestedScrollView(int w,int h);
     NestedScrollView(Context* context,const AttributeSet&attrs);
@@ -116,6 +144,8 @@ public:
     bool hasNestedScrollingParent(int type)const;
     bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
         int dyUnconsumed, int offsetInWindow[], int type);
+    bool dispatchNestedScroll(int dxConsumed, int dyConsumed, int dxUnconsumed,
+        int dyUnconsumed, int offsetInWindow[], int type, int consumed[]);
     bool dispatchNestedPreScroll(int dx, int dy, int consumed[], int offsetInWindow[],int type);
     void setNestedScrollingEnabled(bool enabled);
     bool isNestedScrollingEnabled()const;
@@ -131,6 +161,7 @@ public:
     void onNestedScrollAccepted(View* child,View* target, int axes,int type)override;
     void onStopNestedScroll(View* target, int type)override;
     void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type)override;
+    void onNestedScroll(View* target, int dxConsumed, int dyConsumed, int dxUnconsumed, int dyUnconsumed, int type, int* consumed)override;
     void onNestedPreScroll(View* target, int dx, int dy,int consumed[], int type)override;
     bool onStartNestedScroll(View* child, View* target, int nestedScrollAxes)override;
     void onNestedScrollAccepted(View* child, View* target, int nestedScrollAxes)override;
@@ -161,7 +192,9 @@ public:
     bool fullScroll(int direction);
     bool arrowScroll(int direction);
     void smoothScrollBy(int dx, int dy);
+    void smoothScrollBy(int dx, int dy, int scrollDurationMs);
     void smoothScrollTo(int x, int y);
+    void smoothScrollTo(int x, int y, int scrollDurationMs);
     int computeVerticalScrollRange()override;
 
     int computeVerticalScrollOffset()override;
@@ -178,6 +211,23 @@ public:
     void fling(int velocityY);
     void scrollTo(int x, int y)override;
     void draw(Canvas& canvas)override;
+};
+
+class NestedScrollView::SavedState:public BaseSavedState{
+public:
+    int scrollPosition;
+public:
+    SavedState(Parcelable* superState):BaseSavedState(superState),scrollPosition(0){
+    }
+
+    SavedState(Parcel& source):BaseSavedState(source){
+        scrollPosition = source.readInt();
+    }
+
+    void writeToParcel(Parcel& dest, int flags) {
+        BaseSavedState::writeToParcel(dest, flags);
+        dest.writeInt(scrollPosition);
+    }
 };
 }/*endof namespace*/
 #endif//__NESTED_SCROLLVIEW_H__

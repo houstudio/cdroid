@@ -41,7 +41,6 @@ ScrollView::ScrollView(Context*context,const AttributeSet&atts)
 
 ScrollView::~ScrollView(){
     recycleVelocityTracker();
-    delete mSavedState;
     delete mHapticScrollFeedbackProvider;
     delete mScroller;
     delete mEdgeGlowTop;
@@ -246,9 +245,6 @@ bool ScrollView::executeKeyEvent(KeyEvent& event) {
                 handled = fullScroll(View::FOCUS_DOWN);
             }
             break;
-        case KeyEvent::KEYCODE_SPACE:
-            pageScroll(event.isShiftPressed() ? View::FOCUS_UP : View::FOCUS_DOWN);
-            break;
         case KeyEvent::KEYCODE_MOVE_HOME:
             handled = fullScroll(View::FOCUS_UP);
             break;
@@ -260,6 +256,9 @@ bool ScrollView::executeKeyEvent(KeyEvent& event) {
             break;
         case KeyEvent::KEYCODE_PAGE_DOWN:
             handled = pageScroll(View::FOCUS_DOWN);
+            break;
+        case KeyEvent::KEYCODE_SPACE:
+            handled = pageScroll(event.isShiftPressed() ? View::FOCUS_UP : View::FOCUS_DOWN);
             break;
         }
     }
@@ -449,9 +448,11 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
         if (getChildCount() == 0) {
             return false;
         }
-        if ((mIsBeingDragged = !mScroller->isFinished())) {
+        if (!mScroller->isFinished()) {
             ViewGroup* parent = getParent();
-            if (parent) parent->requestDisallowInterceptTouchEvent(true);
+            if (parent) {
+                parent->requestDisallowInterceptTouchEvent(true);
+            }
         }
 
         // If being flinged and user touches, stop the fling. isFinished
@@ -522,11 +523,7 @@ bool ScrollView::onTouchEvent(MotionEvent& ev) {
             }
             // Calling overScrollBy will call onOverScrolled, which
             // calls onScrollChanged if applicable.
-            if (overScrollBy(0, deltaY, 0, mScrollY, 0, range, 0, mOverscrollDistance, true)
-                    && !hasNestedScrollingParent()) {
-                // Break our velocity if we hit a scroll barrier.
-                mVelocityTracker->clear();
-            }
+            overScrollBy(0, deltaY, 0, mScrollY, 0, range, 0, mOverscrollDistance, true);
 
             const int scrolledDeltaY = mScrollY - oldY;
             const int unconsumedY = deltaY - scrolledDeltaY;
@@ -982,7 +979,7 @@ void ScrollView::smoothScrollBy(int dx, int dy) {
         const int scrollY = mScrollY;
         dy = std::max(0, std::min(scrollY + dy, maxY)) - scrollY;
 
-        mScroller->startScroll(mScrollX, scrollY, 0, dy,mScrollDuration);
+        mScroller->startScroll(mScrollX, scrollY, 0, dy, mScrollDuration);
         postInvalidateOnAnimation();
     } else {
         if (!mScroller->isFinished()) {
@@ -1101,8 +1098,8 @@ void ScrollView::setOverScrollMode(int mode){
             mEdgeGlowBottom = new EdgeEffect(context);
         }
     } else {
-        mEdgeGlowTop = nullptr;
-        mEdgeGlowBottom = nullptr;
+        delete mEdgeGlowTop; mEdgeGlowTop = nullptr;
+        delete mEdgeGlowBottom; mEdgeGlowBottom = nullptr;
     }
     FrameLayout::setOverScrollMode(mode);
 }
