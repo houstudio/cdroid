@@ -183,16 +183,22 @@ void TransitionEffect::onCommit(ViewGroup* container){
             // — by then completeEffect has run synchronously and the FSM has walked the fragment to
             // its final state (INITIALIZING for a hard remove), so reclaimFragment's mState guard is
             // observable.
+            Fragment* fragment = mOperation->mFragment;
             auto hook = mOperation->mReclaimHook;
-            auto scheduleDelete = [cont, view, fired, hook](){
+            std::weak_ptr<bool> fragAlive = fragment ? std::weak_ptr<bool>(fragment->mAliveFlag)
+                                                     : std::weak_ptr<bool>();
+            auto scheduleDelete = [cont, view, fragment, fragAlive, fired, hook](){
                 if(*fired) return; *fired = true;
-                cont->post([cont, view, hook]{
+                cont->post([cont, view, fragment, fragAlive, hook]{
                     // Detach from the parent BEFORE delete: ~View only does mParent->removeViewInternal
                     // (mChildren), and an addDisappearingView'd view has mParent==null while still
                     // listed in mDisappearingChildren — so ~View wouldn't pull it out, leaving the
                     // parent drawing a freed view. Remove explicitly so neither list retains it.
-                    if(view->getParent()) view->getParent()->removeView(view);
-                    delete view;
+                    if(fragAlive.lock()){
+                        if(fragment){ fragment->performDestroyView(); fragment->mView = nullptr; }
+                        if(view->getParent()) view->getParent()->removeView(view);
+                        delete view;
+                    }
                     if(hook) hook();
                 });
             };

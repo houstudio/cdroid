@@ -81,6 +81,10 @@ public:
 
     // --- identity / state (public for same-package access, as in androidx) ---
     int mState = INITIALIZING;
+    // Alive-flag: deferred-cleanup posts (TransitionEffect clone-end performDestroyView) capture a
+    // weak_ptr to this; ~Fragment resets it, so a late post (e.g. after destroy-sweep reclaimFragment
+    // deleted this Fragment) becomes a no-op instead of UAF.
+    std::shared_ptr<bool> mAliveFlag = std::make_shared<bool>();
     std::string mWho;                 // unique id (assigned in ctor)
     std::string mClassName;           // class name (stamped by FragmentFactory.instantiate; androidx uses Fragment.getClass())
     cdroid::Bundle* mArguments = nullptr;
@@ -129,10 +133,10 @@ public:
     Transition* mReturnTransition = nullptr;       // pop exit
     Transition* mSharedElementEnterTransition = nullptr;
     Transition* mSharedElementReturnTransition = nullptr;
-    void setEnterTransition(Transition* t){ mEnterTransition = t; }
-    void setExitTransition(Transition* t){ mExitTransition = t; }
-    void setReenterTransition(Transition* t){ mReenterTransition = t; }
-    void setReturnTransition(Transition* t){ mReturnTransition = t; }
+    void setEnterTransition(Transition* t);
+    void setExitTransition(Transition* t);
+    void setReenterTransition(Transition* t);
+    void setReturnTransition(Transition* t);
     Transition* getEnterTransition() const { return mEnterTransition; }
     Transition* getExitTransition() const { return mExitTransition; }
     Transition* getReenterTransition() const { return mReenterTransition; }

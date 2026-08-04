@@ -74,6 +74,16 @@ Fragment::Fragment(int contentLayoutId) : Fragment(){
 }
 
 Fragment::~Fragment(){
+    // The 6 Fragment Transitions are owned (androidx holds them in fields; GC reclaims). CDROID has
+    // no GC, so ~Fragment must delete them. collectEffects clones them (mEnterTransition->clone())
+    // into a TransitionEffect; the clone self-deletes (setDeleteWhenEnded). This original/template
+    // transition is owned by the Fragment.
+    delete mEnterTransition;
+    delete mExitTransition;
+    delete mReenterTransition;
+    delete mReturnTransition;
+    delete mSharedElementEnterTransition;
+    delete mSharedElementReturnTransition;
     delete mLifecycleRegistry;
     delete mSavedStateRegistryController;
     delete mViewModelStore;
@@ -81,6 +91,34 @@ Fragment::~Fragment(){
     delete mChildHost;
     delete mViewLifecycleOwner;
     // mChildFragmentManager (unique_ptr) releases automatically.
+}
+
+// Fragment owns its 6 Transition* (androidx fields; GC reclaims there). On replace, delete the
+// previous; ~Fragment deletes whatever remains. collectEffects clones these (->clone() into a
+// TransitionEffect); the clone self-deletes via setDeleteWhenEnded.
+void Fragment::setEnterTransition(Transition* t){
+    if(mEnterTransition != t){
+        delete mEnterTransition;
+        mEnterTransition = t;
+    }
+}
+void Fragment::setExitTransition(Transition* t){
+    if(mExitTransition != t){
+        delete mExitTransition;
+        mExitTransition = t;
+    }
+}
+void Fragment::setReenterTransition(Transition* t){
+    if(mReenterTransition != t){
+        delete mReenterTransition;
+        mReenterTransition = t;
+    }
+}
+void Fragment::setReturnTransition(Transition* t){
+    if(mReturnTransition != t){
+        delete mReturnTransition;
+        mReturnTransition = t;
+    }
 }
 
 // --- owner interface ---

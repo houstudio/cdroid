@@ -314,6 +314,16 @@ void FragmentStateManager::stepDown(){
                 if(sec){
                     sec->enqueueRemove(this);
                     sec->executePendingOperations();
+                    // performDestroyView + mView=null are DEFERRED to the exit clone's end
+                    // (TransitionEffect scheduleDelete post). The clone captured the whole view tree
+                    // (e.g. RecyclerView items) in startValues; running onDestroyView now →
+                    // detachAdapter → RecycledViewPool::clear deletes itemViews the clone still
+                    // dereferences in onDisappear → UAF. Android holds the view until the effect
+                    // (clone) ends, then moveToExpectedState → onDestroyView. completeEffect already
+                    // fired synchronously inside executePendingOperations, so the FSM re-enter guard
+                    // lets stepDown continue CREATED→INITIALIZING here without touching the view.
+                    mFragment->mState = Fragment::CREATED;
+                    break;
                 } else {
                     TransitionManager::beginDelayedTransition(mFragment->mContainer,
                         FragmentTransitionImpl::makeExitTransition());
