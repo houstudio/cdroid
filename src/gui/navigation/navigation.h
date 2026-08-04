@@ -1,3 +1,20 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <view/view.h>
 #include <widget/cdwindow.h>
 namespace cdroid{
@@ -75,12 +92,20 @@ public:
     static void setViewNavController(View* view,/*@Nullable*/ NavController* controller);
 
     /**
+     * Retrieve the {@link NavController} associated with the given View, if any. Mirrors the
+     * androidx {@code @RestrictTo(LIBRARY_GROUP)} accessor used by NavHostFragment to read back
+     * (and clear) the controller tag it publishes on view create/destroy.
+     * @param view the view previously associated via setViewNavController
+     * @return the NavController stored on the view, or nullptr
+     */
+    static NavController* getViewNavController(View* view);
+
+private:
+    /**
      * Recurse up the view hierarchy, looking for the NavController
      * @param view the view to search from
      * @return the locally scoped {@link NavController} to the given view, if found
      */
-private:
     static NavController* findViewNavController(View* view);
-    static NavController* getViewNavController(View* view);
 };
 }/*endof namespace*/

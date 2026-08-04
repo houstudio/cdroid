@@ -90,6 +90,7 @@ public:
     bool post(const Runnable& r);
     bool postAtTime(const Runnable& r, int64_t uptimeMillis);
     bool postDelayed(const Runnable& r, long delayMillis);
+    bool postAtFrontOfQueue(const Runnable&);
 };
 }//endof namespace
 #endif

@@ -8,6 +8,7 @@
 #define USE_UIEVENTHANDLER 0
 
 namespace cdroid {
+class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
 class Window : public FrameLayout {
 protected:
     friend class WindowManager;
@@ -111,8 +112,23 @@ public:
     virtual bool onKeyUp(int keyCode,KeyEvent& evt) override;
     virtual bool onKeyDown(int keyCode,KeyEvent& evt) override;
     virtual void onBackPressed();
+    // Activity-aligned lifecycle callbacks. Window plays the role of an Activity
+    // (typedef Window Activity), so it exposes the standard Activity lifecycle.
+    virtual void onCreate(Bundle* savedInstanceState);
+    virtual void onStart();
+    virtual void onResume();
+    virtual void onPause();
+    virtual void onStop();
+    virtual void onDestroy();
+    // Legacy hooks, kept for backward compatibility. The default onCreate(Bundle*)/
+    // onResume()/onPause() forward to these so existing Window subclasses that
+    // override them keep firing unchanged. New code should override the Activity-
+    // named callbacks above instead.
+    [[deprecated("Use onCreate(Bundle*) instead")]]
     virtual void onCreate();
+    [[deprecated("Use onResume() instead")]]
     virtual void onActive();
+    [[deprecated("Use onPause() instead")]]
     virtual void onDeactive();
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;

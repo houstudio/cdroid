@@ -403,20 +403,16 @@ int AttributeSet::getDimensionPixelOffset(const std::string&key,int def)const{
 int AttributeSet::getLayoutDimension(const std::string&key,int def)const{
     const std::string v = getString(key);
     if(v.empty())return def;
-    int result;
-    switch(v[0]){
-    case 'f':
-    case 'm':result = -1;break;//MATCH_PARENT
-    case 'w':result = -2;break;//WRAP_CONTENT
-    default:
-        // "48dp" literal, "@dimen/foo", or "pkg:dimen/foo" (resolved form). Resource references
-        // (contain ':') go through the context; literals through density-aware parsing.
-        result = (v.find(':') != std::string::npos || v[0] == '@')
-                 ? mContext->getDimensionPixelSize(v, def)
-                 : getDimensionPixelSize(key, def);
-        break;
-    }
-    return result;
+    // Special layout keywords: take precedence over dimension parsing. Compared by full string
+    // (not first character) so that package-qualified references starting with f/m/w
+    // (e.g. "foo:dimen/bar") are not misread as match_parent.
+    if (v == "match_parent" || v == "fill_parent") return LayoutParams::MATCH_PARENT;
+    if (v == "wrap_content") return LayoutParams::WRAP_CONTENT;
+    // Everything else is a dimension: "48dp" literal, "@dimen/foo", or "pkg:dimen/foo" (resolved
+    // form). Resource references (contain ':') go through the context; literals through density-aware parsing.
+    return (v.find(':') != std::string::npos || v[0] == '@')
+            ? mContext->getDimensionPixelSize(v, def)
+            : getDimensionPixelSize(key, def);
 }
 
 RefPtr<ColorStateList>AttributeSet::getColorStateList(const std::string&key)const{

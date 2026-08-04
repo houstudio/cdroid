@@ -35,6 +35,12 @@ ConstraintHelper::ConstraintHelper(Context* ctx, const AttributeSet& attrs)
 
 ConstraintHelper::ConstraintHelper(int width, int height)
     : View(width, height) {
+    // ConstraintHelper is an invisible layout aid — it must not paint. Android's
+    // ConstraintHelper has no background and (with the default willNotDraw) draws
+    // nothing. The CDROID View(int,int) ctor hands every view a default opaque
+    // black background, which here would cover the very views the helper arranges
+    // (e.g. Flow drawn over its referenced boxes). Drop that inherited background.
+    setBackground(nullptr);
 }
 
 void ConstraintHelper::init(const AttributeSet& attrs) {

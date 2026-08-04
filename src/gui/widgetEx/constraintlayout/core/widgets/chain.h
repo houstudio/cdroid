@@ -36,7 +36,7 @@ class ChainHead;
 
 class Chain {
   public:
-    static const bool USE_CHAIN_OPTIMIZATION = false;
+    static const bool USE_CHAIN_OPTIMIZATION = true;
 
     // Iterate every chain head recorded on the container and apply chain constraints.
     // `widgets` is nullable (Java ArrayList<ConstraintWidget>); when non-null only chains whose

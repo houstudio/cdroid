@@ -1395,6 +1395,7 @@ public:
     virtual View*keyboardNavigationClusterSearch(View* currentCluster,int direction);
     // Parent and children views
     virtual ViewGroup*getParent()const;
+    Handler* getHandler() const;
     ViewTreeObserver* getViewTreeObserver();
     ViewGroup* getRootView()const;
     bool toGlobalMotionEvent(MotionEvent& ev);

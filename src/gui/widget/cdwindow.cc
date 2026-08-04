@@ -559,6 +559,33 @@ void Window::onCreate(){
     LOGV("%p[%s]:%d",this,getText().c_str(),mID);
 }
 
+void Window::onCreate(Bundle* /*savedInstanceState*/){
+    // Activity-aligned onCreate(Bundle); forward to the legacy no-arg hook so
+    // existing subclasses overriding onCreate() keep firing.
+    onCreate();
+}
+
+void Window::onStart(){
+}
+
+void Window::onResume(){
+    // Backward compatibility: route through the legacy activation hook so that
+    // existing Window subclasses overriding onActive() still receive the event.
+    onActive();
+}
+
+void Window::onPause(){
+    // Backward compatibility: route through the legacy deactivation hook.
+    onDeactive();
+}
+
+void Window::onStop(){
+}
+
+void Window::onDestroy(){
+    LOGD("%p[%s]:%d destroyed",this,getText().c_str(),mID);
+}
+
 void Window::onActive(){
     LOGD("%p[%s]:%d",this,getText().c_str(),mID);
 }
@@ -759,6 +786,7 @@ void Window::close(){
     auto* info = mAttachInfo;
     Window* self = this;
     post([self, info](){
+        self->onDestroy();
         delete info;
         delete self;
     });

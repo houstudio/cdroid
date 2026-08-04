@@ -21,6 +21,7 @@
  */
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/constraintlayout/motion/motionlayout.h>
+#include <widgetEx/constraintlayout/motion/touchresponse.h>
 #include <widgetEx/constraintlayout/motion/viewtransition.h>
 #include <widgetEx/constraintlayout/motion/viewtransitioncontroller.h>
 
@@ -156,7 +157,19 @@ std::string MotionScene::stripId(const std::string& idString) {
 
 int MotionScene::getId(const std::string& idString) const {
     if (idString.empty()) return UNSET;
+    // stripId yields the bare name only ("@+id/cs_prev" -> "cs_prev"); per Android convention the
+    // "@id/" reference prefix is never retained. The bare name resolves through the host Context's
+    // R.id pool (Assets::getId resolves bare names against the id table — same pool
+    // AttributeSet::getResourceId uses), so a Transition's constraintSetStart="@id/cs_prev" agrees
+    // with the <ConstraintSet android:id="@+id/cs_prev">. Scene-local fallback for unregistered names.
     const std::string name = stripId(idString);
+    if (mMotionLayout != nullptr) {
+        Context* ctx = mMotionLayout->getContext();
+        if (ctx != nullptr) {
+            const int rid = ctx->getId(name);
+            if (rid != -1) return rid;
+        }
+    }
     auto it = mConstraintSetIdMap.find(name);
     if (it != mConstraintSetIdMap.end()) return it->second;
     const int id = mNextLocalId++;
@@ -209,6 +222,45 @@ MotionScene::Transition* MotionScene::findTransition(int startId, int endId) con
         if (t->getStartId() == startId && t->getEndId() == endId) return t.get();
     }
     return nullptr;
+}
+
+std::vector<MotionScene::Transition*> MotionScene::getDefinedTransitions() const {
+    std::vector<Transition*> out;
+    out.reserve(mTransitionList.size());
+    for (const auto& t : mTransitionList) out.push_back(t.get());
+    return out;
+}
+
+std::vector<MotionScene::Transition*> MotionScene::getTransitionsWithState(int stateId) const {
+    std::vector<Transition*> out;
+    for (const auto& t : mTransitionList) {
+        if (t->getStartId() == stateId || t->getEndId() == stateId) out.push_back(t.get());
+    }
+    return out;
+}
+
+MotionScene::Transition* MotionScene::bestTransitionFor(int currentState, float dx, float dy) const {
+    // Mirror androidx MotionScene.bestTransitionFor: among enabled transitions touching the current
+    // state, score each by how much its <OnSwipe> drag direction aligns with the gesture (dot product),
+    // flip the score for transitions we'd run backwards (their end == current state), and slightly
+    // bias toward start-over-end. The max wins.
+    Transition* best = nullptr;
+    float max = 0;
+    for (Transition* t : getTransitionsWithState(currentState)) {
+        if (!t->isEnabled()) continue;
+        const OnSwipe* sw = t->getOnSwipe();
+        if (sw == nullptr) continue;
+        float dirX, dirY;
+        TouchResponse::directionVector(sw->dragDirection, dirX, dirY);
+        float val = dirX * dx + dirY * dy;
+        if (t->getEndId() == currentState) val *= -1;   // running this transition backwards
+        else                               val *= 1.1f;  // prefer the transition whose start == state
+        if (val > max) {
+            max = val;
+            best = t;
+        }
+    }
+    return best;
 }
 
 bool MotionScene::autoTransition(MotionLayout* layout, int currentState) {

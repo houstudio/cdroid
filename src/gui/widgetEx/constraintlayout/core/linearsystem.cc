@@ -28,6 +28,7 @@
 #include <widgetEx/constraintlayout/core/solvervariable.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintanchor.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
+#include <widgetEx/constraintlayout/core/widgets/chain.h>
 
 #include <algorithm>
 #include <cmath>
@@ -211,8 +212,11 @@ SolverVariable* LinearSystem::createObjectVariable(ConstraintAnchor* anchor) {
 }
 
 int LinearSystem::getObjectVariableValue(ConstraintAnchor* anchor) {
-    // Java: if (Chain.USE_CHAIN_OPTIMIZATION) { if (anchor.hasFinalValue()) return anchor.getFinalValue(); }
-    // Chain.USE_CHAIN_OPTIMIZATION is a static final == false, so that branch is dead and omitted.
+    // When the Direct fast-path has pinned this anchor, its final value is the single source of
+    // truth (Java parity; Chain.USE_CHAIN_OPTIMIZATION gate).
+    if (Chain::USE_CHAIN_OPTIMIZATION && anchor->hasFinalValue()) {
+        return anchor->getFinalValue();
+    }
     SolverVariable* variable = anchor->getSolverVariable();
     if (variable != nullptr) {
         return (int) (variable->computedValue + 0.5f);

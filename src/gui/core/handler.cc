@@ -83,28 +83,39 @@ void Handler::dispatchMessage(Message& msg){
     }
 }
 
-Looper* Handler::getLooper()const{ return mLooper; }
-MessageQueue* Handler::getQueue()const{ return mQueue; }
+Looper* Handler::getLooper()const{
+    return mLooper;
+}
+
+MessageQueue* Handler::getQueue()const{
+    return mQueue;
+}
 
 // —— has/remove: 委托 MessageQueue (真实现, 替代原 LOGE("TODO")/硬编码) ——
 bool Handler::hasMessages(int what){
     return mQueue && mQueue->hasMessages(this,what,nullptr);
 }
+
 bool Handler::hasMessages(int what,void*object){
     return mQueue && mQueue->hasMessages(this,what,object);
 }
+
 bool Handler::hasCallbacks(const Runnable& r){
     return mQueue && mQueue->hasMessages(this,r,nullptr);
 }
+
 void Handler::removeMessages(int what){
     if(mQueue) mQueue->removeMessages(this,what,nullptr);
 }
+
 void Handler::removeMessages(int what,void*object){
     if(mQueue) mQueue->removeMessages(this,what,object);
 }
+
 void Handler::removeCallbacks(const Runnable& r){
     if(mQueue) mQueue->removeMessages(this,r,nullptr);
 }
+
 void Handler::removeCallbacksAndMessages(void*token){
     if(mQueue) mQueue->removeCallbacksAndMessages(this,token);
 }
@@ -113,21 +124,26 @@ void Handler::removeCallbacksAndMessages(void*token){
 bool Handler::sendMessage(Message* msg){
     return sendMessageDelayed(msg,0);
 }
+
 bool Handler::sendEmptyMessage(int what){
     return sendEmptyMessageDelayed(what,0);
 }
+
 bool Handler::sendEmptyMessageDelayed(int what,long delayMillis){
     Message* msg = Message::obtain(this,what);
     return sendMessageDelayed(msg,delayMillis);
 }
+
 bool Handler::sendEmptyMessageAtTime(int what,int64_t uptimeMillis){
     Message* msg = Message::obtain(this,what);
     return sendMessageAtTime(msg,uptimeMillis);
 }
+
 bool Handler::sendMessageDelayed(Message* msg,long delayMillis){
     if(delayMillis<0) delayMillis = 0;
     return sendMessageAtTime(msg,SystemClock::uptimeMillis()+delayMillis);
 }
+
 bool Handler::sendMessageAtTime(Message* msg,int64_t uptimeMillis){
     if(mQueue==nullptr){
         LOGW("sendMessageAtTime: no mQueue (looper not set)");
@@ -135,6 +151,7 @@ bool Handler::sendMessageAtTime(Message* msg,int64_t uptimeMillis){
     }
     return enqueueMessage(mQueue,msg,uptimeMillis);
 }
+
 bool Handler::sendMessageAtFrontOfQueue(Message* msg){
     if(mQueue==nullptr){
         LOGW("sendMessageAtFrontOfQueue: no mQueue (looper not set)");
@@ -151,20 +168,40 @@ bool Handler::enqueueMessage(MessageQueue* queue,Message* msg,int64_t uptimeMill
 }
 
 // —— obtainMessage: 从对象池取, target=this ——
-Message* Handler::obtainMessage(){ return Message::obtain(this); }
-Message* Handler::obtainMessage(int what){ return Message::obtain(this,what); }
-Message* Handler::obtainMessage(int what,void*obj){ return Message::obtain(this,what,obj); }
-Message* Handler::obtainMessage(int what,int arg1,int arg2){ return Message::obtain(this,what,arg1,arg2); }
-Message* Handler::obtainMessage(int what,int arg1,int arg2,void*obj){ return Message::obtain(this,what,arg1,arg2,obj); }
+Message* Handler::obtainMessage(){
+    return Message::obtain(this);
+}
+
+Message* Handler::obtainMessage(int what){
+    return Message::obtain(this,what);
+}
+
+Message* Handler::obtainMessage(int what,void*obj){
+    return Message::obtain(this,what,obj);
+}
+
+Message* Handler::obtainMessage(int what,int arg1,int arg2){
+    return Message::obtain(this,what,arg1,arg2);
+}
+
+Message* Handler::obtainMessage(int what,int arg1,int arg2,void*obj){
+    return Message::obtain(this,what,arg1,arg2,obj);
+}
 
 bool Handler::post(const Runnable& r){
     return sendMessageDelayed(getPostMessage(r),0);
 }
+
 bool Handler::postAtTime(const Runnable& r,int64_t uptimeMillis){
     return sendMessageAtTime(getPostMessage(r),uptimeMillis);
 }
+
 bool Handler::postDelayed(const Runnable& r,long delayMillis){
     return sendMessageDelayed(getPostMessage(r),delayMillis);
+}
+
+bool Handler::postAtFrontOfQueue(const Runnable&r){
+    return sendMessageDelayed(getPostMessage(r),0);
 }
 
 }//namespace cdroid

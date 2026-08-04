@@ -43,7 +43,9 @@
 #include <widgetEx/constraintlayout/constraintset.h>
 #include <widgetEx/constraintlayout/motion/motionscene.h>
 #include <widgetEx/constraintlayout/motion/touchresponse.h>
+#include <core/callbackbase.h> // Runnable (for the post() wrapper)
 #include <widgetEx/constraintlayout/core/motion/motion.h>
+#include <view/choreographer.h> // FrameCallback — drives the spring by real frame time
 #include <widgetEx/constraintlayout/core/motion/motionwidget.h>
 
 namespace cdroid {
@@ -141,6 +143,41 @@ class MotionLayout : public ConstraintLayout {
     std::vector<int> getConstraintSetIds() const; // all ConstraintSet ids (ViewTransition allStates)
     ViewTransitionController* getViewTransitionController() const;
 
+    // ---- TransitionListener (AndroidX MotionLayout.TransitionListener, nested) ----
+    // Nested under MotionLayout (faithful to AndroidX) but expressed as an EventSet + CallbackBase
+    // callback object (CDROID style, like Animator::AnimatorListener): assign lambdas to the events
+    // you need, then addTransitionListener(it). A helper like Carousel holds one and registers it.
+    class TransitionListener : public EventSet {
+      public:
+        CallbackBase<void, MotionLayout*, int, int, float> onTransitionChange;
+        CallbackBase<void, MotionLayout*, int>             onTransitionCompleted;
+    };
+    // Subscribe to transition lifecycle events. Notified from every completion path (animateTo /
+    // spring / stopLogic / setProgress) so a helper like Carousel can advance its state on completion.
+    void addTransitionListener(const TransitionListener& listener) {
+        mTransitionListeners.push_back(listener);
+    }
+    // mMotionLayout->post(r) resolves to the public View::post (handler-backed, regular queue) —
+    // the same View.post the AndroidX Carousel posts its update runnable through. We intentionally
+    // do NOT override post() here. (View::postUpdate is postAtFrontOfQueue — a different semantic
+    // Android's Carousel does not use.)
+    // Touch-up settle modes (AndroidX MotionLayout.TOUCH_UP_*).
+    static constexpr int TOUCH_UP_STOP = 0;
+    static constexpr int TOUCH_UP_AUTOCOMPLETE_TO_START = 1;
+    static constexpr int TOUCH_UP_AUTOCOMPLETE_TO_END = 2;
+    static constexpr int TOUCH_UP_DECELERATE_AND_COMPLETE = 3;
+    // Drive the transition to `progress` (0 or 1) carrying `velocity` (progress/sec), per mode.
+    void touchAnimateTo(int touchUpMode, float progress, float velocity);
+    // Current transition velocity (progress/sec) from the active engine, else 0.
+    float getVelocity() const;
+    // Re-capture start/end states and rebuild every per-child Motion controller.
+    void rebuildScene();
+    // MotionScene forwarders (defined-transition scan / lookup by id).
+    std::vector<MotionScene::Transition*> getDefinedTransitions() const;
+    MotionScene::Transition* getTransition(int transitionId) const;
+    // transitionToState with an explicit per-transition duration override (Carousel uses it).
+    void transitionToState(int stateId, int64_t durationMs);
+
     // Inject a MotionScene programmatically (instead of via app:layoutDescription). Marks the scene
     // built so the onMeasure path does not rebuild it; the caller wires the current transition.
     void setScene(std::unique_ptr<MotionScene> scene);
@@ -158,6 +195,10 @@ class MotionLayout : public ConstraintLayout {
     bool onTouchEvent(MotionEvent& evt) override;
 
   private:
+    // Fire TransitionListener callbacks. change() every frame/setProgress; completed() when an
+    // animation reaches an endpoint (caller guards on mCurrentState != -1).
+    void fireTransitionChange(int startId, int endId, float progress);
+    void fireTransitionCompleted(int currentId);
     // Animate mProgress to `target` over mTransitionDuration using a ValueAnimator.
     void animateTo(float target);
     // Actually run the start/end capture + build motions (called once we have a real size).
@@ -181,6 +222,18 @@ class MotionLayout : public ConstraintLayout {
     // Wire a transition's <OnClick> targets to toggle/transition-to-end/start the layout.
     void wireOnClicks(MotionScene::Transition* t);
 
+    // Cancel the spring frame-callback loop (remove the posted callback + drop the engine). Called
+    // whenever a new animation or transition supersedes a running spring, and from the dtor.
+    void stopSpringAnimation();
+
+    // Direction-based transition selection (androidx MotionScene.bestTransitionFor /
+    // processTouchEvent): while the layout RESTS at a state (currentState != -1) shared by several
+    // transitions (e.g. a bidirectional Carousel's rest state), switch to the one whose <OnSwipe>
+    // dragDirection best matches the gesture, and seed its fresh TouchResponse at the touch point.
+    // Like Android, picking stops once the drag leaves the endpoint (currentState becomes -1).
+    // No-op for single-transition layouts (best == current, no switch).
+    void pickTransitionForDrag(const MotionEvent& evt);
+
     ConstraintSet* mStartSet = nullptr;
     ConstraintSet* mEndSet = nullptr;
     std::shared_ptr<ConstraintSet> mOwnedStart;
@@ -195,6 +248,11 @@ class MotionLayout : public ConstraintLayout {
     int64_t mTransitionDuration = 400;
     ValueAnimator* mAnimator = nullptr;
     std::unique_ptr<SpringStopEngine> mSpringEngine;
+    // The spring is driven by a Choreographer frame callback (real frame time), not a ValueAnimator.
+    // mSpringFrameCallback re-posts itself each frame until isStopped(); mSpringStartNanos is seeded
+    // on the first frame. Mirrors androidx MotionLayout sampling mInterpolator at (frameTime - start).
+    Choreographer::FrameCallback mSpringFrameCallback;
+    int64_t mSpringStartNanos = -1;
     std::unique_ptr<StopLogicEngine> mStopEngine;
     bool mCaptured = false;
     bool mInAutoTransition = false; // guards autoTransition re-entry
@@ -212,7 +270,11 @@ class MotionLayout : public ConstraintLayout {
 
     // OnSwipe drag-to-progress (null when the scene has no <OnSwipe>).
     std::unique_ptr<TouchResponse> mTouchResponse;
+    // Last touch position (set on DOWN, updated each MOVE) — the per-move drag delta for
+    // pickTransitionForDrag, mirroring MotionScene.mLastTouchX/Y in processTouchEvent.
+    float mLastTouchX = 0, mLastTouchY = 0;
     TriggerListener mTriggerListener; // host receiver for <KeyTrigger> fires (applied per Motion)
+    std::vector<TransitionListener> mTransitionListeners; // Carousel etc. (AndroidX TransitionListener)
 };
 
 } // namespace cdroid

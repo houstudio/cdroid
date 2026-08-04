@@ -76,7 +76,10 @@ class IDGenerater(object):
     def __init__(self,idstart,namespace):
         self.idstart=idstart
         self.namespace=namespace
-        self.processDirs=['layout','drawable','navigation','values','menu']
+        # 'xml' covers <MotionScene> and other non-layout XML under assets/xml/ — their @+id
+        # declarations (e.g. a Transition/ConstraintSet id referenced cross-layer by Carousel's
+        # carousel_nextState) must enter the R.id pool, like Android aapt scanning every XML.
+        self.processDirs=['layout','drawable','navigation','values','menu','xml']
         self.parser = xml.sax.make_parser()
         self.parser.setFeature(xml.sax.handler.feature_namespaces, 0)
         self.Handler = CDROIDHandler(namespace)

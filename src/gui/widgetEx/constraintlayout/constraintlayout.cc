@@ -27,14 +27,21 @@
 
 #include <algorithm>
 #include <climits>
+#include <cmath>
+#include <cstdio>
 
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
+#include <widgetEx/constraintlayout/core/widgets/barrier.h>
 
 #include <porting/cdlog.h>
 #include <view/view.h>
 #include <view/viewgroup.h>
 #include <widget/textview.h>
 #include <widgetEx/constraintlayout/helpers/constrainthelper.h>
+#include <widgetEx/constraintlayout/helpers/circularflow.h>
+#include <widgetEx/constraintlayout/helpers/flow.h>
+#include <widgetEx/constraintlayout/helpers/grid.h>
+#include <widgetEx/constraintlayout/helpers/layer.h>
 #include <widgetEx/constraintlayout/helpers/placeholder.h>
 
 DECLARE_WIDGET(ConstraintLayout)
@@ -360,6 +367,29 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         return (it != mIdToWidget.end()) ? it->second : nullptr;
     };
 
+    // MATCH_PARENT fills the parent: a match_parent dimension with NO explicit constraint on that
+    // axis is implicitly pinned to the parent's opposite sides. AndroidX ConstraintLayout does the
+    // same (a match_parent child is wired to the parent edges — see androidx/constraintlayout#231),
+    // modelling it as MATCH_CONSTRAINT plus parent anchors. Without this a 0dp helper such as Flow
+    // that omits left/right collapses to width 0, so Flow.measure() sees max=0 and scatters its
+    // referenced views into one-per-row chains off-screen.
+    const bool noHorizontalAnchor = lp->leftToLeft == LayoutParams::UNSET
+            && lp->leftToRight == LayoutParams::UNSET && lp->rightToLeft == LayoutParams::UNSET
+            && lp->rightToRight == LayoutParams::UNSET && lp->startToStart == LayoutParams::UNSET
+            && lp->startToEnd == LayoutParams::UNSET && lp->endToStart == LayoutParams::UNSET
+            && lp->endToEnd == LayoutParams::UNSET;
+    if (lp->width == LayoutParams::MATCH_PARENT && noHorizontalAnchor) {
+        widget->mLeft.connect(&mLayoutWidget.mLeft, 0);
+        widget->mRight.connect(&mLayoutWidget.mRight, 0);
+    }
+    const bool noVerticalAnchor = lp->topToTop == LayoutParams::UNSET
+            && lp->topToBottom == LayoutParams::UNSET && lp->bottomToTop == LayoutParams::UNSET
+            && lp->bottomToBottom == LayoutParams::UNSET;
+    if (lp->height == LayoutParams::MATCH_PARENT && noVerticalAnchor) {
+        widget->mTop.connect(&mLayoutWidget.mTop, 0);
+        widget->mBottom.connect(&mLayoutWidget.mBottom, 0);
+    }
+
     // Resolve effective Left/Right anchors. Per AndroidX LayoutParams.resolveLayoutDirection
     // (ConstraintLayout.java:3834-3922): Start/End take precedence over Left/Right — if ANY Start/End
     // anchor is set, Left/Right is ignored entirely; only when NO Start/End is present do Left/Right
@@ -396,13 +426,22 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         if (lp->goneEndMargin   != LayoutParams::GONE_UNSET) goneRightE = lp->goneEndMargin;
     }
 
+    // Target anchors are resolved through getAnchor(Type) rather than via the &t->mLeft/mRight/mTop/
+    // mBottom members. For an ordinary widget the two are identical, but a Guideline only exposes a
+    // single active anchor: getAnchor() redirects TOP/BOTTOM (horizontal guideline) and LEFT/RIGHT
+    // (vertical guideline) to that active anchor, and returns null for the off-axis sides. Reaching
+    // for the member directly would connect to a Guideline's never-positioned orphan anchor (mBottom/
+    // mRight stay 0), so the "to-Bottom"/"to-Right" variants would collapse to the origin. This
+    // mirrors AndroidX, which resolves the end anchor with endWidget.getAnchor(endType).
     // Left (leftToLeft preferred over leftToRight)
     if (leftToLeftE != LayoutParams::UNSET || leftToRightE != LayoutParams::UNSET) {
         bool toLeft = (leftToLeftE != LayoutParams::UNSET);
         int tid = toLeft ? leftToLeftE : leftToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mLeft.connect(toLeft ? &t->mLeft : &t->mRight,
-                                  lp->leftMargin, goneLeftE, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toLeft ? ConstraintAnchor::Type::LEFT
+                                                           : ConstraintAnchor::Type::RIGHT)) {
+                widget->mLeft.connect(ta, lp->leftMargin, goneLeftE, true);
+            }
         }
     }
     // Right
@@ -410,8 +449,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toLeft = (rightToLeftE != LayoutParams::UNSET);
         int tid = toLeft ? rightToLeftE : rightToRightE;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mRight.connect(toLeft ? &t->mLeft : &t->mRight,
-                                   lp->rightMargin, goneRightE, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toLeft ? ConstraintAnchor::Type::LEFT
+                                                           : ConstraintAnchor::Type::RIGHT)) {
+                widget->mRight.connect(ta, lp->rightMargin, goneRightE, true);
+            }
         }
     }
     // Top
@@ -419,8 +460,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toTop = (lp->topToTop != LayoutParams::UNSET);
         int tid = toTop ? lp->topToTop : lp->topToBottom;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mTop.connect(toTop ? &t->mTop : &t->mBottom,
-                                 lp->topMargin, lp->goneTopMargin, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toTop ? ConstraintAnchor::Type::TOP
+                                                          : ConstraintAnchor::Type::BOTTOM)) {
+                widget->mTop.connect(ta, lp->topMargin, lp->goneTopMargin, true);
+            }
         }
     }
     // Bottom
@@ -428,8 +471,10 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
         bool toTop = (lp->bottomToTop != LayoutParams::UNSET);
         int tid = toTop ? lp->bottomToTop : lp->bottomToBottom;
         if (ConstraintWidget* t = resolveTarget(tid)) {
-            widget->mBottom.connect(toTop ? &t->mTop : &t->mBottom,
-                                    lp->bottomMargin, lp->goneBottomMargin, true);
+            if (ConstraintAnchor* ta = t->getAnchor(toTop ? ConstraintAnchor::Type::TOP
+                                                          : ConstraintAnchor::Type::BOTTOM)) {
+                widget->mBottom.connect(ta, lp->bottomMargin, lp->goneBottomMargin, true);
+            }
         }
     }
 
@@ -484,14 +529,17 @@ void ConstraintLayout::applyConstraintsFromLayoutParams(View* child, ConstraintW
     widget->mWeight[ConstraintWidget::HORIZONTAL] = lp->horizontalWeight;
     widget->mWeight[ConstraintWidget::VERTICAL]   = lp->verticalWeight;
 
-    // Baseline constraint (overrides top/bottom)
+    // Baseline constraint (overrides top/bottom). Resolve the target anchor via getAnchor() so a
+    // Guideline target (which has no baseline) yields null and the connection is skipped.
     if (lp->baselineToBaseline != LayoutParams::UNSET) {
         if (ConstraintWidget* t = resolveTarget(lp->baselineToBaseline)) {
-            widget->mBaseline.connect(&t->mBaseline, 0, LayoutParams::GONE_UNSET, true);
-            widget->setHasBaseline(true);
-            t->setHasBaseline(true);
-            widget->mTop.reset();
-            widget->mBottom.reset();
+            if (ConstraintAnchor* ta = t->getAnchor(ConstraintAnchor::Type::BASELINE)) {
+                widget->mBaseline.connect(ta, 0, LayoutParams::GONE_UNSET, true);
+                widget->setHasBaseline(true);
+                t->setHasBaseline(true);
+                widget->mTop.reset();
+                widget->mBottom.reset();
+            }
         }
     }
 
@@ -555,6 +603,229 @@ void ConstraintLayout::measure(ConstraintWidget* widget, BasicMeasure::Measure* 
 void ConstraintLayout::didMeasures() {
     // No-op: Placeholder/helper post-measure work is driven directly from onMeasure
     // (Placeholder::updatePostMeasure loop + the helper updatePostLayout pass in onLayout).
+}
+
+void ConstraintLayout::dispatchDraw(Canvas& canvas) {
+    ViewGroup::dispatchDraw(canvas);
+    if (debugDraw()) {
+        drawDebugOverlays(canvas);
+    }
+}
+
+// CDROID-only visual debug aid. With View::debugDraw() on ("show layout bounds", VIEW_DEBUG),
+// paint the otherwise-invisible helpers: guidelines as full-span lines with their percent/begin/
+// end annotation, barriers as a direction line, and each child's anchor connections to its
+// targets (modeled on AndroidX's private DEBUG_DRAW_CONSTRAINTS, which ships compiled-out).
+void ConstraintLayout::drawDebugOverlays(Canvas& canvas) {
+    const int W = getWidth();
+    const int H = getHeight();
+    char label[32];
+
+    canvas.set_line_width(1);
+    canvas.select_font_face("sans",
+                            Cairo::ToyFontFace::Slant::NORMAL,
+                            Cairo::ToyFontFace::Weight::NORMAL);
+    canvas.set_font_size(11);
+    // Guidelines and barriers are dashed (Android Studio renders helpers as dotted lines);
+    // constraint connection lines are solid, so set_dash({}) is re-applied before that section.
+    canvas.set_dash(std::vector<double>{4.0, 3.0}, 0);
+
+    // --- Guidelines: full-span line + percent/begin/end annotation ---
+    const int count = getChildCount();
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
+        if (!lp || !lp->mIsGuideline) continue;
+        auto* g = dynamic_cast<clcore::Guideline*>(getViewWidget(child));
+        if (g == nullptr) continue;
+
+        const bool vertical = (g->getOrientation() == clcore::Guideline::VERTICAL);
+        if (g->getRelativePercent() != -1) {
+            snprintf(label, sizeof(label), "G %.0f%%", g->getRelativePercent() * 100.0f);
+        } else if (g->getRelativeBegin() != -1) {
+            snprintf(label, sizeof(label), "G begin %d", g->getRelativeBegin());
+        } else if (g->getRelativeEnd() != -1) {
+            snprintf(label, sizeof(label), "G end %d", g->getRelativeEnd());
+        } else {
+            snprintf(label, sizeof(label), "G");
+        }
+
+        // Olive-green dashed full-span line (Android Studio renders helpers as dotted lines).
+        // The editor's edge handle is an interaction affordance — not drawn at runtime.
+        canvas.set_color(0x99, 0xCC, 0x33, 0xD0);
+        if (vertical) {
+            const int x = g->getX();
+            canvas.move_to(x + 0.5, 0);
+            canvas.line_to(x + 0.5, H);
+            canvas.stroke();
+            canvas.set_color(0x99, 0xCC, 0x33, 0xFF);
+            canvas.move_to(x + 6, 12);
+            canvas.show_text(label);
+        } else {
+            const int y = g->getY();
+            canvas.move_to(0, y + 0.5);
+            canvas.line_to(W, y + 0.5);
+            canvas.stroke();
+            canvas.set_color(0x99, 0xCC, 0x33, 0xFF);
+            canvas.move_to(8, y - 4);
+            canvas.show_text(label);
+        }
+    }
+
+    // --- Barriers: direction line + marker ---
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        ConstraintWidget* w = getViewWidget(helper);
+        auto* b = dynamic_cast<clcore::Barrier*>(w);
+        if (b == nullptr) continue;
+
+        // LEFT/RIGHT barriers run vertically (a column at x); TOP/BOTTOM run horizontally (a row at y).
+        const int type = b->getBarrierType();
+        const bool vertical = (type == clcore::Barrier::LEFT || type == clcore::Barrier::RIGHT);
+        const char marker = vertical ? (type == clcore::Barrier::LEFT ? '<' : '>')
+                                     : (type == clcore::Barrier::TOP  ? '^' : 'v');
+        snprintf(label, sizeof(label), "B %c", marker);
+
+        // Purple dashed helper line, like a guideline; the direction is drawn as a text marker.
+        canvas.set_color(0xAB, 0x47, 0xBC, 0xE0); // purple (AS helper accent)
+        if (vertical) {
+            const int x = w->getX();
+            canvas.move_to(x + 0.5, 0);
+            canvas.line_to(x + 0.5, H);
+            canvas.stroke();
+            canvas.set_color(0xAB, 0x47, 0xBC, 0xFF);
+            canvas.move_to(x + 6, H - 4);
+            canvas.show_text(label);
+        } else {
+            const int y = w->getY();
+            canvas.move_to(0, y + 0.5);
+            canvas.line_to(W, y + 0.5);
+            canvas.stroke();
+            canvas.set_color(0xAB, 0x47, 0xBC, 0xFF);
+            canvas.move_to(W - 24, y - 3);
+            canvas.show_text(label);
+        }
+    }
+
+    // --- Other ConstraintHelpers (Grid/Flow/Layer/CircularFlow): range box + type label ---
+    // These are virtual too (AndroidX ConstraintHelper.onDraw is literally "// Nothing"); AS Layout
+    // Inspector outlines the helper's solved frame, so we do the same to make its reach visible.
+    // Barrier is already drawn as a line above; Group owns no widget (0x0 frame) and is skipped by
+    // the extent check. Still in the dashed section (helpers render dotted, like AS).
+    for (ConstraintHelper* helper : mConstraintHelpers) {
+        ConstraintWidget* w = getViewWidget(helper);
+        if (w == nullptr) continue;
+        if (dynamic_cast<clcore::Barrier*>(w)) continue;      // already drawn as a line
+        const int x = w->getX(), y = w->getY();
+        const int ww = w->getWidth(), hh = w->getHeight();
+        if (ww <= 0 && hh <= 0) continue;                     // no extent (e.g. Group)
+        canvas.set_color(0xE8, 0xA8, 0x2E, 0xD0);             // amber, distinct from guideline/barrier
+        canvas.rectangle(x + 0.5, y + 0.5, ww - 1, hh - 1);
+        canvas.stroke();
+        const char* name = "Helper";
+        if (dynamic_cast<Grid*>(helper)) name = "Grid";
+        else if (dynamic_cast<Flow*>(helper)) name = "Flow";
+        else if (dynamic_cast<Layer*>(helper)) name = "Layer";
+        else if (dynamic_cast<CircularFlow*>(helper)) name = "CircularFlow";
+        canvas.set_color(0xE8, 0xA8, 0x2E, 0xFF);
+        canvas.move_to(x + 4, y - 4);
+        canvas.show_text(name);
+    }
+
+    // --- Baseline guides: a green line across each child at its text-baseline height ---
+    // Pure layout aid (where this view baseline-aligns to others); no editor handles. Solid here.
+    canvas.set_dash(std::vector<double>{}, 0);
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
+        if (!lp || lp->mIsGuideline || lp->mIsHelper) continue;
+        if (child->getVisibility() == View::GONE) continue;
+        ConstraintWidget* widget = getViewWidget(child);
+        if (widget == nullptr) continue;
+        if (!widget->hasBaseline() || widget->getBaselineDistance() <= 0) continue;
+        const int ox = widget->getX(), oy = widget->getY();
+        const int ow = widget->getWidth();
+        const int by = oy + widget->getBaselineDistance();
+        canvas.set_color(0x4C, 0xAF, 0x50, 0xC0); // green baseline
+        canvas.move_to(ox + 0.5, by + 0.5);
+        canvas.line_to(ox + ow - 0.5, by + 0.5);
+        canvas.stroke();
+    }
+
+    // --- Constraint connection lines (child anchor -> target anchor) ---
+    // Solid blue with a margin readout; opposing constraints (both sides of an axis connected on a
+    // non-stretch dimension) render as a zigzag spring, like the editor.
+    auto drawConnection = [&](ConstraintAnchor& a, bool spring) {
+        if (!a.isConnected() || a.mTarget == nullptr || a.mOwner == nullptr) return;
+        ConstraintWidget* widget = a.mOwner;
+        ConstraintWidget* target = a.mTarget->mOwner;
+        if (target == nullptr) return;
+        const int ox = widget->getX(), oy = widget->getY();
+        const int ow = widget->getWidth(), oh = widget->getHeight();
+        const int tx = target->getX(), ty = target->getY();
+        const int tw = target->getWidth(), th = target->getHeight();
+        int x1, y1, x2, y2;
+        if (a.mType == ConstraintAnchor::Type::TOP
+                || a.mType == ConstraintAnchor::Type::BOTTOM) {
+            x1 = ox + ow / 2;
+            x2 = tx + tw / 2;
+            y1 = (a.mType == ConstraintAnchor::Type::BOTTOM) ? oy + oh : oy;
+            y2 = (a.mTarget->mType == ConstraintAnchor::Type::TOP) ? ty : ty + th;
+        } else {
+            y1 = oy + oh / 2;
+            y2 = ty + th / 2;
+            x1 = (a.mType == ConstraintAnchor::Type::RIGHT) ? ox + ow : ox;
+            x2 = (a.mTarget->mType == ConstraintAnchor::Type::LEFT) ? tx : tx + tw;
+        }
+        if (spring) {
+            // Zigzag "spring" — Android Studio coils opposing constraints.
+            const double dx = x2 - x1, dy = y2 - y1;
+            const double len = std::sqrt(dx * dx + dy * dy);
+            const int teeth = std::max(4, static_cast<int>(len / 8));
+            const double ux = dx / len, uy = dy / len, px = -uy, py = ux;
+            canvas.move_to(x1 + 0.5, y1 + 0.5);
+            for (int k = 1; k < teeth; k++) {
+                const double t = static_cast<double>(k) / teeth;
+                const double off = (k % 2 == 1) ? 3.0 : -3.0;
+                canvas.line_to(x1 + dx * t + px * off, y1 + dy * t + py * off);
+            }
+            canvas.line_to(x2 + 0.5, y2 + 0.5);
+        } else {
+            canvas.move_to(x1 + 0.5, y1 + 0.5);
+            canvas.line_to(x2 + 0.5, y2 + 0.5);
+        }
+        canvas.stroke();
+        // Margin readout on a white label (Android Studio prints the margin atop each constraint).
+        const int margin = a.getMargin();
+        if (margin > 0) {
+            snprintf(label, sizeof(label), "%d", margin);
+            int tw2 = 0, th2 = 0;
+            canvas.get_text_size(label, &tw2, &th2);
+            const float mx = (x1 + x2) / 2.0f, my = (y1 + y2) / 2.0f;
+            canvas.set_color(0xFF, 0xFF, 0xFF, 0xE0);
+            canvas.rectangle(mx - tw2 / 2 - 3, my - th2 / 2, tw2 + 6, th2);
+            canvas.fill();
+            canvas.set_color(0x33, 0x33, 0x33, 0xFF);
+            canvas.move_to(mx - tw2 / 2, my + th2 / 2 - 1);
+            canvas.show_text(label);
+        }
+    };
+    using DB = ConstraintWidget::DimensionBehaviour;
+    for (int i = 0; i < count; i++) {
+        View* child = getChildAt(i);
+        auto* lp = dynamic_cast<LayoutParams*>(child->getLayoutParams());
+        if (!lp || lp->mIsGuideline || lp->mIsHelper) continue;
+        ConstraintWidget* widget = getViewWidget(child);
+        if (widget == nullptr) continue;
+        const bool vOpp = widget->getVerticalDimensionBehaviour() != DB::MATCH_CONSTRAINT
+                && widget->mTop.isConnected() && widget->mBottom.isConnected();
+        const bool hOpp = widget->getHorizontalDimensionBehaviour() != DB::MATCH_CONSTRAINT
+                && widget->mLeft.isConnected() && widget->mRight.isConnected();
+        canvas.set_color(0x42, 0x85, 0xF4, 0xD0); // Android Studio constraint blue
+        drawConnection(widget->mTop, vOpp);
+        drawConnection(widget->mBottom, vOpp);
+        drawConnection(widget->mLeft, hOpp);
+        drawConnection(widget->mRight, hOpp);
+    }
 }
 
 void ConstraintLayout::onMeasure(int widthMeasureSpec, int heightMeasureSpec) {

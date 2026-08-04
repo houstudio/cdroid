@@ -50,6 +50,11 @@ class TouchResponse {
     TouchResponse(MotionLayout* layout, const MotionScene::OnSwipe& cfg);
     ~TouchResponse();
 
+    // Unit vector of an <OnSwipe dragDirection> (DRAG_UP/DOWN/LEFT/RIGHT/START/END) — the
+    // TOUCH_DIRECTION table. Shared by the ctor and MotionScene::bestTransitionFor so the latter
+    // can score candidate transitions by how well their drag direction aligns with a gesture.
+    static void directionVector(int dragDirection, float& outX, float& outY);
+
     // MotionEvent stages. onMove returns true once a drag is in progress.
     void onDown(const MotionEvent& evt);
     // True once the finger has moved past touch slop in the drag direction (MotionLayout uses this

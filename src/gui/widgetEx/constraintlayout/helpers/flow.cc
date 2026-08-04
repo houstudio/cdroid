@@ -49,6 +49,13 @@ const std::unordered_map<std::string, int> kChainStyle = {
     {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
     {"packed", ConstraintWidget::CHAIN_PACKED}
 };
+// android:orientation is a platform enum (horizontal/vertical), so it needs a
+// string→int map — getInt(key, def) alone can't parse "vertical" (alpha-prefixed
+// values fall back to def). Mirrors LinearLayout/GridLayout/RadioGroup.
+const std::unordered_map<std::string, int> kOrientation = {
+    {"horizontal", (int)ConstraintWidget::HORIZONTAL},
+    {"vertical", (int)ConstraintWidget::VERTICAL}
+};
 } // namespace
 
 static clcore::Flow* asFlow(HelperWidget* hw) {
@@ -59,28 +66,34 @@ Flow::Flow(Context* ctx, const AttributeSet& attrs)
     : ConstraintHelper(ctx, attrs) {
     mHelperWidget = std::make_unique<clcore::Flow>();
     auto* f = asFlow(mHelperWidget.get());
-    f->setWrapMode(attrs.getInt("wrapMode", kWrapMode, clcore::Flow::WRAP_NONE));
-    int orient = attrs.getInt("android:orientation", ConstraintWidget::HORIZONTAL);
+    // AndroidX Flow styleable (ConstraintLayout_flow) reuses the platform
+    // android:orientation/android:padding and prefixes its own attrs with "flow_".
+    // CDROID's AttributeSet (expat namespace-aware, ' ' separator) stores every
+    // namespaced attr by its bare local name, so the lookup keys are the local
+    // names: "orientation"/"padding" and "flow_*". (A bare "android:..." key would
+    // never match — LinearLayout/GridLayout read "orientation" the same way.)
+    f->setWrapMode(attrs.getInt("flow_wrapMode", kWrapMode, clcore::Flow::WRAP_NONE));
+    int orient = attrs.getInt("orientation", kOrientation, ConstraintWidget::HORIZONTAL);
     f->setOrientation(orient == ConstraintWidget::VERTICAL ? ConstraintWidget::VERTICAL
                       : ConstraintWidget::HORIZONTAL);
-    f->setHorizontalAlign(attrs.getInt("horizontalAlign", kHorizontalAlign, clcore::Flow::HORIZONTAL_ALIGN_START));
-    f->setVerticalAlign(attrs.getInt("verticalAlign", kVerticalAlign, clcore::Flow::VERTICAL_ALIGN_CENTER));
-    f->setHorizontalGap(attrs.getDimensionPixelSize("horizontalGap", 0));
-    f->setVerticalGap(attrs.getDimensionPixelSize("verticalGap", 0));
-    f->setHorizontalStyle(attrs.getInt("horizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setVerticalStyle(attrs.getInt("verticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setFirstHorizontalStyle(attrs.getInt("firstHorizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setFirstVerticalStyle(attrs.getInt("firstVerticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setLastHorizontalStyle(attrs.getInt("lastHorizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setLastVerticalStyle(attrs.getInt("lastVerticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
-    f->setHorizontalBias(attrs.getFloat("horizontalBias", 0.5f));
-    f->setVerticalBias(attrs.getFloat("verticalBias", 0.5f));
-    f->setFirstHorizontalBias(attrs.getFloat("firstHorizontalBias", 0.5f));
-    f->setFirstVerticalBias(attrs.getFloat("firstVerticalBias", 0.5f));
-    f->setLastHorizontalBias(attrs.getFloat("lastHorizontalBias", 0.5f));
-    f->setLastVerticalBias(attrs.getFloat("lastVerticalBias", 0.5f));
+    f->setHorizontalAlign(attrs.getInt("flow_horizontalAlign", kHorizontalAlign, clcore::Flow::HORIZONTAL_ALIGN_START));
+    f->setVerticalAlign(attrs.getInt("flow_verticalAlign", kVerticalAlign, clcore::Flow::VERTICAL_ALIGN_CENTER));
+    f->setHorizontalGap(attrs.getDimensionPixelSize("flow_horizontalGap", 0));
+    f->setVerticalGap(attrs.getDimensionPixelSize("flow_verticalGap", 0));
+    f->setHorizontalStyle(attrs.getInt("flow_horizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setVerticalStyle(attrs.getInt("flow_verticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setFirstHorizontalStyle(attrs.getInt("flow_firstHorizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setFirstVerticalStyle(attrs.getInt("flow_firstVerticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setLastHorizontalStyle(attrs.getInt("flow_lastHorizontalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setLastVerticalStyle(attrs.getInt("flow_lastVerticalStyle", kChainStyle, ConstraintWidget::UNKNOWN));
+    f->setHorizontalBias(attrs.getFloat("flow_horizontalBias", 0.5f));
+    f->setVerticalBias(attrs.getFloat("flow_verticalBias", 0.5f));
+    f->setFirstHorizontalBias(attrs.getFloat("flow_firstHorizontalBias", 0.5f));
+    f->setFirstVerticalBias(attrs.getFloat("flow_firstVerticalBias", 0.5f));
+    f->setLastHorizontalBias(attrs.getFloat("flow_lastHorizontalBias", 0.5f));
+    f->setLastVerticalBias(attrs.getFloat("flow_lastVerticalBias", 0.5f));
     f->setPadding(attrs.getDimensionPixelSize("padding", 0));
-    f->setMaxElementsWrap(attrs.getInt("maxElementsWrap", ConstraintWidget::UNKNOWN));
+    f->setMaxElementsWrap(attrs.getInt("flow_maxElementsWrap", ConstraintWidget::UNKNOWN));
     validateParams();
 }
 

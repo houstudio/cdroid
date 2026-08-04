@@ -24,6 +24,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
         widgetEx/constraintlayout/helpers/layer.cc
         widgetEx/constraintlayout/helpers/circularflow.cc
         widgetEx/constraintlayout/helpers/grid.cc
+        widgetEx/constraintlayout/helpers/carousel.cc
         widgetEx/constraintlayout/motion/motioneffect.cc
 
         # --- core: solver math kernel + LinearSystem ---
@@ -54,6 +55,7 @@ if(ENABLE_CONSTRAINTLAYOUT)
 
         # --- core/widgets/analyzer: graph solver (Stage 3) ---
         widgetEx/constraintlayout/core/widgets/analyzer/basicmeasure.cc
+        widgetEx/constraintlayout/core/widgets/analyzer/direct.cc
         widgetEx/constraintlayout/core/widgets/analyzer/dependencynode.cc
         widgetEx/constraintlayout/core/widgets/analyzer/dimensiondependency.cc
         widgetEx/constraintlayout/core/widgets/analyzer/baselinedimensiondependency.cc

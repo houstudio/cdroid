@@ -54,6 +54,7 @@ MotionLayout::MotionLayout(int width, int height)
 MotionLayout::~MotionLayout() {
     // Owns the per-child Motion controllers and the transition animator (buildMotions/animator reuse
     // raw pointers; nothing else frees the last set at destruction).
+    stopSpringAnimation(); // remove any posted spring frame callback so it never fires on a dead this
     for (auto& kv : mMotions) delete kv.second;
     mMotions.clear();
     delete mAnimator;
@@ -192,6 +193,7 @@ void MotionLayout::setProgress(float progress) {
         mScene->autoTransition(this, mCurrentState);
         mInAutoTransition = false;
     }
+    fireTransitionChange(mBeginState, mEndState, mProgress);
 }
 
 void MotionLayout::animateTo(float target) {
@@ -199,6 +201,7 @@ void MotionLayout::animateTo(float target) {
         setProgress(target);
         return;
     }
+    stopSpringAnimation(); // a ValueAnimator transition supersedes any running spring
     const float start = mProgress;
     if (mAnimator != nullptr) {
         mAnimator->cancel();
@@ -213,8 +216,76 @@ void MotionLayout::animateTo(float target) {
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
     });
+    // Notify listeners once on natural completion (animator reaches its end).
+    Animator::AnimatorListener al;
+    al.onAnimationEnd = [this, target](Animator&, bool) {
+        mProgress = target;
+        if (target <= 0.0f) mCurrentState = mBeginState;
+        else if (target >= 1.0f) mCurrentState = mEndState;
+        if (mCaptured) applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
+        if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
+    };
+    mAnimator->addListener(al);
     mAnimator->start();
+}
+
+void MotionLayout::fireTransitionChange(int startId, int endId, float progress) {
+    for (auto& l : mTransitionListeners) {
+        if (l.onTransitionChange) l.onTransitionChange(this, startId, endId, progress);
+    }
+}
+
+void MotionLayout::fireTransitionCompleted(int currentId) {
+    for (auto& l : mTransitionListeners) {
+        if (l.onTransitionCompleted) l.onTransitionCompleted(this, currentId);
+    }
+}
+
+float MotionLayout::getVelocity() const {
+    if (mStopEngine) return mStopEngine->getVelocity();
+    if (mSpringEngine) return mSpringEngine->getVelocity(0.0f);
+    return 0;
+}
+
+void MotionLayout::rebuildScene() {
+    mCaptured = false;
+    captureAndBuild();
+}
+
+void MotionLayout::touchAnimateTo(int touchUpMode, float progress, float velocity) {
+    if (touchUpMode == TOUCH_UP_DECELERATE_AND_COMPLETE) {
+        // Carry the release momentum, decelerate to rest at the endpoint (Android default on touch-up).
+        animateToWithStopLogic(progress, velocity, /*maxAcceleration*/1.2f, /*maxVelocity*/4.0f);
+    } else {
+        animateTo(progress);
+    }
+}
+
+std::vector<MotionScene::Transition*> MotionLayout::getDefinedTransitions() const {
+    std::vector<MotionScene::Transition*> out;
+    if (mScene) out = mScene->getDefinedTransitions();
+    return out;
+}
+
+MotionScene::Transition* MotionLayout::getTransition(int transitionId) const {
+    return mScene ? mScene->getTransitionById(transitionId) : nullptr;
+}
+
+void MotionLayout::transitionToState(int stateId, int64_t durationMs) {
+    const int64_t saved = mTransitionDuration;
+    mTransitionDuration = durationMs;
+    transitionToState(stateId);
+    mTransitionDuration = saved;
+}
+
+void MotionLayout::stopSpringAnimation() {
+    if (mSpringEngine) {
+        Choreographer::getInstance().removeFrameCallback(mSpringFrameCallback);
+        mSpringEngine.reset();
+    }
 }
 
 void MotionLayout::animateToWithSpring(float target, float startVelocity,
@@ -223,38 +294,48 @@ void MotionLayout::animateToWithSpring(float target, float startVelocity,
         setProgress(target);
         return;
     }
-    if (mAnimator != nullptr) {
+    stopSpringAnimation();              // cancel any running spring frame loop
+    if (mAnimator != nullptr) {         // a ValueAnimator-driven transition is mutually exclusive
         mAnimator->cancel();
         delete mAnimator;
+        mAnimator = nullptr;
     }
     mSpringEngine = std::make_unique<SpringStopEngine>();
     mSpringEngine->springConfig(mProgress, target, startVelocity, mass, stiffness, damping,
                                 stopThreshold, boundary);
-    constexpr float kDurationSec = 2.0f; // generous upper bound; the spring ends itself via isStopped
-    mAnimator = ValueAnimator::ofFloat({0.0f, 1.0f});
-    mAnimator->setDuration((int64_t)(kDurationSec * 1000));
+    mSpringStartNanos = -1;             // seeded on the first frame callback
     SpringStopEngine* engine = mSpringEngine.get();
-    mAnimator->addUpdateListener([this, engine, target, kDurationSec](ValueAnimator& a) {
-        const float time = a.getAnimatedFraction() * kDurationSec;
+    // Drive the spring by real frame time, the way androidx MotionLayout samples its interpolator
+    // each frame at (frameTime - mAnimationStartTime): no fixed-duration ValueAnimator and no
+    // artificial time cap. The spring ends itself via isStopped(); the callback re-posts each frame
+    // until then. (startVelocity is unused by the engine — Android stores it in an unused field.)
+    mSpringFrameCallback = [this, engine, target](int64_t frameTimeNanos) {
+        if (mSpringEngine.get() != engine) return;   // stale: a newer animation superseded this one
+        if (mSpringStartNanos < 0) mSpringStartNanos = frameTimeNanos;
+        const float time = (frameTimeNanos - mSpringStartNanos) * 1e-9f;
         mProgress = engine->getInterpolation(time);
         if (mProgress <= 0.0f) mCurrentState = mBeginState;
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
         if (engine->isStopped()) {
             mProgress = target;
             if (target <= 0.0f) mCurrentState = mBeginState;
             else if (target >= 1.0f) mCurrentState = mEndState;
             if (mCaptured) applyMotion();
-            a.cancel();
+            mSpringEngine.reset();   // done: the stale-engine guard above + no re-post end the loop
             if (mCurrentState != -1 && mScene && !mInAutoTransition) {
                 mInAutoTransition = true;
                 mScene->autoTransition(this, mCurrentState);
                 mInAutoTransition = false;
             }
+            if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
+        } else {
+            Choreographer::getInstance().postFrameCallback(mSpringFrameCallback);
         }
-    });
-    mAnimator->start();
+    };
+    Choreographer::getInstance().postFrameCallback(mSpringFrameCallback);
 }
 
 void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
@@ -263,6 +344,7 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
         setProgress(target);
         return;
     }
+    stopSpringAnimation(); // a ValueAnimator transition supersedes any running spring
     if (mAnimator != nullptr) {
         mAnimator->cancel();
         delete mAnimator;
@@ -281,6 +363,7 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
         else if (mProgress >= 1.0f) mCurrentState = mEndState;
         else mCurrentState = -1;
         applyMotion();
+        fireTransitionChange(mBeginState, mEndState, mProgress);
         if (engine->isStopped()) {
             mProgress = target;
             if (target <= 0.0f) mCurrentState = mBeginState;
@@ -292,6 +375,7 @@ void MotionLayout::animateToWithStopLogic(float target, float startVelocity,
                 mScene->autoTransition(this, mCurrentState);
                 mInAutoTransition = false;
             }
+            if (mCurrentState != -1) fireTransitionCompleted(mCurrentState);
         }
     });
     mAnimator->start();
@@ -427,6 +511,7 @@ void MotionLayout::onLayout(bool changed, int l, int t, int w, int h) {
 // ===========================================================================
 void MotionLayout::applyTransition(MotionScene::Transition* t) {
     if (t == nullptr) return;
+    stopSpringAnimation(); // switching transition supersedes any running spring
     ConstraintSet* start = mScene->getConstraintSet(t->getStartId());
     ConstraintSet* end   = mScene->getConstraintSet(t->getEndId());
     if (start == nullptr || end == nullptr) return;
@@ -593,11 +678,22 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
     if (mTouchResponse == nullptr) return ConstraintLayout::onTouchEvent(evt);
     const int action = evt.getActionMasked();
     if (action == MotionEvent::ACTION_DOWN) {
+        mLastTouchX = evt.getX();
+        mLastTouchY = evt.getY();
         mTouchResponse->onDown(evt);
         return true;
     }
     if (action == MotionEvent::ACTION_MOVE) {
+        // Pick the transition whose <OnSwipe> dragDirection matches this gesture while we rest at a
+        // state (currentState != -1) — mirrors MotionScene.processTouchEvent, which runs
+        // bestTransitionFor only at rest and stops once the drag leaves the endpoint. setTransition
+        // fires only when the best transition actually changes, so this is cheap after the first move.
+        if (mCurrentState != -1) {
+            pickTransitionForDrag(evt);
+        }
         mTouchResponse->onMove(evt);
+        mLastTouchX = evt.getX();
+        mLastTouchY = evt.getY();
         return true;
     }
     if (action == MotionEvent::ACTION_UP || action == MotionEvent::ACTION_CANCEL) {
@@ -605,6 +701,17 @@ bool MotionLayout::onTouchEvent(MotionEvent& evt) {
         return true;
     }
     return true;
+}
+
+void MotionLayout::pickTransitionForDrag(const MotionEvent& evt) {
+    if (mScene == nullptr) return;
+    const float dx = evt.getX() - mLastTouchX;
+    const float dy = evt.getY() - mLastTouchY;
+    MotionScene::Transition* best = mScene->bestTransitionFor(mCurrentState, dx, dy);
+    if (best != nullptr && best != mScene->getCurrentTransition()) {
+        setTransition(best->getId());                  // switches current transition + mTouchResponse
+        if (mTouchResponse != nullptr) mTouchResponse->onDown(evt); // seed the fresh TouchResponse here
+    }
 }
 
 } // namespace cdroid

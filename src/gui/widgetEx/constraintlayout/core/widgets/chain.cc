@@ -30,6 +30,7 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintanchor.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
+#include <widgetEx/constraintlayout/core/widgets/analyzer/direct.h>
 
 namespace cdroid {
 
@@ -97,7 +98,14 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
         isChainPacked = head->mVerticalChainStyle == ConstraintWidget::CHAIN_PACKED;
     }
 
-    // USE_CHAIN_OPTIMIZATION (Direct.solveChain) branch omitted — flag is false.
+    // USE_CHAIN_OPTIMIZATION fast-path (Direct.solveChain). On success the chain is fully
+    // resolved positionally and we return immediately; on false the Cassowary traversal below
+    // runs unchanged. Mirrors androidx Chain.applyChainConstraints (126).
+    if (USE_CHAIN_OPTIMIZATION && !isWrapContent
+            && Direct::solveChain(container, system, orientation, offset, chainHead,
+                                  isChainSpread, isChainSpreadInside, isChainPacked)) {
+        return;
+    }
 
     // This traversal sets up basic ordering constraints and builds the match-constraint list.
     while (!done) {

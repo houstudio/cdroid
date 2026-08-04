@@ -1,7 +1,28 @@
+/*********************************************************************************
+ * Copyright (C) [2019] [houzh@msn.com]
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+ *********************************************************************************/
 #include <core/xmlpullparser.h>
 #include <navigation/navaction.h>
 #include <navigation/navgraph.h>
 #include <navigation/navinflater.h>
+#include <navigation/navargument.h>
+#include <navigation/navoptions.h>
+#include <navigation/navtype.h>
+#include <porting/cdlog.h>
 namespace cdroid{
 //frameworks/support/navigation/runtime/src/main/java/androidx/navigation/NavInflater.java
 //private static final String APPLICATION_ID_PLACEHOLDER = "${applicationId}";
@@ -44,6 +65,7 @@ NavGraph* NavInflater::inflate(const std::string& graphResId) {
 
 NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& attrs){
     Navigator* navigator = mNavigatorProvider->getNavigator(parser.getName());
+    if(!navigator){ LOGD("NavInflater: no navigator for tag '%s'", parser.getName().c_str()); return nullptr; }
     NavDestination* dest = navigator->createDestination();
 
     dest->onInflate(mContext, attrs);
@@ -81,25 +103,32 @@ NavDestination* NavInflater::inflate(XmlPullParser&parser,const AttributeSet& at
 
 void NavInflater::inflateArgument(NavDestination& dest,const AttributeSet& attrs){
     const std::string name = attrs.getString("name");
-    const int argType = attrs.getInt("argType",std::unordered_map<std::string,int>{
-            {"string",0},{"integer",1},{"dimension",2},{"float",3}
-        },0);
-    const std::string defValue= attrs.getString("defaultValue");
-    switch(argType){
-    case 0:
-        dest.getDefaultArguments().putString(name, defValue);
-        break;
-    case 1:
-        dest.getDefaultArguments().putInt(name,std::stoi(defValue));
-        break;
-    case 2:
-    case 3:
-        if(defValue.find("p")!=std::string::npos)
-            dest.getDefaultArguments().putInt(name,std::stoi(defValue));
-        else
-            dest.getDefaultArguments().putFloat(name, std::stof(defValue));
-        break;
+    const std::string argType = attrs.getString("argType");
+    const std::string defValue = attrs.getString("defaultValue");
+    const bool nullable = (attrs.getString("nullable") == "true");
+    NavTypeKind kind = argType.empty() ? NavTypeKind::STRING : navTypeKindFromName(argType);
+    NavArgument::Builder builder;
+    builder.setType(kind);
+    builder.setIsNullable(nullable);
+    if(!defValue.empty()){
+        try{
+            switch(kind){
+                case NavTypeKind::INT:    builder.setDefaultValue(IntType().parseValue(defValue)); break;
+                case NavTypeKind::LONG:   builder.setDefaultValue(LongType().parseValue(defValue)); break;
+                case NavTypeKind::FLOAT:  builder.setDefaultValue(std::stof(defValue)); break;
+                case NavTypeKind::BOOL:   builder.setDefaultValue(defValue == "true"); break;
+                // reference default is an @-resource ref / 0x / literal -> int. attrs.getInt uses
+                // the raw attribute value and resolves @-refs (via Context) + 0x + decimals, which
+                // is the closest CDROID analogue to androidx resolving @ refs in inflate (CDROID
+                // has no unified int-resId system, so @string resId is a known limitation).
+                case NavTypeKind::REFERENCE: builder.setDefaultValue(attrs.getInt("defaultValue", 0)); break;
+                default:                  builder.setDefaultValue(defValue); break;
+            }
+        }catch(...){
+            builder.setDefaultValue(defValue);
+        }
     }
+    dest.addArgument(name, builder.build());
 }
 
 void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attrs) {
@@ -113,23 +142,25 @@ void NavInflater::inflateDeepLink(NavDestination& dest, const AttributeSet& attr
 }
 
 void NavInflater::inflateAction(NavDestination& dest,const AttributeSet& attrs) {
-    //TypedArray a = res.obtainAttributes(attrs, R.styleable.NavAction);
-    const int id = attrs.getResourceId("id");//R.styleable.NavAction_android_id, 0);
-    const int destId = attrs.getResourceId("destination");//R.styleable.NavAction_destination, 0);
+    // Mirrors androidx NavInflater.inflateAction: action + destination are int ids; popUpTo is
+    // an int destination id (-1 = none). Anim is kept as a resource name here (androidx uses an
+    // int res id) because CDROID's animation pipeline resolves by name.
+    const int id = attrs.getResourceId("id", 0);
+    const int destId = attrs.getResourceId("destination", 0);
     NavAction* action = new NavAction(destId);
-#if 0
-    NavOptions::Builder builder;// = new NavOptions.Builder();
-    builder.setLaunchSingleTop(a.getBoolean(R.styleable.NavAction_launchSingleTop, false));
-    builder.setLaunchDocument(a.getBoolean(R.styleable.NavAction_launchDocument, false));
-    builder.setClearTask(a.getBoolean(R.styleable.NavAction_clearTask, false));
-    builder.setPopUpTo(a.getResourceId(R.styleable.NavAction_popUpTo, 0),
-            a.getBoolean(R.styleable.NavAction_popUpToInclusive, false));
-    builder.setEnterAnim(a.getResourceId(R.styleable.NavAction_enterAnim, -1));
-    builder.setExitAnim(a.getResourceId(R.styleable.NavAction_exitAnim, -1));
-    builder.setPopEnterAnim(a.getResourceId(R.styleable.NavAction_popEnterAnim, -1));
-    builder.setPopExitAnim(a.getResourceId(R.styleable.NavAction_popExitAnim, -1));
+    NavOptions::Builder builder;
+    builder.setLaunchSingleTop(attrs.getBoolean("launchSingleTop", false));
+    builder.setRestoreState(attrs.getBoolean("restoreState", false));
+    builder.setPopUpTo(attrs.getResourceId("popUpTo", -1),
+            attrs.getBoolean("popUpToInclusive", false),
+            attrs.getBoolean("popUpToSaveState", false));
+    builder.setEnterAnim(attrs.getString("enterAnim"));
+    builder.setExitAnim(attrs.getString("exitAnim"));
+    builder.setPopEnterAnim(attrs.getString("popEnterAnim"));
+    builder.setPopExitAnim(attrs.getString("popExitAnim"));
     action->setNavOptions(builder.build());
-#endif
+    // TODO: nested <argument> children should populate action defaultArguments (needs SavedState
+    // merge); not required for popUpTo/singleTop, deferred.
     dest.putAction(id, action);
 }
 }/*endof namespace*/
