@@ -418,7 +418,12 @@ void Tree::drawStaging(Canvas& outCanvas) {
                           mStagingProperties.getBounds().right(),
                           mStagingProperties.getBounds().bottom(), paint);*/
     outCanvas.set_source(mStagingCache.bitmap,0,0);
-    outCanvas.set_operator(Cairo::Context::Operator::SOURCE);
+    // Composite the cache OVER the destination (Skia's drawBitmap uses SRC_OVER). SOURCE was a
+    // porting bug: it replaced the destination with the cache, so the cache's transparent areas
+    // (everywhere outside the vector paths) erased the host content beneath — e.g. a nav-button
+    // vector on a blue toolbar punched a transparent square that showed the grey compositor surface
+    // behind, instead of letting the toolbar show through.
+    outCanvas.set_operator(Cairo::Context::Operator::OVER);
     outCanvas.scale(float(mStagingProperties.getBounds().width)/mStagingCache.bitmap->get_width(),
             float(mStagingProperties.getBounds().height)/mStagingCache.bitmap->get_height());
     outCanvas.paint();
