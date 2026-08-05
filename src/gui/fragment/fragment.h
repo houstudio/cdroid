@@ -56,6 +56,7 @@ class Handler;
 
 namespace fragment{
 class FragmentManager;
+class Window;
 class FragmentHostCallback;
 class FragmentViewLifecycleOwner;
 
@@ -188,6 +189,9 @@ public:
     // --- accessors ---
     cdroid::Context* getContext();
     cdroid::Context* requireContext();
+    // androidx Fragment.getActivity: the host Activity. CDROID host type is Window (typedef Window
+    // Activity), reached via the FragmentHostCallback.
+    cdroid::Window* getActivity() const;
     cdroid::View* requireView();
     cdroid::View* getView() const { return mView; }
     cdroid::Bundle* getArguments() const { return mArguments; }

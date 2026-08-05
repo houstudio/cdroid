@@ -58,6 +58,10 @@ public:
      virtual void removeEventHandler(const EventHandler*handler);
      virtual int exec();
      virtual void exit(int code=0);
+     // androidx ActivityNavigator ends in context.startActivity(intent). Real impl: resolve the
+     // Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new` the Window
+     // (its ctor self-registers with WindowManager, so it shows), then stamp the Intent on it.
+     void startActivity(const Intent& intent) override;
 };
 
 }/*end ofnamespace*/

@@ -6,6 +6,7 @@
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
+#include <core/intent.h>
 
 #define USE_UIEVENTHANDLER 0
 
@@ -52,6 +53,7 @@ private:
     ActionMode* mActionMode = nullptr;
     ActionBar*  mActionBar  = nullptr; // owned; created by setActionBar(Toolbar*)
     MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
+    Intent mIntent; // the Intent this Window was started with (Activity.getIntent); set by startActivity
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
@@ -105,6 +107,7 @@ protected:
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
+    using Callback = WindowCallback;
     typedef enum{
         TYPE_WALLPAPER    = 1,
         TYPE_APPLICATION  = 2,
@@ -176,6 +179,10 @@ public:
     virtual bool onNavigateUp();
     virtual void invalidateOptionsMenu();
     virtual MenuInflater* getMenuInflater();
+    // The Intent that started this Window (android.app.Activity.getIntent/getIntent). ActivityNavigator
+    // stamps EXTRA_NAV_SOURCE/CURRENT on it; a real Context.startActivity would setIntent on the new Window.
+    Intent getIntent() const { return mIntent; }
+    void setIntent(const Intent& intent) { mIntent = intent; }
     // Programmatic options-menu open/close — delegate to the ActionBar (ToolbarActionBar).
     virtual void openOptionsMenu();
     virtual void closeOptionsMenu();

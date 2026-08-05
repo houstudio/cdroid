@@ -47,8 +47,8 @@ WindowManager::~WindowManager() {
     App::getInstance().exit(0);
     for(Window*w:mWindows){
         View::AttachInfo*info = w->mAttachInfo;
-        Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
-        w->mUIEventHandler->cleanUp();
+        //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
+        //w->mUIEventHandler->cleanUp();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
@@ -110,12 +110,12 @@ void WindowManager::addWindow(Window*win){
     View::AttachInfo*info = new View::AttachInfo(win->getContext());
     info->mContentInsets.setEmpty();
     info->mRootView = win;
-    info->mEventSource=win->mUIEventHandler;
+    //info->mEventSource=win->mUIEventHandler;
     win->dispatchAttachedToWindow(info,win->getVisibility());
 #if USE_UIEVENTHANDLER    
-    Looper::getMainLooper()->addHandler(win->mUIEventHandler);
+    //Looper::getMainLooper()->addHandler(win->mUIEventHandler);
 #else
-    Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
+    //Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
 #endif
     win->post([win](){
         win->onCreate(nullptr);
@@ -150,9 +150,9 @@ void WindowManager::removeWindow(Window*w){
         w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
     }
 #if USE_UIEVENTHANDLER
-    Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
+    //Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
 #else
-    Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
+    //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
 #endif
     // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
     // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
@@ -172,6 +172,7 @@ void WindowManager::removeWindow(Window*w){
             break;
         }
     }
+    mActiveWindow->invalidate();
     GraphDevice::getInstance().flip();
     LOGI("w=%p windows.size=%d",w,mWindows.size());
 }
@@ -201,9 +202,9 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
         }
     #if USE_UIEVENTHANDLER
-        Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
+        //Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
     #else
-        Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
+        //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
     #endif
         View::AttachInfo*info = w->mAttachInfo;
         w->onDestroy();
@@ -450,7 +451,7 @@ void WindowManager::onKeyEvent(KeyEvent&event) {
             LOGV("Window:%p Key:%s[%x] action=%d",win,KeyEvent::keyCodeToString(keyCode).c_str(),keyCode,event.getAction());
             if(win->mAttachInfo->mInTouchMode){
                 ViewTreeObserver*obv = win->getViewTreeObserver();
-                win->mAttachInfo->mInTouchMode=false;
+                win->mAttachInfo->mInTouchMode = false;
                 obv->dispatchOnTouchModeChanged(false);
             }
             win->processKeyEvent(event);

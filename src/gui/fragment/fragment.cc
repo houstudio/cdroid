@@ -145,6 +145,10 @@ cdroid::Context* Fragment::getContext(){
     if(mParentFragment) return mParentFragment->getContext();
     return nullptr;
 }
+
+cdroid::Window* Fragment::getActivity() const {
+    return mHost ? mHost->onGetHost() : nullptr;
+}
 cdroid::Context* Fragment::requireContext(){
     cdroid::Context* c = getContext();
     if(!c) throw std::runtime_error("Fragment " + mWho + " not attached to a context");

@@ -37,6 +37,7 @@ SET(CORE_SOURCES
     core/inputmethodmanager.cc
     core/insets.cc
     core/intent.cc
+    core/activityfactory.cc
     core/uri.cc
     core/iostreams.cc
     core/keyboard.cc

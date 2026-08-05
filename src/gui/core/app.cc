@@ -28,6 +28,9 @@
 #include <core/app.h>
 #include <core/build.h>
 #include <core/messagequeue.h>
+#include <core/intent.h>
+#include <core/activityfactory.h>
+#include <widget/cdwindow.h>
 #include <gui_features.h>
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
@@ -279,6 +282,23 @@ void App::exit(int code){
     if(q){
         q->quit(false);
     }
+}
+
+void App::startActivity(const Intent& intent){
+    // Resolve the Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new`
+    // the Window (its ctor self-registers with WindowManager -> it appears on screen), then stamp the
+    // Intent on it. CDROID's className is the bare C++ class name matching the REGISTER_ACTIVITY key.
+    const std::string className = intent.getComponent().getClassName();
+    fprintf(stderr, "[App::startActivity] className='%s'\n", className.c_str());
+    if(className.empty()){
+        LOGW("App::startActivity: intent has no component class name");
+        return;
+    }
+    ActivityFactory factory;
+    Window* window = factory.instantiate(className);
+    if(window != nullptr){
+        window->setIntent(intent);
+    } // else: ActivityFactory::instantiate already logged "no Window registered".
 }
 
 const std::string App::getName()const{

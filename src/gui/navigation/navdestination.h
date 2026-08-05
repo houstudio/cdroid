@@ -55,6 +55,9 @@ public:
     virtual ~NavDestination();
 
     virtual void onInflate(Context* context, const AttributeSet& attrs);
+    // androidx NavDestination.supportsActions (default true): whether this destination supports
+    // <action> elements. ActivityNavigator.Destination overrides to false.
+    virtual bool supportsActions() const { return true; }
     void setParent(NavGraph* parent);
     NavGraph* getParent();
     // Ancestor chain self -> root (androidx NavDestination.hierarchy).

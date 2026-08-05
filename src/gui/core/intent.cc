@@ -1,6 +1,8 @@
 #include <core/intent.h>
+#include <core/context.h>
 #include <core/uri.h>
 #include <sstream>
+#include <utility>
 namespace cdroid{
 
 Intent::Intent() {
@@ -15,34 +17,21 @@ Intent::Intent(const Intent& o, int copyMode) {
     mData = o.mData;
     mType = o.mType;
     mPackage = o.mPackage;
-    //mComponent = o.mComponent;
+    mComponent = o.mComponent;
 
     mCategories = o.mCategories;
 
-    /*if (copyMode != COPY_MODE_FILTER) {
+    if(copyMode != COPY_MODE_FILTER){
         mFlags = o.mFlags;
         mContentUserHint = o.mContentUserHint;
         mLaunchToken = o.mLaunchToken;
-        if (o.mSourceBounds != nullptr) {
-            this.mSourceBounds = new Rect(o.mSourceBounds);
+        mSourceBounds = o.mSourceBounds;
+        if(o.mSelector) mSelector = new Intent(*o.mSelector);
+        if(copyMode != COPY_MODE_HISTORY){
+            if(o.mExtras) mExtras = new Bundle(*o.mExtras);
+            if(o.mClipData) mClipData = o.mClipData;
         }
-        if (o.mSelector != nullptr) {
-            this.mSelector = new Intent(o.mSelector);
-        }
-
-        if (copyMode != COPY_MODE_HISTORY) {
-            if (o.mExtras != nullptr) {
-                this.mExtras = new Bundle(o.mExtras);
-            }
-            if (o.mClipData != nullptr) {
-                this.mClipData = new ClipData(o.mClipData);
-            }
-        } else {
-            if (o.mExtras != null && !o.mExtras.maybeIsEmpty()) {
-                this.mExtras = Bundle.STRIPPED;
-            }
-        }
-    }*/
+    }
 }
 
 
@@ -79,6 +68,30 @@ Intent* Intent::makeMainActivity(ComponentName mainActivity) {
 
 Intent::~Intent(){
     delete mData;
+    delete mExtras;
+    delete mSelector;
+    // mClipData: forward-declared (incomplete type); rarely used + ownership ambiguous → not deleted
+    // (stays nullptr unless setClipData is called; acceptable potential leak for an edge-case field).
+}
+
+Intent& Intent::operator=(const Intent& o){
+    if(this != &o){
+        Intent tmp(o);  // copy-and-swap: copy ctor handles deep copy, tmp dtor frees old
+        std::swap(mAction, tmp.mAction);
+        std::swap(mData, tmp.mData);
+        std::swap(mType, tmp.mType);
+        std::swap(mPackage, tmp.mPackage);
+        std::swap(mComponent, tmp.mComponent);
+        std::swap(mCategories, tmp.mCategories);
+        std::swap(mFlags, tmp.mFlags);
+        std::swap(mExtras, tmp.mExtras);
+        std::swap(mSourceBounds, tmp.mSourceBounds);
+        std::swap(mSelector, tmp.mSelector);
+        std::swap(mClipData, tmp.mClipData);
+        std::swap(mContentUserHint, tmp.mContentUserHint);
+        std::swap(mLaunchToken, tmp.mLaunchToken);
+    }
+    return *this;
 }
 
 Intent* Intent::makeMainSelectorActivity(const std::string& selectorAction,const std::string& selectorCategory) {
@@ -1129,6 +1142,10 @@ bool Intent::isExcludingStopped() const{
 std::string Intent::getPackage() const{
     return mPackage;
 }
+
+ComponentName Intent::getComponent() const {
+    return mComponent;
+}
 #if 0
 ComponentName Intet::getComponent() {
     return mComponent;
@@ -1542,25 +1559,20 @@ Intent& Intent::setPackage(const std::string& packageName) {
     return *this;
 }
 
-/*Intent& Intent::setComponent(ComponentName component) {
+Intent& Intent::setComponent(ComponentName component) {
     mComponent = component;
     return *this;
 }
 
 Intent& Intent::setClassName(Context* packageContext,const std::string& className) {
-    mComponent = new ComponentName(packageContext, className);
+    mComponent = ComponentName(packageContext->getPackageName(), className);
     return *this;
 }
 
 Intent& Intent::setClassName(const std::string& packageName, const std::string& className) {
-    mComponent = new ComponentName(packageName, className);
+    mComponent = ComponentName(packageName, className);
     return *this;
 }
-
-Intent& setClass(Context* packageContext, Class<?> cls) {
-    mComponent = new ComponentName(packageContext, cls);
-    return *this;
-}*/
 
 void Intent::setSourceBounds(const Rect* r) {
     if (r != nullptr) {
