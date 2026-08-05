@@ -121,8 +121,6 @@ void ActivityNavigator::navigate(NavDestination* destination, Bundle* args, NavO
     // androidx: carry popEnter/popExit anim (int resId) when not an animator resource + override the
     // host pending transition. CDROID anim resources are string-keyed and there is no
     // overridePendingTransition, so the animation branches are not ported.
-    fprintf(stderr, "[ActivityNav] navigate: className='%s' hostActivity=%p → startActivity\n",
-            intent.getComponent().getClassName().c_str(), (void*)mHostActivity);
     mContext->startActivity(intent); // CDROID seam — App::startActivity resolves via ActivityFactory
     LOGD("ActivityNavigator.navigate: component=%s dataPattern=%zu (startActivity is a no-op seam)",
          intent.getComponent().getClassName().c_str(), d->getDataPattern().size());
@@ -153,7 +151,6 @@ int ActivityNavigator::Destination::hashCode() const {
 
 void ActivityNavigator::Destination::onInflate(Context* context, const AttributeSet& attrs){
     NavDestination::onInflate(context, attrs);
-    LOGD("ActivityDest.onInflate name=%s targetPkg=%s action=%s", attrs.getString("name").c_str(), attrs.getString("targetPackage").c_str(), attrs.getString("action").c_str());
     // androidx R.styleable.ActivityNavigator: targetPackage / android:name / action / data / dataPattern.
     setTargetPackage(parseApplicationId(context, attrs.getString("targetPackage")));
     std::string className = attrs.getString("name");

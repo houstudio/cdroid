@@ -31,10 +31,15 @@ namespace cxxopts{
 }
 namespace cdroid{
 
+class Window;
+struct ActivityPendingResult { Window* caller; int requestCode; Window* target; };
+
 class App:public Assets{
 private:
     bool mQuitFlag;
     int mExitCode;
+    std::vector<ActivityPendingResult> mPendingResults;
+    Window* mLastStartedWindow = nullptr;
 protected:
     std::unique_ptr<cxxopts::ParseResult> mArgsResult;
     static std::atomic<App*>mInst;
@@ -57,6 +62,10 @@ public:
      virtual void addEventHandler(const EventHandler* handler);
      virtual void removeEventHandler(const EventHandler*handler);
      virtual int exec();
+     // Activity result mediation: Window.startActivityForResult → target.setResult → close →
+     // caller.onActivityResult. App tracks the caller↔target mapping.
+     void startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode);
+     void dispatchPendingResult(Window* target);
      virtual void exit(int code=0);
      // androidx ActivityNavigator ends in context.startActivity(intent). Real impl: resolve the
      // Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new` the Window

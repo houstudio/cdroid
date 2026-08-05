@@ -21,8 +21,6 @@ bool ActivityFactory::isActivityClass(const std::string& className){
 
 Window* ActivityFactory::instantiate(const std::string& className){
     auto it = registry().find(className);
-    fprintf(stderr, "[ActivityFactory] instantiate('%s') → %s\n", className.c_str(),
-            it != registry().end() ? "FOUND" : "NOT FOUND");
     if(it == registry().end()){
         LOGE("ActivityFactory: no Window registered for '%s' (REGISTER_ACTIVITY it?)", className.c_str());
         return nullptr;

@@ -54,6 +54,9 @@ private:
     ActionBar*  mActionBar  = nullptr; // owned; created by setActionBar(Toolbar*)
     MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
     Intent mIntent; // the Intent this Window was started with (Activity.getIntent); set by startActivity
+    bool mNoHistory = false; // FLAG_ACTIVITY_NO_HISTORY: auto-close when another Window is shown
+    int mResultCode = 0;     // Activity result (set by setResult, delivered on close)
+    Intent* mResultData = nullptr; // borrowed (set by setResult, not deleted by ~Window)
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
@@ -138,6 +141,17 @@ public:
     // Activity-aligned lifecycle callbacks. Window plays the role of an Activity
     // (typedef Window Activity), so it exposes the standard Activity lifecycle.
     virtual void onCreate(Bundle* savedInstanceState);
+    // android.app.Activity.onNewIntent: called when a singleTop/singleTask Window is reused (the
+    // system delivers a new Intent to an existing instance instead of creating a new one).
+    // Default: no-op (setIntent has already been called by startActivity; override to react).
+    virtual void onNewIntent(const Intent& /*intent*/) {}
+    // android.app.Activity result API: startActivityForResult → target setResult → close →
+    // caller.onActivityResult. App mediates the result delivery (see App::dispatchPendingResult).
+    void startActivityForResult(const Intent& intent, int requestCode);
+    void setResult(int resultCode, Intent* data = nullptr) { mResultCode = resultCode; mResultData = data; }
+    int getResultCode() const { return mResultCode; }
+    Intent* getResultData() const { return mResultData; }
+    virtual void onActivityResult(int /*requestCode*/, int /*resultCode*/, Intent* /*data*/) {}
     virtual void onStart();
     virtual void onResume();
     virtual void onPause();
@@ -183,6 +197,9 @@ public:
     // stamps EXTRA_NAV_SOURCE/CURRENT on it; a real Context.startActivity would setIntent on the new Window.
     Intent getIntent() const { return mIntent; }
     void setIntent(const Intent& intent) { mIntent = intent; }
+    // android FLAG_ACTIVITY_NO_HISTORY: if set, this Window auto-closes when another Window is shown.
+    bool isNoHistory() const { return mNoHistory; }
+    void setNoHistory(bool b) { mNoHistory = b; }
     // Programmatic options-menu open/close — delegate to the ActionBar (ToolbarActionBar).
     virtual void openOptionsMenu();
     virtual void closeOptionsMenu();

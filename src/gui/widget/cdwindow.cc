@@ -930,6 +930,10 @@ void Window::doLayout(){
 }
 
 
+void Window::startActivityForResult(const Intent& intent, int requestCode){
+    App::getInstance().startActivityForResultInternal(this, intent, requestCode);
+}
+
 void Window::close(){
     // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
     // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
@@ -940,6 +944,8 @@ void Window::close(){
     // window would never be deleted (NavController chain + view tree + Transition clone all leak).
     // A heap Handler that self-deletes keeps the post alive past removeWindow (same pattern as the
     // Transition clone self-delete in Transition::end()).
+    // Deliver pending activity result if this Window was started via startActivityForResult.
+    App::getInstance().dispatchPendingResult(this);
     auto* info = mAttachInfo;
     Window* self = this;
     Handler* h = new Handler();
