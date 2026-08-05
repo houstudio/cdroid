@@ -91,6 +91,14 @@ foreach(file ${allfiles})
         list(APPEND filtered_files ${file})
     endif()
 endforeach()
+# Re-run the header copy below whenever any tracked header changes. file(COPY) only runs at
+# configure time; without this, editing a src header leaves the ${CMAKE_BINARY_DIR}/include/gui
+# copy stale (apps include the copy) until you touch CMakeLists / re-run cmake by hand.
+set(filtered_files_abs "")
+foreach(f ${filtered_files})
+    list(APPEND filtered_files_abs "${PROJECT_SOURCE_DIR}/${f}")
+endforeach()
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${filtered_files_abs}")
 foreach( each_file ${filtered_files} )
   STRING(REGEX REPLACE ".*/\(.*\)" "\\1" FILE_PATH ${each_file})
   STRING(LENGTH ${each_file} LEN0)

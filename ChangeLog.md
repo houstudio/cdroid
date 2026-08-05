@@ -1,5 +1,5 @@
 # **5.
-  - add Transition 
+  - add Transition
   - add Navigation
   - add Fragment FragmentManger
   - add ConstrainLayout and MotionLayout(full features)
