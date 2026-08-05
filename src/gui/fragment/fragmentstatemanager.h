@@ -29,11 +29,13 @@
  * mInDynamicContainer, mDeferStart, mTransitioning, saved-state plumbing.
  *********************************************************************************/
 namespace cdroid{
+class Bundle; // cdroid::Bundle forward decl (NOT cdroid::fragment::Bundle)
 namespace fragment{
 
 class Fragment;
 class FragmentManager;
 class SpecialEffectsController;
+struct FragmentState;
 
 class FragmentStateManager{
 public:
@@ -43,6 +45,10 @@ public:
     void setFragmentManagerState(int s){ mFragmentManagerState = s; }
     int  getFragmentManagerState() const { return mFragmentManagerState; }
     Fragment* getFragment() const { return mFragment; }
+    // The owning FragmentManager. Used by the SEC reclaim hook (built in SpecialEffectsController::
+    // enqueue) to route fragment reclamation through FragmentManager::reclaimFragment without the
+    // hook capturing this FSM (which destroy-sweep may delete → UAF on a late posted hook).
+    FragmentManager* getFragmentManager() const { return mFragmentManager; }
 
     // androidx FragmentStateManager.computeExpectedState (CDROID subset).
     int  computeExpectedState();
@@ -54,6 +60,24 @@ public:
     // Drive to an explicit target state (used by remove/retain which want INITIALIZING/CREATED
     // regardless of computeExpectedState). Also re-entrancy-guarded.
     void moveToState(int explicitTarget);
+    // androidx SpecialEffectsController.forceCompleteAll: complete every pending/running effect op
+    // for this fragment's container so awaiting-effect clamps lift and the ops retire. Used by the
+    // FragmentManager teardown paths so a fragment mid-effect is not left stranded.
+    void forceCompleteSpecialEffects();
+    // Reclaim this fragment's per-container SpecialEffectsController (cached on the container tag,
+    // see getSpecialEffectsController). Called by FragmentManager::dispatchDestroy after all effects
+    // are force-completed; idempotent across FSMs that share a container.
+    void destroySpecialEffectsController();
+    // androidx FragmentStateManager.saveState(): gather this fragment's saved state (FragmentState
+    // meta + onSaveInstanceState + SavedStateRegistry + view-hierarchy state + arguments) into one
+    // FragmentState. Caller owns the result. Used by the saveBackStack teardown.
+    FragmentState* saveState();
+    // androidx FragmentStateManager.saveViewState(): capture mView's hierarchy state into
+    // mFragment->mSavedViewState.
+    void saveViewState();
+    // androidx FragmentStateManager.restoreState(): re-apply a saved state onto this fragment
+    // (arguments + view state; the lifecycle callbacks consume the rest when re-created).
+    void restoreState(const FragmentState& state);
 private:
     FragmentManager* mFragmentManager;
     Fragment* mFragment;
@@ -62,6 +86,10 @@ private:
     void stepUp();
     void stepDown();
     SpecialEffectsController* getSpecialEffectsController();
+    // The saved instance-state Bundle sliced out of mFragment->mSavedFragmentState (set on restore),
+    // passed to onCreate/onCreateView/onActivityCreated (androidx FragmentStateManager). Null for a
+    // freshly created fragment (no saved state).
+    Bundle* savedInstanceState() const;
 };
 
 }}//namespace fragment::cdroid

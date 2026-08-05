@@ -37,15 +37,9 @@ namespace {
 constexpr const char* LOG_TAG = "Fade";
 constexpr bool DBG = false;
 
-// android: anonymous TransitionListenerAdapter in createAnimation that resets
-// transitionAlpha to 1 when the transition ends. Named here.
-struct FadeEndListener: public TransitionListenerAdapter {
-    View* view;
-    void onTransitionEnd(Transition& transition) override {
-        view->setTransitionAlpha(1);
-        transition.removeListener(this);
-    }
-};
+// android: anonymous TransitionListener in createAnimation that resets transitionAlpha
+// to 1 when the transition ends. Now wired inline as an EventSet TransitionListener value
+// (see createAnimation) — no subclass / no new.
 
 } // anonymous namespace
 
@@ -92,9 +86,11 @@ Animator* Fade::createAnimation(View* view, float startAlpha, float endAlpha) {
     };
     anim->addListener(listener);
 
-    FadeEndListener* endListener = new FadeEndListener();
-    endListener->view = view;
-    addListener(endListener); // Transition takes ownership
+    Transition::TransitionListener endListener;
+    endListener.onTransitionEnd = [view](Transition&) {
+        view->setTransitionAlpha(1);
+    };
+    addListener(endListener);
     return anim;
 }
 

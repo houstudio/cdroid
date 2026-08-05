@@ -82,15 +82,25 @@ void Dialog::hide(){
 }
 
 void Dialog::dismiss(){
-    dismissDialog();   
+    // Guard against re-entrant dismiss (mirrors Android Dialog.dismiss: a dismissed dialog
+    // no-ops). Without this, onDismiss -> (callback) -> dismiss -> onDismiss recurses
+    // (e.g. MenuDialogHelper.onDismiss -> presenter.onCloseMenu -> MenuDialogHelper.onCloseMenu
+    // -> dismiss). dismissDialog() sets mShowing=false before firing onDismiss.
+    if (!mShowing) return;
+    dismissDialog();
 }
 
 void Dialog::dismissDialog(){
     onStop();
     mShowing = false;
-    if(mOnDismissListener)
+    if(mOnDismissListener){
         mOnDismissListener(*this);
-    mWindow->setVisibility(View::INVISIBLE);
+    }
+    if(mWindow){
+        mWindow->setVisibility(View::INVISIBLE);
+        mWindow->close();          // proper window lifecycle cleanup (posts remove + onDestroy)
+        mWindow = nullptr;         // idempotent: prevent double-close crash on re-entry
+    }
 }
 
 void Dialog::dispatchOnCreate(void*buddle){

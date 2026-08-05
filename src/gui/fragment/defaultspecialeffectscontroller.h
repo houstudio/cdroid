@@ -47,7 +47,8 @@ private:
 };
 
 // Runs a Transition via TransitionManager.beginDelayedTransition (default Fade / shared ChangeBounds).
-// Completes synchronously (the transition runs async; the FSM may proceed).
+// Completes on transition end/cancel (the clone runs async; completeEffect is deferred via a cloned
+// listener so the view isn't reclaimed while the transition's startValues still references it).
 class TransitionEffect : public SpecialEffectsController::Effect{
 public:
     TransitionEffect(SpecialEffectsController::Operation* op, Transition* transition) : Effect(op), mTransition(transition){}

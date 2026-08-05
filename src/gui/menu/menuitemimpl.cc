@@ -45,6 +45,12 @@ MenuItemImpl::MenuItemImpl(MenuBuilder* menu, int group, int id, int categoryOrd
 }
 
 MenuItemImpl::~MenuItemImpl(){
+    // MenuItemImpl is the sole owner of its SubMenuBuilder: addSubMenu / performItemAction
+    // `new` it and store it here, and no one else frees it (MenuPopupHelper borrows mMenu but
+    // only deletes mPopup in its dtor). Match AOSP GC by freeing it here; the SubMenuBuilder
+    // base ~MenuBuilder reclaims the submenu's own items without dereferencing the mItem
+    // back-pointer. Without this, clearing a menu whose items carry submenus leaks them.
+    delete mSubMenu;
 }
 
 bool MenuItemImpl::invoke() {

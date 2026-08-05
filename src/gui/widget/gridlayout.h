@@ -68,10 +68,10 @@ protected:
     class Arc{
     public:
         Interval span;
-        MutableInt value;
+        const MutableInt* value = nullptr;
         bool valid;
         Arc();
-        Arc(const Interval& span,const MutableInt& value);
+        Arc(const Interval& span,const MutableInt* value);
     };
     class Bounds{
     public:

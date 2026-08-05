@@ -25,6 +25,13 @@ private:
     std::map<const std::string, Navigator*> mNavigators;
     bool validateName(const std::string& name);
 public:
+    // Owns every Navigator added via addNavigator (NavGraphNavigator/FragmentNavigator/
+    // DialogFragmentNavigator). CDROID has no GC: delete them on destruction. Requires
+    // NavigatorProvider::~NavigatorProvider to be virtual (added in the base) so this dtor runs
+    // when NavController does `delete mNavigatorProvider`.
+    ~SimpleNavigatorProvider() override {
+        for(auto& kv : mNavigators) delete kv.second;
+    }
     Navigator*getNavigator(const std::string& name) override;
 
     Navigator*addNavigator(Navigator*navigator)override;

@@ -18,6 +18,8 @@
 #include <navigation/navigationui.h>
 #include <navigation/appbarconfiguration.h>
 #include <navigation/navdestination.h>
+#include <navigation/navgraph.h>
+#include <widget/actionbar.h>
 #include <widget/toolbar.h>
 #include <view/view.h>
 #include <porting/cdlog.h>
@@ -38,37 +40,58 @@ bool NavigationUI::navigateUp(NavController* navController, AppBarConfiguration*
     return navController->navigateUp();
 }
 
-void NavigationUI::setupActionBarWithNavController(ActionBar* /*actionBar*/,
-                                                   NavController* /*navController*/,
-                                                   AppBarConfiguration* /*configuration*/){
-    // CDROID ActionBar is a shell (no setTitle/setDisplayHomeAsUpEnabled yet). The
-    // destination-changed listener that updates title/Up-arrow is implemented once
-    // ActionBar gains those APIs.
-    LOGD("NavigationUI.setupActionBarWithNavController: ActionBar shell, no-op for now");
+void NavigationUI::setupActionBarWithNavController(ActionBar* actionBar,
+                                                   NavController* navController,
+                                                   AppBarConfiguration* configuration){
+    if(!actionBar || !navController) return;
+    // OnDestinationChangedListener: update the ActionBar title and Up affordance. The Up
+    // button click flows home -> Activity.onOptionsItemSelected -> onNavigateUp; the host
+    // Activity should override onNavigateUp() to call NavigationUI::navigateUp(navController).
+    // The listener is a CallbackBase value owned by NavController (no new/delete); pointers are
+    // captured by value, matching the prior subclass's borrowed-field lifetime.
+    navController->addOnDestinationChangedListener(
+        [actionBar, configuration](NavController*, NavDestination* destination, Bundle*){
+            if(!destination) return;
+            actionBar->setTitle(destination->getLabel());
+            bool isTopLevel = configuration && configuration->isTopLevelDestination(destination->getRoute());
+            actionBar->setDisplayHomeAsUpEnabled(!isTopLevel);
+        });
 }
 
 void NavigationUI::setupWithNavController(Toolbar* toolbar, NavController* navController,
                                           AppBarConfiguration* configuration){
     if(!toolbar || !navController) return;
-    // OnDestinationChangedListener: update the Toolbar title + wire the navigation icon to
-    // navigateUp() unless the destination is a top-level one.
-    class ToolbarListener : public NavController::OnDestinationChangedListener{
-        Toolbar* mToolbar;
-        NavController* mController;
-        AppBarConfiguration* mConfig;
-    public:
-        ToolbarListener(Toolbar* t, NavController* c, AppBarConfiguration* cfg)
-            : mToolbar(t), mController(c), mConfig(cfg){}
-        void onDestinationChanged(NavController*, NavDestination* destination, Bundle*) override{
+    // androidx NavigationUI.setupWithNavController(Toolbar, NavController, AppBarConfiguration)
+    // attaches a ToolbarOnDestinationChangedListener (title + Up indicator, via
+    // AbstractAppBarOnDestinationChangedListener) and wires the navigation click UNCONDITIONALLY
+    // to navigateUp(navController, configuration). With no Openable/drawer configured (CDROID
+    // wires no drawer here) the icon logic clears the nav icon on top-level destinations and
+    // shows the Up indicator otherwise — androidx uses a DrawerArrowDrawable at progress 1; CDROID
+    // has no DrawerArrowDrawable, so the built-in homeAsUpIndicator asset stands in.
+    // The 2-arg overload passes no AppBarConfiguration; androidx then builds a default whose sole
+    // top-level destination is the graph's start destination. Mirror that so the start screen
+    // shows no Up arrow (and the existing 2-arg callers don't regress to an arrow on home).
+    const bool useDefaultConfig = (configuration == nullptr);
+    const std::string startRoute = (useDefaultConfig && navController->getGraph())
+        ? navController->getGraph()->getStartDestinationRoute() : std::string();
+    navController->addOnDestinationChangedListener(
+        [toolbar, configuration, startRoute](NavController*, NavDestination* destination, Bundle*){
             if(!destination) return;
-            mToolbar->setTitle(destination->getLabel());
-            bool isTopLevel = mConfig && mConfig->isTopLevelDestination(destination->getRoute());
-            if(!isTopLevel){
-                mToolbar->setNavigationOnClickListener([this](View&){ mController->navigateUp(); });
+            toolbar->setTitle(destination->getLabel());
+            const std::string& route = destination->getRoute();
+            const bool isTopLevel = (configuration && configuration->isTopLevelDestination(route))
+                || (!configuration && !startRoute.empty() && route == startRoute);
+            if(isTopLevel){
+                toolbar->setNavigationIcon(nullptr);
+            }else{
+                toolbar->setNavigationIcon(
+                    toolbar->getContext()->getDrawable("cdroid:drawable/ic_ab_back_holo_dark"));
             }
-        }
-    };
-    navController->addOnDestinationChangedListener(new ToolbarListener(toolbar, navController, configuration));
+        });
+    // Wired once, unconditionally — navigateUp itself decides drawer-vs-pop from the configuration.
+    toolbar->setNavigationOnClickListener([navController, configuration](View&){
+        navigateUp(navController, configuration);
+    });
 }
 
 bool NavigationUI::onNavDestinationSelected(MenuItem* /*item*/, NavController* /*navController*/){

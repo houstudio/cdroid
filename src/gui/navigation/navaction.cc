@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/navaction.h>
+#include <navigation/navoptions.h>
 namespace cdroid{
 NavAction::NavAction(int destinationId)
     :NavAction(destinationId, nullptr){
@@ -26,11 +27,16 @@ NavAction::NavAction(int destinationId, NavOptions* navOptions) {
     mNavOptions = navOptions;
 }
 
+NavAction::~NavAction(){
+    delete mNavOptions;
+}
+
 int NavAction::getDestinationId() const{
     return mDestinationId;
 }
 
 void NavAction::setNavOptions(NavOptions* navOptions) {
+    delete mNavOptions;
     mNavOptions = navOptions;
 }
 

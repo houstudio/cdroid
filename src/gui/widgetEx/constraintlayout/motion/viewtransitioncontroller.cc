@@ -35,14 +35,18 @@
 namespace cdroid {
 
 ViewTransitionController::ViewTransitionController(MotionLayout* layout)
-    : mMotionLayout(layout) {}
+    : mMotionLayout(layout) {
+    mSharedValueListener = [this](int key, int newValue, int oldValue){
+        onNewValue(key, newValue, oldValue);
+    };
+}
 
 ViewTransitionController::~ViewTransitionController() {
     if (mAnimator != nullptr) {
         mAnimator->cancel();
         delete mAnimator;
     }
-    ConstraintLayout::getSharedValues().removeListener(this);
+    ConstraintLayout::getSharedValues().removeListener(mSharedValueListener);
 }
 
 void ViewTransitionController::add(ViewTransition* vt) {
@@ -72,7 +76,7 @@ void ViewTransitionController::listenForSharedVariable(ViewTransition* vt) {
     // a key would otherwise register it twice and onNewValue would fire each matching VT twice).
     const int key = vt->getSharedValueID();
     if (mListenedKeys.insert(key).second) {
-        ConstraintLayout::getSharedValues().addListener(key, this);
+        ConstraintLayout::getSharedValues().addListener(key, mSharedValueListener);
     }
 }
 

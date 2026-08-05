@@ -3,15 +3,25 @@
 #include <widget/framelayout.h>
 #include <core/handler.h>
 #include <core/uieventsource.h>
+#include <view/choreographer.h>
 #include <view/actionmode.h>
+#include <widget/windowcallback.h>
 
 #define USE_UIEVENTHANDLER 0
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
-class Window : public FrameLayout {
+class ActionBar;
+class Toolbar;
+class Menu;
+class MenuItem;
+class MenuInflater;
+class ContextMenu;
+class ContextMenuInfo;
+class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
+    friend class View;  // View::invalidateInternal/requestLayout → Window::scheduleTraversals
     friend class GraphDevice;
     friend class UIEventSource;
     class InvalidateOnAnimationRunnable:public Runnable{
@@ -40,10 +50,19 @@ private:
     Rect mRectOfFocusedView;
     AccessibilityManager*mAccessibilityManager;
     ActionMode* mActionMode = nullptr;
+    ActionBar*  mActionBar  = nullptr; // owned; created by setActionBar(Toolbar*)
+    MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
 private:
     void doLayout();
+    // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
+    // Moves draw from the doEventHandlers phase (UIEventSource poll) into drainMessageQueue (the
+    // Choreographer posts MSG_DO_FRAME as a Handler message), so draw and effect-end posts share the
+    // same FIFO queue — clone playTransition runs before any posted view delete. Re-entrancy guard
+    // via mTraversalScheduled (multiple invalidate/requestLayout coalesce into one traversal).
+    void scheduleTraversals();
+    void doTraversal();
     bool performFocusNavigation(KeyEvent& event);
     static View*inflate(Context*ctx,std::istream&stream);
     static ViewGroup*findAncestorToTakeFocusInTouchMode(View* focused);
@@ -70,6 +89,7 @@ protected:
     int mLayer;/*surface layer*/
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
+    bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
 #if USE_UIEVENTHANDLER	
     UIEventHandler* mUIEventHandler;
 #else
@@ -130,6 +150,58 @@ public:
     virtual void onActive();
     [[deprecated("Use onPause() instead")]]
     virtual void onDeactive();
+
+    // Panel feature id used as an options-menu dispatch sentinel. CDROID does not
+    // model the full requestWindowFeature()/FEATURE_ACTION_BAR theme machinery
+    // (no DecorView); only this id is referenced internally.
+    static constexpr int FEATURE_OPTIONS_PANEL = 0;
+    // androidx AppCompatDelegate panel id used by ToolbarActionBar's menu callbacks
+    // (onMenuOpened/onPanelClosed). CDROID has only the one options panel, so this aliases it.
+    static constexpr int FEATURE_SUPPORT_ACTION_BAR = 0;
+
+    // Adopts toolbar as this Activity's ActionBar (mirrors framework
+    // Activity.setActionBar / androidx AppCompatActivity.setSupportActionBar — CDROID's
+    // Activity plays the AppCompatActivity role). The created ToolbarActionBar is owned
+    // by this Window and freed in ~Window(). Pass nullptr to clear.
+    void setActionBar(Toolbar* toolbar);
+    ActionBar* getActionBar();
+
+    // Options-menu dispatch chain. Override in subclasses to populate / handle items.
+    virtual bool onCreateOptionsMenu(Menu& menu);
+    virtual bool onPrepareOptionsMenu(Menu& menu);
+    // Non-home options items. (Home/up is folded to onNavigateUp() upstream, in
+    // onMenuItemSelected — mirrors AOSP Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL.)
+    virtual bool onOptionsItemSelected(MenuItem& item);
+    virtual bool onContextItemSelected(MenuItem& item);
+    virtual bool onNavigateUp();
+    virtual void invalidateOptionsMenu();
+    virtual MenuInflater* getMenuInflater();
+    // Programmatic options-menu open/close — delegate to the ActionBar (ToolbarActionBar).
+    virtual void openOptionsMenu();
+    virtual void closeOptionsMenu();
+
+    // --- WindowCallback (android.view.Window.Callback, panel/options subset) ---
+    // These wrap the options-menu methods above with the featureId dimension that androidx
+    // ToolbarActionBar dispatches through. CDROID has a single options panel, so only
+    // FEATURE_OPTIONS_PANEL is honored; other feature ids are no-ops.
+    View* onCreatePanelView(int featureId) override;
+    bool onCreatePanelMenu(int featureId, Menu& menu) override;
+    bool onPreparePanel(int featureId, View* view, Menu& menu) override;
+    bool onMenuOpened(int featureId, Menu& menu) override;
+    bool onMenuItemSelected(int featureId, MenuItem& item) override;
+    void onPanelClosed(int featureId, Menu& menu) override;
+
+    // Context menu (android.app.Activity context menu dispatch). The long-press ->
+    // showContextMenu -> showContextMenuForChild chain terminates here; Window builds and
+    // shows the menu (MenuDialogHelper) and routes item selection to onContextItemSelected.
+    bool showContextMenuForChild(View* originalView) override;
+    bool showContextMenuForChild(View* originalView, float x, float y) override;
+    void registerForContextMenu(View* view);
+    void unregisterForContextMenu(View* view);
+    void openContextMenu(View* view);
+    void closeContextMenu();
+    virtual void onCreateContextMenu(ContextMenu& menu, View& v, ContextMenuInfo* menuInfo);
+
     bool dispatchKeyEvent(KeyEvent&event)override;
     bool isInLayout()const override;
     void dispatchInvalidateOnAnimation(View* view)override;

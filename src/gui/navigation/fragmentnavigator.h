@@ -22,9 +22,12 @@
  * Fragments via FragmentTransaction.replace for each destination's className.
  *********************************************************************************/
 #include <string>
+#include <vector>
+#include <set>
 #include <navigation/navigator.h>
 #include <navigation/navdestination.h>
 #include <navigation/navoptions.h>
+#include <navigation/navbackstackentry.h>
 #include <core/bundle.h>
 #include <core/attributeset.h>
 #include <porting/cdlog.h>
@@ -45,11 +48,28 @@ public:
 
     FragmentNavigator(fragment::FragmentManager* fm, int containerId);
     NavDestination* createDestination() override;
-    void navigate(NavDestination* destination, Bundle* args, NavOptions* navOptions) override;
+    // androidx FragmentNavigator.navigate(entries, navOptions, navigatorExtras): swap a Fragment
+    // in for each entry via FragmentTransaction.replace, skipping addToBackStack on the initial
+    // navigation (state.backStack was empty), then push each entry onto this navigator's state.
+    void navigate(std::vector<NavBackStackEntry*>& entries, NavOptions* navOptions, Extras* navigatorExtras) override;
+    // androidx FragmentNavigator.popBackStack(popUpTo, savedState): pop the FragmentManager back
+    // stack to (inclusive) popUpTo, then pop the entry off this navigator's state.
+    void popBackStack(NavBackStackEntry* popUpTo, bool savedState) override;
+    // Legacy no-arg pop (kept until NavController switches fully to the entry-based pop): pop the
+    // top of the FragmentManager back stack. Returns false at the start fragment (initial).
     bool popBackStack() override;
+    // androidx FragmentNavigator.onSaveState/onRestoreState: persist the savedIds set (which entry
+    // ids are eligible for restoreBackStack).
+    Bundle onSaveState() override;
+    void onRestoreState(const Bundle& savedState) override;
 private:
     fragment::FragmentManager* mFragmentManager;
     int mContainerId;
+    // androidx FragmentNavigator.savedIds: entry ids saved via saveBackStack and thus eligible for
+    // restoreBackStack (gates the navigate restoreState path).
+    std::set<std::string> mSavedIds;
+    // androidx FragmentNavigator.kt:428-470 — per-entry navigate core.
+    void navigate(NavBackStackEntry* entry, NavOptions* navOptions);
 };
 }//namespace cdroid
 #endif

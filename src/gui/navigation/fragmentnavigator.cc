@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <navigation/fragmentnavigator.h>
+#include <navigation/navigatorstate.h>
 #include <fragment/fragment.h>
 #include <fragment/fragmentfactory.h>
 #include <fragment/fragmenttransaction.h>
@@ -39,17 +40,41 @@ void FragmentNavigator::Destination::onInflate(cdroid::Context* context, const A
          getRoute().c_str(), getClassName().c_str());
 }
 
-void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavOptions* navOptions){
-    Destination* d = dynamic_cast<Destination*>(destination);
-    LOGD("FragmentNavigator.navigate className='%s' fm=%p containerId=%d",
-         d ? d->getClassName().c_str() : "(null)", mFragmentManager, mContainerId);
-    if(!d || !mFragmentManager){ LOGD("FragmentNavigator.navigate: bail (d=%p fm=%p)", d, mFragmentManager); return; }
+void FragmentNavigator::navigate(std::vector<NavBackStackEntry*>& entries, NavOptions* navOptions, Extras* /*navigatorExtras*/){
+    // androidx FragmentNavigator.kt:414-426
+    if(!mFragmentManager){ LOGD("FragmentNavigator.navigate: bail (fm null)"); return; }
+    for(NavBackStackEntry* entry : entries){
+        if(entry) navigate(entry, navOptions);
+    }
+}
+
+void FragmentNavigator::navigate(NavBackStackEntry* entry, NavOptions* navOptions){
+    // androidx FragmentNavigator.kt:428-470
+    Destination* d = dynamic_cast<Destination*>(entry->getDestination());
+    LOGD("FragmentNavigator.navigate className='%s' initial=%d",
+         d ? d->getClassName().c_str() : "(null)", getState() ? (int)getState()->getBackStack().empty() : -1);
+    if(!d || !mFragmentManager) return;
+    // androidx :433 — initial navigation is when this navigator's back stack is empty (the start
+    // fragment). It is committed directly, NOT addToBackStack, so it can never be popped by the
+    // FragmentManager to a blank screen; its NavBackStackEntry still leaves the logical back stack
+    // through state.pop (its fragment lingers until the next navigate()'s replace evicts it).
+    const bool initialNavigation = !isAttached() || getState()->getBackStack().empty();
+    // androidx FragmentNavigator.kt:433-444 — restore gate: if NavOptions asks to restore AND this
+    // entry id was previously saved (consume it), re-run the saved transactions instead of building
+    // a fresh FragmentTransaction. restoreBackStack re-creates the fragment + its view state.
+    const bool restoreState = navOptions && !initialNavigation && navOptions->shouldRestoreState()
+                              && (mSavedIds.erase(entry->getId()) > 0);
+    if(restoreState){
+        if(mFragmentManager) mFragmentManager->restoreBackStack(entry->getId());
+        if(getState()) getState()->push(entry);
+        return;
+    }
     fragment::FragmentFactory factory;
     fragment::Fragment* fragment = factory.instantiate(d->getClassName());
     if(!fragment) return;
-    fragment->setArguments(args ? new Bundle(*args) : nullptr);
+    fragment->setArguments(entry->getArguments() ? new Bundle(*entry->getArguments()) : nullptr);
     fragment::FragmentTransaction* t = mFragmentManager->beginTransaction();
-    // Apply custom animations from NavOptions (androidx FragmentNavigator.kt:534-539).
+    // Apply custom animations from NavOptions (androidx createFragmentTransaction :530-539).
     if(navOptions){
         std::string enter = navOptions->getEnterAnim();
         std::string exit = navOptions->getExitAnim();
@@ -59,13 +84,52 @@ void FragmentNavigator::navigate(NavDestination* destination, Bundle* args, NavO
             t->setCustomAnimations(enter, exit, popEnter, popExit);
         }
     }
-    t->replace(mContainerId, fragment);
-    t->addToBackStack(d->getRoute());
+    t->replace(mContainerId, fragment, entry->getId());   // androidx :541 — tag = entry.id
+    if(!initialNavigation){
+        // androidx :447-457 — only non-initial navigations go on the FragmentManager back stack,
+        // named with the entry id so popBackStack(entry.id, INCLUSIVE) can target them.
+        t->addToBackStack(entry->getId());
+    }
     t->commit();
+    // androidx :469 — push the entry onto this navigator's state (drives the NavController back
+    // queue via the push handler, then this state's own back stack).
+    if(getState()) getState()->push(entry);
+}
+
+void FragmentNavigator::popBackStack(NavBackStackEntry* popUpTo, bool savedState){
+    // androidx FragmentNavigator.kt:317-369. With savedState=true, save the entry's back stack
+    // (its fragment state) so it can be restored; the initial entry was never addToBackStack, so
+    // saveBackStack returns false for it (can't save) and it is skipped. With savedState=false,
+    // pop the FragmentManager back stack to (inclusive) the entry (destructive).
+    if(savedState){
+        if(mFragmentManager && mFragmentManager->saveBackStack(popUpTo->getId())){
+            mSavedIds.insert(popUpTo->getId());
+        }
+    } else if(mFragmentManager){
+        mFragmentManager->popBackStackImmediate(popUpTo->getId(), fragment::FragmentManager::POP_BACK_STACK_INCLUSIVE);
+    }
+    if(getState()) getState()->pop(popUpTo, savedState);
 }
 
 bool FragmentNavigator::popBackStack(){
+    // Legacy no-arg pop: pop the top of the FragmentManager back stack (false at the initial).
     return mFragmentManager ? mFragmentManager->popBackStackImmediate() : false;
+}
+
+Bundle FragmentNavigator::onSaveState(){
+    // androidx FragmentNavigator.onSaveState: persist savedIds so restore-eligibility survives a
+    // NavController state save/restore.
+    Bundle b;
+    std::vector<std::string> ids(mSavedIds.begin(), mSavedIds.end());
+    b.putStringArray("androidx-nav-fragment:navigator:savedIds", ids);
+    return b;
+}
+
+void FragmentNavigator::onRestoreState(const Bundle& savedState){
+    mSavedIds.clear();
+    for(const std::string& id : savedState.getStringArray("androidx-nav-fragment:navigator:savedIds")){
+        mSavedIds.insert(id);
+    }
 }
 
 }//namespace cdroid

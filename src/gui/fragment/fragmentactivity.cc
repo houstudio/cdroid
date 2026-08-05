@@ -18,6 +18,8 @@
 #include <fragment/fragmentactivity.h>
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
+#include <navigation/navhostfragment.h>
+#include <navigation/navcontroller.h>
 #include <view/layoutinflater.h>
 #include <view/viewgroup.h>
 #include <core/context.h>
@@ -46,6 +48,7 @@ public:
         return mActivity->findViewById(id);
     }
     bool onHasView() override { return true; }
+    void onSupportInvalidateOptionsMenu() override { mActivity->invalidateOptionsMenu(); }
 };
 
 FragmentActivity::FragmentActivity(int x, int y, int w, int h)
@@ -53,6 +56,7 @@ FragmentActivity::FragmentActivity(int x, int y, int w, int h)
     // android.R.id.content analogue: the id fragments are added into.
     mContainerId = 0x01020002;
     setId(mContainerId);
+    setFocusable(true);
     mLifecycleRegistry = new lifecycle::LifecycleRegistry(this);
     mViewModelStore = new lifecycle::ViewModelStore();
     mSavedStateRegistryController = new savedstate::SavedStateRegistryController(this);
@@ -120,8 +124,41 @@ void FragmentActivity::onDestroy(){
 }
 
 void FragmentActivity::onBackPressed(){
+    // androidx: NavController registers an OnBackPressedCallback with the dispatcher, checked
+    // before the host FragmentManager. CDROID: iterate host-FM fragments for NavHostFragments and
+    // pop their NavController first. If no NavController handles it, fall back to host FM, then
+    // the activity.
+    for(Fragment* f : mFragmentManager->getFragments()){
+        NavHostFragment* host = dynamic_cast<NavHostFragment*>(f);
+        if(host){
+            NavController* nc = host->getNavController();
+            if(nc && nc->popBackStack()) return;
+        }
+    }
     if(mFragmentManager->popBackStackImmediate()) return;
     Activity::onBackPressed();
+}
+
+bool FragmentActivity::onCreateOptionsMenu(Menu& menu){
+    bool show = Activity::onCreateOptionsMenu(menu);
+    show |= mFragmentManager->dispatchCreateOptionsMenu(menu, *getMenuInflater());
+    return show;
+}
+
+bool FragmentActivity::onPrepareOptionsMenu(Menu& menu){
+    bool show = Activity::onPrepareOptionsMenu(menu);
+    show |= mFragmentManager->dispatchPrepareOptionsMenu(menu);
+    return show;
+}
+
+bool FragmentActivity::onOptionsItemSelected(MenuItem& item){
+    // Let the Activity handle it first (e.g. home -> onNavigateUp), then fragments.
+    if(Activity::onOptionsItemSelected(item)) return true;
+    return mFragmentManager->dispatchOptionsItemSelected(item);
+}
+
+bool FragmentActivity::onContextItemSelected(MenuItem& item){
+    return mFragmentManager->dispatchContextItemSelected(item);
 }
 
 FragmentManager* FragmentActivity::getSupportFragmentManager(){

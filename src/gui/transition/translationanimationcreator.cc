@@ -19,61 +19,19 @@ namespace cdroid {
 namespace {
 
 // android: private static TransitionPositionListener extends AnimatorListenerAdapter implements
-// TransitionListener. C++: a TransitionListenerAdapter subclass (transition side) whose
-// animator-side methods (onAnimationCancel/Pause/Resume/End) are invoked from Animator
-// listener lambdas wired in createAnimation.
-class TransitionPositionListener: public TransitionListenerAdapter {
-  public:
-    View* mViewInHierarchy;  // holds the transitionPosition tag
-    View* mMovingView;       // the view being translated (may be an overlay copy)
-    int mStartX;
-    int mStartY;
+// TransitionListener. C++: state held via shared_ptr (mTransitionPosition/mPausedX/Y are
+// mutable and shared by the animator-side and transition-side EventSet lambdas wired in
+// createAnimation). mTransitionPosition (int[2]) is owned by the view's tag, not by this state.
+struct TransitionPositionState {
+    View* mViewInHierarchy = nullptr;  // holds the transitionPosition tag
+    View* mMovingView = nullptr;       // the view being translated (may be an overlay copy)
+    int mStartX = 0;
+    int mStartY = 0;
     int* mTransitionPosition = nullptr; // heap int[2] stored in the view's tag
     float mPausedX = 0;
     float mPausedY = 0;
-    float mTerminalX;
-    float mTerminalY;
-
-    TransitionPositionListener(View* movingView, View* viewInHierarchy,
-                               int startX, int startY, float terminalX, float terminalY) {
-        mMovingView = movingView;
-        mViewInHierarchy = viewInHierarchy;
-        mStartX = startX - (int)lround(mMovingView->getTranslationX());
-        mStartY = startY - (int)lround(mMovingView->getTranslationY());
-        mTerminalX = terminalX;
-        mTerminalY = terminalY;
-        mTransitionPosition = static_cast<int*>(mViewInHierarchy->getTag(R::id::transitionPosition));
-        if (mTransitionPosition != nullptr) {
-            mViewInHierarchy->setTag(R::id::transitionPosition, nullptr);
-        }
-    }
-
-    void onAnimationCancel() {
-        if (mTransitionPosition == nullptr) {
-            mTransitionPosition = new int[2];
-        }
-        mTransitionPosition[0] = (int)lround(mStartX + mMovingView->getTranslationX());
-        mTransitionPosition[1] = (int)lround(mStartY + mMovingView->getTranslationY());
-        mViewInHierarchy->setTag(R::id::transitionPosition, mTransitionPosition);
-    }
-    void onAnimationEnd() {}
-
-    void onAnimationPause() {
-        mPausedX = mMovingView->getTranslationX();
-        mPausedY = mMovingView->getTranslationY();
-        mMovingView->setTranslationX(mTerminalX);
-        mMovingView->setTranslationY(mTerminalY);
-    }
-    void onAnimationResume() {
-        mMovingView->setTranslationX(mPausedX);
-        mMovingView->setTranslationY(mPausedY);
-    }
-
-    void onTransitionEnd(Transition& transition) override {
-        mMovingView->setTranslationX(mTerminalX);
-        mMovingView->setTranslationY(mTerminalY);
-        transition.removeListener(this);
-    }
+    float mTerminalX = 0;
+    float mTerminalY = 0;
 };
 
 } // anonymous namespace
@@ -101,23 +59,48 @@ Animator* TranslationAnimationCreator::createAnimation(View* view, TransitionVal
     path.lineTo(endX, endY);
     ObjectAnimator* anim = ObjectAnimator::ofFloat(view, View::TRANSLATION_X, View::TRANSLATION_Y, path);
 
-    TransitionPositionListener* listener = new TransitionPositionListener(view, values->view,
-            startPosX, startPosY, terminalX, terminalY);
+    // android: new TransitionPositionListener(...). EventSet: one shared_ptr<State> captured by
+    // the transition-side TransitionListener and the animator-side AnimatorListener/PauseListener.
+    auto st = std::make_shared<TransitionPositionState>();
+    st->mMovingView = view;
+    st->mViewInHierarchy = values->view;
+    st->mStartX = startPosX - (int)lround(view->getTranslationX());
+    st->mStartY = startPosY - (int)lround(view->getTranslationY());
+    st->mTerminalX = terminalX;
+    st->mTerminalY = terminalY;
+    st->mTransitionPosition = static_cast<int*>(values->view->getTag(R::id::transitionPosition));
+    if (st->mTransitionPosition != nullptr) {
+        values->view->setTag(R::id::transitionPosition, nullptr);
+    }
+
+    Transition::TransitionListener listener;
+    listener.onTransitionEnd = [st](Transition&) {
+        st->mMovingView->setTranslationX(st->mTerminalX);
+        st->mMovingView->setTranslationY(st->mTerminalY);
+    };
     transition->addListener(listener);
 
     Animator::AnimatorListener al;
-    al.onAnimationCancel = [listener](Animator&) {
-        listener->onAnimationCancel();
+    al.onAnimationCancel = [st](Animator&) {
+        if (st->mTransitionPosition == nullptr) {
+            st->mTransitionPosition = new int[2];
+        }
+        st->mTransitionPosition[0] = (int)lround(st->mStartX + st->mMovingView->getTranslationX());
+        st->mTransitionPosition[1] = (int)lround(st->mStartY + st->mMovingView->getTranslationY());
+        st->mViewInHierarchy->setTag(R::id::transitionPosition, st->mTransitionPosition,
+            [](void* p){ delete[] static_cast<int*>(p); });
     };
-    al.onAnimationEnd    = [listener](Animator&, bool) {
-        listener->onAnimationEnd();
-    };
+    al.onAnimationEnd = [st](Animator&, bool) {};
     Animator::AnimatorPauseListener apl;
-    apl.onAnimationPause  = [listener](Animator&) {
-        listener->onAnimationPause();
+    apl.onAnimationPause = [st](Animator&) {
+        st->mPausedX = st->mMovingView->getTranslationX();
+        st->mPausedY = st->mMovingView->getTranslationY();
+        st->mMovingView->setTranslationX(st->mTerminalX);
+        st->mMovingView->setTranslationY(st->mTerminalY);
     };
-    apl.onAnimationResume = [listener](Animator&) {
-        listener->onAnimationResume();
+    apl.onAnimationResume = [st](Animator&) {
+        st->mMovingView->setTranslationX(st->mPausedX);
+        st->mMovingView->setTranslationY(st->mPausedY);
     };
     anim->addListener(al);
     anim->addPauseListener(apl);

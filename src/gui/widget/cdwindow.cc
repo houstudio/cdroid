@@ -17,6 +17,15 @@
 #include <core/app.h>
 #include <core/looper.h>
 #include <widget/cdwindow.h>
+#include <widget/toolbar.h>
+#include <widget/toolbaractionbar.h>
+#include <widget/R.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
+#include <menu/menuinflater.h>
+#include <menu/contextmenubuilder.h>
+#include <menu/contextmenu.h>
+#include <menu/menudialoghelper.h>
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
@@ -46,6 +55,7 @@ Window::Window(Context*ctx,const AttributeSet&atts)
 Window::Window(int x,int y,int width,int height,int type)
   : FrameLayout(width,height),window_type(type){
     initWindow();
+    LOGD("Window::Window(%p)",this);
     // Set the boundary
     // Do the resizing at first time in order to invoke the OnLayout
     mContext = &App::getInstance();
@@ -64,6 +74,9 @@ void Window::initWindow(){
     mAccessibilityManager =&AccessibilityManager::getInstance(mContext);
     mSendWindowContentChangedAccessibilityEvent = nullptr;
     mPendingRgn = Cairo::Region::create();
+    mActionBar = nullptr;
+    mActionMode = nullptr;
+    mMenuInflater = nullptr;
     setBackground(nullptr);
     setLayoutDirection(View::LAYOUT_DIRECTION_LTR);
     setTextDirection(View::TEXT_DIRECTION_LTR);
@@ -105,10 +118,149 @@ Window::~Window(){
         mActionMode = nullptr;
         mode->finish();
     }
+    delete mActionBar;
+    delete mMenuInflater;
     delete mSendWindowContentChangedAccessibilityEvent;
     // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
     // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
     LOGD("%p:%d destroied!",this,mID);
+}
+
+// =====================================================================================
+//  ActionBar / Options menu
+// =====================================================================================
+void Window::setActionBar(Toolbar* toolbar){
+    delete mActionBar;
+    // CDROID's Activity plays the AppCompatActivity role: adopting a Toolbar builds a
+    // ToolbarActionBar that bridges it (mirrors androidx AppCompatDelegateImpl +
+    // framework Activity.setActionBar).
+    mActionBar = toolbar ? new ToolbarActionBar(toolbar, getText(), this) : nullptr;
+    if(mActionBar) mActionBar->invalidateOptionsMenu();
+}
+
+ActionBar* Window::getActionBar(){
+    return mActionBar;
+}
+
+bool Window::onCreateOptionsMenu(Menu& /*menu*/){
+    return true;
+}
+
+bool Window::onPrepareOptionsMenu(Menu& /*menu*/){
+    return true;
+}
+
+bool Window::onOptionsItemSelected(MenuItem& /*item*/){
+    // Non-home options items reach FragmentActivity's override (which dispatches to Fragments).
+    // Home/up is folded to onNavigateUp() upstream in onMenuItemSelected (mirrors AOSP
+    // Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL), so it never arrives here.
+    return false;
+}
+
+bool Window::onContextItemSelected(MenuItem& /*item*/){
+    return false;
+}
+
+bool Window::onNavigateUp(){
+    // CDROID has no manifest parentActivityIntent; the default Up behavior finishes the
+    // activity (mirrors androidx Activity.onNavigateUp -> finish when no parent). Override
+    // in subclasses (e.g. NavController-driven hosts) for custom Up handling.
+    close();
+    return true;
+}
+
+void Window::invalidateOptionsMenu(){
+    if(mActionBar) mActionBar->invalidateOptionsMenu();
+}
+
+MenuInflater* Window::getMenuInflater(){
+    if(!mMenuInflater) mMenuInflater = new MenuInflater(getContext());
+    return mMenuInflater;
+}
+
+void Window::openOptionsMenu(){
+    if(mActionBar) mActionBar->openOptionsMenu();
+}
+
+void Window::closeOptionsMenu(){
+    if(mActionBar) mActionBar->closeOptionsMenu();
+}
+
+// --- WindowCallback (android.view.Window.Callback, panel/options subset) ---
+// CDROID honours a single options panel (FEATURE_OPTIONS_PANEL); other feature ids are no-ops.
+View* Window::onCreatePanelView(int /*featureId*/){
+    return nullptr; // no custom panel view -> standard options menu
+}
+
+bool Window::onCreatePanelMenu(int featureId, Menu& menu){
+    return (featureId == FEATURE_OPTIONS_PANEL) ? onCreateOptionsMenu(menu) : false;
+}
+
+bool Window::onPreparePanel(int featureId, View* /*view*/, Menu& menu){
+    return (featureId == FEATURE_OPTIONS_PANEL) ? onPrepareOptionsMenu(menu) : true;
+}
+
+bool Window::onMenuOpened(int /*featureId*/, Menu& /*menu*/){
+    return true;
+}
+
+bool Window::onMenuItemSelected(int featureId, MenuItem& item){
+    // Home -> Up fold. AOSP does this in Activity.onMenuItemSelected for FEATURE_OPTIONS_PANEL;
+    // CDROID folds it here (the Window.Callback entry point ToolbarActionBar dispatches through).
+    if(featureId == FEATURE_OPTIONS_PANEL && item.getItemId() == R::id::home && mActionBar &&
+       (mActionBar->getDisplayOptions() & ActionBar::DISPLAY_HOME_AS_UP)){
+        return onNavigateUp();
+    }
+    return onOptionsItemSelected(item);
+}
+
+void Window::onPanelClosed(int /*featureId*/, Menu& /*menu*/){
+    // No PhoneWindow panel state machine beyond the toolbar popup; nothing to do here.
+}
+
+// =====================================================================================
+//  Context menu
+// =====================================================================================
+bool Window::showContextMenuForChild(View* originalView){
+    if(originalView == nullptr) return false;
+    ContextMenuBuilder* builder = new ContextMenuBuilder(getContext());
+    MenuBuilder::Callback cb;
+    cb.onMenuItemSelected = [this](MenuBuilder&, MenuItem& item)->bool{
+        return onContextItemSelected(item);
+    };
+    builder->setCallback(cb);
+    // showDialog builds the menu via originalView.createContextMenu (which invokes the
+    // OnCreateContextMenuListener registered by registerForContextMenu -> onCreateContextMenu)
+    // and presents it as a dialog; item selection routes back through the callback above.
+    MenuDialogHelper* helper = builder->showDialog(originalView);
+    return helper != nullptr;
+}
+
+bool Window::showContextMenuForChild(View* originalView, float /*x*/, float /*y*/){
+    // Anchored variant: CDROID shows the context menu as a centered AlertDialog, so the
+    // touch coordinates are not used (no floating popup anchored to (x,y) here).
+    return showContextMenuForChild(originalView);
+}
+
+void Window::registerForContextMenu(View* view){
+    if(!view) return;
+    view->setOnCreateContextMenuListener(
+        [this](ContextMenu& menu, View& v, ContextMenuInfo* info){ onCreateContextMenu(menu, v, info); });
+}
+
+void Window::unregisterForContextMenu(View* view){
+    if(view) view->setOnCreateContextMenuListener(View::OnCreateContextMenuListener{});
+}
+
+void Window::openContextMenu(View* view){
+    if(view) view->showContextMenu();
+}
+
+void Window::onCreateContextMenu(ContextMenu&, View&, ContextMenuInfo*){}
+
+void Window::closeContextMenu(){
+    // CDROID shows the context menu as a self-dismissing AlertDialog via MenuDialogHelper;
+    // there is no window panel to close programmatically (no FEATURE_CONTEXT_MENU).
 }
 
 // =====================================================================================
@@ -666,11 +818,13 @@ bool Window::dispatchKeyEvent(KeyEvent&event){
         handled = performFocusNavigation(event);
     }
     if(!handled){
-        switch(action){
-        case KeyEvent::ACTION_UP  :
-        case KeyEvent::ACTION_DOWN: handled = FrameLayout::dispatchKeyEvent(event); break;
-        default:break;
-        }
+        // Focus view didn't consume it; route to the WINDOW's own onKeyDown/onKeyUp — not
+        // ViewGroup::dispatchKeyEvent (FrameLayout::), which re-walks children and never reaches
+        // the window's callback when the window itself isn't PFLAG_FOCUSED (root windows rarely are;
+        // focus lives in a child like EditText). Mirrors androidx: an unhandled key falls back to
+        // the window/Activity callback. View::dispatchKeyEvent -> event.dispatch -> onKeyDown/onKeyUp
+        // (Window::onKeyDown ESC startTracking; Window::onKeyUp ESC isTracking -> onBackPressed).
+        handled = View::dispatchKeyEvent(event);
     }
     return handled;
 }
@@ -777,20 +931,61 @@ void Window::doLayout(){
 
 
 void Window::close(){
-    // removeWindow detaches the view tree (which nulls mAttachInfo), so stash the AttachInfo
-    // pointer first and let the posted lambda free it together with the window. removeWindow
-    // itself runs IMMEDIATELY (the window leaves the compositor list at once -> a replacement
-    // window shown in the same tick doesn't race a still-listed one); the deletes are deferred
-    // via a post so the current call stack can still touch this window safely (apps often
-    // closeWindow() then operate on the window in the same callback).
+    // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
+    // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
+    // compositor at once). The deletes are deferred so the current call stack can still touch this
+    // window safely. BUT the post must use a standalone heap Handler, NOT View::post (mAttachInfo's
+    // handler = mUIEventHandler): removeWindow below calls removeEventHandler(mUIEventHandler),
+    // which purges that handler's queued messages — including this delete-window post — so the
+    // window would never be deleted (NavController chain + view tree + Transition clone all leak).
+    // A heap Handler that self-deletes keeps the post alive past removeWindow (same pattern as the
+    // Transition clone self-delete in Transition::end()).
     auto* info = mAttachInfo;
     Window* self = this;
-    post([self, info](){
+    Handler* h = new Handler();
+    h->post([h, self, info](){
         self->onDestroy();
+        // Purge any Choreographer traversal callback that survived teardown. The Choreographer holds
+        // a CALLBACK_TRAVERSAL lambda capturing `self`; if it fired after `delete self` it would call
+        // doTraversal() on a freed Window — the virtual isAttachedToWindow() then reads a zeroed
+        // vtable and jumps to a garbage address (0x0). removeWindow() below detaches the view tree,
+        // and dispatchDetachedFromWindow -> onWindowVisibilityChanged(GONE) can re-trigger
+        // scheduleTraversals(), re-posting that lambda AFTER any removal done at the start of close()
+        // — so the removal must happen here, at the last safe point before `delete self`, by which
+        // time removeWindow has fully run. removeWindow purges the UIEventHandler's messages but NOT
+        // Choreographer callbacks (separate queue). std::function== can't match a capturing lambda,
+        // so removal is by token=self (only this window's CALLBACK_TRAVERSAL record(s)).
+        Choreographer::getInstance().removeCallbacks(
+            Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
+        self->mTraversalScheduled = false;
         delete info;
         delete self;
+        delete h;
     });
     WindowManager::getInstance().removeWindow(this);
+}
+
+void Window::scheduleTraversals(){
+    if(mTraversalScheduled) return;
+    mTraversalScheduled = true;
+    Choreographer::getInstance().postCallback(
+        Choreographer::CALLBACK_TRAVERSAL,
+        [this](){ doTraversal(); },
+        this);  // token=this so close() can purge the pending callback by window identity
+}
+
+void Window::doTraversal(){
+    mTraversalScheduled = false;
+    GraphDevice::getInstance().lock();
+    if(isAttachedToWindow()){
+        if(isLayoutRequested()) doLayout();
+        if(isDirty() && getVisibility() == View::VISIBLE){
+            draw();
+            GraphDevice::getInstance().flip();
+        }
+    }
+    GraphDevice::getInstance().unlock();
+    GraphDevice::getInstance().composeSurfaces();
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){

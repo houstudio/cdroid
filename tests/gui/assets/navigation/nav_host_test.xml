@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nav graph for NavHostFragment tests. Mirrors navdemo's route-based form:
+     android:startDestination="<route>" + app:route on each <fragment> (the form CDROID's
+     NavInflater resolves — app:startDestination with @+id does not). -->
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/nav_host_test"
+            android:startDestination="start_fragment">
+
+    <fragment android:id="@+id/start_fragment" android:name="NavTestFragment" app:route="start_fragment" />
+    <fragment android:id="@+id/second_fragment" android:name="NavTestFragment" app:route="second_fragment" />
+
+</navigation>

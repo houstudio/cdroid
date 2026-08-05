@@ -20,6 +20,7 @@
 #include <fragment/fragmentmanager.h>
 #include <fragment/fragmenthostcallback.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/defaultspecialeffectscontroller.h>
 #include <transition/transitionmanager.h>
 #include <view/view.h>
@@ -45,6 +46,10 @@ static int maxStateToInt(lifecycle::Lifecycle::State s){
     return Fragment::RESUMED;
 }
 
+// Key under which the per-container SpecialEffectsController is cached on the container View's tag
+// (androidx stores it the same way). CDROID must reclaim it explicitly — see destroySpecialEffectsController.
+static constexpr int SEC_TAG = 0x7F0D0001;
+
 FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
     : mFragmentManager(fm), mFragment(f){
 }
@@ -52,14 +57,105 @@ FragmentStateManager::FragmentStateManager(FragmentManager* fm, Fragment* f)
 SpecialEffectsController* FragmentStateManager::getSpecialEffectsController(){
     if(!mFragment || !mFragment->mContainer) return nullptr;
     // One DefaultSpecialEffectsController per container, cached on the container's tag.
-    static const int SEC_TAG = 0x7F0D0001; // arbitrary unique tag key
     cdroid::View* tagView = mFragment->mContainer;
     SpecialEffectsController* sec = static_cast<SpecialEffectsController*>(tagView->getTag(SEC_TAG));
     if(!sec){
         sec = new DefaultSpecialEffectsController(mFragment->mContainer);
-        tagView->setTag(SEC_TAG, sec);
+        tagView->setTag(SEC_TAG, sec,[](void*p){delete (DefaultSpecialEffectsController*)p;});
     }
     return sec;
+}
+
+void FragmentStateManager::destroySpecialEffectsController(){
+    // androidx caches the SEC on the container tag and lets GC reclaim it; CDROID must delete.
+    // The SEC was registered as an OWNED tag (a delete-dtor) in getSpecialEffectsController, and
+    // setKeyedTag invokes the previous entry's dtor on overwrite — so clearing the tag reclaims
+    // the SEC itself (no manual delete here). Idempotent across FSMs sharing one container: the
+    // first clear leaves the tag at {nullptr,{}}, the rest see a null tag and skip.
+    if(!mFragment || !mFragment->mContainer) return;
+    cdroid::View* tagView = mFragment->mContainer;
+    if(tagView->getTag(SEC_TAG)){
+        tagView->setTag(SEC_TAG, nullptr);  // overwrites the owned entry -> dtor deletes the SEC
+    }
+}
+
+void FragmentStateManager::forceCompleteSpecialEffects(){
+    // androidx SpecialEffectsController.forceCompleteAll: retire every pending/running op for this
+    // fragment's container so getAwaitingCompletionLifecycleImpact() returns NONE and the
+    // awaiting-effect clamp in computeExpectedState stops holding the fragment above its target.
+    if(SpecialEffectsController* sec = getSpecialEffectsController()){
+        sec->forceCompleteAll();
+    }
+}
+
+Bundle* FragmentStateManager::savedInstanceState() const{
+    return mFragment->mSavedFragmentState ? mFragment->mSavedFragmentState->savedInstanceState : nullptr;
+}
+
+FragmentState* FragmentStateManager::saveState(){
+    // androidx FragmentStateManager.saveState (FragmentStateManager.java:703-754): pack FragmentState
+    // meta + onSaveInstanceState + SavedStateRegistry + view-hierarchy state + arguments into one
+    // per-fragment saved state (CDROID holds the pieces directly instead of a nested Bundle).
+    FragmentState* s = new FragmentState();
+    // androidx FragmentState(Fragment) — exact field copy.
+    s->className       = mFragment->mClassName;
+    s->who             = mFragment->mWho;
+    s->fromLayout      = mFragment->mFromLayout;
+    s->inDynamicContainer = mFragment->mInDynamicContainer;
+    s->fragmentId      = mFragment->mFragmentId;
+    s->containerId     = mFragment->mContainerId;
+    s->tag             = mFragment->mTag;
+    s->retainInstance  = mFragment->mRetainInstance;
+    s->removing        = mFragment->mRemoving;
+    s->detached        = mFragment->mDetached;
+    s->hidden          = mFragment->mHidden;
+    s->maxLifecycleState = mFragment->mMaxState;
+    s->targetWho       = mFragment->mTargetWho;
+    s->targetRequestCode = mFragment->mTargetRequestCode;
+    s->userVisibleHint = mFragment->mUserVisibleHint;
+    // User + view state only once the fragment has run past ATTACHED.
+    if(mFragment->mState > Fragment::ATTACHED){
+        Bundle* instanceState = new Bundle();
+        mFragment->onSaveInstanceState(instanceState);
+        s->savedInstanceState = instanceState;
+        if(mFragment->mSavedStateRegistryController){
+            mFragment->mSavedStateRegistryController->performSave(s->registryState);
+        }
+        if(mFragment->mView){
+            saveViewState();  // populates mFragment->mSavedViewState
+            s->viewState = mFragment->mSavedViewState;  // transfer ownership to the saved state
+            mFragment->mSavedViewState = nullptr;
+        }
+    }
+    if(mFragment->mArguments){
+        s->arguments = new Bundle(*mFragment->mArguments);
+    }
+    return s;
+}
+
+void FragmentStateManager::saveViewState(){
+    // androidx FragmentStateManager.saveViewState (FragmentStateManager.java:763-782): capture the
+    // view's hierarchy state into mFragment->mSavedViewState. (The view-lifecycle SavedStateRegistry
+    // piece — mSavedViewRegistryState — is omitted for now; CDROID FragmentViewLifecycleOwner
+    // SavedStateRegistry can be wired later.)
+    if(!mFragment->mView) return;
+    SparseArray<Parcelable*>* stateArray = new SparseArray<Parcelable*>();
+    mFragment->mView->saveHierarchyState(*stateArray);
+    delete mFragment->mSavedViewState;
+    mFragment->mSavedViewState = stateArray;
+}
+
+void FragmentStateManager::restoreState(const FragmentState& state){
+    // androidx FragmentStateManager.restoreState: re-apply the saved slices. arguments + view state
+    // are re-applied directly; savedInstanceState/registryState are consumed by the fragment's
+    // lifecycle callbacks once it is re-created (the full slice wiring lands with the Phase 2
+    // restore path that sets mSavedFragmentState before re-running lifecycle).
+    if(state.arguments){
+        delete mFragment->mArguments;
+        mFragment->mArguments = new Bundle(*state.arguments);
+    }
+    delete mFragment->mSavedViewState;
+    mFragment->mSavedViewState = state.viewState ? new SparseArray<Parcelable*>(*state.viewState) : nullptr;
 }
 
 int FragmentStateManager::computeExpectedState(){
@@ -80,7 +176,19 @@ int FragmentStateManager::computeExpectedState(){
             if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::ADDING){
                 maxState = std::min(maxState, (int)Fragment::AWAITING_ENTER_EFFECTS);
             } else if(impact == (int)SpecialEffectsController::Operation::LifecycleImpact::REMOVING){
-                maxState = std::max(maxState, (int)Fragment::AWAITING_EXIT_EFFECTS);
+                // A fragment mid-exit-effect can't drop below AWAITING_EXIT_EFFECTS while its exit
+                // transition runs — UNLESS the FragmentManager itself is tearing down (state below
+                // the floor), in which case the fragment must follow the FM down. Without this
+                // guard, the destroy path's moveToExpectedState() re-entry sees the floor raise the
+                // expected state ABOVE the FM state and resurrects the view; stepUp/stepDown skip
+                // the AWAITING states, so the fragment can never settle and loops forever re-creating
+                // its view in an orphaned container (seen when popping a parent whose nested host is
+                // mid-destruction). androidx completes awaiting effects via forceCompleteAll on
+                // destroy; CDROID's FSM skips AWAITING states, so the floor must yield to the FM.
+                int exitFloor = (int)Fragment::AWAITING_EXIT_EFFECTS;
+                if(mFragmentManagerState >= exitFloor){
+                    maxState = std::max(maxState, exitFloor);
+                }
             }
         }
     }
@@ -111,7 +219,7 @@ void FragmentStateManager::stepUp(){
         case Fragment::INITIALIZING:
             mFragment->performAttach(); mFragment->mState = Fragment::ATTACHED; break;
         case Fragment::ATTACHED:
-            mFragment->performCreate(nullptr); mFragment->mState = Fragment::CREATED; break;
+            mFragment->performCreate(savedInstanceState()); mFragment->mState = Fragment::CREATED; break;
         case Fragment::CREATED: {
             // Resolve the container ViewGroup at view-creation time, by id (androidx
             // FragmentManager.getFragmentContainer): a fragment added before its host's view
@@ -124,7 +232,7 @@ void FragmentStateManager::stepUp(){
             }
             cdroid::LayoutInflater* inflater = mFragmentManager->mHost
                 ? mFragmentManager->mHost->onGetLayoutInflater() : nullptr;
-            mFragment->performCreateView(inflater, mFragment->mContainer, nullptr);
+            mFragment->performCreateView(inflater, mFragment->mContainer, savedInstanceState());
             LOGD("FSM.stepUp CREATED: who=%s mView=%p mContainer=%p",
                  mFragment->mWho.c_str(), mFragment->mView, mFragment->mContainer);
             if(mFragment->mView && mFragment->mContainer){
@@ -157,12 +265,18 @@ void FragmentStateManager::stepUp(){
                     mFragment->mContainer->addView(mFragment->mView);
                 }
             }
-            mFragment->performViewCreated(nullptr);
+            // androidx FragmentStateManager.createView: restore the saved view-hierarchy state
+            // (scroll position, text, focus…) into the freshly created view — for fragments
+            // re-created by restoreBackStack (mSavedViewState set by restoreState).
+            if(mFragment->mSavedViewState && mFragment->mView){
+                mFragment->mView->restoreHierarchyState(*mFragment->mSavedViewState);
+            }
+            mFragment->performViewCreated(savedInstanceState());
             mFragment->mState = Fragment::VIEW_CREATED;
             break;
         }
         case Fragment::VIEW_CREATED:
-            mFragment->performActivityCreated(nullptr); mFragment->mState = Fragment::ACTIVITY_CREATED; break;
+            mFragment->performActivityCreated(savedInstanceState()); mFragment->mState = Fragment::ACTIVITY_CREATED; break;
         case Fragment::ACTIVITY_CREATED:
             mFragment->performStart(); mFragment->mState = Fragment::STARTED; break;
         case Fragment::AWAITING_EXIT_EFFECTS:
@@ -185,6 +299,13 @@ void FragmentStateManager::stepDown(){
         case Fragment::ACTIVITY_CREATED:
             mFragment->mState = Fragment::VIEW_CREATED; break; // no callback on the way down here
         case Fragment::VIEW_CREATED:
+            // androidx FragmentStateManager.moveToExpectedState: when a saveBackStack pop is tearing
+            // this fragment down (mBeingSaved), capture its state ONCE into FragmentManager.mSavedState
+            // before the view is destroyed — so restoreBackStack can rehydrate it. Normal pops have
+            // mBeingSaved=false and skip this (state discarded, as before).
+            if(mFragment->mBeingSaved && mFragmentManager && !mFragmentManager->getSavedState(mFragment->mWho)){
+                mFragmentManager->setSavedState(mFragment->mWho, saveState());
+            }
             if(mFragment->mView && mFragment->mContainer){
                 // SEC: enqueue remove + execute. collectEffects picks Animation (custom exit
                 // anim) or Transition (default Fade); commit applies the removeView via
@@ -193,6 +314,16 @@ void FragmentStateManager::stepDown(){
                 if(sec){
                     sec->enqueueRemove(this);
                     sec->executePendingOperations();
+                    // performDestroyView + mView=null are DEFERRED to the exit clone's end
+                    // (TransitionEffect scheduleDelete post). The clone captured the whole view tree
+                    // (e.g. RecyclerView items) in startValues; running onDestroyView now →
+                    // detachAdapter → RecycledViewPool::clear deletes itemViews the clone still
+                    // dereferences in onDisappear → UAF. Android holds the view until the effect
+                    // (clone) ends, then moveToExpectedState → onDestroyView. completeEffect already
+                    // fired synchronously inside executePendingOperations, so the FSM re-enter guard
+                    // lets stepDown continue CREATED→INITIALIZING here without touching the view.
+                    mFragment->mState = Fragment::CREATED;
+                    break;
                 } else {
                     TransitionManager::beginDelayedTransition(mFragment->mContainer,
                         FragmentTransitionImpl::makeExitTransition());

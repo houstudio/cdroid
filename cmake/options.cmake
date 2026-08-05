@@ -58,51 +58,54 @@ cmake_dependent_option(ENABLE_BARCODE "Enable BarCode(QrCode Code11 Code49 Code9
 cmake_dependent_option(ENABLE_LOTTIE "Enable Lottie Animation" ON "cmake_dependent_option" OFF)
 cmake_dependent_option(ENABLE_LCMS "Enable Little CMS (a color management engine)" OFF "LCMS2_FOUND" OFF)
 
-list(APPEND CDROID_DEPLIBS
-    ${ZLIB_LIBRARIES}
-    ${BZIP2_LIBRARIES}
-    ${PNG_LIBRARIES}
+# --- Public vs private link split (drives target_link_libraries + cdroid.pc) ---
+# PUBLIC: exposed in cdroid's public headers → consumers compile/link against them too.
+# cairo/cairomm: Canvas is-a cairo_t; View/Drawable headers expose Cairo::Context/ImageSurface/RefPtr.
+list(APPEND CDROID_PUBLIC_DEPLIBS  ${CAIRO_LIBRARIES} ${PIXMAN_LIBRARIES})
+# PRIVATE: internal only. cdroid is a shared library → link-time only, not in consumer Cflags.
+# (pixman/z/bz2/harfbuzz-icu/webpdecoder are transitive sub-deps of cairo/zip/harfbuzz/webp;
+#  --as-needed on cdroid drops them from DT_NEEDED. Kept on the link line for static fallback.)
+list(APPEND CDROID_PRIVATE_DEPLIBS
     ${FREETYPE_LIBRARIES}
-    ${PIXMAN_LIBRARIES}
-    ${EXPAT_LIBRARIES}
     ${FONTCONFIG_LIBRARIES}
-    ${CAIRO_LIBRARIES}
-    ${UNIBREAK_LIBRARIES}
-    ${ZIP_LIBRARIES}
-    ${Iconv_LIBRARIES}
     ${HARFBUZZ_LIBRARIES}
+    ${PNG_LIBRARIES}
+    ${ZIP_LIBRARIES}
+    ${EXPAT_LIBRARIES}
+    ${UNIBREAK_LIBRARIES}
+    ${Iconv_LIBRARIES}
 )
 
 if(RTAUDIO_FOUND)
-    list(APPEND CDROID_DEPLIBS ${RTAUDIO_LIBRARIES})
+    list(APPEND CDROID_PRIVATE_DEPLIBS ${RTAUDIO_LIBRARIES})
 endif()
 if(MSVC)
     message(FATAL_ERRPR "PTHREAD=${PTHREAD_LIBRARIES}")
-    list(APPEND CDROID_DEPLIBS ${PTHREAD_LIBRAIRES} kernel32 gdi32 ws2_32)
+    list(APPEND CDROID_PRIVATE_DEPLIBS ${PTHREAD_LIBRAIRES} kernel32 gdi32 ws2_32)
 endif()
 if(ENABLE_LOTTIE)
-    list(APPEND CDROID_DEPLIBS ${RLOTTIE_LIBRARIES})
+    list(APPEND CDROID_PRIVATE_DEPLIBS ${RLOTTIE_LIBRARIES})
 endif()
 
 if (litehtml_FOUND)
-    list( APPEND CDROID_DEPLIBS litehtml)
+    list( APPEND CDROID_PRIVATE_DEPLIBS litehtml)
     #list(APPEND CDROID_DEPINCLUDES ${LITEHTML_INCLUDE_DIRS})
     #add_definitions(-DENABLE_LITEHTML=1)
 endif()
 
 if (PLPLOT_FOUND)
-    list( APPEND CDROID_DEPLIBS ${PLPLOT_LIBRARIES})
+    list( APPEND CDROID_PRIVATE_DEPLIBS ${PLPLOT_LIBRARIES})
     list(APPEND CDROID_DEPINCLUDES ${PLPLOT_INCLUDE_DIRS})
     add_definitions(-DENABLE_PLPLOT=1)
 endif()
 
 if (ENABLE_BARCODE)
-    list( APPEND CDROID_DEPLIBS zint::zint)
+    list( APPEND CDROID_PRIVATE_DEPLIBS zint::zint)
 endif()
 
 if(ENABLE_MATHGL)
     list(APPEND CDROID_DEPINCLUDES ${MATHGL_INCLUDE_DIRS})
-    list(APPEND CDROID_DEPLIBS ${MATHGL_LIBRADIES})
+    list(APPEND CDROID_PRIVATE_DEPLIBS ${MATHGL_LIBRADIES})
 endif()
 
 list(APPEND CDROID_DEPINCLUDES
@@ -116,11 +119,13 @@ message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 
 if(ENABLE_PINYIN2HZ)
     list(APPEND OPTIONAL_LIBS pinyin)
-    list(APPEND CDROID_DEPLIBS pinyin)
+    list(APPEND CDROID_PRIVATE_DEPLIBS pinyin)
     list(APPEND CDROID_DEPINCLUDES ${CMAKE_SOURCE_DIR}/src/3rdparty/pinyin/include)
 endif()
 
 set(SKIP_INSTALL_EXPORT TRUE)
+# CDROID_DEPLIBS = public + private combined (used by the install-symlinks foreach + message).
+set(CDROID_DEPLIBS ${CDROID_PUBLIC_DEPLIBS} ${CDROID_PRIVATE_DEPLIBS})
 
 if(NOT VCPKG_TARGET_TRIPLET)
 foreach(lib ${CDROID_DEPLIBS})

@@ -23,8 +23,10 @@
 #include <fragment/fragmenttransaction.h>
 #include <fragment/backstackrecord.h>
 #include <fragment/fragmentstatemanager.h>
+#include <fragment/fragmentstate.h>
 #include <fragment/fragmentanim.h>
 #include <fragment/fragmenttransitionimpl.h>
+#include <transition/transitionmanager.h>
 #include <animation/animation.h>
 #include <transition/transitionmanager.h>
 #include <transition/fade.h>
@@ -46,16 +48,31 @@ FragmentManager::FragmentManager(){
 }
 
 FragmentManager::~FragmentManager(){
+    LOGD("FragmentManager %p Destroied",this);
     for(BackStackRecord* r : mBackStack) delete r;
     mBackStack.clear();
     // Pending records are owned by this FM (commit transferred ownership); free any that never
     // executed.
     for(BackStackRecord* r : mPendingActions) delete r;
     mPendingActions.clear();
+    // CDROID has no GC: FM owns every Fragment it added (mActive/mAdded/mStateManagers). The
+    // BackStackRecords (which may hold Fragment* in op.mFragment for pop) are deleted above, so
+    // those pointers are defunct. mStateManagers keys are exactly the not-yet-reclaimed fragments
+    // (added / retained / removed-but-effect-pending); reclaimFragment already erased+freed the
+    // rest, so deleting each key here is sole-owner — no double-free. ~Fragment does NOT delete
+    // mView (reclaimed by the effect-end path / the host window's view-tree teardown). Deleting
+    // NavHostFragment runs ~NavHostFragment -> deletes NavController -> ~NavController deletes
+    // mGraph, releasing the whole nav chain at exit.
+    for(auto& kv : mStateManagers){
+        delete kv.second;  // FragmentStateManager
+        delete kv.first;   // Fragment
+    }
+    mStateManagers.clear();
     mAdded.clear();
     mActive.clear();
-    for(auto& kv : mStateManagers) delete kv.second;
-    mStateManagers.clear();
+    // Per-fragment saved state (androidx FragmentStore.mSavedState) — owned by this FM.
+    for(auto& kv : mSavedState) delete kv.second;
+    mSavedState.clear();
 }
 
 void FragmentManager::attachController(FragmentHostCallback* host, FragmentContainer* container, Fragment* parent){
@@ -130,12 +147,73 @@ void FragmentManager::dispatchStop(){
 }
 
 void FragmentManager::dispatchDestroyView(){
+    // Retire any in-flight special-effects ops before tearing views down, so a fragment mid-effect
+    // does not strand its op in mRunningOperations and hold the awaiting clamp (androidx
+    // SpecialEffectsController.forceCompleteAll on destroy).
+    forceCompleteAllSpecialEffects();
     dispatchStateChange(Fragment::CREATED);
 }
 
 void FragmentManager::dispatchDestroy(){
     mDestroyed = true;
+    forceCompleteAllSpecialEffects();
+    // Reclaim the per-container SpecialEffectsControllers cached on container tags (androidx relies
+    // on GC). Done here while fragments still reference their containers — INITIALIZING below
+    // detaches them; the SEC_TAG delete is idempotent across FSMs sharing one container.
+    for(auto& kv : mStateManagers){
+        if(kv.second) kv.second->destroySpecialEffectsController();
+    }
     dispatchStateChange(Fragment::INITIALIZING);
+    // Destroy-sweep: reclaim every irreversibly-destroyed fragment (INITIALIZING + not held by a
+    // back-stack record). endTransitions (inside forceCompleteAllSpecialEffects) synchronously ended
+    // the running clones and POSTED the view-delete + reclaim hooks; those posts fire later and are
+    // made no-op by the mStateManagers sentinel (reclaimFragment's find(f)==end after this sweep) and
+    // the mAlive weak guard (if the FM is destroyed first). Snapshot the keys first — reclaimFragment
+    // erases the very map being iterated.
+    std::vector<Fragment*> snapshot;
+    snapshot.reserve(mStateManagers.size());
+    for(auto& kv : mStateManagers) snapshot.push_back(kv.first);
+    for(Fragment* f : snapshot) reclaimFragment(f);
+}
+
+void FragmentManager::forceCompleteAllSpecialEffects(){
+    // One SEC per container; forceCompleteAll is idempotent, so dedup is optional — call it for
+    // every active fragment's container (redundant calls on a shared SEC are no-ops).
+    for(auto& kv : mActive){
+        Fragment* f = kv.second;
+        if(!f || !f->mContainer) continue;
+        // Force any running Transition clone (and its animators) on this container to end BEFORE the
+        // SEC completes. Without this, a clone's animators (e.g. the Fade's transitionAlpha Object-
+        // Animator) keep running during Activity destroy; the overlay/container teardown then frees
+        // the animating view while the animator still dereferences it -> UAF. endTransitions runs
+        // forceToEnd on every running transition on this sceneRoot.
+        TransitionManager::endTransitions(f->mContainer);
+        if(FragmentStateManager* fsm = getOrCreateStateManager(f)){
+            fsm->forceCompleteSpecialEffects();
+        }
+    }
+}
+
+// androidx FragmentStore.setSavedState: store-or-remove-and-return. setSavedState(who, nullptr) is
+// the retrieve-and-clear used by BackStackState.instantiate on restore; setSavedState(who, s) stores
+// s and returns the previous value (nullptr if none). FM takes ownership of stored FragmentState.
+FragmentState* FragmentManager::setSavedState(const std::string& who, FragmentState* s){
+    if(s != nullptr){
+        FragmentState* prev = nullptr;
+        auto it = mSavedState.find(who);
+        if(it != mSavedState.end()) prev = it->second;
+        mSavedState[who] = s;
+        return prev;
+    }
+    FragmentState* prev = nullptr;
+    auto it = mSavedState.find(who);
+    if(it != mSavedState.end()){ prev = it->second; mSavedState.erase(it); }
+    return prev;
+}
+
+FragmentState* FragmentManager::getSavedState(const std::string& who) const{
+    auto it = mSavedState.find(who);
+    return it != mSavedState.end() ? it->second : nullptr;
 }
 
 // --- internal fragment ops ---
@@ -165,6 +243,58 @@ void FragmentManager::removeFragment(Fragment* f){
     mActive.erase(f->mWho);
     f->mFragmentManager = nullptr;
     f->mHost = nullptr;
+    // NOTE: the fragment instance is intentionally NOT deleted here. android reclaims it via GC once
+    // unreachable (after DESTROYED); CDROID has no GC, but deleting synchronously in removeFragment
+    // UAFs: SEC Operations (FragmentStateManagerOperation) hold a copy of the FSM, and an exit
+    // AnimationEffect's onAnimationEnd (posted async) calls completeEffect->complete->fsm->
+    // moveToExpectedState after this returns — if we deleted the fragment/FSM now that callback
+    // would dereference freed memory (observed: getSpecialEffectsController->mContainer dangling).
+    // Real fix needs the reclamation to wait until the SEC op's effects truly end (like the view
+    // reclaim in TransitionEffect/AnimationEffect), or fragment ref-counting — a separate effort.
+}
+
+// Effect-end-gated reclamation of a hard-removed Fragment instance (CDROID has no GC). Called from
+// the SEC reclaim hook (TransitionEffect clone-end / AnimationEffect anim-end) once the exit effect
+// has truly finished, and from the dispatchDestroy destroy-sweep. Idempotent and UAF-safe:
+void FragmentManager::reclaimFragment(Fragment* f){
+    if(!f) return;
+    // Sentinel: no FragmentStateManager ⇒ already reclaimed (e.g. by the destroy-sweep) or never
+    // added. unordered_map::find compares pointer VALUES only (no deref of a possibly-freed f), so a
+    // late posted hook reaching us after the sweep is a safe no-op.
+    auto it = mStateManagers.find(f);
+    if(it == mStateManagers.end()) return;
+    // Only irreversibly-destroyed fragments (driven to INITIALIZING, performDetach done) qualify.
+    // Retained fragments sit at CREATED and must survive — a future pop reuses the instance.
+    if(f->mState != Fragment::INITIALIZING) return;
+    // LOAD-BEARING: a back-stack record may still hold this exact pointer. OP_REMOVE+addToBackStack
+    // reaches INITIALIZING while its record lives, and executePopOps reuses the pointer via addFragment
+    // — deleting would UAF on the next pop.
+    if(isFragmentReferencedByBackStack(f)) return;
+    FragmentStateManager* fsm = it->second;
+    mStateManagers.erase(it);
+    delete fsm;  // ~FragmentStateManager is compiler-generated; it does NOT delete mFragment.
+    mActive.erase(f->mWho);  // defensive (removeFragment already erased for the hard-remove path)
+    mAdded.erase(std::remove(mAdded.begin(), mAdded.end(), f), mAdded.end());
+    // NOTE: deliberately does NOT touch f->mView. ~Fragment doesn't either, and by now mView is
+    // already null (stepDown VIEW_CREATED clears it) or reclaimed by the same effect-end path that
+    // invoked this hook. Never calls back into the FSM — no busy-loop, no synchronous-completeEffect
+    // invariant violation.
+    delete f;
+}
+
+bool FragmentManager::isFragmentReferencedByBackStack(Fragment* f) const {
+    if(!f) return false;
+    auto recordHolds = [f](const BackStackRecord* r) -> bool {
+        for(const auto& op : r->getOps()){
+            if(op.mFragment == f || op.mOldFragment == f) return true;
+        }
+        return false;
+    };
+    for(const BackStackRecord* r : mBackStack) if(recordHolds(r)) return true;
+    // mPendingActions: records enqueued by commit() but not yet executed — a future pop could reuse
+    // the pointer once they run. Small window, but scanning it keeps the guard sound.
+    for(const BackStackRecord* r : mPendingActions) if(recordHolds(r)) return true;
+    return false;
 }
 
 // Retain a fragment removed by a *reversible* (added-to-back-stack) transaction. androidx
@@ -252,6 +382,67 @@ Fragment* FragmentManager::findFragmentByTag(const std::string& tag){
 
 std::vector<Fragment*> FragmentManager::getFragments() const{ return mAdded; }
 
+// --- options-menu dispatch (androidx FragmentManager.dispatch*OptionsMenu) ---
+bool FragmentManager::isParentMenuVisible(Fragment* parent) const{
+    // androidx: parent == null (host Activity) -> true; else parent.isMenuVisible().
+    if(parent == nullptr) return true;
+    return parent->isMenuVisible();
+}
+
+bool FragmentManager::dispatchCreateOptionsMenu(Menu& menu, MenuInflater& inflater){
+    if(mCurState < Fragment::CREATED) return false;
+    bool show = false;
+    std::vector<Fragment*> newMenus;
+    for(Fragment* f : getFragments()){
+        if(f && isParentMenuVisible(f->getParentFragment()) && f->performCreateOptionsMenu(menu, inflater)){
+            show = true;
+            newMenus.push_back(f);
+        }
+    }
+    // Notify fragments that contributed last time but no longer do.
+    for(Fragment* f : mCreatedMenus){
+        bool still = false;
+        for(Fragment* n : newMenus){ if(n == f){ still = true; break; } }
+        if(!still) f->onDestroyOptionsMenu();
+    }
+    mCreatedMenus = newMenus;
+    return show;
+}
+
+bool FragmentManager::dispatchPrepareOptionsMenu(Menu& menu){
+    if(mCurState < Fragment::CREATED) return false;
+    bool show = false;
+    for(Fragment* f : getFragments()){
+        if(f && isParentMenuVisible(f->getParentFragment()) && f->performPrepareOptionsMenu(menu)){
+            show = true;
+        }
+    }
+    return show;
+}
+
+bool FragmentManager::dispatchOptionsItemSelected(MenuItem& item){
+    if(mCurState < Fragment::CREATED) return false;
+    for(Fragment* f : getFragments()){
+        if(f && f->performOptionsItemSelected(item)) return true;
+    }
+    return false;
+}
+
+bool FragmentManager::dispatchContextItemSelected(MenuItem& item){
+    if(mCurState < Fragment::CREATED) return false;
+    for(Fragment* f : getFragments()){
+        if(f && f->performContextItemSelected(item)) return true;
+    }
+    return false;
+}
+
+void FragmentManager::dispatchOptionsMenuClosed(Menu& menu){
+    if(mCurState < Fragment::CREATED) return;
+    for(Fragment* f : getFragments()){
+        if(f) f->performOptionsMenuClosed(menu);
+    }
+}
+
 Fragment* FragmentManager::getPrimaryNavigationFragment() const{
     // MVP: not tracked yet.
     return nullptr;
@@ -286,8 +477,101 @@ bool FragmentManager::popBackStackImmediate(){
     return true;
 }
 
-bool FragmentManager::popBackStackImmediate(const std::string& /*name*/, int /*flags*/){
-    return false; // TODO: name/flags pop (androidx popBackStackState)
+bool FragmentManager::popBackStackImmediate(const std::string& name, int flags){
+    // androidx FragmentManager.popBackStackState(name, id, flags): pop every record above the
+    // topmost record whose name matches `name`; if POP_BACK_STACK_INCLUSIVE, pop that record too.
+    // A name that was never addToBackStack'd (e.g. the FragmentNavigator initial fragment) is not
+    // found → return false (no-op), which is exactly what lets the initial fragment linger.
+    execPendingActions(false);
+    if(mBackStack.empty()) return false;
+    int index = -1;
+    for(int i = (int)mBackStack.size() - 1; i >= 0; --i){
+        if(mBackStack[i]->getName() == name){ index = i; break; }
+    }
+    if(index < 0) return false;  // name not on this FragmentManager's back stack
+    int stop = (flags & POP_BACK_STACK_INCLUSIVE) ? index - 1 : index;
+    while((int)mBackStack.size() > stop + 1){
+        BackStackRecord* record = mBackStack.back();
+        mBackStack.pop_back();
+        record->executePopOps();
+        delete record;
+    }
+    return true;
+}
+
+bool FragmentManager::saveBackStack(const std::string& name){
+    // androidx FragmentManager.saveBackStackState: find the records named `name`, capture each one's
+    // ops + fragment whos, mark them mBeingSaved, then pop them (top-down). Popping runs executePopOps
+    // → FragmentStateManager tears the fragments down → since mBeingSaved, saveState() writes each
+    // fragment's state into mSavedState[who]. The BackStackState is stored in mBackStackStates[name].
+    execPendingActions(false);
+    int index = -1;
+    for(int i = 0; i < (int)mBackStack.size(); ++i){
+        if(mBackStack[i]->getName() == name){ index = i; break; }   // lowest match (inclusive)
+    }
+    if(index < 0) return false;
+    BackStackState bs;
+    for(int i = index; i < (int)mBackStack.size(); ++i){
+        BackStackRecord* record = mBackStack[i];
+        record->mBeingSaved = true;
+        bs.transactions.push_back(record->captureState());
+        for(const auto& op : record->getOps()){
+            if(op.mFragment && !op.mFragment->mWho.empty()) bs.fragmentWhos.push_back(op.mFragment->mWho);
+        }
+    }
+    for(int i = (int)mBackStack.size() - 1; i >= index; --i){
+        BackStackRecord* record = mBackStack[i];
+        mBackStack.erase(mBackStack.begin() + i);
+        record->executePopOps();   // fragments torn down; FSM.saveState (mBeingSaved) → mSavedState
+        delete record;
+    }
+    mBackStackStates[name] = std::move(bs);
+    return true;
+}
+
+bool FragmentManager::restoreBackStack(const std::string& name){
+    // androidx FragmentManager.restoreBackStackState: take the BackStackState, re-instantiate each
+    // fragment from its saved state, rebuild the BackStackRecords, and re-run them forward.
+    execPendingActions(false);
+    auto it = mBackStackStates.find(name);
+    if(it == mBackStackStates.end()) return false;
+    BackStackState bs = std::move(it->second);
+    mBackStackStates.erase(it);
+    // Phase A — re-create the Fragment objects from their saved state.
+    std::unordered_map<std::string, Fragment*> fragments;
+    for(const std::string& who : bs.fragmentWhos){
+        if(fragments.count(who)) continue;
+        FragmentState* fs = setSavedState(who, nullptr);   // retrieve-and-clear
+        if(!fs || fs->className.empty()){ delete fs; continue; }
+        FragmentFactory factory;                            // uses the global REGISTER_FRAGMENT registry
+        Fragment* f = factory.instantiate(fs->className);
+        if(!f){ delete fs; continue; }
+        // Restore FragmentState meta (androidx FragmentState.instantiate copies these back).
+        f->mWho = fs->who;
+        f->mFragmentId = fs->fragmentId;
+        f->mContainerId = fs->containerId;
+        f->mTag = fs->tag;
+        f->mHidden = fs->hidden;
+        f->mMaxState = fs->maxLifecycleState;
+        if(FragmentStateManager* fsm = getOrCreateStateManager(f)) fsm->restoreState(*fs); // args + view state
+        f->mSavedFragmentState = fs;                        // lifecycle consumes savedInstanceState/registry
+        fragments[who] = f;
+    }
+    // Phase B — rebuild + re-run the transactions forward (adds the fragments, moves them up).
+    for(BackStackRecordState& brs : bs.transactions){
+        BackStackRecord* record = new BackStackRecord(this);
+        record->restoreFromState(brs, fragments);
+        record->executeOps();
+        record->mBeingSaved = false;
+        mBackStack.push_back(record);
+    }
+    return true;
+}
+
+bool FragmentManager::clearBackStack(const std::string& name){
+    // androidx FragmentManager.clearBackStackState = restore then pop (discard).
+    if(!restoreBackStack(name)) return false;
+    return popBackStackImmediate(name, POP_BACK_STACK_INCLUSIVE);
 }
 
 // Enqueue a record for deferred execution (androidx enqueueAction). Ownership of `action`

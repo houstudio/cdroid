@@ -37,6 +37,13 @@ NavDestination::NavDestination(const std::string& navigatorName) {
     mNavigatorName = navigatorName;
 }
 
+NavDestination::~NavDestination(){
+    // Owns its deep links, actions and arguments (added via addDeepLink / putAction / addArgument).
+    for(NavDeepLink* dl : mDeepLinks) delete dl;
+    for(int i = 0; i < mActions.size(); i++) delete mActions.valueAt(i);
+    for(auto& kv : mArguments) delete kv.second;
+}
+
 void NavDestination::addArgument(const std::string& name, NavArgument* argument) {
     mArguments[name] = argument;
 }
@@ -174,12 +181,24 @@ void NavDestination::removeAction(int actionId) {
 void NavDestination::navigate(/*@Nullable*/ Bundle* args, /*@Nullable*/ NavOptions* navOptions) {
     LOGD("NavDestination.navigate route='%s' mNavigator=%p navigatorName='%s'",
          getRoute().c_str(), mNavigator, getNavigatorName().c_str());
-    Bundle defaultArgs = getDefaultArguments();
-    Bundle *finalArgs = new Bundle();
-    /*finalArgs.putAll(defaultArgs);
-    if (args != nullptr) {
-        finalArgs.putAll(args);
-    }*/
-    mNavigator->navigate(this, finalArgs, navOptions);
+    mNavigator->navigate(this, args, navOptions);
+}
+
+Bundle* NavDestination::addInDefaultArgs(Bundle* args){
+    // androidx NavDestination.addInDefaultArgs: merge caller args over default args (defaults from
+    // <argument android:defaultValue>). Caller overrides defaults. Returns args as-is if no defaults.
+    if(mDefaultArgs.isEmpty()) return args;
+    Bundle* result = new Bundle();
+    result->putAll(mDefaultArgs);
+    if(args) result->putAll(*args);
+    return result;
+}
+
+Bundle* NavDestination::matchRouteArgs(const std::string& route) const{
+    // Extract path-param arguments from a filled route (e.g. "detail/42" vs pattern "detail/{id}").
+    // Returns nullptr if this destination's route has no {param} placeholders.
+    if(mRoute.empty() || mRoute.find('{') == std::string::npos) return nullptr;
+    NavDeepLink link(mRoute);
+    return link.getMatchingArguments(route);
 }
 }/*endof namespace*/

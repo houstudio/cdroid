@@ -12,15 +12,6 @@
 #include <navigation/navdestination.h>
 #include <porting/cdlog.h>
 
-class DemoListener : public cdroid::NavController::OnDestinationChangedListener{
-public:
-    void onDestinationChanged(cdroid::NavController* /*controller*/,
-                              cdroid::NavDestination* destination,
-                              cdroid::Bundle* /*arguments*/) override{
-        LOGD("[nav_demo] navigated -> route=%s",
-             destination ? destination->getRoute().c_str() : "(null)");
-    }
-};
 
 int main(int argc, const char* argv[]){
     cdroid::App app(argc, argv);
@@ -36,8 +27,11 @@ int main(int argc, const char* argv[]){
     graph->addDestination(b);
     graph->setStartDestination("a");
 
-    DemoListener listener;
-    controller.addOnDestinationChangedListener(&listener);
+    controller.addOnDestinationChangedListener(
+        [](cdroid::NavController*, cdroid::NavDestination* destination, cdroid::Bundle*){
+            LOGD("[nav_demo] navigated -> route=%s",
+                 destination ? destination->getRoute().c_str() : "(null)");
+        });
 
     LOGD("[nav_demo] setGraph (expect 'a')");
     controller.setGraph(graph);

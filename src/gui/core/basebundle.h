@@ -11,9 +11,8 @@
 namespace cdroid {
 using namespace nonstd;
 class BaseBundle {
-private:
-    std::unordered_map<std::string, any> data_;
-
+protected:
+    std::unordered_map<std::string, any> data_; // protected: mirrors Android's package-private (Bundle subclass needs direct access for putBundle/getBundle)
 public:
     // Put methods for single values
 
@@ -170,6 +169,16 @@ public:
     // Check if the bundle is empty
     bool isEmpty() const {
         return data_.empty();
+    }
+    // Copy all key-values from `other` into this bundle (androidx Bundle.putAll).
+    void putAll(const BaseBundle& other) {
+        for(const auto& kv : other.data_) data_[kv.first] = kv.second;
+    }
+    // Return all keys (androidx Bundle.keySet).
+    std::vector<std::string> keySet() const {
+        std::vector<std::string> keys;
+        for(const auto& kv : data_) keys.push_back(kv.first);
+        return keys;
     }
 
     template<typename T>

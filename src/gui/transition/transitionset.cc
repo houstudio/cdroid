@@ -27,17 +27,9 @@
 
 namespace cdroid {
 
-namespace {
-// android: anonymous TransitionListenerAdapter in runAnimators (sequential) that starts
-// the next child when the previous one ends. Named here.
-struct SequentialListener: public TransitionListenerAdapter {
-    Transition* next;
-    void onTransitionEnd(Transition& transition) override {
-        next->runAnimators();
-        transition.removeListener(this);
-    }
-};
-} // anonymous namespace
+// android: anonymous TransitionListener in runAnimators (sequential) that starts the next
+// child when the previous one ends. Now wired inline in runAnimators as an EventSet
+// TransitionListener value (no subclass / no new).
 
 TransitionSet::TransitionSet() = default;
 
@@ -58,7 +50,7 @@ TransitionSet::~TransitionSet() {
     for (Transition* child : mTransitions) {
         delete child; // set owns its children
     }
-    delete mSetListener;
+    // mSetListener is a value member (EventSet) — freed automatically.
 }
 
 TransitionSet& TransitionSet::setOrdering(int ordering) {
@@ -265,8 +257,23 @@ void TransitionSet::createAnimators(ViewGroup* sceneRoot, TransitionValuesMaps& 
 }
 
 void TransitionSet::setupStartEndListeners() {
-    delete mSetListener;
-    mSetListener = new TransitionSetListener(this);
+    // mSetListener is a value member; wire its callbacks to this set, then copy it onto
+    // every child (EventSet copies share mID; each child's onTransitionEnd decrements the
+    // shared counter). android: a single shared listener tracks "all children done".
+    TransitionSet* self = this;
+    mSetListener.onTransitionStart = [self](Transition&) {
+        if (!self->mStarted) {
+            self->start();
+            self->mStarted = true;
+        }
+    };
+    mSetListener.onTransitionEnd = [self](Transition&) {
+        if (--self->mCurrentListeners == 0) {
+            // All child transitions are done.
+            self->mStarted = false;
+            self->end();
+        }
+    };
     for (Transition* child : mTransitions) {
         child->addListener(mSetListener);
     }
@@ -285,8 +292,10 @@ void TransitionSet::runAnimators() {
         for (int i = 1; i < numTransitions; ++i) {
             Transition* previousTransition = mTransitions[i - 1];
             Transition* nextTransition = mTransitions[i];
-            SequentialListener* sl = new SequentialListener();
-            sl->next = nextTransition;
+            Transition::TransitionListener sl;
+            sl.onTransitionEnd = [nextTransition](Transition&) {
+                nextTransition->runAnimators();
+            };
             previousTransition->addListener(sl);
         }
         Transition* firstTransition = mTransitions[0];
@@ -355,30 +364,11 @@ std::string TransitionSet::toString(const std::string& indent) {
 // ---- clone ----
 void TransitionSet::cloneChildrenInto(TransitionSet& clone) const {
     clone.mTransitions.clear(); // drop shallow copies (the original still owns them)
-    clone.mSetListener = nullptr;
     clone.mStarted = false;
     clone.mCurrentListeners = 0;
     for (Transition* child : mTransitions) {
         clone.addTransitionInternal(child->clone());
     }
-}
-
-// ---- TransitionSetListener ----
-void TransitionSet::TransitionSetListener::onTransitionStart(Transition& /*transition*/) {
-    if (!mTransitionSet->mStarted) {
-        mTransitionSet->start();
-        mTransitionSet->mStarted = true;
-    }
-}
-
-void TransitionSet::TransitionSetListener::onTransitionEnd(Transition& transition) {
-    --mTransitionSet->mCurrentListeners;
-    if (mTransitionSet->mCurrentListeners == 0) {
-        // All child transitions are done.
-        mTransitionSet->mStarted = false;
-        mTransitionSet->end();
-    }
-    transition.removeListener(this);
 }
 
 } // namespace cdroid

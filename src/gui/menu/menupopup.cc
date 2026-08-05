@@ -76,27 +76,22 @@ int MenuPopup::measureIndividualMenuWidth(ListAdapter* adapter, ViewGroup* paren
         Context* context, int maxAllowedWidth) {
     // Menus don't tend to be long, so this is more valid than it looks.
     int maxWidth = 0;
-    int itemType = 0;
-    View* itemView = nullptr;
 
     const int widthMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
     const int heightMeasureSpec = MeasureSpec::makeMeasureSpec(0, MeasureSpec::UNSPECIFIED);
     const int count = adapter->getCount();
     for (int i = 0; i < count; i++) {
-        const int positionType = adapter->getItemViewType(i);
-        if (positionType != itemType) {
-            itemType = positionType;
-            itemView = nullptr;
-        }
-
-        /*if (parent == nullptr) {//The android code here will caused memleak in cdroid
-            //parent = new FrameLayout(context,AttributeSet(context,"cdroid"));
-        }*/
-
-        itemView = adapter->getView(i, itemView, parent);
+        // Measurement-only throwaway views. Android recycles a convertView and
+        // relies on GC; in C++ the inflated views leak -- both the convertView
+        // dropped on item-type change and the view held across an early return.
+        // MenuAdapter::getView does not retain the views it returns, so inflate
+        // a fresh view each iteration and free it right after measuring. The
+        // measured width is identical whether or not the view is recycled.
+        View* itemView = adapter->getView(i, nullptr, parent);
         itemView->measure(widthMeasureSpec, heightMeasureSpec);
 
         const int itemWidth = itemView->getMeasuredWidth();
+        delete itemView;
         if (itemWidth >= maxAllowedWidth) {
             return maxAllowedWidth;
         } else if (itemWidth > maxWidth) {

@@ -27,12 +27,17 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <memory>
 #include <lifecycle/lifecycle.h>
 #include <core/handler.h>
 #include <core/callbackbase.h>
+#include <fragment/fragmentstate.h>
 namespace cdroid{
 class LayoutInflater;
 class View;
+class Menu;
+class MenuInflater;
+class MenuItem;
 namespace fragment{
 
 class Fragment;
@@ -42,6 +47,7 @@ class FragmentFactory;
 class FragmentTransaction;
 class BackStackRecord;
 class FragmentStateManager;
+struct FragmentState;
 
 class FragmentManager{
 public:
@@ -65,6 +71,14 @@ public:
     void dispatchDestroy();
     int getCurState() const { return mCurState; }
 
+    // --- options-menu dispatch (androidx FragmentManager.dispatch*OptionsMenu) ---
+    bool isParentMenuVisible(Fragment* parent) const; // parent is @Nullable (host Activity)
+    bool dispatchCreateOptionsMenu(Menu& menu, MenuInflater& inflater);
+    bool dispatchPrepareOptionsMenu(Menu& menu);
+    bool dispatchOptionsItemSelected(MenuItem& item);
+    bool dispatchContextItemSelected(MenuItem& item);
+    void dispatchOptionsMenuClosed(Menu& menu);
+
     // --- transactions (BackStackRecord-backed) ---
     // A deferred commit, mirroring androidx FragmentManager: commit() enqueues a record and
     // scheduleCommit() posts mExecCommit to the host Handler; the real executeOps()+state
@@ -81,6 +95,14 @@ public:
     bool executePendingTransactions();
     bool popBackStackImmediate();
     bool popBackStackImmediate(const std::string& name, int flags);
+    // androidx FragmentManager.saveBackStack/restoreBackStack/clearBackStack (in-memory, no Parcel):
+    // save = pop the records named `name`, capturing each fragment's state into mSavedState, and
+    // store a BackStackState in mBackStackStates[name]; restore = re-instantiate the fragments and
+    // re-run the transactions forward; clear = restore then pop (discard). All synchronous (CDROID
+    // single-threaded; androidx batches these as OpGenerators — same logical effect).
+    bool saveBackStack(const std::string& name);
+    bool restoreBackStack(const std::string& name);
+    bool clearBackStack(const std::string& name);
     // Enqueue a record for deferred execution (androidx enqueueAction). Transfers ownership of
     // `action` to this FragmentManager (freed after execution, or held in mBackStack if added
     // to the back stack).
@@ -103,16 +125,6 @@ public:
     void setFragmentFactory(FragmentFactory* factory);
     FragmentFactory* getFragmentFactory() const;
 
-    // --- internal fragment ops (used by BackStackRecord.executeOps) ---
-    void addFragment(Fragment* fragment, bool hidden);
-    void removeFragment(Fragment* fragment);
-    // Retain/restore a fragment across a reversible (back-stack) transaction — see .cc.
-    void retainFragment(Fragment* fragment);
-    void unretainFragment(Fragment* fragment);
-    void showFragment(Fragment* fragment);
-    void hideFragment(Fragment* fragment);
-    void attachFragment(Fragment* fragment);
-    void detachFragment(Fragment* fragment);
     // Drives a single fragment to newState (simplified state machine for MVP).
     void moveToState(Fragment* f, int newState);
     // Cap a fragment's lifecycle at `state` (androidx FragmentManager.setMaxLifecycle): sets
@@ -122,6 +134,17 @@ public:
     FragmentHostCallback* getHost() const { return mHost; }
     Fragment* getParent() const { return mParent; }
 
+    // Alive-guard for posted fragment-reclaim hooks: a shared_ptr<bool> whose weak alias is captured
+    // into each SEC reclaim hook. ~FragmentManager releases the shared_ptr, expiring the weak, so a
+    // hook posted during navigation but fired after Activity/host teardown (FM already destroyed) is
+    // a safe no-op rather than a use-after-free on this FragmentManager.
+    std::shared_ptr<bool> getAlive() const { return mAlive; }
+    // Reclaim a hard-removed fragment (driven to INITIALIZING, not referenced by any back-stack
+    // record) once its SEC exit effect has truly ended. Idempotent via the mStateManagers sentinel.
+    // Called from the SEC reclaim hook (effect-end) and the destroy-sweep; never calls back into the
+    // FSM, so it cannot busy-loop.
+    void reclaimFragment(Fragment* f);
+
     // Shared-element transition: the active BackStackRecord declares shared element names;
     // FragmentManager resolves them to target views (by transitionName) in the entering fragment.
     void setPendingSharedElementNames(const std::vector<std::string>& names){ mPendingSharedNames = names; }
@@ -129,26 +152,22 @@ public:
 private:
     friend class FragmentStateManager; // FSM drives the per-fragment state machine
     friend class BackStackRecord;      // records call enqueueAction/execSingleAction/generateOps
-    std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
+
+    // --- private methods ---
+    // Internal fragment ops (used only by BackStackRecord.executeOps — friend). android keeps these
+    // package-private; C++ has no package visibility, so private + friend BackStackRecord. External
+    // code must go through FragmentTransaction, never these directly.
+    void addFragment(Fragment* fragment, bool hidden);
+    void removeFragment(Fragment* fragment);
+    // Retain/restore a fragment across a reversible (back-stack) transaction — see .cc.
+    void retainFragment(Fragment* fragment);
+    void unretainFragment(Fragment* fragment);
+    void showFragment(Fragment* fragment);
+    void hideFragment(Fragment* fragment);
+    void attachFragment(Fragment* fragment);
+    void detachFragment(Fragment* fragment);
     FragmentStateManager* getOrCreateStateManager(Fragment* f);
-    FragmentHostCallback* mHost = nullptr;
-    FragmentContainer* mContainer = nullptr;
-    Fragment* mParent = nullptr;
-    int mCurState = -1; // Fragment::INITIALIZING
-    FragmentFactory* mFragmentFactory = nullptr;
-    std::vector<Fragment*> mAdded;
-    std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
-    std::vector<BackStackRecord*> mBackStack;
-    std::vector<std::string> mPendingSharedNames;
-    bool mDestroyed = false;
-    bool mStateSaved = false;
-    bool mStopped = true;
     // --- deferred-commit machinery (androidx FragmentManager) ---
-    std::vector<BackStackRecord*> mPendingActions; // records enqueued by commit(), awaiting exec
-    bool mExecutingActions = false;                // re-entrancy guard for execPendingActions
-    cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
-    std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
-    std::vector<bool> mTmpIsPop;
     void scheduleCommit();
     bool generateOpsForPendingActions(std::vector<BackStackRecord*>& records,
                                       std::vector<bool>& isRecordPop);
@@ -158,7 +177,45 @@ private:
                             std::vector<bool>& isRecordPop, int startIndex, int endIndex);
     void ensureExecReady(bool allowStateLoss);
     void cleanupExec();
+    // androidx SpecialEffectsController.forceCompleteAll across this FM's containers: retire every
+    // pending/running effect op so awaiting clamps lift. Called on the teardown paths so a fragment
+    // mid-effect is not left stranded in mRunningOperations.
+    void forceCompleteAllSpecialEffects();
+    // androidx FragmentStore.mSavedState + setSavedState/getSavedState: per-fragment saved state
+    // keyed by mWho. setSavedState(who, nullptr) retrieves-and-clears (returns the previous value);
+    // setSavedState(who, s) stores s (returns the previous value). CDROID inlines FragmentStore here.
+    FragmentState* setSavedState(const std::string& who, FragmentState* s);
+    FragmentState* getSavedState(const std::string& who) const;
     static cdroid::View* findViewByTransitionName(cdroid::View* root, const std::string& name);
+    // True if any record in mBackStack or mPendingActions still holds `f` in an Op (mFragment or
+    // mOldFragment) — i.e. a future popBackStack will reuse this exact instance. LOAD-BEARING guard
+    // for reclaimFragment: OP_REMOVE+addToBackStack drives a fragment to INITIALIZING while its record
+    // still points at it, and executePopOps reuses that pointer; deleting it would UAF on pop.
+    bool isFragmentReferencedByBackStack(Fragment* f) const;
+
+    // --- private data ---
+    std::unordered_map<Fragment*, FragmentStateManager*> mStateManagers;
+    FragmentHostCallback* mHost = nullptr;
+    FragmentContainer* mContainer = nullptr;
+    Fragment* mParent = nullptr;
+    int mCurState = -1; // Fragment::INITIALIZING
+    FragmentFactory* mFragmentFactory = nullptr;
+    std::vector<Fragment*> mAdded;
+    std::vector<Fragment*> mCreatedMenus; // fragments that contributed to the last options menu
+    std::unordered_map<std::string, Fragment*> mActive; // who -> Fragment
+    std::unordered_map<std::string, FragmentState*> mSavedState; // who -> saved state (androidx FragmentStore.mSavedState)
+    std::unordered_map<std::string, BackStackState> mBackStackStates; // name -> saved back stack (androidx FragmentManager.mBackStackStates)
+    std::vector<BackStackRecord*> mBackStack;
+    std::vector<std::string> mPendingSharedNames;
+    bool mDestroyed = false;
+    bool mStateSaved = false;
+    bool mStopped = true;
+    bool mExecutingActions = false;                // re-entrancy guard for execPendingActions
+    std::vector<BackStackRecord*> mPendingActions; // records enqueued by commit(), awaiting exec
+    cdroid::Runnable mExecCommit;                  // posted to host Handler -> execPendingActions(true)
+    std::vector<BackStackRecord*> mTmpRecords;     // scratch buffers for batched execution
+    std::vector<bool> mTmpIsPop;
+    std::shared_ptr<bool> mAlive = std::make_shared<bool>(true);  // see getAlive()
 };
 
 }//namespace fragment

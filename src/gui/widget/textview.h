@@ -101,9 +101,9 @@ private:
     float mShadowRadius, mShadowDx, mShadowDy;
     float mSpacingMult;
     float mSpacingAdd;
-    int mBreakStrategy;
-    int mHyphenationFrequency;
-    int mJustificationMode;
+    int mBreakStrategy = Layout::BREAK_STRATEGY_SIMPLE;
+    int mHyphenationFrequency = Layout::HYPHENATION_FREQUENCY_NONE;
+    int mJustificationMode = Layout::JUSTIFICATION_MODE_NONE;
     bool mUseBoundsForWidth = false;
     bool mHideHint;
     bool mSingleLine;
@@ -114,7 +114,7 @@ private:
     bool mUserSetTextScaleX;
     bool mHighlightPathBogus;
     bool mHighlightPathsBogus;
-    bool mUseFallbackLineSpacing;
+    bool mUseFallbackLineSpacing = true; // Android: targetSdk >= P default
     bool mHasPresetAutoSizeValues;
     bool mPreDrawRegistered;
     bool mPreDrawListenerDetached;

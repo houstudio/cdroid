@@ -1,12 +1,43 @@
-# **Introduction**
-**CDroid** is a android like GUI toolkit base on C++11,It is a cross-platform GUI engine for embedded system.
+# CDroid
+
+> **Android's UI framework, faithfully ported to C++ — Android-quality UI on embedded devices with no Android runtime, and a readable mirror of AOSP internals you can actually learn from.**
+
+CDroid is a **line-by-line C++ port of Android's Java UI SDK** — `android.widget`, `android.view`, `android.text`, `android.graphics.drawable`, `android.animation` — built on top of **Cairo** (vector graphics) and targeting **embedded systems** (runs in as little as 32 MB of RAM). It is neither a wrapper around Android nor merely "Android-inspired": class names, member names, method signatures, and control flow track the AOSP sources closely enough that you can open the Android reference next to the C++ and follow along line by line.
+
+If you can describe a UI in Android XML, you can run that same UI on a set-top box, an in-dash display, or an industrial panel — designed in Android Studio, rendered by Cairo, no JVM in sight.
+
 * Main repository: [https://gitee.com/houstudio/cdroid](https://gitee.com/houstudio/cdroid)
-* Mirrored repository: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
-# **Features:**
-* Multi Layer/Multi Window 
-* Integrated with 50+ UI Components and 20+ Drawables(compatible with android)
-* All UI Components(Layouts,Drawables...)can be designed in **AndroidStudio or Eclipse** 
-* Vector Graph supported via **Cairo**
+* Mirror: [https://github.com/houstudio/cdroid](https://github.com/houstudio/cdroid)
+* Contact: QQ 1225012331 / WeChat: calfhou
+
+## Why does this exist?
+
+Embedded teams keep reinventing UI frameworks, and the results are rarely as good as Android's. CDroid takes the other route: **port the real thing**, preserve a decade of Android UI engineering, and ship it where Android itself can't run. The guiding rule is *fidelity over redesign* — translate Android's logic verbatim instead of second-guessing it. (See [AGENTS.md](AGENTS.md).)
+
+## Who is it for?
+
+- **Embedded engineers** who need a polished, animatable, Material-style UI on constrained hardware (32 MB+) where full Android is too heavy.
+- **Android developers** who want to understand *how the framework actually works* — View measure/layout/draw, Choreographer, input dispatch, text layout, drawables — by reading clean C++ instead of fighting the AOSP build. CDroid is the most readable mirror of AOSP framework internals that exists.
+- **C++ engineers** looking for a substantial, well-architected codebase: real ownership/lifetime challenges, modern features (ConstraintLayout/MotionLayout, RecyclerView, fragments, transitions), and Cairo-based rendering.
+
+## Features
+
+- **50+ widgets & 20+ drawables**, API-compatible with Android — design them in Android Studio / Eclipse.
+- **Full AndroidX ports:** RecyclerView, ConstraintLayout + MotionLayout, FragmentManager + Navigation, Flexbox, CoordinatorLayout, ViewPager2.
+- **Fragment + Transition framework**, including shared-element transitions.
+- **Vector graphics via Cairo** — no `Bitmap` class; `Cairo::ImageSurface` plays that role.
+- **Multi-window / multi-layer compositor** with damage-region rendering.
+- **Faithful text stack:** spans, `StaticLayout`/`DynamicLayout`, minikin line-breaking, `KeyCharacterMap`, IME.
+- **Cross-platform backends:** DRM, fb, DirectFB, SDL, XCB/Xlib, VNC.
+
+## Get involved 👋
+
+CDroid is a large port — there is always more to translate from AOSP, and we'd love your help.
+
+- 🆕 **[Good First Issues](docs/contributing/good-first-issues.md)** — concrete, self-contained tasks, each pointing to the exact AOSP source to port.
+- 📖 **[Contributing guide](CONTRIBUTING.md)** — how to build, the fidelity methodology, and how to claim your first task.
+- 中文说明见 [README.cn.md](README.cn.md).
+
 # **Quick Start**
 * VM(Ware):https://pan.baidu.com/s/1-v-rLcHxo5W5TXvJ2NUWxA fetchcode：spux (VM Ubuntu User:cdroid password:123456）
 * After login pls run git pull to get new version of cdroid

@@ -17,6 +17,7 @@ list(APPEND WIDGET_SOURCES
 list(APPEND WIDGET_SOURCES
     #widget/autocompletetextview.cc
     widget/nestedscrollview.cc
+    widget/differentialmotionflingcontroller.cc
     widget/scrollview.cc
     widget/horizontalscrollview.cc
     widget/progressbar.cc
@@ -115,12 +116,9 @@ list(APPEND WIDGET_SOURCES
 
     widget/actionbar.cc
     widget/toolbar.cc
+    widget/toolbarwidgetwrapper.cc
+    widget/toolbaractionbar.cc
     widget/toast.cc
-
-    widget/plotaxis.cc
-    widget/plotobject.cc
-    widget/plotpoint.cc
-    widget/plotview.cc
 )
 if(ENABLE_KPLOT)
 list(APPEND WIDGET_SOURCES

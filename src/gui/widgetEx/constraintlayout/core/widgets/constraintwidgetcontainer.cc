@@ -23,6 +23,7 @@
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/chain.h>
 #include <widgetEx/constraintlayout/core/widgets/helperwidget.h>
+#include <widgetEx/constraintlayout/core/widgets/optimizer.h>
 
 namespace cdroid {
 
@@ -294,11 +295,13 @@ void ConstraintWidgetContainer::layout() {
         // can wire their referenced children's anchor targets before those children solve.
         for (int i = 0; i < count; i++) {
             if (dynamic_cast<HelperWidget*>(mChildren[i]) != nullptr) {
+                Optimizer::checkMatchParent(this, &mSystem, mChildren[i]);
                 mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
             }
         }
         for (int i = 0; i < count; i++) {
             if (dynamic_cast<HelperWidget*>(mChildren[i]) == nullptr) {
+                Optimizer::checkMatchParent(this, &mSystem, mChildren[i]);
                 mChildren[i]->addToSolver(&mSystem, /*optimize=*/false);
             }
         }

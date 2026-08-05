@@ -57,6 +57,14 @@ public:
     void onDestroy() override;
     void onBackPressed() override;
 
+    // Options-menu dispatch chain: forward to the FragmentManager so visible Fragments
+    // that called setHasOptionsMenu(true) can contribute menu items (androidx
+    // FragmentActivity onCreateOptionsMenu / onPrepare / onOptions / onContextItemSelected).
+    bool onCreateOptionsMenu(Menu& menu) override;
+    bool onPrepareOptionsMenu(Menu& menu) override;
+    bool onOptionsItemSelected(MenuItem& item) override;
+    bool onContextItemSelected(MenuItem& item) override;
+
     FragmentManager* getSupportFragmentManager();
     int getFragmentContainerId() const { return mContainerId; }
 

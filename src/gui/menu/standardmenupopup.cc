@@ -75,6 +75,21 @@ StandardMenuPopup::StandardMenuPopup(Context* context, MenuBuilder* menu, View* 
     menu->addMenuPresenter(this, context);
 }
 
+StandardMenuPopup::~StandardMenuPopup() {
+    // This destructor runs at a safe point -- either MenuPopupHelper::getPopup
+    // reclaiming a dismissed popup before the next show, or ~MenuPopupHelper --
+    // never from inside the popup window's dismiss() listener (which would be a
+    // use-after-free, since ListPopupWindow::dismiss touches its members after
+    // firing the listener). By then the window has already been dismissed via
+    // the normal close path; do NOT dismiss() here, as that would re-enter
+    // onDismiss -> mMenu->close() -> onCloseMenu while tearing down. If the
+    // popup is somehow still showing (force close), its decor Window is
+    // reclaimed by ~WindowManager. The list view does not own its adapter, so
+    // free it explicitly.
+    delete mPopup;
+    delete mAdapter;
+}
+
 void StandardMenuPopup::setForceShowIcon(bool forceShow) {
     mAdapter->setForceShowIcon(forceShow);
 }

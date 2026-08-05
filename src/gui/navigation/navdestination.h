@@ -49,6 +49,10 @@ private:
 public:
     NavDestination(Navigator* navigator);
     NavDestination(const std::string& navigatorName);
+    // CDROID has no GC: NavDestination owns its NavDeepLinks / NavActions / NavArguments. Virtual so
+    // that deleting a NavDestination* which actually points at a NavGraph recurses into ~NavGraph
+    // (which owns its child destinations) — nested <navigation> graphs are common.
+    virtual ~NavDestination();
 
     virtual void onInflate(Context* context, const AttributeSet& attrs);
     void setParent(NavGraph* parent);
@@ -86,6 +90,13 @@ public:
     void putAction(int actionId, NavAction* action);
     void removeAction(int actionId);
     void navigate(Bundle* args, NavOptions* navOptions);
+    // androidx NavDestination.addInDefaultArgs: merge caller args over this destination's default
+    // arguments (from <argument android:defaultValue>). Returns a new Bundle, or `args` as-is if
+    // there are no defaults.
+    Bundle* addInDefaultArgs(Bundle* args);
+    // Extract path-param arguments from a filled route (e.g. "detail/42" against pattern
+    // "detail/{id}" → {id:"42"}) via NavDeepLink. Returns nullptr if the route has no params.
+    Bundle* matchRouteArgs(const std::string& route) const;
 };
 }/*endof namespace */
 #endif /*__NAV_DESTINATION_H__*/

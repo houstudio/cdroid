@@ -38,8 +38,14 @@
 #include <lifecycle/lifecycleregistry.h>
 #include <savedstate/savedstateregistryowner.h>
 #include <savedstate/savedstateregistrycontroller.h>
+#include <core/parcelable.h>
+#include <core/sparsearray.h>
+#include <menu/menu.h>
+#include <menu/menuitem.h>
+#include <menu/menuinflater.h>
 
 namespace cdroid{
+namespace fragment{ struct FragmentState; }
 class Context;
 class Bundle;
 class View;
@@ -56,6 +62,7 @@ class FragmentViewLifecycleOwner;
 class Fragment : public savedstate::SavedStateRegistryOwner,
                  public lifecycle::ViewModelStoreOwner,
                  public lifecycle::HasDefaultViewModelProviderFactory{
+    friend class FragmentStateManager; // androidx same-package access to Fragment internals
 public:
     // Fragment state constants (verbatim from androidx).
     static const int INITIALIZING        = -1;
@@ -74,7 +81,12 @@ public:
 
     // --- identity / state (public for same-package access, as in androidx) ---
     int mState = INITIALIZING;
+    // Alive-flag: deferred-cleanup posts (TransitionEffect clone-end performDestroyView) capture a
+    // weak_ptr to this; ~Fragment resets it, so a late post (e.g. after destroy-sweep reclaimFragment
+    // deleted this Fragment) becomes a no-op instead of UAF.
+    std::shared_ptr<bool> mAliveFlag = std::make_shared<bool>();
     std::string mWho;                 // unique id (assigned in ctor)
+    std::string mClassName;           // class name (stamped by FragmentFactory.instantiate; androidx uses Fragment.getClass())
     cdroid::Bundle* mArguments = nullptr;
     std::string mTag;
     std::string mTargetWho;
@@ -98,6 +110,14 @@ public:
     bool mIsCreated = false;
     bool mUserVisibleHint = true;
     lifecycle::Lifecycle::State mMaxState = lifecycle::Lifecycle::State::RESUMED;
+    // --- saved state (androidx Fragment.mSavedViewState / mSavedFragmentState / mBeingSaved) ---
+    // View hierarchy state captured by FragmentStateManager.saveViewState (owned).
+    SparseArray<Parcelable*>* mSavedViewState = nullptr;
+    // The full per-fragment saved state, set on restore so lifecycle callbacks get it; owned.
+    FragmentState* mSavedFragmentState = nullptr;
+    // Set while a saveBackStack pop tears this fragment down: FragmentStateManager saves its state
+    // into FragmentManager.mSavedState instead of discarding it (androidx Fragment.mBeingSaved).
+    bool mBeingSaved = false;
     // Custom transition animations pushed by FragmentTransaction.executeOps (androidx
     // Fragment.setAnimations -> AnimationInfo). Empty = use the default Fade transition.
     std::string mEnterAnim, mExitAnim, mPopEnterAnim, mPopExitAnim;
@@ -113,10 +133,10 @@ public:
     Transition* mReturnTransition = nullptr;       // pop exit
     Transition* mSharedElementEnterTransition = nullptr;
     Transition* mSharedElementReturnTransition = nullptr;
-    void setEnterTransition(Transition* t){ mEnterTransition = t; }
-    void setExitTransition(Transition* t){ mExitTransition = t; }
-    void setReenterTransition(Transition* t){ mReenterTransition = t; }
-    void setReturnTransition(Transition* t){ mReturnTransition = t; }
+    void setEnterTransition(Transition* t);
+    void setExitTransition(Transition* t);
+    void setReenterTransition(Transition* t);
+    void setReturnTransition(Transition* t);
     Transition* getEnterTransition() const { return mEnterTransition; }
     Transition* getExitTransition() const { return mExitTransition; }
     Transition* getReenterTransition() const { return mReenterTransition; }
@@ -149,6 +169,14 @@ public:
     virtual void onLowMemory(){}
     virtual void onConfigurationChanged(){}
 
+    // --- options-menu callbacks (override in subclasses that call setHasOptionsMenu(true)) ---
+    virtual void onCreateOptionsMenu(Menu& menu, MenuInflater& inflater){}
+    virtual void onPrepareOptionsMenu(Menu& menu){}
+    virtual bool onOptionsItemSelected(MenuItem& item){ return false; }
+    virtual bool onContextItemSelected(MenuItem& item){ return false; }
+    virtual void onDestroyOptionsMenu(){}
+    virtual void onOptionsMenuClosed(Menu& menu){}
+
     // --- owner interface implementations ---
     lifecycle::Lifecycle& getLifecycle() override; // returns mLifecycleRegistry
     lifecycle::ViewModelStore& getViewModelStore() override;
@@ -168,6 +196,12 @@ public:
     FragmentManager* getChildFragmentManager();
     Fragment* getParentFragment() const { return mParentFragment; }
     bool isAdded() const { return mHost != nullptr; }
+
+    // --- options-menu participation (mirrors androidx Fragment) ---
+    bool hasOptionsMenu() const { return mHasMenu; }
+    bool isMenuVisible() const;
+    void setHasOptionsMenu(bool hasMenu);
+    void setMenuVisibility(bool menuVisible);
     bool isDetached() const { return mDetached; }
     bool isRemoving() const { return mRemoving; }
     bool isResumed() const { return mState == RESUMED; }
@@ -190,6 +224,13 @@ public:
     void performDestroyView();
     void performDestroy();
     void performDetach();
+
+    // --- options-menu perform (driven by FragmentManager.dispatch*OptionsMenu) ---
+    bool performCreateOptionsMenu(Menu& menu, MenuInflater& inflater);
+    bool performPrepareOptionsMenu(Menu& menu);
+    bool performOptionsItemSelected(MenuItem& item);
+    bool performContextItemSelected(MenuItem& item);
+    void performOptionsMenuClosed(Menu& menu);
 
 protected:
     lifecycle::LifecycleRegistry* mLifecycleRegistry = nullptr; // owned

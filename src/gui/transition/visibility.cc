@@ -30,34 +30,30 @@
 
 namespace cdroid {
 
-namespace {
+// android: anonymous TransitionListener inside onDisappear that removes the overlay view on
+// pause/end and re-adds it on resume. Now wired inline in createAnimator as an EventSet
+// TransitionListener value.
 
-// android: anonymous TransitionListenerAdapter inside onDisappear that removes the
-// overlay view on pause/end and re-adds it on resume. Named here (no anon classes).
-class OverlayListener: public TransitionListenerAdapter {
-  public:
-    ViewGroupOverlay* overlay;
-    View* finalOverlayView;
-    View* startView;
-
-    void onTransitionPause(Transition& /*transition*/) override {
-        overlay->remove(finalOverlayView);
+// Helpers for the disappear listener: shared by the animator-side and transition-side
+// EventSet lambdas (both hold a shared_ptr<Visibility::DisappearState>). Replace the old
+// Visibility::DisappearListener methods.
+static void disappearSuppressLayout(Visibility::DisappearState& s, bool suppress) {
+    if (s.mSuppressLayout && s.mLayoutSuppressed != suppress && s.mParent != nullptr) {
+        s.mLayoutSuppressed = suppress;
+        s.mParent->suppressLayout(suppress);
     }
-    void onTransitionResume(Transition& transition) override {
-        if (finalOverlayView->getParent() == nullptr) {
-            overlay->add(finalOverlayView);
-        } else {
-            transition.cancel();
+}
+static void disappearHideWhenNotCanceled(Visibility::DisappearState& s) {
+    if (!s.mCanceled) {
+        // Recreate the parent's display list in case it includes mView.
+        s.mView->setTransitionVisibility(s.mFinalVisibility);
+        if (s.mParent != nullptr) {
+            s.mParent->invalidate();
         }
     }
-    void onTransitionEnd(Transition& transition) override {
-        startView->setTag(R::id::transition_overlay_view_tag, nullptr);
-        overlay->remove(finalOverlayView);
-        transition.removeListener(this);
-    }
-};
-
-} // anonymous namespace
+    // Layout is allowed now that the View is in its final state.
+    disappearSuppressLayout(s, false);
+}
 
 const std::vector<std::string> Visibility::sTransitionProperties = {PROPNAME_VISIBILITY, PROPNAME_PARENT};
 
@@ -277,11 +273,22 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
                 overlay->remove(overlayView);
             } else {
                 startView->setTag(R::id::transition_overlay_view_tag, overlayView);
-                OverlayListener* l = new OverlayListener();
-                l->overlay = overlay;
-                l->finalOverlayView = overlayView;
-                l->startView = startView;
-                addListener(l); // Transition takes ownership
+                Transition::TransitionListener l;
+                l.onTransitionPause = [overlay, overlayView](Transition&) {
+                    overlay->remove(overlayView);
+                };
+                l.onTransitionResume = [overlay, overlayView](Transition& transition) {
+                    if (overlayView->getParent() == nullptr) {
+                        overlay->add(overlayView);
+                    } else {
+                        transition.cancel();
+                    }
+                };
+                l.onTransitionEnd = [startView, overlay, overlayView](Transition&) {
+                    startView->setTag(R::id::transition_overlay_view_tag, nullptr);
+                    overlay->remove(overlayView);
+                };
+                addListener(l);
             }
         }
         return animator;
@@ -292,26 +299,34 @@ Animator* Visibility::onDisappear(ViewGroup* sceneRoot,
         viewToKeep->setTransitionVisibility(View::VISIBLE);
         Animator* animator = onDisappear(sceneRoot, viewToKeep, startValues, endValues);
         if (animator != nullptr) {
-            DisappearListener* disappearListener = new DisappearListener(viewToKeep, endVisibility, mSuppressLayout);
-            // Wire the animator side via callback members (DisappearListener is one object
-            // in android; CDROID's Animator listeners are EventSet values with callbacks).
+            // android: new DisappearListener(...) shared by the animator side and the
+            // transition side. EventSet: one shared_ptr<DisappearState> captured by all
+            // lambdas (mCanceled/mLayoutSuppressed are mutated by both sides).
+            auto st = std::make_shared<DisappearState>();
+            st->mView = viewToKeep;
+            st->mFinalVisibility = endVisibility;
+            st->mParent = viewToKeep ? viewToKeep->getParent() : nullptr;
+            st->mSuppressLayout = mSuppressLayout;
+            st->mLayoutSuppressed = false;
+            st->mCanceled = false;
+            disappearSuppressLayout(*st, true); // android ctor: suppressLayout(true)
             Animator::AnimatorListener al;
-            al.onAnimationCancel = [disappearListener](Animator& a) {
-                disappearListener->onAnimationCancel(a);
-            };
-            al.onAnimationEnd    = [disappearListener](Animator& a, bool) {
-                disappearListener->onAnimationEnd(a);
-            };
+            al.onAnimationCancel = [st](Animator&) { st->mCanceled = true; };
+            al.onAnimationEnd    = [st](Animator&, bool) { disappearHideWhenNotCanceled(*st); };
             Animator::AnimatorPauseListener apl;
-            apl.onAnimationPause  = [disappearListener](Animator& a) {
-                disappearListener->onAnimationPause(a);
+            apl.onAnimationPause  = [st](Animator&) {
+                if (!st->mCanceled) st->mView->setTransitionVisibility(st->mFinalVisibility);
             };
-            apl.onAnimationResume = [disappearListener](Animator& a) {
-                disappearListener->onAnimationResume(a);
+            apl.onAnimationResume = [st](Animator&) {
+                if (!st->mCanceled) st->mView->setTransitionVisibility(View::VISIBLE);
             };
             animator->addListener(al);
             animator->addPauseListener(apl);
-            addListener(disappearListener); // Transition takes ownership (transition side)
+            Transition::TransitionListener disappearListener;
+            disappearListener.onTransitionEnd    = [st](Transition&) { disappearHideWhenNotCanceled(*st); };
+            disappearListener.onTransitionPause  = [st](Transition&) { disappearSuppressLayout(*st, false); };
+            disappearListener.onTransitionResume = [st](Transition&) { disappearSuppressLayout(*st, true); };
+            addListener(disappearListener); // transition side
         } else {
             viewToKeep->setTransitionVisibility(originalVisibility);
         }
@@ -341,48 +356,7 @@ bool Visibility::isTransitionRequired(TransitionValues* startValues, TransitionV
 }
 
 // ---- DisappearListener ----
-Visibility::DisappearListener::DisappearListener(View* view, int finalVisibility, bool suppress)
-    : mView(view), mFinalVisibility(finalVisibility),
-      mParent(view ? view->getParent() : nullptr), // ViewGroup*
-      mSuppressLayout(suppress) {
-    // Prevent a layout from including mView in its calculation.
-    suppressLayout(true);
-}
-
-void Visibility::DisappearListener::onAnimationPause(Animator& /*animation*/) {
-    if (!mCanceled) {
-        mView->setTransitionVisibility(mFinalVisibility);
-    }
-}
-
-void Visibility::DisappearListener::onAnimationResume(Animator& /*animation*/) {
-    if (!mCanceled) {
-        mView->setTransitionVisibility(View::VISIBLE);
-    }
-}
-
-void Visibility::DisappearListener::onTransitionEnd(Transition& transition) {
-    hideViewWhenNotCanceled();
-    transition.removeListener(this);
-}
-
-void Visibility::DisappearListener::hideViewWhenNotCanceled() {
-    if (!mCanceled) {
-        // Recreate the parent's display list in case it includes mView.
-        mView->setTransitionVisibility(mFinalVisibility);
-        if (mParent != nullptr) {
-            mParent->invalidate();
-        }
-    }
-    // Layout is allowed now that the View is in its final state
-    suppressLayout(false);
-}
-
-void Visibility::DisappearListener::suppressLayout(bool suppress) {
-    if (mSuppressLayout && mLayoutSuppressed != suppress && mParent != nullptr) {
-        mLayoutSuppressed = suppress;
-        mParent->suppressLayout(suppress);
-    }
-}
+// (DisappearListener methods removed — logic moved to the disappearHideWhenNotCanceled /
+// disappearSuppressLayout helpers above + the EventSet lambdas wired in onDisappear.)
 
 } // namespace cdroid

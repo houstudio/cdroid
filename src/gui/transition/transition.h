@@ -25,6 +25,7 @@
 #include <typeindex>
 #include <vector>
 
+#include <core/callbackbase.h>   // EventSet, CallbackBase (TransitionListener value type)
 #include <core/rect.h>       // Rect (getEpicenter return type)
 
 #include <transition/arraymap.h>                 // ArrayMap
@@ -77,28 +78,21 @@ class Transition {
     static constexpr int MATCH_LAST    = MATCH_ITEM_ID;
 
     /**
-     * A transition listener receives notifications from a transition (lifecycle).
-     * Ported from android.transition.Transition.TransitionListener. Implementations
-     * are registered by pointer; the caller owns the lifetime (java reference/GC).
+     * A transition listener receives lifecycle notifications from a transition.
+     * Ported from android.transition.Transition.TransitionListener, but using the
+     * codebase's EventSet + CallbackBase value semantics (same shape as
+     * Animator::AnimatorListener): addListener/removeListener take it by value, so
+     * the Transition owns its listeners (no manual new/delete, no leak). Each
+     * CallbackBase member is a no-op until assigned. Identity for removeListener is
+     * EventSet's shared mID (a copy compares equal to its original).
      */
-    class TransitionListener {
+    class TransitionListener : public EventSet {
       public:
-        virtual ~TransitionListener() = default;
-        virtual void onTransitionStart(Transition& transition) {
-            (void)transition;
-        }
-        virtual void onTransitionEnd(Transition& transition) {
-            (void)transition;
-        }
-        virtual void onTransitionCancel(Transition& transition) {
-            (void)transition;
-        }
-        virtual void onTransitionPause(Transition& transition) {
-            (void)transition;
-        }
-        virtual void onTransitionResume(Transition& transition) {
-            (void)transition;
-        }
+        CallbackBase<void, Transition&> onTransitionStart;
+        CallbackBase<void, Transition&> onTransitionEnd;
+        CallbackBase<void, Transition&> onTransitionCancel;
+        CallbackBase<void, Transition&> onTransitionPause;
+        CallbackBase<void, Transition&> onTransitionResume;
     };
 
     /**
@@ -200,11 +194,17 @@ class Transition {
     virtual void forceToEnd(ViewGroup* sceneRoot);
     virtual void cancel();
 
-    // addListener registers a listener (NOT owned — java reference/GC semantics). The
-    // same listener may be added to multiple transitions. Callers pass a heap listener
-    // that self-removes on end; it is not freed by the Transition (see ~Transition note).
-    Transition& addListener(TransitionListener* listener);
-    Transition& removeListener(TransitionListener* listener);
+    // addListener/removeListener take TransitionListener by value (EventSet identity via
+    // shared mID: a copy compares equal to its original, so removeListener finds it).
+    // The Transition owns its listeners (stored in mListeners) and frees them on destruction.
+    Transition& addListener(const TransitionListener& listener);
+    Transition& removeListener(const TransitionListener& listener);
+
+    // CDROID ownership: clones created per transition run (beginDelayedTransition/go -> clone)
+    // are throwaway (java reclaims via GC). Mark a clone so end() defers delete-this to the next
+    // UI-thread looper iteration via a heap Handler (self-deleting); only the top-level clone is
+    // marked — children of a TransitionSet clone are owned by the set.
+    void setDeleteWhenEnded(bool b);
 
     // ---- propagation / epicenter / path motion ----
     virtual void setEpicenterCallback(EpicenterCallback* epicenterCallback);
@@ -276,8 +276,10 @@ class Transition {
     int  mNumInstances = 0;
     bool mPaused = false;
     bool mEnded = false;
-    std::vector<TransitionListener*> mListeners;
+    bool mDeleteWhenEnded = false; // throwaway clone: queue for deferred deletion on end()
+    std::vector<TransitionListener> mListeners;
     std::vector<Animator*> mAnimators;
+    std::vector<Animator*> mOwnedAnimators; // created by createAnimators; owned, freed in ~Transition
     TransitionPropagation* mPropagation = nullptr;
     EpicenterCallback* mEpicenterCallback = nullptr;
     ArrayMap<std::string, std::string> mNameOverrides; // empty == null (value semantics; copy-safe)

@@ -39,11 +39,8 @@ int main(int argc,const char*argv[]){
     };
     cb.onActionItemClicked = [tv](ActionMode& mode, MenuItem& item)->bool{
         LOGD("== onActionItemClicked id=%d (%s) ==", item.getItemId(), item.getTitle().c_str());
-        if(item.getItemId() == 9){   // Done
-            mode.finish();
-            return true;
-        }
         tv->setText("clicked: " + item.getTitle());
+        mode.finish();   // any item click ends the ActionMode (dismisses the floating toolbar)
         return true;
     };
     cb.onDestroyActionMode = [](ActionMode& mode){

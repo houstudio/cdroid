@@ -39,6 +39,7 @@ class NavDestination;
 class NavBackStackEntry : public savedstate::SavedStateRegistryOwner,
                           public lifecycle::ViewModelStoreOwner,
                           public lifecycle::HasDefaultViewModelProviderFactory{
+    friend class NavController; // restore: set mId to a saved id (androidx NavBackStackEntry.create(id, ...))
 public:
     NavBackStackEntry(NavDestination* destination, Bundle* arguments);
     ~NavBackStackEntry() override;
@@ -51,6 +52,9 @@ public:
     NavDestination* getDestination() const { return mDestination; }
     const std::string& getId() const { return mId; }
     Bundle* getArguments() const { return mArguments; }
+    // Save/restore this entry's SavedStateRegistry state (androidx NavBackStackEntryState.savedState).
+    void saveState(savedstate::SavedState& out);
+    void restoreState(const savedstate::SavedState& in);
 
     void handleLifecycleEvent(lifecycle::Lifecycle::Event event);
     // Drive the LifecycleRegistry straight to `s` (state-based; used by updateBackStackLifecycle).
@@ -67,6 +71,30 @@ private:
     savedstate::SavedStateRegistryController* mSavedStateRegistryController;
     lifecycle::Lifecycle::State mMaxLifecycle = lifecycle::Lifecycle::State::RESUMED;
     static std::string generateId();
+};
+
+// Port of androidx.navigation.NavBackStackEntryState — a saved NavBackStackEntry's identity +
+// destination + arguments (CDROID in-memory: omits the SavedStateHandle slice for now). Held in
+// NavController.mBackStackStates; instantiate() rebuilds a NavBackStackEntry preserving the id so
+// the navigator-side (FragmentNavigator.savedIds) can match it for restoreBackStack.
+struct NavBackStackEntryState{
+    std::string id;            // the NavBackStackEntry mId (preserved across save/restore)
+    int destinationId = 0;     // NavDestination id
+    Bundle* arguments = nullptr; // owned copy
+    savedstate::SavedState savedState; // SavedStateRegistry contents (androidx NavBackStackEntryState.savedState)
+    NavBackStackEntryState() = default;
+    NavBackStackEntryState(const std::string& i, int destId, Bundle* args)
+        : id(i), destinationId(destId), arguments(args ? new Bundle(*args) : nullptr){}
+    ~NavBackStackEntryState(){ delete arguments; }
+    NavBackStackEntryState(const NavBackStackEntryState&) = delete;
+    NavBackStackEntryState& operator=(const NavBackStackEntryState&) = delete;
+    // Move-only (owns arguments) so it can live in / be inserted into a std::vector.
+    NavBackStackEntryState(NavBackStackEntryState&& o) noexcept
+        : id(std::move(o.id)), destinationId(o.destinationId), arguments(o.arguments){ o.arguments = nullptr; }
+    NavBackStackEntryState& operator=(NavBackStackEntryState&& o) noexcept {
+        if(this != &o){ delete arguments; id = std::move(o.id); destinationId = o.destinationId; arguments = o.arguments; o.arguments = nullptr; }
+        return *this;
+    }
 };
 
 }//namespace cdroid

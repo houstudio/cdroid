@@ -34,6 +34,7 @@
 #include <widget/R.h>
 #include <widget/scrollbardrawable.h>
 #include <widget/edgeeffect.h>
+#include <widget/cdwindow.h>
 #include <widget/scrollbarutils.h>
 #include <animation/animationutils.h>
 #include <utils/textutils.h>
@@ -478,6 +479,13 @@ View::~View(){
     if(mBackground)mBackground->setCallback(nullptr);
 
     delete mTouchDelegate;
+    if(mKeyedTags){
+        // CDROID has no GC: invoke each owned payload's destructor before freeing the SparseArray.
+        for(int i = 0; i < mKeyedTags->size(); i++){
+            const KeyedTagEntry& e = mKeyedTags->valueAt(i);
+            if(e.ptr && e.dtor) e.dtor(e.ptr);
+        }
+    }
     delete mKeyedTags;
     delete mForegroundInfo;
     delete mPendingCheckForTap;
@@ -1806,7 +1814,7 @@ void View::dispatchSaveInstanceState(SparseArray<Parcelable*>& container){
             throw std::runtime_error("Derived class did not call super.onSaveInstanceState()");
         }
         if (state!=nullptr){
-            LOGI("Freezing %d %p",mID,state);
+            LOGV("Freezing %d %p",mID,state);
             container.put(mID, state);
         }
     }
@@ -3727,9 +3735,17 @@ void View::setTag(int key,void*tag){
     setKeyedTag(key,tag);
 }
 
+void View::setTag(int key, void* tag, std::function<void(void*)> dtor){
+    setKeyedTag(key, tag, std::move(dtor));
+}
+
 void* View::getTag(int key)const{
-    if (mKeyedTags != nullptr)
-        return mKeyedTags->get(key);
+    if (mKeyedTags != nullptr){
+        // SparseArray::get(key) defaults via static_cast<T>(0), which KeyedTagEntry can't take;
+        // use indexOfKey + valueAt instead.
+        int i = mKeyedTags->indexOfKey(key);
+        if(i >= 0) return mKeyedTags->valueAt(i).ptr;
+    }
     return nullptr;
 }
 
@@ -3738,10 +3754,18 @@ void View::setTagInternal(int key, void* tag) {
     setKeyedTag(key, tag);
 }
 
-void View::setKeyedTag(int key,void* tag){
+void View::setKeyedTag(int key,void* tag, std::function<void(void*)> dtor){
     if(mKeyedTags ==nullptr)
-        mKeyedTags = new SparseArray<void*>();
-    mKeyedTags->put(key,tag);
+        mKeyedTags = new SparseArray<KeyedTagEntry>();
+    // An owned payload (entry whose dtor is set) being overwritten must be reclaimed first — CDROID
+    // has no GC, so "setTag(key, x)" replacing a previously-owned value would otherwise leak the old
+    // one. Tags set without a dtor keep detach-only behaviour: old.dtor is empty -> no reclaim.
+    int idx = mKeyedTags->indexOfKey(key);
+    if(idx >= 0){
+        const KeyedTagEntry& old = mKeyedTags->valueAt(idx);
+        if(old.ptr && old.dtor) old.dtor(old.ptr);
+    }
+    mKeyedTags->put(key, KeyedTagEntry{ tag, std::move(dtor) });
 }
 
 View::AccessibilityDelegate* View::getAccessibilityDelegate() const{
@@ -6228,6 +6252,10 @@ void View::invalidateInternal(int l, int t, int w, int h, bool invalidateCache,b
             ((ViewGroup*)this)->mInvalidRgn->do_union(damage);
         }
     }
+    if(mAttachInfo && mAttachInfo->mRootView){
+        Window* win = dynamic_cast<Window*>(mAttachInfo->mRootView);
+        if(win) win->scheduleTraversals();
+    }
 }
 
 /*param:rect is views logical area,maybe it is large than views'bounds,function invalidate must convert it to bound area*/
@@ -7811,7 +7839,12 @@ void View::createContextMenu(ContextMenu& menu) {
 #if ENABLE(MENU)
     // Sets the current menu info so all items added to menu will have
     // my extra info set.
-    ((MenuBuilder&)menu).setCurrentMenuInfo(menuInfo);
+    // menu is a ContextMenu&; ContextMenu and MenuBuilder are sibling bases (both
+    // virtual-derive Menu) of ContextMenuBuilder, so this is a cross-cast. A C-style
+    // (MenuBuilder&) cast degrades to reinterpret_cast (no subobject adjustment) and
+    // yields a wrong 'this' -> out-of-bounds write. dynamic_cast adjusts correctly
+    // (mirrors AOSP's runtime (MenuBuilder) menu downcast). Same below.
+    dynamic_cast<MenuBuilder&>(menu).setCurrentMenuInfo(menuInfo);
 #endif
     onCreateContextMenu(menu);
     if (mListenerInfo && mListenerInfo->mOnCreateContextMenuListener) {
@@ -7820,7 +7853,7 @@ void View::createContextMenu(ContextMenu& menu) {
 #if ENABLE(MENU)
     // Clear the extra information so subsequent items that aren't mine don't
     // have my extra info.
-    ((MenuBuilder&)menu).setCurrentMenuInfo(nullptr);
+    dynamic_cast<MenuBuilder&>(menu).setCurrentMenuInfo(nullptr);
 #endif
     if (mParent != nullptr) {
         mParent->createContextMenu(menu);
@@ -8787,6 +8820,10 @@ void View::requestLayout(){
     }
     if ( mAttachInfo && (mAttachInfo->mViewRequestingLayout == this) ) {
          mAttachInfo->mViewRequestingLayout = nullptr;
+    }
+    if(mAttachInfo && mAttachInfo->mRootView){
+        Window* win = dynamic_cast<Window*>(mAttachInfo->mRootView);
+        if(win) win->scheduleTraversals();
     }
 }
 

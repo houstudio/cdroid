@@ -135,7 +135,20 @@ Toolbar::~Toolbar(){
     if(mCollapseButtonView==nullptr){
         delete mCollapseIcon;
     }
-    delete mMenuView;
+    // Android reclaims Toolbar's system views via GC; CDROID has none. ~ViewGroup already deletes
+    // any of these still parented to this Toolbar, so only reap the DETACHED ones — several paths
+    // leave them unparented: ensureNavButtonView() never addViews (setNavigationOnClickListener
+    // creates it without going through setNavigationIcon); setTitle("")/setSubtitle("") removeView
+    // the text view; addSystemView parks a view in mHiddenViews (unparented) while an action view is
+    // expanded. The prior unconditional `delete mMenuView` was a double-free whenever mMenuView sat
+    // in mChildren.
+    auto reapDetached = [](View* v){ if(v && v->getParent()==nullptr) delete v; };
+    reapDetached(mNavButtonView);
+    reapDetached(mTitleTextView);
+    reapDetached(mSubtitleTextView);
+    reapDetached(mLogoView);
+    reapDetached(mCollapseButtonView);
+    reapDetached(mMenuView);
     delete mContentInsets;
     delete mExpandedMenuPresenter;
 }
@@ -327,7 +340,7 @@ void Toolbar::setLogo(Drawable* drawable){
     } else if (mLogoView && isChildOrHidden(mLogoView)) {
         removeView(mLogoView);
         auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mLogoView);
-        mHiddenViews.erase(it);//mHiddenViews.remove(mLogoView)
+        mHiddenViews.erase(it);
     }
     if (mLogoView) {
         mLogoView->setImageDrawable(drawable);
@@ -399,7 +412,9 @@ void Toolbar::setTitle(const std::string&title){
     } else if (mTitleTextView && isChildOrHidden(mTitleTextView)) {
         removeView(mTitleTextView);
         auto it = std::find(mHiddenViews.begin(), mHiddenViews.end(), mTitleTextView);
-        if(it != mHiddenViews.end()) mHiddenViews.erase(it);
+        if(it != mHiddenViews.end()) {
+            mHiddenViews.erase(it);
+        }
     }
     if (mTitleTextView) {
         mTitleTextView->setText(title);
@@ -430,7 +445,9 @@ void Toolbar::setSubtitle(const std::string&subtitle){
     } else if (mSubtitleTextView && isChildOrHidden(mSubtitleTextView)) {
         removeView(mSubtitleTextView);
         auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mSubtitleTextView);
-        mHiddenViews.erase(it); //mHiddenViews.remove(mSubtitleTextView);
+        if(it!=mHiddenViews.end()){
+            mHiddenViews.erase(it);
+        }
     }
     if (mSubtitleTextView != nullptr) {
         mSubtitleTextView->setText(subtitle);
@@ -558,8 +575,10 @@ void Toolbar::setNavigationIcon(Drawable*icon){
         }
     } else if ((mNavButtonView != nullptr) && isChildOrHidden(mNavButtonView)) {
         removeView(mNavButtonView);
-        auto itr = std::find(mHiddenViews.begin(),mHiddenViews.end(),mNavButtonView);
-        mHiddenViews.erase(itr);//mHiddenViews.remove(mNavButtonView);
+        auto it = std::find(mHiddenViews.begin(),mHiddenViews.end(),mNavButtonView);
+        if(it!=mHiddenViews.end()){
+            mHiddenViews.erase(it);
+        }
     }
     if (mNavButtonView != nullptr) {
         mNavButtonView->setImageDrawable(icon);
@@ -1322,7 +1341,7 @@ void Toolbar::ensureContentInsets() {
     }
 }
 
-ActionMenuPresenter* Toolbar::getOuterActionMenuPresenter() {
+ActionMenuPresenter* Toolbar::getOuterActionMenuPresenter() const{
      return mOuterActionMenuPresenter;
 }
 

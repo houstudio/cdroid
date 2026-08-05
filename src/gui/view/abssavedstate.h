@@ -31,7 +31,6 @@ protected:
     AbsSavedState(Parcel& source);
 public:
     Parcelable* getSuperState();
-    int describeContents();
     virtual void writeToParcel(Parcel& dest, int flags);
 };
 }/*endof namespace*/

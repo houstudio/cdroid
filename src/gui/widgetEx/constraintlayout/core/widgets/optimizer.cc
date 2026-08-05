@@ -21,16 +21,53 @@
  */
 #include <widgetEx/constraintlayout/core/widgets/optimizer.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
+#include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
+#include <widgetEx/constraintlayout/core/linearsystem.h>
 
 namespace cdroid {
 
-// DEFERRED: ConstraintWidgetContainer is not yet ported (Stage 2 driver = Stage 3 analyzer).
-// The Java body resolves MATCH_PARENT widgets directly (no solver pivot) by pinning their
-// left/right or top/bottom anchors to the container edges and marking the widget DIRECT.
-// Restore verbatim once ConstraintWidgetContainer exists and the driver invokes this.
-void Optimizer::checkMatchParent(ConstraintWidgetContainer* /*container*/, LinearSystem* /*system*/,
-                                 ConstraintWidget* /*widget*/) {
-    // TODO(container): see androidx.constraintlayout.core.widgets.Optimizer.checkMatchParent
+// Verbatim port of androidx.constraintlayout.core.widgets.Optimizer.checkMatchParent.
+// A MATCH_PARENT widget is pinned to the container edges ([leftMargin, containerW-rightMargin])
+// via solver equalities and marked DIRECT, so ConstraintWidget::addToSolver skips applyConstraints
+// (the mHorizontalResolution==DIRECT guard at constraintwidget.cc) and the solver resolves the
+// widget to the full container dimension regardless of any explicit anchors on that axis.
+// Called per-child from ConstraintWidgetContainer::layout() before addToSolver.
+void Optimizer::checkMatchParent(ConstraintWidgetContainer* container, LinearSystem* system,
+                                 ConstraintWidget* widget) {
+    widget->mHorizontalResolution = ConstraintWidget::UNKNOWN;
+    widget->mVerticalResolution   = ConstraintWidget::UNKNOWN;
+
+    if (container->mListDimensionBehaviors[ConstraintWidget::HORIZONTAL]
+            != ConstraintWidget::DimensionBehaviour::WRAP_CONTENT
+        && widget->mListDimensionBehaviors[ConstraintWidget::HORIZONTAL]
+            == ConstraintWidget::DimensionBehaviour::MATCH_PARENT) {
+        int left  = widget->mLeft.mMargin;
+        int right = container->getWidth() - widget->mRight.mMargin;
+        widget->mLeft.mSolverVariable  = system->createObjectVariable(&widget->mLeft);
+        widget->mRight.mSolverVariable = system->createObjectVariable(&widget->mRight);
+        system->addEquality(widget->mLeft.mSolverVariable, left);
+        system->addEquality(widget->mRight.mSolverVariable, right);
+        widget->mHorizontalResolution = ConstraintWidget::DIRECT;
+        widget->setHorizontalDimension(left, right);
+    }
+
+    if (container->mListDimensionBehaviors[ConstraintWidget::VERTICAL]
+            != ConstraintWidget::DimensionBehaviour::WRAP_CONTENT
+        && widget->mListDimensionBehaviors[ConstraintWidget::VERTICAL]
+            == ConstraintWidget::DimensionBehaviour::MATCH_PARENT) {
+        int top    = widget->mTop.mMargin;
+        int bottom = container->getHeight() - widget->mBottom.mMargin;
+        widget->mTop.mSolverVariable    = system->createObjectVariable(&widget->mTop);
+        widget->mBottom.mSolverVariable = system->createObjectVariable(&widget->mBottom);
+        system->addEquality(widget->mTop.mSolverVariable, top);
+        system->addEquality(widget->mBottom.mSolverVariable, bottom);
+        if (widget->mBaselineDistance > 0 || widget->getVisibility() == ConstraintWidget::GONE) {
+            widget->mBaseline.mSolverVariable = system->createObjectVariable(&widget->mBaseline);
+            system->addEquality(widget->mBaseline.mSolverVariable, top + widget->mBaselineDistance);
+        }
+        widget->mVerticalResolution = ConstraintWidget::DIRECT;
+        widget->setVerticalDimension(top, bottom);
+    }
 }
 
 } // namespace cdroid

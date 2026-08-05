@@ -587,7 +587,7 @@ private:
     View&operator=(const View&) = delete;
     //Temporary values used to hold (x,y) coordinates when delegating from the
     // two-arg performLongClick() method to the legacy no-arg version
-    void setKeyedTag(int key,void* tag);
+    void setKeyedTag(int key,void* tag, std::function<void(void*)> dtor = {});
     bool hasPendingLongPressCallback()const;
     void removeTapCallback();
     void removeLongPressCallback();
@@ -732,7 +732,8 @@ protected:
     Context* mContext;
     LayoutParams* mLayoutParams;
     TransformationInfo* mTransformationInfo;
-    SparseArray<void*>* mKeyedTags;
+    struct KeyedTagEntry { void* ptr = nullptr; std::function<void(void*)> dtor; };
+    SparseArray<KeyedTagEntry>* mKeyedTags;
     Animation* mCurrentAnimation;
     std::vector<int> mDrawableState;
     ViewOutlineProvider mOutlineProvider;
@@ -857,6 +858,9 @@ protected:
     virtual bool hasHoveredChild()const;
     virtual bool pointInHoveredChild(MotionEvent& event);
 
+public:
+    // androidx View save/restore instance state (public on View). CDROID kept these protected
+    // historically; made public so FragmentStateManager.saveViewState can drive them.
     virtual void saveHierarchyState(SparseArray<Parcelable*>& container);
     virtual void dispatchSaveInstanceState(SparseArray<Parcelable*>& container);
     virtual Parcelable* onSaveInstanceState();
@@ -864,6 +868,7 @@ protected:
     virtual void dispatchRestoreInstanceState(SparseArray<Parcelable*>& container);
     virtual void onRestoreInstanceState(Parcelable& state);
 
+protected:
     static int combineMeasuredStates(int curState, int newState);
     static std::vector<int>& mergeDrawableStates(std::vector<int>&baseState,const std::vector<int>&additionalState);
     static int resolveSize(int size, int measureSpec);
@@ -1219,6 +1224,9 @@ public:
     void setTag(void*);
     void* getTag()const;
     void setTag(int key,void*tag);
+    // Set a key tag whose payload this View owns: ~View invokes dtor(tag). Use for heap payloads
+    // (SEC cache / SparseArray<Scene*> / int[2]) that java would GC.
+    void setTag(int key,void*tag, std::function<void(void*)> dtor);
     void* getTag(int key)const;
     void setTagInternal(int key,void* tag);
     void setContentDescription(const std::string&);

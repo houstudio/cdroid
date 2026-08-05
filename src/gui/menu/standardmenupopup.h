@@ -57,6 +57,7 @@ private:
 public:
     StandardMenuPopup(Context* context, MenuBuilder* menu, View* anchorView,
             const std::string& popupStyleAttr,const std::string& popupStyleRes, bool overflowOnly);
+    ~StandardMenuPopup() override;
 
     void setForceShowIcon(bool forceShow) override;
 
