@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported/adapted from AOSP CTS cts/tests/tests/graphics/res/xml/level_list_correct.xml (Apache 2.0).
+     The original's @drawable/testimage (png) items are replaced with <color> elements — logic tests
+     (level selection, child count), not pixel tests. -->
+<level-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:minLevel="100"
+          android:maxLevel="200">
+        <color android:color="#FFFF0000"/>
+    </item>
+    <item android:minLevel="200"
+          android:maxLevel="300">
+        <color android:color="#77FFFFFF"/>
+    </item>
+</level-list>
