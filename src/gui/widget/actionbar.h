@@ -39,7 +39,8 @@ public:
     };
 
     // CDROID-style listener (matches the MenuBuilder::Callback pattern).
-    struct OnMenuVisibilityListener{
+    class OnMenuVisibilityListener:public EventSet{
+    public:
         std::function<void(bool)> onMenuVisibilityChanged;
     };
 

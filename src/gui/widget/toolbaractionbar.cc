@@ -26,33 +26,68 @@ ToolbarActionBar::ToolbarActionBar(Toolbar* toolbar, const std::string& title,
     mDecorToolbar->setWindowTitle(title);
 }
 
-ToolbarActionBar::~ToolbarActionBar(){ delete mDecorToolbar; }
+ToolbarActionBar::~ToolbarActionBar(){
+    delete mDecorToolbar;
+}
 
-void ToolbarActionBar::setDisplayOptions(int options){ setDisplayOptions(options, 0xffffffff); }
+void ToolbarActionBar::setDisplayOptions(int options){
+    setDisplayOptions(options, 0xffffffff);
+}
 
 void ToolbarActionBar::setDisplayOptions(int options, int mask){
     const int current = mDecorToolbar->getDisplayOptions();
     mDecorToolbar->setDisplayOptions((options & mask) | (current & ~mask));
 }
 
-int ToolbarActionBar::getDisplayOptions() const{ return mDecorToolbar->getDisplayOptions(); }
+int ToolbarActionBar::getDisplayOptions() const{
+    return mDecorToolbar->getDisplayOptions();
+}
 
-void ToolbarActionBar::setTitle(const std::string& title){ mDecorToolbar->setTitle(title); }
-void ToolbarActionBar::setSubtitle(const std::string& subtitle){ mDecorToolbar->setSubtitle(subtitle); }
+void ToolbarActionBar::setTitle(const std::string& title){
+    mDecorToolbar->setTitle(title);
+}
 
-void ToolbarActionBar::show(){ mDecorToolbar->setVisibility(View::VISIBLE); }
-void ToolbarActionBar::hide(){ mDecorToolbar->setVisibility(View::GONE); }
-bool ToolbarActionBar::isShowing() const{ return mDecorToolbar->getVisibility() == View::VISIBLE; }
-int  ToolbarActionBar::getHeight() const{ return mDecorToolbar->getHeight(); }
-Context* ToolbarActionBar::getThemedContext(){ return mDecorToolbar->getContext(); }
+void ToolbarActionBar::setSubtitle(const std::string& subtitle){
+    mDecorToolbar->setSubtitle(subtitle);
+}
 
-void ToolbarActionBar::setCustomView(View* view){ mDecorToolbar->setCustomView(view); }
-void ToolbarActionBar::setIcon(Drawable* icon){ mDecorToolbar->setIcon(icon); }
-void ToolbarActionBar::setLogo(Drawable* logo){ mDecorToolbar->setLogo(logo); }
+void ToolbarActionBar::show(){
+    mDecorToolbar->setVisibility(View::VISIBLE);
+}
+
+void ToolbarActionBar::hide(){
+    mDecorToolbar->setVisibility(View::GONE);
+}
+
+bool ToolbarActionBar::isShowing() const{
+    return mDecorToolbar->getVisibility() == View::VISIBLE;
+}
+
+int  ToolbarActionBar::getHeight() const{
+    return mDecorToolbar->getHeight();
+}
+
+Context* ToolbarActionBar::getThemedContext(){
+    return mDecorToolbar->getContext();
+}
+
+void ToolbarActionBar::setCustomView(View* view){
+    mDecorToolbar->setCustomView(view);
+}
+
+void ToolbarActionBar::setIcon(Drawable* icon){
+    mDecorToolbar->setIcon(icon);
+}
+
+void ToolbarActionBar::setLogo(Drawable* logo){
+    mDecorToolbar->setLogo(logo);
+}
+
 void ToolbarActionBar::setHomeAsUpIndicator(Drawable* indicator){
     // androidx setHomeAsUpIndicator -> DecorToolbar.setNavigationIcon.
     mDecorToolbar->setNavigationIcon(indicator);
 }
+
 void ToolbarActionBar::setHomeActionContentDescription(const std::string& description){
     // androidx setHomeActionContentDescription -> DecorToolbar.setNavigationContentDescription.
     mDecorToolbar->setNavigationContentDescription(description);
@@ -62,34 +97,43 @@ void ToolbarActionBar::setHomeButtonEnabled(bool enabled){
     mDecorToolbar->setHomeButtonEnabled(enabled);
 }
 
-bool ToolbarActionBar::openOptionsMenu(){ return mDecorToolbar->showOverflowMenu(); }
-bool ToolbarActionBar::closeOptionsMenu(){ return mDecorToolbar->hideOverflowMenu(); }
+bool ToolbarActionBar::openOptionsMenu(){
+    return mDecorToolbar->showOverflowMenu();
+}
 
-int  ToolbarActionBar::getNavigationMode() const{ return mDecorToolbar->getNavigationMode(); }
+bool ToolbarActionBar::closeOptionsMenu(){
+    return mDecorToolbar->hideOverflowMenu();
+}
+
+int  ToolbarActionBar::getNavigationMode() const{
+    return mDecorToolbar->getNavigationMode();
+}
+
 void ToolbarActionBar::setNavigationMode(int mode){
     if(mode == ActionBar::NAVIGATION_MODE_TABS){
         throw std::runtime_error("Tabs are not supported in toolbar action bars");
     }
     mDecorToolbar->setNavigationMode(mode);
 }
+
 void* ToolbarActionBar::newTab(){
     throw std::runtime_error("Tabs are not supported in toolbar action bars");
 }
 
 void ToolbarActionBar::addOnMenuVisibilityListener(const OnMenuVisibilityListener& listener){
-    mMenuVisibilityListeners.push_back(listener);
+    auto it = std::find(mMenuVisibilityListeners.begin(),mMenuVisibilityListeners.end(),listener);
+    if(it==mMenuVisibilityListeners.end()){
+        mMenuVisibilityListeners.push_back(listener);
+    }
 }
 
 void ToolbarActionBar::removeOnMenuVisibilityListener(const OnMenuVisibilityListener& listener){
     // CDROID listeners are structs holding a std::function; compare by callable target (works for
     // function pointers / stateful targets; stateless lambdas share a null target, so removal among
     // several identical lambdas is best-effort — a known limit of the std::function callback model).
-    auto target = listener.onMenuVisibilityChanged.target<void(bool)>();
-    for(auto it = mMenuVisibilityListeners.begin(); it != mMenuVisibilityListeners.end(); ++it){
-        if(it->onMenuVisibilityChanged.target<void(bool)>() == target){
-            mMenuVisibilityListeners.erase(it);
-            return;
-        }
+    auto it = std::find(mMenuVisibilityListeners.begin(),mMenuVisibilityListeners.end(),listener);
+    if(it !=mMenuVisibilityListeners.end()){
+        mMenuVisibilityListeners.erase(it);
     }
 }
 
