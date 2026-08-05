@@ -121,7 +121,7 @@ void Drawable::setHotspotBounds(int left,int top,int width,int height) {
 }
 
 void Drawable::getHotspotBounds(Rect&outRect)const{
-    outRect = mBounds;
+    outRect = getBounds();
 }
 
 bool Drawable::isProjected()const{

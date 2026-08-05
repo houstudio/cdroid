@@ -100,7 +100,7 @@ int ColorDrawable::getAlpha()const{
 void ColorDrawable::setAlpha(int alpha){
     alpha&=0xFF;
     const int baseAlpha = (unsigned int)mColorState->mBaseColor >> 24;
-    const int useAlpha = baseAlpha * alpha >> 8;
+    const int useAlpha = (baseAlpha * alpha + 127) / 255;  // round (Android) — was >>8 (floor)
     const int useColor = ((unsigned int)mColorState->mBaseColor << 8 >> 8) | (useAlpha << 24);
     if (mColorState->mUseColor != useColor) {
         mColorState->mUseColor = useColor;

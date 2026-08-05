@@ -965,3 +965,92 @@ TEST(CLCoreChain, PackChain) {
     EXPECT_EQ(a.getWidth() * 3, b.getWidth());
     EXPECT_EQ(a.getWidth() + b.getWidth(), root.getWidth());
 }
+
+// Ported from androidx.constraintlayout.core.ChainTest.testPackChainOpt (line 363): same a-k
+// scenarios as testPackChain but with OPTIMIZATION_DIRECT|BARRIER|CHAIN (=7) — cross-checks the
+// Direct fast path against the Cassowary fallback. Expectations identical to PackChain.
+TEST(CLCoreChain, PackChainOpt) {
+    ConstraintWidgetContainer root("root", 600, 600);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20);
+    root.add(&a); root.add(&b);
+    root.setOptimizationLevel(7); // OPTIMIZATION_DIRECT|BARRIER|CHAIN
+    using namespace clport;
+    connect(a, Side::LEFT,  root, Side::LEFT);  connect(a, Side::RIGHT, b,    Side::LEFT);
+    connect(b, Side::LEFT,  a,    Side::RIGHT); connect(b, Side::RIGHT, root, Side::RIGHT);
+    setHorizontalChainStyle(a, ConstraintWidget::CHAIN_PACKED);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), 100);
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    a.setVisibility(ConstraintWidget::GONE);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 0);
+    EXPECT_EQ(b.getWidth(), 100);
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    b.setVisibility(ConstraintWidget::GONE);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 0);
+    EXPECT_EQ(b.getWidth(), 0);
+    EXPECT_EQ(getLeft(a), 0);
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    a.setVisibility(ConstraintWidget::VISIBLE);
+    a.setWidth(100);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), 0);
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    a.setVisibility(ConstraintWidget::VISIBLE); a.setWidth(100); a.setHeight(20);
+    b.setVisibility(ConstraintWidget::VISIBLE); b.setWidth(100); b.setHeight(20);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_WRAP, 0, 0, 1);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), 100);
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_SPREAD, 0, 0, 1);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), 500);
+    EXPECT_EQ(getLeft(a), 0);
+    EXPECT_EQ(getLeft(b), 100);
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_SPREAD, 0, 50, 1);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), 50);
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_PERCENT, 0, 0, 0.3f);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_EQ(b.getWidth(), (int)(0.3f * 600));
+    EXPECT_EQ(getLeft(a), root.getWidth() - getRight(b));
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    setDimensionRatio(b, "16:9");
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_RATIO, 0, 0, 1);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 100);
+    EXPECT_NEAR(b.getWidth(), (int)(16.f / 9.f * 20), 1);
+    EXPECT_NEAR(getLeft(a), root.getWidth() - getRight(b), 1);
+    EXPECT_EQ(getLeft(b), getLeft(a) + a.getWidth());
+    a.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    setHorizontalMatchStyle(a, ConstraintWidget::MATCH_CONSTRAINT_SPREAD, 0, 0, 1);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    setHorizontalMatchStyle(b, ConstraintWidget::MATCH_CONSTRAINT_SPREAD, 0, 0, 1);
+    setDimensionRatio(b, 0, 0);
+    a.setVisibility(ConstraintWidget::VISIBLE); a.setWidth(100); a.setHeight(20);
+    b.setVisibility(ConstraintWidget::VISIBLE); b.setWidth(100); b.setHeight(20);
+    root.layout();
+    EXPECT_EQ(a.getWidth(), b.getWidth());
+    EXPECT_EQ(a.getWidth() + b.getWidth(), root.getWidth());
+    setHorizontalWeight(a, 1);
+    setHorizontalWeight(b, 3);
+    root.layout();
+    EXPECT_EQ(a.getWidth() * 3, b.getWidth());
+    EXPECT_EQ(a.getWidth() + b.getWidth(), root.getWidth());
+}
