@@ -64,7 +64,7 @@ public:
     void setFirstDayOfWeek(int firstDayOfWeek)override;
     int getFirstDayOfWeek()override;
 
-    void setMinDate(long minDate)override;
+    void setMinDate(int64_t minDate)override;
     Calendar getMinDate() override;
 
     void setMaxDate(int64_t maxDate)override;
