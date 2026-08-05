@@ -35,6 +35,7 @@
 #include <poll.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <climits>
 #include <sys/inotify.h>
 typedef struct DeviceNode{
     int fd;
