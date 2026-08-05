@@ -182,9 +182,12 @@ public:
                     end--;
                 }
             }
-            // CDROID's setSpan appends rather than replacing an existing span,
-            // so drop the old entry first to mirror Android's replace-on-setSpan.
-            mBuilder.removeSpan(span);
+            // setSpan already replaces an existing span record in place (see
+            // SpannableStringBuilder::setSpan), so updating the range is enough. Do NOT removeSpan
+            // first: removeSpan frees owned spans (dynamic_cast<NoCopySpan*>==nullptr), then the
+            // following setSpan would reuse the freed span pointer (UAF -> crash in addSpan's
+            // dynamic_cast<NoCopySpan*>). This affected every ParagraphStyle span (e.g. <blockquote>
+            // QuoteSpan); the stale comment below claimed setSpan "appends", which is not true.
             if (end != start) {
                 mBuilder.setSpan(span, start, end, Spanned::SPAN_PARAGRAPH);
             }
