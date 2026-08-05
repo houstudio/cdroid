@@ -241,7 +241,9 @@ bool Drawable::hasFocusStateSpecified()const {
 }
 
 bool Drawable::setState(const std::vector<int>&states) {
-    mStateSet=states;
+    // Android short-circuits when the state set is unchanged: no onStateChange call, returns false.
+    if (mStateSet == states) return false;
+    mStateSet = states;
     return onStateChange(states);
 }
 
@@ -250,8 +252,8 @@ const std::vector<int>& Drawable::getState()const {
 }
 
 bool Drawable::setLevel(int level) {
-    if(mLevel!=level) {
-        mLevel=level;
+    if(mLevel != level) {
+        mLevel = level;
         return onLevelChange(level);
     }
     return false;
