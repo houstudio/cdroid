@@ -29,11 +29,10 @@
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
-#include <windowmanager.h>
+#include <core/systemclock.h>
+#include <core/windowmanager.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-#include <uieventsource.h>
-#include <systemclock.h>
 #include <fstream>
 
 using namespace Cairo;
@@ -105,11 +104,6 @@ void Window::initWindow(){
         }
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(acsl);
-#if USE_UIEVENTHANDLER
-    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
-#else
-    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
-#endif
 }
 
 Window::~Window(){
@@ -1169,27 +1163,6 @@ Drawable* Window::getAccessibilityFocusedDrawable(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Window::UIEventHandler::UIEventHandler(View*v,std::function<void()>r){
-    mAttachedView=v;
-    mLayoutRunner=r;
-}
-
-void Window::UIEventHandler::handleIdle(){
-    if (mAttachedView && mAttachedView->isAttachedToWindow()){
-        if(mAttachedView->isLayoutRequested())
-            mLayoutRunner();
-        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
-            GraphDevice::getInstance().lock();
-            ((Window*)mAttachedView)->draw();
-            GraphDevice::getInstance().flip();
-            GraphDevice::getInstance().unlock();
-        }
-    }
-
-    if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().requestCompose();
-}
 
 Window::SendWindowContentChangedAccessibilityEvent::SendWindowContentChangedAccessibilityEvent(Window*w):mWin(w){
     mSource   = nullptr;

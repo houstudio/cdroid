@@ -16,11 +16,11 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <view/viewgroup.h>
+#include <view/focusfinder.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <animation/layouttransition.h>
 #include <animation/layoutanimationcontroller.h>
 #include <porting/cdlog.h>
-#include <view/focusfinder.h>
 #include <core/systemclock.h>
 
 #define CHILD_LEFT_INDEX 0

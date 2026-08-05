@@ -2,13 +2,10 @@
 #define __CDROID_WINDOW_H__
 #include <widget/framelayout.h>
 #include <core/handler.h>
-#include <core/uieventsource.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
 #include <core/intent.h>
-
-#define USE_UIEVENTHANDLER 0
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
@@ -24,7 +21,6 @@ protected:
     friend class WindowManager;
     friend class View;  // View::invalidateInternal/requestLayout → Window::scheduleTraversals
     friend class GraphDevice;
-    friend class UIEventSource;
     class InvalidateOnAnimationRunnable:public Runnable{
     private:
         bool mPosted;
@@ -42,8 +38,6 @@ protected:
         void run();
     };
 private:
-    class UIEventHandler;
-    friend UIEventSource;
     class SendWindowContentChangedAccessibilityEvent;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
@@ -95,11 +89,6 @@ protected:
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
-#if USE_UIEVENTHANDLER	
-    UIEventHandler* mUIEventHandler;
-#else
-    UIEventSource *mUIEventHandler;
-#endif
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;
@@ -238,15 +227,7 @@ public:
     void requestTransitionStart(LayoutTransition* transition)override;
     void close();
 };
-typedef Window Activity;
-class Window::UIEventHandler:public Handler{
-private:
-    View*mAttachedView;
-    std::function<void()> mLayoutRunner;
-public:
-    UIEventHandler(View*,std::function<void()>run);
-    void handleIdle()override;
-};
+using Activity=Window;
 
 class Window::SendWindowContentChangedAccessibilityEvent{
 private:

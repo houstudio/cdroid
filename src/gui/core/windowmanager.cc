@@ -21,7 +21,6 @@
 #include <porting/cdgraph.h>
 #include <core/graphdevice.h>
 #include <core/windowmanager.h>
-#include <core/uieventsource.h>
 #include <mutex>
 
 namespace cdroid {
@@ -47,8 +46,6 @@ WindowManager::~WindowManager() {
     App::getInstance().exit(0);
     for(Window*w:mWindows){
         View::AttachInfo*info = w->mAttachInfo;
-        //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
-        //w->mUIEventHandler->cleanUp();
         w->dispatchDetachedFromWindow();
         delete info;
         delete w;
@@ -110,13 +107,7 @@ void WindowManager::addWindow(Window*win){
     View::AttachInfo*info = new View::AttachInfo(win->getContext());
     info->mContentInsets.setEmpty();
     info->mRootView = win;
-    //info->mEventSource=win->mUIEventHandler;
     win->dispatchAttachedToWindow(info,win->getVisibility());
-#if USE_UIEVENTHANDLER    
-    //Looper::getMainLooper()->addHandler(win->mUIEventHandler);
-#else
-    //Looper::getMainLooper()->addEventHandler(win->mUIEventHandler);
-#endif
     win->post([win](){
         win->onCreate(nullptr);
         win->onStart();
@@ -126,7 +117,7 @@ void WindowManager::addWindow(Window*win){
         info->mTreeObserver->dispatchOnWindowFocusChange(true);
     });
     mActiveWindow = win;
-    LOGV("win=%p Handler=%p windows.size=%d",win,win->mUIEventHandler,mWindows.size());
+    LOGV("win=%p AttachInfo=%p windows.size=%d",win,info,mWindows.size());
 }
 
 void WindowManager::removeWindow(Window*w){
@@ -149,11 +140,6 @@ void WindowManager::removeWindow(Window*w){
         rc.offset(-w1->getLeft(),-w1->getTop());
         w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
     }
-#if USE_UIEVENTHANDLER
-    //Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
-#else
-    //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
-#endif
     // Detach the view tree (derived window is still alive here, so virtual onDetachedFromWindow
     // dispatches correctly). This nulls w->mAttachInfo, so the AttachInfo cannot be freed by
     // ~Window -- Window::close() stashes it (before calling removeWindow) and hands it to the
@@ -201,11 +187,6 @@ void WindowManager::removeWindows(const std::vector<Window*>&ws){
             w1->invalidate((const Rect*)&rc);
             w1->mPendingRgn->do_union({rc.left,rc.top,rc.width,rc.height});
         }
-    #if USE_UIEVENTHANDLER
-        //Looper::getMainLooper()->removeHandler(w->mUIEventHandler);
-    #else
-        //Looper::getMainLooper()->removeEventHandler(w->mUIEventHandler);
-    #endif
         View::AttachInfo*info = w->mAttachInfo;
         w->onDestroy();
         w->dispatchDetachedFromWindow();
