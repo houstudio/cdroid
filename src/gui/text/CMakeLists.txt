@@ -53,7 +53,7 @@ add_library(cdtext
     method/insertmodetransformationmethod.cc
     method/translationtransformationmethod.cc
     )
-target_link_libraries(cdtext minikin)
+target_link_libraries(cdtext PUBLIC expat PRIVATE minikin)
 
 target_include_directories(
     cdtext
