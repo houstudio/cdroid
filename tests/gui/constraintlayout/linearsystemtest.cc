@@ -16,7 +16,7 @@ using namespace cdroid;
 static ConstraintWidget makeWidget() { return ConstraintWidget(100, 50); }
 
 // Pin a widget's left anchor to 42.
-TEST(LinearSystem, SimpleEquality) {
+TEST(CLLinearSystem, SimpleEquality) {
     LinearSystem ls;
     ConstraintWidget w = makeWidget();
     SolverVariable* left = ls.createObjectVariable(&w.mLeft);
@@ -26,7 +26,7 @@ TEST(LinearSystem, SimpleEquality) {
 }
 
 // Two independent pins.
-TEST(LinearSystem, TwoEqualities) {
+TEST(CLLinearSystem, TwoEqualities) {
     LinearSystem ls;
     ConstraintWidget a = makeWidget();
     ConstraintWidget b = makeWidget();
@@ -40,7 +40,7 @@ TEST(LinearSystem, TwoEqualities) {
 }
 
 // a = b (variable-to-variable equality at FIXED strength).
-TEST(LinearSystem, VariableEquality) {
+TEST(CLLinearSystem, VariableEquality) {
     LinearSystem ls;
     ConstraintWidget a = makeWidget();
     ConstraintWidget b = makeWidget();
@@ -53,7 +53,7 @@ TEST(LinearSystem, VariableEquality) {
 }
 
 // Center: widgetLeft centered between 0 and 600 with bias 0.5.
-TEST(LinearSystem, CenterSpan) {
+TEST(CLLinearSystem, CenterSpan) {
     LinearSystem ls;
     ConstraintWidget parent(600, 400);
     ConstraintWidget child(100, 50);
@@ -72,7 +72,7 @@ TEST(LinearSystem, CenterSpan) {
 }
 
 // a >= b + margin (greater-than bound).
-TEST(LinearSystem, GreaterThanBound) {
+TEST(CLLinearSystem, GreaterThanBound) {
     LinearSystem ls;
     ConstraintWidget a = makeWidget();
     ConstraintWidget b = makeWidget();
@@ -86,7 +86,7 @@ TEST(LinearSystem, GreaterThanBound) {
 }
 
 // a <= b + margin (lower-than bound).
-TEST(LinearSystem, LowerThanBound) {
+TEST(CLLinearSystem, LowerThanBound) {
     LinearSystem ls;
     ConstraintWidget a = makeWidget();
     ConstraintWidget b = makeWidget();
@@ -99,7 +99,7 @@ TEST(LinearSystem, LowerThanBound) {
 }
 
 // addEquality(a, b, margin, strength) — synonym with margin.
-TEST(LinearSystem, SynonymWithMargin) {
+TEST(CLLinearSystem, SynonymWithMargin) {
     LinearSystem ls;
     ConstraintWidget a = makeWidget();
     ConstraintWidget b = makeWidget();

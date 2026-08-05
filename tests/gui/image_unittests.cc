@@ -34,15 +34,12 @@ protected:
    std::vector<std::string>images;
 public :
    static Canvas*ctx;
-   static Assets *rm;
    static void SetUpTestCase(){
        GFXInit();
        InputInit();
-       rm=new Assets("ntvplus.pak");
        ctx=new Canvas(800,600);
    }
    static void TearDownCase(){
-       delete rm; 
    }
    virtual void SetUp(){
        images.clear();
@@ -97,7 +94,6 @@ public :
    }
 };
 Canvas*IMAGE::ctx=nullptr;
-Assets *IMAGE::rm=nullptr;
 
 TEST_F(IMAGE,Bitmap){
     loadImages("./","bmp");
