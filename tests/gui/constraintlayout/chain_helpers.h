@@ -25,18 +25,25 @@ using cdroid::clcore::Guideline;
 // Mirrors androidx.constraintlayout.core.widgets.ConstraintAnchor.Type
 enum class Side { LEFT, TOP, RIGHT, BOTTOM, BASELINE, CENTER_X, CENTER_Y, CENTER };
 
-inline ConstraintAnchor& anchor(ConstraintWidget& w, Side s) {
+inline ConstraintAnchor::Type toType(Side s) {
     switch (s) {
-        case Side::LEFT:     return w.mLeft;
-        case Side::TOP:      return w.mTop;
-        case Side::RIGHT:    return w.mRight;
-        case Side::BOTTOM:   return w.mBottom;
-        case Side::BASELINE: return w.mBaseline;
-        case Side::CENTER_X: return w.mCenterX;
-        case Side::CENTER_Y: return w.mCenterY;
-        case Side::CENTER:   return w.mCenter;
+        case Side::LEFT:     return ConstraintAnchor::Type::LEFT;
+        case Side::TOP:      return ConstraintAnchor::Type::TOP;
+        case Side::RIGHT:    return ConstraintAnchor::Type::RIGHT;
+        case Side::BOTTOM:   return ConstraintAnchor::Type::BOTTOM;
+        case Side::BASELINE: return ConstraintAnchor::Type::BASELINE;
+        case Side::CENTER_X: return ConstraintAnchor::Type::CENTER_X;
+        case Side::CENTER_Y: return ConstraintAnchor::Type::CENTER_Y;
+        case Side::CENTER:   return ConstraintAnchor::Type::CENTER;
     }
-    return w.mLeft; // unreachable
+    return ConstraintAnchor::Type::LEFT;
+}
+
+// Resolve via getAnchor(Type) — virtual, so Guideline's override returns its active anchor
+// (a vertical guideline's LEFT/RIGHT both resolve to the guideline line). Direct mLeft access
+// would miss that and leave Guideline-anchored widgets stuck at 0.
+inline ConstraintAnchor& anchor(ConstraintWidget& w, Side s) {
+    return *w.getAnchor(toType(s));
 }
 
 // a.connect(ConstraintAnchor.Type.LEFT, root, ConstraintAnchor.Type.LEFT [, margin])

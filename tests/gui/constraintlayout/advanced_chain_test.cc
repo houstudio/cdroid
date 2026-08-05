@@ -218,3 +218,171 @@ TEST(CLCoreAdvancedChain, VerticalChainStylesPacked) {
     EXPECT_NEAR(getTop(a), gap, 1);
     EXPECT_NEAR(root.getHeight() - gap, getBottom(c), 1);
 }
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testChainWeights (line 163): two
+// MATCH widgets, weights 1:0 — A takes everything (800), B zero. OPTIMIZATION_NONE.
+TEST(CLCoreAdvancedChain, ChainWeights1_0) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20);
+    a.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    root.add(&a); root.add(&b);
+    using namespace clport;
+    connect(a, Side::LEFT,  root, Side::LEFT);
+    connect(a, Side::RIGHT, b,    Side::LEFT);
+    connect(b, Side::LEFT,  a,    Side::RIGHT);
+    connect(b, Side::RIGHT, root, Side::RIGHT);
+    setHorizontalWeight(a, 1); setHorizontalWeight(b, 0);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_NEAR(a.getWidth(), 800, 1);
+    EXPECT_NEAR(b.getWidth(), 0, 1);
+    EXPECT_NEAR(getLeft(a), 0, 1);
+    EXPECT_NEAR(getLeft(b), 800, 1);
+}
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testChain3Weights (line 198): three
+// MATCH widgets, weights 1:0:1 — A and C split 800 (400 each), B zero. OPTIMIZATION_NONE.
+TEST(CLCoreAdvancedChain, Chain3Weights1_0_1) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20), c("C", 100, 20);
+    a.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    c.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    root.add(&a); root.add(&b); root.add(&c);
+    using namespace clport;
+    connect(a, Side::LEFT,  root, Side::LEFT);
+    connect(a, Side::RIGHT, b,    Side::LEFT);
+    connect(b, Side::LEFT,  a,    Side::RIGHT);
+    connect(b, Side::RIGHT, c,    Side::LEFT);
+    connect(c, Side::LEFT,  b,    Side::RIGHT);
+    connect(c, Side::RIGHT, root, Side::RIGHT);
+    setHorizontalWeight(a, 1); setHorizontalWeight(b, 0); setHorizontalWeight(c, 1);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 400);
+    EXPECT_EQ(b.getWidth(), 0);
+    EXPECT_EQ(c.getWidth(), 400);
+    EXPECT_EQ(getLeft(a), 0);
+    EXPECT_EQ(getLeft(b), 400);
+    EXPECT_EQ(getLeft(c), 400);
+}
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testChainLastGone (line 246): four
+// widgets in a vertical chain (each centered horizontally to root), B and D GONE — A and C spread
+// across 800 (OPTIMIZATION_NONE): A.top=253, C.top=527.
+TEST(CLCoreAdvancedChain, ChainLastGone) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20), c("C", 100, 20), d("D", 100, 20);
+    root.add(&a); root.add(&b); root.add(&c); root.add(&d);
+    using namespace clport;
+    for (auto* w : {&a, &b, &c, &d}) { connect(*w, Side::LEFT, root, Side::LEFT); connect(*w, Side::RIGHT, root, Side::RIGHT); }
+    connect(a, Side::TOP,    root, Side::TOP);    connect(a, Side::BOTTOM, b, Side::TOP);
+    connect(b, Side::TOP,    a,    Side::BOTTOM); connect(b, Side::BOTTOM, c, Side::TOP);
+    connect(c, Side::TOP,    b,    Side::BOTTOM); connect(c, Side::BOTTOM, d, Side::TOP);
+    connect(d, Side::TOP,    c,    Side::BOTTOM); connect(d, Side::BOTTOM, root, Side::BOTTOM);
+    b.setVisibility(ConstraintWidget::GONE);
+    d.setVisibility(ConstraintWidget::GONE);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_NEAR(getTop(a), 253, 1);
+    EXPECT_NEAR(getTop(c), 527, 1);
+}
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testTooSmall (line 124): A pinned
+// left and centered vertically; B & C offset right of A by 100 and stacked B-C with mutual
+// top/bottom constraints — too-tight chain (OPTIMIZATION_NONE): A.top=390, B.top=380, C.top=400.
+TEST(CLCoreAdvancedChain, TooSmall) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20), c("C", 100, 20);
+    root.add(&a); root.add(&b); root.add(&c);
+    using namespace clport;
+    connect(a, Side::LEFT,   root, Side::LEFT);
+    connect(a, Side::TOP,    root, Side::TOP);
+    connect(a, Side::BOTTOM, root, Side::BOTTOM);
+    connect(b, Side::LEFT, a, Side::RIGHT, 100);
+    connect(c, Side::LEFT, a, Side::RIGHT, 100);
+    connect(b, Side::TOP,    a, Side::TOP);
+    connect(b, Side::BOTTOM, c, Side::TOP);
+    connect(c, Side::TOP,    b, Side::BOTTOM);
+    connect(c, Side::BOTTOM, a, Side::BOTTOM);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_EQ(getTop(a), 390);
+    EXPECT_EQ(getTop(b), 380);
+    EXPECT_EQ(getTop(c), 400);
+}
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testComplexChainWeights (line 35),
+// case a: A/B both MATCH_CONSTRAINT on both axes, centered horizontally, vertical chain — equal
+// split (800x400 each). OPTIMIZATION_NONE. (Later legs add ratio/weight; multi-layout, omitted.)
+TEST(CLCoreAdvancedChain, ComplexChainWeightsEqual) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20);
+    a.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    a.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    root.add(&a); root.add(&b);
+    using namespace clport;
+    connect(a, Side::LEFT, root, Side::LEFT); connect(a, Side::RIGHT, root, Side::RIGHT);
+    connect(b, Side::LEFT, root, Side::LEFT); connect(b, Side::RIGHT, root, Side::RIGHT);
+    connect(a, Side::TOP,    root, Side::TOP);    connect(a, Side::BOTTOM, b, Side::TOP);
+    connect(b, Side::TOP,    a,    Side::BOTTOM); connect(b, Side::BOTTOM, root, Side::BOTTOM);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_EQ(a.getWidth(), 800);
+    EXPECT_EQ(b.getWidth(), 800);
+    EXPECT_EQ(a.getHeight(), 400);
+    EXPECT_EQ(b.getHeight(), 400);
+    EXPECT_EQ(getTop(a), 0);
+    EXPECT_EQ(getTop(b), 400);
+}
+
+// Ported from androidx.constraintlayout.core.AdvancedChainTest.testRatioChainGone (line 299):
+// A/B/C centered horizontally, chained vertically against a ratio widget (4:3); B&C GONE —
+// A.height=600. Then root WRAP_CONTENT, A.height stays 600. OPTIMIZATION_NONE.
+TEST(CLCoreAdvancedChain, RatioChainGone) {
+    ConstraintWidgetContainer root("root", 800, 800);
+    root.setDimensionBehaviour(ConstraintWidget::HORIZONTAL, DB::FIXED);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::FIXED);
+    ConstraintWidget a("A", 100, 20), b("B", 100, 20), c("C", 100, 20), ratio("ratio", 100, 20);
+    a.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    c.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    ratio.setHorizontalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    a.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    b.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    c.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    ratio.setVerticalDimensionBehaviour(DB::MATCH_CONSTRAINT);
+    clport::setDimensionRatio(ratio, "4:3");
+    root.add(&a); root.add(&b); root.add(&c); root.add(&ratio);
+    using namespace clport;
+    connect(a, Side::LEFT, root, Side::LEFT); connect(a, Side::RIGHT, root, Side::RIGHT);
+    connect(b, Side::LEFT, root, Side::LEFT); connect(b, Side::RIGHT, root, Side::RIGHT);
+    connect(c, Side::LEFT, root, Side::LEFT); connect(c, Side::RIGHT, root, Side::RIGHT);
+    connect(ratio, Side::TOP, root, Side::TOP); connect(ratio, Side::LEFT, root, Side::LEFT); connect(ratio, Side::RIGHT, root, Side::RIGHT);
+    connect(a, Side::TOP,    root,  Side::TOP);
+    connect(a, Side::BOTTOM, b,     Side::TOP);
+    connect(b, Side::BOTTOM, ratio, Side::BOTTOM);
+    connect(c, Side::TOP,    b,     Side::TOP);
+    connect(c, Side::BOTTOM, ratio, Side::BOTTOM);
+    b.setVisibility(ConstraintWidget::GONE);
+    c.setVisibility(ConstraintWidget::GONE);
+    root.setOptimizationLevel(0); // OPTIMIZATION_NONE
+    root.layout();
+    EXPECT_EQ(a.getHeight(), 600);
+    root.setDimensionBehaviour(ConstraintWidget::VERTICAL, DB::WRAP_CONTENT);
+    root.layout();
+    EXPECT_EQ(a.getHeight(), 600);
+}
