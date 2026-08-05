@@ -85,7 +85,8 @@ void VectorDrawable::draw(Canvas& canvas) {
         return;
     }
 
-    // mColorFilter is dormant (precedence vs tint TBD); tint path uses mTintFilter via begin/endTintGroup.
+    // setColorFilter (mColorFilter) takes precedence over tint (matches Android: colorFilter beats
+    // tint). beginTintGroup applies whichever wins; the tint path uses mTintFilter here.
     const bool canReuseCache = mVectorState->canReuseCache();
     ColorFilter* tintFilter = beginTintGroup(canvas, mTmpBounds, mTintFilter.get());
     const int pixelCount = mVectorState->mNativeTree->draw(canvas,nullptr,mTmpBounds,needMirroring(),canReuseCache);

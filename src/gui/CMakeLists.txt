@@ -126,8 +126,8 @@ set(NONPKG_LIBS "-l${PROJECT_NAME} -ltvhal")#non pkgconfig libraries
 set(NONPKG_LIBS_PRIVATE "-ltvhal")
 message("CDROID_DEPLIBS=${CDROID_DEPLIBS}")
 target_link_libraries(cdroid
-    PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal                   # cairo + tvhal (cdlog/LogMessage — cdroid public headers use LOGD/LOGE)
-    PRIVATE image-decoders cdtext ${CDROID_PRIVATE_DEPLIBS})
+    PUBLIC  ${CDROID_PUBLIC_DEPLIBS} tvhal cdtext            # cdtext PUBLIC: apps linking cdroid get Html/text + expat transitively (cdtext is not exposed directly)
+    PRIVATE image-decoders ${CDROID_PRIVATE_DEPLIBS})
 # Prune libcdroid.so's DT_NEEDED to only the libs it actually references. The Find*.cmake modules
 # are old-style (return flat ${LIBS}, not imported targets with INTERFACE_LINK_LIBRARIES), so
 # transitive sub-deps land on the link line: pixman (via cairo), z/bz2 (via zip),

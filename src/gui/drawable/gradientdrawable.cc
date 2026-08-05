@@ -850,6 +850,13 @@ bool GradientDrawable::ensureValidRect() {
 
         const std::vector<int>&gradientColors = st.mGradientColors;
         if (gradientColors.size()) {
+            // Default missing/mismatched stop positions to even spacing. The ctor / setColors only
+            // seed mPositions for 2-3 colors; for any other count mPositions is empty and indexing it
+            // per color below would read out of bounds. Android distributes stops evenly by default.
+            const size_t n = gradientColors.size();
+            std::vector<float> positions;
+            if(st.mPositions.size() == n) positions = st.mPositions;
+            else { positions.resize(n); for(size_t i=0;i<n;i++) positions[i] = (n>1)?(float)i/(n-1):0.f; }
             const RectF r = mRect;
             float x0, y0;
 
@@ -897,7 +904,7 @@ bool GradientDrawable::ensureValidRect() {
                 RefPtr<Cairo::LinearGradient>pat = LinearGradient::create(x0, y0, x1, y1);
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c((uint32_t)gradientColors[i]);
-                    pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
+                    pat->add_color_stop_rgba(positions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
                 }
                 mFillPaint = pat;
             } else if (st.mGradient == RADIAL_GRADIENT) {
@@ -925,7 +932,7 @@ bool GradientDrawable::ensureValidRect() {
                 RefPtr<Cairo::RadialGradient>pat = RadialGradient::create( x0, y0, 0,x0,y0,radius);
                 for(int i=0; i<gradientColors.size(); i++) {
                     Color c((uint32_t)gradientColors[i]);
-                    pat->add_color_stop_rgba(st.mPositions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
+                    pat->add_color_stop_rgba(positions[i],c.red(),c.green(),c.blue(),(c.alpha()*mAlpha)/255.f);
                 }//gradientColors, null, Shader.TileMode.CLAMP));
                 mFillPaint = pat;
             } else if (st.mGradient == SWEEP_GRADIENT) {
