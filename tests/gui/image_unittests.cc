@@ -24,7 +24,14 @@ extern void gettimeofday(struct timeval* t1, struct timezone* zone);
 #undef RGB
 #undef IN
 #endif
-#define SLEEP(x) usleep((x)*1000)
+// Image tests sleep to display frames for visual inspection. Default 0 (no wait) so non-visual
+// runs aren't slowed; set CDROID_IMG_SLEEP=1 (or N to scale) to restore the display delay.
+#include <cstdlib>
+static inline int cdroidImgSleepMult() {
+    const char* e = std::getenv("CDROID_IMG_SLEEP");
+    return e ? std::atoi(e) : 0;
+}
+#define SLEEP(x) usleep((unsigned)(x) * cdroidImgSleepMult() * 1000)
 
 using namespace Cairo;
 using namespace cdroid;
@@ -160,7 +167,7 @@ TEST_F(IMAGE,draw){
         cdroid::Rect rs={img->get_width()/2,img->get_height()/2,img->get_width()/2,img->get_height()/2};
         ctx->draw_image(img,dst,&rs);
         postCompose();
-        sleep(5);
+        if (cdroidImgSleepMult()) sleep(5);
     }
 }
 
