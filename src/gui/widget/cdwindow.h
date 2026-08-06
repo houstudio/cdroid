@@ -6,6 +6,8 @@
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
 #include <core/intent.h>
+#include <widget/activitytransition.h>
+#include <functional>
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
@@ -16,6 +18,7 @@ class MenuItem;
 class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
+class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
 class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
@@ -53,6 +56,23 @@ private:
     Intent* mResultData = nullptr; // borrowed (set by setResult, not deleted by ~Window)
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
+    // Window-level Activity transitions (owned). Mirror android.app.Activity transition API names,
+    // but implemented Window-level (setAlpha/setPos), not android.transition content-level — CDROID's
+    // Window is the composition root, so only moving the Window / setting surface opacity is visible.
+    ActivityTransition* mEnterTransition   = nullptr; // shown on startActivity open
+    ActivityTransition* mExitTransition    = nullptr; // shown when another Window opens over this (MVP: not driven)
+    ActivityTransition* mReturnTransition  = nullptr; // shown on close/back (null => use mExitTransition)
+    ActivityTransition* mReenterTransition = nullptr; // shown returning to this Window (null => use mEnterTransition)
+    Animator* mCurrentTransitionAnimator   = nullptr; // owned (cancel+delete on replace/~Window)
+    // Resting window position captured in setEnterTransition BEFORE snapEnterStart shifts the window
+    // offscreen — setPos rewrites mLeft/mTop, so getLeft()/getTop() read AFTER snap are the offscreen
+    // start, not the resting pos. The enter animation must slide back to this captured resting point.
+    int  mEnterRestX = 0;
+    int  mEnterRestY = 0;
+    bool mEnterRestValid = false;
+    bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
+    bool mInTransition      = false; // close()/re-enter re-entrancy guard
+    bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
 private:
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
@@ -78,6 +98,14 @@ private:
     Drawable* getAccessibilityFocusedDrawable();
     void handleWindowContentChangedEvent(AccessibilityEvent& event);
     ActionMode* startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type);
+    // Activity-transition driver. enter=true plays the open animation; enter=false plays the close
+    // one. onEnd (may be empty) runs when the animation completes (or immediately if NONE).
+    void runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd);
+    void startEnterAnimation();
+    void startExitAnimation(const std::function<void()>& onEnd);
+    void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
+    static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
+    void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
@@ -225,6 +253,16 @@ public:
     ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;
+    // Window-level Activity transitions (android.app.Activity transition API names). Each setter
+    // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
+    void setEnterTransition(ActivityTransition* t);
+    void setExitTransition(ActivityTransition* t);
+    void setReturnTransition(ActivityTransition* t);
+    void setReenterTransition(ActivityTransition* t);
+    ActivityTransition* getEnterTransition()   const { return mEnterTransition; }
+    ActivityTransition* getExitTransition()    const { return mExitTransition; }
+    ActivityTransition* getReturnTransition()  const { return mReturnTransition; }
+    ActivityTransition* getReenterTransition() const { return mReenterTransition; }
     void close();
 };
 using Activity=Window;
