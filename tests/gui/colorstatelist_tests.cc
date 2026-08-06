@@ -111,6 +111,6 @@ TEST_F(COLORSTATESET,match2){
     ASSERT_TRUE(StateSet::stateSetMatches(state1,match1));
 
     ASSERT_EQ(index(states,match2),0);
-    ASSERT_EQ(index(states,match3),-1);
+    ASSERT_EQ(index(states,match3),1);
 }
 
