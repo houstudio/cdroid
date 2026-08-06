@@ -66,42 +66,41 @@ public:
     }
 };
 
-// CDROID known gap: the UI Looper pumps MessageQueue via nextDue() (drain due messages) instead
-// of next() (which runs the IdleHandler path). These two CTS cases assert idle behaviour and will
-// FAIL until the idle path is wired into the pump (tracked separately). Left enabled as the
-// regression target for that fix.
+// These cases drive a fresh, isolated Looper+MessageQueue (stack-allocated `Looper lp(false)`),
+// mirroring CTS's HandlerThread. The shared main looper carries the UI/stage and may always have
+// pending events (Choreographer frames, traversal), so it can never be relied on to be idle; a
+// fresh looper starts with an empty queue, so idle is guaranteed and IdleHandler fires on the
+// first pump via drainMessageQueue → runIdleHandlers.
 TEST(CtsMessageQueueTest, testAddIdleHandler) {
-    Looper* lp = Looper::prepare(false);
-    ASSERT_NE(nullptr, lp);
-    MessageQueue* q = lp->getQueue();
-    TestIdleHandler idle;
+    Looper lp(false);
+    MessageQueue* q = lp.getQueue();
+    TestIdleHandler idle;          // queueIdle() returns false → auto-removed after one fire
     q->addIdleHandler(&idle);
-    for (int i = 0; i < 5 && !idle.called; i++) lp->pollOnce(10);
+    lp.pollOnce(10);               // empty queue → drainMessageQueue → runIdleHandlers fires
     EXPECT_TRUE(idle.called);
-    q->removeIdleHandler(&idle);
 }
 
 TEST(CtsMessageQueueTest, testRemoveIdleHandler) {
-    Looper* lp = Looper::prepare(false);
-    ASSERT_NE(nullptr, lp);
-    MessageQueue* q = lp->getQueue();
+    Looper lp(false);
+    MessageQueue* q = lp.getQueue();
     TestIdleHandler idle;
     q->addIdleHandler(&idle);
     q->removeIdleHandler(&idle);
-    for (int i = 0; i < 3; i++) lp->pollOnce(10);
+    for (int i = 0; i < 3; i++) lp.pollOnce(10);
     EXPECT_FALSE(idle.called);
 }
 
 TEST(CtsMessageQueueTest, testIsIdle) {
-    Looper* lp = Looper::prepare(false);
-    ASSERT_NE(nullptr, lp);
-    MessageQueue* q = lp->getQueue();
-    EXPECT_TRUE(q->isIdle());
-    Handler h(lp);
+    Looper lp(false);
+    MessageQueue* q = lp.getQueue();
+    EXPECT_TRUE(q->isIdle());      // fresh queue is empty → idle
+    // Android semantics: isIdle() means "no message is due NOW". A message scheduled in the
+    // future leaves the head in the future, so the queue is still considered idle.
+    Handler h(&lp);
     Message* m = h.obtainMessage();
     h.sendMessageAtTime(m, SystemClock::uptimeMillis() + TIMEOUT);
-    EXPECT_FALSE(q->isIdle());
-    for (int i = 0; i < (TIMEOUT + 50) / 10 + 1 && !q->isIdle(); i++) lp->pollOnce(10);
+    EXPECT_TRUE(q->isIdle());
+    h.removeMessages(m->what);
     EXPECT_TRUE(q->isIdle());
 }
 

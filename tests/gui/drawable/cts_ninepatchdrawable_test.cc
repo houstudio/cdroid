@@ -65,6 +65,81 @@ TEST_F(CtsNinePatchDrawableTest, testGetConstantState) {
     EXPECT_NE(nullptr, npd.getConstantState());
 }
 
+// --- Real 9-patch data tests (CTS ninepatch_0/1 are BOTH multi-segment: 2 stretch segments on
+// each axis). These exercise the full pakbuilder→cdNp→npTc parse→NinePatchDrawable data path,
+// covering the padding/intrinsic parsing that the empty-logic half above does not.
+
+// CTS ninepatch_0: 7x7 source (1px border) → 5x5 content, xDivs/yDivs=[0,2,3,5], padding=0.
+// CTS asserts getIntrinsicWidth/Height == 5.
+TEST_F(CtsNinePatchDrawableTest, testNinePatch0IntrinsicAndSegments) {
+    Drawable* d = App::getInstance().getDrawable("@drawable/ninepatch_0");
+    ASSERT_NE(nullptr, d);
+    auto* npd = dynamic_cast<NinePatchDrawable*>(d);
+    ASSERT_NE(nullptr, npd);
+    EXPECT_EQ(5, npd->getIntrinsicWidth());
+    EXPECT_EQ(5, npd->getIntrinsicHeight());
+    // padding is zero on this asset → getPadding returns false (no padding).
+    Rect pad;
+    EXPECT_FALSE(npd->getPadding(pad));
+}
+
+// CTS ninepatch_1: 11x11 source → 9x9 content, xDivs/yDivs=[0,4,5,9], padding (L3,R5,T5,B3).
+// CTS asserts getIntrinsicWidth/Height == 9 and getPadding(r) is true.
+TEST_F(CtsNinePatchDrawableTest, testNinePatch1IntrinsicPaddingAndSegments) {
+    Drawable* d = App::getInstance().getDrawable("@drawable/ninepatch_1");
+    ASSERT_NE(nullptr, d);
+    auto* npd = dynamic_cast<NinePatchDrawable*>(d);
+    ASSERT_NE(nullptr, npd);
+    EXPECT_EQ(9, npd->getIntrinsicWidth());
+    EXPECT_EQ(9, npd->getIntrinsicHeight());
+    Rect pad;
+    EXPECT_TRUE(npd->getPadding(pad));
+    // npTc padding L3/R5/T5/B3 → CDROID Rect {left,top,width,height}.
+    EXPECT_EQ(3, pad.left);
+    EXPECT_EQ(5, pad.top);
+    EXPECT_EQ(5, pad.width);
+    EXPECT_EQ(3, pad.height);
+}
+
+// CTS nine_patch_odd_insets_internal: 27x27 source → 25x25 content. Carries the FULL data set:
+// npTc (divs [0,1,24,25], padding 3,3,3,3) + npOl outline (inset 5, radius ~6) + npLb optical
+// (3,3,3,3). Exercises every NinePatchDrawable data accessor on one real asset.
+TEST_F(CtsNinePatchDrawableTest, testNinePatchOddInsetsFullData) {
+    Drawable* d = App::getInstance().getDrawable("@drawable/nine_patch_odd_insets");
+    ASSERT_NE(nullptr, d);
+    auto* npd = dynamic_cast<NinePatchDrawable*>(d);
+    ASSERT_NE(nullptr, npd);
+
+    // intrinsic = content (27 source minus 1px border each side)
+    EXPECT_EQ(25, npd->getIntrinsicWidth());
+    EXPECT_EQ(25, npd->getIntrinsicHeight());
+
+    // padding (L3,R3,T3,B3)
+    Rect pad;
+    EXPECT_TRUE(npd->getPadding(pad));
+    EXPECT_EQ(3, pad.left);
+    EXPECT_EQ(3, pad.top);
+
+    // optical insets (3,3,3,3)
+    Insets optical = npd->getOpticalInsets();
+    EXPECT_EQ(3, optical.left);
+    EXPECT_EQ(3, optical.top);
+
+    // outline rect + radius. CTS sets bounds 40x40 and expects outline rect inset by 5
+    // (5,5,35,35 in ltrb) with radius ~6.8. pakbuilder computes radius 6; CDROID reads it back
+    // from the cdNp npOl chunk at runtime.
+    npd->setBounds(0, 0, 40, 40);
+    Outline out;
+    npd->getOutline(out);
+    Rect outlineRect;
+    EXPECT_TRUE(out.getRect(outlineRect));
+    EXPECT_EQ(5, outlineRect.left);
+    EXPECT_EQ(5, outlineRect.top);
+    // radius: nonzero and in the right ballpark (CTS 6.8, pakbuilder 6).
+    EXPECT_GT(out.getRadius(), 0.f);
+    EXPECT_NEAR(6.f, out.getRadius(), 2.f);
+}
+
 TEST_F(CtsNinePatchDrawableTest, testSetFilterBitmap) {
     // CTS asserts via getPaint().isFilterBitmap(); CDROID exposes isFilterBitmap() directly on the
     // drawable, which is the canonical accessor here.
