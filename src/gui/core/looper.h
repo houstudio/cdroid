@@ -100,7 +100,7 @@ private:
     std::list<MessageHandler*>mHandlers;
     std::list<EventHandler*> mEventHandlers;
 
-    MessageQueue* mQueue;  // Java MessageQueue (CDROID 扩展), 由本 Looper 拥有
+    MessageQueue* mQueue;  // Java MessageQueue (CDROID extension), owned by this Looper
 
     // Whether we are currently waiting for work.  Not protected by a lock,
     // any use of it is racy anyway.

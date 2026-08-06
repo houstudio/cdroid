@@ -27,15 +27,16 @@
 namespace cdroid{
 
 /**
- * 移植自 android.os.MessageQueue (蓝本: android-36 MessageQueue.java, Legacy 路径)。
+ * Ported from android.os.MessageQueue (reference: android-36 MessageQueue.java, Legacy path).
  *
- * 单锁 (std::recursive_mutex 替代 synchronized(this)) + 按 when 升序的单链表
- * (mMessages 头 / mLast 尾)。native 层委托 CDROID 现有 cdroid::Looper
- * (epoll/eventfd/addFd), 复刻 Android 的 NativeMessageQueue
- * (android_os_MessageQueue.cpp)。
+ * Single lock (std::recursive_mutex in place of synchronized(this)) + a singly linked list
+ * ordered by `when` (mMessages head / mLast tail). The native layer delegates to CDROID's
+ * existing cdroid::Looper (epoll/eventfd/addFd), replicating Android's NativeMessageQueue
+ * (android_os_MessageQueue.cpp).
  *
- * 由 cdroid::Looper 拥有 (getQueue()), cdroid::Handler 经它投递/派发消息;
- * cdroid::Looper::drainMessageQueue 在主循环周期性 pump 里非阻塞排空到期消息。
+ * Owned by cdroid::Looper (getQueue()); cdroid::Handler enqueues/dispatches messages through it,
+ * and cdroid::Looper::drainMessageQueue non-blockingly drains due messages during the periodic
+ * main-loop pump.
  */
 class MessageQueue : public LooperCallback{
 public:
@@ -43,7 +44,7 @@ public:
     class IdleHandler{
     public:
         virtual ~IdleHandler() = default;
-        /** @return true 保留, false 自动移除 */
+        /** @return true to keep, false to auto-remove */
         virtual bool queueIdle() = 0;
     };
 
@@ -54,7 +55,7 @@ public:
         static constexpr int EVENT_OUTPUT = 1 << 1;  // :2328
         static constexpr int EVENT_ERROR = 1 << 2;   // :2341
         virtual ~OnFileDescriptorEventListener() = default;
-        /** @return 新的监听事件集, 0 表示注销 */
+        /** @return the new set of events to watch, 0 to unregister */
         virtual int onFileDescriptorEvents(int fd, int events) = 0;  // :2364
     };
 
@@ -71,24 +72,32 @@ public:
     int postSyncBarrier();                                                            // :1100
     void removeSyncBarrier(int token);                                                // :1265
 
-    // package-private (整合阶段由 Looper/Handler 调用)
+    // package-private (called by Looper/Handler during integration)
     Message* next();                                  // :1021
     void quit(bool safe);                             // :1029
     bool enqueueMessage(Message* msg, int64_t when);  // :1392
 
-    // package-private removal/query (由 Handler 调用), 对标 MessageQueue.java Legacy 分支。
-    // 只读查询 → const (mLock 为 mutable)。
+    // package-private removal/query (called by Handler), mirroring the MessageQueue.java Legacy branch.
+    // Read-only queries are const (mLock is mutable).
     bool hasMessages(const Handler* h, int what, void* object)const;              // :1541
     bool hasMessages(const Handler* h, const Runnable& r, void* object)const;            // :1628 (hasCallbacks)
     void removeMessages(const Handler* h, int what, void* object);           // :1725
     void removeMessages(const Handler* h, const Runnable& r, void* object);         // :1845 (removeCallbacks)
     void removeCallbacksAndMessages(const Handler* h, void* token);          // :1993
 
-    // 非阻塞: 取出一条到期 (when<=now) 消息, barrier 时跳到 async; 无到期返回 nullptr。
-    // 供 cdroid::Looper 的周期 pump 排空 Java 消息 (不阻塞/不算 timeout/不跑 IdleHandler)。
+    // Non-blocking: pops one due message (when<=now), skipping past a barrier to the first async;
+    // returns nullptr when nothing is due. Used by cdroid::Looper's periodic pump to drain Java
+    // messages (does not block / compute timeout).
     Message* nextDue();
 
-    // cdroid::LooperCallback: native fd 事件回调入口 (对应 android dispatchEvents, :559)
+    // IdleHandler is managed separately: runs the pending IdleHandlers once when the queue is
+    // idle (no message due now), mirroring the idle segment of MessageQueue.java next()
+    // (:971-1012). Called from Looper::drainMessageQueue — the single pump choke point reached
+    // by every path — so IdleHandler fires regardless of whether the caller drives next() or
+    // nextDue(), as long as there is no message to process.
+    void runIdleHandlers();
+
+    // cdroid::LooperCallback: native fd event callback entry (corresponds to android dispatchEvents, :559)
     int handleEvent(int fd, int events, void* data) override;
 
     cdroid::Looper* getLooper() const { return mLooper; }
@@ -99,22 +108,22 @@ private:
         int fd = 0;
         int events = 0;
         OnFileDescriptorEventListener* listener = nullptr;
-        int seq = 0;  // 代际号, 并发更新校验
+        int seq = 0;  // generation number, used to validate concurrent updates
     };
 
     const bool mQuitAllowed;       // :71
-    cdroid::Looper* mLooper;       // native Looper (NativeMessageQueue 持有的 native Looper)
-    Message* mMessages = nullptr;  // :82 链表头
-    Message* mLast = nullptr;      // :84 链表尾
+    cdroid::Looper* mLooper;       // native Looper (the native Looper held by NativeMessageQueue)
+    Message* mMessages = nullptr;  // :82 list head
+    Message* mLast = nullptr;      // :84 list tail
     std::vector<IdleHandler*> mIdleHandlers;                                       // :86
     std::unordered_map<int, FileDescriptorRecord*> mFileDescriptorRecords;         // :87
     bool mQuitting = false;        // :89
     bool mBlocked = false;         // :92
     int mAsyncMessageCount = 0;    // :96
-    int mNextBarrierToken = 0;     // :2740 (Legacy, 初值 0)
-    mutable std::recursive_mutex mLock;    // synchronized(this); mutable: const 查询方法 (isIdle/isPolling/hasMessages) 须加锁
+    int mNextBarrierToken = 0;     // :2740 (Legacy, initial value 0)
+    mutable std::recursive_mutex mLock;    // synchronized(this); mutable: const query methods (isIdle/isPolling/hasMessages) must lock
 
-    // native 方法, 委托 cdroid::Looper (对应 android_os_MessageQueue.cpp)
+    // native methods, delegate to cdroid::Looper (corresponds to android_os_MessageQueue.cpp)
     void nativeInit(cdroid::Looper* nativeLooper);
     void nativeDestroy();
     void nativePollOnce(int timeoutMillis);
