@@ -402,10 +402,10 @@ int FocusFinder::getWeightedDistanceFor(int majorAxisDistance, int minorAxisDist
 
 bool FocusFinder::isCandidate(const Rect& srcRect,const Rect& destRect, int direction) {
     switch (direction) {
-    case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.left >= destRect.right()) && srcRect.left > destRect.left;
-    case View::FOCUS_RIGHT: return (srcRect.left < destRect.left || srcRect.right() <= destRect.left) && srcRect.right() < destRect.right();
-    case View::FOCUS_UP:    return (srcRect.bottom() > destRect.bottom() || srcRect.top >= destRect.bottom()) && srcRect.top > destRect.top;
-    case View::FOCUS_DOWN:  return (srcRect.top < destRect.top || srcRect.bottom() <= destRect.top) && srcRect.bottom() < destRect.bottom();
+    case View::FOCUS_LEFT:  return (srcRect.right() > destRect.right() || srcRect.left >= destRect.right()) && (srcRect.left > destRect.left);
+    case View::FOCUS_RIGHT: return (srcRect.left < destRect.left || srcRect.right() <= destRect.left) && (srcRect.right() < destRect.right());
+    case View::FOCUS_UP:    return (srcRect.bottom() > destRect.bottom() || srcRect.top >= destRect.bottom()) && (srcRect.top > destRect.top);
+    case View::FOCUS_DOWN:  return (srcRect.top < destRect.top || srcRect.bottom() <= destRect.top) && (srcRect.bottom() < destRect.bottom());
     default:  return false;
     }
 }
