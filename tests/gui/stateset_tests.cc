@@ -35,6 +35,35 @@ TEST(CtsStateSetTest, testDump) {
     SUCCEED();
 }
 
+// --- CDROID supplementary API tests (not in CTS StateSetTest) ---
+
+TEST(CtsStateSetTest, testIsWildCard) {
+    EXPECT_TRUE(StateSet::isWildCard(StateSet::WILD_CARD));   // {} (empty)
+    EXPECT_TRUE(StateSet::isWildCard(std::vector<int>{0}));   // {0}
+    EXPECT_FALSE(StateSet::isWildCard(std::vector<int>{1}));
+    EXPECT_FALSE(StateSet::isWildCard(std::vector<int>{-1}));
+}
+
+TEST(CtsStateSetTest, testStaticStateSets) {
+    EXPECT_EQ((std::vector<int>{StateSet::ENABLED}),  StateSet::ENABLED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{StateSet::PRESSED}),  StateSet::PRESSED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{StateSet::FOCUSED}),  StateSet::FOCUSED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{StateSet::SELECTED}), StateSet::SELECTED_STATE_SET);
+    EXPECT_EQ((std::vector<int>{StateSet::CHECKED}),  StateSet::CHECKED_STATE_SET);
+}
+
+TEST(CtsStateSetTest, testContainsAttribute) {
+    std::vector<std::vector<int>> specs = {
+        {StateSet::FOCUSED},
+        {StateSet::PRESSED, -StateSet::SELECTED}
+    };
+    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::FOCUSED));
+    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::PRESSED));
+    EXPECT_TRUE(StateSet::containsAttribute(specs, StateSet::SELECTED));  // -SELECTED matches attr
+    EXPECT_FALSE(StateSet::containsAttribute(specs, StateSet::CHECKED));
+    EXPECT_FALSE(StateSet::containsAttribute({}, StateSet::FOCUSED));
+}
+
 TEST(CtsStateSetTest, testStateSetMatches) {
     // --- spec1 / stateSet1 ---
     std::vector<int> stateSpec1(2, 0);  // {0,0}
