@@ -12,6 +12,7 @@
 #include <cmath>
 #include <view/motionevent.h>
 #include <view/velocitytracker.h>
+#include <core/inputdevice.h>
 
 using namespace cdroid;
 
@@ -142,7 +143,7 @@ TEST_F(VelocityTrackerMoveTest, testUsesRawCoordinates) {
         int64_t eventTime = downTime + i * 10;
         int action = (i == 0) ? MotionEvent::ACTION_DOWN : MotionEvent::ACTION_MOVE;
         MotionEvent* ev = MotionEvent::obtain(downTime, eventTime, action, 0.f, 0.f, 0);
-        ev->setSource(0x1002);  // CTS InputDevice.SOURCE_TOUCHSCREEN (CDROID has no constant)
+        ev->setSource(InputDevice::SOURCE_TOUCHSCREEN);
         ev->offsetLocation(i * 10, i * 10);
         vt->addMovement(*ev);
         ev->recycle();

@@ -10,6 +10,7 @@
 // Original: cts/tests/tests/view/src/android/view/cts/MotionEventTest.java (Apache 2.0)
 #include <gtest/gtest.h>
 #include <view/motionevent.h>
+#include <core/inputdevice.h>
 
 using namespace cdroid;
 
@@ -54,6 +55,11 @@ TEST(CtsMotionEventTest, testSetLocation) {
     MotionEvent* e = MotionEvent::obtain(DOWN_TIME, EVENT_TIME, MotionEvent::ACTION_MOVE, X, Y, META_STATE);
     EXPECT_FLOAT_EQ(X, e->getX());
     EXPECT_FLOAT_EQ(Y, e->getY());
+    // CTS sets source to SOURCE_TOUCHSCREEN (a POINTER-class source) before setLocation: only
+    // pointer-source events apply the window offset, so shouldDisregardOffset() must be false
+    // for setLocation (which goes through offsetLocation) to affect getX/getY. obtain(6-arg)
+    // leaves source=0 (UNKNOWN, non-pointer) where offset is disregarded — matching Android.
+    e->setSource(InputDevice::SOURCE_TOUCHSCREEN);
     e->setLocation(0.0f, 0.0f);
     EXPECT_FLOAT_EQ(0.0f, e->getX());
     EXPECT_FLOAT_EQ(0.0f, e->getY());
