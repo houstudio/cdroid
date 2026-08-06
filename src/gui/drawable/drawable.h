@@ -83,6 +83,7 @@ public:
     enum{
         DEFAULT_TINT_MODE=PorterDuff::Mode::SRC_IN
     };
+    static constexpr int DEFAULT_BLEND_MODE = BlendMode::SRC_OVER; /* androidx BlendMode DEFAULT_BLEND_MODE */
 protected:
     bool mVisible;
     int mLevel;

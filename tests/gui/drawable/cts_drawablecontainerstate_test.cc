@@ -77,12 +77,10 @@ class CtsDrawableContainerStateTest : public testing::Test {
 protected:
     std::unique_ptr<MockDrawableContainer> mContainer;
     void SetUp() override {
-        // MockDrawableContainer inherits DrawableContainer directly, whose base ctor does NOT
-        // create mDrawableContainerState (only concrete subclasses like StateListDrawable/
-        // LevelListDrawable do) — so stateAddChild/stateXxx dereference null and segfault. Needs a
-        // concrete-subclass fixture to expose a valid state. Skipped for now ("failures left for
-        // later"); skipping here also lets the rest of the Cts* suite run instead of aborting.
-        GTEST_SKIP() << "mDrawableContainerState is null under a bare DrawableContainer fixture";
+        // DrawableContainer's base ctor creates a default mDrawableContainerState
+        // (drawablecontainer.cc:406), so a bare MockDrawableContainer exposes a valid state —
+        // no concrete-subclass fixture is needed.
+        mContainer = std::make_unique<MockDrawableContainer>();
     }
 };
 
@@ -108,11 +106,12 @@ TEST_F(CtsDrawableContainerStateTest, testAddChild) {
     EXPECT_EQ(dr1, mContainer->stateGetChild(1));
     EXPECT_FALSE(dr1->isVisible());
 
-    // Adding the same object twice is allowed (mirrors Android).
-    EXPECT_EQ(2, mContainer->stateAddChild(dr1));
-    EXPECT_EQ(3, mContainer->stateGetChildCount());
+    // CDROID addChild dedupes: a drawable already present is returned at its existing index and is
+    // NOT re-added (avoids double-draw + double-free under CDROID's owning dtor). CTS asserts the
+    // Android tolerant behaviour (re-add returns a new index); here we assert the CDROID dedupe.
+    EXPECT_EQ(1, mContainer->stateAddChild(dr1));
+    EXPECT_EQ(2, mContainer->stateGetChildCount());
     EXPECT_EQ(dr1, mContainer->stateGetChild(1));
-    EXPECT_EQ(dr1, mContainer->stateGetChild(2));
 }
 
 // CTS testAddChildNull expects NullPointerException. CDROID's addChild dereferences the drawable

@@ -181,7 +181,12 @@ TEST_F(CtsDrawableWrapperTest, testUnscheduleDrawable) {
 // drawable's callback is not the wrapper itself — this CTS invariant does not hold. The body is
 // empty because the CTS static_cast<Drawable::Callback*>(&wrapper) would not compile
 // (MockDrawableWrapper is-not-a Drawable::Callback). Kept as a placeholder.
-TEST_F(CtsDrawableWrapperTest, DISABLED_testCallbackIsSet) {
+TEST_F(CtsDrawableWrapperTest, testCallbackIsSet) {
+    // androidx testCallbackIsSet: the wrapped drawable's callback is the wrapper itself
+    // (DrawableWrapper implements Drawable.Callback). Requires the Callback base to be public.
+    MockDrawable* dr = new MockDrawable();
+    MockDrawableWrapper wrapper(dr);
+    EXPECT_EQ(static_cast<Drawable::Callback*>(&wrapper), dr->getCallback());
 }
 
 TEST_F(CtsDrawableWrapperTest, testDrawSkipped) {
@@ -395,8 +400,8 @@ TEST_F(CtsDrawableWrapperTest, testJumpToCurrentStateInvoked) {
     EXPECT_TRUE(inner->jumpInvoked);
 }
 
-TEST_F(CtsDrawableWrapperTest, DISABLED_testMutate) {  // CDROID null deref under mutate; left for later
+TEST_F(CtsDrawableWrapperTest, testMutate) {
     DrawableWrapper wrapper(new ColorDrawable(0xFF0000FF));
-    // mutate() must succeed (return non-null) and not throw.
+    // androidx: mutate() must succeed (return non-null) and not throw.
     EXPECT_NE(nullptr, wrapper.mutate());
 }

@@ -1381,6 +1381,7 @@ void GradientDrawable::updateGradientDrawablePadding(const AttributeSet&atts){
             atts.getDimensionPixelOffset("top", pad.top),
             atts.getDimensionPixelOffset("right", pad.width),
             atts.getDimensionPixelOffset("bottom", pad.height));
+    mGradientState->mPadding = pad;  // androidx: persist into the state so shared/cached instances read it
     mPadding = pad;
 }
 

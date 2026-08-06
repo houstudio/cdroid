@@ -245,6 +245,10 @@ RectShape*RectShape::clone()const{
     return new RectShape(*this);
 }
 
+OvalShape*OvalShape::clone()const{
+    return new OvalShape(*this);
+}
+
 void RectShape::onResize(int width,int height){
 }
 

@@ -106,6 +106,8 @@ LayerDrawable::LayerState::LayerState(){
         mAutoMirrored= attrs->getBoolean("paddingMode");
     }else
 #endif
+    mChangingConfigurations = 0;
+    mChildrenChangingConfigurations = 0;
     mDensity = -1;
     mPaddingTop  = mPaddingBottom= -1;
     mPaddingLeft = mPaddingRight = -1;
@@ -268,7 +270,7 @@ LayerDrawable::LayerDrawable(const std::vector<Drawable*>&drawables)
         ChildDrawable*child=new ChildDrawable(0);
         child->mDrawable=d;
         mLayerState->mChildren.push_back(child);
-        d->setCallback(this);
+        if (d) d->setCallback(this);  // androidx tolerates null child layers (e.g. testIsProjectedWithNullLayer)
     }
     ensurePadding();
     refreshPadding();
@@ -642,6 +644,16 @@ void LayerDrawable::setHotspotBounds(int left,int top,int width,int height){
         }
     }
     mHotspotBounds.set(left, top, width,height);
+}
+
+bool LayerDrawable::isProjected()const{
+    // androidx LayerDrawable.isProjected (414-430): projected if the base is, or any non-null
+    // child layer is. Tolerates null children (CTS testIsProjectedWithNullLayer).
+    if (Drawable::isProjected()) return true;
+    for (ChildDrawable* child : mLayerState->mChildren) {
+        if (child->mDrawable != nullptr && child->mDrawable->isProjected()) return true;
+    }
+    return false;
 }
 
 void LayerDrawable::getHotspotBounds(Rect& outRect)const{

@@ -496,8 +496,8 @@ TEST_F(CtsLayerDrawableTest, testChildIntrinsicSize) {
     EXPECT_EQ(-1, ld.getIntrinsicHeight());
 }
 
-TEST_F(CtsLayerDrawableTest, DISABLED_testIsProjectedWithNullLayer) {  // CDROID null-layer deref; left for later
-    // A null child layer must not crash isProjected (CDROID, like Android, tolerates null children).
+TEST_F(CtsLayerDrawableTest, testIsProjectedWithNullLayer) {
+    // androidx: a null child layer must not crash isProjected (Android tolerates null children).
     LayerDrawable ld(std::vector<Drawable*>{nullptr});
     ld.isProjected();
     SUCCEED();

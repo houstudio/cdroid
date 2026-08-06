@@ -517,6 +517,7 @@ const Property* VectorDrawable::VectorDrawableState::getProperty(const std::stri
 // If copy is not null, deep copy the given VectorDrawableState. Otherwise, create a
 // native vector drawable tree with an empty root group.
 VectorDrawable::VectorDrawableState::VectorDrawableState(const VectorDrawableState* copy) {
+    mChangingConfigurations = 0; // androidx: int defaults to 0; overwritten below when copy != null
     mTint = nullptr;
     mNativeTree = nullptr;
     mCachedTint = nullptr;
