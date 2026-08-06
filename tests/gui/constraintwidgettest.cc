@@ -159,9 +159,11 @@ TEST(ConstraintWidget, LayoutChainSpread) {
 
     container.layout();
 
-    // CHAIN_SPREAD: equal gaps before/inside/after → (600-200)/3 = 133
+    // CHAIN_SPREAD: equal gaps before/inside/after → (600-200)/3=133.33. b lands at 233+133.33=366.66,
+    // which the optimizer's DIRECT path and the full Cassowary solver round 1px apart (366 vs 367) —
+    // tolerate that single-pixel resolution difference (cf. chain_test.cc ±1px note).
     EXPECT_EQ(a.getX(), 133);
-    EXPECT_EQ(b.getX(), 367);
+    EXPECT_NEAR(b.getX(), 367, 1);
 }
 
 // Centered vertically → y = (400-50)/2 = 175.

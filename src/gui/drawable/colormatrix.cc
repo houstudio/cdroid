@@ -29,17 +29,6 @@ ColorVector::ColorVector(const float(&v)[5]){
     for(int i=0;i<5;i++)
         values[i]=v[i];
 }
-#if 0
-ColorVector operator*(const ColorMatrix &m, const ColorVector &v){
-    return ColorVector({
-        m[0][0] * v[0] + m[0][1] * v[1] + m[0][2] * v[2] + m[0][3] * v[3] + m[0][4] * v[4],
-        m[1][0] * v[0] + m[1][1] * v[1] + m[1][2] * v[2] + m[1][3] * v[3] + m[1][4] * v[4],
-        m[2][0] * v[0] + m[2][1] * v[1] + m[2][2] * v[2] + m[2][3] * v[3] + m[2][4] * v[4],
-        m[3][0] * v[0] + m[3][1] * v[1] + m[3][2] * v[2] + m[3][3] * v[3] + m[3][4] * v[4],
-        m[4][0] * v[0] + m[4][1] * v[1] + m[4][2] * v[2] + m[4][3] * v[3] + m[4][4] * v[4]
-    });
-}
-#endif
 ColorMatrix::ColorMatrix(){
     reset();
 }
@@ -149,25 +138,6 @@ void ColorMatrix::setSaturation(float sat) {
     m[5] = R;       m[6] = G + sat; m[7] = B;
     m[10] = R;      m[11] = G;      m[12] = B + sat;
 }
-/**Set the matrix to convert RGB to YUV*/
-void ColorMatrix::setRGB2YUV() {
-    reset();
-    float* m = mArray;
-    // these coefficients match those in libjpeg
-    m[0]  = 0.299f;    m[1]  = 0.587f;    m[2]  = 0.114f;
-    m[5]  = -0.16874f; m[6]  = -0.33126f; m[7]  = 0.5f;
-    m[10] = 0.5f;      m[11] = -0.41869f; m[12] = -0.08131f;
-}
-
-
-void ColorMatrix::setYUV2RGB() {
-    reset();
-    float*m = mArray;
-    // these coefficients match those in libjpeg
-    m[2] = 1.402f;
-    m[5] = 1;   m[6] = -0.34414f;   m[7] = -0.71414f;
-    m[10] = 1;  m[11] = 1.772f;     m[12] = 0;
-}
 const ColorMatrix ColorMatrix::Identity({
     1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
     0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
@@ -175,73 +145,4 @@ const ColorMatrix ColorMatrix::Identity({
     0.0f, 0.0f, 0.0f, 1.0f, 0.0f
     //0.0f, 0.0f, 0.0f, 0.0f, 1.0f
 });
-#if 0
-ColorMatrix operator * (const ColorMatrix &m1, const ColorMatrix &m2){
-    return ColorMatrix({
-        m1[0][0] * m2[0][0] + m1[0][1] * m2[1][0] + m1[0][2] * m2[2][0] + m1[0][3] * m2[3][0] + m1[0][4] * m2[4][0],
-        m1[0][0] * m2[0][1] + m1[0][1] * m2[1][1] + m1[0][2] * m2[2][1] + m1[0][3] * m2[3][1] + m1[0][4] * m2[4][1],
-        m1[0][0] * m2[0][2] + m1[0][1] * m2[1][2] + m1[0][2] * m2[2][2] + m1[0][3] * m2[3][2] + m1[0][4] * m2[4][2],
-        m1[0][0] * m2[0][3] + m1[0][1] * m2[1][3] + m1[0][2] * m2[2][3] + m1[0][3] * m2[3][3] + m1[0][4] * m2[4][3],
-        m1[0][0] * m2[0][4] + m1[0][1] * m2[1][4] + m1[0][2] * m2[2][4] + m1[0][3] * m2[3][4] + m1[0][4] * m2[4][4],
-        m1[1][0] * m2[0][0] + m1[1][1] * m2[1][0] + m1[1][2] * m2[2][0] + m1[1][3] * m2[3][0] + m1[1][4] * m2[4][0],
-        m1[1][0] * m2[0][1] + m1[1][1] * m2[1][1] + m1[1][2] * m2[2][1] + m1[1][3] * m2[3][1] + m1[1][4] * m2[4][1],
-        m1[1][0] * m2[0][2] + m1[1][1] * m2[1][2] + m1[1][2] * m2[2][2] + m1[1][3] * m2[3][2] + m1[1][4] * m2[4][2],
-        m1[1][0] * m2[0][3] + m1[1][1] * m2[1][3] + m1[1][2] * m2[2][3] + m1[1][3] * m2[3][3] + m1[1][4] * m2[4][3],
-        m1[1][0] * m2[0][4] + m1[1][1] * m2[1][4] + m1[1][2] * m2[2][4] + m1[1][3] * m2[3][4] + m1[1][4] * m2[4][4],
-        m1[2][0] * m2[0][0] + m1[2][1] * m2[1][0] + m1[2][2] * m2[2][0] + m1[2][3] * m2[3][0] + m1[2][4] * m2[4][0],
-        m1[2][0] * m2[0][1] + m1[2][1] * m2[1][1] + m1[2][2] * m2[2][1] + m1[2][3] * m2[3][1] + m1[2][4] * m2[4][1],
-        m1[2][0] * m2[0][2] + m1[2][1] * m2[1][2] + m1[2][2] * m2[2][2] + m1[2][3] * m2[3][2] + m1[2][4] * m2[4][2],
-        m1[2][0] * m2[0][3] + m1[2][1] * m2[1][3] + m1[2][2] * m2[2][3] + m1[2][3] * m2[3][3] + m1[2][4] * m2[4][3],
-        m1[2][0] * m2[0][4] + m1[2][1] * m2[1][4] + m1[2][2] * m2[2][4] + m1[2][3] * m2[3][4] + m1[2][4] * m2[4][4],
-        m1[3][0] * m2[0][0] + m1[3][1] * m2[1][0] + m1[3][2] * m2[2][0] + m1[3][3] * m2[3][0] + m1[3][4] * m2[4][0],
-        m1[3][0] * m2[0][1] + m1[3][1] * m2[1][1] + m1[3][2] * m2[2][1] + m1[3][3] * m2[3][1] + m1[3][4] * m2[4][1],
-        m1[3][0] * m2[0][2] + m1[3][1] * m2[1][2] + m1[3][2] * m2[2][2] + m1[3][3] * m2[3][2] + m1[3][4] * m2[4][2],
-        m1[3][0] * m2[0][3] + m1[3][1] * m2[1][3] + m1[3][2] * m2[2][3] + m1[3][3] * m2[3][3] + m1[3][4] * m2[4][3],
-        m1[3][0] * m2[0][4] + m1[3][1] * m2[1][4] + m1[3][2] * m2[2][4] + m1[3][3] * m2[3][4] + m1[3][4] * m2[4][4],
-        m1[4][0] * m2[0][0] + m1[4][1] * m2[1][0] + m1[4][2] * m2[2][0] + m1[4][3] * m2[3][0] + m1[4][4] * m2[4][0],
-        m1[4][0] * m2[0][1] + m1[4][1] * m2[1][1] + m1[4][2] * m2[2][1] + m1[4][3] * m2[3][1] + m1[4][4] * m2[4][1],
-        m1[4][0] * m2[0][2] + m1[4][1] * m2[1][2] + m1[4][2] * m2[2][2] + m1[4][3] * m2[3][2] + m1[4][4] * m2[4][2],
-        m1[4][0] * m2[0][3] + m1[4][1] * m2[1][3] + m1[4][2] * m2[2][3] + m1[4][3] * m2[3][3] + m1[4][4] * m2[4][3],
-        m1[4][0] * m2[0][4] + m1[4][1] * m2[1][4] + m1[4][2] * m2[2][4] + m1[4][3] * m2[3][4] + m1[4][4] * m2[4][4]
-  });
-}
-
-ColorMatrix& ColorMatrix::operator*=(const ColorMatrix &mat){
-    return *this = *this * mat;
-}
-
-template <typename T>
-T clamp(T value, T min, T max){
-    return value < min ? min  : value > max ? max  : value;
-}
-
-unsigned int ColorMatrix::transform(unsigned int color){
-    Color c(color);
-    ColorVector vec({c.red(), c.green(), c.blue(), c.alpha(), 1.0f });
-    vec = (*this) * vec;
-    if (vec[4] != 0.0f)
-       vec[0] /= vec[4]; vec[1] /= vec[4]; vec[2] /= vec[4]; vec[3] /= vec[4]; // vec[4] = 1.0f;
-
-    return Color::toArgb(clamp<int>(255 * vec[0], 0, 255),  clamp<int>(255 * vec[1], 0, 255),
-            clamp<int>(255 * vec[2], 0, 255),    clamp<int>(255 * vec[3], 0, 255));
-}
-
-RefPtr<ImageSurface>ColorMatrix::transform(const RefPtr<ImageSurface>&simg){
-    const int w = simg->get_width();
-    const int h = simg->get_height();
-    RefPtr<ImageSurface>dimg=ImageSurface::create(simg->get_format(),w,h);
-    const unsigned char*ps=simg->get_data();
-    const unsigned char*pd=dimg->get_data();
-    for (int y = 0; y < h; ++y) {
-         unsigned int*pic=(unsigned int*)ps;
-         unsigned int*pid=(unsigned int*)pd;
-         for (int x = 0; x < w; ++x) {
-             pid[x]=transform(pic[x]);
-	 }
-         ps+=simg->get_stride();
-	 pd+=simg->get_stride();
-    }
-    return dimg;
-}
-#endif
 }

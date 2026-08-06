@@ -125,11 +125,13 @@ TEST(ConstraintLayout, ChainSpreadTwo) {
     cl->measure(exactly(600), exactly(400));
     cl->layout(0, 0, 600, 400);
 
-    // CHAIN_SPREAD: equal gaps before/inside/after → (600-200)/3=133
+    // CHAIN_SPREAD: equal gaps before/inside/after → (600-200)/3=133.33. b lands at 233+133.33=366.66,
+    // which the optimizer's DIRECT path and the full Cassowary solver round 1px apart (366 vs 367) —
+    // tolerate that single-pixel resolution difference (cf. chain_test.cc ±1px note).
     EXPECT_EQ(a->getLeft(), 133);
     EXPECT_EQ(a->getRight(), 233);
-    EXPECT_EQ(b->getLeft(), 367);
-    EXPECT_EQ(b->getRight(), 467);
+    EXPECT_NEAR(b->getLeft(), 367, 1);
+    EXPECT_NEAR(b->getRight(), 467, 1);
 }
 
 // A 0dp (MATCH_CONSTRAINT) child with left+right to parent → spread-fills width 600.

@@ -38,7 +38,6 @@ public:
     ColorMatrix();
     ColorMatrix(const ColorMatrix& src);
     ColorMatrix(const float(&v)[20]);
-    ColorMatrix& operator*=(const ColorMatrix&);
     void reset();
     void set(const ColorMatrix& src);
     void set(const float(&v)[20]);
@@ -48,14 +47,8 @@ public:
     void preConcat(ColorMatrix& prematrix);
     void postConcat(ColorMatrix& postmatrix);
     void setSaturation(float sat);
-    void setRGB2YUV();
-    void setYUV2RGB();
-    unsigned int transform(unsigned int color);
-    Cairo::RefPtr<Cairo::ImageSurface>transform(const Cairo::RefPtr<Cairo::ImageSurface>&img);
 };
 
-ColorVector operator * (const ColorMatrix &m , const ColorVector &v);
-ColorMatrix operator * (const ColorMatrix &m1, const ColorMatrix &m2);
 
 }//namespace 
 #endif
