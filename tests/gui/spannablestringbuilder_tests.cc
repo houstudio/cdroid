@@ -11,10 +11,12 @@
 //
 // Original: cts/tests/tests/text/src/android/text/cts/SpannableStringBuilderTest.java (Apache 2.0)
 #include <gtest/gtest.h>
+#include <core/canvas.h>
 #include <text/spannablestringbuilder.h>
 #include <text/spannablestring.h>
 #include <text/String.h>
 #include <text/style/characterstyles.h>
+#include <text/style/leadingmarginspan.h>
 #include <text/parcelablespan.h>
 
 using namespace cdroid;
@@ -153,4 +155,95 @@ TEST(CtsSpannableStringBuilderTest, testClear) {
     SpannableStringBuilder b(u"hello, world");
     b.clear();
     EXPECT_EQ(0, b.length());
+}
+
+TEST(CtsSpannableStringBuilderTest, testInsert2) {
+    SpannableStringBuilder b(u"hello");
+    b.insert(1, String(u"abcd"));
+    EXPECT_EQ("habcdello", b.toUTF8());
+
+    SpannableStringBuilder b2(u"hello");
+    b2.insert(5, String(u"abcd"));
+    EXPECT_EQ("helloabcd", b2.toUTF8());
+}
+
+TEST(CtsSpannableStringBuilderTest, testDelete) {
+    SpannableStringBuilder b(u"hello, world");
+    b.deleteText(0, 5);
+    EXPECT_EQ(", world", b.toUTF8());
+
+    SpannableStringBuilder b2(u"hello, world");
+    b2.deleteText(7, 12);
+    EXPECT_EQ("hello, ", b2.toUTF8());
+}
+
+TEST(CtsSpannableStringBuilderTest, testAppend2) {
+    SpannableStringBuilder b(u"hello");
+    b.append(String(u",world"), 1, 3);
+    EXPECT_EQ("hellowo", b.toUTF8());
+
+    SpannableStringBuilder b2(u"hello");
+    b2.append(String(u",world"), 0, 4);
+    EXPECT_EQ("hello,wor", b2.toUTF8());
+}
+
+TEST(CtsSpannableStringBuilderTest, testReplace2) {
+    SpannableStringBuilder b(u"hello, world");
+    b.replace(0, 5, String(u"ahiabc"), 3, 6);
+    EXPECT_EQ("abc, world", b.toUTF8());
+
+    SpannableStringBuilder b2(u"hello, world");
+    b2.replace(3, 5, String(u"ahiabc"), 3, 6);
+    EXPECT_EQ("helabc, world", b2.toUTF8());
+
+    // Replacing by an empty range deletes
+    SpannableStringBuilder b3(u"hello, world");
+    b3.replace(4, 6, String(u""), 0, 0);
+    EXPECT_EQ("hell world", b3.toUTF8());
+
+    // Insert at (7,7)
+    SpannableStringBuilder b4(u"hello, world");
+    b4.replace(7, 7, String(u"nice "), 0, 5);
+    EXPECT_EQ("hello, nice world", b4.toUTF8());
+}
+
+TEST(CtsSpannableStringBuilderTest, testAppend_textWithSpan) {
+    QuoteSpan* span = new QuoteSpan;
+    SpannableStringBuilder b(u"hello ");
+    int spanStart = b.length();
+    b.append(String(u"planet"), span, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+    int spanEnd = b.length();
+    b.append(String(u" earth"));
+
+    EXPECT_EQ("hello planet earth", b.toUTF8());
+
+    auto spans = b.getSpans(0, b.length(), make_span_filter<ParcelableSpan>());
+    EXPECT_EQ(1u, spans.size());
+    EXPECT_EQ(span, spans[0]);
+    EXPECT_EQ(spanStart, b.getSpanStart(spans[0]));
+    EXPECT_EQ(spanEnd, b.getSpanEnd(spans[0]));
+}
+
+TEST(CtsSpannableStringBuilderTest, testGetSpans) {
+    SpannableStringBuilder b(u"hello, world");
+    UnderlineSpan* span1 = new UnderlineSpan;
+    UnderlineSpan* span2 = new UnderlineSpan;
+    b.setSpan(span1, 1, 2, Spanned::SPAN_POINT_POINT);
+    b.setSpan(span2, 4, 8, Spanned::SPAN_MARK_POINT);
+
+    // Filter for UnderlineSpan -> both
+    auto underlineSpans = b.getSpans(0, 10, make_span_filter<UnderlineSpan>());
+    EXPECT_EQ(2u, underlineSpans.size());
+    EXPECT_EQ(span1, underlineSpans[0]);
+    EXPECT_EQ(span2, underlineSpans[1]);
+
+    // Filter for StrikethroughSpan -> none
+    auto strikeSpans = b.getSpans(0, 10, make_span_filter<StrikethroughSpan>());
+    EXPECT_EQ(0u, strikeSpans.size());
+}
+
+TEST(CtsSpannableStringBuilderTest, testGetSpans_returnsEmptyIfSetSpanIsNotCalled) {
+    SpannableStringBuilder b(u"hello, world");
+    auto spans = b.getSpans(0, 10, make_span_filter<UnderlineSpan>());
+    EXPECT_EQ(0u, spans.size());
 }
