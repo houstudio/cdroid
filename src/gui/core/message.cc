@@ -1,8 +1,8 @@
 /*********************************************************************************
  * Copyright (C) [2019] [houzh@msn.com]
  *
- * android.os.Message 的 C++ 移植实现 (cdroid::Message)。
- * 蓝本: /opt/android-sdk/sources/android-36/android/os/Message.java
+ * C++ port of android.os.Message (cdroid::Message).
+ * Reference: /opt/android-sdk/sources/android-36/android/os/Message.java
  *********************************************************************************/
 #include <core/message.h>
 #include <core/handler.h>
@@ -11,7 +11,7 @@
 
 namespace cdroid{
 
-// 对象池静态成员定义, Message.java:167-170
+// Object-pool static member definitions, Message.java:167-170
 Message* Message::sPool = nullptr;
 int Message::sPoolSize = 0;
 std::mutex Message::sPoolSync;
@@ -89,7 +89,7 @@ Message* Message::obtain(Handler* h, int what, int arg1, int arg2, void* obj){
 // Message.java:333-347
 void Message::recycle(){
     if (isInUse()) {
-        // gCheckRecycle 默认 true; CDROID 无 Java 异常机制, 用 LOGE 替代 (细节取舍)
+        // gCheckRecycle defaults to true; CDROID has no Java exception mechanism, so LOGE instead (trade-off)
         LOGE("This message cannot be recycled because it is in use.");
         return;
     }
@@ -106,7 +106,7 @@ void Message::recycleUnchecked(){
     when = 0;
     target = nullptr;
     callback = nullptr;
-    data = nullptr;  // 注: Bundle 所有权未定 (CDROID 无 GC), 整合阶段细化
+    data = nullptr;  // note: Bundle ownership is undecided (CDROID has no GC); refined during integration
     std::lock_guard<std::mutex> lock(sPoolSync);
     if (sPoolSize < MAX_POOL_SIZE) {
         next = sPool;
@@ -122,7 +122,7 @@ void Message::copyFrom(Message* o){
     arg1 = o->arg1;
     arg2 = o->arg2;
     obj = o->obj;
-    // data: Android 用 o.data.clone(); CDROID Bundle 无 clone, 浅拷 (细节取舍)
+    // data: Android does o.data.clone(); CDROID Bundle has no clone, so shallow copy (trade-off)
     data = o->data;
 }
 
@@ -132,7 +132,7 @@ Handler* Message::getTarget()const{ return target; }
 Runnable Message::getCallback()const{ return callback; }
 Message* Message::setCallback(const Runnable& r){ callback = r; return this; }
 
-// Message.java:449-463 (懒构造)
+// Message.java:449-463 (lazy construction)
 Bundle* Message::getData(){
     if (data == nullptr) data = new Bundle();
     return data;
