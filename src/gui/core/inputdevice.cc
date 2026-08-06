@@ -957,6 +957,10 @@ int32_t TouchDevice::putEvent(long sec,long usec,int32_t type,int32_t code,int32
          * protocol) never sends SYN_MT_REPORT; single-touch (TOUCH_MT cleared)
          * never reaches an MT report either. */
         if(code == SYN_MT_REPORT) {
+            /* Some legacy single-touch drivers emit empty SYN_MT_REPORT
+             * records after BTN_TOUCH=0. They have no ABS_MT_* axes and must
+             * not switch the single-touch state machine into Type-A mode. */
+            if(!mIsMt)break;
             mSawSynMtReport = true; // any SYN_MT_REPORT ⇒ TypeA device
             if(!mTypeB) mSlotID++; // TypeA virtual slot for the next segment
             break; // don't emit until SYN_REPORT
