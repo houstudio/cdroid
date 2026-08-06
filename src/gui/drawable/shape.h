@@ -121,6 +121,7 @@ public:
     void setThicknessRatio(float);
     float getThicknessRatio()const;
     void draw(Canvas&canvas,int x=0,int y=0)override;
+    OvalShape*clone()const override;
 };
 
 class RoundRectShape:public RectShape{

@@ -64,6 +64,7 @@ DrawableWrapper::DrawableWrapper(Drawable*dr){
     mState = nullptr;
     mDrawable= dr;
     mMutated = false;
+    if (dr) dr->setCallback(this);  // androidx: ctor routes through setDrawable, which sets the wrapped drawable's callback to this wrapper
 }
 
 DrawableWrapper::DrawableWrapper(std::shared_ptr<DrawableWrapperState>state){
@@ -164,6 +165,10 @@ void DrawableWrapper::getHotspotBounds(Rect& outRect)const{
 }
 
 std::shared_ptr<DrawableWrapper::DrawableWrapperState> DrawableWrapper::mutateConstantState(){
+    // androidx DrawableWrapper.mutateConstantState returns mState as-is (no copy). The
+    // DrawableWrapper(Drawable*) ctor leaves mState null (it assigns mDrawable directly instead
+    // of going through setDrawable), so guard the copy to avoid derefing a null state.
+    if (mState == nullptr) return nullptr;
     return std::make_shared<DrawableWrapperState>(*mState);
 }
 
@@ -197,7 +202,7 @@ std::shared_ptr<Drawable::ConstantState>DrawableWrapper::getConstantState(){
 int DrawableWrapper::getChangingConfigurations()const{
     return Drawable::getChangingConfigurations()
                 | (mState != nullptr ? mState->getChangingConfigurations() : 0)
-                | (mDrawable&&mDrawable->getChangingConfigurations());
+                | (mDrawable ? mDrawable->getChangingConfigurations() : 0);
 }
 
 void DrawableWrapper::invalidateDrawable(Drawable& who){

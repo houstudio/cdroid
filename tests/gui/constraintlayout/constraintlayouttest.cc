@@ -51,7 +51,7 @@ static int atMost(int size) {
 
 // A fixed 100x50 child whose left+right both connect to the parent → horizontally centered
 // in a 600-wide container: x = (600 - 100) / 2 = 250.
-TEST(ConstraintLayout, CentersChildHorizontally) {
+TEST(CLConstraintLayout, CentersChildHorizontally) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50);
@@ -69,7 +69,7 @@ TEST(ConstraintLayout, CentersChildHorizontally) {
 }
 
 // A child connected leftToLeft only (margin 0), right unconstrained → pinned at x=0.
-TEST(ConstraintLayout, PinsChildLeft) {
+TEST(CLConstraintLayout, PinsChildLeft) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50);
@@ -85,7 +85,7 @@ TEST(ConstraintLayout, PinsChildLeft) {
 }
 
 // A centered child with horizontal bias 0.3 → x = 0.3 * (600 - 100) = 150.
-TEST(ConstraintLayout, BiasChild) {
+TEST(CLConstraintLayout, BiasChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50);
@@ -106,7 +106,7 @@ TEST(ConstraintLayout, BiasChild) {
 
 // Two children chained: A.right→B.left, B.left→A.right, A.left→parent, B.right→parent.
 // CHAIN_SPREAD (default) distributes equal gaps on ALL sides: (600-200)/3 = 133 → A[133,233], B[367,467].
-TEST(ConstraintLayout, ChainSpreadTwo) {
+TEST(CLConstraintLayout, ChainSpreadTwo) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50);
@@ -135,7 +135,7 @@ TEST(ConstraintLayout, ChainSpreadTwo) {
 }
 
 // A 0dp (MATCH_CONSTRAINT) child with left+right to parent → spread-fills width 600.
-TEST(ConstraintLayout, MatchConstraintFills) {
+TEST(CLConstraintLayout, MatchConstraintFills) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 0, 50);
@@ -151,7 +151,7 @@ TEST(ConstraintLayout, MatchConstraintFills) {
 
 // RTL: start_toStartOf=parent pins the widget's Start edge to the parent's Start edge. In RTL
 // Start = Right, so a 100-wide widget lands at x = 600 - 100 = 500 (mirrored vs LTR's x=0).
-TEST(ConstraintLayout, RtlStartToStartPinsRight) {
+TEST(CLConstraintLayout, RtlStartToStartPinsRight) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
@@ -169,7 +169,7 @@ TEST(ConstraintLayout, RtlStartToStartPinsRight) {
 // RTL: start_toStartOf + end_toEndOf = parent pins both horizontal edges. With horizontalBias=0.3
 // the bias mirrors to 1 - 0.3 = 0.7, so a 100-wide widget in a 600-wide RTL container lands at
 // left = 0.7 * (600 - 100) = 350 (vs 150 in LTR). Faithful to AndroidX validate() line 3858.
-TEST(ConstraintLayout, RtlBiasMirrors) {
+TEST(CLConstraintLayout, RtlBiasMirrors) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -186,7 +186,7 @@ TEST(ConstraintLayout, RtlBiasMirrors) {
 }
 
 // RTL: end_toEndOf=parent → End maps to Left under RTL, so a 100-wide widget lands at x=0.
-TEST(ConstraintLayout, RtlEndToEndPinsLeft) {
+TEST(CLConstraintLayout, RtlEndToEndPinsLeft) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -203,7 +203,7 @@ TEST(ConstraintLayout, RtlEndToEndPinsLeft) {
 // RTL: a vertical Guideline with guide_begin=100 mirrors to guide_end=100, i.e. positioned 100 from
 // the right edge → x = 600 - 100 = 500. A 0dp child constrained left=guideline, right=parent fills
 // 500..600 → x=500, width=100.
-TEST(ConstraintLayout, RtlGuidelineBeginMirrorsToEnd) {
+TEST(CLConstraintLayout, RtlGuidelineBeginMirrorsToEnd) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
 
@@ -229,7 +229,7 @@ TEST(ConstraintLayout, RtlGuidelineBeginMirrorsToEnd) {
 
 // RTL: a packed horizontal chain defined with Start/End anchors reverses element order. In LTR the
 // head sits on the left (a left of b); under RTL the head moves to the right (a right of b).
-TEST(ConstraintLayout, RtlHorizontalChainReverses) {
+TEST(CLConstraintLayout, RtlHorizontalChainReverses) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -253,7 +253,7 @@ TEST(ConstraintLayout, RtlHorizontalChainReverses) {
 
 // RTL: layout_goneMarginStart resolves to the right-side gone margin. Target T is GONE; child C is
 // constrained start-to-end-of T. With goneMarginStart=60, in RTL C sits to T's left with that gap.
-TEST(ConstraintLayout, RtlGoneStartMarginResolves) {
+TEST(CLConstraintLayout, RtlGoneStartMarginResolves) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
 
@@ -282,7 +282,7 @@ TEST(ConstraintLayout, RtlGoneStartMarginResolves) {
 // RTL: a Barrier of type START resolves to RIGHT, so it sits at the rightmost right edge of its
 // referenced widgets (here the left-pinned set spans 0..100, so the RIGHT barrier is at x=100). A
 // 0dp child constrained left-of-barrier, right-of-parent fills 100..600.
-TEST(ConstraintLayout, RtlBarrierStartBehavesAsRight) {
+TEST(CLConstraintLayout, RtlBarrierStartBehavesAsRight) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setLayoutDirection(View::LAYOUT_DIRECTION_RTL);
 
@@ -318,7 +318,7 @@ TEST(ConstraintLayout, RtlBarrierStartBehavesAsRight) {
 // constraint target the same edge, Start/End wins and Left/Right is ignored. Anchor A spans 0..200;
 // W sets leftToLeft=A (→A.left=0) and startToEnd=A (LTR: Start→left = leftToRight=A → A.right=200).
 // Start/End wins → W.left = 200, not 0.
-TEST(ConstraintLayout, StartEndTakesPrecedenceOverLeftRight) {
+TEST(CLConstraintLayout, StartEndTakesPrecedenceOverLeftRight) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
 
     TextView* a = new TextView("A", 200, 50); a->setId(2);
@@ -340,7 +340,7 @@ TEST(ConstraintLayout, StartEndTakesPrecedenceOverLeftRight) {
 
 // Layer: a pure group translation (no rotation/scale) shifts every referenced view by the same
 // amount. transform() with scale=1, rotation=0 reduces shiftx = mShiftX for all views.
-TEST(ConstraintLayout, LayerAppliesGroupTranslation) {
+TEST(CLConstraintLayout, LayerAppliesGroupTranslation) {
     ConstraintLayout* cl = new ConstraintLayout(200, 200);
     TextView* a = new TextView("A", 50, 50); a->setId(1);
     TextView* b = new TextView("B", 50, 50); b->setId(2);
@@ -368,7 +368,7 @@ TEST(ConstraintLayout, LayerAppliesGroupTranslation) {
 // Layer: rotating 90° about the bbox center applies the affine rotation transform to each view and
 // propagates the rotation. bbox center = (200,200); view A center (50,50) → dx=dy=-150; with the
 // 90° matrix {0,-1,1,0} shiftx = (-1)(-150)-(-150) = 300, shifty = (1)(-150)-(-150) = 0.
-TEST(ConstraintLayout, LayerRotatesGroupAboutCenter) {
+TEST(CLConstraintLayout, LayerRotatesGroupAboutCenter) {
     ConstraintLayout* cl = new ConstraintLayout(400, 400);
     TextView* a = new TextView("A", 100, 100); a->setId(1);
     TextView* b = new TextView("B", 100, 100); b->setId(2);
@@ -398,7 +398,7 @@ TEST(ConstraintLayout, LayerRotatesGroupAboutCenter) {
 // centered at (200,200); referenced v at angle 0°, radius 100. With the solver's addCenterPoint
 // convention (effective angle = circleAngle+90°), angle 0 places v directly below the center at
 // distance 100 → v center (200,300) → for a 50×50 view, left=175, top=275.
-TEST(ConstraintLayout, CircularFlowPlacesViewOnCircle) {
+TEST(CLConstraintLayout, CircularFlowPlacesViewOnCircle) {
     ConstraintLayout* cl = new ConstraintLayout(400, 400);
 
     // Center view: 100×100, centered in parent → center (200,200).
@@ -437,7 +437,7 @@ TEST(ConstraintLayout, CircularFlowPlacesViewOnCircle) {
 
 // MotionEffect: a decorator that picks the opposite-of-dominant motion direction for the fade. A view
 // moving east (Δx>0) votes WEST; moving south (Δy>0) votes NORTH. Verified via the factored vote.
-TEST(ConstraintLayout, MotionEffectVotesDirection) {
+TEST(CLConstraintLayout, MotionEffectVotesDirection) {
     MotionEffect* me = new MotionEffect(LayoutParams::WRAP_CONTENT, LayoutParams::WRAP_CONTENT);
     EXPECT_TRUE(me->isDecorator());
 
@@ -461,7 +461,7 @@ TEST(ConstraintLayout, MotionEffectVotesDirection) {
 // constrains each view's 4 edges to box[col]/box[row], so each cell is 200×200. Box Views are added
 // during the first measure pass and solved on the second (faithful AndroidX box-View approach), so
 // the container is measured twice.
-TEST(ConstraintLayout, GridArrangesTwoByTwo) {
+TEST(CLConstraintLayout, GridArrangesTwoByTwo) {
     ConstraintLayout* cl = new ConstraintLayout(400, 400);
     // Four 0dp (match_constraint) views that will fill their cells.
     int ids[4] = {1, 2, 3, 4};
@@ -502,7 +502,7 @@ TEST(ConstraintLayout, GridArrangesTwoByTwo) {
 // constraint_referenced_tags: a Group references children by their LayoutParams.constraintTag (not by
 // id). Tags resolve lazily in updatePreLayout (scanning the container's children for a matching tag),
 // merging into mIds — so Group's visibility propagation reaches them.
-TEST(ConstraintLayout, ReferencedTagsResolveViaGroup) {
+TEST(CLConstraintLayout, ReferencedTagsResolveViaGroup) {
     ConstraintLayout* cl = new ConstraintLayout(400, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
     TextView* b = new TextView("B", 100, 50); b->setId(2);
@@ -529,7 +529,7 @@ TEST(ConstraintLayout, ReferencedTagsResolveViaGroup) {
 // BasicMeasure match-constraint convergence: a WRAP_CONTENT (AT_MOST) container with a 0dp
 // match_constraint child capped by matchConstraintMaxWidth. The loop resolves the child to its cap
 // (200) and the container WRAPs down to it (exercises the match-constraint re-measure loop + shrink).
-TEST(ConstraintLayout, WrapContainerWithMatchConstraintMax) {
+TEST(CLConstraintLayout, WrapContainerWithMatchConstraintMax) {
     ConstraintLayout* cl = new ConstraintLayout(0, 0);
     TextView* tv = new TextView("X", 0, 50); tv->setId(1);
     auto* lp = new ConstraintLayout::LayoutParams(0, 50);
@@ -549,7 +549,7 @@ TEST(ConstraintLayout, WrapContainerWithMatchConstraintMax) {
 
 // A vertical Guideline at 50% (x=300) + a 0dp child constrained left=guideline, right=parent.
 // The child should fill from 300 to 600 → x=300, width=300.
-TEST(ConstraintLayout, GuidelinePositionsChild) {
+TEST(CLConstraintLayout, GuidelinePositionsChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
 
@@ -579,7 +579,7 @@ TEST(ConstraintLayout, GuidelinePositionsChild) {
 // Horizontal Guideline at 50% (y=200) + a child whose TOP anchors below it (topToBottom). This is
 // the "to-Bottom" variant: before the getAnchor() fix the child connected to the guideline's orphan
 // mBottom anchor (never positioned, ==0) and collapsed to the top instead of sitting at y=200.
-TEST(ConstraintLayout, GuidelineChildBelowHorizontal) {
+TEST(CLConstraintLayout, GuidelineChildBelowHorizontal) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
 
@@ -605,7 +605,7 @@ TEST(ConstraintLayout, GuidelineChildBelowHorizontal) {
 
 // Vertical Guideline at 50% (x=300) + a child whose LEFT anchors right of it (leftToRight). The
 // "to-Right" variant: previously connected to the guideline's orphan mRight (==0) → child at x=0.
-TEST(ConstraintLayout, GuidelineChildRightOfVertical) {
+TEST(CLConstraintLayout, GuidelineChildRightOfVertical) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
 
@@ -630,7 +630,7 @@ TEST(ConstraintLayout, GuidelineChildRightOfVertical) {
 }
 
 // Ratio: width=200 FIXED, height=0dp MATCH_CONSTRAINT, ratio "2:1" → height=100.
-TEST(ConstraintLayout, RatioChild) {
+TEST(CLConstraintLayout, RatioChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 200, 0);
@@ -649,7 +649,7 @@ TEST(ConstraintLayout, RatioChild) {
 
 // Two children in a PACKED chain (adjacent, centered by default bias 0.5).
 // Group size 200 centered in 600 → A[200,300], B[300,400].
-TEST(ConstraintLayout, ChainPackedTwo) {
+TEST(CLConstraintLayout, ChainPackedTwo) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50);
@@ -678,7 +678,7 @@ TEST(ConstraintLayout, ChainPackedTwo) {
 
 // A RIGHT barrier referencing A and B sits at max(A.right, B.right).
 // A:[0,100], B:[100,200] (B chained to A's right) -> barrier at 200. C pinned to the barrier -> x=200.
-TEST(ConstraintLayout, BarrierRightAtMaxEdge) {
+TEST(CLConstraintLayout, BarrierRightAtMaxEdge) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -712,7 +712,7 @@ TEST(ConstraintLayout, BarrierRightAtMaxEdge) {
 
 // A LEFT barrier referencing A and B sits at min(A.left, B.left).
 // A:[50,150], B:[200,400] -> left barrier at min(50, 200) = 50. C pinned to it -> x=50.
-TEST(ConstraintLayout, BarrierLeftAtMinEdge) {
+TEST(CLConstraintLayout, BarrierLeftAtMinEdge) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -749,7 +749,7 @@ TEST(ConstraintLayout, BarrierLeftAtMinEdge) {
 // ---- Group ----
 
 // Setting a Group's visibility to GONE propagates GONE to every referenced view.
-TEST(ConstraintLayout, GroupHidesReferenced) {
+TEST(CLConstraintLayout, GroupHidesReferenced) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -772,7 +772,7 @@ TEST(ConstraintLayout, GroupHidesReferenced) {
 
 // A Placeholder (centered, 120x60) carrying a content view X (120x60). After layout the content
 // is drawn at the placeholder's frame: x=(600-120)/2=240, y=(400-60)/2=170.
-TEST(ConstraintLayout, PlaceholderPositionsContent) {
+TEST(CLConstraintLayout, PlaceholderPositionsContent) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
 
@@ -805,7 +805,7 @@ TEST(ConstraintLayout, PlaceholderPositionsContent) {
 
 // 0dp width with default=percent, percent=0.5, both sides to parent(600) -> width = 300.
 // (Position centers by default bias 0.5; we assert the percent-computed size.)
-TEST(ConstraintLayout, MatchConstraintPercent) {
+TEST(CLConstraintLayout, MatchConstraintPercent) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 0, 50);
@@ -821,7 +821,7 @@ TEST(ConstraintLayout, MatchConstraintPercent) {
 }
 
 // 0dp width spread-fill would be 600, but max=200 caps it -> width 200.
-TEST(ConstraintLayout, MatchConstraintMaxCaps) {
+TEST(CLConstraintLayout, MatchConstraintMaxCaps) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 0, 50);
@@ -838,7 +838,7 @@ TEST(ConstraintLayout, MatchConstraintMaxCaps) {
 
 // 0dp width with default=wrap should size to the view's content, NOT spread-fill 600.
 // (The solver's WRAP branch uses the content size measured by BasicMeasure.measureChildren.)
-TEST(ConstraintLayout, MatchConstraintWrap) {
+TEST(CLConstraintLayout, MatchConstraintWrap) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 0, 50);
@@ -855,7 +855,7 @@ TEST(ConstraintLayout, MatchConstraintWrap) {
 
 // Two 0dp widgets in a packed chain with weights 1:2 in a 600-wide container.
 // Free space (600) splits by weight -> A=200, B=400.
-TEST(ConstraintLayout, ChainWeightsDistribute) {
+TEST(CLConstraintLayout, ChainWeightsDistribute) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 0, 50); a->setId(1);
@@ -882,7 +882,7 @@ TEST(ConstraintLayout, ChainWeightsDistribute) {
 // Row0: A(0,0) B(100,0); Row1: C(0,50) D(100,50).
 // Flow WRAP_NONE: no wrapping — all referenced widgets stay in a single row even when their total
 // width exceeds the Flow's width. (Vertical position shared; horizontal sequence preserved.)
-TEST(ConstraintLayout, FlowWrapNoneSingleRow) {
+TEST(CLConstraintLayout, FlowWrapNoneSingleRow) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
     TextView* b = new TextView("B", 100, 50); b->setId(2);
@@ -917,7 +917,7 @@ TEST(ConstraintLayout, FlowWrapNoneSingleRow) {
 
 // Flow WRAP_CHAIN_NEW with maxElementsWrap: forces a wrap every N widgets via the running col/row
 // counter (independent of width overflow). Here a wide Flow (no width overflow) wraps every 2.
-TEST(ConstraintLayout, FlowWrapChainNewByMaxElements) {
+TEST(CLConstraintLayout, FlowWrapChainNewByMaxElements) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
     TextView* b = new TextView("B", 100, 50); b->setId(2);
@@ -950,7 +950,7 @@ TEST(ConstraintLayout, FlowWrapChainNewByMaxElements) {
 
 // Flow WRAP_ALIGNED: arranges referenced widgets in a regular grid (here 2×2 via maxElementsWrap=2).
 // Widgets in the same column share an x band; same row share a y band — a true grid, not chains.
-TEST(ConstraintLayout, FlowWrapAlignedGrid) {
+TEST(CLConstraintLayout, FlowWrapAlignedGrid) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
     TextView* b = new TextView("B", 100, 50); b->setId(2);
@@ -985,7 +985,7 @@ TEST(ConstraintLayout, FlowWrapAlignedGrid) {
     EXPECT_LT(a->getTop(),  c->getTop());    // row 0 above row 1
 }
 
-TEST(ConstraintLayout, FlowWrapsToSecondRow) {
+TEST(CLConstraintLayout, FlowWrapsToSecondRow) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -1017,7 +1017,7 @@ TEST(ConstraintLayout, FlowWrapsToSecondRow) {
 
 // A 100x200 Flow (WRAP_CHAIN, VERTICAL) referencing four 50x50 widgets: they stack in a column.
 // w0(0,0) w1(0,50) w2(0,100) w3(0,150).
-TEST(ConstraintLayout, FlowVerticalStacksColumn) {
+TEST(CLConstraintLayout, FlowVerticalStacksColumn) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* views[4];
@@ -1046,7 +1046,7 @@ TEST(ConstraintLayout, FlowVerticalStacksColumn) {
 }
 
 // A Flow with WRAP_CONTENT height: height is driven by the wrapped rows (2 rows of 50 = 100).
-TEST(ConstraintLayout, FlowWrapContentHeight) {
+TEST(CLConstraintLayout, FlowWrapContentHeight) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -1076,7 +1076,7 @@ TEST(ConstraintLayout, FlowWrapContentHeight) {
 }
 
 // A horizontal Flow with WRAP_CONTENT width: no width to wrap against → single row, width = sum.
-TEST(ConstraintLayout, FlowWrapWidthSingleRow) {
+TEST(CLConstraintLayout, FlowWrapWidthSingleRow) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -1106,7 +1106,7 @@ TEST(ConstraintLayout, FlowWrapWidthSingleRow) {
 }
 
 // A WRAP_CONTENT container (AT_MOST spec) should size itself to its fixed child.
-TEST(ConstraintLayout, WrapContainerSizesToChild) {
+TEST(CLConstraintLayout, WrapContainerSizesToChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50);
@@ -1126,7 +1126,7 @@ TEST(ConstraintLayout, WrapContainerSizesToChild) {
 // Build constraints programmatically and apply: connect both sides to parent -> centered.
 // ConstraintSet typed setters: centerHorizontally/Vertically + constrainWidth/Height build a set
 // programmatically; applyTo writes it onto the layout → the view centers in a 600×400 container.
-TEST(ConstraintLayout, ConstraintSetCenterHelpers) {
+TEST(CLConstraintLayout, ConstraintSetCenterHelpers) {
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
     cl->addView(tv, new ConstraintLayout::LayoutParams(100, 50));
@@ -1145,7 +1145,7 @@ TEST(ConstraintLayout, ConstraintSetCenterHelpers) {
     EXPECT_EQ(tv->getTop(), 175);   // (400 - 50) / 2
 }
 
-TEST(ConstraintLayout, ConstraintSetCentersChild) {
+TEST(CLConstraintLayout, ConstraintSetCentersChild) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -1165,7 +1165,7 @@ TEST(ConstraintLayout, ConstraintSetCentersChild) {
 }
 
 // clone() snapshots a layout; modify + applyTo repositions a previously-centered child to the left.
-TEST(ConstraintLayout, ConstraintSetCloneAndModify) {
+TEST(CLConstraintLayout, ConstraintSetCloneAndModify) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -1192,7 +1192,7 @@ TEST(ConstraintLayout, ConstraintSetCloneAndModify) {
 // Constraint model. "parent"/literal ids resolve via Context::getId (strtol fallback). Verifies the
 // name-keyed attribute dispatch (populateConstraint) for dimensions, anchors, bias, margins,
 // visibility/alpha (PropertySet), transforms, chain style, and ratio.
-TEST(ConstraintLayout, ConstraintSetXmlLoad) {
+TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
     App& app = App::getInstance();
     const std::string xml =
         "<ConstraintSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1229,7 +1229,7 @@ TEST(ConstraintLayout, ConstraintSetXmlLoad) {
     EXPECT_EQ(c.layout.rightToRight, 0);
     EXPECT_FLOAT_EQ(c.layout.horizontalBias, 0.25f);
     EXPECT_EQ(c.layout.leftMargin, 8);
-    EXPECT_EQ(c.layout.horizontalChainStyle, ConstraintWidget::CHAIN_PACKED);
+    EXPECT_EQ(c.layout.horizontalChainStyle, (int)ConstraintWidget::CHAIN_PACKED);
     EXPECT_EQ(c.layout.dimensionRatio, "2:1");
     EXPECT_EQ(c.propertySet.visibility, 4); // invisible -> View::INVISIBLE=4
     EXPECT_FLOAT_EQ(c.propertySet.alpha, 0.5f);
@@ -1240,7 +1240,7 @@ TEST(ConstraintLayout, ConstraintSetXmlLoad) {
 // KeyFrames parses a <KeyFrameSet> into core MotionKey subclasses (KeyAttribute + KeyPosition),
 // filed under the target view id. Attribute names are bare localnames (XmlPullParser strips the
 // namespace); motionTarget resolves to a view id via Context::getId (strtol fallback: "42" -> 42).
-TEST(ConstraintLayout, KeyFramesXmlParse) {
+TEST(CLConstraintLayout, KeyFramesXmlParse) {
     App& app = App::getInstance();
     const std::string xml =
         "<KeyFrameSet xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1279,7 +1279,7 @@ TEST(ConstraintLayout, KeyFramesXmlParse) {
 // MotionScene parses a full scene: <Transition> referencing two inline <ConstraintSet>s, with a
 // <KeyFrameSet> and an <OnClick> child. The ConstraintSet ids ("@+id/start") resolve scene-locally
 // by name, so the Transition's start/end refs agree with the parsed sets.
-TEST(ConstraintLayout, MotionSceneXmlParse) {
+TEST(CLConstraintLayout, MotionSceneXmlParse) {
     App& app = App::getInstance();
     const std::string xml =
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\" defaultDuration=\"300\">"
@@ -1332,7 +1332,7 @@ TEST(ConstraintLayout, MotionSceneXmlParse) {
 // deriveConstraintsFrom: a derived <ConstraintSet> inherits the base set's constraints, with its
 // own same-id entries overriding the base's (derived wins). The base may be defined after the
 // derived set in the XML — the merge is lazy on the first getConstraintSet() call.
-TEST(ConstraintLayout, MotionSceneDeriveConstraints) {
+TEST(CLConstraintLayout, MotionSceneDeriveConstraints) {
     App& app = App::getInstance();
     const std::string xml =
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1375,7 +1375,7 @@ TEST(ConstraintLayout, MotionSceneDeriveConstraints) {
 // Multi-transition state machine: <Transition android:id> is parsed, and MotionScene can look up a
 // transition by id or by its start/end ConstraintSet endpoints (used by MotionLayout::setTransition
 // (id) / transitionToState). The first non-abstract transition remains the current one.
-TEST(ConstraintLayout, MotionSceneTransitionLookup) {
+TEST(CLConstraintLayout, MotionSceneTransitionLookup) {
     App& app = App::getInstance();
     const std::string xml =
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1405,7 +1405,7 @@ TEST(ConstraintLayout, MotionSceneTransitionLookup) {
 
 // autoTransition: a <Transition autoTransition="..."> is parsed; when the layout rests at the
 // matching endpoint MotionScene::autoTransition fires it (animate/jump to the other end).
-TEST(ConstraintLayout, MotionSceneAutoTransitionParse) {
+TEST(CLConstraintLayout, MotionSceneAutoTransitionParse) {
     App& app = App::getInstance();
     const std::string xml =
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1426,7 +1426,7 @@ TEST(ConstraintLayout, MotionSceneAutoTransitionParse) {
 // <CustomAttribute> is parsed into the Constraint model and dispatched, at applyTo(), to an
 // externally-registered handler. The framework binds no attribute itself — the test registers a
 // "textColor" -> TextView::setTextColor handler (an app/widget-layer concern) and checks dispatch.
-TEST(ConstraintLayout, ConstraintSetCustomAttribute) {
+TEST(CLConstraintLayout, ConstraintSetCustomAttribute) {
     ConstraintSet::registerCustomAttributeHandler("textColor",
         [](View* v, const ConstraintSet::CustomAttribute& ca) {
             if (auto* tv = dynamic_cast<TextView*>(v)) tv->setTextColor(ca.intValue);
@@ -1458,7 +1458,7 @@ TEST(ConstraintLayout, ConstraintSetCustomAttribute) {
 }
 
 // A container with padding insets its children: leftToLeft=parent with paddingLeft=50 -> x=50.
-TEST(ConstraintLayout, PaddingInsetsChildren) {
+TEST(CLConstraintLayout, PaddingInsetsChildren) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(600, 400);
     cl->setPadding(50, 20, 0, 0);
@@ -1477,7 +1477,7 @@ TEST(ConstraintLayout, PaddingInsetsChildren) {
 
 // A child pinned left in the start set and right in the end set animates across the width.
 // setProgress(0)=left(0), (1)=right(500), (0.5)=mid(250).
-TEST(ConstraintLayout, MotionLayoutAnimatesChild) {
+TEST(CLConstraintLayout, MotionLayoutAnimatesChild) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1508,7 +1508,7 @@ TEST(ConstraintLayout, MotionLayoutAnimatesChild) {
 // A MotionLayout with a position keyframe arcs the child off the linear path at progress 0.5.
 // start: child pinned left (x=0). end: child pinned right (x=500). KeyPosition frame50 percentX=0.5
 // altPercentY=0.5 → at progress 0.5 the child arcs down to y≈250 (linear would be y=0).
-TEST(ConstraintLayout, MotionLayoutKeyPositionArc) {
+TEST(CLConstraintLayout, MotionLayoutKeyPositionArc) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1549,7 +1549,7 @@ TEST(ConstraintLayout, MotionLayoutKeyPositionArc) {
 // (200x50). At width 400 the default wins; at width 800 the Variant wins. Inline <ConstraintSet>
 // refs resolve by name (the `constraints` attr). Anti-flap: passing the current set's id with
 // matching dims returns the same set.
-TEST(ConstraintLayout, ConstraintLayoutStatesMatch) {
+TEST(CLConstraintLayout, ConstraintLayoutStatesMatch) {
     App& app = App::getInstance();
     const std::string xml =
         "<StateSet xmlns:android=\"http://schemas.android.com/apk/res/android\""
@@ -1597,7 +1597,7 @@ TEST(ConstraintLayout, ConstraintLayoutStatesMatch) {
 // ConstraintLayoutStates.updateConstraints applies the dimension-selected ConstraintSet to the
 // bound layout. State "base": default set sizes id=42 to 100px, a Variant for width>600 sizes it to
 // 200px. At width 400 the child measures 100; at width 900 it measures 200 (re-applied + re-measured).
-TEST(ConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
+TEST(CLConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
     App& app = App::getInstance();
     ConstraintLayout* cl = new ConstraintLayout(800, 400);
     TextView* tv = new TextView("X", 100, 50);
@@ -1643,7 +1643,7 @@ TEST(ConstraintLayout, ConstraintLayoutStatesSwitchesOnResize) {
 // ViewTransition parses a <ViewTransition> (a per-view animation) out of a MotionScene. Verifies the
 // attribute dispatch (onStateTransition, duration, viewTransitionMode, motionInterpolator), the
 // nested <KeyFrameSet>, and the getViewTransitionById lookup.
-TEST(ConstraintLayout, ViewTransitionParse) {
+TEST(CLConstraintLayout, ViewTransitionParse) {
     App& app = App::getInstance();
     const std::string xml =
         "<MotionScene xmlns:android=\"http://schemas.android.com/apk/res/android\">"
@@ -1678,7 +1678,7 @@ TEST(ConstraintLayout, ViewTransitionParse) {
 // deviation) and starts an Animate on the controller. Stepping the controller advances the Animate:
 // at the midpoint the KeyAttribute (alpha=0 @frame50) takes the view's alpha to 0; reaching the end
 // (actionDown, no hold) removes the animation.
-TEST(ConstraintLayout, ViewTransitionNoStateAnimates) {
+TEST(CLConstraintLayout, ViewTransitionNoStateAnimates) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1720,7 +1720,7 @@ TEST(ConstraintLayout, ViewTransitionNoStateAnimates) {
 // onStateTransition=actionDownUp sets mHoldAt100, so reaching progress 1.0 HOLDS the animation
 // (it stays registered, awaiting a release that reverses it) — unlike actionDown which removes on
 // completion. This pins the DownUp-specific branch; mutateReverse itself mirrors mutateForward.
-TEST(ConstraintLayout, ViewTransitionNoStateDownUpHolds) {
+TEST(CLConstraintLayout, ViewTransitionNoStateDownUpHolds) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1759,7 +1759,7 @@ TEST(ConstraintLayout, ViewTransitionNoStateDownUpHolds) {
 // (Animate.reactTo -> reverse), which then steps back to 0 over upDuration and removes itself. This
 // pins the mutateReverse path that DownUpHolds leaves untested. A main <Transition> is set up first
 // so the MotionLayout has a current state (touchEvent bails while currentState == -1, faithfully).
-TEST(ConstraintLayout, ViewTransitionNoStateDownUpReverses) {
+TEST(CLConstraintLayout, ViewTransitionNoStateDownUpReverses) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1820,7 +1820,7 @@ TEST(ConstraintLayout, ViewTransitionNoStateDownUpReverses) {
 // the target ConstraintSet's constraint, not a wholesale sub-struct replace. A scale-only delta
 // (scaleX=1.5) must take effect WITHOUT clobbering an unrelated field (rotation=30) the delta never
 // touched. (Android's sparse Delta does this precisely; CDROID approximates via default-difference.)
-TEST(ConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
+TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
     App& app = App::getInstance();
     // The "current state" constraint for view 1 already has rotation=30 (e.g. a rotated button).
     ConstraintSet target;
@@ -1848,7 +1848,7 @@ TEST(ConstraintLayout, ViewTransitionDeltaOverlaysWithoutClobbering) {
 
 // A Layout-field delta (anchor + margin) overlays the same way as Transform: setting leftToLeft +
 // leftMargin takes effect WITHOUT clobbering an unrelated anchor (topToTop) the delta never touched.
-TEST(ConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
+TEST(CLConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
     App& app = App::getInstance();
     ConstraintSet target;
     target.get(1).layout.topToTop = 0;    // already anchored top->parent
@@ -1877,7 +1877,7 @@ TEST(ConstraintLayout, ViewTransitionDeltaOverlaysLayoutFields) {
 // Precise delta: a delta that sets a field to its DEFAULT value (rotation="0") RESETS the target's
 // rotation. The old default-difference approximation skipped default values and would have left the
 // target's rotation=30 untouched. Authored-field overlay applies it.
-TEST(ConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
+TEST(CLConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
     App& app = App::getInstance();
     ConstraintSet target;
     target.get(1).transform.rotation = 30.0f;   // target currently rotated
@@ -1904,7 +1904,7 @@ TEST(ConstraintLayout, ViewTransitionDeltaAppliesDefaultValuedField) {
 // viewTransitionMode=allStates persists the delta into every ConstraintSet except the current state,
 // so the change survives a later state switch. Firing an allStates VT (scaleX=1.5) from the start
 // state writes the delta into the END set (the from-state is the animation source, not persisted).
-TEST(ConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
+TEST(CLConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1948,7 +1948,7 @@ TEST(ConstraintLayout, ViewTransitionAllStatesPersistsDelta) {
 // animates the target. Jumping to progress 1.0 lands the view at the delta'd state. Uses a WIDTH
 // delta (a Layout field applied via layout(), not a transform setter) so an unattached test view
 // reliably reflects it (transform setters are gated on attach).
-TEST(ConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
+TEST(CLConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -1991,7 +1991,7 @@ TEST(ConstraintLayout, ViewTransitionCurrentStateAnimatesDelta) {
 
 // setsTag: a noState ViewTransition that completes sets a keyed tag on its target (numeric setsTag
 // resolves via getResourceId to that int key). After firing + stepping to completion the tag is set.
-TEST(ConstraintLayout, ViewTransitionSetsTagOnCompletion) {
+TEST(CLConstraintLayout, ViewTransitionSetsTagOnCompletion) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -2027,7 +2027,7 @@ TEST(ConstraintLayout, ViewTransitionSetsTagOnCompletion) {
 // matchesView, so the tag must be present then), and the firing loop re-checks matchesView each touch
 // — so removing the tag gates the next fire. A main <Transition> is set up so touchEvent does not
 // bail on currentState == -1.
-TEST(ConstraintLayout, ViewTransitionIfTagSetGates) {
+TEST(CLConstraintLayout, ViewTransitionIfTagSetGates) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -2080,7 +2080,7 @@ TEST(ConstraintLayout, ViewTransitionIfTagSetGates) {
 // sharedValueSet trigger: the ViewTransitionController listens on the SharedValues registry for the
 // VT's SharedValueId; when MotionLayout.setSharedValue reaches the target value, the VT fires.
 // (Process-wide registry; a unique key avoids interference with other tests' leaked listeners.)
-TEST(ConstraintLayout, ViewTransitionSharedValueSetFires) {
+TEST(CLConstraintLayout, ViewTransitionSharedValueSetFires) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);
@@ -2123,7 +2123,7 @@ TEST(ConstraintLayout, ViewTransitionSharedValueSetFires) {
 
 // String motionTarget: a ViewTransition whose motionTarget is a regex matches views whose
 // LayoutParams.constraintTag matches it (not by view id). "btn_.*" matches "btn_save" but not "label".
-TEST(ConstraintLayout, ViewTransitionMatchesConstraintTag) {
+TEST(CLConstraintLayout, ViewTransitionMatchesConstraintTag) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* a = new TextView("A", 100, 50); a->setId(1);
@@ -2153,7 +2153,7 @@ TEST(ConstraintLayout, ViewTransitionMatchesConstraintTag) {
 // A ViewTransition-level (set-level) <CustomAttribute> is stored on the delta and applied to every
 // target via applyDelta. (loadCustomAttribute + the set-level carry; the ViewTransition parse wires
 // <CustomAttribute> children to loadCustomAttribute.)
-TEST(ConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
+TEST(CLConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
     App& app = App::getInstance();
     const std::string xml =
         "<CustomAttribute xmlns:android=\"http://schemas.android.com/apk/res/android\""
@@ -2180,7 +2180,7 @@ TEST(ConstraintLayout, ViewTransitionSetLevelCustomAttribute) {
 // applyViewTransition(id, Motion*) merges a ViewTransition's KeyFrameSet into a standalone Motion
 // (Android applyViewTransition). A Motion with start==end==current frame is otherwise inert; after
 // merging a KeyAttribute (alpha=0 @frame50), interpolating at progress 0.5 yields alpha 0.
-TEST(ConstraintLayout, ViewTransitionApplyViewTransitionMergesKeyframes) {
+TEST(CLConstraintLayout, ViewTransitionApplyViewTransitionMergesKeyframes) {
     App& app = App::getInstance();
     MotionLayout* ml = new MotionLayout(600, 400);
     TextView* tv = new TextView("X", 100, 50); tv->setId(1);

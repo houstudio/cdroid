@@ -13,6 +13,7 @@ SET(DRAWABLE_SOURCES
     drawable/colorfilters.cc
     drawable/colormatrix.cc
     drawable/colorstatelist.cc
+    drawable/colorstatelistdrawable.cc
     drawable/drawable.cc
     drawable/drawablecontainer.cc
     drawable/drawableinflater.cc

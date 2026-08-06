@@ -44,6 +44,9 @@ int ColorDrawable::ColorState::getChangingConfigurations()const{
     return 0;
 }
 
+ColorDrawable::ColorDrawable() : ColorDrawable(0) {
+}
+
 ColorDrawable::ColorDrawable(int color){
     mColorState=std::make_shared<ColorState>();
     mMutated = false;
@@ -99,8 +102,9 @@ int ColorDrawable::getAlpha()const{
 
 void ColorDrawable::setAlpha(int alpha){
     alpha&=0xFF;
+    alpha += alpha >> 7;  // androidx ColorDrawable.setAlpha: map 0..255 into 0..256
     const int baseAlpha = (unsigned int)mColorState->mBaseColor >> 24;
-    const int useAlpha = baseAlpha * alpha >> 8;
+    const int useAlpha = (baseAlpha * alpha) >> 8;  // androidx: baseAlpha * alpha / 256
     const int useColor = ((unsigned int)mColorState->mBaseColor << 8 >> 8) | (useAlpha << 24);
     if (mColorState->mUseColor != useColor) {
         mColorState->mUseColor = useColor;

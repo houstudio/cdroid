@@ -74,6 +74,7 @@ public:
     bool hasFocusStateSpecified()const override;
     void getOutline(Outline&)override;
     std::shared_ptr<ConstantState>getConstantState()override;
+    int getChangingConfigurations()const override; // androidx ShapeDrawable:268 super | mShapeState
     ShapeDrawable*mutate()override;
     void clearMutated()override;
     void draw(Canvas&canvas)override;

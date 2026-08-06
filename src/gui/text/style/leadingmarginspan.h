@@ -56,6 +56,7 @@ class QuoteSpan : public LeadingMarginSpan {
 public:
     QuoteSpan() : mColor(0xff000000), mStripeWidth(6), mGapWidth(2) {}
     explicit QuoteSpan(int color) : mColor(color), mStripeWidth(6), mGapWidth(2) {}
+    int getColor() const { return mColor; }
 
     int getLeadingMargin(bool first) const override {
         return mStripeWidth + mGapWidth;

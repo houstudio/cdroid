@@ -18,28 +18,28 @@
 #ifndef __CORE_HANDLER_H__
 #define __CORE_HANDLER_H__
 #include <core/looper.h>
-#include <core/message.h>      // cdroid::Message (引用语义, 对齐 android.os.Message)
+#include <core/message.h>      // cdroid::Message (reference semantics, aligning with android.os.Message)
 #include <core/callbackbase.h>
 namespace cdroid{
 
 /**
- * 移植自 android.os.Handler (蓝本: android-36 Handler.java)。
- * 以 cdroid::MessageQueue 为后端、引用语义 cdroid::Message*、Java 模型 dispatchMessage。
+ * Ported from android.os.Handler (reference: android-36 Handler.java).
+ * Backed by cdroid::MessageQueue, reference-semantics cdroid::Message*, Java-model dispatchMessage.
  *
- * CDROID 取舍:
- *  - 仍 `: public MessageHandler` —— 保留 handleIdle (UIEventHandler 帧驱动) + mHandlers 注册。
- *  - 统一类型: cdroid::Message 已与池化 Message 合并 (无 struct/os:: 之分)。
- *  - handleMessage(Message&) 是单一虚函数, apps 与库内消费者统一 override 它。
- *  - 两个 dispatchMessage 入口: (Message&) 由 libutils mMessageEnvelopes 路径调用;
- *    (Message*) 由 MessageQueue 排空路径 (Looper::drainMessageQueue) 调用。两者最终都走 handleMessage(Message&)。
- *  - mQueue 取自 Looper::getQueue() (CDROID 扩展, Looper 拥有 Java MessageQueue)。
+ * CDROID trade-offs:
+ *  - Still `: public MessageHandler` — keeps handleIdle (UIEventHandler frame driving) + mHandlers registration.
+ *  - Unified type: cdroid::Message is merged with the pooled Message (no struct/os:: distinction).
+ *  - handleMessage(Message&) is the single virtual function; both apps and in-library consumers override it.
+ *  - Two dispatchMessage entry points: (Message&) is called from the libutils mMessageEnvelopes path;
+ *    (Message*) is called from the MessageQueue drain path (Looper::drainMessageQueue). Both end up in handleMessage(Message&).
+ *  - mQueue comes from Looper::getQueue() (CDROID extension; the Looper owns the Java MessageQueue).
  */
 class Handler:public MessageHandler{
 public:
     using Callback = std::function<bool(Message&)>;  // android.os.Handler.Callback
 private:
     Looper*mLooper;
-    MessageQueue* mQueue;   // :1000 (取自 mLooper->getQueue())
+    MessageQueue* mQueue;   // :1000 (from mLooper->getQueue())
     Callback mCallback;
     bool mAsynchronous;     // :1003
 private:
@@ -54,11 +54,11 @@ public:
     Handler(Looper*looper,Callback callback);
     virtual ~Handler();
 
-    // 单一虚函数: apps (153 处) 与库内消费者均 override 此。Message 已统一为池化类型。
+    // Single virtual function: apps (153 sites) and in-library consumers override this. Message is unified to the pooled type.
     virtual void handleMessage(Message& msg) override {}
-    // libutils 路径派发 (apps 经 looper->sendMessage → mMessageEnvelopes → 此处)
+    // libutils-path dispatch (apps via looper->sendMessage -> mMessageEnvelopes -> here)
     void dispatchMessage(Message& msg) override;
-    // MessageQueue 路径派发 (Looper::drainMessageQueue 排空到期消息 → 此处) → handleMessage(*msg)
+    // MessageQueue-path dispatch (Looper::drainMessageQueue draining due messages -> here) -> handleMessage(*msg)
     virtual void dispatchMessage(Message* msg);
 
     void handleIdle()override;

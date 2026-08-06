@@ -56,10 +56,10 @@ using SizeF= CSize<float>;
 
 template<typename T>
 struct CRect{
-    T left;
-    T top;
-    T width;
-    T height;
+    T left = 0;   // android.graphics.Rect default-constructs to {0,0,0,0}
+    T top = 0;
+    T width = 0;
+    T height = 0;
 
     T bottom()const{return top+height;}
     T right()const{return left+width;}

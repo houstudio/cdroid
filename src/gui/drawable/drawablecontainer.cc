@@ -18,6 +18,7 @@
 #include <drawable/drawablecontainer.h>
 #include <core/systemclock.h>
 #include <porting/cdlog.h>
+#include <set>
 namespace cdroid{
 
 class BlockInvalidateCallback:public Drawable::Callback {
@@ -148,6 +149,11 @@ int DrawableContainer::DrawableContainerState::getChangingConfigurations()const{
 }
 
 int DrawableContainer::DrawableContainerState::addChild(Drawable* dr){
+    // A drawable already present is not re-added (avoids double-draw and a double-free under
+    // CDROID's owning dtor; androidx relies on GC and tolerates the duplicate).
+    for (size_t i = 0; i < mDrawables.size(); i++) {
+        if (mDrawables[i] == dr) return (int)i;
+    }
     const int pos = (int)mDrawables.size();
     dr->mutate();
     dr->setVisible(false, true);
@@ -662,7 +668,8 @@ void DrawableContainer::setHotspotBounds(int left, int top, int width, int heigh
 }
 
 void DrawableContainer::getHotspotBounds(Rect& outRect)const{
-    if(mHotspotBounds.empty())outRect = mHotspotBounds;
+    // androidx DrawableContainer.getHotspotBounds: return our bounds when set, else delegate.
+    if(!mHotspotBounds.empty()) outRect = mHotspotBounds;
     else Drawable::getHotspotBounds(outRect);
 }
 

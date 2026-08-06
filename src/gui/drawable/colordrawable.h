@@ -41,6 +41,7 @@ private:
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
 public:
+    ColorDrawable();
     ColorDrawable(int color);
     ~ColorDrawable()override;
     void setColor(int color);

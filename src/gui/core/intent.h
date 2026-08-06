@@ -4,6 +4,7 @@
 #include <core/rect.h>
 #include <core/parcel.h>
 #include <core/bundle.h>
+#include <core/componentname.h>
 
 namespace cdroid{
 class Uri;
@@ -135,17 +136,17 @@ private:
     // ---------------------------------------------------------------------
 
     std::string mAction;
-    Uri* mData;
+    Uri* mData = nullptr;
     std::string mType;
     std::string mPackage;
-    //ComponentName mComponent;
-    int mFlags;
+    ComponentName mComponent;
+    int mFlags = 0;
     std::set<std::string> mCategories;
-    Bundle* mExtras;
+    Bundle* mExtras = nullptr;
     Rect mSourceBounds;
-    Intent* mSelector;
-    ClipData* mClipData;
-    int mContentUserHint;// = UserHandle.USER_CURRENT;
+    Intent* mSelector = nullptr;
+    ClipData* mClipData = nullptr;
+    int mContentUserHint = 0;// = UserHandle.USER_CURRENT;
     /** Token to track instant app launches. Local only; do not copy cross-process. */
     std::string mLaunchToken;
 
@@ -163,6 +164,7 @@ protected:
 public:
     Intent();
     Intent(const Intent& o);
+    Intent& operator=(const Intent& o);
     Intent* cloneFilter();
     Intent(const std::string& action);
     Intent(const std::string& action, Uri* uri);
@@ -290,7 +292,7 @@ public:
 
     std::string getPackage()const;
 
-    ComponentName getComponent();
+    ComponentName getComponent() const;
 
     Rect getSourceBounds();
 

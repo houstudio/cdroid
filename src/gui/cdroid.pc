@@ -1,19 +1,25 @@
-prefix=/home/houzh/cdroidMaster/outX64-Debug
+prefix=/usr/local
 exec_prefix=${prefix}
-libdir=${prefix}/lib
-sharedlibdir=${prefix}/lib
+libdir=${exec_prefix}/lib
 includedir=${prefix}/include
 
 Name: cdroid
-Description: C++ style Android UI component library
-Version: 4.8.6
+Description: C++ style Android UI component library (Cairo vector graphics backend)
+Version: 4.9.6
 
-#Requires Requires.private libs that supported by pkgconfig
-Requires: 
-Requires.private: 
+# PUBLIC deps — exposed in cdroid's public headers, so consumers compile against them too.
+# cairo/cairomm: Canvas is-a cairo_t; View/Drawable public headers expose Cairo::Context /
+# ImageSurface / RefPtr, so anyone using cdroid is using cairo directly.
+Requires: cairo
 
-#Libs& Libs.private libs that pkg-config cant support
-Libs: -L"${libdir}" 
-Libs.private:-L"${sharedlibdir}" 
+# PRIVATE deps — link-time only. cdroid is a shared library, so these do NOT appear in consumer
+# Cflags (kept out via Requires.private / Libs.private). Internal: minikin, image codecs, XML,
+# compression, font, system libs.
+Requires.private: freetype2 fontconfig harfbuzz libpng expat
 
-Cflags: -I"${includedir}/gui" -I"${includedir}/porting"
+# -ltvhal: tvhal is PUBLIC — cdroid's public headers use LOGD/LOGE (cdlog::LogMessage lives in
+# libtvhal), so consumers must link it too.
+Libs: -L${libdir} -lcdroid -ltvhal
+Libs.private: -lm -pthread -ldl
+
+Cflags: -I${includedir}/gui -I${includedir}/porting

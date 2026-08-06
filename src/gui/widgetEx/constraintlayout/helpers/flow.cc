@@ -45,9 +45,9 @@ const std::unordered_map<std::string, int> kVerticalAlign = {
     {"baseline", clcore::Flow::VERTICAL_ALIGN_BASELINE}
 };
 const std::unordered_map<std::string, int> kChainStyle = {
-    {"spread", ConstraintWidget::CHAIN_SPREAD},
-    {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
-    {"packed", ConstraintWidget::CHAIN_PACKED}
+    {"spread", (int)ConstraintWidget::CHAIN_SPREAD},
+    {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
+    {"packed", (int)ConstraintWidget::CHAIN_PACKED}
 };
 // android:orientation is a platform enum (horizontal/vertical), so it needs a
 // string→int map — getInt(key, def) alone can't parse "vertical" (alpha-prefixed

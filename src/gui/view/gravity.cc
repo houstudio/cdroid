@@ -67,7 +67,7 @@ void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, in
             break;
     default:
             outRect.left = container.left + xAdj;
-            outRect.width=container.width+xAdj;//outRect.right = container.right + xAdj;
+            outRect.width=container.width;//androidx FILL: out.right=container.right+xAdj, so width stays container.width (mirrors the vertical FILL branch below)
             break;
     }
         
@@ -116,8 +116,15 @@ void Gravity::apply(int gravity, int w, int h,const Rect& container,int xAdj, in
 
 void Gravity::applyDisplay(int gravity,const Rect& display,Rect& inoutObj){
     if ((gravity&DISPLAY_CLIP_VERTICAL) != 0) {
-        if (inoutObj.top < display.top) inoutObj.top = display.top;
-        if (inoutObj.bottom() > display.bottom()) inoutObj.width=display.bottom()-inoutObj.top;//inoutObj.bottom = display.bottom;
+        // androidx: clip to the display keeping the opposite edge fixed (height shrinks).
+        // The old code set `width` here (a field-name typo) and left height untouched.
+        if (inoutObj.top < display.top) {
+            inoutObj.height -= (display.top - inoutObj.top);
+            inoutObj.top = display.top;
+        }
+        if (inoutObj.bottom() > display.bottom()) {
+            inoutObj.height = display.bottom() - inoutObj.top;
+        }
     } else {
         int off = 0;
         if (inoutObj.top < display.top) off = display.top-inoutObj.top;
@@ -133,8 +140,14 @@ void Gravity::applyDisplay(int gravity,const Rect& display,Rect& inoutObj){
     }
         
     if ((gravity&DISPLAY_CLIP_HORIZONTAL) != 0) {
-        if (inoutObj.left < display.left) inoutObj.left = display.left;
-        if (inoutObj.right() > display.right()) inoutObj.width=display.right()-inoutObj.left;//inoutObj.right = display.right;
+        // androidx: clip to the display keeping the opposite edge fixed (width shrinks).
+        if (inoutObj.left < display.left) {
+            inoutObj.width -= (display.left - inoutObj.left);
+            inoutObj.left = display.left;
+        }
+        if (inoutObj.right() > display.right()) {
+            inoutObj.width = display.right() - inoutObj.left;
+        }
     } else {
         int off = 0;
         if (inoutObj.left < display.left) off = display.left-inoutObj.left;

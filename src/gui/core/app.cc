@@ -28,6 +28,9 @@
 #include <core/app.h>
 #include <core/build.h>
 #include <core/messagequeue.h>
+#include <core/intent.h>
+#include <core/activityfactory.h>
+#include <widget/cdwindow.h>
 #include <gui_features.h>
 #include <core/cxxopts.h>
 #include <core/inputeventsource.h>
@@ -278,6 +281,94 @@ void App::exit(int code){
     MessageQueue* q = Looper::getMainLooper()->getQueue();
     if(q){
         q->quit(false);
+    }
+}
+
+void App::startActivity(const Intent& intent){
+    // Resolve the Intent's ComponentName.className via ActivityFactory (REGISTER_ACTIVITY) and `new`
+    // the Window (its ctor self-registers with WindowManager -> it appears on screen), then stamp the
+    // Intent on it. CDROID's className is the bare C++ class name matching the REGISTER_ACTIVITY key.
+    const std::string className = intent.getComponent().getClassName();
+    if(className.empty()){
+        LOGW("App::startActivity: intent has no component class name");
+        return;
+    }
+    // Android FLAG_ACTIVITY_NO_HISTORY: existing noHistory windows are auto-finished when
+    // navigating to another Activity.
+    {
+        std::vector<Window*> windows;
+        WindowManager::getInstance().getWindows(windows);
+        for(Window* w : windows){
+            if(w->isNoHistory()) w->close();
+        }
+    }
+    // singleTop reuse (androidx FLAG_ACTIVITY_SINGLE_TOP): if the topmost Window already has this
+    // className, deliver the new Intent to it (setIntent = onNewIntent) instead of creating a new
+    // instance. Matches Android singleTop launch-mode.
+    if((intent.getFlags() & Intent::FLAG_ACTIVITY_SINGLE_TOP) != 0){
+        Window* active = WindowManager::getInstance().getActiveWindow();
+        if(active && active->getIntent().getComponent().getClassName() == className){
+            active->setIntent(intent);
+            active->onNewIntent(intent);
+            WindowManager::getInstance().bringToFront(active);
+            return;
+        }
+    }
+    // FLAG_ACTIVITY_CLEAR_TOP: if target exists, close everything above it. With SINGLE_TOP, reuse
+    // (onNewIntent); without, still create new (Android standard launch mode).
+    if((intent.getFlags() & Intent::FLAG_ACTIVITY_CLEAR_TOP) != 0){
+        std::vector<Window*> windows;
+        WindowManager::getInstance().getWindows(windows);
+        for(int i = (int)windows.size() - 1; i >= 0; --i){
+            if(windows[i]->getIntent().getComponent().getClassName() == className){
+                for(int j = (int)windows.size() - 1; j > i; --j) windows[j]->close();
+                if((intent.getFlags() & Intent::FLAG_ACTIVITY_SINGLE_TOP) != 0){
+                    windows[i]->setIntent(intent);
+                    windows[i]->onNewIntent(intent);
+                    WindowManager::getInstance().bringToFront(windows[i]);
+                    return;
+                }
+                break; // pop done; fall through to create new (standard mode)
+            }
+        }
+    }
+    // FLAG_ACTIVITY_REORDER_TO_FRONT: if target exists anywhere, bring to front (no pop, no new).
+    if((intent.getFlags() & Intent::FLAG_ACTIVITY_REORDER_TO_FRONT) != 0){
+        std::vector<Window*> windows;
+        WindowManager::getInstance().getWindows(windows);
+        for(Window* w : windows){
+            if(w->getIntent().getComponent().getClassName() == className){
+                w->setIntent(intent);
+                w->onNewIntent(intent);
+                WindowManager::getInstance().bringToFront(w);
+                return;
+            }
+        }
+    }
+    ActivityFactory factory;
+    Window* window = factory.instantiate(className);
+    if(window != nullptr){
+        window->setIntent(intent);
+        if((intent.getFlags() & Intent::FLAG_ACTIVITY_NO_HISTORY) != 0) window->setNoHistory(true);
+        mLastStartedWindow = window;
+    } // else: ActivityFactory::instantiate already logged "no Window registered".
+}
+
+void App::startActivityForResultInternal(Window* caller, const Intent& intent, int requestCode){
+    mLastStartedWindow = nullptr;
+    startActivity(intent); // creates target + sets mLastStartedWindow
+    if(mLastStartedWindow != nullptr){
+        mPendingResults.push_back({caller, requestCode, mLastStartedWindow});
+    }
+}
+
+void App::dispatchPendingResult(Window* target){
+    for(auto it = mPendingResults.begin(); it != mPendingResults.end(); ++it){
+        if(it->target == target){
+            it->caller->onActivityResult(it->requestCode, target->getResultCode(), target->getResultData());
+            mPendingResults.erase(it);
+            return;
+        }
     }
 }
 

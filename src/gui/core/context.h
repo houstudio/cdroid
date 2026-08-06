@@ -32,10 +32,16 @@
 namespace cdroid{
 class Drawable;
 class ColorStateList;
+class Intent;
 class Context{
 public:
     virtual ~Context() = default;
     virtual const std::string getPackageName() const = 0;
+    // CDROID seam: androidx ActivityNavigator ends in context.startActivity(intent). CDROID has no
+    // framework "start Activity by Intent" (Activity == Window, instantiated by `new`, not by name),
+    // so the default is a no-op. Wiring (className -> Window factory + show) is deferred; override
+    // (e.g. on App) to actually launch. Kept as Context* so Navigator's mContext->startActivity compiles.
+    virtual void startActivity(const Intent& /*intent*/) = 0;
     virtual const std::string getTheme() const = 0;
     virtual void setTheme(const std::string&theme) = 0;
     virtual const DisplayMetrics&getDisplayMetrics() const = 0;

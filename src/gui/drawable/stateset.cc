@@ -64,10 +64,9 @@ bool StateSet::isWildCard(const std::vector<int>& stateSetOrSpec){
 }
 
 bool StateSet::stateSetMatches(const std::vector<int>& stateSpec,const std::vector<int>& stateSet){
-    
-    if (stateSet.size()==0)
-        return (stateSpec.size()==0) || isWildCard(stateSpec);
-
+    // androidx does NOT short-circuit on an empty stateSet. It walks the spec so that an
+    // all-must-not-match spec matches empty (nothing triggers the negative), while a positive
+    // must-match fails (not found) and WILD_CARD {0} breaks out early as true.
     const size_t stateSpecSize = stateSpec.size();
     const size_t stateSetSize = stateSet.size();
     for (size_t i = 0; i < stateSpecSize; i++) {

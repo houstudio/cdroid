@@ -1,9 +1,9 @@
 /*********************************************************************************
  * Copyright (C) [2019] [houzh@msn.com]
  *
- * android.os.MessageQueue 的 C++ 移植实现 (cdroid::MessageQueue, Legacy 路径)。
- * 蓝本: /opt/android-sdk/sources/android-36/android/os/MessageQueue.java (仅 *Legacy 分支)
- *        /home/git/android_12.0_mid_rkr13/frameworks/base/core/jni/android_os_MessageQueue.cpp
+ * C++ port of android.os.MessageQueue (cdroid::MessageQueue, Legacy path).
+ * Reference: /opt/android-sdk/sources/android-36/android/os/MessageQueue.java (Legacy branch only)
+ *            /home/git/android_12.0_mid_rkr13/frameworks/base/core/jni/android_os_MessageQueue.cpp
  *********************************************************************************/
 #include <core/messagequeue.h>
 #include <core/systemclock.h>
@@ -14,7 +14,7 @@
 namespace cdroid{
 
 // ============================================================================
-// 构造 / native 方法 (委托 cdroid::Looper, 对齐 NativeMessageQueue)
+// Construction / native methods (delegate to cdroid::Looper, aligning with NativeMessageQueue)
 // ============================================================================
 
 MessageQueue::MessageQueue(bool quitAllowed, cdroid::Looper* nativeLooper)
@@ -28,8 +28,9 @@ MessageQueue::~MessageQueue(){
 }
 
 // android_os_MessageQueue.cpp:78-85
-// nativeLooper: 由拥有方 (cdroid::Looper) 显式传入, 避免主 Looper 构造期 TLS 时序问题;
-//               未传时回退到 thread-local (独立构造场景, 如测试)。
+// nativeLooper: passed in explicitly by the owner (cdroid::Looper) to avoid a TLS timing issue
+//               during main-Looper construction; falls back to the thread-local when not supplied
+//               (standalone construction, e.g. tests).
 void MessageQueue::nativeInit(cdroid::Looper* nativeLooper){
     mLooper = nativeLooper ? nativeLooper : cdroid::Looper::getForThread();
     if (mLooper == nullptr) {
@@ -81,7 +82,7 @@ int MessageQueue::toLooperEvents(int events){
 }
 
 // ============================================================================
-// 简单查询 / IdleHandler, MessageQueue.java:308-386
+// Simple queries / IdleHandler, MessageQueue.java:308-386
 // ============================================================================
 
 bool MessageQueue::isIdle()const{  // isIdleLegacy :308
@@ -107,7 +108,7 @@ bool MessageQueue::isPolling()const{  // :413 -> isPollingLocked :421
 }
 
 // ============================================================================
-// FileDescriptor 监听, MessageQueue.java:466-555
+// FileDescriptor monitoring, MessageQueue.java:466-555
 // ============================================================================
 
 void MessageQueue::addOnFileDescriptorEventListener(int fd, int events, OnFileDescriptorEventListener* listener){  // :466
@@ -125,10 +126,10 @@ void MessageQueue::updateOnFileDescriptorEventListenerLocked(int fd, int events,
     auto it = mFileDescriptorRecords.find(fd);
     FileDescriptorRecord* record = (it != mFileDescriptorRecords.end()) ? it->second : nullptr;
     if (record != nullptr && record->events == events) {
-        return;  // 无变化
+        return;  // no change
     }
     if (events != 0) {
-        events |= OnFileDescriptorEventListener::EVENT_ERROR;  // :537 强制加 ERROR
+        events |= OnFileDescriptorEventListener::EVENT_ERROR;  // :537 force ERROR on
         if (record == nullptr) {
             record = new FileDescriptorRecord();
             record->fd = fd;
@@ -136,7 +137,7 @@ void MessageQueue::updateOnFileDescriptorEventListenerLocked(int fd, int events,
         }
         record->listener = listener;
         record->events = events;
-        record->seq += 1;  // 代际号
+        record->seq += 1;  // generation number
         nativeSetFileDescriptorEvents(fd, events);  // :549
     } else if (record != nullptr) {
         record->events = 0;
@@ -146,7 +147,7 @@ void MessageQueue::updateOnFileDescriptorEventListenerLocked(int fd, int events,
     }
 }
 
-// dispatchEvents :559-635 (由 native handleEvent 调入; CDROID 直接用 handleEvent)
+// dispatchEvents :559-635 (entered from native handleEvent; CDROID uses handleEvent directly)
 int MessageQueue::handleEvent(int fd, int events, void* /*data*/){
     OnFileDescriptorEventListener* listener = nullptr;
     int oldWatchedEvents = 0;
@@ -155,23 +156,23 @@ int MessageQueue::handleEvent(int fd, int events, void* /*data*/){
         std::lock_guard<std::recursive_mutex> lock(mLock);
         auto it = mFileDescriptorRecords.find(fd);
         if (it == mFileDescriptorRecords.end()) {
-            return 0;  // spurious, 无 listener
+            return 0;  // spurious, no listener
         }
         FileDescriptorRecord* record = it->second;
         oldWatchedEvents = record->events;
-        events &= oldWatchedEvents;  // :573 按当前监听集过滤
+        events &= oldWatchedEvents;  // :573 filter by the currently watched set
         if (events == 0) {
             return 0;  // spurious
         }
         listener = record->listener;
         seq = record->seq;
     }
-    // 锁外调 listener
+    // Invoke the listener outside the lock.
     int newWatchedEvents = listener ? listener->onFileDescriptorEvents(fd, events) : 0;
     if (newWatchedEvents != 0) {
         newWatchedEvents |= OnFileDescriptorEventListener::EVENT_ERROR;  // :601
     }
-    // 变化则更新 record
+    // Update the record if the watched set changed.
     if (newWatchedEvents != oldWatchedEvents) {
         std::lock_guard<std::recursive_mutex> lock(mLock);
         auto it = mFileDescriptorRecords.find(fd);
@@ -188,26 +189,26 @@ int MessageQueue::handleEvent(int fd, int events, void* /*data*/){
             }
         }
     }
-    return 1;  // 非0: 不让 cdroid::Looper 自动注销 fd (fd 生命周期由 MessageQueue 自管)
+    return 1;  // non-zero: keep cdroid::Looper from auto-unregistering the fd (MessageQueue owns fd lifetime)
 }
 
 // ============================================================================
 // Sync barrier, MessageQueue.java:1100-1251
-//   barrier = target==nullptr 的 Message, arg1 存 token
+//   A barrier is a Message with target==nullptr; arg1 holds the token.
 // ============================================================================
 
 int MessageQueue::postSyncBarrier(){  // postSyncBarrierLegacy :1071 -> postSyncBarrier(when) :1108
     return postSyncBarrier(SystemClock::uptimeMillis());
 }
 
-int MessageQueue::postSyncBarrier(int64_t when){  // Legacy 分支 :1131-1167
+int MessageQueue::postSyncBarrier(int64_t when){  // Legacy branch :1131-1167
     std::lock_guard<std::recursive_mutex> lock(mLock);
-    const int token = mNextBarrierToken++;  // :1132 后增, 首个 token = 0
+    const int token = mNextBarrierToken++;  // :1132 post-increment, first token = 0
     Message* msg = Message::obtain();
     msg->markInUse();
     msg->when = when;
-    msg->arg1 = token;        // token 存 arg1
-    // target 保持 nullptr —— 这就是 barrier 标志
+    msg->arg1 = token;        // token stored in arg1
+    // target stays nullptr — that is the barrier marker
     Message* prev = nullptr;
     Message* p = mMessages;
     if (when != 0) {
@@ -216,7 +217,7 @@ int MessageQueue::postSyncBarrier(int64_t when){  // Legacy 分支 :1131-1167
             p = p->next;
         }
     }
-    if (prev == nullptr) {  // 头插
+    if (prev == nullptr) {  // head insert
         if (p == nullptr) mLast = msg;
         msg->next = p;
         mMessages = msg;
@@ -225,7 +226,7 @@ int MessageQueue::postSyncBarrier(int64_t when){  // Legacy 分支 :1131-1167
         prev->next = msg;
         if (p == nullptr) mLast = msg;
     }
-    return token;  // 不 wake (barrier 目的是 stall)
+    return token;  // do not wake (a barrier is meant to stall)
 }
 
 // removeSyncBarrierLegacy :1216-1249
@@ -268,7 +269,7 @@ bool MessageQueue::enqueueMessage(Message* msg, int64_t when){
         return false;
     }
     if (msg->target == nullptr) {
-        // target==null 是 barrier 专用, 不允许通过 enqueueMessage 投递
+        // target==null is reserved for barriers; not allowed through enqueueMessage
         LOGE("enqueueMessage: message must have a target");
         return false;
     }
@@ -286,12 +287,12 @@ bool MessageQueue::enqueueMessage(Message* msg, int64_t when){
     msg->when = when;
     bool needWake = false;
     Message* p = mMessages;
-    if (p == nullptr || when == 0 || when < p->when) {  // 头插 :1302-1311
+    if (p == nullptr || when == 0 || when < p->when) {  // head insert :1302-1311
         msg->next = p;
         mMessages = msg;
         needWake = mBlocked;
         if (p == nullptr) mLast = msg;
-    } else {  // 中/尾插 :1312-1377
+    } else {  // middle/tail insert :1312-1377
         needWake = mBlocked && p->target == nullptr && msg->isAsynchronous();  // :1316
         Message* prev = p;
         Message* cur = p->next;
@@ -314,17 +315,18 @@ bool MessageQueue::enqueueMessage(Message* msg, int64_t when){
 // ============================================================================
 
 Message* MessageQueue::next(){
-    int pendingIdleHandlerCount = -1;   // :906 仅首次迭代为 -1
-    int nextPollTimeoutMillis = 0;      // :907 首轮不阻塞
+    int nextPollTimeoutMillis = 0;      // :907 do not block on the first round
     for (;;) {
         if (nextPollTimeoutMillis != 0) {
-            // android: Binder.flushPendingCommands(); CDROID 无 binder, 跳过
+            // android: Binder.flushPendingCommands(); CDROID has no binder, skip
         }
-        nativePollOnce(nextPollTimeoutMillis);  // :913 阻塞核心
-        std::vector<IdleHandler*> idleHandlersCopy;
+        // pollInner drains due messages and, once the queue is idle, fires IdleHandler
+        // (see runIdleHandlers). IdleHandler is owned by Looper::drainMessageQueue rather than
+        // inlined here, to avoid double-firing on the pump path.
+        nativePollOnce(nextPollTimeoutMillis);  // :913 blocking core
         {
             std::lock_guard<std::recursive_mutex> lock(mLock);  // :915
-            if (mQuitting) {  // :963 (消息处理之后再判 quitting)
+            if (mQuitting) {  // :963 check quitting after processing messages
                 return nullptr;
             }
             const int64_t now = SystemClock::uptimeMillis();  // :917
@@ -337,14 +339,14 @@ Message* MessageQueue::next(){
                 } while (msg != nullptr && !msg->isAsynchronous());
             }
             if (msg != nullptr) {
-                if (now < msg->when) {  // :928 未到期
+                if (now < msg->when) {  // :928 not due yet
                     nextPollTimeoutMillis = (int)std::min<int64_t>(msg->when - now, INT_MAX);
-                } else {  // :931 到期, 摘出返回
+                } else {  // :931 due — unlink and return
                     mBlocked = false;
-                    if (prevMsg != nullptr) {  // barrier 后摘
+                    if (prevMsg != nullptr) {  // unlink past a barrier
                         prevMsg->next = msg->next;
                         if (prevMsg->next == nullptr) mLast = prevMsg;
-                    } else {  // 头摘
+                    } else {  // unlink the head
                         mMessages = msg->next;
                         if (mMessages == nullptr) mLast = nullptr;
                     }
@@ -354,31 +356,38 @@ Message* MessageQueue::next(){
                     return msg;
                 }
             } else {
-                nextPollTimeoutMillis = -1;  // :957 队列空, 永久阻塞等 wake
+                nextPollTimeoutMillis = -1;  // :957 queue empty, block forever until wake
             }
-            // IdleHandler 触发条件 :971
-            if (pendingIdleHandlerCount < 0
-                && (mMessages == nullptr || now < mMessages->when)) {
-                pendingIdleHandlerCount = (int)mIdleHandlers.size();
-            }
-            if (pendingIdleHandlerCount <= 0) {  // :975 无 idle handler, 继续阻塞
-                mBlocked = true;
-                continue;
-            }
-            idleHandlersCopy = mIdleHandlers;  // 锁内拷快照, 锁外执行
+            mBlocked = true;  // about to block: enqueueMessage head-insert wakes based on this
         }
-        // 锁外执行 idle :989-1005
-        for (size_t i = 0; i < idleHandlersCopy.size(); i++) {
-            IdleHandler* idler = idleHandlersCopy[i];
-            bool keep = idler->queueIdle();
-            if (!keep) {
-                std::lock_guard<std::recursive_mutex> lock(mLock);
-                mIdleHandlers.erase(std::remove(mIdleHandlers.begin(), mIdleHandlers.end(), idler),
-                                    mIdleHandlers.end());
-            }
+    }
+}
+
+// IdleHandler is managed separately: runs the pending IdleHandlers once when the queue is idle
+// (no message due now), mirroring the idle segment of MessageQueue.java next() (:971-1012).
+// Extracted so Looper::drainMessageQueue — the convergence point of every pump path
+// (pollAll/pollOnce/nativePollOnce) — drives it: whether the caller uses next() or nextDue(),
+// IdleHandler fires whenever the queue has no message to process.
+// Snapshot under the lock, execute outside (same as Android, so an idle callback may touch the
+// queue without holding the lock / deadlocking).
+void MessageQueue::runIdleHandlers(){
+    std::vector<IdleHandler*> snapshot;
+    {
+        std::lock_guard<std::recursive_mutex> lock(mLock);
+        if (mQuitting) return;
+        const int64_t now = SystemClock::uptimeMillis();
+        if (!(mMessages == nullptr || now < mMessages->when)) return;  // a due message: not idle
+        if (mIdleHandlers.empty()) return;
+        snapshot = mIdleHandlers;  // snapshot under lock, execute outside
+    }
+    for (size_t i = 0; i < snapshot.size(); i++) {
+        IdleHandler* idler = snapshot[i];
+        bool keep = idler->queueIdle();
+        if (!keep) {
+            std::lock_guard<std::recursive_mutex> lock(mLock);
+            mIdleHandlers.erase(std::remove(mIdleHandlers.begin(), mIdleHandlers.end(), idler),
+                                mIdleHandlers.end());
         }
-        pendingIdleHandlerCount = 0;  // :1008 idle 只在首次迭代跑
-        nextPollTimeoutMillis = 0;    // :1012 跑过 idle 回去不阻塞重查
     }
 }
 
@@ -398,7 +407,7 @@ void MessageQueue::quit(bool safe){  // :1029
         if (safe) removeAllFutureMessagesLocked();  // :1054
         else removeAllMessagesLocked();
     }
-    nativeWake();  // :1061 唤醒 next() 让它看到 mQuitting
+    nativeWake();  // :1061 wake next() so it observes mQuitting
 }
 
 void MessageQueue::removeAllMessagesLocked(){  // :2079
@@ -417,19 +426,19 @@ void MessageQueue::removeAllFutureMessagesLocked(){  // :2093
     const int64_t now = SystemClock::uptimeMillis();
     Message* p = mMessages;
     if (p == nullptr) return;
-    if (p->when > now) {  // :2100 队首就在未来, 整队回收
+    if (p->when > now) {  // :2100 head already in the future, recycle the whole list
         removeAllMessagesLocked();
         return;
     }
     Message* prev = nullptr;
-    while (p != nullptr && p->when <= now) {  // :2107 找首个未来消息
+    while (p != nullptr && p->when <= now) {  // :2107 find the first future message
         prev = p;
         p = p->next;
     }
     if (prev != nullptr) {
-        prev->next = nullptr;  // :2115 截断
+        prev->next = nullptr;  // :2115 truncate
         mLast = prev;
-        while (p != nullptr) {  // 回收 p 起的所有
+        while (p != nullptr) {  // recycle everything from p onward
             Message* n = p->next;
             if (p->isAsynchronous()) mAsyncMessageCount--;
             p->recycleUnchecked();
@@ -439,9 +448,10 @@ void MessageQueue::removeAllFutureMessagesLocked(){  // :2093
 }
 
 // ============================================================================
-// 非阻塞取到期消息 (供 cdroid::Looper 周期 pump 排空 Java 消息)
-// 镜像 next() 的到期提取 (messagequeue.cc:329-357), 含 barrier 跳到 async;
-// 与 next() 的区别: 不阻塞/不算 timeout/不跑 IdleHandler, 无到期返回 nullptr。
+// Non-blocking pop of a due message (used by cdroid::Looper's periodic pump to drain Java msgs).
+// Mirrors the due-message extraction of next() (messagequeue.cc:329-357), including skipping a
+// barrier to the first async. Unlike next(): does not block / compute timeout / run IdleHandler;
+// returns nullptr when nothing is due.
 // ============================================================================
 
 Message* MessageQueue::nextDue(){
@@ -450,13 +460,13 @@ Message* MessageQueue::nextDue(){
     const int64_t now = SystemClock::uptimeMillis();
     Message* prevMsg = nullptr;
     Message* msg = mMessages;
-    if (msg != nullptr && msg->target == nullptr) {  // barrier: 跳到首个 async
+    if (msg != nullptr && msg->target == nullptr) {  // barrier: skip to the first async
         do {
             prevMsg = msg;
             msg = msg->next;
         } while (msg != nullptr && !msg->isAsynchronous());
     }
-    if (msg != nullptr && now >= msg->when) {  // 到期, 摘出
+    if (msg != nullptr && now >= msg->when) {  // due — unlink
         if (prevMsg != nullptr) {
             prevMsg->next = msg->next;
             if (prevMsg->next == nullptr) mLast = prevMsg;
@@ -469,15 +479,15 @@ Message* MessageQueue::nextDue(){
         if (msg->isAsynchronous()) mAsyncMessageCount--;
         return msg;
     }
-    return nullptr;  // 队空 / barrier 后无 async / 未到期
+    return nullptr;  // empty / no async after a barrier / nothing due
 }
 
 // ============================================================================
-// 包私有 removal/query, 对标 MessageQueue.java Legacy 分支
+// Package-private removal/query, mirroring the MessageQueue.java Legacy branch
 //   hasMessagesLegacy :1528 / :1614 / :1652
 //   removeMessagesLegacy :1680 / :1800
 //   removeCallbacksAndMessagesLegacy :1949
-// CDROID 扩展: 维护 mLast 尾指针 (Java MessageQueue 无 mLast)。
+// CDROID extension: maintains the mLast tail pointer (Java MessageQueue has no mLast).
 // ============================================================================
 
 bool MessageQueue::hasMessages(const Handler* h, int what, void* object)const{  // :1541
@@ -511,7 +521,7 @@ void MessageQueue::removeMessages(const Handler* h, int what, void* object){  //
     std::lock_guard<std::recursive_mutex> lock(mLock);
     Message* p = mMessages;
     while (p != nullptr && p->target == h && p->what == what
-           && (object == nullptr || p->obj == object)) {  // 连续匹配的头部
+           && (object == nullptr || p->obj == object)) {  // contiguous matching head
         Message* n = p->next;
         if (p->isAsynchronous()) mAsyncMessageCount--;
         p->recycleUnchecked();
@@ -519,7 +529,7 @@ void MessageQueue::removeMessages(const Handler* h, int what, void* object){  //
     }
     mMessages = p;
     if (p == nullptr) mLast = nullptr;
-    while (p != nullptr) {  // 中/尾部
+    while (p != nullptr) {  // middle/tail
         Message* n = p->next;
         if (n != nullptr && n->target == h && n->what == what
                 && (object == nullptr || n->obj == object)) {

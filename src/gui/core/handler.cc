@@ -1,8 +1,8 @@
 /*********************************************************************************
  * Copyright (C) [2019] [houzh@msn.com]
  *
- * android.os.Handler 的 C++ 移植实现 (Java 模型, cdroid::MessageQueue 后端)。
- * 蓝本: /opt/android-sdk/sources/android-36/android/os/Handler.java
+ * C++ port of android.os.Handler (Java model, cdroid::MessageQueue backend).
+ * Reference: /opt/android-sdk/sources/android-36/android/os/Handler.java
  *********************************************************************************/
 #include <core/handler.h>
 #include <core/messagequeue.h>
@@ -25,14 +25,15 @@ Handler::Handler(Looper*looper,Callback callback)
     ,mQueue(looper?looper->getQueue():nullptr)
     ,mCallback(callback)
     ,mAsynchronous(false){
-    if(mLooper)mLooper->addHandler(this);  // 保留: 注册到 mHandlers 使 handleIdle 生效
+    if(mLooper)mLooper->addHandler(this);  // kept: register into mHandlers so handleIdle takes effect
 }
 
 Handler::~Handler(){
-    // 先清本 Handler 在 Java MessageQueue 中的待派发消息 (Android 靠 GC, C++ 须显式清, 防 UAF)。
+    // Clear this Handler's pending messages from the Java MessageQueue first (Android relies on GC;
+    // C++ must clear explicitly to avoid UAF).
     if(mQueue) mQueue->removeCallbacksAndMessages(this,nullptr);
     if(mLooper){
-        mLooper->removeMessages(this);   // libutils mMessageEnvelopes 残留 (apps 经 looper->sendMessage 投递的)
+        mLooper->removeMessages(this);   // libutils mMessageEnvelopes leftovers (posted via looper->sendMessage)
         mLooper->removeHandler(this);
     }
 }
@@ -59,7 +60,7 @@ void Handler::handleCallback(Message* message){
 void Handler::handleIdle(){
 }
 
-// MessageQueue 路径派发 (Handler.java:101-112): 由 Looper::drainMessageQueue 调用, msg 为池化 Message*。
+// MessageQueue-path dispatch (Handler.java:101-112): called by Looper::drainMessageQueue; msg is a pooled Message*.
 void Handler::dispatchMessage(Message* msg){
     if(msg->callback){
         handleCallback(msg);
@@ -67,11 +68,11 @@ void Handler::dispatchMessage(Message* msg){
         if(mCallback){
             if(mCallback(*msg))return;
         }
-        handleMessage(*msg);  // apps/消费者 override 的 handleMessage(Message&)
+        handleMessage(*msg);  // the handleMessage(Message&) overridden by apps/consumers
     }
 }
 
-// libutils 路径派发: apps 经 looper->sendMessage(this, structMsg) 投递的消息 (mMessageEnvelopes) 由 pollInner 调此。
+// libutils-path dispatch: messages posted by apps via looper->sendMessage(this, structMsg) (mMessageEnvelopes) reach here via pollInner.
 void Handler::dispatchMessage(Message& msg){
     if(msg.callback){
         msg.callback();
@@ -79,7 +80,7 @@ void Handler::dispatchMessage(Message& msg){
         if(mCallback){
             if(mCallback(msg))return;
         }
-        handleMessage(msg);  // apps/消费者 override 的 handleMessage(Message&)
+        handleMessage(msg);  // the handleMessage(Message&) overridden by apps/consumers
     }
 }
 
@@ -91,7 +92,7 @@ MessageQueue* Handler::getQueue()const{
     return mQueue;
 }
 
-// —— has/remove: 委托 MessageQueue (真实现, 替代原 LOGE("TODO")/硬编码) ——
+// —— has/remove: delegate to MessageQueue (real impl, replacing the old LOGE("TODO")/hardcoded stubs) ——
 bool Handler::hasMessages(int what){
     return mQueue && mQueue->hasMessages(this,what,nullptr);
 }
@@ -120,7 +121,7 @@ void Handler::removeCallbacksAndMessages(void*token){
     if(mQueue) mQueue->removeCallbacksAndMessages(this,token);
 }
 
-// —— send/post (对齐 Handler.java) ——
+// —— send/post (aligning with Handler.java) ——
 bool Handler::sendMessage(Message* msg){
     return sendMessageDelayed(msg,0);
 }
@@ -167,7 +168,7 @@ bool Handler::enqueueMessage(MessageQueue* queue,Message* msg,int64_t uptimeMill
     return queue->enqueueMessage(msg,uptimeMillis);
 }
 
-// —— obtainMessage: 从对象池取, target=this ——
+// —— obtainMessage: take from the pool, target=this ——
 Message* Handler::obtainMessage(){
     return Message::obtain(this);
 }

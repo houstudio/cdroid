@@ -136,12 +136,12 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
 
     // Chain styles
     static const std::unordered_map<std::string,int> chainStyles = {
-        {"spread", ConstraintWidget::CHAIN_SPREAD},
-        {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
-        {"packed", ConstraintWidget::CHAIN_PACKED}
+        {"spread", (int)ConstraintWidget::CHAIN_SPREAD},
+        {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
+        {"packed", (int)ConstraintWidget::CHAIN_PACKED}
     };
-    horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
-    verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, ConstraintWidget::CHAIN_SPREAD);
+    horizontalChainStyle = attrs.getInt("layout_constraintHorizontal_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
+    verticalChainStyle   = attrs.getInt("layout_constraintVertical_chainStyle", chainStyles, (int)ConstraintWidget::CHAIN_SPREAD);
 
     // chain weights (layout_constraintHorizontal/Vertical_weight).
     horizontalWeight = attrs.getFloat("layout_constraintHorizontal_weight", ConstraintWidget::UNKNOWN);
@@ -149,12 +149,12 @@ ConstraintLayout::LayoutParams::LayoutParams(Context* c, const AttributeSet& att
 
     // match_constraint (0dp) sizing: default spread/wrap/percent + percent value + min/max.
     static const std::unordered_map<std::string,int> matchDefault = {
-        {"spread",  ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
-        {"wrap",    ConstraintWidget::MATCH_CONSTRAINT_WRAP},
-        {"percent", ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
+        {"spread",  (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
+        {"wrap",    (int)ConstraintWidget::MATCH_CONSTRAINT_WRAP},
+        {"percent", (int)ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
     };
-    matchConstraintDefaultWidth  = attrs.getInt("layout_constraintWidth_default",  matchDefault, ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
-    matchConstraintDefaultHeight = attrs.getInt("layout_constraintHeight_default", matchDefault, ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintDefaultWidth  = attrs.getInt("layout_constraintWidth_default",  matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
+    matchConstraintDefaultHeight = attrs.getInt("layout_constraintHeight_default", matchDefault, (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD);
     matchConstraintPercentWidth  = attrs.getFloat("layout_constraintWidth_percent",  1.0f);
     matchConstraintPercentHeight = attrs.getFloat("layout_constraintHeight_percent", 1.0f);
     matchConstraintMinWidth   = attrs.getDimensionPixelSize("layout_constraintWidth_min",  0);

@@ -29,11 +29,14 @@
 #include <widget/textview.h>
 #include <view/accessibility/accessibilitymanager.h>
 #include <view/floatingactionmode.h>
-#include <windowmanager.h>
+#include <core/systemclock.h>
+#include <core/windowmanager.h>
+#include <animation/animator.h>
+#include <animation/objectanimator.h>
+#include <animation/valueanimator.h>
+#include <view/gravity.h>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-#include <uieventsource.h>
-#include <systemclock.h>
 #include <fstream>
 
 using namespace Cairo;
@@ -105,11 +108,6 @@ void Window::initWindow(){
         }
     });
     mAccessibilityManager->addAccessibilityStateChangeListener(acsl);
-#if USE_UIEVENTHANDLER
-    mUIEventHandler = new UIEventHandler(this,[this](){ doLayout(); });
-#else
-    mUIEventHandler = new UIEventSource(this,[this](){ doLayout(); });
-#endif
 }
 
 Window::~Window(){
@@ -121,6 +119,17 @@ Window::~Window(){
     delete mActionBar;
     delete mMenuInflater;
     delete mSendWindowContentChangedAccessibilityEvent;
+    mDestroyed = true;  // signal the transition end-callback to skip finishClose (we're tearing down)
+    if (mCurrentTransitionAnimator) {
+        Animator* a = mCurrentTransitionAnimator;
+        mCurrentTransitionAnimator = nullptr;  // end-callback sees null + mDestroyed, skips onEnd
+        a->cancel();   // cancel() fires onAnimationEnd (see animator.cc) — guarded by mDestroyed above
+        delete a;
+    }
+    delete mEnterTransition;
+    delete mExitTransition;
+    delete mReturnTransition;
+    delete mReenterTransition;
     // NOTE: the AttachInfo is freed by the lambda posted in close() (which stashed it before
     // removeWindow detached/null'd mAttachInfo); ~Window does not touch mAttachInfo.
     LOGD("%p:%d destroied!",this,mID);
@@ -930,31 +939,45 @@ void Window::doLayout(){
 }
 
 
+void Window::startActivityForResult(const Intent& intent, int requestCode){
+    App::getInstance().startActivityForResultInternal(this, intent, requestCode);
+}
+
 void Window::close(){
+    // Deliver pending activity result synchronously (onActivityResult must not wait on the exit
+    // animation). Then, if a close transition (returnTransition, else exitTransition) is configured,
+    // play it before tearing down — the Window stays in mWindows (visible to composeSurfaces) until
+    // the animation ends, at which point finishClose() runs removeWindow + posts the deletes.
+    App::getInstance().dispatchPendingResult(this);
+    ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
+    if (t && t->getType() != ActivityTransition::Type::NONE
+        && !mInTransition && isAttachedToWindow() && getVisibility() == VISIBLE) {
+        startExitAnimation([this](){ finishClose(); });
+    } else {
+        finishClose();
+    }
+}
+
+void Window::finishClose(){
     // removeWindow detaches the view tree (nulls mAttachInfo), so stash AttachInfo first; the
     // posted lambda frees it + the window. removeWindow runs IMMEDIATELY (window leaves the
     // compositor at once). The deletes are deferred so the current call stack can still touch this
     // window safely. BUT the post must use a standalone heap Handler, NOT View::post (mAttachInfo's
     // handler = mUIEventHandler): removeWindow below calls removeEventHandler(mUIEventHandler),
     // which purges that handler's queued messages — including this delete-window post — so the
-    // window would never be deleted (NavController chain + view tree + Transition clone all leak).
-    // A heap Handler that self-deletes keeps the post alive past removeWindow (same pattern as the
-    // Transition clone self-delete in Transition::end()).
+    // window would never be deleted. A heap Handler that self-deletes keeps the post alive past
+    // removeWindow (same pattern as the Transition clone self-delete in Transition::end()).
     auto* info = mAttachInfo;
     Window* self = this;
     Handler* h = new Handler();
     h->post([h, self, info](){
         self->onDestroy();
-        // Purge any Choreographer traversal callback that survived teardown. The Choreographer holds
-        // a CALLBACK_TRAVERSAL lambda capturing `self`; if it fired after `delete self` it would call
-        // doTraversal() on a freed Window — the virtual isAttachedToWindow() then reads a zeroed
-        // vtable and jumps to a garbage address (0x0). removeWindow() below detaches the view tree,
-        // and dispatchDetachedFromWindow -> onWindowVisibilityChanged(GONE) can re-trigger
-        // scheduleTraversals(), re-posting that lambda AFTER any removal done at the start of close()
-        // — so the removal must happen here, at the last safe point before `delete self`, by which
-        // time removeWindow has fully run. removeWindow purges the UIEventHandler's messages but NOT
-        // Choreographer callbacks (separate queue). std::function== can't match a capturing lambda,
-        // so removal is by token=self (only this window's CALLBACK_TRAVERSAL record(s)).
+        // Purge any Choreographer traversal callback that survived teardown — it captures `self`
+        // and would call doTraversal() on a freed Window. Must run here (last safe point before
+        // `delete self`, after removeWindow fully ran), by token=self. removeWindow purges the
+        // UIEventHandler's messages but NOT Choreographer callbacks (separate queue); and
+        // dispatchDetachedFromWindow -> onWindowVisibilityChanged(GONE) can re-trigger
+        // scheduleTraversals(), re-posting that callback, so removal belongs at the very end.
         Choreographer::getInstance().removeCallbacks(
             Choreographer::CALLBACK_TRAVERSAL, nullptr, self);
         self->mTraversalScheduled = false;
@@ -963,6 +986,127 @@ void Window::close(){
         delete h;
     });
     WindowManager::getInstance().removeWindow(this);
+}
+
+// =====================================================================================
+//  Activity transitions (Window-level: setAlpha for Fade, setPos for Slide)
+//  CDROID's Window is the composition root, so only moving the Window itself (setPos) or setting
+//  its surface opacity (setAlpha) produces a visible whole-window transition; a content view's
+//  translationX cannot move the surface (composeSurfaces blits by getBound(), bypassing the View
+//  transform). Mirrors android.app.Activity transition API names; the implementation is NOT
+//  android.transition.Transition (content-level).
+// =====================================================================================
+void Window::setEnterTransition(ActivityTransition* t) {
+    delete mEnterTransition;
+    mEnterTransition = t;
+    if (t && t->getType() != ActivityTransition::Type::NONE) {
+        // Capture the resting position BEFORE snapEnterStart moves us offscreen: snapEnterStart calls
+        // setPos (-> moveWindow -> setFrame), which overwrites mLeft/mTop with the offscreen start.
+        // Reading getLeft()/getTop() later would return that offscreen value, so the enter animation
+        // would slide entirely off-screen (resting pos corrupted by exactly +width/+height). The Window
+        // ctor already ran setFrame(0,0,W,H), so getLeft()/getTop() here ARE the final resting pos.
+        mEnterRestX = getLeft();
+        mEnterRestY = getTop();
+        mEnterRestValid = true;
+        mPendingEnterAnim = true;
+        snapEnterStart(t);  // pre-snap to the start state before the first frame (no full-show flash)
+    }
+}
+void Window::setExitTransition(ActivityTransition* t)    { delete mExitTransition;    mExitTransition = t; }
+void Window::setReturnTransition(ActivityTransition* t)  { delete mReturnTransition;  mReturnTransition = t; }
+void Window::setReenterTransition(ActivityTransition* t) { delete mReenterTransition; mReenterTransition = t; }
+
+void Window::startEnterAnimation() {
+    runActivityTransition(mEnterTransition, true, std::function<void()>());
+}
+
+void Window::startExitAnimation(const std::function<void()>& onEnd) {
+    ActivityTransition* t = mReturnTransition ? mReturnTransition : mExitTransition;
+    runActivityTransition(t, false, onEnd);
+}
+
+void Window::computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y) {
+    if (edge != Gravity::LEFT && edge != Gravity::RIGHT
+        && edge != Gravity::TOP && edge != Gravity::BOTTOM) edge = Gravity::RIGHT;
+    x = ox; y = oy;
+    if (!offscreen) return;
+    if (edge == Gravity::LEFT)        x = ox - w;
+    else if (edge == Gravity::RIGHT)  x = ox + w;
+    else if (edge == Gravity::TOP)    y = oy - h;
+    else                              y = oy + h;  // BOTTOM
+}
+
+void Window::snapEnterStart(ActivityTransition* t) {
+    if (!t || !isAttachedToWindow()) return;
+    if (t->getType() == ActivityTransition::Type::FADE) {
+        setAlpha(0.f);
+    } else if (t->getType() == ActivityTransition::Type::SLIDE) {
+        int x, y;
+        computeSlidePos(t->getSlideEdge(), getLeft(), getTop(), getWidth(), getHeight(), true, x, y);
+        setPos(x, y);
+    }
+}
+
+void Window::runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd) {
+    if (!t || t->getType() == ActivityTransition::Type::NONE || !isAttachedToWindow()) {
+        mInTransition = false;
+        if (onEnd) onEnd();
+        return;
+    }
+    // Replace any in-flight transition animator. cancel() fires onAnimationEnd (animator.cc) — the
+    // replaced animator is always an enter (onEnd empty), and ~Window's path is guarded by mDestroyed.
+    if (mCurrentTransitionAnimator) {
+        Animator* prev = mCurrentTransitionAnimator;
+        mCurrentTransitionAnimator = nullptr;
+        prev->cancel();
+        delete prev;
+    }
+    mInTransition = true;
+    const int64_t duration = t->getDuration();
+    Animator::AnimatorListener endListener;
+    endListener.onAnimationEnd = [this, onEnd](Animator&, bool) {
+        if (mDestroyed) return;  // ~Window is tearing us down — don't run finishClose / replace
+        mInTransition = false;
+        if (onEnd) onEnd();
+        // The animator is NOT deleted here (delete-in-end-callback). It stays in
+        // mCurrentTransitionAnimator and is freed by ~Window or the next runActivityTransition.
+    };
+
+    if (t->getType() == ActivityTransition::Type::FADE) {
+        // ObjectAnimator "alpha" dispatches to View::setAlpha, which Window overrides to
+        // GFXSurfaceSetOpacity (whole-surface opacity). Each frame must re-compose, so schedule
+        // a traversal (setAlpha itself does not invalidate).
+        ObjectAnimator* anim = ObjectAnimator::ofFloat(this, "alpha",
+            std::vector<float>{enter ? 0.f : 1.f, enter ? 1.f : 0.f});
+        anim->setDuration(duration);
+        anim->addUpdateListener([this](ValueAnimator&) { scheduleTraversals(); });
+        anim->addListener(endListener);
+        mCurrentTransitionAnimator = anim;
+        anim->start();
+    } else { // SLIDE — translate the whole window surface via setPos/moveWindow.
+        const int w = getWidth(), h = getHeight();
+        // Enter slides back to the resting position captured in setEnterTransition (snapEnterStart has
+        // since moved the window offscreen, so getLeft()/getTop() are no longer the resting pos).
+        // Exit slides from the live resting pos — the window is at rest when close() starts the exit.
+        const int ox = (enter && mEnterRestValid) ? mEnterRestX : getLeft();
+        const int oy = (enter && mEnterRestValid) ? mEnterRestY : getTop();
+        int offX, offY;
+        computeSlidePos(t->getSlideEdge(), ox, oy, w, h, true, offX, offY);
+        const int startX = enter ? offX : ox;
+        const int startY = enter ? offY : oy;
+        const int endX   = enter ? ox  : offX;
+        const int endY   = enter ? oy  : offY;
+        ValueAnimator* anim = ValueAnimator::ofFloat(std::vector<float>{0.f, 1.f});
+        anim->setDuration(duration);
+        anim->addUpdateListener([this, startX, startY, endX, endY](ValueAnimator& a) {
+            const float f = a.getAnimatedFraction();
+            setPos((int)(startX + (endX - startX) * f), (int)(startY + (endY - startY) * f));
+        });
+        anim->addListener(endListener);
+        mCurrentTransitionAnimator = anim;
+        if (enter) setPos(startX, startY);  // ensure offscreen before the first animated frame
+        anim->start();
+    }
 }
 
 void Window::scheduleTraversals(){
@@ -986,6 +1130,13 @@ void Window::doTraversal(){
     }
     GraphDevice::getInstance().unlock();
     GraphDevice::getInstance().composeSurfaces();
+    // Kick off the enter transition once the content's first frame is drawn. The Activity set
+    // mEnterTransition (and pre-snapped to the start state) in onCreate; we start the animator here
+    // so the slide/fade begins from a laid-out, drawn window rather than a blank one.
+    if (mPendingEnterAnim && !mInTransition) {
+        mPendingEnterAnim = false;
+        startEnterAnimation();
+    }
 }
 
 bool Window::dispatchTouchEvent(MotionEvent& event){
@@ -1163,27 +1314,6 @@ Drawable* Window::getAccessibilityFocusedDrawable(){
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
-
-Window::UIEventHandler::UIEventHandler(View*v,std::function<void()>r){
-    mAttachedView=v;
-    mLayoutRunner=r;
-}
-
-void Window::UIEventHandler::handleIdle(){
-    if (mAttachedView && mAttachedView->isAttachedToWindow()){
-        if(mAttachedView->isLayoutRequested())
-            mLayoutRunner();
-        if(mAttachedView->isDirty() && mAttachedView->getVisibility()==View::VISIBLE){
-            GraphDevice::getInstance().lock();
-            ((Window*)mAttachedView)->draw();
-            GraphDevice::getInstance().flip();
-            GraphDevice::getInstance().unlock();
-        }
-    }
-
-    if(GraphDevice::getInstance().needCompose())
-        GraphDevice::getInstance().requestCompose();
-}
 
 Window::SendWindowContentChangedAccessibilityEvent::SendWindowContentChangedAccessibilityEvent(Window*w):mWin(w){
     mSource   = nullptr;
