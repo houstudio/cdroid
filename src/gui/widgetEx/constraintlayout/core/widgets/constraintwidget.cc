@@ -34,14 +34,6 @@
 
 namespace cdroid {
 
-// odr-use definitions for static const ints referenced by address (e.g. in unordered_map)
-const int ConstraintWidget::CHAIN_SPREAD;
-const int ConstraintWidget::CHAIN_SPREAD_INSIDE;
-const int ConstraintWidget::CHAIN_PACKED;
-const int ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
-const int ConstraintWidget::MATCH_CONSTRAINT_WRAP;
-const int ConstraintWidget::MATCH_CONSTRAINT_PERCENT;
-
 ConstraintWidget::ConstraintWidget() {
     addAnchors();
 }
@@ -986,7 +978,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
             }
             if (matchMaxDimension > 0) {
                 bool applyLimit = true;
-                if (parentWrapContent && matchConstraintDefault == MATCH_CONSTRAINT_WRAP) {
+                if (parentWrapContent && matchConstraintDefault == (int)MATCH_CONSTRAINT_WRAP) {
                     applyLimit = false;
                 }
                 if (applyLimit) {
@@ -1004,7 +996,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     system->addEquality(end, begin, dimension, SolverVariable::STRENGTH_EQUALITY);
                     system->addLowerThan(end, begin, dimension, SolverVariable::STRENGTH_FIXED);
                 }
-            } else if (matchConstraintDefault == MATCH_CONSTRAINT_PERCENT) {
+            } else if (matchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT) {
                 SolverVariable* percentBegin = nullptr;
                 SolverVariable* percentEnd = nullptr;
                 if (beginAnchor->getType() == ConstraintAnchor::Type::TOP
@@ -1103,7 +1095,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                 if (beginWidget->isBarrier() || endWidget->isBarrier()) {
                     boundsCheckStrength = SolverVariable::STRENGTH_HIGHEST;
                 }
-            } else if (matchConstraintDefault == MATCH_CONSTRAINT_PERCENT) {
+            } else if (matchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT) {
                 applyCentering = true;
                 rangeCheckStrength = SolverVariable::STRENGTH_EQUALITY;
                 boundsCheckStrength = SolverVariable::STRENGTH_EQUALITY;
@@ -1138,8 +1130,8 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     applyStrongChecks = true;
                     if (useRatio) {
                         bool otherSideInvariable =
-                            oppositeMatchConstraintDefault == MATCH_CONSTRAINT_PERCENT
-                            || oppositeMatchConstraintDefault == MATCH_CONSTRAINT_WRAP;
+                            oppositeMatchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT
+                            || oppositeMatchConstraintDefault == (int)MATCH_CONSTRAINT_WRAP;
                         if (!otherSideInvariable) {
                             rangeCheckStrength = SolverVariable::STRENGTH_FIXED;
                             boundsCheckStrength = SolverVariable::STRENGTH_EQUALITY;

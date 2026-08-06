@@ -137,7 +137,7 @@ void Flow::setMaxElementsWrap(int value) {
 int Flow::getWidgetWidth(ConstraintWidget* widget, int max) {
     if (widget == nullptr) return 0;
     if (widget->getHorizontalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT) {
-        if (widget->mMatchConstraintDefaultWidth == MATCH_CONSTRAINT_SPREAD) {
+        if (widget->mMatchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_SPREAD) {
             return 0;
         } else if (widget->mMatchConstraintDefaultWidth == MATCH_CONSTRAINT_PERCENT) {
             int value = (int) (widget->mMatchConstraintPercentWidth * max);
@@ -147,9 +147,9 @@ int Flow::getWidgetWidth(ConstraintWidget* widget, int max) {
                         widget->getVerticalDimensionBehaviour(), widget->getHeight());
             }
             return value;
-        } else if (widget->mMatchConstraintDefaultWidth == MATCH_CONSTRAINT_WRAP) {
+        } else if (widget->mMatchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_WRAP) {
             return widget->getWidth();
-        } else if (widget->mMatchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO) {
+        } else if (widget->mMatchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_RATIO) {
             return (int) (widget->getHeight() * widget->mDimensionRatio + 0.5f);
         }
     }
@@ -159,9 +159,9 @@ int Flow::getWidgetWidth(ConstraintWidget* widget, int max) {
 int Flow::getWidgetHeight(ConstraintWidget* widget, int max) {
     if (widget == nullptr) return 0;
     if (widget->getVerticalDimensionBehaviour() == DimensionBehaviour::MATCH_CONSTRAINT) {
-        if (widget->mMatchConstraintDefaultHeight == MATCH_CONSTRAINT_SPREAD) {
+        if (widget->mMatchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_SPREAD) {
             return 0;
-        } else if (widget->mMatchConstraintDefaultHeight == MATCH_CONSTRAINT_PERCENT) {
+        } else if (widget->mMatchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_PERCENT) {
             int value = (int) (widget->mMatchConstraintPercentHeight * max);
             if (value != widget->getHeight()) {
                 widget->setMeasureRequested(true);
@@ -169,9 +169,9 @@ int Flow::getWidgetHeight(ConstraintWidget* widget, int max) {
                         DimensionBehaviour::FIXED, value);
             }
             return value;
-        } else if (widget->mMatchConstraintDefaultHeight == MATCH_CONSTRAINT_WRAP) {
+        } else if (widget->mMatchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_WRAP) {
             return widget->getHeight();
-        } else if (widget->mMatchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+        } else if (widget->mMatchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_RATIO) {
             return (int) (widget->getWidth() * widget->mDimensionRatio + 0.5f);
         }
     }

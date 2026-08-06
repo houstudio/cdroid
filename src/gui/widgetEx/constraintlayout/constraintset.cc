@@ -634,14 +634,14 @@ void ConstraintSet::createHorizontalChainRtl(int startId, int startSide, int end
 
 // Enum-name -> int maps for the enum-valued attributes (mirrors attrs.xml enum values).
 static const std::unordered_map<std::string,int> kChainStyles = {
-    {"spread", ConstraintWidget::CHAIN_SPREAD},
-    {"spread_inside", ConstraintWidget::CHAIN_SPREAD_INSIDE},
-    {"packed", ConstraintWidget::CHAIN_PACKED}
+    {"spread", (int)ConstraintWidget::CHAIN_SPREAD},
+    {"spread_inside", (int)ConstraintWidget::CHAIN_SPREAD_INSIDE},
+    {"packed", (int)ConstraintWidget::CHAIN_PACKED}
 };
 static const std::unordered_map<std::string,int> kMatchDefault = {
-    {"spread",  ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
-    {"wrap",    ConstraintWidget::MATCH_CONSTRAINT_WRAP},
-    {"percent", ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
+    {"spread",  (int)ConstraintWidget::MATCH_CONSTRAINT_SPREAD},
+    {"wrap",    (int)ConstraintWidget::MATCH_CONSTRAINT_WRAP},
+    {"percent", (int)ConstraintWidget::MATCH_CONSTRAINT_PERCENT}
 };
 static const std::unordered_map<std::string,int> kVisibility = {
     {"visible",   0}, {"invisible", 4}, {"gone", 8}

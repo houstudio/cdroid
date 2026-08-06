@@ -88,14 +88,14 @@ void Chain::applyChainConstraints(ConstraintWidgetContainer* container, LinearSy
     bool isChainPacked = false;
 
     if (orientation == ConstraintWidget::HORIZONTAL) {
-        isChainSpread = head->mHorizontalChainStyle == ConstraintWidget::CHAIN_SPREAD;
+        isChainSpread = head->mHorizontalChainStyle == (int)ConstraintWidget::CHAIN_SPREAD;
         isChainSpreadInside =
-            head->mHorizontalChainStyle == ConstraintWidget::CHAIN_SPREAD_INSIDE;
-        isChainPacked = head->mHorizontalChainStyle == ConstraintWidget::CHAIN_PACKED;
+            head->mHorizontalChainStyle == (int)ConstraintWidget::CHAIN_SPREAD_INSIDE;
+        isChainPacked = head->mHorizontalChainStyle == (int)ConstraintWidget::CHAIN_PACKED;
     } else {
-        isChainSpread = head->mVerticalChainStyle == ConstraintWidget::CHAIN_SPREAD;
-        isChainSpreadInside = head->mVerticalChainStyle == ConstraintWidget::CHAIN_SPREAD_INSIDE;
-        isChainPacked = head->mVerticalChainStyle == ConstraintWidget::CHAIN_PACKED;
+        isChainSpread = head->mVerticalChainStyle == (int)ConstraintWidget::CHAIN_SPREAD;
+        isChainSpreadInside = head->mVerticalChainStyle == (int)ConstraintWidget::CHAIN_SPREAD_INSIDE;
+        isChainPacked = head->mVerticalChainStyle == (int)ConstraintWidget::CHAIN_PACKED;
     }
 
     // USE_CHAIN_OPTIMIZATION fast-path (Direct.solveChain). On success the chain is fully

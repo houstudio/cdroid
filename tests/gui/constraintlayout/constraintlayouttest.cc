@@ -1229,7 +1229,7 @@ TEST(CLConstraintLayout, ConstraintSetXmlLoad) {
     EXPECT_EQ(c.layout.rightToRight, 0);
     EXPECT_FLOAT_EQ(c.layout.horizontalBias, 0.25f);
     EXPECT_EQ(c.layout.leftMargin, 8);
-    EXPECT_EQ(c.layout.horizontalChainStyle, ConstraintWidget::CHAIN_PACKED);
+    EXPECT_EQ(c.layout.horizontalChainStyle, (int)ConstraintWidget::CHAIN_PACKED);
     EXPECT_EQ(c.layout.dimensionRatio, "2:1");
     EXPECT_EQ(c.propertySet.visibility, 4); // invisible -> View::INVISIBLE=4
     EXPECT_FLOAT_EQ(c.propertySet.alpha, 0.5f);
