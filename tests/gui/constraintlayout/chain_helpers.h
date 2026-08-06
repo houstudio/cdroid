@@ -11,6 +11,7 @@
 //   a.getLeft()/getRight()/getTop()/getBottom()-> getLeft(a)/...  (CDROID core only has getX/Y/W/H)
 #pragma once
 #include <cstdlib>
+#include <climits>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidget.h>
 #include <widgetEx/constraintlayout/core/widgets/constraintwidgetcontainer.h>
 #include <widgetEx/constraintlayout/core/widgets/guideline.h>
@@ -59,14 +60,21 @@ inline void setVerticalWeight  (ConstraintWidget& w, float weight) { w.mWeight[C
 
 // b.setHorizontalMatchStyle(type, min, max, value). `value` is percent (0..1) for PERCENT;
 // ignored for SPREAD/WRAP; for RATIO the ratio is set separately via setDimensionRatio().
+// AndroidX ConstraintWidget.setHorizontalMatchStyle writes the MATCH_CONSTRAINT min/max fields
+// (mMatchConstraintMin/MaxWidth), NOT the LayoutParams min/max that setMinWidth/setMaxWidth touch.
+// setMaxWidth writes mMaxDimension, which the solver never reads, so a max never reached the
+// setFrame clamp (constraintwidget.cc) and MATCH_CONSTRAINT_SPREAD widgets kept their even-share
+// size. Write the correct fields verbatim, matching Java: max==MAX_VALUE is stored as 0 (=unset).
 inline void setHorizontalMatchStyle(ConstraintWidget& w, int type, int mn, int mx, float value) {
     w.mMatchConstraintDefaultWidth = type;
-    w.setMinWidth(mn); w.setMaxWidth(mx);
+    w.mMatchConstraintMinWidth = mn;
+    w.mMatchConstraintMaxWidth = (mx == INT_MAX) ? 0 : mx;
     if (type == ConstraintWidget::MATCH_CONSTRAINT_PERCENT) w.mMatchConstraintPercentWidth = value;
 }
 inline void setVerticalMatchStyle(ConstraintWidget& w, int type, int mn, int mx, float value) {
     w.mMatchConstraintDefaultHeight = type;
-    w.setMinHeight(mn); w.setMaxHeight(mx);
+    w.mMatchConstraintMinHeight = mn;
+    w.mMatchConstraintMaxHeight = (mx == INT_MAX) ? 0 : mx;
     if (type == ConstraintWidget::MATCH_CONSTRAINT_PERCENT) w.mMatchConstraintPercentHeight = value;
 }
 

@@ -268,6 +268,13 @@ void ConstraintWidgetContainer::layout() {
     // (off by default in AndroidX) and do not affect the linear-solve correctness here.
     mX = 0;
     mY = 0;
+    // Clear final values our own anchors may carry from a previous layout pass (a FIXED dimension
+    // finalizes mRight/mBottom for the chain fast-path). Without this, switching a dimension to
+    // WRAP_CONTENT between layouts leaves it finalized — and createObjectVariable() then returns
+    // the stale final value as a constant instead of a free variable, so the wrap constraints can
+    // no longer size the container (multi-scenario wrap tests regress). FIXED dimensions are
+    // re-finalized inside the solve loop below.
+    resetFinalResolution();
     const int count = (int) mChildren.size();
 
     // Layout nested containers first.
@@ -285,11 +292,25 @@ void ConstraintWidgetContainer::layout() {
         mSystem.reset();
         clearChains(); // rebuilt by child addToSolver -> isChainHead -> addChain
 
-        // Pin the root container to (0,0) + its size.
+        // Pin the root container's origin to (0,0). A FIXED dimension pins its far edge to the
+        // current size; a WRAP_CONTENT dimension is left free so the per-widget wrap constraints
+        // added in ConstraintWidget::applyConstraints (addGreaterThan(parentMax, childEnd)) can
+        // solve the container down to its children's bounding box. Pinning mRight/mBottom to
+        // mWidth/mHeight on a WRAP dimension (the previous behaviour) overrode those wrap
+        // constraints with a hard equality, so the container never collapsed. AndroidX layout()
+        // does not pin the root at all — the wrap constraints alone fix its size.
+        const bool wrapH = (mListDimensionBehaviors[ConstraintWidget::DIMENSION_HORIZONTAL]
+                == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
+        const bool wrapV = (mListDimensionBehaviors[ConstraintWidget::DIMENSION_VERTICAL]
+                == ConstraintWidget::DimensionBehaviour::WRAP_CONTENT);
         mSystem.addEquality(mSystem.createObjectVariable(&mLeft), 0);
-        mSystem.addEquality(mSystem.createObjectVariable(&mRight), mWidth);
         mSystem.addEquality(mSystem.createObjectVariable(&mTop), 0);
-        mSystem.addEquality(mSystem.createObjectVariable(&mBottom), mHeight);
+        if (!wrapH) {
+            mSystem.addEquality(mSystem.createObjectVariable(&mRight), mWidth);
+        }
+        if (!wrapV) {
+            mSystem.addEquality(mSystem.createObjectVariable(&mBottom), mHeight);
+        }
 
         // Add every child to the solver. HelperWidget children (Flow/Barrier/...) run FIRST so they
         // can wire their referenced children's anchor targets before those children solve.
@@ -313,9 +334,9 @@ void ConstraintWidgetContainer::layout() {
         // final values (not mResolvedHorizontal) so addToSolver is unaffected.
         if (Chain::USE_CHAIN_OPTIMIZATION) {
             mLeft.setFinalValue(0);
-            mRight.setFinalValue(mWidth);
             mTop.setFinalValue(0);
-            mBottom.setFinalValue(mHeight);
+            if (!wrapH) mRight.setFinalValue(mWidth);
+            if (!wrapV) mBottom.setFinalValue(mHeight);
         }
 
         // Apply chain constraints (built above via addChain).

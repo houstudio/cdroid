@@ -195,6 +195,7 @@ void ConstraintWidget::setMaxHeight(int maxHeight) {
 }
 void ConstraintWidget::setBaselineDistance(int baselineDistance) {
     mBaselineDistance = baselineDistance;
+    mHasBaseline = baselineDistance > 0; // androidx: a positive baseline distance means the widget has one
 }
 float ConstraintWidget::getDimensionRatio() const {
     return mDimensionRatio;
@@ -690,37 +691,37 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     if (mDimensionRatio > 0 && mVisibility != GONE) {
         useRatio = true;
         if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultWidth == MATCH_CONSTRAINT_SPREAD) {
+                && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_SPREAD) {
             matchConstraintDefaultWidth = MATCH_CONSTRAINT_RATIO;
         }
         if (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultHeight == MATCH_CONSTRAINT_SPREAD) {
+                && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_SPREAD) {
             matchConstraintDefaultHeight = MATCH_CONSTRAINT_RATIO;
         }
 
         if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
                 && mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO
-                && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+                && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_RATIO
+                && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_RATIO) {
             setupDimensionRatio(horizontalParentWrapContent, verticalParentWrapContent,
                                 horizontalDimensionFixed, verticalDimensionFixed);
         } else if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                   && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = HORIZONTAL;
             width = (int) (mResolvedDimensionRatio * mHeight);
             if (mListDimensionBehaviors[DIMENSION_VERTICAL] != DimensionBehaviour::MATCH_CONSTRAINT) {
-                matchConstraintDefaultWidth = MATCH_CONSTRAINT_RATIO_RESOLVED;
+                matchConstraintDefaultWidth = (int)MATCH_CONSTRAINT_RATIO_RESOLVED;
                 useRatio = false;
             }
         } else if (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                   && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = VERTICAL;
             if (mDimensionRatioSide == UNKNOWN) {
                 mResolvedDimensionRatio = 1 / mResolvedDimensionRatio;
             }
             height = (int) (mResolvedDimensionRatio * mWidth);
             if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] != DimensionBehaviour::MATCH_CONSTRAINT) {
-                matchConstraintDefaultHeight = MATCH_CONSTRAINT_RATIO_RESOLVED;
+                matchConstraintDefaultHeight = (int)MATCH_CONSTRAINT_RATIO_RESOLVED;
                 useRatio = false;
             }
         }
@@ -1323,7 +1324,7 @@ void ConstraintWidget::reset() {
     mMatchConstraintMinWidth  = 0;
     mMatchConstraintMinHeight = 0;
     mDimensionRatio = 0;
-    mHorizontalChainStyle  = CHAIN_SPREAD;
+    mHorizontalChainStyle  = (int)CHAIN_SPREAD;
     mVerticalChainStyle    = CHAIN_SPREAD;
     mHorizontalBiasPercent = DEFAULT_BIAS;
     mVerticalBiasPercent   = DEFAULT_BIAS;
