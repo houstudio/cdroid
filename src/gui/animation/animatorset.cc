@@ -141,10 +141,13 @@ void AnimatorSet::playTogether(const std::vector<Animator*>&items){
 void AnimatorSet::playSequentially(const std::vector<Animator*>&items){
     const size_t size = items.size();
     if(size==1){
-        play(items[0]);
+        // Stack builder (same as playTogether): play() returns a heap Builder* that this
+        // internal caller would have to remember to delete — using a local avoids the leak.
+        Builder(this, items[0]);
     } else {
         for (int i = 0; i < int(size - 1); ++i) {
-            play(items[i])->before(items[i + 1]);
+            Builder builder(this, items[i]);
+            builder.before(items[i + 1]);
         }
     }
 }

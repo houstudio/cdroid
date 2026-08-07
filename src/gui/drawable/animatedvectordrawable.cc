@@ -217,6 +217,10 @@ void AnimatedVectorDrawable::inflate(XmlPullParser&parser,const AttributeSet&att
                     pathErrorScale = vectorDrawable->getPixelSize();
                     if (state->mVectorDrawable != nullptr) {
                         state->mVectorDrawable->setCallback(nullptr);
+                        // CDROID owns mVectorDrawable (no GC); the State ctor seeds a
+                        // default VectorDrawable, so freeing the previous one here avoids
+                        // leaking it each time inflate() supplies the real drawable.
+                        delete state->mVectorDrawable;
                     }
                     state->mVectorDrawable = vectorDrawable;
                 }
