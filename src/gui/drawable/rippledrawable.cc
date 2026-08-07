@@ -16,6 +16,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
 #include <drawable/rippledrawable.h>
+#include <drawable/colorstatelist.h>
+#include <stdexcept>
 #include <widget/R.h>
 namespace cdroid{
 
@@ -23,10 +25,12 @@ RippleDrawable::RippleState::RippleState(LayerState* orig, RippleDrawable* owner
     :LayerDrawable::LayerState(orig,owner){
     //mTouchThemeAttrs = orig->mTouchThemeAttrs;
     mColor = nullptr;
+    mEffectColor = ColorStateList::valueOf(RippleDrawable::DEFAULT_EFFECT_COLOR);
     mMaxRadius = RADIUS_AUTO;
     if(dynamic_cast<RippleState*>(orig)){
         RippleState* origs = (RippleState*) orig;
         mColor = origs->mColor;
+        mEffectColor = origs->mEffectColor;
         mMaxRadius = origs->mMaxRadius;
         if (orig->mDensity != mDensity) {
             applyDensityScaling(orig->mDensity, mDensity);
@@ -253,6 +257,23 @@ void RippleDrawable::setRadius(int radius) {
 
 int RippleDrawable::getRadius()const{
     return mState->mMaxRadius;
+}
+
+void RippleDrawable::setEffectColor(const RefPtr<ColorStateList>& color){
+    if(!color){
+        throw std::invalid_argument("effect color cannot be null");
+    }
+    if(mState->mEffectColor != color){
+        mState->mEffectColor = color;
+        invalidateSelf(false);
+    }
+    // TODO: feed mEffectColor into the patterned-ripple shader color (AOSP line ~998
+    // shader.setColor(color, effectColor)); the API surface + inflate + get/set are faithful, but
+    // the Dual-tone rendering integration is deferred.
+}
+
+RefPtr<ColorStateList> RippleDrawable::getEffectColor()const{
+    return mState->mEffectColor;
 }
 
 bool RippleDrawable::setDrawableByLayerId(int id, Drawable* drawable){
@@ -548,12 +569,19 @@ Rect RippleDrawable::getDirtyBounds() const{
 }
 
 void RippleDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
-    
+
     // Force padding default to STACK before inflating.
     setPaddingMode(PADDING_MODE_STACK);
-    LayerDrawable::inflate(parser,atts);
+    // Read our own root-element attrs BEFORE LayerDrawable::inflate advances the parser into the
+    // child <item>s. The AttributeSet reads the parser's current tag lazily, so reading "color" /
+    // "radius" after super.inflate() (which calls parser.next()) would miss the <ripple> tag's
+    // attributes and silently fall back to the defaults (AOSP takes an attributes snapshot first;
+    // CDROID's AttributeSet has no snapshot, so the read order must precede super.inflate()).
     mState->mColor = atts.getColorStateList("color");
+    const RefPtr<ColorStateList> effectColor = atts.getColorStateList("effectColor");
+    if(effectColor) mState->mEffectColor = effectColor;
     mState->mMaxRadius = atts.getDimensionPixelSize("radius", mState->mMaxRadius);
+    LayerDrawable::inflate(parser,atts);
     updateLocalState();
 }
 

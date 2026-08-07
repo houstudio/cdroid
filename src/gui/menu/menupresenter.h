@@ -18,7 +18,7 @@ public:
          * @param menu
          * @param allMenusAreClosing
          */
-        std::function<void(MenuBuilder&/*menu*/,bool/*allMenusAreClosing*/)> onCloseMenu;
+        std::function<void(MenuBuilder& menu,bool allMenusAreClosing)> onCloseMenu;
 
         /**
          * Called when a submenu opens. Useful for notifying the application
@@ -29,7 +29,7 @@ public:
          * @return true if the Callback will handle presenting the submenu, false if
          *         the presenter should attempt to do so.
          */
-        std::function<bool(MenuBuilder&/*subMenu*/)> onOpenSubMenu;
+        std::function<bool(MenuBuilder& subMenu)> onOpenSubMenu;
     };
 
     /**
