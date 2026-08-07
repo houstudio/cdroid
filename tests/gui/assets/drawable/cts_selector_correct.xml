@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported/adapted from AOSP CTS cts/tests/tests/graphics/res/xml/selector_correct.xml (Apache 2.0).
+     The original's @drawable/testimage (png) item is replaced with a <color> element — these are
+     logic tests (child count, state selection), not pixel tests, so no real bitmap is needed. -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:visible="false"
+    android:variablePadding="true"
+    android:constantSize="true">
+    <item android:state_focused="true"
+          android:state_pressed="false">
+        <color android:color="#FFFF0000"/>
+    </item>
+    <item>
+        <color android:color="#77FFFFFF"/>
+    </item>
+</selector>

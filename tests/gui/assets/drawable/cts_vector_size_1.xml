@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported from AOSP CTS cts/tests/tests/graphics/res/drawable/vector_icon_size_1.xml (Apache 2.0).
+     7dp x 7dp — exercises VectorDrawable's round() (not floor) size computation at the host's
+     densityDpi. Used by the VectorDrawableSizeTest case in cts_vectordrawable_test.cc. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="7dp"
+    android:height="7dp"
+    android:viewportWidth="7.0"
+    android:viewportHeight="7.0">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0,0 L7,0 L7,7 L0,7 z" />
+</vector>

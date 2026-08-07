@@ -15,7 +15,7 @@
 using namespace cdroid;
 
 // A child whose left+right both connect to the parent → horizontally centered in 600.
-TEST(ConstraintWidget, AddToSolverCentered) {
+TEST(CLConstraintWidget, AddToSolverCentered) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -30,7 +30,7 @@ TEST(ConstraintWidget, AddToSolverCentered) {
 }
 
 // A child connected leftToLeft only with margin → pinned at x=margin.
-TEST(ConstraintWidget, AddToSolverPinnedLeft) {
+TEST(CLConstraintWidget, AddToSolverPinnedLeft) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -43,7 +43,7 @@ TEST(ConstraintWidget, AddToSolverPinnedLeft) {
 }
 
 // container.layout() centered (uses the full driver: addToSolver + Chain + minimize + updateFromSolver).
-TEST(ConstraintWidget, LayoutCentered) {
+TEST(CLConstraintWidget, LayoutCentered) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -57,7 +57,7 @@ TEST(ConstraintWidget, LayoutCentered) {
 }
 
 // container.layout() pinned left with margin.
-TEST(ConstraintWidget, LayoutPinnedLeft) {
+TEST(CLConstraintWidget, LayoutPinnedLeft) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -69,7 +69,7 @@ TEST(ConstraintWidget, LayoutPinnedLeft) {
 }
 
 // Two children: one pinned left (x=10), one pinned right (x=570).
-TEST(ConstraintWidget, LayoutTwoChildren) {
+TEST(CLConstraintWidget, LayoutTwoChildren) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget left(100, 50);
     ConstraintWidget right(100, 50);
@@ -86,7 +86,7 @@ TEST(ConstraintWidget, LayoutTwoChildren) {
 }
 
 // A child that fills the parent width (left to parent left, right to parent right, 0dp spread).
-TEST(ConstraintWidget, LayoutFillWidth) {
+TEST(CLConstraintWidget, LayoutFillWidth) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(0, 50);
     child.setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
@@ -102,7 +102,7 @@ TEST(ConstraintWidget, LayoutFillWidth) {
 }
 
 // Centered with bias 0.3 → x = 0.3 * (600-100) = 150.
-TEST(ConstraintWidget, LayoutBiasCentered) {
+TEST(CLConstraintWidget, LayoutBiasCentered) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -116,7 +116,7 @@ TEST(ConstraintWidget, LayoutBiasCentered) {
 }
 
 // Centered with bias 0.3 + margin 20 on left → x = 20 + 0.3*(600-20-100) = 20+144 = 164.
-TEST(ConstraintWidget, LayoutBiasWithMargin) {
+TEST(CLConstraintWidget, LayoutBiasWithMargin) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);
@@ -130,7 +130,7 @@ TEST(ConstraintWidget, LayoutBiasWithMargin) {
 }
 
 // Margins on both sides → x = leftMargin, width = 600 - leftMargin - rightMargin.
-TEST(ConstraintWidget, LayoutMarginsBothSides) {
+TEST(CLConstraintWidget, LayoutMarginsBothSides) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(0, 50);
     child.setHorizontalDimensionBehaviour(ConstraintWidget::DimensionBehaviour::MATCH_CONSTRAINT);
@@ -146,7 +146,7 @@ TEST(ConstraintWidget, LayoutMarginsBothSides) {
 }
 
 // Two children in a horizontal chain (A.left→parent, A.right→B.left, B.left→A.right, B.right→parent).
-TEST(ConstraintWidget, LayoutChainSpread) {
+TEST(CLConstraintWidget, LayoutChainSpread) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget a(100, 50);
     ConstraintWidget b(100, 50);
@@ -167,7 +167,7 @@ TEST(ConstraintWidget, LayoutChainSpread) {
 }
 
 // Centered vertically → y = (400-50)/2 = 175.
-TEST(ConstraintWidget, LayoutVerticalCentered) {
+TEST(CLConstraintWidget, LayoutVerticalCentered) {
     ConstraintWidgetContainer container(600, 400);
     ConstraintWidget child(100, 50);
     container.add(&child);

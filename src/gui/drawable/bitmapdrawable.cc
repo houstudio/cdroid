@@ -236,6 +236,8 @@ int BitmapDrawable::getTintMode()const{
 }
 
 std::shared_ptr<Drawable::ConstantState>BitmapDrawable::getConstantState(){
+    // androidx BitmapDrawable.getConstantState (line 974): OR the drawable's config into the state.
+    mBitmapState->mChangingConfigurations |= getChangingConfigurations();
     return mBitmapState;
 }
 

@@ -2,12 +2,12 @@
 #define __CDROID_WINDOW_H__
 #include <widget/framelayout.h>
 #include <core/handler.h>
-#include <core/uieventsource.h>
 #include <view/choreographer.h>
 #include <view/actionmode.h>
 #include <widget/windowcallback.h>
-
-#define USE_UIEVENTHANDLER 0
+#include <core/intent.h>
+#include <widget/activitytransition.h>
+#include <functional>
 
 namespace cdroid {
 class Bundle; // forward declaration, for Activity-style onCreate(Bundle*)
@@ -18,12 +18,12 @@ class MenuItem;
 class MenuInflater;
 class ContextMenu;
 class ContextMenuInfo;
+class Animator;  // forward — drives Window-level Activity transitions (ObjectAnimator/ValueAnimator)
 class Window : public FrameLayout, public WindowCallback {
 protected:
     friend class WindowManager;
     friend class View;  // View::invalidateInternal/requestLayout → Window::scheduleTraversals
     friend class GraphDevice;
-    friend class UIEventSource;
     class InvalidateOnAnimationRunnable:public Runnable{
     private:
         bool mPosted;
@@ -41,8 +41,6 @@ protected:
         void run();
     };
 private:
-    class UIEventHandler;
-    friend UIEventSource;
     class SendWindowContentChangedAccessibilityEvent;
     friend SendWindowContentChangedAccessibilityEvent;
     bool mInLayout;
@@ -52,8 +50,29 @@ private:
     ActionMode* mActionMode = nullptr;
     ActionBar*  mActionBar  = nullptr; // owned; created by setActionBar(Toolbar*)
     MenuInflater* mMenuInflater = nullptr; // owned; lazy, from getMenuInflater()
+    Intent mIntent; // the Intent this Window was started with (Activity.getIntent); set by startActivity
+    bool mNoHistory = false; // FLAG_ACTIVITY_NO_HISTORY: auto-close when another Window is shown
+    int mResultCode = 0;     // Activity result (set by setResult, delivered on close)
+    Intent* mResultData = nullptr; // borrowed (set by setResult, not deleted by ~Window)
     SendWindowContentChangedAccessibilityEvent* mSendWindowContentChangedAccessibilityEvent;
     std::vector<LayoutTransition*> mPendingTransitions;
+    // Window-level Activity transitions (owned). Mirror android.app.Activity transition API names,
+    // but implemented Window-level (setAlpha/setPos), not android.transition content-level — CDROID's
+    // Window is the composition root, so only moving the Window / setting surface opacity is visible.
+    ActivityTransition* mEnterTransition   = nullptr; // shown on startActivity open
+    ActivityTransition* mExitTransition    = nullptr; // shown when another Window opens over this (MVP: not driven)
+    ActivityTransition* mReturnTransition  = nullptr; // shown on close/back (null => use mExitTransition)
+    ActivityTransition* mReenterTransition = nullptr; // shown returning to this Window (null => use mEnterTransition)
+    Animator* mCurrentTransitionAnimator   = nullptr; // owned (cancel+delete on replace/~Window)
+    // Resting window position captured in setEnterTransition BEFORE snapEnterStart shifts the window
+    // offscreen — setPos rewrites mLeft/mTop, so getLeft()/getTop() read AFTER snap are the offscreen
+    // start, not the resting pos. The enter animation must slide back to this captured resting point.
+    int  mEnterRestX = 0;
+    int  mEnterRestY = 0;
+    bool mEnterRestValid = false;
+    bool mPendingEnterAnim  = false; // run mEnterTransition after the first doTraversal (content drawn)
+    bool mInTransition      = false; // close()/re-enter re-entrancy guard
+    bool mDestroyed         = false; // set in ~Window so the animator end-callback skips finishClose
 private:
     void doLayout();
     // Schedule a traversal (layout + draw + flip + compose) via Choreographer CALLBACK_TRAVERSAL.
@@ -79,6 +98,14 @@ private:
     Drawable* getAccessibilityFocusedDrawable();
     void handleWindowContentChangedEvent(AccessibilityEvent& event);
     ActionMode* startActionModeInternal(View* originatingView, const ActionMode::Callback& callback, int type);
+    // Activity-transition driver. enter=true plays the open animation; enter=false plays the close
+    // one. onEnd (may be empty) runs when the animation completes (or immediately if NONE).
+    void runActivityTransition(ActivityTransition* t, bool enter, const std::function<void()>& onEnd);
+    void startEnterAnimation();
+    void startExitAnimation(const std::function<void()>& onEnd);
+    void snapEnterStart(ActivityTransition* t); // pre-snap to the start state so the first frame isn't a fully-shown flash
+    static void computeSlidePos(int edge, int ox, int oy, int w, int h, bool offscreen, int& x, int& y);
+    void finishClose(); // close()'s tail: post (onDestroy + delete) + removeWindow
 protected:
     std::vector<View*>mLayoutRequesters;
     Cairo::RefPtr<Cairo::Region>mVisibleRgn;
@@ -90,11 +117,6 @@ protected:
     std::string mText;
     InvalidateOnAnimationRunnable mInvalidateOnAnimationRunnable;
     bool mTraversalScheduled = false;  // scheduleTraversals re-entrancy guard
-#if USE_UIEVENTHANDLER	
-    UIEventHandler* mUIEventHandler;
-#else
-    UIEventSource *mUIEventHandler;
-#endif
     void onFinishInflate()override;
     void onSizeChanged(int w,int h,int oldw,int oldh)override;
     void onVisibilityChanged(View& changedView,int visibility)override;
@@ -105,6 +127,7 @@ protected:
     Cairo::RefPtr<Canvas>getCanvas();
     void setAccessibilityFocus(View* view, AccessibilityNodeInfo* node);
 public:
+    using Callback = WindowCallback;
     typedef enum{
         TYPE_WALLPAPER    = 1,
         TYPE_APPLICATION  = 2,
@@ -135,6 +158,17 @@ public:
     // Activity-aligned lifecycle callbacks. Window plays the role of an Activity
     // (typedef Window Activity), so it exposes the standard Activity lifecycle.
     virtual void onCreate(Bundle* savedInstanceState);
+    // android.app.Activity.onNewIntent: called when a singleTop/singleTask Window is reused (the
+    // system delivers a new Intent to an existing instance instead of creating a new one).
+    // Default: no-op (setIntent has already been called by startActivity; override to react).
+    virtual void onNewIntent(const Intent& /*intent*/) {}
+    // android.app.Activity result API: startActivityForResult → target setResult → close →
+    // caller.onActivityResult. App mediates the result delivery (see App::dispatchPendingResult).
+    void startActivityForResult(const Intent& intent, int requestCode);
+    void setResult(int resultCode, Intent* data = nullptr) { mResultCode = resultCode; mResultData = data; }
+    int getResultCode() const { return mResultCode; }
+    Intent* getResultData() const { return mResultData; }
+    virtual void onActivityResult(int /*requestCode*/, int /*resultCode*/, Intent* /*data*/) {}
     virtual void onStart();
     virtual void onResume();
     virtual void onPause();
@@ -176,6 +210,13 @@ public:
     virtual bool onNavigateUp();
     virtual void invalidateOptionsMenu();
     virtual MenuInflater* getMenuInflater();
+    // The Intent that started this Window (android.app.Activity.getIntent/getIntent). ActivityNavigator
+    // stamps EXTRA_NAV_SOURCE/CURRENT on it; a real Context.startActivity would setIntent on the new Window.
+    Intent getIntent() const { return mIntent; }
+    void setIntent(const Intent& intent) { mIntent = intent; }
+    // android FLAG_ACTIVITY_NO_HISTORY: if set, this Window auto-closes when another Window is shown.
+    bool isNoHistory() const { return mNoHistory; }
+    void setNoHistory(bool b) { mNoHistory = b; }
     // Programmatic options-menu open/close — delegate to the ActionBar (ToolbarActionBar).
     virtual void openOptionsMenu();
     virtual void closeOptionsMenu();
@@ -212,17 +253,19 @@ public:
     ActionMode* startActionModeForChild(View* originalView, const ActionMode::Callback& callback, int type)override;
     void cancelInvalidate(View* view)override;
     void requestTransitionStart(LayoutTransition* transition)override;
+    // Window-level Activity transitions (android.app.Activity transition API names). Each setter
+    // takes ownership of the passed ActivityTransition* (replacing/deleting any previous one).
+    void setEnterTransition(ActivityTransition* t);
+    void setExitTransition(ActivityTransition* t);
+    void setReturnTransition(ActivityTransition* t);
+    void setReenterTransition(ActivityTransition* t);
+    ActivityTransition* getEnterTransition()   const { return mEnterTransition; }
+    ActivityTransition* getExitTransition()    const { return mExitTransition; }
+    ActivityTransition* getReturnTransition()  const { return mReturnTransition; }
+    ActivityTransition* getReenterTransition() const { return mReenterTransition; }
     void close();
 };
-typedef Window Activity;
-class Window::UIEventHandler:public Handler{
-private:
-    View*mAttachedView;
-    std::function<void()> mLayoutRunner;
-public:
-    UIEventHandler(View*,std::function<void()>run);
-    void handleIdle()override;
-};
+using Activity=Window;
 
 class Window::SendWindowContentChangedAccessibilityEvent{
 private:

@@ -10040,7 +10040,7 @@ View::AttachInfo::AttachInfo(Context*ctx){
     mRootView     = nullptr;
     mCanvas       = nullptr;
     mTooltipHost  = nullptr;
-    mEventSource  = nullptr;
+    //mEventSource  = nullptr;
     mHandler      = new Handler(Looper::getMainLooper());
     mDragToken = nullptr;
     mViewRequestingLayout = nullptr;

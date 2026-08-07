@@ -19,7 +19,7 @@
 #define __ADAPTIVE_ICON_DRAWABLE_H__
 #include <drawable/drawable.h>
 namespace cdroid{
-class AdaptiveIconDrawable:public Drawable,Drawable::Callback {
+class AdaptiveIconDrawable:public Drawable,public Drawable::Callback {
 private:
     static constexpr float SAFEZONE_SCALE = 66.f/72.f;
     static constexpr float EXTRA_INSET_PERCENTAGE = 1.f / 4.f;

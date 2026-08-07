@@ -20,6 +20,7 @@
 namespace cdroid{
 
 ShapeDrawable::ShapeState::ShapeState(){
+    mChangingConfigurations = 0;
     mAlpha= 255;
     mShape= nullptr;
     mTint = nullptr;
@@ -35,7 +36,7 @@ ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
     mIntrinsicHeight= orig.mIntrinsicHeight;
     mPadding= orig.mPadding;
     mAlpha  = orig.mAlpha;
-    if(mShape)
+    if(orig.mShape)
         mShape  = orig.mShape->clone();
     if(orig.mTint)
         mTint = orig.mTint;
@@ -79,7 +80,14 @@ void ShapeDrawable::getOutline(Outline& outline) {
 }
 
 std::shared_ptr<Drawable::ConstantState>ShapeDrawable::getConstantState(){
+    // androidx ShapeDrawable.getConstantState (line 512): sync the drawable's config into the state.
+    mShapeState->mChangingConfigurations = getChangingConfigurations();
     return mShapeState;
+}
+
+int ShapeDrawable::getChangingConfigurations()const{
+    // androidx ShapeDrawable.getChangingConfigurations (line 268): OR the state's config in.
+    return Drawable::getChangingConfigurations() | mShapeState->getChangingConfigurations();
 }
 
 void ShapeDrawable::setShape(Shape*shape){
@@ -171,6 +179,7 @@ void ShapeDrawable::setTintMode(int tintMode){
 }
 
 void ShapeDrawable::setColorFilter(const cdroid::RefPtr<ColorFilter>&colorFilter){
+    Drawable::setColorFilter(colorFilter);  // androidx stores the filter; getColorFilter() reads it
     invalidateSelf();
 }
 

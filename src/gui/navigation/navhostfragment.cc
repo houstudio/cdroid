@@ -19,6 +19,7 @@
 #include <navigation/navigation.h>
 #include <navigation/fragmentnavigator.h>
 #include <navigation/dialogfragmentnavigator.h>
+#include <navigation/activitynavigator.h>
 #include <navigation/navigatorprovider.h>
 #include <navigation/navgraph.h>
 #include <fragment/fragmentmanager.h>
@@ -45,6 +46,11 @@ void NavHostFragment::onCreate(Bundle* savedInstanceState){
         // registers both "fragment" and "dialog" navigators).
         DialogFragmentNavigator* dialogNav = new DialogFragmentNavigator(getContext(), getChildFragmentManager());
         mNavController->getNavigatorProvider()->addNavigator(dialogNav);
+        // Register the ActivityNavigator for <activity> destinations (androidx cross-Activity nav).
+        // CDROID maps Activity to Window; navigate() builds the Intent and calls Context.startActivity,
+        // a no-op seam until the className->Window-factory + launch wiring is added.
+        ActivityNavigator* activityNav = new ActivityNavigator(getContext(), getActivity());
+        mNavController->getNavigatorProvider()->addNavigator(activityNav);
     }
     // Apply the graph captured at construction, auto-navigating to its startDestination (androidx
     // reads app:navGraph in onInflate and calls setGraph in onCreate). setGraph -> navigate ->

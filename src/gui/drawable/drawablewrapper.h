@@ -21,7 +21,7 @@
 #include <drawable/drawable.h>
 namespace cdroid{
 
-class DrawableWrapper:public Drawable,Drawable::Callback{
+class DrawableWrapper:public Drawable,public Drawable::Callback{
 protected:
     class DrawableWrapperState:public std::enable_shared_from_this<DrawableWrapperState>,public ConstantState{
     public:

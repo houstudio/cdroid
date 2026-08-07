@@ -37,6 +37,7 @@ SET(CORE_SOURCES
     core/inputmethodmanager.cc
     core/insets.cc
     core/intent.cc
+    core/activityfactory.cc
     core/uri.cc
     core/iostreams.cc
     core/keyboard.cc
@@ -61,7 +62,7 @@ SET(CORE_SOURCES
     core/typedvalue.cc
     core/typeface.cc
     core/fontlistparser.cc
-    core/uieventsource.cc
+    #core/uieventsource.cc
     core/virtualkeymap.cc
     core/windowmanager.cc
     core/ziparchive.cc

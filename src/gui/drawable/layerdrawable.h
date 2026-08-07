@@ -142,6 +142,7 @@ public:
     int getIntrinsicHeight() override;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
+    bool isProjected()const override;
     void setAutoMirrored(bool mirrored)override;
     bool isAutoMirrored()const override;
     void jumpToCurrentState()override;

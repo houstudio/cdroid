@@ -30,8 +30,8 @@ protected:
         DrawableContainer*mOwner;
         Rect mConstantPadding;
         int mDensity;
-        int mChangingConfigurations;
-        int mChildrenChangingConfigurations;
+        int mChangingConfigurations = 0;
+        int mChildrenChangingConfigurations = 0;
         int mConstantWidth,mConstantHeight;
         int mConstantMinimumWidth,mConstantMinimumHeight;
         mutable int mOpacity;

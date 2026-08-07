@@ -34,14 +34,6 @@
 
 namespace cdroid {
 
-// odr-use definitions for static const ints referenced by address (e.g. in unordered_map)
-const int ConstraintWidget::CHAIN_SPREAD;
-const int ConstraintWidget::CHAIN_SPREAD_INSIDE;
-const int ConstraintWidget::CHAIN_PACKED;
-const int ConstraintWidget::MATCH_CONSTRAINT_SPREAD;
-const int ConstraintWidget::MATCH_CONSTRAINT_WRAP;
-const int ConstraintWidget::MATCH_CONSTRAINT_PERCENT;
-
 ConstraintWidget::ConstraintWidget() {
     addAnchors();
 }
@@ -195,6 +187,7 @@ void ConstraintWidget::setMaxHeight(int maxHeight) {
 }
 void ConstraintWidget::setBaselineDistance(int baselineDistance) {
     mBaselineDistance = baselineDistance;
+    mHasBaseline = baselineDistance > 0; // androidx: a positive baseline distance means the widget has one
 }
 float ConstraintWidget::getDimensionRatio() const {
     return mDimensionRatio;
@@ -690,37 +683,37 @@ void ConstraintWidget::addToSolver(LinearSystem* system, bool /*optimize*/) {
     if (mDimensionRatio > 0 && mVisibility != GONE) {
         useRatio = true;
         if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultWidth == MATCH_CONSTRAINT_SPREAD) {
+                && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_SPREAD) {
             matchConstraintDefaultWidth = MATCH_CONSTRAINT_RATIO;
         }
         if (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultHeight == MATCH_CONSTRAINT_SPREAD) {
+                && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_SPREAD) {
             matchConstraintDefaultHeight = MATCH_CONSTRAINT_RATIO;
         }
 
         if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
                 && mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO
-                && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+                && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_RATIO
+                && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_RATIO) {
             setupDimensionRatio(horizontalParentWrapContent, verticalParentWrapContent,
                                 horizontalDimensionFixed, verticalDimensionFixed);
         } else if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                   && matchConstraintDefaultWidth == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultWidth == (int)MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = HORIZONTAL;
             width = (int) (mResolvedDimensionRatio * mHeight);
             if (mListDimensionBehaviors[DIMENSION_VERTICAL] != DimensionBehaviour::MATCH_CONSTRAINT) {
-                matchConstraintDefaultWidth = MATCH_CONSTRAINT_RATIO_RESOLVED;
+                matchConstraintDefaultWidth = (int)MATCH_CONSTRAINT_RATIO_RESOLVED;
                 useRatio = false;
             }
         } else if (mListDimensionBehaviors[DIMENSION_VERTICAL] == DimensionBehaviour::MATCH_CONSTRAINT
-                   && matchConstraintDefaultHeight == MATCH_CONSTRAINT_RATIO) {
+                   && matchConstraintDefaultHeight == (int)MATCH_CONSTRAINT_RATIO) {
             mResolvedDimensionRatioSide = VERTICAL;
             if (mDimensionRatioSide == UNKNOWN) {
                 mResolvedDimensionRatio = 1 / mResolvedDimensionRatio;
             }
             height = (int) (mResolvedDimensionRatio * mWidth);
             if (mListDimensionBehaviors[DIMENSION_HORIZONTAL] != DimensionBehaviour::MATCH_CONSTRAINT) {
-                matchConstraintDefaultHeight = MATCH_CONSTRAINT_RATIO_RESOLVED;
+                matchConstraintDefaultHeight = (int)MATCH_CONSTRAINT_RATIO_RESOLVED;
                 useRatio = false;
             }
         }
@@ -985,7 +978,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
             }
             if (matchMaxDimension > 0) {
                 bool applyLimit = true;
-                if (parentWrapContent && matchConstraintDefault == MATCH_CONSTRAINT_WRAP) {
+                if (parentWrapContent && matchConstraintDefault == (int)MATCH_CONSTRAINT_WRAP) {
                     applyLimit = false;
                 }
                 if (applyLimit) {
@@ -1003,7 +996,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     system->addEquality(end, begin, dimension, SolverVariable::STRENGTH_EQUALITY);
                     system->addLowerThan(end, begin, dimension, SolverVariable::STRENGTH_FIXED);
                 }
-            } else if (matchConstraintDefault == MATCH_CONSTRAINT_PERCENT) {
+            } else if (matchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT) {
                 SolverVariable* percentBegin = nullptr;
                 SolverVariable* percentEnd = nullptr;
                 if (beginAnchor->getType() == ConstraintAnchor::Type::TOP
@@ -1102,7 +1095,7 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                 if (beginWidget->isBarrier() || endWidget->isBarrier()) {
                     boundsCheckStrength = SolverVariable::STRENGTH_HIGHEST;
                 }
-            } else if (matchConstraintDefault == MATCH_CONSTRAINT_PERCENT) {
+            } else if (matchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT) {
                 applyCentering = true;
                 rangeCheckStrength = SolverVariable::STRENGTH_EQUALITY;
                 boundsCheckStrength = SolverVariable::STRENGTH_EQUALITY;
@@ -1137,8 +1130,8 @@ void ConstraintWidget::applyConstraints(LinearSystem* system, bool isHorizontal,
                     applyStrongChecks = true;
                     if (useRatio) {
                         bool otherSideInvariable =
-                            oppositeMatchConstraintDefault == MATCH_CONSTRAINT_PERCENT
-                            || oppositeMatchConstraintDefault == MATCH_CONSTRAINT_WRAP;
+                            oppositeMatchConstraintDefault == (int)MATCH_CONSTRAINT_PERCENT
+                            || oppositeMatchConstraintDefault == (int)MATCH_CONSTRAINT_WRAP;
                         if (!otherSideInvariable) {
                             rangeCheckStrength = SolverVariable::STRENGTH_FIXED;
                             boundsCheckStrength = SolverVariable::STRENGTH_EQUALITY;
@@ -1323,7 +1316,7 @@ void ConstraintWidget::reset() {
     mMatchConstraintMinWidth  = 0;
     mMatchConstraintMinHeight = 0;
     mDimensionRatio = 0;
-    mHorizontalChainStyle  = CHAIN_SPREAD;
+    mHorizontalChainStyle  = (int)CHAIN_SPREAD;
     mVerticalChainStyle    = CHAIN_SPREAD;
     mHorizontalBiasPercent = DEFAULT_BIAS;
     mVerticalBiasPercent   = DEFAULT_BIAS;

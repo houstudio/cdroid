@@ -74,7 +74,7 @@ private:
     static void apply(Paint& paint, int style, int fontWeightAdjustment);
 public:
     StyleSpan(int style):StyleSpan(style,0){}
-    StyleSpan(int style, int fontWeightAdjustment){}
+    StyleSpan(int style, int fontWeightAdjustment) : mStyle(style), mFontWeightAdjustment(fontWeightAdjustment) {}
     int getStyle() const{
         return mStyle;
     }

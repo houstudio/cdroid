@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported from AOSP CTS cts/tests/tests/graphics/res/drawable/vector_icon_size_2.xml (Apache 2.0).
+     9dp x 9dp — companion to cts_vector_size_1.xml for the VectorDrawableSizeTest round() case. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="9dp"
+    android:height="9dp"
+    android:viewportWidth="9.0"
+    android:viewportHeight="9.0">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M0,0 L9,0 L9,9 L0,9 z" />
+</vector>

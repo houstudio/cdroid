@@ -77,7 +77,6 @@ class ViewOverlay;
 class GhostView;
 class Window;
 class FocusFinder;
-class UIEventSource;
 class HandlerActionQueue;
 class LayoutInflater;
 class ScrollBarDrawable;
@@ -1644,7 +1643,6 @@ public:
     bool mDebugLayout;
     bool mNextFocusLooped;
     bool mViewVelocityApi;
-    UIEventSource*mEventSource;
     Handler*mHandler;   // 主 looper 的 Handler: View::post/postDelayed 走它 (MQ), 使阻塞主循环 next() 能计时
     std::function<void(int)>mPlaySoundEffect;
     std::function<bool(int,bool)>mPerformHapticFeedback;

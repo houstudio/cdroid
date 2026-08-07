@@ -22,7 +22,7 @@
 //#include <android-base/macros.h>
 #include <unicode/uchar.h>
 #include <unicode/utf16.h>
-
+#include <sys/types.h>
 #include "minikin/Emoji.h"
 
 namespace minikin {

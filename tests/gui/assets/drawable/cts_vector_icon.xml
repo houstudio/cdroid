@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported from AOSP CTS cts/tests/tests/graphics/res/drawable/vector_icon_create.xml (Apache 2.0).
+     A minimal 24dp vector drawable — used by CtsVectorDrawableTest's mutate / intrinsic-size
+     / constant-state cases (logic only; no pixel comparison). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24.0"
+    android:viewportHeight="24.0"
+    android:alpha="1.0"
+    android:opticalInsetLeft="1px"
+    android:opticalInsetTop="2px"
+    android:opticalInsetRight="3px"
+    android:opticalInsetBottom="4px">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M3,3 L21,3 L21,21 L3,21 z" />
+</vector>

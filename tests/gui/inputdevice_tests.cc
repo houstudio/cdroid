@@ -92,6 +92,56 @@ TEST_F(INPUTDEVICE,ST){
    ASSERT_EQ(OutEvents[3]->getY(0),mts[12].value);
 }
 
+TEST_F(INPUTDEVICE, ST_EMPTY_MT_SYNC) {
+    TouchDevice d(INJECTDEV_TOUCH);
+    MTEvent mts[] = {
+        {EV_KEY, BTN_TOUCH, 1},
+        {EV_ABS, ABS_X, 10},
+        {EV_ABS, ABS_Y, 20},
+        {EV_ABS, ABS_PRESSURE, 1},
+        {EV_SYN, SYN_REPORT, 0},
+
+        {EV_ABS, ABS_X, 30},
+        {EV_ABS, ABS_Y, 40},
+        {EV_SYN, SYN_REPORT, 0},
+
+        {EV_KEY, BTN_TOUCH, 0},
+        {EV_ABS, ABS_PRESSURE, 0},
+        {EV_SYN, SYN_REPORT, 0},
+
+        // The Sigma driver emits empty MT separators after release.
+        {EV_SYN, SYN_MT_REPORT, 0},
+        {EV_SYN, SYN_REPORT, 0},
+        {EV_SYN, SYN_MT_REPORT, 0},
+        {EV_SYN, SYN_REPORT, 0},
+        {EV_SYN, SYN_MT_REPORT, 0},
+        {EV_SYN, SYN_REPORT, 0},
+
+        {EV_KEY, BTN_TOUCH, 1},
+        {EV_ABS, ABS_X, 50},
+        {EV_ABS, ABS_Y, 60},
+        {EV_ABS, ABS_PRESSURE, 1},
+        {EV_SYN, SYN_REPORT, 0},
+
+        {EV_ABS, ABS_X, 70},
+        {EV_ABS, ABS_Y, 80},
+        {EV_SYN, SYN_REPORT, 0},
+
+        {EV_KEY, BTN_TOUCH, 0},
+        {EV_ABS, ABS_PRESSURE, 0},
+        {EV_SYN, SYN_REPORT, 0},
+    };
+
+    EventCount = sendEvents(d, mts, sizeof(mts) / sizeof(MTEvent), OutEvents);
+    ASSERT_EQ(EventCount, 6);
+    ASSERT_EQ(OutEvents[0]->getActionMasked(), MotionEvent::ACTION_DOWN);
+    ASSERT_EQ(OutEvents[1]->getActionMasked(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[2]->getActionMasked(), MotionEvent::ACTION_UP);
+    ASSERT_EQ(OutEvents[3]->getActionMasked(), MotionEvent::ACTION_DOWN);
+    ASSERT_EQ(OutEvents[4]->getActionMasked(), MotionEvent::ACTION_MOVE);
+    ASSERT_EQ(OutEvents[5]->getActionMasked(), MotionEvent::ACTION_UP);
+}
+
 TEST_F(INPUTDEVICE,ST2){
     TouchDevice d(INJECTDEV_TOUCH);
     MTEvent mts[]={

@@ -22,20 +22,22 @@
 #include <core/callbackbase.h>
 
 namespace cdroid{
-class Bundle;  // cdroid::Bundle (core/bundle.h), 懒构造于 getData()
-class Handler; // cdroid::Handler (Java 模型), Message.target 指向它
+class Bundle;  // cdroid::Bundle (core/bundle.h), lazily constructed in getData()
+class Handler; // cdroid::Handler (Java model); Message.target points at it
 
 /**
- * 移植自 android.os.Message (蓝本: android-36 Message.java)。
+ * Ported from android.os.Message (reference: android-36 Message.java).
  *
- * 引用语义: 通过 obtain() 从对象池获取、recycle() 归还。**不要栈构造或值拷贝** ——
- * next 指针 + 对象池与值语义不兼容。
+ * Reference semantics: obtain() from the pool, recycle() to return it. **Do not stack-construct
+ * or value-copy** — the next pointer + object pool are incompatible with value semantics.
  *
- * 统一类型: cdroid::Message 即池化 Message (原过渡期的 cdroid::os::Message 已正名至此,
- * looper.h 中的旧 struct cdroid::Message 已删除合并)。Handler/Looper/MessageQueue 统一用它。
+ * Unified type: cdroid::Message is the pooled Message (the transitional cdroid::os::Message was
+ * renamed here, and the old struct cdroid::Message in looper.h was removed/merged).
+ * Handler/Looper/MessageQueue all use it uniformly.
  *
- * 省略项 (细节取舍): Android 的 tracing/权限字段 mEventId / mSendingThreadName /
- * sendingUid / workSourceUid / replyTo(Messenger) 未移植 (依赖 system-server/binder)。
+ * Omissions (deliberate trade-offs): Android's tracing/permission fields mEventId /
+ * mSendingThreadName / sendingUid / workSourceUid / replyTo (Messenger) are not ported (they need
+ * system-server/binder).
  */
 class Message{
 public:
@@ -49,15 +51,15 @@ public:
     int arg2 = 0;               // :71
     void* obj = nullptr;        // :83
     int flags = 0;              // :137
-    int64_t when = 0;           // :146  (时基 SystemClock::uptimeMillis)
+    int64_t when = 0;           // :146  (time base: SystemClock::uptimeMillis)
     Handler* target = nullptr;  // :155
     Runnable callback;          // :158  (cdroid::Runnable)
     Bundle* data = nullptr;     // :152
-    Message* next = nullptr;    // :162  (对象池链表 / MessageQueue 调度链表)
+    Message* next = nullptr;    // :162  (object-pool list / MessageQueue scheduling list)
 
     Message();  // :554
 
-    // obtain 重载, Message.java:178-316 —— 全部从对象池取, 返回所有权裸指针
+    // obtain overloads, Message.java:178-316 — all take from the pool, returning an owning raw pointer
     static Message* obtain();
     static Message* obtain(Message* orig);
     static Message* obtain(Handler* h);
@@ -77,11 +79,11 @@ public:
     Handler* getTarget()const;         // :415
     Runnable getCallback()const;            // :427
     Message* setCallback(const Runnable& r);  // :433 (@hide)
-    Bundle* getData();                 // :449 (懒构造, 改自身 → 非 const)
+    Bundle* getData();                 // :449 (lazily constructed, mutates self -> non-const)
     Bundle* peekData()const;           // :465
     void setData(Bundle* data);        // :475
     Message* setWhat(int what);        // :484 (@hide)
-    void sendToTarget();               // :493 (传 this 给 sendMessage(Message*) → 非 const)
+    void sendToTarget();               // :493 (passes this to sendMessage(Message*) -> non-const)
 
     bool isAsynchronous()const;        // :505
     void setAsynchronous(bool async);  // :535
@@ -89,7 +91,7 @@ public:
     void markInUse();             // :548
 
 private:
-    // 对象池, Message.java:166-172 (synchronized(sPoolSync) → std::mutex)
+    // Object pool, Message.java:166-172 (synchronized(sPoolSync) -> std::mutex)
     static Message* sPool;
     static int sPoolSize;
     static std::mutex sPoolSync;
