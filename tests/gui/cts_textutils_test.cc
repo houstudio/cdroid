@@ -91,3 +91,85 @@ TEST(CtsTextUtilsTest, testReplace) {
     TextUtils::replace(s, std::string("string"), std::string("text"));
     EXPECT_EQ(std::string("this is a text to be as the template for replacement"), s);
 }
+
+TEST(CtsTextUtilsTest, testIndexOf1) {
+    String s("string to be searched");   // length 21
+    EXPECT_EQ(1,  TextUtils::indexOf(&s, u't'));   // first 't'
+    EXPECT_EQ(2,  TextUtils::indexOf(&s, u'r'));   // first 'r'
+    EXPECT_EQ(20, TextUtils::indexOf(&s, u'd'));   // last char
+    EXPECT_EQ(-1, TextUtils::indexOf(&s, u'f'));   // absent
+}
+
+TEST(CtsTextUtilsTest, testIndexOf2) {
+    String s("string to be searched");
+    EXPECT_EQ(2,  TextUtils::indexOf(&s, u'r', 0));              // first 'r'
+    EXPECT_EQ(16, TextUtils::indexOf(&s, u'r', 3));              // second 'r' (after first)
+    EXPECT_EQ(-1, TextUtils::indexOf(&s, u'r', s.length()));     // start at end
+}
+
+TEST(CtsTextUtilsTest, testIndexOf3) {
+    String s("string to be searched");
+    EXPECT_EQ(2,  TextUtils::indexOf(&s, u'r', 0, s.length()));
+    EXPECT_EQ(16, TextUtils::indexOf(&s, u'r', 3, s.length()));
+    EXPECT_EQ(-1, TextUtils::indexOf(&s, u'r', 3, 16));          // window excludes the 2nd 'r'
+}
+
+TEST(CtsTextUtilsTest, testLastIndexOf1) {
+    String s("string to be searched");
+    EXPECT_EQ(7,  TextUtils::lastIndexOf(&s, u't'));   // 't' of "to"
+    EXPECT_EQ(16, TextUtils::lastIndexOf(&s, u'r'));
+    EXPECT_EQ(20, TextUtils::lastIndexOf(&s, u'd'));
+    EXPECT_EQ(-1, TextUtils::lastIndexOf(&s, u'f'));
+}
+
+TEST(CtsTextUtilsTest, testRegionMatches) {
+    String one("one"), two("two");
+    EXPECT_FALSE(TextUtils::regionMatches(&one, 0, &two, 0, 3));
+    EXPECT_TRUE (TextUtils::regionMatches(&one, 0, &one, 0, 3));
+
+    String hello1("Hello Android, hello World!"), hello2("Hello World");
+    EXPECT_TRUE (TextUtils::regionMatches(&hello1, 0,  &hello2, 0, 5));   // "Hello" == "Hello"
+    EXPECT_FALSE(TextUtils::regionMatches(&hello1, 0,  &hello2, 0, 7));   // "Hello A" != "Hello W"
+    EXPECT_TRUE (TextUtils::regionMatches(&hello1, 21, &hello2, 6, 5));   // "World" == "World"
+    EXPECT_FALSE(TextUtils::regionMatches(&hello1, 21, &hello2, 0, 5));   // "World" != "Hello"
+}
+
+TEST(CtsTextUtilsTest, testGetChars) {
+    // getChars copies source[start,end) into dest at destOff; bytes outside that range are unchanged.
+    String src("source string mock");
+    const std::u16string destOrig = u"destination";
+    char16_t dest[32];
+    for (int i = 0; i < 11; i++) dest[i] = destOrig[i];   // seed with "destination"
+
+    TextUtils::getChars(&src, 0, 4, dest, 0);   // copy "sour" over "dest"
+    EXPECT_EQ(u's', dest[0]); EXPECT_EQ(u'o', dest[1]); EXPECT_EQ(u'u', dest[2]); EXPECT_EQ(u'r', dest[3]);
+    EXPECT_EQ(u'i', dest[4]);                    // unchanged (was "ination"[0])
+    TextUtils::getChars(&src, 0, (int)src.length(), dest, 0);
+    EXPECT_EQ(src.charAt(0), dest[0]);
+    EXPECT_EQ(src.charAt(src.length() - 1), dest[src.length() - 1]);
+}
+
+TEST(CtsTextUtilsTest, testConcat) {
+    // concat() with no args -> empty
+    {
+        CharSequence* r = TextUtils::concat({});
+        ASSERT_NE(nullptr, r);
+        EXPECT_EQ(std::string(""), r->toUTF8());
+        delete r;
+    }
+    // single
+    {
+        String first("first");
+        CharSequence* r = TextUtils::concat({&first});
+        EXPECT_EQ(std::string("first"), r->toUTF8());
+        delete r;
+    }
+    // three parts
+    {
+        String first("first"), sep(", "), second("second");
+        CharSequence* r = TextUtils::concat({&first, &sep, &second});
+        EXPECT_EQ(std::string("first, second"), r->toUTF8());
+        delete r;
+    }
+}
+

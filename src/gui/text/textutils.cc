@@ -861,38 +861,24 @@ std::string TextUtils::htmlEncode(const std::string& s) {
 }
 
 CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
-    /*if (text->size() == 0) {
-        return "";
+    // Port of AOSP TextUtils.concat. Returns a CALLER-OWNED CharSequence*. AOSP returns the same
+    // instance for the single-arg case and "" for no args; CDROID always returns a fresh owned
+    // String copy (callers delete the result) so ownership is uniform.
+    if (text.empty()) {
+        return new String();   // AOSP: "" for no args
     }
-
     if (text.size() == 1) {
-        return text[0];
+        return new String(text[0]->toUTF8());
     }
-
-    bool spanned = false;
+    // TODO(spanned): when any piece is a Spanned, AOSP builds a SpannedString via
+    // SpannableStringBuilder preserving spans. CDROID currently flattens to a plain String (spans
+    // dropped) — the spanned path needs SpannableStringBuilder.append(CharSequence*) wiring.
+    std::string sb;
     for (CharSequence* piece : text) {
-        if (dynamic_cast<Spanned*>(piece)) {
-            spanned = true;
-            break;
-        }
+        // AOSP appends "null" for a null piece (StringBuilder compat).
+        sb += (piece ? piece->toUTF8() : std::string("null"));
     }
-
-    if (spanned) {
-        SpannableStringBuilder ssb;
-        for (CharSequence* piece : text) {
-            // If a piece is null, we append the string "null" for compatibility with the
-            // behavior of StringBuilder and the behavior of the concat() method in earlier
-            // versions of Android.
-            ssb.append(piece == nullptr ? "null" : piece);
-        }
-        return new SpannedString(ssb);
-    } else {
-        std::ostringstream sb;
-        for (CharSequence* piece : text) {
-            sb<<piece;
-        }
-        return sb.str();
-    }*/return nullptr;
+    return new String(sb);
 }
 
 bool TextUtils::isGraphic(const CharSequence* str) {
