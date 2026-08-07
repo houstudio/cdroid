@@ -260,6 +260,11 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
     // TODO: This is a terrible idea that potentially destroys any drawable
     // that extends any of these classes. We *really* need to remove this.
 
+    // A layer/state entry may be null (e.g. an empty StateListDrawable slot); pass it through so
+    // the rebuilt tree keeps a null layer — LayerDrawable tolerates null children, and the default
+    // branch below would otherwise deref null.
+    if (drawable == nullptr) return nullptr;
+
     if (dynamic_cast<LayerDrawable*>(drawable)) {
         LayerDrawable* orig = (LayerDrawable*) drawable;
         const int N = orig->getNumberOfLayers();
@@ -311,6 +316,18 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
         } else {
             return clone;
         }
+    }
+    // Untiled child (ShapeDrawable/GradientDrawable/...): clone it so the rebuilt tree owns its
+    // own instances. The original drawable (handed in from Assets::getDrawable) is freed by the
+    // caller (setProgressDrawableTiled); passing the same instance through would leave the
+    // original and the rebuilt clone co-owning it, and freeing one would double-free.
+    std::shared_ptr<Drawable::ConstantState> cs = drawable->getConstantState();
+    if (cs) {
+        Drawable* clone = cs->newDrawable();
+        clone->setBounds(drawable->getBounds());
+        clone->setLevel(drawable->getLevel());
+        clone->setLayoutDirection(drawable->getLayoutDirection());
+        return clone;
     }
     return drawable;
 }
@@ -784,7 +801,11 @@ Drawable*ProgressBar::getIndeterminateDrawable()const{
 }
 
 void ProgressBar::setIndeterminateDrawableTiled(Drawable* d){
-     if(d)d=tileifyIndeterminate(d);
+     if(d){
+         Drawable* orig = d;
+         d = tileifyIndeterminate(d);
+         if(d != orig) delete orig;   // rebuilt (AnimationDrawable); the original is now unreferenced
+     }
      setIndeterminateDrawable(d);
 }
 
@@ -1180,7 +1201,9 @@ void ProgressBar::applyIndeterminateTint(){
 
 void ProgressBar::setProgressDrawableTiled(Drawable* d) {
     if (d != nullptr) {
-        d = tileify(d, false);
+        Drawable* orig = d;
+        d = tileify(d, false);         // rebuilds a fresh tiled drawable tree
+        if (d != orig) delete orig;    // the original (from Assets::getDrawable) is now unreferenced
     }
     setProgressDrawable(d);
 }
