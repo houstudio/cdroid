@@ -120,7 +120,7 @@ void Slide::setSlideEdge(int slideEdge) {
         throw std::invalid_argument("Invalid slide direction");
     }
     mSlideEdge = slideEdge;
-    SidePropagation* propagation = new SidePropagation();
+    auto propagation = std::make_shared<SidePropagation>();
     propagation->setSide(slideEdge);
     setPropagation(propagation);
 }

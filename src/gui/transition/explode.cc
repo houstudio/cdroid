@@ -26,12 +26,12 @@ AccelerateInterpolator sAccelerate;
 } // anonymous namespace
 
 Explode::Explode() {
-    setPropagation(new CircularPropagation());
+    setPropagation(std::make_shared<CircularPropagation>());
 }
 
 Explode::Explode(Context* context, AttributeSet* attrs)
     : Visibility(context, attrs) {
-    setPropagation(new CircularPropagation());
+    setPropagation(std::make_shared<CircularPropagation>());
 }
 
 void Explode::captureValues(TransitionValues& transitionValues) {

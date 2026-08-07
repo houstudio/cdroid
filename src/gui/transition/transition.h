@@ -212,7 +212,7 @@ class Transition {
     Rect getEpicenter() const;
     virtual void setPathMotion(PathMotion* pathMotion);
     PathMotion* getPathMotion() const;
-    virtual void setPropagation(TransitionPropagation* transitionPropagation);
+    virtual void setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation);
     TransitionPropagation* getPropagation() const;
 
     // ---- scene-root / removal / name overrides (engine hooks) ----
@@ -280,7 +280,7 @@ class Transition {
     std::vector<TransitionListener> mListeners;
     std::vector<Animator*> mAnimators;
     std::vector<Animator*> mOwnedAnimators; // created by createAnimators; owned, freed in ~Transition
-    TransitionPropagation* mPropagation = nullptr;
+    std::shared_ptr<TransitionPropagation> mPropagation; // shared: TransitionSet shares one across children
     EpicenterCallback* mEpicenterCallback = nullptr;
     ArrayMap<std::string, std::string> mNameOverrides; // empty == null (value semantics; copy-safe)
     PathMotion* mPathMotion; // set in ctor to STRAIGHT_PATH_MOTION instance

@@ -1020,11 +1020,11 @@ void Transition::setPathMotion(PathMotion* pathMotion) {
 PathMotion* Transition::getPathMotion() const {
     return mPathMotion;
 }
-void Transition::setPropagation(TransitionPropagation* transitionPropagation) {
+void Transition::setPropagation(std::shared_ptr<TransitionPropagation> transitionPropagation) {
     mPropagation = transitionPropagation;
 }
 TransitionPropagation* Transition::getPropagation() const {
-    return mPropagation;
+    return mPropagation.get();
 }
 
 void Transition::capturePropagationValues(TransitionValues& transitionValues) {
