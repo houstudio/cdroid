@@ -466,7 +466,6 @@ void AnimatedVectorDrawable::AnimatedVectorDrawableState::prepareLocalAnimators(
             Animator* nextAnim = prepareLocalAnimator(i);
             builder->with(nextAnim);
         }
-        delete builder;
     }
 }
 
