@@ -41,6 +41,9 @@ private:
     public:
         TransitionState(TransitionState* orig, TransitionDrawable* owner);
         TransitionDrawable*newDrawable()override;
+        // Mirrors AOSP TransitionDrawable.TransitionState: reports only this state's own
+        // changing configurations (drops the children aggregate folded in by LayerState).
+        int getChangingConfigurations()const override;
     };
 
     TransitionDrawable(std::shared_ptr<TransitionState> state);
@@ -53,6 +56,9 @@ public:
     void reverseTransition(int duration);
     bool isCrossFadeEnabled()const;
     void setCrossFadeEnabled(bool enabled);
+    // Mirrors AOSP LayerDrawable.getChangingConfigurations: instance value ORed with the
+    // backing LayerState's value so callers see the effective configuration of this drawable.
+    int getChangingConfigurations()const override;
     void draw(Canvas&canvas)override;
 };
 

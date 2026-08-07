@@ -98,12 +98,19 @@ private:
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
+    // LayerDrawable::mutate() builds the post-mutate constant state via createConstantState.
+    // Ripple overrides it so the new state is a RippleState (preserving mColor/mEffectColor/
+    // mMaxRadius) instead of a plain LayerState that would drop the ripple-specific fields.
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerDrawable::LayerState* state,
+            const AttributeSet* attrs) override;
 public:
     RippleDrawable();
     RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask);
     ~RippleDrawable()override;
     void jumpToCurrentState()override;
+    RippleDrawable* mutate()override;
     int  getOpacity()const override;
+    int  getChangingConfigurations()const override;
     bool setVisible(bool visible, bool restart)override;
     bool isProjected()const;
     bool isStateful()const override;

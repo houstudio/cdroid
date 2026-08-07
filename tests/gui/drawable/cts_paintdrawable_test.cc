@@ -106,3 +106,69 @@ TEST_F(CtsPaintDrawableTest, testSetCornerRadii) {
         EXPECT_NE(nullptr, dynamic_cast<RoundRectShape*>(paintDrawable.getShape()));
     }
 }
+
+// --- ConstantState contract (mirrors CtsVectorDrawableTest) ---
+// PaintDrawable declares no ConstantState of its own — it reuses ShapeDrawable's ShapeState
+// (AOSP PaintDrawable is the same: it inherits ShapeDrawable.ShapeState, whose newDrawable()
+// returns a plain ShapeDrawable). The getConstantState / mutate / changing-configurations
+// contract under test is therefore inherited from ShapeDrawable, ported here against a
+// default-constructed PaintDrawable.
+
+TEST_F(CtsPaintDrawableTest, testGetConstantState) {
+    PaintDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+    // newDrawable yields a distinct instance backed by the same constant state.
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+TEST_F(CtsPaintDrawableTest, testMutate) {
+    // mutate() must give this drawable a private constant-state copy (copy-on-write), so a state
+    // change on the mutated instance does not affect a sibling produced from the same
+    // getConstantState(). Mirrors AOSP testMutate (which uses two resource-cached instances).
+    // The sibling is a ShapeDrawable (see file-header note), so the alpha API is exercised
+    // through that base — alpha independence is exactly what the contract verifies.
+    PaintDrawable d1;
+    ASSERT_EQ(255, d1.getAlpha());  // ShapeState default alpha
+    ShapeDrawable* sibling = dynamic_cast<ShapeDrawable*>(d1.getConstantState()->newDrawable());
+    ASSERT_NE(nullptr, sibling);
+    ASSERT_EQ(255, sibling->getAlpha());
+
+    d1.mutate();
+    d1.setAlpha(100);
+    EXPECT_EQ(100, d1.getAlpha());
+    EXPECT_EQ(255, sibling->getAlpha());  // sibling unaffected — mutate copied the state
+
+    sibling->mutate();
+    sibling->setAlpha(50);
+    EXPECT_EQ(100, d1.getAlpha());
+    EXPECT_EQ(50, sibling->getAlpha());
+    delete sibling;
+}
+
+TEST_F(CtsPaintDrawableTest, testGetChangingConfigurations) {
+    PaintDrawable drawable;
+    auto constantState = drawable.getConstantState();
+
+    // default
+    ASSERT_NE(nullptr, constantState);
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+
+    // changing the drawable's configuration does not affect the cached state's snapshot
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+
+    // re-fetching the constant state reflects the new value
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+
+    // set a new configuration to the drawable; drawable ORs with the state's value
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
+}

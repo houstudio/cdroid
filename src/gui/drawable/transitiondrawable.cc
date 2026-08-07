@@ -29,16 +29,25 @@ TransitionDrawable*TransitionDrawable::TransitionState::newDrawable(){
     return new TransitionDrawable(std::dynamic_pointer_cast<TransitionState>(shared_from_this()));
 }
 
+int TransitionDrawable::TransitionState::getChangingConfigurations()const{
+    return mChangingConfigurations;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
 TransitionDrawable::TransitionDrawable()
     :LayerDrawable(std::make_shared<TransitionState>(nullptr,this)){
 }
 
 TransitionDrawable::TransitionDrawable(const std::vector<Drawable*>drawables)
-    :LayerDrawable(drawables){
-    mAlpha = 0;
-    mCrossFade =false;
-    mTransitionState = TRANSITION_NONE;
+    :TransitionDrawable(std::make_shared<TransitionState>(nullptr,this)){
+    // AOSP TransitionDrawable(Drawable[]) builds a TransitionState (not the plain LayerState that
+    // LayerDrawable(layers) would create), so getConstantState()->newDrawable() yields a
+    // TransitionDrawable and the ConstantState round-trip / copy-on-write mutate stay typed.
+    for(auto d:drawables){
+        addLayer(d);
+    }
+    ensurePadding();
+    refreshPadding();
 }
 
 TransitionDrawable::TransitionDrawable(std::shared_ptr<TransitionState> state)
@@ -102,6 +111,10 @@ bool TransitionDrawable::isCrossFadeEnabled()const{
 
 void TransitionDrawable::setCrossFadeEnabled(bool enabled){
     mCrossFade = enabled;
+}
+
+int TransitionDrawable::getChangingConfigurations()const{
+    return Drawable::getChangingConfigurations() | mLayerState->getChangingConfigurations();
 }
 
 void TransitionDrawable::draw(Canvas&canvas){

@@ -27,6 +27,7 @@ ColorDrawable::ColorState::ColorState(){
     mBaseColor= 0xFF000000;
     mUseColor = 0xFF000000;
     mTintMode = DEFAULT_TINT_MODE;
+    mChangingConfigurations = 0;
 }
 
 ColorDrawable::ColorState::ColorState(const ColorState& state){
@@ -34,6 +35,7 @@ ColorDrawable::ColorState::ColorState(const ColorState& state){
     mUseColor = state.mUseColor;
     mTint = state.mTint;
     mTintMode=state.mTintMode;
+    mChangingConfigurations = state.mChangingConfigurations;
 }
 
 ColorDrawable* ColorDrawable::ColorState::newDrawable(){
@@ -41,7 +43,7 @@ ColorDrawable* ColorDrawable::ColorState::newDrawable(){
 }
 
 int ColorDrawable::ColorState::getChangingConfigurations()const{
-    return 0;
+    return mChangingConfigurations;
 }
 
 ColorDrawable::ColorDrawable() : ColorDrawable(0) {
@@ -69,6 +71,9 @@ void ColorDrawable::inflate(XmlPullParser&parser,const AttributeSet&atts){
 }
 
 std::shared_ptr<Drawable::ConstantState>ColorDrawable::getConstantState(){
+    // Sync the instance changingConfigurations into the state snapshot before returning so
+    // callers re-fetching getConstantState see the current value (mirrors VectorDrawable).
+    mColorState->mChangingConfigurations = getChangingConfigurations();
     return std::dynamic_pointer_cast<ConstantState>(mColorState);
 }
 

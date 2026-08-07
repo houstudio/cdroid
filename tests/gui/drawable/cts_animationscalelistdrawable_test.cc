@@ -93,3 +93,50 @@ TEST_F(CtsAnimationScaleListDrawableTest, testZeroDurationScale) {
 
     EXPECT_FALSE(dynamic_cast<Animatable*>(dr.getCurrent()) != nullptr);
 }
+
+// --- ConstantState contract (default-instance logic; DrawableContainer inherits the correct
+// contract, so no source fixes are needed). Mirrors CtsStateListDrawableTest. ---
+
+TEST_F(CtsAnimationScaleListDrawableTest, testGetConstantState) {
+    AnimationScaleListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+TEST_F(CtsAnimationScaleListDrawableTest, testGetChangingConfigurations) {
+    AnimationScaleListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
+}
+
+TEST_F(CtsAnimationScaleListDrawableTest, testMutate) {
+    // copy-on-write: sibling (from newDrawable) shares state; mutate gives a private copy.
+    AnimationScaleListDrawable d1;
+    AnimationScaleListDrawable* sibling = dynamic_cast<AnimationScaleListDrawable*>(d1.getConstantState()->newDrawable());
+    ASSERT_NE(nullptr, sibling);
+    const int initial = d1.getAlpha();
+    d1.mutate();
+    d1.setAlpha(100);
+    EXPECT_NE(initial, d1.getAlpha());
+    EXPECT_EQ(initial, sibling->getAlpha());
+    sibling->mutate();
+    const int d1Alpha = d1.getAlpha();
+    sibling->setAlpha(50);
+    EXPECT_EQ(d1Alpha, d1.getAlpha());
+    EXPECT_NE(d1Alpha, sibling->getAlpha());
+    delete sibling;
+}

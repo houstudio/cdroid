@@ -32,6 +32,9 @@ ShapeDrawable::ShapeState::ShapeState(){
 
 ShapeDrawable::ShapeState::ShapeState(const ShapeState&orig)
       :ShapeDrawable::ShapeState::ShapeState(){
+    // androidx ShapeState copy ctor (ShapeDrawable.java:565): propagate the cached config so a
+    // copy-on-write clone made by mutate() preserves the snapshot taken by getConstantState().
+    mChangingConfigurations = orig.mChangingConfigurations;
     mIntrinsicWidth = orig.mIntrinsicWidth;
     mIntrinsicHeight= orig.mIntrinsicHeight;
     mPadding= orig.mPadding;

@@ -230,7 +230,23 @@ TEST_F(CtsBitmapDrawableTest, testGetOpacity) {
 //   testInflate                     — needs R.xml.bitmapdrawable; verify separately with an
 //                                      added asset if desired.
 //   testDraw                        — pixel test on a Canvas.
-//   testMutate                      — needs R.drawable.testimage (resource-backed drawable cache
-//                                      with multiple instances); the mutate() API itself is
-//                                      exercised by the constant-state cases above.
 //   testSetBitmap                   — needs android.graphics.Bitmap.
+
+TEST_F(CtsBitmapDrawableTest, testMutate) {
+    // copy-on-write via getConstantState().newDrawable() + mutate(); default-instance (AOSP uses
+    // two resource-cached instances). The contract under test is identical.
+    BitmapDrawable d1;
+    BitmapDrawable* sibling = dynamic_cast<BitmapDrawable*>(d1.getConstantState()->newDrawable());
+    ASSERT_NE(nullptr, sibling);
+    const int initial = d1.getAlpha();
+    d1.mutate();
+    d1.setAlpha(100);
+    EXPECT_NE(initial, d1.getAlpha());
+    EXPECT_EQ(initial, sibling->getAlpha());
+    sibling->mutate();
+    const int d1Alpha = d1.getAlpha();
+    sibling->setAlpha(50);
+    EXPECT_EQ(d1Alpha, d1.getAlpha());
+    EXPECT_NE(d1Alpha, sibling->getAlpha());
+    delete sibling;
+}
