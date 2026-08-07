@@ -25,7 +25,7 @@
 namespace cdroid{
 namespace lifecycle{
 
-class LifecycleEventObserver : public LifecycleObserver{
+class LifecycleEventObserver : virtual public LifecycleObserver{
 public:
     virtual void onStateChanged(LifecycleOwner* source, Lifecycle::Event event) = 0;
 };

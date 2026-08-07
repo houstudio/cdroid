@@ -26,7 +26,7 @@
 namespace cdroid{
 namespace lifecycle{
 
-class DefaultLifecycleObserver : public LifecycleObserver{
+class DefaultLifecycleObserver : virtual public LifecycleObserver{
 public:
     virtual void onCreate(LifecycleOwner*) {}
     virtual void onStart(LifecycleOwner*) {}
