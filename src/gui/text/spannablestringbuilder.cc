@@ -258,6 +258,34 @@ Editable& SpannableStringBuilder::replace(int st, int en, const CharSequence& so
     }
     adjustSpansForReplace(st, en, insertLen - replacedLen);
 
+    // Copy spans carried by the source CharSequence (when it is a Spanned) into this builder,
+    // mapping source[tbstart..tbend) coords to dest[st..st+insertLen). Mirrors AOSP
+    // SpannableStringBuilder.replace, which propagates the source's spans (e.g. pasting spanned
+    // text brings its spans along). SPAN_PARAGRAPH spans whose end is not at a paragraph boundary
+    // ('\n' or end-of-text) in the destination are dropped, matching AOSP's paragraph-style
+    // validity enforcement.
+    if (insertLen > 0) {
+        if (const Spanned* srcSpanned = dynamic_cast<const Spanned*>(tb)) {
+            auto srcSpans = srcSpanned->getSpans(tbstart, tbend, make_span_filter<ParcelableSpan>());
+            for (const ParcelableSpan* span : srcSpans) {
+                const int ss = srcSpanned->getSpanStart(span);
+                const int se = srcSpanned->getSpanEnd(span);
+                const int flags = srcSpanned->getSpanFlags(span);
+                const int ndStart = st + (std::max(ss, tbstart) - tbstart);
+                const int ndEnd   = st + (std::min(se, tbend)   - tbstart);
+                if ((flags & Spanned::SPAN_PARAGRAPH) == Spanned::SPAN_PARAGRAPH) {
+                    if (ndEnd != (int)mText.length()
+                        && (ndEnd >= (int)mText.length() || mText[ndEnd] != u'\n')) {
+                        continue;  // invalid paragraph span in the destination context -> discard
+                    }
+                }
+                if (ParcelableSpan* clone = span->clone()) {
+                    setSpan(clone, ndStart, ndEnd, flags);
+                }
+            }
+        }
+    }
+
     // 3) onTextChanged
     for (const ParcelableSpan* p : watchers) {
         if (TextWatcher* w = asWatcher(p)) {

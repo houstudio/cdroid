@@ -16,6 +16,8 @@
 #include <text/spannablestring.h>
 #include <text/String.h>
 #include <text/style/characterstyles.h>
+#include <text/style/metricaffectingspan.h>
+#include <text/style/alignmentspan.h>
 #include <text/style/leadingmarginspan.h>
 #include <text/parcelablespan.h>
 
@@ -245,5 +247,102 @@ TEST(CtsSpannableStringBuilderTest, testGetSpans) {
 TEST(CtsSpannableStringBuilderTest, testGetSpans_returnsEmptyIfSetSpanIsNotCalled) {
     SpannableStringBuilder b(u"hello, world");
     auto spans = b.getSpans(0, 10, make_span_filter<UnderlineSpan>());
+    EXPECT_EQ(0u, spans.size());
+}
+
+// --- getSpans ordering + nextSpanTransition (CDROID supports priority-sort + type filter) ---
+
+TEST(CtsSpannableStringBuilderTest, testGetSpans_returnsInInsertionOrder) {
+    // AOSP testGetSpans_returnsInInsertionOrder_regular: spans of equal priority come back in
+    // insertion order.
+    SpannableStringBuilder b;
+    std::vector<SubscriptSpan*> expected;
+    for (int i = 0; i < 5; i++) {
+        int cur = b.length();
+        b.append(String(u"12\n"));
+        SubscriptSpan* s = new SubscriptSpan;
+        b.setSpan(s, cur + 1, cur + 2, Spanned::SPAN_EXCLUSIVE_EXCLUSIVE);
+        expected.push_back(s);
+    }
+    auto spans = b.getSpans(0, (int)b.length(), make_span_filter<SubscriptSpan>());
+    ASSERT_EQ(expected.size(), spans.size());
+    for (size_t i = 0; i < expected.size(); i++) {
+        EXPECT_EQ(expected[i], spans[i]) << "span " << i << " not in insertion order";
+    }
+}
+
+TEST(CtsSpannableStringBuilderTest, testGetSpans_returnsSpansSortedFirstByPriorityThenByInsertionOrder) {
+    // AOSP testGetSpans_returnsSpansSortedFirstByPriorityThenByInsertionOrder: priority spans
+    // come first, then non-priority in insertion order.
+    SpannableStringBuilder b(u"p_in_s");
+    SubscriptSpan* first  = new SubscriptSpan;
+    SubscriptSpan* second = new SubscriptSpan;
+    SubscriptSpan* third  = new SubscriptSpan;
+    SubscriptSpan* fourth = new SubscriptSpan;
+    int flags        = Spanned::SPAN_EXCLUSIVE_EXCLUSIVE;
+    int flagsPriority= Spanned::SPAN_EXCLUSIVE_EXCLUSIVE | Spanned::SPAN_PRIORITY;
+    b.setSpan(first,  2, 4, flags);
+    b.setSpan(second, 2, 4, flagsPriority);
+    b.setSpan(third,  0, (int)b.length(), flags);
+    b.setSpan(fourth, 0, (int)b.length(), flagsPriority);
+    auto spans = b.getSpans(0, (int)b.length(), make_span_filter<ParcelableSpan>());
+    ASSERT_EQ(4u, spans.size());
+    EXPECT_EQ(second, spans[0]);
+    EXPECT_EQ(fourth, spans[1]);
+    EXPECT_EQ(first,  spans[2]);
+    EXPECT_EQ(third,  spans[3]);
+}
+
+TEST(CtsSpannableStringBuilderTest, testNextSpanTransition) {
+    // AOSP testNextSpanTransition. Re-setting the SAME span object moves it (underline ends at
+    // 3-4, strikethrough at 8-9). TabStopSpan is absent in CDROID; BackgroundColorSpan stands in
+    // as a query type that is not present in the builder. "null" (all spans) ->
+    // make_span_filter<ParcelableSpan>().
+    SpannableStringBuilder b(u"spannable string");
+    UnderlineSpan* ul = new UnderlineSpan;
+    StrikethroughSpan* st = new StrikethroughSpan;
+    b.setSpan(ul, 1, 2, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+    b.setSpan(ul, 3, 4, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+    b.setSpan(st, 5, 6, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+    b.setSpan(st, 8, 9, Spanned::SPAN_INCLUSIVE_INCLUSIVE);
+    EXPECT_EQ(8,   b.nextSpanTransition(0, 10, make_span_filter<StrikethroughSpan>()));
+    EXPECT_EQ(10,  b.nextSpanTransition(0, 10, make_span_filter<BackgroundColorSpan>()));  // absent
+    EXPECT_EQ(3,   b.nextSpanTransition(0, 5,  make_span_filter<ParcelableSpan>()));       // all
+    EXPECT_EQ(100, b.nextSpanTransition(-5, 100, make_span_filter<BackgroundColorSpan>()));
+    EXPECT_EQ(1,   b.nextSpanTransition(3, 1,  make_span_filter<UnderlineSpan>()));
+}
+
+// --- SpannableStringBuilderSpanTest: paragraph-span retention on replace (AlignmentSpan is a
+//     ParagraphStyle; SPAN_PARAGRAPH spans are kept only when their end lands on a paragraph
+//     boundary — a '\n' or end-of-text). Source is built manually (AlignmentSpan + SPAN_PARAGRAPH)
+//     instead of AOSP's Html.fromHtml("<blockquote>"), which CDROID's fromHtml does not map. ---
+
+static SpannableStringBuilder paragraphSource(const std::u16string& text) {
+    SpannableStringBuilder s(text);
+    s.setSpan(new AlignmentSpan::Standard(Layout::ALIGN_NORMAL), 0, (int)s.length(),
+              Spanned::SPAN_PARAGRAPH);
+    return s;
+}
+
+TEST(CtsSpannableStringBuilderTest, testReplace_retainsParagraphSpanIfNewLineBefore) {
+    SpannableStringBuilder dest(u"1\nselection_to_replace");
+    dest.replace(2, (int)dest.length(), paragraphSource(u"new text"));
+    auto spans = dest.getSpans(0, (int)dest.length(), make_span_filter<AlignmentSpan>());
+    EXPECT_EQ(1u, spans.size());
+}
+
+TEST(CtsSpannableStringBuilderTest, testReplace_retainsParagraphSpanIfStartIsZero) {
+    SpannableStringBuilder dest(u"selection_to_replace");
+    dest.replace(0, (int)dest.length(), paragraphSource(u"new text"));
+    auto spans = dest.getSpans(0, (int)dest.length(), make_span_filter<AlignmentSpan>());
+    EXPECT_EQ(1u, spans.size());
+}
+
+TEST(CtsSpannableStringBuilderTest, testReplace_discardsParagraphSpanIfNoNewLineAfter) {
+    SpannableStringBuilder source(u"a");
+    source.setSpan(new AlignmentSpan::Standard(Layout::ALIGN_NORMAL), 0, 1, Spanned::SPAN_PARAGRAPH);
+    SpannableStringBuilder dest(u"r remaining\n");
+    dest.replace(0, 1, source);
+    auto spans = dest.getSpans(0, (int)dest.length(), make_span_filter<AlignmentSpan>());
     EXPECT_EQ(0u, spans.size());
 }
