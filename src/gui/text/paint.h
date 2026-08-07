@@ -71,7 +71,7 @@ private:
     int mTextAlign;
     int mStartHyphenEdit;
     int mEndHyphenEdit;
-    Style mStyle;
+    Style mStyle=FILL;
     bool mAntialias;
     bool mFakeBoldText;
     bool mStrikeThruText;

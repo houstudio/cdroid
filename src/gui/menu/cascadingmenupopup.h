@@ -61,7 +61,7 @@ private:
     bool mForceShowIcon;
     bool mShowTitle;
     Callback mPresenterCallback;
-    ViewTreeObserver* mTreeObserver;
+    ViewTreeObserver* mTreeObserver=nullptr;
     PopupWindow::OnDismissListener mOnDismissListener;
     std::string mItemLayout;
 

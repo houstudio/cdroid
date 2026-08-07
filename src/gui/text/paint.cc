@@ -33,6 +33,7 @@ Paint::Paint(){
     mTextScaleX=1.f;
     mTextSize=12;
     mAlpha=0xff;
+    StrokeWidth=1.f;
     mTextAlign=Align::LEFT;
     mFakeBoldText=false;
     mStrikeThruText=false;

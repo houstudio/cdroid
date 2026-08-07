@@ -118,6 +118,7 @@ void PopupWindow::init(){
     mAnchorRoot = nullptr;
     mBackground = nullptr;
     mBackgroundView = nullptr;
+    mWindowLayoutType = Window::TYPE_APPLICATION;
     mAboveAnchorBackgroundDrawable = nullptr;
     mBelowAnchorBackgroundDrawable = nullptr;
 
