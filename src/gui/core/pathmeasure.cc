@@ -309,6 +309,7 @@ int PathMeasure::buildSegments(){
         mPoints.push_back(ptStart);
     }
     finalizeContour();
+    cairo_path_destroy(m_path);   // copy_path() calloc'd this; caller owns (leak fix)
     return mSegments.size();
 }
 
