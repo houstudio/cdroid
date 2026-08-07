@@ -28,6 +28,7 @@ private:
         uint32_t mUseColor; // basecolor modulated by setAlpha()
         RefPtr<ColorStateList>mTint;
         int mTintMode;
+        int mChangingConfigurations;
         ColorState();
         ColorState(const ColorState& state);
         ColorDrawable* newDrawable()override;

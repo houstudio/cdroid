@@ -225,3 +225,33 @@ TEST_F(CtsShapeDrawableTest, testMutateGetShape) {
 
     delete b;
 }
+
+TEST_F(CtsShapeDrawableTest, testMutate) {
+    // AOSP CTS ShapeDrawableTest ships no dedicated testMutate (only testMutateGetShape above);
+    // this case mirrors the canonical copy-on-write contract exercised by VectorDrawableTest /
+    // AnimatedImageDrawableTest.testMutate. AOSP relies on two resource-cache lookups to obtain
+    // sibling drawables sharing constant state; CDROID's only public ctor is the default one
+    // (no ShapeDrawable(Shape)), so the sibling sharing constant state is produced here via
+    // getConstantState()->newDrawable() — the copy-on-write contract under test is identical.
+    ShapeDrawable d1;
+    const int initialAlpha = d1.getAlpha();  // default-constructed State initializes alpha to 255
+
+    auto cs = d1.getConstantState();
+    ASSERT_NE(nullptr, cs);
+    Drawable* siblingDrawable = cs->newDrawable();
+    ASSERT_NE(nullptr, siblingDrawable);
+    ShapeDrawable* sibling = dynamic_cast<ShapeDrawable*>(siblingDrawable);
+    ASSERT_NE(nullptr, sibling);
+
+    d1.mutate();
+    d1.setAlpha(0x40);
+    EXPECT_EQ(0x40, d1.getAlpha());
+    EXPECT_EQ(initialAlpha, sibling->getAlpha());
+
+    sibling->mutate();
+    sibling->setAlpha(0x20);
+    EXPECT_EQ(0x40, d1.getAlpha());
+    EXPECT_EQ(0x20, sibling->getAlpha());
+
+    delete sibling;
+}

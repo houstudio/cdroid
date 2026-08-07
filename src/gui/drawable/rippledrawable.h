@@ -25,6 +25,7 @@ namespace cdroid{
 class RippleDrawable:public LayerDrawable{
 private:
     static constexpr int BACKGROUND_OPACITY_DURATION= 80;
+    static constexpr int DEFAULT_EFFECT_COLOR = 0x8dffffff;
     static constexpr int RADIUS_AUTO = -1;
     static constexpr int MASK_UNKNOWN = -1;
     static constexpr int MASK_NONE = 0;
@@ -41,6 +42,7 @@ private:
         int mMaxRadius;
         int mRippleStyle=FORCE_PATTERNED_STYLE?STYLE_PATTERNED:STYLE_SOLID;
         RefPtr<ColorStateList>mColor;
+        RefPtr<ColorStateList>mEffectColor;
         RippleState(LayerState* orig, RippleDrawable* owner);
         ~RippleState();
         void onDensityChanged(int sourceDensity, int targetDensity)override;
@@ -96,17 +98,28 @@ private:
 protected:
     bool onStateChange(const std::vector<int>&stateSet)override;
     void onBoundsChange(const Rect& bounds)override;
+    // LayerDrawable::mutate() builds the post-mutate constant state via createConstantState.
+    // Ripple overrides it so the new state is a RippleState (preserving mColor/mEffectColor/
+    // mMaxRadius) instead of a plain LayerState that would drop the ripple-specific fields.
+    std::shared_ptr<LayerDrawable::LayerState> createConstantState(LayerDrawable::LayerState* state,
+            const AttributeSet* attrs) override;
 public:
     RippleDrawable();
     RippleDrawable(const RefPtr<ColorStateList>& color,Drawable* content,Drawable* mask);
     ~RippleDrawable()override;
     void jumpToCurrentState()override;
+    RippleDrawable* mutate()override;
     int  getOpacity()const override;
+    int  getChangingConfigurations()const override;
     bool setVisible(bool visible, bool restart)override;
     bool isProjected()const;
     bool isStateful()const override;
     bool hasFocusStateSpecified()const override;
     void setColor(const RefPtr<ColorStateList>& color);
+    // Sets/returns the ripple effect color (androidx/API31+ Dual-tone concept, distinct from the
+    // base ripple color). Default is DEFAULT_EFFECT_COLOR (0x8dffffff), per AOSP.
+    void setEffectColor(const RefPtr<ColorStateList>& color);
+    RefPtr<ColorStateList> getEffectColor() const;
     void setRadius(int radius);
     int  getRadius()const;
     bool setDrawableByLayerId(int id, Drawable* drawable)override;

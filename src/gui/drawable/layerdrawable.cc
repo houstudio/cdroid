@@ -280,7 +280,13 @@ LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
     mMutated = false;
     mChildRequestedInvalidation = 0;
     mSuspendChildInvalidation = false;
-    mLayerState = createConstantState(state.get(),nullptr);
+    // Share the passed constant state directly. AOSP's newDrawable() shares the state (the copy
+    // happens lazily in mutate() via createConstantState); routing through createConstantState HERE
+    // would (a) copy eagerly, diverging from AOSP, and (b) lose the subclass state type —
+    // createConstantState called from this base ctor dispatches to the BASE (C++ ctor virtual
+    // dispatch targets the base, unlike Java), so a TransitionDrawable/RippleDrawable would end up
+    // with a plain LayerState and getConstantState()->newDrawable() would yield a LayerDrawable.
+    mLayerState = state;
     if (mLayerState->mChildren.size()) {
         ensurePadding();
         refreshPadding();

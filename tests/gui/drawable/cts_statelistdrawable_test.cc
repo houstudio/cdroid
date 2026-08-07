@@ -45,6 +45,48 @@ TEST_F(CtsStateListDrawableTest, testStateListDrawable) {
     delete d;
 }
 
+TEST_F(CtsStateListDrawableTest, testGetConstantState) {
+    // Default-constructed (AOSP inflates from a selector resource); the constant-state contract
+    // is default-instance logic and ports without the resource. StateListState inherits
+    // DrawableContainer's contract: newDrawable yields a distinct instance backed by the same
+    // constant state.
+    StateListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+TEST_F(CtsStateListDrawableTest, testGetChangingConfigurations) {
+    // Mirrors CtsVectorDrawableTest. DrawableContainer syncs the instance changingConfigurations
+    // into the state snapshot inside getConstantState(), and ORs instance | state in
+    // getChangingConfigurations(). Default-constructed instance; no resource needed.
+    StateListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+
+    // default
+    ASSERT_NE(nullptr, constantState);
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+
+    // changing the drawable's configuration does not affect the cached state's snapshot
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+
+    // re-fetching the constant state reflects the new value
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+
+    // set a new configuration to the drawable; drawable ORs with the state's value
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
+}
+
 TEST_F(CtsStateListDrawableTest, testAddState) {
     EXPECT_EQ(0, mDrawable->getChildCount());
 

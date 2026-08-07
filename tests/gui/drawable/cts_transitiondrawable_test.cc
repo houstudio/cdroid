@@ -14,6 +14,7 @@
 #include <memory>
 #include <drawable/transitiondrawable.h>
 #include <drawable/drawables.h>   // ColorDrawable
+#include <drawable/colordrawable.h>
 #include <core/app.h>
 #include <core/rect.h>
 #include <guienvironment.h>
@@ -138,4 +139,78 @@ TEST_F(CtsTransitionDrawableTest, testAccessCrossFadeEnabled) {
 
     mDrawable->setCrossFadeEnabled(false);
     EXPECT_FALSE(mDrawable->isCrossFadeEnabled());
+}
+
+// --- ConstantState contract (mirrors CtsVectorDrawableTest) ---
+
+TEST_F(CtsTransitionDrawableTest, testGetConstantState) {
+    // getConstantState() must return a non-null state whose newDrawable() yields a distinct
+    // instance backed by the same constant state. Mirrors CtsVectorDrawableTest.testGetConstantState;
+    // CDROID diverges from AOSP only in that the instance is built from ColorDrawable layers rather
+    // than inflated from a resource.
+    TransitionDrawable drawable({new ColorDrawable(COLOR0), new ColorDrawable(COLOR1)});
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+TEST_F(CtsTransitionDrawableTest, testMutate) {
+    // mutate() must give this drawable a private constant-state copy (copy-on-write), so a state
+    // change on the mutated instance does not affect a sibling produced from the same
+    // getConstantState(). Mirrors AOSP testMutate (which uses two resource-cached instances).
+    // CDROID diverges: a default-constructed TransitionDrawable has no child layers and
+    // LayerDrawable::setAlpha/getAlpha proxy to the first child, so the two-layer ColorDrawable
+    // construction is required to observe alpha independence.
+    TransitionDrawable d1({new ColorDrawable(COLOR0), new ColorDrawable(COLOR1)});
+    ASSERT_EQ(255, d1.getAlpha());
+    TransitionDrawable* d2 = dynamic_cast<TransitionDrawable*>(d1.getConstantState()->newDrawable());
+    ASSERT_NE(nullptr, d2);
+    ASSERT_EQ(255, d2->getAlpha());
+
+    d1.mutate();
+    d1.setAlpha(100);
+    EXPECT_NE(255, d1.getAlpha());   // d1's alpha changed from the default 255 (LayerDrawable proxies
+                                     // alpha to the ColorDrawable child, which modulates baseAlpha*alpha>>8,
+                                     // so the read-back is not the raw input — assert the change, not the value)
+    EXPECT_EQ(255, d2->getAlpha());  // sibling unaffected — mutate gave d1 a private state copy
+
+    d2->mutate();
+    const int d1Alpha = d1.getAlpha();
+    d2->setAlpha(50);
+    EXPECT_EQ(d1Alpha, d1.getAlpha());     // d1 unaffected by d2's change (copy-on-write)
+    EXPECT_NE(d1Alpha, d2->getAlpha());    // d2 changed, independently of d1
+    delete d2;
+}
+
+TEST_F(CtsTransitionDrawableTest, testGetChangingConfigurations) {
+    // Mirrors CtsVectorDrawableTest.testGetChangingConfigurations: default 0; changing the drawable's
+    // configuration does not affect a previously-fetched state snapshot; re-fetching reflects it; the
+    // drawable ORs its instance value with the state's value. TransitionDrawable inherits LayerDrawable's
+    // snapshot sync in getConstantState; the instance|state OR is provided by TransitionDrawable itself
+    // (AOSP LayerDrawable.getChangingConfigurations, LayerDrawable.java:1025).
+    TransitionDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+
+    // default
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+
+    // changing the drawable's configuration does not affect the cached state's snapshot
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+
+    // re-fetching the constant state reflects the new value
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+
+    // set a new configuration to the drawable; drawable ORs with the state's value
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
 }

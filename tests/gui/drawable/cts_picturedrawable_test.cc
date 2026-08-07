@@ -104,3 +104,43 @@ TEST_F(CtsPictureDrawableTest, testAccessPicture) {
     pictureDrawable.setPicture(Picture{});
     EXPECT_EQ(nullptr, pictureDrawable.getPicture());
 }
+
+// --- ConstantState contract ---
+// Unlike VectorDrawable/AnimatedImageDrawable, AOSP PictureDrawable is intentionally minimal:
+// it has NO ConstantState subclass and does not override getConstantState() / mutate() /
+// getChangingConfigurations() (confirmed against android-36 PictureDrawable.java and the CTS
+// PictureDrawableTest.java, which carries none of these cases). The cases below therefore
+// document the inherited Drawable base contract, NOT a VectorDrawable-style copy-on-write
+// contract — adding a State subclass here would be an unfaithful redesign.
+
+TEST_F(CtsPictureDrawableTest, testGetConstantState) {
+    // AOSP PictureDrawable inherits Drawable::getConstantState(), which returns null. Verified
+    // for both a null picture and a non-null empty recording surface. (Contrast VectorDrawable,
+    // which returns a populated ConstantState snapshot.)
+    EXPECT_EQ(nullptr, PictureDrawable(Picture{}).getConstantState());
+    EXPECT_EQ(nullptr, PictureDrawable(newEmptyPicture()).getConstantState());
+}
+
+TEST_F(CtsPictureDrawableTest, testMutate) {
+    // AOSP PictureDrawable inherits Drawable::mutate(), which returns `this` with no
+    // copy-on-write (there is no ConstantState to clone). setAlpha is a no-op, so mutation has
+    // no observable state effect. The contract under test is just "mutate() is safe and returns
+    // a usable drawable" — not the shared-state isolation tested by VectorDrawable's testMutate.
+    PictureDrawable pictureDrawable(Picture{});
+    Drawable* mutated = pictureDrawable.mutate();
+    ASSERT_NE(nullptr, mutated);
+    // No ConstantState => no sibling to isolate; setAlpha stays a no-op and must not throw.
+    pictureDrawable.setAlpha(0x40);
+    SUCCEED();
+}
+
+TEST_F(CtsPictureDrawableTest, testGetChangingConfigurations) {
+    // AOSP PictureDrawable inherits Drawable::getChangingConfigurations(): instance-only
+    // mChangingConfigurations. Unlike VectorDrawable there is no ConstantState to OR with and
+    // no state-snapshot semantics, so the contract reduces to: default 0, and
+    // setChangingConfigurations is reflected verbatim on the next read.
+    PictureDrawable pictureDrawable(Picture{});
+    EXPECT_EQ(0, pictureDrawable.getChangingConfigurations());
+    pictureDrawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, pictureDrawable.getChangingConfigurations());
+}

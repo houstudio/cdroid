@@ -37,17 +37,6 @@ English: [good-first-issues.md](good-first-issues.md).
 - **AOSP:** `android-36/android/widget/AbsSeekBar.java:1108-1119` —— 读 `arguments.getFloat(ACTION_ARGUMENT_PROGRESS_VALUE)` 后 `setProgressInternal((int) value, true, true)`。
 - **注意:** `Bundle::getFloat`、`Bundle::containsKey` 都已存在(`src/gui/core/basebundle.h:100,150`)。照抄下方 `ACTION_SCROLL_FORWARD/BACKWARD` 那段做模板。
 
-### A4. `ColorMatrixColorFilter::apply`  ·  中等
-- **文件:** `src/gui/drawable/colorfilters.cc:27`
-- **缺什么:** 函数体是 `LOGW("ColorMatrixColorFilter::apply not yet implemented");` —— 没做逐像素颜色矩阵变换。注释里画了思路(`get_group_target()` → `ImageSurface` → `mCM.transform(...)` → `mark_dirty()`)。
-- **AOSP:** `android-36/android/graphics/ColorMatrixColorFilter.java`。CDroid 的 `ColorMatrix` 类已有现成的 `transform(ImageSurface)` 助手。
-- **兄弟写法:** 同文件的 `PorterDuffColorFilter::apply` / `BlendModeColorFilter::apply` 展示了 `canvas.get_group_target()` 契约。
-
-### A5. `LightingColorFilter::apply`  ·  中等
-- **文件:** `src/gui/drawable/colorfilters.cc:108`
-- **缺什么:** 函数体是 `LOGW("LightingColorFilter::apply not yet implemented");`。应对每个通道算 `R' = R*mul.R + add.R`。
-- **AOSP:** `android-36/android/graphics/LightingColorFilter.java`。它是 `ColorMatrixColorFilter`(A4)的特例 —— 可以用 `mMul`/`mAdd` 构造一个 `ColorMatrix` 后委托。
-
 ---
 
 ## B 组 —— 加一个 demo sample（最适合入门）

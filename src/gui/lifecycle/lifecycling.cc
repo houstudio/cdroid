@@ -22,13 +22,16 @@
 namespace cdroid{
 namespace lifecycle{
 namespace{
-// Wraps a DefaultLifecycleObserver, dispatching each event to the matching
-// callback. Mirrors androidx DefaultLifecycleObserverAdapter (reflective branch
-// omitted).
+// Wraps a DefaultLifecycleObserver, dispatching each event to the matching callback. Mirrors
+// androidx DefaultLifecycleObserverAdapter: when the wrapped object ALSO implements
+// LifecycleEventObserver, onStateChanged is dispatched to BOTH the per-callback AND the
+// LifecycleEventObserver.onStateChanged (reflective branch omitted).
 class DefaultLifecycleObserverAdapter : public LifecycleEventObserver{
     DefaultLifecycleObserver* mObserver;
+    LifecycleEventObserver* mEventObserver; // non-null when the object also is-a LifecycleEventObserver
 public:
-    explicit DefaultLifecycleObserverAdapter(DefaultLifecycleObserver* o) : mObserver(o) {}
+    DefaultLifecycleObserverAdapter(DefaultLifecycleObserver* o, LifecycleEventObserver* e)
+        : mObserver(o), mEventObserver(e) {}
     void onStateChanged(LifecycleOwner* owner, Lifecycle::Event event) override{
         switch(event){
             case Lifecycle::Event::ON_CREATE:  mObserver->onCreate(owner); break;
@@ -39,14 +42,30 @@ public:
             case Lifecycle::Event::ON_DESTROY: mObserver->onDestroy(owner);break;
             case Lifecycle::Event::ON_ANY: break;
         }
+        // androidx: after the DefaultLifecycleObserver per-callback, also forward to the
+        // LifecycleEventObserver side if the object implements it (both-interfaces observer).
+        if(mEventObserver) mEventObserver->onStateChanged(owner, event);
     }
 };
 }//anonymous
 
 LifecycleEventObserver* Lifecycling::lifecycleEventObserver(LifecycleObserver* object){
-    if(auto* e = dynamic_cast<LifecycleEventObserver*>(object)) return e;
-    if(auto* d = dynamic_cast<DefaultLifecycleObserver*>(object))
-        return new DefaultLifecycleObserverAdapter(d);
+    // Mirrors androidx Lifecycling.jvm.kt:
+    //  - both DefaultLifecycleObserver AND LifecycleEventObserver -> adapter(dlo, leo) dispatches BOTH;
+    //  - DefaultLifecycleObserver only -> adapter(dlo, null) -> per-callback;
+    //  - LifecycleEventObserver only -> as-is -> onStateChanged.
+    // (The old code short-circuited on LifecycleEventObserver, so a both-interfaces observer only
+    // received onStateChanged and its DefaultLifecycleObserver per-callbacks were never invoked.)
+    // dynamic_cast (not static_cast) is required: LifecycleObserver is a virtual base of both
+    // DefaultLifecycleObserver and LifecycleEventObserver, so base->derived needs runtime offset.
+    DefaultLifecycleObserver* dlo = dynamic_cast<DefaultLifecycleObserver*>(object);
+    LifecycleEventObserver* leo = dynamic_cast<LifecycleEventObserver*>(object);
+    if(dlo && leo)
+        return new DefaultLifecycleObserverAdapter(dlo, leo);
+    if(dlo)
+        return new DefaultLifecycleObserverAdapter(dlo, nullptr);
+    if(leo)
+        return leo;
     return nullptr; // unsupported observer kind (no reflective @OnLifecycleEvent)
 }
 

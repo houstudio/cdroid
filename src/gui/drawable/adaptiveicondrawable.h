@@ -44,8 +44,8 @@ private:
     std::shared_ptr<Cairo::ImageSurface> mLayersBitmap;
 
     Rect mHotspotBounds;
-    int mAlpha;
-    bool mMutated;
+    int mAlpha = 255;   // AOSP default: fully opaque; was uninitialized (getAlpha returned garbage)
+    bool mMutated = false;
 
     bool mSuspendChildInvalidation;
     bool mChildRequestedInvalidation;
@@ -165,15 +165,15 @@ class AdaptiveIconDrawable::LayerState:public Drawable::ConstantState {
     // use the system's density.
     int mSrcDensityOverride = 0;
     int mOpacityOverride = PixelFormat::UNKNOWN;
-    int mChangingConfigurations;
-    int mChildrenChangingConfigurations;
+    int mChangingConfigurations = 0;
+    int mChildrenChangingConfigurations = 0;
     int mSourceDrawableId = 0;//Resources.ID_NULL;
 private:
     int* mThemeAttrs;
-    int mOpacity;
-    bool mCheckedOpacity;
-    bool mCheckedStateful;
-    bool mIsStateful;
+    int mOpacity = PixelFormat::UNKNOWN;
+    bool mCheckedOpacity = false;
+    bool mCheckedStateful = false;
+    bool mIsStateful = false;
     bool mAutoMirrored = false;
     friend AdaptiveIconDrawable;
 public:

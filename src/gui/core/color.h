@@ -71,6 +71,12 @@ public:
     static uint8_t alpha(int c){return c>>24;}
     static unsigned int toArgb(float r, float g, float b, float a);
     static unsigned int toArgb(uint8_t r,uint8_t g,uint8_t b,uint8_t a);
+    // AOSP Color.argb / Color.rgb — alpha-first arg order (unlike toArgb's r,g,b,a). Faithful to
+    // android.graphics.Color: rgb() forces alpha 0xff; argb() takes it explicitly.
+    static unsigned int argb(int a, int r, int g, int b);
+    static unsigned int argb(float a, float r, float g, float b);
+    static unsigned int rgb(int r, int g, int b);
+    static unsigned int rgb(float r, float g, float b);
     static Color* valueOf(float r,float g,float b,float a=1.0);
     static unsigned int parseColor(const std::string&colorstring);
     static unsigned int getHtmlColor(const std::string&color);

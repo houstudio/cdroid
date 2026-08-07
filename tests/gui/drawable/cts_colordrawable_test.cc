@@ -72,6 +72,35 @@ TEST_F(CtsColorDrawableTest, testGetConstantState) {
               colorDrawable.getConstantState()->getChangingConfigurations());
 }
 
+TEST_F(CtsColorDrawableTest, testMutate) {
+    // Mirrors VectorDrawableTest#testMutate copy-on-write contract. AOSP loads resource-cached
+    // instances that share constant state; CDROID has no cached ColorDrawable here, so a sibling
+    // sharing state is built via getConstantState()->newDrawable() — the same shared-state
+    // relationship AOSP relies on. NOTE: unlike VectorDrawable, ColorDrawable.setAlpha modulates
+    // the base color's alpha (androidx 0..255 -> 0..256 mapping), so getAlpha() reads back the
+    // modulated value, not the set input; with base color 0xFFFF0000 (baseAlpha 255), input 128
+    // reads back as (255 * 128) >> 8 == 127.
+    ColorDrawable d1(0xFFFF0000);
+    ASSERT_EQ(255, d1.getAlpha());
+    ColorDrawable* sibling = dynamic_cast<ColorDrawable*>(d1.getConstantState()->newDrawable());
+    ASSERT_NE(nullptr, sibling);
+    ASSERT_EQ(255, sibling->getAlpha());  // shares d1's constant state
+
+    // mutate d1; its alpha change must not bleed into the still-shared sibling.
+    d1.mutate();
+    d1.setAlpha(0);
+    EXPECT_EQ(0, d1.getAlpha());
+    EXPECT_EQ(255, sibling->getAlpha());
+
+    // mutate sibling; its alpha change must not bleed into d1 either.
+    sibling->mutate();
+    sibling->setAlpha(128);
+    EXPECT_EQ(0, d1.getAlpha());            // d1 keeps its own alpha — sibling's mutate is isolated
+    EXPECT_NE(255, sibling->getAlpha());    // sibling's alpha changed from the default (modulated)
+
+    delete sibling;
+}
+
 TEST_F(CtsColorDrawableTest, testGetOpacity) {
     {
         ColorDrawable colorDrawable(0);  // transparent
