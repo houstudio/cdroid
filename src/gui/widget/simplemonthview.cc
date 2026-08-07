@@ -92,6 +92,7 @@ void SimpleMonthView::initMonthView(){
     mDesiredDayOfWeekHeight = 30;
     mDesiredDaySelectorRadius= 15;
     mMonth = 0;
+    mYear  = 1970;
     mDayHeight=20;
     mPaddedWidth = 0;
     mPaddedHeight= 0;

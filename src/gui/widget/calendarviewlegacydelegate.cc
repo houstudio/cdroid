@@ -27,6 +27,7 @@ CalendarViewLegacyDelegate::CalendarViewLegacyDelegate(CalendarView* delegator, 
     :CalendarView::AbstractCalendarViewDelegate(delegator,context){
     mDelegator = delegator;
     mAdapter = nullptr;
+    mPreviousScrollPosition =0;
     mScrollStateChangedRunnable = new ScrollStateRunnable(this);
     mShowWeekNumber= attrs.getBoolean("showWeekNumber",DEFAULT_SHOW_WEEK_NUMBER);
     Calendar cal;
@@ -676,7 +677,12 @@ CalendarViewLegacyDelegate::WeeksAdapter::WeeksAdapter(CalendarViewLegacyDelegat
     init();
 }
 
+CalendarViewLegacyDelegate::WeeksAdapter::~WeeksAdapter(){
+    delete mGestureDetector;
+}
+
 void CalendarViewLegacyDelegate::WeeksAdapter::init() {
+    mFocusedMonth =0;
     mTotalWeekCount=0;
     mSelectedWeek = mCV->getWeeksSinceMinDate(mSelectedDate);
     mTotalWeekCount = mCV->getWeeksSinceMinDate(mCV->mMaxDate);

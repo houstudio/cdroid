@@ -265,7 +265,7 @@ private:
     void onDateTapped(Calendar& day);
 public:
     WeeksAdapter(CalendarViewLegacyDelegate*,Context* context);
-
+    ~WeeksAdapter()override;
     void setSelectedDay(Calendar& selectedDay);
 
     Calendar getSelectedDay();
@@ -281,8 +281,8 @@ public:
 
 class CalendarViewLegacyDelegate::WeekView:public View {
 private:
-    CalendarViewLegacyDelegate*mCV;
     friend CalendarViewLegacyDelegate;
+    CalendarViewLegacyDelegate*mCV;
     std::vector<std::string> mDayNumbers;
 
     std::vector<bool> mFocusDay;

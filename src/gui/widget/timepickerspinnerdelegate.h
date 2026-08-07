@@ -29,12 +29,11 @@ private:
 
     Calendar mTempCalendar;
 
+    bool mIsAm = false;
     bool mIsEnabled = DEFAULT_ENABLED_STATE;
-    bool mHourWithTwoDigit;
-    char mHourFormat;
-
-    bool mIs24HourView;
-    bool mIsAm;
+    bool mIs24HourView = false;
+    bool mHourWithTwoDigit = true;
+    char mHourFormat = 0;
 private:
     void getHourFormatData();
     bool isAmPmAtStart();
