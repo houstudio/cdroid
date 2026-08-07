@@ -112,6 +112,7 @@ protected:
 public:
     LayerDrawable();
     LayerDrawable(const std::vector<Drawable*>&drawables);
+    ~LayerDrawable() override;
 
     void setLayerSize(int index, int w, int h);
     int getLayerWidth(int index)const;

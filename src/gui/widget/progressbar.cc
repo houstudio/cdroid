@@ -265,6 +265,8 @@ Drawable* ProgressBar::tileify(Drawable* drawable, bool clip){
     // branch below would otherwise deref null.
     if (drawable == nullptr) return nullptr;
 
+    drawable->setCallback(nullptr);
+    unscheduleDrawable(*drawable);
     if (dynamic_cast<LayerDrawable*>(drawable)) {
         LayerDrawable* orig = (LayerDrawable*) drawable;
         const int N = orig->getNumberOfLayers();
@@ -775,6 +777,12 @@ void ProgressBar::setIndeterminateDrawable(Drawable*d){
         if (mIndeterminateDrawable != nullptr) {
             mIndeterminateDrawable->setCallback(nullptr);
             unscheduleDrawable(*mIndeterminateDrawable);
+            // mCurrentDrawable aliases whichever of mProgressDrawable /
+            // mIndeterminateDrawable is shown; clear the alias before deleting so
+            // the later swapCurrentDrawable() does not dereference a dangling
+            // oldDrawable (mirrors setProgressDrawable's guard; GC in Android).
+            if (mIndeterminateDrawable == mCurrentDrawable)
+                mCurrentDrawable = nullptr;
             delete mIndeterminateDrawable;
         }
 

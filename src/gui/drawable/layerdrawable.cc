@@ -287,9 +287,40 @@ LayerDrawable::LayerDrawable(std::shared_ptr<LayerState>state){
     // dispatch targets the base, unlike Java), so a TransitionDrawable/RippleDrawable would end up
     // with a plain LayerState and getConstantState()->newDrawable() would yield a LayerDrawable.
     mLayerState = state;
+    // CDROID has no GC. newDrawable() shares this LayerState — and therefore the very same child
+    // Drawable instances — across every LayerDrawable built from it, and each child holds a raw
+    // callback pointer to whichever owner last wired it. AOSP keeps that owner alive via GC while
+    // siblings share the children; CDROID deletes drawables manually, so repoint the shared
+    // children's callbacks to THIS instance (the one actually taking ownership) and clear them in
+    // the destructor when this is still their target. Otherwise deleting one owner dangles the
+    // survivors' child callbacks and the next setVisible()->invalidateSelf() dispatches through
+    // freed memory (__cxa_pure_virtual). The vector ctor (children added after this base ctor,
+    // each wired via setCallback(this)) is unaffected — mChildren is empty here for that path.
+    for (auto child : mLayerState->mChildren) {
+        if (child->mDrawable != nullptr) {
+            child->mDrawable->setCallback(this);
+        }
+    }
     if (mLayerState->mChildren.size()) {
         ensurePadding();
         refreshPadding();
+    }
+}
+
+LayerDrawable::~LayerDrawable(){
+    // Companion to the callback repoint in the ctor above. If this instance is still the callback
+    // target of the shared children, drop the reference so a sibling that keeps the (refcounted)
+    // LayerState alive is left with a null — and therefore guarded (see invalidateSelf/scheduleSelf)
+    // — callback rather than a dangling one. Children whose callback already points at another
+    // (e.g. a newer) owner are left untouched. Drawable::Callback is a separate inheritance
+    // subobject, so compare via its subobject address, not the LayerDrawable primary 'this'.
+    if (mLayerState != nullptr) {
+        Drawable::Callback* const self = static_cast<Drawable::Callback*>(this);
+        for (auto child : mLayerState->mChildren) {
+            if (child->mDrawable != nullptr && child->mDrawable->getCallback() == self) {
+                child->mDrawable->setCallback(nullptr);
+            }
+        }
     }
 }
 

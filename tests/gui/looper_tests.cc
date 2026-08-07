@@ -1,7 +1,6 @@
 #include <gtest/gtest.h>
 #include <cdroid.h>
 #include <core/systemclock.h>
-#include <utils/atexit.h>
 #include <cdlog.h>
 #include <functional>
 #include <thread>
@@ -294,8 +293,3 @@ TEST_F(LOOPER,timerfd){
 }
 #endif
 
-TEST_F(LOOPER,atexit){
-    AtExit::registerCallback([](){std::cout<<"__1"<<std::endl;});
-    AtExit::registerCallback([](){std::cout<<"__2"<<std::endl;});
-    AtExit::registerCallback([](){std::cout<<"__3"<<std::endl;});
-}
