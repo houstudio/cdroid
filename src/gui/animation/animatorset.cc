@@ -123,8 +123,10 @@ AnimatorSet::~AnimatorSet(){
     for(auto nd:mNodes)
         delete nd;
     for(auto e:mEvents)delete e;
+    for(auto b:mBuilders) delete b;
     mNodeMap.clear();
     mNodes.clear();
+    mBuilders.clear();
     delete mSeekState;
 }
 
@@ -141,13 +143,10 @@ void AnimatorSet::playTogether(const std::vector<Animator*>&items){
 void AnimatorSet::playSequentially(const std::vector<Animator*>&items){
     const size_t size = items.size();
     if(size==1){
-        // Stack builder (same as playTogether): play() returns a heap Builder* that this
-        // internal caller would have to remember to delete — using a local avoids the leak.
-        Builder(this, items[0]);
+        play(items[0]);
     } else {
         for (int i = 0; i < int(size - 1); ++i) {
-            Builder builder(this, items[i]);
-            builder.before(items[i + 1]);
+            play(items[i])->before(items[i + 1]);
         }
     }
 }
@@ -193,8 +192,14 @@ const TimeInterpolator* AnimatorSet::getInterpolator() const{
 }
 
 AnimatorSet::Builder* AnimatorSet::play(Animator* anim){
-    if(anim!=nullptr)
-        return new Builder(this,anim);
+    if(anim!=nullptr){
+        // The Builder is a transient chaining helper; this AnimatorSet owns it and frees
+        // it in the dtor, so callers (playSequentially, fastscroller, AnimatedVectorDrawable)
+        // never need to delete the returned pointer.
+        Builder* builder = new Builder(this,anim);
+        mBuilders.push_back(builder);
+        return builder;
+    }
     return nullptr;
 }
 

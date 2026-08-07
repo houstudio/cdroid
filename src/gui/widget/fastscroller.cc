@@ -844,7 +844,6 @@ bool FastScroller::transitionPreviewLayout(int sectionIndex) {
         scaleAnim->setDuration(DURATION_RESIZE);
         builder->with(scaleAnim);
     }
-    delete builder;
     mPreviewAnimation->start();
     return TextUtils::isEmpty(text);
 }
@@ -1188,7 +1187,6 @@ Animator* FastScroller::groupAnimatorOfFloat(const std::string&propName, float v
             builder->with(anim);
         }
     }
-    delete builder;
     return animSet;
 }
 
