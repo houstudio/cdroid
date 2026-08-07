@@ -24,7 +24,6 @@
 #include <mutex>
 #include <porting/cdlog.h>
 #include <porting/cdgraph.h>
-#include <utils/atexit.h>
 #include <core/app.h>
 #include <core/build.h>
 #include <core/messagequeue.h>
@@ -129,15 +128,6 @@ App::App(int argc,const char*argv[]):mQuitFlag(false),mExitCode(0){
     if(frameDelay) Choreographer::setFrameDelay(frameDelay);
     Typeface::loadPreinstalledSystemFontMap();
     Typeface::loadFaceFromResource(this);
-
-    AtExit::registerCallback([this](){
-        LOGD("Exit...");
-        // Reclaim input events still queued in device buffers now that the main
-        // loop has stopped consuming them; otherwise they leak (InputEventSource
-        // is a process-singleton that is never destroyed).
-        InputEventSource::getInstance().clearEvents();
-        mQuitFlag = true;
-    });
 
     InputEventSource*inputsource=&InputEventSource::getInstance();//(getArg("record",""));
     addEventHandler(inputsource);
