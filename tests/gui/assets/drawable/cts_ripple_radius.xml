@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported from AOSP CTS cts/tests/tests/graphics/res/drawable/rippledrawable_radius.xml (Apache 2.0).
+     A minimal ripple with an explicit radius — used by CtsRippleDrawableTest.testRadiusAttr to
+     verify the android:radius attribute round-trips through RippleDrawable.getRadius(). -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+        android:radius="10px"/>

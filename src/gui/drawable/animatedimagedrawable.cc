@@ -155,7 +155,15 @@ AnimatedImageDrawable*AnimatedImageDrawable::mutate(){
 }
 
 std::shared_ptr<Drawable::ConstantState>AnimatedImageDrawable::getConstantState(){
+    // Sync the instance changing configurations into the state snapshot before handing it out
+    // (mirrors VectorDrawable — callers re-fetching getConstantState expect to see the current
+    // drawable config; without this the snapshot stays stale).
+    mAnimatedImageState->mChangingConfigurations = getChangingConfigurations();
     return std::dynamic_pointer_cast<ConstantState>(mAnimatedImageState);
+}
+
+int AnimatedImageDrawable::getChangingConfigurations()const{
+    return Drawable::getChangingConfigurations() | mAnimatedImageState->getChangingConfigurations();
 }
 
 void AnimatedImageDrawable::setRepeatCount(int repeatCount){
@@ -493,6 +501,9 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(){
     mAutoMirrored= false;
     mFrameCount  = 0;
     mRepeatCount = REPEAT_UNDEFINED;
+    mAlpha       = 255;  // AOSP default: a decoded AnimatedImageDrawable is fully opaque; init so
+                         // getAlpha() on a default-constructed instance is deterministic (not garbage).
+    mChangingConfigurations = 0;
     mFrameSequence = nullptr;
 }
 
@@ -500,6 +511,8 @@ AnimatedImageDrawable::AnimatedImageState::AnimatedImageState(const AnimatedImag
     mAutoMirrored = state.mAutoMirrored;
     mFrameCount = state.mFrameCount;
     mRepeatCount= state.mRepeatCount;
+    mAlpha      = state.mAlpha;  // was missing — copying state lost the alpha
+    mChangingConfigurations = state.mChangingConfigurations;
     mFrameSequence = state.mFrameSequence;
 }
 
@@ -512,7 +525,7 @@ AnimatedImageDrawable* AnimatedImageDrawable::AnimatedImageState::newDrawable(){
 }
 
 int AnimatedImageDrawable::AnimatedImageState::getChangingConfigurations()const{
-    return 0;
+    return mChangingConfigurations;
 }
 
 void AnimatedImageDrawable::submitDecodeTask(int frameIndex, int prevFrame) {

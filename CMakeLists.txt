@@ -1,5 +1,5 @@
-project(CDROID C CXX)
 cmake_minimum_required (VERSION 3.22)
+project(CDROID C CXX)
 
 set(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
 if(COMMAND cmake_policy)

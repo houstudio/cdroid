@@ -37,6 +37,7 @@ private:
         int mFrameCount;
         int mRepeatCount;
         int mAlpha;
+        int mChangingConfigurations;
         FrameSequence*mFrameSequence;
         AnimatedImageState();
         AnimatedImageState(const AnimatedImageState& state);
@@ -94,6 +95,7 @@ public:
     AnimatedImageDrawable(cdroid::Context*,const std::string&res);
     ~AnimatedImageDrawable();
     std::shared_ptr<ConstantState>getConstantState()override;
+    int getChangingConfigurations()const override;
     void setRepeatCount(int repeatCount);
     int getRepeatCount()const;
     int getIntrinsicWidth() override;
