@@ -135,8 +135,8 @@ std::vector<std::string> TextUtils::split(const std::string& text, const std::st
     size_t delim_len = delim.length();
     if (delim_len == 0) return elems;
     while (pos < len){
-        int find_pos = text.find(delim, pos);
-        if (find_pos < 0){
+        auto find_pos = text.find(delim, pos);
+        if (find_pos==std::string::npos){
             elems.push_back(text.substr(pos, len - pos));
             break;
         }
@@ -152,7 +152,7 @@ std::vector<std::string> TextUtils::split(const std::string& s,int delim){
     size_t len = s.length();
     while (pos < len){
         auto find_pos = s.find(delim, pos);
-        if (find_pos != std::string::npos){
+        if (find_pos == std::string::npos){
             elems.push_back(s.substr(pos, len - pos));
             break;
         }
@@ -928,7 +928,7 @@ bool TextUtils::isDigitsOnly(const CharSequence* str) {
     const int len = str->length();
     for (int cp, i = 0; i < len; i += Character::charCount(cp)) {
         cp = Character::codePointAt(str, i);
-        if (!!Character::isDigit(cp)) {
+        if (!Character::isDigit(cp)) {
             return false;
         }
     }
