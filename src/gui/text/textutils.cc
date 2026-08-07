@@ -535,7 +535,7 @@ int TextUtils::getOffsetBefore(const CharSequence* text, int offset) {
         return 0;
     char16_t c = text->charAt(offset - 1);
     if (c >= 0xDC00 && c <= 0xDFFF) {
-        char c1 = text->charAt(offset - 2);
+        char16_t c1 = text->charAt(offset - 2);
         if (c1 >= 0xD800 && c1 <= 0xDBFF)
             offset -= 2;
         else
@@ -568,7 +568,7 @@ int TextUtils::getOffsetAfter(const CharSequence* text, int offset) {
 
     char16_t c = text->charAt(offset);
     if (c >= 0xD800 && c <= 0xDBFF) {
-        char c1 = text->charAt(offset + 1);
+        char16_t c1 = text->charAt(offset + 1);
         if (c1 >= 0xDC00 && c1 <= 0xDFFF)
             offset += 2;
         else
@@ -870,12 +870,27 @@ CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
     if (text.size() == 1) {
         return new String(text[0]->toUTF8());
     }
-    // TODO(spanned): when any piece is a Spanned, AOSP builds a SpannedString via
-    // SpannableStringBuilder preserving spans. CDROID currently flattens to a plain String (spans
-    // dropped) — the spanned path needs SpannableStringBuilder.append(CharSequence*) wiring.
+    // If any piece is a Spanned, preserve spans via SpannableStringBuilder (AOSP does the same);
+    // otherwise flatten to a plain String.
+    bool spanned = false;
+    for (CharSequence* piece : text) {
+        if (piece && dynamic_cast<Spanned*>(piece)) { spanned = true; break; }
+    }
+    if (spanned) {
+        SpannableStringBuilder ssb;
+        for (CharSequence* piece : text) {
+            if (piece) {
+                ssb.append(*piece);
+            } else {
+                // AOSP appends "null" for a null piece (StringBuilder compat).
+                String nullLit("null");
+                ssb.append(static_cast<const CharSequence&>(nullLit));
+            }
+        }
+        return new SpannedString(&ssb);
+    }
     std::string sb;
     for (CharSequence* piece : text) {
-        // AOSP appends "null" for a null piece (StringBuilder compat).
         sb += (piece ? piece->toUTF8() : std::string("null"));
     }
     return new String(sb);
