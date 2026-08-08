@@ -1,5 +1,5 @@
 {
-    "_comment": "SDK framework resource filter. Controls which density/locale variants are kept when compiling framework res via aapt2 -x. Comment lines (starting with _) are ignored. Empty arrays = keep all.",
-    "densities": [],
-    "locales": []
+    "_comment": "SDK framework resource filter for aapt2 -c. densities/locales kept (default config always kept). Empty = keep all.",
+    "densities": ["hdpi"],
+    "locales": ["zh"]
 }

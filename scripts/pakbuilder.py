@@ -425,8 +425,16 @@ class PakBuilder(idgen.IDGenerater):
             tmpres = os.path.join(tmpdir, "res")
             shutil.copytree(self.sdk_res, tmpres)
 
-            # Apply density/locale filter (reduces 45MB arsc → ~10MB).
-            self._apply_sdk_filter(tmpres)
+            # Density/locale trimming via aapt2 -c (config mode). Unlike folder
+            # deletion (which left dangling symbol declarations and broke link),
+            # -c lets aapt2 drop unused configs itself. Build the config list
+            # from sdk_filter.json (default config is always kept implicitly).
+            configs = []
+            if self.sdk_filter and os.path.exists(self.sdk_filter):
+                with open(self.sdk_filter) as fh:
+                    cfg = json.load(fh)
+                configs = list(cfg.get("locales", [])) + list(cfg.get("densities", []))
+            configs = sorted(set(configs) | {"nodpi", "anydpi"})  # always keep fallbacks
 
             # Fix 1: strip android:featureFlag lines from dimens.xml.
             dimens = os.path.join(tmpres, "values", "dimens.xml")
@@ -460,9 +468,13 @@ class PakBuilder(idgen.IDGenerater):
             sys.stderr.write("SDK res: compiling %s via aapt2 -x...\n" % self.sdk_res)
             subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
                            check=True, capture_output=True)
-            subprocess.run([self.aapt2_path, "link", "-x", "--manifest", mpath,
-                            "-o", out_apk, compiled],
-                           check=True, capture_output=True)
+            link_cmd = [self.aapt2_path, "link", "-x", "--manifest", mpath,
+                        "-o", out_apk]
+            if configs:
+                link_cmd += ["-c", ",".join(configs)]
+                sys.stderr.write("SDK res: trimming to configs %s\n" % ",".join(configs))
+            link_cmd += [compiled]
+            subprocess.run(link_cmd, check=True, capture_output=True)
             # Extract everything, stripping 'res/' prefix to match pak convention.
             result = {}
             with zipfile.ZipFile(out_apk) as zf:
