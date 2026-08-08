@@ -7,6 +7,7 @@ option(ENABLE_BINARY_XML "Use SDK framework resources + binary AXML in pak" OFF)
 set(CDROID_AAPT2 "/opt/android-sdk/build-tools/36.0.0/aapt2" CACHE PATH "aapt2 binary")
 set(CDROID_ANDROID_JAR "/opt/android-sdk/platforms/android-36/android.jar" CACHE PATH "android.jar")
 set(CDROID_SDK_RES "/opt/android-sdk/platforms/android-36/data/res" CACHE PATH "SDK framework res dir")
+set(CDROID_SDK_RES_FILTER "${CMAKE_SOURCE_DIR}/scripts/sdk_res_filter.json" CACHE FILEPATH "JSON filter for SDK res densities/locales")
 
 # Enable ctest at the top level so registered tests (e.g. the standalone androidfw
 # sub-library unit tests) are discoverable via `ctest` from the build root.

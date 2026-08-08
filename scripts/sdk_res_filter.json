@@ -1,0 +1,5 @@
+{
+    "_comment": "SDK framework resource filter. Controls which density/locale variants are kept when compiling framework res via aapt2 -x. Comment lines (starting with _) are ignored. Empty arrays = keep all.",
+    "densities": [],
+    "locales": []
+}

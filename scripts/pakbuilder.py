@@ -283,7 +283,7 @@ class PakBuilder(idgen.IDGenerater):
     to binary AXML via aapt2 (opt-in; default is the existing text-XML path)."""
 
     def __init__(self, namespace, res_dir, pak_path, rh_path,
-                 aapt2_path=None, android_jar=None, sdk_res=None):
+                 aapt2_path=None, android_jar=None, sdk_res=None, sdk_filter=None):
         idstart = 1000 if namespace == "cdroid" else 10000   # preserve idgen __main__ rule
         super().__init__(idstart, namespace)                 # wires self.Handler/scanxml/dict2ID/dict2RH
         self.res_dir = res_dir
@@ -291,9 +291,9 @@ class PakBuilder(idgen.IDGenerater):
         self.rh_path = rh_path
         self.aapt2_path = aapt2_path
         self.android_jar = android_jar
-        self.use_aapt2 = bool(aapt2_path and android_jar)
-        self.sdk_res = sdk_res
         self.use_sdk = bool(sdk_res and aapt2_path)
+        self.sdk_res = sdk_res if self.use_sdk else None
+        self.sdk_filter = sdk_filter  # path to JSON with densities/locales whitelist
 
     # ----- ID generation: drive inherited idgen, with its filecmp change gate -----
     def generate_ids(self):
@@ -339,16 +339,94 @@ class PakBuilder(idgen.IDGenerater):
         im.crop((1, 1, W - 1, H - 1)).save(buf, format="PNG")
         return _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
 
+    # ----- Apply density/locale filter to reduce arsc size -----
+    def _apply_sdk_filter(self, tmpres):
+        """Remove unwanted qualifier directories based on sdk_filter JSON.
+        Config format: {"densities": ["hdpi","xhdpi"], "locales": ["zh"]}
+        Empty/missing arrays = keep all. Default (no qualifier) always kept.
+        nodpi/anydpi are always kept (density-independent fallbacks)."""
+        import json, shutil as sh
+        if not self.sdk_filter or not os.path.exists(self.sdk_filter):
+            return
+        with open(self.sdk_filter) as f:
+            cfg = json.load(f)
+        densities = cfg.get("densities", [])
+        locales = cfg.get("locales", [])
+        if not densities and not locales:
+            return  # keep everything
+        # Always keep these (density-independent fallbacks).
+        keep_density = set(densities) | {"nodpi", "anydpi"}
+        density_quals = {"ldpi","mdpi","hdpi","tvdpi","xhdpi","xxhdpi","xxxhdpi","nodpi","anydpi"}
+        removed = 0
+        for entry in os.listdir(tmpres):
+            epath = os.path.join(tmpres, entry)
+            if not os.path.isdir(epath): continue
+            parts = entry.split("-", 1)
+            if len(parts) < 2: continue  # no qualifier (default) → keep
+            base, qual = parts[0], parts[1]
+            should_remove = False
+            if densities and base in ("drawable", "mipmap"):
+                if qual in density_quals and qual not in keep_density:
+                    should_remove = True
+            if locales and base == "values":
+                lang = qual.split("-")[0].split("v")[0]
+                if len(lang) <= 3 and lang.isalpha() and lang not in locales:
+                    should_remove = True
+            if should_remove:
+                sh.rmtree(epath)
+                removed += 1
+        # Clean up symbols.xml: remove declarations for resources that no longer
+        # exist (some drawables only had one density variant, now deleted).
+        symbols = os.path.join(tmpres, "values", "symbols.xml")
+        if removed and os.path.exists(symbols):
+            self._clean_symbols(tmpres, symbols)
+        if removed:
+            sys.stderr.write("SDK filter: removed %d dirs (densities=%s locales=%s)\n"
+                             % (removed, densities, locales))
+
+    def _clean_symbols(self, tmpres, symbols_path):
+        """Remove <symbol> entries from symbols.xml whose resource files were deleted."""
+        import xml.etree.ElementTree as ET
+        tree = ET.parse(symbols_path)
+        root = tree.getroot()
+        removed = 0
+        for sym in list(root):
+            rtype = sym.get("type", "")
+            rname = sym.get("name", "")
+            if not rtype or not rname: continue
+            # Check if ANY file for this resource still exists.
+            found = False
+            for entry in os.listdir(tmpres):
+                if not entry.startswith(rtype): continue
+                candidate = os.path.join(tmpres, entry, rname + ".xml")
+                if os.path.exists(candidate): found = True; break
+                candidate = os.path.join(tmpres, entry, rname + ".png")
+                if os.path.exists(candidate): found = True; break
+                candidate = os.path.join(tmpres, entry, rname + ".9.png")
+                if os.path.exists(candidate): found = True; break
+                candidate = os.path.join(tmpres, entry, rname + ".webp")
+                if os.path.exists(candidate): found = True; break
+            if not found:
+                root.remove(sym)
+                removed += 1
+        tree.write(symbols_path, encoding="utf-8", xml_declaration=True)
+        if removed:
+            sys.stderr.write("SDK filter: cleaned %d orphan symbols\n" % removed)
+
     # ----- SDK framework build: compile SDK data/res/ via aapt2 -x (framework mode) -----
     def _compile_sdk_res(self):
         """Build framework.apk from SDK data/res/ via aapt2 -x. Returns {rel_path: bytes}
         with binary AXML layouts + resources.arsc + drawables (all with 'res/' prefix
         stripped to match pak naming convention)."""
-        import subprocess, shutil
+        import subprocess, shutil, json
         tmpdir = tempfile.mkdtemp(prefix="sdk_aapt2_")
         try:
             tmpres = os.path.join(tmpdir, "res")
             shutil.copytree(self.sdk_res, tmpres)
+
+            # Apply density/locale filter (reduces 45MB arsc → ~10MB).
+            self._apply_sdk_filter(tmpres)
+
             # Fix 1: strip android:featureFlag lines from dimens.xml.
             dimens = os.path.join(tmpres, "values", "dimens.xml")
             if os.path.exists(dimens):
@@ -494,10 +572,11 @@ class PakBuilder(idgen.IDGenerater):
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res]")
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res] [filter.json]")
     aapt2 = sys.argv[5] if len(sys.argv) > 5 else None
     ajar  = sys.argv[6] if len(sys.argv) > 6 else None
     sres  = sys.argv[7] if len(sys.argv) > 7 else None
-    pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres)
+    sflt  = sys.argv[8] if len(sys.argv) > 8 else None
+    pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres, sdk_filter=sflt)
     pb.generate_ids()
     pb.build()
