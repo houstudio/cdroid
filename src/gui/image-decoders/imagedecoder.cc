@@ -232,7 +232,16 @@ Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std:
 
 Drawable*ImageDecoder::createAsDrawable(Context*ctx,const std::string&resourceId){
     std::unique_ptr<std::istream> istm = ctx ? ctx->getInputStream(resourceId) : std::make_unique<std::ifstream>(resourceId);
-    std::unique_ptr<ImageDecoder> decoder = ((istm==nullptr)||(!*istm))?nullptr:getDecoder(*istm);
+    if((istm==nullptr)||(!*istm)) return nullptr;
+    // Slurp into a seekable in-memory buffer. getDetector reads the magic then
+    // seeks back to 0 (libpng re-reads the signature), but ZipStreamBuf's seek
+    // is unreliable on compressed (DEFLATED) pak entries — it works on STORED
+    // entries (e.g. app pngs) yet fails on the framework's deflated drawables,
+    // so the decoder read from offset 14 and reported "Not a PNG file". An
+    // istringstream seeks reliably regardless of the source pak's compression.
+    auto seekable = std::make_unique<std::istringstream>(
+        std::string((std::istreambuf_iterator<char>(*istm)), std::istreambuf_iterator<char>()));
+    std::unique_ptr<ImageDecoder> decoder = getDecoder(*seekable);
     Cairo::RefPtr<Cairo::ImageSurface> image = decoder?decoder->decode(1.0):nullptr;
 
     if(image && decoder && (decoder->getFrameCount()==1)){
