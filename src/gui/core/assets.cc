@@ -322,10 +322,16 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         if (stream && *stream) {
             std::string data((std::istreambuf_iterator<char>(*stream)),
                              std::istreambuf_iterator<char>());
+            // Assets owns the arsc bytes (stable on stack); ResTable uses
+            // copyData=false (raw pointer, no internal copy) to avoid any
+            // vector/malloc lifetime issues.
+            mArscSize = data.size();
+            mArscData.reset(new char[mArscSize]);
+            memcpy(mArscData.get(), data.data(), mArscSize);
             if (!mResTable) mResTable = new ResTable();
-            mResTable->add(data.data(), data.size(), /*copyData*/true);
+            mResTable->add(mArscData.get(), mArscSize, /*copyData*/false);
             LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
-                 path.c_str(), data.size(), mResTable->getError());
+                 path.c_str(), mArscSize, mResTable->getError());
         }
     }
     if(name.compare("cdroid")==0){

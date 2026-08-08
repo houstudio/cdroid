@@ -18,7 +18,7 @@ int main(int argc, const char* argv[]) {
 
     // Inflate a framework layout (binary AXML in cdroid.pak when ENABLE_BINARY_XML).
     LayoutInflater* inflater = LayoutInflater::from(&app);
-    View* view = inflater->inflate("layout/simple_list_item_1", nullptr);
+    View* view = inflater->inflate("cdroid:layout/simple_list_item_1", nullptr);
     if (view) {
         LOGD("Binary AXML layout inflated OK");
         TextView* tv = dynamic_cast<TextView*>(view);
