@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 3.22)
 project(CDROID C CXX)
 
+# Enable ctest at the top level so registered tests (e.g. the standalone androidfw
+# sub-library unit tests) are discoverable via `ctest` from the build root.
+enable_testing()
+
 set(CMAKE_POLICY_DEFAULT_CMP0012 NEW)
 if(COMMAND cmake_policy)
    cmake_policy(SET CMP0003 NEW)
@@ -32,6 +36,9 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
 endif()
 add_subdirectory(src/porting)
 add_subdirectory(src/gui)
+# androidfw: independent binary-resource sub-library (arsc/AXML readers), built
+# and tested in isolation; not linked into libcdroid.so.
+add_subdirectory(src/gui/androidfw)
 add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)
 

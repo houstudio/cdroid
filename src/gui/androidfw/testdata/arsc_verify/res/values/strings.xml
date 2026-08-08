@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Default</string>
+    <string name="greeting">@string/hello</string>
+    <string name="chain">@string/greeting</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="strv" format="string"/>
+    <attr name="intdec" format="integer"/>
+    <attr name="inthex" format="integer"/>
+    <attr name="boolv" format="boolean"/>
+    <attr name="colorv" format="color"/>
+    <attr name="dimv" format="dimension"/>
+    <attr name="refv" format="reference"/>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- root comment -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:strv="Hello 世界"
+    app:intdec="42"
+    app:inthex="0xFF"
+    app:boolv="true"
+    app:colorv="#FF8800"
+    app:dimv="14sp"
+    app:refv="@android:color/black">
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:intdec="7" />
+</LinearLayout>

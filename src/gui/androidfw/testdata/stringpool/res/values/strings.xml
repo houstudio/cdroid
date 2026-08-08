@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The 5 strings that the global string pool in stringpool_fixture.h holds
+     (in pool order): empty, Hello-World, HelloWorld, Hi+globe (surrogate pair),
+     你好世界. See README for the canonical-fixture caveat. -->
+<resources>
+    <string name="empty"></string>
+    <string name="hw1">Hello, World!</string>
+    <string name="hw2">HelloWorld</string>
+    <string name="globe">Hi 🌍</string>
+    <string name="cn">你好世界</string>
+</resources>
