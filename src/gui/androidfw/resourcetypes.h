@@ -248,9 +248,10 @@ private:
     uint32_t                    mStringPoolSize;  // element count (uint16_t, or uint8_t for UTF-8)
     const uint32_t*             mStyles;          // style data region
     uint32_t                    mStylePoolSize;   // uint32_t count
-    // Lazy UTF-8 -> UTF-16 decode cache. For a UTF-8 pool, stringAt converts and
-    // caches here; empty string marks not-yet-decoded (re-decode is harmless).
-    mutable std::vector<std::u16string> mCache;
+    // No decode cache: AOSP's ResStringPool has none (UTF-8 callers use
+    // string8At for a raw pool pointer). stringAt decodes UTF-8 fresh into a
+    // per-thread buffer on each call — a shared mutable cache raced across
+    // threads (input vs main) and dangled c_str()s.
 };
 
 // ---------------------------------------------------------------------------

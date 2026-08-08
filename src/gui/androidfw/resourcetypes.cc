@@ -345,7 +345,6 @@ status_t ResStringPool::getError() const {
 
 void ResStringPool::uninit() {
     mError = NO_INIT;
-    mCache.clear();
     if (mOwnedData) {
         free(mOwnedData);
         mOwnedData = nullptr;
@@ -392,11 +391,16 @@ const char16_t* ResStringPool::stringAt(size_t idx, size_t* outLen) const {
                 size_t u8len = decodeLength(&u8str);  // UTF-8 byte count
 
                 if ((uint32_t)(u8str + u8len - strings) < mStringPoolSize) {
-                    // Cache hit.
-                    if (idx < mCache.size() && !mCache[idx].empty()) {
-                        if (outLen) *outLen = mCache[idx].size();
-                        return mCache[idx].c_str();
-                    }
+                    // Decode fresh into a per-thread buffer. AOSP's ResStringPool
+                    // has no shared decode cache (UTF-8 callers use string8At for
+                    // a raw pool pointer); a shared mutable cache races when the
+                    // input thread and main thread resolve resources
+                    // concurrently — a realloc dangles every c_str() a caller
+                    // holds, producing garbage reads. Per-thread storage removes
+                    // the cross-thread race. The buffer is overwritten on the
+                    // next stringAt on the same thread, so callers MUST copy
+                    // before then (poolString / u16toUtf8 all copy immediately).
+                    static thread_local std::u16string tlsBuf;
 
                     size_t decodedLen = 0;
                     const char* decoded = stringDecodeAt(idx, u8str, u8len, &decodedLen);
@@ -411,13 +415,12 @@ const char16_t* ResStringPool::stringAt(size_t idx, size_t* outLen) const {
                         return nullptr;
                     }
 
-                    if (idx >= mCache.size()) mCache.resize(mHeader->stringCount);
-                    mCache[idx].resize((size_t)actualLen);
+                    tlsBuf.resize((size_t)actualLen);
                     utf8_to_utf16((const uint8_t*)decoded, decodedLen,
-                                  &mCache[idx][0], (size_t)actualLen);
+                                  &tlsBuf[0], (size_t)actualLen);
 
                     if (outLen) *outLen = (size_t)actualLen;
-                    return mCache[idx].c_str();
+                    return tlsBuf.c_str();
                 } else {
                     LOGW("Bad string block: string #%zu extends to %tu, past end at %u",
                             idx, u8str + u8len - strings, (unsigned)mStringPoolSize);

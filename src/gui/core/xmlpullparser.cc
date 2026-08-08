@@ -143,6 +143,9 @@ struct Private{
                         LOGD("AXML attr: %s = %s (raw=%d)", attrName.c_str(), attrValue.c_str(), av ? 1 : 0);
                         event->atts->insert({attrName, AttributeSet::normalize(pkg, attrValue)});
                     }
+                    // Note: aapt2 emits `style="@style/..."` as a regular
+                    // attribute (rendered to "@style/Name" above), so it reaches
+                    // LayoutInflater::getString("style") with no special handling.
                     eventQueue.push(event);
                     return true;
                 }
