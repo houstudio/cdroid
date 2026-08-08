@@ -97,6 +97,11 @@ PNGDecoder::PNGDecoder(std::istream&stream):ImageDecoder(stream) {
     mPrivate->transparency = PixelFormat::UNKNOWN;
     mPrivate->istream = &mStream;
     png_set_read_fn(mPrivate->png_ptr,mPrivate,istream_png_reader);
+    // Keep all unknown chunks (npTc/npLb/npOl 9-patch chunks) so the user-chunk
+    // callback actually receives them — without this libpng warns "forcing save
+    // of an unhandled chunk; please call png_set_keep_unknown_chunks" and the
+    // 9-patch chunk capture silently fails.
+    png_set_keep_unknown_chunks(mPrivate->png_ptr, PNG_HANDLE_CHUNK_ALWAYS, nullptr, 0);
     // Must be set before png_read_info (which runs in decodeSize()); mPrivate is the
     // user-chunk ptr the callback retrieves via png_get_user_chunk_ptr.
     png_set_read_user_chunk_fn(mPrivate->png_ptr, mPrivate, png_read_user_chunk);
