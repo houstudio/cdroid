@@ -1,6 +1,13 @@
 cmake_minimum_required (VERSION 3.22)
 project(CDROID C CXX)
 
+# Binary AXML mode: when ON, pakbuilder uses SDK framework resources (aapt2 -x)
+# to produce binary AXML layouts + resources.arsc in the pak. Default OFF (text XML).
+option(ENABLE_BINARY_XML "Use SDK framework resources + binary AXML in pak" OFF)
+set(CDROID_AAPT2 "/opt/android-sdk/build-tools/36.0.0/aapt2" CACHE PATH "aapt2 binary")
+set(CDROID_ANDROID_JAR "/opt/android-sdk/platforms/android-36/android.jar" CACHE PATH "android.jar")
+set(CDROID_SDK_RES "/opt/android-sdk/platforms/android-36/data/res" CACHE PATH "SDK framework res dir")
+
 # Enable ctest at the top level so registered tests (e.g. the standalone androidfw
 # sub-library unit tests) are discoverable via `ctest` from the build root.
 enable_testing()

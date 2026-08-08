@@ -35,9 +35,18 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # (reusing idgen.py) and builds the pak — stripped XML + aapt-compiled 9-patch
     # (cdNp chunk, borderless) + verbatim binaries. lxml+Pillow are hard deps;
     # pakbuilder.py fails loud if either is missing (no silent half-broken path).
+    #
+    # When ENABLE_BINARY_XML is ON and CDROID_SDK_RES exists, pakbuilder gets
+    # 3 extra args (aapt2, android.jar, sdk_res) and produces a hybrid pak:
+    # binary AXML layouts (from SDK framework res) + text values/ + resources.arsc.
+    set(extra_args "")
+    if(ENABLE_BINARY_XML AND EXISTS "${CDROID_SDK_RES}")
+        set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}")
+        message(STATUS "CreatePAK(${project}): binary AXML mode (SDK framework res)")
+    endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
-                ${project} ${ResourceDIR} ${PakPath} ${rhpath}
+                ${project} ${ResourceDIR} ${PakPath} ${rhpath} ${extra_args}
         COMMAND cp ${PakPath} ${CMAKE_BINARY_DIR}
         WORKING_DIRECTORY ${ResourceDIR}
         COMMENT "Package Assets from ${ResourceDIR} to:${PakPath}")
