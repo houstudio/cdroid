@@ -626,10 +626,11 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
     auto itr = mStrings.find(name);
     if(itr != mStrings.end()) {
         str = itr->second;
-    } else if (mResTable && mResTable->getError() == 0
-               && rawName.find('/') == std::string::npos) {
-        // Fallback: resolve from resources.arsc via ResTable.
-        // Only for bare string names (no type prefix like "attr/xxx").
+    } else if (mResTable && mResTable->getError() == 0) {
+        // Fallback: resolve from resources.arsc via ResTable. arscGetIdentifier
+        // handles both bare names ("cancel") and "type/name" forms
+        // ("string/cancel") — it strips the type prefix and searches type
+        // "string", so non-string resources (e.g. "attr/foo") won't match.
         uint32_t id = arscGetIdentifier(rawName, "string", pkg);
         if (id != 0) {
             size_t len = 0;
