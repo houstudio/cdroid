@@ -1162,6 +1162,9 @@ public:
     size_t size() const { return mCount; }
     bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
     bool hasValueOrEmpty(size_t idx) const;
+    // AOSP TypedArray pattern: iterate only over SET indices (not all COUNT).
+    size_t getIndexCount() const;
+    size_t getIndex(size_t n) const;  // nth set index (0..getIndexCount()-1)
 
     // Typed value getters (low-level; aligned with Android.util.TypedArray).
     int32_t  getInt(size_t idx, int32_t def) const;

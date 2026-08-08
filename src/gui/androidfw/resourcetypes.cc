@@ -2689,4 +2689,20 @@ bool TypedArray::peekValue(size_t idx, Res_value* out) const {
     return get(idx, out);
 }
 
+size_t TypedArray::getIndexCount() const {
+    size_t n = 0;
+    for (size_t i = 0; i < mCount; i++) if (mVals[i].set) n++;
+    return n;
+}
+
+size_t TypedArray::getIndex(size_t n) const {
+    for (size_t i = 0; i < mCount; i++) {
+        if (mVals[i].set) {
+            if (n == 0) return i;
+            n--;
+        }
+    }
+    return (size_t)-1;  // out of range
+}
+
 } // namespace cdroid
