@@ -108,8 +108,18 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagMasks  |= DRAWING_CACHE_QUALITY_MASK;
     }
     mContentDescription = attrs.getString("contentDescription");
-    setVisibility(attrs.getInt("visibility",std::unordered_map<std::string,int>{
-           {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}   },(int)VISIBLE));
+    // visibility: TypedArray (binary enum already resolved to int), else map.
+    {
+        int vis = VISIBLE;
+        if (ta && ta->hasValue(styleable::View::visibility)) {
+            vis = ta->getInt(styleable::View::visibility, (int)VISIBLE);
+        } else {
+            vis = attrs.getInt("visibility",std::unordered_map<std::string,int>{
+               {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}
+            },(int)VISIBLE);
+        }
+        setVisibility(vis);
+    }
 
     if(!attrs.getBoolean("soundEffectsEnabled",true)){
         viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
@@ -292,7 +302,13 @@ View::View(Context*ctx,const AttributeSet&attrs){
         mBackgroundTint->mTintMode = bgTintMode;
         mBackgroundTint->mHasTintMode = true;
     }
-    setBackground(attrs.getDrawable("background"));
+    // background: TypedArray when available (tests getDrawable via arsc), else AttributeSet.
+    {
+        Drawable* bg = (ta && ta->hasValue(styleable::View::background))
+            ? ta->getDrawable(styleable::View::background)
+            : attrs.getDrawable("background");
+        if (bg) setBackground(bg);
+    }
     const int providerInt = attrs.getInt("outlineProvider",std::unordered_map<std::string,int>{
             {"none", (int)PROVIDER_NONE},    {"background",(int)PROVIDER_BACKGROUND},
             {"bounds",(int)PROVIDER_BOUNDS}, {"paddedBounds",(int)PROVIDER_PADDED_BOUNDS}
