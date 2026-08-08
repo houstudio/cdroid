@@ -283,7 +283,7 @@ class PakBuilder(idgen.IDGenerater):
     to binary AXML via aapt2 (opt-in; default is the existing text-XML path)."""
 
     def __init__(self, namespace, res_dir, pak_path, rh_path,
-                 aapt2_path=None, android_jar=None):
+                 aapt2_path=None, android_jar=None, sdk_res=None):
         idstart = 1000 if namespace == "cdroid" else 10000   # preserve idgen __main__ rule
         super().__init__(idstart, namespace)                 # wires self.Handler/scanxml/dict2ID/dict2RH
         self.res_dir = res_dir
@@ -292,6 +292,8 @@ class PakBuilder(idgen.IDGenerater):
         self.aapt2_path = aapt2_path
         self.android_jar = android_jar
         self.use_aapt2 = bool(aapt2_path and android_jar)
+        self.sdk_res = sdk_res
+        self.use_sdk = bool(sdk_res and aapt2_path)
 
     # ----- ID generation: drive inherited idgen, with its filecmp change gate -----
     def generate_ids(self):
@@ -337,6 +339,66 @@ class PakBuilder(idgen.IDGenerater):
         im.crop((1, 1, W - 1, H - 1)).save(buf, format="PNG")
         return _insert_chunk_before_iend(buf.getvalue(), b"cdNp", cdNp)
 
+    # ----- SDK framework build: compile SDK data/res/ via aapt2 -x (framework mode) -----
+    def _compile_sdk_res(self):
+        """Build framework.apk from SDK data/res/ via aapt2 -x. Returns {rel_path: bytes}
+        with binary AXML layouts + resources.arsc + drawables (all with 'res/' prefix
+        stripped to match pak naming convention)."""
+        import subprocess, shutil
+        tmpdir = tempfile.mkdtemp(prefix="sdk_aapt2_")
+        try:
+            tmpres = os.path.join(tmpdir, "res")
+            shutil.copytree(self.sdk_res, tmpres)
+            # Fix 1: strip android:featureFlag lines from dimens.xml.
+            dimens = os.path.join(tmpres, "values", "dimens.xml")
+            if os.path.exists(dimens):
+                with open(dimens) as f: lines = f.readlines()
+                with open(dimens, "w") as f:
+                    f.writelines(l for l in lines if "android:featureFlag" not in l)
+            # Fix 2: add widget dimen stubs + remove their public-final declarations.
+            with open(os.path.join(tmpres, "values", "_sdk_fixes.xml"), "w") as f:
+                f.write('<?xml version="1.0" encoding="utf-8"?>\n<resources>\n'
+                        '  <dimen name="system_app_widget_background_radius">0dp</dimen>\n'
+                        '  <dimen name="system_app_widget_inner_radius">0dp</dimen>\n'
+                        '</resources>\n')
+            pf = os.path.join(tmpres, "values", "public-final.xml")
+            if os.path.exists(pf):
+                with open(pf) as f: lines = f.readlines()
+                with open(pf, "w") as f:
+                    f.writelines(l for l in lines
+                                 if "system_app_widget_background_radius" not in l
+                                 and "system_app_widget_inner_radius" not in l)
+            # Synthesize manifest (framework: package=android).
+            manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
+                        '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
+                        ' package="android">'
+                        '<uses-sdk android:minSdkVersion="26" android:targetSdkVersion="36"/>'
+                        '</manifest>')
+            mpath = os.path.join(tmpdir, "AndroidManifest.xml")
+            with open(mpath, "w") as f: f.write(manifest)
+            compiled = os.path.join(tmpdir, "compiled.zip")
+            out_apk = os.path.join(tmpdir, "framework.apk")
+            sys.stderr.write("SDK res: compiling %s via aapt2 -x...\n" % self.sdk_res)
+            subprocess.run([self.aapt2_path, "compile", "--dir", tmpres, "-o", compiled],
+                           check=True, capture_output=True)
+            subprocess.run([self.aapt2_path, "link", "-x", "--manifest", mpath,
+                            "-o", out_apk, compiled],
+                           check=True, capture_output=True)
+            # Extract everything, stripping 'res/' prefix to match pak convention.
+            result = {}
+            with zipfile.ZipFile(out_apk) as zf:
+                for name in zf.namelist():
+                    if name.endswith("/"): continue
+                    rel = name[4:] if name.startswith("res/") else name
+                    result[rel] = zf.read(name)
+            sys.stderr.write("SDK res: %d entries (binary AXML + arsc + drawables)\n" % len(result))
+            return result
+        except Exception as e:
+            sys.stderr.write("SDK res compile failed (%s); falling back\n" % e)
+            return {}
+        finally:
+            shutil.rmtree(tmpdir, ignore_errors=True)
+
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _compile_aapt2(self):
         """Run aapt2 compile+link on res/, return a dict mapping relative XML
@@ -377,19 +439,28 @@ class PakBuilder(idgen.IDGenerater):
 
     # ----- packaging: one walk, XML deflated / binaries stored -----
     def build(self):
-        # When aapt2 is enabled, pre-compile binary AXML for layouts/drawables.
+        # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
+        sdk_data = self._compile_sdk_res() if self.use_sdk else {}
+        # App mode: compile cdroid's own res/ via aapt2 (optional).
         binary_xmls = self._compile_aapt2() if self.use_aapt2 else {}
         with zipfile.ZipFile(self.pak_path, "w") as zf:
+            # SDK framework: store all entries (binary AXML + arsc + drawables).
+            for rel, data in sorted(sdk_data.items()):
+                zf.writestr(rel, data, zipfile.ZIP_DEFLATED)
+            # Walk cdroid's res/ for files NOT already provided by SDK.
             for root, dirs, files in os.walk(self.res_dir):
                 dirs.sort(); files.sort()
                 for f in files:
                     p = os.path.join(root, f)
                     rel = os.path.relpath(p, self.res_dir).replace(os.sep, "/")
+                    if self.use_sdk and rel in sdk_data:
+                        continue  # SDK already provides this entry
                     if f.endswith(".xml"):
                         if rel in binary_xmls:
-                            # Binary AXML from aapt2 (detected at runtime by XmlPullParser).
                             zf.writestr(rel, binary_xmls[rel], zipfile.ZIP_DEFLATED)
                         else:
+                            # cdroid's values/*.xml kept as text (SDK provides
+                            # layouts/drawables as binary, but NOT values/ files).
                             zf.writestr(rel, self._strip_xml(p), zipfile.ZIP_DEFLATED)
                     elif f.endswith(".9.png"):               # MUST precede the .png branch
                         arc = rel[:-6] + ".png"              # foo.9.png -> foo.png
@@ -402,14 +473,15 @@ class PakBuilder(idgen.IDGenerater):
                             zf.writestr(arc, open(p, "rb").read(), zipfile.ZIP_STORED)
                     elif f.endswith(BIN_EXTS):
                         zf.writestr(rel, open(p, "rb").read(), zipfile.ZIP_STORED)
-                    # other extensions skipped (matches prior behavior: only xml + listed bins)
+                    # other extensions skipped
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 5:
-        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar]")
+        sys.exit("Usage: pakbuilder.py <namespace> <resdir> <pakpath> <rhpath> [aapt2] [android.jar] [sdk_res]")
     aapt2 = sys.argv[5] if len(sys.argv) > 5 else None
     ajar  = sys.argv[6] if len(sys.argv) > 6 else None
-    pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar)
+    sres  = sys.argv[7] if len(sys.argv) > 7 else None
+    pb = PakBuilder(*sys.argv[1:5], aapt2_path=aapt2, android_jar=ajar, sdk_res=sres)
     pb.generate_ids()
     pb.build()
