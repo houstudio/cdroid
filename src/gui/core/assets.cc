@@ -37,6 +37,7 @@ namespace cdroid {
 
 Assets::Assets() {
     mNextAutofillViewId=100000;
+    mResTable = nullptr;
 }
 
 Assets::Assets(const std::string&path):Assets() {
@@ -44,6 +45,7 @@ Assets::Assets(const std::string&path):Assets() {
 }
 
 Assets::~Assets() {
+    delete mResTable;
     for(auto& cls:mStateColors){
         //delete cls.second;
     }
@@ -272,6 +274,18 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         }
         return 0;
     });
+    // Load resources.arsc if present in the pak (binary resource mode).
+    if (pak->hasEntry("resources.arsc")) {
+        auto stream = std::unique_ptr<std::istream>(pak->getInputStream("resources.arsc"));
+        if (stream && *stream) {
+            std::string data((std::istreambuf_iterator<char>(*stream)),
+                             std::istreambuf_iterator<char>());
+            if (!mResTable) mResTable = new ResTable();
+            mResTable->add(data.data(), data.size(), /*copyData*/true);
+            LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
+                 path.c_str(), data.size(), mResTable->getError());
+        }
+    }
     if(name.compare("cdroid")==0){
         setTheme("cdroid:style/Theme");
         //setTheme("cdroid:style/Theme.Material");

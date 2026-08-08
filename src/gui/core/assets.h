@@ -23,6 +23,7 @@
 #include <unordered_map>
 #include <core/variant.h>
 #include <drawable/drawable.h>
+#include "androidfw/resourcetypes.h"   // ResTable: arsc resource resolution
 
 namespace cdroid{
 
@@ -41,6 +42,7 @@ private:
     std::unordered_map<std::string,uint32_t>mColors;
     std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions;
     std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
+    ResTable* mResTable;   // loaded from resources.arsc in pak (null if no arsc)
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
