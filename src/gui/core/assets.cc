@@ -685,8 +685,28 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     if(it != mDimensions.end()){
         return GET_VARIANT(it->second,int);
     }
+    // Fallback: resolve from resources.arsc via ResTable.
+    if (mResTable) {
+        std::string rawName;
+        parseResource(refid, &rawName, nullptr);
+        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        if (id != 0) {
+            Res_value v;
+            if (mResTable->getResource(id, &v) >= 0) {
+                if (v.dataType == Res_value::TYPE_DIMENSION) {
+                    float mag = complexToFloat(v.data);
+                    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+                    const auto& dm = getDisplayMetrics();
+                    if (unit == Res_value::COMPLEX_UNIT_DIP) return (int)(dm.density * mag + 0.5f);
+                    if (unit == Res_value::COMPLEX_UNIT_SP)  return (int)(dm.scaledDensity * mag + 0.5f);
+                    return (int)(mag + 0.5f);
+                }
+                if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+                    return (int)v.data;
+            }
+        }
+    }
     return def;
-
 }
 
 bool Assets::getBoolean(const std::string&refid)const{
