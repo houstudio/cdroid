@@ -95,6 +95,10 @@ LinearLayout::LinearLayout(Context* context,const AttributeSet& attrs)
     int index = attrs.getInt("orientation",std::unordered_map<std::string,int>{
              {"horizontal",LinearLayout::HORIZONTAL},
              {"vertical",LinearLayout::VERTICAL} },-1);
+    // Binary AXML: aapt2 already resolved "vertical"→1 (TYPE_INT_DEC). The
+    // string map has "vertical"→1 but not "1"→1, so getInt returns def.
+    // Fall back to the simple getInt (parses numeric values directly).
+    if (index < 0) index = attrs.getInt("orientation", -1);
     if(index>=0)setOrientation(index);
     index = attrs.getGravity("gravity",-1);
     if(index>=0)setGravity(index);
