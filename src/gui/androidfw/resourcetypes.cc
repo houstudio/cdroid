@@ -498,7 +498,7 @@ const ResStringPool_span* ResStringPool::styleAt(size_t idx) const {
 }
 
 size_t ResStringPool::size() const {
-    return (mError == NO_ERROR) ? mHeader->stringCount : 0;
+    return (mError == NO_ERROR && mHeader) ? mHeader->stringCount : 0;
 }
 
 size_t ResStringPool::styleCount() const {
@@ -1833,8 +1833,10 @@ status_t ResTable::addInternal(const void* data, size_t size, bool appAsLib,
     hdr->cookie = cookie;
     hdr->size = size;
     if (copyData) {
-        hdr->owned.assign((const uint8_t*)data, (const uint8_t*)data + size);
-        hdr->data = hdr->owned.data();
+        hdr->ownedData = malloc(size);
+        if (!hdr->ownedData) return (mError = NO_MEMORY);
+        memcpy(hdr->ownedData, data, size);
+        hdr->data = (const uint8_t*)hdr->ownedData;
     } else {
         hdr->data = (const uint8_t*)data;
     }

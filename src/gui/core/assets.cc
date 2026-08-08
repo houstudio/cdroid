@@ -37,13 +37,17 @@ namespace cdroid {
 
 // arsc identifier lookup with package-name fallback (cdroid → android).
 uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
-    if (!mResTable) return 0;
+    if (!mResTable || mResTable->getError() != 0) return 0;
+    // Strip type prefix: "attr/colorOnPrimary" → "colorOnPrimary"
+    std::string cleanName = name;
+    size_t slash = cleanName.find('/');
+    if (slash != std::string::npos) cleanName = cleanName.substr(slash + 1);
+    if (cleanName.empty()) return 0;
     if (!pkg.empty()) {
-        uint32_t id = mResTable->getIdentifier(name, type, pkg);
+        uint32_t id = mResTable->getIdentifier(cleanName, type, pkg);
         if (id) return id;
     }
-    // Framework arsc uses package "android"; CDROID pak is "cdroid" — try both.
-    return mResTable->getIdentifier(name, type, "android");
+    return mResTable->getIdentifier(cleanName, type, "android");
 }
 
 // Decode a TYPE_DIMENSION complex value to its float magnitude.

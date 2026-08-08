@@ -1048,7 +1048,21 @@ private:
         const uint8_t*       data = nullptr;
         size_t               size = 0;
         const uint8_t*       dataEnd = nullptr;
-        std::vector<uint8_t> owned;       // copy when copyData
+        void*                ownedData = nullptr;  // malloc'd copy when copyData
+        ~Header() { free(ownedData); }
+        Header() = default;
+        Header(Header&& o) noexcept : index(o.index), cookie(o.cookie),
+            data(o.data), size(o.size), dataEnd(o.dataEnd), ownedData(o.ownedData),
+            values(std::move(o.values)) { o.ownedData = nullptr; o.data = nullptr; }
+        Header& operator=(Header&& o) noexcept {
+            if (this != &o) {
+                free(ownedData);
+                index = o.index; cookie = o.cookie; data = o.data; size = o.size;
+                dataEnd = o.dataEnd; ownedData = o.ownedData; values = std::move(o.values);
+                o.ownedData = nullptr; o.data = nullptr;
+            }
+            return *this;
+        }
         ResStringPool        values;      // this arsc's global value string pool
     };
     // A config variant group for one type id (from a TypeSpec + its type chunks).
