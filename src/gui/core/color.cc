@@ -123,8 +123,10 @@ unsigned int Color::parseColor(const std::string& colorString){
 
 unsigned int Color::getHtmlColor(const std::string&colorname){
      auto it = sColorNameMap.find(colorname);
-     if(it== sColorNameMap.end())/*return -1;*/
-         throw std::invalid_argument("invalid color");
+     if(it== sColorNameMap.end()){/*return -1;*/
+         return 0xFFFF0000;
+         //throw std::invalid_argument("invalid color");
+     }
      return it->second;
 }
 

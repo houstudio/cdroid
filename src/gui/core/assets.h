@@ -49,6 +49,7 @@ private:
     // (framework arsc compiled with package="android" via aapt2 -x, but pak
     // registered under "cdroid" — the names don't match, so we fall back).
     uint32_t arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const;
+    bool arscResolveHexRef(const std::string& s, Res_value* out) const;
     const std::string parseResource(const std::string&fullresid,std::string*res,std::string*ns)const;
     void parseItem(const std::string&package,const std::string&resid,const std::vector<std::string>&tag,std::vector<AttributeSet>atts,const std::string&value,void*);
     ZIPArchive*getResource(const std::string & fullresid, std::string* relativeResid,std::string*package)const;
@@ -63,6 +64,10 @@ public:
     Assets();
     Assets(const std::string&path);
     ~Assets()override;
+    // Binary-AXML bridge (transitional): resolve a resource ID / fetch a string
+    // from the loaded arsc so xmlpullparser can render typed attribute values.
+    bool arscResolveId(uint32_t resId, Res_value* out) const;
+    const char16_t* arscStringAt(uint32_t resId, size_t* outLen) const;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;

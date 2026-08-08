@@ -24,6 +24,8 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <cstdlib>
+#include <cerrno>
 #include <utils/textutils.h>
 #include <limits.h>
 #include <unistd.h>
@@ -34,6 +36,32 @@
 
 using namespace Cairo;
 namespace cdroid {
+
+// Resolve a resource ID through the loaded arsc.
+bool Assets::arscResolveId(uint32_t resId, Res_value* out) const {
+    if (!mResTable || resId == 0 || resId == 0xFFFFFFFF) return false;
+    return mResTable->getResource(resId, out) >= 0;
+}
+
+// Get a string from the arsc string pool by resource ID.
+const char16_t* Assets::arscStringAt(uint32_t resId, size_t* outLen) const {
+    if (!mResTable || resId == 0) return nullptr;
+    return mResTable->getResourceString(resId, outLen);
+}
+
+// Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
+bool Assets::arscResolveHexRef(const std::string& s, Res_value* out) const {
+    if (!mResTable || s.empty()) return false;
+    // Accept "@0x...", "0x...", or a bare hex tail after the last '@'.
+    size_t at = s.rfind('@');
+    std::string hex = (at != std::string::npos) ? s.substr(at + 1) : s;
+    if (hex.compare(0, 2, "0x") != 0 && hex.compare(0, 2, "0X") != 0) return false;
+    char* end = nullptr;
+    errno = 0;
+    unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
+    if (errno || end == hex.c_str() + 2 || id == 0 || id == 0xFFFFFFFF) return false;
+    return mResTable->getResource((uint32_t)id, out) >= 0;
+}
 
 // arsc identifier lookup with package-name fallback (cdroid → android).
 uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
@@ -544,6 +572,15 @@ int Assets::getNextAutofillId(){
 }
 
 const std::string Assets::getString(const std::string& resid,const std::string&lan) {
+    // Binary AXML hex reference → resolve via arsc.
+    {
+        Res_value rv;
+        if (arscResolveHexRef(resid, &rv) && rv.dataType == Res_value::TYPE_STRING) {
+            size_t len = 0;
+            const char16_t* s = mResTable->getResourceString(rv.data, &len);
+            if (s && len > 0) return u16toUtf8(s, len);
+        }
+    }
     if((!lan.empty())&&(mLanguage!=lan)) {
         loadStrings(lan);
     }
@@ -607,6 +644,19 @@ size_t Assets::getArray(const std::string&resid,std::vector<std::string>&out) {
 
 Drawable* Assets::getDrawable(const std::string&resid) {
     Drawable* d = nullptr;
+    // Binary AXML hex reference → resolve path via arsc.
+    {
+        Res_value rv;
+        if (arscResolveHexRef(resid, &rv) && rv.dataType == Res_value::TYPE_STRING) {
+            size_t len = 0;
+            const char16_t* s = mResTable->getResourceString(rv.data, &len);
+            if (s && len > 0) {
+                std::string path = u16toUtf8(s, len);
+                if (path.substr(0, 4) == "res/") path = path.substr(4);
+                return getDrawable(path);
+            }
+        }
+    }
     std::string resname,package,ext,fullresid;
     if(resid.empty()||(resid.compare("null")==0)) {
         return nullptr;
@@ -800,6 +850,14 @@ float Assets::getFloat(const std::string&refid,float def)const{
 #pragma GCC optimize("O0")
 //codes between pragma will crashed in ubuntu GCC V8.x,bus GCC V7 wroked well.
 int Assets::getColor(const std::string&refid) {
+    // Binary AXML hex reference: "@0x01060373" → resolve via arsc.
+    {
+        Res_value rv;
+        if (arscResolveHexRef(refid, &rv) &&
+            rv.dataType >= Res_value::TYPE_FIRST_COLOR_INT &&
+            rv.dataType <= Res_value::TYPE_LAST_COLOR_INT)
+            return rv.data;
+    }
     std::string pkg,relname,name = refid;
     parseResource(name,&relname,&pkg);
     name = AttributeSet::normalize(pkg,name);

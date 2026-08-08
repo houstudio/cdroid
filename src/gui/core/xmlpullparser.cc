@@ -15,18 +15,32 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  *********************************************************************************/
+#include <androidfw/resourcetypes.h>   // Must be first: Res_value used by assets.h
 #include <core/xmlpullparser.h>
 #include <porting/cdlog.h>
 #include <core/context.h>
 #include <core/app.h>
+#include <core/assets.h>
 #include <expat.h>
-#include <androidfw/resourcetypes.h>   // ResXMLTree: binary AXML pull parser
 #include <array>
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <vector>
+
 namespace cdroid{
+
+// Decode a TYPE_DIMENSION complex value to its float magnitude.
+static float axmlComplexToFloat(uint32_t data) {
+    const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
+    const uint32_t mantissa = (data >> Res_value::COMPLEX_MANTISSA_SHIFT) & Res_value::COMPLEX_MANTISSA_MASK;
+    switch (radix) {
+        case Res_value::COMPLEX_RADIX_23p0: return (float)(int32_t)mantissa;
+        case Res_value::COMPLEX_RADIX_16p7: return mantissa * (1.0f / (1 << 7));
+        case Res_value::COMPLEX_RADIX_8p15: return mantissa * (1.0f / (1 << 15));
+        default: return mantissa * (1.0f / (1 << 23));
+    }
+}
 struct XmlEvent {
     XmlPullParser::EventType type;
     int depth;
@@ -105,7 +119,7 @@ struct Private{
     }
     // Drive ResXMLParser to produce one XmlEvent (skip namespace events that
     // CDROID's pull model doesn't use). Returns false at END_DOCUMENT.
-    bool feedFromAxml(const std::string& pkg){
+    bool feedFromAxml(const std::string& pkg, Context* ctx){
         if(!axmlTree) return false;
         while(true){
             ResXMLParser::event_code_t ev = axmlTree->next();
@@ -123,7 +137,8 @@ struct Private{
                         size_t avl = 0;
                         const char16_t* av = axmlTree->getAttributeStringValue(i, &avl);
                         std::string attrName = u16toUtf8(an, anl);
-                        std::string attrValue = av ? u16toUtf8(av, avl) : renderTypedValue(i);
+                        std::string attrValue = av ? u16toUtf8(av, avl) : renderTypedValue(i, ctx);
+                        LOGD("AXML attr: %s = %s (raw=%d)", attrName.c_str(), attrValue.c_str(), av ? 1 : 0);
                         event->atts->insert({attrName, AttributeSet::normalize(pkg, attrValue)});
                     }
                     eventQueue.push(event);
@@ -160,7 +175,8 @@ struct Private{
         }
     }
     // Render a typed Res_value to a string when no rawValue is available.
-    std::string renderTypedValue(size_t attrIdx){
+    // ctx: the Context (App/Assets) for resolving references through arsc.
+    std::string renderTypedValue(size_t attrIdx, Context* ctx){
         Res_value v;
         if(axmlTree->getAttributeValue(attrIdx, &v) != sizeof(Res_value)) return "";
         char buf[32];
@@ -170,10 +186,6 @@ struct Private{
                 const char16_t* s = axmlTree->getStrings().stringAt(v.data, &len);
                 return s ? u16toUtf8(s, len) : "";
             }
-            case Res_value::TYPE_REFERENCE:
-            case Res_value::TYPE_ATTRIBUTE:
-                snprintf(buf, sizeof(buf), "@0x%08x", v.data);
-                return buf;
             case Res_value::TYPE_INT_DEC:
                 snprintf(buf, sizeof(buf), "%d", (int)v.data);
                 return buf;
@@ -182,6 +194,45 @@ struct Private{
                 return buf;
             case Res_value::TYPE_INT_BOOLEAN:
                 return v.data ? "true" : "false";
+            case Res_value::TYPE_INT_COLOR_ARGB8:
+            case Res_value::TYPE_INT_COLOR_RGB8:
+            case Res_value::TYPE_INT_COLOR_ARGB4:
+            case Res_value::TYPE_INT_COLOR_RGB4:
+                snprintf(buf, sizeof(buf), "#%08x", v.data);
+                return buf;
+            case Res_value::TYPE_DIMENSION:{
+                float mag = axmlComplexToFloat(v.data);
+                int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+                const char* u = unit == Res_value::COMPLEX_UNIT_SP ? "sp"
+                              : unit == Res_value::COMPLEX_UNIT_DIP ? "dp" : "px";
+                snprintf(buf, sizeof(buf), "%d%s", (int)mag, u);
+                return buf;
+            }
+            case Res_value::TYPE_FLOAT:{
+                float f; memcpy(&f, &v.data, sizeof(f));
+                snprintf(buf, sizeof(buf), "%f", f);
+                return buf;
+            }
+            case Res_value::TYPE_REFERENCE:
+            case Res_value::TYPE_ATTRIBUTE:
+            case Res_value::TYPE_DYNAMIC_REFERENCE:
+            case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
+                // Resolve through arsc if possible (returns the actual value).
+                if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
+                    Assets* assets = dynamic_cast<Assets*>(ctx);
+                    if(assets){
+                        Res_value rv2;
+                        if(assets->arscResolveId(v.data, &rv2)){
+                            if(rv2.dataType == Res_value::TYPE_STRING){
+                                size_t len = 0;
+                                const char16_t* s = assets->arscStringAt(rv2.data, &len);
+                                if(s && len > 0) return u16toUtf8(s, len);
+                            }
+                        }
+                    }
+                }
+                snprintf(buf, sizeof(buf), "@0x%08x", v.data);
+                return buf;
             default:
                 snprintf(buf, sizeof(buf), "0x%08x", v.data);
                 return buf;
@@ -318,7 +369,7 @@ int XmlPullParser::next(){
     while(mData->eventQueue.empty()){
         if(mData->isBinary){
             // Binary AXML: drive ResXMLParser to produce events.
-            if(!mData->feedFromAxml(mPackage)){
+            if(!mData->feedFromAxml(mPackage, mContext)){
                 mData->eventQueue.push(mData->acquire(END_DOCUMENT));
             }
         } else {
