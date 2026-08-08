@@ -494,8 +494,12 @@ class PakBuilder(idgen.IDGenerater):
             id_xml = os.path.join(tmpres, "values", "ID.xml")
             if os.path.exists(id_xml):
                 os.remove(id_xml)
-            # Synthesize a minimal manifest (package name = namespace).
-            pkg = self.namespace if "." in self.namespace else "com." + self.namespace
+            # Synthesize a minimal manifest. aapt2 rejects a non-dotted package
+            # name, so qualify the namespace (e.g. "axmlapp" -> "cdroid.axmlapp").
+            # The arsc package name won't match CDROID's pak name ("axmlapp"),
+            # but Assets::arscGetIdentifier resolves by searching ALL loaded
+            # packages, so the name mismatch doesn't matter.
+            pkg = self.namespace if "." in self.namespace else "cdroid." + self.namespace
             manifest = ('<?xml version="1.0" encoding="utf-8"?>\n'
                         '<manifest xmlns:android="http://schemas.android.com/apk/res/android"'
                         ' package="%s">'

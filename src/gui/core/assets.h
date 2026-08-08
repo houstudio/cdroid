@@ -66,6 +66,10 @@ public:
     // from the loaded arsc so xmlpullparser can render typed attribute values.
     bool arscResolveId(uint32_t resId, Res_value* out) const;
     const char16_t* arscStringAt(uint32_t resId, size_t* outLen) const;
+    // Render a resource ID as an "@type/key" reference string (e.g.
+    // "@drawable/bg", "@string/hello") matching text-XML form, so CDROID's
+    // existing string-based resolvers consume binary-AXML references unchanged.
+    std::string arscReferenceName(uint32_t resId) const;
     int loadStyles(const std::string&resid);
     void clearStyles();
     const std::string getPackageName()const override;

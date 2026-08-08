@@ -49,6 +49,22 @@ const char16_t* Assets::arscStringAt(uint32_t resId, size_t* outLen) const {
     return mResTable->getResourceString(resId, outLen);
 }
 
+// Render a resource ID as "@type/key" (text-XML reference form) so binary-AXML
+// references flow through the same resolution paths as text XML. Returns "" if
+// the arsc can't name the resource (caller falls back to "@0x..").
+std::string Assets::arscReferenceName(uint32_t resId) const {
+    if (!mResTable || resId == 0) return "";
+    std::string pkg, type, key;
+    if (mResTable->getResourceName(resId, &pkg, &type, &key) && !type.empty() && !key.empty()) {
+        // Framework resources need the explicit package prefix ("@android:...");
+        // app resources resolve under the default package, so omit it (matches
+        // text-XML conventions).
+        if (pkg == "android") return "@android:" + type + "/" + key;
+        return "@" + type + "/" + key;
+    }
+    return "";
+}
+
 // Try to resolve a "@0xPPtteeee" hex resource ID string through the arsc.
 bool Assets::arscResolveHexRef(const std::string& s, Res_value* out) const {
     if (!mResTable || s.empty()) return false;
@@ -63,7 +79,10 @@ bool Assets::arscResolveHexRef(const std::string& s, Res_value* out) const {
     return mResTable->getResource((uint32_t)id, out) >= 0;
 }
 
-// arsc identifier lookup with package-name fallback (cdroid → android).
+// arsc identifier lookup. aapt2 forces a dotted package name (e.g.
+// "cdroid.axmlapp") that won't match CDROID's pak name ("axmlapp"), so after
+// trying the requested package and the framework ("android"), fall back to a
+// name-only search across ALL loaded packages (empty package = search all).
 uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
     if (!mResTable || mResTable->getError() != 0) return 0;
     // Strip type prefix: "attr/colorOnPrimary" → "colorOnPrimary"
@@ -75,7 +94,9 @@ uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& t
         uint32_t id = mResTable->getIdentifier(cleanName, type, pkg);
         if (id) return id;
     }
-    return mResTable->getIdentifier(cleanName, type, "android");
+    uint32_t id = mResTable->getIdentifier(cleanName, type, "android");
+    if (id) return id;
+    return mResTable->getIdentifier(cleanName, type, "");  // any package
 }
 
 // Decode a TYPE_DIMENSION complex value to its float magnitude.

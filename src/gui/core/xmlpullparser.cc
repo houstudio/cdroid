@@ -217,17 +217,16 @@ struct Private{
             case Res_value::TYPE_ATTRIBUTE:
             case Res_value::TYPE_DYNAMIC_REFERENCE:
             case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
-                // v.data is a resource ID. Resolve to a string via arsc when the
-                // target is a string resource (arscStringAt takes the resId and
-                // does getResource internally — do NOT pass a resolved pool
-                // index). Non-string refs (color/dimen) fall through to "@0x.."
-                // so the widget's getColor/getDimension path resolves them.
+                // Render as an "@type/key" reference string (e.g. "@drawable/bg",
+                // "@string/hello", "@android:color/holo_orange") — the same form
+                // text XML uses — so the consuming widget's resolver
+                // (getDrawable/getString/getColor/...) handles it unchanged.
+                // Falls back to "@0xRESID" if the arsc can't name the resource.
                 if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
                     Assets* assets = dynamic_cast<Assets*>(ctx);
                     if(assets){
-                        size_t len = 0;
-                        const char16_t* s = assets->arscStringAt(v.data, &len);
-                        if(s && len > 0) return u16toUtf8(s, len);
+                        std::string ref = assets->arscReferenceName(v.data);
+                        if(!ref.empty()) return ref;
                     }
                 }
                 snprintf(buf, sizeof(buf), "@0x%08x", v.data);
