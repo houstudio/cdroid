@@ -35,6 +35,17 @@
 using namespace Cairo;
 namespace cdroid {
 
+// arsc identifier lookup with package-name fallback (cdroid → android).
+uint32_t Assets::arscGetIdentifier(const std::string& name, const std::string& type, const std::string& pkg) const {
+    if (!mResTable) return 0;
+    if (!pkg.empty()) {
+        uint32_t id = mResTable->getIdentifier(name, type, pkg);
+        if (id) return id;
+    }
+    // Framework arsc uses package "android"; CDROID pak is "cdroid" — try both.
+    return mResTable->getIdentifier(name, type, "android");
+}
+
 // Decode a TYPE_DIMENSION complex value to its float magnitude.
 static float complexToFloat(uint32_t data) {
     const uint32_t radix = (data >> Res_value::COMPLEX_RADIX_SHIFT) & Res_value::COMPLEX_RADIX_MASK;
@@ -504,7 +515,7 @@ int Assets::getId(const std::string&resname)const {
     if(it != mIDS.end()) return it->second;
     // Fallback: resolve from resources.arsc via ResTable.
     if (mResTable) {
-        uint32_t id = mResTable->getIdentifier(resid, "id", pkg);
+        uint32_t id = arscGetIdentifier(resid, "id", pkg);
         if (id != 0) return (int)id;
     }
     return -1;
@@ -528,7 +539,7 @@ const std::string Assets::getString(const std::string& resid,const std::string&l
         str = itr->second;
     } else if (mResTable) {
         // Fallback: resolve from resources.arsc via ResTable.
-        uint32_t id = mResTable->getIdentifier(rawName, "string", pkg);
+        uint32_t id = arscGetIdentifier(rawName, "string", pkg);
         if (id != 0) {
             size_t len = 0;
             const char16_t* s = mResTable->getResourceString(id, &len);
@@ -585,7 +596,7 @@ Drawable* Assets::getDrawable(const std::string&resid) {
     if (mResTable && resname.find("drawable/") != std::string::npos) {
         std::string rawName;
         parseResource(resid, &rawName, &package);
-        uint32_t id = mResTable->getIdentifier(rawName, "drawable", package);
+        uint32_t id = arscGetIdentifier(rawName, "drawable", package);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0 && v.dataType == Res_value::TYPE_STRING) {
@@ -676,7 +687,7 @@ int Assets::getDimension(const std::string&refid)const{
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
-        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0) {
@@ -709,7 +720,7 @@ int Assets::getDimensionPixelSize(const std::string&refid,int def)const{
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
-        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0) {
@@ -745,7 +756,7 @@ float Assets::getFloat(const std::string&refid,float def)const{
     if (mResTable) {
         std::string rawName;
         parseResource(refid, &rawName, nullptr);
-        uint32_t id = mResTable->getIdentifier(rawName, "dimen", pkg);
+        uint32_t id = arscGetIdentifier(rawName, "dimen", pkg);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0) {
@@ -776,7 +787,7 @@ int Assets::getColor(const std::string&refid) {
     }
     // Fallback: resolve from resources.arsc via ResTable.
     if (mResTable) {
-        uint32_t id = mResTable->getIdentifier(relname, "color", pkg);
+        uint32_t id = arscGetIdentifier(relname, "color", pkg);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0 &&
@@ -824,7 +835,7 @@ cdroid::RefPtr<ColorStateList> Assets::getColorStateList(const std::string&fullr
     }
     // Fallback: resolve from resources.arsc via ResTable.
     if (mResTable) {
-        uint32_t id = mResTable->getIdentifier(relname, "color", pkg);
+        uint32_t id = arscGetIdentifier(relname, "color", pkg);
         if (id != 0) {
             Res_value v;
             if (mResTable->getResource(id, &v) >= 0 &&
