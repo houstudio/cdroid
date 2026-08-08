@@ -68,17 +68,23 @@ static void PNGAPI pngComplete(png_structp png, png_infop){
     //static_cast<PNGDecoder*>(png_get_progressive_ptr(png))->pngComplete();
 }
 
-// libpng user-chunk callback: capture the CDROID 9-patch bundle chunk DATA (bytes after
-// the 8-byte PNG chunk header) into PRIVATE. Registered via png_set_read_user_chunk_fn
-// (user ptr = mPrivate); fires during png_read_info for unknown chunks. Returning 1 marks
-// the chunk handled. The "cdNp" bundle packs npTc (stretch/padding) + npLb (optical/layout
-// bounds) + npOl (outline) into one blob so the runtime reuses the single-chunk plumbing.
+// libpng user-chunk callback: capture the 9-patch chunk DATA (bytes after the 8-byte
+// PNG chunk header) into PRIVATE. Registered via png_set_read_user_chunk_fn (user ptr =
+// mPrivate); fires during png_read_info for unknown chunks. Returning 1 marks the chunk
+// handled. Accept both chunk forms:
+//  - "cdNp": CDROID bundle (npTc + npLb + npOl) used by pakbuilder-bundled assets.
+//  - "npTc": Android's standard aapt-embedded 9-patch chunk (framework / SDK drawables).
+// NinePatch::Create dispatches on the data (data[0]==1 → cdNp bundle; else raw npTc), so
+// storing either form lets the runtime parse SDK 9-patches without a cdNp bundle.
 static int PNGAPI png_read_user_chunk(png_structp png_ptr, png_unknown_chunkp chunk) {
     if (chunk == nullptr || chunk->size == 0 || chunk->name == nullptr) return 0;
-    if (memcmp(chunk->name, "cdNp", 4) != 0) return 0;  // not our 9-patch bundle
+    const bool isCdNp = memcmp(chunk->name, "cdNp", 4) == 0;
+    const bool isNpTc = memcmp(chunk->name, "npTc", 4) == 0;
+    if (!isCdNp && !isNpTc) return 0;
     PRIVATE* priv = static_cast<PRIVATE*>(png_get_user_chunk_ptr(png_ptr));
     if (priv == nullptr) return 0;
-    if (priv->ninePatchChunk.empty())
+    // cdNp (the full bundle) wins over a bare npTc if both are present.
+    if (isCdNp || priv->ninePatchChunk.empty())
         priv->ninePatchChunk.assign(chunk->data, chunk->data + chunk->size);
     return 1;
 }
