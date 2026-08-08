@@ -291,6 +291,7 @@ class PakBuilder(idgen.IDGenerater):
         self.rh_path = rh_path
         self.aapt2_path = aapt2_path
         self.android_jar = android_jar
+        self.use_aapt2 = bool(aapt2_path and android_jar)
         self.use_sdk = bool(sdk_res and aapt2_path)
         self.sdk_res = sdk_res if self.use_sdk else None
         self.sdk_filter = sdk_filter  # path to JSON with densities/locales whitelist

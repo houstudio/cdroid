@@ -41,11 +41,18 @@ function(CreatePAK project ResourceDIR PakPath rhpath)
     # binary AXML layouts (from SDK framework res) + text values/ + resources.arsc.
     set(extra_args "")
     if(ENABLE_BINARY_XML AND EXISTS "${CDROID_SDK_RES}")
-        set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}")
-        if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
-            list(APPEND extra_args "${CDROID_SDK_RES_FILTER}")
+        if("${project}" STREQUAL "cdroid")
+            # Only cdroid.pak gets the full SDK framework res.
+            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}" "${CDROID_SDK_RES}")
+            if(CDROID_SDK_RES_FILTER AND EXISTS "${CDROID_SDK_RES_FILTER}")
+                list(APPEND extra_args "${CDROID_SDK_RES_FILTER}")
+            endif()
+            message(STATUS "CreatePAK(${project}): SDK framework res mode")
+        else()
+            # App paks: compile their own XML via aapt2 (binary AXML), no SDK res.
+            set(extra_args "${CDROID_AAPT2}" "${CDROID_ANDROID_JAR}")
+            message(STATUS "CreatePAK(${project}): app binary AXML mode (own res only)")
         endif()
-        message(STATUS "CreatePAK(${project}): binary AXML mode (SDK framework res)")
     endif()
     add_custom_target(${project}_assets
         COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/scripts/pakbuilder.py
