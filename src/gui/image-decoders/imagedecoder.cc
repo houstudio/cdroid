@@ -210,7 +210,13 @@ std::unique_ptr<ImageDecoder>ImageDecoder::getDecoder(std::istream&istm){
 
 Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
     float scale = 1.f;
-    std::unique_ptr<ImageDecoder>decoder = getDecoder(istm);
+    // getDetector reads the magic then seeks back to 0; ZipStreamBuf's seek is
+    // unreliable on compressed pak entries (framework 9-patches are DEFLATED),
+    // so a raw ZipInputStream decodes as "Not a PNG". Slurp into a seekable
+    // istringstream first — same fix createAsDrawable uses.
+    std::string data((std::istreambuf_iterator<char>(istm)), std::istreambuf_iterator<char>());
+    std::istringstream seekable(std::move(data));
+    std::unique_ptr<ImageDecoder>decoder = getDecoder(seekable);
     if(decoder == nullptr)
         return nullptr;
     if((width > 0) && (height > 0))

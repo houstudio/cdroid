@@ -322,7 +322,15 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
             LOGW("<nine-patch> src did not decode: %s", srcResId.c_str());
             return;
         }else{
-        state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
+        try {
+            // NinePatchRenderer throws char* ("Not ninepatch image!") if the
+            // chunk yields no stretch regions; catch everything so a failing
+            // framework 9-patch doesn't abort the inflate.
+            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
+        } catch (...) {
+            LOGW("<nine-patch> renderer threw for %s", srcResId.c_str());
+            return;
+        }
         state->mPadding = state->mNinePatch->getPadding();
             mOutlineRadius = state->mNinePatch->getRadius();
             const Rect& r=state->mPadding;
