@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Ported from AOSP CTS cts/tests/tests/graphics/res/drawable/rippledrawable_effect.xml (Apache 2.0).
+     A ripple carrying an explicit android:effectColor (YELLOW) — used by
+     CtsRippleDrawableTest.testEffectColorInflation to verify the effectColor attribute round-trips
+     through RippleDrawable.getEffectColor(). (#FFFF00 == Color.YELLOW == 0xFFFFFF00.) -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+        android:color="#f00" android:effectColor="#FFFF00" />

@@ -37,17 +37,6 @@ These have a faithful signature already; the body is empty, commented out, or re
 - **AOSP:** `android-36/android/widget/AbsSeekBar.java:1108-1119` — reads `arguments.getFloat(ACTION_ARGUMENT_PROGRESS_VALUE)` then `setProgressInternal((int) value, true, true)`.
 - **Note:** `Bundle::getFloat` and `Bundle::containsKey` already exist (`src/gui/core/basebundle.h:100,150`). Copy the `ACTION_SCROLL_FORWARD/BACKWARD` block right below as a template.
 
-### A4. `ColorMatrixColorFilter::apply`  ·  medium
-- **File:** `src/gui/drawable/colorfilters.cc:27`
-- **Missing:** Body is `LOGW("ColorMatrixColorFilter::apply not yet implemented");` — no per-pixel color-matrix transform happens. The comment sketches the approach (`get_group_target()` → `ImageSurface` → `mCM.transform(...)` → `mark_dirty()`).
-- **AOSP:** `android-36/android/graphics/ColorMatrixColorFilter.java`. The CDroid `ColorMatrix` class already exposes a `transform(ImageSurface)` helper.
-- **Sibling pattern:** `PorterDuffColorFilter::apply` / `BlendModeColorFilter::apply` in the same file show the `canvas.get_group_target()` contract.
-
-### A5. `LightingColorFilter::apply`  ·  medium
-- **File:** `src/gui/drawable/colorfilters.cc:108`
-- **Missing:** Body is `LOGW("LightingColorFilter::apply not yet implemented");`. Should compute per channel `R' = R*mul.R + add.R` on the active group surface.
-- **AOSP:** `android-36/android/graphics/LightingColorFilter.java`. `LightingColorFilter` is the special case of `ColorMatrixColorFilter` (A4) — you can build a `ColorMatrix` from `mMul`/`mAdd` and delegate.
-
 ---
 
 ## Section B — Add a demo sample (most beginner-friendly)

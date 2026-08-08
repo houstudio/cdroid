@@ -68,6 +68,27 @@ unsigned int Color::toArgb(uint8_t r,uint8_t g,uint8_t b,uint8_t a){
     return((unsigned int)a<<24)|(r<<16)|(g<<8)|b;
 }
 
+// AOSP Color.argb(int,...) / rgb(int,...) — alpha-first; rgb forces alpha 0xff.
+unsigned int Color::argb(int a,int r,int g,int b){
+    return ((unsigned int)a<<24)|((unsigned int)r<<16)|((unsigned int)g<<8)|(unsigned int)b;
+}
+unsigned int Color::rgb(int r,int g,int b){
+    return 0xFF000000u|((unsigned int)r<<16)|((unsigned int)g<<8)|(unsigned int)b;
+}
+// AOSP Color.argb(float,...) / rgb(float,...) — components in [0,1], round (x*255+0.5).
+unsigned int Color::argb(float a,float r,float g,float b){
+    return ((unsigned int)(int)(a*255.0f+0.5f)<<24)|
+           ((unsigned int)(int)(r*255.0f+0.5f)<<16)|
+           ((unsigned int)(int)(g*255.0f+0.5f)<<8)|
+           (unsigned int)(int)(b*255.0f+0.5f);
+}
+unsigned int Color::rgb(float r,float g,float b){
+    return 0xFF000000u|
+           ((unsigned int)(int)(r*255.0f+0.5f)<<16)|
+           ((unsigned int)(int)(g*255.0f+0.5f)<<8)|
+           (unsigned int)(int)(b*255.0f+0.5f);
+}
+
 unsigned int Color::toArgb()const{
     return ((unsigned int) (mComponents[3] * 255.0f + 0.5f) << 24) |
            ((int) (mComponents[0] * 255.0f + 0.5f) << 16) |

@@ -152,6 +152,43 @@ TEST_F(CtsColorStateListDrawableTest, testMutate) {
     EXPECT_NE(oldState.get(), mDrawable->getConstantState().get());
 }
 
+TEST_F(CtsColorStateListDrawableTest, testGetConstantState) {
+    // Default-constructed instance (AOSP builds the drawable from a ColorStateList resource; the
+    // ConstantState/newDrawable contract under test is identical for a default instance).
+    ColorStateListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+    // newDrawable yields a distinct instance backed by the same constant state.
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+TEST_F(CtsColorStateListDrawableTest, testGetChangingConfigurations) {
+    ColorStateListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+
+    // default
+    ASSERT_NE(nullptr, constantState);
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+
+    // changing the drawable's configuration does not affect the cached state's snapshot
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+
+    // re-fetching the constant state reflects the new value
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+
+    // set a new configuration to the drawable; drawable ORs with the state's value
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
+}
+
 TEST_F(CtsColorStateListDrawableTest, testInvalidationCallbackProxy) {
     TestCallback callback;
     mDrawable->setCallback(&callback);

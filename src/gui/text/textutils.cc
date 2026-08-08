@@ -135,8 +135,8 @@ std::vector<std::string> TextUtils::split(const std::string& text, const std::st
     size_t delim_len = delim.length();
     if (delim_len == 0) return elems;
     while (pos < len){
-        int find_pos = text.find(delim, pos);
-        if (find_pos < 0){
+        auto find_pos = text.find(delim, pos);
+        if (find_pos==std::string::npos){
             elems.push_back(text.substr(pos, len - pos));
             break;
         }
@@ -152,7 +152,7 @@ std::vector<std::string> TextUtils::split(const std::string& s,int delim){
     size_t len = s.length();
     while (pos < len){
         auto find_pos = s.find(delim, pos);
-        if (find_pos != std::string::npos){
+        if (find_pos == std::string::npos){
             elems.push_back(s.substr(pos, len - pos));
             break;
         }
@@ -535,7 +535,7 @@ int TextUtils::getOffsetBefore(const CharSequence* text, int offset) {
         return 0;
     char16_t c = text->charAt(offset - 1);
     if (c >= 0xDC00 && c <= 0xDFFF) {
-        char c1 = text->charAt(offset - 2);
+        char16_t c1 = text->charAt(offset - 2);
         if (c1 >= 0xD800 && c1 <= 0xDBFF)
             offset -= 2;
         else
@@ -568,7 +568,7 @@ int TextUtils::getOffsetAfter(const CharSequence* text, int offset) {
 
     char16_t c = text->charAt(offset);
     if (c >= 0xD800 && c <= 0xDBFF) {
-        char c1 = text->charAt(offset + 1);
+        char16_t c1 = text->charAt(offset + 1);
         if (c1 >= 0xDC00 && c1 <= 0xDFFF)
             offset += 2;
         else
@@ -861,38 +861,39 @@ std::string TextUtils::htmlEncode(const std::string& s) {
 }
 
 CharSequence* TextUtils::concat(const std::vector<CharSequence*>&text) {
-    /*if (text->size() == 0) {
-        return "";
+    // Port of AOSP TextUtils.concat. Returns a CALLER-OWNED CharSequence*. AOSP returns the same
+    // instance for the single-arg case and "" for no args; CDROID always returns a fresh owned
+    // String copy (callers delete the result) so ownership is uniform.
+    if (text.empty()) {
+        return new String();   // AOSP: "" for no args
     }
-
     if (text.size() == 1) {
-        return text[0];
+        return new String(text[0]->toUTF8());
     }
-
+    // If any piece is a Spanned, preserve spans via SpannableStringBuilder (AOSP does the same);
+    // otherwise flatten to a plain String.
     bool spanned = false;
     for (CharSequence* piece : text) {
-        if (dynamic_cast<Spanned*>(piece)) {
-            spanned = true;
-            break;
-        }
+        if (piece && dynamic_cast<Spanned*>(piece)) { spanned = true; break; }
     }
-
     if (spanned) {
         SpannableStringBuilder ssb;
         for (CharSequence* piece : text) {
-            // If a piece is null, we append the string "null" for compatibility with the
-            // behavior of StringBuilder and the behavior of the concat() method in earlier
-            // versions of Android.
-            ssb.append(piece == nullptr ? "null" : piece);
+            if (piece) {
+                ssb.append(*piece);
+            } else {
+                // AOSP appends "null" for a null piece (StringBuilder compat).
+                String nullLit("null");
+                ssb.append(static_cast<const CharSequence&>(nullLit));
+            }
         }
-        return new SpannedString(ssb);
-    } else {
-        std::ostringstream sb;
-        for (CharSequence* piece : text) {
-            sb<<piece;
-        }
-        return sb.str();
-    }*/return nullptr;
+        return new SpannedString(&ssb);
+    }
+    std::string sb;
+    for (CharSequence* piece : text) {
+        sb += (piece ? piece->toUTF8() : std::string("null"));
+    }
+    return new String(sb);
 }
 
 bool TextUtils::isGraphic(const CharSequence* str) {
@@ -928,7 +929,7 @@ bool TextUtils::isDigitsOnly(const CharSequence* str) {
     const int len = str->length();
     for (int cp, i = 0; i < len; i += Character::charCount(cp)) {
         cp = Character::codePointAt(str, i);
-        if (!!Character::isDigit(cp)) {
+        if (!Character::isDigit(cp)) {
             return false;
         }
     }

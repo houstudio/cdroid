@@ -111,3 +111,46 @@ TEST_F(CtsLevelListDrawableTest, testMutate) {
     mDrawable->addLevel(0, 10, new ColorDrawable(0xFF0000FF));
     EXPECT_NE(nullptr, mDrawable->mutate());
 }
+
+// AOSP testGetConstantState loads a resource <level-list>; CDROID uses a default-constructed
+// instance since the ConstantState contract under test (newDrawable yields a distinct instance
+// backed by the same state) is independent of how the children were populated. LevelListDrawable
+// inherits the contract from DrawableContainer.
+TEST_F(CtsLevelListDrawableTest, testGetConstantState) {
+    LevelListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+
+    // newDrawable yields a distinct instance backed by the same constant state.
+    Drawable* copy = constantState->newDrawable();
+    ASSERT_NE(nullptr, copy);
+    EXPECT_NE(&drawable, copy);
+    delete copy;
+}
+
+// AOSP testGetChangingConfigurations (mirrors CtsVectorDrawableTest): a previously-fetched
+// ConstantState snapshot is unaffected by later setChangingConfigurations on the drawable, but
+// re-fetching reflects it; the drawable reports instance | state.
+TEST_F(CtsLevelListDrawableTest, testGetChangingConfigurations) {
+    LevelListDrawable drawable;
+    auto constantState = drawable.getConstantState();
+    ASSERT_NE(nullptr, constantState);
+
+    // default
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+    EXPECT_EQ(0, drawable.getChangingConfigurations());
+
+    // changing the drawable's configuration does not affect the cached state's snapshot
+    drawable.setChangingConfigurations(0xff);
+    EXPECT_EQ(0xff, drawable.getChangingConfigurations());
+    EXPECT_EQ(0, constantState->getChangingConfigurations());
+
+    // re-fetching the constant state reflects the new value
+    constantState = drawable.getConstantState();
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+
+    // set a new configuration to the drawable; drawable ORs with the state's value
+    drawable.setChangingConfigurations(0xff00);
+    EXPECT_EQ(0xff, constantState->getChangingConfigurations());
+    EXPECT_EQ(0xffff, drawable.getChangingConfigurations());
+}

@@ -22,7 +22,6 @@ namespace cdroid{
 
 class FocusFinder{
 private:
-    FocusFinder();
     ViewGroup* getEffectiveRoot(ViewGroup* root, View* focused);
     View* findNextUserSpecifiedKeyboardNavigationCluster(View*root, View*currentCluster,int direction);
     View* findNextUserSpecifiedFocus(ViewGroup* root, View* focused, int direction);
@@ -42,6 +41,7 @@ protected:
     Rect mBestCandidateRect;
     std::vector<View*>mTempList;
 protected: 
+    FocusFinder();
     bool isBetterCandidate(int direction,const Rect& source,const Rect& rect1,const Rect& rect2);
     bool beamBeats(int direction,const Rect& source,const Rect&rect1,const Rect& rect2);
     int getWeightedDistanceFor(int majorAxisDistance, int minorAxisDistance);
