@@ -480,8 +480,11 @@ class PakBuilder(idgen.IDGenerater):
 
     # ----- aapt2 compile: compile res/ to binary AXML, return {rel_path: bytes} -----
     def _compile_aapt2(self):
-        """Run aapt2 compile+link on res/, return a dict mapping relative XML
-        paths (e.g. 'layout/main.xml') to their binary AXML bytes."""
+        """Run aapt2 compile+link on res/, return (binary_xmls, arsc) where
+        binary_xmls maps relative XML paths (e.g. 'layout/main.xml') to their
+        binary AXML bytes, and arsc is the app's resources.arsc bytes (or None
+        if aapt2 did not produce one). The arsc lets app @string/@color refs
+        resolve alongside the framework arsc (multi-package ResTable)."""
         import subprocess, shutil
         tmpdir = tempfile.mkdtemp(prefix="aapt2_")
         try:
@@ -508,17 +511,20 @@ class PakBuilder(idgen.IDGenerater):
             subprocess.run([self.aapt2_path, "link", "-I", self.android_jar,
                             "--manifest", mpath, "-o", out_apk, compiled],
                            check=True, capture_output=True)
-            # Extract binary XML from the apk (paths like res/layout/main.xml).
+            # Extract binary XML (res/layout/*.xml) + the app's resources.arsc.
             result = {}
+            arsc = None
             with zipfile.ZipFile(out_apk) as zf:
                 for name in zf.namelist():
-                    if name.startswith("res/") and name.endswith(".xml"):
+                    if name == "resources.arsc":
+                        arsc = zf.read(name)
+                    elif name.startswith("res/") and name.endswith(".xml"):
                         rel = name[4:]  # strip "res/" prefix -> layout/main.xml
                         result[rel] = zf.read(name)
-            return result
+            return result, arsc
         except Exception as e:
             sys.stderr.write("aapt2 compile failed (%s); falling back to text XML\n" % e)
-            return {}
+            return {}, None
         finally:
             shutil.rmtree(tmpdir, ignore_errors=True)
 
@@ -543,11 +549,22 @@ class PakBuilder(idgen.IDGenerater):
         # SDK mode: build complete framework from SDK data/res/ via aapt2 -x.
         sdk_data = self._compile_sdk_res() if self.use_sdk else {}
         # App mode: compile cdroid's own res/ via aapt2 (optional).
-        binary_xmls = self._compile_aapt2() if self.use_aapt2 else {}
+        binary_xmls, app_arsc = self._compile_aapt2() if self.use_aapt2 else ({}, None)
         with zipfile.ZipFile(self.pak_path, "w") as zf:
-            # SDK framework: store all entries (binary AXML + arsc + drawables).
+            # SDK framework: store binary AXML + arsc + drawables. Skip values/
+            # and color/ here — cdroid ships its own TEXT versions of those
+            # (loadKeyValues needs text; binary selectors can't be parsed as
+            # text). Writing both would create duplicate entries that corrupt
+            # libzip's local-header offsets and break reading of large entries
+            # such as the 47MB resources.arsc.
             for rel, data in sorted(sdk_data.items()):
+                if rel.startswith("values/") or rel.startswith("color/"):
+                    continue
                 zf.writestr(rel, data, zipfile.ZIP_DEFLATED)
+            # App's own resources.arsc (multi-package: resolved by Assets
+            # alongside the framework arsc; lets app @string/@color refs work).
+            if app_arsc:
+                zf.writestr("resources.arsc", app_arsc, zipfile.ZIP_DEFLATED)
             # Walk cdroid's res/ for files NOT already provided by SDK.
             for root, dirs, files in os.walk(self.res_dir):
                 dirs.sort(); files.sort()

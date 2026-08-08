@@ -43,8 +43,6 @@ private:
     std::unordered_map<std::string,nonstd::variant<int,float>>mDimensions;
     std::unordered_map<std::string,std::shared_ptr<ColorStateList>>mStateColors;
     ResTable* mResTable;   // loaded from resources.arsc in pak (null if no arsc)
-    std::unique_ptr<char[]> mArscData;  // owns the arsc bytes (outlives ResTable)
-    size_t mArscSize = 0;
     // arsc identifier lookup: tries the given package first, then "android"
     // (framework arsc compiled with package="android" via aapt2 -x, but pak
     // registered under "cdroid" — the names don't match, so we fall back).

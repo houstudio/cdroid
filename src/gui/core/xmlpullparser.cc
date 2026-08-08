@@ -217,18 +217,17 @@ struct Private{
             case Res_value::TYPE_ATTRIBUTE:
             case Res_value::TYPE_DYNAMIC_REFERENCE:
             case Res_value::TYPE_DYNAMIC_ATTRIBUTE:
-                // Resolve through arsc if possible (returns the actual value).
+                // v.data is a resource ID. Resolve to a string via arsc when the
+                // target is a string resource (arscStringAt takes the resId and
+                // does getResource internally — do NOT pass a resolved pool
+                // index). Non-string refs (color/dimen) fall through to "@0x.."
+                // so the widget's getColor/getDimension path resolves them.
                 if(ctx && v.data != 0 && v.data != 0xFFFFFFFF){
                     Assets* assets = dynamic_cast<Assets*>(ctx);
                     if(assets){
-                        Res_value rv2;
-                        if(assets->arscResolveId(v.data, &rv2)){
-                            if(rv2.dataType == Res_value::TYPE_STRING){
-                                size_t len = 0;
-                                const char16_t* s = assets->arscStringAt(rv2.data, &len);
-                                if(s && len > 0) return u16toUtf8(s, len);
-                            }
-                        }
+                        size_t len = 0;
+                        const char16_t* s = assets->arscStringAt(v.data, &len);
+                        if(s && len > 0) return u16toUtf8(s, len);
                     }
                 }
                 snprintf(buf, sizeof(buf), "@0x%08x", v.data);

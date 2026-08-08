@@ -352,23 +352,24 @@ int Assets::addResource(const std::string&path,const std::string&name) {
         }
         return 0;
     });
-    // Load resources.arsc if present in the pak (binary resource mode).
-    if (pak->hasEntry("resources.arsc")) {
-        auto stream = std::unique_ptr<std::istream>(pak->getInputStream("resources.arsc"));
-        if (stream && *stream) {
-            std::string data((std::istreambuf_iterator<char>(*stream)),
-                             std::istreambuf_iterator<char>());
-            // Assets owns the arsc bytes (stable on stack); ResTable uses
-            // copyData=false (raw pointer, no internal copy) to avoid any
-            // vector/malloc lifetime issues.
-            mArscSize = data.size();
-            mArscData.reset(new char[mArscSize]);
-            memcpy(mArscData.get(), data.data(), mArscSize);
-            if (!mResTable) mResTable = new ResTable();
-            mResTable->add(mArscData.get(), mArscSize, /*copyData*/false);
-            LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
-                 path.c_str(), mArscSize, mResTable->getError());
-        }
+    // Load resources.arsc if present. Try getInputStream directly rather than
+    // hasEntry: cdroid.pak carries duplicate color/ entries (SDK + own), and
+    // libzip's zip_name_locate (used by hasEntry) fails to resolve some names
+    // in such archives, while zip_fopen (getInputStream) still works. Each pak
+    // is one add() = one owning Header; copyData=true makes ResTable malloc its
+    // own copy, so the local buffer can be freed safely across multiple paks.
+    auto stream = std::unique_ptr<std::istream>(pak->getInputStream("resources.arsc"));
+    if (stream && *stream) {
+        std::string data((std::istreambuf_iterator<char>(*stream)),
+                         std::istreambuf_iterator<char>());
+        if (!mResTable) mResTable = new ResTable();
+        // NOTE: the 4-arg form is required so `true` binds to copyData, not to
+        // the int32_t cookie of the 3-arg overload — otherwise copyData defaults
+        // to false, hdr->data aliases the local buffer, and freeing it on return
+        // leaves every Package type/key pointer dangling (UAF).
+        mResTable->add(data.data(), data.size(), /*cookie*/-1, /*copyData*/true);
+        LOGD("Loaded resources.arsc from %s (%zu bytes, error=%d)",
+             path.c_str(), data.size(), mResTable->getError());
     }
     if(name.compare("cdroid")==0){
         setTheme("cdroid:style/Theme");
@@ -572,13 +573,21 @@ int Assets::getNextAutofillId(){
 }
 
 const std::string Assets::getString(const std::string& resid,const std::string&lan) {
-    // Binary AXML hex reference → resolve via arsc.
-    {
-        Res_value rv;
-        if (arscResolveHexRef(resid, &rv) && rv.dataType == Res_value::TYPE_STRING) {
-            size_t len = 0;
-            const char16_t* s = mResTable->getResourceString(rv.data, &len);
-            if (s && len > 0) return u16toUtf8(s, len);
+    // Binary AXML hex reference "@0xPPtteeee" → resolve the resource ID to a
+    // string via arsc. (getResourceString takes a resId and does getResource
+    // internally; do NOT pass the resolved Res_value.data, which for strings is
+    // a string-pool index, not a resId.)
+    if (mResTable) {
+        size_t at = resid.rfind('@');
+        std::string hex = (at != std::string::npos) ? resid.substr(at + 1) : resid;
+        if (hex.compare(0, 2, "0x") == 0 || hex.compare(0, 2, "0X") == 0) {
+            char* end = nullptr;
+            unsigned long id = strtoul(hex.c_str() + 2, &end, 16);
+            if (end != hex.c_str() + 2 && id != 0 && id != 0xFFFFFFFF) {
+                size_t len = 0;
+                const char16_t* s = mResTable->getResourceString((uint32_t)id, &len);
+                if (s && len > 0) return u16toUtf8(s, len);
+            }
         }
     }
     if((!lan.empty())&&(mLanguage!=lan)) {
