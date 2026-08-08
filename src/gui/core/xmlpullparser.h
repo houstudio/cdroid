@@ -51,6 +51,12 @@ public:
     int getColumnNumber()const;
     int next();
     operator bool()const;
+    // Phase 2: expose binary AXML state for TypedArray obtainStyledAttributes.
+    // Returns true if parsing binary AXML (has a ResXMLTree).
+    bool isBinaryAXML() const;
+    // Returns the ResXMLTree* (as void* to avoid the heavy androidfw include here).
+    // Null for text XML. Caller (which has androidfw) casts to const ResXMLTree*.
+    const void* getBinaryAXMLTree() const;
 };
 }
 #endif /*__XML_PULLPARSER_H__*/

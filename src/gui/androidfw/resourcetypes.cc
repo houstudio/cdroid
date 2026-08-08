@@ -2626,4 +2626,67 @@ std::string TypedArray::getString(size_t idx) const {
     return out;
 }
 
+// --- Android-aligned getters (Phase 2) ---
+
+int32_t TypedArray::getInteger(size_t idx, int32_t def) const {
+    return getInt(idx, def);
+}
+
+bool TypedArray::hasValueOrEmpty(size_t idx) const {
+    if (!hasValue(idx)) return false;
+    Res_value v = mVals[idx].value;
+    // @empty is represented as TYPE_REFERENCE with data == 0.
+    return !(v.dataType == Res_value::TYPE_REFERENCE && v.data == 0);
+}
+
+float TypedArray::getFloat(size_t idx, float def) const {
+    Res_value v; if (!get(idx, &v)) return def;
+    if (v.dataType == Res_value::TYPE_FLOAT) {
+        float f; memcpy(&f, &v.data, sizeof(f)); return f;
+    }
+    if (v.dataType == Res_value::TYPE_INT_DEC || v.dataType == Res_value::TYPE_INT_HEX)
+        return (float)(int32_t)v.data;
+    if (v.dataType == Res_value::TYPE_DIMENSION)
+        return complexToFloat(v.data);
+    return def;
+}
+
+int32_t TypedArray::getDimensionPixelOffset(size_t idx, int32_t def) const {
+    Res_value v; if (!get(idx, &v)) return def;
+    if (v.dataType != Res_value::TYPE_DIMENSION) return def;
+    float mag = complexToFloat(v.data);
+    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+    float px = (unit == Res_value::COMPLEX_UNIT_PX) ? mag : mag * mDensity;
+    return (int32_t)px;  // truncate (offset), vs round (size)
+}
+
+int32_t TypedArray::getLayoutDimension(size_t idx, int32_t def) const {
+    Res_value v; if (!get(idx, &v)) return def;
+    // MATCH_PARENT(-1) / WRAP_CONTENT(-2) are passed through as-is.
+    if (v.dataType == Res_value::TYPE_INT_DEC &&
+        ((int32_t)v.data < 0)) return (int32_t)v.data;
+    return getDimensionPixelSize(idx, def);
+}
+
+float TypedArray::getFraction(size_t idx, int base, int pbase, float def) const {
+    Res_value v; if (!get(idx, &v)) return def;
+    if (v.dataType != Res_value::TYPE_FRACTION) return def;
+    float f = complexToFloat(v.data);
+    int unit = (v.data >> Res_value::COMPLEX_UNIT_SHIFT) & Res_value::COMPLEX_UNIT_MASK;
+    return (unit == Res_value::COMPLEX_UNIT_FRACTION_PARENT) ? f * pbase : f * base;
+}
+
+std::string TypedArray::getText(size_t idx) const {
+    return getString(idx);  // CDROID CharSequence == std::string for now
+}
+
+int TypedArray::getType(size_t idx) const {
+    if (!hasValue(idx)) return -1;
+    return mVals[idx].value.dataType;
+}
+
+bool TypedArray::peekValue(size_t idx, Res_value* out) const {
+    return get(idx, out);
+}
+
 } // namespace cdroid

@@ -1151,14 +1151,24 @@ public:
         : mTable(table), mVals(vals), mCount(count), mXml(xmlSrc), mDensity(density) {}
     size_t size() const { return mCount; }
     bool hasValue(size_t idx) const { return idx < mCount && mVals[idx].set; }
+    bool hasValueOrEmpty(size_t idx) const;
 
+    // Typed value getters (low-level; aligned with Android.util.TypedArray).
     int32_t  getInt(size_t idx, int32_t def) const;
+    int32_t  getInteger(size_t idx, int32_t def) const;  // Android alias of getInt
     bool     getBoolean(size_t idx, bool def) const;
+    float    getFloat(size_t idx, float def) const;
     uint32_t getColor(size_t idx, uint32_t def) const;
     float    getDimension(size_t idx, float def) const;
+    int32_t  getDimensionPixelOffset(size_t idx, int32_t def) const;
     int32_t  getDimensionPixelSize(size_t idx, int32_t def) const;
+    int32_t  getLayoutDimension(size_t idx, int32_t def) const;
+    float    getFraction(size_t idx, int base, int pbase, float def) const;
     uint32_t getResourceId(size_t idx, uint32_t def) const;
     std::string getString(size_t idx) const;
+    std::string getText(size_t idx) const;     // alias of getString for now
+    int       getType(size_t idx) const;        // Res_value dataType, or -1
+    bool      peekValue(size_t idx, Res_value* out) const;
 private:
     bool get(size_t idx, Res_value* v) const {
         if (!hasValue(idx)) return false;

@@ -376,6 +376,14 @@ XmlPullParser::operator bool()const{
    return (mData->stream!=nullptr)&&(*mData->stream);
 }
 
+bool XmlPullParser::isBinaryAXML() const {
+    return mData->isBinary && mData->axmlTree && mData->axmlTree->getError() == 0;
+}
+
+const void* XmlPullParser::getBinaryAXMLTree() const {
+    return isBinaryAXML() ? static_cast<const void*>(mData->axmlTree) : nullptr;
+}
+
 XmlPullParser::~XmlPullParser() {
     XML_ParserFree(mData->parser);
     delete mData;
