@@ -35,10 +35,9 @@ if(CMAKE_HOST_SYSTEM_NAME MATCHES "Linux")
    add_link_options("LINKER:-rpath-link,${CMAKE_SOURCE_DIR}/src/porting/${CDROID_CHIPSET}/lib")
 endif()
 add_subdirectory(src/porting)
-add_subdirectory(src/gui)
-# androidfw: independent binary-resource sub-library (arsc/AXML readers), built
-# and tested in isolation; not linked into libcdroid.so.
+# androidfw must be defined before src/gui so cdroid can link it.
 add_subdirectory(src/gui/androidfw)
+add_subdirectory(src/gui)
 add_subdirectory(src/modules)
 add_subdirectory(src/3rdparty)
 
