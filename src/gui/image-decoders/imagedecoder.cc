@@ -208,7 +208,8 @@ std::unique_ptr<ImageDecoder>ImageDecoder::getDecoder(std::istream&istm){
     return nullptr;
 }
 
-Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height){
+Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int width,int height,
+                                                          std::vector<uint8_t>* ninePatchChunk){
     float scale = 1.f;
     // getDetector reads the magic then seeks back to 0; ZipStreamBuf's seek is
     // unreliable on compressed pak entries (framework 9-patches are DEFLATED),
@@ -225,7 +226,14 @@ Cairo::RefPtr<Cairo::ImageSurface> ImageDecoder::loadImage(std::istream&istm,int
         scale = std::min(scale,float(width)/decoder->getWidth());
     else if(height > 0)
         scale = std::max(scale,float(height)/decoder->getHeight());
-    return decoder->decode(scale,mLCMSProfile.get());
+    Cairo::RefPtr<Cairo::ImageSurface> image = decoder->decode(scale,mLCMSProfile.get());
+    // Read the 9-patch chunk AFTER decode — the user-chunk callback (npTc/cdNp)
+    // fires during png_read_info inside decode, so it isn't available before.
+    if(ninePatchChunk){
+        const std::vector<uint8_t>* c = decoder->getNinePatchChunk();
+        if(c) *ninePatchChunk = *c;
+    }
+    return image;
 }
 
 Cairo::RefPtr<Cairo::ImageSurface>ImageDecoder::loadImage(Context*ctx,const std::string&resourceId,int width,int height){

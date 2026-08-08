@@ -301,32 +301,28 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
     if (!srcResId.empty()) {
         Rect padding ,opticalInsets;
         Cairo::RefPtr<Cairo::ImageSurface> bitmap;
+        std::vector<uint8_t> ninePatchChunk;  // npTc/cdNp extracted from the src PNG
         try {
             auto is= a.getContext()->getInputStream(srcResId);
             if (!is || !*is) {
                 LOGW("<nine-patch> src stream unavailable: %s", srcResId.c_str());
                 return;
             }
-            bitmap = ImageDecoder::loadImage(*is,-1,-1);
+            bitmap = ImageDecoder::loadImage(*is,-1,-1, &ninePatchChunk);
         } catch (const std::exception& e) {
-            // Framework 9-patch may fail to decode under binary AXML (wrong
-            // bytes / vector-not-png); the decoder can throw on garbage dims.
-            // Skip instead of aborting the whole inflate.
             LOGW("<nine-patch> src decode threw for %s: %s", srcResId.c_str(), e.what());
             return;
         }
         if (bitmap == nullptr) {
-            // src decoded to nothing (e.g. a framework asset whose bytes didn't
-            // decode under binary AXML). Skip rather than throwing an uncaught
-            // logic_error that aborts the whole inflate.
             LOGW("<nine-patch> src did not decode: %s", srcResId.c_str());
             return;
         }else{
         try {
-            // NinePatchRenderer throws char* ("Not ninepatch image!") if the
-            // chunk yields no stretch regions; catch everything so a failing
-            // framework 9-patch doesn't abort the inflate.
-            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
+            // Pass the extracted chunk so NinePatchRenderer gets stretch regions
+            // (without it, a border-stripped framework 9-patch has no guide to
+            // scan and throws "Not ninepatch image!").
+            const std::vector<uint8_t>* chunkPtr = ninePatchChunk.empty() ? nullptr : &ninePatchChunk;
+            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap, chunkPtr);
         } catch (...) {
             LOGW("<nine-patch> renderer threw for %s", srcResId.c_str());
             return;
