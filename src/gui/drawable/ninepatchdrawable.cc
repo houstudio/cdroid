@@ -301,21 +301,29 @@ void NinePatchDrawable::updateStateFromTypedArray(const AttributeSet&a){
     if (!srcResId.empty()) {
         Rect padding ,opticalInsets;
         Cairo::RefPtr<Cairo::ImageSurface> bitmap;
-        auto is= a.getContext()->getInputStream(srcResId);
-        if (!is || !*is) {
-            // src didn't resolve to a stream (e.g. a ?attr that flattened to a
-            // non-stream value, or an unresolvable reference under binary AXML).
-            // Skip rather than dereferencing a null stream and crashing.
-            LOGW("<nine-patch> src stream unavailable: %s", srcResId.c_str());
+        try {
+            auto is= a.getContext()->getInputStream(srcResId);
+            if (!is || !*is) {
+                LOGW("<nine-patch> src stream unavailable: %s", srcResId.c_str());
+                return;
+            }
+            bitmap = ImageDecoder::loadImage(*is,-1,-1);
+        } catch (const std::exception& e) {
+            // Framework 9-patch may fail to decode under binary AXML (wrong
+            // bytes / vector-not-png); the decoder can throw on garbage dims.
+            // Skip instead of aborting the whole inflate.
+            LOGW("<nine-patch> src decode threw for %s: %s", srcResId.c_str(), e.what());
             return;
         }
-        bitmap = ImageDecoder::loadImage(*is,-1,-1);
         if (bitmap == nullptr) {
-            throw std::logic_error(//a.getPositionDescription() +
-                    ": <nine-patch> requires a valid src attribute");
-        } else {//if (bitmap.getNinePatchChunk() == null) {
-            state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
-            state->mPadding = state->mNinePatch->getPadding();
+            // src decoded to nothing (e.g. a framework asset whose bytes didn't
+            // decode under binary AXML). Skip rather than throwing an uncaught
+            // logic_error that aborts the whole inflate.
+            LOGW("<nine-patch> src did not decode: %s", srcResId.c_str());
+            return;
+        }else{
+        state->mNinePatch = std::make_shared<NinePatchRenderer>(bitmap);
+        state->mPadding = state->mNinePatch->getPadding();
             mOutlineRadius = state->mNinePatch->getRadius();
             const Rect& r=state->mPadding;
             if((r.left==0)&&(r.top==0)&&(r.width==0)&&(r.height==0)){
