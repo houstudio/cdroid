@@ -80,123 +80,137 @@ View::View(Context*ctx,const AttributeSet&attrs){
     initView();
 
     mContext = ctx;
-    // Phase 2 TypedArray: try binary AXML typed resolution first (by attr
-    // resource ID, not string key). Falls back to AttributeSet for text XML.
-    // Note: `id` stays on AttributeSet until R.h is aapt2-generated (idgen IDs
-    // don't match arsc IDs yet). Other attrs use TypedArray when available.
+    // Phase 2: TypedArray (binary AXML typed resolution). ta=null → text XML fallback.
+    // aapt2 already resolved enums/flags at compile time, so TypedArray getters
+    // return integers directly — no string→enum map needed.
     Assets* assets = ctx ? dynamic_cast<Assets*>(ctx) : nullptr;
     auto ta = assets ? assets->obtainStyledAttributesTyped(
         attrs, styleable::View::IDS, styleable::View::COUNT) : nullptr;
+    // (namespace alias not allowed in function body in C++14)
+    // Helpers: TypedArray getters return the default when an attr isn't set,
+    // so no hasValue check needed — just one branch (ta? : attrs). This is the
+    // AOSP pattern: obtainStyledAttributes fills the array once, then each
+    // getter is a single O(1) array[index] lookup.
+    #define TA_BOOL(i,k,d)  (ta?ta->getBoolean(i,d):attrs.getBoolean(k,d))
+    #define TA_FLOAT(i,k,d) (ta?ta->getFloat(i,d):attrs.getFloat(k,d))
+    #define TA_DIM(i,k,d)   (ta?ta->getDimensionPixelSize(i,d):attrs.getDimensionPixelSize(k,d))
+    #define TA_STR(i,k)     (ta?ta->getString(i):attrs.getString(k))
+    #define TA_RES(i,k,d)   (ta?(int)ta->getResourceId(i,(uint32_t)(d)):attrs.getResourceId(k,d))
 
-    mID = attrs.getResourceId("id", View::NO_ID);
-    mMinWidth = (ta && ta->hasValue(styleable::View::minWidth))
-        ? ta->getDimensionPixelSize(styleable::View::minWidth, 0)
-        : attrs.getDimensionPixelSize("minWidth", 0);
-    mMinHeight = (ta && ta->hasValue(styleable::View::minHeight))
-        ? ta->getDimensionPixelSize(styleable::View::minHeight, 0)
-        : attrs.getDimensionPixelSize("minHeight", 0);
-    setLayerType(attrs.getInt("layerType",std::unordered_map<std::string,int>{
-           {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
-        },LAYER_TYPE_NONE));
-    const int quality=attrs.getInt("drawingCacheQuality",std::unordered_map<std::string,int>{
-           {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
-           {"low" ,(int)DRAWING_CACHE_QUALITY_LOW },
-           {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
-    },DRAWING_CACHE_QUALITY_AUTO);
+    mID = attrs.getResourceId("id", View::NO_ID); // id stays on AttributeSet (idgen vs arsc mismatch)
+    mMinWidth  = TA_DIM(styleable::View::minWidth,  "minWidth",  0);
+    mMinHeight = TA_DIM(styleable::View::minHeight, "minHeight", 0);
+
+    // layerType: binary enum (aapt2 resolved), else string map.
+    setLayerType(ta&&ta->hasValue(styleable::View::layerType)
+        ? ta->getInt(styleable::View::layerType, (int)LAYER_TYPE_NONE)
+        : attrs.getInt("layerType", std::unordered_map<std::string,int>{
+              {"software",(int)LAYER_TYPE_SOFTWARE},{"hardware",(int)LAYER_TYPE_HARDWARE}
+          }, (int)LAYER_TYPE_NONE));
+
+    const int quality = ta&&ta->hasValue(styleable::View::drawingCacheQuality)
+        ? ta->getInt(styleable::View::drawingCacheQuality, (int)DRAWING_CACHE_QUALITY_AUTO)
+        : attrs.getInt("drawingCacheQuality", std::unordered_map<std::string,int>{
+              {"auto",(int)DRAWING_CACHE_QUALITY_AUTO},
+              {"low" ,(int)DRAWING_CACHE_QUALITY_LOW },
+              {"high",(int)DRAWING_CACHE_QUALITY_HIGH}
+          }, (int)DRAWING_CACHE_QUALITY_AUTO);
     if(quality){
         viewFlagValues |= quality;
         viewFlagMasks  |= DRAWING_CACHE_QUALITY_MASK;
     }
-    mContentDescription = attrs.getString("contentDescription");
-    // visibility: TypedArray (binary enum already resolved to int), else map.
-    {
-        int vis = VISIBLE;
-        if (ta && ta->hasValue(styleable::View::visibility)) {
-            vis = ta->getInt(styleable::View::visibility, (int)VISIBLE);
-        } else {
-            vis = attrs.getInt("visibility",std::unordered_map<std::string,int>{
-               {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}
-            },(int)VISIBLE);
-        }
-        setVisibility(vis);
-    }
 
-    if(!attrs.getBoolean("soundEffectsEnabled",true)){
+    mContentDescription = TA_STR(styleable::View::contentDescription, "contentDescription");
+
+    // visibility: binary enum already resolved to int.
+    setVisibility(ta&&ta->hasValue(styleable::View::visibility)
+        ? ta->getInt(styleable::View::visibility, (int)VISIBLE)
+        : attrs.getInt("visibility", std::unordered_map<std::string,int>{
+              {"gone",(int)GONE},{"invisible",(int)INVISIBLE},{"visible",(int)VISIBLE}
+          }, (int)VISIBLE));
+
+    if(!TA_BOOL(styleable::View::soundEffectsEnabled, "soundEffectsEnabled", true)){
         viewFlagValues &= ~SOUND_EFFECTS_ENABLED;
         viewFlagMasks |= SOUND_EFFECTS_ENABLED;
     }
-    if(!attrs.getBoolean("hapticFeedbackEnabled",true)){
+    if(!TA_BOOL(styleable::View::hapticFeedbackEnabled, "hapticFeedbackEnabled", true)){
         viewFlagValues &= ~HAPTIC_FEEDBACK_ENABLED;
         viewFlagMasks |= HAPTIC_FEEDBACK_ENABLED;
     }
+
     mPrivateFlags2 &= ~(PFLAG2_LAYOUT_DIRECTION_MASK | PFLAG2_LAYOUT_DIRECTION_RESOLVED_MASK);
-    const int layoutDirection = attrs.getInt("layoutDirection",std::unordered_map<std::string,int>{
-           {"ltr"    ,(int)LAYOUT_DIRECTION_LTR}    ,{"rtl",(int)LAYOUT_DIRECTION_RTL},
-           {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
-	},LAYOUT_DIRECTION_DEFAULT);
+    const int layoutDirection = ta&&ta->hasValue(styleable::View::layoutDirection)
+        ? ta->getInt(styleable::View::layoutDirection, (int)LAYOUT_DIRECTION_DEFAULT)
+        : attrs.getInt("layoutDirection", std::unordered_map<std::string,int>{
+              {"ltr",(int)LAYOUT_DIRECTION_LTR},{"rtl",(int)LAYOUT_DIRECTION_RTL},
+              {"inherit",(int)LAYOUT_DIRECTION_INHERIT},{"local",(int)LAYOUT_DIRECTION_LOCALE}
+          }, (int)LAYOUT_DIRECTION_DEFAULT);
     mPrivateFlags2 |= (layoutDirection << PFLAG2_LAYOUT_DIRECTION_MASK_SHIFT);
 
-    const int textDirection = attrs.getInt("textDirection",std::unordered_map<std::string,int>{
-		 {"inherit",(int)TEXT_DIRECTION_INHERIT}, {"locale",(int)TEXT_DIRECTION_LOCALE},
-		 {"anyRtl" ,(int)TEXT_DIRECTION_ANY_RTL}, {"ltr",(int)TEXT_DIRECTION_LTR},
-         {"rtl",(int)TEXT_DIRECTION_RTL},         {"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
-         {"fisrtStringLtr",(int)TEXT_DIRECTION_FIRST_STRONG_LTR},
-		 {"firstStrongRtl",(int)TEXT_DIRECTION_FIRST_STRONG_RTL}},-1);
-    if (textDirection != -1) {
-        mPrivateFlags2 |= textDirection<< PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
-    }
-    const int textAlignment = attrs.getInt("textAlignment",std::unordered_map<std::string,int>{
-        {"inherit" , (int)TEXT_ALIGNMENT_INHERIT},    {"gravity" , (int)TEXT_ALIGNMENT_GRAVITY},
-        {"textStart",(int)TEXT_ALIGNMENT_TEXT_START}, {"textEnd" , (int)TEXT_ALIGNMENT_TEXT_END},
-        {"center"  , (int)TEXT_ALIGNMENT_CENTER},     {"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
-        {"viewEnd"  ,(int)TEXT_ALIGNMENT_VIEW_END}    },(int)TEXT_ALIGNMENT_DEFAULT);
-    // Clear any text alignment flag already set
-    mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
-    // Set the text alignment flag depending on the value of the attribute
-    mPrivateFlags2 |= (textAlignment<<PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
-    //setTextAlignment( textAlignment );
+    const int textDirection = ta&&ta->hasValue(styleable::View::textDirection)
+        ? ta->getInt(styleable::View::textDirection, -1)
+        : attrs.getInt("textDirection", std::unordered_map<std::string,int>{
+              {"inherit",(int)TEXT_DIRECTION_INHERIT},{"locale",(int)TEXT_DIRECTION_LOCALE},
+              {"anyRtl",(int)TEXT_DIRECTION_ANY_RTL},{"ltr",(int)TEXT_DIRECTION_LTR},
+              {"rtl",(int)TEXT_DIRECTION_RTL},{"firstStrong",(int)TEXT_DIRECTION_FIRST_STRONG},
+              {"fisrtStringLtr",(int)TEXT_DIRECTION_FIRST_STRONG_LTR},
+              {"firstStrongRtl",(int)TEXT_DIRECTION_FIRST_STRONG_RTL}}, -1);
+    if (textDirection != -1) mPrivateFlags2 |= textDirection << PFLAG2_TEXT_DIRECTION_MASK_SHIFT;
 
-    setImportantForAccessibility(attrs.getInt("importantForAccessibility",std::unordered_map<std::string,int>{
-                {"auto",(int)IMPORTANT_FOR_ACCESSIBILITY_AUTO},
-                {"yes" ,(int)IMPORTANT_FOR_ACCESSIBILITY_YES },
-                {"no"  ,(int)IMPORTANT_FOR_ACCESSIBILITY_NO}
-        },IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
+    const int textAlignment = ta&&ta->hasValue(styleable::View::textAlignment)
+        ? ta->getInt(styleable::View::textAlignment, (int)TEXT_ALIGNMENT_DEFAULT)
+        : attrs.getInt("textAlignment", std::unordered_map<std::string,int>{
+              {"inherit",(int)TEXT_ALIGNMENT_INHERIT},{"gravity",(int)TEXT_ALIGNMENT_GRAVITY},
+              {"textStart",(int)TEXT_ALIGNMENT_TEXT_START},{"textEnd",(int)TEXT_ALIGNMENT_TEXT_END},
+              {"center",(int)TEXT_ALIGNMENT_CENTER},{"viewStart",(int)TEXT_ALIGNMENT_VIEW_START},
+              {"viewEnd",(int)TEXT_ALIGNMENT_VIEW_END}}, (int)TEXT_ALIGNMENT_DEFAULT);
+    mPrivateFlags2 &= ~PFLAG2_TEXT_ALIGNMENT_MASK;
+    mPrivateFlags2 |= (textAlignment << PFLAG2_TEXT_ALIGNMENT_MASK_SHIFT);
+
+    setImportantForAccessibility(ta&&ta->hasValue(styleable::View::importantForAccessibility)
+        ? ta->getInt(styleable::View::importantForAccessibility, (int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT)
+        : attrs.getInt("importantForAccessibility", std::unordered_map<std::string,int>{
+              {"auto",(int)IMPORTANT_FOR_ACCESSIBILITY_AUTO},
+              {"yes" ,(int)IMPORTANT_FOR_ACCESSIBILITY_YES },
+              {"no"  ,(int)IMPORTANT_FOR_ACCESSIBILITY_NO}
+          }, (int)IMPORTANT_FOR_ACCESSIBILITY_DEFAULT));
+
     mTouchSlop = ViewConfiguration::get(mContext).getScaledTouchSlop();
 
-    setForegroundGravity( attrs.getGravity("foregroundGravity",Gravity::NO_GRAVITY) );
+    setForegroundGravity(attrs.getGravity("foregroundGravity", Gravity::NO_GRAVITY));
     setForegroundTintList(attrs.getColorStateList("foregroundTint"));
 
-    //setClickable( attrs.getBoolean("clickable",false) );
+    //setClickable( TA_BOOL(styleable::View::clickable, "clickable", false) );
     //setLongClickable( attrs.getBoolean("longclickable",false) );
     //setFocusableInTouchMode( attrs.getBoolean("focusableInTouchMode",false) );
-    //setFocusedByDefault( attrs.getBoolean("focusedByDefault",false) );
+    //setFocusedByDefault( TA_BOOL(styleable::View::focusedByDefault, "focusedByDefault", false) );
   
-    mNextFocusLeftId = attrs.getResourceId("nextFocusLeft",View::NO_ID);
-    mNextFocusRightId= attrs.getResourceId("nextFocusRight",View::NO_ID);
-    mNextFocusUpId   = attrs.getResourceId("nextFocusUp",View::NO_ID);
-    mNextFocusDownId = attrs.getResourceId("nextFocusDown",View::NO_ID);
-    mNextFocusForwardId  = attrs.getResourceId("nextFocusForward",View::NO_ID);
-    mNextClusterForwardId= attrs.getResourceId("nextClusterFoward",View::NO_ID);
+    mNextFocusLeftId = TA_RES(styleable::View::nextFocusLeft, "nextFocusLeft", View::NO_ID);
+    mNextFocusRightId= TA_RES(styleable::View::nextFocusRight, "nextFocusRight", View::NO_ID);
+    mNextFocusUpId   = TA_RES(styleable::View::nextFocusUp, "nextFocusUp", View::NO_ID);
+    mNextFocusDownId = TA_RES(styleable::View::nextFocusDown, "nextFocusDown", View::NO_ID);
+    mNextFocusForwardId  = TA_RES(styleable::View::nextFocusForward, "nextFocusForward", View::NO_ID);
+    mNextClusterForwardId= TA_RES(styleable::View::nextClusterForward, "nextClusterFoward", View::NO_ID);
 
-    setRotation( attrs.getFloat("rotation",0) );
-    setTranslationX( attrs.getDimensionPixelSize("translationX",0) );
-    setTranslationY( attrs.getDimensionPixelSize("translationY",0) );
-    setTranslationZ( attrs.getDimensionPixelSize("translationZ",0) );
-    setRotationX( attrs.getFloat("rotationX",0) );
-    setRotationY( attrs.getFloat("rotationY",0) );
-    setScaleX( attrs.getFloat("scaleX",1.f) );
-    setScaleY( attrs.getFloat("scaleY",1.f) );
+    setRotation( TA_FLOAT(styleable::View::rotation, "rotation", 0) );
+    setTranslationX( TA_DIM(styleable::View::translationX, "translationX", 0) );
+    setTranslationY( TA_DIM(styleable::View::translationY, "translationY", 0) );
+    setTranslationZ( TA_DIM(styleable::View::translationZ, "translationZ", 0) );
+    setRotationX( TA_FLOAT(styleable::View::rotationX, "rotationX", 0) );
+    setRotationY( TA_FLOAT(styleable::View::rotationY, "rotationY", 0) );
+    setScaleX( TA_FLOAT(styleable::View::scaleX, "scaleX", 1.f) );
+    setScaleY( TA_FLOAT(styleable::View::scaleY, "scaleY", 1.f) );
     if(attrs.hasAttribute("transformPivotX"))
-        setPivotX(attrs.getDimensionPixelSize("transformPivotX",0));
+        setPivotX(TA_DIM(styleable::View::transformPivotX, "transformPivotX", 0));
     if(attrs.hasAttribute("transformPivotY"))
-        setPivotY(attrs.getDimensionPixelSize("transformPivotY",0));
+        setPivotY(TA_DIM(styleable::View::transformPivotY, "transformPivotY", 0));
 
-    setKeyboardNavigationCluster( attrs.getBoolean("keyboardNavigationCluster",false) );
-    if(attrs.getBoolean("filterTouchesWhenObscured",false)){
+    setKeyboardNavigationCluster( TA_BOOL(styleable::View::keyboardNavigationCluster, "keyboardNavigationCluster", false) );
+    if(TA_BOOL(styleable::View::filterTouchesWhenObscured, "filterTouchesWhenObscured", false)){
         viewFlagValues |= FILTER_TOUCHES_WHEN_OBSCURED;
         viewFlagMasks |= FILTER_TOUCHES_WHEN_OBSCURED;
     } 
-    if( attrs.getBoolean( "focusableInTouchMode" , false ) ){
+    if( TA_BOOL(styleable::View::focusableInTouchMode, "focusableInTouchMode", false) ){
         viewFlagValues &= ~FOCUSABLE_AUTO;
         viewFlagValues |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE;
         viewFlagMasks  |= FOCUSABLE_IN_TOUCH_MODE | FOCUSABLE_MASK;
@@ -212,24 +226,24 @@ View::View(Context*ctx,const AttributeSet&attrs){
         viewFlagValues|= attrs.getBoolean("focusable",false)?FOCUSABLE : NOT_FOCUSABLE;
         viewFlagMasks |= FOCUSABLE_MASK;
     }
-    if( attrs.getBoolean("clickable",false) ){
+    if( TA_BOOL(styleable::View::clickable, "clickable", false) ){
         viewFlagValues |= CLICKABLE;
         viewFlagMasks  |= CLICKABLE;
     }
-    if( attrs.getBoolean("longClickable",false) ){
+    if( TA_BOOL(styleable::View::longClickable, "longClickable", false) ){
         viewFlagValues |= LONG_CLICKABLE;
         viewFlagMasks  |= LONG_CLICKABLE;
     }
-    setAllowClickWhenDisabled(attrs.getBoolean("allowClickWhenDisabled", false));
-    if( !attrs.getBoolean("saveEnabled",true)){
+    setAllowClickWhenDisabled(TA_BOOL(styleable::View::allowClickWhenDisabled, "allowClickWhenDisabled", false));
+    if( !TA_BOOL(styleable::View::saveEnabled, "saveEnabled", true)){
          viewFlagValues |=SAVE_DISABLED;
          viewFlagMasks |=SAVE_DISABLED_MASK;
     }
-    if(attrs.getBoolean("duplicateParentState",false)){
+    if(TA_BOOL(styleable::View::duplicateParentState, "duplicateParentState", false)){
         viewFlagValues |= DUPLICATE_PARENT_STATE;
         viewFlagMasks  |= DUPLICATE_PARENT_STATE;
     }
-    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
+    setFocusedByDefault(TA_BOOL(styleable::View::focusedByDefault, "focusedByDefault", false));
 
     const int fadingEdges = attrs.getInt("requiresFadingEdge",std::unordered_map<std::string,int>({
 	   {"none",(int)FADING_EDGE_NONE},
@@ -276,12 +290,12 @@ View::View(Context*ctx,const AttributeSet&attrs){
            {"right",(int)SCROLL_INDICATOR_RIGHT}, {"bottom",(int)SCROLL_INDICATOR_BOTTOM}
            }),0)<<SCROLL_INDICATORS_TO_PFLAGS3_LSHIFT)&SCROLL_INDICATORS_PFLAG3_MASK;
     if(scrollIndicators) mPrivateFlags3 |= scrollIndicators;
-    if(attrs.getBoolean("isScrollContainer",false)) setScrollContainer(true);
-    setNestedScrollingEnabled(attrs.getBoolean("nestedScrollingEnabled",false));
+    if(TA_BOOL(styleable::View::isScrollContainer, "isScrollContainer", false)) setScrollContainer(true);
+    setNestedScrollingEnabled(TA_BOOL(styleable::View::nestedScrollingEnabled, "nestedScrollingEnabled", false));
     setKeyboardNavigationCluster(attrs.getBoolean("keyboardNavigationCluster", false));
-    setFocusedByDefault(attrs.getBoolean("focusedByDefault",false));
-    setTransitionName(attrs.getString("transitionName"));
-    std::string animatorResId = attrs.getString("stateListAnimator");
+    setFocusedByDefault(TA_BOOL(styleable::View::focusedByDefault, "focusedByDefault", false));
+    setTransitionName(TA_STR(styleable::View::transitionName, "transitionName"));
+    std::string animatorResId = TA_STR(styleable::View::stateListAnimator, "stateListAnimator");
     if(!animatorResId.empty()){
         setStateListAnimator(AnimatorInflater::loadStateListAnimator(mContext,animatorResId));
     }
